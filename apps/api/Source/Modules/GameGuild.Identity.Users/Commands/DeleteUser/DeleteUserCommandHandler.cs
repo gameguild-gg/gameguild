@@ -1,4 +1,4 @@
-﻿using GameGuild.CQRS;
+using GameGuild.CQRS;
 using GameGuild.Identity.Context.Actors;
 using GameGuild.Resources;
 
@@ -39,7 +39,7 @@ public class DeleteUserCommandHandler(
                 1,
                 actorUserId,
                 "DeleteUser",
-                cancellationToken).ConfigureAwait(false);
+                cancellationToken);
         }
 
         // Publish domain event

@@ -1,4 +1,5 @@
 using Asp.Versioning;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -7,11 +8,11 @@ namespace GameGuild.Identity.Tenants;
 /// <summary>
 ///     Controller for managing tenant settings
 /// </summary>
-[ApiController]
 [ApiVersion("1.0")]
 [Route("v{version:apiVersion}/tenants/{tenantId:guid}/settings")]
 [Tags("tenants/settings")]
-public sealed class TenantSettingsController : ControllerBase
+[Authorize]
+public sealed class TenantSettingsController : BaseApiController
 {
     /// <summary>
     ///     Get tenant settings by tenant ID

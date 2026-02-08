@@ -49,7 +49,7 @@ public class CreateSoDRuleHandler(ISoDService service)
             IsEnabled = request.IsEnabled
         };
 
-        return await service.CreateRuleAsync(rule, cancellationToken);
+        return await service.CreateRuleAsync(rule, cancellationToken).ConfigureAwait(false);
     }
 }
 
@@ -86,7 +86,7 @@ public class UpdateSoDRuleHandler(ISoDService service)
         CancellationToken cancellationToken
     )
     {
-        var existing = await service.GetRuleByIdAsync(request.RuleId, cancellationToken);
+        var existing = await service.GetRuleByIdAsync(request.RuleId, cancellationToken).ConfigureAwait(false);
         if (existing == null)
             return null;
 
@@ -96,7 +96,7 @@ public class UpdateSoDRuleHandler(ISoDService service)
         existing.RuleType = request.RuleType;
         existing.IsEnabled = request.IsEnabled;
 
-        return await service.UpdateRuleAsync(existing, cancellationToken);
+        return await service.UpdateRuleAsync(existing, cancellationToken).ConfigureAwait(false);
     }
 }
 
@@ -121,7 +121,7 @@ public class DeleteSoDRuleHandler(ISoDService service)
         CancellationToken cancellationToken
     )
     {
-        return await service.DeleteRuleAsync(request.RuleId, cancellationToken);
+        return await service.DeleteRuleAsync(request.RuleId, cancellationToken).ConfigureAwait(false);
     }
 }
 
@@ -196,7 +196,7 @@ public class GrantSoDExceptionHandler(ISoDService service)
             request.ApprovedBy,
             request.Justification,
             cancellationToken
-        );
+        ).ConfigureAwait(false);
     }
 }
 
@@ -213,6 +213,6 @@ public class ScanSoDViolationsHandler(ISoDService service)
         CancellationToken cancellationToken
     )
     {
-        return await service.ScanForViolationsAsync(request.TenantId, cancellationToken);
+        return await service.ScanForViolationsAsync(request.TenantId, cancellationToken).ConfigureAwait(false);
     }
 }

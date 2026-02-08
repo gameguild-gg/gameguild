@@ -27,7 +27,7 @@ public partial class ValidateTenantCommandHandler(ITenantRepository tenantReposi
         ValidateName(request.Name, response);
 
         // Validate and check slug availability
-        await ValidateSlugAsync(request.Slug, response, cancellationToken);
+        await ValidateSlugAsync(request.Slug, response, cancellationToken).ConfigureAwait(false);
 
         // Validate admin email
         ValidateAdminEmail(request.AdminEmail, response);
@@ -152,7 +152,7 @@ public partial class ValidateTenantCommandHandler(ITenantRepository tenantReposi
         }
 
         // Check availability in database
-        var isUnique = await tenantRepository.IsSlugUniqueAsync(slug, cancellationToken: cancellationToken);
+        var isUnique = await tenantRepository.IsSlugUniqueAsync(slug, cancellationToken: cancellationToken).ConfigureAwait(false);
         if (!isUnique)
         {
             response.Errors.Add(new TenantValidationError
@@ -164,7 +164,7 @@ public partial class ValidateTenantCommandHandler(ITenantRepository tenantReposi
             response.SlugValidation.IsAvailable = false;
 
             // Generate alternative suggestions
-            response.SlugValidation.SuggestedAlternatives = await GenerateSlugAlternativesAsync(slug, cancellationToken);
+            response.SlugValidation.SuggestedAlternatives = await GenerateSlugAlternativesAsync(slug, cancellationToken).ConfigureAwait(false);
             response.Suggestions.Add($"Try one of these alternatives: {string.Join(", ", response.SlugValidation.SuggestedAlternatives.Take(3))}");
         }
     }

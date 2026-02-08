@@ -1,4 +1,3 @@
-using GameGuild.Abstractions;
 
 namespace GameGuild.Identity.Tenants;
 

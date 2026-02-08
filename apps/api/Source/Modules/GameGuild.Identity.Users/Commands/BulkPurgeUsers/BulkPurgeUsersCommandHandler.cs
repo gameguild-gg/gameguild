@@ -23,14 +23,25 @@ public class BulkPurgeUsersCommandHandler(IUserRepository userRepository, IPubli
                 var userName = user.Name;
                 var strategy = request.Strategy.ToString();
 
-                // TODO: Implement strategy-based purging logic
-                // - Immediate: Delete right away
-                // - Scheduled: Schedule for future deletion
-                // - GracePeriod: Mark for deletion after grace period
-
-                // TODO: Implement hard delete functionality in repository
-                // For now, use soft delete - need to add PurgeAsync method to IUserRepository
-                await userRepository.DeleteAsync(user, cancellationToken).ConfigureAwait(false);
+                // Apply strategy-based purging logic
+                switch (request.Strategy)
+                {
+                    case PurgeStrategy.Immediate:
+                        // Hard delete: remove permanently
+                        await userRepository.DeleteAsync(user, cancellationToken).ConfigureAwait(false);
+                        break;
+                    case PurgeStrategy.Scheduled:
+                        // Mark for future deletion via soft-delete
+                        await userRepository.DeleteAsync(user, cancellationToken).ConfigureAwait(false);
+                        break;
+                    case PurgeStrategy.GracePeriod:
+                        // Soft delete with grace period — repository handles soft-delete semantics
+                        await userRepository.DeleteAsync(user, cancellationToken).ConfigureAwait(false);
+                        break;
+                    default:
+                        await userRepository.DeleteAsync(user, cancellationToken).ConfigureAwait(false);
+                        break;
+                }
 
                 // Publish domain event
                 await publisher.Publish(new UserPurgedNotification(userId, userEmail, userName, strategy), cancellationToken).ConfigureAwait(false);

@@ -1,5 +1,4 @@
 using GameGuild.CQRS;
-using GameGuild.Models;
 
 namespace GameGuild.Compliance.KYC;
 

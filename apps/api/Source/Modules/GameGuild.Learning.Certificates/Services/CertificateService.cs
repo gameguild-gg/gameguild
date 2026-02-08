@@ -1,7 +1,5 @@
-using GameGuild.Abstractions;
 using GameGuild.Identity.Users;
 using GameGuild.Learning.Courses;
-using GameGuild.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -32,7 +30,7 @@ public class CertificateService : ICertificateService
         {
             // Check if certificate already exists for this enrollment
             var existing = await _context.Set<Certificate>()
-                .FirstOrDefaultAsync(c => c.EnrollmentId == enrollmentId && c.TemplateId == templateId);
+                .FirstOrDefaultAsync(c => c.EnrollmentId == enrollmentId && c.TemplateId == templateId).ConfigureAwait(false);
 
             if (existing != null)
             {
@@ -42,7 +40,7 @@ public class CertificateService : ICertificateService
 
             // Get template to determine expiration
             var template = await _context.Set<CertificateTemplate>()
-                .FirstOrDefaultAsync(t => t.Id == templateId);
+                .FirstOrDefaultAsync(t => t.Id == templateId).ConfigureAwait(false);
 
             if (template == null || !template.IsActive)
             {
@@ -51,12 +49,12 @@ public class CertificateService : ICertificateService
 
             // Get recipient name from user
             var user = await _context.Set<User>()
-                .FirstOrDefaultAsync(u => u.Id == userId);
+                .FirstOrDefaultAsync(u => u.Id == userId).ConfigureAwait(false);
             var recipientName = user?.Name ?? user?.Username ?? "Unknown Recipient";
 
             // Get course/program name
             var program = await _context.Set<Program>()
-                .FirstOrDefaultAsync(p => p.Id == courseId);
+                .FirstOrDefaultAsync(p => p.Id == courseId).ConfigureAwait(false);
             var courseName = program?.Title ?? "Unknown Course";
 
             _logger.LogDebug(
@@ -72,7 +70,7 @@ public class CertificateService : ICertificateService
                 courseName);
 
             _context.Set<Certificate>().Add(certificate);
-            await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync().ConfigureAwait(false);
 
             _logger.LogInformation(
                 "Certificate issued: {CertificateNumber} to user {UserId} for course {CourseId}",
@@ -90,13 +88,13 @@ public class CertificateService : ICertificateService
     public async Task<Certificate?> GetCertificateByIdAsync(Guid id)
     {
         return await _context.Set<Certificate>()
-            .FirstOrDefaultAsync(c => c.Id == id);
+            .FirstOrDefaultAsync(c => c.Id == id).ConfigureAwait(false);
     }
 
     public async Task<Certificate?> GetCertificateByNumberAsync(string certificateNumber)
     {
         return await _context.Set<Certificate>()
-            .FirstOrDefaultAsync(c => c.CertificateNumber == certificateNumber);
+            .FirstOrDefaultAsync(c => c.CertificateNumber == certificateNumber).ConfigureAwait(false);
     }
 
     public async Task<IEnumerable<Certificate>> GetUserCertificatesAsync(Guid userId, Guid? tenantId = null)
@@ -104,7 +102,7 @@ public class CertificateService : ICertificateService
         return await _context.Set<Certificate>()
             .Where(c => c.UserId == userId)
             .OrderByDescending(c => c.IssuedAt)
-            .ToListAsync();
+            .ToListAsync().ConfigureAwait(false);
     }
 
     public async Task<IEnumerable<Certificate>> GetCourseCertificatesAsync(Guid courseId, Guid? tenantId = null)
@@ -112,14 +110,14 @@ public class CertificateService : ICertificateService
         return await _context.Set<Certificate>()
             .Where(c => c.CourseId == courseId)
             .OrderByDescending(c => c.IssuedAt)
-            .ToListAsync();
+            .ToListAsync().ConfigureAwait(false);
     }
 
     public async Task<Result<CertificateVerificationResult>> VerifyCertificateAsync(string certificateNumber)
     {
         try
         {
-            var certificate = await GetCertificateByNumberAsync(certificateNumber);
+            var certificate = await GetCertificateByNumberAsync(certificateNumber).ConfigureAwait(false);
 
             if (certificate == null)
             {
@@ -163,7 +161,7 @@ public class CertificateService : ICertificateService
     {
         try
         {
-            var certificate = await GetCertificateByIdAsync(certificateId);
+            var certificate = await GetCertificateByIdAsync(certificateId).ConfigureAwait(false);
 
             if (certificate == null)
             {
@@ -172,7 +170,7 @@ public class CertificateService : ICertificateService
 
             certificate.Revoke(reason);
             _context.Set<Certificate>().Update(certificate);
-            await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync().ConfigureAwait(false);
 
             _logger.LogInformation(
                 "Certificate revoked: {CertificateNumber} - Reason: {Reason}",
@@ -196,7 +194,7 @@ public class CertificateService : ICertificateService
                 && c.ExpiresAt != null
                 && c.ExpiresAt <= threshold)
             .OrderBy(c => c.ExpiresAt)
-            .ToListAsync();
+            .ToListAsync().ConfigureAwait(false);
     }
 
     public async Task<Result<bool>> CheckEligibilityAsync(Guid enrollmentId, Guid templateId)
@@ -207,7 +205,7 @@ public class CertificateService : ICertificateService
 
             // Get enrollment to check completion status
             var enrollment = await _context.Set<ProgramEnrollment>()
-                .FirstOrDefaultAsync(e => e.Id == enrollmentId);
+                .FirstOrDefaultAsync(e => e.Id == enrollmentId).ConfigureAwait(false);
 
             if (enrollment == null)
             {
@@ -236,7 +234,7 @@ public class CertificateService : ICertificateService
 
             // Get template to check if it's active and applicable
             var template = await _context.Set<CertificateTemplate>()
-                .FirstOrDefaultAsync(t => t.Id == templateId);
+                .FirstOrDefaultAsync(t => t.Id == templateId).ConfigureAwait(false);
 
             if (template == null || !template.IsActive)
             {

@@ -9,11 +9,10 @@ namespace GameGuild.Features;
 /// <summary>
 ///     Controller for runtime evaluation of feature flags
 /// </summary>
-[ApiController]
 [ApiVersion("1.0")]
 [Route("v{version:apiVersion}/features")]
 [Authorize]
-public class FeatureFlagsController(IFeatureFlagEvaluationService evaluationService, ILogger<FeatureFlagsController> logger) : ControllerBase
+public class FeatureFlagsController(IFeatureFlagEvaluationService evaluationService, ILogger<FeatureFlagsController> logger) : BaseApiController
 {
     /// <summary>
     ///     Evaluate a feature flag for runtime decisions
@@ -21,29 +20,20 @@ public class FeatureFlagsController(IFeatureFlagEvaluationService evaluationServ
     [HttpPost(":evaluate")]
     public async Task<IActionResult> EvaluateFeature([FromBody] FeatureEvaluationRequest request, CancellationToken cancellationToken)
     {
-        try
+        var context = new FeatureContext
         {
-            var context = new FeatureContext
-            {
-                UserId = request.Context.UserId ?? GetCurrentUserId(),
-                TenantId = request.Context.TenantId ?? GetCurrentTenantId(),
-                Environment = request.Context.Environment,
-                Permissions = request.Context.Permissions,
-                CustomAttributes = request.Context.CustomAttributes,
-                IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString(),
-                UserAgent = HttpContext.Request.Headers.UserAgent.ToString()
-            };
+            UserId = request.Context.UserId ?? GetCurrentUserId(),
+            TenantId = request.Context.TenantId ?? GetCurrentTenantId(),
+            Environment = request.Context.Environment,
+            Permissions = request.Context.Permissions,
+            CustomAttributes = request.Context.CustomAttributes,
+            IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString(),
+            UserAgent = HttpContext.Request.Headers.UserAgent.ToString()
+        };
 
-            var result = await evaluationService.EvaluateAsync(request.FeatureKey, context, cancellationToken);
+        var result = await evaluationService.EvaluateAsync(request.FeatureKey, context, cancellationToken);
 
-            return Ok(result);
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Error evaluating feature flag '{FeatureKey}'", request.FeatureKey);
-
-            return StatusCode(500, new { error = "Internal server error" });
-        }
+        return Ok(result);
     }
 
     /// <summary>
@@ -59,28 +49,19 @@ public class FeatureFlagsController(IFeatureFlagEvaluationService evaluationServ
         CancellationToken cancellationToken = default
     )
     {
-        try
+        var context = new FeatureContext
         {
-            var context = new FeatureContext
-            {
-                UserId = userId ?? GetCurrentUserId(),
-                TenantId = tenantId ?? GetCurrentTenantId(),
-                Environment = environment,
-                Permissions = GetCurrentUserPermissions(),
-                IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString(),
-                UserAgent = HttpContext.Request.Headers.UserAgent.ToString()
-            };
+            UserId = userId ?? GetCurrentUserId(),
+            TenantId = tenantId ?? GetCurrentTenantId(),
+            Environment = environment,
+            Permissions = GetCurrentUserPermissions(),
+            IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString(),
+            UserAgent = HttpContext.Request.Headers.UserAgent.ToString()
+        };
 
-            var result = await evaluationService.GetValueAsync(key, context, defaultValue, cancellationToken);
+        var result = await evaluationService.GetValueAsync(key, context, defaultValue, cancellationToken);
 
-            return Ok(new { featureKey = key, value = result, type = "boolean" });
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Error getting feature flag value '{FeatureKey}'", key);
-
-            return Ok(new { featureKey = key, value = defaultValue, type = "boolean", error = true });
-        }
+        return Ok(new { featureKey = key, value = result, type = "boolean" });
     }
 
     /// <summary>
@@ -89,76 +70,56 @@ public class FeatureFlagsController(IFeatureFlagEvaluationService evaluationServ
     [HttpPost(":evaluate-bulk")]
     public async Task<IActionResult> BulkEvaluateFeatures([FromBody] BulkEvaluationRequest request, CancellationToken cancellationToken)
     {
-        try
+        // Use the context from request, or create a default one
+        var context = request.Context;
+
+        // Fill in missing values from current user context
+        context.UserId ??= GetCurrentUserId();
+        context.TenantId ??= GetCurrentTenantId();
+        context.IpAddress ??= HttpContext.Connection.RemoteIpAddress?.ToString();
+        context.UserAgent ??= HttpContext.Request.Headers.UserAgent.ToString();
+
+        if (context.Permissions.Count == 0) { context.Permissions = GetCurrentUserPermissions(); }
+
+        var results = new List<FeatureEvaluationResult>();
+
+        foreach (var featureKey in request.FeatureKeys)
         {
-            // Use the context from request, or create a default one
-            var context = request.Context;
-
-            // Fill in missing values from current user context
-            context.UserId ??= GetCurrentUserId();
-            context.TenantId ??= GetCurrentTenantId();
-            context.IpAddress ??= HttpContext.Connection.RemoteIpAddress?.ToString();
-            context.UserAgent ??= HttpContext.Request.Headers.UserAgent.ToString();
-
-            if (context.Permissions.Count == 0) { context.Permissions = GetCurrentUserPermissions(); }
-
-            var results = new List<FeatureEvaluationResult>();
-
-            foreach (var featureKey in request.FeatureKeys)
+            try
             {
-                try
-                {
-                    var result = await evaluationService.EvaluateAsync(featureKey, context, cancellationToken);
-                    results.Add(result);
-                }
-                catch (Exception ex)
-                {
-                    logger.LogWarning(ex, "Failed to evaluate feature '{FeatureKey}' in bulk request", featureKey);
-                    results.Add(new FeatureEvaluationResult { FeatureKey = featureKey, IsEnabled = false, Reason = "Evaluation failed" });
-                }
+                var result = await evaluationService.EvaluateAsync(featureKey, context, cancellationToken);
+                results.Add(result);
             }
-
-            return Ok(new BulkEvaluateFeaturesResponse { Results = results.ToDictionary(r => r.FeatureKey, r => r) });
+            catch (Exception ex)
+            {
+                logger.LogWarning(ex, "Failed to evaluate feature '{FeatureKey}' in bulk request", featureKey);
+                results.Add(new FeatureEvaluationResult { FeatureKey = featureKey, IsEnabled = false, Reason = "Evaluation failed" });
+                throw;
+            }
         }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Error in bulk feature evaluation");
 
-            return StatusCode(500, new { error = "Internal server error" });
-        }
+        return Ok(new BulkEvaluateFeaturesResponse { Results = results.ToDictionary(r => r.FeatureKey, r => r) });
     }
 
     /// <summary>
     ///     Get all enabled feature flags for the current context
     /// </summary>
     [HttpGet("enabled")]
-    public IActionResult GetEnabled([FromQuery] Guid? userId = null, [FromQuery] Guid? tenantId = null, [FromQuery] string environment = "production", CancellationToken cancellationToken = default)
+    public async Task<IActionResult> GetEnabled([FromQuery] Guid? userId = null, [FromQuery] Guid? tenantId = null, [FromQuery] string environment = "production", CancellationToken cancellationToken = default)
     {
-        try
+        var context = new FeatureContext
         {
-            // TODO: Implement feature evaluation with context
-            // var context = new FeatureContext
-            // {
-            //     UserId = userId ?? GetCurrentUserId(),
-            //     TenantId = tenantId ?? GetCurrentTenantId(),
-            //     Environment = environment,
-            //     Permissions = GetCurrentUserPermissions(),
-            //     IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString(),
-            //     UserAgent = HttpContext.Request.Headers.UserAgent.ToString()
-            // };
+            UserId = userId ?? GetCurrentUserId(),
+            TenantId = tenantId ?? GetCurrentTenantId(),
+            Environment = environment,
+            Permissions = GetCurrentUserPermissions(),
+            IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString(),
+            UserAgent = HttpContext.Request.Headers.UserAgent.ToString()
+        };
 
-            // This would need to be implemented in the evaluation service
-            // For now, return a placeholder response
-            var enabledFeatures = new List<object>();
+        var result = await evaluationService.GetEnabledFeaturesAsync(context, cancellationToken).ConfigureAwait(false);
 
-            return Ok(enabledFeatures);
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Error getting enabled features");
-
-            return StatusCode(500, new { error = "Internal server error" });
-        }
+        return Ok(result);
     }
 
     private Guid? GetCurrentUserId()

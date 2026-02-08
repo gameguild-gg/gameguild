@@ -11,7 +11,7 @@ public class ActivateUserCommandHandler(IUserRepository userRepository) : IComma
     {
         ArgumentNullException.ThrowIfNull(request);
 
-        var user = await userRepository.GetByIdAsync(request.UserId, cancellationToken).ConfigureAwait(false) ?? throw new UserNotFoundException($"User with ID {request.UserId} not found");
+        var user = await userRepository.GetByIdAsync(request.UserId, cancellationToken) ?? throw new UserNotFoundException($"User with ID {request.UserId} not found");
 
         user.Activate();
         await userRepository.UpdateAsync(user, cancellationToken).ConfigureAwait(false);

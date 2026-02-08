@@ -103,7 +103,7 @@ public class PolicyGateService(
             RiskScore: GetIntFromAttributes(context.Attributes, "risk-score"),
             CustomAttributes: GetStringAttributesFromDict(context.Attributes));
 
-        var conditionalResult = await conditionalEvaluator.EvaluateAsync(conditionalContext, ct);
+        var conditionalResult = await conditionalEvaluator.EvaluateAsync(conditionalContext, ct).ConfigureAwait(false);
         conditionalSw.Stop();
 
         details.Add(new GateEvaluationDetail(
@@ -138,7 +138,7 @@ public class PolicyGateService(
             .WithEnvironment(context.IpAddress, context.UserAgent, context.GeoLocation?.Split('/').FirstOrDefault())
             .Build();
 
-        var abacResult = await abacEvaluator.EvaluateAsync(abacContext, ct);
+        var abacResult = await abacEvaluator.EvaluateAsync(abacContext, ct).ConfigureAwait(false);
         abacSw.Stop();
 
         details.Add(new GateEvaluationDetail(
@@ -219,7 +219,7 @@ public class PolicyGateService(
             Action: context.Action,
             UserRoles: []);
 
-        var result = await conditionalEvaluator.EvaluateAsync(conditionalContext, ct);
+        var result = await conditionalEvaluator.EvaluateAsync(conditionalContext, ct).ConfigureAwait(false);
         sw.Stop();
 
         var detail = new GateEvaluationDetail(
@@ -252,7 +252,7 @@ public class PolicyGateService(
             .WithAction(context.Action)
             .Build();
 
-        var result = await abacEvaluator.EvaluateAsync(abacContext, ct);
+        var result = await abacEvaluator.EvaluateAsync(abacContext, ct).ConfigureAwait(false);
         sw.Stop();
 
         var detail = new GateEvaluationDetail(

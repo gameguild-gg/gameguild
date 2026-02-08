@@ -11,7 +11,7 @@ public class SuspendUserCommandHandler(IUserRepository userRepository, IPublishe
     {
         ArgumentNullException.ThrowIfNull(request);
 
-        var user = await userRepository.GetByIdAsync(request.UserId, cancellationToken).ConfigureAwait(false) ?? throw new UserNotFoundException($"User with ID {request.UserId} not found");
+        var user = await userRepository.GetByIdAsync(request.UserId, cancellationToken) ?? throw new UserNotFoundException($"User with ID {request.UserId} not found");
 
         user.Suspend();
         await userRepository.UpdateAsync(user, cancellationToken).ConfigureAwait(false);

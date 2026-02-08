@@ -1,4 +1,4 @@
-﻿using GameGuild.CQRS;
+using GameGuild.CQRS;
 
 namespace GameGuild.Identity.Users;
 
@@ -11,7 +11,7 @@ public class DeactivateUserCommandHandler(IUserRepository userRepository) : ICom
     {
         ArgumentNullException.ThrowIfNull(request);
 
-        var user = await userRepository.GetByIdAsync(request.UserId, cancellationToken).ConfigureAwait(false) ?? throw new UserNotFoundException($"User with ID {request.UserId} not found");
+        var user = await userRepository.GetByIdAsync(request.UserId, cancellationToken) ?? throw new UserNotFoundException($"User with ID {request.UserId} not found");
 
         user.Deactivate();
         await userRepository.UpdateAsync(user, cancellationToken).ConfigureAwait(false);

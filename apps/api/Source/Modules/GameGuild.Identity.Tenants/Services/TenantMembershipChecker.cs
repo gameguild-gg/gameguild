@@ -17,7 +17,7 @@ public sealed class TenantMembershipChecker(ITenantMemberRepository memberReposi
         Guid tenantId,
         CancellationToken cancellationToken = default)
     {
-        var member = await memberRepository.GetByUserAndTenantAsync(userId, tenantId, cancellationToken);
+        var member = await memberRepository.GetByUserAndTenantAsync(userId, tenantId, cancellationToken).ConfigureAwait(false);
         
         // User is a member if:
         // 1. A TenantMember record exists

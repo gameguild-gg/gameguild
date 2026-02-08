@@ -71,7 +71,7 @@ public sealed class TenantResolver(
         var tenantIdFromHeader = TenantIdExtractor.FromHeader(context, TenantIdHeader);
         if (tenantIdFromHeader.HasValue)
         {
-            var tenant = await GetTenantByIdAsync(tenantIdFromHeader.Value, cancellationToken);
+            var tenant = await GetTenantByIdAsync(tenantIdFromHeader.Value, cancellationToken).ConfigureAwait(false);
             if (tenant is not null)
             {
                 logger.LogDebug(
@@ -90,7 +90,7 @@ public sealed class TenantResolver(
         var host = TenantIdExtractor.GetHost(context);
         if (!string.IsNullOrWhiteSpace(host) && !TenantIdExtractor.IsLocalhost(host))
         {
-            var tenantDomain = await tenantDomainsRepository.GetByDomainAsync(host, cancellationToken);
+            var tenantDomain = await tenantDomainsRepository.GetByDomainAsync(host, cancellationToken).ConfigureAwait(false);
             if (tenantDomain?.Tenant is not null && tenantDomain.Tenant.IsActive)
             {
                 logger.LogDebug(
@@ -106,7 +106,7 @@ public sealed class TenantResolver(
         var tenantIdFromQuery = TenantIdExtractor.FromQuery(context, TenantIdQueryKey);
         if (tenantIdFromQuery.HasValue)
         {
-            var tenant = await GetTenantByIdAsync(tenantIdFromQuery.Value, cancellationToken);
+            var tenant = await GetTenantByIdAsync(tenantIdFromQuery.Value, cancellationToken).ConfigureAwait(false);
             if (tenant is not null)
             {
                 logger.LogDebug(
@@ -121,7 +121,7 @@ public sealed class TenantResolver(
         var tenantIdFromRoute = TenantIdExtractor.FromRoute(context, TenantIdQueryKey);
         if (tenantIdFromRoute.HasValue)
         {
-            var tenant = await GetTenantByIdAsync(tenantIdFromRoute.Value, cancellationToken);
+            var tenant = await GetTenantByIdAsync(tenantIdFromRoute.Value, cancellationToken).ConfigureAwait(false);
             if (tenant is not null)
             {
                 logger.LogDebug(
@@ -136,7 +136,7 @@ public sealed class TenantResolver(
         var tenantIdFromClaims = GetTenantIdFromClaims(context.User);
         if (tenantIdFromClaims.HasValue)
         {
-            var tenant = await GetTenantByIdAsync(tenantIdFromClaims.Value, cancellationToken);
+            var tenant = await GetTenantByIdAsync(tenantIdFromClaims.Value, cancellationToken).ConfigureAwait(false);
             if (tenant is not null)
             {
                 logger.LogDebug(
@@ -148,7 +148,7 @@ public sealed class TenantResolver(
         }
 
         // 6. Fall back to default tenant
-        var defaultTenant = await mediator.Send(new GetDefaultTenantQuery(), cancellationToken);
+        var defaultTenant = await mediator.Send(new GetDefaultTenantQuery(), cancellationToken).ConfigureAwait(false);
         if (defaultTenant is not null && defaultTenant.IsActive)
         {
             logger.LogDebug(
@@ -173,11 +173,11 @@ public sealed class TenantResolver(
         // SECURITY (Attack 5): Reject Guid.Empty to prevent type confusion
         if (Guid.TryParse(tenantIdentifier, out var tenantId) && tenantId != Guid.Empty)
         {
-            return await GetTenantByIdAsync(tenantId, cancellationToken);
+            return await GetTenantByIdAsync(tenantId, cancellationToken).ConfigureAwait(false);
         }
 
         // Try as slug
-        var tenant = await mediator.Send(new GetTenantBySlugQuery(tenantIdentifier), cancellationToken);
+        var tenant = await mediator.Send(new GetTenantBySlugQuery(tenantIdentifier), cancellationToken).ConfigureAwait(false);
         return tenant?.IsActive == true ? tenant : null;
     }
 
@@ -193,7 +193,7 @@ public sealed class TenantResolver(
 
     private async Task<Tenant?> GetTenantByIdAsync(Guid tenantId, CancellationToken cancellationToken)
     {
-        var tenant = await mediator.Send(new GetTenantByIdQuery(tenantId), cancellationToken);
+        var tenant = await mediator.Send(new GetTenantByIdQuery(tenantId), cancellationToken).ConfigureAwait(false);
         return tenant?.IsActive == true ? tenant : null;
     }
 

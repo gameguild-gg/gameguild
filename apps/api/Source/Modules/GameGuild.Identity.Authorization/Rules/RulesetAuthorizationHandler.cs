@@ -37,7 +37,7 @@ public sealed class RulesetAuthorizationHandler : AuthorizationHandler<RulesetRe
 
         // Use pre-loaded ruleset if available (avoids double DB load)
         var ruleset = requirement.Ruleset
-            ?? await _rulesetProvider.GetRulesetAsync(policyName, CancellationToken.None);
+            ?? await _rulesetProvider.GetRulesetAsync(policyName, CancellationToken.None).ConfigureAwait(false);
 
         if (ruleset is null)
         {
@@ -94,7 +94,7 @@ public sealed class RulesetAuthorizationHandler : AuthorizationHandler<RulesetRe
 
             try
             {
-                var result = await evaluator.EvaluateAsync(context, parameters);
+                var result = await evaluator.EvaluateAsync(context, parameters).ConfigureAwait(false);
 
                 if (!result.IsSuccess && !result.IsSkipped)
                 {

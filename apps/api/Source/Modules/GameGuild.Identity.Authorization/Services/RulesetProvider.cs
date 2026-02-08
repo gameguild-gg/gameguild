@@ -38,7 +38,7 @@ public sealed class RulesetProvider : IRulesetProvider
         string policyName,
         CancellationToken cancellationToken = default)
     {
-        return await GetRulesetForTenantAsync(policyName, null, cancellationToken);
+        return await GetRulesetForTenantAsync(policyName, null, cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<PolicyRuleset?> GetRulesetForTenantAsync(
@@ -56,7 +56,7 @@ public sealed class RulesetProvider : IRulesetProvider
         }
 
         // Get policy from repository (it handles tenant fallback internally)
-        var entity = await _policyRepository.GetByNameAsync(policyName, tenantId, cancellationToken);
+        var entity = await _policyRepository.GetByNameAsync(policyName, tenantId, cancellationToken).ConfigureAwait(false);
 
         if (entity is null)
         {

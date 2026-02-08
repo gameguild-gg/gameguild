@@ -7,5 +7,5 @@ namespace GameGuild.Identity.Tenants;
 /// </summary>
 public class GetTenantByIdQueryHandler(ITenantRepository tenantRepository) : IQueryHandler<GetTenantByIdQuery, Tenant?>
 {
-    public async Task<Tenant?> Handle(GetTenantByIdQuery request, CancellationToken cancellationToken) { return await tenantRepository.GetByIdAsync(request.TenantId, cancellationToken); }
+    public async Task<Tenant?> Handle(GetTenantByIdQuery request, CancellationToken cancellationToken) { return await tenantRepository.GetByIdAsync(request.TenantId, cancellationToken).ConfigureAwait(false); }
 }

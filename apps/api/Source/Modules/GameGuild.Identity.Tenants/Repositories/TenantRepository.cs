@@ -1,5 +1,3 @@
-using GameGuild.Abstractions;
-using GameGuild.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace GameGuild.Identity.Tenants;
@@ -154,7 +152,7 @@ public class TenantRepository(IApplicationDbContext context) : ITenantRepository
                 Metadata = a.Metadata ?? new Dictionary<string, string>()
             })
             .ToListAsync(cancellationToken)
-            .ConfigureAwait(false);
+            ;
 
         return new PagedResult<TenantAuditLogEntry>(items, totalCount, skip, pageSize);
     }

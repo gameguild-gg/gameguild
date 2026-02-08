@@ -87,7 +87,7 @@ public class ApproveJitElevationHandler(IJitElevationService service)
             request.ReviewerId,
             request.Comments,
             cancellationToken
-        );
+        ).ConfigureAwait(false);
     }
 }
 
@@ -123,7 +123,7 @@ public class DenyJitElevationHandler(IJitElevationService service)
             request.ReviewerId,
             request.Comments,
             cancellationToken
-        );
+        ).ConfigureAwait(false);
     }
 }
 
@@ -159,7 +159,7 @@ public class RevokeJitElevationHandler(IJitElevationService service)
             request.RevokedBy,
             request.Reason,
             cancellationToken
-        );
+        ).ConfigureAwait(false);
     }
 }
 
@@ -176,6 +176,6 @@ public class CleanupExpiredElevationsHandler(IJitElevationService service)
         CancellationToken cancellationToken
     )
     {
-        return await service.CleanupExpiredElevationsAsync(cancellationToken);
+        return await service.CleanupExpiredElevationsAsync(cancellationToken).ConfigureAwait(false);
     }
 }

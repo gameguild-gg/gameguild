@@ -67,7 +67,7 @@ public sealed class RequireAllPermissionsRuleEvaluator : IRuleEvaluator
 
         // Use batch permission check (single DB call)
         var result = await _permissionService.HasAllPermissionsAsync(
-            userId.Value, tenantId, requiredPermissions, cancellationToken);
+            userId.Value, tenantId, requiredPermissions, cancellationToken).ConfigureAwait(false);
 
         if (!result.HasAllRequired)
         {
@@ -143,7 +143,7 @@ public sealed class RequireAnyPermissionRuleEvaluator : IRuleEvaluator
 
         // Use batch permission check (single DB call)
         var result = await _permissionService.HasAnyPermissionAsync(
-            userId.Value, tenantId, allowedPermissions, cancellationToken);
+            userId.Value, tenantId, allowedPermissions, cancellationToken).ConfigureAwait(false);
 
         if (!result.HasAnyRequired)
         {

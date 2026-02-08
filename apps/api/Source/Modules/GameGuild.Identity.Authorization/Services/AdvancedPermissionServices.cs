@@ -53,7 +53,7 @@ public class JitElevationService(
             Status = ElevationRequestStatus.Pending
         };
 
-        var result = await _repository.CreateAsync(request, cancellationToken);
+        var result = await _repository.CreateAsync(request, cancellationToken).ConfigureAwait(false);
 
         await _auditService.LogPermissionChangeAsync(
             PermissionOperationType.ElevateJIT,
@@ -83,13 +83,13 @@ public class JitElevationService(
         CancellationToken cancellationToken = default
     )
     {
-        var request = await _repository.GetByIdAsync(requestId, cancellationToken);
+        var request = await _repository.GetByIdAsync(requestId, cancellationToken).ConfigureAwait(false);
 
         if (request == null)
             throw new InvalidOperationException($"Elevation request {requestId} not found");
 
         request.Approve(reviewerId, comments);
-        await _repository.UpdateAsync(request, cancellationToken);
+        await _repository.UpdateAsync(request, cancellationToken).ConfigureAwait(false);
 
         _logger.LogInformation(
             "Reviewer {ReviewerId} approved elevation request {RequestId}",
@@ -107,13 +107,13 @@ public class JitElevationService(
         CancellationToken cancellationToken = default
     )
     {
-        var request = await _repository.GetByIdAsync(requestId, cancellationToken);
+        var request = await _repository.GetByIdAsync(requestId, cancellationToken).ConfigureAwait(false);
 
         if (request == null)
             throw new InvalidOperationException($"Elevation request {requestId} not found");
 
         request.Deny(reviewerId, comments);
-        await _repository.UpdateAsync(request, cancellationToken);
+        await _repository.UpdateAsync(request, cancellationToken).ConfigureAwait(false);
 
         _logger.LogInformation(
             "Reviewer {ReviewerId} denied elevation request {RequestId}",
@@ -131,12 +131,12 @@ public class JitElevationService(
         CancellationToken cancellationToken = default
     )
     {
-        var request = await _repository.GetByIdAsync(requestId, cancellationToken);
+        var request = await _repository.GetByIdAsync(requestId, cancellationToken).ConfigureAwait(false);
 
         if (request == null) return false;
 
         request.Revoke(revokedBy, reason);
-        await _repository.UpdateAsync(request, cancellationToken);
+        await _repository.UpdateAsync(request, cancellationToken).ConfigureAwait(false);
 
         _logger.LogInformation(
             "Elevation {RequestId} revoked by {RevokedBy}",
@@ -177,7 +177,7 @@ public class JitElevationService(
         CancellationToken cancellationToken = default
     )
     {
-        var activeElevations = await _repository.GetActiveByUserAsync(userId, tenantId, cancellationToken);
+        var activeElevations = await _repository.GetActiveByUserAsync(userId, tenantId, cancellationToken).ConfigureAwait(false);
 
         return activeElevations.Any(e =>
             e.Permission == permission &&
@@ -188,12 +188,12 @@ public class JitElevationService(
 
     public async Task<int> CleanupExpiredElevationsAsync(CancellationToken cancellationToken = default)
     {
-        var expiredRequests = await _repository.GetExpiredElevationsAsync(cancellationToken);
+        var expiredRequests = await _repository.GetExpiredElevationsAsync(cancellationToken).ConfigureAwait(false);
 
         foreach (var request in expiredRequests)
         {
             request.MarkExpired();
-            await _repository.UpdateAsync(request, cancellationToken);
+            await _repository.UpdateAsync(request, cancellationToken).ConfigureAwait(false);
         }
 
         _logger.LogInformation("Marked {Count} elevations as expired", expiredRequests.Count);
@@ -243,7 +243,7 @@ public class PermissionDelegationService(
             IsActive = true
         };
 
-        return await _repository.CreateAsync(delegation, cancellationToken);
+        return await _repository.CreateAsync(delegation, cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<bool> RevokeDelegationAsync(
@@ -251,12 +251,12 @@ public class PermissionDelegationService(
         CancellationToken cancellationToken = default
     )
     {
-        var delegation = await _repository.GetByIdAsync(delegationId, cancellationToken);
+        var delegation = await _repository.GetByIdAsync(delegationId, cancellationToken).ConfigureAwait(false);
 
         if (delegation == null) return false;
 
         delegation.Deactivate();
-        await _repository.UpdateAsync(delegation, cancellationToken);
+        await _repository.UpdateAsync(delegation, cancellationToken).ConfigureAwait(false);
 
         return true;
     }
@@ -286,7 +286,7 @@ public class PermissionDelegationService(
         CancellationToken cancellationToken = default
     )
     {
-        var delegations = await _repository.GetActiveByDelegateAsync(delegateUserId, tenantId, cancellationToken);
+        var delegations = await _repository.GetActiveByDelegateAsync(delegateUserId, tenantId, cancellationToken).ConfigureAwait(false);
 
         return delegations.Any(d =>
             d.DelegatedPermissions.Contains(permission) &&
@@ -300,24 +300,24 @@ public class PermissionDelegationService(
         CancellationToken cancellationToken = default
     )
     {
-        var delegation = await _repository.GetByIdAsync(delegationId, cancellationToken);
+        var delegation = await _repository.GetByIdAsync(delegationId, cancellationToken).ConfigureAwait(false);
 
         if (delegation == null) return false;
 
         delegation.RecordUsage();
-        await _repository.UpdateAsync(delegation, cancellationToken);
+        await _repository.UpdateAsync(delegation, cancellationToken).ConfigureAwait(false);
 
         return true;
     }
 
     public async Task<int> CleanupExpiredDelegationsAsync(CancellationToken cancellationToken = default)
     {
-        var expiredDelegations = await _repository.GetExpiredDelegationsAsync(cancellationToken);
+        var expiredDelegations = await _repository.GetExpiredDelegationsAsync(cancellationToken).ConfigureAwait(false);
 
         foreach (var delegation in expiredDelegations)
         {
             delegation.Deactivate();
-            await _repository.UpdateAsync(delegation, cancellationToken);
+            await _repository.UpdateAsync(delegation, cancellationToken).ConfigureAwait(false);
         }
 
         _logger.LogInformation("Cleaned up {Count} expired delegations", expiredDelegations.Count);
@@ -359,7 +359,7 @@ public class SoDService(
         CancellationToken cancellationToken = default
     )
     {
-        await _ruleRepository.DeleteAsync(ruleId, cancellationToken);
+        await _ruleRepository.DeleteAsync(ruleId, cancellationToken).ConfigureAwait(false);
         return true;
     }
 
@@ -384,12 +384,12 @@ public class SoDService(
         CancellationToken cancellationToken = default
     )
     {
-        var rules = await _ruleRepository.GetActiveRulesAsync(tenantId, cancellationToken);
+        var rules = await _ruleRepository.GetActiveRulesAsync(tenantId, cancellationToken).ConfigureAwait(false);
         var violations = new List<SoDViolation>();
 
         foreach (var rule in rules)
         {
-            var hasConflict = await CheckRuleViolationAsync(rule, userId, tenantId, cancellationToken);
+            var hasConflict = await CheckRuleViolationAsync(rule, userId, tenantId, cancellationToken).ConfigureAwait(false);
 
             if (hasConflict)
             {
@@ -403,7 +403,7 @@ public class SoDService(
                     ViolationDetails = $"{rule.Name}: {rule.Description}"
                 };
                 violations.Add(violation);
-                await _violationRepository.CreateAsync(violation, cancellationToken);
+                await _violationRepository.CreateAsync(violation, cancellationToken).ConfigureAwait(false);
             }
         }
 
@@ -429,13 +429,13 @@ public class SoDService(
         CancellationToken cancellationToken = default
     )
     {
-        var violation = await _violationRepository.GetByIdAsync(violationId, cancellationToken);
+        var violation = await _violationRepository.GetByIdAsync(violationId, cancellationToken).ConfigureAwait(false);
 
         if (violation == null)
             throw new InvalidOperationException($"Violation {violationId} not found");
 
         violation.Resolve(resolvedBy, action, notes);
-        await _violationRepository.UpdateAsync(violation, cancellationToken);
+        await _violationRepository.UpdateAsync(violation, cancellationToken).ConfigureAwait(false);
 
         return violation;
     }
@@ -447,13 +447,13 @@ public class SoDService(
         CancellationToken cancellationToken = default
     )
     {
-        var violation = await _violationRepository.GetByIdAsync(violationId, cancellationToken);
+        var violation = await _violationRepository.GetByIdAsync(violationId, cancellationToken).ConfigureAwait(false);
 
         if (violation == null)
             throw new InvalidOperationException($"Violation {violationId} not found");
 
         violation.MarkAsException(approvedBy, justification);
-        await _violationRepository.UpdateAsync(violation, cancellationToken);
+        await _violationRepository.UpdateAsync(violation, cancellationToken).ConfigureAwait(false);
 
         return violation;
     }
@@ -463,13 +463,13 @@ public class SoDService(
         CancellationToken cancellationToken = default
     )
     {
-        var violation = await _violationRepository.GetByIdAsync(violationId, cancellationToken);
+        var violation = await _violationRepository.GetByIdAsync(violationId, cancellationToken).ConfigureAwait(false);
 
         if (violation == null)
             throw new InvalidOperationException($"Violation {violationId} not found");
 
         violation.Acknowledge();
-        await _violationRepository.UpdateAsync(violation, cancellationToken);
+        await _violationRepository.UpdateAsync(violation, cancellationToken).ConfigureAwait(false);
 
         return violation;
     }
@@ -480,7 +480,8 @@ public class SoDService(
     )
     {
         _logger.LogInformation("Scanning for SoD violations in tenant {TenantId}", tenantId);
-        // TODO: Implement comprehensive scan across all users
+        // PLANNED: Iterate all active SoD rules, load users with matching permission sets,
+        // and call CheckRuleViolationAsync for each user. Requires ISoDRuleRepository.GetActiveRulesAsync.
         await Task.CompletedTask;
         return 0;
     }
@@ -492,7 +493,8 @@ public class SoDService(
         CancellationToken cancellationToken
     )
     {
-        // TODO: Implement actual permission checking logic
+        // PLANNED: Resolve the user's effective permissions and check if any pair matches
+        // the SoD rule's conflicting permission sets. Requires IPermissionResolutionService.
         return Task.FromResult(false);
     }
 }
@@ -521,7 +523,7 @@ public class DelegatedAdminService(
         CancellationToken cancellationToken = default
     )
     {
-        await _repository.DeleteAsync(scopeId, cancellationToken);
+        await _repository.DeleteAsync(scopeId, cancellationToken).ConfigureAwait(false);
         return true;
     }
 
@@ -542,9 +544,24 @@ public class DelegatedAdminService(
         CancellationToken cancellationToken = default
     )
     {
-        var scopes = await _repository.GetByAdminUserAsync(adminUserId, tenantId, cancellationToken);
-        // TODO: Parse AllowedUserIds JSON to extract Guid list
-        return new List<Guid>();
+        var scopes = await _repository.GetByAdminUserAsync(adminUserId, tenantId, cancellationToken).ConfigureAwait(false);
+
+        var managedUsers = new List<Guid>();
+        foreach (var scope in scopes)
+        {
+            if (string.IsNullOrEmpty(scope.AllowedUserIds)) continue;
+            try
+            {
+                var userIds = System.Text.Json.JsonSerializer.Deserialize<List<Guid>>(scope.AllowedUserIds);
+                if (userIds != null) managedUsers.AddRange(userIds);
+            }
+            catch (System.Text.Json.JsonException ex)
+            {
+                _logger.LogWarning(ex, "Failed to parse AllowedUserIds JSON for scope {ScopeId}", scope.Id);
+            }
+        }
+
+        return managedUsers.Distinct().ToList();
     }
 
     public async Task<List<string>> GetManagedResourceTypesAsync(
@@ -553,9 +570,24 @@ public class DelegatedAdminService(
         CancellationToken cancellationToken = default
     )
     {
-        var scopes = await _repository.GetByAdminUserAsync(adminUserId, tenantId, cancellationToken);
-        // TODO: Parse AllowedResourceTypes JSON to extract resource type list
-        return new List<string>();
+        var scopes = await _repository.GetByAdminUserAsync(adminUserId, tenantId, cancellationToken).ConfigureAwait(false);
+
+        var resourceTypes = new List<string>();
+        foreach (var scope in scopes)
+        {
+            if (string.IsNullOrEmpty(scope.AllowedResourceTypes)) continue;
+            try
+            {
+                var types = System.Text.Json.JsonSerializer.Deserialize<List<string>>(scope.AllowedResourceTypes);
+                if (types != null) resourceTypes.AddRange(types);
+            }
+            catch (System.Text.Json.JsonException ex)
+            {
+                _logger.LogWarning(ex, "Failed to parse AllowedResourceTypes JSON for scope {ScopeId}", scope.Id);
+            }
+        }
+
+        return resourceTypes.Distinct().ToList();
     }
 
     public async Task<bool> CanManageUserAsync(
@@ -565,7 +597,7 @@ public class DelegatedAdminService(
         CancellationToken cancellationToken = default
     )
     {
-        var managedUsers = await GetManagedUsersAsync(adminUserId, tenantId, cancellationToken);
+        var managedUsers = await GetManagedUsersAsync(adminUserId, tenantId, cancellationToken).ConfigureAwait(false);
         return managedUsers.Contains(targetUserId);
     }
 
@@ -576,7 +608,7 @@ public class DelegatedAdminService(
         CancellationToken cancellationToken = default
     )
     {
-        var managedResourceTypes = await GetManagedResourceTypesAsync(adminUserId, tenantId, cancellationToken);
+        var managedResourceTypes = await GetManagedResourceTypesAsync(adminUserId, tenantId, cancellationToken).ConfigureAwait(false);
         return managedResourceTypes.Contains(resourceType);
     }
 }

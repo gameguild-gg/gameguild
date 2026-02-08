@@ -9,11 +9,10 @@ namespace GameGuild.Features;
 /// Controller for managing tenant capabilities and entitlements.
 /// Provides endpoints to query and manage capability states.
 /// </summary>
-[ApiController]
 [ApiVersion("1.0")]
 [Route("v{version:apiVersion}/tenants/{tenantId:guid}/capabilities")]
 [Authorize]
-public sealed class CapabilitiesController : ControllerBase
+public sealed class CapabilitiesController : BaseApiController
 {
     private readonly ICapabilityService _capabilityService;
 

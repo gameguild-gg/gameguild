@@ -10,11 +10,10 @@ namespace GameGuild.Identity.Users;
 /// <summary>
 ///     Controller for managing user profiles and social links
 /// </summary>
-[ApiController]
 [ApiVersion("1.0")]
 [Tags("users/profiles")]
 [Authorize]
-public sealed class UserProfilesController(ISender sender) : ControllerBase
+public sealed class UserProfilesController(ISender sender) : BaseApiController
 {
     /// <summary>
     ///     Find all user profiles with pagination, search, and sorting
@@ -22,7 +21,7 @@ public sealed class UserProfilesController(ISender sender) : ControllerBase
     [HttpGet("v{version:apiVersion}/users/profiles")]
     [Authorize(Policy = Policies.UsersRead)]
     [EndpointSummary("Find all user profiles with pagination, search, and sorting")]
-    [ProducesResponseType<Models.PagedResult<UserProfileDto>>(StatusCodes.Status200OK)]
+    [ProducesResponseType<PagedResult<UserProfileDto>>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> GetProfiles(
         [FromQuery] int page = 1,

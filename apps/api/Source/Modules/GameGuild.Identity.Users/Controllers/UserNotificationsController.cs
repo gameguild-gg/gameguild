@@ -10,11 +10,10 @@ namespace GameGuild.Identity.Users;
 /// <summary>
 ///     Controller for managing user notifications
 /// </summary>
-[ApiController]
 [ApiVersion("1.0")]
 [Tags("users/notifications")]
 [Authorize]
-public sealed class UserNotificationsController(ISender sender) : ControllerBase
+public sealed class UserNotificationsController(ISender sender) : BaseApiController
 {
     /// <summary>
     ///     Get user notifications with pagination, search, and sorting
@@ -22,7 +21,7 @@ public sealed class UserNotificationsController(ISender sender) : ControllerBase
     [HttpGet("v{version:apiVersion}/users/{userId:guid}/notifications")]
     [Authorize(Policy = Policies.UsersReadSelf)]
     [EndpointSummary("Get user notifications with pagination, search, and sorting")]
-    [ProducesResponseType<Models.PagedResult<UserNotificationDto>>(StatusCodes.Status200OK)]
+    [ProducesResponseType<PagedResult<UserNotificationDto>>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetNotifications(
         Guid userId,

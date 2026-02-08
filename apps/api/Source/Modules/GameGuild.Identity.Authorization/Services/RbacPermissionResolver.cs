@@ -1,4 +1,3 @@
-using GameGuild.Abstractions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -67,14 +66,14 @@ public class DynamicRoleRepository(IApplicationDbContext context) : IDynamicRole
     public async Task<DynamicRole> CreateAsync(DynamicRole role, CancellationToken ct = default)
     {
         DbSet.Add(role);
-        await context.SaveChangesAsync(ct);
+        await context.SaveChangesAsync(ct).ConfigureAwait(false);
         return role;
     }
 
     public async Task UpdateAsync(DynamicRole role, CancellationToken ct = default)
     {
         DbSet.Update(role);
-        await context.SaveChangesAsync(ct);
+        await context.SaveChangesAsync(ct).ConfigureAwait(false);
     }
 
     public async Task DeleteAsync(Guid id, CancellationToken ct = default)
@@ -83,21 +82,21 @@ public class DynamicRoleRepository(IApplicationDbContext context) : IDynamicRole
         if (role != null)
         {
             DbSet.Remove(role);
-            await context.SaveChangesAsync(ct);
+            await context.SaveChangesAsync(ct).ConfigureAwait(false);
         }
     }
 
     public async Task<IReadOnlyList<DynamicRole>> GetRoleHierarchyAsync(Guid roleId, CancellationToken ct = default)
     {
         var hierarchy = new List<DynamicRole>();
-        var currentRole = await GetByIdAsync(roleId, ct);
+        var currentRole = await GetByIdAsync(roleId, ct).ConfigureAwait(false);
         
         while (currentRole != null)
         {
             hierarchy.Add(currentRole);
             if (currentRole.ParentRoleId.HasValue)
             {
-                currentRole = await GetByIdAsync(currentRole.ParentRoleId.Value, ct);
+                currentRole = await GetByIdAsync(currentRole.ParentRoleId.Value, ct).ConfigureAwait(false);
             }
             else
             {
@@ -133,13 +132,13 @@ public class DynamicRoleAssignmentRepository(IApplicationDbContext context) : ID
             .Where(a => a.UserId == userId && a.TenantId == tenantId && a.IsActive)
             .Where(a => !a.StartsAt.HasValue || a.StartsAt.Value <= now)
             .Where(a => !a.ExpiresAt.HasValue || a.ExpiresAt.Value > now)
-            .ToListAsync(ct);
+            .ToListAsync(ct).ConfigureAwait(false);
     }
 
     public async Task<DynamicRoleAssignment> CreateAsync(DynamicRoleAssignment assignment, CancellationToken ct = default)
     {
         DbSet.Add(assignment);
-        await context.SaveChangesAsync(ct);
+        await context.SaveChangesAsync(ct).ConfigureAwait(false);
         return assignment;
     }
 
@@ -149,7 +148,7 @@ public class DynamicRoleAssignmentRepository(IApplicationDbContext context) : ID
         if (assignment != null)
         {
             DbSet.Remove(assignment);
-            await context.SaveChangesAsync(ct);
+            await context.SaveChangesAsync(ct).ConfigureAwait(false);
         }
     }
 
@@ -202,14 +201,14 @@ public class RbacPermissionResolver(
         var contributions = new List<RoleContribution>();
 
         // Get valid role assignments for the user
-        var assignments = await assignmentRepository.GetValidByUserAsync(userId, tenantId, ct);
+        var assignments = await assignmentRepository.GetValidByUserAsync(userId, tenantId, ct).ConfigureAwait(false);
 
         foreach (var assignment in assignments)
         {
             if (assignment.Role == null || !assignment.Role.IsActive) continue;
 
             // Get role hierarchy (current role + all parent roles)
-            var hierarchy = await roleRepository.GetRoleHierarchyAsync(assignment.RoleId, ct);
+            var hierarchy = await roleRepository.GetRoleHierarchyAsync(assignment.RoleId, ct).ConfigureAwait(false);
 
             foreach (var role in hierarchy)
             {

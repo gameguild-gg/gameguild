@@ -1,4 +1,4 @@
-﻿using GameGuild.CQRS;
+using GameGuild.CQRS;
 
 namespace GameGuild.Identity.Tenants;
 
@@ -9,14 +9,14 @@ public class ArchiveTenantCommandHandler(ITenantRepository tenantRepository) : I
 {
     public async Task<ArchiveTenantResponse> Handle(ArchiveTenantCommand request, CancellationToken cancellationToken)
     {
-        var tenant = await tenantRepository.GetByIdAsync(request.TenantId, cancellationToken);
+        var tenant = await tenantRepository.GetByIdAsync(request.TenantId, cancellationToken).ConfigureAwait(false);
 
         if (tenant == null) { return new ArchiveTenantResponse { Success = false, Message = $"Tenant with ID {request.TenantId} not found", TenantId = request.TenantId }; }
 
         if (tenant.IsArchived) { return new ArchiveTenantResponse { Success = true, Message = "Tenant is already archived", TenantId = request.TenantId }; }
 
         tenant.Archive(request.Reason);
-        await tenantRepository.UpdateAsync(tenant, cancellationToken);
+        await tenantRepository.UpdateAsync(tenant, cancellationToken).ConfigureAwait(false);
 
         return new ArchiveTenantResponse { Success = true, Message = "Tenant archived successfully", TenantId = request.TenantId };
     }

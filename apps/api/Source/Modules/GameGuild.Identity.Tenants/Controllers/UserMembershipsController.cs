@@ -15,11 +15,10 @@ namespace GameGuild.Identity.Tenants;
 ///     This controller is in the Tenants module but serves user-centric endpoints
 ///     to maintain proper module boundaries while providing intuitive API paths.
 /// </remarks>
-[ApiController]
 [ApiVersion("1.0")]
 [Tags("users/memberships")]
 [Authorize]
-public sealed class UserMembershipsController(ISender sender) : ControllerBase
+public sealed class UserMembershipsController(ISender sender) : BaseApiController
 {
     /// <summary>
     ///     Get all tenant memberships for a user.

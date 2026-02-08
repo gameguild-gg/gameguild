@@ -5,9 +5,9 @@ namespace GameGuild.Identity.Users;
 /// <summary>
 ///     Query handler for getting users with pagination
 /// </summary>
-public class GetUsersPagedQueryHandler(IUserRepository userRepository) : IQueryHandler<GetUsersPagedQuery, Models.PagedResult<UserDto>>
+public class GetUsersPagedQueryHandler(IUserRepository userRepository) : IQueryHandler<GetUsersPagedQuery, PagedResult<UserDto>>
 {
-    public async Task<Models.PagedResult<UserDto>> Handle(GetUsersPagedQuery request, CancellationToken cancellationToken)
+    public async Task<PagedResult<UserDto>> Handle(GetUsersPagedQuery request, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
 
@@ -15,6 +15,6 @@ public class GetUsersPagedQueryHandler(IUserRepository userRepository) : IQueryH
 
         var userDtos = users.Select(user => new UserDto(user.Id, user.Email, user.Name, user.CreatedAt, user.UpdatedAt, user.IsActive, user.PhoneNumber, user.LastSeenAt)).ToList();
 
-        return new Models.PagedResult<UserDto>(userDtos, totalCount, request.PageNumber, request.PageSize);
+        return new PagedResult<UserDto>(userDtos, totalCount, request.PageNumber, request.PageSize);
     }
 }

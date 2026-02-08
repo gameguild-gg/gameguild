@@ -19,7 +19,7 @@ public class GetSoDRuleByIdHandler(ISoDService service)
         CancellationToken cancellationToken
     )
     {
-        return await service.GetRuleByIdAsync(request.RuleId, cancellationToken);
+        return await service.GetRuleByIdAsync(request.RuleId, cancellationToken).ConfigureAwait(false);
     }
 }
 
@@ -36,7 +36,7 @@ public class GetSoDRulesHandler(ISoDService service)
         CancellationToken cancellationToken
     )
     {
-        return await service.GetRulesForTenantAsync(request.TenantId, cancellationToken);
+        return await service.GetRulesForTenantAsync(request.TenantId, cancellationToken).ConfigureAwait(false);
     }
 }
 
@@ -53,7 +53,7 @@ public class GetActiveSoDRulesHandler(ISoDService service)
         CancellationToken cancellationToken
     )
     {
-        return await service.GetActiveRulesAsync(request.TenantId, cancellationToken);
+        return await service.GetActiveRulesAsync(request.TenantId, cancellationToken).ConfigureAwait(false);
     }
 }
 
@@ -70,7 +70,7 @@ public class DetectSoDViolationsHandler(ISoDService service)
         CancellationToken cancellationToken
     )
     {
-        return await service.DetectViolationsAsync(request.UserId, request.TenantId, cancellationToken);
+        return await service.DetectViolationsAsync(request.UserId, request.TenantId, cancellationToken).ConfigureAwait(false);
     }
 }
 
@@ -87,7 +87,7 @@ public class GetUserSoDViolationsHandler(ISoDService service)
         CancellationToken cancellationToken
     )
     {
-        return await service.GetViolationsForUserAsync(request.UserId, request.TenantId, cancellationToken);
+        return await service.GetViolationsForUserAsync(request.UserId, request.TenantId, cancellationToken).ConfigureAwait(false);
     }
 }
 
@@ -104,6 +104,6 @@ public class GetActiveSoDViolationsHandler(ISoDService service)
         CancellationToken cancellationToken
     )
     {
-        return await service.GetActiveViolationsAsync(request.TenantId, cancellationToken);
+        return await service.GetActiveViolationsAsync(request.TenantId, cancellationToken).ConfigureAwait(false);
     }
 }

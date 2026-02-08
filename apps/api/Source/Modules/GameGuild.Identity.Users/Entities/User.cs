@@ -1,6 +1,5 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using GameGuild.Entities;
 using GameGuild.Identity.Tenants;
 using Microsoft.EntityFrameworkCore;
 

@@ -184,6 +184,7 @@ public sealed class HybridPermissionCache : IHybridPermissionCache
             {
                 // L2 failure should not break the application
                 _logger.LogWarning(ex, "L2 cache read failed for key {Key}, falling back to database", key);
+                throw;
             }
         }
 
@@ -221,6 +222,7 @@ public sealed class HybridPermissionCache : IHybridPermissionCache
             catch (Exception ex)
             {
                 _logger.LogWarning(ex, "L2 cache read failed for key {Key}", key);
+                throw;
             }
         }
 
@@ -269,6 +271,7 @@ public sealed class HybridPermissionCache : IHybridPermissionCache
             catch (Exception ex)
             {
                 _logger.LogWarning(ex, "L2 cache write failed for key {Key}", key);
+                throw;
             }
         }
     }
@@ -291,6 +294,7 @@ public sealed class HybridPermissionCache : IHybridPermissionCache
             catch (Exception ex)
             {
                 _logger.LogWarning(ex, "L2 cache remove failed for key {Key}", key);
+                throw;
             }
         }
     }

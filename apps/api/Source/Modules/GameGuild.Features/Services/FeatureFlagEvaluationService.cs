@@ -48,7 +48,7 @@ public class FeatureFlagEvaluationService(
         try
         {
             // Get feature flag from repository
-            var featureFlag = await _queryRepository.GetByKeyAsync(featureKey, cancellationToken);
+            var featureFlag = await _queryRepository.GetByKeyAsync(featureKey, cancellationToken).ConfigureAwait(false);
 
             if (featureFlag == null)
             {
@@ -70,7 +70,7 @@ public class FeatureFlagEvaluationService(
 
             if (strategy != null)
             {
-                var result = await strategy.EvaluateAsync(featureFlag, context, cancellationToken);
+                var result = await strategy.EvaluateAsync(featureFlag, context, cancellationToken).ConfigureAwait(false);
                 result.FeatureKey = featureKey;
                 result.EvaluatedAt = startTime;
 
@@ -118,13 +118,13 @@ public class FeatureFlagEvaluationService(
         // Parallel evaluation for better performance
         var tasks = featureKeys.Select(async key =>
             {
-                var result = await EvaluateAsync(key, request.Context, cancellationToken);
+                var result = await EvaluateAsync(key, request.Context, cancellationToken).ConfigureAwait(false);
 
                 return new { Key = key, Result = result };
             }
         );
 
-        var results = await Task.WhenAll(tasks);
+        var results = await Task.WhenAll(tasks).ConfigureAwait(false);
 
         foreach (var result in results) { response.Results[result.Key] = result.Result; }
 
@@ -134,7 +134,7 @@ public class FeatureFlagEvaluationService(
     /// <inheritdoc />
     public async Task<bool> IsEnabledAsync(string featureKey, FeatureContext context, CancellationToken cancellationToken = default)
     {
-        var result = await EvaluateAsync(featureKey, context, cancellationToken);
+        var result = await EvaluateAsync(featureKey, context, cancellationToken).ConfigureAwait(false);
 
         return result.IsEnabled;
     }
@@ -142,7 +142,7 @@ public class FeatureFlagEvaluationService(
     /// <inheritdoc />
     public async Task<T> GetValueAsync<T>(string featureKey, FeatureContext context, T defaultValue, CancellationToken cancellationToken = default)
     {
-        var result = await EvaluateAsync(featureKey, context, cancellationToken);
+        var result = await EvaluateAsync(featureKey, context, cancellationToken).ConfigureAwait(false);
 
         if (!result.IsEnabled || string.IsNullOrEmpty(result.Value)) { return defaultValue; }
 
@@ -176,17 +176,17 @@ public class FeatureFlagEvaluationService(
         try
         {
             var environment = context.Environment;
-            var allFeatures = await _queryRepository.GetByEnvironmentAsync(environment, cancellationToken);
+            var allFeatures = await _queryRepository.GetByEnvironmentAsync(environment, cancellationToken).ConfigureAwait(false);
 
             var evaluationTasks = allFeatures.Select(async feature =>
                 {
-                    var isEnabled = await IsEnabledAsync(feature.Key, context, cancellationToken);
+                    var isEnabled = await IsEnabledAsync(feature.Key, context, cancellationToken).ConfigureAwait(false);
 
                     return new { feature.Key, IsEnabled = isEnabled };
                 }
             );
 
-            var results = await Task.WhenAll(evaluationTasks);
+            var results = await Task.WhenAll(evaluationTasks).ConfigureAwait(false);
 
             return results.Where(r => r.IsEnabled).Select(r => r.Key).ToList();
         }

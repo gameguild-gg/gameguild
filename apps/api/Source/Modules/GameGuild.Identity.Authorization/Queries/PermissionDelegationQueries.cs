@@ -19,7 +19,7 @@ public class GetDelegationByIdHandler(IPermissionDelegationService service)
         CancellationToken cancellationToken
     )
     {
-        return await service.GetDelegationByIdAsync(request.DelegationId, cancellationToken);
+        return await service.GetDelegationByIdAsync(request.DelegationId, cancellationToken).ConfigureAwait(false);
     }
 }
 
@@ -36,7 +36,7 @@ public class GetActiveDelegationsHandler(IPermissionDelegationService service)
         CancellationToken cancellationToken
     )
     {
-        return await service.GetActiveDelegationsAsync(request.DelegateUserId, request.TenantId, cancellationToken);
+        return await service.GetActiveDelegationsAsync(request.DelegateUserId, request.TenantId, cancellationToken).ConfigureAwait(false);
     }
 }
 
@@ -53,7 +53,7 @@ public class GetDelegationsByDelegatorHandler(IPermissionDelegationService servi
         CancellationToken cancellationToken
     )
     {
-        return await service.GetDelegationsByDelegatorAsync(request.DelegatorUserId, request.TenantId, cancellationToken);
+        return await service.GetDelegationsByDelegatorAsync(request.DelegatorUserId, request.TenantId, cancellationToken).ConfigureAwait(false);
     }
 }
 

@@ -103,6 +103,7 @@ public sealed class MemoryPolicyCache : IPolicyCache
             {
                 _logger?.LogWarning(ex, "Failed to store policy in distributed cache: {Key}", key);
                 // Continue - memory cache still works
+                throw;
             }
         }
     }
@@ -127,6 +128,7 @@ public sealed class MemoryPolicyCache : IPolicyCache
                     catch (Exception ex)
                     {
                         _logger?.LogWarning(ex, "Failed to remove policy from distributed cache: {Key}", key);
+                        throw;
                     }
                 }
             }
@@ -156,6 +158,7 @@ public sealed class MemoryPolicyCache : IPolicyCache
                     catch (Exception ex)
                     {
                         _logger?.LogWarning(ex, "Failed to remove policy from distributed cache: {Key}", key);
+                        throw;
                     }
                 }
             }

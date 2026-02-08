@@ -1,4 +1,3 @@
-using GameGuild.Abstractions;
 using GameGuild.Identity.Authorization.Configuration;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;

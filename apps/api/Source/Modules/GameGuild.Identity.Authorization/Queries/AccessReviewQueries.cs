@@ -19,7 +19,7 @@ public class GetAccessReviewCampaignByIdHandler(IAccessReviewService service)
         CancellationToken cancellationToken
     )
     {
-        return await service.GetCampaignByIdAsync(request.CampaignId, cancellationToken);
+        return await service.GetCampaignByIdAsync(request.CampaignId, cancellationToken).ConfigureAwait(false);
     }
 }
 
@@ -36,7 +36,7 @@ public class GetActiveAccessReviewCampaignsHandler(IAccessReviewService service)
         CancellationToken cancellationToken
     )
     {
-        return await service.GetActiveCampaignsAsync(request.TenantId, cancellationToken);
+        return await service.GetActiveCampaignsAsync(request.TenantId, cancellationToken).ConfigureAwait(false);
     }
 }
 
@@ -53,6 +53,6 @@ public class GetPendingReviewItemsHandler(IAccessReviewService service)
         CancellationToken cancellationToken
     )
     {
-        return await service.GetPendingItemsForReviewerAsync(request.ReviewerId, request.TenantId, cancellationToken);
+        return await service.GetPendingItemsForReviewerAsync(request.ReviewerId, request.TenantId, cancellationToken).ConfigureAwait(false);
     }
 }

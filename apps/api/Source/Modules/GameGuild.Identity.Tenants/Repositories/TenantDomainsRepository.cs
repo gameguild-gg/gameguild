@@ -1,4 +1,3 @@
-using GameGuild.Abstractions;
 using Microsoft.EntityFrameworkCore;
 
 namespace GameGuild.Identity.Tenants;
@@ -22,7 +21,7 @@ public class TenantDomainsRepository(IApplicationDbContext context) : ITenantDom
             .ThenBy(td => td.TopLevelDomain)
             .ThenBy(td => td.Subdomain)
             .ToListAsync(cancellationToken)
-            .ConfigureAwait(false);
+            ;
     }
 
     public async Task<TenantDomain?> GetByDomainAsync(string domain, CancellationToken cancellationToken = default)

@@ -1,4 +1,3 @@
-using GameGuild.Abstractions;
 using GameGuild.CQRS.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -50,7 +49,7 @@ public class ResourcePermissionService : IResourcePermissionService
             };
 
             _dbContext.Set<ResourceInvitation>().Add(invitation);
-            await _dbContext.SaveChangesAsync(cancellationToken);
+            await _dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
             _logger.LogInformation(
                 "Created resource invitation for {Email} to access {ResourceType}/{ResourceId}",
@@ -98,7 +97,7 @@ public class ResourcePermissionService : IResourcePermissionService
                 permission.ExpiresAt = request.ExpiresAt.Value;
             }
 
-            await _dbContext.SaveChangesAsync(cancellationToken);
+            await _dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
             _logger.LogInformation(
                 "Updated permissions for user {UserId} on {ResourceType}/{ResourceId}",
@@ -139,7 +138,7 @@ public class ResourcePermissionService : IResourcePermissionService
             }
 
             permission.Revoke(removedByUserId, reason);
-            await _dbContext.SaveChangesAsync(cancellationToken);
+            await _dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
             _logger.LogInformation(
                 "Removed access for user {UserId} from {ResourceType}/{ResourceId}",
@@ -255,7 +254,7 @@ public class ResourcePermissionService : IResourcePermissionService
         CancellationToken cancellationToken = default)
     {
         var invitation = await _dbContext.Set<ResourceInvitation>()
-            .FirstOrDefaultAsync(i => i.Id == invitationId, cancellationToken);
+            .FirstOrDefaultAsync(i => i.Id == invitationId, cancellationToken).ConfigureAwait(false);
 
         if (invitation == null || !invitation.Accept(acceptingUserId))
         {
@@ -276,7 +275,7 @@ public class ResourcePermissionService : IResourcePermissionService
         };
 
         _dbContext.Set<ResourceUserPermission>().Add(permission);
-        await _dbContext.SaveChangesAsync(cancellationToken);
+        await _dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         _logger.LogInformation(
             "Invitation {InvitationId} accepted by user {UserId}",
@@ -291,14 +290,14 @@ public class ResourcePermissionService : IResourcePermissionService
         CancellationToken cancellationToken = default)
     {
         var invitation = await _dbContext.Set<ResourceInvitation>()
-            .FirstOrDefaultAsync(i => i.Id == invitationId, cancellationToken);
+            .FirstOrDefaultAsync(i => i.Id == invitationId, cancellationToken).ConfigureAwait(false);
 
         if (invitation == null || !invitation.Decline(reason))
         {
             return false;
         }
 
-        await _dbContext.SaveChangesAsync(cancellationToken);
+        await _dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         return true;
     }
 
@@ -308,14 +307,14 @@ public class ResourcePermissionService : IResourcePermissionService
         CancellationToken cancellationToken = default)
     {
         var invitation = await _dbContext.Set<ResourceInvitation>()
-            .FirstOrDefaultAsync(i => i.Id == invitationId, cancellationToken);
+            .FirstOrDefaultAsync(i => i.Id == invitationId, cancellationToken).ConfigureAwait(false);
 
         if (invitation == null || !invitation.Revoke(revokedByUserId))
         {
             return false;
         }
 
-        await _dbContext.SaveChangesAsync(cancellationToken);
+        await _dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         return true;
     }
 
@@ -350,7 +349,7 @@ public class ResourcePermissionService : IResourcePermissionService
             query = query.Where(p => p.ResourceType == resourceType);
         }
 
-        return await query.ToListAsync(cancellationToken);
+        return await query.ToListAsync(cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<BulkShareResult> BulkShareResourceAsync(
@@ -368,7 +367,7 @@ public class ResourcePermissionService : IResourcePermissionService
         foreach (var request in requests)
         {
             var result = await ShareResourceAsync(
-                tenantId, resourceType, resourceId, request, sharedByUserId, cancellationToken);
+                tenantId, resourceType, resourceId, request, sharedByUserId, cancellationToken).ConfigureAwait(false);
 
             results.Add(result);
             if (result.Success)
@@ -409,7 +408,7 @@ public class ResourcePermissionService : IResourcePermissionService
         if (permission != null)
         {
             permission.RecordAccess();
-            await _dbContext.SaveChangesAsync(cancellationToken);
+            await _dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         }
     }
 
@@ -466,7 +465,7 @@ public class ResourcePermissionService : IResourcePermissionService
             };
 
             _dbContext.Set<ResourceUserPermission>().Add(permission);
-            await _dbContext.SaveChangesAsync(cancellationToken);
+            await _dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
             _logger.LogInformation(
                 "Auto-granted owner permissions for user {UserId} on {ResourceType}/{ResourceId}: [{Permissions}]",

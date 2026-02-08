@@ -40,7 +40,7 @@ public class UsageEnforcementMiddleware
         // Skip enforcement for non-tenant requests
         if (actor.TenantId == null)
         {
-            await _next(httpContext);
+            await _next(httpContext).ConfigureAwait(false);
             return;
         }
 
@@ -51,29 +51,29 @@ public class UsageEnforcementMiddleware
         if (path.StartsWith("/health") || path.StartsWith("/api/health") || 
             path.StartsWith("/_") || path.Contains("."))
         {
-            await _next(httpContext);
+            await _next(httpContext).ConfigureAwait(false);
             return;
         }
 
         try
         {
             // Get tenant's active subscription
-            var subscription = await subscriptionQueryService.GetActiveTenantSubscriptionAsync(tenantId);
+            var subscription = await subscriptionQueryService.GetActiveTenantSubscriptionAsync(tenantId).ConfigureAwait(false);
             
             if (subscription == null)
             {
                 _logger.LogWarning("No active subscription found for tenant {TenantId}", tenantId);
-                await _next(httpContext);
+                await _next(httpContext).ConfigureAwait(false);
                 return;
             }
 
             // Get subscription plan
-            var subscriptionPlan = await subscriptionPlanService.GetByIdAsync(subscription.PlanId);
+            var subscriptionPlan = await subscriptionPlanService.GetByIdAsync(subscription.PlanId).ConfigureAwait(false);
             
             if (subscriptionPlan == null)
             {
                 _logger.LogWarning("No subscription plan found for tenant {TenantId}", tenantId);
-                await _next(httpContext);
+                await _next(httpContext).ConfigureAwait(false);
                 return;
             }
 
@@ -119,13 +119,14 @@ public class UsageEnforcementMiddleware
             httpContext.Response.Headers.Append("X-Subscription-Plan", 
                 subscriptionPlan.Name);
 
-            await _next(httpContext);
+            await _next(httpContext).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error enforcing usage limits for tenant {TenantId}", tenantId);
             // Continue execution even if usage enforcement fails
-            await _next(httpContext);
+            await _next(httpContext).ConfigureAwait(false);
+            throw;
         }
     }
 }

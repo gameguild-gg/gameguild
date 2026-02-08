@@ -11,12 +11,11 @@ namespace GameGuild.Identity.Authorization.Controllers;
 /// <summary>
 ///     API controller for Access Review operations
 /// </summary>
-[ApiController]
 [ApiVersion("1.0")]
 [Route("v{version:apiVersion}/access-reviews")]
 [Authorize]
 [Produces("application/json")]
-public class AccessReviewsController(ISender sender) : ControllerBase
+public class AccessReviewsController(ISender sender) : BaseApiController
 {
     // =========================================================================
     // Campaigns

@@ -10,9 +10,9 @@ public class GetDefaultTenantQueryHandler(ITenantRepository tenantRepository) : 
 {
     public async Task<Tenant?> Handle(GetDefaultTenantQuery request, CancellationToken cancellationToken)
     {
-        var queryable = await tenantRepository.GetQueryableAsync(cancellationToken);
+        var queryable = await tenantRepository.GetQueryableAsync(cancellationToken).ConfigureAwait(false);
         return await queryable
             .Where(t => t.IsDefault && t.IsActive)
-            .FirstOrDefaultAsync(cancellationToken);
+            .FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
     }
 }

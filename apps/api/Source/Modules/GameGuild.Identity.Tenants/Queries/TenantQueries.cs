@@ -1,5 +1,4 @@
 using GameGuild.CQRS;
-using GameGuild.Models;
 
 namespace GameGuild.Identity.Tenants;
 
@@ -12,7 +11,7 @@ public record GetTenantAuditLogQuery(
     Guid? ActorId,
     int Page,
     int PageSize
-) : IRequest<GameGuild.Models.PagedResult<TenantAuditLogEntry>>;
+) : IRequest<PagedResult<TenantAuditLogEntry>>;
 
 // Tenant Metadata Queries - Using queries namespace for read operations
 public record GetTenantMetadataQuery(Guid TenantId) : IRequest<TenantMetadataDto?>;

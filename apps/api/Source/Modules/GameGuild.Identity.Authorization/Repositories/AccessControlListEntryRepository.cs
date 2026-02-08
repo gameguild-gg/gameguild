@@ -1,4 +1,3 @@
-using GameGuild.Abstractions;
 using Microsoft.EntityFrameworkCore;
 
 namespace GameGuild.Identity.Authorization;
@@ -34,7 +33,7 @@ public class AccessControlListEntryRepository(IApplicationDbContext context) : I
                      && e.IsActive
                      && (e.ExpiresAt == null || e.ExpiresAt > DateTime.UtcNow),
                 cancellationToken)
-            .ConfigureAwait(false);
+            ;
     }
 
     public async Task<AccessControlListEntry?> GetByPrincipalAndResourceAsync(
@@ -56,7 +55,7 @@ public class AccessControlListEntryRepository(IApplicationDbContext context) : I
                      && e.IsActive
                      && (e.ExpiresAt == null || e.ExpiresAt > DateTime.UtcNow),
                 cancellationToken)
-            .ConfigureAwait(false);
+            ;
     }
 
     public async Task<IReadOnlyList<AccessControlListEntry>> GetByResourceAndPrincipalsAsync(
@@ -122,7 +121,7 @@ public class AccessControlListEntryRepository(IApplicationDbContext context) : I
                         && e.IsActive
                         && (e.ExpiresAt == null || e.ExpiresAt > DateTime.UtcNow))
             .ToListAsync(cancellationToken)
-            .ConfigureAwait(false);
+            ;
     }
 
     public async Task<IReadOnlyList<AccessControlListEntry>> GetByResourceAsync(
@@ -139,7 +138,7 @@ public class AccessControlListEntryRepository(IApplicationDbContext context) : I
                         && e.IsActive
                         && (e.ExpiresAt == null || e.ExpiresAt > DateTime.UtcNow))
             .ToListAsync(cancellationToken)
-            .ConfigureAwait(false);
+            ;
     }
 
     public async Task<IReadOnlyList<AccessControlListEntry>> GetByTenantAsync(
@@ -194,7 +193,7 @@ public class AccessControlListEntryRepository(IApplicationDbContext context) : I
                         && e.ResourceId == resourceId
                         && e.DeletedAt == null)
             .ToListAsync(cancellationToken)
-            .ConfigureAwait(false);
+            ;
 
         foreach (var entry in entries)
         {

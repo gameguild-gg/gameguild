@@ -1,5 +1,4 @@
 using GameGuild.CQRS;
-using GameGuild.Models;
 
 namespace GameGuild.Identity.Tenants;
 
@@ -19,7 +18,7 @@ public class BulkDeleteTenantsCommandHandler(ITenantRepository tenantRepository)
         {
             try
             {
-                var tenant = await tenantRepository.GetByIdAsync(tenantId, cancellationToken);
+                var tenant = await tenantRepository.GetByIdAsync(tenantId, cancellationToken).ConfigureAwait(false);
 
                 if (tenant == null)
                 {
@@ -28,11 +27,11 @@ public class BulkDeleteTenantsCommandHandler(ITenantRepository tenantRepository)
                     continue;
                 }
 
-                if (request.HardDelete) { await tenantRepository.DeleteAsync(tenant, cancellationToken); }
+                if (request.HardDelete) { await tenantRepository.DeleteAsync(tenant, cancellationToken).ConfigureAwait(false); }
                 else
                 {
                     tenant.SoftDelete();
-                    await tenantRepository.UpdateAsync(tenant, cancellationToken);
+                    await tenantRepository.UpdateAsync(tenant, cancellationToken).ConfigureAwait(false);
                 }
 
                 successful++;

@@ -59,7 +59,7 @@ public sealed class PermissionHandler : AuthorizationHandler<PermissionRequireme
                 userId,
                 tenantId,
                 requirement.Permission,
-                CancellationToken.None);
+                CancellationToken.None).ConfigureAwait(false);
 
             if (hasPermission)
             {
@@ -80,6 +80,7 @@ public sealed class PermissionHandler : AuthorizationHandler<PermissionRequireme
         {
             _logger.LogError(ex, "Error checking permission '{Permission}'", requirement.Permission);
             context.Fail(new AuthorizationFailureReason(this, "Error checking permissions"));
+            throw;
         }
     }
 

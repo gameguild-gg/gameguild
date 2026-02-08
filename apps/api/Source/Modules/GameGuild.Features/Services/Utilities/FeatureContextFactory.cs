@@ -109,8 +109,7 @@ public class FeatureContextFactory
     /// </summary>
     private static Guid? GetUserIdFromContext(HttpContext httpContext)
     {
-        // TODO: Implement based on your authentication system
-        // Example: return httpContext.User.GetUserId();
+        // Extract user ID from JWT claims ("sub" or "userId")
         var userIdClaim = httpContext.User.FindFirst("sub")?.Value ?? httpContext.User.FindFirst("userId")?.Value;
 
         return Guid.TryParse(userIdClaim, out var userId) ? userId : null;

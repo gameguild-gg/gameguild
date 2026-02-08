@@ -11,12 +11,11 @@ namespace GameGuild.Identity.Authorization.Controllers;
 /// <summary>
 ///     API controller for Delegated Administration operations
 /// </summary>
-[ApiController]
 [ApiVersion("1.0")]
 [Route("v{version:apiVersion}/delegated-admin")]
 [Authorize]
 [Produces("application/json")]
-public class DelegatedAdminController(ISender sender) : ControllerBase
+public class DelegatedAdminController(ISender sender) : BaseApiController
 {
     /// <summary>
     ///     Grant delegated admin scope to a user

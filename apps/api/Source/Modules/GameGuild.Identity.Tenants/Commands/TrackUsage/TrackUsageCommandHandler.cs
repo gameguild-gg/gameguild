@@ -11,7 +11,7 @@ public class TrackUsageCommandHandler(ITenantRepository tenantRepository, IUsage
     public async Task<TrackUsageResponse> Handle(TrackUsageCommand request, CancellationToken cancellationToken)
     {
         // Verify tenant exists
-        var tenant = await tenantRepository.GetByIdAsync(request.TenantId, cancellationToken);
+        var tenant = await tenantRepository.GetByIdAsync(request.TenantId, cancellationToken).ConfigureAwait(false);
 
         if (tenant == null) { return new TrackUsageResponse { Success = false, Message = $"Tenant with ID {request.TenantId} not found" }; }
 
@@ -27,7 +27,7 @@ public class TrackUsageCommandHandler(ITenantRepository tenantRepository, IUsage
             Metadata = request.Metadata != null ? JsonSerializer.Serialize(request.Metadata) : null
         };
 
-        var trackingId = await usageTrackingService.TrackUsageAsync(usageTracking, cancellationToken);
+        var trackingId = await usageTrackingService.TrackUsageAsync(usageTracking, cancellationToken).ConfigureAwait(false);
 
         return new TrackUsageResponse { Success = true, Message = "Usage tracked successfully", TrackingId = trackingId };
     }

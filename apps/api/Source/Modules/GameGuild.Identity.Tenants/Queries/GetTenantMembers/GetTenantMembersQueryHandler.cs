@@ -9,7 +9,7 @@ public class GetTenantMembersQueryHandler(ITenantMemberRepository memberReposito
 {
     public async Task<GetTenantMembersResponse> Handle(GetTenantMembersQuery request, CancellationToken cancellationToken)
     {
-        var members = await memberRepository.GetByTenantIdAsync(request.TenantId, request.IncludeInactive, cancellationToken);
+        var members = await memberRepository.GetByTenantIdAsync(request.TenantId, request.IncludeInactive, cancellationToken).ConfigureAwait(false);
 
         // Apply role filter if specified
         var filteredMembers = members.AsEnumerable();

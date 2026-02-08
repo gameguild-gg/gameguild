@@ -1,5 +1,4 @@
 using GameGuild.CQRS;
-using GameGuild.Models;
 
 namespace GameGuild.Identity.Tenants;
 
@@ -7,15 +6,15 @@ namespace GameGuild.Identity.Tenants;
 ///     Handler for retrieving tenant audit log entries
 /// </summary>
 public class GetTenantAuditLogQueryHandler(ITenantRepository tenantRepository) 
-    : IRequestHandler<GetTenantAuditLogQuery, GameGuild.Models.PagedResult<TenantAuditLogEntry>>
+    : IRequestHandler<GetTenantAuditLogQuery, PagedResult<TenantAuditLogEntry>>
 {
     /// <summary>
     ///     Handles the audit log query by retrieving filtered and paginated audit entries
     /// </summary>
-    public async Task<GameGuild.Models.PagedResult<TenantAuditLogEntry>> Handle(GetTenantAuditLogQuery request, CancellationToken cancellationToken)
+    public async Task<PagedResult<TenantAuditLogEntry>> Handle(GetTenantAuditLogQuery request, CancellationToken cancellationToken)
     {
         // Verify tenant exists
-        var tenant = await tenantRepository.GetByIdAsync(request.TenantId, cancellationToken);
+        var tenant = await tenantRepository.GetByIdAsync(request.TenantId, cancellationToken).ConfigureAwait(false);
         if (tenant == null)
         {
             throw new KeyNotFoundException($"Tenant with ID '{request.TenantId}' not found");

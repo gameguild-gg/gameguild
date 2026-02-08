@@ -82,7 +82,7 @@ public class TenantMiddleware(
         // Skip tenant resolution for system endpoints
         if (ShouldBypassTenantResolution(path))
         {
-            await next(context);
+            await next(context).ConfigureAwait(false);
             return;
         }
 
@@ -90,7 +90,7 @@ public class TenantMiddleware(
             context,
             mediator,
             tenantDomainsRepository,
-            context.RequestAborted);
+            context.RequestAborted).ConfigureAwait(false);
 
         if (tenant is not null)
         {
@@ -102,7 +102,7 @@ public class TenantMiddleware(
                     userId.Value,
                     tenant.Id,
                     tenantMemberRepository,
-                    context.RequestAborted);
+                    context.RequestAborted).ConfigureAwait(false);
 
                 if (!isMember)
                 {
@@ -117,7 +117,7 @@ public class TenantMiddleware(
                     {
                         error = "Forbidden",
                         message = "You are not a member of the requested tenant"
-                    }, context.RequestAborted);
+                    }, context.RequestAborted).ConfigureAwait(false);
                     return;
                 }
 
@@ -145,7 +145,7 @@ public class TenantMiddleware(
                     tenant.Id,
                     resolutionSource);
 
-                await next(context);
+                await next(context).ConfigureAwait(false);
             }
         }
         else
@@ -153,7 +153,7 @@ public class TenantMiddleware(
             // No tenant resolved - continue without tenant context
             // Individual endpoints can require tenant via [RequireTenant] attribute or check ITenantContext
             logger.LogDebug("No tenant resolved for request to {Path}", path);
-            await next(context);
+            await next(context).ConfigureAwait(false);
         }
     }
 
@@ -181,7 +181,7 @@ public class TenantMiddleware(
         var tenantIdFromHeader = TenantIdExtractor.FromHeader(context, TenantIdHeader);
         if (tenantIdFromHeader.HasValue)
         {
-            var tenant = await mediator.Send(new GetTenantByIdQuery(tenantIdFromHeader.Value), cancellationToken);
+            var tenant = await mediator.Send(new GetTenantByIdQuery(tenantIdFromHeader.Value), cancellationToken).ConfigureAwait(false);
             if (tenant is not null && tenant.IsActive)
             {
                 return (tenant, "Header");
@@ -196,7 +196,7 @@ public class TenantMiddleware(
         var host = TenantIdExtractor.GetHost(context);
         if (!string.IsNullOrWhiteSpace(host) && !TenantIdExtractor.IsLocalhost(host))
         {
-            var tenantDomain = await tenantDomainsRepository.GetByDomainAsync(host, cancellationToken);
+            var tenantDomain = await tenantDomainsRepository.GetByDomainAsync(host, cancellationToken).ConfigureAwait(false);
             if (tenantDomain?.Tenant is not null && tenantDomain.Tenant.IsActive)
             {
                 return (tenantDomain.Tenant, "Domain");
@@ -207,7 +207,7 @@ public class TenantMiddleware(
         var tenantIdFromQuery = TenantIdExtractor.FromQuery(context, TenantIdQueryKey);
         if (tenantIdFromQuery.HasValue)
         {
-            var tenant = await mediator.Send(new GetTenantByIdQuery(tenantIdFromQuery.Value), cancellationToken);
+            var tenant = await mediator.Send(new GetTenantByIdQuery(tenantIdFromQuery.Value), cancellationToken).ConfigureAwait(false);
             if (tenant is not null && tenant.IsActive)
             {
                 return (tenant, "QueryString");
@@ -218,7 +218,7 @@ public class TenantMiddleware(
         var tenantIdFromRoute = TenantIdExtractor.FromRoute(context, TenantIdQueryKey);
         if (tenantIdFromRoute.HasValue)
         {
-            var tenant = await mediator.Send(new GetTenantByIdQuery(tenantIdFromRoute.Value), cancellationToken);
+            var tenant = await mediator.Send(new GetTenantByIdQuery(tenantIdFromRoute.Value), cancellationToken).ConfigureAwait(false);
             if (tenant is not null && tenant.IsActive)
             {
                 return (tenant, "RouteValue");
@@ -226,7 +226,7 @@ public class TenantMiddleware(
         }
 
         // 5. Fall back to default tenant
-        var defaultTenant = await mediator.Send(new GetDefaultTenantQuery(), cancellationToken);
+        var defaultTenant = await mediator.Send(new GetDefaultTenantQuery(), cancellationToken).ConfigureAwait(false);
         if (defaultTenant is not null && defaultTenant.IsActive)
         {
             return (defaultTenant, "Default");
@@ -269,7 +269,7 @@ public class TenantMiddleware(
             var membership = await memberRepository.GetByUserAndTenantAsync(
                 userId,
                 tenantId,
-                cancellationToken);
+                cancellationToken).ConfigureAwait(false);
 
             // User must have an active membership
             return membership is not null && membership.IsActive;

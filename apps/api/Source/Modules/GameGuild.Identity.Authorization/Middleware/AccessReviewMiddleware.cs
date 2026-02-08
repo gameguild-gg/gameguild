@@ -35,6 +35,6 @@ public sealed class AccessReviewMiddleware(
         // Add access review headers for diagnostics
         context.Response.Headers.Append("X-Access-Review", "enabled");
 
-        await next(context);
+        await next(context).ConfigureAwait(false);
     }
 }

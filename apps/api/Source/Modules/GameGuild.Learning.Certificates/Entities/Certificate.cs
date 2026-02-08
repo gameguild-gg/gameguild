@@ -1,4 +1,3 @@
-using GameGuild.Entities;
 
 namespace GameGuild.Learning.Certificates;
 
@@ -28,9 +27,7 @@ public class CertificateTemplate : EntityBase
             Name = name,
             TemplateHtml = templateHtml,
             IsDefault = false,
-            IsActive = true,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            IsActive = true
         };
     }
 }
@@ -78,9 +75,7 @@ public class Certificate : EntityBase
             CourseName = courseName,
             IssuedAt = DateTime.UtcNow,
             ExpiresAt = expiresAt,
-            Status = CertificateStatus.Active,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            Status = CertificateStatus.Active
         };
     }
 

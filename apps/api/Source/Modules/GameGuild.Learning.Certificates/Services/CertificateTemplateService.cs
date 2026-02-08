@@ -1,5 +1,3 @@
-using GameGuild.Abstractions;
-using GameGuild.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -24,7 +22,7 @@ public class CertificateTemplateService : ICertificateTemplateService
         try
         {
             _context.Set<CertificateTemplate>().Add(template);
-            await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync().ConfigureAwait(false);
 
             _logger.LogInformation("Certificate template created: {TemplateId} for course {CourseId}", template.Id, template.CourseId);
 
@@ -40,14 +38,14 @@ public class CertificateTemplateService : ICertificateTemplateService
     public async Task<CertificateTemplate?> GetTemplateByIdAsync(Guid id)
     {
         return await _context.Set<CertificateTemplate>()
-            .FirstOrDefaultAsync(t => t.Id == id);
+            .FirstOrDefaultAsync(t => t.Id == id).ConfigureAwait(false);
     }
 
     public async Task<IEnumerable<CertificateTemplate>> GetTemplatesByCourseAsync(Guid courseId)
     {
         return await _context.Set<CertificateTemplate>()
             .Where(t => t.CourseId == courseId)
-            .ToListAsync();
+            .ToListAsync().ConfigureAwait(false);
     }
 
     public async Task<Result<CertificateTemplate>> UpdateTemplateAsync(CertificateTemplate template)
@@ -55,7 +53,7 @@ public class CertificateTemplateService : ICertificateTemplateService
         try
         {
             _context.Set<CertificateTemplate>().Update(template);
-            await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync().ConfigureAwait(false);
 
             _logger.LogInformation("Certificate template updated: {TemplateId}", template.Id);
 
@@ -72,14 +70,14 @@ public class CertificateTemplateService : ICertificateTemplateService
     {
         try
         {
-            var template = await GetTemplateByIdAsync(id);
+            var template = await GetTemplateByIdAsync(id).ConfigureAwait(false);
             if (template == null)
             {
                 return Result.Failure(Error.NotFound("Template", "Certificate template not found"));
             }
 
             _context.Set<CertificateTemplate>().Remove(template);
-            await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync().ConfigureAwait(false);
 
             _logger.LogInformation("Certificate template deleted: {TemplateId}", id);
 
@@ -102,7 +100,7 @@ public class CertificateTemplateService : ICertificateTemplateService
             query = query.Where(t => t.TenantId == tenantId.Value);
         }
 
-        return await query.ToListAsync();
+        return await query.ToListAsync().ConfigureAwait(false);
     }
 
     public async Task<Result<CertificateTemplate>> SetDefaultTemplateAsync(Guid courseId, Guid templateId)
@@ -112,7 +110,7 @@ public class CertificateTemplateService : ICertificateTemplateService
             // Reset all templates for this course to non-default
             var templates = await _context.Set<CertificateTemplate>()
                 .Where(t => t.CourseId == courseId)
-                .ToListAsync();
+                .ToListAsync().ConfigureAwait(false);
 
             foreach (var t in templates)
             {
@@ -126,7 +124,7 @@ public class CertificateTemplateService : ICertificateTemplateService
                 return Result.Failure<CertificateTemplate>(Error.NotFound("Template", "Certificate template not found"));
             }
 
-            await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync().ConfigureAwait(false);
 
             _logger.LogInformation("Set default certificate template: {TemplateId} for course {CourseId}", templateId, courseId);
 

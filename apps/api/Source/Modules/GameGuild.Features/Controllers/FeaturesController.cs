@@ -14,10 +14,9 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace GameGuild.Features;
 
-[ApiController]
 [ApiVersion("1.0")]
 [Route("v{version:apiVersion}/features")]
-public sealed class FeaturesController(ISender sender, IFeatureFlagManagementService management) : ControllerBase
+public sealed class FeaturesController(ISender sender, IFeatureFlagManagementService management) : BaseApiController
 {
     // GET /api/v1/features - Get all feature flags with optional filtering
     [HttpGet]

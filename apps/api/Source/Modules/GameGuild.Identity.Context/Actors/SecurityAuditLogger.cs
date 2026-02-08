@@ -62,6 +62,7 @@ public sealed class SecurityAuditLogger : ISecurityAuditLogger
             // Security audit logging should never cause request failures
             // Log the failure at a lower level and continue
             _logger.LogDebug(ex, "Failed to log security audit event {EventId}", auditEvent.EventId);
+            throw;
         }
 
         return Task.CompletedTask;

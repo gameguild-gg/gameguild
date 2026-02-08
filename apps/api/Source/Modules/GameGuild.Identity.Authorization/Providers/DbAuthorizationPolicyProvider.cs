@@ -62,7 +62,7 @@ public sealed class DbAuthorizationPolicyProvider : IAuthorizationPolicyProvider
             tenantId = tenantContext?.TenantId?.ToString() ?? _tenancyOptions.DefaultTenantId;
 
             var versionStore = scope.ServiceProvider.GetRequiredService<ITenantSecurityVersionStore>();
-            version = await versionStore.GetVersionAsync(tenantId);
+            version = await versionStore.GetVersionAsync(tenantId).ConfigureAwait(false);
 
             // Check cache first (before loading from database)
             var cachedPolicy = _policyCache.Get(policyName, tenantId, version);
@@ -78,7 +78,7 @@ public sealed class DbAuthorizationPolicyProvider : IAuthorizationPolicyProvider
             
             baseDefinition = await policyStore.GetPolicyAsync(
                 policyName,
-                tenantId: null);
+                tenantId: null).ConfigureAwait(false);
 
             if (baseDefinition is null)
             {
@@ -87,7 +87,7 @@ public sealed class DbAuthorizationPolicyProvider : IAuthorizationPolicyProvider
             }
 
             tenantDefinition = !string.Equals(tenantId, _tenancyOptions.DefaultTenantId, StringComparison.Ordinal)
-                ? await policyStore.GetPolicyAsync(policyName, tenantId)
+                ? await policyStore.GetPolicyAsync(policyName, tenantId).ConfigureAwait(false)
                 : null;
         }
 

@@ -1,5 +1,4 @@
 using System.Text.Json;
-using GameGuild.Abstractions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
@@ -119,7 +118,7 @@ public class CapabilityService : ICapabilityService
             var tenantOverride = await _context.Set<TenantCapability>()
                 .Where(tc => tc.TenantId == tenantId && tc.CapabilityKey == capability)
                 .OrderByDescending(tc => tc.Priority)
-                .FirstOrDefaultAsync(cancellationToken);
+                .FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
 
             if (tenantOverride != null)
             {
@@ -140,7 +139,7 @@ public class CapabilityService : ICapabilityService
             var subscription = await _context.Set<CommerceSubscription>()
                 .Include(s => s.Plan)
                 .Where(s => s.TenantId == tenantId && s.Status == CommerceSubscriptionStatus.Active)
-                .FirstOrDefaultAsync(cancellationToken);
+                .FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
 
             if (subscription == null)
             {
@@ -182,13 +181,13 @@ public class CapabilityService : ICapabilityService
             // Get all explicit overrides for this tenant
             var overrides = await _context.Set<TenantCapability>()
                 .Where(tc => tc.TenantId == tenantId)
-                .ToListAsync(cancellationToken);
+                .ToListAsync(cancellationToken).ConfigureAwait(false);
 
             // Get subscription plan
             var subscription = await _context.Set<CommerceSubscription>()
                 .Include(s => s.Plan)
                 .Where(s => s.TenantId == tenantId && s.Status == CommerceSubscriptionStatus.Active)
-                .FirstOrDefaultAsync(cancellationToken);
+                .FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
 
             var planSlug = subscription?.Plan?.Slug?.ToLowerInvariant() ?? "free";
 
@@ -240,7 +239,7 @@ public class CapabilityService : ICapabilityService
         CancellationToken cancellationToken = default)
     {
         var existing = await _context.Set<TenantCapability>()
-            .FirstOrDefaultAsync(tc => tc.TenantId == tenantId && tc.CapabilityKey == capability, cancellationToken);
+            .FirstOrDefaultAsync(tc => tc.TenantId == tenantId && tc.CapabilityKey == capability, cancellationToken).ConfigureAwait(false);
 
         bool? oldValue = existing?.IsEnabled;
         var oldSource = existing?.Source;
@@ -289,7 +288,7 @@ public class CapabilityService : ICapabilityService
         };
         _context.Set<CapabilityAuditLog>().Add(auditLog);
 
-        await _context.SaveChangesAsync(cancellationToken);
+        await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         // Invalidate cache
         InvalidateCache(tenantId);
@@ -308,7 +307,7 @@ public class CapabilityService : ICapabilityService
         CancellationToken cancellationToken = default)
     {
         var existing = await _context.Set<TenantCapability>()
-            .FirstOrDefaultAsync(tc => tc.TenantId == tenantId && tc.CapabilityKey == capability, cancellationToken);
+            .FirstOrDefaultAsync(tc => tc.TenantId == tenantId && tc.CapabilityKey == capability, cancellationToken).ConfigureAwait(false);
 
         if (existing == null)
         {
@@ -335,7 +334,7 @@ public class CapabilityService : ICapabilityService
         _context.Set<CapabilityAuditLog>().Add(auditLog);
 
         _context.Set<TenantCapability>().Remove(existing);
-        await _context.SaveChangesAsync(cancellationToken);
+        await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         // Invalidate cache
         InvalidateCache(tenantId);
@@ -351,7 +350,7 @@ public class CapabilityService : ICapabilityService
         var subscription = await _context.Set<CommerceSubscription>()
             .Include(s => s.Plan)
             .Where(s => s.TenantId == tenantId && s.Status == CommerceSubscriptionStatus.Active)
-            .FirstOrDefaultAsync(cancellationToken);
+            .FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
 
         if (subscription?.Plan == null)
         {
@@ -365,7 +364,7 @@ public class CapabilityService : ICapabilityService
         // Get existing plan-sourced capabilities (not overrides)
         var existingPlanCapabilities = await _context.Set<TenantCapability>()
             .Where(tc => tc.TenantId == tenantId && tc.Source != null && tc.Source.StartsWith("plan:"))
-            .ToListAsync(cancellationToken);
+            .ToListAsync(cancellationToken).ConfigureAwait(false);
 
         // Update capabilities based on plan
         foreach (var capability in AllCapabilities)
@@ -411,7 +410,7 @@ public class CapabilityService : ICapabilityService
             }
         }
 
-        await _context.SaveChangesAsync(cancellationToken);
+        await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         InvalidateCache(tenantId);
 
         _logger.LogInformation(
@@ -448,7 +447,7 @@ public class CapabilityService : ICapabilityService
         return await query
             .OrderByDescending(log => log.ChangedAt)
             .Take(100)
-            .ToListAsync(cancellationToken);
+            .ToListAsync(cancellationToken).ConfigureAwait(false);
     }
 
     private bool GetPlanCapability(string planSlug, string capability)

@@ -56,11 +56,11 @@ public sealed class ActorContextMiddleware
                 claimsPrincipalAccessor,
                 tenantResolver, 
                 permissionService,
-                context.RequestAborted);
+                context.RequestAborted).ConfigureAwait(false);
 
             actorContextAccessor.SetActorContext(actorContext);
 
-            await _next(context);
+            await _next(context).ConfigureAwait(false);
         }
         catch (PermissionFetchException ex)
         {
@@ -119,7 +119,7 @@ public sealed class ActorContextMiddleware
         var subjectId = ClaimsExtractor.GetUserId(user);
 
         // Resolve tenant ID
-        var tenantIdStr = await tenantResolver.ResolveTenantIdAsync(httpContext, cancellationToken);
+        var tenantIdStr = await tenantResolver.ResolveTenantIdAsync(httpContext, cancellationToken).ConfigureAwait(false);
         Guid? tenantId = Guid.TryParse(tenantIdStr, out var tid) ? tid : null;
 
         // Extract roles from claims
@@ -131,7 +131,7 @@ public sealed class ActorContextMiddleware
             subjectId, 
             tenantId, 
             permissionService, 
-            cancellationToken);
+            cancellationToken).ConfigureAwait(false);
 
         // Extract attributes from claims
         var attributes = ExtractAttributes(user, tenantId);
@@ -185,7 +185,7 @@ public sealed class ActorContextMiddleware
                 var dbPermissions = await permissionService.GetPermissionsAsync(
                     userId, 
                     tenantId.Value, 
-                    cancellationToken);
+                    cancellationToken).ConfigureAwait(false);
 
                 // SECURITY: Replace claim permissions with database permissions
                 // Database is the source of truth for current permissions

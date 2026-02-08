@@ -31,6 +31,6 @@ public sealed class AbacPolicyMiddleware(
         // Add ABAC evaluation headers for diagnostics
         context.Response.Headers.Append("X-ABAC-Policies", "enabled");
 
-        await next(context);
+        await next(context).ConfigureAwait(false);
     }
 }

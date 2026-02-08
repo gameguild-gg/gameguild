@@ -13,12 +13,11 @@ namespace GameGuild.Identity.Authorization;
 ///     Controller for managing resource-level permissions.
 ///     Provides REST endpoints for sharing resources, checking permissions, and managing user access.
 /// </summary>
-[ApiController]
 [ApiVersion("1.0")]
 [Route("api/v{version:apiVersion}/authorization/resources")]
 [Authorize]
 [Produces("application/json")]
-public sealed class ResourcePermissionsController(ISender sender, ILogger<ResourcePermissionsController> logger) : ControllerBase
+public sealed class ResourcePermissionsController(ISender sender, ILogger<ResourcePermissionsController> logger) : BaseApiController
 {
     /// <summary>
     ///     Shares a resource with one or more users by granting them permissions.

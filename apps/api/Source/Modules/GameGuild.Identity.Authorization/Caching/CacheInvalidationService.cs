@@ -203,7 +203,7 @@ public sealed class CacheInvalidationService : ICacheInvalidationService
             TenantId = tenantId,
             UserId = userId,
             OriginInstanceId = _instanceId
-        }, cancellationToken).ConfigureAwait(false);
+        }, cancellationToken);
     }
 
     /// <inheritdoc />
@@ -222,7 +222,7 @@ public sealed class CacheInvalidationService : ICacheInvalidationService
             ResourceType = resourceType,
             ResourceId = resourceId,
             OriginInstanceId = _instanceId
-        }, cancellationToken).ConfigureAwait(false);
+        }, cancellationToken);
     }
 
     /// <inheritdoc />
@@ -242,7 +242,7 @@ public sealed class CacheInvalidationService : ICacheInvalidationService
             TenantId = tenantId,
             PolicyName = policyName,
             OriginInstanceId = _instanceId
-        }, cancellationToken).ConfigureAwait(false);
+        }, cancellationToken);
     }
 
     /// <inheritdoc />

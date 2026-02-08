@@ -19,7 +19,7 @@ public class GetJitElevationByIdHandler(IJitElevationService service)
         CancellationToken cancellationToken
     )
     {
-        return await service.GetRequestByIdAsync(request.RequestId, cancellationToken);
+        return await service.GetRequestByIdAsync(request.RequestId, cancellationToken).ConfigureAwait(false);
     }
 }
 
@@ -36,7 +36,7 @@ public class GetPendingJitElevationsHandler(IJitElevationService service)
         CancellationToken cancellationToken
     )
     {
-        return await service.GetPendingRequestsAsync(request.TenantId, cancellationToken);
+        return await service.GetPendingRequestsAsync(request.TenantId, cancellationToken).ConfigureAwait(false);
     }
 }
 
@@ -53,7 +53,7 @@ public class GetUserJitElevationsHandler(IJitElevationService service)
         CancellationToken cancellationToken
     )
     {
-        return await service.GetUserRequestsAsync(request.UserId, request.TenantId, cancellationToken);
+        return await service.GetUserRequestsAsync(request.UserId, request.TenantId, cancellationToken).ConfigureAwait(false);
     }
 }
 
@@ -70,7 +70,7 @@ public class GetActiveJitElevationsHandler(IJitElevationService service)
         CancellationToken cancellationToken
     )
     {
-        return await service.GetActiveElevationsAsync(request.UserId, request.TenantId, cancellationToken);
+        return await service.GetActiveElevationsAsync(request.UserId, request.TenantId, cancellationToken).ConfigureAwait(false);
     }
 }
 

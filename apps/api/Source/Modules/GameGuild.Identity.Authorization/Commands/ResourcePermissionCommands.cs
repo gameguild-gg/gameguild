@@ -74,7 +74,7 @@ public sealed class UpdateUserPermissionsCommandHandler(
             Actor.SubjectIdAsGuid!.Value,
             Actor.TenantId.Value,
             resourcePermission,
-            cancellationToken);
+            cancellationToken).ConfigureAwait(false);
 
         if (!hasManagePermission)
         {
@@ -196,7 +196,7 @@ public sealed class ShareResourceCommandHandler(
             Actor.SubjectIdAsGuid!.Value,
             Actor.TenantId.Value,
             resourcePermission,
-            cancellationToken);
+            cancellationToken).ConfigureAwait(false);
 
         if (!hasSharePermission)
         {
@@ -305,7 +305,7 @@ public sealed class RemoveUserAccessCommandHandler(
             Actor.SubjectIdAsGuid!.Value,
             Actor.TenantId.Value,
             resourcePermission,
-            cancellationToken);
+            cancellationToken).ConfigureAwait(false);
 
         if (!hasManagePermission)
         {

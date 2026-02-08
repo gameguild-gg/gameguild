@@ -11,12 +11,11 @@ namespace GameGuild.Identity.Authorization.Controllers;
 /// <summary>
 ///     API controller for permission delegation operations
 /// </summary>
-[ApiController]
 [ApiVersion("1.0")]
 [Route("v{version:apiVersion}/permission-delegations")]
 [Authorize]
 [Produces("application/json")]
-public class PermissionDelegationsController(ISender sender) : ControllerBase
+public class PermissionDelegationsController(ISender sender) : BaseApiController
 {
     /// <summary>
     ///     Delegate permissions to another user

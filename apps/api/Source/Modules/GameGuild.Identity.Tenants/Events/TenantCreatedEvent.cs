@@ -1,6 +1,5 @@
 using GameGuild.CQRS;
 using GameGuild.CQRS.Models;
-using GameGuild.ValueObjects;
 
 namespace GameGuild.Identity.Tenants;
 

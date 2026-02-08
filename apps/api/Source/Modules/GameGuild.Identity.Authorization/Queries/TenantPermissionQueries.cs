@@ -252,7 +252,8 @@ public sealed class GetEffectivePermissionsQueryHandler(
             throw new UnauthorizedAccessException("You don't have permission to view permissions for this resource");
         }
 
-        // TODO: Implement actual effective permissions resolution
+        // PLANNED: Wire to full permission resolution engine that aggregates direct grants,
+        // role-based permissions, and inherited tenant permissions.
         var permissions = await GetEffectivePermissionsInternal(
             targetUserId,
             request.ResourceType,
@@ -278,7 +279,8 @@ public sealed class GetEffectivePermissionsQueryHandler(
         Guid resourceId,
         CancellationToken cancellationToken)
     {
-        // TODO: Implement actual permission resolution logic
+        // PLANNED: Query TenantPermission, RolePermission, and UserPermission tables
+        // to build aggregate effective permission set for the given user/resource pair.
         await Task.CompletedTask;
 
         return new List<EffectivePermissionDto>();

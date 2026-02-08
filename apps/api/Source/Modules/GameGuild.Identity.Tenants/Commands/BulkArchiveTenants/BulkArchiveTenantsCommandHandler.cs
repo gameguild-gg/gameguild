@@ -1,5 +1,4 @@
 using GameGuild.CQRS;
-using GameGuild.Models;
 
 namespace GameGuild.Identity.Tenants;
 
@@ -19,7 +18,7 @@ public class BulkArchiveTenantsCommandHandler(ITenantRepository tenantRepository
         {
             try
             {
-                var tenant = await tenantRepository.GetByIdAsync(tenantId, cancellationToken);
+                var tenant = await tenantRepository.GetByIdAsync(tenantId, cancellationToken).ConfigureAwait(false);
 
                 if (tenant == null)
                 {
@@ -37,7 +36,7 @@ public class BulkArchiveTenantsCommandHandler(ITenantRepository tenantRepository
                 }
 
                 tenant.Archive();
-                await tenantRepository.UpdateAsync(tenant, cancellationToken);
+                await tenantRepository.UpdateAsync(tenant, cancellationToken).ConfigureAwait(false);
 
                 successful++;
             }

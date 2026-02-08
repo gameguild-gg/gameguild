@@ -7,9 +7,9 @@ namespace GameGuild.Identity.Users;
 /// <summary>
 ///     Query handler for getting users with cursor-based pagination, filtering, and search
 /// </summary>
-public class GetUsersQueryHandler(IUserRepository userRepository) : IQueryHandler<GetUsersQuery, Models.PagedResult<UserDto>>
+public class GetUsersQueryHandler(IUserRepository userRepository) : IQueryHandler<GetUsersQuery, PagedResult<UserDto>>
 {
-    public async Task<Models.PagedResult<UserDto>> Handle(GetUsersQuery request, CancellationToken cancellationToken)
+    public async Task<PagedResult<UserDto>> Handle(GetUsersQuery request, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
 
@@ -106,7 +106,7 @@ public class GetUsersQueryHandler(IUserRepository userRepository) : IQueryHandle
 
         // Note: For cursor-based pagination, we use PageNumber=1 and PageSize=Limit
         // The cursor itself handles the "page" concept
-        return new Models.PagedResult<UserDto>(userDtos, totalCount, 1, request.Limit);
+        return new PagedResult<UserDto>(userDtos, totalCount, 1, request.Limit);
     }
 
     /// <summary>

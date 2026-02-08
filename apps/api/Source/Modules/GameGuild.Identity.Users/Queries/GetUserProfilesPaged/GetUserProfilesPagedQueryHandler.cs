@@ -6,9 +6,9 @@ namespace GameGuild.Identity.Users;
 ///     Query handler for getting user profiles with pagination, search, and sorting
 /// </summary>
 public class GetUserProfilesPagedQueryHandler(IUserProfileRepository profileRepository)
-    : IQueryHandler<GetUserProfilesPagedQuery, Models.PagedResult<UserProfileDto>>
+    : IQueryHandler<GetUserProfilesPagedQuery, PagedResult<UserProfileDto>>
 {
-    public async Task<Models.PagedResult<UserProfileDto>> Handle(GetUserProfilesPagedQuery request, CancellationToken cancellationToken)
+    public async Task<PagedResult<UserProfileDto>> Handle(GetUserProfilesPagedQuery request, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
 
@@ -19,7 +19,7 @@ public class GetUserProfilesPagedQueryHandler(IUserProfileRepository profileRepo
             request.SortDirection,
             request.PageNumber,
             request.PageSize,
-            cancellationToken).ConfigureAwait(false);
+            cancellationToken);
 
         // Map to DTOs
         var profileDtos = profiles.Select(profile => new UserProfileDto(
@@ -41,6 +41,6 @@ public class GetUserProfilesPagedQueryHandler(IUserProfileRepository profileRepo
             BitConverter.GetBytes(profile.Version) // Convert int version to byte array
         )).ToList();
 
-        return new Models.PagedResult<UserProfileDto>(profileDtos, totalCount, request.PageNumber, request.PageSize);
+        return new PagedResult<UserProfileDto>(profileDtos, totalCount, request.PageNumber, request.PageSize);
     }
 }

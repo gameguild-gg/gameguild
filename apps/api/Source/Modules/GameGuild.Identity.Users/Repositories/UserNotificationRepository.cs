@@ -1,4 +1,3 @@
-using GameGuild.Abstractions;
 using Microsoft.EntityFrameworkCore;
 
 namespace GameGuild.Identity.Users;
@@ -75,7 +74,7 @@ public class UserNotificationRepository(IApplicationDbContext context) : IUserNo
             .Skip(skip)
             .Take(take)
             .ToListAsync(cancellationToken)
-            .ConfigureAwait(false);
+            ;
     }
 
     public async Task<(List<UserNotification> Notifications, int TotalCount)> GetPagedByUserIdAsync(

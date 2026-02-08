@@ -50,12 +50,10 @@ public class CreateAccessReviewCampaignHandler(IAccessReviewService service)
             ReviewType = request.ReviewType,
             StartDate = request.StartDate,
             EndDate = request.EndDate,
-            Status = AccessReviewStatus.Draft,
-            CreatedAt = DateTime.UtcNow,
-            CreatedBy = request.CreatedBy
+            Status = AccessReviewStatus.Draft, CreatedBy = request.CreatedBy
         };
 
-        return await service.CreateCampaignAsync(campaign, cancellationToken);
+        return await service.CreateCampaignAsync(campaign, cancellationToken).ConfigureAwait(false);
     }
 }
 
@@ -80,7 +78,7 @@ public class StartAccessReviewCampaignHandler(IAccessReviewService service)
         CancellationToken cancellationToken
     )
     {
-        return await service.StartCampaignAsync(request.CampaignId, cancellationToken);
+        return await service.StartCampaignAsync(request.CampaignId, cancellationToken).ConfigureAwait(false);
     }
 }
 
@@ -113,7 +111,7 @@ public class CompleteAccessReviewCampaignHandler(IAccessReviewService service)
             request.CampaignId,
             request.CompletedBy,
             cancellationToken
-        );
+        ).ConfigureAwait(false);
     }
 }
 
@@ -138,7 +136,7 @@ public class CancelAccessReviewCampaignHandler(IAccessReviewService service)
         CancellationToken cancellationToken
     )
     {
-        return await service.CancelCampaignAsync(request.CampaignId, cancellationToken);
+        return await service.CancelCampaignAsync(request.CampaignId, cancellationToken).ConfigureAwait(false);
     }
 }
 
@@ -174,7 +172,7 @@ public class ApproveAccessReviewItemHandler(IAccessReviewService service)
             request.Reason,
             request.Notes,
             cancellationToken
-        );
+        ).ConfigureAwait(false);
     }
 }
 
@@ -210,7 +208,7 @@ public class RevokeAccessReviewItemHandler(IAccessReviewService service)
             request.Reason,
             request.Notes,
             cancellationToken
-        );
+        ).ConfigureAwait(false);
     }
 }
 
@@ -227,7 +225,7 @@ public class SendAccessReviewRemindersHandler(IAccessReviewService service)
         CancellationToken cancellationToken
     )
     {
-        return await service.SendRemindersAsync(request.CampaignId, cancellationToken);
+        return await service.SendRemindersAsync(request.CampaignId, cancellationToken).ConfigureAwait(false);
     }
 }
 
@@ -244,6 +242,6 @@ public class ProcessExpiredCampaignsHandler(IAccessReviewService service)
         CancellationToken cancellationToken
     )
     {
-        return await service.ProcessExpiredCampaignsAsync(cancellationToken);
+        return await service.ProcessExpiredCampaignsAsync(cancellationToken).ConfigureAwait(false);
     }
 }

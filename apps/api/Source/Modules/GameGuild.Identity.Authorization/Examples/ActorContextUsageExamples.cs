@@ -141,7 +141,7 @@ public class ProjectAuthorizationService
             userId.Value,
             tenantId.Value,
             resourcePermission,
-            cancellationToken);
+            cancellationToken).ConfigureAwait(false);
     }
 }
 
@@ -248,7 +248,7 @@ public class DataCleanupJob
         {
             // Now all services that inject IActorContextAccessor
             // will see the system actor context
-            await PerformCleanupAsync(cancellationToken);
+            await PerformCleanupAsync(cancellationToken).ConfigureAwait(false);
         }
         finally
         {

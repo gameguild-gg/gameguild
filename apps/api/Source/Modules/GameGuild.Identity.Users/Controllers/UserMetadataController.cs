@@ -10,11 +10,10 @@ namespace GameGuild.Identity.Users;
 /// <summary>
 ///     Controller for managing user metadata
 /// </summary>
-[ApiController]
 [ApiVersion("1.0")]
 [Tags("users/metadata")]
 [Authorize]
-public sealed class UserMetadataController(ISender sender) : ControllerBase
+public sealed class UserMetadataController(ISender sender) : BaseApiController
 {
     /// <summary>
     ///     Get user metadata by user ID

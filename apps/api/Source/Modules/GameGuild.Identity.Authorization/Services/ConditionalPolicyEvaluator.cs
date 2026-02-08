@@ -68,7 +68,7 @@ public class ConditionalPolicyEvaluator(
         ConditionalPolicyContext context,
         CancellationToken ct = default)
     {
-        var policies = await repository.GetActivePoliciesAsync(context.TenantId, ct);
+        var policies = await repository.GetActivePoliciesAsync(context.TenantId, ct).ConfigureAwait(false);
         var details = new List<PolicyEvaluationDetail>();
         
         // Filter and sort policies by priority (descending)

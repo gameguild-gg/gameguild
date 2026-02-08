@@ -7,9 +7,9 @@ namespace GameGuild.Identity.Users;
 ///     Query handler for getting user notifications with pagination, search, and filtering
 /// </summary>
 public class GetUserNotificationsPagedQueryHandler(IUserNotificationRepository notificationRepository)
-    : IQueryHandler<GetUserNotificationsPagedQuery, Models.PagedResult<UserNotificationDto>>
+    : IQueryHandler<GetUserNotificationsPagedQuery, PagedResult<UserNotificationDto>>
 {
-    public async Task<Models.PagedResult<UserNotificationDto>> Handle(GetUserNotificationsPagedQuery request, CancellationToken cancellationToken)
+    public async Task<PagedResult<UserNotificationDto>> Handle(GetUserNotificationsPagedQuery request, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
 
@@ -27,7 +27,7 @@ public class GetUserNotificationsPagedQueryHandler(IUserNotificationRepository n
             request.Priority,
             request.FromDate?.DateTime,
             request.ToDate?.DateTime,
-            cancellationToken).ConfigureAwait(false);
+            cancellationToken);
 
         // Map to DTOs
         var notificationDtos = notifications.Select(notification => new UserNotificationDto(
@@ -54,6 +54,6 @@ public class GetUserNotificationsPagedQueryHandler(IUserNotificationRepository n
             BitConverter.GetBytes(notification.Version)
         )).ToList();
 
-        return new Models.PagedResult<UserNotificationDto>(notificationDtos, totalCount, request.PageNumber, request.PageSize);
+        return new PagedResult<UserNotificationDto>(notificationDtos, totalCount, request.PageNumber, request.PageSize);
     }
 }

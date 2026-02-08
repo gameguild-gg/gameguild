@@ -84,7 +84,7 @@ public class RevokeDelegationHandler(IPermissionDelegationService service)
         CancellationToken cancellationToken
     )
     {
-        return await service.RevokeDelegationAsync(request.DelegationId, cancellationToken);
+        return await service.RevokeDelegationAsync(request.DelegationId, cancellationToken).ConfigureAwait(false);
     }
 }
 
@@ -101,7 +101,7 @@ public class RecordDelegationUsageHandler(IPermissionDelegationService service)
         CancellationToken cancellationToken
     )
     {
-        return await service.RecordDelegationUsageAsync(request.DelegationId, cancellationToken);
+        return await service.RecordDelegationUsageAsync(request.DelegationId, cancellationToken).ConfigureAwait(false);
     }
 }
 
@@ -118,6 +118,6 @@ public class CleanupExpiredDelegationsHandler(IPermissionDelegationService servi
         CancellationToken cancellationToken
     )
     {
-        return await service.CleanupExpiredDelegationsAsync(cancellationToken);
+        return await service.CleanupExpiredDelegationsAsync(cancellationToken).ConfigureAwait(false);
     }
 }

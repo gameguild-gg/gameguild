@@ -1,6 +1,4 @@
 using System.Text.Json;
-using GameGuild.Abstractions;
-using GameGuild.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
@@ -42,7 +40,7 @@ public class SubscriptionFeatureService : ISubscriptionFeatureService
         string featureKey, 
         CancellationToken cancellationToken = default)
     {
-        var result = await ValidateFeatureAccessAsync(tenantId, featureKey, cancellationToken);
+        var result = await ValidateFeatureAccessAsync(tenantId, featureKey, cancellationToken).ConfigureAwait(false);
         return result.IsSuccess && result.Value.IsAllowed;
     }
 
@@ -53,7 +51,7 @@ public class SubscriptionFeatureService : ISubscriptionFeatureService
         CancellationToken cancellationToken = default)
     {
         // First check subscription-level access
-        var subscriptionAccess = await IsFeatureAvailableForTenantAsync(tenantId, featureKey, cancellationToken);
+        var subscriptionAccess = await IsFeatureAvailableForTenantAsync(tenantId, featureKey, cancellationToken).ConfigureAwait(false);
         if (!subscriptionAccess)
         {
             return false;
@@ -67,7 +65,7 @@ public class SubscriptionFeatureService : ISubscriptionFeatureService
             Environment = "production"
         };
 
-        return await _featureFlagService.IsEnabledAsync(featureKey, context, cancellationToken);
+        return await _featureFlagService.IsEnabledAsync(featureKey, context, cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<IEnumerable<string>> GetAvailableFeaturesForTenantAsync(
@@ -85,7 +83,7 @@ public class SubscriptionFeatureService : ISubscriptionFeatureService
         var subscription = await _context.Set<CommerceSubscription>()
             .Include(s => s.Plan)
             .Where(s => s.TenantId == tenantId && s.Status == CommerceSubscriptionStatus.Active)
-            .FirstOrDefaultAsync(cancellationToken);
+            .FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
 
         if (subscription?.Plan == null)
         {
@@ -112,7 +110,7 @@ public class SubscriptionFeatureService : ISubscriptionFeatureService
         }
 
         var plan = await _context.Set<CommerceSubscriptionPlan>()
-            .FirstOrDefaultAsync(p => p.Id == planId, cancellationToken);
+            .FirstOrDefaultAsync(p => p.Id == planId, cancellationToken).ConfigureAwait(false);
 
         if (plan == null)
         {
@@ -136,7 +134,7 @@ public class SubscriptionFeatureService : ISubscriptionFeatureService
         var subscription = await _context.Set<CommerceSubscription>()
             .Include(s => s.Plan)
             .Where(s => s.TenantId == tenantId && s.Status == CommerceSubscriptionStatus.Active)
-            .FirstOrDefaultAsync(cancellationToken);
+            .FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
 
         if (subscription == null)
         {
@@ -173,7 +171,7 @@ public class SubscriptionFeatureService : ISubscriptionFeatureService
                 Environment = "production"
             };
 
-            var isFeatureFlagEnabled = await _featureFlagService.IsEnabledAsync(featureKey, featureFlagContext, cancellationToken);
+            var isFeatureFlagEnabled = await _featureFlagService.IsEnabledAsync(featureKey, featureFlagContext, cancellationToken).ConfigureAwait(false);
 
             if (!isFeatureFlagEnabled)
             {
@@ -197,7 +195,7 @@ public class SubscriptionFeatureService : ISubscriptionFeatureService
         var upgradePlan = await _context.Set<CommerceSubscriptionPlan>()
             .Where(p => p.IsActive && p.Features != null && p.Features.Contains(featureKey))
             .OrderBy(p => p.MonthlyPriceInCents)
-            .FirstOrDefaultAsync(cancellationToken);
+            .FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
 
         return Result.Success(new SubscriptionFeatureAccessResult(
             IsAllowed: false,
@@ -213,10 +211,10 @@ public class SubscriptionFeatureService : ISubscriptionFeatureService
         CancellationToken cancellationToken = default)
     {
         var currentPlan = await _context.Set<CommerceSubscriptionPlan>()
-            .FirstOrDefaultAsync(p => p.Id == currentPlanId, cancellationToken);
+            .FirstOrDefaultAsync(p => p.Id == currentPlanId, cancellationToken).ConfigureAwait(false);
 
         var targetPlan = await _context.Set<CommerceSubscriptionPlan>()
-            .FirstOrDefaultAsync(p => p.Id == targetPlanId, cancellationToken);
+            .FirstOrDefaultAsync(p => p.Id == targetPlanId, cancellationToken).ConfigureAwait(false);
 
         var currentFeatures = ParsePlanFeatures(currentPlan?.Features).ToHashSet(StringComparer.OrdinalIgnoreCase);
         var targetFeatures = ParsePlanFeatures(targetPlan?.Features).ToHashSet(StringComparer.OrdinalIgnoreCase);

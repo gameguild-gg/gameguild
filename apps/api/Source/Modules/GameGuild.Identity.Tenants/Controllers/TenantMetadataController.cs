@@ -1,4 +1,5 @@
 using Asp.Versioning;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -7,11 +8,11 @@ namespace GameGuild.Identity.Tenants;
 /// <summary>
 ///     Controller for managing tenant metadata
 /// </summary>
-[ApiController]
 [ApiVersion("1.0")]
 [Route("v{version:apiVersion}/tenants/{tenantId:guid}/metadata")]
 [Tags("tenants/metadata")]
-public sealed class TenantMetadataController : ControllerBase
+[Authorize]
+public sealed class TenantMetadataController : BaseApiController
 {
     /// <summary>
     ///     Get tenant metadata by tenant ID

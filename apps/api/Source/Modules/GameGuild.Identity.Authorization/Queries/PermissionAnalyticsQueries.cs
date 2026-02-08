@@ -28,7 +28,7 @@ public class GetPermissionUsageHandler(IPermissionAnalyticsService service)
             request.FromDate,
             request.ToDate,
             cancellationToken
-        );
+        ).ConfigureAwait(false);
     }
 }
 
@@ -110,7 +110,7 @@ public class GetPermissionTrendsHandler(IPermissionAnalyticsService service)
             request.FromDate,
             request.ToDate,
             cancellationToken
-        );
+        ).ConfigureAwait(false);
     }
 }
 
@@ -134,7 +134,7 @@ public class DetectPermissionAnomaliesHandler(IPermissionAnalyticsService servic
             request.TenantId,
             request.FromDate,
             cancellationToken
-        );
+        ).ConfigureAwait(false);
     }
 }
 
@@ -160,6 +160,6 @@ public class GeneratePermissionReportHandler(IPermissionAnalyticsService service
             request.PeriodStart,
             request.PeriodEnd,
             cancellationToken
-        );
+        ).ConfigureAwait(false);
     }
 }

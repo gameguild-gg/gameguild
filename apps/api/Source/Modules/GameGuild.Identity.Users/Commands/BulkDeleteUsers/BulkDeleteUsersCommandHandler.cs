@@ -1,4 +1,4 @@
-﻿using GameGuild.CQRS;
+using GameGuild.CQRS;
 using GameGuild.Identity.Context.Actors;
 using GameGuild.Resources;
 
@@ -40,7 +40,7 @@ public class BulkDeleteUsersCommandHandler(
                 deletedCount,
                 actorUserId,
                 "BulkDeleteUsers",
-                cancellationToken).ConfigureAwait(false);
+                cancellationToken);
         }
 
         return Unit.Value;

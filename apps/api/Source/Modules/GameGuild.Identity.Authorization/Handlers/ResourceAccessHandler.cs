@@ -116,6 +116,7 @@ public sealed class ResourceAccessHandler : AuthorizationHandler<ResourceAccessR
             {
                 _logger.LogError(ex, "Error checking Access Control List access");
                 context.Fail(new AuthorizationFailureReason(this, "Error checking resource access"));
+                throw;
             }
 
             return;

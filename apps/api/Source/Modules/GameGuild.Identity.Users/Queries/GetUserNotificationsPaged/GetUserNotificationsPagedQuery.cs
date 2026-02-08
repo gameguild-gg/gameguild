@@ -30,4 +30,4 @@ public record GetUserNotificationsPagedQuery(
     DateTimeOffset? ToDate = null,
     int PageNumber = 1,
     int PageSize = 20
-) : IQuery<Models.PagedResult<UserNotificationDto>>;
+) : IQuery<PagedResult<UserNotificationDto>>;

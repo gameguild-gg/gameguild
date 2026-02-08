@@ -1,4 +1,3 @@
-using GameGuild.Abstractions;
 using Microsoft.EntityFrameworkCore;
 
 namespace GameGuild.Identity.Authorization;
@@ -15,11 +14,10 @@ public class TenantPermissionRepository(IApplicationDbContext context) : ITenant
         CancellationToken cancellationToken = default
     )
     {
-        permission.CreatedAt = DateTime.UtcNow;
-        permission.UpdatedAt = DateTime.UtcNow;
+        permission.Touch();
 
         TenantPermissions.Add(permission);
-        await context.SaveChangesAsync(cancellationToken);
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         return permission;
     }
@@ -29,9 +27,9 @@ public class TenantPermissionRepository(IApplicationDbContext context) : ITenant
         CancellationToken cancellationToken = default
     )
     {
-        permission.UpdatedAt = DateTime.UtcNow;
+        permission.Touch();
         TenantPermissions.Update(permission);
-        await context.SaveChangesAsync(cancellationToken);
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         return permission;
     }
@@ -39,12 +37,12 @@ public class TenantPermissionRepository(IApplicationDbContext context) : ITenant
     public async Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
         var permission = await TenantPermissions
-            .FirstOrDefaultAsync(p => p.Id == id, cancellationToken);
+            .FirstOrDefaultAsync(p => p.Id == id, cancellationToken).ConfigureAwait(false);
 
         if (permission == null) return false;
 
         TenantPermissions.Remove(permission);
-        await context.SaveChangesAsync(cancellationToken);
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         return true;
     }
@@ -56,7 +54,7 @@ public class TenantPermissionRepository(IApplicationDbContext context) : ITenant
     {
         return await TenantPermissions
             .AsNoTracking()
-            .FirstOrDefaultAsync(p => p.Id == id, cancellationToken);
+            .FirstOrDefaultAsync(p => p.Id == id, cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<TenantPermission?> GetByUserAndTenantAsync(
@@ -70,7 +68,7 @@ public class TenantPermissionRepository(IApplicationDbContext context) : ITenant
             .FirstOrDefaultAsync(
                 p => p.UserId == userId && p.TenantId == tenantId,
                 cancellationToken
-            );
+            ).ConfigureAwait(false);
     }
 
     public async Task<List<TenantPermission>> GetByTenantAsync(
@@ -81,7 +79,7 @@ public class TenantPermissionRepository(IApplicationDbContext context) : ITenant
         return await TenantPermissions
             .AsNoTracking()
             .Where(p => p.TenantId == tenantId)
-            .ToListAsync(cancellationToken);
+            .ToListAsync(cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<List<TenantPermission>> GetByUserAsync(
@@ -92,7 +90,7 @@ public class TenantPermissionRepository(IApplicationDbContext context) : ITenant
         return await TenantPermissions
             .AsNoTracking()
             .Where(p => p.UserId == userId)
-            .ToListAsync(cancellationToken);
+            .ToListAsync(cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<List<TenantPermission>> GetExpiredPermissionsAsync(
@@ -102,7 +100,7 @@ public class TenantPermissionRepository(IApplicationDbContext context) : ITenant
         return await TenantPermissions
             .AsNoTracking()
             .Where(p => p.ExpiresAt.HasValue && p.ExpiresAt < DateTime.UtcNow)
-            .ToListAsync(cancellationToken);
+            .ToListAsync(cancellationToken).ConfigureAwait(false);
     }
 }
 
@@ -119,7 +117,7 @@ public class PermissionAuditLogRepository(IApplicationDbContext context) : IPerm
     )
     {
         AuditLogs.Add(auditLog);
-        await context.SaveChangesAsync(cancellationToken);
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         return auditLog;
     }
 
@@ -130,7 +128,7 @@ public class PermissionAuditLogRepository(IApplicationDbContext context) : IPerm
     {
         return await AuditLogs
             .AsNoTracking()
-            .FirstOrDefaultAsync(l => l.Id == id, cancellationToken);
+            .FirstOrDefaultAsync(l => l.Id == id, cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<List<PermissionAuditLog>> GetByTenantAsync(
@@ -143,14 +141,14 @@ public class PermissionAuditLogRepository(IApplicationDbContext context) : IPerm
             return await AuditLogs
                 .AsNoTracking()
                 .OrderByDescending(l => l.Timestamp)
-                .ToListAsync(cancellationToken);
+                .ToListAsync(cancellationToken).ConfigureAwait(false);
         }
 
         return await AuditLogs
             .AsNoTracking()
             .Where(l => l.TenantId != null && l.TenantId.Value.Value == tenantId.Value)
             .OrderByDescending(l => l.Timestamp)
-            .ToListAsync(cancellationToken);
+            .ToListAsync(cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<List<PermissionAuditLog>> GetByUserAsync(
@@ -170,7 +168,7 @@ public class PermissionAuditLogRepository(IApplicationDbContext context) : IPerm
 
         return await query
             .OrderByDescending(l => l.Timestamp)
-            .ToListAsync(cancellationToken);
+            .ToListAsync(cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<List<PermissionAuditLog>> GetByDateRangeAsync(
@@ -191,7 +189,7 @@ public class PermissionAuditLogRepository(IApplicationDbContext context) : IPerm
 
         return await query
             .OrderByDescending(l => l.Timestamp)
-            .ToListAsync(cancellationToken);
+            .ToListAsync(cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<List<PermissionAuditLog>> GetByOperationTypeAsync(
@@ -211,7 +209,7 @@ public class PermissionAuditLogRepository(IApplicationDbContext context) : IPerm
 
         return await query
             .OrderByDescending(l => l.Timestamp)
-            .ToListAsync(cancellationToken);
+            .ToListAsync(cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<List<PermissionAuditLog>> GetByTenantAsync(
@@ -232,7 +230,7 @@ public class PermissionAuditLogRepository(IApplicationDbContext context) : IPerm
 
         return await query
             .OrderByDescending(l => l.Timestamp)
-            .ToListAsync(cancellationToken);
+            .ToListAsync(cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<List<PermissionAuditLog>> GetByUserAsync(
@@ -254,7 +252,7 @@ public class PermissionAuditLogRepository(IApplicationDbContext context) : IPerm
 
         return await query
             .OrderByDescending(l => l.Timestamp)
-            .ToListAsync(cancellationToken);
+            .ToListAsync(cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<List<PermissionAuditLog>> GetByPermissionAsync(
@@ -276,7 +274,7 @@ public class PermissionAuditLogRepository(IApplicationDbContext context) : IPerm
 
         return await query
             .OrderByDescending(l => l.Timestamp)
-            .ToListAsync(cancellationToken);
+            .ToListAsync(cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<List<PermissionAuditLog>> GetByResourceTypeAsync(
@@ -298,6 +296,6 @@ public class PermissionAuditLogRepository(IApplicationDbContext context) : IPerm
 
         return await query
             .OrderByDescending(l => l.Timestamp)
-            .ToListAsync(cancellationToken);
+            .ToListAsync(cancellationToken).ConfigureAwait(false);
     }
 }

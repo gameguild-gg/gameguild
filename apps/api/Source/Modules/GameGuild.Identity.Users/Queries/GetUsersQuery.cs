@@ -12,7 +12,7 @@ namespace GameGuild.Identity.Users;
 /// <param name="Cursor">Optional cursor for pagination</param>
 /// <param name="Limit">Number of results to return</param>
 /// <param name="Sort">Sort criteria</param>
-public record GetUsersQuery(string? Email = null, string? Status = null, bool IncludeDeleted = false, string? SearchTerm = null, string? Cursor = null, int Limit = 50, string? Sort = null) : IQuery<Models.PagedResult<UserDto>>;
+public record GetUsersQuery(string? Email = null, string? Status = null, bool IncludeDeleted = false, string? SearchTerm = null, string? Cursor = null, int Limit = 50, string? Sort = null) : IQuery<PagedResult<UserDto>>;
 
 /// <summary>
 ///     Query to get users metadata/statistics

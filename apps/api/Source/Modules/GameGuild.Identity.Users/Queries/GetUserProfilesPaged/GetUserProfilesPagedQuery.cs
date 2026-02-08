@@ -16,4 +16,4 @@ public record GetUserProfilesPagedQuery(
     string? SortDirection = "asc",
     int PageNumber = 1,
     int PageSize = 20
-) : IQuery<Models.PagedResult<UserProfileDto>>;
+) : IQuery<PagedResult<UserProfileDto>>;

@@ -1,4 +1,3 @@
-using GameGuild.Abstractions;
 using Microsoft.EntityFrameworkCore;
 
 namespace GameGuild.Identity.Tenants;
@@ -79,7 +78,7 @@ public class TenantMetadataRepository(IApplicationDbContext context) : ITenantMe
                 },
                 cancellationToken
             )
-            .ConfigureAwait(false);
+            ;
     }
 
     public async Task AddAsync(TenantMetadata metadata, CancellationToken cancellationToken = default) { await context.Set<TenantMetadata>().AddAsync(metadata, cancellationToken).ConfigureAwait(false); }

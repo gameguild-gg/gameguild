@@ -62,7 +62,7 @@ public class PermissionAuditService(
             userId
         );
 
-        return await _repository.CreateAsync(auditLog, cancellationToken);
+        return await _repository.CreateAsync(auditLog, cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<List<PermissionAuditLog>> GetAuditLogsAsync(
@@ -82,11 +82,11 @@ public class PermissionAuditService(
                 toDate.Value,
                 tenantId,
                 cancellationToken
-            );
+            ).ConfigureAwait(false);
             return limit.HasValue ? logs.Take(limit.Value).ToList() : logs;
         }
 
-        var allLogs = await _repository.GetByTenantAsync(tenantId, cancellationToken);
+        var allLogs = await _repository.GetByTenantAsync(tenantId, cancellationToken).ConfigureAwait(false);
         return limit.HasValue ? allLogs.Take(limit.Value).ToList() : allLogs;
     }
 
@@ -98,7 +98,7 @@ public class PermissionAuditService(
         CancellationToken cancellationToken = default
     )
     {
-        var logs = await _repository.GetByUserAsync(userId, tenantId, cancellationToken);
+        var logs = await _repository.GetByUserAsync(userId, tenantId, cancellationToken).ConfigureAwait(false);
 
         if (fromDate.HasValue)
             logs = logs.Where(l => l.Timestamp >= fromDate.Value).ToList();
@@ -115,7 +115,7 @@ public class PermissionAuditService(
         CancellationToken cancellationToken = default
     )
     {
-        var logs = await _repository.GetByTenantAsync(null, cancellationToken);
+        var logs = await _repository.GetByTenantAsync(null, cancellationToken).ConfigureAwait(false);
         logs = logs.Where(l => l.ResourceId == resourceId).ToList();
 
         if (fromDate.HasValue)
@@ -134,7 +134,7 @@ public class PermissionAuditService(
         CancellationToken cancellationToken = default
     )
     {
-        var logs = await _repository.GetByTenantAsync(tenantId, cancellationToken);
+        var logs = await _repository.GetByTenantAsync(tenantId, cancellationToken).ConfigureAwait(false);
         logs = logs.Where(l => l.OperationType == operationType).ToList();
 
         if (fromDate.HasValue)
@@ -151,7 +151,7 @@ public class PermissionAuditService(
         CancellationToken cancellationToken = default
     )
     {
-        var logs = await _repository.GetByTenantAsync(tenantId, cancellationToken);
+        var logs = await _repository.GetByTenantAsync(tenantId, cancellationToken).ConfigureAwait(false);
         logs = logs.Where(l => !l.Success).ToList();
 
         if (fromDate.HasValue)

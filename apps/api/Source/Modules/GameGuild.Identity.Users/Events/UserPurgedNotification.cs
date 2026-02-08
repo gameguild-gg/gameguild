@@ -13,7 +13,7 @@ public record UserPurgedNotification(Guid UserId, string Email, string Name, str
 {
     public Guid EventId { get; } = Guid.NewGuid();
 
-    public DateTime OccurredAt { get; } = DateTime.UtcNow;
+    public DateTimeOffset OccurredAt { get; } = DateTimeOffset.UtcNow;
 
     public int Version { get; } = 1;
 }

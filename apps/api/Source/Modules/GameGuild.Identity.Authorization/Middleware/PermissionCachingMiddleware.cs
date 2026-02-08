@@ -30,6 +30,6 @@ public sealed class PermissionCachingMiddleware(
         // Add permission caching headers for diagnostics
         context.Response.Headers.Append("X-Permission-Cache", "enabled");
 
-        await next(context);
+        await next(context).ConfigureAwait(false);
     }
 }

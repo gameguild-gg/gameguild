@@ -1,4 +1,3 @@
-using GameGuild.Models;
 using Microsoft.Extensions.Logging;
 
 namespace GameGuild.Compliance.KYC;
@@ -35,7 +34,7 @@ public class KycService : IKycService
                 SubmittedAt = DateTime.UtcNow
             };
 
-            await _repository.CreateAsync(verification, cancellationToken);
+            await _repository.CreateAsync(verification, cancellationToken).ConfigureAwait(false);
             _logger.LogInformation("KYC verification submitted for user {UserId} with provider {Provider}", userId, provider);
 
             return Result<UserKycVerification>.Success(verification);
@@ -56,7 +55,7 @@ public class KycService : IKycService
     {
         try
         {
-            var verification = await _repository.GetByIdAsync(verificationId, cancellationToken);
+            var verification = await _repository.GetByIdAsync(verificationId, cancellationToken).ConfigureAwait(false);
             if (verification == null)
             {
                 return Result.Failure<UserKycVerification>(Error.NotFound("KYC.NotFound", "Verification not found"));
@@ -71,7 +70,7 @@ public class KycService : IKycService
                 verification.ExpiresAt = DateTime.UtcNow.AddYears(1); // Set expiration to 1 year
             }
 
-            await _repository.UpdateAsync(verification, cancellationToken);
+            await _repository.UpdateAsync(verification, cancellationToken).ConfigureAwait(false);
             _logger.LogInformation("KYC verification {VerificationId} status updated to {Status}", verificationId, status);
 
             return Result<UserKycVerification>.Success(verification);
@@ -89,7 +88,7 @@ public class KycService : IKycService
     {
         try
         {
-            var verification = await _repository.GetByIdAsync(verificationId, cancellationToken);
+            var verification = await _repository.GetByIdAsync(verificationId, cancellationToken).ConfigureAwait(false);
             if (verification == null)
             {
                 return Result.Failure<UserKycVerification>(Error.NotFound("KYC.NotFound", "Verification not found"));
@@ -110,7 +109,7 @@ public class KycService : IKycService
     {
         try
         {
-            var verifications = await _repository.GetByUserIdAsync(userId, cancellationToken);
+            var verifications = await _repository.GetByUserIdAsync(userId, cancellationToken).ConfigureAwait(false);
             return Result<List<UserKycVerification>>.Success(verifications);
         }
         catch (Exception ex)
@@ -126,7 +125,7 @@ public class KycService : IKycService
     {
         try
         {
-            var verification = await _repository.GetLatestVerificationAsync(userId, cancellationToken);
+            var verification = await _repository.GetLatestVerificationAsync(userId, cancellationToken).ConfigureAwait(false);
             return Result<UserKycVerification?>.Success(verification);
         }
         catch (Exception ex)
@@ -142,7 +141,7 @@ public class KycService : IKycService
     {
         try
         {
-            var isVerified = await _repository.HasApprovedVerificationAsync(userId, cancellationToken);
+            var isVerified = await _repository.HasApprovedVerificationAsync(userId, cancellationToken).ConfigureAwait(false);
             return Result<bool>.Success(isVerified);
         }
         catch (Exception ex)
@@ -158,7 +157,7 @@ public class KycService : IKycService
     {
         try
         {
-            var verifications = await _repository.GetByStatusAsync(status, cancellationToken);
+            var verifications = await _repository.GetByStatusAsync(status, cancellationToken).ConfigureAwait(false);
             return Result<List<UserKycVerification>>.Success(verifications);
         }
         catch (Exception ex)
@@ -177,13 +176,13 @@ public class KycService : IKycService
     {
         try
         {
-            var verification = await _repository.GetByIdAsync(verificationId, cancellationToken);
+            var verification = await _repository.GetByIdAsync(verificationId, cancellationToken).ConfigureAwait(false);
             if (verification == null)
             {
                 return Result.Failure<string>(Error.NotFound("KYC.NotFound", "Verification not found"));
             }
 
-            // TODO: Implement actual document storage (S3, Azure Blob, etc.)
+            // PLANNED: Implement actual document storage (S3, Azure Blob, etc.) (depends on GameGuild.Storage)
             var documentUrl = $"kyc-documents/{verificationId}/{fileName}";
 
             // Update verification with document type
@@ -196,7 +195,7 @@ public class KycService : IKycService
                 verification.DocumentTypes += $",{documentType}";
             }
 
-            await _repository.UpdateAsync(verification, cancellationToken);
+            await _repository.UpdateAsync(verification, cancellationToken).ConfigureAwait(false);
             _logger.LogInformation("Document {DocumentType} uploaded for verification {VerificationId}", documentType, verificationId);
 
             return Result<string>.Success(documentUrl);
@@ -217,7 +216,7 @@ public class KycService : IKycService
     {
         try
         {
-            var verification = await _repository.GetByExternalIdAsync(externalVerificationId, cancellationToken);
+            var verification = await _repository.GetByExternalIdAsync(externalVerificationId, cancellationToken).ConfigureAwait(false);
             if (verification == null)
             {
                 _logger.LogWarning("Verification not found for external ID {ExternalId}", externalVerificationId);
@@ -235,7 +234,7 @@ public class KycService : IKycService
                 verification.ExpiresAt = DateTime.UtcNow.AddYears(1);
             }
 
-            await _repository.UpdateAsync(verification, cancellationToken);
+            await _repository.UpdateAsync(verification, cancellationToken).ConfigureAwait(false);
             _logger.LogInformation("Provider webhook processed for verification {VerificationId}", verification.Id);
 
             return Result<bool>.Success(true);
@@ -254,7 +253,7 @@ public class KycService : IKycService
     {
         try
         {
-            var verifications = await _repository.GetByDateRangeAsync(startDate, endDate, cancellationToken);
+            var verifications = await _repository.GetByDateRangeAsync(startDate, endDate, cancellationToken).ConfigureAwait(false);
 
             var report = new KycComplianceReportDto
             {

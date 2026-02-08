@@ -57,7 +57,7 @@ public class ResourcePermissionAuthorizationFilter : IAsyncAuthorizationFilter
 
         foreach (var attr in attributes)
         {
-            var authorized = await CheckPermissionAsync(attr, context.HttpContext, actor, permissionQueryService);
+            var authorized = await CheckPermissionAsync(attr, context.HttpContext, actor, permissionQueryService).ConfigureAwait(false);
             if (!authorized)
             {
                 _logger.LogWarning(
@@ -106,19 +106,19 @@ public class ResourcePermissionAuthorizationFilter : IAsyncAuthorizationFilter
         // Handle resource permission attributes
         if (attr is IResourcePermissionMarker resourceAttr)
         {
-            return await CheckResourcePermissionAsync(resourceAttr, httpContext, actor, permissionQueryService);
+            return await CheckResourcePermissionAsync(resourceAttr, httpContext, actor, permissionQueryService).ConfigureAwait(false);
         }
 
         // Handle content-type permission attributes
         if (attr is IContentTypePermissionMarker contentTypeAttr)
         {
-            return await CheckContentTypePermissionAsync(contentTypeAttr, actor, permissionQueryService);
+            return await CheckContentTypePermissionAsync(contentTypeAttr, actor, permissionQueryService).ConfigureAwait(false);
         }
 
         // Handle tenant permission attributes
         if (attr is RequireTenantPermissionAttribute tenantAttr)
         {
-            return await CheckTenantPermissionAsync(tenantAttr.Permission, actor, permissionQueryService);
+            return await CheckTenantPermissionAsync(tenantAttr.Permission, actor, permissionQueryService).ConfigureAwait(false);
         }
 
         // Handle simple permission attributes
@@ -127,14 +127,14 @@ public class ResourcePermissionAuthorizationFilter : IAsyncAuthorizationFilter
             return actor.TenantId.HasValue && await permissionQueryService.HasTenantPermissionAsync(
                 actor.SubjectIdAsGuid!.Value,
                 actor.TenantId.Value,
-                simpleAttr.PermissionName);
+                simpleAttr.PermissionName).ConfigureAwait(false);
         }
         if (attr is RequirePermissionAttribute simpleAttr2)
         {
             return actor.TenantId.HasValue && await permissionQueryService.HasTenantPermissionAsync(
                 actor.SubjectIdAsGuid!.Value,
                 actor.TenantId.Value,
-                simpleAttr2.PermissionName);
+                simpleAttr2.PermissionName).ConfigureAwait(false);
         }
 
         return true;
@@ -163,7 +163,7 @@ public class ResourcePermissionAuthorizationFilter : IAsyncAuthorizationFilter
         var hasPermission = actor.TenantId.HasValue && await permissionQueryService.HasTenantPermissionAsync(
             actor.SubjectIdAsGuid!.Value,
             actor.TenantId.Value,
-            permissionName);
+            permissionName).ConfigureAwait(false);
 
         _logger.LogDebug(
             "Resource permission check: User {UserId}, Resource {ResourceType}:{ResourceId}, Permission {Permission} = {Result}",
@@ -188,7 +188,7 @@ public class ResourcePermissionAuthorizationFilter : IAsyncAuthorizationFilter
         var hasPermission = actor.TenantId.HasValue && await permissionQueryService.HasTenantPermissionAsync(
             actor.SubjectIdAsGuid!.Value,
             actor.TenantId.Value,
-            permissionName);
+            permissionName).ConfigureAwait(false);
 
         _logger.LogDebug(
             "Content-type permission check: User {UserId}, ContentType {ContentType}, Permission {Permission} = {Result}",
@@ -212,7 +212,7 @@ public class ResourcePermissionAuthorizationFilter : IAsyncAuthorizationFilter
         var hasPermission = actor.TenantId.HasValue && await permissionQueryService.HasTenantPermissionAsync(
             actor.SubjectIdAsGuid!.Value,
             actor.TenantId.Value,
-            permissionName);
+            permissionName).ConfigureAwait(false);
 
         _logger.LogDebug(
             "Tenant permission check: User {UserId}, Permission {Permission} = {Result}",

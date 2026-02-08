@@ -10,12 +10,11 @@ namespace GameGuild.Identity.Authorization.Controllers;
 /// <summary>
 ///     API controller for Permission Analytics
 /// </summary>
-[ApiController]
 [ApiVersion("1.0")]
 [Route("v{version:apiVersion}/permission-analytics")]
 [Authorize]
 [Produces("application/json")]
-public class PermissionAnalyticsController(ISender sender) : ControllerBase
+public class PermissionAnalyticsController(ISender sender) : BaseApiController
 {
     /// <summary>
     ///     Get permission usage metrics

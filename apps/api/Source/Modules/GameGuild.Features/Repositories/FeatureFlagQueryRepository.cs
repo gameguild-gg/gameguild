@@ -1,5 +1,3 @@
-using GameGuild.Abstractions;
-using GameGuild.Models;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 
@@ -22,14 +20,14 @@ public class FeatureFlagQueryRepository : IFeatureFlagQueryRepository
         return await _context.Set<FeatureFlag>()
             .Include(f => f.Targets)
             .Include(f => f.UsageAnalytics)
-            .FirstOrDefaultAsync(f => f.Id == id && f.DeletedAt == null, cancellationToken);
+            .FirstOrDefaultAsync(f => f.Id == id && f.DeletedAt == null, cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<FeatureFlag?> GetByKeyAsync(string key, CancellationToken cancellationToken = default)
     {
         return await _context.Set<FeatureFlag>()
             .Include(f => f.Targets)
-            .FirstOrDefaultAsync(f => f.Key == key && f.DeletedAt == null, cancellationToken);
+            .FirstOrDefaultAsync(f => f.Key == key && f.DeletedAt == null, cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<IEnumerable<FeatureFlag>> GetEnabledAsync(CancellationToken cancellationToken = default)
@@ -37,7 +35,7 @@ public class FeatureFlagQueryRepository : IFeatureFlagQueryRepository
         return await _context.Set<FeatureFlag>()
             .Where(f => f.IsEnabled && f.DeletedAt == null)
             .Include(f => f.Targets)
-            .ToListAsync(cancellationToken);
+            .ToListAsync(cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<IEnumerable<FeatureFlag>> GetByEnvironmentAsync(string environment, CancellationToken cancellationToken = default)
@@ -45,7 +43,7 @@ public class FeatureFlagQueryRepository : IFeatureFlagQueryRepository
         return await _context.Set<FeatureFlag>()
             .Where(f => f.Environment == environment && f.DeletedAt == null)
             .Include(f => f.Targets)
-            .ToListAsync(cancellationToken);
+            .ToListAsync(cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<IEnumerable<FeatureFlag>> GetByTenantAsync(Guid tenantId, CancellationToken cancellationToken = default)
@@ -53,7 +51,7 @@ public class FeatureFlagQueryRepository : IFeatureFlagQueryRepository
         return await _context.Set<FeatureFlag>()
             .Where(f => (f.TenantId == tenantId || f.IsGlobal) && f.DeletedAt == null)
             .Include(f => f.Targets)
-            .ToListAsync(cancellationToken);
+            .ToListAsync(cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<IEnumerable<FeatureFlag>> GetByKeysAsync(IEnumerable<string> keys, CancellationToken cancellationToken = default)
@@ -61,7 +59,7 @@ public class FeatureFlagQueryRepository : IFeatureFlagQueryRepository
         return await _context.Set<FeatureFlag>()
             .Where(f => keys.Contains(f.Key) && f.DeletedAt == null)
             .Include(f => f.Targets)
-            .ToListAsync(cancellationToken);
+            .ToListAsync(cancellationToken).ConfigureAwait(false);
     }
 
     public Task<IEnumerable<FeatureFlagTargetDto>> GetTargetingRulesAsync(Guid featureFlagId, CancellationToken cancellationToken = default)
@@ -74,19 +72,63 @@ public class FeatureFlagQueryRepository : IFeatureFlagQueryRepository
         throw new NotImplementedException("GetTargetingRuleByIdAsync will be implemented in follow-up work");
     }
 
-    public Task<IEnumerable<FeatureFlagUsageSummary>> GetUsageSummaryAsync(string featureKey, DateTime? startDate, DateTime? endDate, string? groupBy, CancellationToken cancellationToken = default)
+    public async Task<IEnumerable<FeatureFlagUsageSummary>> GetUsageSummaryAsync(string featureKey, DateTime? startDate, DateTime? endDate, string? groupBy, CancellationToken cancellationToken = default)
     {
-        // TODO: Implement usage summary aggregation
-        return Task.FromResult(Enumerable.Empty<FeatureFlagUsageSummary>());
+        var flag = await GetByKeyAsync(featureKey, cancellationToken).ConfigureAwait(false);
+        if (flag == null)
+            return Enumerable.Empty<FeatureFlagUsageSummary>();
+
+        var query = _context.Set<FeatureFlagUsage>()
+            .Where(u => u.FeatureFlagId == flag.Id);
+
+        if (startDate.HasValue) query = query.Where(u => u.LastAccessAt >= startDate.Value);
+        if (endDate.HasValue) query = query.Where(u => u.LastAccessAt <= endDate.Value);
+
+        var usages = await query.ToListAsync(cancellationToken).ConfigureAwait(false);
+
+        return new[]
+        {
+            new FeatureFlagUsageSummary
+            {
+                FeatureFlagId = flag.Id,
+                FeatureFlagKey = flag.Key,
+                Name = flag.Name,
+                IsEnabled = flag.IsEnabled,
+                TotalEvaluations = (int)usages.Sum(u => u.AccessCount),
+                UniqueUsers = usages.Where(u => u.UserId.HasValue).Select(u => u.UserId!.Value).Distinct().Count(),
+                LastEvaluatedAt = usages.Any() ? usages.Max(u => u.LastAccessAt) : DateTime.UtcNow,
+                CreatedAt = flag.CreatedAt
+            }
+        };
     }
 
-    public Task<FeatureFlagStatistics> GetStatisticsAsync(string environment, DateTime? startDate, DateTime? endDate, CancellationToken cancellationToken = default)
+    public async Task<FeatureFlagStatistics> GetStatisticsAsync(string environment, DateTime? startDate, DateTime? endDate, CancellationToken cancellationToken = default)
     {
-        // TODO: Implement statistics gathering - return stub for now
-        throw new NotImplementedException("Statistics gathering not yet implemented");
+        var flags = await _context.Set<FeatureFlag>()
+            .Where(f => f.Environment == environment && f.DeletedAt == null)
+            .ToListAsync(cancellationToken).ConfigureAwait(false);
+
+        var totalEnabled = flags.Count(f => f.IsEnabled);
+        var totalDisabled = flags.Count(f => !f.IsEnabled);
+        var total = flags.Count;
+
+        return new FeatureFlagStatistics
+        {
+            FeatureFlagId = Guid.Empty,
+            FeatureFlagKey = $"aggregate:{environment}",
+            TotalEvaluations = total,
+            EnabledEvaluations = totalEnabled,
+            DisabledEvaluations = totalDisabled,
+            EnabledPercentage = total > 0 ? (double)totalEnabled / total * 100 : 0,
+            UniqueUsers = 0,
+            FirstEvaluationAt = startDate ?? DateTime.UtcNow,
+            LastEvaluationAt = endDate ?? DateTime.UtcNow,
+            PeriodStart = startDate ?? DateTime.UtcNow.AddMonths(-1),
+            PeriodEnd = endDate ?? DateTime.UtcNow
+        };
     }
 
-    public Task<PagedResult<FeatureFlagEvaluationHistory>> GetEvaluationHistoryAsync(
+    public async Task<PagedResult<FeatureFlagEvaluationHistory>> GetEvaluationHistoryAsync(
         string featureKey,
         DateTime? startDate,
         DateTime? endDate,
@@ -96,17 +138,46 @@ public class FeatureFlagQueryRepository : IFeatureFlagQueryRepository
         int pageSize,
         CancellationToken cancellationToken = default)
     {
-        // TODO: Implement evaluation history tracking
-        return Task.FromResult(new PagedResult<FeatureFlagEvaluationHistory>(
-            Enumerable.Empty<FeatureFlagEvaluationHistory>(),
-            0,
-            page,
-            pageSize));
+        var flag = await GetByKeyAsync(featureKey, cancellationToken).ConfigureAwait(false);
+        if (flag == null)
+            return PagedResult<FeatureFlagEvaluationHistory>.FromPage(
+                Enumerable.Empty<FeatureFlagEvaluationHistory>(), 0, page, pageSize);
+
+        var query = _context.Set<FeatureFlagUsage>()
+            .Where(u => u.FeatureFlagId == flag.Id);
+
+        if (startDate.HasValue) query = query.Where(u => u.LastAccessAt >= startDate.Value);
+        if (endDate.HasValue) query = query.Where(u => u.LastAccessAt <= endDate.Value);
+        if (tenantId.HasValue) query = query.Where(u => u.TenantId == tenantId.Value);
+        if (userId.HasValue) query = query.Where(u => u.UserId == userId.Value);
+
+        var totalCount = await query.CountAsync(cancellationToken).ConfigureAwait(false);
+        var items = await query
+            .OrderByDescending(u => u.LastAccessAt)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .Select(u => new FeatureFlagEvaluationHistory
+            {
+                Id = u.Id,
+                FeatureFlagId = flag.Id,
+                FeatureFlagKey = featureKey,
+                UserId = u.UserId.HasValue ? u.UserId.Value.ToString() : string.Empty,
+                EvaluatedValue = u.ReturnedValue ?? (object)u.WasEnabled,
+                WasEnabled = u.WasEnabled,
+                Environment = u.Environment,
+                TenantId = u.TenantId,
+                Context = u.ContextData,
+                EvaluatedAt = u.LastAccessAt
+            })
+            .ToListAsync(cancellationToken).ConfigureAwait(false);
+
+        return PagedResult<FeatureFlagEvaluationHistory>.FromPage(items, totalCount, page, pageSize);
     }
 
     public Task<IEnumerable<FeatureFlagDependency>> GetDependenciesAsync(Guid featureFlagId, bool includeInverse, CancellationToken cancellationToken = default)
     {
-        // TODO: Implement dependency tracking
+        // PLANNED: FeatureFlagDependency is not yet a tracked entity in DbContext.
+        // Will implement when dependency tracking feature is added.
         return Task.FromResult(Enumerable.Empty<FeatureFlagDependency>());
     }
 
@@ -146,84 +217,109 @@ public class FeatureFlagQueryRepository : IFeatureFlagQueryRepository
         });
     }
 
-    public Task<FeatureFlagAnalytics> GetAnalyticsAsync(string featureKey, DateTime? startDate, DateTime? endDate, string? environment, Guid? tenantId, CancellationToken cancellationToken = default)
+    public async Task<FeatureFlagAnalytics> GetAnalyticsAsync(string featureKey, DateTime? startDate, DateTime? endDate, string? environment, Guid? tenantId, CancellationToken cancellationToken = default)
     {
-        // TODO: Implement comprehensive analytics
-        throw new NotImplementedException("Analytics not yet fully implemented");
+        var flag = await GetByKeyAsync(featureKey, cancellationToken).ConfigureAwait(false);
+        if (flag == null)
+            return new FeatureFlagAnalytics { FeatureKey = featureKey };
+
+        var query = _context.Set<FeatureFlagUsage>()
+            .Where(u => u.FeatureFlagId == flag.Id);
+
+        if (startDate.HasValue) query = query.Where(u => u.LastAccessAt >= startDate.Value);
+        if (endDate.HasValue) query = query.Where(u => u.LastAccessAt <= endDate.Value);
+        if (tenantId.HasValue) query = query.Where(u => u.TenantId == tenantId.Value);
+
+        var usages = await query.ToListAsync(cancellationToken).ConfigureAwait(false);
+
+        return new FeatureFlagAnalytics
+        {
+            FeatureKey = featureKey,
+            TotalAccesses = usages.Sum(u => u.AccessCount),
+            EnabledAccesses = usages.Where(u => u.WasEnabled).Sum(u => u.AccessCount),
+            DisabledAccesses = usages.Where(u => !u.WasEnabled).Sum(u => u.AccessCount),
+            EnabledPercentage = usages.Any() ? (double)usages.Count(u => u.WasEnabled) / usages.Count * 100 : 0,
+            UniqueUsers = usages.Where(u => u.UserId.HasValue).Select(u => u.UserId!.Value).Distinct().Count(),
+            UniqueTenants = usages.Where(u => u.TenantId.HasValue).Select(u => u.TenantId!.Value).Distinct().Count(),
+            FirstAccess = usages.Any() ? usages.Min(u => u.FirstAccessAt) : DateTime.UtcNow,
+            LastAccess = usages.Any() ? usages.Max(u => u.LastAccessAt) : DateTime.UtcNow,
+            PeriodStart = startDate ?? DateTime.UtcNow.AddMonths(-1),
+            PeriodEnd = endDate ?? DateTime.UtcNow
+        };
     }
 
     public async Task<FeatureFlag> AddAsync(FeatureFlag entity, CancellationToken cancellationToken = default)
     {
         _context.Set<FeatureFlag>().Add(entity);
-        await _context.SaveChangesAsync(cancellationToken);
+        await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         return entity;
     }
 
     public async Task AddRangeAsync(IEnumerable<FeatureFlag> entities, CancellationToken cancellationToken = default)
     {
         _context.Set<FeatureFlag>().AddRange(entities);
-        await _context.SaveChangesAsync(cancellationToken);
+        await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<FeatureFlag> UpdateAsync(FeatureFlag entity, CancellationToken cancellationToken = default)
     {
         _context.Set<FeatureFlag>().Update(entity);
-        await _context.SaveChangesAsync(cancellationToken);
+        await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         return entity;
     }
 
     public async Task UpdateRangeAsync(IEnumerable<FeatureFlag> entities, CancellationToken cancellationToken = default)
     {
         _context.Set<FeatureFlag>().UpdateRange(entities);
-        await _context.SaveChangesAsync(cancellationToken);
+        await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
     }
 
     public async Task RemoveAsync(FeatureFlag entity, CancellationToken cancellationToken = default)
     {
         _context.Set<FeatureFlag>().Remove(entity);
-        await _context.SaveChangesAsync(cancellationToken);
+        await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
     }
 
     public async Task RemoveAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var entity = await GetByIdAsync(id, cancellationToken);
+        var entity = await GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
         if (entity != null)
         {
             _context.Set<FeatureFlag>().Remove(entity);
-            await _context.SaveChangesAsync(cancellationToken);
+            await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         }
     }
 
     public async Task RemoveRangeAsync(IEnumerable<FeatureFlag> entities, CancellationToken cancellationToken = default)
     {
         _context.Set<FeatureFlag>().RemoveRange(entities);
-        await _context.SaveChangesAsync(cancellationToken);
+        await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
     }
 
     public async Task SoftDeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var entity = await GetByIdAsync(id, cancellationToken);
+        var entity = await GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
         if (entity != null)
         {
-            entity.DeletedAt = DateTimeOffset.UtcNow.DateTime;
-            await UpdateAsync(entity, cancellationToken);
+            entity.SoftDelete();
+            await UpdateAsync(entity, cancellationToken).ConfigureAwait(false);
         }
     }
 
     public async Task RestoreAsync(Guid id, CancellationToken cancellationToken = default)
     {
         var entity = await _context.Set<FeatureFlag>()
-            .FirstOrDefaultAsync(f => f.Id == id, cancellationToken);
+            .FirstOrDefaultAsync(f => f.Id == id, cancellationToken).ConfigureAwait(false);
         if (entity != null)
         {
-            entity.DeletedAt = null;
-            await UpdateAsync(entity, cancellationToken);
+            entity.Restore();
+            await UpdateAsync(entity, cancellationToken).ConfigureAwait(false);
         }
     }
 
     public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
-        return await _context.SaveChangesAsync(cancellationToken);
+        return await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<IEnumerable<FeatureFlag>> GetAllAsync(CancellationToken cancellationToken = default)
@@ -231,7 +327,7 @@ public class FeatureFlagQueryRepository : IFeatureFlagQueryRepository
         return await _context.Set<FeatureFlag>()
             .Where(f => f.DeletedAt == null)
             .Include(f => f.Targets)
-            .ToListAsync(cancellationToken);
+            .ToListAsync(cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<IPage<FeatureFlag>> GetPagedAsync(int page, int pageSize, CancellationToken cancellationToken = default)
@@ -240,13 +336,13 @@ public class FeatureFlagQueryRepository : IFeatureFlagQueryRepository
             .Where(f => f.DeletedAt == null)
             .Include(f => f.Targets);
 
-        var totalCount = await query.CountAsync(cancellationToken);
+        var totalCount = await query.CountAsync(cancellationToken).ConfigureAwait(false);
         var items = await query
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
-            .ToListAsync(cancellationToken);
+            .ToListAsync(cancellationToken).ConfigureAwait(false);
 
-        return (IPage<FeatureFlag>)new PagedResult<FeatureFlag>(items, totalCount, page, pageSize);
+        return (IPage<FeatureFlag>)PagedResult<FeatureFlag>.FromPage(items, totalCount, page, pageSize);
     }
 
     public async Task<IEnumerable<FeatureFlag>> FindAsync(Expression<Func<FeatureFlag, bool>> predicate, CancellationToken cancellationToken = default)
@@ -255,7 +351,7 @@ public class FeatureFlagQueryRepository : IFeatureFlagQueryRepository
             .Where(predicate)
             .Where(f => f.DeletedAt == null)
             .Include(f => f.Targets)
-            .ToListAsync(cancellationToken);
+            .ToListAsync(cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<FeatureFlag?> FirstOrDefaultAsync(Expression<Func<FeatureFlag, bool>> predicate, CancellationToken cancellationToken = default)
@@ -264,7 +360,7 @@ public class FeatureFlagQueryRepository : IFeatureFlagQueryRepository
             .Where(predicate)
             .Where(f => f.DeletedAt == null)
             .Include(f => f.Targets)
-            .FirstOrDefaultAsync(cancellationToken);
+            .FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<bool> AnyAsync(Expression<Func<FeatureFlag, bool>> predicate, CancellationToken cancellationToken = default)
@@ -272,7 +368,7 @@ public class FeatureFlagQueryRepository : IFeatureFlagQueryRepository
         return await _context.Set<FeatureFlag>()
             .Where(predicate)
             .Where(f => f.DeletedAt == null)
-            .AnyAsync(cancellationToken);
+            .AnyAsync(cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<int> CountAsync(Expression<Func<FeatureFlag, bool>>? predicate = null, CancellationToken cancellationToken = default)
@@ -283,12 +379,12 @@ public class FeatureFlagQueryRepository : IFeatureFlagQueryRepository
         if (predicate != null)
             query = query.Where(predicate);
 
-        return await query.CountAsync(cancellationToken);
+        return await query.CountAsync(cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<bool> ExistsAsync(Guid id, CancellationToken cancellationToken = default)
     {
         return await _context.Set<FeatureFlag>()
-            .AnyAsync(f => f.Id == id && f.DeletedAt == null, cancellationToken);
+            .AnyAsync(f => f.Id == id && f.DeletedAt == null, cancellationToken).ConfigureAwait(false);
     }
 }

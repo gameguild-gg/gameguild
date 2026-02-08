@@ -13,4 +13,4 @@ public record GetTenantsPageQuery(
     string? SearchTerm = null,
     string? SortBy = "Name",
     bool SortDescending = false
-) : IQuery<Models.PagedResult<Tenant>>;
+) : IQuery<PagedResult<Tenant>>;

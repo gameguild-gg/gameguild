@@ -67,7 +67,7 @@ public sealed class SelfOrPermissionRuleEvaluator : IRuleEvaluator
         if (!string.IsNullOrEmpty(anyPermission))
         {
             var hasAnyPermission = await _permissionService.HasPermissionAsync(
-                currentUserId, tenantId, anyPermission, cancellationToken);
+                currentUserId, tenantId, anyPermission, cancellationToken).ConfigureAwait(false);
             if (hasAnyPermission)
             {
                 return RuleEvaluationResult.Success();
@@ -83,7 +83,7 @@ public sealed class SelfOrPermissionRuleEvaluator : IRuleEvaluator
             if (!string.IsNullOrEmpty(selfPermission))
             {
                 var hasSelfPermission = await _permissionService.HasPermissionAsync(
-                    currentUserId, tenantId, selfPermission, cancellationToken);
+                    currentUserId, tenantId, selfPermission, cancellationToken).ConfigureAwait(false);
                 if (hasSelfPermission)
                 {
                     return RuleEvaluationResult.Success();
@@ -107,7 +107,7 @@ public sealed class SelfOrPermissionRuleEvaluator : IRuleEvaluator
             }
 
             var hasSelfPermission = await _permissionService.HasPermissionAsync(
-                currentUserId, tenantId, selfPermission, cancellationToken);
+                currentUserId, tenantId, selfPermission, cancellationToken).ConfigureAwait(false);
             if (hasSelfPermission)
             {
                 return RuleEvaluationResult.Success();

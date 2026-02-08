@@ -1,4 +1,3 @@
-using GameGuild.Abstractions;
 using Microsoft.EntityFrameworkCore;
 
 namespace GameGuild.Features;
@@ -18,14 +17,14 @@ public class FeatureFlagAnalyticsRepository : IFeatureFlagAnalyticsRepository
     public async Task RecordUsageAsync(FeatureFlagUsage usage, CancellationToken cancellationToken = default)
     {
         _context.Set<FeatureFlagUsage>().Add(usage);
-        await _context.SaveChangesAsync(cancellationToken);
+        await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<IEnumerable<FeatureFlagUsage>> GetUsageAnalyticsAsync(string featureKey, DateTime startDate, DateTime endDate, CancellationToken cancellationToken = default)
     {
         // First get the feature flag to find its ID
         var featureFlag = await _context.Set<FeatureFlag>()
-            .FirstOrDefaultAsync(f => f.Key == featureKey && f.DeletedAt == null, cancellationToken);
+            .FirstOrDefaultAsync(f => f.Key == featureKey && f.DeletedAt == null, cancellationToken).ConfigureAwait(false);
 
         if (featureFlag == null)
             return Enumerable.Empty<FeatureFlagUsage>();
@@ -64,7 +63,7 @@ public class FeatureFlagAnalyticsRepository : IFeatureFlagAnalyticsRepository
     public async Task<FeatureFlagUsageStats> GetAggregatedStatsAsync(string featureKey, DateTime startDate, DateTime endDate, CancellationToken cancellationToken = default)
     {
         var featureFlag = await _context.Set<FeatureFlag>()
-            .FirstOrDefaultAsync(f => f.Key == featureKey && f.DeletedAt == null, cancellationToken);
+            .FirstOrDefaultAsync(f => f.Key == featureKey && f.DeletedAt == null, cancellationToken).ConfigureAwait(false);
 
         if (featureFlag == null)
         {
@@ -83,7 +82,7 @@ public class FeatureFlagAnalyticsRepository : IFeatureFlagAnalyticsRepository
                        u.LastAccessAt >= startDate &&
                        u.LastAccessAt <= endDate &&
                        u.DeletedAt == null)
-            .ToListAsync(cancellationToken);
+            .ToListAsync(cancellationToken).ConfigureAwait(false);
 
         return new FeatureFlagUsageStats
         {
@@ -112,7 +111,7 @@ public class FeatureFlagAnalyticsRepository : IFeatureFlagAnalyticsRepository
         var featureFlagIds = topFeatures.Select(x => x.FeatureFlagId).ToList();
         var featureFlags = await _context.Set<FeatureFlag>()
             .Where(f => featureFlagIds.Contains(f.Id) && f.DeletedAt == null)
-            .ToListAsync(cancellationToken);
+            .ToListAsync(cancellationToken).ConfigureAwait(false);
 
         var featureFlagDict = featureFlags.ToDictionary(f => f.Id, f => f.Key);
 
@@ -124,7 +123,7 @@ public class FeatureFlagAnalyticsRepository : IFeatureFlagAnalyticsRepository
     public async Task RecordUsageBulkAsync(IEnumerable<FeatureFlagUsage> usageRecords, CancellationToken cancellationToken = default)
     {
         _context.Set<FeatureFlagUsage>().AddRange(usageRecords);
-        await _context.SaveChangesAsync(cancellationToken);
+        await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<int> PurgeOldUsageRecordsAsync(DateTime beforeDate, CancellationToken cancellationToken = default)
@@ -132,14 +131,14 @@ public class FeatureFlagAnalyticsRepository : IFeatureFlagAnalyticsRepository
         var beforeDateOffset = new DateTimeOffset(beforeDate, TimeSpan.Zero);
         var oldRecords = await _context.Set<FeatureFlagUsage>()
             .Where(u => u.CreatedAt < beforeDateOffset && u.DeletedAt == null)
-            .ToListAsync(cancellationToken);
+            .ToListAsync(cancellationToken).ConfigureAwait(false);
 
         foreach (var record in oldRecords)
         {
-            record.DeletedAt = DateTimeOffset.UtcNow.DateTime;
+            record.SoftDelete();
         }
 
-        return await _context.SaveChangesAsync(cancellationToken);
+        return await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<AnalyticsExportResult> ExportAnalyticsAsync(
@@ -160,7 +159,7 @@ public class FeatureFlagAnalyticsRepository : IFeatureFlagAnalyticsRepository
         {
             var featureFlags = await _context.Set<FeatureFlag>()
                 .Where(f => featureKeys.Contains(f.Key) && f.DeletedAt == null)
-                .ToListAsync(cancellationToken);
+                .ToListAsync(cancellationToken).ConfigureAwait(false);
 
             var featureFlagIds = featureFlags.Select(f => f.Id).ToList();
             query = query.Where(u => featureFlagIds.Contains(u.FeatureFlagId));
@@ -178,7 +177,7 @@ public class FeatureFlagAnalyticsRepository : IFeatureFlagAnalyticsRepository
         if (tenantId.HasValue)
             query = query.Where(u => u.TenantId == tenantId.Value);
 
-        var usages = await query.ToListAsync(cancellationToken);
+        var usages = await query.ToListAsync(cancellationToken).ConfigureAwait(false);
 
         // Simple export result - serialize to JSON bytes
         var jsonData = System.Text.Json.JsonSerializer.Serialize<object>(includeDetails ? usages : usages.Select(u => new { u.FeatureFlagId, u.AccessCount, u.LastAccessAt }));

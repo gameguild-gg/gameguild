@@ -10,11 +10,10 @@ namespace GameGuild.Identity.Users;
 /// <summary>
 ///     Controller for managing user preferences and settings
 /// </summary>
-[ApiController]
 [ApiVersion("1.0")]
 [Tags("users/preferences")]
 [Authorize]
-public sealed class UserPreferencesController(ISender sender) : ControllerBase
+public sealed class UserPreferencesController(ISender sender) : BaseApiController
 {
     /// <summary>
     ///     Get user preferences

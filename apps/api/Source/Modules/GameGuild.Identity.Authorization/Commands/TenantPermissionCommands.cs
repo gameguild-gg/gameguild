@@ -96,7 +96,7 @@ public sealed class GrantTenantPermissionCommandHandler(
                 request.ExpiresAt,
                 request.Reason,
                 cancellationToken)
-            .ConfigureAwait(false);
+            ;
 
         logger.LogInformation(
             "Successfully granted tenant permissions to user {UserId}: {PermissionId}",
@@ -436,7 +436,7 @@ public sealed class DenyTenantPermissionCommandHandler(
                 request.DeniedBy,
                 request.Reason,
                 cancellationToken)
-            .ConfigureAwait(false);
+            ;
 
         logger.LogInformation(
             "Successfully denied tenant permissions for user {UserId}: {PermissionId}",

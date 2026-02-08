@@ -27,7 +27,7 @@ public sealed class AuthorizationPermissionServiceAdapter : IAuthorizationPermis
             userId,
             tenantId,
             permission,
-            cancellationToken);
+            cancellationToken).ConfigureAwait(false);
     }
 
     /// <inheritdoc />
@@ -47,7 +47,7 @@ public sealed class AuthorizationPermissionServiceAdapter : IAuthorizationPermis
         var userPermissions = await _queryService.GetEffectivePermissionsAsync(
             userId,
             tenantId,
-            cancellationToken);
+            cancellationToken).ConfigureAwait(false);
 
         var userPermissionSet = new HashSet<string>(userPermissions, StringComparer.OrdinalIgnoreCase);
 
@@ -81,7 +81,7 @@ public sealed class AuthorizationPermissionServiceAdapter : IAuthorizationPermis
         var userPermissions = await _queryService.GetEffectivePermissionsAsync(
             userId,
             tenantId,
-            cancellationToken);
+            cancellationToken).ConfigureAwait(false);
 
         var userPermissionSet = new HashSet<string>(userPermissions, StringComparer.OrdinalIgnoreCase);
 
@@ -107,7 +107,7 @@ public sealed class AuthorizationPermissionServiceAdapter : IAuthorizationPermis
         var permissions = await _queryService.GetEffectivePermissionsAsync(
             userId,
             tenantId,
-            cancellationToken);
+            cancellationToken).ConfigureAwait(false);
 
         return permissions;
     }

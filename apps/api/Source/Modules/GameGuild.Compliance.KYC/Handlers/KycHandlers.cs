@@ -1,5 +1,4 @@
 using GameGuild.CQRS;
-using GameGuild.Models;
 using Microsoft.Extensions.Logging;
 
 namespace GameGuild.Compliance.KYC;
@@ -56,7 +55,7 @@ public class UpdateKycVerificationStatusHandler : IRequestHandler<UpdateKycVerif
                 request.Status,
                 request.Notes,
                 request.CompletedAt,
-                cancellationToken);
+                cancellationToken).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -86,7 +85,7 @@ public class UploadKycDocumentHandler : IRequestHandler<UploadKycDocumentCommand
                 request.DocumentType,
                 request.DocumentStream,
                 request.FileName,
-                cancellationToken);
+                cancellationToken).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -116,7 +115,7 @@ public class ProcessKycProviderWebhookHandler : IRequestHandler<ProcessKycProvid
                 request.ExternalVerificationId,
                 request.Status,
                 request.ProviderData,
-                cancellationToken);
+                cancellationToken).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -141,7 +140,7 @@ public class DeleteKycVerificationHandler : IRequestHandler<DeleteKycVerificatio
     {
         try
         {
-            await _repository.DeleteAsync(request.VerificationId, cancellationToken);
+            await _repository.DeleteAsync(request.VerificationId, cancellationToken).ConfigureAwait(false);
             _logger.LogInformation("KYC verification {VerificationId} deleted", request.VerificationId);
             return Result<bool>.Success(true);
         }
@@ -169,7 +168,7 @@ public class GetKycVerificationByIdHandler : IRequestHandler<GetKycVerificationB
     {
         try
         {
-            return await _kycService.GetVerificationByIdAsync(request.VerificationId, cancellationToken);
+            return await _kycService.GetVerificationByIdAsync(request.VerificationId, cancellationToken).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -194,7 +193,7 @@ public class GetKycVerificationsByUserIdHandler : IRequestHandler<GetKycVerifica
     {
         try
         {
-            return await _kycService.GetVerificationsByUserIdAsync(request.UserId, cancellationToken);
+            return await _kycService.GetVerificationsByUserIdAsync(request.UserId, cancellationToken).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -219,7 +218,7 @@ public class GetLatestKycVerificationHandler : IRequestHandler<GetLatestKycVerif
     {
         try
         {
-            return await _kycService.GetLatestVerificationAsync(request.UserId, cancellationToken);
+            return await _kycService.GetLatestVerificationAsync(request.UserId, cancellationToken).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -244,7 +243,7 @@ public class IsUserVerifiedHandler : IRequestHandler<IsUserVerifiedQuery, Result
     {
         try
         {
-            return await _kycService.IsUserVerifiedAsync(request.UserId, cancellationToken);
+            return await _kycService.IsUserVerifiedAsync(request.UserId, cancellationToken).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -269,7 +268,7 @@ public class GetKycVerificationsByStatusHandler : IRequestHandler<GetKycVerifica
     {
         try
         {
-            return await _kycService.GetVerificationsByStatusAsync(request.Status, cancellationToken);
+            return await _kycService.GetVerificationsByStatusAsync(request.Status, cancellationToken).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -294,7 +293,7 @@ public class GetKycComplianceReportHandler : IRequestHandler<GetKycComplianceRep
     {
         try
         {
-            return await _kycService.GetComplianceReportAsync(request.StartDate, request.EndDate, cancellationToken);
+            return await _kycService.GetComplianceReportAsync(request.StartDate, request.EndDate, cancellationToken).ConfigureAwait(false);
         }
         catch (Exception ex)
         {

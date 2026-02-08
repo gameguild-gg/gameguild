@@ -1,3 +1,4 @@
+using GameGuild.CQRS;
 using Microsoft.Extensions.Logging;
 
 namespace GameGuild.Identity.Authorization;
@@ -8,7 +9,8 @@ namespace GameGuild.Identity.Authorization;
 public class AccessReviewService(
     IAccessReviewCampaignRepository campaignRepository,
     IAccessReviewItemRepository itemRepository,
-    ILogger<AccessReviewService> logger
+    ILogger<AccessReviewService> logger,
+    IPublisher? publisher = null
 ) : IAccessReviewService
 {
     private readonly IAccessReviewCampaignRepository _campaignRepository =
@@ -20,12 +22,14 @@ public class AccessReviewService(
     private readonly ILogger<AccessReviewService> _logger =
         logger ?? throw new ArgumentNullException(nameof(logger));
 
+    private readonly IPublisher? _publisher = publisher;
+
     public async Task<AccessReviewCampaign> CreateCampaignAsync(
         AccessReviewCampaign campaign,
         CancellationToken cancellationToken = default
     )
     {
-        var result = await _campaignRepository.CreateAsync(campaign, cancellationToken);
+        var result = await _campaignRepository.CreateAsync(campaign, cancellationToken).ConfigureAwait(false);
 
         _logger.LogInformation(
             "Created access review campaign {CampaignId}: {Name}",
@@ -41,7 +45,7 @@ public class AccessReviewService(
         CancellationToken cancellationToken = default
     )
     {
-        await _campaignRepository.UpdateAsync(campaign, cancellationToken);
+        await _campaignRepository.UpdateAsync(campaign, cancellationToken).ConfigureAwait(false);
 
         _logger.LogInformation("Updated access review campaign {CampaignId}", campaign.Id);
 
@@ -53,12 +57,12 @@ public class AccessReviewService(
         CancellationToken cancellationToken = default
     )
     {
-        var campaign = await _campaignRepository.GetByIdAsync(campaignId, cancellationToken);
+        var campaign = await _campaignRepository.GetByIdAsync(campaignId, cancellationToken).ConfigureAwait(false);
 
         if (campaign == null) return false;
 
         campaign.Start();
-        await _campaignRepository.UpdateAsync(campaign, cancellationToken);
+        await _campaignRepository.UpdateAsync(campaign, cancellationToken).ConfigureAwait(false);
 
         _logger.LogInformation("Started access review campaign {CampaignId}", campaignId);
 
@@ -71,12 +75,12 @@ public class AccessReviewService(
         CancellationToken cancellationToken = default
     )
     {
-        var campaign = await _campaignRepository.GetByIdAsync(campaignId, cancellationToken);
+        var campaign = await _campaignRepository.GetByIdAsync(campaignId, cancellationToken).ConfigureAwait(false);
 
         if (campaign == null) return false;
 
         campaign.Complete(completedBy);
-        await _campaignRepository.UpdateAsync(campaign, cancellationToken);
+        await _campaignRepository.UpdateAsync(campaign, cancellationToken).ConfigureAwait(false);
 
         _logger.LogInformation("Completed access review campaign {CampaignId} by {CompletedBy}", campaignId, completedBy);
 
@@ -88,12 +92,12 @@ public class AccessReviewService(
         CancellationToken cancellationToken = default
     )
     {
-        var campaign = await _campaignRepository.GetByIdAsync(campaignId, cancellationToken);
+        var campaign = await _campaignRepository.GetByIdAsync(campaignId, cancellationToken).ConfigureAwait(false);
 
         if (campaign == null) return false;
 
         campaign.Cancel();
-        await _campaignRepository.UpdateAsync(campaign, cancellationToken);
+        await _campaignRepository.UpdateAsync(campaign, cancellationToken).ConfigureAwait(false);
 
         _logger.LogInformation("Cancelled access review campaign {CampaignId}", campaignId);
 
@@ -123,13 +127,13 @@ public class AccessReviewService(
         CancellationToken cancellationToken = default
     )
     {
-        var item = await _itemRepository.GetByIdAsync(itemId, cancellationToken);
+        var item = await _itemRepository.GetByIdAsync(itemId, cancellationToken).ConfigureAwait(false);
 
         if (item == null)
             throw new InvalidOperationException($"Review item {itemId} not found");
 
         item.Approve(reason, notes);
-        await _itemRepository.UpdateAsync(item, cancellationToken);
+        await _itemRepository.UpdateAsync(item, cancellationToken).ConfigureAwait(false);
 
         _logger.LogInformation("Approved review item {ItemId}", itemId);
 
@@ -143,13 +147,13 @@ public class AccessReviewService(
         CancellationToken cancellationToken = default
     )
     {
-        var item = await _itemRepository.GetByIdAsync(itemId, cancellationToken);
+        var item = await _itemRepository.GetByIdAsync(itemId, cancellationToken).ConfigureAwait(false);
 
         if (item == null)
             throw new InvalidOperationException($"Review item {itemId} not found");
 
         item.Revoke(reason, notes);
-        await _itemRepository.UpdateAsync(item, cancellationToken);
+        await _itemRepository.UpdateAsync(item, cancellationToken).ConfigureAwait(false);
 
         _logger.LogInformation("Revoked review item {ItemId}", itemId);
 
@@ -161,8 +165,8 @@ public class AccessReviewService(
         CancellationToken cancellationToken = default
     )
     {
-        var items = await _itemRepository.GetByCampaignAsync(campaignId, cancellationToken);
-        var campaign = await _campaignRepository.GetByIdAsync(campaignId, cancellationToken);
+        var items = await _itemRepository.GetByCampaignAsync(campaignId, cancellationToken).ConfigureAwait(false);
+        var campaign = await _campaignRepository.GetByIdAsync(campaignId, cancellationToken).ConfigureAwait(false);
 
         if (campaign == null) return 0;
 
@@ -171,9 +175,16 @@ public class AccessReviewService(
         foreach (var item in items.Where(i => i.NeedsReminder(campaign.ReminderFrequencyDays)))
         {
             item.RecordReminderSent();
-            await _itemRepository.UpdateAsync(item, cancellationToken);
+            await _itemRepository.UpdateAsync(item, cancellationToken).ConfigureAwait(false);
             remindersSent++;
-            // TODO: Actually send the reminder notification
+
+            if (_publisher is not null)
+            {
+                await _publisher.Publish(
+                    new AccessReviewReminderNotification(campaignId, item.Id, item.ReviewerId),
+                    cancellationToken
+                ).ConfigureAwait(false);
+            }
         }
 
         _logger.LogInformation("Sent {Count} reminders for campaign {CampaignId}", remindersSent, campaignId);
@@ -185,13 +196,13 @@ public class AccessReviewService(
         CancellationToken cancellationToken = default
     )
     {
-        var pendingCampaigns = await _campaignRepository.GetPendingCampaignsAsync(cancellationToken);
+        var pendingCampaigns = await _campaignRepository.GetPendingCampaignsAsync(cancellationToken).ConfigureAwait(false);
         var expiredCount = 0;
 
         foreach (var campaign in pendingCampaigns.Where(c => c.IsExpired()))
         {
             campaign.MarkExpired();
-            await _campaignRepository.UpdateAsync(campaign, cancellationToken);
+            await _campaignRepository.UpdateAsync(campaign, cancellationToken).ConfigureAwait(false);
             expiredCount++;
         }
 
@@ -227,7 +238,7 @@ public class PermissionAnalyticsService(
             toDate ?? DateTime.UtcNow,
             tenantId,
             cancellationToken
-        );
+        ).ConfigureAwait(false);
 
         return logs
             .Where(l => l.PermissionType != null)
@@ -256,7 +267,7 @@ public class PermissionAnalyticsService(
             toDate ?? DateTime.UtcNow,
             tenantId,
             cancellationToken
-        );
+        ).ConfigureAwait(false);
 
         return logs
             .Where(l => l.UserId.HasValue)
@@ -286,7 +297,7 @@ public class PermissionAnalyticsService(
             toDate ?? DateTime.UtcNow,
             tenantId,
             cancellationToken
-        );
+        ).ConfigureAwait(false);
 
         return logs
             .Where(l => l.ResourceId.HasValue && l.ResourceType != null)
@@ -315,7 +326,7 @@ public class PermissionAnalyticsService(
             toDate,
             tenantId,
             cancellationToken
-        );
+        ).ConfigureAwait(false);
 
         return logs
             .GroupBy(l => l.Timestamp.Date)
@@ -324,7 +335,10 @@ public class PermissionAnalyticsService(
                 Date = g.Key,
                 Grants = g.Count(l => l.OperationType == PermissionOperationType.Grant),
                 Revokes = g.Count(l => l.OperationType == PermissionOperationType.Revoke),
-                ActivePermissions = 0 // TODO: Calculate active permissions at each date
+                ActivePermissions = g.Count(l => l.OperationType == PermissionOperationType.Grant)
+                    - g.Count(l => l.OperationType == PermissionOperationType.Revoke)
+                    // NOTE: This is a daily delta, not a running total. A running total requires
+                    // a window function or post-processing scan. PLANNED: Replace with cumulative sum.
             })
             .OrderBy(t => t.Date)
             .ToList();
@@ -347,7 +361,7 @@ public class PermissionAnalyticsService(
             DateTime.UtcNow,
             tenantId,
             cancellationToken
-        );
+        ).ConfigureAwait(false);
 
         var anomalies = new List<PermissionAnomaly>();
 
@@ -387,11 +401,11 @@ public class PermissionAnalyticsService(
             periodEnd
         );
 
-        var topPermissions = await GetPermissionUsageAsync(tenantId, periodStart, periodEnd, cancellationToken);
-        var topUsers = await GetUserActivityAsync(tenantId, 10, periodStart, periodEnd, cancellationToken);
-        var anomalies = await DetectAnomaliesAsync(tenantId, periodStart, cancellationToken);
+        var topPermissions = await GetPermissionUsageAsync(tenantId, periodStart, periodEnd, cancellationToken).ConfigureAwait(false);
+        var topUsers = await GetUserActivityAsync(tenantId, 10, periodStart, periodEnd, cancellationToken).ConfigureAwait(false);
+        var anomalies = await DetectAnomaliesAsync(tenantId, periodStart, cancellationToken).ConfigureAwait(false);
 
-        var logs = await _auditLogRepository.GetByDateRangeAsync(periodStart, periodEnd, tenantId, cancellationToken);
+        var logs = await _auditLogRepository.GetByDateRangeAsync(periodStart, periodEnd, tenantId, cancellationToken).ConfigureAwait(false);
 
         return new PermissionAnalyticsReport
         {

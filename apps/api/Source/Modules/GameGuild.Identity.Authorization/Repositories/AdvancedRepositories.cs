@@ -16,8 +16,8 @@ public class JitElevationRequestRepository(DbContext context) : IJitElevationReq
         CancellationToken cancellationToken = default
     )
     {
-        await DbSet.AddAsync(request, cancellationToken);
-        await _context.SaveChangesAsync(cancellationToken);
+        await DbSet.AddAsync(request, cancellationToken).ConfigureAwait(false);
+        await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         return request;
     }
 
@@ -33,16 +33,16 @@ public class JitElevationRequestRepository(DbContext context) : IJitElevationReq
     {
         request.UpdatedAt = DateTime.UtcNow;
         DbSet.Update(request);
-        await _context.SaveChangesAsync(cancellationToken);
+        await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
     }
 
     public async Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var request = await GetByIdAsync(id, cancellationToken);
+        var request = await GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
         if (request != null)
         {
             DbSet.Remove(request);
-            await _context.SaveChangesAsync(cancellationToken);
+            await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         }
     }
 
@@ -89,7 +89,7 @@ public class JitElevationRequestRepository(DbContext context) : IJitElevationReq
         if (tenantId.HasValue)
             query = query.Where(r => r.TenantId == new TenantId(tenantId.Value));
 
-        return await query.ToListAsync(cancellationToken);
+        return await query.ToListAsync(cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<List<JitElevationRequest>> GetExpiredElevationsAsync(
@@ -99,7 +99,7 @@ public class JitElevationRequestRepository(DbContext context) : IJitElevationReq
         var now = DateTime.UtcNow;
         return await DbSet
             .Where(r => r.Status == ElevationRequestStatus.Active && r.ExpiresAt <= now)
-            .ToListAsync(cancellationToken);
+            .ToListAsync(cancellationToken).ConfigureAwait(false);
     }
 }
 
@@ -116,8 +116,8 @@ public class PermissionDelegationRepository(DbContext context) : IPermissionDele
         CancellationToken cancellationToken = default
     )
     {
-        await DbSet.AddAsync(delegation, cancellationToken);
-        await _context.SaveChangesAsync(cancellationToken);
+        await DbSet.AddAsync(delegation, cancellationToken).ConfigureAwait(false);
+        await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         return delegation;
     }
 
@@ -133,16 +133,16 @@ public class PermissionDelegationRepository(DbContext context) : IPermissionDele
     {
         delegation.UpdatedAt = DateTime.UtcNow;
         DbSet.Update(delegation);
-        await _context.SaveChangesAsync(cancellationToken);
+        await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
     }
 
     public async Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var delegation = await GetByIdAsync(id, cancellationToken);
+        var delegation = await GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
         if (delegation != null)
         {
             DbSet.Remove(delegation);
-            await _context.SaveChangesAsync(cancellationToken);
+            await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         }
     }
 
@@ -177,7 +177,7 @@ public class PermissionDelegationRepository(DbContext context) : IPermissionDele
         if (tenantId.HasValue)
             query = query.Where(d => d.TenantId == new TenantId(tenantId.Value));
 
-        return await query.ToListAsync(cancellationToken);
+        return await query.ToListAsync(cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<List<PermissionDelegation>> GetExpiredDelegationsAsync(
@@ -187,7 +187,7 @@ public class PermissionDelegationRepository(DbContext context) : IPermissionDele
         var now = DateTime.UtcNow;
         return await DbSet
             .Where(d => d.IsActive && d.ExpiresAt != null && d.ExpiresAt <= now)
-            .ToListAsync(cancellationToken);
+            .ToListAsync(cancellationToken).ConfigureAwait(false);
     }
 }
 
@@ -204,8 +204,8 @@ public class SoDRuleRepository(DbContext context) : ISoDRuleRepository
         CancellationToken cancellationToken = default
     )
     {
-        await DbSet.AddAsync(rule, cancellationToken);
-        await _context.SaveChangesAsync(cancellationToken);
+        await DbSet.AddAsync(rule, cancellationToken).ConfigureAwait(false);
+        await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         return rule;
     }
 
@@ -221,17 +221,17 @@ public class SoDRuleRepository(DbContext context) : ISoDRuleRepository
     {
         rule.UpdatedAt = DateTime.UtcNow;
         DbSet.Update(rule);
-        await _context.SaveChangesAsync(cancellationToken);
+        await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         return rule;
     }
 
     public async Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var rule = await GetByIdAsync(id, cancellationToken);
+        var rule = await GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
         if (rule != null)
         {
             DbSet.Remove(rule);
-            await _context.SaveChangesAsync(cancellationToken);
+            await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         }
     }
 
@@ -257,7 +257,7 @@ public class SoDRuleRepository(DbContext context) : ISoDRuleRepository
         if (tenantId.HasValue)
             query = query.Where(r => r.TenantId == new TenantId(tenantId.Value));
 
-        return await query.ToListAsync(cancellationToken);
+        return await query.ToListAsync(cancellationToken).ConfigureAwait(false);
     }
 }
 
@@ -274,8 +274,8 @@ public class SoDViolationRepository(DbContext context) : ISoDViolationRepository
         CancellationToken cancellationToken = default
     )
     {
-        await DbSet.AddAsync(violation, cancellationToken);
-        await _context.SaveChangesAsync(cancellationToken);
+        await DbSet.AddAsync(violation, cancellationToken).ConfigureAwait(false);
+        await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         return violation;
     }
 
@@ -291,16 +291,16 @@ public class SoDViolationRepository(DbContext context) : ISoDViolationRepository
     {
         violation.UpdatedAt = DateTime.UtcNow;
         DbSet.Update(violation);
-        await _context.SaveChangesAsync(cancellationToken);
+        await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
     }
 
     public async Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var violation = await GetByIdAsync(id, cancellationToken);
+        var violation = await GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
         if (violation != null)
         {
             DbSet.Remove(violation);
-            await _context.SaveChangesAsync(cancellationToken);
+            await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         }
     }
 
@@ -335,7 +335,7 @@ public class SoDViolationRepository(DbContext context) : ISoDViolationRepository
         if (tenantId.HasValue)
             query = query.Where(v => v.TenantId == new TenantId(tenantId.Value));
 
-        return await query.ToListAsync(cancellationToken);
+        return await query.ToListAsync(cancellationToken).ConfigureAwait(false);
     }
 }
 
@@ -352,8 +352,8 @@ public class AccessReviewCampaignRepository(DbContext context) : IAccessReviewCa
         CancellationToken cancellationToken = default
     )
     {
-        await DbSet.AddAsync(campaign, cancellationToken);
-        await _context.SaveChangesAsync(cancellationToken);
+        await DbSet.AddAsync(campaign, cancellationToken).ConfigureAwait(false);
+        await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         return campaign;
     }
 
@@ -369,16 +369,16 @@ public class AccessReviewCampaignRepository(DbContext context) : IAccessReviewCa
     {
         campaign.UpdatedAt = DateTime.UtcNow;
         DbSet.Update(campaign);
-        await _context.SaveChangesAsync(cancellationToken);
+        await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
     }
 
     public async Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var campaign = await GetByIdAsync(id, cancellationToken);
+        var campaign = await GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
         if (campaign != null)
         {
             DbSet.Remove(campaign);
-            await _context.SaveChangesAsync(cancellationToken);
+            await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         }
     }
 
@@ -409,7 +409,7 @@ public class AccessReviewCampaignRepository(DbContext context) : IAccessReviewCa
         if (tenantId.HasValue)
             query = query.Where(c => c.TenantId == new TenantId(tenantId.Value));
 
-        return await query.ToListAsync(cancellationToken);
+        return await query.ToListAsync(cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<List<AccessReviewCampaign>> GetPendingCampaignsAsync(
@@ -419,7 +419,7 @@ public class AccessReviewCampaignRepository(DbContext context) : IAccessReviewCa
         var now = DateTime.UtcNow;
         return await DbSet
             .Where(c => c.Status == AccessReviewStatus.InProgress && c.EndDate >= now)
-            .ToListAsync(cancellationToken);
+            .ToListAsync(cancellationToken).ConfigureAwait(false);
     }
 }
 
@@ -436,8 +436,8 @@ public class AccessReviewItemRepository(DbContext context) : IAccessReviewItemRe
         CancellationToken cancellationToken = default
     )
     {
-        await DbSet.AddAsync(item, cancellationToken);
-        await _context.SaveChangesAsync(cancellationToken);
+        await DbSet.AddAsync(item, cancellationToken).ConfigureAwait(false);
+        await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         return item;
     }
 
@@ -453,16 +453,16 @@ public class AccessReviewItemRepository(DbContext context) : IAccessReviewItemRe
     {
         item.UpdatedAt = DateTime.UtcNow;
         DbSet.Update(item);
-        await _context.SaveChangesAsync(cancellationToken);
+        await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
     }
 
     public async Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var item = await GetByIdAsync(id, cancellationToken);
+        var item = await GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
         if (item != null)
         {
             DbSet.Remove(item);
-            await _context.SaveChangesAsync(cancellationToken);
+            await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         }
     }
 
@@ -501,8 +501,8 @@ public class DelegatedAdminScopeRepository(DbContext context) : IDelegatedAdminS
         CancellationToken cancellationToken = default
     )
     {
-        await DbSet.AddAsync(scope, cancellationToken);
-        await _context.SaveChangesAsync(cancellationToken);
+        await DbSet.AddAsync(scope, cancellationToken).ConfigureAwait(false);
+        await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         return scope;
     }
 
@@ -518,16 +518,16 @@ public class DelegatedAdminScopeRepository(DbContext context) : IDelegatedAdminS
     {
         scope.UpdatedAt = DateTime.UtcNow;
         DbSet.Update(scope);
-        await _context.SaveChangesAsync(cancellationToken);
+        await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
     }
 
     public async Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var scope = await GetByIdAsync(id, cancellationToken);
+        var scope = await GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
         if (scope != null)
         {
             DbSet.Remove(scope);
-            await _context.SaveChangesAsync(cancellationToken);
+            await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         }
     }
 
@@ -542,7 +542,7 @@ public class DelegatedAdminScopeRepository(DbContext context) : IDelegatedAdminS
         if (tenantId.HasValue)
             query = query.Where(s => s.TenantId == new TenantId(tenantId.Value));
 
-        return await query.ToListAsync(cancellationToken);
+        return await query.ToListAsync(cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<List<DelegatedAdminScope>> GetByTenantAsync(

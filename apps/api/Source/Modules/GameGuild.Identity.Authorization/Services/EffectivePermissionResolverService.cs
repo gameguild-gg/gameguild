@@ -46,7 +46,7 @@ public class EffectivePermissionResolverService(
         }
 
         // 2. RBAC permissions (from roles, including hierarchy)
-        var rbacResult = await rbacResolver.ResolvePermissionsAsync(userId, tenantId, ct);
+        var rbacResult = await rbacResolver.ResolvePermissionsAsync(userId, tenantId, ct).ConfigureAwait(false);
         foreach (var perm in rbacResult.Permissions)
         {
             if (allPermissions.Add(perm))
@@ -64,7 +64,7 @@ public class EffectivePermissionResolverService(
         // 3. Tenant default permissions (if tenant context exists)
         if (tenantId.HasValue)
         {
-            var tenantPermission = await tenantPermissionStore.GetPermissionAsync(tenantId.Value, ct);
+            var tenantPermission = await tenantPermissionStore.GetPermissionAsync(tenantId.Value, ct).ConfigureAwait(false);
             if (tenantPermission != null)
             {
                 foreach (var perm in tenantPermission.Permissions)
@@ -95,7 +95,7 @@ public class EffectivePermissionResolverService(
         // 5. Direct grants (per-resource permissions)
         if (tenantId.HasValue)
         {
-            var directGrants = await resourcePermissionStore.GetUserPermissionsAsync(userId, tenantId.Value, ct);
+            var directGrants = await resourcePermissionStore.GetUserPermissionsAsync(userId, tenantId.Value, ct).ConfigureAwait(false);
             foreach (var grant in directGrants)
             {
                 foreach (var perm in grant.Permissions)
@@ -151,7 +151,7 @@ public class EffectivePermissionResolverService(
         string permission,
         CancellationToken ct = default)
     {
-        var effective = await ResolveAsync(userId, tenantId, ct);
+        var effective = await ResolveAsync(userId, tenantId, ct).ConfigureAwait(false);
         return effective.Permissions.Contains(permission);
     }
 
@@ -161,7 +161,7 @@ public class EffectivePermissionResolverService(
         IEnumerable<string> permissions,
         CancellationToken ct = default)
     {
-        var effective = await ResolveAsync(userId, tenantId, ct);
+        var effective = await ResolveAsync(userId, tenantId, ct).ConfigureAwait(false);
         return permissions.All(p => effective.Permissions.Contains(p));
     }
 
@@ -171,7 +171,7 @@ public class EffectivePermissionResolverService(
         IEnumerable<string> permissions,
         CancellationToken ct = default)
     {
-        var effective = await ResolveAsync(userId, tenantId, ct);
+        var effective = await ResolveAsync(userId, tenantId, ct).ConfigureAwait(false);
         return permissions.Any(p => effective.Permissions.Contains(p));
     }
 

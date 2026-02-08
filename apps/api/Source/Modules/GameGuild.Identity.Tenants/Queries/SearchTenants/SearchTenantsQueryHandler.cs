@@ -9,7 +9,7 @@ public class SearchTenantsQueryHandler(ITenantRepository tenantRepository) : IQu
 {
     public async Task<IEnumerable<Tenant>> Handle(SearchTenantsQuery request, CancellationToken cancellationToken)
     {
-        var tenants = await tenantRepository.GetAllAsync(cancellationToken);
+        var tenants = await tenantRepository.GetAllAsync(cancellationToken).ConfigureAwait(false);
 
         // Apply filters
         var filtered = tenants.AsEnumerable();

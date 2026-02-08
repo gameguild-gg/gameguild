@@ -16,8 +16,8 @@ public class AbacPolicyRepository(DbContext context) : IAbacPolicyRepository
         CancellationToken cancellationToken = default
     )
     {
-        await DbSet.AddAsync(policy, cancellationToken);
-        await _context.SaveChangesAsync(cancellationToken);
+        await DbSet.AddAsync(policy, cancellationToken).ConfigureAwait(false);
+        await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         return policy;
     }
 
@@ -33,16 +33,16 @@ public class AbacPolicyRepository(DbContext context) : IAbacPolicyRepository
     {
         policy.UpdatedAt = DateTime.UtcNow;
         DbSet.Update(policy);
-        await _context.SaveChangesAsync(cancellationToken);
+        await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
     }
 
     public async Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var policy = await GetByIdAsync(id, cancellationToken);
+        var policy = await GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
         if (policy != null)
         {
             DbSet.Remove(policy);
-            await _context.SaveChangesAsync(cancellationToken);
+            await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         }
     }
 
@@ -85,8 +85,8 @@ public class ConditionalPolicyRepository(DbContext context) : IConditionalPolicy
         CancellationToken cancellationToken = default
     )
     {
-        await DbSet.AddAsync(policy, cancellationToken);
-        await _context.SaveChangesAsync(cancellationToken);
+        await DbSet.AddAsync(policy, cancellationToken).ConfigureAwait(false);
+        await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         return policy;
     }
 
@@ -102,16 +102,16 @@ public class ConditionalPolicyRepository(DbContext context) : IConditionalPolicy
     {
         policy.UpdatedAt = DateTime.UtcNow;
         DbSet.Update(policy);
-        await _context.SaveChangesAsync(cancellationToken);
+        await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
     }
 
     public async Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var policy = await GetByIdAsync(id, cancellationToken);
+        var policy = await GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
         if (policy != null)
         {
             DbSet.Remove(policy);
-            await _context.SaveChangesAsync(cancellationToken);
+            await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         }
     }
 
@@ -154,8 +154,8 @@ public class DataMaskingRuleRepository(DbContext context) : IDataMaskingRuleRepo
         CancellationToken cancellationToken = default
     )
     {
-        await DbSet.AddAsync(rule, cancellationToken);
-        await _context.SaveChangesAsync(cancellationToken);
+        await DbSet.AddAsync(rule, cancellationToken).ConfigureAwait(false);
+        await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         return rule;
     }
 
@@ -171,16 +171,16 @@ public class DataMaskingRuleRepository(DbContext context) : IDataMaskingRuleRepo
     {
         rule.UpdatedAt = DateTime.UtcNow;
         DbSet.Update(rule);
-        await _context.SaveChangesAsync(cancellationToken);
+        await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
     }
 
     public async Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var rule = await GetByIdAsync(id, cancellationToken);
+        var rule = await GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
         if (rule != null)
         {
             DbSet.Remove(rule);
-            await _context.SaveChangesAsync(cancellationToken);
+            await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         }
     }
 
@@ -206,7 +206,7 @@ public class DataMaskingRuleRepository(DbContext context) : IDataMaskingRuleRepo
         if (tenantId.HasValue)
             query = query.Where(r => r.TenantId == new TenantId(tenantId.Value));
 
-        return await query.ToListAsync(cancellationToken);
+        return await query.ToListAsync(cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<List<DataMaskingRule>> GetByResourceTypeAsync(
@@ -220,7 +220,7 @@ public class DataMaskingRuleRepository(DbContext context) : IDataMaskingRuleRepo
         if (tenantId.HasValue)
             query = query.Where(r => r.TenantId == new TenantId(tenantId.Value));
 
-        return await query.ToListAsync(cancellationToken);
+        return await query.ToListAsync(cancellationToken).ConfigureAwait(false);
     }
 }
 
@@ -237,8 +237,8 @@ public class PolicyBundleRepository(DbContext context) : IPolicyBundleRepository
         CancellationToken cancellationToken = default
     )
     {
-        await DbSet.AddAsync(bundle, cancellationToken);
-        await _context.SaveChangesAsync(cancellationToken);
+        await DbSet.AddAsync(bundle, cancellationToken).ConfigureAwait(false);
+        await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         return bundle;
     }
 
@@ -254,16 +254,16 @@ public class PolicyBundleRepository(DbContext context) : IPolicyBundleRepository
     {
         bundle.UpdatedAt = DateTime.UtcNow;
         DbSet.Update(bundle);
-        await _context.SaveChangesAsync(cancellationToken);
+        await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
     }
 
     public async Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var bundle = await GetByIdAsync(id, cancellationToken);
+        var bundle = await GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
         if (bundle != null)
         {
             DbSet.Remove(bundle);
-            await _context.SaveChangesAsync(cancellationToken);
+            await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         }
     }
 
@@ -290,7 +290,7 @@ public class PolicyBundleRepository(DbContext context) : IPolicyBundleRepository
         if (tenantId.HasValue)
             query = query.Where(b => b.TenantId == new TenantId(tenantId.Value));
 
-        return await query.FirstOrDefaultAsync(cancellationToken);
+        return await query.FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
     }
 }
 
@@ -307,8 +307,8 @@ public class PolicyBundleDeploymentRepository(DbContext context) : IPolicyBundle
         CancellationToken cancellationToken = default
     )
     {
-        await DbSet.AddAsync(deployment, cancellationToken);
-        await _context.SaveChangesAsync(cancellationToken);
+        await DbSet.AddAsync(deployment, cancellationToken).ConfigureAwait(false);
+        await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         return deployment;
     }
 
@@ -323,7 +323,7 @@ public class PolicyBundleDeploymentRepository(DbContext context) : IPolicyBundle
     )
     {
         DbSet.Update(deployment);
-        await _context.SaveChangesAsync(cancellationToken);
+        await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<List<PolicyBundleDeployment>> GetByBundleAsync(
@@ -354,8 +354,8 @@ public class PermissionTemplateVersionRepository(DbContext context) : IPermissio
         CancellationToken cancellationToken = default
     )
     {
-        await DbSet.AddAsync(version, cancellationToken);
-        await _context.SaveChangesAsync(cancellationToken);
+        await DbSet.AddAsync(version, cancellationToken).ConfigureAwait(false);
+        await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         return version;
     }
 
@@ -370,7 +370,7 @@ public class PermissionTemplateVersionRepository(DbContext context) : IPermissio
     )
     {
         DbSet.Update(version);
-        await _context.SaveChangesAsync(cancellationToken);
+        await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<List<PermissionTemplateVersion>> GetByTemplateIdAsync(
@@ -401,8 +401,8 @@ public class PermissionTemplateMigrationRepository(DbContext context) : IPermiss
         CancellationToken cancellationToken = default
     )
     {
-        await DbSet.AddAsync(migration, cancellationToken);
-        await _context.SaveChangesAsync(cancellationToken);
+        await DbSet.AddAsync(migration, cancellationToken).ConfigureAwait(false);
+        await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         return migration;
     }
 
@@ -417,7 +417,7 @@ public class PermissionTemplateMigrationRepository(DbContext context) : IPermiss
     )
     {
         DbSet.Update(migration);
-        await _context.SaveChangesAsync(cancellationToken);
+        await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<List<PermissionTemplateMigration>> GetByTemplateIdAsync(
@@ -441,8 +441,8 @@ public class PolicyRegistryAuditLogRepository(DbContext context) : IPolicyRegist
         CancellationToken cancellationToken = default
     )
     {
-        await DbSet.AddAsync(log, cancellationToken);
-        await _context.SaveChangesAsync(cancellationToken);
+        await DbSet.AddAsync(log, cancellationToken).ConfigureAwait(false);
+        await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         return log;
     }
 

@@ -1,4 +1,6 @@
+using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace GameGuild.Identity.Authorization.Configuration;
@@ -46,9 +48,16 @@ public class DynamicRoleConfiguration : IEntityTypeConfiguration<DynamicRole>
         builder.Property(e => e.PrerequisiteRoleIds)
             .IsRequired();
         
-        // Ignore Metadata for now - Dictionary<string, object> needs explicit JSONB handling
-        // TODO: Add JSONB support when needed
-        builder.Ignore(e => e.Metadata);
+        // JSONB column for Metadata dictionary — stored as PostgreSQL jsonb type
+        builder.Property(e => e.Metadata)
+            .HasColumnType("jsonb")
+            .HasConversion(
+                v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
+                v => JsonSerializer.Deserialize<Dictionary<string, object>>(v, (JsonSerializerOptions?)null) ?? new Dictionary<string, object>())
+            .Metadata.SetValueComparer(new ValueComparer<Dictionary<string, object>>(
+                (a, b) => JsonSerializer.Serialize(a, (JsonSerializerOptions?)null) == JsonSerializer.Serialize(b, (JsonSerializerOptions?)null),
+                v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null).GetHashCode(),
+                v => JsonSerializer.Deserialize<Dictionary<string, object>>(JsonSerializer.Serialize(v, (JsonSerializerOptions?)null), (JsonSerializerOptions?)null)!));
         
         // Self-referencing relationship for role hierarchy
         builder.HasOne(e => e.ParentRole)

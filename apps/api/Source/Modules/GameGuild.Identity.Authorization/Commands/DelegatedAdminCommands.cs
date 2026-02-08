@@ -57,7 +57,7 @@ public class GrantDelegatedAdminHandler(IDelegatedAdminService service)
             IsActive = true
         };
 
-        return await service.GrantDelegatedAdminAsync(scope, cancellationToken);
+        return await service.GrantDelegatedAdminAsync(scope, cancellationToken).ConfigureAwait(false);
     }
 }
 
@@ -82,6 +82,6 @@ public class RevokeDelegatedAdminHandler(IDelegatedAdminService service)
         CancellationToken cancellationToken
     )
     {
-        return await service.RevokeDelegatedAdminAsync(request.ScopeId, cancellationToken);
+        return await service.RevokeDelegatedAdminAsync(request.ScopeId, cancellationToken).ConfigureAwait(false);
     }
 }

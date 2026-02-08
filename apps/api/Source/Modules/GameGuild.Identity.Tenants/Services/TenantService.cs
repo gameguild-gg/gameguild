@@ -12,24 +12,24 @@ public class TenantService(
 {
     public async Task<IReadOnlyList<Tenant>> GetActiveTenantsAsync(CancellationToken cancellationToken = default)
     {
-        var tenants = await tenantRepository.GetActiveTenantsAsync(cancellationToken);
+        var tenants = await tenantRepository.GetActiveTenantsAsync(cancellationToken).ConfigureAwait(false);
         return tenants.ToList().AsReadOnly();
     }
 
     public async Task<Tenant?> GetTenantByIdAsync(Guid tenantId, CancellationToken cancellationToken = default)
     {
-        return await tenantRepository.GetByIdAsync(tenantId, cancellationToken);
+        return await tenantRepository.GetByIdAsync(tenantId, cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<Tenant?> GetTenantBySlugAsync(string slug, CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(slug);
-        return await tenantRepository.GetBySlugAsync(slug, cancellationToken);
+        return await tenantRepository.GetBySlugAsync(slug, cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<Tenant?> GetDefaultTenantAsync(CancellationToken cancellationToken = default)
     {
-        var tenants = await tenantRepository.GetActiveTenantsAsync(cancellationToken);
+        var tenants = await tenantRepository.GetActiveTenantsAsync(cancellationToken).ConfigureAwait(false);
         return tenants.FirstOrDefault(t => t.IsDefault);
     }
 
@@ -58,7 +58,7 @@ public class TenantService(
             IsActive = true
         };
 
-        var created = await tenantRepository.CreateAsync(tenant, cancellationToken);
+        var created = await tenantRepository.CreateAsync(tenant, cancellationToken).ConfigureAwait(false);
         logger.LogInformation("Created tenant {TenantName} ({TenantId})", created.Name, created.Id);
 
         return created;
@@ -79,7 +79,7 @@ public class TenantService(
         tenant.Update(name, description);
         tenant.AdminEmail = adminEmail;
 
-        var updated = await tenantRepository.UpdateAsync(tenant, cancellationToken);
+        var updated = await tenantRepository.UpdateAsync(tenant, cancellationToken).ConfigureAwait(false);
         logger.LogInformation("Updated tenant {TenantName} ({TenantId})", updated.Name, updated.Id);
 
         return updated;
@@ -90,7 +90,7 @@ public class TenantService(
         var tenant = await tenantRepository.GetByIdAsync(tenantId, cancellationToken)
             ?? throw new InvalidOperationException($"Tenant with ID '{tenantId}' not found.");
 
-        await tenantRepository.DeleteAsync(tenant, cancellationToken);
+        await tenantRepository.DeleteAsync(tenant, cancellationToken).ConfigureAwait(false);
         logger.LogInformation("Deleted tenant {TenantName} ({TenantId})", tenant.Name, tenant.Id);
     }
 
@@ -100,7 +100,7 @@ public class TenantService(
             ?? throw new InvalidOperationException($"Tenant with ID '{tenantId}' not found.");
 
         tenant.Activate();
-        var updated = await tenantRepository.UpdateAsync(tenant, cancellationToken);
+        var updated = await tenantRepository.UpdateAsync(tenant, cancellationToken).ConfigureAwait(false);
         logger.LogInformation("Activated tenant {TenantName} ({TenantId})", updated.Name, updated.Id);
 
         return updated;
@@ -112,7 +112,7 @@ public class TenantService(
             ?? throw new InvalidOperationException($"Tenant with ID '{tenantId}' not found.");
 
         tenant.Deactivate();
-        var updated = await tenantRepository.UpdateAsync(tenant, cancellationToken);
+        var updated = await tenantRepository.UpdateAsync(tenant, cancellationToken).ConfigureAwait(false);
         logger.LogInformation("Deactivated tenant {TenantName} ({TenantId})", updated.Name, updated.Id);
 
         return updated;
@@ -130,7 +130,7 @@ public class TenantService(
         tenant.ArchivedAt = DateTime.UtcNow;
         tenant.Deactivate();
 
-        var updated = await tenantRepository.UpdateAsync(tenant, cancellationToken);
+        var updated = await tenantRepository.UpdateAsync(tenant, cancellationToken).ConfigureAwait(false);
         logger.LogInformation("Archived tenant {TenantName} ({TenantId}). Reason: {Reason}", 
             updated.Name, updated.Id, reason);
 
@@ -146,7 +146,7 @@ public class TenantService(
         tenant.ArchivedAt = null;
         tenant.Activate();
 
-        var updated = await tenantRepository.UpdateAsync(tenant, cancellationToken);
+        var updated = await tenantRepository.UpdateAsync(tenant, cancellationToken).ConfigureAwait(false);
         logger.LogInformation("Restored tenant {TenantName} ({TenantId})", updated.Name, updated.Id);
 
         return updated;
@@ -158,7 +158,7 @@ public class TenantService(
         CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(slug);
-        return await tenantRepository.IsSlugUniqueAsync(slug, excludeId, cancellationToken);
+        return await tenantRepository.IsSlugUniqueAsync(slug, excludeId, cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<(IReadOnlyList<Tenant> Tenants, int TotalCount)> GetTenantsPagedAsync(
@@ -175,7 +175,7 @@ public class TenantService(
             page,
             pageSize,
             includeArchived ? null : true,
-            cancellationToken);
+            cancellationToken).ConfigureAwait(false);
 
         return (items.ToList().AsReadOnly(), totalCount);
     }

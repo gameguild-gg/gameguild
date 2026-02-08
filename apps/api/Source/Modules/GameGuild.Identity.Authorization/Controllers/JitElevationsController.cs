@@ -11,12 +11,11 @@ namespace GameGuild.Identity.Authorization.Controllers;
 /// <summary>
 ///     API controller for JIT (Just-in-Time) elevation operations
 /// </summary>
-[ApiController]
 [ApiVersion("1.0")]
 [Route("v{version:apiVersion}/jit-elevations")]
 [Authorize]
 [Produces("application/json")]
-public class JitElevationsController(ISender sender) : ControllerBase
+public class JitElevationsController(ISender sender) : BaseApiController
 {
     /// <summary>
     ///     Request a JIT elevation for a permission

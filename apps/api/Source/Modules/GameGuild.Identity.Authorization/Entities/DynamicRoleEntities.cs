@@ -1,4 +1,3 @@
-using GameGuild.Entities;
 
 namespace GameGuild.Identity.Authorization;
 

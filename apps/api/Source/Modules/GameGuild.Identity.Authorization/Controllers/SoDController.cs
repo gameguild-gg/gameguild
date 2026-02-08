@@ -11,12 +11,11 @@ namespace GameGuild.Identity.Authorization.Controllers;
 /// <summary>
 ///     API controller for Separation of Duties (SoD) operations
 /// </summary>
-[ApiController]
 [ApiVersion("1.0")]
 [Route("v{version:apiVersion}/sod")]
 [Authorize]
 [Produces("application/json")]
-public class SoDController(ISender sender) : ControllerBase
+public class SoDController(ISender sender) : BaseApiController
 {
     // =========================================================================
     // SoD Rules

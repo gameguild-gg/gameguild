@@ -81,7 +81,7 @@ public class AbacPolicyEvaluator(
             tenantId = t;
         }
 
-        var policies = await repository.GetActivePoliciesAsync(tenantId, ct);
+        var policies = await repository.GetActivePoliciesAsync(tenantId, ct).ConfigureAwait(false);
         var details = new List<AbacPolicyEvaluationDetail>();
 
         foreach (var policy in policies.OrderByDescending(p => p.Priority))

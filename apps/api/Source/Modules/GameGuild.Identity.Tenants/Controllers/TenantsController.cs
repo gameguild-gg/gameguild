@@ -1,19 +1,19 @@
 using Asp.Versioning;
 using GameGuild.CQRS;
 using GameGuild.Commerce.Payments;
-using GameGuild.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace GameGuild.Identity.Tenants;
 
 /// <summary>
-///     Tenants API Controller - RESTful API for tenant organization management
+///     Tenants API Controller - RESTful API for tenant CRUD and collection operations
 /// </summary>
-[ApiController]
 [ApiVersion("1.0")]
 [Tags("tenants")]
-public sealed class TenantsController(ISender sender) : ControllerBase
+[Authorize]
+public sealed class TenantsController(ISender sender) : BaseApiController
 {
     #region Collection Operations - /v1/tenants
 
@@ -49,7 +49,7 @@ public sealed class TenantsController(ISender sender) : ControllerBase
     [HttpGet("v{version:apiVersion}/tenants")]
     [EndpointSummary("Get tenants with pagination, search, and sorting")]
     [EndpointDescription("Retrieves a paginated list of all tenant organizations accessible to the requesting user.")]
-    [ProducesResponseType<CQRS.PagedResult<Tenant>>(StatusCodes.Status200OK)]
+    [ProducesResponseType<PagedResult<Tenant>>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> GetTenants([FromQuery] int page = 1, [FromQuery] int pageSize = 20, [FromQuery] string? status = null, [FromQuery] string? searchTerm = null, CancellationToken ct = default)
@@ -77,7 +77,7 @@ public sealed class TenantsController(ISender sender) : ControllerBase
                 ),
                 ct
             )
-            .ConfigureAwait(false);
+            ;
 
         return Ok(tenants);
     }
@@ -123,193 +123,8 @@ public sealed class TenantsController(ISender sender) : ControllerBase
             new ValidateTenantCommand(body.Name, body.Slug, body.AdminEmail),
             ct
         ).ConfigureAwait(false);
-        
+
         return Ok(validationResult);
-    }
-
-    #endregion
-
-    #region Bulk Operations - /v1/tenants:action
-
-    /// <summary>
-    ///     Bulk create tenants
-    /// </summary>
-    /// <param name="request">Bulk create request</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Created tenant data</returns>
-    [HttpPost("v{version:apiVersion}/tenants:create")]
-    [EndpointSummary("Bulk create tenants")]
-    [EndpointDescription("Creates multiple tenant organizations at once.")]
-    [ProducesResponseType(StatusCodes.Status201Created)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> BulkCreateTenants([FromBody] object request, CancellationToken ct)
-    {
-        ArgumentNullException.ThrowIfNull(request);
-        // TODO: Implement BulkCreateTenantsCommand
-        await Task.CompletedTask;
-
-        return Created(string.Empty, new { message = "Bulk create tenants - not implemented yet" });
-    }
-
-    /// <summary>
-    ///     Bulk partial update tenants
-    /// </summary>
-    /// <param name="request">Bulk update request</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>No content on success</returns>
-    [HttpPost("v{version:apiVersion}/tenants:update")]
-    [EndpointSummary("Bulk partial update tenants")]
-    [EndpointDescription("Updates multiple tenants with partial data.")]
-    [ProducesResponseType(StatusCodes.Status204NoContent)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> BulkPartialUpdateTenants([FromBody] object request, CancellationToken ct)
-    {
-        ArgumentNullException.ThrowIfNull(request);
-        // TODO: Implement BulkUpdateTenantsCommand
-        await Task.CompletedTask;
-
-        return NoContent();
-    }
-
-    /// <summary>
-    ///     Bulk full update tenants
-    /// </summary>
-    /// <param name="request">Bulk update request</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>No content on success</returns>
-    [HttpPost("v{version:apiVersion}/tenants:replace")]
-    [EndpointSummary("Bulk full update tenants")]
-    [EndpointDescription("Updates multiple tenants with complete data.")]
-    [ProducesResponseType(StatusCodes.Status204NoContent)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> BulkFullUpdateTenants([FromBody] object request, CancellationToken ct)
-    {
-        ArgumentNullException.ThrowIfNull(request);
-        // TODO: Implement BulkUpdateTenantsCommand
-        await Task.CompletedTask;
-
-        return NoContent();
-    }
-
-    /// <summary>
-    ///     Bulk soft delete tenants
-    /// </summary>
-    /// <param name="request">Bulk delete request</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>No content on success</returns>
-    [HttpPost("v{version:apiVersion}/tenants:delete")]
-    [EndpointSummary("Bulk soft delete tenants")]
-    [EndpointDescription("Soft deletes multiple tenants at once.")]
-    [ProducesResponseType(StatusCodes.Status204NoContent)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> BulkDeleteTenants([FromBody] object request, CancellationToken ct)
-    {
-        ArgumentNullException.ThrowIfNull(request);
-        // TODO: Implement BulkDeleteTenantsCommand
-        await Task.CompletedTask;
-
-        return NoContent();
-    }
-
-    /// <summary>
-    ///     Bulk activate tenant accounts
-    /// </summary>
-    /// <param name="request">Bulk activate request</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Activated tenant data</returns>
-    [HttpPost("v{version:apiVersion}/tenants:activate")]
-    [EndpointSummary("Bulk activate tenant accounts")]
-    [EndpointDescription("Activates multiple tenant accounts at once.")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> BulkActivateTenants([FromBody] object request, CancellationToken ct)
-    {
-        ArgumentNullException.ThrowIfNull(request);
-        // TODO: Implement BulkActivateTenantsCommand
-        await Task.CompletedTask;
-
-        return Ok(new { message = "Bulk activate tenants - not implemented yet" });
-    }
-
-    /// <summary>
-    ///     Bulk deactivate tenant accounts
-    /// </summary>
-    /// <param name="request">Bulk deactivate request</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Deactivated tenant data</returns>
-    [HttpPost("v{version:apiVersion}/tenants:deactivate")]
-    [EndpointSummary("Bulk deactivate tenant accounts")]
-    [EndpointDescription("Deactivates multiple tenant accounts at once.")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> BulkDeactivateTenants([FromBody] object request, CancellationToken ct)
-    {
-        ArgumentNullException.ThrowIfNull(request);
-        // TODO: Implement BulkDeactivateTenantsCommand
-        await Task.CompletedTask;
-
-        return Ok(new { message = "Bulk deactivate tenants - not implemented yet" });
-    }
-
-    /// <summary>
-    ///     Bulk archive tenant accounts
-    /// </summary>
-    /// <param name="request">Bulk archive request</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Archived tenant data</returns>
-    [HttpPost("v{version:apiVersion}/tenants:archive")]
-    [EndpointSummary("Bulk archive tenant accounts")]
-    [EndpointDescription("Archives multiple tenant accounts at once.")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> BulkArchiveTenants([FromBody] object request, CancellationToken ct)
-    {
-        ArgumentNullException.ThrowIfNull(request);
-        // TODO: Implement BulkArchiveTenantsCommand
-        await Task.CompletedTask;
-
-        return Ok(new { message = "Bulk archive tenants - not implemented yet" });
-    }
-
-    /// <summary>
-    ///     Bulk undelete soft-deleted tenants
-    /// </summary>
-    /// <param name="request">Bulk undelete request</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Restored tenant data</returns>
-    [HttpPost("v{version:apiVersion}/tenants:undelete")]
-    [EndpointSummary("Bulk undelete soft-deleted tenants")]
-    [EndpointDescription("Restores multiple soft-deleted tenants at once.")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> BulkUndeleteTenants([FromBody] object request, CancellationToken ct)
-    {
-        ArgumentNullException.ThrowIfNull(request);
-        // TODO: Implement BulkUndeleteTenantsCommand
-        await Task.CompletedTask;
-
-        return Ok(new { message = "Bulk undelete tenants - not implemented yet" });
-    }
-
-    /// <summary>
-    ///     Bulk hard delete tenants (irreversible purge)
-    /// </summary>
-    /// <param name="request">Bulk purge request</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>No content on success</returns>
-    [HttpPost("v{version:apiVersion}/tenants:purge")]
-    [EndpointSummary("Bulk hard delete tenants (irreversible purge)")]
-    [EndpointDescription("Permanently deletes multiple tenants. Admin operation requiring proper authorization.")]
-    [ProducesResponseType(StatusCodes.Status204NoContent)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status412PreconditionFailed)]
-    public async Task<IActionResult> BulkPurgeTenants([FromBody] object request, CancellationToken ct)
-    {
-        ArgumentNullException.ThrowIfNull(request);
-        // TODO: Implement BulkPurgeTenantsCommand
-        await Task.CompletedTask;
-
-        return NoContent();
     }
 
     #endregion
@@ -416,229 +231,4 @@ public sealed class TenantsController(ISender sender) : ControllerBase
     }
 
     #endregion
-
-    #region Individual Tenant Actions - /v1/tenants/{tenantId}:action
-
-    /// <summary>
-    ///     Activate tenant account
-    /// </summary>
-    /// <param name="tenantId">Tenant ID</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>No content on success</returns>
-    [HttpPost("v{version:apiVersion}/tenants/{tenantId:guid}:activate")]
-    [EndpointSummary("Activate tenant account")]
-    [EndpointDescription("Activates a tenant organization by ID.")]
-    [ProducesResponseType(StatusCodes.Status204NoContent)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> ActivateTenant(Guid tenantId, CancellationToken ct)
-    {
-        await sender.Send(new ActivateTenantCommand(tenantId), ct).ConfigureAwait(false);
-
-        return NoContent();
-    }
-
-    /// <summary>
-    ///     Deactivate tenant account
-    /// </summary>
-    /// <param name="tenantId">Tenant ID</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>No content on success</returns>
-    [HttpPost("v{version:apiVersion}/tenants/{tenantId:guid}:deactivate")]
-    [EndpointSummary("Deactivate tenant account")]
-    [EndpointDescription("Deactivates a tenant organization by ID.")]
-    [ProducesResponseType(StatusCodes.Status204NoContent)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> DeactivateTenant(Guid tenantId, CancellationToken ct)
-    {
-        await sender.Send(new DeactivateTenantCommand(tenantId), ct).ConfigureAwait(false);
-
-        return NoContent();
-    }
-
-    /// <summary>
-    ///     Archive (soft delete) tenant account
-    /// </summary>
-    /// <param name="tenantId">Tenant ID</param>
-    /// <param name="body">Archive request containing reason and optional metadata</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>No content on success</returns>
-    [HttpPost("v{version:apiVersion}/tenants/{tenantId:guid}:archive")]
-    [EndpointSummary("Archive (soft delete) tenant account")]
-    [EndpointDescription("Archives a tenant organization by ID.")]
-    [ProducesResponseType(StatusCodes.Status204NoContent)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> ArchiveTenant(Guid tenantId, [FromBody] ArchiveRequest body, CancellationToken ct)
-    {
-        ArgumentNullException.ThrowIfNull(body);
-        await sender.Send(new ArchiveTenantCommand(tenantId, body.Reason), ct).ConfigureAwait(false);
-
-        return NoContent();
-    }
-
-    /// <summary>
-    ///     Undelete a soft-deleted tenant account
-    /// </summary>
-    /// <param name="tenantId">Tenant ID</param>
-    /// <param name="body">Recovery request containing reason and optional restoration settings</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>No content on success</returns>
-    [HttpPost("v{version:apiVersion}/tenants/{tenantId:guid}:undelete")]
-    [EndpointSummary("Undelete a soft-deleted tenant account")]
-    [EndpointDescription("Undeletes a previously soft-deleted (archived) tenant organization.")]
-    [ProducesResponseType(StatusCodes.Status204NoContent)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> UndeleteTenant(Guid tenantId, [FromBody] RecoverRequest body, CancellationToken ct)
-    {
-        ArgumentNullException.ThrowIfNull(body);
-        await sender.Send(new RecoverTenantCommand(tenantId, body.Reason), ct).ConfigureAwait(false);
-
-        return NoContent();
-    }
-
-    /// <summary>
-    ///     Permanently delete (hard delete) tenant account
-    /// </summary>
-    /// <param name="tenantId">Tenant ID</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>No content on success</returns>
-    [HttpPost("v{version:apiVersion}/tenants/{tenantId:guid}:purge")]
-    [EndpointSummary("Permanently delete (hard delete) tenant account")]
-    [EndpointDescription("Permanently and irreversibly deletes a tenant organization. Admin operation requiring proper authorization.")]
-    [ProducesResponseType(StatusCodes.Status204NoContent)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> PurgeTenant(Guid tenantId, CancellationToken ct)
-    {
-        await sender.Send(new DeleteTenantCommand(tenantId), ct).ConfigureAwait(false);
-
-        return NoContent();
-    }
-
-    /// <summary>
-    ///     Get tenant audit log
-    /// </summary>
-    /// <param name="tenantId">Tenant ID</param>
-    /// <param name="startDate">Optional start date filter</param>
-    /// <param name="endDate">Optional end date filter</param>
-    /// <param name="action">Optional action type filter (e.g., 'create', 'update', 'delete', 'settings_change')</param>
-    /// <param name="actorId">Optional filter by actor (user who performed the action)</param>
-    /// <param name="page">Page number for pagination (default: 1)</param>
-    /// <param name="pageSize">Number of items per page (default: 50, max: 200)</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Paginated list of audit log entries</returns>
-    /// <remarks>
-    ///     Retrieves the audit log for a specific tenant, showing all changes and actions performed.
-    ///     Audit entries include:
-    ///     - Timestamp of the action
-    ///     - Action type (create, update, delete, settings change, etc.)
-    ///     - Actor who performed the action
-    ///     - Before and after values for changes
-    ///     - IP address and user agent (when available)
-    ///     - Correlation ID for request tracking
-    /// </remarks>
-    [HttpGet("v{version:apiVersion}/tenants/{tenantId:guid}/audit-log")]
-    [EndpointSummary("Get tenant audit log")]
-    [EndpointDescription("Retrieves the audit log for a tenant showing all changes, actions, and who performed them.")]
-    [ProducesResponseType<GameGuild.Models.PagedResult<TenantAuditLogEntry>>(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetTenantAuditLog(
-        Guid tenantId,
-        [FromQuery] DateTime? startDate = null,
-        [FromQuery] DateTime? endDate = null,
-        [FromQuery] string? action = null,
-        [FromQuery] Guid? actorId = null,
-        [FromQuery] int page = 1,
-        [FromQuery] int pageSize = 50,
-        CancellationToken ct = default
-    )
-    {
-        // Validate pagination parameters
-        if (page < 1) page = 1;
-        if (pageSize < 1) pageSize = 50;
-        if (pageSize > 200) pageSize = 200;
-
-        var auditLog = await sender.Send(
-            new GetTenantAuditLogQuery(tenantId, startDate, endDate, action, actorId, page, pageSize),
-            ct
-        ).ConfigureAwait(false);
-
-        return Ok(auditLog);
-    }
-
-    #endregion
-}
-
-/// <summary>
-///     Validate tenant request
-/// </summary>
-public record ValidateTenantRequest(
-    string Name,
-    string Slug,
-    string AdminEmail
-);
-
-/// <summary>
-///     Tenant validation response
-/// </summary>
-public class TenantValidationResponse
-{
-    public bool IsValid { get; set; }
-    public List<TenantValidationError> Errors { get; set; } = new();
-    public List<TenantValidationWarning> Warnings { get; set; } = new();
-    public List<string> Suggestions { get; set; } = new();
-    public SlugValidation? SlugValidation { get; set; }
-}
-
-/// <summary>
-///     Validation error detail
-/// </summary>
-public class TenantValidationError
-{
-    public string Field { get; set; } = string.Empty;
-    public string Code { get; set; } = string.Empty;
-    public string Message { get; set; } = string.Empty;
-}
-
-/// <summary>
-///     Validation warning detail
-/// </summary>
-public class TenantValidationWarning
-{
-    public string Field { get; set; } = string.Empty;
-    public string Code { get; set; } = string.Empty;
-    public string Message { get; set; } = string.Empty;
-}
-
-/// <summary>
-///     Slug validation result
-/// </summary>
-public class SlugValidation
-{
-    public bool IsAvailable { get; set; }
-    public bool IsValid { get; set; }
-    public List<string> SuggestedAlternatives { get; set; } = new();
-}
-
-/// <summary>
-///     Tenant audit log entry
-/// </summary>
-public class TenantAuditLogEntry
-{
-    public Guid Id { get; set; }
-    public Guid TenantId { get; set; }
-    public DateTime Timestamp { get; set; }
-    public string Action { get; set; } = string.Empty;
-    public Guid? ActorId { get; set; }
-    public string? ActorName { get; set; }
-    public string? ActorEmail { get; set; }
-    public Dictionary<string, object?> BeforeValues { get; set; } = new();
-    public Dictionary<string, object?> AfterValues { get; set; } = new();
-    public string? IpAddress { get; set; }
-    public string? UserAgent { get; set; }
-    public string? CorrelationId { get; set; }
-    public Dictionary<string, string> Metadata { get; set; } = new();
 }

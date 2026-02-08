@@ -19,7 +19,7 @@ public class GetDelegatedAdminScopeByIdHandler(IDelegatedAdminService service)
         CancellationToken cancellationToken
     )
     {
-        return await service.GetScopeByIdAsync(request.ScopeId, cancellationToken);
+        return await service.GetScopeByIdAsync(request.ScopeId, cancellationToken).ConfigureAwait(false);
     }
 }
 
@@ -36,7 +36,7 @@ public class GetAdminScopesHandler(IDelegatedAdminService service)
         CancellationToken cancellationToken
     )
     {
-        return await service.GetAdminScopesAsync(request.AdminUserId, request.TenantId, cancellationToken);
+        return await service.GetAdminScopesAsync(request.AdminUserId, request.TenantId, cancellationToken).ConfigureAwait(false);
     }
 }
 
@@ -53,7 +53,7 @@ public class GetManagedUsersHandler(IDelegatedAdminService service)
         CancellationToken cancellationToken
     )
     {
-        return await service.GetManagedUsersAsync(request.AdminUserId, request.TenantId, cancellationToken);
+        return await service.GetManagedUsersAsync(request.AdminUserId, request.TenantId, cancellationToken).ConfigureAwait(false);
     }
 }
 
@@ -70,7 +70,7 @@ public class GetManagedResourceTypesHandler(IDelegatedAdminService service)
         CancellationToken cancellationToken
     )
     {
-        return await service.GetManagedResourceTypesAsync(request.AdminUserId, request.TenantId, cancellationToken);
+        return await service.GetManagedResourceTypesAsync(request.AdminUserId, request.TenantId, cancellationToken).ConfigureAwait(false);
     }
 }
 
@@ -92,7 +92,7 @@ public class CanManageUserHandler(IDelegatedAdminService service)
             request.TargetUserId,
             request.TenantId,
             cancellationToken
-        );
+        ).ConfigureAwait(false);
     }
 }
 
@@ -114,6 +114,6 @@ public class CanManageResourceHandler(IDelegatedAdminService service)
             request.ResourceType,
             request.TenantId,
             cancellationToken
-        );
+        ).ConfigureAwait(false);
     }
 }

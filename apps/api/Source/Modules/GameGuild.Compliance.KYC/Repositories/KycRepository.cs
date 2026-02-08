@@ -1,4 +1,3 @@
-using GameGuild.Abstractions;
 using Microsoft.EntityFrameworkCore;
 
 namespace GameGuild.Compliance.KYC;
@@ -16,7 +15,7 @@ public class KycRepository : IKycRepository
     {
         return await _context.Set<UserKycVerification>()
             .Include(v => v.User)
-            .FirstOrDefaultAsync(v => v.Id == id, cancellationToken);
+            .FirstOrDefaultAsync(v => v.Id == id, cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<List<UserKycVerification>> GetByUserIdAsync(Guid userId, CancellationToken cancellationToken = default)
@@ -25,7 +24,7 @@ public class KycRepository : IKycRepository
             .Include(v => v.User)
             .Where(v => v.UserId == userId)
             .OrderByDescending(v => v.SubmittedAt)
-            .ToListAsync(cancellationToken);
+            .ToListAsync(cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<UserKycVerification?> GetLatestVerificationAsync(Guid userId, CancellationToken cancellationToken = default)
@@ -34,7 +33,7 @@ public class KycRepository : IKycRepository
             .Include(v => v.User)
             .Where(v => v.UserId == userId)
             .OrderByDescending(v => v.SubmittedAt)
-            .FirstOrDefaultAsync(cancellationToken);
+            .FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<bool> HasApprovedVerificationAsync(Guid userId, CancellationToken cancellationToken = default)
@@ -43,7 +42,7 @@ public class KycRepository : IKycRepository
             .AnyAsync(v => v.UserId == userId &&
                           v.Status == KycVerificationStatus.Approved &&
                           (v.ExpiresAt == null || v.ExpiresAt > DateTime.UtcNow),
-                cancellationToken);
+                cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<List<UserKycVerification>> GetByStatusAsync(KycVerificationStatus status, CancellationToken cancellationToken = default)
@@ -52,14 +51,14 @@ public class KycRepository : IKycRepository
             .Include(v => v.User)
             .Where(v => v.Status == status)
             .OrderByDescending(v => v.SubmittedAt)
-            .ToListAsync(cancellationToken);
+            .ToListAsync(cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<UserKycVerification?> GetByExternalIdAsync(string externalVerificationId, CancellationToken cancellationToken = default)
     {
         return await _context.Set<UserKycVerification>()
             .Include(v => v.User)
-            .FirstOrDefaultAsync(v => v.ExternalVerificationId == externalVerificationId, cancellationToken);
+            .FirstOrDefaultAsync(v => v.ExternalVerificationId == externalVerificationId, cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<List<UserKycVerification>> GetByDateRangeAsync(DateTime startDate, DateTime endDate, CancellationToken cancellationToken = default)
@@ -68,28 +67,28 @@ public class KycRepository : IKycRepository
             .Include(v => v.User)
             .Where(v => v.SubmittedAt >= startDate && v.SubmittedAt <= endDate)
             .OrderByDescending(v => v.SubmittedAt)
-            .ToListAsync(cancellationToken);
+            .ToListAsync(cancellationToken).ConfigureAwait(false);
     }
 
     public async Task CreateAsync(UserKycVerification verification, CancellationToken cancellationToken = default)
     {
-        await _context.Set<UserKycVerification>().AddAsync(verification, cancellationToken);
-        await _context.SaveChangesAsync(cancellationToken);
+        await _context.Set<UserKycVerification>().AddAsync(verification, cancellationToken).ConfigureAwait(false);
+        await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
     }
 
     public async Task UpdateAsync(UserKycVerification verification, CancellationToken cancellationToken = default)
     {
         _context.Set<UserKycVerification>().Update(verification);
-        await _context.SaveChangesAsync(cancellationToken);
+        await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
     }
 
     public async Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var verification = await GetByIdAsync(id, cancellationToken);
+        var verification = await GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
         if (verification != null)
         {
             _context.Set<UserKycVerification>().Remove(verification);
-            await _context.SaveChangesAsync(cancellationToken);
+            await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         }
     }
 }

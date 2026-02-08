@@ -1,4 +1,3 @@
-using GameGuild.Enums;
 using GameGuild.Identity.Authorization;
 using GameGuild.Identity.Context.Actors;
 using Microsoft.AspNetCore.Authorization;
@@ -10,10 +9,9 @@ namespace GameGuild.Learning.Certificates;
 /// <summary>
 /// Controller for certificate management and verification
 /// </summary>
-[ApiController]
 [Route("api/certificates")]
 [Authorize]
-public class CertificatesController : ControllerBase
+public class CertificatesController : BaseApiController
 {
     private readonly ICertificateService _certificateService;
     private readonly ICertificateTemplateService _templateService;

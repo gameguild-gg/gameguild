@@ -13,12 +13,11 @@ namespace GameGuild.Identity.Authorization;
 ///     Controller for managing tenant-level permissions.
 ///     Provides REST endpoints for granting, revoking, and querying tenant permissions.
 /// </summary>
-[ApiController]
 [ApiVersion("1.0")]
 [Route("api/v{version:apiVersion}/authorization/tenants")]
 [Authorize]
 [Produces("application/json")]
-public sealed class TenantPermissionsController(ISender sender, ILogger<TenantPermissionsController> logger) : ControllerBase
+public sealed class TenantPermissionsController(ISender sender, ILogger<TenantPermissionsController> logger) : BaseApiController
 {
     /// <summary>
     ///     Grants tenant-level permissions to a user.
