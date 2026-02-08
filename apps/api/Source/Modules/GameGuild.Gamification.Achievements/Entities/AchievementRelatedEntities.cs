@@ -1,6 +1,5 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using GameGuild.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace GameGuild.Gamification.Achievements;
@@ -66,9 +65,7 @@ public class AchievementLevel : EntityBase
             Level = level,
             Name = name,
             RequiredProgress = requiredProgress,
-            Points = points,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            Points = points
         };
     }
 }
@@ -160,9 +157,7 @@ public class AchievementProgress : EntityBase
             AchievementId = achievementId,
             TargetProgress = targetProgress,
             CurrentProgress = 0,
-            TenantId = tenantId,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            TenantId = tenantId
         };
     }
 

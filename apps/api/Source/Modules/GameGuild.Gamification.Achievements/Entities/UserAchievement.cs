@@ -1,6 +1,5 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using GameGuild.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace GameGuild.Gamification.Achievements;
@@ -87,9 +86,7 @@ public class UserAchievement : EntityBase
             PointsEarned = points,
             Context = context,
             TenantId = tenantId,
-            EarnCount = 1,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            EarnCount = 1
         };
     }
 

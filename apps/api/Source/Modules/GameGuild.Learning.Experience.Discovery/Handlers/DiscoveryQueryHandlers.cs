@@ -1,4 +1,3 @@
-using GameGuild.Abstractions;
 using GameGuild.CQRS;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -43,7 +42,7 @@ public class DiscoveryQueryHandlers(IApplicationDbContext context, ILogger<Disco
             .OrderBy(fc => fc.DisplayOrder)
             .Skip(request.Skip)
             .Take(request.Take)
-            .ToListAsync(cancellationToken);
+            .ToListAsync(cancellationToken).ConfigureAwait(false);
 
         logger.LogInformation("Found {Count} active featured content items", result.Count);
         return result;
@@ -68,7 +67,7 @@ public class DiscoveryQueryHandlers(IApplicationDbContext context, ILogger<Disco
             .OrderBy(fc => fc.DisplayOrder)
             .Skip(request.Skip)
             .Take(request.Take)
-            .ToListAsync(cancellationToken);
+            .ToListAsync(cancellationToken).ConfigureAwait(false);
 
         logger.LogInformation("Found {Count} featured content items of type {Type}", result.Count, request.Type);
         return result;
@@ -80,7 +79,7 @@ public class DiscoveryQueryHandlers(IApplicationDbContext context, ILogger<Disco
 
         return await context.Set<FeaturedContent>()
             .Where(fc => fc.DeletedAt == null)
-            .FirstOrDefaultAsync(fc => fc.Id == request.Id, cancellationToken);
+            .FirstOrDefaultAsync(fc => fc.Id == request.Id, cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<IEnumerable<FeaturedContent>> Handle(GetAllFeaturedContentQuery request, CancellationToken cancellationToken)
@@ -105,7 +104,7 @@ public class DiscoveryQueryHandlers(IApplicationDbContext context, ILogger<Disco
             .ThenBy(fc => fc.DisplayOrder)
             .Skip(request.Skip)
             .Take(request.Take)
-            .ToListAsync(cancellationToken);
+            .ToListAsync(cancellationToken).ConfigureAwait(false);
     }
 
     // ===== COURSE COLLECTION QUERY HANDLERS =====
@@ -132,7 +131,7 @@ public class DiscoveryQueryHandlers(IApplicationDbContext context, ILogger<Disco
             .ThenByDescending(cc => cc.CreatedAt)
             .Skip(request.Skip)
             .Take(request.Take)
-            .ToListAsync(cancellationToken);
+            .ToListAsync(cancellationToken).ConfigureAwait(false);
 
         logger.LogInformation("Found {Count} published collections", result.Count);
         return result;
@@ -150,7 +149,7 @@ public class DiscoveryQueryHandlers(IApplicationDbContext context, ILogger<Disco
             query = query.Where(cc => cc.TenantId == request.TenantId || cc.TenantId == null);
         }
 
-        return await query.FirstOrDefaultAsync(cancellationToken);
+        return await query.FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<CourseCollection?> Handle(GetCollectionByIdQuery request, CancellationToken cancellationToken)
@@ -159,7 +158,7 @@ public class DiscoveryQueryHandlers(IApplicationDbContext context, ILogger<Disco
 
         return await context.Set<CourseCollection>()
             .Where(cc => cc.DeletedAt == null)
-            .FirstOrDefaultAsync(cc => cc.Id == request.Id, cancellationToken);
+            .FirstOrDefaultAsync(cc => cc.Id == request.Id, cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<IEnumerable<CourseCollection>> Handle(GetFeaturedCollectionsQuery request, CancellationToken cancellationToken)
@@ -177,7 +176,7 @@ public class DiscoveryQueryHandlers(IApplicationDbContext context, ILogger<Disco
         return await query
             .OrderByDescending(cc => cc.CreatedAt)
             .Take(request.Take)
-            .ToListAsync(cancellationToken);
+            .ToListAsync(cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<IEnumerable<CourseCollection>> Handle(GetCollectionsByCuratorQuery request, CancellationToken cancellationToken)
@@ -196,7 +195,7 @@ public class DiscoveryQueryHandlers(IApplicationDbContext context, ILogger<Disco
             .OrderByDescending(cc => cc.CreatedAt)
             .Skip(request.Skip)
             .Take(request.Take)
-            .ToListAsync(cancellationToken);
+            .ToListAsync(cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<IEnumerable<CourseCollection>> Handle(GetAllCollectionsQuery request, CancellationToken cancellationToken)
@@ -221,7 +220,7 @@ public class DiscoveryQueryHandlers(IApplicationDbContext context, ILogger<Disco
             .ThenByDescending(cc => cc.CreatedAt)
             .Skip(request.Skip)
             .Take(request.Take)
-            .ToListAsync(cancellationToken);
+            .ToListAsync(cancellationToken).ConfigureAwait(false);
     }
 
     // ===== SEARCH QUERY HANDLERS =====
@@ -234,7 +233,7 @@ public class DiscoveryQueryHandlers(IApplicationDbContext context, ILogger<Disco
             .Where(sh => sh.UserId == request.UserId)
             .OrderByDescending(sh => sh.CreatedAt)
             .Take(request.Take)
-            .ToListAsync(cancellationToken);
+            .ToListAsync(cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<IEnumerable<PopularSearchResult>> Handle(GetPopularSearchesQuery request, CancellationToken cancellationToken)

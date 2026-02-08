@@ -1,4 +1,3 @@
-using GameGuild.Entities;
 
 namespace GameGuild.Learning.Experience.Discovery;
 
@@ -40,9 +39,7 @@ public class FeaturedContent : EntityBase
             CourseId = courseId,
             LearningPathId = learningPathId,
             TenantId = tenantId,
-            IsActive = true,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            IsActive = true
         };
     }
 
@@ -91,9 +88,7 @@ public class CourseCollection : EntityBase
             Type = type,
             IsPublished = false,
             IsFeatured = false,
-            CourseCount = 0,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            CourseCount = 0
         };
     }
 }
@@ -127,9 +122,7 @@ public class SearchHistory : EntityBase
             TenantId = tenantId,
             Query = query,
             ResultCount = resultCount,
-            Filters = filters,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            Filters = filters
         };
     }
 

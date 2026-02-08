@@ -1,8 +1,8 @@
 using Asp.Versioning;
-using GameGuild.Enums;
 using GameGuild.Identity.Authorization;
 using GameGuild.Learning.Attributes;
 using GameGuild.Learning.Filters;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace GameGuild.Learning.Experience.Discovery;
@@ -19,12 +19,12 @@ namespace GameGuild.Learning.Experience.Discovery;
 /// Public endpoints for discovery experience
 /// Admin endpoints for content curation
 /// </remarks>
-[ApiController]
 [ApiVersion("1.0")]
 [Route("v{version:apiVersion}/discovery")]
 [LxpCapabilityFilter]
 [LxpCapability(LxpCapabilities.Discovery)]
-public class DiscoveryController(IDiscoveryService discoveryService) : ControllerBase
+[Authorize]
+public class DiscoveryController(IDiscoveryService discoveryService) : BaseApiController
 {
     // ===== PUBLIC FEATURED CONTENT ENDPOINTS =====
 

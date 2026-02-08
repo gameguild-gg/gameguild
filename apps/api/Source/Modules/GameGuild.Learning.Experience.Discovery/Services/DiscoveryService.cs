@@ -11,17 +11,17 @@ public class DiscoveryService(IMediator mediator) : IDiscoveryService
 
     public async Task<FeaturedContent?> GetFeaturedContentByIdAsync(Guid id)
     {
-        return await mediator.Send(new GetFeaturedContentByIdQuery(id));
+        return await mediator.Send(new GetFeaturedContentByIdQuery(id)).ConfigureAwait(false);
     }
 
     public async Task<IEnumerable<FeaturedContent>> GetActiveFeaturedContentAsync(Guid? tenantId = null, int skip = 0, int take = 50)
     {
-        return await mediator.Send(new GetActiveFeaturedContentQuery(tenantId, skip, take));
+        return await mediator.Send(new GetActiveFeaturedContentQuery(tenantId, skip, take)).ConfigureAwait(false);
     }
 
     public async Task<IEnumerable<FeaturedContent>> GetFeaturedContentByTypeAsync(FeaturedContentType type, Guid? tenantId = null, int skip = 0, int take = 50)
     {
-        return await mediator.Send(new GetFeaturedContentByTypeQuery(type, tenantId, skip, take));
+        return await mediator.Send(new GetFeaturedContentByTypeQuery(type, tenantId, skip, take)).ConfigureAwait(false);
     }
 
     public async Task<FeaturedContent> CreateFeaturedContentAsync(CreateFeaturedContentDto dto, Guid? tenantId = null)
@@ -60,39 +60,39 @@ public class DiscoveryService(IMediator mediator) : IDiscoveryService
 
     public async Task<bool> DeleteFeaturedContentAsync(Guid id)
     {
-        return await mediator.Send(new DeleteFeaturedContentCommand(id));
+        return await mediator.Send(new DeleteFeaturedContentCommand(id)).ConfigureAwait(false);
     }
 
     public async Task<FeaturedContent?> ToggleFeaturedContentAsync(Guid id, bool isActive)
     {
-        return await mediator.Send(new ToggleFeaturedContentCommand(id, isActive));
+        return await mediator.Send(new ToggleFeaturedContentCommand(id, isActive)).ConfigureAwait(false);
     }
 
     // ===== COURSE COLLECTIONS =====
 
     public async Task<CourseCollection?> GetCollectionByIdAsync(Guid id)
     {
-        return await mediator.Send(new GetCollectionByIdQuery(id));
+        return await mediator.Send(new GetCollectionByIdQuery(id)).ConfigureAwait(false);
     }
 
     public async Task<CourseCollection?> GetCollectionBySlugAsync(string slug, Guid? tenantId = null)
     {
-        return await mediator.Send(new GetCollectionBySlugQuery(slug, tenantId));
+        return await mediator.Send(new GetCollectionBySlugQuery(slug, tenantId)).ConfigureAwait(false);
     }
 
     public async Task<IEnumerable<CourseCollection>> GetPublishedCollectionsAsync(Guid? tenantId = null, CollectionType? type = null, int skip = 0, int take = 50)
     {
-        return await mediator.Send(new GetPublishedCollectionsQuery(tenantId, type, skip, take));
+        return await mediator.Send(new GetPublishedCollectionsQuery(tenantId, type, skip, take)).ConfigureAwait(false);
     }
 
     public async Task<IEnumerable<CourseCollection>> GetFeaturedCollectionsAsync(Guid? tenantId = null, int take = 10)
     {
-        return await mediator.Send(new GetFeaturedCollectionsQuery(tenantId, take));
+        return await mediator.Send(new GetFeaturedCollectionsQuery(tenantId, take)).ConfigureAwait(false);
     }
 
     public async Task<IEnumerable<CourseCollection>> GetCollectionsByCuratorAsync(Guid curatorId, bool includeUnpublished = false, int skip = 0, int take = 50)
     {
-        return await mediator.Send(new GetCollectionsByCuratorQuery(curatorId, includeUnpublished, skip, take));
+        return await mediator.Send(new GetCollectionsByCuratorQuery(curatorId, includeUnpublished, skip, take)).ConfigureAwait(false);
     }
 
     public async Task<CourseCollection> CreateCollectionAsync(CreateCourseCollectionDto dto, Guid curatorId, Guid? tenantId = null)
@@ -120,17 +120,17 @@ public class DiscoveryService(IMediator mediator) : IDiscoveryService
 
     public async Task<CourseCollection?> PublishCollectionAsync(Guid id)
     {
-        return await mediator.Send(new PublishCourseCollectionCommand(id));
+        return await mediator.Send(new PublishCourseCollectionCommand(id)).ConfigureAwait(false);
     }
 
     public async Task<CourseCollection?> UnpublishCollectionAsync(Guid id)
     {
-        return await mediator.Send(new UnpublishCourseCollectionCommand(id));
+        return await mediator.Send(new UnpublishCourseCollectionCommand(id)).ConfigureAwait(false);
     }
 
     public async Task<bool> DeleteCollectionAsync(Guid id)
     {
-        return await mediator.Send(new DeleteCourseCollectionCommand(id));
+        return await mediator.Send(new DeleteCourseCollectionCommand(id)).ConfigureAwait(false);
     }
 
     // ===== SEARCH ANALYTICS =====
@@ -142,21 +142,21 @@ public class DiscoveryService(IMediator mediator) : IDiscoveryService
             ResultCount: dto.ResultCount,
             UserId: userId,
             Filters: dto.Filters
-        ));
+        )).ConfigureAwait(false);
     }
 
     public async Task<bool> RecordSearchClickAsync(Guid searchId, Guid clickedCourseId)
     {
-        return await mediator.Send(new RecordSearchClickCommand(searchId, clickedCourseId));
+        return await mediator.Send(new RecordSearchClickCommand(searchId, clickedCourseId)).ConfigureAwait(false);
     }
 
     public async Task<IEnumerable<SearchHistory>> GetUserSearchHistoryAsync(Guid userId, int take = 20)
     {
-        return await mediator.Send(new GetUserSearchHistoryQuery(userId, take));
+        return await mediator.Send(new GetUserSearchHistoryQuery(userId, take)).ConfigureAwait(false);
     }
 
     public async Task<IEnumerable<PopularSearchResult>> GetPopularSearchesAsync(int daysBack = 30, int take = 20)
     {
-        return await mediator.Send(new GetPopularSearchesQuery(daysBack, take));
+        return await mediator.Send(new GetPopularSearchesQuery(daysBack, take)).ConfigureAwait(false);
     }
 }

@@ -7,10 +7,9 @@ namespace GameGuild.Gamification.Achievements;
 /// <summary>
 /// REST API controller for achievement management and gamification.
 /// </summary>
-[ApiController]
 [Route("api/[controller]")]
 [Authorize]
-public class AchievementsController : ControllerBase
+public class AchievementsController : BaseApiController
 {
     private readonly IAchievementService _achievementService;
     private readonly IActorContextAccessor _actorContextAccessor;
@@ -48,10 +47,10 @@ public class AchievementsController : ControllerBase
             Category = ua.Achievement?.Category,
             IconUrl = ua.Achievement?.IconUrl,
             EarnedAt = ua.EarnedAt,
-            Level = ua.Level,
+            Level = ua.Level ?? 0,
             Progress = ua.Progress,
             MaxProgress = ua.MaxProgress,
-            ProgressPercentage = ua.ProgressPercentage,
+            ProgressPercentage = (decimal)ua.ProgressPercentage,
             IsCompleted = ua.IsCompleted,
             PointsEarned = ua.PointsEarned
         });
@@ -104,7 +103,7 @@ public class AchievementsController : ControllerBase
             Category = ua.Achievement?.Category,
             IconUrl = ua.Achievement?.IconUrl,
             EarnedAt = ua.EarnedAt,
-            Level = ua.Level,
+            Level = ua.Level ?? 0,
             PointsEarned = ua.PointsEarned,
             IsCompleted = ua.IsCompleted
         });
@@ -194,17 +193,17 @@ public class AchievementsController : ControllerBase
     /// Create a new achievement (admin only).
     /// </summary>
     [HttpPost]
-    // TODO: Add [RequirePermission("achievements:create")] when permission is registered
+    // PLANNED: Add [RequirePermission("achievements:create")] when achievement permissions are registered in the authorization module
     public async Task<ActionResult<AchievementDto>> CreateAchievement([FromBody] CreateAchievementRequest request)
     {
         var actorContext = _actorContextAccessor.ActorContext;
 
         var achievement = Achievement.Create(
             request.Name,
-            request.Description,
-            request.Category,
-            request.Type,
+            request.Category ?? "general",
+            request.Type ?? "badge",
             request.Points,
+            request.Description,
             actorContext.TenantId);
 
         if (!string.IsNullOrEmpty(request.IconUrl))
@@ -231,7 +230,7 @@ public class AchievementsController : ControllerBase
     /// Update an existing achievement (admin only).
     /// </summary>
     [HttpPut("{achievementId:guid}")]
-    // TODO: Add [RequirePermission("achievements:update")] when permission is registered
+    // PLANNED: Add [RequirePermission("achievements:update")] when achievement permissions are registered in the authorization module
     public async Task<ActionResult<AchievementDto>> UpdateAchievement(
         Guid achievementId,
         [FromBody] UpdateAchievementRequest request)
@@ -283,7 +282,7 @@ public class AchievementsController : ControllerBase
     /// Delete an achievement (admin only).
     /// </summary>
     [HttpDelete("{achievementId:guid}")]
-    // TODO: Add [RequirePermission("achievements:delete")] when permission is registered
+    // PLANNED: Add [RequirePermission("achievements:delete")] when achievement permissions are registered in the authorization module
     public async Task<ActionResult> DeleteAchievement(Guid achievementId)
     {
         var result = await _achievementService.DeleteAchievementAsync(achievementId);
@@ -302,7 +301,7 @@ public class AchievementsController : ControllerBase
     /// Award an achievement to a user (admin only, for manual awards).
     /// </summary>
     [HttpPost("{achievementId:guid}/award")]
-    // TODO: Add [RequirePermission("achievements:award")] when permission is registered
+    // PLANNED: Add [RequirePermission("achievements:award")] when achievement permissions are registered in the authorization module
     public async Task<ActionResult<UserAchievementDto>> AwardAchievement(
         Guid achievementId,
         [FromBody] AwardAchievementRequest request)
@@ -359,7 +358,7 @@ public class AchievementsController : ControllerBase
                 Level = l.Level,
                 Name = l.Name,
                 RequiredProgress = l.RequiredProgress,
-                PointsAwarded = l.PointsAwarded,
+                PointsAwarded = l.Points,
                 IconUrl = l.IconUrl
             }).ToList()
         };

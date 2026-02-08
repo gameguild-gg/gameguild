@@ -1,4 +1,3 @@
-using GameGuild.Abstractions;
 using GameGuild.CQRS;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -40,7 +39,7 @@ public class DiscoveryCommandHandlers(IApplicationDbContext context, ILogger<Dis
         // For now, we create with the basic factory method
 
         context.Set<FeaturedContent>().Add(featuredContent);
-        await context.SaveChangesAsync(cancellationToken);
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         logger.LogInformation("Created featured content with ID: {Id}", featuredContent.Id);
         return featuredContent;
@@ -52,7 +51,7 @@ public class DiscoveryCommandHandlers(IApplicationDbContext context, ILogger<Dis
 
         var featuredContent = await context.Set<FeaturedContent>()
             .Where(fc => fc.DeletedAt == null)
-            .FirstOrDefaultAsync(fc => fc.Id == request.Id, cancellationToken);
+            .FirstOrDefaultAsync(fc => fc.Id == request.Id, cancellationToken).ConfigureAwait(false);
 
         if (featuredContent == null)
         {
@@ -63,7 +62,7 @@ public class DiscoveryCommandHandlers(IApplicationDbContext context, ILogger<Dis
         // Note: Entity would need Update methods added for proper encapsulation
         // This is a simplified implementation
         context.Set<FeaturedContent>().Update(featuredContent);
-        await context.SaveChangesAsync(cancellationToken);
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         logger.LogInformation("Updated featured content: {Id}", request.Id);
         return featuredContent;
@@ -74,7 +73,7 @@ public class DiscoveryCommandHandlers(IApplicationDbContext context, ILogger<Dis
         logger.LogInformation("Deleting featured content: {Id}", request.Id);
 
         var featuredContent = await context.Set<FeaturedContent>()
-            .FirstOrDefaultAsync(fc => fc.Id == request.Id, cancellationToken);
+            .FirstOrDefaultAsync(fc => fc.Id == request.Id, cancellationToken).ConfigureAwait(false);
 
         if (featuredContent == null)
         {
@@ -83,7 +82,7 @@ public class DiscoveryCommandHandlers(IApplicationDbContext context, ILogger<Dis
         }
 
         featuredContent.SoftDelete();
-        await context.SaveChangesAsync(cancellationToken);
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         logger.LogInformation("Deleted featured content: {Id}", request.Id);
         return true;
@@ -95,7 +94,7 @@ public class DiscoveryCommandHandlers(IApplicationDbContext context, ILogger<Dis
 
         var featuredContent = await context.Set<FeaturedContent>()
             .Where(fc => fc.DeletedAt == null)
-            .FirstOrDefaultAsync(fc => fc.Id == request.Id, cancellationToken);
+            .FirstOrDefaultAsync(fc => fc.Id == request.Id, cancellationToken).ConfigureAwait(false);
 
         if (featuredContent == null)
         {
@@ -105,7 +104,7 @@ public class DiscoveryCommandHandlers(IApplicationDbContext context, ILogger<Dis
 
         // Note: Entity would need SetActive method for proper encapsulation
         context.Set<FeaturedContent>().Update(featuredContent);
-        await context.SaveChangesAsync(cancellationToken);
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         return featuredContent;
     }
@@ -122,7 +121,7 @@ public class DiscoveryCommandHandlers(IApplicationDbContext context, ILogger<Dis
         // Ensure slug uniqueness
         var existingSlug = await context.Set<CourseCollection>()
             .Where(cc => cc.Slug == slug && cc.DeletedAt == null)
-            .FirstOrDefaultAsync(cancellationToken);
+            .FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
 
         if (existingSlug != null)
         {
@@ -138,7 +137,7 @@ public class DiscoveryCommandHandlers(IApplicationDbContext context, ILogger<Dis
         );
 
         context.Set<CourseCollection>().Add(collection);
-        await context.SaveChangesAsync(cancellationToken);
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         logger.LogInformation("Created course collection with ID: {Id}", collection.Id);
         return collection;
@@ -150,7 +149,7 @@ public class DiscoveryCommandHandlers(IApplicationDbContext context, ILogger<Dis
 
         var collection = await context.Set<CourseCollection>()
             .Where(cc => cc.DeletedAt == null)
-            .FirstOrDefaultAsync(cc => cc.Id == request.Id, cancellationToken);
+            .FirstOrDefaultAsync(cc => cc.Id == request.Id, cancellationToken).ConfigureAwait(false);
 
         if (collection == null)
         {
@@ -160,7 +159,7 @@ public class DiscoveryCommandHandlers(IApplicationDbContext context, ILogger<Dis
 
         // Note: Entity would need Update methods for proper encapsulation
         context.Set<CourseCollection>().Update(collection);
-        await context.SaveChangesAsync(cancellationToken);
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         logger.LogInformation("Updated course collection: {Id}", request.Id);
         return collection;
@@ -172,7 +171,7 @@ public class DiscoveryCommandHandlers(IApplicationDbContext context, ILogger<Dis
 
         var collection = await context.Set<CourseCollection>()
             .Where(cc => cc.DeletedAt == null)
-            .FirstOrDefaultAsync(cc => cc.Id == request.Id, cancellationToken);
+            .FirstOrDefaultAsync(cc => cc.Id == request.Id, cancellationToken).ConfigureAwait(false);
 
         if (collection == null)
         {
@@ -182,7 +181,7 @@ public class DiscoveryCommandHandlers(IApplicationDbContext context, ILogger<Dis
 
         // Note: Entity would need Publish method for proper encapsulation
         context.Set<CourseCollection>().Update(collection);
-        await context.SaveChangesAsync(cancellationToken);
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         logger.LogInformation("Published course collection: {Id}", request.Id);
         return collection;
@@ -194,7 +193,7 @@ public class DiscoveryCommandHandlers(IApplicationDbContext context, ILogger<Dis
 
         var collection = await context.Set<CourseCollection>()
             .Where(cc => cc.DeletedAt == null)
-            .FirstOrDefaultAsync(cc => cc.Id == request.Id, cancellationToken);
+            .FirstOrDefaultAsync(cc => cc.Id == request.Id, cancellationToken).ConfigureAwait(false);
 
         if (collection == null)
         {
@@ -204,7 +203,7 @@ public class DiscoveryCommandHandlers(IApplicationDbContext context, ILogger<Dis
 
         // Note: Entity would need Unpublish method for proper encapsulation
         context.Set<CourseCollection>().Update(collection);
-        await context.SaveChangesAsync(cancellationToken);
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         logger.LogInformation("Unpublished course collection: {Id}", request.Id);
         return collection;
@@ -215,7 +214,7 @@ public class DiscoveryCommandHandlers(IApplicationDbContext context, ILogger<Dis
         logger.LogInformation("Deleting course collection: {Id}", request.Id);
 
         var collection = await context.Set<CourseCollection>()
-            .FirstOrDefaultAsync(cc => cc.Id == request.Id, cancellationToken);
+            .FirstOrDefaultAsync(cc => cc.Id == request.Id, cancellationToken).ConfigureAwait(false);
 
         if (collection == null)
         {
@@ -224,7 +223,7 @@ public class DiscoveryCommandHandlers(IApplicationDbContext context, ILogger<Dis
         }
 
         collection.SoftDelete();
-        await context.SaveChangesAsync(cancellationToken);
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         logger.LogInformation("Deleted course collection: {Id}", request.Id);
         return true;
@@ -243,7 +242,7 @@ public class DiscoveryCommandHandlers(IApplicationDbContext context, ILogger<Dis
         );
 
         context.Set<SearchHistory>().Add(searchHistory);
-        await context.SaveChangesAsync(cancellationToken);
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         return searchHistory;
     }
@@ -253,7 +252,7 @@ public class DiscoveryCommandHandlers(IApplicationDbContext context, ILogger<Dis
         logger.LogDebug("Recording search click: {SearchId} -> {CourseId}", request.SearchId, request.ClickedCourseId);
 
         var searchHistory = await context.Set<SearchHistory>()
-            .FirstOrDefaultAsync(sh => sh.Id == request.SearchId, cancellationToken);
+            .FirstOrDefaultAsync(sh => sh.Id == request.SearchId, cancellationToken).ConfigureAwait(false);
 
         if (searchHistory == null)
         {
@@ -262,7 +261,7 @@ public class DiscoveryCommandHandlers(IApplicationDbContext context, ILogger<Dis
         }
 
         // Note: Entity would need RecordClick method for proper encapsulation
-        await context.SaveChangesAsync(cancellationToken);
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         return true;
     }

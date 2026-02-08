@@ -1,5 +1,3 @@
-using GameGuild.Abstractions;
-using GameGuild.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -27,7 +25,7 @@ public class AchievementService : IAchievementService
     {
         try
         {
-            var achievement = await GetAchievementByIdAsync(achievementId);
+            var achievement = await GetAchievementByIdAsync(achievementId).ConfigureAwait(false);
             if (achievement == null)
             {
                 return Result.Failure<UserAchievement>(Error.NotFound("Achievement", "Achievement not found"));
@@ -42,7 +40,7 @@ public class AchievementService : IAchievementService
             if (!achievement.IsRepeatable)
             {
                 var existing = await _context.Set<UserAchievement>()
-                    .FirstOrDefaultAsync(ua => ua.UserId == userId && ua.AchievementId == achievementId);
+                    .FirstOrDefaultAsync(ua => ua.UserId == userId && ua.AchievementId == achievementId).ConfigureAwait(false);
 
                 if (existing != null)
                 {
@@ -51,7 +49,7 @@ public class AchievementService : IAchievementService
             }
 
             // Check prerequisites
-            var prerequisitesMet = await CheckPrerequisitesInternalAsync(userId, achievement, tenantId);
+            var prerequisitesMet = await CheckPrerequisitesInternalAsync(userId, achievement, tenantId).ConfigureAwait(false);
             if (!prerequisitesMet)
             {
                 return Result.Failure<UserAchievement>(Error.Validation("Achievement", "Prerequisites not met"));
@@ -60,7 +58,7 @@ public class AchievementService : IAchievementService
             var userAchievement = UserAchievement.Create(userId, achievementId, achievement.Points, context, tenantId);
 
             _context.Set<UserAchievement>().Add(userAchievement);
-            await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync().ConfigureAwait(false);
 
             _logger.LogInformation(
                 "Achievement {AchievementId} awarded to user {UserId}. Points: {Points}",
@@ -84,7 +82,7 @@ public class AchievementService : IAchievementService
     {
         try
         {
-            var achievement = await GetAchievementByIdAsync(achievementId);
+            var achievement = await GetAchievementByIdAsync(achievementId).ConfigureAwait(false);
             if (achievement == null)
             {
                 return Result.Failure<AchievementProgress>(Error.NotFound("Achievement", "Achievement not found"));
@@ -92,7 +90,7 @@ public class AchievementService : IAchievementService
 
             // Get or create progress record
             var progress = await _context.Set<AchievementProgress>()
-                .FirstOrDefaultAsync(p => p.UserId == userId && p.AchievementId == achievementId);
+                .FirstOrDefaultAsync(p => p.UserId == userId && p.AchievementId == achievementId).ConfigureAwait(false);
 
             if (progress == null)
             {
@@ -108,12 +106,12 @@ public class AchievementService : IAchievementService
             progress.IncrementProgress(progressIncrement);
             progress.Context = context;
 
-            await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync().ConfigureAwait(false);
 
             // Auto-award if completed
             if (progress.IsCompleted)
             {
-                await AwardAchievementAsync(userId, achievementId, context, tenantId);
+                await AwardAchievementAsync(userId, achievementId, context, tenantId).ConfigureAwait(false);
             }
 
             _logger.LogInformation(
@@ -136,12 +134,12 @@ public class AchievementService : IAchievementService
             var allAchievements = await _context.Set<Achievement>()
                 .Include(a => a.Prerequisites)
                 .Where(a => a.IsActive && (a.TenantId == tenantId || a.TenantId == null))
-                .ToListAsync();
+                .ToListAsync().ConfigureAwait(false);
 
             var userAchievementIds = await _context.Set<UserAchievement>()
                 .Where(ua => ua.UserId == userId)
                 .Select(ua => ua.AchievementId)
-                .ToListAsync();
+                .ToListAsync().ConfigureAwait(false);
 
             var eligibleAchievements = new List<Achievement>();
 
@@ -150,7 +148,7 @@ public class AchievementService : IAchievementService
                 if (!achievement.IsRepeatable && userAchievementIds.Contains(achievement.Id))
                     continue;
 
-                var prerequisitesMet = await CheckPrerequisitesInternalAsync(userId, achievement, tenantId);
+                var prerequisitesMet = await CheckPrerequisitesInternalAsync(userId, achievement, tenantId).ConfigureAwait(false);
                 if (prerequisitesMet)
                 {
                     eligibleAchievements.Add(achievement);
@@ -172,14 +170,14 @@ public class AchievementService : IAchievementService
         {
             var achievement = await _context.Set<Achievement>()
                 .Include(a => a.Prerequisites)
-                .FirstOrDefaultAsync(a => a.Id == achievementId);
+                .FirstOrDefaultAsync(a => a.Id == achievementId).ConfigureAwait(false);
 
             if (achievement == null)
             {
                 return Result.Failure<bool>(Error.NotFound("Achievement", "Achievement not found"));
             }
 
-            var met = await CheckPrerequisitesInternalAsync(userId, achievement, tenantId);
+            var met = await CheckPrerequisitesInternalAsync(userId, achievement, tenantId).ConfigureAwait(false);
             return Result.Success(met);
         }
         catch (Exception ex)
@@ -215,7 +213,7 @@ public class AchievementService : IAchievementService
         try
         {
             var userAchievement = await _context.Set<UserAchievement>()
-                .FirstOrDefaultAsync(ua => ua.Id == userAchievementId);
+                .FirstOrDefaultAsync(ua => ua.Id == userAchievementId).ConfigureAwait(false);
 
             if (userAchievement == null)
             {
@@ -223,7 +221,7 @@ public class AchievementService : IAchievementService
             }
 
             userAchievement.MarkAsNotified();
-            await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync().ConfigureAwait(false);
 
             return Result.Success();
         }
@@ -239,7 +237,7 @@ public class AchievementService : IAchievementService
         return await _context.Set<Achievement>()
             .Include(a => a.Levels)
             .Include(a => a.Prerequisites)
-            .FirstOrDefaultAsync(a => a.Id == id);
+            .FirstOrDefaultAsync(a => a.Id == id).ConfigureAwait(false);
     }
 
     public async Task<IEnumerable<Achievement>> GetAchievementsAsync(
@@ -301,7 +299,7 @@ public class AchievementService : IAchievementService
     {
         return await _context.Set<UserAchievement>()
             .Where(ua => ua.UserId == userId && (ua.TenantId == tenantId || ua.TenantId == null))
-            .SumAsync(ua => ua.PointsEarned);
+            .SumAsync(ua => ua.PointsEarned).ConfigureAwait(false);
     }
 
     public async Task<Result<Achievement>> CreateAchievementAsync(Achievement achievement)
@@ -309,7 +307,7 @@ public class AchievementService : IAchievementService
         try
         {
             _context.Set<Achievement>().Add(achievement);
-            await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync().ConfigureAwait(false);
 
             _logger.LogInformation("Achievement created: {AchievementId} - {Name}", achievement.Id, achievement.Name);
 
@@ -327,7 +325,7 @@ public class AchievementService : IAchievementService
         try
         {
             _context.Set<Achievement>().Update(achievement);
-            await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync().ConfigureAwait(false);
 
             _logger.LogInformation("Achievement updated: {AchievementId}", achievement.Id);
 
@@ -344,14 +342,14 @@ public class AchievementService : IAchievementService
     {
         try
         {
-            var achievement = await GetAchievementByIdAsync(achievementId);
+            var achievement = await GetAchievementByIdAsync(achievementId).ConfigureAwait(false);
             if (achievement == null)
             {
                 return Result.Failure(Error.NotFound("Achievement", "Achievement not found"));
             }
 
             _context.Set<Achievement>().Remove(achievement);
-            await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync().ConfigureAwait(false);
 
             _logger.LogInformation("Achievement deleted: {AchievementId}", achievementId);
 
@@ -371,7 +369,7 @@ public class AchievementService : IAchievementService
 
         var userAchievements = await _context.Set<UserAchievement>()
             .Where(ua => ua.UserId == userId && (ua.TenantId == tenantId || ua.TenantId == null))
-            .ToListAsync();
+            .ToListAsync().ConfigureAwait(false);
 
         foreach (var prerequisite in achievement.Prerequisites)
         {
