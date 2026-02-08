@@ -1,6 +1,5 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using GameGuild.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace GameGuild.Resources.Contents;
@@ -109,9 +108,7 @@ public class ContentVersion : EntityBase
             CreatedBy = createdBy,
             ChangeNotes = changeNotes?.Trim(),
             Status = ContentVersionStatus.Draft,
-            IsCurrentVersion = false,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            IsCurrentVersion = false
         };
     }
 
@@ -272,9 +269,7 @@ public class ContentVersionReview : EntityBase
             ReviewerId = reviewerId,
             Decision = decision,
             Feedback = feedback?.Trim(),
-            Suggestions = suggestions,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            Suggestions = suggestions
         };
     }
 }

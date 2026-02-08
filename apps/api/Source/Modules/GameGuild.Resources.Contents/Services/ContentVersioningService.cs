@@ -1,506 +1,97 @@
-using GameGuild.Identity.Context.Actors;
-using GameGuild.Models;
-using GameGuild.Abstractions;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
-
 namespace GameGuild.Resources.Contents;
 
 /// <summary>
-/// Implementation of the content versioning service
+/// Thin facade that delegates to focused sub-services.
+/// Preserves the <see cref="IContentVersioningService"/> contract for backward compatibility.
 /// </summary>
-public class ContentVersioningService : IContentVersioningService
+public class ContentVersioningService(
+    IContentDraftService draftService,
+    IContentReviewPublishingService reviewPublishingService,
+    IContentVersionQueryService versionQueryService) : IContentVersioningService
 {
-    private readonly IApplicationDbContext _db;
-    private readonly IActorContextAccessor _actorContextAccessor;
-    private readonly ILogger<ContentVersioningService> _logger;
-
-    public ContentVersioningService(
-        IApplicationDbContext db,
-        IActorContextAccessor actorContextAccessor,
-        ILogger<ContentVersioningService> logger)
-    {
-        _db = db;
-        _actorContextAccessor = actorContextAccessor;
-        _logger = logger;
-    }
-
-    private Guid GetCurrentUserId() => _actorContextAccessor.ActorContext.SubjectIdAsGuid ?? Guid.Empty;
-
     // ─── Draft Management ────────────────────────────────────────────────────────
 
-    public async Task<Result<ContentVersion>> CreateDraftAsync(
-        Guid entityId,
-        string entityType,
-        string title,
-        Guid createdBy,
-        string? summary = null,
-        string? body = null,
-        string? metadata = null,
-        string? changeNotes = null,
+    public Task<Result<ContentVersion>> CreateDraftAsync(
+        Guid entityId, string entityType, string title, Guid createdBy,
+        string? summary = null, string? body = null, string? metadata = null,
+        string? changeNotes = null, CancellationToken ct = default)
+        => draftService.CreateDraftAsync(entityId, entityType, title, createdBy, summary, body, metadata, changeNotes, ct);
+
+    public Task<Result<ContentVersion>> UpdateDraftAsync(
+        Guid versionId, string? title = null, string? summary = null,
+        string? body = null, string? metadata = null, string? changeNotes = null,
         CancellationToken ct = default)
-    {
-        // Get next version number
-        var maxVersion = await _db.Set<ContentVersion>()
-            .Where(v => v.EntityId == entityId && v.EntityType == entityType && !v.IsDeleted)
-            .MaxAsync(v => (int?)v.VersionNumber, ct) ?? 0;
+        => draftService.UpdateDraftAsync(versionId, title, summary, body, metadata, changeNotes, ct);
 
-        var version = ContentVersion.Create(
-            entityId,
-            entityType,
-            maxVersion + 1,
-            title,
-            createdBy,
-            summary,
-            body,
-            metadata,
-            changeNotes);
-
-        _db.Set<ContentVersion>().Add(version);
-        await _db.SaveChangesAsync(ct);
-
-        _logger.LogInformation("Created draft version {VersionNumber} for {EntityType}:{EntityId}",
-            version.VersionNumber, entityType, entityId);
-
-        return Result.Success(version);
-    }
-
-    public async Task<Result<ContentVersion>> UpdateDraftAsync(
-        Guid versionId,
-        string? title = null,
-        string? summary = null,
-        string? body = null,
-        string? metadata = null,
-        string? changeNotes = null,
-        CancellationToken ct = default)
-    {
-        var version = await _db.Set<ContentVersion>()
-            .FirstOrDefaultAsync(v => v.Id == versionId && !v.IsDeleted, ct);
-
-        if (version == null)
-            return Result.Failure<ContentVersion>(ContentVersioningErrors.NotFound);
-
-        if (version.Status != ContentVersionStatus.Draft)
-            return Result.Failure<ContentVersion>(ContentVersioningErrors.CanOnlyUpdateDrafts);
-
-        version.UpdateDraft(title, summary, body, metadata, changeNotes);
-        await _db.SaveChangesAsync(ct);
-
-        _logger.LogInformation("Updated draft version {VersionId}", versionId);
-
-        return Result.Success(version);
-    }
-
-    public async Task<Result<ContentVersion>> GetDraftAsync(Guid entityId, string entityType, CancellationToken ct = default)
-    {
-        var draft = await _db.Set<ContentVersion>()
-            .Where(v => v.EntityId == entityId && v.EntityType == entityType && !v.IsDeleted)
-            .Where(v => v.Status == ContentVersionStatus.Draft)
-            .OrderByDescending(v => v.VersionNumber)
-            .FirstOrDefaultAsync(ct);
-
-        if (draft == null)
-            return Result.Failure<ContentVersion>(ContentVersioningErrors.NotFound);
-
-        return Result.Success(draft);
-    }
+    public Task<Result<ContentVersion>> GetDraftAsync(Guid entityId, string entityType, CancellationToken ct = default)
+        => draftService.GetDraftAsync(entityId, entityType, ct);
 
     // ─── Review Workflow ─────────────────────────────────────────────────────────
 
-    public async Task<Result<ContentVersion>> SubmitForReviewAsync(Guid versionId, CancellationToken ct = default)
-    {
-        var version = await _db.Set<ContentVersion>()
-            .FirstOrDefaultAsync(v => v.Id == versionId && !v.IsDeleted, ct);
+    public Task<Result<ContentVersion>> SubmitForReviewAsync(Guid versionId, CancellationToken ct = default)
+        => reviewPublishingService.SubmitForReviewAsync(versionId, ct);
 
-        if (version == null)
-            return Result.Failure<ContentVersion>(ContentVersioningErrors.NotFound);
+    public Task<Result<ContentVersion>> ApproveAsync(Guid versionId, string? reviewNotes = null, CancellationToken ct = default)
+        => reviewPublishingService.ApproveAsync(versionId, reviewNotes, ct);
 
-        try
-        {
-            version.SubmitForReview(GetCurrentUserId());
-            await _db.SaveChangesAsync(ct);
+    public Task<Result<ContentVersion>> RejectAsync(Guid versionId, string? reviewNotes = null, CancellationToken ct = default)
+        => reviewPublishingService.RejectAsync(versionId, reviewNotes, ct);
 
-            _logger.LogInformation("Version {VersionId} submitted for review", versionId);
-            return Result.Success(version);
-        }
-        catch (InvalidOperationException ex)
-        {
-            return Result.Failure<ContentVersion>(Error.Failure("ContentVersioning.InvalidOperation", ex.Message));
-        }
-    }
+    public Task<Result<IEnumerable<ContentVersion>>> GetPendingReviewAsync(
+        string? entityType = null, int skip = 0, int take = 20, CancellationToken ct = default)
+        => reviewPublishingService.GetPendingReviewAsync(entityType, skip, take, ct);
 
-    public async Task<Result<ContentVersion>> ApproveAsync(Guid versionId, string? reviewNotes = null, CancellationToken ct = default)
-    {
-        var version = await _db.Set<ContentVersion>()
-            .FirstOrDefaultAsync(v => v.Id == versionId && !v.IsDeleted, ct);
-
-        if (version == null)
-            return Result.Failure<ContentVersion>(ContentVersioningErrors.NotFound);
-
-        try
-        {
-            version.Approve(GetCurrentUserId(), reviewNotes);
-            await _db.SaveChangesAsync(ct);
-
-            _logger.LogInformation("Version {VersionId} approved", versionId);
-            return Result.Success(version);
-        }
-        catch (InvalidOperationException ex)
-        {
-            return Result.Failure<ContentVersion>(Error.Failure("ContentVersioning.InvalidOperation", ex.Message));
-        }
-    }
-
-    public async Task<Result<ContentVersion>> RejectAsync(Guid versionId, string? reviewNotes = null, CancellationToken ct = default)
-    {
-        var version = await _db.Set<ContentVersion>()
-            .FirstOrDefaultAsync(v => v.Id == versionId && !v.IsDeleted, ct);
-
-        if (version == null)
-            return Result.Failure<ContentVersion>(ContentVersioningErrors.NotFound);
-
-        try
-        {
-            version.Reject(GetCurrentUserId(), reviewNotes);
-            await _db.SaveChangesAsync(ct);
-
-            _logger.LogInformation("Version {VersionId} rejected", versionId);
-            return Result.Success(version);
-        }
-        catch (InvalidOperationException ex)
-        {
-            return Result.Failure<ContentVersion>(Error.Failure("ContentVersioning.InvalidOperation", ex.Message));
-        }
-    }
-
-    public async Task<Result<IEnumerable<ContentVersion>>> GetPendingReviewAsync(
-        string? entityType = null,
-        int skip = 0,
-        int take = 20,
-        CancellationToken ct = default)
-    {
-        var query = _db.Set<ContentVersion>()
-            .Where(v => !v.IsDeleted)
-            .Where(v => v.Status == ContentVersionStatus.PendingReview);
-
-        if (!string.IsNullOrEmpty(entityType))
-            query = query.Where(v => v.EntityType == entityType);
-
-        var versions = await query
-            .OrderBy(v => v.SubmittedForReviewAt)
-            .Skip(skip)
-            .Take(take)
-            .ToListAsync(ct);
-
-        return Result.Success<IEnumerable<ContentVersion>>(versions);
-    }
-
-    public async Task<Result<ContentVersionReview>> AddReviewAsync(
-        Guid versionId,
-        ContentReviewDecision decision,
-        string? feedback = null,
-        string? suggestions = null,
-        CancellationToken ct = default)
-    {
-        var version = await _db.Set<ContentVersion>()
-            .FirstOrDefaultAsync(v => v.Id == versionId && !v.IsDeleted, ct);
-
-        if (version == null)
-            return Result.Failure<ContentVersionReview>(ContentVersioningErrors.NotFound);
-
-        var review = ContentVersionReview.Create(
-            versionId,
-            GetCurrentUserId(),
-            decision,
-            feedback,
-            suggestions);
-
-        _db.Set<ContentVersionReview>().Add(review);
-        await _db.SaveChangesAsync(ct);
-
-        return Result.Success(review);
-    }
+    public Task<Result<ContentVersionReview>> AddReviewAsync(
+        Guid versionId, ContentReviewDecision decision,
+        string? feedback = null, string? suggestions = null, CancellationToken ct = default)
+        => reviewPublishingService.AddReviewAsync(versionId, decision, feedback, suggestions, ct);
 
     // ─── Publishing ──────────────────────────────────────────────────────────────
 
-    public async Task<Result<ContentVersion>> PublishAsync(Guid versionId, CancellationToken ct = default)
-    {
-        var version = await _db.Set<ContentVersion>()
-            .FirstOrDefaultAsync(v => v.Id == versionId && !v.IsDeleted, ct);
+    public Task<Result<ContentVersion>> PublishAsync(Guid versionId, CancellationToken ct = default)
+        => reviewPublishingService.PublishAsync(versionId, ct);
 
-        if (version == null)
-            return Result.Failure<ContentVersion>(ContentVersioningErrors.NotFound);
+    public Task<Result<ContentVersion>> SchedulePublishAsync(Guid versionId, DateTime scheduledAt, CancellationToken ct = default)
+        => reviewPublishingService.SchedulePublishAsync(versionId, scheduledAt, ct);
 
-        try
-        {
-            // Unset current version flag on old versions
-            var currentVersions = await _db.Set<ContentVersion>()
-                .Where(v => v.EntityId == version.EntityId && v.EntityType == version.EntityType && !v.IsDeleted)
-                .Where(v => v.IsCurrentVersion)
-                .ToListAsync(ct);
+    public Task<Result<ContentVersion>> CancelScheduledPublishAsync(Guid versionId, CancellationToken ct = default)
+        => reviewPublishingService.CancelScheduledPublishAsync(versionId, ct);
 
-            foreach (var cv in currentVersions)
-                cv.SetAsCurrent(false);
-
-            version.Publish(GetCurrentUserId());
-            await _db.SaveChangesAsync(ct);
-
-            _logger.LogInformation("Version {VersionId} published for {EntityType}:{EntityId}",
-                versionId, version.EntityType, version.EntityId);
-
-            return Result.Success(version);
-        }
-        catch (InvalidOperationException ex)
-        {
-            return Result.Failure<ContentVersion>(Error.Failure("ContentVersioning.InvalidOperation", ex.Message));
-        }
-    }
-
-    public async Task<Result<ContentVersion>> SchedulePublishAsync(Guid versionId, DateTime scheduledAt, CancellationToken ct = default)
-    {
-        var version = await _db.Set<ContentVersion>()
-            .FirstOrDefaultAsync(v => v.Id == versionId && !v.IsDeleted, ct);
-
-        if (version == null)
-            return Result.Failure<ContentVersion>(ContentVersioningErrors.NotFound);
-
-        if (scheduledAt <= DateTime.UtcNow)
-            return Result.Failure<ContentVersion>(ContentVersioningErrors.ScheduleDateMustBeFuture);
-
-        try
-        {
-            version.SchedulePublish(scheduledAt, GetCurrentUserId());
-            await _db.SaveChangesAsync(ct);
-
-            _logger.LogInformation("Version {VersionId} scheduled for publishing at {ScheduledAt}", versionId, scheduledAt);
-
-            return Result.Success(version);
-        }
-        catch (InvalidOperationException ex)
-        {
-            return Result.Failure<ContentVersion>(Error.Failure("ContentVersioning.InvalidOperation", ex.Message));
-        }
-    }
-
-    public async Task<Result<ContentVersion>> CancelScheduledPublishAsync(Guid versionId, CancellationToken ct = default)
-    {
-        var version = await _db.Set<ContentVersion>()
-            .FirstOrDefaultAsync(v => v.Id == versionId && !v.IsDeleted, ct);
-
-        if (version == null)
-            return Result.Failure<ContentVersion>(ContentVersioningErrors.NotFound);
-
-        if (version.Status != ContentVersionStatus.Scheduled)
-            return Result.Failure<ContentVersion>(ContentVersioningErrors.NotScheduled);
-
-        // Revert to approved status
-        version.Approve(GetCurrentUserId(), "Scheduled publishing cancelled");
-        await _db.SaveChangesAsync(ct);
-
-        _logger.LogInformation("Scheduled publishing cancelled for version {VersionId}", versionId);
-
-        return Result.Success(version);
-    }
-
-    public async Task<Result<int>> ProcessScheduledPublishingAsync(CancellationToken ct = default)
-    {
-        var now = DateTime.UtcNow;
-        
-        var scheduledVersions = await _db.Set<ContentVersion>()
-            .Where(v => !v.IsDeleted)
-            .Where(v => v.Status == ContentVersionStatus.Scheduled)
-            .Where(v => v.ScheduledPublishAt <= now)
-            .ToListAsync(ct);
-
-        var publishedCount = 0;
-
-        foreach (var version in scheduledVersions)
-        {
-            try
-            {
-                // Unset current version flag on old versions
-                var currentVersions = await _db.Set<ContentVersion>()
-                    .Where(v => v.EntityId == version.EntityId && v.EntityType == version.EntityType && !v.IsDeleted)
-                    .Where(v => v.IsCurrentVersion)
-                    .ToListAsync(ct);
-
-                foreach (var cv in currentVersions)
-                    cv.SetAsCurrent(false);
-
-                version.Publish(version.PublishedBy ?? Guid.Empty);
-                publishedCount++;
-
-                _logger.LogInformation("Auto-published scheduled version {VersionId} for {EntityType}:{EntityId}",
-                    version.Id, version.EntityType, version.EntityId);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Failed to auto-publish version {VersionId}", version.Id);
-            }
-        }
-
-        await _db.SaveChangesAsync(ct);
-
-        return Result.Success(publishedCount);
-    }
+    public Task<Result<int>> ProcessScheduledPublishingAsync(CancellationToken ct = default)
+        => reviewPublishingService.ProcessScheduledPublishingAsync(ct);
 
     // ─── Version History ─────────────────────────────────────────────────────────
 
-    public async Task<Result<IEnumerable<ContentVersion>>> GetVersionHistoryAsync(
-        Guid entityId,
-        string entityType,
-        CancellationToken ct = default)
-    {
-        var versions = await _db.Set<ContentVersion>()
-            .Where(v => v.EntityId == entityId && v.EntityType == entityType && !v.IsDeleted)
-            .OrderByDescending(v => v.VersionNumber)
-            .ToListAsync(ct);
+    public Task<Result<IEnumerable<ContentVersion>>> GetVersionHistoryAsync(
+        Guid entityId, string entityType, CancellationToken ct = default)
+        => versionQueryService.GetVersionHistoryAsync(entityId, entityType, ct);
 
-        return Result.Success<IEnumerable<ContentVersion>>(versions);
-    }
+    public Task<Result<ContentVersion>> GetVersionAsync(Guid versionId, CancellationToken ct = default)
+        => versionQueryService.GetVersionAsync(versionId, ct);
 
-    public async Task<Result<ContentVersion>> GetVersionAsync(Guid versionId, CancellationToken ct = default)
-    {
-        var version = await _db.Set<ContentVersion>()
-            .FirstOrDefaultAsync(v => v.Id == versionId && !v.IsDeleted, ct);
+    public Task<Result<ContentVersion>> GetVersionByNumberAsync(
+        Guid entityId, string entityType, int versionNumber, CancellationToken ct = default)
+        => versionQueryService.GetVersionByNumberAsync(entityId, entityType, versionNumber, ct);
 
-        if (version == null)
-            return Result.Failure<ContentVersion>(ContentVersioningErrors.NotFound);
+    public Task<Result<ContentVersion>> GetCurrentVersionAsync(Guid entityId, string entityType, CancellationToken ct = default)
+        => versionQueryService.GetCurrentVersionAsync(entityId, entityType, ct);
 
-        return Result.Success(version);
-    }
-
-    public async Task<Result<ContentVersion>> GetVersionByNumberAsync(
-        Guid entityId,
-        string entityType,
-        int versionNumber,
-        CancellationToken ct = default)
-    {
-        var version = await _db.Set<ContentVersion>()
-            .FirstOrDefaultAsync(v =>
-                v.EntityId == entityId &&
-                v.EntityType == entityType &&
-                v.VersionNumber == versionNumber &&
-                !v.IsDeleted, ct);
-
-        if (version == null)
-            return Result.Failure<ContentVersion>(ContentVersioningErrors.NotFound);
-
-        return Result.Success(version);
-    }
-
-    public async Task<Result<ContentVersion>> GetCurrentVersionAsync(Guid entityId, string entityType, CancellationToken ct = default)
-    {
-        var version = await _db.Set<ContentVersion>()
-            .FirstOrDefaultAsync(v =>
-                v.EntityId == entityId &&
-                v.EntityType == entityType &&
-                v.IsCurrentVersion &&
-                !v.IsDeleted, ct);
-
-        if (version == null)
-            return Result.Failure<ContentVersion>(ContentVersioningErrors.NotFound);
-
-        return Result.Success(version);
-    }
-
-    public async Task<Result<ContentVersionDiff>> CompareVersionsAsync(
-        Guid versionId1,
-        Guid versionId2,
-        CancellationToken ct = default)
-    {
-        var v1 = await _db.Set<ContentVersion>().FirstOrDefaultAsync(v => v.Id == versionId1 && !v.IsDeleted, ct);
-        var v2 = await _db.Set<ContentVersion>().FirstOrDefaultAsync(v => v.Id == versionId2 && !v.IsDeleted, ct);
-
-        if (v1 == null || v2 == null)
-            return Result.Failure<ContentVersionDiff>(ContentVersioningErrors.NotFound);
-
-        if (v1.EntityId != v2.EntityId || v1.EntityType != v2.EntityType)
-            return Result.Failure<ContentVersionDiff>(ContentVersioningErrors.VersionsMustBeSameEntity);
-
-        var diff = new ContentVersionDiff(
-            versionId1,
-            versionId2,
-            v1.VersionNumber,
-            v2.VersionNumber,
-            v1.Title != v2.Title,
-            v1.Summary != v2.Summary,
-            v1.Body != v2.Body,
-            v1.Metadata != v2.Metadata,
-            v1.Title != v2.Title ? $"'{v1.Title}' -> '{v2.Title}'" : null,
-            v1.Summary != v2.Summary ? $"Summary changed" : null,
-            v1.Body != v2.Body ? "Body changed" : null
-        );
-
-        return Result.Success(diff);
-    }
+    public Task<Result<ContentVersionDiff>> CompareVersionsAsync(
+        Guid versionId1, Guid versionId2, CancellationToken ct = default)
+        => versionQueryService.CompareVersionsAsync(versionId1, versionId2, ct);
 
     // ─── Rollback ────────────────────────────────────────────────────────────────
 
-    public async Task<Result<ContentVersion>> RollbackAsync(
-        Guid entityId,
-        string entityType,
-        int targetVersionNumber,
-        string? reason = null,
-        CancellationToken ct = default)
-    {
-        var targetVersion = await _db.Set<ContentVersion>()
-            .FirstOrDefaultAsync(v =>
-                v.EntityId == entityId &&
-                v.EntityType == entityType &&
-                v.VersionNumber == targetVersionNumber &&
-                !v.IsDeleted, ct);
-
-        if (targetVersion == null)
-            return Result.Failure<ContentVersion>(ContentVersioningErrors.NotFound);
-
-        // Create new version based on target
-        var rollbackResult = await CreateDraftAsync(
-            entityId,
-            entityType,
-            targetVersion.Title,
-            GetCurrentUserId(),
-            targetVersion.Summary,
-            targetVersion.Body,
-            targetVersion.Metadata,
-            $"Rollback to v{targetVersionNumber}" + (reason != null ? $": {reason}" : ""),
-            ct);
-
-        if (!rollbackResult.IsSuccess)
-            return rollbackResult;
-
-        _logger.LogInformation("Created rollback version from v{TargetVersion} for {EntityType}:{EntityId}",
-            targetVersionNumber, entityType, entityId);
-
-        return rollbackResult;
-    }
+    public Task<Result<ContentVersion>> RollbackAsync(
+        Guid entityId, string entityType, int targetVersionNumber,
+        string? reason = null, CancellationToken ct = default)
+        => draftService.RollbackAsync(entityId, entityType, targetVersionNumber, reason, ct);
 
     // ─── Cleanup ─────────────────────────────────────────────────────────────────
 
-    public async Task<Result<int>> ArchiveOldVersionsAsync(
-        Guid entityId,
-        string entityType,
-        int keepCount = 10,
-        CancellationToken ct = default)
-    {
-        var versionsToArchive = await _db.Set<ContentVersion>()
-            .Where(v => v.EntityId == entityId && v.EntityType == entityType && !v.IsDeleted)
-            .Where(v => v.Status == ContentVersionStatus.Published || v.Status == ContentVersionStatus.Archived)
-            .Where(v => !v.IsCurrentVersion)
-            .OrderByDescending(v => v.VersionNumber)
-            .Skip(keepCount)
-            .ToListAsync(ct);
-
-        foreach (var version in versionsToArchive)
-            version.Archive();
-
-        await _db.SaveChangesAsync(ct);
-
-        _logger.LogInformation("Archived {Count} old versions for {EntityType}:{EntityId}",
-            versionsToArchive.Count, entityType, entityId);
-
-        return Result.Success(versionsToArchive.Count);
-    }
+    public Task<Result<int>> ArchiveOldVersionsAsync(
+        Guid entityId, string entityType, int keepCount = 10, CancellationToken ct = default)
+        => draftService.ArchiveOldVersionsAsync(entityId, entityType, keepCount, ct);
 }
 
 /// <summary>

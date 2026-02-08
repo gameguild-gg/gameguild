@@ -6,10 +6,9 @@ namespace GameGuild.Resources.Contents;
 /// <summary>
 /// REST API controller for content versioning
 /// </summary>
-[ApiController]
 [Route("api/contents/[controller]")]
 [Authorize]
-public class VersioningController : ControllerBase
+public class VersioningController : BaseApiController
 {
     private readonly IContentVersioningService _versioningService;
 

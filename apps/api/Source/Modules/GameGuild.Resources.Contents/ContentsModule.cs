@@ -1,4 +1,3 @@
-using GameGuild.Abstractions;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -16,7 +15,12 @@ public class ContentsModule : IModule
     /// <inheritdoc />
     public IServiceCollection ConfigureServices(IServiceCollection services, IConfiguration configuration)
     {
-        // Register content versioning services
+        // Register focused sub-services
+        services.AddScoped<IContentDraftService, ContentDraftService>();
+        services.AddScoped<IContentReviewPublishingService, ContentReviewPublishingService>();
+        services.AddScoped<IContentVersionQueryService, ContentVersionQueryService>();
+
+        // Facade for backward compatibility
         services.AddScoped<IContentVersioningService, ContentVersioningService>();
 
         return services;
