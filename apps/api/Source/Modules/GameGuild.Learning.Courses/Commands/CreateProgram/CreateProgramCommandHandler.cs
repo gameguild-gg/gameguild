@@ -1,9 +1,7 @@
-using GameGuild.Abstractions;
 using GameGuild.CQRS;
 
 
 
-using GameGuild.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -40,13 +38,11 @@ public class CreateProgramCommandHandler(IApplicationDbContext context, ILogger<
       MaxEnrollments = request.MaxEnrollments,
       EnrollmentDeadline = request.EnrollmentDeadline,
       Status = ContentStatus.Draft,
-      Visibility = AccessLevel.Private,
-      CreatedAt = DateTime.UtcNow,
-      UpdatedAt = DateTime.UtcNow,
+      Visibility = ContentVisibility.Private,
     };
 
     context.Set<Program>().Add(program);
-    await context.SaveChangesAsync(cancellationToken);
+    await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
     logger.LogInformation("Created program with ID: {ProgramId}", program.Id);
 

@@ -1,4 +1,3 @@
-using GameGuild.Abstractions;
 using GameGuild.CQRS;
 using GameGuild.Tags;
 using Microsoft.EntityFrameworkCore;
@@ -19,7 +18,7 @@ public class AddTagToProgramCommandHandler(
 
         // Verify program exists
         var program = await context.Set<Program>()
-            .FirstOrDefaultAsync(p => p.Id == request.ProgramId && p.DeletedAt == null, cancellationToken);
+            .FirstOrDefaultAsync(p => p.Id == request.ProgramId && p.DeletedAt == null, cancellationToken).ConfigureAwait(false);
 
         if (program == null)
         {
@@ -28,7 +27,7 @@ public class AddTagToProgramCommandHandler(
 
         // Verify tag exists
         var tag = await context.Set<Tag>()
-            .FirstOrDefaultAsync(t => t.Id == request.TagId && t.IsActive, cancellationToken);
+            .FirstOrDefaultAsync(t => t.Id == request.TagId && t.IsActive, cancellationToken).ConfigureAwait(false);
 
         if (tag == null)
         {
@@ -37,7 +36,7 @@ public class AddTagToProgramCommandHandler(
 
         // Check if already tagged
         var existingTag = await context.Set<ProgramTag>()
-            .FirstOrDefaultAsync(pt => pt.ProgramId == request.ProgramId && pt.TagId == request.TagId, cancellationToken);
+            .FirstOrDefaultAsync(pt => pt.ProgramId == request.ProgramId && pt.TagId == request.TagId, cancellationToken).ConfigureAwait(false);
 
         if (existingTag != null)
         {
@@ -52,7 +51,7 @@ public class AddTagToProgramCommandHandler(
             displayOrder: request.DisplayOrder);
 
         context.Set<ProgramTag>().Add(programTag);
-        await context.SaveChangesAsync(cancellationToken);
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         logger.LogInformation("Added tag {TagId} to program {ProgramId}", request.TagId, request.ProgramId);
         return programTag;
@@ -69,7 +68,7 @@ public class UpdateProgramTagCommandHandler(
         logger.LogDebug("Updating tag {TagId} on program {ProgramId}", request.TagId, request.ProgramId);
 
         var programTag = await context.Set<ProgramTag>()
-            .FirstOrDefaultAsync(pt => pt.ProgramId == request.ProgramId && pt.TagId == request.TagId, cancellationToken);
+            .FirstOrDefaultAsync(pt => pt.ProgramId == request.ProgramId && pt.TagId == request.TagId, cancellationToken).ConfigureAwait(false);
 
         if (programTag == null)
         {
@@ -91,7 +90,7 @@ public class UpdateProgramTagCommandHandler(
             programTag.SetDisplayOrder(request.DisplayOrder.Value);
         }
 
-        await context.SaveChangesAsync(cancellationToken);
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         return programTag;
     }
 }
@@ -106,7 +105,7 @@ public class RemoveTagFromProgramCommandHandler(
         logger.LogInformation("Removing tag {TagId} from program {ProgramId}", request.TagId, request.ProgramId);
 
         var programTag = await context.Set<ProgramTag>()
-            .FirstOrDefaultAsync(pt => pt.ProgramId == request.ProgramId && pt.TagId == request.TagId, cancellationToken);
+            .FirstOrDefaultAsync(pt => pt.ProgramId == request.ProgramId && pt.TagId == request.TagId, cancellationToken).ConfigureAwait(false);
 
         if (programTag == null)
         {
@@ -115,7 +114,7 @@ public class RemoveTagFromProgramCommandHandler(
         }
 
         context.Set<ProgramTag>().Remove(programTag);
-        await context.SaveChangesAsync(cancellationToken);
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         logger.LogInformation("Removed tag {TagId} from program {ProgramId}", request.TagId, request.ProgramId);
         return Unit.Value;
@@ -133,7 +132,7 @@ public class BulkAddTagsToProgramCommandHandler(
 
         // Verify program exists
         var program = await context.Set<Program>()
-            .FirstOrDefaultAsync(p => p.Id == request.ProgramId && p.DeletedAt == null, cancellationToken);
+            .FirstOrDefaultAsync(p => p.Id == request.ProgramId && p.DeletedAt == null, cancellationToken).ConfigureAwait(false);
 
         if (program == null)
         {
@@ -144,7 +143,7 @@ public class BulkAddTagsToProgramCommandHandler(
         var existingTagIds = await context.Set<ProgramTag>()
             .Where(pt => pt.ProgramId == request.ProgramId)
             .Select(pt => pt.TagId)
-            .ToListAsync(cancellationToken);
+            .ToListAsync(cancellationToken).ConfigureAwait(false);
 
         var newTags = new List<ProgramTag>();
 
@@ -169,7 +168,7 @@ public class BulkAddTagsToProgramCommandHandler(
         if (newTags.Any())
         {
             context.Set<ProgramTag>().AddRange(newTags);
-            await context.SaveChangesAsync(cancellationToken);
+            await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         }
 
         logger.LogInformation("Added {Count} new tags to program {ProgramId}", newTags.Count, request.ProgramId);
@@ -188,7 +187,7 @@ public class ReorderProgramTagsCommandHandler(
 
         var programTags = await context.Set<ProgramTag>()
             .Where(pt => pt.ProgramId == request.ProgramId)
-            .ToListAsync(cancellationToken);
+            .ToListAsync(cancellationToken).ConfigureAwait(false);
 
         var order = 0;
         foreach (var tagId in request.TagIdsInOrder)
@@ -200,7 +199,7 @@ public class ReorderProgramTagsCommandHandler(
             }
         }
 
-        await context.SaveChangesAsync(cancellationToken);
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         logger.LogInformation("Reordered tags for program {ProgramId}", request.ProgramId);
         return Unit.Value;
     }

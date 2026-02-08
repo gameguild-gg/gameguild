@@ -1,7 +1,8 @@
 using Asp.Versioning;
-using GameGuild.Enums;
 using GameGuild.Identity.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 
 namespace GameGuild.Learning.Courses;
 
@@ -9,10 +10,10 @@ namespace GameGuild.Learning.Courses;
 /// REST API controller for ContentInteraction operations
 /// Follows permission inheritance: ContentInteraction inherits permissions from Program
 /// </summary>
-[ApiController]
 [ApiVersion("1.0")]
 [Route("v{version:apiVersion}/course-interactions")]
-public class ContentInteractionController(IContentInteractionService contentInteractionService, IProgramContentService programContentService) : ControllerBase {
+[Authorize]
+public class ContentInteractionController(IContentInteractionService contentInteractionService, IProgramContentService programContentService, ILogger<ContentInteractionController> _logger) : BaseApiController {
   /// <summary>
   /// Create or resume a content interaction
   /// Requires Read permission on the parent Program
@@ -20,17 +21,14 @@ public class ContentInteractionController(IContentInteractionService contentInte
   [HttpPost]
   [RequireResourcePermission<PermissionType, Program>(PermissionType.Read, "programId")]
   public async Task<ActionResult<ContentInteractionDto>> CreateInteraction([FromQuery] Guid programId, [FromBody] StartContentRequest request) {
-    try {
-      // Verify content belongs to the specified program
-      var content = await programContentService.GetContentByIdAsync(request.ContentId);
+    // Verify content belongs to the specified program
+    var content = await programContentService.GetContentByIdAsync(request.ContentId);
 
-      if (content == null || content.ProgramId != programId) return BadRequest("Content does not belong to the specified program.");
+    if (content == null || content.ProgramId != programId) return BadRequest("Content does not belong to the specified program.");
 
-      var interaction = await contentInteractionService.StartContentAsync(request.ProgramUserId, request.ContentId);
+    var interaction = await contentInteractionService.StartContentAsync(request.ProgramUserId, request.ContentId);
 
-      return Ok(interaction.ToDto());
-    }
-    catch (Exception ex) { return BadRequest(ex.Message); }
+    return Ok(interaction.ToDto());
   }
 
   /// <summary>
@@ -51,7 +49,6 @@ public class ContentInteractionController(IContentInteractionService contentInte
       return Ok(interaction.ToDto());
     }
     catch (InvalidOperationException ex) { return BadRequest(ex.Message); }
-    catch (Exception ex) { return StatusCode(500, ex.Message); }
   }
 
   /// <summary>
@@ -72,7 +69,6 @@ public class ContentInteractionController(IContentInteractionService contentInte
       return Ok(interaction.ToDto());
     }
     catch (InvalidOperationException ex) { return BadRequest(ex.Message); }
-    catch (Exception ex) { return StatusCode(500, ex.Message); }
   }
 
   /// <summary>
@@ -93,7 +89,6 @@ public class ContentInteractionController(IContentInteractionService contentInte
       return Ok(interaction.ToDto());
     }
     catch (InvalidOperationException ex) { return BadRequest(ex.Message); }
-    catch (Exception ex) { return StatusCode(500, ex.Message); }
   }
 
   /// <summary>
@@ -103,19 +98,16 @@ public class ContentInteractionController(IContentInteractionService contentInte
   [HttpGet("user/{programUserId}/content/{contentId}")]
   [RequireResourcePermission<PermissionType, Program>(PermissionType.Read, "programId")]
   public async Task<ActionResult<ContentInteractionDto>> GetInteraction([FromRoute] Guid programUserId, [FromRoute] Guid contentId, [FromQuery] Guid programId) {
-    try {
-      // Verify content belongs to the specified program
-      var content = await programContentService.GetContentByIdAsync(contentId);
+    // Verify content belongs to the specified program
+    var content = await programContentService.GetContentByIdAsync(contentId);
 
-      if (content == null || content.ProgramId != programId) return BadRequest("Content does not belong to the specified program.");
+    if (content == null || content.ProgramId != programId) return BadRequest("Content does not belong to the specified program.");
 
-      var interaction = await contentInteractionService.GetInteractionAsync(programUserId, contentId);
+    var interaction = await contentInteractionService.GetInteractionAsync(programUserId, contentId);
 
-      if (interaction == null) return NotFound("Interaction not found.");
+    if (interaction == null) return NotFound("Interaction not found.");
 
-      return Ok(interaction.ToDto());
-    }
-    catch (Exception ex) { return StatusCode(500, ex.Message); }
+    return Ok(interaction.ToDto());
   }
 
   /// <summary>
@@ -125,15 +117,12 @@ public class ContentInteractionController(IContentInteractionService contentInte
   [HttpGet("user/{programUserId}")]
   [RequireResourcePermission<PermissionType, Program>(PermissionType.Read, "programId")]
   public async Task<ActionResult<IEnumerable<ContentInteractionDto>>> GetUserInteractions([FromRoute] Guid programUserId, [FromQuery] Guid programId) {
-    try {
-      var interactions = await contentInteractionService.GetUserInteractionsAsync(programUserId);
+    var interactions = await contentInteractionService.GetUserInteractionsAsync(programUserId);
 
-      // Filter to only interactions for content in the specified program
-      var filteredInteractions = interactions.Where(i => i.Content.ProgramId == programId);
+    // Filter to only interactions for content in the specified program
+    var filteredInteractions = interactions.Where(i => i.Content.ProgramId == programId);
 
-      return Ok(filteredInteractions.ToDto());
-    }
-    catch (Exception ex) { return StatusCode(500, ex.Message); }
+    return Ok(filteredInteractions.ToDto());
   }
 
   /// <summary>
@@ -154,6 +143,5 @@ public class ContentInteractionController(IContentInteractionService contentInte
       return Ok(interaction.ToDto());
     }
     catch (InvalidOperationException ex) { return BadRequest(ex.Message); }
-    catch (Exception ex) { return StatusCode(500, ex.Message); }
   }
 }

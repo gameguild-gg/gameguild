@@ -1,7 +1,5 @@
-using GameGuild.Abstractions;
 using GameGuild.CQRS;
 
-using GameGuild.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -19,15 +17,15 @@ public class BulkArchiveProgramsCommandHandler(IApplicationDbContext context, IL
 
         var programs = await context.Set<Program>()
             .Where(p => request.ProgramIds.Contains(p.Id) && p.DeletedAt == null)
-            .ToListAsync(cancellationToken);
+            .ToListAsync(cancellationToken).ConfigureAwait(false);
 
         foreach (var program in programs)
         {
             program.Status = ContentStatus.Archived;
-            program.UpdatedAt = DateTime.UtcNow;
+            program.Touch();
         }
 
-        await context.SaveChangesAsync(cancellationToken);
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         logger.LogInformation("Bulk archived {Count} programs", programs.Count);
 

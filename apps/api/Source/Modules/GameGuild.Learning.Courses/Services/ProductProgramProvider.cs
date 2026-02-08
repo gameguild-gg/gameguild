@@ -1,4 +1,3 @@
-using GameGuild.Abstractions;
 using GameGuild.Learning.Abstractions;
 using Microsoft.EntityFrameworkCore;
 
@@ -26,7 +25,7 @@ public class ProductProgramProvider : IProductProgramProvider
             .Where(pp => pp.ProductId == productId)
             .OrderBy(pp => pp.SortOrder)
             .Select(pp => pp.ProgramId)
-            .ToListAsync(cancellationToken);
+            .ToListAsync(cancellationToken).ConfigureAwait(false);
     }
 
     /// <inheritdoc />
@@ -36,6 +35,6 @@ public class ProductProgramProvider : IProductProgramProvider
         CancellationToken cancellationToken = default)
     {
         return await _context.Set<ProductProgram>()
-            .AnyAsync(pp => pp.ProductId == productId && pp.ProgramId == programId, cancellationToken);
+            .AnyAsync(pp => pp.ProductId == productId && pp.ProgramId == programId, cancellationToken).ConfigureAwait(false);
     }
 }

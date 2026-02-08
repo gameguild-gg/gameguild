@@ -54,13 +54,3 @@ public record SearchProgramsByTagNameQuery(
 public record ProgramWithSkillDto(
     Program Program,
     ProgramTagDto SkillTag);
-
-public record PagedResult<T>(
-    IEnumerable<T> Items,
-    int TotalCount,
-    int Skip,
-    int Take)
-{
-    public int PageCount => (int)Math.Ceiling((double)TotalCount / Take);
-    public bool HasMore => Skip + Take < TotalCount;
-}

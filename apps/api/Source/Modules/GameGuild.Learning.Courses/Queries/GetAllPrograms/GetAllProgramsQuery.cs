@@ -1,6 +1,5 @@
 using GameGuild.CQRS;
 
-using GameGuild.Enums;
 
 namespace GameGuild.Learning.Courses;
 
@@ -12,7 +11,7 @@ public record GetAllProgramsQuery(
   ProgramCategory? Category = null,
   ProgramDifficulty? Difficulty = null,
   ContentStatus? Status = null,
-  AccessLevel? Visibility = null,
+  ContentVisibility? Visibility = null,
   EnrollmentStatus? EnrollmentStatus = null,
   string? CreatorId = null,
   bool IncludeArchived = false,

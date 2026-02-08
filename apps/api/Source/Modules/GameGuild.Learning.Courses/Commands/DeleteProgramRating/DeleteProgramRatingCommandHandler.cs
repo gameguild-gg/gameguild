@@ -1,4 +1,3 @@
-using GameGuild.Abstractions;
 using GameGuild.CQRS;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -19,7 +18,7 @@ public class DeleteProgramRatingCommandHandler(IApplicationDbContext context, IL
     if (rating == null) { return false; }
 
     context.Set<ProgramRating>().Remove(rating);
-    await context.SaveChangesAsync(cancellationToken);
+    await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
     logger.LogInformation("Deleted rating for program {ProgramId} by user {UserId}", request.ProgramId, request.UserId);
 

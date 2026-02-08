@@ -1,5 +1,3 @@
-using GameGuild.Abstractions;
-using GameGuild.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -40,7 +38,7 @@ public class AssessmentService : IAssessmentService
             assessment.SetAvailability(request.AvailableFrom, request.AvailableUntil);
 
             _context.Set<Assessment>().Add(assessment);
-            await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync().ConfigureAwait(false);
 
             _logger.LogInformation("Assessment created: {AssessmentId} for course {CourseId}", assessment.Id, request.CourseId);
 
@@ -56,7 +54,7 @@ public class AssessmentService : IAssessmentService
     public async Task<Assessment?> GetAssessmentByIdAsync(Guid id)
     {
         return await _context.Set<Assessment>()
-            .FirstOrDefaultAsync(a => a.Id == id);
+            .FirstOrDefaultAsync(a => a.Id == id).ConfigureAwait(false);
     }
 
     public async Task<IEnumerable<Assessment>> GetCourseAssessmentsAsync(Guid courseId)
@@ -64,14 +62,14 @@ public class AssessmentService : IAssessmentService
         return await _context.Set<Assessment>()
             .Where(a => a.CourseId == courseId)
             .OrderBy(a => a.Order)
-            .ToListAsync();
+            .ToListAsync().ConfigureAwait(false);
     }
 
     public async Task<Result<Assessment>> UpdateAssessmentAsync(Guid id, UpdateAssessmentRequest request)
     {
         try
         {
-            var assessment = await GetAssessmentByIdAsync(id);
+            var assessment = await GetAssessmentByIdAsync(id).ConfigureAwait(false);
             if (assessment == null)
             {
                 return Result.Failure<Assessment>(Error.NotFound("Assessment", "Assessment not found"));
@@ -89,7 +87,7 @@ public class AssessmentService : IAssessmentService
                 request.AvailableUntil);
 
             _context.Set<Assessment>().Update(assessment);
-            await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync().ConfigureAwait(false);
 
             _logger.LogInformation("Assessment updated: {AssessmentId}", id);
 
@@ -106,7 +104,7 @@ public class AssessmentService : IAssessmentService
     {
         try
         {
-            var assessment = await GetAssessmentByIdAsync(id);
+            var assessment = await GetAssessmentByIdAsync(id).ConfigureAwait(false);
             if (assessment == null)
             {
                 return Result.Failure(Error.NotFound("Assessment", "Assessment not found"));
@@ -114,7 +112,7 @@ public class AssessmentService : IAssessmentService
 
             assessment.SoftDelete();
             _context.Set<Assessment>().Update(assessment);
-            await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync().ConfigureAwait(false);
 
             _logger.LogInformation("Assessment deleted: {AssessmentId}", id);
 
@@ -133,7 +131,7 @@ public class AssessmentService : IAssessmentService
     {
         try
         {
-            var assessment = await GetAssessmentByIdAsync(assessmentId);
+            var assessment = await GetAssessmentByIdAsync(assessmentId).ConfigureAwait(false);
             if (assessment == null)
             {
                 return Result.Failure<AssessmentSubmission>(Error.NotFound("Assessment", "Assessment not found"));
@@ -145,7 +143,7 @@ public class AssessmentService : IAssessmentService
             }
 
             // Check attempt limit
-            var attemptCount = await GetAttemptCountAsync(assessmentId, enrollmentId);
+            var attemptCount = await GetAttemptCountAsync(assessmentId, enrollmentId).ConfigureAwait(false);
             if (assessment.MaxAttempts.HasValue && attemptCount >= assessment.MaxAttempts.Value)
             {
                 return Result.Failure<AssessmentSubmission>(Error.Validation("Assessment", "Maximum attempts reached"));
@@ -154,7 +152,7 @@ public class AssessmentService : IAssessmentService
             var submission = AssessmentSubmission.Start(assessmentId, enrollmentId, userId, attemptCount + 1);
 
             _context.Set<AssessmentSubmission>().Add(submission);
-            await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync().ConfigureAwait(false);
 
             _logger.LogInformation("Submission started: {SubmissionId} for assessment {AssessmentId}", submission.Id, assessmentId);
 
@@ -171,7 +169,7 @@ public class AssessmentService : IAssessmentService
     {
         try
         {
-            var submission = await GetSubmissionByIdAsync(submissionId);
+            var submission = await GetSubmissionByIdAsync(submissionId).ConfigureAwait(false);
             if (submission == null)
             {
                 return Result.Failure<AssessmentSubmission>(Error.NotFound("Submission", "Submission not found"));
@@ -184,7 +182,7 @@ public class AssessmentService : IAssessmentService
 
             submission.Submit();
             _context.Set<AssessmentSubmission>().Update(submission);
-            await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync().ConfigureAwait(false);
 
             _logger.LogInformation("Submission submitted: {SubmissionId}", submissionId);
 
@@ -201,13 +199,13 @@ public class AssessmentService : IAssessmentService
     {
         try
         {
-            var submission = await GetSubmissionByIdAsync(submissionId);
+            var submission = await GetSubmissionByIdAsync(submissionId).ConfigureAwait(false);
             if (submission == null)
             {
                 return Result.Failure<AssessmentSubmission>(Error.NotFound("Submission", "Submission not found"));
             }
 
-            var assessment = await GetAssessmentByIdAsync(submission.AssessmentId);
+            var assessment = await GetAssessmentByIdAsync(submission.AssessmentId).ConfigureAwait(false);
             if (assessment == null)
             {
                 return Result.Failure<AssessmentSubmission>(Error.NotFound("Assessment", "Assessment not found"));
@@ -215,7 +213,7 @@ public class AssessmentService : IAssessmentService
 
             submission.Grade(request.Score, assessment.PassingScore, request.GradedBy, request.Feedback);
             _context.Set<AssessmentSubmission>().Update(submission);
-            await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync().ConfigureAwait(false);
 
             _logger.LogInformation("Submission graded: {SubmissionId} with score {Score}", submissionId, request.Score);
 
@@ -231,7 +229,7 @@ public class AssessmentService : IAssessmentService
     public async Task<AssessmentSubmission?> GetSubmissionByIdAsync(Guid id)
     {
         return await _context.Set<AssessmentSubmission>()
-            .FirstOrDefaultAsync(s => s.Id == id);
+            .FirstOrDefaultAsync(s => s.Id == id).ConfigureAwait(false);
     }
 
     public async Task<IEnumerable<AssessmentSubmission>> GetAssessmentSubmissionsAsync(Guid assessmentId)
@@ -239,7 +237,7 @@ public class AssessmentService : IAssessmentService
         return await _context.Set<AssessmentSubmission>()
             .Where(s => s.AssessmentId == assessmentId)
             .OrderByDescending(s => s.StartedAt)
-            .ToListAsync();
+            .ToListAsync().ConfigureAwait(false);
     }
 
     public async Task<IEnumerable<AssessmentSubmission>> GetUserSubmissionsAsync(Guid enrollmentId)
@@ -247,20 +245,20 @@ public class AssessmentService : IAssessmentService
         return await _context.Set<AssessmentSubmission>()
             .Where(s => s.EnrollmentId == enrollmentId)
             .OrderByDescending(s => s.StartedAt)
-            .ToListAsync();
+            .ToListAsync().ConfigureAwait(false);
     }
 
     public async Task<int> GetAttemptCountAsync(Guid assessmentId, Guid enrollmentId)
     {
         return await _context.Set<AssessmentSubmission>()
-            .CountAsync(s => s.AssessmentId == assessmentId && s.EnrollmentId == enrollmentId);
+            .CountAsync(s => s.AssessmentId == assessmentId && s.EnrollmentId == enrollmentId).ConfigureAwait(false);
     }
 
     public async Task<Result<bool>> CanAttemptAsync(Guid assessmentId, Guid enrollmentId)
     {
         try
         {
-            var assessment = await GetAssessmentByIdAsync(assessmentId);
+            var assessment = await GetAssessmentByIdAsync(assessmentId).ConfigureAwait(false);
             if (assessment == null)
             {
                 return Result.Failure<bool>(Error.NotFound("Assessment", "Assessment not found"));
@@ -273,7 +271,7 @@ public class AssessmentService : IAssessmentService
 
             if (assessment.MaxAttempts.HasValue)
             {
-                var attemptCount = await GetAttemptCountAsync(assessmentId, enrollmentId);
+                var attemptCount = await GetAttemptCountAsync(assessmentId, enrollmentId).ConfigureAwait(false);
                 return Result.Success(attemptCount < assessment.MaxAttempts.Value);
             }
 

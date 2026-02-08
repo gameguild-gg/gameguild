@@ -1,6 +1,4 @@
-using GameGuild.Abstractions;
 using GameGuild.CQRS;
-using GameGuild.Enums;
 using Microsoft.Extensions.Logging;
 using Microsoft.EntityFrameworkCore;
 
@@ -16,11 +14,11 @@ public class GetPublishedProgramBySlugQueryHandler(IApplicationDbContext context
     public async Task<Program?> Handle(GetPublishedProgramBySlugQuery request, CancellationToken cancellationToken) {
     logger.LogInformation("Getting published program by slug: {Slug}", request.Slug);
 
-    var query = context.Set<Program>().Where(p => p.Slug == request.Slug && p.DeletedAt == null && p.Status == ContentStatus.Published && p.Visibility == AccessLevel.Public);
+    var query = context.Set<Program>().Where(p => p.Slug == request.Slug && p.DeletedAt == null && p.Status == ContentStatus.Published && p.Visibility == ContentVisibility.Public);
 
     if (request.IncludeContent) query = query.Include(p => p.ProgramContents.Where(pc => !pc.IsDeleted));
 
-    var program = await query.FirstOrDefaultAsync(cancellationToken);
+    var program = await query.FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
 
     if (program != null)
       logger.LogInformation("Found published program by slug: {Slug}", request.Slug);

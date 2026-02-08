@@ -1,7 +1,5 @@
-using GameGuild.Abstractions;
 using GameGuild.CQRS;
 
-using GameGuild.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -21,9 +19,9 @@ public class RestoreProgramCommandHandler(IApplicationDbContext context, ILogger
     if (program == null) { throw new InvalidOperationException($"Program with ID {request.Id} not found"); }
 
     program.Status = ContentStatus.Draft;
-    program.UpdatedAt = DateTime.UtcNow;
+    program.Touch();
 
-    await context.SaveChangesAsync(cancellationToken);
+    await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
     logger.LogInformation("Restored program: {ProgramId}", program.Id);
 

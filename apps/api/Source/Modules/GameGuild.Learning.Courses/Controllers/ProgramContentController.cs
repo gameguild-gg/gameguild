@@ -5,11 +5,10 @@ using AuthorizeAttribute = Microsoft.AspNetCore.Authorization.AuthorizeAttribute
 namespace GameGuild.Learning.Courses;
 
 /// <summary> Controller for managing program content with 3-layer DAC permissions Supports tenant-level, content-type-level, and resource-level permissions </summary>
-[ApiController]
 [ApiVersion("1.0")]
 [Route("v{version:apiVersion}/courses/{programId}/content")]
 [Authorize]
-public class ProgramContentController(IProgramContentService contentService) : ControllerBase {
+public class ProgramContentController(IProgramContentService contentService) : BaseApiController {
   /// <summary> Get all content for a course with optional filtering (resource-level Read permission required on parent Program) </summary>
   /// <remarks>
   /// Supports filtering via query parameters:

@@ -1,4 +1,3 @@
-using GameGuild.Abstractions;
 using GameGuild.CQRS;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -17,15 +16,15 @@ public class BulkUpdateProgramVisibilityCommandHandler(IApplicationDbContext con
 
         var programs = await context.Set<Program>()
             .Where(p => request.ProgramIds.Contains(p.Id) && p.DeletedAt == null)
-            .ToListAsync(cancellationToken);
+            .ToListAsync(cancellationToken).ConfigureAwait(false);
 
         foreach (var program in programs)
         {
             program.Visibility = request.Visibility;
-            program.UpdatedAt = DateTime.UtcNow;
+            program.Touch();
         }
 
-        await context.SaveChangesAsync(cancellationToken);
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         logger.LogInformation("Bulk updated visibility for {Count} programs", programs.Count);
 

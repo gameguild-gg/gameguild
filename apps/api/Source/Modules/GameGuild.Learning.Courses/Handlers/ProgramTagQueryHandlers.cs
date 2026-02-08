@@ -1,4 +1,3 @@
-using GameGuild.Abstractions;
 using GameGuild.CQRS;
 using GameGuild.Tags;
 using Microsoft.EntityFrameworkCore;
@@ -16,7 +15,7 @@ public class GetProgramTagsQueryHandler(
             .Where(pt => pt.ProgramId == request.ProgramId)
             .OrderBy(pt => pt.DisplayOrder)
             .ThenByDescending(pt => pt.IsPrimary)
-            .ToListAsync(cancellationToken);
+            .ToListAsync(cancellationToken).ConfigureAwait(false);
 
         return programTags.Select(pt => pt.ToDto());
     }
@@ -33,13 +32,13 @@ public class GetProgramsByTagQueryHandler(
             .Where(p => context.Set<ProgramTag>()
                 .Any(pt => pt.ProgramId == p.Id && pt.TagId == request.TagId));
 
-        var totalCount = await query.CountAsync(cancellationToken);
+        var totalCount = await query.CountAsync(cancellationToken).ConfigureAwait(false);
 
         var items = await query
             .OrderByDescending(p => p.CreatedAt)
             .Skip(request.Skip)
             .Take(request.Take)
-            .ToListAsync(cancellationToken);
+            .ToListAsync(cancellationToken).ConfigureAwait(false);
 
         return new PagedResult<Program>(items, totalCount, request.Skip, request.Take);
     }
@@ -58,14 +57,14 @@ public class GetProgramsBySkillQueryHandler(
                           && p.DeletedAt == null
                     select new { Program = p, ProgramTag = pt };
 
-        var totalCount = await query.CountAsync(cancellationToken);
+        var totalCount = await query.CountAsync(cancellationToken).ConfigureAwait(false);
 
         var items = await query
             .OrderByDescending(x => x.ProgramTag.ProficiencyLevel)
             .ThenByDescending(x => x.Program.CreatedAt)
             .Skip(request.Skip)
             .Take(request.Take)
-            .ToListAsync(cancellationToken);
+            .ToListAsync(cancellationToken).ConfigureAwait(false);
 
         return new PagedResult<ProgramWithSkillDto>(
             items.Select(x => new ProgramWithSkillDto(x.Program, x.ProgramTag.ToDto())),
@@ -102,13 +101,13 @@ public class GetProgramsBySkillsQueryHandler(
                     context.Set<ProgramTag>().Any(pt => pt.ProgramId == p.Id && pt.TagId == tagId)));
         }
 
-        var totalCount = await query.CountAsync(cancellationToken);
+        var totalCount = await query.CountAsync(cancellationToken).ConfigureAwait(false);
 
         var items = await query
             .OrderByDescending(p => p.CreatedAt)
             .Skip(request.Skip)
             .Take(request.Take)
-            .ToListAsync(cancellationToken);
+            .ToListAsync(cancellationToken).ConfigureAwait(false);
 
         return new PagedResult<Program>(items, totalCount, request.Skip, request.Take);
     }
@@ -123,7 +122,7 @@ public class GetProgramPrimarySkillQueryHandler(
         var primaryTag = await context.Set<ProgramTag>()
             .Include(pt => pt.Tag)
             .Where(pt => pt.ProgramId == request.ProgramId && pt.IsPrimary)
-            .FirstOrDefaultAsync(cancellationToken);
+            .FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
 
         return primaryTag?.ToDto();
     }
@@ -140,20 +139,20 @@ public class SearchProgramsByTagNameQueryHandler(
         var matchingTagIds = await context.Set<Tag>()
             .Where(t => t.IsActive && t.Name.ToLower().Contains(normalizedSearch))
             .Select(t => t.Id)
-            .ToListAsync(cancellationToken);
+            .ToListAsync(cancellationToken).ConfigureAwait(false);
 
         var query = context.Set<Program>()
             .Where(p => p.DeletedAt == null)
             .Where(p => context.Set<ProgramTag>()
                 .Any(pt => pt.ProgramId == p.Id && matchingTagIds.Contains(pt.TagId)));
 
-        var totalCount = await query.CountAsync(cancellationToken);
+        var totalCount = await query.CountAsync(cancellationToken).ConfigureAwait(false);
 
         var items = await query
             .OrderByDescending(p => p.CreatedAt)
             .Skip(request.Skip)
             .Take(request.Take)
-            .ToListAsync(cancellationToken);
+            .ToListAsync(cancellationToken).ConfigureAwait(false);
 
         return new PagedResult<Program>(items, totalCount, request.Skip, request.Take);
     }

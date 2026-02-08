@@ -1,4 +1,3 @@
-using GameGuild.Enums;
 using GameGuild.Identity.Authentication;
 using GameGuild.Identity.Authorization;
 using Microsoft.EntityFrameworkCore;

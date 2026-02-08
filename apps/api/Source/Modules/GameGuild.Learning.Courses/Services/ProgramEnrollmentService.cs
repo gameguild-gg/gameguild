@@ -1,4 +1,3 @@
-using GameGuild.Abstractions;
 using GameGuild.Learning.Abstractions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -36,7 +35,7 @@ public class ProgramEnrollmentService : IProgramEnrollmentService {
         existingEnrollment.EnrolledAt = DateTime.UtcNow;
         existingEnrollment.EnrollmentSource = source;
         existingEnrollment.Touch();
-        await _context.SaveChangesAsync();
+        await _context.SaveChangesAsync().ConfigureAwait(false);
       }
 
       return existingEnrollment;
@@ -53,7 +52,7 @@ public class ProgramEnrollmentService : IProgramEnrollmentService {
     var enrollment = new ProgramEnrollment { UserId = userId, ProgramId = programId, EnrollmentSource = source, EnrolledAt = DateTime.UtcNow, StartDate = DateTime.UtcNow };
 
     _context.Set<ProgramEnrollment>().Add(enrollment);
-    await _context.SaveChangesAsync();
+    await _context.SaveChangesAsync().ConfigureAwait(false);
 
     return enrollment;
   }
@@ -65,7 +64,7 @@ public class ProgramEnrollmentService : IProgramEnrollmentService {
     IReadOnlyList<Guid> programIds;
     
     if (_productProgramProvider != null) {
-      programIds = await _productProgramProvider.GetProgramIdsForProductAsync(productId);
+      programIds = await _productProgramProvider.GetProgramIdsForProductAsync(productId).ConfigureAwait(false);
     } else {
       // Fallback for backward compatibility - direct query
       _logger.LogWarning("IProductProgramProvider not configured, using direct ProductProgram query");
@@ -73,14 +72,14 @@ public class ProgramEnrollmentService : IProgramEnrollmentService {
           .Where(pp => pp.ProductId == productId)
           .OrderBy(pp => pp.SortOrder)
           .Select(pp => pp.ProgramId)
-          .ToListAsync();
+          .ToListAsync().ConfigureAwait(false);
     }
 
     var enrollments = new List<ProgramEnrollment>();
 
     foreach (var programId in programIds) {
       try {
-        var enrollment = await EnrollUserAsync(userId, programId, EnrollmentSource.ProductPurchase);
+        var enrollment = await EnrollUserAsync(userId, programId, EnrollmentSource.ProductPurchase).ConfigureAwait(false);
         enrollments.Add(enrollment);
         _logger.LogInformation(
             "Successfully enrolled user {UserId} in program {ProgramId} from product {ProductId}",
@@ -90,6 +89,7 @@ public class ProgramEnrollmentService : IProgramEnrollmentService {
         _logger.LogWarning(ex,
             "Failed to enroll user {UserId} in program {ProgramId} from product {ProductId}",
             userId, programId, productId);
+          throw;
       }
     }
 
@@ -126,7 +126,7 @@ public class ProgramEnrollmentService : IProgramEnrollmentService {
     else if (enrollment.ProgressPercentage > 0 && enrollment.CompletionStatus == CompletionStatus.NotStarted) { enrollment.CompletionStatus = CompletionStatus.InProgress; }
 
     enrollment.Touch();
-    await _context.SaveChangesAsync();
+    await _context.SaveChangesAsync().ConfigureAwait(false);
 
     return enrollment;
   }
@@ -138,7 +138,7 @@ public class ProgramEnrollmentService : IProgramEnrollmentService {
     if (enrollment == null) throw new ArgumentException("Enrollment not found", nameof(enrollmentId));
 
     enrollment.MarkAsCompleted(finalGrade);
-    await _context.SaveChangesAsync();
+    await _context.SaveChangesAsync().ConfigureAwait(false);
 
     return enrollment;
   }
@@ -151,7 +151,7 @@ public class ProgramEnrollmentService : IProgramEnrollmentService {
 
     enrollment.EnrollmentStatus = EnrollmentStatus.Cancelled;
     enrollment.Touch();
-    await _context.SaveChangesAsync();
+    await _context.SaveChangesAsync().ConfigureAwait(false);
 
     return true;
   }
@@ -202,7 +202,7 @@ public class ProgramEnrollmentService : IProgramEnrollmentService {
           enrollmentId,
           enrollment.UserId,
           enrollment.ProgramId,
-          enrollment.TenantId);
+          enrollment.TenantId).ConfigureAwait(false);
 
       if (result.IsSuccess) {
         _logger.LogInformation(
@@ -225,7 +225,7 @@ public class ProgramEnrollmentService : IProgramEnrollmentService {
     enrollment.CompletionStatus = CompletionStatus.CompletedWithCertificate;
     enrollment.Touch();
 
-    await _context.SaveChangesAsync();
+    await _context.SaveChangesAsync().ConfigureAwait(false);
 
     _logger.LogInformation(
         "Certificate issuance completed for enrollment {EnrollmentId}",

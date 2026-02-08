@@ -1,4 +1,3 @@
-using GameGuild.Abstractions;
 using GameGuild.CQRS;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -19,10 +18,10 @@ public class DeleteProgramCommandHandler(IApplicationDbContext context, ILogger<
     if (program == null) { return false; }
 
     // Soft delete
-    program.DeletedAt = DateTime.UtcNow;
-    program.UpdatedAt = DateTime.UtcNow;
+    program.SoftDelete();
+    program.Touch();
 
-    await context.SaveChangesAsync(cancellationToken);
+    await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
     logger.LogInformation("Deleted program: {ProgramId}", program.Id);
 

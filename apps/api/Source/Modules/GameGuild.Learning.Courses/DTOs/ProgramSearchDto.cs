@@ -1,14 +1,13 @@
-using GameGuild.Enums;
 
 
 namespace GameGuild.Learning.Courses;
 
-public record ProgramSearchDto(string? SearchTerm = null, ContentStatus? Status = null, AccessLevel? Visibility = null, Guid? CreatorId = null, int Skip = 0, int Take = 50) {
+public record ProgramSearchDto(string? SearchTerm = null, ContentStatus? Status = null, ContentVisibility? Visibility = null, Guid? CreatorId = null, int Skip = 0, int Take = 50) {
   public string? SearchTerm { get; init; } = SearchTerm;
 
   public ContentStatus? Status { get; init; } = Status;
 
-  public AccessLevel? Visibility { get; init; } = Visibility;
+  public ContentVisibility? Visibility { get; init; } = Visibility;
 
   public Guid? CreatorId { get; init; } = CreatorId;
 

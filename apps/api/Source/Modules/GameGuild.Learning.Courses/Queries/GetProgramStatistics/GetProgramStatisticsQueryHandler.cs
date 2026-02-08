@@ -1,4 +1,3 @@
-using GameGuild.Abstractions;
 using GameGuild.CQRS;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -25,12 +24,12 @@ public class GetProgramStatisticsQueryHandler(
             .AsNoTracking()
             .Where(e => e.ProgramId == request.ProgramId && e.DeletedAt == null);
 
-        var totalEnrollments = await enrollmentsQuery.CountAsync(cancellationToken);
+        var totalEnrollments = await enrollmentsQuery.CountAsync(cancellationToken).ConfigureAwait(false);
         var activeEnrollments = await enrollmentsQuery
-            .CountAsync(e => e.EnrollmentStatus == EnrollmentStatus.Active, cancellationToken);
+            .CountAsync(e => e.EnrollmentStatus == EnrollmentStatus.Active, cancellationToken).ConfigureAwait(false);
         var completedEnrollments = await enrollmentsQuery
             .CountAsync(e => e.CompletionStatus == CompletionStatus.Completed ||
-                           e.CompletionStatus == CompletionStatus.CompletedWithCertificate, cancellationToken);
+                           e.CompletionStatus == CompletionStatus.CompletedWithCertificate, cancellationToken).ConfigureAwait(false);
 
         // Calculate completion rate
         var completionRate = totalEnrollments > 0
@@ -42,7 +41,7 @@ public class GetProgramStatisticsQueryHandler(
             .AsNoTracking()
             .Where(r => r.ProgramId == request.ProgramId);
 
-        var totalRatings = await ratingsQuery.CountAsync(cancellationToken);
+        var totalRatings = await ratingsQuery.CountAsync(cancellationToken).ConfigureAwait(false);
         var averageRating = totalRatings > 0
             ? await ratingsQuery.AverageAsync(r => r.Rating, cancellationToken)
             : 0m;
@@ -53,7 +52,7 @@ public class GetProgramStatisticsQueryHandler(
             .Where(e => e.CompletionStatus == CompletionStatus.Completed ||
                        e.CompletionStatus == CompletionStatus.CompletedWithCertificate)
             .Select(e => new { e.EnrolledAt, e.CompletedAt })
-            .ToListAsync(cancellationToken);
+            .ToListAsync(cancellationToken).ConfigureAwait(false);
 
         var averageCompletionTime = completedWithTimes.Count > 0
             ? TimeSpan.FromTicks((long)completedWithTimes

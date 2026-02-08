@@ -6,14 +6,16 @@ namespace GameGuild.Learning.Abstractions;
 /// <summary>
 /// Base controller class for Learning module controllers.
 /// Provides common functionality including authenticated user context access and standard response helpers.
+/// Inherits from <see cref="BaseApiController"/> for standardized Result-to-ActionResult mapping.
 /// </summary>
 /// <remarks>
 /// This base class addresses DRY violations by centralizing:
 /// - Actor context extraction pattern (GetRequiredUserId, GetRequiredActorContext)
 /// - Null check + NotFound response pattern (NotFoundIfNull)
 /// - Common authorization helpers
+/// - Result-to-ActionResult mapping (via BaseApiController)
 /// </remarks>
-public abstract class LearningControllerBase : ControllerBase
+public abstract class LearningControllerBase : BaseApiController
 {
     /// <summary>
     /// Provides access to the authenticated user's context
@@ -118,10 +120,10 @@ public abstract class LearningControllerBase : ControllerBase
         if (currentUserId.Value == resourceUserId)
             return true;
 
-        // TODO: Add admin role check when role system is available
-        // var actor = ActorContextAccessor.ActorContext;
-        // if (actor.IsInRole("Admin") || actor.IsInRole("TenantAdmin"))
-        //     return true;
+        // Admin role check: admins and tenant admins can access any user's resources
+        var actor = ActorContextAccessor.ActorContext;
+        if (actor.IsSystemAdmin || actor.IsTenantAdmin)
+            return true;
 
         return false;
     }

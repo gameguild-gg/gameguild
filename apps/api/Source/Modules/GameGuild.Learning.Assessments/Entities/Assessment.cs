@@ -1,4 +1,3 @@
-using GameGuild.Entities;
 
 namespace GameGuild.Learning.Assessments;
 
@@ -40,9 +39,7 @@ public class Assessment : EntityBase
             MaxScore = maxScore,
             PassingScore = passingScore,
             IsRequired = isRequired,
-            Order = 0,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            Order = 0
         };
     }
 
@@ -133,9 +130,7 @@ public class AssessmentSubmission : EntityBase
             UserId = userId,
             AttemptNumber = attemptNumber,
             StartedAt = DateTime.UtcNow,
-            Status = SubmissionStatus.InProgress,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            Status = SubmissionStatus.InProgress
         };
     }
 

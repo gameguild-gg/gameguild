@@ -1,4 +1,3 @@
-using GameGuild.Abstractions;
 using GameGuild.CQRS;
 using Microsoft.Extensions.Logging;
 using Microsoft.EntityFrameworkCore;
@@ -25,7 +24,7 @@ public class GetProgramBySlugQueryHandler(IApplicationDbContext context, ILogger
 
     if (request.IncludeRatings) query = query.Include(p => p.ProgramRatings);
 
-    var program = await query.FirstOrDefaultAsync(cancellationToken);
+    var program = await query.FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
 
     if (program != null)
       logger.LogInformation("Found program by slug: {Slug}", request.Slug);

@@ -1,4 +1,3 @@
-using GameGuild.Abstractions;
 using GameGuild.CQRS;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -19,7 +18,7 @@ public class RemoveProgramContentCommandHandler(IApplicationDbContext context, I
     if (programContent == null) { return false; }
 
     context.Set<ProgramContent>().Remove(programContent);
-    await context.SaveChangesAsync(cancellationToken);
+    await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
     logger.LogInformation("Removed content {ContentId} from program {ProgramId}", request.ContentId, request.ProgramId);
 

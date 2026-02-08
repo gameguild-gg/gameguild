@@ -1,11 +1,9 @@
-using GameGuild.Abstractions;
 using GameGuild.CQRS;
 
 
 
 
 
-using GameGuild.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -57,12 +55,10 @@ public class ProgramCommandHandlers(IApplicationDbContext context, ILogger<Progr
       SortOrder = request.Order,
       IsRequired = request.IsRequired,
       // PointsReward = request.PointsReward,  // This property doesn't exist in the current model
-      CreatedAt = DateTime.UtcNow,
-      UpdatedAt = DateTime.UtcNow,
     };
 
     context.Set<ProgramContent>().Add(programContent);
-    await context.SaveChangesAsync(cancellationToken);
+    await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
     logger.LogInformation("Added content {ContentId} to program {ProgramId}", request.ContentId, request.ProgramId);
 
@@ -78,10 +74,10 @@ public class ProgramCommandHandlers(IApplicationDbContext context, ILogger<Progr
 
     if (existingWishlist != null) { throw new InvalidOperationException("Program is already in user's wishlist"); }
 
-    var wishlist = new ProgramWishlist { ProgramId = request.ProgramId, UserId = Guid.Parse(request.UserId), CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow };
+    var wishlist = new ProgramWishlist { ProgramId = request.ProgramId, UserId = Guid.Parse(request.UserId) };
 
     context.Set<ProgramWishlist>().Add(wishlist);
-    await context.SaveChangesAsync(cancellationToken);
+    await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
     logger.LogInformation("Added program {ProgramId} to wishlist for user {UserId}", request.ProgramId, request.UserId);
 
@@ -96,9 +92,9 @@ public class ProgramCommandHandlers(IApplicationDbContext context, ILogger<Progr
     if (program == null) { throw new InvalidOperationException($"Program with ID {request.Id} not found"); }
 
     program.Status = ContentStatus.Archived;
-    program.UpdatedAt = DateTime.UtcNow;
+    program.Touch();
 
-    await context.SaveChangesAsync(cancellationToken);
+    await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
     logger.LogInformation("Archived program: {ProgramId}", program.Id);
 
@@ -112,10 +108,10 @@ public class ProgramCommandHandlers(IApplicationDbContext context, ILogger<Progr
 
     foreach (var program in programs) {
       program.Status = ContentStatus.Archived;
-      program.UpdatedAt = DateTime.UtcNow;
+      program.Touch();
     }
 
-    await context.SaveChangesAsync(cancellationToken);
+    await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
     logger.LogInformation("Bulk archived {Count} programs", programs.Count);
 
@@ -131,10 +127,10 @@ public class ProgramCommandHandlers(IApplicationDbContext context, ILogger<Progr
 
     foreach (var program in programs) {
       program.Visibility = request.Visibility;
-      program.UpdatedAt = DateTime.UtcNow;
+      program.Touch();
     }
 
-    await context.SaveChangesAsync(cancellationToken);
+    await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
     logger.LogInformation("Bulk updated visibility for {Count} programs", programs.Count);
 
@@ -167,13 +163,11 @@ public class ProgramCommandHandlers(IApplicationDbContext context, ILogger<Progr
       MaxEnrollments = request.MaxEnrollments,
       EnrollmentDeadline = request.EnrollmentDeadline,
       Status = ContentStatus.Draft,
-      Visibility = AccessLevel.Private,
-      CreatedAt = DateTime.UtcNow,
-      UpdatedAt = DateTime.UtcNow,
+      Visibility = ContentVisibility.Private,
     };
 
     context.Set<Program>().Add(program);
-    await context.SaveChangesAsync(cancellationToken);
+    await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
     logger.LogInformation("Created program with ID: {ProgramId}", program.Id);
 
@@ -188,10 +182,10 @@ public class ProgramCommandHandlers(IApplicationDbContext context, ILogger<Progr
     if (program == null) { return false; }
 
     // Soft delete
-    program.DeletedAt = DateTime.UtcNow;
-    program.UpdatedAt = DateTime.UtcNow;
+    program.SoftDelete();
+    program.Touch();
 
-    await context.SaveChangesAsync(cancellationToken);
+    await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
     logger.LogInformation("Deleted program: {ProgramId}", program.Id);
 
@@ -206,7 +200,7 @@ public class ProgramCommandHandlers(IApplicationDbContext context, ILogger<Progr
     if (rating == null) { return false; }
 
     context.Set<ProgramRating>().Remove(rating);
-    await context.SaveChangesAsync(cancellationToken);
+    await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
     logger.LogInformation("Deleted rating for program {ProgramId} by user {UserId}", request.ProgramId, request.UserId);
 
@@ -229,10 +223,10 @@ public class ProgramCommandHandlers(IApplicationDbContext context, ILogger<Progr
 
     if (existingEnrollment != null && existingEnrollment.IsActive) { throw new InvalidOperationException("User is already enrolled in this program"); }
 
-    var enrollment = new ProgramUser { ProgramId = request.ProgramId, UserId = Guid.Parse(request.UserId), JoinedAt = request.EnrollmentDate ?? DateTime.UtcNow, IsActive = true, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow };
+    var enrollment = new ProgramUser { ProgramId = request.ProgramId, UserId = Guid.Parse(request.UserId), JoinedAt = request.EnrollmentDate ?? DateTime.UtcNow, IsActive = true };
 
     context.Set<ProgramUser>().Add(enrollment);
-    await context.SaveChangesAsync(cancellationToken);
+    await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
     logger.LogInformation("Enrolled user {UserId} in program {ProgramId}", request.UserId, request.ProgramId);
 
@@ -249,10 +243,10 @@ public class ProgramCommandHandlers(IApplicationDbContext context, ILogger<Progr
     if (program == null) { throw new InvalidOperationException($"Program with ID {request.Id} not found"); }
 
     program.Status = ContentStatus.Published;
-    program.Visibility = AccessLevel.Public;
-    program.UpdatedAt = DateTime.UtcNow;
+    program.Visibility = ContentVisibility.Public;
+    program.Touch();
 
-    await context.SaveChangesAsync(cancellationToken);
+    await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
     logger.LogInformation("Published program: {ProgramId}", program.Id);
 
@@ -268,10 +262,10 @@ public class ProgramCommandHandlers(IApplicationDbContext context, ILogger<Progr
 
     if (existingRating != null) { throw new InvalidOperationException("User has already rated this program"); }
 
-    var rating = new ProgramRating { ProgramId = request.ProgramId, UserId = request.UserId, Rating = request.Rating, Review = request.Review, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow };
+    var rating = new ProgramRating { ProgramId = request.ProgramId, UserId = request.UserId, Rating = request.Rating, Review = request.Review };
 
     context.Set<ProgramRating>().Add(rating);
-    await context.SaveChangesAsync(cancellationToken);
+    await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
     logger.LogInformation("Added rating for program {ProgramId} by user {UserId}", request.ProgramId, request.UserId);
 
@@ -286,7 +280,7 @@ public class ProgramCommandHandlers(IApplicationDbContext context, ILogger<Progr
     if (wishlist == null) { return false; }
 
     context.Set<ProgramWishlist>().Remove(wishlist);
-    await context.SaveChangesAsync(cancellationToken);
+    await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
     logger.LogInformation("Removed program {ProgramId} from wishlist for user {UserId}", request.ProgramId, request.UserId);
 
@@ -301,7 +295,7 @@ public class ProgramCommandHandlers(IApplicationDbContext context, ILogger<Progr
     if (programContent == null) { return false; }
 
     context.Set<ProgramContent>().Remove(programContent);
-    await context.SaveChangesAsync(cancellationToken);
+    await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
     logger.LogInformation("Removed content {ContentId} from program {ProgramId}", request.ContentId, request.ProgramId);
 
@@ -316,11 +310,11 @@ public class ProgramCommandHandlers(IApplicationDbContext context, ILogger<Progr
     foreach (var programContent in programContents) {
       if (request.ContentOrders.TryGetValue(programContent.Id, out var newOrder)) {
         programContent.SortOrder = newOrder;
-        programContent.UpdatedAt = DateTime.UtcNow;
+        programContent.Touch();
       }
     }
 
-    await context.SaveChangesAsync(cancellationToken);
+    await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
     logger.LogInformation("Reordered content for program {ProgramId}", request.ProgramId);
 
@@ -335,9 +329,9 @@ public class ProgramCommandHandlers(IApplicationDbContext context, ILogger<Progr
     if (program == null) { throw new InvalidOperationException($"Program with ID {request.Id} not found"); }
 
     program.Status = ContentStatus.Draft;
-    program.UpdatedAt = DateTime.UtcNow;
+    program.Touch();
 
-    await context.SaveChangesAsync(cancellationToken);
+    await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
     logger.LogInformation("Restored program: {ProgramId}", program.Id);
 
@@ -352,9 +346,9 @@ public class ProgramCommandHandlers(IApplicationDbContext context, ILogger<Progr
     if (enrollment == null) { return false; }
 
     enrollment.IsActive = false;
-    enrollment.UpdatedAt = DateTime.UtcNow;
+    enrollment.Touch();
 
-    await context.SaveChangesAsync(cancellationToken);
+    await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
     logger.LogInformation("Unenrolled user {UserId} from program {ProgramId}", request.UserId, request.ProgramId);
 
@@ -369,10 +363,10 @@ public class ProgramCommandHandlers(IApplicationDbContext context, ILogger<Progr
     if (program == null) { throw new InvalidOperationException($"Program with ID {request.Id} not found"); }
 
     program.Status = ContentStatus.Draft;
-    program.Visibility = AccessLevel.Private;
-    program.UpdatedAt = DateTime.UtcNow;
+    program.Visibility = ContentVisibility.Private;
+    program.Touch();
 
-    await context.SaveChangesAsync(cancellationToken);
+    await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
     logger.LogInformation("Unpublished program: {ProgramId}", program.Id);
 
@@ -389,9 +383,9 @@ public class ProgramCommandHandlers(IApplicationDbContext context, ILogger<Progr
     program.EnrollmentStatus = (EnrollmentStatus)request.Status;
     if (request.MaxEnrollments.HasValue) program.MaxEnrollments = request.MaxEnrollments;
     if (request.EnrollmentDeadline.HasValue) program.EnrollmentDeadline = request.EnrollmentDeadline;
-    program.UpdatedAt = DateTime.UtcNow;
+    program.Touch();
 
-    await context.SaveChangesAsync(cancellationToken);
+    await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
     logger.LogInformation("Updated enrollment status for program: {ProgramId}", program.Id);
 
@@ -421,9 +415,9 @@ public class ProgramCommandHandlers(IApplicationDbContext context, ILogger<Progr
     if (request.MaxEnrollments.HasValue) program.MaxEnrollments = request.MaxEnrollments;
     if (request.EnrollmentDeadline.HasValue) program.EnrollmentDeadline = request.EnrollmentDeadline;
 
-    program.UpdatedAt = DateTime.UtcNow;
+    program.Touch();
 
-    await context.SaveChangesAsync(cancellationToken);
+    await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
     logger.LogInformation("Updated program: {ProgramId}", program.Id);
 
@@ -439,9 +433,9 @@ public class ProgramCommandHandlers(IApplicationDbContext context, ILogger<Progr
 
     rating.Rating = request.Rating;
     rating.Review = request.Review;
-    rating.UpdatedAt = DateTime.UtcNow;
+    rating.Touch();
 
-    await context.SaveChangesAsync(cancellationToken);
+    await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
     logger.LogInformation("Updated rating for program {ProgramId} by user {UserId}", request.ProgramId, request.UserId);
 

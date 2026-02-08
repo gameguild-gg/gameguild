@@ -1,6 +1,4 @@
-using GameGuild.Abstractions;
 using GameGuild.CQRS;
-using GameGuild.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -31,9 +29,9 @@ public class GetGlobalProgramStatisticsQueryHandler(
         if (request.ToDate.HasValue)
             programsQuery = programsQuery.Where(p => p.CreatedAt <= request.ToDate.Value);
 
-        var totalPrograms = await programsQuery.CountAsync(cancellationToken);
+        var totalPrograms = await programsQuery.CountAsync(cancellationToken).ConfigureAwait(false);
         var publishedPrograms = await programsQuery
-            .CountAsync(p => p.Status == ContentStatus.Published, cancellationToken);
+            .CountAsync(p => p.Status == ContentStatus.Published, cancellationToken).ConfigureAwait(false);
 
         // Get enrollment statistics
         var enrollmentsQuery = context.Set<ProgramEnrollment>()
@@ -45,15 +43,15 @@ public class GetGlobalProgramStatisticsQueryHandler(
         if (request.ToDate.HasValue)
             enrollmentsQuery = enrollmentsQuery.Where(e => e.EnrolledAt <= request.ToDate.Value);
 
-        var totalEnrollments = await enrollmentsQuery.CountAsync(cancellationToken);
+        var totalEnrollments = await enrollmentsQuery.CountAsync(cancellationToken).ConfigureAwait(false);
         var activeEnrollments = await enrollmentsQuery
-            .CountAsync(e => e.EnrollmentStatus == EnrollmentStatus.Active, cancellationToken);
+            .CountAsync(e => e.EnrollmentStatus == EnrollmentStatus.Active, cancellationToken).ConfigureAwait(false);
 
         // Get rating statistics
         var ratingsQuery = context.Set<ProgramRating>()
             .AsNoTracking();
 
-        var totalRatings = await ratingsQuery.CountAsync(cancellationToken);
+        var totalRatings = await ratingsQuery.CountAsync(cancellationToken).ConfigureAwait(false);
         var averageRating = totalRatings > 0
             ? await ratingsQuery.AverageAsync(r => r.Rating, cancellationToken)
             : 0m;
@@ -63,14 +61,14 @@ public class GetGlobalProgramStatisticsQueryHandler(
             .GroupBy(p => p.Category)
             .OrderByDescending(g => g.Count())
             .Select(g => g.Key)
-            .FirstOrDefaultAsync(cancellationToken);
+            .FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
 
         // Find most popular difficulty
         var mostPopularDifficulty = await programsQuery
             .GroupBy(p => p.Difficulty)
             .OrderByDescending(g => g.Count())
             .Select(g => g.Key)
-            .FirstOrDefaultAsync(cancellationToken);
+            .FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
 
         logger.LogInformation(
             "Global statistics: {TotalPrograms} programs, {TotalEnrollments} enrollments, {AvgRating} avg rating",

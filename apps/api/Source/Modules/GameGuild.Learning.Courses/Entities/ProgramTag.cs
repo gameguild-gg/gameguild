@@ -1,5 +1,4 @@
 using System.ComponentModel.DataAnnotations.Schema;
-using GameGuild.Entities;
 using GameGuild.Tags;
 using Microsoft.EntityFrameworkCore;
 
@@ -72,9 +71,7 @@ public class ProgramTag : EntityBase
             TagId = tagId,
             ProficiencyLevel = proficiencyLevel,
             IsPrimary = isPrimary,
-            DisplayOrder = displayOrder,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            DisplayOrder = displayOrder
         };
     }
 

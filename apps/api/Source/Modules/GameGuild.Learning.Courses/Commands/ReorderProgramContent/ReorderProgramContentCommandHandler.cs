@@ -1,4 +1,3 @@
-using GameGuild.Abstractions;
 using GameGuild.CQRS;
 
 using Microsoft.EntityFrameworkCore;
@@ -18,18 +17,18 @@ public class ReorderProgramContentCommandHandler(IApplicationDbContext context, 
 
         var programContents = await context.Set<ProgramContent>()
             .Where(pc => pc.ProgramId == request.ProgramId && request.ContentOrders.Keys.Contains(pc.Id))
-            .ToListAsync(cancellationToken);
+            .ToListAsync(cancellationToken).ConfigureAwait(false);
 
         foreach (var programContent in programContents)
         {
             if (request.ContentOrders.TryGetValue(programContent.Id, out var newOrder))
             {
                 programContent.SortOrder = newOrder;
-                programContent.UpdatedAt = DateTime.UtcNow;
+                programContent.Touch();
             }
         }
 
-        await context.SaveChangesAsync(cancellationToken);
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         logger.LogInformation("Reordered content for program {ProgramId}", request.ProgramId);
 

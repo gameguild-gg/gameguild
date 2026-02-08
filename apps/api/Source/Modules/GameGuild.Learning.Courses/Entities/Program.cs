@@ -1,5 +1,3 @@
-using GameGuild.Entities;
-using GameGuild.Enums;
 using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -45,7 +43,7 @@ public class Program : EntityBase {
     /// <summary>
     /// Access level for the program
     /// </summary>
-    public AccessLevel Visibility { get; set; } = AccessLevel.Public;
+    public ContentVisibility Visibility { get; set; } = ContentVisibility.Public;
 
     /// <summary>
     /// Metadata as JSON dictionary for storing additional properties

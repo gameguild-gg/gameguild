@@ -1,6 +1,4 @@
-using GameGuild.Abstractions;
 using GameGuild.CQRS;
-using GameGuild.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -36,23 +34,23 @@ public class GetCreatorProgramStatisticsQueryHandler(
 
         var totalPrograms = programIds.Count;
         var publishedPrograms = await programsQuery
-            .CountAsync(p => p.Status == ContentStatus.Published, cancellationToken);
+            .CountAsync(p => p.Status == ContentStatus.Published, cancellationToken).ConfigureAwait(false);
 
         // Get enrollment statistics
         var enrollmentsQuery = context.Set<ProgramEnrollment>()
             .AsNoTracking()
             .Where(e => programIds.Contains(e.ProgramId) && e.DeletedAt == null);
 
-        var totalEnrollments = await enrollmentsQuery.CountAsync(cancellationToken);
+        var totalEnrollments = await enrollmentsQuery.CountAsync(cancellationToken).ConfigureAwait(false);
         var activeEnrollments = await enrollmentsQuery
-            .CountAsync(e => e.EnrollmentStatus == EnrollmentStatus.Active, cancellationToken);
+            .CountAsync(e => e.EnrollmentStatus == EnrollmentStatus.Active, cancellationToken).ConfigureAwait(false);
 
         // Get rating statistics
         var ratingsQuery = context.Set<ProgramRating>()
             .AsNoTracking()
             .Where(r => programIds.Contains(r.ProgramId));
 
-        var totalRatings = await ratingsQuery.CountAsync(cancellationToken);
+        var totalRatings = await ratingsQuery.CountAsync(cancellationToken).ConfigureAwait(false);
         var averageRating = totalRatings > 0
             ? await ratingsQuery.AverageAsync(r => r.Rating, cancellationToken)
             : 0m;
@@ -60,7 +58,7 @@ public class GetCreatorProgramStatisticsQueryHandler(
         // Calculate average completion rate
         var completedEnrollments = await enrollmentsQuery
             .CountAsync(e => e.CompletionStatus == CompletionStatus.Completed ||
-                           e.CompletionStatus == CompletionStatus.CompletedWithCertificate, cancellationToken);
+                           e.CompletionStatus == CompletionStatus.CompletedWithCertificate, cancellationToken).ConfigureAwait(false);
         var averageCompletionRate = totalEnrollments > 0
             ? (decimal)completedEnrollments / totalEnrollments * 100
             : 0m;

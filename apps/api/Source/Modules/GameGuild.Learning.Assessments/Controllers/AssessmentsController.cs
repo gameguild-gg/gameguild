@@ -8,10 +8,9 @@ namespace GameGuild.Learning.Assessments;
 /// <summary>
 /// Controller for assessment management and submission handling
 /// </summary>
-[ApiController]
 [Route("api/assessments")]
 [Authorize]
-public class AssessmentsController : ControllerBase
+public class AssessmentsController : BaseApiController
 {
     private readonly IAssessmentService _assessmentService;
     private readonly IActorContextAccessor _actorContextAccessor;
@@ -78,7 +77,7 @@ public class AssessmentsController : ControllerBase
         var result = await _assessmentService.UpdateAssessmentAsync(id, request);
         if (!result.IsSuccess)
         {
-            return result.Error.Type == GameGuild.Models.ErrorType.NotFound 
+            return result.Error.Type == ErrorType.NotFound 
                 ? NotFound(result.Error) 
                 : BadRequest(result.Error);
         }
@@ -95,7 +94,7 @@ public class AssessmentsController : ControllerBase
         var result = await _assessmentService.DeleteAssessmentAsync(id);
         if (!result.IsSuccess)
         {
-            return result.Error.Type == GameGuild.Models.ErrorType.NotFound 
+            return result.Error.Type == ErrorType.NotFound 
                 ? NotFound(result.Error) 
                 : BadRequest(result.Error);
         }

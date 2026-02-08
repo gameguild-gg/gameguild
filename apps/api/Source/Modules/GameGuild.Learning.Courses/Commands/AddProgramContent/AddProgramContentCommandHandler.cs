@@ -1,4 +1,3 @@
-using GameGuild.Abstractions;
 using GameGuild.CQRS;
 using Microsoft.Extensions.Logging;
 
@@ -19,12 +18,10 @@ public class AddProgramContentCommandHandler(IApplicationDbContext context, ILog
       SortOrder = request.Order,
       IsRequired = request.IsRequired,
       // PointsReward = request.PointsReward,  // This property doesn't exist in the current model
-      CreatedAt = DateTime.UtcNow,
-      UpdatedAt = DateTime.UtcNow,
     };
 
     context.Set<ProgramContent>().Add(programContent);
-    await context.SaveChangesAsync(cancellationToken);
+    await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
     logger.LogInformation("Added content {ContentId} to program {ProgramId}", request.ContentId, request.ProgramId);
 

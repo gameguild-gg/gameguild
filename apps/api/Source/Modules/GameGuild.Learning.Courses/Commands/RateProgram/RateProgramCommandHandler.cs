@@ -1,4 +1,3 @@
-using GameGuild.Abstractions;
 using GameGuild.CQRS;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -18,10 +17,10 @@ public class RateProgramCommandHandler(IApplicationDbContext context, ILogger<Ra
 
     if (existingRating != null) { throw new InvalidOperationException("User has already rated this program"); }
 
-    var rating = new ProgramRating { ProgramId = request.ProgramId, UserId = request.UserId, Rating = request.Rating, Review = request.Review, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow };
+    var rating = new ProgramRating { ProgramId = request.ProgramId, UserId = request.UserId, Rating = request.Rating, Review = request.Review };
 
     context.Set<ProgramRating>().Add(rating);
-    await context.SaveChangesAsync(cancellationToken);
+    await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
     logger.LogInformation("Added rating for program {ProgramId} by user {UserId}", request.ProgramId, request.UserId);
 

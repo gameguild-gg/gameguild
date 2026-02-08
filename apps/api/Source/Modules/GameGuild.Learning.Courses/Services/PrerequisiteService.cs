@@ -1,5 +1,3 @@
-using GameGuild.Abstractions;
-using GameGuild.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -23,7 +21,7 @@ public class PrerequisiteService : IPrerequisiteService
     {
         // Validate courses exist
         var courseExists = await _context.Set<Program>()
-            .AnyAsync(p => p.Id == request.CourseId && (request.TenantId == null || p.TenantId == request.TenantId));
+            .AnyAsync(p => p.Id == request.CourseId && (request.TenantId == null || p.TenantId == request.TenantId)).ConfigureAwait(false);
         
         if (!courseExists)
         {
@@ -31,7 +29,7 @@ public class PrerequisiteService : IPrerequisiteService
         }
 
         var prerequisiteCourseExists = await _context.Set<Program>()
-            .AnyAsync(p => p.Id == request.PrerequisiteCourseId && (request.TenantId == null || p.TenantId == request.TenantId));
+            .AnyAsync(p => p.Id == request.PrerequisiteCourseId && (request.TenantId == null || p.TenantId == request.TenantId)).ConfigureAwait(false);
         
         if (!prerequisiteCourseExists)
         {
@@ -40,7 +38,7 @@ public class PrerequisiteService : IPrerequisiteService
 
         // Check for duplicate
         var exists = await _context.Set<CoursePrerequisite>()
-            .AnyAsync(cp => cp.CourseId == request.CourseId && cp.PrerequisiteCourseId == request.PrerequisiteCourseId);
+            .AnyAsync(cp => cp.CourseId == request.CourseId && cp.PrerequisiteCourseId == request.PrerequisiteCourseId).ConfigureAwait(false);
         
         if (exists)
         {
@@ -65,7 +63,7 @@ public class PrerequisiteService : IPrerequisiteService
             request.PrerequisiteGroup);
 
         _context.Set<CoursePrerequisite>().Add(prerequisite);
-        await _context.SaveChangesAsync();
+        await _context.SaveChangesAsync().ConfigureAwait(false);
 
         _logger.LogInformation("Created prerequisite {PrerequisiteId} for course {CourseId}", prerequisite.Id, request.CourseId);
 
@@ -77,7 +75,7 @@ public class PrerequisiteService : IPrerequisiteService
         return await _context.Set<CoursePrerequisite>()
             .Include(cp => cp.Course)
             .Include(cp => cp.PrerequisiteCourse)
-            .FirstOrDefaultAsync(cp => cp.Id == id);
+            .FirstOrDefaultAsync(cp => cp.Id == id).ConfigureAwait(false);
     }
 
     public async Task<IEnumerable<CoursePrerequisite>> GetCoursePrerequisitesAsync(Guid courseId, Guid? tenantId)
@@ -87,7 +85,7 @@ public class PrerequisiteService : IPrerequisiteService
             .Where(cp => cp.CourseId == courseId && (tenantId == null || cp.TenantId == tenantId))
             .OrderBy(cp => cp.DisplayOrder)
             .ThenBy(cp => cp.CreatedAt)
-            .ToListAsync();
+            .ToListAsync().ConfigureAwait(false);
     }
 
     public async Task<IEnumerable<CoursePrerequisite>> GetDependentCoursesAsync(Guid prerequisiteCourseId, Guid? tenantId)
@@ -96,13 +94,13 @@ public class PrerequisiteService : IPrerequisiteService
             .Include(cp => cp.Course)
             .Where(cp => cp.PrerequisiteCourseId == prerequisiteCourseId && (tenantId == null || cp.TenantId == tenantId))
             .OrderBy(cp => cp.Course!.Title)
-            .ToListAsync();
+            .ToListAsync().ConfigureAwait(false);
     }
 
     public async Task<Result<CoursePrerequisite>> UpdatePrerequisiteAsync(Guid id, UpdatePrerequisiteRequest request)
     {
         var prerequisite = await _context.Set<CoursePrerequisite>()
-            .FirstOrDefaultAsync(cp => cp.Id == id);
+            .FirstOrDefaultAsync(cp => cp.Id == id).ConfigureAwait(false);
 
         if (prerequisite == null)
         {
@@ -116,7 +114,7 @@ public class PrerequisiteService : IPrerequisiteService
             request.DisplayOrder,
             request.PrerequisiteGroup);
 
-        await _context.SaveChangesAsync();
+        await _context.SaveChangesAsync().ConfigureAwait(false);
 
         _logger.LogInformation("Updated prerequisite {PrerequisiteId}", id);
 
@@ -126,7 +124,7 @@ public class PrerequisiteService : IPrerequisiteService
     public async Task<Result<bool>> DeletePrerequisiteAsync(Guid id)
     {
         var prerequisite = await _context.Set<CoursePrerequisite>()
-            .FirstOrDefaultAsync(cp => cp.Id == id);
+            .FirstOrDefaultAsync(cp => cp.Id == id).ConfigureAwait(false);
 
         if (prerequisite == null)
         {
@@ -134,7 +132,7 @@ public class PrerequisiteService : IPrerequisiteService
         }
 
         _context.Set<CoursePrerequisite>().Remove(prerequisite);
-        await _context.SaveChangesAsync();
+        await _context.SaveChangesAsync().ConfigureAwait(false);
 
         _logger.LogInformation("Deleted prerequisite {PrerequisiteId}", id);
 
@@ -143,7 +141,7 @@ public class PrerequisiteService : IPrerequisiteService
 
     public async Task<PrerequisiteCheckResult> CheckPrerequisitesAsync(Guid courseId, Guid userId, Guid? tenantId)
     {
-        var prerequisites = await GetCoursePrerequisitesAsync(courseId, tenantId);
+        var prerequisites = await GetCoursePrerequisitesAsync(courseId, tenantId).ConfigureAwait(false);
         var statuses = new List<PrerequisiteStatus>();
         var allSatisfied = true;
 
@@ -159,7 +157,7 @@ public class PrerequisiteService : IPrerequisiteService
             foreach (var prereq in group)
             {
                 var enrollment = await _context.Set<ProgramEnrollment>()
-                    .FirstOrDefaultAsync(e => e.ProgramId == prereq.PrerequisiteCourseId && e.UserId == userId);
+                    .FirstOrDefaultAsync(e => e.ProgramId == prereq.PrerequisiteCourseId && e.UserId == userId).ConfigureAwait(false);
 
                 var courseName = prereq.PrerequisiteCourse?.Title ?? "Unknown Course";
                 bool isSatisfied;
@@ -218,7 +216,7 @@ public class PrerequisiteService : IPrerequisiteService
         var visited = new HashSet<Guid>();
         var chain = new List<CoursePrerequisite>();
 
-        await CollectPrerequisitesRecursiveAsync(courseId, tenantId, visited, chain);
+        await CollectPrerequisitesRecursiveAsync(courseId, tenantId, visited, chain).ConfigureAwait(false);
 
         return chain;
     }
@@ -234,12 +232,12 @@ public class PrerequisiteService : IPrerequisiteService
 
         visited.Add(courseId);
 
-        var prerequisites = await GetCoursePrerequisitesAsync(courseId, tenantId);
+        var prerequisites = await GetCoursePrerequisitesAsync(courseId, tenantId).ConfigureAwait(false);
 
         foreach (var prereq in prerequisites)
         {
             chain.Add(prereq);
-            await CollectPrerequisitesRecursiveAsync(prereq.PrerequisiteCourseId, tenantId, visited, chain);
+            await CollectPrerequisitesRecursiveAsync(prereq.PrerequisiteCourseId, tenantId, visited, chain).ConfigureAwait(false);
         }
     }
 
@@ -248,7 +246,7 @@ public class PrerequisiteService : IPrerequisiteService
         // Check if adding this prerequisite would create a cycle
         // by checking if courseId is reachable from prerequisiteCourseId
         var visited = new HashSet<Guid>();
-        return await IsReachableAsync(prerequisiteCourseId, courseId, tenantId, visited);
+        return await IsReachableAsync(prerequisiteCourseId, courseId, tenantId, visited).ConfigureAwait(false);
     }
 
     private async Task<bool> IsReachableAsync(Guid from, Guid target, Guid? tenantId, HashSet<Guid> visited)
@@ -264,7 +262,7 @@ public class PrerequisiteService : IPrerequisiteService
         var prerequisites = await _context.Set<CoursePrerequisite>()
             .Where(cp => cp.CourseId == from && (tenantId == null || cp.TenantId == tenantId))
             .Select(cp => cp.PrerequisiteCourseId)
-            .ToListAsync();
+            .ToListAsync().ConfigureAwait(false);
 
         foreach (var prereqId in prerequisites)
         {
@@ -279,7 +277,7 @@ public class PrerequisiteService : IPrerequisiteService
     {
         var prerequisites = await _context.Set<CoursePrerequisite>()
             .Where(cp => cp.CourseId == courseId)
-            .ToListAsync();
+            .ToListAsync().ConfigureAwait(false);
 
         var idList = prerequisiteIds.ToList();
         var order = 0;
@@ -293,7 +291,7 @@ public class PrerequisiteService : IPrerequisiteService
             }
         }
 
-        await _context.SaveChangesAsync();
+        await _context.SaveChangesAsync().ConfigureAwait(false);
 
         _logger.LogInformation("Reordered prerequisites for course {CourseId}", courseId);
 

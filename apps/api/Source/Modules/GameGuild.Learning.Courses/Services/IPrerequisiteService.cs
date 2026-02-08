@@ -1,4 +1,3 @@
-using GameGuild.Models;
 
 namespace GameGuild.Learning.Courses;
 

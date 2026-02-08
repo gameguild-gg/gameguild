@@ -1,7 +1,5 @@
-using GameGuild.Abstractions;
 using GameGuild.CQRS;
 
-using GameGuild.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -21,10 +19,10 @@ public class UnpublishProgramCommandHandler(IApplicationDbContext context, ILogg
     if (program == null) { throw new InvalidOperationException($"Program with ID {request.Id} not found"); }
 
     program.Status = ContentStatus.Draft;
-    program.Visibility = AccessLevel.Private;
-    program.UpdatedAt = DateTime.UtcNow;
+    program.Visibility = ContentVisibility.Private;
+    program.Touch();
 
-    await context.SaveChangesAsync(cancellationToken);
+    await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
     logger.LogInformation("Unpublished program: {ProgramId}", program.Id);
 

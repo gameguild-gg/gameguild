@@ -1,4 +1,3 @@
-using GameGuild.Abstractions;
 using GameGuild.CQRS;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -20,9 +19,9 @@ public class UpdateProgramRatingCommandHandler(IApplicationDbContext context, IL
 
     rating.Rating = request.Rating;
     rating.Review = request.Review;
-    rating.UpdatedAt = DateTime.UtcNow;
+    rating.Touch();
 
-    await context.SaveChangesAsync(cancellationToken);
+    await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
     logger.LogInformation("Updated rating for program {ProgramId} by user {UserId}", request.ProgramId, request.UserId);
 

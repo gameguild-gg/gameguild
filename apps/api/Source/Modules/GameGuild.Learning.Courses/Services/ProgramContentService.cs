@@ -1,4 +1,3 @@
-using GameGuild.Abstractions;
 
 
 using Microsoft.EntityFrameworkCore;
@@ -10,8 +9,7 @@ namespace GameGuild.Learning.Courses;
 public class ProgramContentService(IApplicationDbContext context) : IProgramContentService {
   public async Task<ProgramContent> CreateContentAsync(ProgramContent content) {
     // Set creation timestamp
-    content.CreatedAt = DateTime.UtcNow;
-    content.UpdatedAt = DateTime.UtcNow;
+    content.Touch();
 
     // If no sort order is specified, put it at the end
     if (content.SortOrder == 0) {
@@ -20,7 +18,7 @@ public class ProgramContentService(IApplicationDbContext context) : IProgramCont
     }
 
     context.Set<ProgramContent>().Add(content);
-    await context.SaveChangesAsync();
+    await context.SaveChangesAsync().ConfigureAwait(false);
 
     return content;
   }
@@ -57,9 +55,9 @@ public class ProgramContentService(IApplicationDbContext context) : IProgramCont
     existingContent.MaxPoints = content.MaxPoints;
     existingContent.EstimatedMinutes = content.EstimatedMinutes;
     existingContent.Visibility = content.Visibility;
-    existingContent.UpdatedAt = DateTime.UtcNow;
+    existingContent.Touch();
 
-    await context.SaveChangesAsync();
+    await context.SaveChangesAsync().ConfigureAwait(false);
 
     return existingContent;
   }
@@ -70,11 +68,11 @@ public class ProgramContentService(IApplicationDbContext context) : IProgramCont
     if (content == null) return false;
 
     // Soft delete the content and all its children
-    content.DeletedAt = DateTime.UtcNow;
+    content.SoftDelete();
 
-    foreach (var child in content.Children.Where(c => !c.IsDeleted)) child.DeletedAt = DateTime.UtcNow;
+    foreach (var child in content.Children.Where(c => !c.IsDeleted)) child.SoftDelete();
 
-    await context.SaveChangesAsync();
+    await context.SaveChangesAsync().ConfigureAwait(false);
 
     return true;
   }
@@ -90,10 +88,10 @@ public class ProgramContentService(IApplicationDbContext context) : IProgramCont
     foreach (var (contentId, sortOrder) in newOrder) {
       var content = contentItems.First(c => c.Id == contentId);
       content.SortOrder = sortOrder;
-      content.UpdatedAt = DateTime.UtcNow;
+      content.Touch();
     }
 
-    await context.SaveChangesAsync();
+    await context.SaveChangesAsync().ConfigureAwait(false);
 
     return true;
   }
@@ -118,9 +116,9 @@ public class ProgramContentService(IApplicationDbContext context) : IProgramCont
     // Update parent and sort order
     content.ParentId = newParentId;
     content.SortOrder = newSortOrder;
-    content.UpdatedAt = DateTime.UtcNow;
+    content.Touch();
 
-    await context.SaveChangesAsync();
+    await context.SaveChangesAsync().ConfigureAwait(false);
 
     return true;
   }

@@ -1,4 +1,3 @@
-using GameGuild.Abstractions;
 using GameGuild.CQRS;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -19,9 +18,9 @@ public class UnenrollUserCommandHandler(IApplicationDbContext context, ILogger<U
     if (enrollment == null) { return false; }
 
     enrollment.IsActive = false;
-    enrollment.UpdatedAt = DateTime.UtcNow;
+    enrollment.Touch();
 
-    await context.SaveChangesAsync(cancellationToken);
+    await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
     logger.LogInformation("Unenrolled user {UserId} from program {ProgramId}", request.UserId, request.ProgramId);
 

@@ -1,4 +1,3 @@
-using GameGuild.Abstractions;
 using GameGuild.CQRS;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -42,7 +41,7 @@ public class GetUserProgramProgressQueryHandler(
         // Get total content count for the program
         var totalContent = await context.Set<ProgramContent>()
             .AsNoTracking()
-            .CountAsync(c => c.ProgramId == request.ProgramId && !c.IsDeleted, cancellationToken);
+            .CountAsync(c => c.ProgramId == request.ProgramId && !c.IsDeleted, cancellationToken).ConfigureAwait(false);
 
         // Get completed content count
         var completedContent = await context.Set<ContentProgress>()
@@ -50,7 +49,7 @@ public class GetUserProgramProgressQueryHandler(
             .CountAsync(cp =>
                 cp.ProgramEnrollmentId == enrollment.Id &&
                 cp.CompletionStatus == ContentCompletionStatus.Completed,
-                cancellationToken);
+                cancellationToken).ConfigureAwait(false);
 
         // Calculate progress percentage
         var progressPercentage = totalContent > 0
@@ -61,13 +60,13 @@ public class GetUserProgramProgressQueryHandler(
         var timeSpentSeconds = await context.Set<ContentProgress>()
             .AsNoTracking()
             .Where(cp => cp.ProgramEnrollmentId == enrollment.Id)
-            .SumAsync(cp => cp.TimeSpentSeconds, cancellationToken);
+            .SumAsync(cp => cp.TimeSpentSeconds, cancellationToken).ConfigureAwait(false);
 
         // Get last activity
         var lastActivity = await context.Set<ContentProgress>()
             .AsNoTracking()
             .Where(cp => cp.ProgramEnrollmentId == enrollment.Id)
-            .MaxAsync(cp => (DateTime?)cp.LastAccessedAt, cancellationToken);
+            .MaxAsync(cp => (DateTime?)cp.LastAccessedAt, cancellationToken).ConfigureAwait(false);
 
         var isCompleted = enrollment.CompletionStatus == CompletionStatus.Completed ||
                          enrollment.CompletionStatus == CompletionStatus.CompletedWithCertificate;

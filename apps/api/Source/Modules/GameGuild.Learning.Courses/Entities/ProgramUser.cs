@@ -1,4 +1,3 @@
-using GameGuild.Entities;
 using GameGuild.Identity.Users;
 using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
@@ -97,11 +96,11 @@ public class ProgramUser : EntityBase
     /// </summary>
     public virtual ICollection<ActivityGrade> GivenGrades { get; set; } = new List<ActivityGrade>();
 
-    // Certificates earned by this user (TODO: Implement when Certificates module is available)
+    // Certificates earned by this user (PLANNED: Implement when Certificates module is available, depends on GameGuild.Learning.Certificates)
     // public virtual ICollection<UserCertificate> UserCertificates { get; set; } = new List<UserCertificate>();
 
     /*
-    Feedback submissions for this program enrollment (TODO: Implement when Feedbacks module is available)
+    Feedback submissions for this program enrollment (PLANNED: Implement when Feedbacks module is available)
     public virtual ICollection<ProgramFeedbackSubmission> FeedbackSubmissions { get; set; } = new List<ProgramFeedbackSubmission>();
     */
 

@@ -1,4 +1,3 @@
-using GameGuild.Abstractions;
 using GameGuild.CQRS;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -21,9 +20,9 @@ public class UpdateEnrollmentStatusCommandHandler(IApplicationDbContext context,
     program.EnrollmentStatus = (EnrollmentStatus)request.Status;
     if (request.MaxEnrollments.HasValue) program.MaxEnrollments = request.MaxEnrollments;
     if (request.EnrollmentDeadline.HasValue) program.EnrollmentDeadline = request.EnrollmentDeadline;
-    program.UpdatedAt = DateTime.UtcNow;
+    program.Touch();
 
-    await context.SaveChangesAsync(cancellationToken);
+    await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
     logger.LogInformation("Updated enrollment status for program: {ProgramId}", program.Id);
 

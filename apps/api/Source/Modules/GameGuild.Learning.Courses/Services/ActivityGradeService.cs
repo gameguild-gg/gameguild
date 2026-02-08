@@ -1,4 +1,3 @@
-using GameGuild.Abstractions;
 
 
 using Microsoft.EntityFrameworkCore;
@@ -32,7 +31,7 @@ public class ActivityGradeService(IApplicationDbContext context) : IActivityGrad
       existingGrade.GradedAt = DateTime.UtcNow;
       existingGrade.Touch();
 
-      await context.SaveChangesAsync();
+      await context.SaveChangesAsync().ConfigureAwait(false);
 
       return existingGrade;
     }
@@ -41,7 +40,7 @@ public class ActivityGradeService(IApplicationDbContext context) : IActivityGrad
     var newGrade = new ActivityGrade { ContentInteractionId = contentInteractionId, GraderProgramUserId = graderProgramUserId, Grade = grade, Feedback = feedback, GradingDetails = gradingDetails ?? "{}", GradedAt = DateTime.UtcNow };
 
     context.Set<ActivityGrade>().Add(newGrade);
-    await context.SaveChangesAsync();
+    await context.SaveChangesAsync().ConfigureAwait(false);
 
     return newGrade;
   }
@@ -103,7 +102,7 @@ public class ActivityGradeService(IApplicationDbContext context) : IActivityGrad
     grade.GradedAt = DateTime.UtcNow;
     grade.Touch();
 
-    await context.SaveChangesAsync();
+    await context.SaveChangesAsync().ConfigureAwait(false);
 
     return grade;
   }
@@ -115,7 +114,7 @@ public class ActivityGradeService(IApplicationDbContext context) : IActivityGrad
     if (grade == null) return false;
 
     context.Set<ActivityGrade>().Remove(grade);
-    await context.SaveChangesAsync();
+    await context.SaveChangesAsync().ConfigureAwait(false);
 
     return true;
   }

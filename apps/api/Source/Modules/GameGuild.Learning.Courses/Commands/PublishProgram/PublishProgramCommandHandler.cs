@@ -1,7 +1,5 @@
-using GameGuild.Abstractions;
 using GameGuild.CQRS;
 
-using GameGuild.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -21,10 +19,10 @@ public class PublishProgramCommandHandler(IApplicationDbContext context, ILogger
     if (program == null) { throw new InvalidOperationException($"Program with ID {request.Id} not found"); }
 
     program.Status = ContentStatus.Published;
-    program.Visibility = AccessLevel.Public;
-    program.UpdatedAt = DateTime.UtcNow;
+    program.Visibility = ContentVisibility.Public;
+    program.Touch();
 
-    await context.SaveChangesAsync(cancellationToken);
+    await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
     logger.LogInformation("Published program: {ProgramId}", program.Id);
 

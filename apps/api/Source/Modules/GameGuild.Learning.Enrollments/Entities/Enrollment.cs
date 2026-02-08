@@ -1,4 +1,3 @@
-using GameGuild.Entities;
 
 namespace GameGuild.Learning.Enrollments;
 
@@ -29,9 +28,7 @@ public class Enrollment : EntityBase
             CohortId = cohortId,
             Status = EnrollmentStatus.Active,
             EnrolledAt = DateTime.UtcNow,
-            Progress = 0,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            Progress = 0
         };
     }
 

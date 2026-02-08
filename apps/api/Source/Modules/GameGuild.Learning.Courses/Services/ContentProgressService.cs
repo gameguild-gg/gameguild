@@ -1,4 +1,3 @@
-using GameGuild.Abstractions;
 
 
 using Microsoft.EntityFrameworkCore;
@@ -27,16 +26,16 @@ public class ContentProgressService : IContentProgressService {
     }
 
     progress.MarkAsAccessed();
-    await _context.SaveChangesAsync();
+    await _context.SaveChangesAsync().ConfigureAwait(false);
 
     // Update program-level progress
-    await UpdateProgramProgressAsync(userId, programEnrollmentId);
+    await UpdateProgramProgressAsync(userId, programEnrollmentId).ConfigureAwait(false);
 
     return progress;
   }
 
   /// <summary> Start tracking content progress (initial access) </summary>
-  public async Task<ContentProgress> StartContentAsync(Guid userId, Guid contentId, Guid programEnrollmentId) { return await TrackContentAccessAsync(userId, contentId, programEnrollmentId); }
+  public async Task<ContentProgress> StartContentAsync(Guid userId, Guid contentId, Guid programEnrollmentId) { return await TrackContentAccessAsync(userId, contentId, programEnrollmentId).ConfigureAwait(false); }
 
   /// <summary> Update content progress </summary>
   public async Task<ContentProgress> UpdateContentProgressAsync(Guid userId, Guid contentId, decimal progressPercentage, int? timeSpentSeconds = null) {
@@ -48,10 +47,10 @@ public class ContentProgressService : IContentProgressService {
 
     if (timeSpentSeconds.HasValue) { progress.AddTimeSpent(timeSpentSeconds.Value); }
 
-    await _context.SaveChangesAsync();
+    await _context.SaveChangesAsync().ConfigureAwait(false);
 
     // Update program-level progress
-    await UpdateProgramProgressAsync(userId, progress.ProgramEnrollmentId);
+    await UpdateProgramProgressAsync(userId, progress.ProgramEnrollmentId).ConfigureAwait(false);
 
     return progress;
   }
@@ -63,10 +62,10 @@ public class ContentProgressService : IContentProgressService {
     if (progress == null) { throw new ArgumentException("Content progress not found. Track access first.", nameof(contentId)); }
 
     progress.MarkAsCompleted(score, maxScore);
-    await _context.SaveChangesAsync();
+    await _context.SaveChangesAsync().ConfigureAwait(false);
 
     // Update program-level progress
-    await UpdateProgramProgressAsync(userId, progress.ProgramEnrollmentId);
+    await UpdateProgramProgressAsync(userId, progress.ProgramEnrollmentId).ConfigureAwait(false);
 
     return progress;
   }
@@ -128,7 +127,7 @@ public class ContentProgressService : IContentProgressService {
     var programContents = await _context.Set<ProgramContent>()
         .Where(pc => pc.ProgramId == content.ProgramId)
         .OrderBy(pc => pc.SortOrder)
-        .ToListAsync();
+        .ToListAsync().ConfigureAwait(false);
 
     // Find the index of the current content
     var contentIndex = programContents.FindIndex(pc => pc.Id == contentId);
@@ -150,7 +149,7 @@ public class ContentProgressService : IContentProgressService {
         .Where(cp => cp.UserId == userId 
             && previousRequiredContents.Contains(cp.ContentId)
             && cp.CompletionStatus == ContentCompletionStatus.Completed)
-        .CountAsync();
+        .CountAsync().ConfigureAwait(false);
 
     // User can access if all previous required content is completed
     return completedCount >= previousRequiredContents.Count;
@@ -193,7 +192,7 @@ public class ContentProgressService : IContentProgressService {
                                         .ToListAsync();
 
     _context.Set<ContentProgress>().RemoveRange(progressRecords);
-    await _context.SaveChangesAsync();
+    await _context.SaveChangesAsync().ConfigureAwait(false);
 
     // Reset program enrollment progress
     var enrollment = await _context.Set<ProgramEnrollment>().FirstOrDefaultAsync(pe => pe.UserId == userId && pe.ProgramId == programId);
@@ -203,7 +202,7 @@ public class ContentProgressService : IContentProgressService {
       enrollment.CompletionStatus = CompletionStatus.NotStarted;
       enrollment.CompletedAt = null;
       enrollment.Touch();
-      await _context.SaveChangesAsync();
+      await _context.SaveChangesAsync().ConfigureAwait(false);
     }
 
     return true;
@@ -215,7 +214,7 @@ public class ContentProgressService : IContentProgressService {
 
     if (enrollment == null) return;
 
-    var programProgress = await CalculateProgramProgressAsync(userId, enrollment.ProgramId);
-    await _enrollmentService.UpdateProgressAsync(programEnrollmentId, programProgress);
+    var programProgress = await CalculateProgramProgressAsync(userId, enrollment.ProgramId).ConfigureAwait(false);
+    await _enrollmentService.UpdateProgressAsync(programEnrollmentId, programProgress).ConfigureAwait(false);
   }
 }

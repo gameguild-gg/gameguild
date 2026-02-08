@@ -1,4 +1,3 @@
-using GameGuild.Abstractions;
 using GameGuild.CQRS;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -18,10 +17,10 @@ public class AddToWishlistCommandHandler(IApplicationDbContext context, ILogger<
 
     if (existingWishlist != null) { throw new InvalidOperationException("Program is already in user's wishlist"); }
 
-    var wishlist = new ProgramWishlist { ProgramId = request.ProgramId, UserId = Guid.Parse(request.UserId), CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow };
+    var wishlist = new ProgramWishlist { ProgramId = request.ProgramId, UserId = Guid.Parse(request.UserId) };
 
     context.Set<ProgramWishlist>().Add(wishlist);
-    await context.SaveChangesAsync(cancellationToken);
+    await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
     logger.LogInformation("Added program {ProgramId} to wishlist for user {UserId}", request.ProgramId, request.UserId);
 

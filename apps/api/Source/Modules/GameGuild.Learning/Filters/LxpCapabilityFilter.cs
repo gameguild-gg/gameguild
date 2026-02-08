@@ -30,7 +30,7 @@ public sealed class LxpCapabilityFilter : IAsyncActionFilter
         if (attributes.Count == 0)
         {
             // No capability requirements, proceed
-            await next();
+            await next().ConfigureAwait(false);
             return;
         }
 
@@ -78,7 +78,7 @@ public sealed class LxpCapabilityFilter : IAsyncActionFilter
                 var isEnabled = await capabilityService.IsCapabilityEnabledAsync(
                     tenantId.Value,
                     attribute.Capability,
-                    context.HttpContext.RequestAborted);
+                    context.HttpContext.RequestAborted).ConfigureAwait(false);
 
                 if (!isEnabled)
                 {
@@ -126,7 +126,7 @@ public sealed class LxpCapabilityFilter : IAsyncActionFilter
         }
 
         // All capabilities enabled, proceed
-        await next();
+        await next().ConfigureAwait(false);
     }
 
     private static Guid? GetTenantId(HttpContext httpContext)

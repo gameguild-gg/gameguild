@@ -8,10 +8,9 @@ namespace GameGuild.Learning.Courses;
 /// <summary>
 /// Controller for managing course prerequisites
 /// </summary>
-[ApiController]
 [Route("api/prerequisites")]
 [Authorize]
-public class PrerequisitesController : ControllerBase
+public class PrerequisitesController : BaseApiController
 {
     private readonly IPrerequisiteService _prerequisiteService;
     private readonly IActorContextAccessor _actorContextAccessor;
@@ -182,7 +181,7 @@ public class PrerequisitesController : ControllerBase
         
         if (!result.IsSuccess)
         {
-            return result.Error.Type == GameGuild.Models.ErrorType.NotFound 
+            return result.Error.Type == ErrorType.NotFound 
                 ? NotFound(result.Error) 
                 : BadRequest(result.Error);
         }
@@ -200,7 +199,7 @@ public class PrerequisitesController : ControllerBase
         
         if (!result.IsSuccess)
         {
-            return result.Error.Type == GameGuild.Models.ErrorType.NotFound 
+            return result.Error.Type == ErrorType.NotFound 
                 ? NotFound(result.Error) 
                 : BadRequest(result.Error);
         }

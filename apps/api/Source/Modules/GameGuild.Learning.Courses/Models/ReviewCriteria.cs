@@ -1,4 +1,3 @@
-using GameGuild.Entities;
 using System.ComponentModel.DataAnnotations;
 
 namespace GameGuild.Learning.Courses;

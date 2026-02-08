@@ -1,4 +1,3 @@
-using GameGuild.Entities;
 using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -92,8 +91,7 @@ public class CoursePrerequisite : EntityBase
             MinimumGrade = minimumGrade,
             Description = description,
             DisplayOrder = displayOrder,
-            PrerequisiteGroup = prerequisiteGroup,
-            CreatedAt = DateTime.UtcNow
+            PrerequisiteGroup = prerequisiteGroup
         };
     }
 
