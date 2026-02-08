@@ -45,7 +45,7 @@ public class ReviewReportHandler : IRequestHandler<ReviewReportCommand, ReviewRe
             request.ReviewerId,
             request.Decision,
             request.Notes,
-            ct);
+            ct).ConfigureAwait(false);
 
         if (!success)
         {

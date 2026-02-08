@@ -44,7 +44,7 @@ public class ReportAssetHandler : IRequestHandler<ReportAssetCommand, ReportAsse
         CancellationToken ct = default)
     {
         // Verify asset exists
-        var reference = await _referenceRepository.GetByIdAsync(request.AssetReferenceId, ct);
+        var reference = await _referenceRepository.GetByIdAsync(request.AssetReferenceId, ct).ConfigureAwait(false);
         if (reference == null)
         {
             return null;
@@ -61,7 +61,7 @@ public class ReportAssetHandler : IRequestHandler<ReportAssetCommand, ReportAsse
             request.ReportedByUserId,
             request.Reason,
             request.Description,
-            ct);
+            ct).ConfigureAwait(false);
 
         if (report == null)
         {

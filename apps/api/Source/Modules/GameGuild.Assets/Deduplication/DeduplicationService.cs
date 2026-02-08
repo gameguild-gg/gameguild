@@ -77,7 +77,7 @@ public class DeduplicationService : IDeduplicationService
     public async Task<string> ComputeContentHashAsync(Stream content, CancellationToken ct = default)
     {
         using var sha256 = SHA256.Create();
-        var hashBytes = await sha256.ComputeHashAsync(content, ct);
+        var hashBytes = await sha256.ComputeHashAsync(content, ct).ConfigureAwait(false);
         content.Position = 0; // Reset stream position for subsequent reads
         
         return Convert.ToHexString(hashBytes).ToLowerInvariant();
@@ -199,7 +199,7 @@ public class DeduplicationService : IDeduplicationService
             return null;
         }
 
-        var existing = await _contentRepository.GetByContentHashAsync(contentHash, ct);
+        var existing = await _contentRepository.GetByContentHashAsync(contentHash, ct).ConfigureAwait(false);
         return existing?.Id;
     }
 }

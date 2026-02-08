@@ -48,7 +48,7 @@ public class GenerateAccessUrlHandler : IRequestHandler<GenerateAccessUrlCommand
                 request.AssetReferenceId,
                 request.UserId,
                 request.TenantId,
-                ct);
+                ct).ConfigureAwait(false);
         }
         else
         {
@@ -57,7 +57,7 @@ public class GenerateAccessUrlHandler : IRequestHandler<GenerateAccessUrlCommand
                 request.UserId,
                 request.TenantId,
                 request.Transformation,
-                ct);
+                ct).ConfigureAwait(false);
         }
 
         if (accessUrl == null)

@@ -40,7 +40,7 @@ public class DeleteAssetHandler : IRequestHandler<DeleteAssetCommand, DeleteAsse
         DeleteAssetCommand request,
         CancellationToken ct = default)
     {
-        var reference = await _referenceRepository.GetByIdAsync(request.AssetReferenceId, ct);
+        var reference = await _referenceRepository.GetByIdAsync(request.AssetReferenceId, ct).ConfigureAwait(false);
         if (reference == null)
         {
             return new DeleteAssetResponse(false, false);
@@ -56,13 +56,13 @@ public class DeleteAssetHandler : IRequestHandler<DeleteAssetCommand, DeleteAsse
         var contentId = reference.AssetContentId;
 
         // Soft delete the reference
-        await _referenceRepository.DeleteAsync(request.AssetReferenceId, ct);
+        await _referenceRepository.DeleteAsync(request.AssetReferenceId, ct).ConfigureAwait(false);
 
         // Decrement content reference count (may mark for garbage collection)
-        await _contentRepository.DecrementReferenceCountAsync(contentId, ct);
+        await _contentRepository.DecrementReferenceCountAsync(contentId, ct).ConfigureAwait(false);
 
         // Check if content is now marked for deletion
-        var content = await _contentRepository.GetByIdAsync(contentId, ct);
+        var content = await _contentRepository.GetByIdAsync(contentId, ct).ConfigureAwait(false);
         var contentMarkedForDeletion = content?.MarkedForDeletionAt != null;
 
         return new DeleteAssetResponse(true, contentMarkedForDeletion);

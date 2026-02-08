@@ -43,7 +43,7 @@ public class GetModerationQueueHandler : IRequestHandler<GetModerationQueueQuery
         GetModerationQueueQuery request,
         CancellationToken ct = default)
     {
-        var reports = await _moderationService.GetPendingReportsAsync(request.Limit, ct);
+        var reports = await _moderationService.GetPendingReportsAsync(request.Limit, ct).ConfigureAwait(false);
 
         var result = reports.Select(report =>
         {

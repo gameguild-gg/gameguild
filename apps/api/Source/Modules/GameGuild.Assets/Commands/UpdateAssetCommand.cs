@@ -39,7 +39,7 @@ public class UpdateAssetHandler : IRequestHandler<UpdateAssetCommand, UpdateAsse
         UpdateAssetCommand request,
         CancellationToken ct = default)
     {
-        var reference = await _referenceRepository.GetByIdAsync(request.AssetReferenceId, ct);
+        var reference = await _referenceRepository.GetByIdAsync(request.AssetReferenceId, ct).ConfigureAwait(false);
         if (reference == null)
         {
             return null;
@@ -62,7 +62,7 @@ public class UpdateAssetHandler : IRequestHandler<UpdateAssetCommand, UpdateAsse
             reference.UpdateAccessPolicy(request.AccessPolicy.Value);
         }
 
-        await _referenceRepository.UpdateAsync(reference, ct);
+        await _referenceRepository.UpdateAsync(reference, ct).ConfigureAwait(false);
 
         return new UpdateAssetResponse(
             reference.Id,

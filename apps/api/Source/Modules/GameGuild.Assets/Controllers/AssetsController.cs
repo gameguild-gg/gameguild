@@ -10,14 +10,13 @@ namespace GameGuild.Assets.Controllers;
 /// <summary>
 /// Controller for asset operations.
 /// </summary>
-[ApiController]
 [ApiVersion("1.0")]
 [Route("v{version:apiVersion}/assets")]
 [Authorize]
 public class AssetsController(
     ISender sender,
     IActorContextAccessor actorContextAccessor,
-    IAssetUploadService uploadService) : ControllerBase
+    IAssetUploadService uploadService) : BaseApiController
 {
     private ActorContext Actor => actorContextAccessor.ActorContext;
 

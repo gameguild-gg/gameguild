@@ -82,7 +82,7 @@ public class UploadAssetHandler : IRequestHandler<UploadAssetCommand, UploadAsse
         }
 
         // Get content to check if it was deduped
-        var content = await _contentRepository.GetByIdAsync(result.AssetContentId!.Value, ct);
+        var content = await _contentRepository.GetByIdAsync(result.AssetContentId!.Value, ct).ConfigureAwait(false);
         var wasDeduped = content?.ReferenceCount > 1;
 
         return new UploadAssetResponse(

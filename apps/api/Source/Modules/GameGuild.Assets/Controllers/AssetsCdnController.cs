@@ -14,10 +14,9 @@ namespace GameGuild.Assets.Controllers;
 /// - /e/{token} - Ephemeral URL with embedded asset reference
 /// - /t/{transformation}/{referenceId}/{token} - Transformed asset access
 /// </remarks>
-[ApiController]
 [Route("assets")]
 [AllowAnonymous] // Token-based authorization, not session-based
-public class AssetsCdnController : ControllerBase
+public class AssetsCdnController : BaseApiController
 {
     private readonly IAssetAccessService _accessService;
     private readonly IAssetStorageService _storageService;

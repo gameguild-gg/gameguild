@@ -10,13 +10,12 @@ namespace GameGuild.Assets.Controllers;
 /// <summary>
 /// Admin controller for asset moderation.
 /// </summary>
-[ApiController]
 [ApiVersion("1.0")]
 [Route("v{version:apiVersion}/admin/assets")]
 [Authorize(Policy = "RequireAdminRole")]
 public class AssetsAdminController(
     ISender sender,
-    IActorContextAccessor actorContextAccessor) : ControllerBase
+    IActorContextAccessor actorContextAccessor) : BaseApiController
 {
     private ActorContext Actor => actorContextAccessor.ActorContext;
 

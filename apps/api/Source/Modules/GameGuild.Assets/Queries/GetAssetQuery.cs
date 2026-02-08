@@ -63,7 +63,7 @@ public class GetAssetHandler : IRequestHandler<GetAssetQuery, AssetDto?>
     {
         var reference = request.IncludeContentDetails
             ? await _referenceRepository.GetByIdWithContentAsync(request.AssetReferenceId, ct)
-            : await _referenceRepository.GetByIdAsync(request.AssetReferenceId, ct);
+            : await _referenceRepository.GetByIdAsync(request.AssetReferenceId, ct).ConfigureAwait(false);
 
         if (reference == null)
         {
@@ -75,7 +75,7 @@ public class GetAssetHandler : IRequestHandler<GetAssetQuery, AssetDto?>
             request.AssetReferenceId,
             request.UserId,
             request.TenantId,
-            ct);
+            ct).ConfigureAwait(false);
 
         if (!validation.IsValid)
         {

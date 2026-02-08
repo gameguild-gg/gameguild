@@ -34,7 +34,7 @@ public class GetUserAssetsHandler : IRequestHandler<GetUserAssetsQuery, IReadOnl
         GetUserAssetsQuery request,
         CancellationToken ct = default)
     {
-        var references = await _referenceRepository.GetByUserAsync(request.UserId, ct);
+        var references = await _referenceRepository.GetByUserAsync(request.UserId, ct).ConfigureAwait(false);
 
         var result = references.Select(reference =>
         {

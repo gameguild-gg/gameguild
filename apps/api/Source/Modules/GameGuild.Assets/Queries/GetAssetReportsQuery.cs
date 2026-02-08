@@ -29,7 +29,7 @@ public class GetAssetReportsHandler : IRequestHandler<GetAssetReportsQuery, IRea
         GetAssetReportsQuery request,
         CancellationToken ct = default)
     {
-        var reports = await _reportRepository.GetByAssetReferenceAsync(request.AssetReferenceId, ct);
+        var reports = await _reportRepository.GetByAssetReferenceAsync(request.AssetReferenceId, ct).ConfigureAwait(false);
 
         var result = reports.Select(report => new ReportDto(
             report.Id,

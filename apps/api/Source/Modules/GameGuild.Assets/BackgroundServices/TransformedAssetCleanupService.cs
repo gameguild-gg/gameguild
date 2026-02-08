@@ -30,14 +30,14 @@ public class TransformedAssetCleanupService : BackgroundService
         {
             try
             {
-                await RunCleanupAsync(stoppingToken);
+                await RunCleanupAsync(stoppingToken).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error during transformed asset cleanup");
             }
 
-            await Task.Delay(_interval, stoppingToken);
+            await Task.Delay(_interval, stoppingToken).ConfigureAwait(false);
         }
     }
 
@@ -50,7 +50,7 @@ public class TransformedAssetCleanupService : BackgroundService
             .GetRequiredService<Microsoft.Extensions.Options.IOptions<AssetStorageOptions>>().Value;
 
         // Get stale transformed assets
-        var staleAssets = await transformedRepository.GetStaleAssetsAsync(_maxAge, 100, ct);
+        var staleAssets = await transformedRepository.GetStaleAssetsAsync(_maxAge, 100, ct).ConfigureAwait(false);
 
         if (staleAssets.Count == 0)
         {
@@ -73,10 +73,10 @@ public class TransformedAssetCleanupService : BackgroundService
                 await storageService.DeleteAsync(
                     storageOptions.TransformedBucketName,
                     asset.ObjectKey,
-                    ct);
+                    ct).ConfigureAwait(false);
 
                 // Delete record
-                await transformedRepository.DeleteAsync(asset.Id, ct);
+                await transformedRepository.DeleteAsync(asset.Id, ct).ConfigureAwait(false);
 
                 deleted++;
             }
@@ -87,6 +87,7 @@ public class TransformedAssetCleanupService : BackgroundService
                     ex,
                     "Failed to delete transformed asset {AssetId}",
                     asset.Id);
+                throw;
             }
         }
 

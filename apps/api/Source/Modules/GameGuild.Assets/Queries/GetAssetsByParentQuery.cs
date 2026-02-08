@@ -40,7 +40,7 @@ public class GetAssetsByParentHandler : IRequestHandler<GetAssetsByParentQuery, 
         var references = await _referenceRepository.GetByParentAsync(
             request.ParentResourceType,
             request.ParentResourceId,
-            ct);
+            ct).ConfigureAwait(false);
 
         var result = new List<AssetDto>();
 
@@ -51,7 +51,7 @@ public class GetAssetsByParentHandler : IRequestHandler<GetAssetsByParentQuery, 
                 reference.Id,
                 request.UserId,
                 request.TenantId,
-                ct);
+                ct).ConfigureAwait(false);
 
             if (!validation.IsValid)
                 continue;

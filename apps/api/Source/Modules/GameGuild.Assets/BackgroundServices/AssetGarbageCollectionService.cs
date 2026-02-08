@@ -30,14 +30,15 @@ public class AssetGarbageCollectionService : BackgroundService
         {
             try
             {
-                await RunGarbageCollectionAsync(stoppingToken);
+                await RunGarbageCollectionAsync(stoppingToken).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error during asset garbage collection");
+                throw;
             }
 
-            await Task.Delay(_interval, stoppingToken);
+            await Task.Delay(_interval, stoppingToken).ConfigureAwait(false);
         }
     }
 
@@ -52,7 +53,7 @@ public class AssetGarbageCollectionService : BackgroundService
         var candidates = await contentRepository.GetGarbageCollectionCandidatesAsync(
             _gracePeriod,
             100,
-            ct);
+            ct).ConfigureAwait(false);
 
         if (candidates.Count == 0)
         {
@@ -72,13 +73,13 @@ public class AssetGarbageCollectionService : BackgroundService
             try
             {
                 // Delete transformed versions first
-                await transformedRepository.DeleteBySourceAsync(content.Id, ct);
+                await transformedRepository.DeleteBySourceAsync(content.Id, ct).ConfigureAwait(false);
 
                 // Delete from storage
-                await storageService.DeleteAsync(content.BucketName, content.ObjectKey, ct);
+                await storageService.DeleteAsync(content.BucketName, content.ObjectKey, ct).ConfigureAwait(false);
 
                 // Delete record
-                await contentRepository.DeleteAsync(content.Id, ct);
+                await contentRepository.DeleteAsync(content.Id, ct).ConfigureAwait(false);
 
                 deleted++;
 
@@ -93,6 +94,7 @@ public class AssetGarbageCollectionService : BackgroundService
                     ex,
                     "Failed to delete content {ContentId}",
                     content.Id);
+                throw;
             }
         }
 
