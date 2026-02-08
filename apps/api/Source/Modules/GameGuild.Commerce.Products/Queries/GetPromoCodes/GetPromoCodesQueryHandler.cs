@@ -19,7 +19,7 @@ public class GetPromoCodesQueryHandler(IPromoCodeRepository promoCodeRepository)
             request.SearchTerm,
             request.Skip,
             request.Take,
-            cancellationToken).ConfigureAwait(false);
+            cancellationToken);
 
         var dtos = new List<PromoCodeDto>();
 

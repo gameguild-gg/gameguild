@@ -1,5 +1,6 @@
 using Asp.Versioning;
 using GameGuild.Identity.Authorization;
+using GameGuild.Identity.Context.Actors;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -9,12 +10,11 @@ namespace GameGuild.Commerce.Products;
 /// <summary>
 /// Controller for managing user entitlements (resource-oriented)
 /// </summary>
-[ApiController]
 [ApiVersion("1.0")]
 [Route("v{version:apiVersion}/users")]
 [Tags("users/entitlements")]
 [Authorize]
-public class UserEntitlementsController(IEntitlementService entitlementService) : ControllerBase
+public class UserEntitlementsController(IEntitlementService entitlementService, IActorContextAccessor actorContextAccessor) : BaseApiController
 {
     /// <summary>
     /// Get current user's entitlements
@@ -54,9 +54,7 @@ public class UserEntitlementsController(IEntitlementService entitlementService) 
 
     private Guid GetUserId()
     {
-        var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
-            ?? User.FindFirst("sub")?.Value;
-        return Guid.TryParse(userIdClaim, out var userId) ? userId : Guid.Empty;
+        return actorContextAccessor.ActorContext.SubjectIdAsGuid ?? Guid.Empty;
     }
 
     private static EntitlementInfoDto MapToDto(EntitlementInfo info) => new(

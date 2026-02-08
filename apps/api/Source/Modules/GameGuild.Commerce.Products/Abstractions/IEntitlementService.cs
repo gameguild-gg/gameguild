@@ -66,6 +66,12 @@ public interface IEntitlementService
         CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Get all currently active entitlements across all users (admin use case)
+    /// </summary>
+    Task<IEnumerable<EntitlementInfo>> GetAllActiveEntitlementsAsync(
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Process expired subscriptions (batch job)
     /// </summary>
     Task<int> ProcessExpiredSubscriptionsAsync(

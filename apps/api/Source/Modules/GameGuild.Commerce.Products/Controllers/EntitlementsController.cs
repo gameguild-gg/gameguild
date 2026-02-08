@@ -1,5 +1,6 @@
 using Asp.Versioning;
 using GameGuild.Identity.Authorization;
+using GameGuild.Identity.Context.Actors;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -9,12 +10,11 @@ namespace GameGuild.Commerce.Products;
 /// <summary>
 /// Controller for managing product entitlements
 /// </summary>
-[ApiController]
 [ApiVersion("1.0")]
 [Route("v{version:apiVersion}/entitlements")]
 [Tags("entitlements")]
 [Authorize]
-public class EntitlementsController(IEntitlementService entitlementService) : ControllerBase
+public class EntitlementsController(IEntitlementService entitlementService, IActorContextAccessor actorContextAccessor) : BaseApiController
 {
     /// <summary>
     /// List entitlements with optional status filter
@@ -37,8 +37,23 @@ public class EntitlementsController(IEntitlementService entitlementService) : Co
             return Ok(expiringEntitlements.Select(MapToDto));
         }
 
-        // TODO: Implement full list with other status filters
-        return Ok(Enumerable.Empty<EntitlementInfoDto>());
+        if (string.Equals(status, "active", StringComparison.OrdinalIgnoreCase))
+        {
+            var activeEntitlements = await entitlementService.GetAllActiveEntitlementsAsync(
+                cancellationToken).ConfigureAwait(false);
+            return Ok(activeEntitlements.Select(MapToDto));
+        }
+
+        if (string.Equals(status, "expired", StringComparison.OrdinalIgnoreCase))
+        {
+            // No direct method for expired, return empty for now
+            return Ok(Enumerable.Empty<EntitlementInfoDto>());
+        }
+
+        // No status filter — return all active by default
+        var allActive = await entitlementService.GetAllActiveEntitlementsAsync(
+            cancellationToken).ConfigureAwait(false);
+        return Ok(allActive.Select(MapToDto));
     }
 
     /// <summary>
@@ -94,7 +109,7 @@ public class EntitlementsController(IEntitlementService entitlementService) : Co
             request.Currency,
             request.ExpiresAt,
             orderId: null,
-            cancellationToken).ConfigureAwait(false);
+            cancellationToken);
 
         if (!result.Success)
         {
@@ -137,9 +152,7 @@ public class EntitlementsController(IEntitlementService entitlementService) : Co
 
     private Guid GetUserId()
     {
-        var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
-            ?? User.FindFirst("sub")?.Value;
-        return Guid.TryParse(userIdClaim, out var userId) ? userId : Guid.Empty;
+        return actorContextAccessor.ActorContext.SubjectIdAsGuid ?? Guid.Empty;
     }
 
     private static EntitlementInfoDto MapToDto(EntitlementInfo info) => new(

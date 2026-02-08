@@ -1,6 +1,5 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using GameGuild.Entities;
 using GameGuild.Identity.Users;
 using Microsoft.EntityFrameworkCore;
 
@@ -150,9 +149,7 @@ public class UserProduct : EntityBase
             Currency = currency,
             AccessStartDate = DateTime.UtcNow,
             AccessEndDate = expiresAt,
-            TenantId = tenantId,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            TenantId = tenantId
         };
     }
 }

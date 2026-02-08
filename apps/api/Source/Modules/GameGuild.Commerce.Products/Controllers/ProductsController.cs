@@ -10,12 +10,11 @@ namespace GameGuild.Commerce.Products;
 /// <summary>
 /// REST API controller for managing products
 /// </summary>
-[ApiController]
 [ApiVersion("1.0")]
 [Route("v{version:apiVersion}/products")]
 [Tags("products")]
 [Authorize]
-public class ProductsController(IMediator mediator) : ControllerBase
+public class ProductsController(IMediator mediator) : BaseApiController
 {
     /// <summary>
     /// Get product by ID

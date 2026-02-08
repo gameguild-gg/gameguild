@@ -1,6 +1,5 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using GameGuild.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace GameGuild.Commerce.Products;
@@ -106,9 +105,7 @@ public class ProductCommissionConfig : EntityBase
             ReferralCommissionPercentage = referralCommissionPercentage,
             AffiliateCommissionPercentage = affiliateCommissionPercentage,
             MaxAffiliateDiscount = maxAffiliateDiscount,
-            TenantId = tenantId,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            TenantId = tenantId
         };
     }
 

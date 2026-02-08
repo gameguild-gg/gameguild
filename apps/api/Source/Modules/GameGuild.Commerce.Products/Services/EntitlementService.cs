@@ -243,4 +243,23 @@ public class EntitlementService(
 
         return count;
     }
+
+    /// <inheritdoc />
+    public async Task<IEnumerable<EntitlementInfo>> GetAllActiveEntitlementsAsync(
+        CancellationToken cancellationToken = default)
+    {
+        var activeProducts = await userProductRepository.GetAllActiveAsync(cancellationToken).ConfigureAwait(false);
+
+        return activeProducts.Select(up => new EntitlementInfo(
+            up.ProductId,
+            up.Product?.Name ?? "Unknown",
+            up.AccessStatus,
+            up.AcquisitionType,
+            up.AccessStartDate,
+            up.AccessEndDate,
+            up.AcquisitionType == ProductAcquisitionType.Subscription,
+            up.SubscriptionStatus,
+            up.PricePaid,
+            up.Currency));
+    }
 }

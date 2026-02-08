@@ -37,7 +37,7 @@ public class GrantProductAccessCommandHandler(
             existingAccess.Currency = request.Currency;
             existingAccess.AccessEndDate = request.AccessEndDate;
             existingAccess.SubscriptionId = request.SubscriptionId;
-            existingAccess.UpdatedAt = DateTime.UtcNow;
+            existingAccess.Touch();
 
             await userProductRepository.UpdateAsync(existingAccess, cancellationToken).ConfigureAwait(false);
             await userProductRepository.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
@@ -56,9 +56,7 @@ public class GrantProductAccessCommandHandler(
             PricePaid = request.PricePaid,
             Currency = request.Currency,
             AccessEndDate = request.AccessEndDate,
-            SubscriptionId = request.SubscriptionId,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            SubscriptionId = request.SubscriptionId
         };
 
         await userProductRepository.AddAsync(userProduct, cancellationToken).ConfigureAwait(false);

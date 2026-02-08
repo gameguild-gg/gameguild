@@ -71,6 +71,12 @@ public interface IUserProductRepository
         CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Get all user products with active access status
+    /// </summary>
+    Task<IEnumerable<UserProduct>> GetAllActiveAsync(
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Save changes to the database
     /// </summary>
     Task SaveChangesAsync(CancellationToken cancellationToken = default);

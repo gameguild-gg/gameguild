@@ -23,7 +23,7 @@ public class RevokeProductAccessCommandHandler(IUserProductRepository userProduc
         }
 
         userProduct.AccessStatus = ProductAccessStatus.Revoked;
-        userProduct.UpdatedAt = DateTime.UtcNow;
+        userProduct.Touch();
 
         await userProductRepository.UpdateAsync(userProduct, cancellationToken).ConfigureAwait(false);
         await userProductRepository.SaveChangesAsync(cancellationToken).ConfigureAwait(false);

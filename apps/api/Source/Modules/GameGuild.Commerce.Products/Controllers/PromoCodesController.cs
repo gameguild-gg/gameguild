@@ -10,13 +10,12 @@ namespace GameGuild.Commerce.Products;
 /// <summary>
 /// Controller for managing promo codes
 /// </summary>
-[ApiController]
 [ApiVersion("1.0")]
 [Route("v{version:apiVersion}/promo-codes")]
 [Tags("promo-codes")]
 [Authorize]
 [RequirePermission(PromoCodesPermission.Keys.Read)]
-public class PromoCodesController(IMediator mediator) : ControllerBase
+public class PromoCodesController(IMediator mediator) : BaseApiController
 {
     /// <summary>
     /// Get all promo codes (paginated) with optional status filter

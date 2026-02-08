@@ -1,6 +1,5 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using GameGuild.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace GameGuild.Commerce.Products;
@@ -119,9 +118,7 @@ public class ProductPricingVersion : EntityBase
             IsActive = true,
             ChangeReason = changeReason,
             CreatedByUserId = createdByUserId,
-            TenantId = pricing.TenantId,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            TenantId = pricing.TenantId
         };
     }
 

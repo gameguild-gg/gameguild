@@ -38,9 +38,7 @@ public class CreatePromoCodeCommandHandler(IPromoCodeRepository promoCodeReposit
             IsExclusive = request.IsExclusive,
             StackingPriority = request.StackingPriority,
             ProductId = request.ProductId,
-            CreatedBy = request.CreatedBy ?? Guid.Empty,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            CreatedBy = request.CreatedBy ?? Guid.Empty
         };
 
         // Add to repository

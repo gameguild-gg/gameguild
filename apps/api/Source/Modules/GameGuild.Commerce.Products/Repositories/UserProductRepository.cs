@@ -1,4 +1,3 @@
-using GameGuild.Abstractions;
 using Microsoft.EntityFrameworkCore;
 
 namespace GameGuild.Commerce.Products;
@@ -117,7 +116,7 @@ public class UserProductRepository(IApplicationDbContext context)
                          up.AccessEndDate > DateTime.UtcNow)
             .OrderBy(up => up.AccessEndDate)
             .ToListAsync(cancellationToken)
-            .ConfigureAwait(false);
+            ;
     }
 
     /// <inheritdoc />
@@ -131,12 +130,25 @@ public class UserProductRepository(IApplicationDbContext context)
                          up.AccessEndDate != null &&
                          up.AccessEndDate <= DateTime.UtcNow)
             .ToListAsync(cancellationToken)
-            .ConfigureAwait(false);
+            ;
     }
 
     /// <inheritdoc />
     public async Task SaveChangesAsync(CancellationToken cancellationToken = default)
     {
         await Context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <inheritdoc />
+    public async Task<IEnumerable<UserProduct>> GetAllActiveAsync(
+        CancellationToken cancellationToken = default)
+    {
+        return await Entities
+            .Include(up => up.Product)
+            .Where(up => up.AccessStatus == ProductAccessStatus.Active)
+            .OrderByDescending(up => up.CreatedAt)
+            .Take(500)
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
     }
 }

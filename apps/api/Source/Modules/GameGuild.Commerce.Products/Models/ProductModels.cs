@@ -63,34 +63,3 @@ public record ProductPricingDto(
     decimal CurrentPrice,
     bool IsSaleActive
 );
-
-/// <summary>
-/// Paged result wrapper
-/// </summary>
-/// <typeparam name="T">Item type</typeparam>
-/// <param name="Items">Items in current page</param>
-/// <param name="TotalCount">Total count of all items</param>
-/// <param name="Skip">Items skipped</param>
-/// <param name="Take">Items taken</param>
-public record PagedResult<T>(
-    IReadOnlyList<T> Items,
-    int TotalCount,
-    int Skip,
-    int Take
-)
-{
-    /// <summary>
-    /// Whether there are more items
-    /// </summary>
-    public bool HasMore => Skip + Items.Count < TotalCount;
-
-    /// <summary>
-    /// Current page number (1-based)
-    /// </summary>
-    public int CurrentPage => (Skip / Take) + 1;
-
-    /// <summary>
-    /// Total number of pages
-    /// </summary>
-    public int TotalPages => (int)Math.Ceiling((double)TotalCount / Take);
-}

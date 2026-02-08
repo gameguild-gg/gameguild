@@ -1,4 +1,3 @@
-using GameGuild.Abstractions;
 using Microsoft.EntityFrameworkCore;
 
 namespace GameGuild.Commerce.Products;
@@ -39,7 +38,7 @@ public class PromoCodeRepository(IApplicationDbContext context)
             .Where(p => p.ValidUntil == null || p.ValidUntil > now)
             .OrderByDescending(p => p.StackingPriority)
             .ToListAsync(cancellationToken)
-            .ConfigureAwait(false);
+            ;
     }
 
     /// <inheritdoc />

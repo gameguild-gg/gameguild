@@ -1,7 +1,5 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using GameGuild.Entities;
-using GameGuild.ValueObjects;
 using Microsoft.EntityFrameworkCore;
 
 namespace GameGuild.Commerce.Products;

@@ -66,7 +66,7 @@ public class UpdatePromoCodeCommandHandler(IPromoCodeRepository promoCodeReposit
         if (request.ProductId.HasValue)
             promoCode.ProductId = request.ProductId.Value;
 
-        promoCode.UpdatedAt = DateTime.UtcNow;
+        promoCode.Touch();
 
         // Update in repository
         await promoCodeRepository.UpdateAsync(promoCode, cancellationToken).ConfigureAwait(false);

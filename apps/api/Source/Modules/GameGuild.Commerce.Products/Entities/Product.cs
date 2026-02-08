@@ -1,6 +1,5 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using GameGuild.Entities;
 using GameGuild.Identity.Users;
 using Microsoft.EntityFrameworkCore;
 
@@ -149,9 +148,7 @@ public class Product : EntityBase
             ImageUrl = imageUrl,
             CreatorId = creatorId,
             IsBundle = isBundle,
-            TenantId = tenantId,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            TenantId = tenantId
         };
     }
 

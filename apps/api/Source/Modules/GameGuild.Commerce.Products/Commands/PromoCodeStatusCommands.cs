@@ -15,16 +15,16 @@ public class ActivatePromoCodeHandler(IPromoCodeRepository repository) : IComman
 {
     public async Task<PromoCodeDto> Handle(ActivatePromoCodeCommand request, CancellationToken cancellationToken)
     {
-        var promoCode = await repository.GetByIdAsync(request.PromoCodeId, cancellationToken);
+        var promoCode = await repository.GetByIdAsync(request.PromoCodeId, cancellationToken).ConfigureAwait(false);
         if (promoCode == null)
         {
             throw new PromoCodeNotFoundException(request.PromoCodeId);
         }
 
         promoCode.IsActive = true;
-        promoCode.UpdatedAt = DateTime.UtcNow;
+        promoCode.Touch();
         
-        await repository.UpdateAsync(promoCode, cancellationToken);
+        await repository.UpdateAsync(promoCode, cancellationToken).ConfigureAwait(false);
         return promoCode.ToDto();
     }
 }
@@ -42,16 +42,16 @@ public class DeactivatePromoCodeHandler(IPromoCodeRepository repository) : IComm
 {
     public async Task<PromoCodeDto> Handle(DeactivatePromoCodeCommand request, CancellationToken cancellationToken)
     {
-        var promoCode = await repository.GetByIdAsync(request.PromoCodeId, cancellationToken);
+        var promoCode = await repository.GetByIdAsync(request.PromoCodeId, cancellationToken).ConfigureAwait(false);
         if (promoCode == null)
         {
             throw new PromoCodeNotFoundException(request.PromoCodeId);
         }
 
         promoCode.IsActive = false;
-        promoCode.UpdatedAt = DateTime.UtcNow;
+        promoCode.Touch();
         
-        await repository.UpdateAsync(promoCode, cancellationToken);
+        await repository.UpdateAsync(promoCode, cancellationToken).ConfigureAwait(false);
         return promoCode.ToDto();
     }
 }
@@ -101,7 +101,7 @@ public class PatchPromoCodeHandler(IPromoCodeRepository repository) : ICommandHa
 {
     public async Task<PromoCodeDto> Handle(PatchPromoCodeCommand request, CancellationToken cancellationToken)
     {
-        var promoCode = await repository.GetByIdAsync(request.PromoCodeId, cancellationToken);
+        var promoCode = await repository.GetByIdAsync(request.PromoCodeId, cancellationToken).ConfigureAwait(false);
         if (promoCode == null)
         {
             throw new PromoCodeNotFoundException(request.PromoCodeId);
@@ -124,9 +124,9 @@ public class PatchPromoCodeHandler(IPromoCodeRepository repository) : ICommandHa
         if (request.StackingPriority.HasValue) promoCode.StackingPriority = request.StackingPriority.Value;
         if (request.ProductId.HasValue) promoCode.ProductId = request.ProductId;
         
-        promoCode.UpdatedAt = DateTime.UtcNow;
+        promoCode.Touch();
         
-        await repository.UpdateAsync(promoCode, cancellationToken);
+        await repository.UpdateAsync(promoCode, cancellationToken).ConfigureAwait(false);
         return promoCode.ToDto();
     }
 }
@@ -144,7 +144,7 @@ public class PromoCodeExistsHandler(IPromoCodeRepository repository) : IQueryHan
 {
     public async Task<bool> Handle(PromoCodeExistsQuery request, CancellationToken cancellationToken)
     {
-        var promoCode = await repository.GetByIdAsync(request.PromoCodeId, cancellationToken);
+        var promoCode = await repository.GetByIdAsync(request.PromoCodeId, cancellationToken).ConfigureAwait(false);
         return promoCode != null;
     }
 }
@@ -162,7 +162,7 @@ public class GetPromoCodeByCodeHandler(IPromoCodeRepository repository) : IQuery
 {
     public async Task<PromoCodeDto?> Handle(GetPromoCodeByCodeQuery request, CancellationToken cancellationToken)
     {
-        var promoCode = await repository.GetByCodeAsync(request.Code, cancellationToken);
+        var promoCode = await repository.GetByCodeAsync(request.Code, cancellationToken).ConfigureAwait(false);
         return promoCode?.ToDto();
     }
 }
@@ -180,7 +180,7 @@ public class GetPromoCodeUsageHandler(IPromoCodeRepository repository) : IQueryH
 {
     public async Task<PromoCodeUsageDto> Handle(GetPromoCodeUsageQuery request, CancellationToken cancellationToken)
     {
-        var stats = await repository.GetUsageStatsAsync(request.PromoCodeId, cancellationToken);
+        var stats = await repository.GetUsageStatsAsync(request.PromoCodeId, cancellationToken).ConfigureAwait(false);
         return stats;
     }
 }

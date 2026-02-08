@@ -15,7 +15,7 @@ public class ActivateProductHandler(IProductRepository repository) : ICommandHan
 {
     public async Task<ProductDto> Handle(ActivateProductCommand request, CancellationToken cancellationToken)
     {
-        var product = await repository.GetByIdAsync(request.ProductId, cancellationToken);
+        var product = await repository.GetByIdAsync(request.ProductId, cancellationToken).ConfigureAwait(false);
         if (product == null)
         {
             throw new ProductNotFoundException(request.ProductId);
@@ -23,9 +23,9 @@ public class ActivateProductHandler(IProductRepository repository) : ICommandHan
 
         // Product activation logic - if the entity had an IsActive flag, we'd set it here
         // For now, this is a placeholder for future status management
-        product.UpdatedAt = DateTime.UtcNow;
+        product.Touch();
         
-        await repository.UpdateAsync(product, cancellationToken);
+        await repository.UpdateAsync(product, cancellationToken).ConfigureAwait(false);
         return product.ToDto();
     }
 }
@@ -43,7 +43,7 @@ public class DeactivateProductHandler(IProductRepository repository) : ICommandH
 {
     public async Task<ProductDto> Handle(DeactivateProductCommand request, CancellationToken cancellationToken)
     {
-        var product = await repository.GetByIdAsync(request.ProductId, cancellationToken);
+        var product = await repository.GetByIdAsync(request.ProductId, cancellationToken).ConfigureAwait(false);
         if (product == null)
         {
             throw new ProductNotFoundException(request.ProductId);
@@ -51,9 +51,9 @@ public class DeactivateProductHandler(IProductRepository repository) : ICommandH
 
         // Product deactivation logic - if the entity had an IsActive flag, we'd set it here
         // For now, this is a placeholder for future status management
-        product.UpdatedAt = DateTime.UtcNow;
+        product.Touch();
         
-        await repository.UpdateAsync(product, cancellationToken);
+        await repository.UpdateAsync(product, cancellationToken).ConfigureAwait(false);
         return product.ToDto();
     }
 }
@@ -71,7 +71,7 @@ public class ArchiveProductHandler(IProductRepository repository) : ICommandHand
 {
     public async Task<ProductDto> Handle(ArchiveProductCommand request, CancellationToken cancellationToken)
     {
-        var product = await repository.GetByIdAsync(request.ProductId, cancellationToken);
+        var product = await repository.GetByIdAsync(request.ProductId, cancellationToken).ConfigureAwait(false);
         if (product == null)
         {
             throw new ProductNotFoundException(request.ProductId);
@@ -80,7 +80,7 @@ public class ArchiveProductHandler(IProductRepository repository) : ICommandHand
         // Archive the product using soft delete
         product.SoftDelete();
         
-        await repository.UpdateAsync(product, cancellationToken);
+        await repository.UpdateAsync(product, cancellationToken).ConfigureAwait(false);
         return product.ToDto();
     }
 }
@@ -122,7 +122,7 @@ public class PatchProductHandler(IProductRepository repository) : ICommandHandle
 {
     public async Task<ProductDto> Handle(PatchProductCommand request, CancellationToken cancellationToken)
     {
-        var product = await repository.GetByIdAsync(request.ProductId, cancellationToken);
+        var product = await repository.GetByIdAsync(request.ProductId, cancellationToken).ConfigureAwait(false);
         if (product == null)
         {
             throw new ProductNotFoundException(request.ProductId);
@@ -142,9 +142,9 @@ public class PatchProductHandler(IProductRepository repository) : ICommandHandle
         if (request.Type.HasValue) product.Type = request.Type.Value;
         if (request.IsBundle.HasValue) product.IsBundle = request.IsBundle.Value;
         
-        product.UpdatedAt = DateTime.UtcNow;
+        product.Touch();
         
-        await repository.UpdateAsync(product, cancellationToken);
+        await repository.UpdateAsync(product, cancellationToken).ConfigureAwait(false);
         return product.ToDto();
     }
 }
@@ -198,7 +198,7 @@ public class BatchCreateProductsHandler(IProductRepository repository) : IComman
                 request.TenantId
             );
 
-            await repository.AddAsync(product, cancellationToken);
+            await repository.AddAsync(product, cancellationToken).ConfigureAwait(false);
             createdProducts.Add(product.ToDto());
         }
 
@@ -219,7 +219,7 @@ public class ProductExistsHandler(IProductRepository repository) : IQueryHandler
 {
     public async Task<bool> Handle(ProductExistsQuery request, CancellationToken cancellationToken)
     {
-        var product = await repository.GetByIdAsync(request.ProductId, cancellationToken);
+        var product = await repository.GetByIdAsync(request.ProductId, cancellationToken).ConfigureAwait(false);
         return product != null;
     }
 }
