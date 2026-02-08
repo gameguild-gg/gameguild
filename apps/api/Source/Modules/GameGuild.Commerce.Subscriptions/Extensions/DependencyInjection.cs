@@ -16,18 +16,25 @@ public static class DependencyInjection
     /// <returns>The configured service collection</returns>
     public static IServiceCollection AddSubscriptionsModule(this IServiceCollection services)
     {
-        // Register Subscription Plan Service (required by SubscriptionService, SubscriptionNotificationService, etc.)
+        // Register Subscription Plan Service (required by sub-services)
         services.AddScoped<ISubscriptionPlanService, SubscriptionPlanService>();
         
-        // Register Subscription Service (implements all 4 focused interfaces)
-        services.AddScoped<SubscriptionService>();
-        services.AddScoped<ISubscriptionLifecycleService>(sp => sp.GetRequiredService<SubscriptionService>());
-        services.AddScoped<ISubscriptionBillingService>(sp => sp.GetRequiredService<SubscriptionService>());
-        services.AddScoped<ISubscriptionQueryService>(sp => sp.GetRequiredService<SubscriptionService>());
-        services.AddScoped<ISubscriptionExternalIdService>(sp => sp.GetRequiredService<SubscriptionService>());
-        
-        // Register Subscription Notification Service
+        // Register Subscription Notification Service (required by billing sub-service)
         services.AddScoped<ISubscriptionNotificationService, SubscriptionNotificationService>();
+        
+        // Register focused sub-services
+        services.AddScoped<SubscriptionLifecycleService>();
+        services.AddScoped<ISubscriptionLifecycleService>(sp => sp.GetRequiredService<SubscriptionLifecycleService>());
+        
+        services.AddScoped<SubscriptionBillingService>();
+        services.AddScoped<ISubscriptionBillingService>(sp => sp.GetRequiredService<SubscriptionBillingService>());
+        
+        services.AddScoped<SubscriptionQueryAndExternalIdService>();
+        services.AddScoped<ISubscriptionQueryService>(sp => sp.GetRequiredService<SubscriptionQueryAndExternalIdService>());
+        services.AddScoped<ISubscriptionExternalIdService>(sp => sp.GetRequiredService<SubscriptionQueryAndExternalIdService>());
+        
+        // Register SubscriptionService as thin facade for backward compatibility
+        services.AddScoped<SubscriptionService>();
         
         // Register Plan Pricing Resolver for cross-module pricing lookups (Payments module integration)
         services.AddScoped<IPlanPricingResolver, SubscriptionPlanPricingResolver>();
@@ -61,8 +68,8 @@ public static class DependencyInjection
         services.AddScoped<IQueryHandler<GetActiveTenantSubscriptionQuery, Subscription?>, GetActiveTenantSubscriptionQueryHandler>();
         services.AddScoped<IRequestHandler<GetActiveTenantSubscriptionQuery, Subscription?>>(sp => sp.GetRequiredService<IQueryHandler<GetActiveTenantSubscriptionQuery, Subscription?>>());
         
-        services.AddScoped<IQueryHandler<GetPagedSubscriptionsQuery, Models.PagedResult<Subscription>>, GetPagedSubscriptionsQueryHandler>();
-        services.AddScoped<IRequestHandler<GetPagedSubscriptionsQuery, Models.PagedResult<Subscription>>>(sp => sp.GetRequiredService<IQueryHandler<GetPagedSubscriptionsQuery, Models.PagedResult<Subscription>>>());
+        services.AddScoped<IQueryHandler<GetPagedSubscriptionsQuery, PagedResult<Subscription>>, GetPagedSubscriptionsQueryHandler>();
+        services.AddScoped<IRequestHandler<GetPagedSubscriptionsQuery, PagedResult<Subscription>>>(sp => sp.GetRequiredService<IQueryHandler<GetPagedSubscriptionsQuery, PagedResult<Subscription>>>());
         
         services.AddScoped<IQueryHandler<GetSubscriptionByIdQuery, Subscription?>, GetSubscriptionByIdQueryHandler>();
         services.AddScoped<IRequestHandler<GetSubscriptionByIdQuery, Subscription?>>(sp => sp.GetRequiredService<IQueryHandler<GetSubscriptionByIdQuery, Subscription?>>());

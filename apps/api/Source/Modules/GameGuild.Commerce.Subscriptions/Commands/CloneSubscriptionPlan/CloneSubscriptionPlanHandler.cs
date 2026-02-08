@@ -1,4 +1,3 @@
-using GameGuild.Abstractions;
 using GameGuild.CQRS;
 using Microsoft.EntityFrameworkCore;
 
@@ -36,7 +35,7 @@ public sealed class CloneSubscriptionPlanHandler(IApplicationDbContext context)
         newPlan.Deactivate();
 
         context.Set<SubscriptionPlan>().Add(newPlan);
-        await context.SaveChangesAsync(cancellationToken);
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         return newPlan.Id;
     }

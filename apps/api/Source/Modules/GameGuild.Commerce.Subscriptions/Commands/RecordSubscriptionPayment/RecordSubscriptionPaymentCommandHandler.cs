@@ -1,5 +1,4 @@
-﻿using GameGuild.CQRS;
-using GameGuild.SharedKernel;
+using GameGuild.CQRS;
 
 namespace GameGuild.Commerce.Subscriptions;
 
@@ -29,7 +28,7 @@ public class RecordSubscriptionPaymentCommandHandler(ISubscriptionRepository sub
         // Save changes only if payment was successfully recorded
         if (result.IsSuccess)
         {
-            await subscriptionRepository.UpdateAsync(subscription, cancellationToken);
+            await subscriptionRepository.UpdateAsync(subscription, cancellationToken).ConfigureAwait(false);
         }
 
         return result;

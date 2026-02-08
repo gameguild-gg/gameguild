@@ -27,7 +27,7 @@ public class SubscriptionNotificationService : ISubscriptionNotificationService
 
     public async Task SendRenewalReminderAsync(Subscription subscription, int daysUntilRenewal, CancellationToken cancellationToken = default)
     {
-        var plan = await GetPlanNameAsync(subscription.PlanId, cancellationToken);
+        var plan = await GetPlanNameAsync(subscription.PlanId, cancellationToken).ConfigureAwait(false);
         
         _logger.LogInformation(
             "[NOTIFICATION] Renewal reminder: Subscription {SubscriptionId} for tenant {TenantId} " +
@@ -50,7 +50,7 @@ public class SubscriptionNotificationService : ISubscriptionNotificationService
 
     public async Task SendTrialExpirationReminderAsync(Subscription subscription, int daysUntilExpiration, CancellationToken cancellationToken = default)
     {
-        var plan = await GetPlanNameAsync(subscription.PlanId, cancellationToken);
+        var plan = await GetPlanNameAsync(subscription.PlanId, cancellationToken).ConfigureAwait(false);
         
         _logger.LogInformation(
             "[NOTIFICATION] Trial expiration reminder: Subscription {SubscriptionId} for tenant {TenantId} " +
@@ -67,7 +67,7 @@ public class SubscriptionNotificationService : ISubscriptionNotificationService
 
     public async Task SendPaymentFailureNotificationAsync(Subscription subscription, string failureReason, int retryAttempt, CancellationToken cancellationToken = default)
     {
-        var plan = await GetPlanNameAsync(subscription.PlanId, cancellationToken);
+        var plan = await GetPlanNameAsync(subscription.PlanId, cancellationToken).ConfigureAwait(false);
         
         _logger.LogWarning(
             "[NOTIFICATION] Payment failure: Subscription {SubscriptionId} for tenant {TenantId} " +
@@ -87,7 +87,7 @@ public class SubscriptionNotificationService : ISubscriptionNotificationService
 
     public async Task SendSubscriptionActivatedNotificationAsync(Subscription subscription, CancellationToken cancellationToken = default)
     {
-        var plan = await GetPlanNameAsync(subscription.PlanId, cancellationToken);
+        var plan = await GetPlanNameAsync(subscription.PlanId, cancellationToken).ConfigureAwait(false);
         
         _logger.LogInformation(
             "[NOTIFICATION] Subscription activated: Subscription {SubscriptionId} for tenant {TenantId} " +
@@ -106,7 +106,7 @@ public class SubscriptionNotificationService : ISubscriptionNotificationService
 
     public async Task SendSubscriptionCancelledNotificationAsync(Subscription subscription, CancellationReason cancellationReason, CancellationToken cancellationToken = default)
     {
-        var plan = await GetPlanNameAsync(subscription.PlanId, cancellationToken);
+        var plan = await GetPlanNameAsync(subscription.PlanId, cancellationToken).ConfigureAwait(false);
         
         _logger.LogInformation(
             "[NOTIFICATION] Subscription cancelled: Subscription {SubscriptionId} for tenant {TenantId} " +
@@ -123,7 +123,7 @@ public class SubscriptionNotificationService : ISubscriptionNotificationService
 
     public async Task SendSubscriptionSuspendedNotificationAsync(Subscription subscription, string? suspensionReason, CancellationToken cancellationToken = default)
     {
-        var plan = await GetPlanNameAsync(subscription.PlanId, cancellationToken);
+        var plan = await GetPlanNameAsync(subscription.PlanId, cancellationToken).ConfigureAwait(false);
         
         _logger.LogWarning(
             "[NOTIFICATION] Subscription suspended: Subscription {SubscriptionId} for tenant {TenantId} " +
@@ -139,7 +139,7 @@ public class SubscriptionNotificationService : ISubscriptionNotificationService
 
     public async Task SendSubscriptionReactivatedNotificationAsync(Subscription subscription, CancellationToken cancellationToken = default)
     {
-        var plan = await GetPlanNameAsync(subscription.PlanId, cancellationToken);
+        var plan = await GetPlanNameAsync(subscription.PlanId, cancellationToken).ConfigureAwait(false);
         
         _logger.LogInformation(
             "[NOTIFICATION] Subscription reactivated: Subscription {SubscriptionId} for tenant {TenantId} " +
@@ -153,8 +153,8 @@ public class SubscriptionNotificationService : ISubscriptionNotificationService
 
     public async Task SendPlanUpgradeNotificationAsync(Subscription subscription, Guid oldPlanId, Guid newPlanId, CancellationToken cancellationToken = default)
     {
-        var oldPlan = await GetPlanNameAsync(oldPlanId, cancellationToken);
-        var newPlan = await GetPlanNameAsync(newPlanId, cancellationToken);
+        var oldPlan = await GetPlanNameAsync(oldPlanId, cancellationToken).ConfigureAwait(false);
+        var newPlan = await GetPlanNameAsync(newPlanId, cancellationToken).ConfigureAwait(false);
         
         _logger.LogInformation(
             "[NOTIFICATION] Plan upgrade: Subscription {SubscriptionId} for tenant {TenantId} " +
@@ -172,8 +172,8 @@ public class SubscriptionNotificationService : ISubscriptionNotificationService
 
     public async Task SendPlanDowngradeNotificationAsync(Subscription subscription, Guid oldPlanId, Guid newPlanId, DateTime effectiveDate, CancellationToken cancellationToken = default)
     {
-        var oldPlan = await GetPlanNameAsync(oldPlanId, cancellationToken);
-        var newPlan = await GetPlanNameAsync(newPlanId, cancellationToken);
+        var oldPlan = await GetPlanNameAsync(oldPlanId, cancellationToken).ConfigureAwait(false);
+        var newPlan = await GetPlanNameAsync(newPlanId, cancellationToken).ConfigureAwait(false);
         
         _logger.LogInformation(
             "[NOTIFICATION] Plan downgrade: Subscription {SubscriptionId} for tenant {TenantId} " +
@@ -197,7 +197,7 @@ public class SubscriptionNotificationService : ISubscriptionNotificationService
     {
         try
         {
-            var plan = await _planService.GetByIdAsync(planId, cancellationToken);
+            var plan = await _planService.GetByIdAsync(planId, cancellationToken).ConfigureAwait(false);
             return plan?.Name ?? $"Plan {planId}";
         }
         catch (Exception ex)

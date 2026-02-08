@@ -1,5 +1,3 @@
-using GameGuild.Abstractions;
-using GameGuild.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace GameGuild.Commerce.Subscriptions;
@@ -123,6 +121,6 @@ public class SubscriptionPlanRepository(IApplicationDbContext context)
             .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
 
-        return new PagedResult<SubscriptionPlan>(items, totalCount, skip / pageSize + 1, pageSize);
+        return PagedResult<SubscriptionPlan>.FromPage(items, totalCount, skip / pageSize + 1, pageSize);
     }
 }

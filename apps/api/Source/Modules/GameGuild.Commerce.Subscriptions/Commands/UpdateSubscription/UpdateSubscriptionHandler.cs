@@ -1,6 +1,4 @@
-using GameGuild.Abstractions;
 using GameGuild.CQRS;
-using GameGuild.ValueObjects;
 using Microsoft.EntityFrameworkCore;
 
 namespace GameGuild.Commerce.Subscriptions;
@@ -40,7 +38,7 @@ public sealed class UpdateSubscriptionHandler(IApplicationDbContext context)
         // Update external IDs
         subscription.SetExternalIds(request.ExternalSubscriptionId, request.ExternalCustomerId);
 
-        await context.SaveChangesAsync(cancellationToken);
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         return Unit.Value;
     }
 }

@@ -1,6 +1,5 @@
 using GameGuild.CQRS;
 using GameGuild.Resources;
-using GameGuild.ValueObjects;
 
 namespace GameGuild.Commerce.Subscriptions;
 

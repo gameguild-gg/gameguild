@@ -1,6 +1,3 @@
-using GameGuild.Abstractions;
-using GameGuild.Models;
-using GameGuild.ValueObjects;
 using Microsoft.EntityFrameworkCore;
 
 namespace GameGuild.Commerce.Subscriptions;

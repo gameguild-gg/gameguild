@@ -1,4 +1,3 @@
-using GameGuild.Abstractions;
 using GameGuild.CQRS;
 using Microsoft.EntityFrameworkCore;
 
@@ -21,7 +20,7 @@ public sealed class PauseSubscriptionHandler(IApplicationDbContext context)
         // Use Suspend() which sets status to Suspended and stores reason in metadata
         subscription.Suspend(request.Reason);
 
-        await context.SaveChangesAsync(cancellationToken);
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         return Unit.Value;
     }
 }

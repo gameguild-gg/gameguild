@@ -1,4 +1,3 @@
-using GameGuild.Abstractions;
 using GameGuild.CQRS;
 using Microsoft.EntityFrameworkCore;
 
@@ -20,7 +19,7 @@ public sealed class ArchiveSubscriptionPlanHandler(IApplicationDbContext context
         // Use Deactivate() which sets IsActive = false and raises PlanDiscontinuedEvent
         plan.Deactivate();
 
-        await context.SaveChangesAsync(cancellationToken);
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         return Unit.Value;
     }
 }

@@ -41,7 +41,7 @@ public class SubscriptionPlanService : ISubscriptionPlanService
             throw new InvalidOperationException($"A subscription plan with slug '{slug}' already exists.");
 
         var plan = new SubscriptionPlan(name, slug, monthlyPriceInCents, currency, description);
-        var result = await _planRepository.AddAsync(plan, cancellationToken);
+        var result = await _planRepository.AddAsync(plan, cancellationToken).ConfigureAwait(false);
 
         // Invalidate active plans cache since a new plan was added
         _cache.Remove(ActivePlansCacheKey);
@@ -57,7 +57,7 @@ public class SubscriptionPlanService : ISubscriptionPlanService
         int? sortOrder = null,
         CancellationToken cancellationToken = default)
     {
-        var plan = await GetPlanOrThrowAsync(planId, cancellationToken);
+        var plan = await GetPlanOrThrowAsync(planId, cancellationToken).ConfigureAwait(false);
 
         // Validate name uniqueness if changed
         if (!string.Equals(plan.Name, name, StringComparison.OrdinalIgnoreCase) &&
@@ -65,7 +65,7 @@ public class SubscriptionPlanService : ISubscriptionPlanService
             throw new InvalidOperationException($"A subscription plan with name '{name}' already exists.");
 
         plan.UpdateDetails(name, description, sortOrder);
-        var result = await _planRepository.UpdateAsync(plan, cancellationToken);
+        var result = await _planRepository.UpdateAsync(plan, cancellationToken).ConfigureAwait(false);
 
         InvalidatePlanCache(planId);
 
@@ -79,9 +79,9 @@ public class SubscriptionPlanService : ISubscriptionPlanService
         long? annualPriceInCents = null,
         CancellationToken cancellationToken = default)
     {
-        var plan = await GetPlanOrThrowAsync(planId, cancellationToken);
+        var plan = await GetPlanOrThrowAsync(planId, cancellationToken).ConfigureAwait(false);
         plan.UpdatePricing(monthlyPriceInCents, annualPriceInCents);
-        var result = await _planRepository.UpdateAsync(plan, cancellationToken);
+        var result = await _planRepository.UpdateAsync(plan, cancellationToken).ConfigureAwait(false);
 
         InvalidatePlanCache(planId);
 
@@ -96,9 +96,9 @@ public class SubscriptionPlanService : ISubscriptionPlanService
         long? maxApiCallsPerMonth = null,
         CancellationToken cancellationToken = default)
     {
-        var plan = await GetPlanOrThrowAsync(planId, cancellationToken);
+        var plan = await GetPlanOrThrowAsync(planId, cancellationToken).ConfigureAwait(false);
         plan.UpdateLimits(maxUsers, maxStorageMb, maxApiCallsPerMonth);
-        var result = await _planRepository.UpdateAsync(plan, cancellationToken);
+        var result = await _planRepository.UpdateAsync(plan, cancellationToken).ConfigureAwait(false);
 
         InvalidatePlanCache(planId);
 
@@ -114,9 +114,9 @@ public class SubscriptionPlanService : ISubscriptionPlanService
         string? features = null,
         CancellationToken cancellationToken = default)
     {
-        var plan = await GetPlanOrThrowAsync(planId, cancellationToken);
+        var plan = await GetPlanOrThrowAsync(planId, cancellationToken).ConfigureAwait(false);
         plan.UpdateFeatures(hasPrioritySupport, hasAdvancedAnalytics, hasCustomBranding, features);
-        var result = await _planRepository.UpdateAsync(plan, cancellationToken);
+        var result = await _planRepository.UpdateAsync(plan, cancellationToken).ConfigureAwait(false);
 
         InvalidatePlanCache(planId);
 
@@ -126,9 +126,9 @@ public class SubscriptionPlanService : ISubscriptionPlanService
     /// <inheritdoc />
     public async Task<SubscriptionPlan> ActivateAsync(Guid planId, CancellationToken cancellationToken = default)
     {
-        var plan = await GetPlanOrThrowAsync(planId, cancellationToken);
+        var plan = await GetPlanOrThrowAsync(planId, cancellationToken).ConfigureAwait(false);
         plan.Activate();
-        var result = await _planRepository.UpdateAsync(plan, cancellationToken);
+        var result = await _planRepository.UpdateAsync(plan, cancellationToken).ConfigureAwait(false);
 
         InvalidatePlanCache(planId);
 
@@ -138,9 +138,9 @@ public class SubscriptionPlanService : ISubscriptionPlanService
     /// <inheritdoc />
     public async Task<SubscriptionPlan> DeactivateAsync(Guid planId, CancellationToken cancellationToken = default)
     {
-        var plan = await GetPlanOrThrowAsync(planId, cancellationToken);
+        var plan = await GetPlanOrThrowAsync(planId, cancellationToken).ConfigureAwait(false);
         plan.Deactivate();
-        var result = await _planRepository.UpdateAsync(plan, cancellationToken);
+        var result = await _planRepository.UpdateAsync(plan, cancellationToken).ConfigureAwait(false);
 
         InvalidatePlanCache(planId);
 
@@ -150,9 +150,9 @@ public class SubscriptionPlanService : ISubscriptionPlanService
     /// <inheritdoc />
     public async Task<SubscriptionPlan> SetFeaturedAsync(Guid planId, bool featured = true, CancellationToken cancellationToken = default)
     {
-        var plan = await GetPlanOrThrowAsync(planId, cancellationToken);
+        var plan = await GetPlanOrThrowAsync(planId, cancellationToken).ConfigureAwait(false);
         plan.SetFeatured(featured);
-        var result = await _planRepository.UpdateAsync(plan, cancellationToken);
+        var result = await _planRepository.UpdateAsync(plan, cancellationToken).ConfigureAwait(false);
 
         InvalidatePlanCache(planId);
 
@@ -162,9 +162,9 @@ public class SubscriptionPlanService : ISubscriptionPlanService
     /// <inheritdoc />
     public async Task<SubscriptionPlan> SetExternalIdAsync(Guid planId, string externalId, CancellationToken cancellationToken = default)
     {
-        var plan = await GetPlanOrThrowAsync(planId, cancellationToken);
+        var plan = await GetPlanOrThrowAsync(planId, cancellationToken).ConfigureAwait(false);
         plan.SetExternalId(externalId);
-        var result = await _planRepository.UpdateAsync(plan, cancellationToken);
+        var result = await _planRepository.UpdateAsync(plan, cancellationToken).ConfigureAwait(false);
 
         InvalidatePlanCache(planId);
 
@@ -179,7 +179,7 @@ public class SubscriptionPlanService : ISubscriptionPlanService
         if (_cache.TryGetValue(cacheKey, out SubscriptionPlan? cachedPlan))
             return cachedPlan;
 
-        var plan = await _planRepository.GetByIdAsync(planId, cancellationToken);
+        var plan = await _planRepository.GetByIdAsync(planId, cancellationToken).ConfigureAwait(false);
 
         if (plan is not null)
         {
@@ -205,7 +205,7 @@ public class SubscriptionPlanService : ISubscriptionPlanService
         if (_cache.TryGetValue(ActivePlansCacheKey, out IEnumerable<SubscriptionPlan>? cachedPlans) && cachedPlans is not null)
             return cachedPlans;
 
-        var plans = await _planRepository.GetActiveAsync(cancellationToken);
+        var plans = await _planRepository.GetActiveAsync(cancellationToken).ConfigureAwait(false);
         var plansList = plans.ToList();
 
         var cacheOptions = new MemoryCacheEntryOptions()
@@ -246,7 +246,7 @@ public class SubscriptionPlanService : ISubscriptionPlanService
         long apiCallsPerMonth,
         CancellationToken cancellationToken = default)
     {
-        var plan = await GetPlanOrThrowAsync(planId, cancellationToken);
+        var plan = await GetPlanOrThrowAsync(planId, cancellationToken).ConfigureAwait(false);
 
         var errors = new List<string>();
 
@@ -263,7 +263,7 @@ public class SubscriptionPlanService : ISubscriptionPlanService
             return PlanValidationResult.Success();
 
         // Find suitable upgrade plans
-        var activePlans = await _planRepository.GetActiveAsync(cancellationToken);
+        var activePlans = await _planRepository.GetActiveAsync(cancellationToken).ConfigureAwait(false);
         var suggestedUpgrades = activePlans
             .Where(p => p.Id != planId &&
                         p.AllowsUserCount(userCount) &&
@@ -281,8 +281,8 @@ public class SubscriptionPlanService : ISubscriptionPlanService
     /// <inheritdoc />
     public async Task<PlanUsageStatistics> GetUsageStatisticsAsync(Guid planId, CancellationToken cancellationToken = default)
     {
-        var plan = await GetPlanOrThrowAsync(planId, cancellationToken);
-        var activeSubscriptionCount = await _planRepository.GetActiveSubscriptionCountAsync(planId, cancellationToken);
+        var plan = await GetPlanOrThrowAsync(planId, cancellationToken).ConfigureAwait(false);
+        var activeSubscriptionCount = await _planRepository.GetActiveSubscriptionCountAsync(planId, cancellationToken).ConfigureAwait(false);
 
         // Return basic statistics - more detailed analytics would require additional repository methods
         return new DefaultPlanUsageStatistics
@@ -306,8 +306,8 @@ public class SubscriptionPlanService : ISubscriptionPlanService
         long currentApiCallsPerMonth,
         CancellationToken cancellationToken = default)
     {
-        var currentPlan = await GetPlanOrThrowAsync(currentPlanId, cancellationToken);
-        var activePlans = await _planRepository.GetActiveAsync(cancellationToken);
+        var currentPlan = await GetPlanOrThrowAsync(currentPlanId, cancellationToken).ConfigureAwait(false);
+        var activePlans = await _planRepository.GetActiveAsync(cancellationToken).ConfigureAwait(false);
 
         // Find plans that accommodate current usage and are more expensive (upgrades)
         return activePlans
@@ -323,18 +323,18 @@ public class SubscriptionPlanService : ISubscriptionPlanService
     /// <inheritdoc />
     public async Task DeleteAsync(Guid planId, CancellationToken cancellationToken = default)
     {
-        var activeSubscriptionCount = await _planRepository.GetActiveSubscriptionCountAsync(planId, cancellationToken);
+        var activeSubscriptionCount = await _planRepository.GetActiveSubscriptionCountAsync(planId, cancellationToken).ConfigureAwait(false);
         if (activeSubscriptionCount > 0)
             throw new InvalidOperationException($"Cannot delete plan with {activeSubscriptionCount} active subscriptions. Deactivate the plan instead.");
 
-        await _planRepository.DeleteAsync(planId, cancellationToken);
+        await _planRepository.DeleteAsync(planId, cancellationToken).ConfigureAwait(false);
 
         InvalidatePlanCache(planId);
     }
 
     private async Task<SubscriptionPlan> GetPlanOrThrowAsync(Guid planId, CancellationToken cancellationToken)
     {
-        var plan = await _planRepository.GetByIdAsync(planId, cancellationToken);
+        var plan = await _planRepository.GetByIdAsync(planId, cancellationToken).ConfigureAwait(false);
         if (plan == null)
             throw new InvalidOperationException($"Subscription plan with ID '{planId}' not found.");
         return plan;

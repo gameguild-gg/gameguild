@@ -3,8 +3,6 @@ using System.ComponentModel.DataAnnotations.Schema;
 using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
 using GameGuild.CQRS.Models;
-using GameGuild.SharedKernel;
-using GameGuild.ValueObjects;
 using Microsoft.EntityFrameworkCore;
 
 namespace GameGuild.Commerce.Subscriptions;

@@ -1,4 +1,3 @@
-using GameGuild.Abstractions;
 using GameGuild.CQRS;
 using Microsoft.EntityFrameworkCore;
 
@@ -17,7 +16,7 @@ public sealed class DeleteSubscriptionHandler(IApplicationDbContext context)
             ?? throw new InvalidOperationException($"Subscription {request.SubscriptionId} not found");
 
         context.Set<Subscription>().Remove(subscription);
-        await context.SaveChangesAsync(cancellationToken);
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         return Unit.Value;
     }
 }

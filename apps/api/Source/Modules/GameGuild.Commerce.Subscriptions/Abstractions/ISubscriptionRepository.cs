@@ -1,6 +1,4 @@
 
-using GameGuild.Models;
-using GameGuild.ValueObjects;
 
 namespace GameGuild.Commerce.Subscriptions;
 

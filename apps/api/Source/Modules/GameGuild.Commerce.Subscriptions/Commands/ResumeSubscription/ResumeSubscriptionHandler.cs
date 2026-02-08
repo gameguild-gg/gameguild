@@ -1,4 +1,3 @@
-using GameGuild.Abstractions;
 using GameGuild.CQRS;
 using Microsoft.EntityFrameworkCore;
 
@@ -20,7 +19,7 @@ public sealed class ResumeSubscriptionHandler(IApplicationDbContext context)
         // Use Reactivate() which sets status back to Active and clears metadata
         subscription.Reactivate();
 
-        await context.SaveChangesAsync(cancellationToken);
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         return Unit.Value;
     }
 }

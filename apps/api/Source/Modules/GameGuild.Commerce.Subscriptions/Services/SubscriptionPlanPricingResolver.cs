@@ -1,5 +1,4 @@
 using GameGuild.Commerce.Payments;
-using GameGuild.ValueObjects;
 
 namespace GameGuild.Commerce.Subscriptions;
 
@@ -23,7 +22,7 @@ public sealed class SubscriptionPlanPricingResolver : IPlanPricingResolver
     /// <inheritdoc />
     public async Task<Money?> GetPlanMonthlyPriceAsync(Guid planId, CancellationToken cancellationToken = default)
     {
-        var plan = await _planService.GetByIdAsync(planId, cancellationToken);
+        var plan = await _planService.GetByIdAsync(planId, cancellationToken).ConfigureAwait(false);
         
         if (plan is null)
             return null;
@@ -34,7 +33,7 @@ public sealed class SubscriptionPlanPricingResolver : IPlanPricingResolver
     /// <inheritdoc />
     public async Task<Money?> GetPlanPriceAsync(Guid planId, BillingCycle billingCycle, CancellationToken cancellationToken = default)
     {
-        var plan = await _planService.GetByIdAsync(planId, cancellationToken);
+        var plan = await _planService.GetByIdAsync(planId, cancellationToken).ConfigureAwait(false);
         
         if (plan is null)
             return null;
@@ -56,7 +55,7 @@ public sealed class SubscriptionPlanPricingResolver : IPlanPricingResolver
     /// <inheritdoc />
     public async Task<bool> PlanExistsAsync(Guid planId, CancellationToken cancellationToken = default)
     {
-        var plan = await _planService.GetByIdAsync(planId, cancellationToken);
+        var plan = await _planService.GetByIdAsync(planId, cancellationToken).ConfigureAwait(false);
         return plan is not null;
     }
     

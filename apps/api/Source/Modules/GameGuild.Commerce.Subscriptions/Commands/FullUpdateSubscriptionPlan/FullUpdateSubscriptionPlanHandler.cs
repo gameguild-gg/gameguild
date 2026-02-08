@@ -1,4 +1,3 @@
-using GameGuild.Abstractions;
 using GameGuild.CQRS;
 using Microsoft.EntityFrameworkCore;
 
@@ -30,9 +29,9 @@ public sealed class FullUpdateSubscriptionPlanHandler(IApplicationDbContext cont
         plan.HasCustomBranding = request.HasCustomBranding ?? false;
         plan.Features = request.Features;
         plan.SortOrder = request.SortOrder ?? 0;
-        plan.UpdatedAt = DateTime.UtcNow;
+        plan.Touch();
 
-        await context.SaveChangesAsync(cancellationToken);
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         return Unit.Value;
     }
 }

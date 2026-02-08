@@ -1,4 +1,3 @@
-using GameGuild.Abstractions;
 using GameGuild.CQRS;
 using Microsoft.EntityFrameworkCore;
 
@@ -45,7 +44,7 @@ public sealed class PatchSubscriptionHandler(IApplicationDbContext context)
             subscription.UpdateMetadata(request.Metadata);
         }
 
-        await context.SaveChangesAsync(cancellationToken);
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         return Unit.Value;
     }
 }

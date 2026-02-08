@@ -6,7 +6,7 @@ namespace GameGuild.Commerce.Subscriptions;
 ///     Query to get subscription invoices
 /// </summary>
 public record GetSubscriptionInvoicesQuery(Guid SubscriptionId, int Page = 1, int PageSize = 20) 
-    : IQuery<GameGuild.CQRS.PagedResult<SubscriptionInvoiceDto>>;
+    : IQuery<PagedResult<SubscriptionInvoiceDto>>;
 
 /// <summary>
 ///     DTO for subscription invoice
