@@ -1,6 +1,5 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using GameGuild.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace GameGuild.Commerce.Orders;
@@ -74,12 +73,10 @@ public class OrderAuditLog : EntityBase
             NewStatus = evt.NewStatus,
             Reason = evt.Reason,
             ExternalPaymentId = evt.ExternalPaymentId,
-            OccurredAt = evt.OccurredAt,
+            OccurredAt = evt.OccurredAt.UtcDateTime,
             InitiatedBy = initiatedBy ?? "System",
             IpAddress = ipAddress,
-            AdditionalContext = additionalContext,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            AdditionalContext = additionalContext
         };
     }
 }

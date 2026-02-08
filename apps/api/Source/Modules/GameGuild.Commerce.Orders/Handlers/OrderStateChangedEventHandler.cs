@@ -1,4 +1,3 @@
-using GameGuild.Abstractions;
 using GameGuild.CQRS;
 using Microsoft.Extensions.Logging;
 
@@ -33,7 +32,7 @@ public class OrderStateChangedEventHandler(
             additionalContext: null);
 
         dbContext.Set<OrderAuditLog>().Add(auditLog);
-        await dbContext.SaveChangesAsync(cancellationToken);
+        await dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         logger.LogDebug(
             "Created audit log entry {AuditLogId} for order {OrderId} state transition",

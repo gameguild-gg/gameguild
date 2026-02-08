@@ -1,7 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using GameGuild.Identity.Users;
-using GameGuild.SharedKernel;
 using Microsoft.EntityFrameworkCore;
 
 namespace GameGuild.Commerce.Orders;
@@ -172,9 +171,7 @@ public class Order : StatefulEntity<OrderStatus>
             TenantId = tenantId,
             IpAddress = ipAddress,
             UserAgent = userAgent,
-            Status = OrderStatus.Pending,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            Status = OrderStatus.Pending
         };
     }
 
@@ -234,10 +231,10 @@ public class Order : StatefulEntity<OrderStatus>
             Quantity = quantity,
             DiscountAmount = discountAmount,
             PromoCodesApplied = promoCodesApplied,
-            LineTotal = (unitPrice * quantity) - discountAmount,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            LineTotal = (unitPrice * quantity) - discountAmount
         };
+
+        lineItem.Touch();
 
         // Set TenantId via reflection to bypass protected setter
         typeof(OrderLineItem).GetProperty(nameof(TenantId))!

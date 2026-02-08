@@ -1,5 +1,5 @@
-using GameGuild.Abstractions;
 using GameGuild.Commerce.Products;
+using Microsoft.EntityFrameworkCore;
 
 namespace GameGuild.Commerce.Orders;
 
@@ -168,7 +168,7 @@ public class OrderService(
                     order.Currency,
                     expiresAt: null, // Will be set by subscription logic if applicable
                     orderId: order.Id,
-                    cancellationToken).ConfigureAwait(false);
+                    cancellationToken);
 
                 if (entitlementResult.Success && entitlementResult.UserProduct != null)
                 {
@@ -276,6 +276,22 @@ public class OrderService(
         CancellationToken cancellationToken = default)
     {
         return await orderRepository.GetByUserIdAsync(userId, status, cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <inheritdoc />
+    public async Task<IEnumerable<Order>> GetAllOrdersAsync(
+        OrderStatus? status = null,
+        CancellationToken cancellationToken = default)
+    {
+        var query = dbContext.Set<Order>().AsQueryable();
+
+        if (status.HasValue)
+            query = query.Where(o => o.Status == status.Value);
+
+        return await query
+            .OrderByDescending(o => o.CreatedAt)
+            .Take(500)
+            .ToListAsync(cancellationToken).ConfigureAwait(false);
     }
 
     /// <inheritdoc />

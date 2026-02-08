@@ -1,19 +1,59 @@
 using Asp.Versioning;
 using GameGuild.Identity.Authorization;
+using GameGuild.Identity.Context.Actors;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace GameGuild.Commerce.Orders;
 
 /// <summary>
-/// Controller for managing orders and purchases
+/// Controller for managing orders and purchases.
+/// Uses <see cref="ToOrderActionResult"/> and <see cref="ToBoolActionResult"/> helpers
+/// to eliminate duplicated error-handling patterns (DRY).
 /// </summary>
-[ApiController]
 [ApiVersion("1.0")]
 [Route("v{version:apiVersion}/orders")]
 [Authorize]
-public class OrdersController(IOrderService orderService) : ControllerBase
+public class OrdersController(IOrderService orderService, IActorContextAccessor actorContextAccessor) : BaseApiController
 {
+    // ── OrderResult → ActionResult mapping (DRY) ─────────────────────────
+
+    /// <summary>
+    ///     Maps an <see cref="OrderResult"/> to an <see cref="ActionResult{OrderDto}"/>.
+    ///     Returns 200 OK on success, or 400 BadRequest with a ProblemDetails body on failure.
+    /// </summary>
+    private ActionResult<OrderDto> ToOrderActionResult(OrderResult result)
+    {
+        if (!result.Success)
+            return BadRequest(CreateProblemDetails(result.ErrorMessage));
+
+        return Ok(MapToDto(result.Order!));
+    }
+
+    /// <summary>
+    ///     Maps a boolean success/failure to 204 NoContent or 400 BadRequest.
+    /// </summary>
+    private IActionResult ToBoolActionResult(bool success, string failureMessage)
+    {
+        if (!success)
+            return BadRequest(CreateProblemDetails(failureMessage));
+
+        return NoContent();
+    }
+
+    /// <summary>
+    ///     Creates a consistent ProblemDetails error response.
+    /// </summary>
+    private static ProblemDetails CreateProblemDetails(string? errorMessage) => new()
+    {
+        Title = "Order Operation Failed",
+        Detail = errorMessage ?? "An unexpected error occurred.",
+        Status = 400,
+        Type = "https://tools.ietf.org/html/rfc7231#section-6.5.1"
+    };
+
+    // ── Endpoints ────────────────────────────────────────────────────────
+
     /// <summary>
     /// Create a new order with idempotency protection
     /// </summary>
@@ -31,21 +71,16 @@ public class OrdersController(IOrderService orderService) : ControllerBase
                 request.TenantId,
                 GetIpAddress(),
                 GetUserAgent()),
-            cancellationToken).ConfigureAwait(false);
+            cancellationToken);
 
         if (!result.Success)
-        {
-            return BadRequest(new { error = result.ErrorMessage });
-        }
+            return BadRequest(CreateProblemDetails(result.ErrorMessage));
 
         var dto = MapToDto(result.Order!);
 
-        if (result.WasDuplicate)
-        {
-            return Ok(dto); // Return 200 for idempotent duplicate
-        }
-
-        return CreatedAtAction(nameof(GetOrder), new { orderId = dto.Id }, dto);
+        return result.WasDuplicate
+            ? Ok(dto) // Return 200 for idempotent duplicate
+            : CreatedAtAction(nameof(GetOrder), new { orderId = dto.Id }, dto);
     }
 
     /// <summary>
@@ -85,12 +120,7 @@ public class OrdersController(IOrderService orderService) : ControllerBase
             request?.PaymentMethod,
             cancellationToken).ConfigureAwait(false);
 
-        if (!result.Success)
-        {
-            return BadRequest(new { error = result.ErrorMessage });
-        }
-
-        return Ok(MapToDto(result.Order!));
+        return ToOrderActionResult(result);
     }
 
     /// <summary>
@@ -108,12 +138,7 @@ public class OrdersController(IOrderService orderService) : ControllerBase
             request?.Reason,
             cancellationToken).ConfigureAwait(false);
 
-        if (!success)
-        {
-            return BadRequest(new { error = "Cannot cancel order in current state" });
-        }
-
-        return NoContent();
+        return ToBoolActionResult(success, "Cannot cancel order in current state");
     }
 
     /// <summary>
@@ -132,12 +157,7 @@ public class OrdersController(IOrderService orderService) : ControllerBase
             request.Reason ?? "",
             cancellationToken).ConfigureAwait(false);
 
-        if (!result.Success)
-        {
-            return BadRequest(new { error = result.ErrorMessage });
-        }
-
-        return Ok(MapToDto(result.Order!));
+        return ToOrderActionResult(result);
     }
 
     /// <summary>
@@ -152,9 +172,7 @@ public class OrdersController(IOrderService orderService) : ControllerBase
         var order = await orderService.GetOrderAsync(orderId, cancellationToken).ConfigureAwait(false);
 
         if (order == null)
-        {
             return NotFound();
-        }
 
         // Users can only view their own orders unless they have admin permission
         // This check should be enhanced with proper ownership validation
@@ -173,19 +191,16 @@ public class OrdersController(IOrderService orderService) : ControllerBase
         [FromQuery] OrderStatus? status = null,
         CancellationToken cancellationToken = default)
     {
-        // Handle owner=me filter
-        if (owner == "me")
+        // Admin can list all orders when no owner filter is specified
+        if (string.IsNullOrEmpty(owner) || !string.Equals(owner, "me", StringComparison.OrdinalIgnoreCase))
         {
-            var orders = await orderService.GetUserOrdersAsync(
-                GetUserId(),
+            var allOrders = await orderService.GetAllOrdersAsync(
                 status,
                 cancellationToken).ConfigureAwait(false);
-
-            return Ok(orders.Select(MapToDto));
+            return Ok(allOrders.Select(MapToDto));
         }
 
-        // TODO: Admin can list all orders (requires admin permission check)
-        // For now, default to user's own orders if no owner specified
+        // owner=me resolves to current user's orders
         var userOrders = await orderService.GetUserOrdersAsync(
             GetUserId(),
             status,
@@ -222,12 +237,7 @@ public class OrdersController(IOrderService orderService) : ControllerBase
             new UpdateOrderRequest(request.Currency, request.Notes, request.Metadata),
             cancellationToken).ConfigureAwait(false);
 
-        if (!result.Success)
-        {
-            return BadRequest(new { error = result.ErrorMessage });
-        }
-
-        return Ok(MapToDto(result.Order!));
+        return ToOrderActionResult(result);
     }
 
     /// <summary>
@@ -242,12 +252,7 @@ public class OrdersController(IOrderService orderService) : ControllerBase
     {
         var success = await orderService.DeleteOrderAsync(orderId, reason, cancellationToken).ConfigureAwait(false);
 
-        if (!success)
-        {
-            return BadRequest(new { error = "Cannot delete order in current state" });
-        }
-
-        return NoContent();
+        return ToBoolActionResult(success, "Cannot delete order in current state");
     }
 
     /// <summary>
@@ -265,12 +270,7 @@ public class OrdersController(IOrderService orderService) : ControllerBase
             request?.Amount,
             cancellationToken).ConfigureAwait(false);
 
-        if (!result.Success)
-        {
-            return BadRequest(new { error = result.ErrorMessage });
-        }
-
-        return Ok(MapToDto(result.Order!));
+        return ToOrderActionResult(result);
     }
 
     /// <summary>
@@ -288,12 +288,7 @@ public class OrdersController(IOrderService orderService) : ControllerBase
             request?.Reason,
             cancellationToken).ConfigureAwait(false);
 
-        if (!result.Success)
-        {
-            return BadRequest(new { error = result.ErrorMessage });
-        }
-
-        return Ok(MapToDto(result.Order!));
+        return ToOrderActionResult(result);
     }
 
     /// <summary>
@@ -307,19 +302,14 @@ public class OrdersController(IOrderService orderService) : ControllerBase
     {
         var result = await orderService.ReleaseOrderAsync(orderId, cancellationToken).ConfigureAwait(false);
 
-        if (!result.Success)
-        {
-            return BadRequest(new { error = result.ErrorMessage });
-        }
-
-        return Ok(MapToDto(result.Order!));
+        return ToOrderActionResult(result);
     }
+
+    // ── Private helpers ──────────────────────────────────────────────────
 
     private Guid GetUserId()
     {
-        var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
-            ?? User.FindFirst("sub")?.Value;
-        return Guid.TryParse(userIdClaim, out var userId) ? userId : Guid.Empty;
+        return actorContextAccessor.ActorContext.SubjectIdAsGuid ?? Guid.Empty;
     }
 
     private string? GetIpAddress()

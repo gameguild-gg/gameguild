@@ -72,6 +72,13 @@ public interface IOrderService
         CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Get all orders across all users (admin use case)
+    /// </summary>
+    Task<IEnumerable<Order>> GetAllOrdersAsync(
+        OrderStatus? status = null,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Update order details (partial update)
     /// </summary>
     Task<OrderResult> UpdateOrderAsync(
