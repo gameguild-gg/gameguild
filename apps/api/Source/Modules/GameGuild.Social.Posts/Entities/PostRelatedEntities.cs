@@ -1,6 +1,5 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using GameGuild.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace GameGuild.Social.Posts;
@@ -50,9 +49,7 @@ public class PostStatistics : EntityBase
             AverageEngagementTime = 0,
             EngagementScore = 0,
             TrendingScore = 0,
-            LastCalculatedAt = DateTime.UtcNow,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            LastCalculatedAt = DateTime.UtcNow
         };
     }
 
@@ -137,9 +134,7 @@ public class PostContentReference : EntityBase
             ResourceType = resourceType,
             ReferenceType = referenceType,
             Context = context,
-            Order = order,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            Order = order
         };
     }
 }
@@ -186,9 +181,7 @@ public class PostFollower : EntityBase
             NotifyOnComments = notifyOnComments,
             NotifyOnLikes = notifyOnLikes,
             NotifyOnShares = notifyOnShares,
-            NotifyOnUpdates = notifyOnUpdates,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            NotifyOnUpdates = notifyOnUpdates
         };
     }
 
@@ -248,9 +241,7 @@ public class PostTag : EntityBase
             Category = category,
             Color = color,
             UsageCount = 0,
-            IsFeatured = false,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            IsFeatured = false
         };
     }
 
@@ -283,9 +274,7 @@ public class PostTagAssignment : EntityBase
             Id = Guid.NewGuid(),
             PostId = postId,
             TagId = tagId,
-            Order = order,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            Order = order
         };
     }
 }
@@ -342,9 +331,7 @@ public class PostView : EntityBase
             UserAgent = userAgent,
             Referrer = referrer,
             DurationSeconds = 0,
-            IsEngaged = false,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            IsEngaged = false
         };
     }
 
@@ -381,9 +368,7 @@ public class PostLike : EntityBase
             Id = Guid.NewGuid(),
             PostId = postId,
             UserId = userId,
-            ReactionType = reactionType,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            ReactionType = reactionType
         };
     }
 

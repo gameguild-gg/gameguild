@@ -1,4 +1,3 @@
-using GameGuild.Entities;
 
 namespace GameGuild.Social.Posts;
 
@@ -39,9 +38,7 @@ public class Post : EntityBase
             LikesCount = 0,
             CommentsCount = 0,
             SharesCount = 0,
-            ViewsCount = 0,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            ViewsCount = 0
         };
     }
 
@@ -89,9 +86,7 @@ public class PostComment : EntityBase
             ParentCommentId = parentCommentId,
             Content = content,
             IsEdited = false,
-            LikesCount = 0,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            LikesCount = 0
         };
     }
 

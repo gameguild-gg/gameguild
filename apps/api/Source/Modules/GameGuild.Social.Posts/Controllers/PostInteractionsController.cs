@@ -1,0 +1,169 @@
+using GameGuild.Identity.Context.Actors;
+using GameGuild.Social.Posts.Services;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+
+namespace GameGuild.Social.Posts.Controllers;
+
+/// <summary>
+/// REST API for post interactions: likes, pins, shares, views, statistics, and following.
+/// </summary>
+[Route("api/v1/posts")]
+[Authorize]
+public class PostInteractionsController(IPostService postService, IActorContextAccessor actorContextAccessor)
+    : BaseApiController
+{
+    private Guid GetCurrentUserId()
+    {
+        var actor = actorContextAccessor.ActorContext;
+        return actor?.SubjectIdAsGuid ?? Guid.Empty;
+    }
+
+    #region Reactions
+
+    /// <summary>Toggle like on a post</summary>
+    [HttpPost("{postId:guid}/like")]
+    public async Task<IActionResult> ToggleLike(Guid postId, [FromQuery] string reactionType = "like", CancellationToken cancellationToken = default)
+    {
+        var userId = GetCurrentUserId();
+        if (userId == Guid.Empty)
+            return Unauthorized();
+
+        var result = await postService.TogglePostLikeAsync(postId, userId, reactionType, cancellationToken);
+        return result.IsSuccess
+            ? Ok(new { Liked = result.Value })
+            : BadRequest(result.Error);
+    }
+
+    /// <summary>Toggle pin on a post (author only)</summary>
+    [HttpPost("{postId:guid}/pin")]
+    public async Task<IActionResult> TogglePin(Guid postId, CancellationToken cancellationToken = default)
+    {
+        var userId = GetCurrentUserId();
+        if (userId == Guid.Empty)
+            return Unauthorized();
+
+        var canPerform = await postService.CanUserPerformActionAsync(postId, userId, "pin", cancellationToken);
+        if (!canPerform.IsSuccess || !canPerform.Value)
+            return Forbid();
+
+        var result = await postService.TogglePostPinAsync(postId, cancellationToken);
+        return result.IsSuccess
+            ? Ok(new { Pinned = result.Value })
+            : BadRequest(result.Error);
+    }
+
+    /// <summary>Record a share of the post</summary>
+    [HttpPost("{postId:guid}/share")]
+    [AllowAnonymous]
+    public async Task<IActionResult> Share(Guid postId, CancellationToken cancellationToken = default)
+    {
+        var result = await postService.SharePostAsync(postId, cancellationToken);
+        return result.IsSuccess
+            ? Ok()
+            : BadRequest(result.Error);
+    }
+
+    /// <summary>Record a view of the post</summary>
+    [HttpPost("{postId:guid}/view")]
+    [AllowAnonymous]
+    public async Task<IActionResult> RecordView(
+        Guid postId,
+        [FromHeader(Name = "X-Forwarded-For")] string? ipAddress = null,
+        [FromHeader(Name = "User-Agent")] string? userAgent = null,
+        [FromHeader(Name = "Referer")] string? referrer = null,
+        CancellationToken cancellationToken = default)
+    {
+        var userId = GetCurrentUserId();
+        var result = await postService.RecordPostViewAsync(
+            postId,
+            userId == Guid.Empty ? null : userId,
+            ipAddress,
+            userAgent,
+            referrer,
+            cancellationToken);
+
+        return result.IsSuccess
+            ? Ok()
+            : BadRequest(result.Error);
+    }
+
+    /// <summary>Get statistics for a post</summary>
+    [HttpGet("{postId:guid}/statistics")]
+    [AllowAnonymous]
+    public async Task<IActionResult> GetStatistics(Guid postId, CancellationToken cancellationToken = default)
+    {
+        var result = await postService.GetPostStatisticsAsync(postId, cancellationToken);
+        return result.IsSuccess
+            ? Ok(PostMappings.MapStatisticsToDto(result.Value!))
+            : NotFound(result.Error);
+    }
+
+    #endregion
+
+    #region Following
+
+    /// <summary>Follow a post for notifications</summary>
+    [HttpPost("{postId:guid}/follow")]
+    public async Task<IActionResult> FollowPost(Guid postId, [FromBody] FollowPostRequest? request = null, CancellationToken cancellationToken = default)
+    {
+        var userId = GetCurrentUserId();
+        if (userId == Guid.Empty)
+            return Unauthorized();
+
+        var result = await postService.FollowPostAsync(
+            postId,
+            userId,
+            request?.NotifyOnComments ?? true,
+            request?.NotifyOnLikes ?? false,
+            request?.NotifyOnShares ?? false,
+            request?.NotifyOnUpdates ?? true,
+            cancellationToken);
+
+        return result.IsSuccess
+            ? Ok(PostMappings.MapFollowerToDto(result.Value!))
+            : BadRequest(result.Error);
+    }
+
+    /// <summary>Unfollow a post</summary>
+    [HttpDelete("{postId:guid}/follow")]
+    public async Task<IActionResult> UnfollowPost(Guid postId, CancellationToken cancellationToken = default)
+    {
+        var userId = GetCurrentUserId();
+        if (userId == Guid.Empty)
+            return Unauthorized();
+
+        var result = await postService.UnfollowPostAsync(postId, userId, cancellationToken);
+        return result.IsSuccess
+            ? NoContent()
+            : BadRequest(result.Error);
+    }
+
+    /// <summary>Check if current user is following a post</summary>
+    [HttpGet("{postId:guid}/follow")]
+    public async Task<IActionResult> IsFollowing(Guid postId, CancellationToken cancellationToken = default)
+    {
+        var userId = GetCurrentUserId();
+        if (userId == Guid.Empty)
+            return Unauthorized();
+
+        var result = await postService.IsFollowingPostAsync(postId, userId, cancellationToken);
+        return result.IsSuccess
+            ? Ok(new { IsFollowing = result.Value })
+            : BadRequest(result.Error);
+    }
+
+    #endregion
+}
+
+#region Request DTOs
+
+public record FollowPostRequest
+{
+    public bool NotifyOnComments { get; init; } = true;
+    public bool NotifyOnLikes { get; init; } = false;
+    public bool NotifyOnShares { get; init; } = false;
+    public bool NotifyOnUpdates { get; init; } = true;
+}
+
+#endregion

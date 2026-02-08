@@ -13,7 +13,16 @@ public static class PostsModule
     /// </summary>
     public static IServiceCollection AddPostsModule(this IServiceCollection services)
     {
+        // Register focused sub-services
+        services.AddScoped<IPostCrudService, PostCrudService>();
+        services.AddScoped<IPostEngagementService, PostEngagementService>();
+        services.AddScoped<IPostCommentService, PostCommentService>();
+        services.AddScoped<IPostTagService, PostTagService>();
+        services.AddScoped<IPostContentReferenceService, PostContentReferenceService>();
+
+        // Composite service for backward compatibility
         services.AddScoped<IPostService, PostService>();
+
         services.AddScoped<IPostAnnouncementService, PostAnnouncementService>();
 
         return services;

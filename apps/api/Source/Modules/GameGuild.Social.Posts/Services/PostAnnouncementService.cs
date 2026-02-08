@@ -1,5 +1,3 @@
-using GameGuild.Abstractions;
-using GameGuild.Models;
 using Microsoft.Extensions.Logging;
 
 namespace GameGuild.Social.Posts.Services;
@@ -38,18 +36,18 @@ public class PostAnnouncementService : IPostAnnouncementService
             content,
             PostVisibility.Public,
             tenantId: tenantId,
-            cancellationToken: cancellationToken);
+            cancellationToken: cancellationToken).ConfigureAwait(false);
 
         if (result.IsSuccess && result.Value is not null)
         {
             // Pin high-priority announcements
             if (priority == "high" || priority == "urgent")
             {
-                await _postService.TogglePostPinAsync(result.Value.Id, cancellationToken);
+                await _postService.TogglePostPinAsync(result.Value.Id, cancellationToken).ConfigureAwait(false);
             }
 
             // Add system tag
-            await _postService.AddTagsToPostAsync(result.Value.Id, new[] { "announcement", "system" }, cancellationToken);
+            await _postService.AddTagsToPostAsync(result.Value.Id, new[] { "announcement", "system" }, cancellationToken).ConfigureAwait(false);
 
             _logger.LogInformation("Created system announcement post {PostId} for tenant {TenantId}", result.Value.Id, tenantId);
         }
@@ -72,11 +70,11 @@ public class PostAnnouncementService : IPostAnnouncementService
             content,
             PostVisibility.Public,
             tenantId: tenantId,
-            cancellationToken: cancellationToken);
+            cancellationToken: cancellationToken).ConfigureAwait(false);
 
         if (result.IsSuccess && result.Value is not null)
         {
-            await _postService.AddTagsToPostAsync(result.Value.Id, new[] { "milestone", "celebration", "achievement" }, cancellationToken);
+            await _postService.AddTagsToPostAsync(result.Value.Id, new[] { "milestone", "celebration", "achievement" }, cancellationToken).ConfigureAwait(false);
 
             _logger.LogInformation("Created milestone celebration post {PostId} for '{Milestone}'", result.Value.Id, milestoneName);
         }
@@ -99,7 +97,7 @@ public class PostAnnouncementService : IPostAnnouncementService
             formattedContent,
             PostVisibility.Public,
             tenantId: tenantId,
-            cancellationToken: cancellationToken);
+            cancellationToken: cancellationToken).ConfigureAwait(false);
 
         if (result.IsSuccess && result.Value is not null)
         {
@@ -107,7 +105,7 @@ public class PostAnnouncementService : IPostAnnouncementService
             if (targetAudience != "all")
                 tags.Add(targetAudience.ToLowerInvariant());
 
-            await _postService.AddTagsToPostAsync(result.Value.Id, tags.ToArray(), cancellationToken);
+            await _postService.AddTagsToPostAsync(result.Value.Id, tags.ToArray(), cancellationToken).ConfigureAwait(false);
 
             _logger.LogInformation("Created community update post {PostId} for audience '{Audience}'", result.Value.Id, targetAudience);
         }
@@ -128,11 +126,11 @@ public class PostAnnouncementService : IPostAnnouncementService
             content,
             PostVisibility.Public,
             tenantId: tenantId,
-            cancellationToken: cancellationToken);
+            cancellationToken: cancellationToken).ConfigureAwait(false);
 
         if (result.IsSuccess && result.Value is not null)
         {
-            await _postService.AddTagsToPostAsync(result.Value.Id, new[] { "welcome", "introduction", "new-member" }, cancellationToken);
+            await _postService.AddTagsToPostAsync(result.Value.Id, new[] { "welcome", "introduction", "new-member" }, cancellationToken).ConfigureAwait(false);
 
             _logger.LogInformation("Created welcome post {PostId} for user {UserId}", result.Value.Id, userId);
         }

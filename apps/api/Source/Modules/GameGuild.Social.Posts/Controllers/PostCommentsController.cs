@@ -1,0 +1,144 @@
+using GameGuild.Identity.Context.Actors;
+using GameGuild.Social.Posts.Services;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+
+namespace GameGuild.Social.Posts.Controllers;
+
+/// <summary>
+/// REST API for post comments and tags.
+/// </summary>
+[Route("api/v1/posts")]
+[Authorize]
+public class PostCommentsController(IPostService postService, IActorContextAccessor actorContextAccessor)
+    : BaseApiController
+{
+    private Guid GetCurrentUserId()
+    {
+        var actor = actorContextAccessor.ActorContext;
+        return actor?.SubjectIdAsGuid ?? Guid.Empty;
+    }
+
+    #region Comments
+
+    /// <summary>Get comments for a post</summary>
+    [HttpGet("{postId:guid}/comments")]
+    [AllowAnonymous]
+    public async Task<IActionResult> GetComments(Guid postId, [FromQuery] int skip = 0, [FromQuery] int take = 50, CancellationToken cancellationToken = default)
+    {
+        var result = await postService.GetPostCommentsAsync(postId, skip, take, cancellationToken);
+        return result.IsSuccess
+            ? Ok(result.Value!.Select(PostMappings.MapCommentToDto))
+            : BadRequest(result.Error);
+    }
+
+    /// <summary>Add a comment to a post</summary>
+    [HttpPost("{postId:guid}/comments")]
+    public async Task<IActionResult> AddComment(Guid postId, [FromBody] AddCommentRequest request, CancellationToken cancellationToken = default)
+    {
+        var userId = GetCurrentUserId();
+        if (userId == Guid.Empty)
+            return Unauthorized();
+
+        var result = await postService.AddCommentAsync(postId, userId, request.Content, request.ParentCommentId, cancellationToken);
+        return result.IsSuccess
+            ? Created($"/api/v1/posts/{postId}/comments/{result.Value!.Id}", PostMappings.MapCommentToDto(result.Value))
+            : BadRequest(result.Error);
+    }
+
+    /// <summary>Update a comment</summary>
+    [HttpPut("{postId:guid}/comments/{commentId:guid}")]
+    public async Task<IActionResult> UpdateComment(Guid postId, Guid commentId, [FromBody] UpdateCommentRequest request, CancellationToken cancellationToken = default)
+    {
+        var userId = GetCurrentUserId();
+        if (userId == Guid.Empty)
+            return Unauthorized();
+
+        // Verify comment ownership before allowing update
+        var commentResult = await postService.GetCommentByIdAsync(commentId, cancellationToken);
+        if (!commentResult.IsSuccess)
+            return NotFound(commentResult.Error);
+        if (commentResult.Value!.AuthorId != userId)
+            return Forbid();
+
+        var result = await postService.UpdateCommentAsync(commentId, request.Content, cancellationToken);
+        return result.IsSuccess
+            ? Ok(PostMappings.MapCommentToDto(result.Value!))
+            : BadRequest(result.Error);
+    }
+
+    /// <summary>Delete a comment</summary>
+    [HttpDelete("{postId:guid}/comments/{commentId:guid}")]
+    public async Task<IActionResult> DeleteComment(Guid postId, Guid commentId, CancellationToken cancellationToken = default)
+    {
+        var userId = GetCurrentUserId();
+        if (userId == Guid.Empty)
+            return Unauthorized();
+
+        // Verify comment ownership before allowing delete
+        var commentResult = await postService.GetCommentByIdAsync(commentId, cancellationToken);
+        if (!commentResult.IsSuccess)
+            return NotFound(commentResult.Error);
+        if (commentResult.Value!.AuthorId != userId)
+            return Forbid();
+
+        var result = await postService.DeleteCommentAsync(commentId, cancellationToken);
+        return result.IsSuccess
+            ? NoContent()
+            : BadRequest(result.Error);
+    }
+
+    #endregion
+
+    #region Tags
+
+    /// <summary>Get popular tags</summary>
+    [HttpGet("tags/popular")]
+    [AllowAnonymous]
+    public async Task<IActionResult> GetPopularTags([FromQuery] int count = 20, CancellationToken cancellationToken = default)
+    {
+        var result = await postService.GetPopularTagsAsync(count, cancellationToken);
+        return result.IsSuccess
+            ? Ok(result.Value!.Select(PostMappings.MapTagToDto))
+            : BadRequest(result.Error);
+    }
+
+    /// <summary>Get tags for a post</summary>
+    [HttpGet("{postId:guid}/tags")]
+    [AllowAnonymous]
+    public async Task<IActionResult> GetPostTags(Guid postId, CancellationToken cancellationToken = default)
+    {
+        var result = await postService.GetPostTagsAsync(postId, cancellationToken);
+        return result.IsSuccess
+            ? Ok(result.Value!.Select(PostMappings.MapTagToDto))
+            : BadRequest(result.Error);
+    }
+
+    /// <summary>Search posts by tags</summary>
+    [HttpGet("tags/search")]
+    [AllowAnonymous]
+    public async Task<IActionResult> SearchByTags([FromQuery] string[] tags, [FromQuery] int skip = 0, [FromQuery] int take = 50, CancellationToken cancellationToken = default)
+    {
+        var result = await postService.GetPostsByTagsAsync(tags, skip, take, cancellationToken);
+        return result.IsSuccess
+            ? Ok(result.Value!.Select(PostMappings.MapToDto))
+            : BadRequest(result.Error);
+    }
+
+    #endregion
+}
+
+#region Request DTOs
+
+public record AddCommentRequest
+{
+    public string Content { get; init; } = string.Empty;
+    public Guid? ParentCommentId { get; init; }
+}
+
+public record UpdateCommentRequest
+{
+    public string Content { get; init; } = string.Empty;
+}
+
+#endregion
