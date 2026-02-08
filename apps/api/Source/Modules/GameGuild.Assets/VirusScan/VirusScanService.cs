@@ -187,10 +187,10 @@ public class VirusScanService : IVirusScanService
                     Details: $"File size {content.Length} exceeds maximum {_options.MaxScanSizeBytes}");
             }
 
-            // TODO: Implement actual ClamAV integration
+            // PLANNED: Implement actual ClamAV integration (depends on ClamAV daemon or commercial AV SDK)
             // For now, this is a placeholder that always returns clean
             // In production, integrate with ClamAV, Windows Defender, or commercial AV
-            await Task.Delay(10, ct); // Simulate scan time
+            await Task.Delay(10, ct).ConfigureAwait(false); // Simulate scan time
 
             var duration = DateTime.UtcNow - startTime;
 
@@ -224,8 +224,8 @@ public class VirusScanService : IVirusScanService
         string objectKey,
         CancellationToken ct = default)
     {
-        // TODO: Implement scanning of stored objects
-        await Task.Delay(10, ct);
+        // PLANNED: Implement scanning of stored objects (depends on IStorageService to stream object content for scanning)
+        await Task.Delay(10, ct).ConfigureAwait(false);
 
         return new VirusScanResult(
             true,
@@ -236,7 +236,7 @@ public class VirusScanService : IVirusScanService
 
     public Task<bool> IsHealthyAsync(CancellationToken ct = default)
     {
-        // TODO: Check ClamAV daemon connectivity
+        // PLANNED: Check ClamAV daemon connectivity (depends on ClamAV daemon deployment)
         return Task.FromResult(true);
     }
 

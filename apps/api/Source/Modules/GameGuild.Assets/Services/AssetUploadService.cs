@@ -74,18 +74,18 @@ public class AssetUploadService : IAssetUploadService
 
         // Compute content hash
         content.Position = 0;
-        var contentHash = await ComputeHashAsync(content, ct);
+        var contentHash = await ComputeHashAsync(content, ct).ConfigureAwait(false);
         content.Position = 0;
 
         // Check for existing content (deduplication)
-        var existingContent = await _contentRepository.GetByContentHashAsync(contentHash, ct);
+        var existingContent = await _contentRepository.GetByContentHashAsync(contentHash, ct).ConfigureAwait(false);
         AssetContent assetContent;
 
         if (existingContent != null)
         {
             _logger.LogInformation("Content already exists with hash {ContentHash}, reusing", contentHash);
             assetContent = existingContent;
-            await _contentRepository.IncrementReferenceCountAsync(existingContent.Id, ct);
+            await _contentRepository.IncrementReferenceCountAsync(existingContent.Id, ct).ConfigureAwait(false);
         }
         else
         {
@@ -93,13 +93,13 @@ public class AssetUploadService : IAssetUploadService
             int? width = null, height = null;
             if (mimeType.StartsWith("image/"))
             {
-                (width, height) = await ExtractImageDimensionsAsync(content, ct);
+                (width, height) = await ExtractImageDimensionsAsync(content, ct).ConfigureAwait(false);
                 content.Position = 0;
             }
 
             // Upload to storage
             var storageResult = await _storageService.UploadAsync(
-                content, contentHash, mimeType, false, ct);
+                content, contentHash, mimeType, false, ct).ConfigureAwait(false);
 
             // Create content record
             assetContent = new AssetContent(
@@ -111,7 +111,7 @@ public class AssetUploadService : IAssetUploadService
                 width,
                 height);
 
-            assetContent = await _contentRepository.AddAsync(assetContent, ct);
+            assetContent = await _contentRepository.AddAsync(assetContent, ct).ConfigureAwait(false);
         }
 
         // Create reference
@@ -123,7 +123,7 @@ public class AssetUploadService : IAssetUploadService
             options.ParentResourceType,
             options.ParentResourceId);
 
-        reference = await _referenceRepository.AddAsync(reference, ct);
+        reference = await _referenceRepository.AddAsync(reference, ct).ConfigureAwait(false);
 
         return new AssetUploadResult(true, reference.Id, assetContent.Id, null);
     }
@@ -135,7 +135,7 @@ public class AssetUploadService : IAssetUploadService
         Guid userId,
         CancellationToken ct = default)
     {
-        var uploadId = await _storageService.InitiateMultipartUploadAsync(mimeType, ct);
+        var uploadId = await _storageService.InitiateMultipartUploadAsync(mimeType, ct).ConfigureAwait(false);
         var chunkSize = _options.Value.ChunkSizeBytes;
         var totalChunks = (int)Math.Ceiling((double)totalSize / chunkSize);
 
@@ -168,12 +168,12 @@ public class AssetUploadService : IAssetUploadService
         if (session.ExpiresAt < DateTime.UtcNow)
         {
             _chunkedSessions.Remove(uploadId);
-            await _storageService.AbortMultipartUploadAsync(uploadId, session.ObjectKey, ct);
+            await _storageService.AbortMultipartUploadAsync(uploadId, session.ObjectKey, ct).ConfigureAwait(false);
             return false;
         }
 
         var eTag = await _storageService.UploadPartAsync(
-            uploadId, session.ObjectKey, chunkIndex + 1, chunkContent, ct);
+            uploadId, session.ObjectKey, chunkIndex + 1, chunkContent, ct).ConfigureAwait(false);
 
         // Track the ETag for this part
         session = session with 
@@ -203,13 +203,13 @@ public class AssetUploadService : IAssetUploadService
             .ToList();
 
         var storageResult = await _storageService.CompleteMultipartUploadAsync(
-            uploadId, session.ObjectKey, eTags, ct);
+            uploadId, session.ObjectKey, eTags, ct).ConfigureAwait(false);
 
         // Download and compute hash
         using var stream = await _storageService.DownloadAsync(
-            storageResult.BucketName, storageResult.ObjectKey, ct);
+            storageResult.BucketName, storageResult.ObjectKey, ct).ConfigureAwait(false);
 
-        var contentHash = await ComputeHashAsync(stream, ct);
+        var contentHash = await ComputeHashAsync(stream, ct).ConfigureAwait(false);
 
         // Create content record
         var assetContent = new AssetContent(
@@ -220,7 +220,7 @@ public class AssetUploadService : IAssetUploadService
             session.TotalSize,
             null, null);
 
-        assetContent = await _contentRepository.AddAsync(assetContent, ct);
+        assetContent = await _contentRepository.AddAsync(assetContent, ct).ConfigureAwait(false);
 
         // Create reference
         var reference = new AssetReference(
@@ -231,7 +231,7 @@ public class AssetUploadService : IAssetUploadService
             options.ParentResourceType,
             options.ParentResourceId);
 
-        reference = await _referenceRepository.AddAsync(reference, ct);
+        reference = await _referenceRepository.AddAsync(reference, ct).ConfigureAwait(false);
 
         return new AssetUploadResult(true, reference.Id, assetContent.Id, null);
     }
@@ -241,14 +241,14 @@ public class AssetUploadService : IAssetUploadService
         if (_chunkedSessions.TryGetValue(uploadId, out var session))
         {
             _chunkedSessions.Remove(uploadId);
-            await _storageService.AbortMultipartUploadAsync(uploadId, session.ObjectKey, ct);
+            await _storageService.AbortMultipartUploadAsync(uploadId, session.ObjectKey, ct).ConfigureAwait(false);
         }
     }
 
     private static async Task<string> ComputeHashAsync(Stream content, CancellationToken ct)
     {
         using var sha256 = SHA256.Create();
-        var hashBytes = await sha256.ComputeHashAsync(content, ct);
+        var hashBytes = await sha256.ComputeHashAsync(content, ct).ConfigureAwait(false);
         return Convert.ToHexString(hashBytes).ToLowerInvariant();
     }
 

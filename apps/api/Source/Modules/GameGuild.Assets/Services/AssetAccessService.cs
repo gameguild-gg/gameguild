@@ -51,14 +51,14 @@ public class AssetAccessService : IAssetAccessService
         TransformationSpec? transformation = null,
         CancellationToken ct = default)
     {
-        var reference = await _referenceRepository.GetByIdWithContentAsync(assetReferenceId, ct);
+        var reference = await _referenceRepository.GetByIdWithContentAsync(assetReferenceId, ct).ConfigureAwait(false);
         if (reference == null || reference.Content == null)
         {
             return null;
         }
 
         // Check access policy
-        var validation = await ValidateAccessAsync(assetReferenceId, userId, tenantId, ct);
+        var validation = await ValidateAccessAsync(assetReferenceId, userId, tenantId, ct).ConfigureAwait(false);
         if (!validation.IsValid)
         {
             _logger.LogWarning(
@@ -81,7 +81,7 @@ public class AssetAccessService : IAssetAccessService
             var transformationsEnabled = await _featureService.IsEnabledAsync(
                 FeatureFlagConstants.AssetFeatureFlags.TransformationsEnabled,
                 featureContext,
-                ct);
+                ct).ConfigureAwait(false);
 
             if (!transformationsEnabled)
             {
@@ -97,7 +97,7 @@ public class AssetAccessService : IAssetAccessService
                     FeatureFlagConstants.AssetFeatureFlags.MaxTransformDimension,
                     featureContext,
                     4096, // Default max dimension
-                    ct);
+                    ct).ConfigureAwait(false);
 
                 if ((transformation.Width.HasValue && transformation.Width > maxDimension) ||
                     (transformation.Height.HasValue && transformation.Height > maxDimension))
@@ -111,7 +111,7 @@ public class AssetAccessService : IAssetAccessService
         }
 
         // Get download window from feature flag
-        var downloadWindowHours = await GetDownloadWindowHoursAsync(userId, tenantId, ct);
+        var downloadWindowHours = await GetDownloadWindowHoursAsync(userId, tenantId, ct).ConfigureAwait(false);
         var expiryMinutes = downloadWindowHours * 60;
 
         // Generate token
@@ -126,7 +126,7 @@ public class AssetAccessService : IAssetAccessService
         var expiry = DateTimeOffset.UtcNow.AddMinutes(expiryMinutes);
 
         // Record access
-        await _referenceRepository.RecordAccessAsync(assetReferenceId, ct);
+        await _referenceRepository.RecordAccessAsync(assetReferenceId, ct).ConfigureAwait(false);
 
         return new AssetAccessUrl(url, token, expiry, reference.Content.MimeType);
     }
@@ -144,7 +144,7 @@ public class AssetAccessService : IAssetAccessService
             FeatureFlagConstants.AssetFeatureFlags.DownloadWindowHours,
             featureContext,
             _options.DefaultExpiryMinutes / 60, // Fall back to config
-            ct);
+            ct).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -165,14 +165,14 @@ public class AssetAccessService : IAssetAccessService
         Guid? tenantId,
         CancellationToken ct = default)
     {
-        var reference = await _referenceRepository.GetByIdWithContentAsync(assetReferenceId, ct);
+        var reference = await _referenceRepository.GetByIdWithContentAsync(assetReferenceId, ct).ConfigureAwait(false);
         if (reference == null || reference.Content == null)
         {
             return null;
         }
 
         // Check access
-        var validation = await ValidateAccessAsync(assetReferenceId, userId, tenantId, ct);
+        var validation = await ValidateAccessAsync(assetReferenceId, userId, tenantId, ct).ConfigureAwait(false);
         if (!validation.IsValid)
         {
             return null;
@@ -185,9 +185,9 @@ public class AssetAccessService : IAssetAccessService
             reference.Content.ObjectKey,
             expiry,
             isDownload: true,
-            ct);
+            ct).ConfigureAwait(false);
 
-        await _referenceRepository.RecordAccessAsync(assetReferenceId, ct);
+        await _referenceRepository.RecordAccessAsync(assetReferenceId, ct).ConfigureAwait(false);
 
         return new AssetAccessUrl(
             presignedUrl,
@@ -202,7 +202,7 @@ public class AssetAccessService : IAssetAccessService
         Guid? tenantId,
         CancellationToken ct = default)
     {
-        var reference = await _referenceRepository.GetByIdAsync(assetReferenceId, ct);
+        var reference = await _referenceRepository.GetByIdAsync(assetReferenceId, ct).ConfigureAwait(false);
         if (reference == null)
         {
             return new AssetAccessValidation(false, AssetAccessDeniedReason.NotFound);
@@ -243,7 +243,7 @@ public class AssetAccessService : IAssetAccessService
                 return new AssetAccessValidation(true, null);
 
             case AssetAccessPolicy.Inherited:
-                // TODO: Check parent resource access
+                // PLANNED: Check parent resource access via parent module's access control (depends on resource hierarchy implementation)
                 // For now, require authentication
                 if (userId == null)
                 {
@@ -300,7 +300,7 @@ public class AssetAccessService : IAssetAccessService
         }
 
         // Check that the asset still exists
-        var reference = await _referenceRepository.GetByIdAsync(assetReferenceId, ct);
+        var reference = await _referenceRepository.GetByIdAsync(assetReferenceId, ct).ConfigureAwait(false);
         if (reference == null || reference.IsDeleted)
         {
             return new TokenValidationResult(false, "Asset not found");
@@ -353,7 +353,7 @@ public class AssetAccessService : IAssetAccessService
         var transformationsEnabled = await _featureService.IsEnabledAsync(
             FeatureFlagConstants.AssetFeatureFlags.TransformationsEnabled,
             featureContext,
-            ct);
+            ct).ConfigureAwait(false);
 
         if (!transformationsEnabled)
         {
@@ -367,7 +367,7 @@ public class AssetAccessService : IAssetAccessService
             "GetOrCreateTransformation called for content {ContentId} with spec {Spec}",
             contentId, spec);
 
-        // TODO: Implement transformation lookup/creation via ITransformationService
+        // PLANNED: Implement transformation lookup/creation via ITransformationService (depends on GameGuild.Assets.Transformations)
         // var transformedAsset = await _transformationService.GetOrCreateAsync(contentId, spec, ct);
         // return transformedAsset != null
         //     ? new TransformedAssetInfo(transformedAsset.Id, contentId, ...)

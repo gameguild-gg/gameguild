@@ -182,7 +182,7 @@ public sealed class AssetAuthorizationHandler : AuthorizationHandler<AssetAccess
     /// <inheritdoc />
     public async Task<bool> CanReadAsync(Guid assetId, CancellationToken ct = default)
     {
-        return await CheckAccessAsync(assetId, AssetsPermission.Read, ct);
+        return await CheckAccessAsync(assetId, AssetsPermission.Read, ct).ConfigureAwait(false);
     }
 
     /// <inheritdoc />
@@ -195,31 +195,31 @@ public sealed class AssetAuthorizationHandler : AuthorizationHandler<AssetAccess
     /// <inheritdoc />
     public async Task<bool> CanUpdateAsync(Guid assetId, CancellationToken ct = default)
     {
-        return await CheckAccessAsync(assetId, AssetsPermission.Update, ct);
+        return await CheckAccessAsync(assetId, AssetsPermission.Update, ct).ConfigureAwait(false);
     }
 
     /// <inheritdoc />
     public async Task<bool> CanDeleteAsync(Guid assetId, CancellationToken ct = default)
     {
-        return await CheckAccessAsync(assetId, AssetsPermission.Delete, ct);
+        return await CheckAccessAsync(assetId, AssetsPermission.Delete, ct).ConfigureAwait(false);
     }
 
     /// <inheritdoc />
     public async Task<bool> CanTransformAsync(Guid assetId, CancellationToken ct = default)
     {
-        return await CheckAccessAsync(assetId, AssetsPermission.Transform, ct);
+        return await CheckAccessAsync(assetId, AssetsPermission.Transform, ct).ConfigureAwait(false);
     }
 
     /// <inheritdoc />
     public async Task<bool> CanGenerateUrlAsync(Guid assetId, CancellationToken ct = default)
     {
-        return await CheckAccessAsync(assetId, AssetsPermission.GenerateUrl, ct);
+        return await CheckAccessAsync(assetId, AssetsPermission.GenerateUrl, ct).ConfigureAwait(false);
     }
 
     /// <inheritdoc />
     public async Task<bool> CanReportAsync(Guid assetId, CancellationToken ct = default)
     {
-        return await CheckAccessAsync(assetId, AssetsPermission.Report, ct);
+        return await CheckAccessAsync(assetId, AssetsPermission.Report, ct).ConfigureAwait(false);
     }
 
     /// <inheritdoc />
@@ -251,7 +251,7 @@ public sealed class AssetAuthorizationHandler : AuthorizationHandler<AssetAccess
         }
 
         // Ownership check
-        var asset = await _referenceRepository.GetByIdAsync(assetId, ct);
+        var asset = await _referenceRepository.GetByIdAsync(assetId, ct).ConfigureAwait(false);
         if (asset == null)
         {
             return false;

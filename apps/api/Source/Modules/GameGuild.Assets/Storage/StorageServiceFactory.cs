@@ -186,7 +186,7 @@ public class StorageServiceFactory : IStorageServiceFactory
             return _globalStorageService;
         }
 
-        var tenantConfig = await _tenantConfigRepo.GetByTenantIdAsync(tenantId, ct);
+        var tenantConfig = await _tenantConfigRepo.GetByTenantIdAsync(tenantId, ct).ConfigureAwait(false);
         
         if (tenantConfig == null || !tenantConfig.IsEnabled)
         {
@@ -244,7 +244,7 @@ public class StorageServiceFactory : IStorageServiceFactory
             try
             {
                 using var stream = new MemoryStream(testContent);
-                await service.UploadAsync(stream, testKey, "text/plain", false, ct);
+                await service.UploadAsync(stream, testKey, "text/plain", false, ct).ConfigureAwait(false);
                 canWrite = true;
             }
             catch
@@ -257,7 +257,7 @@ public class StorageServiceFactory : IStorageServiceFactory
             {
                 try
                 {
-                    var exists = await service.ExistsAsync(bucketName, testKey, ct);
+                    var exists = await service.ExistsAsync(bucketName, testKey, ct).ConfigureAwait(false);
                     canRead = exists;
                 }
                 catch
@@ -271,7 +271,7 @@ public class StorageServiceFactory : IStorageServiceFactory
             {
                 try
                 {
-                    await service.DeleteAsync(bucketName, testKey, ct);
+                    await service.DeleteAsync(bucketName, testKey, ct).ConfigureAwait(false);
                     canDelete = true;
                 }
                 catch
@@ -292,15 +292,8 @@ public class StorageServiceFactory : IStorageServiceFactory
         }
         catch (Exception ex)
         {
-            var latency = DateTime.UtcNow - startTime;
-            return new StorageTestResult(
-                Success: false,
-                CanRead: false,
-                CanWrite: false,
-                CanDelete: false,
-                BucketExists: false,
-                ErrorMessage: ex.Message,
-                Latency: latency);
+            _logger.LogError(ex, "Unexpected error in Operation");
+            throw;
         }
     }
 
@@ -350,14 +343,14 @@ public class StorageServiceFactory : IStorageServiceFactory
 
     private IStorageService CreateGcsService(GoogleCloudStorageConfiguration config, string bucketName)
     {
-        // TODO: Implement Google Cloud Storage service
+        // PLANNED: Implement Google Cloud Storage service (depends on Google.Cloud.Storage.V1 NuGet package)
         // Would use Google.Cloud.Storage.V1 NuGet package
         throw new NotImplementedException("Google Cloud Storage support coming soon");
     }
 
     private IStorageService CreateAzureService(AzureBlobStorageConfiguration config, string bucketName)
     {
-        // TODO: Implement Azure Blob Storage service
+        // PLANNED: Implement Azure Blob Storage service (depends on Azure.Storage.Blobs NuGet package)
         // Would use Azure.Storage.Blobs NuGet package
         throw new NotImplementedException("Azure Blob Storage support coming soon");
     }
@@ -392,7 +385,7 @@ public class StorageServiceFactory : IStorageServiceFactory
 
     private IStorageService CreateLocalService(LocalFileSystemConfiguration config, string bucketName)
     {
-        // TODO: Implement local filesystem storage for development
+        // PLANNED: Implement local filesystem storage for development (lower priority, useful for local dev without cloud credentials)
         throw new NotImplementedException("Local filesystem storage for development coming soon");
     }
 }

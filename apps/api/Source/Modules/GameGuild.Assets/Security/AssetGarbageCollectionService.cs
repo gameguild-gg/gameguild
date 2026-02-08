@@ -126,7 +126,7 @@ public class AssetGarbageCollectionService : IAssetGarbageCollectionService
             var candidates = await _contentRepository.GetMarkedForDeletionAsync(
                 cutoffDate,
                 _options.MaxItemsPerRun,
-                ct);
+                ct).ConfigureAwait(false);
 
             messages.Add($"Found {candidates.Count} candidates for deletion");
 
@@ -140,7 +140,7 @@ public class AssetGarbageCollectionService : IAssetGarbageCollectionService
                     // CRITICAL: Double-check reference count before deletion
                     // This prevents race conditions where new references were added
                     var currentRefCount = await _contentRepository.GetCurrentReferenceCountAsync(
-                        content.Id, ct);
+                        content.Id, ct).ConfigureAwait(false);
 
                     if (currentRefCount > 0)
                     {
@@ -149,7 +149,7 @@ public class AssetGarbageCollectionService : IAssetGarbageCollectionService
                             content.Id, currentRefCount);
 
                         // Clear deletion mark since it's now referenced
-                        await ClearDeletionMarkAsync(content.Id, ct);
+                        await ClearDeletionMarkAsync(content.Id, ct).ConfigureAwait(false);
                         skipped++;
                         messages.Add($"Skipped {content.Id}: now has {currentRefCount} references");
                         continue;
@@ -174,13 +174,13 @@ public class AssetGarbageCollectionService : IAssetGarbageCollectionService
                     await _storageService.DeleteAsync(
                         content.BucketName,
                         content.ObjectKey,
-                        ct);
+                        ct).ConfigureAwait(false);
 
                     // Delete transformed versions
                     // (handled by cascade or separate cleanup)
 
                     // Delete from database
-                    await _contentRepository.DeleteAsync(content.Id, ct);
+                    await _contentRepository.DeleteAsync(content.Id, ct).ConfigureAwait(false);
 
                     deleted++;
                     _logger.LogInformation(
@@ -198,6 +198,7 @@ public class AssetGarbageCollectionService : IAssetGarbageCollectionService
                     errors++;
                     _logger.LogError(ex, "Error deleting content {ContentId}", content.Id);
                     messages.Add($"Error deleting {content.Id}: {ex.Message}");
+                    throw;
                 }
             }
         }
@@ -211,6 +212,7 @@ public class AssetGarbageCollectionService : IAssetGarbageCollectionService
             errors++;
             _logger.LogError(ex, "Garbage collection failed");
             messages.Add($"GC error: {ex.Message}");
+            throw;
         }
 
         var duration = DateTime.UtcNow - startTime;
@@ -225,7 +227,7 @@ public class AssetGarbageCollectionService : IAssetGarbageCollectionService
 
     public async Task MarkForDeletionAsync(Guid contentId, CancellationToken ct = default)
     {
-        var content = await _contentRepository.GetByIdAsync(contentId, ct);
+        var content = await _contentRepository.GetByIdAsync(contentId, ct).ConfigureAwait(false);
         if (content == null)
             return;
 
@@ -233,7 +235,7 @@ public class AssetGarbageCollectionService : IAssetGarbageCollectionService
         if (content.MarkedForDeletionAt == null && content.ReferenceCount <= 0)
         {
             content.MarkedForDeletionAt = DateTime.UtcNow;
-            await _contentRepository.UpdateAsync(content, ct);
+            await _contentRepository.UpdateAsync(content, ct).ConfigureAwait(false);
 
             _logger.LogInformation(
                 "Content {ContentId} marked for deletion (grace period: {Days} days)",
@@ -243,14 +245,14 @@ public class AssetGarbageCollectionService : IAssetGarbageCollectionService
 
     public async Task ClearDeletionMarkAsync(Guid contentId, CancellationToken ct = default)
     {
-        var content = await _contentRepository.GetByIdAsync(contentId, ct);
+        var content = await _contentRepository.GetByIdAsync(contentId, ct).ConfigureAwait(false);
         if (content == null)
             return;
 
         if (content.MarkedForDeletionAt != null)
         {
             content.MarkedForDeletionAt = null;
-            await _contentRepository.UpdateAsync(content, ct);
+            await _contentRepository.UpdateAsync(content, ct).ConfigureAwait(false);
 
             _logger.LogInformation(
                 "Content {ContentId} deletion mark cleared (now referenced)",
@@ -266,6 +268,6 @@ public class AssetGarbageCollectionService : IAssetGarbageCollectionService
         return await _contentRepository.GetMarkedForDeletionAsync(
             cutoffDate,
             1000,
-            ct);
+            ct).ConfigureAwait(false);
     }
 }

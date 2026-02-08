@@ -18,7 +18,7 @@ public class AssetReportRepository : IAssetReportRepository
     {
         return await _context.Set<AssetReport>()
             .Include(x => x.Reference)
-            .FirstOrDefaultAsync(x => x.Id == id, ct);
+            .FirstOrDefaultAsync(x => x.Id == id, ct).ConfigureAwait(false);
     }
 
     public async Task<IReadOnlyList<AssetReport>> GetByAssetReferenceAsync(
@@ -28,7 +28,7 @@ public class AssetReportRepository : IAssetReportRepository
         return await _context.Set<AssetReport>()
             .Where(x => x.AssetReferenceId == assetReferenceId)
             .OrderByDescending(x => x.CreatedAt)
-            .ToListAsync(ct);
+            .ToListAsync(ct).ConfigureAwait(false);
     }
 
     public async Task<IReadOnlyList<AssetReport>> GetPendingReportsAsync(
@@ -46,15 +46,15 @@ public class AssetReportRepository : IAssetReportRepository
 
     public async Task<AssetReport> AddAsync(AssetReport report, CancellationToken ct = default)
     {
-        await _context.Set<AssetReport>().AddAsync(report, ct);
-        await _context.SaveChangesAsync(ct);
+        await _context.Set<AssetReport>().AddAsync(report, ct).ConfigureAwait(false);
+        await _context.SaveChangesAsync(ct).ConfigureAwait(false);
         return report;
     }
 
     public async Task UpdateAsync(AssetReport report, CancellationToken ct = default)
     {
         _context.Set<AssetReport>().Update(report);
-        await _context.SaveChangesAsync(ct);
+        await _context.SaveChangesAsync(ct).ConfigureAwait(false);
     }
 
     public async Task<bool> HasUserReportedAsync(
@@ -63,6 +63,6 @@ public class AssetReportRepository : IAssetReportRepository
         CancellationToken ct = default)
     {
         return await _context.Set<AssetReport>()
-            .AnyAsync(x => x.AssetReferenceId == assetReferenceId && x.ReportedByUserId == userId, ct);
+            .AnyAsync(x => x.AssetReferenceId == assetReferenceId && x.ReportedByUserId == userId, ct).ConfigureAwait(false);
     }
 }

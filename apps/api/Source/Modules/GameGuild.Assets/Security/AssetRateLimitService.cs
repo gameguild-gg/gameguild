@@ -127,7 +127,7 @@ public class AssetRateLimitService : IAssetRateLimitService
         var windowKey = GetWindowKey();
         var key = $"{AssetAccessKeyPrefix}{assetReferenceId}:{windowKey}";
 
-        var currentCountStr = await _cache.GetStringAsync(key, ct);
+        var currentCountStr = await _cache.GetStringAsync(key, ct).ConfigureAwait(false);
         var currentCount = string.IsNullOrEmpty(currentCountStr) ? 0 : int.Parse(currentCountStr);
 
         if (currentCount >= _options.MaxAccessPerAssetPerHour)
@@ -171,7 +171,7 @@ public class AssetRateLimitService : IAssetRateLimitService
         var windowKey = GetWindowKey();
         var key = $"{Ip403KeyPrefix}{ipAddress}:{windowKey}";
 
-        var currentCountStr = await _cache.GetStringAsync(key, ct);
+        var currentCountStr = await _cache.GetStringAsync(key, ct).ConfigureAwait(false);
         var currentCount = string.IsNullOrEmpty(currentCountStr) ? 0 : int.Parse(currentCountStr);
 
         var newCount = currentCount + 1;
@@ -220,7 +220,7 @@ public class AssetRateLimitService : IAssetRateLimitService
         }
 
         var blockKey = $"{IpBlockKeyPrefix}{ipAddress}";
-        var blockedAt = await _cache.GetStringAsync(blockKey, ct);
+        var blockedAt = await _cache.GetStringAsync(blockKey, ct).ConfigureAwait(false);
         return !string.IsNullOrEmpty(blockedAt);
     }
 
@@ -231,7 +231,7 @@ public class AssetRateLimitService : IAssetRateLimitService
         var windowKey = GetWindowKey();
         var key = $"{AssetAccessKeyPrefix}{assetReferenceId}:{windowKey}";
 
-        var currentCountStr = await _cache.GetStringAsync(key, ct);
+        var currentCountStr = await _cache.GetStringAsync(key, ct).ConfigureAwait(false);
         var currentCount = string.IsNullOrEmpty(currentCountStr) ? 0 : long.Parse(currentCountStr);
 
         return new AssetAccessStats(

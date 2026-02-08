@@ -130,7 +130,7 @@ public class DownloadWindowService : IDownloadWindowService
         Guid userId,
         CancellationToken ct = default)
     {
-        var reference = await _referenceRepository.GetByIdAsync(assetReferenceId, ct);
+        var reference = await _referenceRepository.GetByIdAsync(assetReferenceId, ct).ConfigureAwait(false);
         if (reference == null)
         {
             return new DownloadWindowValidationResult(false, "Asset not found");
@@ -168,7 +168,7 @@ public class DownloadWindowService : IDownloadWindowService
         if (reference.GrantedByOrderId.HasValue)
         {
             var isOrderValid = await _orderValidation.IsOrderValidForDownloadAsync(
-                reference.GrantedByOrderId.Value, ct);
+                reference.GrantedByOrderId.Value, ct).ConfigureAwait(false);
 
             if (!isOrderValid)
             {
@@ -198,14 +198,14 @@ public class DownloadWindowService : IDownloadWindowService
         TimeSpan? customDuration = null,
         CancellationToken ct = default)
     {
-        var reference = await _referenceRepository.GetByIdAsync(assetReferenceId, ct);
+        var reference = await _referenceRepository.GetByIdAsync(assetReferenceId, ct).ConfigureAwait(false);
         if (reference == null)
         {
             return new DownloadWindowValidationResult(false, "Asset not found");
         }
 
         // Validate order first
-        var orderStatus = await _orderValidation.GetOrderStatusAsync(orderId, ct);
+        var orderStatus = await _orderValidation.GetOrderStatusAsync(orderId, ct).ConfigureAwait(false);
         if (orderStatus != OrderStatus.Paid && orderStatus != OrderStatus.Fulfilled)
         {
             return new DownloadWindowValidationResult(
@@ -226,7 +226,7 @@ public class DownloadWindowService : IDownloadWindowService
         reference.DownloadWindowExpiresAt = expiresAt;
         reference.GrantedByOrderId = orderId;
 
-        await _referenceRepository.UpdateAsync(reference, ct);
+        await _referenceRepository.UpdateAsync(reference, ct).ConfigureAwait(false);
 
         _logger.LogInformation(
             "Download window granted for asset {AssetId} to user {UserId} via order {OrderId}, expires {Expiry}",
@@ -241,7 +241,7 @@ public class DownloadWindowService : IDownloadWindowService
         string reason,
         CancellationToken ct = default)
     {
-        var reference = await _referenceRepository.GetByIdAsync(assetReferenceId, ct);
+        var reference = await _referenceRepository.GetByIdAsync(assetReferenceId, ct).ConfigureAwait(false);
         if (reference == null)
             return;
 
@@ -251,7 +251,7 @@ public class DownloadWindowService : IDownloadWindowService
             reference.DownloadWindowExpiresAt = null;
             reference.GrantedByOrderId = null;
 
-            await _referenceRepository.UpdateAsync(reference, ct);
+            await _referenceRepository.UpdateAsync(reference, ct).ConfigureAwait(false);
 
             _logger.LogInformation(
                 "Download window revoked for asset {AssetId}, order {OrderId}: {Reason}",
@@ -268,13 +268,13 @@ public class PlaceholderOrderValidationService : IOrderValidationService
 {
     public Task<OrderStatus?> GetOrderStatusAsync(Guid orderId, CancellationToken ct = default)
     {
-        // TODO: Integrate with Commerce.Orders module
+        // PLANNED: Integrate with Commerce.Orders module (depends on GameGuild.Commerce.Orders)
         return Task.FromResult<OrderStatus?>(OrderStatus.Fulfilled);
     }
 
     public Task<bool> IsOrderValidForDownloadAsync(Guid orderId, CancellationToken ct = default)
     {
-        // TODO: Integrate with Commerce.Orders module
+        // PLANNED: Integrate with Commerce.Orders module (depends on GameGuild.Commerce.Orders)
         // Valid if: Paid, Fulfilled, not Refunded, not Cancelled, not Disputed
         return Task.FromResult(true);
     }

@@ -7,9 +7,8 @@ namespace GameGuild.Assets.Security;
 /// <summary>
 /// Secure content delivery endpoint with all threat mitigations.
 /// </summary>
-[ApiController]
 [Route("api/assets")]
-public class SecureAssetDeliveryController : ControllerBase
+public class SecureAssetDeliveryController : BaseApiController
 {
     private readonly IAssetAccessService _accessService;
     private readonly IAssetRateLimitService _rateLimitService;

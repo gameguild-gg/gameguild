@@ -27,7 +27,7 @@ public class AssetModerationService : IAssetModerationService
         string mimeType,
         CancellationToken ct = default)
     {
-        var assetContent = await _contentRepository.GetByIdAsync(assetContentId, ct);
+        var assetContent = await _contentRepository.GetByIdAsync(assetContentId, ct).ConfigureAwait(false);
         if (assetContent == null)
         {
             return new ModerationResult(false, ModerationStatus.Pending, 0, null, "Asset not found");
@@ -47,7 +47,7 @@ public class AssetModerationService : IAssetModerationService
         if (isImage)
         {
             // Simulate image moderation
-            var result = await SimulateImageModerationAsync(content, ct);
+            var result = await SimulateImageModerationAsync(content, ct).ConfigureAwait(false);
             status = result.Status;
             confidence = result.Confidence;
             detectedIssue = result.Issue;
@@ -55,7 +55,7 @@ public class AssetModerationService : IAssetModerationService
 
         // Update content status
         assetContent.SetModerationStatus(status);
-        await _contentRepository.UpdateAsync(assetContent, ct);
+        await _contentRepository.UpdateAsync(assetContent, ct).ConfigureAwait(false);
 
         _logger.LogInformation(
             "Moderated content {ContentId}: Status={Status}, Confidence={Confidence}",
@@ -73,7 +73,7 @@ public class AssetModerationService : IAssetModerationService
         int limit = 100,
         CancellationToken ct = default)
     {
-        return await _reportRepository.GetPendingReportsAsync(limit, ct);
+        return await _reportRepository.GetPendingReportsAsync(limit, ct).ConfigureAwait(false);
     }
 
     public async Task<bool> SubmitReviewAsync(
@@ -83,20 +83,20 @@ public class AssetModerationService : IAssetModerationService
         string? notes = null,
         CancellationToken ct = default)
     {
-        var report = await _reportRepository.GetByIdAsync(reportId, ct);
+        var report = await _reportRepository.GetByIdAsync(reportId, ct).ConfigureAwait(false);
         if (report == null)
         {
             return false;
         }
 
         report.SubmitReview(reviewerId, decision, notes);
-        await _reportRepository.UpdateAsync(report, ct);
+        await _reportRepository.UpdateAsync(report, ct).ConfigureAwait(false);
 
         // If blocked, update the content status
         if (decision == ReviewDecision.BlockContent && report.Reference?.Content != null)
         {
             report.Reference.Content.SetModerationStatus(ModerationStatus.Blocked);
-            await _contentRepository.UpdateAsync(report.Reference.Content, ct);
+            await _contentRepository.UpdateAsync(report.Reference.Content, ct).ConfigureAwait(false);
         }
 
         _logger.LogInformation(
@@ -123,7 +123,7 @@ public class AssetModerationService : IAssetModerationService
         }
 
         var report = new AssetReport(assetReferenceId, reportedByUserId, reason, description);
-        return await _reportRepository.AddAsync(report, ct);
+        return await _reportRepository.AddAsync(report, ct).ConfigureAwait(false);
     }
 
     private async Task<(ModerationStatus Status, double Confidence, string? Issue)> SimulateImageModerationAsync(

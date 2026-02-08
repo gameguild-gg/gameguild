@@ -58,7 +58,7 @@ public class AssetStorageService : IAssetStorageService
         request.Metadata.Add("content-hash", contentHash);
         request.Metadata.Add("uploaded-at", DateTime.UtcNow.ToString("O"));
 
-        await _s3Client.PutObjectAsync(request, ct);
+        await _s3Client.PutObjectAsync(request, ct).ConfigureAwait(false);
 
         return new StorageUploadResult(bucketName, objectKey);
     }
@@ -74,7 +74,7 @@ public class AssetStorageService : IAssetStorageService
             Key = objectKey
         };
 
-        var response = await _s3Client.GetObjectAsync(request, ct);
+        var response = await _s3Client.GetObjectAsync(request, ct).ConfigureAwait(false);
         return response.ResponseStream;
     }
 
@@ -91,7 +91,7 @@ public class AssetStorageService : IAssetStorageService
                 Key = objectKey
             };
 
-            await _s3Client.GetObjectMetadataAsync(request, ct);
+            await _s3Client.GetObjectMetadataAsync(request, ct).ConfigureAwait(false);
             return true;
         }
         catch (Amazon.S3.AmazonS3Exception ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
@@ -113,7 +113,7 @@ public class AssetStorageService : IAssetStorageService
                 Key = objectKey
             };
 
-            var response = await _s3Client.GetObjectMetadataAsync(request, ct);
+            var response = await _s3Client.GetObjectMetadataAsync(request, ct).ConfigureAwait(false);
 
             return new StorageMetadata(
                 response.ContentLength,
@@ -138,7 +138,7 @@ public class AssetStorageService : IAssetStorageService
             Key = objectKey
         };
 
-        await _s3Client.DeleteObjectAsync(request, ct);
+        await _s3Client.DeleteObjectAsync(request, ct).ConfigureAwait(false);
     }
 
     public async Task<string> GeneratePresignedUrlAsync(
@@ -172,7 +172,7 @@ public class AssetStorageService : IAssetStorageService
             ContentType = mimeType
         };
 
-        var response = await _s3Client.InitiateMultipartUploadAsync(request, ct);
+        var response = await _s3Client.InitiateMultipartUploadAsync(request, ct).ConfigureAwait(false);
         return response.UploadId;
     }
 
@@ -192,7 +192,7 @@ public class AssetStorageService : IAssetStorageService
             InputStream = content
         };
 
-        var response = await _s3Client.UploadPartAsync(request, ct);
+        var response = await _s3Client.UploadPartAsync(request, ct).ConfigureAwait(false);
         return response.ETag;
     }
 
@@ -214,7 +214,7 @@ public class AssetStorageService : IAssetStorageService
             request.PartETags.Add(new Amazon.S3.Model.PartETag(i + 1, partETags[i]));
         }
 
-        await _s3Client.CompleteMultipartUploadAsync(request, ct);
+        await _s3Client.CompleteMultipartUploadAsync(request, ct).ConfigureAwait(false);
 
         return new StorageUploadResult(_options.BucketName, objectKey);
     }
@@ -231,7 +231,7 @@ public class AssetStorageService : IAssetStorageService
             UploadId = uploadId
         };
 
-        await _s3Client.AbortMultipartUploadAsync(request, ct);
+        await _s3Client.AbortMultipartUploadAsync(request, ct).ConfigureAwait(false);
     }
 
     public async Task UploadToQuarantineAsync(
@@ -261,7 +261,7 @@ public class AssetStorageService : IAssetStorageService
 
         request.Metadata.Add("quarantined-at", DateTime.UtcNow.ToString("O"));
 
-        await _s3Client.PutObjectAsync(request, ct);
+        await _s3Client.PutObjectAsync(request, ct).ConfigureAwait(false);
     }
 
     private static string GenerateObjectKey(string contentHash, string mimeType, bool isTransformed)

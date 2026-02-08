@@ -97,7 +97,7 @@ public class SecureUploadService : ISecureUploadService
         // Threat #7: Synchronous virus scan for high-risk types
         if (_virusScanOptions.Enabled && requiresSyncScan)
         {
-            var scanResult = await _virusScanService.ScanAsync(content, fileName, ct);
+            var scanResult = await _virusScanService.ScanAsync(content, fileName, ct).ConfigureAwait(false);
             content.Position = 0;
 
             if (!scanResult.IsClean)
@@ -109,7 +109,7 @@ public class SecureUploadService : ISecureUploadService
                 if (_virusScanOptions.QuarantineInfected)
                 {
                     // Move to quarantine bucket
-                    await QuarantineContentAsync(content, fileName, mimeType, userId, scanResult, ct);
+                    await QuarantineContentAsync(content, fileName, mimeType, userId, scanResult, ct).ConfigureAwait(false);
                 }
 
                 return new SecureUploadResult(
@@ -121,7 +121,7 @@ public class SecureUploadService : ISecureUploadService
 
         // Perform the actual upload
         var uploadResult = await _uploadService.UploadAsync(
-            content, fileName, mimeType, userId, options, ct);
+            content, fileName, mimeType, userId, options, ct).ConfigureAwait(false);
 
         if (!uploadResult.Success)
         {
@@ -135,7 +135,7 @@ public class SecureUploadService : ISecureUploadService
         var assetReferenceId = uploadResult.AssetReferenceId!.Value;
 
         // Update content with scan status
-        var assetContent = await _contentRepository.GetByIdAsync(assetContentId, ct);
+        var assetContent = await _contentRepository.GetByIdAsync(assetContentId, ct).ConfigureAwait(false);
         if (assetContent != null)
         {
             // Mark scan status
@@ -170,7 +170,7 @@ public class SecureUploadService : ISecureUploadService
                 assetContent.SetModerationStatus(ModerationStatus.Pending);
             }
 
-            await _contentRepository.UpdateAsync(assetContent, ct);
+            await _contentRepository.UpdateAsync(assetContent, ct).ConfigureAwait(false);
         }
 
         // Determine final status
@@ -242,7 +242,7 @@ public class SecureUploadService : ISecureUploadService
             };
 
             content.Position = 0;
-            await _storageService.UploadToQuarantineAsync(content, quarantineKey, metadata, ct);
+            await _storageService.UploadToQuarantineAsync(content, quarantineKey, metadata, ct).ConfigureAwait(false);
 
             _logger.LogInformation(
                 "Quarantined infected file: {FileName} -> {QuarantineKey}",
@@ -251,6 +251,7 @@ public class SecureUploadService : ISecureUploadService
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to quarantine infected file: {FileName}", fileName);
+            throw;
         }
     }
 }

@@ -22,20 +22,20 @@ public class TransformedAssetRepository : ITransformedAssetRepository
         return await _context.Set<TransformedAsset>()
             .FirstOrDefaultAsync(x => 
                 x.SourceContentId == sourceContentId && 
-                x.TransformationSpec == transformationSpec, ct);
+                x.TransformationSpec == transformationSpec, ct).ConfigureAwait(false);
     }
 
     public async Task<TransformedAsset> AddAsync(TransformedAsset asset, CancellationToken ct = default)
     {
-        await _context.Set<TransformedAsset>().AddAsync(asset, ct);
-        await _context.SaveChangesAsync(ct);
+        await _context.Set<TransformedAsset>().AddAsync(asset, ct).ConfigureAwait(false);
+        await _context.SaveChangesAsync(ct).ConfigureAwait(false);
         return asset;
     }
 
     public async Task UpdateAsync(TransformedAsset asset, CancellationToken ct = default)
     {
         _context.Set<TransformedAsset>().Update(asset);
-        await _context.SaveChangesAsync(ct);
+        await _context.SaveChangesAsync(ct).ConfigureAwait(false);
     }
 
     public async Task<IReadOnlyList<TransformedAsset>> GetStaleAssetsAsync(
@@ -49,20 +49,20 @@ public class TransformedAssetRepository : ITransformedAssetRepository
             .Where(x => x.LastAccessedAt < cutoff)
             .OrderBy(x => x.LastAccessedAt)
             .Take(limit)
-            .ToListAsync(ct);
+            .ToListAsync(ct).ConfigureAwait(false);
     }
 
     public async Task DeleteAsync(Guid id, CancellationToken ct = default)
     {
         await _context.Set<TransformedAsset>()
             .Where(x => x.Id == id)
-            .ExecuteDeleteAsync(ct);
+            .ExecuteDeleteAsync(ct).ConfigureAwait(false);
     }
 
     public async Task DeleteBySourceAsync(Guid sourceContentId, CancellationToken ct = default)
     {
         await _context.Set<TransformedAsset>()
             .Where(x => x.SourceContentId == sourceContentId)
-            .ExecuteDeleteAsync(ct);
+            .ExecuteDeleteAsync(ct).ConfigureAwait(false);
     }
 }

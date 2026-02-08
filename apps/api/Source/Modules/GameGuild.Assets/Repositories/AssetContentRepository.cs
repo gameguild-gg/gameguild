@@ -17,26 +17,26 @@ public class AssetContentRepository : IAssetContentRepository
     public async Task<AssetContent?> GetByIdAsync(Guid id, CancellationToken ct = default)
     {
         return await _context.Set<AssetContent>()
-            .FirstOrDefaultAsync(x => x.Id == id, ct);
+            .FirstOrDefaultAsync(x => x.Id == id, ct).ConfigureAwait(false);
     }
 
     public async Task<AssetContent?> GetByContentHashAsync(string contentHash, CancellationToken ct = default)
     {
         return await _context.Set<AssetContent>()
-            .FirstOrDefaultAsync(x => x.ContentHash == contentHash, ct);
+            .FirstOrDefaultAsync(x => x.ContentHash == contentHash, ct).ConfigureAwait(false);
     }
 
     public async Task<AssetContent> AddAsync(AssetContent content, CancellationToken ct = default)
     {
-        await _context.Set<AssetContent>().AddAsync(content, ct);
-        await _context.SaveChangesAsync(ct);
+        await _context.Set<AssetContent>().AddAsync(content, ct).ConfigureAwait(false);
+        await _context.SaveChangesAsync(ct).ConfigureAwait(false);
         return content;
     }
 
     public async Task UpdateAsync(AssetContent content, CancellationToken ct = default)
     {
         _context.Set<AssetContent>().Update(content);
-        await _context.SaveChangesAsync(ct);
+        await _context.SaveChangesAsync(ct).ConfigureAwait(false);
     }
 
     public async Task<IReadOnlyList<AssetContent>> GetPendingVirusScanAsync(int limit = 100, CancellationToken ct = default)
@@ -45,7 +45,7 @@ public class AssetContentRepository : IAssetContentRepository
             .Where(x => x.VirusScanStatus == VirusScanStatus.Pending)
             .OrderBy(x => x.CreatedAt)
             .Take(limit)
-            .ToListAsync(ct);
+            .ToListAsync(ct).ConfigureAwait(false);
     }
 
     public async Task<IReadOnlyList<AssetContent>> GetPendingModerationAsync(int limit = 100, CancellationToken ct = default)
@@ -81,7 +81,7 @@ public class AssetContentRepository : IAssetContentRepository
             .Where(x => x.Id == id)
             .ExecuteUpdateAsync(x => x
                 .SetProperty(p => p.ReferenceCount, p => p.ReferenceCount + 1)
-                .SetProperty(p => p.MarkedForDeletionAt, (DateTime?)null), ct);
+                .SetProperty(p => p.MarkedForDeletionAt, (DateTime?)null), ct).ConfigureAwait(false);
     }
 
     public async Task DecrementReferenceCountAsync(Guid id, CancellationToken ct = default)
@@ -90,20 +90,20 @@ public class AssetContentRepository : IAssetContentRepository
         await _context.Set<AssetContent>()
             .Where(x => x.Id == id)
             .ExecuteUpdateAsync(x => x
-                .SetProperty(p => p.ReferenceCount, p => p.ReferenceCount - 1), ct);
+                .SetProperty(p => p.ReferenceCount, p => p.ReferenceCount - 1), ct).ConfigureAwait(false);
 
         // Then mark for deletion if count reached 0
         await _context.Set<AssetContent>()
             .Where(x => x.Id == id && x.ReferenceCount <= 0 && x.MarkedForDeletionAt == null)
             .ExecuteUpdateAsync(x => x
-                .SetProperty(p => p.MarkedForDeletionAt, DateTime.UtcNow), ct);
+                .SetProperty(p => p.MarkedForDeletionAt, DateTime.UtcNow), ct).ConfigureAwait(false);
     }
 
     public async Task DeleteAsync(Guid id, CancellationToken ct = default)
     {
         await _context.Set<AssetContent>()
             .Where(x => x.Id == id)
-            .ExecuteDeleteAsync(ct);
+            .ExecuteDeleteAsync(ct).ConfigureAwait(false);
     }
 
     public async Task<List<AssetContent>> GetMarkedForDeletionAsync(
@@ -125,6 +125,6 @@ public class AssetContentRepository : IAssetContentRepository
         return await _context.Set<AssetContent>()
             .Where(x => x.Id == id)
             .Select(x => x.ReferenceCount)
-            .FirstOrDefaultAsync(ct);
+            .FirstOrDefaultAsync(ct).ConfigureAwait(false);
     }
 }
