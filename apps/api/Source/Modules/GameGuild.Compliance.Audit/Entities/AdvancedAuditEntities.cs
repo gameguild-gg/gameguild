@@ -1,4 +1,3 @@
-using GameGuild.Entities;
 
 namespace GameGuild.Compliance.Audit;
 
@@ -55,9 +54,7 @@ public sealed class RetentionPolicySimulation : EntityBase
             RetentionDays = retentionDays,
             ApplicableEventTypes = applicableEventTypes,
             CostPerGbPerMonth = costPerGbPerMonth,
-            IsActive = true,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            IsActive = true
         };
     }
 
@@ -161,9 +158,7 @@ public sealed class PiiRedactionRule : EntityBase
             DetectionMethod = detectionMethod,
             RedactionStrategy = redactionStrategy,
             IsEnabled = true,
-            Priority = 100,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            Priority = 100
         };
     }
 }
@@ -234,9 +229,7 @@ public sealed class SavedAuditQuery : EntityBase
             QueryName = queryName,
             QueryDsl = queryDsl,
             CreatedByUserId = createdByUserId,
-            IsPublic = isPublic,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            IsPublic = isPublic
         };
     }
 
@@ -294,9 +287,7 @@ public sealed class AuditReplaySession : EntityBase
             ReplayStartTime = startTime,
             ReplayEndTime = endTime,
             CreatedByUserId = createdByUserId,
-            Status = ReplayStatus.Created,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            Status = ReplayStatus.Created
         };
     }
 

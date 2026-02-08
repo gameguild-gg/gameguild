@@ -1,4 +1,3 @@
-using GameGuild.Entities;
 
 namespace GameGuild.Compliance.Audit;
 
@@ -61,8 +60,7 @@ public sealed class FieldAccessAudit : EntityBase {
             SensitivityLevel = sensitivityLevel,
             IpAddress = ipAddress,
             UserAgent = userAgent,
-            AccessedAt = DateTime.UtcNow,
-            CreatedAt = DateTime.UtcNow
+            AccessedAt = DateTime.UtcNow
         };
     }
 

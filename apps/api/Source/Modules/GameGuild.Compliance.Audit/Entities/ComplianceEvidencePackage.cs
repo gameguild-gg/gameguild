@@ -1,4 +1,3 @@
-using GameGuild.Entities;
 
 namespace GameGuild.Compliance.Audit;
 
@@ -57,8 +56,7 @@ public sealed class ComplianceEvidencePackage : EntityBase {
             PeriodStart = periodStart,
             PeriodEnd = periodEnd,
             Status = CompliancePackageStatus.Draft,
-            PreparedBy = preparedBy,
-            CreatedAt = DateTime.UtcNow
+            PreparedBy = preparedBy
         };
     }
 

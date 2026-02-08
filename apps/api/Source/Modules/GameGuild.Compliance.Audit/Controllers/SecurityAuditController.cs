@@ -1,4 +1,5 @@
 using Asp.Versioning;
+using GameGuild.Identity.Context.Actors;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -13,14 +14,14 @@ namespace GameGuild.Compliance.Audit;
 ///     - Permission audit logs (grants, revokes, changes)
 ///     - General audit logs (admin actions, security violations)
 /// </summary>
-[ApiController]
 [ApiVersion("1.0")]
 [Route("v{version:apiVersion}/admin/security-audit")]
 [Authorize(Roles = "Admin,SystemAdmin")]
 public class SecurityAuditController(
     ISecurityAuditAggregator auditAggregator,
     IAuditService auditService,
-    ILogger<SecurityAuditController> logger) : ControllerBase
+    IActorContextAccessor actorContextAccessor,
+    ILogger<SecurityAuditController> logger) : BaseApiController
 {
     /// <summary>
     ///     Get unified security audit logs from all sources with filtering and pagination.
@@ -36,28 +37,20 @@ public class SecurityAuditController(
         [FromQuery] UnifiedSecurityAuditRequest request,
         CancellationToken cancellationToken = default)
     {
-        try
-        {
-            var adminUserId = GetCurrentUserId();
-            if (!adminUserId.HasValue)
-                return Unauthorized("User not authenticated");
+        var adminUserId = GetCurrentUserId();
+        if (!adminUserId.HasValue)
+            return Unauthorized("User not authenticated");
 
-            // Log this admin access
-            await auditService.LogAdminActionAsync(
-                adminUserId.Value,
-                "ViewSecurityAuditLogs",
-                "Admin accessed unified security audit logs",
-                new { Filters = request });
+        // Log this admin access
+        await auditService.LogAdminActionAsync(
+            adminUserId.Value,
+            "ViewSecurityAuditLogs",
+            "Admin accessed unified security audit logs",
+            new { Filters = request });
 
-            var result = await auditAggregator.GetUnifiedAuditLogsAsync(request, cancellationToken);
+        var result = await auditAggregator.GetUnifiedAuditLogsAsync(request, cancellationToken);
 
-            return Ok(result);
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Failed to retrieve unified security audit logs");
-            return StatusCode(500, "Failed to retrieve security audit logs");
-        }
+        return Ok(result);
     }
 
     /// <summary>
@@ -69,26 +62,18 @@ public class SecurityAuditController(
         [FromQuery] AuthenticationAuditRequest request,
         CancellationToken cancellationToken = default)
     {
-        try
-        {
-            var adminUserId = GetCurrentUserId();
-            if (!adminUserId.HasValue)
-                return Unauthorized("User not authenticated");
+        var adminUserId = GetCurrentUserId();
+        if (!adminUserId.HasValue)
+            return Unauthorized("User not authenticated");
 
-            await auditService.LogAdminActionAsync(
-                adminUserId.Value,
-                "ViewAuthenticationLogs",
-                "Admin accessed authentication audit logs");
+        await auditService.LogAdminActionAsync(
+            adminUserId.Value,
+            "ViewAuthenticationLogs",
+            "Admin accessed authentication audit logs");
 
-            var result = await auditAggregator.GetAuthenticationLogsAsync(request, cancellationToken);
+        var result = await auditAggregator.GetAuthenticationLogsAsync(request, cancellationToken);
 
-            return Ok(result);
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Failed to retrieve authentication audit logs");
-            return StatusCode(500, "Failed to retrieve authentication audit logs");
-        }
+        return Ok(result);
     }
 
     /// <summary>
@@ -100,26 +85,18 @@ public class SecurityAuditController(
         [FromQuery] PermissionAuditRequest request,
         CancellationToken cancellationToken = default)
     {
-        try
-        {
-            var adminUserId = GetCurrentUserId();
-            if (!adminUserId.HasValue)
-                return Unauthorized("User not authenticated");
+        var adminUserId = GetCurrentUserId();
+        if (!adminUserId.HasValue)
+            return Unauthorized("User not authenticated");
 
-            await auditService.LogAdminActionAsync(
-                adminUserId.Value,
-                "ViewPermissionLogs",
-                "Admin accessed permission audit logs");
+        await auditService.LogAdminActionAsync(
+            adminUserId.Value,
+            "ViewPermissionLogs",
+            "Admin accessed permission audit logs");
 
-            var result = await auditAggregator.GetPermissionLogsAsync(request, cancellationToken);
+        var result = await auditAggregator.GetPermissionLogsAsync(request, cancellationToken);
 
-            return Ok(result);
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Failed to retrieve permission audit logs");
-            return StatusCode(500, "Failed to retrieve permission audit logs");
-        }
+        return Ok(result);
     }
 
     /// <summary>
@@ -133,30 +110,22 @@ public class SecurityAuditController(
         [FromQuery] Guid? tenantId = null,
         CancellationToken cancellationToken = default)
     {
-        try
-        {
-            var adminUserId = GetCurrentUserId();
-            if (!adminUserId.HasValue)
-                return Unauthorized("User not authenticated");
+        var adminUserId = GetCurrentUserId();
+        if (!adminUserId.HasValue)
+            return Unauthorized("User not authenticated");
 
-            await auditService.LogAdminActionAsync(
-                adminUserId.Value,
-                "ViewSecurityDashboard",
-                "Admin accessed security audit dashboard");
+        await auditService.LogAdminActionAsync(
+            adminUserId.Value,
+            "ViewSecurityDashboard",
+            "Admin accessed security audit dashboard");
 
-            var result = await auditAggregator.GetSecurityDashboardAsync(
-                startDate ?? DateTime.UtcNow.AddDays(-30),
-                endDate ?? DateTime.UtcNow,
-                tenantId,
-                cancellationToken);
+        var result = await auditAggregator.GetSecurityDashboardAsync(
+            startDate ?? DateTime.UtcNow.AddDays(-30),
+            endDate ?? DateTime.UtcNow,
+            tenantId,
+            cancellationToken);
 
-            return Ok(result);
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Failed to retrieve security dashboard");
-            return StatusCode(500, "Failed to retrieve security dashboard");
-        }
+        return Ok(result);
     }
 
     /// <summary>
@@ -168,35 +137,24 @@ public class SecurityAuditController(
         [FromBody] UnifiedSecurityAuditRequest request,
         CancellationToken cancellationToken = default)
     {
-        try
-        {
-            var adminUserId = GetCurrentUserId();
-            if (!adminUserId.HasValue)
-                return Unauthorized("User not authenticated");
+        var adminUserId = GetCurrentUserId();
+        if (!adminUserId.HasValue)
+            return Unauthorized("User not authenticated");
 
-            await auditService.LogAdminActionAsync(
-                adminUserId.Value,
-                "ExportSecurityAuditLogs",
-                "Admin exported unified security audit logs",
-                new { Filters = request });
+        await auditService.LogAdminActionAsync(
+            adminUserId.Value,
+            "ExportSecurityAuditLogs",
+            "Admin exported unified security audit logs",
+            new { Filters = request });
 
-            var exportData = await auditAggregator.ExportAuditLogsAsync(request, cancellationToken);
-            var fileName = $"security-audit-{DateTime.UtcNow:yyyy-MM-dd-HH-mm-ss}.csv";
+        var exportData = await auditAggregator.ExportAuditLogsAsync(request, cancellationToken);
+        var fileName = $"security-audit-{DateTime.UtcNow:yyyy-MM-dd-HH-mm-ss}.csv";
 
-            return File(exportData, "text/csv", fileName);
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Failed to export security audit logs");
-            return StatusCode(500, "Failed to export security audit logs");
-        }
+        return File(exportData, "text/csv", fileName);
     }
 
     private Guid? GetCurrentUserId()
     {
-        var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-        if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
-            return null;
-        return userId;
+        return actorContextAccessor.ActorContext.SubjectIdAsGuid;
     }
 }

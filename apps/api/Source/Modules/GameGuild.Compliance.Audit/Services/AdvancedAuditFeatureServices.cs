@@ -59,92 +59,92 @@ public sealed class AdvancedAuditFeatureServices : IAdvancedAuditFeatureServices
     // Feature 2: Scheduled exports
     public async Task<ScheduledAuditExport> CreateScheduledExportAsync(ScheduledAuditExport export)
     {
-        await _repository.AddScheduledExportAsync(export);
+        await _repository.AddScheduledExportAsync(export).ConfigureAwait(false);
         return export;
     }
 
     public async Task<AuditExportHistory> ExecuteScheduledExportAsync(Guid scheduledExportId)
     {
-        return await _exportService.ExecuteExportAsync(scheduledExportId);
+        return await _exportService.ExecuteExportAsync(scheduledExportId).ConfigureAwait(false);
     }
 
     public async Task<IEnumerable<ScheduledAuditExport>> GetScheduledExportsAsync(Guid tenantId)
     {
-        return await _repository.GetScheduledExportsAsync(tenantId);
+        return await _repository.GetScheduledExportsAsync(tenantId).ConfigureAwait(false);
     }
 
     // Feature 3: Retention simulation
     public async Task<RetentionPolicySimulation> CreateRetentionPolicyAsync(RetentionPolicySimulation policy)
     {
-        await _repository.AddRetentionPolicyAsync(policy);
+        await _repository.AddRetentionPolicyAsync(policy).ConfigureAwait(false);
         return policy;
     }
 
     public async Task<RetentionPolicySimulation> SimulateForecastAsync(Guid policyId, int forecastDays)
     {
-        var policy = await _repository.GetRetentionPolicyAsync(policyId);
+        var policy = await _repository.GetRetentionPolicyAsync(policyId).ConfigureAwait(false);
         if (policy == null) throw new InvalidOperationException("Policy not found");
 
         policy.CalculateForecast(forecastDays);
         policy.GenerateRecommendations();
-        await _repository.UpdateRetentionPolicyAsync(policy);
+        await _repository.UpdateRetentionPolicyAsync(policy).ConfigureAwait(false);
         return policy;
     }
 
     public async Task<IEnumerable<RetentionPolicySimulation>> GetRetentionPoliciesAsync(Guid tenantId)
     {
-        return await _repository.GetRetentionPoliciesAsync(tenantId);
+        return await _repository.GetRetentionPoliciesAsync(tenantId).ConfigureAwait(false);
     }
 
     // Feature 4: PII redaction
     public async Task<string> RedactPiiAsync(string content, Guid tenantId)
     {
-        return await _redactionService.RedactAsync(content, tenantId);
+        return await _redactionService.RedactAsync(content, tenantId).ConfigureAwait(false);
     }
 
     public async Task<PiiRedactionRule> CreateRedactionRuleAsync(PiiRedactionRule rule)
     {
-        await _repository.AddRedactionRuleAsync(rule);
+        await _repository.AddRedactionRuleAsync(rule).ConfigureAwait(false);
         return rule;
     }
 
     public async Task<IEnumerable<PiiRedactionRule>> GetRedactionRulesAsync(Guid tenantId)
     {
-        return await _repository.GetRedactionRulesAsync(tenantId);
+        return await _repository.GetRedactionRulesAsync(tenantId).ConfigureAwait(false);
     }
 
     // Feature 5: Saved queries
     public async Task<SavedAuditQuery> CreateSavedQueryAsync(SavedAuditQuery query)
     {
-        await _repository.AddSavedQueryAsync(query);
+        await _repository.AddSavedQueryAsync(query).ConfigureAwait(false);
         return query;
     }
 
     public async Task<object> ExecuteSavedQueryAsync(Guid queryId, Guid userId)
     {
-        return await _queryService.ExecuteQueryAsync(queryId, userId);
+        return await _queryService.ExecuteQueryAsync(queryId, userId).ConfigureAwait(false);
     }
 
     public async Task<IEnumerable<SavedAuditQuery>> GetSavedQueriesAsync(Guid tenantId, Guid userId)
     {
-        return await _repository.GetSavedQueriesAsync(tenantId, userId);
+        return await _repository.GetSavedQueriesAsync(tenantId, userId).ConfigureAwait(false);
     }
 
     // Feature 6: Audit replay
     public async Task<AuditReplaySession> CreateReplaySessionAsync(AuditReplaySession session)
     {
-        await _repository.AddReplaySessionAsync(session);
+        await _repository.AddReplaySessionAsync(session).ConfigureAwait(false);
         return session;
     }
 
     public async Task<AuditReplaySession> ExecuteReplayAsync(Guid sessionId)
     {
-        return await _replayService.ExecuteReplayAsync(sessionId);
+        return await _replayService.ExecuteReplayAsync(sessionId).ConfigureAwait(false);
     }
 
     public async Task<IEnumerable<AuditReplaySession>> GetReplaySessionsAsync(Guid tenantId)
     {
-        return await _repository.GetReplaySessionsAsync(tenantId);
+        return await _repository.GetReplaySessionsAsync(tenantId).ConfigureAwait(false);
     }
 }
 

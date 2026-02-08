@@ -1,5 +1,5 @@
-using System.Security.Claims;
 using Asp.Versioning;
+using GameGuild.Identity.Context.Actors;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -9,25 +9,17 @@ namespace GameGuild.Compliance.Audit;
 /// <summary>
 /// Controller for audit log management (admin only)
 /// </summary>
-[ApiController]
 [ApiVersion("1.0")]
 [Route("v{version:apiVersion}/admin/audit-logs")]
 [Authorize(Roles = "Admin")] // Restrict to admin users only
-public class AuditController(IAuditService auditService, ILogger<AuditController> logger) : ControllerBase
+public class AuditController(IAuditService auditService, IActorContextAccessor actorContextAccessor, ILogger<AuditController> logger) : BaseApiController
 {
     /// <summary>
-    /// Gets the current user ID from the JWT claims
+    /// Gets the current user ID from the actor context
     /// </summary>
     protected Guid? GetCurrentUserId()
     {
-        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        
-        if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
-        {
-            return null;
-        }
-        
-        return userId;
+        return actorContextAccessor.ActorContext.SubjectIdAsGuid;
     }
 
     /// <summary>
@@ -36,43 +28,34 @@ public class AuditController(IAuditService auditService, ILogger<AuditController
     [HttpGet]
     public async Task<ActionResult<AuditLogResponse>> GetAuditLogs([FromQuery] AuditLogQueryRequest request)
     {
-        try
+        var adminUserId = GetCurrentUserId();
+        if (!adminUserId.HasValue) throw new UnauthorizedAccessException("User not authenticated");
+
+        // Log admin access to audit logs
+        await auditService.LogAdminActionAsync(adminUserId.Value, "ViewAuditLogs", "Admin accessed audit logs", new { Filters = request, RequestedBy = adminUserId.Value });
+
+        var query = new AuditLogQuery
         {
-            var adminUserId = GetCurrentUserId();
-            if (!adminUserId.HasValue) throw new UnauthorizedAccessException("User not authenticated");
+            UserId = request.UserId,
+            TenantId = request.TenantId,
+            ActionType = request.ActionType,
+            ResourceType = request.ResourceType,
+            Category = request.Category,
+            RiskLevel = request.RiskLevel,
+            Success = request.Success,
+            StartDate = request.StartDate,
+            EndDate = request.EndDate,
+            IpAddress = request.IpAddress,
+            Skip = request.Skip,
+            Take = Math.Min(request.Take, 1000) // Cap at 1000 records
+        };
 
-            // Log admin access to audit logs
-            await auditService.LogAdminActionAsync(adminUserId.Value, "ViewAuditLogs", "Admin accessed audit logs", new { Filters = request, RequestedBy = adminUserId.Value });
+        var logs = await auditService.GetAuditLogsAsync(query);
+        var totalCount = await auditService.GetAuditLogCountAsync(query);
 
-            var query = new AuditLogQuery
-            {
-                UserId = request.UserId,
-                TenantId = request.TenantId,
-                ActionType = request.ActionType,
-                ResourceType = request.ResourceType,
-                Category = request.Category,
-                RiskLevel = request.RiskLevel,
-                Success = request.Success,
-                StartDate = request.StartDate,
-                EndDate = request.EndDate,
-                IpAddress = request.IpAddress,
-                Skip = request.Skip,
-                Take = Math.Min(request.Take, 1000) // Cap at 1000 records
-            };
+        var response = new AuditLogResponse { Logs = logs.Select(MapToDto).ToList(), TotalCount = totalCount, Skip = request.Skip, Take = request.Take };
 
-            var logs = await auditService.GetAuditLogsAsync(query);
-            var totalCount = await auditService.GetAuditLogCountAsync(query);
-
-            var response = new AuditLogResponse { Logs = logs.Select(MapToDto).ToList(), TotalCount = totalCount, Skip = request.Skip, Take = request.Take };
-
-            return Ok(response);
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Failed to retrieve audit logs");
-
-            return StatusCode(500, "Failed to retrieve audit logs");
-        }
+        return Ok(response);
     }
 
     /// <summary>
@@ -81,47 +64,38 @@ public class AuditController(IAuditService auditService, ILogger<AuditController
     [HttpGet("statistics")]
     public async Task<ActionResult<AuditStatisticsResponse>> GetAuditStatistics([FromQuery] AuditStatisticsRequest request)
     {
-        try
+        var adminUserId = GetCurrentUserId();
+        if (!adminUserId.HasValue) throw new UnauthorizedAccessException("User not authenticated");
+
+        await auditService.LogAdminActionAsync(adminUserId.Value, "ViewAuditStatistics", "Admin accessed audit statistics");
+
+        var startDate = request.StartDate ?? DateTime.UtcNow.AddDays(-30);
+        var endDate = request.EndDate ?? DateTime.UtcNow;
+
+        // Get statistics for different categories
+        var authenticationQuery = new AuditLogQuery { Category = AuditCategory.Authentication, StartDate = startDate, EndDate = endDate };
+
+        var permissionQuery = new AuditLogQuery { Category = AuditCategory.Permission, StartDate = startDate, EndDate = endDate };
+
+        var securityQuery = new AuditLogQuery { Category = AuditCategory.Security, StartDate = startDate, EndDate = endDate };
+
+        var failedQuery = new AuditLogQuery { Success = false, StartDate = startDate, EndDate = endDate };
+
+        var highRiskQuery = new AuditLogQuery { RiskLevel = AuditRiskLevel.High, StartDate = startDate, EndDate = endDate };
+
+        var response = new AuditStatisticsResponse
         {
-            var adminUserId = GetCurrentUserId();
-            if (!adminUserId.HasValue) throw new UnauthorizedAccessException("User not authenticated");
+            StartDate = startDate,
+            EndDate = endDate,
+            TotalEvents = await auditService.GetAuditLogCountAsync(new AuditLogQuery { StartDate = startDate, EndDate = endDate }),
+            AuthenticationEvents = await auditService.GetAuditLogCountAsync(authenticationQuery),
+            PermissionEvents = await auditService.GetAuditLogCountAsync(permissionQuery),
+            SecurityEvents = await auditService.GetAuditLogCountAsync(securityQuery),
+            FailedEvents = await auditService.GetAuditLogCountAsync(failedQuery),
+            HighRiskEvents = await auditService.GetAuditLogCountAsync(highRiskQuery)
+        };
 
-            await auditService.LogAdminActionAsync(adminUserId.Value, "ViewAuditStatistics", "Admin accessed audit statistics");
-
-            var startDate = request.StartDate ?? DateTime.UtcNow.AddDays(-30);
-            var endDate = request.EndDate ?? DateTime.UtcNow;
-
-            // Get statistics for different categories
-            var authenticationQuery = new AuditLogQuery { Category = AuditCategory.Authentication, StartDate = startDate, EndDate = endDate };
-
-            var permissionQuery = new AuditLogQuery { Category = AuditCategory.Permission, StartDate = startDate, EndDate = endDate };
-
-            var securityQuery = new AuditLogQuery { Category = AuditCategory.Security, StartDate = startDate, EndDate = endDate };
-
-            var failedQuery = new AuditLogQuery { Success = false, StartDate = startDate, EndDate = endDate };
-
-            var highRiskQuery = new AuditLogQuery { RiskLevel = AuditRiskLevel.High, StartDate = startDate, EndDate = endDate };
-
-            var response = new AuditStatisticsResponse
-            {
-                StartDate = startDate,
-                EndDate = endDate,
-                TotalEvents = await auditService.GetAuditLogCountAsync(new AuditLogQuery { StartDate = startDate, EndDate = endDate }),
-                AuthenticationEvents = await auditService.GetAuditLogCountAsync(authenticationQuery),
-                PermissionEvents = await auditService.GetAuditLogCountAsync(permissionQuery),
-                SecurityEvents = await auditService.GetAuditLogCountAsync(securityQuery),
-                FailedEvents = await auditService.GetAuditLogCountAsync(failedQuery),
-                HighRiskEvents = await auditService.GetAuditLogCountAsync(highRiskQuery)
-            };
-
-            return Ok(response);
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Failed to retrieve audit statistics");
-
-            return StatusCode(500, "Failed to retrieve audit statistics");
-        }
+        return Ok(response);
     }
 
     /// <summary>
@@ -130,44 +104,35 @@ public class AuditController(IAuditService auditService, ILogger<AuditController
     [HttpPost(":export")]
     public async Task<ActionResult> ExportAuditLogs([FromBody] AuditExportRequest request)
     {
-        try
+        var adminUserId = GetCurrentUserId();
+        if (!adminUserId.HasValue) throw new UnauthorizedAccessException("User not authenticated");
+
+        await auditService.LogAdminActionAsync(adminUserId.Value, "ExportAuditLogs", "Admin exported audit logs", new { ExportRequest = request, RequestedBy = adminUserId.Value });
+
+        var query = new AuditLogQuery
         {
-            var adminUserId = GetCurrentUserId();
-            if (!adminUserId.HasValue) throw new UnauthorizedAccessException("User not authenticated");
+            UserId = request.UserId,
+            TenantId = request.TenantId,
+            ActionType = request.ActionType,
+            ResourceType = request.ResourceType,
+            Category = request.Category,
+            RiskLevel = request.RiskLevel,
+            Success = request.Success,
+            StartDate = request.StartDate,
+            EndDate = request.EndDate,
+            IpAddress = request.IpAddress,
+            Take = 0 // Get all matching records for export
+        };
 
-            await auditService.LogAdminActionAsync(adminUserId.Value, "ExportAuditLogs", "Admin exported audit logs", new { ExportRequest = request, RequestedBy = adminUserId.Value });
+        var logs = await auditService.GetAuditLogsAsync(query);
 
-            var query = new AuditLogQuery
-            {
-                UserId = request.UserId,
-                TenantId = request.TenantId,
-                ActionType = request.ActionType,
-                ResourceType = request.ResourceType,
-                Category = request.Category,
-                RiskLevel = request.RiskLevel,
-                Success = request.Success,
-                StartDate = request.StartDate,
-                EndDate = request.EndDate,
-                IpAddress = request.IpAddress,
-                Take = 0 // Get all matching records for export
-            };
+        // Convert to CSV format
+        var csv = GenerateCsv(logs);
+        var bytes = System.Text.Encoding.UTF8.GetBytes(csv);
 
-            var logs = await auditService.GetAuditLogsAsync(query);
+        var fileName = $"audit-logs-{DateTime.UtcNow:yyyy-MM-dd-HH-mm-ss}.csv";
 
-            // Convert to CSV format
-            var csv = GenerateCsv(logs);
-            var bytes = System.Text.Encoding.UTF8.GetBytes(csv);
-
-            var fileName = $"audit-logs-{DateTime.UtcNow:yyyy-MM-dd-HH-mm-ss}.csv";
-
-            return File(bytes, "text/csv", fileName);
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Failed to export audit logs");
-
-            return StatusCode(500, "Failed to export audit logs");
-        }
+        return File(bytes, "text/csv", fileName);
     }
 
     private AuditLogDto MapToDto(AuditLog log)

@@ -1,4 +1,3 @@
-using GameGuild.Entities;
 
 namespace GameGuild.Compliance.Audit;
 
@@ -78,8 +77,7 @@ public sealed class AuditAnomaly : EntityBase {
             IpAddress = ipAddress,
             AnomalyData = anomalyData,
             DetectedAt = DateTime.UtcNow,
-            Status = AnomalyStatus.Detected,
-            CreatedAt = DateTime.UtcNow
+            Status = AnomalyStatus.Detected
         };
     }
 

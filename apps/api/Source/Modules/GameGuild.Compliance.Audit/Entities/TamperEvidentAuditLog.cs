@@ -1,4 +1,3 @@
-using GameGuild.Entities;
 
 namespace GameGuild.Compliance.Audit;
 
@@ -86,8 +85,7 @@ public sealed class TamperEvidentAuditLog : EntityBase {
             SequenceNumber = sequenceNumber,
             IsVerified = false,
             ForwardedToSiem = false,
-            IsPartOfEvidence = false,
-            CreatedAt = DateTime.UtcNow
+            IsPartOfEvidence = false
         };
     }
 

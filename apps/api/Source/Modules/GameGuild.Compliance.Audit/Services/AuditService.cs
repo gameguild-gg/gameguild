@@ -1,5 +1,4 @@
 using System.Text.Json;
-using GameGuild.Abstractions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -34,7 +33,7 @@ public class AuditService(IApplicationDbContext context, IHttpContextAccessor ht
             };
 
             context.Set<AuditLog>().Add(auditLog);
-            await context.SaveChangesAsync();
+            await context.SaveChangesAsync().ConfigureAwait(false);
 
             // Log to structured logging as well for real-time monitoring
             var logLevel = GetLogLevel(request.RiskLevel, request.Success);
@@ -119,7 +118,7 @@ public class AuditService(IApplicationDbContext context, IHttpContextAccessor ht
             {
                 ActionType = actionType, ResourceType = "System", UserId = userId, Description = description, Metadata = metadata, Success = true, RiskLevel = AuditRiskLevel.High, Category = AuditCategory.Admin
             }
-        );
+        ).ConfigureAwait(false);
     }
 
     public async Task LogSecurityViolationAsync(string violationType, string description, Guid? userId = null, object? metadata = null)
@@ -269,7 +268,7 @@ public class AuditService(IApplicationDbContext context, IHttpContextAccessor ht
             queryable = queryable.Take(Math.Min(query.Take, 1000)); // Cap at 1000 records
         }
 
-        return await queryable.ToListAsync();
+        return await queryable.ToListAsync().ConfigureAwait(false);
     }
 
     public async Task<int> GetAuditLogCountAsync(AuditLogQuery query)
@@ -297,7 +296,7 @@ public class AuditService(IApplicationDbContext context, IHttpContextAccessor ht
 
         if (!string.IsNullOrEmpty(query.IpAddress)) { queryable = queryable.Where(a => a.IpAddress == query.IpAddress); }
 
-        return await queryable.CountAsync();
+        return await queryable.CountAsync().ConfigureAwait(false);
     }
 
     private string? GetClientIpAddress(HttpContext? httpContext)

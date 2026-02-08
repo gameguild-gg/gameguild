@@ -17,7 +17,11 @@ public static class AuditModule
         // Register audit services
         services.AddScoped<IAuditService, AuditService>();
 
-        // Register security audit aggregator for unified security monitoring
+        // Register security audit sub-services
+        services.AddScoped<IAuditLogQueryService, AuditLogQueryService>();
+        services.AddScoped<IAuditReportService, AuditReportService>();
+
+        // Register security audit aggregator facade for backward compatibility
         services.AddScoped<ISecurityAuditAggregator, SecurityAuditAggregator>();
 
         return services;

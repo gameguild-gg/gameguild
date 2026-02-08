@@ -1,4 +1,3 @@
-using GameGuild.Entities;
 
 namespace GameGuild.Compliance.Audit;
 
@@ -76,9 +75,7 @@ public sealed class ScheduledAuditExport : EntityBase
             DestinationUrl = destinationUrl,
             ExportFormat = exportFormat,
             ComplianceFramework = complianceFramework,
-            IsEnabled = true,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            IsEnabled = true
         };
     }
 
@@ -152,9 +149,7 @@ public sealed class AuditExportHistory : EntityBase
             ScheduledExportId = scheduledExportId,
             TenantId = tenantId,
             ExecutedAt = DateTime.UtcNow,
-            Status = ExportStatus.InProgress,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            Status = ExportStatus.InProgress
         };
     }
 
