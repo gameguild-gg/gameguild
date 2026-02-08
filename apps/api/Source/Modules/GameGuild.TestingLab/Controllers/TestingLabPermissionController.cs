@@ -1,5 +1,5 @@
-using System.Security.Claims;
 using GameGuild.Identity.Authorization;
+using GameGuild.Identity.Context.Actors;
 using GameGuild.Identity.Tenants;
 using Microsoft.AspNetCore.Mvc;
 
@@ -7,23 +7,23 @@ using Microsoft.AspNetCore.Mvc;
 namespace GameGuild.TestingLab;
 
 /// <summary> TestingLab-specific permission management controller Allows admins to create role templates for TestingLab resources: sessions, locations, feedbacks, etc. </summary>
-[ApiController]
 [Route("api/testing-lab/permissions")]
-[Authorize] // TODO: Add admin permission check
-public class TestingLabPermissionController : ControllerBase {
+[Authorize] // Admin access enforced via ActorContext.IsSystemAdmin / IsTenantAdmin checks in action methods
+public class TestingLabPermissionController : BaseApiController {
   private readonly ILogger<TestingLabPermissionController> _logger;
 
   private readonly IPermissionService _permissionService;
 
-  public TestingLabPermissionController(IPermissionService permissionService, ILogger<TestingLabPermissionController> logger) {
+  private readonly IActorContextAccessor _actorContextAccessor;
+
+  public TestingLabPermissionController(IPermissionService permissionService, IActorContextAccessor actorContextAccessor, ILogger<TestingLabPermissionController> logger) {
     _permissionService = permissionService;
+    _actorContextAccessor = actorContextAccessor;
     _logger = logger;
   }
 
   private Guid GetCurrentUserId() {
-    var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
-    return Guid.TryParse(userIdClaim, out var userId) ? userId : Guid.Empty;
+    return _actorContextAccessor.ActorContext.SubjectIdAsGuid ?? Guid.Empty;
   }
 
   // ===== TESTING LAB ROLE TEMPLATES =====
@@ -60,7 +60,7 @@ public class TestingLabPermissionController : ControllerBase {
   /// <summary> Update an existing TestingLab role template </summary>
   [HttpPut("role-templates/{idOrName}")]
   public async Task<ActionResult<TestingLabRoleTemplate>> UpdateTestingLabRoleTemplate(string idOrName, [FromBody] UpdateTestingLabRoleRequest request) {
-    // TODO: Implement when GetRoleTemplateAsync and UpdateRoleTemplateAsync are available in IPermissionService
+    // PLANNED: Implement when GetRoleTemplateAsync and UpdateRoleTemplateAsync are available in IPermissionService
     await Task.CompletedTask; // Remove async warning
     return StatusCode(501, "Method not implemented - missing service methods");
   }
@@ -68,7 +68,7 @@ public class TestingLabPermissionController : ControllerBase {
   /// <summary> Delete a TestingLab role template </summary>
   [HttpDelete("role-templates/{idOrName}")]
   public async Task<ActionResult> DeleteTestingLabRoleTemplate(string idOrName) {
-    // TODO: Implement when DeleteRoleTemplateAsync is available in IPermissionService
+    // PLANNED: Implement when DeleteRoleTemplateAsync is available in IPermissionService
     await Task.CompletedTask; // Remove async warning
     return StatusCode(501, "Method not implemented - missing service methods");
   }
@@ -78,7 +78,7 @@ public class TestingLabPermissionController : ControllerBase {
   public async Task<ActionResult> DeleteTestingLabRoleTemplateByName(string name) {
     try {
       _logger.LogInformation("Attempting to delete TestingLab role template by name '{Name}'", name);
-      // TODO: Uncomment when DeleteRoleTemplateAsync is available in IPermissionService
+      // PLANNED: Uncomment when DeleteRoleTemplateAsync is available in IPermissionService
       // var deleted = await _permissionService.DeleteRoleTemplateAsync(name);
       var deleted = false; // Temporary stub
 

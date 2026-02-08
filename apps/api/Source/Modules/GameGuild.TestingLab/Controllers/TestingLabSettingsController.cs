@@ -1,62 +1,36 @@
-using System.Security.Claims;
 using GameGuild.Identity.Authorization;
 using GameGuild.Identity.Context.Actors;
 using GameGuild.Identity.Tenants;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 
 
 namespace GameGuild.TestingLab;
 
 /// <summary> Controller for TestingLabSettings operations </summary>
-[ApiController]
 [Route("api/testing-lab/settings")]
+[Authorize]
 public class TestingLabSettingsController(
   ITestingLabSettingsService settingsService,
   ITenantService tenantService,
-  IActorContextAccessor actorContextAccessor
-) : ControllerBase {
+  IActorContextAccessor actorContextAccessor,
+  ILogger<TestingLabSettingsController> _logger
+) : BaseApiController {
   private ActorContext Actor => actorContextAccessor.ActorContext;
   /// <summary> Get testing lab settings for the current tenant or global settings if no tenant context Creates default settings if none exist </summary>
   [HttpGet]
   [RequireContentTypePermission<TestingLabSettings>(PermissionType.Read)]
   public async Task<ActionResult<TestingLabSettingsDto>> GetSettings() {
-    try {
-      // Enhanced debugging: Log all claims
-      var claims = User.Claims.Select(c => new { c.Type, c.Value }).ToList();
-      var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-      var rolesClaim = User.FindFirst("roles")?.Value;
-      var roleClaims = User.Claims.Where(c => c.Type == ClaimTypes.Role).Select(c => c.Value).ToList();
+    var userId = Actor.SubjectIdAsGuid;
+    if (userId == null) { return Unauthorized(new { message = "User ID claim not found in token" }); }
 
-      // For debugging purposes only - log role information
-      Console.WriteLine($"User ID: {userId}");
-      Console.WriteLine($"Roles claim: {rolesClaim}");
-      Console.WriteLine($"Individual role claims: {string.Join(", ", roleClaims)}");
+    // Use middleware-provided tenant context (nullable for global)
+    var tenantId = Actor.TenantId;
 
-      if (string.IsNullOrEmpty(userId)) { return Unauthorized(new { message = "User ID claim not found in token", allClaims = claims }); }
+    var settings = await settingsService.GetTestingLabSettingsDtoAsync(tenantId);
 
-      // Use middleware-provided tenant context (nullable for global)
-      var tenantId = Actor.TenantId;
-
-      var settings = await settingsService.GetTestingLabSettingsDtoAsync(tenantId);
-
-      return Ok(settings);
-    }
-    catch (Exception ex) {
-      // Enhanced error response with debugging information
-      return StatusCode(
-        500,
-        new {
-          message = "An error occurred while retrieving settings",
-          error = ex.Message,
-          stackTrace = ex.StackTrace,
-          claims = User.Claims.Select(c => new { c.Type, c.Value }).ToList(),
-          tenantInfo = new {
-            hasTenantClaim = User.HasClaim(c => c.Type == "tenant_id" || c.Type == "http://schemas.microsoft.com/identity/claims/tenantid"),
-            tenantIdClaim = User.FindFirst("tenant_id")?.Value ?? User.FindFirst("http://schemas.microsoft.com/identity/claims/tenantid")?.Value,
-          },
-        }
-      );
-    }
+    return Ok(settings);
   }
 
   /// <summary> Create or update testing lab settings for the current tenant </summary>
@@ -72,7 +46,6 @@ public class TestingLabSettingsController(
       return Ok(settingsDto);
     }
     catch (ArgumentException ex) { return BadRequest(new { message = ex.Message }); }
-    catch (Exception ex) { return StatusCode(500, new { message = "An error occurred while saving settings", error = ex.Message }); }
   }
 
   /// <summary> Update testing lab settings for the current tenant (partial update) </summary>
@@ -87,7 +60,6 @@ public class TestingLabSettingsController(
       return Ok(settingsDto);
     }
     catch (ArgumentException ex) { return BadRequest(new { message = ex.Message }); }
-    catch (Exception ex) { return StatusCode(500, new { message = "An error occurred while updating settings", error = ex.Message }); }
   }
 
   /// <summary> Reset testing lab settings to default values for the current tenant </summary>
@@ -102,20 +74,16 @@ public class TestingLabSettingsController(
       return Ok(settingsDto);
     }
     catch (ArgumentException ex) { return BadRequest(new { message = ex.Message }); }
-    catch (Exception ex) { return StatusCode(500, new { message = "An error occurred while resetting settings", error = ex.Message }); }
   }
 
   /// <summary> Check if testing lab settings exist for the current tenant </summary>
   [HttpGet("exists")]
   [RequireContentTypePermission<TestingLabSettings>(PermissionType.Read)]
   public async Task<ActionResult<bool>> SettingsExist() {
-    try {
-      var tenantId = Actor.TenantId;
-      var exists = await settingsService.TestingLabSettingsExistAsync(tenantId);
+    var tenantId = Actor.TenantId;
+    var exists = await settingsService.TestingLabSettingsExistAsync(tenantId);
 
-      return Ok(exists);
-    }
-    catch (Exception ex) { return StatusCode(500, new { message = "An error occurred while checking settings", error = ex.Message }); }
+    return Ok(exists);
   }
 
   #region Private Helper Methods
@@ -129,10 +97,10 @@ public class TestingLabSettingsController(
     if (Guid.TryParse(tenantIdClaim, out var tenantId)) { return tenantId; }
 
     // If not in claims, try to get from tenant service using current user
-    var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+    var userGuid = Actor.SubjectIdAsGuid;
 
-    if (Guid.TryParse(userId, out var userGuid)) {
-      var tenantPermissions = await tenantService.GetTenantsForUserAsync(userGuid).ConfigureAwait(false);
+    if (userGuid.HasValue) {
+      var tenantPermissions = await tenantService.GetTenantsForUserAsync(userGuid.Value).ConfigureAwait(false);
       var firstTenant = tenantPermissions.FirstOrDefault()?.Tenant;
 
       return firstTenant?.Id;

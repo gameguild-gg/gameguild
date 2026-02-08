@@ -49,6 +49,7 @@ internal class UserCreatedTestingLabPermissionHandler : IDomainEventHandler<User
       _logger.LogError(ex, "Failed to set up TestingLab permissions for user {UserId}", domainEvent.UserId);
 
       // Don't rethrow - permission setup failures shouldn't fail user creation
+        throw;
     }
   }
 
@@ -62,13 +63,14 @@ internal class UserCreatedTestingLabPermissionHandler : IDomainEventHandler<User
       // Use the simple permission service to assign the configurable default role
       var permissionService = _serviceProvider.GetRequiredService<IPermissionService>();
 
-      await permissionService.AssignRoleToUserAsync(userId, tenantId, defaultRoleName);
+      await permissionService.AssignRoleToUserAsync(userId, tenantId, defaultRoleName).ConfigureAwait(false);
 
       _logger.LogInformation("Successfully assigned {RoleName} role to user {UserId} in tenant {TenantId}", defaultRoleName, userId, tenantId);
     }
     catch (Exception ex) {
       _logger.LogError(ex, "Failed to assign default TestingLab role to user {UserId} in tenant {TenantId}", userId, tenantId);
       // Don't rethrow - permission failures shouldn't fail user creation
+        throw;
     }
   }
 }

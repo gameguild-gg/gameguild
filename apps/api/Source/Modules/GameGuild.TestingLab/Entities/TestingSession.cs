@@ -134,7 +134,7 @@ public class TestingSession : EntityBase
     public virtual ICollection<TestingFeedback> Feedback { get; set; } = new List<TestingFeedback>();
 
     /// <summary>
-    /// Session waitlist entries (TODO: Implement SessionWaitlist entity)
+    /// Session waitlist entries (PLANNED: Implement SessionWaitlist entity)
     /// </summary>
     // public virtual ICollection<SessionWaitlist> Waitlist { get; set; } = new List<SessionWaitlist>();
 
