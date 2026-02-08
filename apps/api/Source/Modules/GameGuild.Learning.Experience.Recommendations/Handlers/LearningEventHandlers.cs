@@ -1,4 +1,3 @@
-using GameGuild.Abstractions;
 using GameGuild.CQRS;
 using GameGuild.Learning;
 using GameGuild.Learning.Experience.Discovery;
@@ -22,7 +21,7 @@ public class CourseCompletedLearningProfileHandler(
             notification.UserId, notification.CourseId);
 
         var profile = await context.Set<UserLearningProfile>()
-            .FirstOrDefaultAsync(p => p.UserId == notification.UserId, cancellationToken);
+            .FirstOrDefaultAsync(p => p.UserId == notification.UserId, cancellationToken).ConfigureAwait(false);
 
         if (profile == null)
         {
@@ -34,7 +33,7 @@ public class CourseCompletedLearningProfileHandler(
         profile.IncrementCoursesCompleted(hours > 0 ? hours : 1);
         profile.UpdateActivity();
 
-        await context.SaveChangesAsync(cancellationToken);
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         logger.LogInformation(
             "Updated learning profile for user {UserId}: {TotalCourses} courses, {TotalHours} hours",
             notification.UserId, profile.TotalCoursesCompleted, profile.TotalHoursLearned);
@@ -54,12 +53,12 @@ public class CourseViewedActivityHandler(
         logger.LogDebug("Updating activity for user {UserId} who viewed course", notification.UserId);
 
         var profile = await context.Set<UserLearningProfile>()
-            .FirstOrDefaultAsync(p => p.UserId == notification.UserId, cancellationToken);
+            .FirstOrDefaultAsync(p => p.UserId == notification.UserId, cancellationToken).ConfigureAwait(false);
 
         if (profile != null)
         {
             profile.UpdateActivity();
-            await context.SaveChangesAsync(cancellationToken);
+            await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         }
     }
 }
@@ -79,12 +78,12 @@ public class RecommendationConvertedHandler(
             notification.RecommendationId, notification.UserId, notification.CourseId);
 
         var recommendation = await context.Set<CourseRecommendation>()
-            .FirstOrDefaultAsync(r => r.Id == notification.RecommendationId, cancellationToken);
+            .FirstOrDefaultAsync(r => r.Id == notification.RecommendationId, cancellationToken).ConfigureAwait(false);
 
         if (recommendation != null)
         {
             recommendation.MarkViewed();
-            await context.SaveChangesAsync(cancellationToken);
+            await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         }
     }
 }
@@ -111,7 +110,7 @@ public class SearchPerformedHistoryHandler(
             tenantId: notification.TenantId);
 
         context.Set<SearchHistory>().Add(searchHistory);
-        await context.SaveChangesAsync(cancellationToken);
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
     }
 }
 
@@ -134,12 +133,12 @@ public class SearchResultClickedHandler(
             .Where(s => s.Query == notification.Query)
             .Where(s => s.CreatedAt >= recentCutoff)
             .OrderByDescending(s => s.CreatedAt)
-            .FirstOrDefaultAsync(cancellationToken);
+            .FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
 
         if (searchHistory != null)
         {
             searchHistory.RecordClick(notification.ClickedCourseId, notification.Position);
-            await context.SaveChangesAsync(cancellationToken);
+            await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         }
     }
 }
@@ -169,7 +168,7 @@ public class LearningProgressRecommendationRefreshHandler(
             await engine.RefreshRecommendationsAsync(
                 notification.UserId, 
                 notification.TenantId, 
-                cancellationToken);
+                cancellationToken).ConfigureAwait(false);
         }
     }
 }
@@ -189,7 +188,7 @@ public class UserSkillUpdatedProfileHandler(
             notification.SkillName, notification.UserId);
 
         var profile = await context.Set<UserLearningProfile>()
-            .FirstOrDefaultAsync(p => p.UserId == notification.UserId, cancellationToken);
+            .FirstOrDefaultAsync(p => p.UserId == notification.UserId, cancellationToken).ConfigureAwait(false);
 
         if (profile == null)
         {
@@ -198,6 +197,6 @@ public class UserSkillUpdatedProfileHandler(
         }
 
         profile.AddSkill(notification.SkillName);
-        await context.SaveChangesAsync(cancellationToken);
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
     }
 }

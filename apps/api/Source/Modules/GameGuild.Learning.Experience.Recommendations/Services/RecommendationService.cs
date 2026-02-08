@@ -19,7 +19,7 @@ public class RecommendationService(IMediator mediator) : IRecommendationService
         CancellationToken cancellationToken = default)
     {
         return await mediator.Send(new GetUserRecommendationsQuery(
-            userId, tenantId, type, includeViewed, skip, take), cancellationToken);
+            userId, tenantId, type, includeViewed, skip, take), cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<IEnumerable<CourseRecommendation>> GenerateRecommendationsAsync(
@@ -30,7 +30,7 @@ public class RecommendationService(IMediator mediator) : IRecommendationService
         CancellationToken cancellationToken = default)
     {
         return await mediator.Send(new GenerateRecommendationsCommand(
-            userId, tenantId, maxResults, types), cancellationToken);
+            userId, tenantId, maxResults, types), cancellationToken).ConfigureAwait(false);
     }
 
     public async Task MarkRecommendationViewedAsync(
@@ -38,7 +38,7 @@ public class RecommendationService(IMediator mediator) : IRecommendationService
         Guid userId,
         CancellationToken cancellationToken = default)
     {
-        await mediator.Send(new MarkRecommendationViewedCommand(recommendationId, userId), cancellationToken);
+        await mediator.Send(new MarkRecommendationViewedCommand(recommendationId, userId), cancellationToken).ConfigureAwait(false);
     }
 
     public async Task DismissRecommendationAsync(
@@ -46,7 +46,7 @@ public class RecommendationService(IMediator mediator) : IRecommendationService
         Guid userId,
         CancellationToken cancellationToken = default)
     {
-        await mediator.Send(new DismissRecommendationCommand(recommendationId, userId), cancellationToken);
+        await mediator.Send(new DismissRecommendationCommand(recommendationId, userId), cancellationToken).ConfigureAwait(false);
     }
 
     public async Task RefreshRecommendationsAsync(
@@ -54,14 +54,14 @@ public class RecommendationService(IMediator mediator) : IRecommendationService
         Guid? tenantId = null,
         CancellationToken cancellationToken = default)
     {
-        await mediator.Send(new RefreshRecommendationsCommand(userId, tenantId), cancellationToken);
+        await mediator.Send(new RefreshRecommendationsCommand(userId, tenantId), cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<RecommendationStatisticsDto> GetStatisticsAsync(
         Guid userId,
         CancellationToken cancellationToken = default)
     {
-        return await mediator.Send(new GetRecommendationStatisticsQuery(userId), cancellationToken);
+        return await mediator.Send(new GetRecommendationStatisticsQuery(userId), cancellationToken).ConfigureAwait(false);
     }
 
     // ===== USER LEARNING PROFILE =====
@@ -70,14 +70,14 @@ public class RecommendationService(IMediator mediator) : IRecommendationService
         Guid userId,
         CancellationToken cancellationToken = default)
     {
-        return await mediator.Send(new GetUserLearningProfileQuery(userId), cancellationToken);
+        return await mediator.Send(new GetUserLearningProfileQuery(userId), cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<UserLearningProfile> GetOrCreateUserProfileAsync(
         Guid userId,
         CancellationToken cancellationToken = default)
     {
-        return await mediator.Send(new GetOrCreateUserLearningProfileQuery(userId), cancellationToken);
+        return await mediator.Send(new GetOrCreateUserLearningProfileQuery(userId), cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<UserLearningProfile> UpdateUserProfileAsync(
@@ -99,7 +99,7 @@ public class RecommendationService(IMediator mediator) : IRecommendationService
         string skill,
         CancellationToken cancellationToken = default)
     {
-        return await mediator.Send(new AddSkillToProfileCommand(userId, skill), cancellationToken);
+        return await mediator.Send(new AddSkillToProfileCommand(userId, skill), cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<UserLearningProfile> RemoveSkillFromProfileAsync(
@@ -107,7 +107,7 @@ public class RecommendationService(IMediator mediator) : IRecommendationService
         string skill,
         CancellationToken cancellationToken = default)
     {
-        return await mediator.Send(new RemoveSkillFromProfileCommand(userId, skill), cancellationToken);
+        return await mediator.Send(new RemoveSkillFromProfileCommand(userId, skill), cancellationToken).ConfigureAwait(false);
     }
 
     // ===== DISCOVERY =====
@@ -119,7 +119,7 @@ public class RecommendationService(IMediator mediator) : IRecommendationService
         int take = 10,
         CancellationToken cancellationToken = default)
     {
-        return await mediator.Send(new GetPopularCoursesQuery(tenantId, category, skip, take), cancellationToken);
+        return await mediator.Send(new GetPopularCoursesQuery(tenantId, category, skip, take), cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<IEnumerable<TrendingCourseDto>> GetTrendingCoursesAsync(
@@ -129,7 +129,7 @@ public class RecommendationService(IMediator mediator) : IRecommendationService
         int take = 10,
         CancellationToken cancellationToken = default)
     {
-        return await mediator.Send(new GetTrendingCoursesQuery(tenantId, daysWindow, skip, take), cancellationToken);
+        return await mediator.Send(new GetTrendingCoursesQuery(tenantId, daysWindow, skip, take), cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<IEnumerable<SimilarCourseDto>> GetSimilarCoursesAsync(
@@ -138,6 +138,6 @@ public class RecommendationService(IMediator mediator) : IRecommendationService
         int maxResults = 5,
         CancellationToken cancellationToken = default)
     {
-        return await mediator.Send(new GetSimilarCoursesQuery(courseId, tenantId, maxResults), cancellationToken);
+        return await mediator.Send(new GetSimilarCoursesQuery(courseId, tenantId, maxResults), cancellationToken).ConfigureAwait(false);
     }
 }

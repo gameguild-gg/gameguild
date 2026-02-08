@@ -1,5 +1,3 @@
-using GameGuild.Abstractions;
-using GameGuild.Enums;
 using GameGuild.Learning.Courses;
 using Microsoft.EntityFrameworkCore;
 

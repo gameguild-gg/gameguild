@@ -1,5 +1,3 @@
-using GameGuild.Abstractions;
-using GameGuild.Enums;
 using GameGuild.Learning.Courses;
 using Microsoft.EntityFrameworkCore;
 
@@ -25,7 +23,7 @@ public class PopularInCategoryStrategy(IApplicationDbContext context) : IRecomme
         // Get user's learning profile for preferred categories
         var profile = await context.Set<UserLearningProfile>()
             .AsNoTracking()
-            .FirstOrDefaultAsync(p => p.UserId == userId, cancellationToken);
+            .FirstOrDefaultAsync(p => p.UserId == userId, cancellationToken).ConfigureAwait(false);
 
         var preferredCategories = ParseCategories(profile?.PreferredCategories);
 

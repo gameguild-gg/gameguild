@@ -1,4 +1,3 @@
-using GameGuild.Abstractions;
 using GameGuild.Learning.Experience.LearningPaths;
 using Microsoft.EntityFrameworkCore;
 
@@ -27,7 +26,7 @@ public class NextInPathStrategy(IApplicationDbContext context) : IRecommendation
             .AsNoTracking()
             .Where(e => e.UserId == userId)
             .Where(e => e.Status == LearningPathEnrollmentStatus.InProgress)
-            .ToListAsync(cancellationToken);
+            .ToListAsync(cancellationToken).ConfigureAwait(false);
 
         if (!activeEnrollments.Any())
         {
@@ -40,7 +39,7 @@ public class NextInPathStrategy(IApplicationDbContext context) : IRecommendation
             .AsNoTracking()
             .Where(lp => pathIds.Contains(lp.Id))
             .Include(lp => lp.Courses)
-            .ToListAsync(cancellationToken);
+            .ToListAsync(cancellationToken).ConfigureAwait(false);
 
         var recommendations = new List<RecommendationCandidate>();
 

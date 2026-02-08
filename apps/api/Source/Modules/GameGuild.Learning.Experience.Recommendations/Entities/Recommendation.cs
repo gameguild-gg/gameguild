@@ -1,4 +1,3 @@
-using GameGuild.Entities;
 
 namespace GameGuild.Learning.Experience.Recommendations;
 
@@ -36,9 +35,7 @@ public class CourseRecommendation : EntityBase
             Reason = reason,
             IsViewed = false,
             IsDismissed = false,
-            ExpiresAt = DateTime.UtcNow.Add(validFor ?? TimeSpan.FromDays(30)),
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            ExpiresAt = DateTime.UtcNow.Add(validFor ?? TimeSpan.FromDays(30))
         };
     }
 
@@ -81,9 +78,7 @@ public class UserLearningProfile : EntityBase
             Id = Guid.NewGuid(),
             UserId = userId,
             TotalCoursesCompleted = 0,
-            TotalHoursLearned = 0,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            TotalHoursLearned = 0
         };
     }
 

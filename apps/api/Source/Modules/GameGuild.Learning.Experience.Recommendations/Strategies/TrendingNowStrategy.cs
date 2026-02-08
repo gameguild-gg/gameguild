@@ -1,4 +1,3 @@
-using GameGuild.Abstractions;
 using GameGuild.Learning.Courses;
 using Microsoft.EntityFrameworkCore;
 
@@ -28,7 +27,7 @@ public class TrendingNowStrategy(IApplicationDbContext context) : IRecommendatio
         var query = context.Set<Program>()
             .AsNoTracking()
             .Where(p => p.DeletedAt == null)
-            .Where(p => p.Status == GameGuild.Enums.ContentStatus.Published)
+            .Where(p => p.Status == ContentStatus.Published)
             .Where(p => !excludeSet.Contains(p.Id));
 
         // Apply tenant filter

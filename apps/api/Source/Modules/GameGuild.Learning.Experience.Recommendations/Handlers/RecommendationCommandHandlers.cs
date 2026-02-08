@@ -1,5 +1,4 @@
 using System.Text.Json;
-using GameGuild.Abstractions;
 using GameGuild.CQRS;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -18,7 +17,7 @@ public class CreateOrUpdateLearningProfileCommandHandler(
         logger.LogInformation("Creating/updating learning profile for user {UserId}", request.UserId);
 
         var profile = await context.Set<UserLearningProfile>()
-            .FirstOrDefaultAsync(p => p.UserId == request.UserId, cancellationToken);
+            .FirstOrDefaultAsync(p => p.UserId == request.UserId, cancellationToken).ConfigureAwait(false);
 
         if (profile == null)
         {
@@ -39,7 +38,7 @@ public class CreateOrUpdateLearningProfileCommandHandler(
                 ? JsonSerializer.Serialize(request.Skills) 
                 : null);
 
-        await context.SaveChangesAsync(cancellationToken);
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         return profile;
     }
 }
@@ -54,7 +53,7 @@ public class AddSkillToProfileCommandHandler(
         logger.LogInformation("Adding skill {Skill} to profile for user {UserId}", request.Skill, request.UserId);
 
         var profile = await context.Set<UserLearningProfile>()
-            .FirstOrDefaultAsync(p => p.UserId == request.UserId, cancellationToken);
+            .FirstOrDefaultAsync(p => p.UserId == request.UserId, cancellationToken).ConfigureAwait(false);
 
         if (profile == null)
         {
@@ -63,7 +62,7 @@ public class AddSkillToProfileCommandHandler(
         }
 
         profile.AddSkill(request.Skill);
-        await context.SaveChangesAsync(cancellationToken);
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         return profile;
     }
 }
@@ -78,7 +77,7 @@ public class RemoveSkillFromProfileCommandHandler(
         logger.LogInformation("Removing skill {Skill} from profile for user {UserId}", request.Skill, request.UserId);
 
         var profile = await context.Set<UserLearningProfile>()
-            .FirstOrDefaultAsync(p => p.UserId == request.UserId, cancellationToken);
+            .FirstOrDefaultAsync(p => p.UserId == request.UserId, cancellationToken).ConfigureAwait(false);
 
         if (profile == null)
         {
@@ -86,7 +85,7 @@ public class RemoveSkillFromProfileCommandHandler(
         }
 
         profile.RemoveSkill(request.Skill);
-        await context.SaveChangesAsync(cancellationToken);
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         return profile;
     }
 }
@@ -101,12 +100,12 @@ public class UpdateUserActivityCommandHandler(
         logger.LogDebug("Updating activity for user {UserId}", request.UserId);
 
         var profile = await context.Set<UserLearningProfile>()
-            .FirstOrDefaultAsync(p => p.UserId == request.UserId, cancellationToken);
+            .FirstOrDefaultAsync(p => p.UserId == request.UserId, cancellationToken).ConfigureAwait(false);
 
         if (profile != null)
         {
             profile.UpdateActivity();
-            await context.SaveChangesAsync(cancellationToken);
+            await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         }
         return Unit.Value;
     }
@@ -122,7 +121,7 @@ public class IncrementCompletedCoursesCommandHandler(
         logger.LogInformation("Incrementing completed courses for user {UserId} by {Hours} hours", request.UserId, request.Hours);
 
         var profile = await context.Set<UserLearningProfile>()
-            .FirstOrDefaultAsync(p => p.UserId == request.UserId, cancellationToken);
+            .FirstOrDefaultAsync(p => p.UserId == request.UserId, cancellationToken).ConfigureAwait(false);
 
         if (profile == null)
         {
@@ -131,7 +130,7 @@ public class IncrementCompletedCoursesCommandHandler(
         }
 
         profile.IncrementCoursesCompleted(request.Hours);
-        await context.SaveChangesAsync(cancellationToken);
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         return Unit.Value;
     }
 }
@@ -152,7 +151,7 @@ public class GenerateRecommendationsCommandHandler(
             request.TenantId,
             request.MaxResults,
             request.Types,
-            cancellationToken);
+            cancellationToken).ConfigureAwait(false);
     }
 }
 
@@ -164,7 +163,7 @@ public class MarkRecommendationViewedCommandHandler(
     public async Task<Unit> Handle(MarkRecommendationViewedCommand request, CancellationToken cancellationToken)
     {
         var recommendation = await context.Set<CourseRecommendation>()
-            .FirstOrDefaultAsync(r => r.Id == request.RecommendationId && r.UserId == request.UserId, cancellationToken);
+            .FirstOrDefaultAsync(r => r.Id == request.RecommendationId && r.UserId == request.UserId, cancellationToken).ConfigureAwait(false);
 
         if (recommendation == null)
         {
@@ -173,7 +172,7 @@ public class MarkRecommendationViewedCommandHandler(
         }
 
         recommendation.MarkViewed();
-        await context.SaveChangesAsync(cancellationToken);
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         logger.LogInformation("Marked recommendation {Id} as viewed", request.RecommendationId);
         return Unit.Value;
     }
@@ -187,7 +186,7 @@ public class DismissRecommendationCommandHandler(
     public async Task<Unit> Handle(DismissRecommendationCommand request, CancellationToken cancellationToken)
     {
         var recommendation = await context.Set<CourseRecommendation>()
-            .FirstOrDefaultAsync(r => r.Id == request.RecommendationId && r.UserId == request.UserId, cancellationToken);
+            .FirstOrDefaultAsync(r => r.Id == request.RecommendationId && r.UserId == request.UserId, cancellationToken).ConfigureAwait(false);
 
         if (recommendation == null)
         {
@@ -196,7 +195,7 @@ public class DismissRecommendationCommandHandler(
         }
 
         recommendation.Dismiss();
-        await context.SaveChangesAsync(cancellationToken);
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         logger.LogInformation("Dismissed recommendation {Id}", request.RecommendationId);
         return Unit.Value;
     }
@@ -210,7 +209,7 @@ public class RefreshRecommendationsCommandHandler(
     public async Task<Unit> Handle(RefreshRecommendationsCommand request, CancellationToken cancellationToken)
     {
         logger.LogInformation("Refreshing recommendations for user {UserId}", request.UserId);
-        await engine.RefreshRecommendationsAsync(request.UserId, request.TenantId, cancellationToken);
+        await engine.RefreshRecommendationsAsync(request.UserId, request.TenantId, cancellationToken).ConfigureAwait(false);
         return Unit.Value;
     }
 }
@@ -226,10 +225,10 @@ public class ClearUserRecommendationsCommandHandler(
 
         var recommendations = await context.Set<CourseRecommendation>()
             .Where(r => r.UserId == request.UserId)
-            .ToListAsync(cancellationToken);
+            .ToListAsync(cancellationToken).ConfigureAwait(false);
 
         context.Set<CourseRecommendation>().RemoveRange(recommendations);
-        await context.SaveChangesAsync(cancellationToken);
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         return recommendations.Count;
     }

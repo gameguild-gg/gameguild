@@ -1,4 +1,3 @@
-using GameGuild.Abstractions;
 using GameGuild.Learning.Courses;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -39,7 +38,7 @@ public class RecommendationEngine : IRecommendationEngine
             userId, tenantId, maxResults);
 
         // Get courses to exclude (already enrolled, completed, or recently dismissed)
-        var excludeCourseIds = await GetExcludedCourseIdsAsync(userId, cancellationToken);
+        var excludeCourseIds = await GetExcludedCourseIdsAsync(userId, cancellationToken).ConfigureAwait(false);
 
         // Get existing valid recommendations to avoid duplicates
         var existingRecommendations = await _context.Set<CourseRecommendation>()
@@ -47,7 +46,7 @@ public class RecommendationEngine : IRecommendationEngine
             .Where(r => r.UserId == userId)
             .Where(r => !r.IsDismissed)
             .Where(r => r.ExpiresAt > DateTime.UtcNow)
-            .ToListAsync(cancellationToken);
+            .ToListAsync(cancellationToken).ConfigureAwait(false);
 
         var existingCourseIds = existingRecommendations.Select(r => r.CourseId).ToHashSet();
 
@@ -68,7 +67,7 @@ public class RecommendationEngine : IRecommendationEngine
                     tenantId,
                     excludeCourseIds.Union(existingCourseIds),
                     MaxCandidatesPerStrategy,
-                    cancellationToken);
+                    cancellationToken).ConfigureAwait(false);
 
                 allCandidates.AddRange(candidates);
                 _logger.LogDebug("Strategy {Strategy} generated {Count} candidates", strategy.Type, candidates.Count());
@@ -76,6 +75,7 @@ public class RecommendationEngine : IRecommendationEngine
             catch (Exception ex)
             {
                 _logger.LogWarning(ex, "Strategy {Strategy} failed, continuing with others", strategy.Type);
+                throw;
             }
         }
 
@@ -101,7 +101,7 @@ public class RecommendationEngine : IRecommendationEngine
         if (newRecommendations.Any())
         {
             _context.Set<CourseRecommendation>().AddRange(newRecommendations);
-            await _context.SaveChangesAsync(cancellationToken);
+            await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
             _logger.LogInformation("Created {Count} new recommendations for user {UserId}", newRecommendations.Count, userId);
         }
 
@@ -125,7 +125,7 @@ public class RecommendationEngine : IRecommendationEngine
             .Where(r => r.UserId == userId)
             .Where(r => r.ExpiresAt <= DateTime.UtcNow)
             .Where(r => !r.IsDismissed)
-            .ToListAsync(cancellationToken);
+            .ToListAsync(cancellationToken).ConfigureAwait(false);
 
         foreach (var rec in expiredRecommendations)
         {
@@ -134,11 +134,11 @@ public class RecommendationEngine : IRecommendationEngine
 
         if (expiredRecommendations.Any())
         {
-            await _context.SaveChangesAsync(cancellationToken);
+            await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         }
 
         // Generate new recommendations
-        await GenerateRecommendationsAsync(userId, tenantId, DefaultMaxResults, null, cancellationToken);
+        await GenerateRecommendationsAsync(userId, tenantId, DefaultMaxResults, null, cancellationToken).ConfigureAwait(false);
     }
 
     private async Task<HashSet<Guid>> GetExcludedCourseIdsAsync(Guid userId, CancellationToken cancellationToken)
@@ -148,7 +148,7 @@ public class RecommendationEngine : IRecommendationEngine
             .AsNoTracking()
             .Where(pu => pu.UserId == userId && pu.IsActive)
             .Select(pu => pu.ProgramId)
-            .ToListAsync(cancellationToken);
+            .ToListAsync(cancellationToken).ConfigureAwait(false);
 
         // Get recently dismissed recommendations (within 30 days)
         var dismissedCutoff = DateTime.UtcNow.AddDays(-30);

@@ -1,4 +1,3 @@
-using GameGuild.Abstractions;
 using GameGuild.CQRS;
 using GameGuild.Learning.Courses;
 using Microsoft.EntityFrameworkCore;
@@ -37,7 +36,7 @@ public class GetUserRecommendationsQueryHandler(
             .OrderByDescending(r => r.Score)
             .Skip(request.Skip)
             .Take(request.Take)
-            .ToListAsync(cancellationToken);
+            .ToListAsync(cancellationToken).ConfigureAwait(false);
     }
 }
 
@@ -52,7 +51,7 @@ public class GetRecommendationByIdQueryHandler(
 
         return await context.Set<CourseRecommendation>()
             .AsNoTracking()
-            .FirstOrDefaultAsync(r => r.Id == request.Id && r.UserId == request.UserId, cancellationToken);
+            .FirstOrDefaultAsync(r => r.Id == request.Id && r.UserId == request.UserId, cancellationToken).ConfigureAwait(false);
     }
 }
 
@@ -68,7 +67,7 @@ public class GetRecommendationStatisticsQueryHandler(
         var recommendations = await context.Set<CourseRecommendation>()
             .AsNoTracking()
             .Where(r => r.UserId == request.UserId)
-            .ToListAsync(cancellationToken);
+            .ToListAsync(cancellationToken).ConfigureAwait(false);
 
         var byType = recommendations
             .GroupBy(r => r.Type)
@@ -97,7 +96,7 @@ public class HasPendingRecommendationsQueryHandler(
             .AnyAsync(r => r.UserId == request.UserId 
                 && !r.IsDismissed 
                 && !r.IsViewed 
-                && r.ExpiresAt > DateTime.UtcNow, cancellationToken);
+                && r.ExpiresAt > DateTime.UtcNow, cancellationToken).ConfigureAwait(false);
     }
 }
 
@@ -114,7 +113,7 @@ public class GetUserLearningProfileQueryHandler(
 
         return await context.Set<UserLearningProfile>()
             .AsNoTracking()
-            .FirstOrDefaultAsync(p => p.UserId == request.UserId, cancellationToken);
+            .FirstOrDefaultAsync(p => p.UserId == request.UserId, cancellationToken).ConfigureAwait(false);
     }
 }
 
@@ -128,13 +127,13 @@ public class GetOrCreateUserLearningProfileQueryHandler(
         logger.LogDebug("Getting or creating learning profile for user {UserId}", request.UserId);
 
         var profile = await context.Set<UserLearningProfile>()
-            .FirstOrDefaultAsync(p => p.UserId == request.UserId, cancellationToken);
+            .FirstOrDefaultAsync(p => p.UserId == request.UserId, cancellationToken).ConfigureAwait(false);
 
         if (profile == null)
         {
             profile = UserLearningProfile.Create(request.UserId);
             context.Set<UserLearningProfile>().Add(profile);
-            await context.SaveChangesAsync(cancellationToken);
+            await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         }
 
         return profile;
@@ -155,7 +154,7 @@ public class GetPopularCoursesQueryHandler(
         var query = context.Set<Program>()
             .AsNoTracking()
             .Where(p => p.DeletedAt == null)
-            .Where(p => p.Status == GameGuild.Enums.ContentStatus.Published);
+            .Where(p => p.Status == ContentStatus.Published);
 
         if (request.TenantId.HasValue)
         {
@@ -211,7 +210,7 @@ public class GetTrendingCoursesQueryHandler(
         var query = context.Set<Program>()
             .AsNoTracking()
             .Where(p => p.DeletedAt == null)
-            .Where(p => p.Status == GameGuild.Enums.ContentStatus.Published);
+            .Where(p => p.Status == ContentStatus.Published);
 
         if (request.TenantId.HasValue)
         {
@@ -266,7 +265,7 @@ public class GetSimilarCoursesQueryHandler(
         // Get the source course
         var sourceCourse = await context.Set<Program>()
             .AsNoTracking()
-            .FirstOrDefaultAsync(p => p.Id == request.CourseId, cancellationToken);
+            .FirstOrDefaultAsync(p => p.Id == request.CourseId, cancellationToken).ConfigureAwait(false);
 
         if (sourceCourse == null)
         {
@@ -278,7 +277,7 @@ public class GetSimilarCoursesQueryHandler(
         var query = context.Set<Program>()
             .AsNoTracking()
             .Where(p => p.DeletedAt == null)
-            .Where(p => p.Status == GameGuild.Enums.ContentStatus.Published)
+            .Where(p => p.Status == ContentStatus.Published)
             .Where(p => p.Id != request.CourseId)
             .Where(p => p.Category == sourceCourse.Category);
 
@@ -354,7 +353,7 @@ public class GetPotentialLearnersQueryHandler(
         // Get course category and skills
         var course = await context.Set<Program>()
             .AsNoTracking()
-            .FirstOrDefaultAsync(p => p.Id == request.CourseId, cancellationToken);
+            .FirstOrDefaultAsync(p => p.Id == request.CourseId, cancellationToken).ConfigureAwait(false);
 
         if (course == null)
         {
@@ -366,7 +365,7 @@ public class GetPotentialLearnersQueryHandler(
             .AsNoTracking()
             .Where(pu => pu.ProgramId == request.CourseId)
             .Select(pu => pu.UserId)
-            .ToListAsync(cancellationToken);
+            .ToListAsync(cancellationToken).ConfigureAwait(false);
 
         // Find users with matching preferences who aren't enrolled
         var query = context.Set<UserLearningProfile>()
@@ -381,6 +380,6 @@ public class GetPotentialLearnersQueryHandler(
             .OrderByDescending(p => p.LastActivityAt)
             .Take(request.MaxResults)
             .Select(p => p.UserId)
-            .ToListAsync(cancellationToken);
+            .ToListAsync(cancellationToken).ConfigureAwait(false);
     }
 }
