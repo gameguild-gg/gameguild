@@ -13,6 +13,8 @@ public static class FollowsModule
     /// </summary>
     public static IServiceCollection AddFollowsModule(this IServiceCollection services)
     {
+        services.AddScoped<IUserModerationService, UserModerationService>();
+        services.AddScoped<IFollowOperationService, FollowOperationService>();
         services.AddScoped<IFollowerService, FollowerService>();
         return services;
     }

@@ -6,10 +6,9 @@ using Microsoft.Extensions.Logging;
 
 namespace GameGuild.Social.Follows.Controllers;
 
-[ApiController]
 [Route("api/[controller]")]
 [Authorize]
-public class FollowersController : ControllerBase
+public class FollowersController : BaseApiController
 {
     private readonly IFollowerService _followerService;
     private readonly IActorContextAccessor _actorContextAccessor;

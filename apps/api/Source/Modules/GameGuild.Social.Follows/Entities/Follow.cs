@@ -1,5 +1,4 @@
 using System.ComponentModel.DataAnnotations;
-using GameGuild.Entities;
 
 namespace GameGuild.Social.Follows;
 
@@ -35,9 +34,7 @@ public class Follow : EntityBase
             FollowedEntityId = followedEntityId,
             FollowedEntityType = followedEntityType,
             NotificationsEnabled = notificationsEnabled,
-            FollowedAt = DateTime.UtcNow,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            FollowedAt = DateTime.UtcNow
         };
     }
 
@@ -88,9 +85,7 @@ public class Block : EntityBase
             BlockerId = blockerId,
             BlockedId = blockedId,
             Reason = reason,
-            BlockedAt = DateTime.UtcNow,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            BlockedAt = DateTime.UtcNow
         };
     }
 }
@@ -127,9 +122,7 @@ public class Mute : EntityBase
             MutedId = mutedId,
             Reason = reason,
             MutedAt = DateTime.UtcNow,
-            ExpiresAt = expiresAt,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            ExpiresAt = expiresAt
         };
     }
 
@@ -183,9 +176,7 @@ public class FollowPrivacySettings : EntityBase
             AllowFollowers = true,
             NotifyOnNewFollower = true,
             ShowFollowerCount = true,
-            ShowFollowingCount = true,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            ShowFollowingCount = true
         };
     }
 
