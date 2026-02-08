@@ -9,7 +9,7 @@ public sealed class FreezeWalletHandler(IWalletService walletService) : ICommand
 {
     public async Task<Unit> Handle(FreezeWalletCommand request, CancellationToken cancellationToken)
     {
-        await walletService.FreezeWalletAsync(request.WalletId, request.Reason, cancellationToken);
+        await walletService.FreezeWalletAsync(request.WalletId, request.Reason, cancellationToken).ConfigureAwait(false);
         return Unit.Value;
     }
 }

@@ -14,7 +14,7 @@ public sealed class GetWalletAuditLogHandler(IWalletService walletService) : IQu
             request.WalletId,
             request.Page,
             request.PageSize,
-            cancellationToken);
+            cancellationToken).ConfigureAwait(false);
 
         var totalPages = (int)Math.Ceiling((double)totalCount / request.PageSize);
 

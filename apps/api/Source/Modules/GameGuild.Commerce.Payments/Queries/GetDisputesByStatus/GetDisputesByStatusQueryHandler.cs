@@ -1,4 +1,4 @@
-﻿using GameGuild.CQRS;
+using GameGuild.CQRS;
 
 namespace GameGuild.Commerce.Payments;
 
@@ -9,6 +9,6 @@ public sealed class GetDisputesByStatusQueryHandler(IDisputeService disputeServi
 {
     public async Task<List<PaymentDispute>> Handle(GetDisputesByStatusQuery request, CancellationToken cancellationToken)
     {
-        return await disputeService.GetDisputesByStatusAsync(request.Status, request.Skip, request.Take, cancellationToken);
+        return await disputeService.GetDisputesByStatusAsync(request.Status, request.Skip, request.Take, cancellationToken).ConfigureAwait(false);
     }
 }

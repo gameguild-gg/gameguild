@@ -9,7 +9,7 @@ public class LockWalletCommandHandler(IWalletService walletService) : ICommandHa
 {
     public async Task<Unit> Handle(LockWalletCommand request, CancellationToken cancellationToken)
     {
-        await walletService.LockWalletAsync(request.UserId, request.Reason, cancellationToken);
+        await walletService.LockWalletAsync(request.UserId, request.Reason, cancellationToken).ConfigureAwait(false);
 
         return Unit.Value;
     }

@@ -1,7 +1,7 @@
 using Asp.Versioning;
 using GameGuild.CQRS;
 
-
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -11,11 +11,11 @@ namespace GameGuild.Commerce.Payments;
 ///     Tax calculation controller.
 ///     Provides endpoints for calculating taxes and validating exemptions.
 /// </summary>
-[ApiController]
 [ApiVersion("1.0")]
 [Route("v{version:apiVersion}/taxes")]
 [Tags("taxes")]
-public sealed class TaxesController(ISender sender) : ControllerBase
+[Authorize]
+public sealed class TaxesController(ISender sender) : BaseApiController
 {
     /// <summary>
     ///     Calculate tax for a transaction
@@ -65,7 +65,7 @@ public sealed class TaxesController(ISender sender) : ControllerBase
             request.ExemptionCertificateNumber,
             request.CustomerVatNumber,
             request.CustomerId,
-            request.TransactionDate), ct).ConfigureAwait(false);
+            request.TransactionDate), ct);
 
         return Ok(result);
     }

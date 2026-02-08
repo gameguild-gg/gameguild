@@ -1,4 +1,4 @@
-﻿using GameGuild.CQRS;
+using GameGuild.CQRS;
 
 namespace GameGuild.Commerce.Payments;
 
@@ -9,7 +9,7 @@ public sealed class GetTaxJurisdictionsQueryHandler(ITaxCalculationService taxCa
 {
     public async Task<List<TaxJurisdiction>> Handle(GetTaxJurisdictionsQuery request, CancellationToken cancellationToken)
     {
-        var jurisdictions = await taxCalculationService.GetTaxJurisdictionsAsync(cancellationToken);
+        var jurisdictions = await taxCalculationService.GetTaxJurisdictionsAsync(cancellationToken).ConfigureAwait(false);
 
         return jurisdictions.ToList();
     }

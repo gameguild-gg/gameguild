@@ -1,4 +1,3 @@
-using GameGuild.Abstractions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -98,7 +97,7 @@ public class PaymentRepository(
                         && !p.MaxRetriesReached)
             .OrderBy(p => p.NextRetryAt)
             .ToListAsync(cancellationToken)
-            .ConfigureAwait(false);
+            ;
     }
 
     public async Task<IEnumerable<Payment>> GetByDateRangeAsync(

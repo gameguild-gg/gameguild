@@ -1,4 +1,3 @@
-using GameGuild.Abstractions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
@@ -60,7 +59,7 @@ public class TaxCalculationService : ITaxCalculationService
         _logger.LogInformation("Calculating tax for jurisdiction {Jurisdiction}, amount {Amount}, customer type {CustomerType}", request.JurisdictionCode, request.Amount, request.CustomerType);
 
         // Get jurisdiction with caching
-        var jurisdiction = await GetCachedJurisdictionAsync(request.JurisdictionCode, cancellationToken);
+        var jurisdiction = await GetCachedJurisdictionAsync(request.JurisdictionCode, cancellationToken).ConfigureAwait(false);
 
         if (jurisdiction == null)
         {
@@ -86,7 +85,7 @@ public class TaxCalculationService : ITaxCalculationService
         }
 
         // Get tax rate with caching
-        var taxRate = await GetTaxRateAsync(request.JurisdictionCode, TaxType.VAT, request.ProductCategory, request.TransactionDate, cancellationToken);
+        var taxRate = await GetTaxRateAsync(request.JurisdictionCode, TaxType.VAT, request.ProductCategory, request.TransactionDate, cancellationToken).ConfigureAwait(false);
 
         if (taxRate == null)
         {
@@ -117,7 +116,7 @@ public class TaxCalculationService : ITaxCalculationService
         var jurisdiction = await TaxJurisdictions
             .Include(j => j.TaxRules)
             .ThenInclude(r => r.DefaultTaxRate)
-            .FirstOrDefaultAsync(j => j.Code == jurisdictionCode && j.IsActive, cancellationToken);
+            .FirstOrDefaultAsync(j => j.Code == jurisdictionCode && j.IsActive, cancellationToken).ConfigureAwait(false);
 
         if (jurisdiction != null)
         {
@@ -400,7 +399,7 @@ public class TaxCalculationService : ITaxCalculationService
             )
             .OrderBy(tr => tr.Priority)
             .ToListAsync(cancellationToken)
-            .ConfigureAwait(false);
+            ;
     }
 
     #endregion

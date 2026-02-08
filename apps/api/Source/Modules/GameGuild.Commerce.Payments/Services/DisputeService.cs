@@ -1,4 +1,3 @@
-using GameGuild.Abstractions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -22,7 +21,7 @@ public class DisputeService(IApplicationDbContext context, ILogger<DisputeServic
         var dispute = new PaymentDispute { PaymentId = paymentId, UserId = userId, Type = type, Amount = amount, Reason = reason, Description = description, Status = DisputeStatus.Submitted, DueDate = dueDate };
 
         PaymentDisputes.Add(dispute);
-        await context.SaveChangesAsync(cancellationToken);
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         logger.LogInformation("Dispute created with ID {DisputeId}", dispute.Id);
 
@@ -53,7 +52,7 @@ public class DisputeService(IApplicationDbContext context, ILogger<DisputeServic
     {
         logger.LogInformation("Updating dispute {DisputeId} status to {Status}", disputeId, newStatus);
 
-        var dispute = await GetDisputeByIdAsync(disputeId, cancellationToken);
+        var dispute = await GetDisputeByIdAsync(disputeId, cancellationToken).ConfigureAwait(false);
 
         if (dispute == null) throw new InvalidOperationException($"Dispute {disputeId} not found");
 
@@ -69,7 +68,7 @@ public class DisputeService(IApplicationDbContext context, ILogger<DisputeServic
                 break;
         }
 
-        await context.SaveChangesAsync(cancellationToken);
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         logger.LogInformation("Dispute {DisputeId} status updated to {Status}", disputeId, newStatus);
     }
 
@@ -77,7 +76,7 @@ public class DisputeService(IApplicationDbContext context, ILogger<DisputeServic
     {
         logger.LogInformation("Resolving dispute {DisputeId} with resolution {Resolution}", disputeId, resolution);
 
-        var dispute = await GetDisputeByIdAsync(disputeId, cancellationToken);
+        var dispute = await GetDisputeByIdAsync(disputeId, cancellationToken).ConfigureAwait(false);
 
         if (dispute == null) throw new InvalidOperationException($"Dispute {disputeId} not found");
 
@@ -88,7 +87,7 @@ public class DisputeService(IApplicationDbContext context, ILogger<DisputeServic
         else
             dispute.Resolve(resolution, notes ?? string.Empty, resolvedBy ?? Guid.Empty);
 
-        await context.SaveChangesAsync(cancellationToken);
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         logger.LogInformation("Dispute {DisputeId} resolved", disputeId);
     }
 
@@ -96,12 +95,12 @@ public class DisputeService(IApplicationDbContext context, ILogger<DisputeServic
     {
         logger.LogInformation("Cancelling dispute {DisputeId}", disputeId);
 
-        var dispute = await GetDisputeByIdAsync(disputeId, cancellationToken);
+        var dispute = await GetDisputeByIdAsync(disputeId, cancellationToken).ConfigureAwait(false);
 
         if (dispute == null) throw new InvalidOperationException($"Dispute {disputeId} not found");
 
         dispute.Cancel(reason);
-        await context.SaveChangesAsync(cancellationToken);
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         logger.LogInformation("Dispute {DisputeId} cancelled", disputeId);
     }
@@ -122,7 +121,7 @@ public class DisputeService(IApplicationDbContext context, ILogger<DisputeServic
     {
         logger.LogInformation("Adding evidence to dispute {DisputeId}", disputeId);
 
-        var dispute = await GetDisputeByIdAsync(disputeId, cancellationToken);
+        var dispute = await GetDisputeByIdAsync(disputeId, cancellationToken).ConfigureAwait(false);
 
         if (dispute == null) throw new InvalidOperationException($"Dispute {disputeId} not found");
 
@@ -142,7 +141,7 @@ public class DisputeService(IApplicationDbContext context, ILogger<DisputeServic
         };
 
         DisputeEvidences.Add(evidence);
-        await context.SaveChangesAsync(cancellationToken);
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         logger.LogInformation("Evidence {EvidenceId} added to dispute {DisputeId}", evidence.Id, disputeId);
 

@@ -9,6 +9,6 @@ public class DeductFundsCommandHandler(IWalletService walletService) : ICommandH
 {
     public async Task<WalletTransaction> Handle(DeductFundsCommand request, CancellationToken cancellationToken)
     {
-        return await walletService.DeductFundsAsync(request.UserId, request.Amount, request.Description, request.ReferenceId, cancellationToken);
+        return await walletService.DeductFundsAsync(request.UserId, request.Amount, request.Description, request.ReferenceId, cancellationToken).ConfigureAwait(false);
     }
 }

@@ -9,7 +9,7 @@ public sealed class UnfreezeWalletHandler(IWalletService walletService) : IComma
 {
     public async Task<Unit> Handle(UnfreezeWalletCommand request, CancellationToken cancellationToken)
     {
-        await walletService.UnfreezeWalletAsync(request.WalletId, cancellationToken);
+        await walletService.UnfreezeWalletAsync(request.WalletId, cancellationToken).ConfigureAwait(false);
         return Unit.Value;
     }
 }

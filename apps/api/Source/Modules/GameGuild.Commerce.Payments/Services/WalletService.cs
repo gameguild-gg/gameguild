@@ -13,7 +13,7 @@ public class WalletService(IWalletRepository walletRepository, ILogger<WalletSer
         logger.LogInformation("Creating wallet for user {UserId} with currency {Currency}", userId, currency);
 
         // Check if wallet already exists
-        var existing = await GetWalletByUserIdAsync(userId, cancellationToken);
+        var existing = await GetWalletByUserIdAsync(userId, cancellationToken).ConfigureAwait(false);
 
         if (existing != null)
         {
@@ -25,7 +25,7 @@ public class WalletService(IWalletRepository walletRepository, ILogger<WalletSer
         var wallet = new UserWallet { UserId = userId, Currency = currency, Balance = 0, IsActive = true, IsLocked = false };
 
         walletRepository.Add(wallet);
-        await walletRepository.SaveChangesAsync(cancellationToken);
+        await walletRepository.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         logger.LogInformation("Wallet created for user {UserId} with ID {WalletId}", userId, wallet.Id);
 
@@ -34,17 +34,17 @@ public class WalletService(IWalletRepository walletRepository, ILogger<WalletSer
 
     public async Task<UserWallet?> GetWalletByUserIdAsync(Guid userId, CancellationToken cancellationToken = default)
     {
-        return await walletRepository.GetByUserIdAsync(userId, cancellationToken);
+        return await walletRepository.GetByUserIdAsync(userId, cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<UserWallet?> GetWalletByIdAsync(Guid walletId, CancellationToken cancellationToken = default)
     {
-        return await walletRepository.GetByIdAsync(walletId, cancellationToken);
+        return await walletRepository.GetByIdAsync(walletId, cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<decimal> GetBalanceAsync(Guid userId, CancellationToken cancellationToken = default)
     {
-        var wallet = await GetWalletByUserIdAsync(userId, cancellationToken);
+        var wallet = await GetWalletByUserIdAsync(userId, cancellationToken).ConfigureAwait(false);
 
         return wallet?.Balance ?? 0;
     }
@@ -53,16 +53,16 @@ public class WalletService(IWalletRepository walletRepository, ILogger<WalletSer
     {
         logger.LogInformation("Adding {Amount} funds to wallet for user {UserId}", amount, userId);
 
-        var wallet = await GetWalletByUserIdAsync(userId, cancellationToken);
+        var wallet = await GetWalletByUserIdAsync(userId, cancellationToken).ConfigureAwait(false);
 
         if (wallet == null)
         {
             logger.LogWarning("Wallet not found for user {UserId}, creating new wallet", userId);
-            wallet = await CreateWalletAsync(userId, cancellationToken : cancellationToken);
+            wallet = await CreateWalletAsync(userId, cancellationToken : cancellationToken).ConfigureAwait(false);
         }
 
         wallet.AddFunds(amount, description, referenceId);
-        await walletRepository.SaveChangesAsync(cancellationToken);
+        await walletRepository.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         var transaction = wallet.Transactions.OrderByDescending(t => t.CreatedAt).First();
         logger.LogInformation("Funds added: Transaction {TransactionId}, Balance {Balance}", transaction.Id, wallet.Balance);
@@ -74,7 +74,7 @@ public class WalletService(IWalletRepository walletRepository, ILogger<WalletSer
     {
         logger.LogInformation("Deducting {Amount} funds from wallet for user {UserId}", amount, userId);
 
-        var wallet = await GetWalletByUserIdAsync(userId, cancellationToken);
+        var wallet = await GetWalletByUserIdAsync(userId, cancellationToken).ConfigureAwait(false);
 
         if (wallet == null)
         {
@@ -84,7 +84,7 @@ public class WalletService(IWalletRepository walletRepository, ILogger<WalletSer
         }
 
         wallet.DeductFunds(amount, description, referenceId);
-        await walletRepository.SaveChangesAsync(cancellationToken);
+        await walletRepository.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         var transaction = wallet.Transactions.OrderByDescending(t => t.CreatedAt).First();
         logger.LogInformation("Funds deducted: Transaction {TransactionId}, Balance {Balance}", transaction.Id, wallet.Balance);
@@ -104,15 +104,15 @@ public class WalletService(IWalletRepository walletRepository, ILogger<WalletSer
         logger.LogInformation("Transferring {Amount} from user {FromUserId} to user {ToUserId}", amount, fromUserId, toUserId);
 
         // Get both wallets
-        var fromWallet = await GetWalletByUserIdAsync(fromUserId, cancellationToken);
-        var toWallet = await GetWalletByUserIdAsync(toUserId, cancellationToken);
+        var fromWallet = await GetWalletByUserIdAsync(fromUserId, cancellationToken).ConfigureAwait(false);
+        var toWallet = await GetWalletByUserIdAsync(toUserId, cancellationToken).ConfigureAwait(false);
 
         if (fromWallet == null) throw new InvalidOperationException($"Source wallet not found for user {fromUserId}");
 
         if (toWallet == null)
         {
             logger.LogWarning("Destination wallet not found for user {ToUserId}, creating new wallet", toUserId);
-            toWallet = await CreateWalletAsync(toUserId, fromWallet.Currency, cancellationToken);
+            toWallet = await CreateWalletAsync(toUserId, fromWallet.Currency, cancellationToken).ConfigureAwait(false);
         }
 
         // Currency check
@@ -132,7 +132,7 @@ public class WalletService(IWalletRepository walletRepository, ILogger<WalletSer
         debitTransaction.Type = WalletTransactionType.TransferOut;
         creditTransaction.Type = WalletTransactionType.TransferIn;
 
-        await walletRepository.SaveChangesAsync(cancellationToken);
+        await walletRepository.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         logger.LogInformation("Transfer completed: Debit {DebitId}, Credit {CreditId}", debitTransaction.Id, creditTransaction.Id);
 
@@ -143,12 +143,12 @@ public class WalletService(IWalletRepository walletRepository, ILogger<WalletSer
     {
         logger.LogInformation("Locking wallet for user {UserId}: {Reason}", userId, reason);
 
-        var wallet = await GetWalletByUserIdAsync(userId, cancellationToken);
+        var wallet = await GetWalletByUserIdAsync(userId, cancellationToken).ConfigureAwait(false);
 
         if (wallet == null) throw new InvalidOperationException($"Wallet not found for user {userId}");
 
         wallet.Lock(reason);
-        await walletRepository.SaveChangesAsync(cancellationToken);
+        await walletRepository.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         logger.LogInformation("Wallet locked for user {UserId}", userId);
     }
@@ -157,12 +157,12 @@ public class WalletService(IWalletRepository walletRepository, ILogger<WalletSer
     {
         logger.LogInformation("Unlocking wallet for user {UserId}", userId);
 
-        var wallet = await GetWalletByUserIdAsync(userId, cancellationToken);
+        var wallet = await GetWalletByUserIdAsync(userId, cancellationToken).ConfigureAwait(false);
 
         if (wallet == null) throw new InvalidOperationException($"Wallet not found for user {userId}");
 
         wallet.Unlock();
-        await walletRepository.SaveChangesAsync(cancellationToken);
+        await walletRepository.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         logger.LogInformation("Wallet unlocked for user {UserId}", userId);
     }
@@ -176,11 +176,11 @@ public class WalletService(IWalletRepository walletRepository, ILogger<WalletSer
         CancellationToken cancellationToken = default
     )
     {
-        var wallet = await GetWalletByUserIdAsync(userId, cancellationToken);
+        var wallet = await GetWalletByUserIdAsync(userId, cancellationToken).ConfigureAwait(false);
 
         if (wallet == null) return new List<WalletTransaction>();
 
-        return await walletRepository.GetTransactionsAsync(wallet.Id, skip, take, typeFilter, statusFilter, cancellationToken);
+        return await walletRepository.GetTransactionsAsync(wallet.Id, skip, take, typeFilter, statusFilter, cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<(List<UserWallet> Wallets, int TotalCount)> ListWalletsAsync(
@@ -193,7 +193,7 @@ public class WalletService(IWalletRepository walletRepository, ILogger<WalletSer
         logger.LogInformation("Listing wallets - Page: {Page}, PageSize: {PageSize}, Currency: {Currency}, IsFrozen: {IsFrozen}",
             page, pageSize, currency, isFrozen);
 
-        return await walletRepository.ListWalletsAsync(page, pageSize, currency, isFrozen, cancellationToken);
+        return await walletRepository.ListWalletsAsync(page, pageSize, currency, isFrozen, cancellationToken).ConfigureAwait(false);
     }
 
     public async Task UpdateWalletSettingsAsync(
@@ -205,7 +205,7 @@ public class WalletService(IWalletRepository walletRepository, ILogger<WalletSer
     {
         logger.LogInformation("Updating wallet settings for {WalletId}", walletId);
 
-        var wallet = await GetWalletByIdAsync(walletId, cancellationToken);
+        var wallet = await GetWalletByIdAsync(walletId, cancellationToken).ConfigureAwait(false);
 
         if (wallet == null) throw new InvalidOperationException($"Wallet not found: {walletId}");
 
@@ -213,7 +213,7 @@ public class WalletService(IWalletRepository walletRepository, ILogger<WalletSer
         if (dailyLimit.HasValue) wallet.DailyLimit = dailyLimit.Value;
         if (monthlyLimit.HasValue) wallet.MonthlyLimit = monthlyLimit.Value;
 
-        await walletRepository.SaveChangesAsync(cancellationToken);
+        await walletRepository.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         logger.LogInformation("Wallet settings updated for {WalletId}", walletId);
     }
@@ -222,7 +222,7 @@ public class WalletService(IWalletRepository walletRepository, ILogger<WalletSer
     {
         logger.LogInformation("Closing wallet {WalletId}", walletId);
 
-        var wallet = await GetWalletByIdAsync(walletId, cancellationToken);
+        var wallet = await GetWalletByIdAsync(walletId, cancellationToken).ConfigureAwait(false);
 
         if (wallet == null) throw new InvalidOperationException($"Wallet not found: {walletId}");
 
@@ -230,7 +230,7 @@ public class WalletService(IWalletRepository walletRepository, ILogger<WalletSer
             throw new InvalidOperationException($"Cannot close wallet with non-zero balance: {wallet.Balance}");
 
         wallet.IsActive = false;
-        await walletRepository.SaveChangesAsync(cancellationToken);
+        await walletRepository.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         logger.LogInformation("Wallet closed: {WalletId}", walletId);
     }
@@ -239,12 +239,12 @@ public class WalletService(IWalletRepository walletRepository, ILogger<WalletSer
     {
         logger.LogInformation("Freezing wallet {WalletId}: {Reason}", walletId, reason);
 
-        var wallet = await GetWalletByIdAsync(walletId, cancellationToken);
+        var wallet = await GetWalletByIdAsync(walletId, cancellationToken).ConfigureAwait(false);
 
         if (wallet == null) throw new InvalidOperationException($"Wallet not found: {walletId}");
 
         wallet.Lock(reason);
-        await walletRepository.SaveChangesAsync(cancellationToken);
+        await walletRepository.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         logger.LogInformation("Wallet frozen: {WalletId}", walletId);
     }
@@ -253,12 +253,12 @@ public class WalletService(IWalletRepository walletRepository, ILogger<WalletSer
     {
         logger.LogInformation("Unfreezing wallet {WalletId}", walletId);
 
-        var wallet = await GetWalletByIdAsync(walletId, cancellationToken);
+        var wallet = await GetWalletByIdAsync(walletId, cancellationToken).ConfigureAwait(false);
 
         if (wallet == null) throw new InvalidOperationException($"Wallet not found: {walletId}");
 
         wallet.Unlock();
-        await walletRepository.SaveChangesAsync(cancellationToken);
+        await walletRepository.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         logger.LogInformation("Wallet unfrozen: {WalletId}", walletId);
     }
@@ -271,13 +271,13 @@ public class WalletService(IWalletRepository walletRepository, ILogger<WalletSer
     {
         logger.LogInformation("Getting audit log for wallet {WalletId}", walletId);
 
-        var wallet = await GetWalletByIdAsync(walletId, cancellationToken);
+        var wallet = await GetWalletByIdAsync(walletId, cancellationToken).ConfigureAwait(false);
 
         if (wallet == null) throw new InvalidOperationException($"Wallet not found: {walletId}");
 
         var skip = (page - 1) * pageSize;
-        var transactions = await walletRepository.GetTransactionsAsync(walletId, skip, pageSize, null, null, cancellationToken);
-        var totalCount = await walletRepository.GetTransactionCountAsync(walletId, cancellationToken);
+        var transactions = await walletRepository.GetTransactionsAsync(walletId, skip, pageSize, null, null, cancellationToken).ConfigureAwait(false);
+        var totalCount = await walletRepository.GetTransactionCountAsync(walletId, cancellationToken).ConfigureAwait(false);
 
         return (transactions, totalCount);
     }

@@ -7,5 +7,5 @@ namespace GameGuild.Commerce.Payments;
 /// </summary>
 public class CreateWalletCommandHandler(IWalletService walletService) : ICommandHandler<CreateWalletCommand, UserWallet>
 {
-    public async Task<UserWallet> Handle(CreateWalletCommand request, CancellationToken cancellationToken) { return await walletService.CreateWalletAsync(request.UserId, request.Currency, cancellationToken); }
+    public async Task<UserWallet> Handle(CreateWalletCommand request, CancellationToken cancellationToken) { return await walletService.CreateWalletAsync(request.UserId, request.Currency, cancellationToken).ConfigureAwait(false); }
 }

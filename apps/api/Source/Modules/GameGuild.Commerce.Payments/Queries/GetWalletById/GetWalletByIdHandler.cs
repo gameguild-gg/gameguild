@@ -9,6 +9,6 @@ public sealed class GetWalletByIdHandler(IWalletService walletService) : IQueryH
 {
     public async Task<UserWallet?> Handle(GetWalletByIdQuery request, CancellationToken cancellationToken)
     {
-        return await walletService.GetWalletByIdAsync(request.WalletId, cancellationToken);
+        return await walletService.GetWalletByIdAsync(request.WalletId, cancellationToken).ConfigureAwait(false);
     }
 }

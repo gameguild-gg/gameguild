@@ -9,7 +9,7 @@ public sealed class CloseWalletHandler(IWalletService walletService) : ICommandH
 {
     public async Task<Unit> Handle(CloseWalletCommand request, CancellationToken cancellationToken)
     {
-        await walletService.CloseWalletAsync(request.WalletId, cancellationToken);
+        await walletService.CloseWalletAsync(request.WalletId, cancellationToken).ConfigureAwait(false);
         return Unit.Value;
     }
 }

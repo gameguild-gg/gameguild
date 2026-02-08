@@ -15,7 +15,7 @@ public sealed class ListWalletsHandler(IWalletService walletService) : IQueryHan
             request.PageSize,
             request.Currency,
             request.IsFrozen,
-            cancellationToken);
+            cancellationToken).ConfigureAwait(false);
 
         var totalPages = (int)Math.Ceiling((double)totalCount / request.PageSize);
 

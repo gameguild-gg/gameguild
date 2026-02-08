@@ -1,0 +1,281 @@
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using Stripe;
+
+namespace GameGuild.Commerce.Payments;
+
+/// <summary>
+///     Stripe payment processing, refunds, and webhook validation.
+///     Handles core transactional operations against the Stripe API.
+/// </summary>
+public class StripePaymentService(
+    IOptions<StripeGatewayOptions> options,
+    ILogger<StripePaymentService> logger) : IStripePaymentService
+{
+    private readonly StripeGatewayOptions _options = options.Value;
+    private readonly PaymentIntentService _paymentIntentService = new();
+    private readonly RefundService _refundService = new();
+
+    /// <inheritdoc />
+    public async Task<GatewayPaymentResult> ProcessPaymentAsync(
+        GatewayPaymentRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        logger.LogInformation(
+            "Processing Stripe payment: {Amount} {Currency} with idempotency key {IdempotencyKey} (Simulation: {IsSimulation})",
+            request.Amount, request.Currency, request.IdempotencyKey, _options.UseSimulation);
+
+        if (_options.UseSimulation)
+        {
+            return await ProcessPaymentSimulatedAsync(cancellationToken).ConfigureAwait(false);
+        }
+
+        return await ProcessPaymentRealAsync(request, cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <inheritdoc />
+    public async Task<GatewayRefundResult> ProcessRefundAsync(
+        GatewayRefundRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        logger.LogInformation(
+            "Processing Stripe refund for transaction {TransactionId} with idempotency key {IdempotencyKey} (Simulation: {IsSimulation})",
+            request.OriginalTransactionId, request.IdempotencyKey, _options.UseSimulation);
+
+        if (_options.UseSimulation)
+        {
+            return await ProcessRefundSimulatedAsync(request, cancellationToken).ConfigureAwait(false);
+        }
+
+        return await ProcessRefundRealAsync(request, cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <inheritdoc />
+    public Task<bool> ValidateWebhookSignatureAsync(
+        string payload,
+        string signature,
+        string secret)
+    {
+        if (_options.UseSimulation)
+        {
+            return ValidateWebhookSignatureSimulatedAsync(signature, secret);
+        }
+
+        return ValidateWebhookSignatureRealAsync(payload, signature, secret);
+    }
+
+    #region Payment
+
+    private async Task<GatewayPaymentResult> ProcessPaymentRealAsync(
+        GatewayPaymentRequest request,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var createOptions = new PaymentIntentCreateOptions
+            {
+                Amount = StripeAmountConverter.ToStripeAmount(request.Amount, request.Currency),
+                Currency = request.Currency.ToLowerInvariant(),
+                Customer = request.CustomerId,
+                PaymentMethod = request.PaymentMethodId,
+                Confirm = true,
+                Description = request.Description,
+                Metadata = request.Metadata,
+                AutomaticPaymentMethods = new PaymentIntentAutomaticPaymentMethodsOptions
+                {
+                    Enabled = true,
+                    AllowRedirects = "never"
+                }
+            };
+
+            var requestOptions = new RequestOptions
+            {
+                IdempotencyKey = request.IdempotencyKey
+            };
+
+            var paymentIntent = await _paymentIntentService.CreateAsync(
+                createOptions,
+                requestOptions,
+                cancellationToken).ConfigureAwait(false);
+
+            logger.LogInformation(
+                "Stripe payment processed: {PaymentIntentId} with status {Status}",
+                paymentIntent.Id, paymentIntent.Status);
+
+            return new GatewayPaymentResult(
+                Success: paymentIntent.Status == "succeeded",
+                TransactionId: paymentIntent.Id,
+                ExternalPaymentId: paymentIntent.LatestChargeId,
+                ErrorCode: null,
+                ErrorMessage: null,
+                Status: StripeStatusMapper.MapPaymentStatus(paymentIntent.Status),
+                ProcessedAt: DateTime.UtcNow);
+        }
+        catch (StripeException ex)
+        {
+            logger.LogError(ex,
+                "Stripe payment failed for idempotency key {IdempotencyKey}: {ErrorCode} - {ErrorMessage}",
+                request.IdempotencyKey, ex.StripeError?.Code, ex.StripeError?.Message);
+
+            return new GatewayPaymentResult(
+                Success: false,
+                TransactionId: null,
+                ExternalPaymentId: null,
+                ErrorCode: ex.StripeError?.Code ?? "stripe_error",
+                ErrorMessage: ex.StripeError?.Message ?? ex.Message,
+                Status: PaymentStatus.Failed,
+                ProcessedAt: DateTime.UtcNow);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Unexpected error during Stripe payment for idempotency key {IdempotencyKey}",
+                request.IdempotencyKey);
+
+            return SimulatedPaymentResultFactory.PaymentFailure(ex.Message, "unexpected_error");
+        }
+    }
+
+    private async Task<GatewayPaymentResult> ProcessPaymentSimulatedAsync(
+        CancellationToken cancellationToken)
+    {
+        await Task.Delay(1, cancellationToken).ConfigureAwait(false);
+        logger.LogDebug("Using simulated payment response for development/testing");
+        return SimulatedPaymentResultFactory.PaymentSuccess(logger);
+    }
+
+    #endregion
+
+    #region Refund
+
+    private async Task<GatewayRefundResult> ProcessRefundRealAsync(
+        GatewayRefundRequest request,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var createOptions = new RefundCreateOptions
+            {
+                PaymentIntent = request.OriginalTransactionId,
+                Reason = StripeStatusMapper.MapRefundReason(request.Reason)
+            };
+
+            if (request.Amount.HasValue)
+            {
+                createOptions.Amount = StripeAmountConverter.ToStripeAmount(request.Amount.Value, "USD");
+            }
+
+            var requestOptions = new RequestOptions
+            {
+                IdempotencyKey = request.IdempotencyKey
+            };
+
+            var refund = await _refundService.CreateAsync(
+                createOptions,
+                requestOptions,
+                cancellationToken).ConfigureAwait(false);
+
+            logger.LogInformation(
+                "Stripe refund processed: {RefundId} with status {Status}",
+                refund.Id, refund.Status);
+
+            return new GatewayRefundResult(
+                Success: refund.Status == "succeeded",
+                RefundId: refund.Id,
+                AmountRefunded: StripeAmountConverter.FromStripeAmount(refund.Amount, refund.Currency),
+                ErrorCode: null,
+                ErrorMessage: null,
+                ProcessedAt: DateTime.UtcNow);
+        }
+        catch (StripeException ex)
+        {
+            logger.LogError(ex,
+                "Stripe refund failed for transaction {TransactionId}: {ErrorCode} - {ErrorMessage}",
+                request.OriginalTransactionId, ex.StripeError?.Code, ex.StripeError?.Message);
+
+            return new GatewayRefundResult(
+                Success: false,
+                RefundId: null,
+                AmountRefunded: 0,
+                ErrorCode: ex.StripeError?.Code ?? "stripe_error",
+                ErrorMessage: ex.StripeError?.Message ?? ex.Message,
+                ProcessedAt: DateTime.UtcNow);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Unexpected error during Stripe refund for transaction {TransactionId}",
+                request.OriginalTransactionId);
+
+            return SimulatedPaymentResultFactory.RefundFailure(ex.Message, "unexpected_error");
+        }
+    }
+
+    private async Task<GatewayRefundResult> ProcessRefundSimulatedAsync(
+        GatewayRefundRequest request,
+        CancellationToken cancellationToken)
+    {
+        await Task.Delay(1, cancellationToken).ConfigureAwait(false);
+        logger.LogDebug("Using simulated refund response for development/testing");
+        return SimulatedPaymentResultFactory.RefundSuccess(request.Amount ?? 0, logger);
+    }
+
+    #endregion
+
+    #region Webhook
+
+    private Task<bool> ValidateWebhookSignatureRealAsync(
+        string payload,
+        string signature,
+        string secret)
+    {
+        try
+        {
+            if (string.IsNullOrEmpty(payload) || string.IsNullOrEmpty(signature) || string.IsNullOrEmpty(secret))
+            {
+                logger.LogWarning("Webhook validation failed: missing required parameters");
+                return Task.FromResult(false);
+            }
+
+            var stripeEvent = EventUtility.ConstructEvent(
+                payload,
+                signature,
+                secret,
+                tolerance: _options.WebhookToleranceSeconds);
+
+            logger.LogDebug(
+                "Webhook signature validated successfully for event {EventId} of type {EventType}",
+                stripeEvent.Id, stripeEvent.Type);
+
+            return Task.FromResult(true);
+        }
+        catch (StripeException ex)
+        {
+            logger.LogWarning(ex,
+                "Stripe webhook signature validation failed: {ErrorMessage}",
+                ex.Message);
+            return Task.FromResult(false);
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "Unexpected error during webhook signature validation");
+            return Task.FromResult(false);
+        }
+    }
+
+    private Task<bool> ValidateWebhookSignatureSimulatedAsync(
+        string signature,
+        string secret)
+    {
+        logger.LogDebug("Using simulated webhook validation for development/testing");
+
+        if (string.IsNullOrEmpty(signature) || string.IsNullOrEmpty(secret))
+        {
+            logger.LogWarning("Simulated webhook validation failed: missing signature or secret");
+            return Task.FromResult(false);
+        }
+
+        var isValidFormat = signature.StartsWith("t=", StringComparison.Ordinal) && signature.Contains(",v1=");
+        return Task.FromResult(isValidFormat || !string.IsNullOrEmpty(signature));
+    }
+
+    #endregion
+}

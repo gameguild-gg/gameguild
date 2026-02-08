@@ -1,5 +1,6 @@
 using Asp.Versioning;
 using GameGuild.CQRS;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -9,11 +10,11 @@ namespace GameGuild.Commerce.Payments;
 ///     Tax rules controller.
 ///     Provides endpoints for managing tax rules.
 /// </summary>
-[ApiController]
 [ApiVersion("1.0")]
 [Route("v{version:apiVersion}/tax-rules")]
 [Tags("tax-rules")]
-public sealed class TaxRulesController(ISender sender) : ControllerBase
+[Authorize]
+public sealed class TaxRulesController(ISender sender) : BaseApiController
 {
     /// <summary>
     ///     Get tax rules for a jurisdiction
@@ -87,7 +88,7 @@ public sealed class TaxRulesController(ISender sender) : ControllerBase
             body.Rate,
             body.EffectiveFrom,
             body.EffectiveTo,
-            body.Description), ct).ConfigureAwait(false);
+            body.Description), ct);
 
         return CreatedAtAction(nameof(GetRuleById), new { ruleId = id }, new { id });
     }
@@ -114,7 +115,7 @@ public sealed class TaxRulesController(ISender sender) : ControllerBase
             body.EffectiveFrom,
             body.EffectiveTo,
             body.Description,
-            body.IsActive), ct).ConfigureAwait(false);
+            body.IsActive), ct);
         return NoContent();
     }
 

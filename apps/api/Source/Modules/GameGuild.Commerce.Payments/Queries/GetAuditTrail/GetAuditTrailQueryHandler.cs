@@ -1,4 +1,4 @@
-﻿using GameGuild.CQRS;
+using GameGuild.CQRS;
 
 namespace GameGuild.Commerce.Payments;
 
@@ -9,6 +9,6 @@ public sealed class GetAuditTrailQueryHandler(IRevenueAuditService revenueAuditS
 {
     public async Task<List<AuditTrail>> Handle(GetAuditTrailQuery request, CancellationToken cancellationToken)
     {
-        return await revenueAuditService.GetAuditTrailByEntityAsync(request.EntityType, request.EntityId, request.Skip, request.Take, cancellationToken);
+        return await revenueAuditService.GetAuditTrailByEntityAsync(request.EntityType, request.EntityId, request.Skip, request.Take, cancellationToken).ConfigureAwait(false);
     }
 }

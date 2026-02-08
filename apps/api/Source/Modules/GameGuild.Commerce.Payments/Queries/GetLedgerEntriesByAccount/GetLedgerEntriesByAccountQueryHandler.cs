@@ -1,4 +1,4 @@
-﻿using GameGuild.CQRS;
+using GameGuild.CQRS;
 
 namespace GameGuild.Commerce.Payments;
 
@@ -9,6 +9,6 @@ public sealed class GetLedgerEntriesByAccountQueryHandler(IRevenueAuditService r
 {
     public async Task<List<FinancialLedgerEntry>> Handle(GetLedgerEntriesByAccountQuery request, CancellationToken cancellationToken)
     {
-        return await revenueAuditService.GetLedgerEntriesByAccountAsync(request.Account, request.Skip, request.Take, cancellationToken);
+        return await revenueAuditService.GetLedgerEntriesByAccountAsync(request.Account, request.Skip, request.Take, cancellationToken).ConfigureAwait(false);
     }
 }

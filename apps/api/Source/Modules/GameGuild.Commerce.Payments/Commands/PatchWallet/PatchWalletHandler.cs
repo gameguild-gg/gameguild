@@ -14,7 +14,7 @@ public sealed class PatchWalletHandler(IWalletService walletService) : ICommandH
             request.Currency,
             request.DailyLimit,
             request.MonthlyLimit,
-            cancellationToken);
+            cancellationToken).ConfigureAwait(false);
         return Unit.Value;
     }
 }

@@ -20,12 +20,11 @@ namespace GameGuild.Commerce.Payments;
 ///     Supports both user-based operations (/users/{userId}/wallet) and 
 ///     wallet-ID-based operations (/wallets/{walletId}).
 /// </summary>
-[ApiController]
 [ApiVersion("1.0")]
 [Route("v{version:apiVersion}")]
 [Tags("wallets")]
 [Authorize]
-public sealed class WalletsController(ISender sender) : ControllerBase
+public sealed class WalletsController(ISender sender) : BaseApiController
 {
     #region Wallet Creation
 

@@ -16,13 +16,12 @@ namespace GameGuild.Commerce.Payments;
 ///     - ExpensiveOperations policy for mutations (payment processing, refunds)
 ///     - Api policy for query endpoints
 /// </summary>
-[ApiController]
 [ApiVersion("1.0")]
 [Route("api/v{version:apiVersion}/[controller]")]
 [Tags("payments")]
 [Authorize]
 [EnableRateLimiting(RateLimitPolicies.ExpensiveOperations)]
-public sealed class PaymentsController(ISender sender, IActorContextAccessor actorContextAccessor) : ControllerBase
+public sealed class PaymentsController(ISender sender, IActorContextAccessor actorContextAccessor) : BaseApiController
 {
     /// <summary>
     ///     Retrieve all payment transactions with optional filtering

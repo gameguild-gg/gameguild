@@ -1,5 +1,4 @@
 ﻿using GameGuild.CQRS;
-using GameGuild.ValueObjects;
 
 namespace GameGuild.Commerce.Payments;
 
@@ -44,7 +43,7 @@ public sealed class CalculatePricingQueryHandler : IQueryHandler<CalculatePricin
         // Apply discount code if provided
         if (!string.IsNullOrEmpty(request.DiscountCode))
         {
-            // TODO: Integrate with discount/promo code service when available
+            // PLANNED: Integrate with discount/promo code service when available (depends on GameGuild.Commerce.Promotions)
             // For now, apply a placeholder discount calculation
             // This should be replaced with actual promo code validation and application
             // Example: var promoResult = await _promoService.ValidateAndApplyAsync(request.DiscountCode, basePrice, cancellationToken);

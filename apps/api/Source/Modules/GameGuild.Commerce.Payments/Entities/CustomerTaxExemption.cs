@@ -1,4 +1,3 @@
-using GameGuild.Entities;
 
 namespace GameGuild.Commerce.Payments;
 
@@ -43,8 +42,7 @@ public class CustomerTaxExemption : EntityBase
             IssuingAuthority = issuingAuthority,
             Notes = notes,
             Status = TaxExemptionStatus.Active,
-            VerificationStatus = ExemptionVerificationStatus.Pending,
-            CreatedAt = DateTime.UtcNow
+            VerificationStatus = ExemptionVerificationStatus.Pending
         };
     }
 

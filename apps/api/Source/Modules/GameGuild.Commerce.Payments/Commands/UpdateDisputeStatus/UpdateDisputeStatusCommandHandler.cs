@@ -1,4 +1,4 @@
-﻿using GameGuild.CQRS;
+using GameGuild.CQRS;
 
 namespace GameGuild.Commerce.Payments;
 
@@ -9,7 +9,7 @@ public sealed class UpdateDisputeStatusCommandHandler(IDisputeService disputeSer
 {
     public async Task<Unit> Handle(UpdateDisputeStatusCommand request, CancellationToken cancellationToken)
     {
-        await disputeService.UpdateDisputeStatusAsync(request.DisputeId, request.NewStatus, request.DueDate, cancellationToken);
+        await disputeService.UpdateDisputeStatusAsync(request.DisputeId, request.NewStatus, request.DueDate, cancellationToken).ConfigureAwait(false);
 
         return Unit.Value;
     }

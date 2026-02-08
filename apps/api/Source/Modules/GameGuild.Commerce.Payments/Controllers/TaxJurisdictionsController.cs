@@ -1,5 +1,6 @@
 using Asp.Versioning;
 using GameGuild.CQRS;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -9,11 +10,11 @@ namespace GameGuild.Commerce.Payments;
 ///     Tax jurisdictions controller.
 ///     Provides endpoints for managing tax jurisdictions.
 /// </summary>
-[ApiController]
 [ApiVersion("1.0")]
 [Route("v{version:apiVersion}/tax-jurisdictions")]
 [Tags("tax-jurisdictions")]
-public sealed class TaxJurisdictionsController(ISender sender) : ControllerBase
+[Authorize]
+public sealed class TaxJurisdictionsController(ISender sender) : BaseApiController
 {
     /// <summary>
     ///     Get all tax jurisdictions
@@ -67,7 +68,7 @@ public sealed class TaxJurisdictionsController(ISender sender) : ControllerBase
             body.Country,
             body.State,
             body.TaxType,
-            body.DefaultRate), ct).ConfigureAwait(false);
+            body.DefaultRate), ct);
 
         return CreatedAtAction(nameof(GetJurisdictionById), new { jurisdictionId = id }, new { id });
     }

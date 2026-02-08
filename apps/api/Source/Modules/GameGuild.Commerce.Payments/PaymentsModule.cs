@@ -32,8 +32,10 @@ public static class PaymentsModule
         services.AddScoped<ITaxCalculationService, TaxCalculationService>();
         services.AddScoped<IWalletService, WalletService>();
 
-        // Register payment gateway
+        // Register payment gateway and sub-services
         services.Configure<StripeGatewayOptions>(configuration.GetSection("Stripe"));
+        services.AddScoped<IStripePaymentService, StripePaymentService>();
+        services.AddScoped<IStripeCustomerService, StripeCustomerService>();
         services.AddScoped<IPaymentGateway, StripePaymentGateway>();
 
         // Register controllers

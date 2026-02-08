@@ -1,4 +1,4 @@
-﻿using GameGuild.CQRS;
+using GameGuild.CQRS;
 
 namespace GameGuild.Commerce.Payments;
 
@@ -9,6 +9,6 @@ public sealed class GetRevenueEventsByReferenceIdQueryHandler(IRevenueAuditServi
 {
     public async Task<List<RevenueEvent>> Handle(GetRevenueEventsByReferenceIdQuery request, CancellationToken cancellationToken)
     {
-        return await revenueAuditService.GetRevenueEventsByReferenceIdAsync(request.ReferenceId, cancellationToken);
+        return await revenueAuditService.GetRevenueEventsByReferenceIdAsync(request.ReferenceId, cancellationToken).ConfigureAwait(false);
     }
 }

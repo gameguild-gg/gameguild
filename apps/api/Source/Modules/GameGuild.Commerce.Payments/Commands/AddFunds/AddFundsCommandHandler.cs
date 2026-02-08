@@ -9,6 +9,6 @@ public class AddFundsCommandHandler(IWalletService walletService) : ICommandHand
 {
     public async Task<WalletTransaction> Handle(AddFundsCommand request, CancellationToken cancellationToken)
     {
-        return await walletService.AddFundsAsync(request.UserId, request.Amount, request.Description, request.ReferenceId, cancellationToken);
+        return await walletService.AddFundsAsync(request.UserId, request.Amount, request.Description, request.ReferenceId, cancellationToken).ConfigureAwait(false);
     }
 }

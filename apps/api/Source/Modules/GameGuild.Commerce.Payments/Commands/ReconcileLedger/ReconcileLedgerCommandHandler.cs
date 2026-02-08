@@ -1,4 +1,4 @@
-﻿using GameGuild.CQRS;
+using GameGuild.CQRS;
 
 namespace GameGuild.Commerce.Payments;
 
@@ -9,7 +9,7 @@ public sealed class ReconcileLedgerCommandHandler(IRevenueAuditService revenueAu
 {
     public async Task<Unit> Handle(ReconcileLedgerCommand request, CancellationToken cancellationToken)
     {
-        await revenueAuditService.ReconcileLedgerEntryAsync(request.EntryId, request.ReconciledBy, request.Notes, cancellationToken);
+        await revenueAuditService.ReconcileLedgerEntryAsync(request.EntryId, request.ReconciledBy, request.Notes, cancellationToken).ConfigureAwait(false);
 
         return Unit.Value;
     }

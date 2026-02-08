@@ -1,4 +1,4 @@
-﻿using GameGuild.CQRS;
+using GameGuild.CQRS;
 
 namespace GameGuild.Commerce.Payments;
 
@@ -7,5 +7,5 @@ namespace GameGuild.Commerce.Payments;
 /// </summary>
 public sealed class GetWalletBalanceQueryHandler(IWalletService walletService) : IQueryHandler<GetWalletBalanceQuery, decimal>
 {
-    public async Task<decimal> Handle(GetWalletBalanceQuery request, CancellationToken cancellationToken) { return await walletService.GetBalanceAsync(request.UserId, cancellationToken); }
+    public async Task<decimal> Handle(GetWalletBalanceQuery request, CancellationToken cancellationToken) { return await walletService.GetBalanceAsync(request.UserId, cancellationToken).ConfigureAwait(false); }
 }
