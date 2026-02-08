@@ -1,4 +1,3 @@
-using GameGuild.Abstractions;
 using GameGuild.CQRS;
 using GameGuild.Identity.Authorization;
 using Microsoft.EntityFrameworkCore;
@@ -26,7 +25,7 @@ public class GetPermissionTemplatesQueryHandler(
                 .Where(t => t.IsActive)
                 .OrderBy(t => t.Category)
                 .ThenBy(t => t.Name)
-                .ToListAsync(cancellationToken);
+                .ToListAsync(cancellationToken).ConfigureAwait(false);
 
             var dtos = templates.Select(t => new PermissionTemplateDto
             {

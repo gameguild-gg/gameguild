@@ -2,7 +2,7 @@
 
 namespace GameGuild.Identity.Authentication;
 
-public record GetPeriodicAccessReviewsQuery : IQuery<Models.PagedResult<PeriodicAccessReview>>
+public record GetPeriodicAccessReviewsQuery : IQuery<PagedResult<PeriodicAccessReview>>
 {
     public Guid? TenantId { get; init; }
 

@@ -1,4 +1,3 @@
-using GameGuild.Abstractions;
 using Microsoft.EntityFrameworkCore;
 
 namespace GameGuild.Identity.Authentication;
@@ -15,14 +14,14 @@ public class ServiceAccountRepository(IApplicationDbContext context) : IServiceA
     public async Task<ServiceAccount?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         return await ServiceAccounts
-            .FirstOrDefaultAsync(sa => sa.Id == id && sa.IsActive, cancellationToken);
+            .FirstOrDefaultAsync(sa => sa.Id == id && sa.IsActive, cancellationToken).ConfigureAwait(false);
     }
 
     /// <inheritdoc />
     public async Task<ServiceAccount?> GetByClientIdAsync(string clientId, CancellationToken cancellationToken = default)
     {
         return await ServiceAccounts
-            .FirstOrDefaultAsync(sa => sa.ClientId == clientId, cancellationToken);
+            .FirstOrDefaultAsync(sa => sa.ClientId == clientId, cancellationToken).ConfigureAwait(false);
     }
 
     /// <inheritdoc />
@@ -33,7 +32,7 @@ public class ServiceAccountRepository(IApplicationDbContext context) : IServiceA
         return await ServiceAccounts
             .Where(sa => sa.TenantId == tenantId)
             .OrderByDescending(sa => sa.CreatedAt)
-            .ToListAsync(cancellationToken);
+            .ToListAsync(cancellationToken).ConfigureAwait(false);
     }
 
     /// <inheritdoc />
@@ -43,7 +42,17 @@ public class ServiceAccountRepository(IApplicationDbContext context) : IServiceA
         return await ServiceAccounts
             .Where(sa => sa.TenantId == null)
             .OrderByDescending(sa => sa.CreatedAt)
-            .ToListAsync(cancellationToken);
+            .ToListAsync(cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<ServiceAccount>> GetAllAsync(
+        CancellationToken cancellationToken = default)
+    {
+        return await ServiceAccounts
+            .OrderByDescending(sa => sa.CreatedAt)
+            .Take(500)
+            .ToListAsync(cancellationToken).ConfigureAwait(false);
     }
 
     /// <inheritdoc />
@@ -52,11 +61,10 @@ public class ServiceAccountRepository(IApplicationDbContext context) : IServiceA
         CancellationToken cancellationToken = default)
     {
         serviceAccount.Id = Guid.NewGuid();
-        serviceAccount.CreatedAt = DateTime.UtcNow;
         serviceAccount.UpdatedAt = DateTime.UtcNow;
 
         ServiceAccounts.Add(serviceAccount);
-        await context.SaveChangesAsync(cancellationToken);
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         return serviceAccount;
     }
@@ -69,7 +77,7 @@ public class ServiceAccountRepository(IApplicationDbContext context) : IServiceA
         serviceAccount.UpdatedAt = DateTime.UtcNow;
 
         ServiceAccounts.Update(serviceAccount);
-        await context.SaveChangesAsync(cancellationToken);
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         return serviceAccount;
     }
@@ -77,7 +85,7 @@ public class ServiceAccountRepository(IApplicationDbContext context) : IServiceA
     /// <inheritdoc />
     public async Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var serviceAccount = await GetByIdAsync(id, cancellationToken);
+        var serviceAccount = await GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
 
         if (serviceAccount != null)
         {
@@ -85,7 +93,7 @@ public class ServiceAccountRepository(IApplicationDbContext context) : IServiceA
             serviceAccount.IsActive = false;
             serviceAccount.UpdatedAt = DateTime.UtcNow;
 
-            await UpdateAsync(serviceAccount, cancellationToken);
+            await UpdateAsync(serviceAccount, cancellationToken).ConfigureAwait(false);
         }
     }
 
@@ -93,6 +101,6 @@ public class ServiceAccountRepository(IApplicationDbContext context) : IServiceA
     public async Task<bool> ClientIdExistsAsync(string clientId, CancellationToken cancellationToken = default)
     {
         return await ServiceAccounts
-            .AnyAsync(sa => sa.ClientId == clientId, cancellationToken);
+            .AnyAsync(sa => sa.ClientId == clientId, cancellationToken).ConfigureAwait(false);
     }
 }

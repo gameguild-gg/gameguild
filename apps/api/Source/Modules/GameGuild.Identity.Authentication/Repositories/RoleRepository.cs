@@ -1,4 +1,3 @@
-using GameGuild.Abstractions;
 using Microsoft.EntityFrameworkCore;
 
 namespace GameGuild.Identity.Authentication;
@@ -15,7 +14,7 @@ public class RoleRepository(IApplicationDbContext context) : IRoleRepository
     {
         return await Roles
             .AsNoTracking()
-            .FirstOrDefaultAsync(r => r.Id == id, cancellationToken);
+            .FirstOrDefaultAsync(r => r.Id == id, cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<List<Role>> GetAllAsync(Guid? tenantId = null, bool includeInactive = false, CancellationToken cancellationToken = default)
@@ -34,7 +33,7 @@ public class RoleRepository(IApplicationDbContext context) : IRoleRepository
 
         return await query
             .OrderBy(r => r.Name)
-            .ToListAsync(cancellationToken);
+            .ToListAsync(cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<Role?> GetByNameAsync(string name, Guid? tenantId = null, CancellationToken cancellationToken = default)
@@ -50,26 +49,25 @@ public class RoleRepository(IApplicationDbContext context) : IRoleRepository
             query = query.Where(r => r.Name.ToLower() == name.ToLower() && r.TenantId == null);
         }
 
-        return await query.FirstOrDefaultAsync(cancellationToken);
+        return await query.FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<Role> AddAsync(Role role, CancellationToken cancellationToken = default)
     {
-        role.CreatedAt = DateTime.UtcNow;
-        role.UpdatedAt = DateTime.UtcNow;
+        role.Touch();
 
         Roles.Add(role);
-        await context.SaveChangesAsync(cancellationToken);
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         return role;
     }
 
     public async Task UpdateAsync(Role role, CancellationToken cancellationToken = default)
     {
-        role.UpdatedAt = DateTime.UtcNow;
+        role.Touch();
 
         Roles.Update(role);
-        await context.SaveChangesAsync(cancellationToken);
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
     }
 
     public async Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)
@@ -78,7 +76,7 @@ public class RoleRepository(IApplicationDbContext context) : IRoleRepository
         if (role != null)
         {
             Roles.Remove(role);
-            await context.SaveChangesAsync(cancellationToken);
+            await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         }
     }
 
@@ -100,7 +98,7 @@ public class RoleRepository(IApplicationDbContext context) : IRoleRepository
             query = query.Where(r => r.Id != excludeRoleId.Value);
         }
 
-        return await query.AnyAsync(cancellationToken);
+        return await query.AnyAsync(cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<List<Role>> GetUserRolesAsync(Guid userId, bool includeExpired = false, CancellationToken cancellationToken = default)
@@ -119,14 +117,14 @@ public class RoleRepository(IApplicationDbContext context) : IRoleRepository
             .Include(ur => ur.Role)
             .Where(ur => ur.Role != null && ur.Role.IsActive)
             .Select(ur => ur.Role!)
-            .ToListAsync(cancellationToken);
+            .ToListAsync(cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<UserRole> AssignRoleToUserAsync(UserRole userRole, CancellationToken cancellationToken = default)
     {
         // Check if the role is already assigned to the user
         var existingUserRole = await UserRoles
-            .FirstOrDefaultAsync(ur => ur.UserId == userRole.UserId && ur.RoleId == userRole.RoleId, cancellationToken);
+            .FirstOrDefaultAsync(ur => ur.UserId == userRole.UserId && ur.RoleId == userRole.RoleId, cancellationToken).ConfigureAwait(false);
 
         if (existingUserRole != null)
         {
@@ -134,12 +132,11 @@ public class RoleRepository(IApplicationDbContext context) : IRoleRepository
             return existingUserRole;
         }
 
-        userRole.CreatedAt = DateTime.UtcNow;
-        userRole.UpdatedAt = DateTime.UtcNow;
+        userRole.Touch();
         userRole.AssignedAt = DateTime.UtcNow;
 
         UserRoles.Add(userRole);
-        await context.SaveChangesAsync(cancellationToken);
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         return userRole;
     }
@@ -147,12 +144,12 @@ public class RoleRepository(IApplicationDbContext context) : IRoleRepository
     public async Task RemoveRoleFromUserAsync(Guid userId, Guid roleId, CancellationToken cancellationToken = default)
     {
         var userRole = await UserRoles
-            .FirstOrDefaultAsync(ur => ur.UserId == userId && ur.RoleId == roleId, cancellationToken);
+            .FirstOrDefaultAsync(ur => ur.UserId == userId && ur.RoleId == roleId, cancellationToken).ConfigureAwait(false);
 
         if (userRole != null)
         {
             UserRoles.Remove(userRole);
-            await context.SaveChangesAsync(cancellationToken);
+            await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         }
     }
 
@@ -164,6 +161,6 @@ public class RoleRepository(IApplicationDbContext context) : IRoleRepository
             .AnyAsync(ur => ur.UserId == userId 
                 && ur.RoleId == roleId 
                 && (ur.ExpiresAt == null || ur.ExpiresAt > now), 
-                cancellationToken);
+                cancellationToken).ConfigureAwait(false);
     }
 }

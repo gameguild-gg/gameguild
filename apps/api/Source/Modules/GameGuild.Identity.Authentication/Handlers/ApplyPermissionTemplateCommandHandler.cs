@@ -1,4 +1,3 @@
-using GameGuild.Abstractions;
 using GameGuild.CQRS;
 using GameGuild.Identity.Authorization;
 using Microsoft.EntityFrameworkCore;
@@ -27,7 +26,7 @@ public class ApplyPermissionTemplateCommandHandler(
         {
             // Get the template
             var template = await dbContext.Set<PermissionTemplate>()
-                .FirstOrDefaultAsync(t => t.Id == request.TemplateId && t.IsActive, cancellationToken);
+                .FirstOrDefaultAsync(t => t.Id == request.TemplateId && t.IsActive, cancellationToken).ConfigureAwait(false);
 
             if (template == null)
             {
@@ -44,7 +43,7 @@ public class ApplyPermissionTemplateCommandHandler(
                     p.TenantId == request.TenantId &&
                     p.UserId == request.UserId &&
                     p.IsActive,
-                    cancellationToken);
+                    cancellationToken).ConfigureAwait(false);
 
             List<string> permissionsToGrant;
 
@@ -103,7 +102,7 @@ public class ApplyPermissionTemplateCommandHandler(
                 dbContext.Set<TenantPermission>().Add(newPermission);
             }
 
-            await dbContext.SaveChangesAsync(cancellationToken);
+            await dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
             logger.LogInformation(
                 "Applied {Count} permissions from template {TemplateId} to user {UserId}",

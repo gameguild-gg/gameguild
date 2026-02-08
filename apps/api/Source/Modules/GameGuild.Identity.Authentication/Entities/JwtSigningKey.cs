@@ -1,6 +1,5 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using GameGuild.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace GameGuild.Identity.Authentication;
@@ -87,9 +86,7 @@ public class JwtSigningKey : EntityBase
             IsActive = false, // Activated separately
             ValidFrom = validFrom,
             ExpiresAt = validFrom.Add(validity),
-            KeyVersion = keyVersion,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            KeyVersion = keyVersion
         };
     }
 

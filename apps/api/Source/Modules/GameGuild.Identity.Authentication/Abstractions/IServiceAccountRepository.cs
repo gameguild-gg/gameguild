@@ -26,6 +26,11 @@ public interface IServiceAccountRepository
     Task<IReadOnlyList<ServiceAccount>> GetGlobalServiceAccountsAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
+    ///     Gets all service accounts across all tenants.
+    /// </summary>
+    Task<IReadOnlyList<ServiceAccount>> GetAllAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
     ///     Creates a new service account.
     /// </summary>
     Task<ServiceAccount> CreateAsync(ServiceAccount serviceAccount, CancellationToken cancellationToken = default);

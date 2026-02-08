@@ -19,30 +19,23 @@ public class TrustedDeviceConfiguration : IEntityTypeConfiguration<TrustedDevice
         // Configure Id property
         builder.Property(x => x.Id).HasColumnName("id").IsRequired();
 
-        // TODO: Add specific property configurations for TrustedDevice
-        // Example:
-        // builder.Property(x => x.Name)
-        //     .HasColumnName("name")
-        //     .HasMaxLength(255)
-        //     .IsRequired();
+        // Property configurations
+        builder.Property(x => x.UserId).HasColumnName("user_id").IsRequired();
+        builder.Property(x => x.DeviceFingerprint).HasColumnName("device_fingerprint").HasMaxLength(64).IsRequired();
+        builder.Property(x => x.DeviceName).HasColumnName("device_name").HasMaxLength(200).IsRequired();
+        builder.Property(x => x.DeviceInfo).HasColumnName("device_info").HasMaxLength(2000).IsRequired();
+        builder.Property(x => x.TrustedAt).HasColumnName("trusted_at").IsRequired();
+        builder.Property(x => x.LastUsedAt).HasColumnName("last_used_at").IsRequired();
+        builder.Property(x => x.IsActive).HasColumnName("is_active").IsRequired();
+        builder.Property(x => x.ExpiresAt).HasColumnName("expires_at");
+        builder.Property(x => x.AssociatedIpAddresses).HasColumnName("associated_ip_addresses").HasMaxLength(1000);
+        builder.Property(x => x.CreatedAt).HasColumnName("created_at").IsRequired();
+        builder.Property(x => x.UpdatedAt).HasColumnName("updated_at").IsRequired();
+        builder.Ignore(x => x.IsExpired);
+        builder.Ignore(x => x.IsValid);
 
-        // TODO: Add relationship configurations
-        // Example:
-        // builder.HasOne(x => x.Tenant)
-        //     .WithMany()
-        //     .HasForeignKey(x => x.TenantId)
-        //     .OnDelete(DeleteBehavior.Cascade);
-
-        // Configure indexes
-        // builder.HasIndex(x => x.TenantId).HasDatabaseName("idx_trusteddevice_tenant_id");
-
-        // Configure created/updated timestamps if inherited from EntityBase
-        // builder.Property(x => x.CreatedAt)
-        //     .HasColumnName("created_at")
-        //     .IsRequired();
-        // 
-        // builder.Property(x => x.UpdatedAt)
-        //     .HasColumnName("updated_at")
-        //     .IsRequired();
+        // Indexes
+        builder.HasIndex(x => x.UserId).HasDatabaseName("ix_trusteddevice_user_id");
+        builder.HasIndex(x => new { x.UserId, x.DeviceFingerprint }).IsUnique().HasDatabaseName("ix_trusteddevice_user_fingerprint");
     }
 }

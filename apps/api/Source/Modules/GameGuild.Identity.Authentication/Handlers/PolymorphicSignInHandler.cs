@@ -25,7 +25,7 @@ public class PolymorphicSignInHandler(
             if (!validationResult.IsValid)
             {
                 var errors = validationResult.Errors.Select(e => new ValidationError(e.PropertyName, e.ErrorMessage));
-                throw new ValidationException(errors);
+                throw new RequestValidationException(errors);
             }
         }
 

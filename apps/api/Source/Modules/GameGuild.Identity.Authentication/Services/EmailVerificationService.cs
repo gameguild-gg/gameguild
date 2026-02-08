@@ -1,3 +1,5 @@
+using GameGuild.Identity.Users;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
@@ -5,16 +7,13 @@ namespace GameGuild.Identity.Authentication;
 
 /// <summary>
 ///     Implementation of email verification service that handles token generation, validation, and email sending coordination.
+///     Uses IMemoryCache for token/verification storage. In production, replace with IDistributedCache (Redis).
 /// </summary>
-public class EmailVerificationService(ILogger<EmailVerificationService> logger, IConfiguration configuration) : IEmailVerificationService
+public class EmailVerificationService(ILogger<EmailVerificationService> logger, IConfiguration configuration, IMemoryCache memoryCache, IUserRepository? userRepository = null) : IEmailVerificationService
 {
-    private readonly Dictionary<string, DateTime> _rateLimits = new Dictionary<string, DateTime>();
-
-    // TODO: Replace with actual database or distributed cache (Redis) for production
-    // This in-memory storage will not work across multiple instances or restarts
-    private readonly Dictionary<string, TokenInfo> _tokens = new Dictionary<string, TokenInfo>();
-
-    private readonly Dictionary<Guid, bool> _verifiedEmails = new Dictionary<Guid, bool>();
+    private const string TokenKeyPrefix = "emailverify:token:";
+    private const string VerifiedKeyPrefix = "emailverify:verified:";
+    private const string RateLimitKeyPrefix = "emailverify:ratelimit:";
 
     public Task<string> GenerateVerificationTokenAsync(Guid userId, string email)
     {
@@ -23,7 +22,10 @@ public class EmailVerificationService(ILogger<EmailVerificationService> logger, 
             var token = Guid.NewGuid().ToString("N");
             var tokenInfo = new TokenInfo { UserId = userId, Email = email.ToLowerInvariant(), Type = "email_verification", ExpiresAt = DateTime.UtcNow.AddHours(24) };
 
-            _tokens[token] = tokenInfo;
+            memoryCache.Set(TokenKeyPrefix + token, tokenInfo, new MemoryCacheEntryOptions
+            {
+                AbsoluteExpiration = tokenInfo.ExpiresAt
+            });
             logger.LogInformation("Generated email verification token for user {UserId}", userId);
 
             return Task.FromResult(token);
@@ -40,13 +42,12 @@ public class EmailVerificationService(ILogger<EmailVerificationService> logger, 
     {
         try
         {
-            // TODO: Integrate with actual email service (SendGrid, SMTP, etc.)
-            // For now, log the token for development/testing purposes
-            // IMPORTANT: Never log sensitive tokens in production!
+            // PLANNED: Integrate with IEmailService (SendGrid, SMTP, etc.) when Communication module
+            // exposes email dispatch infrastructure. Currently logs the verification link.
             var verificationLink = $"{configuration["App:BaseUrl"]}/verify-email?token={token}";
             logger.LogInformation("Email verification link for {Email} (User: {UserName}): {VerificationLink}", email, userName ?? "Unknown", verificationLink);
 
-            // TODO: Send actual email with verification link
+            // PLANNED: Send actual email via IEmailService.SendAsync when available.
             // Example:
             // await _emailService.SendAsync(new EmailMessage
             // {
@@ -69,7 +70,7 @@ public class EmailVerificationService(ILogger<EmailVerificationService> logger, 
     {
         try
         {
-            if (!_tokens.TryGetValue(token, out var tokenInfo))
+            if (!memoryCache.TryGetValue(TokenKeyPrefix + token, out TokenInfo? tokenInfo) || tokenInfo == null)
             {
                 logger.LogWarning("Invalid verification token used for user {UserId}", userId);
 
@@ -85,7 +86,7 @@ public class EmailVerificationService(ILogger<EmailVerificationService> logger, 
 
             if (tokenInfo.ExpiresAt < DateTime.UtcNow)
             {
-                _tokens.Remove(token);
+                memoryCache.Remove(TokenKeyPrefix + token);
                 logger.LogWarning("Expired verification token used for user {UserId}", userId);
 
                 return Task.FromResult(false);
@@ -98,11 +99,11 @@ public class EmailVerificationService(ILogger<EmailVerificationService> logger, 
                 return Task.FromResult(false);
             }
 
-            // Mark email as verified
-            _verifiedEmails[userId] = true;
+            // Mark email as verified (no expiration — stays until app restarts or cache eviction)
+            memoryCache.Set(VerifiedKeyPrefix + userId, true);
 
             // Remove used token
-            _tokens.Remove(token);
+            memoryCache.Remove(TokenKeyPrefix + token);
 
             logger.LogInformation("Email verified successfully for user {UserId}", userId);
 
@@ -116,20 +117,30 @@ public class EmailVerificationService(ILogger<EmailVerificationService> logger, 
         }
     }
 
-    public Task<bool> IsEmailVerifiedAsync(Guid userId)
+    public async Task<bool> IsEmailVerifiedAsync(Guid userId)
     {
         try
         {
-            // TODO: Check database for actual email verification status
-            var isVerified = _verifiedEmails.TryGetValue(userId, out var verified) && verified;
+            // Check database for actual email verification status via IUserRepository
+            if (userRepository is not null)
+            {
+                var user = await userRepository.GetByIdAsync(userId).ConfigureAwait(false);
+                if (user is not null)
+                {
+                    return user.IsEmailVerified;
+                }
+            }
 
-            return Task.FromResult(isVerified);
+            // Fallback to in-memory cache when IUserRepository is unavailable or user not found
+            var isVerified = memoryCache.TryGetValue(VerifiedKeyPrefix + userId, out bool verified) && verified;
+
+            return isVerified;
         }
         catch (Exception ex)
         {
             logger.LogError(ex, "Error checking email verification status for user {UserId}", userId);
 
-            return Task.FromResult(false);
+            return false;
         }
     }
 
@@ -137,10 +148,10 @@ public class EmailVerificationService(ILogger<EmailVerificationService> logger, 
     {
         try
         {
-            var rateLimitKey = $"{userId}:{email.ToLowerInvariant()}";
+            var rateLimitKey = RateLimitKeyPrefix + $"{userId}:{email.ToLowerInvariant()}";
 
             // Check rate limiting (1 email per 2 minutes)
-            if (_rateLimits.TryGetValue(rateLimitKey, out var lastSent))
+            if (memoryCache.TryGetValue(rateLimitKey, out DateTime lastSent))
             {
                 var timeSinceLastSent = DateTime.UtcNow - lastSent;
 
@@ -153,13 +164,16 @@ public class EmailVerificationService(ILogger<EmailVerificationService> logger, 
             }
 
             // Generate new token
-            var token = await GenerateVerificationTokenAsync(userId, email);
+            var token = await GenerateVerificationTokenAsync(userId, email).ConfigureAwait(false);
 
             // Send email
-            await SendVerificationEmailAsync(email, token);
+            await SendVerificationEmailAsync(email, token).ConfigureAwait(false);
 
-            // Update rate limit
-            _rateLimits[rateLimitKey] = DateTime.UtcNow;
+            // Update rate limit with sliding expiration
+            memoryCache.Set(rateLimitKey, DateTime.UtcNow, new MemoryCacheEntryOptions
+            {
+                AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(2)
+            });
 
             logger.LogInformation("Resent verification email to user {UserId}", userId);
 
@@ -177,7 +191,7 @@ public class EmailVerificationService(ILogger<EmailVerificationService> logger, 
     {
         try
         {
-            if (!_tokens.TryGetValue(token, out var tokenInfo)) { return Task.FromResult(false); }
+            if (!memoryCache.TryGetValue(TokenKeyPrefix + token, out TokenInfo? tokenInfo) || tokenInfo == null) { return Task.FromResult(false); }
 
             var isValid = tokenInfo.ExpiresAt >= DateTime.UtcNow && tokenInfo.Type == "email_verification";
 

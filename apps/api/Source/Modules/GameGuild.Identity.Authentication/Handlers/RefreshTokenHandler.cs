@@ -25,7 +25,7 @@ public class RefreshTokenHandler(IAuthService authService, IUserRepository userR
         {
             var errors = validationResult.Errors.Select(e => new ValidationError(e.PropertyName, e.ErrorMessage));
 
-            throw new ValidationException(errors);
+            throw new RequestValidationException(errors);
         }
 
         _logger.LogInformation("Processing refresh token request with token: {RefreshToken}", command.RefreshToken);

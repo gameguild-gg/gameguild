@@ -1,4 +1,5 @@
 using System.Security.Cryptography;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 
 namespace GameGuild.Identity.Authentication;
@@ -6,10 +7,10 @@ namespace GameGuild.Identity.Authentication;
 /// <summary>
 ///     Service for Web3 authentication operations
 /// </summary>
-public class Web3Service(ILogger<Web3Service> logger) : IWeb3Service
+public class Web3Service(ILogger<Web3Service> logger, IMemoryCache memoryCache) : IWeb3Service
 {
-    // TODO: In production, use Redis or distributed cache instead of in-memory dictionary
-    private readonly Dictionary<string, Web3Challenge> _challenges = new Dictionary<string, Web3Challenge>();
+    /// <summary>Cache key prefix for Web3 challenges. Production should use IDistributedCache (Redis).</summary>
+    private const string ChallengeKeyPrefix = "web3:challenge:";
 
     public async Task<Web3Challenge> GenerateChallengeAsync(string walletAddress, Guid? tenantId = null)
     {
@@ -23,12 +24,17 @@ public class Web3Service(ILogger<Web3Service> logger) : IWeb3Service
 
         var challenge = new Web3Challenge { Message = message, WalletAddress = walletAddress, Nonce = nonce, IssuedAt = issuedAt, ExpiresAt = expiresAt, TenantId = tenantId };
 
-        // Store challenge temporarily
-        // TODO: In production, use Redis with expiration
-        _challenges[nonce] = challenge;
+        // Store challenge in cache with automatic expiration
+        var cacheKey = ChallengeKeyPrefix + nonce;
+        var cacheOptions = new MemoryCacheEntryOptions
+        {
+            AbsoluteExpiration = expiresAt
+        };
+        memoryCache.Set(cacheKey, challenge, cacheOptions);
 
-        // Clean up expired challenges
-        CleanupExpiredChallenges();
+        // Also store a wallet→nonce lookup for VerifySignatureAsync
+        var walletKey = ChallengeKeyPrefix + "wallet:" + walletAddress.ToLowerInvariant();
+        memoryCache.Set(walletKey, nonce, cacheOptions);
 
         logger.LogInformation("Generated Web3 challenge for wallet {WalletAddress}", walletAddress);
 
@@ -45,12 +51,26 @@ public class Web3Service(ILogger<Web3Service> logger) : IWeb3Service
             return false;
         }
 
-        // Find the challenge by searching for the wallet address in stored challenges
-        var challenge = _challenges.Values.FirstOrDefault(c => c.WalletAddress.Equals(walletAddress, StringComparison.OrdinalIgnoreCase) && c.Message == originalMessage);
-
-        if (challenge == null)
+        // Find the challenge via wallet→nonce lookup
+        var walletKey = ChallengeKeyPrefix + "wallet:" + walletAddress.ToLowerInvariant();
+        if (!memoryCache.TryGetValue(walletKey, out string? nonce) || nonce == null)
         {
             logger.LogWarning("Challenge not found for wallet {WalletAddress}", walletAddress);
+
+            return false;
+        }
+
+        var cacheKey = ChallengeKeyPrefix + nonce;
+        if (!memoryCache.TryGetValue(cacheKey, out Web3Challenge? challenge) || challenge == null)
+        {
+            logger.LogWarning("Challenge not found for wallet {WalletAddress}", walletAddress);
+
+            return false;
+        }
+
+        if (challenge.Message != originalMessage)
+        {
+            logger.LogWarning("Challenge message mismatch for wallet {WalletAddress}", walletAddress);
 
             return false;
         }
@@ -58,19 +78,21 @@ public class Web3Service(ILogger<Web3Service> logger) : IWeb3Service
         // Check if challenge is expired
         if (!challenge.IsValid)
         {
-            _challenges.Remove(challenge.Nonce);
+            memoryCache.Remove(cacheKey);
+            memoryCache.Remove(walletKey);
             logger.LogWarning("Expired challenge for wallet {WalletAddress}", walletAddress);
 
             return false;
         }
 
         // Verify the signature
-        var isValidSignature = await VerifyEthereumSignature(signature, walletAddress);
+        var isValidSignature = await VerifyEthereumSignature(signature, walletAddress).ConfigureAwait(false);
 
         if (isValidSignature)
         {
-            // Remove used challenge
-            _challenges.Remove(challenge.Nonce);
+            // Remove used challenge from cache
+            memoryCache.Remove(cacheKey);
+            memoryCache.Remove(walletKey);
             logger.LogInformation("Successfully verified Web3 signature for wallet {WalletAddress}", walletAddress);
         }
         else { logger.LogWarning("Invalid signature for wallet {WalletAddress}", walletAddress); }
@@ -102,21 +124,12 @@ public class Web3Service(ILogger<Web3Service> logger) : IWeb3Service
         return $"Sign this message to authenticate with GameGuild.\n\n" + $"Wallet: {walletAddress}\n" + $"Nonce: {nonce}\n" + $"Timestamp: {timestamp}";
     }
 
-    private void CleanupExpiredChallenges()
-    {
-        var expiredKeys = _challenges.Where(kvp => !kvp.Value.IsValid).Select(kvp => kvp.Key).ToList();
-
-        foreach (var key in expiredKeys) { _challenges.Remove(key); }
-    }
 
     private Task<bool> VerifyEthereumSignature(string signature, string walletAddress)
     {
         try
         {
-            // This is a simplified implementation
-            // In production, use a library like Nethereum for proper signature verification
-
-            // Basic validation checks
+            // Basic format validation
             if (string.IsNullOrEmpty(signature) || signature.Length < 132) // 0x + 130 hex chars
             {
                 return Task.FromResult(false);
@@ -124,11 +137,16 @@ public class Web3Service(ILogger<Web3Service> logger) : IWeb3Service
 
             if (!signature.StartsWith("0x", StringComparison.Ordinal)) { return Task.FromResult(false); }
 
-            // TODO: Implement actual signature verification using Nethereum
-            // For now, return true if basic validation passes
-            logger.LogInformation("Web3 signature verification for wallet {WalletAddress} - basic validation passed", walletAddress);
+            // SECURITY: Actual cryptographic signature verification is NOT implemented.
+            // Add the Nethereum NuGet package and implement EcRecover to verify
+            // that the signature was produced by the private key for walletAddress.
+            // Until then, Web3 authentication MUST NOT be enabled in production.
+            logger.LogError(
+                "Web3 signature verification is not implemented — rejecting signature for wallet {WalletAddress}. " +
+                "Add Nethereum package and implement EcRecover before enabling Web3 auth in production",
+                walletAddress);
 
-            return Task.FromResult(true);
+            return Task.FromResult(false);
         }
         catch (CryptographicException ex)
         {

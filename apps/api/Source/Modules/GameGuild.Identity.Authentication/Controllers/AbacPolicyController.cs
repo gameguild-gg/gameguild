@@ -1,23 +1,24 @@
 using Asp.Versioning;
 using GameGuild.Identity.Authorization;
 using GameGuild.CQRS;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
 namespace GameGuild.Identity.Authentication;
 
-// TODO: Reactivate this controller when ABAC policy management is ready for production
+// PLANNED: Reactivate this controller when ABAC policy management is ready for production
 /// <summary>
 ///     API controller for Attribute-Based Access Control (ABAC) policy management
 ///     Provides comprehensive CRUD operations and policy evaluation capabilities
 /// </summary>
-[ApiController]
 [ApiVersion("1.0")]
 [Route("v{version:apiVersion}/abac-policies")]
 [Tags("abac-policies")]
 [ApiExplorerSettings(IgnoreApi = true)]
-public class AbacPolicyController(IMediator mediator, ILogger<AbacPolicyController> logger) : ControllerBase
+[Authorize]
+public class AbacPolicyController(IMediator mediator, ILogger<AbacPolicyController> logger) : BaseApiController
 {
     private readonly ILogger<AbacPolicyController> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
@@ -31,18 +32,9 @@ public class AbacPolicyController(IMediator mediator, ILogger<AbacPolicyControll
     [HttpPost]
     public async Task<ActionResult<AbacPolicy>> CreateAbacPolicy([FromBody] CreateAbacPolicyCommand command)
     {
-        try
-        {
-            var result = await _mediator.Send(command);
+        var result = await _mediator.Send(command);
 
-            return CreatedAtAction(nameof(GetAbacPolicy), new { id = result.Id }, result);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to create ABAC policy {PolicyName}", command.Name);
-
-            return BadRequest(new { error = ex.Message });
-        }
+        return CreatedAtAction(nameof(GetAbacPolicy), new { id = result.Id }, result);
     }
 
     /// <summary>
@@ -51,19 +43,10 @@ public class AbacPolicyController(IMediator mediator, ILogger<AbacPolicyControll
     [HttpGet("{policyId}")]
     public async Task<ActionResult<AbacPolicy>> GetAbacPolicy(Guid policyId)
     {
-        try
-        {
-            var query = new GetAbacPolicyQuery { PolicyId = policyId };
-            var result = await _mediator.Send(query);
+        var query = new GetAbacPolicyQuery { PolicyId = policyId };
+        var result = await _mediator.Send(query);
 
-            return Ok(result);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to get ABAC policy {PolicyId}", policyId);
-
-            return BadRequest(new { error = ex.Message });
-        }
+        return Ok(result);
     }
 
     /// <summary>
@@ -72,19 +55,10 @@ public class AbacPolicyController(IMediator mediator, ILogger<AbacPolicyControll
     [HttpPut("{policyId}")]
     public async Task<ActionResult<AbacPolicy>> UpdateAbacPolicy(Guid policyId, [FromBody] UpdateAbacPolicyCommand command)
     {
-        try
-        {
-            command.PolicyId = policyId;
-            var result = await _mediator.Send(command);
+        command.PolicyId = policyId;
+        var result = await _mediator.Send(command);
 
-            return Ok(result);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to update ABAC policy {PolicyId}", policyId);
-
-            return BadRequest(new { error = ex.Message });
-        }
+        return Ok(result);
     }
 
     /// <summary>
@@ -93,26 +67,17 @@ public class AbacPolicyController(IMediator mediator, ILogger<AbacPolicyControll
     [HttpDelete("{policyId}")]
     public async Task<ActionResult> DeleteAbacPolicy(Guid policyId)
     {
-        try
-        {
-            var command = new DeleteAbacPolicyCommand { PolicyId = policyId };
-            await _mediator.Send(command);
+        var command = new DeleteAbacPolicyCommand { PolicyId = policyId };
+        await _mediator.Send(command);
 
-            return NoContent();
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to delete ABAC policy {PolicyId}", policyId);
-
-            return BadRequest(new { error = ex.Message });
-        }
+        return NoContent();
     }
 
     /// <summary>
     ///     Get all ABAC policies for a tenant with optional filtering
     /// </summary>
     [HttpGet]
-    public async Task<ActionResult<Models.PagedResult<AbacPolicy>>> GetAbacPolicies(
+    public async Task<ActionResult<PagedResult<AbacPolicy>>> GetAbacPolicies(
         [FromQuery] Guid? tenantId = null,
         [FromQuery] bool? isActive = null,
         [FromQuery] string? category = null,
@@ -120,19 +85,10 @@ public class AbacPolicyController(IMediator mediator, ILogger<AbacPolicyControll
         [FromQuery] int pageSize = 20
     )
     {
-        try
-        {
-            var query = new GetAbacPoliciesQuery { TenantId = tenantId, IsActive = isActive, Category = category, Page = page, PageSize = pageSize };
-            var result = await _mediator.Send(query);
+        var query = new GetAbacPoliciesQuery { TenantId = tenantId, IsActive = isActive, Category = category, Page = page, PageSize = pageSize };
+        var result = await _mediator.Send(query);
 
-            return Ok(result);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to get ABAC policies");
-
-            return BadRequest(new { error = ex.Message });
-        }
+        return Ok(result);
     }
 
     #endregion
@@ -145,18 +101,9 @@ public class AbacPolicyController(IMediator mediator, ILogger<AbacPolicyControll
     [HttpPost(":evaluate")]
     public async Task<ActionResult<AbacEvaluationResult>> EvaluateAbacPolicies([FromBody] EvaluateAbacPoliciesCommand command)
     {
-        try
-        {
-            var result = await _mediator.Send(command);
+        var result = await _mediator.Send(command);
 
-            return Ok(result);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to evaluate ABAC policies for user {UserId}", command.Context.UserAttributes.GetValueOrDefault("userId"));
-
-            return BadRequest(new { error = ex.Message });
-        }
+        return Ok(result);
     }
 
     /// <summary>
@@ -165,18 +112,9 @@ public class AbacPolicyController(IMediator mediator, ILogger<AbacPolicyControll
     [HttpPost(":evaluate-bulk")]
     public async Task<ActionResult<BulkAbacEvaluationResult>> BulkEvaluateAbacPolicies([FromBody] BulkEvaluateAbacPoliciesCommand command)
     {
-        try
-        {
-            var result = await _mediator.Send(command);
+        var result = await _mediator.Send(command);
 
-            return Ok(result);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to bulk evaluate ABAC policies for {ContextCount} contexts", command.Contexts.Count);
-
-            return BadRequest(new { error = ex.Message });
-        }
+        return Ok(result);
     }
 
     /// <summary>
@@ -185,18 +123,9 @@ public class AbacPolicyController(IMediator mediator, ILogger<AbacPolicyControll
     [HttpPost(":test-expression")]
     public async Task<ActionResult<AbacExpressionTestResult>> TestAbacExpression([FromBody] TestAbacExpressionCommand command)
     {
-        try
-        {
-            var result = await _mediator.Send(command);
+        var result = await _mediator.Send(command);
 
-            return Ok(result);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to test ABAC expression");
-
-            return BadRequest(new { error = ex.Message });
-        }
+        return Ok(result);
     }
 
     #endregion
@@ -209,19 +138,10 @@ public class AbacPolicyController(IMediator mediator, ILogger<AbacPolicyControll
     [HttpPost("{policyId}:activate")]
     public async Task<ActionResult> ActivateAbacPolicy(Guid policyId)
     {
-        try
-        {
-            var command = new ActivateAbacPolicyCommand { PolicyId = policyId };
-            await _mediator.Send(command);
+        var command = new ActivateAbacPolicyCommand { PolicyId = policyId };
+        await _mediator.Send(command);
 
-            return Ok(new { message = "ABAC policy activated successfully" });
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to activate ABAC policy {PolicyId}", policyId);
-
-            return BadRequest(new { error = ex.Message });
-        }
+        return Ok(new { message = "ABAC policy activated successfully" });
     }
 
     /// <summary>
@@ -230,19 +150,10 @@ public class AbacPolicyController(IMediator mediator, ILogger<AbacPolicyControll
     [HttpPost("{policyId}:deactivate")]
     public async Task<ActionResult> DeactivateAbacPolicy(Guid policyId)
     {
-        try
-        {
-            var command = new DeactivateAbacPolicyCommand { PolicyId = policyId };
-            await _mediator.Send(command);
+        var command = new DeactivateAbacPolicyCommand { PolicyId = policyId };
+        await _mediator.Send(command);
 
-            return Ok(new { message = "ABAC policy deactivated successfully" });
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to deactivate ABAC policy {PolicyId}", policyId);
-
-            return BadRequest(new { error = ex.Message });
-        }
+        return Ok(new { message = "ABAC policy deactivated successfully" });
     }
 
     /// <summary>
@@ -251,19 +162,10 @@ public class AbacPolicyController(IMediator mediator, ILogger<AbacPolicyControll
     [HttpPost("{policyId}:clone")]
     public async Task<ActionResult<AbacPolicy>> CloneAbacPolicy(Guid policyId, [FromBody] CloneAbacPolicyCommand command)
     {
-        try
-        {
-            command.SourcePolicyId = policyId;
-            var result = await _mediator.Send(command);
+        command.SourcePolicyId = policyId;
+        var result = await _mediator.Send(command);
 
-            return CreatedAtAction(nameof(GetAbacPolicy), new { policyId = result.Id }, result);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to clone ABAC policy {PolicyId}", policyId);
-
-            return BadRequest(new { error = ex.Message });
-        }
+        return CreatedAtAction(nameof(GetAbacPolicy), new { policyId = result.Id }, result);
     }
 
     #endregion
@@ -276,19 +178,10 @@ public class AbacPolicyController(IMediator mediator, ILogger<AbacPolicyControll
     [HttpGet("statistics")]
     public async Task<ActionResult<AbacPolicyStatisticsDto>> GetAbacPolicyStatistics([FromQuery] Guid? tenantId = null, [FromQuery] DateTime? fromDate = null, [FromQuery] DateTime? toDate = null)
     {
-        try
-        {
-            var query = new GetAbacPolicyStatisticsQuery { TenantId = tenantId, FromDate = fromDate ?? DateTime.UtcNow.AddDays(-30), ToDate = toDate ?? DateTime.UtcNow };
-            var result = await _mediator.Send(query);
+        var query = new GetAbacPolicyStatisticsQuery { TenantId = tenantId, FromDate = fromDate ?? DateTime.UtcNow.AddDays(-30), ToDate = toDate ?? DateTime.UtcNow };
+        var result = await _mediator.Send(query);
 
-            return Ok(result);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to get ABAC policy statistics");
-
-            return BadRequest(new { error = ex.Message });
-        }
+        return Ok(result);
     }
 
     /// <summary>
@@ -297,19 +190,10 @@ public class AbacPolicyController(IMediator mediator, ILogger<AbacPolicyControll
     [HttpGet("{policyId}/usage")]
     public async Task<ActionResult<AbacPolicyUsageDto>> GetAbacPolicyUsage(Guid policyId, [FromQuery] DateTime? fromDate = null, [FromQuery] DateTime? toDate = null)
     {
-        try
-        {
-            var query = new GetAbacPolicyUsageQuery { PolicyId = policyId, FromDate = fromDate ?? DateTime.UtcNow.AddDays(-7), ToDate = toDate ?? DateTime.UtcNow };
-            var result = await _mediator.Send(query);
+        var query = new GetAbacPolicyUsageQuery { PolicyId = policyId, FromDate = fromDate ?? DateTime.UtcNow.AddDays(-7), ToDate = toDate ?? DateTime.UtcNow };
+        var result = await _mediator.Send(query);
 
-            return Ok(result);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to get ABAC policy usage for policy {PolicyId}", policyId);
-
-            return BadRequest(new { error = ex.Message });
-        }
+        return Ok(result);
     }
 
     /// <summary>
@@ -318,19 +202,10 @@ public class AbacPolicyController(IMediator mediator, ILogger<AbacPolicyControll
     [HttpGet("{policyId}/audit-trail")]
     public async Task<ActionResult<AbacPolicyAuditTrailDto>> GetAbacPolicyAuditTrail(Guid policyId, [FromQuery] int page = 1, [FromQuery] int pageSize = 50)
     {
-        try
-        {
-            var query = new GetAbacPolicyAuditTrailQuery { PolicyId = policyId, Page = page, PageSize = pageSize };
-            var result = await _mediator.Send(query);
+        var query = new GetAbacPolicyAuditTrailQuery { PolicyId = policyId, Page = page, PageSize = pageSize };
+        var result = await _mediator.Send(query);
 
-            return Ok(result);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to get ABAC policy audit trail for policy {PolicyId}", policyId);
-
-            return BadRequest(new { error = ex.Message });
-        }
+        return Ok(result);
     }
 
     #endregion
@@ -343,18 +218,9 @@ public class AbacPolicyController(IMediator mediator, ILogger<AbacPolicyControll
     [HttpPost(":validate")]
     public async Task<ActionResult<AbacPolicyValidationResult>> ValidateAbacPolicy([FromBody] ValidateAbacPolicyCommand command)
     {
-        try
-        {
-            var result = await _mediator.Send(command);
+        var result = await _mediator.Send(command);
 
-            return Ok(result);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to validate ABAC policy");
-
-            return BadRequest(new { error = ex.Message });
-        }
+        return Ok(result);
     }
 
     /// <summary>
@@ -363,19 +229,10 @@ public class AbacPolicyController(IMediator mediator, ILogger<AbacPolicyControll
     [HttpGet("conflicts")]
     public async Task<ActionResult<AbacPolicyConflictsDto>> GetAbacPolicyConflicts([FromQuery] Guid? tenantId = null)
     {
-        try
-        {
-            var query = new GetAbacPolicyConflictsQuery { TenantId = tenantId };
-            var result = await _mediator.Send(query);
+        var query = new GetAbacPolicyConflictsQuery { TenantId = tenantId };
+        var result = await _mediator.Send(query);
 
-            return Ok(result);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to get ABAC policy conflicts");
-
-            return BadRequest(new { error = ex.Message });
-        }
+        return Ok(result);
     }
 
     #endregion
@@ -388,19 +245,10 @@ public class AbacPolicyController(IMediator mediator, ILogger<AbacPolicyControll
     [HttpGet("templates")]
     public async Task<ActionResult<IEnumerable<AbacPolicyTemplateDto>>> GetAbacPolicyTemplates()
     {
-        try
-        {
-            var query = new GetAbacPolicyTemplatesQuery();
-            var result = await _mediator.Send(query);
+        var query = new GetAbacPolicyTemplatesQuery();
+        var result = await _mediator.Send(query);
 
-            return Ok(result);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to get ABAC policy templates");
-
-            return BadRequest(new { error = ex.Message });
-        }
+        return Ok(result);
     }
 
     /// <summary>
@@ -409,19 +257,10 @@ public class AbacPolicyController(IMediator mediator, ILogger<AbacPolicyControll
     [HttpPost("templates/{templateId}:instantiate")]
     public async Task<ActionResult<AbacPolicy>> CreateAbacPolicyFromTemplate(Guid templateId, [FromBody] CreateAbacPolicyFromTemplateCommand command)
     {
-        try
-        {
-            command.TemplateId = templateId;
-            var result = await _mediator.Send(command);
+        command.TemplateId = templateId;
+        var result = await _mediator.Send(command);
 
-            return CreatedAtAction(nameof(GetAbacPolicy), new { id = result.Id }, result);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to create ABAC policy from template {TemplateId}", templateId);
-
-            return BadRequest(new { error = ex.Message });
-        }
+        return CreatedAtAction(nameof(GetAbacPolicy), new { id = result.Id }, result);
     }
 
     #endregion

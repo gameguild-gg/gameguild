@@ -21,6 +21,6 @@ public class LocalSignUpHandler(IAuthService authService, IUserRepository userRe
         logger.LogInformation("User successfully signed up via local authentication");
 
         // Map from Domain response to Application DTO
-        return await domainResult.ToDto(userRepository, cancellationToken);
+        return await domainResult.ToDto(userRepository, cancellationToken).ConfigureAwait(false);
     }
 }

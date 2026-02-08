@@ -52,7 +52,8 @@ public sealed class MfaController(IMfaService mfaService) : AuthControllerBase
     public async Task<IActionResult> InitiateTotpSetup(CancellationToken ct)
     {
         var userId = GetCurrentUserId();
-        var result = await mfaService.InitiateMfaSetupAsync(userId);
+        var userEmail = GetCurrentUserEmail();
+        var result = await mfaService.InitiateMfaSetupAsync(userId, userEmail);
 
         if (!result.Success)
         {
@@ -192,7 +193,8 @@ public sealed class MfaController(IMfaService mfaService) : AuthControllerBase
     {
         ArgumentNullException.ThrowIfNull(body);
 
-        // TODO: Implement SMS MFA setup with ISmsService
+        // PLANNED: Wire to ISender with a SetupSmsMfaCommand that uses ISmsService
+        // to send verification code to body.PhoneNumber.
         // var userId = GetCurrentUserId();
         // await smsService.SendVerificationCodeAsync(body.PhoneNumber);
 
@@ -220,7 +222,8 @@ public sealed class MfaController(IMfaService mfaService) : AuthControllerBase
     {
         ArgumentNullException.ThrowIfNull(body);
 
-        // TODO: Implement SMS MFA completion
+        // PLANNED: Wire to ISender with a CompleteSmsMfaSetupCommand that validates
+        // the SMS code and enables SMS MFA for the user.
         // var userId = GetCurrentUserId();
         // var result = await mfaService.CompleteSmsSetupAsync(userId, body.Code);
 
@@ -268,7 +271,7 @@ public sealed class MfaController(IMfaService mfaService) : AuthControllerBase
                 Name = "SMS",
                 Description = "Receive verification codes via text message",
                 IsEnabled = enabledMethods.Contains("sms", StringComparer.OrdinalIgnoreCase),
-                IsAvailable = true, // TODO: Check if SMS service is configured
+                IsAvailable = true, // PLANNED: Check ISmsService.IsConfiguredAsync() when SMS module is wired
                 Priority = 2
             },
             new()

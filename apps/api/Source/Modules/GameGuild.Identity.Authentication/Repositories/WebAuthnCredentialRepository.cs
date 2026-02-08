@@ -1,4 +1,3 @@
-using GameGuild.Abstractions;
 using Microsoft.EntityFrameworkCore;
 
 namespace GameGuild.Identity.Authentication;
@@ -14,14 +13,14 @@ public class WebAuthnCredentialRepository(IApplicationDbContext context) : IWebA
     {
         return await Credentials
             .AsNoTracking()
-            .FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
+            .FirstOrDefaultAsync(c => c.Id == id, cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<UserWebAuthnCredential?> GetByCredentialIdAsync(string credentialId, CancellationToken cancellationToken = default)
     {
         return await Credentials
             .AsNoTracking()
-            .FirstOrDefaultAsync(c => c.CredentialId == credentialId && c.IsActive, cancellationToken);
+            .FirstOrDefaultAsync(c => c.CredentialId == credentialId && c.IsActive, cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<List<UserWebAuthnCredential>> GetByUserIdAsync(Guid userId, CancellationToken cancellationToken = default)
@@ -30,7 +29,7 @@ public class WebAuthnCredentialRepository(IApplicationDbContext context) : IWebA
             .AsNoTracking()
             .Where(c => c.UserId == userId)
             .OrderByDescending(c => c.CreatedAt)
-            .ToListAsync(cancellationToken);
+            .ToListAsync(cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<List<UserWebAuthnCredential>> GetActiveByUserIdAsync(Guid userId, CancellationToken cancellationToken = default)
@@ -39,7 +38,7 @@ public class WebAuthnCredentialRepository(IApplicationDbContext context) : IWebA
             .AsNoTracking()
             .Where(c => c.UserId == userId && c.IsActive)
             .OrderByDescending(c => c.LastUsedAt ?? c.CreatedAt)
-            .ToListAsync(cancellationToken);
+            .ToListAsync(cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<List<string>> GetCredentialIdsForUserAsync(Guid userId, CancellationToken cancellationToken = default)
@@ -48,21 +47,20 @@ public class WebAuthnCredentialRepository(IApplicationDbContext context) : IWebA
             .AsNoTracking()
             .Where(c => c.UserId == userId && c.IsActive)
             .Select(c => c.CredentialId)
-            .ToListAsync(cancellationToken);
+            .ToListAsync(cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<UserWebAuthnCredential> CreateAsync(UserWebAuthnCredential credential, CancellationToken cancellationToken = default)
     {
-        credential.CreatedAt = DateTime.UtcNow;
         Credentials.Add(credential);
-        await context.SaveChangesAsync(cancellationToken);
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         return credential;
     }
 
     public async Task<UserWebAuthnCredential> UpdateAsync(UserWebAuthnCredential credential, CancellationToken cancellationToken = default)
     {
         Credentials.Update(credential);
-        await context.SaveChangesAsync(cancellationToken);
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         return credential;
     }
 
@@ -72,7 +70,7 @@ public class WebAuthnCredentialRepository(IApplicationDbContext context) : IWebA
         if (credential == null) return false;
 
         Credentials.Remove(credential);
-        await context.SaveChangesAsync(cancellationToken);
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         return true;
     }
 
@@ -80,14 +78,14 @@ public class WebAuthnCredentialRepository(IApplicationDbContext context) : IWebA
     {
         return await Credentials
             .AsNoTracking()
-            .AnyAsync(c => c.UserId == userId && c.IsActive, cancellationToken);
+            .AnyAsync(c => c.UserId == userId && c.IsActive, cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<int> CountActiveCredentialsAsync(Guid userId, CancellationToken cancellationToken = default)
     {
         return await Credentials
             .AsNoTracking()
-            .CountAsync(c => c.UserId == userId && c.IsActive, cancellationToken);
+            .CountAsync(c => c.UserId == userId && c.IsActive, cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<bool> RevokeAsync(Guid id, CancellationToken cancellationToken = default)
@@ -97,7 +95,7 @@ public class WebAuthnCredentialRepository(IApplicationDbContext context) : IWebA
 
         credential.IsActive = false;
         credential.RevokedAt = DateTime.UtcNow;
-        await context.SaveChangesAsync(cancellationToken);
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         return true;
     }
 
@@ -108,7 +106,7 @@ public class WebAuthnCredentialRepository(IApplicationDbContext context) : IWebA
         {
             credential.SignatureCounter = newCounter;
             credential.LastUsedAt = DateTime.UtcNow;
-            await context.SaveChangesAsync(cancellationToken);
+            await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         }
     }
 }

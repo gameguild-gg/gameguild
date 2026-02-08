@@ -10,7 +10,7 @@ public class GetRolesQueryHandler(IRoleRepository roleRepository) : IQueryHandle
 {
     public async Task<List<RoleDto>> Handle(GetRolesQuery request, CancellationToken cancellationToken)
     {
-        var roles = await roleRepository.GetAllAsync(request.TenantId, request.IncludeInactive, cancellationToken);
+        var roles = await roleRepository.GetAllAsync(request.TenantId, request.IncludeInactive, cancellationToken).ConfigureAwait(false);
 
         return roles.Select(r => new RoleDto
         {
@@ -33,7 +33,7 @@ public class GetRoleByIdQueryHandler(IRoleRepository roleRepository) : IQueryHan
 {
     public async Task<RoleDto?> Handle(GetRoleByIdQuery request, CancellationToken cancellationToken)
     {
-        var role = await roleRepository.GetByIdAsync(request.RoleId, cancellationToken);
+        var role = await roleRepository.GetByIdAsync(request.RoleId, cancellationToken).ConfigureAwait(false);
 
         if (role == null)
         {
@@ -61,7 +61,7 @@ public class GetUserRolesQueryHandler(IRoleRepository roleRepository) : IQueryHa
 {
     public async Task<List<RoleDto>> Handle(GetUserRolesQuery request, CancellationToken cancellationToken)
     {
-        var roles = await roleRepository.GetUserRolesAsync(request.UserId, request.IncludeExpired, cancellationToken);
+        var roles = await roleRepository.GetUserRolesAsync(request.UserId, request.IncludeExpired, cancellationToken).ConfigureAwait(false);
 
         return roles.Select(r => new RoleDto
         {

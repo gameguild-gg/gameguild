@@ -19,30 +19,28 @@ public class IdentityVerificationConfiguration : IEntityTypeConfiguration<Identi
         // Configure Id property
         builder.Property(x => x.Id).HasColumnName("id").IsRequired();
 
-        // TODO: Add specific property configurations for IdentityVerification
-        // Example:
-        // builder.Property(x => x.Name)
-        //     .HasColumnName("name")
-        //     .HasMaxLength(255)
-        //     .IsRequired();
+        // Property configurations
+        builder.Property(x => x.UserId).HasColumnName("user_id").IsRequired();
+        builder.Property(x => x.VerificationType).HasColumnName("verification_type").HasMaxLength(128).IsRequired();
+        builder.Property(x => x.Status).HasColumnName("status").HasMaxLength(64).IsRequired();
+        builder.Property(x => x.VerifiedValue).HasColumnName("verified_value").HasMaxLength(256).IsRequired();
+        builder.Property(x => x.InitiatedAt).HasColumnName("initiated_at").IsRequired();
+        builder.Property(x => x.CompletedAt).HasColumnName("completed_at");
+        builder.Property(x => x.ExpiresAt).HasColumnName("expires_at");
+        builder.Property(x => x.VerificationProvider).HasColumnName("verification_provider").HasMaxLength(256);
+        builder.Property(x => x.ExternalVerificationId).HasColumnName("external_verification_id").HasMaxLength(256);
+        builder.Property(x => x.ConfidenceScore).HasColumnName("confidence_score");
+        builder.Property(x => x.Notes).HasColumnName("notes").HasMaxLength(1000);
+        builder.Property(x => x.ReviewedBy).HasColumnName("reviewed_by");
+        builder.Property(x => x.ReviewedAt).HasColumnName("reviewed_at");
+        builder.Property(x => x.DocumentIds).HasColumnName("document_ids").HasMaxLength(2000);
+        builder.Property(x => x.Metadata).HasColumnName("metadata").HasMaxLength(2000);
+        builder.Ignore(x => x.IsValid);
+        builder.Ignore(x => x.IsPending);
 
-        // TODO: Add relationship configurations
-        // Example:
-        // builder.HasOne(x => x.Tenant)
-        //     .WithMany()
-        //     .HasForeignKey(x => x.TenantId)
-        //     .OnDelete(DeleteBehavior.Cascade);
-
-        // Configure indexes
-        // builder.HasIndex(x => x.TenantId).HasDatabaseName("idx_identityverification_tenant_id");
-
-        // Configure created/updated timestamps if inherited from EntityBase
-        // builder.Property(x => x.CreatedAt)
-        //     .HasColumnName("created_at")
-        //     .IsRequired();
-        // 
-        // builder.Property(x => x.UpdatedAt)
-        //     .HasColumnName("updated_at")
-        //     .IsRequired();
+        // Indexes
+        builder.HasIndex(x => x.UserId).HasDatabaseName("ix_identityverification_user_id");
+        builder.HasIndex(x => x.Status).HasDatabaseName("ix_identityverification_status");
+        builder.HasIndex(x => new { x.UserId, x.VerificationType }).HasDatabaseName("ix_identityverification_user_type");
     }
 }

@@ -1,7 +1,5 @@
-using GameGuild.Abstractions;
 using GameGuild.CQRS;
 using GameGuild.Identity.Context.Actors;
-using GameGuild.Models;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -87,7 +85,7 @@ public class CreateApiKeyHandler : IRequestHandler<CreateApiKeyCommand, Result<C
             request.IpWhitelist);
 
         _dbContext.Set<ApiKey>().Add(apiKey);
-        await _dbContext.SaveChangesAsync(cancellationToken);
+        await _dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         _logger.LogInformation("API key created: {KeyId} for user {UserId} with scopes {Scopes}",
             apiKey.Id, actor.SubjectIdAsGuid.Value, string.Join(", ", request.Scopes));
@@ -153,7 +151,7 @@ public class ListApiKeysHandler : IRequestHandler<ListApiKeysQuery, Result<List<
         var keys = await _dbContext.Set<ApiKey>()
             .Where(k => k.UserId == actor.SubjectIdAsGuid.Value)
             .OrderByDescending(k => k.CreatedAt)
-            .ToListAsync(cancellationToken);
+            .ToListAsync(cancellationToken).ConfigureAwait(false);
 
         return Result.Success(keys.Select(ApiKeyDto.FromEntity).ToList());
     }
@@ -190,13 +188,13 @@ public class RevokeApiKeyHandler : IRequestHandler<RevokeApiKeyCommand, Result<b
             return Result.Failure<bool>(Error.Failure("Auth.Required", "User must be authenticated"));
 
         var apiKey = await _dbContext.Set<ApiKey>()
-            .FirstOrDefaultAsync(k => k.Id == request.KeyId && k.UserId == actor.SubjectIdAsGuid.Value, cancellationToken);
+            .FirstOrDefaultAsync(k => k.Id == request.KeyId && k.UserId == actor.SubjectIdAsGuid.Value, cancellationToken).ConfigureAwait(false);
 
         if (apiKey == null)
             return Result.Failure<bool>(Error.NotFound("ApiKey.NotFound", "API key not found"));
 
         apiKey.Revoke(request.Reason ?? "User revoked");
-        await _dbContext.SaveChangesAsync(cancellationToken);
+        await _dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         _logger.LogInformation("API key revoked: {KeyId} by user {UserId}. Reason: {Reason}",
             request.KeyId, actor.SubjectIdAsGuid.Value, request.Reason);

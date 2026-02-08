@@ -1,5 +1,6 @@
 using System.Security.Cryptography;
 using System.Text;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
 namespace GameGuild.Identity.Authentication;
@@ -8,11 +9,26 @@ namespace GameGuild.Identity.Authentication;
 ///     Encryption service using AES-256-GCM for symmetric encryption.
 ///     Provides encryption/decryption for sensitive data (MFA secrets, tokens, etc.).
 /// </summary>
-public sealed class EncryptionService(ILogger<EncryptionService> logger) : IEncryptionService
+public sealed class EncryptionService(ILogger<EncryptionService> logger, IConfiguration configuration) : IEncryptionService
 {
-    // Encryption key (TODO: Move to secure key vault/configuration)
-    // In production, use Azure Key Vault, AWS KMS, or similar
-    private const string EncryptionKeyTemp = "GameGuild_Encryption_Key_32_Chars"; // Must be 32 bytes for AES-256
+    /// <summary>
+    ///     Fallback key used only when no key is configured. Logs a warning on first use.
+    ///     In production, set Encryption:Key in configuration or use a key vault.
+    /// </summary>
+    private const string FallbackKey = "GameGuild_Encryption_Key_32_Chars";
+
+    private string EncryptionKey
+    {
+        get
+        {
+            var configuredKey = configuration["Encryption:Key"];
+            if (!string.IsNullOrEmpty(configuredKey))
+                return configuredKey;
+
+            logger.LogWarning("Encryption:Key not configured — using insecure fallback key. Set Encryption:Key in configuration for production");
+            return FallbackKey;
+        }
+    }
 
     // AES-GCM parameters
     private const int NonceSize = 12; // 96 bits (recommended for AES-GCM)
@@ -34,8 +50,8 @@ public sealed class EncryptionService(ILogger<EncryptionService> logger) : IEncr
             // Convert plaintext to bytes
             var plaintextBytes = Encoding.UTF8.GetBytes(plaintext);
 
-            // Generate encryption key from constant (TODO: Use secure key management)
-            var key = DeriveKey(EncryptionKeyTemp);
+            // Generate encryption key from configuration
+            var key = DeriveKey(EncryptionKey);
 
             // Generate random nonce (96 bits)
             var nonce = new byte[NonceSize];
@@ -97,8 +113,8 @@ public sealed class EncryptionService(ILogger<EncryptionService> logger) : IEncr
             Buffer.BlockCopy(combined, NonceSize, ciphertextBytes, 0, ciphertextBytes.Length);
             Buffer.BlockCopy(combined, NonceSize + ciphertextBytes.Length, tag, 0, TagSize);
 
-            // Generate encryption key
-            var key = DeriveKey(EncryptionKeyTemp);
+            // Generate encryption key from configuration
+            var key = DeriveKey(EncryptionKey);
 
             // Decrypt using AES-GCM
             var plaintext = new byte[ciphertextBytes.Length];
@@ -197,18 +213,15 @@ public sealed class EncryptionService(ILogger<EncryptionService> logger) : IEncr
     #region Private Helper Methods
 
     /// <summary>
-    ///     Derives a 32-byte key from the encryption key constant.
-    ///     In production, use proper key derivation (PBKDF2, HKDF, etc.).
+    ///     Derives a 32-byte key from the encryption key using HKDF (RFC 5869).
     /// </summary>
     private byte[ ] DeriveKey(string keyString)
     {
-        // Simple key derivation (TODO: Use PBKDF2 or HKDF in production)
-        using var sha256 = SHA256.Create();
         var keyBytes = Encoding.UTF8.GetBytes(keyString);
-        var derivedKey = sha256.ComputeHash(keyBytes);
+        var info = Encoding.UTF8.GetBytes("GameGuild.Encryption.AES256GCM");
 
-        // AES-256 requires 32 bytes
-        if (derivedKey.Length != 32) { throw new CryptographicException("Invalid key length for AES-256"); }
+        // HKDF: extract-then-expand with SHA-256 produces exactly 32 bytes for AES-256
+        var derivedKey = HKDF.DeriveKey(HashAlgorithmName.SHA256, keyBytes, 32, salt: null, info);
 
         return derivedKey;
     }

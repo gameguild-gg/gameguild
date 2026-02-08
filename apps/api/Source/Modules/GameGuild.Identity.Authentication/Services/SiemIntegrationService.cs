@@ -66,12 +66,13 @@ public class SiemIntegrationService : ISiemIntegrationService
             // Send to SIEM endpoint if configured
             if (!string.IsNullOrEmpty(_siemEndpoint) && _httpClient != null)
             {
-                await SendToSiemEndpointAsync(siemEvent, cancellationToken);
+                await SendToSiemEndpointAsync(siemEvent, cancellationToken).ConfigureAwait(false);
             }
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to send security event to SIEM system");
+            throw;
         }
     }
 
@@ -99,7 +100,7 @@ public class SiemIntegrationService : ISiemIntegrationService
             }
         };
 
-        await SendSecurityEventAsync(siemEvent, cancellationToken);
+        await SendSecurityEventAsync(siemEvent, cancellationToken).ConfigureAwait(false);
     }
 
     public async Task SendSuspiciousActivityEventAsync(SuspiciousActivity activity, CancellationToken cancellationToken = default)
@@ -130,7 +131,7 @@ public class SiemIntegrationService : ISiemIntegrationService
             }
         };
 
-        await SendSecurityEventAsync(siemEvent, cancellationToken);
+        await SendSecurityEventAsync(siemEvent, cancellationToken).ConfigureAwait(false);
     }
 
     public async Task SendBruteForceEventAsync(string identifier, int attemptCount, TimeSpan timeWindow, CancellationToken cancellationToken = default)
@@ -149,7 +150,7 @@ public class SiemIntegrationService : ISiemIntegrationService
             }
         };
 
-        await SendSecurityEventAsync(siemEvent, cancellationToken);
+        await SendSecurityEventAsync(siemEvent, cancellationToken).ConfigureAwait(false);
     }
 
     public async Task SendImpossibleTravelEventAsync(Guid userId, LocationInfo fromLocation, LocationInfo toLocation, TimeSpan timeBetween, CancellationToken cancellationToken = default)
@@ -175,7 +176,7 @@ public class SiemIntegrationService : ISiemIntegrationService
             }
         };
 
-        await SendSecurityEventAsync(siemEvent, cancellationToken);
+        await SendSecurityEventAsync(siemEvent, cancellationToken).ConfigureAwait(false);
     }
 
     private async Task SendToSiemEndpointAsync(SiemEvent siemEvent, CancellationToken cancellationToken)
@@ -204,7 +205,7 @@ public class SiemIntegrationService : ISiemIntegrationService
                 request.Headers.Add("X-API-Key", _siemApiKey);
             }
 
-            var response = await _httpClient.SendAsync(request, cancellationToken);
+            var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
 
             if (!response.IsSuccessStatusCode)
             {
@@ -222,6 +223,7 @@ public class SiemIntegrationService : ISiemIntegrationService
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error sending event to SIEM endpoint");
+            throw;
         }
     }
 

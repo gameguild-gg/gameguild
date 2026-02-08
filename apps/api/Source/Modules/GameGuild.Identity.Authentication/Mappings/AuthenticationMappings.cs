@@ -20,7 +20,7 @@ public static class AuthenticationMappings
     {
         // Try to fetch user details from repository
         // Note: In some scenarios (e.g., tests with separate DbContext scopes), the user might not be available yet
-        var user = await userRepository.GetByIdAsync(domainResponse.UserId, cancellationToken);
+        var user = await userRepository.GetByIdAsync(domainResponse.UserId, cancellationToken).ConfigureAwait(false);
 
         return new Authentication_SignInResponse
         {

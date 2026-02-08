@@ -1,7 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Security.Cryptography;
-using GameGuild.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace GameGuild.Identity.Authentication;
@@ -126,9 +125,7 @@ public class ApiKey : EntityBase
             Scopes = string.Join(",", scopes),
             IsActive = true,
             ExpiresAt = expiresAt,
-            IpWhitelist = ipWhitelist,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            IpWhitelist = ipWhitelist
         };
 
         return (apiKey, plaintext);

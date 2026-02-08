@@ -19,7 +19,7 @@ public class GoogleIdTokenSignInHandler(IAuthService authService, IUserRepositor
         {
             var errors = validationResult.Errors.Select(e => new ValidationError(e.PropertyName, e.ErrorMessage));
 
-            throw new ValidationException(errors);
+            throw new RequestValidationException(errors);
         }
 
         var signInRequest = new GoogleIdTokenRequest { IdToken = command.IdToken, TenantId = command.TenantId };

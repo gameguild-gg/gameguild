@@ -1,4 +1,3 @@
-using GameGuild.Abstractions;
 using GameGuild.CQRS;
 using Microsoft.EntityFrameworkCore;
 
@@ -17,7 +16,7 @@ public sealed class RevokeContentTypePermissionByIdHandler(IApplicationDbContext
             ?? throw new InvalidOperationException($"Content type permission grant {request.GrantId} not found");
 
         context.Set<ContentTypePermission>().Remove(grant);
-        await context.SaveChangesAsync(cancellationToken);
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         return Unit.Value;
     }

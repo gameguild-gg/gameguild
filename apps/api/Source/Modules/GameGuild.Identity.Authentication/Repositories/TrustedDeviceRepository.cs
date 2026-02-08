@@ -1,4 +1,3 @@
-using GameGuild.Abstractions;
 using Microsoft.EntityFrameworkCore;
 
 namespace GameGuild.Identity.Authentication;
@@ -32,13 +31,12 @@ public class TrustedDeviceRepository(IApplicationDbContext context) : ITrustedDe
     public async Task<TrustedDevice> CreateAsync(TrustedDevice device, CancellationToken cancellationToken = default)
     {
         device.Id = Guid.NewGuid();
-        device.CreatedAt = DateTime.UtcNow;
         device.UpdatedAt = DateTime.UtcNow;
         device.TrustedAt = DateTime.UtcNow;
         device.LastUsedAt = DateTime.UtcNow;
 
         TrustedDevices.Add(device);
-        await context.SaveChangesAsync(cancellationToken);
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         return device;
     }
@@ -48,21 +46,21 @@ public class TrustedDeviceRepository(IApplicationDbContext context) : ITrustedDe
         device.UpdatedAt = DateTime.UtcNow;
 
         TrustedDevices.Update(device);
-        await context.SaveChangesAsync(cancellationToken);
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         return device;
     }
 
     public async Task RevokeAsync(Guid deviceId, CancellationToken cancellationToken = default)
     {
-        var device = await GetByIdAsync(deviceId, cancellationToken);
+        var device = await GetByIdAsync(deviceId, cancellationToken).ConfigureAwait(false);
 
         if (device == null) return;
 
         device.IsActive = false;
         device.UpdatedAt = DateTime.UtcNow;
 
-        await UpdateAsync(device, cancellationToken);
+        await UpdateAsync(device, cancellationToken).ConfigureAwait(false);
     }
 
     public async Task RevokeAllForUserAsync(Guid userId, CancellationToken cancellationToken = default)
@@ -80,7 +78,7 @@ public class TrustedDeviceRepository(IApplicationDbContext context) : ITrustedDe
         }
 
         TrustedDevices.UpdateRange(userDevices);
-        await context.SaveChangesAsync(cancellationToken);
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
     }
 
     public async Task DeleteExpiredAsync(DateTime now, CancellationToken cancellationToken = default)
@@ -90,7 +88,7 @@ public class TrustedDeviceRepository(IApplicationDbContext context) : ITrustedDe
         if (expiredDevices.Count == 0) return;
 
         TrustedDevices.RemoveRange(expiredDevices);
-        await context.SaveChangesAsync(cancellationToken);
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
     }
 
     // Helper methods for backward compatibility and service layer
@@ -103,7 +101,7 @@ public class TrustedDeviceRepository(IApplicationDbContext context) : ITrustedDe
 
     public async Task<bool> UpdateLastUsedAsync(Guid userId, string deviceFingerprint, CancellationToken cancellationToken = default)
     {
-        var device = await GetByUserAndFingerprintAsync(userId, deviceFingerprint, cancellationToken);
+        var device = await GetByUserAndFingerprintAsync(userId, deviceFingerprint, cancellationToken).ConfigureAwait(false);
 
         if (device == null) return false;
 
@@ -114,7 +112,7 @@ public class TrustedDeviceRepository(IApplicationDbContext context) : ITrustedDe
         device.LastUsedAt = now;
         device.UpdatedAt = now;
 
-        await UpdateAsync(device, cancellationToken);
+        await UpdateAsync(device, cancellationToken).ConfigureAwait(false);
 
         return true;
     }

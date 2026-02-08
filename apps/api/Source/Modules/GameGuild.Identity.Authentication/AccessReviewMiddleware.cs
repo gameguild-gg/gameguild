@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 
 namespace GameGuild.Identity.Authentication;
@@ -20,6 +20,6 @@ public class AccessReviewMiddleware(RequestDelegate next, ILogger<AccessReviewMi
         // Add access review headers
         context.Response.Headers.Append("X-Access-Review", "enabled");
 
-        await next(context);
+        await next(context).ConfigureAwait(false);
     }
 }

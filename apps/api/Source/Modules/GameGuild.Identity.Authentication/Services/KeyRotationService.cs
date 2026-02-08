@@ -1,4 +1,3 @@
-using GameGuild.Abstractions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -18,7 +17,7 @@ public class KeyRotationService(
         return await _dbContext.Set<JwtSigningKey>()
             .Where(k => k.IsActive && k.ValidFrom <= DateTime.UtcNow && k.ExpiresAt > DateTime.UtcNow)
             .OrderByDescending(k => k.KeyVersion)
-            .FirstOrDefaultAsync(cancellationToken);
+            .FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<List<JwtSigningKey>> GetValidationKeysAsync(CancellationToken cancellationToken = default)
@@ -27,13 +26,13 @@ public class KeyRotationService(
         return await _dbContext.Set<JwtSigningKey>()
             .Where(k => k.ValidFrom <= now && k.ExpiresAt > now)
             .OrderByDescending(k => k.KeyVersion)
-            .ToListAsync(cancellationToken);
+            .ToListAsync(cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<JwtSigningKey?> GetKeyByIdAsync(string keyId, CancellationToken cancellationToken = default)
     {
         return await _dbContext.Set<JwtSigningKey>()
-            .FirstOrDefaultAsync(k => k.KeyId == keyId, cancellationToken);
+            .FirstOrDefaultAsync(k => k.KeyId == keyId, cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<JwtSigningKey> RotateKeyAsync(string reason = "scheduled", int validityDays = 90, CancellationToken cancellationToken = default)
@@ -41,7 +40,7 @@ public class KeyRotationService(
         logger.LogInformation("Starting JWT key rotation. Reason: {Reason}", reason);
 
         // Get current active key
-        var currentKey = await GetActiveSigningKeyAsync(cancellationToken);
+        var currentKey = await GetActiveSigningKeyAsync(cancellationToken).ConfigureAwait(false);
         var nextVersion = (currentKey?.KeyVersion ?? 0) + 1;
 
         // Create new key
@@ -51,7 +50,7 @@ public class KeyRotationService(
 
         // Save new key
         _dbContext.Set<JwtSigningKey>().Add(newKey);
-        await _dbContext.SaveChangesAsync(cancellationToken);
+        await _dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         // Activate new key
         newKey.Activate();
@@ -70,7 +69,7 @@ public class KeyRotationService(
                 newKey.KeyId, newKey.KeyVersion);
         }
 
-        await _dbContext.SaveChangesAsync(cancellationToken);
+        await _dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         return newKey;
     }
@@ -81,7 +80,7 @@ public class KeyRotationService(
         
         var expiredKeys = await _dbContext.Set<JwtSigningKey>()
             .Where(k => k.ExpiresAt < cutoffDate)
-            .ToListAsync(cancellationToken);
+            .ToListAsync(cancellationToken).ConfigureAwait(false);
 
         if (expiredKeys.Count == 0)
         {
@@ -90,7 +89,7 @@ public class KeyRotationService(
         }
 
         _dbContext.Set<JwtSigningKey>().RemoveRange(expiredKeys);
-        await _dbContext.SaveChangesAsync(cancellationToken);
+        await _dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         logger.LogInformation("Cleaned up {Count} expired JWT signing keys older than {CutoffDate}",
             expiredKeys.Count, cutoffDate);
@@ -100,11 +99,11 @@ public class KeyRotationService(
 
     public async Task InitializeAsync(CancellationToken cancellationToken = default)
     {
-        var activeKey = await GetActiveSigningKeyAsync(cancellationToken);
+        var activeKey = await GetActiveSigningKeyAsync(cancellationToken).ConfigureAwait(false);
         if (activeKey == null)
         {
             logger.LogWarning("No active JWT signing key found. Creating initial key...");
-            await RotateKeyAsync("initialization", validityDays: 90, cancellationToken);
+            await RotateKeyAsync("initialization", validityDays: 90, cancellationToken).ConfigureAwait(false);
         }
         else
         {

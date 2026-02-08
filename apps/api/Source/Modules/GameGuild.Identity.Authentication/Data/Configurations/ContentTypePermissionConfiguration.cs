@@ -19,30 +19,15 @@ public class ContentTypePermissionConfiguration : IEntityTypeConfiguration<Conte
         // Configure Id property
         builder.Property(x => x.Id).HasColumnName("id").IsRequired();
 
-        // TODO: Add specific property configurations for ContentTypePermission
-        // Example:
-        // builder.Property(x => x.Name)
-        //     .HasColumnName("name")
-        //     .HasMaxLength(255)
-        //     .IsRequired();
+        // Property configurations
+        builder.Property(x => x.ContentTypeName).HasColumnName("content_type_name").HasMaxLength(256).IsRequired();
+        builder.Property(x => x.Description).HasColumnName("description").HasMaxLength(1000);
+        builder.Property(x => x.UserId).HasColumnName("user_id");
+        builder.Property(x => x.Permissions).HasColumnName("permissions").HasMaxLength(500);
 
-        // TODO: Add relationship configurations
-        // Example:
-        // builder.HasOne(x => x.Tenant)
-        //     .WithMany()
-        //     .HasForeignKey(x => x.TenantId)
-        //     .OnDelete(DeleteBehavior.Cascade);
-
-        // Configure indexes
-        // builder.HasIndex(x => x.TenantId).HasDatabaseName("idx_contenttypepermission_tenant_id");
-
-        // Configure created/updated timestamps if inherited from EntityBase
-        // builder.Property(x => x.CreatedAt)
-        //     .HasColumnName("created_at")
-        //     .IsRequired();
-        // 
-        // builder.Property(x => x.UpdatedAt)
-        //     .HasColumnName("updated_at")
-        //     .IsRequired();
+        // Indexes
+        builder.HasIndex(x => x.TenantId).HasDatabaseName("ix_contenttypepermission_tenant_id");
+        builder.HasIndex(x => x.UserId).HasDatabaseName("ix_contenttypepermission_user_id");
+        builder.HasIndex(x => new { x.TenantId, x.ContentTypeName }).HasDatabaseName("ix_contenttypepermission_tenant_contenttype");
     }
 }

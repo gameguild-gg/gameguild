@@ -1,4 +1,3 @@
-using GameGuild.Abstractions;
 using Microsoft.EntityFrameworkCore;
 
 namespace GameGuild.Identity.Authentication;
@@ -30,12 +29,11 @@ public class UserSessionRepository(IApplicationDbContext context) : IUserSession
     public async Task<UserSession> CreateAsync(UserSession session, CancellationToken cancellationToken = default)
     {
         session.Id = Guid.NewGuid();
-        session.CreatedAt = DateTime.UtcNow;
         session.UpdatedAt = DateTime.UtcNow;
         session.LastUsedAt = DateTime.UtcNow;
 
         UserSessions.Add(session);
-        await context.SaveChangesAsync(cancellationToken);
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         return session;
     }
@@ -45,14 +43,14 @@ public class UserSessionRepository(IApplicationDbContext context) : IUserSession
         session.UpdatedAt = DateTime.UtcNow;
 
         UserSessions.Update(session);
-        await context.SaveChangesAsync(cancellationToken);
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         return session;
     }
 
     public async Task TerminateAsync(Guid sessionId, string reason, CancellationToken cancellationToken = default)
     {
-        var session = await GetByIdAsync(sessionId, cancellationToken);
+        var session = await GetByIdAsync(sessionId, cancellationToken).ConfigureAwait(false);
 
         if (session == null) return;
 
@@ -61,7 +59,7 @@ public class UserSessionRepository(IApplicationDbContext context) : IUserSession
         session.TerminatedAt = DateTime.UtcNow;
         session.UpdatedAt = DateTime.UtcNow;
 
-        await UpdateAsync(session, cancellationToken);
+        await UpdateAsync(session, cancellationToken).ConfigureAwait(false);
     }
 
     public async Task TerminateAllForUserAsync(Guid userId, string reason, CancellationToken cancellationToken = default)
@@ -81,7 +79,7 @@ public class UserSessionRepository(IApplicationDbContext context) : IUserSession
         }
 
         UserSessions.UpdateRange(activeSessions);
-        await context.SaveChangesAsync(cancellationToken);
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
     }
 
     public async Task TerminateAllExceptAsync(Guid userId, Guid keepSessionId, string reason, CancellationToken cancellationToken = default)
@@ -101,7 +99,7 @@ public class UserSessionRepository(IApplicationDbContext context) : IUserSession
         }
 
         UserSessions.UpdateRange(activeSessions);
-        await context.SaveChangesAsync(cancellationToken);
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
     }
 
     public async Task DeleteExpiredAsync(DateTime now, CancellationToken cancellationToken = default)
@@ -111,7 +109,7 @@ public class UserSessionRepository(IApplicationDbContext context) : IUserSession
         if (expiredSessions.Count == 0) return;
 
         UserSessions.RemoveRange(expiredSessions);
-        await context.SaveChangesAsync(cancellationToken);
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<int> CountActiveSessionsAsync(Guid userId, CancellationToken cancellationToken = default)
@@ -133,21 +131,21 @@ public class UserSessionRepository(IApplicationDbContext context) : IUserSession
 
     public async Task<bool> UpdateLastUsedAsync(Guid sessionId, CancellationToken cancellationToken = default)
     {
-        var session = await GetByIdAsync(sessionId, cancellationToken);
+        var session = await GetByIdAsync(sessionId, cancellationToken).ConfigureAwait(false);
 
         if (session is not { IsActive: true }) return false;
 
         session.LastUsedAt = DateTime.UtcNow;
         session.UpdatedAt = DateTime.UtcNow;
 
-        await UpdateAsync(session, cancellationToken);
+        await UpdateAsync(session, cancellationToken).ConfigureAwait(false);
 
         return true;
     }
 
     public async Task<bool> MarkDeviceAsTrustedAsync(Guid sessionId, CancellationToken cancellationToken = default)
     {
-        var session = await GetByIdAsync(sessionId, cancellationToken);
+        var session = await GetByIdAsync(sessionId, cancellationToken).ConfigureAwait(false);
 
         if (session == null) return false;
 
@@ -155,7 +153,7 @@ public class UserSessionRepository(IApplicationDbContext context) : IUserSession
         session.TrustedAt = DateTime.UtcNow;
         session.UpdatedAt = DateTime.UtcNow;
 
-        await UpdateAsync(session, cancellationToken);
+        await UpdateAsync(session, cancellationToken).ConfigureAwait(false);
 
         return true;
     }

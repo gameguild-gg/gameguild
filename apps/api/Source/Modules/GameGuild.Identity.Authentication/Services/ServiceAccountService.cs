@@ -58,14 +58,10 @@ public sealed class ServiceAccountService : IServiceAccountService
             TenantId = tenantId,
             Scopes = scopes,
             IsActive = true,
-            ExpiresAt = expiresAt,
-            CreatedAt = DateTime.UtcNow,
-            CreatedBy = createdBy,
-            UpdatedAt = DateTime.UtcNow,
-            AllowedIpAddresses = allowedIpAddresses
+            ExpiresAt = expiresAt, CreatedBy = createdBy, AllowedIpAddresses = allowedIpAddresses
         };
 
-        var created = await _repository.CreateAsync(serviceAccount, cancellationToken);
+        var created = await _repository.CreateAsync(serviceAccount, cancellationToken).ConfigureAwait(false);
 
         _logger.LogInformation(
             "Created service account {ServiceAccountId} with client ID {ClientId} for tenant {TenantId}",
@@ -81,7 +77,7 @@ public sealed class ServiceAccountService : IServiceAccountService
         string? ipAddress,
         CancellationToken cancellationToken = default)
     {
-        var serviceAccount = await _repository.GetByClientIdAsync(clientId, cancellationToken);
+        var serviceAccount = await _repository.GetByClientIdAsync(clientId, cancellationToken).ConfigureAwait(false);
 
         if (serviceAccount == null)
         {
@@ -107,7 +103,7 @@ public sealed class ServiceAccountService : IServiceAccountService
                     "Authentication failed: IP {IpAddress} not in allowed list for service account {ServiceAccountId}",
                     ipAddress, serviceAccount.Id);
                 serviceAccount.RecordFailedAuthentication(LockThreshold);
-                await _repository.UpdateAsync(serviceAccount, cancellationToken);
+                await _repository.UpdateAsync(serviceAccount, cancellationToken).ConfigureAwait(false);
                 return null;
             }
         }
@@ -119,13 +115,13 @@ public sealed class ServiceAccountService : IServiceAccountService
                 "Authentication failed: invalid client secret for service account {ServiceAccountId}",
                 serviceAccount.Id);
             serviceAccount.RecordFailedAuthentication(LockThreshold);
-            await _repository.UpdateAsync(serviceAccount, cancellationToken);
+            await _repository.UpdateAsync(serviceAccount, cancellationToken).ConfigureAwait(false);
             return null;
         }
 
         // Record successful authentication
         serviceAccount.RecordSuccessfulAuthentication(ipAddress);
-        await _repository.UpdateAsync(serviceAccount, cancellationToken);
+        await _repository.UpdateAsync(serviceAccount, cancellationToken).ConfigureAwait(false);
 
         _logger.LogInformation(
             "Service account {ServiceAccountId} authenticated successfully from IP {IpAddress}",
@@ -144,7 +140,7 @@ public sealed class ServiceAccountService : IServiceAccountService
         var newSecretHash = _hasher.HashToken(newSecret);
 
         serviceAccount.RotateSecret(newSecretHash);
-        await _repository.UpdateAsync(serviceAccount, cancellationToken);
+        await _repository.UpdateAsync(serviceAccount, cancellationToken).ConfigureAwait(false);
 
         _logger.LogInformation(
             "Rotated secret for service account {ServiceAccountId} (rotation #{RotationCount})",
@@ -160,7 +156,7 @@ public sealed class ServiceAccountService : IServiceAccountService
                              ?? throw new InvalidOperationException($"Service account {serviceAccountId} not found");
 
         serviceAccount.Unlock();
-        await _repository.UpdateAsync(serviceAccount, cancellationToken);
+        await _repository.UpdateAsync(serviceAccount, cancellationToken).ConfigureAwait(false);
 
         _logger.LogInformation("Unlocked service account {ServiceAccountId}", serviceAccountId);
     }
@@ -172,7 +168,7 @@ public sealed class ServiceAccountService : IServiceAccountService
                              ?? throw new InvalidOperationException($"Service account {serviceAccountId} not found");
 
         serviceAccount.Lock(reason);
-        await _repository.UpdateAsync(serviceAccount, cancellationToken);
+        await _repository.UpdateAsync(serviceAccount, cancellationToken).ConfigureAwait(false);
 
         _logger.LogInformation("Locked service account {ServiceAccountId} with reason: {Reason}", serviceAccountId, reason);
     }
@@ -199,7 +195,7 @@ public sealed class ServiceAccountService : IServiceAccountService
 
         serviceAccount.IsActive = false;
         serviceAccount.UpdatedAt = DateTime.UtcNow;
-        await _repository.UpdateAsync(serviceAccount, cancellationToken);
+        await _repository.UpdateAsync(serviceAccount, cancellationToken).ConfigureAwait(false);
 
         _logger.LogInformation("Deactivated service account {ServiceAccountId}", serviceAccountId);
     }
@@ -212,7 +208,7 @@ public sealed class ServiceAccountService : IServiceAccountService
 
         serviceAccount.IsActive = true;
         serviceAccount.UpdatedAt = DateTime.UtcNow;
-        await _repository.UpdateAsync(serviceAccount, cancellationToken);
+        await _repository.UpdateAsync(serviceAccount, cancellationToken).ConfigureAwait(false);
 
         _logger.LogInformation("Reactivated service account {ServiceAccountId}", serviceAccountId);
     }
@@ -225,7 +221,7 @@ public sealed class ServiceAccountService : IServiceAccountService
 
         serviceAccount.Scopes = scopes;
         serviceAccount.UpdatedAt = DateTime.UtcNow;
-        await _repository.UpdateAsync(serviceAccount, cancellationToken);
+        await _repository.UpdateAsync(serviceAccount, cancellationToken).ConfigureAwait(false);
 
         _logger.LogInformation(
             "Updated scopes for service account {ServiceAccountId} to: {Scopes}",
@@ -239,6 +235,10 @@ public sealed class ServiceAccountService : IServiceAccountService
     /// <inheritdoc />
     public Task<IReadOnlyList<ServiceAccount>> GetByTenantAsync(Guid tenantId, CancellationToken cancellationToken = default)
         => _repository.GetByTenantIdAsync(tenantId, cancellationToken);
+
+    /// <inheritdoc />
+    public Task<IReadOnlyList<ServiceAccount>> GetAllAsync(CancellationToken cancellationToken = default)
+        => _repository.GetAllAsync(cancellationToken);
 
     private static string GenerateSecureSecret()
     {

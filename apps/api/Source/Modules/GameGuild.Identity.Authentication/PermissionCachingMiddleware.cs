@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 
 namespace GameGuild.Identity.Authentication;
@@ -22,6 +22,6 @@ public class PermissionCachingMiddleware(RequestDelegate next, ILogger<Permissio
         // Add permission caching headers
         context.Response.Headers.Append("X-Permission-Cache", "enabled");
 
-        await next(context);
+        await next(context).ConfigureAwait(false);
     }
 }

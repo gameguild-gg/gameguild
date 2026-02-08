@@ -1,5 +1,6 @@
 using System.Text.RegularExpressions;
 
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
 namespace GameGuild.Identity.Authentication;
@@ -8,24 +9,24 @@ namespace GameGuild.Identity.Authentication;
 ///     Password hashing service using BCrypt or Argon2.
 ///     Provides password hashing, verification, strength validation, and rehashing detection.
 /// </summary>
-public sealed class PasswordHasher(ILogger<PasswordHasher> logger) : IPasswordHasher
+public sealed class PasswordHasher(ILogger<PasswordHasher> logger, IConfiguration configuration) : IPasswordHasher
 {
     // BCrypt work factor (cost parameter) - higher is more secure but slower
     // Recommended: 12-14 for production (2^12 to 2^14 iterations)
     private const int BCryptWorkFactor = 12;
 
-    // Password policy defaults (TODO: Move to configuration)
-    private const int MinPasswordLength = 8;
+    // Password policy — loaded from configuration section "PasswordPolicy", with secure defaults
+    private int MinPasswordLength => configuration.GetValue("PasswordPolicy:MinPasswordLength", 8);
 
-    private const int MaxPasswordLength = 128;
+    private int MaxPasswordLength => configuration.GetValue("PasswordPolicy:MaxPasswordLength", 128);
 
-    private const bool RequireUppercase = true;
+    private bool RequireUppercase => configuration.GetValue("PasswordPolicy:RequireUppercase", true);
 
-    private const bool RequireLowercase = true;
+    private bool RequireLowercase => configuration.GetValue("PasswordPolicy:RequireLowercase", true);
 
-    private const bool RequireDigit = true;
+    private bool RequireDigit => configuration.GetValue("PasswordPolicy:RequireDigit", true);
 
-    private const bool RequireSpecialChar = true;
+    private bool RequireSpecialChar => configuration.GetValue("PasswordPolicy:RequireSpecialChar", true);
 
     /// <summary>
     ///     Hashes a password using BCrypt algorithm.

@@ -14,11 +14,11 @@ namespace GameGuild.Identity.Authentication;
 /// <remarks>
 ///     Rate limited to 10 requests per minute per client to prevent brute-force attacks.
 /// </remarks>
-[ApiController]
 [ApiVersion("1.0")]
 [Tags("authentication")]
 [EnableRateLimiting(RateLimitPolicies.Authentication)]
-public sealed class AuthController(ISender sender) : ControllerBase
+[Authorize]
+public sealed class AuthController(ISender sender) : BaseApiController
 {
     #region Registration Operations - /v1/auth/sign-up
 
@@ -122,12 +122,12 @@ public sealed class AuthController(ISender sender) : ControllerBase
     [EndpointDescription("Initiates GitHub OAuth authentication flow and returns the authorization URL.")]
     [ProducesResponseType<GitHubSignInResponse>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public Task<IActionResult> GitHubSignIn([FromQuery] string redirectUri, CancellationToken ct)
+    public async Task<IActionResult> GitHubSignIn([FromQuery] string redirectUri, CancellationToken ct)
     {
-        // TODO: Implement proper GitHub OAuth flow with CQRS command
-        var mockAuthUrl = $"https://github.com/login/oauth/authorize?client_id=test&redirect_uri={redirectUri}";
+        var command = new GitHubSignInCommand { RedirectUri = redirectUri };
+        var result = await sender.Send(command, ct).ConfigureAwait(false);
 
-        return Task.FromResult<IActionResult>(Ok(new GitHubSignInResponse { AuthUrl = mockAuthUrl }));
+        return Ok(result);
     }
 
     #endregion
@@ -234,11 +234,13 @@ public sealed class AuthController(ISender sender) : ControllerBase
     [EndpointDescription("Sends a verification email to the specified email address to confirm ownership.")]
     [ProducesResponseType<EmailVerificationResponse>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public Task<IActionResult> SendEmailVerification([FromBody] SendEmailVerificationRequest body, CancellationToken ct)
+    public async Task<IActionResult> SendEmailVerification([FromBody] SendEmailVerificationRequest body, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(body);
-        // TODO: Implement proper email verification command
-        return Task.FromResult<IActionResult>(Ok(new EmailVerificationResponse { Message = "Verification email sent successfully" }));
+        var command = new SendEmailVerificationCommand { Email = body.Email };
+        var result = await sender.Send(command, ct).ConfigureAwait(false);
+
+        return Ok(result);
     }
 
     /// <summary>

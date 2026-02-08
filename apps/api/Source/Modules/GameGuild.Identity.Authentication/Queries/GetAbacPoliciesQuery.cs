@@ -3,7 +3,7 @@ using GameGuild.CQRS;
 
 namespace GameGuild.Identity.Authentication;
 
-public record GetAbacPoliciesQuery : IQuery<Models.PagedResult<AbacPolicy>>
+public record GetAbacPoliciesQuery : IQuery<PagedResult<AbacPolicy>>
 {
     public Guid? TenantId { get; init; }
 

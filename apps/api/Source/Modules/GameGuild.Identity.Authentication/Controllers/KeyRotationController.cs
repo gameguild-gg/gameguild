@@ -9,11 +9,10 @@ namespace GameGuild.Identity.Authentication;
 /// <summary>
 ///     Controller for JWT signing key rotation management
 /// </summary>
-[ApiController]
 [ApiVersion("1.0")]
 [Tags("signing-keys")]
 [Authorize(Roles = "SystemAdministrator")]
-public class KeyRotationController : ControllerBase
+public class KeyRotationController : BaseApiController
 {
     private readonly IKeyRotationService _keyRotationService;
     private readonly ILogger<KeyRotationController> _logger;

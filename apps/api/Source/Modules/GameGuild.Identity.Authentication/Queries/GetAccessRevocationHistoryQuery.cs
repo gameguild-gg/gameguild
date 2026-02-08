@@ -2,7 +2,7 @@
 
 namespace GameGuild.Identity.Authentication;
 
-public record GetAccessRevocationHistoryQuery : IQuery<Models.PagedResult<AccessRevocationRecord>>
+public record GetAccessRevocationHistoryQuery : IQuery<PagedResult<AccessRevocationRecord>>
 {
     public Guid? UserId { get; init; }
 

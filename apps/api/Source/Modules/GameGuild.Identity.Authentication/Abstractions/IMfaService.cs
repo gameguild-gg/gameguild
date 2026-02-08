@@ -8,7 +8,7 @@ public interface IMfaService
 {
     Task<MfaConfigurationResponse> GetMfaConfigurationAsync(Guid userId, CancellationToken cancellationToken = default);
 
-    Task<MfaSetupResult> InitiateMfaSetupAsync(Guid userId, CancellationToken cancellationToken = default);
+    Task<MfaSetupResult> InitiateMfaSetupAsync(Guid userId, string userEmail, CancellationToken cancellationToken = default);
 
     Task<MfaVerificationResult> CompleteMfaSetupAsync(Guid userId, string totpCode, CancellationToken cancellationToken = default);
 

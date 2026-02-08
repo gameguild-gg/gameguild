@@ -1,4 +1,3 @@
-using GameGuild.Abstractions;
 using GameGuild.CQRS;
 using GameGuild.Identity.Authorization;
 using Microsoft.EntityFrameworkCore;
@@ -18,7 +17,7 @@ public sealed class RevokeTenantPermissionByIdHandler(IApplicationDbContext cont
             ?? throw new InvalidOperationException($"Tenant permission grant {request.GrantId} not found");
 
         context.Set<TenantPermission>().Remove(grant);
-        await context.SaveChangesAsync(cancellationToken);
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         return Unit.Value;
     }

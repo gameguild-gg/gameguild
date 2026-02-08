@@ -3,7 +3,7 @@ using GameGuild.CQRS;
 
 namespace GameGuild.Identity.Authentication;
 
-public record GetAccessReviewItemsQuery : IQuery<Models.PagedResult<AccessReviewItem>>
+public record GetAccessReviewItemsQuery : IQuery<PagedResult<AccessReviewItem>>
 {
     public Guid CampaignId { get; init; }
 

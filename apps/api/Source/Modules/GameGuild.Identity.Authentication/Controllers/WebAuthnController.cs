@@ -13,13 +13,12 @@ namespace GameGuild.Identity.Authentication;
 /// <remarks>
 ///     Rate limited to 10 requests per minute per client to prevent abuse of authentication endpoints.
 /// </remarks>
-[ApiController]
 [ApiVersion("1.0")]
 [Route("v{version:apiVersion}/auth/webauthn")]
 [Tags("auth/webauthn")]
 [EnableRateLimiting(RateLimitPolicies.Authentication)]
 public class WebAuthnController(
-    IWebAuthnService webAuthnService) : ControllerBase
+    IWebAuthnService webAuthnService) : BaseApiController
 {
     #region Registration Endpoints
 

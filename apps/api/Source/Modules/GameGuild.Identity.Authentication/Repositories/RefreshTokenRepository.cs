@@ -1,4 +1,3 @@
-using GameGuild.Abstractions;
 using Microsoft.EntityFrameworkCore;
 
 namespace GameGuild.Identity.Authentication;
@@ -25,11 +24,10 @@ public class RefreshTokenRepository(IApplicationDbContext context) : IRefreshTok
     public async Task<RefreshToken> CreateAsync(RefreshToken refreshToken, CancellationToken cancellationToken = default)
     {
         refreshToken.Id = Guid.NewGuid();
-        refreshToken.CreatedAt = DateTime.UtcNow;
         refreshToken.UpdatedAt = DateTime.UtcNow;
 
         RefreshTokens.Add(refreshToken);
-        await context.SaveChangesAsync(cancellationToken);
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         return refreshToken;
     }
@@ -39,14 +37,14 @@ public class RefreshTokenRepository(IApplicationDbContext context) : IRefreshTok
         refreshToken.UpdatedAt = DateTime.UtcNow;
 
         RefreshTokens.Update(refreshToken);
-        await context.SaveChangesAsync(cancellationToken);
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         return refreshToken;
     }
 
     public async Task RevokeAsync(string token, string? revokedByIp = null, string? replacedByToken = null, CancellationToken cancellationToken = default)
     {
-        var refreshToken = await GetByTokenAsync(token, cancellationToken);
+        var refreshToken = await GetByTokenAsync(token, cancellationToken).ConfigureAwait(false);
 
         if (refreshToken == null || refreshToken.IsRevoked) return;
 
@@ -56,7 +54,7 @@ public class RefreshTokenRepository(IApplicationDbContext context) : IRefreshTok
         refreshToken.ReplacedByToken = replacedByToken;
         refreshToken.UpdatedAt = DateTime.UtcNow;
 
-        await UpdateAsync(refreshToken, cancellationToken);
+        await UpdateAsync(refreshToken, cancellationToken).ConfigureAwait(false);
     }
 
     public async Task RevokeAllForUserAsync(Guid userId, string? revokedByIp = null, CancellationToken cancellationToken = default)
@@ -76,7 +74,7 @@ public class RefreshTokenRepository(IApplicationDbContext context) : IRefreshTok
         }
 
         RefreshTokens.UpdateRange(activeTokens);
-        await context.SaveChangesAsync(cancellationToken);
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
     }
 
     public async Task DeleteExpiredAndRevokedAsync(DateTime cutoffDate, CancellationToken cancellationToken = default)
@@ -86,7 +84,7 @@ public class RefreshTokenRepository(IApplicationDbContext context) : IRefreshTok
         if (expiredTokens.Count > 0)
         {
             RefreshTokens.RemoveRange(expiredTokens);
-            await context.SaveChangesAsync(cancellationToken);
+            await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         }
     }
 
@@ -94,12 +92,12 @@ public class RefreshTokenRepository(IApplicationDbContext context) : IRefreshTok
 
     public async Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var refreshToken = await GetByIdAsync(id, cancellationToken);
+        var refreshToken = await GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
 
         if (refreshToken == null) return false;
 
         RefreshTokens.Remove(refreshToken);
-        var changes = await context.SaveChangesAsync(cancellationToken);
+        var changes = await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         return changes > 0;
     }

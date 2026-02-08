@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 
 namespace GameGuild.Identity.Authentication;
@@ -20,6 +20,6 @@ public class AbacPolicyMiddleware(RequestDelegate next, ILogger<AbacPolicyMiddle
         // Add ABAC evaluation headers
         context.Response.Headers.Append("X-ABAC-Policies", "enabled");
 
-        await next(context);
+        await next(context).ConfigureAwait(false);
     }
 }

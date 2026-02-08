@@ -11,7 +11,7 @@ public class CreateRoleCommandHandler(IRoleRepository roleRepository) : ICommand
     public async Task<RoleDto> Handle(CreateRoleCommand request, CancellationToken cancellationToken)
     {
         // Check if role with same name already exists in tenant
-        var exists = await roleRepository.ExistsByNameAsync(request.Name, request.TenantId, cancellationToken: cancellationToken);
+        var exists = await roleRepository.ExistsByNameAsync(request.Name, request.TenantId, cancellationToken: cancellationToken).ConfigureAwait(false);
         if (exists)
         {
             throw new InvalidOperationException($"Role with name '{request.Name}' already exists in this tenant.");
@@ -25,7 +25,7 @@ public class CreateRoleCommandHandler(IRoleRepository roleRepository) : ICommand
         };
 
         // Save to database
-        var createdRole = await roleRepository.AddAsync(role, cancellationToken);
+        var createdRole = await roleRepository.AddAsync(role, cancellationToken).ConfigureAwait(false);
 
         // Return DTO
         return new RoleDto
@@ -50,7 +50,7 @@ public class UpdateRoleCommandHandler(IRoleRepository roleRepository) : ICommand
     public async Task<RoleDto> Handle(UpdateRoleCommand request, CancellationToken cancellationToken)
     {
         // Get existing role
-        var role = await roleRepository.GetByIdAsync(request.RoleId, cancellationToken);
+        var role = await roleRepository.GetByIdAsync(request.RoleId, cancellationToken).ConfigureAwait(false);
         if (role == null)
         {
             throw new InvalidOperationException($"Role with ID '{request.RoleId}' not found.");
@@ -59,7 +59,7 @@ public class UpdateRoleCommandHandler(IRoleRepository roleRepository) : ICommand
         // Check if name is being changed and if new name already exists
         if (request.Name != null && request.Name != role.Name)
         {
-            var exists = await roleRepository.ExistsByNameAsync(request.Name, role.TenantId, request.RoleId, cancellationToken);
+            var exists = await roleRepository.ExistsByNameAsync(request.Name, role.TenantId, request.RoleId, cancellationToken).ConfigureAwait(false);
             if (exists)
             {
                 throw new InvalidOperationException($"Role with name '{request.Name}' already exists in this tenant.");
@@ -84,7 +84,7 @@ public class UpdateRoleCommandHandler(IRoleRepository roleRepository) : ICommand
         }
 
         // Save changes
-        await roleRepository.UpdateAsync(role, cancellationToken);
+        await roleRepository.UpdateAsync(role, cancellationToken).ConfigureAwait(false);
 
         // Return DTO
         return new RoleDto
@@ -109,14 +109,14 @@ public class DeleteRoleCommandHandler(IRoleRepository roleRepository) : ICommand
     public async Task<bool> Handle(DeleteRoleCommand request, CancellationToken cancellationToken)
     {
         // Check if role exists
-        var role = await roleRepository.GetByIdAsync(request.RoleId, cancellationToken);
+        var role = await roleRepository.GetByIdAsync(request.RoleId, cancellationToken).ConfigureAwait(false);
         if (role == null)
         {
             throw new InvalidOperationException($"Role with ID '{request.RoleId}' not found.");
         }
 
         // Delete role
-        await roleRepository.DeleteAsync(request.RoleId, cancellationToken);
+        await roleRepository.DeleteAsync(request.RoleId, cancellationToken).ConfigureAwait(false);
 
         return true;
     }
@@ -130,14 +130,14 @@ public class AssignRoleToUserCommandHandler(IRoleRepository roleRepository) : IC
     public async Task<UserRoleDto> Handle(AssignRoleToUserCommand request, CancellationToken cancellationToken)
     {
         // Check if role exists
-        var role = await roleRepository.GetByIdAsync(request.RoleId, cancellationToken);
+        var role = await roleRepository.GetByIdAsync(request.RoleId, cancellationToken).ConfigureAwait(false);
         if (role == null)
         {
             throw new InvalidOperationException($"Role with ID '{request.RoleId}' not found.");
         }
 
         // Check if user already has this role
-        var hasRole = await roleRepository.UserHasRoleAsync(request.UserId, request.RoleId, cancellationToken);
+        var hasRole = await roleRepository.UserHasRoleAsync(request.UserId, request.RoleId, cancellationToken).ConfigureAwait(false);
         if (hasRole)
         {
             throw new InvalidOperationException($"User already has role '{role.Name}'.");
@@ -150,7 +150,7 @@ public class AssignRoleToUserCommandHandler(IRoleRepository roleRepository) : IC
         };
 
         // Save to database
-        var createdUserRole = await roleRepository.AssignRoleToUserAsync(userRole, cancellationToken);
+        var createdUserRole = await roleRepository.AssignRoleToUserAsync(userRole, cancellationToken).ConfigureAwait(false);
 
         // Return DTO
         return new UserRoleDto
@@ -185,14 +185,14 @@ public class RemoveRoleFromUserCommandHandler(IRoleRepository roleRepository) : 
     public async Task<bool> Handle(RemoveRoleFromUserCommand request, CancellationToken cancellationToken)
     {
         // Check if user has this role
-        var hasRole = await roleRepository.UserHasRoleAsync(request.UserId, request.RoleId, cancellationToken);
+        var hasRole = await roleRepository.UserHasRoleAsync(request.UserId, request.RoleId, cancellationToken).ConfigureAwait(false);
         if (!hasRole)
         {
             throw new InvalidOperationException($"User does not have this role.");
         }
 
         // Remove role from user
-        await roleRepository.RemoveRoleFromUserAsync(request.UserId, request.RoleId, cancellationToken);
+        await roleRepository.RemoveRoleFromUserAsync(request.UserId, request.RoleId, cancellationToken).ConfigureAwait(false);
 
         return true;
     }

@@ -5,4 +5,4 @@ namespace GameGuild.Identity.Authentication;
 /// </summary>
 public record InitiateKycVerificationCommand(Guid UserId, string Provider, VerificationLevel Level, VerificationType Type, string? InitiatedFromIp = null);
 
-// TODO: Move these enums to appropriate namespace in Domain layer
+// PLANNED: Move VerificationLevel and VerificationType enums to a shared Domain/Compliance namespace

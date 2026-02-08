@@ -9,11 +9,10 @@ namespace GameGuild.Identity.Authentication;
 /// <summary>
 ///     Controller for API key management
 /// </summary>
-[ApiController]
 [ApiVersion("1.0")]
 [Tags("api-keys")]
 [Authorize]
-public class ApiKeyController : ControllerBase
+public class ApiKeyController : BaseApiController
 {
     private readonly IMediator _dispatcher;
 

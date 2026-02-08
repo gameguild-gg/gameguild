@@ -33,28 +33,29 @@ public class KeyRotationBackgroundService : BackgroundService
         {
             using var scope = _serviceProvider.CreateScope();
             var keyRotationService = scope.ServiceProvider.GetRequiredService<IKeyRotationService>();
-            await keyRotationService.InitializeAsync(stoppingToken);
+            await keyRotationService.InitializeAsync(stoppingToken).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to initialize JWT signing keys");
+            throw;
         }
 
         while (!stoppingToken.IsCancellationRequested)
         {
             try
             {
-                await Task.Delay(_options.CheckInterval, stoppingToken);
+                await Task.Delay(_options.CheckInterval, stoppingToken).ConfigureAwait(false);
 
                 using var scope = _serviceProvider.CreateScope();
                 var keyRotationService = scope.ServiceProvider.GetRequiredService<IKeyRotationService>();
 
                 // Check if rotation is needed
-                var activeKey = await keyRotationService.GetActiveSigningKeyAsync(stoppingToken);
+                var activeKey = await keyRotationService.GetActiveSigningKeyAsync(stoppingToken).ConfigureAwait(false);
                 if (activeKey == null)
                 {
                     _logger.LogWarning("No active signing key found. Rotating...");
-                    await keyRotationService.RotateKeyAsync("missing-active-key", _options.KeyValidityDays, stoppingToken);
+                    await keyRotationService.RotateKeyAsync("missing-active-key", _options.KeyValidityDays, stoppingToken).ConfigureAwait(false);
                 }
                 else
                 {
@@ -62,12 +63,12 @@ public class KeyRotationBackgroundService : BackgroundService
                     if (timeUntilExpiry <= _options.RotationThreshold)
                     {
                         _logger.LogInformation("Active key expires in {TimeUntilExpiry}. Rotating...", timeUntilExpiry);
-                        await keyRotationService.RotateKeyAsync("scheduled-rotation", _options.KeyValidityDays, stoppingToken);
+                        await keyRotationService.RotateKeyAsync("scheduled-rotation", _options.KeyValidityDays, stoppingToken).ConfigureAwait(false);
                     }
                 }
 
                 // Cleanup expired keys
-                await keyRotationService.CleanupExpiredKeysAsync(_options.ExpiredKeyRetentionDays, stoppingToken);
+                await keyRotationService.CleanupExpiredKeysAsync(_options.ExpiredKeyRetentionDays, stoppingToken).ConfigureAwait(false);
             }
             catch (OperationCanceledException)
             {
@@ -78,6 +79,7 @@ public class KeyRotationBackgroundService : BackgroundService
             {
                 _logger.LogError(ex, "Error during JWT key rotation check");
                 // Continue running despite errors
+                throw;
             }
         }
 

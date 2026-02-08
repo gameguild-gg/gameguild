@@ -3,7 +3,7 @@ using GameGuild.CQRS;
 
 namespace GameGuild.Identity.Authentication;
 
-public record GetConditionalPoliciesQuery : IQuery<Models.PagedResult<ConditionalPolicy>>
+public record GetConditionalPoliciesQuery : IQuery<PagedResult<ConditionalPolicy>>
 {
     public Guid? TenantId { get; init; }
 

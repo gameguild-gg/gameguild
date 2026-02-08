@@ -1,4 +1,3 @@
-using GameGuild.Abstractions;
 using Microsoft.EntityFrameworkCore;
 
 namespace GameGuild.Identity.Authentication;
@@ -29,18 +28,17 @@ public class MfaAttemptRepository(IApplicationDbContext context) : IMfaAttemptRe
         if (oldAttempts.Count > 0)
         {
             MfaAttempts.RemoveRange(oldAttempts);
-            await context.SaveChangesAsync(cancellationToken);
+            await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         }
     }
 
     public async Task<MfaAttempt> CreateAsync(MfaAttempt attempt, CancellationToken cancellationToken = default)
     {
         attempt.Id = Guid.NewGuid();
-        attempt.CreatedAt = DateTime.UtcNow;
         attempt.UpdatedAt = DateTime.UtcNow;
 
         MfaAttempts.Add(attempt);
-        await context.SaveChangesAsync(cancellationToken);
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         return attempt;
     }
@@ -66,19 +64,19 @@ public class MfaAttemptRepository(IApplicationDbContext context) : IMfaAttemptRe
         attempt.UpdatedAt = DateTime.UtcNow;
 
         MfaAttempts.Update(attempt);
-        await context.SaveChangesAsync(cancellationToken);
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         return attempt;
     }
 
     public async Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var attempt = await GetByIdAsync(id, cancellationToken);
+        var attempt = await GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
 
         if (attempt == null) return false;
 
         MfaAttempts.Remove(attempt);
-        var changes = await context.SaveChangesAsync(cancellationToken);
+        var changes = await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         return changes > 0;
     }

@@ -57,8 +57,16 @@ public static class DataDependencyInjection
         services.AddScoped<IRoleRepository, RoleRepository>();
         services.AddScoped<IServiceAccountRepository, ServiceAccountRepository>();
 
-        // Core authentication services
+        // Core authentication services - focused sub-services
+        services.AddScoped<IAuthAttemptService, AuthAttemptService>();
+        services.AddScoped<ILocalAuthService, LocalAuthService>();
+        services.AddScoped<IOAuthAuthService, OAuthAuthService>();
+        services.AddScoped<IPasswordService, PasswordService>();
+        services.AddScoped<IWeb3AuthService, Web3AuthService>();
+
+        // Composite service for backward compatibility
         services.AddScoped<IAuthService, AuthService>();
+
         services.AddScoped<IJwtTokenService, JwtTokenService>();
         services.AddScoped<IPasswordHasher, PasswordHasher>();
         services.AddScoped<IOAuthService, OAuthService>();
@@ -69,7 +77,12 @@ public static class DataDependencyInjection
         // NOTE: Replace with Redis implementation for distributed deployments
         services.AddSingleton<ITokenRevocationService, InMemoryTokenRevocationService>();
 
-        // MFA services
+        // MFA services - focused sub-services
+        services.AddScoped<ITotpMfaService, TotpMfaService>();
+        services.AddScoped<IBackupCodeMfaService, BackupCodeMfaService>();
+        services.AddScoped<IMfaAttemptTrackingService, MfaAttemptTrackingService>();
+
+        // Composite MFA service for backward compatibility
         services.AddScoped<IMfaService, MfaService>();
 
         // Session management
@@ -104,8 +117,13 @@ public static class DataDependencyInjection
         services.AddSingleton(fido2Config);
         services.AddSingleton<IFido2>(sp => new Fido2(sp.GetRequiredService<Fido2Configuration>()));
 
-        // Register WebAuthn repository and service
+        // Register WebAuthn repository and sub-services
         services.AddScoped<IWebAuthnCredentialRepository, WebAuthnCredentialRepository>();
+        services.AddScoped<IWebAuthnRegistrationService, WebAuthnRegistrationService>();
+        services.AddScoped<IWebAuthnAuthenticationService, WebAuthnAuthenticationSubService>();
+        services.AddScoped<IWebAuthnCredentialManagementService, WebAuthnCredentialManagementService>();
+
+        // Facade preserves original IWebAuthnService contract for backward compatibility
         services.AddScoped<IWebAuthnService, WebAuthnService>();
     }
 
@@ -114,7 +132,12 @@ public static class DataDependencyInjection
     /// </summary>
     private static void RegisterSecurityServices(IServiceCollection services)
     {
-        // Security services - registered as concrete classes until interfaces are aligned
+        // Anomaly-detection sub-services
+        services.AddScoped<IThreatDetectionService, ThreatDetectionService>();
+        services.AddScoped<IBehavioralAnalysisService, BehavioralAnalysisService>();
+        services.AddScoped<ILoginAttemptAnalysisService, LoginAttemptAnalysisService>();
+
+        // Facade that preserves the original IAuthenticationAnomalyDetectionService contract
         services.AddScoped<AuthenticationAnomalyDetectionService>();
         services.AddScoped<IEmailVerificationService, EmailVerificationService>();
         services.AddScoped<IAuthenticationAnomalyDetectionService, AuthenticationAnomalyDetectionService>();

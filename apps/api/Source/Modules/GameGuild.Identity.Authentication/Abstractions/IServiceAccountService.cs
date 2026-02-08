@@ -98,4 +98,9 @@ public interface IServiceAccountService
     ///     Gets all service accounts for a tenant.
     /// </summary>
     Task<IReadOnlyList<ServiceAccount>> GetByTenantAsync(Guid tenantId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    ///     Gets all service accounts across all tenants (admin use case).
+    /// </summary>
+    Task<IReadOnlyList<ServiceAccount>> GetAllAsync(CancellationToken cancellationToken = default);
 }

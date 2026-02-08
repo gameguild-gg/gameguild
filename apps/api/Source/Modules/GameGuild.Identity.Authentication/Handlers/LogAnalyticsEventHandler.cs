@@ -4,16 +4,20 @@ using Microsoft.Extensions.Logging;
 namespace GameGuild.Identity.Authentication;
 
 /// <summary>
-///     Handler for user signed up notifications - logs analytics event
+///     Handler for user signed up notifications - logs analytics event.
+///     PLANNED: Inject IAnalyticsService (Mixpanel, Segment, etc.) when implemented.
 /// </summary>
 public class LogAnalyticsEventHandler(ILogger<LogAnalyticsEventHandler> logger) : INotificationHandler<UserSignedUpNotification>
 {
-    // TODO: Inject IAnalyticsService when implemented
-
-    public async Task Handle(UserSignedUpNotification notification, CancellationToken cancellationToken)
+    public Task Handle(UserSignedUpNotification notification, CancellationToken cancellationToken)
     {
-        // In a real application, you would send this to an analytics service
-        // like Google Analytics, Mixpanel, Segment, etc.
+        // PLANNED: Replace with actual analytics service call:
+        // await _analyticsService.TrackEventAsync("user_signed_up", new {
+        //     user_id = notification.UserId,
+        //     email = notification.Email,
+        //     username = notification.Username,
+        //     tenant_id = notification.TenantId
+        // });
         logger.LogInformation(
             "Analytics: User sign-up event - UserId: {UserId}, Email: {Email}, Username: {Username}, TenantId: {TenantId}",
             notification.UserId,
@@ -22,17 +26,6 @@ public class LogAnalyticsEventHandler(ILogger<LogAnalyticsEventHandler> logger) 
             notification.TenantId
         );
 
-        // TODO: Replace with actual analytics service call
-        // await _analyticsService.TrackEventAsync("user_signed_up", new {
-        //     user_id = notification.UserId,
-        //     email = notification.Email,
-        //     username = notification.Username,
-        //     tenant_id = notification.TenantId
-        // });
-
-        // Simulate analytics API call
-        await Task.Delay(50, cancellationToken);
-
-        logger.LogInformation("Analytics event logged for user {Email}", notification.Email);
+        return Task.CompletedTask;
     }
 }

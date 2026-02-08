@@ -19,30 +19,26 @@ public class BlockchainCertificateAnchorConfiguration : IEntityTypeConfiguration
         // Configure Id property
         builder.Property(x => x.Id).HasColumnName("id").IsRequired();
 
-        // TODO: Add specific property configurations for BlockchainCertificateAnchor
-        // Example:
-        // builder.Property(x => x.Name)
-        //     .HasColumnName("name")
-        //     .HasMaxLength(255)
-        //     .IsRequired();
+        // Property configurations
+        builder.Property(x => x.UserId).HasColumnName("user_id").IsRequired();
+        builder.Property(x => x.CertificateType).HasColumnName("certificate_type").HasMaxLength(128).IsRequired();
+        builder.Property(x => x.CertificateHash).HasColumnName("certificate_hash").HasMaxLength(128).IsRequired();
+        builder.Property(x => x.CertificateData).HasColumnName("certificate_data").HasMaxLength(4000).IsRequired();
+        builder.Property(x => x.TransactionHash).HasColumnName("transaction_hash").HasMaxLength(128).IsRequired();
+        builder.Property(x => x.BlockchainNetwork).HasColumnName("blockchain_network").HasMaxLength(64).IsRequired();
+        builder.Property(x => x.BlockNumber).HasColumnName("block_number");
+        builder.Property(x => x.AnchoredAt).HasColumnName("anchored_at").IsRequired();
+        builder.Property(x => x.IsRevoked).HasColumnName("is_revoked").IsRequired();
+        builder.Property(x => x.RevokedAt).HasColumnName("revoked_at");
+        builder.Property(x => x.RevocationReason).HasColumnName("revocation_reason").HasMaxLength(1000);
+        builder.Property(x => x.RevocationTransactionHash).HasColumnName("revocation_transaction_hash").HasMaxLength(128);
+        builder.Property(x => x.ExpiresAt).HasColumnName("expires_at");
+        builder.Property(x => x.Metadata).HasColumnName("metadata").HasMaxLength(2000);
+        builder.Ignore(x => x.IsValid);
 
-        // TODO: Add relationship configurations
-        // Example:
-        // builder.HasOne(x => x.Tenant)
-        //     .WithMany()
-        //     .HasForeignKey(x => x.TenantId)
-        //     .OnDelete(DeleteBehavior.Cascade);
-
-        // Configure indexes
-        // builder.HasIndex(x => x.TenantId).HasDatabaseName("idx_blockchaincertificateanchor_tenant_id");
-
-        // Configure created/updated timestamps if inherited from EntityBase
-        // builder.Property(x => x.CreatedAt)
-        //     .HasColumnName("created_at")
-        //     .IsRequired();
-        // 
-        // builder.Property(x => x.UpdatedAt)
-        //     .HasColumnName("updated_at")
-        //     .IsRequired();
+        // Indexes
+        builder.HasIndex(x => x.UserId).HasDatabaseName("ix_blockchaincertificateanchor_user_id");
+        builder.HasIndex(x => x.CertificateHash).IsUnique().HasDatabaseName("ix_blockchaincertificateanchor_certificate_hash");
+        builder.HasIndex(x => x.TransactionHash).HasDatabaseName("ix_blockchaincertificateanchor_transaction_hash");
     }
 }

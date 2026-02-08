@@ -4,6 +4,7 @@ using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 using GameGuild.Configuration.ApplicationLayer;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
@@ -18,6 +19,7 @@ public sealed class JwtTokenService(
     ILogger<JwtTokenService> logger,
     IRefreshTokenRepository refreshTokenRepository,
     IRefreshTokenHasher refreshTokenHasher,
+    IHttpContextAccessor httpContextAccessor,
     IOptions<JwtOptions> jwtOptions) : IJwtTokenService
 {
     private readonly JwtOptions _jwtOptions = jwtOptions.Value;
@@ -110,8 +112,7 @@ public sealed class JwtTokenService(
                     Id = Guid.NewGuid(),
                     UserId = userId,
                     Token = hashedToken, // Store hash, not plaintext
-                    CreatedByIp = "0.0.0.0", // TODO: Extract from request context
-                    CreatedAt = DateTime.UtcNow,
+                    CreatedByIp = httpContextAccessor.HttpContext?.Connection.RemoteIpAddress?.ToString() ?? "0.0.0.0",
                     ExpiresAt = DateTime.UtcNow.AddDays(_jwtOptions.RefreshTokenExpirationDays),
                     IsRevoked = false
                 };
@@ -378,8 +379,9 @@ public sealed class JwtTokenService(
     /// </summary>
     public string GenerateAccessToken(Guid userId, string email, string[ ] roles, IEnumerable<Claim> additionalClaims)
     {
-        // For now, we'll use the base method and ignore additional claims
-        // TODO: Implement proper additional claims support
+        // NOTE: Additional claims are not yet forwarded to GenerateAccessTokenAsync because
+        // the async overload does not accept an additionalClaims parameter. When the async
+        // method is extended, wire the claims through here.
         return GenerateAccessTokenAsync(userId, email, roles, null, tokenVersion: 1, CancellationToken.None).GetAwaiter().GetResult();
     }
 

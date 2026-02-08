@@ -1,4 +1,3 @@
-using GameGuild.Abstractions;
 using Microsoft.EntityFrameworkCore;
 
 namespace GameGuild.Identity.Authentication;
@@ -23,11 +22,10 @@ public class UserMfaConfigurationRepository(IApplicationDbContext context) : IUs
     public async Task<UserMfaConfiguration> CreateAsync(UserMfaConfiguration configuration, CancellationToken cancellationToken = default)
     {
         configuration.Id = Guid.NewGuid();
-        configuration.CreatedAt = DateTime.UtcNow;
         configuration.UpdatedAt = DateTime.UtcNow;
 
         UserMfaConfigurations.Add(configuration);
-        await context.SaveChangesAsync(cancellationToken);
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         return configuration;
     }
@@ -37,63 +35,63 @@ public class UserMfaConfigurationRepository(IApplicationDbContext context) : IUs
         configuration.UpdatedAt = DateTime.UtcNow;
 
         UserMfaConfigurations.Update(configuration);
-        await context.SaveChangesAsync(cancellationToken);
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         return configuration;
     }
 
     public async Task DeleteByUserIdAsync(Guid userId, CancellationToken cancellationToken = default)
     {
-        var configuration = await GetByUserIdAsync(userId, cancellationToken);
+        var configuration = await GetByUserIdAsync(userId, cancellationToken).ConfigureAwait(false);
 
         if (configuration != null)
         {
             UserMfaConfigurations.Remove(configuration);
-            await context.SaveChangesAsync(cancellationToken);
+            await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         }
     }
 
     public async Task<MfaMethod?> GetPreferredMethodAsync(Guid userId, CancellationToken cancellationToken = default)
     {
-        var configuration = await GetByUserIdAsync(userId, cancellationToken);
+        var configuration = await GetByUserIdAsync(userId, cancellationToken).ConfigureAwait(false);
 
         return configuration?.PreferredMethod;
     }
 
     public async Task IncrementFailedAttemptsAsync(Guid userId, CancellationToken cancellationToken = default)
     {
-        var configuration = await GetByUserIdAsync(userId, cancellationToken);
+        var configuration = await GetByUserIdAsync(userId, cancellationToken).ConfigureAwait(false);
 
         if (configuration != null)
         {
             configuration.FailedAttempts++;
             configuration.UpdatedAt = DateTime.UtcNow;
-            await UpdateAsync(configuration, cancellationToken);
+            await UpdateAsync(configuration, cancellationToken).ConfigureAwait(false);
         }
     }
 
     public async Task ResetFailedAttemptsAsync(Guid userId, CancellationToken cancellationToken = default)
     {
-        var configuration = await GetByUserIdAsync(userId, cancellationToken);
+        var configuration = await GetByUserIdAsync(userId, cancellationToken).ConfigureAwait(false);
 
         if (configuration != null)
         {
             configuration.FailedAttempts = 0;
             configuration.LastUsedAt = DateTime.UtcNow;
             configuration.UpdatedAt = DateTime.UtcNow;
-            await UpdateAsync(configuration, cancellationToken);
+            await UpdateAsync(configuration, cancellationToken).ConfigureAwait(false);
         }
     }
 
     public async Task SetLockoutAsync(Guid userId, DateTime lockoutUntil, CancellationToken cancellationToken = default)
     {
-        var configuration = await GetByUserIdAsync(userId, cancellationToken);
+        var configuration = await GetByUserIdAsync(userId, cancellationToken).ConfigureAwait(false);
 
         if (configuration != null)
         {
             configuration.LockedOutUntil = lockoutUntil;
             configuration.UpdatedAt = DateTime.UtcNow;
-            await UpdateAsync(configuration, cancellationToken);
+            await UpdateAsync(configuration, cancellationToken).ConfigureAwait(false);
         }
     }
 
@@ -106,7 +104,7 @@ public class UserMfaConfigurationRepository(IApplicationDbContext context) : IUs
 
     public async Task<bool> EnableMfaAsync(Guid userId, CancellationToken cancellationToken = default)
     {
-        var configuration = await GetByUserIdAsync(userId, cancellationToken);
+        var configuration = await GetByUserIdAsync(userId, cancellationToken).ConfigureAwait(false);
 
         if (configuration == null) return false;
 
@@ -114,28 +112,28 @@ public class UserMfaConfigurationRepository(IApplicationDbContext context) : IUs
         configuration.EnabledAt = DateTime.UtcNow;
         configuration.UpdatedAt = DateTime.UtcNow;
 
-        await UpdateAsync(configuration, cancellationToken);
+        await UpdateAsync(configuration, cancellationToken).ConfigureAwait(false);
 
         return true;
     }
 
     public async Task<bool> DisableMfaAsync(Guid userId, CancellationToken cancellationToken = default)
     {
-        var configuration = await GetByUserIdAsync(userId, cancellationToken);
+        var configuration = await GetByUserIdAsync(userId, cancellationToken).ConfigureAwait(false);
 
         if (configuration == null) return false;
 
         configuration.IsEnabled = false;
         configuration.UpdatedAt = DateTime.UtcNow;
 
-        await UpdateAsync(configuration, cancellationToken);
+        await UpdateAsync(configuration, cancellationToken).ConfigureAwait(false);
 
         return true;
     }
 
     public async Task<int> UpdateFailedAttemptsAsync(Guid userId, bool increment, CancellationToken cancellationToken = default)
     {
-        var configuration = await GetByUserIdAsync(userId, cancellationToken);
+        var configuration = await GetByUserIdAsync(userId, cancellationToken).ConfigureAwait(false);
 
         if (configuration == null) return 0;
 
@@ -147,28 +145,28 @@ public class UserMfaConfigurationRepository(IApplicationDbContext context) : IUs
         }
 
         configuration.UpdatedAt = DateTime.UtcNow;
-        await UpdateAsync(configuration, cancellationToken);
+        await UpdateAsync(configuration, cancellationToken).ConfigureAwait(false);
 
         return configuration.FailedAttempts;
     }
 
     public async Task<bool> LockoutUserAsync(Guid userId, DateTime lockoutUntil, CancellationToken cancellationToken = default)
     {
-        var configuration = await GetByUserIdAsync(userId, cancellationToken);
+        var configuration = await GetByUserIdAsync(userId, cancellationToken).ConfigureAwait(false);
 
         if (configuration == null) return false;
 
         configuration.LockedOutUntil = lockoutUntil;
         configuration.UpdatedAt = DateTime.UtcNow;
 
-        await UpdateAsync(configuration, cancellationToken);
+        await UpdateAsync(configuration, cancellationToken).ConfigureAwait(false);
 
         return true;
     }
 
     public async Task<bool> ClearLockoutAsync(Guid userId, CancellationToken cancellationToken = default)
     {
-        var configuration = await GetByUserIdAsync(userId, cancellationToken);
+        var configuration = await GetByUserIdAsync(userId, cancellationToken).ConfigureAwait(false);
 
         if (configuration == null) return false;
 
@@ -176,19 +174,19 @@ public class UserMfaConfigurationRepository(IApplicationDbContext context) : IUs
         configuration.FailedAttempts = 0;
         configuration.UpdatedAt = DateTime.UtcNow;
 
-        await UpdateAsync(configuration, cancellationToken);
+        await UpdateAsync(configuration, cancellationToken).ConfigureAwait(false);
 
         return true;
     }
 
     public async Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var configuration = await GetByIdAsync(id, cancellationToken);
+        var configuration = await GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
 
         if (configuration == null) return false;
 
         UserMfaConfigurations.Remove(configuration);
-        var changes = await context.SaveChangesAsync(cancellationToken);
+        var changes = await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         return changes > 0;
     }

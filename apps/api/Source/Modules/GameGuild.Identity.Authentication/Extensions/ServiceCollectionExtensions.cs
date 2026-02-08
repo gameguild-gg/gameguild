@@ -53,7 +53,8 @@ public static class ServiceCollectionExtensions
                 }
             );
 
-        // TODO: Implement these services
+        // PLANNED: Register presentation services when implementations exist.
+        // Requires: ModelValidationService, ResponseFormattingService, ErrorHandlingService classes.
         // Register model validation
         // services.AddScoped<IModelValidationService, ModelValidationService>();
 
@@ -69,8 +70,9 @@ public static class ServiceCollectionExtensions
     /// </summary>
     private static void RegisterAuthorizationServices(IServiceCollection services)
     {
-        _ = services; // TODO: Implement service registrations below
-        // Register permission services
+        _ = services; // PLANNED: Register authorization services once implementations are created.
+        // Requires: PermissionAuthorizationService, PermissionHierarchyService, PermissionTemplateService,
+        //           BulkPermissionService, BulkOperationResultService, PermissionAnalyticsService, PermissionAuditService.
         // services.AddScoped<IPermissionAuthorizationService, PermissionAuthorizationService>();
         // services.AddScoped<IPermissionHierarchyService, PermissionHierarchyService>();
         // services.AddScoped<IPermissionTemplateService, PermissionTemplateService>();
@@ -89,8 +91,9 @@ public static class ServiceCollectionExtensions
     /// </summary>
     private static void RegisterPolicyEvaluationServices(IServiceCollection services)
     {
-        _ = services; // TODO: Implement service registrations below
-        // Register ABAC services
+        _ = services; // PLANNED: Register ABAC and conditional policy services once implementations are created.
+        // Requires: AbacPolicyEvaluationService, AbacExpressionValidationService, ConditionalPolicyEvaluationService,
+        //           PolicyAnalyticsService, PolicyUsageTrackingService.
         // services.AddScoped<IAbacPolicyEvaluationService, AbacPolicyEvaluationService>();
         // services.AddScoped<IAbacExpressionValidationService, AbacExpressionValidationService>();
         // services.AddScoped<IAbacPolicyConflictDetectionService, AbacPolicyConflictDetectionService>();
@@ -112,8 +115,9 @@ public static class ServiceCollectionExtensions
     /// </summary>
     private static void RegisterAccessReviewServices(IServiceCollection services)
     {
-        _ = services; // TODO: Implement service registrations below
-        // Register campaign management
+        _ = services; // PLANNED: Register access review and compliance services once implementations are created.
+        // Requires: AccessReviewOrchestrationService, AccessReviewCampaignService, PeriodicAccessReviewService,
+        //           AccessRevocationService, ComplianceReportingService.
         // services.AddScoped<IAccessReviewOrchestrationService, AccessReviewOrchestrationService>();
         // services.AddScoped<IAccessReviewCampaignService, AccessReviewCampaignService>();
         // services.AddScoped<IAccessReviewItemService, AccessReviewItemService>();
@@ -141,8 +145,8 @@ public static class ServiceCollectionExtensions
     /// </summary>
     private static void RegisterCachingServices(IServiceCollection services)
     {
-        _ = services; // TODO: Implement service registrations below
-        // Register permission caching
+        _ = services; // PLANNED: Register permission and policy caching services once implementations are created.
+        // Requires: PermissionCacheService, PolicyCacheService, CacheInvalidationService, CacheWarmupService.
         // services.AddScoped<IPermissionCacheService, PermissionCacheService>();
         // services.AddScoped<IPermissionCacheStatsService, PermissionCacheStatsService>();
 
@@ -160,8 +164,8 @@ public static class ServiceCollectionExtensions
     /// </summary>
     private static void RegisterAuditServices(IServiceCollection services)
     {
-        _ = services; // TODO: Implement service registrations below
-        // Register audit logging
+        _ = services; // PLANNED: Register audit and compliance monitoring services once implementations are created.
+        // Requires: PermissionAuditLogger, PolicyAuditLogger, AuditTrailService, ComplianceMonitoringService.
         // services.AddScoped<IPermissionAuditLogger, PermissionAuditLogger>();
         // services.AddScoped<IPolicyAuditLogger, PolicyAuditLogger>();
         // services.AddScoped<IAccessReviewAuditLogger, AccessReviewAuditLogger>();
@@ -180,7 +184,7 @@ public static class ServiceCollectionExtensions
     /// </summary>
     public static IServiceCollection AddAuthenticationHealthChecks(this IServiceCollection services, IConfiguration configuration)
     {
-        // TODO: Implement health check services
+        // PLANNED: Add health checks for authentication sub-services when they exist.
         services.AddHealthChecks();
         // .AddCheck<PermissionServiceHealthCheck>("permission-service")
         // .AddCheck<AbacPolicyServiceHealthCheck>("abac-policy-service")
@@ -196,8 +200,8 @@ public static class ServiceCollectionExtensions
     /// </summary>
     public static IServiceCollection AddAuthenticationMetrics(this IServiceCollection services)
     {
-        // TODO: Implement metrics collection services
-        // Register metrics collectors
+        // PLANNED: Register metrics collectors for permission, policy evaluation, access review, and cache performance.
+        // Requires: PermissionMetricsCollector, PolicyEvaluationMetricsCollector, etc.
         // services.AddScoped<IPermissionMetricsCollector, PermissionMetricsCollector>();
         // services.AddScoped<IPolicyEvaluationMetricsCollector, PolicyEvaluationMetricsCollector>();
         // services.AddScoped<IAccessReviewMetricsCollector, AccessReviewMetricsCollector>();

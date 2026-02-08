@@ -7,17 +7,16 @@ using Microsoft.Extensions.Logging;
 
 namespace GameGuild.Identity.Authentication;
 
-// TODO: Reactivate this controller when role management features are ready for production
+// PLANNED: Reactivate this controller when role management features are ready for production
 /// <summary>
 ///     Controller for role management endpoints
 /// </summary>
-[ApiController]
 [ApiVersion("1.0")]
 [Route("v{version:apiVersion}/roles")]
 [Tags("roles")]
 [Produces("application/json")]
 [ApiExplorerSettings(IgnoreApi = true)]
-public class RolesController(ILogger<RolesController> logger, ISender sender) : ControllerBase
+public class RolesController(ILogger<RolesController> logger, ISender sender) : BaseApiController
 {
     /// <summary>
     ///     Get all roles in the system
@@ -34,22 +33,14 @@ public class RolesController(ILogger<RolesController> logger, ISender sender) : 
     {
         logger.LogInformation("Getting all roles");
 
-        try
+        var query = new GetRolesQuery
         {
-            var query = new GetRolesQuery
-            {
-                TenantId = tenantId,
-                IncludeInactive = includeInactive
-            };
+            TenantId = tenantId,
+            IncludeInactive = includeInactive
+        };
 
-            var roles = await sender.Send(query, cancellationToken);
-            return Ok(roles);
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Error getting roles");
-            return StatusCode(500, "An error occurred while retrieving roles");
-        }
+        var roles = await sender.Send(query, cancellationToken);
+        return Ok(roles);
     }
 
     /// <summary>
@@ -66,23 +57,15 @@ public class RolesController(ILogger<RolesController> logger, ISender sender) : 
     {
         logger.LogInformation("Getting role by ID: {RoleId}", roleId);
 
-        try
-        {
-            var query = new GetRoleByIdQuery { RoleId = roleId };
-            var role = await sender.Send(query, cancellationToken);
+        var query = new GetRoleByIdQuery { RoleId = roleId };
+        var role = await sender.Send(query, cancellationToken);
 
-            if (role == null)
-            {
-                return NotFound($"Role with ID '{roleId}' not found");
-            }
-
-            return Ok(role);
-        }
-        catch (Exception ex)
+        if (role == null)
         {
-            logger.LogError(ex, "Error getting role by ID: {RoleId}", roleId);
-            return StatusCode(500, "An error occurred while retrieving the role");
+            return NotFound($"Role with ID '{roleId}' not found");
         }
+
+        return Ok(role);
     }
 
     /// <summary>
@@ -99,29 +82,16 @@ public class RolesController(ILogger<RolesController> logger, ISender sender) : 
     {
         logger.LogInformation("Creating new role: {RoleName}", request.Name);
 
-        try
+        var command = new CreateRoleCommand
         {
-            var command = new CreateRoleCommand
-            {
-                Name = request.Name,
-                Description = request.Description,
-                Permissions = request.Permissions,
-                TenantId = request.TenantId
-            };
+            Name = request.Name,
+            Description = request.Description,
+            Permissions = request.Permissions,
+            TenantId = request.TenantId
+        };
 
-            var role = await sender.Send(command, cancellationToken);
-            return CreatedAtAction(nameof(GetById), new { id = role.Id }, role);
-        }
-        catch (InvalidOperationException ex)
-        {
-            logger.LogWarning(ex, "Invalid operation while creating role");
-            return BadRequest(ex.Message);
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Error creating role");
-            return StatusCode(500, "An error occurred while creating the role");
-        }
+        var role = await sender.Send(command, cancellationToken);
+        return CreatedAtAction(nameof(GetById), new { id = role.Id }, role);
     }
 
     /// <summary>
@@ -139,30 +109,17 @@ public class RolesController(ILogger<RolesController> logger, ISender sender) : 
     {
         logger.LogInformation("Updating role: {RoleId}", roleId);
 
-        try
+        var command = new UpdateRoleCommand
         {
-            var command = new UpdateRoleCommand
-            {
-                RoleId = roleId,
-                Name = request.Name,
-                Description = request.Description,
-                Permissions = request.Permissions,
-                IsActive = request.IsActive
-            };
+            RoleId = roleId,
+            Name = request.Name,
+            Description = request.Description,
+            Permissions = request.Permissions,
+            IsActive = request.IsActive
+        };
 
-            var role = await sender.Send(command, cancellationToken);
-            return Ok(role);
-        }
-        catch (InvalidOperationException ex)
-        {
-            logger.LogWarning(ex, "Invalid operation while updating role");
-            return BadRequest(ex.Message);
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Error updating role: {RoleId}", roleId);
-            return StatusCode(500, "An error occurred while updating the role");
-        }
+        var role = await sender.Send(command, cancellationToken);
+        return Ok(role);
     }
 
     /// <summary>
@@ -179,22 +136,9 @@ public class RolesController(ILogger<RolesController> logger, ISender sender) : 
     {
         logger.LogInformation("Deleting role: {RoleId}", roleId);
 
-        try
-        {
-            var command = new DeleteRoleCommand { RoleId = roleId };
-            await sender.Send(command, cancellationToken);
-            return NoContent();
-        }
-        catch (InvalidOperationException ex)
-        {
-            logger.LogWarning(ex, "Invalid operation while deleting role");
-            return NotFound(ex.Message);
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Error deleting role: {RoleId}", roleId);
-            return StatusCode(500, "An error occurred while deleting the role");
-        }
+        var command = new DeleteRoleCommand { RoleId = roleId };
+        await sender.Send(command, cancellationToken);
+        return NoContent();
     }
 
     /// <summary>
@@ -211,22 +155,14 @@ public class RolesController(ILogger<RolesController> logger, ISender sender) : 
     {
         logger.LogInformation("Getting roles for user: {UserId}", userId);
 
-        try
+        var query = new GetUserRolesQuery
         {
-            var query = new GetUserRolesQuery
-            {
-                UserId = userId,
-                IncludeExpired = includeExpired
-            };
+            UserId = userId,
+            IncludeExpired = includeExpired
+        };
 
-            var roles = await sender.Send(query, cancellationToken);
-            return Ok(roles);
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Error getting roles for user: {UserId}", userId);
-            return StatusCode(500, "An error occurred while retrieving user roles");
-        }
+        var roles = await sender.Send(query, cancellationToken);
+        return Ok(roles);
     }
 
     /// <summary>
@@ -243,28 +179,15 @@ public class RolesController(ILogger<RolesController> logger, ISender sender) : 
     {
         logger.LogInformation("Assigning role {RoleId} to user {UserId}", request.RoleId, request.UserId);
 
-        try
+        var command = new AssignRoleToUserCommand
         {
-            var command = new AssignRoleToUserCommand
-            {
-                UserId = request.UserId,
-                RoleId = request.RoleId,
-                ExpiresAt = request.ExpiresAt
-            };
+            UserId = request.UserId,
+            RoleId = request.RoleId,
+            ExpiresAt = request.ExpiresAt
+        };
 
-            var userRole = await sender.Send(command, cancellationToken);
-            return CreatedAtAction(nameof(GetUserRoles), new { userId = request.UserId }, userRole);
-        }
-        catch (InvalidOperationException ex)
-        {
-            logger.LogWarning(ex, "Invalid operation while assigning role");
-            return BadRequest(ex.Message);
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Error assigning role {RoleId} to user {UserId}", request.RoleId, request.UserId);
-            return StatusCode(500, "An error occurred while assigning the role");
-        }
+        var userRole = await sender.Send(command, cancellationToken);
+        return CreatedAtAction(nameof(GetUserRoles), new { userId = request.UserId }, userRole);
     }
 
     /// <summary>
@@ -281,26 +204,13 @@ public class RolesController(ILogger<RolesController> logger, ISender sender) : 
     {
         logger.LogInformation("Removing role {RoleId} from user {UserId}", request.RoleId, request.UserId);
 
-        try
+        var command = new RemoveRoleFromUserCommand
         {
-            var command = new RemoveRoleFromUserCommand
-            {
-                UserId = request.UserId,
-                RoleId = request.RoleId
-            };
+            UserId = request.UserId,
+            RoleId = request.RoleId
+        };
 
-            await sender.Send(command, cancellationToken);
-            return NoContent();
-        }
-        catch (InvalidOperationException ex)
-        {
-            logger.LogWarning(ex, "Invalid operation while removing role");
-            return BadRequest(ex.Message);
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Error removing role {RoleId} from user {UserId}", request.RoleId, request.UserId);
-            return StatusCode(500, "An error occurred while removing the role");
-        }
+        await sender.Send(command, cancellationToken);
+        return NoContent();
     }
 }

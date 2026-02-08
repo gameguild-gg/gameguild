@@ -41,22 +41,22 @@ public sealed class LogoutHandler : IRequestHandler<LogoutCommand, LogoutRespons
                 await _tokenRevocationService.RevokeAllUserTokensAsync(
                     command.UserId,
                     command.Reason ?? "User initiated logout everywhere",
-                    cancellationToken);
+                    cancellationToken).ConfigureAwait(false);
 
                 // Revoke all refresh tokens in database
                 await _refreshTokenRepository.RevokeAllForUserAsync(
                     command.UserId, 
                     command.IpAddress, 
-                    cancellationToken);
+                    cancellationToken).ConfigureAwait(false);
 
                 // Terminate all user sessions
                 await _userSessionRepository.TerminateAllForUserAsync(
                     command.UserId, 
                     command.Reason ?? "User initiated logout everywhere",
-                    cancellationToken);
+                    cancellationToken).ConfigureAwait(false);
 
                 // Count sessions for response
-                var sessions = await _userSessionRepository.GetByUserIdAsync(command.UserId, cancellationToken);
+                var sessions = await _userSessionRepository.GetByUserIdAsync(command.UserId, cancellationToken).ConfigureAwait(false);
                 sessionsInvalidated = sessions.Count;
 
                 _logger.LogInformation(
@@ -74,7 +74,7 @@ public sealed class LogoutHandler : IRequestHandler<LogoutCommand, LogoutRespons
                         command.CurrentTokenJti,
                         expiresAt,
                         command.Reason ?? "User initiated logout",
-                        cancellationToken);
+                        cancellationToken).ConfigureAwait(false);
 
                     sessionsInvalidated = 1;
 

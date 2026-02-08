@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Security.Cryptography;
 using System.Text;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 
 namespace GameGuild.Identity.Authentication;
@@ -8,7 +9,7 @@ namespace GameGuild.Identity.Authentication;
 /// <summary>
 ///     Service to protect against user enumeration attacks by ensuring consistent timing and responses
 /// </summary>
-public class UserEnumerationProtectionService(ILogger<UserEnumerationProtectionService> logger) : IUserEnumerationProtectionService
+public class UserEnumerationProtectionService(ILogger<UserEnumerationProtectionService> logger, IMemoryCache memoryCache) : IUserEnumerationProtectionService
 {
     // Consistent error message to prevent user enumeration
     private const string ConsistentErrorMessage = "Invalid credentials. Please check your email and password.";
@@ -50,7 +51,11 @@ public class UserEnumerationProtectionService(ILogger<UserEnumerationProtectionS
 
             if (remainingDelay > TimeSpan.Zero) { await Task.Delay(remainingDelay).ConfigureAwait(false); }
         }
-        catch (Exception ex) { logger.LogError(ex, "Error in timing protection delay"); }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error in timing protection delay");
+            throw;
+        }
     }
 
     public string GetGenericErrorMessage(string context)
@@ -66,22 +71,51 @@ public class UserEnumerationProtectionService(ILogger<UserEnumerationProtectionS
         };
     }
 
+    private const int MaxAttemptsPerWindow = 10;
+    private const int TimeWindowMinutes = 15;
+    private const string AttemptKeyPrefix = "enum:attempts:";
+
     public async Task<ThrottleDecision> ShouldThrottleAsync(string identifier)
     {
-        // TODO: Implement actual enumeration tracking with database/cache
-        // For now, return a basic decision
+        var cacheKey = AttemptKeyPrefix + identifier;
+
+        var attemptCount = memoryCache.GetOrCreate(cacheKey, entry =>
+        {
+            entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(TimeWindowMinutes);
+            return 0;
+        });
+
+        var shouldThrottle = attemptCount >= MaxAttemptsPerWindow;
+        var delayMs = shouldThrottle ? Math.Min(attemptCount * 500, 5000) : 0;
+
+        if (shouldThrottle)
+        {
+            logger.LogWarning("Throttling enumeration attempts for identifier {Identifier}: {AttemptCount} attempts in {TimeWindow} min window",
+                identifier, attemptCount, TimeWindowMinutes);
+        }
 
         await Task.CompletedTask.ConfigureAwait(false);
 
-        return new ThrottleDecision { ShouldThrottle = false, DelayMs = 0, AttemptCount = 0, TimeWindowMinutes = 15 };
+        return new ThrottleDecision { ShouldThrottle = shouldThrottle, DelayMs = delayMs, AttemptCount = attemptCount, TimeWindowMinutes = TimeWindowMinutes };
     }
 
     public async Task RecordEnumerationAttemptAsync(string identifier, string attemptType)
     {
-        // TODO: Implement enumeration attempt tracking
-        // This would typically store attempts in cache/database for analysis
+        var cacheKey = AttemptKeyPrefix + identifier;
 
-        logger.LogWarning("Potential enumeration attempt detected - Identifier: {Identifier}, Type: {AttemptType}", identifier, attemptType);
+        var currentCount = memoryCache.GetOrCreate(cacheKey, entry =>
+        {
+            entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(TimeWindowMinutes);
+            return 0;
+        });
+
+        memoryCache.Set(cacheKey, currentCount + 1, new MemoryCacheEntryOptions
+        {
+            AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(TimeWindowMinutes)
+        });
+
+        logger.LogWarning("Potential enumeration attempt detected — Identifier: {Identifier}, Type: {AttemptType}, Count: {Count}",
+            identifier, attemptType, currentCount + 1);
 
         await Task.CompletedTask.ConfigureAwait(false);
     }
@@ -99,13 +133,13 @@ public class UserEnumerationProtectionService(ILogger<UserEnumerationProtectionS
             if (!userExists)
             {
                 // Simulate database lookup time
-                await Task.Delay(Random.Next(50, 150));
+                await Task.Delay(Random.Next(50, 150)).ConfigureAwait(false);
 
                 // Perform dummy password hashing to simulate verification
-                await PerformDummyPasswordHashAsync("dummy_password_for_timing");
+                await PerformDummyPasswordHashAsync("dummy_password_for_timing").ConfigureAwait(false);
 
                 // Simulate additional processing
-                await Task.Delay(Random.Next(30, 100));
+                await Task.Delay(Random.Next(30, 100)).ConfigureAwait(false);
             }
 
             stopwatch.Stop();
@@ -114,7 +148,7 @@ public class UserEnumerationProtectionService(ILogger<UserEnumerationProtectionS
             var elapsed = stopwatch.Elapsed;
             var remainingDelay = targetDelay - elapsed;
 
-            if (remainingDelay > TimeSpan.Zero) { await Task.Delay(remainingDelay); }
+            if (remainingDelay > TimeSpan.Zero) { await Task.Delay(remainingDelay).ConfigureAwait(false); }
 
             var totalTime = stopwatch.Elapsed + (remainingDelay > TimeSpan.Zero ? remainingDelay : TimeSpan.Zero);
 
@@ -130,7 +164,11 @@ public class UserEnumerationProtectionService(ILogger<UserEnumerationProtectionS
                 );
             }
         }
-        catch (Exception ex) { logger.LogError(ex, "Error in authentication delay simulation"); }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error in authentication delay simulation");
+            throw;
+        }
     }
 
     public string GetConsistentErrorMessage() { return ConsistentErrorMessage; }

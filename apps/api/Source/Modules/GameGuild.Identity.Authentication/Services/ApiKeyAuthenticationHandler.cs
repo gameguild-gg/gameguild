@@ -1,6 +1,5 @@
 using System.Security.Claims;
 using System.Text.Encodings.Web;
-using GameGuild.Abstractions;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -47,7 +46,7 @@ public class ApiKeyAuthenticationHandler : AuthenticationHandler<ApiKeyAuthentic
 
             // Look up API key in database
             var apiKey = await _dbContext.Set<ApiKey>()
-                .FirstOrDefaultAsync(k => k.KeyHash == keyHash);
+                .FirstOrDefaultAsync(k => k.KeyHash == keyHash).ConfigureAwait(false);
 
             if (apiKey == null)
             {
@@ -76,7 +75,7 @@ public class ApiKeyAuthenticationHandler : AuthenticationHandler<ApiKeyAuthentic
 
             // Record usage
             apiKey.RecordUsage();
-            await _dbContext.SaveChangesAsync(Context.RequestAborted);
+            await _dbContext.SaveChangesAsync(Context.RequestAborted).ConfigureAwait(false);
 
             // Create claims
             var claims = new List<Claim>

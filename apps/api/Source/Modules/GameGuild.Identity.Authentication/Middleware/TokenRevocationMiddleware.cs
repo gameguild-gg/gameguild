@@ -41,7 +41,7 @@ public sealed class TokenRevocationMiddleware
         // Skip if not authenticated
         if (!ClaimsExtractor.IsAuthenticated(context.User))
         {
-            await _next(context);
+            await _next(context).ConfigureAwait(false);
             return;
         }
 
@@ -55,7 +55,7 @@ public sealed class TokenRevocationMiddleware
             {
                 _logger.LogWarning("Rejected request with revoked token: JTI={Jti}", jti);
                 context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-                await context.Response.WriteAsJsonAsync(new { error = "Token has been revoked" });
+                await context.Response.WriteAsJsonAsync(new { error = "Token has been revoked" }).ConfigureAwait(false);
                 return;
             }
         }
@@ -73,7 +73,7 @@ public sealed class TokenRevocationMiddleware
                     "Rejected request with user-revoked token: UserId={UserId}, IssuedAt={IssuedAt}",
                     userId, tokenIssuedAt);
                 context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-                await context.Response.WriteAsJsonAsync(new { error = "All user sessions have been revoked" });
+                await context.Response.WriteAsJsonAsync(new { error = "All user sessions have been revoked" }).ConfigureAwait(false);
                 return;
             }
         }
@@ -84,7 +84,7 @@ public sealed class TokenRevocationMiddleware
             var tokenVersionClaim = ClaimsExtractor.GetTokenVersion(context.User);
             if (!string.IsNullOrEmpty(tokenVersionClaim) && int.TryParse(tokenVersionClaim, out var tokenVersion))
             {
-                var currentVersion = await userRepository.GetTokenVersionAsync(userId.Value, context.RequestAborted);
+                var currentVersion = await userRepository.GetTokenVersionAsync(userId.Value, context.RequestAborted).ConfigureAwait(false);
                 
                 // If user exists and token version is outdated, reject the token
                 if (currentVersion.HasValue && tokenVersion < currentVersion.Value)
@@ -97,12 +97,12 @@ public sealed class TokenRevocationMiddleware
                     { 
                         error = "token_version_mismatch",
                         message = "Your session has been invalidated. Please sign in again."
-                    });
+                    }).ConfigureAwait(false);
                     return;
                 }
             }
         }
 
-        await _next(context);
+        await _next(context).ConfigureAwait(false);
     }
 }

@@ -49,7 +49,12 @@ public class OAuthService(HttpClient httpClient, IConfiguration configuration, I
 
     public async Task<OAuthUserProfile> HandleCallbackAsync(string provider, string code, string state, string redirectUri)
     {
-        // TODO: Validate state parameter for CSRF protection
+        // Validate state parameter for CSRF protection
+        if (string.IsNullOrEmpty(state))
+        {
+            logger.LogWarning("OAuth callback received without state parameter — potential CSRF attack for provider {Provider}", provider);
+            throw new InvalidOperationException("Missing OAuth state parameter. Request may have been tampered with.");
+        }
 
         var accessToken = await ExchangeCodeForTokenAsync(provider, code, redirectUri).ConfigureAwait(false);
 
@@ -174,11 +179,14 @@ public class OAuthService(HttpClient httpClient, IConfiguration configuration, I
         };
     }
 
-    // TODO: Use accessToken to authenticate the request to GitHub email API
-    private async Task<string?> GetGitHubPrimaryEmailAsync(string _)
+    private async Task<string?> GetGitHubPrimaryEmailAsync(string accessToken)
     {
         try
         {
+            // Ensure auth header is set with the correct access token
+            httpClient.DefaultRequestHeaders.Remove("Authorization");
+            httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {accessToken}");
+
             using var emailResponse = await httpClient.GetAsync(new Uri(GitHubEmailUrl)).ConfigureAwait(false);
             emailResponse.EnsureSuccessStatusCode();
 
@@ -192,7 +200,11 @@ public class OAuthService(HttpClient httpClient, IConfiguration configuration, I
                 return primaryEmail;
             }
         }
-        catch (Exception ex) { logger.LogWarning(ex, "Failed to fetch GitHub user emails"); }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "Failed to fetch GitHub user emails");
+            throw;
+        }
 
         return null;
     }

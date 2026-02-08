@@ -1,6 +1,5 @@
 using GameGuild.Identity.Authorization;
 using GameGuild.CQRS.Models;
-using GameGuild.Entities;
 
 namespace GameGuild.Identity.Authentication;
 

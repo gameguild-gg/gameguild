@@ -1,4 +1,3 @@
-using GameGuild.Abstractions;
 using Microsoft.EntityFrameworkCore;
 
 namespace GameGuild.Identity.Authentication;
@@ -41,19 +40,18 @@ public class AuthenticationAttemptRepository(IApplicationDbContext context) : IA
         if (oldAttempts.Count > 0)
         {
             AuthenticationAttempts.RemoveRange(oldAttempts);
-            await context.SaveChangesAsync(cancellationToken);
+            await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         }
     }
 
     public async Task<AuthenticationAttempt> CreateAsync(AuthenticationAttempt attempt, CancellationToken cancellationToken = default)
     {
         attempt.Id = Guid.NewGuid();
-        attempt.CreatedAt = DateTime.UtcNow;
         attempt.UpdatedAt = DateTime.UtcNow;
         attempt.Email = attempt.Email.ToLowerInvariant();
 
         AuthenticationAttempts.Add(attempt);
-        await context.SaveChangesAsync(cancellationToken);
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         return attempt;
     }
@@ -79,19 +77,19 @@ public class AuthenticationAttemptRepository(IApplicationDbContext context) : IA
         attempt.UpdatedAt = DateTime.UtcNow;
 
         AuthenticationAttempts.Update(attempt);
-        await context.SaveChangesAsync(cancellationToken);
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         return attempt;
     }
 
     public async Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var attempt = await GetByIdAsync(id, cancellationToken);
+        var attempt = await GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
 
         if (attempt == null) return false;
 
         AuthenticationAttempts.Remove(attempt);
-        var changes = await context.SaveChangesAsync(cancellationToken);
+        var changes = await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         return changes > 0;
     }
@@ -113,7 +111,7 @@ public class AuthenticationAttemptRepository(IApplicationDbContext context) : IA
         if (oldAttempts.Count == 0) return 0;
 
         AuthenticationAttempts.RemoveRange(oldAttempts);
-        await context.SaveChangesAsync(cancellationToken);
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         return oldAttempts.Count;
     }
@@ -124,7 +122,7 @@ public class AuthenticationAttemptRepository(IApplicationDbContext context) : IA
             .Where(a => a.UserId == userId && a.AttemptedAt >= since)
             .OrderByDescending(a => a.AttemptedAt)
             .Take(limit)
-            .ToListAsync(cancellationToken);
+            .ToListAsync(cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<List<AuthenticationAttempt>> GetRecentAttemptsByIpAsync(string ipAddress, DateTime since, int limit = 100, CancellationToken cancellationToken = default)
@@ -133,14 +131,14 @@ public class AuthenticationAttemptRepository(IApplicationDbContext context) : IA
             .Where(a => a.IpAddress == ipAddress && a.AttemptedAt >= since)
             .OrderByDescending(a => a.AttemptedAt)
             .Take(limit)
-            .ToListAsync(cancellationToken);
+            .ToListAsync(cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<(int TotalAttempts, int SuccessfulAttempts, int FailedAttempts)> GetUserStatisticsAsync(Guid userId, DateTime since, CancellationToken cancellationToken = default)
     {
         var attempts = await AuthenticationAttempts
             .Where(a => a.UserId == userId && a.AttemptedAt >= since)
-            .ToListAsync(cancellationToken);
+            .ToListAsync(cancellationToken).ConfigureAwait(false);
 
         var total = attempts.Count;
         var successful = attempts.Count(a => a.IsSuccessful);
