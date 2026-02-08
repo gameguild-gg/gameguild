@@ -13,7 +13,13 @@ public static class SocialModule
     /// </summary>
     public static IServiceCollection AddSocialModule(this IServiceCollection services)
     {
-        services.AddScoped<ISocialService, SocialService>();
+        // Register individual services
+        services.AddScoped<IReviewService, ReviewService>();
+        services.AddScoped<IWishlistService, WishlistService>();
+        services.AddScoped<IDiscussionService, DiscussionService>();
+        services.AddScoped<IReplyService, ReplyService>();
+        services.AddScoped<ILikeService, LikeService>();
+        services.AddScoped<IFeedService, FeedService>();
 
         return services;
     }

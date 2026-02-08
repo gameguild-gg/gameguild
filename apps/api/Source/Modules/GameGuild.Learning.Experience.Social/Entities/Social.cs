@@ -1,4 +1,3 @@
-using GameGuild.Entities;
 
 namespace GameGuild.Learning.Experience.Social;
 
@@ -40,9 +39,7 @@ public class CourseReview : EntityBase
             IsVerifiedPurchase = enrollmentId.HasValue,
             HelpfulCount = 0,
             IsApproved = false,
-            IsFeatured = false,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            IsFeatured = false
         };
     }
 
@@ -71,9 +68,7 @@ public class CourseWishlist : EntityBase
             CourseId = courseId,
             UserId = userId,
             NotifyOnSale = true,
-            NotifyOnUpdate = false,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            NotifyOnUpdate = false
         };
     }
 }
@@ -115,9 +110,7 @@ public class CourseDiscussion : EntityBase
             IsResolved = false,
             ReplyCount = 0,
             ViewCount = 0,
-            LastActivityAt = DateTime.UtcNow,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            LastActivityAt = DateTime.UtcNow
         };
     }
 
@@ -152,9 +145,7 @@ public class DiscussionReply : EntityBase
             ParentReplyId = parentReplyId,
             Content = content,
             IsAcceptedAnswer = false,
-            UpvoteCount = 0,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            UpvoteCount = 0
         };
     }
 
@@ -180,9 +171,7 @@ public class CourseLike : EntityBase
             Id = Guid.NewGuid(),
             CourseId = courseId,
             UserId = userId,
-            TenantId = tenantId,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            TenantId = tenantId
         };
     }
 }
@@ -233,9 +222,7 @@ public class PersonalizedFeedItem : EntityBase
             Reason = reason,
             IsViewed = false,
             IsDismissed = false,
-            ExpiresAt = DateTime.UtcNow.AddDays(expiresInDays),
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            ExpiresAt = DateTime.UtcNow.AddDays(expiresInDays)
         };
     }
 
