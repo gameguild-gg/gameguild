@@ -1,6 +1,4 @@
 using System.Linq.Expressions;
-using GameGuild.Abstractions;
-using GameGuild.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace GameGuild.Commerce;
