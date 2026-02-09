@@ -25,6 +25,11 @@ import ai4games2Week04Lecture from "./04-minmax/01-lecture.md";
 import ai4games2Week04Readings from "./04-minmax/02-readings.md";
 import ai4games2Week04Quiz from "./04-minmax/03-quiz.md";
 import ai4games2Week04Assignment from "./04-minmax/04-assignment.md";
+import ai4games2Week05Slides from "./05-mcts/00-reveal.md";
+import ai4games2Week05Lecture from "./05-mcts/01-lecture.md";
+import ai4games2Week05Readings from "./05-mcts/02-readings.md";
+import ai4games2Week05Quiz from "./05-mcts/03-quiz.md";
+import ai4games2Week05Assignment from "./05-mcts/04-assignment.md";
 import ai4games2ExtraOldLecture from "./old/extras/llms.md";
 import ai4games2Week01OldLecture from "./old/week01/lecture.md";
 import ai4games2Week01OldReadings from "./old/week01/readings.md";
@@ -646,6 +651,122 @@ export const ai4games2Week04AssignmentContent: ProgramContent = {
   updatedAt: "2023-01-01T00:00:00Z",
 };
 
+// Week 05 Content (Monte Carlo Tree Search)
+export const ai4games2Week05SlidesContent: ProgramContent = {
+  id: "ai4games2-week-05-slides",
+  programId: "ai4games2-program",
+  parentId: undefined,
+  title: "Week 5: Monte Carlo Tree Search",
+  slug: "week-05",
+  description: "MCTS algorithm, UCB1 selection, rollout simulations, and neural MCTS (AlphaGo/AlphaZero)",
+  type: ProgramContentType.REVEAL,
+  body: ai4games2Week05Slides,
+  sortOrder: 5,
+  isRequired: true,
+  gradingMethod: 0,
+  maxPoints: null,
+  estimatedMinutes: 60,
+  visibility: 1,
+  program: ai4games2Program,
+  parent: undefined,
+  children: [],
+  contentInteractions: [],
+  createdAt: "2023-01-01T00:00:00Z",
+  updatedAt: "2023-01-01T00:00:00Z",
+};
+
+export const ai4games2Week05LectureContent: ProgramContent = {
+  id: "ai4games2-week-05-lecture",
+  programId: "ai4games2-program",
+  parentId: "ai4games2-week-05-slides",
+  title: "Week 5: Lecture Notes",
+  slug: "lecture",
+  description: "Detailed lecture notes on MCTS, UCB1, rollout policies, and AlphaZero",
+  type: ProgramContentType.PAGE,
+  body: ai4games2Week05Lecture,
+  sortOrder: 1,
+  isRequired: true,
+  gradingMethod: 0,
+  maxPoints: null,
+  estimatedMinutes: 45,
+  visibility: 1,
+  program: ai4games2Program,
+  parent: ai4games2Week05SlidesContent,
+  children: [],
+  contentInteractions: [],
+  createdAt: "2023-01-01T00:00:00Z",
+  updatedAt: "2023-01-01T00:00:00Z",
+};
+
+export const ai4games2Week05ReadingsContent: ProgramContent = {
+  id: "ai4games2-week-05-readings",
+  programId: "ai4games2-program",
+  parentId: "ai4games2-week-05-slides",
+  title: "Week 5: Readings",
+  slug: "readings",
+  description: "Required readings and videos for Monte Carlo Tree Search",
+  type: ProgramContentType.PAGE,
+  body: ai4games2Week05Readings,
+  sortOrder: 2,
+  isRequired: true,
+  gradingMethod: 0,
+  maxPoints: null,
+  estimatedMinutes: 139,
+  visibility: 1,
+  program: ai4games2Program,
+  parent: ai4games2Week05SlidesContent,
+  children: [],
+  contentInteractions: [],
+  createdAt: "2023-01-01T00:00:00Z",
+  updatedAt: "2023-01-01T00:00:00Z",
+};
+
+export const ai4games2Week05QuizContent: ProgramContent = {
+  id: "ai4games2-week-05-quiz",
+  programId: "ai4games2-program",
+  parentId: "ai4games2-week-05-slides",
+  title: "Week 5: Quiz",
+  slug: "quiz",
+  description: "Test your understanding of MCTS, UCB1, and the four search phases",
+  type: ProgramContentType.PAGE,
+  body: ai4games2Week05Quiz,
+  sortOrder: 3,
+  isRequired: true,
+  gradingMethod: 1,
+  maxPoints: 10,
+  estimatedMinutes: 15,
+  visibility: 1,
+  program: ai4games2Program,
+  parent: ai4games2Week05SlidesContent,
+  children: [],
+  contentInteractions: [],
+  createdAt: "2023-01-01T00:00:00Z",
+  updatedAt: "2023-01-01T00:00:00Z",
+};
+
+export const ai4games2Week05AssignmentContent: ProgramContent = {
+  id: "ai4games2-week-05-assignment",
+  programId: "ai4games2-program",
+  parentId: "ai4games2-week-05-slides",
+  title: "Week 5: Assignment",
+  slug: "assignment",
+  description: "Implement a game AI using Monte Carlo Tree Search with UCB1",
+  type: ProgramContentType.PAGE,
+  body: ai4games2Week05Assignment,
+  sortOrder: 4,
+  isRequired: true,
+  gradingMethod: 1,
+  maxPoints: 100,
+  estimatedMinutes: 120,
+  visibility: 1,
+  program: ai4games2Program,
+  parent: ai4games2Week05SlidesContent,
+  children: [],
+  contentInteractions: [],
+  createdAt: "2023-01-01T00:00:00Z",
+  updatedAt: "2023-01-01T00:00:00Z",
+};
+
 export const ai4games2Week02OldContent: ProgramContent = {
   id: "ai4games2-week-02",
   programId: "ai4games2-program",
@@ -1084,6 +1205,12 @@ ai4games2Week04SlidesContent.children = [
   ai4games2Week04QuizContent,
   ai4games2Week04AssignmentContent,
 ];
+ai4games2Week05SlidesContent.children = [
+  ai4games2Week05LectureContent,
+  ai4games2Week05ReadingsContent,
+  ai4games2Week05QuizContent,
+  ai4games2Week05AssignmentContent,
+];
 ai4games2Week02OldContent.children = [ai4games2Week02OldPcgContent];
 ai4games2Week03OldContent.children = [ai4games2Week03OldAstarContent];
 ai4games2Week04OldContent.children = [ai4games2Week04OldAssignmentContent];
@@ -1116,6 +1243,7 @@ ai4games2Program.programContents = [
   ai4games2Week02LectureContent,
   ai4games2Week03LectureContent,
   ai4games2Week04SlidesContent,
+  ai4games2Week05SlidesContent,
   ai4games2OldContent,
 ];
 
