@@ -1,8 +1,7 @@
 using FluentAssertions;
-using GameGuild.Abstractions;
+
 using GameGuild.CQRS;
-using GameGuild.SharedKernel;
-using GameGuild.ValueObjects;
+
 using Microsoft.EntityFrameworkCore;
 using Moq;
 using Xunit;

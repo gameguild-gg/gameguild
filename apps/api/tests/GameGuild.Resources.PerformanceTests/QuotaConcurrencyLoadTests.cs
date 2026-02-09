@@ -44,11 +44,7 @@ public class QuotaConcurrencyLoadTests
         var repository = new ResourceQuotaRepository(context);
         var usageRepository = new UsageRecordRepository(context);
         var publisherMock = new Mock<IPublisher>();
-        var service = new ResourceQuotaService(
-            repository,
-            usageRepository,
-            publisherMock.Object,
-            NullLogger<ResourceQuotaService>.Instance);
+        var service = CreateResourceQuotaService(repository, usageRepository, publisherMock.Object);
 
         // Set up quota with hard limit
         await service.SetQuotaAsync(
@@ -125,11 +121,7 @@ public class QuotaConcurrencyLoadTests
         var repository = new ResourceQuotaRepository(context);
         var usageRepository = new UsageRecordRepository(context);
         var publisherMock = new Mock<IPublisher>();
-        var service = new ResourceQuotaService(
-            repository,
-            usageRepository,
-            publisherMock.Object,
-            NullLogger<ResourceQuotaService>.Instance);
+        var service = CreateResourceQuotaService(repository, usageRepository, publisherMock.Object);
 
         // Create 10 tenants with different quotas
         var tenants = Enumerable.Range(0, 10).Select(_ => Guid.NewGuid()).ToArray();
@@ -189,11 +181,7 @@ public class QuotaConcurrencyLoadTests
         var repository = new ResourceQuotaRepository(context);
         var usageRepository = new UsageRecordRepository(context);
         var publisherMock = new Mock<IPublisher>();
-        var service = new ResourceQuotaService(
-            repository,
-            usageRepository,
-            publisherMock.Object,
-            NullLogger<ResourceQuotaService>.Instance);
+        var service = CreateResourceQuotaService(repository, usageRepository, publisherMock.Object);
 
         await service.SetQuotaAsync(_testTenantId, ResourceUsageType.Projects, softLimit: 40, hardLimit: 50);
 
@@ -239,6 +227,33 @@ public class QuotaConcurrencyLoadTests
         }
         Console.WriteLine($"Total Successes: {totalSuccess} (Limit: 50)");
     }
+
+    private static ResourceQuotaService CreateResourceQuotaService(
+        IResourceQuotaRepository repository,
+        IUsageRecordRepository usageRepository,
+        IPublisher publisher)
+    {
+        var management = new QuotaManagementService(
+            repository,
+            usageRepository,
+            publisher,
+            NullLogger<QuotaManagementService>.Instance);
+
+        var enforcement = new QuotaEnforcementService(
+            repository,
+            management,
+            publisher,
+            NullLogger<QuotaEnforcementService>.Instance);
+
+        var maintenance = new QuotaMaintenanceService(
+            repository,
+            usageRepository,
+            management,
+            publisher,
+            NullLogger<QuotaMaintenanceService>.Instance);
+
+        return new ResourceQuotaService(management, enforcement, maintenance);
+    }
 }
 
 /// <summary>
@@ -265,11 +280,26 @@ public class QuotaOperationBenchmarks
         var usageRepository = new UsageRecordRepository(_context);
         var publisherMock = new Mock<IPublisher>();
 
-        _service = new ResourceQuotaService(
+        var management = new QuotaManagementService(
             repository,
             usageRepository,
             publisherMock.Object,
-            NullLogger<ResourceQuotaService>.Instance);
+            NullLogger<QuotaManagementService>.Instance);
+
+        var enforcement = new QuotaEnforcementService(
+            repository,
+            management,
+            publisherMock.Object,
+            NullLogger<QuotaEnforcementService>.Instance);
+
+        var maintenance = new QuotaMaintenanceService(
+            repository,
+            usageRepository,
+            management,
+            publisherMock.Object,
+            NullLogger<QuotaMaintenanceService>.Instance);
+
+        _service = new ResourceQuotaService(management, enforcement, maintenance);
 
         // Pre-create quota for benchmarks
         _service.SetQuotaAsync(_tenantId, ResourceUsageType.ApiCalls, 1000000, 10000000).Wait();

@@ -44,8 +44,7 @@ public class GetWebhookEventHandlerTests
             ExternalEventId = "evt_1",
             EventType = "invoice.payment_succeeded",
             IsProcessed = true,
-            ProcessingAttempts = 1,
-            CreatedAt = DateTime.UtcNow
+            ProcessingAttempts = 1
         };
 
         var repository = new Mock<IBillingWebhookRepository>();

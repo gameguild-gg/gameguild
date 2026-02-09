@@ -1,7 +1,7 @@
 using FluentAssertions;
 using GameGuild.API.Database;
 using GameGuild.Commerce.Billing;
-using GameGuild.ValueObjects;
+
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
@@ -377,7 +377,7 @@ public class CommerceSecurityIntegrationTests : IClassFixture<WebApplicationFact
             planId: planId,
             createdByUserId: Guid.NewGuid(),
             billingCycle: BillingCycle.Monthly,
-            amount: new GameGuild.ValueObjects.Money(29.99m, "USD"),
+            amount: new Money(29.99m, "USD"),
             startDate: DateTime.UtcNow
         );
 
@@ -399,7 +399,7 @@ public class CommerceSecurityIntegrationTests : IClassFixture<WebApplicationFact
             planId: planId,
             createdByUserId: Guid.NewGuid(),
             billingCycle: BillingCycle.Monthly,
-            amount: new GameGuild.ValueObjects.Money(29.99m, "USD"),
+            amount: new Money(29.99m, "USD"),
             startDate: DateTime.UtcNow
         );
 

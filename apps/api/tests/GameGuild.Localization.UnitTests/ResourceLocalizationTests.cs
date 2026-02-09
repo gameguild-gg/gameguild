@@ -1,6 +1,6 @@
 using FluentAssertions;
 using GameGuild.CQRS;
-using GameGuild.Entities;
+
 using GameGuild.Localization;
 using Xunit;
 

@@ -1,5 +1,6 @@
 using FluentAssertions;
 using GameGuild.Identity.Authentication;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Xunit;
@@ -14,7 +15,10 @@ public class EncryptionServiceTests
     public EncryptionServiceTests()
     {
         _loggerMock = new Mock<ILogger<EncryptionService>>();
-        _service = new EncryptionService(_loggerMock.Object);
+        var configurationMock = new Mock<IConfiguration>();
+        // Return null so fallback key is used in tests
+        configurationMock.Setup(c => c["Encryption:Key"]).Returns((string?)null);
+        _service = new EncryptionService(_loggerMock.Object, configurationMock.Object);
     }
 
     [Fact]

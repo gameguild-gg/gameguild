@@ -66,6 +66,6 @@ public class GetDefaultTenantQueryHandlerTests
         public Task<Tenant> UpdateAsync(Tenant tenant, CancellationToken cancellationToken = default) => throw new NotImplementedException();
         public Task DeleteAsync(Guid id, CancellationToken cancellationToken = default) => throw new NotImplementedException();
         public Task DeleteAsync(Tenant tenant, CancellationToken cancellationToken = default) => throw new NotImplementedException();
-        public Task<GameGuild.Models.PagedResult<TenantAuditLogEntry>> GetAuditLogAsync(Guid tenantId, DateTime? startDate, DateTime? endDate, string? action, Guid? actorId, int page, int pageSize, CancellationToken cancellationToken = default) => throw new NotImplementedException();
+        public Task<PagedResult<TenantAuditLogEntry>> GetAuditLogAsync(Guid tenantId, DateTime? startDate, DateTime? endDate, string? action, Guid? actorId, int page, int pageSize, CancellationToken cancellationToken = default) => throw new NotImplementedException();
     }
 }

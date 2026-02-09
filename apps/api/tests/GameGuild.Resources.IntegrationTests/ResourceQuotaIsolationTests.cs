@@ -9,7 +9,8 @@ using Xunit;
 namespace GameGuild.Resources.IntegrationTests;
 
 /// <summary>
-/// Integration tests verifying cross-tenant quota isolation
+/// Integration tests verifying cross-tenant quota isolation.
+/// Constructs real sub-services (management → enforcement → maintenance → facade).
 /// </summary>
 public class ResourceQuotaIsolationTests : IDisposable
 {
@@ -27,11 +28,29 @@ public class ResourceQuotaIsolationTests : IDisposable
         _repository = new ResourceQuotaRepository(_context);
         var usageRepository = new UsageRecordRepository(_context);
         var publisherMock = new Mock<IPublisher>();
-        _service = new ResourceQuotaService(
+
+        // Build the real sub-services
+        var management = new QuotaManagementService(
             _repository,
             usageRepository,
             publisherMock.Object,
-            NullLogger<ResourceQuotaService>.Instance);
+            NullLogger<QuotaManagementService>.Instance);
+
+        var enforcement = new QuotaEnforcementService(
+            _repository,
+            management,
+            publisherMock.Object,
+            NullLogger<QuotaEnforcementService>.Instance);
+
+        var maintenance = new QuotaMaintenanceService(
+            _repository,
+            usageRepository,
+            management,
+            publisherMock.Object,
+            NullLogger<QuotaMaintenanceService>.Instance);
+
+        // Compose the facade
+        _service = new ResourceQuotaService(management, enforcement, maintenance);
     }
 
     [Fact]
@@ -94,16 +113,16 @@ public class ResourceQuotaIsolationTests : IDisposable
         // Assert: Quotas are completely separate
         quotaA.Should().NotBeNull();
         quotaB.Should().NotBeNull();
-        
+
         quotaA!.TenantId.Should().Be(tenantA);
         quotaB!.TenantId.Should().Be(tenantB);
-        
+
         quotaA.HardLimit.Should().Be(1000);
         quotaB.HardLimit.Should().Be(2000);
 
         // Verify that modifying Tenant A's quota doesn't affect Tenant B
         await _service.SetQuotaAsync(tenantA, ResourceUsageType.Storage, softLimit: null, hardLimit: 500);
-        
+
         var updatedQuotaA = await _service.GetQuotaAsync(tenantA, ResourceUsageType.Storage);
         var unchangedQuotaB = await _service.GetQuotaAsync(tenantB, ResourceUsageType.Storage);
 

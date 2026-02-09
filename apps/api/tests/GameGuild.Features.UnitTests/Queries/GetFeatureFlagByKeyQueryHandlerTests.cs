@@ -1,4 +1,5 @@
 using FluentAssertions;
+using GameGuild;
 using GameGuild.Features;
 using Moq;
 using Xunit;
@@ -69,9 +70,9 @@ public class GetFeatureFlagByKeyQueryHandlerTests
             Description = "A test feature",
             IsEnabled = true,
             Type = FeatureFlagType.Toggle,
-            Environment = "production",
-            CreatedAt = DateTime.UtcNow
+            Environment = "production"
         };
+        typeof(EntityBase).GetProperty(nameof(EntityBase.CreatedAt))!.SetValue(featureFlag, DateTime.UtcNow);
 
         _mockRepository
             .Setup(r => r.GetByKeyAsync("test-feature", It.IsAny<CancellationToken>()))
@@ -149,14 +150,15 @@ public class GetFeatureFlagByKeyQueryHandlerTests
 
     private static FeatureFlag CreateFeatureFlag(string key, bool isEnabled = true)
     {
-        return new FeatureFlag
+        var flag = new FeatureFlag
         {
             Id = Guid.NewGuid(),
             Key = key,
             Name = $"Feature {key}",
             IsEnabled = isEnabled,
-            Type = FeatureFlagType.Toggle,
-            CreatedAt = DateTime.UtcNow
+            Type = FeatureFlagType.Toggle
         };
+        typeof(EntityBase).GetProperty(nameof(EntityBase.CreatedAt))!.SetValue(flag, DateTime.UtcNow);
+        return flag;
     }
 }

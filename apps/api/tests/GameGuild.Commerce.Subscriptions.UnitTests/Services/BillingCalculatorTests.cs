@@ -1,6 +1,6 @@
 using FluentAssertions;
 using GameGuild.Commerce.Subscriptions;
-using GameGuild.ValueObjects;
+
 using Xunit;
 
 namespace GameGuild.Commerce.Subscriptions.UnitTests.Services;

@@ -11,9 +11,9 @@ public class SearchTenantsQueryHandlerTests
     {
         var tenants = new List<Tenant>
         {
-            new() { Name = "Alpha", Slug = "alpha", IsActive = true, AdminEmail = "admin@alpha.com", CreatedAt = DateTime.UtcNow.AddDays(-2) },
-            new() { Name = "Beta", Slug = "beta", IsActive = false, AdminEmail = "admin@beta.com", CreatedAt = DateTime.UtcNow.AddDays(-1) },
-            new() { Name = "Alpha Team", Slug = "alpha-team", IsActive = true, AdminEmail = "team@alpha.com", CreatedAt = DateTime.UtcNow }
+            new() { Name = "Alpha", Slug = "alpha", IsActive = true, AdminEmail = "admin@alpha.com" },
+            new() { Name = "Beta", Slug = "beta", IsActive = false, AdminEmail = "admin@beta.com" },
+            new() { Name = "Alpha Team", Slug = "alpha-team", IsActive = true, AdminEmail = "team@alpha.com" }
         };
 
         var repo = new Mock<ITenantRepository>();

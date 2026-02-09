@@ -1,5 +1,6 @@
 using FluentAssertions;
-using GameGuild.ValueObjects;
+
+
 using Xunit;
 
 namespace GameGuild.Commerce.Subscriptions.UnitTests.Entities;
@@ -162,7 +163,7 @@ public class SubscriptionStateMachineTests
 
         // Act & Assert
         var act = () => subscription.Activate();
-        act.Should().Throw<GameGuild.SharedKernel.InvalidStateTransitionException>()
+        act.Should().Throw<InvalidStateTransitionException>()
             .WithMessage("*Cancelled*Active*");
     }
 
@@ -175,7 +176,7 @@ public class SubscriptionStateMachineTests
 
         // Act & Assert
         var act = () => subscription.Reactivate();
-        act.Should().Throw<GameGuild.SharedKernel.InvalidStateTransitionException>()
+        act.Should().Throw<InvalidStateTransitionException>()
             .WithMessage("*Cancelled*Active*");
     }
 
@@ -187,7 +188,7 @@ public class SubscriptionStateMachineTests
 
         // Act & Assert
         var act = () => subscription.Suspend("Cannot suspend pending");
-        act.Should().Throw<GameGuild.SharedKernel.InvalidStateTransitionException>()
+        act.Should().Throw<InvalidStateTransitionException>()
             .WithMessage("*PendingActivation*Suspended*");
     }
 
@@ -199,7 +200,7 @@ public class SubscriptionStateMachineTests
 
         // Act & Assert
         var act = () => subscription.Suspend("Cannot suspend trial");
-        act.Should().Throw<GameGuild.SharedKernel.InvalidStateTransitionException>()
+        act.Should().Throw<InvalidStateTransitionException>()
             .WithMessage("*Trialing*Suspended*");
     }
 
@@ -211,7 +212,7 @@ public class SubscriptionStateMachineTests
 
         // Act & Assert
         var act = () => subscription.StartTrial(DateTime.UtcNow.AddDays(14));
-        act.Should().Throw<GameGuild.SharedKernel.InvalidStateTransitionException>()
+        act.Should().Throw<InvalidStateTransitionException>()
             .WithMessage("*Active*Trialing*");
     }
 

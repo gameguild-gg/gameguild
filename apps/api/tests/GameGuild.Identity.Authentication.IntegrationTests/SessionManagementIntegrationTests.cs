@@ -748,9 +748,7 @@ public class SessionManagementIntegrationTests : IClassFixture<WebApplicationFac
             Id = userId,
             Email = $"test.user.{userId}@example.com",
             Username = $"testuser_{userId:N}",
-            PasswordHash = "hashed_password",
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            PasswordHash = "hashed_password"
         };
 
         await _dbContext.Set<User>().AddAsync(user);

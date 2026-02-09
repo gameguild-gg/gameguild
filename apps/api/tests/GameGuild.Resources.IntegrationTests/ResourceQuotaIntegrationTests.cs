@@ -9,7 +9,8 @@ using Xunit;
 namespace GameGuild.Resources.IntegrationTests;
 
 /// <summary>
-/// Integration tests for resource quota functionality with concurrency scenarios
+/// Integration tests for resource quota functionality with concurrency scenarios.
+/// Constructs real sub-services (management → enforcement → maintenance → facade).
 /// </summary>
 public class ResourceQuotaIntegrationTests : IDisposable
 {
@@ -28,11 +29,29 @@ public class ResourceQuotaIntegrationTests : IDisposable
         _repository = new ResourceQuotaRepository(_context);
         _publisherMock = new Mock<IPublisher>();
         var usageRepository = new UsageRecordRepository(_context);
-        _service = new ResourceQuotaService(
+
+        // Build the real sub-services
+        var management = new QuotaManagementService(
             _repository,
             usageRepository,
             _publisherMock.Object,
-            NullLogger<ResourceQuotaService>.Instance);
+            NullLogger<QuotaManagementService>.Instance);
+
+        var enforcement = new QuotaEnforcementService(
+            _repository,
+            management,
+            _publisherMock.Object,
+            NullLogger<QuotaEnforcementService>.Instance);
+
+        var maintenance = new QuotaMaintenanceService(
+            _repository,
+            usageRepository,
+            management,
+            _publisherMock.Object,
+            NullLogger<QuotaMaintenanceService>.Instance);
+
+        // Compose the facade
+        _service = new ResourceQuotaService(management, enforcement, maintenance);
     }
 
     [Fact(Skip = "In-memory DbContext is not thread-safe. Use real database for concurrency testing.")]
@@ -40,7 +59,7 @@ public class ResourceQuotaIntegrationTests : IDisposable
     {
         // Note: This test requires a real database with proper concurrency support.
         // In-memory provider doesn't support concurrent access from multiple threads.
-        
+
         // Arrange: Create a quota with limit of 10
         var tenantId = Guid.NewGuid();
         await _service.SetQuotaAsync(tenantId, ResourceUsageType.Users, softLimit: 8, hardLimit: 10);
@@ -70,7 +89,7 @@ public class ResourceQuotaIntegrationTests : IDisposable
 
         // Assert
         successCount.Should().BeLessOrEqualTo(10, "quota enforcement should prevent more than 10 successful increments");
-        
+
         var quota = await _service.GetQuotaAsync(tenantId, ResourceUsageType.Users);
         quota.Should().NotBeNull();
         quota!.CurrentUsage.Should().BeLessOrEqualTo(10, "final usage must not exceed hard limit");
@@ -97,7 +116,7 @@ public class ResourceQuotaIntegrationTests : IDisposable
 
         // Assert
         successCount.Should().Be(10, "exactly 10 should succeed before hitting hard limit");
-        
+
         var quota = await _service.GetQuotaAsync(tenantId, ResourceUsageType.Users);
         quota.Should().NotBeNull();
         quota!.CurrentUsage.Should().Be(10, "final usage should be exactly at hard limit");
@@ -108,11 +127,11 @@ public class ResourceQuotaIntegrationTests : IDisposable
     {
         // Note: Changed to sequential due to in-memory DbContext thread-safety limitations.
         // For true concurrency testing, use a real database.
-        
+
         // Arrange: Tenant with quota 10, current usage 9
         var tenantId = Guid.NewGuid();
         await _service.SetQuotaAsync(tenantId, ResourceUsageType.Users, softLimit: 8, hardLimit: 10);
-        
+
         // Pre-consume 9 slots
         for (int i = 0; i < 9; i++)
         {
@@ -192,7 +211,7 @@ public class ResourceQuotaIntegrationTests : IDisposable
     {
         // Note: This test requires a real database with transaction support.
         // The in-memory provider ignores transactions.
-        
+
         // Arrange
         var tenantId = Guid.NewGuid();
         await _service.SetQuotaAsync(tenantId, ResourceUsageType.Users, softLimit: null, hardLimit: 10);
@@ -202,7 +221,7 @@ public class ResourceQuotaIntegrationTests : IDisposable
 
         // Act: Simulate a transaction that would increment quota but then fail
         using var transaction = await _context.Database.BeginTransactionAsync();
-        
+
         try
         {
             // Try to consume quota
@@ -210,9 +229,9 @@ public class ResourceQuotaIntegrationTests : IDisposable
                 tenantId,
                 ResourceUsageType.Users,
                 amount: 1);
-            
+
             success.Should().BeTrue();
-            
+
             // Simulate failure - rollback
             await transaction.RollbackAsync();
         }
@@ -232,7 +251,7 @@ public class ResourceQuotaIntegrationTests : IDisposable
     {
         // Note: Changed from concurrent to sequential due to in-memory DbContext limitations.
         // For true concurrency testing, use a real database with proper transaction isolation.
-        
+
         // Arrange
         var tenantId = Guid.NewGuid();
         var quota = await _service.SetQuotaAsync(
@@ -270,7 +289,7 @@ public class ResourceQuotaIntegrationTests : IDisposable
 
         // Assert: All 50 should succeed since we reset to 0
         successCount.Should().Be(50, "all requests should succeed after quota reset");
-        
+
         var finalQuota = await _service.GetQuotaAsync(tenantId, ResourceUsageType.ApiCalls);
         finalQuota!.CurrentUsage.Should().Be(50, "usage should match successful operations after reset");
     }

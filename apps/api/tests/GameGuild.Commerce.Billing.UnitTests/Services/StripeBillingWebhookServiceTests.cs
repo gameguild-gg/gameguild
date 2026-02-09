@@ -1,7 +1,7 @@
 using FluentAssertions;
 using GameGuild.Commerce;
 using GameGuild.Commerce.Subscriptions;
-using GameGuild.ValueObjects;
+
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using Xunit;

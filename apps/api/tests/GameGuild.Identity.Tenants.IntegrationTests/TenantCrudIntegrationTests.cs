@@ -62,9 +62,7 @@ public class TenantCrudIntegrationTests : IClassFixture<WebApplicationFactory<Ga
             Name = "Test Tenant",
             Slug = "test-tenant",
             AdminEmail = "admin@test.com",
-            IsActive = true,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            IsActive = true
         };
 
         // Act
@@ -90,9 +88,7 @@ public class TenantCrudIntegrationTests : IClassFixture<WebApplicationFactory<Ga
             Name = "Slug Test Tenant",
             Slug = "slug-test-tenant",
             AdminEmail = "admin@slug.com",
-            IsActive = true,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            IsActive = true
         };
 
         await _dbContext.Set<Tenant>().AddAsync(tenant);
@@ -119,9 +115,7 @@ public class TenantCrudIntegrationTests : IClassFixture<WebApplicationFactory<Ga
             Name = "Original Name",
             Slug = "original-slug",
             AdminEmail = "admin@original.com",
-            IsActive = true,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            IsActive = true
         };
 
         await _dbContext.Set<Tenant>().AddAsync(tenant);
@@ -129,7 +123,7 @@ public class TenantCrudIntegrationTests : IClassFixture<WebApplicationFactory<Ga
 
         // Act
         tenant.Name = "Updated Name";
-        tenant.UpdatedAt = DateTime.UtcNow;
+        tenant.Touch();
         await _dbContext.SaveChangesAsync();
 
         // Assert
@@ -149,9 +143,7 @@ public class TenantCrudIntegrationTests : IClassFixture<WebApplicationFactory<Ga
             Name = "Inactive Tenant",
             Slug = "inactive-tenant",
             AdminEmail = "admin@inactive.com",
-            IsActive = false,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            IsActive = false
         };
 
         await _dbContext.Set<Tenant>().AddAsync(tenant);
@@ -177,9 +169,7 @@ public class TenantCrudIntegrationTests : IClassFixture<WebApplicationFactory<Ga
             Name = "Active Tenant",
             Slug = "active-tenant",
             AdminEmail = "admin@active.com",
-            IsActive = true,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            IsActive = true
         };
 
         await _dbContext.Set<Tenant>().AddAsync(tenant);
@@ -205,9 +195,7 @@ public class TenantCrudIntegrationTests : IClassFixture<WebApplicationFactory<Ga
             Name = "Active 1",
             Slug = "active-1",
             AdminEmail = "admin@active1.com",
-            IsActive = true,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            IsActive = true
         };
 
         var activeTenant2 = new Tenant
@@ -216,9 +204,7 @@ public class TenantCrudIntegrationTests : IClassFixture<WebApplicationFactory<Ga
             Name = "Active 2",
             Slug = "active-2",
             AdminEmail = "admin@active2.com",
-            IsActive = true,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            IsActive = true
         };
 
         var inactiveTenant = new Tenant
@@ -227,9 +213,7 @@ public class TenantCrudIntegrationTests : IClassFixture<WebApplicationFactory<Ga
             Name = "Inactive",
             Slug = "inactive",
             AdminEmail = "admin@inactive.com",
-            IsActive = false,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            IsActive = false
         };
 
         await _dbContext.Set<Tenant>().AddRangeAsync(activeTenant1, activeTenant2, inactiveTenant);
@@ -255,9 +239,7 @@ public class TenantCrudIntegrationTests : IClassFixture<WebApplicationFactory<Ga
             Name = "Delete Test",
             Slug = "delete-test",
             AdminEmail = "admin@delete.com",
-            IsActive = true,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            IsActive = true
         };
 
         await _dbContext.Set<Tenant>().AddAsync(tenant);

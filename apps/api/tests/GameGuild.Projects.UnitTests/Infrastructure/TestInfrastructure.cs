@@ -90,9 +90,7 @@ public class TestDataBuilder
             Id = Guid.NewGuid(),
             Email = email ?? _fixture.Create<string>() + "@test.com",
             FirstName = firstName ?? _fixture.Create<string>(),
-            LastName = lastName ?? _fixture.Create<string>(),
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            LastName = lastName ?? _fixture.Create<string>()
         };
     }
 
@@ -110,9 +108,7 @@ public class TestDataBuilder
             DevelopmentStatus = DevelopmentStatus.InDevelopment,
             Status = ContentStatus.Published,
             Visibility = AccessLevel.Public,
-            CreatedById = userId,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            CreatedById = userId
         };
     }
 
@@ -122,9 +118,7 @@ public class TestDataBuilder
         {
             Id = Guid.NewGuid(),
             Name = name ?? _fixture.Create<string>(),
-            Description = _fixture.Create<string>(),
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            Description = _fixture.Create<string>()
         };
     }
 }

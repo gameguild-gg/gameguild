@@ -1,6 +1,6 @@
 using FluentAssertions;
-using GameGuild.Entities;
-using GameGuild.SharedKernel;
+
+
 using Xunit;
 
 namespace GameGuild.Tests.SharedKernel.Unit.Entities;
@@ -191,7 +191,9 @@ public class EntityBaseTests
     {
         // Arrange
         var entity = new TestEntity();
-        entity.Version = 1;
+        // Simulate EF Core setting Version after SaveChanges
+        typeof(EntityBase<Guid>).GetProperty(nameof(EntityBase.Version))!
+            .SetValue(entity, 1);
 
         // Assert
         entity.IsNew.Should().BeFalse();

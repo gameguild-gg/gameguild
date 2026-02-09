@@ -1,5 +1,5 @@
 using BenchmarkDotNet.Attributes;
-using GameGuild.ValueObjects;
+
 using System.Collections.Concurrent;
 
 namespace GameGuild.Commerce.Subscriptions.PerformanceTests.Security;

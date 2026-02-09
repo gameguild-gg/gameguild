@@ -312,9 +312,7 @@ public class AccessControlIntegrationTests : IClassFixture<WebApplicationFactory
             }",
             Action = "Block",
             IsActive = true,
-            Priority = 50,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            Priority = 50
         };
 
         await _dbContext.Set<ConditionalPolicy>().AddAsync(policy);
@@ -363,9 +361,7 @@ public class AccessControlIntegrationTests : IClassFixture<WebApplicationFactory
             }",
             Action = "Block",
             IsActive = true,
-            Priority = 100,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            Priority = 100
         };
 
         await _dbContext.Set<ConditionalPolicy>().AddAsync(policy);
@@ -434,9 +430,7 @@ public class AccessControlIntegrationTests : IClassFixture<WebApplicationFactory
             }",
             Action = "RequireMfa",
             IsActive = true,
-            Priority = 80,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            Priority = 80
         };
 
         await _dbContext.Set<ConditionalPolicy>().AddAsync(policy);
@@ -478,9 +472,7 @@ public class AccessControlIntegrationTests : IClassFixture<WebApplicationFactory
             ConditionExpression = @"{ ""default"": true }",
             Action = "Allow",
             IsActive = true,
-            Priority = 10,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            Priority = 10
         };
 
         var highPriorityPolicy = new ConditionalPolicy
@@ -492,9 +484,7 @@ public class AccessControlIntegrationTests : IClassFixture<WebApplicationFactory
             ConditionExpression = @"{ ""userAttribute"": { ""status"": ""Pending"" } }",
             Action = "Block",
             IsActive = true,
-            Priority = 100,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            Priority = 100
         };
 
         await _dbContext.Set<ConditionalPolicy>().AddRangeAsync(lowPriorityPolicy, highPriorityPolicy);

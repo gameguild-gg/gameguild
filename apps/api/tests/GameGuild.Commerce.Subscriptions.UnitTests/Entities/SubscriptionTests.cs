@@ -1,4 +1,5 @@
-using GameGuild.ValueObjects;
+
+
 using FluentAssertions;
 using Xunit;
 
@@ -319,7 +320,7 @@ public class SubscriptionTests
 
         // Act & Assert
         var act = () => subscription.Activate();
-        act.Should().Throw<GameGuild.SharedKernel.InvalidStateTransitionException>()
+        act.Should().Throw<InvalidStateTransitionException>()
             .WithMessage("*Cancelled*Active*");
     }
 

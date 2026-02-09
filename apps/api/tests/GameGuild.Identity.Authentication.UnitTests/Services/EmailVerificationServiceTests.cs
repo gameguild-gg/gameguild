@@ -1,5 +1,6 @@
 using FluentAssertions;
 using GameGuild.Identity.Authentication;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -18,7 +19,8 @@ public class EmailVerificationServiceTests
         _loggerMock = new Mock<ILogger<EmailVerificationService>>();
         _configurationMock = new Mock<IConfiguration>();
         _configurationMock.Setup(c => c["App:BaseUrl"]).Returns("https://example.com");
-        _service = new EmailVerificationService(_loggerMock.Object, _configurationMock.Object);
+        var memoryCache = new MemoryCache(new MemoryCacheOptions());
+        _service = new EmailVerificationService(_loggerMock.Object, _configurationMock.Object, memoryCache);
     }
 
     [Fact]

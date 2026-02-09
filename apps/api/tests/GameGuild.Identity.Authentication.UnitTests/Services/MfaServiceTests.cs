@@ -6,312 +6,305 @@ using Xunit;
 namespace GameGuild.Identity.Authentication.UnitTests.Services;
 
 /// <summary>
-/// Unit tests for MfaService - Multi-Factor Authentication service
-/// Tests MFA setup, verification, backup codes, TOTP, and lockout mechanisms
+/// Unit tests for the MfaService orchestrator.
+/// Each test verifies that the orchestrator correctly delegates to the appropriate sub-service.
 /// </summary>
 public class MfaServiceTests
 {
     private readonly Mock<ILogger<MfaService>> _loggerMock;
-    private readonly Mock<IUserMfaConfigurationRepository> _mfaConfigRepositoryMock;
-    private readonly Mock<IMfaAttemptRepository> _mfaAttemptRepositoryMock;
-    private readonly Mock<IEncryptionService> _encryptionServiceMock;
+    private readonly Mock<ITotpMfaService> _totpMfaServiceMock;
+    private readonly Mock<IBackupCodeMfaService> _backupCodeMfaServiceMock;
+    private readonly Mock<IMfaAttemptTrackingService> _attemptTrackingServiceMock;
     private readonly MfaService _service;
 
     public MfaServiceTests()
     {
         _loggerMock = new Mock<ILogger<MfaService>>();
-        _mfaConfigRepositoryMock = new Mock<IUserMfaConfigurationRepository>();
-        _mfaAttemptRepositoryMock = new Mock<IMfaAttemptRepository>();
-        _encryptionServiceMock = new Mock<IEncryptionService>();
+        _totpMfaServiceMock = new Mock<ITotpMfaService>();
+        _backupCodeMfaServiceMock = new Mock<IBackupCodeMfaService>();
+        _attemptTrackingServiceMock = new Mock<IMfaAttemptTrackingService>();
 
         _service = new MfaService(
             _loggerMock.Object,
-            _mfaConfigRepositoryMock.Object,
-            _mfaAttemptRepositoryMock.Object,
-            _encryptionServiceMock.Object);
+            _totpMfaServiceMock.Object,
+            _backupCodeMfaServiceMock.Object,
+            _attemptTrackingServiceMock.Object);
     }
 
     #region GetMfaConfigurationAsync Tests
 
     [Fact]
-    public async Task GetMfaConfigurationAsync_WhenNoConfig_ShouldReturnDisabledResponse()
+    public async Task GetMfaConfigurationAsync_ShouldDelegateToAttemptTrackingService()
     {
         // Arrange
         var userId = Guid.NewGuid();
-        _mfaConfigRepositoryMock
-            .Setup(x => x.GetByUserIdAsync(userId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync((UserMfaConfiguration?)null);
+        var expected = new MfaConfigurationResponse
+        {
+            IsEnabled = true,
+            EnabledMethods = new[] { "Totp", "BackupCode" },
+            BackupCodesRemaining = 5
+        };
+
+        _attemptTrackingServiceMock
+            .Setup(x => x.GetMfaConfigurationAsync(userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(expected);
 
         // Act
         var result = await _service.GetMfaConfigurationAsync(userId);
 
         // Assert
-        result.IsEnabled.Should().BeFalse();
-        result.EnabledMethods.Should().BeEmpty();
-        result.EnabledAt.Should().BeNull();
-        result.BackupCodesRemaining.Should().Be(0);
-    }
-
-    [Fact]
-    public async Task GetMfaConfigurationAsync_WhenMfaDisabled_ShouldReturnDisabledResponse()
-    {
-        // Arrange
-        var userId = Guid.NewGuid();
-        var mfaConfig = new UserMfaConfiguration
-        {
-            Id = Guid.NewGuid(),
-            UserId = userId,
-            IsEnabled = false,
-            TotpSecretKey = "encrypted_secret",
-            BackupCodes = "code1,code2,code3"
-        };
-
-        _mfaConfigRepositoryMock
-            .Setup(x => x.GetByUserIdAsync(userId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(mfaConfig);
-
-        // Act
-        var result = await _service.GetMfaConfigurationAsync(userId);
-
-        // Assert
-        result.IsEnabled.Should().BeFalse();
-        result.EnabledMethods.Should().BeEmpty();
-        result.BackupCodesRemaining.Should().Be(0);
-    }
-
-    [Fact]
-    public async Task GetMfaConfigurationAsync_WhenMfaEnabledWithTotpAndBackupCodes_ShouldReturnBothMethods()
-    {
-        // Arrange
-        var userId = Guid.NewGuid();
-        var enabledAt = DateTime.UtcNow.AddDays(-7);
-        var mfaConfig = new UserMfaConfiguration
-        {
-            Id = Guid.NewGuid(),
-            UserId = userId,
-            IsEnabled = true,
-            TotpSecretKey = "encrypted_secret_key",
-            BackupCodes = "code1,code2,code3,code4,code5",
-            EnabledAt = enabledAt
-        };
-
-        _mfaConfigRepositoryMock
-            .Setup(x => x.GetByUserIdAsync(userId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(mfaConfig);
-
-        // Act
-        var result = await _service.GetMfaConfigurationAsync(userId);
-
-        // Assert
-        result.IsEnabled.Should().BeTrue();
-        result.EnabledMethods.Should().Contain("Totp");
-        result.EnabledMethods.Should().Contain("BackupCode");
-        result.EnabledMethods.Should().HaveCount(2);
-        result.EnabledAt.Should().Be(enabledAt);
-        result.BackupCodesRemaining.Should().Be(5);
-    }
-
-    [Fact]
-    public async Task GetMfaConfigurationAsync_WhenOnlyTotpEnabled_ShouldReturnOnlyTotpMethod()
-    {
-        // Arrange
-        var userId = Guid.NewGuid();
-        var mfaConfig = new UserMfaConfiguration
-        {
-            Id = Guid.NewGuid(),
-            UserId = userId,
-            IsEnabled = true,
-            TotpSecretKey = "encrypted_secret_key",
-            BackupCodes = null,
-            EnabledAt = DateTime.UtcNow
-        };
-
-        _mfaConfigRepositoryMock
-            .Setup(x => x.GetByUserIdAsync(userId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(mfaConfig);
-
-        // Act
-        var result = await _service.GetMfaConfigurationAsync(userId);
-
-        // Assert
-        result.IsEnabled.Should().BeTrue();
-        result.EnabledMethods.Should().ContainSingle();
-        result.EnabledMethods.Should().Contain("Totp");
-        result.BackupCodesRemaining.Should().Be(0);
-    }
-
-    #endregion
-
-    #region GenerateBackupCodesAsync Tests
-
-    [Fact]
-    public async Task GenerateBackupCodesAsync_WhenMfaNotEnabled_ShouldThrowInvalidOperationException()
-    {
-        // Arrange
-        var userId = Guid.NewGuid();
-        var mfaConfig = new UserMfaConfiguration
-        {
-            Id = Guid.NewGuid(),
-            UserId = userId,
-            IsEnabled = false
-        };
-
-        _mfaConfigRepositoryMock
-            .Setup(x => x.GetByUserIdAsync(userId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(mfaConfig);
-
-        // Act
-        Func<Task> act = async () => await _service.GenerateBackupCodesAsync(userId);
-
-        // Assert
-        await act.Should().ThrowAsync<InvalidOperationException>()
-            .WithMessage("MFA must be enabled to generate backup codes");
-    }
-
-    [Fact]
-    public async Task GenerateBackupCodesAsync_WhenMfaEnabled_ShouldGenerate10Codes()
-    {
-        // Arrange
-        var userId = Guid.NewGuid();
-        var mfaConfig = new UserMfaConfiguration
-        {
-            Id = Guid.NewGuid(),
-            UserId = userId,
-            IsEnabled = true,
-            TotpSecretKey = "secret"
-        };
-
-        _mfaConfigRepositoryMock
-            .Setup(x => x.GetByUserIdAsync(userId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(mfaConfig);
-
-        _mfaConfigRepositoryMock
-            .Setup(x => x.UpdateAsync(It.IsAny<UserMfaConfiguration>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new UserMfaConfiguration());
-
-        // Act
-        var codes = await _service.GenerateBackupCodesAsync(userId);
-
-        // Assert
-        codes.Should().HaveCount(10);
-        codes.Should().OnlyContain(code => !string.IsNullOrWhiteSpace(code));
-        codes.Should().OnlyHaveUniqueItems();
-    }
-
-    [Fact]
-    public async Task GenerateBackupCodesAsync_WhenMfaEnabled_ShouldUpdateRepository()
-    {
-        // Arrange
-        var userId = Guid.NewGuid();
-        var mfaConfig = new UserMfaConfiguration
-        {
-            Id = Guid.NewGuid(),
-            UserId = userId,
-            IsEnabled = true,
-            TotpSecretKey = "secret",
-            UpdatedAt = DateTime.UtcNow.AddDays(-1)
-        };
-
-        _mfaConfigRepositoryMock
-            .Setup(x => x.GetByUserIdAsync(userId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(mfaConfig);
-
-        _mfaConfigRepositoryMock
-            .Setup(x => x.UpdateAsync(It.IsAny<UserMfaConfiguration>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new UserMfaConfiguration());
-
-        // Act
-        await _service.GenerateBackupCodesAsync(userId);
-
-        // Assert
-        _mfaConfigRepositoryMock.Verify(
-            x => x.UpdateAsync(
-                It.Is<UserMfaConfiguration>(config => 
-                    config.UserId == userId &&
-                    !string.IsNullOrEmpty(config.BackupCodes) &&
-                    config.UpdatedAt > DateTime.UtcNow.AddMinutes(-1)),
-                It.IsAny<CancellationToken>()),
+        result.Should().BeSameAs(expected);
+        _attemptTrackingServiceMock.Verify(
+            x => x.GetMfaConfigurationAsync(userId, It.IsAny<CancellationToken>()),
             Times.Once);
     }
 
     #endregion
 
-    #region SetupTotpAsync Tests
+    #region InitiateMfaSetupAsync Tests
 
     [Fact]
-    public async Task SetupTotpAsync_WhenCalled_ShouldGenerateSecretKeyAndQrCodeUri()
+    public async Task InitiateMfaSetupAsync_ShouldDelegateToTotpAndBackupCodeServices()
     {
         // Arrange
         var userId = Guid.NewGuid();
-        var userEmail = "test@example.com";
-        var mfaConfig = new UserMfaConfiguration
-        {
-            Id = Guid.NewGuid(),
-            UserId = userId
-        };
+        var expectedQrUri = "otpauth://totp/GameGuild:user@example.com?secret=ABC123";
+        var expectedSecret = "ABC123";
 
-        _mfaConfigRepositoryMock
-            .Setup(x => x.GetByUserIdAsync(userId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(mfaConfig);
+        _totpMfaServiceMock
+            .Setup(x => x.SetupTotpAsync(userId, It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((expectedQrUri, expectedSecret));
 
-        _encryptionServiceMock
-            .Setup(x => x.Encrypt(It.IsAny<string>()))
-            .Returns((string value) => $"encrypted_{value}");
+        _backupCodeMfaServiceMock
+            .Setup(x => x.GenerateBackupCode())
+            .Returns("ABCD1234");
 
-        _mfaConfigRepositoryMock
-            .Setup(x => x.UpdateAsync(It.IsAny<UserMfaConfiguration>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new UserMfaConfiguration());
+        _backupCodeMfaServiceMock
+            .Setup(x => x.StoreBackupCodesForSetupAsync(userId, It.IsAny<IReadOnlyList<string>>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
 
         // Act
-        var result = await _service.SetupTotpAsync(userId, userEmail);
+        var result = await _service.InitiateMfaSetupAsync(userId, "user@example.com");
 
         // Assert
-        result.SecretKey.Should().NotBeNullOrWhiteSpace();
-        result.SecretKey.Length.Should().BeGreaterOrEqualTo(16);
-        result.QrCodeUri.Should().NotBeNullOrWhiteSpace();
-        result.QrCodeUri.Should().Contain("otpauth://totp/");
-        result.QrCodeUri.Should().Contain("test%40example.com"); // URL-encoded email
+        result.Success.Should().BeTrue();
+        result.SecretKey.Should().Be(expectedSecret);
+        result.QrCodeUri.Should().Be(expectedQrUri);
+        result.BackupCodes.Should().HaveCount(10);
+        result.Message.Should().Be("MFA setup initiated successfully");
+
+        _totpMfaServiceMock.Verify(
+            x => x.SetupTotpAsync(userId, It.IsAny<string>(), It.IsAny<CancellationToken>()),
+            Times.Once);
+        _backupCodeMfaServiceMock.Verify(
+            x => x.GenerateBackupCode(),
+            Times.Exactly(10));
+        _backupCodeMfaServiceMock.Verify(
+            x => x.StoreBackupCodesForSetupAsync(userId, It.IsAny<IReadOnlyList<string>>(), It.IsAny<CancellationToken>()),
+            Times.Once);
     }
 
     [Fact]
-    public async Task SetupTotpAsync_WhenCalled_ShouldUpdateRepository()
+    public async Task InitiateMfaSetupAsync_WhenTotpSetupFails_ShouldThrow()
     {
         // Arrange
         var userId = Guid.NewGuid();
-        var userEmail = "test@example.com";
-        var mfaConfig = new UserMfaConfiguration
-        {
-            Id = Guid.NewGuid(),
-            UserId = userId
-        };
+        _totpMfaServiceMock
+            .Setup(x => x.SetupTotpAsync(userId, It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new InvalidOperationException("Setup failed"));
 
-        _mfaConfigRepositoryMock
-            .Setup(x => x.GetByUserIdAsync(userId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(mfaConfig);
+        // Act & Assert
+        var act = () => _service.InitiateMfaSetupAsync(userId, "user@example.com");
+        await act.Should().ThrowAsync<InvalidOperationException>().WithMessage("Setup failed");
+    }
 
-        _encryptionServiceMock
-            .Setup(x => x.Encrypt(It.IsAny<string>()))
-            .Returns((string value) => $"encrypted_{value}");
+    #endregion
 
-        _mfaConfigRepositoryMock
-            .Setup(x => x.UpdateAsync(It.IsAny<UserMfaConfiguration>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new UserMfaConfiguration());
+    #region CompleteMfaSetupAsync Tests
+
+    [Fact]
+    public async Task CompleteMfaSetupAsync_WhenTotpValid_ShouldReturnSuccess()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var totpCode = "123456";
+
+        _totpMfaServiceMock
+            .Setup(x => x.VerifyTotpAsync(userId, totpCode, null, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
 
         // Act
-        await _service.SetupTotpAsync(userId, userEmail);
+        var result = await _service.CompleteMfaSetupAsync(userId, totpCode);
 
         // Assert
-        _mfaConfigRepositoryMock.Verify(
-            x => x.UpdateAsync(
-                It.Is<UserMfaConfiguration>(config =>
-                    config.UserId == userId &&
-                    !string.IsNullOrEmpty(config.TotpSecretKey)),
-                It.IsAny<CancellationToken>()),
+        result.Success.Should().BeTrue();
+        result.Message.Should().Be("MFA setup completed successfully");
+        _totpMfaServiceMock.Verify(
+            x => x.VerifyTotpAsync(userId, totpCode, null, It.IsAny<CancellationToken>()),
             Times.Once);
+    }
 
-        _encryptionServiceMock.Verify(
-            x => x.Encrypt(It.IsAny<string>()),
+    [Fact]
+    public async Task CompleteMfaSetupAsync_WhenTotpInvalid_ShouldReturnFailure()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var totpCode = "000000";
+
+        _totpMfaServiceMock
+            .Setup(x => x.VerifyTotpAsync(userId, totpCode, null, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
+
+        // Act
+        var result = await _service.CompleteMfaSetupAsync(userId, totpCode);
+
+        // Assert
+        result.Success.Should().BeFalse();
+        result.Message.Should().Be("Invalid TOTP code");
+    }
+
+    [Fact]
+    public async Task CompleteMfaSetupAsync_WhenExceptionThrown_ShouldThrow()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var totpCode = "123456";
+
+        _totpMfaServiceMock
+            .Setup(x => x.VerifyTotpAsync(userId, totpCode, null, It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new Exception("Verification error"));
+
+        // Act & Assert
+        var act = () => _service.CompleteMfaSetupAsync(userId, totpCode);
+        await act.Should().ThrowAsync<Exception>().WithMessage("Verification error");
+    }
+
+    #endregion
+
+    #region VerifyMfaAsync Tests
+
+    [Fact]
+    public async Task VerifyMfaAsync_WithTotpMethod_ShouldDelegateToTotpService()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var code = "123456";
+
+        _totpMfaServiceMock
+            .Setup(x => x.VerifyTotpAsync(userId, code, null, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+
+        // Act
+        var result = await _service.VerifyMfaAsync(userId, code, MfaMethod.Totp);
+
+        // Assert
+        result.Success.Should().BeTrue();
+        result.Message.Should().Be("MFA verification successful");
+        _totpMfaServiceMock.Verify(
+            x => x.VerifyTotpAsync(userId, code, null, It.IsAny<CancellationToken>()),
             Times.Once);
+        _backupCodeMfaServiceMock.Verify(
+            x => x.VerifyBackupCodeAsync(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task VerifyMfaAsync_WithBackupCodeMethod_ShouldDelegateToBackupCodeService()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var code = "ABCD1234";
+
+        _backupCodeMfaServiceMock
+            .Setup(x => x.VerifyBackupCodeAsync(userId, code, null, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+
+        // Act
+        var result = await _service.VerifyMfaAsync(userId, code, MfaMethod.BackupCode);
+
+        // Assert
+        result.Success.Should().BeTrue();
+        result.Message.Should().Be("MFA verification successful");
+        _backupCodeMfaServiceMock.Verify(
+            x => x.VerifyBackupCodeAsync(userId, code, null, It.IsAny<CancellationToken>()),
+            Times.Once);
+        _totpMfaServiceMock.Verify(
+            x => x.VerifyTotpAsync(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task VerifyMfaAsync_WithInvalidTotpCode_ShouldReturnFailure()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var code = "000000";
+
+        _totpMfaServiceMock
+            .Setup(x => x.VerifyTotpAsync(userId, code, null, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
+
+        // Act
+        var result = await _service.VerifyMfaAsync(userId, code, MfaMethod.Totp);
+
+        // Assert
+        result.Success.Should().BeFalse();
+        result.Message.Should().Be("Invalid MFA code");
+    }
+
+    [Fact]
+    public async Task VerifyMfaAsync_WithUnsupportedMethod_ShouldReturnFailure()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var code = "123456";
+
+        // Act
+        var result = await _service.VerifyMfaAsync(userId, code, MfaMethod.Sms);
+
+        // Assert
+        result.Success.Should().BeFalse();
+        result.Message.Should().Be("Invalid MFA code");
+    }
+
+    [Fact]
+    public async Task VerifyMfaAsync_DefaultMethod_ShouldUseTotp()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var code = "123456";
+
+        _totpMfaServiceMock
+            .Setup(x => x.VerifyTotpAsync(userId, code, null, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+
+        // Act
+        var result = await _service.VerifyMfaAsync(userId, code);
+
+        // Assert
+        result.Success.Should().BeTrue();
+        _totpMfaServiceMock.Verify(
+            x => x.VerifyTotpAsync(userId, code, null, It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task VerifyMfaAsync_WhenExceptionThrown_ShouldReturnFailure()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var code = "123456";
+
+        _totpMfaServiceMock
+            .Setup(x => x.VerifyTotpAsync(userId, code, null, It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new Exception("Service error"));
+
+        // Act
+        var result = await _service.VerifyMfaAsync(userId, code, MfaMethod.Totp);
+
+        // Assert
+        result.Success.Should().BeFalse();
+        result.Message.Should().Be("Service error");
     }
 
     #endregion
@@ -319,127 +312,237 @@ public class MfaServiceTests
     #region DisableMfaAsync Tests
 
     [Fact]
-    public async Task DisableMfaAsync_WhenMfaConfigExists_ShouldDisableAndReturnTrue()
+    public async Task DisableMfaAsync_WhenConfirmationCodeValid_ShouldDelegateToAttemptTrackingService()
     {
         // Arrange
         var userId = Guid.NewGuid();
-        var mfaConfig = new UserMfaConfiguration
-        {
-            Id = Guid.NewGuid(),
-            UserId = userId,
-            IsEnabled = true,
-            TotpSecretKey = "secret",
-            BackupCodes = "codes"
-        };
+        var confirmationCode = "123456";
 
-        _mfaConfigRepositoryMock
-            .Setup(x => x.GetByUserIdAsync(userId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(mfaConfig);
+        _totpMfaServiceMock
+            .Setup(x => x.VerifyTotpAsync(userId, confirmationCode, null, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
 
-        _mfaConfigRepositoryMock
-            .Setup(x => x.UpdateAsync(It.IsAny<UserMfaConfiguration>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new UserMfaConfiguration());
+        _attemptTrackingServiceMock
+            .Setup(x => x.DisableMfaAsync(userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
 
         // Act
-        var result = await _service.DisableMfaAsync(userId);
+        var result = await _service.DisableMfaAsync(userId, confirmationCode);
 
         // Assert
         result.Should().BeTrue();
-        _mfaConfigRepositoryMock.Verify(
-            x => x.UpdateAsync(
-                It.Is<UserMfaConfiguration>(config =>
-                    config.UserId == userId &&
-                    !config.IsEnabled &&
-                    config.TotpSecretKey == null &&
-                    config.BackupCodes == null &&
-                    config.FailedAttempts == 0),
-                It.IsAny<CancellationToken>()),
+        _totpMfaServiceMock.Verify(
+            x => x.VerifyTotpAsync(userId, confirmationCode, null, It.IsAny<CancellationToken>()),
+            Times.Once);
+        _attemptTrackingServiceMock.Verify(
+            x => x.DisableMfaAsync(userId, It.IsAny<CancellationToken>()),
             Times.Once);
     }
 
     [Fact]
-    public async Task DisableMfaAsync_WhenNoMfaConfig_ShouldReturnFalse()
+    public async Task DisableMfaAsync_WhenConfirmationCodeInvalid_ShouldReturnFalse()
     {
         // Arrange
         var userId = Guid.NewGuid();
-        _mfaConfigRepositoryMock
-            .Setup(x => x.GetByUserIdAsync(userId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync((UserMfaConfiguration?)null);
+        var confirmationCode = "000000";
+
+        _totpMfaServiceMock
+            .Setup(x => x.VerifyTotpAsync(userId, confirmationCode, null, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
 
         // Act
-        var result = await _service.DisableMfaAsync(userId);
+        var result = await _service.DisableMfaAsync(userId, confirmationCode);
 
         // Assert
         result.Should().BeFalse();
-        _mfaConfigRepositoryMock.Verify(
-            x => x.UpdateAsync(It.IsAny<UserMfaConfiguration>(), It.IsAny<CancellationToken>()),
+        _attemptTrackingServiceMock.Verify(
+            x => x.DisableMfaAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()),
             Times.Never);
     }
 
     #endregion
 
-    #region GetMfaStatusAsync Tests
+    #region GenerateBackupCodesAsync Tests
 
     [Fact]
-    public async Task GetMfaStatusAsync_WhenMfaEnabled_ShouldReturnTrue()
+    public async Task GenerateBackupCodesAsync_ShouldDelegateToBackupCodeService()
     {
         // Arrange
         var userId = Guid.NewGuid();
-        var mfaConfig = new UserMfaConfiguration
-        {
-            Id = Guid.NewGuid(),
-            UserId = userId,
-            IsEnabled = true
-        };
+        var expected = new[] { "CODE1", "CODE2", "CODE3" };
 
-        _mfaConfigRepositoryMock
-            .Setup(x => x.GetByUserIdAsync(userId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(mfaConfig);
+        _backupCodeMfaServiceMock
+            .Setup(x => x.GenerateBackupCodesAsync(userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(expected);
 
         // Act
-        var result = await _service.GetMfaStatusAsync(userId);
+        var result = await _service.GenerateBackupCodesAsync(userId);
+
+        // Assert
+        result.Should().BeSameAs(expected);
+        _backupCodeMfaServiceMock.Verify(
+            x => x.GenerateBackupCodesAsync(userId, It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    #endregion
+
+    #region VerifyBackupCodeAsync Tests
+
+    [Fact]
+    public async Task VerifyBackupCodeAsync_ShouldDelegateToBackupCodeService()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var backupCode = "ABCD1234";
+        var deviceId = "device-123";
+
+        _backupCodeMfaServiceMock
+            .Setup(x => x.VerifyBackupCodeAsync(userId, backupCode, deviceId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+
+        // Act
+        var result = await _service.VerifyBackupCodeAsync(userId, backupCode, deviceId);
 
         // Assert
         result.Should().BeTrue();
+        _backupCodeMfaServiceMock.Verify(
+            x => x.VerifyBackupCodeAsync(userId, backupCode, deviceId, It.IsAny<CancellationToken>()),
+            Times.Once);
     }
 
     [Fact]
-    public async Task GetMfaStatusAsync_WhenMfaDisabled_ShouldReturnFalse()
+    public async Task VerifyBackupCodeAsync_WithNullDeviceId_ShouldDelegateCorrectly()
     {
         // Arrange
         var userId = Guid.NewGuid();
-        var mfaConfig = new UserMfaConfiguration
-        {
-            Id = Guid.NewGuid(),
-            UserId = userId,
-            IsEnabled = false
-        };
+        var backupCode = "ABCD1234";
 
-        _mfaConfigRepositoryMock
-            .Setup(x => x.GetByUserIdAsync(userId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(mfaConfig);
+        _backupCodeMfaServiceMock
+            .Setup(x => x.VerifyBackupCodeAsync(userId, backupCode, null, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
 
         // Act
-        var result = await _service.GetMfaStatusAsync(userId);
+        var result = await _service.VerifyBackupCodeAsync(userId, backupCode);
+
+        // Assert
+        result.Should().BeFalse();
+        _backupCodeMfaServiceMock.Verify(
+            x => x.VerifyBackupCodeAsync(userId, backupCode, null, It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    #endregion
+
+    #region GenerateQrCodeAsync Tests
+
+    [Fact]
+    public async Task GenerateQrCodeAsync_ShouldDelegateToTotpService()
+    {
+        // Arrange
+        var qrCodeData = "otpauth://totp/GameGuild:user@test.com?secret=ABC123";
+        var expected = new byte[] { 0x89, 0x50, 0x4E, 0x47 }; // PNG header bytes
+
+        _totpMfaServiceMock
+            .Setup(x => x.GenerateQrCodeAsync(qrCodeData, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(expected);
+
+        // Act
+        var result = await _service.GenerateQrCodeAsync(qrCodeData);
+
+        // Assert
+        result.Should().BeSameAs(expected);
+        _totpMfaServiceMock.Verify(
+            x => x.GenerateQrCodeAsync(qrCodeData, It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    #endregion
+
+    #region IsMfaEnabledAsync Tests
+
+    [Fact]
+    public async Task IsMfaEnabledAsync_ShouldDelegateToAttemptTrackingService()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+
+        _attemptTrackingServiceMock
+            .Setup(x => x.GetMfaStatusAsync(userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+
+        // Act
+        var result = await _service.IsMfaEnabledAsync(userId);
+
+        // Assert
+        result.Should().BeTrue();
+        _attemptTrackingServiceMock.Verify(
+            x => x.GetMfaStatusAsync(userId, It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task IsMfaEnabledAsync_WhenDisabled_ShouldReturnFalse()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+
+        _attemptTrackingServiceMock
+            .Setup(x => x.GetMfaStatusAsync(userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
+
+        // Act
+        var result = await _service.IsMfaEnabledAsync(userId);
 
         // Assert
         result.Should().BeFalse();
     }
 
+    #endregion
+
+    #region IsMfaRequiredAsync Tests
+
     [Fact]
-    public async Task GetMfaStatusAsync_WhenNoConfig_ShouldReturnFalse()
+    public async Task IsMfaRequiredAsync_ShouldDelegateToIsMfaRequiredByPolicyAsync()
     {
         // Arrange
         var userId = Guid.NewGuid();
-        _mfaConfigRepositoryMock
-            .Setup(x => x.GetByUserIdAsync(userId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync((UserMfaConfiguration?)null);
+
+        _attemptTrackingServiceMock
+            .Setup(x => x.IsMfaRequiredByPolicyAsync(userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
 
         // Act
-        var result = await _service.GetMfaStatusAsync(userId);
+        var result = await _service.IsMfaRequiredAsync(userId);
 
         // Assert
-        result.Should().BeFalse();
+        result.Should().BeTrue();
+        _attemptTrackingServiceMock.Verify(
+            x => x.IsMfaRequiredByPolicyAsync(userId, It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    #endregion
+
+    #region ResetMfaFailedAttemptsAsync Tests
+
+    [Fact]
+    public async Task ResetMfaFailedAttemptsAsync_ShouldDelegateToAttemptTrackingService()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+
+        _attemptTrackingServiceMock
+            .Setup(x => x.ResetFailedAttemptsAsync(userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+
+        // Act
+        await _service.ResetMfaFailedAttemptsAsync(userId);
+
+        // Assert
+        _attemptTrackingServiceMock.Verify(
+            x => x.ResetFailedAttemptsAsync(userId, It.IsAny<CancellationToken>()),
+            Times.Once);
     }
 
     #endregion
@@ -447,183 +550,40 @@ public class MfaServiceTests
     #region IsUserLockedOutAsync Tests
 
     [Fact]
+    public async Task IsUserLockedOutAsync_ShouldDelegateToAttemptTrackingService()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+
+        _attemptTrackingServiceMock
+            .Setup(x => x.IsUserLockedOutAsync(userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+
+        // Act
+        var result = await _service.IsUserLockedOutAsync(userId);
+
+        // Assert
+        result.Should().BeTrue();
+        _attemptTrackingServiceMock.Verify(
+            x => x.IsUserLockedOutAsync(userId, It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
     public async Task IsUserLockedOutAsync_WhenNotLockedOut_ShouldReturnFalse()
     {
         // Arrange
         var userId = Guid.NewGuid();
-        var mfaConfig = new UserMfaConfiguration
-        {
-            Id = Guid.NewGuid(),
-            UserId = userId,
-            IsEnabled = true,
-            LockedOutUntil = null
-        };
 
-        _mfaConfigRepositoryMock
-            .Setup(x => x.GetByUserIdAsync(userId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(mfaConfig);
+        _attemptTrackingServiceMock
+            .Setup(x => x.IsUserLockedOutAsync(userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
 
         // Act
         var result = await _service.IsUserLockedOutAsync(userId);
 
         // Assert
         result.Should().BeFalse();
-    }
-
-    [Fact]
-    public async Task IsUserLockedOutAsync_WhenLockedOutInPast_ShouldReturnFalse()
-    {
-        // Arrange
-        var userId = Guid.NewGuid();
-        var mfaConfig = new UserMfaConfiguration
-        {
-            Id = Guid.NewGuid(),
-            UserId = userId,
-            IsEnabled = true,
-            LockedOutUntil = DateTime.UtcNow.AddMinutes(-10) // Lockout expired
-        };
-
-        _mfaConfigRepositoryMock
-            .Setup(x => x.GetByUserIdAsync(userId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(mfaConfig);
-
-        // Act
-        var result = await _service.IsUserLockedOutAsync(userId);
-
-        // Assert
-        result.Should().BeFalse();
-    }
-
-    [Fact]
-    public async Task IsUserLockedOutAsync_WhenCurrentlyLockedOut_ShouldReturnTrue()
-    {
-        // Arrange
-        var userId = Guid.NewGuid();
-        var mfaConfig = new UserMfaConfiguration
-        {
-            Id = Guid.NewGuid(),
-            UserId = userId,
-            IsEnabled = true,
-            FailedAttempts = 5, // MaxFailedAttempts
-            LockedOutUntil = DateTime.UtcNow.AddMinutes(10) // Still locked out
-        };
-
-        _mfaConfigRepositoryMock
-            .Setup(x => x.GetByUserIdAsync(userId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(mfaConfig);
-
-        // Act
-        var result = await _service.IsUserLockedOutAsync(userId);
-
-        // Assert
-        result.Should().BeTrue();
-    }
-
-    #endregion
-
-    #region ResetFailedAttemptsAsync Tests
-
-    [Fact]
-    public async Task ResetFailedAttemptsAsync_WhenMfaConfigExists_ShouldResetAttemptsAndReturnTrue()
-    {
-        // Arrange
-        var userId = Guid.NewGuid();
-        var mfaConfig = new UserMfaConfiguration
-        {
-            Id = Guid.NewGuid(),
-            UserId = userId,
-            IsEnabled = true,
-            FailedAttempts = 3,
-            LockedOutUntil = DateTime.UtcNow.AddMinutes(5)
-        };
-
-        _mfaConfigRepositoryMock
-            .Setup(x => x.GetByUserIdAsync(userId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(mfaConfig);
-
-        _mfaConfigRepositoryMock
-            .Setup(x => x.UpdateAsync(It.IsAny<UserMfaConfiguration>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new UserMfaConfiguration());
-
-        // Act
-        var result = await _service.ResetFailedAttemptsAsync(userId);
-
-        // Assert
-        result.Should().BeTrue();
-        _mfaConfigRepositoryMock.Verify(
-            x => x.UpdateAsync(
-                It.Is<UserMfaConfiguration>(config =>
-                    config.UserId == userId &&
-                    config.FailedAttempts == 0),
-                It.IsAny<CancellationToken>()),
-            Times.Once);
-    }
-
-    [Fact]
-    public async Task ResetFailedAttemptsAsync_WhenNoMfaConfig_ShouldReturnFalse()
-    {
-        // Arrange
-        var userId = Guid.NewGuid();
-        _mfaConfigRepositoryMock
-            .Setup(x => x.GetByUserIdAsync(userId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync((UserMfaConfiguration?)null);
-
-        // Act
-        var result = await _service.ResetFailedAttemptsAsync(userId);
-
-        // Assert
-        result.Should().BeFalse();
-        _mfaConfigRepositoryMock.Verify(
-            x => x.UpdateAsync(It.IsAny<UserMfaConfiguration>(), It.IsAny<CancellationToken>()),
-            Times.Never);
-    }
-
-    #endregion
-
-    #region GetMfaAttemptsAsync Tests
-
-    [Fact]
-    public async Task GetMfaAttemptsAsync_WhenCalled_ShouldReturnAttempts()
-    {
-        // Arrange
-        var userId = Guid.NewGuid();
-        var attempts = new List<MfaAttempt>
-        {
-            new() { Id = Guid.NewGuid(), UserId = userId, IsSuccessful = true, AttemptedAt = DateTime.UtcNow },
-            new() { Id = Guid.NewGuid(), UserId = userId, IsSuccessful = false, AttemptedAt = DateTime.UtcNow.AddMinutes(-5) }
-        };
-
-        _mfaAttemptRepositoryMock
-            .Setup(x => x.GetByUserIdAsync(userId, 50, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(attempts);
-
-        // Act
-        var result = await _service.GetMfaAttemptsAsync(userId);
-
-        // Assert
-        result.Should().HaveCount(2);
-        result.Should().BeEquivalentTo(attempts);
-    }
-
-    [Fact]
-    public async Task GetMfaAttemptsAsync_WithCustomLimit_ShouldUseSpecifiedLimit()
-    {
-        // Arrange
-        var userId = Guid.NewGuid();
-        var limit = 10;
-        var attempts = new List<MfaAttempt>();
-
-        _mfaAttemptRepositoryMock
-            .Setup(x => x.GetByUserIdAsync(userId, limit, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(attempts);
-
-        // Act
-        await _service.GetMfaAttemptsAsync(userId, limit);
-
-        // Assert
-        _mfaAttemptRepositoryMock.Verify(
-            x => x.GetByUserIdAsync(userId, limit, It.IsAny<CancellationToken>()),
-            Times.Once);
     }
 
     #endregion

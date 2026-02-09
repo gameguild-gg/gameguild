@@ -1,4 +1,5 @@
 using FluentAssertions;
+using GameGuild;
 using GameGuild.Commerce.Products;
 using GameGuild.CQRS;
 using Moq;
@@ -22,12 +23,13 @@ public class DeleteProductCommandHandlerTests
 
     private static Product CreateTestProduct(Guid? id = null)
     {
-        return new Product
+        var product = new Product
         {
             Id = id ?? Guid.NewGuid(),
-            Name = "Test Product",
-            Version = 1
+            Name = "Test Product"
         };
+        typeof(EntityBase).GetProperty(nameof(EntityBase.Version))!.SetValue(product, 1);
+        return product;
     }
 
     #region Soft Delete Tests
@@ -167,7 +169,7 @@ public class DeleteProductCommandHandlerTests
         // Arrange
         var productId = Guid.NewGuid();
         var existingProduct = CreateTestProduct(productId);
-        existingProduct.Version = 3;
+        typeof(EntityBase).GetProperty(nameof(EntityBase.Version))!.SetValue(existingProduct, 3);
         
         var command = new DeleteProductCommand(
             ProductId: productId,
@@ -189,7 +191,7 @@ public class DeleteProductCommandHandlerTests
         // Arrange
         var productId = Guid.NewGuid();
         var existingProduct = CreateTestProduct(productId);
-        existingProduct.Version = 5;
+        typeof(EntityBase).GetProperty(nameof(EntityBase.Version))!.SetValue(existingProduct, 5);
         
         var command = new DeleteProductCommand(
             ProductId: productId,

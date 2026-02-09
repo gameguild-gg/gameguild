@@ -1,6 +1,7 @@
 using AutoFixture;
 using FluentAssertions;
-using GameGuild.Abstractions;
+using GameGuild;
+
 using Microsoft.EntityFrameworkCore;
 using MockQueryable.Moq;
 using Moq;
@@ -210,11 +211,9 @@ public class RoleRepositoryTests
     public async Task UpdateAsync_UpdatesRole_AndSetsUpdatedTimestamp()
     {
         // Arrange
-        var role = new Role("UpdatedRole", "Updated description", null)
-        {
-            CreatedAt = DateTime.UtcNow.AddDays(-1),
-            UpdatedAt = DateTime.UtcNow.AddDays(-1)
-        };
+        var role = new Role("UpdatedRole", "Updated description", null);
+        typeof(EntityBase).GetProperty(nameof(EntityBase.CreatedAt))!.SetValue(role, DateTime.UtcNow.AddDays(-1));
+        typeof(EntityBase).GetProperty(nameof(EntityBase.UpdatedAt))!.SetValue(role, DateTime.UtcNow.AddDays(-1));
 
         _mockContext.Setup(c => c.SaveChangesAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(1);
@@ -356,10 +355,10 @@ public class RoleRepositoryTests
         var existingUserRole = new UserRole(userId, roleId, assignedBy) 
         { 
             Id = Guid.NewGuid(),
-            CreatedAt = DateTime.UtcNow.AddDays(-1),
-            UpdatedAt = DateTime.UtcNow.AddDays(-1),
             AssignedAt = DateTime.UtcNow.AddDays(-1)
         };
+        typeof(EntityBase).GetProperty(nameof(EntityBase.CreatedAt))!.SetValue(existingUserRole, DateTime.UtcNow.AddDays(-1));
+        typeof(EntityBase).GetProperty(nameof(EntityBase.UpdatedAt))!.SetValue(existingUserRole, DateTime.UtcNow.AddDays(-1));
 
         // Setup UserRole collection with existing assignment
         var userRoles = new List<UserRole> { existingUserRole }.AsQueryable();

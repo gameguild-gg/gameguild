@@ -1,5 +1,6 @@
 using FluentAssertions;
-using GameGuild.Abstractions;
+using GameGuild;
+
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using Moq;
@@ -66,8 +67,8 @@ public class CommerceRepositoryBaseTests
         var first = new PricingRule { Name = "Old", RuleType = PricingRuleType.Percentage, DiscountPercentage = 5 };
         var second = new PricingRule { Name = "New", RuleType = PricingRuleType.FixedAmount, DiscountAmount = 10 };
 
-        first.CreatedAt = DateTime.UtcNow.AddMinutes(-10);
-        second.CreatedAt = DateTime.UtcNow.AddMinutes(-1);
+        typeof(EntityBase).GetProperty(nameof(EntityBase.CreatedAt))!.SetValue(first, DateTime.UtcNow.AddMinutes(-10));
+        typeof(EntityBase).GetProperty(nameof(EntityBase.CreatedAt))!.SetValue(second, DateTime.UtcNow.AddMinutes(-1));
 
         context.PricingRules.AddRange(first, second);
         await context.SaveChangesAsync();

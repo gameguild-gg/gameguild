@@ -1,4 +1,5 @@
-using GameGuild.ValueObjects;
+
+
 using FluentAssertions;
 using GameGuild.CQRS;
 using Moq;
@@ -57,7 +58,7 @@ public class ActivateSubscriptionCommandHandlerTests
         Func<Task> act = async () => await _handler.Handle(command, CancellationToken.None);
 
         // Assert
-        await act.Should().ThrowAsync<GameGuild.SharedKernel.SubscriptionNotFoundException>()
+        await act.Should().ThrowAsync<SubscriptionNotFoundException>()
             .WithMessage($"*{subscriptionId}*");
     }
 

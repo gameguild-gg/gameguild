@@ -1,270 +1,387 @@
 using FluentAssertions;
-using GameGuild.CQRS;
-using Microsoft.Extensions.Logging;
 using Moq;
 using Xunit;
 
 namespace GameGuild.Resources.UnitTests.Services;
 
+/// <summary>
+///     Unit tests for the <see cref="ResourceQuotaService"/> facade.
+///     Verifies that every method delegates to the correct sub-service.
+/// </summary>
 public class ResourceQuotaServiceTests
 {
-    private readonly Mock<IResourceQuotaRepository> _quotaRepositoryMock;
-    private readonly Mock<IUsageRecordRepository> _usageRepositoryMock;
-    private readonly Mock<IPublisher> _publisherMock;
-    private readonly Mock<ILogger<ResourceQuotaService>> _loggerMock;
+    private readonly Mock<IQuotaManagementService> _managementMock;
+    private readonly Mock<IQuotaEnforcementService> _enforcementMock;
+    private readonly Mock<IQuotaMaintenanceService> _maintenanceMock;
     private readonly ResourceQuotaService _service;
 
     public ResourceQuotaServiceTests()
     {
-        _quotaRepositoryMock = new Mock<IResourceQuotaRepository>();
-        _usageRepositoryMock = new Mock<IUsageRecordRepository>();
-        _publisherMock = new Mock<IPublisher>();
-        _loggerMock = new Mock<ILogger<ResourceQuotaService>>();
+        _managementMock = new Mock<IQuotaManagementService>();
+        _enforcementMock = new Mock<IQuotaEnforcementService>();
+        _maintenanceMock = new Mock<IQuotaMaintenanceService>();
         _service = new ResourceQuotaService(
-            _quotaRepositoryMock.Object,
-            _usageRepositoryMock.Object,
-            _publisherMock.Object,
-            _loggerMock.Object);
+            _managementMock.Object,
+            _enforcementMock.Object,
+            _maintenanceMock.Object);
     }
 
+    #region IResourceQuotaReader delegation (management)
+
     [Fact]
-    public async Task CheckLimitsAsync_ReturnsCanProceedFalse_WhenHardLimitExceeded()
+    public async Task GetQuotaAsync_DelegatesToManagement()
     {
         // Arrange
         var tenantId = Guid.NewGuid();
-        var resourceType = ResourceUsageType.Users;
-        var requestedAmount = 5L;
+        var type = ResourceUsageType.Users;
+        var expected = new ResourceQuota { Id = Guid.NewGuid(), Type = type };
 
-        var quota = CreateQuota(tenantId, resourceType, hardLimit: 10, currentUsage: 10);
-        _quotaRepositoryMock
-            .Setup(x => x.GetByTenantAndTypeAsync(tenantId, resourceType, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(quota);
+        _managementMock
+            .Setup(x => x.GetQuotaAsync(tenantId, type, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(expected);
 
         // Act
-        var result = await _service.CheckLimitsAsync(tenantId, resourceType, requestedAmount);
+        var result = await _service.GetQuotaAsync(tenantId, type);
 
         // Assert
-        result.Should().NotBeNull();
-        result.CanProceed.Should().BeFalse();
-        result.CurrentUsage.Should().Be(10);
-        result.HardLimit.Should().Be(10);
+        result.Should().BeSameAs(expected);
+        _managementMock.Verify(x => x.GetQuotaAsync(tenantId, type, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
-    public async Task CheckLimitsAsync_ReturnsCanProceedTrue_WhenWithinLimits()
+    public async Task GetTenantQuotasAsync_DelegatesToManagement()
     {
-        // Arrange
         var tenantId = Guid.NewGuid();
-        var resourceType = ResourceUsageType.Users;
-        var requestedAmount = 3L;
+        var expected = new[] { new ResourceQuota() };
 
-        var quota = CreateQuota(tenantId, resourceType, hardLimit: 10, currentUsage: 5);
-        _quotaRepositoryMock
-            .Setup(x => x.GetByTenantAndTypeAsync(tenantId, resourceType, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(quota);
+        _managementMock
+            .Setup(x => x.GetTenantQuotasAsync(tenantId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(expected);
 
-        // Act
-        var result = await _service.CheckLimitsAsync(tenantId, resourceType, requestedAmount);
+        var result = await _service.GetTenantQuotasAsync(tenantId);
 
-        // Assert
-        result.Should().NotBeNull();
-        result.CanProceed.Should().BeTrue();
-        result.CurrentUsage.Should().Be(5);
-        result.HardLimit.Should().Be(10);
+        result.Should().BeSameAs(expected);
+        _managementMock.Verify(x => x.GetTenantQuotasAsync(tenantId, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
-    public async Task CheckLimitsAsync_ReturnsCanProceedTrue_WhenNoQuotaExists()
+    public async Task GetCurrentUsageAsync_DelegatesToManagement()
     {
-        // Arrange
         var tenantId = Guid.NewGuid();
-        var resourceType = ResourceUsageType.Users;
-        var requestedAmount = 100L;
+        var type = ResourceUsageType.Storage;
 
-        _quotaRepositoryMock
-            .Setup(x => x.GetByTenantAndTypeAsync(tenantId, resourceType, It.IsAny<CancellationToken>()))
-            .ReturnsAsync((ResourceQuota?)null);
+        _managementMock
+            .Setup(x => x.GetCurrentUsageAsync(tenantId, type, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(42L);
 
-        // Act
-        var result = await _service.CheckLimitsAsync(tenantId, resourceType, requestedAmount);
+        var result = await _service.GetCurrentUsageAsync(tenantId, type);
 
-        // Assert
-        result.Should().NotBeNull();
-        result.CanProceed.Should().BeTrue("no quota means unlimited");
-        result.CurrentUsage.Should().Be(0);
-        result.HardLimit.Should().BeNull();
+        result.Should().Be(42L);
+        _managementMock.Verify(x => x.GetCurrentUsageAsync(tenantId, type, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
-    public async Task CheckLimitsAsync_ReturnsSoftLimitWarning_WhenApproachingLimit()
+    public async Task GetUsageHistoryAsync_DelegatesToManagement()
     {
-        // Arrange
         var tenantId = Guid.NewGuid();
-        var resourceType = ResourceUsageType.Storage;
-        var requestedAmount = 100L;
+        var type = ResourceUsageType.ApiCalls;
+        var from = DateTime.UtcNow.AddDays(-7);
+        var to = DateTime.UtcNow;
+        var expected = new[] { new UsageRecord() };
 
-        var quota = CreateQuota(tenantId, resourceType, softLimit: 800, hardLimit: 1000, currentUsage: 750);
-        _quotaRepositoryMock
-            .Setup(x => x.GetByTenantAndTypeAsync(tenantId, resourceType, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(quota);
+        _managementMock
+            .Setup(x => x.GetUsageHistoryAsync(tenantId, type, from, to, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(expected);
 
-        // Act
-        var result = await _service.CheckLimitsAsync(tenantId, resourceType, requestedAmount);
+        var result = await _service.GetUsageHistoryAsync(tenantId, type, from, to);
 
-        // Assert
-        result.Should().NotBeNull();
-        result.CanProceed.Should().BeTrue();
-        result.CurrentUsage.Should().Be(750);
-        result.SoftLimit.Should().Be(800);
+        result.Should().BeSameAs(expected);
+        _managementMock.Verify(x => x.GetUsageHistoryAsync(tenantId, type, from, to, It.IsAny<CancellationToken>()), Times.Once);
     }
 
-    private ResourceQuota CreateQuota(
-        Guid tenantId,
-        ResourceUsageType type,
-        long? softLimit = null,
-        long? hardLimit = null,
-        long currentUsage = 0)
+    #endregion
+
+    #region IResourceQuotaWriter delegation (management)
+
+    [Fact]
+    public async Task SetQuotaAsync_DelegatesToManagement()
     {
-        var quota = new ResourceQuota
+        var tenantId = Guid.NewGuid();
+        var type = ResourceUsageType.Projects;
+        var expected = new ResourceQuota { Id = Guid.NewGuid(), Type = type };
+
+        _managementMock
+            .Setup(x => x.SetQuotaAsync(tenantId, type, 80, 100, ResourceQuotaPeriod.Monthly, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(expected);
+
+        var result = await _service.SetQuotaAsync(tenantId, type, 80, 100);
+
+        result.Should().BeSameAs(expected);
+        _managementMock.Verify(
+            x => x.SetQuotaAsync(tenantId, type, 80, 100, ResourceQuotaPeriod.Monthly, It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task DeleteQuotaAsync_DelegatesToManagement()
+    {
+        var tenantId = Guid.NewGuid();
+        var type = ResourceUsageType.Users;
+
+        _managementMock
+            .Setup(x => x.DeleteQuotaAsync(tenantId, type, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+
+        var result = await _service.DeleteQuotaAsync(tenantId, type);
+
+        result.Should().BeTrue();
+        _managementMock.Verify(x => x.DeleteQuotaAsync(tenantId, type, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    #endregion
+
+    #region IResourceQuotaEnforcer delegation (enforcement)
+
+    [Fact]
+    public async Task CheckLimitsAsync_DelegatesToEnforcement()
+    {
+        var tenantId = Guid.NewGuid();
+        var type = ResourceUsageType.Users;
+        var expected = new ResourceLimitCheckResponse
         {
-            Id = Guid.NewGuid(),
-            Type = type,
-            SoftLimit = softLimit,
-            HardLimit = hardLimit,
-            CurrentUsage = currentUsage,
-            IsActive = true,
-            Period = ResourceQuotaPeriod.Monthly,
-            LastReset = DateTime.UtcNow.AddDays(-1)
+            CanProceed = false,
+            CurrentUsage = 10,
+            HardLimit = 10
         };
 
-        quota.SetProperties(new Dictionary<string, object?> { ["TenantId"] = tenantId });
-        return quota;
-    }
+        _enforcementMock
+            .Setup(x => x.CheckLimitsAsync(tenantId, type, 5, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(expected);
 
-    #region Batch Query Tests - N+1 Fix Verification
+        var result = await _service.CheckLimitsAsync(tenantId, type, 5);
 
-    [Fact]
-    public async Task CheckMultipleLimitsAsync_UsesSingleBatchQuery()
-    {
-        // Arrange
-        var tenantId = Guid.NewGuid();
-        var requestedAmounts = new Dictionary<ResourceUsageType, long>
-        {
-            [ResourceUsageType.Users] = 1L,
-            [ResourceUsageType.Projects] = 1L,
-            [ResourceUsageType.Storage] = 1L
-        };
-        
-        var quotas = new Dictionary<ResourceUsageType, ResourceQuota>
-        {
-            [ResourceUsageType.Users] = CreateQuota(tenantId, ResourceUsageType.Users, hardLimit: 100, currentUsage: 50),
-            [ResourceUsageType.Projects] = CreateQuota(tenantId, ResourceUsageType.Projects, hardLimit: 10, currentUsage: 5),
-            [ResourceUsageType.Storage] = CreateQuota(tenantId, ResourceUsageType.Storage, hardLimit: 1000, currentUsage: 200)
-        };
-
-        _quotaRepositoryMock
-            .Setup(x => x.GetByTenantAndTypesAsync(tenantId, It.IsAny<IEnumerable<ResourceUsageType>>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(quotas);
-
-        // Act
-        var results = await _service.CheckMultipleLimitsAsync(tenantId, requestedAmounts);
-
-        // Assert - Should use batch query (single call), not N individual calls
-        _quotaRepositoryMock.Verify(
-            x => x.GetByTenantAndTypesAsync(tenantId, It.IsAny<IEnumerable<ResourceUsageType>>(), It.IsAny<CancellationToken>()),
-            Times.Once,
-            "Should use batch query instead of N individual queries");
-        
-        // Should NOT call individual GetByTenantAndTypeAsync
-        _quotaRepositoryMock.Verify(
-            x => x.GetByTenantAndTypeAsync(It.IsAny<Guid>(), It.IsAny<ResourceUsageType>(), It.IsAny<CancellationToken>()),
-            Times.Never,
-            "Batch query should avoid N+1 individual queries");
-
-        results.Should().HaveCount(3);
+        result.Should().BeSameAs(expected);
+        _enforcementMock.Verify(x => x.CheckLimitsAsync(tenantId, type, 5, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
-    public async Task CheckMultipleLimitsAsync_ReturnsResultsForAllTypes()
+    public async Task CheckMultipleLimitsAsync_DelegatesToEnforcement()
     {
-        // Arrange
         var tenantId = Guid.NewGuid();
         var requestedAmounts = new Dictionary<ResourceUsageType, long>
         {
             [ResourceUsageType.Users] = 1L,
             [ResourceUsageType.Projects] = 1L
         };
-        
-        var quotas = new Dictionary<ResourceUsageType, ResourceQuota>
+        var expected = new Dictionary<ResourceUsageType, ResourceLimitCheckResponse>
         {
-            [ResourceUsageType.Users] = CreateQuota(tenantId, ResourceUsageType.Users, hardLimit: 100, currentUsage: 50),
-            [ResourceUsageType.Projects] = CreateQuota(tenantId, ResourceUsageType.Projects, hardLimit: 10, currentUsage: 5)
+            [ResourceUsageType.Users] = new() { CanProceed = true },
+            [ResourceUsageType.Projects] = new() { CanProceed = true }
         };
 
-        _quotaRepositoryMock
-            .Setup(x => x.GetByTenantAndTypesAsync(tenantId, It.IsAny<IEnumerable<ResourceUsageType>>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(quotas);
+        _enforcementMock
+            .Setup(x => x.CheckMultipleLimitsAsync(tenantId, requestedAmounts, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(expected);
 
-        // Act
-        var results = await _service.CheckMultipleLimitsAsync(tenantId, requestedAmounts);
+        var result = await _service.CheckMultipleLimitsAsync(tenantId, requestedAmounts);
 
-        // Assert
-        results.Should().ContainKey(ResourceUsageType.Users);
-        results.Should().ContainKey(ResourceUsageType.Projects);
-        results[ResourceUsageType.Users].CanProceed.Should().BeTrue();
-        results[ResourceUsageType.Projects].CanProceed.Should().BeTrue();
+        result.Should().BeSameAs(expected);
+        _enforcementMock.Verify(
+            x => x.CheckMultipleLimitsAsync(tenantId, requestedAmounts, It.IsAny<CancellationToken>()),
+            Times.Once);
     }
 
     [Fact]
-    public async Task CheckMultipleLimitsAsync_HandlesPartialQuotas()
+    public async Task TryConsumeResourceAsync_DelegatesToEnforcement()
     {
-        // Arrange - Only some resource types have quotas defined
         var tenantId = Guid.NewGuid();
-        var requestedAmounts = new Dictionary<ResourceUsageType, long>
-        {
-            [ResourceUsageType.Users] = 1L,
-            [ResourceUsageType.Projects] = 1L,
-            [ResourceUsageType.ApiCalls] = 1L
-        };
-        
-        // Only Users and Projects have quotas, ApiCalls does not
-        var quotas = new Dictionary<ResourceUsageType, ResourceQuota>
-        {
-            [ResourceUsageType.Users] = CreateQuota(tenantId, ResourceUsageType.Users, hardLimit: 100, currentUsage: 50),
-            [ResourceUsageType.Projects] = CreateQuota(tenantId, ResourceUsageType.Projects, hardLimit: 10, currentUsage: 5)
-        };
+        var type = ResourceUsageType.Storage;
+        var userId = Guid.NewGuid();
+        var expected = new ResourceLimitCheckResponse { CanProceed = true, CurrentUsage = 5 };
 
-        _quotaRepositoryMock
-            .Setup(x => x.GetByTenantAndTypesAsync(tenantId, It.IsAny<IEnumerable<ResourceUsageType>>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(quotas);
+        _enforcementMock
+            .Setup(x => x.TryConsumeResourceAsync(tenantId, type, 1, userId, "test", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(expected);
 
-        // Act
-        var results = await _service.CheckMultipleLimitsAsync(tenantId, requestedAmounts);
+        var result = await _service.TryConsumeResourceAsync(tenantId, type, 1, userId, "test");
 
-        // Assert - Should return results for all requested types
-        results.Should().HaveCount(3);
-        results[ResourceUsageType.Users].HardLimit.Should().Be(100);
-        results[ResourceUsageType.Projects].HardLimit.Should().Be(10);
-        results[ResourceUsageType.ApiCalls].HardLimit.Should().BeNull("no quota defined means unlimited");
-        results[ResourceUsageType.ApiCalls].CanProceed.Should().BeTrue();
+        result.Should().BeSameAs(expected);
+        _enforcementMock.Verify(
+            x => x.TryConsumeResourceAsync(tenantId, type, 1, userId, "test", It.IsAny<CancellationToken>()),
+            Times.Once);
     }
 
     [Fact]
-    public async Task CheckMultipleLimitsAsync_EmptyTypes_ReturnsEmptyDictionary()
+    public async Task TryAtomicConsumeAsync_DelegatesToEnforcement()
     {
-        // Arrange
         var tenantId = Guid.NewGuid();
-        var requestedAmounts = new Dictionary<ResourceUsageType, long>();
+        var type = ResourceUsageType.Users;
 
-        _quotaRepositoryMock
-            .Setup(x => x.GetByTenantAndTypesAsync(tenantId, It.IsAny<IEnumerable<ResourceUsageType>>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new Dictionary<ResourceUsageType, ResourceQuota>());
+        _enforcementMock
+            .Setup(x => x.TryAtomicConsumeAsync(tenantId, type, 1, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((true, 5L, (long?)10L));
 
-        // Act
-        var results = await _service.CheckMultipleLimitsAsync(tenantId, requestedAmounts);
+        var (success, usage, limit) = await _service.TryAtomicConsumeAsync(tenantId, type, 1);
 
-        // Assert
-        results.Should().BeEmpty();
+        success.Should().BeTrue();
+        usage.Should().Be(5L);
+        limit.Should().Be(10L);
+        _enforcementMock.Verify(
+            x => x.TryAtomicConsumeAsync(tenantId, type, 1, It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task DecrementUsageAsync_DelegatesToEnforcement()
+    {
+        var tenantId = Guid.NewGuid();
+        var type = ResourceUsageType.Users;
+        var userId = Guid.NewGuid();
+
+        _enforcementMock
+            .Setup(x => x.DecrementUsageAsync(tenantId, type, 1, userId, "delete", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+
+        var result = await _service.DecrementUsageAsync(tenantId, type, 1, userId, "delete");
+
+        result.Should().BeTrue();
+        _enforcementMock.Verify(
+            x => x.DecrementUsageAsync(tenantId, type, 1, userId, "delete", It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    #endregion
+
+    #region IResourceQuotaAnalytics + IResourceQuotaMaintenance delegation (maintenance)
+
+    [Fact]
+    public async Task GetResourceUsageDetailsAsync_DelegatesToMaintenance()
+    {
+        var tenantId = Guid.NewGuid();
+        var type = ResourceUsageType.Users;
+        var expected = new ResourceUsageResponse();
+
+        _maintenanceMock
+            .Setup(x => x.GetResourceUsageDetailsAsync(tenantId, type, 30, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(expected);
+
+        var result = await _service.GetResourceUsageDetailsAsync(tenantId, type);
+
+        result.Should().BeSameAs(expected);
+        _maintenanceMock.Verify(
+            x => x.GetResourceUsageDetailsAsync(tenantId, type, 30, It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task GetTenantsExceedingLimitsAsync_DelegatesToMaintenance()
+    {
+        var type = ResourceUsageType.Users;
+        var expected = new[] { Guid.NewGuid() }.AsEnumerable();
+
+        _maintenanceMock
+            .Setup(x => x.GetTenantsExceedingLimitsAsync(type, true, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(expected);
+
+        var result = await _service.GetTenantsExceedingLimitsAsync(type, true);
+
+        result.Should().BeSameAs(expected);
+        _maintenanceMock.Verify(
+            x => x.GetTenantsExceedingLimitsAsync(type, true, It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task ResetExpiredQuotasAsync_DelegatesToMaintenance()
+    {
+        _maintenanceMock
+            .Setup(x => x.ResetExpiredQuotasAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(3);
+
+        var result = await _service.ResetExpiredQuotasAsync();
+
+        result.Should().Be(3);
+        _maintenanceMock.Verify(x => x.ResetExpiredQuotasAsync(It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task CleanupOldUsageRecordsAsync_DelegatesToMaintenance()
+    {
+        var olderThan = DateTime.UtcNow.AddDays(-90);
+
+        _maintenanceMock
+            .Setup(x => x.CleanupOldUsageRecordsAsync(olderThan, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(42);
+
+        var result = await _service.CleanupOldUsageRecordsAsync(olderThan);
+
+        result.Should().Be(42);
+        _maintenanceMock.Verify(
+            x => x.CleanupOldUsageRecordsAsync(olderThan, It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task RecalculateUsageAsync_DelegatesToMaintenance()
+    {
+        var tenantId = Guid.NewGuid();
+        var type = ResourceUsageType.Storage;
+
+        _maintenanceMock
+            .Setup(x => x.RecalculateUsageAsync(tenantId, type, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+
+        var result = await _service.RecalculateUsageAsync(tenantId, type);
+
+        result.Should().BeTrue();
+        _maintenanceMock.Verify(
+            x => x.RecalculateUsageAsync(tenantId, type, It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    #endregion
+
+    #region Cross-cutting: no sub-service receives calls meant for another
+
+    [Fact]
+    public async Task EnforcementCalls_DoNotTouchManagementOrMaintenance()
+    {
+        var tenantId = Guid.NewGuid();
+        _enforcementMock
+            .Setup(x => x.CheckLimitsAsync(tenantId, ResourceUsageType.Users, 1, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ResourceLimitCheckResponse { CanProceed = true });
+
+        await _service.CheckLimitsAsync(tenantId, ResourceUsageType.Users);
+
+        _managementMock.VerifyNoOtherCalls();
+        _maintenanceMock.VerifyNoOtherCalls();
+    }
+
+    [Fact]
+    public async Task ManagementCalls_DoNotTouchEnforcementOrMaintenance()
+    {
+        var tenantId = Guid.NewGuid();
+        _managementMock
+            .Setup(x => x.GetQuotaAsync(tenantId, ResourceUsageType.Users, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((ResourceQuota?)null);
+
+        await _service.GetQuotaAsync(tenantId, ResourceUsageType.Users);
+
+        _enforcementMock.VerifyNoOtherCalls();
+        _maintenanceMock.VerifyNoOtherCalls();
+    }
+
+    [Fact]
+    public async Task MaintenanceCalls_DoNotTouchManagementOrEnforcement()
+    {
+        _maintenanceMock
+            .Setup(x => x.ResetExpiredQuotasAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(0);
+
+        await _service.ResetExpiredQuotasAsync();
+
+        _managementMock.VerifyNoOtherCalls();
+        _enforcementMock.VerifyNoOtherCalls();
     }
 
     #endregion

@@ -1,5 +1,5 @@
 using FluentAssertions;
-using GameGuild.Abstractions;
+
 using Microsoft.EntityFrameworkCore;
 using Moq;
 using Xunit;

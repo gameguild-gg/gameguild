@@ -1,4 +1,5 @@
 using FluentAssertions;
+using GameGuild;
 using GameGuild.Features;
 using Moq;
 using Xunit;
@@ -226,9 +227,9 @@ public class GetAllFeatureFlagsQueryHandlerTests
             Description = "A test feature",
             IsEnabled = true,
             Type = FeatureFlagType.Toggle,
-            Environment = "production",
-            CreatedAt = DateTime.UtcNow
+            Environment = "production"
         };
+        typeof(EntityBase).GetProperty(nameof(EntityBase.CreatedAt))!.SetValue(featureFlag, DateTime.UtcNow);
 
         _mockRepository
             .Setup(r => r.GetAllAsync(It.IsAny<CancellationToken>()))
@@ -269,15 +270,16 @@ public class GetAllFeatureFlagsQueryHandlerTests
         bool isEnabled = true,
         string? environment = null)
     {
-        return new FeatureFlag
+        var flag = new FeatureFlag
         {
             Id = Guid.NewGuid(),
             Key = key,
             Name = $"Feature {key}",
             IsEnabled = isEnabled,
             Type = FeatureFlagType.Toggle,
-            Environment = environment,
-            CreatedAt = DateTime.UtcNow
+            Environment = environment
         };
+        typeof(EntityBase).GetProperty(nameof(EntityBase.CreatedAt))!.SetValue(flag, DateTime.UtcNow);
+        return flag;
     }
 }

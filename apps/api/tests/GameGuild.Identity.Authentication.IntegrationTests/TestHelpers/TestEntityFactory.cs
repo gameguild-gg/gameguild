@@ -65,9 +65,7 @@ public static class TestEntityFactory
             EnvironmentConditions = environmentConditions,
             Priority = 0,
             IsEnabled = true,
-            CreatedBy = createdBy ?? Guid.NewGuid(),
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            CreatedBy = createdBy ?? Guid.NewGuid()
         };
         
         SetTenantId(policy, tenantId);
@@ -88,9 +86,7 @@ public static class TestEntityFactory
             UserId = userId,
             TenantId = tenantId,
             Permissions = new[] { permission.ToString() },
-            GrantedAt = DateTime.UtcNow,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            GrantedAt = DateTime.UtcNow
         };
         
         return tenantPermission;
@@ -110,9 +106,7 @@ public static class TestEntityFactory
             Id = Guid.NewGuid(),
             Permissions = ((int)permission).ToString(),
             GrantedAt = DateTime.UtcNow,
-            IsActive = true,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            IsActive = true
         };
         
         return contentPermission;
@@ -133,9 +127,7 @@ public static class TestEntityFactory
             Name = name,
             Description = description ?? $"{name} description",
             Permissions = System.Text.Json.JsonSerializer.Serialize(permissions ?? new List<string> { "read" }),
-            IsActive = true,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            IsActive = true
         };
         
         SetTenantId(role, tenantId);

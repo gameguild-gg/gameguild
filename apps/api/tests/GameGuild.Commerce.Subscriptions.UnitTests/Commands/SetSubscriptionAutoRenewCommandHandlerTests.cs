@@ -1,7 +1,7 @@
 using FluentAssertions;
 using GameGuild.CQRS;
-using GameGuild.SharedKernel;
-using GameGuild.ValueObjects;
+
+
 using Moq;
 using Xunit;
 

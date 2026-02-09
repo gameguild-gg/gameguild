@@ -1,5 +1,5 @@
 using FluentAssertions;
-using GameGuild.Abstractions;
+
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;

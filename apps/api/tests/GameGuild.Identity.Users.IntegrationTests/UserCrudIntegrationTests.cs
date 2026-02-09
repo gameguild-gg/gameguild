@@ -62,9 +62,7 @@ public class UserCrudIntegrationTests : IClassFixture<WebApplicationFactory<Game
             Id = Guid.NewGuid(),
             Email = "newuser@example.com",
             Name = "New User",
-            IsActive = true,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            IsActive = true
         };
 
         // Act
@@ -92,9 +90,7 @@ public class UserCrudIntegrationTests : IClassFixture<WebApplicationFactory<Game
             Id = Guid.NewGuid(),
             Email = "duplicate@example.com",
             Name = "User One",
-            IsActive = true,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            IsActive = true
         };
 
         var user2 = new User
@@ -102,9 +98,7 @@ public class UserCrudIntegrationTests : IClassFixture<WebApplicationFactory<Game
             Id = Guid.NewGuid(),
             Email = "duplicate@example.com",
             Name = "User Two",
-            IsActive = true,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            IsActive = true
         };
 
         await _dbContext.Set<User>().AddAsync(user1);
@@ -130,9 +124,7 @@ public class UserCrudIntegrationTests : IClassFixture<WebApplicationFactory<Game
             Id = Guid.NewGuid(),
             Email = invalidEmail,
             Name = "Test User",
-            IsActive = true,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            IsActive = true
         };
 
         // Act
@@ -152,9 +144,7 @@ public class UserCrudIntegrationTests : IClassFixture<WebApplicationFactory<Game
             Id = Guid.NewGuid(),
             Email = "existing@example.com",
             Name = "Get User",
-            IsActive = true,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            IsActive = true
         };
 
         await _dbContext.Set<User>().AddAsync(user);
@@ -192,9 +182,7 @@ public class UserCrudIntegrationTests : IClassFixture<WebApplicationFactory<Game
             Id = Guid.NewGuid(),
             Email = "findbyyemail@example.com",
             Name = "Find By Email",
-            IsActive = true,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            IsActive = true
         };
 
         await _dbContext.Set<User>().AddAsync(user);
@@ -218,9 +206,7 @@ public class UserCrudIntegrationTests : IClassFixture<WebApplicationFactory<Game
             Id = Guid.NewGuid(),
             Email = "update@example.com",
             Name = "Original Name",
-            IsActive = true,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            IsActive = true
         };
 
         await _dbContext.Set<User>().AddAsync(user);
@@ -230,7 +216,7 @@ public class UserCrudIntegrationTests : IClassFixture<WebApplicationFactory<Game
 
         // Act
         user.Name = "Updated Name";
-        user.UpdatedAt = DateTime.UtcNow;
+        user.Touch();
         await _dbContext.SaveChangesAsync();
 
         // Detach and re-query to verify
@@ -253,9 +239,7 @@ public class UserCrudIntegrationTests : IClassFixture<WebApplicationFactory<Game
             Id = Guid.NewGuid(),
             Email = "toggle@example.com",
             Name = "Toggle User",
-            IsActive = true,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            IsActive = true
         };
 
         await _dbContext.Set<User>().AddAsync(user);
@@ -286,9 +270,7 @@ public class UserCrudIntegrationTests : IClassFixture<WebApplicationFactory<Game
             Email = "multi@example.com",
             Name = "Original Name",
             PhoneNumber = "123-456-7890",
-            IsActive = true,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            IsActive = true
         };
 
         await _dbContext.Set<User>().AddAsync(user);
@@ -298,7 +280,7 @@ public class UserCrudIntegrationTests : IClassFixture<WebApplicationFactory<Game
         user.Name = "New Name";
         user.PhoneNumber = "098-765-4321";
         user.IsActive = false;
-        user.UpdatedAt = DateTime.UtcNow;
+        user.Touch();
         await _dbContext.SaveChangesAsync();
 
         // Detach and re-query
@@ -321,9 +303,7 @@ public class UserCrudIntegrationTests : IClassFixture<WebApplicationFactory<Game
             Id = Guid.NewGuid(),
             Email = "delete@example.com",
             Name = "Delete User",
-            IsActive = true,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            IsActive = true
         };
 
         await _dbContext.Set<User>().AddAsync(user);
@@ -354,9 +334,7 @@ public class UserCrudIntegrationTests : IClassFixture<WebApplicationFactory<Game
             Id = Guid.NewGuid(),
             Email = "filtered@example.com",
             Name = "Filtered User",
-            IsActive = true,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            IsActive = true
         };
 
         await _dbContext.Set<User>().AddAsync(user);
@@ -384,9 +362,7 @@ public class UserCrudIntegrationTests : IClassFixture<WebApplicationFactory<Game
             Id = Guid.NewGuid(),
             Email = "restore@example.com",
             Name = "Restore User",
-            IsActive = true,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            IsActive = true
         };
 
         await _dbContext.Set<User>().AddAsync(user);
@@ -413,9 +389,7 @@ public class UserCrudIntegrationTests : IClassFixture<WebApplicationFactory<Game
             Id = Guid.NewGuid(),
             Email = "active@example.com",
             Name = "Active User",
-            IsActive = true,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            IsActive = true
         };
 
         var inactiveUser = new User
@@ -423,9 +397,7 @@ public class UserCrudIntegrationTests : IClassFixture<WebApplicationFactory<Game
             Id = Guid.NewGuid(),
             Email = "inactive@example.com",
             Name = "Inactive User",
-            IsActive = false,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            IsActive = false
         };
 
         await _dbContext.Set<User>().AddRangeAsync(activeUser, inactiveUser);
@@ -451,9 +423,7 @@ public class UserCrudIntegrationTests : IClassFixture<WebApplicationFactory<Game
             Id = Guid.NewGuid(),
             Email = $"user{i:D2}@example.com", // D2 pads with leading zero
             Name = $"User {i}",
-            IsActive = true,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            IsActive = true
         }).ToList();
 
         await _dbContext.Set<User>().AddRangeAsync(users);
@@ -483,9 +453,7 @@ public class UserCrudIntegrationTests : IClassFixture<WebApplicationFactory<Game
             Id = Guid.NewGuid(),
             Email = $"bulk{i}@example.com",
             Name = $"Bulk User {i}",
-            IsActive = true,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            IsActive = true
         }).ToList();
 
         // Act

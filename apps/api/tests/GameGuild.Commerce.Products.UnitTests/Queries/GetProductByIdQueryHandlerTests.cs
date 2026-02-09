@@ -1,4 +1,5 @@
 using FluentAssertions;
+using GameGuild;
 using GameGuild.Commerce.Products;
 using Moq;
 using Xunit;
@@ -75,10 +76,10 @@ public class GetProductByIdQueryHandlerTests
             Type = ProductType.Course,
             IsBundle = false,
             CreatorId = creatorId,
-            CreatedAt = new DateTime(2024, 1, 1),
-            UpdatedAt = new DateTime(2024, 6, 1),
             Pricing = new List<ProductPricing>()
         };
+        typeof(EntityBase).GetProperty(nameof(EntityBase.CreatedAt))!.SetValue(product, new DateTime(2024, 1, 1));
+        typeof(EntityBase).GetProperty(nameof(EntityBase.UpdatedAt))!.SetValue(product, new DateTime(2024, 6, 1));
 
         _mockRepository
             .Setup(r => r.GetByIdAsync(productId, It.IsAny<CancellationToken>(), true, false))
@@ -189,15 +190,16 @@ public class GetProductByIdQueryHandlerTests
 
     private static Product CreateProduct(Guid productId)
     {
-        return new Product
+        var product = new Product
         {
             Id = productId,
             Name = "Test Product",
             Type = ProductType.Course,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow,
             Pricing = new List<ProductPricing>()
         };
+        typeof(EntityBase).GetProperty(nameof(EntityBase.CreatedAt))!.SetValue(product, DateTime.UtcNow);
+        typeof(EntityBase).GetProperty(nameof(EntityBase.UpdatedAt))!.SetValue(product, DateTime.UtcNow);
+        return product;
     }
 
     private static Product CreateProductWithPricing(Guid productId)
@@ -213,14 +215,15 @@ public class GetProductByIdQueryHandlerTests
             isDefault: true
         );
 
-        return new Product
+        var product = new Product
         {
             Id = productId,
             Name = "Test Product",
             Type = ProductType.Course,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow,
             Pricing = new List<ProductPricing> { pricing }
         };
+        typeof(EntityBase).GetProperty(nameof(EntityBase.CreatedAt))!.SetValue(product, DateTime.UtcNow);
+        typeof(EntityBase).GetProperty(nameof(EntityBase.UpdatedAt))!.SetValue(product, DateTime.UtcNow);
+        return product;
     }
 }

@@ -1,5 +1,6 @@
 using FluentAssertions;
 using GameGuild.Configuration.ApplicationLayer;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Moq;
@@ -15,6 +16,7 @@ public class JwtTokenServiceTests
     private readonly Mock<ILogger<JwtTokenService>> _loggerMock;
     private readonly Mock<IRefreshTokenRepository> _refreshTokenRepositoryMock;
     private readonly Mock<IRefreshTokenHasher> _refreshTokenHasherMock;
+    private readonly Mock<IHttpContextAccessor> _httpContextAccessorMock;
     private readonly Mock<IOptions<JwtOptions>> _jwtOptionsMock;
     private readonly JwtTokenService _service;
     private readonly JwtOptions _jwtOptions;
@@ -24,6 +26,7 @@ public class JwtTokenServiceTests
         _loggerMock = new Mock<ILogger<JwtTokenService>>();
         _refreshTokenRepositoryMock = new Mock<IRefreshTokenRepository>();
         _refreshTokenHasherMock = new Mock<IRefreshTokenHasher>();
+        _httpContextAccessorMock = new Mock<IHttpContextAccessor>();
         
         _jwtOptions = new JwtOptions
         {
@@ -41,6 +44,7 @@ public class JwtTokenServiceTests
             _loggerMock.Object,
             _refreshTokenRepositoryMock.Object,
             _refreshTokenHasherMock.Object,
+            _httpContextAccessorMock.Object,
             _jwtOptionsMock.Object
         );
     }

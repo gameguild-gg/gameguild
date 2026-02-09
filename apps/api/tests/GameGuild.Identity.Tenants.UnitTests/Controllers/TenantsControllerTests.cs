@@ -25,8 +25,8 @@ public class TenantsControllerTests
     public async Task GetTenants_Should_Clamp_Page_And_Return_Ok()
     {
         var sender = new StubSender();
-        var paged = new GameGuild.Models.PagedResult<Tenant>(new List<Tenant>(), 0, 0, 100);
-        sender.Setup<GetTenantsPageQuery, GameGuild.Models.PagedResult<Tenant>>(_ => paged);
+        var paged = new PagedResult<Tenant>(new List<Tenant>(), 0, 0, 100);
+        sender.Setup<GetTenantsPageQuery, PagedResult<Tenant>>(_ => paged);
 
         var controller = new TenantsController(sender);
         var result = await controller.GetTenants(page: 0, pageSize: 200, status: "active", searchTerm: null, ct: CancellationToken.None);
@@ -59,24 +59,6 @@ public class TenantsControllerTests
     }
 
     [Fact]
-    public async Task Bulk_Endpoints_Should_Return_Expected_Results()
-    {
-        var sender = new StubSender();
-        var controller = new TenantsController(sender);
-        var payload = new { };
-
-        (await controller.BulkCreateTenants(payload, CancellationToken.None)).Should().BeOfType<CreatedResult>();
-        (await controller.BulkPartialUpdateTenants(payload, CancellationToken.None)).Should().BeOfType<NoContentResult>();
-        (await controller.BulkFullUpdateTenants(payload, CancellationToken.None)).Should().BeOfType<NoContentResult>();
-        (await controller.BulkDeleteTenants(payload, CancellationToken.None)).Should().BeOfType<NoContentResult>();
-        (await controller.BulkActivateTenants(payload, CancellationToken.None)).Should().BeOfType<OkObjectResult>();
-        (await controller.BulkDeactivateTenants(payload, CancellationToken.None)).Should().BeOfType<OkObjectResult>();
-        (await controller.BulkArchiveTenants(payload, CancellationToken.None)).Should().BeOfType<OkObjectResult>();
-        (await controller.BulkUndeleteTenants(payload, CancellationToken.None)).Should().BeOfType<OkObjectResult>();
-        (await controller.BulkPurgeTenants(payload, CancellationToken.None)).Should().BeOfType<NoContentResult>();
-    }
-
-    [Fact]
     public async Task CheckTenantExists_Should_Return_NotFound_When_Missing()
     {
         var sender = new StubSender();
@@ -106,22 +88,176 @@ public class TenantsControllerTests
         var sender = new StubSender();
         sender.Setup<UpdateTenantCommand, Unit>(_ => Unit.Value);
         sender.Setup<ArchiveTenantCommand, ArchiveTenantResponse>(_ => new ArchiveTenantResponse { Success = true });
-        sender.Setup<ActivateTenantCommand, ActivateTenantResponse>(_ => new ActivateTenantResponse { Success = true });
-        sender.Setup<DeactivateTenantCommand, Unit>(_ => Unit.Value);
-        sender.Setup<RecoverTenantCommand, RecoverTenantResponse>(_ => new RecoverTenantResponse { Success = true });
-        sender.Setup<DeleteTenantCommand, Unit>(_ => Unit.Value);
-        sender.Setup<GetTenantAuditLogQuery, GameGuild.Models.PagedResult<TenantAuditLogEntry>>(_ => new GameGuild.Models.PagedResult<TenantAuditLogEntry>(new List<TenantAuditLogEntry>(), 0, 0, 10));
 
         var controller = new TenantsController(sender);
 
         (await controller.PatchTenantById(Guid.NewGuid(), new UpdateTenantRequest("Name", null), CancellationToken.None)).Should().BeOfType<NoContentResult>();
         (await controller.UpdateTenantById(Guid.NewGuid(), new UpdateTenantRequest("Name", "Desc"), CancellationToken.None)).Should().BeOfType<NoContentResult>();
         (await controller.DeleteTenantById(Guid.NewGuid(), new ArchiveRequest("reason"), CancellationToken.None)).Should().BeOfType<NoContentResult>();
+    }
+
+    private sealed class StubSender : ISender
+    {
+        private readonly Dictionary<Type, Func<object, object?>> _handlers = new();
+
+        public void Setup<TRequest, TResponse>(Func<TRequest, TResponse> handler)
+        {
+            _handlers[typeof(TRequest)] = request => handler((TRequest)request);
+        }
+
+        public Task<TResponse> Send<TResponse>(IRequest<TResponse> request, CancellationToken cancellationToken = default)
+        {
+            if (_handlers.TryGetValue(request.GetType(), out var handler))
+            {
+                return Task.FromResult((TResponse)handler(request)!);
+            }
+
+            return Task.FromResult(default(TResponse)!);
+        }
+
+        public Task<object?> Send(object request, CancellationToken cancellationToken = default)
+        {
+            if (_handlers.TryGetValue(request.GetType(), out var handler))
+            {
+                return Task.FromResult(handler(request));
+            }
+
+            return Task.FromResult<object?>(null);
+        }
+
+        public Task Send<TRequest>(TRequest request, CancellationToken cancellationToken = default) where TRequest : IRequest
+        {
+            return Task.CompletedTask;
+        }
+
+        public IAsyncEnumerable<TResponse> CreateStream<TResponse>(IStream<TResponse> request, CancellationToken cancellationToken = default)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task Publish<TNotification>(TNotification notification, CancellationToken cancellationToken = default) where TNotification : INotification
+        {
+            return Task.CompletedTask;
+        }
+
+        public Task Publish(object notification, CancellationToken cancellationToken = default)
+        {
+            return Task.CompletedTask;
+        }
+    }
+}
+
+public class TenantBulkOperationsControllerTests
+{
+    [Fact]
+    public async Task Bulk_Endpoints_Should_Return_Expected_Results()
+    {
+        var sender = new StubSender();
+        var bulkResponse = new BulkOperationResponse { TotalRequested = 1, SuccessfulOperations = 1, FailedOperations = 0 };
+
+        sender.Setup<BulkCreateTenantsCommand, BulkOperationResponse>(_ => bulkResponse);
+        sender.Setup<BulkUpdateTenantsCommand, BulkOperationResponse>(_ => bulkResponse);
+        sender.Setup<BulkDeleteTenantsCommand, BulkOperationResponse>(_ => bulkResponse);
+        sender.Setup<BulkActivateTenantsCommand, BulkOperationResponse>(_ => bulkResponse);
+        sender.Setup<BulkDeactivateTenantsCommand, BulkOperationResponse>(_ => bulkResponse);
+        sender.Setup<BulkArchiveTenantsCommand, BulkOperationResponse>(_ => bulkResponse);
+        sender.Setup<BulkUndeleteTenantsCommand, BulkOperationResponse>(_ => bulkResponse);
+        sender.Setup<BulkPurgeTenantsCommand, BulkOperationResponse>(_ => bulkResponse);
+
+        var controller = new TenantBulkOperationsController(sender);
+        var tenantIds = new[] { Guid.NewGuid() };
+
+        (await controller.BulkCreateTenants(new BulkCreateTenantsCommand(new[] { new BulkCreateTenantItem("Test", "test", "admin@test.com") }), CancellationToken.None)).Should().BeOfType<ObjectResult>();
+        (await controller.BulkPartialUpdateTenants(new BulkUpdateTenantsCommand(new[] { new BulkUpdateTenantItem(Guid.NewGuid(), "Updated") }), CancellationToken.None)).Should().BeOfType<OkObjectResult>();
+        (await controller.BulkFullUpdateTenants(new BulkUpdateTenantsCommand(new[] { new BulkUpdateTenantItem(Guid.NewGuid(), "Replaced") }), CancellationToken.None)).Should().BeOfType<OkObjectResult>();
+        (await controller.BulkDeleteTenants(new BulkDeleteTenantsCommand(tenantIds), CancellationToken.None)).Should().BeOfType<OkObjectResult>();
+        (await controller.BulkActivateTenants(new BulkActivateTenantsCommand(tenantIds), CancellationToken.None)).Should().BeOfType<OkObjectResult>();
+        (await controller.BulkDeactivateTenants(new BulkDeactivateTenantsCommand(tenantIds), CancellationToken.None)).Should().BeOfType<OkObjectResult>();
+        (await controller.BulkArchiveTenants(new BulkArchiveTenantsCommand(tenantIds), CancellationToken.None)).Should().BeOfType<OkObjectResult>();
+        (await controller.BulkUndeleteTenants(new BulkUndeleteTenantsCommand(tenantIds), CancellationToken.None)).Should().BeOfType<OkObjectResult>();
+        (await controller.BulkPurgeTenants(new BulkPurgeTenantsCommand(tenantIds), CancellationToken.None)).Should().BeOfType<OkObjectResult>();
+    }
+
+    private sealed class StubSender : ISender
+    {
+        private readonly Dictionary<Type, Func<object, object?>> _handlers = new();
+
+        public void Setup<TRequest, TResponse>(Func<TRequest, TResponse> handler)
+        {
+            _handlers[typeof(TRequest)] = request => handler((TRequest)request);
+        }
+
+        public Task<TResponse> Send<TResponse>(IRequest<TResponse> request, CancellationToken cancellationToken = default)
+        {
+            if (_handlers.TryGetValue(request.GetType(), out var handler))
+            {
+                return Task.FromResult((TResponse)handler(request)!);
+            }
+
+            return Task.FromResult(default(TResponse)!);
+        }
+
+        public Task<object?> Send(object request, CancellationToken cancellationToken = default)
+        {
+            if (_handlers.TryGetValue(request.GetType(), out var handler))
+            {
+                return Task.FromResult(handler(request));
+            }
+
+            return Task.FromResult<object?>(null);
+        }
+
+        public Task Send<TRequest>(TRequest request, CancellationToken cancellationToken = default) where TRequest : IRequest
+        {
+            return Task.CompletedTask;
+        }
+
+        public IAsyncEnumerable<TResponse> CreateStream<TResponse>(IStream<TResponse> request, CancellationToken cancellationToken = default)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task Publish<TNotification>(TNotification notification, CancellationToken cancellationToken = default) where TNotification : INotification
+        {
+            return Task.CompletedTask;
+        }
+
+        public Task Publish(object notification, CancellationToken cancellationToken = default)
+        {
+            return Task.CompletedTask;
+        }
+    }
+}
+
+public class TenantLifecycleControllerTests
+{
+    [Fact]
+    public async Task Lifecycle_Endpoints_Should_Return_NoContent()
+    {
+        var sender = new StubSender();
+        sender.Setup<ActivateTenantCommand, ActivateTenantResponse>(_ => new ActivateTenantResponse { Success = true });
+        sender.Setup<DeactivateTenantCommand, Unit>(_ => Unit.Value);
+        sender.Setup<ArchiveTenantCommand, ArchiveTenantResponse>(_ => new ArchiveTenantResponse { Success = true });
+        sender.Setup<RecoverTenantCommand, RecoverTenantResponse>(_ => new RecoverTenantResponse { Success = true });
+        sender.Setup<DeleteTenantCommand, Unit>(_ => Unit.Value);
+
+        var controller = new TenantLifecycleController(sender);
+
         (await controller.ActivateTenant(Guid.NewGuid(), CancellationToken.None)).Should().BeOfType<NoContentResult>();
         (await controller.DeactivateTenant(Guid.NewGuid(), CancellationToken.None)).Should().BeOfType<NoContentResult>();
         (await controller.ArchiveTenant(Guid.NewGuid(), new ArchiveRequest("reason"), CancellationToken.None)).Should().BeOfType<NoContentResult>();
         (await controller.UndeleteTenant(Guid.NewGuid(), new RecoverRequest("reason"), CancellationToken.None)).Should().BeOfType<NoContentResult>();
         (await controller.PurgeTenant(Guid.NewGuid(), CancellationToken.None)).Should().BeOfType<NoContentResult>();
+    }
+
+    [Fact]
+    public async Task GetTenantAuditLog_Should_Return_Ok()
+    {
+        var sender = new StubSender();
+        sender.Setup<GetTenantAuditLogQuery, PagedResult<TenantAuditLogEntry>>(_ => new PagedResult<TenantAuditLogEntry>(new List<TenantAuditLogEntry>(), 0, 0, 10));
+
+        var controller = new TenantLifecycleController(sender);
+
         (await controller.GetTenantAuditLog(Guid.NewGuid(), null, null, null, null, 0, 500, CancellationToken.None)).Should().BeOfType<OkObjectResult>();
     }
 

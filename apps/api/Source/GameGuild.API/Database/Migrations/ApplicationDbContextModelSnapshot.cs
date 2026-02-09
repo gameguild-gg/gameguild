@@ -5151,7 +5151,7 @@ namespace GameGuild.API.Database.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.OwnsOne("GameGuild.ValueObjects.Money", "Amount", b1 =>
+                    b.OwnsOne("Money", "Amount", b1 =>
                         {
                             b1.Property<Guid>("SubscriptionId")
                                 .HasColumnType("uuid");

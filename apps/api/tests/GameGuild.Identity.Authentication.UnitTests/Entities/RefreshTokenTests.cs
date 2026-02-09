@@ -36,8 +36,7 @@ public class RefreshTokenTests
             UserId = Guid.NewGuid(),
             Token = "test-token",
             ExpiresAt = DateTime.UtcNow.AddDays(1), // Not expired
-            CreatedByIp = "127.0.0.1",
-            CreatedAt = DateTime.UtcNow
+            CreatedByIp = "127.0.0.1"
         };
 
         // Act & Assert
@@ -55,8 +54,7 @@ public class RefreshTokenTests
             Token = "test-token",
             ExpiresAt = DateTime.UtcNow.AddDays(1),
             IsRevoked = false,
-            CreatedByIp = "127.0.0.1",
-            CreatedAt = DateTime.UtcNow
+            CreatedByIp = "127.0.0.1"
         };
 
         // Act & Assert
@@ -119,9 +117,7 @@ public class RefreshTokenTests
             UserId = userId,
             Token = token,
             ExpiresAt = expiresAt,
-            CreatedByIp = createdByIp,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            CreatedByIp = createdByIp
         };
 
         // Assert
@@ -143,8 +139,7 @@ public class RefreshTokenTests
             UserId = Guid.NewGuid(),
             Token = "test-token",
             ExpiresAt = DateTime.UtcNow.AddDays(7),
-            CreatedByIp = "127.0.0.1",
-            CreatedAt = DateTime.UtcNow
+            CreatedByIp = "127.0.0.1"
         };
 
         var revokedByIp = "192.168.1.1";

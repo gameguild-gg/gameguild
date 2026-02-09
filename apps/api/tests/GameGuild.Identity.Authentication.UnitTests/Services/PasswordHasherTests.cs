@@ -1,4 +1,5 @@
 using FluentAssertions;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Xunit;
@@ -16,7 +17,8 @@ public class PasswordHasherTests
     public PasswordHasherTests()
     {
         _loggerMock = new Mock<ILogger<PasswordHasher>>();
-        _passwordHasher = new PasswordHasher(_loggerMock.Object);
+        var configurationMock = new Mock<IConfiguration>();
+        _passwordHasher = new PasswordHasher(_loggerMock.Object, configurationMock.Object);
     }
 
     [Fact]

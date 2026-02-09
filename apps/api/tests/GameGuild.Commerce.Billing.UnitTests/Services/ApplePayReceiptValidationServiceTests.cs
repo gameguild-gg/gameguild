@@ -1,6 +1,7 @@
 using FluentAssertions;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
+using Moq;
 using System.Net;
 using System.Reflection;
 using System.Security.Cryptography;
@@ -47,6 +48,7 @@ public class ApplePayReceiptValidationServiceTests
     [Fact]
     public async Task ValidateReceiptAsync_Should_Fail_When_PrivateKey_File_Missing()
     {
+        // With the decomposed service, a null JWT from authService triggers this path
         var service = CreateService(new StubHttpMessageHandler(_ => new HttpResponseMessage(HttpStatusCode.OK)), new ApplePaySettings
         {
             BundleId = "com.example.app",
@@ -69,13 +71,14 @@ public class ApplePayReceiptValidationServiceTests
             Content = new StringContent("{}", Encoding.UTF8, "application/json")
         });
 
+        var authMock = CreateAuthMock("fake-jwt");
         var service = CreateService(handler, new ApplePaySettings
         {
             BundleId = "com.example.app",
             TeamId = "TEAM",
             KeyId = "KEY",
             PrivateKeyContent = CreatePrivateKeyPem()
-        });
+        }, authMock: authMock);
 
         var result = await service.ValidateReceiptAsync("receipt", "tx", "com.example.app", CancellationToken.None);
 
@@ -97,13 +100,17 @@ public class ApplePayReceiptValidationServiceTests
             Content = new StringContent($"{{\"signedTransactionInfo\":\"{signedTransaction}\"}}", Encoding.UTF8, "application/json")
         });
 
+        var authMock = CreateAuthMock("fake-jwt");
+        var jwsMock = new Mock<IAppleJwsVerificationService>();
+        jwsMock.Setup(x => x.DecodeSignedTransaction(It.IsAny<string>())).Returns((AppleTransactionInfo?)null);
+
         var service = CreateService(handler, new ApplePaySettings
         {
             BundleId = "com.example.app",
             TeamId = "TEAM",
             KeyId = "KEY",
             PrivateKeyContent = CreatePrivateKeyPem()
-        });
+        }, authMock: authMock, jwsMock: jwsMock);
 
         var result = await service.ValidateReceiptAsync("receipt", "tx", "com.example.app", CancellationToken.None);
 
@@ -114,16 +121,22 @@ public class ApplePayReceiptValidationServiceTests
     [Fact]
     public async Task ValidateReceiptAsync_Should_Succeed_With_Valid_Signed_Transaction()
     {
-        var (leafCert, rootCert, leafKey) = CreateAppleCertificateChain();
-        using var _ = leafCert;
-        using var __ = rootCert;
-        using var ___ = leafKey;
-
-        var signedTransaction = CreateSignedTransaction(leafCert, rootCert, leafKey, "com.example.app");
-
         var handler = new StubHttpMessageHandler(_ => new HttpResponseMessage(HttpStatusCode.OK)
         {
-            Content = new StringContent($"{{\"signedTransactionInfo\":\"{signedTransaction}\"}}", Encoding.UTF8, "application/json")
+            Content = new StringContent("{\"signedTransactionInfo\":\"signed.tx.jws\"}", Encoding.UTF8, "application/json")
+        });
+
+        var authMock = CreateAuthMock("fake-jwt");
+        var jwsMock = new Mock<IAppleJwsVerificationService>();
+        jwsMock.Setup(x => x.DecodeSignedTransaction(It.IsAny<string>())).Returns(new AppleTransactionInfo
+        {
+            TransactionId = "tx",
+            OriginalTransactionId = "orig",
+            BundleId = "com.example.app",
+            ProductId = "prod_1",
+            PurchaseDate = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
+            Type = "auto",
+            Environment = "Sandbox"
         });
 
         var service = CreateService(handler, new ApplePaySettings
@@ -132,7 +145,7 @@ public class ApplePayReceiptValidationServiceTests
             TeamId = "TEAM",
             KeyId = "KEY",
             PrivateKeyContent = CreatePrivateKeyPem()
-        });
+        }, authMock: authMock, jwsMock: jwsMock);
 
         var result = await service.ValidateReceiptAsync("receipt", "tx", "com.example.app", CancellationToken.None);
 
@@ -148,13 +161,14 @@ public class ApplePayReceiptValidationServiceTests
             Content = new StringContent("error", Encoding.UTF8, "application/json")
         });
 
+        var authMock = CreateAuthMock("fake-jwt");
         var service = CreateService(handler, new ApplePaySettings
         {
             BundleId = "com.example.app",
             TeamId = "TEAM",
             KeyId = "KEY",
             PrivateKeyContent = CreatePrivateKeyPem()
-        });
+        }, authMock: authMock);
 
         var result = await service.ValidateReceiptAsync("receipt", "tx", "com.example.app", CancellationToken.None);
 
@@ -165,12 +179,15 @@ public class ApplePayReceiptValidationServiceTests
     [Fact]
     public async Task VerifyNotificationAsync_Should_Fail_When_Payload_Invalid()
     {
+        var jwsMock = new Mock<IAppleJwsVerificationService>();
+        jwsMock.Setup(x => x.DecodeSignedNotification(It.IsAny<string>())).Returns((AppleNotificationPayload?)null);
+
         var service = CreateService(new StubHttpMessageHandler(_ => new HttpResponseMessage(HttpStatusCode.OK)), new ApplePaySettings
         {
             BundleId = "com.example.app",
             TeamId = "TEAM",
             KeyId = "KEY"
-        });
+        }, jwsMock: jwsMock);
 
         var result = await service.VerifyNotificationAsync("invalid", CancellationToken.None);
 
@@ -181,22 +198,38 @@ public class ApplePayReceiptValidationServiceTests
     [Fact]
     public async Task VerifyNotificationAsync_Should_Succeed_With_Valid_Signed_Payload()
     {
-        var (leafCert, rootCert, leafKey) = CreateAppleCertificateChain();
-        using var _ = leafCert;
-        using var __ = rootCert;
-        using var ___ = leafKey;
-
-        var signedTransaction = CreateSignedTransaction(leafCert, rootCert, leafKey, "com.example.app");
-        var signedNotification = CreateSignedNotification(leafCert, rootCert, leafKey, "com.example.app", signedTransaction);
+        var jwsMock = new Mock<IAppleJwsVerificationService>();
+        jwsMock.Setup(x => x.DecodeSignedNotification(It.IsAny<string>())).Returns(new AppleNotificationPayload
+        {
+            NotificationType = "SUBSCRIBED",
+            Subtype = null,
+            Data = new AppleNotificationData
+            {
+                BundleId = "com.example.app",
+                Environment = "Sandbox",
+                SignedTransactionInfo = "signed.tx.jws"
+            },
+            Version = "1.0"
+        });
+        jwsMock.Setup(x => x.DecodeSignedTransaction(It.IsAny<string>())).Returns(new AppleTransactionInfo
+        {
+            TransactionId = "tx",
+            OriginalTransactionId = "orig",
+            BundleId = "com.example.app",
+            ProductId = "prod_1",
+            PurchaseDate = 1,
+            Type = "auto",
+            Environment = "Sandbox"
+        });
 
         var service = CreateService(new StubHttpMessageHandler(_ => new HttpResponseMessage(HttpStatusCode.OK)), new ApplePaySettings
         {
             BundleId = "com.example.app",
             TeamId = "TEAM",
             KeyId = "KEY"
-        });
+        }, jwsMock: jwsMock);
 
-        var result = await service.VerifyNotificationAsync(signedNotification, CancellationToken.None);
+        var result = await service.VerifyNotificationAsync("signed.notification.jws", CancellationToken.None);
 
         result.IsValid.Should().BeTrue();
         result.NotificationType.Should().Be("SUBSCRIBED");
@@ -206,7 +239,7 @@ public class ApplePayReceiptValidationServiceTests
     [Fact]
     public void Base64UrlDecodeBytes_Should_Decode_String()
     {
-        var method = typeof(ApplePayReceiptValidationService)
+        var method = typeof(AppleJwsVerificationService)
             .GetMethod("Base64UrlDecodeBytes", BindingFlags.NonPublic | BindingFlags.Static);
 
         var bytes = (byte[])method!.Invoke(null, new object[] { "aGVsbG8" })!;
@@ -217,7 +250,7 @@ public class ApplePayReceiptValidationServiceTests
     [Fact]
     public void Base64UrlDecode_Should_Decode_String()
     {
-        var method = typeof(ApplePayReceiptValidationService)
+        var method = typeof(AppleJwsVerificationService)
             .GetMethod("Base64UrlDecode", BindingFlags.NonPublic | BindingFlags.Static);
 
         var decoded = (string)method!.Invoke(null, new object[] { "aGVsbG8" })!;
@@ -228,17 +261,12 @@ public class ApplePayReceiptValidationServiceTests
     [Fact]
     public void VerifyAppleCertificateChain_Should_Return_False_For_Short_Chain()
     {
-        var service = CreateService(new StubHttpMessageHandler(_ => new HttpResponseMessage(HttpStatusCode.OK)), new ApplePaySettings
-        {
-            BundleId = "com.example.app",
-            TeamId = "TEAM",
-            KeyId = "KEY"
-        });
+        var jwsService = new AppleJwsVerificationService(NullLogger<AppleJwsVerificationService>.Instance);
 
-        var method = typeof(ApplePayReceiptValidationService)
+        var method = typeof(AppleJwsVerificationService)
             .GetMethod("VerifyAppleCertificateChain", BindingFlags.NonPublic | BindingFlags.Instance);
 
-        var result = (bool)method!.Invoke(service, new object[] { new[] { "only" } })!;
+        var result = (bool)method!.Invoke(jwsService, new object[] { new[] { "only" } })!;
 
         result.Should().BeFalse();
     }
@@ -252,17 +280,12 @@ public class ApplePayReceiptValidationServiceTests
 
         var certBase64 = Convert.ToBase64String(cert.Export(X509ContentType.Cert));
 
-        var service = CreateService(new StubHttpMessageHandler(_ => new HttpResponseMessage(HttpStatusCode.OK)), new ApplePaySettings
-        {
-            BundleId = "com.example.app",
-            TeamId = "TEAM",
-            KeyId = "KEY"
-        });
+        var jwsService = new AppleJwsVerificationService(NullLogger<AppleJwsVerificationService>.Instance);
 
-        var method = typeof(ApplePayReceiptValidationService)
+        var method = typeof(AppleJwsVerificationService)
             .GetMethod("VerifyAppleCertificateChain", BindingFlags.NonPublic | BindingFlags.Instance);
 
-        var result = (bool)method!.Invoke(service, new object[] { new[] { certBase64, certBase64 } })!;
+        var result = (bool)method!.Invoke(jwsService, new object[] { new[] { certBase64, certBase64 } })!;
 
         result.Should().BeFalse();
     }
@@ -274,18 +297,13 @@ public class ApplePayReceiptValidationServiceTests
         var request = new CertificateRequest("CN=Test", rsa, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
         using var cert = request.CreateSelfSigned(DateTimeOffset.UtcNow.AddDays(-1), DateTimeOffset.UtcNow.AddDays(1));
 
-        var service = CreateService(new StubHttpMessageHandler(_ => new HttpResponseMessage(HttpStatusCode.OK)), new ApplePaySettings
-        {
-            BundleId = "com.example.app",
-            TeamId = "TEAM",
-            KeyId = "KEY"
-        });
+        var jwsService = new AppleJwsVerificationService(NullLogger<AppleJwsVerificationService>.Instance);
 
-        var method = typeof(ApplePayReceiptValidationService)
+        var method = typeof(AppleJwsVerificationService)
             .GetMethod("VerifyJwsSignature", BindingFlags.NonPublic | BindingFlags.Instance);
 
         var parts = new[] { "a", "b", "c" };
-        var result = (bool)method!.Invoke(service, new object[] { parts, cert, "ES256" })!;
+        var result = (bool)method!.Invoke(jwsService, new object[] { parts, cert, "ES256" })!;
 
         result.Should().BeFalse();
     }
@@ -297,18 +315,13 @@ public class ApplePayReceiptValidationServiceTests
         var request = new CertificateRequest("CN=Test", ecdsa, HashAlgorithmName.SHA256);
         using var cert = request.CreateSelfSigned(DateTimeOffset.UtcNow.AddDays(-1), DateTimeOffset.UtcNow.AddDays(1));
 
-        var service = CreateService(new StubHttpMessageHandler(_ => new HttpResponseMessage(HttpStatusCode.OK)), new ApplePaySettings
-        {
-            BundleId = "com.example.app",
-            TeamId = "TEAM",
-            KeyId = "KEY"
-        });
+        var jwsService = new AppleJwsVerificationService(NullLogger<AppleJwsVerificationService>.Instance);
 
-        var method = typeof(ApplePayReceiptValidationService)
+        var method = typeof(AppleJwsVerificationService)
             .GetMethod("VerifyJwsSignature", BindingFlags.NonPublic | BindingFlags.Instance);
 
         var parts = new[] { "a", "b", "c" };
-        var result = (bool)method!.Invoke(service, new object[] { parts, cert, "ES384" })!;
+        var result = (bool)method!.Invoke(jwsService, new object[] { parts, cert, "ES384" })!;
 
         result.Should().BeFalse();
     }
@@ -316,17 +329,9 @@ public class ApplePayReceiptValidationServiceTests
     [Fact]
     public void DecodeSignedTransaction_Should_Return_Null_When_Parts_Invalid()
     {
-        var service = CreateService(new StubHttpMessageHandler(_ => new HttpResponseMessage(HttpStatusCode.OK)), new ApplePaySettings
-        {
-            BundleId = "com.example.app",
-            TeamId = "TEAM",
-            KeyId = "KEY"
-        });
+        var jwsService = new AppleJwsVerificationService(NullLogger<AppleJwsVerificationService>.Instance);
 
-        var method = typeof(ApplePayReceiptValidationService)
-            .GetMethod("DecodeSignedTransaction", BindingFlags.NonPublic | BindingFlags.Instance);
-
-        var result = method!.Invoke(service, new object[] { "a.b" });
+        var result = jwsService.DecodeSignedTransaction("a.b");
 
         result.Should().BeNull();
     }
@@ -334,21 +339,13 @@ public class ApplePayReceiptValidationServiceTests
     [Fact]
     public void DecodeSignedTransaction_Should_Return_Null_When_Header_Missing_X5c()
     {
-        var service = CreateService(new StubHttpMessageHandler(_ => new HttpResponseMessage(HttpStatusCode.OK)), new ApplePaySettings
-        {
-            BundleId = "com.example.app",
-            TeamId = "TEAM",
-            KeyId = "KEY"
-        });
+        var jwsService = new AppleJwsVerificationService(NullLogger<AppleJwsVerificationService>.Instance);
 
         var header = Base64UrlEncode(Encoding.UTF8.GetBytes("{\"alg\":\"ES256\"}"));
         var payload = Base64UrlEncode(Encoding.UTF8.GetBytes("{}"));
         var signed = $"{header}.{payload}.sig";
 
-        var method = typeof(ApplePayReceiptValidationService)
-            .GetMethod("DecodeSignedTransaction", BindingFlags.NonPublic | BindingFlags.Instance);
-
-        var result = method!.Invoke(service, new object[] { signed });
+        var result = jwsService.DecodeSignedTransaction(signed);
 
         result.Should().BeNull();
     }
@@ -356,26 +353,31 @@ public class ApplePayReceiptValidationServiceTests
     [Fact]
     public void DecodeSignedNotification_Should_Return_Null_When_Parts_Invalid()
     {
-        var service = CreateService(new StubHttpMessageHandler(_ => new HttpResponseMessage(HttpStatusCode.OK)), new ApplePaySettings
-        {
-            BundleId = "com.example.app",
-            TeamId = "TEAM",
-            KeyId = "KEY"
-        });
+        var jwsService = new AppleJwsVerificationService(NullLogger<AppleJwsVerificationService>.Instance);
 
-        var method = typeof(ApplePayReceiptValidationService)
-            .GetMethod("DecodeSignedNotification", BindingFlags.NonPublic | BindingFlags.Instance);
-
-        var result = method!.Invoke(service, new object[] { "a.b" });
+        var result = jwsService.DecodeSignedNotification("a.b");
 
         result.Should().BeNull();
     }
 
-    private static ApplePayReceiptValidationService CreateService(HttpMessageHandler handler, ApplePaySettings settings)
+    private static ApplePayReceiptValidationService CreateService(
+        HttpMessageHandler handler,
+        ApplePaySettings settings,
+        Mock<IAppleStoreAuthService>? authMock = null,
+        Mock<IAppleJwsVerificationService>? jwsMock = null)
     {
         var httpClient = new HttpClient(handler);
         var options = Options.Create(settings);
-        return new ApplePayReceiptValidationService(httpClient, options, NullLogger<ApplePayReceiptValidationService>.Instance);
+        var authService = (authMock ?? new Mock<IAppleStoreAuthService>()).Object;
+        var jwsService = (jwsMock ?? new Mock<IAppleJwsVerificationService>()).Object;
+        return new ApplePayReceiptValidationService(httpClient, options, authService, jwsService, NullLogger<ApplePayReceiptValidationService>.Instance);
+    }
+
+    private static Mock<IAppleStoreAuthService> CreateAuthMock(string jwt)
+    {
+        var mock = new Mock<IAppleStoreAuthService>();
+        mock.Setup(x => x.GetAppStoreJwtAsync(It.IsAny<CancellationToken>())).ReturnsAsync(jwt);
+        return mock;
     }
 
     private static X509Certificate2 CreateAppleLikeCertificate(out ECDsa key)

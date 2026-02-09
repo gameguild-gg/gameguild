@@ -67,9 +67,7 @@ public class EntityBaseIntegrationTests : IClassFixture<WebApplicationFactory<Ga
             Id = Guid.NewGuid(),
             Email = "audit@example.com",
             Name = "Audit User",
-            IsActive = true,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            IsActive = true
         };
 
         // Act
@@ -95,9 +93,7 @@ public class EntityBaseIntegrationTests : IClassFixture<WebApplicationFactory<Ga
             Id = Guid.NewGuid(),
             Email = "update@example.com",
             Name = "Update User",
-            IsActive = true,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            IsActive = true
         };
 
         await _dbContext.Set<User>().AddAsync(user);
@@ -110,7 +106,7 @@ public class EntityBaseIntegrationTests : IClassFixture<WebApplicationFactory<Ga
 
         // Act
         user.Name = "Updated Name";
-        user.UpdatedAt = DateTime.UtcNow;
+        user.Touch();
         await _dbContext.SaveChangesAsync();
 
         // Assert
@@ -127,9 +123,7 @@ public class EntityBaseIntegrationTests : IClassFixture<WebApplicationFactory<Ga
             Id = Guid.NewGuid(),
             Email = "softdelete@example.com",
             Name = "Soft Delete User",
-            IsActive = true,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            IsActive = true
         };
 
         await _dbContext.Set<User>().AddAsync(user);
@@ -159,9 +153,7 @@ public class EntityBaseIntegrationTests : IClassFixture<WebApplicationFactory<Ga
             Id = Guid.NewGuid(),
             Email = "active@example.com",
             Name = "Active User",
-            IsActive = true,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            IsActive = true
         };
 
         var deletedUser = new User
@@ -169,9 +161,7 @@ public class EntityBaseIntegrationTests : IClassFixture<WebApplicationFactory<Ga
             Id = Guid.NewGuid(),
             Email = "deleted@example.com",
             Name = "Deleted User",
-            IsActive = true,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            IsActive = true
         };
         deletedUser.SoftDelete();
 
@@ -197,9 +187,7 @@ public class EntityBaseIntegrationTests : IClassFixture<WebApplicationFactory<Ga
             Id = Guid.NewGuid(),
             Email = "active2@example.com",
             Name = "Active User 2",
-            IsActive = true,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            IsActive = true
         };
 
         var deletedUser = new User
@@ -207,9 +195,7 @@ public class EntityBaseIntegrationTests : IClassFixture<WebApplicationFactory<Ga
             Id = Guid.NewGuid(),
             Email = "deleted2@example.com",
             Name = "Deleted User 2",
-            IsActive = true,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            IsActive = true
         };
         deletedUser.SoftDelete();
 
@@ -237,9 +223,7 @@ public class EntityBaseIntegrationTests : IClassFixture<WebApplicationFactory<Ga
             Id = Guid.NewGuid(),
             Email = "tenant@example.com",
             Name = "Tenant User",
-            IsActive = true,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            IsActive = true
         };
 
         // Act
@@ -267,9 +251,7 @@ public class EntityBaseIntegrationTests : IClassFixture<WebApplicationFactory<Ga
             Id = Guid.NewGuid(),
             Email = "global@example.com",
             Name = "Global User",
-            IsActive = true,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            IsActive = true
         };
 
         // Act
@@ -297,9 +279,7 @@ public class EntityBaseIntegrationTests : IClassFixture<WebApplicationFactory<Ga
             Id = Guid.NewGuid(),
             Email = "touch@example.com",
             Name = "Touch User",
-            IsActive = true,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            IsActive = true
         };
 
         await _dbContext.Set<User>().AddAsync(user);
@@ -325,9 +305,7 @@ public class EntityBaseIntegrationTests : IClassFixture<WebApplicationFactory<Ga
             Id = Guid.NewGuid(),
             Email = "version@example.com",
             Name = "Version User",
-            IsActive = true,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            IsActive = true
         };
 
         // Act
@@ -348,9 +326,7 @@ public class EntityBaseIntegrationTests : IClassFixture<WebApplicationFactory<Ga
             Id = Guid.NewGuid(),
             Email = "idempotent@example.com",
             Name = "Idempotent Delete",
-            IsActive = true,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            IsActive = true
         };
 
         await _dbContext.Set<User>().AddAsync(user);
@@ -377,9 +353,7 @@ public class EntityBaseIntegrationTests : IClassFixture<WebApplicationFactory<Ga
             Id = Guid.NewGuid(),
             Email = "restore-never-deleted@example.com",
             Name = "Never Deleted User",
-            IsActive = true,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            IsActive = true
         };
 
         await _dbContext.Set<User>().AddAsync(user);

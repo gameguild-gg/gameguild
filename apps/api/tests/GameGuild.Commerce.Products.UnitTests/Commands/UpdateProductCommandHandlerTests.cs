@@ -1,4 +1,5 @@
 using FluentAssertions;
+using GameGuild;
 using GameGuild.Commerce.Products;
 using Moq;
 using Xunit;
@@ -26,9 +27,9 @@ public class UpdateProductCommandHandlerTests
             Id = id ?? Guid.NewGuid(),
             Name = name,
             Description = "Original Description",
-            Type = ProductType.Program,
-            Version = 1
+            Type = ProductType.Program
         };
+        typeof(EntityBase).GetProperty(nameof(EntityBase.Version))!.SetValue(product, 1);
         return product;
     }
 
@@ -218,7 +219,7 @@ public class UpdateProductCommandHandlerTests
         // Arrange
         var productId = Guid.NewGuid();
         var existingProduct = CreateTestProduct(productId);
-        existingProduct.Version = 2; // Current version is 2
+        typeof(EntityBase).GetProperty(nameof(EntityBase.Version))!.SetValue(existingProduct, 2); // Current version is 2
         
         var command = new UpdateProductCommand(
             ProductId: productId,
@@ -241,7 +242,7 @@ public class UpdateProductCommandHandlerTests
         // Arrange
         var productId = Guid.NewGuid();
         var existingProduct = CreateTestProduct(productId);
-        existingProduct.Version = 5;
+        typeof(EntityBase).GetProperty(nameof(EntityBase.Version))!.SetValue(existingProduct, 5);
         
         var command = new UpdateProductCommand(
             ProductId: productId,

@@ -102,9 +102,7 @@ public class RoleManagementIntegrationTests : IClassFixture<WebApplicationFactor
             Name = "TestRole",
             Description = "Test role for assignment",
             IsActive = true,
-            Permissions = JsonSerializer.Serialize(new List<string> { "read", "write" }),
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            Permissions = JsonSerializer.Serialize(new List<string> { "read", "write" })
         };
 
         var userId = Guid.NewGuid();
@@ -132,9 +130,9 @@ public class RoleManagementIntegrationTests : IClassFixture<WebApplicationFactor
 
         var roles = new List<Role>
         {
-            new Role { Id = Guid.NewGuid(), Name = "Admin", IsActive = true, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow },
-            new Role { Id = Guid.NewGuid(), Name = "Editor", IsActive = true, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow },
-            new Role { Id = Guid.NewGuid(), Name = "Viewer", IsActive = true, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow }
+            new Role { Id = Guid.NewGuid(), Name = "Admin", IsActive = true },
+            new Role { Id = Guid.NewGuid(), Name = "Editor", IsActive = true },
+            new Role { Id = Guid.NewGuid(), Name = "Viewer", IsActive = true }
         };
 
         foreach (var role in roles)
@@ -160,9 +158,7 @@ public class RoleManagementIntegrationTests : IClassFixture<WebApplicationFactor
         {
             Id = Guid.NewGuid(),
             Name = "TemporaryRole",
-            IsActive = true,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            IsActive = true
         };
 
         var userId = Guid.NewGuid();
@@ -189,9 +185,7 @@ public class RoleManagementIntegrationTests : IClassFixture<WebApplicationFactor
         {
             Id = Guid.NewGuid(),
             Name = "SharedRole",
-            IsActive = true,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            IsActive = true
         };
 
         await _roleRepository.AddAsync(role);
@@ -222,9 +216,7 @@ public class RoleManagementIntegrationTests : IClassFixture<WebApplicationFactor
         {
             Id = Guid.NewGuid(),
             Name = "UniqueRole",
-            IsActive = true,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            IsActive = true
         };
 
         var userId = Guid.NewGuid();
@@ -255,9 +247,7 @@ public class RoleManagementIntegrationTests : IClassFixture<WebApplicationFactor
         {
             Id = Guid.NewGuid(),
             Name = "TemporaryAccessRole",
-            IsActive = true,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            IsActive = true
         };
 
         var userId = Guid.NewGuid();
@@ -287,18 +277,14 @@ public class RoleManagementIntegrationTests : IClassFixture<WebApplicationFactor
         {
             Id = Guid.NewGuid(),
             Name = "ActiveRole",
-            IsActive = true,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            IsActive = true
         };
 
         var expiredRole = new Role
         {
             Id = Guid.NewGuid(),
             Name = "ExpiredRole",
-            IsActive = true,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            IsActive = true
         };
 
         var userId = Guid.NewGuid();
@@ -334,9 +320,7 @@ public class RoleManagementIntegrationTests : IClassFixture<WebApplicationFactor
         {
             Id = Guid.NewGuid(),
             Name = "FutureExpiryRole",
-            IsActive = true,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            IsActive = true
         };
 
         var userId = Guid.NewGuid();
@@ -363,9 +347,7 @@ public class RoleManagementIntegrationTests : IClassFixture<WebApplicationFactor
         {
             Id = Guid.NewGuid(),
             Name = "PreciseExpiryRole",
-            IsActive = true,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            IsActive = true
         };
 
         var userId = Guid.NewGuid();
@@ -401,9 +383,7 @@ public class RoleManagementIntegrationTests : IClassFixture<WebApplicationFactor
         {
             Id = Guid.NewGuid(),
             Name = "EarlyRemovalRole",
-            IsActive = true,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            IsActive = true
         };
 
         var userId = Guid.NewGuid();

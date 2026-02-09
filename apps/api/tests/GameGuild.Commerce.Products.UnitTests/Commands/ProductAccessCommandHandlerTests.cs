@@ -1,4 +1,5 @@
 using FluentAssertions;
+using GameGuild;
 using GameGuild.Commerce.Products;
 using GameGuild.CQRS;
 using Moq;
@@ -228,7 +229,7 @@ public class GrantProductAccessCommandHandlerTests
         Guid productId,
         ProductAccessStatus status = ProductAccessStatus.Active)
     {
-        return new UserProduct
+        var up = new UserProduct
         {
             Id = Guid.NewGuid(),
             UserId = userId,
@@ -236,10 +237,11 @@ public class GrantProductAccessCommandHandlerTests
             AccessStatus = status,
             AcquisitionType = ProductAcquisitionType.Grant,
             PricePaid = 0,
-            Currency = "USD",
-            CreatedAt = DateTime.UtcNow.AddDays(-1),
-            UpdatedAt = DateTime.UtcNow.AddDays(-1)
+            Currency = "USD"
         };
+        typeof(EntityBase).GetProperty(nameof(EntityBase.CreatedAt))!.SetValue(up, DateTime.UtcNow.AddDays(-1));
+        typeof(EntityBase).GetProperty(nameof(EntityBase.UpdatedAt))!.SetValue(up, DateTime.UtcNow.AddDays(-1));
+        return up;
     }
 }
 
@@ -360,7 +362,7 @@ public class RevokeProductAccessCommandHandlerTests
         Guid productId,
         ProductAccessStatus status = ProductAccessStatus.Active)
     {
-        return new UserProduct
+        var up = new UserProduct
         {
             Id = Guid.NewGuid(),
             UserId = userId,
@@ -368,9 +370,10 @@ public class RevokeProductAccessCommandHandlerTests
             AccessStatus = status,
             AcquisitionType = ProductAcquisitionType.Grant,
             PricePaid = 0,
-            Currency = "USD",
-            CreatedAt = DateTime.UtcNow.AddDays(-1),
-            UpdatedAt = DateTime.UtcNow.AddDays(-1)
+            Currency = "USD"
         };
+        typeof(EntityBase).GetProperty(nameof(EntityBase.CreatedAt))!.SetValue(up, DateTime.UtcNow.AddDays(-1));
+        typeof(EntityBase).GetProperty(nameof(EntityBase.UpdatedAt))!.SetValue(up, DateTime.UtcNow.AddDays(-1));
+        return up;
     }
 }

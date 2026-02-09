@@ -212,7 +212,7 @@ public class AuthenticationFlowsE2ETests : IClassFixture<WebApplicationFactory<G
         var userId = signUpResult.UserId;
 
         // Act 1: Initiate MFA Setup
-        var setupResult = await _mfaService.InitiateMfaSetupAsync(userId);
+        var setupResult = await _mfaService.InitiateMfaSetupAsync(userId, email);
 
         // Assert Setup Initiation
         setupResult.Should().NotBeNull();
@@ -253,7 +253,7 @@ public class AuthenticationFlowsE2ETests : IClassFixture<WebApplicationFactory<G
         var userId = signUpResult.UserId;
 
         // Setup MFA first
-        var setupResult = await _mfaService.InitiateMfaSetupAsync(userId);
+        var setupResult = await _mfaService.InitiateMfaSetupAsync(userId, email);
 
         // Act: Disable MFA (requires password confirmation)
         await _mfaService.DisableMfaAsync(userId, "TestPassword123!");
@@ -281,7 +281,7 @@ public class AuthenticationFlowsE2ETests : IClassFixture<WebApplicationFactory<G
         var userId = signUpResult.UserId;
 
         // Setup MFA
-        var setupResult = await _mfaService.InitiateMfaSetupAsync(userId);
+        var setupResult = await _mfaService.InitiateMfaSetupAsync(userId, email);
         var originalBackupCodes = setupResult.BackupCodes;
 
         // Complete MFA setup by enabling it directly in the database (test workaround)

@@ -1,4 +1,5 @@
 using FluentAssertions;
+using GameGuild;
 using GameGuild.Commerce.Products;
 using Moq;
 using Xunit;
@@ -78,9 +79,9 @@ public class GetUserProductsQueryHandlerTests
             PricePaid = 99.99m,
             Currency = "USD",
             AccessStartDate = new DateTime(2024, 1, 1),
-            AccessEndDate = new DateTime(2024, 12, 31),
-            CreatedAt = new DateTime(2024, 1, 1)
+            AccessEndDate = new DateTime(2024, 12, 31)
         };
+        typeof(EntityBase).GetProperty(nameof(EntityBase.CreatedAt))!.SetValue(userProduct, new DateTime(2024, 1, 1));
 
         _mockRepository
             .Setup(r => r.GetByUserIdAsync(userId, null, It.IsAny<CancellationToken>()))
@@ -202,7 +203,7 @@ public class GetUserProductsQueryHandlerTests
         ProductAccessStatus status,
         Guid? productId = null)
     {
-        return new UserProduct
+        var up = new UserProduct
         {
             Id = Guid.NewGuid(),
             UserId = userId,
@@ -210,8 +211,9 @@ public class GetUserProductsQueryHandlerTests
             AccessStatus = status,
             AcquisitionType = ProductAcquisitionType.Purchase,
             PricePaid = 50m,
-            Currency = "USD",
-            CreatedAt = DateTime.UtcNow
+            Currency = "USD"
         };
+        typeof(EntityBase).GetProperty(nameof(EntityBase.CreatedAt))!.SetValue(up, DateTime.UtcNow);
+        return up;
     }
 }
