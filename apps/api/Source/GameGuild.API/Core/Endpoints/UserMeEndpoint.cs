@@ -60,7 +60,7 @@ public static class UserMeEndpoint
             name = request.Username;
 
         var command = new UpdateUserCommand(userId, name);
-        var result = await sender.Send(command);
+        var result = await sender.Send(command).ConfigureAwait(false);
 
         return Results.Ok(new { id = userId, name = result.Name, email = result.Email });
     }

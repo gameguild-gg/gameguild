@@ -28,7 +28,7 @@ public sealed class SubscriptionActivatedQuotaSyncHandler(
         // Load subscription with plan details (Plan is eagerly loaded by repository)
         var subscription = await subscriptionRepository.GetByIdAsync(
             notification.SubscriptionId,
-            cancellationToken);
+            cancellationToken).ConfigureAwait(false);
 
         if (subscription is null)
         {
@@ -83,7 +83,7 @@ public sealed class SubscriptionActivatedQuotaSyncHandler(
         }
 
         // Wait for all quota updates to complete
-        await Task.WhenAll(syncTasks);
+        await Task.WhenAll(syncTasks).ConfigureAwait(false);
 
         logger.LogInformation(
             "Quota sync completed for subscription {SubscriptionId}. " +
@@ -111,7 +111,7 @@ public sealed class SubscriptionActivatedQuotaSyncHandler(
                 softLimit,
                 hardLimit,
                 ResourceQuotaPeriod.Monthly,
-                cancellationToken);
+                cancellationToken).ConfigureAwait(false);
 
             logger.LogDebug(
                 "Set {ResourceType} quota for tenant {TenantId}: soft={SoftLimit}, hard={HardLimit}",

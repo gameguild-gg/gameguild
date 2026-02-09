@@ -42,7 +42,7 @@ public class MetricsController(ILogger<MetricsController> logger) : ControllerBa
         var process = Process.GetCurrentProcess();
         var assembly = Assembly.GetExecutingAssembly();
         var startTime = process.StartTime.ToUniversalTime();
-        var uptime = (DateTime.UtcNow - startTime).TotalSeconds;
+        var uptime = (SystemClock.UtcNow - startTime).TotalSeconds;
 
         // Build Prometheus-format metrics
         var metrics = new System.Text.StringBuilder();

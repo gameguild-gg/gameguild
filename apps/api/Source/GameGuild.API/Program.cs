@@ -17,18 +17,10 @@ using GameGuild.API.Setup;
 // Create the web application builder with default configuration
 var builder = WebApplication.CreateBuilder(args);
 
-// Configure global JSON serializer options BEFORE any services
-// Configure System.Text.Json defaults globally for all JSON operations
-var defaultOptions = new System.Text.Json.JsonSerializerOptions
-{
-    MaxDepth = 128,
-    ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles,
-    WriteIndented = true
-};
-System.Text.Json.JsonSerializerOptions.Default.MaxDepth = 128;
-System.Text.Json.JsonSerializerOptions.Default.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+// Configure JSON serializer options for all layers
+// Note: JsonSerializerOptions.Default is read-only; configure via DI options instead.
 
-// Configure HTTP JSON options with the same settings
+// Configure HTTP JSON options (minimal APIs)
 builder.Services.Configure<Microsoft.AspNetCore.Http.Json.JsonOptions>(options =>
 {
     options.SerializerOptions.MaxDepth = 128;

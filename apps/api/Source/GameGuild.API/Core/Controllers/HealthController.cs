@@ -43,13 +43,13 @@ public class HealthController(
     [ProducesResponseType<HealthinessResponse>(503)]
     public async Task<ActionResult<HealthinessResponse>> GetHealth()
     {
-        var healthReport = await _healthCheckService.CheckHealthAsync();
+        var healthReport = await _healthCheckService.CheckHealthAsync().ConfigureAwait(false);
 
         var response = new HealthinessResponse
         {
             Status = healthReport.Status.ToString(),
             Duration = healthReport.TotalDuration,
-            Timestamp = DateTime.UtcNow,
+            Timestamp = SystemClock.UtcNow,
             Checks = healthReport.Entries.ToDictionary(
                 kvp => kvp.Key,
                 kvp => new HealthinessResponseItem
@@ -89,13 +89,13 @@ public class HealthController(
     public async Task<ActionResult<ReadinessResponse>> GetReadiness()
     {
         var healthReport = await _healthCheckService.CheckHealthAsync(
-            check => check.Tags.Contains("ready"));
+            check => check.Tags.Contains("ready")).ConfigureAwait(false);
 
         var response = new ReadinessResponse
         {
             Status = healthReport.Status.ToString(),
             Ready = healthReport.Status == HealthStatus.Healthy,
-            Timestamp = DateTime.UtcNow,
+            Timestamp = SystemClock.UtcNow,
             Services = healthReport.Entries.ToDictionary(
                 kvp => kvp.Key,
                 kvp => kvp.Value.Status == HealthStatus.Healthy)
@@ -134,8 +134,8 @@ public class HealthController(
         {
             Status = "Healthy",
             Alive = true,
-            Timestamp = DateTime.UtcNow,
-            Uptime = DateTime.UtcNow - System.Diagnostics.Process.GetCurrentProcess().StartTime.ToUniversalTime(),
+            Timestamp = SystemClock.UtcNow,
+            Uptime = SystemClock.UtcNow - System.Diagnostics.Process.GetCurrentProcess().StartTime.ToUniversalTime(),
             Version = GetType().Assembly.GetName().Version?.ToString() ?? "Unknown"
         };
 
@@ -168,7 +168,7 @@ public class HealthController(
     public async Task<ActionResult<DependencyHealthResponse>> GetDependencyHealth()
     {
         var healthReport = await _healthCheckService.CheckHealthAsync(
-            check => check.Tags.Contains("dependency") || check.Tags.Contains("ready"));
+            check => check.Tags.Contains("dependency") || check.Tags.Contains("ready")).ConfigureAwait(false);
 
         var dependencies = new List<DependencyHealthItem>();
 
@@ -193,7 +193,7 @@ public class HealthController(
         {
             Status = healthReport.Status.ToString(),
             TotalDuration = healthReport.TotalDuration,
-            Timestamp = DateTime.UtcNow,
+            Timestamp = SystemClock.UtcNow,
             HealthyCount = dependencies.Count(d => d.IsHealthy),
             UnhealthyCount = dependencies.Count(d => !d.IsHealthy),
             Dependencies = dependencies

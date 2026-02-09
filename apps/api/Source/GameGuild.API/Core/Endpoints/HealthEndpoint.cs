@@ -33,7 +33,7 @@ internal class HealthEndpoint : IEndpoint
     {
         var dependencies = new List<DependencyHealth> { new DependencyHealth("Database", "Healthy", TimeSpan.FromMilliseconds(12)), new DependencyHealth("Cache", "Healthy", TimeSpan.FromMilliseconds(3)) };
 
-        var healthResponse = new HealthResponse("Healthy", DateTime.UtcNow, "1.0.0", new ReadOnlyCollection<DependencyHealth>(dependencies));
+        var healthResponse = new HealthResponse("Healthy", SystemClock.UtcNow, "1.0.0", new ReadOnlyCollection<DependencyHealth>(dependencies));
 
         return Task.FromResult(Results.Ok(healthResponse));
     }

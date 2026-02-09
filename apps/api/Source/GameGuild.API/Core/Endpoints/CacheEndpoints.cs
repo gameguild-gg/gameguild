@@ -29,9 +29,9 @@ internal class CacheEndpoints : IEndpoint
             var testValue = "health_check_value";
 
             // Test cache operations
-            await cacheService.SetAsync(testKey, testValue, TimeSpan.FromSeconds(10));
-            var retrievedValue = await cacheService.GetAsync<string>(testKey);
-            await cacheService.RemoveAsync(testKey);
+            await cacheService.SetAsync(testKey, testValue, TimeSpan.FromSeconds(10)).ConfigureAwait(false);
+            var retrievedValue = await cacheService.GetAsync<string>(testKey).ConfigureAwait(false);
+            await cacheService.RemoveAsync(testKey).ConfigureAwait(false);
 
             var isHealthy = retrievedValue == testValue;
 
@@ -50,21 +50,21 @@ internal class CacheEndpoints : IEndpoint
             var testData = new { Message = "Test cache data", Timestamp = DateTimeOffset.UtcNow };
 
             // Test Set operation
-            await cacheService.SetAsync(testKey, testData, TimeSpan.FromMinutes(5));
+            await cacheService.SetAsync(testKey, testData, TimeSpan.FromMinutes(5)).ConfigureAwait(false);
             results.Add(new { Operation = "Set", Status = "Success", Key = testKey });
 
             // Test Get operation
-            var retrievedData = await cacheService.GetAsync<object>(testKey);
+            var retrievedData = await cacheService.GetAsync<object>(testKey).ConfigureAwait(false);
             results.Add(new { Operation = "Get", Status = retrievedData != null ? "Success" : "Failed", Data = retrievedData });
 
             // Test Exists operation - check if data exists by trying to get it
-            var existsData = await cacheService.GetAsync<object>(testKey);
+            var existsData = await cacheService.GetAsync<object>(testKey).ConfigureAwait(false);
             var exists = existsData != null;
             results.Add(new { Operation = "Exists", Status = exists ? "Success" : "Failed", Exists = exists });
 
             // Test Remove operation
-            await cacheService.RemoveAsync(testKey);
-            var existsAfterRemove = await cacheService.GetAsync<object>(testKey) != null;
+            await cacheService.RemoveAsync(testKey).ConfigureAwait(false);
+            var existsAfterRemove = await cacheService.GetAsync<object>(testKey).ConfigureAwait(false) != null;
             results.Add(new { Operation = "Remove", Status = !existsAfterRemove ? "Success" : "Failed", Exists = existsAfterRemove });
 
             return Results.Ok(new { Message = "Cache operations test completed", Results = results, Timestamp = DateTimeOffset.UtcNow });

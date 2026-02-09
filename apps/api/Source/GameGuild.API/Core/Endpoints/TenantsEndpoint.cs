@@ -74,8 +74,8 @@ internal class TenantsEndpoint : IEndpoint
     {
         var tenants = new List<TenantResponse>
         {
-            new TenantResponse(Guid.NewGuid(), "Acme Corp", "acme-corp", "Enterprise", true, DateTime.UtcNow.AddDays(-30)),
-            new TenantResponse(Guid.NewGuid(), "Beta Inc", "beta-inc", "Professional", true, DateTime.UtcNow.AddDays(-15))
+            new TenantResponse(Guid.NewGuid(), "Acme Corp", "acme-corp", "Enterprise", true, SystemClock.UtcNow.AddDays(-30)),
+            new TenantResponse(Guid.NewGuid(), "Beta Inc", "beta-inc", "Professional", true, SystemClock.UtcNow.AddDays(-15))
         };
 
         return Task.FromResult(Results.Ok(new ReadOnlyCollection<TenantResponse>(tenants)));
@@ -88,7 +88,7 @@ internal class TenantsEndpoint : IEndpoint
     /// <returns>The tenant response or not found</returns>
     private static Task<IResult> GetTenant(Guid id)
     {
-        var tenant = new TenantResponse(id, "Acme Corp", "acme-corp", "Enterprise", true, DateTime.UtcNow.AddDays(-30));
+        var tenant = new TenantResponse(id, "Acme Corp", "acme-corp", "Enterprise", true, SystemClock.UtcNow.AddDays(-30));
 
         return Task.FromResult(Results.Ok(tenant));
     }
@@ -100,7 +100,7 @@ internal class TenantsEndpoint : IEndpoint
     /// <returns>The created tenant response</returns>
     private static Task<IResult> CreateTenant(CreateTenantRequest request)
     {
-        var tenant = new TenantResponse(Guid.NewGuid(), request.Name, request.Slug, request.Plan, true, DateTime.UtcNow);
+        var tenant = new TenantResponse(Guid.NewGuid(), request.Name, request.Slug, request.Plan, true, SystemClock.UtcNow);
 
         return Task.FromResult(Results.Created($"/tenants/{tenant.Id}", tenant));
     }
@@ -113,7 +113,7 @@ internal class TenantsEndpoint : IEndpoint
     /// <returns>The updated tenant response</returns>
     private static Task<IResult> UpdateTenant(Guid id, UpdateTenantRequest request)
     {
-        var tenant = new TenantResponse(id, request.Name, request.Slug, request.Plan, request.IsActive, DateTime.UtcNow.AddDays(-30));
+        var tenant = new TenantResponse(id, request.Name, request.Slug, request.Plan, request.IsActive, SystemClock.UtcNow.AddDays(-30));
 
         return Task.FromResult(Results.Ok(tenant));
     }

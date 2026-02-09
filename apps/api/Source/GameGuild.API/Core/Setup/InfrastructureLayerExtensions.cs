@@ -250,6 +250,10 @@ public static class InfrastructureLayerExtensions
             {
                 options.EnableDetailedErrors();
             }
+
+            // Suppress PendingModelChangesWarning caused by dynamic HasData values
+            options.ConfigureWarnings(w =>
+                w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
         });
 
         services.AddScoped<IApplicationDbContext>(provider => provider.GetRequiredService<ApplicationDbContext>());
@@ -353,8 +357,8 @@ public static class InfrastructureLayerExtensions
             {
                 logger.LogWarning(
                     "Convention scan: {TypeName} in {Assembly} was NOT registered — " +
-                    "no matching I{TypeName} interface found. " +
-                    "If this type should be registered, verify the interface follows the I{{Name}} naming convention.",
+                    "no matching interface found. " +
+                    "If this type should be registered, verify the interface follows the IName naming convention.",
                     unmatched.Name, assembly.GetName().Name);
             }
         }
@@ -403,6 +407,14 @@ public static class InfrastructureLayerExtensions
 
         foreach (var (interfaceType, implementationType) in serviceRegistrations)
         {
+            // Skip services that are already registered (e.g. via module-specific factories)
+            if (services.Any(sd => sd.ServiceType == interfaceType))
+            {
+                logger.LogInformation("Skipped {Service} — already registered",
+                    FormatInterfaceName(interfaceType.Name));
+                continue;
+            }
+
             stepStopwatch.Restart();
             services.AddScoped(interfaceType, implementationType);
             logger.LogInformation("Registered {Service} in {ElapsedMs}ms",

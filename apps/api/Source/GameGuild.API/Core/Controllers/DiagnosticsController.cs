@@ -11,7 +11,7 @@ namespace GameGuild.API.Controllers;
 /// </summary>
 [ApiController]
 [Tags("health")]
-[AllowAnonymous]
+[Authorize]
 public class DiagnosticsController(ILogger<DiagnosticsController> logger) : ControllerBase
 {
     private readonly ILogger<DiagnosticsController> _logger =
@@ -75,19 +75,14 @@ public class DiagnosticsController(ILogger<DiagnosticsController> logger) : Cont
                 DotNetVersion = Environment.Version.ToString(),
                 OSDescription = RuntimeInformation.OSDescription,
                 OSArchitecture = RuntimeInformation.OSArchitecture.ToString(),
-                ProcessArchitecture = RuntimeInformation.ProcessArchitecture.ToString(),
-                MachineName = Environment.MachineName,
-                ProcessorCount = Environment.ProcessorCount
+                ProcessArchitecture = RuntimeInformation.ProcessArchitecture.ToString()
             },
             Process = new ProcessDetails
             {
-                Id = process.Id,
                 StartTime = process.StartTime.ToUniversalTime(),
-                Uptime = DateTime.UtcNow - process.StartTime.ToUniversalTime(),
-                WorkingSet = process.WorkingSet64,
-                ThreadCount = process.Threads.Count
+                Uptime = SystemClock.UtcNow - process.StartTime.ToUniversalTime()
             },
-            Timestamp = DateTime.UtcNow
+            Timestamp = SystemClock.UtcNow
         };
 
         return Ok(response);
@@ -178,10 +173,6 @@ public class RuntimeDetails
     public string OSArchitecture { get; set; } = string.Empty;
 
     public string ProcessArchitecture { get; set; } = string.Empty;
-
-    public string MachineName { get; set; } = string.Empty;
-
-    public int ProcessorCount { get; set; }
 }
 
 /// <summary>
@@ -189,15 +180,9 @@ public class RuntimeDetails
 /// </summary>
 public class ProcessDetails
 {
-    public int Id { get; set; }
-
     public DateTime StartTime { get; set; }
 
     public TimeSpan Uptime { get; set; }
-
-    public long WorkingSet { get; set; }
-
-    public int ThreadCount { get; set; }
 }
 
 #endregion

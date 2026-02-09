@@ -1,0 +1,192 @@
+using System.Globalization;
+using GameGuild.Configuration;
+using GameGuild.Configuration.PresentationLayer.FeatureFlags;
+using GameGuild.Configuration.PresentationLayer.GraphQL;
+using GameGuild.Configuration.PresentationLayer.HealthChecks;
+using GameGuild.Configuration.PresentationLayer.Localization;
+using GameGuild.Configuration.PresentationLayer.ModelValidation;
+using GameGuild.Configuration.PresentationLayer.RequestContext;
+using GameGuild.Configuration.PresentationLayer.ResponseCompression;
+using GameGuild.Configuration.PresentationLayer.SignalR;
+using Microsoft.AspNetCore.HttpLogging;
+using Microsoft.AspNetCore.Localization;
+using Microsoft.AspNetCore.Mvc;
+using HttpLoggingOptions = GameGuild.Configuration.PresentationLayer.HttpLogging.HttpLoggingOptions;
+using ProblemDetailsOptions = GameGuild.Configuration.PresentationLayer.ProblemDetails.ProblemDetailsOptions;
+
+namespace GameGuild.API;
+
+/// <summary>
+///     Extension methods for configuring infrastructure services
+///     (HttpLogging, ProblemDetails, Localization, ResponseCompression,
+///     RequestContext, FeatureFlags, ModelValidation, HealthChecks, SignalR, GraphQL).
+/// </summary>
+public static class InfrastructureServiceCollectionExtensions
+{
+    public static IServiceCollection SetupHttpLogging(this IServiceCollection services, IConfiguration configuration,
+        HttpLoggingOptions? options)
+    {
+        options ??= OptionBuilderUtilities.CreateAndBind(configuration, "HttpLogging",
+            HttpLoggingOptions.CreateDefault);
+        options.Validate();
+
+        services.AddHttpLogging(loggingOptions =>
+            {
+                loggingOptions.LoggingFields = HttpLoggingFields.All;
+
+                if (options.LogRequestHeaders) loggingOptions.LoggingFields |= HttpLoggingFields.RequestHeaders;
+                if (options.LogResponseHeaders) loggingOptions.LoggingFields |= HttpLoggingFields.ResponseHeaders;
+                if (options.LogRequestBody) loggingOptions.LoggingFields |= HttpLoggingFields.RequestBody;
+                if (options.LogResponseBody) loggingOptions.LoggingFields |= HttpLoggingFields.ResponseBody;
+            }
+        );
+
+        return services;
+    }
+
+    public static IServiceCollection SetupProblemDetails(this IServiceCollection services, IConfiguration configuration,
+        ProblemDetailsOptions? options)
+    {
+        options ??= OptionBuilderUtilities.CreateAndBind(configuration, "ProblemDetails",
+            ProblemDetailsOptions.CreateDefault);
+        options.Validate();
+
+        services.AddProblemDetails(problemDetailsOptions =>
+            {
+                problemDetailsOptions.CustomizeProblemDetails = context =>
+                {
+                    context.ProblemDetails.Instance = context.HttpContext.Request.Path;
+                    context.ProblemDetails.Extensions["traceId"] = context.HttpContext.TraceIdentifier;
+
+                    if (options.IncludeExceptionDetails && context.Exception != null)
+                    {
+                        context.ProblemDetails.Extensions["exception"] = context.Exception.ToString();
+                    }
+                };
+            }
+        );
+
+        return services;
+    }
+
+    public static IServiceCollection SetupLocalization(this IServiceCollection services, IConfiguration configuration,
+        LocalizationOptions? options)
+    {
+        options ??= OptionBuilderUtilities.CreateAndBind(configuration, "Localization",
+            LocalizationOptions.CreateDefault);
+        options.Validate();
+
+        services.AddLocalization(localizationOptions => { localizationOptions.ResourcesPath = "Resources"; });
+
+        services.Configure<RequestLocalizationOptions>(requestLocalizationOptions =>
+            {
+                var supportedCultures = options.SupportedCultures;
+                requestLocalizationOptions.DefaultRequestCulture = new RequestCulture(options.DefaultCulture);
+                requestLocalizationOptions.SupportedCultures =
+                    supportedCultures.Select(c => new CultureInfo(c)).ToList();
+                requestLocalizationOptions.SupportedUICultures =
+                    supportedCultures.Select(c => new CultureInfo(c)).ToList();
+            }
+        );
+
+        return services;
+    }
+
+    public static IServiceCollection SetupResponseCompression(this IServiceCollection services,
+        IConfiguration configuration, ResponseCompressionOptions? options)
+    {
+        options ??= OptionBuilderUtilities.CreateAndBind(configuration, "ResponseCompression",
+            ResponseCompressionOptions.CreateDefault);
+        options.Validate();
+
+        services.AddResponseCompression(compressionOptions =>
+            {
+                compressionOptions.MimeTypes = options.MimeTypes;
+                compressionOptions.EnableForHttps = true;
+            }
+        );
+
+        return services;
+    }
+
+    public static IServiceCollection SetupRequestContext(this IServiceCollection services, IConfiguration configuration,
+        RequestContextOptions? options)
+    {
+        options ??= OptionBuilderUtilities.CreateAndBind(configuration, "RequestContext",
+            RequestContextOptions.CreateDefault);
+        options.Validate();
+
+        // Placeholder for unified request context registration
+        // Future implementation will handle user, tenant, location, and feature flag contexts
+        return services;
+    }
+
+    public static IServiceCollection SetupFeatureFlags(this IServiceCollection services, IConfiguration configuration,
+        FeatureFlagsOptions? options)
+    {
+        options ??= OptionBuilderUtilities.CreateAndBind(configuration, "FeatureFlags",
+            FeatureFlagsOptions.CreateDefault);
+        options.Validate();
+
+        // PLANNED: Implement OpenFeature services when the OpenFeature .NET SDK is added.
+        // PLANNED: Add hosted service to initialize OpenFeature provider during startup.
+
+        return services;
+    }
+
+    public static IServiceCollection SetupModelValidation(this IServiceCollection services,
+        IConfiguration configuration, ModelValidationOptions? options)
+    {
+        options ??= OptionBuilderUtilities.CreateAndBind(configuration, "ModelValidation",
+            ModelValidationOptions.CreateDefault);
+        options.Validate();
+
+        services.Configure<ApiBehaviorOptions>(behaviorOptions =>
+        {
+            behaviorOptions.SuppressModelStateInvalidFilter = options.SuppressModelStateInvalidFilter;
+        });
+
+        return services;
+    }
+
+    public static IServiceCollection SetupHealthChecks(this IServiceCollection services, IConfiguration configuration,
+        HealthChecksOptions? options)
+    {
+        options ??= OptionBuilderUtilities.CreateAndBind(configuration, "HealthChecks",
+            HealthChecksOptions.CreateDefault);
+        options.Validate();
+
+        services.AddHealthChecks();
+
+        return services;
+    }
+
+    public static IServiceCollection SetupSignalR(this IServiceCollection services, IConfiguration configuration,
+        SignalROptions? options)
+    {
+        options ??= OptionBuilderUtilities.CreateAndBind(configuration, "SignalR", SignalROptions.CreateDefault);
+        options.Validate();
+
+        services.AddSignalR(signalROptions =>
+            {
+                signalROptions.EnableDetailedErrors = options.EnableDetailedErrors;
+                signalROptions.KeepAliveInterval = options.KeepAliveInterval;
+                signalROptions.ClientTimeoutInterval = options.ClientTimeoutInterval;
+                signalROptions.MaximumReceiveMessageSize = options.MaximumReceiveMessageSize;
+            }
+        );
+
+        return services;
+    }
+
+    public static IServiceCollection SetupGraphQL(this IServiceCollection services, IConfiguration configuration,
+        GraphQLOptions? options)
+    {
+        options ??= OptionBuilderUtilities.CreateAndBind(configuration, "GraphQL", GraphQLOptions.CreateDefault);
+        options.Validate();
+
+        // GraphQL services can be configured by the application layer if enabled.
+
+        return services;
+    }
+}

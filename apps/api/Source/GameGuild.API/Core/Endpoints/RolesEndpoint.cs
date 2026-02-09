@@ -17,7 +17,7 @@ public static class RolesEndpoint
     {
         var rolesGroup = app.MapGroup("/roles").WithTags("Roles").RequireAuthorization();
 
-        rolesGroup.MapGet("/", GetAllRoles).WithName("GetAllRoles").WithOpenApi();
+        rolesGroup.MapGet("/", (Delegate)GetAllRoles).WithName("GetAllRoles").WithOpenApi();
 
         rolesGroup.MapGet("/{id:guid}", GetRoleById).WithName("GetRoleById").WithOpenApi();
 
@@ -30,7 +30,7 @@ public static class RolesEndpoint
         // Also map without /api prefix for backward compatibility with tests
         var rolesGroupNoApi = app.MapGroup("/roles").WithTags("Roles").RequireAuthorization();
 
-        rolesGroupNoApi.MapGet("/", GetAllRoles).WithName("GetAllRolesNoApi").WithOpenApi();
+        rolesGroupNoApi.MapGet("/", (Delegate)GetAllRoles).WithName("GetAllRolesNoApi").WithOpenApi();
 
         rolesGroupNoApi.MapGet("/{id:guid}", GetRoleById).WithName("GetRoleByIdNoApi").WithOpenApi();
 
@@ -47,7 +47,7 @@ public static class RolesEndpoint
     {
         var sender = context.RequestServices.GetRequiredService<ISender>();
         var query = new GetRolesQuery { IncludeInactive = false };
-        var roles = await sender.Send<List<RoleDto>>(query);
+        var roles = await sender.Send<List<RoleDto>>(query).ConfigureAwait(false);
 
         return Results.Ok(roles);
     }
@@ -56,7 +56,7 @@ public static class RolesEndpoint
     {
         var sender = context.RequestServices.GetRequiredService<ISender>();
         var query = new GetRoleByIdQuery { RoleId = id };
-        var role = await sender.Send<RoleDto?>(query);
+        var role = await sender.Send<RoleDto?>(query).ConfigureAwait(false);
 
         return role is null
             ? Results.NotFound(new { message = "Role not found" })
@@ -77,7 +77,7 @@ public static class RolesEndpoint
             Description = request.Description ?? string.Empty,
             Permissions = request.Permissions?.Select(p => p.ToString()).ToList() ?? new List<string>()
         };
-        var role = await sender.Send<RoleDto>(command);
+        var role = await sender.Send<RoleDto>(command).ConfigureAwait(false);
 
         return Results.Created($"/roles/{role.Id}", role);
     }
@@ -92,7 +92,7 @@ public static class RolesEndpoint
             Description = request.Description,
             Permissions = request.Permissions?.Select(p => p.ToString()).ToList()
         };
-        var role = await sender.Send<RoleDto>(command);
+        var role = await sender.Send<RoleDto>(command).ConfigureAwait(false);
 
         return Results.Ok(role);
     }
@@ -101,7 +101,7 @@ public static class RolesEndpoint
     {
         var sender = context.RequestServices.GetRequiredService<ISender>();
         var command = new DeleteRoleCommand { RoleId = id };
-        var result = await sender.Send<bool>(command);
+        var result = await sender.Send<bool>(command).ConfigureAwait(false);
 
         return result ? Results.NoContent() : Results.NotFound(new { message = "Role not found" });
     }

@@ -35,7 +35,7 @@ public sealed class SubscriptionPlanChangedQuotaSyncHandler(
         // Load the new plan to get its limits
         var newPlan = await planRepository.GetByIdAsync(
             notification.NewPlanId,
-            cancellationToken);
+            cancellationToken).ConfigureAwait(false);
 
         if (newPlan is null)
         {
@@ -84,7 +84,7 @@ public sealed class SubscriptionPlanChangedQuotaSyncHandler(
         }
 
         // Wait for all quota updates to complete
-        await Task.WhenAll(syncTasks);
+        await Task.WhenAll(syncTasks).ConfigureAwait(false);
 
         logger.LogInformation(
             "Quota sync completed for plan change on subscription {SubscriptionId}. " +
@@ -116,7 +116,7 @@ public sealed class SubscriptionPlanChangedQuotaSyncHandler(
                 softLimit,
                 hardLimit,
                 ResourceQuotaPeriod.Monthly,
-                cancellationToken);
+                cancellationToken).ConfigureAwait(false);
 
             var action = isUpgrade ? "Upgraded" : "Downgraded";
             logger.LogDebug(

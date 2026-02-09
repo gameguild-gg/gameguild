@@ -57,7 +57,7 @@ public static class AuthenticationEndpoint
             };
 
             // Call the Authentication module's service
-            var response = await authService.LocalSignUpAsync(signUpRequest, cancellationToken);
+            var response = await authService.LocalSignUpAsync(signUpRequest, cancellationToken).ConfigureAwait(false);
 
             logger.LogInformation("User signed up successfully: {Email}, Response.Email: {ResponseEmail}, Response.UserId: {UserId}", request.Email, response.Email, response.UserId);
 
@@ -97,7 +97,7 @@ public static class AuthenticationEndpoint
         try
         {
             // Find user by email
-            var user = await dbContext.Set<User>().FirstOrDefaultAsync(u => u.Email == request.Email);
+            var user = await dbContext.Set<User>().FirstOrDefaultAsync(u => u.Email == request.Email).ConfigureAwait(false);
 
             if (user == null || !user.HasPassword) { return Results.Unauthorized(); }
 
@@ -106,7 +106,7 @@ public static class AuthenticationEndpoint
 
             // Record login
             user.RecordLogin();
-            await dbContext.SaveChangesAsync();
+            await dbContext.SaveChangesAsync().ConfigureAwait(false);
 
             // Generate tokens
             var tokens = GenerateTokens(user, configuration);
@@ -141,7 +141,7 @@ public static class AuthenticationEndpoint
 
         return Task.FromResult(
             Results.Ok(
-                new RefreshTokenResponseDto { AccessToken = "new-access-token", RefreshToken = "new-refresh-token", AccessTokenExpiresAt = DateTime.UtcNow.AddHours(1), RefreshTokenExpiresAt = DateTime.UtcNow.AddDays(7) }
+                new RefreshTokenResponseDto { AccessToken = "new-access-token", RefreshToken = "new-refresh-token", AccessTokenExpiresAt = SystemClock.UtcNow.AddHours(1), RefreshTokenExpiresAt = SystemClock.UtcNow.AddDays(7) }
             )
         );
     }
@@ -157,9 +157,9 @@ public static class AuthenticationEndpoint
                 {
                     AccessToken = "google-access-token",
                     RefreshToken = "google-refresh-token",
-                    AccessTokenExpiresAt = DateTime.UtcNow.AddHours(1),
-                    RefreshTokenExpiresAt = DateTime.UtcNow.AddDays(7),
-                    ExpiresAt = DateTime.UtcNow.AddHours(1),
+                    AccessTokenExpiresAt = SystemClock.UtcNow.AddHours(1),
+                    RefreshTokenExpiresAt = SystemClock.UtcNow.AddDays(7),
+                    ExpiresAt = SystemClock.UtcNow.AddHours(1),
                     User = new AuthUserDto { Id = Guid.NewGuid(), Email = "google-user@example.com", Username = "googleuser" }
                 }
             )
@@ -168,17 +168,19 @@ public static class AuthenticationEndpoint
 
     private static TokenResponse GenerateTokens(User user, IConfiguration configuration)
     {
-        var jwtSecret = configuration["Jwt:Secret"] ?? "default-secret-key-for-development-only-min-32-chars";
+        var jwtSecret = configuration["Jwt:Secret"]
+            ?? configuration["Jwt:SecretKey"]
+            ?? configuration["JwtSettings:SecretKey"]
+            ?? configuration["Authentication:JwtSecretKey"]
+            ?? throw new InvalidOperationException("JWT secret is not configured. Set 'Jwt:Secret' in configuration.");
         var jwtIssuer = configuration["Jwt:Issuer"] ?? "GameGuild";
         var jwtAudience = configuration["Jwt:Audience"] ?? "GameGuild";
         var expirationMinutes = int.Parse(configuration["Jwt:ExpirationMinutes"] ?? "60");
 
-        Console.WriteLine($"[Token Gen] JWT Secret length: {jwtSecret.Length}, Issuer: {jwtIssuer}, Audience: {jwtAudience}");
-
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret)) { KeyId = "GameGuild-jwt-key" };
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-        var accessTokenExpiry = DateTime.UtcNow.AddMinutes(expirationMinutes);
-        var refreshTokenExpiry = DateTime.UtcNow.AddDays(7);
+        var accessTokenExpiry = SystemClock.UtcNow.AddMinutes(expirationMinutes);
+        var refreshTokenExpiry = SystemClock.UtcNow.AddDays(7);
 
         var claims = new[ ]
         {
