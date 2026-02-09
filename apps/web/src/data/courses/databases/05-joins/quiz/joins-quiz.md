@@ -158,26 +158,26 @@ This quiz tests your understanding of **INNER JOIN**, **LEFT/RIGHT/FULL OUTER JO
 - [ ] A.
 ```sql
 SELECT c.name, o.id FROM customers c
-INNER JOIN orders o ON c.id = o.customer_id;
+LEFT JOIN orders o ON c.id = o.customer_id;
 ```
 
 - [ ] B.
 ```sql
 SELECT c.name, o.id FROM customers c
-LEFT JOIN orders o ON c.id = o.customer_id;
+RIGHT JOIN orders o ON c.id = o.customer_id;
 ```
 
 - [ ] C.
 ```sql
-SELECT c.name, o.id FROM customers c
-RIGHT JOIN orders o ON c.id = o.customer_id;
-```
-
-- [ ] D.
-```sql
 SELECT c.name, o.id FROM orders o
 LEFT JOIN customers c ON c.id = o.customer_id;
 ```
+- [ ] D.
+```sql
+SELECT c.name, o.id FROM customers c
+INNER JOIN orders o ON c.id = o.customer_id;
+```
+
 
 ---
 
@@ -192,8 +192,8 @@ JOIN customers ON customer_id = id;
 ```
 
 - [ ] A. The `JOIN` keyword should be `INNER JOIN`
-- [ ] B. `id` and `customer_id` are ambiguous - unclear which table they belong to
-- [ ] C. The query is missing a `WHERE` clause
+- [ ] B. The query is missing a `WHERE` clause
+- [ ] C. `id` and `customer_id` are ambiguous - unclear which table they belong to
 - [ ] D. Nothing is wrong, this query is valid
 
 ---
@@ -205,30 +205,30 @@ JOIN customers ON customer_id = id;
 - [ ] A.
 ```sql
 SELECT c.* FROM customers c
-INNER JOIN orders o ON c.id = o.customer_id
+RIGHT JOIN orders o ON c.id = o.customer_id
 WHERE o.id IS NULL;
 ```
-
 - [ ] B.
-```sql
-SELECT c.* FROM customers c
-LEFT JOIN orders o ON c.id = o.customer_id
-WHERE o.id IS NULL;
-```
-
-- [ ] C.
 ```sql
 SELECT c.* FROM customers c
 LEFT JOIN orders o ON c.id = o.customer_id
 WHERE o.id IS NOT NULL;
 ```
 
+- [ ] C.
+```sql
+SELECT c.* FROM customers c
+INNER JOIN orders o ON c.id = o.customer_id
+WHERE o.id IS NULL;
+```
+
 - [ ] D.
 ```sql
 SELECT c.* FROM customers c
-RIGHT JOIN orders o ON c.id = o.customer_id
+LEFT JOIN orders o ON c.id = o.customer_id
 WHERE o.id IS NULL;
 ```
+
 
 ---
 
@@ -244,9 +244,9 @@ Table B: 4 rows
 **How many rows will `SELECT * FROM A CROSS JOIN B` return?**
 
 - [ ] A. 3 rows
-- [ ] B. 4 rows
-- [ ] C. 7 rows
-- [ ] D. 12 rows
+- [ ] B. 12 rows
+- [ ] C. 4 rows
+- [ ] D. 7 rows
 
 ---
 
@@ -258,14 +258,14 @@ Table B: 4 rows
 ```sql
 SELECT e.name AS employee, m.name AS manager
 FROM employees e
-INNER JOIN managers m ON e.manager_id = m.id;
+LEFT JOIN employees m ON e.manager_id = m.id;
 ```
 
 - [ ] B.
 ```sql
 SELECT e.name AS employee, m.name AS manager
 FROM employees e
-LEFT JOIN employees m ON e.manager_id = m.id;
+INNER JOIN managers m ON e.manager_id = m.id;
 ```
 
 - [ ] C.
@@ -300,10 +300,10 @@ LEFT JOIN orders o ON c.id = o.customer_id
 WHERE o.status = 'shipped';
 ```
 
-- [ ] A. They are identical in behavior
-- [ ] B. Query 1 returns all customers; Query 2 returns only customers with shipped orders
-- [ ] C. Query 1 is invalid syntax; Query 2 is correct
-- [ ] D. Query 2 returns all customers; Query 1 returns only customers with shipped orders
+- [ ] A. Query 1 is invalid syntax; Query 2 is correct
+- [ ] B. They are identical in behavior
+- [ ] C. Query 2 returns all customers; Query 1 returns only customers with shipped orders
+- [ ] D. Query 1 returns all customers; Query 2 returns only customers with shipped orders
 
 ---
 
@@ -312,8 +312,8 @@ WHERE o.status = 'shipped';
 **Which statement about `FULL OUTER JOIN` is correct?**
 
 - [ ] A. It returns only rows that match in both tables
-- [ ] B. It returns all rows from the left table and only matching rows from the right
-- [ ] C. It returns all rows from both tables, with NULLs where there's no match
+- [ ] B. It returns all rows from both tables, with NULLs where there's no match
+- [ ] C. It returns all rows from the left table and only matching rows from the right
 - [ ] D. It returns only rows that don't match in either table
 
 ---
@@ -323,8 +323,8 @@ WHERE o.status = 'shipped';
 **Why is `NATURAL JOIN` generally discouraged?**
 
 - [ ] A. It's slower than explicit joins
-- [ ] B. It automatically matches on ALL columns with the same name, which can cause unexpected results
-- [ ] C. It only works with `LEFT JOIN`
+- [ ] B. It only works with `LEFT JOIN`
+- [ ] C. It automatically matches on ALL columns with the same name, which can cause unexpected results
 - [ ] D. It's not supported by PostgreSQL
 
 ---
@@ -339,8 +339,8 @@ FROM products p1
 JOIN products p2 ON p1.price = p2.price AND p1.id < p2.id;
 ```
 
-- [ ] A. All products paired with themselves
-- [ ] B. Pairs of different products that have the same price (no duplicates)
+- [ ] A. Pairs of different products that have the same price (no duplicates)
+- [ ] B. All products paired with themselves
 - [ ] C. All products with their prices doubled
 - [ ] D. Products where p1.price is less than p2.price
 
@@ -360,18 +360,18 @@ GROUP BY c.id, c.name;
 
 - [ ] B.
 ```sql
-SELECT c.name, COALESCE(SUM(o.total_amount), 0) AS revenue
+SELECT c.name, SUM(o.total_amount) AS revenue
 FROM customers c
 LEFT JOIN orders o ON c.id = o.customer_id
+WHERE o.total_amount > 0
 GROUP BY c.id, c.name;
 ```
 
 - [ ] C.
 ```sql
-SELECT c.name, SUM(o.total_amount) AS revenue
+SELECT c.name, COALESCE(SUM(o.total_amount), 0) AS revenue
 FROM customers c
 LEFT JOIN orders o ON c.id = o.customer_id
-WHERE o.total_amount > 0
 GROUP BY c.id, c.name;
 ```
 
@@ -389,8 +389,8 @@ GROUP BY c.name;
 **In the query execution order, when are JOINs processed?**
 
 - [ ] A. After SELECT
-- [ ] B. After GROUP BY
-- [ ] C. Before WHERE
+- [ ] B. Before WHERE
+- [ ] C. After GROUP BY
 - [ ] D. After HAVING
 
 ---
@@ -406,9 +406,9 @@ WHERE EXISTS (SELECT 1 FROM orders o WHERE o.customer_id = c.id);
 ```
 
 - [ ] A. Returns customers who have never placed an order
-- [ ] B. Returns customers who have placed at least one order (without duplicates)
-- [ ] C. Returns all customers with a count of their orders
-- [ ] D. Returns the first order for each customer
+- [ ] B. Returns all customers with a count of their orders
+- [ ] C. Returns the first order for each customer
+- [ ] D. Returns customers who have placed at least one order (without duplicates)
 
 ---
 
@@ -428,10 +428,10 @@ employees (left)     departments (right)    Result:
                                             +-------+--------+---------+
 ```
 
-- [ ] A. INNER JOIN
-- [ ] B. LEFT JOIN
-- [ ] C. RIGHT JOIN
-- [ ] D. FULL OUTER JOIN
+- [ ] A. FULL OUTER JOIN
+- [ ] B. INNER JOIN
+- [ ] C. LEFT JOIN
+- [ ] D. RIGHT JOIN
 
 ---
 
@@ -440,8 +440,8 @@ employees (left)     departments (right)    Result:
 **Which is the correct way to use the `USING` clause?**
 
 - [ ] A. `FROM orders o JOIN customers c USING (o.customer_id = c.customer_id)`
-- [ ] B. `FROM orders o JOIN customers c USING (customer_id)`
-- [ ] C. `FROM orders JOIN customers USING customer_id`
+- [ ] B. `FROM orders JOIN customers USING customer_id`
+- [ ] C. `FROM orders o JOIN customers c USING (customer_id)`
 - [ ] D. `FROM orders o JOIN customers c USING customer_id = customer_id`
 
 ---
@@ -455,9 +455,9 @@ SELECT * FROM orders, customers;
 ```
 
 - [ ] A. The syntax is invalid
-- [ ] B. It creates a Cartesian product (every order paired with every customer)
-- [ ] C. It only returns orders without customers
-- [ ] D. It returns an empty result set
+- [ ] B. It only returns orders without customers
+- [ ] C. It returns an empty result set
+- [ ] D. It creates a Cartesian product (every order paired with every customer)
 
 ---
 
@@ -485,10 +485,9 @@ LEFT JOIN suppliers s ON p.supplier_id = s.id;
 ```sql
 SELECT p.name, c.name AS category, s.name AS supplier
 FROM products p
-INNER JOIN categories c ON p.category_id = c.id
-LEFT JOIN suppliers s ON p.supplier_id = s.id;
+LEFT JOIN categories c ON p.category_id = c.id
+INNER JOIN suppliers s ON p.supplier_id = s.id;
 ```
-
 - [ ] C.
 ```sql
 SELECT p.name, c.name AS category, s.name AS supplier
@@ -501,9 +500,10 @@ INNER JOIN suppliers s ON p.supplier_id = s.id;
 ```sql
 SELECT p.name, c.name AS category, s.name AS supplier
 FROM products p
-LEFT JOIN categories c ON p.category_id = c.id
-INNER JOIN suppliers s ON p.supplier_id = s.id;
+INNER JOIN categories c ON p.category_id = c.id
+LEFT JOIN suppliers s ON p.supplier_id = s.id;
 ```
+
 
 ---
 
@@ -518,9 +518,9 @@ LEFT JOIN products p ON c.id = p.category_id
 WHERE p.id IS NULL;
 ```
 
-- [ ] A. All categories with their products
-- [ ] B. Categories that have at least one product
-- [ ] C. Categories that have no products (empty categories)
+- [ ] A. Categories that have no products (empty categories)
+- [ ] B. All categories with their products
+- [ ] C. Categories that have at least one product
 - [ ] D. Products that have no category assigned
 
 ---
@@ -543,14 +543,14 @@ WHERE e1.hire_date = e2.hire_date;
 ```sql
 SELECT e1.name, e2.name, e1.hire_date
 FROM employees e1
-JOIN employees e2 ON e1.hire_date = e2.hire_date AND e1.id < e2.id;
+JOIN employees e2 ON e1.hire_date = e2.hire_date AND e1.id != e2.id;
 ```
 
 - [ ] C.
 ```sql
 SELECT e1.name, e2.name, e1.hire_date
 FROM employees e1
-JOIN employees e2 ON e1.hire_date = e2.hire_date AND e1.id != e2.id;
+JOIN employees e2 ON e1.hire_date = e2.hire_date AND e1.id < e2.id;
 ```
 
 - [ ] D.
@@ -582,8 +582,8 @@ ORDER BY revenue DESC;
 ```
 
 - [ ] A. The number of products per category
-- [ ] B. Revenue per product from completed orders
-- [ ] C. Number of orders and total revenue per category from completed orders
+- [ ] B. Number of orders and total revenue per category from completed orders
+- [ ] C. Revenue per product from completed orders
 - [ ] D. Average order value per category
 
 ---
@@ -598,21 +598,21 @@ ORDER BY revenue DESC;
 ```sql
 SELECT c.name AS color, s.name AS size
 FROM colors c
-INNER JOIN sizes s ON c.id = s.id;
+CROSS JOIN sizes s;
 ```
 
 - [ ] B.
 ```sql
 SELECT c.name AS color, s.name AS size
 FROM colors c
-LEFT JOIN sizes s ON 1=1;
+INNER JOIN sizes s ON c.id = s.id;
 ```
 
 - [ ] C.
 ```sql
 SELECT c.name AS color, s.name AS size
 FROM colors c
-CROSS JOIN sizes s;
+LEFT JOIN sizes s ON 1=1;
 ```
 
 - [ ] D.
@@ -640,8 +640,8 @@ WHERE NOT EXISTS (
 
 - [ ] A. Finds customers who placed orders in 2026
 - [ ] B. Finds customers who have never placed any order
-- [ ] C. Finds customers who have NOT placed any orders in 2026 (but may have ordered before)
-- [ ] D. Counts orders per customer in 2026
+- [ ] C. Counts orders per customer in 2026
+- [ ] D. Finds customers who have NOT placed any orders in 2026 (but may have ordered before)
 
 ---
 
@@ -699,8 +699,8 @@ WHERE d.location = 'New York';
 ```
 
 - [ ] A. Returns all employees, showing department only for those in New York
-- [ ] B. Returns only employees whose department is in New York (like an INNER JOIN)
-- [ ] C. Returns all employees and all departments in New York
+- [ ] B. Returns all employees and all departments in New York
+- [ ] C. Returns only employees whose department is in New York (like an INNER JOIN)
 - [ ] D. Returns an error because you can't filter on a LEFT JOINed table
 
 ---
@@ -713,17 +713,6 @@ WHERE d.location = 'New York';
 
 - [ ] A.
 ```sql
-SELECT c.name, COUNT(p.id) AS products, SUM(oi.quantity) AS total_qty
-FROM customers c
-JOIN orders o ON c.id = o.customer_id
-JOIN order_items oi ON o.id = oi.order_id
-JOIN products p ON oi.product_id = p.id
-GROUP BY c.id, c.name
-WHERE COUNT(DISTINCT p.id) > 5;
-```
-
-- [ ] B.
-```sql
 SELECT c.name, COUNT(DISTINCT p.id) AS products, SUM(oi.quantity) AS total_qty
 FROM customers c
 JOIN orders o ON c.id = o.customer_id
@@ -731,6 +720,17 @@ JOIN order_items oi ON o.id = oi.order_id
 JOIN products p ON oi.product_id = p.id
 GROUP BY c.id, c.name
 HAVING COUNT(DISTINCT p.id) > 5;
+```
+
+- [ ] B.
+```sql
+SELECT c.name, COUNT(p.id) AS products, SUM(oi.quantity) AS total_qty
+FROM customers c
+JOIN orders o ON c.id = o.customer_id
+JOIN order_items oi ON o.id = oi.order_id
+JOIN products p ON oi.product_id = p.id
+GROUP BY c.id, c.name
+WHERE COUNT(DISTINCT p.id) > 5;
 ```
 
 - [ ] C.
@@ -768,9 +768,9 @@ WHERE EXISTS (
 ```
 
 - [ ] A. Anti-join (finds rows with NO match)
-- [ ] B. Semi-join (finds rows with at least one match, no duplicates)
-- [ ] C. Cross join (all combinations)
-- [ ] D. Self-join (table joined to itself)
+- [ ] B. Cross join (all combinations)
+- [ ] C. Self-join (table joined to itself)
+- [ ] D. Semi-join (finds rows with at least one match, no duplicates)
 
 ---
 
@@ -808,23 +808,23 @@ JOIN salary_grades g ON e.salary = g.min_salary;
 ```sql
 SELECT e.name, g.grade_name
 FROM employees e
-JOIN salary_grades g ON e.salary BETWEEN g.min_salary AND g.max_salary;
+CROSS JOIN salary_grades g
+WHERE e.salary > g.min_salary;
 ```
 
 - [ ] C.
 ```sql
 SELECT e.name, g.grade_name
 FROM employees e
-CROSS JOIN salary_grades g
-WHERE e.salary > g.min_salary;
+LEFT JOIN salary_grades g ON e.salary = g.grade_name;
 ```
-
 - [ ] D.
 ```sql
 SELECT e.name, g.grade_name
 FROM employees e
-LEFT JOIN salary_grades g ON e.salary = g.grade_name;
+JOIN salary_grades g ON e.salary BETWEEN g.min_salary AND g.max_salary;
 ```
+
 
 ---
 
@@ -840,8 +840,8 @@ FROM employees e
 JOIN employees s ON e.hire_date > s.hire_date;
 ```
 
-- [ ] A. Equality join
-- [ ] B. Non-equality join (comparison-based)
+- [ ] A. Non-equality join (comparison-based)
+- [ ] B. Equality join
 - [ ] C. Natural join
 - [ ] D. Cross join
 
@@ -870,8 +870,8 @@ WHERE o.status = 'completed';
 ```
 
 - [ ] A. Only `customers.id` (the primary key)
-- [ ] B. `orders.customer_id`, `order_items.order_id`, `order_items.product_id`, and `orders.status`
-- [ ] C. Only `orders.status` since it's in the WHERE clause
+- [ ] B. Only `orders.status` since it's in the WHERE clause
+- [ ] C. `orders.customer_id`, `order_items.order_id`, `order_items.product_id`, and `orders.status`
 - [ ] D. No indexes are needed; JOINs are automatically optimized
 
 ---
@@ -888,14 +888,14 @@ WHERE o.status = 'completed';
 ```sql
 SELECT p.name, d.tier_name, d.discount_pct
 FROM products p
-JOIN discount_tiers d ON p.price >= d.min_price AND p.price <= d.max_price;
+JOIN discount_tiers d ON p.id = d.id;
 ```
 
 - [ ] B.
 ```sql
 SELECT p.name, d.tier_name, d.discount_pct
 FROM products p
-JOIN discount_tiers d ON p.id = d.id;
+JOIN discount_tiers d ON p.price >= d.min_price AND p.price <= d.max_price;
 ```
 
 - [ ] C.
@@ -911,76 +911,3 @@ SELECT p.name, d.tier_name, d.discount_pct
 FROM products p
 LEFT JOIN discount_tiers d ON p.price = d.min_price;
 ```
-
----
-
----
-
-## Answer Key (Instructor Only)
-
-### Part A: True or False
-
-| Q | Answer | Explanation |
-|:-:|:------:|-------------|
-| 1 | **True** | `JOIN` without a qualifier defaults to `INNER JOIN` |
-| 2 | **False** | `INNER JOIN` only returns matching rows; `LEFT JOIN` would include non-matches with NULLs |
-| 3 | **True** | `LEFT JOIN` and `LEFT OUTER JOIN` are synonyms |
-| 4 | **False** | `CROSS JOIN` produces the Cartesian product: 100 × 50 = 5,000 rows |
-| 5 | **False** | `ON` filters before joining (preserving left rows); `WHERE` filters after (like INNER JOIN) |
-| 6 | **False** | Self-joins don't require self-referencing FK; any comparison between rows works |
-| 7 | **True** | `NATURAL JOIN` matches on ALL identically-named columns automatically |
-| 8 | **True** | `A RIGHT JOIN B` equals `B LEFT JOIN A` |
-| 9 | **False** | For `INNER JOIN`, order doesn't affect results (may affect performance) |
-| 10 | **False** | `FULL OUTER JOIN` returns ALL rows from both tables, with NULLs for non-matches |
-| 11 | **True** | `USING (column)` requires the column name to be identical in both tables |
-| 12 | **True** | Missing join condition in comma-separated tables creates a Cartesian product |
-| 13 | **True** | SQL requires non-aggregated SELECT columns to be in GROUP BY |
-| 14 | **True** | `NOT EXISTS` often has better query plan optimization than LEFT JOIN anti-pattern |
-| 15 | **False** | MySQL doesn't support `FULL OUTER JOIN` directly; requires UNION workaround |
-
-### Part B: Multiple Choice
-
-| Q | Answer | Explanation |
-|:-:|:------:|-------------|
-| 16 | **B** | `LEFT JOIN` from customers keeps all customers, even those without orders |
-| 17 | **B** | Both tables have `id` columns; unclear which table `id` and `customer_id` reference |
-| 18 | **B** | `LEFT JOIN` + `WHERE right.id IS NULL` is the anti-join pattern for finding non-matches |
-| 19 | **D** | CROSS JOIN = Cartesian product: 3 × 4 = 12 rows |
-| 20 | **B** | Self-join on employees table with LEFT JOIN to include employees without managers |
-| 21 | **B** | `ON` filter preserves all left rows; `WHERE` filter removes non-matching left rows |
-| 22 | **C** | `FULL OUTER JOIN` keeps all rows from both tables with NULLs for non-matches |
-| 23 | **B** | `NATURAL JOIN` matches ALL same-named columns (id, created_at, etc.), causing issues |
-| 24 | **B** | Self-join on price with `id < id` prevents self-matches and duplicate pairs |
-| 25 | **B** | `LEFT JOIN` includes customers with no orders; `COALESCE` converts NULL to 0 |
-| 26 | **C** | Execution order: FROM + JOINs → WHERE → GROUP BY → HAVING → SELECT |
-| 27 | **B** | `EXISTS` returns true if subquery has any rows, giving customers with orders (no dups) |
-| 28 | **D** | Result shows Carol (no dept) and IT (no employees) = both unmatched sides |
-| 29 | **B** | `USING (column_name)` is the correct syntax without table qualifiers |
-| 30 | **B** | Comma join without WHERE condition creates Cartesian product |
-
-### Part C: SQL Translation
-
-| Q | Answer | Explanation |
-|:-:|:------:|-------------|
-| 31 | **B** | `INNER JOIN` categories (required) + `LEFT JOIN` suppliers (optional) |
-| 32 | **C** | LEFT JOIN + WHERE IS NULL = categories with no matching products |
-| 33 | **B** | Self-join on hire_date with `id < id` prevents self-pairs and duplicates |
-| 34 | **C** | Four-table join counting distinct orders and summing revenue per category |
-| 35 | **C** | `CROSS JOIN` generates all combinations of colors and sizes |
-| 36 | **C** | `NOT EXISTS` with date condition finds customers with no 2026 orders |
-| 37 | **B** | INNER JOINs ensure orders have items; LEFT JOINs would include empty orders |
-| 38 | **B** | WHERE on LEFT JOINed table filters out NULLs, effectively becoming INNER JOIN |
-| 39 | **B** | Uses `COUNT(DISTINCT)` with `HAVING` (not WHERE) for aggregate condition |
-| 40 | **B** | `EXISTS` is a semi-join: returns rows that have at least one match |
-
-### Part D: Additional Questions
-
-| Q | Answer | Explanation |
-|:-:|:------:|-------------|
-| 41 | **False** | Join conditions can use any comparison: `=`, `>`, `<`, `BETWEEN`, `!=`, etc. |
-| 42 | **B** | `BETWEEN min_salary AND max_salary` is a range-based non-equality join |
-| 43 | **B** | `hire_date > hire_date` is a comparison (non-equality) join condition |
-| 44 | **True** | Indexes on FK columns dramatically improve join performance |
-| 45 | **B** | Index join columns (FKs) and filter columns (status) for optimal performance |
-| 46 | **A** | Uses `>=` and `<=` for range-based join matching price to tier range |
-
