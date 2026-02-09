@@ -5,8 +5,13 @@ namespace GameGuild.Configuration.PresentationLayer.RateLimiting;
 ///     Supports multiple partitioning strategies (IP, User, Tenant, API Key)
 ///     and multiple algorithms (Fixed Window, Sliding Window, Token Bucket, Concurrency).
 /// </summary>
-public class RateLimitingOptions : BaseOptions
+public sealed class RateLimitingOptions : BaseOptions
 {
+    /// <summary>
+    ///     The configuration section name for this options type.
+    /// </summary>
+    public const string SectionName = "RateLimiting";
+
     /// <summary>
     ///     Whether rate limiting is enabled globally.
     /// </summary>

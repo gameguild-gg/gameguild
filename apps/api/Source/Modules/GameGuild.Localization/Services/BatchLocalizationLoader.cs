@@ -1,4 +1,3 @@
-using GameGuild.Abstractions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
@@ -124,7 +123,7 @@ public class BatchLocalizationLoader : IBatchLocalizationLoader
         var dbLocalizations = await query
             .Include(l => l.Language)
             .AsNoTracking()
-            .ToListAsync(cancellationToken);
+            .ToListAsync(cancellationToken).ConfigureAwait(false);
 
         // Group by resource and cache
         var grouped = dbLocalizations
@@ -183,7 +182,7 @@ public class BatchLocalizationLoader : IBatchLocalizationLoader
         var localizations = await query
             .Include(l => l.Language)
             .AsNoTracking()
-            .ToListAsync(cancellationToken);
+            .ToListAsync(cancellationToken).ConfigureAwait(false);
 
         // Create result dictionary with all requested IDs
         var result = resourceIdList.ToDictionary(

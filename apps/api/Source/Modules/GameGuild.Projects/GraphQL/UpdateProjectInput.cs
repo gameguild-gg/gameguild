@@ -1,0 +1,47 @@
+
+namespace GameGuild.Projects;
+
+/// <summary>
+/// Input type for updating an existing project
+/// </summary>
+public record UpdateProjectInput(
+  Guid ProjectId,
+  string? Title,
+  string? Description,
+  string? ShortDescription,
+  string? ImageUrl,
+  string? RepositoryUrl,
+  string? WebsiteUrl,
+  string? DownloadUrl,
+  GameGuild.ProjectType? Type,
+  Guid? CategoryId,
+  ContentStatus? Status,
+  ContentVisibility? Visibility,
+  List<string>? Tags
+) {
+  public Guid ProjectId { get; init; } = ProjectId;
+
+  public string? Title { get; init; } = Title;
+
+  public string? Description { get; init; } = Description;
+
+  public string? ShortDescription { get; init; } = ShortDescription;
+
+  public string? ImageUrl { get; init; } = ImageUrl;
+
+  public string? RepositoryUrl { get; init; } = RepositoryUrl;
+
+  public string? WebsiteUrl { get; init; } = WebsiteUrl;
+
+  public string? DownloadUrl { get; init; } = DownloadUrl;
+
+  public GameGuild.ProjectType? Type { get; init; } = Type;
+
+  public Guid? CategoryId { get; init; } = CategoryId;
+
+  public ContentStatus? Status { get; init; } = Status;
+
+  public ContentVisibility? Visibility { get; init; } = Visibility;
+
+  public List<string>? Tags { get; init; } = Tags;
+}

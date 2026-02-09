@@ -86,7 +86,7 @@ public sealed class TranslationWorkflowService : ITranslationWorkflowService
             Tasks = new List<TranslationTaskEntity>()
         };
 
-        await _repository.CreateWorkflowAsync(entity, cancellationToken);
+        await _repository.CreateWorkflowAsync(entity, cancellationToken).ConfigureAwait(false);
         
         _logger.LogInformation("Created translation workflow {WorkflowId} for resource {ResourceKey}",
             entity.Id, resourceKey);
@@ -100,7 +100,7 @@ public sealed class TranslationWorkflowService : ITranslationWorkflowService
         Guid translatorId,
         CancellationToken cancellationToken = default)
     {
-        var workflow = await _repository.GetWorkflowByIdAsync(workflowId, cancellationToken);
+        var workflow = await _repository.GetWorkflowByIdAsync(workflowId, cancellationToken).ConfigureAwait(false);
         if (workflow == null)
         {
             throw new InvalidOperationException($"Workflow {workflowId} not found");
@@ -116,10 +116,10 @@ public sealed class TranslationWorkflowService : ITranslationWorkflowService
             AssignedAt = DateTime.UtcNow
         };
 
-        await _repository.CreateTaskAsync(taskEntity, cancellationToken);
+        await _repository.CreateTaskAsync(taskEntity, cancellationToken).ConfigureAwait(false);
         
         workflow.Status = TranslationWorkflowStatus.InProgress;
-        await _repository.UpdateWorkflowAsync(workflow, cancellationToken);
+        await _repository.UpdateWorkflowAsync(workflow, cancellationToken).ConfigureAwait(false);
 
         _logger.LogInformation("Assigned task {TaskId} to translator {TranslatorId} for language {Language}",
             taskEntity.Id, translatorId, targetLanguage);
@@ -133,7 +133,7 @@ public sealed class TranslationWorkflowService : ITranslationWorkflowService
         Dictionary<string, string>? metadata = null,
         CancellationToken cancellationToken = default)
     {
-        var task = await _repository.GetTaskByIdAsync(taskId, cancellationToken);
+        var task = await _repository.GetTaskByIdAsync(taskId, cancellationToken).ConfigureAwait(false);
         if (task == null)
         {
             throw new InvalidOperationException($"Task {taskId} not found");
@@ -144,7 +144,7 @@ public sealed class TranslationWorkflowService : ITranslationWorkflowService
         task.Status = TranslationTaskStatus.PendingReview;
         task.SubmittedAt = DateTime.UtcNow;
 
-        await _repository.UpdateTaskAsync(task, cancellationToken);
+        await _repository.UpdateTaskAsync(task, cancellationToken).ConfigureAwait(false);
 
         _logger.LogInformation("Translation submitted for task {TaskId}", taskId);
 
@@ -158,7 +158,7 @@ public sealed class TranslationWorkflowService : ITranslationWorkflowService
         string? feedback = null,
         CancellationToken cancellationToken = default)
     {
-        var task = await _repository.GetTaskByIdAsync(taskId, cancellationToken);
+        var task = await _repository.GetTaskByIdAsync(taskId, cancellationToken).ConfigureAwait(false);
         if (task == null)
         {
             throw new InvalidOperationException($"Task {taskId} not found");
@@ -176,7 +176,7 @@ public sealed class TranslationWorkflowService : ITranslationWorkflowService
             _ => throw new ArgumentException($"Unknown decision: {decision}")
         };
 
-        await _repository.UpdateTaskAsync(task, cancellationToken);
+        await _repository.UpdateTaskAsync(task, cancellationToken).ConfigureAwait(false);
 
         _logger.LogInformation("Task {TaskId} reviewed by {ReviewerId}: {Decision}",
             taskId, reviewerId, decision);
@@ -189,7 +189,7 @@ public sealed class TranslationWorkflowService : ITranslationWorkflowService
         Guid approverId,
         CancellationToken cancellationToken = default)
     {
-        var workflow = await _repository.GetWorkflowByIdAsync(workflowId, cancellationToken);
+        var workflow = await _repository.GetWorkflowByIdAsync(workflowId, cancellationToken).ConfigureAwait(false);
         if (workflow == null)
         {
             throw new InvalidOperationException($"Workflow {workflowId} not found");
@@ -205,7 +205,7 @@ public sealed class TranslationWorkflowService : ITranslationWorkflowService
         workflow.ApprovedBy = approverId;
         workflow.ApprovedAt = DateTime.UtcNow;
 
-        await _repository.UpdateWorkflowAsync(workflow, cancellationToken);
+        await _repository.UpdateWorkflowAsync(workflow, cancellationToken).ConfigureAwait(false);
 
         _logger.LogInformation("Workflow {WorkflowId} approved by {ApproverId}", workflowId, approverId);
 
@@ -221,12 +221,12 @@ public sealed class TranslationWorkflowService : ITranslationWorkflowService
 
         if (translatorId.HasValue)
         {
-            tasks = await _repository.GetPendingTasksByTranslatorAsync(translatorId.Value, cancellationToken);
+            tasks = await _repository.GetPendingTasksByTranslatorAsync(translatorId.Value, cancellationToken).ConfigureAwait(false);
         }
         else
         {
             // Get all pending workflows and extract their tasks
-            var workflows = await _repository.GetPendingWorkflowsAsync(cancellationToken);
+            var workflows = await _repository.GetPendingWorkflowsAsync(cancellationToken).ConfigureAwait(false);
             tasks = workflows.SelectMany(w => w.Tasks)
                 .Where(t => t.Status == TranslationTaskStatus.Assigned ||
                            t.Status == TranslationTaskStatus.PendingReview)
@@ -243,7 +243,7 @@ public sealed class TranslationWorkflowService : ITranslationWorkflowService
         Guid workflowId,
         CancellationToken cancellationToken = default)
     {
-        var workflow = await _repository.GetWorkflowByIdAsync(workflowId, cancellationToken);
+        var workflow = await _repository.GetWorkflowByIdAsync(workflowId, cancellationToken).ConfigureAwait(false);
         if (workflow == null)
         {
             throw new InvalidOperationException($"Workflow {workflowId} not found");

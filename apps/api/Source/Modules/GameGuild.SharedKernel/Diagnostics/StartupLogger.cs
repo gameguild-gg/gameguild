@@ -1,6 +1,6 @@
 using Microsoft.Extensions.Logging;
 
-namespace GameGuild.Diagnostics;
+namespace GameGuild;
 
 /// <summary>
 ///     Provides a shared startup logger for use during application bootstrapping,

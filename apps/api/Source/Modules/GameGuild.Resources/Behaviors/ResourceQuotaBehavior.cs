@@ -41,7 +41,7 @@ public class ResourceQuotaBehavior<TRequest, TResponse> : IPipelineBehavior<TReq
         if (quotaAttribute == null)
         {
             // No quota required, proceed normally
-            return await next();
+            return await next().ConfigureAwait(false);
         }
 
         // Ensure we have a tenant context - FAIL-CLOSED: reject if missing
@@ -84,7 +84,7 @@ public class ResourceQuotaBehavior<TRequest, TResponse> : IPipelineBehavior<TReq
                     resourceType,
                     amount,
                     cancellationToken
-                );
+                ).ConfigureAwait(false);
 
                 if (!success)
                 {
@@ -115,7 +115,7 @@ public class ResourceQuotaBehavior<TRequest, TResponse> : IPipelineBehavior<TReq
                 quotaConsumed = true;
 
                 // Check soft limit for warning purposes
-                var quota = await _quotaService.GetQuotaAsync(tenantId, resourceType, cancellationToken);
+                var quota = await _quotaService.GetQuotaAsync(tenantId, resourceType, cancellationToken).ConfigureAwait(false);
                 if (quota?.SoftLimit.HasValue == true && currentUsage > quota.SoftLimit.Value)
                 {
                     _logger.LogWarning(
@@ -144,7 +144,7 @@ public class ResourceQuotaBehavior<TRequest, TResponse> : IPipelineBehavior<TReq
                     resourceType,
                     amount,
                     cancellationToken
-                );
+                ).ConfigureAwait(false);
 
                 if (!limitCheck.CanProceed)
                 {
@@ -159,7 +159,7 @@ public class ResourceQuotaBehavior<TRequest, TResponse> : IPipelineBehavior<TReq
             }
 
             // Execute the command
-            var response = await next();
+            var response = await next().ConfigureAwait(false);
 
             _logger.LogInformation(
                 "Successfully completed {CommandType} with {Amount} {ResourceType} quota for tenant {TenantId}",
@@ -195,7 +195,7 @@ public class ResourceQuotaBehavior<TRequest, TResponse> : IPipelineBehavior<TReq
                     resourceType,
                     amount,
                     cancellationToken: cancellationToken
-                );
+                ).ConfigureAwait(false);
             }
             catch (Exception rollbackEx)
             {

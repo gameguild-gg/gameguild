@@ -1,5 +1,3 @@
-using GameGuild.Abstractions;
-using GameGuild.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace GameGuild.Resources;
@@ -48,14 +46,14 @@ public class UsageRecordRepository(IApplicationDbContext context) : IUsageRecord
         if (toDate.HasValue) query = query.Where(r => r.PeriodStart <= toDate.Value);
 
         // Get total count for pagination metadata
-        var totalCount = await query.CountAsync(cancellationToken);
+        var totalCount = await query.CountAsync(cancellationToken).ConfigureAwait(false);
 
         // Apply ordering and pagination
         var items = await query
             .OrderByDescending(r => r.PeriodStart)
             .Skip(skip)
             .Take(take)
-            .ToListAsync(cancellationToken);
+            .ToListAsync(cancellationToken).ConfigureAwait(false);
 
         return new PagedResult<UsageRecord>(items, totalCount, skip, take);
     }
@@ -75,17 +73,17 @@ public class UsageRecordRepository(IApplicationDbContext context) : IUsageRecord
     public async Task<UsageRecord> CreateAsync(UsageRecord record, CancellationToken cancellationToken = default)
     {
         UsageRecords.Add(record);
-        await context.SaveChangesAsync(cancellationToken);
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         return record;
     }
 
-    public async Task<UsageRecord> AddAsync(UsageRecord record, CancellationToken cancellationToken = default) { return await CreateAsync(record, cancellationToken); }
+    public async Task<UsageRecord> AddAsync(UsageRecord record, CancellationToken cancellationToken = default) { return await CreateAsync(record, cancellationToken).ConfigureAwait(false); }
 
     public async Task<UsageRecord> UpdateAsync(UsageRecord record, CancellationToken cancellationToken = default)
     {
         UsageRecords.Update(record);
-        await context.SaveChangesAsync(cancellationToken);
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         return record;
     }
@@ -102,12 +100,12 @@ public class UsageRecordRepository(IApplicationDbContext context) : IUsageRecord
         if (records.Count == 0) return false;
 
         UsageRecords.RemoveRange(records);
-        await context.SaveChangesAsync(cancellationToken);
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         return true;
     }
 
-    public async Task<bool> DeleteOlderThanAsync(DateTime cutoffDate, CancellationToken cancellationToken = default) { return await DeleteOldRecordsAsync(cutoffDate, cancellationToken); }
+    public async Task<bool> DeleteOlderThanAsync(DateTime cutoffDate, CancellationToken cancellationToken = default) { return await DeleteOldRecordsAsync(cutoffDate, cancellationToken).ConfigureAwait(false); }
 
     public async Task<IEnumerable<UsageRecord>> GetByUserAsync(Guid userId, CancellationToken cancellationToken = default)
     {
@@ -135,7 +133,7 @@ public class UsageRecordRepository(IApplicationDbContext context) : IUsageRecord
             archived++;
         }
 
-        await context.SaveChangesAsync(cancellationToken);
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         return archived;
     }
@@ -147,7 +145,7 @@ public class UsageRecordRepository(IApplicationDbContext context) : IUsageRecord
         if (records.Count == 0) return false;
 
         UsageRecords.RemoveRange(records);
-        await context.SaveChangesAsync(cancellationToken);
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         return true;
     }
@@ -159,7 +157,7 @@ public class UsageRecordRepository(IApplicationDbContext context) : IUsageRecord
         if (records.Count == 0) return false;
 
         UsageRecords.RemoveRange(records);
-        await context.SaveChangesAsync(cancellationToken);
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         return true;
     }
@@ -202,7 +200,7 @@ public class UsageRecordRepository(IApplicationDbContext context) : IUsageRecord
         if (records.Count == 0) return false;
 
         UsageRecords.RemoveRange(records);
-        await context.SaveChangesAsync(cancellationToken);
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         return true;
     }
@@ -214,7 +212,7 @@ public class UsageRecordRepository(IApplicationDbContext context) : IUsageRecord
         if (tenantId.HasValue)
             query = query.Where(r => r.TenantId!.Value == tenantId.Value);
 
-        return await query.CountAsync(cancellationToken);
+        return await query.CountAsync(cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<int> GetArchivedRecordCountAsync(Guid? tenantId = null, CancellationToken cancellationToken = default)
@@ -227,7 +225,7 @@ public class UsageRecordRepository(IApplicationDbContext context) : IUsageRecord
         // Count records that have archived:true in their metadata
         return await query
             .Where(r => r.Metadata != null && r.Metadata.Contains("\"archived\":true"))
-            .CountAsync(cancellationToken);
+            .CountAsync(cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<DateTime?> GetOldestRecordDateAsync(Guid? tenantId = null, CancellationToken cancellationToken = default)
@@ -240,7 +238,7 @@ public class UsageRecordRepository(IApplicationDbContext context) : IUsageRecord
         return await query
             .OrderBy(r => r.PeriodStart)
             .Select(r => (DateTime?)r.PeriodStart)
-            .FirstOrDefaultAsync(cancellationToken);
+            .FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<long> GetEstimatedStorageBytesAsync(Guid? tenantId = null, bool archivedOnly = false, CancellationToken cancellationToken = default)
@@ -254,7 +252,7 @@ public class UsageRecordRepository(IApplicationDbContext context) : IUsageRecord
             query = query.Where(r => r.Metadata != null && r.Metadata.Contains("\"archived\":true"));
 
         // Estimate ~200 bytes per record for typical usage record storage
-        var recordCount = await query.CountAsync(cancellationToken);
+        var recordCount = await query.CountAsync(cancellationToken).ConfigureAwait(false);
 
         return recordCount * 200L;
     }

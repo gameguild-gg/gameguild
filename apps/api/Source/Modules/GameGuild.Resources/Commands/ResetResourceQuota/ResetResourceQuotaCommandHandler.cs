@@ -24,7 +24,7 @@ public class ResetResourceQuotaCommandHandler(
         var actorId = actor?.SubjectIdAsGuid;
 
         quota.ResetUsage();
-        quota.UpdatedAt = DateTime.UtcNow;
+        quota.Touch();
 
         await resourceQuotaRepository.UpdateAsync(quota, cancellationToken).ConfigureAwait(false);
 
@@ -39,7 +39,7 @@ public class ResetResourceQuotaCommandHandler(
             HardLimit: quota.HardLimit,
             Source: "ResetResourceQuotaCommand",
             ActorId: actorId,
-            Timestamp: DateTime.UtcNow), cancellationToken).ConfigureAwait(false);
+            Timestamp: DateTime.UtcNow), cancellationToken);
 
         return Unit.Value;
     }

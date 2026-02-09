@@ -23,7 +23,7 @@ public class SlaImpactAnalysisService(
         CancellationToken cancellationToken = default
     )
     {
-        var quota = await quotaRepository.GetByIdAsync(resourceQuotaId, cancellationToken);
+        var quota = await quotaRepository.GetByIdAsync(resourceQuotaId, cancellationToken).ConfigureAwait(false);
 
         if (quota == null) { throw new ArgumentException($"Resource quota {resourceQuotaId} not found", nameof(resourceQuotaId)); }
 
@@ -46,7 +46,7 @@ public class SlaImpactAnalysisService(
 
         violation.CalculateDeviation();
 
-        var savedViolation = await analysisRepository.CreateAsync(violation, cancellationToken);
+        var savedViolation = await analysisRepository.CreateAsync(violation, cancellationToken).ConfigureAwait(false);
 
         logger.LogWarning("SLA violation recorded: Type={Type}, Severity={Severity}, Quota={QuotaId}, Expected={Expected}, Actual={Actual}", violationType, severity, resourceQuotaId, expectedValue, actualValue);
 
@@ -55,7 +55,7 @@ public class SlaImpactAnalysisService(
         {
             try
             {
-                var escalationResult = await escalationService.EscalateViolationAsync(savedViolation, cancellationToken);
+                var escalationResult = await escalationService.EscalateViolationAsync(savedViolation, cancellationToken).ConfigureAwait(false);
 
                 if (escalationResult.WasEscalated)
                 {
@@ -68,13 +68,14 @@ public class SlaImpactAnalysisService(
             {
                 // Don't fail the violation recording if escalation fails
                 logger.LogError(ex, "Failed to auto-escalate violation {ViolationId}", savedViolation.Id);
+                throw;
             }
         }
 
         return savedViolation;
     }
 
-    public async Task<SlaImpactAnalysis?> GetViolationAsync(Guid violationId, CancellationToken cancellationToken = default) { return await analysisRepository.GetByIdAsync(violationId, cancellationToken); }
+    public async Task<SlaImpactAnalysis?> GetViolationAsync(Guid violationId, CancellationToken cancellationToken = default) { return await analysisRepository.GetByIdAsync(violationId, cancellationToken).ConfigureAwait(false); }
 
     public async Task<IEnumerable<SlaImpactAnalysis>> GetTenantViolationsAsync(
         Guid tenantId,
@@ -86,10 +87,10 @@ public class SlaImpactAnalysisService(
     {
         IEnumerable<SlaImpactAnalysis> violations;
 
-        if (fromDate.HasValue && toDate.HasValue) { violations = await analysisRepository.GetByDateRangeAsync(tenantId, fromDate.Value, toDate.Value, cancellationToken); }
+        if (fromDate.HasValue && toDate.HasValue) { violations = await analysisRepository.GetByDateRangeAsync(tenantId, fromDate.Value, toDate.Value, cancellationToken).ConfigureAwait(false); }
         else
         {
-            violations = await analysisRepository.GetByTenantAsync(tenantId, cancellationToken);
+            violations = await analysisRepository.GetByTenantAsync(tenantId, cancellationToken).ConfigureAwait(false);
 
             if (fromDate.HasValue) violations = violations.Where(v => v.ViolationStartTime >= fromDate.Value);
             if (toDate.HasValue) violations = violations.Where(v => v.ViolationStartTime <= toDate.Value);
@@ -109,7 +110,7 @@ public class SlaImpactAnalysisService(
             throw new ArgumentException("TenantId is required", nameof(tenantId));
         }
 
-        var violations = await analysisRepository.GetUnresolvedAsync(tenantId.Value, cancellationToken);
+        var violations = await analysisRepository.GetUnresolvedAsync(tenantId.Value, cancellationToken).ConfigureAwait(false);
 
         if (minSeverity.HasValue) { violations = violations.Where(v => v.Severity >= minSeverity.Value); }
 
@@ -118,13 +119,13 @@ public class SlaImpactAnalysisService(
 
     public async Task<bool> ResolveViolationAsync(Guid violationId, Guid resolvedByUserId, string? mitigationActions = null, CancellationToken cancellationToken = default)
     {
-        var violation = await analysisRepository.GetByIdAsync(violationId, cancellationToken);
+        var violation = await analysisRepository.GetByIdAsync(violationId, cancellationToken).ConfigureAwait(false);
 
         if (violation == null) return false;
 
         violation.Resolve(resolvedByUserId, mitigationActions);
 
-        await analysisRepository.UpdateAsync(violation, cancellationToken);
+        await analysisRepository.UpdateAsync(violation, cancellationToken).ConfigureAwait(false);
 
         logger.LogInformation("SLA violation {ViolationId} resolved by user {UserId}", violationId, resolvedByUserId);
 
@@ -133,7 +134,7 @@ public class SlaImpactAnalysisService(
 
     public async Task<bool> UpdateViolationAsync(Guid violationId, string? rootCause = null, string? businessImpact = null, bool? requiresEscalation = null, CancellationToken cancellationToken = default)
     {
-        var violation = await analysisRepository.GetByIdAsync(violationId, cancellationToken);
+        var violation = await analysisRepository.GetByIdAsync(violationId, cancellationToken).ConfigureAwait(false);
 
         if (violation == null) return false;
 
@@ -143,9 +144,9 @@ public class SlaImpactAnalysisService(
 
         if (requiresEscalation.HasValue) violation.RequiresEscalation = requiresEscalation.Value;
 
-        violation.UpdatedAt = DateTime.UtcNow;
+        violation.Touch();
 
-        await analysisRepository.UpdateAsync(violation, cancellationToken);
+        await analysisRepository.UpdateAsync(violation, cancellationToken).ConfigureAwait(false);
 
         logger.LogInformation("SLA violation {ViolationId} updated", violationId);
 
@@ -154,19 +155,19 @@ public class SlaImpactAnalysisService(
 
     public async Task<string> CreateIncidentTicketAsync(Guid violationId, CancellationToken cancellationToken = default)
     {
-        var violation = await analysisRepository.GetByIdAsync(violationId, cancellationToken);
+        var violation = await analysisRepository.GetByIdAsync(violationId, cancellationToken).ConfigureAwait(false);
 
         if (violation == null) { throw new ArgumentException($"Violation {violationId} not found", nameof(violationId)); }
 
         // Create incident ticket using the injected provider
         // The provider can be implemented by Incident Management module for real integration
-        var ticketId = await incidentTicketProvider.CreateTicketAsync(violation, cancellationToken);
+        var ticketId = await incidentTicketProvider.CreateTicketAsync(violation, cancellationToken).ConfigureAwait(false);
 
         violation.IncidentCreated = true;
         violation.IncidentTicketId = ticketId;
-        violation.UpdatedAt = DateTime.UtcNow;
+        violation.Touch();
 
-        await analysisRepository.UpdateAsync(violation, cancellationToken);
+        await analysisRepository.UpdateAsync(violation, cancellationToken).ConfigureAwait(false);
 
         logger.LogInformation("Incident ticket {TicketId} created for SLA violation {ViolationId}", ticketId, violationId);
 
@@ -175,7 +176,7 @@ public class SlaImpactAnalysisService(
 
     public async Task<SlaComplianceMetrics> GetComplianceMetricsAsync(Guid tenantId, DateTime periodStart, DateTime periodEnd, CancellationToken cancellationToken = default)
     {
-        var violations = await analysisRepository.GetByDateRangeAsync(tenantId, periodStart, periodEnd, cancellationToken);
+        var violations = await analysisRepository.GetByDateRangeAsync(tenantId, periodStart, periodEnd, cancellationToken).ConfigureAwait(false);
 
         var violationsList = violations.ToList();
 
@@ -228,7 +229,7 @@ public class SlaImpactAnalysisService(
         var from = fromDate ?? DateTime.UtcNow.AddMonths(-1);
         var to = toDate ?? DateTime.UtcNow;
 
-        var stringCounts = await analysisRepository.GetViolationCountsByTypeAsync(tenantId.Value, from, to, cancellationToken);
+        var stringCounts = await analysisRepository.GetViolationCountsByTypeAsync(tenantId.Value, from, to, cancellationToken).ConfigureAwait(false);
 
         // Convert Dictionary<string, int> to Dictionary<ResourceUsageType, int>
         var result = new Dictionary<ResourceUsageType, int>();
@@ -248,7 +249,7 @@ public class SlaImpactAnalysisService(
             throw new ArgumentException("TenantId is required for getting critical ongoing violations", nameof(tenantId));
         }
 
-        var unresolved = await analysisRepository.GetUnresolvedAsync(tenantId.Value, cancellationToken);
+        var unresolved = await analysisRepository.GetUnresolvedAsync(tenantId.Value, cancellationToken).ConfigureAwait(false);
 
         return unresolved
             .Where(v => v.Severity >= SlaViolationSeverity.High && !v.IsResolved)

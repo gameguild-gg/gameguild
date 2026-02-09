@@ -13,13 +13,13 @@ public record QuotaExceededEvent(
     long HardLimit,
     string? Source,
     Guid? ActorId,
-    DateTime Timestamp) : IDomainEvent
+    DateTimeOffset Timestamp) : IDomainEvent
 {
     /// <inheritdoc />
     public Guid EventId { get; init; } = Guid.NewGuid();
 
     /// <inheritdoc />
-    public DateTime OccurredAt { get; init; } = Timestamp;
+    public DateTimeOffset OccurredAt { get; init; } = Timestamp;
 
     /// <inheritdoc />
     public int Version { get; init; } = 1;

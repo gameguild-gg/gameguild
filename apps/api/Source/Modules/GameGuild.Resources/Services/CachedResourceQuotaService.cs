@@ -67,7 +67,7 @@ public class CachedResourceQuotaService : IResourceQuotaService
         ResourceQuotaPeriod period = ResourceQuotaPeriod.Monthly,
         CancellationToken cancellationToken = default)
     {
-        var result = await _inner.SetQuotaAsync(tenantId, type, softLimit, hardLimit, period, cancellationToken);
+        var result = await _inner.SetQuotaAsync(tenantId, type, softLimit, hardLimit, period, cancellationToken).ConfigureAwait(false);
         InvalidateQuotaCache(tenantId, type);
         return result;
     }
@@ -85,7 +85,7 @@ public class CachedResourceQuotaService : IResourceQuotaService
             return cached;
         }
 
-        var quota = await _inner.GetQuotaAsync(tenantId, type, cancellationToken);
+        var quota = await _inner.GetQuotaAsync(tenantId, type, cancellationToken).ConfigureAwait(false);
 
         if (quota != null)
         {
@@ -112,7 +112,7 @@ public class CachedResourceQuotaService : IResourceQuotaService
             return cached;
         }
 
-        var quotas = await _inner.GetTenantQuotasAsync(tenantId, cancellationToken);
+        var quotas = await _inner.GetTenantQuotasAsync(tenantId, cancellationToken).ConfigureAwait(false);
         var quotaList = quotas.ToList();
 
         _cache.Set(cacheKey, quotaList, new MemoryCacheEntryOptions
@@ -129,7 +129,7 @@ public class CachedResourceQuotaService : IResourceQuotaService
         ResourceUsageType type,
         CancellationToken cancellationToken = default)
     {
-        var result = await _inner.DeleteQuotaAsync(tenantId, type, cancellationToken);
+        var result = await _inner.DeleteQuotaAsync(tenantId, type, cancellationToken).ConfigureAwait(false);
         InvalidateQuotaCache(tenantId, type);
         return result;
     }
@@ -142,7 +142,7 @@ public class CachedResourceQuotaService : IResourceQuotaService
         CancellationToken cancellationToken = default)
     {
         // Use cached quota if available
-        var quota = await GetQuotaAsync(tenantId, type, cancellationToken);
+        var quota = await GetQuotaAsync(tenantId, type, cancellationToken).ConfigureAwait(false);
         return quota?.CurrentUsage ?? 0;
     }
 
@@ -166,7 +166,7 @@ public class CachedResourceQuotaService : IResourceQuotaService
         CancellationToken cancellationToken = default)
     {
         // CheckLimitsAsync can use cached data (advisory only)
-        return await _inner.CheckLimitsAsync(tenantId, type, requestedAmount, cancellationToken);
+        return await _inner.CheckLimitsAsync(tenantId, type, requestedAmount, cancellationToken).ConfigureAwait(false);
     }
 
     public Task<Dictionary<ResourceUsageType, ResourceLimitCheckResponse>> CheckMultipleLimitsAsync(
@@ -188,7 +188,7 @@ public class CachedResourceQuotaService : IResourceQuotaService
         CancellationToken cancellationToken = default)
     {
         // Always go to inner service for atomic operations
-        var result = await _inner.TryConsumeResourceAsync(tenantId, type, amount, userId, source, cancellationToken);
+        var result = await _inner.TryConsumeResourceAsync(tenantId, type, amount, userId, source, cancellationToken).ConfigureAwait(false);
 
         // Invalidate cache after mutation
         InvalidateQuotaCache(tenantId, type);
@@ -203,7 +203,7 @@ public class CachedResourceQuotaService : IResourceQuotaService
         CancellationToken cancellationToken = default)
     {
         // Atomic operations always bypass cache for accuracy
-        var result = await _inner.TryAtomicConsumeAsync(tenantId, type, amount, cancellationToken);
+        var result = await _inner.TryAtomicConsumeAsync(tenantId, type, amount, cancellationToken).ConfigureAwait(false);
 
         // Always invalidate after attempt (whether success or failure)
         InvalidateQuotaCache(tenantId, type);
@@ -219,7 +219,7 @@ public class CachedResourceQuotaService : IResourceQuotaService
         string? source = null,
         CancellationToken cancellationToken = default)
     {
-        var result = await _inner.DecrementUsageAsync(tenantId, type, amount, userId, source, cancellationToken);
+        var result = await _inner.DecrementUsageAsync(tenantId, type, amount, userId, source, cancellationToken).ConfigureAwait(false);
 
         if (result)
         {
@@ -250,7 +250,7 @@ public class CachedResourceQuotaService : IResourceQuotaService
 
     public async Task<int> ResetExpiredQuotasAsync(CancellationToken cancellationToken = default)
     {
-        var result = await _inner.ResetExpiredQuotasAsync(cancellationToken);
+        var result = await _inner.ResetExpiredQuotasAsync(cancellationToken).ConfigureAwait(false);
 
         // Note: We can't know which tenants were reset, so we don't invalidate specific caches
         // The cache will naturally expire based on TTL
@@ -269,7 +269,7 @@ public class CachedResourceQuotaService : IResourceQuotaService
         ResourceUsageType type,
         CancellationToken cancellationToken = default)
     {
-        var result = await _inner.RecalculateUsageAsync(tenantId, type, cancellationToken);
+        var result = await _inner.RecalculateUsageAsync(tenantId, type, cancellationToken).ConfigureAwait(false);
 
         if (result)
         {

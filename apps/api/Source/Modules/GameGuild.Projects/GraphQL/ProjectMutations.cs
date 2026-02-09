@@ -1,18 +1,18 @@
 using GameGuild.Identity.Context.Actors;
-using GameGuild.Enums;
-using AccessLevel = GameGuild.Enums.AccessLevel;
+using HotChocolate;
+
 
 namespace GameGuild.Projects;
 
 /// <summary>
 /// GraphQL mutations for Project module using CQRS pattern
 /// </summary>
-// [ExtendObjectType<Mutation>] // TODO: Configure GraphQL Mutation type
+// [ExtendObjectType<Mutation>] // PLANNED: Configure GraphQL Mutation type when HotChocolate schema stitching is set up for the Projects module
 public class ProjectMutations {
   /// <summary>
   /// Creates a new project using CQRS pattern
   /// </summary>
-  public async Task<CreateProjectResult> CreateProject(CreateProjectInput input, [Service] CQRS.IMediator mediator, [Service] IActorContextAccessor actorContextAccessor, CancellationToken cancellationToken) {
+  public async Task<Project> CreateProject(CreateProjectInput input, [Service] CQRS.IMediator mediator, [Service] IActorContextAccessor actorContextAccessor, CancellationToken cancellationToken) {
     var actor = actorContextAccessor.ActorContext;
     var command = new CreateProjectCommand {
       Title = input.Title,
@@ -25,18 +25,20 @@ public class ProjectMutations {
       Type = (GameGuild.ProjectType)input.Type,
       CreatedById = actor.SubjectIdAsGuid ?? Guid.Empty,
       CategoryId = input.CategoryId,
-      Visibility = input.Visibility ?? AccessLevel.Public,
+      Visibility = input.Visibility ?? ContentVisibility.Public,
       Status = input.Status ?? ContentStatus.Draft,
       Tags = input.Tags,
     };
 
-    return await mediator.Send(command, cancellationToken);
+    var result = await mediator.Send(command, cancellationToken).ConfigureAwait(false);
+    if (result.IsSuccess) return result.Value;
+    throw new GraphQLException(result.Error.Description);
   }
 
   /// <summary>
   /// Updates an existing project using CQRS pattern
   /// </summary>
-  public async Task<UpdateProjectResult> UpdateProject(UpdateProjectInput input, [Service] CQRS.IMediator mediator, [Service] IActorContextAccessor actorContextAccessor, CancellationToken cancellationToken) {
+  public async Task<Project> UpdateProject(UpdateProjectInput input, [Service] CQRS.IMediator mediator, [Service] IActorContextAccessor actorContextAccessor, CancellationToken cancellationToken) {
     var actor = actorContextAccessor.ActorContext;
     var command = new UpdateProjectCommand {
       ProjectId = input.ProjectId,
@@ -55,46 +57,56 @@ public class ProjectMutations {
       UpdatedBy = actor.SubjectIdAsGuid ?? Guid.Empty,
     };
 
-    return await mediator.Send(command, cancellationToken);
+    var result = await mediator.Send(command, cancellationToken).ConfigureAwait(false);
+    if (result.IsSuccess) return result.Value;
+    throw new GraphQLException(result.Error.Description);
   }
 
   /// <summary>
   /// Deletes a project using CQRS pattern
   /// </summary>
-  public async Task<DeleteProjectResult> DeleteProject(Guid projectId, [Service] CQRS.IMediator mediator, [Service] IActorContextAccessor actorContextAccessor, bool softDelete = true, string? reason = null, CancellationToken cancellationToken = default) {
+  public async Task<bool> DeleteProject(Guid projectId, [Service] CQRS.IMediator mediator, [Service] IActorContextAccessor actorContextAccessor, bool softDelete = true, string? reason = null, CancellationToken cancellationToken = default) {
     var actor = actorContextAccessor.ActorContext;
     var command = new DeleteProjectCommand { ProjectId = projectId, DeletedBy = actor.SubjectIdAsGuid ?? Guid.Empty, SoftDelete = softDelete, Reason = reason };
 
-    return await mediator.Send(command, cancellationToken);
+    var result = await mediator.Send(command, cancellationToken).ConfigureAwait(false);
+    if (result.IsSuccess) return result.Value;
+    throw new GraphQLException(result.Error.Description);
   }
 
   /// <summary>
   /// Publishes a project using CQRS pattern
   /// </summary>
-  public async Task<PublishProjectResult> PublishProject(Guid projectId, [Service] CQRS.IMediator mediator, [Service] IActorContextAccessor actorContextAccessor, CancellationToken cancellationToken) {
+  public async Task<Project> PublishProject(Guid projectId, [Service] CQRS.IMediator mediator, [Service] IActorContextAccessor actorContextAccessor, CancellationToken cancellationToken) {
     var actor = actorContextAccessor.ActorContext;
     var command = new PublishProjectCommand { ProjectId = projectId, PublishedBy = actor.SubjectIdAsGuid ?? Guid.Empty };
 
-    return await mediator.Send(command, cancellationToken);
+    var result = await mediator.Send(command, cancellationToken).ConfigureAwait(false);
+    if (result.IsSuccess) return result.Value;
+    throw new GraphQLException(result.Error.Description);
   }
 
   /// <summary>
   /// Unpublishes a project using CQRS pattern
   /// </summary>
-  public async Task<UnpublishProjectResult> UnpublishProject(Guid projectId, [Service] CQRS.IMediator mediator, [Service] IActorContextAccessor actorContextAccessor, CancellationToken cancellationToken) {
+  public async Task<Project> UnpublishProject(Guid projectId, [Service] CQRS.IMediator mediator, [Service] IActorContextAccessor actorContextAccessor, CancellationToken cancellationToken) {
     var actor = actorContextAccessor.ActorContext;
     var command = new UnpublishProjectCommand { ProjectId = projectId, UnpublishedBy = actor.SubjectIdAsGuid ?? Guid.Empty };
 
-    return await mediator.Send(command, cancellationToken);
+    var result = await mediator.Send(command, cancellationToken).ConfigureAwait(false);
+    if (result.IsSuccess) return result.Value;
+    throw new GraphQLException(result.Error.Description);
   }
 
   /// <summary>
   /// Archives a project using CQRS pattern
   /// </summary>
-  public async Task<ArchiveProjectResult> ArchiveProject(Guid projectId, [Service] CQRS.IMediator mediator, [Service] IActorContextAccessor actorContextAccessor, CancellationToken cancellationToken) {
+  public async Task<Project> ArchiveProject(Guid projectId, [Service] CQRS.IMediator mediator, [Service] IActorContextAccessor actorContextAccessor, CancellationToken cancellationToken) {
     var actor = actorContextAccessor.ActorContext;
     var command = new ArchiveProjectCommand { ProjectId = projectId, ArchivedBy = actor.SubjectIdAsGuid ?? Guid.Empty };
 
-    return await mediator.Send(command, cancellationToken);
+    var result = await mediator.Send(command, cancellationToken).ConfigureAwait(false);
+    if (result.IsSuccess) return result.Value;
+    throw new GraphQLException(result.Error.Description);
   }
 }

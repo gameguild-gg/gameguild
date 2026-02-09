@@ -1,4 +1,3 @@
-using GameGuild.Models;
 
 namespace GameGuild.Notifications.Services;
 

@@ -79,7 +79,7 @@ public static class BackgroundJobQuotaHelper
             tenantId,
             resourceType,
             amount,
-            cancellationToken);
+            cancellationToken).ConfigureAwait(false);
 
         if (!success)
         {
@@ -95,7 +95,7 @@ public static class BackgroundJobQuotaHelper
         try
         {
             // Step 2: Execute the action
-            await action();
+            await action().ConfigureAwait(false);
         }
         catch
         {
@@ -105,7 +105,7 @@ public static class BackgroundJobQuotaHelper
                 resourceType,
                 amount,
                 source: source ?? "BackgroundJobQuotaHelper:Rollback",
-                cancellationToken: cancellationToken);
+                cancellationToken: cancellationToken).ConfigureAwait(false);
 
             throw;
         }
@@ -147,7 +147,7 @@ public static class BackgroundJobQuotaHelper
             tenantId,
             resourceType,
             amount,
-            cancellationToken);
+            cancellationToken).ConfigureAwait(false);
 
         if (!success)
         {
@@ -163,7 +163,7 @@ public static class BackgroundJobQuotaHelper
         try
         {
             // Step 2: Execute the action
-            return await action();
+            return await action().ConfigureAwait(false);
         }
         catch
         {
@@ -173,7 +173,7 @@ public static class BackgroundJobQuotaHelper
                 resourceType,
                 amount,
                 source: source ?? "BackgroundJobQuotaHelper:Rollback",
-                cancellationToken: cancellationToken);
+                cancellationToken: cancellationToken).ConfigureAwait(false);
 
             throw;
         }
@@ -226,7 +226,7 @@ public static class BackgroundJobQuotaHelper
             tenantId,
             resourceType,
             batchSize,
-            cancellationToken);
+            cancellationToken).ConfigureAwait(false);
 
         if (!success)
         {
@@ -251,7 +251,7 @@ public static class BackgroundJobQuotaHelper
 
                 try
                 {
-                    var (itemSuccess, result) = await processor(item);
+                    var (itemSuccess, result) = await processor(item).ConfigureAwait(false);
                     if (itemSuccess && result is not null)
                     {
                         successful.Add(result);
@@ -277,7 +277,7 @@ public static class BackgroundJobQuotaHelper
                     resourceType,
                     failed.Count,
                     source: source ?? "BackgroundJobQuotaHelper:BatchPartialRelease",
-                    cancellationToken: CancellationToken.None); // Don't cancel quota release
+                    cancellationToken: CancellationToken.None).ConfigureAwait(false); // Don't cancel quota release
             }
         }
 

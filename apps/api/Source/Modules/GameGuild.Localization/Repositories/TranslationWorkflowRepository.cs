@@ -1,4 +1,3 @@
-using GameGuild.Abstractions;
 using Microsoft.EntityFrameworkCore;
 
 namespace GameGuild.Localization;
@@ -24,7 +23,7 @@ public class TranslationWorkflowRepository : ITranslationWorkflowRepository
     {
         return await _context.Set<TranslationWorkflowEntity>()
             .Include(w => w.Tasks)
-            .FirstOrDefaultAsync(w => w.Id == workflowId && !w.IsDeleted, cancellationToken);
+            .FirstOrDefaultAsync(w => w.Id == workflowId && !w.IsDeleted, cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<IReadOnlyList<TranslationWorkflowEntity>> GetWorkflowsByStatusAsync(
@@ -36,7 +35,7 @@ public class TranslationWorkflowRepository : ITranslationWorkflowRepository
             .Where(w => w.Status == status && !w.IsDeleted)
             .OrderByDescending(w => w.Priority)
             .ThenBy(w => w.CreatedAt)
-            .ToListAsync(cancellationToken);
+            .ToListAsync(cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<IReadOnlyList<TranslationWorkflowEntity>> GetWorkflowsByPriorityAsync(
@@ -47,7 +46,7 @@ public class TranslationWorkflowRepository : ITranslationWorkflowRepository
             .Include(w => w.Tasks)
             .Where(w => w.Priority == priority && !w.IsDeleted)
             .OrderBy(w => w.CreatedAt)
-            .ToListAsync(cancellationToken);
+            .ToListAsync(cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<TranslationWorkflowEntity> CreateWorkflowAsync(
@@ -56,8 +55,8 @@ public class TranslationWorkflowRepository : ITranslationWorkflowRepository
     {
         ArgumentNullException.ThrowIfNull(workflow);
 
-        await _context.Set<TranslationWorkflowEntity>().AddAsync(workflow, cancellationToken);
-        await _context.SaveChangesAsync(cancellationToken);
+        await _context.Set<TranslationWorkflowEntity>().AddAsync(workflow, cancellationToken).ConfigureAwait(false);
+        await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         
         return workflow;
     }
@@ -69,7 +68,7 @@ public class TranslationWorkflowRepository : ITranslationWorkflowRepository
         ArgumentNullException.ThrowIfNull(workflow);
 
         _context.Set<TranslationWorkflowEntity>().Update(workflow);
-        await _context.SaveChangesAsync(cancellationToken);
+        await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<IReadOnlyList<TranslationWorkflowEntity>> GetPendingWorkflowsAsync(
@@ -80,7 +79,7 @@ public class TranslationWorkflowRepository : ITranslationWorkflowRepository
             .Where(w => w.Status != TranslationWorkflowStatus.Completed && !w.IsDeleted)
             .OrderByDescending(w => w.Priority)
             .ThenBy(w => w.CreatedAt)
-            .ToListAsync(cancellationToken);
+            .ToListAsync(cancellationToken).ConfigureAwait(false);
     }
 
     #endregion
@@ -93,7 +92,7 @@ public class TranslationWorkflowRepository : ITranslationWorkflowRepository
     {
         return await _context.Set<TranslationTaskEntity>()
             .Include(t => t.Workflow)
-            .FirstOrDefaultAsync(t => t.Id == taskId && !t.IsDeleted, cancellationToken);
+            .FirstOrDefaultAsync(t => t.Id == taskId && !t.IsDeleted, cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<IReadOnlyList<TranslationTaskEntity>> GetTasksByWorkflowIdAsync(
@@ -103,7 +102,7 @@ public class TranslationWorkflowRepository : ITranslationWorkflowRepository
         return await _context.Set<TranslationTaskEntity>()
             .Where(t => t.WorkflowId == workflowId && !t.IsDeleted)
             .OrderBy(t => t.CreatedAt)
-            .ToListAsync(cancellationToken);
+            .ToListAsync(cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<IReadOnlyList<TranslationTaskEntity>> GetPendingTasksByTranslatorAsync(
@@ -126,8 +125,8 @@ public class TranslationWorkflowRepository : ITranslationWorkflowRepository
     {
         ArgumentNullException.ThrowIfNull(task);
 
-        await _context.Set<TranslationTaskEntity>().AddAsync(task, cancellationToken);
-        await _context.SaveChangesAsync(cancellationToken);
+        await _context.Set<TranslationTaskEntity>().AddAsync(task, cancellationToken).ConfigureAwait(false);
+        await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         
         return task;
     }
@@ -139,7 +138,7 @@ public class TranslationWorkflowRepository : ITranslationWorkflowRepository
         ArgumentNullException.ThrowIfNull(task);
 
         _context.Set<TranslationTaskEntity>().Update(task);
-        await _context.SaveChangesAsync(cancellationToken);
+        await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
     }
 
     #endregion

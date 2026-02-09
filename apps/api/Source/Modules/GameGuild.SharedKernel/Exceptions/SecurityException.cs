@@ -1,12 +1,12 @@
 using System.Net;
 
-namespace GameGuild.Exceptions;
+namespace GameGuild;
 
 /// <summary>
 ///     Base exception for all security-related errors.
 ///     Provides proper HTTP status code mapping and prevents information leakage.
 /// </summary>
-public abstract class SecurityException : DomainException
+public abstract class SecurityException : Exception
 {
     /// <summary>
     ///     The HTTP status code to return (401 or 403).

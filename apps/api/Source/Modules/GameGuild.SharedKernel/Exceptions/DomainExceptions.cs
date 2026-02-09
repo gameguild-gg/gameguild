@@ -1,4 +1,4 @@
-namespace GameGuild.SharedKernel;
+namespace GameGuild;
 
 /// <summary>
 ///     Exception thrown when an invalid state transition is attempted.
@@ -27,15 +27,6 @@ public class InvalidStateTransitionException : DomainException
         FromState = fromState;
         ToState = toState;
     }
-}
-
-/// <summary>
-///     Base class for domain-specific exceptions.
-/// </summary>
-public abstract class DomainException : Exception
-{
-    protected DomainException(string message) : base(message) { }
-    protected DomainException(string message, Exception innerException) : base(message, innerException) { }
 }
 
 /// <summary>
@@ -68,49 +59,4 @@ public class SubscriptionNotFoundException : EntityNotFoundException
 {
     public SubscriptionNotFoundException(Guid subscriptionId)
         : base("Subscription", subscriptionId) { }
-}
-
-/// <summary>
-///     Exception thrown when an order is not found.
-/// </summary>
-public class OrderNotFoundException : EntityNotFoundException
-{
-    public OrderNotFoundException(Guid orderId)
-        : base("Order", orderId) { }
-}
-
-/// <summary>
-///     Exception thrown when a payment is not found.
-/// </summary>
-public class PaymentNotFoundException : EntityNotFoundException
-{
-    public PaymentNotFoundException(Guid paymentId)
-        : base("Payment", paymentId) { }
-}
-
-/// <summary>
-///     Exception thrown when a product is not found.
-/// </summary>
-public class ProductNotFoundException : EntityNotFoundException
-{
-    public ProductNotFoundException(Guid productId)
-        : base("Product", productId) { }
-}
-
-/// <summary>
-///     Exception thrown when an invoice is not found.
-/// </summary>
-public class InvoiceNotFoundException : EntityNotFoundException
-{
-    public InvoiceNotFoundException(Guid invoiceId)
-        : base("Invoice", invoiceId) { }
-}
-
-/// <summary>
-///     Exception thrown when a webhook event is not found.
-/// </summary>
-public class WebhookEventNotFoundException : EntityNotFoundException
-{
-    public WebhookEventNotFoundException(Guid eventId)
-        : base("WebhookEvent", eventId) { }
 }

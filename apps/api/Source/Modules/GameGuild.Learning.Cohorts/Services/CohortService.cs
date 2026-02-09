@@ -1,5 +1,3 @@
-using GameGuild.Abstractions;
-using GameGuild.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -43,7 +41,7 @@ public class CohortService : ICohortService
             }
 
             _context.Set<Cohort>().Add(cohort);
-            await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync().ConfigureAwait(false);
 
             _logger.LogInformation("Cohort created: {CohortId} for course {CourseId}", cohort.Id, request.CourseId);
 
@@ -59,7 +57,7 @@ public class CohortService : ICohortService
     public async Task<Cohort?> GetCohortByIdAsync(Guid id)
     {
         return await _context.Set<Cohort>()
-            .FirstOrDefaultAsync(c => c.Id == id);
+            .FirstOrDefaultAsync(c => c.Id == id).ConfigureAwait(false);
     }
 
     public async Task<IEnumerable<Cohort>> GetCoursCohortsAsync(Guid courseId, Guid? tenantId = null)
@@ -74,7 +72,7 @@ public class CohortService : ICohortService
 
         return await query
             .OrderByDescending(c => c.StartDate)
-            .ToListAsync();
+            .ToListAsync().ConfigureAwait(false);
     }
 
     public async Task<IEnumerable<Cohort>> GetActiveCohortsAsync(Guid courseId, Guid? tenantId = null)
@@ -90,7 +88,7 @@ public class CohortService : ICohortService
 
         return await query
             .OrderBy(c => c.StartDate)
-            .ToListAsync();
+            .ToListAsync().ConfigureAwait(false);
     }
 
     public async Task<IEnumerable<Cohort>> GetEnrollableCohortsAsync(Guid courseId, Guid? tenantId = null)
@@ -108,14 +106,14 @@ public class CohortService : ICohortService
 
         return await query
             .OrderBy(c => c.StartDate)
-            .ToListAsync();
+            .ToListAsync().ConfigureAwait(false);
     }
 
     public async Task<Result<Cohort>> UpdateCohortAsync(Guid id, UpdateCohortRequest request)
     {
         try
         {
-            var cohort = await GetCohortByIdAsync(id);
+            var cohort = await GetCohortByIdAsync(id).ConfigureAwait(false);
             if (cohort == null)
             {
                 return Result.Failure<Cohort>(Error.NotFound("Cohort", "Cohort not found"));
@@ -131,7 +129,7 @@ public class CohortService : ICohortService
                 request.MeetingSchedule);
 
             _context.Set<Cohort>().Update(cohort);
-            await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync().ConfigureAwait(false);
 
             _logger.LogInformation("Cohort updated: {CohortId}", id);
 
@@ -146,14 +144,14 @@ public class CohortService : ICohortService
 
     public async Task<Result<Cohort>> OpenCohortAsync(Guid id)
     {
-        var cohort = await GetCohortByIdAsync(id);
+        var cohort = await GetCohortByIdAsync(id).ConfigureAwait(false);
         if (cohort == null)
         {
             return Result.Failure<Cohort>(Error.NotFound("Cohort", "Cohort not found"));
         }
 
         cohort.Open();
-        await _context.SaveChangesAsync();
+        await _context.SaveChangesAsync().ConfigureAwait(false);
 
         _logger.LogInformation("Cohort opened: {CohortId}", id);
         return Result.Success(cohort);
@@ -161,14 +159,14 @@ public class CohortService : ICohortService
 
     public async Task<Result<Cohort>> CloseCohortAsync(Guid id)
     {
-        var cohort = await GetCohortByIdAsync(id);
+        var cohort = await GetCohortByIdAsync(id).ConfigureAwait(false);
         if (cohort == null)
         {
             return Result.Failure<Cohort>(Error.NotFound("Cohort", "Cohort not found"));
         }
 
         cohort.Close();
-        await _context.SaveChangesAsync();
+        await _context.SaveChangesAsync().ConfigureAwait(false);
 
         _logger.LogInformation("Cohort closed: {CohortId}", id);
         return Result.Success(cohort);
@@ -176,14 +174,14 @@ public class CohortService : ICohortService
 
     public async Task<Result<Cohort>> CompleteCohortAsync(Guid id)
     {
-        var cohort = await GetCohortByIdAsync(id);
+        var cohort = await GetCohortByIdAsync(id).ConfigureAwait(false);
         if (cohort == null)
         {
             return Result.Failure<Cohort>(Error.NotFound("Cohort", "Cohort not found"));
         }
 
         cohort.Complete();
-        await _context.SaveChangesAsync();
+        await _context.SaveChangesAsync().ConfigureAwait(false);
 
         _logger.LogInformation("Cohort completed: {CohortId}", id);
         return Result.Success(cohort);
@@ -191,14 +189,14 @@ public class CohortService : ICohortService
 
     public async Task<Result<Cohort>> CancelCohortAsync(Guid id)
     {
-        var cohort = await GetCohortByIdAsync(id);
+        var cohort = await GetCohortByIdAsync(id).ConfigureAwait(false);
         if (cohort == null)
         {
             return Result.Failure<Cohort>(Error.NotFound("Cohort", "Cohort not found"));
         }
 
         cohort.Cancel();
-        await _context.SaveChangesAsync();
+        await _context.SaveChangesAsync().ConfigureAwait(false);
 
         _logger.LogInformation("Cohort cancelled: {CohortId}", id);
         return Result.Success(cohort);
@@ -206,7 +204,7 @@ public class CohortService : ICohortService
 
     public async Task<Result> DeleteCohortAsync(Guid id)
     {
-        var cohort = await GetCohortByIdAsync(id);
+        var cohort = await GetCohortByIdAsync(id).ConfigureAwait(false);
         if (cohort == null)
         {
             return Result.Failure(Error.NotFound("Cohort", "Cohort not found"));
@@ -218,7 +216,7 @@ public class CohortService : ICohortService
         }
 
         _context.Set<Cohort>().Remove(cohort);
-        await _context.SaveChangesAsync();
+        await _context.SaveChangesAsync().ConfigureAwait(false);
 
         _logger.LogInformation("Cohort deleted: {CohortId}", id);
         return Result.Success();

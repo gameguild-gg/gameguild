@@ -9,10 +9,9 @@ namespace GameGuild.Notifications.Controllers;
 /// <summary>
 /// API controller for managing user notifications
 /// </summary>
-[ApiController]
 [Route("api/[controller]")]
 [Authorize]
-public class NotificationsController : ControllerBase
+public class NotificationsController : BaseApiController
 {
     private readonly INotificationService _notificationService;
     private readonly IActorContextAccessor _actorContextAccessor;

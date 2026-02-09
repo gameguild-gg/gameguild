@@ -14,14 +14,13 @@ namespace GameGuild.Resources;
 /// <remarks>
 ///     All endpoints require authentication. User ownership or admin role is enforced.
 /// </remarks>
-[ApiController]
 [ApiVersion("1.0")]
 [Tags("users/resources/settings")]
 [Authorize]
 [EnableRateLimiting(RateLimitPolicies.PerUser)]
 public sealed class UserResourceSettingsController(
     IResourceSettingsRepository settingsRepository,
-    IActorContextAccessor actorContextAccessor) : ControllerBase
+    IActorContextAccessor actorContextAccessor) : BaseApiController
 {
     /// <summary>
     ///     Validates that the current actor owns the user resource or is an admin.
@@ -113,7 +112,7 @@ public sealed class UserResourceSettingsController(
         if (existing != null)
         {
             existing.Value = body.Value;
-            existing.UpdatedAt = DateTime.UtcNow;
+            existing.Touch();
 
             await settingsRepository.UpdateAsync(existing, ct).ConfigureAwait(false);
 

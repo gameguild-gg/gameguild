@@ -1,7 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using GameGuild.CQRS.Models;
-using GameGuild.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace GameGuild.Notifications;
@@ -138,9 +137,7 @@ public class NotificationTemplate : EntityBase
             TemplateTenantId = tenantId.HasValue ? new TenantId(tenantId.Value) : null,
             Category = category,
             SupportedPlaceholders = supportedPlaceholders,
-            IsActive = true,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            IsActive = true
         };
     }
 

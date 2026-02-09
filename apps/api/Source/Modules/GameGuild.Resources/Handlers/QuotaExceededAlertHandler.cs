@@ -125,11 +125,11 @@ public class QuotaExceededAlertHandler(
             ["resource_type"] = notification.ResourceType.ToString()
         });
 
-        // TODO: Future integrations:
-        // - Send Slack/Teams notification for critical tenants
-        // - Trigger PagerDuty alert for repeated violations
-        // - Send email to tenant admin approaching limits
-        // - Enqueue notification for in-app alert
+        // PLANNED: In-app notification delivery via GameGuild.Notifications
+        // (blocked by circular dependency: Notifications → Identity.Users → Resources → Notifications).
+        // Resolution: extract a shared INotificationPublisher abstraction into SharedKernel,
+        // or move QuotaExceededAlertHandler into a dedicated orchestration module.
+        // Current alerts are delivered via structured logging + OpenTelemetry metrics (Datadog/Prometheus).
 
         await Task.CompletedTask;
     }

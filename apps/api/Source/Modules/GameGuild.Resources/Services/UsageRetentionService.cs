@@ -17,15 +17,15 @@ public class UsageRetentionService(IUsageRetentionPolicyRepository policyReposit
         CancellationToken cancellationToken = default
     )
     {
-        var existingPolicy = await policyRepository.GetByTenantAndTypeAsync(tenantId, resourceType, cancellationToken);
+        var existingPolicy = await policyRepository.GetByTenantAndTypeAsync(tenantId, resourceType, cancellationToken).ConfigureAwait(false);
 
         if (existingPolicy != null)
         {
             existingPolicy.RetentionDays = retentionDays;
             existingPolicy.ArchiveAfterDays = archiveAfterDays;
             existingPolicy.EnableCompaction = enableCompaction;
-            existingPolicy.UpdatedAt = DateTime.UtcNow;
-            existingPolicy = await policyRepository.UpdateAsync(existingPolicy, cancellationToken);
+            existingPolicy.Touch();
+            existingPolicy = await policyRepository.UpdateAsync(existingPolicy, cancellationToken).ConfigureAwait(false);
         }
         else
         {
@@ -43,7 +43,7 @@ public class UsageRetentionService(IUsageRetentionPolicyRepository policyReposit
             // Set TenantId using SetProperties (EntityBase has protected setter)
             if (tenantId.HasValue) { existingPolicy.SetProperties(new Dictionary<string, object?> { ["TenantId"] = new TenantId(tenantId.Value) }); }
 
-            existingPolicy = await policyRepository.CreateAsync(existingPolicy, cancellationToken);
+            existingPolicy = await policyRepository.CreateAsync(existingPolicy, cancellationToken).ConfigureAwait(false);
         }
 
         logger.LogInformation("Set retention policy: TenantId={TenantId}, Type={Type}, Retention={Retention}days, Archive={Archive}days", tenantId, resourceType, retentionDays, archiveAfterDays);
@@ -53,14 +53,14 @@ public class UsageRetentionService(IUsageRetentionPolicyRepository policyReposit
 
     public async Task<UsageRetentionPolicy?> GetPolicyAsync(Guid? tenantId, ResourceUsageType? resourceType, CancellationToken cancellationToken = default)
     {
-        return await policyRepository.GetByTenantAndTypeAsync(tenantId, resourceType, cancellationToken);
+        return await policyRepository.GetByTenantAndTypeAsync(tenantId, resourceType, cancellationToken).ConfigureAwait(false);
     }
 
-    public async Task<IEnumerable<UsageRetentionPolicy>> GetActivePoliciesAsync(CancellationToken cancellationToken = default) { return await policyRepository.GetActivePoliciesAsync(cancellationToken); }
+    public async Task<IEnumerable<UsageRetentionPolicy>> GetActivePoliciesAsync(CancellationToken cancellationToken = default) { return await policyRepository.GetActivePoliciesAsync(cancellationToken).ConfigureAwait(false); }
 
     public async Task<RetentionExecutionResult> ExecuteRetentionAsync(Guid policyId, CancellationToken cancellationToken = default)
     {
-        var policy = await policyRepository.GetByIdAsync(policyId, cancellationToken);
+        var policy = await policyRepository.GetByIdAsync(policyId, cancellationToken).ConfigureAwait(false);
 
         if (policy is not { IsActive: true })
         {
@@ -77,20 +77,20 @@ public class UsageRetentionService(IUsageRetentionPolicyRepository policyReposit
         {
             // Archive old records
             var archiveThreshold = policy.GetArchiveThresholdDate();
-            result.RecordsArchived = await usageRepository.ArchiveOlderThanAsync(archiveThreshold, cancellationToken);
+            result.RecordsArchived = await usageRepository.ArchiveOlderThanAsync(archiveThreshold, cancellationToken).ConfigureAwait(false);
 
             // Delete very old records
             var deleteThreshold = policy.GetDeletionThresholdDate();
-            var deleted = await usageRepository.DeleteOlderThanAsync(deleteThreshold, cancellationToken);
+            var deleted = await usageRepository.DeleteOlderThanAsync(deleteThreshold, cancellationToken).ConfigureAwait(false);
             result.RecordsDeleted = deleted ? 1 : 0;
 
             // Compact records if enabled
-            if (policy.EnableCompaction) { result.RecordsCompacted = await CompactUsageRecordsAsync(policy.TenantId ?? Guid.Empty, policy.ResourceType, archiveThreshold, cancellationToken); }
+            if (policy.EnableCompaction) { result.RecordsCompacted = await CompactUsageRecordsAsync(policy.TenantId ?? Guid.Empty, policy.ResourceType, archiveThreshold, cancellationToken).ConfigureAwait(false); }
 
             // Update policy execution time
             policy.LastExecutedAt = DateTime.UtcNow;
             policy.NextExecutionAt = policy.CalculateNextCompaction();
-            await policyRepository.UpdateAsync(policy, cancellationToken);
+            await policyRepository.UpdateAsync(policy, cancellationToken).ConfigureAwait(false);
 
             logger.LogInformation("Retention policy {PolicyId} executed: Archived={Archived}, Deleted={Deleted}, Compacted={Compacted}", policyId, result.RecordsArchived, result.RecordsDeleted, result.RecordsCompacted);
         }
@@ -118,10 +118,10 @@ public class UsageRetentionService(IUsageRetentionPolicyRepository policyReposit
         // If type is not specified, get all types for the tenant
         IEnumerable<UsageRecord> records;
 
-        if (type.HasValue) { records = await usageRepository.GetByTenantAsync(tenantId, type.Value, null, threshold, cancellationToken); }
+        if (type.HasValue) { records = await usageRepository.GetByTenantAsync(tenantId, type.Value, null, threshold, cancellationToken).ConfigureAwait(false); }
         else
         {
-            records = await usageRepository.GetByTenantAsync(tenantId, cancellationToken);
+            records = await usageRepository.GetByTenantAsync(tenantId, cancellationToken).ConfigureAwait(false);
             records = records.Where(r => r.PeriodStart <= threshold);
         }
 
@@ -142,12 +142,12 @@ public class UsageRetentionService(IUsageRetentionPolicyRepository policyReposit
             // Create monthly aggregated record
             var monthlyRecord = UsageRecord.CreateMonthly(group.Key.Type, tenantId, totalUsage, periodStart);
 
-            await usageRepository.AddAsync(monthlyRecord, cancellationToken);
+            await usageRepository.AddAsync(monthlyRecord, cancellationToken).ConfigureAwait(false);
             compactedCount++;
         }
 
         // Delete the original detailed records
-        await usageRepository.DeleteOlderThanAsync(threshold, cancellationToken);
+        await usageRepository.DeleteOlderThanAsync(threshold, cancellationToken).ConfigureAwait(false);
 
         logger.LogInformation("Compacted {Count} usage records into {MonthlyCount} monthly records for tenant {TenantId}", recordsList.Count, compactedCount, tenantId);
 
@@ -158,23 +158,23 @@ public class UsageRetentionService(IUsageRetentionPolicyRepository policyReposit
     {
         var threshold = olderThan ?? DateTime.UtcNow.AddDays(-90);
 
-        return await usageRepository.ArchiveOlderThanAsync(threshold, cancellationToken);
+        return await usageRepository.ArchiveOlderThanAsync(threshold, cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<int> DeleteArchivedRecordsAsync(DateTime olderThan, CancellationToken cancellationToken = default)
     {
-        var deleted = await usageRepository.DeleteOlderThanAsync(olderThan, cancellationToken);
+        var deleted = await usageRepository.DeleteOlderThanAsync(olderThan, cancellationToken).ConfigureAwait(false);
 
         return deleted ? 1 : 0;
     }
 
     public async Task<RetentionStats> GetRetentionStatsAsync(Guid? tenantId = null, CancellationToken cancellationToken = default)
     {
-        var totalRecords = await usageRepository.GetTotalRecordCountAsync(tenantId, cancellationToken);
-        var archivedRecords = await usageRepository.GetArchivedRecordCountAsync(tenantId, cancellationToken);
-        var oldestDate = await usageRepository.GetOldestRecordDateAsync(tenantId, cancellationToken);
-        var totalStorageBytes = await usageRepository.GetEstimatedStorageBytesAsync(tenantId, archivedOnly: false, cancellationToken);
-        var archivedStorageBytes = await usageRepository.GetEstimatedStorageBytesAsync(tenantId, archivedOnly: true, cancellationToken);
+        var totalRecords = await usageRepository.GetTotalRecordCountAsync(tenantId, cancellationToken).ConfigureAwait(false);
+        var archivedRecords = await usageRepository.GetArchivedRecordCountAsync(tenantId, cancellationToken).ConfigureAwait(false);
+        var oldestDate = await usageRepository.GetOldestRecordDateAsync(tenantId, cancellationToken).ConfigureAwait(false);
+        var totalStorageBytes = await usageRepository.GetEstimatedStorageBytesAsync(tenantId, archivedOnly: false, cancellationToken).ConfigureAwait(false);
+        var archivedStorageBytes = await usageRepository.GetEstimatedStorageBytesAsync(tenantId, archivedOnly: true, cancellationToken).ConfigureAwait(false);
 
         logger.LogInformation(
             "Retrieved retention stats: TenantId={TenantId}, Total={Total}, Archived={Archived}, OldestDate={OldestDate}",

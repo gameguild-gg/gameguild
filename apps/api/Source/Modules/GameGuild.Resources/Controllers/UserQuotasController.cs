@@ -15,14 +15,13 @@ namespace GameGuild.Resources;
 /// <remarks>
 ///     All endpoints require authentication. User ownership or admin role is enforced.
 /// </remarks>
-[ApiController]
 [ApiVersion("1.0")]
 [Tags("users/quotas")]
 [Authorize]
 [EnableRateLimiting(RateLimitPolicies.PerUser)]
 public sealed class UserQuotasController(
     ISender sender,
-    IActorContextAccessor actorContextAccessor) : ControllerBase
+    IActorContextAccessor actorContextAccessor) : BaseApiController
 {
     /// <summary>
     ///     Validates that the current actor is the owner of the resource or a system admin.

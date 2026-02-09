@@ -8,10 +8,9 @@ namespace GameGuild.Learning.Cohorts;
 /// <summary>
 /// Controller for cohort management
 /// </summary>
-[ApiController]
 [Route("api/cohorts")]
 [Authorize]
-public class CohortsController : ControllerBase
+public class CohortsController : BaseApiController
 {
     private readonly ICohortService _cohortService;
     private readonly IActorContextAccessor _actorContextAccessor;
@@ -104,7 +103,7 @@ public class CohortsController : ControllerBase
         var result = await _cohortService.UpdateCohortAsync(id, request);
         if (!result.IsSuccess)
         {
-            return result.Error.Type == GameGuild.Models.ErrorType.NotFound 
+            return result.Error.Type == ErrorType.NotFound 
                 ? NotFound(result.Error) 
                 : BadRequest(result.Error);
         }
@@ -121,7 +120,7 @@ public class CohortsController : ControllerBase
         var result = await _cohortService.OpenCohortAsync(id);
         if (!result.IsSuccess)
         {
-            return result.Error.Type == GameGuild.Models.ErrorType.NotFound 
+            return result.Error.Type == ErrorType.NotFound 
                 ? NotFound(result.Error) 
                 : BadRequest(result.Error);
         }
@@ -138,7 +137,7 @@ public class CohortsController : ControllerBase
         var result = await _cohortService.CloseCohortAsync(id);
         if (!result.IsSuccess)
         {
-            return result.Error.Type == GameGuild.Models.ErrorType.NotFound 
+            return result.Error.Type == ErrorType.NotFound 
                 ? NotFound(result.Error) 
                 : BadRequest(result.Error);
         }
@@ -155,7 +154,7 @@ public class CohortsController : ControllerBase
         var result = await _cohortService.CompleteCohortAsync(id);
         if (!result.IsSuccess)
         {
-            return result.Error.Type == GameGuild.Models.ErrorType.NotFound 
+            return result.Error.Type == ErrorType.NotFound 
                 ? NotFound(result.Error) 
                 : BadRequest(result.Error);
         }
@@ -172,7 +171,7 @@ public class CohortsController : ControllerBase
         var result = await _cohortService.CancelCohortAsync(id);
         if (!result.IsSuccess)
         {
-            return result.Error.Type == GameGuild.Models.ErrorType.NotFound 
+            return result.Error.Type == ErrorType.NotFound 
                 ? NotFound(result.Error) 
                 : BadRequest(result.Error);
         }
@@ -189,7 +188,7 @@ public class CohortsController : ControllerBase
         var result = await _cohortService.DeleteCohortAsync(id);
         if (!result.IsSuccess)
         {
-            return result.Error.Type == GameGuild.Models.ErrorType.NotFound 
+            return result.Error.Type == ErrorType.NotFound 
                 ? NotFound(result.Error) 
                 : BadRequest(result.Error);
         }

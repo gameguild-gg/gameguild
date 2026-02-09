@@ -1,8 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using GameGuild.Entities;
 using GameGuild.Identity.Users;
-using GameGuild.Enums;
 
 namespace GameGuild.Projects;
 
@@ -50,7 +48,7 @@ public sealed class Project : EntityBase {
 
     /// <summary> Visibility/access level for the project </summary>
     [Required]
-    public AccessLevel Visibility { get; set; } = AccessLevel.Private;
+    public ContentVisibility Visibility { get; set; } = ContentVisibility.Private;
 
     /// <summary> Project category (entity) </summary>
     public ProjectCategory? Category { get; set; }

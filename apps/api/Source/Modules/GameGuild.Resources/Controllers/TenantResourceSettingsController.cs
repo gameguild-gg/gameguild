@@ -15,7 +15,6 @@ namespace GameGuild.Resources;
 /// <remarks>
 ///     All endpoints require authentication. Tenant membership validation is enforced.
 /// </remarks>
-[ApiController]
 [ApiVersion("1.0")]
 [Tags("tenants/resources/settings")]
 [Authorize]
@@ -23,7 +22,7 @@ namespace GameGuild.Resources;
 public sealed class TenantResourceSettingsController(
     IResourceSettingsRepository settingsRepository,
     IActorContextAccessor actorContextAccessor,
-    ITenantMembershipChecker tenantMembershipChecker) : ControllerBase
+    ITenantMembershipChecker tenantMembershipChecker) : BaseApiController
 {
     /// <summary>
     ///     Validates that the current actor is a member of the specified tenant.
@@ -158,7 +157,7 @@ public sealed class TenantResourceSettingsController(
             existing.AllowUserOverride = body.AllowUserOverride ?? existing.AllowUserOverride;
             existing.DisplayOrder = body.DisplayOrder ?? existing.DisplayOrder;
             existing.ValidationRules = body.ValidationRules ?? existing.ValidationRules;
-            existing.UpdatedAt = DateTime.UtcNow;
+            existing.Touch();
 
             await settingsRepository.UpdateAsync(existing, ct).ConfigureAwait(false);
 

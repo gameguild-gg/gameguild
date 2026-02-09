@@ -1,23 +1,29 @@
 using System.Net;
-using System.Text.Json;
-using GameGuild.Exceptions;
+using GameGuild.CQRS;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using JsonSerializer = System.Text.Json.JsonSerializer;
 
-namespace GameGuild.Middlewares;
+namespace GameGuild;
 
 /// <summary>
 ///     Middleware for handling unhandled exceptions globally.
-///     Implements secure error handling with proper 401/403 distinction and information leakage prevention.
+///     Implements secure error handling with proper 401/403 distinction, validation error reporting,
+///     domain exception handling, and information leakage prevention.
+///     All responses use typed <see cref="ProblemDetails"/> per RFC 7807 for consistency with
+///     <see cref="ProblemDetailsMapper"/>.
 /// </summary>
-public class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<ExceptionHandlingMiddleware> logger)
+public sealed class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<ExceptionHandlingMiddleware> logger)
 {
     public async Task InvokeAsync(HttpContext context)
     {
-        try { await next(context); }
+        try
+        {
+            await next(context).ConfigureAwait(false);
+        }
         catch (SecurityException securityException)
         {
-            // Log the internal message (with sensitive details) for debugging
             logger.LogWarning(securityException,
                 "Security exception occurred. StatusCode: {StatusCode}, Path: {Path}, TraceId: {TraceId}, InternalMessage: {InternalMessage}",
                 (int)securityException.StatusCode,
@@ -25,68 +31,142 @@ public class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<Exception
                 context.TraceIdentifier,
                 securityException.InternalMessage);
 
-            // Return sanitized public message to client
-            await HandleSecurityExceptionAsync(context, securityException);
+            if (context.Response.HasStarted)
+            {
+                logger.LogWarning("Response has already started, cannot write error response for SecurityException");
+                return;
+            }
+
+            await HandleSecurityExceptionAsync(context, securityException).ConfigureAwait(false);
+        }
+        catch (RequestValidationException validationException)
+        {
+            logger.LogWarning(validationException,
+                "Validation failed. Path: {Path}, TraceId: {TraceId}, ErrorCount: {ErrorCount}",
+                context.Request.Path,
+                context.TraceIdentifier,
+                validationException.Errors.Count);
+
+            if (context.Response.HasStarted)
+            {
+                logger.LogWarning("Response has already started, cannot write error response for RequestValidationException");
+                return;
+            }
+
+            await HandleRequestValidationExceptionAsync(context, validationException).ConfigureAwait(false);
+        }
+        catch (DomainException domainException)
+        {
+            logger.LogWarning(domainException,
+                "Domain exception occurred. Path: {Path}, TraceId: {TraceId}",
+                context.Request.Path,
+                context.TraceIdentifier);
+
+            if (context.Response.HasStarted)
+            {
+                logger.LogWarning("Response has already started, cannot write error response for DomainException");
+                return;
+            }
+
+            await HandleDomainExceptionAsync(context, domainException).ConfigureAwait(false);
         }
         catch (Exception exception)
         {
             logger.LogError(exception, "An unhandled exception occurred");
-            await HandleExceptionAsync(context, exception);
+
+            if (context.Response.HasStarted)
+            {
+                logger.LogWarning("Response has already started, cannot write error response for unhandled exception");
+                return;
+            }
+
+            await HandleExceptionAsync(context, exception).ConfigureAwait(false);
         }
     }
 
     private static async Task HandleSecurityExceptionAsync(HttpContext context, SecurityException exception)
     {
-        var response = context.Response;
-        response.ContentType = "application/problem+json";
-        response.StatusCode = (int)exception.StatusCode;
-
-        var problemDetails = new
+        var statusCode = (int)exception.StatusCode;
+        var problemDetails = new ProblemDetails
         {
-            type = GetProblemTypeUrl(exception.StatusCode),
-            title = GetProblemTitle(exception.StatusCode),
-            status = (int)exception.StatusCode,
-            // Use the sanitized public message - never expose internal details
-            detail = exception.PublicMessage,
-            traceId = context.TraceIdentifier
+            Type = GetProblemTypeUrl(exception.StatusCode),
+            Title = GetProblemTitle(exception.StatusCode),
+            Status = statusCode,
+            Detail = exception.PublicMessage
         };
+        problemDetails.Extensions["traceId"] = context.TraceIdentifier;
 
-        var jsonResponse = JsonSerializer.Serialize(problemDetails, new JsonSerializerOptions
+        await WriteProblemDetailsAsync(context.Response, statusCode, problemDetails).ConfigureAwait(false);
+    }
+
+    private static async Task HandleRequestValidationExceptionAsync(HttpContext context, RequestValidationException exception)
+    {
+        const int statusCode = StatusCodes.Status400BadRequest;
+        var problemDetails = new ProblemDetails
         {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+            Type = RfcUrls.BadRequest,
+            Title = "Validation Failed",
+            Status = statusCode,
+            Detail = exception.Message
+        };
+        problemDetails.Extensions["traceId"] = context.TraceIdentifier;
+        problemDetails.Extensions["errors"] = exception.Errors.Select(e => new
+        {
+            property = e.PropertyName,
+            message = e.ErrorMessage,
+            attemptedValue = e.AttemptedValue
         });
-        await response.WriteAsync(jsonResponse);
+
+        await WriteProblemDetailsAsync(context.Response, statusCode, problemDetails).ConfigureAwait(false);
+    }
+
+    private static async Task HandleDomainExceptionAsync(HttpContext context, DomainException exception)
+    {
+        const int statusCode = StatusCodes.Status422UnprocessableEntity;
+        var problemDetails = new ProblemDetails
+        {
+            Type = RfcUrls.UnprocessableEntity,
+            Title = "Domain Rule Violation",
+            Status = statusCode,
+            Detail = exception.Message
+        };
+        problemDetails.Extensions["traceId"] = context.TraceIdentifier;
+
+        await WriteProblemDetailsAsync(context.Response, statusCode, problemDetails).ConfigureAwait(false);
     }
 
     private static async Task HandleExceptionAsync(HttpContext context, Exception exception)
     {
-        var response = context.Response;
-        response.ContentType = "application/problem+json";
-        response.StatusCode = (int)HttpStatusCode.InternalServerError;
-
+        const int statusCode = StatusCodes.Status500InternalServerError;
         // SECURITY: Never expose exception details to clients
-        var problemDetails = new
+        var problemDetails = new ProblemDetails
         {
-            type = "https://tools.ietf.org/html/rfc7231#section-6.6.1",
-            title = "Internal Server Error",
-            status = 500,
-            // Generic message - don't leak exception.Message
-            detail = "An unexpected error occurred. Please try again later.",
-            traceId = context.TraceIdentifier
+            Type = RfcUrls.InternalServerError,
+            Title = "Internal Server Error",
+            Status = statusCode,
+            Detail = "An unexpected error occurred. Please try again later."
         };
+        problemDetails.Extensions["traceId"] = context.TraceIdentifier;
 
-        var jsonResponse = JsonSerializer.Serialize(problemDetails, new JsonSerializerOptions
-        {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-        });
-        await response.WriteAsync(jsonResponse);
+        await WriteProblemDetailsAsync(context.Response, statusCode, problemDetails).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    ///     Writes a typed <see cref="ProblemDetails"/> as JSON using the shared serializer options (no per-call allocation).
+    /// </summary>
+    private static async Task WriteProblemDetailsAsync(HttpResponse response, int statusCode, ProblemDetails problemDetails)
+    {
+        response.ContentType = "application/problem+json";
+        response.StatusCode = statusCode;
+        var jsonResponse = JsonSerializer.Serialize(problemDetails, SharedJsonOptions.Api);
+        await response.WriteAsync(jsonResponse).ConfigureAwait(false);
     }
 
     private static string GetProblemTypeUrl(HttpStatusCode statusCode) => statusCode switch
     {
-        HttpStatusCode.Unauthorized => "https://tools.ietf.org/html/rfc7235#section-3.1",
-        HttpStatusCode.Forbidden => "https://tools.ietf.org/html/rfc7231#section-6.5.3",
-        _ => "https://tools.ietf.org/html/rfc7231#section-6.6.1"
+        HttpStatusCode.Unauthorized => RfcUrls.Unauthorized,
+        HttpStatusCode.Forbidden => RfcUrls.Forbidden,
+        _ => RfcUrls.InternalServerError
     };
 
     private static string GetProblemTitle(HttpStatusCode statusCode) => statusCode switch

@@ -1,12 +1,9 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Reflection;
-using GameGuild.Abstractions;
 using GameGuild.CQRS;
 using GameGuild.CQRS.Models;
-using Microsoft.Extensions.Logging;
 
-namespace GameGuild.Entities;
+namespace GameGuild;
 
 /// <summary>
 ///     Generic base entity class that provides common properties and functionality for all domain entities.
@@ -45,58 +42,63 @@ public abstract class EntityBase<TKey> : IEntity<TKey>, ITenantScoped where TKey
     public IReadOnlyList<IDomainEvent> DomainEvents { get => _domainEvents.AsReadOnly(); }
 
     /// <summary>
-    ///     Unique identifier for the entity
+    ///     Unique identifier for the entity.
+    ///     Setter is public for EF Core materialization; prefer constructor or factory methods for domain code.
     /// </summary>
     [Key]
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public virtual TKey Id { get; set; } = default!;
 
     /// <summary>
-    ///     Version number for optimistic concurrency control
-    ///     Uses ConcurrencyCheck for cross-database compatibility (Postgres, SQLite, SQL Server)
+    ///     Version number for optimistic concurrency control.
+    ///     Uses ConcurrencyCheck for cross-database compatibility (Postgres, SQLite, SQL Server).
+    ///     Protected setter prevents direct manipulation outside the entity hierarchy; EF Core uses backing field.
     /// </summary>
     [ConcurrencyCheck]
-    public virtual int Version { get; set; } = 0;
+    public int Version { get; protected set; } = 0;
 
     /// <summary>
-    ///     Timestamp when the entity was created
+    ///     Timestamp when the entity was created.
+    ///     Protected setter prevents modification after initial creation; EF Core uses backing field.
     /// </summary>
     [Required]
-    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-    public virtual DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime CreatedAt { get; protected set; } = SystemClock.UtcNow;
 
     /// <summary>
-    ///     Timestamp when the entity was last updated
+    ///     Timestamp when the entity was last updated.
+    ///     Protected setter — use <see cref="Touch"/> to update. EF Core uses backing field.
     /// </summary>
     [Required]
-    [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
-    public virtual DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime UpdatedAt { get; protected set; } = SystemClock.UtcNow;
 
     /// <summary>
-    ///     Timestamp when the entity was soft-deleted (null if not deleted)
+    ///     Timestamp when the entity was soft-deleted (null if not deleted).
+    ///     Protected setter — use <see cref="SoftDelete"/>/<see cref="Restore"/>. EF Core uses backing field.
     /// </summary>
-    public virtual DateTime? DeletedAt { get; set; }
+    public DateTime? DeletedAt { get; protected set; }
 
     /// <summary>
-    ///     Updates the UpdatedAt timestamp to the current UTC time
+    ///     Updates the UpdatedAt timestamp to the current UTC time.
     /// </summary>
-    public virtual void Touch() { UpdatedAt = DateTime.UtcNow; }
+    public void Touch() { UpdatedAt = SystemClock.UtcNow; }
 
     /// <summary>
-    ///     Soft-delete the entity by setting DeletedAt timestamp
+    ///     Soft-delete the entity by setting DeletedAt timestamp.
+    ///     A new entity (Version == 0) cannot be soft-deleted.
     /// </summary>
-    public virtual void SoftDelete()
+    public void SoftDelete()
     {
         if (IsDeleted) return;
+        if (IsNew) throw new InvalidOperationException("Cannot soft-delete an entity that has not been persisted (Version == 0).");
 
-        DeletedAt = DateTime.UtcNow;
+        DeletedAt = SystemClock.UtcNow;
         Touch();
     }
 
     /// <summary>
-    ///     Restore a soft-deleted entity by clearing DeletedAt timestamp
+    ///     Restore a soft-deleted entity by clearing DeletedAt timestamp.
     /// </summary>
-    public virtual void Restore()
+    public void Restore()
     {
         if (!IsDeleted) return;
 
@@ -107,9 +109,28 @@ public abstract class EntityBase<TKey> : IEntity<TKey>, ITenantScoped where TKey
     public virtual Guid? TenantId { get; protected set; }
 
     /// <summary>
+    ///     Sets the TenantId property on this entity.
+    /// </summary>
+    /// <param name="tenantId">The tenant ID to set</param>
+    public void SetTenantId(Guid tenantId)
+    {
+        TenantId = tenantId;
+    }
+
+    /// <summary>
+    ///     Sets the TenantId property on this entity from a <see cref="TenantId"/> value object.
+    /// </summary>
+    /// <param name="tenantId">The tenant ID value object</param>
+    public void SetTenantId(TenantId tenantId)
+    {
+        ArgumentNullException.ThrowIfNull(tenantId);
+        TenantId = tenantId.Value;
+    }
+
+    /// <summary>
     ///     Private non-virtual method to update timestamp during construction
     /// </summary>
-    private void UpdateTimestamp() { UpdatedAt = DateTime.UtcNow; }
+    private void UpdateTimestamp() { UpdatedAt = SystemClock.UtcNow; }
 
     /// <summary> Adds a domain event to the entity's event collection </summary>
     /// <param name="domainEvent"> The domain event to add </param>
@@ -125,20 +146,13 @@ public abstract class EntityBase<TKey> : IEntity<TKey>, ITenantScoped where TKey
     protected void Raise(IDomainEvent domainEvent) { _domainEvents.Add(domainEvent); }
 
     /// <summary>
-    ///     Gets a dictionary representation of the entity's current state
+    ///     Gets a dictionary representation of the entity's current state.
+    ///     Internal to prevent external consumers from bypassing encapsulation.
     /// </summary>
     /// <returns>Dictionary with property names and values</returns>
-    public virtual Dictionary<string, object?> ToDictionary()
+    internal virtual Dictionary<string, object?> ToDictionary()
     {
-        var result = new Dictionary<string, object?>();
-        var properties = GetType().GetProperties();
-
-        foreach (var property in properties)
-        {
-            if (property.CanRead) { result[property.Name] = property.GetValue(this); }
-        }
-
-        return result;
+        return EntityPropertyMapper.GetProperties(this);
     }
 
     /// <summary>
@@ -153,22 +167,14 @@ public abstract class EntityBase<TKey> : IEntity<TKey>, ITenantScoped where TKey
 
     /// <summary>
     ///     Non-virtual initialization method safe to call from constructors.
-    ///     Converts the partial object to a property dictionary and applies via SetPropertiesInternal.
+    ///     Converts the partial object to a property dictionary and applies via <see cref="EntityPropertyMapper"/>.
     /// </summary>
     private void InitializeFromPartial(object? partial)
     {
         if (partial is null) return;
 
-        if (partial is Dictionary<string, object?> dictionary)
-        {
-            SetPropertiesInternal(dictionary, true);
-            return;
-        }
-
-        var properties = partial.GetType().GetProperties();
-        var map = new Dictionary<string, object?>(properties.Length, StringComparer.Ordinal);
-        foreach (var property in properties) map[property.Name] = property.GetValue(partial);
-        SetPropertiesInternal(map, true);
+        var dictionary = EntityPropertyMapper.ToDictionary(partial);
+        SetPropertiesInternal(dictionary, true);
     }
 
     /// <summary>
@@ -179,101 +185,25 @@ public abstract class EntityBase<TKey> : IEntity<TKey>, ITenantScoped where TKey
 
     /// <summary>
     ///     Internal method to set properties with option to use non-virtual timestamp update.
+    ///     Delegates to <see cref="EntityPropertyMapper"/> for the actual property mapping.
     /// </summary>
     /// <param name="properties">Dictionary of property names and values</param>
     /// <param name="isFromConstructor">True if called from constructor to avoid virtual method calls</param>
-    /// <exception cref="InvalidOperationException">Thrown when a property value cannot be converted to the target type</exception>
     private void SetPropertiesInternal(Dictionary<string, object?> properties, bool isFromConstructor)
     {
-        var entityType = GetType();
-
-        foreach (var property in properties)
+        EntityPropertyMapper.SetProperties(this, properties, propertyName =>
         {
-            var propertyInfo = entityType.GetProperty(property.Key, BindingFlags.Public | BindingFlags.Instance);
-
-            if (propertyInfo == null || !propertyInfo.CanWrite) continue;
-
-            var value = property.Value;
-
-            if (value is null)
-            {
-                if (!IsNullableProperty(propertyInfo))
-                    throw new InvalidOperationException(
-                        $"Cannot set non-nullable property '{property.Key}' on {entityType.Name} to null.");
-
-                propertyInfo.SetValue(this, null, null);
-                continue; // was incorrectly 'return' — must continue to next property
-            }
-
-            var targetType = Nullable.GetUnderlyingType(propertyInfo.PropertyType) ?? propertyInfo.PropertyType;
-
-            try
-            {
-                value = ConvertToTargetType(value, targetType);
-            }
-            catch (Exception ex) when (ex is InvalidCastException or FormatException or OverflowException or ArgumentException)
-            {
-                throw new InvalidOperationException(
-                    $"Failed to convert value for property '{property.Key}' on {entityType.Name}. " +
-                    $"Expected type '{targetType.Name}', got '{value.GetType().Name}' with value '{value}'.",
-                    ex);
-            }
-
-            propertyInfo.SetValue(this, value);
-
             // Don't auto-update UpdatedAt for CreatedAt changes
-            if (!string.Equals(property.Key, nameof(CreatedAt), StringComparison.Ordinal))
+            if (!string.Equals(propertyName, nameof(CreatedAt), StringComparison.Ordinal))
             {
                 if (isFromConstructor)
                     UpdateTimestamp();
                 else
                     Touch();
             }
-        }
+        });
     }
 
-    /// <summary>
-    ///     Converts a value to the specified target type, handling common domain types.
-    /// </summary>
-    private static object ConvertToTargetType(object value, Type targetType)
-    {
-        // Guid conversion from string
-        if (targetType == typeof(Guid) && value is string guidString)
-        {
-            if (!Guid.TryParse(guidString, out var guid))
-                throw new FormatException($"'{guidString}' is not a valid GUID.");
-            return guid;
-        }
-
-        // TenantId conversion
-        if (targetType == typeof(TenantId) || targetType == typeof(TenantId?))
-        {
-            return value switch
-            {
-                string tenantIdString when Guid.TryParse(tenantIdString, out var parsedGuid) => new TenantId(parsedGuid),
-                Guid tenantIdGuid => new TenantId(tenantIdGuid),
-                TenantId tid => tid,
-                _ => throw new InvalidCastException($"Cannot convert '{value.GetType().Name}' to TenantId.")
-            };
-        }
-
-        // Same type — no conversion needed
-        if (value.GetType() == targetType || targetType.IsAssignableFrom(value.GetType()))
-            return value;
-
-        return Convert.ChangeType(value, targetType);
-    }
-
-    /// <summary>
-    ///     Checks whether a property type is nullable (reference type or Nullable&lt;T&gt;).
-    /// </summary>
-    private static bool IsNullableProperty(PropertyInfo propertyInfo)
-    {
-        if (!propertyInfo.PropertyType.IsValueType)
-            return true; // Reference types are nullable
-
-        return Nullable.GetUnderlyingType(propertyInfo.PropertyType) != null;
-    }
 }
 
 /// <summary>
@@ -315,27 +245,12 @@ public class EntityBase : EntityBase<Guid>, IEntity
     /// <returns>New instance of the entity</returns>
     public static T Create<T>(object partial) where T : EntityBase, new()
     {
-        // Create an instance and set properties
         var instance = new T();
 
-        switch (partial)
+        if (partial != null)
         {
-            case null: break;
-            // Handle Dictionary<string, object?> case
-            case Dictionary<string, object?> dict: instance.SetProperties(dict); break;
-
-            default:
-                {
-                    // Handle an anonymous object case
-                    var properties = partial.GetType().GetProperties();
-                    var propDict = new Dictionary<string, object?>();
-
-                    foreach (var prop in properties) propDict[prop.Name] = prop.GetValue(partial);
-
-                    instance.SetProperties(propDict);
-
-                    break;
-                }
+            var propDict = EntityPropertyMapper.ToDictionary(partial);
+            instance.SetProperties(propDict);
         }
 
         return instance;

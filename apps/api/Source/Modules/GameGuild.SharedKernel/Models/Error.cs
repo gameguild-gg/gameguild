@@ -1,4 +1,4 @@
-﻿namespace GameGuild.Models;
+﻿namespace GameGuild;
 
 /// <summary>
 ///     Represents a domain error with a machine-readable code, human-readable description, and type.
@@ -6,8 +6,8 @@
 /// </summary>
 public record Error(string Code, string Description, ErrorType Type)
 {
-    /// <summary>Sentinel value representing "no error".</summary>
-    public static readonly Error None = new(string.Empty, string.Empty, ErrorType.Failure);
+    /// <summary>Sentinel value representing "no error". Uses a dedicated type to avoid confusion with real failures.</summary>
+    public static readonly Error None = new(string.Empty, string.Empty, ErrorType.None);
 
     /// <summary>Generic null-value error.</summary>
     public static readonly Error NullValue = new("General.Null", "Null value was provided", ErrorType.Failure);

@@ -1,7 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace GameGuild.Serialization;
+namespace GameGuild;
 
 /// <summary>
 ///     Provides shared <see cref="JsonSerializerOptions" /> instances to avoid repeated allocations.

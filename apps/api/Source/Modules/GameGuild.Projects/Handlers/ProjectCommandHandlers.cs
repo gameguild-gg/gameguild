@@ -1,7 +1,5 @@
-using GameGuild.Abstractions;
 using GameGuild.CQRS;
 using GameGuild.Identity.Context.Actors;
-using GameGuild.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -20,12 +18,12 @@ public static class ProjectRoles {
 
 /// <summary> Command handlers for project operations </summary>
 public class ProjectCommandHandlers
-  : IRequestHandler<CreateProjectCommand, CreateProjectResult>,
-    IRequestHandler<UpdateProjectCommand, UpdateProjectResult>,
-    IRequestHandler<DeleteProjectCommand, DeleteProjectResult>,
-    IRequestHandler<PublishProjectCommand, PublishProjectResult>,
-    IRequestHandler<UnpublishProjectCommand, UnpublishProjectResult>,
-    IRequestHandler<ArchiveProjectCommand, ArchiveProjectResult> {
+  : ICommandHandler<CreateProjectCommand, Result<Project>>,
+    ICommandHandler<UpdateProjectCommand, Result<Project>>,
+    ICommandHandler<DeleteProjectCommand, Result<bool>>,
+    ICommandHandler<PublishProjectCommand, Result<Project>>,
+    ICommandHandler<UnpublishProjectCommand, Result<Project>>,
+    ICommandHandler<ArchiveProjectCommand, Result<Project>> {
   private readonly IApplicationDbContext _context;
 
   private readonly ILogger<ProjectCommandHandlers> _logger;
@@ -43,223 +41,220 @@ public class ProjectCommandHandlers
   private Guid? TenantId => Actor.TenantId;
   private bool IsAuthenticated => Actor.IsAuthenticated;
 
-  public async Task<ArchiveProjectResult> Handle(ArchiveProjectCommand request, CancellationToken cancellationToken) {
-    try {
-      var project = await _context.Set<Project>().Include(p => p.Collaborators).FirstOrDefaultAsync(p => p.Id == request.ProjectId && p.DeletedAt == null, cancellationToken);
+  public async Task<Result<Project>> Handle(CreateProjectCommand request, CancellationToken cancellationToken) {
+    _logger.LogInformation("Creating project: {Title} by user {UserId}", request.Title, UserId);
 
-      if (project == null) { return new ArchiveProjectResult { Success = false, Error = "Project not found" }; }
-
-      // Check authorization - user must have archive permissions
-      var hasArchivePermission = project.Collaborators.Any(c => c.UserId == UserId && c.IsActive && c.Permissions.Contains(PermissionType.Archive.ToString()));
-
-      if (!hasArchivePermission) { return new ArchiveProjectResult { Success = false, Error = "Unauthorized to archive this project" }; }
-
-      project.Status = ContentStatus.Archived;
-      project.UpdatedAt = DateTime.UtcNow;
-
-      await _context.SaveChangesAsync(cancellationToken);
-
-      return new ArchiveProjectResult { Success = true, Project = project };
+    if (!IsAuthenticated || UserId == null) {
+      return Result.Failure<Project>(Error.Unauthorized("Project.Unauthenticated", "User must be authenticated"));
     }
-    catch (Exception ex) {
-      _logger.LogError(ex, "Error archiving project: {ProjectId}", request.ProjectId);
 
-      return new ArchiveProjectResult { Success = false, Error = "Failed to archive project" };
+    // Create project entity
+    var project = new Project {
+      Id = Guid.NewGuid(),
+      Title = request.Title,
+      Description = request.Description,
+      ShortDescription = request.ShortDescription,
+      ImageUrl = request.ImageUrl,
+      RepositoryUrl = request.RepositoryUrl,
+      WebsiteUrl = request.WebsiteUrl,
+      DownloadUrl = request.DownloadUrl,
+      Type = (GameGuild.Projects.ProjectType)request.Type,
+      CategoryId = request.CategoryId,
+      Visibility = request.Visibility,
+      Status = request.Status
+    };
+
+    // Set TenantId on the entity directly
+    var tenantId = request.TenantId ?? TenantId;
+    if (tenantId.HasValue) {
+      project.SetTenantId(tenantId.Value);
     }
+
+    // Generate slug from name
+    project.Slug = GenerateSlug(request.Title);
+
+    // Ensure slug is unique
+    var existingSlugCount = await _context.Set<Project>()
+      .Where(p => p.Slug.StartsWith(project.Slug) && p.DeletedAt == null)
+      .CountAsync(cancellationToken).ConfigureAwait(false);
+
+    if (existingSlugCount > 0) {
+      project.Slug = $"{project.Slug}-{existingSlugCount + 1}";
+    }
+
+    _context.Set<Project>().Add(project);
+
+    // Add the creator as a collaborator with all permissions
+    var creatorCollaborator = new ProjectCollaborator {
+      Id = Guid.NewGuid(),
+      ProjectId = project.Id,
+      UserId = UserId!.Value,
+      Role = ProjectRoles.Owner,
+      Permissions = FormatOwnerPermissions(),
+      IsActive = true,
+      JoinedAt = DateTime.UtcNow
+    };
+    _context.Set<ProjectCollaborator>().Add(creatorCollaborator);
+
+    await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+
+    _logger.LogInformation("Project created successfully: {ProjectId}", project.Id);
+
+    return Result.Success(project);
   }
 
-  public async Task<CreateProjectResult> Handle(CreateProjectCommand request, CancellationToken cancellationToken) {
-    try {
-      _logger.LogInformation("Creating project: {Title} by user {UserId}", request.Title, UserId);
+  public async Task<Result<Project>> Handle(UpdateProjectCommand request, CancellationToken cancellationToken) {
+    _logger.LogInformation("Updating project: {ProjectId} by user {UserId}", request.ProjectId, UserId);
 
-      // Validate user permissions
-      if (!IsAuthenticated || UserId == null) { return new CreateProjectResult { Success = false, Error = "User must be authenticated" }; }
+    var project = await _context.Set<Project>()
+      .Include(p => p.Collaborators)
+      .FirstOrDefaultAsync(p => p.Id == request.ProjectId && p.DeletedAt == null, cancellationToken)
+      .ConfigureAwait(false);
 
-      // Create project entity
-      var project = new Project {
-        Id = Guid.NewGuid(),
-        Title = request.Title,
-        Description = request.Description,
-        ShortDescription = request.ShortDescription,
-        ImageUrl = request.ImageUrl,
-        RepositoryUrl = request.RepositoryUrl,
-        WebsiteUrl = request.WebsiteUrl,
-        DownloadUrl = request.DownloadUrl,
-        Type = (GameGuild.Projects.ProjectType)request.Type,
-        CategoryId = request.CategoryId,
-        Visibility = request.Visibility,
-        Status = request.Status,
-        CreatedAt = DateTime.UtcNow,
-        UpdatedAt = DateTime.UtcNow,
-      };
-      
-      // Set TenantId using helper (TenantId has protected setter)
-      var tenantId = request.TenantId ?? TenantId;
-      if (tenantId.HasValue)
-      {
-        EntityHelper.SetTenantId(project, tenantId.Value);
-      }
-
-      // Generate slug from name
-      project.Slug = GenerateSlug(request.Title);
-
-      // Ensure slug is unique
-      var existingSlugCount = await _context.Set<Project>().Where(p => p.Slug.StartsWith(project.Slug) && p.DeletedAt == null).CountAsync(cancellationToken);
-
-      if (existingSlugCount > 0) { project.Slug = $"{project.Slug}-{existingSlugCount + 1}"; }
-
-      _context.Set<Project>().Add(project);
-
-      // Add the creator as a collaborator with all permissions
-      var creatorCollaborator = new ProjectCollaborator {
-        Id = Guid.NewGuid(),
-        ProjectId = project.Id,
-        UserId = UserId!.Value,
-        Role = ProjectRoles.Owner,
-        Permissions = FormatOwnerPermissions(),
-        IsActive = true,
-        JoinedAt = DateTime.UtcNow,
-        CreatedAt = DateTime.UtcNow,
-        UpdatedAt = DateTime.UtcNow,
-      };
-      _context.Set<ProjectCollaborator>().Add(creatorCollaborator);
-
-      await _context.SaveChangesAsync(cancellationToken);
-
-      _logger.LogInformation("Project created successfully: {ProjectId}", project.Id);
-
-      return new CreateProjectResult { Success = true, Project = project };
+    if (project == null) {
+      return Result.Failure<Project>(Error.NotFound("Project.NotFound", $"Project with ID {request.ProjectId} was not found"));
     }
-    catch (Exception ex) {
-      _logger.LogError(ex, "Error creating project: {Title}", request.Title);
 
-      return new CreateProjectResult { Success = false, Error = "Failed to create project" };
+    // Check authorization - user must have edit permissions
+    var hasEditPermission = project.Collaborators.Any(c =>
+      c.UserId == UserId && c.IsActive && c.Permissions.Contains(PermissionType.Edit.ToString()));
+
+    if (!hasEditPermission) {
+      return Result.Failure<Project>(Error.Forbidden("Project.Forbidden", "Unauthorized to update this project"));
     }
+
+    // Update fields
+    if (request.Title != null) project.Title = request.Title;
+    if (request.Description != null) project.Description = request.Description;
+    if (request.ShortDescription != null) project.ShortDescription = request.ShortDescription;
+    if (request.ImageUrl != null) project.ImageUrl = request.ImageUrl;
+    if (request.RepositoryUrl != null) project.RepositoryUrl = request.RepositoryUrl;
+    if (request.WebsiteUrl != null) project.WebsiteUrl = request.WebsiteUrl;
+    if (request.DownloadUrl != null) project.DownloadUrl = request.DownloadUrl;
+    if (request.Type.HasValue) project.Type = (GameGuild.Projects.ProjectType)request.Type.Value;
+    if (request.CategoryId.HasValue) project.CategoryId = request.CategoryId;
+    if (request.Visibility.HasValue) project.Visibility = request.Visibility.Value;
+    if (request.Status.HasValue) project.Status = request.Status.Value;
+
+    project.Touch();
+
+    await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+
+    _logger.LogInformation("Project updated successfully: {ProjectId}", project.Id);
+
+    return Result.Success(project);
   }
 
-  public async Task<DeleteProjectResult> Handle(DeleteProjectCommand request, CancellationToken cancellationToken) {
-    try {
-      _logger.LogInformation("Deleting project: {ProjectId} by user {UserId}", request.ProjectId, UserId);
+  public async Task<Result<bool>> Handle(DeleteProjectCommand request, CancellationToken cancellationToken) {
+    _logger.LogInformation("Deleting project: {ProjectId} by user {UserId}", request.ProjectId, UserId);
 
-      var project = await _context.Set<Project>().Include(p => p.Collaborators).FirstOrDefaultAsync(p => p.Id == request.ProjectId && p.DeletedAt == null, cancellationToken);
+    var project = await _context.Set<Project>()
+      .Include(p => p.Collaborators)
+      .FirstOrDefaultAsync(p => p.Id == request.ProjectId && p.DeletedAt == null, cancellationToken)
+      .ConfigureAwait(false);
 
-      if (project == null) { return new DeleteProjectResult { Success = false, Error = "Project not found" }; }
-
-      // Check authorization - user must have delete permissions
-      var hasDeletePermission = project.Collaborators.Any(c => c.UserId == UserId && c.IsActive && c.Permissions.Contains(PermissionType.Delete.ToString()));
-
-      if (!hasDeletePermission) { return new DeleteProjectResult { Success = false, Error = "Unauthorized to delete this project" }; }
-
-      if (request.SoftDelete) {
-        // Mark as deleted but preserve data
-        // Use the DeletedAt property from the base EntityBase for soft delete
-        project.DeletedAt = DateTime.UtcNow;
-        project.UpdatedAt = DateTime.UtcNow;
-      }
-      else { _context.Set<Project>().Remove(project); }
-
-      await _context.SaveChangesAsync(cancellationToken);
-
-      _logger.LogInformation("Project deleted successfully: {ProjectId}", project.Id);
-
-      return new DeleteProjectResult { Success = true };
+    if (project == null) {
+      return Result.Failure<bool>(Error.NotFound("Project.NotFound", $"Project with ID {request.ProjectId} was not found"));
     }
-    catch (Exception ex) {
-      _logger.LogError(ex, "Error deleting project: {ProjectId}", request.ProjectId);
 
-      return new DeleteProjectResult { Success = false, Error = "Failed to delete project" };
+    // Check authorization - user must have delete permissions
+    var hasDeletePermission = project.Collaborators.Any(c =>
+      c.UserId == UserId && c.IsActive && c.Permissions.Contains(PermissionType.Delete.ToString()));
+
+    if (!hasDeletePermission) {
+      return Result.Failure<bool>(Error.Forbidden("Project.Forbidden", "Unauthorized to delete this project"));
     }
+
+    if (request.SoftDelete) {
+      project.SoftDelete();
+    }
+    else {
+      _context.Set<Project>().Remove(project);
+    }
+
+    await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+
+    _logger.LogInformation("Project deleted successfully: {ProjectId}", project.Id);
+
+    return Result.Success(true);
   }
 
-  public async Task<PublishProjectResult> Handle(PublishProjectCommand request, CancellationToken cancellationToken) {
-    try {
-      var project = await _context.Set<Project>().Include(p => p.Collaborators).FirstOrDefaultAsync(p => p.Id == request.ProjectId && p.DeletedAt == null, cancellationToken);
+  public async Task<Result<Project>> Handle(PublishProjectCommand request, CancellationToken cancellationToken) {
+    var project = await _context.Set<Project>()
+      .Include(p => p.Collaborators)
+      .FirstOrDefaultAsync(p => p.Id == request.ProjectId && p.DeletedAt == null, cancellationToken)
+      .ConfigureAwait(false);
 
-      if (project == null) { return new PublishProjectResult { Success = false, Error = "Project not found" }; }
-
-      // Check authorization - user must have publish permissions
-      var hasPublishPermission = project.Collaborators.Any(c => c.UserId == UserId && c.IsActive && c.Permissions.Contains(PermissionType.Publish.ToString()));
-
-      if (!hasPublishPermission) { return new PublishProjectResult { Success = false, Error = "Unauthorized to publish this project" }; }
-
-      project.Status = ContentStatus.Published;
-      project.UpdatedAt = DateTime.UtcNow;
-
-      await _context.SaveChangesAsync(cancellationToken);
-
-      return new PublishProjectResult { Success = true, Project = project };
+    if (project == null) {
+      return Result.Failure<Project>(Error.NotFound("Project.NotFound", $"Project with ID {request.ProjectId} was not found"));
     }
-    catch (Exception ex) {
-      _logger.LogError(ex, "Error publishing project: {ProjectId}", request.ProjectId);
 
-      return new PublishProjectResult { Success = false, Error = "Failed to publish project" };
+    // Check authorization - user must have publish permissions
+    var hasPublishPermission = project.Collaborators.Any(c =>
+      c.UserId == UserId && c.IsActive && c.Permissions.Contains(PermissionType.Publish.ToString()));
+
+    if (!hasPublishPermission) {
+      return Result.Failure<Project>(Error.Forbidden("Project.Forbidden", "Unauthorized to publish this project"));
     }
+
+    project.Status = ContentStatus.Published;
+    project.Touch();
+
+    await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+
+    return Result.Success(project);
   }
 
-  public async Task<UnpublishProjectResult> Handle(UnpublishProjectCommand request, CancellationToken cancellationToken) {
-    try {
-      var project = await _context.Set<Project>().Include(p => p.Collaborators).FirstOrDefaultAsync(p => p.Id == request.ProjectId && p.DeletedAt == null, cancellationToken);
+  public async Task<Result<Project>> Handle(UnpublishProjectCommand request, CancellationToken cancellationToken) {
+    var project = await _context.Set<Project>()
+      .Include(p => p.Collaborators)
+      .FirstOrDefaultAsync(p => p.Id == request.ProjectId && p.DeletedAt == null, cancellationToken)
+      .ConfigureAwait(false);
 
-      if (project == null) { return new UnpublishProjectResult { Success = false, Error = "Project not found" }; }
-
-      // Check authorization - user must have unpublish permissions
-      var hasUnpublishPermission = project.Collaborators.Any(c => c.UserId == UserId && c.IsActive && c.Permissions.Contains(PermissionType.Unpublish.ToString()));
-
-      if (!hasUnpublishPermission) { return new UnpublishProjectResult { Success = false, Error = "Unauthorized to unpublish this project" }; }
-
-      project.Status = ContentStatus.Draft;
-      project.UpdatedAt = DateTime.UtcNow;
-
-      await _context.SaveChangesAsync(cancellationToken);
-
-      return new UnpublishProjectResult { Success = true, Project = project };
+    if (project == null) {
+      return Result.Failure<Project>(Error.NotFound("Project.NotFound", $"Project with ID {request.ProjectId} was not found"));
     }
-    catch (Exception ex) {
-      _logger.LogError(ex, "Error unpublishing project: {ProjectId}", request.ProjectId);
 
-      return new UnpublishProjectResult { Success = false, Error = "Failed to unpublish project" };
+    // Check authorization - user must have unpublish permissions
+    var hasUnpublishPermission = project.Collaborators.Any(c =>
+      c.UserId == UserId && c.IsActive && c.Permissions.Contains(PermissionType.Unpublish.ToString()));
+
+    if (!hasUnpublishPermission) {
+      return Result.Failure<Project>(Error.Forbidden("Project.Forbidden", "Unauthorized to unpublish this project"));
     }
+
+    project.Status = ContentStatus.Draft;
+    project.Touch();
+
+    await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+
+    return Result.Success(project);
   }
 
-  public async Task<UpdateProjectResult> Handle(UpdateProjectCommand request, CancellationToken cancellationToken) {
-    try {
-      _logger.LogInformation("Updating project: {ProjectId} by user {UserId}", request.ProjectId, UserId);
+  public async Task<Result<Project>> Handle(ArchiveProjectCommand request, CancellationToken cancellationToken) {
+    var project = await _context.Set<Project>()
+      .Include(p => p.Collaborators)
+      .FirstOrDefaultAsync(p => p.Id == request.ProjectId && p.DeletedAt == null, cancellationToken)
+      .ConfigureAwait(false);
 
-      var project = await _context.Set<Project>().Include(p => p.Collaborators).FirstOrDefaultAsync(p => p.Id == request.ProjectId && p.DeletedAt == null, cancellationToken);
-
-      if (project == null) { return new UpdateProjectResult { Success = false, Error = "Project not found" }; }
-
-      // Check authorization - user must have edit permissions
-      var hasEditPermission = project.Collaborators.Any(c => c.UserId == UserId && c.IsActive && c.Permissions.Contains(PermissionType.Edit.ToString()));
-
-      if (!hasEditPermission) { return new UpdateProjectResult { Success = false, Error = "Unauthorized to update this project" }; }
-
-      // Update fields
-      if (request.Title != null) project.Title = request.Title;
-      if (request.Description != null) project.Description = request.Description;
-      if (request.ShortDescription != null) project.ShortDescription = request.ShortDescription;
-      if (request.ImageUrl != null) project.ImageUrl = request.ImageUrl;
-      if (request.RepositoryUrl != null) project.RepositoryUrl = request.RepositoryUrl;
-      if (request.WebsiteUrl != null) project.WebsiteUrl = request.WebsiteUrl;
-      if (request.DownloadUrl != null) project.DownloadUrl = request.DownloadUrl;
-      if (request.Type.HasValue) project.Type = (GameGuild.Projects.ProjectType)request.Type.Value;
-      if (request.CategoryId.HasValue) project.CategoryId = request.CategoryId;
-      if (request.Visibility.HasValue) project.Visibility = request.Visibility.Value;
-      if (request.Status.HasValue) project.Status = request.Status.Value;
-
-      project.UpdatedAt = DateTime.UtcNow;
-
-      await _context.SaveChangesAsync(cancellationToken);
-
-      _logger.LogInformation("Project updated successfully: {ProjectId}", project.Id);
-
-      return new UpdateProjectResult { Success = true, Project = project };
+    if (project == null) {
+      return Result.Failure<Project>(Error.NotFound("Project.NotFound", $"Project with ID {request.ProjectId} was not found"));
     }
-    catch (Exception ex) {
-      _logger.LogError(ex, "Error updating project: {ProjectId}", request.ProjectId);
 
-      return new UpdateProjectResult { Success = false, Error = "Failed to update project" };
+    // Check authorization - user must have archive permissions
+    var hasArchivePermission = project.Collaborators.Any(c =>
+      c.UserId == UserId && c.IsActive && c.Permissions.Contains(PermissionType.Archive.ToString()));
+
+    if (!hasArchivePermission) {
+      return Result.Failure<Project>(Error.Forbidden("Project.Forbidden", "Unauthorized to archive this project"));
     }
+
+    project.Status = ContentStatus.Archived;
+    project.Touch();
+
+    await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+
+    return Result.Success(project);
   }
 
   private static string GenerateSlug(string name) { return Project.GenerateSlug(name); }

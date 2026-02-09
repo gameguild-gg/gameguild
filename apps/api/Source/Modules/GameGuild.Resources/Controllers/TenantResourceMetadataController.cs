@@ -15,7 +15,6 @@ namespace GameGuild.Resources;
 /// <remarks>
 ///     All endpoints require authentication. Tenant membership validation is enforced.
 /// </remarks>
-[ApiController]
 [ApiVersion("1.0")]
 [Tags("tenants/resources/metadata")]
 [Authorize]
@@ -23,7 +22,7 @@ namespace GameGuild.Resources;
 public sealed class TenantResourceMetadataController(
     IResourceMetadataRepository metadataRepository,
     IActorContextAccessor actorContextAccessor,
-    ITenantMembershipChecker tenantMembershipChecker) : ControllerBase
+    ITenantMembershipChecker tenantMembershipChecker) : BaseApiController
 {
     /// <summary>
     ///     Validates that the current actor is a member of the specified tenant.
@@ -129,7 +128,7 @@ public sealed class TenantResourceMetadataController(
             existing.Description = body.Description ?? existing.Description;
             existing.Category = body.Category ?? existing.Category;
             existing.DisplayOrder = body.DisplayOrder ?? existing.DisplayOrder;
-            existing.UpdatedAt = DateTime.UtcNow;
+            existing.Touch();
 
             await metadataRepository.UpdateAsync(existing, ct).ConfigureAwait(false);
 

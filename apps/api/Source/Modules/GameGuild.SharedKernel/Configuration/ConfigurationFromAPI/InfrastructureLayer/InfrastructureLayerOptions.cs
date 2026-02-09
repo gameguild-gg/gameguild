@@ -5,8 +5,13 @@ namespace GameGuild.Configuration.ConfigurationFromAPI.InfrastructureLayer;
 /// <summary>
 ///     Core infrastructure layer configuration options for repositories, database, caching, and external services.
 /// </summary>
-public class InfrastructureLayerOptions : BaseOptions
+public sealed class InfrastructureLayerOptions : BaseOptions
 {
+    /// <summary>
+    ///     The configuration section name for this options type.
+    /// </summary>
+    public const string SectionName = "InfrastructureLayer";
+
     /// <summary>
     ///     Enable database registration (ApplicationDbContext with PostgreSQL).
     /// </summary>
@@ -55,7 +60,7 @@ public class InfrastructureLayerOptions : BaseOptions
 /// <summary>
 ///     Database configuration options for PostgreSQL.
 /// </summary>
-public class DatabaseOptions : BaseOptions
+public sealed class DatabaseOptions : BaseOptions
 {
     /// <summary>
     ///     Connection string name in configuration.

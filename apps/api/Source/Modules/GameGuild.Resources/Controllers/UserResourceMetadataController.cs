@@ -14,14 +14,13 @@ namespace GameGuild.Resources;
 /// <remarks>
 ///     All endpoints require authentication. User ownership or admin role is enforced.
 /// </remarks>
-[ApiController]
 [ApiVersion("1.0")]
 [Tags("users/resources/metadata")]
 [Authorize]
 [EnableRateLimiting(RateLimitPolicies.PerUser)]
 public sealed class UserResourceMetadataController(
     IResourceMetadataRepository metadataRepository,
-    IActorContextAccessor actorContextAccessor) : ControllerBase
+    IActorContextAccessor actorContextAccessor) : BaseApiController
 {
     /// <summary>
     ///     Validates that the current actor owns the user resource or is an admin.
@@ -117,7 +116,7 @@ public sealed class UserResourceMetadataController(
             existing.Description = body.Description ?? existing.Description;
             existing.Category = body.Category ?? existing.Category;
             existing.DisplayOrder = body.DisplayOrder ?? existing.DisplayOrder;
-            existing.UpdatedAt = DateTime.UtcNow;
+            existing.Touch();
 
             await metadataRepository.UpdateAsync(existing, ct).ConfigureAwait(false);
 

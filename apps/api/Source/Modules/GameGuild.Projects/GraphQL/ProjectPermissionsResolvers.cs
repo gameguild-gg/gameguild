@@ -5,7 +5,7 @@ using IPermissionService = GameGuild.Identity.Authentication.IPermissionService;
 
 namespace GameGuild.Projects;
 
-// [ExtendObjectType(typeof(Project))] // TODO: Configure GraphQL Project type
+// [ExtendObjectType(typeof(Project))] // PLANNED: Configure GraphQL Project type when HotChocolate schema stitching is set up for the Projects module
 public sealed class ProjectPermissionsResolvers {
   public async Task<bool> CanEdit(/* [Service] */ IPermissionService permissionService, ClaimsPrincipal user, /* [Parent] */ Project project) {
     ArgumentNullException.ThrowIfNull(permissionService);

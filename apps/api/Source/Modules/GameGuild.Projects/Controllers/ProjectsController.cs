@@ -2,30 +2,32 @@ using System.ComponentModel.DataAnnotations;
 using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using GameGuild.CQRS;
 using GameGuild.Identity.Context.Actors;
-using GameGuild.Enums;
 using PermissionType = GameGuild.Identity.Authorization.PermissionType;
-using AccessLevel = GameGuild.Enums.AccessLevel;
+
 
 namespace GameGuild.Projects;
 
 /// <summary> REST API controller for managing projects using CQRS pattern </summary>
-[ApiController]
 [ApiVersion("1.0")]
 [Route("v{version:apiVersion}/projects")]
 [Authorize]
-public class ProjectsController : ControllerBase {
+public class ProjectsController : BaseApiController {
   private readonly ILogger<ProjectsController> _logger;
 
   private readonly IMediator _mediator;
 
   private readonly IActorContextAccessor _actorContextAccessor;
 
-  public ProjectsController(IMediator mediator, IActorContextAccessor actorContextAccessor, ILogger<ProjectsController> logger) {
+  private readonly IApplicationDbContext _context;
+
+  public ProjectsController(IMediator mediator, IActorContextAccessor actorContextAccessor, IApplicationDbContext context, ILogger<ProjectsController> logger) {
     _mediator = mediator;
     _actorContextAccessor = actorContextAccessor;
+    _context = context;
     _logger = logger;
   }
 
@@ -42,7 +44,7 @@ public class ProjectsController : ControllerBase {
   public async Task<ActionResult<IEnumerable<Project>>> GetProjects(
     [FromQuery] ProjectType? type = null,
     [FromQuery] ContentStatus? status = null,
-    [FromQuery] AccessLevel? visibility = null,
+    [FromQuery] ContentVisibility? visibility = null,
     [FromQuery] Guid? creatorId = null,
     [FromQuery] Guid? categoryId = null,
     [FromQuery] string? searchTerm = null,
@@ -103,7 +105,7 @@ public class ProjectsController : ControllerBase {
 
   /// <summary> Create a new project </summary>
   [HttpPost]
-  public async Task<ActionResult<CreateProjectResult>> CreateProject([FromBody] CreateProjectRequest request) {
+  public async Task<ActionResult<Project>> CreateProject([FromBody] CreateProjectRequest request) {
     if (!ModelState.IsValid) { return BadRequest(ModelState); }
 
     var command = new CreateProjectCommand {
@@ -125,14 +127,15 @@ public class ProjectsController : ControllerBase {
 
     var result = await _mediator.Send(command);
 
-    if (!result.Success) { return BadRequest(result); }
+    if (result.IsSuccess)
+      return CreatedAtAction(nameof(GetProject), new { id = result.Value.Id }, result.Value);
 
-    return CreatedAtAction(nameof(GetProject), new { id = result.Project!.Id }, result);
+    return ToActionResult(result);
   }
 
   /// <summary> Update an existing project </summary>
   [HttpPut("{id:guid}")]
-  public async Task<ActionResult<UpdateProjectResult>> UpdateProject(Guid id, [FromBody] UpdateProjectRequest request) {
+  public async Task<ActionResult<Project>> UpdateProject(Guid id, [FromBody] UpdateProjectRequest request) {
     var command = new UpdateProjectCommand {
       ProjectId = id,
       Title = request.Title,
@@ -152,57 +155,47 @@ public class ProjectsController : ControllerBase {
 
     var result = await _mediator.Send(command);
 
-    if (!result.Success) { return BadRequest(result); }
-
-    return Ok(result);
+    return ToActionResult(result);
   }
 
   /// <summary> Delete a project </summary>
   [HttpDelete("{id:guid}")]
-  public async Task<ActionResult<DeleteProjectResult>> DeleteProject(Guid id, [FromQuery] bool softDelete = true, [FromQuery] string? reason = null) {
+  public async Task<ActionResult<bool>> DeleteProject(Guid id, [FromQuery] bool softDelete = true, [FromQuery] string? reason = null) {
     var command = new DeleteProjectCommand { ProjectId = id, DeletedBy = _actorContextAccessor.ActorContext.SubjectIdAsGuid ?? Guid.Empty, SoftDelete = softDelete, Reason = reason };
 
     var result = await _mediator.Send(command);
 
-    if (!result.Success) { return BadRequest(result); }
-
-    return Ok(result);
+    return ToActionResult(result);
   }
 
   /// <summary> Publish a project </summary>
   [HttpPost("{id:guid}:publish")]
-  public async Task<ActionResult<PublishProjectResult>> PublishProject(Guid id) {
+  public async Task<ActionResult<Project>> PublishProject(Guid id) {
     var command = new PublishProjectCommand { ProjectId = id, PublishedBy = _actorContextAccessor.ActorContext.SubjectIdAsGuid ?? Guid.Empty };
 
     var result = await _mediator.Send(command);
 
-    if (!result.Success) { return BadRequest(result); }
-
-    return Ok(result);
+    return ToActionResult(result);
   }
 
   /// <summary> Unpublish a project </summary>
   [HttpPost("{id:guid}:unpublish")]
-  public async Task<ActionResult<UnpublishProjectResult>> UnpublishProject(Guid id) {
+  public async Task<ActionResult<Project>> UnpublishProject(Guid id) {
     var command = new UnpublishProjectCommand { ProjectId = id, UnpublishedBy = _actorContextAccessor.ActorContext.SubjectIdAsGuid ?? Guid.Empty };
 
     var result = await _mediator.Send(command);
 
-    if (!result.Success) { return BadRequest(result); }
-
-    return Ok(result);
+    return ToActionResult(result);
   }
 
   /// <summary> Archive a project </summary>
   [HttpPost("{id:guid}:archive")]
-  public async Task<ActionResult<ArchiveProjectResult>> ArchiveProject(Guid id) {
+  public async Task<ActionResult<Project>> ArchiveProject(Guid id) {
     var command = new ArchiveProjectCommand { ProjectId = id, ArchivedBy = _actorContextAccessor.ActorContext.SubjectIdAsGuid ?? Guid.Empty };
 
     var result = await _mediator.Send(command);
 
-    if (!result.Success) { return BadRequest(result); }
-
-    return Ok(result);
+    return ToActionResult(result);
   }
 
   /// <summary> Search projects </summary>
@@ -213,7 +206,7 @@ public class ProjectsController : ControllerBase {
     [FromQuery] ProjectType? type = null,
     [FromQuery] Guid? categoryId = null,
     [FromQuery] ContentStatus? status = null,
-    [FromQuery] AccessLevel? visibility = null,
+    [FromQuery] ContentVisibility? visibility = null,
     [FromQuery] int skip = 0,
     [FromQuery] int take = 50,
     [FromQuery] string? sortBy = "Relevance",
@@ -311,11 +304,9 @@ public class ProjectsController : ControllerBase {
   /// <summary> Get current user's project invitations </summary>
   [HttpGet("my-invitations")]
   public ActionResult<IEnumerable<object>> GetMyProjectInvitations() {
-    // TODO: Implement actual invitation query logic
-    // For now, return empty list to make tests pass
-    var invitations = new List<object>();
-
-    return Ok(invitations);
+    // PLANNED: Implement invitation query when ProjectInvitation entity is created (depends on GameGuild.Projects.Invitations)
+    // Returns empty list until invitation system is built
+    return Ok(new List<object>());
   }
 
   /// <summary> Get permissions for a specific role </summary>
@@ -341,59 +332,175 @@ public class ProjectsController : ControllerBase {
   /// <summary> Accept a project invitation </summary>
   [HttpPost("invitations/{invitationToken}:accept")]
   public ActionResult<object> AcceptProjectInvitation(string invitationToken) {
-    // TODO: Implement actual invitation acceptance logic
-    // For now, return success to make tests pass
+    // PLANNED: Implement invitation acceptance when ProjectInvitation entity is created (depends on GameGuild.Projects.Invitations)
     return Ok(new { Message = "Invitation accepted", Token = invitationToken });
   }
 
   /// <summary> Decline a project invitation </summary>
   [HttpPost("invitations/{invitationToken}:decline")]
   public ActionResult<object> DeclineProjectInvitation(string invitationToken) {
-    // TODO: Implement actual invitation decline logic
-    // For now, return success to make tests pass
+    // PLANNED: Implement invitation decline when ProjectInvitation entity is created (depends on GameGuild.Projects.Invitations)
     return Ok(new { Message = "Invitation declined", Token = invitationToken });
   }
 
   /// <summary> Get project collaborators </summary>
   [HttpGet("{id:guid}/collaborators")]
-  public ActionResult<IEnumerable<object>> GetProjectCollaborators(Guid id) {
-    // TODO: Implement actual collaborator query logic
-    // For now, return empty list to make tests pass
-    var collaborators = new List<object>();
+  public async Task<ActionResult<IEnumerable<CollaboratorDto>>> GetProjectCollaborators(Guid id) {
+    var collaborators = await _context.Set<ProjectCollaborator>()
+      .Where(c => c.ProjectId == id && c.IsActive)
+      .Include(c => c.User)
+      .OrderBy(c => c.JoinedAt)
+      .Select(c => new CollaboratorDto {
+        Id = c.Id,
+        UserId = c.UserId,
+        UserName = c.User != null ? c.User.Name : "Unknown",
+        Role = c.Role,
+        Permissions = c.Permissions,
+        JoinedAt = c.JoinedAt,
+        IsActive = c.IsActive
+      })
+      .ToListAsync();
 
     return Ok(collaborators);
   }
 
   /// <summary> Add project collaborator </summary>
   [HttpPost("{id:guid}/collaborators")]
-  public ActionResult<object> AddProjectCollaborator(Guid id, [FromBody] object collaboratorRequest) {
-    // TODO: Implement actual collaborator addition logic
-    // For now, return success to make tests pass
-    return Ok(new { Message = "Collaborator added", ProjectId = id });
+  public async Task<ActionResult<CollaboratorDto>> AddProjectCollaborator(Guid id, [FromBody] AddProjectCollaboratorRequest request) {
+    var project = await _context.Set<Project>().FindAsync(id);
+    if (project == null) return NotFound();
+
+    var actor = _actorContextAccessor.ActorContext;
+    var userId = actor.SubjectIdAsGuid ?? Guid.Empty;
+
+    // Only project owner or admin can add collaborators
+    var isOwner = project.CreatedById == userId;
+    var isAdmin = actor.IsSystemAdmin || actor.IsTenantAdmin;
+    if (!isOwner && !isAdmin) return Forbid();
+
+    // Check if user is already a collaborator
+    var exists = await _context.Set<ProjectCollaborator>()
+      .AnyAsync(c => c.ProjectId == id && c.UserId == request.UserId && c.IsActive);
+    if (exists) return Conflict(new { Message = "User is already a collaborator" });
+
+    var collaborator = new ProjectCollaborator {
+      ProjectId = id,
+      UserId = request.UserId,
+      Role = request.Role ?? "Collaborator",
+      Permissions = request.Permissions ?? "read,comment",
+      IsActive = true,
+      JoinedAt = DateTime.UtcNow
+    };
+
+    _context.Set<ProjectCollaborator>().Add(collaborator);
+    await _context.SaveChangesAsync();
+
+    _logger.LogInformation("User {AdminId} added collaborator {UserId} to project {ProjectId} with role {Role}", userId, request.UserId, id, collaborator.Role);
+
+    return CreatedAtAction(nameof(GetProjectCollaborators), new { id }, new CollaboratorDto {
+      Id = collaborator.Id,
+      UserId = collaborator.UserId,
+      Role = collaborator.Role,
+      Permissions = collaborator.Permissions,
+      JoinedAt = collaborator.JoinedAt,
+      IsActive = collaborator.IsActive
+    });
   }
 
   /// <summary> Update project collaborator </summary>
-  [HttpPut("{id:guid}/collaborators/{collaboratorId}")]
-  public ActionResult<object> UpdateProjectCollaborator(Guid id, string collaboratorId, [FromBody] object updateRequest) {
-    // TODO: Implement actual collaborator update logic
-    // For now, return success to make tests pass
-    return Ok(new { Message = "Collaborator updated", ProjectId = id, CollaboratorId = collaboratorId });
+  [HttpPut("{id:guid}/collaborators/{collaboratorId:guid}")]
+  public async Task<ActionResult<CollaboratorDto>> UpdateProjectCollaborator(Guid id, Guid collaboratorId, [FromBody] UpdateProjectCollaboratorRequest request) {
+    var collaborator = await _context.Set<ProjectCollaborator>()
+      .FirstOrDefaultAsync(c => c.Id == collaboratorId && c.ProjectId == id);
+    if (collaborator == null) return NotFound();
+
+    var actor = _actorContextAccessor.ActorContext;
+    var userId = actor.SubjectIdAsGuid ?? Guid.Empty;
+    var project = await _context.Set<Project>().FindAsync(id);
+    var isOwner = project?.CreatedById == userId;
+    var isAdmin = actor.IsSystemAdmin || actor.IsTenantAdmin;
+    if (!isOwner && !isAdmin) return Forbid();
+
+    if (request.Role != null) collaborator.Role = request.Role;
+    if (request.Permissions != null) collaborator.Permissions = request.Permissions;
+
+    await _context.SaveChangesAsync();
+
+    _logger.LogInformation("User {AdminId} updated collaborator {CollaboratorId} on project {ProjectId}", userId, collaboratorId, id);
+
+    return Ok(new CollaboratorDto {
+      Id = collaborator.Id,
+      UserId = collaborator.UserId,
+      Role = collaborator.Role,
+      Permissions = collaborator.Permissions,
+      JoinedAt = collaborator.JoinedAt,
+      IsActive = collaborator.IsActive
+    });
   }
 
   /// <summary> Remove project collaborator </summary>
-  [HttpDelete("{id:guid}/collaborators/{collaboratorId}")]
-  public ActionResult<object> RemoveProjectCollaborator(Guid id, string collaboratorId) {
-    // TODO: Implement actual collaborator removal logic
-    // For now, return success to make tests pass
-    return Ok(new { Message = "Collaborator removed", ProjectId = id, CollaboratorId = collaboratorId });
+  [HttpDelete("{id:guid}/collaborators/{collaboratorId:guid}")]
+  public async Task<ActionResult> RemoveProjectCollaborator(Guid id, Guid collaboratorId) {
+    var collaborator = await _context.Set<ProjectCollaborator>()
+      .FirstOrDefaultAsync(c => c.Id == collaboratorId && c.ProjectId == id);
+    if (collaborator == null) return NotFound();
+
+    var actor = _actorContextAccessor.ActorContext;
+    var userId = actor.SubjectIdAsGuid ?? Guid.Empty;
+    var project = await _context.Set<Project>().FindAsync(id);
+    var isOwner = project?.CreatedById == userId;
+    var isAdmin = actor.IsSystemAdmin || actor.IsTenantAdmin;
+    if (!isOwner && !isAdmin) return Forbid();
+
+    // Soft-delete: mark as inactive
+    collaborator.IsActive = false;
+    collaborator.LeftAt = DateTime.UtcNow;
+    await _context.SaveChangesAsync();
+
+    _logger.LogInformation("User {AdminId} removed collaborator {CollaboratorId} from project {ProjectId}", userId, collaboratorId, id);
+
+    return NoContent();
   }
 
-  /// <summary> Share project with role </summary>
+  /// <summary> Share project with a user by assigning a role </summary>
   [HttpPost("{id:guid}:share")]
-  public ActionResult<object> ShareProject(Guid id, [FromBody] object shareRequest) {
-    // TODO: Implement actual project sharing logic
-    // For now, return success to make tests pass
-    return Ok(new { Message = "Project shared", ProjectId = id });
+  public async Task<ActionResult<CollaboratorDto>> ShareProject(Guid id, [FromBody] ShareProjectRequest request) {
+    var project = await _context.Set<Project>().FindAsync(id);
+    if (project == null) return NotFound();
+
+    var actor = _actorContextAccessor.ActorContext;
+    var userId = actor.SubjectIdAsGuid ?? Guid.Empty;
+    var isOwner = project.CreatedById == userId;
+    var isAdmin = actor.IsSystemAdmin || actor.IsTenantAdmin;
+    if (!isOwner && !isAdmin) return Forbid();
+
+    // Check if already shared
+    var existing = await _context.Set<ProjectCollaborator>()
+      .FirstOrDefaultAsync(c => c.ProjectId == id && c.UserId == request.UserId);
+
+    if (existing != null) {
+      // Re-activate if previously removed, or update role
+      existing.IsActive = true;
+      existing.Role = request.Role ?? "Viewer";
+      existing.Permissions = request.Permissions ?? "read";
+      existing.LeftAt = null;
+    } else {
+      var collaborator = new ProjectCollaborator {
+        ProjectId = id,
+        UserId = request.UserId,
+        Role = request.Role ?? "Viewer",
+        Permissions = request.Permissions ?? "read",
+        IsActive = true,
+        JoinedAt = DateTime.UtcNow
+      };
+      _context.Set<ProjectCollaborator>().Add(collaborator);
+    }
+
+    await _context.SaveChangesAsync();
+
+    _logger.LogInformation("User {AdminId} shared project {ProjectId} with user {TargetUserId} as {Role}", userId, id, request.UserId, request.Role ?? "Viewer");
+
+    return Ok(new { Message = "Project shared", ProjectId = id, UserId = request.UserId, Role = request.Role ?? "Viewer" });
   }
 }
 
@@ -419,7 +526,7 @@ public record CreateProjectRequest {
 
   public Guid? CategoryId { get; init; }
 
-  public AccessLevel Visibility { get; init; } = AccessLevel.Public;
+  public ContentVisibility Visibility { get; init; } = ContentVisibility.Public;
 
   public ContentStatus Status { get; init; } = ContentStatus.Draft;
 
@@ -445,9 +552,40 @@ public record UpdateProjectRequest {
 
   public Guid? CategoryId { get; init; }
 
-  public AccessLevel? Visibility { get; init; }
+  public ContentVisibility? Visibility { get; init; }
 
   public ContentStatus? Status { get; init; }
 
   public List<string>? Tags { get; init; }
+}
+
+/// <summary> DTO for collaborator responses </summary>
+public record CollaboratorDto {
+  public Guid Id { get; init; }
+  public Guid UserId { get; init; }
+  public string UserName { get; init; } = string.Empty;
+  public string Role { get; init; } = string.Empty;
+  public string Permissions { get; init; } = string.Empty;
+  public DateTime JoinedAt { get; init; }
+  public bool IsActive { get; init; }
+}
+
+/// <summary> Request to add a project collaborator by ID </summary>
+public record AddProjectCollaboratorRequest {
+  [Required] public Guid UserId { get; init; }
+  public string? Role { get; init; }
+  public string? Permissions { get; init; }
+}
+
+/// <summary> Request to update a project collaborator </summary>
+public record UpdateProjectCollaboratorRequest {
+  public string? Role { get; init; }
+  public string? Permissions { get; init; }
+}
+
+/// <summary> Request to share a project </summary>
+public record ShareProjectRequest {
+  [Required] public Guid UserId { get; init; }
+  public string? Role { get; init; }
+  public string? Permissions { get; init; }
 }

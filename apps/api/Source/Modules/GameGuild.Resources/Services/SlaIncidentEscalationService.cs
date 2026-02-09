@@ -64,16 +64,16 @@ public class LoggingSlaNotificationSender(ILogger<LoggingSlaNotificationSender> 
 /// <summary>
 ///     Implementation of SLA incident escalation service.
 ///     Wires SLA violations to the notification system and incident management.
-///     Uses Lazy&lt;ISlaImpactAnalysisService&gt; to break circular dependency.
+///     Depends on <see cref="ISlaImpactAnalysisRepository"/> and <see cref="IIncidentTicketProvider"/>
+///     directly to avoid a circular dependency with <c>ISlaImpactAnalysisService</c>.
 /// </summary>
 public class SlaIncidentEscalationService(
-    Lazy<ISlaImpactAnalysisService> slaServiceLazy,
     ISlaImpactAnalysisRepository slaRepository,
+    IIncidentTicketProvider incidentTicketProvider,
     ISlaNotificationSender notificationSender,
     ILogger<SlaIncidentEscalationService> logger
 ) : ISlaIncidentEscalationService
 {
-    private ISlaImpactAnalysisService SlaService => slaServiceLazy.Value;
     
     // In-memory config cache - in production would use a repository
     private static readonly Dictionary<Guid, SlaEscalationConfig> ConfigCache = new();
@@ -89,7 +89,7 @@ public class SlaIncidentEscalationService(
             return SlaEscalationResult.Failed("Violation has no tenant context");
         }
 
-        var config = await GetEscalationConfigAsync(violation.TenantId.Value, cancellationToken);
+        var config = await GetEscalationConfigAsync(violation.TenantId.Value, cancellationToken).ConfigureAwait(false);
 
         // Check if escalation is needed
         if (!config.AutoEscalationEnabled)
@@ -114,7 +114,12 @@ public class SlaIncidentEscalationService(
             // Create incident ticket if configured
             if (config.AutoCreateIncidents && !violation.IncidentCreated)
             {
-                incidentId = await SlaService.CreateIncidentTicketAsync(violation.Id, cancellationToken);
+                incidentId = await incidentTicketProvider.CreateTicketAsync(violation, cancellationToken).ConfigureAwait(false);
+
+                // Update the violation record directly via the repository
+                violation.IncidentCreated = true;
+                violation.IncidentTicketId = incidentId;
+                await slaRepository.UpdateAsync(violation, cancellationToken).ConfigureAwait(false);
                 
                 logger.LogInformation(
                     "Created incident {IncidentId} for violation {ViolationId}",
@@ -122,16 +127,14 @@ public class SlaIncidentEscalationService(
             }
 
             // Send notifications
-            await SendViolationNotificationAsync(violation, cancellationToken);
+            await SendViolationNotificationAsync(violation, cancellationToken).ConfigureAwait(false);
 
             // Collect notified users
             notifiedUsers.AddRange(config.EscalationUserIds);
 
-            // Mark violation as escalated
-            await SlaService.UpdateViolationAsync(
-                violation.Id,
-                requiresEscalation: true,
-                cancellationToken: cancellationToken);
+            // Mark violation as escalated directly via the repository
+            violation.RequiresEscalation = true;
+            await slaRepository.UpdateAsync(violation, cancellationToken).ConfigureAwait(false);
 
             logger.LogInformation(
                 "Escalated violation {ViolationId}: Incident={IncidentId}, NotifiedUsers={UserCount}",
@@ -154,18 +157,17 @@ public class SlaIncidentEscalationService(
 
         // Get all tenants with unresolved high/critical violations
         // Note: In production, this would need a more efficient query
-        var tenantIds = await GetTenantsWithPendingEscalationsAsync(cancellationToken);
+        var tenantIds = await GetTenantsWithPendingEscalationsAsync(cancellationToken).ConfigureAwait(false);
 
         foreach (var tenantId in tenantIds)
         {
-            var violations = await SlaService.GetUnresolvedViolationsAsync(
-                tenantId,
-                SlaViolationSeverity.High,
-                cancellationToken);
+            var allViolations = await slaRepository.GetUnresolvedAsync(tenantId, cancellationToken).ConfigureAwait(false);
+            var violations = allViolations
+                .Where(v => v.Severity >= SlaViolationSeverity.High);
 
             foreach (var violation in violations.Where(v => v.RequiresEscalation && !v.IncidentCreated))
             {
-                var result = await EscalateViolationAsync(violation, cancellationToken);
+                var result = await EscalateViolationAsync(violation, cancellationToken).ConfigureAwait(false);
                 
                 if (result.WasEscalated)
                 {
@@ -188,7 +190,7 @@ public class SlaIncidentEscalationService(
             return;
         }
 
-        var config = await GetEscalationConfigAsync(violation.TenantId.Value, cancellationToken);
+        var config = await GetEscalationConfigAsync(violation.TenantId.Value, cancellationToken).ConfigureAwait(false);
 
         var severityText = violation.Severity switch
         {
@@ -279,7 +281,7 @@ public class SlaIncidentEscalationService(
     {
         // Get distinct tenant IDs from unresolved violations
         // This is a simplified implementation - in production would use a dedicated query
-        var allViolations = await slaRepository.GetUnresolvedAsync(Guid.Empty, cancellationToken);
+        var allViolations = await slaRepository.GetUnresolvedAsync(Guid.Empty, cancellationToken).ConfigureAwait(false);
         
         return allViolations
             .Where(v => v.TenantId.HasValue && v.RequiresEscalation && !v.IncidentCreated)

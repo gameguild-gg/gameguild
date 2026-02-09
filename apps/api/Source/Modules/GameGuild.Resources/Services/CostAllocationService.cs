@@ -21,7 +21,7 @@ public class CostAllocationService(
     {
         logger.LogInformation("Generating cost allocation report for tenant {TenantId} from {Start} to {End}", tenantId, periodStart, periodEnd);
 
-        var usageRecords = await usageRepository.GetByTenantAsync(tenantId, null, periodStart, periodEnd, cancellationToken);
+        var usageRecords = await usageRepository.GetByTenantAsync(tenantId, null, periodStart, periodEnd, cancellationToken).ConfigureAwait(false);
 
         var groupedByType = usageRecords.GroupBy(r => r.Type).Select(g => new { UsageType = g.Key, TotalUsage = g.Sum(r => r.UsageAmount) }).ToList();
 
@@ -34,7 +34,7 @@ public class CostAllocationService(
             totalCost += costPerUnit * group.TotalUsage;
 
             // Get allocation tags from resource quotas
-            var quota = await quotaRepository.GetByTenantAndTypeAsync(tenantId, group.UsageType, cancellationToken);
+            var quota = await quotaRepository.GetByTenantAndTypeAsync(tenantId, group.UsageType, cancellationToken).ConfigureAwait(false);
 
             if (quota?.Metadata != null)
             {
@@ -72,7 +72,7 @@ public class CostAllocationService(
         };
         report.SetProperties(new Dictionary<string, object?> { ["TenantId"] = tenantId });
 
-        var savedReport = await reportRepository.AddAsync(report, cancellationToken);
+        var savedReport = await reportRepository.AddAsync(report, cancellationToken).ConfigureAwait(false);
 
         logger.LogInformation("Generated cost allocation report {ReportId} for tenant {TenantId} with total cost {TotalCost:C}", savedReport.Id, tenantId, totalCost);
 
@@ -81,15 +81,15 @@ public class CostAllocationService(
 
     public async Task<IEnumerable<CostAllocationReport>> GetTenantReportsAsync(Guid tenantId, DateTime? fromDate = null, DateTime? toDate = null, CancellationToken cancellationToken = default)
     {
-        return await reportRepository.GetByTenantAsync(tenantId, fromDate, toDate, cancellationToken);
+        return await reportRepository.GetByTenantAsync(tenantId, fromDate, toDate, cancellationToken).ConfigureAwait(false);
     }
 
-    public async Task<CostAllocationReport?> GetReportAsync(Guid reportId, CancellationToken cancellationToken = default) { return await reportRepository.GetByIdAsync(reportId, cancellationToken); }
+    public async Task<CostAllocationReport?> GetReportAsync(Guid reportId, CancellationToken cancellationToken = default) { return await reportRepository.GetByIdAsync(reportId, cancellationToken).ConfigureAwait(false); }
 
     public async Task<decimal> CalculateTotalCostAsync(Guid tenantId, DateTime periodStart, DateTime periodEnd, CancellationToken cancellationToken = default)
     {
         // Get all usage records for tenant and filter by date
-        var allRecords = await usageRepository.GetByTenantAsync(tenantId, cancellationToken);
+        var allRecords = await usageRepository.GetByTenantAsync(tenantId, cancellationToken).ConfigureAwait(false);
         var usageRecords = allRecords.Where(r => r.PeriodStart >= periodStart && r.PeriodStart <= periodEnd);
 
         decimal totalCost = 0;
@@ -106,27 +106,27 @@ public class CostAllocationService(
 
     public async Task<bool> MarkAsExportedAsync(Guid reportId, string? invoiceReference = null, CancellationToken cancellationToken = default)
     {
-        var report = await reportRepository.GetByIdAsync(reportId, cancellationToken);
+        var report = await reportRepository.GetByIdAsync(reportId, cancellationToken).ConfigureAwait(false);
 
         if (report == null) return false;
 
         report.IsExported = true;
         report.ExportedAt = DateTime.UtcNow;
         report.InvoiceReference = invoiceReference;
-        report.UpdatedAt = DateTime.UtcNow;
+        report.Touch();
 
-        await reportRepository.UpdateAsync(report, cancellationToken);
+        await reportRepository.UpdateAsync(report, cancellationToken).ConfigureAwait(false);
 
         logger.LogInformation("Marked report {ReportId} as exported with invoice reference {InvoiceReference}", reportId, invoiceReference);
 
         return true;
     }
 
-    public async Task<IEnumerable<CostAllocationReport>> GetUnexportedReportsAsync(CancellationToken cancellationToken = default) { return await reportRepository.GetUnexportedReportsAsync(cancellationToken); }
+    public async Task<IEnumerable<CostAllocationReport>> GetUnexportedReportsAsync(CancellationToken cancellationToken = default) { return await reportRepository.GetUnexportedReportsAsync(cancellationToken).ConfigureAwait(false); }
 
     public async Task<bool> UpdateAllocationTagsAsync(Guid reportId, Dictionary<string, string> tags, CancellationToken cancellationToken = default)
     {
-        var report = await reportRepository.GetByIdAsync(reportId, cancellationToken);
+        var report = await reportRepository.GetByIdAsync(reportId, cancellationToken).ConfigureAwait(false);
 
         if (report == null) return false;
 
@@ -134,9 +134,9 @@ public class CostAllocationService(
         report.CostCenter = tags.GetValueOrDefault("CostCenter");
         report.Project = tags.GetValueOrDefault("Project");
         report.Owner = tags.GetValueOrDefault("Owner");
-        report.UpdatedAt = DateTime.UtcNow;
+        report.Touch();
 
-        await reportRepository.UpdateAsync(report, cancellationToken);
+        await reportRepository.UpdateAsync(report, cancellationToken).ConfigureAwait(false);
 
         logger.LogInformation("Updated allocation tags for report {ReportId}", reportId);
 
@@ -149,6 +149,6 @@ public class CostAllocationService(
         return _options.CostPerUnit.GetValueOrDefault(typeName, _options.DefaultCostPerUnit);
     }
 
-    // TODO: Integration with Billing module for invoice generation
-    // TODO: Integration with Finance module for cost center validation
+    // PLANNED: Integration with Billing module for invoice generation (depends on GameGuild.Commerce.Billing)
+    // PLANNED: Integration with Finance module for cost center validation (depends on GameGuild.Finance)
 }

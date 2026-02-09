@@ -1,9 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
-using GameGuild.Entities;
 using GameGuild.Identity.Users;
-using GameGuild.Enums;
 
 namespace GameGuild.Projects;
 
@@ -33,7 +31,7 @@ public sealed class ProjectLegacy : EntityBase {
   public ContentStatus Status { get; set; } = ContentStatus.Draft;
 
   /// <summary> Visibility/access level for the project </summary>
-  public AccessLevel Visibility { get; set; } = AccessLevel.Private;
+  public ContentVisibility Visibility { get; set; } = ContentVisibility.Private;
 
   /// <summary> Short description (max 500 chars) </summary>
   [MaxLength(500)]

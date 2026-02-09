@@ -9,7 +9,7 @@ public class UsageTrendAnalysisService(IResourceUsageTrendRepository trendReposi
 {
     public async Task<ResourceUsageTrend> AnalyzeTrendAsync(Guid tenantId, ResourceUsageType type, DateTime periodStart, DateTime periodEnd, CancellationToken cancellationToken = default)
     {
-        var usageRecords = await usageRepository.GetByTenantAsync(tenantId, type, periodStart, periodEnd, cancellationToken);
+        var usageRecords = await usageRepository.GetByTenantAsync(tenantId, type, periodStart, periodEnd, cancellationToken).ConfigureAwait(false);
 
         var recordsList = usageRecords.ToList();
 
@@ -57,7 +57,7 @@ public class UsageTrendAnalysisService(IResourceUsageTrendRepository trendReposi
         };
         trend.SetProperties(new Dictionary<string, object?> { ["TenantId"] = tenantId });
 
-        var savedTrend = await trendRepository.AddAsync(trend, cancellationToken);
+        var savedTrend = await trendRepository.AddAsync(trend, cancellationToken).ConfigureAwait(false);
 
         logger.LogInformation("Analyzed trend for tenant {TenantId}, type {Type}: Pattern={Pattern}, Growth={Growth:P}", tenantId, type, pattern, growthRate);
 
@@ -66,14 +66,14 @@ public class UsageTrendAnalysisService(IResourceUsageTrendRepository trendReposi
 
     public async Task<IEnumerable<ResourceUsageTrend>> GetTenantTrendsAsync(Guid tenantId, DateTime? fromDate = null, DateTime? toDate = null, CancellationToken cancellationToken = default)
     {
-        return await trendRepository.GetByTenantAsync(tenantId, null, fromDate, toDate, cancellationToken);
+        return await trendRepository.GetByTenantAsync(tenantId, null, fromDate, toDate, cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<IEnumerable<ResourceUsageTrend>> DetectAnomaliesAsync(Guid tenantId, ResourceUsageType? type = null, int lookbackDays = 30, CancellationToken cancellationToken = default)
     {
         var fromDate = DateTime.UtcNow.AddDays(-lookbackDays);
 
-        var trends = await trendRepository.GetByTenantAsync(tenantId, type, fromDate, null, cancellationToken);
+        var trends = await trendRepository.GetByTenantAsync(tenantId, type, fromDate, null, cancellationToken).ConfigureAwait(false);
 
         return trends.Where(t => t.AnomalyCount > 0 || t.IsAnomaly((long) t.AverageUsage, t.StandardDeviation));
     }
@@ -83,7 +83,7 @@ public class UsageTrendAnalysisService(IResourceUsageTrendRepository trendReposi
         // Get recent usage records (last 90 days) for linear regression
         var fromDate = DateTime.UtcNow.AddDays(-90);
 
-        var usageRecords = await usageRepository.GetByTenantAsync(tenantId, type, fromDate, null, cancellationToken);
+        var usageRecords = await usageRepository.GetByTenantAsync(tenantId, type, fromDate, null, cancellationToken).ConfigureAwait(false);
         var recordsList = usageRecords.OrderBy(r => r.PeriodStart).ToList();
 
         if (recordsList.Count == 0)
@@ -159,7 +159,7 @@ public class UsageTrendAnalysisService(IResourceUsageTrendRepository trendReposi
     {
         IEnumerable<ResourceUsageTrend> trends;
 
-        if (tenantId.HasValue) { trends = await trendRepository.GetByTenantAsync(tenantId.Value, type, null, null, cancellationToken); }
+        if (tenantId.HasValue) { trends = await trendRepository.GetByTenantAsync(tenantId.Value, type, null, null, cancellationToken).ConfigureAwait(false); }
         else
         {
             // Get all trends - would need an additional repository method
@@ -177,7 +177,7 @@ public class UsageTrendAnalysisService(IResourceUsageTrendRepository trendReposi
         var endDate = DateTime.UtcNow;
         var startDate = endDate.AddDays(-periodDays);
 
-        var usageRecords = await usageRepository.GetByTenantAsync(tenantId, type, startDate, endDate, cancellationToken);
+        var usageRecords = await usageRepository.GetByTenantAsync(tenantId, type, startDate, endDate, cancellationToken).ConfigureAwait(false);
 
         var recordsList = usageRecords.OrderBy(r => r.PeriodStart).ToList();
 

@@ -1,7 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using GameGuild.CQRS.Models;
-using GameGuild.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace GameGuild.Notifications;
@@ -166,9 +165,7 @@ public class Notification : EntityBase
             Metadata = metadata,
             TemplateId = templateId,
             IsRead = false,
-            IsSent = false,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            IsSent = false
         };
     }
 

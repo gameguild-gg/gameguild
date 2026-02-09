@@ -1,6 +1,5 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using GameGuild.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace GameGuild.Notifications;
@@ -112,9 +111,7 @@ public class NotificationPreference : EntityBase
             SocialEnabled = true,
             LearningEnabled = true,
             AchievementsEnabled = true,
-            QuietHoursBypassPriority = NotificationPriority.Urgent,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            QuietHoursBypassPriority = NotificationPriority.Urgent
         };
     }
 

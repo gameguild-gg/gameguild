@@ -1,6 +1,6 @@
 namespace GameGuild.Configuration.PresentationLayer.Authorization;
 
-public class AuthorizationOptions : BaseOptions
+public sealed class AuthorizationOptions : BaseOptions
 {
     /// <summary>
     ///     The configuration section name.

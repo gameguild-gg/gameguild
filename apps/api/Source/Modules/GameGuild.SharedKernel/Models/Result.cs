@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 
-namespace GameGuild.Models;
+namespace GameGuild;
 
 /// <summary>
 ///     Represents the outcome of an operation that can either succeed or fail with an <see cref="Error" />.
@@ -24,7 +24,7 @@ public class Result
     /// <summary>Whether the operation failed.</summary>
     public bool IsFailure => !IsSuccess;
 
-    /// <summary>The error describing the failure. Equals <see cref="Models.Error.None" /> on success.</summary>
+    /// <summary>The error describing the failure. Equals <see cref="Error.None" /> on success.</summary>
     public Error Error { get; }
 
     // ── Factory methods ──────────────────────────────────────────────────
@@ -45,10 +45,10 @@ public class Result
 
     /// <summary>
     ///     Creates a validation-failure result from a collection of individual errors.
-    ///     Convenience factory that wraps errors inside a <see cref="Models.ValidationError" />.
+    ///     Convenience factory that wraps errors inside a <see cref="AggregateValidationError" />.
     /// </summary>
     public static Result ValidationFailure(IEnumerable<Error> errors)
-        => Failure(new ValidationError(errors.ToArray()));
+        => Failure(new AggregateValidationError(errors.ToArray()));
 
     // ── Combinators ──────────────────────────────────────────────────────
 
@@ -58,7 +58,7 @@ public class Result
     public static Result Combine(params Result[] results)
     {
         var failures = results.Where(r => r.IsFailure).ToArray();
-        return failures.Length == 0 ? Success() : Failure(new ValidationError(failures.Select(r => r.Error).ToArray()));
+        return failures.Length == 0 ? Success() : Failure(new AggregateValidationError(failures.Select(r => r.Error).ToArray()));
     }
 
     /// <summary>

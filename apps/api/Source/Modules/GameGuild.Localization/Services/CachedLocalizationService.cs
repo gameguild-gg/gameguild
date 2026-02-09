@@ -39,7 +39,7 @@ public class CachedLocalizationService : ILocalizationService
         }
 
         _logger.LogDebug("Cache miss for localization {ResourceId}:{LanguageId}", resourceId, languageId);
-        var result = await _inner.GetLocalizationAsync(resourceId, languageId, cancellationToken);
+        var result = await _inner.GetLocalizationAsync(resourceId, languageId, cancellationToken).ConfigureAwait(false);
 
         if (result != null)
         {
@@ -67,7 +67,7 @@ public class CachedLocalizationService : ILocalizationService
         }
 
         _logger.LogDebug("Cache miss for all localizations {ResourceId}", resourceId);
-        var result = await _inner.GetAllLocalizationsAsync(resourceId, cancellationToken);
+        var result = await _inner.GetAllLocalizationsAsync(resourceId, cancellationToken).ConfigureAwait(false);
 
         var cacheOptions = new MemoryCacheEntryOptions
         {
@@ -83,7 +83,7 @@ public class CachedLocalizationService : ILocalizationService
         ResourceLocalization localization, 
         CancellationToken cancellationToken = default)
     {
-        var result = await _inner.CreateLocalizationAsync(localization, cancellationToken);
+        var result = await _inner.CreateLocalizationAsync(localization, cancellationToken).ConfigureAwait(false);
         InvalidateCache(localization.ResourceId, localization.LanguageId);
         return result;
     }
@@ -92,7 +92,7 @@ public class CachedLocalizationService : ILocalizationService
         ResourceLocalization localization, 
         CancellationToken cancellationToken = default)
     {
-        var result = await _inner.UpdateLocalizationAsync(localization, cancellationToken);
+        var result = await _inner.UpdateLocalizationAsync(localization, cancellationToken).ConfigureAwait(false);
         InvalidateCache(localization.ResourceId, localization.LanguageId);
         return result;
     }
@@ -102,7 +102,7 @@ public class CachedLocalizationService : ILocalizationService
         Guid languageId, 
         CancellationToken cancellationToken = default)
     {
-        await _inner.DeleteLocalizationAsync(resourceId, languageId, cancellationToken);
+        await _inner.DeleteLocalizationAsync(resourceId, languageId, cancellationToken).ConfigureAwait(false);
         InvalidateCache(resourceId, languageId);
     }
 
@@ -118,7 +118,7 @@ public class CachedLocalizationService : ILocalizationService
             return cached!;
         }
 
-        var result = await _inner.GetLocalizationsForFieldAsync(resourceId, fieldName, cancellationToken);
+        var result = await _inner.GetLocalizationsForFieldAsync(resourceId, fieldName, cancellationToken).ConfigureAwait(false);
 
         var cacheOptions = new MemoryCacheEntryOptions
         {

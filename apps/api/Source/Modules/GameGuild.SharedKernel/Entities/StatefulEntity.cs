@@ -1,6 +1,5 @@
-using GameGuild.Entities;
 
-namespace GameGuild.SharedKernel;
+namespace GameGuild;
 
 /// <summary>
 ///     Base class for entities with state machine behavior.
@@ -48,6 +47,7 @@ public abstract class StatefulEntity<TStatus> : EntityBase
         
         var oldStatus = Status;
         Status = newStatus;
+        Touch();
         OnStatusChanged(oldStatus, newStatus);
     }
 

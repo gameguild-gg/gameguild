@@ -27,7 +27,6 @@ public class SetResourceQuotaCommandHandler(
             {
                 Id = Guid.NewGuid(),
                 Type = request.Type,
-                CreatedAt = DateTime.UtcNow,
                 SoftLimit = request.SoftLimit,
                 HardLimit = request.HardLimit,
                 Period = request.Period,
@@ -48,7 +47,7 @@ public class SetResourceQuotaCommandHandler(
             quota.Period = request.Period;
             quota.IsActive = request.IsActive;
             quota.ResetTime = request.ResetTime;
-            quota.UpdatedAt = DateTime.UtcNow;
+            quota.Touch();
 
             await repository.UpdateAsync(quota, cancellationToken).ConfigureAwait(false);
         }
@@ -64,7 +63,7 @@ public class SetResourceQuotaCommandHandler(
             HardLimit: request.HardLimit,
             Source: "SetResourceQuotaCommand",
             ActorId: actorId,
-            Timestamp: DateTime.UtcNow), cancellationToken).ConfigureAwait(false);
+            Timestamp: DateTime.UtcNow), cancellationToken);
 
         return Unit.Value;
     }

@@ -14,12 +14,11 @@ namespace GameGuild.Resources;
 /// <remarks>
 ///     This controller exposes cross-tenant aggregates and should only be accessible to system administrators.
 /// </remarks>
-[ApiController]
 [ApiVersion("1.0")]
 [Tags("resources")]
 [Authorize(Policy = "RequireAdminRole")]
 [EnableRateLimiting(RateLimitPolicies.Internal)]
-public sealed class ResourcesController(ISender sender) : ControllerBase
+public sealed class ResourcesController(ISender sender) : BaseApiController
 {
     #region Collection Operations - /v1/resources
 

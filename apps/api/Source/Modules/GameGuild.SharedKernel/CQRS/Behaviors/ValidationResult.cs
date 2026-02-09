@@ -2,7 +2,6 @@ namespace GameGuild.CQRS;
 
 /// <summary>
 ///     Result of CQRS pipeline validation. Immutable — use factory methods to create.
-///     For domain-level mutable validation with metadata, use <see cref="GameGuild.Validators.ValidationResult" />.
 /// </summary>
 public sealed class ValidationResult
 {

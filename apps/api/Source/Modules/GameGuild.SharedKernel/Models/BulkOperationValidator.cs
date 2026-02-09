@@ -1,6 +1,6 @@
 using FluentValidation;
 
-namespace GameGuild.Models;
+namespace GameGuild;
 
 /// <summary>
 ///     Base validator for bulk operations

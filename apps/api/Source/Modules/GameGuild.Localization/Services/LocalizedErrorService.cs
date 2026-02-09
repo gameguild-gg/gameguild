@@ -13,6 +13,7 @@ public class LocalizedErrorService : ILocalizedErrorService
 {
     private readonly ILocalizationContext _localizationContext;
     private readonly ILanguageRepository _languageRepository;
+    private readonly ILocalizationService? _localizationService;
     private readonly IMemoryCache _cache;
     private readonly ILogger<LocalizedErrorService> _logger;
     private readonly TimeSpan _cacheExpiration = TimeSpan.FromMinutes(30);
@@ -66,16 +67,24 @@ public class LocalizedErrorService : ILocalizedErrorService
             [ErrorMessageKeys.Asset.DownloadLimitExceeded] = "Download limit exceeded. Please try again later."
         });
 
+    /// <summary>
+    /// Well-known resource ID used to store error message overrides in the ResourceLocalization table.
+    /// Error keys are stored as FieldName values under this resource ID with ResourceType "ErrorMessage".
+    /// </summary>
+    private static readonly Guid ErrorMessageResourceId = new("A0000000-0000-0000-0000-E00000000001");
+
     public LocalizedErrorService(
         ILocalizationContext localizationContext,
         ILanguageRepository languageRepository,
         IMemoryCache cache,
-        ILogger<LocalizedErrorService> logger)
+        ILogger<LocalizedErrorService> logger,
+        ILocalizationService? localizationService = null)
     {
         _localizationContext = localizationContext ?? throw new ArgumentNullException(nameof(localizationContext));
         _languageRepository = languageRepository ?? throw new ArgumentNullException(nameof(languageRepository));
         _cache = cache ?? throw new ArgumentNullException(nameof(cache));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _localizationService = localizationService;
     }
 
     public string GetErrorMessage(string errorKey, params object[] args)
@@ -135,8 +144,14 @@ public class LocalizedErrorService : ILocalizedErrorService
         {
             entry.AbsoluteExpirationRelativeToNow = _cacheExpiration;
             
-            // TODO: Lookup from database (ResourceLocalization) for tenant-specific overrides
-            // For now, use fallback messages
+            // Attempt DB lookup for tenant-specific overrides via ResourceLocalization.
+            // Convention: error messages are stored under a well-known ResourceId with the
+            // error key as the FieldName and ResourceType "ErrorMessage".
+            var dbMessage = TryGetDatabaseTranslation(key, culture);
+            if (dbMessage is not null)
+            {
+                return dbMessage;
+            }
             
             if (FallbackMessages.TryGetValue(key, out var message))
             {
@@ -148,9 +163,53 @@ public class LocalizedErrorService : ILocalizedErrorService
         })!;
     }
 
+    private string? TryGetDatabaseTranslation(string key, CultureInfo culture)
+    {
+        if (_localizationService is null)
+        {
+            return null;
+        }
+
+        try
+        {
+            var language = _languageRepository.GetByCodeAsync(culture.Name).GetAwaiter().GetResult();
+            if (language is null)
+            {
+                return null;
+            }
+
+            var localizations = _localizationService
+                .GetLocalizationsForFieldAsync(ErrorMessageResourceId, key)
+                .GetAwaiter().GetResult();
+
+            var match = localizations.FirstOrDefault(l => l.LanguageId == language.Id);
+            return match?.Content;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogDebug(ex, "Database lookup failed for error key {Key} in culture {Culture}, using fallback", 
+                key, culture.Name);
+            return null;
+        }
+    }
+
     private bool HasDatabaseTranslation(string key)
     {
-        // TODO: Implement database lookup
-        return false;
+        if (_localizationService is null)
+        {
+            return false;
+        }
+
+        try
+        {
+            var localizations = _localizationService
+                .GetLocalizationsForFieldAsync(ErrorMessageResourceId, key)
+                .GetAwaiter().GetResult();
+            return localizations.Count > 0;
+        }
+        catch
+        {
+            return false;
+        }
     }
 }

@@ -24,10 +24,10 @@ public class RedisDistributedRateLimiter(
         {
             // Sliding window algorithm using sorted set
             // 1. Remove expired entries
-            await db.SortedSetRemoveRangeByScoreAsync(redisKey, 0, windowStart);
+            await db.SortedSetRemoveRangeByScoreAsync(redisKey, 0, windowStart).ConfigureAwait(false);
 
             // 2. Count current requests in window
-            var currentCount = await db.SortedSetLengthAsync(redisKey);
+            var currentCount = await db.SortedSetLengthAsync(redisKey).ConfigureAwait(false);
 
             // 3. Check if under limit
             if (currentCount >= maxRequests)
@@ -39,10 +39,10 @@ public class RedisDistributedRateLimiter(
 
             // 4. Add current request with timestamp as score
             var requestId = Guid.NewGuid().ToString("N");
-            await db.SortedSetAddAsync(redisKey, requestId, now);
+            await db.SortedSetAddAsync(redisKey, requestId, now).ConfigureAwait(false);
 
             // 5. Set expiry on key (cleanup)
-            await db.KeyExpireAsync(redisKey, window.Add(TimeSpan.FromMinutes(1)));
+            await db.KeyExpireAsync(redisKey, window.Add(TimeSpan.FromMinutes(1))).ConfigureAwait(false);
 
             logger.LogDebug("Rate limit check passed for key {Key}: {CurrentCount}/{MaxRequests}",
                 key, currentCount + 1, maxRequests);
@@ -67,10 +67,10 @@ public class RedisDistributedRateLimiter(
         try
         {
             // Remove expired entries first
-            await db.SortedSetRemoveRangeByScoreAsync(redisKey, 0, windowStart);
+            await db.SortedSetRemoveRangeByScoreAsync(redisKey, 0, windowStart).ConfigureAwait(false);
 
             // Count current requests
-            var count = await db.SortedSetLengthAsync(redisKey);
+            var count = await db.SortedSetLengthAsync(redisKey).ConfigureAwait(false);
             return (int)count;
         }
         catch (Exception ex)
@@ -94,7 +94,7 @@ public class RedisDistributedRateLimiter(
                 redisKey,
                 start: windowStart,
                 stop: double.PositiveInfinity,
-                take: 1);
+                take: 1).ConfigureAwait(false);
 
             if (oldestEntries.Length == 0)
                 return null;
@@ -119,7 +119,7 @@ public class RedisDistributedRateLimiter(
 
         try
         {
-            await db.KeyDeleteAsync(redisKey);
+            await db.KeyDeleteAsync(redisKey).ConfigureAwait(false);
             logger.LogInformation("Rate limit reset for key {Key}", key);
         }
         catch (Exception ex)

@@ -1,4 +1,3 @@
-using GameGuild.Abstractions;
 using Microsoft.EntityFrameworkCore;
 
 namespace GameGuild.Resources;
@@ -25,7 +24,7 @@ public class ResourceQuotaRepository(IApplicationDbContext context) : IResourceQ
     public async Task<ResourceQuota> CreateAsync(ResourceQuota quota, CancellationToken cancellationToken = default)
     {
         ResourceQuotas.Add(quota);
-        await context.SaveChangesAsync(cancellationToken);
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         return quota;
     }
@@ -33,19 +32,19 @@ public class ResourceQuotaRepository(IApplicationDbContext context) : IResourceQ
     public async Task<ResourceQuota> UpdateAsync(ResourceQuota quota, CancellationToken cancellationToken = default)
     {
         ResourceQuotas.Update(quota);
-        await context.SaveChangesAsync(cancellationToken);
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         return quota;
     }
 
     public async Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var quota = await GetByIdAsync(id, cancellationToken);
+        var quota = await GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
 
         if (quota == null) return false;
 
         ResourceQuotas.Remove(quota);
-        await context.SaveChangesAsync(cancellationToken);
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         return true;
     }
@@ -77,7 +76,7 @@ public class ResourceQuotaRepository(IApplicationDbContext context) : IResourceQ
 
         if (type.HasValue) { query = query.Where(q => q.Type == type.Value); }
 
-        var quotas = await query.ToListAsync(cancellationToken);
+        var quotas = await query.ToListAsync(cancellationToken).ConfigureAwait(false);
 
         // Filter in memory using entity business logic
         return quotas.Where(q => softLimitOnly ? q.IsSoftLimitExceeded() : q.IsHardLimitExceeded());
@@ -100,7 +99,7 @@ public class ResourceQuotaRepository(IApplicationDbContext context) : IResourceQ
         var typesList = types.ToList();
         var quotas = await ResourceQuotas
             .Where(q => q.TenantId!.Value == tenantId && typesList.Contains(q.Type))
-            .ToListAsync(cancellationToken);
+            .ToListAsync(cancellationToken).ConfigureAwait(false);
 
         return quotas.ToDictionary(q => q.Type);
     }
@@ -118,12 +117,12 @@ public class ResourceQuotaRepository(IApplicationDbContext context) : IResourceQ
 
     public async Task<bool> DeleteByUserAndTypeAsync(Guid userId, ResourceUsageType type, CancellationToken cancellationToken = default)
     {
-        var quota = await GetByUserAndTypeAsync(userId, type, cancellationToken);
+        var quota = await GetByUserAndTypeAsync(userId, type, cancellationToken).ConfigureAwait(false);
 
         if (quota == null) return false;
 
         ResourceQuotas.Remove(quota);
-        await context.SaveChangesAsync(cancellationToken);
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         return true;
     }
@@ -141,7 +140,7 @@ public class ResourceQuotaRepository(IApplicationDbContext context) : IResourceQ
         {
             // Fresh query each retry to get latest state
             var quota = await ResourceQuotas
-                .FirstOrDefaultAsync(q => q.TenantId!.Value == tenantId && q.Type == type, cancellationToken);
+                .FirstOrDefaultAsync(q => q.TenantId!.Value == tenantId && q.Type == type, cancellationToken).ConfigureAwait(false);
 
             // No quota means unlimited - allow operation
             if (quota == null)
@@ -166,11 +165,11 @@ public class ResourceQuotaRepository(IApplicationDbContext context) : IResourceQ
 
             // Increment usage
             quota.CurrentUsage = projectedUsage;
-            quota.UpdatedAt = DateTime.UtcNow;
+            quota.Touch();
 
             try
             {
-                await context.SaveChangesAsync(cancellationToken);
+                await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
                 return (true, quota);
             }
             catch (DbUpdateConcurrencyException)
@@ -199,16 +198,16 @@ public class ResourceQuotaRepository(IApplicationDbContext context) : IResourceQ
         CancellationToken cancellationToken = default)
     {
         var quota = await ResourceQuotas
-            .FirstOrDefaultAsync(q => q.TenantId!.Value == tenantId && q.Type == type, cancellationToken);
+            .FirstOrDefaultAsync(q => q.TenantId!.Value == tenantId && q.Type == type, cancellationToken).ConfigureAwait(false);
 
         if (quota == null)
             return false;
 
         // Use entity method to ensure usage never goes negative
         quota.RemoveUsage(amount);
-        quota.UpdatedAt = DateTime.UtcNow;
+        quota.Touch();
 
-        await context.SaveChangesAsync(cancellationToken);
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         return true;
     }
 }

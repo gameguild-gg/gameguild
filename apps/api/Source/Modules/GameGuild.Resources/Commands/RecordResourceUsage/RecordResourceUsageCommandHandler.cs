@@ -76,7 +76,7 @@ public class RecordResourceUsageCommandHandler(IUsageRecordRepository usageRecor
         if (!request.SkipQuotaIncrement && quota != null)
         {
             quota.AddUsage(request.Count);
-            quota.UpdatedAt = DateTime.UtcNow;
+            quota.Touch();
             await resourceQuotaRepository.UpdateAsync(quota, cancellationToken).ConfigureAwait(false);
         }
 

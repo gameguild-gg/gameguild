@@ -1,9 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
-using GameGuild.Entities;
 using GameGuild.Identity.Users;
-using GameGuild.Enums;
 
 namespace GameGuild.Projects;
 

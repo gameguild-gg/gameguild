@@ -12,7 +12,7 @@ public sealed class CleanupOrphanedResourcesHandler(IUsageRecordRepository repos
     {
         // For orphaned resources, we look for records without a valid tenant
         // This is a placeholder implementation - actual logic would depend on business rules
-        var totalRecords = await repository.GetTotalRecordCountAsync(null, cancellationToken);
+        var totalRecords = await repository.GetTotalRecordCountAsync(null, cancellationToken).ConfigureAwait(false);
 
         if (request.DryRun)
         {

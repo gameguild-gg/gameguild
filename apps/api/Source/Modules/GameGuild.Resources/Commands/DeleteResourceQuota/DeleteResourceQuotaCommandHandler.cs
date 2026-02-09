@@ -38,7 +38,7 @@ public class DeleteResourceQuotaCommandHandler(
             HardLimit: hardLimit,
             Source: "DeleteResourceQuotaCommand",
             ActorId: actorId,
-            Timestamp: DateTime.UtcNow), cancellationToken).ConfigureAwait(false);
+            Timestamp: DateTime.UtcNow), cancellationToken);
 
         return Unit.Value;
     }

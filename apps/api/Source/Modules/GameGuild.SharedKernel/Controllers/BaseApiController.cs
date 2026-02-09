@@ -1,8 +1,7 @@
-using GameGuild.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
-namespace GameGuild.Controllers;
+namespace GameGuild;
 
 /// <summary>
 ///     Base controller providing standardized Result-to-ActionResult mapping.
@@ -64,42 +63,16 @@ public abstract class BaseApiController : ControllerBase
 
     /// <summary>
     ///     Converts an <see cref="Error" /> to a ProblemDetails <see cref="ObjectResult" />.
+    ///     Delegates to <see cref="ProblemDetailsMapper" /> for consistent error mapping (DRY).
     /// </summary>
     private ObjectResult ToProblemResult(Error error)
     {
-        var statusCode = CustomResults.GetStatusCode(error.Type);
-        var problemDetails = new ProblemDetails
-        {
-            Title = error.Code,
-            Detail = error.Description,
-            Status = statusCode,
-            Type = GetRfcType(error.Type)
-        };
-
-        if (error is ValidationError validationError)
-        {
-            problemDetails.Extensions["errors"] = validationError.Errors;
-        }
-
-        return new ObjectResult(problemDetails) { StatusCode = statusCode };
+        var problemDetails = ProblemDetailsMapper.ToProblemDetails(error);
+        return new ObjectResult(problemDetails) { StatusCode = problemDetails.Status };
     }
 
     /// <summary>
     ///     Converts an <see cref="Error" /> to a ProblemDetails <see cref="IActionResult" />.
     /// </summary>
     private IActionResult ToProblemActionResult(Error error) => ToProblemResult(error);
-
-    private static string GetRfcType(ErrorType errorType)
-    {
-        return errorType switch
-        {
-            ErrorType.Validation => "https://tools.ietf.org/html/rfc7231#section-6.5.1",
-            ErrorType.Problem => "https://tools.ietf.org/html/rfc7231#section-6.5.1",
-            ErrorType.NotFound => "https://tools.ietf.org/html/rfc7231#section-6.5.4",
-            ErrorType.Conflict => "https://tools.ietf.org/html/rfc7231#section-6.5.8",
-            ErrorType.Unauthorized => "https://tools.ietf.org/html/rfc7235#section-3.1",
-            ErrorType.Forbidden => "https://tools.ietf.org/html/rfc7231#section-6.5.3",
-            _ => "https://tools.ietf.org/html/rfc7231#section-6.6.1"
-        };
-    }
 }

@@ -1,16 +1,33 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
 
-namespace GameGuild.Middlewares;
+namespace GameGuild;
 
 /// <summary>
 /// Middleware that provides idempotency support for POST/PUT/PATCH requests.
 /// Clients can include an Idempotency-Key header to prevent duplicate processing
 /// of requests that may be retried due to network issues.
 /// </summary>
-public class IdempotencyMiddleware
+/// <remarks>
+/// <para>
+/// <b>⚠️ Single-Instance Limitation:</b> This middleware uses <see cref="IMemoryCache"/>
+/// which is local to the process. In a multi-instance deployment (e.g., Kubernetes pods,
+/// Azure App Service scale-out), each instance maintains its own cache — meaning the same
+/// idempotency key can be processed independently by different instances.
+/// </para>
+/// <para>
+/// <b>Production Migration Path:</b> To support multi-instance deployments, replace
+/// the default <see cref="MemoryCacheIdempotencyStore"/> with an <see cref="IIdempotencyStore"/>
+/// implementation backed by <c>IDistributedCache</c> (Redis, SQL Server, etc.)
+/// and use distributed locking (e.g., RedLock) to prevent concurrent processing of the
+/// same key across instances.
+/// </para>
+/// </remarks>
+public sealed class IdempotencyMiddleware
 {
     /// <summary>
     /// The header name for the idempotency key
@@ -24,18 +41,18 @@ public class IdempotencyMiddleware
     
     private readonly RequestDelegate _next;
     private readonly ILogger<IdempotencyMiddleware> _logger;
-    private readonly IMemoryCache _cache;
+    private readonly IIdempotencyStore _store;
     private readonly TimeSpan _cacheDuration;
 
     public IdempotencyMiddleware(
         RequestDelegate next, 
         ILogger<IdempotencyMiddleware> logger,
-        IMemoryCache cache,
+        IIdempotencyStore store,
         IdempotencyOptions? options = null)
     {
         _next = next;
         _logger = logger;
-        _cache = cache;
+        _store = store;
         _cacheDuration = options?.CacheDuration ?? TimeSpan.FromHours(24);
     }
 
@@ -45,7 +62,7 @@ public class IdempotencyMiddleware
         var method = context.Request.Method;
         if (!IsMutatingMethod(method))
         {
-            await _next(context);
+            await _next(context).ConfigureAwait(false);
             return;
         }
 
@@ -54,44 +71,41 @@ public class IdempotencyMiddleware
             string.IsNullOrWhiteSpace(idempotencyKey))
         {
             // No idempotency key provided - process normally
-            await _next(context);
+            await _next(context).ConfigureAwait(false);
             return;
         }
 
         var cacheKey = BuildCacheKey(context, idempotencyKey!);
         
         // Check if we have a cached response
-        if (_cache.TryGetValue(cacheKey, out IdempotentResponse? cachedResponse) && cachedResponse != null)
+        var cachedResponse = await _store.TryGetResponseAsync(cacheKey).ConfigureAwait(false);
+        if (cachedResponse != null)
         {
             _logger.LogInformation(
                 "Replaying idempotent response for key {IdempotencyKey}, Path: {Path}",
                 idempotencyKey, context.Request.Path);
             
-            await WriteCachedResponse(context, cachedResponse);
+            await WriteCachedResponse(context, cachedResponse).ConfigureAwait(false);
             return;
         }
 
         // Check if request is in-flight (to prevent race conditions)
-        var inFlightKey = $"{cacheKey}:in-flight";
-        if (_cache.TryGetValue(inFlightKey, out _))
+        if (!await _store.TryMarkInFlightAsync(cacheKey, TimeSpan.FromMinutes(5)))
         {
             _logger.LogWarning(
                 "Request with idempotency key {IdempotencyKey} is already in progress",
-                idempotencyKey);
+                idempotencyKey.ToString());
             
             context.Response.StatusCode = StatusCodes.Status409Conflict;
             await context.Response.WriteAsJsonAsync(new
             {
-                Type = "https://tools.ietf.org/html/rfc7231#section-6.5.8",
+                Type = RfcUrls.Conflict,
                 Title = "Conflict",
                 Status = 409,
                 Detail = "A request with this idempotency key is already being processed"
             });
             return;
         }
-
-        // Mark request as in-flight
-        _cache.Set(inFlightKey, true, TimeSpan.FromMinutes(5));
 
         try
         {
@@ -100,13 +114,14 @@ public class IdempotencyMiddleware
             using var responseBody = new MemoryStream();
             context.Response.Body = responseBody;
 
-            await _next(context);
+            await _next(context).ConfigureAwait(false);
 
             // Cache successful responses (2xx status codes)
             if (context.Response.StatusCode >= 200 && context.Response.StatusCode < 300)
             {
                 responseBody.Seek(0, SeekOrigin.Begin);
-                var body = await new StreamReader(responseBody).ReadToEndAsync();
+                using var reader = new StreamReader(responseBody, leaveOpen: true);
+                var body = await reader.ReadToEndAsync().ConfigureAwait(false);
                 
                 var idempotentResponse = new IdempotentResponse(
                     context.Response.StatusCode,
@@ -116,7 +131,7 @@ public class IdempotencyMiddleware
                         .Where(h => !h.Key.StartsWith("Transfer-", StringComparison.OrdinalIgnoreCase))
                         .ToDictionary(h => h.Key, h => h.Value.ToString()));
 
-                _cache.Set(cacheKey, idempotentResponse, _cacheDuration);
+                await _store.SetResponseAsync(cacheKey, idempotentResponse, _cacheDuration).ConfigureAwait(false);
                 
                 _logger.LogInformation(
                     "Cached idempotent response for key {IdempotencyKey}, Status: {StatusCode}",
@@ -125,13 +140,13 @@ public class IdempotencyMiddleware
 
             // Write response to client
             responseBody.Seek(0, SeekOrigin.Begin);
-            await responseBody.CopyToAsync(originalBodyStream);
+            await responseBody.CopyToAsync(originalBodyStream).ConfigureAwait(false);
             context.Response.Body = originalBodyStream;
         }
         finally
         {
             // Remove in-flight marker
-            _cache.Remove(inFlightKey);
+            await _store.RemoveInFlightAsync(cacheKey).ConfigureAwait(false);
         }
     }
 
@@ -165,7 +180,7 @@ public class IdempotencyMiddleware
             }
         }
 
-        await context.Response.WriteAsync(cachedResponse.Body);
+        await context.Response.WriteAsync(cachedResponse.Body).ConfigureAwait(false);
     }
 }
 
@@ -197,12 +212,32 @@ public static class IdempotencyMiddlewareExtensions
     /// <summary>
     /// Adds idempotency support to the application pipeline.
     /// Place after authentication but before endpoint routing.
+    /// Requires <see cref="AddIdempotency"/> to have been called on the service collection,
+    /// or an <see cref="IIdempotencyStore"/> to have been registered manually.
     /// </summary>
     public static IApplicationBuilder UseIdempotency(this IApplicationBuilder app, Action<IdempotencyOptions>? configure = null)
     {
         var options = new IdempotencyOptions();
         configure?.Invoke(options);
-        
+
         return app.UseMiddleware<IdempotencyMiddleware>(options);
+    }
+
+    /// <summary>
+    /// Registers idempotency services in the DI container.
+    /// Call this before <see cref="UseIdempotency"/>.
+    /// </summary>
+    /// <param name="services">The service collection</param>
+    /// <param name="configure">Optional configuration</param>
+    /// <returns>The service collection for chaining</returns>
+    public static IServiceCollection AddIdempotency(this IServiceCollection services, Action<IdempotencyOptions>? configure = null)
+    {
+        if (configure != null)
+            services.Configure(configure);
+
+        services.AddMemoryCache();
+        services.TryAddSingleton<IIdempotencyStore, MemoryCacheIdempotencyStore>();
+
+        return services;
     }
 }

@@ -3,41 +3,34 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace GameGuild.Filters;
+namespace GameGuild;
 
 /// <summary>
 /// Action filter that adds RFC 5988 Link headers for pagination.
-/// Automatically detects PagedResult responses and adds navigation links.
+/// Automatically detects <see cref="IPage{T}"/> responses and adds navigation links.
+/// Uses interface-based access instead of reflection for type-safe, zero-allocation property reads.
 /// </summary>
-public class PaginationHeadersFilter : IAsyncResultFilter
+public sealed class PaginationHeadersFilter : IAsyncResultFilter
 {
     public async Task OnResultExecutionAsync(ResultExecutingContext context, ResultExecutionDelegate next)
     {
-        if (context.Result is ObjectResult objectResult && objectResult.Value != null)
+        if (context.Result is ObjectResult { Value: IPaginationMetadata page })
         {
-            // Check if the result is a PagedResult
-            var resultType = objectResult.Value.GetType();
-            if (resultType.IsGenericType && resultType.GetGenericTypeDefinition() == typeof(Models.PagedResult<>))
-            {
-                AddPaginationHeaders(context.HttpContext, objectResult.Value);
-            }
+            AddPaginationHeaders(context.HttpContext, page);
         }
 
-        await next();
+        await next().ConfigureAwait(false);
     }
 
-    private static void AddPaginationHeaders(HttpContext httpContext, object pagedResult)
+    private static void AddPaginationHeaders(HttpContext httpContext, IPaginationMetadata page)
     {
-        var type = pagedResult.GetType();
-        
-        // Extract pagination properties using reflection
-        var totalCount = (int)type.GetProperty("TotalCount")!.GetValue(pagedResult)!;
-        var skip = (int)type.GetProperty("Skip")!.GetValue(pagedResult)!;
-        var take = (int)type.GetProperty("Take")!.GetValue(pagedResult)!;
-        var pageNumber = (int)type.GetProperty("PageNumber")!.GetValue(pagedResult)!;
-        var totalPages = (int)type.GetProperty("TotalPages")!.GetValue(pagedResult)!;
-        var hasNextPage = (bool)type.GetProperty("HasNextPage")!.GetValue(pagedResult)!;
-        var hasPreviousPage = (bool)type.GetProperty("HasPreviousPage")!.GetValue(pagedResult)!;
+        var totalCount = page.TotalCount;
+        var skip = page.Skip;
+        var take = page.Take;
+        var pageNumber = page.PageNumber;
+        var totalPages = page.TotalPages;
+        var hasNextPage = page.HasNextPage;
+        var hasPreviousPage = page.HasPreviousPage;
 
         // Add X-Pagination header with metadata
         httpContext.Response.Headers.Append("X-Pagination", System.Text.Json.JsonSerializer.Serialize(new
@@ -92,7 +85,7 @@ public class PaginationHeadersFilter : IAsyncResultFilter
                         !q.Key.Equals("take", StringComparison.OrdinalIgnoreCase) &&
                         !q.Key.Equals("page", StringComparison.OrdinalIgnoreCase) &&
                         !q.Key.Equals("pageSize", StringComparison.OrdinalIgnoreCase))
-            .Select(q => $"{q.Key}={q.Value}")
+            .Select(q => $"{Uri.EscapeDataString(q.Key)}={Uri.EscapeDataString(q.Value.ToString())}")
             .ToList();
         
         var queryString = query.Any() ? "?" + string.Join("&", query) : "";

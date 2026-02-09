@@ -16,7 +16,6 @@ namespace GameGuild.Resources;
 /// <remarks>
 ///     All endpoints require authentication. Tenant membership validation is enforced.
 /// </remarks>
-[ApiController]
 [ApiVersion("1.0")]
 [Tags("tenants/quotas")]
 [Authorize]
@@ -24,7 +23,7 @@ namespace GameGuild.Resources;
 public sealed class TenantQuotasController(
     ISender sender,
     IActorContextAccessor actorContextAccessor,
-    ITenantMembershipChecker tenantMembershipChecker) : ControllerBase
+    ITenantMembershipChecker tenantMembershipChecker) : BaseApiController
 {
     /// <summary>
     ///     Validates that the current actor is a member of the specified tenant.

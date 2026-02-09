@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace GameGuild.Models;
+namespace GameGuild;
 
 /// <summary>
 /// Standard query parameters for paginated API endpoints.
@@ -135,11 +135,11 @@ public static class CursorPagination
             var parts = data.Split('|');
             
             var id = Guid.Parse(parts[0]);
-            DateTime? timestamp = parts.Length > 1 ? DateTime.Parse(parts[1]) : null;
+            DateTime? timestamp = parts.Length > 1 ? DateTime.Parse(parts[1], System.Globalization.CultureInfo.InvariantCulture) : null;
             
             return (id, timestamp);
         }
-        catch
+        catch (FormatException)
         {
             return (Guid.Empty, null);
         }

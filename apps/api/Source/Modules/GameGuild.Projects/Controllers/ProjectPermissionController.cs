@@ -1,5 +1,5 @@
-using System.Security.Claims;
 using Asp.Versioning;
+using GameGuild.Identity.Context.Actors;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using AuthorizeAttribute = Microsoft.AspNetCore.Authorization.AuthorizeAttribute;
@@ -8,20 +8,22 @@ using PermissionType = GameGuild.Identity.Authorization.PermissionType;
 namespace GameGuild.Projects;
 
 /// <summary> Controller specifically for managing project permissions and collaboration Extends the base resource permission functionality with project-specific features </summary>
-[ApiController]
 [ApiVersion("1.0")]
 [Route("v{version:apiVersion}/projects/{projectId}/permissions")]
 [Authorize]
-public class ProjectPermissionController : ControllerBase {
+public class ProjectPermissionController : BaseApiController {
   private readonly ILogger<ProjectPermissionController> _logger;
 
   private readonly IPermissionResolver _permissionResolver;
 
   private readonly IResourcePermissionService _resourcePermissionService;
 
-  public ProjectPermissionController(IPermissionResolver permissionResolver, IResourcePermissionService resourcePermissionService, ILogger<ProjectPermissionController> logger) {
+  private readonly IActorContextAccessor _actorContextAccessor;
+
+  public ProjectPermissionController(IPermissionResolver permissionResolver, IResourcePermissionService resourcePermissionService, IActorContextAccessor actorContextAccessor, ILogger<ProjectPermissionController> logger) {
     _permissionResolver = permissionResolver;
     _resourcePermissionService = resourcePermissionService;
+    _actorContextAccessor = actorContextAccessor;
     _logger = logger;
   }
 
@@ -188,15 +190,11 @@ public class ProjectPermissionController : ControllerBase {
   #region Private Helper Methods
 
   private Guid GetCurrentUserId() {
-    var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
-    return Guid.TryParse(userIdClaim, out var userId) ? userId : Guid.Empty;
+    return _actorContextAccessor.ActorContext.SubjectIdAsGuid ?? Guid.Empty;
   }
 
   private Guid? GetCurrentTenantId() {
-    var tenantIdClaim = User.FindFirst("tenant_id")?.Value;
-
-    return Guid.TryParse(tenantIdClaim, out var tenantId) ? tenantId : null;
+    return _actorContextAccessor.ActorContext.TenantId;
   }
 
   private static string DetermineProjectRole(PermissionType[] permissions) {

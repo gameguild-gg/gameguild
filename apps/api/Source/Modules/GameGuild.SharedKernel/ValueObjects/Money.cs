@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 
-namespace GameGuild.ValueObjects;
+namespace GameGuild;
 
 /// <summary>
 ///     Represents a money value with currency
@@ -44,7 +44,10 @@ public record Money
     {
         if (left.Currency != right.Currency) throw new InvalidOperationException("Cannot subtract money with different currencies.");
 
-        return new Money(left.Amount - right.Amount, left.Currency);
+        var result = left.Amount - right.Amount;
+        if (result < 0) throw new BusinessRuleViolationException("NegativeMoneyResult", $"Money subtraction would result in a negative amount ({result} {left.Currency}).");
+
+        return new Money(result, left.Currency);
     }
 
     public static Money operator *(Money money, decimal multiplier) { return new Money(money.Amount * multiplier, money.Currency); }
@@ -74,5 +77,5 @@ public record Money
 
     public static bool operator <=(Money left, Money right) { return !(left > right); }
 
-    public override string ToString() { return $"{Amount:C} {Currency}"; }
+    public override string ToString() { return string.Format(System.Globalization.CultureInfo.InvariantCulture, "{0:F2} {1}", Amount, Currency); }
 }

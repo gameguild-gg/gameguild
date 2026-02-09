@@ -62,7 +62,7 @@ public static class DependencyInjection
         services.AddScoped<IQueryHandler<CheckResourceQuotaQuery, ResourceQuotaEnforcementResult>, CheckResourceQuotaQueryHandler>();
 
         // Register Usage Queries
-        services.AddScoped<IQueryHandler<GetResourceUsageRecordsQuery, Models.PagedResult<UsageRecord>>, GetResourceUsageRecordsQueryHandler>();
+        services.AddScoped<IQueryHandler<GetResourceUsageRecordsQuery, PagedResult<UsageRecord>>, GetResourceUsageRecordsQueryHandler>();
         services.AddScoped<IQueryHandler<GetCurrentResourceUsageSummaryQuery, Dictionary<ResourceUsageType, int>>, GetCurrentResourceUsageSummaryQueryHandler>();
         services.AddScoped<IQueryHandler<GetResourceUsageByTypeQuery, Dictionary<Guid, int>>, GetResourceUsageByTypeQueryHandler>();
 
@@ -81,10 +81,14 @@ public static class DependencyInjection
         // Register User-Level Limit Checking Queries
         services.AddScoped<IQueryHandler<CheckUserResourceUsageLimitsQuery, Dictionary<ResourceUsageType, bool>>, CheckUserResourceUsageLimitsQueryHandler>();
 
-        // Register Application Services
-        // ResourceQuotaService with caching decorator for improved read performance
+        // Register focused sub-services
+        services.AddScoped<IQuotaManagementService, QuotaManagementService>();
+        services.AddScoped<IQuotaEnforcementService, QuotaEnforcementService>();
+        services.AddScoped<IQuotaMaintenanceService, QuotaMaintenanceService>();
+
+        // Register the thin facade (used by CachedResourceQuotaService decorator)
         services.AddScoped<ResourceQuotaService>();
-        
+
         // Register the unified IResourceQuotaService with caching decorator
         services.AddScoped<IResourceQuotaService>(sp =>
             new CachedResourceQuotaService(
@@ -92,8 +96,7 @@ public static class DependencyInjection
                 sp.GetRequiredService<Microsoft.Extensions.Caching.Memory.IMemoryCache>(),
                 sp.GetRequiredService<Microsoft.Extensions.Logging.ILogger<CachedResourceQuotaService>>()));
 
-        // ISP: Register segregated interfaces pointing to the same implementation
-        // This allows consumers to depend only on the interface they need
+        // ISP: Register segregated interfaces pointing to the unified service
         services.AddScoped<IResourceQuotaReader>(sp => sp.GetRequiredService<IResourceQuotaService>());
         services.AddScoped<IResourceQuotaWriter>(sp => sp.GetRequiredService<IResourceQuotaService>());
         services.AddScoped<IResourceQuotaEnforcer>(sp => sp.GetRequiredService<IResourceQuotaService>());
@@ -108,9 +111,8 @@ public static class DependencyInjection
         services.AddScoped<ICostAllocationService, CostAllocationService>();
 
         // SLA Incident Escalation Services
-        // Use Lazy<T> to break circular dependency between SlaImpactAnalysisService and SlaIncidentEscalationService
-        services.AddScoped<Lazy<ISlaImpactAnalysisService>>(sp =>
-            new Lazy<ISlaImpactAnalysisService>(() => sp.GetRequiredService<ISlaImpactAnalysisService>()));
+        // SlaIncidentEscalationService depends on ISlaImpactAnalysisRepository + IIncidentTicketProvider
+        // directly, avoiding the former circular dependency with ISlaImpactAnalysisService.
         services.AddScoped<ISlaNotificationSender, LoggingSlaNotificationSender>();
         services.AddScoped<ISlaIncidentEscalationService, SlaIncidentEscalationService>();
         services.AddScoped<IIncidentTicketProvider, DefaultIncidentTicketProvider>();
