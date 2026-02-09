@@ -17,7 +17,7 @@ public class ProgramCrudController(IProgramCrudService programService) : BaseApi
   /// <summary> Get all courses with optional filtering (content-type level read permission) </summary>
   [HttpGet]
   [RequireContentTypePermission<Program>(PermissionType.Read)]
-  public async Task<ActionResult<IEnumerable<Program>>> GetPrograms(
+  public async Task<ActionResult<IEnumerable<ProgramDto>>> GetPrograms(
       [FromQuery] string? status = null,
       [FromQuery] ProgramCategory? category = null,
       [FromQuery] ProgramDifficulty? difficulty = null,
@@ -28,52 +28,52 @@ public class ProgramCrudController(IProgramCrudService programService) : BaseApi
       [FromQuery] int take = 50) {
     if (!string.IsNullOrEmpty(q)) {
       var searchResults = await programService.SearchProgramsAsync(q, skip, take);
-      return Ok(searchResults);
+      return Ok(searchResults.ToDtos());
     }
 
     if (status == "published") {
       var publishedPrograms = await programService.GetPublishedProgramsAsync(skip, take);
-      return Ok(publishedPrograms);
+      return Ok(publishedPrograms.ToDtos());
     }
 
     if (category.HasValue) {
       var categoryPrograms = await programService.GetProgramsByCategoryAsync(category.Value, skip, take);
-      return Ok(categoryPrograms);
+      return Ok(categoryPrograms.ToDtos());
     }
 
     if (difficulty.HasValue) {
       var difficultyPrograms = await programService.GetProgramsByDifficultyAsync(difficulty.Value, skip, take);
-      return Ok(difficultyPrograms);
+      return Ok(difficultyPrograms.ToDtos());
     }
 
     if (creatorId.HasValue) {
       var creatorPrograms = await programService.GetProgramsByCreatorAsync(creatorId.Value, skip, take);
-      return Ok(creatorPrograms);
+      return Ok(creatorPrograms.ToDtos());
     }
 
     if (sort == "popular") {
       var popularPrograms = await programService.GetPopularProgramsAsync(take);
-      return Ok(popularPrograms);
+      return Ok(popularPrograms.ToDtos());
     }
 
     if (sort == "recent") {
       var recentPrograms = await programService.GetRecentProgramsAsync(take);
-      return Ok(recentPrograms);
+      return Ok(recentPrograms.ToDtos());
     }
 
     var programs = await programService.GetProgramsAsync(skip, take);
-    return Ok(programs);
+    return Ok(programs.ToDtos());
   }
 
   /// <summary> Create a new program (content-type level draft permission) </summary>
   [HttpPost]
   [RequireContentTypePermission<Program>(PermissionType.Draft)]
-  public async Task<ActionResult<Program>> CreateProgram([FromBody] CreateProgramDto createDto) {
+  public async Task<ActionResult<ProgramDto>> CreateProgram([FromBody] CreateProgramDto createDto) {
     if (!ModelState.IsValid) return BadRequest(ModelState);
 
     var program = await programService.CreateProgramAsync(createDto);
 
-    return CreatedAtAction(nameof(GetProgram), new { id = program.Id }, program);
+    return CreatedAtAction(nameof(GetProgram), new { id = program.Id }, program.ToDto());
   }
 
   // ===== RESOURCE-LEVEL OPERATIONS =====
@@ -81,36 +81,36 @@ public class ProgramCrudController(IProgramCrudService programService) : BaseApi
   /// <summary> Get a specific program by ID (resource-level read permission) </summary>
   [HttpGet("{id}")]
   [RequireResourcePermission<PermissionType, Program>(PermissionType.Read)]
-  public async Task<ActionResult<Program>> GetProgram(Guid id) {
+  public async Task<ActionResult<ProgramDto>> GetProgram(Guid id) {
     var program = await programService.GetProgramByIdAsync(id);
 
     if (program == null) return NotFound();
 
-    return Ok(program);
+    return Ok(program.ToDto());
   }
 
   /// <summary> Get a specific program with all content included (resource-level read permission) </summary>
   [HttpGet("{id}/with-content")]
   [RequireResourcePermission<PermissionType, Program>(PermissionType.Read)]
-  public async Task<ActionResult<Program>> GetProgramWithContent(Guid id) {
+  public async Task<ActionResult<ProgramDto>> GetProgramWithContent(Guid id) {
     var program = await programService.GetProgramWithContentAsync(id);
 
     if (program == null) return NotFound();
 
-    return Ok(program);
+    return Ok(program.ToDto());
   }
 
   /// <summary> Update a program (resource-level edit permission) </summary>
   [HttpPut("{id}")]
   [RequireResourcePermission<PermissionType, Program>(PermissionType.Edit)]
-  public async Task<ActionResult<Program>> UpdateProgram(Guid id, [FromBody] UpdateProgramDto updateDto) {
+  public async Task<ActionResult<ProgramDto>> UpdateProgram(Guid id, [FromBody] UpdateProgramDto updateDto) {
     if (!ModelState.IsValid) return BadRequest(ModelState);
 
     var program = await programService.UpdateProgramAsync(id, updateDto);
 
     if (program == null) return NotFound();
 
-    return Ok(program);
+    return Ok(program.ToDto());
   }
 
   /// <summary> Delete a program (resource-level delete permission) </summary>
@@ -129,19 +129,19 @@ public class ProgramCrudController(IProgramCrudService programService) : BaseApi
   /// <summary> Clone/duplicate a program (resource-level clone permission) </summary>
   [HttpPost("{id}:clone")]
   [RequireResourcePermission<PermissionType, Program>(PermissionType.Clone)]
-  public async Task<ActionResult<Program>> CloneProgram(Guid id, [FromBody] CloneProgramDto cloneDto) {
+  public async Task<ActionResult<ProgramDto>> CloneProgram(Guid id, [FromBody] CloneProgramDto cloneDto) {
     if (!ModelState.IsValid) return BadRequest(ModelState);
 
     var program = await programService.CloneProgramAsync(id, cloneDto.NewTitle);
 
     if (program == null) return NotFound();
 
-    return CreatedAtAction(nameof(GetProgram), new { id = program.Id }, program);
+    return CreatedAtAction(nameof(GetProgram), new { id = program.Id }, program.ToDto());
   }
 
   /// <summary> Get a specific program by slug (public access for published programs) </summary>
   [HttpGet("slug/{slug}")]
-  public async Task<ActionResult<Program>> GetProgramBySlug(string slug) {
+  public async Task<ActionResult<ProgramDto>> GetProgramBySlug(string slug) {
     var isAuthenticated = HttpContext.User.Identity?.IsAuthenticated == true;
 
     Program? program;
@@ -159,7 +159,7 @@ public class ProgramCrudController(IProgramCrudService programService) : BaseApi
 
     if (program == null) return NotFound();
 
-    return Ok(program);
+    return Ok(program.ToDto());
   }
 
   // ===== CONTENT MANAGEMENT ENDPOINTS =====
@@ -298,25 +298,25 @@ public class ProgramCrudController(IProgramCrudService programService) : BaseApi
   /// <summary> Enable monetization for a program (resource-level monetize permission) </summary>
   [HttpPost("{id}:monetize")]
   [RequireResourcePermission<PermissionType, Program>(PermissionType.Edit)]
-  public async Task<ActionResult<Program>> EnableMonetization(Guid id, [FromBody] MonetizationDto monetizationDto) {
+  public async Task<ActionResult<ProgramDto>> EnableMonetization(Guid id, [FromBody] MonetizationDto monetizationDto) {
     if (!ModelState.IsValid) return BadRequest(ModelState);
 
     var program = await programService.EnableMonetizationAsync(id, monetizationDto);
 
     if (program == null) return NotFound();
 
-    return Ok(program);
+    return Ok(program.ToDto());
   }
 
   /// <summary> Disable monetization for a program (resource-level monetize permission) </summary>
   [HttpPost("{id}:disable-monetization")]
   [RequireResourcePermission<PermissionType, Program>(PermissionType.Edit)]
-  public async Task<ActionResult<Program>> DisableMonetization(Guid id) {
+  public async Task<ActionResult<ProgramDto>> DisableMonetization(Guid id) {
     var program = await programService.DisableMonetizationAsync(id);
 
     if (program == null) return NotFound();
 
-    return Ok(program);
+    return Ok(program.ToDto());
   }
 
   /// <summary> Get program pricing information (resource-level read permission) </summary>

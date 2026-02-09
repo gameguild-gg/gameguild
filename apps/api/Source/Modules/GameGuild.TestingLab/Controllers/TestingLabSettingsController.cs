@@ -45,7 +45,11 @@ public class TestingLabSettingsController(
 
       return Ok(settingsDto);
     }
-    catch (ArgumentException ex) { return BadRequest(new { message = ex.Message }); }
+    catch (ArgumentException ex)
+    {
+      _logger.LogWarning(ex, "Invalid settings data provided for tenant {TenantId}", Actor.TenantId);
+      return BadRequest(new { message = "The provided settings data is invalid." });
+    }
   }
 
   /// <summary> Update testing lab settings for the current tenant (partial update) </summary>
@@ -59,7 +63,11 @@ public class TestingLabSettingsController(
 
       return Ok(settingsDto);
     }
-    catch (ArgumentException ex) { return BadRequest(new { message = ex.Message }); }
+    catch (ArgumentException ex)
+    {
+      _logger.LogWarning(ex, "Invalid settings update data for tenant {TenantId}", Actor.TenantId);
+      return BadRequest(new { message = "The provided settings update data is invalid." });
+    }
   }
 
   /// <summary> Reset testing lab settings to default values for the current tenant </summary>
@@ -73,7 +81,11 @@ public class TestingLabSettingsController(
 
       return Ok(settingsDto);
     }
-    catch (ArgumentException ex) { return BadRequest(new { message = ex.Message }); }
+    catch (ArgumentException ex)
+    {
+      _logger.LogWarning(ex, "Error resetting settings for tenant {TenantId}", Actor.TenantId);
+      return BadRequest(new { message = "An error occurred while resetting the settings." });
+    }
   }
 
   /// <summary> Check if testing lab settings exist for the current tenant </summary>

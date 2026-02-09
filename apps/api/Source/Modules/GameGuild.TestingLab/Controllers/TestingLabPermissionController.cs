@@ -53,7 +53,11 @@ public class TestingLabPermissionController : BaseApiController {
 
       return Ok(MapToTestingLabRoleTemplate(template));
     }
-    catch (InvalidOperationException ex) { return Conflict(ex.Message); }
+    catch (InvalidOperationException ex)
+    {
+      _logger.LogWarning(ex, "Conflict while creating role template '{RoleName}'", request.Name);
+      return Conflict("A conflict occurred while creating the role template.");
+    }
     */
   }
 
@@ -88,7 +92,11 @@ public class TestingLabPermissionController : BaseApiController {
 
       return NoContent();
     }
-    catch (InvalidOperationException ex) { return Conflict(ex.Message); }
+    catch (InvalidOperationException ex)
+    {
+      _logger.LogWarning(ex, "Conflict while deleting role template '{Name}'", name);
+      return Conflict("A conflict occurred while deleting the role template.");
+    }
   }
 
   // ===== USER TESTING LAB PERMISSIONS =====
@@ -151,7 +159,11 @@ public class TestingLabPermissionController : BaseApiController {
 
       return Ok();
     }
-    catch (InvalidOperationException ex) { return NotFound(ex.Message); }
+    catch (InvalidOperationException ex)
+    {
+      _logger.LogWarning(ex, "Failed to assign role '{RoleName}' to user {UserId}", request.RoleName, userId);
+      return NotFound("The specified user or role was not found.");
+    }
   }
 
   /// <summary> Revoke a TestingLab role from a user </summary>

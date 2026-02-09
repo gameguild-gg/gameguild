@@ -2,9 +2,6 @@
 	"folders": [
 		{
 			"path": "."
-		},
-		{
-			"path": "../../matheus-martins/web-development/docs/client-data-flow-guideline"
 		}
 	],
 	"settings": {}

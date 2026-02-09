@@ -76,7 +76,11 @@ public class TestingRequestsController(
             var updatedRequest = await requestService.UpdateTestingRequestAsync(request);
             return Ok(updatedRequest);
         }
-        catch (InvalidOperationException ex) { return NotFound(ex.Message); }
+        catch (InvalidOperationException ex)
+        {
+            _logger.LogWarning(ex, "Testing request {RequestId} not found or could not be updated", id);
+            return NotFound("The requested testing request was not found or could not be updated.");
+        }
     }
 
     // DELETE: testing/requests/{id}

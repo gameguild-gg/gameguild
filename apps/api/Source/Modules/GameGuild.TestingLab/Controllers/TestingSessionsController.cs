@@ -74,7 +74,11 @@ public class TestingSessionsController(
             var updatedSession = await sessionService.UpdateTestingSessionAsync(session);
             return Ok(updatedSession);
         }
-        catch (InvalidOperationException ex) { return NotFound(ex.Message); }
+        catch (InvalidOperationException ex)
+        {
+            _logger.LogWarning(ex, "Testing session {SessionId} not found or could not be updated", id);
+            return NotFound("The requested testing session was not found or could not be updated.");
+        }
     }
 
     // DELETE: testing/sessions/{id}
