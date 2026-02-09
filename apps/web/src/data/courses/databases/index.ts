@@ -39,6 +39,13 @@ import week04QuizNormalization from './04-normalization/quiz/normalization-quiz.
 import week04Readings from './04-normalization/readings-04.md';
 import week04Reveal from './04-normalization/reveal.md';
 
+// Week 05 imports
+import week05JoinFundamentals from './05-joins/join-fundamentals.md';
+import week05OuterJoins from './05-joins/outer-joins-and-advanced-patterns.md';
+import week05JoinsQuiz from './05-joins/quiz/joins-quiz.md';
+import week05Readings from './05-joins/readings-05.md';
+import week05Reveal from './05-joins/reveal.md';
+
 // Program definition
 export const databasesProgram: Program = {
     id: 'databases-program-1',
@@ -852,6 +859,122 @@ export const week04QuizNormalizationContent: ProgramContent = {
     updatedAt: '2023-01-01T00:00:00Z',
 };
 
+// Week 05: Joins - Parent content (Reveal)
+export const week05RevealContent: ProgramContent = {
+    id: 'databases-week-05-reveal',
+    programId: 'databases-program-1',
+    slug: 'joins',
+    parentId: undefined,
+    title: 'SQL Joins: Fundamentals & Outer Joins',
+    description: 'Reveal.js presentation covering join fundamentals and outer joins',
+    type: ProgramContentType.REVEAL,
+    body: week05Reveal,
+    sortOrder: 6,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 45,
+    visibility: 1, // Published
+    program: databasesProgram,
+    parent: undefined,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const week05ReadingsContent: ProgramContent = {
+    id: 'databases-week-05-readings',
+    programId: 'databases-program-1',
+    slug: 'readings-05',
+    parentId: 'databases-week-05-reveal',
+    title: 'Week 05 Readings & Resources',
+    description: 'Readings for joins, outer joins, and join patterns',
+    type: 0, // Page
+    body: week05Readings,
+    sortOrder: 1,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 25,
+    visibility: 1, // Published
+    program: databasesProgram,
+    parent: week05RevealContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const week05JoinFundamentalsContent: ProgramContent = {
+    id: 'databases-week-05-join-fundamentals',
+    programId: 'databases-program-1',
+    slug: 'join-fundamentals',
+    parentId: 'databases-week-05-readings',
+    title: 'Join Fundamentals',
+    description: 'INNER JOIN mechanics, join conditions, aliases, and multi-table joins',
+    type: 0, // Page
+    body: week05JoinFundamentals,
+    sortOrder: 1,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 35,
+    visibility: 1, // Published
+    program: databasesProgram,
+    parent: week05ReadingsContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const week05OuterJoinsContent: ProgramContent = {
+    id: 'databases-week-05-outer-joins',
+    programId: 'databases-program-1',
+    slug: 'outer-joins-and-advanced-patterns',
+    parentId: 'databases-week-05-readings',
+    title: 'Outer Joins & Advanced Patterns',
+    description: 'LEFT/RIGHT/FULL OUTER joins, self-joins, and CROSS JOIN',
+    type: 0, // Page
+    body: week05OuterJoins,
+    sortOrder: 2,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 40,
+    visibility: 1, // Published
+    program: databasesProgram,
+    parent: week05ReadingsContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const week05JoinsQuizContent: ProgramContent = {
+    id: 'databases-week-05-joins-quiz',
+    programId: 'databases-program-1',
+    slug: 'joins-quiz',
+    parentId: 'databases-week-05-reveal',
+    title: 'Quiz: SQL Joins',
+    description: 'Practice INNER/OUTER JOINs, self-joins, and CROSS JOIN patterns',
+    type: 0, // Page
+    body: week05JoinsQuiz,
+    sortOrder: 2,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 35,
+    visibility: 1, // Published
+    program: databasesProgram,
+    parent: week05RevealContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
 // Wire program contents and product-program relations
 // only the parent contents go directly under the program
 databasesProgram.programContents = [
@@ -860,6 +983,7 @@ databasesProgram.programContents = [
     week02LectureContent,
     week03RevealContent,
     week04RevealContent,
+    week05RevealContent,
 ];
 
 // Set up parent-child relationships
@@ -902,6 +1026,16 @@ week04RevealContent.children = [
     week04IndexingFundamentalsContent,
     week04ReadingsContent,
     week04QuizNormalizationContent,
+];
+
+week05RevealContent.children = [
+    week05ReadingsContent,
+    week05JoinsQuizContent,
+];
+
+week05ReadingsContent.children = [
+    week05JoinFundamentalsContent,
+    week05OuterJoinsContent,
 ];
 
 databasesProduct.productPrograms = [databasesProductProgram];
