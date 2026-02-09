@@ -12,15 +12,15 @@ Build an AI engine that uses **Monte Carlo Tree Search (MCTS)** to make decision
 
 ## Game Options
 
-Choose one of the following (or propose another—check with me first):
+Choose one of the following (or propose another, check with me first):
 
 | Game                     | Notes                                                            |
 | ------------------------ | ---------------------------------------------------------------- |
-| **Tic-Tac-Toe**          | Simplest option—good for verifying correctness vs known solution |
+| **Tic-Tac-Toe**          | Simplest option, good for verifying correctness vs known solution |
 | **Connect 4**            | Medium complexity, good branching factor for MCTS                |
-| **Hex**                  | MCTS excels here—no known good evaluation function               |
+| **Hex**                  | MCTS excels here, no known good evaluation function               |
 | **Othello / Reversi**    | Classic MCTS benchmark, well-studied                             |
-| **Go (9×9)**             | The canonical MCTS game—smaller board for feasibility            |
+| **Go (9×9)**             | The canonical MCTS game-smaller board for feasibility            |
 | **Chess**                | Compare MCTS vs your MinMax from Assignment 4                    |
 | **Ultimate Tic-Tac-Toe** | Nested game with interesting strategic depth                     |
 
@@ -67,7 +67,7 @@ When reaching a leaf that is not terminal, generate child nodes for legal moves.
 
 ### 4. Simulation (Rollout)
 
-Implement at minimum a **uniform random rollout** — play random legal moves until reaching a terminal state. Return the game outcome (win=1, loss=0, draw=0.5).
+Implement at minimum a **uniform random rollout** - play random legal moves until reaching a terminal state. Return the game outcome (win=1, loss=0, draw=0.5).
 
 ### 5. Backpropagation
 
@@ -115,7 +115,7 @@ For extra challenge, implement one or more of the following:
 
 ## Additional Resources
 
-- [MCTS Visualizer](https://vgarciasc.github.io/mcts-viz/) — Watch MCTS build its tree step by step
-- [Monte Carlo Tree Search (GeeksForGeeks)](https://www.geeksforgeeks.org/ml-monte-carlo-tree-search-mcts/) — Implementation walkthrough
-- [pbsinclair42/mcts](https://github.com/pbsinclair42/mcts) — Clean Python MCTS reference implementation
-- [Browne et al., A Survey of MCTS Methods (2012)](https://ieeexplore.ieee.org/document/6145622) — Comprehensive survey of MCTS variations
+- [MCTS Visualizer](https://vgarciasc.github.io/mcts-viz/) - Watch MCTS build its tree step by step
+- [Monte Carlo Tree Search (GeeksForGeeks)](https://www.geeksforgeeks.org/ml-monte-carlo-tree-search-mcts/) - Implementation walkthrough
+- [pbsinclair42/mcts](https://github.com/pbsinclair42/mcts) - Clean Python MCTS reference implementation
+- [Browne et al., A Survey of MCTS Methods (2012)](https://ieeexplore.ieee.org/document/6145622) - Comprehensive survey of MCTS variations

@@ -22,10 +22,32 @@
 
 ## Videos
 
-| #   | Video                                                                                                        | Time   | Covers                                                                       |
-| --- | ------------------------------------------------------------------------------------------------------------ | ------ | ---------------------------------------------------------------------------- |
-| A   | John Levine - [Monte Carlo Tree Search](https://www.youtube.com/watch?v=UXW2yZndl7U)                         | 14 min | Clear visual explanation of the four MCTS phases with game tree examples     |
-| B   | Sebastian Lague - [Coding Adventure: Making a Better Chess Bot](https://www.youtube.com/watch?v=_vqlIPDR2TU) | 25 min | Practical MCTS implementation journey, debugging, and performance comparison |
+### Core MCTS Concepts
+
+| #   | Video                                                                                         | Time   | Covers                                                                   |
+| --- | --------------------------------------------------------------------------------------------- | ------ | ------------------------------------------------------------------------ |
+| A   | John Levine - [Monte Carlo Tree Search](https://www.youtube.com/watch?v=UXW2yZndl7U)          | 14 min | Clear visual explanation of the four MCTS phases with game tree examples |
+| B   | AI and Games - [AI 101: Monte Carlo Tree Search](https://www.youtube.com/watch?v=lhFXKNyA0QA) | 12 min | MCTS explained in the context of game AI with visual examples            |
+| C   | Gaurav Sen - [What is Monte Carlo Tree Search?](https://www.youtube.com/watch?v=hmQogtp6-fs)  | 15 min | Intuitive walkthrough of MCTS with diagrams and pseudocode               |
+| D   | Udacity - [Monte Carlo Tree Search](https://www.youtube.com/watch?v=onBYsen2_eA)              | 8 min  | Short focused lesson on MCTS fundamentals                                |
+
+### AlphaGo, AlphaZero & Neural MCTS
+
+| #   | Video                                                                                                                 | Time    | Covers                                                                    |
+| --- | --------------------------------------------------------------------------------------------------------------------- | ------- | ------------------------------------------------------------------------- |
+| E   | Google DeepMind - [AlphaGo - The Movie](https://www.youtube.com/watch?v=WXuK6gekU1Y)                                  | 90 min  | Full award-winning documentary on the historic AlphaGo vs Lee Sedol match |
+| F   | Google DeepMind - [AlphaZero: Shedding New Light on Chess, Shogi and Go](https://www.youtube.com/watch?v=7L2sUGcOgh0) | 5 min   | How AlphaZero mastered three games through pure self-play                 |
+| G   | ChessNetwork - [AlphaZero Masters Chess in 4 Hours](https://www.youtube.com/watch?v=0g9SlVdv1PY)                      | 20 min  | Analysis of AlphaZero's chess games and what makes its style unique       |
+| H   | Josh Varty - [Alpha Zero and Monte Carlo Tree Search](https://www.youtube.com/watch?v=62nq4Zsn8vc)                    | 25 min  | Technical deep dive into how AlphaZero combines MCTS with neural nets     |
+| I   | Google DeepMind - [Match 3 - Lee Sedol vs AlphaGo](https://www.youtube.com/watch?v=qUAmTYHEyM8)                       | 270 min | The famous game where Lee Sedol found AlphaGo's weakness with Move 78     |
+
+### Game AI in Practice
+
+| #   | Video                                                                                                        | Time   | Covers                                                                          |
+| --- | ------------------------------------------------------------------------------------------------------------ | ------ | ------------------------------------------------------------------------------- |
+| J   | Sebastian Lague - [Coding Adventure: Making a Better Chess Bot](https://www.youtube.com/watch?v=_vqlIPDR2TU) | 25 min | Practical MCTS implementation journey, debugging, and performance comparison    |
+| K   | Sebastian Lague - [Coding Adventure: Chess](https://www.youtube.com/watch?v=U4ogK0MIzqk)                     | 21 min | Building a chess engine from scratch, covering search algorithms and evaluation |
+| L   | Game Maker's Toolkit - [What Makes Good AI?](https://www.youtube.com/watch?v=9bbhJi0NBkk)                    | 17 min | Design perspective on game AI: when to make AI smart vs fun                     |
 
 ---
 
@@ -89,6 +111,6 @@
 
 ---
 
-**Study order:** John Levine MCTS video → GeeksForGeeks article → Chess Programming Wiki → MCTS Visualizer → Millington Ch. 8.4 → Sebastian Lague video
+**Study order:** John Levine MCTS video (A) → AI and Games (B) → GeeksForGeeks article → Chess Programming Wiki → MCTS Visualizer → Millington Ch. 8.4 → Sebastian Lague videos (J/K)
 
-**Total required time:** ~2h 19min (readings: 1h 15min, videos: 39min, interactive: 25min)
+**Total required time:** ~2h 30min (readings: 1h 15min, videos: ~50min, interactive: 25min)
