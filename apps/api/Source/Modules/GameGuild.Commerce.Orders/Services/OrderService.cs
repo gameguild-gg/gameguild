@@ -168,7 +168,7 @@ public class OrderService(
                     order.Currency,
                     expiresAt: null, // Will be set by subscription logic if applicable
                     orderId: order.Id,
-                    cancellationToken);
+                    cancellationToken).ConfigureAwait(false);
 
                 if (entitlementResult.Success && entitlementResult.UserProduct != null)
                 {
@@ -289,7 +289,7 @@ public class OrderService(
             query = query.Where(o => o.Status == status.Value);
 
         return await query
-            .OrderByDescending(o => o.CreatedAt)
+            .OrderByDescending(o => o.CreatedAt.ConfigureAwait(false))
             .Take(500)
             .ToListAsync(cancellationToken).ConfigureAwait(false);
     }

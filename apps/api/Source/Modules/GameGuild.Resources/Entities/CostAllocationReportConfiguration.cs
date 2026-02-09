@@ -11,7 +11,7 @@ public class CostAllocationReportConfiguration : IEntityTypeConfiguration<CostAl
     public void Configure(EntityTypeBuilder<CostAllocationReport> builder)
     {
         // Configure table name (snake_case convention)
-        builder.ToTable("CostAllocationReports", "gameguild.resources");
+        builder.ToTable("cost_allocation_reports", "gameguild.resources");
 
         // Primary key
         builder.HasKey(x => x.Id);

@@ -11,7 +11,7 @@ public class AuthenticationAttemptConfiguration : IEntityTypeConfiguration<Authe
     public void Configure(EntityTypeBuilder<AuthenticationAttempt> builder)
     {
         // Configure table name (snake_case convention)
-        builder.ToTable("authenticationattempt", "gameguild.authentication");
+        builder.ToTable("authentication_attempts", "gameguild.authentication");
 
         // Configure primary key
         builder.HasKey(x => x.Id);

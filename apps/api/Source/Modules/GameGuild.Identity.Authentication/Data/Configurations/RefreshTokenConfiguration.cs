@@ -11,7 +11,7 @@ public class RefreshTokenConfiguration : IEntityTypeConfiguration<RefreshToken>
     public void Configure(EntityTypeBuilder<RefreshToken> builder)
     {
         // Configure table name (snake_case convention)
-        builder.ToTable("refreshtoken", "gameguild.authentication");
+        builder.ToTable("refresh_tokens", "gameguild.authentication");
 
         // Configure primary key
         builder.HasKey(x => x.Id);

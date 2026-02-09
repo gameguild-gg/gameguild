@@ -21,7 +21,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     /// <inheritdoc />
     public async Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default)
     {
-        return await Database.BeginTransactionAsync(cancellationToken);
+        return await Database.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>

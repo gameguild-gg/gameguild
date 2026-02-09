@@ -131,10 +131,10 @@ public class TenantMiddleware(
             context.Items[HttpContextKeys.CurrentTenant] = tenant;
             context.Items[HttpContextKeys.AuthorizationTenantId] = tenant.Id;
 
-            // Add to logging scope for structured logging
+            // Add to logging scope for structured logging (redact TenantId to prevent PII leakage)
             using (logger.BeginScope(new Dictionary<string, object>
             {
-                ["TenantId"] = tenant.Id,
+                ["TenantId"] = LogRedaction.RedactId(tenant.Id, "tid"),
                 ["TenantSlug"] = tenant.Slug,
                 ["TenantResolutionSource"] = resolutionSource
             }))
@@ -142,7 +142,7 @@ public class TenantMiddleware(
                 logger.LogDebug(
                     "Tenant resolved: {TenantName} ({TenantId}) via {ResolutionSource}",
                     tenant.Name,
-                    tenant.Id,
+                    LogRedaction.RedactId(tenant.Id, "tid"),
                     resolutionSource);
 
                 await next(context).ConfigureAwait(false);

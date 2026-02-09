@@ -16,9 +16,7 @@ public static class OrdersModule
         // Register repositories
         services.AddScoped<IOrderRepository, OrderRepository>();
 
-        // Register services
-        services.AddScoped<IOrderService, OrderService>();
-
+        // IOrderService removed — all operations now use CQRS commands/queries dispatched via ISender.
         // CQRS handlers are automatically registered by assembly scanning in ApplicationLayerExtensions
 
         return services;

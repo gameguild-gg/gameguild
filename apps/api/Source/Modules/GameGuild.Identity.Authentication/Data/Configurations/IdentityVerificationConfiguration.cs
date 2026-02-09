@@ -11,7 +11,7 @@ public class IdentityVerificationConfiguration : IEntityTypeConfiguration<Identi
     public void Configure(EntityTypeBuilder<IdentityVerification> builder)
     {
         // Configure table name (snake_case convention)
-        builder.ToTable("identityverification", "gameguild.authentication");
+        builder.ToTable("identity_verifications", "gameguild.authentication");
 
         // Configure primary key
         builder.HasKey(x => x.Id);

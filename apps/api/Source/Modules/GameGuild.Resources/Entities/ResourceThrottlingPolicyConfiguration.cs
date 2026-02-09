@@ -11,7 +11,7 @@ public class ResourceThrottlingPolicyConfiguration : IEntityTypeConfiguration<Re
     public void Configure(EntityTypeBuilder<ResourceThrottlingPolicy> builder)
     {
         // Configure table name (snake_case convention)
-        builder.ToTable("ResourceThrottlingPolicies", "gameguild.resources");
+        builder.ToTable("resource_throttling_policies", "gameguild.resources");
 
         // Primary key
         builder.HasKey(x => x.Id);

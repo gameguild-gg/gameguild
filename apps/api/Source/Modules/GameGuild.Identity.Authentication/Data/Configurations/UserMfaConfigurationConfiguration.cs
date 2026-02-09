@@ -11,7 +11,7 @@ public class UserMfaConfigurationConfiguration : IEntityTypeConfiguration<UserMf
     public void Configure(EntityTypeBuilder<UserMfaConfiguration> builder)
     {
         // Configure table name (snake_case convention)
-        builder.ToTable("user_mfa_configuration", "gameguild.authentication");
+        builder.ToTable("user_mfa_configurations", "gameguild.authentication");
 
         // Configure primary key
         builder.HasKey(x => x.Id);

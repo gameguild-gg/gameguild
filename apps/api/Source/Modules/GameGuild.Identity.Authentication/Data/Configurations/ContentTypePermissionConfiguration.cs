@@ -11,7 +11,7 @@ public class ContentTypePermissionConfiguration : IEntityTypeConfiguration<Conte
     public void Configure(EntityTypeBuilder<ContentTypePermission> builder)
     {
         // Configure table name (snake_case convention)
-        builder.ToTable("contenttypepermission", "gameguild.authentication");
+        builder.ToTable("content_type_permissions", "gameguild.authentication");
 
         // Configure primary key
         builder.HasKey(x => x.Id);

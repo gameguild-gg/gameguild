@@ -11,7 +11,7 @@ public class UsageRetentionPolicyConfiguration : IEntityTypeConfiguration<UsageR
     public void Configure(EntityTypeBuilder<UsageRetentionPolicy> builder)
     {
         // Configure table name (snake_case convention)
-        builder.ToTable("UsageRetentionPolicies", "gameguild.resources");
+        builder.ToTable("usage_retention_policies", "gameguild.resources");
 
         // Primary key
         builder.HasKey(x => x.Id);

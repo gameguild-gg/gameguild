@@ -1,4 +1,5 @@
 using Asp.Versioning;
+using GameGuild.CQRS;
 using GameGuild.Identity.Authorization;
 using GameGuild.Identity.Context.Actors;
 using Microsoft.AspNetCore.Authorization;
@@ -8,35 +9,33 @@ namespace GameGuild.Commerce.Orders;
 
 /// <summary>
 /// Controller for managing orders and purchases.
-/// Uses <see cref="ToOrderActionResult"/> and <see cref="ToBoolActionResult"/> helpers
-/// to eliminate duplicated error-handling patterns (DRY).
+/// Dispatches all operations through CQRS commands/queries via <see cref="ISender"/>.
 /// </summary>
 [ApiVersion("1.0")]
 [Route("v{version:apiVersion}/orders")]
 [Authorize]
-public class OrdersController(IOrderService orderService, IActorContextAccessor actorContextAccessor) : BaseApiController
+public class OrdersController(ISender sender, IActorContextAccessor actorContextAccessor) : BaseApiController
 {
-    // ── OrderResult → ActionResult mapping (DRY) ─────────────────────────
+    // ── Result → ActionResult mapping (DRY) ─────────────────────────────
 
     /// <summary>
-    ///     Maps an <see cref="OrderResult"/> to an <see cref="ActionResult{OrderDto}"/>.
-    ///     Returns 200 OK on success, or 400 BadRequest with a ProblemDetails body on failure.
+    ///     Maps a <see cref="Result{OrderOperationResult}"/> to an <see cref="ActionResult{OrderDto}"/>.
     /// </summary>
-    private ActionResult<OrderDto> ToOrderActionResult(OrderResult result)
+    private ActionResult<OrderDto> ToOrderActionResult(Result<OrderOperationResult> result)
     {
-        if (!result.Success)
-            return BadRequest(CreateProblemDetails(result.ErrorMessage));
+        if (result.IsFailure)
+            return BadRequest(CreateProblemDetails(result.Error.Description));
 
-        return Ok(MapToDto(result.Order!));
+        return Ok(MapToDto(result.Value.Order));
     }
 
     /// <summary>
-    ///     Maps a boolean success/failure to 204 NoContent or 400 BadRequest.
+    ///     Maps a <see cref="Result"/> to 204 NoContent or 400 BadRequest.
     /// </summary>
-    private IActionResult ToBoolActionResult(bool success, string failureMessage)
+    private IActionResult ToResultActionResult(Result result)
     {
-        if (!success)
-            return BadRequest(CreateProblemDetails(failureMessage));
+        if (result.IsFailure)
+            return BadRequest(CreateProblemDetails(result.Error.Description));
 
         return NoContent();
     }
@@ -63,22 +62,22 @@ public class OrdersController(IOrderService orderService, IActorContextAccessor 
         [FromBody] CreateOrderRequest request,
         CancellationToken cancellationToken = default)
     {
-        var result = await orderService.CreateOrderAsync(
-            new CreateOrderRequest(
-                request.UserId,
-                request.IdempotencyKey,
-                request.Currency,
-                request.TenantId,
-                GetIpAddress(),
-                GetUserAgent()),
-            cancellationToken);
+        var command = new CreateOrderCommand(
+            request.UserId,
+            request.IdempotencyKey,
+            request.Currency,
+            request.TenantId,
+            GetIpAddress(),
+            GetUserAgent());
 
-        if (!result.Success)
-            return BadRequest(CreateProblemDetails(result.ErrorMessage));
+        var result = await sender.Send<Result<OrderOperationResult>>(command, cancellationToken).ConfigureAwait(false);
 
-        var dto = MapToDto(result.Order!);
+        if (result.IsFailure)
+            return BadRequest(CreateProblemDetails(result.Error.Description));
 
-        return result.WasDuplicate
+        var dto = MapToDto(result.Value.Order);
+
+        return result.Value.WasDuplicate
             ? Ok(dto) // Return 200 for idempotent duplicate
             : CreatedAtAction(nameof(GetOrder), new { orderId = dto.Id }, dto);
     }
@@ -93,14 +92,13 @@ public class OrdersController(IOrderService orderService, IActorContextAccessor 
         [FromBody] AddOrderItemRequest request,
         CancellationToken cancellationToken = default)
     {
-        var order = await orderService.AddProductToOrderAsync(
-            orderId,
-            request.ProductId,
-            request.Quantity,
-            request.PromoCode,
-            cancellationToken).ConfigureAwait(false);
+        var command = new AddProductToOrderCommand(orderId, request.ProductId, request.Quantity, request.PromoCode);
+        var result = await sender.Send<Result<Order>>(command, cancellationToken).ConfigureAwait(false);
 
-        return Ok(MapToDto(order));
+        if (result.IsFailure)
+            return BadRequest(CreateProblemDetails(result.Error.Description));
+
+        return Ok(MapToDto(result.Value));
     }
 
     /// <summary>
@@ -113,12 +111,8 @@ public class OrdersController(IOrderService orderService, IActorContextAccessor 
         [FromBody] CompleteOrderRequest? request = null,
         CancellationToken cancellationToken = default)
     {
-        var result = await orderService.CompleteOrderAsync(
-            orderId,
-            request?.PaymentId,
-            request?.PaymentProviderReference,
-            request?.PaymentMethod,
-            cancellationToken).ConfigureAwait(false);
+        var command = new CompleteOrderCommand(orderId, request?.PaymentId, request?.PaymentProviderReference, request?.PaymentMethod);
+        var result = await sender.Send<Result<OrderOperationResult>>(command, cancellationToken).ConfigureAwait(false);
 
         return ToOrderActionResult(result);
     }
@@ -133,12 +127,10 @@ public class OrdersController(IOrderService orderService, IActorContextAccessor 
         [FromBody] CancelOrderRequest? request = null,
         CancellationToken cancellationToken = default)
     {
-        var success = await orderService.CancelOrderAsync(
-            orderId,
-            request?.Reason,
-            cancellationToken).ConfigureAwait(false);
+        var command = new CancelOrderCommand(orderId, request?.Reason);
+        var result = await sender.Send<Result>(command, cancellationToken).ConfigureAwait(false);
 
-        return ToBoolActionResult(success, "Cannot cancel order in current state");
+        return ToResultActionResult(result);
     }
 
     /// <summary>
@@ -151,11 +143,8 @@ public class OrdersController(IOrderService orderService, IActorContextAccessor 
         [FromBody] RefundOrderRequest request,
         CancellationToken cancellationToken = default)
     {
-        var result = await orderService.RefundOrderAsync(
-            orderId,
-            request.Amount,
-            request.Reason ?? "",
-            cancellationToken).ConfigureAwait(false);
+        var command = new RefundOrderCommand(orderId, request.Amount, request.Reason ?? "");
+        var result = await sender.Send<Result<OrderOperationResult>>(command, cancellationToken).ConfigureAwait(false);
 
         return ToOrderActionResult(result);
     }
@@ -169,13 +158,11 @@ public class OrdersController(IOrderService orderService, IActorContextAccessor 
         Guid orderId,
         CancellationToken cancellationToken = default)
     {
-        var order = await orderService.GetOrderAsync(orderId, cancellationToken).ConfigureAwait(false);
+        var order = await sender.Send<Order?>(new GetOrderQuery(orderId), cancellationToken).ConfigureAwait(false);
 
         if (order == null)
             return NotFound();
 
-        // Users can only view their own orders unless they have admin permission
-        // This check should be enhanced with proper ownership validation
         return Ok(MapToDto(order));
     }
 
@@ -194,16 +181,15 @@ public class OrdersController(IOrderService orderService, IActorContextAccessor 
         // Admin can list all orders when no owner filter is specified
         if (string.IsNullOrEmpty(owner) || !string.Equals(owner, "me", StringComparison.OrdinalIgnoreCase))
         {
-            var allOrders = await orderService.GetAllOrdersAsync(
-                status,
+            var allOrders = await sender.Send<IEnumerable<Order>>(
+                new GetAllOrdersQuery(status),
                 cancellationToken).ConfigureAwait(false);
             return Ok(allOrders.Select(MapToDto));
         }
 
         // owner=me resolves to current user's orders
-        var userOrders = await orderService.GetUserOrdersAsync(
-            GetUserId(),
-            status,
+        var userOrders = await sender.Send<IEnumerable<Order>>(
+            new GetUserOrdersQuery(GetUserId(), status),
             cancellationToken).ConfigureAwait(false);
 
         return Ok(userOrders.Select(MapToDto));
@@ -218,8 +204,8 @@ public class OrdersController(IOrderService orderService, IActorContextAccessor 
         Guid orderId,
         CancellationToken cancellationToken = default)
     {
-        var order = await orderService.GetOrderAsync(orderId, cancellationToken).ConfigureAwait(false);
-        return order != null ? Ok() : NotFound();
+        var exists = await sender.Send<bool>(new OrderExistsQuery(orderId), cancellationToken).ConfigureAwait(false);
+        return exists ? Ok() : NotFound();
     }
 
     /// <summary>
@@ -232,10 +218,8 @@ public class OrdersController(IOrderService orderService, IActorContextAccessor 
         [FromBody] PatchOrderRequest request,
         CancellationToken cancellationToken = default)
     {
-        var result = await orderService.UpdateOrderAsync(
-            orderId,
-            new UpdateOrderRequest(request.Currency, request.Notes, request.Metadata),
-            cancellationToken).ConfigureAwait(false);
+        var command = new UpdateOrderCommand(orderId, request.Currency, request.Notes, request.Metadata);
+        var result = await sender.Send<Result<OrderOperationResult>>(command, cancellationToken).ConfigureAwait(false);
 
         return ToOrderActionResult(result);
     }
@@ -250,9 +234,10 @@ public class OrdersController(IOrderService orderService, IActorContextAccessor 
         [FromQuery] string? reason = null,
         CancellationToken cancellationToken = default)
     {
-        var success = await orderService.DeleteOrderAsync(orderId, reason, cancellationToken).ConfigureAwait(false);
+        var command = new DeleteOrderCommand(orderId, reason);
+        var result = await sender.Send<Result>(command, cancellationToken).ConfigureAwait(false);
 
-        return ToBoolActionResult(success, "Cannot delete order in current state");
+        return ToResultActionResult(result);
     }
 
     /// <summary>
@@ -265,10 +250,8 @@ public class OrdersController(IOrderService orderService, IActorContextAccessor 
         [FromBody] CaptureOrderRequest? request = null,
         CancellationToken cancellationToken = default)
     {
-        var result = await orderService.CaptureOrderAsync(
-            orderId,
-            request?.Amount,
-            cancellationToken).ConfigureAwait(false);
+        var command = new CaptureOrderCommand(orderId, request?.Amount);
+        var result = await sender.Send<Result<OrderOperationResult>>(command, cancellationToken).ConfigureAwait(false);
 
         return ToOrderActionResult(result);
     }
@@ -283,10 +266,8 @@ public class OrdersController(IOrderService orderService, IActorContextAccessor 
         [FromBody] HoldOrderRequest? request = null,
         CancellationToken cancellationToken = default)
     {
-        var result = await orderService.HoldOrderAsync(
-            orderId,
-            request?.Reason,
-            cancellationToken).ConfigureAwait(false);
+        var command = new HoldOrderCommand(orderId, request?.Reason);
+        var result = await sender.Send<Result<OrderOperationResult>>(command, cancellationToken).ConfigureAwait(false);
 
         return ToOrderActionResult(result);
     }
@@ -300,7 +281,8 @@ public class OrdersController(IOrderService orderService, IActorContextAccessor 
         Guid orderId,
         CancellationToken cancellationToken = default)
     {
-        var result = await orderService.ReleaseOrderAsync(orderId, cancellationToken).ConfigureAwait(false);
+        var command = new ReleaseOrderCommand(orderId);
+        var result = await sender.Send<Result<OrderOperationResult>>(command, cancellationToken).ConfigureAwait(false);
 
         return ToOrderActionResult(result);
     }

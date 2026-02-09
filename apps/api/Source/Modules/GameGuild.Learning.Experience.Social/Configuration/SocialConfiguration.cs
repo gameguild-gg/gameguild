@@ -11,7 +11,7 @@ public class CourseReviewConfiguration : IEntityTypeConfiguration<CourseReview>
 {
     public void Configure(EntityTypeBuilder<CourseReview> builder)
     {
-        builder.ToTable("CourseReviews");
+        builder.ToTable("course_reviews");
 
         builder.HasKey(e => e.Id);
 
@@ -50,7 +50,7 @@ public class CourseWishlistConfiguration : IEntityTypeConfiguration<CourseWishli
 {
     public void Configure(EntityTypeBuilder<CourseWishlist> builder)
     {
-        builder.ToTable("CourseWishlists");
+        builder.ToTable("course_wishlists");
 
         builder.HasKey(e => e.Id);
 
@@ -74,7 +74,7 @@ public class CourseDiscussionConfiguration : IEntityTypeConfiguration<CourseDisc
 {
     public void Configure(EntityTypeBuilder<CourseDiscussion> builder)
     {
-        builder.ToTable("CourseDiscussions");
+        builder.ToTable("course_discussions");
 
         builder.HasKey(e => e.Id);
 
@@ -111,7 +111,7 @@ public class DiscussionReplyConfiguration : IEntityTypeConfiguration<DiscussionR
 {
     public void Configure(EntityTypeBuilder<DiscussionReply> builder)
     {
-        builder.ToTable("DiscussionReplies");
+        builder.ToTable("discussion_replies");
 
         builder.HasKey(e => e.Id);
 
@@ -144,7 +144,7 @@ public class CourseLikeConfiguration : IEntityTypeConfiguration<CourseLike>
 {
     public void Configure(EntityTypeBuilder<CourseLike> builder)
     {
-        builder.ToTable("CourseLikes");
+        builder.ToTable("course_likes");
 
         builder.HasKey(e => e.Id);
 
@@ -175,7 +175,7 @@ public class PersonalizedFeedItemConfiguration : IEntityTypeConfiguration<Person
 {
     public void Configure(EntityTypeBuilder<PersonalizedFeedItem> builder)
     {
-        builder.ToTable("PersonalizedFeedItems");
+        builder.ToTable("personalized_feed_items");
 
         builder.HasKey(e => e.Id);
 

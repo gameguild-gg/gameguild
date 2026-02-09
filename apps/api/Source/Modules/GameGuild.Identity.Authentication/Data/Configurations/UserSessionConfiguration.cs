@@ -11,7 +11,7 @@ public class UserSessionConfiguration : IEntityTypeConfiguration<UserSession>
     public void Configure(EntityTypeBuilder<UserSession> builder)
     {
         // Configure table name (snake_case convention)
-        builder.ToTable("usersession", "gameguild.authentication");
+        builder.ToTable("user_sessions", "gameguild.authentication");
 
         // Configure primary key
         builder.HasKey(x => x.Id);

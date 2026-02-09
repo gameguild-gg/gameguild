@@ -11,7 +11,7 @@ public class BlockchainCertificateAnchorConfiguration : IEntityTypeConfiguration
     public void Configure(EntityTypeBuilder<BlockchainCertificateAnchor> builder)
     {
         // Configure table name (snake_case convention)
-        builder.ToTable("blockchaincertificateanchor", "gameguild.authentication");
+        builder.ToTable("blockchain_certificate_anchors", "gameguild.authentication");
 
         // Configure primary key
         builder.HasKey(x => x.Id);

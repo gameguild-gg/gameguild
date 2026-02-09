@@ -10,7 +10,7 @@ public class TransformedAssetConfiguration : IEntityTypeConfiguration<Transforme
 {
     public void Configure(EntityTypeBuilder<TransformedAsset> builder)
     {
-        builder.ToTable("TransformedAssets", "assets");
+        builder.ToTable("transformed_assets", "assets");
 
         builder.HasKey(e => e.Id);
 

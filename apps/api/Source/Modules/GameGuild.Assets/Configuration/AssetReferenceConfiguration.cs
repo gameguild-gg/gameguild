@@ -10,7 +10,7 @@ public class AssetReferenceConfiguration : IEntityTypeConfiguration<AssetReferen
 {
     public void Configure(EntityTypeBuilder<AssetReference> builder)
     {
-        builder.ToTable("AssetReferences", "assets");
+        builder.ToTable("asset_references", "assets");
 
         builder.HasKey(e => e.Id);
 

@@ -7,7 +7,7 @@ public class FollowEntityConfiguration : IEntityTypeConfiguration<Follow>
 {
     public void Configure(EntityTypeBuilder<Follow> builder)
     {
-        builder.ToTable("Follows");
+        builder.ToTable("follows");
 
         builder.HasKey(f => f.Id);
 
@@ -44,7 +44,7 @@ public class BlockEntityConfiguration : IEntityTypeConfiguration<Block>
 {
     public void Configure(EntityTypeBuilder<Block> builder)
     {
-        builder.ToTable("Blocks");
+        builder.ToTable("blocks");
 
         builder.HasKey(b => b.Id);
 
@@ -73,7 +73,7 @@ public class MuteEntityConfiguration : IEntityTypeConfiguration<Mute>
 {
     public void Configure(EntityTypeBuilder<Mute> builder)
     {
-        builder.ToTable("Mutes");
+        builder.ToTable("mutes");
 
         builder.HasKey(m => m.Id);
 
@@ -108,7 +108,7 @@ public class FollowPrivacySettingsEntityConfiguration : IEntityTypeConfiguration
 {
     public void Configure(EntityTypeBuilder<FollowPrivacySettings> builder)
     {
-        builder.ToTable("FollowPrivacySettings");
+        builder.ToTable("follow_privacy_settings");
 
         builder.HasKey(p => p.Id);
 

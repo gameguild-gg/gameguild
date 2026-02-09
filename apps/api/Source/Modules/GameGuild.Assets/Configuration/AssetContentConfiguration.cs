@@ -10,7 +10,7 @@ public class AssetContentConfiguration : IEntityTypeConfiguration<AssetContent>
 {
     public void Configure(EntityTypeBuilder<AssetContent> builder)
     {
-        builder.ToTable("AssetContents", "assets");
+        builder.ToTable("asset_contents", "assets");
 
         builder.HasKey(e => e.Id);
 

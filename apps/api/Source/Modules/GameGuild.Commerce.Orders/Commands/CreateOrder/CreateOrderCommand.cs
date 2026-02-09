@@ -1,3 +1,5 @@
+using GameGuild.CQRS;
+
 namespace GameGuild.Commerce.Orders;
 
 /// <summary>
@@ -9,13 +11,4 @@ public sealed record CreateOrderCommand(
     string Currency = "USD",
     Guid? TenantId = null,
     string? IpAddress = null,
-    string? UserAgent = null);
-
-/// <summary>
-/// Result of creating an order
-/// </summary>
-public sealed record CreateOrderResult(
-    bool Success,
-    Order? Order,
-    string? ErrorMessage,
-    bool WasDuplicate);
+    string? UserAgent = null) : ICommand<Result<OrderOperationResult>>;

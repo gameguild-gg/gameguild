@@ -10,7 +10,7 @@ public class AssetReportConfiguration : IEntityTypeConfiguration<AssetReport>
 {
     public void Configure(EntityTypeBuilder<AssetReport> builder)
     {
-        builder.ToTable("AssetReports", "assets");
+        builder.ToTable("asset_reports", "assets");
 
         builder.HasKey(e => e.Id);
 

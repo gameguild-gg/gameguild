@@ -11,7 +11,7 @@ public class SlaImpactAnalysisConfiguration : IEntityTypeConfiguration<SlaImpact
     public void Configure(EntityTypeBuilder<SlaImpactAnalysis> builder)
     {
         // Configure table name (snake_case convention)
-        builder.ToTable("SlaImpactAnalyses", "gameguild.resources");
+        builder.ToTable("sla_impact_analyses", "gameguild.resources");
 
         // Primary key
         builder.HasKey(x => x.Id);

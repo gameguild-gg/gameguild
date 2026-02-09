@@ -16,26 +16,24 @@ public class RequestContextLoggingMiddleware(RequestDelegate next, ILogger<Reque
         var path = httpContext.Request.Path;
         var method = httpContext.Request.Method;
 
-        // Log request start with context
+        // Log request start with context (redact PII: TenantId, UserId, Email)
         logger.LogInformation(
-            "Request {RequestId} started: {Method} {Path} | User: {UserId} ({UserEmail}) | Tenant: {TenantId} | Authenticated: {IsAuthenticated}",
+            "Request {RequestId} started: {Method} {Path} | User: {UserId} | Tenant: {TenantId} | Authenticated: {IsAuthenticated}",
             requestId,
             method,
             path,
-            actor.SubjectId ?? "Anonymous",
-            actor.GetAttribute("email") ?? "N/A",
-            actor.TenantId?.ToString() ?? "None",
+            LogRedaction.RedactId(actor.SubjectId, "uid"),
+            LogRedaction.RedactId(actor.TenantId, "tid"),
             actor.IsAuthenticated
         );
 
-        // Add structured logging properties
+        // Add structured logging properties (redact PII)
         using (logger.BeginScope(
                    new Dictionary<string, object>
                    {
                        ["RequestId"] = requestId,
-                       ["UserId"] = actor.SubjectId ?? "Anonymous",
-                       ["UserEmail"] = actor.GetAttribute("email") ?? "N/A",
-                       ["TenantId"] = actor.TenantId?.ToString() ?? "None",
+                       ["UserId"] = LogRedaction.RedactId(actor.SubjectId, "uid"),
+                       ["TenantId"] = LogRedaction.RedactId(actor.TenantId, "tid"),
                        ["IsAuthenticated"] = actor.IsAuthenticated,
                        ["Roles"] = string.Join(", ", actor.Roles)
                    }

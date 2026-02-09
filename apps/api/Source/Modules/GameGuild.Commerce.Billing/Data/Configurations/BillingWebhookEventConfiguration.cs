@@ -11,7 +11,7 @@ public class BillingWebhookEventConfiguration : IEntityTypeConfiguration<Billing
     public void Configure(EntityTypeBuilder<BillingWebhookEvent> builder)
     {
         // Configure table
-        builder.ToTable("BillingWebhookEvents");
+        builder.ToTable("billing_webhook_events");
 
         // Configure primary key
         builder.HasKey(x => x.Id);

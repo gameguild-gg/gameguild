@@ -11,7 +11,7 @@ public class MfaAttemptConfiguration : IEntityTypeConfiguration<MfaAttempt>
     public void Configure(EntityTypeBuilder<MfaAttempt> builder)
     {
         // Configure table name (snake_case convention)
-        builder.ToTable("mfaattempt", "gameguild.authentication");
+        builder.ToTable("mfa_attempts", "gameguild.authentication");
 
         // Configure primary key
         builder.HasKey(x => x.Id);

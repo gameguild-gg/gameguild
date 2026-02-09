@@ -12,7 +12,7 @@ public class OrderRepository(IApplicationDbContext context)
     public async Task<Order?> GetByIdempotencyKeyAsync(string idempotencyKey, CancellationToken cancellationToken = default)
     {
         return await Entities
-            .Include(o => o.LineItems)
+            .Include(o => o.LineItems.ConfigureAwait(false))
             .FirstOrDefaultAsync(o => o.IdempotencyKey == idempotencyKey, cancellationToken)
             .ConfigureAwait(false);
     }
@@ -33,7 +33,7 @@ public class OrderRepository(IApplicationDbContext context)
         }
 
         return await query
-            .OrderByDescending(o => o.CreatedAt)
+            .OrderByDescending(o => o.CreatedAt.ConfigureAwait(false))
             .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
     }
@@ -54,7 +54,7 @@ public class OrderRepository(IApplicationDbContext context)
         }
 
         return await query
-            .OrderByDescending(o => o.CreatedAt)
+            .OrderByDescending(o => o.CreatedAt.ConfigureAwait(false))
             .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
     }
@@ -76,7 +76,7 @@ public class OrderRepository(IApplicationDbContext context)
         }
 
         return await query
-            .OrderByDescending(o => o.CreatedAt)
+            .OrderByDescending(o => o.CreatedAt.ConfigureAwait(false))
             .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
     }
@@ -85,7 +85,7 @@ public class OrderRepository(IApplicationDbContext context)
     public async Task<Order?> GetWithLineItemsAsync(Guid id, CancellationToken cancellationToken = default)
     {
         return await Entities
-            .Include(o => o.LineItems)
+            .Include(o => o.LineItems.ConfigureAwait(false))
                 .ThenInclude(li => li.Product)
             .FirstOrDefaultAsync(o => o.Id == id, cancellationToken)
             .ConfigureAwait(false);

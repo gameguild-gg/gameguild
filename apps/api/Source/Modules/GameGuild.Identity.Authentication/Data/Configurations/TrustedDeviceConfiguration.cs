@@ -11,7 +11,7 @@ public class TrustedDeviceConfiguration : IEntityTypeConfiguration<TrustedDevice
     public void Configure(EntityTypeBuilder<TrustedDevice> builder)
     {
         // Configure table name (snake_case convention)
-        builder.ToTable("trusteddevice", "gameguild.authentication");
+        builder.ToTable("trusted_devices", "gameguild.authentication");
 
         // Configure primary key
         builder.HasKey(x => x.Id);

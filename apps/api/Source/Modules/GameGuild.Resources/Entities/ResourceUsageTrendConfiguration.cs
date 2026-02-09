@@ -11,7 +11,7 @@ public class ResourceUsageTrendConfiguration : IEntityTypeConfiguration<Resource
     public void Configure(EntityTypeBuilder<ResourceUsageTrend> builder)
     {
         // Configure table name (snake_case convention)
-        builder.ToTable("ResourceUsageTrends", "gameguild.resources");
+        builder.ToTable("resource_usage_trends", "gameguild.resources");
 
         // Primary key
         builder.HasKey(x => x.Id);
