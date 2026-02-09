@@ -11,13 +11,11 @@
 
 </details>
 
-**Video explanations:** [MCTS Explained](https://www.youtube.com/watch?v=UXW2yZndl7U) | [AlphaGo Documentary](https://www.youtube.com/watch?v=WXuK6gekU1Y)
+**Video explanations:** [MCTS Explained](https://www.youtube.com/watch?v=UXW2yZndl7U) | [AlphaGo Documentary](https://www.youtube.com/watch?v=WXuK6gekU1Y) | [AI and Games: MCTS](https://www.youtube.com/watch?v=lhFXKNyA0QA) | [Coding Adventure: Chess](https://www.youtube.com/watch?v=U4ogK0MIzqk)
 
 Monte Carlo Tree Search (MCTS) is a search algorithm that uses random simulations to estimate the value of different actions in a game. Unlike minimax, which exhaustively explores the game tree to a fixed depth, MCTS builds a partial tree incrementally by sampling random games (rollouts) and using statistics to guide which parts of the tree to explore further.
 
 MCTS is particularly powerful for games with large branching factors where minimax is infeasible—most famously Go, where the branching factor of ~250 makes exhaustive search impossible.
-
-![meme](https://i.imgflip.com/2/1bij.jpg)
 
 ## Why Not Just Use Minimax?
 
@@ -447,4 +445,4 @@ Move mctsSearchTimed(GameState state, double timeLimit) {
 | Randomness/info     | Difficult to handle      | Natural fit                 |
 | Implementation      | Simpler                  | More infrastructure needed  |
 
-Both approaches have their place. Modern engines like Leela Chess Zero use MCTS with neural networks, while Stockfish uses alpha-beta with neural evaluation—and they perform comparably!
+Both approaches have their place. Modern engines like Leela Chess Zero use MCTS with neural networks, while Stockfish uses alpha-beta with neural evaluation - and they perform comparably!
