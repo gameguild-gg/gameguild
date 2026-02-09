@@ -1,7 +1,6 @@
 using System.Diagnostics;
 using System.Reflection;
 using GameGuild.CQRS;
-using GameGuild.Diagnostics;
 
 namespace GameGuild.API.Setup;
 

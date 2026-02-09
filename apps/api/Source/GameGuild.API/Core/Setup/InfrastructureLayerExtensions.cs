@@ -1,6 +1,5 @@
 using System.Diagnostics;
 using System.Text.RegularExpressions;
-using GameGuild.Abstractions;
 using GameGuild.API.Database;
 using GameGuild.Commerce.Billing;
 using GameGuild.Commerce.Payments;
@@ -11,7 +10,6 @@ using GameGuild.Identity.Authorization;
 using GameGuild.Identity.Context;
 using GameGuild.Configuration.ConfigurationFromAPI.InfrastructureLayer;
 using GameGuild.Configuration.InfrastructureLayer;
-using GameGuild.Diagnostics;
 using GameGuild.Resources;
 using Microsoft.EntityFrameworkCore;
 
@@ -261,9 +259,15 @@ public static class InfrastructureLayerExtensions
     }
 
     /// <summary>
-    ///     Registers repository implementations by convention from module assemblies.
-    ///     Discovers interfaces matching I*Repository pattern and their implementations.
+    ///     Registers repository and service implementations by convention from module assemblies.
+    ///     Discovers interfaces matching I{Name}Repository → {Name}Repository and
+    ///     I{Name}Service → {Name}Service patterns.
     /// </summary>
+    /// <remarks>
+    ///     Includes startup validation that warns about concrete types whose names end in
+    ///     "Repository" or "Service" but were NOT matched by the convention scanner.
+    ///     This prevents silent registration failures when a class/interface is renamed.
+    /// </remarks>
     private static void AddRepositories(this IServiceCollection services, ILogger logger)
     {
         var totalStopwatch = Stopwatch.StartNew();
@@ -290,6 +294,7 @@ public static class InfrastructureLayerExtensions
         // Collect all registrations first
         var repositoryRegistrations = new List<(Type interfaceType, Type implementationType)>();
         var serviceRegistrations = new List<(Type interfaceType, Type implementationType)>();
+        var matchedTypes = new HashSet<Type>();
 
         foreach (var assembly in assemblies)
         {
@@ -318,6 +323,7 @@ public static class InfrastructureLayerExtensions
                         if (implementationType.Name == expectedImplName)
                         {
                             repositoryRegistrations.Add((interfaceType, implementationType));
+                            matchedTypes.Add(implementationType);
                         }
                     }
                     // Match service pattern: I{Name}Service -> {Name}Service (but not IApplicationDbContext etc.)
@@ -328,14 +334,33 @@ public static class InfrastructureLayerExtensions
                         if (implementationType.Name == expectedImplName)
                         {
                             serviceRegistrations.Add((interfaceType, implementationType));
+                            matchedTypes.Add(implementationType);
                         }
                     }
                 }
             }
+
+            // ── Validation: warn about unmatched types ───────────────────
+            // Log concrete types that look like repositories/services but were not matched.
+            // This catches silent failures from naming mismatches (e.g. IFooRepo vs FooRepository).
+            var unmatchedTypes = types
+                .Where(t => !matchedTypes.Contains(t))
+                .Where(t => t.Name.EndsWith("Repository") || t.Name.EndsWith("Service"))
+                .Where(t => !t.Name.Contains("Decorator") && !t.Name.Contains("Cached") && !t.Name.Contains("Logging") && !t.Name.Contains("Default"))
+                .ToList();
+
+            foreach (var unmatched in unmatchedTypes)
+            {
+                logger.LogWarning(
+                    "Convention scan: {TypeName} in {Assembly} was NOT registered — " +
+                    "no matching I{TypeName} interface found. " +
+                    "If this type should be registered, verify the interface follows the I{{Name}} naming convention.",
+                    unmatched.Name, assembly.GetName().Name);
+            }
         }
 
         // Register and log repositories individually
-        logger.LogInformation("Setting up repositories...");
+        logger.LogInformation("Setting up {Count} repositories...", repositoryRegistrations.Count);
         var stepStopwatch = Stopwatch.StartNew();
 
         foreach (var (interfaceType, implementationType) in repositoryRegistrations)
@@ -373,7 +398,7 @@ public static class InfrastructureLayerExtensions
         logger.LogInformation("Completed repository setup in {ElapsedMs}ms", totalStopwatch.ElapsedMilliseconds);
 
         // Register and log services individually
-        logger.LogInformation("Setting up services...");
+        logger.LogInformation("Setting up {Count} services...", serviceRegistrations.Count);
         var serviceStopwatch = Stopwatch.StartNew();
 
         foreach (var (interfaceType, implementationType) in serviceRegistrations)
@@ -384,14 +409,10 @@ public static class InfrastructureLayerExtensions
                 FormatInterfaceName(interfaceType.Name), stepStopwatch.ElapsedMilliseconds);
         }
 
-        // Register Lazy<T> wrappers for circular dependency resolution
-        // SlaIncidentEscalationService depends on ISlaImpactAnalysisService which depends on SlaIncidentEscalationService
-        services.AddScoped<Lazy<GameGuild.Resources.ISlaImpactAnalysisService>>(sp =>
-            new Lazy<GameGuild.Resources.ISlaImpactAnalysisService>(() => sp.GetRequiredService<GameGuild.Resources.ISlaImpactAnalysisService>()));
-
         totalStopwatch.Stop();
         logger.LogInformation("Completed service setup in {ElapsedMs}ms", serviceStopwatch.ElapsedMilliseconds);
-        logger.LogInformation("Completed registration of {RepoCount} repositories and {ServiceCount} services in {ElapsedMs}ms",
+        logger.LogInformation(
+            "Convention-based DI registration complete: {RepoCount} repositories, {ServiceCount} services in {ElapsedMs}ms",
             repositoryRegistrations.Count, serviceRegistrations.Count, totalStopwatch.ElapsedMilliseconds);
     }
 

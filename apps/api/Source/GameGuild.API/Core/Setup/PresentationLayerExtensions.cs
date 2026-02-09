@@ -1,6 +1,5 @@
 using System.Diagnostics;
 using GameGuild.Configuration.PresentationLayer;
-using GameGuild.Diagnostics;
 
 namespace GameGuild.API.Setup;
 

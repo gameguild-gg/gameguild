@@ -75,7 +75,7 @@ public static class AuthenticationEndpoint
                     AccessTokenExpiresAt = response.ExpiresAt,
                     RefreshTokenExpiresAt = response.ExpiresAt.AddDays(7), // Assuming 7 day refresh token
                     ExpiresAt = response.ExpiresAt,
-                    User = new UserDto
+                    User = new AuthUserDto
                     {
                         Id = response.UserId,
                         Email = debugEmail, // Using debug email to test
@@ -121,7 +121,7 @@ public static class AuthenticationEndpoint
                     AccessTokenExpiresAt = tokens.AccessTokenExpiresAt,
                     RefreshTokenExpiresAt = tokens.RefreshTokenExpiresAt,
                     ExpiresAt = tokens.AccessTokenExpiresAt,
-                    User = new UserDto { Id = user.Id, Email = user.Email, Username = user.Username }
+                    User = new AuthUserDto { Id = user.Id, Email = user.Email, Username = user.Username }
                 }
             );
         }
@@ -160,7 +160,7 @@ public static class AuthenticationEndpoint
                     AccessTokenExpiresAt = DateTime.UtcNow.AddHours(1),
                     RefreshTokenExpiresAt = DateTime.UtcNow.AddDays(7),
                     ExpiresAt = DateTime.UtcNow.AddHours(1),
-                    User = new UserDto { Id = Guid.NewGuid(), Email = "google-user@example.com", Username = "googleuser" }
+                    User = new AuthUserDto { Id = Guid.NewGuid(), Email = "google-user@example.com", Username = "googleuser" }
                 }
             )
         );
@@ -218,7 +218,7 @@ public record SignInResponseDto
 
     public required DateTime RefreshTokenExpiresAt { get; init; }
 
-    public required UserDto User { get; init; }
+    public required AuthUserDto User { get; init; }
 
     public Guid? TenantId { get; init; }
 }
@@ -234,7 +234,7 @@ public record RefreshTokenResponseDto
     public required DateTime RefreshTokenExpiresAt { get; init; }
 }
 
-public record UserDto
+public record AuthUserDto
 {
     public required Guid Id { get; init; }
 

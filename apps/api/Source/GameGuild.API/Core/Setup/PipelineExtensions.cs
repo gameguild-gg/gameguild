@@ -1,6 +1,4 @@
 using Asp.Versioning.ApiExplorer;
-using GameGuild.Endpoints;
-using GameGuild.Middlewares;
 using GameGuild.Identity.Authorization;
 using GameGuild.Identity.Tenants;
 using Serilog;

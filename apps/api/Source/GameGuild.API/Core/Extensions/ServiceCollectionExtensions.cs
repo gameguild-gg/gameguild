@@ -20,12 +20,10 @@ using GameGuild.Configuration.PresentationLayer.ModelValidation;
 using GameGuild.Configuration.PresentationLayer.RateLimiting;
 using GameGuild.Configuration.PresentationLayer.RequestContext;
 using GameGuild.Configuration.PresentationLayer.ResponseCompression;
-using GameGuild.Configuration.PresentationLayer.SignalIR;
-using GameGuild.Endpoints;
+using GameGuild.Configuration.PresentationLayer.SignalR;
 using GameGuild.Commerce.Payments;
 using GameGuild.Commerce.Products;
 using GameGuild.Commerce.Subscriptions;
-using GameGuild.Transformers;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.AspNetCore.Localization;
@@ -297,12 +295,12 @@ public static class ServiceCollectionExtensions
             FeatureFlagsOptions.CreateDefault);
         options.Validate();
 
-        // TODO: Implement OpenFeature services
+        // PLANNED: Implement OpenFeature services when the OpenFeature .NET SDK is added.
         // Register OpenFeature API singleton and a thin service wrapper.
         // services.AddSingleton(Api.Instance);
         // services.AddSingleton<IFeatureFlagService, FeatureFlagService>();
 
-        // Add hosted service to initialize OpenFeature provider during startup
+        // PLANNED: Add hosted service to initialize OpenFeature provider during startup.
         // services.AddHostedService<OpenFeatureHostedInitializer>();
 
         return services;
@@ -342,7 +340,7 @@ public static class ServiceCollectionExtensions
             
             // Admin policies
             authzOptions.AddPolicy("Admin", policy => policy.RequireRole("Admin"));
-            authzOptions.AddPolicy("SecureAdmin", policy => policy.RequireRole("Admin")); // TODO: Add MFA requirement
+            authzOptions.AddPolicy("SecureAdmin", policy => policy.RequireRole("Admin").RequireClaim("mfa_verified", "true"));
             
             // User management policies (require authenticated user)
             authzOptions.AddPolicy("Users.Read", policy => policy.RequireAuthenticatedUser());
@@ -746,10 +744,10 @@ public static class ServiceCollectionExtensions
         return services;
     }
 
-    public static IServiceCollection SetupGraphQl(this IServiceCollection services, IConfiguration configuration,
-        GraphQlOptions? options)
+    public static IServiceCollection SetupGraphQL(this IServiceCollection services, IConfiguration configuration,
+        GraphQLOptions? options)
     {
-        options ??= OptionBuilderUtilities.CreateAndBind(configuration, "GraphQL", GraphQlOptions.CreateDefault);
+        options ??= OptionBuilderUtilities.CreateAndBind(configuration, "GraphQL", GraphQLOptions.CreateDefault);
         options.Validate();
 
         // GraphQL services can be configured by the application layer if enabled.
