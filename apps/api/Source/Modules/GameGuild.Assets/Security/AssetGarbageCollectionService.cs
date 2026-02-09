@@ -42,7 +42,7 @@ public class AssetGarbageCollectionOptions
 /// <summary>
 /// Result of a garbage collection run.
 /// </summary>
-public record GarbageCollectionResult(
+public sealed record GarbageCollectionResult(
     int ItemsProcessed,
     int ItemsDeleted,
     int ItemsSkipped,

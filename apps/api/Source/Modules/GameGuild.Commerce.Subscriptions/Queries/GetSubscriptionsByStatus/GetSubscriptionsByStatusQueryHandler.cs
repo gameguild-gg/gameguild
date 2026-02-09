@@ -5,7 +5,7 @@ namespace GameGuild.Commerce.Subscriptions;
 /// <summary>
 ///     Query handler for getting subscriptions by status
 /// </summary>
-public class GetSubscriptionsByStatusQueryHandler(ISubscriptionRepository subscriptionRepository) 
+public sealed class GetSubscriptionsByStatusQueryHandler(ISubscriptionRepository subscriptionRepository) 
     : IQueryHandler<GetSubscriptionsByStatusQuery, IEnumerable<Subscription>>
 {
     public async Task<IEnumerable<Subscription>> Handle(GetSubscriptionsByStatusQuery request, CancellationToken cancellationToken)

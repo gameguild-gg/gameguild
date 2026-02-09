@@ -5,7 +5,7 @@ using GameGuild.CQRS.Models;
 
 namespace GameGuild.Monitoring.SLA;
 
-public class RecordSliMetricCommandHandler(IServiceLevelObjectiveRepository sloRepository, IServiceLevelIndicatorRepository sliRepository, ISlaMonitoringService monitoringService)
+public sealed class RecordSliMetricCommandHandler(IServiceLevelObjectiveRepository sloRepository, IServiceLevelIndicatorRepository sliRepository, ISlaMonitoringService monitoringService)
     : ICommandHandler<RecordSliMetricCommand, SliMetricDto>
 {
     public async Task<SliMetricDto> Handle(RecordSliMetricCommand request, CancellationToken cancellationToken)

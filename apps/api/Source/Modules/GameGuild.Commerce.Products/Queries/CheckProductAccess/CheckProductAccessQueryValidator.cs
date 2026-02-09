@@ -5,7 +5,7 @@ namespace GameGuild.Commerce.Products;
 /// <summary>
 /// Validator for CheckProductAccessQuery
 /// </summary>
-public class CheckProductAccessQueryValidator : AbstractValidator<CheckProductAccessQuery>
+public sealed class CheckProductAccessQueryValidator : AbstractValidator<CheckProductAccessQuery>
 {
     public CheckProductAccessQueryValidator()
     {

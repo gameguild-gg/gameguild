@@ -2,4 +2,4 @@ using GameGuild.CQRS;
 
 namespace GameGuild.Commerce.Subscriptions;
 
-public record GetSubscriptionPlanByIdQuery(Guid Id) : IQuery<SubscriptionPlan?>;
+public sealed record GetSubscriptionPlanByIdQuery(Guid Id) : IQuery<SubscriptionPlan?>;

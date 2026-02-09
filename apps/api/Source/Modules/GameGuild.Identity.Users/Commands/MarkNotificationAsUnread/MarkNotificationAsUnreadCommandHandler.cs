@@ -2,7 +2,7 @@ using GameGuild.CQRS;
 
 namespace GameGuild.Identity.Users;
 
-public class MarkNotificationAsUnreadCommandHandler(IUserRepository userRepository, IUserNotificationRepository notificationRepository) : ICommandHandler<MarkNotificationAsUnreadCommand>
+public sealed class MarkNotificationAsUnreadCommandHandler(IUserRepository userRepository, IUserNotificationRepository notificationRepository) : ICommandHandler<MarkNotificationAsUnreadCommand>
 {
     public async Task<Unit> Handle(MarkNotificationAsUnreadCommand request, CancellationToken cancellationToken)
     {

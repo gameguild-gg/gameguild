@@ -7,7 +7,7 @@ namespace GameGuild.Monitoring.SLA;
 /// <summary>
 ///     Handler for retrieving SLO compliance status.
 /// </summary>
-public class GetSloComplianceQueryHandler(ISlaMonitoringService slaMonitoringService, IServiceLevelObjectiveRepository sloRepository) : IQueryHandler<GetSloComplianceQuery, SloComplianceDto>
+public sealed class GetSloComplianceQueryHandler(ISlaMonitoringService slaMonitoringService, IServiceLevelObjectiveRepository sloRepository) : IQueryHandler<GetSloComplianceQuery, SloComplianceDto>
 {
     public async Task<SloComplianceDto> Handle(GetSloComplianceQuery request, CancellationToken cancellationToken)
     {

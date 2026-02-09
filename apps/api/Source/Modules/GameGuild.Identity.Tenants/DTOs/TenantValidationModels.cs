@@ -3,7 +3,7 @@ namespace GameGuild.Identity.Tenants;
 /// <summary>
 ///     Validate tenant request
 /// </summary>
-public record ValidateTenantRequest(
+public sealed record ValidateTenantRequest(
     string Name,
     string Slug,
     string AdminEmail

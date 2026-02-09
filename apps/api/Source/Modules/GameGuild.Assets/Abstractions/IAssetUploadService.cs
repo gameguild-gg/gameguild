@@ -63,7 +63,7 @@ public record UploadAssetOptions(
 /// <summary>
 /// Result of an asset upload.
 /// </summary>
-public record AssetUploadResult(
+public sealed record AssetUploadResult(
     bool Success,
     Guid? AssetReferenceId,
     Guid? AssetContentId,

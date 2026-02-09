@@ -1,11 +1,11 @@
-﻿using GameGuild.CQRS;
+using GameGuild.CQRS;
 
 namespace GameGuild.Identity.Users;
 
 /// <summary>
 ///     Command handler for bulk activating users
 /// </summary>
-public class BulkActivateUsersCommandHandler(IUserRepository userRepository) : ICommandHandler<BulkActivateUsersCommand, BulkActivateUsersResponse>
+public sealed class BulkActivateUsersCommandHandler(IUserRepository userRepository) : ICommandHandler<BulkActivateUsersCommand, BulkActivateUsersResponse>
 {
     public async Task<BulkActivateUsersResponse> Handle(BulkActivateUsersCommand request, CancellationToken cancellationToken)
     {

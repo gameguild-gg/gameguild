@@ -5,4 +5,4 @@ namespace GameGuild.Commerce.Payments;
 /// <summary>
 ///     Command to delete a tax rule
 /// </summary>
-public record DeleteTaxRuleCommand(Guid RuleId) : ICommand;
+public sealed record DeleteTaxRuleCommand(Guid RuleId) : ICommand;

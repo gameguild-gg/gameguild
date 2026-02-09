@@ -1,9 +1,9 @@
-﻿using GameGuild.Identity.Authorization;
+using GameGuild.Identity.Authorization;
 using GameGuild.CQRS;
 
 namespace GameGuild.Identity.Authentication;
 
-public record UpdateAccessReviewCampaignCommand : ICommand<AccessReviewCampaign>
+public sealed record UpdateAccessReviewCampaignCommand : ICommand<AccessReviewCampaign>
 {
     public Guid CampaignId { get; set; }
 

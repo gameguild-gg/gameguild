@@ -5,7 +5,7 @@ namespace GameGuild.Commerce.Subscriptions;
 /// <summary>
 ///     Validator for RecordSubscriptionPaymentCommand
 /// </summary>
-public class RecordSubscriptionPaymentCommandValidator : AbstractValidator<RecordSubscriptionPaymentCommand>
+public sealed class RecordSubscriptionPaymentCommandValidator : AbstractValidator<RecordSubscriptionPaymentCommand>
 {
     public RecordSubscriptionPaymentCommandValidator()
     {

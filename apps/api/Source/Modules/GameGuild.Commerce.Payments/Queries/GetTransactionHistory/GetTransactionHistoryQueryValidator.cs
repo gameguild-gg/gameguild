@@ -2,7 +2,7 @@ using FluentValidation;
 
 namespace GameGuild.Commerce.Payments;
 
-public class GetTransactionHistoryQueryValidator : AbstractValidator<GetTransactionHistoryQuery>
+public sealed class GetTransactionHistoryQueryValidator : AbstractValidator<GetTransactionHistoryQuery>
 {
     public GetTransactionHistoryQueryValidator()
     {

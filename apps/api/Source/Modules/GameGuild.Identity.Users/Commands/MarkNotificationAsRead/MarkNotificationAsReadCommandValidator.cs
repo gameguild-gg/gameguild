@@ -2,7 +2,7 @@ using FluentValidation;
 
 namespace GameGuild.Identity.Users;
 
-public class MarkNotificationAsReadCommandValidator : AbstractValidator<MarkNotificationAsReadCommand>
+public sealed class MarkNotificationAsReadCommandValidator : AbstractValidator<MarkNotificationAsReadCommand>
 {
     public MarkNotificationAsReadCommandValidator()
     {

@@ -5,7 +5,7 @@ namespace GameGuild.Resources;
 /// <summary>
 ///     Handler for setting user resource quota
 /// </summary>
-public class SetUserResourceQuotaCommandHandler(IResourceQuotaRepository quotaRepository) : ICommandHandler<SetUserResourceQuotaCommand>
+public sealed class SetUserResourceQuotaCommandHandler(IResourceQuotaRepository quotaRepository) : ICommandHandler<SetUserResourceQuotaCommand>
 {
     public async Task<Unit> Handle(SetUserResourceQuotaCommand request, CancellationToken cancellationToken)
     {

@@ -6,12 +6,12 @@ namespace GameGuild.Commerce.Products;
 /// Command to activate a promo code
 /// </summary>
 /// <param name="PromoCodeId">Promo code ID</param>
-public record ActivatePromoCodeCommand(Guid PromoCodeId) : ICommand<PromoCodeDto>;
+public sealed record ActivatePromoCodeCommand(Guid PromoCodeId) : ICommand<PromoCodeDto>;
 
 /// <summary>
 /// Handler for ActivatePromoCodeCommand
 /// </summary>
-public class ActivatePromoCodeHandler(IPromoCodeRepository repository) : ICommandHandler<ActivatePromoCodeCommand, PromoCodeDto>
+public sealed class ActivatePromoCodeHandler(IPromoCodeRepository repository) : ICommandHandler<ActivatePromoCodeCommand, PromoCodeDto>
 {
     public async Task<PromoCodeDto> Handle(ActivatePromoCodeCommand request, CancellationToken cancellationToken)
     {
@@ -33,12 +33,12 @@ public class ActivatePromoCodeHandler(IPromoCodeRepository repository) : IComman
 /// Command to deactivate a promo code
 /// </summary>
 /// <param name="PromoCodeId">Promo code ID</param>
-public record DeactivatePromoCodeCommand(Guid PromoCodeId) : ICommand<PromoCodeDto>;
+public sealed record DeactivatePromoCodeCommand(Guid PromoCodeId) : ICommand<PromoCodeDto>;
 
 /// <summary>
 /// Handler for DeactivatePromoCodeCommand
 /// </summary>
-public class DeactivatePromoCodeHandler(IPromoCodeRepository repository) : ICommandHandler<DeactivatePromoCodeCommand, PromoCodeDto>
+public sealed class DeactivatePromoCodeHandler(IPromoCodeRepository repository) : ICommandHandler<DeactivatePromoCodeCommand, PromoCodeDto>
 {
     public async Task<PromoCodeDto> Handle(DeactivatePromoCodeCommand request, CancellationToken cancellationToken)
     {
@@ -75,7 +75,7 @@ public class DeactivatePromoCodeHandler(IPromoCodeRepository repository) : IComm
 /// <param name="IsExclusive">Optional exclusive flag</param>
 /// <param name="StackingPriority">Optional stacking priority</param>
 /// <param name="ProductId">Optional product ID</param>
-public record PatchPromoCodeCommand(
+public sealed record PatchPromoCodeCommand(
     Guid PromoCodeId,
     string? Name = null,
     string? Description = null,
@@ -97,7 +97,7 @@ public record PatchPromoCodeCommand(
 /// <summary>
 /// Handler for PatchPromoCodeCommand
 /// </summary>
-public class PatchPromoCodeHandler(IPromoCodeRepository repository) : ICommandHandler<PatchPromoCodeCommand, PromoCodeDto>
+public sealed class PatchPromoCodeHandler(IPromoCodeRepository repository) : ICommandHandler<PatchPromoCodeCommand, PromoCodeDto>
 {
     public async Task<PromoCodeDto> Handle(PatchPromoCodeCommand request, CancellationToken cancellationToken)
     {
@@ -135,12 +135,12 @@ public class PatchPromoCodeHandler(IPromoCodeRepository repository) : ICommandHa
 /// Query to check if a promo code exists
 /// </summary>
 /// <param name="PromoCodeId">Promo code ID</param>
-public record PromoCodeExistsQuery(Guid PromoCodeId) : IQuery<bool>;
+public sealed record PromoCodeExistsQuery(Guid PromoCodeId) : IQuery<bool>;
 
 /// <summary>
 /// Handler for PromoCodeExistsQuery
 /// </summary>
-public class PromoCodeExistsHandler(IPromoCodeRepository repository) : IQueryHandler<PromoCodeExistsQuery, bool>
+public sealed class PromoCodeExistsHandler(IPromoCodeRepository repository) : IQueryHandler<PromoCodeExistsQuery, bool>
 {
     public async Task<bool> Handle(PromoCodeExistsQuery request, CancellationToken cancellationToken)
     {
@@ -153,12 +153,12 @@ public class PromoCodeExistsHandler(IPromoCodeRepository repository) : IQueryHan
 /// Query to get a promo code by its code string
 /// </summary>
 /// <param name="Code">Promo code string</param>
-public record GetPromoCodeByCodeQuery(string Code) : IQuery<PromoCodeDto?>;
+public sealed record GetPromoCodeByCodeQuery(string Code) : IQuery<PromoCodeDto?>;
 
 /// <summary>
 /// Handler for GetPromoCodeByCodeQuery
 /// </summary>
-public class GetPromoCodeByCodeHandler(IPromoCodeRepository repository) : IQueryHandler<GetPromoCodeByCodeQuery, PromoCodeDto?>
+public sealed class GetPromoCodeByCodeHandler(IPromoCodeRepository repository) : IQueryHandler<GetPromoCodeByCodeQuery, PromoCodeDto?>
 {
     public async Task<PromoCodeDto?> Handle(GetPromoCodeByCodeQuery request, CancellationToken cancellationToken)
     {
@@ -171,12 +171,12 @@ public class GetPromoCodeByCodeHandler(IPromoCodeRepository repository) : IQuery
 /// Query to get usage statistics for a promo code
 /// </summary>
 /// <param name="PromoCodeId">Promo code ID</param>
-public record GetPromoCodeUsageQuery(Guid PromoCodeId) : IQuery<PromoCodeUsageDto>;
+public sealed record GetPromoCodeUsageQuery(Guid PromoCodeId) : IQuery<PromoCodeUsageDto>;
 
 /// <summary>
 /// Handler for GetPromoCodeUsageQuery
 /// </summary>
-public class GetPromoCodeUsageHandler(IPromoCodeRepository repository) : IQueryHandler<GetPromoCodeUsageQuery, PromoCodeUsageDto>
+public sealed class GetPromoCodeUsageHandler(IPromoCodeRepository repository) : IQueryHandler<GetPromoCodeUsageQuery, PromoCodeUsageDto>
 {
     public async Task<PromoCodeUsageDto> Handle(GetPromoCodeUsageQuery request, CancellationToken cancellationToken)
     {
@@ -198,7 +198,7 @@ public class GetPromoCodeUsageHandler(IPromoCodeRepository repository) : IQueryH
 /// <param name="RemainingUses">Remaining uses (null = unlimited)</param>
 /// <param name="FirstUsedAt">First usage timestamp</param>
 /// <param name="LastUsedAt">Last usage timestamp</param>
-public record PromoCodeUsageDto(
+public sealed record PromoCodeUsageDto(
     Guid PromoCodeId,
     string Code,
     int TotalUses,

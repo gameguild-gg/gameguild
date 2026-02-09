@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 ﻿namespace GameGuild.Learning.Courses;
 
 /// <summary> DTO for creating new activity grades </summary>
-public record CreateActivityGradeDto([Required] Guid ContentInteractionId, [Required] Guid GraderProgramUserId, [Required] [Range(0, 100)] decimal Grade, string? Feedback = null, string? GradingDetails = null) {
+public sealed record CreateActivityGradeDto([Required] Guid ContentInteractionId, [Required] Guid GraderProgramUserId, [Required] [Range(0, 100)] decimal Grade, string? Feedback = null, string? GradingDetails = null) {
   public Guid ContentInteractionId { get; init; } = ContentInteractionId;
 
   public Guid GraderProgramUserId { get; init; } = GraderProgramUserId;

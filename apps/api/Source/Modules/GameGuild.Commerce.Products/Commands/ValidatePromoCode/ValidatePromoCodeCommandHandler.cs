@@ -5,7 +5,7 @@ namespace GameGuild.Commerce.Products;
 /// <summary>
 /// Handler for validating a promo code
 /// </summary>
-public class ValidatePromoCodeCommandHandler(IPricingEngineService pricingEngine)
+public sealed class ValidatePromoCodeCommandHandler(IPricingEngineService pricingEngine)
     : ICommandHandler<ValidatePromoCodeCommand, PromoCodeValidationResult>
 {
     public async Task<PromoCodeValidationResult> Handle(

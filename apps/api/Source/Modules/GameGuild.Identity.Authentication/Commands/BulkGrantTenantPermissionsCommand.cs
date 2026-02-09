@@ -3,7 +3,7 @@ using GameGuild.Identity.Authorization;
 
 namespace GameGuild.Identity.Authentication;
 
-public record BulkGrantTenantPermissionsCommand : ICommand<BulkPermissionResult>
+public sealed record BulkGrantTenantPermissionsCommand : ICommand<BulkPermissionResult>
 {
     public List<Guid> UserIds { get; init; } = new List<Guid>();
 

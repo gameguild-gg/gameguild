@@ -1,9 +1,9 @@
-﻿using GameGuild.Identity.Authorization;
+using GameGuild.Identity.Authorization;
 using GameGuild.CQRS;
 
 namespace GameGuild.Identity.Authentication;
 
-public record CloneConditionalPolicyCommand : ICommand<ConditionalPolicy>
+public sealed record CloneConditionalPolicyCommand : ICommand<ConditionalPolicy>
 {
     public Guid SourcePolicyId { get; set; }
 

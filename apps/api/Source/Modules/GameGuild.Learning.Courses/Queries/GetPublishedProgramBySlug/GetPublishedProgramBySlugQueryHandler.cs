@@ -8,7 +8,7 @@ namespace GameGuild.Learning.Courses;
 /// <summary>
 /// Query handler for GetPublishedProgramBySlugQuery
 /// </summary>
-public class GetPublishedProgramBySlugQueryHandler(IApplicationDbContext context, ILogger<GetPublishedProgramBySlugQueryHandler> logger)
+public sealed class GetPublishedProgramBySlugQueryHandler(IApplicationDbContext context, ILogger<GetPublishedProgramBySlugQueryHandler> logger)
     : IQueryHandler<GetPublishedProgramBySlugQuery, Program?>
 {
     public async Task<Program?> Handle(GetPublishedProgramBySlugQuery request, CancellationToken cancellationToken) {

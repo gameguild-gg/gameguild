@@ -6,4 +6,4 @@ namespace GameGuild.Identity.Tenants;
 /// <param name="TenantId">Created tenant ID</param>
 /// <param name="Name">Tenant name</param>
 /// <param name="Slug">Tenant slug</param>
-public record CreateTenantResponse(Guid TenantId, string Name, string Slug);
+public sealed record CreateTenantResponse(Guid TenantId, string Name, string Slug);

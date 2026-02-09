@@ -7,7 +7,7 @@ namespace GameGuild.Identity.Authentication;
 ///     Handler for user signed up notifications - sends welcome email.
 ///     PLANNED: Inject IEmailService (SendGrid, SMTP, etc.) when implemented.
 /// </summary>
-public class SendWelcomeEmailHandler(ILogger<SendWelcomeEmailHandler> logger) : INotificationHandler<UserSignedUpNotification>
+public sealed class SendWelcomeEmailHandler(ILogger<SendWelcomeEmailHandler> logger) : INotificationHandler<UserSignedUpNotification>
 {
     public Task Handle(UserSignedUpNotification notification, CancellationToken cancellationToken)
     {

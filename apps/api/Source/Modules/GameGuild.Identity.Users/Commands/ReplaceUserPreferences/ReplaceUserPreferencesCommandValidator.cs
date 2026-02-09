@@ -5,7 +5,7 @@ namespace GameGuild.Identity.Users;
 /// <summary>
 ///     Validator for ReplaceUserPreferencesCommand
 /// </summary>
-public class ReplaceUserPreferencesCommandValidator : AbstractValidator<ReplaceUserPreferencesCommand>
+public sealed class ReplaceUserPreferencesCommandValidator : AbstractValidator<ReplaceUserPreferencesCommand>
 {
     public ReplaceUserPreferencesCommandValidator()
     {

@@ -6,7 +6,7 @@ namespace GameGuild.Resources;
 /// <summary>
 ///     Handler for resetting resource quotas with audit logging for SOC2/ISO 27001 compliance
 /// </summary>
-public class ResetResourceQuotaCommandHandler(
+public sealed class ResetResourceQuotaCommandHandler(
     IResourceQuotaRepository resourceQuotaRepository,
     IPublisher publisher,
     IActorContextAccessor actorContextAccessor) : ICommandHandler<ResetResourceQuotaCommand>

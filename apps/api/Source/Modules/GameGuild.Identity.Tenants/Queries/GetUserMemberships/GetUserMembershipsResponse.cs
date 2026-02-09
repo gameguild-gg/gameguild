@@ -3,7 +3,7 @@ namespace GameGuild.Identity.Tenants;
 /// <summary>
 ///     Response containing all tenant memberships for a user.
 /// </summary>
-public record GetUserMembershipsResponse
+public sealed record GetUserMembershipsResponse
 {
     /// <summary>
     ///     List of tenant memberships the user belongs to
@@ -20,7 +20,7 @@ public record GetUserMembershipsResponse
 ///     DTO representing a user's membership in a tenant.
 ///     Provides tenant information along with the user's role and status.
 /// </summary>
-public record UserMembershipDto
+public sealed record UserMembershipDto
 {
     /// <summary>
     ///     The membership ID

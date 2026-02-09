@@ -5,7 +5,7 @@ namespace GameGuild.Identity.Users;
 /// <summary>
 ///     Command handler for archiving multiple notifications
 /// </summary>
-public class BulkArchiveNotificationsCommandHandler(IUserNotificationRepository notificationRepository)
+public sealed class BulkArchiveNotificationsCommandHandler(IUserNotificationRepository notificationRepository)
     : ICommandHandler<BulkArchiveNotificationsCommand>
 {
     public async Task<Unit> Handle(BulkArchiveNotificationsCommand request, CancellationToken cancellationToken)

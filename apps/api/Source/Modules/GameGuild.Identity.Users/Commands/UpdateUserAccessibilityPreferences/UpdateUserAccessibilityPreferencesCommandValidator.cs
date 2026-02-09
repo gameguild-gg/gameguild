@@ -2,7 +2,7 @@ using FluentValidation;
 
 namespace GameGuild.Identity.Users;
 
-public class UpdateUserAccessibilityPreferencesCommandValidator : AbstractValidator<UpdateUserAccessibilityPreferencesCommand>
+public sealed class UpdateUserAccessibilityPreferencesCommandValidator : AbstractValidator<UpdateUserAccessibilityPreferencesCommand>
 {
     public UpdateUserAccessibilityPreferencesCommandValidator()
     {

@@ -1,11 +1,11 @@
-﻿using FluentValidation;
+using FluentValidation;
 
 namespace GameGuild.Identity.Tenants;
 
 /// <summary>
 ///     Validator for DeleteTenantCommand
 /// </summary>
-public class DeleteTenantCommandValidator : AbstractValidator<DeleteTenantCommand>
+public sealed class DeleteTenantCommandValidator : AbstractValidator<DeleteTenantCommand>
 {
     public DeleteTenantCommandValidator()
     {

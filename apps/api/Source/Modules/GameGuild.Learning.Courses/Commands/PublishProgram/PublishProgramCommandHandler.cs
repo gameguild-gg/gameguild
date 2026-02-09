@@ -8,7 +8,7 @@ namespace GameGuild.Learning.Courses;
 /// <summary>
 /// Command handler for PublishProgramCommand
 /// </summary>
-public class PublishProgramCommandHandler(IApplicationDbContext context, ILogger<PublishProgramCommandHandler> logger)
+public sealed class PublishProgramCommandHandler(IApplicationDbContext context, ILogger<PublishProgramCommandHandler> logger)
     : ICommandHandler<PublishProgramCommand, Program>
 {
     public async Task<Program> Handle(PublishProgramCommand request, CancellationToken cancellationToken) {

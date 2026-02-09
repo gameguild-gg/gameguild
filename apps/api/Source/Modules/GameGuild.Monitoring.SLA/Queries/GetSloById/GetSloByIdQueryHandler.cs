@@ -4,7 +4,7 @@ using GameGuild.CQRS;
 
 namespace GameGuild.Monitoring.SLA;
 
-public class GetSloByIdQueryHandler(IServiceLevelObjectiveRepository repository) : IQueryHandler<GetSloByIdQuery, SloDto?>
+public sealed class GetSloByIdQueryHandler(IServiceLevelObjectiveRepository repository) : IQueryHandler<GetSloByIdQuery, SloDto?>
 {
     public async Task<SloDto?> Handle(GetSloByIdQuery request, CancellationToken cancellationToken)
     {

@@ -8,7 +8,7 @@ namespace GameGuild.Identity.Users;
 ///     Command handler for bulk creating users with atomic quota enforcement.
 ///     Uses TryAtomicConsumeAsync to prevent race conditions under concurrent access.
 /// </summary>
-public class BulkCreateUsersCommandHandler(
+public sealed class BulkCreateUsersCommandHandler(
     IUserRepository userRepository,
     IResourceQuotaService quotaService,
     IActorContextAccessor actorContextAccessor) : ICommandHandler<BulkCreateUsersCommand, BulkCreateUsersResponse>

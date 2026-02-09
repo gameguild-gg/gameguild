@@ -5,7 +5,7 @@ namespace GameGuild.Commerce.Products;
 /// <summary>
 /// Validator for DeleteProductCommand
 /// </summary>
-public class DeleteProductCommandValidator : AbstractValidator<DeleteProductCommand>
+public sealed class DeleteProductCommandValidator : AbstractValidator<DeleteProductCommand>
 {
     public DeleteProductCommandValidator()
     {

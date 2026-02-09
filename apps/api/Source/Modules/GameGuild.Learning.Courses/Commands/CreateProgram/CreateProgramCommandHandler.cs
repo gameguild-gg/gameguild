@@ -10,7 +10,7 @@ namespace GameGuild.Learning.Courses;
 /// <summary>
 /// Command handler for CreateProgramCommand
 /// </summary>
-public class CreateProgramCommandHandler(IApplicationDbContext context, ILogger<CreateProgramCommandHandler> logger)
+public sealed class CreateProgramCommandHandler(IApplicationDbContext context, ILogger<CreateProgramCommandHandler> logger)
     : ICommandHandler<CreateProgramCommand, Program>
 {
     public async Task<Program> Handle(CreateProgramCommand request, CancellationToken cancellationToken) {

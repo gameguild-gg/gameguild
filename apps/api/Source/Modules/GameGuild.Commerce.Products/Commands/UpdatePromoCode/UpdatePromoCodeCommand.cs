@@ -21,7 +21,7 @@ namespace GameGuild.Commerce.Products;
 /// <param name="IsExclusive">Whether the code cannot be stacked</param>
 /// <param name="StackingPriority">Priority for stacking</param>
 /// <param name="ProductId">Specific product ID</param>
-public record UpdatePromoCodeCommand(
+public sealed record UpdatePromoCodeCommand(
     Guid Id,
     string? Name = null,
     string? Description = null,

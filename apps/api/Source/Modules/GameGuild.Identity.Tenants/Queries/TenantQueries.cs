@@ -3,7 +3,7 @@ using GameGuild.CQRS;
 namespace GameGuild.Identity.Tenants;
 
 // Tenant Audit Log Queries
-public record GetTenantAuditLogQuery(
+public sealed record GetTenantAuditLogQuery(
     Guid TenantId,
     DateTime? StartDate,
     DateTime? EndDate,
@@ -14,17 +14,17 @@ public record GetTenantAuditLogQuery(
 ) : IRequest<PagedResult<TenantAuditLogEntry>>;
 
 // Tenant Metadata Queries - Using queries namespace for read operations
-public record GetTenantMetadataQuery(Guid TenantId) : IRequest<TenantMetadataDto?>;
+public sealed record GetTenantMetadataQuery(Guid TenantId) : IRequest<TenantMetadataDto?>;
 
-public record GetTenantCustomFieldsQuery(Guid TenantId) : IRequest<Dictionary<string, object?>?>;
+public sealed record GetTenantCustomFieldsQuery(Guid TenantId) : IRequest<Dictionary<string, object?>?>;
 
-public record GetTenantTagsQuery(Guid TenantId) : IRequest<List<string>?>;
+public sealed record GetTenantTagsQuery(Guid TenantId) : IRequest<List<string>?>;
 
 // Tenant Settings Queries - Using queries namespace for read operations  
-public record GetTenantSettingsQuery(Guid TenantId) : IRequest<TenantSettingsDto?>;
+public sealed record GetTenantSettingsQuery(Guid TenantId) : IRequest<TenantSettingsDto?>;
 
-public record GetTenantFeatureFlagsQuery(Guid TenantId) : IRequest<Dictionary<string, bool>?>;
+public sealed record GetTenantFeatureFlagsQuery(Guid TenantId) : IRequest<Dictionary<string, bool>?>;
 
-public record GetTenantSystemLimitsQuery(Guid TenantId) : IRequest<TenantSystemLimitsDto?>;
+public sealed record GetTenantSystemLimitsQuery(Guid TenantId) : IRequest<TenantSystemLimitsDto?>;
 
-public record GetTenantIntegrationSettingsQuery(Guid TenantId) : IRequest<TenantIntegrationSettingsDto?>;
+public sealed record GetTenantIntegrationSettingsQuery(Guid TenantId) : IRequest<TenantIntegrationSettingsDto?>;

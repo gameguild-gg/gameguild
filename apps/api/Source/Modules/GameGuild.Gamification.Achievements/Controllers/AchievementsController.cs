@@ -367,7 +367,7 @@ public class AchievementsController : BaseApiController
 
 #region DTOs
 
-public record AchievementDto
+public sealed record AchievementDto
 {
     public Guid Id { get; init; }
     public string Name { get; init; } = string.Empty;
@@ -384,7 +384,7 @@ public record AchievementDto
     public List<AchievementLevelDto> Levels { get; init; } = new();
 }
 
-public record AchievementLevelDto
+public sealed record AchievementLevelDto
 {
     public Guid Id { get; init; }
     public int Level { get; init; }
@@ -394,7 +394,7 @@ public record AchievementLevelDto
     public string? IconUrl { get; init; }
 }
 
-public record UserAchievementDto
+public sealed record UserAchievementDto
 {
     public Guid Id { get; init; }
     public Guid AchievementId { get; init; }
@@ -411,7 +411,7 @@ public record UserAchievementDto
     public int PointsEarned { get; init; }
 }
 
-public record CreateAchievementRequest
+public sealed record CreateAchievementRequest
 {
     public string Name { get; init; } = string.Empty;
     public string? Description { get; init; }
@@ -425,7 +425,7 @@ public record CreateAchievementRequest
     public int DisplayOrder { get; init; }
 }
 
-public record UpdateAchievementRequest
+public sealed record UpdateAchievementRequest
 {
     public string? Name { get; init; }
     public string? Description { get; init; }
@@ -439,7 +439,7 @@ public record UpdateAchievementRequest
     public int? DisplayOrder { get; init; }
 }
 
-public record AwardAchievementRequest
+public sealed record AwardAchievementRequest
 {
     public Guid UserId { get; init; }
     public string? Context { get; init; }

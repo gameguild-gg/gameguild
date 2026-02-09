@@ -8,7 +8,7 @@ namespace GameGuild.Commerce.Billing;
 ///     Handler for ProcessStripeWebhookCommand.
 ///     Integrates with StripeBillingWebhookService for full webhook processing.
 /// </summary>
-public class ProcessStripeWebhookCommandHandler(
+public sealed class ProcessStripeWebhookCommandHandler(
     StripeBillingWebhookService stripeWebhookService,
     ILogger<ProcessStripeWebhookCommandHandler> logger
 ) : ICommandHandler<ProcessStripeWebhookCommand, WebhookProcessingResult>

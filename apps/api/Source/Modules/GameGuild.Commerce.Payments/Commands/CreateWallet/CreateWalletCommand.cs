@@ -9,4 +9,4 @@ namespace GameGuild.Commerce.Payments;
 /// <param name="UserId">User unique identifier</param>
 /// <param name="Currency">Currency code (default: USD)</param>
 [RequiresQuota(ResourceUsageType.Wallets, 1, Source = "CreateWallet")]
-public record CreateWalletCommand(Guid UserId, string Currency = "USD") : ICommand<UserWallet>;
+public sealed record CreateWalletCommand(Guid UserId, string Currency = "USD") : ICommand<UserWallet>;

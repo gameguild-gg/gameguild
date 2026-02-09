@@ -3,7 +3,7 @@ using GameGuild.Identity.Authorization;
 
 namespace GameGuild.Identity.Authentication;
 
-public record RevokeResourcePermissionCommand : ICommand<bool>
+public sealed record RevokeResourcePermissionCommand : ICommand<bool>
 {
     public Guid UserId { get; init; }
 

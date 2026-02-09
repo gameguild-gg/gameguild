@@ -40,7 +40,7 @@ public record ConditionalPolicyContext(
 /// <summary>
 ///     Result of conditional policy evaluation.
 /// </summary>
-public record ConditionalPolicyResult(
+public sealed record ConditionalPolicyResult(
     bool IsAllowed,
     Guid? DeniedByPolicyId = null,
     string? DeniedByPolicyName = null,

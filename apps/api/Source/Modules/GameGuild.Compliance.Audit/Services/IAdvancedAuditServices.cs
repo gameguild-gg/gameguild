@@ -125,7 +125,7 @@ public interface ISiemIntegrationService {
     Task<Result> RetryFailedForwardsAsync(CancellationToken cancellationToken = default);
 }
 
-public record ChainVerificationResult(
+public sealed record ChainVerificationResult(
     bool IsValid,
     int TotalLogs,
     int VerifiedLogs,

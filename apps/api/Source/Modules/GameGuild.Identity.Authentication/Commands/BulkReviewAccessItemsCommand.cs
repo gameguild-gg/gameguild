@@ -1,8 +1,8 @@
-﻿using GameGuild.CQRS;
+using GameGuild.CQRS;
 
 namespace GameGuild.Identity.Authentication;
 
-public record BulkReviewAccessItemsCommand : ICommand<BulkAccessReviewResult>
+public sealed record BulkReviewAccessItemsCommand : ICommand<BulkAccessReviewResult>
 {
     public List<Guid> ItemIds { get; init; } = new List<Guid>();
 

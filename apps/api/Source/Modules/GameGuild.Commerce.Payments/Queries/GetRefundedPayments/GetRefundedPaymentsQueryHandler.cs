@@ -10,7 +10,7 @@ namespace GameGuild.Commerce.Payments;
 ///     - FinancialLedgerEntry with refund transaction type
 ///     - Payment gateway refund records
 /// </remarks>
-public class GetRefundedPaymentsQueryHandler : IQueryHandler<GetRefundedPaymentsQuery, IEnumerable<PaymentResult>>
+public sealed class GetRefundedPaymentsQueryHandler : IQueryHandler<GetRefundedPaymentsQuery, IEnumerable<PaymentResult>>
 {
     public Task<IEnumerable<PaymentResult>> Handle(GetRefundedPaymentsQuery request, CancellationToken cancellationToken)
     {

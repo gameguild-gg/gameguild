@@ -5,7 +5,7 @@ namespace GameGuild.Identity.Users;
 /// <summary>
 ///     Command handler for resetting user localization preferences to defaults
 /// </summary>
-public class ResetUserLocalizationPreferencesCommandHandler(IUserRepository userRepository, IUserPreferencesRepository preferencesRepository)
+public sealed class ResetUserLocalizationPreferencesCommandHandler(IUserRepository userRepository, IUserPreferencesRepository preferencesRepository)
     : ICommandHandler<ResetUserLocalizationPreferencesCommand>
 {
     public async Task<Unit> Handle(ResetUserLocalizationPreferencesCommand request, CancellationToken cancellationToken)

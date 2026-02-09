@@ -6,7 +6,7 @@ namespace GameGuild.Identity.Authentication;
 /// <summary>
 ///     Handler for logging authentication failure events and performing security actions
 /// </summary>
-public class AuthenticationFailedEventHandler(ILogger<AuthenticationFailedEventHandler> logger) : INotificationHandler<AuthenticationFailedEvent>
+public sealed class AuthenticationFailedEventHandler(ILogger<AuthenticationFailedEventHandler> logger) : INotificationHandler<AuthenticationFailedEvent>
 {
     public async Task Handle(AuthenticationFailedEvent notification, CancellationToken cancellationToken)
     {

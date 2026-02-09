@@ -341,7 +341,7 @@ public class NotificationsController : BaseApiController
 
 #region DTOs
 
-public record NotificationDto(
+public sealed record NotificationDto(
     Guid Id,
     string Type,
     string Channel,
@@ -356,7 +356,7 @@ public record NotificationDto(
     string? ReferenceEntityType,
     DateTime CreatedAt);
 
-public record NotificationPreferenceDto(
+public sealed record NotificationPreferenceDto(
     bool EmailEnabled,
     bool PushEnabled,
     bool InAppEnabled,
@@ -370,11 +370,11 @@ public record NotificationPreferenceDto(
     string? Timezone,
     string? EmailDigestFrequency);
 
-public record UnreadCountResponse(int Count);
+public sealed record UnreadCountResponse(int Count);
 
-public record DeletedCountResponse(int DeletedCount);
+public sealed record DeletedCountResponse(int DeletedCount);
 
-public record UpdatePreferencesRequest(
+public sealed record UpdatePreferencesRequest(
     bool? EmailEnabled,
     bool? PushEnabled,
     bool? InAppEnabled,
@@ -384,7 +384,7 @@ public record UpdatePreferencesRequest(
     bool? LearningEnabled,
     bool? AchievementsEnabled);
 
-public record SetQuietHoursRequest(
+public sealed record SetQuietHoursRequest(
     TimeOnly? Start,
     TimeOnly? End,
     string? Timezone);

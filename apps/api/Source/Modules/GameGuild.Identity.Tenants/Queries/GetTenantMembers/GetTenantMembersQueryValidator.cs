@@ -5,7 +5,7 @@ namespace GameGuild.Identity.Tenants;
 /// <summary>
 ///     Validator for GetTenantMembersQuery
 /// </summary>
-public class GetTenantMembersQueryValidator : AbstractValidator<GetTenantMembersQuery>
+public sealed class GetTenantMembersQueryValidator : AbstractValidator<GetTenantMembersQuery>
 {
     public GetTenantMembersQueryValidator()
     {

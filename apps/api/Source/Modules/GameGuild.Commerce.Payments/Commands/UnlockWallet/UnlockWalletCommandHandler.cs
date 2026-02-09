@@ -5,7 +5,7 @@ namespace GameGuild.Commerce.Payments;
 /// <summary>
 ///     Handler for UnlockWalletCommand
 /// </summary>
-public class UnlockWalletCommandHandler(IWalletService walletService) : ICommandHandler<UnlockWalletCommand>
+public sealed class UnlockWalletCommandHandler(IWalletService walletService) : ICommandHandler<UnlockWalletCommand>
 {
     public async Task<Unit> Handle(UnlockWalletCommand request, CancellationToken cancellationToken)
     {

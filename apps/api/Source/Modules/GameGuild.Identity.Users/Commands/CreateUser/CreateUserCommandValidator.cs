@@ -9,7 +9,7 @@ namespace GameGuild.Identity.Users;
 ///     </summary>
 ///     ///
 /// </summary>
-public class CreateUserCommandValidator : AbstractValidator<CreateUserCommand>
+public sealed class CreateUserCommandValidator : AbstractValidator<CreateUserCommand>
 
 {
     public CreateUserCommandValidator()

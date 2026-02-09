@@ -8,7 +8,7 @@ namespace GameGuild.Identity.Users;
 ///     Command handler for deleting users (soft delete).
 ///     Decrements the Users quota to maintain accurate resource accounting.
 /// </summary>
-public class DeleteUserCommandHandler(
+public sealed class DeleteUserCommandHandler(
     IUserRepository userRepository,
     IPublisher publisher,
     IResourceQuotaService quotaService,

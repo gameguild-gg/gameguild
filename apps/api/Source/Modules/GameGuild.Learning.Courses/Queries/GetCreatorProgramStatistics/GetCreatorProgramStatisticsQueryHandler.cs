@@ -8,7 +8,7 @@ namespace GameGuild.Learning.Courses;
 /// Query handler for GetCreatorProgramStatisticsQuery
 /// Calculates aggregate statistics for all programs created by a specific user
 /// </summary>
-public class GetCreatorProgramStatisticsQueryHandler(
+public sealed class GetCreatorProgramStatisticsQueryHandler(
     IApplicationDbContext context,
     ILogger<GetCreatorProgramStatisticsQueryHandler> logger)
     : IQueryHandler<GetCreatorProgramStatisticsQuery, CreatorProgramStatistics>

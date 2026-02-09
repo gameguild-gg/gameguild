@@ -77,7 +77,7 @@ public class ApiKeyController : BaseApiController
     }
 }
 
-public record RevokeApiKeyRequest
+public sealed record RevokeApiKeyRequest
 {
     public string? Reason { get; init; }
 }

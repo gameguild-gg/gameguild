@@ -2,7 +2,7 @@ using GameGuild.CQRS;
 
 namespace GameGuild.Identity.Tenants;
 
-public class BulkUndeleteTenantsCommandHandler(ITenantRepository tenantRepository) : ICommandHandler<BulkUndeleteTenantsCommand, BulkOperationResponse>
+public sealed class BulkUndeleteTenantsCommandHandler(ITenantRepository tenantRepository) : ICommandHandler<BulkUndeleteTenantsCommand, BulkOperationResponse>
 {
     public async Task<BulkOperationResponse> Handle(BulkUndeleteTenantsCommand request, CancellationToken cancellationToken)
     {

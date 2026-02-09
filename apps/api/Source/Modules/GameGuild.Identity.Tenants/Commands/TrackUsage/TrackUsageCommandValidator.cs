@@ -1,11 +1,11 @@
-﻿using FluentValidation;
+using FluentValidation;
 
 namespace GameGuild.Identity.Tenants;
 
 /// <summary>
 ///     Validator for TrackUsageCommand
 /// </summary>
-public class TrackUsageCommandValidator : AbstractValidator<TrackUsageCommand>
+public sealed class TrackUsageCommandValidator : AbstractValidator<TrackUsageCommand>
 {
     public TrackUsageCommandValidator()
     {

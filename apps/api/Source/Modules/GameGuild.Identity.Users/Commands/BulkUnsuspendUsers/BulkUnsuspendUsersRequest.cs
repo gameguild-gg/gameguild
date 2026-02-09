@@ -4,4 +4,4 @@ namespace GameGuild.Identity.Users;
 ///     Request model for bulk unsuspending users via API
 /// </summary>
 /// <param name="UserIds">Collection of user IDs to unsuspend</param>
-public record BulkUnsuspendUsersRequest(IEnumerable<Guid> UserIds);
+public sealed record BulkUnsuspendUsersRequest(IEnumerable<Guid> UserIds);

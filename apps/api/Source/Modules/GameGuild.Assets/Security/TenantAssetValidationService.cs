@@ -35,7 +35,7 @@ public class TenantIsolationOptions
 /// <summary>
 /// Result of tenant validation.
 /// </summary>
-public record TenantValidationResult(
+public sealed record TenantValidationResult(
     bool IsValid,
     string? Error = null,
     Guid? ResolvedTenantId = null);

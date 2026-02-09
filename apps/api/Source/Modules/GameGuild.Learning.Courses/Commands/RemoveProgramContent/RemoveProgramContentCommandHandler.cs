@@ -7,7 +7,7 @@ namespace GameGuild.Learning.Courses;
 /// <summary>
 /// Command handler for RemoveProgramContentCommand
 /// </summary>
-public class RemoveProgramContentCommandHandler(IApplicationDbContext context, ILogger<RemoveProgramContentCommandHandler> logger)
+public sealed class RemoveProgramContentCommandHandler(IApplicationDbContext context, ILogger<RemoveProgramContentCommandHandler> logger)
     : ICommandHandler<RemoveProgramContentCommand, bool>
 {
     public async Task<bool> Handle(RemoveProgramContentCommand request, CancellationToken cancellationToken) {

@@ -5,4 +5,4 @@ namespace GameGuild.Identity.Tenants;
 /// <summary>
 ///     Validator for GetActiveTenantsQuery
 /// </summary>
-public class GetActiveTenantsQueryValidator : AbstractValidator<GetActiveTenantsQuery> { }
+public sealed class GetActiveTenantsQueryValidator : AbstractValidator<GetActiveTenantsQuery> { }

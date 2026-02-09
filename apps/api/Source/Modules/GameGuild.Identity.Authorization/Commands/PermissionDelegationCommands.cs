@@ -10,7 +10,7 @@ namespace GameGuild.Identity.Authorization.Commands;
 /// <summary>
 ///     Command to delegate permissions to another user
 /// </summary>
-public record DelegatePermissionsCommand(
+public sealed record DelegatePermissionsCommand(
     Guid DelegatorUserId,
     Guid DelegateUserId,
     string[] Permissions,
@@ -22,7 +22,7 @@ public record DelegatePermissionsCommand(
     int? UsageLimit = null
 ) : ICommand<PermissionDelegation>;
 
-public class DelegatePermissionsValidator : AbstractValidator<DelegatePermissionsCommand>
+public sealed class DelegatePermissionsValidator : AbstractValidator<DelegatePermissionsCommand>
 {
     public DelegatePermissionsValidator()
     {
@@ -40,7 +40,7 @@ public class DelegatePermissionsValidator : AbstractValidator<DelegatePermission
     }
 }
 
-public class DelegatePermissionsHandler(IPermissionDelegationService service)
+public sealed class DelegatePermissionsHandler(IPermissionDelegationService service)
     : ICommandHandler<DelegatePermissionsCommand, PermissionDelegation>
 {
     public async Task<PermissionDelegation> Handle(
@@ -66,9 +66,9 @@ public class DelegatePermissionsHandler(IPermissionDelegationService service)
 /// <summary>
 ///     Command to revoke a permission delegation
 /// </summary>
-public record RevokeDelegationCommand(Guid DelegationId) : ICommand<bool>;
+public sealed record RevokeDelegationCommand(Guid DelegationId) : ICommand<bool>;
 
-public class RevokeDelegationValidator : AbstractValidator<RevokeDelegationCommand>
+public sealed class RevokeDelegationValidator : AbstractValidator<RevokeDelegationCommand>
 {
     public RevokeDelegationValidator()
     {
@@ -76,7 +76,7 @@ public class RevokeDelegationValidator : AbstractValidator<RevokeDelegationComma
     }
 }
 
-public class RevokeDelegationHandler(IPermissionDelegationService service)
+public sealed class RevokeDelegationHandler(IPermissionDelegationService service)
     : ICommandHandler<RevokeDelegationCommand, bool>
 {
     public async Task<bool> Handle(
@@ -91,9 +91,9 @@ public class RevokeDelegationHandler(IPermissionDelegationService service)
 /// <summary>
 ///     Command to record usage of a delegated permission
 /// </summary>
-public record RecordDelegationUsageCommand(Guid DelegationId) : ICommand<bool>;
+public sealed record RecordDelegationUsageCommand(Guid DelegationId) : ICommand<bool>;
 
-public class RecordDelegationUsageHandler(IPermissionDelegationService service)
+public sealed class RecordDelegationUsageHandler(IPermissionDelegationService service)
     : ICommandHandler<RecordDelegationUsageCommand, bool>
 {
     public async Task<bool> Handle(
@@ -108,9 +108,9 @@ public class RecordDelegationUsageHandler(IPermissionDelegationService service)
 /// <summary>
 ///     Command to cleanup expired delegations
 /// </summary>
-public record CleanupExpiredDelegationsCommand : ICommand<int>;
+public sealed record CleanupExpiredDelegationsCommand : ICommand<int>;
 
-public class CleanupExpiredDelegationsHandler(IPermissionDelegationService service)
+public sealed class CleanupExpiredDelegationsHandler(IPermissionDelegationService service)
     : ICommandHandler<CleanupExpiredDelegationsCommand, int>
 {
     public async Task<int> Handle(

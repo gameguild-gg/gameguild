@@ -16,7 +16,7 @@ namespace GameGuild.API.Integration;
 ///     if current usage exceeds new limits, the system will enforce soft-limit warnings
 ///     but allow continued operation until the next billing cycle (grace period).
 /// </remarks>
-public class SubscriptionPlanChangedQuotaSyncHandler(
+public sealed class SubscriptionPlanChangedQuotaSyncHandler(
     ISubscriptionPlanRepository planRepository,
     IResourceQuotaService resourceQuotaService,
     ILogger<SubscriptionPlanChangedQuotaSyncHandler> logger

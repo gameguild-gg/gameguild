@@ -257,7 +257,7 @@ public class ProductsController(IMediator mediator) : BaseApiController
 /// <summary>
 /// Request model for creating a product
 /// </summary>
-public record CreateProductRequest
+public sealed record CreateProductRequest
 {
     public string Name { get; init; } = string.Empty;
     public string? Description { get; init; }
@@ -276,7 +276,7 @@ public record CreateProductRequest
 /// <summary>
 /// Request model for updating a product
 /// </summary>
-public record UpdateProductRequest
+public sealed record UpdateProductRequest
 {
     public string? Name { get; init; }
     public string? Description { get; init; }
@@ -294,7 +294,7 @@ public record UpdateProductRequest
 /// <summary>
 /// Request model for partial product update (PATCH)
 /// </summary>
-public record PatchProductRequest
+public sealed record PatchProductRequest
 {
     public string? Name { get; init; }
     public string? Description { get; init; }
@@ -312,7 +312,7 @@ public record PatchProductRequest
 /// <summary>
 /// Request model for batch creating products
 /// </summary>
-public record BatchCreateProductsRequest
+public sealed record BatchCreateProductsRequest
 {
     public List<BatchProductCreateItem> Products { get; init; } = new();
     public Guid? TenantId { get; init; }

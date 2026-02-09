@@ -110,9 +110,9 @@ public static class RolesEndpoint
 /// <summary>
 ///     Request DTO for creating a role (endpoint-level)
 /// </summary>
-public record CreateRoleEndpointRequest(string Name, string? Description, Guid[]? Permissions);
+public sealed record CreateRoleEndpointRequest(string Name, string? Description, Guid[]? Permissions);
 
 /// <summary>
 ///     Request DTO for updating a role (endpoint-level)
 /// </summary>
-public record UpdateRoleEndpointRequest(string Name, string? Description, Guid[]? Permissions);
+public sealed record UpdateRoleEndpointRequest(string Name, string? Description, Guid[]? Permissions);

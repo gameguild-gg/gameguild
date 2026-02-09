@@ -6,4 +6,4 @@ namespace GameGuild.Identity.Users;
 ///     Command to suspend multiple users
 /// </summary>
 /// <param name="UserIds">Collection of user IDs to suspend</param>
-public record BulkSuspendUsersCommand(IEnumerable<Guid> UserIds) : ICommand<BulkSuspendUsersResponse>;
+public sealed record BulkSuspendUsersCommand(IEnumerable<Guid> UserIds) : ICommand<BulkSuspendUsersResponse>;

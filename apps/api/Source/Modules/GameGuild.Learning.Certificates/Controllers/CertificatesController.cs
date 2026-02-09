@@ -156,7 +156,7 @@ public class CertificatesController : BaseApiController
 /// <summary>
 /// DTO for certificate display
 /// </summary>
-public record CertificateDto(
+public sealed record CertificateDto(
     Guid Id,
     string CertificateNumber,
     string RecipientName,
@@ -178,7 +178,7 @@ public record CertificateDto(
 /// <summary>
 /// Request to issue a certificate
 /// </summary>
-public record IssueCertificateRequest(
+public sealed record IssueCertificateRequest(
     Guid TemplateId,
     Guid EnrollmentId,
     Guid UserId,
@@ -187,4 +187,4 @@ public record IssueCertificateRequest(
 /// <summary>
 /// Request to revoke a certificate
 /// </summary>
-public record RevokeCertificateRequest(string Reason);
+public sealed record RevokeCertificateRequest(string Reason);

@@ -3,7 +3,7 @@ namespace GameGuild.Identity.Tenants;
 /// <summary>
 ///     Response for usage tracking
 /// </summary>
-public record TrackUsageResponse
+public sealed record TrackUsageResponse
 {
     public bool Success { get; init; }
 

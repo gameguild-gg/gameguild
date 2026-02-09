@@ -6,7 +6,7 @@ namespace GameGuild.Commerce.Subscriptions;
 ///     Handler for recording subscription payments with out-of-order protection.
 ///     Does not use base handler due to custom return type (PaymentRecordResult).
 /// </summary>
-public class RecordSubscriptionPaymentCommandHandler(ISubscriptionRepository subscriptionRepository) 
+public sealed class RecordSubscriptionPaymentCommandHandler(ISubscriptionRepository subscriptionRepository) 
     : ICommandHandler<RecordSubscriptionPaymentCommand, PaymentRecordResult>
 {
     public async Task<PaymentRecordResult> Handle(RecordSubscriptionPaymentCommand request, CancellationToken cancellationToken)

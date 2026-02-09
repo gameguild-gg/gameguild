@@ -5,7 +5,7 @@ namespace GameGuild.Commerce.Subscriptions;
 /// <summary>
 ///     DTO for subscription summary information
 /// </summary>
-public record SubscriptionSummaryDto
+public sealed record SubscriptionSummaryDto
 {
     /// <summary>
     ///     Subscription ID

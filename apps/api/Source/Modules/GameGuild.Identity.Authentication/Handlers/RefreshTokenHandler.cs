@@ -7,7 +7,7 @@ namespace GameGuild.Identity.Authentication;
 /// <summary>
 ///     Handler for refresh token command
 /// </summary>
-public class RefreshTokenHandler(IAuthService authService, IUserRepository userRepository, ILogger<RefreshTokenHandler> logger, FluentValidation.IValidator<RefreshTokenCommand> validator)
+public sealed class RefreshTokenHandler(IAuthService authService, IUserRepository userRepository, ILogger<RefreshTokenHandler> logger, FluentValidation.IValidator<RefreshTokenCommand> validator)
     : IRequestHandler<RefreshTokenCommand, SignInResponse>
 {
     private readonly IAuthService _authService = authService ?? throw new ArgumentNullException(nameof(authService));

@@ -47,7 +47,7 @@ public interface ISubscriptionFeatureService
 /// <summary>
 /// Result of a subscription-based feature access check
 /// </summary>
-public record SubscriptionFeatureAccessResult(
+public sealed record SubscriptionFeatureAccessResult(
     bool IsAllowed,
     string FeatureKey,
     string? PlanName,

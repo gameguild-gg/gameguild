@@ -9,7 +9,7 @@ namespace GameGuild.Commerce.Products;
 /// <param name="PricingId">Optional specific pricing ID to use</param>
 /// <param name="PromoCodes">Optional list of promo codes to apply</param>
 /// <param name="UserId">Optional user ID for user-specific discounts</param>
-public record CalculateProductPriceQuery(
+public sealed record CalculateProductPriceQuery(
     Guid ProductId,
     Guid? PricingId = null,
     List<string>? PromoCodes = null,

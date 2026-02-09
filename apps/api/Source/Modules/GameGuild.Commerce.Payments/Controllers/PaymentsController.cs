@@ -299,11 +299,11 @@ public sealed class PaymentsController(ISender sender, IActorContextAccessor act
         return Ok(r);
     }
 
-    public record ProcessPaymentRequest(Guid TenantId, Guid SubscriptionId, decimal Amount, string PaymentMethodId);
+    public sealed record ProcessPaymentRequest(Guid TenantId, Guid SubscriptionId, decimal Amount, string PaymentMethodId);
 
-    public record RefundRequest(decimal? Amount, string? Reason);
+    public sealed record RefundRequest(decimal? Amount, string? Reason);
 
-    public record CancelPaymentRequest(string CancellationReason, Guid? CanceledBy = null, string? Notes = null);
+    public sealed record CancelPaymentRequest(string CancellationReason, Guid? CanceledBy = null, string? Notes = null);
 
     #region Private Methods
 

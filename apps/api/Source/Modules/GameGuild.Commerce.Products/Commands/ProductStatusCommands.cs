@@ -6,12 +6,12 @@ namespace GameGuild.Commerce.Products;
 /// Command to activate a product
 /// </summary>
 /// <param name="ProductId">Product ID</param>
-public record ActivateProductCommand(Guid ProductId) : ICommand<ProductDto>;
+public sealed record ActivateProductCommand(Guid ProductId) : ICommand<ProductDto>;
 
 /// <summary>
 /// Handler for ActivateProductCommand
 /// </summary>
-public class ActivateProductHandler(IProductRepository repository) : ICommandHandler<ActivateProductCommand, ProductDto>
+public sealed class ActivateProductHandler(IProductRepository repository) : ICommandHandler<ActivateProductCommand, ProductDto>
 {
     public async Task<ProductDto> Handle(ActivateProductCommand request, CancellationToken cancellationToken)
     {
@@ -34,12 +34,12 @@ public class ActivateProductHandler(IProductRepository repository) : ICommandHan
 /// Command to deactivate a product
 /// </summary>
 /// <param name="ProductId">Product ID</param>
-public record DeactivateProductCommand(Guid ProductId) : ICommand<ProductDto>;
+public sealed record DeactivateProductCommand(Guid ProductId) : ICommand<ProductDto>;
 
 /// <summary>
 /// Handler for DeactivateProductCommand
 /// </summary>
-public class DeactivateProductHandler(IProductRepository repository) : ICommandHandler<DeactivateProductCommand, ProductDto>
+public sealed class DeactivateProductHandler(IProductRepository repository) : ICommandHandler<DeactivateProductCommand, ProductDto>
 {
     public async Task<ProductDto> Handle(DeactivateProductCommand request, CancellationToken cancellationToken)
     {
@@ -62,12 +62,12 @@ public class DeactivateProductHandler(IProductRepository repository) : ICommandH
 /// Command to archive a product
 /// </summary>
 /// <param name="ProductId">Product ID</param>
-public record ArchiveProductCommand(Guid ProductId) : ICommand<ProductDto>;
+public sealed record ArchiveProductCommand(Guid ProductId) : ICommand<ProductDto>;
 
 /// <summary>
 /// Handler for ArchiveProductCommand
 /// </summary>
-public class ArchiveProductHandler(IProductRepository repository) : ICommandHandler<ArchiveProductCommand, ProductDto>
+public sealed class ArchiveProductHandler(IProductRepository repository) : ICommandHandler<ArchiveProductCommand, ProductDto>
 {
     public async Task<ProductDto> Handle(ArchiveProductCommand request, CancellationToken cancellationToken)
     {
@@ -100,7 +100,7 @@ public class ArchiveProductHandler(IProductRepository repository) : ICommandHand
 /// <param name="MaxAffiliateDiscount">Optional max affiliate discount</param>
 /// <param name="AffiliateCommissionPercentage">Optional affiliate commission</param>
 /// <param name="ExpectedVersion">Expected version for optimistic concurrency</param>
-public record PatchProductCommand(
+public sealed record PatchProductCommand(
     Guid ProductId,
     string? Name = null,
     string? Description = null,
@@ -118,7 +118,7 @@ public record PatchProductCommand(
 /// <summary>
 /// Handler for PatchProductCommand
 /// </summary>
-public class PatchProductHandler(IProductRepository repository) : ICommandHandler<PatchProductCommand, ProductDto>
+public sealed class PatchProductHandler(IProductRepository repository) : ICommandHandler<PatchProductCommand, ProductDto>
 {
     public async Task<ProductDto> Handle(PatchProductCommand request, CancellationToken cancellationToken)
     {
@@ -154,7 +154,7 @@ public class PatchProductHandler(IProductRepository repository) : ICommandHandle
 /// </summary>
 /// <param name="Products">List of products to create</param>
 /// <param name="TenantId">Optional tenant ID</param>
-public record BatchCreateProductsCommand(
+public sealed record BatchCreateProductsCommand(
     List<BatchProductCreateItem> Products,
     Guid? TenantId = null
 ) : ICommand<List<ProductDto>>;
@@ -179,7 +179,7 @@ public record BatchProductCreateItem(
 /// <summary>
 /// Handler for BatchCreateProductsCommand
 /// </summary>
-public class BatchCreateProductsHandler(IProductRepository repository) : ICommandHandler<BatchCreateProductsCommand, List<ProductDto>>
+public sealed class BatchCreateProductsHandler(IProductRepository repository) : ICommandHandler<BatchCreateProductsCommand, List<ProductDto>>
 {
     public async Task<List<ProductDto>> Handle(BatchCreateProductsCommand request, CancellationToken cancellationToken)
     {
@@ -210,12 +210,12 @@ public class BatchCreateProductsHandler(IProductRepository repository) : IComman
 /// Query to check if a product exists
 /// </summary>
 /// <param name="ProductId">Product ID</param>
-public record ProductExistsQuery(Guid ProductId) : IQuery<bool>;
+public sealed record ProductExistsQuery(Guid ProductId) : IQuery<bool>;
 
 /// <summary>
 /// Handler for ProductExistsQuery
 /// </summary>
-public class ProductExistsHandler(IProductRepository repository) : IQueryHandler<ProductExistsQuery, bool>
+public sealed class ProductExistsHandler(IProductRepository repository) : IQueryHandler<ProductExistsQuery, bool>
 {
     public async Task<bool> Handle(ProductExistsQuery request, CancellationToken cancellationToken)
     {

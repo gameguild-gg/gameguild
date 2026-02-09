@@ -10,7 +10,7 @@ namespace GameGuild.Commerce.Payments;
 ///     - Subscription renewal schedules in the Subscriptions module
 ///     - Payment gateway scheduling (e.g., Stripe Billing)
 /// </remarks>
-public class GetScheduledPaymentsQueryHandler : IQueryHandler<GetScheduledPaymentsQuery, IEnumerable<PaymentResult>>
+public sealed class GetScheduledPaymentsQueryHandler : IQueryHandler<GetScheduledPaymentsQuery, IEnumerable<PaymentResult>>
 {
     public Task<IEnumerable<PaymentResult>> Handle(GetScheduledPaymentsQuery request, CancellationToken cancellationToken)
     {

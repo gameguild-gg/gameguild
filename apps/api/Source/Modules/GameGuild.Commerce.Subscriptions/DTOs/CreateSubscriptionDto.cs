@@ -4,7 +4,7 @@ namespace GameGuild.Commerce.Subscriptions;
 /// <summary>
 ///     DTO for creating a new subscription
 /// </summary>
-public record CreateSubscriptionDto
+public sealed record CreateSubscriptionDto
 {
     /// <summary>
     ///     Plan ID for the subscription

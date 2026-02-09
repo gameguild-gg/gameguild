@@ -5,7 +5,7 @@ namespace GameGuild.Identity.Tenants;
 /// <summary>
 ///     Handler for updating tenant command
 /// </summary>
-public class UpdateTenantCommandHandler(ITenantRepository tenantRepository) : ICommandHandler<UpdateTenantCommand>
+public sealed class UpdateTenantCommandHandler(ITenantRepository tenantRepository) : ICommandHandler<UpdateTenantCommand>
 {
     public async Task<Unit> Handle(UpdateTenantCommand request, CancellationToken cancellationToken)
     {

@@ -4,7 +4,7 @@ namespace GameGuild.Social.Ratings;
 /// Domain events for the ratings system
 /// </summary>
 /// 
-public record RatingCreatedEvent(
+public sealed record RatingCreatedEvent(
     Guid RatingId,
     Guid UserId,
     Guid EntityId,
@@ -13,7 +13,7 @@ public record RatingCreatedEvent(
     bool HasReview
 );
 
-public record RatingUpdatedEvent(
+public sealed record RatingUpdatedEvent(
     Guid RatingId,
     Guid UserId,
     Guid EntityId,
@@ -22,34 +22,34 @@ public record RatingUpdatedEvent(
     int NewValue
 );
 
-public record RatingDeletedEvent(
+public sealed record RatingDeletedEvent(
     Guid RatingId,
     Guid UserId,
     Guid EntityId,
     string EntityType
 );
 
-public record RatingReportedEvent(
+public sealed record RatingReportedEvent(
     Guid RatingId,
     Guid ReportedByUserId,
     string Reason,
     int TotalReports
 );
 
-public record RatingModerationStatusChangedEvent(
+public sealed record RatingModerationStatusChangedEvent(
     Guid RatingId,
     RatingModerationStatus OldStatus,
     RatingModerationStatus NewStatus
 );
 
-public record RatingSummaryRecalculatedEvent(
+public sealed record RatingSummaryRecalculatedEvent(
     Guid EntityId,
     string EntityType,
     decimal AverageRating,
     int TotalRatings
 );
 
-public record RatingHelpfulVoteEvent(
+public sealed record RatingHelpfulVoteEvent(
     Guid RatingId,
     Guid VoterUserId,
     bool IsHelpful

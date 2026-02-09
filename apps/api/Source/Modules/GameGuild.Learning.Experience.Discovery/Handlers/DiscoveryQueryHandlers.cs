@@ -7,7 +7,7 @@ namespace GameGuild.Learning.Experience.Discovery;
 /// <summary>
 /// Query handlers for Discovery module
 /// </summary>
-public class DiscoveryQueryHandlers(IApplicationDbContext context, ILogger<DiscoveryQueryHandlers> logger)
+public sealed class DiscoveryQueryHandlers(IApplicationDbContext context, ILogger<DiscoveryQueryHandlers> logger)
     : IRequestHandler<GetActiveFeaturedContentQuery, IEnumerable<FeaturedContent>>,
       IRequestHandler<GetFeaturedContentByTypeQuery, IEnumerable<FeaturedContent>>,
       IRequestHandler<GetFeaturedContentByIdQuery, FeaturedContent?>,

@@ -6,7 +6,7 @@ namespace GameGuild.Commerce.Billing;
 /// <summary>
 ///     Handler for retrying webhook events
 /// </summary>
-public class RetryWebhookEventHandler(
+public sealed class RetryWebhookEventHandler(
     IBillingWebhookRepository webhookRepository,
     ILogger<RetryWebhookEventHandler> logger) : ICommandHandler<RetryWebhookEventCommand, WebhookRetryResult>
 {

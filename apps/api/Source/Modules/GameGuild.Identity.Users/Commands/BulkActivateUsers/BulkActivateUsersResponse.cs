@@ -6,4 +6,4 @@ namespace GameGuild.Identity.Users;
 /// </summary>
 /// <param name="ActivatedUsers">Successfully activated users</param>
 /// <param name="FailedUserIds">User IDs that failed to activate</param>
-public record BulkActivateUsersResponse(IEnumerable<UserDto> ActivatedUsers, IEnumerable<Guid> FailedUserIds);
+public sealed record BulkActivateUsersResponse(IEnumerable<UserDto> ActivatedUsers, IEnumerable<Guid> FailedUserIds);

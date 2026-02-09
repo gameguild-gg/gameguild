@@ -5,7 +5,7 @@ namespace GameGuild.Commerce.Subscriptions;
 /// <summary>
 ///     Command to fully update a subscription
 /// </summary>
-public record UpdateSubscriptionCommand(
+public sealed record UpdateSubscriptionCommand(
     Guid SubscriptionId,
     Guid PlanId,
     BillingCycle BillingCycle,

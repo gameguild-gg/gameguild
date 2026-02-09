@@ -5,7 +5,7 @@ namespace GameGuild.Identity.Tenants;
 /// <summary>
 ///     Handler for deactivating tenant command
 /// </summary>
-public class DeactivateTenantCommandHandler(ITenantRepository tenantRepository) : ICommandHandler<DeactivateTenantCommand>
+public sealed class DeactivateTenantCommandHandler(ITenantRepository tenantRepository) : ICommandHandler<DeactivateTenantCommand>
 {
     public async Task<Unit> Handle(DeactivateTenantCommand request, CancellationToken cancellationToken)
     {

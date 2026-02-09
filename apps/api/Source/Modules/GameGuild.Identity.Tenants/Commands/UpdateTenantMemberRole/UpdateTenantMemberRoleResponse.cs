@@ -3,7 +3,7 @@ namespace GameGuild.Identity.Tenants;
 /// <summary>
 ///     Response for updating tenant member role
 /// </summary>
-public record UpdateTenantMemberRoleResponse
+public sealed record UpdateTenantMemberRoleResponse
 {
     public bool Success { get; init; }
 

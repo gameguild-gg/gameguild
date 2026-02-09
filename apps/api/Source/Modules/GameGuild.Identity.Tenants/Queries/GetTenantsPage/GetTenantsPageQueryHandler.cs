@@ -5,7 +5,7 @@ namespace GameGuild.Identity.Tenants;
 /// <summary>
 ///     Handler for getting tenants page
 /// </summary>
-public class GetTenantsPageQueryHandler(ITenantRepository tenantRepository) : IQueryHandler<GetTenantsPageQuery, PagedResult<Tenant>>
+public sealed class GetTenantsPageQueryHandler(ITenantRepository tenantRepository) : IQueryHandler<GetTenantsPageQuery, PagedResult<Tenant>>
 {
     public async Task<PagedResult<Tenant>> Handle(GetTenantsPageQuery request, CancellationToken cancellationToken)
     {

@@ -13,7 +13,7 @@ namespace GameGuild.Commerce.Subscriptions;
 /// <param name="FulfilledOrderId">Optional Order ID that triggered this subscription (Economic Model: Order→Subscription causality)</param>
 /// <param name="StartDate">Optional start date</param>
 /// <param name="TrialDays">Optional trial period in days</param>
-public record CreateSubscriptionRequest(
+public sealed record CreateSubscriptionRequest(
     Guid TenantId, 
     Guid PlanId, 
     Guid CreatedByUserId, 

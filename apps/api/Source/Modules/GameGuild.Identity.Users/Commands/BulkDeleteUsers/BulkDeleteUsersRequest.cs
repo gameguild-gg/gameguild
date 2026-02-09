@@ -4,4 +4,4 @@ namespace GameGuild.Identity.Users;
 ///     Request model for bulk deleting users via API
 /// </summary>
 /// <param name="UserIds">Collection of user IDs to delete</param>
-public record BulkDeleteUsersRequest(IEnumerable<Guid> UserIds);
+public sealed record BulkDeleteUsersRequest(IEnumerable<Guid> UserIds);

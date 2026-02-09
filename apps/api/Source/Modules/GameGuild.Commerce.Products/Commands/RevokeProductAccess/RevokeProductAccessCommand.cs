@@ -8,7 +8,7 @@ namespace GameGuild.Commerce.Products;
 /// <param name="UserId">User ID</param>
 /// <param name="ProductId">Product ID</param>
 /// <param name="Reason">Reason for revocation</param>
-public record RevokeProductAccessCommand(
+public sealed record RevokeProductAccessCommand(
     Guid UserId,
     Guid ProductId,
     string? Reason = null

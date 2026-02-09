@@ -1,11 +1,11 @@
-﻿using GameGuild.CQRS;
+using GameGuild.CQRS;
 
 namespace GameGuild.Identity.Tenants;
 
 /// <summary>
 ///     Handler for activating tenant command
 /// </summary>
-public class ActivateTenantCommandHandler(ITenantRepository tenantRepository) : ICommandHandler<ActivateTenantCommand, ActivateTenantResponse>
+public sealed class ActivateTenantCommandHandler(ITenantRepository tenantRepository) : ICommandHandler<ActivateTenantCommand, ActivateTenantResponse>
 {
     public async Task<ActivateTenantResponse> Handle(ActivateTenantCommand request, CancellationToken cancellationToken)
     {

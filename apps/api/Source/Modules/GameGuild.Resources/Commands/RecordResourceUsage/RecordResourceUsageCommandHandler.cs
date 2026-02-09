@@ -7,7 +7,7 @@ namespace GameGuild.Resources;
 ///     This handler enforces hard limits - if recording would exceed the quota, it throws QuotaExceededException.
 ///     When SkipQuotaIncrement is true (quota was already atomically consumed), only creates the audit record.
 /// </summary>
-public class RecordResourceUsageCommandHandler(IUsageRecordRepository usageRecordRepository, IResourceQuotaRepository resourceQuotaRepository) : ICommandHandler<RecordResourceUsageCommand, Guid>
+public sealed class RecordResourceUsageCommandHandler(IUsageRecordRepository usageRecordRepository, IResourceQuotaRepository resourceQuotaRepository) : ICommandHandler<RecordResourceUsageCommand, Guid>
 {
     public async Task<Guid> Handle(RecordResourceUsageCommand request, CancellationToken cancellationToken)
     {

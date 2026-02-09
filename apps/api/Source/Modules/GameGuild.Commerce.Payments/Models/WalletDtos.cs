@@ -3,7 +3,7 @@ namespace GameGuild.Commerce.Payments.Models;
 /// <summary>
 ///     Request to update wallet settings
 /// </summary>
-public record PatchWalletRequest(
+public sealed record PatchWalletRequest(
     string? Currency = null,
     decimal? DailyLimit = null,
     decimal? MonthlyLimit = null);
@@ -11,7 +11,7 @@ public record PatchWalletRequest(
 /// <summary>
 ///     Request to freeze a wallet
 /// </summary>
-public record FreezeWalletRequest(string Reason);
+public sealed record FreezeWalletRequest(string Reason);
 
 /// <summary>
 ///     Wallet audit log entry
@@ -29,7 +29,7 @@ public record WalletAuditEntry(
 /// <summary>
 ///     Paginated wallet audit log response
 /// </summary>
-public record WalletAuditLogResponse(
+public sealed record WalletAuditLogResponse(
     IReadOnlyList<WalletAuditEntry> Items,
     int TotalCount,
     int Page,
@@ -39,7 +39,7 @@ public record WalletAuditLogResponse(
 /// <summary>
 ///     Paginated list of wallets response
 /// </summary>
-public record WalletListResponse(
+public sealed record WalletListResponse(
     IReadOnlyList<WalletSummary> Items,
     int TotalCount,
     int Page,

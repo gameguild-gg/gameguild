@@ -4,7 +4,7 @@ namespace GameGuild.Commerce.Subscriptions;
 ///     Command handler for setting subscription auto-renew.
 ///     Uses base handler to reduce boilerplate for fetch/validate/save pattern.
 /// </summary>
-public class SetSubscriptionAutoRenewCommandHandler(ISubscriptionRepository subscriptionRepository)
+public sealed class SetSubscriptionAutoRenewCommandHandler(ISubscriptionRepository subscriptionRepository)
     : SubscriptionCommandHandlerBase<SetSubscriptionAutoRenewCommand>(subscriptionRepository)
 {
     /// <inheritdoc />

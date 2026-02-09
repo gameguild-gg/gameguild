@@ -104,7 +104,7 @@ public class AllowedTransformations
 /// <summary>
 /// Result of transformation validation.
 /// </summary>
-public record TransformationValidationResult(
+public sealed record TransformationValidationResult(
     bool IsValid,
     string? Error = null,
     TransformationSpec? SanitizedSpec = null);
@@ -131,7 +131,7 @@ public interface ITransformationValidator
 /// <summary>
 /// Implementation of transformation validation.
 /// </summary>
-public class TransformationValidator : ITransformationValidator
+public sealed class TransformationValidator : ITransformationValidator
 {
     private readonly TransformationOptions _options;
 

@@ -5,7 +5,7 @@ namespace GameGuild.Identity.Users;
 /// <summary>
 ///     Command handler for deactivating users
 /// </summary>
-public class DeactivateUserCommandHandler(IUserRepository userRepository) : ICommandHandler<DeactivateUserCommand, UserDto>
+public sealed class DeactivateUserCommandHandler(IUserRepository userRepository) : ICommandHandler<DeactivateUserCommand, UserDto>
 {
     public async Task<UserDto> Handle(DeactivateUserCommand request, CancellationToken cancellationToken)
     {

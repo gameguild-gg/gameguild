@@ -354,18 +354,18 @@ public class AssetsAdminController(
     #endregion
 }
 
-public record ReviewReportRequest(
+public sealed record ReviewReportRequest(
     ReviewDecision Decision,
     string? Notes = null);
 
-public record UpdateVirusScanRequest(
+public sealed record UpdateVirusScanRequest(
     VirusScanStatus Status,
     string? ScanResult = null);
 
-public record MarkNonDeletableRequest(
+public sealed record MarkNonDeletableRequest(
     string? Reason = null);
 
-public record ContentModerationRequest(
+public sealed record ContentModerationRequest(
     ModerationStatus Status,
     string[]? Labels = null,
     string? Notes = null);

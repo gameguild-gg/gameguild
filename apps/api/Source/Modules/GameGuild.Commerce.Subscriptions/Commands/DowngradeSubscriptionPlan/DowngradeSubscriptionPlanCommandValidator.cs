@@ -5,7 +5,7 @@ namespace GameGuild.Commerce.Subscriptions;
 /// <summary>
 ///     Validator for DowngradeSubscriptionPlanCommand
 /// </summary>
-public class DowngradeSubscriptionPlanCommandValidator : AbstractValidator<DowngradeSubscriptionPlanCommand>
+public sealed class DowngradeSubscriptionPlanCommandValidator : AbstractValidator<DowngradeSubscriptionPlanCommand>
 {
     public DowngradeSubscriptionPlanCommandValidator()
     {

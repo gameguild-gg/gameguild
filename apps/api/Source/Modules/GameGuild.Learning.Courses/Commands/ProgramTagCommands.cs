@@ -8,7 +8,7 @@ namespace GameGuild.Learning.Courses;
 /// <summary>
 /// Add a tag (skill, topic, technology) to a program
 /// </summary>
-public record AddTagToProgramCommand(
+public sealed record AddTagToProgramCommand(
     Guid ProgramId,
     Guid TagId,
     SkillProficiencyLevel ProficiencyLevel = SkillProficiencyLevel.Beginner,
@@ -18,7 +18,7 @@ public record AddTagToProgramCommand(
 /// <summary>
 /// Update a program tag's properties
 /// </summary>
-public record UpdateProgramTagCommand(
+public sealed record UpdateProgramTagCommand(
     Guid ProgramId,
     Guid TagId,
     SkillProficiencyLevel? ProficiencyLevel = null,
@@ -28,18 +28,18 @@ public record UpdateProgramTagCommand(
 /// <summary>
 /// Remove a tag from a program
 /// </summary>
-public record RemoveTagFromProgramCommand(Guid ProgramId, Guid TagId) : ICommand;
+public sealed record RemoveTagFromProgramCommand(Guid ProgramId, Guid TagId) : ICommand;
 
 /// <summary>
 /// Bulk add tags to a program
 /// </summary>
-public record BulkAddTagsToProgramCommand(
+public sealed record BulkAddTagsToProgramCommand(
     Guid ProgramId,
     IEnumerable<AddTagToProgramDto> Tags) : ICommand<IEnumerable<ProgramTag>>;
 
 /// <summary>
 /// Reorder tags on a program
 /// </summary>
-public record ReorderProgramTagsCommand(
+public sealed record ReorderProgramTagsCommand(
     Guid ProgramId,
     IEnumerable<Guid> TagIdsInOrder) : ICommand;

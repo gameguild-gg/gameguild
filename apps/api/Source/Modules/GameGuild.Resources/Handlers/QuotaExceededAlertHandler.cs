@@ -17,7 +17,7 @@ namespace GameGuild.Resources.Handlers;
 ///     Alert thresholds and notification channels are configurable.
 ///     Default behavior: Log warning for all exceeded events, error for repeated violations.
 /// </remarks>
-public class QuotaExceededAlertHandler(
+public sealed class QuotaExceededAlertHandler(
     ILogger<QuotaExceededAlertHandler> logger
 ) : INotificationHandler<QuotaExceededEvent>
 {

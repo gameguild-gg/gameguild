@@ -1,9 +1,9 @@
-﻿using GameGuild.Identity.Authorization;
+using GameGuild.Identity.Authorization;
 using GameGuild.CQRS;
 
 namespace GameGuild.Identity.Authentication;
 
-public record ReviewAccessItemCommand : ICommand<AccessReviewItem>
+public sealed record ReviewAccessItemCommand : ICommand<AccessReviewItem>
 {
     public Guid ItemId { get; init; }
 

@@ -186,12 +186,12 @@ public sealed class CapabilitiesController : BaseApiController
 /// <summary>
 /// Response for capability check endpoint.
 /// </summary>
-public record CapabilityCheckResponse(string Capability, bool IsEnabled);
+public sealed record CapabilityCheckResponse(string Capability, bool IsEnabled);
 
 /// <summary>
 /// Request for setting a capability override.
 /// </summary>
-public record SetCapabilityOverrideRequest(
+public sealed record SetCapabilityOverrideRequest(
     string Capability,
     bool IsEnabled,
     string? Source,
@@ -201,7 +201,7 @@ public record SetCapabilityOverrideRequest(
 /// <summary>
 /// DTO for capability audit log entries.
 /// </summary>
-public record CapabilityAuditLogDto(
+public sealed record CapabilityAuditLogDto(
     Guid Id,
     Guid TenantId,
     string CapabilityKey,

@@ -1,6 +1,6 @@
-﻿namespace GameGuild.Commerce.Payments;
+namespace GameGuild.Commerce.Payments;
 
-public record TransferFundsResponse
+public sealed record TransferFundsResponse
 {
     public required WalletTransaction DebitTransaction { get; init; }
 

@@ -3,7 +3,7 @@ namespace GameGuild.Learning.Experience.Recommendations;
 /// <summary>
 /// DTO for a course recommendation
 /// </summary>
-public record RecommendationDto(
+public sealed record RecommendationDto(
     Guid Id,
     Guid UserId,
     Guid CourseId,
@@ -18,7 +18,7 @@ public record RecommendationDto(
 /// <summary>
 /// DTO for a recommendation with course details
 /// </summary>
-public record RecommendationDetailDto(
+public sealed record RecommendationDetailDto(
     Guid Id,
     Guid UserId,
     Guid CourseId,
@@ -38,7 +38,7 @@ public record RecommendationDetailDto(
 /// <summary>
 /// DTO for user learning profile
 /// </summary>
-public record UserLearningProfileDto(
+public sealed record UserLearningProfileDto(
     Guid Id,
     Guid UserId,
     string[]? PreferredCategories,
@@ -55,7 +55,7 @@ public record UserLearningProfileDto(
 /// <summary>
 /// DTO for creating/updating user learning profile
 /// </summary>
-public record CreateOrUpdateLearningProfileDto(
+public sealed record CreateOrUpdateLearningProfileDto(
     string[]? PreferredCategories,
     string? PreferredDifficulty,
     string? PreferredDuration,
@@ -65,7 +65,7 @@ public record CreateOrUpdateLearningProfileDto(
 /// <summary>
 /// DTO for creating a recommendation (internal use)
 /// </summary>
-public record CreateRecommendationDto(
+public sealed record CreateRecommendationDto(
     Guid UserId,
     Guid CourseId,
     RecommendationType Type,
@@ -76,7 +76,7 @@ public record CreateRecommendationDto(
 /// <summary>
 /// DTO for recommendation statistics
 /// </summary>
-public record RecommendationStatisticsDto(
+public sealed record RecommendationStatisticsDto(
     int TotalRecommendations,
     int ViewedCount,
     int DismissedCount,
@@ -86,7 +86,7 @@ public record RecommendationStatisticsDto(
 /// <summary>
 /// DTO for popular course result
 /// </summary>
-public record PopularCourseDto(
+public sealed record PopularCourseDto(
     Guid CourseId,
     string Title,
     string? Description,
@@ -99,7 +99,7 @@ public record PopularCourseDto(
 /// <summary>
 /// DTO for trending course result
 /// </summary>
-public record TrendingCourseDto(
+public sealed record TrendingCourseDto(
     Guid CourseId,
     string Title,
     string? Description,
@@ -111,7 +111,7 @@ public record TrendingCourseDto(
 /// <summary>
 /// DTO for similar course result
 /// </summary>
-public record SimilarCourseDto(
+public sealed record SimilarCourseDto(
     Guid CourseId,
     string Title,
     string? Description,

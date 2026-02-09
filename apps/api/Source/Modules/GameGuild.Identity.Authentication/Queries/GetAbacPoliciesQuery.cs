@@ -1,9 +1,9 @@
-﻿using GameGuild.Identity.Authorization;
+using GameGuild.Identity.Authorization;
 using GameGuild.CQRS;
 
 namespace GameGuild.Identity.Authentication;
 
-public record GetAbacPoliciesQuery : IQuery<PagedResult<AbacPolicy>>
+public sealed record GetAbacPoliciesQuery : IQuery<PagedResult<AbacPolicy>>
 {
     public Guid? TenantId { get; init; }
 

@@ -5,7 +5,7 @@ namespace GameGuild.Identity.Users;
 /// <summary>
 ///     Command handler for bulk unsuspending users
 /// </summary>
-public class BulkUnsuspendUsersCommandHandler(IUserRepository userRepository) : ICommandHandler<BulkUnsuspendUsersCommand, BulkUnsuspendUsersResponse>
+public sealed class BulkUnsuspendUsersCommandHandler(IUserRepository userRepository) : ICommandHandler<BulkUnsuspendUsersCommand, BulkUnsuspendUsersResponse>
 {
     public async Task<BulkUnsuspendUsersResponse> Handle(BulkUnsuspendUsersCommand request, CancellationToken cancellationToken)
     {

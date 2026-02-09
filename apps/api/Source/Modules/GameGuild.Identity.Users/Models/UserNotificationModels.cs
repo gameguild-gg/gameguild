@@ -22,7 +22,7 @@ namespace GameGuild.Identity.Users;
 /// <param name="CreatedAt">When the notification was created</param>
 /// <param name="UpdatedAt">When the notification was last updated</param>
 /// <param name="Version">Version for optimistic concurrency control</param>
-public record UserNotificationDto(
+public sealed record UserNotificationDto(
     Guid Id,
     Guid UserId,
     string Type,
@@ -52,7 +52,7 @@ public record UserNotificationDto(
 /// <param name="Archived">Number of archived notifications</param>
 /// <param name="ByPriority">Count of notifications by priority level</param>
 /// <param name="ByCategory">Count of notifications by category</param>
-public record UserNotificationCountDto(int Total, int Unread, int Archived, Dictionary<string, int> ByPriority, Dictionary<string, int> ByCategory);
+public sealed record UserNotificationCountDto(int Total, int Unread, int Archived, Dictionary<string, int> ByPriority, Dictionary<string, int> ByCategory);
 
 /// <summary>
 ///     Data transfer object for detailed notification information
@@ -60,7 +60,7 @@ public record UserNotificationCountDto(int Total, int Unread, int Archived, Dict
 /// <param name="Notification">The notification details</param>
 /// <param name="RelatedNotifications">Related notifications</param>
 /// <param name="Actions">Available actions for the notification</param>
-public record UserNotificationDetailDto(UserNotificationDto Notification, List<UserNotificationDto> RelatedNotifications, List<NotificationActionDto> Actions);
+public sealed record UserNotificationDetailDto(UserNotificationDto Notification, List<UserNotificationDto> RelatedNotifications, List<NotificationActionDto> Actions);
 
 /// <summary>
 ///     Data transfer object for notification action
@@ -70,14 +70,14 @@ public record UserNotificationDetailDto(UserNotificationDto Notification, List<U
 /// <param name="Url">Action URL</param>
 /// <param name="Type">Action type</param>
 /// <param name="IsPrimary">Whether this is the primary action</param>
-public record NotificationActionDto(string Id, string Text, string? Url, string Type, bool IsPrimary);
+public sealed record NotificationActionDto(string Id, string Text, string? Url, string Type, bool IsPrimary);
 
 /// <summary>
 ///     Request model for executing a notification action
 /// </summary>
 /// <param name="ActionId">The identifier of the action to execute</param>
 /// <param name="Parameters">Additional parameters for the action</param>
-public record ExecuteNotificationActionRequest(string ActionId, Dictionary<string, object?>? Parameters = null);
+public sealed record ExecuteNotificationActionRequest(string ActionId, Dictionary<string, object?>? Parameters = null);
 
 /// <summary>
 ///     Data transfer object for notification action result
@@ -86,7 +86,7 @@ public record ExecuteNotificationActionRequest(string ActionId, Dictionary<strin
 /// <param name="Message">Result message</param>
 /// <param name="RedirectUrl">URL to redirect to after action</param>
 /// <param name="UpdatedNotification">Updated notification after action</param>
-public record NotificationActionResultDto(bool Success, string? Message, string? RedirectUrl, UserNotificationDto? UpdatedNotification);
+public sealed record NotificationActionResultDto(bool Success, string? Message, string? RedirectUrl, UserNotificationDto? UpdatedNotification);
 
 /// <summary>
 ///     Data transfer object for notification delivery settings
@@ -102,7 +102,7 @@ public record NotificationActionResultDto(bool Success, string? Message, string?
 /// <param name="QuietHoursEnd">End of quiet hours</param>
 /// <param name="TimeZone">User's timezone for delivery scheduling</param>
 /// <param name="CategorySettings">Per-category delivery settings</param>
-public record UserNotificationDeliverySettingsDto(
+public sealed record UserNotificationDeliverySettingsDto(
     Guid UserId,
     bool EmailEnabled,
     bool PushEnabled,
@@ -124,7 +124,7 @@ public record UserNotificationDeliverySettingsDto(
 /// <param name="PushEnabled">Whether push delivery is enabled for this category</param>
 /// <param name="SmsEnabled">Whether SMS delivery is enabled for this category</param>
 /// <param name="Priority">Minimum priority for notifications in this category</param>
-public record NotificationCategorySettingsDto(bool Enabled, bool EmailEnabled, bool PushEnabled, bool SmsEnabled, string Priority);
+public sealed record NotificationCategorySettingsDto(bool Enabled, bool EmailEnabled, bool PushEnabled, bool SmsEnabled, string Priority);
 
 /// <summary>
 ///     Request model for updating notification delivery settings
@@ -139,7 +139,7 @@ public record NotificationCategorySettingsDto(bool Enabled, bool EmailEnabled, b
 /// <param name="QuietHoursEnd">End of quiet hours</param>
 /// <param name="TimeZone">User's timezone</param>
 /// <param name="CategorySettings">Per-category delivery settings</param>
-public record UpdateUserNotificationDeliverySettingsRequest(
+public sealed record UpdateUserNotificationDeliverySettingsRequest(
     bool? EmailEnabled = null,
     bool? PushEnabled = null,
     bool? SmsEnabled = null,
@@ -158,7 +158,7 @@ public record UpdateUserNotificationDeliverySettingsRequest(
 /// <param name="NotificationIds">IDs of notifications to operate on</param>
 /// <param name="Operation">Operation to perform</param>
 /// <param name="FilterCriteria">Filter criteria for selecting notifications</param>
-public record BulkNotificationRequest(List<Guid>? NotificationIds = null, string? Operation = null, NotificationFilterCriteria? FilterCriteria = null);
+public sealed record BulkNotificationRequest(List<Guid>? NotificationIds = null, string? Operation = null, NotificationFilterCriteria? FilterCriteria = null);
 
 /// <summary>
 ///     Filter criteria for notifications

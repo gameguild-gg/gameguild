@@ -13,7 +13,7 @@ namespace GameGuild.Commerce.Billing;
 /// <param name="CertUrl">PayPal certificate URL (PAYPAL-CERT-URL header)</param>
 /// <param name="AuthAlgo">PayPal auth algorithm (PAYPAL-AUTH-ALGO header)</param>
 /// <param name="WebhookId">PayPal webhook ID from configuration</param>
-public record ProcessPayPalWebhookCommand(
+public sealed record ProcessPayPalWebhookCommand(
     string Payload,
     string TransmissionId,
     string TransmissionSignature,

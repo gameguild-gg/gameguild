@@ -5,7 +5,7 @@ namespace GameGuild.Identity.Tenants;
 /// <summary>
 ///     Validator for BulkDeactivateTenantsCommand
 /// </summary>
-public class BulkDeactivateTenantsCommandValidator : AbstractValidator<BulkDeactivateTenantsCommand>
+public sealed class BulkDeactivateTenantsCommandValidator : AbstractValidator<BulkDeactivateTenantsCommand>
 {
     public BulkDeactivateTenantsCommandValidator()
     {

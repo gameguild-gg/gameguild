@@ -12,4 +12,4 @@ public enum PurgeStrategy { Immediate, Scheduled, GracePeriod }
 /// </summary>
 /// <param name="UserId">The ID of the user to purge</param>
 /// <param name="Strategy">The purge strategy to use</param>
-public record PurgeUserCommand(Guid UserId, PurgeStrategy Strategy = PurgeStrategy.GracePeriod) : ICommand;
+public sealed record PurgeUserCommand(Guid UserId, PurgeStrategy Strategy = PurgeStrategy.GracePeriod) : ICommand;

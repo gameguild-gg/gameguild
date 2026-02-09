@@ -2,7 +2,7 @@ using GameGuild.CQRS;
 
 namespace GameGuild.Identity.Users;
 
-public class ResetUserNotificationPreferencesCommandHandler(IUserRepository userRepository, IUserPreferencesRepository preferencesRepository) : ICommandHandler<ResetUserNotificationPreferencesCommand>
+public sealed class ResetUserNotificationPreferencesCommandHandler(IUserRepository userRepository, IUserPreferencesRepository preferencesRepository) : ICommandHandler<ResetUserNotificationPreferencesCommand>
 {
     public async Task<Unit> Handle(ResetUserNotificationPreferencesCommand request, CancellationToken cancellationToken)
     {

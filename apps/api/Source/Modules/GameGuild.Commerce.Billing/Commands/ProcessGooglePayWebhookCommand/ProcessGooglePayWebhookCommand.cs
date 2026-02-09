@@ -8,4 +8,4 @@ namespace GameGuild.Commerce.Billing;
 /// <param name="Payload">The webhook payload from Google Pay</param>
 /// <param name="AuthHeader">The authorization header containing JWT token</param>
 /// <param name="ProjectId">The Google Cloud project ID for validation</param>
-public record ProcessGooglePayWebhookCommand(string Payload, string AuthHeader, string ProjectId) : ICommand<WebhookProcessingResult>;
+public sealed record ProcessGooglePayWebhookCommand(string Payload, string AuthHeader, string ProjectId) : ICommand<WebhookProcessingResult>;

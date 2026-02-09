@@ -18,7 +18,7 @@ namespace GameGuild.Commerce.Products;
 /// <param name="CreatedAt">Creation timestamp</param>
 /// <param name="UpdatedAt">Last update timestamp</param>
 /// <param name="Pricing">Pricing information (optional)</param>
-public record ProductDto(
+public sealed record ProductDto(
     Guid Id,
     string Name,
     string? Description,
@@ -50,7 +50,7 @@ public record ProductDto(
 /// <param name="IsDefault">Whether this is the default pricing</param>
 /// <param name="CurrentPrice">Current effective price</param>
 /// <param name="IsSaleActive">Whether sale is currently active</param>
-public record ProductPricingDto(
+public sealed record ProductPricingDto(
     Guid Id,
     Guid ProductId,
     string Name,

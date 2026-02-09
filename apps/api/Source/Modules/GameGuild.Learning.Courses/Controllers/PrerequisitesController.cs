@@ -243,7 +243,7 @@ public class PrerequisitesController : BaseApiController
 
 // ===== API Request DTOs =====
 
-public record CreatePrerequisiteApiRequest(
+public sealed record CreatePrerequisiteApiRequest(
     Guid CourseId,
     Guid PrerequisiteCourseId,
     PrerequisiteType Type = PrerequisiteType.Required,
@@ -252,18 +252,18 @@ public record CreatePrerequisiteApiRequest(
     int DisplayOrder = 0,
     string? PrerequisiteGroup = null);
 
-public record UpdatePrerequisiteApiRequest(
+public sealed record UpdatePrerequisiteApiRequest(
     PrerequisiteType? Type = null,
     int? MinimumGrade = null,
     string? Description = null,
     int? DisplayOrder = null,
     string? PrerequisiteGroup = null);
 
-public record ReorderPrerequisitesRequest(IEnumerable<Guid> PrerequisiteIds);
+public sealed record ReorderPrerequisitesRequest(IEnumerable<Guid> PrerequisiteIds);
 
 // ===== Response DTOs =====
 
-public record PrerequisiteDto(
+public sealed record PrerequisiteDto(
     Guid Id,
     Guid CourseId,
     Guid PrerequisiteCourseId,
@@ -290,11 +290,11 @@ public record PrerequisiteDto(
         entity.CreatedAt);
 }
 
-public record PrerequisiteCheckResultDto(
+public sealed record PrerequisiteCheckResultDto(
     bool IsSatisfied,
     IEnumerable<PrerequisiteStatusDto> Prerequisites);
 
-public record PrerequisiteStatusDto(
+public sealed record PrerequisiteStatusDto(
     Guid PrerequisiteId,
     Guid PrerequisiteCourseId,
     string CourseName,
@@ -304,4 +304,4 @@ public record PrerequisiteStatusDto(
     int? AchievedGrade,
     string? Reason);
 
-public record CircularDependencyCheckResult(bool WouldCreateCycle);
+public sealed record CircularDependencyCheckResult(bool WouldCreateCycle);

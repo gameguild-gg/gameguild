@@ -4,7 +4,7 @@ namespace GameGuild.Commerce.Subscriptions;
 ///     Command handler for activating a subscription.
 ///     Uses base handler to reduce boilerplate for fetch/validate/save pattern.
 /// </summary>
-public class ActivateSubscriptionCommandHandler(ISubscriptionRepository subscriptionRepository)
+public sealed class ActivateSubscriptionCommandHandler(ISubscriptionRepository subscriptionRepository)
     : SubscriptionCommandHandlerBase<ActivateSubscriptionCommand>(subscriptionRepository)
 {
     /// <inheritdoc />

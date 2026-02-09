@@ -3,7 +3,7 @@ using FluentValidation;
 namespace GameGuild.Learning.Courses;
 
 /// <summary> Validator for EnrollUserCommand </summary>
-public class EnrollUserCommandValidator : AbstractValidator<EnrollUserCommand> {
+public sealed class EnrollUserCommandValidator : AbstractValidator<EnrollUserCommand> {
     public EnrollUserCommandValidator() {
         RuleFor(x => x.ProgramId)
           .NotEmpty().WithMessage("Program ID is required");

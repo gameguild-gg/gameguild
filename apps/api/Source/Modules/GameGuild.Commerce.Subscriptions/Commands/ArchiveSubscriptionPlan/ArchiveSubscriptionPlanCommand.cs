@@ -5,4 +5,4 @@ namespace GameGuild.Commerce.Subscriptions;
 /// <summary>
 ///     Command to archive a subscription plan
 /// </summary>
-public record ArchiveSubscriptionPlanCommand(Guid PlanId) : ICommand;
+public sealed record ArchiveSubscriptionPlanCommand(Guid PlanId) : ICommand;

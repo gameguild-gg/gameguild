@@ -3,7 +3,7 @@ using GameGuild.Identity.Authorization;
 
 namespace GameGuild.Identity.Authentication;
 
-public record RevokeContentTypePermissionCommand : ICommand
+public sealed record RevokeContentTypePermissionCommand : ICommand
 {
     public Guid UserId { get; init; }
 

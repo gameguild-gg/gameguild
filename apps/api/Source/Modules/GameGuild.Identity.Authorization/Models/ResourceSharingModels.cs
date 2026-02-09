@@ -10,7 +10,7 @@ namespace GameGuild.Identity.Authorization;
 /// <param name="GrantedAt">When the permissions were granted.</param>
 /// <param name="ExpiresAt">When the permissions expire.</param>
 /// <param name="IsOwner">Whether the user is the resource owner.</param>
-public record ResourceAccessDto(
+public sealed record ResourceAccessDto(
     Guid UserId,
     string UserName,
     string Email,
@@ -26,7 +26,7 @@ public record ResourceAccessDto(
 /// <param name="Permissions">The permissions to grant.</param>
 /// <param name="ExpiresAt">Optional expiration date for the share.</param>
 /// <param name="Message">Optional message to include with the invitation.</param>
-public record ShareResourceRequest(
+public sealed record ShareResourceRequest(
     string Email,
     string[] Permissions,
     DateTime? ExpiresAt = null,
@@ -74,7 +74,7 @@ public class ShareResult
 /// <param name="UserId">The user's ID.</param>
 /// <param name="Permissions">The new set of permissions.</param>
 /// <param name="ExpiresAt">Optional new expiration date.</param>
-public record UpdatePermissionsRequest(
+public sealed record UpdatePermissionsRequest(
     Guid UserId,
     string[] Permissions,
     DateTime? ExpiresAt = null);
@@ -105,7 +105,7 @@ public class PermissionUpdateResult
 /// </summary>
 /// <param name="UserId">The user's ID.</param>
 /// <param name="Reason">Optional reason for removal.</param>
-public record RemoveAccessRequest(
+public sealed record RemoveAccessRequest(
     Guid UserId,
     string? Reason = null);
 
@@ -142,7 +142,7 @@ public class ResourceUsersResponse
 /// <param name="InvitedAt">When the invitation was sent.</param>
 /// <param name="ExpiresAt">When the invitation expires.</param>
 /// <param name="Status">The current invitation status.</param>
-public record PendingInvitationDto(
+public sealed record PendingInvitationDto(
     Guid InvitationId,
     string Email,
     string[] Permissions,
@@ -153,7 +153,7 @@ public record PendingInvitationDto(
 /// <summary>
 ///     Request to apply a permission template.
 /// </summary>
-public record ApplyTemplateRequest(
+public sealed record ApplyTemplateRequest(
     string TemplateId,
     Guid[] UserIds);
 

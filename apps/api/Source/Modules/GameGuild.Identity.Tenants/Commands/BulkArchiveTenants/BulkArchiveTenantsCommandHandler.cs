@@ -5,7 +5,7 @@ namespace GameGuild.Identity.Tenants;
 /// <summary>
 ///     Handler for bulk archiving of tenants
 /// </summary>
-public class BulkArchiveTenantsCommandHandler(ITenantRepository tenantRepository) : ICommandHandler<BulkArchiveTenantsCommand, BulkOperationResponse>
+public sealed class BulkArchiveTenantsCommandHandler(ITenantRepository tenantRepository) : ICommandHandler<BulkArchiveTenantsCommand, BulkOperationResponse>
 {
     public async Task<BulkOperationResponse> Handle(BulkArchiveTenantsCommand request, CancellationToken cancellationToken)
     {

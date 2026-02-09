@@ -5,7 +5,7 @@ namespace GameGuild.Commerce.Products;
 /// <summary>
 /// Handler for granting product access to a user
 /// </summary>
-public class GrantProductAccessCommandHandler(
+public sealed class GrantProductAccessCommandHandler(
     IUserProductRepository userProductRepository,
     IProductRepository productRepository)
     : ICommandHandler<GrantProductAccessCommand, UserProductAccessDto>

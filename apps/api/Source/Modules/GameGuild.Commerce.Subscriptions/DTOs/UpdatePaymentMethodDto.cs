@@ -3,7 +3,7 @@ namespace GameGuild.Commerce.Subscriptions;
 /// <summary>
 ///     DTO for updating payment method
 /// </summary>
-public record UpdatePaymentMethodDto
+public sealed record UpdatePaymentMethodDto
 {
     /// <summary>
     ///     Payment method ID
@@ -89,7 +89,7 @@ public enum PaymentMethodType
 /// <summary>
 ///     DTO for billing address
 /// </summary>
-public record BillingAddressDto
+public sealed record BillingAddressDto
 {
     /// <summary>Street address line 1</summary>
     public string? Line1 { get; init; }

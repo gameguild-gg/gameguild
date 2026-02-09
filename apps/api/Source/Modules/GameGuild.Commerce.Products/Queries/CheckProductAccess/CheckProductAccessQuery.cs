@@ -7,7 +7,7 @@ namespace GameGuild.Commerce.Products;
 /// </summary>
 /// <param name="UserId">User ID</param>
 /// <param name="ProductId">Product ID</param>
-public record CheckProductAccessQuery(
+public sealed record CheckProductAccessQuery(
     Guid UserId,
     Guid ProductId
 ) : IQuery<ProductAccessCheckResult>;
@@ -19,7 +19,7 @@ public record CheckProductAccessQuery(
 /// <param name="AccessStatus">Current access status (if any)</param>
 /// <param name="AccessEndDate">When access expires (if applicable)</param>
 /// <param name="AcquisitionType">How the user acquired access</param>
-public record ProductAccessCheckResult(
+public sealed record ProductAccessCheckResult(
     bool HasAccess,
     ProductAccessStatus? AccessStatus = null,
     DateTime? AccessEndDate = null,

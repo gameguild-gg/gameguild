@@ -7,4 +7,4 @@ namespace GameGuild.Identity.Users;
 /// </summary>
 /// <param name="UserId">The user ID</param>
 /// <param name="Request">The update request containing optional fields</param>
-public record UpdateUserMetadataCommand(Guid UserId, UpdateUserMetadataRequest Request) : ICommand;
+public sealed record UpdateUserMetadataCommand(Guid UserId, UpdateUserMetadataRequest Request) : ICommand;

@@ -1,9 +1,9 @@
-﻿using GameGuild.Identity.Authorization;
+using GameGuild.Identity.Authorization;
 using GameGuild.CQRS;
 
 namespace GameGuild.Identity.Authentication;
 
-public record ValidateConditionCommand : ICommand<ConditionValidationResult>
+public sealed record ValidateConditionCommand : ICommand<ConditionValidationResult>
 {
     public PolicyConditionType ConditionType { get; init; }
 

@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace GameGuild.Learning.Courses;
 
-public class GetProgramTagsQueryHandler(
+public sealed class GetProgramTagsQueryHandler(
     IApplicationDbContext context)
     : IQueryHandler<GetProgramTagsQuery, IEnumerable<ProgramTagDto>>
 {
@@ -21,7 +21,7 @@ public class GetProgramTagsQueryHandler(
     }
 }
 
-public class GetProgramsByTagQueryHandler(
+public sealed class GetProgramsByTagQueryHandler(
     IApplicationDbContext context)
     : IQueryHandler<GetProgramsByTagQuery, PagedResult<Program>>
 {
@@ -44,7 +44,7 @@ public class GetProgramsByTagQueryHandler(
     }
 }
 
-public class GetProgramsBySkillQueryHandler(
+public sealed class GetProgramsBySkillQueryHandler(
     IApplicationDbContext context)
     : IQueryHandler<GetProgramsBySkillQuery, PagedResult<ProgramWithSkillDto>>
 {
@@ -74,7 +74,7 @@ public class GetProgramsBySkillQueryHandler(
     }
 }
 
-public class GetProgramsBySkillsQueryHandler(
+public sealed class GetProgramsBySkillsQueryHandler(
     IApplicationDbContext context)
     : IQueryHandler<GetProgramsBySkillsQuery, PagedResult<Program>>
 {
@@ -113,7 +113,7 @@ public class GetProgramsBySkillsQueryHandler(
     }
 }
 
-public class GetProgramPrimarySkillQueryHandler(
+public sealed class GetProgramPrimarySkillQueryHandler(
     IApplicationDbContext context)
     : IQueryHandler<GetProgramPrimarySkillQuery, ProgramTagDto?>
 {
@@ -128,7 +128,7 @@ public class GetProgramPrimarySkillQueryHandler(
     }
 }
 
-public class SearchProgramsByTagNameQueryHandler(
+public sealed class SearchProgramsByTagNameQueryHandler(
     IApplicationDbContext context)
     : IQueryHandler<SearchProgramsByTagNameQuery, PagedResult<Program>>
 {

@@ -31,7 +31,7 @@ public interface IPayPalSignatureVerificationService
 /// <summary>
 ///     Result of PayPal webhook signature verification.
 /// </summary>
-public record PayPalVerificationResult(
+public sealed record PayPalVerificationResult(
     bool IsValid,
     string VerificationStatus,
     string? ErrorMessage = null)

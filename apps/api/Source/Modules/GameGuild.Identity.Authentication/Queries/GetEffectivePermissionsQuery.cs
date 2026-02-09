@@ -1,8 +1,8 @@
-﻿using GameGuild.CQRS;
+using GameGuild.CQRS;
 
 namespace GameGuild.Identity.Authentication;
 
-public record GetEffectivePermissionsQuery : IQuery<EffectivePermissionsDto>
+public sealed record GetEffectivePermissionsQuery : IQuery<EffectivePermissionsDto>
 {
     public Guid UserId { get; init; }
 

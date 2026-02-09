@@ -12,7 +12,7 @@ namespace GameGuild.Identity.Tenants;
 /// <param name="AdminNotes">Administrative notes and documentation</param>
 /// <param name="CreatedAt">Timestamp when the metadata was created</param>
 /// <param name="UpdatedAt">Timestamp when the metadata was last updated</param>
-public record TenantMetadataDto(
+public sealed record TenantMetadataDto(
     Guid Id,
     Dictionary<string, object?> CustomFields,
     List<string> Tags,
@@ -32,7 +32,7 @@ public record TenantMetadataDto(
 /// <param name="TenantType">Type and category of the tenant</param>
 /// <param name="GeographicRegion">Geographic location and regulatory information</param>
 /// <param name="ComplianceRequirements">Compliance and regulatory requirements</param>
-public record TenantBusinessInfoDto(string? Industry, string? OrganizationSize, string? TenantType, string? GeographicRegion, List<string> ComplianceRequirements);
+public sealed record TenantBusinessInfoDto(string? Industry, string? OrganizationSize, string? TenantType, string? GeographicRegion, List<string> ComplianceRequirements);
 
 /// <summary>
 ///     Contact information data transfer object for tenant organizational data
@@ -43,7 +43,7 @@ public record TenantBusinessInfoDto(string? Industry, string? OrganizationSize, 
 /// <param name="OrganizationName">Name of the organization</param>
 /// <param name="Address">Physical address of the organization</param>
 /// <param name="Website">Website URL of the organization</param>
-public record TenantContactInfoDto(string? PrimaryContactName, string? PrimaryContactEmail, string? PrimaryContactPhone, string? OrganizationName, TenantAddressDto? Address, string? Website);
+public sealed record TenantContactInfoDto(string? PrimaryContactName, string? PrimaryContactEmail, string? PrimaryContactPhone, string? OrganizationName, TenantAddressDto? Address, string? Website);
 
 /// <summary>
 ///     Address information data transfer object
@@ -53,7 +53,7 @@ public record TenantContactInfoDto(string? PrimaryContactName, string? PrimaryCo
 /// <param name="State">State or province</param>
 /// <param name="PostalCode">Postal or ZIP code</param>
 /// <param name="Country">Country name</param>
-public record TenantAddressDto(string? Street, string? City, string? State, string? PostalCode, string? Country);
+public sealed record TenantAddressDto(string? Street, string? City, string? State, string? PostalCode, string? Country);
 
 /// <summary>
 ///     Request model for updating tenant metadata
@@ -64,7 +64,7 @@ public record TenantAddressDto(string? Street, string? City, string? State, stri
 /// <param name="BusinessInfo">Business information to update</param>
 /// <param name="ContactInfo">Contact information to update</param>
 /// <param name="AdminNotes">Administrative notes to update</param>
-public record UpdateTenantMetadataRequest(
+public sealed record UpdateTenantMetadataRequest(
     Dictionary<string, object?>? CustomFields,
     List<string>? Tags,
     Dictionary<string, string>? ExternalReferences,
@@ -82,7 +82,7 @@ public record UpdateTenantMetadataRequest(
 /// <param name="BusinessInfo">Complete business information</param>
 /// <param name="ContactInfo">Complete contact information</param>
 /// <param name="AdminNotes">Administrative notes</param>
-public record ReplaceTenantMetadataRequest(
+public sealed record ReplaceTenantMetadataRequest(
     Dictionary<string, object?> CustomFields,
     List<string> Tags,
     Dictionary<string, string> ExternalReferences,
@@ -99,7 +99,7 @@ public record ReplaceTenantMetadataRequest(
 /// <param name="TenantType">Tenant type</param>
 /// <param name="GeographicRegion">Geographic region</param>
 /// <param name="ComplianceRequirements">Compliance requirements</param>
-public record UpdateTenantBusinessInfoRequest(string? Industry, string? OrganizationSize, string? TenantType, string? GeographicRegion, List<string>? ComplianceRequirements);
+public sealed record UpdateTenantBusinessInfoRequest(string? Industry, string? OrganizationSize, string? TenantType, string? GeographicRegion, List<string>? ComplianceRequirements);
 
 /// <summary>
 ///     Request model for updating tenant contact information
@@ -110,7 +110,7 @@ public record UpdateTenantBusinessInfoRequest(string? Industry, string? Organiza
 /// <param name="OrganizationName">Organization name</param>
 /// <param name="Address">Organization address</param>
 /// <param name="Website">Organization website</param>
-public record UpdateTenantContactInfoRequest(string? PrimaryContactName, string? PrimaryContactEmail, string? PrimaryContactPhone, string? OrganizationName, UpdateTenantAddressRequest? Address, string? Website);
+public sealed record UpdateTenantContactInfoRequest(string? PrimaryContactName, string? PrimaryContactEmail, string? PrimaryContactPhone, string? OrganizationName, UpdateTenantAddressRequest? Address, string? Website);
 
 /// <summary>
 ///     Request model for updating tenant address information
@@ -120,22 +120,22 @@ public record UpdateTenantContactInfoRequest(string? PrimaryContactName, string?
 /// <param name="State">State or province</param>
 /// <param name="PostalCode">Postal or ZIP code</param>
 /// <param name="Country">Country name</param>
-public record UpdateTenantAddressRequest(string? Street, string? City, string? State, string? PostalCode, string? Country);
+public sealed record UpdateTenantAddressRequest(string? Street, string? City, string? State, string? PostalCode, string? Country);
 
 /// <summary>
 ///     Request model for updating tenant custom fields
 /// </summary>
 /// <param name="CustomFields">Dictionary of custom fields to update</param>
-public record UpdateTenantCustomFieldsRequest(Dictionary<string, object?> CustomFields);
+public sealed record UpdateTenantCustomFieldsRequest(Dictionary<string, object?> CustomFields);
 
 /// <summary>
 ///     Request model for updating tenant tags
 /// </summary>
 /// <param name="Tags">List of tags to set</param>
-public record UpdateTenantTagsRequest(List<string> Tags);
+public sealed record UpdateTenantTagsRequest(List<string> Tags);
 
 /// <summary>
 ///     Request model for replacing tenant tags
 /// </summary>
 /// <param name="Tags">Complete list of tags to replace existing tags</param>
-public record ReplaceTenantTagsRequest(List<string> Tags);
+public sealed record ReplaceTenantTagsRequest(List<string> Tags);

@@ -13,7 +13,7 @@ namespace GameGuild.Commerce.Products;
 /// <param name="Take">Number of items to take</param>
 /// <param name="SortBy">Sort field (Name, CreatedAt)</param>
 /// <param name="SortDirection">Sort direction (ASC, DESC)</param>
-public record GetProductsPagedQuery(
+public sealed record GetProductsPagedQuery(
     ProductType? Type = null,
     Guid? CreatorId = null,
     string? SearchTerm = null,

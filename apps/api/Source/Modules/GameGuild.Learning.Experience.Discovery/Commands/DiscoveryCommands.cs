@@ -7,7 +7,7 @@ namespace GameGuild.Learning.Experience.Discovery;
 /// <summary>
 /// Command to create featured content
 /// </summary>
-public record CreateFeaturedContentCommand(
+public sealed record CreateFeaturedContentCommand(
     FeaturedContentType Type,
     string Title,
     int DisplayOrder,
@@ -25,7 +25,7 @@ public record CreateFeaturedContentCommand(
 /// <summary>
 /// Command to update featured content
 /// </summary>
-public record UpdateFeaturedContentCommand(
+public sealed record UpdateFeaturedContentCommand(
     Guid Id,
     string? Title = null,
     string? Subtitle = null,
@@ -41,19 +41,19 @@ public record UpdateFeaturedContentCommand(
 /// <summary>
 /// Command to delete featured content
 /// </summary>
-public record DeleteFeaturedContentCommand(Guid Id) : ICommand<bool>;
+public sealed record DeleteFeaturedContentCommand(Guid Id) : ICommand<bool>;
 
 /// <summary>
 /// Command to activate/deactivate featured content
 /// </summary>
-public record ToggleFeaturedContentCommand(Guid Id, bool IsActive) : ICommand<FeaturedContent?>;
+public sealed record ToggleFeaturedContentCommand(Guid Id, bool IsActive) : ICommand<FeaturedContent?>;
 
 // ===== COURSE COLLECTION COMMANDS =====
 
 /// <summary>
 /// Command to create a course collection
 /// </summary>
-public record CreateCourseCollectionCommand(
+public sealed record CreateCourseCollectionCommand(
     Guid CuratorId,
     string Title,
     CollectionType Type = CollectionType.Curated,
@@ -65,7 +65,7 @@ public record CreateCourseCollectionCommand(
 /// <summary>
 /// Command to update a course collection
 /// </summary>
-public record UpdateCourseCollectionCommand(
+public sealed record UpdateCourseCollectionCommand(
     Guid Id,
     string? Title = null,
     string? Description = null,
@@ -76,24 +76,24 @@ public record UpdateCourseCollectionCommand(
 /// <summary>
 /// Command to publish a course collection
 /// </summary>
-public record PublishCourseCollectionCommand(Guid Id) : ICommand<CourseCollection?>;
+public sealed record PublishCourseCollectionCommand(Guid Id) : ICommand<CourseCollection?>;
 
 /// <summary>
 /// Command to unpublish a course collection
 /// </summary>
-public record UnpublishCourseCollectionCommand(Guid Id) : ICommand<CourseCollection?>;
+public sealed record UnpublishCourseCollectionCommand(Guid Id) : ICommand<CourseCollection?>;
 
 /// <summary>
 /// Command to delete a course collection
 /// </summary>
-public record DeleteCourseCollectionCommand(Guid Id) : ICommand<bool>;
+public sealed record DeleteCourseCollectionCommand(Guid Id) : ICommand<bool>;
 
 // ===== SEARCH HISTORY COMMANDS =====
 
 /// <summary>
 /// Command to record a search
 /// </summary>
-public record RecordSearchCommand(
+public sealed record RecordSearchCommand(
     string Query,
     int ResultCount,
     Guid? UserId = null,
@@ -103,7 +103,7 @@ public record RecordSearchCommand(
 /// <summary>
 /// Command to record a click from search results
 /// </summary>
-public record RecordSearchClickCommand(
+public sealed record RecordSearchClickCommand(
     Guid SearchId,
     Guid ClickedCourseId
 ) : ICommand<bool>;

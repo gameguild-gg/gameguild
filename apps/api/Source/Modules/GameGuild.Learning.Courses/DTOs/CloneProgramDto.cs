@@ -1,6 +1,6 @@
 namespace GameGuild.Learning.Courses;
 
-public record CloneProgramDto(string NewTitle, string? NewDescription = null) {
+public sealed record CloneProgramDto(string NewTitle, string? NewDescription = null) {
   public string NewTitle { get; init; } = NewTitle;
 
   public string? NewDescription { get; init; } = NewDescription;

@@ -1,8 +1,8 @@
-﻿using GameGuild.CQRS;
+using GameGuild.CQRS;
 
 namespace GameGuild.Identity.Authentication;
 
-public record GetPermissionAnalyticsQuery : IQuery<PermissionAnalyticsDto>
+public sealed record GetPermissionAnalyticsQuery : IQuery<PermissionAnalyticsDto>
 {
     public Guid TenantId { get; init; }
 

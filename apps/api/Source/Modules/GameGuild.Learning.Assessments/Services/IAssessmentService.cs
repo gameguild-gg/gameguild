@@ -79,7 +79,7 @@ public interface IAssessmentService
 /// <summary>
 /// Request to create a new assessment
 /// </summary>
-public record CreateAssessmentRequest(
+public sealed record CreateAssessmentRequest(
     Guid CourseId,
     string Title,
     string? Description,
@@ -96,7 +96,7 @@ public record CreateAssessmentRequest(
 /// <summary>
 /// Request to update an assessment
 /// </summary>
-public record UpdateAssessmentRequest(
+public sealed record UpdateAssessmentRequest(
     string? Title = null,
     string? Description = null,
     int? MaxScore = null,
@@ -111,7 +111,7 @@ public record UpdateAssessmentRequest(
 /// <summary>
 /// Request to grade a submission
 /// </summary>
-public record GradeSubmissionRequest(
+public sealed record GradeSubmissionRequest(
     int Score,
     Guid? GradedBy = null,
     string? Feedback = null

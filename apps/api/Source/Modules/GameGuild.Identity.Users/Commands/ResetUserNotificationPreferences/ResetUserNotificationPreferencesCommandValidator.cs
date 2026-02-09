@@ -2,7 +2,7 @@ using FluentValidation;
 
 namespace GameGuild.Identity.Users;
 
-public class ResetUserNotificationPreferencesCommandValidator : AbstractValidator<ResetUserNotificationPreferencesCommand>
+public sealed class ResetUserNotificationPreferencesCommandValidator : AbstractValidator<ResetUserNotificationPreferencesCommand>
 {
     public ResetUserNotificationPreferencesCommandValidator()
     {

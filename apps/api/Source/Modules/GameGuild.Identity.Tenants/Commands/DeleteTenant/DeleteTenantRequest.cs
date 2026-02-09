@@ -4,4 +4,4 @@ namespace GameGuild.Identity.Tenants;
 ///     Request model for deleting a tenant
 /// </summary>
 /// <param name="ConfirmationToken">Confirmation token to prevent accidental deletions</param>
-public record DeleteTenantRequest(string ConfirmationToken);
+public sealed record DeleteTenantRequest(string ConfirmationToken);

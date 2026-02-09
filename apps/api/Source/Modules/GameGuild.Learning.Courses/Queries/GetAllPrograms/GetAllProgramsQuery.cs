@@ -4,7 +4,7 @@ using GameGuild.CQRS;
 namespace GameGuild.Learning.Courses;
 
 /// <summary> Query to get all programs with pagination and filtering </summary>
-public record GetAllProgramsQuery(
+public sealed record GetAllProgramsQuery(
   int Skip = 0,
   int Take = 50,
   string? Search = null,

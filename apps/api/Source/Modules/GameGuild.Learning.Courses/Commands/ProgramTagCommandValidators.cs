@@ -2,7 +2,7 @@ using FluentValidation;
 
 namespace GameGuild.Learning.Courses;
 
-public class AddTagToProgramCommandValidator : AbstractValidator<AddTagToProgramCommand>
+public sealed class AddTagToProgramCommandValidator : AbstractValidator<AddTagToProgramCommand>
 {
     public AddTagToProgramCommandValidator()
     {
@@ -24,7 +24,7 @@ public class AddTagToProgramCommandValidator : AbstractValidator<AddTagToProgram
     }
 }
 
-public class UpdateProgramTagCommandValidator : AbstractValidator<UpdateProgramTagCommand>
+public sealed class UpdateProgramTagCommandValidator : AbstractValidator<UpdateProgramTagCommand>
 {
     public UpdateProgramTagCommandValidator()
     {
@@ -48,7 +48,7 @@ public class UpdateProgramTagCommandValidator : AbstractValidator<UpdateProgramT
     }
 }
 
-public class RemoveTagFromProgramCommandValidator : AbstractValidator<RemoveTagFromProgramCommand>
+public sealed class RemoveTagFromProgramCommandValidator : AbstractValidator<RemoveTagFromProgramCommand>
 {
     public RemoveTagFromProgramCommandValidator()
     {
@@ -62,7 +62,7 @@ public class RemoveTagFromProgramCommandValidator : AbstractValidator<RemoveTagF
     }
 }
 
-public class BulkAddTagsToProgramCommandValidator : AbstractValidator<BulkAddTagsToProgramCommand>
+public sealed class BulkAddTagsToProgramCommandValidator : AbstractValidator<BulkAddTagsToProgramCommand>
 {
     public BulkAddTagsToProgramCommandValidator()
     {

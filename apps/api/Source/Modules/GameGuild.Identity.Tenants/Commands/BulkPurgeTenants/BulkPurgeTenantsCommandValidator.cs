@@ -5,7 +5,7 @@ namespace GameGuild.Identity.Tenants;
 /// <summary>
 ///     Validator for BulkPurgeTenantsCommand — uses stricter limit (50) for destructive operations
 /// </summary>
-public class BulkPurgeTenantsCommandValidator : AbstractValidator<BulkPurgeTenantsCommand>
+public sealed class BulkPurgeTenantsCommandValidator : AbstractValidator<BulkPurgeTenantsCommand>
 {
     public BulkPurgeTenantsCommandValidator()
     {

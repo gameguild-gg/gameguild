@@ -5,7 +5,7 @@ namespace GameGuild.Commerce.Products;
 /// <summary>
 /// Validator for GetProductByIdQuery
 /// </summary>
-public class GetProductByIdQueryValidator : AbstractValidator<GetProductByIdQuery>
+public sealed class GetProductByIdQueryValidator : AbstractValidator<GetProductByIdQuery>
 {
     public GetProductByIdQueryValidator()
     {

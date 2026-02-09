@@ -13,7 +13,7 @@ namespace GameGuild.Resources;
 /// <param name="Metadata">Optional metadata (JSON string)</param>
 /// <param name="Source">Optional source identifier (e.g., "API", "UI", "System")</param>
 /// <param name="SkipQuotaIncrement">If true, only creates the usage record without incrementing quota (use when quota was already atomically consumed)</param>
-public record RecordResourceUsageCommand(
+public sealed record RecordResourceUsageCommand(
     Guid TenantId,
     ResourceUsageType ResourceUsageType,
     long Count,

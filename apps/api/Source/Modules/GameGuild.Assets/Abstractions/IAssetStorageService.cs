@@ -104,7 +104,7 @@ public interface IAssetStorageService
 /// <summary>
 /// Result of a storage upload.
 /// </summary>
-public record StorageUploadResult(
+public sealed record StorageUploadResult(
     string BucketName,
     string ObjectKey,
     string? ETag = null,

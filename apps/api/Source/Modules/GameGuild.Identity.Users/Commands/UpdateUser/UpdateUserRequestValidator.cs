@@ -5,7 +5,7 @@ namespace GameGuild.Identity.Users;
 /// <summary>
 ///     Validator for UpdateUserRequest
 /// </summary>
-public class UpdateUserRequestValidator : AbstractValidator<UpdateUserRequest>
+public sealed class UpdateUserRequestValidator : AbstractValidator<UpdateUserRequest>
 {
     public UpdateUserRequestValidator()
     {

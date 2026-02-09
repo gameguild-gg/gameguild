@@ -6,7 +6,7 @@ namespace GameGuild.Identity.Authentication;
 /// <summary>
 ///     Handler for logging user sign-in events and performing post-login actions
 /// </summary>
-public class UserSignedInEventHandler(ILogger<UserSignedInEventHandler> logger) : INotificationHandler<UserSignedInEvent>
+public sealed class UserSignedInEventHandler(ILogger<UserSignedInEventHandler> logger) : INotificationHandler<UserSignedInEvent>
 {
     public async Task Handle(UserSignedInEvent notification, CancellationToken cancellationToken)
     {

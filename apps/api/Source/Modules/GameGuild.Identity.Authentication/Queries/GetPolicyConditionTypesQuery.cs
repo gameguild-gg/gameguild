@@ -1,5 +1,5 @@
-﻿using GameGuild.CQRS;
+using GameGuild.CQRS;
 
 namespace GameGuild.Identity.Authentication;
 
-public record GetPolicyConditionTypesQuery : IQuery<IEnumerable<PolicyConditionTypeDto>> { }
+public sealed record GetPolicyConditionTypesQuery : IQuery<IEnumerable<PolicyConditionTypeDto>> { }

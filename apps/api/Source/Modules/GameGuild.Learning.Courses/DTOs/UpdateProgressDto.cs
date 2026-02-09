@@ -1,6 +1,6 @@
 namespace GameGuild.Learning.Courses;
 
-public record UpdateProgressDto(ProgressStatus? Status = null, DateTime? LastAccessedAt = null, Dictionary<string, object>? AdditionalData = null) {
+public sealed record UpdateProgressDto(ProgressStatus? Status = null, DateTime? LastAccessedAt = null, Dictionary<string, object>? AdditionalData = null) {
   public ProgressStatus? Status { get; init; } = Status;
 
   public DateTime? LastAccessedAt { get; init; } = LastAccessedAt;

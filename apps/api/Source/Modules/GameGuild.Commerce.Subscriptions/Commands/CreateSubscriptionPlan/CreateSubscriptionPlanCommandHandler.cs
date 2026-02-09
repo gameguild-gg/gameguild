@@ -6,7 +6,7 @@ namespace GameGuild.Commerce.Subscriptions;
 /// <summary>
 ///     Command handler for creating a new subscription plan
 /// </summary>
-public class CreateSubscriptionPlanCommandHandler(
+public sealed class CreateSubscriptionPlanCommandHandler(
     ISubscriptionPlanRepository subscriptionPlanRepository,
     ILogger<CreateSubscriptionPlanCommandHandler> logger) : ICommandHandler<CreateSubscriptionPlanCommand, Guid>
 {

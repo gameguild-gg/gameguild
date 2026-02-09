@@ -3,7 +3,7 @@ using GameGuild.CQRS;
 namespace GameGuild.Learning.Courses;
 
 /// <summary> Query to search programs with advanced filtering </summary>
-public record SearchProgramsQuery(
+public sealed record SearchProgramsQuery(
   string SearchTerm,
   ProgramCategory? Category = null,
   ProgramDifficulty? Difficulty = null,

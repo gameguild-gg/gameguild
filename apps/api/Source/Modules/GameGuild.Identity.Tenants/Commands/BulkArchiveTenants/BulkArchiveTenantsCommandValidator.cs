@@ -4,7 +4,7 @@ namespace GameGuild.Identity.Tenants;
 /// <summary>
 ///     Validator for BulkArchiveTenantsCommand
 /// </summary>
-public class BulkArchiveTenantsCommandValidator : BulkOperationValidator<BulkArchiveTenantsCommand>
+public sealed class BulkArchiveTenantsCommandValidator : BulkOperationValidator<BulkArchiveTenantsCommand>
 {
     public BulkArchiveTenantsCommandValidator() { AddCommonRules(); }
 

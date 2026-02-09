@@ -9,4 +9,4 @@ namespace GameGuild.Commerce.Payments;
 /// <param name="SubscriptionId">Subscription ID</param>
 /// <param name="Amount">Payment amount</param>
 /// <param name="PaymentMethodId">Payment method identifier</param>
-public record ProcessPaymentCommand(Guid TenantId, Guid SubscriptionId, decimal Amount, string PaymentMethodId) : ICommand<PaymentResult>;
+public sealed record ProcessPaymentCommand(Guid TenantId, Guid SubscriptionId, decimal Amount, string PaymentMethodId) : ICommand<PaymentResult>;

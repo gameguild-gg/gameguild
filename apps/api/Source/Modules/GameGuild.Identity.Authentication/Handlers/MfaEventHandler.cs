@@ -6,7 +6,7 @@ namespace GameGuild.Identity.Authentication;
 /// <summary>
 ///     Handler for logging MFA-related events
 /// </summary>
-public class MfaEventHandler(ILogger<MfaEventHandler> logger) : INotificationHandler<MfaEnabledEvent>,
+public sealed class MfaEventHandler(ILogger<MfaEventHandler> logger) : INotificationHandler<MfaEnabledEvent>,
     INotificationHandler<MfaDisabledEvent>,
     INotificationHandler<MfaVerificationSucceededEvent>,
     INotificationHandler<MfaVerificationFailedEvent>

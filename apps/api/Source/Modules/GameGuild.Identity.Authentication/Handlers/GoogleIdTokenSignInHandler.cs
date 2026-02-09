@@ -7,7 +7,7 @@ namespace GameGuild.Identity.Authentication;
 /// <summary>
 ///     Handler for Google ID token sign-in command
 /// </summary>
-public class GoogleIdTokenSignInHandler(IAuthService authService, IUserRepository userRepository, ILogger<GoogleIdTokenSignInHandler> logger, FluentValidation.IValidator<GoogleIdTokenSignInCommand> validator)
+public sealed class GoogleIdTokenSignInHandler(IAuthService authService, IUserRepository userRepository, ILogger<GoogleIdTokenSignInHandler> logger, FluentValidation.IValidator<GoogleIdTokenSignInCommand> validator)
     : IRequestHandler<GoogleIdTokenSignInCommand, SignInResponse>
 {
     public async Task<SignInResponse> Handle(GoogleIdTokenSignInCommand command, CancellationToken cancellationToken)

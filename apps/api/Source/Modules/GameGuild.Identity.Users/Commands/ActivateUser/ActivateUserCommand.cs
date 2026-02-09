@@ -6,4 +6,4 @@ namespace GameGuild.Identity.Users;
 ///     Command to activate a user
 /// </summary>
 /// <param name="UserId">User's unique identifier</param>
-public record ActivateUserCommand(Guid UserId) : ICommand<UserDto>;
+public sealed record ActivateUserCommand(Guid UserId) : ICommand<UserDto>;

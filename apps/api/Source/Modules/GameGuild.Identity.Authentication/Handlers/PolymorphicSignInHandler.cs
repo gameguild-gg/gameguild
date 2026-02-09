@@ -8,7 +8,7 @@ namespace GameGuild.Identity.Authentication;
 /// <summary>
 ///     Handler for polymorphic sign-in command supporting multiple credential types
 /// </summary>
-public class PolymorphicSignInHandler(
+public sealed class PolymorphicSignInHandler(
     IAuthService authService,
     IUserRepository userRepository,
     ILogger<PolymorphicSignInHandler> logger,

@@ -3,7 +3,7 @@ using FluentValidation;
 namespace GameGuild.Learning.Courses;
 
 /// <summary> Validator for UpdateProgramRatingCommand </summary>
-public class UpdateProgramRatingCommandValidator : AbstractValidator<UpdateProgramRatingCommand> {
+public sealed class UpdateProgramRatingCommandValidator : AbstractValidator<UpdateProgramRatingCommand> {
     public UpdateProgramRatingCommandValidator() {
         RuleFor(x => x.ProgramId)
           .NotEmpty().WithMessage("Program ID is required");

@@ -6,7 +6,7 @@ namespace GameGuild.Commerce.Products;
 /// Command handler for updating an existing product
 /// </summary>
 #pragma warning disable CS0618 // Type or member is obsolete - Deprecated properties intentionally used during migration period
-public class UpdateProductCommandHandler(IProductRepository productRepository)
+public sealed class UpdateProductCommandHandler(IProductRepository productRepository)
     : ICommandHandler<UpdateProductCommand, ProductDto>
 {
     public async Task<ProductDto> Handle(UpdateProductCommand request, CancellationToken cancellationToken)

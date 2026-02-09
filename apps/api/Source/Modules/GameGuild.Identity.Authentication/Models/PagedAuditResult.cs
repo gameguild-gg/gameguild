@@ -5,4 +5,4 @@ namespace GameGuild.Identity.Authentication;
 /// </summary>
 /// <param name="Items">The audit entries</param>
 /// <param name="TotalCount">Total count of entries</param>
-public record PagedAuditResult(IEnumerable<ServiceAccountAuditEntry> Items, int TotalCount);
+public sealed record PagedAuditResult(IEnumerable<ServiceAccountAuditEntry> Items, int TotalCount);

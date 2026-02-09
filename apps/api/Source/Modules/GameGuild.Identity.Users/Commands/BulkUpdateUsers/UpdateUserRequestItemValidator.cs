@@ -1,11 +1,11 @@
-﻿using FluentValidation;
+using FluentValidation;
 
 namespace GameGuild.Identity.Users;
 
 /// <summary>
 ///     Validator for UpdateUserRequestItem
 /// </summary>
-public class UpdateUserRequestItemValidator : AbstractValidator<UpdateUserRequestItem>
+public sealed class UpdateUserRequestItemValidator : AbstractValidator<UpdateUserRequestItem>
 {
     public UpdateUserRequestItemValidator()
     {

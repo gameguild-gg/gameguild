@@ -11,7 +11,7 @@ namespace GameGuild.Resources;
 /// <param name="EndDate">Optional end date filter</param>
 /// <param name="PageNumber">Page number (1-based), defaults to 1</param>
 /// <param name="PageSize">Number of records per page, defaults to 50 (max 200)</param>
-public record GetResourceUsageRecordsQuery(
+public sealed record GetResourceUsageRecordsQuery(
     Guid TenantId, 
     ResourceUsageType? ResourceUsageType = null, 
     DateTime? StartDate = null, 

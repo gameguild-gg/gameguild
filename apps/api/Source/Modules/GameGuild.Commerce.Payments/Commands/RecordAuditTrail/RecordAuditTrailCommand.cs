@@ -5,7 +5,7 @@ namespace GameGuild.Commerce.Payments;
 /// <summary>
 ///     Command to record an audit trail entry
 /// </summary>
-public record RecordAuditTrailCommand(
+public sealed record RecordAuditTrailCommand(
     string EntityType,
     Guid EntityId,
     string Action,

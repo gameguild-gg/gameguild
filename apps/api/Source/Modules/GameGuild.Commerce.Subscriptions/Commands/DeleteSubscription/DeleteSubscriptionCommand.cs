@@ -5,4 +5,4 @@ namespace GameGuild.Commerce.Subscriptions;
 /// <summary>
 ///     Command to delete a subscription
 /// </summary>
-public record DeleteSubscriptionCommand(Guid SubscriptionId) : ICommand;
+public sealed record DeleteSubscriptionCommand(Guid SubscriptionId) : ICommand;

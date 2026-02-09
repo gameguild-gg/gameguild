@@ -5,7 +5,7 @@ namespace GameGuild.Commerce.Products;
 /// <summary>
 /// Validator for RevokeProductAccessCommand
 /// </summary>
-public class RevokeProductAccessCommandValidator : AbstractValidator<RevokeProductAccessCommand>
+public sealed class RevokeProductAccessCommandValidator : AbstractValidator<RevokeProductAccessCommand>
 {
     public RevokeProductAccessCommandValidator()
     {

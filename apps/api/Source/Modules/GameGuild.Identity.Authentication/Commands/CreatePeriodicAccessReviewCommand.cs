@@ -1,8 +1,8 @@
-﻿using GameGuild.CQRS;
+using GameGuild.CQRS;
 
 namespace GameGuild.Identity.Authentication;
 
-public record CreatePeriodicAccessReviewCommand : ICommand<PeriodicAccessReview>
+public sealed record CreatePeriodicAccessReviewCommand : ICommand<PeriodicAccessReview>
 {
     public Guid TenantId { get; init; }
 

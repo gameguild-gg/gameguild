@@ -5,7 +5,7 @@ namespace GameGuild.Commerce.Products;
 /// <summary>
 /// Handler for deleting a promo code
 /// </summary>
-public class DeletePromoCodeCommandHandler(IPromoCodeRepository promoCodeRepository)
+public sealed class DeletePromoCodeCommandHandler(IPromoCodeRepository promoCodeRepository)
     : ICommandHandler<DeletePromoCodeCommand, Unit>
 {
     public async Task<Unit> Handle(DeletePromoCodeCommand request, CancellationToken cancellationToken)

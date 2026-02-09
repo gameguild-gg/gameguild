@@ -6,7 +6,7 @@ namespace GameGuild.Identity.Authentication;
 
 // ABAC Policy Commands
 [RequiresQuota(ResourceUsageType.AbacPolicies, 1, Source = "CreateAbacPolicy")]
-public record CreateAbacPolicyCommand : ICommand<AbacPolicy>
+public sealed record CreateAbacPolicyCommand : ICommand<AbacPolicy>
 {
     public string Name { get; init; } = string.Empty;
 

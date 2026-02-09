@@ -5,7 +5,7 @@ namespace GameGuild.Identity.Users;
 /// <summary>
 ///     Validator for ResetUserPreferencesCommand
 /// </summary>
-public class ResetUserPreferencesCommandValidator : AbstractValidator<ResetUserPreferencesCommand>
+public sealed class ResetUserPreferencesCommandValidator : AbstractValidator<ResetUserPreferencesCommand>
 {
     public ResetUserPreferencesCommandValidator()
     {

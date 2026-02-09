@@ -7,7 +7,7 @@ namespace GameGuild.Learning.Courses;
 /// <summary>
 /// Command handler for UpdateProgramCommand
 /// </summary>
-public class UpdateProgramCommandHandler(IApplicationDbContext context, ILogger<UpdateProgramCommandHandler> logger)
+public sealed class UpdateProgramCommandHandler(IApplicationDbContext context, ILogger<UpdateProgramCommandHandler> logger)
     : ICommandHandler<UpdateProgramCommand, Program>
 {
     public async Task<Program> Handle(UpdateProgramCommand request, CancellationToken cancellationToken) {

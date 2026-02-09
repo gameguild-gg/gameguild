@@ -5,7 +5,7 @@ namespace GameGuild.Identity.Users;
 /// <summary>
 ///     Command handler for replacing user preferences
 /// </summary>
-public class ReplaceUserPreferencesCommandHandler(IUserRepository userRepository, IUserPreferencesRepository preferencesRepository) : ICommandHandler<ReplaceUserPreferencesCommand>
+public sealed class ReplaceUserPreferencesCommandHandler(IUserRepository userRepository, IUserPreferencesRepository preferencesRepository) : ICommandHandler<ReplaceUserPreferencesCommand>
 {
     public async Task<Unit> Handle(ReplaceUserPreferencesCommand request, CancellationToken cancellationToken)
     {

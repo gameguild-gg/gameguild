@@ -1,9 +1,9 @@
-﻿using GameGuild.Identity.Authorization;
+using GameGuild.Identity.Authorization;
 using GameGuild.CQRS;
 
 namespace GameGuild.Identity.Authentication;
 
-public record TestConditionalPolicyRuleCommand : ICommand<ConditionalPolicyTestResult>
+public sealed record TestConditionalPolicyRuleCommand : ICommand<ConditionalPolicyTestResult>
 {
     public PolicyConditionType ConditionType { get; init; }
 

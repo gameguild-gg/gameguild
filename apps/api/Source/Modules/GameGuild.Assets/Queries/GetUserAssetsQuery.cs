@@ -5,13 +5,13 @@ namespace GameGuild.Assets.Queries;
 /// <summary>
 /// Query to get assets owned by a user.
 /// </summary>
-public record GetUserAssetsQuery(
+public sealed record GetUserAssetsQuery(
     Guid UserId,
     Guid? TenantId,
     int? Skip = null,
     int? Take = null) : IRequest<IReadOnlyList<AssetDto>>;
 
-public class GetUserAssetsValidator : AbstractValidator<GetUserAssetsQuery>
+public sealed class GetUserAssetsValidator : AbstractValidator<GetUserAssetsQuery>
 {
     public GetUserAssetsValidator()
     {
@@ -21,7 +21,7 @@ public class GetUserAssetsValidator : AbstractValidator<GetUserAssetsQuery>
     }
 }
 
-public class GetUserAssetsHandler : IRequestHandler<GetUserAssetsQuery, IReadOnlyList<AssetDto>>
+public sealed class GetUserAssetsHandler : IRequestHandler<GetUserAssetsQuery, IReadOnlyList<AssetDto>>
 {
     private readonly IAssetReferenceRepository _referenceRepository;
 

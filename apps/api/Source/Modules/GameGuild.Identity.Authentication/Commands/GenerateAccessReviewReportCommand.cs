@@ -1,8 +1,8 @@
-﻿using GameGuild.CQRS;
+using GameGuild.CQRS;
 
 namespace GameGuild.Identity.Authentication;
 
-public record GenerateAccessReviewReportCommand : ICommand<AccessReviewReportDto>
+public sealed record GenerateAccessReviewReportCommand : ICommand<AccessReviewReportDto>
 {
     public Guid CampaignId { get; init; }
 

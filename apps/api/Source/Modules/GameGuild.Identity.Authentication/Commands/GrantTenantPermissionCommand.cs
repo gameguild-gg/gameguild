@@ -4,7 +4,7 @@ using GameGuild.CQRS;
 namespace GameGuild.Identity.Authentication;
 
 // Tenant Permission Commands
-public record GrantTenantPermissionCommand : ICommand<TenantPermission>
+public sealed record GrantTenantPermissionCommand : ICommand<TenantPermission>
 {
     public Guid UserId { get; init; }
 

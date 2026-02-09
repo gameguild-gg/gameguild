@@ -6,4 +6,4 @@ namespace GameGuild.Commerce.Products;
 /// Command to delete a promo code
 /// </summary>
 /// <param name="Id">Promo code ID</param>
-public record DeletePromoCodeCommand(Guid Id) : ICommand<Unit>;
+public sealed record DeletePromoCodeCommand(Guid Id) : ICommand<Unit>;

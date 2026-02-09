@@ -2,7 +2,7 @@ using FluentValidation;
 
 namespace GameGuild.Commerce.Billing;
 
-public class ProcessBillingWebhookCommandValidator : AbstractValidator<ProcessBillingWebhookCommand>
+public sealed class ProcessBillingWebhookCommandValidator : AbstractValidator<ProcessBillingWebhookCommand>
 {
     public ProcessBillingWebhookCommandValidator()
     {

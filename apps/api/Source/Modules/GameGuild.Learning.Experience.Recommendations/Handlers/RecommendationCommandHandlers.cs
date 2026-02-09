@@ -7,7 +7,7 @@ namespace GameGuild.Learning.Experience.Recommendations;
 
 // ===== USER LEARNING PROFILE HANDLERS =====
 
-public class CreateOrUpdateLearningProfileCommandHandler(
+public sealed class CreateOrUpdateLearningProfileCommandHandler(
     IApplicationDbContext context,
     ILogger<CreateOrUpdateLearningProfileCommandHandler> logger)
     : ICommandHandler<CreateOrUpdateLearningProfileCommand, UserLearningProfile>
@@ -43,7 +43,7 @@ public class CreateOrUpdateLearningProfileCommandHandler(
     }
 }
 
-public class AddSkillToProfileCommandHandler(
+public sealed class AddSkillToProfileCommandHandler(
     IApplicationDbContext context,
     ILogger<AddSkillToProfileCommandHandler> logger)
     : ICommandHandler<AddSkillToProfileCommand, UserLearningProfile>
@@ -67,7 +67,7 @@ public class AddSkillToProfileCommandHandler(
     }
 }
 
-public class RemoveSkillFromProfileCommandHandler(
+public sealed class RemoveSkillFromProfileCommandHandler(
     IApplicationDbContext context,
     ILogger<RemoveSkillFromProfileCommandHandler> logger)
     : ICommandHandler<RemoveSkillFromProfileCommand, UserLearningProfile>
@@ -90,7 +90,7 @@ public class RemoveSkillFromProfileCommandHandler(
     }
 }
 
-public class UpdateUserActivityCommandHandler(
+public sealed class UpdateUserActivityCommandHandler(
     IApplicationDbContext context,
     ILogger<UpdateUserActivityCommandHandler> logger)
     : ICommandHandler<UpdateUserActivityCommand>
@@ -111,7 +111,7 @@ public class UpdateUserActivityCommandHandler(
     }
 }
 
-public class IncrementCompletedCoursesCommandHandler(
+public sealed class IncrementCompletedCoursesCommandHandler(
     IApplicationDbContext context,
     ILogger<IncrementCompletedCoursesCommandHandler> logger)
     : ICommandHandler<IncrementCompletedCoursesCommand>
@@ -137,7 +137,7 @@ public class IncrementCompletedCoursesCommandHandler(
 
 // ===== RECOMMENDATION HANDLERS =====
 
-public class GenerateRecommendationsCommandHandler(
+public sealed class GenerateRecommendationsCommandHandler(
     IRecommendationEngine engine,
     ILogger<GenerateRecommendationsCommandHandler> logger)
     : ICommandHandler<GenerateRecommendationsCommand, IEnumerable<CourseRecommendation>>
@@ -155,7 +155,7 @@ public class GenerateRecommendationsCommandHandler(
     }
 }
 
-public class MarkRecommendationViewedCommandHandler(
+public sealed class MarkRecommendationViewedCommandHandler(
     IApplicationDbContext context,
     ILogger<MarkRecommendationViewedCommandHandler> logger)
     : ICommandHandler<MarkRecommendationViewedCommand>
@@ -178,7 +178,7 @@ public class MarkRecommendationViewedCommandHandler(
     }
 }
 
-public class DismissRecommendationCommandHandler(
+public sealed class DismissRecommendationCommandHandler(
     IApplicationDbContext context,
     ILogger<DismissRecommendationCommandHandler> logger)
     : ICommandHandler<DismissRecommendationCommand>
@@ -201,7 +201,7 @@ public class DismissRecommendationCommandHandler(
     }
 }
 
-public class RefreshRecommendationsCommandHandler(
+public sealed class RefreshRecommendationsCommandHandler(
     IRecommendationEngine engine,
     ILogger<RefreshRecommendationsCommandHandler> logger)
     : ICommandHandler<RefreshRecommendationsCommand>
@@ -214,7 +214,7 @@ public class RefreshRecommendationsCommandHandler(
     }
 }
 
-public class ClearUserRecommendationsCommandHandler(
+public sealed class ClearUserRecommendationsCommandHandler(
     IApplicationDbContext context,
     ILogger<ClearUserRecommendationsCommandHandler> logger)
     : ICommandHandler<ClearUserRecommendationsCommand, int>

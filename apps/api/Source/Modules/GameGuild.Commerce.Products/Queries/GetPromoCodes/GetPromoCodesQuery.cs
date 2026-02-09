@@ -11,7 +11,7 @@ namespace GameGuild.Commerce.Products;
 /// <param name="SearchTerm">Search term for code, name, or description</param>
 /// <param name="Skip">Number of items to skip</param>
 /// <param name="Take">Number of items to take</param>
-public record GetPromoCodesQuery(
+public sealed record GetPromoCodesQuery(
     bool? IsActive = null,
     PromoCodeType? Type = null,
     Guid? ProductId = null,

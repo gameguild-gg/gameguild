@@ -1,5 +1,5 @@
-﻿using GameGuild.CQRS;
+using GameGuild.CQRS;
 
 namespace GameGuild.Identity.Authentication;
 
-public record GetConditionalPolicyTemplatesQuery : IQuery<IEnumerable<ConditionalPolicyTemplateDto>> { }
+public sealed record GetConditionalPolicyTemplatesQuery : IQuery<IEnumerable<ConditionalPolicyTemplateDto>> { }

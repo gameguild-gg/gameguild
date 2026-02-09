@@ -5,7 +5,7 @@ namespace GameGuild.Commerce.Products;
 /// <summary>
 /// Handler for getting paginated promo codes
 /// </summary>
-public class GetPromoCodesQueryHandler(IPromoCodeRepository promoCodeRepository)
+public sealed class GetPromoCodesQueryHandler(IPromoCodeRepository promoCodeRepository)
     : IQueryHandler<GetPromoCodesQuery, PagedResult<PromoCodeDto>>
 {
     public async Task<PagedResult<PromoCodeDto>> Handle(GetPromoCodesQuery request, CancellationToken cancellationToken)

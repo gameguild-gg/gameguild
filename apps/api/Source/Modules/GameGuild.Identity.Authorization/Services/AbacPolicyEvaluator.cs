@@ -28,7 +28,7 @@ public record AbacRequestContext(
 /// <summary>
 ///     Result of ABAC policy evaluation.
 /// </summary>
-public record AbacEvaluationResult(
+public sealed record AbacEvaluationResult(
     AbacDecision Decision,
     Guid? DecidingPolicyId = null,
     string? DecidingPolicyName = null,

@@ -7,4 +7,4 @@ namespace GameGuild.Commerce.Subscriptions;
 ///     Command to create a new subscription plan
 /// </summary>
 [RequiresQuota(ResourceUsageType.SubscriptionPlans, Source = "CreateSubscriptionPlan")]
-public record CreateSubscriptionPlanCommand(string Name, string Slug, long MonthlyPriceInCents, string Currency = "USD", string? Description = null) : ICommand<Guid>;
+public sealed record CreateSubscriptionPlanCommand(string Name, string Slug, long MonthlyPriceInCents, string Currency = "USD", string? Description = null) : ICommand<Guid>;

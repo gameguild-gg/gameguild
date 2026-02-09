@@ -5,7 +5,7 @@ namespace GameGuild.Commerce.Products;
 /// <summary>
 /// Handler for checking product access
 /// </summary>
-public class CheckProductAccessQueryHandler(IUserProductRepository userProductRepository)
+public sealed class CheckProductAccessQueryHandler(IUserProductRepository userProductRepository)
     : IQueryHandler<CheckProductAccessQuery, ProductAccessCheckResult>
 {
     public async Task<ProductAccessCheckResult> Handle(

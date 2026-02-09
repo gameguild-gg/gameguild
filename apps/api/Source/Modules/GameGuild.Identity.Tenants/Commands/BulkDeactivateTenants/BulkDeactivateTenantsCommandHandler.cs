@@ -5,7 +5,7 @@ namespace GameGuild.Identity.Tenants;
 /// <summary>
 ///     Handler for bulk deactivation of tenants
 /// </summary>
-public class BulkDeactivateTenantsCommandHandler(ITenantRepository tenantRepository) : ICommandHandler<BulkDeactivateTenantsCommand, BulkOperationResponse>
+public sealed class BulkDeactivateTenantsCommandHandler(ITenantRepository tenantRepository) : ICommandHandler<BulkDeactivateTenantsCommand, BulkOperationResponse>
 {
     public async Task<BulkOperationResponse> Handle(BulkDeactivateTenantsCommand request, CancellationToken cancellationToken)
     {

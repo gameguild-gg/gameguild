@@ -1,11 +1,11 @@
-﻿using GameGuild.CQRS;
+using GameGuild.CQRS;
 
 namespace GameGuild.Identity.Users;
 
 /// <summary>
 ///     Query handler for getting users with pagination
 /// </summary>
-public class GetUsersPagedQueryHandler(IUserRepository userRepository) : IQueryHandler<GetUsersPagedQuery, PagedResult<UserDto>>
+public sealed class GetUsersPagedQueryHandler(IUserRepository userRepository) : IQueryHandler<GetUsersPagedQuery, PagedResult<UserDto>>
 {
     public async Task<PagedResult<UserDto>> Handle(GetUsersPagedQuery request, CancellationToken cancellationToken)
     {

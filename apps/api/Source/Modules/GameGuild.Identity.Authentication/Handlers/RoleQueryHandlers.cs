@@ -6,7 +6,7 @@ namespace GameGuild.Identity.Authentication;
 /// <summary>
 ///     Handler for GetRolesQuery
 /// </summary>
-public class GetRolesQueryHandler(IRoleRepository roleRepository) : IQueryHandler<GetRolesQuery, List<RoleDto>>
+public sealed class GetRolesQueryHandler(IRoleRepository roleRepository) : IQueryHandler<GetRolesQuery, List<RoleDto>>
 {
     public async Task<List<RoleDto>> Handle(GetRolesQuery request, CancellationToken cancellationToken)
     {
@@ -29,7 +29,7 @@ public class GetRolesQueryHandler(IRoleRepository roleRepository) : IQueryHandle
 /// <summary>
 ///     Handler for GetRoleByIdQuery
 /// </summary>
-public class GetRoleByIdQueryHandler(IRoleRepository roleRepository) : IQueryHandler<GetRoleByIdQuery, RoleDto?>
+public sealed class GetRoleByIdQueryHandler(IRoleRepository roleRepository) : IQueryHandler<GetRoleByIdQuery, RoleDto?>
 {
     public async Task<RoleDto?> Handle(GetRoleByIdQuery request, CancellationToken cancellationToken)
     {
@@ -57,7 +57,7 @@ public class GetRoleByIdQueryHandler(IRoleRepository roleRepository) : IQueryHan
 /// <summary>
 ///     Handler for GetUserRolesQuery
 /// </summary>
-public class GetUserRolesQueryHandler(IRoleRepository roleRepository) : IQueryHandler<GetUserRolesQuery, List<RoleDto>>
+public sealed class GetUserRolesQueryHandler(IRoleRepository roleRepository) : IQueryHandler<GetUserRolesQuery, List<RoleDto>>
 {
     public async Task<List<RoleDto>> Handle(GetUserRolesQuery request, CancellationToken cancellationToken)
     {

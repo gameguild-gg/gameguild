@@ -10,7 +10,7 @@ namespace GameGuild.Features;
 ///     Implements fail-closed behavior: if tenant targeting rules exist but no TenantId is provided,
 ///     the feature is disabled to prevent cross-tenant feature leakage.
 /// </summary>
-public class TenantTargetingHandler(ILogger<TenantTargetingHandler> logger) : ITargetingRuleHandler
+public sealed class TenantTargetingHandler(ILogger<TenantTargetingHandler> logger) : ITargetingRuleHandler
 {
     public int Priority
     {

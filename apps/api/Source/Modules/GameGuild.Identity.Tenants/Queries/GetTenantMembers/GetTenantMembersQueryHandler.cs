@@ -5,7 +5,7 @@ namespace GameGuild.Identity.Tenants;
 /// <summary>
 ///     Handler for getting tenant members
 /// </summary>
-public class GetTenantMembersQueryHandler(ITenantMemberRepository memberRepository) : IQueryHandler<GetTenantMembersQuery, GetTenantMembersResponse>
+public sealed class GetTenantMembersQueryHandler(ITenantMemberRepository memberRepository) : IQueryHandler<GetTenantMembersQuery, GetTenantMembersResponse>
 {
     public async Task<GetTenantMembersResponse> Handle(GetTenantMembersQuery request, CancellationToken cancellationToken)
     {

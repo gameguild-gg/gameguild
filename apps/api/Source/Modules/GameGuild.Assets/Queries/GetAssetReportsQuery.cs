@@ -5,10 +5,10 @@ namespace GameGuild.Assets.Queries;
 /// <summary>
 /// Query to get reports for an asset (admin only).
 /// </summary>
-public record GetAssetReportsQuery(
+public sealed record GetAssetReportsQuery(
     Guid AssetReferenceId) : IRequest<IReadOnlyList<ReportDto>>;
 
-public class GetAssetReportsValidator : AbstractValidator<GetAssetReportsQuery>
+public sealed class GetAssetReportsValidator : AbstractValidator<GetAssetReportsQuery>
 {
     public GetAssetReportsValidator()
     {
@@ -16,7 +16,7 @@ public class GetAssetReportsValidator : AbstractValidator<GetAssetReportsQuery>
     }
 }
 
-public class GetAssetReportsHandler : IRequestHandler<GetAssetReportsQuery, IReadOnlyList<ReportDto>>
+public sealed class GetAssetReportsHandler : IRequestHandler<GetAssetReportsQuery, IReadOnlyList<ReportDto>>
 {
     private readonly IAssetReportRepository _reportRepository;
 

@@ -138,7 +138,7 @@ public sealed class TaxRulesController(ISender sender) : BaseApiController
 }
 
 /// <summary>Request to create a tax rule</summary>
-public record CreateTaxRuleRequest(
+public sealed record CreateTaxRuleRequest(
     string JurisdictionCode,
     string? ProductCategory,
     string CustomerType,
@@ -148,7 +148,7 @@ public record CreateTaxRuleRequest(
     string? Description);
 
 /// <summary>Request to partially update a tax rule</summary>
-public record PatchTaxRuleRequest(
+public sealed record PatchTaxRuleRequest(
     decimal? Rate = null,
     DateTime? EffectiveFrom = null,
     DateTime? EffectiveTo = null,
@@ -156,7 +156,7 @@ public record PatchTaxRuleRequest(
     bool? IsActive = null);
 
 /// <summary>DTO for tax rule</summary>
-public record TaxRuleDto(
+public sealed record TaxRuleDto(
     Guid Id,
     string JurisdictionCode,
     string? ProductCategory,

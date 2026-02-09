@@ -336,6 +336,6 @@ public class SecureAssetDeliveryController : BaseApiController
 /// <summary>
 /// Request for access URL generation.
 /// </summary>
-public record AccessUrlRequest(
+public sealed record AccessUrlRequest(
     string? Transform = null,
     bool DirectStorage = false);

@@ -291,26 +291,26 @@ public sealed class SubscriptionLifecycleController(ISender sender) : BaseApiCon
 
     #region Request DTOs
 
-    public record StartTrialRequest(int TrialDays);
+    public sealed record StartTrialRequest(int TrialDays);
 
-    public record EndTrialRequest(bool ConvertToPaid);
+    public sealed record EndTrialRequest(bool ConvertToPaid);
 
-    public record CancelRequest(string Reason, string? Note, DateTime? EffectiveDate);
+    public sealed record CancelRequest(string Reason, string? Note, DateTime? EffectiveDate);
 
-    public record SuspendRequest(string? Reason);
+    public sealed record SuspendRequest(string? Reason);
 
-    public record UpgradeRequest(Guid NewPlanId, DateTime? EffectiveDate);
+    public sealed record UpgradeRequest(Guid NewPlanId, DateTime? EffectiveDate);
 
-    public record DowngradeRequest(Guid NewPlanId, DateTime? EffectiveDate);
+    public sealed record DowngradeRequest(Guid NewPlanId, DateTime? EffectiveDate);
 
-    public record ChangeBillingCycleRequest(BillingCycle BillingCycle);
+    public sealed record ChangeBillingCycleRequest(BillingCycle BillingCycle);
 
-    public record AutoRenewRequest(bool AutoRenew);
+    public sealed record AutoRenewRequest(bool AutoRenew);
 
-    public record ExternalIdsRequest(string? ExternalSubscriptionId, string? ExternalCustomerId);
+    public sealed record ExternalIdsRequest(string? ExternalSubscriptionId, string? ExternalCustomerId);
 
     /// <summary>Request to pause subscription billing</summary>
-    public record PauseSubscriptionRequest(DateTime? PauseUntil = null, string? Reason = null);
+    public sealed record PauseSubscriptionRequest(DateTime? PauseUntil = null, string? Reason = null);
 
     #endregion
 }

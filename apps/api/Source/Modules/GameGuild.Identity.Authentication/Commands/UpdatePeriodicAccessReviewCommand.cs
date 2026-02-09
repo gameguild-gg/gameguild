@@ -1,8 +1,8 @@
-﻿using GameGuild.CQRS;
+using GameGuild.CQRS;
 
 namespace GameGuild.Identity.Authentication;
 
-public record UpdatePeriodicAccessReviewCommand : ICommand<PeriodicAccessReview>
+public sealed record UpdatePeriodicAccessReviewCommand : ICommand<PeriodicAccessReview>
 {
     public Guid ReviewId { get; set; }
 

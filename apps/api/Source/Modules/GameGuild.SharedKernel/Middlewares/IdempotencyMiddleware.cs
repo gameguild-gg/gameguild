@@ -187,7 +187,7 @@ public sealed class IdempotencyMiddleware
 /// <summary>
 /// Cached response for idempotent requests
 /// </summary>
-public record IdempotentResponse(
+public sealed record IdempotentResponse(
     int StatusCode,
     string ContentType,
     string Body,

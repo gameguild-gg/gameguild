@@ -10,7 +10,7 @@ namespace GameGuild.Identity.Authorization.Commands;
 /// <summary>
 ///     Command to create an access review campaign
 /// </summary>
-public record CreateAccessReviewCampaignCommand(
+public sealed record CreateAccessReviewCampaignCommand(
     string Name,
     string Description,
     Guid? TenantId,
@@ -20,7 +20,7 @@ public record CreateAccessReviewCampaignCommand(
     Guid CreatedBy
 ) : ICommand<AccessReviewCampaign>;
 
-public class CreateAccessReviewCampaignValidator : AbstractValidator<CreateAccessReviewCampaignCommand>
+public sealed class CreateAccessReviewCampaignValidator : AbstractValidator<CreateAccessReviewCampaignCommand>
 {
     public CreateAccessReviewCampaignValidator()
     {
@@ -34,7 +34,7 @@ public class CreateAccessReviewCampaignValidator : AbstractValidator<CreateAcces
     }
 }
 
-public class CreateAccessReviewCampaignHandler(IAccessReviewService service)
+public sealed class CreateAccessReviewCampaignHandler(IAccessReviewService service)
     : ICommandHandler<CreateAccessReviewCampaignCommand, AccessReviewCampaign>
 {
     public async Task<AccessReviewCampaign> Handle(
@@ -60,9 +60,9 @@ public class CreateAccessReviewCampaignHandler(IAccessReviewService service)
 /// <summary>
 ///     Command to start an access review campaign
 /// </summary>
-public record StartAccessReviewCampaignCommand(Guid CampaignId) : ICommand<bool>;
+public sealed record StartAccessReviewCampaignCommand(Guid CampaignId) : ICommand<bool>;
 
-public class StartAccessReviewCampaignValidator : AbstractValidator<StartAccessReviewCampaignCommand>
+public sealed class StartAccessReviewCampaignValidator : AbstractValidator<StartAccessReviewCampaignCommand>
 {
     public StartAccessReviewCampaignValidator()
     {
@@ -70,7 +70,7 @@ public class StartAccessReviewCampaignValidator : AbstractValidator<StartAccessR
     }
 }
 
-public class StartAccessReviewCampaignHandler(IAccessReviewService service)
+public sealed class StartAccessReviewCampaignHandler(IAccessReviewService service)
     : ICommandHandler<StartAccessReviewCampaignCommand, bool>
 {
     public async Task<bool> Handle(
@@ -85,12 +85,12 @@ public class StartAccessReviewCampaignHandler(IAccessReviewService service)
 /// <summary>
 ///     Command to complete an access review campaign
 /// </summary>
-public record CompleteAccessReviewCampaignCommand(
+public sealed record CompleteAccessReviewCampaignCommand(
     Guid CampaignId,
     Guid CompletedBy
 ) : ICommand<bool>;
 
-public class CompleteAccessReviewCampaignValidator : AbstractValidator<CompleteAccessReviewCampaignCommand>
+public sealed class CompleteAccessReviewCampaignValidator : AbstractValidator<CompleteAccessReviewCampaignCommand>
 {
     public CompleteAccessReviewCampaignValidator()
     {
@@ -99,7 +99,7 @@ public class CompleteAccessReviewCampaignValidator : AbstractValidator<CompleteA
     }
 }
 
-public class CompleteAccessReviewCampaignHandler(IAccessReviewService service)
+public sealed class CompleteAccessReviewCampaignHandler(IAccessReviewService service)
     : ICommandHandler<CompleteAccessReviewCampaignCommand, bool>
 {
     public async Task<bool> Handle(
@@ -118,9 +118,9 @@ public class CompleteAccessReviewCampaignHandler(IAccessReviewService service)
 /// <summary>
 ///     Command to cancel an access review campaign
 /// </summary>
-public record CancelAccessReviewCampaignCommand(Guid CampaignId) : ICommand<bool>;
+public sealed record CancelAccessReviewCampaignCommand(Guid CampaignId) : ICommand<bool>;
 
-public class CancelAccessReviewCampaignValidator : AbstractValidator<CancelAccessReviewCampaignCommand>
+public sealed class CancelAccessReviewCampaignValidator : AbstractValidator<CancelAccessReviewCampaignCommand>
 {
     public CancelAccessReviewCampaignValidator()
     {
@@ -128,7 +128,7 @@ public class CancelAccessReviewCampaignValidator : AbstractValidator<CancelAcces
     }
 }
 
-public class CancelAccessReviewCampaignHandler(IAccessReviewService service)
+public sealed class CancelAccessReviewCampaignHandler(IAccessReviewService service)
     : ICommandHandler<CancelAccessReviewCampaignCommand, bool>
 {
     public async Task<bool> Handle(
@@ -143,13 +143,13 @@ public class CancelAccessReviewCampaignHandler(IAccessReviewService service)
 /// <summary>
 ///     Command to approve an access review item
 /// </summary>
-public record ApproveAccessReviewItemCommand(
+public sealed record ApproveAccessReviewItemCommand(
     Guid ItemId,
     string? Reason = null,
     string? Notes = null
 ) : ICommand<AccessReviewItem>;
 
-public class ApproveAccessReviewItemValidator : AbstractValidator<ApproveAccessReviewItemCommand>
+public sealed class ApproveAccessReviewItemValidator : AbstractValidator<ApproveAccessReviewItemCommand>
 {
     public ApproveAccessReviewItemValidator()
     {
@@ -159,7 +159,7 @@ public class ApproveAccessReviewItemValidator : AbstractValidator<ApproveAccessR
     }
 }
 
-public class ApproveAccessReviewItemHandler(IAccessReviewService service)
+public sealed class ApproveAccessReviewItemHandler(IAccessReviewService service)
     : ICommandHandler<ApproveAccessReviewItemCommand, AccessReviewItem>
 {
     public async Task<AccessReviewItem> Handle(
@@ -179,13 +179,13 @@ public class ApproveAccessReviewItemHandler(IAccessReviewService service)
 /// <summary>
 ///     Command to revoke access for an access review item
 /// </summary>
-public record RevokeAccessReviewItemCommand(
+public sealed record RevokeAccessReviewItemCommand(
     Guid ItemId,
     string Reason,
     string? Notes = null
 ) : ICommand<AccessReviewItem>;
 
-public class RevokeAccessReviewItemValidator : AbstractValidator<RevokeAccessReviewItemCommand>
+public sealed class RevokeAccessReviewItemValidator : AbstractValidator<RevokeAccessReviewItemCommand>
 {
     public RevokeAccessReviewItemValidator()
     {
@@ -195,7 +195,7 @@ public class RevokeAccessReviewItemValidator : AbstractValidator<RevokeAccessRev
     }
 }
 
-public class RevokeAccessReviewItemHandler(IAccessReviewService service)
+public sealed class RevokeAccessReviewItemHandler(IAccessReviewService service)
     : ICommandHandler<RevokeAccessReviewItemCommand, AccessReviewItem>
 {
     public async Task<AccessReviewItem> Handle(
@@ -215,9 +215,9 @@ public class RevokeAccessReviewItemHandler(IAccessReviewService service)
 /// <summary>
 ///     Command to send reminders for a campaign
 /// </summary>
-public record SendAccessReviewRemindersCommand(Guid CampaignId) : ICommand<int>;
+public sealed record SendAccessReviewRemindersCommand(Guid CampaignId) : ICommand<int>;
 
-public class SendAccessReviewRemindersHandler(IAccessReviewService service)
+public sealed class SendAccessReviewRemindersHandler(IAccessReviewService service)
     : ICommandHandler<SendAccessReviewRemindersCommand, int>
 {
     public async Task<int> Handle(
@@ -232,9 +232,9 @@ public class SendAccessReviewRemindersHandler(IAccessReviewService service)
 /// <summary>
 ///     Command to process expired campaigns
 /// </summary>
-public record ProcessExpiredCampaignsCommand : ICommand<int>;
+public sealed record ProcessExpiredCampaignsCommand : ICommand<int>;
 
-public class ProcessExpiredCampaignsHandler(IAccessReviewService service)
+public sealed class ProcessExpiredCampaignsHandler(IAccessReviewService service)
     : ICommandHandler<ProcessExpiredCampaignsCommand, int>
 {
     public async Task<int> Handle(

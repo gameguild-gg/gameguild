@@ -6,5 +6,5 @@ namespace GameGuild.Commerce.Products;
 /// Validator for GetActivePromoCodesQuery.
 /// No validation rules required - ProductId is optional.
 /// </summary>
-public class GetActivePromoCodesQueryValidator : AbstractValidator<GetActivePromoCodesQuery>;
+public sealed class GetActivePromoCodesQueryValidator : AbstractValidator<GetActivePromoCodesQuery>;
 

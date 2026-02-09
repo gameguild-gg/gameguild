@@ -3,7 +3,7 @@ using GameGuild.Identity.Authorization;
 
 namespace GameGuild.Identity.Authentication;
 
-public record EvaluateConditionalPoliciesCommand : ICommand<ConditionalPolicyResult>
+public sealed record EvaluateConditionalPoliciesCommand : ICommand<ConditionalPolicyResult>
 {
     public Guid UserId { get; init; }
 

@@ -2,4 +2,4 @@ using GameGuild.CQRS;
 
 namespace GameGuild.Commerce.Subscriptions;
 
-public record DeactivateSubscriptionPlanCommand(Guid Id) : ICommand;
+public sealed record DeactivateSubscriptionPlanCommand(Guid Id) : ICommand;

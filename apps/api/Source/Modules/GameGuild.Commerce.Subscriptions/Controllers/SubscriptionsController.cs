@@ -225,7 +225,7 @@ public sealed class SubscriptionsController(ISender sender, IActorContextAccesso
     /// <param name="FulfilledOrderId">Optional Order ID that triggered this subscription (Economic Model: Order→Subscription causality)</param>
     /// <param name="StartDate">Optional start date</param>
     /// <param name="TrialDays">Optional trial period in days</param>
-    public record CreateSubscriptionRequest(
+    public sealed record CreateSubscriptionRequest(
         Guid TenantId, 
         Guid PlanId, 
         Guid CreatedByUserId, 
@@ -237,7 +237,7 @@ public sealed class SubscriptionsController(ISender sender, IActorContextAccesso
         int? TrialDays = null);
 
     /// <summary>Request to partially update a subscription</summary>
-    public record PatchSubscriptionRequest(
+    public sealed record PatchSubscriptionRequest(
         BillingCycle? BillingCycle = null,
         bool? AutoRenew = null,
         string? ExternalSubscriptionId = null,
@@ -245,7 +245,7 @@ public sealed class SubscriptionsController(ISender sender, IActorContextAccesso
         string? Metadata = null);
 
     /// <summary>Request to fully update a subscription</summary>
-    public record PutSubscriptionRequest(
+    public sealed record PutSubscriptionRequest(
         Guid PlanId,
         BillingCycle BillingCycle,
         decimal Amount,

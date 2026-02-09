@@ -24,7 +24,7 @@ namespace GameGuild.Learning.Courses;
 /// for specific command operations while maintaining transaction integrity
 /// and consistent logging for audit and monitoring purposes.
 /// </remarks>
-public class ProgramCommandHandlers(IApplicationDbContext context, ILogger<ProgramCommandHandlers> logger) : IRequestHandler<CreateProgramCommand, Program>,
+public sealed class ProgramCommandHandlers(IApplicationDbContext context, ILogger<ProgramCommandHandlers> logger) : IRequestHandler<CreateProgramCommand, Program>,
                                                                                                             IRequestHandler<UpdateProgramCommand, Program>,
                                                                                                             IRequestHandler<DeleteProgramCommand, bool>,
                                                                                                             IRequestHandler<PublishProgramCommand, Program>,

@@ -5,7 +5,7 @@ namespace GameGuild.Commerce.Products;
 /// <summary>
 /// Validator for GrantProductAccessCommand
 /// </summary>
-public class GrantProductAccessCommandValidator : AbstractValidator<GrantProductAccessCommand>
+public sealed class GrantProductAccessCommandValidator : AbstractValidator<GrantProductAccessCommand>
 {
     public GrantProductAccessCommandValidator()
     {

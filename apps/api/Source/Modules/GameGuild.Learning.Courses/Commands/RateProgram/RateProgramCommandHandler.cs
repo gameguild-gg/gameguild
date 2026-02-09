@@ -7,7 +7,7 @@ namespace GameGuild.Learning.Courses;
 /// <summary>
 /// Command handler for RateProgramCommand
 /// </summary>
-public class RateProgramCommandHandler(IApplicationDbContext context, ILogger<RateProgramCommandHandler> logger)
+public sealed class RateProgramCommandHandler(IApplicationDbContext context, ILogger<RateProgramCommandHandler> logger)
     : ICommandHandler<RateProgramCommand, ProgramRating>
 {
     public async Task<ProgramRating> Handle(RateProgramCommand request, CancellationToken cancellationToken) {

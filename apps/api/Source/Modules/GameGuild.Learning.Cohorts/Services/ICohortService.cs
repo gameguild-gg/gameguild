@@ -65,7 +65,7 @@ public interface ICohortService
 /// <summary>
 /// Request to create a new cohort
 /// </summary>
-public record CreateCohortRequest(
+public sealed record CreateCohortRequest(
     Guid CourseId,
     string Name,
     DateTime StartDate,
@@ -79,7 +79,7 @@ public record CreateCohortRequest(
 /// <summary>
 /// Request to update a cohort
 /// </summary>
-public record UpdateCohortRequest(
+public sealed record UpdateCohortRequest(
     string? Name = null,
     string? Description = null,
     DateTime? StartDate = null,

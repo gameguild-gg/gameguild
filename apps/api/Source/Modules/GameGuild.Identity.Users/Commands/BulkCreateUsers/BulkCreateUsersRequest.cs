@@ -4,4 +4,4 @@ namespace GameGuild.Identity.Users;
 ///     Request model for bulk creating users via API
 /// </summary>
 /// <param name="Users">Collection of users to create</param>
-public record BulkCreateUsersRequest(IEnumerable<CreateUserRequestItem> Users);
+public sealed record BulkCreateUsersRequest(IEnumerable<CreateUserRequestItem> Users);

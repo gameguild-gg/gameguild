@@ -1,9 +1,9 @@
-﻿using GameGuild.Identity.Authorization;
+using GameGuild.Identity.Authorization;
 using GameGuild.CQRS;
 
 namespace GameGuild.Identity.Authentication;
 
-public record SimulateConditionalPolicyCommand : ICommand<ConditionalPolicySimulationResult>
+public sealed record SimulateConditionalPolicyCommand : ICommand<ConditionalPolicySimulationResult>
 {
     public Guid? PolicyId { get; init; }
 

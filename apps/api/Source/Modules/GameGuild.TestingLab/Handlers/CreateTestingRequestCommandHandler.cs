@@ -3,7 +3,7 @@ using GameGuild.CQRS;
 
 namespace GameGuild.TestingLab;
 
-public class CreateTestingRequestCommandHandler : ITestingLabCommandHandler<CreateTestingRequestCommand, TestingRequest> {
+public sealed class CreateTestingRequestCommandHandler : ITestingLabCommandHandler<CreateTestingRequestCommand, TestingRequest> {
   private readonly IMediator _mediator;
 
   private readonly ITestingRequestRepository _repository;

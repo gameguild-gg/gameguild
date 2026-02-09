@@ -7,7 +7,7 @@ namespace GameGuild.Identity.Authentication;
 ///     Handler for user signed up notifications - logs analytics event.
 ///     PLANNED: Inject IAnalyticsService (Mixpanel, Segment, etc.) when implemented.
 /// </summary>
-public class LogAnalyticsEventHandler(ILogger<LogAnalyticsEventHandler> logger) : INotificationHandler<UserSignedUpNotification>
+public sealed class LogAnalyticsEventHandler(ILogger<LogAnalyticsEventHandler> logger) : INotificationHandler<UserSignedUpNotification>
 {
     public Task Handle(UserSignedUpNotification notification, CancellationToken cancellationToken)
     {

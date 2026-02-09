@@ -5,7 +5,7 @@ namespace GameGuild.Commerce.Products;
 /// <summary>
 /// Handler for getting user products
 /// </summary>
-public class GetUserProductsQueryHandler(IUserProductRepository userProductRepository)
+public sealed class GetUserProductsQueryHandler(IUserProductRepository userProductRepository)
     : IQueryHandler<GetUserProductsQuery, IReadOnlyList<UserProductAccessDto>>
 {
     public async Task<IReadOnlyList<UserProductAccessDto>> Handle(

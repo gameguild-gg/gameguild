@@ -3,7 +3,7 @@ using GameGuild.CQRS;
 namespace GameGuild.Projects;
 
 /// <summary> Query to get all projects </summary>
-public record GetAllProjectsQuery : IQuery<Result<IEnumerable<Project>>> {
+public sealed record GetAllProjectsQuery : IQuery<Result<IEnumerable<Project>>> {
   public ProjectType? Type { get; init; }
 
   public ContentStatus? Status { get; init; }
@@ -48,7 +48,7 @@ public record GetAllProjectsQuery : IQuery<Result<IEnumerable<Project>>> {
 }
 
 /// <summary> Query to get project by ID </summary>
-public record GetProjectByIdQuery : IQuery<Result<Project?>> {
+public sealed record GetProjectByIdQuery : IQuery<Result<Project?>> {
   public Guid ProjectId { get; init; }
 
   public bool IncludeTeam { get; init; } = true;
@@ -61,7 +61,7 @@ public record GetProjectByIdQuery : IQuery<Result<Project?>> {
 }
 
 /// <summary> Query to get project by slug </summary>
-public record GetProjectBySlugQuery : IQuery<Result<Project?>> {
+public sealed record GetProjectBySlugQuery : IQuery<Result<Project?>> {
   public string Slug { get; init; } = string.Empty;
 
   public bool IncludeTeam { get; init; } = true;
@@ -72,7 +72,7 @@ public record GetProjectBySlugQuery : IQuery<Result<Project?>> {
 }
 
 /// <summary> Query to get projects by category </summary>
-public record GetProjectsByCategoryQuery : IQuery<Result<IEnumerable<Project>>> {
+public sealed record GetProjectsByCategoryQuery : IQuery<Result<IEnumerable<Project>>> {
   public Guid CategoryId { get; init; }
 
   public ContentStatus? Status { get; init; }
@@ -83,7 +83,7 @@ public record GetProjectsByCategoryQuery : IQuery<Result<IEnumerable<Project>>> 
 }
 
 /// <summary> Query to get projects by creator </summary>
-public record GetProjectsByCreatorQuery : IQuery<Result<IEnumerable<Project>>> {
+public sealed record GetProjectsByCreatorQuery : IQuery<Result<IEnumerable<Project>>> {
   public Guid CreatorId { get; init; }
 
   public ContentStatus? Status { get; init; }
@@ -94,7 +94,7 @@ public record GetProjectsByCreatorQuery : IQuery<Result<IEnumerable<Project>>> {
 }
 
 /// <summary> Query to get projects by status </summary>
-public record GetProjectsByStatusQuery : IQuery<Result<IEnumerable<Project>>> {
+public sealed record GetProjectsByStatusQuery : IQuery<Result<IEnumerable<Project>>> {
   public ContentStatus Status { get; init; }
 
   public ProjectType? Type { get; init; }
@@ -105,14 +105,14 @@ public record GetProjectsByStatusQuery : IQuery<Result<IEnumerable<Project>>> {
 }
 
 /// <summary> Query to get deleted projects (admin only) </summary>
-public record GetDeletedProjectsQuery : IQuery<Result<IEnumerable<Project>>> {
+public sealed record GetDeletedProjectsQuery : IQuery<Result<IEnumerable<Project>>> {
   public int Skip { get; init; } = 0;
 
   public int Take { get; init; } = 50;
 }
 
 /// <summary> Query to search projects </summary>
-public record SearchProjectsQuery : IQuery<Result<IEnumerable<Project>>> {
+public sealed record SearchProjectsQuery : IQuery<Result<IEnumerable<Project>>> {
   public string SearchTerm { get; init; } = string.Empty;
 
   public ProjectType? Type { get; init; }
@@ -135,7 +135,7 @@ public record SearchProjectsQuery : IQuery<Result<IEnumerable<Project>>> {
 }
 
 /// <summary> Query to get project statistics </summary>
-public record GetProjectStatisticsQuery : IQuery<Result<ProjectStatistics>> {
+public sealed record GetProjectStatisticsQuery : IQuery<Result<ProjectStatistics>> {
   public Guid ProjectId { get; init; }
 
   public DateTime? FromDate { get; init; }
@@ -144,7 +144,7 @@ public record GetProjectStatisticsQuery : IQuery<Result<ProjectStatistics>> {
 }
 
 /// <summary> Query to get popular projects </summary>
-public record GetPopularProjectsQuery : IQuery<Result<IEnumerable<Project>>> {
+public sealed record GetPopularProjectsQuery : IQuery<Result<IEnumerable<Project>>> {
   public ProjectType? Type { get; init; }
 
   public TimeSpan? TimeWindow { get; init; } = TimeSpan.FromDays(30);
@@ -153,14 +153,14 @@ public record GetPopularProjectsQuery : IQuery<Result<IEnumerable<Project>>> {
 }
 
 /// <summary> Query to get recent projects </summary>
-public record GetRecentProjectsQuery : IQuery<Result<IEnumerable<Project>>> {
+public sealed record GetRecentProjectsQuery : IQuery<Result<IEnumerable<Project>>> {
   public ProjectType? Type { get; init; }
 
   public int Take { get; init; } = 10;
 }
 
 /// <summary> Query to get featured projects </summary>
-public record GetFeaturedProjectsQuery : IQuery<Result<IEnumerable<Project>>> {
+public sealed record GetFeaturedProjectsQuery : IQuery<Result<IEnumerable<Project>>> {
   public ProjectType? Type { get; init; }
 
   public int Take { get; init; } = 10;

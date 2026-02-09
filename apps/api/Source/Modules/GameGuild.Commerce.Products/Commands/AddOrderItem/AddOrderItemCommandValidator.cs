@@ -5,7 +5,7 @@ namespace GameGuild.Commerce.Products;
 /// <summary>
 /// Validator for AddOrderItemCommand
 /// </summary>
-public class AddOrderItemCommandValidator : AbstractValidator<AddOrderItemCommand>
+public sealed class AddOrderItemCommandValidator : AbstractValidator<AddOrderItemCommand>
 {
     public AddOrderItemCommandValidator()
     {

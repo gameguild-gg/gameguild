@@ -5,7 +5,7 @@ namespace GameGuild.Identity.Tenants;
 /// <summary>
 ///     Query to search tenants by various criteria
 /// </summary>
-public record SearchTenantsQuery(
+public sealed record SearchTenantsQuery(
     string? SearchTerm = null,
     bool? IsActive = null,
     bool? IsArchived = null,

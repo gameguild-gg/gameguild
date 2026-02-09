@@ -5,7 +5,7 @@ namespace GameGuild.Resources;
 /// <summary>
 ///     Handler for checking resource usage limits against quotas
 /// </summary>
-public class CheckResourceUsageLimitsQueryHandler(
+public sealed class CheckResourceUsageLimitsQueryHandler(
     IResourceQuotaRepository resourceQuotaRepository,
     IApplicationDbContext dbContext) : IQueryHandler<CheckResourceUsageLimitsQuery, Dictionary<ResourceUsageType, bool>>
 {

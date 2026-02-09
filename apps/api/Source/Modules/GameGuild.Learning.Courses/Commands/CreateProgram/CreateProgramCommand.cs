@@ -12,7 +12,7 @@ namespace GameGuild.Learning.Courses;
 
 /// <summary> Command to create a new program </summary>
 [RequiresQuota(ResourceUsageType.Programs, Source = "CreateProgram")]
-public record CreateProgramCommand(
+public sealed record CreateProgramCommand(
   string Title,
   string Description,
   string? Summary = null,

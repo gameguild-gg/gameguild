@@ -357,7 +357,7 @@ public class OrdersController(IOrderService orderService, IActorContextAccessor 
 }
 
 /// <summary>Request to add an item to an order</summary>
-public record AddOrderItemRequest(
+public sealed record AddOrderItemRequest(
     Guid ProductId,
     int Quantity = 1,
     string? PromoCode = null);
@@ -366,19 +366,19 @@ public record AddOrderItemRequest(
 /// <param name="PaymentId">Optional internal Payment entity ID for Payment→Order linkage</param>
 /// <param name="PaymentProviderReference">Optional external payment provider reference</param>
 /// <param name="PaymentMethod">Optional payment method description (e.g., "card", "bank_transfer")</param>
-public record CompleteOrderRequest(
+public sealed record CompleteOrderRequest(
     Guid? PaymentId = null,
     string? PaymentProviderReference = null,
     string? PaymentMethod = null);
 
 /// <summary>Request to cancel an order</summary>
-public record CancelOrderRequest(string? Reason = null);
+public sealed record CancelOrderRequest(string? Reason = null);
 
 /// <summary>Request to refund an order</summary>
-public record RefundOrderRequest(decimal? Amount = null, string? Reason = null);
+public sealed record RefundOrderRequest(decimal? Amount = null, string? Reason = null);
 
 /// <summary>Order DTO</summary>
-public record OrderDto(
+public sealed record OrderDto(
     Guid Id,
     Guid UserId,
     string IdempotencyKey,
@@ -399,7 +399,7 @@ public record OrderDto(
     IReadOnlyList<OrderLineItemDto> LineItems);
 
 /// <summary>Order line item DTO</summary>
-public record OrderLineItemDto(
+public sealed record OrderLineItemDto(
     Guid Id,
     Guid ProductId,
     string ProductName,
@@ -413,13 +413,13 @@ public record OrderLineItemDto(
     bool IsSubscription);
 
 /// <summary>Request to partially update an order</summary>
-public record PatchOrderRequest(
+public sealed record PatchOrderRequest(
     string? Currency = null,
     string? Notes = null,
     Dictionary<string, string>? Metadata = null);
 
 /// <summary>Request to capture payment for an order</summary>
-public record CaptureOrderRequest(decimal? Amount = null);
+public sealed record CaptureOrderRequest(decimal? Amount = null);
 
 /// <summary>Request to hold an order</summary>
-public record HoldOrderRequest(string? Reason = null);
+public sealed record HoldOrderRequest(string? Reason = null);

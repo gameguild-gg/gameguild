@@ -24,7 +24,7 @@ namespace GameGuild.Commerce.Products;
 /// <param name="ProductId">Specific product ID (null = all products)</param>
 /// <param name="CreatedBy">User ID of the creator</param>
 [RequiresQuota(ResourceUsageType.PromoCodes, 1, Source = "CreatePromoCode")]
-public record CreatePromoCodeCommand(
+public sealed record CreatePromoCodeCommand(
     string Code,
     string Name,
     string? Description = null,

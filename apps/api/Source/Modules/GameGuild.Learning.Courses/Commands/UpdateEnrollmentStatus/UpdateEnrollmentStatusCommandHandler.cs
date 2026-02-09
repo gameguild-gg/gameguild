@@ -7,7 +7,7 @@ namespace GameGuild.Learning.Courses;
 /// <summary>
 /// Command handler for UpdateEnrollmentStatusCommand
 /// </summary>
-public class UpdateEnrollmentStatusCommandHandler(IApplicationDbContext context, ILogger<UpdateEnrollmentStatusCommandHandler> logger)
+public sealed class UpdateEnrollmentStatusCommandHandler(IApplicationDbContext context, ILogger<UpdateEnrollmentStatusCommandHandler> logger)
     : ICommandHandler<UpdateEnrollmentStatusCommand, Program>
 {
     public async Task<Program> Handle(UpdateEnrollmentStatusCommand request, CancellationToken cancellationToken) {

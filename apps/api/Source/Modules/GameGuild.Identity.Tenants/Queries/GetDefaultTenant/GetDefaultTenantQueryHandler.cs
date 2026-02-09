@@ -6,7 +6,7 @@ namespace GameGuild.Identity.Tenants;
 /// <summary>
 ///     Handler for getting the default tenant
 /// </summary>
-public class GetDefaultTenantQueryHandler(ITenantRepository tenantRepository) : IQueryHandler<GetDefaultTenantQuery, Tenant?>
+public sealed class GetDefaultTenantQueryHandler(ITenantRepository tenantRepository) : IQueryHandler<GetDefaultTenantQuery, Tenant?>
 {
     public async Task<Tenant?> Handle(GetDefaultTenantQuery request, CancellationToken cancellationToken)
     {

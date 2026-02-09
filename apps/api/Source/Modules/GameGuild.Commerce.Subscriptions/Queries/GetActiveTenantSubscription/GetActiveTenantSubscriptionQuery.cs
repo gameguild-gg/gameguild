@@ -5,4 +5,4 @@ namespace GameGuild.Commerce.Subscriptions;
 /// <summary>
 ///     Query to get active subscription for tenant
 /// </summary>
-public record GetActiveTenantSubscriptionQuery(Guid TenantId) : IQuery<Subscription?>;
+public sealed record GetActiveTenantSubscriptionQuery(Guid TenantId) : IQuery<Subscription?>;

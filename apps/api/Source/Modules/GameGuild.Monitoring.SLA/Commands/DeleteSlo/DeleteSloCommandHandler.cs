@@ -3,7 +3,7 @@ using GameGuild.CQRS;
 
 namespace GameGuild.Monitoring.SLA;
 
-public class DeleteSloCommandHandler(IServiceLevelObjectiveRepository repository) : ICommandHandler<DeleteSloCommand, Unit>
+public sealed class DeleteSloCommandHandler(IServiceLevelObjectiveRepository repository) : ICommandHandler<DeleteSloCommand, Unit>
 {
     public async Task<Unit> Handle(DeleteSloCommand request, CancellationToken cancellationToken)
     {

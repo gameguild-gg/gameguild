@@ -5,7 +5,7 @@ namespace GameGuild.Commerce.Billing;
 /// <summary>
 ///     Validator for ProcessApplePayWebhookCommand
 /// </summary>
-public class ProcessApplePayWebhookCommandValidator : AbstractValidator<ProcessApplePayWebhookCommand>
+public sealed class ProcessApplePayWebhookCommandValidator : AbstractValidator<ProcessApplePayWebhookCommand>
 {
     public ProcessApplePayWebhookCommandValidator()
     {

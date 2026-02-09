@@ -5,16 +5,16 @@ namespace GameGuild.Assets.Commands;
 /// <summary>
 /// Command to delete an asset reference.
 /// </summary>
-public record DeleteAssetCommand(
+public sealed record DeleteAssetCommand(
     Guid AssetReferenceId,
     Guid UserId,
     bool ForceDelete = false) : IRequest<DeleteAssetResponse>;
 
-public record DeleteAssetResponse(
+public sealed record DeleteAssetResponse(
     bool Success,
     bool ContentMarkedForDeletion);
 
-public class DeleteAssetValidator : AbstractValidator<DeleteAssetCommand>
+public sealed class DeleteAssetValidator : AbstractValidator<DeleteAssetCommand>
 {
     public DeleteAssetValidator()
     {
@@ -23,7 +23,7 @@ public class DeleteAssetValidator : AbstractValidator<DeleteAssetCommand>
     }
 }
 
-public class DeleteAssetHandler : IRequestHandler<DeleteAssetCommand, DeleteAssetResponse>
+public sealed class DeleteAssetHandler : IRequestHandler<DeleteAssetCommand, DeleteAssetResponse>
 {
     private readonly IAssetReferenceRepository _referenceRepository;
     private readonly IAssetContentRepository _contentRepository;

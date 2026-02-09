@@ -117,7 +117,7 @@ public sealed class TaxJurisdictionsController(ISender sender) : BaseApiControll
 }
 
 /// <summary>Request to create a tax jurisdiction</summary>
-public record CreateTaxJurisdictionRequest(
+public sealed record CreateTaxJurisdictionRequest(
     string Code,
     string Name,
     string Country,
@@ -126,14 +126,14 @@ public record CreateTaxJurisdictionRequest(
     decimal DefaultRate);
 
 /// <summary>Request to partially update a tax jurisdiction</summary>
-public record PatchTaxJurisdictionRequest(
+public sealed record PatchTaxJurisdictionRequest(
     string? Name = null,
     string? TaxType = null,
     decimal? DefaultRate = null,
     bool? IsActive = null);
 
 /// <summary>DTO for tax jurisdiction</summary>
-public record TaxJurisdictionDto(
+public sealed record TaxJurisdictionDto(
     Guid Id,
     string Code,
     string Name,

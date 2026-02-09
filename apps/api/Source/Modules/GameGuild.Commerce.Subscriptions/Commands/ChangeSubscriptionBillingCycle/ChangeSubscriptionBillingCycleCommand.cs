@@ -5,4 +5,4 @@ namespace GameGuild.Commerce.Subscriptions;
 /// <summary>
 ///     Command to change billing cycle
 /// </summary>
-public record ChangeSubscriptionBillingCycleCommand(Guid SubscriptionId, BillingCycle NewBillingCycle) : ICommand;
+public sealed record ChangeSubscriptionBillingCycleCommand(Guid SubscriptionId, BillingCycle NewBillingCycle) : ICommand;

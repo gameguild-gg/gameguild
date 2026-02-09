@@ -5,7 +5,7 @@ namespace GameGuild.Identity.Users;
 /// <summary>
 ///     Command handler for updating user notification preferences
 /// </summary>
-public class UpdateUserNotificationPreferencesCommandHandler(IUserRepository userRepository, IUserPreferencesRepository preferencesRepository) : ICommandHandler<UpdateUserNotificationPreferencesCommand>
+public sealed class UpdateUserNotificationPreferencesCommandHandler(IUserRepository userRepository, IUserPreferencesRepository preferencesRepository) : ICommandHandler<UpdateUserNotificationPreferencesCommand>
 {
     public async Task<Unit> Handle(UpdateUserNotificationPreferencesCommand request, CancellationToken cancellationToken)
     {

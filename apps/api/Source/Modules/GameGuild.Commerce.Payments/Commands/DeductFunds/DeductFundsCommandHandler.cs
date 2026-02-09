@@ -5,7 +5,7 @@ namespace GameGuild.Commerce.Payments;
 /// <summary>
 ///     Handler for DeductFundsCommand
 /// </summary>
-public class DeductFundsCommandHandler(IWalletService walletService) : ICommandHandler<DeductFundsCommand, WalletTransaction>
+public sealed class DeductFundsCommandHandler(IWalletService walletService) : ICommandHandler<DeductFundsCommand, WalletTransaction>
 {
     public async Task<WalletTransaction> Handle(DeductFundsCommand request, CancellationToken cancellationToken)
     {

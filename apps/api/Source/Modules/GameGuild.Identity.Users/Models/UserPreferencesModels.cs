@@ -13,7 +13,7 @@ namespace GameGuild.Identity.Users;
 /// <param name="CreatedAt">When the preferences were created</param>
 /// <param name="UpdatedAt">When the preferences were last updated</param>
 /// <param name="Version">Version for optimistic concurrency control</param>
-public record UserPreferencesDto(
+public sealed record UserPreferencesDto(
     Guid Id,
     Guid UserId,
     Dictionary<string, object?> GeneralPreferences,
@@ -33,7 +33,7 @@ public record UserPreferencesDto(
 /// <param name="NotificationPreferences">Notification preferences to update</param>
 /// <param name="AccessibilityPreferences">Accessibility preferences to update</param>
 /// <param name="PrivacyPreferences">Privacy preferences to update</param>
-public record UpdateUserPreferencesRequest(
+public sealed record UpdateUserPreferencesRequest(
     Dictionary<string, object?>? GeneralPreferences = null,
     Dictionary<string, object?>? NotificationPreferences = null,
     Dictionary<string, object?>? AccessibilityPreferences = null,
@@ -47,7 +47,7 @@ public record UpdateUserPreferencesRequest(
 /// <param name="NotificationPreferences">Complete set of notification preferences</param>
 /// <param name="AccessibilityPreferences">Complete set of accessibility preferences</param>
 /// <param name="PrivacyPreferences">Complete set of privacy preferences</param>
-public record ReplaceUserPreferencesRequest(
+public sealed record ReplaceUserPreferencesRequest(
     Dictionary<string, object?> GeneralPreferences,
     Dictionary<string, object?> NotificationPreferences,
     Dictionary<string, object?> AccessibilityPreferences,
@@ -64,7 +64,7 @@ public record ReplaceUserPreferencesRequest(
 /// <param name="Frequency">Notification frequency preference</param>
 /// <param name="QuietHours">Quiet hours configuration</param>
 /// <param name="CategoryPreferences">Notification preferences by category</param>
-public record UserNotificationPreferencesDto(
+public sealed record UserNotificationPreferencesDto(
     bool EmailEnabled,
     bool PushEnabled,
     bool SmsEnabled,
@@ -78,13 +78,13 @@ public record UserNotificationPreferencesDto(
 ///     Request model for updating user notification preferences
 /// </summary>
 /// <param name="NotificationPreferences">Notification preferences to update</param>
-public record UpdateUserNotificationPreferencesRequest(Dictionary<string, object?> NotificationPreferences);
+public sealed record UpdateUserNotificationPreferencesRequest(Dictionary<string, object?> NotificationPreferences);
 
 /// <summary>
 ///     Request model for replacing user notification preferences
 /// </summary>
 /// <param name="NotificationPreferences">Complete set of notification preferences</param>
-public record ReplaceUserNotificationPreferencesRequest(Dictionary<string, object?> NotificationPreferences);
+public sealed record ReplaceUserNotificationPreferencesRequest(Dictionary<string, object?> NotificationPreferences);
 
 /// <summary>
 ///     Data transfer object for user accessibility preferences
@@ -97,7 +97,7 @@ public record ReplaceUserNotificationPreferencesRequest(Dictionary<string, objec
 /// <param name="FontSize">Preferred font size</param>
 /// <param name="ColorScheme">Preferred color scheme</param>
 /// <param name="CustomSettings">Custom accessibility settings</param>
-public record UserAccessibilityPreferencesDto(
+public sealed record UserAccessibilityPreferencesDto(
     bool HighContrast,
     bool LargeText,
     bool ScreenReader,
@@ -112,13 +112,13 @@ public record UserAccessibilityPreferencesDto(
 ///     Request model for updating user accessibility preferences
 /// </summary>
 /// <param name="AccessibilityPreferences">Accessibility preferences to update</param>
-public record UpdateUserAccessibilityPreferencesRequest(Dictionary<string, object?> AccessibilityPreferences);
+public sealed record UpdateUserAccessibilityPreferencesRequest(Dictionary<string, object?> AccessibilityPreferences);
 
 /// <summary>
 ///     Request model for replacing user accessibility preferences
 /// </summary>
 /// <param name="AccessibilityPreferences">Complete set of accessibility preferences</param>
-public record ReplaceUserAccessibilityPreferencesRequest(Dictionary<string, object?> AccessibilityPreferences);
+public sealed record ReplaceUserAccessibilityPreferencesRequest(Dictionary<string, object?> AccessibilityPreferences);
 
 /// <summary>
 ///     Data transfer object for user privacy preferences
@@ -131,7 +131,7 @@ public record ReplaceUserAccessibilityPreferencesRequest(Dictionary<string, obje
 /// <param name="AnalyticsCookies">Whether analytics cookies are allowed</param>
 /// <param name="PersonalizedContent">Whether personalized content is allowed</param>
 /// <param name="CustomSettings">Custom privacy settings</param>
-public record UserPrivacyPreferencesDto(
+public sealed record UserPrivacyPreferencesDto(
     string ProfileVisibility,
     bool ActivityTracking,
     Dictionary<string, object?> DataCollection,
@@ -146,13 +146,13 @@ public record UserPrivacyPreferencesDto(
 ///     Request model for updating user privacy preferences
 /// </summary>
 /// <param name="PrivacyPreferences">Privacy preferences to update</param>
-public record UpdateUserPrivacyPreferencesRequest(Dictionary<string, object?> PrivacyPreferences);
+public sealed record UpdateUserPrivacyPreferencesRequest(Dictionary<string, object?> PrivacyPreferences);
 
 /// <summary>
 ///     Request model for replacing user privacy preferences
 /// </summary>
 /// <param name="PrivacyPreferences">Complete set of privacy preferences</param>
-public record ReplaceUserPrivacyPreferencesRequest(Dictionary<string, object?> PrivacyPreferences);
+public sealed record ReplaceUserPrivacyPreferencesRequest(Dictionary<string, object?> PrivacyPreferences);
 
 /// <summary>
 ///     Data transfer object for user localization preferences
@@ -164,16 +164,16 @@ public record ReplaceUserPrivacyPreferencesRequest(Dictionary<string, object?> P
 /// <param name="Currency">Preferred currency code (e.g., USD, EUR)</param>
 /// <param name="NumberFormat">Number formatting preferences</param>
 /// <param name="CustomSettings">Custom localization settings</param>
-public record UserLocalizationPreferencesDto(string Language, string Timezone, string DateFormat, string TimeFormat, string Currency, Dictionary<string, object?> NumberFormat, Dictionary<string, object?> CustomSettings);
+public sealed record UserLocalizationPreferencesDto(string Language, string Timezone, string DateFormat, string TimeFormat, string Currency, Dictionary<string, object?> NumberFormat, Dictionary<string, object?> CustomSettings);
 
 /// <summary>
 ///     Request model for updating user localization preferences
 /// </summary>
 /// <param name="LocalizationPreferences">Localization preferences to update</param>
-public record UpdateUserLocalizationPreferencesRequest(Dictionary<string, object?> LocalizationPreferences);
+public sealed record UpdateUserLocalizationPreferencesRequest(Dictionary<string, object?> LocalizationPreferences);
 
 /// <summary>
 ///     Request model for replacing user localization preferences
 /// </summary>
 /// <param name="LocalizationPreferences">Complete set of localization preferences</param>
-public record ReplaceUserLocalizationPreferencesRequest(Dictionary<string, object?> LocalizationPreferences);
+public sealed record ReplaceUserLocalizationPreferencesRequest(Dictionary<string, object?> LocalizationPreferences);

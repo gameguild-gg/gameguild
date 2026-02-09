@@ -1,8 +1,8 @@
-﻿using GameGuild.CQRS;
+using GameGuild.CQRS;
 
 namespace GameGuild.Identity.Authentication;
 
-public record GetConditionalPolicyEvaluationHistoryQuery : IQuery<ConditionalPolicyEvaluationHistoryDto>
+public sealed record GetConditionalPolicyEvaluationHistoryQuery : IQuery<ConditionalPolicyEvaluationHistoryDto>
 {
     public Guid PolicyId { get; init; }
 

@@ -36,7 +36,7 @@ public class AutoModerationOptions
 /// <summary>
 /// Auto-moderation result from ML analysis.
 /// </summary>
-public record AutoModerationResult(
+public sealed record AutoModerationResult(
     bool IsApproved,
     double Confidence,
     string[] DetectedLabels,

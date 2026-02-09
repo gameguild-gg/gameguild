@@ -7,4 +7,4 @@ namespace GameGuild.Identity.Users;
 /// </summary>
 /// <param name="UserId">The user ID</param>
 /// <param name="Request">The replacement request containing all fields</param>
-public record ReplaceUserMetadataCommand(Guid UserId, ReplaceUserMetadataRequest Request) : ICommand;
+public sealed record ReplaceUserMetadataCommand(Guid UserId, ReplaceUserMetadataRequest Request) : ICommand;

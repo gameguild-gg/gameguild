@@ -9,9 +9,9 @@ namespace GameGuild.Identity.Authorization.Queries;
 /// <summary>
 ///     Query to get a delegated admin scope by ID
 /// </summary>
-public record GetDelegatedAdminScopeByIdQuery(Guid ScopeId) : IQuery<DelegatedAdminScope?>;
+public sealed record GetDelegatedAdminScopeByIdQuery(Guid ScopeId) : IQuery<DelegatedAdminScope?>;
 
-public class GetDelegatedAdminScopeByIdHandler(IDelegatedAdminService service)
+public sealed class GetDelegatedAdminScopeByIdHandler(IDelegatedAdminService service)
     : IQueryHandler<GetDelegatedAdminScopeByIdQuery, DelegatedAdminScope?>
 {
     public async Task<DelegatedAdminScope?> Handle(
@@ -26,9 +26,9 @@ public class GetDelegatedAdminScopeByIdHandler(IDelegatedAdminService service)
 /// <summary>
 ///     Query to get admin scopes for a user
 /// </summary>
-public record GetAdminScopesQuery(Guid AdminUserId, Guid? TenantId) : IQuery<List<DelegatedAdminScope>>;
+public sealed record GetAdminScopesQuery(Guid AdminUserId, Guid? TenantId) : IQuery<List<DelegatedAdminScope>>;
 
-public class GetAdminScopesHandler(IDelegatedAdminService service)
+public sealed class GetAdminScopesHandler(IDelegatedAdminService service)
     : IQueryHandler<GetAdminScopesQuery, List<DelegatedAdminScope>>
 {
     public async Task<List<DelegatedAdminScope>> Handle(
@@ -43,9 +43,9 @@ public class GetAdminScopesHandler(IDelegatedAdminService service)
 /// <summary>
 ///     Query to get managed users for an admin
 /// </summary>
-public record GetManagedUsersQuery(Guid AdminUserId, Guid? TenantId) : IQuery<List<Guid>>;
+public sealed record GetManagedUsersQuery(Guid AdminUserId, Guid? TenantId) : IQuery<List<Guid>>;
 
-public class GetManagedUsersHandler(IDelegatedAdminService service)
+public sealed class GetManagedUsersHandler(IDelegatedAdminService service)
     : IQueryHandler<GetManagedUsersQuery, List<Guid>>
 {
     public async Task<List<Guid>> Handle(
@@ -60,9 +60,9 @@ public class GetManagedUsersHandler(IDelegatedAdminService service)
 /// <summary>
 ///     Query to get managed resource types for an admin
 /// </summary>
-public record GetManagedResourceTypesQuery(Guid AdminUserId, Guid? TenantId) : IQuery<List<string>>;
+public sealed record GetManagedResourceTypesQuery(Guid AdminUserId, Guid? TenantId) : IQuery<List<string>>;
 
-public class GetManagedResourceTypesHandler(IDelegatedAdminService service)
+public sealed class GetManagedResourceTypesHandler(IDelegatedAdminService service)
     : IQueryHandler<GetManagedResourceTypesQuery, List<string>>
 {
     public async Task<List<string>> Handle(
@@ -77,9 +77,9 @@ public class GetManagedResourceTypesHandler(IDelegatedAdminService service)
 /// <summary>
 ///     Query to check if admin can manage a user
 /// </summary>
-public record CanManageUserQuery(Guid AdminUserId, Guid TargetUserId, Guid? TenantId) : IQuery<bool>;
+public sealed record CanManageUserQuery(Guid AdminUserId, Guid TargetUserId, Guid? TenantId) : IQuery<bool>;
 
-public class CanManageUserHandler(IDelegatedAdminService service)
+public sealed class CanManageUserHandler(IDelegatedAdminService service)
     : IQueryHandler<CanManageUserQuery, bool>
 {
     public async Task<bool> Handle(
@@ -99,9 +99,9 @@ public class CanManageUserHandler(IDelegatedAdminService service)
 /// <summary>
 ///     Query to check if admin can manage a resource type
 /// </summary>
-public record CanManageResourceQuery(Guid AdminUserId, string ResourceType, Guid? TenantId) : IQuery<bool>;
+public sealed record CanManageResourceQuery(Guid AdminUserId, string ResourceType, Guid? TenantId) : IQuery<bool>;
 
-public class CanManageResourceHandler(IDelegatedAdminService service)
+public sealed class CanManageResourceHandler(IDelegatedAdminService service)
     : IQueryHandler<CanManageResourceQuery, bool>
 {
     public async Task<bool> Handle(

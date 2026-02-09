@@ -2,7 +2,7 @@ using GameGuild.CQRS;
 
 namespace GameGuild.Identity.Users;
 
-public class UpdateUserAccessibilityPreferencesCommandHandler(IUserRepository userRepository, IUserPreferencesRepository preferencesRepository) : ICommandHandler<UpdateUserAccessibilityPreferencesCommand>
+public sealed class UpdateUserAccessibilityPreferencesCommandHandler(IUserRepository userRepository, IUserPreferencesRepository preferencesRepository) : ICommandHandler<UpdateUserAccessibilityPreferencesCommand>
 {
     public async Task<Unit> Handle(UpdateUserAccessibilityPreferencesCommand request, CancellationToken cancellationToken)
     {

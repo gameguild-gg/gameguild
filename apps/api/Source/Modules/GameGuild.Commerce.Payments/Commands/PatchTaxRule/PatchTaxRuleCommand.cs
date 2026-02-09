@@ -5,7 +5,7 @@ namespace GameGuild.Commerce.Payments;
 /// <summary>
 ///     Command to partially update a tax rule
 /// </summary>
-public record PatchTaxRuleCommand(
+public sealed record PatchTaxRuleCommand(
     Guid RuleId,
     decimal? Rate,
     DateTime? EffectiveFrom,

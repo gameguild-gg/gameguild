@@ -5,7 +5,7 @@ namespace GameGuild.Commerce.Products;
 /// <summary>
 /// Handler for getting product pricing
 /// </summary>
-public class GetProductPricingQueryHandler(
+public sealed class GetProductPricingQueryHandler(
     IProductRepository productRepository,
     IPricingEngineService pricingEngine)
     : IQueryHandler<GetProductPricingQuery, IReadOnlyList<ProductPricingDto>>

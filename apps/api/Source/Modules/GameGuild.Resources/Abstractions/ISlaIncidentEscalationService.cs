@@ -53,7 +53,7 @@ public interface ISlaIncidentEscalationService
 /// <summary>
 ///     Result of SLA violation escalation.
 /// </summary>
-public record SlaEscalationResult
+public sealed record SlaEscalationResult
 {
     /// <summary>Whether escalation was triggered</summary>
     public bool WasEscalated { get; init; }

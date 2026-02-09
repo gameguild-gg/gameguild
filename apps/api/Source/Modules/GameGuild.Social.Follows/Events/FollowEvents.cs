@@ -1,7 +1,7 @@
 namespace GameGuild.Social.Follows.Events;
 
 /// <summary>Event raised when a user follows an entity</summary>
-public record FollowerAddedEvent(
+public sealed record FollowerAddedEvent(
     Guid FollowId,
     Guid FollowerId,
     Guid FollowedEntityId,
@@ -10,7 +10,7 @@ public record FollowerAddedEvent(
     bool NotificationsEnabled);
 
 /// <summary>Event raised when a user unfollows an entity</summary>
-public record FollowerRemovedEvent(
+public sealed record FollowerRemovedEvent(
     Guid FollowId,
     Guid FollowerId,
     Guid FollowedEntityId,
@@ -18,7 +18,7 @@ public record FollowerRemovedEvent(
     DateTime UnfollowedAt);
 
 /// <summary>Event raised when a user blocks another user</summary>
-public record UserBlockedEvent(
+public sealed record UserBlockedEvent(
     Guid BlockId,
     Guid BlockerId,
     Guid BlockedUserId,
@@ -26,13 +26,13 @@ public record UserBlockedEvent(
     DateTime BlockedAt);
 
 /// <summary>Event raised when a user unblocks another user</summary>
-public record UserUnblockedEvent(
+public sealed record UserUnblockedEvent(
     Guid BlockerId,
     Guid BlockedUserId,
     DateTime UnblockedAt);
 
 /// <summary>Event raised when a user mutes another user</summary>
-public record UserMutedEvent(
+public sealed record UserMutedEvent(
     Guid MuteId,
     Guid MuterId,
     Guid MutedUserId,
@@ -41,13 +41,13 @@ public record UserMutedEvent(
     DateTime? ExpiresAt);
 
 /// <summary>Event raised when a user unmutes another user</summary>
-public record UserUnmutedEvent(
+public sealed record UserUnmutedEvent(
     Guid MuterId,
     Guid MutedUserId,
     DateTime UnmutedAt);
 
 /// <summary>Event raised when privacy settings are updated</summary>
-public record PrivacySettingsUpdatedEvent(
+public sealed record PrivacySettingsUpdatedEvent(
     Guid UserId,
     bool AllowFollowers,
     bool NotifyOnNewFollower,

@@ -2,4 +2,4 @@ using GameGuild.CQRS;
 
 namespace GameGuild.Commerce.Subscriptions;
 
-public record GetActiveSubscriptionPlansQuery : IQuery<IEnumerable<SubscriptionPlan>>;
+public sealed record GetActiveSubscriptionPlansQuery : IQuery<IEnumerable<SubscriptionPlan>>;

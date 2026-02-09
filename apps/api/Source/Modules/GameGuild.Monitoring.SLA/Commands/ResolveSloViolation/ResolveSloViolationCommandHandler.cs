@@ -6,7 +6,7 @@ namespace GameGuild.Monitoring.SLA;
 /// <summary>
 ///     Handler for resolving SLO violations.
 /// </summary>
-public class ResolveSloViolationCommandHandler(ISloViolationRepository violationRepository) : ICommandHandler<ResolveSloViolationCommand, Unit>
+public sealed class ResolveSloViolationCommandHandler(ISloViolationRepository violationRepository) : ICommandHandler<ResolveSloViolationCommand, Unit>
 {
     public async Task<Unit> Handle(ResolveSloViolationCommand request, CancellationToken cancellationToken)
     {

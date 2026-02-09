@@ -99,7 +99,7 @@ public class KeyRotationController : BaseApiController
 /// <summary>
 ///     DTO for JWT signing key information (without exposing key material)
 /// </summary>
-public record JwtKeyInfoDto
+public sealed record JwtKeyInfoDto
 {
     public string KeyId { get; init; } = string.Empty;
     public string Algorithm { get; init; } = string.Empty;
@@ -129,7 +129,7 @@ public record JwtKeyInfoDto
 /// <summary>
 ///     Request to manually rotate signing key
 /// </summary>
-public record RotateKeyRequest
+public sealed record RotateKeyRequest
 {
     public string? Reason { get; init; }
     public int? ValidityDays { get; init; }
@@ -138,7 +138,7 @@ public record RotateKeyRequest
 /// <summary>
 ///     Request to cleanup expired keys
 /// </summary>
-public record CleanupKeysRequest
+public sealed record CleanupKeysRequest
 {
     public int? RetentionDays { get; init; }
 }
@@ -146,7 +146,7 @@ public record CleanupKeysRequest
 /// <summary>
 ///     Result of cleanup operation
 /// </summary>
-public record CleanupResult
+public sealed record CleanupResult
 {
     public int DeletedCount { get; init; }
 }

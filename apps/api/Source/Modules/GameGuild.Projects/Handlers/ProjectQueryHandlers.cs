@@ -8,7 +8,7 @@ namespace GameGuild.Projects;
 /// <summary>
 /// Query handlers for project operations
 /// </summary>
-public class ProjectQueryHandlers
+public sealed class ProjectQueryHandlers
   : IQueryHandler<GetAllProjectsQuery, Result<IEnumerable<Project>>>,
     IQueryHandler<GetProjectByIdQuery, Result<Project?>>,
     IQueryHandler<GetProjectBySlugQuery, Result<Project?>>,

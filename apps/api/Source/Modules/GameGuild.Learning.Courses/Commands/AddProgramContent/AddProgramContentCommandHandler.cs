@@ -6,7 +6,7 @@ namespace GameGuild.Learning.Courses;
 /// <summary>
 /// Command handler for AddProgramContentCommand
 /// </summary>
-public class AddProgramContentCommandHandler(IApplicationDbContext context, ILogger<AddProgramContentCommandHandler> logger)
+public sealed class AddProgramContentCommandHandler(IApplicationDbContext context, ILogger<AddProgramContentCommandHandler> logger)
     : ICommandHandler<AddProgramContentCommand, ProgramContent>
 {
     public async Task<ProgramContent> Handle(AddProgramContentCommand request, CancellationToken cancellationToken) {

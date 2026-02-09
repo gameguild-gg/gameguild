@@ -7,7 +7,7 @@ namespace GameGuild.Learning.Courses;
 /// <summary>
 /// Command handler for UnenrollUserCommand
 /// </summary>
-public class UnenrollUserCommandHandler(IApplicationDbContext context, ILogger<UnenrollUserCommandHandler> logger)
+public sealed class UnenrollUserCommandHandler(IApplicationDbContext context, ILogger<UnenrollUserCommandHandler> logger)
     : ICommandHandler<UnenrollUserCommand, bool>
 {
     public async Task<bool> Handle(UnenrollUserCommand request, CancellationToken cancellationToken) {

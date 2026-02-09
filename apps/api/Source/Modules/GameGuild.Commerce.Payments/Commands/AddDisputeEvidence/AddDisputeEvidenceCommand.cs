@@ -5,7 +5,7 @@ namespace GameGuild.Commerce.Payments;
 /// <summary>
 ///     Command to add evidence to a dispute
 /// </summary>
-public record AddDisputeEvidenceCommand(
+public sealed record AddDisputeEvidenceCommand(
     Guid DisputeId,
     EvidenceType EvidenceType,
     string Title,

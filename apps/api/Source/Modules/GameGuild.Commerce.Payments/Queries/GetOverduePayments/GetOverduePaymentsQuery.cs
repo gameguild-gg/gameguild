@@ -9,4 +9,4 @@ namespace GameGuild.Commerce.Payments;
 /// <param name="OverdueThreshold">Number of days past due date to consider overdue</param>
 /// <param name="StartDate">Optional start date filter for original payment due date</param>
 /// <param name="EndDate">Optional end date filter for original payment due date</param>
-public record GetOverduePaymentsQuery(Guid? TenantId = null, int OverdueThreshold = 30, DateTime? StartDate = null, DateTime? EndDate = null) : IQuery<IEnumerable<PaymentResult>>;
+public sealed record GetOverduePaymentsQuery(Guid? TenantId = null, int OverdueThreshold = 30, DateTime? StartDate = null, DateTime? EndDate = null) : IQuery<IEnumerable<PaymentResult>>;

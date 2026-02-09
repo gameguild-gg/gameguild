@@ -5,18 +5,18 @@ namespace GameGuild.Assets.Commands;
 /// <summary>
 /// Command to update an asset reference.
 /// </summary>
-public record UpdateAssetCommand(
+public sealed record UpdateAssetCommand(
     Guid AssetReferenceId,
     Guid UserId,
     string? DisplayName = null,
     AssetAccessPolicy? AccessPolicy = null) : IRequest<UpdateAssetResponse?>;
 
-public record UpdateAssetResponse(
+public sealed record UpdateAssetResponse(
     Guid AssetReferenceId,
     string? DisplayName,
     AssetAccessPolicy AccessPolicy);
 
-public class UpdateAssetValidator : AbstractValidator<UpdateAssetCommand>
+public sealed class UpdateAssetValidator : AbstractValidator<UpdateAssetCommand>
 {
     public UpdateAssetValidator()
     {
@@ -26,7 +26,7 @@ public class UpdateAssetValidator : AbstractValidator<UpdateAssetCommand>
     }
 }
 
-public class UpdateAssetHandler : IRequestHandler<UpdateAssetCommand, UpdateAssetResponse?>
+public sealed class UpdateAssetHandler : IRequestHandler<UpdateAssetCommand, UpdateAssetResponse?>
 {
     private readonly IAssetReferenceRepository _referenceRepository;
 

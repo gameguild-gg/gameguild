@@ -2,7 +2,7 @@ using FluentValidation;
 
 namespace GameGuild.Identity.Tenants;
 
-public class BulkUpdateTenantsCommandValidator : AbstractValidator<BulkUpdateTenantsCommand>
+public sealed class BulkUpdateTenantsCommandValidator : AbstractValidator<BulkUpdateTenantsCommand>
 {
     public BulkUpdateTenantsCommandValidator()
     {

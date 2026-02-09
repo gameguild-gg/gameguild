@@ -18,7 +18,7 @@ public record LearningPaginationRequest
 /// Common paginated response wrapper
 /// </summary>
 /// <typeparam name="T">The type of items in the response</typeparam>
-public record LearningPaginatedResponse<T>
+public sealed record LearningPaginatedResponse<T>
 {
     public IReadOnlyList<T> Items { get; init; } = Array.Empty<T>();
     public int TotalCount { get; init; }
@@ -52,7 +52,7 @@ public record LearningPaginatedResponse<T>
 /// <summary>
 /// Common filter request for learning content
 /// </summary>
-public record LearningFilterRequest
+public sealed record LearningFilterRequest
 {
     public IReadOnlyList<Guid>? CategoryIds { get; init; }
     public IReadOnlyList<string>? Tags { get; init; }
@@ -68,7 +68,7 @@ public record LearningFilterRequest
 /// <summary>
 /// Common search request for learning content
 /// </summary>
-public record LearningSearchRequest : LearningPaginationRequest
+public sealed record LearningSearchRequest : LearningPaginationRequest
 {
     public string? Query { get; init; }
     public LearningFilterRequest? Filters { get; init; }

@@ -5,7 +5,7 @@ namespace GameGuild.Commerce.Subscriptions;
 /// <summary>
 ///     Validator for StartSubscriptionTrialCommand
 /// </summary>
-public class StartSubscriptionTrialCommandValidator : AbstractValidator<StartSubscriptionTrialCommand>
+public sealed class StartSubscriptionTrialCommandValidator : AbstractValidator<StartSubscriptionTrialCommand>
 {
     public StartSubscriptionTrialCommandValidator()
     {

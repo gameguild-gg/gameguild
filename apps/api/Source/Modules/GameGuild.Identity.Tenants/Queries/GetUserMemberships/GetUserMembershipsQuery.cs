@@ -8,4 +8,4 @@ namespace GameGuild.Identity.Tenants;
 /// </summary>
 /// <param name="UserId">The user ID to get memberships for</param>
 /// <param name="IncludeInactive">Whether to include inactive memberships (default: false)</param>
-public record GetUserMembershipsQuery(Guid UserId, bool IncludeInactive = false) : IQuery<GetUserMembershipsResponse>;
+public sealed record GetUserMembershipsQuery(Guid UserId, bool IncludeInactive = false) : IQuery<GetUserMembershipsResponse>;

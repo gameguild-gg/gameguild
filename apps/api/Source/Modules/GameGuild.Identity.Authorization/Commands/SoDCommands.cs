@@ -10,7 +10,7 @@ namespace GameGuild.Identity.Authorization.Commands;
 /// <summary>
 ///     Command to create a new SoD rule
 /// </summary>
-public record CreateSoDRuleCommand(
+public sealed record CreateSoDRuleCommand(
     string Name,
     string Description,
     string[] ConflictingPermissions,
@@ -19,7 +19,7 @@ public record CreateSoDRuleCommand(
     bool IsEnabled = true
 ) : ICommand<SoDRule>;
 
-public class CreateSoDRuleValidator : AbstractValidator<CreateSoDRuleCommand>
+public sealed class CreateSoDRuleValidator : AbstractValidator<CreateSoDRuleCommand>
 {
     public CreateSoDRuleValidator()
     {
@@ -31,7 +31,7 @@ public class CreateSoDRuleValidator : AbstractValidator<CreateSoDRuleCommand>
     }
 }
 
-public class CreateSoDRuleHandler(ISoDService service)
+public sealed class CreateSoDRuleHandler(ISoDService service)
     : ICommandHandler<CreateSoDRuleCommand, SoDRule>
 {
     public async Task<SoDRule> Handle(
@@ -56,7 +56,7 @@ public class CreateSoDRuleHandler(ISoDService service)
 /// <summary>
 ///     Command to update an existing SoD rule
 /// </summary>
-public record UpdateSoDRuleCommand(
+public sealed record UpdateSoDRuleCommand(
     Guid RuleId,
     string Name,
     string Description,
@@ -65,7 +65,7 @@ public record UpdateSoDRuleCommand(
     bool IsEnabled
 ) : ICommand<SoDRule?>;
 
-public class UpdateSoDRuleValidator : AbstractValidator<UpdateSoDRuleCommand>
+public sealed class UpdateSoDRuleValidator : AbstractValidator<UpdateSoDRuleCommand>
 {
     public UpdateSoDRuleValidator()
     {
@@ -78,7 +78,7 @@ public class UpdateSoDRuleValidator : AbstractValidator<UpdateSoDRuleCommand>
     }
 }
 
-public class UpdateSoDRuleHandler(ISoDService service)
+public sealed class UpdateSoDRuleHandler(ISoDService service)
     : ICommandHandler<UpdateSoDRuleCommand, SoDRule?>
 {
     public async Task<SoDRule?> Handle(
@@ -103,9 +103,9 @@ public class UpdateSoDRuleHandler(ISoDService service)
 /// <summary>
 ///     Command to delete a SoD rule
 /// </summary>
-public record DeleteSoDRuleCommand(Guid RuleId) : ICommand<bool>;
+public sealed record DeleteSoDRuleCommand(Guid RuleId) : ICommand<bool>;
 
-public class DeleteSoDRuleValidator : AbstractValidator<DeleteSoDRuleCommand>
+public sealed class DeleteSoDRuleValidator : AbstractValidator<DeleteSoDRuleCommand>
 {
     public DeleteSoDRuleValidator()
     {
@@ -113,7 +113,7 @@ public class DeleteSoDRuleValidator : AbstractValidator<DeleteSoDRuleCommand>
     }
 }
 
-public class DeleteSoDRuleHandler(ISoDService service)
+public sealed class DeleteSoDRuleHandler(ISoDService service)
     : ICommandHandler<DeleteSoDRuleCommand, bool>
 {
     public async Task<bool> Handle(
@@ -128,14 +128,14 @@ public class DeleteSoDRuleHandler(ISoDService service)
 /// <summary>
 ///     Command to resolve a SoD violation
 /// </summary>
-public record ResolveSoDViolationCommand(
+public sealed record ResolveSoDViolationCommand(
     Guid ViolationId,
     Guid ResolvedBy,
     SoDResolutionAction Action,
     string Notes
 ) : ICommand<SoDViolation>;
 
-public class ResolveSoDViolationValidator : AbstractValidator<ResolveSoDViolationCommand>
+public sealed class ResolveSoDViolationValidator : AbstractValidator<ResolveSoDViolationCommand>
 {
     public ResolveSoDViolationValidator()
     {
@@ -146,7 +146,7 @@ public class ResolveSoDViolationValidator : AbstractValidator<ResolveSoDViolatio
     }
 }
 
-public class ResolveSoDViolationHandler(ISoDService service)
+public sealed class ResolveSoDViolationHandler(ISoDService service)
     : ICommandHandler<ResolveSoDViolationCommand, SoDViolation>
 {
     public async Task<SoDViolation> Handle(
@@ -167,13 +167,13 @@ public class ResolveSoDViolationHandler(ISoDService service)
 /// <summary>
 ///     Command to grant an exception for a SoD violation
 /// </summary>
-public record GrantSoDExceptionCommand(
+public sealed record GrantSoDExceptionCommand(
     Guid ViolationId,
     Guid ApprovedBy,
     string Justification
 ) : ICommand<SoDViolation>;
 
-public class GrantSoDExceptionValidator : AbstractValidator<GrantSoDExceptionCommand>
+public sealed class GrantSoDExceptionValidator : AbstractValidator<GrantSoDExceptionCommand>
 {
     public GrantSoDExceptionValidator()
     {
@@ -183,7 +183,7 @@ public class GrantSoDExceptionValidator : AbstractValidator<GrantSoDExceptionCom
     }
 }
 
-public class GrantSoDExceptionHandler(ISoDService service)
+public sealed class GrantSoDExceptionHandler(ISoDService service)
     : ICommandHandler<GrantSoDExceptionCommand, SoDViolation>
 {
     public async Task<SoDViolation> Handle(
@@ -203,9 +203,9 @@ public class GrantSoDExceptionHandler(ISoDService service)
 /// <summary>
 ///     Command to scan for SoD violations
 /// </summary>
-public record ScanSoDViolationsCommand(Guid? TenantId) : ICommand<int>;
+public sealed record ScanSoDViolationsCommand(Guid? TenantId) : ICommand<int>;
 
-public class ScanSoDViolationsHandler(ISoDService service)
+public sealed class ScanSoDViolationsHandler(ISoDService service)
     : ICommandHandler<ScanSoDViolationsCommand, int>
 {
     public async Task<int> Handle(

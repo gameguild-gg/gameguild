@@ -9,7 +9,7 @@ namespace GameGuild.Learning.Experience.Recommendations;
 /// <summary>
 /// Handles CourseCompletedEvent to update user learning profile statistics
 /// </summary>
-public class CourseCompletedLearningProfileHandler(
+public sealed class CourseCompletedLearningProfileHandler(
     IApplicationDbContext context,
     ILogger<CourseCompletedLearningProfileHandler> logger)
     : IDomainEventHandler<CourseCompletedEvent>
@@ -43,7 +43,7 @@ public class CourseCompletedLearningProfileHandler(
 /// <summary>
 /// Handles CourseViewedEvent to update user activity
 /// </summary>
-public class CourseViewedActivityHandler(
+public sealed class CourseViewedActivityHandler(
     IApplicationDbContext context,
     ILogger<CourseViewedActivityHandler> logger)
     : IDomainEventHandler<CourseViewedEvent>
@@ -66,7 +66,7 @@ public class CourseViewedActivityHandler(
 /// <summary>
 /// Handles RecommendationConvertedEvent to track recommendation effectiveness
 /// </summary>
-public class RecommendationConvertedHandler(
+public sealed class RecommendationConvertedHandler(
     IApplicationDbContext context,
     ILogger<RecommendationConvertedHandler> logger)
     : IDomainEventHandler<RecommendationConvertedEvent>
@@ -91,7 +91,7 @@ public class RecommendationConvertedHandler(
 /// <summary>
 /// Handles SearchPerformedEvent to record search history for analytics
 /// </summary>
-public class SearchPerformedHistoryHandler(
+public sealed class SearchPerformedHistoryHandler(
     IApplicationDbContext context,
     ILogger<SearchPerformedHistoryHandler> logger)
     : IDomainEventHandler<SearchPerformedEvent>
@@ -117,7 +117,7 @@ public class SearchPerformedHistoryHandler(
 /// <summary>
 /// Handles SearchResultClickedEvent to update search history with click data
 /// </summary>
-public class SearchResultClickedHandler(
+public sealed class SearchResultClickedHandler(
     IApplicationDbContext context,
     ILogger<SearchResultClickedHandler> logger)
     : IDomainEventHandler<SearchResultClickedEvent>
@@ -146,7 +146,7 @@ public class SearchResultClickedHandler(
 /// <summary>
 /// Handles LearningProgressUpdatedEvent to refresh recommendations when significant progress is made
 /// </summary>
-public class LearningProgressRecommendationRefreshHandler(
+public sealed class LearningProgressRecommendationRefreshHandler(
     IRecommendationEngine engine,
     ILogger<LearningProgressRecommendationRefreshHandler> logger)
     : IDomainEventHandler<LearningProgressUpdatedEvent>
@@ -176,7 +176,7 @@ public class LearningProgressRecommendationRefreshHandler(
 /// <summary>
 /// Handles UserSkillUpdatedEvent to update user learning profile skills
 /// </summary>
-public class UserSkillUpdatedProfileHandler(
+public sealed class UserSkillUpdatedProfileHandler(
     IApplicationDbContext context,
     ILogger<UserSkillUpdatedProfileHandler> logger)
     : IDomainEventHandler<UserSkillUpdatedEvent>

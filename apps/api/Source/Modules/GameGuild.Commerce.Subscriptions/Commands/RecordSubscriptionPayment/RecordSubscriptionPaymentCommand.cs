@@ -11,7 +11,7 @@ namespace GameGuild.Commerce.Subscriptions;
 /// <param name="PaymentDate">When the payment was processed</param>
 /// <param name="IdempotencyKey">Unique payment key (e.g., external payment ID from provider)</param>
 /// <param name="ForBillingCycle">Optional billing cycle this payment is for (prevents out-of-order issues)</param>
-public record RecordSubscriptionPaymentCommand(
+public sealed record RecordSubscriptionPaymentCommand(
     Guid SubscriptionId,
     decimal Amount,
     string Currency,

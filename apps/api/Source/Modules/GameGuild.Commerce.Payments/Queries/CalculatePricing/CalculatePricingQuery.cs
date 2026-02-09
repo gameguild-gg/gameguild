@@ -9,4 +9,4 @@ namespace GameGuild.Commerce.Payments;
 ///     This query requires integration with the Subscriptions module for plan pricing.
 ///     It combines base pricing with discount codes and promo stacking rules.
 /// </remarks>
-public record CalculatePricingQuery(Guid PlanId, Guid? TenantId = null, string? DiscountCode = null) : IQuery<PricingCalculationResult>;
+public sealed record CalculatePricingQuery(Guid PlanId, Guid? TenantId = null, string? DiscountCode = null) : IQuery<PricingCalculationResult>;

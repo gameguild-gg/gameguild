@@ -179,6 +179,6 @@ public class JitElevationsController(ISender sender) : BaseApiController
 }
 
 // Request DTOs
-public record ApproveElevationRequest(Guid ReviewerId, string? Comments = null);
-public record DenyElevationRequest(Guid ReviewerId, string Comments);
-public record RevokeElevationRequest(Guid RevokedBy, string Reason);
+public sealed record ApproveElevationRequest(Guid ReviewerId, string? Comments = null);
+public sealed record DenyElevationRequest(Guid ReviewerId, string Comments);
+public sealed record RevokeElevationRequest(Guid RevokedBy, string Reason);

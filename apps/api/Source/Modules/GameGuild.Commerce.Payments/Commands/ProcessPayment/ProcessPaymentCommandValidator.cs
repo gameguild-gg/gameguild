@@ -2,7 +2,7 @@ using FluentValidation;
 
 namespace GameGuild.Commerce.Payments;
 
-public class ProcessPaymentCommandValidator : AbstractValidator<ProcessPaymentCommand>
+public sealed class ProcessPaymentCommandValidator : AbstractValidator<ProcessPaymentCommand>
 {
     public ProcessPaymentCommandValidator()
     {

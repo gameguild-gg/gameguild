@@ -1,9 +1,9 @@
-﻿using GameGuild.Identity.Authorization;
+using GameGuild.Identity.Authorization;
 using GameGuild.CQRS;
 
 namespace GameGuild.Identity.Authentication;
 
-public record UpdateAbacPolicyCommand : ICommand<AbacPolicy>
+public sealed record UpdateAbacPolicyCommand : ICommand<AbacPolicy>
 {
     public Guid PolicyId { get; set; }
 

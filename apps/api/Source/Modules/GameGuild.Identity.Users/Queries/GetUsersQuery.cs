@@ -12,12 +12,12 @@ namespace GameGuild.Identity.Users;
 /// <param name="Cursor">Optional cursor for pagination</param>
 /// <param name="Limit">Number of results to return</param>
 /// <param name="Sort">Sort criteria</param>
-public record GetUsersQuery(string? Email = null, string? Status = null, bool IncludeDeleted = false, string? SearchTerm = null, string? Cursor = null, int Limit = 50, string? Sort = null) : IQuery<PagedResult<UserDto>>;
+public sealed record GetUsersQuery(string? Email = null, string? Status = null, bool IncludeDeleted = false, string? SearchTerm = null, string? Cursor = null, int Limit = 50, string? Sort = null) : IQuery<PagedResult<UserDto>>;
 
 /// <summary>
 ///     Query to get users metadata/statistics
 /// </summary>
-public record GetUsersMetadataQuery : IQuery<UsersMetadataDto>;
+public sealed record GetUsersMetadataQuery : IQuery<UsersMetadataDto>;
 
 /// <summary>
 ///     Metadata about users collection
@@ -27,4 +27,4 @@ public record GetUsersMetadataQuery : IQuery<UsersMetadataDto>;
 /// <param name="InactiveCount">Number of inactive users</param>
 /// <param name="DeletedCount">Number of soft-deleted users</param>
 /// <param name="ETag">ETag for caching</param>
-public record UsersMetadataDto(int TotalCount, int ActiveCount, int InactiveCount, int DeletedCount, string ETag);
+public sealed record UsersMetadataDto(int TotalCount, int ActiveCount, int InactiveCount, int DeletedCount, string ETag);

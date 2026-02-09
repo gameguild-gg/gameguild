@@ -5,7 +5,7 @@ namespace GameGuild.Commerce.Products;
 /// <summary>
 /// Query handler for getting a paginated list of products
 /// </summary>
-public class GetProductsPagedQueryHandler(IProductRepository productRepository)
+public sealed class GetProductsPagedQueryHandler(IProductRepository productRepository)
     : IQueryHandler<GetProductsPagedQuery, PagedResult<ProductDto>>
 {
     public async Task<PagedResult<ProductDto>> Handle(GetProductsPagedQuery request, CancellationToken cancellationToken)

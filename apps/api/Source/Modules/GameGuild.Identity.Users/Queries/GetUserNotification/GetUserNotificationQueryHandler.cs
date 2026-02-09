@@ -5,7 +5,7 @@ namespace GameGuild.Identity.Users;
 /// <summary>
 /// Query handler for getting a single user notification
 /// </summary>
-public class GetUserNotificationQueryHandler(IUserRepository userRepository) : IQueryHandler<GetUserNotificationQuery, UserNotificationDetailDto?>
+public sealed class GetUserNotificationQueryHandler(IUserRepository userRepository) : IQueryHandler<GetUserNotificationQuery, UserNotificationDetailDto?>
 {
     public async Task<UserNotificationDetailDto?> Handle(GetUserNotificationQuery request, CancellationToken cancellationToken)
     {

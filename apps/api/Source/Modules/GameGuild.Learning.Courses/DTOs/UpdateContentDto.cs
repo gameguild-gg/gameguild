@@ -1,6 +1,6 @@
 namespace GameGuild.Learning.Courses;
 
-public record UpdateContentDto(string? Title = null, string? Description = null, string? Body = null, int? SortOrder = null, bool? IsRequired = null, int? EstimatedMinutes = null) {
+public sealed record UpdateContentDto(string? Title = null, string? Description = null, string? Body = null, int? SortOrder = null, bool? IsRequired = null, int? EstimatedMinutes = null) {
   public string? Title { get; init; } = Title;
 
   public string? Description { get; init; } = Description;

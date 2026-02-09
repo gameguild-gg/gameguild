@@ -4,7 +4,7 @@ using GameGuild.CQRS;
 namespace GameGuild.Identity.Authentication;
 
 // Tenant Permission Queries
-public record HasTenantPermissionQuery : IQuery<bool>
+public sealed record HasTenantPermissionQuery : IQuery<bool>
 {
     public Guid UserId { get; init; }
 

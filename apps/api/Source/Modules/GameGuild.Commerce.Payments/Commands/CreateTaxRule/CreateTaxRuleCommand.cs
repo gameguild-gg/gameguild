@@ -5,7 +5,7 @@ namespace GameGuild.Commerce.Payments;
 /// <summary>
 ///     Command to create a tax rule
 /// </summary>
-public record CreateTaxRuleCommand(
+public sealed record CreateTaxRuleCommand(
     string JurisdictionCode,
     string? ProductCategory,
     string CustomerType,

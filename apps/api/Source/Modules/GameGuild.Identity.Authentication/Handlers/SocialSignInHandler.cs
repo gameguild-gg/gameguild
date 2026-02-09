@@ -7,7 +7,7 @@ namespace GameGuild.Identity.Authentication;
 /// <summary>
 ///     Handler for social sign-in command
 /// </summary>
-public class SocialSignInHandler(
+public sealed class SocialSignInHandler(
     IAuthService authService,
     IUserRepository userRepository,
     ILogger<SocialSignInHandler> logger,

@@ -96,17 +96,17 @@ public static class PermissionsEndpoint
 /// <summary>
 ///     Request DTO for creating a permission
 /// </summary>
-public record CreatePermissionRequest(string Name, string? Description, string? Resource);
+public sealed record CreatePermissionRequest(string Name, string? Description, string? Resource);
 
 /// <summary>
 ///     Request DTO for updating a permission
 /// </summary>
-public record UpdatePermissionRequest(string Name, string? Description, string? Resource);
+public sealed record UpdatePermissionRequest(string Name, string? Description, string? Resource);
 
 /// <summary>
 ///     Request DTO for assigning permissions to a role
 /// </summary>
-public record AssignPermissionsRequest(Guid[ ] PermissionIds);
+public sealed record AssignPermissionsRequest(Guid[ ] PermissionIds);
 
 /// <summary>
 ///     DTO for permission response data

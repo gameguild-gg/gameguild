@@ -4,7 +4,7 @@ namespace GameGuild.Commerce.Subscriptions;
 ///     Result of a payment recording operation on a subscription.
 ///     Provides detailed outcome information including out-of-order rejection details.
 /// </summary>
-public record PaymentRecordResult
+public sealed record PaymentRecordResult
 {
     /// <summary>
     ///     Whether the payment was successfully recorded

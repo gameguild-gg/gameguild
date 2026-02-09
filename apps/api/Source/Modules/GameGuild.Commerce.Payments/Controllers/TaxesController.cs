@@ -72,7 +72,7 @@ public sealed class TaxesController(ISender sender) : BaseApiController
 }
 
 /// <summary>Request to validate tax exemption</summary>
-public record ValidateTaxExemptionRequest(
+public sealed record ValidateTaxExemptionRequest(
     string JurisdictionCode,
     string ExemptionType,
     string? ExemptionCertificateNumber,
@@ -81,7 +81,7 @@ public record ValidateTaxExemptionRequest(
     DateTime? TransactionDate);
 
 /// <summary>Result of tax exemption validation</summary>
-public record TaxExemptionValidationResult(
+public sealed record TaxExemptionValidationResult(
     bool IsValid,
     string? ExemptionType,
     decimal ExemptionRate,

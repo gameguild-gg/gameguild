@@ -9,7 +9,7 @@ namespace GameGuild.Commerce.Products;
 /// <param name="PromoCodes">List of promo codes to apply</param>
 /// <param name="ProductId">Optional product ID for product-specific codes</param>
 /// <param name="UserId">Optional user ID for user-specific validation</param>
-public record ApplyPromoCodesCommand(
+public sealed record ApplyPromoCodesCommand(
     decimal OrderAmount,
     List<string> PromoCodes,
     Guid? ProductId = null,

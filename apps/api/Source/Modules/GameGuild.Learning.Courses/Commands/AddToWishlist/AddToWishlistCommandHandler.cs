@@ -7,7 +7,7 @@ namespace GameGuild.Learning.Courses;
 /// <summary>
 /// Command handler for AddToWishlistCommand
 /// </summary>
-public class AddToWishlistCommandHandler(IApplicationDbContext context, ILogger<AddToWishlistCommandHandler> logger)
+public sealed class AddToWishlistCommandHandler(IApplicationDbContext context, ILogger<AddToWishlistCommandHandler> logger)
     : ICommandHandler<AddToWishlistCommand, ProgramWishlist>
 {
     public async Task<ProgramWishlist> Handle(AddToWishlistCommand request, CancellationToken cancellationToken) {

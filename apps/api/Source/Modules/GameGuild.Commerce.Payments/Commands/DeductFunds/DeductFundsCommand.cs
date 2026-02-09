@@ -9,4 +9,4 @@ namespace GameGuild.Commerce.Payments;
 /// <param name="Amount">Amount to deduct</param>
 /// <param name="Description">Transaction description</param>
 /// <param name="ReferenceId">Optional reference ID (e.g., order ID)</param>
-public record DeductFundsCommand(Guid UserId, decimal Amount, string Description, string? ReferenceId = null) : ICommand<WalletTransaction>;
+public sealed record DeductFundsCommand(Guid UserId, decimal Amount, string Description, string? ReferenceId = null) : ICommand<WalletTransaction>;

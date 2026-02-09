@@ -10,4 +10,4 @@ namespace GameGuild.Identity.Users;
 /// <param name="Name">User's full name</param>
 /// <param name="PhoneNumber">Optional phone number</param>
 [RequiresQuota(ResourceUsageType.Users, Source = "CreateUser")]
-public record CreateUserCommand(string Email, string Name, string? PhoneNumber = null) : ICommand<UserDto>;
+public sealed record CreateUserCommand(string Email, string Name, string? PhoneNumber = null) : ICommand<UserDto>;

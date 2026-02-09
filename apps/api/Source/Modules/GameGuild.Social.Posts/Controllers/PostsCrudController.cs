@@ -181,7 +181,7 @@ public class PostsCrudController(IPostService postService, IActorContextAccessor
 
 #region Request DTOs
 
-public record CreatePostRequest
+public sealed record CreatePostRequest
 {
     public string Content { get; init; } = string.Empty;
     public PostVisibility Visibility { get; init; } = PostVisibility.Public;
@@ -191,7 +191,7 @@ public record CreatePostRequest
     public string[]? Tags { get; init; }
 }
 
-public record UpdatePostRequest
+public sealed record UpdatePostRequest
 {
     public string Content { get; init; } = string.Empty;
 }

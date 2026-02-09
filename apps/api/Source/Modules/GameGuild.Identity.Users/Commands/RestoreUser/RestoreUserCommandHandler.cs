@@ -5,7 +5,7 @@ namespace GameGuild.Identity.Users;
 /// <summary>
 ///     Command handler for restoring soft-deleted users
 /// </summary>
-public class RestoreUserCommandHandler(IUserRepository userRepository, IPublisher publisher) : ICommandHandler<RestoreUserCommand, UserDto>
+public sealed class RestoreUserCommandHandler(IUserRepository userRepository, IPublisher publisher) : ICommandHandler<RestoreUserCommand, UserDto>
 {
     public async Task<UserDto> Handle(RestoreUserCommand request, CancellationToken cancellationToken)
     {

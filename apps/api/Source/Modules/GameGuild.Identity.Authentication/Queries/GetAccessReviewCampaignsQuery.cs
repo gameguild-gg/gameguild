@@ -1,9 +1,9 @@
-﻿using GameGuild.Identity.Authorization;
+using GameGuild.Identity.Authorization;
 using GameGuild.CQRS;
 
 namespace GameGuild.Identity.Authentication;
 
-public record GetAccessReviewCampaignsQuery : IQuery<PagedResult<AccessReviewCampaign>>
+public sealed record GetAccessReviewCampaignsQuery : IQuery<PagedResult<AccessReviewCampaign>>
 {
     public Guid? TenantId { get; init; }
 

@@ -19,7 +19,7 @@ namespace GameGuild.Identity.Users;
 /// <param name="CreatedAt">When the profile was created</param>
 /// <param name="UpdatedAt">When the profile was last updated</param>
 /// <param name="Version">Version for optimistic concurrency control</param>
-public record UserProfileDto(
+public sealed record UserProfileDto(
     Guid Id,
     Guid UserId,
     string? DisplayName,
@@ -50,7 +50,7 @@ public record UserProfileDto(
 /// <param name="ProfileVisibility">Profile visibility to update</param>
 /// <param name="ShowEmail">Whether to show email</param>
 /// <param name="ShowLocation">Whether to show location</param>
-public record UpdateUserProfileRequest(
+public sealed record UpdateUserProfileRequest(
     string? DisplayName = null,
     string? Bio = null,
     string? Location = null,
@@ -74,7 +74,7 @@ public record UpdateUserProfileRequest(
 /// <param name="ProfileVisibility">Profile visibility setting</param>
 /// <param name="ShowEmail">Whether to show email in profile</param>
 /// <param name="ShowLocation">Whether to show location in profile</param>
-public record ReplaceUserProfileRequest(string? DisplayName, string? Bio, string? Location, string? Website, string? TimeZone, string? Language, string ProfileVisibility, bool ShowEmail, bool ShowLocation);
+public sealed record ReplaceUserProfileRequest(string? DisplayName, string? Bio, string? Location, string? Website, string? TimeZone, string? Language, string ProfileVisibility, bool ShowEmail, bool ShowLocation);
 
 /// <summary>
 ///     Data transfer object for user avatar
@@ -83,7 +83,7 @@ public record ReplaceUserProfileRequest(string? DisplayName, string? Bio, string
 /// <param name="UploadedAt">When the avatar was uploaded</param>
 /// <param name="FileSize">Size of the avatar file in bytes</param>
 /// <param name="ContentType">MIME type of the avatar file</param>
-public record UserAvatarDto(string AvatarUrl, DateTimeOffset UploadedAt, long FileSize, string ContentType);
+public sealed record UserAvatarDto(string AvatarUrl, DateTimeOffset UploadedAt, long FileSize, string ContentType);
 
 /// <summary>
 ///     Request model for uploading user avatar
@@ -91,7 +91,7 @@ public record UserAvatarDto(string AvatarUrl, DateTimeOffset UploadedAt, long Fi
 /// <param name="ImageData">Base64 encoded image data</param>
 /// <param name="ContentType">MIME type of the image</param>
 /// <param name="FileName">Original file name</param>
-public record UploadUserAvatarRequest(string ImageData, string ContentType, string FileName);
+public sealed record UploadUserAvatarRequest(string ImageData, string ContentType, string FileName);
 
 /// <summary>
 ///     Data transfer object for user banner
@@ -100,7 +100,7 @@ public record UploadUserAvatarRequest(string ImageData, string ContentType, stri
 /// <param name="UploadedAt">When the banner was uploaded</param>
 /// <param name="FileSize">Size of the banner file in bytes</param>
 /// <param name="ContentType">MIME type of the banner file</param>
-public record UserBannerDto(string BannerUrl, DateTimeOffset UploadedAt, long FileSize, string ContentType);
+public sealed record UserBannerDto(string BannerUrl, DateTimeOffset UploadedAt, long FileSize, string ContentType);
 
 /// <summary>
 ///     Request model for uploading user banner
@@ -108,7 +108,7 @@ public record UserBannerDto(string BannerUrl, DateTimeOffset UploadedAt, long Fi
 /// <param name="ImageData">Base64 encoded image data</param>
 /// <param name="ContentType">MIME type of the image</param>
 /// <param name="FileName">Original file name</param>
-public record UploadUserBannerRequest(string ImageData, string ContentType, string FileName);
+public sealed record UploadUserBannerRequest(string ImageData, string ContentType, string FileName);
 
 
 

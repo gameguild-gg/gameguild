@@ -12,7 +12,7 @@ namespace GameGuild.Commerce.Payments;
 /// <param name="PageNumber">Page number for pagination</param>
 /// <param name="PageSize">Page size for pagination</param>
 /// <param name="IsAdminRequest">Indicates if this is an admin request</param>
-public record GetPaymentHistoryQuery(
+public sealed record GetPaymentHistoryQuery(
     Guid? UserId = null,
     Guid? TenantId = null,
     DateTime? StartDate = null,

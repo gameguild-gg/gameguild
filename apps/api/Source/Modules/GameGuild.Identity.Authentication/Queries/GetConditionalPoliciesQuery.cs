@@ -1,9 +1,9 @@
-﻿using GameGuild.Identity.Authorization;
+using GameGuild.Identity.Authorization;
 using GameGuild.CQRS;
 
 namespace GameGuild.Identity.Authentication;
 
-public record GetConditionalPoliciesQuery : IQuery<PagedResult<ConditionalPolicy>>
+public sealed record GetConditionalPoliciesQuery : IQuery<PagedResult<ConditionalPolicy>>
 {
     public Guid? TenantId { get; init; }
 

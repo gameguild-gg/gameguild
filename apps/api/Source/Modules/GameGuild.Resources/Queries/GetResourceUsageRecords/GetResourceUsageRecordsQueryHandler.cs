@@ -5,7 +5,7 @@ namespace GameGuild.Resources;
 /// <summary>
 ///     Handler for getting resource usage records with pagination
 /// </summary>
-public class GetResourceUsageRecordsQueryHandler(IUsageRecordRepository usageRecordRepository) : IQueryHandler<GetResourceUsageRecordsQuery, PagedResult<UsageRecord>>
+public sealed class GetResourceUsageRecordsQueryHandler(IUsageRecordRepository usageRecordRepository) : IQueryHandler<GetResourceUsageRecordsQuery, PagedResult<UsageRecord>>
 {
     /// <summary>
     ///     Maximum allowed page size to prevent excessive memory usage

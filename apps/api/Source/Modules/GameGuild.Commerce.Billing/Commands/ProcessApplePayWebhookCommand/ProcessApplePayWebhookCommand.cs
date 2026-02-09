@@ -9,7 +9,7 @@ namespace GameGuild.Commerce.Billing;
 /// <param name="Payload">Raw JSON payload from Apple Pay</param>
 /// <param name="MerchantId">Apple Pay merchant identifier</param>
 /// <param name="Signature">Apple Pay signature for verification</param>
-public record ProcessApplePayWebhookCommand(
+public sealed record ProcessApplePayWebhookCommand(
     string Payload,
     string MerchantId,
     string Signature) : ICommand<WebhookProcessingResult>;

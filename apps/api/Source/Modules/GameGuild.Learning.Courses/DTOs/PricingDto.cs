@@ -1,6 +1,6 @@
 namespace GameGuild.Learning.Courses;
 
-public record PricingDto(decimal Price, string Currency, bool IsSubscription, int? SubscriptionDurationDays, bool IsMonetizationEnabled) {
+public sealed record PricingDto(decimal Price, string Currency, bool IsSubscription, int? SubscriptionDurationDays, bool IsMonetizationEnabled) {
   public decimal Price { get; init; } = Price;
 
   public string Currency { get; init; } = Currency;

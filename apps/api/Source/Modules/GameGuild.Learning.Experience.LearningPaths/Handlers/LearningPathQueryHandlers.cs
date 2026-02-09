@@ -7,7 +7,7 @@ namespace GameGuild.Learning.Experience.LearningPaths;
 /// <summary>
 /// Query handlers for Learning Paths module
 /// </summary>
-public class LearningPathQueryHandlers(IApplicationDbContext context, ILogger<LearningPathQueryHandlers> logger)
+public sealed class LearningPathQueryHandlers(IApplicationDbContext context, ILogger<LearningPathQueryHandlers> logger)
     : IRequestHandler<GetPublishedPathsQuery, IEnumerable<LearningPath>>,
       IRequestHandler<GetPathBySlugQuery, LearningPath?>,
       IRequestHandler<GetPathByIdQuery, LearningPath?>,

@@ -10,7 +10,7 @@ namespace GameGuild.Identity.Authentication;
 /// <summary>
 ///     Authentication handler for API key-based authentication
 /// </summary>
-public class ApiKeyAuthenticationHandler : AuthenticationHandler<ApiKeyAuthenticationOptions>
+public sealed class ApiKeyAuthenticationHandler : AuthenticationHandler<ApiKeyAuthenticationOptions>
 {
     private readonly IApplicationDbContext _dbContext;
     private const string ApiKeyHeaderName = "X-API-Key";

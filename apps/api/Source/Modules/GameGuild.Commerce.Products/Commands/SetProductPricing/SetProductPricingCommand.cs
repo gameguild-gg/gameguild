@@ -15,7 +15,7 @@ namespace GameGuild.Commerce.Products;
 /// <param name="IsDefault">Whether this is the default pricing</param>
 /// <param name="PricingId">Existing pricing ID to update (null = create new)</param>
 /// <param name="UpdatedByUserId">User making the change for audit trail</param>
-public record SetProductPricingCommand(
+public sealed record SetProductPricingCommand(
     Guid ProductId,
     string Name,
     decimal BasePrice,

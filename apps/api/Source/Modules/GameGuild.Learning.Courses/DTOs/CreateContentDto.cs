@@ -1,6 +1,6 @@
 namespace GameGuild.Learning.Courses;
 
-public record CreateContentDto(string Title, string Description, ProgramContentType Type, string Body, int? SortOrder = null, bool IsRequired = true, int? EstimatedMinutes = null) {
+public sealed record CreateContentDto(string Title, string Description, ProgramContentType Type, string Body, int? SortOrder = null, bool IsRequired = true, int? EstimatedMinutes = null) {
   public string Title { get; init; } = Title;
 
   public string Description { get; init; } = Description;

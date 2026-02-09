@@ -2,7 +2,7 @@ using FluentValidation;
 
 namespace GameGuild.Identity.Users;
 
-public class UpdateUserPrivacyPreferencesCommandValidator : AbstractValidator<UpdateUserPrivacyPreferencesCommand>
+public sealed class UpdateUserPrivacyPreferencesCommandValidator : AbstractValidator<UpdateUserPrivacyPreferencesCommand>
 {
     public UpdateUserPrivacyPreferencesCommandValidator()
     {

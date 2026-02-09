@@ -5,7 +5,7 @@ namespace GameGuild.Identity.Users;
 /// <summary>
 ///     Command handler for unsuspending users
 /// </summary>
-public class UnsuspendUserCommandHandler(IUserRepository userRepository, IPublisher publisher) : ICommandHandler<UnsuspendUserCommand, UserDto>
+public sealed class UnsuspendUserCommandHandler(IUserRepository userRepository, IPublisher publisher) : ICommandHandler<UnsuspendUserCommand, UserDto>
 {
     public async Task<UserDto> Handle(UnsuspendUserCommand request, CancellationToken cancellationToken)
     {

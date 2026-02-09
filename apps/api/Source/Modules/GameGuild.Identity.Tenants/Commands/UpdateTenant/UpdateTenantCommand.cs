@@ -8,4 +8,4 @@ namespace GameGuild.Identity.Tenants;
 /// <param name="TenantId">Tenant unique identifier</param>
 /// <param name="Name">New tenant name</param>
 /// <param name="Description">New tenant description</param>
-public record UpdateTenantCommand(Guid TenantId, string? Name = null, string? Description = null) : ICommand;
+public sealed record UpdateTenantCommand(Guid TenantId, string? Name = null, string? Description = null) : ICommand;

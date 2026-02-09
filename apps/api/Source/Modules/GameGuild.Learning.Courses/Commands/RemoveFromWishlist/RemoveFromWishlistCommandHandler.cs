@@ -7,7 +7,7 @@ namespace GameGuild.Learning.Courses;
 /// <summary>
 /// Command handler for RemoveFromWishlistCommand
 /// </summary>
-public class RemoveFromWishlistCommandHandler(IApplicationDbContext context, ILogger<RemoveFromWishlistCommandHandler> logger)
+public sealed class RemoveFromWishlistCommandHandler(IApplicationDbContext context, ILogger<RemoveFromWishlistCommandHandler> logger)
     : ICommandHandler<RemoveFromWishlistCommand, bool>
 {
     public async Task<bool> Handle(RemoveFromWishlistCommand request, CancellationToken cancellationToken) {

@@ -7,4 +7,4 @@ namespace GameGuild.Identity.Users;
 /// </summary>
 /// <param name="UserId">The user ID</param>
 /// <param name="Request">Notification preferences to update</param>
-public record UpdateUserNotificationPreferencesCommand(Guid UserId, UpdateUserNotificationPreferencesRequest Request) : ICommand;
+public sealed record UpdateUserNotificationPreferencesCommand(Guid UserId, UpdateUserNotificationPreferencesRequest Request) : ICommand;

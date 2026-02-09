@@ -7,4 +7,4 @@ namespace GameGuild.Identity.Users;
 /// </summary>
 /// <param name="UserId">The user ID</param>
 /// <param name="Request">Preferences to update</param>
-public record UpdateUserPreferencesCommand(Guid UserId, UpdateUserPreferencesRequest Request) : ICommand;
+public sealed record UpdateUserPreferencesCommand(Guid UserId, UpdateUserPreferencesRequest Request) : ICommand;

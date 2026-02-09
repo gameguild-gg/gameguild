@@ -110,7 +110,7 @@ public enum AssetAccessDeniedReason
 /// <summary>
 /// Result of token validation.
 /// </summary>
-public record TokenValidationResult(
+public sealed record TokenValidationResult(
     bool IsValid,
     string? Error = null,
     Guid? UserId = null,
@@ -119,7 +119,7 @@ public record TokenValidationResult(
 /// <summary>
 /// Result of ephemeral token validation.
 /// </summary>
-public record EphemeralTokenValidationResult(
+public sealed record EphemeralTokenValidationResult(
     bool IsValid,
     Guid AssetReferenceId,
     bool IsExpired = false,

@@ -7,7 +7,7 @@ namespace GameGuild.Projects;
 /// Command to create a new project
 /// </summary>
 [RequiresQuota(ResourceUsageType.Projects, Source = "CreateProject")]
-public record CreateProjectCommand : ICommand<Result<Project>> {
+public sealed record CreateProjectCommand : ICommand<Result<Project>> {
   public string Title { get; init; } = string.Empty;
 
   public string? Description { get; init; }
@@ -40,7 +40,7 @@ public record CreateProjectCommand : ICommand<Result<Project>> {
 /// <summary>
 /// Command to update an existing project
 /// </summary>
-public record UpdateProjectCommand : ICommand<Result<Project>> {
+public sealed record UpdateProjectCommand : ICommand<Result<Project>> {
   public Guid ProjectId { get; init; }
 
   public string? Title { get; init; }
@@ -73,7 +73,7 @@ public record UpdateProjectCommand : ICommand<Result<Project>> {
 /// <summary>
 /// Command to delete a project
 /// </summary>
-public record DeleteProjectCommand : ICommand<Result<bool>> {
+public sealed record DeleteProjectCommand : ICommand<Result<bool>> {
   public Guid ProjectId { get; init; }
 
   public Guid DeletedBy { get; init; }
@@ -86,7 +86,7 @@ public record DeleteProjectCommand : ICommand<Result<bool>> {
 /// <summary>
 /// Command to publish a project
 /// </summary>
-public record PublishProjectCommand : ICommand<Result<Project>> {
+public sealed record PublishProjectCommand : ICommand<Result<Project>> {
   public Guid ProjectId { get; init; }
 
   public Guid PublishedBy { get; init; }
@@ -95,7 +95,7 @@ public record PublishProjectCommand : ICommand<Result<Project>> {
 /// <summary>
 /// Command to unpublish a project
 /// </summary>
-public record UnpublishProjectCommand : ICommand<Result<Project>> {
+public sealed record UnpublishProjectCommand : ICommand<Result<Project>> {
   public Guid ProjectId { get; init; }
 
   public Guid UnpublishedBy { get; init; }
@@ -104,7 +104,7 @@ public record UnpublishProjectCommand : ICommand<Result<Project>> {
 /// <summary>
 /// Command to archive a project
 /// </summary>
-public record ArchiveProjectCommand : ICommand<Result<Project>> {
+public sealed record ArchiveProjectCommand : ICommand<Result<Project>> {
   public Guid ProjectId { get; init; }
 
   public Guid ArchivedBy { get; init; }

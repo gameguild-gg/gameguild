@@ -1,6 +1,6 @@
-﻿namespace GameGuild.Commerce.Payments;
+namespace GameGuild.Commerce.Payments;
 
-public record AddFundsRequest
+public sealed record AddFundsRequest
 {
     public required Guid UserId { get; init; }
 

@@ -17,7 +17,7 @@ public static class ProjectRoles {
 }
 
 /// <summary> Command handlers for project operations </summary>
-public class ProjectCommandHandlers
+public sealed class ProjectCommandHandlers
   : ICommandHandler<CreateProjectCommand, Result<Project>>,
     ICommandHandler<UpdateProjectCommand, Result<Project>>,
     ICommandHandler<DeleteProjectCommand, Result<bool>>,

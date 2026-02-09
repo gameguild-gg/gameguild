@@ -10,7 +10,7 @@ namespace GameGuild.Identity.Users;
 /// <param name="SortDirection">Sort direction (asc or desc)</param>
 /// <param name="PageNumber">Page number (1-based)</param>
 /// <param name="PageSize">Number of profiles per page</param>
-public record GetUserProfilesPagedQuery(
+public sealed record GetUserProfilesPagedQuery(
     string? Search = null,
     string? SortBy = null,
     string? SortDirection = "asc",

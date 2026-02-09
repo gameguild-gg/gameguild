@@ -7,7 +7,7 @@ namespace GameGuild.Learning.Experience.LearningPaths;
 /// <summary>
 /// Command to create a new learning path
 /// </summary>
-public record CreateLearningPathCommand(
+public sealed record CreateLearningPathCommand(
     Guid CreatorId,
     string Title,
     LearningPathDifficulty Difficulty = LearningPathDifficulty.Beginner,
@@ -20,7 +20,7 @@ public record CreateLearningPathCommand(
 /// <summary>
 /// Command to update a learning path
 /// </summary>
-public record UpdateLearningPathCommand(
+public sealed record UpdateLearningPathCommand(
     Guid Id,
     string? Title = null,
     string? Description = null,
@@ -33,26 +33,26 @@ public record UpdateLearningPathCommand(
 /// <summary>
 /// Command to delete a learning path
 /// </summary>
-public record DeleteLearningPathCommand(Guid Id) : ICommand<bool>;
+public sealed record DeleteLearningPathCommand(Guid Id) : ICommand<bool>;
 
 // ===== LEARNING PATH LIFECYCLE COMMANDS =====
 
 /// <summary>
 /// Command to publish a learning path
 /// </summary>
-public record PublishLearningPathCommand(Guid Id) : ICommand<LearningPath?>;
+public sealed record PublishLearningPathCommand(Guid Id) : ICommand<LearningPath?>;
 
 /// <summary>
 /// Command to unpublish a learning path
 /// </summary>
-public record UnpublishLearningPathCommand(Guid Id) : ICommand<LearningPath?>;
+public sealed record UnpublishLearningPathCommand(Guid Id) : ICommand<LearningPath?>;
 
 // ===== COURSE MANAGEMENT COMMANDS =====
 
 /// <summary>
 /// Command to add a course to a learning path
 /// </summary>
-public record AddCourseToPathCommand(
+public sealed record AddCourseToPathCommand(
     Guid LearningPathId,
     Guid CourseId,
     int Order,
@@ -62,7 +62,7 @@ public record AddCourseToPathCommand(
 /// <summary>
 /// Command to remove a course from a learning path
 /// </summary>
-public record RemoveCourseFromPathCommand(
+public sealed record RemoveCourseFromPathCommand(
     Guid LearningPathId,
     Guid CourseId
 ) : ICommand<bool>;
@@ -70,7 +70,7 @@ public record RemoveCourseFromPathCommand(
 /// <summary>
 /// Command to reorder courses in a learning path
 /// </summary>
-public record ReorderPathCoursesCommand(
+public sealed record ReorderPathCoursesCommand(
     Guid LearningPathId,
     IEnumerable<CourseOrderDto> Courses
 ) : ICommand<LearningPath?>;
@@ -80,7 +80,7 @@ public record ReorderPathCoursesCommand(
 /// <summary>
 /// Command to enroll a user in a learning path
 /// </summary>
-public record EnrollInPathCommand(
+public sealed record EnrollInPathCommand(
     Guid LearningPathId,
     Guid UserId
 ) : ICommand<LearningPathEnrollment>;
@@ -88,7 +88,7 @@ public record EnrollInPathCommand(
 /// <summary>
 /// Command to unenroll a user from a learning path
 /// </summary>
-public record UnenrollFromPathCommand(
+public sealed record UnenrollFromPathCommand(
     Guid LearningPathId,
     Guid UserId
 ) : ICommand<bool>;
@@ -96,7 +96,7 @@ public record UnenrollFromPathCommand(
 /// <summary>
 /// Command to update user's progress in a learning path
 /// </summary>
-public record UpdatePathProgressCommand(
+public sealed record UpdatePathProgressCommand(
     Guid LearningPathId,
     Guid UserId,
     int CoursesCompleted
@@ -105,7 +105,7 @@ public record UpdatePathProgressCommand(
 /// <summary>
 /// Command to mark a learning path as completed
 /// </summary>
-public record CompletePathCommand(
+public sealed record CompletePathCommand(
     Guid LearningPathId,
     Guid UserId
 ) : ICommand<LearningPathEnrollment?>;
@@ -113,7 +113,7 @@ public record CompletePathCommand(
 /// <summary>
 /// Command to abandon a learning path enrollment
 /// </summary>
-public record AbandonPathCommand(
+public sealed record AbandonPathCommand(
     Guid LearningPathId,
     Guid UserId
 ) : ICommand<bool>;

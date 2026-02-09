@@ -505,7 +505,7 @@ public class ProjectsController : BaseApiController {
 }
 
 /// <summary> Request DTOs for REST API </summary>
-public record CreateProjectRequest {
+public sealed record CreateProjectRequest {
   [Required(ErrorMessage = "Title is required")]
   [StringLength(255, MinimumLength = 1, ErrorMessage = "Title must be between 1 and 255 characters")]
   public string Title { get; init; } = string.Empty;
@@ -533,7 +533,7 @@ public record CreateProjectRequest {
   public List<string>? Tags { get; init; }
 }
 
-public record UpdateProjectRequest {
+public sealed record UpdateProjectRequest {
   public string? Title { get; init; }
 
   public string? Description { get; init; }
@@ -560,7 +560,7 @@ public record UpdateProjectRequest {
 }
 
 /// <summary> DTO for collaborator responses </summary>
-public record CollaboratorDto {
+public sealed record CollaboratorDto {
   public Guid Id { get; init; }
   public Guid UserId { get; init; }
   public string UserName { get; init; } = string.Empty;
@@ -571,20 +571,20 @@ public record CollaboratorDto {
 }
 
 /// <summary> Request to add a project collaborator by ID </summary>
-public record AddProjectCollaboratorRequest {
+public sealed record AddProjectCollaboratorRequest {
   [Required] public Guid UserId { get; init; }
   public string? Role { get; init; }
   public string? Permissions { get; init; }
 }
 
 /// <summary> Request to update a project collaborator </summary>
-public record UpdateProjectCollaboratorRequest {
+public sealed record UpdateProjectCollaboratorRequest {
   public string? Role { get; init; }
   public string? Permissions { get; init; }
 }
 
 /// <summary> Request to share a project </summary>
-public record ShareProjectRequest {
+public sealed record ShareProjectRequest {
   [Required] public Guid UserId { get; init; }
   public string? Role { get; init; }
   public string? Permissions { get; init; }

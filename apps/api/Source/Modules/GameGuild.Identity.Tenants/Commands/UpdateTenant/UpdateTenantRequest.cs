@@ -5,4 +5,4 @@ namespace GameGuild.Identity.Tenants;
 /// </summary>
 /// <param name="Name">New tenant name</param>
 /// <param name="Description">New tenant description</param>
-public record UpdateTenantRequest(string Name, string? Description);
+public sealed record UpdateTenantRequest(string Name, string? Description);

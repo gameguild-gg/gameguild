@@ -223,7 +223,7 @@ public class SoDController(ISender sender) : BaseApiController
 }
 
 // Request DTOs
-public record UpdateSoDRuleRequest(
+public sealed record UpdateSoDRuleRequest(
     string Name,
     string Description,
     string[] ConflictingPermissions,
@@ -231,5 +231,5 @@ public record UpdateSoDRuleRequest(
     bool IsEnabled
 );
 
-public record ResolveViolationRequest(Guid ResolvedBy, SoDResolutionAction Action, string Notes);
-public record GrantExceptionRequest(Guid ApprovedBy, string Justification);
+public sealed record ResolveViolationRequest(Guid ResolvedBy, SoDResolutionAction Action, string Notes);
+public sealed record GrantExceptionRequest(Guid ApprovedBy, string Justification);

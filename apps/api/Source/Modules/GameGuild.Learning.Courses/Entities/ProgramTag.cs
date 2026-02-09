@@ -97,7 +97,7 @@ public class ProgramTag : EntityBase
 /// <summary>
 /// DTO for program skill/tag assignment
 /// </summary>
-public record ProgramTagDto(
+public sealed record ProgramTagDto(
     Guid Id,
     Guid ProgramId,
     Guid TagId,
@@ -110,7 +110,7 @@ public record ProgramTagDto(
 /// <summary>
 /// DTO for adding a tag to a program
 /// </summary>
-public record AddTagToProgramDto(
+public sealed record AddTagToProgramDto(
     Guid TagId,
     SkillProficiencyLevel ProficiencyLevel = SkillProficiencyLevel.Beginner,
     bool IsPrimary = false,
@@ -119,7 +119,7 @@ public record AddTagToProgramDto(
 /// <summary>
 /// DTO for updating a program tag
 /// </summary>
-public record UpdateProgramTagDto(
+public sealed record UpdateProgramTagDto(
     SkillProficiencyLevel? ProficiencyLevel = null,
     bool? IsPrimary = null,
     int? DisplayOrder = null);

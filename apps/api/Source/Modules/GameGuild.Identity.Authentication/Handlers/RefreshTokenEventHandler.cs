@@ -6,7 +6,7 @@ namespace GameGuild.Identity.Authentication;
 /// <summary>
 ///     Handler for logging refresh token lifecycle events
 /// </summary>
-public class RefreshTokenEventHandler(ILogger<RefreshTokenEventHandler> logger) : INotificationHandler<RefreshTokenGeneratedEvent>,
+public sealed class RefreshTokenEventHandler(ILogger<RefreshTokenEventHandler> logger) : INotificationHandler<RefreshTokenGeneratedEvent>,
     INotificationHandler<RefreshTokenUsedEvent>,
     INotificationHandler<RefreshTokenRevokedEvent>
 {

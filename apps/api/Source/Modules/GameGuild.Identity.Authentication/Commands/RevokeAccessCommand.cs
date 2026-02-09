@@ -1,8 +1,8 @@
-﻿using GameGuild.CQRS;
+using GameGuild.CQRS;
 
 namespace GameGuild.Identity.Authentication;
 
-public record RevokeAccessCommand : ICommand<bool>
+public sealed record RevokeAccessCommand : ICommand<bool>
 {
     public Guid UserId { get; init; }
 

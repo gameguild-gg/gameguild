@@ -5,7 +5,7 @@ namespace GameGuild.Commerce.Subscriptions;
 /// <summary>
 ///     Validator for UpgradeSubscriptionPlanCommand
 /// </summary>
-public class UpgradeSubscriptionPlanCommandValidator : AbstractValidator<UpgradeSubscriptionPlanCommand>
+public sealed class UpgradeSubscriptionPlanCommandValidator : AbstractValidator<UpgradeSubscriptionPlanCommand>
 {
     public UpgradeSubscriptionPlanCommandValidator()
     {

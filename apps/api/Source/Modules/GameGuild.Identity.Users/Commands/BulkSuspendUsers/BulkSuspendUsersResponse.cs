@@ -6,4 +6,4 @@ namespace GameGuild.Identity.Users;
 /// </summary>
 /// <param name="SuspendedUsers">Successfully suspended users</param>
 /// <param name="FailedUserIds">User IDs that failed to suspend</param>
-public record BulkSuspendUsersResponse(IEnumerable<UserDto> SuspendedUsers, IEnumerable<Guid> FailedUserIds);
+public sealed record BulkSuspendUsersResponse(IEnumerable<UserDto> SuspendedUsers, IEnumerable<Guid> FailedUserIds);

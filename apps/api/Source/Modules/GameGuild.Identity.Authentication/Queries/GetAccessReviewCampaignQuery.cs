@@ -4,7 +4,7 @@ using GameGuild.CQRS;
 namespace GameGuild.Identity.Authentication;
 
 // Access Review Campaign Queries
-public record GetAccessReviewCampaignQuery : IQuery<AccessReviewCampaign>
+public sealed record GetAccessReviewCampaignQuery : IQuery<AccessReviewCampaign>
 {
     public Guid CampaignId { get; init; }
 }

@@ -5,7 +5,7 @@ namespace GameGuild.Identity.Tenants;
 /// <summary>
 ///     Handler for retrieving tenant audit log entries
 /// </summary>
-public class GetTenantAuditLogQueryHandler(ITenantRepository tenantRepository) 
+public sealed class GetTenantAuditLogQueryHandler(ITenantRepository tenantRepository) 
     : IRequestHandler<GetTenantAuditLogQuery, PagedResult<TenantAuditLogEntry>>
 {
     /// <summary>

@@ -78,7 +78,7 @@ internal static class PostMappings
 
 #region Response DTOs
 
-public record PostDto
+public sealed record PostDto
 {
     public Guid Id { get; init; }
     public Guid AuthorId { get; init; }
@@ -100,7 +100,7 @@ public record PostDto
     public DateTime UpdatedAt { get; init; }
 }
 
-public record CommentDto
+public sealed record CommentDto
 {
     public Guid Id { get; init; }
     public Guid PostId { get; init; }
@@ -113,7 +113,7 @@ public record CommentDto
     public DateTime CreatedAt { get; init; }
 }
 
-public record TagDto
+public sealed record TagDto
 {
     public Guid Id { get; init; }
     public string Name { get; init; } = string.Empty;
@@ -125,7 +125,7 @@ public record TagDto
     public bool IsFeatured { get; init; }
 }
 
-public record StatisticsDto
+public sealed record StatisticsDto
 {
     public Guid PostId { get; init; }
     public int ViewsCount { get; init; }
@@ -137,7 +137,7 @@ public record StatisticsDto
     public DateTime LastCalculatedAt { get; init; }
 }
 
-public record FollowerDto
+public sealed record FollowerDto
 {
     public Guid PostId { get; init; }
     public Guid UserId { get; init; }

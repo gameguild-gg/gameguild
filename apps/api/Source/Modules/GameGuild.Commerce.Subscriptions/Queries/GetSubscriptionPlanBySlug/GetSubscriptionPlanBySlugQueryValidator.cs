@@ -5,7 +5,7 @@ namespace GameGuild.Commerce.Subscriptions;
 /// <summary>
 ///     Validator for GetSubscriptionPlanBySlugQuery
 /// </summary>
-public class GetSubscriptionPlanBySlugQueryValidator : AbstractValidator<GetSubscriptionPlanBySlugQuery>
+public sealed class GetSubscriptionPlanBySlugQueryValidator : AbstractValidator<GetSubscriptionPlanBySlugQuery>
 {
     public GetSubscriptionPlanBySlugQueryValidator()
     {

@@ -5,18 +5,18 @@ namespace GameGuild.Assets.Commands;
 /// <summary>
 /// Command to review a moderation report (admin only).
 /// </summary>
-public record ReviewReportCommand(
+public sealed record ReviewReportCommand(
     Guid ReportId,
     Guid ReviewerId,
     ReviewDecision Decision,
     string? Notes = null) : IRequest<ReviewReportResponse?>;
 
-public record ReviewReportResponse(
+public sealed record ReviewReportResponse(
     Guid ReportId,
     ReportStatus Status,
     ReviewDecision Decision);
 
-public class ReviewReportValidator : AbstractValidator<ReviewReportCommand>
+public sealed class ReviewReportValidator : AbstractValidator<ReviewReportCommand>
 {
     public ReviewReportValidator()
     {
@@ -27,7 +27,7 @@ public class ReviewReportValidator : AbstractValidator<ReviewReportCommand>
     }
 }
 
-public class ReviewReportHandler : IRequestHandler<ReviewReportCommand, ReviewReportResponse?>
+public sealed class ReviewReportHandler : IRequestHandler<ReviewReportCommand, ReviewReportResponse?>
 {
     private readonly IAssetModerationService _moderationService;
 

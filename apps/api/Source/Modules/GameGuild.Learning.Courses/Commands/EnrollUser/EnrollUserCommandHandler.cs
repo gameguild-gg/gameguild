@@ -7,7 +7,7 @@ namespace GameGuild.Learning.Courses;
 /// <summary>
 /// Command handler for EnrollUserCommand
 /// </summary>
-public class EnrollUserCommandHandler(IApplicationDbContext context, ILogger<EnrollUserCommandHandler> logger)
+public sealed class EnrollUserCommandHandler(IApplicationDbContext context, ILogger<EnrollUserCommandHandler> logger)
     : ICommandHandler<EnrollUserCommand, ProgramUser>
 {
     public async Task<ProgramUser> Handle(EnrollUserCommand request, CancellationToken cancellationToken) {

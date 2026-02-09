@@ -2,7 +2,7 @@ using FluentValidation;
 
 namespace GameGuild.Identity.Users;
 
-public class ReplaceUserProfileCommandValidator : AbstractValidator<ReplaceUserProfileCommand>
+public sealed class ReplaceUserProfileCommandValidator : AbstractValidator<ReplaceUserProfileCommand>
 {
     public ReplaceUserProfileCommandValidator()
     {

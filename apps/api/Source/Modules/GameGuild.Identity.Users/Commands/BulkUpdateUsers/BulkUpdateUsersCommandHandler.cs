@@ -5,7 +5,7 @@ namespace GameGuild.Identity.Users;
 /// <summary>
 ///     Command handler for bulk updating users
 /// </summary>
-public class BulkUpdateUsersCommandHandler(IUserRepository userRepository) : ICommandHandler<BulkUpdateUsersCommand>
+public sealed class BulkUpdateUsersCommandHandler(IUserRepository userRepository) : ICommandHandler<BulkUpdateUsersCommand>
 {
     public async Task<Unit> Handle(BulkUpdateUsersCommand request, CancellationToken cancellationToken)
     {

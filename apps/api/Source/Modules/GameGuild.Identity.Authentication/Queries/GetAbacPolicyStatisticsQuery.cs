@@ -1,8 +1,8 @@
-﻿using GameGuild.CQRS;
+using GameGuild.CQRS;
 
 namespace GameGuild.Identity.Authentication;
 
-public record GetAbacPolicyStatisticsQuery : IQuery<AbacPolicyStatisticsDto>
+public sealed record GetAbacPolicyStatisticsQuery : IQuery<AbacPolicyStatisticsDto>
 {
     public Guid? TenantId { get; init; }
 

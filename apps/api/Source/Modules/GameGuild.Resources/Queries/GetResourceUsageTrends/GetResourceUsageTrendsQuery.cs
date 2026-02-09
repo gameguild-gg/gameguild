@@ -9,7 +9,7 @@ namespace GameGuild.Resources;
 /// <param name="StartDate">Start date for the trend period</param>
 /// <param name="EndDate">End date for the trend period</param>
 /// <param name="Granularity">Time granularity for aggregation</param>
-public record GetResourceUsageTrendsQuery(
+public sealed record GetResourceUsageTrendsQuery(
     ResourceUsageType ResourceUsageType,
     DateTime StartDate,
     DateTime EndDate,

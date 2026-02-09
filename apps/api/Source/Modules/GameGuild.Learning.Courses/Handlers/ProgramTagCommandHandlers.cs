@@ -5,7 +5,7 @@ using Microsoft.Extensions.Logging;
 
 namespace GameGuild.Learning.Courses;
 
-public class AddTagToProgramCommandHandler(
+public sealed class AddTagToProgramCommandHandler(
     IApplicationDbContext context,
     ILogger<AddTagToProgramCommandHandler> logger)
     : ICommandHandler<AddTagToProgramCommand, ProgramTag>
@@ -58,7 +58,7 @@ public class AddTagToProgramCommandHandler(
     }
 }
 
-public class UpdateProgramTagCommandHandler(
+public sealed class UpdateProgramTagCommandHandler(
     IApplicationDbContext context,
     ILogger<UpdateProgramTagCommandHandler> logger)
     : ICommandHandler<UpdateProgramTagCommand, ProgramTag>
@@ -95,7 +95,7 @@ public class UpdateProgramTagCommandHandler(
     }
 }
 
-public class RemoveTagFromProgramCommandHandler(
+public sealed class RemoveTagFromProgramCommandHandler(
     IApplicationDbContext context,
     ILogger<RemoveTagFromProgramCommandHandler> logger)
     : ICommandHandler<RemoveTagFromProgramCommand>
@@ -121,7 +121,7 @@ public class RemoveTagFromProgramCommandHandler(
     }
 }
 
-public class BulkAddTagsToProgramCommandHandler(
+public sealed class BulkAddTagsToProgramCommandHandler(
     IApplicationDbContext context,
     ILogger<BulkAddTagsToProgramCommandHandler> logger)
     : ICommandHandler<BulkAddTagsToProgramCommand, IEnumerable<ProgramTag>>
@@ -176,7 +176,7 @@ public class BulkAddTagsToProgramCommandHandler(
     }
 }
 
-public class ReorderProgramTagsCommandHandler(
+public sealed class ReorderProgramTagsCommandHandler(
     IApplicationDbContext context,
     ILogger<ReorderProgramTagsCommandHandler> logger)
     : ICommandHandler<ReorderProgramTagsCommand>

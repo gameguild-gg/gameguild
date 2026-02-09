@@ -358,7 +358,7 @@ public class RatingsController : BaseApiController
 
 // ─── DTOs ────────────────────────────────────────────────────────────────────
 
-public record CreateRatingRequest(
+public sealed record CreateRatingRequest(
     Guid EntityId,
     string EntityType,
     int Value,
@@ -366,16 +366,16 @@ public record CreateRatingRequest(
     string? ReviewTitle = null
 );
 
-public record BatchSummaryRequest(
+public sealed record BatchSummaryRequest(
     IEnumerable<Guid> EntityIds,
     string EntityType
 );
 
-public record VoteHelpfulRequest(bool IsHelpful);
+public sealed record VoteHelpfulRequest(bool IsHelpful);
 
-public record ReportRequest(string Reason);
+public sealed record ReportRequest(string Reason);
 
-public record RatingDto(
+public sealed record RatingDto(
     Guid Id,
     Guid UserId,
     Guid EntityId,
@@ -406,7 +406,7 @@ public record RatingDto(
     );
 }
 
-public record RatingSummaryDto(
+public sealed record RatingSummaryDto(
     Guid EntityId,
     string EntityType,
     decimal AverageRating,

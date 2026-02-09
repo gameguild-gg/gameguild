@@ -2,7 +2,7 @@ using GameGuild.CQRS;
 
 namespace GameGuild.Identity.Users;
 
-public class ArchiveNotificationCommandHandler(IUserRepository userRepository, IUserNotificationRepository notificationRepository) : ICommandHandler<ArchiveNotificationCommand>
+public sealed class ArchiveNotificationCommandHandler(IUserRepository userRepository, IUserNotificationRepository notificationRepository) : ICommandHandler<ArchiveNotificationCommand>
 {
     public async Task<Unit> Handle(ArchiveNotificationCommand request, CancellationToken cancellationToken)
     {

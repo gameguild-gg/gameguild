@@ -5,7 +5,7 @@ namespace GameGuild.Commerce.Subscriptions;
 /// <summary>
 ///     Query handler for getting subscription plans within a price range
 /// </summary>
-public class GetSubscriptionPlansByPriceRangeQueryHandler(ISubscriptionPlanRepository subscriptionPlanRepository) 
+public sealed class GetSubscriptionPlansByPriceRangeQueryHandler(ISubscriptionPlanRepository subscriptionPlanRepository) 
     : IQueryHandler<GetSubscriptionPlansByPriceRangeQuery, IEnumerable<SubscriptionPlan>>
 {
     public async Task<IEnumerable<SubscriptionPlan>> Handle(GetSubscriptionPlansByPriceRangeQuery request, CancellationToken cancellationToken)

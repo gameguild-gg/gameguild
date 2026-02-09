@@ -8,4 +8,4 @@ namespace GameGuild.Commerce.Payments;
 /// <param name="PaymentId">Payment unique identifier</param>
 /// <param name="Status">New payment status</param>
 /// <param name="TransactionId">External transaction ID</param>
-public record UpdatePaymentStatusCommand(Guid PaymentId, PaymentStatus Status, string? TransactionId = null) : ICommand<bool>;
+public sealed record UpdatePaymentStatusCommand(Guid PaymentId, PaymentStatus Status, string? TransactionId = null) : ICommand<bool>;

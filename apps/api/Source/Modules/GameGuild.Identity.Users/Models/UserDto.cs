@@ -11,4 +11,4 @@ namespace GameGuild.Identity.Users;
 /// <param name="IsActive">Whether the user is active</param>
 /// <param name="PhoneNumber">Optional phone number</param>
 /// <param name="LastSeenAt">When the user was last seen/logged in</param>
-public record UserDto(Guid Id, string Email, string Name, DateTime CreatedAt, DateTime? UpdatedAt, bool IsActive = true, string? PhoneNumber = null, DateTime? LastSeenAt = null);
+public sealed record UserDto(Guid Id, string Email, string Name, DateTime CreatedAt, DateTime? UpdatedAt, bool IsActive = true, string? PhoneNumber = null, DateTime? LastSeenAt = null);

@@ -17,7 +17,7 @@ namespace GameGuild.Identity.Users;
 /// <param name="ToDate">Filter by creation date to</param>
 /// <param name="PageNumber">Page number (1-based)</param>
 /// <param name="PageSize">Number of notifications per page</param>
-public record GetUserNotificationsPagedQuery(
+public sealed record GetUserNotificationsPagedQuery(
     Guid UserId,
     string? Search = null,
     string? SortBy = null,

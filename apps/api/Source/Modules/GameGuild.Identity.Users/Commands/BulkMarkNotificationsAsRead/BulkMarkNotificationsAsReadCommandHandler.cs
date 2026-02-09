@@ -5,7 +5,7 @@ namespace GameGuild.Identity.Users;
 /// <summary>
 ///     Command handler for marking multiple notifications as read
 /// </summary>
-public class BulkMarkNotificationsAsReadCommandHandler(IUserNotificationRepository notificationRepository)
+public sealed class BulkMarkNotificationsAsReadCommandHandler(IUserNotificationRepository notificationRepository)
     : ICommandHandler<BulkMarkNotificationsAsReadCommand>
 {
     public async Task<Unit> Handle(BulkMarkNotificationsAsReadCommand request, CancellationToken cancellationToken)

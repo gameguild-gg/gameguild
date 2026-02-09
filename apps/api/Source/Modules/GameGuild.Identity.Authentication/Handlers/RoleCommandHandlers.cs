@@ -6,7 +6,7 @@ namespace GameGuild.Identity.Authentication;
 /// <summary>
 ///     Handler for CreateRoleCommand
 /// </summary>
-public class CreateRoleCommandHandler(IRoleRepository roleRepository) : ICommandHandler<CreateRoleCommand, RoleDto>
+public sealed class CreateRoleCommandHandler(IRoleRepository roleRepository) : ICommandHandler<CreateRoleCommand, RoleDto>
 {
     public async Task<RoleDto> Handle(CreateRoleCommand request, CancellationToken cancellationToken)
     {
@@ -45,7 +45,7 @@ public class CreateRoleCommandHandler(IRoleRepository roleRepository) : ICommand
 /// <summary>
 ///     Handler for UpdateRoleCommand
 /// </summary>
-public class UpdateRoleCommandHandler(IRoleRepository roleRepository) : ICommandHandler<UpdateRoleCommand, RoleDto>
+public sealed class UpdateRoleCommandHandler(IRoleRepository roleRepository) : ICommandHandler<UpdateRoleCommand, RoleDto>
 {
     public async Task<RoleDto> Handle(UpdateRoleCommand request, CancellationToken cancellationToken)
     {
@@ -104,7 +104,7 @@ public class UpdateRoleCommandHandler(IRoleRepository roleRepository) : ICommand
 /// <summary>
 ///     Handler for DeleteRoleCommand
 /// </summary>
-public class DeleteRoleCommandHandler(IRoleRepository roleRepository) : ICommandHandler<DeleteRoleCommand, bool>
+public sealed class DeleteRoleCommandHandler(IRoleRepository roleRepository) : ICommandHandler<DeleteRoleCommand, bool>
 {
     public async Task<bool> Handle(DeleteRoleCommand request, CancellationToken cancellationToken)
     {
@@ -125,7 +125,7 @@ public class DeleteRoleCommandHandler(IRoleRepository roleRepository) : ICommand
 /// <summary>
 ///     Handler for AssignRoleToUserCommand
 /// </summary>
-public class AssignRoleToUserCommandHandler(IRoleRepository roleRepository) : ICommandHandler<AssignRoleToUserCommand, UserRoleDto>
+public sealed class AssignRoleToUserCommandHandler(IRoleRepository roleRepository) : ICommandHandler<AssignRoleToUserCommand, UserRoleDto>
 {
     public async Task<UserRoleDto> Handle(AssignRoleToUserCommand request, CancellationToken cancellationToken)
     {
@@ -180,7 +180,7 @@ public class AssignRoleToUserCommandHandler(IRoleRepository roleRepository) : IC
 /// <summary>
 ///     Handler for RemoveRoleFromUserCommand
 /// </summary>
-public class RemoveRoleFromUserCommandHandler(IRoleRepository roleRepository) : ICommandHandler<RemoveRoleFromUserCommand, bool>
+public sealed class RemoveRoleFromUserCommandHandler(IRoleRepository roleRepository) : ICommandHandler<RemoveRoleFromUserCommand, bool>
 {
     public async Task<bool> Handle(RemoveRoleFromUserCommand request, CancellationToken cancellationToken)
     {

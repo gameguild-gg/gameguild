@@ -1,8 +1,8 @@
-﻿using GameGuild.CQRS;
+using GameGuild.CQRS;
 
 namespace GameGuild.Identity.Authentication;
 
-public record GetAbacPolicyAuditTrailQuery : IQuery<AbacPolicyAuditTrailDto>
+public sealed record GetAbacPolicyAuditTrailQuery : IQuery<AbacPolicyAuditTrailDto>
 {
     public Guid PolicyId { get; init; }
 

@@ -6,4 +6,4 @@ namespace GameGuild.Identity.Users;
 ///     Command to restore a soft-deleted user
 /// </summary>
 /// <param name="UserId">The ID of the user to restore</param>
-public record RestoreUserCommand(Guid UserId) : ICommand<UserDto>;
+public sealed record RestoreUserCommand(Guid UserId) : ICommand<UserDto>;

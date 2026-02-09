@@ -2,7 +2,7 @@ using GameGuild.CQRS;
 
 namespace GameGuild.Identity.Users;
 
-public class ReplaceUserProfileCommandHandler(IUserRepository userRepository, IUserProfileRepository profileRepository) : ICommandHandler<ReplaceUserProfileCommand>
+public sealed class ReplaceUserProfileCommandHandler(IUserRepository userRepository, IUserProfileRepository profileRepository) : ICommandHandler<ReplaceUserProfileCommand>
 {
     public async Task<Unit> Handle(ReplaceUserProfileCommand request, CancellationToken cancellationToken)
     {

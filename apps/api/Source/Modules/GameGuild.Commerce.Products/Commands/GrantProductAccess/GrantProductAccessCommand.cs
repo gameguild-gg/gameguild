@@ -12,7 +12,7 @@ namespace GameGuild.Commerce.Products;
 /// <param name="Currency">Currency code</param>
 /// <param name="AccessEndDate">When access expires (null = permanent)</param>
 /// <param name="SubscriptionId">Associated subscription ID (if applicable)</param>
-public record GrantProductAccessCommand(
+public sealed record GrantProductAccessCommand(
     Guid UserId,
     Guid ProductId,
     ProductAcquisitionType AcquisitionType = ProductAcquisitionType.Grant,

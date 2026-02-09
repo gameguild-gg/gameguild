@@ -8,7 +8,7 @@ namespace GameGuild.Commerce.Billing;
 ///     Handler for ProcessPayPalWebhookCommand.
 ///     Delegates to PayPalBillingWebhookService for actual processing.
 /// </summary>
-public class ProcessPayPalWebhookCommandHandler(
+public sealed class ProcessPayPalWebhookCommandHandler(
     PayPalBillingWebhookService paypalWebhookService,
     ILogger<ProcessPayPalWebhookCommandHandler> logger
 ) : ICommandHandler<ProcessPayPalWebhookCommand, WebhookProcessingResult>

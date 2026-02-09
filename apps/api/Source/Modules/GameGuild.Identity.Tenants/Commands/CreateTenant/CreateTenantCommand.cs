@@ -11,4 +11,4 @@ namespace GameGuild.Identity.Tenants;
 /// <param name="AdminEmail">Administrator email address</param>
 /// <param name="Description">Optional tenant description</param>
 [RequiresQuota(ResourceUsageType.Tenants, 1, Source = "CreateTenant")]
-public record CreateTenantCommand(string Name, string Slug, string AdminEmail, string? Description = null) : ICommand<Guid>;
+public sealed record CreateTenantCommand(string Name, string Slug, string AdminEmail, string? Description = null) : ICommand<Guid>;

@@ -8,7 +8,7 @@ namespace GameGuild.Identity.Authentication;
 /// <summary>
 ///     Handler for local sign-in command
 /// </summary>
-public class LocalSignInHandler(
+public sealed class LocalSignInHandler(
     IAuthService authService,
     IUserRepository userRepository,
     IHttpContextAccessor httpContextAccessor,

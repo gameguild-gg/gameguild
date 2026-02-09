@@ -11,4 +11,4 @@ namespace GameGuild.Identity.Users;
 ///     Note: Since bulk operations have dynamic amounts, quota checking is handled
 ///     in the handler using IResourceQuotaService.CheckLimitsAsync() directly.
 /// </remarks>
-public record BulkCreateUsersCommand(IEnumerable<CreateUserRequestItem> Users) : ICommand<BulkCreateUsersResponse>;
+public sealed record BulkCreateUsersCommand(IEnumerable<CreateUserRequestItem> Users) : ICommand<BulkCreateUsersResponse>;

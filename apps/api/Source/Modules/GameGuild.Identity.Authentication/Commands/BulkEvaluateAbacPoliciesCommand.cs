@@ -1,8 +1,8 @@
-﻿using GameGuild.CQRS;
+using GameGuild.CQRS;
 
 namespace GameGuild.Identity.Authentication;
 
-public record BulkEvaluateAbacPoliciesCommand : ICommand<BulkAbacEvaluationResult>
+public sealed record BulkEvaluateAbacPoliciesCommand : ICommand<BulkAbacEvaluationResult>
 {
     public List<AbacEvaluationContext> Contexts { get; init; } = new List<AbacEvaluationContext>();
 

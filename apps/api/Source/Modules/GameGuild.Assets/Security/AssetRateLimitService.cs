@@ -42,7 +42,7 @@ public class AssetRateLimitOptions
 /// <summary>
 /// Result of a rate limit check.
 /// </summary>
-public record RateLimitResult(
+public sealed record RateLimitResult(
     bool IsAllowed,
     int CurrentCount,
     int Limit,

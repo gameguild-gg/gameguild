@@ -102,7 +102,7 @@ public enum VirusScanMode
 /// <summary>
 /// Result of a virus scan.
 /// </summary>
-public record VirusScanResult(
+public sealed record VirusScanResult(
     bool IsClean,
     string Status,
     string? ThreatName = null,

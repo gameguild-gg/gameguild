@@ -5,7 +5,7 @@ namespace GameGuild.Identity.Users;
 /// <summary>
 /// Query handler for getting user metadata
 /// </summary>
-public class GetUserMetadataQueryHandler(IUserRepository userRepository) : IQueryHandler<GetUserMetadataQuery, UserMetadataDto?>
+public sealed class GetUserMetadataQueryHandler(IUserRepository userRepository) : IQueryHandler<GetUserMetadataQuery, UserMetadataDto?>
 {
     public async Task<UserMetadataDto?> Handle(GetUserMetadataQuery request, CancellationToken cancellationToken)
     {

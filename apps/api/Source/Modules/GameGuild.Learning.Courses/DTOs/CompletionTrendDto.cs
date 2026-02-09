@@ -1,6 +1,6 @@
 namespace GameGuild.Learning.Courses;
 
-public record CompletionTrendDto(DateTime Date, int CompletedCount, int TotalCount, decimal Rate) {
+public sealed record CompletionTrendDto(DateTime Date, int CompletedCount, int TotalCount, decimal Rate) {
   public DateTime Date { get; init; } = Date;
 
   public int CompletedCount { get; init; } = CompletedCount;

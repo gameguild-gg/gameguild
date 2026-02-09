@@ -86,7 +86,7 @@ public interface IPaymentGateway
 /// <summary>
 ///     Request for processing a payment
 /// </summary>
-public record GatewayPaymentRequest(
+public sealed record GatewayPaymentRequest(
     string IdempotencyKey,
     decimal Amount,
     string Currency,
@@ -98,7 +98,7 @@ public record GatewayPaymentRequest(
 /// <summary>
 ///     Result of a payment processing attempt
 /// </summary>
-public record GatewayPaymentResult(
+public sealed record GatewayPaymentResult(
     bool Success,
     string? TransactionId,
     string? ExternalPaymentId,
@@ -110,7 +110,7 @@ public record GatewayPaymentResult(
 /// <summary>
 ///     Request for processing a refund
 /// </summary>
-public record GatewayRefundRequest(
+public sealed record GatewayRefundRequest(
     string IdempotencyKey,
     string OriginalTransactionId,
     decimal? Amount,
@@ -119,7 +119,7 @@ public record GatewayRefundRequest(
 /// <summary>
 ///     Result of a refund processing attempt
 /// </summary>
-public record GatewayRefundResult(
+public sealed record GatewayRefundResult(
     bool Success,
     string? RefundId,
     decimal AmountRefunded,
@@ -130,7 +130,7 @@ public record GatewayRefundResult(
 /// <summary>
 ///     Request for creating a customer
 /// </summary>
-public record GatewayCustomerRequest(
+public sealed record GatewayCustomerRequest(
     string Email,
     string? Name,
     string? Phone,
@@ -139,7 +139,7 @@ public record GatewayCustomerRequest(
 /// <summary>
 ///     Result of customer creation
 /// </summary>
-public record GatewayCustomerResult(
+public sealed record GatewayCustomerResult(
     bool Success,
     string? ExternalCustomerId,
     string? ErrorCode,
@@ -148,7 +148,7 @@ public record GatewayCustomerResult(
 /// <summary>
 ///     Request for creating a payment method
 /// </summary>
-public record GatewayPaymentMethodRequest(
+public sealed record GatewayPaymentMethodRequest(
     string CustomerId,
     string PaymentMethodToken,
     bool SetAsDefault = true);
@@ -156,7 +156,7 @@ public record GatewayPaymentMethodRequest(
 /// <summary>
 ///     Result of payment method creation
 /// </summary>
-public record GatewayPaymentMethodResult(
+public sealed record GatewayPaymentMethodResult(
     bool Success,
     string? ExternalPaymentMethodId,
     string? CardLast4,
@@ -169,7 +169,7 @@ public record GatewayPaymentMethodResult(
 /// <summary>
 ///     Result of subscription cancellation
 /// </summary>
-public record GatewayCancellationResult(
+public sealed record GatewayCancellationResult(
     bool Success,
     string? ErrorCode,
     string? ErrorMessage,

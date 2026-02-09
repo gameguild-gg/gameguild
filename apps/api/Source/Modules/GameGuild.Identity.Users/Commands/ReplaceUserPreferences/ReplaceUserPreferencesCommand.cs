@@ -7,4 +7,4 @@ namespace GameGuild.Identity.Users;
 /// </summary>
 /// <param name="UserId">The user ID</param>
 /// <param name="Request">Complete set of preferences</param>
-public record ReplaceUserPreferencesCommand(Guid UserId, ReplaceUserPreferencesRequest Request) : ICommand;
+public sealed record ReplaceUserPreferencesCommand(Guid UserId, ReplaceUserPreferencesRequest Request) : ICommand;

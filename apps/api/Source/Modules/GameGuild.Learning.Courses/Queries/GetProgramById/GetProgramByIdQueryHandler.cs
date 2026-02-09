@@ -8,7 +8,7 @@ namespace GameGuild.Learning.Courses;
 /// <summary>
 /// Query handler for GetProgramByIdQuery
 /// </summary>
-public class GetProgramByIdQueryHandler(IApplicationDbContext context, ILogger<GetProgramByIdQueryHandler> logger)
+public sealed class GetProgramByIdQueryHandler(IApplicationDbContext context, ILogger<GetProgramByIdQueryHandler> logger)
     : IQueryHandler<GetProgramByIdQuery, Program?>
 {
     public async Task<Program?> Handle(GetProgramByIdQuery request, CancellationToken cancellationToken) {

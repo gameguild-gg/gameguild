@@ -3,7 +3,7 @@ using GameGuild.CQRS;
 
 namespace GameGuild.Monitoring.SLA;
 
-public class GetSlosQueryHandler(IServiceLevelObjectiveRepository repository) : IQueryHandler<GetSlosQuery, List<SloDto>>
+public sealed class GetSlosQueryHandler(IServiceLevelObjectiveRepository repository) : IQueryHandler<GetSlosQuery, List<SloDto>>
 {
     public async Task<List<SloDto>> Handle(GetSlosQuery request, CancellationToken cancellationToken)
     {

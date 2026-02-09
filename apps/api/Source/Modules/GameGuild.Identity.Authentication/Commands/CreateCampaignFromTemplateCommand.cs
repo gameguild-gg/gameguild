@@ -1,9 +1,9 @@
-﻿using GameGuild.Identity.Authorization;
+using GameGuild.Identity.Authorization;
 using GameGuild.CQRS;
 
 namespace GameGuild.Identity.Authentication;
 
-public record CreateCampaignFromTemplateCommand : ICommand<AccessReviewCampaign>
+public sealed record CreateCampaignFromTemplateCommand : ICommand<AccessReviewCampaign>
 {
     public Guid TemplateId { get; init; }
 

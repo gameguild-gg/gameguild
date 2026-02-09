@@ -6,7 +6,7 @@ namespace GameGuild.Identity.Tenants;
 ///     Command to create multiple tenants at once
 /// </summary>
 /// <param name="Tenants">Collection of tenant data to create</param>
-public record BulkCreateTenantsCommand(IEnumerable<BulkCreateTenantItem> Tenants) : ICommand<BulkOperationResponse>;
+public sealed record BulkCreateTenantsCommand(IEnumerable<BulkCreateTenantItem> Tenants) : ICommand<BulkOperationResponse>;
 
 /// <summary>
 ///     Data for a single tenant to create in a bulk operation

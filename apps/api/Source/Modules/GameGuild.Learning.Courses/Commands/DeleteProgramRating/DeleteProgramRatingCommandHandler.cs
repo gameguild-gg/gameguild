@@ -7,7 +7,7 @@ namespace GameGuild.Learning.Courses;
 /// <summary>
 /// Command handler for DeleteProgramRatingCommand
 /// </summary>
-public class DeleteProgramRatingCommandHandler(IApplicationDbContext context, ILogger<DeleteProgramRatingCommandHandler> logger)
+public sealed class DeleteProgramRatingCommandHandler(IApplicationDbContext context, ILogger<DeleteProgramRatingCommandHandler> logger)
     : ICommandHandler<DeleteProgramRatingCommand, bool>
 {
     public async Task<bool> Handle(DeleteProgramRatingCommand request, CancellationToken cancellationToken) {

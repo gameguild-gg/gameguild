@@ -5,7 +5,7 @@ using GameGuild.CQRS;
 namespace GameGuild.Learning.Courses;
 
 /// <summary> Command to update an existing program </summary>
-public record UpdateProgramCommand(
+public sealed record UpdateProgramCommand(
   Guid Id,
   string? Title = null,
   string? Description = null,

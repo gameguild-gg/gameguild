@@ -3,7 +3,7 @@ using GameGuild.Identity.Authorization;
 
 namespace GameGuild.Identity.Authentication;
 
-public record GetContentTypePermissionsQuery : IQuery<IEnumerable<PermissionType>>
+public sealed record GetContentTypePermissionsQuery : IQuery<IEnumerable<PermissionType>>
 {
     public Guid UserId { get; init; }
 

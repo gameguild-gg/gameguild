@@ -1,9 +1,9 @@
-﻿using GameGuild.Identity.Authorization;
+using GameGuild.Identity.Authorization;
 using GameGuild.CQRS;
 
 namespace GameGuild.Identity.Authentication;
 
-public record UpdateConditionalPolicyCommand : ICommand<ConditionalPolicy>
+public sealed record UpdateConditionalPolicyCommand : ICommand<ConditionalPolicy>
 {
     public Guid PolicyId { get; set; }
 

@@ -295,23 +295,23 @@ public sealed class SubscriptionPlanOperationsController(ISender sender) : BaseA
     #region Request Records
 
     // POST /subscription-plans/{planId}:validate-limits
-    public record ValidateLimitsRequest(int Users, long StorageMb, long ApiCalls);
+    public sealed record ValidateLimitsRequest(int Users, long StorageMb, long ApiCalls);
 
     // PATCH style updates separated by concern
-    public record UpdateDetailsRequest(Guid PlanId, string Name, string? Description, int? SortOrder);
+    public sealed record UpdateDetailsRequest(Guid PlanId, string Name, string? Description, int? SortOrder);
 
-    public record UpdatePricingRequest(long MonthlyPriceInCents, long? AnnualPriceInCents);
+    public sealed record UpdatePricingRequest(long MonthlyPriceInCents, long? AnnualPriceInCents);
 
-    public record UpdateLimitsRequest(int? MaxUsers, long? MaxStorageMb, long? MaxApiCallsPerMonth);
+    public sealed record UpdateLimitsRequest(int? MaxUsers, long? MaxStorageMb, long? MaxApiCallsPerMonth);
 
-    public record UpdateFeaturesRequest(bool? HasPrioritySupport, bool? HasAdvancedAnalytics, bool? HasCustomBranding, string? Features);
+    public sealed record UpdateFeaturesRequest(bool? HasPrioritySupport, bool? HasAdvancedAnalytics, bool? HasCustomBranding, string? Features);
 
-    public record SetFeaturedRequest(bool Featured = true);
+    public sealed record SetFeaturedRequest(bool Featured = true);
 
-    public record SetExternalIdRequest(string ExternalId);
+    public sealed record SetExternalIdRequest(string ExternalId);
 
     // POST /subscription-plans/{planId}:clone
-    public record CloneSubscriptionPlanRequest(string NewName, string NewSlug);
+    public sealed record CloneSubscriptionPlanRequest(string NewName, string NewSlug);
 
     #endregion
 }

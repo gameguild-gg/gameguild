@@ -5,7 +5,7 @@ namespace GameGuild.Commerce.Payments;
 /// <summary>
 ///     Command to validate a tax exemption
 /// </summary>
-public record ValidateTaxExemptionCommand(
+public sealed record ValidateTaxExemptionCommand(
     string JurisdictionCode,
     string ExemptionType,
     string? ExemptionCertificateNumber,

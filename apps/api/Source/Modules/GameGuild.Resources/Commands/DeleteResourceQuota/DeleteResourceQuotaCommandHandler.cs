@@ -6,7 +6,7 @@ namespace GameGuild.Resources;
 /// <summary>
 ///     Handler for deleting resource quotas with audit logging for SOC2/ISO 27001 compliance
 /// </summary>
-public class DeleteResourceQuotaCommandHandler(
+public sealed class DeleteResourceQuotaCommandHandler(
     IResourceQuotaRepository resourceQuotaRepository,
     IPublisher publisher,
     IActorContextAccessor actorContextAccessor) : ICommandHandler<DeleteResourceQuotaCommand>

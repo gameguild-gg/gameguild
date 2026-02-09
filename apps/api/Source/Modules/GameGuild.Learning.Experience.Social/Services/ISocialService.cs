@@ -27,7 +27,7 @@ public record CourseRatingStats(
 /// <summary>
 /// DTO for creating a review
 /// </summary>
-public record CreateReviewRequest(
+public sealed record CreateReviewRequest(
     Guid CourseId,
     int Rating,
     string? Title = null,
@@ -37,7 +37,7 @@ public record CreateReviewRequest(
 /// <summary>
 /// DTO for creating a discussion
 /// </summary>
-public record CreateDiscussionRequest(
+public sealed record CreateDiscussionRequest(
     Guid CourseId,
     string Title,
     string Content,
@@ -46,7 +46,7 @@ public record CreateDiscussionRequest(
 /// <summary>
 /// DTO for creating a reply
 /// </summary>
-public record CreateReplyRequest(
+public sealed record CreateReplyRequest(
     Guid DiscussionId,
     string Content,
     Guid? ParentReplyId = null);
@@ -54,14 +54,14 @@ public record CreateReplyRequest(
 /// <summary>
 /// DTO for wishlist preferences
 /// </summary>
-public record WishlistPreferencesRequest(
+public sealed record WishlistPreferencesRequest(
     bool NotifyOnSale,
     bool NotifyOnUpdate);
 
 /// <summary>
 /// DTO for course review response
 /// </summary>
-public record CourseReviewDto(
+public sealed record CourseReviewDto(
     Guid Id,
     Guid CourseId,
     Guid UserId,
@@ -77,7 +77,7 @@ public record CourseReviewDto(
 /// <summary>
 /// DTO for discussion response
 /// </summary>
-public record CourseDiscussionDto(
+public sealed record CourseDiscussionDto(
     Guid Id,
     Guid CourseId,
     Guid? ContentId,
@@ -94,7 +94,7 @@ public record CourseDiscussionDto(
 /// <summary>
 /// DTO for discussion reply response
 /// </summary>
-public record DiscussionReplyDto(
+public sealed record DiscussionReplyDto(
     Guid Id,
     Guid DiscussionId,
     Guid AuthorId,
@@ -107,7 +107,7 @@ public record DiscussionReplyDto(
 /// <summary>
 /// DTO for wishlist item response
 /// </summary>
-public record CourseWishlistDto(
+public sealed record CourseWishlistDto(
     Guid Id,
     Guid CourseId,
     Guid UserId,
@@ -118,7 +118,7 @@ public record CourseWishlistDto(
 /// <summary>
 /// DTO for course like response
 /// </summary>
-public record CourseLikeDto(
+public sealed record CourseLikeDto(
     Guid Id,
     Guid CourseId,
     Guid UserId,
@@ -127,7 +127,7 @@ public record CourseLikeDto(
 /// <summary>
 /// DTO for personalized feed item response
 /// </summary>
-public record PersonalizedFeedItemDto(
+public sealed record PersonalizedFeedItemDto(
     Guid Id,
     FeedItemType ItemType,
     Guid? CourseId,

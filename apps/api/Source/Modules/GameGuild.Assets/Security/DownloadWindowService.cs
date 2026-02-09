@@ -34,7 +34,7 @@ public class DownloadWindowOptions
 /// <summary>
 /// Result of download window validation.
 /// </summary>
-public record DownloadWindowValidationResult(
+public sealed record DownloadWindowValidationResult(
     bool IsValid,
     string? Error = null,
     DateTime? ExpiresAt = null,

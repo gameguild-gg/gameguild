@@ -5,13 +5,13 @@ namespace GameGuild.Assets.Queries;
 /// <summary>
 /// Query to get assets by parent resource.
 /// </summary>
-public record GetAssetsByParentQuery(
+public sealed record GetAssetsByParentQuery(
     string ParentResourceType,
     Guid ParentResourceId,
     Guid? UserId,
     Guid? TenantId) : IRequest<IReadOnlyList<AssetDto>>;
 
-public class GetAssetsByParentValidator : AbstractValidator<GetAssetsByParentQuery>
+public sealed class GetAssetsByParentValidator : AbstractValidator<GetAssetsByParentQuery>
 {
     public GetAssetsByParentValidator()
     {
@@ -20,7 +20,7 @@ public class GetAssetsByParentValidator : AbstractValidator<GetAssetsByParentQue
     }
 }
 
-public class GetAssetsByParentHandler : IRequestHandler<GetAssetsByParentQuery, IReadOnlyList<AssetDto>>
+public sealed class GetAssetsByParentHandler : IRequestHandler<GetAssetsByParentQuery, IReadOnlyList<AssetDto>>
 {
     private readonly IAssetReferenceRepository _referenceRepository;
     private readonly IAssetAccessService _accessService;

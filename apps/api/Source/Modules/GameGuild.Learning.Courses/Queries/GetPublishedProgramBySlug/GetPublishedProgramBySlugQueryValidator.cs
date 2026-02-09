@@ -2,7 +2,7 @@ using FluentValidation;
 
 namespace GameGuild.Learning.Courses;
 
-public class GetPublishedProgramBySlugQueryValidator : AbstractValidator<GetPublishedProgramBySlugQuery> {
+public sealed class GetPublishedProgramBySlugQueryValidator : AbstractValidator<GetPublishedProgramBySlugQuery> {
     public GetPublishedProgramBySlugQueryValidator() {
         RuleFor(x => x.Slug)
           .NotEmpty().WithMessage("Program slug is required")

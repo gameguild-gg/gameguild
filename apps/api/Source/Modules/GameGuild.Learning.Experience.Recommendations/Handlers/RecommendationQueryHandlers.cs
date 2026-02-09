@@ -7,7 +7,7 @@ namespace GameGuild.Learning.Experience.Recommendations;
 
 // ===== RECOMMENDATION QUERY HANDLERS =====
 
-public class GetUserRecommendationsQueryHandler(
+public sealed class GetUserRecommendationsQueryHandler(
     IApplicationDbContext context,
     ILogger<GetUserRecommendationsQueryHandler> logger)
     : IQueryHandler<GetUserRecommendationsQuery, IEnumerable<CourseRecommendation>>
@@ -40,7 +40,7 @@ public class GetUserRecommendationsQueryHandler(
     }
 }
 
-public class GetRecommendationByIdQueryHandler(
+public sealed class GetRecommendationByIdQueryHandler(
     IApplicationDbContext context,
     ILogger<GetRecommendationByIdQueryHandler> logger)
     : IQueryHandler<GetRecommendationByIdQuery, CourseRecommendation?>
@@ -55,7 +55,7 @@ public class GetRecommendationByIdQueryHandler(
     }
 }
 
-public class GetRecommendationStatisticsQueryHandler(
+public sealed class GetRecommendationStatisticsQueryHandler(
     IApplicationDbContext context,
     ILogger<GetRecommendationStatisticsQueryHandler> logger)
     : IQueryHandler<GetRecommendationStatisticsQuery, RecommendationStatisticsDto>
@@ -82,7 +82,7 @@ public class GetRecommendationStatisticsQueryHandler(
     }
 }
 
-public class HasPendingRecommendationsQueryHandler(
+public sealed class HasPendingRecommendationsQueryHandler(
     IApplicationDbContext context,
     ILogger<HasPendingRecommendationsQueryHandler> logger)
     : IQueryHandler<HasPendingRecommendationsQuery, bool>
@@ -102,7 +102,7 @@ public class HasPendingRecommendationsQueryHandler(
 
 // ===== USER LEARNING PROFILE QUERY HANDLERS =====
 
-public class GetUserLearningProfileQueryHandler(
+public sealed class GetUserLearningProfileQueryHandler(
     IApplicationDbContext context,
     ILogger<GetUserLearningProfileQueryHandler> logger)
     : IQueryHandler<GetUserLearningProfileQuery, UserLearningProfile?>
@@ -117,7 +117,7 @@ public class GetUserLearningProfileQueryHandler(
     }
 }
 
-public class GetOrCreateUserLearningProfileQueryHandler(
+public sealed class GetOrCreateUserLearningProfileQueryHandler(
     IApplicationDbContext context,
     ILogger<GetOrCreateUserLearningProfileQueryHandler> logger)
     : IQueryHandler<GetOrCreateUserLearningProfileQuery, UserLearningProfile>
@@ -142,7 +142,7 @@ public class GetOrCreateUserLearningProfileQueryHandler(
 
 // ===== POPULAR/TRENDING QUERY HANDLERS =====
 
-public class GetPopularCoursesQueryHandler(
+public sealed class GetPopularCoursesQueryHandler(
     IApplicationDbContext context,
     ILogger<GetPopularCoursesQueryHandler> logger)
     : IQueryHandler<GetPopularCoursesQuery, IEnumerable<PopularCourseDto>>
@@ -196,7 +196,7 @@ public class GetPopularCoursesQueryHandler(
     }
 }
 
-public class GetTrendingCoursesQueryHandler(
+public sealed class GetTrendingCoursesQueryHandler(
     IApplicationDbContext context,
     ILogger<GetTrendingCoursesQueryHandler> logger)
     : IQueryHandler<GetTrendingCoursesQuery, IEnumerable<TrendingCourseDto>>
@@ -253,7 +253,7 @@ public class GetTrendingCoursesQueryHandler(
     }
 }
 
-public class GetSimilarCoursesQueryHandler(
+public sealed class GetSimilarCoursesQueryHandler(
     IApplicationDbContext context,
     ILogger<GetSimilarCoursesQueryHandler> logger)
     : IQueryHandler<GetSimilarCoursesQuery, IEnumerable<SimilarCourseDto>>
@@ -341,7 +341,7 @@ public class GetSimilarCoursesQueryHandler(
     }
 }
 
-public class GetPotentialLearnersQueryHandler(
+public sealed class GetPotentialLearnersQueryHandler(
     IApplicationDbContext context,
     ILogger<GetPotentialLearnersQueryHandler> logger)
     : IQueryHandler<GetPotentialLearnersQuery, IEnumerable<Guid>>

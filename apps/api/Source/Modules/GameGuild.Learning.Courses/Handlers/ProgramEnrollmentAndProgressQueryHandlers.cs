@@ -11,7 +11,7 @@ namespace GameGuild.Learning.Courses;
 /// <summary>
 /// Query handlers for Program enrollment, progress, content, ratings, and wishlist operations.
 /// </summary>
-public class ProgramEnrollmentAndProgressQueryHandlers(IApplicationDbContext context, ILogger<ProgramEnrollmentAndProgressQueryHandlers> logger) : IRequestHandler<GetUserEnrolledProgramsQuery, IEnumerable<Program>>,
+public sealed class ProgramEnrollmentAndProgressQueryHandlers(IApplicationDbContext context, ILogger<ProgramEnrollmentAndProgressQueryHandlers> logger) : IRequestHandler<GetUserEnrolledProgramsQuery, IEnumerable<Program>>,
                                                                                                                                                     IRequestHandler<GetProgramEnrollmentsQuery, IEnumerable<ProgramUser>>,
                                                                                                                                                     IRequestHandler<CheckUserEnrollmentQuery, ProgramUser?>,
                                                                                                                                                     IRequestHandler<GetProgramContentQuery, IEnumerable<ProgramContent>>,

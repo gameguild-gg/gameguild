@@ -5,7 +5,7 @@ namespace GameGuild.Commerce.Subscriptions;
 /// <summary>
 ///     Validator for ChangeSubscriptionBillingCycleCommand
 /// </summary>
-public class ChangeSubscriptionBillingCycleCommandValidator : AbstractValidator<ChangeSubscriptionBillingCycleCommand>
+public sealed class ChangeSubscriptionBillingCycleCommandValidator : AbstractValidator<ChangeSubscriptionBillingCycleCommand>
 {
     public ChangeSubscriptionBillingCycleCommandValidator()
     {

@@ -5,7 +5,7 @@ namespace GameGuild.Identity.Users;
 /// <summary>
 ///     Command handler for resetting user preferences to defaults
 /// </summary>
-public class ResetUserPreferencesCommandHandler(IUserRepository userRepository, IUserPreferencesRepository preferencesRepository) : ICommandHandler<ResetUserPreferencesCommand>
+public sealed class ResetUserPreferencesCommandHandler(IUserRepository userRepository, IUserPreferencesRepository preferencesRepository) : ICommandHandler<ResetUserPreferencesCommand>
 {
     public async Task<Unit> Handle(ResetUserPreferencesCommand request, CancellationToken cancellationToken)
     {

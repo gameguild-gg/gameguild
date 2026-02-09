@@ -5,4 +5,4 @@ namespace GameGuild.Commerce.Subscriptions;
 /// <summary>
 ///     Command to record a payment failure for a subscription
 /// </summary>
-public record RecordSubscriptionPaymentFailureCommand(Guid SubscriptionId, string Reason, DateTime FailureDate) : ICommand;
+public sealed record RecordSubscriptionPaymentFailureCommand(Guid SubscriptionId, string Reason, DateTime FailureDate) : ICommand;

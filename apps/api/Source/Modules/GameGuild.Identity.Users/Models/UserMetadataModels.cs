@@ -11,7 +11,7 @@ namespace GameGuild.Identity.Users;
 /// <param name="CreatedAt">When the metadata was created</param>
 /// <param name="UpdatedAt">When the metadata was last updated</param>
 /// <param name="Version">Version for optimistic concurrency control</param>
-public record UserMetadataDto(
+public sealed record UserMetadataDto(
     Guid Id,
     Guid UserId,
     Dictionary<string, object?> CustomFields,
@@ -29,7 +29,7 @@ public record UserMetadataDto(
 /// <param name="TagsToAdd">Tags to add to the user</param>
 /// <param name="TagsToRemove">Tags to remove from the user</param>
 /// <param name="ExternalReferences">External references to update</param>
-public record UpdateUserMetadataRequest(Dictionary<string, object?>? CustomFields = null, List<string>? TagsToAdd = null, List<string>? TagsToRemove = null, Dictionary<string, string>? ExternalReferences = null);
+public sealed record UpdateUserMetadataRequest(Dictionary<string, object?>? CustomFields = null, List<string>? TagsToAdd = null, List<string>? TagsToRemove = null, Dictionary<string, string>? ExternalReferences = null);
 
 /// <summary>
 ///     Request model for completely replacing user metadata
@@ -37,23 +37,23 @@ public record UpdateUserMetadataRequest(Dictionary<string, object?>? CustomField
 /// <param name="CustomFields">Complete set of custom fields</param>
 /// <param name="Tags">Complete set of tags</param>
 /// <param name="ExternalReferences">Complete set of external references</param>
-public record ReplaceUserMetadataRequest(Dictionary<string, object?> CustomFields, List<string> Tags, Dictionary<string, string> ExternalReferences);
+public sealed record ReplaceUserMetadataRequest(Dictionary<string, object?> CustomFields, List<string> Tags, Dictionary<string, string> ExternalReferences);
 
 /// <summary>
 ///     Request model for updating user custom fields
 /// </summary>
 /// <param name="CustomFields">Custom fields to update</param>
-public record UpdateUserCustomFieldsRequest(Dictionary<string, object?> CustomFields);
+public sealed record UpdateUserCustomFieldsRequest(Dictionary<string, object?> CustomFields);
 
 /// <summary>
 ///     Request model for updating user tags
 /// </summary>
 /// <param name="TagsToAdd">Tags to add</param>
 /// <param name="TagsToRemove">Tags to remove</param>
-public record UpdateUserTagsRequest(List<string>? TagsToAdd = null, List<string>? TagsToRemove = null);
+public sealed record UpdateUserTagsRequest(List<string>? TagsToAdd = null, List<string>? TagsToRemove = null);
 
 /// <summary>
 ///     Request model for replacing all user tags
 /// </summary>
 /// <param name="Tags">Complete set of tags</param>
-public record ReplaceUserTagsRequest(List<string> Tags);
+public sealed record ReplaceUserTagsRequest(List<string> Tags);

@@ -3,7 +3,7 @@ using FluentValidation;
 namespace GameGuild.Projects;
 
 /// <summary> Validator for CreateProjectCommand </summary>
-public class CreateProjectCommandValidator : AbstractValidator<CreateProjectCommand> {
+public sealed class CreateProjectCommandValidator : AbstractValidator<CreateProjectCommand> {
   public CreateProjectCommandValidator() {
     RuleFor(x => x.Title)
       .NotEmpty().WithMessage("Project name is required")
@@ -16,7 +16,7 @@ public class CreateProjectCommandValidator : AbstractValidator<CreateProjectComm
 }
 
 /// <summary> Validator for UpdateProjectCommand </summary>
-public class UpdateProjectCommandValidator : AbstractValidator<UpdateProjectCommand> {
+public sealed class UpdateProjectCommandValidator : AbstractValidator<UpdateProjectCommand> {
   public UpdateProjectCommandValidator() {
     RuleFor(x => x.ProjectId)
       .NotEmpty().WithMessage("Project ID is required");
@@ -29,7 +29,7 @@ public class UpdateProjectCommandValidator : AbstractValidator<UpdateProjectComm
 }
 
 /// <summary> Validator for DeleteProjectCommand </summary>
-public class DeleteProjectCommandValidator : AbstractValidator<DeleteProjectCommand> {
+public sealed class DeleteProjectCommandValidator : AbstractValidator<DeleteProjectCommand> {
   public DeleteProjectCommandValidator() {
     RuleFor(x => x.ProjectId)
       .NotEmpty().WithMessage("Project ID is required");
@@ -37,7 +37,7 @@ public class DeleteProjectCommandValidator : AbstractValidator<DeleteProjectComm
 }
 
 /// <summary> Validator for PublishProjectCommand </summary>
-public class PublishProjectCommandValidator : AbstractValidator<PublishProjectCommand> {
+public sealed class PublishProjectCommandValidator : AbstractValidator<PublishProjectCommand> {
   public PublishProjectCommandValidator() {
     RuleFor(x => x.ProjectId)
       .NotEmpty().WithMessage("Project ID is required");
@@ -45,7 +45,7 @@ public class PublishProjectCommandValidator : AbstractValidator<PublishProjectCo
 }
 
 /// <summary> Validator for UnpublishProjectCommand </summary>
-public class UnpublishProjectCommandValidator : AbstractValidator<UnpublishProjectCommand> {
+public sealed class UnpublishProjectCommandValidator : AbstractValidator<UnpublishProjectCommand> {
   public UnpublishProjectCommandValidator() {
     RuleFor(x => x.ProjectId)
       .NotEmpty().WithMessage("Project ID is required");
@@ -53,7 +53,7 @@ public class UnpublishProjectCommandValidator : AbstractValidator<UnpublishProje
 }
 
 /// <summary> Validator for ArchiveProjectCommand </summary>
-public class ArchiveProjectCommandValidator : AbstractValidator<ArchiveProjectCommand> {
+public sealed class ArchiveProjectCommandValidator : AbstractValidator<ArchiveProjectCommand> {
   public ArchiveProjectCommandValidator() {
     RuleFor(x => x.ProjectId)
       .NotEmpty().WithMessage("Project ID is required");

@@ -5,7 +5,7 @@ namespace GameGuild.Commerce.Products;
 /// <summary>
 /// Handler for getting a promo code by ID
 /// </summary>
-public class GetPromoCodeByIdQueryHandler(IPromoCodeRepository promoCodeRepository)
+public sealed class GetPromoCodeByIdQueryHandler(IPromoCodeRepository promoCodeRepository)
     : IQueryHandler<GetPromoCodeByIdQuery, PromoCodeDto?>
 {
     public async Task<PromoCodeDto?> Handle(GetPromoCodeByIdQuery request, CancellationToken cancellationToken)

@@ -7,4 +7,4 @@ namespace GameGuild.Identity.Users;
 /// </summary>
 /// <param name="UserId">The user ID</param>
 /// <param name="Request">Localization preferences to update</param>
-public record UpdateUserLocalizationPreferencesCommand(Guid UserId, UpdateUserLocalizationPreferencesRequest Request) : ICommand;
+public sealed record UpdateUserLocalizationPreferencesCommand(Guid UserId, UpdateUserLocalizationPreferencesRequest Request) : ICommand;

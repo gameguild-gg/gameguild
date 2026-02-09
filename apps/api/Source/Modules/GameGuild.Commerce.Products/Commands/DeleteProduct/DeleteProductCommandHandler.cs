@@ -5,7 +5,7 @@ namespace GameGuild.Commerce.Products;
 /// <summary>
 /// Command handler for deleting a product
 /// </summary>
-public class DeleteProductCommandHandler(IProductRepository productRepository)
+public sealed class DeleteProductCommandHandler(IProductRepository productRepository)
     : ICommandHandler<DeleteProductCommand>
 {
     public async Task<Unit> Handle(DeleteProductCommand request, CancellationToken cancellationToken)

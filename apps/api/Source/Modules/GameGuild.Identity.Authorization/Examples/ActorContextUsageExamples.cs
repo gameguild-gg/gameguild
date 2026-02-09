@@ -42,7 +42,7 @@ public static class ActorContextConfigurationExample
 /// <summary>
 ///     Example CQRS command handler using ActorContext for authorization.
 /// </summary>
-public class UpdateProjectCommandHandler
+public sealed class UpdateProjectCommandHandler
 {
     private readonly IActorContextAccessor _actorContextAccessor;
 
@@ -265,7 +265,7 @@ public class DataCleanupJob
 }
 
 // Helper types for examples
-public record UpdateProjectCommand(Guid ProjectId, string Name, Guid ProjectOwnerId);
+public sealed record UpdateProjectCommand(Guid ProjectId, string Name, Guid ProjectOwnerId);
 public record Result
 {
     public bool IsSuccess { get; init; }

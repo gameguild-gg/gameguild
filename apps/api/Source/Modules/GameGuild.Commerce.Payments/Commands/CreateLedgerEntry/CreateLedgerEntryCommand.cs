@@ -5,7 +5,7 @@ namespace GameGuild.Commerce.Payments;
 /// <summary>
 ///     Command to create a financial ledger entry
 /// </summary>
-public record CreateLedgerEntryCommand(
+public sealed record CreateLedgerEntryCommand(
     LedgerEntryType EntryType,
     string DebitAccount,
     string CreditAccount,

@@ -5,7 +5,7 @@ namespace GameGuild.Identity.Tenants;
 /// <summary>
 ///     Handler for creating tenant command
 /// </summary>
-public class CreateTenantCommandHandler(ITenantRepository tenantRepository) : ICommandHandler<CreateTenantCommand, Guid>
+public sealed class CreateTenantCommandHandler(ITenantRepository tenantRepository) : ICommandHandler<CreateTenantCommand, Guid>
 {
     public async Task<Guid> Handle(CreateTenantCommand request, CancellationToken cancellationToken)
     {

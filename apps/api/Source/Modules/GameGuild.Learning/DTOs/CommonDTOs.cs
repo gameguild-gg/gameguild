@@ -3,7 +3,7 @@ namespace GameGuild.Learning.DTOs;
 /// <summary>
 /// Common course summary DTO used across learning modules
 /// </summary>
-public record CourseSummaryDto
+public sealed record CourseSummaryDto
 {
     public Guid Id { get; init; }
     public string Title { get; init; } = string.Empty;
@@ -26,7 +26,7 @@ public record CourseSummaryDto
 /// <summary>
 /// Common content item summary DTO
 /// </summary>
-public record ContentSummaryDto
+public sealed record ContentSummaryDto
 {
     public Guid Id { get; init; }
     public Guid CourseId { get; init; }
@@ -40,7 +40,7 @@ public record ContentSummaryDto
 /// <summary>
 /// Common user learning profile summary
 /// </summary>
-public record LearnerSummaryDto
+public sealed record LearnerSummaryDto
 {
     public Guid UserId { get; init; }
     public string? DisplayName { get; init; }
@@ -53,7 +53,7 @@ public record LearnerSummaryDto
 /// <summary>
 /// Common enrollment summary DTO
 /// </summary>
-public record EnrollmentSummaryDto
+public sealed record EnrollmentSummaryDto
 {
     public Guid Id { get; init; }
     public Guid UserId { get; init; }
@@ -69,7 +69,7 @@ public record EnrollmentSummaryDto
 /// <summary>
 /// Common progress tracking DTO
 /// </summary>
-public record ProgressDto
+public sealed record ProgressDto
 {
     public Guid UserId { get; init; }
     public Guid EntityId { get; init; } // Course, LearningPath, or Content ID
@@ -86,7 +86,7 @@ public record ProgressDto
 /// <summary>
 /// Common skill DTO
 /// </summary>
-public record SkillDto
+public sealed record SkillDto
 {
     public Guid Id { get; init; }
     public string Name { get; init; } = string.Empty;
@@ -99,7 +99,7 @@ public record SkillDto
 /// <summary>
 /// Common tag DTO for categorization
 /// </summary>
-public record TagDto
+public sealed record TagDto
 {
     public Guid Id { get; init; }
     public string Name { get; init; } = string.Empty;

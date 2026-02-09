@@ -4,4 +4,4 @@ namespace GameGuild.Identity.Tenants;
 ///     Request model for deactivating a tenant
 /// </summary>
 /// <param name="Reason">Reason for deactivation</param>
-public record DeactivateRequest(string Reason);
+public sealed record DeactivateRequest(string Reason);

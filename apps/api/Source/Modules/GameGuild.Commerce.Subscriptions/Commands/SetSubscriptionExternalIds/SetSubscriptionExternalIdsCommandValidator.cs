@@ -5,7 +5,7 @@ namespace GameGuild.Commerce.Subscriptions;
 /// <summary>
 ///     Validator for SetSubscriptionExternalIdsCommand
 /// </summary>
-public class SetSubscriptionExternalIdsCommandValidator : AbstractValidator<SetSubscriptionExternalIdsCommand>
+public sealed class SetSubscriptionExternalIdsCommandValidator : AbstractValidator<SetSubscriptionExternalIdsCommand>
 {
     public SetSubscriptionExternalIdsCommandValidator()
     {

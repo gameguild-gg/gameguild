@@ -4,4 +4,4 @@ namespace GameGuild.Identity.Tenants;
 ///     Request model for archiving a tenant
 /// </summary>
 /// <param name="Reason">Reason for archiving the tenant</param>
-public record ArchiveRequest(string Reason);
+public sealed record ArchiveRequest(string Reason);

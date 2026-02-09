@@ -4,7 +4,7 @@ namespace GameGuild.Features;
 /// <summary>
 ///     Query to get feature flag evaluation history
 /// </summary>
-public record GetFeatureFlagEvaluationHistoryQuery : CQRS.IQuery<PagedResult<FeatureFlagEvaluationHistory>>
+public sealed record GetFeatureFlagEvaluationHistoryQuery : CQRS.IQuery<PagedResult<FeatureFlagEvaluationHistory>>
 {
     public required string FeatureKey { get; init; }
 

@@ -1,8 +1,8 @@
-﻿using GameGuild.CQRS;
+using GameGuild.CQRS;
 
 namespace GameGuild.Identity.Authentication;
 
-public record TestAbacExpressionCommand : ICommand<AbacExpressionTestResult>
+public sealed record TestAbacExpressionCommand : ICommand<AbacExpressionTestResult>
 {
     public string JsonExpression { get; init; } = string.Empty;
 

@@ -8,7 +8,7 @@ namespace GameGuild.Learning.Courses;
 /// Query handler for GetGlobalProgramStatisticsQuery
 /// Calculates platform-wide program statistics
 /// </summary>
-public class GetGlobalProgramStatisticsQueryHandler(
+public sealed class GetGlobalProgramStatisticsQueryHandler(
     IApplicationDbContext context,
     ILogger<GetGlobalProgramStatisticsQueryHandler> logger)
     : IQueryHandler<GetGlobalProgramStatisticsQuery, GlobalProgramStatistics>

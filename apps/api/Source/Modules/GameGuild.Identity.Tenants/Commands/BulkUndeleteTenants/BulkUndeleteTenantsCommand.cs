@@ -6,4 +6,4 @@ namespace GameGuild.Identity.Tenants;
 ///     Command to restore multiple soft-deleted tenants at once
 /// </summary>
 /// <param name="TenantIds">Collection of tenant IDs to restore</param>
-public record BulkUndeleteTenantsCommand(IEnumerable<Guid> TenantIds) : ICommand<BulkOperationResponse>;
+public sealed record BulkUndeleteTenantsCommand(IEnumerable<Guid> TenantIds) : ICommand<BulkOperationResponse>;

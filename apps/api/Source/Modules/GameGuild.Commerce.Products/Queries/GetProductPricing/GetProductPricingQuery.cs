@@ -6,4 +6,4 @@ namespace GameGuild.Commerce.Products;
 /// Query to get pricing options for a product
 /// </summary>
 /// <param name="ProductId">Product ID</param>
-public record GetProductPricingQuery(Guid ProductId) : IQuery<IReadOnlyList<ProductPricingDto>>;
+public sealed record GetProductPricingQuery(Guid ProductId) : IQuery<IReadOnlyList<ProductPricingDto>>;

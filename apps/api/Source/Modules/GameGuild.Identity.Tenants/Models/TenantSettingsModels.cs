@@ -13,7 +13,7 @@ namespace GameGuild.Identity.Tenants;
 /// <param name="SystemLimits">Usage limits and resource constraints</param>
 /// <param name="CreatedAt">Timestamp when the settings were created</param>
 /// <param name="UpdatedAt">Timestamp when the settings were last updated</param>
-public record TenantSettingsDto(
+public sealed record TenantSettingsDto(
     Guid Id,
     TenantSystemConfigurationDto SystemConfiguration,
     Dictionary<string, bool> FeatureFlags,
@@ -35,7 +35,7 @@ public record TenantSettingsDto(
 /// <param name="NumberFormat">Default number format preference</param>
 /// <param name="CurrencySettings">Currency and monetary settings</param>
 /// <param name="CustomConfiguration">Additional custom configuration settings</param>
-public record TenantSystemConfigurationDto(string TimeZone, string Locale, string DateFormat, string NumberFormat, TenantCurrencySettingsDto CurrencySettings, Dictionary<string, object?> CustomConfiguration);
+public sealed record TenantSystemConfigurationDto(string TimeZone, string Locale, string DateFormat, string NumberFormat, TenantCurrencySettingsDto CurrencySettings, Dictionary<string, object?> CustomConfiguration);
 
 /// <summary>
 ///     Currency settings data transfer object
@@ -43,7 +43,7 @@ public record TenantSystemConfigurationDto(string TimeZone, string Locale, strin
 /// <param name="DefaultCurrency">Default currency code (ISO 4217)</param>
 /// <param name="DisplayFormat">Currency display format</param>
 /// <param name="DecimalPlaces">Number of decimal places for currency</param>
-public record TenantCurrencySettingsDto(string DefaultCurrency, string DisplayFormat, int DecimalPlaces);
+public sealed record TenantCurrencySettingsDto(string DefaultCurrency, string DisplayFormat, int DecimalPlaces);
 
 /// <summary>
 ///     Business rules data transfer object
@@ -52,7 +52,7 @@ public record TenantCurrencySettingsDto(string DefaultCurrency, string DisplayFo
 /// <param name="ValidationRules">Data validation and business logic rules</param>
 /// <param name="ApprovalRules">Approval process and authorization rules</param>
 /// <param name="NotificationRules">Notification and alerting rules</param>
-public record TenantBusinessRulesDto(Dictionary<string, object?> WorkflowRules, Dictionary<string, object?> ValidationRules, Dictionary<string, object?> ApprovalRules, Dictionary<string, object?> NotificationRules);
+public sealed record TenantBusinessRulesDto(Dictionary<string, object?> WorkflowRules, Dictionary<string, object?> ValidationRules, Dictionary<string, object?> ApprovalRules, Dictionary<string, object?> NotificationRules);
 
 /// <summary>
 ///     User interface settings data transfer object
@@ -62,7 +62,7 @@ public record TenantBusinessRulesDto(Dictionary<string, object?> WorkflowRules, 
 /// <param name="Branding">Branding and logo settings</param>
 /// <param name="CustomCss">Custom CSS overrides</param>
 /// <param name="ComponentSettings">Component-specific settings</param>
-public record TenantUiSettingsDto(string Theme, Dictionary<string, object?> Layout, TenantBrandingDto Branding, string? CustomCss, Dictionary<string, object?> ComponentSettings);
+public sealed record TenantUiSettingsDto(string Theme, Dictionary<string, object?> Layout, TenantBrandingDto Branding, string? CustomCss, Dictionary<string, object?> ComponentSettings);
 
 /// <summary>
 ///     Branding settings data transfer object
@@ -72,7 +72,7 @@ public record TenantUiSettingsDto(string Theme, Dictionary<string, object?> Layo
 /// <param name="PrimaryColor">Primary brand color</param>
 /// <param name="SecondaryColor">Secondary brand color</param>
 /// <param name="CompanyName">Company name for branding</param>
-public record TenantBrandingDto(string? LogoUrl, string? FaviconUrl, string? PrimaryColor, string? SecondaryColor, string? CompanyName);
+public sealed record TenantBrandingDto(string? LogoUrl, string? FaviconUrl, string? PrimaryColor, string? SecondaryColor, string? CompanyName);
 
 /// <summary>
 ///     Security settings data transfer object
@@ -82,7 +82,7 @@ public record TenantBrandingDto(string? LogoUrl, string? FaviconUrl, string? Pri
 /// <param name="TwoFactorRequired">Whether two-factor authentication is required</param>
 /// <param name="IpWhitelist">IP address whitelist for access control</param>
 /// <param name="ApiRateLimits">API rate limiting settings</param>
-public record TenantSecuritySettingsDto(Dictionary<string, object?> PasswordPolicy, int SessionTimeout, bool TwoFactorRequired, List<string> IpWhitelist, Dictionary<string, int> ApiRateLimits);
+public sealed record TenantSecuritySettingsDto(Dictionary<string, object?> PasswordPolicy, int SessionTimeout, bool TwoFactorRequired, List<string> IpWhitelist, Dictionary<string, int> ApiRateLimits);
 
 /// <summary>
 ///     Integration settings data transfer object
@@ -91,7 +91,7 @@ public record TenantSecuritySettingsDto(Dictionary<string, object?> PasswordPoli
 /// <param name="WebhookSettings">Webhook endpoints and configurations</param>
 /// <param name="ApiKeys">API key management and settings</param>
 /// <param name="SsoConfiguration">Single sign-on configuration</param>
-public record TenantIntegrationSettingsDto(Dictionary<string, object?> ExternalServices, Dictionary<string, object?> WebhookSettings, Dictionary<string, string> ApiKeys, Dictionary<string, object?> SsoConfiguration);
+public sealed record TenantIntegrationSettingsDto(Dictionary<string, object?> ExternalServices, Dictionary<string, object?> WebhookSettings, Dictionary<string, string> ApiKeys, Dictionary<string, object?> SsoConfiguration);
 
 /// <summary>
 ///     System limits data transfer object
@@ -101,7 +101,7 @@ public record TenantIntegrationSettingsDto(Dictionary<string, object?> ExternalS
 /// <param name="MaxApiCalls">Maximum API calls per period</param>
 /// <param name="MaxProjects">Maximum number of projects</param>
 /// <param name="CustomLimits">Additional custom resource limits</param>
-public record TenantSystemLimitsDto(int MaxUsers, long MaxStorage, int MaxApiCalls, int MaxProjects, Dictionary<string, int> CustomLimits);
+public sealed record TenantSystemLimitsDto(int MaxUsers, long MaxStorage, int MaxApiCalls, int MaxProjects, Dictionary<string, int> CustomLimits);
 
 /// <summary>
 ///     Request model for updating tenant settings
@@ -113,7 +113,7 @@ public record TenantSystemLimitsDto(int MaxUsers, long MaxStorage, int MaxApiCal
 /// <param name="SecuritySettings">Security settings to update</param>
 /// <param name="IntegrationSettings">Integration settings to update</param>
 /// <param name="SystemLimits">System limits to update</param>
-public record UpdateTenantSettingsRequest(
+public sealed record UpdateTenantSettingsRequest(
     UpdateTenantSystemConfigurationRequest? SystemConfiguration,
     Dictionary<string, bool>? FeatureFlags,
     UpdateTenantBusinessRulesRequest? BusinessRules,
@@ -133,7 +133,7 @@ public record UpdateTenantSettingsRequest(
 /// <param name="SecuritySettings">Complete security settings</param>
 /// <param name="IntegrationSettings">Complete integration settings</param>
 /// <param name="SystemLimits">Complete system limits</param>
-public record ReplaceTenantSettingsRequest(
+public sealed record ReplaceTenantSettingsRequest(
     UpdateTenantSystemConfigurationRequest SystemConfiguration,
     Dictionary<string, bool> FeatureFlags,
     UpdateTenantBusinessRulesRequest BusinessRules,
@@ -152,7 +152,7 @@ public record ReplaceTenantSettingsRequest(
 /// <param name="NumberFormat">Number format to update</param>
 /// <param name="CurrencySettings">Currency settings to update</param>
 /// <param name="CustomConfiguration">Custom configuration to update</param>
-public record UpdateTenantSystemConfigurationRequest(
+public sealed record UpdateTenantSystemConfigurationRequest(
     string? TimeZone,
     string? Locale,
     string? DateFormat,
@@ -167,7 +167,7 @@ public record UpdateTenantSystemConfigurationRequest(
 /// <param name="DefaultCurrency">Default currency to update</param>
 /// <param name="DisplayFormat">Display format to update</param>
 /// <param name="DecimalPlaces">Decimal places to update</param>
-public record UpdateTenantCurrencySettingsRequest(string? DefaultCurrency, string? DisplayFormat, int? DecimalPlaces);
+public sealed record UpdateTenantCurrencySettingsRequest(string? DefaultCurrency, string? DisplayFormat, int? DecimalPlaces);
 
 /// <summary>
 ///     Request model for updating business rules
@@ -176,7 +176,7 @@ public record UpdateTenantCurrencySettingsRequest(string? DefaultCurrency, strin
 /// <param name="ValidationRules">Validation rules to update</param>
 /// <param name="ApprovalRules">Approval rules to update</param>
 /// <param name="NotificationRules">Notification rules to update</param>
-public record UpdateTenantBusinessRulesRequest(
+public sealed record UpdateTenantBusinessRulesRequest(
     Dictionary<string, object?>? WorkflowRules,
     Dictionary<string, object?>? ValidationRules,
     Dictionary<string, object?>? ApprovalRules,
@@ -191,7 +191,7 @@ public record UpdateTenantBusinessRulesRequest(
 /// <param name="Branding">Branding to update</param>
 /// <param name="CustomCss">Custom CSS to update</param>
 /// <param name="ComponentSettings">Component settings to update</param>
-public record UpdateTenantUiSettingsRequest(string? Theme, Dictionary<string, object?>? Layout, UpdateTenantBrandingRequest? Branding, string? CustomCss, Dictionary<string, object?>? ComponentSettings);
+public sealed record UpdateTenantUiSettingsRequest(string? Theme, Dictionary<string, object?>? Layout, UpdateTenantBrandingRequest? Branding, string? CustomCss, Dictionary<string, object?>? ComponentSettings);
 
 /// <summary>
 ///     Request model for updating branding
@@ -201,7 +201,7 @@ public record UpdateTenantUiSettingsRequest(string? Theme, Dictionary<string, ob
 /// <param name="PrimaryColor">Primary color to update</param>
 /// <param name="SecondaryColor">Secondary color to update</param>
 /// <param name="CompanyName">Company name to update</param>
-public record UpdateTenantBrandingRequest(string? LogoUrl, string? FaviconUrl, string? PrimaryColor, string? SecondaryColor, string? CompanyName);
+public sealed record UpdateTenantBrandingRequest(string? LogoUrl, string? FaviconUrl, string? PrimaryColor, string? SecondaryColor, string? CompanyName);
 
 /// <summary>
 ///     Request model for updating security settings
@@ -211,7 +211,7 @@ public record UpdateTenantBrandingRequest(string? LogoUrl, string? FaviconUrl, s
 /// <param name="TwoFactorRequired">Two-factor requirement to update</param>
 /// <param name="IpWhitelist">IP whitelist to update</param>
 /// <param name="ApiRateLimits">API rate limits to update</param>
-public record UpdateTenantSecuritySettingsRequest(Dictionary<string, object?>? PasswordPolicy, int? SessionTimeout, bool? TwoFactorRequired, List<string>? IpWhitelist, Dictionary<string, int>? ApiRateLimits);
+public sealed record UpdateTenantSecuritySettingsRequest(Dictionary<string, object?>? PasswordPolicy, int? SessionTimeout, bool? TwoFactorRequired, List<string>? IpWhitelist, Dictionary<string, int>? ApiRateLimits);
 
 /// <summary>
 ///     Request model for updating integration settings
@@ -220,7 +220,7 @@ public record UpdateTenantSecuritySettingsRequest(Dictionary<string, object?>? P
 /// <param name="WebhookSettings">Webhook settings to update</param>
 /// <param name="ApiKeys">API keys to update</param>
 /// <param name="SsoConfiguration">SSO configuration to update</param>
-public record UpdateTenantIntegrationSettingsRequest(
+public sealed record UpdateTenantIntegrationSettingsRequest(
     Dictionary<string, object?>? ExternalServices,
     Dictionary<string, object?>? WebhookSettings,
     Dictionary<string, string>? ApiKeys,
@@ -235,10 +235,10 @@ public record UpdateTenantIntegrationSettingsRequest(
 /// <param name="MaxApiCalls">Max API calls to update</param>
 /// <param name="MaxProjects">Max projects to update</param>
 /// <param name="CustomLimits">Custom limits to update</param>
-public record UpdateTenantSystemLimitsRequest(int? MaxUsers, long? MaxStorage, int? MaxApiCalls, int? MaxProjects, Dictionary<string, int>? CustomLimits);
+public sealed record UpdateTenantSystemLimitsRequest(int? MaxUsers, long? MaxStorage, int? MaxApiCalls, int? MaxProjects, Dictionary<string, int>? CustomLimits);
 
 /// <summary>
 ///     Request model for updating feature flags
 /// </summary>
 /// <param name="FeatureFlags">Feature flags to update</param>
-public record UpdateTenantFeatureFlagsRequest(Dictionary<string, bool> FeatureFlags);
+public sealed record UpdateTenantFeatureFlagsRequest(Dictionary<string, bool> FeatureFlags);

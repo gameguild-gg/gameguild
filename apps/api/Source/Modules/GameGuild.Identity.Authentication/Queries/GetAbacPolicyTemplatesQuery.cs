@@ -1,5 +1,5 @@
-﻿using GameGuild.CQRS;
+using GameGuild.CQRS;
 
 namespace GameGuild.Identity.Authentication;
 
-public record GetAbacPolicyTemplatesQuery : IQuery<IEnumerable<AbacPolicyTemplateDto>> { }
+public sealed record GetAbacPolicyTemplatesQuery : IQuery<IEnumerable<AbacPolicyTemplateDto>> { }

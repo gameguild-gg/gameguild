@@ -3,7 +3,7 @@ using FluentValidation;
 namespace GameGuild.Learning.Courses;
 
 /// <summary> Validator for RemoveFromWishlistCommand </summary>
-public class RemoveFromWishlistCommandValidator : AbstractValidator<RemoveFromWishlistCommand> {
+public sealed class RemoveFromWishlistCommandValidator : AbstractValidator<RemoveFromWishlistCommand> {
     public RemoveFromWishlistCommandValidator() {
         RuleFor(x => x.ProgramId)
           .NotEmpty().WithMessage("Program ID is required");

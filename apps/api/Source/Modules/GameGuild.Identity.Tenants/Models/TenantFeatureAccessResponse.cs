@@ -3,7 +3,7 @@ namespace GameGuild.Identity.Tenants;
 /// <summary>
 ///     Response of a tenant feature access check
 /// </summary>
-public record TenantFeatureAccessResponse
+public sealed record TenantFeatureAccessResponse
 {
     /// <summary>
     ///     Whether the tenant has access to the feature

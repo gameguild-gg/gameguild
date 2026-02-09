@@ -1,8 +1,8 @@
-﻿using GameGuild.CQRS;
+using GameGuild.CQRS;
 
 namespace GameGuild.Identity.Authentication;
 
-public record GetAccessRevocationHistoryQuery : IQuery<PagedResult<AccessRevocationRecord>>
+public sealed record GetAccessRevocationHistoryQuery : IQuery<PagedResult<AccessRevocationRecord>>
 {
     public Guid? UserId { get; init; }
 

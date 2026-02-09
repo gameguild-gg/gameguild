@@ -10,7 +10,7 @@ namespace GameGuild.Identity.Authorization.Commands;
 /// <summary>
 ///     Command to grant delegated admin scope
 /// </summary>
-public record GrantDelegatedAdminCommand(
+public sealed record GrantDelegatedAdminCommand(
     Guid AdminUserId,
     Guid? TenantId,
     string Name,
@@ -21,7 +21,7 @@ public record GrantDelegatedAdminCommand(
     Guid? OrganizationalUnitId = null
 ) : ICommand<DelegatedAdminScope>;
 
-public class GrantDelegatedAdminValidator : AbstractValidator<GrantDelegatedAdminCommand>
+public sealed class GrantDelegatedAdminValidator : AbstractValidator<GrantDelegatedAdminCommand>
 {
     public GrantDelegatedAdminValidator()
     {
@@ -36,7 +36,7 @@ public class GrantDelegatedAdminValidator : AbstractValidator<GrantDelegatedAdmi
     }
 }
 
-public class GrantDelegatedAdminHandler(IDelegatedAdminService service)
+public sealed class GrantDelegatedAdminHandler(IDelegatedAdminService service)
     : ICommandHandler<GrantDelegatedAdminCommand, DelegatedAdminScope>
 {
     public async Task<DelegatedAdminScope> Handle(
@@ -64,9 +64,9 @@ public class GrantDelegatedAdminHandler(IDelegatedAdminService service)
 /// <summary>
 ///     Command to revoke delegated admin scope
 /// </summary>
-public record RevokeDelegatedAdminCommand(Guid ScopeId) : ICommand<bool>;
+public sealed record RevokeDelegatedAdminCommand(Guid ScopeId) : ICommand<bool>;
 
-public class RevokeDelegatedAdminValidator : AbstractValidator<RevokeDelegatedAdminCommand>
+public sealed class RevokeDelegatedAdminValidator : AbstractValidator<RevokeDelegatedAdminCommand>
 {
     public RevokeDelegatedAdminValidator()
     {
@@ -74,7 +74,7 @@ public class RevokeDelegatedAdminValidator : AbstractValidator<RevokeDelegatedAd
     }
 }
 
-public class RevokeDelegatedAdminHandler(IDelegatedAdminService service)
+public sealed class RevokeDelegatedAdminHandler(IDelegatedAdminService service)
     : ICommandHandler<RevokeDelegatedAdminCommand, bool>
 {
     public async Task<bool> Handle(

@@ -40,7 +40,7 @@ public interface IStorageServiceFactory
 /// <summary>
 /// Result of testing a storage configuration.
 /// </summary>
-public record StorageTestResult(
+public sealed record StorageTestResult(
     bool Success,
     bool CanRead,
     bool CanWrite,

@@ -130,13 +130,13 @@ public class PostCommentsController(IPostService postService, IActorContextAcces
 
 #region Request DTOs
 
-public record AddCommentRequest
+public sealed record AddCommentRequest
 {
     public string Content { get; init; } = string.Empty;
     public Guid? ParentCommentId { get; init; }
 }
 
-public record UpdateCommentRequest
+public sealed record UpdateCommentRequest
 {
     public string Content { get; init; } = string.Empty;
 }

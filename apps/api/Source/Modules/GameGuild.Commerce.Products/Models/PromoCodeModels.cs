@@ -23,7 +23,7 @@ namespace GameGuild.Commerce.Products;
 /// <param name="UsageCount">Current usage count</param>
 /// <param name="CreatedAt">Creation timestamp</param>
 /// <param name="UpdatedAt">Last update timestamp</param>
-public record PromoCodeDto(
+public sealed record PromoCodeDto(
     Guid Id,
     string Code,
     string Name,
@@ -54,7 +54,7 @@ public record PromoCodeDto(
 /// <param name="ErrorMessage">Error message if invalid</param>
 /// <param name="DiscountAmount">Calculated discount amount</param>
 /// <param name="DiscountPercentage">Discount percentage applied</param>
-public record PromoCodeValidationResult(
+public sealed record PromoCodeValidationResult(
     bool IsValid,
     string? Code = null,
     string? ErrorMessage = null,
@@ -70,7 +70,7 @@ public record PromoCodeValidationResult(
 /// <param name="TotalDiscount">Total discount applied</param>
 /// <param name="AppliedCodes">List of codes that were applied</param>
 /// <param name="RejectedCodes">List of codes that were rejected with reasons</param>
-public record PromoCodeApplicationResult(
+public sealed record PromoCodeApplicationResult(
     decimal OriginalAmount,
     decimal FinalAmount,
     decimal TotalDiscount,
@@ -113,7 +113,7 @@ public record RejectedPromoCode(
 /// <param name="MaxTotalDiscountPercentage">Max total discount percentage</param>
 /// <param name="MaxTotalDiscountAmount">Max total discount amount</param>
 /// <param name="ConflictStrategy">Conflict resolution strategy</param>
-public record PromoStackingRuleDto(
+public sealed record PromoStackingRuleDto(
     Guid Id,
     string Name,
     string? Description,
@@ -136,7 +136,7 @@ public record PromoStackingRuleDto(
 /// <param name="FinalPrice">Final calculated price</param>
 /// <param name="Currency">Currency code</param>
 /// <param name="AppliedPromoCodes">List of applied promo codes</param>
-public record PricingCalculationResult(
+public sealed record PricingCalculationResult(
     decimal BasePrice,
     decimal? SalePrice,
     bool IsSaleActive,
@@ -158,7 +158,7 @@ public record PricingCalculationResult(
 /// <param name="AccessStartDate">When access started</param>
 /// <param name="AccessEndDate">When access ends (null = permanent)</param>
 /// <param name="GrantedAt">When access was granted</param>
-public record UserProductAccessDto(
+public sealed record UserProductAccessDto(
     Guid UserId,
     Guid ProductId,
     ProductAccessStatus AccessStatus,

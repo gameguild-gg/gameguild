@@ -2,7 +2,7 @@ using FluentValidation;
 
 namespace GameGuild.Learning.Experience.Recommendations;
 
-public class CreateOrUpdateLearningProfileCommandValidator : AbstractValidator<CreateOrUpdateLearningProfileCommand>
+public sealed class CreateOrUpdateLearningProfileCommandValidator : AbstractValidator<CreateOrUpdateLearningProfileCommand>
 {
     public CreateOrUpdateLearningProfileCommandValidator()
     {
@@ -32,7 +32,7 @@ public class CreateOrUpdateLearningProfileCommandValidator : AbstractValidator<C
     }
 }
 
-public class AddSkillToProfileCommandValidator : AbstractValidator<AddSkillToProfileCommand>
+public sealed class AddSkillToProfileCommandValidator : AbstractValidator<AddSkillToProfileCommand>
 {
     public AddSkillToProfileCommandValidator()
     {
@@ -47,7 +47,7 @@ public class AddSkillToProfileCommandValidator : AbstractValidator<AddSkillToPro
     }
 }
 
-public class RemoveSkillFromProfileCommandValidator : AbstractValidator<RemoveSkillFromProfileCommand>
+public sealed class RemoveSkillFromProfileCommandValidator : AbstractValidator<RemoveSkillFromProfileCommand>
 {
     public RemoveSkillFromProfileCommandValidator()
     {
@@ -61,7 +61,7 @@ public class RemoveSkillFromProfileCommandValidator : AbstractValidator<RemoveSk
     }
 }
 
-public class GenerateRecommendationsCommandValidator : AbstractValidator<GenerateRecommendationsCommand>
+public sealed class GenerateRecommendationsCommandValidator : AbstractValidator<GenerateRecommendationsCommand>
 {
     public GenerateRecommendationsCommandValidator()
     {
@@ -75,7 +75,7 @@ public class GenerateRecommendationsCommandValidator : AbstractValidator<Generat
     }
 }
 
-public class MarkRecommendationViewedCommandValidator : AbstractValidator<MarkRecommendationViewedCommand>
+public sealed class MarkRecommendationViewedCommandValidator : AbstractValidator<MarkRecommendationViewedCommand>
 {
     public MarkRecommendationViewedCommandValidator()
     {
@@ -89,7 +89,7 @@ public class MarkRecommendationViewedCommandValidator : AbstractValidator<MarkRe
     }
 }
 
-public class DismissRecommendationCommandValidator : AbstractValidator<DismissRecommendationCommand>
+public sealed class DismissRecommendationCommandValidator : AbstractValidator<DismissRecommendationCommand>
 {
     public DismissRecommendationCommandValidator()
     {

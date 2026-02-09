@@ -8,7 +8,7 @@ namespace GameGuild.Learning.Courses;
 /// <summary>
 /// Command handler for BulkArchiveProgramsCommand
 /// </summary>
-public class BulkArchiveProgramsCommandHandler(IApplicationDbContext context, ILogger<BulkArchiveProgramsCommandHandler> logger)
+public sealed class BulkArchiveProgramsCommandHandler(IApplicationDbContext context, ILogger<BulkArchiveProgramsCommandHandler> logger)
     : ICommandHandler<BulkArchiveProgramsCommand, IEnumerable<Program>>
 {
     public async Task<IEnumerable<Program>> Handle(BulkArchiveProgramsCommand request, CancellationToken cancellationToken)

@@ -12,7 +12,7 @@ namespace GameGuild.API.Integration;
 ///     This handler coordinates between Commerce.Subscriptions and Resources modules,
 ///     residing in the API composition root to maintain module independence.
 /// </remarks>
-public class SubscriptionActivatedQuotaSyncHandler(
+public sealed class SubscriptionActivatedQuotaSyncHandler(
     ISubscriptionRepository subscriptionRepository,
     IResourceQuotaService resourceQuotaService,
     ILogger<SubscriptionActivatedQuotaSyncHandler> logger

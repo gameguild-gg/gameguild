@@ -5,7 +5,7 @@ namespace GameGuild.Identity.Authentication;
 /// <summary>
 ///     Validator for GoogleIdTokenSignInCommand following CQRS and DRY principles
 /// </summary>
-public class GoogleIdTokenSignInCommandValidator : AbstractValidator<GoogleIdTokenSignInCommand>
+public sealed class GoogleIdTokenSignInCommandValidator : AbstractValidator<GoogleIdTokenSignInCommand>
 {
     public GoogleIdTokenSignInCommandValidator()
     {

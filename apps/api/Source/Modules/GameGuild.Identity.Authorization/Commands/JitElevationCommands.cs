@@ -10,7 +10,7 @@ namespace GameGuild.Identity.Authorization.Commands;
 /// <summary>
 ///     Command to request a Just-in-Time permission elevation
 /// </summary>
-public record RequestJitElevationCommand(
+public sealed record RequestJitElevationCommand(
     Guid RequesterId,
     Guid? TenantId,
     string Permission,
@@ -21,7 +21,7 @@ public record RequestJitElevationCommand(
     DateTime? StartsAt = null
 ) : ICommand<JitElevationRequest>;
 
-public class RequestJitElevationValidator : AbstractValidator<RequestJitElevationCommand>
+public sealed class RequestJitElevationValidator : AbstractValidator<RequestJitElevationCommand>
 {
     public RequestJitElevationValidator()
     {
@@ -33,7 +33,7 @@ public class RequestJitElevationValidator : AbstractValidator<RequestJitElevatio
     }
 }
 
-public class RequestJitElevationHandler(IJitElevationService service)
+public sealed class RequestJitElevationHandler(IJitElevationService service)
     : ICommandHandler<RequestJitElevationCommand, JitElevationRequest>
 {
     public async Task<JitElevationRequest> Handle(
@@ -58,13 +58,13 @@ public class RequestJitElevationHandler(IJitElevationService service)
 /// <summary>
 ///     Command to approve a JIT elevation request
 /// </summary>
-public record ApproveJitElevationCommand(
+public sealed record ApproveJitElevationCommand(
     Guid RequestId,
     Guid ReviewerId,
     string? Comments = null
 ) : ICommand<JitElevationRequest>;
 
-public class ApproveJitElevationValidator : AbstractValidator<ApproveJitElevationCommand>
+public sealed class ApproveJitElevationValidator : AbstractValidator<ApproveJitElevationCommand>
 {
     public ApproveJitElevationValidator()
     {
@@ -74,7 +74,7 @@ public class ApproveJitElevationValidator : AbstractValidator<ApproveJitElevatio
     }
 }
 
-public class ApproveJitElevationHandler(IJitElevationService service)
+public sealed class ApproveJitElevationHandler(IJitElevationService service)
     : ICommandHandler<ApproveJitElevationCommand, JitElevationRequest>
 {
     public async Task<JitElevationRequest> Handle(
@@ -94,13 +94,13 @@ public class ApproveJitElevationHandler(IJitElevationService service)
 /// <summary>
 ///     Command to deny a JIT elevation request
 /// </summary>
-public record DenyJitElevationCommand(
+public sealed record DenyJitElevationCommand(
     Guid RequestId,
     Guid ReviewerId,
     string Comments
 ) : ICommand<JitElevationRequest>;
 
-public class DenyJitElevationValidator : AbstractValidator<DenyJitElevationCommand>
+public sealed class DenyJitElevationValidator : AbstractValidator<DenyJitElevationCommand>
 {
     public DenyJitElevationValidator()
     {
@@ -110,7 +110,7 @@ public class DenyJitElevationValidator : AbstractValidator<DenyJitElevationComma
     }
 }
 
-public class DenyJitElevationHandler(IJitElevationService service)
+public sealed class DenyJitElevationHandler(IJitElevationService service)
     : ICommandHandler<DenyJitElevationCommand, JitElevationRequest>
 {
     public async Task<JitElevationRequest> Handle(
@@ -130,13 +130,13 @@ public class DenyJitElevationHandler(IJitElevationService service)
 /// <summary>
 ///     Command to revoke an active JIT elevation
 /// </summary>
-public record RevokeJitElevationCommand(
+public sealed record RevokeJitElevationCommand(
     Guid RequestId,
     Guid RevokedBy,
     string Reason
 ) : ICommand<bool>;
 
-public class RevokeJitElevationValidator : AbstractValidator<RevokeJitElevationCommand>
+public sealed class RevokeJitElevationValidator : AbstractValidator<RevokeJitElevationCommand>
 {
     public RevokeJitElevationValidator()
     {
@@ -146,7 +146,7 @@ public class RevokeJitElevationValidator : AbstractValidator<RevokeJitElevationC
     }
 }
 
-public class RevokeJitElevationHandler(IJitElevationService service)
+public sealed class RevokeJitElevationHandler(IJitElevationService service)
     : ICommandHandler<RevokeJitElevationCommand, bool>
 {
     public async Task<bool> Handle(
@@ -166,9 +166,9 @@ public class RevokeJitElevationHandler(IJitElevationService service)
 /// <summary>
 ///     Command to cleanup expired JIT elevations
 /// </summary>
-public record CleanupExpiredElevationsCommand : ICommand<int>;
+public sealed record CleanupExpiredElevationsCommand : ICommand<int>;
 
-public class CleanupExpiredElevationsHandler(IJitElevationService service)
+public sealed class CleanupExpiredElevationsHandler(IJitElevationService service)
     : ICommandHandler<CleanupExpiredElevationsCommand, int>
 {
     public async Task<int> Handle(

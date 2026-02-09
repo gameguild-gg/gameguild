@@ -4,7 +4,7 @@ using GameGuild.CQRS;
 
 namespace GameGuild.Monitoring.SLA;
 
-public class GetErrorBudgetQueryHandler(IServiceLevelObjectiveRepository sloRepository, IErrorBudgetCalculator errorBudgetCalculator) : IQueryHandler<GetErrorBudgetQuery, ErrorBudgetDto?>
+public sealed class GetErrorBudgetQueryHandler(IServiceLevelObjectiveRepository sloRepository, IErrorBudgetCalculator errorBudgetCalculator) : IQueryHandler<GetErrorBudgetQuery, ErrorBudgetDto?>
 {
     public async Task<ErrorBudgetDto?> Handle(GetErrorBudgetQuery request, CancellationToken cancellationToken)
     {

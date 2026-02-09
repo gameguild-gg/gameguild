@@ -124,7 +124,7 @@ public enum TrendGranularity
 /// <summary>
 ///     Result of usage trends query
 /// </summary>
-public record UsageTrendsResult(
+public sealed record UsageTrendsResult(
     ResourceUsageType Type,
     DateTime StartDate,
     DateTime EndDate,
@@ -139,4 +139,4 @@ public record UsageTrendDataPoint(DateTime Period, long TotalUsage, int TenantCo
 /// <summary>
 ///     Request to cleanup orphaned resources
 /// </summary>
-public record CleanupOrphanedResourcesRequest(bool DryRun = true, List<ResourceUsageType>? ResourceTypes = null);
+public sealed record CleanupOrphanedResourcesRequest(bool DryRun = true, List<ResourceUsageType>? ResourceTypes = null);

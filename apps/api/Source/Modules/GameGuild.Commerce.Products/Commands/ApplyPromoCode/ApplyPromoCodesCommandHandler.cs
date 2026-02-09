@@ -5,7 +5,7 @@ namespace GameGuild.Commerce.Products;
 /// <summary>
 /// Handler for applying promo codes to an order
 /// </summary>
-public class ApplyPromoCodesCommandHandler(IPricingEngineService pricingEngine)
+public sealed class ApplyPromoCodesCommandHandler(IPricingEngineService pricingEngine)
     : ICommandHandler<ApplyPromoCodesCommand, PromoCodeApplicationResult>
 {
     public async Task<PromoCodeApplicationResult> Handle(

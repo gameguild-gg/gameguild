@@ -7,7 +7,7 @@ namespace GameGuild.Commerce.Orders;
 ///     Handles order state change events by persisting audit log entries.
 ///     This provides a complete audit trail for all order state transitions.
 /// </summary>
-public class OrderStateChangedEventHandler(
+public sealed class OrderStateChangedEventHandler(
     IApplicationDbContext dbContext,
     ILogger<OrderStateChangedEventHandler> logger) : INotificationHandler<OrderStateChangedEvent>
 {

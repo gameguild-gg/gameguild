@@ -12,7 +12,7 @@ namespace GameGuild.Assets.Commands;
 /// - AssetStorage: File size in bytes counted post-upload via SecureUploadService
 /// </remarks>
 [RequiresQuota(ResourceUsageType.Assets, 1)]
-public record UploadAssetCommand(
+public sealed record UploadAssetCommand(
     Stream Content,
     string FileName,
     string MimeType,
@@ -23,14 +23,14 @@ public record UploadAssetCommand(
     string? ParentResourceType = null,
     Guid? ParentResourceId = null) : IRequest<UploadAssetResponse>;
 
-public record UploadAssetResponse(
+public sealed record UploadAssetResponse(
     Guid AssetReferenceId,
     Guid AssetContentId,
     string ContentHash,
     bool WasDeduped,
     string? Error = null);
 
-public class UploadAssetValidator : AbstractValidator<UploadAssetCommand>
+public sealed class UploadAssetValidator : AbstractValidator<UploadAssetCommand>
 {
     public UploadAssetValidator()
     {
@@ -44,7 +44,7 @@ public class UploadAssetValidator : AbstractValidator<UploadAssetCommand>
     }
 }
 
-public class UploadAssetHandler : IRequestHandler<UploadAssetCommand, UploadAssetResponse>
+public sealed class UploadAssetHandler : IRequestHandler<UploadAssetCommand, UploadAssetResponse>
 {
     private readonly IAssetUploadService _uploadService;
     private readonly IAssetContentRepository _contentRepository;

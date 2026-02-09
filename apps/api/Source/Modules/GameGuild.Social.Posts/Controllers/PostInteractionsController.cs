@@ -158,7 +158,7 @@ public class PostInteractionsController(IPostService postService, IActorContextA
 
 #region Request DTOs
 
-public record FollowPostRequest
+public sealed record FollowPostRequest
 {
     public bool NotifyOnComments { get; init; } = true;
     public bool NotifyOnLikes { get; init; } = false;

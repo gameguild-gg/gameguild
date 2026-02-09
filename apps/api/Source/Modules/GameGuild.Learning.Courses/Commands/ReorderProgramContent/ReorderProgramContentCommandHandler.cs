@@ -8,7 +8,7 @@ namespace GameGuild.Learning.Courses;
 /// <summary>
 /// Command handler for ReorderProgramContentCommand
 /// </summary>
-public class ReorderProgramContentCommandHandler(IApplicationDbContext context, ILogger<ReorderProgramContentCommandHandler> logger)
+public sealed class ReorderProgramContentCommandHandler(IApplicationDbContext context, ILogger<ReorderProgramContentCommandHandler> logger)
     : ICommandHandler<ReorderProgramContentCommand, IEnumerable<ProgramContent>>
 {
     public async Task<IEnumerable<ProgramContent>> Handle(ReorderProgramContentCommand request, CancellationToken cancellationToken)

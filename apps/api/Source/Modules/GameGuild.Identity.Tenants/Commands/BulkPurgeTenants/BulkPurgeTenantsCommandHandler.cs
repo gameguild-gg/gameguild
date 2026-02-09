@@ -5,7 +5,7 @@ namespace GameGuild.Identity.Tenants;
 /// <summary>
 ///     Handler for permanent bulk purge of tenants (hard delete)
 /// </summary>
-public class BulkPurgeTenantsCommandHandler(ITenantRepository tenantRepository) : ICommandHandler<BulkPurgeTenantsCommand, BulkOperationResponse>
+public sealed class BulkPurgeTenantsCommandHandler(ITenantRepository tenantRepository) : ICommandHandler<BulkPurgeTenantsCommand, BulkOperationResponse>
 {
     public async Task<BulkOperationResponse> Handle(BulkPurgeTenantsCommand request, CancellationToken cancellationToken)
     {

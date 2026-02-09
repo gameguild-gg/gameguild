@@ -10,7 +10,7 @@ namespace GameGuild.Commerce.Payments;
 ///     - Payment cancellation records
 ///     - Voided transactions in the ledger
 /// </remarks>
-public class GetCanceledPaymentsQueryHandler : IQueryHandler<GetCanceledPaymentsQuery, IEnumerable<PaymentResult>>
+public sealed class GetCanceledPaymentsQueryHandler : IQueryHandler<GetCanceledPaymentsQuery, IEnumerable<PaymentResult>>
 {
     public Task<IEnumerable<PaymentResult>> Handle(GetCanceledPaymentsQuery request, CancellationToken cancellationToken)
     {

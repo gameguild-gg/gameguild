@@ -1,6 +1,6 @@
 namespace GameGuild.TestingLab;
 
-public class GetTestingRequestsQueryHandler : ITestingLabQueryHandler<GetTestingRequestsQuery, IEnumerable<TestingRequest>> {
+public sealed class GetTestingRequestsQueryHandler : ITestingLabQueryHandler<GetTestingRequestsQuery, IEnumerable<TestingRequest>> {
   private readonly ITestingRequestService _service;
 
   public GetTestingRequestsQueryHandler(ITestingRequestService service) { _service = service; }

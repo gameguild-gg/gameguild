@@ -5,7 +5,7 @@ namespace GameGuild.Identity.Users;
 /// <summary>
 ///     Handler for replacing user metadata
 /// </summary>
-public class ReplaceUserMetadataCommandHandler(IUserRepository userRepository, IUserMetadataRepository metadataRepository)
+public sealed class ReplaceUserMetadataCommandHandler(IUserRepository userRepository, IUserMetadataRepository metadataRepository)
     : ICommandHandler<ReplaceUserMetadataCommand>
 {
     public async Task<Unit> Handle(ReplaceUserMetadataCommand request, CancellationToken cancellationToken)

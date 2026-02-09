@@ -1,9 +1,9 @@
-﻿using GameGuild.Identity.Authorization;
+using GameGuild.Identity.Authorization;
 using GameGuild.CQRS;
 
 namespace GameGuild.Identity.Authentication;
 
-public record CreateConditionalPolicyFromTemplateCommand : ICommand<ConditionalPolicy>
+public sealed record CreateConditionalPolicyFromTemplateCommand : ICommand<ConditionalPolicy>
 {
     public Guid TemplateId { get; set; }
 

@@ -169,13 +169,13 @@ public class EntitlementsController(IEntitlementService entitlementService, IAct
 }
 
 /// <summary>Result of an entitlement check</summary>
-public record EntitlementCheckResult(Guid ProductId, bool HasAccess);
+public sealed record EntitlementCheckResult(Guid ProductId, bool HasAccess);
 
 /// <summary>Request to check multiple product access</summary>
-public record CheckMultipleAccessRequest(IEnumerable<Guid> ProductIds);
+public sealed record CheckMultipleAccessRequest(IEnumerable<Guid> ProductIds);
 
 /// <summary>Request to grant an entitlement</summary>
-public record GrantEntitlementRequest(
+public sealed record GrantEntitlementRequest(
     Guid UserId,
     Guid ProductId,
     ProductAcquisitionType AcquisitionType,
@@ -184,13 +184,13 @@ public record GrantEntitlementRequest(
     DateTime? ExpiresAt = null);
 
 /// <summary>Request to revoke an entitlement</summary>
-public record RevokeEntitlementRequest(
+public sealed record RevokeEntitlementRequest(
     Guid UserId,
     Guid ProductId,
     string? Reason = null);
 
 /// <summary>Entitlement info DTO</summary>
-public record EntitlementInfoDto(
+public sealed record EntitlementInfoDto(
     Guid ProductId,
     string ProductName,
     string Status,

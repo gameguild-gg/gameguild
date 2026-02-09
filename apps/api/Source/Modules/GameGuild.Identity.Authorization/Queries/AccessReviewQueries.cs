@@ -9,9 +9,9 @@ namespace GameGuild.Identity.Authorization.Queries;
 /// <summary>
 ///     Query to get an access review campaign by ID
 /// </summary>
-public record GetAccessReviewCampaignByIdQuery(Guid CampaignId) : IQuery<AccessReviewCampaign?>;
+public sealed record GetAccessReviewCampaignByIdQuery(Guid CampaignId) : IQuery<AccessReviewCampaign?>;
 
-public class GetAccessReviewCampaignByIdHandler(IAccessReviewService service)
+public sealed class GetAccessReviewCampaignByIdHandler(IAccessReviewService service)
     : IQueryHandler<GetAccessReviewCampaignByIdQuery, AccessReviewCampaign?>
 {
     public async Task<AccessReviewCampaign?> Handle(
@@ -26,9 +26,9 @@ public class GetAccessReviewCampaignByIdHandler(IAccessReviewService service)
 /// <summary>
 ///     Query to get active access review campaigns
 /// </summary>
-public record GetActiveAccessReviewCampaignsQuery(Guid? TenantId) : IQuery<List<AccessReviewCampaign>>;
+public sealed record GetActiveAccessReviewCampaignsQuery(Guid? TenantId) : IQuery<List<AccessReviewCampaign>>;
 
-public class GetActiveAccessReviewCampaignsHandler(IAccessReviewService service)
+public sealed class GetActiveAccessReviewCampaignsHandler(IAccessReviewService service)
     : IQueryHandler<GetActiveAccessReviewCampaignsQuery, List<AccessReviewCampaign>>
 {
     public async Task<List<AccessReviewCampaign>> Handle(
@@ -43,9 +43,9 @@ public class GetActiveAccessReviewCampaignsHandler(IAccessReviewService service)
 /// <summary>
 ///     Query to get pending review items for a reviewer
 /// </summary>
-public record GetPendingReviewItemsQuery(Guid ReviewerId, Guid? TenantId) : IQuery<List<AccessReviewItem>>;
+public sealed record GetPendingReviewItemsQuery(Guid ReviewerId, Guid? TenantId) : IQuery<List<AccessReviewItem>>;
 
-public class GetPendingReviewItemsHandler(IAccessReviewService service)
+public sealed class GetPendingReviewItemsHandler(IAccessReviewService service)
     : IQueryHandler<GetPendingReviewItemsQuery, List<AccessReviewItem>>
 {
     public async Task<List<AccessReviewItem>> Handle(

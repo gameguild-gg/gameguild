@@ -5,7 +5,7 @@ namespace GameGuild.Identity.Users;
 /// <summary>
 ///     Command handler for activating users
 /// </summary>
-public class ActivateUserCommandHandler(IUserRepository userRepository) : ICommandHandler<ActivateUserCommand, UserDto>
+public sealed class ActivateUserCommandHandler(IUserRepository userRepository) : ICommandHandler<ActivateUserCommand, UserDto>
 {
     public async Task<UserDto> Handle(ActivateUserCommand request, CancellationToken cancellationToken)
     {

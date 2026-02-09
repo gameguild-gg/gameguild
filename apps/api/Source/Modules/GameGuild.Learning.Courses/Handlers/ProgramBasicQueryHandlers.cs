@@ -12,7 +12,7 @@ namespace GameGuild.Learning.Courses;
 /// Query handlers for basic Program retrieval operations:
 /// get all, get by ID, get by slug, get published by slug, search, filter by category/difficulty/creator.
 /// </summary>
-public class ProgramBasicQueryHandlers(IApplicationDbContext context, ILogger<ProgramBasicQueryHandlers> logger) : IRequestHandler<GetAllProgramsQuery, IEnumerable<Program>>,
+public sealed class ProgramBasicQueryHandlers(IApplicationDbContext context, ILogger<ProgramBasicQueryHandlers> logger) : IRequestHandler<GetAllProgramsQuery, IEnumerable<Program>>,
                                                                                                                     IRequestHandler<GetProgramByIdQuery, Program?>,
                                                                                                                     IRequestHandler<GetProgramBySlugQuery, Program?>,
                                                                                                                     IRequestHandler<GetPublishedProgramBySlugQuery, Program?>,

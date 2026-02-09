@@ -223,13 +223,13 @@ public sealed class SubscriptionPlansCrudController(ISender sender) : BaseApiCon
     #region Request Records
 
     // POST /subscription-plans
-    public record CreatePlanRequest(string Name, string Slug, long MonthlyPriceInCents, string Currency = "USD", string? Description = null);
+    public sealed record CreatePlanRequest(string Name, string Slug, long MonthlyPriceInCents, string Currency = "USD", string? Description = null);
 
     // POST /subscription-plans:compare
-    public record ComparePlansRequest(Guid BasePlanId, List<Guid> ComparePlanIds);
+    public sealed record ComparePlansRequest(Guid BasePlanId, List<Guid> ComparePlanIds);
 
     // PUT /subscription-plans/{planId}
-    public record PutSubscriptionPlanRequest(
+    public sealed record PutSubscriptionPlanRequest(
         string Name,
         string Slug,
         string? Description,

@@ -6,7 +6,7 @@ namespace GameGuild.Identity.Users;
 /// <summary>
 ///     Query handler for getting user notifications with pagination, search, and filtering
 /// </summary>
-public class GetUserNotificationsPagedQueryHandler(IUserNotificationRepository notificationRepository)
+public sealed class GetUserNotificationsPagedQueryHandler(IUserNotificationRepository notificationRepository)
     : IQueryHandler<GetUserNotificationsPagedQuery, PagedResult<UserNotificationDto>>
 {
     public async Task<PagedResult<UserNotificationDto>> Handle(GetUserNotificationsPagedQuery request, CancellationToken cancellationToken)

@@ -9,7 +9,7 @@ namespace GameGuild.Commerce.Products;
 /// <param name="SoftDelete">Whether to soft delete (default) or hard delete</param>
 /// <param name="Reason">Optional reason for deletion</param>
 /// <param name="ExpectedVersion">Expected version for optimistic concurrency</param>
-public record DeleteProductCommand(
+public sealed record DeleteProductCommand(
     Guid ProductId,
     bool SoftDelete = true,
     string? Reason = null,

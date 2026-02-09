@@ -6,7 +6,7 @@ namespace GameGuild.Identity.Authentication;
 
 // Access Review Campaign Commands
 [RequiresQuota(ResourceUsageType.AccessReviewCampaigns, 1, Source = "CreateAccessReviewCampaign")]
-public record CreateAccessReviewCampaignCommand : ICommand<AccessReviewCampaign>
+public sealed record CreateAccessReviewCampaignCommand : ICommand<AccessReviewCampaign>
 {
     public string Name { get; init; } = string.Empty;
 

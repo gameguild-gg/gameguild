@@ -8,7 +8,7 @@ namespace GameGuild.Identity.Users;
 ///     Command handler for bulk deleting users.
 ///     Decrements the Users quota to maintain accurate resource accounting.
 /// </summary>
-public class BulkDeleteUsersCommandHandler(
+public sealed class BulkDeleteUsersCommandHandler(
     IUserRepository userRepository,
     IResourceQuotaService quotaService,
     IActorContextAccessor actorContextAccessor) : ICommandHandler<BulkDeleteUsersCommand>

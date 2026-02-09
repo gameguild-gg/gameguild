@@ -5,7 +5,7 @@ namespace GameGuild.Identity.Authentication;
 /// <summary>
 ///     Command to revoke a content type permission grant by its ID
 /// </summary>
-public record RevokeContentTypePermissionByIdCommand : ICommand
+public sealed record RevokeContentTypePermissionByIdCommand : ICommand
 {
     /// <summary>
     ///     The unique identifier of the permission grant to revoke

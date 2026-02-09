@@ -1,11 +1,11 @@
-﻿using FluentValidation;
+using FluentValidation;
 
 namespace GameGuild.Identity.Tenants;
 
 /// <summary>
 ///     Validator for UpdateTenantMemberRoleCommand
 /// </summary>
-public class UpdateTenantMemberRoleCommandValidator : AbstractValidator<UpdateTenantMemberRoleCommand>
+public sealed class UpdateTenantMemberRoleCommandValidator : AbstractValidator<UpdateTenantMemberRoleCommand>
 {
     public UpdateTenantMemberRoleCommandValidator()
     {

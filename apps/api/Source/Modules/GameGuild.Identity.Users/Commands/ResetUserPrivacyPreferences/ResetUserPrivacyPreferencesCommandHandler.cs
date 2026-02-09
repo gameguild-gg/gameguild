@@ -2,7 +2,7 @@ using GameGuild.CQRS;
 
 namespace GameGuild.Identity.Users;
 
-public class ResetUserPrivacyPreferencesCommandHandler(IUserRepository userRepository, IUserPreferencesRepository preferencesRepository) : ICommandHandler<ResetUserPrivacyPreferencesCommand>
+public sealed class ResetUserPrivacyPreferencesCommandHandler(IUserRepository userRepository, IUserPreferencesRepository preferencesRepository) : ICommandHandler<ResetUserPrivacyPreferencesCommand>
 {
     public async Task<Unit> Handle(ResetUserPrivacyPreferencesCommand request, CancellationToken cancellationToken)
     {

@@ -5,7 +5,7 @@ namespace GameGuild.Identity.Users;
 /// <summary>
 ///     Validator for UpdateUserPreferencesCommand
 /// </summary>
-public class UpdateUserPreferencesCommandValidator : AbstractValidator<UpdateUserPreferencesCommand>
+public sealed class UpdateUserPreferencesCommandValidator : AbstractValidator<UpdateUserPreferencesCommand>
 {
     public UpdateUserPreferencesCommandValidator()
     {

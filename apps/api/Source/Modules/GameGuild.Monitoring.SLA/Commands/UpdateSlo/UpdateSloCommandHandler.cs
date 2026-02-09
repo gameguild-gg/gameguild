@@ -4,7 +4,7 @@ using GameGuild.CQRS;
 
 namespace GameGuild.Monitoring.SLA;
 
-public class UpdateSloCommandHandler(IServiceLevelObjectiveRepository repository) : ICommandHandler<UpdateSloCommand, SloDto>
+public sealed class UpdateSloCommandHandler(IServiceLevelObjectiveRepository repository) : ICommandHandler<UpdateSloCommand, SloDto>
 {
     public async Task<SloDto> Handle(UpdateSloCommand request, CancellationToken cancellationToken)
     {

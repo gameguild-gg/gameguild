@@ -5,7 +5,7 @@ namespace GameGuild.Identity.Users;
 /// <summary>
 /// Query handler for getting user profile by user ID
 /// </summary>
-public class GetUserProfileQueryHandler(IUserProfileRepository profileRepository) : IQueryHandler<GetUserProfileQuery, UserProfileDto?>
+public sealed class GetUserProfileQueryHandler(IUserProfileRepository profileRepository) : IQueryHandler<GetUserProfileQuery, UserProfileDto?>
 {
     public async Task<UserProfileDto?> Handle(GetUserProfileQuery request, CancellationToken cancellationToken)
     {

@@ -7,7 +7,7 @@ namespace GameGuild.Learning.Experience.Discovery;
 /// <summary>
 /// Query to get all active featured content for a tenant
 /// </summary>
-public record GetActiveFeaturedContentQuery(
+public sealed record GetActiveFeaturedContentQuery(
     Guid? TenantId = null,
     int Skip = 0,
     int Take = 50
@@ -16,7 +16,7 @@ public record GetActiveFeaturedContentQuery(
 /// <summary>
 /// Query to get featured content by type
 /// </summary>
-public record GetFeaturedContentByTypeQuery(
+public sealed record GetFeaturedContentByTypeQuery(
     FeaturedContentType Type,
     Guid? TenantId = null,
     int Skip = 0,
@@ -26,12 +26,12 @@ public record GetFeaturedContentByTypeQuery(
 /// <summary>
 /// Query to get featured content by ID
 /// </summary>
-public record GetFeaturedContentByIdQuery(Guid Id) : IQuery<FeaturedContent?>;
+public sealed record GetFeaturedContentByIdQuery(Guid Id) : IQuery<FeaturedContent?>;
 
 /// <summary>
 /// Query to get all featured content (admin view)
 /// </summary>
-public record GetAllFeaturedContentQuery(
+public sealed record GetAllFeaturedContentQuery(
     Guid? TenantId = null,
     bool IncludeInactive = false,
     int Skip = 0,
@@ -43,7 +43,7 @@ public record GetAllFeaturedContentQuery(
 /// <summary>
 /// Query to get published course collections
 /// </summary>
-public record GetPublishedCollectionsQuery(
+public sealed record GetPublishedCollectionsQuery(
     Guid? TenantId = null,
     CollectionType? Type = null,
     int Skip = 0,
@@ -53,17 +53,17 @@ public record GetPublishedCollectionsQuery(
 /// <summary>
 /// Query to get a course collection by slug
 /// </summary>
-public record GetCollectionBySlugQuery(string Slug, Guid? TenantId = null) : IQuery<CourseCollection?>;
+public sealed record GetCollectionBySlugQuery(string Slug, Guid? TenantId = null) : IQuery<CourseCollection?>;
 
 /// <summary>
 /// Query to get a course collection by ID
 /// </summary>
-public record GetCollectionByIdQuery(Guid Id) : IQuery<CourseCollection?>;
+public sealed record GetCollectionByIdQuery(Guid Id) : IQuery<CourseCollection?>;
 
 /// <summary>
 /// Query to get featured collections
 /// </summary>
-public record GetFeaturedCollectionsQuery(
+public sealed record GetFeaturedCollectionsQuery(
     Guid? TenantId = null,
     int Take = 10
 ) : IQuery<IEnumerable<CourseCollection>>;
@@ -71,7 +71,7 @@ public record GetFeaturedCollectionsQuery(
 /// <summary>
 /// Query to get collections curated by a specific user
 /// </summary>
-public record GetCollectionsByCuratorQuery(
+public sealed record GetCollectionsByCuratorQuery(
     Guid CuratorId,
     bool IncludeUnpublished = false,
     int Skip = 0,
@@ -81,7 +81,7 @@ public record GetCollectionsByCuratorQuery(
 /// <summary>
 /// Query to get all collections (admin view)
 /// </summary>
-public record GetAllCollectionsQuery(
+public sealed record GetAllCollectionsQuery(
     Guid? TenantId = null,
     bool IncludeUnpublished = true,
     int Skip = 0,
@@ -93,7 +93,7 @@ public record GetAllCollectionsQuery(
 /// <summary>
 /// Query to get search history for a user
 /// </summary>
-public record GetUserSearchHistoryQuery(
+public sealed record GetUserSearchHistoryQuery(
     Guid UserId,
     int Take = 20
 ) : IQuery<IEnumerable<SearchHistory>>;
@@ -101,7 +101,7 @@ public record GetUserSearchHistoryQuery(
 /// <summary>
 /// Query to get popular searches (analytics)
 /// </summary>
-public record GetPopularSearchesQuery(
+public sealed record GetPopularSearchesQuery(
     int DaysBack = 30,
     int Take = 20
 ) : IQuery<IEnumerable<PopularSearchResult>>;
@@ -109,7 +109,7 @@ public record GetPopularSearchesQuery(
 /// <summary>
 /// Result for popular searches query
 /// </summary>
-public record PopularSearchResult(
+public sealed record PopularSearchResult(
     string Query,
     int SearchCount,
     int TotalClicks,

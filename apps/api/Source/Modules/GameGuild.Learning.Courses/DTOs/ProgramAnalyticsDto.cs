@@ -1,6 +1,6 @@
 namespace GameGuild.Learning.Courses;
 
-public record ProgramAnalyticsDto(
+public sealed record ProgramAnalyticsDto(
   Guid ProgramId,
   string Title,
   int TotalUsers,

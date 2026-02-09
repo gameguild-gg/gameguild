@@ -220,7 +220,7 @@ public class AssessmentsController : BaseApiController
 
 // ===== DTOs =====
 
-public record AssessmentDto(
+public sealed record AssessmentDto(
     Guid Id,
     Guid CourseId,
     Guid? ContentId,
@@ -255,7 +255,7 @@ public record AssessmentDto(
         entity.IsAvailable());
 }
 
-public record AssessmentSubmissionDto(
+public sealed record AssessmentSubmissionDto(
     Guid Id,
     Guid AssessmentId,
     Guid EnrollmentId,
@@ -286,6 +286,6 @@ public record AssessmentSubmissionDto(
         entity.Status);
 }
 
-public record StartSubmissionRequest(Guid EnrollmentId);
+public sealed record StartSubmissionRequest(Guid EnrollmentId);
 
-public record CanAttemptResponse(bool CanAttempt, int CurrentAttemptCount);
+public sealed record CanAttemptResponse(bool CanAttempt, int CurrentAttemptCount);

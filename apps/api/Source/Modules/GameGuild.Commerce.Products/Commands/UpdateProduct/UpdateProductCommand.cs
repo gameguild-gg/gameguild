@@ -17,7 +17,7 @@ namespace GameGuild.Commerce.Products;
 /// <param name="MaxAffiliateDiscount">Updated max affiliate discount</param>
 /// <param name="AffiliateCommissionPercentage">Updated affiliate commission</param>
 /// <param name="ExpectedVersion">Expected version for optimistic concurrency</param>
-public record UpdateProductCommand(
+public sealed record UpdateProductCommand(
     Guid ProductId,
     string? Name = null,
     string? Description = null,

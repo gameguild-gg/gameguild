@@ -8,7 +8,7 @@ namespace GameGuild.Learning.Courses;
 /// <summary>
 /// Command handler for ArchiveProgramCommand
 /// </summary>
-public class ArchiveProgramCommandHandler(IApplicationDbContext context, ILogger<ArchiveProgramCommandHandler> logger)
+public sealed class ArchiveProgramCommandHandler(IApplicationDbContext context, ILogger<ArchiveProgramCommandHandler> logger)
     : ICommandHandler<ArchiveProgramCommand, Program>
 {
     public async Task<Program> Handle(ArchiveProgramCommand request, CancellationToken cancellationToken) {

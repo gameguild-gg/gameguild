@@ -4,7 +4,7 @@ using Microsoft.Extensions.Logging;
 namespace GameGuild.Compliance.KYC;
 
 // Command Handlers
-public class SubmitKycVerificationHandler : IRequestHandler<SubmitKycVerificationCommand, Result<UserKycVerification>>
+public sealed class SubmitKycVerificationHandler : IRequestHandler<SubmitKycVerificationCommand, Result<UserKycVerification>>
 {
     private readonly IKycService _kycService;
     private readonly ILogger<SubmitKycVerificationHandler> _logger;
@@ -35,7 +35,7 @@ public class SubmitKycVerificationHandler : IRequestHandler<SubmitKycVerificatio
     }
 }
 
-public class UpdateKycVerificationStatusHandler : IRequestHandler<UpdateKycVerificationStatusCommand, Result<UserKycVerification>>
+public sealed class UpdateKycVerificationStatusHandler : IRequestHandler<UpdateKycVerificationStatusCommand, Result<UserKycVerification>>
 {
     private readonly IKycService _kycService;
     private readonly ILogger<UpdateKycVerificationStatusHandler> _logger;
@@ -65,7 +65,7 @@ public class UpdateKycVerificationStatusHandler : IRequestHandler<UpdateKycVerif
     }
 }
 
-public class UploadKycDocumentHandler : IRequestHandler<UploadKycDocumentCommand, Result<string>>
+public sealed class UploadKycDocumentHandler : IRequestHandler<UploadKycDocumentCommand, Result<string>>
 {
     private readonly IKycService _kycService;
     private readonly ILogger<UploadKycDocumentHandler> _logger;
@@ -95,7 +95,7 @@ public class UploadKycDocumentHandler : IRequestHandler<UploadKycDocumentCommand
     }
 }
 
-public class ProcessKycProviderWebhookHandler : IRequestHandler<ProcessKycProviderWebhookCommand, Result<bool>>
+public sealed class ProcessKycProviderWebhookHandler : IRequestHandler<ProcessKycProviderWebhookCommand, Result<bool>>
 {
     private readonly IKycService _kycService;
     private readonly ILogger<ProcessKycProviderWebhookHandler> _logger;
@@ -125,7 +125,7 @@ public class ProcessKycProviderWebhookHandler : IRequestHandler<ProcessKycProvid
     }
 }
 
-public class DeleteKycVerificationHandler : IRequestHandler<DeleteKycVerificationCommand, Result<bool>>
+public sealed class DeleteKycVerificationHandler : IRequestHandler<DeleteKycVerificationCommand, Result<bool>>
 {
     private readonly IKycRepository _repository;
     private readonly ILogger<DeleteKycVerificationHandler> _logger;
@@ -153,7 +153,7 @@ public class DeleteKycVerificationHandler : IRequestHandler<DeleteKycVerificatio
 }
 
 // Query Handlers
-public class GetKycVerificationByIdHandler : IRequestHandler<GetKycVerificationByIdQuery, Result<UserKycVerification>>
+public sealed class GetKycVerificationByIdHandler : IRequestHandler<GetKycVerificationByIdQuery, Result<UserKycVerification>>
 {
     private readonly IKycService _kycService;
     private readonly ILogger<GetKycVerificationByIdHandler> _logger;
@@ -178,7 +178,7 @@ public class GetKycVerificationByIdHandler : IRequestHandler<GetKycVerificationB
     }
 }
 
-public class GetKycVerificationsByUserIdHandler : IRequestHandler<GetKycVerificationsByUserIdQuery, Result<List<UserKycVerification>>>
+public sealed class GetKycVerificationsByUserIdHandler : IRequestHandler<GetKycVerificationsByUserIdQuery, Result<List<UserKycVerification>>>
 {
     private readonly IKycService _kycService;
     private readonly ILogger<GetKycVerificationsByUserIdHandler> _logger;
@@ -203,7 +203,7 @@ public class GetKycVerificationsByUserIdHandler : IRequestHandler<GetKycVerifica
     }
 }
 
-public class GetLatestKycVerificationHandler : IRequestHandler<GetLatestKycVerificationQuery, Result<UserKycVerification?>>
+public sealed class GetLatestKycVerificationHandler : IRequestHandler<GetLatestKycVerificationQuery, Result<UserKycVerification?>>
 {
     private readonly IKycService _kycService;
     private readonly ILogger<GetLatestKycVerificationHandler> _logger;
@@ -228,7 +228,7 @@ public class GetLatestKycVerificationHandler : IRequestHandler<GetLatestKycVerif
     }
 }
 
-public class IsUserVerifiedHandler : IRequestHandler<IsUserVerifiedQuery, Result<bool>>
+public sealed class IsUserVerifiedHandler : IRequestHandler<IsUserVerifiedQuery, Result<bool>>
 {
     private readonly IKycService _kycService;
     private readonly ILogger<IsUserVerifiedHandler> _logger;
@@ -253,7 +253,7 @@ public class IsUserVerifiedHandler : IRequestHandler<IsUserVerifiedQuery, Result
     }
 }
 
-public class GetKycVerificationsByStatusHandler : IRequestHandler<GetKycVerificationsByStatusQuery, Result<List<UserKycVerification>>>
+public sealed class GetKycVerificationsByStatusHandler : IRequestHandler<GetKycVerificationsByStatusQuery, Result<List<UserKycVerification>>>
 {
     private readonly IKycService _kycService;
     private readonly ILogger<GetKycVerificationsByStatusHandler> _logger;
@@ -278,7 +278,7 @@ public class GetKycVerificationsByStatusHandler : IRequestHandler<GetKycVerifica
     }
 }
 
-public class GetKycComplianceReportHandler : IRequestHandler<GetKycComplianceReportQuery, Result<KycComplianceReportDto>>
+public sealed class GetKycComplianceReportHandler : IRequestHandler<GetKycComplianceReportQuery, Result<KycComplianceReportDto>>
 {
     private readonly IKycService _kycService;
     private readonly ILogger<GetKycComplianceReportHandler> _logger;

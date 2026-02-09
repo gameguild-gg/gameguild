@@ -296,7 +296,7 @@ public class VersioningController : BaseApiController
 
 // ─── DTOs ────────────────────────────────────────────────────────────────────
 
-public record CreateDraftRequest(
+public sealed record CreateDraftRequest(
     Guid EntityId,
     string EntityType,
     string Title,
@@ -307,7 +307,7 @@ public record CreateDraftRequest(
     string? ChangeNotes = null
 );
 
-public record UpdateDraftRequest(
+public sealed record UpdateDraftRequest(
     string? Title = null,
     string? Summary = null,
     string? Body = null,
@@ -315,19 +315,19 @@ public record UpdateDraftRequest(
     string? ChangeNotes = null
 );
 
-public record ReviewRequest(string? ReviewNotes = null);
+public sealed record ReviewRequest(string? ReviewNotes = null);
 
-public record ScheduleRequest(DateTime ScheduledAt);
+public sealed record ScheduleRequest(DateTime ScheduledAt);
 
-public record RollbackRequest(int TargetVersionNumber, string? Reason = null);
+public sealed record RollbackRequest(int TargetVersionNumber, string? Reason = null);
 
-public record AddReviewRequest(
+public sealed record AddReviewRequest(
     ContentReviewDecision Decision,
     string? Feedback = null,
     string? Suggestions = null
 );
 
-public record ContentVersionDto(
+public sealed record ContentVersionDto(
     Guid Id,
     Guid EntityId,
     string EntityType,
@@ -374,7 +374,7 @@ public record ContentVersionDto(
     );
 }
 
-public record ContentVersionReviewDto(
+public sealed record ContentVersionReviewDto(
     Guid Id,
     Guid ContentVersionId,
     Guid ReviewerId,

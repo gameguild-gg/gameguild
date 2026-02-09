@@ -5,17 +5,17 @@ namespace GameGuild.Assets.Commands;
 /// <summary>
 /// Command to report an asset for moderation.
 /// </summary>
-public record ReportAssetCommand(
+public sealed record ReportAssetCommand(
     Guid AssetReferenceId,
     Guid ReportedByUserId,
     ReportReason Reason,
     string? Description = null) : IRequest<ReportAssetResponse?>;
 
-public record ReportAssetResponse(
+public sealed record ReportAssetResponse(
     Guid ReportId,
     ReportStatus Status);
 
-public class ReportAssetValidator : AbstractValidator<ReportAssetCommand>
+public sealed class ReportAssetValidator : AbstractValidator<ReportAssetCommand>
 {
     public ReportAssetValidator()
     {
@@ -26,7 +26,7 @@ public class ReportAssetValidator : AbstractValidator<ReportAssetCommand>
     }
 }
 
-public class ReportAssetHandler : IRequestHandler<ReportAssetCommand, ReportAssetResponse?>
+public sealed class ReportAssetHandler : IRequestHandler<ReportAssetCommand, ReportAssetResponse?>
 {
     private readonly IAssetModerationService _moderationService;
     private readonly IAssetReferenceRepository _referenceRepository;

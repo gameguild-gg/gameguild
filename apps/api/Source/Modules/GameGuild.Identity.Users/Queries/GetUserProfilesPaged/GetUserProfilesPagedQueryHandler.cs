@@ -5,7 +5,7 @@ namespace GameGuild.Identity.Users;
 /// <summary>
 ///     Query handler for getting user profiles with pagination, search, and sorting
 /// </summary>
-public class GetUserProfilesPagedQueryHandler(IUserProfileRepository profileRepository)
+public sealed class GetUserProfilesPagedQueryHandler(IUserProfileRepository profileRepository)
     : IQueryHandler<GetUserProfilesPagedQuery, PagedResult<UserProfileDto>>
 {
     public async Task<PagedResult<UserProfileDto>> Handle(GetUserProfilesPagedQuery request, CancellationToken cancellationToken)

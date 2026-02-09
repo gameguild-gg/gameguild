@@ -4,7 +4,7 @@ namespace GameGuild.Commerce.Subscriptions;
 ///     Command handler for suspending a subscription.
 ///     Uses base handler to reduce boilerplate for fetch/validate/save pattern.
 /// </summary>
-public class SuspendSubscriptionCommandHandler(ISubscriptionRepository subscriptionRepository)
+public sealed class SuspendSubscriptionCommandHandler(ISubscriptionRepository subscriptionRepository)
     : SubscriptionCommandHandlerBase<SuspendSubscriptionCommand>(subscriptionRepository)
 {
     /// <inheritdoc />

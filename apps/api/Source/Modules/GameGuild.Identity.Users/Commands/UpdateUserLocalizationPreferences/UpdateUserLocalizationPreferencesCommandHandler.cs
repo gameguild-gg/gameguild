@@ -5,7 +5,7 @@ namespace GameGuild.Identity.Users;
 /// <summary>
 ///     Command handler for updating user localization preferences
 /// </summary>
-public class UpdateUserLocalizationPreferencesCommandHandler(IUserRepository userRepository, IUserPreferencesRepository preferencesRepository)
+public sealed class UpdateUserLocalizationPreferencesCommandHandler(IUserRepository userRepository, IUserPreferencesRepository preferencesRepository)
     : ICommandHandler<UpdateUserLocalizationPreferencesCommand>
 {
     public async Task<Unit> Handle(UpdateUserLocalizationPreferencesCommand request, CancellationToken cancellationToken)

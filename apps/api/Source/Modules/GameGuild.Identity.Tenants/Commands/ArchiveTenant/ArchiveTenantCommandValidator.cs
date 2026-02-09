@@ -1,11 +1,11 @@
-﻿using FluentValidation;
+using FluentValidation;
 
 namespace GameGuild.Identity.Tenants;
 
 /// <summary>
 ///     Validator for ArchiveTenantCommand
 /// </summary>
-public class ArchiveTenantCommandValidator : AbstractValidator<ArchiveTenantCommand>
+public sealed class ArchiveTenantCommandValidator : AbstractValidator<ArchiveTenantCommand>
 {
     public ArchiveTenantCommandValidator()
     {

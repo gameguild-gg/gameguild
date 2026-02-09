@@ -5,13 +5,13 @@ namespace GameGuild.Assets.Queries;
 /// <summary>
 /// Query to get an asset by ID.
 /// </summary>
-public record GetAssetQuery(
+public sealed record GetAssetQuery(
     Guid AssetReferenceId,
     Guid? UserId,
     Guid? TenantId,
     bool IncludeContentDetails = false) : IRequest<AssetDto?>;
 
-public record AssetDto(
+public sealed record AssetDto(
     Guid Id,
     Guid AssetContentId,
     Guid CreatedByUserId,
@@ -25,7 +25,7 @@ public record AssetDto(
     DateTime? UpdatedAt,
     AssetContentDto? Content);
 
-public record AssetContentDto(
+public sealed record AssetContentDto(
     Guid Id,
     string ContentHash,
     string MimeType,
@@ -35,7 +35,7 @@ public record AssetContentDto(
     VirusScanStatus VirusScanStatus,
     ModerationStatus ModerationStatus);
 
-public class GetAssetValidator : AbstractValidator<GetAssetQuery>
+public sealed class GetAssetValidator : AbstractValidator<GetAssetQuery>
 {
     public GetAssetValidator()
     {
@@ -44,7 +44,7 @@ public class GetAssetValidator : AbstractValidator<GetAssetQuery>
     }
 }
 
-public class GetAssetHandler : IRequestHandler<GetAssetQuery, AssetDto?>
+public sealed class GetAssetHandler : IRequestHandler<GetAssetQuery, AssetDto?>
 {
     private readonly IAssetReferenceRepository _referenceRepository;
     private readonly IAssetAccessService _accessService;

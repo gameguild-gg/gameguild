@@ -3,7 +3,7 @@ using GameGuild.Identity.Authorization;
 
 namespace GameGuild.Identity.Authentication;
 
-public record HasResourcePermissionQuery : IQuery<bool>
+public sealed record HasResourcePermissionQuery : IQuery<bool>
 {
     public Guid UserId { get; init; }
 

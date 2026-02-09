@@ -3,7 +3,7 @@ namespace GameGuild.Identity.Tenants;
 /// <summary>
 ///     Validator for BulkUndeleteTenantsCommand
 /// </summary>
-public class BulkUndeleteTenantsCommandValidator : BulkOperationValidator<BulkUndeleteTenantsCommand>
+public sealed class BulkUndeleteTenantsCommandValidator : BulkOperationValidator<BulkUndeleteTenantsCommand>
 {
     public BulkUndeleteTenantsCommandValidator() { AddCommonRules(); }
 

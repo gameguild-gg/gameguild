@@ -5,7 +5,7 @@ namespace GameGuild.Resources;
 /// <summary>
 ///     Handler for toggling resource quota activation status
 /// </summary>
-public class ToggleResourceQuotaCommandHandler(IResourceQuotaRepository resourceQuotaRepository) : ICommandHandler<ToggleResourceQuotaCommand>
+public sealed class ToggleResourceQuotaCommandHandler(IResourceQuotaRepository resourceQuotaRepository) : ICommandHandler<ToggleResourceQuotaCommand>
 {
     public async Task<Unit> Handle(ToggleResourceQuotaCommand request, CancellationToken cancellationToken)
     {

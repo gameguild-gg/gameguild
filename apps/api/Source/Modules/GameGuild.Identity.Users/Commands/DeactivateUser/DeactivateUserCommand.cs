@@ -1,4 +1,4 @@
-﻿using GameGuild.CQRS;
+using GameGuild.CQRS;
 
 namespace GameGuild.Identity.Users;
 
@@ -6,4 +6,4 @@ namespace GameGuild.Identity.Users;
 ///     Command to deactivate a user
 /// </summary>
 /// <param name="UserId">User's unique identifier</param>
-public record DeactivateUserCommand(Guid UserId) : ICommand<UserDto>;
+public sealed record DeactivateUserCommand(Guid UserId) : ICommand<UserDto>;

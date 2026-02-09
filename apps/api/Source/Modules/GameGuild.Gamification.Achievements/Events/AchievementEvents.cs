@@ -8,7 +8,7 @@ namespace GameGuild.Gamification.Achievements;
 /// <summary>
 /// Event raised when a user earns a new achievement.
 /// </summary>
-public record AchievementEarnedEvent(
+public sealed record AchievementEarnedEvent(
     Guid UserId,
     Guid AchievementId,
     string AchievementName,
@@ -20,7 +20,7 @@ public record AchievementEarnedEvent(
 /// <summary>
 /// Event raised when a user's progress toward an achievement is updated.
 /// </summary>
-public record AchievementProgressUpdatedEvent(
+public sealed record AchievementProgressUpdatedEvent(
     Guid UserId,
     Guid AchievementId,
     int CurrentProgress,
@@ -31,7 +31,7 @@ public record AchievementProgressUpdatedEvent(
 /// <summary>
 /// Event raised when a user reaches a new level in a tiered achievement.
 /// </summary>
-public record AchievementLevelUpEvent(
+public sealed record AchievementLevelUpEvent(
     Guid UserId,
     Guid AchievementId,
     string AchievementName,
@@ -44,7 +44,7 @@ public record AchievementLevelUpEvent(
 /// <summary>
 /// Event raised when a user earns achievement points (for leaderboard updates).
 /// </summary>
-public record AchievementPointsEarnedEvent(
+public sealed record AchievementPointsEarnedEvent(
     Guid UserId,
     int PointsEarned,
     int TotalPoints,
@@ -54,7 +54,7 @@ public record AchievementPointsEarnedEvent(
 /// <summary>
 /// Event raised when an achievement becomes available (e.g., prerequisites met).
 /// </summary>
-public record AchievementUnlockedEvent(
+public sealed record AchievementUnlockedEvent(
     Guid UserId,
     Guid AchievementId,
     string AchievementName,
@@ -64,7 +64,7 @@ public record AchievementUnlockedEvent(
 /// <summary>
 /// Event raised when a new achievement is created by an admin.
 /// </summary>
-public record AchievementCreatedEvent(
+public sealed record AchievementCreatedEvent(
     Guid AchievementId,
     string Name,
     string? Category,
@@ -75,7 +75,7 @@ public record AchievementCreatedEvent(
 /// <summary>
 /// Event raised when an achievement is modified.
 /// </summary>
-public record AchievementModifiedEvent(
+public sealed record AchievementModifiedEvent(
     Guid AchievementId,
     string Name,
     string ChangeDescription,
@@ -85,7 +85,7 @@ public record AchievementModifiedEvent(
 /// <summary>
 /// Event raised for milestone achievements (e.g., "First 100 users to complete").
 /// </summary>
-public record MilestoneAchievementEvent(
+public sealed record MilestoneAchievementEvent(
     Guid UserId,
     Guid AchievementId,
     string AchievementName,

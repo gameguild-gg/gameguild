@@ -5,7 +5,7 @@ namespace GameGuild.Commerce.Products;
 /// <summary>
 /// Query handler for getting a product by ID
 /// </summary>
-public class GetProductByIdQueryHandler(IProductRepository productRepository)
+public sealed class GetProductByIdQueryHandler(IProductRepository productRepository)
     : IQueryHandler<GetProductByIdQuery, ProductDto?>
 {
     public async Task<ProductDto?> Handle(GetProductByIdQuery request, CancellationToken cancellationToken)

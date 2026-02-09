@@ -9,9 +9,9 @@ namespace GameGuild.Identity.Authorization.Queries;
 /// <summary>
 ///     Query to get a SoD rule by ID
 /// </summary>
-public record GetSoDRuleByIdQuery(Guid RuleId) : IQuery<SoDRule?>;
+public sealed record GetSoDRuleByIdQuery(Guid RuleId) : IQuery<SoDRule?>;
 
-public class GetSoDRuleByIdHandler(ISoDService service)
+public sealed class GetSoDRuleByIdHandler(ISoDService service)
     : IQueryHandler<GetSoDRuleByIdQuery, SoDRule?>
 {
     public async Task<SoDRule?> Handle(
@@ -26,9 +26,9 @@ public class GetSoDRuleByIdHandler(ISoDService service)
 /// <summary>
 ///     Query to get SoD rules for a tenant
 /// </summary>
-public record GetSoDRulesQuery(Guid? TenantId) : IQuery<List<SoDRule>>;
+public sealed record GetSoDRulesQuery(Guid? TenantId) : IQuery<List<SoDRule>>;
 
-public class GetSoDRulesHandler(ISoDService service)
+public sealed class GetSoDRulesHandler(ISoDService service)
     : IQueryHandler<GetSoDRulesQuery, List<SoDRule>>
 {
     public async Task<List<SoDRule>> Handle(
@@ -43,9 +43,9 @@ public class GetSoDRulesHandler(ISoDService service)
 /// <summary>
 ///     Query to get active SoD rules for a tenant
 /// </summary>
-public record GetActiveSoDRulesQuery(Guid? TenantId) : IQuery<List<SoDRule>>;
+public sealed record GetActiveSoDRulesQuery(Guid? TenantId) : IQuery<List<SoDRule>>;
 
-public class GetActiveSoDRulesHandler(ISoDService service)
+public sealed class GetActiveSoDRulesHandler(ISoDService service)
     : IQueryHandler<GetActiveSoDRulesQuery, List<SoDRule>>
 {
     public async Task<List<SoDRule>> Handle(
@@ -60,9 +60,9 @@ public class GetActiveSoDRulesHandler(ISoDService service)
 /// <summary>
 ///     Query to detect SoD violations for a user
 /// </summary>
-public record DetectSoDViolationsQuery(Guid UserId, Guid? TenantId) : IQuery<List<SoDViolation>>;
+public sealed record DetectSoDViolationsQuery(Guid UserId, Guid? TenantId) : IQuery<List<SoDViolation>>;
 
-public class DetectSoDViolationsHandler(ISoDService service)
+public sealed class DetectSoDViolationsHandler(ISoDService service)
     : IQueryHandler<DetectSoDViolationsQuery, List<SoDViolation>>
 {
     public async Task<List<SoDViolation>> Handle(
@@ -77,9 +77,9 @@ public class DetectSoDViolationsHandler(ISoDService service)
 /// <summary>
 ///     Query to get SoD violations for a user
 /// </summary>
-public record GetUserSoDViolationsQuery(Guid UserId, Guid? TenantId) : IQuery<List<SoDViolation>>;
+public sealed record GetUserSoDViolationsQuery(Guid UserId, Guid? TenantId) : IQuery<List<SoDViolation>>;
 
-public class GetUserSoDViolationsHandler(ISoDService service)
+public sealed class GetUserSoDViolationsHandler(ISoDService service)
     : IQueryHandler<GetUserSoDViolationsQuery, List<SoDViolation>>
 {
     public async Task<List<SoDViolation>> Handle(
@@ -94,9 +94,9 @@ public class GetUserSoDViolationsHandler(ISoDService service)
 /// <summary>
 ///     Query to get active SoD violations
 /// </summary>
-public record GetActiveSoDViolationsQuery(Guid? TenantId) : IQuery<List<SoDViolation>>;
+public sealed record GetActiveSoDViolationsQuery(Guid? TenantId) : IQuery<List<SoDViolation>>;
 
-public class GetActiveSoDViolationsHandler(ISoDService service)
+public sealed class GetActiveSoDViolationsHandler(ISoDService service)
     : IQueryHandler<GetActiveSoDViolationsQuery, List<SoDViolation>>
 {
     public async Task<List<SoDViolation>> Handle(

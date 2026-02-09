@@ -5,7 +5,7 @@ namespace GameGuild.Identity.Tenants;
 /// <summary>
 ///     Handler for searching tenants
 /// </summary>
-public class SearchTenantsQueryHandler(ITenantRepository tenantRepository) : IQueryHandler<SearchTenantsQuery, IEnumerable<Tenant>>
+public sealed class SearchTenantsQueryHandler(ITenantRepository tenantRepository) : IQueryHandler<SearchTenantsQuery, IEnumerable<Tenant>>
 {
     public async Task<IEnumerable<Tenant>> Handle(SearchTenantsQuery request, CancellationToken cancellationToken)
     {

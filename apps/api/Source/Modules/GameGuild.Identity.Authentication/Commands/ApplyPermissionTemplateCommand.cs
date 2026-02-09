@@ -1,8 +1,8 @@
-﻿using GameGuild.CQRS;
+using GameGuild.CQRS;
 
 namespace GameGuild.Identity.Authentication;
 
-public record ApplyPermissionTemplateCommand : ICommand<ApplyPermissionTemplateResult>
+public sealed record ApplyPermissionTemplateCommand : ICommand<ApplyPermissionTemplateResult>
 {
     public Guid UserId { get; init; }
 

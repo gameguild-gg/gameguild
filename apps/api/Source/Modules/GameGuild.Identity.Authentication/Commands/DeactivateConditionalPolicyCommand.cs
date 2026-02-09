@@ -1,8 +1,8 @@
-﻿using GameGuild.CQRS;
+using GameGuild.CQRS;
 
 namespace GameGuild.Identity.Authentication;
 
-public record DeactivateConditionalPolicyCommand : ICommand
+public sealed record DeactivateConditionalPolicyCommand : ICommand
 {
     public Guid PolicyId { get; init; }
 }

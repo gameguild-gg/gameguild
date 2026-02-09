@@ -8,7 +8,7 @@ namespace GameGuild.TestingLab;
 ///     Command to create a new testing session
 /// </summary>
 [RequiresQuota(ResourceUsageType.TestingSessions, Source = "CreateTestingSession")]
-public record CreateTestingSessionCommand(
+public sealed record CreateTestingSessionCommand(
   Guid TestingRequestId,
   string Title,
   string? Description,

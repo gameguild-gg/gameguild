@@ -5,7 +5,7 @@ namespace GameGuild.Identity.Users;
 /// <summary>
 ///     Validator for BulkDeactivateUsersCommand
 /// </summary>
-public class BulkDeactivateUsersCommandValidator : AbstractValidator<BulkDeactivateUsersCommand>
+public sealed class BulkDeactivateUsersCommandValidator : AbstractValidator<BulkDeactivateUsersCommand>
 {
     public BulkDeactivateUsersCommandValidator()
     {

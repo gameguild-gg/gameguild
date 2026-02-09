@@ -25,7 +25,7 @@ public interface ISecureUploadService
 /// <summary>
 /// Result of a secure upload operation.
 /// </summary>
-public record SecureUploadResult(
+public sealed record SecureUploadResult(
     bool Success,
     Guid? AssetReferenceId,
     Guid? AssetContentId,

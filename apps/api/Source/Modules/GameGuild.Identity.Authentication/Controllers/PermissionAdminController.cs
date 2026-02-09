@@ -153,4 +153,4 @@ public class PermissionAdminController(IMediator mediator, ILogger<PermissionAdm
 /// <summary>
 ///     Request body for applying a permission template
 /// </summary>
-public record ApplyPermissionTemplateRequest(Guid UserId, Guid? TenantId = null);
+public sealed record ApplyPermissionTemplateRequest(Guid UserId, Guid? TenantId = null);

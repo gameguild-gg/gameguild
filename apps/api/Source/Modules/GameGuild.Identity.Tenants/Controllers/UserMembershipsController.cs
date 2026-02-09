@@ -88,7 +88,7 @@ public sealed class UserMembershipsController(ISender sender) : BaseApiControlle
 /// <summary>
 ///     Response containing membership count
 /// </summary>
-public record MembershipCountResponse
+public sealed record MembershipCountResponse
 {
     /// <summary>
     ///     Number of active memberships

@@ -5,7 +5,7 @@ namespace GameGuild.Commerce.Subscriptions;
 /// <summary>
 ///     Command to perform a full update on a subscription plan
 /// </summary>
-public record FullUpdateSubscriptionPlanCommand(
+public sealed record FullUpdateSubscriptionPlanCommand(
     Guid PlanId,
     string Name,
     string Slug,

@@ -8,7 +8,7 @@ namespace GameGuild.Commerce.Billing;
 ///     Handler for ProcessApplePayWebhookCommand.
 ///     Delegates to ApplePayBillingWebhookService for actual processing.
 /// </summary>
-public class ProcessApplePayWebhookCommandHandler(
+public sealed class ProcessApplePayWebhookCommandHandler(
     ApplePayBillingWebhookService applePayWebhookService,
     ILogger<ProcessApplePayWebhookCommandHandler> logger
 ) : ICommandHandler<ProcessApplePayWebhookCommand, WebhookProcessingResult>

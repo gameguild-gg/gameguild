@@ -7,7 +7,7 @@ namespace GameGuild.Monitoring.SLA;
 /// <summary>
 ///     Handler for retrieving SLO violations with filtering.
 /// </summary>
-public class GetSloViolationsQueryHandler(ISloViolationRepository violationRepository, IServiceLevelObjectiveRepository sloRepository) : IQueryHandler<GetSloViolationsQuery, List<SloViolationDto>>
+public sealed class GetSloViolationsQueryHandler(ISloViolationRepository violationRepository, IServiceLevelObjectiveRepository sloRepository) : IQueryHandler<GetSloViolationsQuery, List<SloViolationDto>>
 {
     private readonly IServiceLevelObjectiveRepository _sloRepository = sloRepository;
 

@@ -3,7 +3,7 @@ using GameGuild.Identity.Authorization;
 
 namespace GameGuild.Identity.Authentication;
 
-public record ResolvePermissionHierarchyQuery : IQuery<PermissionHierarchyResult>
+public sealed record ResolvePermissionHierarchyQuery : IQuery<PermissionHierarchyResult>
 {
     public Guid UserId { get; init; }
 

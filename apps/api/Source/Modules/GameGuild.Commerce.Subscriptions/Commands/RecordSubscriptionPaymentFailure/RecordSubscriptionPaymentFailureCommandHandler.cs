@@ -1,10 +1,10 @@
-﻿namespace GameGuild.Commerce.Subscriptions;
+namespace GameGuild.Commerce.Subscriptions;
 
 /// <summary>
 ///     Handler for recording subscription payment failures.
 ///     Uses base handler to reduce boilerplate for fetch/validate/save pattern.
 /// </summary>
-public class RecordSubscriptionPaymentFailureCommandHandler(ISubscriptionRepository subscriptionRepository)
+public sealed class RecordSubscriptionPaymentFailureCommandHandler(ISubscriptionRepository subscriptionRepository)
     : SubscriptionCommandHandlerBase<RecordSubscriptionPaymentFailureCommand>(subscriptionRepository)
 {
     /// <inheritdoc />

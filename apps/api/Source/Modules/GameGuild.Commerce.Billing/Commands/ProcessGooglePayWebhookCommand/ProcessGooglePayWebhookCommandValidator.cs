@@ -2,7 +2,7 @@ using FluentValidation;
 
 namespace GameGuild.Commerce.Billing;
 
-public class ProcessGooglePayWebhookCommandValidator : AbstractValidator<ProcessGooglePayWebhookCommand>
+public sealed class ProcessGooglePayWebhookCommandValidator : AbstractValidator<ProcessGooglePayWebhookCommand>
 {
     public ProcessGooglePayWebhookCommandValidator()
     {

@@ -1,8 +1,8 @@
-﻿using GameGuild.CQRS;
+using GameGuild.CQRS;
 
 namespace GameGuild.Identity.Authentication;
 
-public record ValidateAbacPolicyCommand : ICommand<AbacPolicyValidationResult>
+public sealed record ValidateAbacPolicyCommand : ICommand<AbacPolicyValidationResult>
 {
     public string JsonExpression { get; init; } = string.Empty;
 

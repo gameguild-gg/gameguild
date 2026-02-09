@@ -5,7 +5,7 @@ namespace GameGuild.Identity.Authentication;
 /// <summary>
 ///     Validator for RefreshTokenCommand
 /// </summary>
-public class RefreshTokenCommandValidator : AbstractValidator<RefreshTokenCommand>
+public sealed class RefreshTokenCommandValidator : AbstractValidator<RefreshTokenCommand>
 {
     public RefreshTokenCommandValidator()
     {

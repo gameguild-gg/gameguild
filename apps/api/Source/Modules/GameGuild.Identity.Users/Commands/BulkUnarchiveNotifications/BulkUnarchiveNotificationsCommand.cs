@@ -7,4 +7,4 @@ namespace GameGuild.Identity.Users;
 /// </summary>
 /// <param name="UserId">User identifier</param>
 /// <param name="NotificationIds">List of notification IDs to unarchive</param>
-public record BulkUnarchiveNotificationsCommand(Guid UserId, List<Guid> NotificationIds) : ICommand;
+public sealed record BulkUnarchiveNotificationsCommand(Guid UserId, List<Guid> NotificationIds) : ICommand;

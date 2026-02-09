@@ -5,7 +5,7 @@ namespace GameGuild.Identity.Users;
 /// <summary>
 ///     Command handler for unarchiving a notification
 /// </summary>
-public class UnarchiveNotificationCommandHandler(IUserRepository userRepository, IUserNotificationRepository notificationRepository)
+public sealed class UnarchiveNotificationCommandHandler(IUserRepository userRepository, IUserNotificationRepository notificationRepository)
     : ICommandHandler<UnarchiveNotificationCommand>
 {
     public async Task<Unit> Handle(UnarchiveNotificationCommand request, CancellationToken cancellationToken)

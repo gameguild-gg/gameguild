@@ -5,7 +5,7 @@ namespace GameGuild.Commerce.Subscriptions;
 /// <summary>
 ///     Validator for UpdateSubscriptionMetadataCommand
 /// </summary>
-public class UpdateSubscriptionMetadataCommandValidator : AbstractValidator<UpdateSubscriptionMetadataCommand>
+public sealed class UpdateSubscriptionMetadataCommandValidator : AbstractValidator<UpdateSubscriptionMetadataCommand>
 {
     public UpdateSubscriptionMetadataCommandValidator()
     {

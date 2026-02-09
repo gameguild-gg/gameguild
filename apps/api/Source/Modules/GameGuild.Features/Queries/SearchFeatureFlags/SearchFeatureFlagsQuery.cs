@@ -4,7 +4,7 @@ namespace GameGuild.Features;
 /// <summary>
 ///     Query to search feature flags
 /// </summary>
-public record SearchFeatureFlagsQuery : CQRS.IQuery<PagedResult<FeatureFlagDto>>
+public sealed record SearchFeatureFlagsQuery : CQRS.IQuery<PagedResult<FeatureFlagDto>>
 {
     public string? SearchTerm { get; init; }
 

@@ -340,7 +340,7 @@ public class FollowersController : BaseApiController
 
 #region DTOs
 
-public record FollowDto(
+public sealed record FollowDto(
     Guid Id,
     Guid FollowerId,
     Guid FollowedEntityId,
@@ -348,7 +348,7 @@ public record FollowDto(
     bool NotificationsEnabled,
     DateTime FollowedAt);
 
-public record FollowPrivacySettingsDto(
+public sealed record FollowPrivacySettingsDto(
     Guid Id,
     Guid UserId,
     bool IsFollowerListPublic,
@@ -358,14 +358,14 @@ public record FollowPrivacySettingsDto(
     bool ShowFollowerCount,
     bool ShowFollowingCount);
 
-public record BlockDto(
+public sealed record BlockDto(
     Guid Id,
     Guid BlockerId,
     Guid BlockedId,
     string? Reason,
     DateTime BlockedAt);
 
-public record MuteDto(
+public sealed record MuteDto(
     Guid Id,
     Guid MuterId,
     Guid MutedId,
@@ -373,13 +373,13 @@ public record MuteDto(
     DateTime MutedAt,
     DateTime? ExpiresAt);
 
-public record FollowRequest(Guid EntityId, string EntityType, bool NotificationsEnabled = true);
-public record UpdateNotificationsRequest(Guid EntityId, string EntityType, bool NotificationsEnabled);
-public record BlockRequest(Guid BlockedUserId, string? Reason = null);
-public record MuteRequest(Guid MutedUserId, string? Reason = null, DateTime? ExpiresAt = null);
-public record BatchStatusRequest(IEnumerable<Guid> EntityIds, string EntityType);
-public record BatchCountsRequest(IEnumerable<Guid> EntityIds, string EntityType);
-public record UpdatePrivacySettingsRequest(
+public sealed record FollowRequest(Guid EntityId, string EntityType, bool NotificationsEnabled = true);
+public sealed record UpdateNotificationsRequest(Guid EntityId, string EntityType, bool NotificationsEnabled);
+public sealed record BlockRequest(Guid BlockedUserId, string? Reason = null);
+public sealed record MuteRequest(Guid MutedUserId, string? Reason = null, DateTime? ExpiresAt = null);
+public sealed record BatchStatusRequest(IEnumerable<Guid> EntityIds, string EntityType);
+public sealed record BatchCountsRequest(IEnumerable<Guid> EntityIds, string EntityType);
+public sealed record UpdatePrivacySettingsRequest(
     bool IsFollowerListPublic,
     bool IsFollowingListPublic,
     bool AllowFollowers,

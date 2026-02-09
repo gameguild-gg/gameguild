@@ -1,5 +1,5 @@
-﻿using GameGuild.CQRS;
+using GameGuild.CQRS;
 
 namespace GameGuild.Identity.Authentication;
 
-public record GetPermissionTemplatesQuery : IQuery<IEnumerable<PermissionTemplateDto>> { }
+public sealed record GetPermissionTemplatesQuery : IQuery<IEnumerable<PermissionTemplateDto>> { }

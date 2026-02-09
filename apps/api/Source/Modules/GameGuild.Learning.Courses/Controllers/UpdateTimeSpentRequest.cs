@@ -1,7 +1,7 @@
 
 ﻿namespace GameGuild.Learning.Courses;
 
-public record UpdateTimeSpentRequest(Guid ProgramUserId, Guid ContentId, int AdditionalMinutes) {
+public sealed record UpdateTimeSpentRequest(Guid ProgramUserId, Guid ContentId, int AdditionalMinutes) {
   public Guid ProgramUserId { get; init; } = ProgramUserId;
 
   public Guid ContentId { get; init; } = ContentId;

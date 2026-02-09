@@ -5,7 +5,7 @@ namespace GameGuild.Commerce.Subscriptions;
 /// <summary>
 ///     Query handler for getting subscription by ID
 /// </summary>
-public class GetSubscriptionByIdQueryHandler(ISubscriptionRepository subscriptionRepository) : IQueryHandler<GetSubscriptionByIdQuery, Subscription?>
+public sealed class GetSubscriptionByIdQueryHandler(ISubscriptionRepository subscriptionRepository) : IQueryHandler<GetSubscriptionByIdQuery, Subscription?>
 {
     public async Task<Subscription?> Handle(GetSubscriptionByIdQuery request, CancellationToken cancellationToken)
     {

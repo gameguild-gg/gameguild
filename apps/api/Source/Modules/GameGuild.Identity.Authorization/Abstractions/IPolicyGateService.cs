@@ -112,7 +112,7 @@ public record PolicyGateContext
 /// <summary>
 ///     Result of policy gate evaluation.
 /// </summary>
-public record PolicyGateResult
+public sealed record PolicyGateResult
 {
     /// <summary>
     ///     Whether all gates passed (access allowed to proceed to permission check).

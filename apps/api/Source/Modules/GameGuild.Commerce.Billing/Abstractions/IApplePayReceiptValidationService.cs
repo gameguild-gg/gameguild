@@ -33,7 +33,7 @@ public interface IApplePayReceiptValidationService
 /// <summary>
 ///     Result of Apple receipt validation.
 /// </summary>
-public record AppleReceiptValidationResult(
+public sealed record AppleReceiptValidationResult(
     bool IsValid,
     string? TransactionId,
     string? ProductId,
@@ -59,7 +59,7 @@ public record AppleReceiptValidationResult(
 /// <summary>
 ///     Result of Apple notification verification.
 /// </summary>
-public record AppleNotificationVerificationResult(
+public sealed record AppleNotificationVerificationResult(
     bool IsValid,
     string? NotificationType,
     string? Subtype,

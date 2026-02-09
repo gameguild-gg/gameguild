@@ -12,7 +12,7 @@ namespace GameGuild.Learning.Courses;
 /// Query handlers for Program statistics (single, global, creator) and discovery
 /// operations (popular, recent, featured, recommended).
 /// </summary>
-public class ProgramStatisticsAndDiscoveryQueryHandlers(IApplicationDbContext context, ILogger<ProgramStatisticsAndDiscoveryQueryHandlers> logger) : IRequestHandler<GetProgramStatisticsQuery, ProgramStatistics>,
+public sealed class ProgramStatisticsAndDiscoveryQueryHandlers(IApplicationDbContext context, ILogger<ProgramStatisticsAndDiscoveryQueryHandlers> logger) : IRequestHandler<GetProgramStatisticsQuery, ProgramStatistics>,
                                                                                                                                                       IRequestHandler<GetGlobalProgramStatisticsQuery, GlobalProgramStatistics>,
                                                                                                                                                       IRequestHandler<GetCreatorProgramStatisticsQuery, CreatorProgramStatistics>,
                                                                                                                                                       IRequestHandler<GetPopularProgramsQuery, IEnumerable<Program>>,

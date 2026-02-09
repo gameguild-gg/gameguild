@@ -177,7 +177,7 @@ public interface IRbacPermissionResolver
 ///     Contains both allowed and denied permissions from all resolved roles.
 ///     Caller should apply DENY-WINS semantics: EffectivePermissions = Permissions - DenyPermissions
 /// </remarks>
-public record RbacResolutionResult(
+public sealed record RbacResolutionResult(
     IReadOnlySet<string> Permissions,
     IReadOnlySet<string> DenyPermissions,
     IReadOnlyList<RoleContribution> RoleContributions);

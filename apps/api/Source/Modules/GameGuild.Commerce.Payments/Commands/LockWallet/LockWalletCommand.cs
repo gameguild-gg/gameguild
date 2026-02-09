@@ -7,4 +7,4 @@ namespace GameGuild.Commerce.Payments;
 /// </summary>
 /// <param name="UserId">User unique identifier</param>
 /// <param name="Reason">Reason for locking the wallet</param>
-public record LockWalletCommand(Guid UserId, string Reason) : ICommand;
+public sealed record LockWalletCommand(Guid UserId, string Reason) : ICommand;

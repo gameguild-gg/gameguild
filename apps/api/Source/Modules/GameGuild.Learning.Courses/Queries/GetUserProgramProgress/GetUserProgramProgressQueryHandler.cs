@@ -8,7 +8,7 @@ namespace GameGuild.Learning.Courses;
 /// Query handler for GetUserProgramProgressQuery
 /// Gets detailed progress information for a user in a specific program
 /// </summary>
-public class GetUserProgramProgressQueryHandler(
+public sealed class GetUserProgramProgressQueryHandler(
     IApplicationDbContext context,
     ILogger<GetUserProgramProgressQueryHandler> logger)
     : IQueryHandler<GetUserProgramProgressQuery, ProgramUserProgress?>

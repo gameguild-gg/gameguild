@@ -2,7 +2,7 @@ using GameGuild.CQRS;
 
 namespace GameGuild.Identity.Users;
 
-public class ReplaceUserNotificationPreferencesCommandHandler(IUserRepository userRepository, IUserPreferencesRepository preferencesRepository) : ICommandHandler<ReplaceUserNotificationPreferencesCommand>
+public sealed class ReplaceUserNotificationPreferencesCommandHandler(IUserRepository userRepository, IUserPreferencesRepository preferencesRepository) : ICommandHandler<ReplaceUserNotificationPreferencesCommand>
 {
     public async Task<Unit> Handle(ReplaceUserNotificationPreferencesCommand request, CancellationToken cancellationToken)
     {

@@ -121,7 +121,7 @@ public interface IOrderService
 /// <summary>
 /// Request to update an order
 /// </summary>
-public record UpdateOrderRequest(
+public sealed record UpdateOrderRequest(
     string? Currency = null,
     string? Notes = null,
     Dictionary<string, string>? Metadata = null);
@@ -129,7 +129,7 @@ public record UpdateOrderRequest(
 /// <summary>
 /// Request to create a new order
 /// </summary>
-public record CreateOrderRequest(
+public sealed record CreateOrderRequest(
     Guid UserId,
     string IdempotencyKey,
     string Currency = "USD",

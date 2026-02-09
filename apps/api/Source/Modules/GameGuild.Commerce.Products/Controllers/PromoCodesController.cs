@@ -324,7 +324,7 @@ public class PromoCodesController(IMediator mediator) : BaseApiController
 /// <summary>
 /// Request to create a promo code
 /// </summary>
-public record CreatePromoCodeRequest(
+public sealed record CreatePromoCodeRequest(
     string Code,
     string Name,
     string? Description = null,
@@ -346,7 +346,7 @@ public record CreatePromoCodeRequest(
 /// <summary>
 /// Request to update a promo code
 /// </summary>
-public record UpdatePromoCodeRequest(
+public sealed record UpdatePromoCodeRequest(
     string? Name = null,
     string? Description = null,
     PromoCodeType? Type = null,
@@ -367,7 +367,7 @@ public record UpdatePromoCodeRequest(
 /// <summary>
 /// Request to partially update a promo code (PATCH)
 /// </summary>
-public record PatchPromoCodeRequest(
+public sealed record PatchPromoCodeRequest(
     string? Name = null,
     string? Description = null,
     PromoCodeType? Type = null,
@@ -388,7 +388,7 @@ public record PatchPromoCodeRequest(
 /// <summary>
 /// Request to validate a promo code
 /// </summary>
-public record ValidatePromoCodeRequest(
+public sealed record ValidatePromoCodeRequest(
     string Code,
     decimal OrderAmount,
     Guid? ProductId = null
@@ -397,7 +397,7 @@ public record ValidatePromoCodeRequest(
 /// <summary>
 /// Request to apply promo codes
 /// </summary>
-public record ApplyPromoCodesRequest(
+public sealed record ApplyPromoCodesRequest(
     decimal OrderAmount,
     List<string> PromoCodes,
     Guid? ProductId = null

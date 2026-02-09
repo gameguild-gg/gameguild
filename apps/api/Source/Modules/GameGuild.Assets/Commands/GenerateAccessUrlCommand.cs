@@ -5,20 +5,20 @@ namespace GameGuild.Assets.Commands;
 /// <summary>
 /// Command to generate an access URL for an asset.
 /// </summary>
-public record GenerateAccessUrlCommand(
+public sealed record GenerateAccessUrlCommand(
     Guid AssetReferenceId,
     Guid? UserId,
     Guid? TenantId,
     TransformationSpec? Transformation = null,
     bool DirectStorageUrl = false) : IRequest<GenerateAccessUrlResponse?>;
 
-public record GenerateAccessUrlResponse(
+public sealed record GenerateAccessUrlResponse(
     string Url,
     string? Token,
     DateTimeOffset ExpiresAt,
     string MimeType);
 
-public class GenerateAccessUrlValidator : AbstractValidator<GenerateAccessUrlCommand>
+public sealed class GenerateAccessUrlValidator : AbstractValidator<GenerateAccessUrlCommand>
 {
     public GenerateAccessUrlValidator()
     {
@@ -27,7 +27,7 @@ public class GenerateAccessUrlValidator : AbstractValidator<GenerateAccessUrlCom
     }
 }
 
-public class GenerateAccessUrlHandler : IRequestHandler<GenerateAccessUrlCommand, GenerateAccessUrlResponse?>
+public sealed class GenerateAccessUrlHandler : IRequestHandler<GenerateAccessUrlCommand, GenerateAccessUrlResponse?>
 {
     private readonly IAssetAccessService _accessService;
 

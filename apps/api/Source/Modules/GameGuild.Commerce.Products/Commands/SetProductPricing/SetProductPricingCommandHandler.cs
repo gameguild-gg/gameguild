@@ -6,7 +6,7 @@ namespace GameGuild.Commerce.Products;
 /// <summary>
 /// Handler for setting product pricing with immutable price versioning
 /// </summary>
-public class SetProductPricingCommandHandler(
+public sealed class SetProductPricingCommandHandler(
     IProductRepository productRepository,
     IApplicationDbContext dbContext)
     : ICommandHandler<SetProductPricingCommand, ProductPricingDto>

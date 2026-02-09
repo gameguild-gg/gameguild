@@ -6,4 +6,4 @@ namespace GameGuild.Commerce.Payments.Queries.GetWalletAuditLog;
 /// <summary>
 ///     Query to get wallet audit log
 /// </summary>
-public record GetWalletAuditLogQuery(Guid WalletId, int Page, int PageSize) : IQuery<WalletAuditLogResponse>;
+public sealed record GetWalletAuditLogQuery(Guid WalletId, int Page, int PageSize) : IQuery<WalletAuditLogResponse>;

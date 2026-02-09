@@ -5,7 +5,7 @@ namespace GameGuild.Identity.Authentication;
 /// <summary>
 ///     Validator for LocalSignInCommand following CQRS and DRY principles
 /// </summary>
-public class LocalSignInCommandValidator : AbstractValidator<LocalSignInCommand>
+public sealed class LocalSignInCommandValidator : AbstractValidator<LocalSignInCommand>
 {
     public LocalSignInCommandValidator()
     {

@@ -1,9 +1,9 @@
-﻿using GameGuild.Identity.Authorization;
+using GameGuild.Identity.Authorization;
 using GameGuild.CQRS;
 
 namespace GameGuild.Identity.Authentication;
 
-public record CreateAbacPolicyFromTemplateCommand : ICommand<AbacPolicy>
+public sealed record CreateAbacPolicyFromTemplateCommand : ICommand<AbacPolicy>
 {
     public Guid TemplateId { get; set; }
 

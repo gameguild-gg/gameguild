@@ -48,7 +48,7 @@ public abstract class NotificationHandlerExecutor
 ///     into the abstract <see cref="NotificationHandlerExecutor" /> contract.
 /// </summary>
 /// <typeparam name="TNotification">Notification type</typeparam>
-public class NotificationHandlerExecutorAdapter<TNotification> : NotificationHandlerExecutor where TNotification : INotification
+public sealed class NotificationHandlerExecutorAdapter<TNotification> : NotificationHandlerExecutor where TNotification : INotification
 {
     private readonly INotificationHandler<TNotification> _handler;
 

@@ -5,7 +5,7 @@ namespace GameGuild.Identity.Users;
 /// <summary>
 ///     Command handler for marking multiple notifications as unread
 /// </summary>
-public class BulkMarkNotificationsAsUnreadCommandHandler(IUserNotificationRepository notificationRepository)
+public sealed class BulkMarkNotificationsAsUnreadCommandHandler(IUserNotificationRepository notificationRepository)
     : ICommandHandler<BulkMarkNotificationsAsUnreadCommand>
 {
     public async Task<Unit> Handle(BulkMarkNotificationsAsUnreadCommand request, CancellationToken cancellationToken)

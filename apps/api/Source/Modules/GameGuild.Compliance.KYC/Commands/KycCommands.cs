@@ -3,7 +3,7 @@ using GameGuild.CQRS;
 namespace GameGuild.Compliance.KYC;
 
 // Commands
-public record SubmitKycVerificationCommand(
+public sealed record SubmitKycVerificationCommand(
     Guid UserId,
     KycProvider Provider,
     string VerificationLevel,
@@ -11,53 +11,53 @@ public record SubmitKycVerificationCommand(
     string? DocumentCountry
 ) : IRequest<Result<UserKycVerification>>;
 
-public record UpdateKycVerificationStatusCommand(
+public sealed record UpdateKycVerificationStatusCommand(
     Guid VerificationId,
     KycVerificationStatus Status,
     string? Notes,
     DateTime? CompletedAt
 ) : IRequest<Result<UserKycVerification>>;
 
-public record UploadKycDocumentCommand(
+public sealed record UploadKycDocumentCommand(
     Guid VerificationId,
     string DocumentType,
     Stream DocumentStream,
     string FileName
 ) : IRequest<Result<string>>;
 
-public record ProcessKycProviderWebhookCommand(
+public sealed record ProcessKycProviderWebhookCommand(
     KycProvider Provider,
     string ExternalVerificationId,
     KycVerificationStatus Status,
     string? ProviderData
 ) : IRequest<Result<bool>>;
 
-public record DeleteKycVerificationCommand(
+public sealed record DeleteKycVerificationCommand(
     Guid VerificationId
 ) : IRequest<Result<bool>>;
 
 // Queries
-public record GetKycVerificationByIdQuery(
+public sealed record GetKycVerificationByIdQuery(
     Guid VerificationId
 ) : IRequest<Result<UserKycVerification>>;
 
-public record GetKycVerificationsByUserIdQuery(
+public sealed record GetKycVerificationsByUserIdQuery(
     Guid UserId
 ) : IRequest<Result<List<UserKycVerification>>>;
 
-public record GetLatestKycVerificationQuery(
+public sealed record GetLatestKycVerificationQuery(
     Guid UserId
 ) : IRequest<Result<UserKycVerification?>>;
 
-public record IsUserVerifiedQuery(
+public sealed record IsUserVerifiedQuery(
     Guid UserId
 ) : IRequest<Result<bool>>;
 
-public record GetKycVerificationsByStatusQuery(
+public sealed record GetKycVerificationsByStatusQuery(
     KycVerificationStatus Status
 ) : IRequest<Result<List<UserKycVerification>>>;
 
-public record GetKycComplianceReportQuery(
+public sealed record GetKycComplianceReportQuery(
     DateTime StartDate,
     DateTime EndDate
 ) : IRequest<Result<KycComplianceReportDto>>;

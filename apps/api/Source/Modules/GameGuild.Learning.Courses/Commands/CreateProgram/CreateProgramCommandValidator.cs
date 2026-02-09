@@ -3,7 +3,7 @@ using FluentValidation;
 namespace GameGuild.Learning.Courses;
 
 /// <summary> Validator for CreateProgramCommand </summary>
-public class CreateProgramCommandValidator : AbstractValidator<CreateProgramCommand> {
+public sealed class CreateProgramCommandValidator : AbstractValidator<CreateProgramCommand> {
     public CreateProgramCommandValidator() {
         RuleFor(x => x.Title)
           .NotEmpty().WithMessage("Program title is required")

@@ -9,7 +9,7 @@ namespace GameGuild.Commerce.Products;
 /// <param name="OrderAmount">The order amount</param>
 /// <param name="ProductId">Optional product ID</param>
 /// <param name="UserId">Optional user ID</param>
-public record ValidatePromoCodeCommand(
+public sealed record ValidatePromoCodeCommand(
     string Code,
     decimal OrderAmount,
     Guid? ProductId = null,

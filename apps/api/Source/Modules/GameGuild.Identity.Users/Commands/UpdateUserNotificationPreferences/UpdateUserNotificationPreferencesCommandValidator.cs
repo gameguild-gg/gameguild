@@ -2,7 +2,7 @@ using FluentValidation;
 
 namespace GameGuild.Identity.Users;
 
-public class UpdateUserNotificationPreferencesCommandValidator : AbstractValidator<UpdateUserNotificationPreferencesCommand>
+public sealed class UpdateUserNotificationPreferencesCommandValidator : AbstractValidator<UpdateUserNotificationPreferencesCommand>
 {
     public UpdateUserNotificationPreferencesCommandValidator()
     {

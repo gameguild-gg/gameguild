@@ -19,7 +19,7 @@ namespace GameGuild.Commerce.Payments;
 ///         when more complex payment querying is required beyond ledger entries.
 ///     </para>
 /// </remarks>
-public class GetAllPaymentsQueryHandler : IQueryHandler<GetAllPaymentsQuery, IEnumerable<PaymentResult>>
+public sealed class GetAllPaymentsQueryHandler : IQueryHandler<GetAllPaymentsQuery, IEnumerable<PaymentResult>>
 {
     public Task<IEnumerable<PaymentResult>> Handle(GetAllPaymentsQuery request, CancellationToken cancellationToken)
     {

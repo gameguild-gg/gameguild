@@ -8,7 +8,7 @@ namespace GameGuild.Learning.Courses;
 /// Query handler for GetProgramStatisticsQuery
 /// Calculates statistics for a specific program
 /// </summary>
-public class GetProgramStatisticsQueryHandler(
+public sealed class GetProgramStatisticsQueryHandler(
     IApplicationDbContext context,
     ILogger<GetProgramStatisticsQueryHandler> logger)
     : IQueryHandler<GetProgramStatisticsQuery, ProgramStatistics>

@@ -6,7 +6,7 @@ namespace GameGuild.Identity.Tenants;
 ///     Command to update multiple tenants at once
 /// </summary>
 /// <param name="Updates">Collection of tenant updates</param>
-public record BulkUpdateTenantsCommand(IEnumerable<BulkUpdateTenantItem> Updates) : ICommand<BulkOperationResponse>;
+public sealed record BulkUpdateTenantsCommand(IEnumerable<BulkUpdateTenantItem> Updates) : ICommand<BulkOperationResponse>;
 
 /// <summary>
 ///     Data for a single tenant update in a bulk operation

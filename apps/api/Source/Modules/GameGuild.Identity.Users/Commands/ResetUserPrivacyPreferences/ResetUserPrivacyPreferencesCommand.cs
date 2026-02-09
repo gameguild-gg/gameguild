@@ -2,4 +2,4 @@ using GameGuild.CQRS;
 
 namespace GameGuild.Identity.Users;
 
-public record ResetUserPrivacyPreferencesCommand(Guid UserId) : ICommand;
+public sealed record ResetUserPrivacyPreferencesCommand(Guid UserId) : ICommand;

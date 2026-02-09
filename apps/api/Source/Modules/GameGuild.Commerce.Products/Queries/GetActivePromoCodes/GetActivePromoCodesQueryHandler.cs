@@ -5,7 +5,7 @@ namespace GameGuild.Commerce.Products;
 /// <summary>
 /// Handler for getting active promo codes
 /// </summary>
-public class GetActivePromoCodesQueryHandler(IPromoCodeRepository promoCodeRepository)
+public sealed class GetActivePromoCodesQueryHandler(IPromoCodeRepository promoCodeRepository)
     : IQueryHandler<GetActivePromoCodesQuery, IReadOnlyList<PromoCodeDto>>
 {
     public async Task<IReadOnlyList<PromoCodeDto>> Handle(

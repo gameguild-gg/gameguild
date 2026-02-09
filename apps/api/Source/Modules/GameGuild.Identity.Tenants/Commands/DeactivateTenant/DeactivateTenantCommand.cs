@@ -6,4 +6,4 @@ namespace GameGuild.Identity.Tenants;
 ///     Command to deactivate a tenant
 /// </summary>
 /// <param name="TenantId">Tenant unique identifier</param>
-public record DeactivateTenantCommand(Guid TenantId) : ICommand;
+public sealed record DeactivateTenantCommand(Guid TenantId) : ICommand;

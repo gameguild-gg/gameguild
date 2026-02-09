@@ -1,6 +1,6 @@
 namespace GameGuild.Learning.Courses;
 
-public record UserProgressDto(decimal CompletionPercentage, DateTime? LastAccessedAt, DateTime? StartedAt, DateTime? CompletedAt, IEnumerable<ContentProgressDto> ContentProgress) {
+public sealed record UserProgressDto(decimal CompletionPercentage, DateTime? LastAccessedAt, DateTime? StartedAt, DateTime? CompletedAt, IEnumerable<ContentProgressDto> ContentProgress) {
   public decimal CompletionPercentage { get; init; } = CompletionPercentage;
 
   public DateTime? LastAccessedAt { get; init; } = LastAccessedAt;

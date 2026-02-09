@@ -198,15 +198,15 @@ public static class AuthenticationEndpoint
 }
 
 // Request/Response DTOs
-public record SignUpRequest(string Email, string Password, string? Username);
+public sealed record SignUpRequest(string Email, string Password, string? Username);
 
-public record SignInRequest(string Email, string Password);
+public sealed record SignInRequest(string Email, string Password);
 
-public record RefreshTokenRequest(string RefreshToken);
+public sealed record RefreshTokenRequest(string RefreshToken);
 
-public record GoogleSignInRequest(string IdToken);
+public sealed record GoogleSignInRequest(string IdToken);
 
-public record SignInResponseDto
+public sealed record SignInResponseDto
 {
     public required string AccessToken { get; init; }
 
@@ -223,7 +223,7 @@ public record SignInResponseDto
     public Guid? TenantId { get; init; }
 }
 
-public record RefreshTokenResponseDto
+public sealed record RefreshTokenResponseDto
 {
     public required string AccessToken { get; init; }
 
@@ -234,7 +234,7 @@ public record RefreshTokenResponseDto
     public required DateTime RefreshTokenExpiresAt { get; init; }
 }
 
-public record AuthUserDto
+public sealed record AuthUserDto
 {
     public required Guid Id { get; init; }
 
@@ -247,7 +247,7 @@ public record AuthUserDto
     public string? LastName { get; init; }
 }
 
-public record TokenResponse
+public sealed record TokenResponse
 {
     public required string AccessToken { get; init; }
 

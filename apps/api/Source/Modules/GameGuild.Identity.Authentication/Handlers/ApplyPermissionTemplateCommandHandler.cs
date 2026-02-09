@@ -9,7 +9,7 @@ namespace GameGuild.Identity.Authentication;
 ///     Command handler for applying a permission template to a user.
 ///     Grants all permissions defined in the template to the specified user.
 /// </summary>
-public class ApplyPermissionTemplateCommandHandler(
+public sealed class ApplyPermissionTemplateCommandHandler(
     IApplicationDbContext dbContext,
     ILogger<ApplyPermissionTemplateCommandHandler> logger
 ) : ICommandHandler<ApplyPermissionTemplateCommand, ApplyPermissionTemplateResult>

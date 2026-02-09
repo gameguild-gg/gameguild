@@ -5,7 +5,7 @@ namespace GameGuild.Identity.Users;
 /// <summary>
 ///     Command handler for bulk restoring soft-deleted users
 /// </summary>
-public class BulkRestoreUsersCommandHandler(IUserRepository userRepository, IPublisher publisher) : ICommandHandler<BulkRestoreUsersCommand, BulkRestoreUsersResponse>
+public sealed class BulkRestoreUsersCommandHandler(IUserRepository userRepository, IPublisher publisher) : ICommandHandler<BulkRestoreUsersCommand, BulkRestoreUsersResponse>
 {
     public async Task<BulkRestoreUsersResponse> Handle(BulkRestoreUsersCommand request, CancellationToken cancellationToken)
     {

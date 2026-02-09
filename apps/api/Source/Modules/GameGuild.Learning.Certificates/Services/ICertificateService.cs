@@ -77,7 +77,7 @@ public interface ICertificateService
 /// <summary>
 /// Result of certificate verification
 /// </summary>
-public record CertificateVerificationResult(
+public sealed record CertificateVerificationResult(
     bool IsValid,
     string CertificateNumber,
     string? RecipientName,

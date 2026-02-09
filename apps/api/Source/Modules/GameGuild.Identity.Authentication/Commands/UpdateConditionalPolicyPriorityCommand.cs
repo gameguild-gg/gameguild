@@ -1,8 +1,8 @@
-﻿using GameGuild.CQRS;
+using GameGuild.CQRS;
 
 namespace GameGuild.Identity.Authentication;
 
-public record UpdateConditionalPolicyPriorityCommand : ICommand
+public sealed record UpdateConditionalPolicyPriorityCommand : ICommand
 {
     public Guid PolicyId { get; set; }
 

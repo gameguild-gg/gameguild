@@ -5,7 +5,7 @@ namespace GameGuild.Learning.Experience.LearningPaths;
 /// <summary>
 /// Validator for CreateLearningPathCommand
 /// </summary>
-public class CreateLearningPathCommandValidator : AbstractValidator<CreateLearningPathCommand>
+public sealed class CreateLearningPathCommandValidator : AbstractValidator<CreateLearningPathCommand>
 {
     public CreateLearningPathCommandValidator()
     {
@@ -35,7 +35,7 @@ public class CreateLearningPathCommandValidator : AbstractValidator<CreateLearni
 /// <summary>
 /// Validator for UpdateLearningPathCommand
 /// </summary>
-public class UpdateLearningPathCommandValidator : AbstractValidator<UpdateLearningPathCommand>
+public sealed class UpdateLearningPathCommandValidator : AbstractValidator<UpdateLearningPathCommand>
 {
     public UpdateLearningPathCommandValidator()
     {
@@ -63,7 +63,7 @@ public class UpdateLearningPathCommandValidator : AbstractValidator<UpdateLearni
 /// <summary>
 /// Validator for AddCourseToPathCommand
 /// </summary>
-public class AddCourseToPathCommandValidator : AbstractValidator<AddCourseToPathCommand>
+public sealed class AddCourseToPathCommandValidator : AbstractValidator<AddCourseToPathCommand>
 {
     public AddCourseToPathCommandValidator()
     {
@@ -81,7 +81,7 @@ public class AddCourseToPathCommandValidator : AbstractValidator<AddCourseToPath
 /// <summary>
 /// Validator for EnrollInPathCommand
 /// </summary>
-public class EnrollInPathCommandValidator : AbstractValidator<EnrollInPathCommand>
+public sealed class EnrollInPathCommandValidator : AbstractValidator<EnrollInPathCommand>
 {
     public EnrollInPathCommandValidator()
     {
@@ -96,7 +96,7 @@ public class EnrollInPathCommandValidator : AbstractValidator<EnrollInPathComman
 /// <summary>
 /// Validator for UpdatePathProgressCommand
 /// </summary>
-public class UpdatePathProgressCommandValidator : AbstractValidator<UpdatePathProgressCommand>
+public sealed class UpdatePathProgressCommandValidator : AbstractValidator<UpdatePathProgressCommand>
 {
     public UpdatePathProgressCommandValidator()
     {
@@ -114,7 +114,7 @@ public class UpdatePathProgressCommandValidator : AbstractValidator<UpdatePathPr
 /// <summary>
 /// Validator for ReorderPathCoursesCommand
 /// </summary>
-public class ReorderPathCoursesCommandValidator : AbstractValidator<ReorderPathCoursesCommand>
+public sealed class ReorderPathCoursesCommandValidator : AbstractValidator<ReorderPathCoursesCommand>
 {
     public ReorderPathCoursesCommandValidator()
     {

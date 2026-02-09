@@ -5,10 +5,10 @@ namespace GameGuild.Assets.Queries;
 /// <summary>
 /// Query to get pending moderation queue (admin only).
 /// </summary>
-public record GetModerationQueueQuery(
+public sealed record GetModerationQueueQuery(
     int Limit = 100) : IRequest<IReadOnlyList<ReportDto>>;
 
-public record ReportDto(
+public sealed record ReportDto(
     Guid Id,
     Guid AssetReferenceId,
     Guid ReportedByUserId,
@@ -22,7 +22,7 @@ public record ReportDto(
     DateTime? ReviewedAt,
     AssetDto? Asset);
 
-public class GetModerationQueueValidator : AbstractValidator<GetModerationQueueQuery>
+public sealed class GetModerationQueueValidator : AbstractValidator<GetModerationQueueQuery>
 {
     public GetModerationQueueValidator()
     {
@@ -30,7 +30,7 @@ public class GetModerationQueueValidator : AbstractValidator<GetModerationQueueQ
     }
 }
 
-public class GetModerationQueueHandler : IRequestHandler<GetModerationQueueQuery, IReadOnlyList<ReportDto>>
+public sealed class GetModerationQueueHandler : IRequestHandler<GetModerationQueueQuery, IReadOnlyList<ReportDto>>
 {
     private readonly IAssetModerationService _moderationService;
 

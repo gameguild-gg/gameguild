@@ -5,7 +5,7 @@ namespace GameGuild.Commerce.Payments.Commands.PatchWallet;
 /// <summary>
 ///     Command to partially update wallet settings
 /// </summary>
-public record PatchWalletCommand(
+public sealed record PatchWalletCommand(
     Guid WalletId,
     string? Currency = null,
     decimal? DailyLimit = null,

@@ -5,7 +5,7 @@ namespace GameGuild.Commerce.Products;
 /// <summary>
 /// Command handler for creating a new product
 /// </summary>
-public class CreateProductCommandHandler(IProductRepository productRepository)
+public sealed class CreateProductCommandHandler(IProductRepository productRepository)
     : ICommandHandler<CreateProductCommand, ProductDto>
 {
     public async Task<ProductDto> Handle(CreateProductCommand request, CancellationToken cancellationToken)

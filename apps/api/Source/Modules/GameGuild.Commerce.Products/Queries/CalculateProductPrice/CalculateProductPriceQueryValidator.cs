@@ -5,7 +5,7 @@ namespace GameGuild.Commerce.Products;
 /// <summary>
 /// Validator for CalculateProductPriceQuery
 /// </summary>
-public class CalculateProductPriceQueryValidator : AbstractValidator<CalculateProductPriceQuery>
+public sealed class CalculateProductPriceQueryValidator : AbstractValidator<CalculateProductPriceQuery>
 {
     public CalculateProductPriceQueryValidator()
     {

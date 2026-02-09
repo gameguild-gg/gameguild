@@ -8,12 +8,12 @@ namespace GameGuild.Learning.Courses;
 /// <summary>
 /// Get all tags for a specific program
 /// </summary>
-public record GetProgramTagsQuery(Guid ProgramId) : IQuery<IEnumerable<ProgramTagDto>>;
+public sealed record GetProgramTagsQuery(Guid ProgramId) : IQuery<IEnumerable<ProgramTagDto>>;
 
 /// <summary>
 /// Get all programs tagged with a specific tag
 /// </summary>
-public record GetProgramsByTagQuery(
+public sealed record GetProgramsByTagQuery(
     Guid TagId,
     int Skip = 0,
     int Take = 20) : IQuery<PagedResult<Program>>;
@@ -21,7 +21,7 @@ public record GetProgramsByTagQuery(
 /// <summary>
 /// Get programs by skill with minimum proficiency level
 /// </summary>
-public record GetProgramsBySkillQuery(
+public sealed record GetProgramsBySkillQuery(
     Guid SkillTagId,
     SkillProficiencyLevel MinProficiency = SkillProficiencyLevel.Beginner,
     int Skip = 0,
@@ -30,7 +30,7 @@ public record GetProgramsBySkillQuery(
 /// <summary>
 /// Get programs that teach multiple skills
 /// </summary>
-public record GetProgramsBySkillsQuery(
+public sealed record GetProgramsBySkillsQuery(
     IEnumerable<Guid> SkillTagIds,
     bool RequireAll = false,
     int Skip = 0,
@@ -39,18 +39,18 @@ public record GetProgramsBySkillsQuery(
 /// <summary>
 /// Get primary skill for a program
 /// </summary>
-public record GetProgramPrimarySkillQuery(Guid ProgramId) : IQuery<ProgramTagDto?>;
+public sealed record GetProgramPrimarySkillQuery(Guid ProgramId) : IQuery<ProgramTagDto?>;
 
 /// <summary>
 /// Search programs by tag name
 /// </summary>
-public record SearchProgramsByTagNameQuery(
+public sealed record SearchProgramsByTagNameQuery(
     string TagName,
     int Skip = 0,
     int Take = 20) : IQuery<PagedResult<Program>>;
 
 // ===== DTOs =====
 
-public record ProgramWithSkillDto(
+public sealed record ProgramWithSkillDto(
     Program Program,
     ProgramTagDto SkillTag);

@@ -5,7 +5,7 @@ namespace GameGuild.Learning.Experience.Discovery;
 /// <summary>
 /// Validator for CreateFeaturedContentCommand
 /// </summary>
-public class CreateFeaturedContentCommandValidator : AbstractValidator<CreateFeaturedContentCommand>
+public sealed class CreateFeaturedContentCommandValidator : AbstractValidator<CreateFeaturedContentCommand>
 {
     public CreateFeaturedContentCommandValidator()
     {
@@ -45,7 +45,7 @@ public class CreateFeaturedContentCommandValidator : AbstractValidator<CreateFea
 /// <summary>
 /// Validator for UpdateFeaturedContentCommand
 /// </summary>
-public class UpdateFeaturedContentCommandValidator : AbstractValidator<UpdateFeaturedContentCommand>
+public sealed class UpdateFeaturedContentCommandValidator : AbstractValidator<UpdateFeaturedContentCommand>
 {
     public UpdateFeaturedContentCommandValidator()
     {
@@ -69,7 +69,7 @@ public class UpdateFeaturedContentCommandValidator : AbstractValidator<UpdateFea
 /// <summary>
 /// Validator for CreateCourseCollectionCommand
 /// </summary>
-public class CreateCourseCollectionCommandValidator : AbstractValidator<CreateCourseCollectionCommand>
+public sealed class CreateCourseCollectionCommandValidator : AbstractValidator<CreateCourseCollectionCommand>
 {
     public CreateCourseCollectionCommandValidator()
     {
@@ -96,7 +96,7 @@ public class CreateCourseCollectionCommandValidator : AbstractValidator<CreateCo
 /// <summary>
 /// Validator for UpdateCourseCollectionCommand
 /// </summary>
-public class UpdateCourseCollectionCommandValidator : AbstractValidator<UpdateCourseCollectionCommand>
+public sealed class UpdateCourseCollectionCommandValidator : AbstractValidator<UpdateCourseCollectionCommand>
 {
     public UpdateCourseCollectionCommandValidator()
     {
@@ -116,7 +116,7 @@ public class UpdateCourseCollectionCommandValidator : AbstractValidator<UpdateCo
 /// <summary>
 /// Validator for RecordSearchCommand
 /// </summary>
-public class RecordSearchCommandValidator : AbstractValidator<RecordSearchCommand>
+public sealed class RecordSearchCommandValidator : AbstractValidator<RecordSearchCommand>
 {
     public RecordSearchCommandValidator()
     {

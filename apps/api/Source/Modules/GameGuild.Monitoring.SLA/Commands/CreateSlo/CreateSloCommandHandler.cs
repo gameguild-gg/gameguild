@@ -6,7 +6,7 @@ using GameGuild.CQRS.Models;
 
 namespace GameGuild.Monitoring.SLA;
 
-public class CreateSloCommandHandler(IServiceLevelObjectiveRepository repository) : ICommandHandler<CreateSloCommand, SloDto>
+public sealed class CreateSloCommandHandler(IServiceLevelObjectiveRepository repository) : ICommandHandler<CreateSloCommand, SloDto>
 {
     public async Task<SloDto> Handle(CreateSloCommand request, CancellationToken cancellationToken)
     {

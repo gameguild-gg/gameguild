@@ -8,7 +8,7 @@ namespace GameGuild.Learning.Courses;
 /// <summary>
 /// Command handler for RestoreProgramCommand
 /// </summary>
-public class RestoreProgramCommandHandler(IApplicationDbContext context, ILogger<RestoreProgramCommandHandler> logger)
+public sealed class RestoreProgramCommandHandler(IApplicationDbContext context, ILogger<RestoreProgramCommandHandler> logger)
     : ICommandHandler<RestoreProgramCommand, Program>
 {
     public async Task<Program> Handle(RestoreProgramCommand request, CancellationToken cancellationToken) {

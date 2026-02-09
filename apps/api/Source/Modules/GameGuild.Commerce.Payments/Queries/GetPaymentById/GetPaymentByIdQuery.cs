@@ -6,4 +6,4 @@ namespace GameGuild.Commerce.Payments;
 ///     Query to get payment by ID
 /// </summary>
 /// <param name="PaymentId">Payment unique identifier</param>
-public record GetPaymentByIdQuery(Guid PaymentId) : IQuery<PaymentResult?>;
+public sealed record GetPaymentByIdQuery(Guid PaymentId) : IQuery<PaymentResult?>;

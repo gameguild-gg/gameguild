@@ -1,4 +1,4 @@
-﻿using GameGuild.CQRS;
+using GameGuild.CQRS;
 
 namespace GameGuild.Identity.Users;
 
@@ -6,4 +6,4 @@ namespace GameGuild.Identity.Users;
 ///     Command to delete multiple users
 /// </summary>
 /// <param name="UserIds">Collection of user IDs to delete</param>
-public record BulkDeleteUsersCommand(IEnumerable<Guid> UserIds) : ICommand;
+public sealed record BulkDeleteUsersCommand(IEnumerable<Guid> UserIds) : ICommand;

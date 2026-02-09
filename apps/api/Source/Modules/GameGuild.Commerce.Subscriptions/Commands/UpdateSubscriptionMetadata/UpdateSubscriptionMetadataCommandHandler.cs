@@ -1,10 +1,10 @@
-﻿namespace GameGuild.Commerce.Subscriptions;
+namespace GameGuild.Commerce.Subscriptions;
 
 /// <summary>
 ///     Handler for updating subscription metadata.
 ///     Uses base handler to reduce boilerplate for fetch/validate/save pattern.
 /// </summary>
-public class UpdateSubscriptionMetadataCommandHandler(ISubscriptionRepository subscriptionRepository)
+public sealed class UpdateSubscriptionMetadataCommandHandler(ISubscriptionRepository subscriptionRepository)
     : SubscriptionCommandHandlerBase<UpdateSubscriptionMetadataCommand>(subscriptionRepository)
 {
     /// <inheritdoc />

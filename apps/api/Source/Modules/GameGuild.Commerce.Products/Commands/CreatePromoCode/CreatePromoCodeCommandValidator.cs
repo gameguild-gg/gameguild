@@ -5,7 +5,7 @@ namespace GameGuild.Commerce.Products;
 /// <summary>
 /// Validator for CreatePromoCodeCommand
 /// </summary>
-public class CreatePromoCodeCommandValidator : AbstractValidator<CreatePromoCodeCommand>
+public sealed class CreatePromoCodeCommandValidator : AbstractValidator<CreatePromoCodeCommand>
 {
     public CreatePromoCodeCommandValidator()
     {

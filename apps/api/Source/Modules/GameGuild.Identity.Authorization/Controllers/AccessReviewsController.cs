@@ -203,6 +203,6 @@ public class AccessReviewsController(ISender sender) : BaseApiController
 }
 
 // Request DTOs
-public record CompleteCampaignRequest(Guid CompletedBy);
-public record ApproveItemRequest(string? Reason = null, string? Notes = null);
-public record RevokeItemRequest(string Reason, string? Notes = null);
+public sealed record CompleteCampaignRequest(Guid CompletedBy);
+public sealed record ApproveItemRequest(string? Reason = null, string? Notes = null);
+public sealed record RevokeItemRequest(string Reason, string? Notes = null);

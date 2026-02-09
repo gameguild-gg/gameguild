@@ -45,7 +45,7 @@ public interface IAssetModerationService
 /// <summary>
 /// Result of a moderation operation.
 /// </summary>
-public record ModerationResult(
+public sealed record ModerationResult(
     bool IsApproved,
     ModerationStatus Status,
     double Confidence,

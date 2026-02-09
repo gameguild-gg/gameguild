@@ -7,7 +7,7 @@ namespace GameGuild.Identity.Users;
 /// <summary>
 ///     Query handler for getting users with cursor-based pagination, filtering, and search
 /// </summary>
-public class GetUsersQueryHandler(IUserRepository userRepository) : IQueryHandler<GetUsersQuery, PagedResult<UserDto>>
+public sealed class GetUsersQueryHandler(IUserRepository userRepository) : IQueryHandler<GetUsersQuery, PagedResult<UserDto>>
 {
     public async Task<PagedResult<UserDto>> Handle(GetUsersQuery request, CancellationToken cancellationToken)
     {

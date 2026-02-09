@@ -7,7 +7,7 @@ namespace GameGuild.Identity.Authentication;
 ///     Command to create a new role
 /// </summary>
 [RequiresQuota(ResourceUsageType.Roles, Source = "CreateRole")]
-public record CreateRoleCommand : ICommand<RoleDto>
+public sealed record CreateRoleCommand : ICommand<RoleDto>
 {
     public string Name { get; init; } = string.Empty;
     public string Description { get; init; } = string.Empty;
@@ -18,7 +18,7 @@ public record CreateRoleCommand : ICommand<RoleDto>
 /// <summary>
 ///     Command to update an existing role
 /// </summary>
-public record UpdateRoleCommand : ICommand<RoleDto>
+public sealed record UpdateRoleCommand : ICommand<RoleDto>
 {
     public Guid RoleId { get; init; }
     public string? Name { get; init; }
@@ -30,7 +30,7 @@ public record UpdateRoleCommand : ICommand<RoleDto>
 /// <summary>
 ///     Command to delete a role
 /// </summary>
-public record DeleteRoleCommand : ICommand<bool>
+public sealed record DeleteRoleCommand : ICommand<bool>
 {
     public Guid RoleId { get; init; }
 }
@@ -38,7 +38,7 @@ public record DeleteRoleCommand : ICommand<bool>
 /// <summary>
 ///     Command to assign a role to a user
 /// </summary>
-public record AssignRoleToUserCommand : ICommand<UserRoleDto>
+public sealed record AssignRoleToUserCommand : ICommand<UserRoleDto>
 {
     public Guid UserId { get; init; }
     public Guid RoleId { get; init; }
@@ -49,7 +49,7 @@ public record AssignRoleToUserCommand : ICommand<UserRoleDto>
 /// <summary>
 ///     Command to remove a role from a user
 /// </summary>
-public record RemoveRoleFromUserCommand : ICommand<bool>
+public sealed record RemoveRoleFromUserCommand : ICommand<bool>
 {
     public Guid UserId { get; init; }
     public Guid RoleId { get; init; }

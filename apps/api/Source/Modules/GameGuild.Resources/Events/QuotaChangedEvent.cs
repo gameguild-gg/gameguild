@@ -5,7 +5,7 @@ namespace GameGuild.Resources;
 /// <summary>
 ///     Domain event raised when a quota is modified (created, updated, or deleted)
 /// </summary>
-public record QuotaChangedEvent(
+public sealed record QuotaChangedEvent(
     Guid TenantId,
     ResourceUsageType ResourceType,
     QuotaChangeType ChangeType,

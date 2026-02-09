@@ -6,7 +6,7 @@ namespace GameGuild.Resources;
 ///     Handler for getting resource usage by type across all tenants.
 ///     Aggregates usage records by tenant for the given type and date range.
 /// </summary>
-public class GetResourceUsageByTypeQueryHandler(IUsageRecordRepository usageRecordRepository)
+public sealed class GetResourceUsageByTypeQueryHandler(IUsageRecordRepository usageRecordRepository)
     : IQueryHandler<GetResourceUsageByTypeQuery, Dictionary<Guid, int>>
 {
     public async Task<Dictionary<Guid, int>> Handle(GetResourceUsageByTypeQuery request, CancellationToken cancellationToken)

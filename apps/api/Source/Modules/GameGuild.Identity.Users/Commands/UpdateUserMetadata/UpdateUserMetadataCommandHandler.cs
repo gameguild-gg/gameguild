@@ -5,7 +5,7 @@ namespace GameGuild.Identity.Users;
 /// <summary>
 ///     Handler for updating user metadata
 /// </summary>
-public class UpdateUserMetadataCommandHandler(IUserRepository userRepository, IUserMetadataRepository metadataRepository)
+public sealed class UpdateUserMetadataCommandHandler(IUserRepository userRepository, IUserMetadataRepository metadataRepository)
     : ICommandHandler<UpdateUserMetadataCommand>
 {
     public async Task<Unit> Handle(UpdateUserMetadataCommand request, CancellationToken cancellationToken)

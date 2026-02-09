@@ -8,7 +8,7 @@ namespace GameGuild.Identity.Authentication;
 
 // ==================== CREATE API KEY ====================
 
-public record CreateApiKeyCommand : IRequest<Result<CreateApiKeyResponse>>
+public sealed record CreateApiKeyCommand : IRequest<Result<CreateApiKeyResponse>>
 {
     public required string Name { get; init; }
     public required string[] Scopes { get; init; }
@@ -16,7 +16,7 @@ public record CreateApiKeyCommand : IRequest<Result<CreateApiKeyResponse>>
     public string? IpWhitelist { get; init; }
 }
 
-public record CreateApiKeyResponse
+public sealed record CreateApiKeyResponse
 {
     public Guid Id { get; init; }
     public string Name { get; init; } = string.Empty;
@@ -41,7 +41,7 @@ public record CreateApiKeyResponse
     }
 }
 
-public class CreateApiKeyValidator : AbstractValidator<CreateApiKeyCommand>
+public sealed class CreateApiKeyValidator : AbstractValidator<CreateApiKeyCommand>
 {
     public CreateApiKeyValidator()
     {
@@ -54,7 +54,7 @@ public class CreateApiKeyValidator : AbstractValidator<CreateApiKeyCommand>
     }
 }
 
-public class CreateApiKeyHandler : IRequestHandler<CreateApiKeyCommand, Result<CreateApiKeyResponse>>
+public sealed class CreateApiKeyHandler : IRequestHandler<CreateApiKeyCommand, Result<CreateApiKeyResponse>>
 {
     private readonly IApplicationDbContext _dbContext;
     private readonly IActorContextAccessor _actorContext;
@@ -96,11 +96,11 @@ public class CreateApiKeyHandler : IRequestHandler<CreateApiKeyCommand, Result<C
 
 // ==================== LIST API KEYS ====================
 
-public record ListApiKeysQuery : IRequest<Result<List<ApiKeyDto>>>
+public sealed record ListApiKeysQuery : IRequest<Result<List<ApiKeyDto>>>
 {
 }
 
-public record ApiKeyDto
+public sealed record ApiKeyDto
 {
     public Guid Id { get; init; }
     public string Name { get; init; } = string.Empty;
@@ -129,7 +129,7 @@ public record ApiKeyDto
     }
 }
 
-public class ListApiKeysHandler : IRequestHandler<ListApiKeysQuery, Result<List<ApiKeyDto>>>
+public sealed class ListApiKeysHandler : IRequestHandler<ListApiKeysQuery, Result<List<ApiKeyDto>>>
 {
     private readonly IApplicationDbContext _dbContext;
     private readonly IActorContextAccessor _actorContext;
@@ -159,13 +159,13 @@ public class ListApiKeysHandler : IRequestHandler<ListApiKeysQuery, Result<List<
 
 // ==================== REVOKE API KEY ====================
 
-public record RevokeApiKeyCommand : IRequest<Result<bool>>
+public sealed record RevokeApiKeyCommand : IRequest<Result<bool>>
 {
     public required Guid KeyId { get; init; }
     public string? Reason { get; init; }
 }
 
-public class RevokeApiKeyHandler : IRequestHandler<RevokeApiKeyCommand, Result<bool>>
+public sealed class RevokeApiKeyHandler : IRequestHandler<RevokeApiKeyCommand, Result<bool>>
 {
     private readonly IApplicationDbContext _dbContext;
     private readonly IActorContextAccessor _actorContext;

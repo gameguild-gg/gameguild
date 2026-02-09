@@ -5,4 +5,4 @@ namespace GameGuild.Identity.Users;
 /// </summary>
 /// <param name="Name">Updated user name</param>
 /// <param name="PhoneNumber">Updated phone number</param>
-public record UpdateUserRequest(string Name, string? PhoneNumber = null);
+public sealed record UpdateUserRequest(string Name, string? PhoneNumber = null);

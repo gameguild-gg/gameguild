@@ -100,7 +100,7 @@ public enum SecurityEventType
 ///         </list>
 ///     </para>
 /// </remarks>
-public record SecurityAuditEvent
+public sealed record SecurityAuditEvent
 {
     /// <summary>
     ///     Unique identifier for this event.

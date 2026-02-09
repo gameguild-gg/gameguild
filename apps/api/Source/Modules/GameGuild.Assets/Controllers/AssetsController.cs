@@ -482,10 +482,10 @@ public class AssetsController(
 
 }
 
-public record UpdateAssetRequest(
+public sealed record UpdateAssetRequest(
     string? DisplayName = null,
     AssetAccessPolicy? AccessPolicy = null);
 
-public record ReportAssetRequest(
+public sealed record ReportAssetRequest(
     ReportReason Reason,
     string? Description = null);

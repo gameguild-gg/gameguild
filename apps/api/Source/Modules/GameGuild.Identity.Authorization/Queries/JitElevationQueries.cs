@@ -9,9 +9,9 @@ namespace GameGuild.Identity.Authorization.Queries;
 /// <summary>
 ///     Query to get a JIT elevation request by ID
 /// </summary>
-public record GetJitElevationByIdQuery(Guid RequestId) : IQuery<JitElevationRequest?>;
+public sealed record GetJitElevationByIdQuery(Guid RequestId) : IQuery<JitElevationRequest?>;
 
-public class GetJitElevationByIdHandler(IJitElevationService service)
+public sealed class GetJitElevationByIdHandler(IJitElevationService service)
     : IQueryHandler<GetJitElevationByIdQuery, JitElevationRequest?>
 {
     public async Task<JitElevationRequest?> Handle(
@@ -26,9 +26,9 @@ public class GetJitElevationByIdHandler(IJitElevationService service)
 /// <summary>
 ///     Query to get pending JIT elevation requests
 /// </summary>
-public record GetPendingJitElevationsQuery(Guid? TenantId) : IQuery<List<JitElevationRequest>>;
+public sealed record GetPendingJitElevationsQuery(Guid? TenantId) : IQuery<List<JitElevationRequest>>;
 
-public class GetPendingJitElevationsHandler(IJitElevationService service)
+public sealed class GetPendingJitElevationsHandler(IJitElevationService service)
     : IQueryHandler<GetPendingJitElevationsQuery, List<JitElevationRequest>>
 {
     public async Task<List<JitElevationRequest>> Handle(
@@ -43,9 +43,9 @@ public class GetPendingJitElevationsHandler(IJitElevationService service)
 /// <summary>
 ///     Query to get user's JIT elevation requests
 /// </summary>
-public record GetUserJitElevationsQuery(Guid UserId, Guid? TenantId) : IQuery<List<JitElevationRequest>>;
+public sealed record GetUserJitElevationsQuery(Guid UserId, Guid? TenantId) : IQuery<List<JitElevationRequest>>;
 
-public class GetUserJitElevationsHandler(IJitElevationService service)
+public sealed class GetUserJitElevationsHandler(IJitElevationService service)
     : IQueryHandler<GetUserJitElevationsQuery, List<JitElevationRequest>>
 {
     public async Task<List<JitElevationRequest>> Handle(
@@ -60,9 +60,9 @@ public class GetUserJitElevationsHandler(IJitElevationService service)
 /// <summary>
 ///     Query to get active JIT elevations for a user
 /// </summary>
-public record GetActiveJitElevationsQuery(Guid UserId, Guid? TenantId) : IQuery<List<JitElevationRequest>>;
+public sealed record GetActiveJitElevationsQuery(Guid UserId, Guid? TenantId) : IQuery<List<JitElevationRequest>>;
 
-public class GetActiveJitElevationsHandler(IJitElevationService service)
+public sealed class GetActiveJitElevationsHandler(IJitElevationService service)
     : IQueryHandler<GetActiveJitElevationsQuery, List<JitElevationRequest>>
 {
     public async Task<List<JitElevationRequest>> Handle(
@@ -77,14 +77,14 @@ public class GetActiveJitElevationsHandler(IJitElevationService service)
 /// <summary>
 ///     Query to check if user has an active JIT elevation for a permission
 /// </summary>
-public record HasActiveJitElevationQuery(
+public sealed record HasActiveJitElevationQuery(
     Guid UserId,
     string Permission,
     Guid? TenantId,
     Guid? ResourceId = null
 ) : IQuery<bool>;
 
-public class HasActiveJitElevationHandler(IJitElevationService service)
+public sealed class HasActiveJitElevationHandler(IJitElevationService service)
     : IQueryHandler<HasActiveJitElevationQuery, bool>
 {
     public async Task<bool> Handle(

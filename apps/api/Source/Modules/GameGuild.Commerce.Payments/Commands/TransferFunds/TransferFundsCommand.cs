@@ -10,4 +10,4 @@ namespace GameGuild.Commerce.Payments;
 /// <param name="Amount">Amount to transfer</param>
 /// <param name="Description">Transfer description</param>
 /// <param name="ReferenceId">Optional reference ID</param>
-public record TransferFundsCommand(Guid FromUserId, Guid ToUserId, decimal Amount, string Description, string? ReferenceId = null) : ICommand<TransferResult>;
+public sealed record TransferFundsCommand(Guid FromUserId, Guid ToUserId, decimal Amount, string Description, string? ReferenceId = null) : ICommand<TransferResult>;

@@ -5,7 +5,7 @@ namespace GameGuild.Commerce.Products;
 /// <summary>
 /// Handler for updating an existing promo code
 /// </summary>
-public class UpdatePromoCodeCommandHandler(IPromoCodeRepository promoCodeRepository)
+public sealed class UpdatePromoCodeCommandHandler(IPromoCodeRepository promoCodeRepository)
     : ICommandHandler<UpdatePromoCodeCommand, PromoCodeDto>
 {
     public async Task<PromoCodeDto> Handle(UpdatePromoCodeCommand request, CancellationToken cancellationToken)

@@ -1,8 +1,8 @@
-﻿using GameGuild.CQRS;
+using GameGuild.CQRS;
 
 namespace GameGuild.Identity.Authentication;
 
-public record GetPermissionAuditTrailQuery : IQuery<PermissionAuditTrailDto>
+public sealed record GetPermissionAuditTrailQuery : IQuery<PermissionAuditTrailDto>
 {
     public Guid? UserId { get; init; }
 

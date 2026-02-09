@@ -1,8 +1,8 @@
-﻿using GameGuild.CQRS;
+using GameGuild.CQRS;
 
 namespace GameGuild.Identity.Authentication;
 
-public record BulkRevokeAccessCommand : ICommand<BulkAccessRevocationResult>
+public sealed record BulkRevokeAccessCommand : ICommand<BulkAccessRevocationResult>
 {
     public List<AccessRevocationRequest> Revocations { get; init; } = new List<AccessRevocationRequest>();
 

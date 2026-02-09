@@ -7,7 +7,7 @@ namespace GameGuild.Learning.Experience.LearningPaths;
 /// <summary>
 /// Command handlers for Learning Paths module
 /// </summary>
-public class LearningPathCommandHandlers(IApplicationDbContext context, ILogger<LearningPathCommandHandlers> logger)
+public sealed class LearningPathCommandHandlers(IApplicationDbContext context, ILogger<LearningPathCommandHandlers> logger)
     : ICommandHandler<CreateLearningPathCommand, LearningPath>,
       ICommandHandler<UpdateLearningPathCommand, LearningPath?>,
       ICommandHandler<DeleteLearningPathCommand, bool>,

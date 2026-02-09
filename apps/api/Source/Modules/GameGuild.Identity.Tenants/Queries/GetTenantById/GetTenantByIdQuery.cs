@@ -6,4 +6,4 @@ namespace GameGuild.Identity.Tenants;
 ///     Query to get a tenant by ID
 /// </summary>
 /// <param name="TenantId">Tenant unique identifier</param>
-public record GetTenantByIdQuery(Guid TenantId) : IQuery<Tenant?>;
+public sealed record GetTenantByIdQuery(Guid TenantId) : IQuery<Tenant?>;

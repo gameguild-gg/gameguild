@@ -5,7 +5,7 @@ namespace GameGuild.Commerce.Products;
 /// <summary>
 /// Handler for revoking product access from a user
 /// </summary>
-public class RevokeProductAccessCommandHandler(IUserProductRepository userProductRepository)
+public sealed class RevokeProductAccessCommandHandler(IUserProductRepository userProductRepository)
     : ICommandHandler<RevokeProductAccessCommand, Unit>
 {
     public async Task<Unit> Handle(RevokeProductAccessCommand request, CancellationToken cancellationToken)

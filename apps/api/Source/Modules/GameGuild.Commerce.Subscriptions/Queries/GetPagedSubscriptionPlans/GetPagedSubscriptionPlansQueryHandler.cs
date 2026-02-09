@@ -5,7 +5,7 @@ namespace GameGuild.Commerce.Subscriptions;
 /// <summary>
 ///     Query handler for getting paged subscription plans
 /// </summary>
-public class GetPagedSubscriptionPlansQueryHandler(ISubscriptionPlanRepository subscriptionPlanRepository) 
+public sealed class GetPagedSubscriptionPlansQueryHandler(ISubscriptionPlanRepository subscriptionPlanRepository) 
     : IQueryHandler<GetPagedSubscriptionPlansQuery, IEnumerable<SubscriptionPlan>>
 {
     public async Task<IEnumerable<SubscriptionPlan>> Handle(GetPagedSubscriptionPlansQuery request, CancellationToken cancellationToken)

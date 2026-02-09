@@ -6,7 +6,7 @@ namespace GameGuild.Identity.Users;
 /// <summary>
 ///     Command handler for permanently deleting (purging) users
 /// </summary>
-public class PurgeUserCommandHandler(IUserRepository userRepository, IPublisher publisher) : ICommandHandler<PurgeUserCommand>
+public sealed class PurgeUserCommandHandler(IUserRepository userRepository, IPublisher publisher) : ICommandHandler<PurgeUserCommand>
 {
     public async Task<Unit> Handle(PurgeUserCommand request, CancellationToken cancellationToken)
     {

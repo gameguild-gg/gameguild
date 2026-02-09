@@ -7,7 +7,7 @@ namespace GameGuild.Commerce.Products;
 /// </summary>
 /// <param name="UserId">User ID</param>
 /// <param name="Status">Optional status filter</param>
-public record GetUserProductsQuery(
+public sealed record GetUserProductsQuery(
     Guid UserId,
     ProductAccessStatus? Status = null
 ) : IQuery<IReadOnlyList<UserProductAccessDto>>;

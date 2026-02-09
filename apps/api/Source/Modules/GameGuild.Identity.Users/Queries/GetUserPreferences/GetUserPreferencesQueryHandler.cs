@@ -5,7 +5,7 @@ namespace GameGuild.Identity.Users;
 /// <summary>
 /// Query handler for getting user preferences
 /// </summary>
-public class GetUserPreferencesQueryHandler(IUserRepository userRepository) : IQueryHandler<GetUserPreferencesQuery, UserPreferencesDto?>
+public sealed class GetUserPreferencesQueryHandler(IUserRepository userRepository) : IQueryHandler<GetUserPreferencesQuery, UserPreferencesDto?>
 {
     public async Task<UserPreferencesDto?> Handle(GetUserPreferencesQuery request, CancellationToken cancellationToken)
     {

@@ -5,7 +5,7 @@ namespace GameGuild.Commerce.Subscriptions;
 /// <summary>
 ///     Command to partially update a subscription
 /// </summary>
-public record PatchSubscriptionCommand(
+public sealed record PatchSubscriptionCommand(
     Guid SubscriptionId,
     BillingCycle? BillingCycle = null,
     bool? AutoRenew = null,

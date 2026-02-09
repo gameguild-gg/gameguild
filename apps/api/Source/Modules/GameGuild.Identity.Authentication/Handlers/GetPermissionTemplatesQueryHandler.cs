@@ -8,7 +8,7 @@ namespace GameGuild.Identity.Authentication;
 /// <summary>
 ///     Query handler for retrieving available permission templates.
 /// </summary>
-public class GetPermissionTemplatesQueryHandler(
+public sealed class GetPermissionTemplatesQueryHandler(
     IApplicationDbContext dbContext,
     ILogger<GetPermissionTemplatesQueryHandler> logger
 ) : IQueryHandler<GetPermissionTemplatesQuery, IEnumerable<PermissionTemplateDto>>

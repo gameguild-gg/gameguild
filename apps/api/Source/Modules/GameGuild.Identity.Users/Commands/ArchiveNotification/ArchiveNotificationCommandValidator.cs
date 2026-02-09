@@ -2,7 +2,7 @@ using FluentValidation;
 
 namespace GameGuild.Identity.Users;
 
-public class ArchiveNotificationCommandValidator : AbstractValidator<ArchiveNotificationCommand>
+public sealed class ArchiveNotificationCommandValidator : AbstractValidator<ArchiveNotificationCommand>
 {
     public ArchiveNotificationCommandValidator()
     {

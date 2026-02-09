@@ -5,7 +5,7 @@ namespace GameGuild.Commerce.Products;
 /// <summary>
 /// Validator for SetProductPricingCommand
 /// </summary>
-public class SetProductPricingCommandValidator : AbstractValidator<SetProductPricingCommand>
+public sealed class SetProductPricingCommandValidator : AbstractValidator<SetProductPricingCommand>
 {
     public SetProductPricingCommandValidator()
     {

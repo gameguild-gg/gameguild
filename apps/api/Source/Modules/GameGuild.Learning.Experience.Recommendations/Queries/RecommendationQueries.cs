@@ -7,7 +7,7 @@ namespace GameGuild.Learning.Experience.Recommendations;
 /// <summary>
 /// Get personalized recommendations for a user
 /// </summary>
-public record GetUserRecommendationsQuery(
+public sealed record GetUserRecommendationsQuery(
     Guid UserId,
     Guid? TenantId = null,
     RecommendationType? Type = null,
@@ -18,36 +18,36 @@ public record GetUserRecommendationsQuery(
 /// <summary>
 /// Get a specific recommendation by ID
 /// </summary>
-public record GetRecommendationByIdQuery(Guid Id, Guid UserId) : IQuery<CourseRecommendation?>;
+public sealed record GetRecommendationByIdQuery(Guid Id, Guid UserId) : IQuery<CourseRecommendation?>;
 
 /// <summary>
 /// Get recommendation statistics for a user
 /// </summary>
-public record GetRecommendationStatisticsQuery(Guid UserId) : IQuery<RecommendationStatisticsDto>;
+public sealed record GetRecommendationStatisticsQuery(Guid UserId) : IQuery<RecommendationStatisticsDto>;
 
 /// <summary>
 /// Check if user has any pending recommendations
 /// </summary>
-public record HasPendingRecommendationsQuery(Guid UserId) : IQuery<bool>;
+public sealed record HasPendingRecommendationsQuery(Guid UserId) : IQuery<bool>;
 
 // ===== USER LEARNING PROFILE QUERIES =====
 
 /// <summary>
 /// Get user's learning profile
 /// </summary>
-public record GetUserLearningProfileQuery(Guid UserId) : IQuery<UserLearningProfile?>;
+public sealed record GetUserLearningProfileQuery(Guid UserId) : IQuery<UserLearningProfile?>;
 
 /// <summary>
 /// Get or create user's learning profile
 /// </summary>
-public record GetOrCreateUserLearningProfileQuery(Guid UserId) : IQuery<UserLearningProfile>;
+public sealed record GetOrCreateUserLearningProfileQuery(Guid UserId) : IQuery<UserLearningProfile>;
 
 // ===== POPULAR/TRENDING QUERIES =====
 
 /// <summary>
 /// Get popular courses across the platform
 /// </summary>
-public record GetPopularCoursesQuery(
+public sealed record GetPopularCoursesQuery(
     Guid? TenantId = null,
     string? Category = null,
     int Skip = 0,
@@ -56,7 +56,7 @@ public record GetPopularCoursesQuery(
 /// <summary>
 /// Get trending courses (high recent enrollment velocity)
 /// </summary>
-public record GetTrendingCoursesQuery(
+public sealed record GetTrendingCoursesQuery(
     Guid? TenantId = null,
     int DaysWindow = 7,
     int Skip = 0,
@@ -65,7 +65,7 @@ public record GetTrendingCoursesQuery(
 /// <summary>
 /// Get courses similar to a specific course
 /// </summary>
-public record GetSimilarCoursesQuery(
+public sealed record GetSimilarCoursesQuery(
     Guid CourseId,
     Guid? TenantId = null,
     int MaxResults = 5) : IQuery<IEnumerable<SimilarCourseDto>>;
@@ -73,7 +73,7 @@ public record GetSimilarCoursesQuery(
 /// <summary>
 /// Get users who might benefit from a specific course (for admin)
 /// </summary>
-public record GetPotentialLearnersQuery(
+public sealed record GetPotentialLearnersQuery(
     Guid CourseId,
     Guid? TenantId = null,
     int MaxResults = 20) : IQuery<IEnumerable<Guid>>;

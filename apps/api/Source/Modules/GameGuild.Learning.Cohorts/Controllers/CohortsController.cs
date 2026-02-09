@@ -199,7 +199,7 @@ public class CohortsController : BaseApiController
 
 // ===== DTOs =====
 
-public record CohortDto(
+public sealed record CohortDto(
     Guid Id,
     Guid CourseId,
     Guid? TenantId,

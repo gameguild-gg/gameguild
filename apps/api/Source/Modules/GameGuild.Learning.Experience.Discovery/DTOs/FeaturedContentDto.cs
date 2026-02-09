@@ -3,7 +3,7 @@ namespace GameGuild.Learning.Experience.Discovery;
 /// <summary>
 /// DTO for featured content response
 /// </summary>
-public record FeaturedContentDto(
+public sealed record FeaturedContentDto(
     Guid Id,
     Guid? CourseId,
     Guid? LearningPathId,
@@ -24,7 +24,7 @@ public record FeaturedContentDto(
 /// <summary>
 /// DTO for creating featured content
 /// </summary>
-public record CreateFeaturedContentDto(
+public sealed record CreateFeaturedContentDto(
     FeaturedContentType Type,
     string Title,
     int DisplayOrder,
@@ -40,7 +40,7 @@ public record CreateFeaturedContentDto(
 /// <summary>
 /// DTO for updating featured content
 /// </summary>
-public record UpdateFeaturedContentDto(
+public sealed record UpdateFeaturedContentDto(
     string? Title = null,
     string? Subtitle = null,
     string? ImageUrl = null,
@@ -54,7 +54,7 @@ public record UpdateFeaturedContentDto(
 /// <summary>
 /// DTO for course collection response
 /// </summary>
-public record CourseCollectionDto(
+public sealed record CourseCollectionDto(
     Guid Id,
     Guid? TenantId,
     Guid CuratorId,
@@ -72,7 +72,7 @@ public record CourseCollectionDto(
 /// <summary>
 /// DTO for creating a course collection
 /// </summary>
-public record CreateCourseCollectionDto(
+public sealed record CreateCourseCollectionDto(
     string Title,
     CollectionType Type = CollectionType.Curated,
     string? Description = null,
@@ -81,7 +81,7 @@ public record CreateCourseCollectionDto(
 /// <summary>
 /// DTO for updating a course collection
 /// </summary>
-public record UpdateCourseCollectionDto(
+public sealed record UpdateCourseCollectionDto(
     string? Title = null,
     string? Description = null,
     string? ImageUrl = null,
@@ -90,7 +90,7 @@ public record UpdateCourseCollectionDto(
 /// <summary>
 /// DTO for search history (analytics)
 /// </summary>
-public record SearchHistoryDto(
+public sealed record SearchHistoryDto(
     Guid Id,
     Guid? UserId,
     string Query,
@@ -102,7 +102,7 @@ public record SearchHistoryDto(
 /// <summary>
 /// DTO for recording a search
 /// </summary>
-public record RecordSearchDto(
+public sealed record RecordSearchDto(
     string Query,
     int ResultCount,
     string? Filters = null);
@@ -110,6 +110,6 @@ public record RecordSearchDto(
 /// <summary>
 /// DTO for recording a search click
 /// </summary>
-public record RecordSearchClickDto(
+public sealed record RecordSearchClickDto(
     Guid SearchId,
     Guid ClickedCourseId);

@@ -5,7 +5,7 @@ namespace GameGuild.Identity.Tenants;
 /// <summary>
 ///     Validator for UpdateTenantCommand
 /// </summary>
-public class UpdateTenantCommandValidator : AbstractValidator<UpdateTenantCommand>
+public sealed class UpdateTenantCommandValidator : AbstractValidator<UpdateTenantCommand>
 {
     public UpdateTenantCommandValidator()
     {

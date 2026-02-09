@@ -6,7 +6,7 @@ namespace GameGuild.Commerce.Billing;
 /// <summary>
 ///     Handler for getting webhook events
 /// </summary>
-public class GetWebhookEventHandler(
+public sealed class GetWebhookEventHandler(
     IBillingWebhookRepository webhookRepository,
     ILogger<GetWebhookEventHandler> logger) : IQueryHandler<GetWebhookEventQuery, BillingWebhookEventDto?>
 {

@@ -19,7 +19,7 @@ namespace GameGuild.Commerce.Products;
 /// <param name="AffiliateCommissionPercentage">Affiliate commission percentage</param>
 /// <param name="TenantId">Optional tenant ID</param>
 [RequiresQuota(ResourceUsageType.Products, Source = "CreateProduct")]
-public record CreateProductCommand(
+public sealed record CreateProductCommand(
     string Name,
     string? Description = null,
     string? ShortDescription = null,

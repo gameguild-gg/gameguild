@@ -59,7 +59,7 @@ public interface IPrerequisiteService
 
 // ===== Request DTOs =====
 
-public record CreatePrerequisiteRequest(
+public sealed record CreatePrerequisiteRequest(
     Guid CourseId,
     Guid PrerequisiteCourseId,
     Guid? TenantId,
@@ -69,7 +69,7 @@ public record CreatePrerequisiteRequest(
     int DisplayOrder = 0,
     string? PrerequisiteGroup = null);
 
-public record UpdatePrerequisiteRequest(
+public sealed record UpdatePrerequisiteRequest(
     PrerequisiteType? Type = null,
     int? MinimumGrade = null,
     string? Description = null,
@@ -78,7 +78,7 @@ public record UpdatePrerequisiteRequest(
 
 // ===== Response DTOs =====
 
-public record PrerequisiteCheckResult(
+public sealed record PrerequisiteCheckResult(
     bool IsSatisfied,
     IEnumerable<PrerequisiteStatus> Prerequisites);
 

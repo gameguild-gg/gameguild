@@ -1,8 +1,8 @@
-﻿using GameGuild.CQRS;
+using GameGuild.CQRS;
 
 namespace GameGuild.Identity.Authentication;
 
-public record GetPeriodicAccessReviewsQuery : IQuery<PagedResult<PeriodicAccessReview>>
+public sealed record GetPeriodicAccessReviewsQuery : IQuery<PagedResult<PeriodicAccessReview>>
 {
     public Guid? TenantId { get; init; }
 

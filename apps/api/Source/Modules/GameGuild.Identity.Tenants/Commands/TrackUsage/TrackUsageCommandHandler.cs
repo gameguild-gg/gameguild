@@ -6,7 +6,7 @@ namespace GameGuild.Identity.Tenants;
 /// <summary>
 ///     Handler for tracking usage
 /// </summary>
-public class TrackUsageCommandHandler(ITenantRepository tenantRepository, IUsageTrackingService usageTrackingService) : ICommandHandler<TrackUsageCommand, TrackUsageResponse>
+public sealed class TrackUsageCommandHandler(ITenantRepository tenantRepository, IUsageTrackingService usageTrackingService) : ICommandHandler<TrackUsageCommand, TrackUsageResponse>
 {
     public async Task<TrackUsageResponse> Handle(TrackUsageCommand request, CancellationToken cancellationToken)
     {

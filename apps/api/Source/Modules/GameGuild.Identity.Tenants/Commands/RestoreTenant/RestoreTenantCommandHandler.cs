@@ -5,7 +5,7 @@ namespace GameGuild.Identity.Tenants;
 /// <summary>
 ///     Handler for restoring a tenant
 /// </summary>
-public class RestoreTenantCommandHandler(ITenantRepository tenantRepository) : ICommandHandler<RestoreTenantCommand, RestoreTenantResponse>
+public sealed class RestoreTenantCommandHandler(ITenantRepository tenantRepository) : ICommandHandler<RestoreTenantCommand, RestoreTenantResponse>
 {
     public async Task<RestoreTenantResponse> Handle(RestoreTenantCommand request, CancellationToken cancellationToken)
     {

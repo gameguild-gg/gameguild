@@ -7,7 +7,7 @@ namespace GameGuild.Learning.Experience.Discovery;
 /// <summary>
 /// Command handlers for Discovery module
 /// </summary>
-public class DiscoveryCommandHandlers(IApplicationDbContext context, ILogger<DiscoveryCommandHandlers> logger)
+public sealed class DiscoveryCommandHandlers(IApplicationDbContext context, ILogger<DiscoveryCommandHandlers> logger)
     : ICommandHandler<CreateFeaturedContentCommand, FeaturedContent>,
       ICommandHandler<UpdateFeaturedContentCommand, FeaturedContent?>,
       ICommandHandler<DeleteFeaturedContentCommand, bool>,

@@ -217,4 +217,4 @@ public class RecommendationsController(IRecommendationService recommendationServ
 /// <summary>
 /// Request DTO for adding a skill
 /// </summary>
-public record AddSkillRequest(string Skill);
+public sealed record AddSkillRequest(string Skill);

@@ -5,7 +5,7 @@ namespace GameGuild.Commerce.Products;
 /// <summary>
 /// Validator for GetProductsPagedQuery
 /// </summary>
-public class GetProductsPagedQueryValidator : AbstractValidator<GetProductsPagedQuery>
+public sealed class GetProductsPagedQueryValidator : AbstractValidator<GetProductsPagedQuery>
 {
     private static readonly string[] AllowedSortFields = { "name", "createdat", "updatedat" };
     private static readonly string[] AllowedSortDirections = { "asc", "desc" };

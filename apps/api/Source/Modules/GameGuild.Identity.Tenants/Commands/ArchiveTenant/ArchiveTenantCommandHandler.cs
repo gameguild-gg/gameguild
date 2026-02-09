@@ -5,7 +5,7 @@ namespace GameGuild.Identity.Tenants;
 /// <summary>
 ///     Handler for archiving a tenant
 /// </summary>
-public class ArchiveTenantCommandHandler(ITenantRepository tenantRepository) : ICommandHandler<ArchiveTenantCommand, ArchiveTenantResponse>
+public sealed class ArchiveTenantCommandHandler(ITenantRepository tenantRepository) : ICommandHandler<ArchiveTenantCommand, ArchiveTenantResponse>
 {
     public async Task<ArchiveTenantResponse> Handle(ArchiveTenantCommand request, CancellationToken cancellationToken)
     {

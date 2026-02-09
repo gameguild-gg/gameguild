@@ -14,7 +14,7 @@ namespace GameGuild.Resources;
 ///     which uses <c>TryAtomicConsumeAsync</c> for atomic reservation.
 ///     </para>
 /// </summary>
-public class CheckResourceQuotaQueryHandler(IResourceQuotaRepository resourceQuotaRepository) : IQueryHandler<CheckResourceQuotaQuery, ResourceQuotaEnforcementResult>
+public sealed class CheckResourceQuotaQueryHandler(IResourceQuotaRepository resourceQuotaRepository) : IQueryHandler<CheckResourceQuotaQuery, ResourceQuotaEnforcementResult>
 {
     public async Task<ResourceQuotaEnforcementResult> Handle(CheckResourceQuotaQuery request, CancellationToken cancellationToken)
     {
