@@ -59,10 +59,6 @@ FROM orders o
 JOIN customers c ON o.customer_id = c.id;
 ```
 
----
-
-## INNER JOIN Visual
-
 ```
 customers              orders
 +----+-------+         +----+-------------+

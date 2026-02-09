@@ -30,11 +30,11 @@
 
 ### The Go Problem
 
-| Game          | Branching Factor | Typical Depth | Game Tree Size     |
-| ------------- | --------------- | ------------- | ------------------ |
-| Tic-Tac-Toe   | ~4              | 9             | $\sim 10^{5}$     |
-| Chess         | ~35             | 80            | $\sim 10^{120}$   |
-| **Go (19×19)** | **~250**         | **150**       | $\sim 10^{360}$   |
+| Game           | Branching Factor | Typical Depth | Game Tree Size  |
+| -------------- | ---------------- | ------------- | --------------- |
+| Tic-Tac-Toe    | ~4               | 9             | $\sim 10^{5}$   |
+| Chess          | ~35              | 80            | $\sim 10^{120}$ |
+| **Go (19×19)** | **~250**         | **150**       | $\sim 10^{360}$ |
 
 Minimax with alpha-beta is **infeasible** for Go!
 
@@ -97,12 +97,12 @@ Starting from the root, traverse the tree using a **tree policy** until reaching
 
 ```mermaid
 flowchart TD
-    A["Root\n10/20"] --> B["Child A\n6/12"]
-    A --> C["Child B\n4/8"]
-    B --> D["Leaf D\n2/4"]
-    B --> E["Leaf E\n4/8"]
-    C --> F["Leaf F\n3/6"]
-    C --> G["Leaf G\n1/2"]
+    A["Root<br>10/20"] --> B["Child A<br>6/12"]
+    A --> C["Child B<br>4/8"]
+    B --> D["Leaf D<br>2/4"]
+    B --> E["Leaf E<br>4/8"]
+    C --> F["Leaf F<br>3/6"]
+    C --> G["Leaf G<br>1/2"]
 
     style A fill:#ffb
     style B fill:#ffb
@@ -127,9 +127,9 @@ $$UCB1 = \frac{w_i}{n_i} + C \sqrt{\frac{\ln N}{n_i}}$$
 
 ```mermaid
 flowchart TD
-    A["Parent N=100"] --> B["Child A\nw=45, n=50\nWR=90%"]
-    A --> C["Child B\nw=8, n=10\nWR=80%"]
-    A --> D["Child C\nw=0, n=0\nUCB=∞"]
+    A["Parent N=100"] --> B["Child A<br>w=45, n=50<br>WR=90%"]
+    A --> C["Child B<br>w=8, n=10<br>WR=80%"]
+    A --> D["Child C<br>w=0, n=0<br>UCB=∞"]
 
     style B fill:#bfb
     style D fill:#ffb
@@ -172,9 +172,9 @@ When a leaf node is reached that is **not terminal**:
 
 ```mermaid
 flowchart TD
-    A["Selected Leaf\n3/6"] --> B["New Child 1\n0/0"]
-    A --> C["New Child 2\n0/0"]
-    A --> D["New Child 3\n0/0"]
+    A["Selected Leaf<br>3/6"] --> B["New Child 1<br>0/0"]
+    A --> C["New Child 2<br>0/0"]
+    A --> D["New Child 3<br>0/0"]
 
     style A fill:#ffb
     style B fill:#bfb
@@ -215,8 +215,7 @@ From the newly expanded node, play a **random game** to completion:
 flowchart TD
     A["Expanded Node"] --> B["Random Move 1"]
     B --> C["Random Move 2"]
-    C --> D["Random Move 3"]
-    D --> E["..."]
+    C --> E["..."]
     E --> F["Terminal State"]
     F --> G{"Result?"}
     G -->|Win| H["Return 1"]
@@ -260,12 +259,12 @@ double simulate(MCTSNode* node) {
 
 ### Improving Rollouts
 
-| Strategy               | Description                                  |
-| ---------------------- | -------------------------------------------- |
-| **Random** (default)   | Uniform random moves — fast but noisy        |
-| **Light playout**      | Simple heuristics (capture when possible)    |
-| **Heavy playout**      | Pattern matching, domain knowledge           |
-| **Neural network**     | Learned policy (AlphaGo approach)            |
+| Strategy             | Description                               |
+| -------------------- | ----------------------------------------- |
+| **Random** (default) | Uniform random moves — fast but noisy     |
+| **Light playout**    | Simple heuristics (capture when possible) |
+| **Heavy playout**    | Pattern matching, domain knowledge        |
+| **Neural network**   | Learned policy (AlphaGo approach)         |
 
 Better rollout policies → fewer iterations needed
 
@@ -281,9 +280,9 @@ Update **every node** on the path from the simulated leaf back to the root:
 
 ```mermaid
 flowchart TD
-    A["Root\n11/21 ⬆"] --> B["Child\n7/13 ⬆"]
-    B --> C["Leaf\n3/5 ⬆"]
-    C --> D["Simulated\nResult: WIN"]
+    A["Root<br>11/21 ⬆"] --> B["Child<br>7/13 ⬆"]
+    B --> C["Leaf<br>3/5 ⬆"]
+    C --> D["Simulated<br>Result: WIN"]
 
     style D fill:#bfb
     style C fill:#ffb
@@ -352,11 +351,11 @@ Move mctsSearch(GameState rootState, int iterations) {
 
 After all iterations, select the child of root with:
 
-| Strategy          | Formula            | When to Use                |
-| ----------------- | ------------------ | -------------------------- |
-| **Most visits**   | $\max(n_i)$        | Most reliable (default)    |
-| **Highest win rate** | $\max(w_i/n_i)$ | When sample size is equal  |
-| **Robust child**  | Both agree         | Tournament play            |
+| Strategy             | Formula         | When to Use               |
+| -------------------- | --------------- | ------------------------- |
+| **Most visits**      | $\max(n_i)$     | Most reliable (default)   |
+| **Highest win rate** | $\max(w_i/n_i)$ | When sample size is equal |
+| **Robust child**     | Both agree      | Tournament play           |
 
 ```cpp
 MCTSNode* bestChild(MCTSNode* root) {
@@ -379,7 +378,7 @@ MCTSNode* bestChild(MCTSNode* root) {
 
 ```mermaid
 flowchart TD
-    A["Root\n0/0"]
+    A["Root<br>0/0"]
 
     style A fill:#ffb
 ```
@@ -392,9 +391,9 @@ Start with just the root node. No information yet.
 
 ```mermaid
 flowchart TD
-    A["Root\n0/0"] --> B["Move A\n0/0"]
-    A --> C["Move B\n0/0"]
-    A --> D["Move C\n0/0"]
+    A["Root<br>0/0"] --> B["Move A<br>0/0"]
+    A --> C["Move B<br>0/0"]
+    A --> D["Move C<br>0/0"]
 
     style A fill:#ffb
     style B fill:#bfb
@@ -410,9 +409,9 @@ Expand root → generate all children. Pick one for simulation.
 
 ```mermaid
 flowchart TD
-    A["Root\n1/1"] --> B["Move A\n1/1 ← WIN"]
-    A --> C["Move B\n0/0"]
-    A --> D["Move C\n0/0"]
+    A["Root<br>1/1"] --> B["Move A<br>1/1 ← WIN"]
+    A --> C["Move B<br>0/0"]
+    A --> D["Move C<br>0/0"]
 
     style A fill:#ffb
     style B fill:#bfb
@@ -428,9 +427,9 @@ Rollout from Move A → WIN. Update: A gets 1/1, Root gets 1/1.
 
 ```mermaid
 flowchart TD
-    A["Root\n1/2"] --> B["Move A\n1/1"]
-    A --> C["Move B\n0/1 ← LOSS"]
-    A --> D["Move C\n0/0"]
+    A["Root<br>1/2"] --> B["Move A<br>1/1"]
+    A --> C["Move B<br>0/1 ← LOSS"]
+    A --> D["Move C<br>0/0"]
 
     style A fill:#ffb
     style B fill:#ddd
@@ -446,9 +445,9 @@ UCB sends us to Move B (unvisited = ∞). Rollout → LOSS.
 
 ```mermaid
 flowchart TD
-    A["Root\n2/3"] --> B["Move A\n1/1"]
-    A --> C["Move B\n0/1"]
-    A --> D["Move C\n1/1 ← WIN"]
+    A["Root<br>2/3"] --> B["Move A<br>1/1"]
+    A --> C["Move B<br>0/1"]
+    A --> D["Move C<br>1/1 ← WIN"]
 
     style A fill:#ffb
     style B fill:#ddd
@@ -464,9 +463,9 @@ UCB sends us to Move C (unvisited). Rollout → WIN.
 
 ```mermaid
 flowchart TD
-    A["Root\n502/1000"] --> B["Move A\n250/500"]
-    A --> C["Move B\n52/200"]
-    A --> D["Move C\n200/300"]
+    A["Root<br>502/1000"] --> B["Move A<br>250/500"]
+    A --> C["Move B<br>52/200"]
+    A --> D["Move C<br>200/300"]
 
     style A fill:#ffb
     style B fill:#bfb
@@ -475,6 +474,7 @@ flowchart TD
 ```
 
 After 1000 iterations:
+
 - Move A: 500 visits, 50% win rate → **most visited**
 - Move B: 200 visits, 26% win rate → worst
 - Move C: 300 visits, 67% win rate → highest win rate
@@ -527,8 +527,8 @@ MCTS Selection ≈ **Multi-Armed Bandit** problem:
 
 ```mermaid
 flowchart LR
-    A["🎰 Arm 1\n?? payout"] --- B["🎰 Arm 2\n?? payout"]
-    B --- C["🎰 Arm 3\n?? payout"]
+    A["🎰 Arm 1<br>?? payout"] --- B["🎰 Arm 2<br>?? payout"]
+    B --- C["🎰 Arm 3<br>?? payout"]
 ```
 
 Which arm do you pull next? UCB1 tells you!
@@ -541,24 +541,24 @@ Which arm do you pull next? UCB1 tells you!
 
 ### Advantages of MCTS
 
-| Property             | Description                                         |
-| -------------------- | --------------------------------------------------- |
-| **Anytime**          | Can return a move at any point (more time = better) |
-| **No eval needed**   | Doesn't require a heuristic evaluation function     |
-| **Asymmetric tree**  | Focuses search on promising branches                |
-| **Domain agnostic**  | Works for any game with defined rules               |
+| Property            | Description                                         |
+| ------------------- | --------------------------------------------------- |
+| **Anytime**         | Can return a move at any point (more time = better) |
+| **No eval needed**  | Doesn't require a heuristic evaluation function     |
+| **Asymmetric tree** | Focuses search on promising branches                |
+| **Domain agnostic** | Works for any game with defined rules               |
 
 ---
 
 ### MCTS vs Minimax
 
-| Feature              | Minimax + α-β        | MCTS                     |
-| -------------------- | --------------------- | ------------------------ |
-| Search type          | Exhaustive (depth)    | Sampling (statistics)    |
-| Eval function        | **Required**          | Not required             |
-| Branching factor     | Sensitive             | Handles large b well     |
-| Time control         | Iterative deepening   | Anytime (natural)        |
-| Optimal play         | Yes (full depth)      | Converges asymptotically |
+| Feature          | Minimax + α-β       | MCTS                     |
+| ---------------- | ------------------- | ------------------------ |
+| Search type      | Exhaustive (depth)  | Sampling (statistics)    |
+| Eval function    | **Required**        | Not required             |
+| Branching factor | Sensitive           | Handles large b well     |
+| Time control     | Iterative deepening | Anytime (natural)        |
+| Optimal play     | Yes (full depth)    | Converges asymptotically |
 
 ---
 
@@ -566,10 +566,10 @@ Which arm do you pull next? UCB1 tells you!
 
 ```mermaid
 flowchart TD
-    A["Root"] --> B["Promising\n(many visits)"]
+    A["Root"] --> B["Promising<br>(many visits)"]
     A --> C["Mediocre"]
-    A --> D["Bad\n(few visits)"]
-    B --> B1["Deep\nanalysis"]
+    A --> D["Bad<br>(few visits)"]
+    B --> B1["Deep<br>analysis"]
     B --> B2["Deep"]
     B1 --> B11["Deeper"]
     B1 --> B12["Deeper"]
@@ -606,10 +606,10 @@ DeepMind's AlphaGo beat Lee Sedol 4-1 in Go:
 ```mermaid
 flowchart TD
     A["Game State"] --> B["Neural Network"]
-    B --> C["Policy Head\n(move probabilities)"]
-    B --> D["Value Head\n(position evaluation)"]
-    C --> E["Guide Selection\n(replace UCB exploration)"]
-    D --> F["Replace Rollout\n(no random simulation)"]
+    B --> C["Policy Head<br>(move probabilities)"]
+    B --> D["Value Head<br>(position evaluation)"]
+    C --> E["Guide Selection<br>(replace UCB exploration)"]
+    D --> F["Replace Rollout<br>(no random simulation)"]
 ```
 
 ---
@@ -629,12 +629,12 @@ Where $p_i$ = **prior probability** from neural network policy.
 
 ### AlphaGo → AlphaZero
 
-| Version         | Year | Key Innovation                        |
-| --------------- | ---- | ------------------------------------- |
-| **AlphaGo Fan** | 2015 | MCTS + CNN + human game data          |
-| **AlphaGo Lee** | 2016 | Deeper networks, beat world champion  |
-| **AlphaGo Zero**| 2017 | Self-play only, no human data         |
-| **AlphaZero**   | 2017 | Generalized to Chess, Shogi, and Go   |
+| Version          | Year | Key Innovation                       |
+| ---------------- | ---- | ------------------------------------ |
+| **AlphaGo Fan**  | 2015 | MCTS + CNN + human game data         |
+| **AlphaGo Lee**  | 2016 | Deeper networks, beat world champion |
+| **AlphaGo Zero** | 2017 | Self-play only, no human data        |
+| **AlphaZero**    | 2017 | Generalized to Chess, Shogi, and Go  |
 
 AlphaZero mastered Chess in **4 hours** of self-play training.
 
@@ -670,11 +670,11 @@ void reuseTree(MCTSNode* root, Move opponentMove) {
 
 Three main approaches:
 
-| Method             | Description                             |
-| ------------------ | --------------------------------------- |
-| **Leaf parallel**  | Multiple rollouts from same leaf        |
-| **Root parallel**  | Independent trees, merge statistics     |
-| **Tree parallel**  | Shared tree with virtual loss           |
+| Method            | Description                         |
+| ----------------- | ----------------------------------- |
+| **Leaf parallel** | Multiple rollouts from same leaf    |
+| **Root parallel** | Independent trees, merge statistics |
+| **Tree parallel** | Shared tree with virtual loss       |
 
 Virtual loss trick: temporarily count a visit as a loss to discourage other threads from visiting the same node.
 
@@ -683,12 +683,14 @@ Virtual loss trick: temporarily count a visit as a loss to discourage other thre
 ### When to Use MCTS
 
 ✅ **Good for:**
+
 - Games with large branching factors (Go, Hex)
 - Games without good evaluation functions
 - Single-player puzzles (planning)
 - Real-time strategy games
 
 ❌ **Less suitable for:**
+
 - Games where minimax works well (Chess, Checkers)
 - Games requiring deep tactical calculation
 - Deterministic games with small state spaces
@@ -743,11 +745,11 @@ public:
 
 ### Complexity
 
-| Aspect           | Value                                      |
-| ---------------- | ------------------------------------------ |
-| Time per iter.   | $O(d)$ where $d$ = simulation depth        |
-| Space            | $O(n)$ nodes in tree (grows incrementally) |
-| Convergence      | Approaches minimax value as $n → ∞$        |
+| Aspect         | Value                                      |
+| -------------- | ------------------------------------------ |
+| Time per iter. | $O(d)$ where $d$ = simulation depth        |
+| Space          | $O(n)$ nodes in tree (grows incrementally) |
+| Convergence    | Approaches minimax value as $n → ∞$        |
 
 ---
 
