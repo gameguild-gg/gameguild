@@ -614,15 +614,23 @@ describe('Courses E2E — full CRUD + lifecycle + content', () => {
       requiresAuth: true,
     });
 
+    if (!result.ok) {
+      console.log('DELETE content error:', JSON.stringify(result.error));
+    } else {
+      console.log('DELETE content ok');
+    }
+
     expect(result.ok).toBe(true);
 
-    // Verify it's gone
-    const getResult = await authedClient.request<ProgramContentDto>({
-      method: 'GET',
-      path: `/v1/courses/${courseId}/content/${assignmentContentId}`,
-      requiresAuth: true,
-    });
-    expect(getResult.ok).toBe(false);
+    if (result.ok) {
+      // Verify it's gone
+      const getResult = await authedClient.request<ProgramContentDto>({
+        method: 'GET',
+        path: `/v1/courses/${courseId}/content/${assignmentContentId}`,
+        requiresAuth: true,
+      });
+      expect(getResult.ok).toBe(false);
+    }
   });
 
   // ── 28. Remove user from course ────────────────────────────────────────
@@ -633,6 +641,11 @@ describe('Courses E2E — full CRUD + lifecycle + content', () => {
       requiresAuth: true,
     });
 
+    if (!result.ok) {
+      console.log('DELETE user error:', JSON.stringify(result.error));
+    } else {
+      console.log('DELETE user ok');
+    }
     expect(result.ok).toBe(true);
   });
 
@@ -644,15 +657,22 @@ describe('Courses E2E — full CRUD + lifecycle + content', () => {
       requiresAuth: true,
     });
 
+    if (!result.ok) {
+      console.log('DELETE course error:', JSON.stringify(result.error));
+    } else {
+      console.log('DELETE course ok');
+    }
     expect(result.ok).toBe(true);
 
-    // Verify it's gone
-    const getResult = await authedClient.request<ProgramDto>({
-      method: 'GET',
-      path: `/v1/courses/${courseId}`,
-      requiresAuth: true,
-    });
-    expect(getResult.ok).toBe(false);
+    if (result.ok) {
+      // Verify it's gone
+      const getResult = await authedClient.request<ProgramDto>({
+        method: 'GET',
+        path: `/v1/courses/${courseId}`,
+        requiresAuth: true,
+      });
+      expect(getResult.ok).toBe(false);
+    }
   });
 
   it('deletes the cloned course', async () => {
@@ -662,6 +682,11 @@ describe('Courses E2E — full CRUD + lifecycle + content', () => {
       requiresAuth: true,
     });
 
+    if (!result.ok) {
+      console.log('DELETE cloned error:', JSON.stringify(result.error));
+    } else {
+      console.log('DELETE cloned ok');
+    }
     expect(result.ok).toBe(true);
   });
 });

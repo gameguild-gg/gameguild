@@ -67,9 +67,9 @@ public sealed class ProgramBasicQueryHandlers(IApplicationDbContext context, ILo
       .AsNoTracking() // Read-only query optimization
       .Where(p => p.Id == request.Id && p.DeletedAt == null);
 
-    if (request.IncludeContent) query = query.Include(p => p.ProgramContents.Where(pc => !pc.IsDeleted));
+    if (request.IncludeContent) query = query.Include(p => p.ProgramContents.Where(pc => pc.DeletedAt == null));
 
-    if (request.IncludeEnrollments) query = query.Include(p => p.ProgramUsers.Where(pu => !pu.IsDeleted));
+    if (request.IncludeEnrollments) query = query.Include(p => p.ProgramUsers.Where(pu => pu.DeletedAt == null));
 
     if (request.IncludeRatings) query = query.Include(p => p.ProgramRatings);
 
@@ -90,9 +90,9 @@ public sealed class ProgramBasicQueryHandlers(IApplicationDbContext context, ILo
       .AsNoTracking() // Read-only query optimization
       .Where(p => p.Slug == request.Slug && p.DeletedAt == null);
 
-    if (request.IncludeContent) query = query.Include(p => p.ProgramContents.Where(pc => !pc.IsDeleted));
+    if (request.IncludeContent) query = query.Include(p => p.ProgramContents.Where(pc => pc.DeletedAt == null));
 
-    if (request.IncludeEnrollments) query = query.Include(p => p.ProgramUsers.Where(pu => !pu.IsDeleted));
+    if (request.IncludeEnrollments) query = query.Include(p => p.ProgramUsers.Where(pu => pu.DeletedAt == null));
 
     if (request.IncludeRatings) query = query.Include(p => p.ProgramRatings);
 
@@ -111,7 +111,7 @@ public sealed class ProgramBasicQueryHandlers(IApplicationDbContext context, ILo
 
     var query = context.Set<Program>().Where(p => p.Slug == request.Slug && p.DeletedAt == null && p.Status == ContentStatus.Published && p.Visibility == ContentVisibility.Public);
 
-    if (request.IncludeContent) query = query.Include(p => p.ProgramContents.Where(pc => !pc.IsDeleted));
+    if (request.IncludeContent) query = query.Include(p => p.ProgramContents.Where(pc => pc.DeletedAt == null));
 
     var program = await query.FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
 

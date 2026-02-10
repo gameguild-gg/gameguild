@@ -18,9 +18,9 @@ public sealed class GetProgramBySlugQueryHandler(IApplicationDbContext context, 
       .AsNoTracking() // Read-only query optimization
       .Where(p => p.Slug == request.Slug && p.DeletedAt == null);
 
-    if (request.IncludeContent) query = query.Include(p => p.ProgramContents.Where(pc => !pc.IsDeleted));
+    if (request.IncludeContent) query = query.Include(p => p.ProgramContents.Where(pc => pc.DeletedAt == null));
 
-    if (request.IncludeEnrollments) query = query.Include(p => p.ProgramUsers.Where(pu => !pu.IsDeleted));
+    if (request.IncludeEnrollments) query = query.Include(p => p.ProgramUsers.Where(pu => pu.DeletedAt == null));
 
     if (request.IncludeRatings) query = query.Include(p => p.ProgramRatings);
 

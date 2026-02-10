@@ -43,7 +43,7 @@ public sealed class ProgramEnrollmentAndProgressQueryHandlers(IApplicationDbCont
 
     var query = context.Set<ProgramContent>()
       .AsNoTracking() // Read-only query optimization
-      .Where(pc => pc.ProgramId == request.ProgramId && !pc.IsDeleted);
+      .Where(pc => pc.ProgramId == request.ProgramId && pc.DeletedAt == null);
 
     if (request.OnlyVisible) {
       query = query.Where(pc => pc.Visibility == Visibility.Public); // Filter by public visibility
@@ -116,7 +116,7 @@ public sealed class ProgramEnrollmentAndProgressQueryHandlers(IApplicationDbCont
 
     if (enrollment == null) return null;
 
-    var totalContent = await context.Set<ProgramContent>().Where(pc => pc.ProgramId == request.ProgramId && !pc.IsDeleted).CountAsync(cancellationToken).ConfigureAwait(false);
+    var totalContent = await context.Set<ProgramContent>().Where(pc => pc.ProgramId == request.ProgramId && pc.DeletedAt == null).CountAsync(cancellationToken).ConfigureAwait(false);
 
     // Note: This is a simplified implementation. You might want to track actual content completion
     var completedContent = 0; // This would need to be calculated from actual progress tracking

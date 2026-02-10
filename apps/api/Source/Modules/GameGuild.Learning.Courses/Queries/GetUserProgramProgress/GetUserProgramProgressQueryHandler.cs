@@ -41,7 +41,7 @@ public sealed class GetUserProgramProgressQueryHandler(
         // Get total content count for the program
         var totalContent = await context.Set<ProgramContent>()
             .AsNoTracking()
-            .CountAsync(c => c.ProgramId == request.ProgramId && !c.IsDeleted, cancellationToken).ConfigureAwait(false);
+            .CountAsync(c => c.ProgramId == request.ProgramId && c.DeletedAt == null, cancellationToken).ConfigureAwait(false);
 
         // Get completed content count
         var completedContent = await context.Set<ContentProgress>()

@@ -56,6 +56,6 @@ public class CoursePrerequisiteConfiguration : IEntityTypeConfiguration<CoursePr
         builder.HasIndex(cp => cp.TenantId);
 
         // Global query filter for soft delete
-        builder.HasQueryFilter(cp => !cp.IsDeleted);
+        builder.HasQueryFilter(cp => cp.DeletedAt == null);
     }
 }

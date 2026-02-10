@@ -27,8 +27,8 @@ public static class ProgramContentMappingExtensions {
       UpdatedAt = content.UpdatedAt,
       ProgramTitle = content.Program?.Title,
       ParentTitle = content.Parent?.Title,
-      ChildrenCount = content.Children?.Count(c => !c.IsDeleted) ?? 0,
-      Children = content.Children?.Where(c => !c.IsDeleted).Select(c => c.ToDto()).ToList() ?? new List<ProgramContentDto>(),
+      ChildrenCount = content.Children?.Count(c => c.DeletedAt == null) ?? 0,
+      Children = content.Children?.Where(c => c.DeletedAt == null).Select(c => c.ToDto()).ToList() ?? new List<ProgramContentDto>(),
     };
   }
 

@@ -16,7 +16,7 @@ public sealed class GetPublishedProgramBySlugQueryHandler(IApplicationDbContext 
 
     var query = context.Set<Program>().Where(p => p.Slug == request.Slug && p.DeletedAt == null && p.Status == ContentStatus.Published && p.Visibility == ContentVisibility.Public);
 
-    if (request.IncludeContent) query = query.Include(p => p.ProgramContents.Where(pc => !pc.IsDeleted));
+    if (request.IncludeContent) query = query.Include(p => p.ProgramContents.Where(pc => pc.DeletedAt == null));
 
     var program = await query.FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
 
