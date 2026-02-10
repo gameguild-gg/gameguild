@@ -157,4 +157,155 @@ public class PasswordHasherTests
         // Assert
         result.Should().BeFalse();
     }
+
+    // --- NeedsUpgrade / NeedsRehashAsync ---
+
+    [Fact]
+    public void NeedsUpgrade_WithCurrentWorkFactor_ShouldReturnFalse()
+    {
+        var hash = _passwordHasher.HashPassword("StrongP@ss1");
+        _passwordHasher.NeedsUpgrade(hash).Should().BeFalse();
+    }
+
+    [Fact]
+    public void NeedsUpgrade_WithLowerWorkFactor_ShouldReturnTrue()
+    {
+        var hash = BCrypt.Net.BCrypt.HashPassword("StrongP@ss1", 10);
+        _passwordHasher.NeedsUpgrade(hash).Should().BeTrue();
+    }
+
+    [Fact]
+    public void NeedsUpgrade_WithInvalidFormat_ShouldReturnTrue()
+    {
+        _passwordHasher.NeedsUpgrade("not-a-hash").Should().BeTrue();
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("   ")]
+    public void NeedsUpgrade_WithNullOrEmpty_ShouldReturnFalse(string? hash)
+    {
+        _passwordHasher.NeedsUpgrade(hash!).Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task NeedsRehashAsync_ShouldWorkWithCurrentHash()
+    {
+        var hash = await _passwordHasher.HashPasswordAsync("StrongP@ss1");
+        (await _passwordHasher.NeedsRehashAsync(hash)).Should().BeFalse();
+    }
+
+    // --- ValidatePasswordStrength ---
+
+    [Fact]
+    public void ValidatePasswordStrength_ValidPassword_ShouldBeValid()
+    {
+        var result = _passwordHasher.ValidatePasswordStrength("Str0ng!Pass");
+
+        result.IsValid.Should().BeTrue();
+        result.ValidationFailures.Should().BeEmpty();
+        result.StrengthScore.Should().BeGreaterThan(0);
+        result.StrengthLevel.Should().NotBeEmpty();
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("   ")]
+    public void ValidatePasswordStrength_NullOrEmpty_ShouldBeInvalid(string? password)
+    {
+        var result = _passwordHasher.ValidatePasswordStrength(password!);
+
+        result.IsValid.Should().BeFalse();
+        result.ValidationFailures.Should().Contain("Password is required");
+    }
+
+    [Fact]
+    public void ValidatePasswordStrength_TooShort_ShouldFail()
+    {
+        var result = _passwordHasher.ValidatePasswordStrength("Ab1!");
+
+        result.IsValid.Should().BeFalse();
+        result.ValidationFailures.Should().Contain(f => f.Contains("at least"));
+    }
+
+    [Fact]
+    public void ValidatePasswordStrength_NoUppercase_ShouldFail()
+    {
+        var result = _passwordHasher.ValidatePasswordStrength("nouppercase1!");
+
+        result.IsValid.Should().BeFalse();
+        result.ValidationFailures.Should().Contain(f => f.Contains("uppercase"));
+    }
+
+    [Fact]
+    public void ValidatePasswordStrength_NoLowercase_ShouldFail()
+    {
+        var result = _passwordHasher.ValidatePasswordStrength("NOLOWERCASE1!");
+
+        result.IsValid.Should().BeFalse();
+        result.ValidationFailures.Should().Contain(f => f.Contains("lowercase"));
+    }
+
+    [Fact]
+    public void ValidatePasswordStrength_NoDigit_ShouldFail()
+    {
+        var result = _passwordHasher.ValidatePasswordStrength("NoDigitHere!");
+
+        result.IsValid.Should().BeFalse();
+        result.ValidationFailures.Should().Contain(f => f.Contains("digit"));
+    }
+
+    [Fact]
+    public void ValidatePasswordStrength_NoSpecialChar_ShouldFail()
+    {
+        var result = _passwordHasher.ValidatePasswordStrength("NoSpecialChar1");
+
+        result.IsValid.Should().BeFalse();
+        result.ValidationFailures.Should().Contain(f => f.Contains("special"));
+    }
+
+    [Fact]
+    public void ValidatePasswordStrength_CommonPassword_ShouldFail()
+    {
+        var result = _passwordHasher.ValidatePasswordStrength("password");
+
+        result.IsValid.Should().BeFalse();
+        result.ValidationFailures.Should().Contain(f => f.Contains("common"));
+    }
+
+    [Fact]
+    public async Task ValidatePasswordStrengthAsync_ShouldWork()
+    {
+        var result = await _passwordHasher.ValidatePasswordStrengthAsync("Str0ng!Pass");
+        result.IsValid.Should().BeTrue();
+    }
+
+    // --- Sync methods ---
+
+    [Fact]
+    public void HashPassword_Sync_ShouldReturnHash()
+    {
+        var hash = _passwordHasher.HashPassword("StrongP@ss1");
+        hash.Should().StartWith("$2");
+    }
+
+    [Fact]
+    public void VerifyPassword_Sync_ShouldVerify()
+    {
+        var hash = _passwordHasher.HashPassword("StrongP@ss1");
+        _passwordHasher.VerifyPassword(hash, "StrongP@ss1").Should().BeTrue();
+        _passwordHasher.VerifyPassword(hash, "WrongP@ss1").Should().BeFalse();
+    }
+
+    [Theory]
+    [InlineData(null, "pass")]
+    [InlineData("", "pass")]
+    [InlineData("hash", null)]
+    [InlineData("hash", "")]
+    public void VerifyPassword_Sync_WithNullOrEmpty_ShouldReturnFalse(string? hash, string? password)
+    {
+        _passwordHasher.VerifyPassword(hash!, password!).Should().BeFalse();
+    }
 }
