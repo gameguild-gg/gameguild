@@ -495,6 +495,42 @@ Kernel can interrupt at any time (preemptive)
 
 ---
 
+## Thread Context Switch
+
+**What happens during a context switch:**
+
+1. Save CPU registers to memory
+2. Save stack pointer + instruction pointer
+3. Load next thread's registers
+4. Resume execution
+
+**Cost:** ~1-10 μs per switch
+
+---
+
+## Thread-Per-Connection
+
+```cpp
+void handle_client(tcp::socket socket) {
+    while (true) {
+        auto msg = recv_message(socket);  // Blocks THIS thread only
+        auto response = process(msg);
+        send_message(socket, response);
+    }
+}
+
+int main() {
+    while (true) {
+        tcp::socket socket = acceptor.accept();
+        std::thread(handle_client, std::move(socket)).detach();
+    }
+}
+```
+
+Simple but doesn't scale beyond thousands
+
+---
+
 ## OS Threads: Pros & Cons
 
 **Pros:**
@@ -528,6 +564,39 @@ sequenceDiagram
 ```
 
 Programmer explicitly yields (cooperative)
+
+---
+
+## How co_await Works
+
+1. Check if result is ready
+2. If not: save state to heap (coroutine frame)
+3. Return control to event loop
+4. Later: resume when I/O completes
+5. Continue from suspension point
+
+**Key:** Only suspends at explicit `co_await` points
+
+---
+
+## Callbacks vs Coroutines
+
+```cpp
+// Callback hell:
+async_read(socket, buf, [](auto ec, auto n) {
+    async_write(socket, buf, [](auto ec, auto n) {
+        async_read(socket, buf, [](auto ec, auto n) {
+            // Deeply nested...
+        });
+    });
+});
+
+// Coroutine:
+co_await async_read(socket, buf, use_awaitable);
+co_await async_write(socket, buf, use_awaitable);
+co_await async_read(socket, buf, use_awaitable);
+// Flat, readable!
+```
 
 ---
 
@@ -600,6 +669,56 @@ std::jthread thread(handler, std::move(socket));
 
 ---
 
+## jthread vs thread
+
+| Feature      | std::thread    | std::jthread        |
+| ------------ | -------------- | ------------------- |
+| Destructor   | std::terminate | Joins automatically |
+| Cancellation | Manual flag    | Built-in stop_token |
+| Request stop | Manual         | request_stop()      |
+
+**Use std::jthread** unless you need C++11/14/17 compatibility
+
+---
+
+## Cooperative Cancellation
+
+```cpp
+void handler(tcp::socket socket, std::stop_token stop) {
+    // Register cleanup callback
+    std::stop_callback cb(stop, [&socket]() {
+        socket.cancel();  // Cancel pending I/O
+    });
+
+    while (!stop.stop_requested()) {
+        auto msg = recv_message(socket);
+        process(msg);
+    }
+}
+
+// Request graceful shutdown:
+thread.request_stop();
+// Destructor waits for thread to finish
+```
+
+---
+
+## io_context: The Event Loop
+
+```mermaid
+flowchart LR
+    A1[async_read] --> Q[Work Queue]
+    A2[async_write] --> Q
+    Q --> R[Reactor]
+    R -->|ready| H[Handlers]
+```
+
+- `io_context.run()` blocks until all work done
+- One thread can handle thousands of connections
+- Handlers execute one at a time (per thread)
+
+---
+
 ## Boost.Asio Callbacks
 
 ```cpp
@@ -619,26 +738,109 @@ class Session : public std::enable_shared_from_this<Session> {
 
 ---
 
+## Why shared_from_this?
+
+```cpp
+auto self = shared_from_this();
+```
+
+**Problem:** Handler runs later, Session may be destroyed
+
+**Solution:** Capture `self` (shared_ptr) in lambda
+
+- Keeps Session alive until handler runs
+- When error occurs, self released, Session destroyed
+
+---
+
+## Multi-threaded io_context
+
+```cpp
+boost::asio::io_context io;
+Server server(io, 12345);
+
+std::vector<std::jthread> threads;
+for (size_t i = 0; i < num_cores; ++i) {
+    threads.emplace_back([&io]() {
+        io.run();  // Multiple threads process handlers
+    });
+}
+```
+
+Use **strand** to serialize handlers when needed
+
+---
+
 ## C++20 Coroutines
 
 ```cpp
-boost::asio::awaitable<void> handle_client(tcp::socket socket) {
-    while (true) {
-        uint32_t net_len;
-        co_await boost::asio::async_read(socket,
-            boost::asio::buffer(&net_len, 4),
-            boost::asio::use_awaitable);
+awaitable<void> handle_client(tcp::socket socket) {
+    try {
+        while (true) {
+            uint32_t net_len;
+            co_await async_read(socket,
+                buffer(&net_len, 4), use_awaitable);
 
-        uint32_t len = boost::endian::big_to_native(net_len);
-        std::vector<uint8_t> payload(len);
-        co_await boost::asio::async_read(socket,
-            boost::asio::buffer(payload),
-            boost::asio::use_awaitable);
+            uint32_t len = big_to_native(net_len);
+            std::vector<uint8_t> payload(len);
+            co_await async_read(socket,
+                buffer(payload), use_awaitable);
 
-        process(payload);
+            process(payload);
+        }
+    } catch (std::exception&) {
+        // Connection closed
     }
 }
 ```
+
+---
+
+## Spawning Coroutines
+
+```cpp
+awaitable<void> accept_loop(tcp::acceptor& acceptor) {
+    while (true) {
+        auto socket = co_await acceptor.async_accept(use_awaitable);
+
+        // Spawn new coroutine for this client
+        co_spawn(acceptor.get_executor(),
+            handle_client(std::move(socket)),
+            detached);  // Fire and forget
+    }
+}
+
+int main() {
+    io_context io;
+    tcp::acceptor acceptor(io, {tcp::v4(), 12345});
+    co_spawn(io, accept_loop(acceptor), detached);
+    io.run();
+}
+```
+
+---
+
+## Coroutine Error Handling
+
+```cpp
+awaitable<void> client_handler(tcp::socket socket) {
+    try {
+        // ... main loop ...
+    } catch (boost::system::system_error& e) {
+        if (e.code() == error::eof) {
+            // Clean disconnect
+        } else if (e.code() == error::operation_aborted) {
+            // Cancelled
+        } else {
+            // Real error
+        }
+    }
+}
+```
+
+Exceptions replace error codes in coroutines
+
+````
 
 ---
 
@@ -666,7 +868,7 @@ try {
         // Error during transfer
     }
 }
-```
+````
 
 ---
 
