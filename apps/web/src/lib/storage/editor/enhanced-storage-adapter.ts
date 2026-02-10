@@ -24,6 +24,7 @@ export interface ProjectData {
   storageType: StorageType
   isLocallyAvailable?: boolean // Computed dynamically based on local storage check
   preferences?: ProjectPreferences // Project-level preferences
+  deps?: ProjectData[] // Dependent type2 projects (used by type3 slideshow)
 }
 
 interface TagData {
@@ -172,7 +173,7 @@ export class EnhancedStorageAdapter {
     }
   }
 
-  async save(id: string, name: string, data: string, tags: string[] = [], storageType: StorageType = STORAGE_TYPES.LOCAL, preferences?: ProjectPreferences, type: ProjectType = PROJECT_TYPES.TYPE1): Promise<void> {
+  async save(id: string, name: string, data: string, tags: string[] = [], storageType: StorageType = STORAGE_TYPES.LOCAL, preferences?: ProjectPreferences, type: ProjectType = PROJECT_TYPES.TYPE1, deps?: ProjectData[]): Promise<void> {
     if (!this.isInitialized) throw new Error("Storage adapter not initialized")
 
     const hash = await HashManager.generateHash(data)
@@ -195,6 +196,7 @@ export class EnhancedStorageAdapter {
       syncStatus: SYNC_STATUS.PENDING,
       storageType,
       preferences: preferences || existing?.preferences, // Preserve existing preferences if not provided
+      deps: deps ?? existing?.deps, // Preserve existing deps if not provided
     }
 
     // Save to IndexedDB

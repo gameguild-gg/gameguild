@@ -1,6 +1,7 @@
 import { toast } from "sonner"
 import type { ProjectPreferences } from "@/lib/storage/editor/project-preferences"
 import type { ProjectType } from "@/lib/storage/editor/project-types"
+import { detectProjectLayout } from "@/lib/storage/editor/layout-detector"
 
 export interface ProjectData {
   id: string
@@ -14,6 +15,7 @@ export interface ProjectData {
   storageType?: "local" | "gameguild-cloud" | "google-drive"
   isLocallyAvailable?: boolean
   preferences?: ProjectPreferences
+  deps?: any[]
 }
 
 export interface CheckSelectedProjectPreviewParams {
@@ -21,6 +23,7 @@ export interface CheckSelectedProjectPreviewParams {
     load: (id: string) => Promise<ProjectData | null>
   }
   setCurrentProject: (project: ProjectData | null) => void
+  setResolvedProjects?: (projects: Map<string, any>) => void
 }
 
 /**
@@ -30,7 +33,36 @@ export interface CheckSelectedProjectPreviewParams {
 export async function checkSelectedProject(
   params: CheckSelectedProjectPreviewParams,
 ): Promise<void> {
-  const { storageAdapter, setCurrentProject } = params
+  const { storageAdapter, setCurrentProject, setResolvedProjects } = params
+
+  // Helper to load independent projects for slideshows
+  const loadIndependentProjects = async (projectData: ProjectData) => {
+    if (!setResolvedProjects) return
+    
+    const layoutInfo = detectProjectLayout(projectData.data)
+    if (!layoutInfo.hasSlides || !layoutInfo.slideshowData) return
+    
+    const independentSlides = layoutInfo.slideshowData.slides.filter(
+      (slide: any) => slide.projectRef && !slide.projectRef.isDependent
+    )
+    
+    if (independentSlides.length === 0) return
+    
+    const results = new Map<string, ProjectData | null>()
+    await Promise.all(
+      independentSlides.map(async (slide: any) => {
+        const projectId = slide.projectRef!.projectId
+        try {
+          const project = await storageAdapter.load(projectId)
+          results.set(slide.id, project)
+        } catch (error) {
+          console.error(`Failed to load independent project ${projectId}:`, error)
+          results.set(slide.id, null)
+        }
+      })
+    )
+    setResolvedProjects(results)
+  }
 
   try {
     // First, check for project ID in URL hash
@@ -40,6 +72,9 @@ export async function checkSelectedProject(
         const projectData = await storageAdapter.load(hash)
         if (projectData && projectData.data) {
           setCurrentProject(projectData)
+          
+          // Load independent projects for slideshows inline to avoid race conditions
+          await loadIndependentProjects(projectData)
           
           // Update URL hash if not already set
           if (window.location.hash !== `#${projectData.id}`) {
@@ -81,6 +116,9 @@ export async function checkSelectedProject(
       // Set the current project for viewing
       if (projectData.id && projectData.data) {
         setCurrentProject(projectData)
+        
+        // Load independent projects for slideshows inline to avoid race conditions
+        await loadIndependentProjects(projectData)
         
         // Update URL hash
         window.history.pushState(null, '', `#${projectData.id}`)

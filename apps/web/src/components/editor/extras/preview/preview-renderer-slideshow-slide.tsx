@@ -5,12 +5,16 @@ import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-r
 import { Button } from "@/components/ui/button"
 import { PreviewRendererType2 } from "./preview-renderer-type2"
 import type { SlideshowStructure } from "@/lib/storage/editor/slideshow-structure"
+import { getDependentProject } from "@/lib/storage/editor/slideshow-structure"
+import type { ProjectData } from "@/lib/storage/editor/enhanced-storage-adapter"
 import type { ProjectPreferences } from "@/lib/storage/editor/project-preferences"
 
 interface PreviewRendererSlideshowSlideProps {
   structure: SlideshowStructure
   projectId: string
   projectName?: string
+  deps: ProjectData[]
+  resolvedProjects?: Map<string, ProjectData | null>
   storageAdapter?: {
     load: (id: string) => Promise<any>
   }
@@ -21,10 +25,11 @@ export function PreviewRendererSlideshowSlide({
   structure,
   projectId,
   projectName,
+  deps,
+  resolvedProjects,
   storageAdapter,
   preferences,
 }: PreviewRendererSlideshowSlideProps) {
-  // A ordem dos slides é definida pela posição no array
   const slides = structure.slides
   const [currentIndex, setCurrentIndex] = useState(0)
 
@@ -35,6 +40,26 @@ export function PreviewRendererSlideshowSlide({
   const goToPrevious = () => setCurrentIndex(Math.max(0, currentIndex - 1))
   const goToNext = () => setCurrentIndex(Math.min(totalSlides - 1, currentIndex + 1))
   const goToLast = () => setCurrentIndex(totalSlides - 1)
+
+  const getSlideBlockStates = (slide: (typeof slides)[0]): Record<string, string> => {
+    let project: ProjectData | null = null
+    if (slide.projectRef.isDependent) {
+      project = getDependentProject(deps, slide.projectRef.projectId) || null
+    } else {
+      project = resolvedProjects?.get(slide.id) || null
+    }
+    if (!project?.data) return {}
+    try {
+      const parsed = JSON.parse(project.data)
+      const result: Record<string, string> = {}
+      for (const [key, value] of Object.entries(parsed)) {
+        result[key] = typeof value === 'string' ? value : JSON.stringify(value)
+      }
+      return result
+    } catch {
+      return {}
+    }
+  }
 
   if (totalSlides === 0) {
     return (
@@ -111,7 +136,9 @@ export function PreviewRendererSlideshowSlide({
       </div>
 
       {/* Current Slide Content */}
-      {currentSlide && (
+      {currentSlide && (() => {
+        const blockStates = getSlideBlockStates(currentSlide)
+        return (
         <div className="border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
           {/* Slide Header */}
           {currentSlide.name && (
@@ -127,13 +154,13 @@ export function PreviewRendererSlideshowSlide({
             </div>
           )}
 
-          {/* Slide Content - Always uses multi-block system */}
+          {/* Slide Content */}
           <div className="p-6">
-            {currentSlide.blocks && Object.keys(currentSlide.blocks).length > 0 ? (
+            {Object.keys(blockStates).length > 0 ? (
               <PreviewRendererType2
                 blockStates={(() => {
                   const { cellsToLexical } = require("@/lib/storage/editor/cell-structure")
-                  return Object.entries(currentSlide.blocks).reduce((acc, [blockId, blockState]) => {
+                  return Object.entries(blockStates).reduce((acc, [blockId, blockState]) => {
                     const cellsData = typeof blockState === "string"
                       ? JSON.parse(blockState)
                       : blockState;
@@ -152,7 +179,8 @@ export function PreviewRendererSlideshowSlide({
             )}
           </div>
         </div>
-      )}
+        )
+      })()}
 
       {/* Quick Navigation Dots */}
       {totalSlides > 1 && (
