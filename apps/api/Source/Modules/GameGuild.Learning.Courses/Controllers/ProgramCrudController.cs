@@ -163,43 +163,8 @@ public class ProgramCrudController(IProgramCrudService programService) : BaseApi
   }
 
   // ===== CONTENT MANAGEMENT ENDPOINTS =====
-
-  /// <summary> Add content to a program (resource-level edit permission) </summary>
-  [HttpPost("{id}/content")]
-  [RequireResourcePermission<PermissionType, Program>(PermissionType.Edit)]
-  public async Task<ActionResult<ProgramContent>> AddContent(Guid id, [FromBody] CreateContentDto contentDto) {
-    if (!ModelState.IsValid) return BadRequest(ModelState);
-
-    var content = await programService.AddContentAsync(id, contentDto).ConfigureAwait(false);
-
-    if (content == null) return NotFound("Program not found");
-
-    return Ok(content);
-  }
-
-  /// <summary> Update program content (resource-level edit permission) </summary>
-  [HttpPut("{id}/content/{contentId}")]
-  [RequireResourcePermission<PermissionType, Program>(PermissionType.Edit)]
-  public async Task<ActionResult<ProgramContent>> UpdateContent(Guid id, Guid contentId, [FromBody] UpdateContentDto contentDto) {
-    if (!ModelState.IsValid) return BadRequest(ModelState);
-
-    var content = await programService.UpdateContentAsync(id, contentId, contentDto).ConfigureAwait(false);
-
-    if (content == null) return NotFound();
-
-    return Ok(content);
-  }
-
-  /// <summary> Remove content from a program (resource-level edit permission) </summary>
-  [HttpDelete("{id}/content/{contentId}")]
-  [RequireResourcePermission<PermissionType, Program>(PermissionType.Edit)]
-  public async Task<ActionResult> RemoveContent(Guid id, Guid contentId) {
-    var success = await programService.RemoveContentAsync(id, contentId).ConfigureAwait(false);
-
-    if (!success) return NotFound();
-
-    return NoContent();
-  }
+  // NOTE: POST/PUT/DELETE for content are in ProgramContentController to avoid route conflicts.
+  // Only reorder endpoint is kept here since it uses a unique action-style route.
 
   /// <summary> Reorder content in a program (resource-level edit permission) </summary>
   [HttpPost("{id}/content:reorder")]

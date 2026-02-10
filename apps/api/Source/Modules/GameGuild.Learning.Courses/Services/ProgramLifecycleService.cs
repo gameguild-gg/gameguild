@@ -131,7 +131,7 @@ public class ProgramLifecycleService(IApplicationDbContext context) : IProgramLi
 
     if (program == null) return null;
 
-    program.Status = ContentStatus.Published;
+    program.Status = ContentStatus.Review;
     program.Touch();
     await context.SaveChangesAsync().ConfigureAwait(false);
 
@@ -191,7 +191,7 @@ public class ProgramLifecycleService(IApplicationDbContext context) : IProgramLi
 
     if (program == null) return null;
 
-    program.Status = ContentStatus.Published;
+    program.Status = ContentStatus.Draft;
     program.Touch();
     await context.SaveChangesAsync().ConfigureAwait(false);
 

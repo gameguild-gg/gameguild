@@ -1,3 +1,4 @@
+using System.Reflection;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.EntityFrameworkCore.Diagnostics;
@@ -6,11 +7,18 @@ namespace GameGuild.API.Database;
 
 /// <summary>
 ///     Factory for creating ApplicationDbContext at design time for EF Core migrations.
+///     Force-loads all referenced GameGuild assemblies so that IModelConfiguration
+///     implementations are discovered correctly by ApplicationDbContext.OnModelCreating.
 /// </summary>
 public class DesignTimeDbContextFactory : IDesignTimeDbContextFactory<ApplicationDbContext>
 {
     public ApplicationDbContext CreateDbContext(string[] args)
     {
+        // Force-load all GameGuild assemblies so OnModelCreating can discover
+        // every IModelConfiguration via AppDomain.CurrentDomain.GetAssemblies().
+        // At design time, referenced assemblies aren't loaded until first use.
+        ForceLoadGameGuildAssemblies();
+
         var configuration = new ConfigurationBuilder()
             .SetBasePath(Directory.GetCurrentDirectory())
             .AddJsonFile("appsettings.json", optional: true)
@@ -27,5 +35,32 @@ public class DesignTimeDbContextFactory : IDesignTimeDbContextFactory<Applicatio
             w.Ignore(RelationalEventId.PendingModelChangesWarning));
 
         return new ApplicationDbContext(optionsBuilder.Options);
+    }
+
+    /// <summary>
+    ///     Scans the output directory for all GameGuild.*.dll files and loads them
+    ///     into the current AppDomain so that assembly scanning finds all modules.
+    /// </summary>
+    private static void ForceLoadGameGuildAssemblies()
+    {
+        var baseDir = AppDomain.CurrentDomain.BaseDirectory;
+        var dlls = Directory.GetFiles(baseDir, "GameGuild.*.dll", SearchOption.TopDirectoryOnly);
+
+        foreach (var dll in dlls)
+        {
+            try
+            {
+                var name = AssemblyName.GetAssemblyName(dll);
+                if (AppDomain.CurrentDomain.GetAssemblies()
+                    .All(a => a.FullName != name.FullName))
+                {
+                    Assembly.LoadFrom(dll);
+                }
+            }
+            catch
+            {
+                // Ignore assemblies that fail to load (e.g. test assemblies)
+            }
+        }
     }
 }
