@@ -17,6 +17,16 @@ import networkingWeek03QuizMd from './03-udp/03-quiz.md';
 import networkingWeek03AssignmentMd from './03-udp/04-assignment.md';
 import networkingWeek04LectureReveal from './04-tcp/00-reveal.md';
 import networkingWeek04LectureMd from './04-tcp/01-lecture.md';
+import networkingWeek04IntroductionMd from './04-tcp/01a-introduction.md';
+import networkingWeek04ConnectionEstablishmentMd from './04-tcp/01b-connection-establishment.md';
+import networkingWeek04ReliabilityMd from './04-tcp/01c-reliability.md';
+import networkingWeek04FlowControlMd from './04-tcp/01d-flow-control.md';
+import networkingWeek04CongestionControlMd from './04-tcp/01e-congestion-control.md';
+import networkingWeek04TerminationComparisonMd from './04-tcp/01f-termination-comparison.md';
+import networkingWeek04BoostAsioMd from './04-tcp/01g-boost-asio.md';
+import networkingWeek04MultiClientMd from './04-tcp/01h-multi-client.md';
+import networkingWeek04ConcurrencyModelsMd from './04-tcp/01i-concurrency-models.md';
+import networkingWeek04DebuggingMd from './04-tcp/01j-debugging.md';
 import networkingWeek04ReadingsMd from './04-tcp/02-readings.md';
 import networkingWeek04QuizMd from './04-tcp/03-quiz.md';
 import networkingWeek04AssignmentMd from './04-tcp/04-assignment.md';
@@ -578,6 +588,238 @@ export const networkingWeek04Assignment: ProgramContent & { slug: string } = {
     updatedAt: '2023-01-01T00:00:00Z',
 };
 
+// Week 04 Lecture Sections (split from main lecture)
+
+export const networkingWeek04Introduction: ProgramContent & { slug: string } = {
+    id: 'week-04-introduction',
+    slug: 'introduction',
+    programId: 'networking-program-1',
+    parentId: 'week-04-lecture',
+    title: '1. Introduction to TCP',
+    description: 'TCP as a connection-oriented, reliable, byte-stream protocol and TCP header format.',
+    type: 0, // Page
+    body: networkingWeek04IntroductionMd,
+    sortOrder: 1,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 10,
+    visibility: 1, // Published
+    program: networkingProgram,
+    parent: networkingWeek04LectureContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const networkingWeek04ConnectionEstablishment: ProgramContent & { slug: string } = {
+    id: 'week-04-connection-establishment',
+    slug: 'connection-establishment',
+    programId: 'networking-program-1',
+    parentId: 'week-04-lecture',
+    title: '2. Connection Establishment',
+    description: 'TCP three-way handshake and connection state machine.',
+    type: 0, // Page
+    body: networkingWeek04ConnectionEstablishmentMd,
+    sortOrder: 2,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 15,
+    visibility: 1, // Published
+    program: networkingProgram,
+    parent: networkingWeek04LectureContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const networkingWeek04Reliability: ProgramContent & { slug: string } = {
+    id: 'week-04-reliability',
+    slug: 'reliability',
+    programId: 'networking-program-1',
+    parentId: 'week-04-lecture',
+    title: '3. Reliability Mechanisms',
+    description: 'Sequence numbers, acknowledgments, and retransmission.',
+    type: 0, // Page
+    body: networkingWeek04ReliabilityMd,
+    sortOrder: 3,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 15,
+    visibility: 1, // Published
+    program: networkingProgram,
+    parent: networkingWeek04LectureContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const networkingWeek04FlowControl: ProgramContent & { slug: string } = {
+    id: 'week-04-flow-control',
+    slug: 'flow-control',
+    programId: 'networking-program-1',
+    parentId: 'week-04-lecture',
+    title: '4. Flow Control',
+    description: 'Sliding window protocol and preventing receiver buffer overflow.',
+    type: 0, // Page
+    body: networkingWeek04FlowControlMd,
+    sortOrder: 4,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 10,
+    visibility: 1, // Published
+    program: networkingProgram,
+    parent: networkingWeek04LectureContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const networkingWeek04CongestionControl: ProgramContent & { slug: string } = {
+    id: 'week-04-congestion-control',
+    slug: 'congestion-control',
+    programId: 'networking-program-1',
+    parentId: 'week-04-lecture',
+    title: '5. Congestion Control',
+    description: 'Slow start, AIMD, and network congestion prevention.',
+    type: 0, // Page
+    body: networkingWeek04CongestionControlMd,
+    sortOrder: 5,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 15,
+    visibility: 1, // Published
+    program: networkingProgram,
+    parent: networkingWeek04LectureContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const networkingWeek04TerminationComparison: ProgramContent & { slug: string } = {
+    id: 'week-04-termination-comparison',
+    slug: 'termination-comparison',
+    programId: 'networking-program-1',
+    parentId: 'week-04-lecture',
+    title: '6. Termination and Protocol Comparison',
+    description: 'TCP connection termination and TCP vs UDP comparison.',
+    type: 0, // Page
+    body: networkingWeek04TerminationComparisonMd,
+    sortOrder: 6,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 15,
+    visibility: 1, // Published
+    program: networkingProgram,
+    parent: networkingWeek04LectureContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const networkingWeek04BoostAsio: ProgramContent & { slug: string } = {
+    id: 'week-04-boost-asio',
+    slug: 'boost-asio',
+    programId: 'networking-program-1',
+    parentId: 'week-04-lecture',
+    title: '7. TCP Programming with Boost.Asio',
+    description: 'Client/server setup, socket options, and graceful shutdown.',
+    type: 0, // Page
+    body: networkingWeek04BoostAsioMd,
+    sortOrder: 7,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 20,
+    visibility: 1, // Published
+    program: networkingProgram,
+    parent: networkingWeek04LectureContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const networkingWeek04MultiClient: ProgramContent & { slug: string } = {
+    id: 'week-04-multi-client',
+    slug: 'multi-client',
+    programId: 'networking-program-1',
+    parentId: 'week-04-lecture',
+    title: '8. Multi-Client Connection Management',
+    description: 'Server architecture, io_context.run(), user registry, and chat commands.',
+    type: 0, // Page
+    body: networkingWeek04MultiClientMd,
+    sortOrder: 8,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 45,
+    visibility: 1, // Published
+    program: networkingProgram,
+    parent: networkingWeek04LectureContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const networkingWeek04ConcurrencyModels: ProgramContent & { slug: string } = {
+    id: 'week-04-concurrency-models',
+    slug: 'concurrency-models',
+    programId: 'networking-program-1',
+    parentId: 'week-04-lecture',
+    title: '9. Alternative Concurrency Models',
+    description: 'Async I/O with Boost.Asio and choosing the right model.',
+    type: 0, // Page
+    body: networkingWeek04ConcurrencyModelsMd,
+    sortOrder: 9,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 20,
+    visibility: 1, // Published
+    program: networkingProgram,
+    parent: networkingWeek04LectureContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const networkingWeek04Debugging: ProgramContent & { slug: string } = {
+    id: 'week-04-debugging',
+    slug: 'debugging',
+    programId: 'networking-program-1',
+    parentId: 'week-04-lecture',
+    title: '10. Common TCP Issues and Debugging',
+    description: 'Troubleshooting common issues and final summary.',
+    type: 0, // Page
+    body: networkingWeek04DebuggingMd,
+    sortOrder: 10,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 15,
+    visibility: 1, // Published
+    program: networkingProgram,
+    parent: networkingWeek04LectureContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
 // Week 05: Message Framing, Buffering, and Concurrency
 
 export const networkingWeek05Intro: ProgramContent & { slug: string } = {
@@ -839,6 +1081,18 @@ networkingWeek01Intro.children = [networkingWeek01Readings, networkingWeek01Quiz
 networkingWeek02Intro.children = [networkingWeek02LectureSlides, networkingWeek02Readings, networkingWeek02Quiz, networkingWeek02Assignment];
 networkingWeek03Intro.children = [networkingWeek03LectureSlides, networkingWeek03Readings, networkingWeek03Quiz, networkingWeek03Assignment];
 networkingWeek04Intro.children = [networkingWeek04LectureContent, networkingWeek04Readings, networkingWeek04Quiz, networkingWeek04Assignment];
+networkingWeek04LectureContent.children = [
+    networkingWeek04Introduction,
+    networkingWeek04ConnectionEstablishment,
+    networkingWeek04Reliability,
+    networkingWeek04FlowControl,
+    networkingWeek04CongestionControl,
+    networkingWeek04TerminationComparison,
+    networkingWeek04BoostAsio,
+    networkingWeek04MultiClient,
+    networkingWeek04ConcurrencyModels,
+    networkingWeek04Debugging,
+];
 networkingWeek05LectureContent.children = [
     networkingWeek05FramingProblem,
     networkingWeek05FramingStrategies,
