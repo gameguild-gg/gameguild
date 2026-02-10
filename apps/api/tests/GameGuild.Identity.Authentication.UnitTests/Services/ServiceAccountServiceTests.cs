@@ -463,7 +463,7 @@ public class ServiceAccountServiceTests
 
         // Assert
         _repositoryMock.Verify(x => x.UpdateAsync(It.Is<ServiceAccount>(sa =>
-            !sa.IsActive && sa.UpdatedAt != null),
+            !sa.IsActive && sa.UpdatedAt > DateTime.UtcNow.AddSeconds(-5)),
             It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -488,7 +488,7 @@ public class ServiceAccountServiceTests
 
         // Assert
         _repositoryMock.Verify(x => x.UpdateAsync(It.Is<ServiceAccount>(sa =>
-            sa.IsActive && sa.UpdatedAt != null),
+            sa.IsActive && sa.UpdatedAt > DateTime.UtcNow.AddSeconds(-5)),
             It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -518,7 +518,7 @@ public class ServiceAccountServiceTests
 
         // Assert
         _repositoryMock.Verify(x => x.UpdateAsync(It.Is<ServiceAccount>(sa =>
-            sa.Scopes == newScopes && sa.UpdatedAt != null),
+            sa.Scopes == newScopes && sa.UpdatedAt > DateTime.UtcNow.AddSeconds(-5)),
             It.IsAny<CancellationToken>()), Times.Once);
     }
 

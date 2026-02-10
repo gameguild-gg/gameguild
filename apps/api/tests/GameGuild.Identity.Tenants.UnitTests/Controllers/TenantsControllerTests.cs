@@ -130,11 +130,6 @@ public class TenantsControllerTests
             return Task.CompletedTask;
         }
 
-        public IAsyncEnumerable<TResponse> CreateStream<TResponse>(IStream<TResponse> request, CancellationToken cancellationToken = default)
-        {
-            throw new NotImplementedException();
-        }
-
         public Task Publish<TNotification>(TNotification notification, CancellationToken cancellationToken = default) where TNotification : INotification
         {
             return Task.CompletedTask;
@@ -210,11 +205,6 @@ public class TenantBulkOperationsControllerTests
         public Task Send<TRequest>(TRequest request, CancellationToken cancellationToken = default) where TRequest : IRequest
         {
             return Task.CompletedTask;
-        }
-
-        public IAsyncEnumerable<TResponse> CreateStream<TResponse>(IStream<TResponse> request, CancellationToken cancellationToken = default)
-        {
-            throw new NotImplementedException();
         }
 
         public Task Publish<TNotification>(TNotification notification, CancellationToken cancellationToken = default) where TNotification : INotification
@@ -293,11 +283,6 @@ public class TenantLifecycleControllerTests
         public Task Send<TRequest>(TRequest request, CancellationToken cancellationToken = default) where TRequest : IRequest
         {
             return Task.CompletedTask;
-        }
-
-        public IAsyncEnumerable<TResponse> CreateStream<TResponse>(IStream<TResponse> request, CancellationToken cancellationToken = default)
-        {
-            throw new NotImplementedException();
         }
 
         public Task Publish<TNotification>(TNotification notification, CancellationToken cancellationToken = default) where TNotification : INotification

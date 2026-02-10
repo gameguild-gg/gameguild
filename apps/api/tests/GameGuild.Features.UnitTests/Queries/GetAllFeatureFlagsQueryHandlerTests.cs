@@ -277,7 +277,7 @@ public class GetAllFeatureFlagsQueryHandlerTests
             Name = $"Feature {key}",
             IsEnabled = isEnabled,
             Type = FeatureFlagType.Toggle,
-            Environment = environment
+            Environment = environment ?? "production"
         };
         typeof(EntityBase).GetProperty(nameof(EntityBase.CreatedAt))!.SetValue(flag, DateTime.UtcNow);
         return flag;

@@ -77,11 +77,6 @@ public class UserMembershipsControllerTests
             return Task.CompletedTask;
         }
 
-        public IAsyncEnumerable<TResponse> CreateStream<TResponse>(IStream<TResponse> request, CancellationToken cancellationToken = default)
-        {
-            throw new NotImplementedException();
-        }
-
         public Task Publish<TNotification>(TNotification notification, CancellationToken cancellationToken = default) where TNotification : INotification
         {
             return Task.CompletedTask;

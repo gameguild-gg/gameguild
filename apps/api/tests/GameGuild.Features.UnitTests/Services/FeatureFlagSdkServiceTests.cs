@@ -8,12 +8,12 @@ namespace GameGuild.Features.UnitTests.Services;
 
 public class FeatureFlagSdkServiceTests
 {
-    private readonly Mock<IFeatureFlagRepository> _repositoryMock;
+    private readonly Mock<IFeatureFlagQueryRepository> _repositoryMock;
     private readonly FeatureFlagSdkService _service;
 
     public FeatureFlagSdkServiceTests()
     {
-        _repositoryMock = new Mock<IFeatureFlagRepository>();
+        _repositoryMock = new Mock<IFeatureFlagQueryRepository>();
         _service = new FeatureFlagSdkService(_repositoryMock.Object);
     }
 
