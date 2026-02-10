@@ -270,8 +270,8 @@ public class GetModerationQueueQueryHandlerTests
         result.Should().HaveCount(1);
         result[0].Asset.Should().NotBeNull();
         result[0].Asset!.Content.Should().NotBeNull();
-        result[0].Asset.Content!.Id.Should().Be(contentId);
-        result[0].Asset.Content.MimeType.Should().Be("image/png");
+        result[0].Asset!.Content!.Id.Should().Be(contentId);
+        result[0].Asset!.Content!.MimeType.Should().Be("image/png");
     }
 
     [Fact]
