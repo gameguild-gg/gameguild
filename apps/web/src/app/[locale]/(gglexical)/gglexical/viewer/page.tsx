@@ -17,6 +17,7 @@ import { detectProjectLayout, extractEditorStates } from "@/lib/storage/editor/l
 import { getLayoutFromType, type ProjectType, type InternalLayout } from "@/lib/storage/editor/project-types"
 import { checkSelectedProject as checkProjectPreview } from "@/components/editor/extras/preview/preview-load-operations"
 import type { ProjectData } from "@/components/editor/extras/preview/preview-load-operations"
+import type { ProjectData as StorageProjectData } from "@/lib/storage/editor/enhanced-storage-adapter"
 import { cellsToLexical } from "@/lib/storage/editor/cell-structure"
 
 
@@ -28,6 +29,7 @@ export default function PreviewPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [exitDialogOpen, setExitDialogOpen] = useState(false)
   const [nextUrl, setNextUrl] = useState<string>("")
+  const [resolvedProjects, setResolvedProjects] = useState<Map<string, StorageProjectData | null>>(new Map())
   
   const router = useRouter()
 
@@ -60,6 +62,7 @@ export default function PreviewPage() {
             load: (id: string) => dbStorage.current.load(id),
           },
           setCurrentProject,
+          setResolvedProjects,
         })
         
       } catch (error) {
@@ -145,7 +148,38 @@ export default function PreviewPage() {
     setCurrentProject(projectData)
     // Update URL hash with project ID
     window.history.pushState(null, '', `#${projectData.id}`)
+    
+    // Load independent projects inline to avoid race conditions
+    const layoutInfo = detectProjectLayout(projectData.data)
+    if (layoutInfo.hasSlides && layoutInfo.slideshowData && dbStorage.current) {
+      const independentSlides = layoutInfo.slideshowData.slides.filter(
+        (slide: any) => slide.projectRef && !slide.projectRef.isDependent
+      )
+      if (independentSlides.length > 0) {
+        ;(async () => {
+          const results = new Map<string, StorageProjectData | null>()
+          await Promise.all(
+            independentSlides.map(async (slide: any) => {
+              const projectId = slide.projectRef!.projectId
+              try {
+                const project = await dbStorage.current!.load(projectId)
+                results.set(slide.id, project)
+              } catch (error) {
+                console.error(`Failed to load independent project ${projectId}:`, error)
+                results.set(slide.id, null)
+              }
+            })
+          )
+          setResolvedProjects(results)
+        })()
+      }
+    }
   }
+
+  // NOTE: Independent projects are loaded inline during:
+  // 1. checkProjectPreview (URL hash loading) - in preview-load-operations.ts
+  // 2. handleProjectLoad (Open dialog/list loading) - above
+  // No useEffect needed here since both loading paths handle it inline
 
   const getLayoutAndStates = (): { 
     layout: InternalLayout; 
@@ -313,6 +347,8 @@ export default function PreviewPage() {
                       structure={slideshowData}
                       projectId={currentProject.id}
                       projectName={currentProject.name}
+                      deps={(currentProject as any).deps || []}
+                      resolvedProjects={resolvedProjects}
                       storageAdapter={storageAdapter}
                       preferences={currentProject.preferences}
                     />
@@ -321,6 +357,8 @@ export default function PreviewPage() {
                       structure={slideshowData}
                       projectId={currentProject.id}
                       projectName={currentProject.name}
+                      deps={(currentProject as any).deps || []}
+                      resolvedProjects={resolvedProjects}
                       storageAdapter={storageAdapter}
                       preferences={currentProject.preferences}
                     />

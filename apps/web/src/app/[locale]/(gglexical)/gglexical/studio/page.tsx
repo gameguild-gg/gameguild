@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Badge } from "@/components/ui/badge"
 import { Save, Eye, Blocks, Home, History, RotateCcw } from "lucide-react"
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, useCallback } from "react"
 import { toast } from "sonner"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
@@ -27,6 +27,7 @@ import { checkSelectedProject as checkProject } from "@/components/editor/extras
 import { EditorLayoutType1 } from "@/components/editor/extras/editor/editor-layout-type1"
 import { EditorLayoutType2 } from "@/components/editor/extras/editor/editor-layout-type2"
 import { EditorLayoutSlideshow } from "@/components/editor/extras/editor/editor-layout-slideshow"
+import { ProjectImportDialog } from "@/components/editor/extras/editor/project-import-dialog"
 import { EnhancedStorageAdapter, type ProjectPreferences } from "@/lib/storage/editor/enhanced-storage-adapter"
 import { syncConfig } from "@/lib/sync/editor/sync-config"
 import { SaveAsDialog } from "@/components/editor/extras/editor/save-as-dialog"
@@ -44,8 +45,13 @@ import {
   type SlideshowStructure, 
   type PreviewMode,
   createEmptySlideshowStructure,
-  serializeSlideshowStructure
+  serializeSlideshowStructure,
+  convertToIndependent,
+  convertToDependent,
+  importProjectToSlide,
+  getDependentProject,
 } from "@/lib/storage/editor/slideshow-structure"
+import type { ProjectData as StorageProjectData } from "@/lib/storage/editor/enhanced-storage-adapter"
 import type { CellularContent } from "@/lib/storage/editor/cell-structure"
 
 interface ProjectData {
@@ -59,6 +65,7 @@ interface ProjectData {
   updatedAt: string
   storageType?: "local" | "gameguild-cloud" | "google-drive"
   preferences?: ProjectPreferences
+  deps?: StorageProjectData[]
 }
 
 // Generate unique ID for projects
@@ -150,6 +157,13 @@ export default function Page() {
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0)
   const [slideEditorRefs, setSlideEditorRefs] = useState<Map<string, React.RefObject<LexicalEditor>>>(new Map())
   const [previewMode, setPreviewMode] = useState<PreviewMode>("continuous")
+  const [slideshowDeps, setSlideshowDeps] = useState<StorageProjectData[]>([])
+  const [resolvedProjects, setResolvedProjects] = useState<Map<string, StorageProjectData | null>>(new Map())
+  
+  // Debug: log when resolvedProjects changes
+  useEffect(() => {
+    console.log(`[studio/page] resolvedProjects state changed: size=${resolvedProjects.size}, keys=${Array.from(resolvedProjects.keys()).join(',')}`)
+  }, [resolvedProjects])
   
   const [nextUrl, setNextUrl] = useState<string | null>(null)
   const [exitDialogOpen, setExitDialogOpen] = useState(false)
@@ -159,6 +173,12 @@ export default function Page() {
   const [isViewingHistory, setIsViewingHistory] = useState(false)
   const [currentViewingSha, setCurrentViewingSha] = useState<string | null>(null)
   const [headProjectData, setHeadProjectData] = useState<string | null>(null) // Store HEAD data when viewing history
+  const [headSlideshowDeps, setHeadSlideshowDeps] = useState<StorageProjectData[]>([]) // Store HEAD deps when viewing history
+
+  // NOTE: Independent projects are loaded inline during:
+  // 1. checkProject (URL hash loading) - in project-load-operations.ts
+  // 2. onProjectLoad (Open dialog loading) - below in onProjectLoad callback
+  // No useEffect needed here since both loading paths handle it inline
 
   const handleLinkNavigation = (event: React.MouseEvent<HTMLAnchorElement>, url: string) => {
     if (event.ctrlKey || event.metaKey || event.button === 1) {
@@ -208,6 +228,8 @@ export default function Page() {
     const checkSelectedProject = async () => {
       await checkProject({
         storageAdapter,
+        // Pass directDbLoad to bypass closure issues with isDbInitialized
+        directDbLoad: (id: string) => dbStorage.current.load(id),
         editorRef,
         blockRefs,
         setCurrentProjectId,
@@ -220,6 +242,8 @@ export default function Page() {
         setEditorState,
         setBlockStates,
         setSlideshowStructure,
+        setDeps: setSlideshowDeps,
+        setResolvedProjects,
         setCurrentSlideIndex,
         setSlideEditorRefs,
         setPreviewMode,
@@ -274,7 +298,7 @@ export default function Page() {
   }, [currentProjectId, isDbInitialized, editorState, blockStates, slideshowStructure])
 
   const storageAdapter = {
-    save: async (id: string, name: string, data: string, tags: string[] = [], storageType: "local" | "gameguild-cloud" | "google-drive" = "local", preferences?: ProjectPreferences, type: string = "type1") => {
+    save: async (id: string, name: string, data: string, tags: string[] = [], storageType: "local" | "gameguild-cloud" | "google-drive" = "local", preferences?: ProjectPreferences, type: string = "type1", deps?: StorageProjectData[]) => {
       if (!id || !name || !data) {
         console.warn("Invalid id, name or data")
         return
@@ -288,7 +312,7 @@ export default function Page() {
       console.log(`Saving project "${name}" (${id}) to ${storageType} - Size: ${formatSize(originalSize)}`)
 
       try {
-        await dbStorage.current.save(id, name, data, tags, storageType, preferences, type as any)
+        await dbStorage.current.save(id, name, data, tags, storageType, preferences, type as any, deps)
         console.log(`Saved project "${name}" (${id}) to ${storageType} successfully`)
       } catch (error) {
         console.error("Failed to save project:", error)
@@ -483,6 +507,7 @@ export default function Page() {
       setSaveAsDialogOpen,
       preferences,
       type: currentProjectType,
+      deps: currentLayout === "slideshow" ? slideshowDeps : undefined,
     })
   }
 
@@ -813,6 +838,7 @@ export default function Page() {
           
           if (layoutInfo.hasSlides && layoutInfo.slideshowData) {
             setSlideshowStructure(layoutInfo.slideshowData)
+            setSlideshowDeps(headSlideshowDeps)
             setCurrentSlideIndex(0)
           } else if (currentLayout === "single" && states.blocks.b1) {
             setEditorState(JSON.stringify(states.blocks.b1))
@@ -836,6 +862,7 @@ export default function Page() {
         setIsViewingHistory(false)
         setCurrentViewingSha(null)
         setHeadProjectData(null)
+        setHeadSlideshowDeps([])
         
         toast.success("Viewing latest version", {
           description: "You can edit the project",
@@ -862,6 +889,9 @@ export default function Page() {
           currentData = createProjectData(currentProjectType, { blocks })
         }
         setHeadProjectData(currentData)
+        if (currentLayout === "slideshow") {
+          setHeadSlideshowDeps([...slideshowDeps])
+        }
       }
 
       // Load the commit data
@@ -889,6 +919,7 @@ export default function Page() {
       
       if (layoutInfo.hasSlides && layoutInfo.slideshowData) {
         setSlideshowStructure(layoutInfo.slideshowData)
+        setSlideshowDeps(commitData.deps || [])
         setCurrentSlideIndex(0)
       } else if (currentLayout === "single" && states.blocks.b1) {
         setEditorState(JSON.stringify(states.blocks.b1))
@@ -945,6 +976,9 @@ export default function Page() {
         currentData = createProjectData(currentProjectType, { blocks })
       }
       setHeadProjectData(currentData)
+      if (currentLayout === "slideshow") {
+        setHeadSlideshowDeps([...slideshowDeps])
+      }
     }
 
     // Load the snapshot
@@ -964,6 +998,7 @@ export default function Page() {
     
     if (layoutInfo.hasSlides && layoutInfo.slideshowData) {
       setSlideshowStructure(layoutInfo.slideshowData)
+      setSlideshowDeps(headSlideshowDeps)
       setCurrentSlideIndex(0)
     } else if (currentLayout === "single" && states.blocks.b1) {
       setEditorState(JSON.stringify(states.blocks.b1))
@@ -986,11 +1021,121 @@ export default function Page() {
     setIsViewingHistory(false)
     setCurrentViewingSha(null)
     setHeadProjectData(null)
+    setHeadSlideshowDeps([])
     
     toast.success("Returned to latest version", {
       description: "You can now edit the project",
       duration: 2000,
       icon: "✏️",
+    })
+  }
+
+  // --- Slideshow slide-project management handlers ---
+
+  const [importDialogOpen, setImportDialogOpen] = useState(false)
+  const [importTargetSlideId, setImportTargetSlideId] = useState<string | null>(null)
+
+  const handleConvertToIndependent = async (slideId: string) => {
+    if (!slideshowStructure || !currentProjectId) return
+    try {
+      const newIndependentId = generateProjectId()
+      const result = convertToIndependent(slideshowStructure, slideId, slideshowDeps, newIndependentId)
+      
+      // Save the extracted project as a standalone project
+      await storageAdapter.save(
+        result.extractedProject.id,
+        result.extractedProject.name || `Slide ${slideId}`,
+        result.extractedProject.data,
+        result.extractedProject.tags || [],
+        (result.extractedProject.storageType || "local") as "local" | "gameguild-cloud" | "google-drive",
+        undefined,
+        "type2"
+      )
+      
+      setSlideshowStructure(result.structure)
+      setSlideshowDeps(result.deps)
+      
+      toast.success("Slide converted to independent", {
+        description: "The project was saved as a standalone type2 project.",
+        duration: 3000,
+        icon: "🔓",
+      })
+    } catch (error) {
+      console.error("Failed to convert to independent:", error)
+      toast.error("Conversion failed", {
+        description: error instanceof Error ? error.message : "Unknown error",
+        duration: 4000,
+      })
+    }
+  }
+
+  const handleConvertToDependent = async (slideId: string) => {
+    if (!slideshowStructure || !currentProjectId) return
+    try {
+      const slide = slideshowStructure.slides.find(s => s.id === slideId)
+      if (!slide || slide.projectRef.isDependent) return
+      
+      // Load the independent project data
+      const independentProject = await storageAdapter.load(slide.projectRef.projectId)
+      if (!independentProject) {
+        toast.error("Project not found", {
+          description: "Could not load the independent project",
+          duration: 3000,
+        })
+        return
+      }
+      
+      const result = convertToDependent(
+        slideshowStructure, slideId, slideshowDeps,
+        independentProject as StorageProjectData, currentProjectId
+      )
+      
+      setSlideshowStructure(result.structure)
+      setSlideshowDeps(result.deps)
+      
+      toast.success("Slide unlocked for editing", {
+        description: "A dependent copy was created. Changes won't affect the original.",
+        duration: 3000,
+        icon: "🔓",
+      })
+    } catch (error) {
+      console.error("Failed to convert to dependent:", error)
+      toast.error("Unlock failed", {
+        description: error instanceof Error ? error.message : "Unknown error",
+        duration: 4000,
+      })
+    }
+  }
+
+  const handleImportProject = (slideId: string) => {
+    setImportTargetSlideId(slideId)
+    setImportDialogOpen(true)
+  }
+
+  const handleImportConfirm = (projectId: string, loadMode: 'snapshot' | 'head', snapshotTag?: string) => {
+    if (!slideshowStructure || !importTargetSlideId) return
+    
+    // Remove old dependent project from deps if the slide was dependent
+    const slide = slideshowStructure.slides.find(s => s.id === importTargetSlideId)
+    let updatedDeps = slideshowDeps
+    if (slide?.projectRef.isDependent) {
+      updatedDeps = slideshowDeps.filter(d => d.id !== slide.projectRef.projectId)
+    }
+    
+    const newStructure = importProjectToSlide(
+      slideshowStructure, importTargetSlideId,
+      projectId, loadMode, snapshotTag
+    )
+    
+    setSlideshowStructure(newStructure)
+    setSlideshowDeps(updatedDeps)
+    setImportDialogOpen(false)
+    setImportTargetSlideId(null)
+    
+    toast.success("Project imported", {
+      description: `Slide now references project ${projectId.substring(0, 8)}...`,
+      duration: 3000,
+      icon: "📥",
     })
   }
 
@@ -1137,6 +1282,7 @@ export default function Page() {
                       // Handle slideshow layout
                       if (layoutInfo.hasSlides && layoutInfo.slideshowData) {
                         setSlideshowStructure(layoutInfo.slideshowData)
+                        setSlideshowDeps(projectData.deps || [])
                         setCurrentSlideIndex(0)
                         
                         // Load previewMode from preferences or default to continuous
@@ -1149,6 +1295,36 @@ export default function Page() {
                           newRefs.set(slide.id, { current: undefined as any })
                         })
                         setSlideEditorRefs(newRefs)
+                        
+                        // Load independent projects inline to avoid race conditions
+                        const independentSlides = layoutInfo.slideshowData.slides.filter(
+                          (slide) => slide.projectRef && !slide.projectRef.isDependent
+                        )
+                        console.log(`[onProjectLoad] Found ${independentSlides.length} independent slides`)
+                        if (independentSlides.length > 0 && dbStorage.current) {
+                          ;(async () => {
+                            console.log(`[onProjectLoad] Starting to load independent projects`)
+                            const results = new Map<string, StorageProjectData | null>()
+                            await Promise.all(
+                              independentSlides.map(async (slide) => {
+                                const projectId = slide.projectRef!.projectId
+                                console.log(`[onProjectLoad] Loading project ${projectId} for slide ${slide.id}`)
+                                try {
+                                  const project = await dbStorage.current!.load(projectId)
+                                  console.log(`[onProjectLoad] Loaded project for slide ${slide.id}:`, project ? project.name : 'null')
+                                  results.set(slide.id, project)
+                                } catch (error) {
+                                  console.error(`Failed to load independent project ${projectId}:`, error)
+                                  results.set(slide.id, null)
+                                }
+                              })
+                            )
+                            console.log(`[onProjectLoad] Setting resolvedProjects with ${results.size} entries, keys:`, Array.from(results.keys()))
+                            setResolvedProjects(results)
+                          })()
+                        } else {
+                          console.log(`[onProjectLoad] No independent slides or dbStorage not ready`)
+                        }
                         
                         // Update URL hash with project ID
                         window.history.pushState(null, '', `#${projectData.id}`)
@@ -1344,9 +1520,10 @@ export default function Page() {
                 
                 if (layoutType === "slideshow") {
                   // Slideshow slides
-                  const initialStructure = createEmptySlideshowStructure()
+                  const { structure: initialStructure, deps: initialDeps } = createEmptySlideshowStructure(projectData.id)
                   dataString = serializeSlideshowStructure(initialStructure)
                   setSlideshowStructure(initialStructure)
+                  setSlideshowDeps(initialDeps)
                   setCurrentSlideIndex(0)
                   
                   // Initialize editor refs for first slide
@@ -1366,7 +1543,8 @@ export default function Page() {
                         projectData.tags,
                         projectData.storageType,
                         undefined,
-                        projectData.type
+                        projectData.type,
+                        initialDeps
                       )
                     } catch (error) {
                       console.error("Failed to save slideshow structure:", error)
@@ -1431,6 +1609,8 @@ export default function Page() {
               <EditorLayoutSlideshow
                 structure={slideshowStructure}
                 onStructureChange={setSlideshowStructure}
+                deps={slideshowDeps}
+                onDepsChange={setSlideshowDeps}
                 currentSlideIndex={currentSlideIndex}
                 onSlideIndexChange={setCurrentSlideIndex}
                 slideEditorRefs={slideEditorRefs}
@@ -1445,6 +1625,10 @@ export default function Page() {
                 preferences={currentProjectPreferences}
                 onPreferencesChange={handlePreferencesChange}
                 readOnly={isViewingHistory}
+                resolvedProjects={resolvedProjects}
+                onConvertToIndependent={handleConvertToIndependent}
+                onConvertToDependent={handleConvertToDependent}
+                onImportProject={handleImportProject}
               />
             ) : currentLayout === "single" ? (
               <EditorLayoutType1
@@ -1582,6 +1766,8 @@ export default function Page() {
                   structure={previewSlideshowStructure}
                   projectId={currentProjectId}
                   projectName={currentProjectName}
+                  deps={slideshowDeps}
+                  resolvedProjects={resolvedProjects}
                   storageAdapter={storageAdapter}
                   preferences={currentProjectPreferences}
                 />
@@ -1590,6 +1776,8 @@ export default function Page() {
                   structure={previewSlideshowStructure}
                   projectId={currentProjectId}
                   projectName={currentProjectName}
+                  deps={slideshowDeps}
+                  resolvedProjects={resolvedProjects}
                   storageAdapter={storageAdapter}
                   preferences={currentProjectPreferences}
                 />
@@ -1613,6 +1801,18 @@ export default function Page() {
         onCreateSnapshot={handleCreateSnapshot}
         listHistory={(id) => dbStorage.current.listHistory(id)}
         listSnapshots={(id) => dbStorage.current.listSnapshots(id)}
+      />
+
+      {/* Project Import Dialog for slideshow slides */}
+      <ProjectImportDialog
+        open={importDialogOpen}
+        onOpenChange={setImportDialogOpen}
+        storageAdapter={{
+          list: () => storageAdapter.list(),
+          listSnapshots: (id: string) => dbStorage.current.listSnapshots(id),
+        }}
+        onConfirm={handleImportConfirm}
+        currentProjectId={currentProjectId}
       />
     </>
   )

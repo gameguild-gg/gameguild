@@ -32,6 +32,7 @@ interface ProjectData {
   storageType?: "local" | "gameguild-cloud" | "google-drive"
   isLocallyAvailable?: boolean
   preferences?: ProjectPreferences
+  deps?: any[]
 }
 
 interface StorageAdapter {

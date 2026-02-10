@@ -5,10 +5,12 @@ import { Plus, Trash2, GripVertical, Layers } from "lucide-react"
 import { useState } from "react"
 import { cn } from "@/lib/utils"
 import type { SlideData } from "@/lib/storage/editor/slideshow-structure"
+import type { ProjectData } from "@/lib/storage/editor/enhanced-storage-adapter"
 import { DeleteConfirmDialog } from "@/components/editor/extras/dialogs/delete-confirm-dialog"
 
 interface SlideNavigationSidebarProps {
   slides: SlideData[]
+  deps: ProjectData[]
   currentSlideIndex: number
   onSlideSelect: (index: number) => void
   onSlideAdd?: () => void
@@ -20,6 +22,7 @@ interface SlideNavigationSidebarProps {
 
 export function SlideNavigationSidebar({
   slides,
+  deps,
   currentSlideIndex,
   onSlideSelect,
   onSlideAdd,
@@ -198,11 +201,17 @@ export function SlideNavigationSidebar({
                     </div>
                   )}
 
-                  {/* Block Count Badge */}
+                  {/* Block Count / Status Badge */}
                   <div className="mt-1">
-                    <span className="inline-block px-2 py-0.5 text-xs rounded bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400">
-                      {Object.keys(slide.blocks || {}).length} block{Object.keys(slide.blocks || {}).length !== 1 ? 's' : ''}
-                    </span>
+                    {slide.projectRef.isDependent ? (
+                      <span className="inline-block px-2 py-0.5 text-xs rounded bg-green-100 dark:bg-green-900/50 text-green-600 dark:text-green-400">
+                        Dependent
+                      </span>
+                    ) : (
+                      <span className="inline-block px-2 py-0.5 text-xs rounded bg-amber-100 dark:bg-amber-900/50 text-amber-600 dark:text-amber-400">
+                        Independent
+                      </span>
+                    )}
                   </div>
                 </div>
               </div>
