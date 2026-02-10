@@ -1,32 +1,52 @@
 /**
  * Slideshow Structure System (type3)
  * 
- * Estrutura para projetos tipo Slideshow
- * Cada slide usa o mesmo sistema de multi-panel do type2
+ * Each slide references a type2 project instead of containing blocks inline.
+ * Type2 projects can be:
+ *   - "dependent" (isDependent=true): stored in ProjectData.deps of the type3 project
+ *   - "independent" (isDependent=false): standalone projects, loaded via git history
  * 
- * Hierarquia: slides[] → blocks[] → cells[]
+ * loadMode determines how independent projects are loaded:
+ *   - 'head': always loads the latest commit from git history
+ *   - 'snapshot': loads a specific tagged version from git history
  */
 
-import type { SerializedEditorState } from "lexical"
+import type { ProjectData } from './enhanced-storage-adapter'
+import { PROJECT_TYPES } from './project-types'
+import type { StorageType } from './storage-types'
+import { STORAGE_TYPES } from './storage-types'
 
+/**
+ * Reference from a slide to its type2 project
+ */
+export interface SlideProjectRef {
+  projectId: string        // ID of the type2 project
+  isDependent: boolean     // true = in deps, false = standalone project
+  snapshotTag?: string     // tag name for loadMode='snapshot'
+  loadMode: 'snapshot' | 'head'  // how to load independent projects
+}
+
+/**
+ * A single slide in the slideshow
+ */
 export interface SlideData {
-  id: string // formato: s1, s2, s3...
-  name?: string // Nome opcional do slide (ex: "Introdução", "Capítulo 1")
-  // Ordem é definida pela posição no array slides[]
-  
-  // Blocos do slide (b1, b2, b3... - mesmo sistema do type2)
-  blocks: Record<string, SerializedEditorState | string>
+  id: string             // format: s1, s2, s3...
+  name?: string          // Optional slide name
+  projectRef: SlideProjectRef  // Reference to the type2 project
 }
 
 export type PreviewMode = "continuous" | "slide"
 
+/**
+ * Top-level slideshow structure (stored in ProjectData.data)
+ */
 export interface SlideshowStructure {
   version: "slideshow-v1"
   slides: SlideData[]
 }
 
 /**
- * Detecta se os dados são do formato slideshow
+ * Detects if data is in slideshow format
  */
 export function isSlideshowStructure(data: string): boolean {
   try {
@@ -38,164 +58,130 @@ export function isSlideshowStructure(data: string): boolean {
 }
 
 /**
- * Converte formato para estrutura slideshow
- * Espera dados já no formato blocks: {b1, b2, b3...}
+ * Creates the default empty type2 project data (multi-block with b1)
  */
-export function migrateToSlideshowStructure(data: string): SlideshowStructure {
-  try {
-    const parsed = JSON.parse(data)
-    
-    // Se já é formato slideshow, retorna
-    if (isSlideshowStructure(data)) {
-      return parsed as SlideshowStructure
-    }
-    
-    // Se é formato com blocos
-    if (parsed.blocks && typeof parsed.blocks === 'object') {
-      const blocks = parsed.blocks
-      return {
-        version: "slideshow-v1",
-        slides: [
-          {
-            id: "s1",
-            blocks: Object.entries(blocks).reduce((acc, [key, value]: [string, any]) => {
-              acc[key] = typeof value === 'string' ? value : JSON.stringify(value)
-              return acc
-            }, {} as Record<string, string>)
-          }
-        ]
-      }
-    }
-    
-    // Formato single (estado direto) - assume b1
-    return {
-      version: "slideshow-v1",
-      slides: [
-        {
-          id: "s1",
-          blocks: {
-            b1: typeof parsed === 'string' ? parsed : JSON.stringify(parsed)
-          }
-        }
-      ]
-    }
-  } catch (error) {
-    console.error("Failed to migrate to slideshow structure:", error)
-    // Retorna estrutura vazia em caso de erro
-    return {
-      version: "slideshow-v1",
-      slides: []
-    }
+function createEmptyType2Data(): string {
+  return JSON.stringify({ b1: JSON.stringify([]) })
+}
+
+/**
+ * Creates a new dependent type2 project
+ */
+export function createDependentProject(
+  parentProjectId: string,
+  slideId: string,
+  name?: string
+): ProjectData {
+  const now = new Date().toISOString()
+  const projectId = `${parentProjectId}-${slideId}`
+  
+  return {
+    id: projectId,
+    name: name || `Slide ${slideId}`,
+    type: PROJECT_TYPES.TYPE2,
+    data: createEmptyType2Data(),
+    tags: [],
+    size: 0,
+    createdAt: now,
+    updatedAt: now,
+    hash: '',
+    storageType: STORAGE_TYPES.LOCAL as StorageType,
   }
 }
 
 /**
- * Cria uma nova estrutura slideshow vazia
+ * Creates a new empty slideshow structure with one slide.
+ * Returns both the structure and the deps array with the dependent type2 project.
  */
-export function createEmptySlideshowStructure(): SlideshowStructure {
-  const emptyState = {
-    root: {
-      children: [
-        {
-          children: [],
-          direction: null,
-          format: "",
-          indent: 0,
-          type: "paragraph",
-          version: 1
-        }
-      ],
-      direction: null,
-      format: "",
-      indent: 0,
-      type: "root",
-      version: 1
-    }
-  }
+export function createEmptySlideshowStructure(
+  parentProjectId: string
+): { structure: SlideshowStructure; deps: ProjectData[] } {
+  const slideId = 's1'
+  const depProject = createDependentProject(parentProjectId, slideId, 'Slide 1')
   
-  return {
+  const structure: SlideshowStructure = {
     version: "slideshow-v1",
     slides: [
       {
-        id: "s1",
+        id: slideId,
         name: "Slide 1",
-        blocks: {
-          b1: JSON.stringify(emptyState)
+        projectRef: {
+          projectId: depProject.id,
+          isDependent: true,
+          loadMode: 'head',
         }
       }
     ]
   }
+  
+  return { structure, deps: [depProject] }
 }
 
 /**
- * Adiciona um novo slide à estrutura
- * Cada slide usa o sistema multi-block (mesmo que type2)
+ * Adds a new slide with a new dependent type2 project.
+ * Returns updated structure, deps, and the new project.
  */
 export function addSlide(
-  structure: SlideshowStructure, 
+  structure: SlideshowStructure,
+  parentProjectId: string,
+  deps: ProjectData[],
   position?: number
-): SlideshowStructure {
-  const emptyState = {
-    root: {
-      children: [
-        {
-          children: [],
-          direction: null,
-          format: "",
-          indent: 0,
-          type: "paragraph",
-          version: 1
-        }
-      ],
-      direction: null,
-      format: "",
-      indent: 0,
-      type: "root",
-      version: 1
-    }
-  }
+): { structure: SlideshowStructure; deps: ProjectData[]; newProject: ProjectData } {
+  const slideId = generateSlideId(structure)
+  const depProject = createDependentProject(
+    parentProjectId,
+    slideId,
+    `Slide ${structure.slides.length + 1}`
+  )
   
   const newSlide: SlideData = {
-    id: generateSlideId(structure),
+    id: slideId,
     name: `Slide ${structure.slides.length + 1}`,
-    blocks: {
-      b1: JSON.stringify(emptyState)
+    projectRef: {
+      projectId: depProject.id,
+      isDependent: true,
+      loadMode: 'head',
     }
   }
   
   const newSlides = [...structure.slides]
-  
   if (position !== undefined) {
-    // Inserir na posição específica
     newSlides.splice(position, 0, newSlide)
   } else {
-    // Adicionar no final
     newSlides.push(newSlide)
   }
   
   return {
-    ...structure,
-    slides: newSlides
+    structure: { ...structure, slides: newSlides },
+    deps: [...deps, depProject],
+    newProject: depProject,
   }
 }
 
 /**
- * Remove um slide da estrutura
+ * Removes a slide and its dependent project (if dependent)
  */
 export function removeSlide(
   structure: SlideshowStructure,
-  slideId: string
-): SlideshowStructure {
+  slideId: string,
+  deps: ProjectData[]
+): { structure: SlideshowStructure; deps: ProjectData[] } {
+  const slide = structure.slides.find(s => s.id === slideId)
   const newSlides = structure.slides.filter(s => s.id !== slideId)
   
+  let newDeps = deps
+  if (slide?.projectRef.isDependent) {
+    newDeps = deps.filter(d => d.id !== slide.projectRef.projectId)
+  }
+  
   return {
-    ...structure,
-    slides: newSlides
+    structure: { ...structure, slides: newSlides },
+    deps: newDeps,
   }
 }
 
 /**
- * Reordena slides
+ * Reorders slides (deps are unaffected — they're referenced by projectId)
  */
 export function reorderSlides(
   structure: SlideshowStructure,
@@ -206,19 +192,16 @@ export function reorderSlides(
   const [movedSlide] = newSlides.splice(fromIndex, 1)
   
   if (!movedSlide) {
-    return structure // No slide to move
+    return structure
   }
   
   newSlides.splice(toIndex, 0, movedSlide)
   
-  return {
-    ...structure,
-    slides: newSlides
-  }
+  return { ...structure, slides: newSlides }
 }
 
 /**
- * Atualiza o nome de um slide
+ * Updates a slide's name
  */
 export function updateSlideName(
   structure: SlideshowStructure,
@@ -234,31 +217,166 @@ export function updateSlideName(
 }
 
 /**
- * Atualiza o estado de um slide
+ * Converts a dependent type2 project to independent.
+ * Removes from deps, assigns new ID, updates slide reference.
+ * Caller must save the extracted project as standalone.
  */
-export function updateSlideState(
+export function convertToIndependent(
   structure: SlideshowStructure,
   slideId: string,
-  blocks: Record<string, SerializedEditorState | string>
+  deps: ProjectData[],
+  newIndependentId: string
+): {
+  structure: SlideshowStructure
+  deps: ProjectData[]
+  extractedProject: ProjectData
+} {
+  const slide = structure.slides.find(s => s.id === slideId)
+  if (!slide || !slide.projectRef.isDependent) {
+    throw new Error(`Slide ${slideId} is not dependent or does not exist`)
+  }
+  
+  const depProject = deps.find(d => d.id === slide.projectRef.projectId)
+  if (!depProject) {
+    throw new Error(`Dependent project ${slide.projectRef.projectId} not found in deps`)
+  }
+  
+  const extractedProject: ProjectData = {
+    ...depProject,
+    id: newIndependentId,
+    updatedAt: new Date().toISOString(),
+  }
+  
+  const newStructure: SlideshowStructure = {
+    ...structure,
+    slides: structure.slides.map(s =>
+      s.id === slideId
+        ? {
+            ...s,
+            projectRef: {
+              projectId: newIndependentId,
+              isDependent: false,
+              loadMode: 'head',
+            }
+          }
+        : s
+    )
+  }
+  
+  const newDeps = deps.filter(d => d.id !== slide.projectRef.projectId)
+  
+  return { structure: newStructure, deps: newDeps, extractedProject }
+}
+
+/**
+ * Converts an independent type2 project to dependent (creates a copy in deps).
+ * Original independent project remains unchanged.
+ */
+export function convertToDependent(
+  structure: SlideshowStructure,
+  slideId: string,
+  deps: ProjectData[],
+  independentProject: ProjectData,
+  parentProjectId: string
+): {
+  structure: SlideshowStructure
+  deps: ProjectData[]
+} {
+  const slide = structure.slides.find(s => s.id === slideId)
+  if (!slide) {
+    throw new Error(`Slide ${slideId} does not exist`)
+  }
+  
+  const depId = `${parentProjectId}-${slideId}`
+  const depProject: ProjectData = {
+    ...independentProject,
+    id: depId,
+    updatedAt: new Date().toISOString(),
+  }
+  
+  const newStructure: SlideshowStructure = {
+    ...structure,
+    slides: structure.slides.map(s =>
+      s.id === slideId
+        ? {
+            ...s,
+            projectRef: {
+              projectId: depId,
+              isDependent: true,
+              loadMode: 'head',
+            }
+          }
+        : s
+    )
+  }
+  
+  return {
+    structure: newStructure,
+    deps: [...deps, depProject],
+  }
+}
+
+/**
+ * Imports an independent type2 project into a slide (reference only, no copy).
+ */
+export function importProjectToSlide(
+  structure: SlideshowStructure,
+  slideId: string,
+  independentProjectId: string,
+  loadMode: 'snapshot' | 'head',
+  snapshotTag?: string
 ): SlideshowStructure {
   return {
     ...structure,
-    slides: structure.slides.map(slide =>
-      slide.id === slideId ? { ...slide, blocks } : slide
+    slides: structure.slides.map(s =>
+      s.id === slideId
+        ? {
+            ...s,
+            projectRef: {
+              projectId: independentProjectId,
+              isDependent: false,
+              loadMode,
+              snapshotTag: loadMode === 'snapshot' ? snapshotTag : undefined,
+            }
+          }
+        : s
     )
   }
 }
 
 /**
- * Gera um ID único para slide no formato s1, s2, s3...
- * Encontra o próximo número disponível baseado nos IDs existentes
+ * Updates the data of a dependent project in deps
+ */
+export function updateDependentProjectData(
+  deps: ProjectData[],
+  projectId: string,
+  newData: string
+): ProjectData[] {
+  return deps.map(dep =>
+    dep.id === projectId
+      ? { ...dep, data: newData, updatedAt: new Date().toISOString() }
+      : dep
+  )
+}
+
+/**
+ * Gets a dependent project from deps by projectId
+ */
+export function getDependentProject(
+  deps: ProjectData[],
+  projectId: string
+): ProjectData | undefined {
+  return deps.find(d => d.id === projectId)
+}
+
+/**
+ * Generates a unique slide ID in format s1, s2, s3...
  */
 export function generateSlideId(structure?: SlideshowStructure): string {
   if (!structure || structure.slides.length === 0) {
     return "s1"
   }
   
-  // Extrai os números dos IDs existentes (s1 -> 1, s2 -> 2, etc.)
   const existingNumbers = structure.slides
     .map(slide => {
       const match = slide.id.match(/^s(\d+)$/)
@@ -266,20 +384,19 @@ export function generateSlideId(structure?: SlideshowStructure): string {
     })
     .filter(n => n > 0)
   
-  // Encontra o próximo número disponível
   const maxNumber = existingNumbers.length > 0 ? Math.max(...existingNumbers) : 0
   return `s${maxNumber + 1}`
 }
 
 /**
- * Converte estrutura slideshow para string JSON
+ * Serializes slideshow structure to JSON string
  */
 export function serializeSlideshowStructure(structure: SlideshowStructure): string {
   return JSON.stringify(structure)
 }
 
 /**
- * Parse estrutura slideshow de string JSON
+ * Parses slideshow structure from JSON string
  */
 export function parseSlideshowStructure(data: string): SlideshowStructure {
   return JSON.parse(data) as SlideshowStructure
