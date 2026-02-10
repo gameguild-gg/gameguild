@@ -28,7 +28,7 @@ public class AssetsAdminController(
         CancellationToken ct = default)
     {
         var query = new GetModerationQueueQuery(limit);
-        var result = await sender.Send(query, ct);
+        var result = await sender.Send(query, ct).ConfigureAwait(false);
 
         return Ok(result);
     }
@@ -42,7 +42,7 @@ public class AssetsAdminController(
         CancellationToken ct = default)
     {
         var query = new GetAssetReportsQuery(id);
-        var result = await sender.Send(query, ct);
+        var result = await sender.Send(query, ct).ConfigureAwait(false);
 
         return Ok(result);
     }
@@ -67,7 +67,7 @@ public class AssetsAdminController(
             request.Decision,
             request.Notes);
 
-        var result = await sender.Send(command, ct);
+        var result = await sender.Send(command, ct).ConfigureAwait(false);
 
         if (result == null)
         {
@@ -92,7 +92,7 @@ public class AssetsAdminController(
 
         var command = new DeleteAssetCommand(id, Actor.SubjectIdAsGuid.Value, ForceDelete: true);
 
-        var result = await sender.Send(command, ct);
+        var result = await sender.Send(command, ct).ConfigureAwait(false);
 
         if (!result.Success)
         {
@@ -115,7 +115,7 @@ public class AssetsAdminController(
     {
         if (status == "pending-virus-scan")
         {
-            var virusScanItems = await contentRepository.GetPendingVirusScanAsync(limit, ct);
+            var virusScanItems = await contentRepository.GetPendingVirusScanAsync(limit, ct).ConfigureAwait(false);
             return Ok(virusScanItems.Select(x => new
             {
                 x.Id,
@@ -130,7 +130,7 @@ public class AssetsAdminController(
 
         if (status == "pending-moderation")
         {
-            var moderationItems = await contentRepository.GetPendingModerationAsync(limit, ct);
+            var moderationItems = await contentRepository.GetPendingModerationAsync(limit, ct).ConfigureAwait(false);
             return Ok(moderationItems.Select(x => new
             {
                 x.Id,
@@ -161,7 +161,7 @@ public class AssetsAdminController(
         var items = await contentRepository.GetGarbageCollectionCandidatesAsync(
             TimeSpan.FromHours(gracePeriodHours),
             limit,
-            ct);
+            ct).ConfigureAwait(false);
 
         return Ok(items.Select(x => new
         {
@@ -184,14 +184,14 @@ public class AssetsAdminController(
         [FromServices] IAssetContentRepository contentRepository,
         CancellationToken ct = default)
     {
-        var content = await contentRepository.GetByIdAsync(contentId, ct);
+        var content = await contentRepository.GetByIdAsync(contentId, ct).ConfigureAwait(false);
         if (content == null)
         {
             return NotFound();
         }
 
         content.SetVirusScanStatus(request.Status, request.ScanResult);
-        await contentRepository.UpdateAsync(content, ct);
+        await contentRepository.UpdateAsync(content, ct).ConfigureAwait(false);
 
         return Ok(new { content.Id, content.VirusScanStatus });
     }
@@ -218,7 +218,7 @@ public class AssetsAdminController(
         var candidates = await contentRepository.GetGarbageCollectionCandidatesAsync(
             TimeSpan.FromHours(gracePeriodHours),
             limit,
-            ct);
+            ct).ConfigureAwait(false);
 
         var deleted = 0;
         var failed = 0;
@@ -228,13 +228,13 @@ public class AssetsAdminController(
             try
             {
                 // Delete transformed versions first
-                await transformedRepository.DeleteBySourceAsync(content.Id, ct);
+                await transformedRepository.DeleteBySourceAsync(content.Id, ct).ConfigureAwait(false);
 
                 // Delete from storage
-                await storageService.DeleteAsync(content.BucketName, content.ObjectKey, ct);
+                await storageService.DeleteAsync(content.BucketName, content.ObjectKey, ct).ConfigureAwait(false);
 
                 // Delete record
-                await contentRepository.DeleteAsync(content.Id, ct);
+                await contentRepository.DeleteAsync(content.Id, ct).ConfigureAwait(false);
 
                 deleted++;
             }
@@ -268,14 +268,14 @@ public class AssetsAdminController(
         [FromServices] IAssetContentRepository contentRepository,
         CancellationToken ct = default)
     {
-        var content = await contentRepository.GetByIdAsync(contentId, ct);
+        var content = await contentRepository.GetByIdAsync(contentId, ct).ConfigureAwait(false);
         if (content == null)
         {
             return NotFound();
         }
 
         content.MarkAsNonDeletable(request?.Reason);
-        await contentRepository.UpdateAsync(content, ct);
+        await contentRepository.UpdateAsync(content, ct).ConfigureAwait(false);
 
         return Ok(new
         {
@@ -296,14 +296,14 @@ public class AssetsAdminController(
         [FromServices] IAssetContentRepository contentRepository,
         CancellationToken ct = default)
     {
-        var content = await contentRepository.GetByIdAsync(contentId, ct);
+        var content = await contentRepository.GetByIdAsync(contentId, ct).ConfigureAwait(false);
         if (content == null)
         {
             return NotFound();
         }
 
         content.MarkAsDeletable();
-        await contentRepository.UpdateAsync(content, ct);
+        await contentRepository.UpdateAsync(content, ct).ConfigureAwait(false);
 
         return Ok(new { content.Id, content.IsDeletable });
     }
@@ -333,21 +333,21 @@ public class AssetsAdminController(
             return Unauthorized();
         }
 
-        var content = await contentRepository.GetByIdAsync(contentId, ct);
+        var content = await contentRepository.GetByIdAsync(contentId, ct).ConfigureAwait(false);
         if (content == null)
         {
             return NotFound();
         }
 
         content.SetModerationStatus(request.Status, Actor.SubjectIdAsGuid.Value, request.Labels, request.Notes);
-        await contentRepository.UpdateAsync(content, ct);
+        await contentRepository.UpdateAsync(content, ct).ConfigureAwait(false);
 
         return Ok(new
         {
             content.Id,
             content.ModerationStatus,
             ReviewedBy = Actor.SubjectIdAsGuid.Value,
-            ReviewedAt = DateTime.UtcNow
+            ReviewedAt = SystemClock.UtcNow
         });
     }
 

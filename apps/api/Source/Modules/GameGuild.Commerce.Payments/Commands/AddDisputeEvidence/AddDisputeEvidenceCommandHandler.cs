@@ -1,4 +1,4 @@
-﻿using GameGuild.CQRS;
+using GameGuild.CQRS;
 
 namespace GameGuild.Commerce.Payments;
 
@@ -21,6 +21,6 @@ public sealed class AddDisputeEvidenceCommandHandler(IDisputeService disputeServ
             request.FileSize,
             request.MimeType,
             cancellationToken
-        );
+        ).ConfigureAwait(false);
     }
 }

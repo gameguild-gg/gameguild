@@ -171,23 +171,23 @@ public class UserNotificationRepository(IApplicationDbContext context) : IUserNo
     {
         await context.Set<UserNotification>()
             .Where(n => n.UserId == userId && !n.IsRead && n.DeletedAt == null)
-            .ExecuteUpdateAsync(setters => setters.SetProperty(n => n.IsRead, true).SetProperty(n => n.ReadAt, DateTime.UtcNow).SetProperty(n => n.UpdatedAt, DateTime.UtcNow), cancellationToken)
+            .ExecuteUpdateAsync(setters => setters.SetProperty(n => n.IsRead, true).SetProperty(n => n.ReadAt, SystemClock.UtcNow).SetProperty(n => n.UpdatedAt, SystemClock.UtcNow), cancellationToken)
             .ConfigureAwait(false);
     }
 
     public async Task ArchiveAllAsync(Guid userId, int olderThanDays = 30, CancellationToken cancellationToken = default)
     {
-        var cutoffDate = DateTime.UtcNow.AddDays(-olderThanDays);
+        var cutoffDate = SystemClock.UtcNow.AddDays(-olderThanDays);
 
         await context.Set<UserNotification>()
             .Where(n => n.UserId == userId && !n.IsArchived && n.DeletedAt == null && n.CreatedAt < cutoffDate)
-            .ExecuteUpdateAsync(setters => setters.SetProperty(n => n.IsArchived, true).SetProperty(n => n.ArchivedAt, DateTime.UtcNow).SetProperty(n => n.UpdatedAt, DateTime.UtcNow), cancellationToken)
+            .ExecuteUpdateAsync(setters => setters.SetProperty(n => n.IsArchived, true).SetProperty(n => n.ArchivedAt, SystemClock.UtcNow).SetProperty(n => n.UpdatedAt, SystemClock.UtcNow), cancellationToken)
             .ConfigureAwait(false);
     }
 
     public async Task DeleteArchivedAsync(Guid userId, int olderThanDays = 90, CancellationToken cancellationToken = default)
     {
-        var cutoffDate = DateTime.UtcNow.AddDays(-olderThanDays);
+        var cutoffDate = SystemClock.UtcNow.AddDays(-olderThanDays);
 
         await context.Set<UserNotification>().Where(n => n.UserId == userId && n.IsArchived && n.ArchivedAt < cutoffDate).ExecuteDeleteAsync(cancellationToken).ConfigureAwait(false);
     }

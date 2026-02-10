@@ -52,7 +52,7 @@ public class SubscriptionLifecycleService(
     {
         await GetRequiredPlanAsync(planId, cancellationToken).ConfigureAwait(false);
 
-        var effectiveStartDate = startDate ?? DateTime.UtcNow;
+        var effectiveStartDate = startDate ?? SystemClock.UtcNow;
         DateTime? trialEndDate = trialDays.HasValue ? effectiveStartDate.AddDays(trialDays.Value) : null;
 
         var subscription = new Subscription(
@@ -81,7 +81,7 @@ public class SubscriptionLifecycleService(
             throw new ArgumentOutOfRangeException(nameof(trialDays), "Trial days must be positive");
 
         var subscription = await GetRequiredAsync(subscriptionId, cancellationToken).ConfigureAwait(false);
-        subscription.StartTrial(DateTime.UtcNow.AddDays(trialDays));
+        subscription.StartTrial(SystemClock.UtcNow.AddDays(trialDays));
         return await _repository.UpdateAsync(subscription, cancellationToken).ConfigureAwait(false);
     }
 

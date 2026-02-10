@@ -6,9 +6,8 @@ namespace GameGuild.Features;
 /// <summary>
 ///     Handler for ToggleFeatureFlagCommand
 /// </summary>
-#pragma warning disable CS0618 // IFeatureFlagRepository migration pending
 public sealed class ToggleFeatureFlagCommandHandler(
-    IFeatureFlagRepository repository,
+    IFeatureFlagQueryRepository repository,
     ILogger<ToggleFeatureFlagCommandHandler> logger
 ) : IRequestHandler<ToggleFeatureFlagCommand>
 {
@@ -27,4 +26,3 @@ public sealed class ToggleFeatureFlagCommandHandler(
         return Unit.Value;
     }
 }
-#pragma warning restore CS0618

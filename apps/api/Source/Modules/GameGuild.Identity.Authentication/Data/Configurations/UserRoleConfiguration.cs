@@ -11,7 +11,7 @@ public class UserRoleConfiguration : IEntityTypeConfiguration<UserRole>
     public void Configure(EntityTypeBuilder<UserRole> builder)
     {
         // Configure table name (snake_case convention)
-        builder.ToTable("user_roles", "gameguild.authentication");
+        builder.ToTable("user_role", "gameguild.authentication");
 
         // Configure primary key
         builder.HasKey(x => x.Id);

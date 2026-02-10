@@ -146,7 +146,7 @@ public class TestingFeedbackOperationsService(IApplicationDbContext context) : I
         feedback.IsReported = true;
         feedback.ReportReason = reason;
         feedback.ReportedByUserId = reportedByUserId;
-        feedback.ReportedAt = DateTime.UtcNow;
+        feedback.ReportedAt = SystemClock.UtcNow;
 
         await context.SaveChangesAsync().ConfigureAwait(false);
     }

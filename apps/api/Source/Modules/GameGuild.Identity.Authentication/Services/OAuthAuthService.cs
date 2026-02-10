@@ -39,7 +39,7 @@ public class OAuthAuthService(
         var jwtToken = jwtTokenService.GenerateAccessToken(userId, email, roles);
         var refreshTokenValue = await jwtTokenService.GenerateRefreshTokenAsync(userId, deviceInfo, cancellationToken).ConfigureAwait(false);
         var refreshExpiresInDays = int.Parse(configuration["Jwt:RefreshTokenExpirationDays"] ?? configuration["Jwt:RefreshTokenExpiryInDays"] ?? "7", CultureInfo.InvariantCulture);
-        var refreshTokenExpiresAt = DateTime.UtcNow.AddDays(refreshExpiresInDays);
+        var refreshTokenExpiresAt = SystemClock.UtcNow.AddDays(refreshExpiresInDays);
 
         var refreshToken = new RefreshToken
         {
@@ -60,7 +60,7 @@ public class OAuthAuthService(
             AccessToken = jwtToken,
             RefreshToken = refreshTokenValue,
             ExpiresAt = refreshTokenExpiresAt,
-            ExpiresIn = (int)(refreshTokenExpiresAt - DateTime.UtcNow).TotalSeconds,
+            ExpiresIn = (int)(refreshTokenExpiresAt - SystemClock.UtcNow).TotalSeconds,
             UserId = userId,
             Email = email,
             SessionId = refreshToken.Id
@@ -86,7 +86,7 @@ public class OAuthAuthService(
         var jwtToken = jwtTokenService.GenerateAccessToken(userId, email, roles);
         var refreshTokenValue = await jwtTokenService.GenerateRefreshTokenAsync(userId, deviceInfo, cancellationToken).ConfigureAwait(false);
         var refreshExpiresInDays = int.Parse(configuration["Jwt:RefreshTokenExpirationDays"] ?? configuration["Jwt:RefreshTokenExpiryInDays"] ?? "7", CultureInfo.InvariantCulture);
-        var refreshTokenExpiresAt = DateTime.UtcNow.AddDays(refreshExpiresInDays);
+        var refreshTokenExpiresAt = SystemClock.UtcNow.AddDays(refreshExpiresInDays);
 
         var refreshToken = new RefreshToken
         {
@@ -107,7 +107,7 @@ public class OAuthAuthService(
             AccessToken = jwtToken,
             RefreshToken = refreshTokenValue,
             ExpiresAt = refreshTokenExpiresAt,
-            ExpiresIn = (int)(refreshTokenExpiresAt - DateTime.UtcNow).TotalSeconds,
+            ExpiresIn = (int)(refreshTokenExpiresAt - SystemClock.UtcNow).TotalSeconds,
             UserId = userId,
             Email = email,
             SessionId = refreshToken.Id
@@ -148,7 +148,7 @@ public class OAuthAuthService(
             var refreshTokenValue = await jwtTokenService.GenerateRefreshTokenAsync(userId, deviceInfo, cancellationToken).ConfigureAwait(false);
 
             var refreshTokenExpiryDays = int.Parse(configuration["Jwt:RefreshTokenExpiryInDays"] ?? "7", CultureInfo.InvariantCulture);
-            var refreshTokenExpiresAt = DateTime.UtcNow.AddDays(refreshTokenExpiryDays);
+            var refreshTokenExpiresAt = SystemClock.UtcNow.AddDays(refreshTokenExpiryDays);
 
             var refreshTokenEntity = new RefreshToken
             {
@@ -169,7 +169,7 @@ public class OAuthAuthService(
                 AccessToken = jwtToken,
                 RefreshToken = refreshTokenValue,
                 ExpiresAt = refreshTokenExpiresAt,
-                ExpiresIn = (int)(refreshTokenExpiresAt - DateTime.UtcNow).TotalSeconds,
+                ExpiresIn = (int)(refreshTokenExpiresAt - SystemClock.UtcNow).TotalSeconds,
                 UserId = userId,
                 Email = email,
                 SessionId = refreshTokenEntity.Id

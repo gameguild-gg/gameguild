@@ -44,7 +44,7 @@ public class AccessReviewItemController(IMediator mediator, ILogger<AccessReview
         {
             CampaignId = campaignId, Status = status, ReviewerId = reviewerId, Page = page, PageSize = pageSize
         };
-        var result = await _mediator.Send(query);
+        var result = await _mediator.Send(query).ConfigureAwait(false);
 
         return Ok(result);
     }
@@ -56,7 +56,7 @@ public class AccessReviewItemController(IMediator mediator, ILogger<AccessReview
     public async Task<ActionResult> ReviewAccessItem(Guid itemId, [FromBody] ReviewAccessItemCommand command)
     {
         var reviewCommand = command with { ItemId = itemId };
-        await _mediator.Send(reviewCommand);
+        await _mediator.Send(reviewCommand).ConfigureAwait(false);
 
         return Ok(new { message = "Access review item reviewed successfully" });
     }
@@ -68,7 +68,7 @@ public class AccessReviewItemController(IMediator mediator, ILogger<AccessReview
     public async Task<ActionResult<BulkAccessReviewResult>> BulkReviewAccessItems(
         [FromBody] BulkReviewAccessItemsCommand command)
     {
-        var result = await _mediator.Send(command);
+        var result = await _mediator.Send(command).ConfigureAwait(false);
 
         return Ok(result);
     }
@@ -80,7 +80,7 @@ public class AccessReviewItemController(IMediator mediator, ILogger<AccessReview
     public async Task<ActionResult<AccessReviewItemDetails>> GetAccessReviewItemDetails(Guid itemId)
     {
         var query = new GetAccessReviewItemDetailsQuery { ItemId = itemId };
-        var result = await _mediator.Send(query);
+        var result = await _mediator.Send(query).ConfigureAwait(false);
 
         return Ok(result);
     }
@@ -96,7 +96,7 @@ public class AccessReviewItemController(IMediator mediator, ILogger<AccessReview
     public async Task<ActionResult<PeriodicAccessReview>> CreatePeriodicAccessReview(
         [FromBody] CreatePeriodicAccessReviewCommand command)
     {
-        var result = await _mediator.Send(command);
+        var result = await _mediator.Send(command).ConfigureAwait(false);
 
         return CreatedAtAction(nameof(GetPeriodicAccessReview), new { id = result.Id }, result);
     }
@@ -108,7 +108,7 @@ public class AccessReviewItemController(IMediator mediator, ILogger<AccessReview
     public async Task<ActionResult<PeriodicAccessReview>> GetPeriodicAccessReview(Guid scheduleId)
     {
         var query = new GetPeriodicAccessReviewQuery { ReviewId = scheduleId };
-        var result = await _mediator.Send(query);
+        var result = await _mediator.Send(query).ConfigureAwait(false);
 
         return Ok(result);
     }
@@ -128,7 +128,7 @@ public class AccessReviewItemController(IMediator mediator, ILogger<AccessReview
         {
             TenantId = tenantId, IsActive = isActive, Page = page, PageSize = pageSize
         };
-        var result = await _mediator.Send(query);
+        var result = await _mediator.Send(query).ConfigureAwait(false);
 
         return Ok(result);
     }
@@ -140,7 +140,7 @@ public class AccessReviewItemController(IMediator mediator, ILogger<AccessReview
     public async Task<ActionResult<AccessReviewCampaign>> TriggerPeriodicAccessReview(Guid scheduleId)
     {
         var command = new TriggerPeriodicAccessReviewCommand { ReviewId = scheduleId };
-        var result = await _mediator.Send(command);
+        var result = await _mediator.Send(command).ConfigureAwait(false);
 
         return Ok(result);
     }

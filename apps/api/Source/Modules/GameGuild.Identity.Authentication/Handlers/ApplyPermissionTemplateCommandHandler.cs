@@ -93,7 +93,7 @@ public sealed class ApplyPermissionTemplateCommandHandler(
                     TenantId = request.TenantId,
                     UserId = request.UserId,
                     Permissions = template.Permissions,
-                    GrantedAt = DateTime.UtcNow,
+                    GrantedAt = SystemClock.UtcNow,
                     GrantedBy = grantedByUserId,
                     Reason = request.Reason ?? $"Applied from template: {template.Name}",
                     IsActive = true

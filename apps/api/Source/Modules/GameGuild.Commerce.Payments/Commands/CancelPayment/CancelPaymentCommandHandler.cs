@@ -27,7 +27,7 @@ public sealed class CancelPaymentCommandHandler(
             {
                 PaymentId = request.PaymentId,
                 CancellationReason = request.CancellationReason,
-                CanceledAt = DateTime.UtcNow,
+                CanceledAt = SystemClock.UtcNow,
                 Success = false,
                 ErrorMessage = $"Payment {request.PaymentId} not found"
             };
@@ -43,7 +43,7 @@ public sealed class CancelPaymentCommandHandler(
             {
                 PaymentId = request.PaymentId,
                 CancellationReason = request.CancellationReason,
-                CanceledAt = DateTime.UtcNow,
+                CanceledAt = SystemClock.UtcNow,
                 CanceledBy = request.CanceledBy,
                 Success = false,
                 ErrorMessage = $"Payment in status {payment.Status} cannot be cancelled"
@@ -59,7 +59,7 @@ public sealed class CancelPaymentCommandHandler(
             logger.LogInformation("Payment {PaymentId} was already succeeded, processing refund", request.PaymentId);
 
             var refundRequest = new GatewayRefundRequest(
-                IdempotencyKey: $"cancel_refund_{payment.Id}_{DateTime.UtcNow:yyyyMMddHHmmss}",
+                IdempotencyKey: $"cancel_refund_{payment.Id}_{SystemClock.UtcNow:yyyyMMddHHmmss}",
                 OriginalTransactionId: payment.ExternalTransactionId ?? payment.ExternalPaymentId,
                 Amount: payment.Amount,
                 Reason: request.CancellationReason);
@@ -88,7 +88,7 @@ public sealed class CancelPaymentCommandHandler(
                 {
                     PaymentId = request.PaymentId,
                     CancellationReason = request.CancellationReason,
-                    CanceledAt = DateTime.UtcNow,
+                    CanceledAt = SystemClock.UtcNow,
                     CanceledBy = request.CanceledBy,
                     Success = false,
                     ErrorMessage = $"Refund failed: {refundResult.ErrorMessage}"
@@ -109,7 +109,7 @@ public sealed class CancelPaymentCommandHandler(
         {
             PaymentId = request.PaymentId,
             CancellationReason = request.CancellationReason,
-            CanceledAt = payment.CancelledAt ?? DateTime.UtcNow,
+            CanceledAt = payment.CancelledAt ?? SystemClock.UtcNow,
             CanceledBy = request.CanceledBy,
             Success = true,
             RefundProcessed = refundProcessed,

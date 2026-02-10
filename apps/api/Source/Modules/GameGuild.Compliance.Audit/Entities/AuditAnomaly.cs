@@ -76,7 +76,7 @@ public sealed class AuditAnomaly : EntityBase {
             ConfidenceScore = confidenceScore,
             IpAddress = ipAddress,
             AnomalyData = anomalyData,
-            DetectedAt = DateTime.UtcNow,
+            DetectedAt = SystemClock.UtcNow,
             Status = AnomalyStatus.Detected
         };
     }
@@ -105,31 +105,31 @@ public sealed class AuditAnomaly : EntityBase {
 
     public void AssignTo(string assignee) {
         AssignedTo = assignee;
-        AssignedAt = DateTime.UtcNow;
+        AssignedAt = SystemClock.UtcNow;
         Status = AnomalyStatus.Assigned;
     }
 
     public void MarkAsInvestigating() {
-        InvestigatedAt = DateTime.UtcNow;
+        InvestigatedAt = SystemClock.UtcNow;
         Status = AnomalyStatus.Investigating;
     }
 
     public void Resolve(string resolutionNotes, string? mitigationActions = null) {
         ResolutionNotes = resolutionNotes;
         MitigationActions = mitigationActions;
-        ResolvedAt = DateTime.UtcNow;
+        ResolvedAt = SystemClock.UtcNow;
         Status = AnomalyStatus.Resolved;
     }
 
     public void MarkAsFalsePositive(string notes) {
         ResolutionNotes = notes;
-        ResolvedAt = DateTime.UtcNow;
+        ResolvedAt = SystemClock.UtcNow;
         Status = AnomalyStatus.FalsePositive;
     }
 
     public void MarkNotificationSent(string channel) {
         NotificationSent = true;
-        NotificationSentAt = DateTime.UtcNow;
+        NotificationSentAt = SystemClock.UtcNow;
         NotificationChannel = channel;
     }
 }

@@ -66,7 +66,7 @@ public class WalletTransaction : EntityBase
     public void Complete()
     {
         Status = TransactionStatus.Completed;
-        ProcessedAt = DateTime.UtcNow;
+        ProcessedAt = SystemClock.UtcNow;
     }
 
     /// <summary>Mark transaction as failed</summary>
@@ -74,6 +74,6 @@ public class WalletTransaction : EntityBase
     {
         Status = TransactionStatus.Failed;
         Notes = reason;
-        ProcessedAt = DateTime.UtcNow;
+        ProcessedAt = SystemClock.UtcNow;
     }
 }

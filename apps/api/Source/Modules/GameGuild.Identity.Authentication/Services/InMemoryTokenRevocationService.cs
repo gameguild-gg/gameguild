@@ -44,7 +44,7 @@ public sealed class InMemoryTokenRevocationService : ITokenRevocationService
         {
             Jti = jti,
             ExpiresAt = expiresAt,
-            RevokedAt = DateTime.UtcNow,
+            RevokedAt = SystemClock.UtcNow,
             Reason = reason
         };
 
@@ -60,7 +60,7 @@ public sealed class InMemoryTokenRevocationService : ITokenRevocationService
     /// <inheritdoc />
     public Task RevokeAllUserTokensAsync(Guid userId, string? reason = null, CancellationToken cancellationToken = default)
     {
-        var revocationTime = DateTime.UtcNow;
+        var revocationTime = SystemClock.UtcNow;
         
         // Update or add the user's revocation time
         _userRevocationTimes.AddOrUpdate(userId, revocationTime, (_, _) => revocationTime);
@@ -114,7 +114,7 @@ public sealed class InMemoryTokenRevocationService : ITokenRevocationService
     /// <inheritdoc />
     public Task<int> CleanupExpiredAsync(CancellationToken cancellationToken = default)
     {
-        var now = DateTime.UtcNow;
+        var now = SystemClock.UtcNow;
         var cleanedCount = 0;
 
         // Clean up expired individual token revocations

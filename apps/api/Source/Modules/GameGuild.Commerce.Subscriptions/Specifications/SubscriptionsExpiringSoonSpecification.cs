@@ -6,7 +6,7 @@ namespace GameGuild.Commerce.Subscriptions;
 /// </summary>
 public class SubscriptionsExpiringSoonSpecification : Specification<Subscription>
 {
-    public SubscriptionsExpiringSoonSpecification(int daysFromNow) : base(s => s.EndDate.HasValue && s.EndDate.Value <= DateTime.UtcNow.AddDays(daysFromNow) && s.Status == SubscriptionStatus.Active)
+    public SubscriptionsExpiringSoonSpecification(int daysFromNow) : base(s => s.EndDate.HasValue && s.EndDate.Value <= SystemClock.UtcNow.AddDays(daysFromNow) && s.Status == SubscriptionStatus.Active)
     {
     }
 }

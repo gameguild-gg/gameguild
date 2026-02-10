@@ -71,7 +71,7 @@ public class UsageTrendAnalysisService(IResourceUsageTrendRepository trendReposi
 
     public async Task<IEnumerable<ResourceUsageTrend>> DetectAnomaliesAsync(Guid tenantId, ResourceUsageType? type = null, int lookbackDays = 30, CancellationToken cancellationToken = default)
     {
-        var fromDate = DateTime.UtcNow.AddDays(-lookbackDays);
+        var fromDate = SystemClock.UtcNow.AddDays(-lookbackDays);
 
         var trends = await trendRepository.GetByTenantAsync(tenantId, type, fromDate, null, cancellationToken).ConfigureAwait(false);
 
@@ -81,7 +81,7 @@ public class UsageTrendAnalysisService(IResourceUsageTrendRepository trendReposi
     public async Task<long> ForecastUsageAsync(Guid tenantId, ResourceUsageType type, DateTime targetDate, CancellationToken cancellationToken = default)
     {
         // Get recent usage records (last 90 days) for linear regression
-        var fromDate = DateTime.UtcNow.AddDays(-90);
+        var fromDate = SystemClock.UtcNow.AddDays(-90);
 
         var usageRecords = await usageRepository.GetByTenantAsync(tenantId, type, fromDate, null, cancellationToken).ConfigureAwait(false);
         var recordsList = usageRecords.OrderBy(r => r.PeriodStart).ToList();
@@ -174,7 +174,7 @@ public class UsageTrendAnalysisService(IResourceUsageTrendRepository trendReposi
 
     public async Task<decimal> CalculateGrowthRateAsync(Guid tenantId, ResourceUsageType type, int periodDays = 30, CancellationToken cancellationToken = default)
     {
-        var endDate = DateTime.UtcNow;
+        var endDate = SystemClock.UtcNow;
         var startDate = endDate.AddDays(-periodDays);
 
         var usageRecords = await usageRepository.GetByTenantAsync(tenantId, type, startDate, endDate, cancellationToken).ConfigureAwait(false);

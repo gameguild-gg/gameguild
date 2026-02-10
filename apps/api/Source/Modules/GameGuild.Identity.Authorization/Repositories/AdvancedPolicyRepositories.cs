@@ -31,7 +31,7 @@ public class AbacPolicyRepository(DbContext context) : IAbacPolicyRepository
         CancellationToken cancellationToken = default
     )
     {
-        policy.UpdatedAt = DateTime.UtcNow;
+        policy.UpdatedAt = SystemClock.UtcNow;
         DbSet.Update(policy);
         await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
     }
@@ -100,7 +100,7 @@ public class ConditionalPolicyRepository(DbContext context) : IConditionalPolicy
         CancellationToken cancellationToken = default
     )
     {
-        policy.UpdatedAt = DateTime.UtcNow;
+        policy.UpdatedAt = SystemClock.UtcNow;
         DbSet.Update(policy);
         await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
     }
@@ -169,7 +169,7 @@ public class DataMaskingRuleRepository(DbContext context) : IDataMaskingRuleRepo
         CancellationToken cancellationToken = default
     )
     {
-        rule.UpdatedAt = DateTime.UtcNow;
+        rule.UpdatedAt = SystemClock.UtcNow;
         DbSet.Update(rule);
         await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
     }
@@ -252,7 +252,7 @@ public class PolicyBundleRepository(DbContext context) : IPolicyBundleRepository
         CancellationToken cancellationToken = default
     )
     {
-        bundle.UpdatedAt = DateTime.UtcNow;
+        bundle.UpdatedAt = SystemClock.UtcNow;
         DbSet.Update(bundle);
         await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
     }

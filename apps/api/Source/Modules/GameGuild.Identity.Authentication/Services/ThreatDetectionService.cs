@@ -20,7 +20,7 @@ public class ThreatDetectionService(
 
     public async Task<bool> DetectBruteForceAsync(string identifier, int timeWindowMinutes = 15)
     {
-        var sinceTime = DateTime.UtcNow.AddMinutes(-timeWindowMinutes);
+        var sinceTime = SystemClock.UtcNow.AddMinutes(-timeWindowMinutes);
         var failedAttempts = await authAttemptRepository
             .GetFailedAttemptsAsync(identifier, sinceTime, CancellationToken.None)
             .ConfigureAwait(false);
@@ -84,7 +84,7 @@ public class ThreatDetectionService(
         string email,
         CancellationToken cancellationToken = default)
     {
-        var now = DateTime.UtcNow;
+        var now = SystemClock.UtcNow;
         var oneHourAgo = now.AddHours(-1);
 
         var recentAttempts = await authAttemptRepository

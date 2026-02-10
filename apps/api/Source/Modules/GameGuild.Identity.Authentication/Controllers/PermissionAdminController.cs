@@ -42,8 +42,8 @@ public class PermissionAdminController(IMediator mediator, ILogger<PermissionAdm
         [FromQuery] DateTime? fromDate = null, 
         [FromQuery] DateTime? toDate = null)
     {
-        var query = new GetPermissionAnalyticsQuery { TenantId = tenantId, FromDate = fromDate ?? DateTime.UtcNow.AddDays(-30), ToDate = toDate ?? DateTime.UtcNow };
-        var result = await _mediator.Send(query);
+        var query = new GetPermissionAnalyticsQuery { TenantId = tenantId, FromDate = fromDate ?? SystemClock.UtcNow.AddDays(-30), ToDate = toDate ?? SystemClock.UtcNow };
+        var result = await _mediator.Send(query).ConfigureAwait(false);
 
         return Ok(result);
     }
@@ -71,7 +71,7 @@ public class PermissionAdminController(IMediator mediator, ILogger<PermissionAdm
             Page = page,
             PageSize = pageSize
         };
-        var result = await _mediator.Send(query);
+        var result = await _mediator.Send(query).ConfigureAwait(false);
 
         return Ok(result);
     }
@@ -89,7 +89,7 @@ public class PermissionAdminController(IMediator mediator, ILogger<PermissionAdm
     public async Task<ActionResult<PermissionCacheStatsDto>> GetCacheStatistics()
     {
         var query = new GetPermissionCacheStatsQuery();
-        var result = await _mediator.Send(query);
+        var result = await _mediator.Send(query).ConfigureAwait(false);
 
         return Ok(result);
     }
@@ -103,7 +103,7 @@ public class PermissionAdminController(IMediator mediator, ILogger<PermissionAdm
     public async Task<ActionResult> ClearPermissionCache([FromQuery] Guid? userId = null, [FromQuery] Guid? tenantId = null)
     {
         var command = new ClearPermissionCacheCommand { UserId = userId, TenantId = tenantId };
-        await _mediator.Send(command);
+        await _mediator.Send(command).ConfigureAwait(false);
 
         return Ok(new { message = "Permission cache cleared successfully" });
     }
@@ -121,7 +121,7 @@ public class PermissionAdminController(IMediator mediator, ILogger<PermissionAdm
     public async Task<ActionResult<IEnumerable<PermissionTemplateDto>>> GetPermissionTemplates()
     {
         var query = new GetPermissionTemplatesQuery();
-        var result = await _mediator.Send(query);
+        var result = await _mediator.Send(query).ConfigureAwait(false);
 
         return Ok(result);
     }
@@ -142,7 +142,7 @@ public class PermissionAdminController(IMediator mediator, ILogger<PermissionAdm
             UserId = request.UserId,
             TenantId = request.TenantId
         };
-        var result = await _mediator.Send(command);
+        var result = await _mediator.Send(command).ConfigureAwait(false);
 
         return Ok(result);
     }

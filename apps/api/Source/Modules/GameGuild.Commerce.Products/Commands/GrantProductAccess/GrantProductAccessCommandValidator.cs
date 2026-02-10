@@ -28,7 +28,7 @@ public sealed class GrantProductAccessCommandValidator : AbstractValidator<Grant
             .WithMessage("Currency code must be exactly 3 characters.");
 
         RuleFor(x => x.AccessEndDate)
-            .GreaterThan(DateTime.UtcNow)
+            .GreaterThan(SystemClock.UtcNow)
             .WithMessage("Access end date must be in the future.")
             .When(x => x.AccessEndDate.HasValue);
     }

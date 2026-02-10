@@ -147,7 +147,7 @@ public class TenantStorageConfiguration : EntityBase
 
     public void RecordValidation(bool success, string? error = null)
     {
-        LastValidated = DateTime.UtcNow;
+        LastValidated = SystemClock.UtcNow;
         LastValidationSuccess = success;
         LastValidationError = error;
     }

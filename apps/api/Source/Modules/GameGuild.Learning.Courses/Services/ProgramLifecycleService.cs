@@ -45,7 +45,7 @@ public class ProgramLifecycleService(IApplicationDbContext context) : IProgramLi
 
     program.Status = ContentStatus.Draft;
     program.SetMetadata("rejectionReason", reason);
-    program.SetMetadata("rejectionDate", DateTime.UtcNow);
+    program.SetMetadata("rejectionDate", SystemClock.UtcNow);
     program.Touch();
     await context.SaveChangesAsync().ConfigureAwait(false);
 

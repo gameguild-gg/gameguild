@@ -76,7 +76,7 @@ public sealed class RequireMfaRuleEvaluator : IRuleEvaluator
                     "Could not parse MFA timestamp"));
             }
 
-            var age = DateTime.UtcNow - mfaTime;
+            var age = SystemClock.UtcNow - mfaTime;
             if (age.TotalMinutes > maxAgeMinutes)
             {
                 return Task.FromResult(RuleEvaluationResult.Fail(

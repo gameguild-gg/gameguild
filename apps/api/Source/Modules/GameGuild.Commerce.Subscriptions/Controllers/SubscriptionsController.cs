@@ -53,7 +53,7 @@ public sealed class SubscriptionsController(ISender sender, IActorContextAccesso
             body.Amount, 
             FulfilledOrderId: body.FulfilledOrderId,
             StartDate: body.StartDate, 
-            TrialDays: body.TrialDays), ct);
+            TrialDays: body.TrialDays), ct).ConfigureAwait(false);
 
         return CreatedAtAction(nameof(GetSubscriptionById), new { subscriptionId = id }, new { id });
     }
@@ -93,11 +93,11 @@ public sealed class SubscriptionsController(ISender sender, IActorContextAccesso
         // If expiring filter is set, delegate to expiring subscriptions query
         if (expiring == true)
         {
-            var expiringResult = await sender.Send(new GetExpiringSubscriptionsQuery(expiringDays), ct);
+            var expiringResult = await sender.Send(new GetExpiringSubscriptionsQuery(expiringDays), ct).ConfigureAwait(false);
             return Ok(expiringResult);
         }
 
-        var result = await sender.Send(new GetPagedSubscriptionsQuery(page, pageSize, status, tenantId, planId), ct);
+        var result = await sender.Send(new GetPagedSubscriptionsQuery(page, pageSize, status, tenantId, planId), ct).ConfigureAwait(false);
         return Ok(result);
     }
 
@@ -118,7 +118,7 @@ public sealed class SubscriptionsController(ISender sender, IActorContextAccesso
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> CheckSubscriptionExistsById(Guid subscriptionId, CancellationToken ct)
     {
-        var subscription = await sender.Send(new GetSubscriptionByIdQuery(subscriptionId), ct);
+        var subscription = await sender.Send(new GetSubscriptionByIdQuery(subscriptionId), ct).ConfigureAwait(false);
         return subscription is null ? NotFound() : Ok();
     }
 
@@ -136,7 +136,7 @@ public sealed class SubscriptionsController(ISender sender, IActorContextAccesso
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetSubscriptionById(Guid subscriptionId, CancellationToken ct)
     {
-        var subscription = await sender.Send(new GetSubscriptionByIdQuery(subscriptionId), ct);
+        var subscription = await sender.Send(new GetSubscriptionByIdQuery(subscriptionId), ct).ConfigureAwait(false);
         return subscription is null ? NotFound() : Ok(subscription);
     }
 
@@ -162,7 +162,7 @@ public sealed class SubscriptionsController(ISender sender, IActorContextAccesso
             body.AutoRenew,
             body.ExternalSubscriptionId,
             body.ExternalCustomerId,
-            body.Metadata), ct);
+            body.Metadata), ct).ConfigureAwait(false);
         return NoContent();
     }
 
@@ -189,7 +189,7 @@ public sealed class SubscriptionsController(ISender sender, IActorContextAccesso
             body.Amount,
             body.AutoRenew,
             body.ExternalSubscriptionId,
-            body.ExternalCustomerId), ct);
+            body.ExternalCustomerId), ct).ConfigureAwait(false);
         return NoContent();
     }
 
@@ -206,7 +206,7 @@ public sealed class SubscriptionsController(ISender sender, IActorContextAccesso
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> DeleteSubscription(Guid subscriptionId, CancellationToken ct)
     {
-        await sender.Send(new DeleteSubscriptionCommand(subscriptionId), ct);
+        await sender.Send(new DeleteSubscriptionCommand(subscriptionId), ct).ConfigureAwait(false);
         return NoContent();
     }
 

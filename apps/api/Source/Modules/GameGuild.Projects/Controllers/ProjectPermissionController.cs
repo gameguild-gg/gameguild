@@ -34,7 +34,7 @@ public class ProjectPermissionController : BaseApiController {
     var userId = GetCurrentUserId();
     var tenantId = GetCurrentTenantId();
 
-    var permissions = await _permissionResolver.GetEffectivePermissionsAsync<Project>(userId, tenantId, projectId, "Project");
+    var permissions = await _permissionResolver.GetEffectivePermissionsAsync<Project>(userId, tenantId, projectId, "Project").ConfigureAwait(false);
 
     return Ok(permissions);
   }
@@ -45,7 +45,7 @@ public class ProjectPermissionController : BaseApiController {
   public async Task<ActionResult<IEnumerable<ProjectCollaboratorDto>>> GetProjectCollaborators(Guid projectId) {
     var userId = GetCurrentUserId();
 
-    var users = await _resourcePermissionService.GetResourceUsersAsync("projects", projectId, userId);
+    var users = await _resourcePermissionService.GetResourceUsersAsync("projects", projectId, userId).ConfigureAwait(false);
 
     var collaborators = users.Select(u => new ProjectCollaboratorDto {
       UserId = u.UserId,
@@ -71,13 +71,13 @@ public class ProjectPermissionController : BaseApiController {
     var userId = GetCurrentUserId();
 
     // Validate that user can grant the requested permissions
-    var canGrantPermissions = await _permissionResolver.CanGrantPermissionsAsync(userId, GetCurrentTenantId(), request.Permissions, projectId);
+    var canGrantPermissions = await _permissionResolver.CanGrantPermissionsAsync(userId, GetCurrentTenantId(), request.Permissions, projectId).ConfigureAwait(false);
 
     if (!canGrantPermissions) return Forbid("You don't have permission to grant some of the requested permissions");
 
     var inviteRequest = new InviteUserRequest { Email = request.Email, Permissions = request.Permissions, ExpiresAt = request.ExpiresAt, Message = request.Message, RequireAcceptance = request.RequireAcceptance };
 
-    var result = await _resourcePermissionService.InviteUserToResourceAsync("projects", projectId, inviteRequest, userId);
+    var result = await _resourcePermissionService.InviteUserToResourceAsync("projects", projectId, inviteRequest, userId).ConfigureAwait(false);
 
     if (!result.Success) return BadRequest(result.ErrorMessage);
 
@@ -91,11 +91,11 @@ public class ProjectPermissionController : BaseApiController {
     var userId = GetCurrentUserId();
 
     // Validate that user can grant the requested permissions
-    var canGrantPermissions = await _permissionResolver.CanGrantPermissionsAsync(userId, GetCurrentTenantId(), request.Permissions, projectId);
+    var canGrantPermissions = await _permissionResolver.CanGrantPermissionsAsync(userId, GetCurrentTenantId(), request.Permissions, projectId).ConfigureAwait(false);
 
     if (!canGrantPermissions) return Forbid("You don't have permission to grant some of the requested permissions");
 
-    var result = await _resourcePermissionService.UpdateUserPermissionsAsync("projects", projectId, collaboratorUserId, request.Permissions, userId, request.ExpiresAt);
+    var result = await _resourcePermissionService.UpdateUserPermissionsAsync("projects", projectId, collaboratorUserId, request.Permissions, userId, request.ExpiresAt).ConfigureAwait(false);
 
     if (!result.Success) return BadRequest(result.ErrorMessage);
 
@@ -108,7 +108,7 @@ public class ProjectPermissionController : BaseApiController {
   public async Task<ActionResult<PermissionUpdateResult>> RemoveCollaborator(Guid projectId, Guid collaboratorUserId) {
     var userId = GetCurrentUserId();
 
-    var result = await _resourcePermissionService.RemoveUserAccessAsync("projects", projectId, collaboratorUserId, userId);
+    var result = await _resourcePermissionService.RemoveUserAccessAsync("projects", projectId, collaboratorUserId, userId).ConfigureAwait(false);
 
     if (!result.Success) return BadRequest(result.ErrorMessage);
 
@@ -166,7 +166,7 @@ public class ProjectPermissionController : BaseApiController {
     if (roleTemplate == null) return BadRequest($"Unknown role template: {request.RoleName}");
 
     // Validate that user can grant the role permissions
-    var canGrantPermissions = await _permissionResolver.CanGrantPermissionsAsync(userId, GetCurrentTenantId(), roleTemplate.Permissions, projectId);
+    var canGrantPermissions = await _permissionResolver.CanGrantPermissionsAsync(userId, GetCurrentTenantId(), roleTemplate.Permissions, projectId).ConfigureAwait(false);
 
     if (!canGrantPermissions) return Forbid($"You don't have permission to grant {request.RoleName} role");
 
@@ -180,7 +180,7 @@ public class ProjectPermissionController : BaseApiController {
       NotifyUsers = request.NotifyUsers,
     };
 
-    var result = await _resourcePermissionService.ShareResourceAsync("projects", projectId, shareRequest, userId);
+    var result = await _resourcePermissionService.ShareResourceAsync("projects", projectId, shareRequest, userId).ConfigureAwait(false);
 
     if (!result.Success) return BadRequest(result.ErrorMessage);
 

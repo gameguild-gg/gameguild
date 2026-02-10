@@ -82,7 +82,7 @@ public class BillingWebhookEvent : EntityBase
     public void MarkAsProcessed()
     {
         IsProcessed = true;
-        ProcessedAt = DateTime.UtcNow;
+        ProcessedAt = SystemClock.UtcNow;
         IsFailed = false;
         Touch();
     }

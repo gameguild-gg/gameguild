@@ -46,7 +46,7 @@ public class FeaturedContent : EntityBase
     public bool IsCurrentlyActive()
     {
         if (!IsActive) return false;
-        var now = DateTime.UtcNow;
+        var now = SystemClock.UtcNow;
         if (StartsAt.HasValue && now < StartsAt.Value) return false;
         if (EndsAt.HasValue && now > EndsAt.Value) return false;
         return true;
@@ -130,7 +130,7 @@ public class SearchHistory : EntityBase
     {
         ClickedCourseId = courseId;
         ClickedPosition = position;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 }
 

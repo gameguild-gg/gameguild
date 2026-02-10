@@ -131,7 +131,7 @@ public sealed class QuotaExceededAlertHandler(
         // or move QuotaExceededAlertHandler into a dedicated orchestration module.
         // Current alerts are delivered via structured logging + OpenTelemetry metrics (Datadog/Prometheus).
 
-        await Task.CompletedTask;
+        await Task.CompletedTask.ConfigureAwait(false);
     }
 
     /// <summary>
@@ -141,7 +141,7 @@ public sealed class QuotaExceededAlertHandler(
     {
         lock (ViolationsLock)
         {
-            var now = DateTime.UtcNow;
+            var now = SystemClock.UtcNow;
 
             // Clean up old entries
             var expiredKeys = RecentViolations

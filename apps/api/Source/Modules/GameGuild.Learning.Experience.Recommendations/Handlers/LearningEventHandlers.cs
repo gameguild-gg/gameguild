@@ -127,7 +127,7 @@ public sealed class SearchResultClickedHandler(
         logger.LogDebug("Recording search result click for user {UserId}, query '{Query}'", notification.UserId, notification.Query);
 
         // Find recent search history for this user/query
-        var recentCutoff = DateTime.UtcNow.AddMinutes(-30);
+        var recentCutoff = SystemClock.UtcNow.AddMinutes(-30);
         var searchHistory = await context.Set<SearchHistory>()
             .Where(s => s.UserId == notification.UserId)
             .Where(s => s.Query == notification.Query)

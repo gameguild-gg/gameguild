@@ -40,7 +40,7 @@ public sealed class ProcessStripeWebhookCommandHandler(
                 request.Payload,
                 request.Signature,
                 cancellationToken
-            );
+            ).ConfigureAwait(false);
 
             // Log metrics for monitoring
             LogWebhookMetrics("stripe", eventType, result);

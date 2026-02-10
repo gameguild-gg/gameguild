@@ -173,7 +173,7 @@ public class ActivityGrade : EntityBase
     /// <summary>
     /// Days since grading
     /// </summary>
-    public int DaysSinceGrading => (DateTime.UtcNow - GradedAt).Days;
+    public int DaysSinceGrading => (SystemClock.UtcNow - GradedAt).Days;
 
     // Domain Methods
     /// <summary>
@@ -183,7 +183,7 @@ public class ActivityGrade : EntityBase
     {
         Points = Math.Max(0, Math.Min(maxPoints ?? 100m, points));
         MaxPoints = maxPoints ?? MaxPoints ?? 100m;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     /// <summary>
@@ -192,7 +192,7 @@ public class ActivityGrade : EntityBase
     public void SetLetterGrade(string grade)
     {
         GradeLetter = grade?.ToUpper();
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     /// <summary>
@@ -201,7 +201,7 @@ public class ActivityGrade : EntityBase
     public void UpdateFeedback(string? feedback)
     {
         Feedback = feedback;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     /// <summary>
@@ -210,7 +210,7 @@ public class ActivityGrade : EntityBase
     public void FinalizeGrade()
     {
         IsFinalized = true;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     /// <summary>
@@ -219,7 +219,7 @@ public class ActivityGrade : EntityBase
     public void Unlock()
     {
         IsFinalized = false;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     /// <summary>
@@ -228,7 +228,7 @@ public class ActivityGrade : EntityBase
     public void RecordGradingTime(int minutes)
     {
         GradingTimeMinutes = minutes;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     /// <summary>
@@ -237,7 +237,7 @@ public class ActivityGrade : EntityBase
     public void SetRubricData(string rubricJson)
     {
         RubricData = rubricJson;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     /// <summary>
@@ -298,7 +298,7 @@ public class ActivityGrade : EntityBase
             MaxPoints = MaxPoints,
             GradeLetter = CalculateLetterGrade(),
             Feedback = reason != null ? $"Revision: {reason}\\n\\nOriginal feedback: {Feedback}" : Feedback,
-            GradedAt = DateTime.UtcNow,
+            GradedAt = SystemClock.UtcNow,
             IsFinalized = false,
             GradeType = GradeType,
             AttemptNumber = AttemptNumber + 1,

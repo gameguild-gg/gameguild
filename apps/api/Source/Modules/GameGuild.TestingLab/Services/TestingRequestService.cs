@@ -66,7 +66,7 @@ public class TestingRequestService : ITestingRequestService {
   }
 
   public async Task<IEnumerable<TestingRequest>> GetActiveRequestsAsync() {
-    var now = DateTime.UtcNow;
+    var now = SystemClock.UtcNow;
 
     return await _context.TestingRequests.Include(r => r.CreatedBy)
                          .Include(r => r.ProjectVersion)
@@ -77,7 +77,7 @@ public class TestingRequestService : ITestingRequestService {
   }
 
   public async Task<IEnumerable<TestingRequest>> GetRequestsNeedingClosureAsync() {
-    var now = DateTime.UtcNow;
+    var now = SystemClock.UtcNow;
 
     return await _context.TestingRequests.Include(r => r.CreatedBy)
                          .Include(r => r.ProjectVersion)
@@ -116,7 +116,7 @@ public class TestingRequestService : ITestingRequestService {
     // Check if there's space
     if (request.MaxTesters.HasValue && request.CurrentTesterCount >= request.MaxTesters.Value) throw new InvalidOperationException("Testing request has reached maximum testers");
 
-    var participant = new TestingParticipant { TestingRequestId = testingRequestId, UserId = userId, StartedAt = DateTime.UtcNow };
+    var participant = new TestingParticipant { TestingRequestId = testingRequestId, UserId = userId, StartedAt = SystemClock.UtcNow };
 
     _context.TestingParticipants.Add(participant);
     request.CurrentTesterCount++;

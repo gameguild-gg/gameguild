@@ -69,7 +69,7 @@ public sealed class OwnerOrAclRuleEvaluator(IAccessControlListService aclService
                 aclResource.ResourceType,
                 aclResource.ResourceId,
                 minimumAccessLevel,
-                cancellationToken);
+                cancellationToken).ConfigureAwait(false);
 
             if (hasAccess)
             {

@@ -63,7 +63,7 @@ public sealed class SetResourceQuotaCommandHandler(
             HardLimit: request.HardLimit,
             Source: "SetResourceQuotaCommand",
             ActorId: actorId,
-            Timestamp: DateTime.UtcNow), cancellationToken);
+            Timestamp: SystemClock.UtcNow), cancellationToken);
 
         return Unit.Value;
     }

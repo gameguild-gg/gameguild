@@ -210,7 +210,7 @@ public class NotificationDeliveryService(
         NotificationPriority priority = NotificationPriority.Normal,
         CancellationToken cancellationToken = default)
     {
-        if (scheduledAt <= DateTime.UtcNow)
+        if (scheduledAt <= SystemClock.UtcNow)
         {
             return Result.Failure<Notification>(Error.Validation("Notification.InvalidSchedule", "Scheduled time must be in the future"));
         }

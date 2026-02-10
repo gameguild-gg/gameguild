@@ -6,9 +6,8 @@ namespace GameGuild.Features;
 /// <summary>
 ///     Handler for CreateFeatureFlagCommand
 /// </summary>
-#pragma warning disable CS0618 // IFeatureFlagRepository migration pending
 public sealed class CreateFeatureFlagCommandHandler(
-    IFeatureFlagRepository repository,
+    IFeatureFlagQueryRepository repository,
     ILogger<CreateFeatureFlagCommandHandler> logger
 ) : IRequestHandler<CreateFeatureFlagCommand, Guid>
 {
@@ -33,4 +32,3 @@ public sealed class CreateFeatureFlagCommandHandler(
         return created.Id;
     }
 }
-#pragma warning restore CS0618

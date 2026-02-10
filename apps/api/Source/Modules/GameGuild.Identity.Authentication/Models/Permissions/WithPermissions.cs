@@ -26,7 +26,7 @@ public abstract class WithPermissions : EntityBase<Guid>
     {
         UserId = userId;
         TenantId = tenantId.HasValue ? new TenantId(tenantId.Value) : null;
-        GrantedAt = DateTime.UtcNow;
+        GrantedAt = SystemClock.UtcNow;
     }
 #pragma warning restore CA2214
 
@@ -64,7 +64,7 @@ public abstract class WithPermissions : EntityBase<Guid>
     /// <summary>
     ///     Date and time when these permissions were granted
     /// </summary>
-    public DateTime GrantedAt { get; set; } = DateTime.UtcNow;
+    public DateTime GrantedAt { get; set; } = SystemClock.UtcNow;
 
     /// <summary>
     ///     Add a permission to this entity
@@ -78,7 +78,7 @@ public abstract class WithPermissions : EntityBase<Guid>
         {
             permissions.Add(permission);
             Permissions = string.Join(",", permissions.Select(p => (int) p));
-            UpdatedAt = DateTime.UtcNow;
+            UpdatedAt = SystemClock.UtcNow;
         }
     }
 
@@ -94,7 +94,7 @@ public abstract class WithPermissions : EntityBase<Guid>
         {
             permissions.Remove(permission);
             Permissions = string.Join(",", permissions.Select(p => (int) p));
-            UpdatedAt = DateTime.UtcNow;
+            UpdatedAt = SystemClock.UtcNow;
         }
     }
 
@@ -123,14 +123,14 @@ public abstract class WithPermissions : EntityBase<Guid>
     public void SetPermissions(IEnumerable<PermissionType> permissions)
     {
         Permissions = string.Join(",", permissions.Select(p => (int) p));
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     /// <summary>
     ///     Check if permissions have expired
     /// </summary>
     /// <returns>True if permissions are expired</returns>
-    public bool IsExpired() { return ExpiresAt.HasValue && ExpiresAt.Value <= DateTime.UtcNow; }
+    public bool IsExpired() { return ExpiresAt.HasValue && ExpiresAt.Value <= SystemClock.UtcNow; }
 
     /// <summary>
     ///     Check if permissions are currently effective (active and not expired)
@@ -144,8 +144,8 @@ public abstract class WithPermissions : EntityBase<Guid>
     public void Expire()
     {
         IsActive = false;
-        ExpiresAt = DateTime.UtcNow;
-        UpdatedAt = DateTime.UtcNow;
+        ExpiresAt = SystemClock.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     /// <summary>
@@ -155,7 +155,7 @@ public abstract class WithPermissions : EntityBase<Guid>
     public void ExtendExpiration(DateTime? newExpirationDate)
     {
         ExpiresAt = newExpirationDate;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     /// <summary>

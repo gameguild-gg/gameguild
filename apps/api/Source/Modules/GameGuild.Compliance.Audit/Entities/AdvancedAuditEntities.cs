@@ -63,14 +63,14 @@ public sealed class RetentionPolicySimulation : EntityBase
         CurrentStorageSizeBytes = currentStorageBytes;
         RecordCount = recordCount;
         AverageGrowthRatePerDay = growthRate;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     public void CalculateForecast(int forecastDays)
     {
         ForecastDays = forecastDays;
-        ForecastStartDate = DateTime.UtcNow;
-        ForecastEndDate = DateTime.UtcNow.AddDays(forecastDays);
+        ForecastStartDate = SystemClock.UtcNow;
+        ForecastEndDate = SystemClock.UtcNow.AddDays(forecastDays);
 
         // Linear growth projection
         EstimatedStorageSizeBytes = CurrentStorageSizeBytes + (long)(AverageGrowthRatePerDay * forecastDays);
@@ -81,7 +81,7 @@ public sealed class RetentionPolicySimulation : EntityBase
         EstimatedMonthlyCost = (EstimatedStorageSizeBytes / (decimal)(1024 * 1024 * 1024)) * CostPerGbPerMonth;
         ProjectedAnnualCost = EstimatedMonthlyCost * 12;
 
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     public void GenerateRecommendations()
@@ -100,7 +100,7 @@ public sealed class RetentionPolicySimulation : EntityBase
             RecommendedActions = $"Current retention policy of {RetentionDays} days is optimal";
         }
 
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     private int CalculateOptimalRetention()
@@ -236,8 +236,8 @@ public sealed class SavedAuditQuery : EntityBase
     public void RecordExecution()
     {
         ExecutionCount++;
-        LastExecutedAt = DateTime.UtcNow;
-        UpdatedAt = DateTime.UtcNow;
+        LastExecutedAt = SystemClock.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 }
 
@@ -294,7 +294,7 @@ public sealed class AuditReplaySession : EntityBase
     public void StartReplay()
     {
         Status = ReplayStatus.InProgress;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     public void CompleteReplay(int totalEvents, int snapshots, string? timelineUrl, string? finalStateJson)
@@ -304,13 +304,13 @@ public sealed class AuditReplaySession : EntityBase
         StateSnapshotsCreated = snapshots;
         TimelineVisualizationUrl = timelineUrl;
         FinalStateJson = finalStateJson;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     public void RecordFindings(string findings)
     {
         Findings = findings;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 }
 

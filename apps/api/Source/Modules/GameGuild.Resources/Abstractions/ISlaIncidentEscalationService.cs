@@ -71,7 +71,7 @@ public sealed record SlaEscalationResult
     public string? ErrorMessage { get; init; }
 
     /// <summary>Timestamp of escalation</summary>
-    public DateTime ProcessedAt { get; init; } = DateTime.UtcNow;
+    public DateTime ProcessedAt { get; init; } = SystemClock.UtcNow;
 
     public static SlaEscalationResult Success(string? incidentId, List<Guid>? notifiedUsers = null) => new()
     {

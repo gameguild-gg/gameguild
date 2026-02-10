@@ -10,7 +10,7 @@ public class UserWebAuthnCredentialConfiguration : IEntityTypeConfiguration<User
 {
     public void Configure(EntityTypeBuilder<UserWebAuthnCredential> builder)
     {
-        builder.ToTable("user_web_authn_credentials", "auth");
+        builder.ToTable("UserWebAuthnCredentials", "auth");
 
         builder.HasKey(c => c.Id);
 

@@ -164,7 +164,7 @@ public class ProgramReadService(IApplicationDbContext context) : IProgramReadSer
       0,
       TimeSpan.Zero,
       0,
-      DateTime.UtcNow,
+      SystemClock.UtcNow,
       new Dictionary<string, object>()
     );
   }

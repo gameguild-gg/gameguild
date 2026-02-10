@@ -63,7 +63,7 @@ public class UserWallet : EntityBase
         if (amount <= 0) throw new ArgumentException("Amount must be positive", nameof(amount));
 
         Balance += amount;
-        LastTransactionAt = DateTime.UtcNow;
+        LastTransactionAt = SystemClock.UtcNow;
 
         var transaction = new WalletTransaction
         {
@@ -87,7 +87,7 @@ public class UserWallet : EntityBase
         if (Balance < amount) throw new InvalidOperationException("Insufficient balance");
 
         Balance -= amount;
-        LastTransactionAt = DateTime.UtcNow;
+        LastTransactionAt = SystemClock.UtcNow;
 
         // Touch() increments the Version property which triggers EF Core's
         // concurrency check on SaveChangesAsync(), preventing double-spend

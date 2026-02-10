@@ -44,7 +44,7 @@ public class JitElevationRequest
 
     public string? RevocationReason { get; set; }
 
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime CreatedAt { get; set; } = SystemClock.UtcNow;
 
     public DateTime? UpdatedAt { get; set; }
 
@@ -55,7 +55,7 @@ public class JitElevationRequest
     {
         if (Status != ElevationRequestStatus.Active) return false;
 
-        var now = DateTime.UtcNow;
+        var now = SystemClock.UtcNow;
         var startTime = StartsAt ?? CreatedAt;
 
         return now >= startTime && now < ExpiresAt;
@@ -64,7 +64,7 @@ public class JitElevationRequest
     /// <summary>
     ///     Check if request has expired
     /// </summary>
-    public bool IsExpired() => Status == ElevationRequestStatus.Active && DateTime.UtcNow >= ExpiresAt;
+    public bool IsExpired() => Status == ElevationRequestStatus.Active && SystemClock.UtcNow >= ExpiresAt;
 
     /// <summary>
     ///     Approve the elevation request
@@ -76,12 +76,12 @@ public class JitElevationRequest
 
         Status = ElevationRequestStatus.Approved;
         ReviewerId = reviewerId;
-        ReviewedAt = DateTime.UtcNow;
+        ReviewedAt = SystemClock.UtcNow;
         ReviewerComments = comments;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
 
         // Auto-activate if no start time specified
-        if (StartsAt == null || StartsAt <= DateTime.UtcNow)
+        if (StartsAt == null || StartsAt <= SystemClock.UtcNow)
         {
             Activate();
         }
@@ -97,9 +97,9 @@ public class JitElevationRequest
 
         Status = ElevationRequestStatus.Denied;
         ReviewerId = reviewerId;
-        ReviewedAt = DateTime.UtcNow;
+        ReviewedAt = SystemClock.UtcNow;
         ReviewerComments = comments;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     /// <summary>
@@ -111,8 +111,8 @@ public class JitElevationRequest
             throw new InvalidOperationException("Only approved requests can be activated");
 
         Status = ElevationRequestStatus.Active;
-        ActivatedAt = DateTime.UtcNow;
-        UpdatedAt = DateTime.UtcNow;
+        ActivatedAt = SystemClock.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     /// <summary>
@@ -125,9 +125,9 @@ public class JitElevationRequest
 
         Status = ElevationRequestStatus.Revoked;
         RevokedBy = revokedBy;
-        RevokedAt = DateTime.UtcNow;
+        RevokedAt = SystemClock.UtcNow;
         RevocationReason = reason;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     /// <summary>
@@ -138,7 +138,7 @@ public class JitElevationRequest
         if (Status == ElevationRequestStatus.Active)
         {
             Status = ElevationRequestStatus.Expired;
-            UpdatedAt = DateTime.UtcNow;
+            UpdatedAt = SystemClock.UtcNow;
         }
     }
 
@@ -149,7 +149,7 @@ public class JitElevationRequest
     {
         if (!IsActive()) return 0;
 
-        var remaining = ExpiresAt - DateTime.UtcNow;
+        var remaining = ExpiresAt - SystemClock.UtcNow;
         return (int)Math.Max(0, remaining.TotalMinutes);
     }
 }

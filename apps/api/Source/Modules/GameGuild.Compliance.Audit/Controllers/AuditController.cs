@@ -12,7 +12,7 @@ namespace GameGuild.Compliance.Audit;
 [ApiVersion("1.0")]
 [Route("v{version:apiVersion}/admin/audit-logs")]
 [Authorize(Roles = "Admin")] // Restrict to admin users only
-public class AuditController(IAuditService auditService, IActorContextAccessor actorContextAccessor, ILogger<AuditController> logger) : BaseApiController
+public class AuditController(IAuditService auditService, IActorContextAccessor actorContextAccessor, ILogger<AuditController> _logger) : BaseApiController
 {
     /// <summary>
     /// Gets the current user ID from the actor context
@@ -31,8 +31,10 @@ public class AuditController(IAuditService auditService, IActorContextAccessor a
         var adminUserId = GetCurrentUserId();
         if (!adminUserId.HasValue) throw new UnauthorizedAccessException("User not authenticated");
 
+        _logger.LogInformation("Admin {AdminUserId} querying audit logs: ActionType={ActionType}, RiskLevel={RiskLevel}", adminUserId.Value, request.ActionType, request.RiskLevel);
+
         // Log admin access to audit logs
-        await auditService.LogAdminActionAsync(adminUserId.Value, "ViewAuditLogs", "Admin accessed audit logs", new { Filters = request, RequestedBy = adminUserId.Value });
+        await auditService.LogAdminActionAsync(adminUserId.Value, "ViewAuditLogs", "Admin accessed audit logs", new { Filters = request, RequestedBy = adminUserId.Value }).ConfigureAwait(false);
 
         var query = new AuditLogQuery
         {
@@ -50,8 +52,8 @@ public class AuditController(IAuditService auditService, IActorContextAccessor a
             Take = Math.Min(request.Take, 1000) // Cap at 1000 records
         };
 
-        var logs = await auditService.GetAuditLogsAsync(query);
-        var totalCount = await auditService.GetAuditLogCountAsync(query);
+        var logs = await auditService.GetAuditLogsAsync(query).ConfigureAwait(false);
+        var totalCount = await auditService.GetAuditLogCountAsync(query).ConfigureAwait(false);
 
         var response = new AuditLogResponse { Logs = logs.Select(MapToDto).ToList(), TotalCount = totalCount, Skip = request.Skip, Take = request.Take };
 
@@ -67,10 +69,10 @@ public class AuditController(IAuditService auditService, IActorContextAccessor a
         var adminUserId = GetCurrentUserId();
         if (!adminUserId.HasValue) throw new UnauthorizedAccessException("User not authenticated");
 
-        await auditService.LogAdminActionAsync(adminUserId.Value, "ViewAuditStatistics", "Admin accessed audit statistics");
+        await auditService.LogAdminActionAsync(adminUserId.Value, "ViewAuditStatistics", "Admin accessed audit statistics").ConfigureAwait(false);
 
-        var startDate = request.StartDate ?? DateTime.UtcNow.AddDays(-30);
-        var endDate = request.EndDate ?? DateTime.UtcNow;
+        var startDate = request.StartDate ?? SystemClock.UtcNow.AddDays(-30);
+        var endDate = request.EndDate ?? SystemClock.UtcNow;
 
         // Get statistics for different categories
         var authenticationQuery = new AuditLogQuery { Category = AuditCategory.Authentication, StartDate = startDate, EndDate = endDate };
@@ -83,16 +85,23 @@ public class AuditController(IAuditService auditService, IActorContextAccessor a
 
         var highRiskQuery = new AuditLogQuery { RiskLevel = AuditRiskLevel.High, StartDate = startDate, EndDate = endDate };
 
+        var totalEvents = await auditService.GetAuditLogCountAsync(new AuditLogQuery { StartDate = startDate, EndDate = endDate }).ConfigureAwait(false);
+        var authenticationEvents = await auditService.GetAuditLogCountAsync(authenticationQuery).ConfigureAwait(false);
+        var permissionEvents = await auditService.GetAuditLogCountAsync(permissionQuery).ConfigureAwait(false);
+        var securityEvents = await auditService.GetAuditLogCountAsync(securityQuery).ConfigureAwait(false);
+        var failedEvents = await auditService.GetAuditLogCountAsync(failedQuery).ConfigureAwait(false);
+        var highRiskEvents = await auditService.GetAuditLogCountAsync(highRiskQuery).ConfigureAwait(false);
+
         var response = new AuditStatisticsResponse
         {
             StartDate = startDate,
             EndDate = endDate,
-            TotalEvents = await auditService.GetAuditLogCountAsync(new AuditLogQuery { StartDate = startDate, EndDate = endDate }),
-            AuthenticationEvents = await auditService.GetAuditLogCountAsync(authenticationQuery),
-            PermissionEvents = await auditService.GetAuditLogCountAsync(permissionQuery),
-            SecurityEvents = await auditService.GetAuditLogCountAsync(securityQuery),
-            FailedEvents = await auditService.GetAuditLogCountAsync(failedQuery),
-            HighRiskEvents = await auditService.GetAuditLogCountAsync(highRiskQuery)
+            TotalEvents = totalEvents,
+            AuthenticationEvents = authenticationEvents,
+            PermissionEvents = permissionEvents,
+            SecurityEvents = securityEvents,
+            FailedEvents = failedEvents,
+            HighRiskEvents = highRiskEvents
         };
 
         return Ok(response);
@@ -107,7 +116,7 @@ public class AuditController(IAuditService auditService, IActorContextAccessor a
         var adminUserId = GetCurrentUserId();
         if (!adminUserId.HasValue) throw new UnauthorizedAccessException("User not authenticated");
 
-        await auditService.LogAdminActionAsync(adminUserId.Value, "ExportAuditLogs", "Admin exported audit logs", new { ExportRequest = request, RequestedBy = adminUserId.Value });
+        await auditService.LogAdminActionAsync(adminUserId.Value, "ExportAuditLogs", "Admin exported audit logs", new { ExportRequest = request, RequestedBy = adminUserId.Value }).ConfigureAwait(false);
 
         var query = new AuditLogQuery
         {
@@ -124,13 +133,13 @@ public class AuditController(IAuditService auditService, IActorContextAccessor a
             Take = 0 // Get all matching records for export
         };
 
-        var logs = await auditService.GetAuditLogsAsync(query);
+        var logs = await auditService.GetAuditLogsAsync(query).ConfigureAwait(false);
 
         // Convert to CSV format
         var csv = GenerateCsv(logs);
         var bytes = System.Text.Encoding.UTF8.GetBytes(csv);
 
-        var fileName = $"audit-logs-{DateTime.UtcNow:yyyy-MM-dd-HH-mm-ss}.csv";
+        var fileName = $"audit-logs-{SystemClock.UtcNow:yyyy-MM-dd-HH-mm-ss}.csv";
 
         return File(bytes, "text/csv", fileName);
     }

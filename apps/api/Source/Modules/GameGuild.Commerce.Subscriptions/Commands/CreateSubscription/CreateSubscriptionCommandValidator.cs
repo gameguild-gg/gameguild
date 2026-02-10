@@ -19,6 +19,6 @@ public sealed class CreateSubscriptionCommandValidator : AbstractValidator<Creat
 
         RuleFor(x => x.TrialDays).GreaterThan(0).When(x => x.TrialDays.HasValue).WithMessage("TrialDays must be greater than 0 when specified");
 
-        RuleFor(x => x.StartDate).GreaterThanOrEqualTo(DateTime.UtcNow.Date).When(x => x.StartDate.HasValue).WithMessage("StartDate must be today or in the future when specified");
+        RuleFor(x => x.StartDate).GreaterThanOrEqualTo(SystemClock.UtcNow.Date).When(x => x.StartDate.HasValue).WithMessage("StartDate must be today or in the future when specified");
     }
 }

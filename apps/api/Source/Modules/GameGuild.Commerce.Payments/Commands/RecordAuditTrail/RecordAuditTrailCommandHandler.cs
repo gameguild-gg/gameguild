@@ -1,4 +1,4 @@
-﻿using GameGuild.CQRS;
+using GameGuild.CQRS;
 
 namespace GameGuild.Commerce.Payments;
 
@@ -20,7 +20,7 @@ public sealed class RecordAuditTrailCommandHandler(IRevenueAuditService revenueA
             request.UserAgent,
             request.Reason,
             cancellationToken
-        );
+        ).ConfigureAwait(false);
 
         return Unit.Value;
     }

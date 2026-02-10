@@ -52,7 +52,7 @@ public class ServiceAccountCrudController(
             createdBy,
             request.AllowedIpAddresses,
             request.ExpiresAt,
-            cancellationToken);
+            cancellationToken).ConfigureAwait(false);
 
         return CreatedAtAction(
             nameof(GetServiceAccount),
@@ -81,7 +81,7 @@ public class ServiceAccountCrudController(
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetServiceAccount(Guid serviceAccountId, CancellationToken cancellationToken)
     {
-        var account = await serviceAccountService.GetByIdAsync(serviceAccountId, cancellationToken);
+        var account = await serviceAccountService.GetByIdAsync(serviceAccountId, cancellationToken).ConfigureAwait(false);
         if (account == null)
         {
             return NotFound();
@@ -104,7 +104,7 @@ public class ServiceAccountCrudController(
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> CheckServiceAccountExists(Guid serviceAccountId, CancellationToken cancellationToken)
     {
-        var account = await serviceAccountService.GetByIdAsync(serviceAccountId, cancellationToken);
+        var account = await serviceAccountService.GetByIdAsync(serviceAccountId, cancellationToken).ConfigureAwait(false);
         return account == null ? NotFound() : Ok();
     }
 
@@ -127,7 +127,7 @@ public class ServiceAccountCrudController(
         [FromBody] PatchServiceAccountRequest request,
         CancellationToken cancellationToken)
     {
-        var account = await serviceAccountService.GetByIdAsync(serviceAccountId, cancellationToken);
+        var account = await serviceAccountService.GetByIdAsync(serviceAccountId, cancellationToken).ConfigureAwait(false);
         if (account == null)
         {
             return NotFound();
@@ -144,7 +144,7 @@ public class ServiceAccountCrudController(
         }
         if (!string.IsNullOrEmpty(request.Scopes))
         {
-            await serviceAccountService.UpdateScopesAsync(serviceAccountId, request.Scopes, cancellationToken);
+            await serviceAccountService.UpdateScopesAsync(serviceAccountId, request.Scopes, cancellationToken).ConfigureAwait(false);
         }
         if (request.ExpiresAt.HasValue)
         {
@@ -167,12 +167,12 @@ public class ServiceAccountCrudController(
     {
         if (tenantId.HasValue)
         {
-            var accounts = await serviceAccountService.GetByTenantAsync(tenantId.Value, cancellationToken);
+            var accounts = await serviceAccountService.GetByTenantAsync(tenantId.Value, cancellationToken).ConfigureAwait(false);
             return Ok(accounts.Select(MapToResponse));
         }
 
         // Admin can list all service accounts across tenants
-        var allAccounts = await serviceAccountService.GetAllAsync(cancellationToken);
+        var allAccounts = await serviceAccountService.GetAllAsync(cancellationToken).ConfigureAwait(false);
         return Ok(allAccounts.Select(MapToResponse));
     }
 
@@ -185,13 +185,13 @@ public class ServiceAccountCrudController(
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> DeleteServiceAccount(Guid serviceAccountId, CancellationToken cancellationToken)
     {
-        var account = await serviceAccountService.GetByIdAsync(serviceAccountId, cancellationToken);
+        var account = await serviceAccountService.GetByIdAsync(serviceAccountId, cancellationToken).ConfigureAwait(false);
         if (account == null)
         {
             return NotFound();
         }
 
-        await serviceAccountService.DeactivateAsync(serviceAccountId, cancellationToken);
+        await serviceAccountService.DeactivateAsync(serviceAccountId, cancellationToken).ConfigureAwait(false);
         return NoContent();
     }
 

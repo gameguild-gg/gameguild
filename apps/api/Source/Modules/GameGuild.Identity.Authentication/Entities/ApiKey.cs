@@ -147,7 +147,7 @@ public class ApiKey : EntityBase
     {
         if (!IsActive) return false;
         if (RevokedAt.HasValue) return false;
-        if (ExpiresAt.HasValue && ExpiresAt.Value < DateTime.UtcNow) return false;
+        if (ExpiresAt.HasValue && ExpiresAt.Value < SystemClock.UtcNow) return false;
         return true;
     }
 
@@ -166,7 +166,7 @@ public class ApiKey : EntityBase
     /// </summary>
     public void RecordUsage()
     {
-        LastUsedAt = DateTime.UtcNow;
+        LastUsedAt = SystemClock.UtcNow;
         UsageCount++;
         Touch();
     }
@@ -177,7 +177,7 @@ public class ApiKey : EntityBase
     public void Revoke(string reason)
     {
         IsActive = false;
-        RevokedAt = DateTime.UtcNow;
+        RevokedAt = SystemClock.UtcNow;
         RevocationReason = reason;
         Touch();
     }

@@ -113,7 +113,7 @@ public sealed class TranslationWorkflowService : ITranslationWorkflowService
             TargetLanguage = targetLanguage,
             TranslatorId = translatorId,
             Status = TranslationTaskStatus.Assigned,
-            AssignedAt = DateTime.UtcNow
+            AssignedAt = SystemClock.UtcNow
         };
 
         await _repository.CreateTaskAsync(taskEntity, cancellationToken).ConfigureAwait(false);
@@ -142,7 +142,7 @@ public sealed class TranslationWorkflowService : ITranslationWorkflowService
         task.TranslatedText = translatedText;
         task.Metadata = metadata;
         task.Status = TranslationTaskStatus.PendingReview;
-        task.SubmittedAt = DateTime.UtcNow;
+        task.SubmittedAt = SystemClock.UtcNow;
 
         await _repository.UpdateTaskAsync(task, cancellationToken).ConfigureAwait(false);
 
@@ -166,7 +166,7 @@ public sealed class TranslationWorkflowService : ITranslationWorkflowService
 
         task.ReviewerId = reviewerId;
         task.ReviewFeedback = feedback;
-        task.ReviewedAt = DateTime.UtcNow;
+        task.ReviewedAt = SystemClock.UtcNow;
 
         task.Status = decision switch
         {
@@ -203,7 +203,7 @@ public sealed class TranslationWorkflowService : ITranslationWorkflowService
 
         workflow.Status = TranslationWorkflowStatus.Completed;
         workflow.ApprovedBy = approverId;
-        workflow.ApprovedAt = DateTime.UtcNow;
+        workflow.ApprovedAt = SystemClock.UtcNow;
 
         await _repository.UpdateWorkflowAsync(workflow, cancellationToken).ConfigureAwait(false);
 

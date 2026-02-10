@@ -45,7 +45,7 @@ public class RepliesController : LearningControllerBase
             userId,
             request.Content,
             request.ParentReplyId,
-            cancellationToken);
+            cancellationToken).ConfigureAwait(false);
 
         if (!result.IsSuccess)
         {
@@ -67,7 +67,7 @@ public class RepliesController : LearningControllerBase
         [FromQuery] int take = 50,
         CancellationToken cancellationToken = default)
     {
-        var result = await _replyService.GetDiscussionRepliesAsync(discussionId, skip, take, cancellationToken);
+        var result = await _replyService.GetDiscussionRepliesAsync(discussionId, skip, take, cancellationToken).ConfigureAwait(false);
 
         if (!result.IsSuccess)
         {
@@ -87,7 +87,7 @@ public class RepliesController : LearningControllerBase
     public async Task<IActionResult> AcceptReplyAsAnswer(Guid id, CancellationToken cancellationToken = default)
     {
         var userId = GetRequiredUserId();
-        var result = await _replyService.AcceptReplyAsAnswerAsync(id, userId, cancellationToken);
+        var result = await _replyService.AcceptReplyAsAnswerAsync(id, userId, cancellationToken).ConfigureAwait(false);
 
         if (!result.IsSuccess)
         {
@@ -105,7 +105,7 @@ public class RepliesController : LearningControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> UpvoteReply(Guid id, CancellationToken cancellationToken = default)
     {
-        var result = await _replyService.UpvoteReplyAsync(id, cancellationToken);
+        var result = await _replyService.UpvoteReplyAsync(id, cancellationToken).ConfigureAwait(false);
 
         if (!result.IsSuccess)
         {
@@ -124,7 +124,7 @@ public class RepliesController : LearningControllerBase
     public async Task<IActionResult> DeleteReply(Guid id, CancellationToken cancellationToken = default)
     {
         var userId = GetRequiredUserId();
-        var result = await _replyService.DeleteReplyAsync(id, userId, cancellationToken);
+        var result = await _replyService.DeleteReplyAsync(id, userId, cancellationToken).ConfigureAwait(false);
 
         if (!result.IsSuccess)
         {

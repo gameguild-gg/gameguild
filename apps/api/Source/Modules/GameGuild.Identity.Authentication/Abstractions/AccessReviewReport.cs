@@ -33,5 +33,5 @@ public abstract class AccessReviewReport
     /// <summary>
     ///     Report generation timestamp
     /// </summary>
-    public DateTime GeneratedAt { get; set; } = DateTime.UtcNow;
+    public DateTime GeneratedAt { get; set; } = SystemClock.UtcNow;
 }

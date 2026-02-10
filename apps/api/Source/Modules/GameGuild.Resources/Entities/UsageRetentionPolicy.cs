@@ -81,7 +81,7 @@ public class UsageRetentionPolicy : EntityBase
     /// </summary>
     public DateTime CalculateNextCompaction()
     {
-        var lastExecution = LastExecutedAt ?? DateTime.UtcNow;
+        var lastExecution = LastExecutedAt ?? SystemClock.UtcNow;
 
         return lastExecution.AddDays(CompactionIntervalDays);
     }
@@ -94,16 +94,16 @@ public class UsageRetentionPolicy : EntityBase
         if (!IsActive) return false;
         if (!NextExecutionAt.HasValue) return true;
 
-        return DateTime.UtcNow >= NextExecutionAt.Value;
+        return SystemClock.UtcNow >= NextExecutionAt.Value;
     }
 
     /// <summary>
     ///     Get archive threshold date
     /// </summary>
-    public DateTime GetArchiveThresholdDate() { return DateTime.UtcNow.AddDays(-ArchiveAfterDays); }
+    public DateTime GetArchiveThresholdDate() { return SystemClock.UtcNow.AddDays(-ArchiveAfterDays); }
 
     /// <summary>
     ///     Get deletion threshold date
     /// </summary>
-    public DateTime GetDeletionThresholdDate() { return DateTime.UtcNow.AddDays(-RetentionDays); }
+    public DateTime GetDeletionThresholdDate() { return SystemClock.UtcNow.AddDays(-RetentionDays); }
 }

@@ -128,7 +128,7 @@ public class DatabaseFeatureFlagProvider(IServiceProvider serviceProvider, ILogg
 
     private static FeatureContext ConvertFromOpenFeatureContext(OFEvaluationContext? openFeatureContext)
     {
-        var context = new FeatureContext { RequestTime = DateTime.UtcNow, CustomAttributes = new Dictionary<string, object>() };
+        var context = new FeatureContext { RequestTime = SystemClock.UtcNow, CustomAttributes = new Dictionary<string, object>() };
 
         if (openFeatureContext == null) { return context; }
 

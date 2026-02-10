@@ -150,7 +150,7 @@ public class DownloadWindowService : IDownloadWindowService
         }
 
         // Check if window has expired
-        var now = DateTime.UtcNow;
+        var now = SystemClock.UtcNow;
         var expiry = reference.DownloadWindowExpiresAt.Value;
         var gracePeriod = TimeSpan.FromMinutes(_options.GracePeriodMinutes);
 
@@ -220,7 +220,7 @@ public class DownloadWindowService : IDownloadWindowService
             duration = TimeSpan.FromHours(_options.MaxWindowHours);
         }
 
-        var expiresAt = DateTime.UtcNow.Add(duration);
+        var expiresAt = SystemClock.UtcNow.Add(duration);
 
         // Update reference with download window
         reference.DownloadWindowExpiresAt = expiresAt;

@@ -178,7 +178,7 @@ public class AssetReference : EntityBase, ILocalizable
     public void RecordAccess()
     {
         AccessCount++;
-        LastAccessedAt = DateTime.UtcNow;
+        LastAccessedAt = SystemClock.UtcNow;
     }
 
     /// <summary>
@@ -186,7 +186,7 @@ public class AssetReference : EntityBase, ILocalizable
     /// </summary>
     [NotMapped]
     public bool IsDownloadWindowValid =>
-        !DownloadWindowExpiresAt.HasValue || DownloadWindowExpiresAt.Value > DateTime.UtcNow;
+        !DownloadWindowExpiresAt.HasValue || DownloadWindowExpiresAt.Value > SystemClock.UtcNow;
 
     /// <summary>
     /// Updates the display name.

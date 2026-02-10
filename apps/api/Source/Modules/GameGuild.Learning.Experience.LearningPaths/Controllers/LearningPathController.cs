@@ -40,7 +40,7 @@ public class LearningPathController(ILearningPathService learningPathService) : 
         [FromQuery] int skip = 0,
         [FromQuery] int take = 50)
     {
-        var paths = await learningPathService.GetPublishedPathsAsync(tenantId, difficulty, skip, take);
+        var paths = await learningPathService.GetPublishedPathsAsync(tenantId, difficulty, skip, take).ConfigureAwait(false);
         return Ok(paths.Select(p => p.ToDto()));
     }
 
@@ -60,7 +60,7 @@ public class LearningPathController(ILearningPathService learningPathService) : 
             return BadRequest("Search query is required");
         }
 
-        var paths = await learningPathService.SearchPathsAsync(q, tenantId, difficulty, skip, take);
+        var paths = await learningPathService.SearchPathsAsync(q, tenantId, difficulty, skip, take).ConfigureAwait(false);
         return Ok(paths.Select(p => p.ToDto()));
     }
 
@@ -72,7 +72,7 @@ public class LearningPathController(ILearningPathService learningPathService) : 
         [FromQuery] Guid? tenantId = null,
         [FromQuery] int take = 10)
     {
-        var paths = await learningPathService.GetFeaturedPathsAsync(tenantId, take);
+        var paths = await learningPathService.GetFeaturedPathsAsync(tenantId, take).ConfigureAwait(false);
         return Ok(paths.Select(p => p.ToDto()));
     }
 
@@ -85,7 +85,7 @@ public class LearningPathController(ILearningPathService learningPathService) : 
         [FromQuery] int daysBack = 30,
         [FromQuery] int take = 10)
     {
-        var paths = await learningPathService.GetPopularPathsAsync(tenantId, daysBack, take);
+        var paths = await learningPathService.GetPopularPathsAsync(tenantId, daysBack, take).ConfigureAwait(false);
         return Ok(paths.Select(p => p.ToDto()));
     }
 
@@ -97,7 +97,7 @@ public class LearningPathController(ILearningPathService learningPathService) : 
         string slug,
         [FromQuery] Guid? tenantId = null)
     {
-        var path = await learningPathService.GetPathBySlugAsync(slug, tenantId);
+        var path = await learningPathService.GetPathBySlugAsync(slug, tenantId).ConfigureAwait(false);
         if (path == null) return NotFound();
         return Ok(path.ToDetailDto());
     }
@@ -108,7 +108,7 @@ public class LearningPathController(ILearningPathService learningPathService) : 
     [HttpGet("{id}")]
     public async Task<ActionResult<LearningPathDetailDto>> GetPathById(Guid id)
     {
-        var path = await learningPathService.GetPathByIdAsync(id, includeCourses: true);
+        var path = await learningPathService.GetPathByIdAsync(id, includeCourses: true).ConfigureAwait(false);
         if (path == null) return NotFound();
         return Ok(path.ToDetailDto());
     }
@@ -125,7 +125,7 @@ public class LearningPathController(ILearningPathService learningPathService) : 
         [FromQuery] int skip = 0,
         [FromQuery] int take = 50)
     {
-        var paths = await learningPathService.GetPathsByCreatorAsync(creatorId, includeUnpublished, skip, take);
+        var paths = await learningPathService.GetPathsByCreatorAsync(creatorId, includeUnpublished, skip, take).ConfigureAwait(false);
         return Ok(paths.Select(p => p.ToDto()));
     }
 
@@ -141,7 +141,7 @@ public class LearningPathController(ILearningPathService learningPathService) : 
     {
         if (!ModelState.IsValid) return BadRequest(ModelState);
 
-        var path = await learningPathService.CreatePathAsync(dto, creatorId, tenantId);
+        var path = await learningPathService.CreatePathAsync(dto, creatorId, tenantId).ConfigureAwait(false);
         return CreatedAtAction(nameof(GetPathById), new { id = path.Id }, path.ToDto());
     }
 
@@ -156,7 +156,7 @@ public class LearningPathController(ILearningPathService learningPathService) : 
     {
         if (!ModelState.IsValid) return BadRequest(ModelState);
 
-        var path = await learningPathService.UpdatePathAsync(id, dto);
+        var path = await learningPathService.UpdatePathAsync(id, dto).ConfigureAwait(false);
         if (path == null) return NotFound();
         return Ok(path.ToDto());
     }
@@ -168,7 +168,7 @@ public class LearningPathController(ILearningPathService learningPathService) : 
     [RequireResourcePermission<PermissionType, LearningPath>(PermissionType.Delete)]
     public async Task<IActionResult> DeletePath(Guid id)
     {
-        var success = await learningPathService.DeletePathAsync(id);
+        var success = await learningPathService.DeletePathAsync(id).ConfigureAwait(false);
         if (!success) return NotFound();
         return NoContent();
     }
@@ -182,7 +182,7 @@ public class LearningPathController(ILearningPathService learningPathService) : 
     {
         try
         {
-            var path = await learningPathService.PublishPathAsync(id);
+            var path = await learningPathService.PublishPathAsync(id).ConfigureAwait(false);
             if (path == null) return NotFound();
             return Ok(path.ToDto());
         }
@@ -199,7 +199,7 @@ public class LearningPathController(ILearningPathService learningPathService) : 
     [RequireResourcePermission<PermissionType, LearningPath>(PermissionType.Unpublish)]
     public async Task<ActionResult<LearningPathDto>> UnpublishPath(Guid id)
     {
-        var path = await learningPathService.UnpublishPathAsync(id);
+        var path = await learningPathService.UnpublishPathAsync(id).ConfigureAwait(false);
         if (path == null) return NotFound();
         return Ok(path.ToDto());
     }
@@ -219,7 +219,7 @@ public class LearningPathController(ILearningPathService learningPathService) : 
 
         try
         {
-            var path = await learningPathService.AddCourseToPathAsync(id, dto);
+            var path = await learningPathService.AddCourseToPathAsync(id, dto).ConfigureAwait(false);
             if (path == null) return NotFound();
             return Ok(path.ToDetailDto());
         }
@@ -236,7 +236,7 @@ public class LearningPathController(ILearningPathService learningPathService) : 
     [RequireResourcePermission<PermissionType, LearningPath>(PermissionType.Edit)]
     public async Task<IActionResult> RemoveCourseFromPath(Guid id, Guid courseId)
     {
-        var success = await learningPathService.RemoveCourseFromPathAsync(id, courseId);
+        var success = await learningPathService.RemoveCourseFromPathAsync(id, courseId).ConfigureAwait(false);
         if (!success) return NotFound();
         return NoContent();
     }
@@ -252,7 +252,7 @@ public class LearningPathController(ILearningPathService learningPathService) : 
     {
         if (!ModelState.IsValid) return BadRequest(ModelState);
 
-        var path = await learningPathService.ReorderCoursesAsync(id, dto);
+        var path = await learningPathService.ReorderCoursesAsync(id, dto).ConfigureAwait(false);
         if (path == null) return NotFound();
         return Ok(path.ToDetailDto());
     }
@@ -269,7 +269,7 @@ public class LearningPathController(ILearningPathService learningPathService) : 
     {
         try
         {
-            var enrollment = await learningPathService.EnrollAsync(id, userId);
+            var enrollment = await learningPathService.EnrollAsync(id, userId).ConfigureAwait(false);
             return CreatedAtAction(nameof(GetUserEnrollment), new { id, userId }, enrollment.ToDto());
         }
         catch (InvalidOperationException ex)
@@ -286,7 +286,7 @@ public class LearningPathController(ILearningPathService learningPathService) : 
         Guid id,
         [FromQuery] Guid userId)
     {
-        var success = await learningPathService.UnenrollAsync(id, userId);
+        var success = await learningPathService.UnenrollAsync(id, userId).ConfigureAwait(false);
         if (!success) return NotFound();
         return NoContent();
     }
@@ -297,7 +297,7 @@ public class LearningPathController(ILearningPathService learningPathService) : 
     [HttpGet("{id}/enrollment/{userId}")]
     public async Task<ActionResult<LearningPathEnrollmentDto>> GetUserEnrollment(Guid id, Guid userId)
     {
-        var enrollment = await learningPathService.GetEnrollmentAsync(id, userId);
+        var enrollment = await learningPathService.GetEnrollmentAsync(id, userId).ConfigureAwait(false);
         if (enrollment == null) return NotFound();
         return Ok(enrollment.ToDto());
     }
@@ -308,7 +308,7 @@ public class LearningPathController(ILearningPathService learningPathService) : 
     [HttpGet("{id}/enrollment/{userId}/check")]
     public async Task<ActionResult<bool>> CheckEnrollment(Guid id, Guid userId)
     {
-        var isEnrolled = await learningPathService.IsEnrolledAsync(id, userId);
+        var isEnrolled = await learningPathService.IsEnrolledAsync(id, userId).ConfigureAwait(false);
         return Ok(isEnrolled);
     }
 
@@ -323,7 +323,7 @@ public class LearningPathController(ILearningPathService learningPathService) : 
     {
         if (!ModelState.IsValid) return BadRequest(ModelState);
 
-        var enrollment = await learningPathService.UpdateProgressAsync(id, userId, dto);
+        var enrollment = await learningPathService.UpdateProgressAsync(id, userId, dto).ConfigureAwait(false);
         if (enrollment == null) return NotFound();
         return Ok(enrollment.ToDto());
     }
@@ -336,7 +336,7 @@ public class LearningPathController(ILearningPathService learningPathService) : 
         Guid id,
         [FromQuery] Guid userId)
     {
-        var enrollment = await learningPathService.CompletePathAsync(id, userId);
+        var enrollment = await learningPathService.CompletePathAsync(id, userId).ConfigureAwait(false);
         if (enrollment == null) return NotFound();
         return Ok(enrollment.ToDto());
     }
@@ -349,7 +349,7 @@ public class LearningPathController(ILearningPathService learningPathService) : 
         Guid id,
         [FromQuery] Guid userId)
     {
-        var success = await learningPathService.AbandonPathAsync(id, userId);
+        var success = await learningPathService.AbandonPathAsync(id, userId).ConfigureAwait(false);
         if (!success) return NotFound();
         return NoContent();
     }
@@ -366,7 +366,7 @@ public class LearningPathController(ILearningPathService learningPathService) : 
         [FromQuery] int skip = 0,
         [FromQuery] int take = 50)
     {
-        var enrollments = await learningPathService.GetUserEnrollmentsAsync(userId, status, skip, take);
+        var enrollments = await learningPathService.GetUserEnrollmentsAsync(userId, status, skip, take).ConfigureAwait(false);
         return Ok(enrollments.Select(e => e.ToDto()));
     }
 
@@ -379,7 +379,7 @@ public class LearningPathController(ILearningPathService learningPathService) : 
         [FromQuery] int skip = 0,
         [FromQuery] int take = 20)
     {
-        var enrollments = await learningPathService.GetUserCompletedPathsAsync(userId, skip, take);
+        var enrollments = await learningPathService.GetUserCompletedPathsAsync(userId, skip, take).ConfigureAwait(false);
         return Ok(enrollments.Select(e => e.ToDto()));
     }
 
@@ -392,7 +392,7 @@ public class LearningPathController(ILearningPathService learningPathService) : 
     [RequireResourcePermission<PermissionType, LearningPath>(PermissionType.Read)]
     public async Task<ActionResult<LearningPathStatisticsDto>> GetPathStatistics(Guid id)
     {
-        var statistics = await learningPathService.GetPathStatisticsAsync(id);
+        var statistics = await learningPathService.GetPathStatisticsAsync(id).ConfigureAwait(false);
         if (statistics == null) return NotFound();
         return Ok(statistics);
     }
@@ -408,7 +408,7 @@ public class LearningPathController(ILearningPathService learningPathService) : 
         [FromQuery] int skip = 0,
         [FromQuery] int take = 50)
     {
-        var enrollments = await learningPathService.GetPathEnrollmentsAsync(id, status, skip, take);
+        var enrollments = await learningPathService.GetPathEnrollmentsAsync(id, status, skip, take).ConfigureAwait(false);
         return Ok(enrollments.Select(e => e.ToDto()));
     }
 }

@@ -80,7 +80,7 @@ public sealed class TamperEvidentAuditLog : EntityBase {
             Country = country,
             Region = region,
             City = city,
-            Timestamp = DateTime.UtcNow,
+            Timestamp = SystemClock.UtcNow,
             PreviousHash = previousHash,
             SequenceNumber = sequenceNumber,
             IsVerified = false,
@@ -92,18 +92,18 @@ public sealed class TamperEvidentAuditLog : EntityBase {
     public void SetCryptographicHashes(string contentHash, string chainHash) {
         ContentHash = contentHash;
         ChainHash = chainHash;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     public void Sign(string digitalSignature, string signingKeyId) {
         DigitalSignature = digitalSignature;
         SigningKeyId = signingKeyId;
-        SignedAt = DateTime.UtcNow;
+        SignedAt = SystemClock.UtcNow;
     }
 
     public void MarkAsVerified(string? notes = null) {
         IsVerified = true;
-        LastVerifiedAt = DateTime.UtcNow;
+        LastVerifiedAt = SystemClock.UtcNow;
         VerificationNotes = notes;
     }
 
@@ -119,7 +119,7 @@ public sealed class TamperEvidentAuditLog : EntityBase {
 
     public void MarkAsForwardedToSiem(string correlationId) {
         ForwardedToSiem = true;
-        ForwardedAt = DateTime.UtcNow;
+        ForwardedAt = SystemClock.UtcNow;
         SiemCorrelationId = correlationId;
     }
 

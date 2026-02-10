@@ -122,7 +122,7 @@ public sealed class ProgramStatisticsAndDiscoveryQueryHandlers(IApplicationDbCon
   public async Task<IEnumerable<Program>> Handle(GetPopularProgramsQuery request, CancellationToken cancellationToken) {
     logger.LogInformation("Getting popular programs");
 
-    var sinceDate = DateTime.UtcNow.AddDays(-request.DaysBack);
+    var sinceDate = SystemClock.UtcNow.AddDays(-request.DaysBack);
 
     var programs = await context.Set<Program>().Where(p => p.DeletedAt == null && p.Status == ContentStatus.Published && p.Visibility == ContentVisibility.Public)
                                 .OrderByDescending(p => p.ProgramUsers.Count(pu => pu.JoinedAt >= sinceDate)) // Fixed property name
@@ -139,7 +139,7 @@ public sealed class ProgramStatisticsAndDiscoveryQueryHandlers(IApplicationDbCon
   public async Task<IEnumerable<Program>> Handle(GetRecentProgramsQuery request, CancellationToken cancellationToken) {
     logger.LogInformation("Getting recent programs");
 
-    var sinceDate = DateTime.UtcNow.AddDays(-request.DaysBack);
+    var sinceDate = SystemClock.UtcNow.AddDays(-request.DaysBack);
 
     var programs = await context.Set<Program>().Where(p => p.DeletedAt == null && p.Status == ContentStatus.Published && p.Visibility == ContentVisibility.Public && p.CreatedAt >= sinceDate // Fixed: use CreatedAt instead of PublishedAt
                                 )

@@ -19,7 +19,7 @@ public class PermissionDelegation
 
     public string[] DelegatedPermissions { get; set; } = Array.Empty<string>();
 
-    public DateTime StartsAt { get; set; } = DateTime.UtcNow;
+    public DateTime StartsAt { get; set; } = SystemClock.UtcNow;
 
     public DateTime? ExpiresAt { get; set; }
 
@@ -35,7 +35,7 @@ public class PermissionDelegation
 
     public int UsageCount { get; set; }
 
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime CreatedAt { get; set; } = SystemClock.UtcNow;
 
     public DateTime? UpdatedAt { get; set; }
 
@@ -44,8 +44,8 @@ public class PermissionDelegation
     /// </summary>
     public bool IsValidNow() =>
         IsActive &&
-        StartsAt <= DateTime.UtcNow &&
-        (ExpiresAt == null || ExpiresAt > DateTime.UtcNow) &&
+        StartsAt <= SystemClock.UtcNow &&
+        (ExpiresAt == null || ExpiresAt > SystemClock.UtcNow) &&
         (UsageLimit == null || UsageCount < UsageLimit);
 
     /// <summary>
@@ -63,7 +63,7 @@ public class PermissionDelegation
             throw new InvalidOperationException("Cannot record usage for invalid delegation");
 
         UsageCount++;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
 
         // Auto-deactivate if usage limit reached
         if (UsageLimit.HasValue && UsageCount >= UsageLimit.Value)
@@ -78,7 +78,7 @@ public class PermissionDelegation
     public void Activate()
     {
         IsActive = true;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     /// <summary>
@@ -87,24 +87,24 @@ public class PermissionDelegation
     public void Deactivate()
     {
         IsActive = false;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     /// <summary>
     ///     Check if delegation has expired
     /// </summary>
-    public bool IsExpired() => ExpiresAt.HasValue && DateTime.UtcNow > ExpiresAt.Value;
+    public bool IsExpired() => ExpiresAt.HasValue && SystemClock.UtcNow > ExpiresAt.Value;
 
     /// <summary>
     ///     Extend the expiration date
     /// </summary>
     public void Extend(DateTime newExpiresAt)
     {
-        if (newExpiresAt <= DateTime.UtcNow)
+        if (newExpiresAt <= SystemClock.UtcNow)
             throw new ArgumentException("New expiration must be in the future", nameof(newExpiresAt));
 
         ExpiresAt = newExpiresAt;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     /// <summary>

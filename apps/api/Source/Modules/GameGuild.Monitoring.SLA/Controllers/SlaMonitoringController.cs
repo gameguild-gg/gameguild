@@ -43,7 +43,7 @@ public class SlaMonitoringController(ISender sender, IActorContextAccessor actor
         // Override TenantId from authenticated context when not explicitly set
         var tenantId = GetTenantId(command.TenantId != Guid.Empty ? command.TenantId : null);
         var enrichedCommand = command with { TenantId = tenantId };
-        var result = await sender.Send(enrichedCommand, cancellationToken);
+        var result = await sender.Send(enrichedCommand, cancellationToken).ConfigureAwait(false);
 
         return CreatedAtAction(nameof(GetSlo), new { id = result.Id }, result);
     }
@@ -71,7 +71,7 @@ public class SlaMonitoringController(ISender sender, IActorContextAccessor actor
     {
         var actualTenantId = GetTenantId(tenantId);
         var query = new GetSlosQuery(actualTenantId, serviceName, isEnabled, skip, take);
-        var result = await sender.Send(query, cancellationToken);
+        var result = await sender.Send(query, cancellationToken).ConfigureAwait(false);
 
         return Ok(result);
     }
@@ -89,7 +89,7 @@ public class SlaMonitoringController(ISender sender, IActorContextAccessor actor
     {
         var tenantId = GetTenantId();
         var query = new GetSloByIdQuery(id, tenantId);
-        var result = await sender.Send(query, cancellationToken);
+        var result = await sender.Send(query, cancellationToken).ConfigureAwait(false);
 
         if (result == null) return NotFound();
 
@@ -114,7 +114,7 @@ public class SlaMonitoringController(ISender sender, IActorContextAccessor actor
         // Ensure TenantId is set from authenticated context
         var tenantId = GetTenantId(command.TenantId != Guid.Empty ? command.TenantId : null);
         var enrichedCommand = command with { TenantId = tenantId };
-        var result = await sender.Send(enrichedCommand, cancellationToken);
+        var result = await sender.Send(enrichedCommand, cancellationToken).ConfigureAwait(false);
 
         return Ok(result);
     }
@@ -132,7 +132,7 @@ public class SlaMonitoringController(ISender sender, IActorContextAccessor actor
     {
         var tenantId = GetTenantId();
         var command = new DeleteSloCommand(id, tenantId);
-        await sender.Send(command, cancellationToken);
+        await sender.Send(command, cancellationToken).ConfigureAwait(false);
 
         return NoContent();
     }
@@ -151,7 +151,7 @@ public class SlaMonitoringController(ISender sender, IActorContextAccessor actor
         // Override TenantId from authenticated context when not explicitly set
         var tenantId = GetTenantId(command.TenantId != Guid.Empty ? command.TenantId : null);
         var enrichedCommand = command with { TenantId = tenantId };
-        await sender.Send(enrichedCommand, cancellationToken);
+        await sender.Send(enrichedCommand, cancellationToken).ConfigureAwait(false);
 
         return NoContent();
     }
@@ -171,7 +171,7 @@ public class SlaMonitoringController(ISender sender, IActorContextAccessor actor
     {
         var tenantId = GetTenantId();
         var query = new GetSloComplianceQuery(id, tenantId, startDate, endDate);
-        var result = await sender.Send(query, cancellationToken);
+        var result = await sender.Send(query, cancellationToken).ConfigureAwait(false);
 
         return Ok(result);
     }
@@ -189,7 +189,7 @@ public class SlaMonitoringController(ISender sender, IActorContextAccessor actor
     {
         var tenantId = GetTenantId();
         var query = new GetErrorBudgetQuery(id, tenantId);
-        var result = await sender.Send(query, cancellationToken);
+        var result = await sender.Send(query, cancellationToken).ConfigureAwait(false);
 
         return Ok(result);
     }
@@ -222,7 +222,7 @@ public class SlaMonitoringController(ISender sender, IActorContextAccessor actor
         // Default to current user's tenant if not explicitly specified
         var actualTenantId = tenantId ?? actorContextAccessor.ActorContext.TenantId;
         var query = new GetSloViolationsQuery(sloId, actualTenantId, onlyUnresolved, startDate, endDate, skip, take);
-        var result = await sender.Send(query, cancellationToken);
+        var result = await sender.Send(query, cancellationToken).ConfigureAwait(false);
 
         return Ok(result);
     }
@@ -245,7 +245,7 @@ public class SlaMonitoringController(ISender sender, IActorContextAccessor actor
         // Ensure TenantId is set from authenticated context
         var tenantId = GetTenantId(command.TenantId != Guid.Empty ? command.TenantId : null);
         var enrichedCommand = command with { TenantId = tenantId };
-        await sender.Send(enrichedCommand, cancellationToken);
+        await sender.Send(enrichedCommand, cancellationToken).ConfigureAwait(false);
 
         return NoContent();
     }

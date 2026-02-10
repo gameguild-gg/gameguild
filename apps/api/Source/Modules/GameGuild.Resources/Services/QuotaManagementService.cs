@@ -13,7 +13,7 @@ public class QuotaManagementService(
     IPublisher publisher,
     ILogger<QuotaManagementService> logger) : IQuotaManagementService
 {
-    /// <inheritdoc cref="ResourceQuotaService.ActivitySource"/>
+    /// <summary>OpenTelemetry activity source for quota management operations.</summary>
     public static readonly ActivitySource ActivitySource = new("GameGuild.Resources.QuotaManagement", "1.0.0");
 
     private const string SetQuotaOperation = "quota.set";
@@ -51,7 +51,7 @@ public class QuotaManagementService(
         }
         else
         {
-            existingQuota = new ResourceQuota { Type = type, SoftLimit = softLimit, HardLimit = hardLimit, Period = period, CurrentUsage = 0, LastReset = DateTime.UtcNow, IsActive = true };
+            existingQuota = new ResourceQuota { Type = type, SoftLimit = softLimit, HardLimit = hardLimit, Period = period, CurrentUsage = 0, LastReset = SystemClock.UtcNow, IsActive = true };
             existingQuota.SetProperties(new Dictionary<string, object?> { ["TenantId"] = tenantId });
             existingQuota = await quotaRepository.CreateAsync(existingQuota, cancellationToken).ConfigureAwait(false);
         }
@@ -66,7 +66,7 @@ public class QuotaManagementService(
             HardLimit: hardLimit,
             Source: "SetQuotaAsync",
             ActorId: null,
-            Timestamp: DateTime.UtcNow), cancellationToken);
+            Timestamp: SystemClock.UtcNow), cancellationToken);
 
         logger.LogInformation("Set quota for tenant {TenantId}, type {Type}: Soft={SoftLimit}, Hard={HardLimit}", tenantId, type, softLimit, hardLimit);
 
@@ -116,7 +116,7 @@ public class QuotaManagementService(
                 HardLimit: quota.HardLimit,
                 Source: "DeleteQuotaAsync",
                 ActorId: null,
-                Timestamp: DateTime.UtcNow), cancellationToken);
+                Timestamp: SystemClock.UtcNow), cancellationToken);
 
             logger.LogInformation("Deleted quota for tenant {TenantId}, type {Type}", tenantId, type);
         }

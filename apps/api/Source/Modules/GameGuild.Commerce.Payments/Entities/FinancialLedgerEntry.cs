@@ -104,7 +104,7 @@ public class FinancialLedgerEntry : EntityBase
         if (IsReconciled) throw new InvalidOperationException("Entry is already reconciled");
 
         IsReconciled = true;
-        ReconciledAt = DateTime.UtcNow;
+        ReconciledAt = SystemClock.UtcNow;
         ReconciledBy = reconciledBy;
         if (notes != null) Notes = notes;
     }

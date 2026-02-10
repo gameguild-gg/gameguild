@@ -11,7 +11,7 @@ public class MfaAttemptConfiguration : IEntityTypeConfiguration<MfaAttempt>
     public void Configure(EntityTypeBuilder<MfaAttempt> builder)
     {
         // Configure table name (snake_case convention)
-        builder.ToTable("mfa_attempts", "gameguild.authentication");
+        builder.ToTable("mfaattempt", "gameguild.authentication");
 
         // Configure primary key
         builder.HasKey(x => x.Id);
@@ -20,20 +20,18 @@ public class MfaAttemptConfiguration : IEntityTypeConfiguration<MfaAttempt>
         builder.Property(x => x.Id).HasColumnName("id").IsRequired();
 
         // Property configurations
-        builder.Property(x => x.UserId).HasColumnName("user_id").IsRequired();
-        builder.Property(x => x.Method).HasColumnName("method").HasConversion<string>().HasMaxLength(50).IsRequired();
-        builder.Property(x => x.IsSuccessful).HasColumnName("is_successful").IsRequired();
-        builder.Property(x => x.FailureReason).HasColumnName("failure_reason").HasMaxLength(500);
-        builder.Property(x => x.IpAddress).HasColumnName("ip_address").HasMaxLength(45).IsRequired();
-        builder.Property(x => x.UserAgent).HasColumnName("user_agent").HasMaxLength(500).IsRequired();
-        builder.Property(x => x.AttemptedAt).HasColumnName("attempted_at").IsRequired();
-        builder.Property(x => x.ProcessingTimeMs).HasColumnName("processing_time_ms").IsRequired();
-        builder.Property(x => x.DeviceFingerprint).HasColumnName("device_fingerprint").HasMaxLength(256);
-        builder.Property(x => x.SessionId).HasColumnName("session_id");
-        builder.Property(x => x.TenantId).HasColumnName("tenant_id");
-        builder.Property(x => x.Metadata).HasColumnName("metadata").HasMaxLength(2000);
-        builder.Property(x => x.CreatedAt).HasColumnName("created_at").IsRequired();
-        builder.Property(x => x.UpdatedAt).HasColumnName("updated_at").IsRequired();
+        builder.Property(x => x.UserId).IsRequired();
+        builder.Property(x => x.Method).HasConversion<string>().HasMaxLength(50).IsRequired();
+        builder.Property(x => x.IsSuccessful).IsRequired();
+        builder.Property(x => x.FailureReason).HasMaxLength(500);
+        builder.Property(x => x.IpAddress).HasMaxLength(45).IsRequired();
+        builder.Property(x => x.UserAgent).HasMaxLength(500).IsRequired();
+        builder.Property(x => x.AttemptedAt).IsRequired();
+        builder.Property(x => x.ProcessingTimeMs).IsRequired();
+        builder.Property(x => x.DeviceFingerprint).HasMaxLength(256);
+        builder.Property(x => x.Metadata).HasMaxLength(2000);
+        builder.Property(x => x.CreatedAt).IsRequired();
+        builder.Property(x => x.UpdatedAt).IsRequired();
 
         // Indexes
         builder.HasIndex(x => x.UserId).HasDatabaseName("ix_mfaattempt_user_id");

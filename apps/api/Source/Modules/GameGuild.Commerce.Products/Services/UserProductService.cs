@@ -44,7 +44,7 @@ public class UserProductService(IUserProductRepository userProductRepository) : 
             AccessStatus = ProductAccessStatus.Active,
             PricePaid = pricePaid,
             Currency = currency,
-            AccessStartDate = DateTime.UtcNow,
+            AccessStartDate = SystemClock.UtcNow,
             AccessEndDate = expiresAt
         };
 
@@ -93,7 +93,7 @@ public class UserProductService(IUserProductRepository userProductRepository) : 
             return false;
         }
 
-        if (userProduct.AccessEndDate.HasValue && userProduct.AccessEndDate.Value < DateTime.UtcNow)
+        if (userProduct.AccessEndDate.HasValue && userProduct.AccessEndDate.Value < SystemClock.UtcNow)
         {
             return false;
         }

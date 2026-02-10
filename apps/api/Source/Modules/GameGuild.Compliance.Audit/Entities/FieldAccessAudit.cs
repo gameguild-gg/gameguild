@@ -60,7 +60,7 @@ public sealed class FieldAccessAudit : EntityBase {
             SensitivityLevel = sensitivityLevel,
             IpAddress = ipAddress,
             UserAgent = userAgent,
-            AccessedAt = DateTime.UtcNow
+            AccessedAt = SystemClock.UtcNow
         };
     }
 
@@ -85,7 +85,7 @@ public sealed class FieldAccessAudit : EntityBase {
 
     public void MarkNotificationSent() {
         NotificationSent = true;
-        NotificationSentAt = DateTime.UtcNow;
+        NotificationSentAt = SystemClock.UtcNow;
     }
 }
 

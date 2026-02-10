@@ -19,7 +19,7 @@ public sealed class GetUserProfilesPagedQueryHandler(IUserProfileRepository prof
             request.SortDirection,
             request.PageNumber,
             request.PageSize,
-            cancellationToken);
+            cancellationToken).ConfigureAwait(false);
 
         // Map to DTOs
         var profileDtos = profiles.Select(profile => new UserProfileDto(

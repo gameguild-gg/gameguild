@@ -13,6 +13,6 @@ public sealed class UpgradeSubscriptionPlanCommandValidator : AbstractValidator<
 
         RuleFor(x => x.NewPlanId).NotEmpty().WithMessage("NewPlanId is required");
 
-        RuleFor(x => x.EffectiveDate).GreaterThanOrEqualTo(DateTime.UtcNow.Date).When(x => x.EffectiveDate.HasValue).WithMessage("EffectiveDate must be today or in the future when specified");
+        RuleFor(x => x.EffectiveDate).GreaterThanOrEqualTo(SystemClock.UtcNow.Date).When(x => x.EffectiveDate.HasValue).WithMessage("EffectiveDate must be today or in the future when specified");
     }
 }

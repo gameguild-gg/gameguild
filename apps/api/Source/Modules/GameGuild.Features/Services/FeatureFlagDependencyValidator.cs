@@ -3,9 +3,7 @@ namespace GameGuild.Features;
 /// <summary>
 ///     Implementation of feature flag dependency validation with cycle detection
 /// </summary>
-#pragma warning disable CS0618 // Type or member is obsolete - IFeatureFlagRepository migration pending
-public sealed class FeatureFlagDependencyValidator(IFeatureFlagRepository repository) : IFeatureFlagDependencyValidator
-#pragma warning restore CS0618
+public sealed class FeatureFlagDependencyValidator(IFeatureFlagQueryRepository repository) : IFeatureFlagDependencyValidator
 {
     public async Task<bool> HasCircularDependencyAsync(string flagKey, string dependsOnKey)
     {

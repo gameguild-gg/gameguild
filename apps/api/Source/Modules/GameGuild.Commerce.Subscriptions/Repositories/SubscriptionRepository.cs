@@ -45,7 +45,7 @@ public class SubscriptionRepository(IApplicationDbContext context)
 
     public async Task<IEnumerable<Subscription>> GetExpiringSoonAsync(int days, CancellationToken cancellationToken = default)
     {
-        var cutoffDate = DateTime.UtcNow.AddDays(days);
+        var cutoffDate = SystemClock.UtcNow.AddDays(days);
 
         return await Query.Include(s => s.Plan)
             .Where(s => s.EndDate.HasValue && s.EndDate <= cutoffDate && s.Status == SubscriptionStatus.Active)
@@ -56,7 +56,7 @@ public class SubscriptionRepository(IApplicationDbContext context)
 
     public async Task<IEnumerable<Subscription>> GetDueForRenewalAsync(int days, CancellationToken cancellationToken = default)
     {
-        var cutoffDate = DateTime.UtcNow.AddDays(days);
+        var cutoffDate = SystemClock.UtcNow.AddDays(days);
 
         return await Query.Include(s => s.Plan)
             .Where(s => s.NextBillingDate <= cutoffDate && s.Status == SubscriptionStatus.Active)
@@ -67,7 +67,7 @@ public class SubscriptionRepository(IApplicationDbContext context)
 
     public async Task<IEnumerable<Subscription>> GetTrialsExpiringSoonAsync(int days, CancellationToken cancellationToken = default)
     {
-        var cutoffDate = DateTime.UtcNow.AddDays(days);
+        var cutoffDate = SystemClock.UtcNow.AddDays(days);
 
         return await Query.Include(s => s.Plan)
             .Where(s => s.TrialEndDate.HasValue && s.TrialEndDate <= cutoffDate && s.Status == SubscriptionStatus.Trialing)

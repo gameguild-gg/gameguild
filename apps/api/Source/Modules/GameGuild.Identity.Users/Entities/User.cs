@@ -201,8 +201,8 @@ public class User : EntityBase, IUser
     /// </summary>
     public void RecordLogin()
     {
-        LastLoginAt = DateTime.UtcNow;
-        LastSeenAt = DateTime.UtcNow;
+        LastLoginAt = SystemClock.UtcNow;
+        LastSeenAt = SystemClock.UtcNow;
         Touch();
     }
 
@@ -278,7 +278,7 @@ public class User : EntityBase, IUser
     /// </summary>
     public void RecordActivity()
     {
-        LastSeenAt = DateTime.UtcNow;
+        LastSeenAt = SystemClock.UtcNow;
         Touch();
     }
 

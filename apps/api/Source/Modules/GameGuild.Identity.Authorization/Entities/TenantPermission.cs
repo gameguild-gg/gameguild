@@ -55,7 +55,7 @@ public class TenantPermission : EntityBase
     /// <summary>
     ///     When the permission was granted
     /// </summary>
-    public DateTime GrantedAt { get; set; } = DateTime.UtcNow;
+    public DateTime GrantedAt { get; set; } = SystemClock.UtcNow;
 
     /// <summary>
     ///     Reason for granting (audit trail)
@@ -74,7 +74,7 @@ public class TenantPermission : EntityBase
     /// </summary>
     public bool IsExpired()
     {
-        return ExpiresAt.HasValue && ExpiresAt.Value < DateTime.UtcNow;
+        return ExpiresAt.HasValue && ExpiresAt.Value < SystemClock.UtcNow;
     }
 
     /// <summary>
@@ -158,7 +158,7 @@ public class TenantPermission : EntityBase
     /// </summary>
     public void Expire()
     {
-        ExpiresAt = DateTime.UtcNow;
+        ExpiresAt = SystemClock.UtcNow;
         IsActive = false;
     }
 }

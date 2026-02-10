@@ -94,5 +94,5 @@ public class BlockchainCertificateAnchor
     /// <summary>
     ///     Gets whether the certificate is currently valid.
     /// </summary>
-    public bool IsValid { get => !IsRevoked && (ExpiresAt == null || ExpiresAt > DateTime.UtcNow); }
+    public bool IsValid { get => !IsRevoked && (ExpiresAt == null || ExpiresAt > SystemClock.UtcNow); }
 }

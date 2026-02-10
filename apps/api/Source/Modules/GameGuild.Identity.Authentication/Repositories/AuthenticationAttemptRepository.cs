@@ -47,7 +47,7 @@ public class AuthenticationAttemptRepository(IApplicationDbContext context) : IA
     public async Task<AuthenticationAttempt> CreateAsync(AuthenticationAttempt attempt, CancellationToken cancellationToken = default)
     {
         attempt.Id = Guid.NewGuid();
-        attempt.UpdatedAt = DateTime.UtcNow;
+        attempt.UpdatedAt = SystemClock.UtcNow;
         attempt.Email = attempt.Email.ToLowerInvariant();
 
         AuthenticationAttempts.Add(attempt);
@@ -74,7 +74,7 @@ public class AuthenticationAttemptRepository(IApplicationDbContext context) : IA
 
     public async Task<AuthenticationAttempt> UpdateAsync(AuthenticationAttempt attempt, CancellationToken cancellationToken = default)
     {
-        attempt.UpdatedAt = DateTime.UtcNow;
+        attempt.UpdatedAt = SystemClock.UtcNow;
 
         AuthenticationAttempts.Update(attempt);
         await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);

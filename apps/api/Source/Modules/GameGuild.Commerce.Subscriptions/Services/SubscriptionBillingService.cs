@@ -144,7 +144,7 @@ public class SubscriptionBillingService(
             FailedRenewals = failCount,
             TotalRevenue = totalRevenue,
             RenewalAttempts = attempts,
-            ProcessedAt = DateTime.UtcNow
+            ProcessedAt = SystemClock.UtcNow
         };
     }
 

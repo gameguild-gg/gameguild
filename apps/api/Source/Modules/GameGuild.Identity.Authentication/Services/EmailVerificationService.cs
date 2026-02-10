@@ -20,7 +20,7 @@ public class EmailVerificationService(ILogger<EmailVerificationService> logger, 
         try
         {
             var token = Guid.NewGuid().ToString("N");
-            var tokenInfo = new TokenInfo { UserId = userId, Email = email.ToLowerInvariant(), Type = "email_verification", ExpiresAt = DateTime.UtcNow.AddHours(24) };
+            var tokenInfo = new TokenInfo { UserId = userId, Email = email.ToLowerInvariant(), Type = "email_verification", ExpiresAt = SystemClock.UtcNow.AddHours(24) };
 
             memoryCache.Set(TokenKeyPrefix + token, tokenInfo, new MemoryCacheEntryOptions
             {
@@ -84,7 +84,7 @@ public class EmailVerificationService(ILogger<EmailVerificationService> logger, 
                 return Task.FromResult(false);
             }
 
-            if (tokenInfo.ExpiresAt < DateTime.UtcNow)
+            if (tokenInfo.ExpiresAt < SystemClock.UtcNow)
             {
                 memoryCache.Remove(TokenKeyPrefix + token);
                 logger.LogWarning("Expired verification token used for user {UserId}", userId);
@@ -153,7 +153,7 @@ public class EmailVerificationService(ILogger<EmailVerificationService> logger, 
             // Check rate limiting (1 email per 2 minutes)
             if (memoryCache.TryGetValue(rateLimitKey, out DateTime lastSent))
             {
-                var timeSinceLastSent = DateTime.UtcNow - lastSent;
+                var timeSinceLastSent = SystemClock.UtcNow - lastSent;
 
                 if (timeSinceLastSent < TimeSpan.FromMinutes(2))
                 {
@@ -170,7 +170,7 @@ public class EmailVerificationService(ILogger<EmailVerificationService> logger, 
             await SendVerificationEmailAsync(email, token).ConfigureAwait(false);
 
             // Update rate limit with sliding expiration
-            memoryCache.Set(rateLimitKey, DateTime.UtcNow, new MemoryCacheEntryOptions
+            memoryCache.Set(rateLimitKey, SystemClock.UtcNow, new MemoryCacheEntryOptions
             {
                 AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(2)
             });
@@ -193,7 +193,7 @@ public class EmailVerificationService(ILogger<EmailVerificationService> logger, 
         {
             if (!memoryCache.TryGetValue(TokenKeyPrefix + token, out TokenInfo? tokenInfo) || tokenInfo == null) { return Task.FromResult(false); }
 
-            var isValid = tokenInfo.ExpiresAt >= DateTime.UtcNow && tokenInfo.Type == "email_verification";
+            var isValid = tokenInfo.ExpiresAt >= SystemClock.UtcNow && tokenInfo.Type == "email_verification";
 
             return Task.FromResult(isValid);
         }

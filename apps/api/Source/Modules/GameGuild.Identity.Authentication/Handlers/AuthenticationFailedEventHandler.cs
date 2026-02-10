@@ -27,6 +27,6 @@ public sealed class AuthenticationFailedEventHandler(ILogger<AuthenticationFaile
         // - Trigger account lockout after threshold reached
         // - Send email notifications for suspicious activity
 
-        await Task.CompletedTask;
+        await Task.CompletedTask.ConfigureAwait(false);
     }
 }

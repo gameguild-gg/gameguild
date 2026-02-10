@@ -42,7 +42,7 @@ public class RevenueEvent : EntityBase
     public string ReferenceId { get; set; } = string.Empty;
 
     /// <summary>Event timestamp</summary>
-    public DateTime Timestamp { get; set; } = DateTime.UtcNow;
+    public DateTime Timestamp { get; set; } = SystemClock.UtcNow;
 
     /// <summary>Metadata (JSON)</summary>
     [MaxLength(2000)]
@@ -71,7 +71,7 @@ public class RevenueEvent : EntityBase
     public void MarkAsProcessed(Guid? ledgerEntryId = null)
     {
         Status = RevenueEventStatus.Processed;
-        ProcessedAt = DateTime.UtcNow;
+        ProcessedAt = SystemClock.UtcNow;
         LedgerEntryId = ledgerEntryId;
     }
 
@@ -79,7 +79,7 @@ public class RevenueEvent : EntityBase
     public void MarkAsFailed(string reason)
     {
         Status = RevenueEventStatus.Failed;
-        ProcessedAt = DateTime.UtcNow;
+        ProcessedAt = SystemClock.UtcNow;
         ProcessingNotes = reason;
     }
 }

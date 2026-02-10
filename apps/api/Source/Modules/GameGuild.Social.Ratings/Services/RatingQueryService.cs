@@ -10,7 +10,7 @@ namespace GameGuild.Social.Ratings;
 public class RatingQueryService(
     IApplicationDbContext db,
     IActorContextAccessor actorContextAccessor,
-    ILogger<RatingQueryService> logger) : IRatingQueryService
+    ILogger<RatingQueryService> _logger) : IRatingQueryService
 {
     private Guid GetCurrentUserId() => actorContextAccessor.ActorContext.SubjectIdAsGuid ?? throw new UnauthorizedAccessException("User not authenticated");
 
@@ -26,6 +26,8 @@ public class RatingQueryService(
         int take = 20,
         CancellationToken ct = default)
     {
+        _logger.LogDebug("Querying ratings: EntityId={EntityId}, EntityType={EntityType}, SortOrder={SortOrder}", entityId, entityType, sortOrder);
+
         var query = db.Set<Rating>()
             .Where(r => r.EntityId == entityId && r.EntityType == entityType && !r.IsDeleted)
             .Where(r => r.ModerationStatus == RatingModerationStatus.Approved);

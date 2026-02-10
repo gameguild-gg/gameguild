@@ -40,7 +40,7 @@ public class FeedController : LearningControllerBase
         CancellationToken cancellationToken = default)
     {
         var userId = GetRequiredUserId();
-        var result = await _feedService.GetPersonalizedFeedAsync(userId, skip, take, filterByType, cancellationToken);
+        var result = await _feedService.GetPersonalizedFeedAsync(userId, skip, take, filterByType, cancellationToken).ConfigureAwait(false);
 
         if (!result.IsSuccess)
         {
@@ -59,7 +59,7 @@ public class FeedController : LearningControllerBase
     public async Task<IActionResult> GenerateFeedItems(CancellationToken cancellationToken = default)
     {
         var userId = GetRequiredUserId();
-        var result = await _feedService.GenerateFeedItemsAsync(userId, null, cancellationToken);
+        var result = await _feedService.GenerateFeedItemsAsync(userId, null, cancellationToken).ConfigureAwait(false);
 
         if (!result.IsSuccess)
         {
@@ -77,7 +77,7 @@ public class FeedController : LearningControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> MarkFeedItemViewed(Guid id, CancellationToken cancellationToken = default)
     {
-        var result = await _feedService.MarkFeedItemViewedAsync(id, cancellationToken);
+        var result = await _feedService.MarkFeedItemViewedAsync(id, cancellationToken).ConfigureAwait(false);
 
         if (!result.IsSuccess)
         {
@@ -96,7 +96,7 @@ public class FeedController : LearningControllerBase
     public async Task<IActionResult> DismissFeedItem(Guid id, CancellationToken cancellationToken = default)
     {
         var userId = GetRequiredUserId();
-        var result = await _feedService.DismissFeedItemAsync(id, userId, cancellationToken);
+        var result = await _feedService.DismissFeedItemAsync(id, userId, cancellationToken).ConfigureAwait(false);
 
         if (!result.IsSuccess)
         {

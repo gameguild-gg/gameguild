@@ -11,7 +11,7 @@ public class IdentityVerificationConfiguration : IEntityTypeConfiguration<Identi
     public void Configure(EntityTypeBuilder<IdentityVerification> builder)
     {
         // Configure table name (snake_case convention)
-        builder.ToTable("identity_verifications", "gameguild.authentication");
+        builder.ToTable("identityverification", "gameguild.authentication");
 
         // Configure primary key
         builder.HasKey(x => x.Id);
@@ -20,21 +20,16 @@ public class IdentityVerificationConfiguration : IEntityTypeConfiguration<Identi
         builder.Property(x => x.Id).HasColumnName("id").IsRequired();
 
         // Property configurations
-        builder.Property(x => x.UserId).HasColumnName("user_id").IsRequired();
-        builder.Property(x => x.VerificationType).HasColumnName("verification_type").HasMaxLength(128).IsRequired();
-        builder.Property(x => x.Status).HasColumnName("status").HasMaxLength(64).IsRequired();
-        builder.Property(x => x.VerifiedValue).HasColumnName("verified_value").HasMaxLength(256).IsRequired();
-        builder.Property(x => x.InitiatedAt).HasColumnName("initiated_at").IsRequired();
-        builder.Property(x => x.CompletedAt).HasColumnName("completed_at");
-        builder.Property(x => x.ExpiresAt).HasColumnName("expires_at");
-        builder.Property(x => x.VerificationProvider).HasColumnName("verification_provider").HasMaxLength(256);
-        builder.Property(x => x.ExternalVerificationId).HasColumnName("external_verification_id").HasMaxLength(256);
-        builder.Property(x => x.ConfidenceScore).HasColumnName("confidence_score");
-        builder.Property(x => x.Notes).HasColumnName("notes").HasMaxLength(1000);
-        builder.Property(x => x.ReviewedBy).HasColumnName("reviewed_by");
-        builder.Property(x => x.ReviewedAt).HasColumnName("reviewed_at");
-        builder.Property(x => x.DocumentIds).HasColumnName("document_ids").HasMaxLength(2000);
-        builder.Property(x => x.Metadata).HasColumnName("metadata").HasMaxLength(2000);
+        builder.Property(x => x.UserId).IsRequired();
+        builder.Property(x => x.VerificationType).HasMaxLength(128).IsRequired();
+        builder.Property(x => x.Status).HasMaxLength(64).IsRequired();
+        builder.Property(x => x.VerifiedValue).HasMaxLength(256).IsRequired();
+        builder.Property(x => x.InitiatedAt).IsRequired();
+        builder.Property(x => x.VerificationProvider).HasMaxLength(256);
+        builder.Property(x => x.ExternalVerificationId).HasMaxLength(256);
+        builder.Property(x => x.Notes).HasMaxLength(1000);
+        builder.Property(x => x.DocumentIds).HasMaxLength(2000);
+        builder.Property(x => x.Metadata).HasMaxLength(2000);
         builder.Ignore(x => x.IsValid);
         builder.Ignore(x => x.IsPending);
 

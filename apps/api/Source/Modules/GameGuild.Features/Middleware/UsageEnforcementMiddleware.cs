@@ -80,7 +80,7 @@ public class UsageEnforcementMiddleware
             // Check API call limits
             if (subscriptionPlan.MaxApiCallsPerMonth.HasValue)
             {
-                var cacheKey = $"{ApiCallsCacheKeyPrefix}{tenantId}_{DateTime.UtcNow:yyyyMM}";
+                var cacheKey = $"{ApiCallsCacheKeyPrefix}{tenantId}_{SystemClock.UtcNow:yyyyMM}";
                 var currentCalls = _cache.GetOrCreate(cacheKey, entry =>
                 {
                     entry.AbsoluteExpirationRelativeToNow = CacheExpiration;
@@ -104,7 +104,7 @@ public class UsageEnforcementMiddleware
                             message = $"You have exceeded your monthly API call limit of {subscriptionPlan.MaxApiCallsPerMonth.Value}",
                             limit = subscriptionPlan.MaxApiCallsPerMonth.Value,
                             current = currentCalls,
-                            resetDate = new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, 1).AddMonths(1)
+                            resetDate = new DateTime(SystemClock.UtcNow.Year, SystemClock.UtcNow.Month, 1).AddMonths(1)
                         }));
                     return;
                 }

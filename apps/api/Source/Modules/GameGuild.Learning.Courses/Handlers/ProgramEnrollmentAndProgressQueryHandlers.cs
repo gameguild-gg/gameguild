@@ -24,7 +24,7 @@ public sealed class ProgramEnrollmentAndProgressQueryHandlers(IApplicationDbCont
     logger.LogInformation("Checking enrollment for user {UserId} in program {ProgramId}", request.UserId, request.ProgramId);
 
     var userGuid = Guid.Parse(request.UserId); // Convert string UserId to Guid
-    var enrollment = await context.Set<ProgramUser>().Where(pu => pu.ProgramId == request.ProgramId && pu.UserId == userGuid).FirstOrDefaultAsync(cancellationToken);
+    var enrollment = await context.Set<ProgramUser>().Where(pu => pu.ProgramId == request.ProgramId && pu.UserId == userGuid).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
 
     return enrollment;
   }
@@ -33,7 +33,7 @@ public sealed class ProgramEnrollmentAndProgressQueryHandlers(IApplicationDbCont
     logger.LogInformation("Checking if program {ProgramId} is in wishlist for user {UserId}", request.ProgramId, request.UserId);
 
     var userGuid = Guid.Parse(request.UserId); // Convert string UserId to Guid
-    var exists = await context.Set<ProgramWishlist>().AnyAsync(pw => pw.ProgramId == request.ProgramId && pw.UserId == userGuid, cancellationToken); // Fixed: use converted Guid
+    var exists = await context.Set<ProgramWishlist>().AnyAsync(pw => pw.ProgramId == request.ProgramId && pw.UserId == userGuid, cancellationToken).ConfigureAwait(false); // Fixed: use converted Guid
 
     return exists;
   }
@@ -50,7 +50,7 @@ public sealed class ProgramEnrollmentAndProgressQueryHandlers(IApplicationDbCont
     }
 
     var content = await query.OrderBy(pc => pc.SortOrder) // Fixed property name from Order to SortOrder
-                             .ToListAsync(cancellationToken);
+                             .ToListAsync(cancellationToken).ConfigureAwait(false);
 
     logger.LogInformation("Found {Count} content items for program {ProgramId}", content.Count, request.ProgramId);
 
@@ -67,7 +67,7 @@ public sealed class ProgramEnrollmentAndProgressQueryHandlers(IApplicationDbCont
     var enrollments = await query.OrderByDescending(pu => pu.JoinedAt) // Fixed property name
                                  .Skip(request.Skip)
                                  .Take(request.Take)
-                                 .ToListAsync(cancellationToken);
+                                 .ToListAsync(cancellationToken).ConfigureAwait(false);
 
     logger.LogInformation("Found {Count} enrollments for program {ProgramId}", enrollments.Count, request.ProgramId);
 
@@ -77,7 +77,7 @@ public sealed class ProgramEnrollmentAndProgressQueryHandlers(IApplicationDbCont
   public async Task<IEnumerable<ProgramRating>> Handle(GetProgramRatingsQuery request, CancellationToken cancellationToken) {
     logger.LogInformation("Getting ratings for program: {ProgramId}", request.ProgramId);
 
-    var ratings = await context.Set<ProgramRating>().Where(pr => pr.ProgramId == request.ProgramId).OrderByDescending(pr => pr.CreatedAt).Skip(request.Skip).Take(request.Take).ToListAsync(cancellationToken);
+    var ratings = await context.Set<ProgramRating>().Where(pr => pr.ProgramId == request.ProgramId).OrderByDescending(pr => pr.CreatedAt).Skip(request.Skip).Take(request.Take).ToListAsync(cancellationToken).ConfigureAwait(false);
 
     logger.LogInformation("Found {Count} ratings for program {ProgramId}", ratings.Count, request.ProgramId);
 
@@ -88,7 +88,7 @@ public sealed class ProgramEnrollmentAndProgressQueryHandlers(IApplicationDbCont
     logger.LogInformation("Getting rating for program {ProgramId} by user {UserId}", request.ProgramId, request.UserId);
 
     var rating = await context.Set<ProgramRating>().Where(pr => pr.ProgramId == request.ProgramId && pr.UserId == request.UserId) // UserId is string in ProgramRating model
-                              .FirstOrDefaultAsync(cancellationToken);
+                              .FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
 
     return rating;
   }
@@ -102,7 +102,7 @@ public sealed class ProgramEnrollmentAndProgressQueryHandlers(IApplicationDbCont
     var programs = await query.OrderByDescending(p => p.ProgramUsers.First(pu => pu.UserId == userGuid).JoinedAt) // Fixed property name
                               .Skip(request.Skip)
                               .Take(request.Take)
-                              .ToListAsync(cancellationToken);
+                              .ToListAsync(cancellationToken).ConfigureAwait(false);
 
     logger.LogInformation("Found {Count} enrolled programs for user {UserId}", programs.Count, request.UserId);
 
@@ -112,11 +112,11 @@ public sealed class ProgramEnrollmentAndProgressQueryHandlers(IApplicationDbCont
   public async Task<ProgramUserProgress?> Handle(GetUserProgramProgressQuery request, CancellationToken cancellationToken) {
     logger.LogInformation("Getting progress for user {UserId} in program {ProgramId}", request.UserId, request.ProgramId);
 
-    var enrollment = await context.Set<ProgramUser>().Where(pu => pu.ProgramId == request.ProgramId && pu.UserId == request.UserId && pu.IsActive).FirstOrDefaultAsync(cancellationToken);
+    var enrollment = await context.Set<ProgramUser>().Where(pu => pu.ProgramId == request.ProgramId && pu.UserId == request.UserId && pu.IsActive).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
 
     if (enrollment == null) return null;
 
-    var totalContent = await context.Set<ProgramContent>().Where(pc => pc.ProgramId == request.ProgramId && !pc.IsDeleted).CountAsync(cancellationToken);
+    var totalContent = await context.Set<ProgramContent>().Where(pc => pc.ProgramId == request.ProgramId && !pc.IsDeleted).CountAsync(cancellationToken).ConfigureAwait(false);
 
     // Note: This is a simplified implementation. You might want to track actual content completion
     var completedContent = 0; // This would need to be calculated from actual progress tracking
@@ -140,7 +140,7 @@ public sealed class ProgramEnrollmentAndProgressQueryHandlers(IApplicationDbCont
                                 .OrderByDescending(p => p.ProgramWishlists.First(pw => pw.UserId == userGuid).CreatedAt) // Fixed: use converted Guid
                                 .Skip(request.Skip)
                                 .Take(request.Take)
-                                .ToListAsync(cancellationToken);
+                                .ToListAsync(cancellationToken).ConfigureAwait(false);
 
     logger.LogInformation("Found {Count} programs in wishlist for user {UserId}", programs.Count, request.UserId);
 

@@ -53,7 +53,7 @@ public class PermissionAuditService(
             PerformedBy = performedBy,
             PermissionDetails = errorMessage,
             ErrorMessage = errorMessage,
-            Timestamp = DateTime.UtcNow
+            Timestamp = SystemClock.UtcNow
         };
 
         _logger.LogInformation(

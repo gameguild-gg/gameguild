@@ -28,7 +28,7 @@ public class DelegatedAdminController(ISender sender) : BaseApiController
         CancellationToken cancellationToken
     )
     {
-        var result = await sender.Send(command, cancellationToken);
+        var result = await sender.Send(command, cancellationToken).ConfigureAwait(false);
         return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
     }
 
@@ -41,7 +41,7 @@ public class DelegatedAdminController(ISender sender) : BaseApiController
     public async Task<IActionResult> RevokeAdmin(Guid id, CancellationToken cancellationToken)
     {
         var command = new RevokeDelegatedAdminCommand(id);
-        var result = await sender.Send(command, cancellationToken);
+        var result = await sender.Send(command, cancellationToken).ConfigureAwait(false);
 
         if (!result)
             return NotFound();
@@ -58,7 +58,7 @@ public class DelegatedAdminController(ISender sender) : BaseApiController
     public async Task<IActionResult> GetById(Guid id, CancellationToken cancellationToken)
     {
         var query = new GetDelegatedAdminScopeByIdQuery(id);
-        var result = await sender.Send(query, cancellationToken);
+        var result = await sender.Send(query, cancellationToken).ConfigureAwait(false);
 
         if (result == null)
             return NotFound();
@@ -78,7 +78,7 @@ public class DelegatedAdminController(ISender sender) : BaseApiController
     )
     {
         var query = new GetAdminScopesQuery(adminUserId, tenantId);
-        var result = await sender.Send(query, cancellationToken);
+        var result = await sender.Send(query, cancellationToken).ConfigureAwait(false);
         return Ok(result);
     }
 
@@ -94,7 +94,7 @@ public class DelegatedAdminController(ISender sender) : BaseApiController
     )
     {
         var query = new GetManagedUsersQuery(adminUserId, tenantId);
-        var result = await sender.Send(query, cancellationToken);
+        var result = await sender.Send(query, cancellationToken).ConfigureAwait(false);
         return Ok(result);
     }
 
@@ -110,7 +110,7 @@ public class DelegatedAdminController(ISender sender) : BaseApiController
     )
     {
         var query = new GetManagedResourceTypesQuery(adminUserId, tenantId);
-        var result = await sender.Send(query, cancellationToken);
+        var result = await sender.Send(query, cancellationToken).ConfigureAwait(false);
         return Ok(result);
     }
 
@@ -127,7 +127,7 @@ public class DelegatedAdminController(ISender sender) : BaseApiController
     )
     {
         var query = new CanManageUserQuery(adminUserId, targetUserId, tenantId);
-        var result = await sender.Send(query, cancellationToken);
+        var result = await sender.Send(query, cancellationToken).ConfigureAwait(false);
         return Ok(result);
     }
 
@@ -144,7 +144,7 @@ public class DelegatedAdminController(ISender sender) : BaseApiController
     )
     {
         var query = new CanManageResourceQuery(adminUserId, resourceType, tenantId);
-        var result = await sender.Send(query, cancellationToken);
+        var result = await sender.Send(query, cancellationToken).ConfigureAwait(false);
         return Ok(result);
     }
 }

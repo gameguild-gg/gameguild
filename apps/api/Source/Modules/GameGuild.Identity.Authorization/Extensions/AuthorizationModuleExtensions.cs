@@ -349,10 +349,10 @@ public static class AuthorizationModuleExtensions
 internal class TenantPermissionStoreAdapter(ITenantPermissionRepository repository) : ITenantPermissionStore
 {
     public async Task<TenantPermission?> GetPermissionAsync(Guid tenantId, CancellationToken ct = default)
-        => await repository.GetByUserAndTenantAsync(null, tenantId, ct);
+        => await repository.GetByUserAndTenantAsync(null, tenantId, ct).ConfigureAwait(false);
 
     public async Task<IReadOnlyList<TenantPermission>> GetAllPermissionsAsync(Guid tenantId, CancellationToken ct = default)
-        => await repository.GetByTenantAsync(tenantId, ct);
+        => await repository.GetByTenantAsync(tenantId, ct).ConfigureAwait(false);
 }
 
 /// <summary>
@@ -364,7 +364,7 @@ internal class ResourcePermissionStoreAdapter(IResourcePermissionService service
         Guid userId,
         Guid tenantId,
         CancellationToken ct = default)
-        => await service.GetUserResourcesAsync(new CQRS.Models.TenantId(tenantId), userId, null, ct);
+        => await service.GetUserResourcesAsync(new CQRS.Models.TenantId(tenantId), userId, null, ct).ConfigureAwait(false);
 
     public Task<IReadOnlyList<ResourceUserPermission>> GetResourcePermissionsAsync(
         Guid resourceId,

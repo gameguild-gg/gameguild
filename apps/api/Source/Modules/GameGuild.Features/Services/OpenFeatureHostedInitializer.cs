@@ -27,7 +27,7 @@ public class OpenFeatureHostedInitializer : IHostedService
             var api = Api.Instance;
 
             // Wait for the provider to be ready
-            await Task.CompletedTask;
+            await Task.CompletedTask.ConfigureAwait(false);
 
             _logger.LogInformation("OpenFeature initialized successfully");
         }

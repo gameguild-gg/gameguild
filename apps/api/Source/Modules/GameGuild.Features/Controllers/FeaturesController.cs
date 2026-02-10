@@ -1,4 +1,4 @@
-﻿using Asp.Versioning;
+using Asp.Versioning;
 using GameGuild.CQRS;
 
 
@@ -24,7 +24,7 @@ public sealed class FeaturesController(ISender sender, IFeatureFlagManagementSer
     public async Task<IActionResult> GetAll([FromQuery] bool? isEnabled, CancellationToken ct)
     {
         var query = new GetAllFeatureFlagsQuery { IsEnabled = isEnabled };
-        var result = await sender.Send(query, ct);
+        var result = await sender.Send(query, ct).ConfigureAwait(false);
 
         return Ok(result);
     }
@@ -34,7 +34,7 @@ public sealed class FeaturesController(ISender sender, IFeatureFlagManagementSer
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetByKey(string key, CancellationToken ct)
     {
-        var feature = await sender.Send(new GetFeatureFlagByKeyQuery { Key = key }, ct);
+        var feature = await sender.Send(new GetFeatureFlagByKeyQuery { Key = key }, ct).ConfigureAwait(false);
 
         return feature is null ? NotFound() : Ok(feature);
     }
@@ -44,7 +44,7 @@ public sealed class FeaturesController(ISender sender, IFeatureFlagManagementSer
     [ProducesResponseType(typeof(bool), StatusCodes.Status200OK)]
     public async Task<IActionResult> CheckExists(string key, [FromQuery] string? environment, CancellationToken ct)
     {
-        var exists = await sender.Send(new FeatureFlagExistsQuery { Key = key, Environment = environment }, ct);
+        var exists = await sender.Send(new FeatureFlagExistsQuery { Key = key, Environment = environment }, ct).ConfigureAwait(false);
 
         return Ok(exists);
     }
@@ -55,7 +55,7 @@ public sealed class FeaturesController(ISender sender, IFeatureFlagManagementSer
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> Create([FromBody] CreateFeatureRequest body, CancellationToken ct)
     {
-        var id = await sender.Send(new CreateFeatureFlagCommand(body.Key, body.Name, body.Description, body.IsEnabled, body.TenantId), ct);
+        var id = await sender.Send(new CreateFeatureFlagCommand(body.Key, body.Name, body.Description, body.IsEnabled, body.TenantId), ct).ConfigureAwait(false);
 
         // After create, return the feature by key
         return CreatedAtRoute("GetFeatureByKey", new { key = body.Key }, new { id, body.Key, body.Name, body.IsEnabled });
@@ -67,11 +67,11 @@ public sealed class FeaturesController(ISender sender, IFeatureFlagManagementSer
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Update(string key, [FromBody] UpdateFeatureRequest body, CancellationToken ct)
     {
-        var existing = await sender.Send(new GetFeatureFlagByKeyQuery { Key = key }, ct);
+        var existing = await sender.Send(new GetFeatureFlagByKeyQuery { Key = key }, ct).ConfigureAwait(false);
 
         if (existing is null) return NotFound();
 
-        await sender.Send(new UpdateFeatureFlagCommand(existing.Id, body.Name, body.Description, body.IsEnabled, body.RolloutPercentage, body.EnabledValue, body.DefaultValue), ct);
+        await sender.Send(new UpdateFeatureFlagCommand(existing.Id, body.Name, body.Description, body.IsEnabled, body.RolloutPercentage, body.EnabledValue, body.DefaultValue), ct).ConfigureAwait(false);
 
         return NoContent();
     }
@@ -82,11 +82,11 @@ public sealed class FeaturesController(ISender sender, IFeatureFlagManagementSer
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Delete(string key, CancellationToken ct)
     {
-        var existing = await sender.Send(new GetFeatureFlagByKeyQuery { Key = key }, ct);
+        var existing = await sender.Send(new GetFeatureFlagByKeyQuery { Key = key }, ct).ConfigureAwait(false);
 
         if (existing is null) return NotFound();
 
-        await management.DeleteFeatureFlagAsync(existing.Id, ct);
+        await management.DeleteFeatureFlagAsync(existing.Id, ct).ConfigureAwait(false);
 
         return NoContent();
     }
@@ -96,7 +96,7 @@ public sealed class FeaturesController(ISender sender, IFeatureFlagManagementSer
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> Enable(Guid id, CancellationToken ct)
     {
-        await sender.Send(new EnableFeatureFlagCommand(id), ct);
+        await sender.Send(new EnableFeatureFlagCommand(id), ct).ConfigureAwait(false);
 
         return NoContent();
     }
@@ -106,7 +106,7 @@ public sealed class FeaturesController(ISender sender, IFeatureFlagManagementSer
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> Disable(Guid id, CancellationToken ct)
     {
-        await sender.Send(new DisableFeatureFlagCommand(id), ct);
+        await sender.Send(new DisableFeatureFlagCommand(id), ct).ConfigureAwait(false);
 
         return NoContent();
     }
@@ -116,7 +116,7 @@ public sealed class FeaturesController(ISender sender, IFeatureFlagManagementSer
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> Toggle(Guid id, [FromBody] ToggleFeatureRequest body, CancellationToken ct)
     {
-        await sender.Send(new ToggleFeatureFlagCommand(id, body.IsEnabled), ct);
+        await sender.Send(new ToggleFeatureFlagCommand(id, body.IsEnabled), ct).ConfigureAwait(false);
 
         return NoContent();
     }

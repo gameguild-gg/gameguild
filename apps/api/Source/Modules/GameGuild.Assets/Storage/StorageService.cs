@@ -176,7 +176,7 @@ public class S3StorageService : IStorageService
         };
 
         request.Metadata.Add("content-hash", contentHash);
-        request.Metadata.Add("uploaded-at", DateTime.UtcNow.ToString("O"));
+        request.Metadata.Add("uploaded-at", SystemClock.UtcNow.ToString("O"));
 
         await _s3Client.PutObjectAsync(request, ct).ConfigureAwait(false);
 
@@ -272,7 +272,7 @@ public class S3StorageService : IStorageService
         {
             BucketName = bucketName,
             Key = objectKey,
-            Expires = DateTime.UtcNow.Add(expiry),
+            Expires = SystemClock.UtcNow.Add(expiry),
             Verb = isDownload ? Amazon.S3.HttpVerb.GET : Amazon.S3.HttpVerb.PUT
         };
 
@@ -375,7 +375,7 @@ public class S3StorageService : IStorageService
             request.Metadata.Add(key, value);
         }
 
-        request.Metadata.Add("quarantined-at", DateTime.UtcNow.ToString("O"));
+        request.Metadata.Add("quarantined-at", SystemClock.UtcNow.ToString("O"));
 
         await _s3Client.PutObjectAsync(request, ct).ConfigureAwait(false);
     }

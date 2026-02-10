@@ -42,7 +42,7 @@ public class RecommendationsController(IRecommendationService recommendationServ
     {
         var userId = GetRequiredUserId();
         var recommendations = await recommendationService.GetUserRecommendationsAsync(
-            userId, tenantId, type, includeViewed, skip, take);
+            userId, tenantId, type, includeViewed, skip, take).ConfigureAwait(false);
         return Ok(recommendations.Select(r => r.ToDto()));
     }
 
@@ -57,7 +57,7 @@ public class RecommendationsController(IRecommendationService recommendationServ
     {
         var userId = GetRequiredUserId();
         var recommendations = await recommendationService.GenerateRecommendationsAsync(
-            userId, tenantId, maxResults);
+            userId, tenantId, maxResults).ConfigureAwait(false);
         return Ok(recommendations.Select(r => r.ToDto()));
     }
 
@@ -69,7 +69,7 @@ public class RecommendationsController(IRecommendationService recommendationServ
     public async Task<ActionResult> MarkRecommendationViewed(Guid id)
     {
         var userId = GetRequiredUserId();
-        await recommendationService.MarkRecommendationViewedAsync(id, userId);
+        await recommendationService.MarkRecommendationViewedAsync(id, userId).ConfigureAwait(false);
         return NoContent();
     }
 
@@ -81,7 +81,7 @@ public class RecommendationsController(IRecommendationService recommendationServ
     public async Task<ActionResult> DismissRecommendation(Guid id)
     {
         var userId = GetRequiredUserId();
-        await recommendationService.DismissRecommendationAsync(id, userId);
+        await recommendationService.DismissRecommendationAsync(id, userId).ConfigureAwait(false);
         return NoContent();
     }
 
@@ -94,7 +94,7 @@ public class RecommendationsController(IRecommendationService recommendationServ
         [FromQuery] Guid? tenantId = null)
     {
         var userId = GetRequiredUserId();
-        await recommendationService.RefreshRecommendationsAsync(userId, tenantId);
+        await recommendationService.RefreshRecommendationsAsync(userId, tenantId).ConfigureAwait(false);
         return NoContent();
     }
 
@@ -106,7 +106,7 @@ public class RecommendationsController(IRecommendationService recommendationServ
     public async Task<ActionResult<RecommendationStatisticsDto>> GetMyStatistics()
     {
         var userId = GetRequiredUserId();
-        var stats = await recommendationService.GetStatisticsAsync(userId);
+        var stats = await recommendationService.GetStatisticsAsync(userId).ConfigureAwait(false);
         return Ok(stats);
     }
 
@@ -120,7 +120,7 @@ public class RecommendationsController(IRecommendationService recommendationServ
     public async Task<ActionResult<UserLearningProfileDto>> GetMyProfile()
     {
         var userId = GetRequiredUserId();
-        var profile = await recommendationService.GetOrCreateUserProfileAsync(userId);
+        var profile = await recommendationService.GetOrCreateUserProfileAsync(userId).ConfigureAwait(false);
         return Ok(profile.ToDto());
     }
 
@@ -135,7 +135,7 @@ public class RecommendationsController(IRecommendationService recommendationServ
         if (!ModelState.IsValid) return BadRequest(ModelState);
 
         var userId = GetRequiredUserId();
-        var profile = await recommendationService.UpdateUserProfileAsync(userId, dto);
+        var profile = await recommendationService.UpdateUserProfileAsync(userId, dto).ConfigureAwait(false);
         return Ok(profile.ToDto());
     }
 
@@ -153,7 +153,7 @@ public class RecommendationsController(IRecommendationService recommendationServ
         }
 
         var userId = GetRequiredUserId();
-        var profile = await recommendationService.AddSkillToProfileAsync(userId, request.Skill);
+        var profile = await recommendationService.AddSkillToProfileAsync(userId, request.Skill).ConfigureAwait(false);
         return Ok(profile.ToDto());
     }
 
@@ -166,7 +166,7 @@ public class RecommendationsController(IRecommendationService recommendationServ
         string skill)
     {
         var userId = GetRequiredUserId();
-        var profile = await recommendationService.RemoveSkillFromProfileAsync(userId, skill);
+        var profile = await recommendationService.RemoveSkillFromProfileAsync(userId, skill).ConfigureAwait(false);
         return Ok(profile.ToDto());
     }
 
@@ -182,7 +182,7 @@ public class RecommendationsController(IRecommendationService recommendationServ
         [FromQuery] int skip = 0,
         [FromQuery] int take = 10)
     {
-        var courses = await recommendationService.GetPopularCoursesAsync(tenantId, category, skip, take);
+        var courses = await recommendationService.GetPopularCoursesAsync(tenantId, category, skip, take).ConfigureAwait(false);
         return Ok(courses);
     }
 
@@ -196,7 +196,7 @@ public class RecommendationsController(IRecommendationService recommendationServ
         [FromQuery] int skip = 0,
         [FromQuery] int take = 10)
     {
-        var courses = await recommendationService.GetTrendingCoursesAsync(tenantId, daysWindow, skip, take);
+        var courses = await recommendationService.GetTrendingCoursesAsync(tenantId, daysWindow, skip, take).ConfigureAwait(false);
         return Ok(courses);
     }
 
@@ -209,7 +209,7 @@ public class RecommendationsController(IRecommendationService recommendationServ
         [FromQuery] Guid? tenantId = null,
         [FromQuery] int maxResults = 5)
     {
-        var courses = await recommendationService.GetSimilarCoursesAsync(courseId, tenantId, maxResults);
+        var courses = await recommendationService.GetSimilarCoursesAsync(courseId, tenantId, maxResults).ConfigureAwait(false);
         return Ok(courses);
     }
 }

@@ -30,7 +30,7 @@ public class BehavioralAnalysisService(
         {
             var analysisWindow = configuration.GetValue(
                 "Authentication:Anomaly:BehavioralAnalysisWindowDays", DefaultBehavioralAnalysisWindowDays);
-            var since = DateTime.UtcNow.AddDays(-analysisWindow);
+            var since = SystemClock.UtcNow.AddDays(-analysisWindow);
             var historicalAttempts = await authAttemptRepository
                 .GetRecentAttemptsAsync(userId, since, limit: 1000, cancellationToken: default)
                 .ConfigureAwait(false);
@@ -83,7 +83,7 @@ public class BehavioralAnalysisService(
                 .Select(g => new { Hour = g.Key, Count = g.Count() })
                 .ToList();
 
-            var currentHour = DateTime.UtcNow.Hour;
+            var currentHour = SystemClock.UtcNow.Hour;
             var typicalHours = hourlyPattern
                 .Where(h => h.Count >= successfulAttempts.Count * 0.1)
                 .Select(h => h.Hour)

@@ -29,7 +29,7 @@ public sealed class MfaController(IMfaService mfaService) : AuthControllerBase
     public async Task<IActionResult> GetMfaConfiguration(CancellationToken ct)
     {
         var userId = GetCurrentUserId();
-        MfaConfigurationResponse configuration = await mfaService.GetMfaConfigurationAsync(userId);
+        MfaConfigurationResponse configuration = await mfaService.GetMfaConfigurationAsync(userId).ConfigureAwait(false);
 
         return Ok(configuration);
     }
@@ -53,7 +53,7 @@ public sealed class MfaController(IMfaService mfaService) : AuthControllerBase
     {
         var userId = GetCurrentUserId();
         var userEmail = GetCurrentUserEmail();
-        var result = await mfaService.InitiateMfaSetupAsync(userId, userEmail);
+        var result = await mfaService.InitiateMfaSetupAsync(userId, userEmail).ConfigureAwait(false);
 
         if (!result.Success)
         {
@@ -84,7 +84,7 @@ public sealed class MfaController(IMfaService mfaService) : AuthControllerBase
     {
         ArgumentNullException.ThrowIfNull(body);
         var userId = GetCurrentUserId();
-        var result = await mfaService.CompleteMfaSetupAsync(userId, body.Code);
+        var result = await mfaService.CompleteMfaSetupAsync(userId, body.Code).ConfigureAwait(false);
 
         if (!result.Success)
         {
@@ -113,7 +113,7 @@ public sealed class MfaController(IMfaService mfaService) : AuthControllerBase
     public async Task<IActionResult> VerifyMfa([FromBody] VerifyMfaRequest body, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(body);
-        var result = await mfaService.VerifyMfaAsync(body.UserId, body.Code, body.Method);
+        var result = await mfaService.VerifyMfaAsync(body.UserId, body.Code, body.Method).ConfigureAwait(false);
 
         if (!result.Success)
         {
@@ -140,7 +140,7 @@ public sealed class MfaController(IMfaService mfaService) : AuthControllerBase
     public async Task<IActionResult> GetBackupCodes(CancellationToken ct)
     {
         var userId = GetCurrentUserId();
-        var configuration = await mfaService.GetMfaConfigurationAsync(userId, ct);
+        var configuration = await mfaService.GetMfaConfigurationAsync(userId, ct).ConfigureAwait(false);
 
         return Ok(new BackupCodesStatusResponse
         {
@@ -164,12 +164,12 @@ public sealed class MfaController(IMfaService mfaService) : AuthControllerBase
     public async Task<IActionResult> RegenerateBackupCodes(CancellationToken ct)
     {
         var userId = GetCurrentUserId();
-        var backupCodes = await mfaService.GenerateBackupCodesAsync(userId);
+        var backupCodes = await mfaService.GenerateBackupCodesAsync(userId).ConfigureAwait(false);
 
         return Ok(new BackupCodesResponse
         {
             Codes = [.. backupCodes],
-            GeneratedAt = DateTime.UtcNow
+            GeneratedAt = SystemClock.UtcNow
         });
     }
 
@@ -250,7 +250,7 @@ public sealed class MfaController(IMfaService mfaService) : AuthControllerBase
     public async Task<IActionResult> ListMfaMethods(CancellationToken ct)
     {
         var userId = GetCurrentUserId();
-        var configuration = await mfaService.GetMfaConfigurationAsync(userId, ct);
+        var configuration = await mfaService.GetMfaConfigurationAsync(userId, ct).ConfigureAwait(false);
 
         var enabledMethods = configuration.EnabledMethods ?? [];
 
@@ -333,7 +333,7 @@ public sealed class MfaController(IMfaService mfaService) : AuthControllerBase
     {
         ArgumentNullException.ThrowIfNull(body);
         var userId = GetCurrentUserId();
-        var result = await mfaService.DisableMfaAsync(userId, body.Password);
+        var result = await mfaService.DisableMfaAsync(userId, body.Password).ConfigureAwait(false);
 
         if (!result)
         {

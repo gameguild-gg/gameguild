@@ -38,10 +38,10 @@ public class Web3Challenge
     /// <summary>
     ///     Gets whether the challenge is still valid (not expired).
     /// </summary>
-    public bool IsValid { get => DateTime.UtcNow < ExpiresAt; }
+    public bool IsValid { get => SystemClock.UtcNow < ExpiresAt; }
 
     /// <summary>
     ///     Gets the number of seconds until expiration.
     /// </summary>
-    public int SecondsUntilExpiration { get => Math.Max(0, (int) (ExpiresAt - DateTime.UtcNow).TotalSeconds); }
+    public int SecondsUntilExpiration { get => Math.Max(0, (int) (ExpiresAt - SystemClock.UtcNow).TotalSeconds); }
 }

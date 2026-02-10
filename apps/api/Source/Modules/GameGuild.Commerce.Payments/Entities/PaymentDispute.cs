@@ -108,7 +108,7 @@ public class PaymentDispute : EntityBase
         Status = DisputeStatus.Resolved;
         Resolution = resolution;
         ResolutionNotes = notes;
-        ResolvedAt = DateTime.UtcNow;
+        ResolvedAt = SystemClock.UtcNow;
         ResolvedBy = resolvedBy;
     }
 
@@ -133,6 +133,6 @@ public class PaymentDispute : EntityBase
 
         Status = DisputeStatus.Cancelled;
         ResolutionNotes = reason;
-        ResolvedAt = DateTime.UtcNow;
+        ResolvedAt = SystemClock.UtcNow;
     }
 }

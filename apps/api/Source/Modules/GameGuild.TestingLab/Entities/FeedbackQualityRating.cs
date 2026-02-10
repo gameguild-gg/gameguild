@@ -75,6 +75,6 @@ public class FeedbackQualityRating : EntityBase
 
         QualityRating = rating;
         Reason = reason;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 }

@@ -32,7 +32,7 @@ public class ApiKeyController : BaseApiController
         [FromBody] CreateApiKeyCommand command,
         CancellationToken cancellationToken)
     {
-        var result = await _dispatcher.Send(command, cancellationToken);
+        var result = await _dispatcher.Send(command, cancellationToken).ConfigureAwait(false);
         return result.IsSuccess
             ? Ok(result.Value)
             : BadRequest(new { error = result.Error });
@@ -46,7 +46,7 @@ public class ApiKeyController : BaseApiController
     [ProducesResponseType(typeof(List<ApiKeyDto>), StatusCodes.Status200OK)]
     public async Task<IActionResult> ListApiKeys(CancellationToken cancellationToken)
     {
-        var result = await _dispatcher.Send(new ListApiKeysQuery(), cancellationToken);
+        var result = await _dispatcher.Send(new ListApiKeysQuery(), cancellationToken).ConfigureAwait(false);
         return result.IsSuccess
             ? Ok(result.Value)
             : BadRequest(new { error = result.Error });
@@ -70,7 +70,7 @@ public class ApiKeyController : BaseApiController
             Reason = request?.Reason
         };
 
-        var result = await _dispatcher.Send(command, cancellationToken);
+        var result = await _dispatcher.Send(command, cancellationToken).ConfigureAwait(false);
         return result.IsSuccess
             ? Ok(new { message = "API key revoked successfully" })
             : BadRequest(new { error = result.Error });

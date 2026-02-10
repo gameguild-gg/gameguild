@@ -131,43 +131,6 @@ internal class MediatorSender : ISender
         throw new InvalidOperationException($"No handler found for request type {requestType}");
     }
 
-    // ── CreateStream ───────────────────────────────────────────────────────
-
-    /// <summary>
-    ///     Create a stream via a single stream handler.
-    /// </summary>
-    public IAsyncEnumerable<TResponse> CreateStream<TResponse>(IStream<TResponse> request, CancellationToken cancellationToken = default)
-    {
-        ArgumentNullException.ThrowIfNull(request);
-        return CreateStreamCore(request, cancellationToken);
-    }
-
-    private async IAsyncEnumerable<TResponse> CreateStreamCore<TResponse>(
-        IStream<TResponse> request,
-        [EnumeratorCancellation] CancellationToken cancellationToken)
-    {
-        var requestType = request.GetType();
-        var handlerType = typeof(IStreamRequestHandler<,>).MakeGenericType(requestType, typeof(TResponse));
-        var handler = GetHandler(handlerType);
-
-        var method = s_handleMethodCache.GetOrAdd(handlerType, static ht =>
-            ht.GetMethod("Handle")
-            ?? throw new InvalidOperationException($"Handler method not found for {ht}"));
-
-        var compiledInvoker = ExpressionTreeCompiler.GetOrCompile(method);
-        var invokeResult = compiledInvoker(handler, [request, cancellationToken]);
-
-        // The compiled invoker wraps the call; for IAsyncEnumerable the raw result is not a Task,
-        // so we extract the synchronous result from the wrapper
-        var rawResult = invokeResult.IsCompletedSuccessfully ? invokeResult.Result : await invokeResult.ConfigureAwait(false);
-
-        if (rawResult is not IAsyncEnumerable<TResponse> stream)
-            throw new InvalidOperationException($"Handler returned unexpected type: {rawResult?.GetType()}");
-
-        await foreach (var item in stream.WithCancellation(cancellationToken).ConfigureAwait(false))
-            yield return item;
-    }
-
     // ── Shared pipeline infrastructure ─────────────────────────────────────
 
     /// <summary>
@@ -239,6 +202,10 @@ internal class MediatorSender : ISender
 
         var compiledInvoker = ExpressionTreeCompiler.GetOrCompile(handleMethod);
         var result = await compiledInvoker(behavior, [request, next, cancellationToken]).ConfigureAwait(false);
+
+        // Handle null results: nullable TResponse (e.g. Tenant?) returns null legitimately
+        if (result is null)
+            return default!;
 
         if (result is TResponse typedResult)
             return typedResult;

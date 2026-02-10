@@ -23,7 +23,7 @@ public class TestingSessionsController(
     [RequireResourcePermission<TestingSessionPermission, TestingSession>(PermissionType.Read)]
     public async Task<ActionResult<IEnumerable<TestingSession>>> GetTestingSessions([FromQuery] int skip = 0, [FromQuery] int take = 50)
     {
-        var sessions = await sessionService.GetTestingSessionsAsync(skip, take);
+        var sessions = await sessionService.GetTestingSessionsAsync(skip, take).ConfigureAwait(false);
         return Ok(sessions);
     }
 
@@ -32,7 +32,7 @@ public class TestingSessionsController(
     [RequireResourcePermission<TestingSessionPermission, TestingSession>(PermissionType.Read)]
     public async Task<ActionResult<TestingSession>> GetTestingSession(Guid id)
     {
-        var session = await sessionService.GetTestingSessionByIdAsync(id);
+        var session = await sessionService.GetTestingSessionByIdAsync(id).ConfigureAwait(false);
         if (session == null) return NotFound();
         return Ok(session);
     }
@@ -42,7 +42,7 @@ public class TestingSessionsController(
     [RequireResourcePermission<TestingSessionPermission, TestingSession>(PermissionType.Read)]
     public async Task<ActionResult<TestingSession>> GetTestingSessionWithDetails(Guid id)
     {
-        var session = await sessionService.GetTestingSessionByIdWithDetailsAsync(id);
+        var session = await sessionService.GetTestingSessionByIdWithDetailsAsync(id).ConfigureAwait(false);
         if (session == null) return NotFound();
         return Ok(session);
     }
@@ -57,7 +57,7 @@ public class TestingSessionsController(
             return Unauthorized("User ID not found in token");
 
         session.CreatedById = userId.Value;
-        var createdSession = await sessionService.CreateTestingSessionAsync(session);
+        var createdSession = await sessionService.CreateTestingSessionAsync(session).ConfigureAwait(false);
 
         return CreatedAtAction(nameof(GetTestingSession), new { id = createdSession.Id }, createdSession);
     }
@@ -71,7 +71,7 @@ public class TestingSessionsController(
 
         try
         {
-            var updatedSession = await sessionService.UpdateTestingSessionAsync(session);
+            var updatedSession = await sessionService.UpdateTestingSessionAsync(session).ConfigureAwait(false);
             return Ok(updatedSession);
         }
         catch (InvalidOperationException ex)
@@ -86,7 +86,7 @@ public class TestingSessionsController(
     [RequireResourcePermission<TestingSessionPermission, TestingSession>(PermissionType.Delete)]
     public async Task<ActionResult> DeleteTestingSession(Guid id)
     {
-        var result = await sessionService.DeleteTestingSessionAsync(id);
+        var result = await sessionService.DeleteTestingSessionAsync(id).ConfigureAwait(false);
         if (!result) return NotFound();
         return NoContent();
     }
@@ -96,7 +96,7 @@ public class TestingSessionsController(
     [RequireResourcePermission<TestingSessionPermission, TestingSession>(PermissionType.Edit)]
     public async Task<ActionResult> RestoreTestingSession(Guid id)
     {
-        var result = await sessionService.RestoreTestingSessionAsync(id);
+        var result = await sessionService.RestoreTestingSessionAsync(id).ConfigureAwait(false);
         if (!result) return NotFound();
         return Ok();
     }
@@ -109,7 +109,7 @@ public class TestingSessionsController(
     [AllowAnonymous]
     public async Task<ActionResult<IEnumerable<TestingSession>>> GetPublicTestingSessions([FromQuery] int take = 100)
     {
-        var sessions = await sessionService.GetPublicTestingSessionsAsync(take);
+        var sessions = await sessionService.GetPublicTestingSessionsAsync(take).ConfigureAwait(false);
         return Ok(sessions);
     }
 
@@ -118,7 +118,7 @@ public class TestingSessionsController(
     [RequireResourcePermission<TestingSessionPermission, TestingSession>(PermissionType.Read)]
     public async Task<ActionResult<IEnumerable<TestingSession>>> GetTestingSessionsByRequest(Guid testingRequestId)
     {
-        var sessions = await sessionService.GetTestingSessionsByRequestAsync(testingRequestId);
+        var sessions = await sessionService.GetTestingSessionsByRequestAsync(testingRequestId).ConfigureAwait(false);
         return Ok(sessions);
     }
 
@@ -127,7 +127,7 @@ public class TestingSessionsController(
     [RequireResourcePermission<TestingSessionPermission, TestingSession>(PermissionType.Read)]
     public async Task<ActionResult<IEnumerable<TestingSession>>> GetTestingSessionsByLocation(Guid locationId)
     {
-        var sessions = await sessionService.GetTestingSessionsByLocationAsync(locationId);
+        var sessions = await sessionService.GetTestingSessionsByLocationAsync(locationId).ConfigureAwait(false);
         return Ok(sessions);
     }
 
@@ -136,7 +136,7 @@ public class TestingSessionsController(
     [RequireResourcePermission<TestingSessionPermission, TestingSession>(PermissionType.Read)]
     public async Task<ActionResult<IEnumerable<TestingSession>>> GetTestingSessionsByStatus(SessionStatus status)
     {
-        var sessions = await sessionService.GetTestingSessionsByStatusAsync(status);
+        var sessions = await sessionService.GetTestingSessionsByStatusAsync(status).ConfigureAwait(false);
         return Ok(sessions);
     }
 
@@ -145,7 +145,7 @@ public class TestingSessionsController(
     [RequireResourcePermission<TestingSessionPermission, TestingSession>(PermissionType.Read)]
     public async Task<ActionResult<IEnumerable<TestingSession>>> GetTestingSessionsByManager(Guid managerId)
     {
-        var sessions = await sessionService.GetTestingSessionsByManagerAsync(managerId);
+        var sessions = await sessionService.GetTestingSessionsByManagerAsync(managerId).ConfigureAwait(false);
         return Ok(sessions);
     }
 
@@ -156,7 +156,7 @@ public class TestingSessionsController(
     {
         if (string.IsNullOrWhiteSpace(searchTerm)) return BadRequest("Search term is required");
 
-        var sessions = await sessionService.SearchTestingSessionsAsync(searchTerm);
+        var sessions = await sessionService.SearchTestingSessionsAsync(searchTerm).ConfigureAwait(false);
         return Ok(sessions);
     }
 
@@ -165,7 +165,7 @@ public class TestingSessionsController(
     [RequireResourcePermission<TestingSessionPermission, TestingSession>(PermissionType.Read, "sessionId")]
     public async Task<ActionResult<object>> GetTestingSessionStatistics(Guid sessionId)
     {
-        var statistics = await sessionService.GetTestingSessionStatisticsAsync(sessionId);
+        var statistics = await sessionService.GetTestingSessionStatisticsAsync(sessionId).ConfigureAwait(false);
         return Ok(statistics);
     }
 
@@ -174,7 +174,7 @@ public class TestingSessionsController(
     [RequireResourcePermission<SessionRegistrationPermission, SessionRegistration>(PermissionType.Read)]
     public async Task<ActionResult<object>> GetSessionAttendanceReport()
     {
-        var report = await sessionService.GetSessionAttendanceReportAsync();
+        var report = await sessionService.GetSessionAttendanceReportAsync().ConfigureAwait(false);
         return Ok(report);
     }
 
@@ -187,7 +187,7 @@ public class TestingSessionsController(
         if (currentUserId == null)
             return Unauthorized("User ID not found in token");
 
-        await sessionService.UpdateSessionAttendanceAsync(sessionId, attendanceDto.UserId, attendanceDto.AttendanceStatus, currentUserId.Value);
+        await sessionService.UpdateSessionAttendanceAsync(sessionId, attendanceDto.UserId, attendanceDto.AttendanceStatus, currentUserId.Value).ConfigureAwait(false);
 
         return Ok(new { message = "Attendance updated successfully" });
     }

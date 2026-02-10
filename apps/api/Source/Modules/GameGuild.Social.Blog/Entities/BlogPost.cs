@@ -46,18 +46,18 @@ public class BlogPost : EntityBase
     public void Publish()
     {
         Status = BlogPostStatus.Published;
-        PublishedAt = DateTime.UtcNow;
-        UpdatedAt = DateTime.UtcNow;
+        PublishedAt = SystemClock.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     public void Unpublish()
     {
         Status = BlogPostStatus.Draft;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
-    public void Feature() { IsFeatured = true; UpdatedAt = DateTime.UtcNow; }
-    public void Unfeature() { IsFeatured = false; UpdatedAt = DateTime.UtcNow; }
+    public void Feature() { IsFeatured = true; UpdatedAt = SystemClock.UtcNow; }
+    public void Unfeature() { IsFeatured = false; UpdatedAt = SystemClock.UtcNow; }
     public void IncrementViews() => ViewsCount++;
     public void IncrementLikes() => LikesCount++;
     public void DecrementLikes() { if (LikesCount > 0) LikesCount--; }

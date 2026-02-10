@@ -129,7 +129,7 @@ public class ProductPricingVersion : EntityBase
         ProductPricing pricing,
         Guid? createdByUserId = null)
     {
-        return Create(pricing, 1, DateTime.UtcNow, "Initial pricing", createdByUserId);
+        return Create(pricing, 1, SystemClock.UtcNow, "Initial pricing", createdByUserId);
     }
 
     /// <summary>

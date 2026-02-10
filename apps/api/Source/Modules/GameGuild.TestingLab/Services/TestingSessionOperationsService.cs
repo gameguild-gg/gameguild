@@ -157,7 +157,7 @@ public class TestingSessionOperationsService(IApplicationDbContext context) : IT
 
     public async Task<IEnumerable<TestingSession>> GetPublicTestingSessionsAsync(int take = 100)
     {
-        var now = DateTime.UtcNow;
+        var now = SystemClock.UtcNow;
         var graceWindow = now.AddHours(-2);
 
         return await context.TestingSessions
@@ -220,7 +220,7 @@ public class TestingSessionOperationsService(IApplicationDbContext context) : IT
 
         registration.AttendanceStatus = status;
 
-        if (status == AttendanceStatus.Completed) { registration.AttendedAt = DateTime.UtcNow; }
+        if (status == AttendanceStatus.Completed) { registration.AttendedAt = SystemClock.UtcNow; }
 
         await context.SaveChangesAsync().ConfigureAwait(false);
     }

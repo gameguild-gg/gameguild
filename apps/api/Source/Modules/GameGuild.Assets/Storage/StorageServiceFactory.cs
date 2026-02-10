@@ -226,7 +226,7 @@ public class StorageServiceFactory : IStorageServiceFactory
         string bucketName,
         CancellationToken ct = default)
     {
-        var startTime = DateTime.UtcNow;
+        var startTime = SystemClock.UtcNow;
         
         try
         {
@@ -280,7 +280,7 @@ public class StorageServiceFactory : IStorageServiceFactory
                 }
             }
 
-            var latency = DateTime.UtcNow - startTime;
+            var latency = SystemClock.UtcNow - startTime;
 
             return new StorageTestResult(
                 Success: canWrite && canRead,

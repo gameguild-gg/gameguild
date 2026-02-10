@@ -45,7 +45,7 @@ public class RecommendationEngine : IRecommendationEngine
             .AsNoTracking()
             .Where(r => r.UserId == userId)
             .Where(r => !r.IsDismissed)
-            .Where(r => r.ExpiresAt > DateTime.UtcNow)
+            .Where(r => r.ExpiresAt > SystemClock.UtcNow)
             .ToListAsync(cancellationToken).ConfigureAwait(false);
 
         var existingCourseIds = existingRecommendations.Select(r => r.CourseId).ToHashSet();
@@ -123,7 +123,7 @@ public class RecommendationEngine : IRecommendationEngine
         // Mark expired recommendations as dismissed
         var expiredRecommendations = await _context.Set<CourseRecommendation>()
             .Where(r => r.UserId == userId)
-            .Where(r => r.ExpiresAt <= DateTime.UtcNow)
+            .Where(r => r.ExpiresAt <= SystemClock.UtcNow)
             .Where(r => !r.IsDismissed)
             .ToListAsync(cancellationToken).ConfigureAwait(false);
 
@@ -151,7 +151,7 @@ public class RecommendationEngine : IRecommendationEngine
             .ToListAsync(cancellationToken).ConfigureAwait(false);
 
         // Get recently dismissed recommendations (within 30 days)
-        var dismissedCutoff = DateTime.UtcNow.AddDays(-30);
+        var dismissedCutoff = SystemClock.UtcNow.AddDays(-30);
         var dismissedCourseIds = await _context.Set<CourseRecommendation>()
             .AsNoTracking()
             .Where(r => r.UserId == userId)

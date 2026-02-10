@@ -31,7 +31,7 @@ public class JitElevationRequestRepository(DbContext context) : IJitElevationReq
         CancellationToken cancellationToken = default
     )
     {
-        request.UpdatedAt = DateTime.UtcNow;
+        request.UpdatedAt = SystemClock.UtcNow;
         DbSet.Update(request);
         await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
     }
@@ -79,7 +79,7 @@ public class JitElevationRequestRepository(DbContext context) : IJitElevationReq
         CancellationToken cancellationToken = default
     )
     {
-        var now = DateTime.UtcNow;
+        var now = SystemClock.UtcNow;
         var query = DbSet.Where(r =>
             r.RequesterId == userId &&
             r.Status == ElevationRequestStatus.Active &&
@@ -96,7 +96,7 @@ public class JitElevationRequestRepository(DbContext context) : IJitElevationReq
         CancellationToken cancellationToken = default
     )
     {
-        var now = DateTime.UtcNow;
+        var now = SystemClock.UtcNow;
         return await DbSet
             .Where(r => r.Status == ElevationRequestStatus.Active && r.ExpiresAt <= now)
             .ToListAsync(cancellationToken).ConfigureAwait(false);
@@ -131,7 +131,7 @@ public class PermissionDelegationRepository(DbContext context) : IPermissionDele
         CancellationToken cancellationToken = default
     )
     {
-        delegation.UpdatedAt = DateTime.UtcNow;
+        delegation.UpdatedAt = SystemClock.UtcNow;
         DbSet.Update(delegation);
         await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
     }
@@ -166,7 +166,7 @@ public class PermissionDelegationRepository(DbContext context) : IPermissionDele
         CancellationToken cancellationToken = default
     )
     {
-        var now = DateTime.UtcNow;
+        var now = SystemClock.UtcNow;
         var query = DbSet.Where(d =>
             d.DelegateUserId == delegateUserId &&
             d.IsActive &&
@@ -184,7 +184,7 @@ public class PermissionDelegationRepository(DbContext context) : IPermissionDele
         CancellationToken cancellationToken = default
     )
     {
-        var now = DateTime.UtcNow;
+        var now = SystemClock.UtcNow;
         return await DbSet
             .Where(d => d.IsActive && d.ExpiresAt != null && d.ExpiresAt <= now)
             .ToListAsync(cancellationToken).ConfigureAwait(false);
@@ -219,7 +219,7 @@ public class SoDRuleRepository(DbContext context) : ISoDRuleRepository
         CancellationToken cancellationToken = default
     )
     {
-        rule.UpdatedAt = DateTime.UtcNow;
+        rule.UpdatedAt = SystemClock.UtcNow;
         DbSet.Update(rule);
         await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         return rule;
@@ -289,7 +289,7 @@ public class SoDViolationRepository(DbContext context) : ISoDViolationRepository
         CancellationToken cancellationToken = default
     )
     {
-        violation.UpdatedAt = DateTime.UtcNow;
+        violation.UpdatedAt = SystemClock.UtcNow;
         DbSet.Update(violation);
         await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
     }
@@ -367,7 +367,7 @@ public class AccessReviewCampaignRepository(DbContext context) : IAccessReviewCa
         CancellationToken cancellationToken = default
     )
     {
-        campaign.UpdatedAt = DateTime.UtcNow;
+        campaign.UpdatedAt = SystemClock.UtcNow;
         DbSet.Update(campaign);
         await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
     }
@@ -399,7 +399,7 @@ public class AccessReviewCampaignRepository(DbContext context) : IAccessReviewCa
         CancellationToken cancellationToken = default
     )
     {
-        var now = DateTime.UtcNow;
+        var now = SystemClock.UtcNow;
         var query = DbSet.Where(c =>
             c.Status == AccessReviewStatus.InProgress &&
             c.StartDate <= now &&
@@ -416,7 +416,7 @@ public class AccessReviewCampaignRepository(DbContext context) : IAccessReviewCa
         CancellationToken cancellationToken = default
     )
     {
-        var now = DateTime.UtcNow;
+        var now = SystemClock.UtcNow;
         return await DbSet
             .Where(c => c.Status == AccessReviewStatus.InProgress && c.EndDate >= now)
             .ToListAsync(cancellationToken).ConfigureAwait(false);
@@ -451,7 +451,7 @@ public class AccessReviewItemRepository(DbContext context) : IAccessReviewItemRe
         CancellationToken cancellationToken = default
     )
     {
-        item.UpdatedAt = DateTime.UtcNow;
+        item.UpdatedAt = SystemClock.UtcNow;
         DbSet.Update(item);
         await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
     }
@@ -516,7 +516,7 @@ public class DelegatedAdminScopeRepository(DbContext context) : IDelegatedAdminS
         CancellationToken cancellationToken = default
     )
     {
-        scope.UpdatedAt = DateTime.UtcNow;
+        scope.UpdatedAt = SystemClock.UtcNow;
         DbSet.Update(scope);
         await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
     }

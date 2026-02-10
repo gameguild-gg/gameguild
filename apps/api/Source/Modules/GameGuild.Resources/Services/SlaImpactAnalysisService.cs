@@ -31,7 +31,7 @@ public class SlaImpactAnalysisService(
         {
             ResourceQuotaId = resourceQuotaId,
             UserId = userId,
-            ViolationStartTime = DateTime.UtcNow,
+            ViolationStartTime = SystemClock.UtcNow,
             ViolationType = violationType,
             Severity = severity,
             ExpectedValue = expectedValue,
@@ -197,7 +197,7 @@ public class SlaImpactAnalysisService(
 
         var violationHours = violationsList.Sum(v =>
             {
-                var endTime = v.ViolationEndTime ?? DateTime.UtcNow;
+                var endTime = v.ViolationEndTime ?? SystemClock.UtcNow;
 
                 return (endTime - v.ViolationStartTime).TotalHours;
             }
@@ -226,8 +226,8 @@ public class SlaImpactAnalysisService(
     {
         if (!tenantId.HasValue) { throw new ArgumentException("TenantId is required", nameof(tenantId)); }
 
-        var from = fromDate ?? DateTime.UtcNow.AddMonths(-1);
-        var to = toDate ?? DateTime.UtcNow;
+        var from = fromDate ?? SystemClock.UtcNow.AddMonths(-1);
+        var to = toDate ?? SystemClock.UtcNow;
 
         var stringCounts = await analysisRepository.GetViolationCountsByTypeAsync(tenantId.Value, from, to, cancellationToken).ConfigureAwait(false);
 

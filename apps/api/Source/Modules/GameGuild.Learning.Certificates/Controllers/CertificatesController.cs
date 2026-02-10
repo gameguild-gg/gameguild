@@ -42,7 +42,7 @@ public class CertificatesController : BaseApiController
             return Unauthorized();
         }
 
-        var certificates = await _certificateService.GetUserCertificatesAsync(actor.SubjectIdAsGuid.Value, actor.TenantId);
+        var certificates = await _certificateService.GetUserCertificatesAsync(actor.SubjectIdAsGuid.Value, actor.TenantId).ConfigureAwait(false);
         var dtos = certificates.Select(c => CertificateDto.FromEntity(c));
 
         return Ok(dtos);
@@ -54,7 +54,7 @@ public class CertificatesController : BaseApiController
     [HttpGet("{id:guid}")]
     public async Task<ActionResult<CertificateDto>> GetCertificate(Guid id)
     {
-        var certificate = await _certificateService.GetCertificateByIdAsync(id);
+        var certificate = await _certificateService.GetCertificateByIdAsync(id).ConfigureAwait(false);
         if (certificate == null)
         {
             return NotFound();
@@ -70,7 +70,7 @@ public class CertificatesController : BaseApiController
     [AllowAnonymous]
     public async Task<ActionResult<CertificateVerificationResult>> VerifyCertificate(string certificateNumber)
     {
-        var result = await _certificateService.VerifyCertificateAsync(certificateNumber);
+        var result = await _certificateService.VerifyCertificateAsync(certificateNumber).ConfigureAwait(false);
 
         if (!result.IsSuccess)
         {
@@ -98,7 +98,7 @@ public class CertificatesController : BaseApiController
             request.EnrollmentId,
             request.UserId,
             request.CourseId,
-            actor.TenantId);
+            actor.TenantId).ConfigureAwait(false);
 
         if (!result.IsSuccess)
         {
@@ -115,7 +115,7 @@ public class CertificatesController : BaseApiController
     [RequireResourcePermission<PermissionType, Certificate>(PermissionType.Delete)]
     public async Task<ActionResult> RevokeCertificate(Guid id, [FromBody] RevokeCertificateRequest request)
     {
-        var result = await _certificateService.RevokeCertificateAsync(id, request.Reason);
+        var result = await _certificateService.RevokeCertificateAsync(id, request.Reason).ConfigureAwait(false);
 
         if (!result.IsSuccess)
         {
@@ -133,7 +133,7 @@ public class CertificatesController : BaseApiController
     {
         var actor = _actorContextAccessor.ActorContext;
 
-        var certificates = await _certificateService.GetCourseCertificatesAsync(courseId, actor.TenantId);
+        var certificates = await _certificateService.GetCourseCertificatesAsync(courseId, actor.TenantId).ConfigureAwait(false);
         var dtos = certificates.Select(c => CertificateDto.FromEntity(c));
 
         return Ok(dtos);
@@ -146,7 +146,7 @@ public class CertificatesController : BaseApiController
     [RequireContentTypePermission<Certificate>(PermissionType.Read)]
     public async Task<ActionResult<IEnumerable<CertificateDto>>> GetExpiringCertificates([FromQuery] int days = 30)
     {
-        var certificates = await _certificateService.GetExpiringCertificatesAsync(days);
+        var certificates = await _certificateService.GetExpiringCertificatesAsync(days).ConfigureAwait(false);
         var dtos = certificates.Select(c => CertificateDto.FromEntity(c));
 
         return Ok(dtos);

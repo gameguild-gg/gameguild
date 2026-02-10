@@ -159,7 +159,7 @@ public class TestingFeedback : EntityBase
             throw new ArgumentOutOfRangeException(nameof(rating), "Rating must be between 1 and 10");
 
         OverallRating = rating;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     /// <summary>
@@ -168,7 +168,7 @@ public class TestingFeedback : EntityBase
     public void SetRecommendation(bool wouldRecommend)
     {
         WouldRecommend = wouldRecommend;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     /// <summary>
@@ -177,7 +177,7 @@ public class TestingFeedback : EntityBase
     public void UpdateNotes(string? notes)
     {
         AdditionalNotes = notes;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     /// <summary>
@@ -188,8 +188,8 @@ public class TestingFeedback : EntityBase
         IsReported = true;
         ReportedById = reportedById;
         ReportReason = reason;
-        ReportedAt = DateTime.UtcNow;
-        UpdatedAt = DateTime.UtcNow;
+        ReportedAt = SystemClock.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     /// <summary>
@@ -201,7 +201,7 @@ public class TestingFeedback : EntityBase
         ReportedById = null;
         ReportReason = null;
         ReportedAt = null;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     /// <summary>
@@ -210,6 +210,6 @@ public class TestingFeedback : EntityBase
     public void SetQualityRating(FeedbackQuality quality)
     {
         QualityRating = quality;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 }

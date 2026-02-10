@@ -32,7 +32,7 @@ public sealed class SessionController(ISessionManagementService sessionService) 
     public async Task<IActionResult> GetSessions(CancellationToken ct)
     {
         var userId = GetCurrentUserId();
-        var sessions = await sessionService.GetUserSessionsAsync(userId);
+        var sessions = await sessionService.GetUserSessionsAsync(userId).ConfigureAwait(false);
 
         var response = sessions.Select(s => new SessionResponse
             {
@@ -71,7 +71,7 @@ public sealed class SessionController(ISessionManagementService sessionService) 
         var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
         var userAgent = HttpContext.Request.Headers.UserAgent.ToString();
 
-        SessionSecurityAnalysis analysis = await sessionService.AnalyzeSessionSecurityAsync(userId, ipAddress, userAgent);
+        SessionSecurityAnalysis analysis = await sessionService.AnalyzeSessionSecurityAsync(userId, ipAddress, userAgent).ConfigureAwait(false);
 
         return Ok(analysis);
     }
@@ -95,14 +95,14 @@ public sealed class SessionController(ISessionManagementService sessionService) 
     public async Task<IActionResult> TerminateSession(Guid sessionId, CancellationToken ct)
     {
         var userId = GetCurrentUserId();
-        var session = await sessionService.GetSessionAsync(sessionId);
+        var session = await sessionService.GetSessionAsync(sessionId).ConfigureAwait(false);
 
         if (session == null || session.UserId != userId)
         {
             return NotFound(new SessionErrorResponse { Error = "Session not found" });
         }
 
-        var success = await sessionService.TerminateSessionAsync(sessionId, SessionTerminationReason.UserLogout);
+        var success = await sessionService.TerminateSessionAsync(sessionId, SessionTerminationReason.UserLogout).ConfigureAwait(false);
 
         if (!success)
         {
@@ -131,7 +131,7 @@ public sealed class SessionController(ISessionManagementService sessionService) 
         var userId = GetCurrentUserId();
         var currentSessionId = GetCurrentSessionId();
 
-        var terminatedCount = await sessionService.TerminateAllUserSessionsAsync(userId, SessionTerminationReason.UserLogout, currentSessionId);
+        var terminatedCount = await sessionService.TerminateAllUserSessionsAsync(userId, SessionTerminationReason.UserLogout, currentSessionId).ConfigureAwait(false);
 
         return Ok(new SessionTerminationResponse
         {
@@ -154,7 +154,7 @@ public sealed class SessionController(ISessionManagementService sessionService) 
     {
         var userId = GetCurrentUserId();
 
-        var terminatedCount = await sessionService.TerminateAllUserSessionsAsync(userId, SessionTerminationReason.UserLogout);
+        var terminatedCount = await sessionService.TerminateAllUserSessionsAsync(userId, SessionTerminationReason.UserLogout).ConfigureAwait(false);
 
         return Ok(new SessionTerminationResponse
         {
@@ -183,7 +183,7 @@ public sealed class SessionController(ISessionManagementService sessionService) 
             return BadRequest(new SessionErrorResponse { Error = "No active session found" });
         }
 
-        var success = await sessionService.RefreshSessionAsync(currentSessionId.Value);
+        var success = await sessionService.RefreshSessionAsync(currentSessionId.Value).ConfigureAwait(false);
 
         if (!success)
         {

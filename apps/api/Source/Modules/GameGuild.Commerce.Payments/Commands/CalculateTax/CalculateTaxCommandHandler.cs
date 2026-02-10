@@ -26,7 +26,7 @@ public sealed class CalculateTaxCommandHandler(ITaxCalculationService taxCalcula
             ProductCategory = request.ProductCategory,
             CustomerVatNumber = request.CustomerVatNumber,
             IsTaxInclusive = request.IsTaxInclusive,
-            TransactionDate = request.TransactionDate ?? DateTime.UtcNow,
+            TransactionDate = request.TransactionDate ?? SystemClock.UtcNow,
             ApplicableExemptions = request.ApplicableExemptions?.ToList() ?? new List<string>()
         };
 

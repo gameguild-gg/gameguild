@@ -51,7 +51,7 @@ public sealed class UpdateProgramCommandValidator : AbstractValidator<UpdateProg
           .When(x => x.MaxEnrollments.HasValue);
 
         RuleFor(x => x.EnrollmentDeadline)
-          .GreaterThan(DateTime.UtcNow).WithMessage("Enrollment deadline must be in the future")
+          .GreaterThan(SystemClock.UtcNow).WithMessage("Enrollment deadline must be in the future")
           .When(x => x.EnrollmentDeadline.HasValue);
     }
 

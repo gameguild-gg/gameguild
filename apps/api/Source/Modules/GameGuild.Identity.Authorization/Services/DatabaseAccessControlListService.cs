@@ -115,7 +115,7 @@ public sealed class DatabaseAccessControlListService(
             existing.AccessLevel = accessLevel;
             existing.IsDenied = false;
             existing.GrantedBy = grantorId;
-            existing.GrantedAt = DateTime.UtcNow;
+            existing.GrantedAt = SystemClock.UtcNow;
             existing.IsActive = true;
             await repository.UpdateAsync(existing, cancellationToken).ConfigureAwait(false);
         }
@@ -132,7 +132,7 @@ public sealed class DatabaseAccessControlListService(
                 AccessLevel = accessLevel,
                 IsDenied = false,
                 GrantedBy = grantorId,
-                GrantedAt = DateTime.UtcNow,
+                GrantedAt = SystemClock.UtcNow,
                 IsActive = true
             };
             await repository.AddAsync(entry, cancellationToken).ConfigureAwait(false);
@@ -184,7 +184,7 @@ public sealed class DatabaseAccessControlListService(
             existing.AccessLevel = accessLevel;
             existing.IsDenied = true;
             existing.GrantedBy = grantorId;
-            existing.GrantedAt = DateTime.UtcNow;
+            existing.GrantedAt = SystemClock.UtcNow;
             existing.IsActive = true;
             await repository.UpdateAsync(existing, cancellationToken).ConfigureAwait(false);
         }
@@ -201,7 +201,7 @@ public sealed class DatabaseAccessControlListService(
                 AccessLevel = accessLevel,
                 IsDenied = true,
                 GrantedBy = grantorId,
-                GrantedAt = DateTime.UtcNow,
+                GrantedAt = SystemClock.UtcNow,
                 IsActive = true
             };
             await repository.AddAsync(entry, cancellationToken).ConfigureAwait(false);

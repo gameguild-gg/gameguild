@@ -33,7 +33,7 @@ public sealed class UserProfilesController(ISender sender) : BaseApiController
     )
     {
         var query = new GetUserProfilesPagedQuery(search, sortBy, sortDirection, page, pageSize);
-        var result = await sender.Send(query, ct);
+        var result = await sender.Send(query, ct).ConfigureAwait(false);
 
         return Ok(result);
     }
@@ -49,7 +49,7 @@ public sealed class UserProfilesController(ISender sender) : BaseApiController
     public async Task<IActionResult> GetProfile(Guid userId, CancellationToken ct)
     {
         var query = new GetUserProfileQuery(userId);
-        var result = await sender.Send(query, ct);
+        var result = await sender.Send(query, ct).ConfigureAwait(false);
 
         return result == null ? NotFound() : Ok(result);
     }
@@ -68,7 +68,7 @@ public sealed class UserProfilesController(ISender sender) : BaseApiController
         ArgumentNullException.ThrowIfNull(body);
 
         var command = new UpdateUserProfileCommand(userId, body);
-        await sender.Send(command, ct);
+        await sender.Send(command, ct).ConfigureAwait(false);
 
         return NoContent();
     }
@@ -87,7 +87,7 @@ public sealed class UserProfilesController(ISender sender) : BaseApiController
         ArgumentNullException.ThrowIfNull(body);
 
         var command = new ReplaceUserProfileCommand(userId, body);
-        await sender.Send(command, ct);
+        await sender.Send(command, ct).ConfigureAwait(false);
 
         return NoContent();
     }

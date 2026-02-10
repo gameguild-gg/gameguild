@@ -92,7 +92,7 @@ public class UserWebAuthnCredential
     /// <summary>
     ///     When the credential was registered.
     /// </summary>
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime CreatedAt { get; set; } = SystemClock.UtcNow;
 
     /// <summary>
     ///     When the credential was last used for authentication.

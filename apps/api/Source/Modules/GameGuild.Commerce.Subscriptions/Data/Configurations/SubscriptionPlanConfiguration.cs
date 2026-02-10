@@ -11,7 +11,7 @@ public class SubscriptionPlanConfiguration : IEntityTypeConfiguration<Subscripti
     public void Configure(EntityTypeBuilder<SubscriptionPlan> builder)
     {
         // Configure table
-        builder.ToTable("subscription_plans");
+        builder.ToTable("SubscriptionPlans");
 
         // Configure primary key
         builder.HasKey(x => x.Id);

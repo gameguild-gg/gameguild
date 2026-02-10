@@ -29,7 +29,7 @@ public sealed class TenantSettingsController : BaseApiController
     public async Task<IActionResult> GetSettings(Guid tenantId, CancellationToken ct)
     {
         // Placeholder implementation
-        await Task.CompletedTask;
+        await Task.CompletedTask.ConfigureAwait(false);
 
         var placeholderSettings = new TenantSettingsDto(
             tenantId,
@@ -72,7 +72,7 @@ public sealed class TenantSettingsController : BaseApiController
         ArgumentNullException.ThrowIfNull(body);
 
         // Placeholder implementation
-        await Task.CompletedTask;
+        await Task.CompletedTask.ConfigureAwait(false);
 
         return NoContent();
     }
@@ -96,7 +96,7 @@ public sealed class TenantSettingsController : BaseApiController
         ArgumentNullException.ThrowIfNull(body);
 
         // Placeholder implementation
-        await Task.CompletedTask;
+        await Task.CompletedTask.ConfigureAwait(false);
 
         return NoContent();
     }
@@ -116,7 +116,7 @@ public sealed class TenantSettingsController : BaseApiController
     public async Task<IActionResult> GetFeatureFlags(Guid tenantId, CancellationToken ct)
     {
         // Placeholder implementation
-        await Task.CompletedTask;
+        await Task.CompletedTask.ConfigureAwait(false);
         var placeholderFlags = new Dictionary<string, bool>();
 
         return Ok(placeholderFlags);
@@ -141,7 +141,7 @@ public sealed class TenantSettingsController : BaseApiController
         ArgumentNullException.ThrowIfNull(featureFlags);
 
         // Placeholder implementation
-        await Task.CompletedTask;
+        await Task.CompletedTask.ConfigureAwait(false);
 
         return NoContent();
     }
@@ -161,7 +161,7 @@ public sealed class TenantSettingsController : BaseApiController
     public async Task<IActionResult> GetSystemLimits(Guid tenantId, CancellationToken ct)
     {
         // Placeholder implementation
-        await Task.CompletedTask;
+        await Task.CompletedTask.ConfigureAwait(false);
 
         var placeholderLimits = new TenantSystemLimitsDto(
             100,
@@ -193,7 +193,7 @@ public sealed class TenantSettingsController : BaseApiController
         ArgumentNullException.ThrowIfNull(body);
 
         // Placeholder implementation
-        await Task.CompletedTask;
+        await Task.CompletedTask.ConfigureAwait(false);
 
         return NoContent();
     }
@@ -213,7 +213,7 @@ public sealed class TenantSettingsController : BaseApiController
     public async Task<IActionResult> GetIntegrationSettings(Guid tenantId, CancellationToken ct)
     {
         // Placeholder implementation
-        await Task.CompletedTask;
+        await Task.CompletedTask.ConfigureAwait(false);
         var placeholderSettings = new TenantIntegrationSettingsDto(new Dictionary<string, object?>(), new Dictionary<string, object?>(), new Dictionary<string, string>(), new Dictionary<string, object?>());
 
         return Ok(placeholderSettings);
@@ -238,7 +238,7 @@ public sealed class TenantSettingsController : BaseApiController
         ArgumentNullException.ThrowIfNull(body);
 
         // Placeholder implementation
-        await Task.CompletedTask;
+        await Task.CompletedTask.ConfigureAwait(false);
 
         return NoContent();
     }

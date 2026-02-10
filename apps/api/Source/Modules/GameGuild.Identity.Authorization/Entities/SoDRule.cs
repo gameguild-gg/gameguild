@@ -42,7 +42,7 @@ public class SoDRule
 
     public Guid CreatedBy { get; set; }
 
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime CreatedAt { get; set; } = SystemClock.UtcNow;
 
     public DateTime? UpdatedAt { get; set; }
 
@@ -59,7 +59,7 @@ public class SoDRule
     public void Enable()
     {
         IsEnabled = true;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     /// <summary>
@@ -68,7 +68,7 @@ public class SoDRule
     public void Disable()
     {
         IsEnabled = false;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     /// <summary>
@@ -77,8 +77,8 @@ public class SoDRule
     public void RecordViolation()
     {
         ViolationCount++;
-        LastViolationDetected = DateTime.UtcNow;
-        UpdatedAt = DateTime.UtcNow;
+        LastViolationDetected = SystemClock.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     /// <summary>
@@ -111,7 +111,7 @@ public class SoDViolation
 
     public string ConflictingItems { get; set; } = string.Empty;
 
-    public DateTime DetectedAt { get; set; } = DateTime.UtcNow;
+    public DateTime DetectedAt { get; set; } = SystemClock.UtcNow;
 
     public Guid? DetectedBy { get; set; }
 
@@ -131,7 +131,7 @@ public class SoDViolation
 
     public DateTime? ApprovedAt { get; set; }
 
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime CreatedAt { get; set; } = SystemClock.UtcNow;
 
     public DateTime? UpdatedAt { get; set; }
 
@@ -154,10 +154,10 @@ public class SoDViolation
     {
         Status = SoDViolationStatus.Resolved;
         ResolvedBy = resolvedBy;
-        ResolvedAt = DateTime.UtcNow;
+        ResolvedAt = SystemClock.UtcNow;
         ResolutionAction = action;
         ResolutionNotes = notes;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     /// <summary>
@@ -168,9 +168,9 @@ public class SoDViolation
         Status = SoDViolationStatus.Excepted;
         IsException = true;
         ApprovedBy = approvedBy;
-        ApprovedAt = DateTime.UtcNow;
+        ApprovedAt = SystemClock.UtcNow;
         ExceptionJustification = justification;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     /// <summary>
@@ -179,6 +179,6 @@ public class SoDViolation
     public void Acknowledge()
     {
         Status = SoDViolationStatus.Acknowledged;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 }

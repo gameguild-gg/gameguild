@@ -16,7 +16,7 @@ public sealed class TransferFundsCommandHandler(IWalletService walletService) : 
             request.Description,
             request.ReferenceId,
             cancellationToken
-        );
+        ).ConfigureAwait(false);
 
         return new TransferResult(debitTransaction, creditTransaction);
     }

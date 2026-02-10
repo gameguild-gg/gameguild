@@ -87,7 +87,7 @@ public class PaymentRepository(
 
     public async Task<IEnumerable<Payment>> GetDueForRetryAsync(CancellationToken cancellationToken = default)
     {
-        var now = DateTime.UtcNow;
+        var now = SystemClock.UtcNow;
         logger.LogDebug("Getting payments due for retry at: {Now}", now);
 
         return await Query

@@ -43,5 +43,5 @@ public abstract class VerifiableCredential
     /// <summary>
     ///     Gets whether the credential is still valid.
     /// </summary>
-    public bool IsValid { get => ExpirationDate == null || DateTime.UtcNow < ExpirationDate; }
+    public bool IsValid { get => ExpirationDate == null || SystemClock.UtcNow < ExpirationDate; }
 }

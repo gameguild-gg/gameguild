@@ -43,5 +43,5 @@ public abstract class SubscriptionUsageStatistics
     /// <summary>
     ///     When the statistics were last updated
     /// </summary>
-    public DateTime LastUpdated { get; init; } = DateTime.UtcNow;
+    public DateTime LastUpdated { get; init; } = SystemClock.UtcNow;
 }

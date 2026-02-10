@@ -39,13 +39,13 @@ public class RequestContextLoggingMiddleware(RequestDelegate next, ILogger<Reque
                    }
                ))
         {
-            var startTime = DateTime.UtcNow;
+            var startTime = SystemClock.UtcNow;
 
             try
             {
                 await next(httpContext).ConfigureAwait(false);
 
-                var duration = DateTime.UtcNow - startTime;
+                var duration = SystemClock.UtcNow - startTime;
                 var statusCode = httpContext.Response.StatusCode;
 
                 // Log request completion
@@ -53,7 +53,7 @@ public class RequestContextLoggingMiddleware(RequestDelegate next, ILogger<Reque
             }
             catch (Exception ex)
             {
-                var duration = DateTime.UtcNow - startTime;
+                var duration = SystemClock.UtcNow - startTime;
 
                 // Log request failure
                 logger.LogError(ex, "Request {RequestId} failed after {Duration}ms: {ErrorMessage}", requestId, duration.TotalMilliseconds, ex.Message);

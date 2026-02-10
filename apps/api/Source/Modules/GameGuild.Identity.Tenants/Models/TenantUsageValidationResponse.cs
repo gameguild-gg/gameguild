@@ -13,7 +13,7 @@ public class TenantUsageValidationResponse
 
     public bool RequiresUpgrade { get; init; }
 
-    public DateTime ValidatedAt { get; init; } = DateTime.UtcNow;
+    public DateTime ValidatedAt { get; init; } = SystemClock.UtcNow;
 
     /// <summary>
     ///     Creates a valid Response

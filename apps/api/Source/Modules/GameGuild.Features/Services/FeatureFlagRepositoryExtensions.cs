@@ -1,13 +1,11 @@
 namespace GameGuild.Features;
 
 /// <summary>
-///     Extension method for repository to get flags by environment
+///     Extension method for repository to get flags by environment (client-side filter)
 /// </summary>
 public static class FeatureFlagRepositoryExtensions
 {
-#pragma warning disable CS0618 // Type or member is obsolete - IFeatureFlagRepository migration pending
-    public static async Task<List<FeatureFlag>> GetByEnvironmentAsync(this IFeatureFlagRepository repository, string environment)
-#pragma warning restore CS0618
+    public static async Task<List<FeatureFlag>> GetByEnvironmentAsync(this IFeatureFlagQueryRepository repository, string environment)
     {
         var allFlags = await repository.GetAllAsync().ConfigureAwait(false);
 

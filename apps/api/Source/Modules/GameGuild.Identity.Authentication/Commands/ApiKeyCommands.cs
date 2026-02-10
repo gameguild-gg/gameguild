@@ -48,7 +48,7 @@ public sealed class CreateApiKeyValidator : AbstractValidator<CreateApiKeyComman
         RuleFor(x => x.Name).NotEmpty().MaximumLength(100);
         RuleFor(x => x.Scopes).NotEmpty().WithMessage("At least one scope is required");
         RuleFor(x => x.ExpiresAt)
-            .Must(expiry => !expiry.HasValue || expiry.Value > DateTime.UtcNow)
+            .Must(expiry => !expiry.HasValue || expiry.Value > SystemClock.UtcNow)
             .When(x => x.ExpiresAt.HasValue)
             .WithMessage("Expiry date must be in the future");
     }

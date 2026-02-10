@@ -28,7 +28,7 @@ public class ActivityGradeService(IApplicationDbContext context) : IActivityGrad
       existingGrade.Feedback = feedback;
       existingGrade.GradingDetails = gradingDetails;
       existingGrade.GraderProgramUserId = graderProgramUserId;
-      existingGrade.GradedAt = DateTime.UtcNow;
+      existingGrade.GradedAt = SystemClock.UtcNow;
       existingGrade.Touch();
 
       await context.SaveChangesAsync().ConfigureAwait(false);
@@ -37,7 +37,7 @@ public class ActivityGradeService(IApplicationDbContext context) : IActivityGrad
     }
 
     // Create new grade
-    var newGrade = new ActivityGrade { ContentInteractionId = contentInteractionId, GraderProgramUserId = graderProgramUserId, Grade = grade, Feedback = feedback, GradingDetails = gradingDetails ?? "{}", GradedAt = DateTime.UtcNow };
+    var newGrade = new ActivityGrade { ContentInteractionId = contentInteractionId, GraderProgramUserId = graderProgramUserId, Grade = grade, Feedback = feedback, GradingDetails = gradingDetails ?? "{}", GradedAt = SystemClock.UtcNow };
 
     context.Set<ActivityGrade>().Add(newGrade);
     await context.SaveChangesAsync().ConfigureAwait(false);
@@ -99,7 +99,7 @@ public class ActivityGradeService(IApplicationDbContext context) : IActivityGrad
     if (newGrade.HasValue) grade.Grade = newGrade.Value;
     if (newFeedback != null) grade.Feedback = newFeedback;
     if (newGradingDetails != null) grade.GradingDetails = newGradingDetails;
-    grade.GradedAt = DateTime.UtcNow;
+    grade.GradedAt = SystemClock.UtcNow;
     grade.Touch();
 
     await context.SaveChangesAsync().ConfigureAwait(false);

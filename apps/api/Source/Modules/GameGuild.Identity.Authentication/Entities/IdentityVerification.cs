@@ -99,7 +99,7 @@ public class IdentityVerification
     /// <summary>
     ///     Gets whether the verification is currently valid.
     /// </summary>
-    public bool IsValid { get => Status == "Approved" && (ExpiresAt == null || ExpiresAt > DateTime.UtcNow); }
+    public bool IsValid { get => Status == "Approved" && (ExpiresAt == null || ExpiresAt > SystemClock.UtcNow); }
 
     /// <summary>
     ///     Gets whether the verification is pending review.

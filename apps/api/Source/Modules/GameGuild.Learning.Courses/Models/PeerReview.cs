@@ -42,7 +42,7 @@ public class PeerReview : EntityBase {
   public PeerReviewStatus Status { get; set; } = PeerReviewStatus.Assigned;
 
   /// <summary> When the review was assigned </summary>
-  public DateTime AssignedAt { get; set; } = DateTime.UtcNow;
+  public DateTime AssignedAt { get; set; } = SystemClock.UtcNow;
 
   /// <summary> When the review was submitted </summary>
   public DateTime? SubmittedAt { get; set; }
@@ -80,7 +80,7 @@ public class PeerReview : EntityBase {
     Grade = grade;
     Feedback = feedback;
     ReviewData = reviewData;
-    SubmittedAt = DateTime.UtcNow;
+    SubmittedAt = SystemClock.UtcNow;
     Touch();
   }
 
@@ -88,7 +88,7 @@ public class PeerReview : EntityBase {
   public void AcceptReview(string? reason = null) {
     IsAccepted = true;
     AcceptanceReason = reason;
-    ResponseAt = DateTime.UtcNow;
+    ResponseAt = SystemClock.UtcNow;
     Status = PeerReviewStatus.Accepted;
     Touch();
   }
@@ -97,7 +97,7 @@ public class PeerReview : EntityBase {
   public void RejectReview(string reason) {
     IsAccepted = false;
     AcceptanceReason = reason;
-    ResponseAt = DateTime.UtcNow;
+    ResponseAt = SystemClock.UtcNow;
     Status = PeerReviewStatus.Rejected;
     Touch();
   }

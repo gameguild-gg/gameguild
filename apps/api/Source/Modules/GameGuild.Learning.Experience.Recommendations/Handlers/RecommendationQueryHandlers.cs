@@ -20,7 +20,7 @@ public sealed class GetUserRecommendationsQueryHandler(
             .AsNoTracking()
             .Where(r => r.UserId == request.UserId)
             .Where(r => !r.IsDismissed)
-            .Where(r => r.ExpiresAt > DateTime.UtcNow);
+            .Where(r => r.ExpiresAt > SystemClock.UtcNow);
 
         if (!request.IncludeViewed)
         {
@@ -96,7 +96,7 @@ public sealed class HasPendingRecommendationsQueryHandler(
             .AnyAsync(r => r.UserId == request.UserId 
                 && !r.IsDismissed 
                 && !r.IsViewed 
-                && r.ExpiresAt > DateTime.UtcNow, cancellationToken).ConfigureAwait(false);
+                && r.ExpiresAt > SystemClock.UtcNow, cancellationToken).ConfigureAwait(false);
     }
 }
 
@@ -205,7 +205,7 @@ public sealed class GetTrendingCoursesQueryHandler(
     {
         logger.LogDebug("Getting trending courses for last {DaysWindow} days", request.DaysWindow);
 
-        var cutoff = DateTime.UtcNow.AddDays(-request.DaysWindow);
+        var cutoff = SystemClock.UtcNow.AddDays(-request.DaysWindow);
 
         var query = context.Set<Program>()
             .AsNoTracking()

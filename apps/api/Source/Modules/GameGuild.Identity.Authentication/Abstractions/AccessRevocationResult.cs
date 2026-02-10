@@ -23,5 +23,5 @@ public abstract class AccessRevocationResult
     /// <summary>
     ///     Execution timestamp
     /// </summary>
-    public DateTime ExecutedAt { get; set; } = DateTime.UtcNow;
+    public DateTime ExecutedAt { get; set; } = SystemClock.UtcNow;
 }

@@ -128,13 +128,13 @@ public class ProgramUser : EntityBase
     /// <summary>
     /// Days since enrollment
     /// </summary>
-    public int DaysSinceEnrollment => (DateTime.UtcNow - JoinedAt).Days;
+    public int DaysSinceEnrollment => (SystemClock.UtcNow - JoinedAt).Days;
 
     /// <summary>
     /// Days since last access
     /// </summary>
     public int? DaysSinceLastAccess => LastAccessedAt.HasValue
-        ? (DateTime.UtcNow - LastAccessedAt.Value).Days
+        ? (SystemClock.UtcNow - LastAccessedAt.Value).Days
         : null;
 
     /// <summary>
@@ -152,7 +152,7 @@ public class ProgramUser : EntityBase
     {
         if (!StartedAt.HasValue)
         {
-            StartedAt = DateTime.UtcNow;
+            StartedAt = SystemClock.UtcNow;
         }
         UpdateLastAccess();
     }
@@ -165,7 +165,7 @@ public class ProgramUser : EntityBase
         if (CompletedAt.HasValue)
             return; // Already completed
 
-        CompletedAt = DateTime.UtcNow;
+        CompletedAt = SystemClock.UtcNow;
         CompletionPercentage = 100m;
         FinalGrade = finalGrade ?? CalculateFinalGrade();
         UpdateLastAccess();
@@ -176,8 +176,8 @@ public class ProgramUser : EntityBase
     /// </summary>
     public void UpdateLastAccess()
     {
-        LastAccessedAt = DateTime.UtcNow;
-        UpdatedAt = DateTime.UtcNow;
+        LastAccessedAt = SystemClock.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     /// <summary>
@@ -186,7 +186,7 @@ public class ProgramUser : EntityBase
     public void Deactivate()
     {
         IsActive = false;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     /// <summary>
@@ -195,7 +195,7 @@ public class ProgramUser : EntityBase
     public void Reactivate()
     {
         IsActive = true;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     /// <summary>
@@ -221,7 +221,7 @@ public class ProgramUser : EntityBase
             Complete();
         }
 
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     /// <summary>

@@ -21,7 +21,7 @@ public class SecurityAuditController(
     ISecurityAuditAggregator auditAggregator,
     IAuditService auditService,
     IActorContextAccessor actorContextAccessor,
-    ILogger<SecurityAuditController> logger) : BaseApiController
+    ILogger<SecurityAuditController> _logger) : BaseApiController
 {
     /// <summary>
     ///     Get unified security audit logs from all sources with filtering and pagination.
@@ -41,14 +41,16 @@ public class SecurityAuditController(
         if (!adminUserId.HasValue)
             return Unauthorized("User not authenticated");
 
+        _logger.LogInformation("Admin {AdminUserId} accessing security audit logs: SourceType={SourceType}", adminUserId.Value, request.SourceType);
+
         // Log this admin access
         await auditService.LogAdminActionAsync(
             adminUserId.Value,
             "ViewSecurityAuditLogs",
             "Admin accessed unified security audit logs",
-            new { Filters = request });
+            new { Filters = request }).ConfigureAwait(false);
 
-        var result = await auditAggregator.GetUnifiedAuditLogsAsync(request, cancellationToken);
+        var result = await auditAggregator.GetUnifiedAuditLogsAsync(request, cancellationToken).ConfigureAwait(false);
 
         return Ok(result);
     }
@@ -69,9 +71,9 @@ public class SecurityAuditController(
         await auditService.LogAdminActionAsync(
             adminUserId.Value,
             "ViewAuthenticationLogs",
-            "Admin accessed authentication audit logs");
+            "Admin accessed authentication audit logs").ConfigureAwait(false);
 
-        var result = await auditAggregator.GetAuthenticationLogsAsync(request, cancellationToken);
+        var result = await auditAggregator.GetAuthenticationLogsAsync(request, cancellationToken).ConfigureAwait(false);
 
         return Ok(result);
     }
@@ -92,9 +94,9 @@ public class SecurityAuditController(
         await auditService.LogAdminActionAsync(
             adminUserId.Value,
             "ViewPermissionLogs",
-            "Admin accessed permission audit logs");
+            "Admin accessed permission audit logs").ConfigureAwait(false);
 
-        var result = await auditAggregator.GetPermissionLogsAsync(request, cancellationToken);
+        var result = await auditAggregator.GetPermissionLogsAsync(request, cancellationToken).ConfigureAwait(false);
 
         return Ok(result);
     }
@@ -117,13 +119,13 @@ public class SecurityAuditController(
         await auditService.LogAdminActionAsync(
             adminUserId.Value,
             "ViewSecurityDashboard",
-            "Admin accessed security audit dashboard");
+            "Admin accessed security audit dashboard").ConfigureAwait(false);
 
         var result = await auditAggregator.GetSecurityDashboardAsync(
-            startDate ?? DateTime.UtcNow.AddDays(-30),
-            endDate ?? DateTime.UtcNow,
+            startDate ?? SystemClock.UtcNow.AddDays(-30),
+            endDate ?? SystemClock.UtcNow,
             tenantId,
-            cancellationToken);
+            cancellationToken).ConfigureAwait(false);
 
         return Ok(result);
     }
@@ -145,10 +147,10 @@ public class SecurityAuditController(
             adminUserId.Value,
             "ExportSecurityAuditLogs",
             "Admin exported unified security audit logs",
-            new { Filters = request });
+            new { Filters = request }).ConfigureAwait(false);
 
-        var exportData = await auditAggregator.ExportAuditLogsAsync(request, cancellationToken);
-        var fileName = $"security-audit-{DateTime.UtcNow:yyyy-MM-dd-HH-mm-ss}.csv";
+        var exportData = await auditAggregator.ExportAuditLogsAsync(request, cancellationToken).ConfigureAwait(false);
+        var fileName = $"security-audit-{SystemClock.UtcNow:yyyy-MM-dd-HH-mm-ss}.csv";
 
         return File(exportData, "text/csv", fileName);
     }

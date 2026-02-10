@@ -175,7 +175,7 @@ public class ConditionalPolicyEvaluator(
             var conditions = JsonSerializer.Deserialize<TimeConditions>(timeConditionsJson);
             if (conditions == null) return true;
 
-            var now = DateTime.UtcNow;
+            var now = SystemClock.UtcNow;
 
             // Check day of week
             if (conditions.DaysOfWeek?.Length > 0)
@@ -232,7 +232,7 @@ public class ConditionalPolicyEvaluator(
             // Check session age
             if (conditions.MaxSessionAgeMinutes.HasValue && context.AuthenticationTime.HasValue)
             {
-                var sessionAge = DateTime.UtcNow - context.AuthenticationTime.Value;
+                var sessionAge = SystemClock.UtcNow - context.AuthenticationTime.Value;
                 if (sessionAge.TotalMinutes > conditions.MaxSessionAgeMinutes.Value)
                     return false;
             }

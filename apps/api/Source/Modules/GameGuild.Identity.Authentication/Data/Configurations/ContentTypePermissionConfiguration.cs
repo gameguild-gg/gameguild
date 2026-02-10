@@ -11,7 +11,7 @@ public class ContentTypePermissionConfiguration : IEntityTypeConfiguration<Conte
     public void Configure(EntityTypeBuilder<ContentTypePermission> builder)
     {
         // Configure table name (snake_case convention)
-        builder.ToTable("content_type_permissions", "gameguild.authentication");
+        builder.ToTable("contenttypepermission", "gameguild.authentication");
 
         // Configure primary key
         builder.HasKey(x => x.Id);
@@ -20,10 +20,9 @@ public class ContentTypePermissionConfiguration : IEntityTypeConfiguration<Conte
         builder.Property(x => x.Id).HasColumnName("id").IsRequired();
 
         // Property configurations
-        builder.Property(x => x.ContentTypeName).HasColumnName("content_type_name").HasMaxLength(256).IsRequired();
-        builder.Property(x => x.Description).HasColumnName("description").HasMaxLength(1000);
-        builder.Property(x => x.UserId).HasColumnName("user_id");
-        builder.Property(x => x.Permissions).HasColumnName("permissions").HasMaxLength(500);
+        builder.Property(x => x.ContentTypeName).HasMaxLength(256).IsRequired();
+        builder.Property(x => x.Description).HasMaxLength(1000);
+        builder.Property(x => x.Permissions).HasMaxLength(500);
 
         // Indexes
         builder.HasIndex(x => x.TenantId).HasDatabaseName("ix_contenttypepermission_tenant_id");

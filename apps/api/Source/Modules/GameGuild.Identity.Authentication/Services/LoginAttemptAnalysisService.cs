@@ -48,7 +48,7 @@ public class LoginAttemptAnalysisService(
                 UserAgent = request.UserAgent,
                 IsSuccessful = request.IsSuccessful,
                 FailureReason = request.FailureReason,
-                AttemptedAt = DateTime.UtcNow,
+                AttemptedAt = SystemClock.UtcNow,
                 ProcessingTime = request.ProcessingTime,
                 Location = request.Location,
                 DeviceFingerprint = request.DeviceFingerprint,
@@ -112,7 +112,7 @@ public class LoginAttemptAnalysisService(
             if (context.UserId.HasValue)
             {
                 var userId = context.UserId.Value;
-                var since = DateTime.UtcNow.AddHours(-24);
+                var since = SystemClock.UtcNow.AddHours(-24);
                 var recentAttempts = await authAttemptRepository
                     .GetRecentAttemptsAsync(userId, since, cancellationToken: default)
                     .ConfigureAwait(false);
@@ -227,7 +227,7 @@ public class LoginAttemptAnalysisService(
             RiskFactors = new List<string>()
         };
 
-        var oneHourAgo = DateTime.UtcNow.AddHours(-1);
+        var oneHourAgo = SystemClock.UtcNow.AddHours(-1);
 
         var recentIpAttempts = await authAttemptRepository
             .GetFailedAttemptsAsync(attempt.Email, oneHourAgo, cancellationToken)

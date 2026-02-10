@@ -126,7 +126,7 @@ public class DynamicRoleAssignmentRepository(IApplicationDbContext context) : ID
 
     public async Task<IReadOnlyList<DynamicRoleAssignment>> GetValidByUserAsync(Guid userId, Guid? tenantId, CancellationToken ct = default)
     {
-        var now = DateTime.UtcNow;
+        var now = SystemClock.UtcNow;
         return await DbSet
             .Include(a => a.Role)
             .Where(a => a.UserId == userId && a.TenantId == tenantId && a.IsActive)

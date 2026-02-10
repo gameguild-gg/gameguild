@@ -56,7 +56,7 @@ public sealed class JwtTokenService(
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtOptions.SecretKey)) { KeyId = "GameGuild-jwt-key" };
             var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
-            var token = new JwtSecurityToken(_jwtOptions.Issuer, _jwtOptions.Audience, claims, DateTime.UtcNow, DateTime.UtcNow.AddMinutes(_jwtOptions.AccessTokenExpirationMinutes), credentials);
+            var token = new JwtSecurityToken(_jwtOptions.Issuer, _jwtOptions.Audience, claims, SystemClock.UtcNow, SystemClock.UtcNow.AddMinutes(_jwtOptions.AccessTokenExpirationMinutes), credentials);
 
             var tokenString = new JwtSecurityTokenHandler().WriteToken(token);
 
@@ -96,7 +96,7 @@ public sealed class JwtTokenService(
                 rng.GetBytes(tokenBytes);
 
                 // Add timestamp and user ID for additional entropy
-                var entropy = $"{DateTime.UtcNow.Ticks}_{userId}_{Guid.NewGuid()}";
+                var entropy = $"{SystemClock.UtcNow.Ticks}_{userId}_{Guid.NewGuid()}";
                 var entropyBytes = Encoding.UTF8.GetBytes(entropy);
 
                 // Combine random bytes with entropy
@@ -113,7 +113,7 @@ public sealed class JwtTokenService(
                     UserId = userId,
                     Token = hashedToken, // Store hash, not plaintext
                     CreatedByIp = httpContextAccessor.HttpContext?.Connection.RemoteIpAddress?.ToString() ?? "0.0.0.0",
-                    ExpiresAt = DateTime.UtcNow.AddDays(_jwtOptions.RefreshTokenExpirationDays),
+                    ExpiresAt = SystemClock.UtcNow.AddDays(_jwtOptions.RefreshTokenExpirationDays),
                     IsRevoked = false
                 };
 
@@ -268,7 +268,7 @@ public sealed class JwtTokenService(
             }
 
             refreshToken.IsRevoked = true;
-            refreshToken.RevokedAt = DateTime.UtcNow;
+            refreshToken.RevokedAt = SystemClock.UtcNow;
 
             await refreshTokenRepository.UpdateAsync(refreshToken, cancellationToken).ConfigureAwait(false);
 
@@ -301,7 +301,7 @@ public sealed class JwtTokenService(
 
         try
         {
-            var expiresAt = DateTime.UtcNow.AddMinutes(_jwtOptions.AccessTokenExpirationMinutes);
+            var expiresAt = SystemClock.UtcNow.AddMinutes(_jwtOptions.AccessTokenExpirationMinutes);
 
             var claims = new List<Claim>
             {
@@ -345,7 +345,7 @@ public sealed class JwtTokenService(
                 issuer: _jwtOptions.Issuer,
                 audience: _jwtOptions.Audience,
                 claims: claims,
-                notBefore: DateTime.UtcNow,
+                notBefore: SystemClock.UtcNow,
                 expires: expiresAt,
                 signingCredentials: credentials);
 

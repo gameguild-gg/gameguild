@@ -129,7 +129,7 @@ public sealed class MfaAttemptTrackingService(
 
             // Soft delete or disable
             mfaConfig.IsEnabled = false;
-            mfaConfig.UpdatedAt = DateTime.UtcNow;
+            mfaConfig.UpdatedAt = SystemClock.UtcNow;
             mfaConfig.TotpSecretKey = null;
             mfaConfig.BackupCodes = null;
             mfaConfig.FailedAttempts = 0;
@@ -181,7 +181,7 @@ public sealed class MfaAttemptTrackingService(
             }
 
             mfaConfig.FailedAttempts = 0;
-            mfaConfig.UpdatedAt = DateTime.UtcNow;
+            mfaConfig.UpdatedAt = SystemClock.UtcNow;
 
             await mfaConfigRepository.UpdateAsync(mfaConfig, cancellationToken).ConfigureAwait(false);
 
@@ -214,7 +214,7 @@ public sealed class MfaAttemptTrackingService(
                 DeviceFingerprint = deviceId,
                 IpAddress = httpContextAccessor.HttpContext?.Connection.RemoteIpAddress?.ToString() ?? "0.0.0.0",
                 UserAgent = httpContextAccessor.HttpContext?.Request.Headers.UserAgent.ToString() ?? "Unknown",
-                AttemptedAt = DateTime.UtcNow,
+                AttemptedAt = SystemClock.UtcNow,
                 ProcessingTimeMs = 0
             };
 
@@ -236,7 +236,7 @@ public sealed class MfaAttemptTrackingService(
 
         if (!mfaConfig.LockedOutUntil.HasValue) { return false; }
 
-        return DateTime.UtcNow < mfaConfig.LockedOutUntil.Value;
+        return SystemClock.UtcNow < mfaConfig.LockedOutUntil.Value;
     }
 
     /// <summary>

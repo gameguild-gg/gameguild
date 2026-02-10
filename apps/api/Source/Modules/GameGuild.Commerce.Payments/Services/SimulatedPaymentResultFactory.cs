@@ -46,7 +46,7 @@ public static class SimulatedPaymentResultFactory
             ErrorCode: null,
             ErrorMessage: null,
             Status: PaymentStatus.Succeeded,
-            ProcessedAt: DateTime.UtcNow);
+            ProcessedAt: SystemClock.UtcNow);
     }
 
     /// <summary>
@@ -61,7 +61,7 @@ public static class SimulatedPaymentResultFactory
             ErrorCode: errorCode,
             ErrorMessage: errorMessage,
             Status: PaymentStatus.Failed,
-            ProcessedAt: DateTime.UtcNow);
+            ProcessedAt: SystemClock.UtcNow);
     }
 
     /// <summary>
@@ -78,7 +78,7 @@ public static class SimulatedPaymentResultFactory
             AmountRefunded: amount,
             ErrorCode: null,
             ErrorMessage: null,
-            ProcessedAt: DateTime.UtcNow);
+            ProcessedAt: SystemClock.UtcNow);
     }
 
     /// <summary>
@@ -92,7 +92,7 @@ public static class SimulatedPaymentResultFactory
             AmountRefunded: 0,
             ErrorCode: errorCode,
             ErrorMessage: errorMessage,
-            ProcessedAt: DateTime.UtcNow);
+            ProcessedAt: SystemClock.UtcNow);
     }
 
     /// <summary>
@@ -167,7 +167,7 @@ public static class SimulatedPaymentResultFactory
     /// </summary>
     public static GatewayCancellationResult CancellationSuccess(DateTime? effectiveDate = null, ILogger? logger = null)
     {
-        effectiveDate ??= DateTime.UtcNow;
+        effectiveDate ??= SystemClock.UtcNow;
         logger?.LogDebug("Generated simulated Stripe subscription cancellation");
 
         return new GatewayCancellationResult(
@@ -198,17 +198,17 @@ public sealed class SimulatedTestCard
     /// <summary>
     ///     Standard Stripe test card (Visa ending in 4242).
     /// </summary>
-    public static readonly SimulatedTestCard Visa4242 = new("4242", "visa", 12, DateTime.UtcNow.Year + 3);
+    public static readonly SimulatedTestCard Visa4242 = new("4242", "visa", 12, SystemClock.UtcNow.Year + 3);
 
     /// <summary>
     ///     Mastercard test card ending in 5555.
     /// </summary>
-    public static readonly SimulatedTestCard Mastercard5555 = new("5555", "mastercard", 10, DateTime.UtcNow.Year + 2);
+    public static readonly SimulatedTestCard Mastercard5555 = new("5555", "mastercard", 10, SystemClock.UtcNow.Year + 2);
 
     /// <summary>
     ///     Amex test card ending in 8431.
     /// </summary>
-    public static readonly SimulatedTestCard Amex8431 = new("8431", "amex", 6, DateTime.UtcNow.Year + 4);
+    public static readonly SimulatedTestCard Amex8431 = new("8431", "amex", 6, SystemClock.UtcNow.Year + 4);
 
     public SimulatedTestCard(string last4, string brand, int expiryMonth, int expiryYear)
     {

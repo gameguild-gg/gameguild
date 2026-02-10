@@ -128,7 +128,7 @@ public class TaxCalculationService : ITaxCalculationService
 
     public async Task<TaxRate?> GetTaxRateAsync(string jurisdictionCode, TaxType taxType, string? productCategory = null, DateTime? effectiveDate = null, CancellationToken cancellationToken = default)
     {
-        var date = effectiveDate ?? DateTime.UtcNow;
+        var date = effectiveDate ?? SystemClock.UtcNow;
         
         // Create a cache key that includes all relevant parameters
         // Note: We cache based on date truncated to the day to allow reasonable caching while still
@@ -170,7 +170,7 @@ public class TaxCalculationService : ITaxCalculationService
         _logger.LogDebug("Validating tax exemption for customer {CustomerId} in jurisdiction {JurisdictionCode}", 
             customerId, jurisdictionCode);
 
-        var now = DateTime.UtcNow;
+        var now = SystemClock.UtcNow;
         var normalizedJurisdiction = jurisdictionCode.ToUpperInvariant();
         
         // Check cache first for tax exemption status
@@ -387,7 +387,7 @@ public class TaxCalculationService : ITaxCalculationService
 
     public async Task<IEnumerable<TaxRule>> GetApplicableTaxRulesAsync(string jurisdictionCode, CustomerType customerType, DateTime? effectiveDate = null, CancellationToken cancellationToken = default)
     {
-        var date = effectiveDate ?? DateTime.UtcNow;
+        var date = effectiveDate ?? SystemClock.UtcNow;
 
         return await _context.Set<TaxRule>()
             .Include(tr => tr.TaxJurisdiction)

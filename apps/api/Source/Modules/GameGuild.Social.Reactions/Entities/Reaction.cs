@@ -28,7 +28,7 @@ public class Reaction : EntityBase
     public void ChangeType(ReactionType newType)
     {
         Type = newType;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 }
 

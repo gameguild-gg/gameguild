@@ -60,7 +60,7 @@ public class ServiceAccountTokenController(
             request.ClientId,
             request.ClientSecret,
             ipAddress,
-            cancellationToken);
+            cancellationToken).ConfigureAwait(false);
 
         if (serviceAccount == null)
         {
@@ -78,13 +78,13 @@ public class ServiceAccountTokenController(
             serviceAccount.Name,
             serviceAccount.GetScopesSet(),
             serviceAccount.TenantId,
-            cancellationToken);
+            cancellationToken).ConfigureAwait(false);
 
         return Ok(new ClientCredentialsTokenResponse
         {
             AccessToken = accessToken,
             TokenType = "Bearer",
-            ExpiresIn = (int)(expiresAt - DateTime.UtcNow).TotalSeconds,
+            ExpiresIn = (int)(expiresAt - SystemClock.UtcNow).TotalSeconds,
             Scope = serviceAccount.Scopes
         });
     }

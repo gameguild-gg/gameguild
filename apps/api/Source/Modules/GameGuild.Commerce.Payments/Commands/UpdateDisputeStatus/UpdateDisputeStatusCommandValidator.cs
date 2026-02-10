@@ -13,6 +13,6 @@ public sealed class UpdateDisputeStatusCommandValidator : AbstractValidator<Upda
 
         RuleFor(x => x.NewStatus).NotEmpty().WithMessage("New status is required");
 
-        RuleFor(x => x.DueDate).GreaterThan(DateTime.UtcNow).WithMessage("Due date must be in the future").When(x => x.DueDate.HasValue);
+        RuleFor(x => x.DueDate).GreaterThan(SystemClock.UtcNow).WithMessage("Due date must be in the future").When(x => x.DueDate.HasValue);
     }
 }

@@ -51,7 +51,7 @@ public class SessionRegistration : EntityBase
     /// When the registration was made
     /// </summary>
     [Required]
-    public DateTime RegisteredAt { get; set; } = DateTime.UtcNow;
+    public DateTime RegisteredAt { get; set; } = SystemClock.UtcNow;
 
     /// <summary>
     /// When the user confirmed attendance
@@ -113,8 +113,8 @@ public class SessionRegistration : EntityBase
     public void Confirm()
     {
         Status = RegistrationStatus.Confirmed;
-        ConfirmedAt = DateTime.UtcNow;
-        UpdatedAt = DateTime.UtcNow;
+        ConfirmedAt = SystemClock.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     /// <summary>
@@ -124,7 +124,7 @@ public class SessionRegistration : EntityBase
     {
         Status = RegistrationStatus.Cancelled;
         AttendanceStatus = AttendanceStatus.NoShow;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     /// <summary>
@@ -132,9 +132,9 @@ public class SessionRegistration : EntityBase
     /// </summary>
     public void CheckIn()
     {
-        CheckedInAt = DateTime.UtcNow;
+        CheckedInAt = SystemClock.UtcNow;
         AttendanceStatus = AttendanceStatus.Present;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     /// <summary>
@@ -142,9 +142,9 @@ public class SessionRegistration : EntityBase
     /// </summary>
     public void CheckOut()
     {
-        CheckedOutAt = DateTime.UtcNow;
+        CheckedOutAt = SystemClock.UtcNow;
         AttendanceStatus = AttendanceStatus.Completed;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     /// <summary>
@@ -153,7 +153,7 @@ public class SessionRegistration : EntityBase
     public void MarkNoShow()
     {
         AttendanceStatus = AttendanceStatus.NoShow;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     /// <summary>
@@ -162,6 +162,6 @@ public class SessionRegistration : EntityBase
     public void UpdateNotes(string? notes)
     {
         Notes = notes;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 }

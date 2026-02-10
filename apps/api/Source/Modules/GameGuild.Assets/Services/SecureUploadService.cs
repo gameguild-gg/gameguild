@@ -230,7 +230,7 @@ public class SecureUploadService : ISecureUploadService
     {
         try
         {
-            var quarantineKey = $"quarantine/{userId}/{DateTime.UtcNow:yyyy/MM/dd}/{Guid.NewGuid()}/{fileName}";
+            var quarantineKey = $"quarantine/{userId}/{SystemClock.UtcNow:yyyy/MM/dd}/{Guid.NewGuid()}/{fileName}";
             var metadata = new Dictionary<string, string>
             {
                 ["OriginalFileName"] = fileName,
@@ -238,7 +238,7 @@ public class SecureUploadService : ISecureUploadService
                 ["UserId"] = userId.ToString(),
                 ["ThreatName"] = scanResult.ThreatName ?? "Unknown",
                 ["ThreatType"] = scanResult.ThreatType ?? "Unknown",
-                ["QuarantinedAt"] = DateTime.UtcNow.ToString("O")
+                ["QuarantinedAt"] = SystemClock.UtcNow.ToString("O")
             };
 
             content.Position = 0;

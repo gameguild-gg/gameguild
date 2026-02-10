@@ -51,7 +51,7 @@ public sealed class CapabilitiesController : BaseApiController
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> GetCapabilities(Guid tenantId, CancellationToken ct)
     {
-        var capabilities = await _capabilityService.GetTenantCapabilitiesAsync(tenantId, ct);
+        var capabilities = await _capabilityService.GetTenantCapabilitiesAsync(tenantId, ct).ConfigureAwait(false);
         return Ok(capabilities);
     }
 
@@ -68,7 +68,7 @@ public sealed class CapabilitiesController : BaseApiController
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> CheckCapability(Guid tenantId, string capability, CancellationToken ct)
     {
-        var isEnabled = await _capabilityService.IsCapabilityEnabledAsync(tenantId, capability, ct);
+        var isEnabled = await _capabilityService.IsCapabilityEnabledAsync(tenantId, capability, ct).ConfigureAwait(false);
         return Ok(new CapabilityCheckResponse(capability, isEnabled));
     }
 
@@ -101,7 +101,7 @@ public sealed class CapabilitiesController : BaseApiController
             userId,
             request.Reason,
             request.ExpiresAt,
-            ct);
+            ct).ConfigureAwait(false);
 
         return NoContent();
     }
@@ -126,7 +126,7 @@ public sealed class CapabilitiesController : BaseApiController
         var userIdClaim = User.FindFirst("sub")?.Value ?? User.FindFirst("userId")?.Value;
         Guid? userId = Guid.TryParse(userIdClaim, out var parsedUserId) ? parsedUserId : null;
 
-        await _capabilityService.RemoveCapabilityOverrideAsync(tenantId, capability, userId, reason, ct);
+        await _capabilityService.RemoveCapabilityOverrideAsync(tenantId, capability, userId, reason, ct).ConfigureAwait(false);
         return NoContent();
     }
 
@@ -142,7 +142,7 @@ public sealed class CapabilitiesController : BaseApiController
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> SyncFromPlan(Guid tenantId, CancellationToken ct)
     {
-        await _capabilityService.SyncCapabilitiesFromPlanAsync(tenantId, ct);
+        await _capabilityService.SyncCapabilitiesFromPlanAsync(tenantId, ct).ConfigureAwait(false);
         return NoContent();
     }
 
@@ -165,7 +165,7 @@ public sealed class CapabilitiesController : BaseApiController
         [FromQuery] DateTimeOffset? toDate,
         CancellationToken ct)
     {
-        var logs = await _capabilityService.GetAuditLogAsync(tenantId, capability, fromDate, toDate, ct);
+        var logs = await _capabilityService.GetAuditLogAsync(tenantId, capability, fromDate, toDate, ct).ConfigureAwait(false);
         var dtos = logs.Select(log => new CapabilityAuditLogDto(
             log.Id,
             log.TenantId,

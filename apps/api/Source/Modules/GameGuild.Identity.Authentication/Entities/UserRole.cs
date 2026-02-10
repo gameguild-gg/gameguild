@@ -22,7 +22,7 @@ public class UserRole : EntityBase<Guid>
         UserId = userId;
         RoleId = roleId;
         AssignedBy = assignedBy;
-        AssignedAt = DateTime.UtcNow;
+        AssignedAt = SystemClock.UtcNow;
         // Avoid virtual member calls in constructor - base class sets CreatedAt/UpdatedAt
     }
 
@@ -60,7 +60,7 @@ public class UserRole : EntityBase<Guid>
     ///     Check if this role assignment has expired
     /// </summary>
     /// <returns>True if the role assignment has expired</returns>
-    public bool IsExpired() => ExpiresAt.HasValue && ExpiresAt.Value < DateTime.UtcNow;
+    public bool IsExpired() => ExpiresAt.HasValue && ExpiresAt.Value < SystemClock.UtcNow;
 
     /// <summary>
     ///     Check if this is a permanent role assignment

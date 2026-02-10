@@ -92,7 +92,7 @@ public sealed class ProjectCommandHandlers
       Role = ProjectRoles.Owner,
       Permissions = FormatOwnerPermissions(),
       IsActive = true,
-      JoinedAt = DateTime.UtcNow
+      JoinedAt = SystemClock.UtcNow
     };
     _context.Set<ProjectCollaborator>().Add(creatorCollaborator);
 

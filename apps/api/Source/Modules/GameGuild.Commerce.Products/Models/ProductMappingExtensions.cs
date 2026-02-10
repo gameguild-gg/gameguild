@@ -65,7 +65,7 @@ public static class ProductMappingExtensions
     /// </summary>
     public static ProductPricingDto ToDto(this ProductPricing pricing)
     {
-        var now = DateTime.UtcNow;
+        var now = SystemClock.UtcNow;
         var isSaleActive = pricing.SalePrice.HasValue 
             && (!pricing.SaleStartDate.HasValue || pricing.SaleStartDate <= now)
             && (!pricing.SaleEndDate.HasValue || pricing.SaleEndDate > now);

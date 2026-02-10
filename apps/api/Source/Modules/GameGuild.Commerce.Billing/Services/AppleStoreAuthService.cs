@@ -24,7 +24,7 @@ public class AppleStoreAuthService(
     public async Task<string?> GetAppStoreJwtAsync(CancellationToken cancellationToken = default)
     {
         // Check cached JWT
-        if (!string.IsNullOrEmpty(_cachedJwt) && DateTime.UtcNow < _jwtExpiresAt)
+        if (!string.IsNullOrEmpty(_cachedJwt) && SystemClock.UtcNow < _jwtExpiresAt)
         {
             return _cachedJwt;
         }
@@ -33,7 +33,7 @@ public class AppleStoreAuthService(
         try
         {
             // Double-check after acquiring lock
-            if (!string.IsNullOrEmpty(_cachedJwt) && DateTime.UtcNow < _jwtExpiresAt)
+            if (!string.IsNullOrEmpty(_cachedJwt) && SystemClock.UtcNow < _jwtExpiresAt)
             {
                 return _cachedJwt;
             }
@@ -47,7 +47,7 @@ public class AppleStoreAuthService(
             }
 
             // Generate JWT
-            var now = DateTime.UtcNow;
+            var now = SystemClock.UtcNow;
             var expiry = now.AddMinutes(15); // App Store Server API JWTs are valid for up to 60 minutes
 
             var securityKey = new ECDsaSecurityKey(privateKey) { KeyId = _settings.KeyId };

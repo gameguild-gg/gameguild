@@ -193,7 +193,7 @@ public sealed record SecurityAuditEvent
         {
             EventId = Guid.NewGuid(),
             EventType = eventType,
-            Timestamp = DateTime.UtcNow,
+            Timestamp = SystemClock.UtcNow,
             SubjectId = actorContext?.SubjectId,
             TenantId = actorContext?.TenantId,
             ActorKind = actorContext?.ActorKind ?? ActorKind.Anonymous,

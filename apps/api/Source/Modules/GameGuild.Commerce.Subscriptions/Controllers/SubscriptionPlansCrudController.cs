@@ -32,7 +32,7 @@ public sealed class SubscriptionPlansCrudController(ISender sender) : BaseApiCon
     public async Task<IActionResult> CreateSubscriptionPlan([FromBody] CreatePlanRequest body, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(body);
-        var id = await sender.Send(new CreateSubscriptionPlanCommand(body.Name, body.Slug, body.MonthlyPriceInCents, body.Currency, body.Description), ct);
+        var id = await sender.Send(new CreateSubscriptionPlanCommand(body.Name, body.Slug, body.MonthlyPriceInCents, body.Currency, body.Description), ct).ConfigureAwait(false);
 
         return CreatedAtAction(nameof(GetSubscriptionPlanById), new { planId = id }, new { id, body.Name, body.Slug });
     }
@@ -75,39 +75,39 @@ public sealed class SubscriptionPlansCrudController(ISender sender) : BaseApiCon
         // If slug is specified, return single plan lookup
         if (!string.IsNullOrEmpty(slug))
         {
-            var plan = await sender.Send(new GetSubscriptionPlanBySlugQuery(slug), ct);
+            var plan = await sender.Send(new GetSubscriptionPlanBySlugQuery(slug), ct).ConfigureAwait(false);
             return plan is null ? NotFound() : Ok(plan);
         }
 
         // If price range is specified, filter by price
         if (minPrice.HasValue || maxPrice.HasValue)
         {
-            var priceResult = await sender.Send(new GetSubscriptionPlansByPriceRangeQuery(minPrice ?? 0, maxPrice ?? long.MaxValue), ct);
+            var priceResult = await sender.Send(new GetSubscriptionPlansByPriceRangeQuery(minPrice ?? 0, maxPrice ?? long.MaxValue), ct).ConfigureAwait(false);
             return Ok(priceResult);
         }
 
         // If activeOnly is specified, use the simple query, otherwise use the paginated query
         if (activeOnly && page == 1 && pageSize == 20 && !isActive.HasValue && !isFeatured.HasValue && string.IsNullOrEmpty(q))
         {
-            var result = await sender.Send(new GetActiveSubscriptionPlansQuery(), ct);
+            var result = await sender.Send(new GetActiveSubscriptionPlansQuery(), ct).ConfigureAwait(false);
             return Ok(result);
         }
 
         // If only featured filter is requested without other pagination
         if (isFeatured == true && page == 1 && pageSize == 20 && !isActive.HasValue && string.IsNullOrEmpty(q))
         {
-            var featuredResult = await sender.Send(new GetFeaturedSubscriptionPlansQuery(), ct);
+            var featuredResult = await sender.Send(new GetFeaturedSubscriptionPlansQuery(), ct).ConfigureAwait(false);
             return Ok(featuredResult);
         }
 
         // If search term is provided without pagination, use search query
         if (!string.IsNullOrEmpty(q) && page == 1 && pageSize == 20 && !isActive.HasValue && !isFeatured.HasValue)
         {
-            var searchResult = await sender.Send(new SearchSubscriptionPlansQuery(q), ct);
+            var searchResult = await sender.Send(new SearchSubscriptionPlansQuery(q), ct).ConfigureAwait(false);
             return Ok(searchResult);
         }
 
-        var pagedResult = await sender.Send(new GetPagedSubscriptionPlansQuery(page, pageSize, isActive, isFeatured, q), ct);
+        var pagedResult = await sender.Send(new GetPagedSubscriptionPlansQuery(page, pageSize, isActive, isFeatured, q), ct).ConfigureAwait(false);
         return Ok(pagedResult);
     }
 
@@ -125,7 +125,7 @@ public sealed class SubscriptionPlansCrudController(ISender sender) : BaseApiCon
     public async Task<IActionResult> CompareSubscriptionPlans([FromBody] ComparePlansRequest body, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(body);
-        var result = await sender.Send(new CompareSubscriptionPlansQuery(body.BasePlanId, body.ComparePlanIds), ct);
+        var result = await sender.Send(new CompareSubscriptionPlansQuery(body.BasePlanId, body.ComparePlanIds), ct).ConfigureAwait(false);
         return Ok(result);
     }
 
@@ -146,7 +146,7 @@ public sealed class SubscriptionPlansCrudController(ISender sender) : BaseApiCon
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> CheckSubscriptionPlanExistsById(Guid planId, CancellationToken ct)
     {
-        var plan = await sender.Send(new GetSubscriptionPlanByIdQuery(planId), ct);
+        var plan = await sender.Send(new GetSubscriptionPlanByIdQuery(planId), ct).ConfigureAwait(false);
         return plan is null ? NotFound() : Ok();
     }
 
@@ -163,7 +163,7 @@ public sealed class SubscriptionPlansCrudController(ISender sender) : BaseApiCon
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetSubscriptionPlanById(Guid planId, CancellationToken ct)
     {
-        var plan = await sender.Send(new GetSubscriptionPlanByIdQuery(planId), ct);
+        var plan = await sender.Send(new GetSubscriptionPlanByIdQuery(planId), ct).ConfigureAwait(false);
         return plan is null ? NotFound() : Ok(plan);
     }
 
@@ -180,7 +180,7 @@ public sealed class SubscriptionPlansCrudController(ISender sender) : BaseApiCon
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> DeleteSubscriptionPlan(Guid planId, CancellationToken ct)
     {
-        await sender.Send(new DeleteSubscriptionPlanCommand(planId), ct);
+        await sender.Send(new DeleteSubscriptionPlanCommand(planId), ct).ConfigureAwait(false);
         return NoContent();
     }
 
@@ -214,7 +214,7 @@ public sealed class SubscriptionPlansCrudController(ISender sender) : BaseApiCon
             body.HasAdvancedAnalytics,
             body.HasCustomBranding,
             body.Features,
-            body.SortOrder), ct);
+            body.SortOrder), ct).ConfigureAwait(false);
         return NoContent();
     }
 

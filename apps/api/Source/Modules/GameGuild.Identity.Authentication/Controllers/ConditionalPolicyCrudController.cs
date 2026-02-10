@@ -31,7 +31,7 @@ public class ConditionalPolicyCrudController(IMediator mediator, ILogger<Conditi
     [HttpPost]
     public async Task<ActionResult<ConditionalPolicy>> CreateConditionalPolicy([FromBody] CreateConditionalPolicyCommand command)
     {
-        var result = await _mediator.Send(command);
+        var result = await _mediator.Send(command).ConfigureAwait(false);
 
         return CreatedAtAction(nameof(GetConditionalPolicy), new { id = result.Id }, result);
     }
@@ -43,7 +43,7 @@ public class ConditionalPolicyCrudController(IMediator mediator, ILogger<Conditi
     public async Task<ActionResult<ConditionalPolicy>> GetConditionalPolicy(Guid policyId)
     {
         var query = new GetConditionalPolicyQuery { PolicyId = policyId };
-        var result = await _mediator.Send(query);
+        var result = await _mediator.Send(query).ConfigureAwait(false);
 
         return Ok(result);
     }
@@ -55,7 +55,7 @@ public class ConditionalPolicyCrudController(IMediator mediator, ILogger<Conditi
     public async Task<ActionResult<ConditionalPolicy>> UpdateConditionalPolicy(Guid policyId, [FromBody] UpdateConditionalPolicyCommand command)
     {
         command.PolicyId = policyId;
-        var result = await _mediator.Send(command);
+        var result = await _mediator.Send(command).ConfigureAwait(false);
 
         return Ok(result);
     }
@@ -67,7 +67,7 @@ public class ConditionalPolicyCrudController(IMediator mediator, ILogger<Conditi
     public async Task<ActionResult> DeleteConditionalPolicy(Guid policyId)
     {
         var command = new DeleteConditionalPolicyCommand { PolicyId = policyId };
-        await _mediator.Send(command);
+        await _mediator.Send(command).ConfigureAwait(false);
 
         return NoContent();
     }
@@ -85,7 +85,7 @@ public class ConditionalPolicyCrudController(IMediator mediator, ILogger<Conditi
     )
     {
         var query = new GetConditionalPoliciesQuery { TenantId = tenantId, IsActive = isActive, ConditionType = conditionType, Page = page, PageSize = pageSize };
-        var result = await _mediator.Send(query);
+        var result = await _mediator.Send(query).ConfigureAwait(false);
 
         return Ok(result);
     }
@@ -101,7 +101,7 @@ public class ConditionalPolicyCrudController(IMediator mediator, ILogger<Conditi
     public async Task<ActionResult> ActivateConditionalPolicy(Guid policyId)
     {
         var command = new ActivateConditionalPolicyCommand { PolicyId = policyId };
-        await _mediator.Send(command);
+        await _mediator.Send(command).ConfigureAwait(false);
 
         return Ok(new { message = "Conditional policy activated successfully" });
     }
@@ -113,7 +113,7 @@ public class ConditionalPolicyCrudController(IMediator mediator, ILogger<Conditi
     public async Task<ActionResult> DeactivateConditionalPolicy(Guid policyId)
     {
         var command = new DeactivateConditionalPolicyCommand { PolicyId = policyId };
-        await _mediator.Send(command);
+        await _mediator.Send(command).ConfigureAwait(false);
 
         return Ok(new { message = "Conditional policy deactivated successfully" });
     }
@@ -125,7 +125,7 @@ public class ConditionalPolicyCrudController(IMediator mediator, ILogger<Conditi
     public async Task<ActionResult<ConditionalPolicy>> CloneConditionalPolicy(Guid policyId, [FromBody] CloneConditionalPolicyCommand command)
     {
         command.SourcePolicyId = policyId;
-        var result = await _mediator.Send(command);
+        var result = await _mediator.Send(command).ConfigureAwait(false);
 
         return CreatedAtAction(nameof(GetConditionalPolicy), new { policyId = result.Id }, result);
     }
@@ -137,7 +137,7 @@ public class ConditionalPolicyCrudController(IMediator mediator, ILogger<Conditi
     public async Task<ActionResult> UpdateConditionalPolicyPriority(Guid policyId, [FromBody] UpdateConditionalPolicyPriorityCommand command)
     {
         command.PolicyId = policyId;
-        await _mediator.Send(command);
+        await _mediator.Send(command).ConfigureAwait(false);
 
         return Ok(new { message = "Policy priority updated successfully" });
     }
@@ -153,7 +153,7 @@ public class ConditionalPolicyCrudController(IMediator mediator, ILogger<Conditi
     public async Task<ActionResult<IEnumerable<ConditionalPolicyTemplateDto>>> GetConditionalPolicyTemplates()
     {
         var query = new GetConditionalPolicyTemplatesQuery();
-        var result = await _mediator.Send(query);
+        var result = await _mediator.Send(query).ConfigureAwait(false);
 
         return Ok(result);
     }
@@ -165,7 +165,7 @@ public class ConditionalPolicyCrudController(IMediator mediator, ILogger<Conditi
     public async Task<ActionResult<ConditionalPolicy>> CreateConditionalPolicyFromTemplate(Guid templateId, [FromBody] CreateConditionalPolicyFromTemplateCommand command)
     {
         command.TemplateId = templateId;
-        var result = await _mediator.Send(command);
+        var result = await _mediator.Send(command).ConfigureAwait(false);
 
         return CreatedAtAction(nameof(GetConditionalPolicy), new { id = result.Id }, result);
     }

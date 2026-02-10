@@ -35,7 +35,7 @@ public class MfaAttemptRepository(IApplicationDbContext context) : IMfaAttemptRe
     public async Task<MfaAttempt> CreateAsync(MfaAttempt attempt, CancellationToken cancellationToken = default)
     {
         attempt.Id = Guid.NewGuid();
-        attempt.UpdatedAt = DateTime.UtcNow;
+        attempt.UpdatedAt = SystemClock.UtcNow;
 
         MfaAttempts.Add(attempt);
         await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
@@ -61,7 +61,7 @@ public class MfaAttemptRepository(IApplicationDbContext context) : IMfaAttemptRe
 
     public async Task<MfaAttempt> UpdateAsync(MfaAttempt attempt, CancellationToken cancellationToken = default)
     {
-        attempt.UpdatedAt = DateTime.UtcNow;
+        attempt.UpdatedAt = SystemClock.UtcNow;
 
         MfaAttempts.Update(attempt);
         await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);

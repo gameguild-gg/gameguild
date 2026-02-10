@@ -29,7 +29,7 @@ public class UserAchievement : EntityBase
     public virtual Achievement? Achievement { get; set; }
 
     /// <summary> When the achievement was earned </summary>
-    public DateTime EarnedAt { get; set; } = DateTime.UtcNow;
+    public DateTime EarnedAt { get; set; } = SystemClock.UtcNow;
 
     /// <summary> The level achieved if this is a multi-level achievement </summary>
     public int? Level { get; set; }
@@ -81,7 +81,7 @@ public class UserAchievement : EntityBase
             Id = Guid.NewGuid(),
             UserId = userId,
             AchievementId = achievementId,
-            EarnedAt = DateTime.UtcNow,
+            EarnedAt = SystemClock.UtcNow,
             IsCompleted = true,
             PointsEarned = points,
             Context = context,
@@ -94,7 +94,7 @@ public class UserAchievement : EntityBase
     public void MarkAsNotified()
     {
         IsNotified = true;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     public void IncrementProgress(int amount = 1)
@@ -104,12 +104,12 @@ public class UserAchievement : EntityBase
         {
             IsCompleted = true;
         }
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     public void IncrementEarnCount()
     {
         EarnCount++;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 }

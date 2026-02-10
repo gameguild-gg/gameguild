@@ -25,7 +25,7 @@ public class RevenueAuditService(
     {
         logger.LogInformation("Recording revenue event: {EventType} for amount {Amount} {Currency}", eventType, amount, currency);
 
-        var revenueEvent = new RevenueEvent { EventType = eventType, Amount = amount, Currency = currency, Source = source, ReferenceId = referenceId, Timestamp = DateTime.UtcNow, UserId = userId, Metadata = metadata };
+        var revenueEvent = new RevenueEvent { EventType = eventType, Amount = amount, Currency = currency, Source = source, ReferenceId = referenceId, Timestamp = SystemClock.UtcNow, UserId = userId, Metadata = metadata };
 
         await revenueEventRepository.AddAsync(revenueEvent, cancellationToken).ConfigureAwait(false);
         await revenueEventRepository.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
@@ -76,8 +76,8 @@ public class RevenueAuditService(
             Description = description,
             ReferenceNumber = referenceNumber ?? Guid.NewGuid().ToString(),
             IsReconciled = false,
-            FiscalYear = DateTime.UtcNow.Year,
-            FiscalPeriod = DateTime.UtcNow.Month
+            FiscalYear = SystemClock.UtcNow.Year,
+            FiscalPeriod = SystemClock.UtcNow.Month
         };
 
         await ledgerRepository.AddAsync(entry, cancellationToken).ConfigureAwait(false);
@@ -154,7 +154,7 @@ public class RevenueAuditService(
             OldValue = oldValue,
             NewValue = newValue,
             ChangedBy = changedBy,
-            ChangedAt = DateTime.UtcNow,
+            ChangedAt = SystemClock.UtcNow,
             IpAddress = ipAddress,
             UserAgent = userAgent,
             Reason = reason

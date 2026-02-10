@@ -61,7 +61,7 @@ public class LocalizationContext : ILocalizationContext
 
     public string TimeZoneId => _currentTimeZone.Id;
 
-    public DateTime GetCurrentLocalTime() => TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, CurrentTimeZone);
+    public DateTime GetCurrentLocalTime() => TimeZoneInfo.ConvertTimeFromUtc(SystemClock.UtcNow, CurrentTimeZone);
 
     public DateTime ConvertToLocalTime(DateTime utcTime) => TimeZoneInfo.ConvertTimeFromUtc(utcTime, CurrentTimeZone);
 

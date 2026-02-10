@@ -155,7 +155,7 @@ public class AbacPolicy
     /// </summary>
     public Guid? UpdatedBy { get; set; }
 
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime CreatedAt { get; set; } = SystemClock.UtcNow;
 
     public DateTime? UpdatedAt { get; set; }
 
@@ -171,7 +171,7 @@ public class AbacPolicy
     {
         if (!IsEnabled) return false;
 
-        var now = DateTime.UtcNow;
+        var now = SystemClock.UtcNow;
 
         if (EffectiveFrom.HasValue && now < EffectiveFrom.Value) return false;
         if (EffectiveUntil.HasValue && now > EffectiveUntil.Value) return false;
@@ -185,7 +185,7 @@ public class AbacPolicy
     public void Enable()
     {
         IsEnabled = true;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     /// <summary>
@@ -194,7 +194,7 @@ public class AbacPolicy
     public void Disable()
     {
         IsEnabled = false;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     /// <summary>
@@ -206,7 +206,7 @@ public class AbacPolicy
             throw new ArgumentException("Priority must be non-negative", nameof(priority));
 
         Priority = priority;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     /// <summary>
@@ -216,7 +216,7 @@ public class AbacPolicy
     {
         IsEnabled = isActive;
         UpdatedBy = updatedBy;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     /// <summary>
@@ -227,7 +227,7 @@ public class AbacPolicy
         EffectiveFrom = effectiveFrom;
         EffectiveUntil = effectiveUntil;
         UpdatedBy = updatedBy;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     /// <summary>
@@ -239,7 +239,7 @@ public class AbacPolicy
         ConditionExpression = conditionExpression;
         UpdatedBy = updatedBy;
         Version++;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     /// <summary>
@@ -251,7 +251,7 @@ public class AbacPolicy
         Description = description;
         Priority = priority;
         UpdatedBy = updatedBy;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     /// <summary>
@@ -308,7 +308,7 @@ public class DelegatedAdminScope
 
     public bool CanViewAuditLogs { get; set; }
 
-    public DateTime StartsAt { get; set; } = DateTime.UtcNow;
+    public DateTime StartsAt { get; set; } = SystemClock.UtcNow;
 
     public DateTime? ExpiresAt { get; set; }
 
@@ -316,7 +316,7 @@ public class DelegatedAdminScope
 
     public Guid CreatedBy { get; set; }
 
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime CreatedAt { get; set; } = SystemClock.UtcNow;
 
     public DateTime? UpdatedAt { get; set; }
 
@@ -327,7 +327,7 @@ public class DelegatedAdminScope
     {
         if (!IsActive) return false;
 
-        var now = DateTime.UtcNow;
+        var now = SystemClock.UtcNow;
         return now >= StartsAt && (ExpiresAt == null || now < ExpiresAt);
     }
 
@@ -355,7 +355,7 @@ public class DelegatedAdminScope
     public void Activate()
     {
         IsActive = true;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     /// <summary>
@@ -364,7 +364,7 @@ public class DelegatedAdminScope
     public void Deactivate()
     {
         IsActive = false;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 }
 
@@ -407,7 +407,7 @@ public class PermissionTemplateVersion
 
     public string[]? Tags { get; set; }
 
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime CreatedAt { get; set; } = SystemClock.UtcNow;
 
     public DateTime? UpdatedAt { get; set; }
 
@@ -473,7 +473,7 @@ public class PermissionTemplateMigration
 
     public string? Notes { get; set; }
 
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime CreatedAt { get; set; } = SystemClock.UtcNow;
 
     public DateTime? UpdatedAt { get; set; }
 
@@ -543,7 +543,7 @@ public class PolicyBundle
 
     public DateTime? LastDeployedAt { get; set; }
 
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime CreatedAt { get; set; } = SystemClock.UtcNow;
 
     public DateTime? UpdatedAt { get; set; }
 
@@ -574,7 +574,7 @@ public class PolicyBundleDeployment
 
     public PolicyDeploymentStatus Status { get; set; } = PolicyDeploymentStatus.Pending;
 
-    public DateTime DeployedAt { get; set; } = DateTime.UtcNow;
+    public DateTime DeployedAt { get; set; } = SystemClock.UtcNow;
 
     public Guid DeployedBy { get; set; }
 
@@ -605,7 +605,7 @@ public class PolicyBundleDeployment
     public void Activate()
     {
         Status = PolicyDeploymentStatus.Active;
-        ActivatedAt = DateTime.UtcNow;
+        ActivatedAt = SystemClock.UtcNow;
     }
 
     /// <summary>
@@ -614,7 +614,7 @@ public class PolicyBundleDeployment
     public void Rollback(Guid userId, string reason)
     {
         Status = PolicyDeploymentStatus.RolledBack;
-        RolledBackAt = DateTime.UtcNow;
+        RolledBackAt = SystemClock.UtcNow;
         RolledBackBy = userId;
         RollbackReason = reason;
     }
@@ -633,7 +633,7 @@ public class PolicyRegistryAuditLog
 
     public Guid PerformedBy { get; set; }
 
-    public DateTime PerformedAt { get; set; } = DateTime.UtcNow;
+    public DateTime PerformedAt { get; set; } = SystemClock.UtcNow;
 
     public string? Details { get; set; }
 

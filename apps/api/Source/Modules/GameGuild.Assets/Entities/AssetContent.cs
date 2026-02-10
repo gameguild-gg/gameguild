@@ -205,7 +205,7 @@ public class AssetContent : EntityBase
     public void SetModerationStatus(ModerationStatus status, IEnumerable<string>? labels = null)
     {
         ModerationStatus = status;
-        ModerationCompletedAt = DateTime.UtcNow;
+        ModerationCompletedAt = SystemClock.UtcNow;
         if (labels != null)
         {
             SetModerationLabels(labels);
@@ -218,7 +218,7 @@ public class AssetContent : EntityBase
     public void SetModerationStatus(ModerationStatus status, Guid reviewedBy, string[]? labels = null, string? notes = null)
     {
         ModerationStatus = status;
-        ModerationCompletedAt = DateTime.UtcNow;
+        ModerationCompletedAt = SystemClock.UtcNow;
         if (labels != null)
         {
             SetModerationLabels(labels);
@@ -232,7 +232,7 @@ public class AssetContent : EntityBase
     public void SetVirusScanStatus(VirusScanStatus status, string? scanResult = null)
     {
         VirusScanStatus = status;
-        VirusScanCompletedAt = DateTime.UtcNow;
+        VirusScanCompletedAt = SystemClock.UtcNow;
     }
 
     /// <summary>
@@ -255,7 +255,7 @@ public class AssetContent : EntityBase
         // If still has no references, it will be picked up by next GC run
         if (ReferenceCount == 0)
         {
-            MarkedForDeletionAt = DateTime.UtcNow;
+            MarkedForDeletionAt = SystemClock.UtcNow;
         }
     }
 }

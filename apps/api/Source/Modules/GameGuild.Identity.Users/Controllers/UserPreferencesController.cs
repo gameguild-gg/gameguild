@@ -26,7 +26,7 @@ public sealed class UserPreferencesController(ISender sender) : BaseApiControlle
     public async Task<IActionResult> GetPreferences(Guid userId, CancellationToken ct)
     {
         var query = new GetUserPreferencesQuery(userId);
-        var result = await sender.Send(query, ct);
+        var result = await sender.Send(query, ct).ConfigureAwait(false);
 
         return result == null ? NotFound() : Ok(result);
     }
@@ -45,7 +45,7 @@ public sealed class UserPreferencesController(ISender sender) : BaseApiControlle
         ArgumentNullException.ThrowIfNull(body);
 
         var command = new UpdateUserPreferencesCommand(userId, body);
-        await sender.Send(command, ct);
+        await sender.Send(command, ct).ConfigureAwait(false);
 
         return NoContent();
     }
@@ -64,7 +64,7 @@ public sealed class UserPreferencesController(ISender sender) : BaseApiControlle
         ArgumentNullException.ThrowIfNull(body);
 
         var command = new ReplaceUserPreferencesCommand(userId, body);
-        await sender.Send(command, ct);
+        await sender.Send(command, ct).ConfigureAwait(false);
 
         return NoContent();
     }
@@ -80,7 +80,7 @@ public sealed class UserPreferencesController(ISender sender) : BaseApiControlle
     public async Task<IActionResult> ResetPreferences(Guid userId, CancellationToken ct)
     {
         var command = new ResetUserPreferencesCommand(userId);
-        await sender.Send(command, ct);
+        await sender.Send(command, ct).ConfigureAwait(false);
 
         return NoContent();
     }
@@ -100,7 +100,7 @@ public sealed class UserPreferencesController(ISender sender) : BaseApiControlle
     public async Task<IActionResult> CheckNotificationPreferences(Guid userId, CancellationToken ct)
     {
         var query = new GetUserPreferencesQuery(userId);
-        var result = await sender.Send(query, ct);
+        var result = await sender.Send(query, ct).ConfigureAwait(false);
 
         return result == null ? NotFound() : Ok();
     }
@@ -116,7 +116,7 @@ public sealed class UserPreferencesController(ISender sender) : BaseApiControlle
     public async Task<IActionResult> GetNotificationPreferences(Guid userId, CancellationToken ct)
     {
         var query = new GetUserPreferencesQuery(userId);
-        var result = await sender.Send(query, ct);
+        var result = await sender.Send(query, ct).ConfigureAwait(false);
 
         return result?.NotificationPreferences == null ? NotFound() : Ok(result.NotificationPreferences);
     }
@@ -135,7 +135,7 @@ public sealed class UserPreferencesController(ISender sender) : BaseApiControlle
         ArgumentNullException.ThrowIfNull(body);
 
         var command = new ReplaceUserNotificationPreferencesCommand(userId, body);
-        await sender.Send(command, ct);
+        await sender.Send(command, ct).ConfigureAwait(false);
 
         return NoContent();
     }
@@ -154,7 +154,7 @@ public sealed class UserPreferencesController(ISender sender) : BaseApiControlle
         ArgumentNullException.ThrowIfNull(body);
 
         var command = new UpdateUserNotificationPreferencesCommand(userId, body);
-        await sender.Send(command, ct);
+        await sender.Send(command, ct).ConfigureAwait(false);
 
         return NoContent();
     }
@@ -170,7 +170,7 @@ public sealed class UserPreferencesController(ISender sender) : BaseApiControlle
     public async Task<IActionResult> ResetNotificationPreferences(Guid userId, CancellationToken ct)
     {
         var command = new ResetUserNotificationPreferencesCommand(userId);
-        await sender.Send(command, ct);
+        await sender.Send(command, ct).ConfigureAwait(false);
 
         return NoContent();
     }
@@ -190,7 +190,7 @@ public sealed class UserPreferencesController(ISender sender) : BaseApiControlle
     public async Task<IActionResult> CheckAccessibilityPreferences(Guid userId, CancellationToken ct)
     {
         var query = new GetUserPreferencesQuery(userId);
-        var result = await sender.Send(query, ct);
+        var result = await sender.Send(query, ct).ConfigureAwait(false);
 
         return result == null ? NotFound() : Ok();
     }
@@ -206,7 +206,7 @@ public sealed class UserPreferencesController(ISender sender) : BaseApiControlle
     public async Task<IActionResult> GetAccessibilityPreferences(Guid userId, CancellationToken ct)
     {
         var query = new GetUserPreferencesQuery(userId);
-        var result = await sender.Send(query, ct);
+        var result = await sender.Send(query, ct).ConfigureAwait(false);
 
         return result?.AccessibilityPreferences == null ? NotFound() : Ok(result.AccessibilityPreferences);
     }
@@ -225,7 +225,7 @@ public sealed class UserPreferencesController(ISender sender) : BaseApiControlle
         ArgumentNullException.ThrowIfNull(body);
 
         var command = new ReplaceUserAccessibilityPreferencesCommand(userId, body);
-        await sender.Send(command, ct);
+        await sender.Send(command, ct).ConfigureAwait(false);
 
         return NoContent();
     }
@@ -244,7 +244,7 @@ public sealed class UserPreferencesController(ISender sender) : BaseApiControlle
         ArgumentNullException.ThrowIfNull(body);
 
         var command = new UpdateUserAccessibilityPreferencesCommand(userId, body);
-        await sender.Send(command, ct);
+        await sender.Send(command, ct).ConfigureAwait(false);
 
         return NoContent();
     }
@@ -260,7 +260,7 @@ public sealed class UserPreferencesController(ISender sender) : BaseApiControlle
     public async Task<IActionResult> ResetAccessibilityPreferences(Guid userId, CancellationToken ct)
     {
         var command = new ResetUserAccessibilityPreferencesCommand(userId);
-        await sender.Send(command, ct);
+        await sender.Send(command, ct).ConfigureAwait(false);
 
         return NoContent();
     }
@@ -280,7 +280,7 @@ public sealed class UserPreferencesController(ISender sender) : BaseApiControlle
     public async Task<IActionResult> CheckPrivacyPreferences(Guid userId, CancellationToken ct)
     {
         var query = new GetUserPreferencesQuery(userId);
-        var result = await sender.Send(query, ct);
+        var result = await sender.Send(query, ct).ConfigureAwait(false);
 
         return result == null ? NotFound() : Ok();
     }
@@ -296,7 +296,7 @@ public sealed class UserPreferencesController(ISender sender) : BaseApiControlle
     public async Task<IActionResult> GetPrivacyPreferences(Guid userId, CancellationToken ct)
     {
         var query = new GetUserPreferencesQuery(userId);
-        var result = await sender.Send(query, ct);
+        var result = await sender.Send(query, ct).ConfigureAwait(false);
 
         return result?.PrivacyPreferences == null ? NotFound() : Ok(result.PrivacyPreferences);
     }
@@ -315,7 +315,7 @@ public sealed class UserPreferencesController(ISender sender) : BaseApiControlle
         ArgumentNullException.ThrowIfNull(body);
 
         var command = new ReplaceUserPrivacyPreferencesCommand(userId, body);
-        await sender.Send(command, ct);
+        await sender.Send(command, ct).ConfigureAwait(false);
 
         return NoContent();
     }
@@ -334,7 +334,7 @@ public sealed class UserPreferencesController(ISender sender) : BaseApiControlle
         ArgumentNullException.ThrowIfNull(body);
 
         var command = new UpdateUserPrivacyPreferencesCommand(userId, body);
-        await sender.Send(command, ct);
+        await sender.Send(command, ct).ConfigureAwait(false);
 
         return NoContent();
     }
@@ -350,7 +350,7 @@ public sealed class UserPreferencesController(ISender sender) : BaseApiControlle
     public async Task<IActionResult> ResetPrivacyPreferences(Guid userId, CancellationToken ct)
     {
         var command = new ResetUserPrivacyPreferencesCommand(userId);
-        await sender.Send(command, ct);
+        await sender.Send(command, ct).ConfigureAwait(false);
 
         return NoContent();
     }
@@ -370,7 +370,7 @@ public sealed class UserPreferencesController(ISender sender) : BaseApiControlle
     public async Task<IActionResult> CheckLocalizationPreferences(Guid userId, CancellationToken ct)
     {
         var query = new GetUserPreferencesQuery(userId);
-        var result = await sender.Send(query, ct);
+        var result = await sender.Send(query, ct).ConfigureAwait(false);
 
         return result == null ? NotFound() : Ok();
     }
@@ -386,7 +386,7 @@ public sealed class UserPreferencesController(ISender sender) : BaseApiControlle
     public async Task<IActionResult> GetLocalizationPreferences(Guid userId, CancellationToken ct)
     {
         var query = new GetUserPreferencesQuery(userId);
-        var result = await sender.Send(query, ct);
+        var result = await sender.Send(query, ct).ConfigureAwait(false);
 
         if (result == null)
             return NotFound();
@@ -422,7 +422,7 @@ public sealed class UserPreferencesController(ISender sender) : BaseApiControlle
         ArgumentNullException.ThrowIfNull(body);
 
         var command = new ReplaceUserLocalizationPreferencesCommand(userId, body);
-        await sender.Send(command, ct);
+        await sender.Send(command, ct).ConfigureAwait(false);
 
         return NoContent();
     }
@@ -441,7 +441,7 @@ public sealed class UserPreferencesController(ISender sender) : BaseApiControlle
         ArgumentNullException.ThrowIfNull(body);
 
         var command = new UpdateUserLocalizationPreferencesCommand(userId, body);
-        await sender.Send(command, ct);
+        await sender.Send(command, ct).ConfigureAwait(false);
 
         return NoContent();
     }
@@ -457,7 +457,7 @@ public sealed class UserPreferencesController(ISender sender) : BaseApiControlle
     public async Task<IActionResult> ResetLocalizationPreferences(Guid userId, CancellationToken ct)
     {
         var command = new ResetUserLocalizationPreferencesCommand(userId);
-        await sender.Send(command, ct);
+        await sender.Send(command, ct).ConfigureAwait(false);
 
         return NoContent();
     }

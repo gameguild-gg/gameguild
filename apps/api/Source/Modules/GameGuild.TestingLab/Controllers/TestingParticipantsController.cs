@@ -25,7 +25,7 @@ public class TestingParticipantsController(
     [RequireResourcePermission<TestingParticipantPermission, TestingParticipant>(PermissionType.Create)]
     public async Task<ActionResult<TestingParticipant>> AddParticipant(Guid requestId, Guid userId)
     {
-        var participant = await participantService.AddParticipantAsync(requestId, userId);
+        var participant = await participantService.AddParticipantAsync(requestId, userId).ConfigureAwait(false);
         return Ok(participant);
     }
 
@@ -34,7 +34,7 @@ public class TestingParticipantsController(
     [RequireResourcePermission<TestingParticipantPermission, TestingParticipant>(PermissionType.Delete)]
     public async Task<ActionResult> RemoveParticipant(Guid requestId, Guid userId)
     {
-        var result = await participantService.RemoveParticipantAsync(requestId, userId);
+        var result = await participantService.RemoveParticipantAsync(requestId, userId).ConfigureAwait(false);
         if (!result) return NotFound();
         return NoContent();
     }
@@ -44,7 +44,7 @@ public class TestingParticipantsController(
     [RequireResourcePermission<TestingParticipantPermission, TestingParticipant>(PermissionType.Read)]
     public async Task<ActionResult<IEnumerable<TestingParticipant>>> GetTestingRequestParticipants(Guid requestId)
     {
-        var participants = await participantService.GetTestingRequestParticipantsAsync(requestId);
+        var participants = await participantService.GetTestingRequestParticipantsAsync(requestId).ConfigureAwait(false);
         return Ok(participants);
     }
 
@@ -53,7 +53,7 @@ public class TestingParticipantsController(
     [RequireResourcePermission<TestingParticipantPermission, TestingParticipant>(PermissionType.Read)]
     public async Task<ActionResult<bool>> CheckUserParticipation(Guid requestId, Guid userId)
     {
-        var isParticipant = await participantService.IsUserParticipantAsync(requestId, userId);
+        var isParticipant = await participantService.IsUserParticipantAsync(requestId, userId).ConfigureAwait(false);
         return Ok(isParticipant);
     }
 
@@ -70,7 +70,7 @@ public class TestingParticipantsController(
         if (userId == null)
             return Unauthorized("User ID not found in token");
 
-        var registration = await participantService.RegisterForSessionAsync(sessionId, userId.Value, request.RegistrationType, request.Notes);
+        var registration = await participantService.RegisterForSessionAsync(sessionId, userId.Value, request.RegistrationType, request.Notes).ConfigureAwait(false);
         return Ok(registration);
     }
 
@@ -83,7 +83,7 @@ public class TestingParticipantsController(
         if (userId == null)
             return Unauthorized("User ID not found in token");
 
-        var result = await participantService.UnregisterFromSessionAsync(sessionId, userId.Value);
+        var result = await participantService.UnregisterFromSessionAsync(sessionId, userId.Value).ConfigureAwait(false);
         if (!result) return NotFound();
         return NoContent();
     }
@@ -93,7 +93,7 @@ public class TestingParticipantsController(
     [RequireResourcePermission<SessionRegistrationPermission, SessionRegistration>(PermissionType.Read, "sessionId")]
     public async Task<ActionResult<IEnumerable<SessionRegistration>>> GetSessionRegistrations(Guid sessionId)
     {
-        var registrations = await participantService.GetSessionRegistrationsAsync(sessionId);
+        var registrations = await participantService.GetSessionRegistrationsAsync(sessionId).ConfigureAwait(false);
         return Ok(registrations);
     }
 
@@ -110,7 +110,7 @@ public class TestingParticipantsController(
         if (userId == null)
             return Unauthorized("User ID not found in token");
 
-        var waitlistEntry = await participantService.AddToWaitlistAsync(sessionId, userId.Value, request.RegistrationType, request.Notes);
+        var waitlistEntry = await participantService.AddToWaitlistAsync(sessionId, userId.Value, request.RegistrationType, request.Notes).ConfigureAwait(false);
         return Ok(waitlistEntry);
     }
 
@@ -123,7 +123,7 @@ public class TestingParticipantsController(
         if (userId == null)
             return Unauthorized("User ID not found in token");
 
-        var result = await participantService.RemoveFromWaitlistAsync(sessionId, userId.Value);
+        var result = await participantService.RemoveFromWaitlistAsync(sessionId, userId.Value).ConfigureAwait(false);
         if (!result) return NotFound();
         return NoContent();
     }
@@ -133,7 +133,7 @@ public class TestingParticipantsController(
     [RequireResourcePermission<SessionWaitlistPermission, SessionWaitlist>(PermissionType.Read, "sessionId")]
     public async Task<ActionResult<IEnumerable<SessionWaitlist>>> GetSessionWaitlist(Guid sessionId)
     {
-        var waitlist = await participantService.GetSessionWaitlistAsync(sessionId);
+        var waitlist = await participantService.GetSessionWaitlistAsync(sessionId).ConfigureAwait(false);
         return Ok(waitlist);
     }
 
@@ -146,7 +146,7 @@ public class TestingParticipantsController(
     [RequireResourcePermission<TestingParticipantPermission, TestingParticipant>(PermissionType.Read, "userId")]
     public async Task<ActionResult<object>> GetUserTestingActivity(Guid userId)
     {
-        var activity = await participantService.GetUserTestingActivityAsync(userId);
+        var activity = await participantService.GetUserTestingActivityAsync(userId).ConfigureAwait(false);
         return Ok(activity);
     }
 
@@ -155,7 +155,7 @@ public class TestingParticipantsController(
     [RequireResourcePermission<SessionRegistrationPermission, SessionRegistration>(PermissionType.Read)]
     public async Task<ActionResult<object>> GetStudentAttendanceReport()
     {
-        var report = await participantService.GetStudentAttendanceReportAsync();
+        var report = await participantService.GetStudentAttendanceReportAsync().ConfigureAwait(false);
         return Ok(report);
     }
 

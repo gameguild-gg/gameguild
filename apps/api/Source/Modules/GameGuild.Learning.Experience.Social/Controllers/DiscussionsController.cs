@@ -45,7 +45,7 @@ public class DiscussionsController : LearningControllerBase
             request.Title,
             request.Content,
             request.ContentId,
-            cancellationToken);
+            cancellationToken).ConfigureAwait(false);
 
         if (!result.IsSuccess)
         {
@@ -65,9 +65,9 @@ public class DiscussionsController : LearningControllerBase
     public async Task<IActionResult> GetDiscussion(Guid id, CancellationToken cancellationToken = default)
     {
         // Increment view count
-        await _discussionService.IncrementDiscussionViewsAsync(id, cancellationToken);
+        await _discussionService.IncrementDiscussionViewsAsync(id, cancellationToken).ConfigureAwait(false);
 
-        var result = await _discussionService.GetDiscussionByIdAsync(id, cancellationToken);
+        var result = await _discussionService.GetDiscussionByIdAsync(id, cancellationToken).ConfigureAwait(false);
 
         if (!result.IsSuccess)
         {
@@ -90,7 +90,7 @@ public class DiscussionsController : LearningControllerBase
         [FromQuery] bool pinnedFirst = true,
         CancellationToken cancellationToken = default)
     {
-        var result = await _discussionService.GetCourseDiscussionsAsync(courseId, skip, take, pinnedFirst, cancellationToken);
+        var result = await _discussionService.GetCourseDiscussionsAsync(courseId, skip, take, pinnedFirst, cancellationToken).ConfigureAwait(false);
 
         if (!result.IsSuccess)
         {
@@ -114,7 +114,7 @@ public class DiscussionsController : LearningControllerBase
         [FromQuery] int take = 20,
         CancellationToken cancellationToken = default)
     {
-        var result = await _discussionService.GetContentDiscussionsAsync(courseId, contentId, skip, take, cancellationToken);
+        var result = await _discussionService.GetContentDiscussionsAsync(courseId, contentId, skip, take, cancellationToken).ConfigureAwait(false);
 
         if (!result.IsSuccess)
         {
@@ -133,7 +133,7 @@ public class DiscussionsController : LearningControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> PinDiscussion(Guid id, CancellationToken cancellationToken = default)
     {
-        var result = await _discussionService.PinDiscussionAsync(id, cancellationToken);
+        var result = await _discussionService.PinDiscussionAsync(id, cancellationToken).ConfigureAwait(false);
 
         if (!result.IsSuccess)
         {
@@ -151,7 +151,7 @@ public class DiscussionsController : LearningControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> UnpinDiscussion(Guid id, CancellationToken cancellationToken = default)
     {
-        var result = await _discussionService.UnpinDiscussionAsync(id, cancellationToken);
+        var result = await _discussionService.UnpinDiscussionAsync(id, cancellationToken).ConfigureAwait(false);
 
         if (!result.IsSuccess)
         {
@@ -169,7 +169,7 @@ public class DiscussionsController : LearningControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> MarkDiscussionResolved(Guid id, CancellationToken cancellationToken = default)
     {
-        var result = await _discussionService.MarkDiscussionResolvedAsync(id, cancellationToken);
+        var result = await _discussionService.MarkDiscussionResolvedAsync(id, cancellationToken).ConfigureAwait(false);
 
         if (!result.IsSuccess)
         {
@@ -188,7 +188,7 @@ public class DiscussionsController : LearningControllerBase
     public async Task<IActionResult> DeleteDiscussion(Guid id, CancellationToken cancellationToken = default)
     {
         var userId = GetRequiredUserId();
-        var result = await _discussionService.DeleteDiscussionAsync(id, userId, cancellationToken);
+        var result = await _discussionService.DeleteDiscussionAsync(id, userId, cancellationToken).ConfigureAwait(false);
 
         if (!result.IsSuccess)
         {

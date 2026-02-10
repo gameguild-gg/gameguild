@@ -48,7 +48,7 @@ public class NotificationsController : BaseApiController
         CancellationToken cancellationToken = default)
     {
         var userId = GetRequiredUserId();
-        var result = await _notificationService.GetUserNotificationsAsync(userId, skip, take, isRead, cancellationToken);
+        var result = await _notificationService.GetUserNotificationsAsync(userId, skip, take, isRead, cancellationToken).ConfigureAwait(false);
 
         if (!result.IsSuccess)
         {
@@ -67,7 +67,7 @@ public class NotificationsController : BaseApiController
     public async Task<IActionResult> GetUnreadCount(CancellationToken cancellationToken = default)
     {
         var userId = GetRequiredUserId();
-        var result = await _notificationService.GetUnreadCountAsync(userId, cancellationToken);
+        var result = await _notificationService.GetUnreadCountAsync(userId, cancellationToken).ConfigureAwait(false);
 
         if (!result.IsSuccess)
         {
@@ -85,7 +85,7 @@ public class NotificationsController : BaseApiController
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetNotification(Guid id, CancellationToken cancellationToken = default)
     {
-        var result = await _notificationService.GetByIdAsync(id, cancellationToken);
+        var result = await _notificationService.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
 
         if (!result.IsSuccess)
         {
@@ -111,7 +111,7 @@ public class NotificationsController : BaseApiController
     public async Task<IActionResult> MarkAsRead(Guid id, CancellationToken cancellationToken = default)
     {
         // First verify ownership
-        var notificationResult = await _notificationService.GetByIdAsync(id, cancellationToken);
+        var notificationResult = await _notificationService.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
         if (!notificationResult.IsSuccess)
         {
             return NotFound(notificationResult.Error);
@@ -123,7 +123,7 @@ public class NotificationsController : BaseApiController
             return Forbid();
         }
 
-        var result = await _notificationService.MarkAsReadAsync(id, cancellationToken);
+        var result = await _notificationService.MarkAsReadAsync(id, cancellationToken).ConfigureAwait(false);
         if (!result.IsSuccess)
         {
             return BadRequest(result.Error);
@@ -140,7 +140,7 @@ public class NotificationsController : BaseApiController
     public async Task<IActionResult> MarkAllAsRead(CancellationToken cancellationToken = default)
     {
         var userId = GetRequiredUserId();
-        var result = await _notificationService.MarkAllAsReadAsync(userId, cancellationToken);
+        var result = await _notificationService.MarkAllAsReadAsync(userId, cancellationToken).ConfigureAwait(false);
 
         if (!result.IsSuccess)
         {
@@ -158,7 +158,7 @@ public class NotificationsController : BaseApiController
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> MarkAsUnread(Guid id, CancellationToken cancellationToken = default)
     {
-        var notificationResult = await _notificationService.GetByIdAsync(id, cancellationToken);
+        var notificationResult = await _notificationService.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
         if (!notificationResult.IsSuccess)
         {
             return NotFound(notificationResult.Error);
@@ -170,7 +170,7 @@ public class NotificationsController : BaseApiController
             return Forbid();
         }
 
-        var result = await _notificationService.MarkAsUnreadAsync(id, cancellationToken);
+        var result = await _notificationService.MarkAsUnreadAsync(id, cancellationToken).ConfigureAwait(false);
         if (!result.IsSuccess)
         {
             return BadRequest(result.Error);
@@ -187,7 +187,7 @@ public class NotificationsController : BaseApiController
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> DeleteNotification(Guid id, CancellationToken cancellationToken = default)
     {
-        var notificationResult = await _notificationService.GetByIdAsync(id, cancellationToken);
+        var notificationResult = await _notificationService.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
         if (!notificationResult.IsSuccess)
         {
             return NotFound(notificationResult.Error);
@@ -199,7 +199,7 @@ public class NotificationsController : BaseApiController
             return Forbid();
         }
 
-        var result = await _notificationService.DeleteAsync(id, cancellationToken);
+        var result = await _notificationService.DeleteAsync(id, cancellationToken).ConfigureAwait(false);
         if (!result.IsSuccess)
         {
             return BadRequest(result.Error);
@@ -216,7 +216,7 @@ public class NotificationsController : BaseApiController
     public async Task<IActionResult> DeleteReadNotifications(CancellationToken cancellationToken = default)
     {
         var userId = GetRequiredUserId();
-        var result = await _notificationService.DeleteReadNotificationsAsync(userId, cancellationToken);
+        var result = await _notificationService.DeleteReadNotificationsAsync(userId, cancellationToken).ConfigureAwait(false);
 
         if (!result.IsSuccess)
         {
@@ -234,7 +234,7 @@ public class NotificationsController : BaseApiController
     public async Task<IActionResult> GetPreferences(CancellationToken cancellationToken = default)
     {
         var userId = GetRequiredUserId();
-        var result = await _notificationService.GetPreferencesAsync(userId, cancellationToken);
+        var result = await _notificationService.GetPreferencesAsync(userId, cancellationToken).ConfigureAwait(false);
 
         if (!result.IsSuccess)
         {
@@ -264,7 +264,7 @@ public class NotificationsController : BaseApiController
             request.SocialEnabled,
             request.LearningEnabled,
             request.AchievementsEnabled,
-            cancellationToken);
+            cancellationToken).ConfigureAwait(false);
 
         if (!result.IsSuccess)
         {
@@ -289,7 +289,7 @@ public class NotificationsController : BaseApiController
             request.Start,
             request.End,
             request.Timezone,
-            cancellationToken);
+            cancellationToken).ConfigureAwait(false);
 
         if (!result.IsSuccess)
         {

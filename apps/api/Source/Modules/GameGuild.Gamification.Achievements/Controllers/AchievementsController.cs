@@ -36,7 +36,7 @@ public class AchievementsController : BaseApiController
         var achievements = await _achievementService.GetUserAchievementsAsync(
             actorContext.SubjectIdAsGuid.Value,
             category,
-            actorContext.TenantId);
+            actorContext.TenantId).ConfigureAwait(false);
 
         var dtos = achievements.Select(ua => new UserAchievementDto
         {
@@ -70,7 +70,7 @@ public class AchievementsController : BaseApiController
             
         var points = await _achievementService.GetUserTotalPointsAsync(
             actorContext.SubjectIdAsGuid.Value,
-            actorContext.TenantId);
+            actorContext.TenantId).ConfigureAwait(false);
 
         return Ok(new { totalPoints = points });
     }
@@ -87,7 +87,7 @@ public class AchievementsController : BaseApiController
             
         var result = await _achievementService.GetUnnotifiedAchievementsAsync(
             actorContext.SubjectIdAsGuid.Value,
-            actorContext.TenantId);
+            actorContext.TenantId).ConfigureAwait(false);
 
         if (!result.IsSuccess)
         {
@@ -117,7 +117,7 @@ public class AchievementsController : BaseApiController
     [HttpPost("my/{userAchievementId}/mark-notified")]
     public async Task<ActionResult> MarkAsNotified(Guid userAchievementId)
     {
-        var result = await _achievementService.MarkNotifiedAsync(userAchievementId);
+        var result = await _achievementService.MarkNotifiedAsync(userAchievementId).ConfigureAwait(false);
 
         if (!result.IsSuccess)
         {
@@ -141,7 +141,7 @@ public class AchievementsController : BaseApiController
             
         var result = await _achievementService.GetEligibleAchievementsAsync(
             actorContext.SubjectIdAsGuid.Value,
-            actorContext.TenantId);
+            actorContext.TenantId).ConfigureAwait(false);
 
         if (!result.IsSuccess)
         {
@@ -166,7 +166,7 @@ public class AchievementsController : BaseApiController
             category,
             isActive,
             includeSecrets: false,
-            actorContext.TenantId);
+            actorContext.TenantId).ConfigureAwait(false);
 
         var dtos = achievements.Select(MapToDto);
         return Ok(dtos);
@@ -179,7 +179,7 @@ public class AchievementsController : BaseApiController
     [AllowAnonymous]
     public async Task<ActionResult<AchievementDto>> GetAchievement(Guid achievementId)
     {
-        var achievement = await _achievementService.GetAchievementByIdAsync(achievementId);
+        var achievement = await _achievementService.GetAchievementByIdAsync(achievementId).ConfigureAwait(false);
 
         if (achievement == null)
         {
@@ -216,7 +216,7 @@ public class AchievementsController : BaseApiController
         achievement.IsRepeatable = request.IsRepeatable;
         achievement.DisplayOrder = request.DisplayOrder;
 
-        var result = await _achievementService.CreateAchievementAsync(achievement);
+        var result = await _achievementService.CreateAchievementAsync(achievement).ConfigureAwait(false);
 
         if (!result.IsSuccess)
         {
@@ -235,7 +235,7 @@ public class AchievementsController : BaseApiController
         Guid achievementId,
         [FromBody] UpdateAchievementRequest request)
     {
-        var achievement = await _achievementService.GetAchievementByIdAsync(achievementId);
+        var achievement = await _achievementService.GetAchievementByIdAsync(achievementId).ConfigureAwait(false);
 
         if (achievement == null)
         {
@@ -268,7 +268,7 @@ public class AchievementsController : BaseApiController
         if (request.DisplayOrder.HasValue)
             achievement.DisplayOrder = request.DisplayOrder.Value;
 
-        var result = await _achievementService.UpdateAchievementAsync(achievement);
+        var result = await _achievementService.UpdateAchievementAsync(achievement).ConfigureAwait(false);
 
         if (!result.IsSuccess)
         {
@@ -285,7 +285,7 @@ public class AchievementsController : BaseApiController
     // PLANNED: Add [RequirePermission("achievements:delete")] when achievement permissions are registered in the authorization module
     public async Task<ActionResult> DeleteAchievement(Guid achievementId)
     {
-        var result = await _achievementService.DeleteAchievementAsync(achievementId);
+        var result = await _achievementService.DeleteAchievementAsync(achievementId).ConfigureAwait(false);
 
         if (!result.IsSuccess)
         {
@@ -312,7 +312,7 @@ public class AchievementsController : BaseApiController
             request.UserId,
             achievementId,
             request.Context,
-            actorContext.TenantId);
+            actorContext.TenantId).ConfigureAwait(false);
 
         if (!result.IsSuccess)
         {

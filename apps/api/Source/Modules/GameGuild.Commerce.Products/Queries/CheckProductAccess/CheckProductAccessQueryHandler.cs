@@ -25,7 +25,7 @@ public sealed class CheckProductAccessQueryHandler(IUserProductRepository userPr
         }
 
         var hasAccess = userProduct.AccessStatus == ProductAccessStatus.Active &&
-                        (userProduct.AccessEndDate == null || userProduct.AccessEndDate > DateTime.UtcNow);
+                        (userProduct.AccessEndDate == null || userProduct.AccessEndDate > SystemClock.UtcNow);
 
         return new ProductAccessCheckResult(
             hasAccess,

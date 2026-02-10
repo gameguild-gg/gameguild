@@ -20,10 +20,6 @@ public interface ISender
     /// </summary>
     Task<object?> Send(object request, CancellationToken cancellationToken = default);
 
-    /// <summary>
-    ///     Create a stream via a single stream handler
-    /// </summary>
-    IAsyncEnumerable<TResponse> CreateStream<TResponse>(IStream<TResponse> request, CancellationToken cancellationToken = default);
 }
 
 /// <summary>
@@ -40,23 +36,8 @@ public interface ITenantScoped
 }
 
 /// <summary>
-///     Marker interface for cacheable requests
-/// </summary>
-public interface ICacheableRequest
-{
-    /// <summary>
-    ///     Gets the cache key for this request
-    /// </summary>
-    string CacheKey { get; }
-
-    /// <summary>
-    ///     Gets the cache expiration time
-    /// </summary>
-    TimeSpan CacheExpiration { get; }
-}
-
-/// <summary>
-///     Cache service interface
+///     Cache service interface for request-level caching.
+///     Default implementation: <see cref="Implementation.MemoryCacheService"/>.
 /// </summary>
 public interface ICacheService
 {
@@ -74,19 +55,4 @@ public interface ICacheService
     ///     Removes a value from cache
     /// </summary>
     Task RemoveAsync(string key, CancellationToken cancellationToken = default);
-}
-
-/// <summary>
-///     Simple validator interface. 
-///     <b>Deprecated:</b> Use <c>FluentValidation.IValidator&lt;T&gt;</c> instead.
-///     The <see cref="ValidationBehavior{TRequest,TResponse}"/> now uses FluentValidation directly.
-/// </summary>
-/// <typeparam name="T">Type to validate</typeparam>
-[Obsolete("Use FluentValidation.IValidator<T> instead. This interface is no longer consumed by the CQRS pipeline.")]
-public interface IValidator<T>
-{
-    /// <summary>
-    ///     Validates the instance
-    /// </summary>
-    Task<ValidationResult> ValidateAsync(ValidationContext<T> context, CancellationToken cancellationToken = default);
 }

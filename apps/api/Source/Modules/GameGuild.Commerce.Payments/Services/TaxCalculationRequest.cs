@@ -19,7 +19,7 @@ public class TaxCalculationRequest
 
     public bool IsTaxInclusive { get; init; }
 
-    public DateTime TransactionDate { get; init; } = DateTime.UtcNow;
+    public DateTime TransactionDate { get; init; } = SystemClock.UtcNow;
 
     public List<string> ApplicableExemptions { get; init; } = new List<string>();
 }

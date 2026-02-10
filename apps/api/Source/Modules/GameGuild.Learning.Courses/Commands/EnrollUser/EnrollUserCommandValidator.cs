@@ -12,7 +12,7 @@ public sealed class EnrollUserCommandValidator : AbstractValidator<EnrollUserCom
           .NotEmpty().WithMessage("User ID is required");
 
         RuleFor(x => x.EnrollmentDate)
-          .LessThanOrEqualTo(DateTime.UtcNow).WithMessage("Enrollment date cannot be in the future")
+          .LessThanOrEqualTo(SystemClock.UtcNow).WithMessage("Enrollment date cannot be in the future")
           .When(x => x.EnrollmentDate.HasValue);
     }
 }

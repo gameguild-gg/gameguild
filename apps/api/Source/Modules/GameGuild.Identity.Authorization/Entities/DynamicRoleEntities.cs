@@ -168,7 +168,7 @@ public class DynamicRoleAssignment : EntityBase
     public bool IsValid()
     {
         if (!IsActive) return false;
-        var now = DateTime.UtcNow;
+        var now = SystemClock.UtcNow;
         if (StartsAt.HasValue && StartsAt.Value > now) return false;
         if (ExpiresAt.HasValue && ExpiresAt.Value <= now) return false;
         return true;

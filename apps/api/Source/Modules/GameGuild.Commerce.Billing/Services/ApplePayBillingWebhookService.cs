@@ -138,7 +138,7 @@ public class ApplePayBillingWebhookService : BillingWebhookService
                     TransactionId = notification.TransactionId,
                     OriginalTransactionId = notification.OriginalTransactionId,
                     ProductId = notification.ProductId,
-                    PaidAt = DateTime.UtcNow
+                    PaidAt = SystemClock.UtcNow
                 };
                 await HandlePaymentSucceededAsync(paymentPayload).ConfigureAwait(false);
                 break;
@@ -344,7 +344,7 @@ internal class ApplePayWebhookPayload
         ExternalSubscriptionId = SubscriptionId ?? TransactionId ?? string.Empty,
         Status = Status ?? string.Empty,
         Amount = Amount,
-        StartDate = DateTime.UtcNow,
+        StartDate = SystemClock.UtcNow,
         EndDate = null,
         OriginalTransactionId = TransactionId
     };
@@ -356,7 +356,7 @@ internal class ApplePayWebhookPayload
         ExternalSubscriptionId = SubscriptionId ?? string.Empty,
         Amount = Amount,
         Currency = Currency ?? "USD",
-        PaidAt = DateTime.UtcNow,
+        PaidAt = SystemClock.UtcNow,
         FailureReason = null,
         TransactionId = TransactionId,
         OriginalTransactionId = TransactionId

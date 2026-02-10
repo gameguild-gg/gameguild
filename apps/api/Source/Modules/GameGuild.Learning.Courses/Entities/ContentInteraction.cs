@@ -160,7 +160,7 @@ public class ContentInteraction : EntityBase
     /// Time since last access in days
     /// </summary>
     public int? DaysSinceLastAccess => LastAccessedAt.HasValue
-        ? (DateTime.UtcNow - LastAccessedAt.Value).Days
+        ? (SystemClock.UtcNow - LastAccessedAt.Value).Days
         : null;
 
     /// <summary>
@@ -178,7 +178,7 @@ public class ContentInteraction : EntityBase
     {
         if (!StartedAt.HasValue)
         {
-            StartedAt = DateTime.UtcNow;
+            StartedAt = SystemClock.UtcNow;
         }
         UpdateLastAccess();
     }
@@ -208,7 +208,7 @@ public class ContentInteraction : EntityBase
             return; // Already completed
 
         IsCompleted = true;
-        CompletedAt = DateTime.UtcNow;
+        CompletedAt = SystemClock.UtcNow;
         ProgressPercentage = 100m;
         UpdateLastAccess();
     }
@@ -218,8 +218,8 @@ public class ContentInteraction : EntityBase
     /// </summary>
     public void UpdateLastAccess()
     {
-        LastAccessedAt = DateTime.UtcNow;
-        UpdatedAt = DateTime.UtcNow;
+        LastAccessedAt = SystemClock.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     /// <summary>

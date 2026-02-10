@@ -106,7 +106,7 @@ public record PolicyGateContext
     /// <summary>
     ///     Request timestamp.
     /// </summary>
-    public DateTime RequestTime { get; init; } = DateTime.UtcNow;
+    public DateTime RequestTime { get; init; } = SystemClock.UtcNow;
 }
 
 /// <summary>

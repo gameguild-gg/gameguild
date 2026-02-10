@@ -18,11 +18,11 @@ public class ProgramContentController(IProgramContentService contentService) : B
   // [GameGuild.Identity.Authorization.RequireResourcePermission<GameGuild.Modules.Programs.ProgramPermission, GameGuild.Modules.Programs.Entities.Program>(PermissionType.Read, "programId")]
   public async Task<ActionResult<IEnumerable<ProgramContentDto>>> GetProgramContent(Guid programId, [FromQuery] string? level = null) {
     if (level == "top") {
-      var topLevelContent = await contentService.GetTopLevelContentAsync(programId);
+      var topLevelContent = await contentService.GetTopLevelContentAsync(programId).ConfigureAwait(false);
       return Ok(topLevelContent.ToDtos());
     }
 
-    var content = await contentService.GetContentByProgramAsync(programId);
+    var content = await contentService.GetContentByProgramAsync(programId).ConfigureAwait(false);
     var contentDtos = content.ToDtos();
     return Ok(contentDtos);
   }
@@ -31,7 +31,7 @@ public class ProgramContentController(IProgramContentService contentService) : B
   [HttpGet("{id}")]
   // [GameGuild.Identity.Authorization.RequireResourcePermission<GameGuild.Modules.Programs.ProgramPermission, GameGuild.Modules.Programs.Entities.Program>(PermissionType.Read, "programId")]
   public async Task<ActionResult<ProgramContentDto>> GetContent(Guid programId, Guid id) {
-    var content = await contentService.GetContentByIdAsync(id);
+    var content = await contentService.GetContentByIdAsync(id).ConfigureAwait(false);
 
     if (content == null || content.ProgramId != programId) return NotFound();
 
@@ -47,7 +47,7 @@ public class ProgramContentController(IProgramContentService contentService) : B
     if (createDto.ProgramId != programId) return BadRequest("Program ID in URL must match Program ID in request body");
 
     var content = createDto.ToEntity();
-    var createdContent = await contentService.CreateContentAsync(content);
+    var createdContent = await contentService.CreateContentAsync(content).ConfigureAwait(false);
     var contentDto = createdContent.ToDto();
 
     return CreatedAtAction(nameof(GetContent), new { programId = createdContent.ProgramId, id = createdContent.Id }, contentDto);
@@ -59,14 +59,14 @@ public class ProgramContentController(IProgramContentService contentService) : B
   public async Task<ActionResult<ProgramContentDto>> UpdateContent(Guid programId, Guid id, [FromBody] UpdateProgramContentDto updateDto) {
     if (updateDto.Id != id) return BadRequest("Content ID in URL must match Content ID in request body");
 
-    var existingContent = await contentService.GetContentByIdAsync(id);
+    var existingContent = await contentService.GetContentByIdAsync(id).ConfigureAwait(false);
 
     if (existingContent == null || existingContent.ProgramId != programId) return NotFound();
 
     // Apply updates from DTO
     existingContent.ApplyUpdates(updateDto);
 
-    var updatedContent = await contentService.UpdateContentAsync(existingContent);
+    var updatedContent = await contentService.UpdateContentAsync(existingContent).ConfigureAwait(false);
     var contentDto = updatedContent.ToDto();
 
     return Ok(contentDto);
@@ -76,11 +76,11 @@ public class ProgramContentController(IProgramContentService contentService) : B
   [HttpDelete("{id}")]
   // [GameGuild.Identity.Authorization.RequireResourcePermission<GameGuild.Modules.Programs.ProgramPermission, GameGuild.Modules.Programs.Entities.Program>(PermissionType.Delete, "programId")]
   public async Task<ActionResult> DeleteContent(Guid programId, Guid id) {
-    var content = await contentService.GetContentByIdAsync(id);
+    var content = await contentService.GetContentByIdAsync(id).ConfigureAwait(false);
 
     if (content == null || content.ProgramId != programId) return NotFound();
 
-    var deleted = await contentService.DeleteContentAsync(id);
+    var deleted = await contentService.DeleteContentAsync(id).ConfigureAwait(false);
 
     if (!deleted) return NotFound();
 
@@ -92,11 +92,11 @@ public class ProgramContentController(IProgramContentService contentService) : B
   // [GameGuild.Identity.Authorization.RequireResourcePermission<GameGuild.Modules.Programs.ProgramPermission, GameGuild.Modules.Programs.Entities.Program>(PermissionType.Read, "programId")]
   public async Task<ActionResult<IEnumerable<ProgramContentDto>>> GetChildContent(Guid programId, Guid parentId) {
     // Verify parent belongs to the program
-    var parent = await contentService.GetContentByIdAsync(parentId);
+    var parent = await contentService.GetContentByIdAsync(parentId).ConfigureAwait(false);
 
     if (parent == null || parent.ProgramId != programId) return NotFound("Parent content not found or does not belong to this program");
 
-    var children = await contentService.GetContentByParentAsync(parentId);
+    var children = await contentService.GetContentByParentAsync(parentId).ConfigureAwait(false);
     var childrenDtos = children.ToDtos();
 
     return Ok(childrenDtos);
@@ -108,7 +108,7 @@ public class ProgramContentController(IProgramContentService contentService) : B
   public async Task<ActionResult> ReorderContent(Guid programId, [FromBody] ReorderContentDto reorderDto) {
     // Convert the simple list to (Id, SortOrder) tuples
     var newOrder = reorderDto.ContentIds.Select((id, index) => (id, index + 1)).ToList();
-    var success = await contentService.ReorderContentAsync(programId, newOrder);
+    var success = await contentService.ReorderContentAsync(programId, newOrder).ConfigureAwait(false);
 
     if (!success) return BadRequest("Failed to reorder content. Some content items may not exist.");
 
@@ -121,11 +121,11 @@ public class ProgramContentController(IProgramContentService contentService) : B
   public async Task<ActionResult> MoveContent(Guid programId, Guid id, [FromBody] MoveContentDto moveDto) {
     if (moveDto.ContentId != id) return BadRequest("Content ID in URL must match Content ID in request body");
 
-    var content = await contentService.GetContentByIdAsync(id);
+    var content = await contentService.GetContentByIdAsync(id).ConfigureAwait(false);
 
     if (content == null || content.ProgramId != programId) return NotFound();
 
-    var success = await contentService.MoveContentAsync(id, moveDto.NewParentId, moveDto.NewSortOrder);
+    var success = await contentService.MoveContentAsync(id, moveDto.NewParentId, moveDto.NewSortOrder).ConfigureAwait(false);
 
     if (!success) return BadRequest("Failed to move content");
 
@@ -136,7 +136,7 @@ public class ProgramContentController(IProgramContentService contentService) : B
   [HttpGet("required")]
   // [GameGuild.Identity.Authorization.RequireResourcePermission<GameGuild.Modules.Programs.ProgramPermission, GameGuild.Modules.Programs.Entities.Program>(PermissionType.Read, "programId")]
   public async Task<ActionResult<IEnumerable<ProgramContentDto>>> GetRequiredContent(Guid programId) {
-    var requiredContent = await contentService.GetRequiredContentAsync(programId);
+    var requiredContent = await contentService.GetRequiredContentAsync(programId).ConfigureAwait(false);
     var contentDtos = requiredContent.ToDtos();
 
     return Ok(contentDtos);
@@ -146,7 +146,7 @@ public class ProgramContentController(IProgramContentService contentService) : B
   [HttpGet("by-type/{type}")]
   // [GameGuild.Identity.Authorization.RequireResourcePermission<GameGuild.Modules.Programs.ProgramPermission, GameGuild.Modules.Programs.Entities.Program>(PermissionType.Read, "programId")]
   public async Task<ActionResult<IEnumerable<ProgramContentDto>>> GetContentByType(Guid programId, ProgramContentType type) {
-    var content = await contentService.GetContentByTypeAsync(programId, type);
+    var content = await contentService.GetContentByTypeAsync(programId, type).ConfigureAwait(false);
     var contentDtos = content.ToDtos();
 
     return Ok(contentDtos);
@@ -156,7 +156,7 @@ public class ProgramContentController(IProgramContentService contentService) : B
   [HttpGet("by-visibility/{visibility}")]
   // [GameGuild.Identity.Authorization.RequireResourcePermission<GameGuild.Modules.Programs.ProgramPermission, GameGuild.Modules.Programs.Entities.Program>(PermissionType.Read, "programId")]
   public async Task<ActionResult<IEnumerable<ProgramContentDto>>> GetContentByVisibility(Guid programId, Visibility visibility) {
-    var content = await contentService.GetContentByVisibilityAsync(programId, visibility);
+    var content = await contentService.GetContentByVisibilityAsync(programId, visibility).ConfigureAwait(false);
     var contentDtos = content.ToDtos();
 
     return Ok(contentDtos);
@@ -168,7 +168,7 @@ public class ProgramContentController(IProgramContentService contentService) : B
   public async Task<ActionResult<IEnumerable<ProgramContentDto>>> SearchContent(Guid programId, [FromBody] SearchContentDto searchDto) {
     if (searchDto.ProgramId != programId) return BadRequest("Program ID in URL must match Program ID in request body");
 
-    var content = await contentService.SearchContentAsync(programId, searchDto.SearchTerm);
+    var content = await contentService.SearchContentAsync(programId, searchDto.SearchTerm).ConfigureAwait(false);
     var contentDtos = content.ToDtos();
 
     return Ok(contentDtos);
@@ -178,8 +178,8 @@ public class ProgramContentController(IProgramContentService contentService) : B
   [HttpGet("stats")]
   // [GameGuild.Identity.Authorization.RequireResourcePermission<GameGuild.Modules.Programs.ProgramPermission, GameGuild.Modules.Programs.Entities.Program>(PermissionType.Read, "programId")]
   public async Task<ActionResult<ContentStatsDto>> GetContentStats(Guid programId) {
-    var totalContent = await contentService.GetContentCountAsync(programId);
-    var requiredContent = await contentService.GetRequiredContentCountAsync(programId);
+    var totalContent = await contentService.GetContentCountAsync(programId).ConfigureAwait(false);
+    var requiredContent = await contentService.GetRequiredContentCountAsync(programId).ConfigureAwait(false);
 
     var stats = new ContentStatsDto { ProgramId = programId, TotalContent = totalContent, RequiredContent = requiredContent, OptionalContent = totalContent - requiredContent };
 

@@ -42,7 +42,7 @@ public sealed class ResourcePermissionsController(ISender sender, ILogger<Resour
             command.ResourceId,
             command.UserIds.Length);
 
-        var result = await sender.Send(command, cancellationToken);
+        var result = await sender.Send(command, cancellationToken).ConfigureAwait(false);
 
         return Ok(result);
     }
@@ -70,7 +70,7 @@ public sealed class ResourcePermissionsController(ISender sender, ILogger<Resour
             command.ResourceType,
             command.ResourceId);
 
-        var result = await sender.Send(command, cancellationToken);
+        var result = await sender.Send(command, cancellationToken).ConfigureAwait(false);
 
         return Ok(result);
     }
@@ -98,7 +98,7 @@ public sealed class ResourcePermissionsController(ISender sender, ILogger<Resour
             command.ResourceType,
             command.ResourceId);
 
-        var result = await sender.Send(command, cancellationToken);
+        var result = await sender.Send(command, cancellationToken).ConfigureAwait(false);
 
         return Ok(result);
     }
@@ -136,7 +136,7 @@ public sealed class ResourcePermissionsController(ISender sender, ILogger<Resour
             UserId = userId
         };
 
-        var result = await sender.Send(query, cancellationToken);
+        var result = await sender.Send(query, cancellationToken).ConfigureAwait(false);
 
         return Ok(result);
     }
@@ -175,7 +175,7 @@ public sealed class ResourcePermissionsController(ISender sender, ILogger<Resour
             UserId = userId
         };
 
-        var result = await sender.Send(query, cancellationToken);
+        var result = await sender.Send(query, cancellationToken).ConfigureAwait(false);
 
         return Ok(result);
     }
@@ -216,7 +216,7 @@ public sealed class ResourcePermissionsController(ISender sender, ILogger<Resour
             IncludeExpired = includeExpired
         };
 
-        var result = await sender.Send(query, cancellationToken);
+        var result = await sender.Send(query, cancellationToken).ConfigureAwait(false);
 
         return Ok(result);
     }

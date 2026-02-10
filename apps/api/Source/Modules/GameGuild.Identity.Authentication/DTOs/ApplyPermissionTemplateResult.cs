@@ -39,7 +39,7 @@ public class ApplyPermissionTemplateResult
             PermissionsGranted = permissions.Count,
             GrantedPermissions = permissions,
             Success = true,
-            AppliedAt = DateTime.UtcNow,
+            AppliedAt = SystemClock.UtcNow,
             AppliedBy = appliedBy
         };
     }
@@ -52,7 +52,7 @@ public class ApplyPermissionTemplateResult
             TemplateId = templateId,
             Success = false,
             Errors = new List<string> { error },
-            AppliedAt = DateTime.UtcNow
+            AppliedAt = SystemClock.UtcNow
         };
     }
 }

@@ -27,7 +27,7 @@ public class Enrollment : EntityBase
             UserId = userId,
             CohortId = cohortId,
             Status = EnrollmentStatus.Active,
-            EnrolledAt = DateTime.UtcNow,
+            EnrolledAt = SystemClock.UtcNow,
             Progress = 0
         };
     }
@@ -35,8 +35,8 @@ public class Enrollment : EntityBase
     public void UpdateProgress(int progress)
     {
         Progress = Math.Clamp(progress, 0, 100);
-        LastActivityAt = DateTime.UtcNow;
-        UpdatedAt = DateTime.UtcNow;
+        LastActivityAt = SystemClock.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
 
         if (Progress == 100 && Status == EnrollmentStatus.Active)
         {
@@ -47,28 +47,28 @@ public class Enrollment : EntityBase
     public void Complete()
     {
         Status = EnrollmentStatus.Completed;
-        CompletedAt = DateTime.UtcNow;
+        CompletedAt = SystemClock.UtcNow;
         Progress = 100;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     public void Drop(string? reason = null)
     {
         Status = EnrollmentStatus.Dropped;
-        DroppedAt = DateTime.UtcNow;
-        UpdatedAt = DateTime.UtcNow;
+        DroppedAt = SystemClock.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     public void Pause()
     {
         Status = EnrollmentStatus.Paused;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     public void Resume()
     {
         Status = EnrollmentStatus.Active;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 }
 

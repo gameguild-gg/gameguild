@@ -288,7 +288,7 @@ public class PricingEngineService(
             return false;
         }
 
-        var now = DateTime.UtcNow;
+        var now = SystemClock.UtcNow;
 
         var startValid = !pricing.SaleStartDate.HasValue || pricing.SaleStartDate.Value <= now;
         var endValid = !pricing.SaleEndDate.HasValue || pricing.SaleEndDate.Value > now;

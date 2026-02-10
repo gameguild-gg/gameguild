@@ -27,7 +27,7 @@ public class TenantSecurityVersion : EntityBase
     ///     Gets or sets when the version was last updated.
     /// </summary>
     [Required]
-    public DateTime LastUpdatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime LastUpdatedAt { get; set; } = SystemClock.UtcNow;
 
     /// <summary>
     ///     Gets or sets a description of the last change that caused the version increment.
@@ -43,7 +43,7 @@ public class TenantSecurityVersion : EntityBase
     public long IncrementVersion(string? reason = null)
     {
         SecurityVersion++;
-        LastUpdatedAt = DateTime.UtcNow;
+        LastUpdatedAt = SystemClock.UtcNow;
         LastChangeReason = reason;
         Touch();
         return SecurityVersion;

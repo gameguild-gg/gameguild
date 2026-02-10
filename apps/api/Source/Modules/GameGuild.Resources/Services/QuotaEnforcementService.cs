@@ -183,7 +183,7 @@ public class QuotaEnforcementService(
                 HardLimit: quota.HardLimit,
                 Source: "TryAtomicConsumeAsync",
                 ActorId: null,
-                Timestamp: DateTime.UtcNow), cancellationToken);
+                Timestamp: SystemClock.UtcNow), cancellationToken);
         }
         else
         {
@@ -197,7 +197,7 @@ public class QuotaEnforcementService(
                 HardLimit: quota.HardLimit ?? 0,
                 Source: "TryAtomicConsumeAsync",
                 ActorId: null,
-                Timestamp: DateTime.UtcNow), cancellationToken);
+                Timestamp: SystemClock.UtcNow), cancellationToken);
         }
 
         return (success, quota.CurrentUsage, quota.HardLimit);
@@ -241,7 +241,7 @@ public class QuotaEnforcementService(
                     HardLimit: quotaBefore?.HardLimit,
                     Source: source ?? "DecrementUsageAsync",
                     ActorId: userId,
-                    Timestamp: DateTime.UtcNow), cancellationToken);
+                    Timestamp: SystemClock.UtcNow), cancellationToken);
 
                 logger.LogInformation(
                     "Decremented {Amount} {Type} usage for tenant {TenantId} (source: {Source})",

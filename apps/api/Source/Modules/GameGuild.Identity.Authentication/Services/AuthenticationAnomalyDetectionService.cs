@@ -31,7 +31,7 @@ public class AuthenticationAnomalyDetectionService(
 
         try
         {
-            var since = DateTime.UtcNow.AddHours(-24);
+            var since = SystemClock.UtcNow.AddHours(-24);
             var recentAttempts = await authAttemptRepository
                 .GetRecentAttemptsAsync(userId, since, cancellationToken: default)
                 .ConfigureAwait(false);
@@ -53,7 +53,7 @@ public class AuthenticationAnomalyDetectionService(
                 result.RiskFactors.Add($"Multiple user agents ({uniqueUserAgents}) from same IP");
             }
 
-            var lastFiveMinutes = DateTime.UtcNow.AddMinutes(-5);
+            var lastFiveMinutes = SystemClock.UtcNow.AddMinutes(-5);
             var recentRapidAttempts = recentAttempts.Where(a => a.AttemptedAt >= lastFiveMinutes).ToList();
 
             if (recentRapidAttempts.Count >= 3)
@@ -83,7 +83,7 @@ public class AuthenticationAnomalyDetectionService(
 
             if (lastSuccessful != null)
             {
-                var hourOfDay = DateTime.UtcNow.Hour;
+                var hourOfDay = SystemClock.UtcNow.Hour;
                 var lastSuccessHour = lastSuccessful.AttemptedAt.Hour;
                 var hourDifference = Math.Abs(hourOfDay - lastSuccessHour);
 

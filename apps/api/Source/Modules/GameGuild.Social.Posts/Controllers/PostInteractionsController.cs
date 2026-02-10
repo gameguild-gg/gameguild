@@ -29,7 +29,7 @@ public class PostInteractionsController(IPostService postService, IActorContextA
         if (userId == Guid.Empty)
             return Unauthorized();
 
-        var result = await postService.TogglePostLikeAsync(postId, userId, reactionType, cancellationToken);
+        var result = await postService.TogglePostLikeAsync(postId, userId, reactionType, cancellationToken).ConfigureAwait(false);
         return result.IsSuccess
             ? Ok(new { Liked = result.Value })
             : BadRequest(result.Error);
@@ -43,11 +43,11 @@ public class PostInteractionsController(IPostService postService, IActorContextA
         if (userId == Guid.Empty)
             return Unauthorized();
 
-        var canPerform = await postService.CanUserPerformActionAsync(postId, userId, "pin", cancellationToken);
+        var canPerform = await postService.CanUserPerformActionAsync(postId, userId, "pin", cancellationToken).ConfigureAwait(false);
         if (!canPerform.IsSuccess || !canPerform.Value)
             return Forbid();
 
-        var result = await postService.TogglePostPinAsync(postId, cancellationToken);
+        var result = await postService.TogglePostPinAsync(postId, cancellationToken).ConfigureAwait(false);
         return result.IsSuccess
             ? Ok(new { Pinned = result.Value })
             : BadRequest(result.Error);
@@ -58,7 +58,7 @@ public class PostInteractionsController(IPostService postService, IActorContextA
     [AllowAnonymous]
     public async Task<IActionResult> Share(Guid postId, CancellationToken cancellationToken = default)
     {
-        var result = await postService.SharePostAsync(postId, cancellationToken);
+        var result = await postService.SharePostAsync(postId, cancellationToken).ConfigureAwait(false);
         return result.IsSuccess
             ? Ok()
             : BadRequest(result.Error);
@@ -81,7 +81,7 @@ public class PostInteractionsController(IPostService postService, IActorContextA
             ipAddress,
             userAgent,
             referrer,
-            cancellationToken);
+            cancellationToken).ConfigureAwait(false);
 
         return result.IsSuccess
             ? Ok()
@@ -93,7 +93,7 @@ public class PostInteractionsController(IPostService postService, IActorContextA
     [AllowAnonymous]
     public async Task<IActionResult> GetStatistics(Guid postId, CancellationToken cancellationToken = default)
     {
-        var result = await postService.GetPostStatisticsAsync(postId, cancellationToken);
+        var result = await postService.GetPostStatisticsAsync(postId, cancellationToken).ConfigureAwait(false);
         return result.IsSuccess
             ? Ok(PostMappings.MapStatisticsToDto(result.Value!))
             : NotFound(result.Error);
@@ -118,7 +118,7 @@ public class PostInteractionsController(IPostService postService, IActorContextA
             request?.NotifyOnLikes ?? false,
             request?.NotifyOnShares ?? false,
             request?.NotifyOnUpdates ?? true,
-            cancellationToken);
+            cancellationToken).ConfigureAwait(false);
 
         return result.IsSuccess
             ? Ok(PostMappings.MapFollowerToDto(result.Value!))
@@ -133,7 +133,7 @@ public class PostInteractionsController(IPostService postService, IActorContextA
         if (userId == Guid.Empty)
             return Unauthorized();
 
-        var result = await postService.UnfollowPostAsync(postId, userId, cancellationToken);
+        var result = await postService.UnfollowPostAsync(postId, userId, cancellationToken).ConfigureAwait(false);
         return result.IsSuccess
             ? NoContent()
             : BadRequest(result.Error);
@@ -147,7 +147,7 @@ public class PostInteractionsController(IPostService postService, IActorContextA
         if (userId == Guid.Empty)
             return Unauthorized();
 
-        var result = await postService.IsFollowingPostAsync(postId, userId, cancellationToken);
+        var result = await postService.IsFollowingPostAsync(postId, userId, cancellationToken).ConfigureAwait(false);
         return result.IsSuccess
             ? Ok(new { IsFollowing = result.Value })
             : BadRequest(result.Error);

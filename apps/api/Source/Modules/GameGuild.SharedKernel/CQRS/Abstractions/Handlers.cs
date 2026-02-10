@@ -60,15 +60,4 @@ public interface INotificationHandler<in TNotification> where TNotification : IN
 /// <typeparam name="TDomainEvent">The type of domain event being handled</typeparam>
 public interface IDomainEventHandler<in TDomainEvent> : INotificationHandler<TDomainEvent> where TDomainEvent : IDomainEvent { }
 
-/// <summary>
-///     Defines a handler for a streamable request
-/// </summary>
-/// <typeparam name="TRequest">The type of request being handled</typeparam>
-/// <typeparam name="TResponse">The type of response from the handler</typeparam>
-public interface IStreamRequestHandler<in TRequest, out TResponse> where TRequest : IStream<TResponse>
-{
-    /// <summary>
-    ///     Handles a streaming request
-    /// </summary>
-    IAsyncEnumerable<TResponse> Handle(TRequest request, CancellationToken cancellationToken);
-}
+

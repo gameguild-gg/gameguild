@@ -1,22 +1,27 @@
 namespace GameGuild.CQRS;
 
 /// <summary>
-///     Result of CQRS pipeline validation. Immutable — use factory methods to create.
+///     Represents the result of a validation operation.
 /// </summary>
-public sealed class ValidationResult
+public sealed record ValidationResult
 {
-    /// <summary>Whether the validation passed (no errors).</summary>
-    public bool IsValid => !Errors.Any();
+    /// <summary>
+    ///     Whether the validation passed.
+    /// </summary>
+    public bool IsValid { get; private init; }
 
-    /// <summary>Collection of validation errors.</summary>
-    public IEnumerable<ValidationError> Errors { get; init; } = [];
+    /// <summary>
+    ///     Validation errors, if any.
+    /// </summary>
+    public IReadOnlyList<ValidationError> Errors { get; private init; } = [];
 
-    /// <summary>Creates a successful validation result.</summary>
-    public static ValidationResult Success() => new();
+    /// <summary>
+    ///     Creates a successful validation result.
+    /// </summary>
+    public static ValidationResult Success() => new() { IsValid = true };
 
-    /// <summary>Creates a failed validation result with the specified errors.</summary>
-    public static ValidationResult Failure(params ValidationError[] errors) => new() { Errors = errors };
-
-    /// <summary>Creates a failed validation result from a collection of errors.</summary>
-    public static ValidationResult Failure(IEnumerable<ValidationError> errors) => new() { Errors = errors };
+    /// <summary>
+    ///     Creates a failed validation result with errors.
+    /// </summary>
+    public static ValidationResult Failure(params ValidationError[] errors) => new() { IsValid = false, Errors = errors };
 }

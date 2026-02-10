@@ -14,7 +14,7 @@ public sealed class ProcessPaymentCommandHandler(
     public async Task<PaymentResult> Handle(ProcessPaymentCommand request, CancellationToken cancellationToken)
     {
         // Generate idempotency key from request parameters
-        var idempotencyKey = $"pay_{request.TenantId}_{request.SubscriptionId}_{request.Amount}_{DateTime.UtcNow:yyyyMMddHH}";
+        var idempotencyKey = $"pay_{request.TenantId}_{request.SubscriptionId}_{request.Amount}_{SystemClock.UtcNow:yyyyMMddHH}";
 
         logger.LogInformation(
             "Processing payment for tenant {TenantId}, subscription {SubscriptionId}, amount {Amount}",

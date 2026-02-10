@@ -29,5 +29,5 @@ public abstract class RenewalAttempt
     /// <summary>
     ///     When the attempt was made
     /// </summary>
-    public DateTime AttemptedAt { get; init; } = DateTime.UtcNow;
+    public DateTime AttemptedAt { get; init; } = SystemClock.UtcNow;
 }

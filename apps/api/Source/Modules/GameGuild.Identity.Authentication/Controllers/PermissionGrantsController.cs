@@ -40,7 +40,7 @@ public class PermissionGrantsController(IMediator mediator, ILogger<PermissionGr
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<TenantPermission>> CreateTenantGrant([FromBody] GrantTenantPermissionCommand command)
     {
-        var result = await _mediator.Send(command);
+        var result = await _mediator.Send(command).ConfigureAwait(false);
 
         return CreatedAtAction(
             nameof(PermissionEvaluationController.GetTenantPermissions),
@@ -59,7 +59,7 @@ public class PermissionGrantsController(IMediator mediator, ILogger<PermissionGr
     public async Task<ActionResult> DeleteTenantGrant(Guid grantId)
     {
         var command = new RevokeTenantPermissionByIdCommand { GrantId = grantId };
-        await _mediator.Send(command);
+        await _mediator.Send(command).ConfigureAwait(false);
 
         return NoContent();
     }
@@ -72,7 +72,7 @@ public class PermissionGrantsController(IMediator mediator, ILogger<PermissionGr
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult> RevokeTenantPermission([FromBody] RevokeTenantPermissionCommand command)
     {
-        await _mediator.Send(command);
+        await _mediator.Send(command).ConfigureAwait(false);
 
         return NoContent();
     }
@@ -85,7 +85,7 @@ public class PermissionGrantsController(IMediator mediator, ILogger<PermissionGr
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<BulkPermissionResult>> BatchCreateTenantGrants([FromBody] BulkGrantTenantPermissionsCommand command)
     {
-        var result = await _mediator.Send(command);
+        var result = await _mediator.Send(command).ConfigureAwait(false);
 
         return Ok(result);
     }
@@ -98,7 +98,7 @@ public class PermissionGrantsController(IMediator mediator, ILogger<PermissionGr
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<BulkPermissionResult>> BatchDeleteTenantGrants([FromBody] BulkRevokeTenantPermissionsCommand command)
     {
-        var result = await _mediator.Send(command);
+        var result = await _mediator.Send(command).ConfigureAwait(false);
 
         return Ok(result);
     }
@@ -115,7 +115,7 @@ public class PermissionGrantsController(IMediator mediator, ILogger<PermissionGr
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<ContentTypePermission>> CreateContentTypeGrant([FromBody] GrantContentTypePermissionCommand command)
     {
-        var result = await _mediator.Send(command);
+        var result = await _mediator.Send(command).ConfigureAwait(false);
 
         return CreatedAtAction(
             nameof(PermissionEvaluationController.GetContentTypePermissions),
@@ -134,7 +134,7 @@ public class PermissionGrantsController(IMediator mediator, ILogger<PermissionGr
     public async Task<ActionResult> DeleteContentTypeGrant(Guid grantId)
     {
         var command = new RevokeContentTypePermissionByIdCommand { GrantId = grantId };
-        await _mediator.Send(command);
+        await _mediator.Send(command).ConfigureAwait(false);
 
         return NoContent();
     }
@@ -147,7 +147,7 @@ public class PermissionGrantsController(IMediator mediator, ILogger<PermissionGr
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult> RevokeContentTypePermission([FromBody] RevokeContentTypePermissionCommand command)
     {
-        await _mediator.Send(command);
+        await _mediator.Send(command).ConfigureAwait(false);
 
         return NoContent();
     }
@@ -164,7 +164,7 @@ public class PermissionGrantsController(IMediator mediator, ILogger<PermissionGr
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<bool>> CreateResourceGrant([FromBody] GrantResourcePermissionCommand command)
     {
-        var result = await _mediator.Send(command);
+        var result = await _mediator.Send(command).ConfigureAwait(false);
 
         return CreatedAtAction(
             nameof(PermissionEvaluationController.GetResourcePermissions),
@@ -183,7 +183,7 @@ public class PermissionGrantsController(IMediator mediator, ILogger<PermissionGr
     public async Task<ActionResult> DeleteResourceGrant(Guid grantId)
     {
         var command = new RevokeResourcePermissionByIdCommand { GrantId = grantId };
-        await _mediator.Send(command);
+        await _mediator.Send(command).ConfigureAwait(false);
 
         return NoContent();
     }
@@ -196,7 +196,7 @@ public class PermissionGrantsController(IMediator mediator, ILogger<PermissionGr
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult> RevokeResourcePermission([FromBody] RevokeResourcePermissionCommand command)
     {
-        await _mediator.Send(command);
+        await _mediator.Send(command).ConfigureAwait(false);
 
         return NoContent();
     }
@@ -209,7 +209,7 @@ public class PermissionGrantsController(IMediator mediator, ILogger<PermissionGr
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<BulkPermissionResult>> BatchCreateResourceGrants([FromBody] BulkGrantResourcePermissionsCommand command)
     {
-        var result = await _mediator.Send(command);
+        var result = await _mediator.Send(command).ConfigureAwait(false);
 
         return Ok(result);
     }

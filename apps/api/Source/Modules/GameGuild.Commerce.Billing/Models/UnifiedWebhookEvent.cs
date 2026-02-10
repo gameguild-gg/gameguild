@@ -60,7 +60,7 @@ public sealed class UnifiedWebhookEvent
     /// <summary>
     ///     When we received the webhook.
     /// </summary>
-    public DateTime ReceivedAt { get; init; } = DateTime.UtcNow;
+    public DateTime ReceivedAt { get; init; } = SystemClock.UtcNow;
 
     /// <summary>
     ///     Raw payload for debugging/auditing.
@@ -96,7 +96,7 @@ public sealed class UnifiedWebhookEvent
             Status = MapStatus(payload.Status),
             Amount = payload.Amount,
             Currency = payload.Currency,
-            EventTimestamp = payload.PaidAt ?? DateTime.UtcNow,
+            EventTimestamp = payload.PaidAt ?? SystemClock.UtcNow,
             ProviderData = new Dictionary<string, object>
             {
                 ["customerId"] = payload.CustomerId ?? "",
@@ -125,7 +125,7 @@ public sealed class UnifiedWebhookEvent
             Status = MapStatus(payload.Status),
             Amount = payload.Amount,
             Currency = payload.Currency,
-            EventTimestamp = payload.PaidAt ?? DateTime.UtcNow,
+            EventTimestamp = payload.PaidAt ?? SystemClock.UtcNow,
             ProviderData = new Dictionary<string, object>
             {
                 ["transactionId"] = payload.TransactionId ?? "",
@@ -152,7 +152,7 @@ public sealed class UnifiedWebhookEvent
             ExternalSubscriptionId = payload.ExternalSubscriptionId,
             Status = MapStatus(payload.Status),
             Amount = payload.Amount,
-            EventTimestamp = payload.StartDate ?? DateTime.UtcNow,
+            EventTimestamp = payload.StartDate ?? SystemClock.UtcNow,
             ProviderData = new Dictionary<string, object>
             {
                 ["customerId"] = payload.CustomerId ?? "",

@@ -104,7 +104,7 @@ public class AssetGarbageCollectionService : IAssetGarbageCollectionService
     public async Task<GarbageCollectionResult> RunGarbageCollectionAsync(
         CancellationToken ct = default)
     {
-        var startTime = DateTime.UtcNow;
+        var startTime = SystemClock.UtcNow;
         var messages = new List<string>();
         var processed = 0;
         var deleted = 0;
@@ -122,7 +122,7 @@ public class AssetGarbageCollectionService : IAssetGarbageCollectionService
         try
         {
             // Get content marked for deletion past grace period
-            var cutoffDate = DateTime.UtcNow.AddDays(-_options.GracePeriodDays);
+            var cutoffDate = SystemClock.UtcNow.AddDays(-_options.GracePeriodDays);
             var candidates = await _contentRepository.GetMarkedForDeletionAsync(
                 cutoffDate,
                 _options.MaxItemsPerRun,
@@ -215,7 +215,7 @@ public class AssetGarbageCollectionService : IAssetGarbageCollectionService
             throw;
         }
 
-        var duration = DateTime.UtcNow - startTime;
+        var duration = SystemClock.UtcNow - startTime;
         _logger.LogInformation(
             "Garbage collection completed: {Processed} processed, {Deleted} deleted, " +
             "{Skipped} skipped, {Errors} errors in {Duration}s",
@@ -234,7 +234,7 @@ public class AssetGarbageCollectionService : IAssetGarbageCollectionService
         // Only mark if not already marked and reference count is 0
         if (content.MarkedForDeletionAt == null && content.ReferenceCount <= 0)
         {
-            content.MarkedForDeletionAt = DateTime.UtcNow;
+            content.MarkedForDeletionAt = SystemClock.UtcNow;
             await _contentRepository.UpdateAsync(content, ct).ConfigureAwait(false);
 
             _logger.LogInformation(
@@ -264,7 +264,7 @@ public class AssetGarbageCollectionService : IAssetGarbageCollectionService
         int daysUntilDeletion,
         CancellationToken ct = default)
     {
-        var cutoffDate = DateTime.UtcNow.AddDays(_options.GracePeriodDays - daysUntilDeletion);
+        var cutoffDate = SystemClock.UtcNow.AddDays(_options.GracePeriodDays - daysUntilDeletion);
         return await _contentRepository.GetMarkedForDeletionAsync(
             cutoffDate,
             1000,

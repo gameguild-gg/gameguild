@@ -38,7 +38,7 @@ public class ConditionalPolicy
 
     public string? CustomConditions { get; set; }
 
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime CreatedAt { get; set; } = SystemClock.UtcNow;
 
     public DateTime? UpdatedAt { get; set; }
 
@@ -55,7 +55,7 @@ public class ConditionalPolicy
     public void Enable()
     {
         IsEnabled = true;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     /// <summary>
@@ -64,7 +64,7 @@ public class ConditionalPolicy
     public void Disable()
     {
         IsEnabled = false;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     /// <summary>
@@ -76,7 +76,7 @@ public class ConditionalPolicy
             throw new ArgumentException("Priority must be non-negative", nameof(priority));
 
         Priority = priority;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     /// <summary>

@@ -176,7 +176,7 @@ public class PermissionAuditLog
 
     public string? ErrorMessage { get; set; }
 
-    public DateTime Timestamp { get; set; } = DateTime.UtcNow;
+    public DateTime Timestamp { get; set; } = SystemClock.UtcNow;
 
     /// <summary>
     ///     Check if operation was successful

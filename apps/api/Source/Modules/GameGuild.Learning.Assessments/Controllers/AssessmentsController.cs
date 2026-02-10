@@ -34,7 +34,7 @@ public class AssessmentsController : BaseApiController
     [HttpPost]
     public async Task<ActionResult<AssessmentDto>> CreateAssessment([FromBody] CreateAssessmentRequest request)
     {
-        var result = await _assessmentService.CreateAssessmentAsync(request);
+        var result = await _assessmentService.CreateAssessmentAsync(request).ConfigureAwait(false);
         if (!result.IsSuccess)
         {
             return BadRequest(result.Error);
@@ -49,7 +49,7 @@ public class AssessmentsController : BaseApiController
     [HttpGet("{id:guid}")]
     public async Task<ActionResult<AssessmentDto>> GetAssessment(Guid id)
     {
-        var assessment = await _assessmentService.GetAssessmentByIdAsync(id);
+        var assessment = await _assessmentService.GetAssessmentByIdAsync(id).ConfigureAwait(false);
         if (assessment == null)
         {
             return NotFound();
@@ -64,7 +64,7 @@ public class AssessmentsController : BaseApiController
     [HttpGet("course/{courseId:guid}")]
     public async Task<ActionResult<IEnumerable<AssessmentDto>>> GetCourseAssessments(Guid courseId)
     {
-        var assessments = await _assessmentService.GetCourseAssessmentsAsync(courseId);
+        var assessments = await _assessmentService.GetCourseAssessmentsAsync(courseId).ConfigureAwait(false);
         return Ok(assessments.Select(AssessmentDto.FromEntity));
     }
 
@@ -74,7 +74,7 @@ public class AssessmentsController : BaseApiController
     [HttpPut("{id:guid}")]
     public async Task<ActionResult<AssessmentDto>> UpdateAssessment(Guid id, [FromBody] UpdateAssessmentRequest request)
     {
-        var result = await _assessmentService.UpdateAssessmentAsync(id, request);
+        var result = await _assessmentService.UpdateAssessmentAsync(id, request).ConfigureAwait(false);
         if (!result.IsSuccess)
         {
             return result.Error.Type == ErrorType.NotFound 
@@ -91,7 +91,7 @@ public class AssessmentsController : BaseApiController
     [HttpDelete("{id:guid}")]
     public async Task<ActionResult> DeleteAssessment(Guid id)
     {
-        var result = await _assessmentService.DeleteAssessmentAsync(id);
+        var result = await _assessmentService.DeleteAssessmentAsync(id).ConfigureAwait(false);
         if (!result.IsSuccess)
         {
             return result.Error.Type == ErrorType.NotFound 
@@ -121,7 +121,7 @@ public class AssessmentsController : BaseApiController
         var result = await _assessmentService.StartSubmissionAsync(
             assessmentId, 
             request.EnrollmentId, 
-            actor.SubjectIdAsGuid.Value);
+            actor.SubjectIdAsGuid.Value).ConfigureAwait(false);
 
         if (!result.IsSuccess)
         {
@@ -140,7 +140,7 @@ public class AssessmentsController : BaseApiController
     [HttpPost("submissions/{submissionId:guid}/submit")]
     public async Task<ActionResult<AssessmentSubmissionDto>> SubmitAssessment(Guid submissionId)
     {
-        var result = await _assessmentService.SubmitAsync(submissionId);
+        var result = await _assessmentService.SubmitAsync(submissionId).ConfigureAwait(false);
         if (!result.IsSuccess)
         {
             return BadRequest(result.Error);
@@ -157,7 +157,7 @@ public class AssessmentsController : BaseApiController
         Guid submissionId, 
         [FromBody] GradeSubmissionRequest request)
     {
-        var result = await _assessmentService.GradeSubmissionAsync(submissionId, request);
+        var result = await _assessmentService.GradeSubmissionAsync(submissionId, request).ConfigureAwait(false);
         if (!result.IsSuccess)
         {
             return BadRequest(result.Error);
@@ -172,7 +172,7 @@ public class AssessmentsController : BaseApiController
     [HttpGet("submissions/{submissionId:guid}")]
     public async Task<ActionResult<AssessmentSubmissionDto>> GetSubmission(Guid submissionId)
     {
-        var submission = await _assessmentService.GetSubmissionByIdAsync(submissionId);
+        var submission = await _assessmentService.GetSubmissionByIdAsync(submissionId).ConfigureAwait(false);
         if (submission == null)
         {
             return NotFound();
@@ -187,7 +187,7 @@ public class AssessmentsController : BaseApiController
     [HttpGet("{assessmentId:guid}/submissions")]
     public async Task<ActionResult<IEnumerable<AssessmentSubmissionDto>>> GetAssessmentSubmissions(Guid assessmentId)
     {
-        var submissions = await _assessmentService.GetAssessmentSubmissionsAsync(assessmentId);
+        var submissions = await _assessmentService.GetAssessmentSubmissionsAsync(assessmentId).ConfigureAwait(false);
         return Ok(submissions.Select(AssessmentSubmissionDto.FromEntity));
     }
 
@@ -197,7 +197,7 @@ public class AssessmentsController : BaseApiController
     [HttpGet("my-submissions/{enrollmentId:guid}")]
     public async Task<ActionResult<IEnumerable<AssessmentSubmissionDto>>> GetMySubmissions(Guid enrollmentId)
     {
-        var submissions = await _assessmentService.GetUserSubmissionsAsync(enrollmentId);
+        var submissions = await _assessmentService.GetUserSubmissionsAsync(enrollmentId).ConfigureAwait(false);
         return Ok(submissions.Select(AssessmentSubmissionDto.FromEntity));
     }
 
@@ -207,13 +207,13 @@ public class AssessmentsController : BaseApiController
     [HttpGet("{assessmentId:guid}/can-attempt/{enrollmentId:guid}")]
     public async Task<ActionResult<CanAttemptResponse>> CanAttempt(Guid assessmentId, Guid enrollmentId)
     {
-        var result = await _assessmentService.CanAttemptAsync(assessmentId, enrollmentId);
+        var result = await _assessmentService.CanAttemptAsync(assessmentId, enrollmentId).ConfigureAwait(false);
         if (!result.IsSuccess)
         {
             return BadRequest(result.Error);
         }
 
-        var attemptCount = await _assessmentService.GetAttemptCountAsync(assessmentId, enrollmentId);
+        var attemptCount = await _assessmentService.GetAttemptCountAsync(assessmentId, enrollmentId).ConfigureAwait(false);
         return Ok(new CanAttemptResponse(result.Value, attemptCount));
     }
 }

@@ -42,7 +42,7 @@ public sealed class UserNotificationsController(ISender sender) : BaseApiControl
         var query = new GetUserNotificationsPagedQuery(
             userId, search, sortBy, sortDirection, isRead, isArchived,
             type, priority, fromDate, toDate, page, pageSize);
-        var result = await sender.Send(query, ct);
+        var result = await sender.Send(query, ct).ConfigureAwait(false);
 
         return Ok(result);
     }
@@ -66,7 +66,7 @@ public sealed class UserNotificationsController(ISender sender) : BaseApiControl
         }
 
         var command = new BulkMarkNotificationsAsReadCommand(userId, body.NotificationIds);
-        await sender.Send(command, ct);
+        await sender.Send(command, ct).ConfigureAwait(false);
 
         return NoContent();
     }
@@ -90,7 +90,7 @@ public sealed class UserNotificationsController(ISender sender) : BaseApiControl
         }
 
         var command = new BulkMarkNotificationsAsUnreadCommand(userId, body.NotificationIds);
-        await sender.Send(command, ct);
+        await sender.Send(command, ct).ConfigureAwait(false);
 
         return NoContent();
     }
@@ -114,7 +114,7 @@ public sealed class UserNotificationsController(ISender sender) : BaseApiControl
         }
 
         var command = new BulkArchiveNotificationsCommand(userId, body.NotificationIds);
-        await sender.Send(command, ct);
+        await sender.Send(command, ct).ConfigureAwait(false);
 
         return NoContent();
     }
@@ -138,7 +138,7 @@ public sealed class UserNotificationsController(ISender sender) : BaseApiControl
         }
 
         var command = new BulkUnarchiveNotificationsCommand(userId, body.NotificationIds);
-        await sender.Send(command, ct);
+        await sender.Send(command, ct).ConfigureAwait(false);
 
         return NoContent();
     }
@@ -154,7 +154,7 @@ public sealed class UserNotificationsController(ISender sender) : BaseApiControl
     public async Task<IActionResult> CheckNotificationExists(Guid userId, Guid notificationId, CancellationToken ct)
     {
         var query = new GetUserNotificationQuery(userId, notificationId);
-        var result = await sender.Send(query, ct);
+        var result = await sender.Send(query, ct).ConfigureAwait(false);
 
         return result == null ? NotFound() : Ok();
     }
@@ -170,7 +170,7 @@ public sealed class UserNotificationsController(ISender sender) : BaseApiControl
     public async Task<IActionResult> GetNotification(Guid userId, Guid notificationId, CancellationToken ct)
     {
         var query = new GetUserNotificationQuery(userId, notificationId);
-        var result = await sender.Send(query, ct);
+        var result = await sender.Send(query, ct).ConfigureAwait(false);
 
         return result == null ? NotFound() : Ok(result);
     }
@@ -186,7 +186,7 @@ public sealed class UserNotificationsController(ISender sender) : BaseApiControl
     public async Task<IActionResult> MarkNotificationAsRead(Guid userId, Guid notificationId, CancellationToken ct)
     {
         var command = new MarkNotificationAsReadCommand(userId, notificationId);
-        await sender.Send(command, ct);
+        await sender.Send(command, ct).ConfigureAwait(false);
 
         return NoContent();
     }
@@ -202,7 +202,7 @@ public sealed class UserNotificationsController(ISender sender) : BaseApiControl
     public async Task<IActionResult> MarkNotificationAsUnread(Guid userId, Guid notificationId, CancellationToken ct)
     {
         var command = new MarkNotificationAsUnreadCommand(userId, notificationId);
-        await sender.Send(command, ct);
+        await sender.Send(command, ct).ConfigureAwait(false);
 
         return NoContent();
     }
@@ -218,7 +218,7 @@ public sealed class UserNotificationsController(ISender sender) : BaseApiControl
     public async Task<IActionResult> ArchiveNotification(Guid userId, Guid notificationId, CancellationToken ct)
     {
         var command = new ArchiveNotificationCommand(userId, notificationId);
-        await sender.Send(command, ct);
+        await sender.Send(command, ct).ConfigureAwait(false);
 
         return NoContent();
     }
@@ -234,7 +234,7 @@ public sealed class UserNotificationsController(ISender sender) : BaseApiControl
     public async Task<IActionResult> UnarchiveNotification(Guid userId, Guid notificationId, CancellationToken ct)
     {
         var command = new UnarchiveNotificationCommand(userId, notificationId);
-        await sender.Send(command, ct);
+        await sender.Send(command, ct).ConfigureAwait(false);
 
         return NoContent();
     }

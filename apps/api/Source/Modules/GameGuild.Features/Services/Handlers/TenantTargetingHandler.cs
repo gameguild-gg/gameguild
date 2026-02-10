@@ -46,7 +46,7 @@ public sealed class TenantTargetingHandler(ILogger<TenantTargetingHandler> logge
                     Reason = "Fail-closed: Tenant targeting configured but no TenantId in context",
                     IsTargeted = true,
                     TargetType = FeatureFlagConstants.TargetTypes.Tenant,
-                    EvaluatedAt = DateTime.UtcNow
+                    EvaluatedAt = SystemClock.UtcNow
                 }
             );
         }
@@ -84,7 +84,7 @@ public sealed class TenantTargetingHandler(ILogger<TenantTargetingHandler> logge
                 RolloutPercentage = tenantTarget.RolloutPercentage,
                 IsTargeted = true,
                 TargetType = tenantTarget.TargetType,
-                EvaluatedAt = DateTime.UtcNow
+                EvaluatedAt = SystemClock.UtcNow
             }
         );
     }

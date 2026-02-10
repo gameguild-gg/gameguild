@@ -177,8 +177,8 @@ public class Notification : EntityBase
         if (IsRead) return;
         
         IsRead = true;
-        ReadAt = DateTime.UtcNow;
-        UpdatedAt = DateTime.UtcNow;
+        ReadAt = SystemClock.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     /// <summary>
@@ -188,7 +188,7 @@ public class Notification : EntityBase
     {
         IsRead = false;
         ReadAt = null;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     /// <summary>
@@ -199,8 +199,8 @@ public class Notification : EntityBase
         if (IsSent) return;
         
         IsSent = true;
-        SentAt = DateTime.UtcNow;
-        UpdatedAt = DateTime.UtcNow;
+        SentAt = SystemClock.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     /// <summary>

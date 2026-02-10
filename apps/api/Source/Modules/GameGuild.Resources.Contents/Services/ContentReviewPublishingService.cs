@@ -168,7 +168,7 @@ public class ContentReviewPublishingService(
         if (version == null)
             return Result.Failure<ContentVersion>(ContentVersioningErrors.NotFound);
 
-        if (scheduledAt <= DateTime.UtcNow)
+        if (scheduledAt <= SystemClock.UtcNow)
             return Result.Failure<ContentVersion>(ContentVersioningErrors.ScheduleDateMustBeFuture);
 
         try
@@ -207,7 +207,7 @@ public class ContentReviewPublishingService(
 
     public async Task<Result<int>> ProcessScheduledPublishingAsync(CancellationToken ct = default)
     {
-        var now = DateTime.UtcNow;
+        var now = SystemClock.UtcNow;
 
         var scheduledVersions = await db.Set<ContentVersion>()
             .Where(v => !v.IsDeleted)

@@ -20,7 +20,7 @@ public sealed class TrackUsageCommandHandler(ITenantRepository tenantRepository,
         {
             TenantId = request.TenantId,
             ResourceType = request.ResourceType,
-            Date = DateTime.UtcNow,
+            Date = SystemClock.UtcNow,
             UsageAmount = request.Quantity,
             Cost = request.Cost ?? 0m,
             Unit = request.ActionType,

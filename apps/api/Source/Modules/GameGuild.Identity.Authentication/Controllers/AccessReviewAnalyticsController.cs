@@ -34,7 +34,7 @@ public class AccessReviewAnalyticsController(IMediator mediator, ILogger<AccessR
     [HttpPost(":revoke-access")]
     public async Task<ActionResult<AccessRevocationResult>> RevokeAccess([FromBody] RevokeAccessCommand command)
     {
-        var result = await _mediator.Send(command);
+        var result = await _mediator.Send(command).ConfigureAwait(false);
 
         return Ok(result);
     }
@@ -46,7 +46,7 @@ public class AccessReviewAnalyticsController(IMediator mediator, ILogger<AccessR
     public async Task<ActionResult<BulkAccessRevocationResult>> BulkRevokeAccess(
         [FromBody] BulkRevokeAccessCommand command)
     {
-        var result = await _mediator.Send(command);
+        var result = await _mediator.Send(command).ConfigureAwait(false);
 
         return Ok(result);
     }
@@ -73,7 +73,7 @@ public class AccessReviewAnalyticsController(IMediator mediator, ILogger<AccessR
             Page = page,
             PageSize = pageSize
         };
-        var result = await _mediator.Send(query);
+        var result = await _mediator.Send(query).ConfigureAwait(false);
 
         return Ok(result);
     }
@@ -94,10 +94,10 @@ public class AccessReviewAnalyticsController(IMediator mediator, ILogger<AccessR
         var query = new GetAccessReviewAnalyticsQuery
         {
             TenantId = tenantId,
-            FromDate = fromDate ?? DateTime.UtcNow.AddMonths(-3),
-            ToDate = toDate ?? DateTime.UtcNow
+            FromDate = fromDate ?? SystemClock.UtcNow.AddMonths(-3),
+            ToDate = toDate ?? SystemClock.UtcNow
         };
-        var result = await _mediator.Send(query);
+        var result = await _mediator.Send(query).ConfigureAwait(false);
 
         return Ok(result);
     }
@@ -109,7 +109,7 @@ public class AccessReviewAnalyticsController(IMediator mediator, ILogger<AccessR
     public async Task<ActionResult<ComplianceStatusDto>> GetComplianceStatus([FromQuery] Guid tenantId)
     {
         var query = new GetComplianceStatusQuery { TenantId = tenantId };
-        var result = await _mediator.Send(query);
+        var result = await _mediator.Send(query).ConfigureAwait(false);
 
         return Ok(result);
     }
@@ -121,7 +121,7 @@ public class AccessReviewAnalyticsController(IMediator mediator, ILogger<AccessR
     public async Task<ActionResult<AccessReviewReportDto>> GenerateAccessReviewReport(
         [FromBody] GenerateAccessReviewReportCommand command)
     {
-        var result = await _mediator.Send(command);
+        var result = await _mediator.Send(command).ConfigureAwait(false);
 
         return Ok(result);
     }

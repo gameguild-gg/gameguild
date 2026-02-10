@@ -47,7 +47,7 @@ public class TestingLabPermissionController : BaseApiController {
     try {
       var permissionTemplates = BuildPermissionTemplates(request.Permissions);
 
-      var template = await _permissionService.CreateRoleTemplateAsync(request.Name, request.Description, permissionTemplates);
+      var template = await _permissionService.CreateRoleTemplateAsync(request.Name, request.Description, permissionTemplates).ConfigureAwait(false);
 
       _logger.LogInformation("Admin user {UserId} created TestingLab role template '{RoleName}'", GetCurrentUserId(), request.Name);
 
@@ -65,7 +65,7 @@ public class TestingLabPermissionController : BaseApiController {
   [HttpPut("role-templates/{idOrName}")]
   public async Task<ActionResult<TestingLabRoleTemplate>> UpdateTestingLabRoleTemplate(string idOrName, [FromBody] UpdateTestingLabRoleRequest request) {
     // PLANNED: Implement when GetRoleTemplateAsync and UpdateRoleTemplateAsync are available in IPermissionService
-    await Task.CompletedTask; // Remove async warning
+    await Task.CompletedTask.ConfigureAwait(false); // Remove async warning
     return StatusCode(501, "Method not implemented - missing service methods");
   }
 
@@ -73,7 +73,7 @@ public class TestingLabPermissionController : BaseApiController {
   [HttpDelete("role-templates/{idOrName}")]
   public async Task<ActionResult> DeleteTestingLabRoleTemplate(string idOrName) {
     // PLANNED: Implement when DeleteRoleTemplateAsync is available in IPermissionService
-    await Task.CompletedTask; // Remove async warning
+    await Task.CompletedTask.ConfigureAwait(false); // Remove async warning
     return StatusCode(501, "Method not implemented - missing service methods");
   }
 
@@ -104,8 +104,8 @@ public class TestingLabPermissionController : BaseApiController {
   /// <summary> Get TestingLab permissions for a specific user </summary>
   [HttpGet("users/{userId}")]
   public async Task<ActionResult<UserTestingLabPermissions>> GetUserTestingLabPermissions(Guid userId, [FromQuery] Guid? tenantId = null) {
-    var userRoles = await _permissionService.GetUserRolesAsync(userId, tenantId);
-    var userPermissions = await _permissionService.GetUserPermissionsAsync(userId, tenantId);
+    var userRoles = await _permissionService.GetUserRolesAsync(userId, tenantId).ConfigureAwait(false);
+    var userPermissions = await _permissionService.GetUserPermissionsAsync(userId, tenantId).ConfigureAwait(false);
 
     var testingLabPermissions = userPermissions.Where(p => IsTestingLabResource(p.ResourceType)).ToList();
 
@@ -153,7 +153,7 @@ public class TestingLabPermissionController : BaseApiController {
   [HttpPost("users/{userId}/roles")]
   public async Task<ActionResult> AssignTestingLabRole(Guid userId, [FromBody] AssignTestingLabRoleRequest request) {
     try {
-      await _permissionService.AssignRoleToUserAsync(userId, request.TenantId, request.RoleName, request.ExpiresAt);
+      await _permissionService.AssignRoleToUserAsync(userId, request.TenantId, request.RoleName, request.ExpiresAt).ConfigureAwait(false);
 
       _logger.LogInformation("Admin user {AdminUserId} assigned TestingLab role '{RoleName}' to user {UserId}", GetCurrentUserId(), request.RoleName, userId);
 
@@ -169,7 +169,7 @@ public class TestingLabPermissionController : BaseApiController {
   /// <summary> Revoke a TestingLab role from a user </summary>
   [HttpDelete("users/{userId}/roles/{roleName}")]
   public async Task<ActionResult> RevokeTestingLabRole(Guid userId, string roleName, [FromQuery] Guid? tenantId = null) {
-    await _permissionService.RevokeRoleFromUserAsync(userId, tenantId, roleName);
+    await _permissionService.RevokeRoleFromUserAsync(userId, tenantId, roleName).ConfigureAwait(false);
 
     _logger.LogInformation("Admin user {AdminUserId} revoked TestingLab role '{RoleName}' from user {UserId}", GetCurrentUserId(), roleName, userId);
 
@@ -183,7 +183,7 @@ public class TestingLabPermissionController : BaseApiController {
   public async Task<ActionResult> GrantResourcePermission(Guid userId, string resourceType, Guid resourceId, [FromBody] GrantResourcePermissionRequest request) {
     if (!IsTestingLabResource(resourceType)) { return BadRequest($"'{resourceType}' is not a valid TestingLab resource type"); }
 
-    await _permissionService.GrantPermissionAsync(userId, request.TenantId, request.Action, resourceType, resourceId, null, request.ExpiresAt);
+    await _permissionService.GrantPermissionAsync(userId, request.TenantId, request.Action, resourceType, resourceId, null, request.ExpiresAt).ConfigureAwait(false);
 
     _logger.LogInformation("Admin user {AdminUserId} granted permission '{Action}' on {ResourceType} {ResourceId} to user {UserId}", GetCurrentUserId(), request.Action, resourceType, resourceId, userId);
 
@@ -195,7 +195,7 @@ public class TestingLabPermissionController : BaseApiController {
   public async Task<ActionResult> RevokeResourcePermission(Guid userId, string resourceType, Guid resourceId, [FromQuery] string action, [FromQuery] Guid? tenantId = null) {
     if (!IsTestingLabResource(resourceType)) { return BadRequest($"'{resourceType}' is not a valid TestingLab resource type"); }
 
-    await _permissionService.RevokePermissionAsync(userId, tenantId, action, resourceType, resourceId);
+    await _permissionService.RevokePermissionAsync(userId, tenantId, action, resourceType, resourceId).ConfigureAwait(false);
 
     _logger.LogInformation("Admin user {AdminUserId} revoked permission '{Action}' on {ResourceType} {ResourceId} from user {UserId}", GetCurrentUserId(), action, resourceType, resourceId, userId);
 
@@ -209,7 +209,7 @@ public class TestingLabPermissionController : BaseApiController {
   public async Task<ActionResult<bool>> CheckTestingLabPermission(Guid userId, string resourceType, [FromQuery] string action, [FromQuery] Guid? resourceId = null, [FromQuery] Guid? tenantId = null) {
     if (!IsTestingLabResource(resourceType)) { return BadRequest($"'{resourceType}' is not a valid TestingLab resource type"); }
 
-    var hasPermission = await _permissionService.HasPermissionAsync(userId, tenantId, action, resourceType, resourceId);
+    var hasPermission = await _permissionService.HasPermissionAsync(userId, tenantId, action, resourceType, resourceId).ConfigureAwait(false);
 
     return Ok(hasPermission);
   }

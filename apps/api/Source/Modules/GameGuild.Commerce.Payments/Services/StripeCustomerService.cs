@@ -172,7 +172,7 @@ public class StripeCustomerService(
                 Success: subscription.Status == "canceled",
                 ErrorCode: null,
                 ErrorMessage: null,
-                EffectiveDate: subscription.CanceledAt ?? DateTime.UtcNow);
+                EffectiveDate: subscription.CanceledAt ?? SystemClock.UtcNow);
         }
         catch (StripeException ex)
         {

@@ -52,52 +52,52 @@ public class Cohort : EntityBase
     {
         IsOpen = true;
         Status = CohortStatus.Active;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     public void Close()
     {
         IsOpen = false;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     public void IncrementEnrollment()
     {
         CurrentEnrollmentCount++;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     public void DecrementEnrollment()
     {
         if (CurrentEnrollmentCount > 0)
             CurrentEnrollmentCount--;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     public void Complete()
     {
         Status = CohortStatus.Completed;
         IsOpen = false;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     public void Cancel()
     {
         Status = CohortStatus.Cancelled;
         IsOpen = false;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     public void SetDescription(string? description)
     {
         Description = description;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     public void SetMeetingSchedule(string? schedule)
     {
         MeetingSchedule = schedule;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     public void Update(
@@ -116,7 +116,7 @@ public class Cohort : EntityBase
         if (maxCapacity.HasValue) MaxCapacity = maxCapacity.Value;
         InstructorId = instructorId;
         MeetingSchedule = meetingSchedule;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 }
 

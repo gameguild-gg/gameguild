@@ -73,7 +73,7 @@ public class Certificate : EntityBase
             CertificateNumber = GenerateCertificateNumber(),
             RecipientName = recipientName,
             CourseName = courseName,
-            IssuedAt = DateTime.UtcNow,
+            IssuedAt = SystemClock.UtcNow,
             ExpiresAt = expiresAt,
             Status = CertificateStatus.Active
         };
@@ -81,22 +81,22 @@ public class Certificate : EntityBase
 
     private static string GenerateCertificateNumber()
     {
-        return $"CERT-{DateTime.UtcNow:yyyyMMdd}-{Guid.NewGuid().ToString("N")[..8].ToUpperInvariant()}";
+        return $"CERT-{SystemClock.UtcNow:yyyyMMdd}-{Guid.NewGuid().ToString("N")[..8].ToUpperInvariant()}";
     }
 
     public bool IsValid()
     {
         if (Status != CertificateStatus.Active) return false;
-        if (ExpiresAt.HasValue && DateTime.UtcNow > ExpiresAt.Value) return false;
+        if (ExpiresAt.HasValue && SystemClock.UtcNow > ExpiresAt.Value) return false;
         return true;
     }
 
     public void Revoke(string reason)
     {
         Status = CertificateStatus.Revoked;
-        RevokedAt = DateTime.UtcNow;
+        RevokedAt = SystemClock.UtcNow;
         RevocationReason = reason;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 }
 

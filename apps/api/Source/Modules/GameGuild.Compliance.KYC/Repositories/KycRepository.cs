@@ -41,7 +41,7 @@ public class KycRepository : IKycRepository
         return await _context.Set<UserKycVerification>()
             .AnyAsync(v => v.UserId == userId &&
                           v.Status == KycVerificationStatus.Approved &&
-                          (v.ExpiresAt == null || v.ExpiresAt > DateTime.UtcNow),
+                          (v.ExpiresAt == null || v.ExpiresAt > SystemClock.UtcNow),
                 cancellationToken).ConfigureAwait(false);
     }
 

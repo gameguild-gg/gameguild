@@ -25,7 +25,7 @@ public class TenantSecurityVersionRepository(IApplicationDbContext context) : IT
         {
             TenantId = tenantId,
             SecurityVersion = 1,
-            LastUpdatedAt = DateTime.UtcNow,
+            LastUpdatedAt = SystemClock.UtcNow,
             LastChangeReason = "Initial creation"
         };
 

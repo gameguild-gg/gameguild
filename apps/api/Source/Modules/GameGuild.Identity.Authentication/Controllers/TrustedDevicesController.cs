@@ -31,7 +31,7 @@ public sealed class TrustedDevicesController(ISessionManagementService sessionSe
     public async Task<IActionResult> GetTrustedDevices(CancellationToken ct)
     {
         var userId = GetCurrentUserId();
-        var devices = await sessionService.GetTrustedDevicesAsync(userId);
+        var devices = await sessionService.GetTrustedDevicesAsync(userId).ConfigureAwait(false);
 
         var response = devices.Select(d => new TrustedDeviceResponse
             {
@@ -67,7 +67,7 @@ public sealed class TrustedDevicesController(ISessionManagementService sessionSe
         var userAgent = HttpContext.Request.Headers.UserAgent.ToString();
 
         var deviceFingerprint = GenerateDeviceFingerprint(ipAddress, userAgent);
-        var success = await sessionService.TrustDeviceAsync(userId, deviceFingerprint, body.DeviceName);
+        var success = await sessionService.TrustDeviceAsync(userId, deviceFingerprint, body.DeviceName).ConfigureAwait(false);
 
         if (!success)
         {
@@ -92,7 +92,7 @@ public sealed class TrustedDevicesController(ISessionManagementService sessionSe
     public async Task<IActionResult> RevokeTrustedDevice(Guid deviceId, CancellationToken ct)
     {
         var userId = GetCurrentUserId();
-        var success = await sessionService.RevokeTrustedDeviceAsync(userId, deviceId);
+        var success = await sessionService.RevokeTrustedDeviceAsync(userId, deviceId).ConfigureAwait(false);
 
         if (!success)
         {

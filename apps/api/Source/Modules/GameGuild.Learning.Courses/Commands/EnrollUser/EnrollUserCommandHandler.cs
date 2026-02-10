@@ -24,7 +24,7 @@ public sealed class EnrollUserCommandHandler(IApplicationDbContext context, ILog
 
     if (existingEnrollment != null && existingEnrollment.IsActive) { throw new InvalidOperationException("User is already enrolled in this program"); }
 
-    var enrollment = new ProgramUser { ProgramId = request.ProgramId, UserId = Guid.Parse(request.UserId), JoinedAt = request.EnrollmentDate ?? DateTime.UtcNow, IsActive = true };
+    var enrollment = new ProgramUser { ProgramId = request.ProgramId, UserId = Guid.Parse(request.UserId), JoinedAt = request.EnrollmentDate ?? SystemClock.UtcNow, IsActive = true };
 
     context.Set<ProgramUser>().Add(enrollment);
     await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);

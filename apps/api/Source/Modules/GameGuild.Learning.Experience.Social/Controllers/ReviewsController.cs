@@ -46,7 +46,7 @@ public class ReviewsController : LearningControllerBase
             request.Title,
             request.Content,
             request.EnrollmentId,
-            cancellationToken);
+            cancellationToken).ConfigureAwait(false);
 
         if (!result.IsSuccess)
         {
@@ -65,7 +65,7 @@ public class ReviewsController : LearningControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetReview(Guid id, CancellationToken cancellationToken = default)
     {
-        var result = await _reviewService.GetReviewByIdAsync(id, cancellationToken);
+        var result = await _reviewService.GetReviewByIdAsync(id, cancellationToken).ConfigureAwait(false);
 
         if (!result.IsSuccess)
         {
@@ -88,7 +88,7 @@ public class ReviewsController : LearningControllerBase
         [FromQuery] bool approvedOnly = true,
         CancellationToken cancellationToken = default)
     {
-        var result = await _reviewService.GetCourseReviewsAsync(courseId, skip, take, approvedOnly, cancellationToken);
+        var result = await _reviewService.GetCourseReviewsAsync(courseId, skip, take, approvedOnly, cancellationToken).ConfigureAwait(false);
 
         if (!result.IsSuccess)
         {
@@ -110,7 +110,7 @@ public class ReviewsController : LearningControllerBase
         CancellationToken cancellationToken = default)
     {
         var userId = GetRequiredUserId();
-        var result = await _reviewService.GetUserReviewsAsync(userId, skip, take, cancellationToken);
+        var result = await _reviewService.GetUserReviewsAsync(userId, skip, take, cancellationToken).ConfigureAwait(false);
 
         if (!result.IsSuccess)
         {
@@ -129,7 +129,7 @@ public class ReviewsController : LearningControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> MarkReviewHelpful(Guid id, CancellationToken cancellationToken = default)
     {
-        var result = await _reviewService.MarkReviewHelpfulAsync(id, cancellationToken);
+        var result = await _reviewService.MarkReviewHelpfulAsync(id, cancellationToken).ConfigureAwait(false);
 
         if (!result.IsSuccess)
         {
@@ -148,7 +148,7 @@ public class ReviewsController : LearningControllerBase
     public async Task<IActionResult> DeleteReview(Guid id, CancellationToken cancellationToken = default)
     {
         var userId = GetRequiredUserId();
-        var result = await _reviewService.DeleteReviewAsync(id, userId, cancellationToken);
+        var result = await _reviewService.DeleteReviewAsync(id, userId, cancellationToken).ConfigureAwait(false);
 
         if (!result.IsSuccess)
         {
@@ -166,7 +166,7 @@ public class ReviewsController : LearningControllerBase
     [ProducesResponseType(typeof(CourseRatingStats), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetCourseRatingStats(Guid courseId, CancellationToken cancellationToken = default)
     {
-        var result = await _reviewService.GetCourseRatingStatsAsync(courseId, cancellationToken);
+        var result = await _reviewService.GetCourseRatingStatsAsync(courseId, cancellationToken).ConfigureAwait(false);
 
         if (!result.IsSuccess)
         {
@@ -184,7 +184,7 @@ public class ReviewsController : LearningControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> ApproveReview(Guid id, CancellationToken cancellationToken = default)
     {
-        var result = await _reviewService.ApproveReviewAsync(id, cancellationToken);
+        var result = await _reviewService.ApproveReviewAsync(id, cancellationToken).ConfigureAwait(false);
 
         if (!result.IsSuccess)
         {
@@ -202,7 +202,7 @@ public class ReviewsController : LearningControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> FeatureReview(Guid id, CancellationToken cancellationToken = default)
     {
-        var result = await _reviewService.FeatureReviewAsync(id, cancellationToken);
+        var result = await _reviewService.FeatureReviewAsync(id, cancellationToken).ConfigureAwait(false);
 
         if (!result.IsSuccess)
         {

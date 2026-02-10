@@ -79,15 +79,15 @@ public sealed class ScheduledAuditExport : EntityBase
         };
     }
 
-    public void Enable() { IsEnabled = true; UpdatedAt = DateTime.UtcNow; }
-    public void Disable() { IsEnabled = false; UpdatedAt = DateTime.UtcNow; }
+    public void Enable() { IsEnabled = true; UpdatedAt = SystemClock.UtcNow; }
+    public void Disable() { IsEnabled = false; UpdatedAt = SystemClock.UtcNow; }
 
     public void RecordSuccess(DateTime executedAt)
     {
         SuccessCount++;
         LastSuccessAt = executedAt;
         LastRunAt = executedAt;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     public void RecordFailure(DateTime executedAt, string errorMessage)
@@ -96,13 +96,13 @@ public sealed class ScheduledAuditExport : EntityBase
         LastFailureAt = executedAt;
         LastErrorMessage = errorMessage;
         LastRunAt = executedAt;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     public void UpdateNextRunTime(DateTime nextRunAt)
     {
         NextRunAt = nextRunAt;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 }
 
@@ -148,7 +148,7 @@ public sealed class AuditExportHistory : EntityBase
             Id = Guid.NewGuid(),
             ScheduledExportId = scheduledExportId,
             TenantId = tenantId,
-            ExecutedAt = DateTime.UtcNow,
+            ExecutedAt = SystemClock.UtcNow,
             Status = ExportStatus.InProgress
         };
     }
@@ -161,7 +161,7 @@ public sealed class AuditExportHistory : EntityBase
         ExportPath = exportPath;
         FileChecksum = fileChecksum;
         ExecutionDuration = duration;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     public void Fail(string errorMessage, TimeSpan duration)
@@ -169,7 +169,7 @@ public sealed class AuditExportHistory : EntityBase
         Status = ExportStatus.Failed;
         ErrorMessage = errorMessage;
         ExecutionDuration = duration;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 }
 

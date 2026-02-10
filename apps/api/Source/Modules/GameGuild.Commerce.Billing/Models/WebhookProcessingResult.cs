@@ -28,7 +28,7 @@ public class WebhookProcessingResult
     {
         Processed = true,
         EventId = eventId,
-        ProcessedAt = DateTime.UtcNow
+        ProcessedAt = SystemClock.UtcNow
     };
 
     /// <summary>Creates a result for an already-processed event (idempotent response)</summary>
@@ -37,7 +37,7 @@ public class WebhookProcessingResult
         Processed = true,
         WasAlreadyProcessed = true,
         EventId = eventId,
-        ProcessedAt = originalProcessedAt ?? DateTime.UtcNow
+        ProcessedAt = originalProcessedAt ?? SystemClock.UtcNow
     };
 
     /// <summary>Creates a failure result</summary>

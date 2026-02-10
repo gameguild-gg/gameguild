@@ -37,7 +37,7 @@ public class CohortsController : BaseApiController
         // Use tenant from actor if not specified in request
         var effectiveRequest = request with { TenantId = request.TenantId ?? actor.TenantId };
 
-        var result = await _cohortService.CreateCohortAsync(effectiveRequest);
+        var result = await _cohortService.CreateCohortAsync(effectiveRequest).ConfigureAwait(false);
         if (!result.IsSuccess)
         {
             return BadRequest(result.Error);
@@ -52,7 +52,7 @@ public class CohortsController : BaseApiController
     [HttpGet("{id:guid}")]
     public async Task<ActionResult<CohortDto>> GetCohort(Guid id)
     {
-        var cohort = await _cohortService.GetCohortByIdAsync(id);
+        var cohort = await _cohortService.GetCohortByIdAsync(id).ConfigureAwait(false);
         if (cohort == null)
         {
             return NotFound();
@@ -68,7 +68,7 @@ public class CohortsController : BaseApiController
     public async Task<ActionResult<IEnumerable<CohortDto>>> GetCourseCohorts(Guid courseId)
     {
         var actor = _actorContextAccessor.ActorContext;
-        var cohorts = await _cohortService.GetCoursCohortsAsync(courseId, actor.TenantId);
+        var cohorts = await _cohortService.GetCoursCohortsAsync(courseId, actor.TenantId).ConfigureAwait(false);
         return Ok(cohorts.Select(CohortDto.FromEntity));
     }
 
@@ -79,7 +79,7 @@ public class CohortsController : BaseApiController
     public async Task<ActionResult<IEnumerable<CohortDto>>> GetActiveCohorts(Guid courseId)
     {
         var actor = _actorContextAccessor.ActorContext;
-        var cohorts = await _cohortService.GetActiveCohortsAsync(courseId, actor.TenantId);
+        var cohorts = await _cohortService.GetActiveCohortsAsync(courseId, actor.TenantId).ConfigureAwait(false);
         return Ok(cohorts.Select(CohortDto.FromEntity));
     }
 
@@ -90,7 +90,7 @@ public class CohortsController : BaseApiController
     public async Task<ActionResult<IEnumerable<CohortDto>>> GetEnrollableCohorts(Guid courseId)
     {
         var actor = _actorContextAccessor.ActorContext;
-        var cohorts = await _cohortService.GetEnrollableCohortsAsync(courseId, actor.TenantId);
+        var cohorts = await _cohortService.GetEnrollableCohortsAsync(courseId, actor.TenantId).ConfigureAwait(false);
         return Ok(cohorts.Select(CohortDto.FromEntity));
     }
 
@@ -100,7 +100,7 @@ public class CohortsController : BaseApiController
     [HttpPut("{id:guid}")]
     public async Task<ActionResult<CohortDto>> UpdateCohort(Guid id, [FromBody] UpdateCohortRequest request)
     {
-        var result = await _cohortService.UpdateCohortAsync(id, request);
+        var result = await _cohortService.UpdateCohortAsync(id, request).ConfigureAwait(false);
         if (!result.IsSuccess)
         {
             return result.Error.Type == ErrorType.NotFound 
@@ -117,7 +117,7 @@ public class CohortsController : BaseApiController
     [HttpPost("{id:guid}/open")]
     public async Task<ActionResult<CohortDto>> OpenCohort(Guid id)
     {
-        var result = await _cohortService.OpenCohortAsync(id);
+        var result = await _cohortService.OpenCohortAsync(id).ConfigureAwait(false);
         if (!result.IsSuccess)
         {
             return result.Error.Type == ErrorType.NotFound 
@@ -134,7 +134,7 @@ public class CohortsController : BaseApiController
     [HttpPost("{id:guid}/close")]
     public async Task<ActionResult<CohortDto>> CloseCohort(Guid id)
     {
-        var result = await _cohortService.CloseCohortAsync(id);
+        var result = await _cohortService.CloseCohortAsync(id).ConfigureAwait(false);
         if (!result.IsSuccess)
         {
             return result.Error.Type == ErrorType.NotFound 
@@ -151,7 +151,7 @@ public class CohortsController : BaseApiController
     [HttpPost("{id:guid}/complete")]
     public async Task<ActionResult<CohortDto>> CompleteCohort(Guid id)
     {
-        var result = await _cohortService.CompleteCohortAsync(id);
+        var result = await _cohortService.CompleteCohortAsync(id).ConfigureAwait(false);
         if (!result.IsSuccess)
         {
             return result.Error.Type == ErrorType.NotFound 
@@ -168,7 +168,7 @@ public class CohortsController : BaseApiController
     [HttpPost("{id:guid}/cancel")]
     public async Task<ActionResult<CohortDto>> CancelCohort(Guid id)
     {
-        var result = await _cohortService.CancelCohortAsync(id);
+        var result = await _cohortService.CancelCohortAsync(id).ConfigureAwait(false);
         if (!result.IsSuccess)
         {
             return result.Error.Type == ErrorType.NotFound 
@@ -185,7 +185,7 @@ public class CohortsController : BaseApiController
     [HttpDelete("{id:guid}")]
     public async Task<ActionResult> DeleteCohort(Guid id)
     {
-        var result = await _cohortService.DeleteCohortAsync(id);
+        var result = await _cohortService.DeleteCohortAsync(id).ConfigureAwait(false);
         if (!result.IsSuccess)
         {
             return result.Error.Type == ErrorType.NotFound 

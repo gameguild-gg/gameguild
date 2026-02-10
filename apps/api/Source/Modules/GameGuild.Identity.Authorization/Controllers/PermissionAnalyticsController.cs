@@ -29,7 +29,7 @@ public class PermissionAnalyticsController(ISender sender) : BaseApiController
     )
     {
         var query = new GetPermissionUsageQuery(tenantId, fromDate, toDate);
-        var result = await sender.Send(query, cancellationToken);
+        var result = await sender.Send(query, cancellationToken).ConfigureAwait(false);
         return Ok(result);
     }
 
@@ -47,7 +47,7 @@ public class PermissionAnalyticsController(ISender sender) : BaseApiController
     )
     {
         var query = new GetUserActivityQuery(tenantId, top, fromDate, toDate);
-        var result = await sender.Send(query, cancellationToken);
+        var result = await sender.Send(query, cancellationToken).ConfigureAwait(false);
         return Ok(result);
     }
 
@@ -65,7 +65,7 @@ public class PermissionAnalyticsController(ISender sender) : BaseApiController
     )
     {
         var query = new GetResourceAccessPatternsQuery(tenantId, top, fromDate, toDate);
-        var result = await sender.Send(query, cancellationToken);
+        var result = await sender.Send(query, cancellationToken).ConfigureAwait(false);
         return Ok(result);
     }
 
@@ -82,7 +82,7 @@ public class PermissionAnalyticsController(ISender sender) : BaseApiController
     )
     {
         var query = new GetPermissionTrendsQuery(tenantId, fromDate, toDate);
-        var result = await sender.Send(query, cancellationToken);
+        var result = await sender.Send(query, cancellationToken).ConfigureAwait(false);
         return Ok(result);
     }
 
@@ -98,7 +98,7 @@ public class PermissionAnalyticsController(ISender sender) : BaseApiController
     )
     {
         var query = new DetectPermissionAnomaliesQuery(tenantId, fromDate);
-        var result = await sender.Send(query, cancellationToken);
+        var result = await sender.Send(query, cancellationToken).ConfigureAwait(false);
         return Ok(result);
     }
 
@@ -115,7 +115,7 @@ public class PermissionAnalyticsController(ISender sender) : BaseApiController
     )
     {
         var query = new GeneratePermissionReportQuery(tenantId, periodStart, periodEnd);
-        var result = await sender.Send(query, cancellationToken);
+        var result = await sender.Send(query, cancellationToken).ConfigureAwait(false);
         return Ok(result);
     }
 }

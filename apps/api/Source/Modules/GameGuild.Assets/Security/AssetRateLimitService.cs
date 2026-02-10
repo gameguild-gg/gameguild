@@ -190,7 +190,7 @@ public class AssetRateLimitService : IAssetRateLimitService
             var blockKey = $"{IpBlockKeyPrefix}{ipAddress}";
             await _cache.SetStringAsync(
                 blockKey,
-                DateTime.UtcNow.ToString("O"),
+                SystemClock.UtcNow.ToString("O"),
                 new DistributedCacheEntryOptions
                 {
                     AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(_options.BlockDurationMinutes)
@@ -238,7 +238,7 @@ public class AssetRateLimitService : IAssetRateLimitService
             assetReferenceId,
             currentCount,
             currentCount, // Would need separate total counter for accurate total
-            currentCount > 0 ? DateTime.UtcNow : null);
+            currentCount > 0 ? SystemClock.UtcNow : null);
     }
 
     private string GetWindowKey()

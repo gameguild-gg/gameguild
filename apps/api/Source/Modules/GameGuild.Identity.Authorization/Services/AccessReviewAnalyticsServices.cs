@@ -234,8 +234,8 @@ public class PermissionAnalyticsService(
     )
     {
         var logs = await _auditLogRepository.GetByDateRangeAsync(
-            fromDate ?? DateTime.UtcNow.AddMonths(-1),
-            toDate ?? DateTime.UtcNow,
+            fromDate ?? SystemClock.UtcNow.AddMonths(-1),
+            toDate ?? SystemClock.UtcNow,
             tenantId,
             cancellationToken
         ).ConfigureAwait(false);
@@ -263,8 +263,8 @@ public class PermissionAnalyticsService(
     )
     {
         var logs = await _auditLogRepository.GetByDateRangeAsync(
-            fromDate ?? DateTime.UtcNow.AddMonths(-1),
-            toDate ?? DateTime.UtcNow,
+            fromDate ?? SystemClock.UtcNow.AddMonths(-1),
+            toDate ?? SystemClock.UtcNow,
             tenantId,
             cancellationToken
         ).ConfigureAwait(false);
@@ -293,8 +293,8 @@ public class PermissionAnalyticsService(
     )
     {
         var logs = await _auditLogRepository.GetByDateRangeAsync(
-            fromDate ?? DateTime.UtcNow.AddMonths(-1),
-            toDate ?? DateTime.UtcNow,
+            fromDate ?? SystemClock.UtcNow.AddMonths(-1),
+            toDate ?? SystemClock.UtcNow,
             tenantId,
             cancellationToken
         ).ConfigureAwait(false);
@@ -357,8 +357,8 @@ public class PermissionAnalyticsService(
         );
 
         var logs = await _auditLogRepository.GetByDateRangeAsync(
-            fromDate ?? DateTime.UtcNow.AddDays(-7),
-            DateTime.UtcNow,
+            fromDate ?? SystemClock.UtcNow.AddDays(-7),
+            SystemClock.UtcNow,
             tenantId,
             cancellationToken
         ).ConfigureAwait(false);
@@ -379,7 +379,7 @@ public class PermissionAnalyticsService(
                 UserId = group.Key,
                 AnomalyType = "ExcessiveGrants",
                 Description = $"User performed {group.Count()} permission grants in the period",
-                DetectedAt = DateTime.UtcNow,
+                DetectedAt = SystemClock.UtcNow,
                 Severity = ImpactSeverity.Medium
             });
         }

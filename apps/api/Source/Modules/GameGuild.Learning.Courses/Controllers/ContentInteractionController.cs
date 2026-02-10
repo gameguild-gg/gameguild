@@ -21,12 +21,14 @@ public class ContentInteractionController(IContentInteractionService contentInte
   [HttpPost]
   [RequireResourcePermission<PermissionType, Program>(PermissionType.Read, "programId")]
   public async Task<ActionResult<ContentInteractionDto>> CreateInteraction([FromQuery] Guid programId, [FromBody] StartContentRequest request) {
+    _logger.LogDebug("Creating content interaction: ProgramId={ProgramId}, ContentId={ContentId}", programId, request.ContentId);
+
     // Verify content belongs to the specified program
-    var content = await programContentService.GetContentByIdAsync(request.ContentId);
+    var content = await programContentService.GetContentByIdAsync(request.ContentId).ConfigureAwait(false);
 
     if (content == null || content.ProgramId != programId) return BadRequest("Content does not belong to the specified program.");
 
-    var interaction = await contentInteractionService.StartContentAsync(request.ProgramUserId, request.ContentId);
+    var interaction = await contentInteractionService.StartContentAsync(request.ProgramUserId, request.ContentId).ConfigureAwait(false);
 
     return Ok(interaction.ToDto());
   }
@@ -40,11 +42,11 @@ public class ContentInteractionController(IContentInteractionService contentInte
   public async Task<ActionResult<ContentInteractionDto>> UpdateProgress([FromRoute] Guid interactionId, [FromQuery] Guid programId, [FromBody] UpdateProgressRequest request) {
     try {
       // Get the interaction to verify it belongs to the specified program
-      var currentInteraction = await contentInteractionService.GetInteractionAsync(request.ProgramUserId, request.ContentId);
+      var currentInteraction = await contentInteractionService.GetInteractionAsync(request.ProgramUserId, request.ContentId).ConfigureAwait(false);
 
       if (currentInteraction == null || currentInteraction.Content.ProgramId != programId) return BadRequest("Interaction does not belong to the specified program.");
 
-      var interaction = await contentInteractionService.UpdateProgressAsync(interactionId, request.CompletionPercentage);
+      var interaction = await contentInteractionService.UpdateProgressAsync(interactionId, request.CompletionPercentage).ConfigureAwait(false);
 
       return Ok(interaction.ToDto());
     }
@@ -60,11 +62,11 @@ public class ContentInteractionController(IContentInteractionService contentInte
   public async Task<ActionResult<ContentInteractionDto>> SubmitContent([FromRoute] Guid interactionId, [FromQuery] Guid programId, [FromBody] SubmitContentRequest request) {
     try {
       // Verify the interaction belongs to the specified program
-      var currentInteraction = await contentInteractionService.GetInteractionAsync(request.ProgramUserId, request.ContentId);
+      var currentInteraction = await contentInteractionService.GetInteractionAsync(request.ProgramUserId, request.ContentId).ConfigureAwait(false);
 
       if (currentInteraction == null || currentInteraction.Content.ProgramId != programId) return BadRequest("Interaction does not belong to the specified program.");
 
-      var interaction = await contentInteractionService.SubmitContentAsync(interactionId, request.SubmissionData);
+      var interaction = await contentInteractionService.SubmitContentAsync(interactionId, request.SubmissionData).ConfigureAwait(false);
 
       return Ok(interaction.ToDto());
     }
@@ -80,11 +82,11 @@ public class ContentInteractionController(IContentInteractionService contentInte
   public async Task<ActionResult<ContentInteractionDto>> CompleteContent([FromRoute] Guid interactionId, [FromQuery] Guid programId, [FromBody] CompleteContentRequest request) {
     try {
       // Verify the interaction belongs to the specified program
-      var currentInteraction = await contentInteractionService.GetInteractionAsync(request.ProgramUserId, request.ContentId);
+      var currentInteraction = await contentInteractionService.GetInteractionAsync(request.ProgramUserId, request.ContentId).ConfigureAwait(false);
 
       if (currentInteraction == null || currentInteraction.Content.ProgramId != programId) return BadRequest("Interaction does not belong to the specified program.");
 
-      var interaction = await contentInteractionService.CompleteContentAsync(interactionId);
+      var interaction = await contentInteractionService.CompleteContentAsync(interactionId).ConfigureAwait(false);
 
       return Ok(interaction.ToDto());
     }
@@ -99,11 +101,11 @@ public class ContentInteractionController(IContentInteractionService contentInte
   [RequireResourcePermission<PermissionType, Program>(PermissionType.Read, "programId")]
   public async Task<ActionResult<ContentInteractionDto>> GetInteraction([FromRoute] Guid programUserId, [FromRoute] Guid contentId, [FromQuery] Guid programId) {
     // Verify content belongs to the specified program
-    var content = await programContentService.GetContentByIdAsync(contentId);
+    var content = await programContentService.GetContentByIdAsync(contentId).ConfigureAwait(false);
 
     if (content == null || content.ProgramId != programId) return BadRequest("Content does not belong to the specified program.");
 
-    var interaction = await contentInteractionService.GetInteractionAsync(programUserId, contentId);
+    var interaction = await contentInteractionService.GetInteractionAsync(programUserId, contentId).ConfigureAwait(false);
 
     if (interaction == null) return NotFound("Interaction not found.");
 
@@ -117,7 +119,7 @@ public class ContentInteractionController(IContentInteractionService contentInte
   [HttpGet("user/{programUserId}")]
   [RequireResourcePermission<PermissionType, Program>(PermissionType.Read, "programId")]
   public async Task<ActionResult<IEnumerable<ContentInteractionDto>>> GetUserInteractions([FromRoute] Guid programUserId, [FromQuery] Guid programId) {
-    var interactions = await contentInteractionService.GetUserInteractionsAsync(programUserId);
+    var interactions = await contentInteractionService.GetUserInteractionsAsync(programUserId).ConfigureAwait(false);
 
     // Filter to only interactions for content in the specified program
     var filteredInteractions = interactions.Where(i => i.Content.ProgramId == programId);
@@ -134,11 +136,11 @@ public class ContentInteractionController(IContentInteractionService contentInte
   public async Task<ActionResult<ContentInteractionDto>> UpdateTimeSpent([FromRoute] Guid interactionId, [FromQuery] Guid programId, [FromBody] UpdateTimeSpentRequest request) {
     try {
       // Verify the interaction belongs to the specified program
-      var currentInteraction = await contentInteractionService.GetInteractionAsync(request.ProgramUserId, request.ContentId);
+      var currentInteraction = await contentInteractionService.GetInteractionAsync(request.ProgramUserId, request.ContentId).ConfigureAwait(false);
 
       if (currentInteraction == null || currentInteraction.Content.ProgramId != programId) return BadRequest("Interaction does not belong to the specified program.");
 
-      var interaction = await contentInteractionService.UpdateTimeSpentAsync(interactionId, request.AdditionalMinutes);
+      var interaction = await contentInteractionService.UpdateTimeSpentAsync(interactionId, request.AdditionalMinutes).ConfigureAwait(false);
 
       return Ok(interaction.ToDto());
     }

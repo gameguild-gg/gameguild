@@ -94,7 +94,7 @@ public sealed class ResourceAccessHandler : AuthorizationHandler<ResourceAccessR
                     resourceType,
                     resourceId,
                     requirement.MinimumAccessLevel,
-                    CancellationToken.None);
+                    CancellationToken.None).ConfigureAwait(false);
 
                 if (hasAccess)
                 {

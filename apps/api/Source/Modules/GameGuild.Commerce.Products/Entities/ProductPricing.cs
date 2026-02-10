@@ -78,13 +78,13 @@ public class ProductPricing : EntityBase
 
         // Create version before changing
         var previousVersion = GetCurrentActiveVersion();
-        previousVersion?.Supersede(DateTime.UtcNow);
+        previousVersion?.Supersede(SystemClock.UtcNow);
 
         BasePrice = newBasePrice;
         CurrentVersion++;
         Touch();
 
-        return ProductPricingVersion.Create(this, CurrentVersion, DateTime.UtcNow, changeReason, changedByUserId);
+        return ProductPricingVersion.Create(this, CurrentVersion, SystemClock.UtcNow, changeReason, changedByUserId);
     }
 
     /// <summary>
@@ -96,13 +96,13 @@ public class ProductPricing : EntityBase
             throw new ArgumentException("Sale price cannot be negative", nameof(newSalePrice));
 
         var previousVersion = GetCurrentActiveVersion();
-        previousVersion?.Supersede(DateTime.UtcNow);
+        previousVersion?.Supersede(SystemClock.UtcNow);
 
         SalePrice = newSalePrice;
         CurrentVersion++;
         Touch();
 
-        return ProductPricingVersion.Create(this, CurrentVersion, DateTime.UtcNow, changeReason, changedByUserId);
+        return ProductPricingVersion.Create(this, CurrentVersion, SystemClock.UtcNow, changeReason, changedByUserId);
     }
 
     /// <summary>
@@ -120,14 +120,14 @@ public class ProductPricing : EntityBase
             throw new ArgumentException("Sale price must be less than base price", nameof(newSalePrice));
 
         var previousVersion = GetCurrentActiveVersion();
-        previousVersion?.Supersede(DateTime.UtcNow);
+        previousVersion?.Supersede(SystemClock.UtcNow);
 
         BasePrice = newBasePrice;
         SalePrice = newSalePrice;
         CurrentVersion++;
         Touch();
 
-        return ProductPricingVersion.Create(this, CurrentVersion, DateTime.UtcNow, changeReason, changedByUserId);
+        return ProductPricingVersion.Create(this, CurrentVersion, SystemClock.UtcNow, changeReason, changedByUserId);
     }
 
     /// <summary>
@@ -171,7 +171,7 @@ public class ProductPricing : EntityBase
     {
         if (!SalePrice.HasValue) return false;
 
-        var now = DateTime.UtcNow;
+        var now = SystemClock.UtcNow;
         return (SaleStartDate == null || SaleStartDate <= now) && (SaleEndDate == null || SaleEndDate > now);
     }
 

@@ -84,13 +84,13 @@ public class TestingSessionService : ITestingSessionService {
   }
 
   public async Task<IEnumerable<TestingSession>> GetUpcomingSessionsAsync() {
-    var now = DateTime.UtcNow;
+    var now = SystemClock.UtcNow;
 
     return await _context.TestingSessions.Where(ts => ts.StartTime > now && ts.DeletedAt == null && ts.Status == SessionStatus.Scheduled).Include(ts => ts.TestingRequest).Include(ts => ts.Location).OrderBy(ts => ts.StartTime).ToListAsync();
   }
 
   public async Task<IEnumerable<TestingSession>> GetActiveSessionsAsync() {
-    var now = DateTime.UtcNow;
+    var now = SystemClock.UtcNow;
 
     return await _context.TestingSessions.Where(ts => ts.StartTime <= now && ts.EndTime >= now && ts.DeletedAt == null && ts.Status == SessionStatus.Active)
                          .Include(ts => ts.TestingRequest)

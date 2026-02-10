@@ -338,6 +338,13 @@ public class OrdersController(ISender sender, IActorContextAccessor actorContext
     );
 }
 
+/// <summary>Request to create a new order</summary>
+public sealed record CreateOrderRequest(
+    Guid UserId,
+    string IdempotencyKey,
+    string Currency = "USD",
+    Guid? TenantId = null);
+
 /// <summary>Request to add an item to an order</summary>
 public sealed record AddOrderItemRequest(
     Guid ProductId,

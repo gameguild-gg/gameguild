@@ -145,7 +145,7 @@ public sealed class ProgramBasicQueryHandlers(IApplicationDbContext context, ILo
     if (request.AvailableForEnrollment) {
       query = query.Where(p => p.EnrollmentStatus == EnrollmentStatus.Open &&
                                (p.MaxEnrollments == null || p.ProgramUsers.Count(pu => pu.IsActive) < p.MaxEnrollments) &&
-                               (p.EnrollmentDeadline == null || p.EnrollmentDeadline > DateTime.UtcNow)
+                               (p.EnrollmentDeadline == null || p.EnrollmentDeadline > SystemClock.UtcNow)
       );
     }
 

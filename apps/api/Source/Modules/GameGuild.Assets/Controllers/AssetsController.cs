@@ -56,7 +56,7 @@ public class AssetsController(
             parentResourceType,
             parentResourceId);
 
-        var result = await sender.Send(command, ct);
+        var result = await sender.Send(command, ct).ConfigureAwait(false);
 
         if (result.Error != null)
         {
@@ -104,7 +104,7 @@ public class AssetsController(
             mimeType,
             totalSize,
             Actor.SubjectIdAsGuid.Value,
-            ct);
+            ct).ConfigureAwait(false);
 
         return Ok(session);
     }
@@ -140,7 +140,7 @@ public class AssetsController(
         }
 
         await using var stream = chunk.OpenReadStream();
-        var success = await uploadService.UploadChunkAsync(uploadId, chunkIndex, stream, ct);
+        var success = await uploadService.UploadChunkAsync(uploadId, chunkIndex, stream, ct).ConfigureAwait(false);
 
         if (!success)
         {
@@ -184,7 +184,7 @@ public class AssetsController(
             parentResourceType,
             parentResourceId);
 
-        var result = await uploadService.CompleteChunkedUploadAsync(uploadId, options, ct);
+        var result = await uploadService.CompleteChunkedUploadAsync(uploadId, options, ct).ConfigureAwait(false);
 
         if (!result.Success)
         {
@@ -214,7 +214,7 @@ public class AssetsController(
             return Unauthorized();
         }
 
-        await uploadService.AbortChunkedUploadAsync(uploadId, ct);
+        await uploadService.AbortChunkedUploadAsync(uploadId, ct).ConfigureAwait(false);
         return NoContent();
     }
 
@@ -236,7 +236,7 @@ public class AssetsController(
             Actor.TenantId,
             includeContent);
 
-        var result = await sender.Send(query, ct);
+        var result = await sender.Send(query, ct).ConfigureAwait(false);
 
         if (result == null)
         {
@@ -281,7 +281,7 @@ public class AssetsController(
             transformation,
             direct);
 
-        var result = await sender.Send(command, ct);
+        var result = await sender.Send(command, ct).ConfigureAwait(false);
 
         if (result == null)
         {
@@ -311,7 +311,7 @@ public class AssetsController(
             return Forbid();
         }
 
-        var reference = await referenceRepository.GetByIdWithContentAsync(id, ct);
+        var reference = await referenceRepository.GetByIdWithContentAsync(id, ct).ConfigureAwait(false);
         if (reference?.Content == null)
         {
             return NotFound();
@@ -327,9 +327,9 @@ public class AssetsController(
         var stream = await storageService.DownloadAsync(
             reference.Content.BucketName,
             reference.Content.ObjectKey,
-            ct);
+            ct).ConfigureAwait(false);
 
-        await referenceRepository.RecordAccessAsync(id, ct);
+        await referenceRepository.RecordAccessAsync(id, ct).ConfigureAwait(false);
 
         return File(stream, reference.Content.MimeType, reference.DisplayName);
     }
@@ -354,7 +354,7 @@ public class AssetsController(
             request.DisplayName,
             request.AccessPolicy);
 
-        var result = await sender.Send(command, ct);
+        var result = await sender.Send(command, ct).ConfigureAwait(false);
 
         if (result == null)
         {
@@ -379,7 +379,7 @@ public class AssetsController(
 
         var command = new DeleteAssetCommand(id, Actor.SubjectIdAsGuid.Value);
 
-        var result = await sender.Send(command, ct);
+        var result = await sender.Send(command, ct).ConfigureAwait(false);
 
         if (!result.Success)
         {
@@ -409,7 +409,7 @@ public class AssetsController(
             request.Reason,
             request.Description);
 
-        var result = await sender.Send(command, ct);
+        var result = await sender.Send(command, ct).ConfigureAwait(false);
 
         if (result == null)
         {
@@ -447,7 +447,7 @@ public class AssetsController(
                 skip,
                 take);
 
-            var myResult = await sender.Send(myAssetsQuery, ct);
+            var myResult = await sender.Send(myAssetsQuery, ct).ConfigureAwait(false);
             return Ok(myResult);
         }
 
@@ -460,7 +460,7 @@ public class AssetsController(
                 Actor.SubjectIdAsGuid,
                 Actor.TenantId);
 
-            var parentResult = await sender.Send(parentQuery, ct);
+            var parentResult = await sender.Send(parentQuery, ct).ConfigureAwait(false);
             return Ok(parentResult);
         }
 
@@ -476,7 +476,7 @@ public class AssetsController(
             skip,
             take);
 
-        var result = await sender.Send(query, ct);
+        var result = await sender.Send(query, ct).ConfigureAwait(false);
         return Ok(result);
     }
 

@@ -127,7 +127,7 @@ public class TenantService(
             ?? throw new InvalidOperationException($"Tenant with ID '{tenantId}' not found.");
 
         tenant.IsArchived = true;
-        tenant.ArchivedAt = DateTime.UtcNow;
+        tenant.ArchivedAt = SystemClock.UtcNow;
         tenant.Deactivate();
 
         var updated = await tenantRepository.UpdateAsync(tenant, cancellationToken).ConfigureAwait(false);

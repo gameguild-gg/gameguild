@@ -51,7 +51,7 @@ public sealed class RequireTimeWindowRuleEvaluator : IRuleEvaluator
             }
         }
 
-        var now = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, timezone);
+        var now = TimeZoneInfo.ConvertTimeFromUtc(SystemClock.UtcNow, timezone);
         var currentDayOfWeek = (int)now.DayOfWeek;
         var currentTime = now.TimeOfDay;
 

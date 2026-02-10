@@ -26,7 +26,7 @@ public class PostsCrudController(IPostService postService, IActorContextAccessor
     [AllowAnonymous]
     public async Task<IActionResult> GetPosts([FromQuery] int skip = 0, [FromQuery] int take = 50, CancellationToken cancellationToken = default)
     {
-        var result = await postService.GetPublicPostsAsync(skip, take, cancellationToken);
+        var result = await postService.GetPublicPostsAsync(skip, take, cancellationToken).ConfigureAwait(false);
         return result.IsSuccess
             ? Ok(result.Value!.Select(PostMappings.MapToDto))
             : BadRequest(result.Error);
@@ -37,7 +37,7 @@ public class PostsCrudController(IPostService postService, IActorContextAccessor
     [AllowAnonymous]
     public async Task<IActionResult> GetPost(Guid postId, CancellationToken cancellationToken = default)
     {
-        var result = await postService.GetPostByIdAsync(postId, cancellationToken);
+        var result = await postService.GetPostByIdAsync(postId, cancellationToken).ConfigureAwait(false);
         return result.IsSuccess
             ? Ok(PostMappings.MapToDto(result.Value!))
             : NotFound(result.Error);
@@ -51,7 +51,7 @@ public class PostsCrudController(IPostService postService, IActorContextAccessor
         if (userId == Guid.Empty)
             return Unauthorized();
 
-        var result = await postService.GetFeedPostsAsync(userId, skip, take, cancellationToken);
+        var result = await postService.GetFeedPostsAsync(userId, skip, take, cancellationToken).ConfigureAwait(false);
         return result.IsSuccess
             ? Ok(result.Value!.Select(PostMappings.MapToDto))
             : BadRequest(result.Error);
@@ -62,7 +62,7 @@ public class PostsCrudController(IPostService postService, IActorContextAccessor
     [AllowAnonymous]
     public async Task<IActionResult> GetTrending([FromQuery] int skip = 0, [FromQuery] int take = 50, CancellationToken cancellationToken = default)
     {
-        var result = await postService.GetTrendingPostsAsync(skip, take, cancellationToken);
+        var result = await postService.GetTrendingPostsAsync(skip, take, cancellationToken).ConfigureAwait(false);
         return result.IsSuccess
             ? Ok(result.Value!.Select(PostMappings.MapToDto))
             : BadRequest(result.Error);
@@ -73,7 +73,7 @@ public class PostsCrudController(IPostService postService, IActorContextAccessor
     [AllowAnonymous]
     public async Task<IActionResult> GetByAuthor(Guid authorId, [FromQuery] int skip = 0, [FromQuery] int take = 50, CancellationToken cancellationToken = default)
     {
-        var result = await postService.GetPostsByAuthorAsync(authorId, skip, take, cancellationToken);
+        var result = await postService.GetPostsByAuthorAsync(authorId, skip, take, cancellationToken).ConfigureAwait(false);
         return result.IsSuccess
             ? Ok(result.Value!.Select(PostMappings.MapToDto))
             : BadRequest(result.Error);
@@ -87,7 +87,7 @@ public class PostsCrudController(IPostService postService, IActorContextAccessor
         if (userId == Guid.Empty)
             return Unauthorized();
 
-        var result = await postService.GetPostsByAuthorAsync(userId, skip, take, cancellationToken);
+        var result = await postService.GetPostsByAuthorAsync(userId, skip, take, cancellationToken).ConfigureAwait(false);
         return result.IsSuccess
             ? Ok(result.Value!.Select(PostMappings.MapToDto))
             : BadRequest(result.Error);
@@ -101,7 +101,7 @@ public class PostsCrudController(IPostService postService, IActorContextAccessor
         if (string.IsNullOrWhiteSpace(q))
             return BadRequest("Search query is required");
 
-        var result = await postService.SearchPostsAsync(q, skip, take, cancellationToken);
+        var result = await postService.SearchPostsAsync(q, skip, take, cancellationToken).ConfigureAwait(false);
         return result.IsSuccess
             ? Ok(result.Value!.Select(PostMappings.MapToDto))
             : BadRequest(result.Error);
@@ -126,11 +126,11 @@ public class PostsCrudController(IPostService postService, IActorContextAccessor
             request.MediaUrl,
             request.MediaType,
             request.TenantId,
-            cancellationToken);
+            cancellationToken).ConfigureAwait(false);
 
         if (result.IsSuccess && result.Value is not null && request.Tags?.Length > 0)
         {
-            await postService.AddTagsToPostAsync(result.Value.Id, request.Tags, cancellationToken);
+            await postService.AddTagsToPostAsync(result.Value.Id, request.Tags, cancellationToken).ConfigureAwait(false);
         }
 
         return result.IsSuccess
@@ -147,11 +147,11 @@ public class PostsCrudController(IPostService postService, IActorContextAccessor
             return Unauthorized();
 
         // Check ownership
-        var canPerform = await postService.CanUserPerformActionAsync(postId, userId, "edit", cancellationToken);
+        var canPerform = await postService.CanUserPerformActionAsync(postId, userId, "edit", cancellationToken).ConfigureAwait(false);
         if (!canPerform.IsSuccess || !canPerform.Value)
             return Forbid();
 
-        var result = await postService.UpdatePostAsync(postId, request.Content, cancellationToken);
+        var result = await postService.UpdatePostAsync(postId, request.Content, cancellationToken).ConfigureAwait(false);
         return result.IsSuccess
             ? Ok(PostMappings.MapToDto(result.Value!))
             : BadRequest(result.Error);
@@ -166,11 +166,11 @@ public class PostsCrudController(IPostService postService, IActorContextAccessor
             return Unauthorized();
 
         // Check ownership
-        var canPerform = await postService.CanUserPerformActionAsync(postId, userId, "delete", cancellationToken);
+        var canPerform = await postService.CanUserPerformActionAsync(postId, userId, "delete", cancellationToken).ConfigureAwait(false);
         if (!canPerform.IsSuccess || !canPerform.Value)
             return Forbid();
 
-        var result = await postService.DeletePostAsync(postId, cancellationToken);
+        var result = await postService.DeletePostAsync(postId, cancellationToken).ConfigureAwait(false);
         return result.IsSuccess
             ? NoContent()
             : BadRequest(result.Error);

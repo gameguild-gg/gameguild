@@ -19,7 +19,7 @@ public sealed class RefreshTokenEventHandler(ILogger<RefreshTokenEventHandler> l
         // - Log to security audit system
         // - Track token generation metrics
 
-        await Task.CompletedTask;
+        await Task.CompletedTask.ConfigureAwait(false);
     }
 
     public async Task Handle(RefreshTokenRevokedEvent notification, CancellationToken cancellationToken)
@@ -32,7 +32,7 @@ public sealed class RefreshTokenEventHandler(ILogger<RefreshTokenEventHandler> l
         // - Log to security audit system
         // - Track revocation metrics
 
-        await Task.CompletedTask;
+        await Task.CompletedTask.ConfigureAwait(false);
     }
 
     public async Task Handle(RefreshTokenUsedEvent notification, CancellationToken cancellationToken)
@@ -44,6 +44,6 @@ public sealed class RefreshTokenEventHandler(ILogger<RefreshTokenEventHandler> l
         // - Detect suspicious token reuse patterns
         // - Track token usage metrics
 
-        await Task.CompletedTask;
+        await Task.CompletedTask.ConfigureAwait(false);
     }
 }

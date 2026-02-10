@@ -39,7 +39,7 @@ public sealed class ResetResourceQuotaCommandHandler(
             HardLimit: quota.HardLimit,
             Source: "ResetResourceQuotaCommand",
             ActorId: actorId,
-            Timestamp: DateTime.UtcNow), cancellationToken);
+            Timestamp: SystemClock.UtcNow), cancellationToken);
 
         return Unit.Value;
     }

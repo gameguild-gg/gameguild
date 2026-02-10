@@ -5,9 +5,7 @@ namespace GameGuild.Features;
 /// <summary>
 ///     Implementation of SDK configuration generation
 /// </summary>
-#pragma warning disable CS0618 // Type or member is obsolete - IFeatureFlagRepository migration pending
-public class FeatureFlagSdkService(IFeatureFlagRepository repository) : IFeatureFlagSdkService
-#pragma warning restore CS0618
+public class FeatureFlagSdkService(IFeatureFlagQueryRepository repository) : IFeatureFlagSdkService
 {
     public async Task<SdkConfiguration> GenerateSdkConfigurationAsync(string environment, string? tenantId = null, CancellationToken cancellationToken = default)
     {

@@ -31,7 +31,7 @@ public sealed class ProcessRefundCommandHandler(
                 Currency = "USD",
                 Status = TransactionStatus.Failed,
                 Reason = request.Reason,
-                ProcessedAt = DateTime.UtcNow,
+                ProcessedAt = SystemClock.UtcNow,
                 IsSuccess = false,
                 ErrorMessage = $"Payment {request.PaymentId} not found"
             };
@@ -51,7 +51,7 @@ public sealed class ProcessRefundCommandHandler(
                 Currency = payment.Currency,
                 Status = TransactionStatus.Failed,
                 Reason = request.Reason,
-                ProcessedAt = DateTime.UtcNow,
+                ProcessedAt = SystemClock.UtcNow,
                 IsSuccess = false,
                 ErrorMessage = $"Payment in status {payment.Status} cannot be refunded"
             };
@@ -72,14 +72,14 @@ public sealed class ProcessRefundCommandHandler(
                 Currency = payment.Currency,
                 Status = TransactionStatus.Failed,
                 Reason = request.Reason,
-                ProcessedAt = DateTime.UtcNow,
+                ProcessedAt = SystemClock.UtcNow,
                 IsSuccess = false,
                 ErrorMessage = $"Refund amount {request.Amount} exceeds maximum refundable {maxRefundable}"
             };
         }
 
         // 4. Process refund through payment gateway
-        var refundIdempotencyKey = $"refund_{payment.Id}_{request.Amount}_{DateTime.UtcNow:yyyyMMddHHmmss}";
+        var refundIdempotencyKey = $"refund_{payment.Id}_{request.Amount}_{SystemClock.UtcNow:yyyyMMddHHmmss}";
         var gatewayRequest = new GatewayRefundRequest(
             IdempotencyKey: refundIdempotencyKey,
             OriginalTransactionId: payment.ExternalTransactionId ?? payment.ExternalPaymentId ?? payment.Id.ToString(),
@@ -102,7 +102,7 @@ public sealed class ProcessRefundCommandHandler(
                 Currency = payment.Currency,
                 Status = TransactionStatus.Failed,
                 Reason = request.Reason,
-                ProcessedAt = DateTime.UtcNow,
+                ProcessedAt = SystemClock.UtcNow,
                 IsSuccess = false,
                 ErrorMessage = gatewayResult.ErrorMessage
             };
@@ -125,9 +125,9 @@ public sealed class ProcessRefundCommandHandler(
             Currency = payment.Currency,
             Status = TransactionStatus.Completed,
             Reason = request.Reason,
-            ProcessedAt = DateTime.UtcNow,
+            ProcessedAt = SystemClock.UtcNow,
             ReferenceNumber = refundId,
-            EstimatedCompletionDate = DateTime.UtcNow.AddDays(5), // Standard refund processing time
+            EstimatedCompletionDate = SystemClock.UtcNow.AddDays(5), // Standard refund processing time
             ProcessingFee = 0,
             IsSuccess = true
         };

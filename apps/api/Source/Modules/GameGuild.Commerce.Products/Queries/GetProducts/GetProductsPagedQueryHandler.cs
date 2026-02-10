@@ -22,7 +22,7 @@ public sealed class GetProductsPagedQueryHandler(IProductRepository productRepos
             sortBy: request.SortBy,
             sortDirection: request.SortDirection,
             cancellationToken: cancellationToken
-        );
+        ).ConfigureAwait(false);
 
         var dtos = products.Select(product => new ProductDto(
             product.Id,

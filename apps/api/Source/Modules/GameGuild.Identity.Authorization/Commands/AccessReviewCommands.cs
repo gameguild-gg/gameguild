@@ -27,7 +27,7 @@ public sealed class CreateAccessReviewCampaignValidator : AbstractValidator<Crea
         RuleFor(x => x.Name).NotEmpty().MaximumLength(256);
         RuleFor(x => x.Description).NotEmpty().MaximumLength(2000);
         RuleFor(x => x.ReviewType).IsInEnum();
-        RuleFor(x => x.StartDate).GreaterThanOrEqualTo(DateTime.UtcNow.Date);
+        RuleFor(x => x.StartDate).GreaterThanOrEqualTo(SystemClock.UtcNow.Date);
         RuleFor(x => x.EndDate).GreaterThan(x => x.StartDate)
             .WithMessage("End date must be after start date");
         RuleFor(x => x.CreatedBy).NotEmpty();

@@ -26,6 +26,6 @@ public sealed class UserSignedInEventHandler(ILogger<UserSignedInEventHandler> l
         // - Update session tracking
         // - Detect anomalies in login location/device
 
-        await Task.CompletedTask;
+        await Task.CompletedTask.ConfigureAwait(false);
     }
 }

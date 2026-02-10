@@ -34,7 +34,7 @@ public class VersioningController : BaseApiController
             request.Body,
             request.Metadata,
             request.ChangeNotes,
-            ct);
+            ct).ConfigureAwait(false);
 
         return result.IsSuccess
             ? CreatedAtAction(nameof(GetVersion), new { versionId = result.Value.Id }, ContentVersionDto.FromEntity(result.Value))
@@ -57,7 +57,7 @@ public class VersioningController : BaseApiController
             request.Body,
             request.Metadata,
             request.ChangeNotes,
-            ct);
+            ct).ConfigureAwait(false);
 
         return result.IsSuccess
             ? Ok(ContentVersionDto.FromEntity(result.Value))
@@ -68,12 +68,11 @@ public class VersioningController : BaseApiController
     /// Get a specific version
     /// </summary>
     [HttpGet("{versionId:guid}")]
-    [AllowAnonymous]
     [ProducesResponseType(typeof(ContentVersionDto), 200)]
     [ProducesResponseType(404)]
     public async Task<IActionResult> GetVersion(Guid versionId, CancellationToken ct)
     {
-        var result = await _versioningService.GetVersionAsync(versionId, ct);
+        var result = await _versioningService.GetVersionAsync(versionId, ct).ConfigureAwait(false);
         return result.IsSuccess
             ? Ok(ContentVersionDto.FromEntity(result.Value))
             : NotFound(result.Error);
@@ -83,11 +82,10 @@ public class VersioningController : BaseApiController
     /// Get version history for an entity
     /// </summary>
     [HttpGet("entity/{entityType}/{entityId:guid}/history")]
-    [AllowAnonymous]
     [ProducesResponseType(typeof(IEnumerable<ContentVersionDto>), 200)]
     public async Task<IActionResult> GetVersionHistory(string entityType, Guid entityId, CancellationToken ct)
     {
-        var result = await _versioningService.GetVersionHistoryAsync(entityId, entityType, ct);
+        var result = await _versioningService.GetVersionHistoryAsync(entityId, entityType, ct).ConfigureAwait(false);
 
         if (!result.IsSuccess)
             return BadRequest(result.Error);
@@ -105,7 +103,7 @@ public class VersioningController : BaseApiController
     [ProducesResponseType(404)]
     public async Task<IActionResult> GetCurrentVersion(string entityType, Guid entityId, CancellationToken ct)
     {
-        var result = await _versioningService.GetCurrentVersionAsync(entityId, entityType, ct);
+        var result = await _versioningService.GetCurrentVersionAsync(entityId, entityType, ct).ConfigureAwait(false);
         return result.IsSuccess
             ? Ok(ContentVersionDto.FromEntity(result.Value))
             : NotFound(result.Error);
@@ -115,12 +113,11 @@ public class VersioningController : BaseApiController
     /// Get a specific version by number
     /// </summary>
     [HttpGet("entity/{entityType}/{entityId:guid}/version/{versionNumber:int}")]
-    [AllowAnonymous]
     [ProducesResponseType(typeof(ContentVersionDto), 200)]
     [ProducesResponseType(404)]
     public async Task<IActionResult> GetVersionByNumber(string entityType, Guid entityId, int versionNumber, CancellationToken ct)
     {
-        var result = await _versioningService.GetVersionByNumberAsync(entityId, entityType, versionNumber, ct);
+        var result = await _versioningService.GetVersionByNumberAsync(entityId, entityType, versionNumber, ct).ConfigureAwait(false);
         return result.IsSuccess
             ? Ok(ContentVersionDto.FromEntity(result.Value))
             : NotFound(result.Error);
@@ -135,7 +132,7 @@ public class VersioningController : BaseApiController
     [ProducesResponseType(404)]
     public async Task<IActionResult> SubmitForReview(Guid versionId, CancellationToken ct)
     {
-        var result = await _versioningService.SubmitForReviewAsync(versionId, ct);
+        var result = await _versioningService.SubmitForReviewAsync(versionId, ct).ConfigureAwait(false);
         return result.IsSuccess
             ? Ok(ContentVersionDto.FromEntity(result.Value))
             : result.Error.Code == "ContentVersioning.NotFound" ? NotFound(result.Error) : BadRequest(result.Error);
@@ -152,7 +149,7 @@ public class VersioningController : BaseApiController
         [FromQuery] int take = 20,
         CancellationToken ct = default)
     {
-        var result = await _versioningService.GetPendingReviewAsync(entityType, skip, take, ct);
+        var result = await _versioningService.GetPendingReviewAsync(entityType, skip, take, ct).ConfigureAwait(false);
 
         if (!result.IsSuccess)
             return BadRequest(result.Error);
@@ -170,7 +167,7 @@ public class VersioningController : BaseApiController
     [ProducesResponseType(404)]
     public async Task<IActionResult> Approve(Guid versionId, [FromBody] ReviewRequest? request, CancellationToken ct)
     {
-        var result = await _versioningService.ApproveAsync(versionId, request?.ReviewNotes, ct);
+        var result = await _versioningService.ApproveAsync(versionId, request?.ReviewNotes, ct).ConfigureAwait(false);
         return result.IsSuccess
             ? Ok(ContentVersionDto.FromEntity(result.Value))
             : result.Error.Code == "ContentVersioning.NotFound" ? NotFound(result.Error) : BadRequest(result.Error);
@@ -185,7 +182,7 @@ public class VersioningController : BaseApiController
     [ProducesResponseType(404)]
     public async Task<IActionResult> Reject(Guid versionId, [FromBody] ReviewRequest? request, CancellationToken ct)
     {
-        var result = await _versioningService.RejectAsync(versionId, request?.ReviewNotes, ct);
+        var result = await _versioningService.RejectAsync(versionId, request?.ReviewNotes, ct).ConfigureAwait(false);
         return result.IsSuccess
             ? Ok(ContentVersionDto.FromEntity(result.Value))
             : result.Error.Code == "ContentVersioning.NotFound" ? NotFound(result.Error) : BadRequest(result.Error);
@@ -200,7 +197,7 @@ public class VersioningController : BaseApiController
     [ProducesResponseType(404)]
     public async Task<IActionResult> Publish(Guid versionId, CancellationToken ct)
     {
-        var result = await _versioningService.PublishAsync(versionId, ct);
+        var result = await _versioningService.PublishAsync(versionId, ct).ConfigureAwait(false);
         return result.IsSuccess
             ? Ok(ContentVersionDto.FromEntity(result.Value))
             : result.Error.Code == "ContentVersioning.NotFound" ? NotFound(result.Error) : BadRequest(result.Error);
@@ -215,7 +212,7 @@ public class VersioningController : BaseApiController
     [ProducesResponseType(404)]
     public async Task<IActionResult> SchedulePublish(Guid versionId, [FromBody] ScheduleRequest request, CancellationToken ct)
     {
-        var result = await _versioningService.SchedulePublishAsync(versionId, request.ScheduledAt, ct);
+        var result = await _versioningService.SchedulePublishAsync(versionId, request.ScheduledAt, ct).ConfigureAwait(false);
         return result.IsSuccess
             ? Ok(ContentVersionDto.FromEntity(result.Value))
             : result.Error.Code == "ContentVersioning.NotFound" ? NotFound(result.Error) : BadRequest(result.Error);
@@ -230,7 +227,7 @@ public class VersioningController : BaseApiController
     [ProducesResponseType(404)]
     public async Task<IActionResult> CancelSchedule(Guid versionId, CancellationToken ct)
     {
-        var result = await _versioningService.CancelScheduledPublishAsync(versionId, ct);
+        var result = await _versioningService.CancelScheduledPublishAsync(versionId, ct).ConfigureAwait(false);
         return result.IsSuccess
             ? Ok(ContentVersionDto.FromEntity(result.Value))
             : result.Error.Code == "ContentVersioning.NotFound" ? NotFound(result.Error) : BadRequest(result.Error);
@@ -240,7 +237,6 @@ public class VersioningController : BaseApiController
     /// Compare two versions
     /// </summary>
     [HttpGet("compare")]
-    [AllowAnonymous]
     [ProducesResponseType(typeof(ContentVersionDiff), 200)]
     [ProducesResponseType(400)]
     [ProducesResponseType(404)]
@@ -249,7 +245,7 @@ public class VersioningController : BaseApiController
         [FromQuery] Guid versionId2,
         CancellationToken ct)
     {
-        var result = await _versioningService.CompareVersionsAsync(versionId1, versionId2, ct);
+        var result = await _versioningService.CompareVersionsAsync(versionId1, versionId2, ct).ConfigureAwait(false);
         return result.IsSuccess
             ? Ok(result.Value)
             : result.Error.Code == "ContentVersioning.NotFound" ? NotFound(result.Error) : BadRequest(result.Error);
@@ -269,7 +265,7 @@ public class VersioningController : BaseApiController
         CancellationToken ct)
     {
         var result = await _versioningService.RollbackAsync(
-            entityId, entityType, request.TargetVersionNumber, request.Reason, ct);
+            entityId, entityType, request.TargetVersionNumber, request.Reason, ct).ConfigureAwait(false);
 
         return result.IsSuccess
             ? CreatedAtAction(nameof(GetVersion), new { versionId = result.Value.Id }, ContentVersionDto.FromEntity(result.Value))
@@ -286,7 +282,7 @@ public class VersioningController : BaseApiController
     public async Task<IActionResult> AddReview(Guid versionId, [FromBody] AddReviewRequest request, CancellationToken ct)
     {
         var result = await _versioningService.AddReviewAsync(
-            versionId, request.Decision, request.Feedback, request.Suggestions, ct);
+            versionId, request.Decision, request.Feedback, request.Suggestions, ct).ConfigureAwait(false);
 
         return result.IsSuccess
             ? CreatedAtAction(nameof(GetVersion), new { versionId }, ContentVersionReviewDto.FromEntity(result.Value))

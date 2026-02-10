@@ -12,5 +12,5 @@ public class ReviewConflict {
 
     public string Reason { get; set; } = string.Empty;
 
-    public DateTime DetectedAt { get; set; } = DateTime.UtcNow;
+    public DateTime DetectedAt { get; set; } = SystemClock.UtcNow;
 }

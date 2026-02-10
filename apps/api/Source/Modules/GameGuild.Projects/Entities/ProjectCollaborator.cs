@@ -55,7 +55,7 @@ public class ProjectCollaborator : EntityBase<Guid>
     /// <summary>
     /// Date when the collaboration started
     /// </summary>
-    public DateTime JoinedAt { get; set; } = DateTime.UtcNow;
+    public DateTime JoinedAt { get; set; } = SystemClock.UtcNow;
 
     /// <summary>
     /// Date when the collaboration ended (if applicable)

@@ -50,7 +50,7 @@ public sealed class PermissionGrantService(
             UserId = userId,
             TenantId = tenantId,
             Permissions = permissions,
-            GrantedAt = DateTime.UtcNow,
+            GrantedAt = SystemClock.UtcNow,
             GrantedBy = grantedBy,
             ExpiresAt = expiresAt,
             Reason = reason
@@ -144,7 +144,7 @@ public sealed class PermissionGrantService(
                 TenantId = null,
                 Permissions = permissions,
                 GrantedBy = setBy,
-                GrantedAt = DateTime.UtcNow,
+                GrantedAt = SystemClock.UtcNow,
                 Reason = "Global default permissions"
             };
             await repository.CreateAsync(permission, cancellationToken).ConfigureAwait(false);
@@ -179,7 +179,7 @@ public sealed class PermissionGrantService(
                 TenantId = tenantId,
                 Permissions = permissions,
                 GrantedBy = setBy,
-                GrantedAt = DateTime.UtcNow,
+                GrantedAt = SystemClock.UtcNow,
                 Reason = "Tenant default permissions"
             };
             await repository.CreateAsync(permission, cancellationToken).ConfigureAwait(false);
@@ -235,7 +235,7 @@ public sealed class PermissionGrantService(
             Permissions = Array.Empty<string>(),
             DenyPermissions = permissions,
             GrantedBy = deniedBy,
-            GrantedAt = DateTime.UtcNow,
+            GrantedAt = SystemClock.UtcNow,
             Reason = reason ?? "Deny permissions added"
         };
 
@@ -369,7 +369,7 @@ public sealed class PermissionQueryService(
     {
         var existing = await repository.GetByUserAndTenantAsync(userId, tenantId, cancellationToken).ConfigureAwait(false);
 
-        if (existing == null || existing.ExpiresAt.HasValue && existing.ExpiresAt.Value < DateTime.UtcNow)
+        if (existing == null || existing.ExpiresAt.HasValue && existing.ExpiresAt.Value < SystemClock.UtcNow)
             return false;
 
         return existing.HasPermission(permission);
@@ -447,7 +447,7 @@ public sealed class PermissionQueryService(
         var userPermissions = await repository.GetByUserAsync(userId, cancellationToken).ConfigureAwait(false);
         var directGrants = userPermissions
             .Where(p => p.TenantId == tenantId.Value)
-            .Where(p => !p.ExpiresAt.HasValue || p.ExpiresAt.Value > DateTime.UtcNow)
+            .Where(p => !p.ExpiresAt.HasValue || p.ExpiresAt.Value > SystemClock.UtcNow)
             .ToList();
 
         foreach (var grant in directGrants)

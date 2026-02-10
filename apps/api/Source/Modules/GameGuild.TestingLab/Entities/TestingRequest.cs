@@ -150,7 +150,7 @@ public class TestingRequest : EntityBase
     /// <summary>
     /// Whether this request is currently active
     /// </summary>
-    public bool IsActive => Status == TestingRequestStatus.Active && DateTime.UtcNow >= StartDate && DateTime.UtcNow <= EndDate;
+    public bool IsActive => Status == TestingRequestStatus.Active && SystemClock.UtcNow >= StartDate && SystemClock.UtcNow <= EndDate;
 
     /// <summary>
     /// Whether this request accepts new testers
@@ -170,7 +170,7 @@ public class TestingRequest : EntityBase
     /// <summary>
     /// Days remaining for testing
     /// </summary>
-    public int? DaysRemaining => IsActive ? (int?)Math.Max(0, (EndDate - DateTime.UtcNow).Days) : null;
+    public int? DaysRemaining => IsActive ? (int?)Math.Max(0, (EndDate - SystemClock.UtcNow).Days) : null;
 
     // Domain Methods
     /// <summary>
@@ -182,7 +182,7 @@ public class TestingRequest : EntityBase
             throw new InvalidOperationException("Only draft or paused requests can be activated");
 
         Status = TestingRequestStatus.Active;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     /// <summary>
@@ -194,7 +194,7 @@ public class TestingRequest : EntityBase
             throw new InvalidOperationException("Only active requests can be paused");
 
         Status = TestingRequestStatus.Paused;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     /// <summary>
@@ -206,7 +206,7 @@ public class TestingRequest : EntityBase
             return;
 
         Status = TestingRequestStatus.Completed;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     /// <summary>
@@ -218,7 +218,7 @@ public class TestingRequest : EntityBase
             throw new InvalidOperationException("Completed requests cannot be cancelled");
 
         Status = TestingRequestStatus.Cancelled;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     /// <summary>
@@ -230,7 +230,7 @@ public class TestingRequest : EntityBase
             throw new InvalidOperationException("Maximum testers reached");
 
         CurrentTesterCount++;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     /// <summary>
@@ -239,7 +239,7 @@ public class TestingRequest : EntityBase
     public void RemoveTester()
     {
         CurrentTesterCount = Math.Max(0, CurrentTesterCount - 1);
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     /// <summary>
@@ -248,7 +248,7 @@ public class TestingRequest : EntityBase
     public void SetPriority(TestingPriority priority)
     {
         Priority = priority;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     /// <summary>
@@ -257,6 +257,6 @@ public class TestingRequest : EntityBase
     public void SetEstimatedDuration(int hours)
     {
         EstimatedDurationHours = hours;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 }

@@ -21,7 +21,7 @@ public class TestingLocationsController(
     [RequireResourcePermission<TestingLocationPermission, TestingLocation>(PermissionType.Read)]
     public async Task<ActionResult<IEnumerable<TestingLocation>>> GetTestingLocations([FromQuery] int skip = 0, [FromQuery] int take = 50)
     {
-        var locations = await locationService.GetTestingLocationsAsync(skip, take);
+        var locations = await locationService.GetTestingLocationsAsync(skip, take).ConfigureAwait(false);
         return Ok(locations);
     }
 
@@ -30,7 +30,7 @@ public class TestingLocationsController(
     [RequireResourcePermission<TestingLocationPermission, TestingLocation>(PermissionType.Read)]
     public async Task<ActionResult<TestingLocation>> GetTestingLocation(Guid id)
     {
-        var location = await locationService.GetTestingLocationByIdAsync(id);
+        var location = await locationService.GetTestingLocationByIdAsync(id).ConfigureAwait(false);
         if (location == null) return NotFound();
         return Ok(location);
     }
@@ -43,7 +43,7 @@ public class TestingLocationsController(
         if (!ModelState.IsValid) return BadRequest(ModelState);
 
         var location = locationDto.ToTestingLocation();
-        var createdLocation = await locationService.CreateTestingLocationAsync(location);
+        var createdLocation = await locationService.CreateTestingLocationAsync(location).ConfigureAwait(false);
 
         return CreatedAtAction(nameof(GetTestingLocation), new { id = createdLocation.Id }, createdLocation);
     }
@@ -53,11 +53,11 @@ public class TestingLocationsController(
     [RequireResourcePermission<TestingLocationPermission, TestingLocation>(PermissionType.Edit)]
     public async Task<ActionResult<TestingLocation>> UpdateTestingLocation(Guid id, UpdateTestingLocationDto locationDto)
     {
-        var existingLocation = await locationService.GetTestingLocationByIdAsync(id);
+        var existingLocation = await locationService.GetTestingLocationByIdAsync(id).ConfigureAwait(false);
         if (existingLocation == null) return NotFound();
 
         locationDto.UpdateTestingLocation(existingLocation);
-        var updatedLocation = await locationService.UpdateTestingLocationAsync(existingLocation);
+        var updatedLocation = await locationService.UpdateTestingLocationAsync(existingLocation).ConfigureAwait(false);
 
         return Ok(updatedLocation);
     }
@@ -67,7 +67,7 @@ public class TestingLocationsController(
     [RequireResourcePermission<TestingLocationPermission, TestingLocation>(PermissionType.Delete)]
     public async Task<ActionResult> DeleteTestingLocation(Guid id)
     {
-        var result = await locationService.DeleteTestingLocationAsync(id);
+        var result = await locationService.DeleteTestingLocationAsync(id).ConfigureAwait(false);
         if (!result) return NotFound();
         return NoContent();
     }
@@ -77,7 +77,7 @@ public class TestingLocationsController(
     [RequireResourcePermission<TestingLocationPermission, TestingLocation>(PermissionType.Edit)]
     public async Task<ActionResult> RestoreTestingLocation(Guid id)
     {
-        var result = await locationService.RestoreTestingLocationAsync(id);
+        var result = await locationService.RestoreTestingLocationAsync(id).ConfigureAwait(false);
         if (!result) return NotFound();
         return Ok(new { message = "Testing location restored successfully" });
     }

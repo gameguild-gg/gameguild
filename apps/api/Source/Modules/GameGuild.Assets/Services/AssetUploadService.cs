@@ -147,7 +147,7 @@ public class AssetUploadService : IAssetUploadService
             mimeType,
             totalSize,
             totalChunks,
-            DateTime.UtcNow.AddMinutes(_options.Value.ChunkedUploadExpiryMinutes));
+            SystemClock.UtcNow.AddMinutes(_options.Value.ChunkedUploadExpiryMinutes));
 
         _chunkedSessions[uploadId] = session;
 
@@ -165,7 +165,7 @@ public class AssetUploadService : IAssetUploadService
             return false;
         }
 
-        if (session.ExpiresAt < DateTime.UtcNow)
+        if (session.ExpiresAt < SystemClock.UtcNow)
         {
             _chunkedSessions.Remove(uploadId);
             await _storageService.AbortMultipartUploadAsync(uploadId, session.ObjectKey, ct).ConfigureAwait(false);

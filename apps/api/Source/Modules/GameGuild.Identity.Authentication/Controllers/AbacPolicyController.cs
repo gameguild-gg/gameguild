@@ -32,7 +32,7 @@ public class AbacPolicyController(IMediator mediator, ILogger<AbacPolicyControll
     [HttpPost]
     public async Task<ActionResult<AbacPolicy>> CreateAbacPolicy([FromBody] CreateAbacPolicyCommand command)
     {
-        var result = await _mediator.Send(command);
+        var result = await _mediator.Send(command).ConfigureAwait(false);
 
         return CreatedAtAction(nameof(GetAbacPolicy), new { id = result.Id }, result);
     }
@@ -44,7 +44,7 @@ public class AbacPolicyController(IMediator mediator, ILogger<AbacPolicyControll
     public async Task<ActionResult<AbacPolicy>> GetAbacPolicy(Guid policyId)
     {
         var query = new GetAbacPolicyQuery { PolicyId = policyId };
-        var result = await _mediator.Send(query);
+        var result = await _mediator.Send(query).ConfigureAwait(false);
 
         return Ok(result);
     }
@@ -56,7 +56,7 @@ public class AbacPolicyController(IMediator mediator, ILogger<AbacPolicyControll
     public async Task<ActionResult<AbacPolicy>> UpdateAbacPolicy(Guid policyId, [FromBody] UpdateAbacPolicyCommand command)
     {
         command.PolicyId = policyId;
-        var result = await _mediator.Send(command);
+        var result = await _mediator.Send(command).ConfigureAwait(false);
 
         return Ok(result);
     }
@@ -68,7 +68,7 @@ public class AbacPolicyController(IMediator mediator, ILogger<AbacPolicyControll
     public async Task<ActionResult> DeleteAbacPolicy(Guid policyId)
     {
         var command = new DeleteAbacPolicyCommand { PolicyId = policyId };
-        await _mediator.Send(command);
+        await _mediator.Send(command).ConfigureAwait(false);
 
         return NoContent();
     }
@@ -86,7 +86,7 @@ public class AbacPolicyController(IMediator mediator, ILogger<AbacPolicyControll
     )
     {
         var query = new GetAbacPoliciesQuery { TenantId = tenantId, IsActive = isActive, Category = category, Page = page, PageSize = pageSize };
-        var result = await _mediator.Send(query);
+        var result = await _mediator.Send(query).ConfigureAwait(false);
 
         return Ok(result);
     }
@@ -101,7 +101,7 @@ public class AbacPolicyController(IMediator mediator, ILogger<AbacPolicyControll
     [HttpPost(":evaluate")]
     public async Task<ActionResult<AbacEvaluationResult>> EvaluateAbacPolicies([FromBody] EvaluateAbacPoliciesCommand command)
     {
-        var result = await _mediator.Send(command);
+        var result = await _mediator.Send(command).ConfigureAwait(false);
 
         return Ok(result);
     }
@@ -112,7 +112,7 @@ public class AbacPolicyController(IMediator mediator, ILogger<AbacPolicyControll
     [HttpPost(":evaluate-bulk")]
     public async Task<ActionResult<BulkAbacEvaluationResult>> BulkEvaluateAbacPolicies([FromBody] BulkEvaluateAbacPoliciesCommand command)
     {
-        var result = await _mediator.Send(command);
+        var result = await _mediator.Send(command).ConfigureAwait(false);
 
         return Ok(result);
     }
@@ -123,7 +123,7 @@ public class AbacPolicyController(IMediator mediator, ILogger<AbacPolicyControll
     [HttpPost(":test-expression")]
     public async Task<ActionResult<AbacExpressionTestResult>> TestAbacExpression([FromBody] TestAbacExpressionCommand command)
     {
-        var result = await _mediator.Send(command);
+        var result = await _mediator.Send(command).ConfigureAwait(false);
 
         return Ok(result);
     }
@@ -139,7 +139,7 @@ public class AbacPolicyController(IMediator mediator, ILogger<AbacPolicyControll
     public async Task<ActionResult> ActivateAbacPolicy(Guid policyId)
     {
         var command = new ActivateAbacPolicyCommand { PolicyId = policyId };
-        await _mediator.Send(command);
+        await _mediator.Send(command).ConfigureAwait(false);
 
         return Ok(new { message = "ABAC policy activated successfully" });
     }
@@ -151,7 +151,7 @@ public class AbacPolicyController(IMediator mediator, ILogger<AbacPolicyControll
     public async Task<ActionResult> DeactivateAbacPolicy(Guid policyId)
     {
         var command = new DeactivateAbacPolicyCommand { PolicyId = policyId };
-        await _mediator.Send(command);
+        await _mediator.Send(command).ConfigureAwait(false);
 
         return Ok(new { message = "ABAC policy deactivated successfully" });
     }
@@ -163,7 +163,7 @@ public class AbacPolicyController(IMediator mediator, ILogger<AbacPolicyControll
     public async Task<ActionResult<AbacPolicy>> CloneAbacPolicy(Guid policyId, [FromBody] CloneAbacPolicyCommand command)
     {
         command.SourcePolicyId = policyId;
-        var result = await _mediator.Send(command);
+        var result = await _mediator.Send(command).ConfigureAwait(false);
 
         return CreatedAtAction(nameof(GetAbacPolicy), new { policyId = result.Id }, result);
     }
@@ -178,8 +178,8 @@ public class AbacPolicyController(IMediator mediator, ILogger<AbacPolicyControll
     [HttpGet("statistics")]
     public async Task<ActionResult<AbacPolicyStatisticsDto>> GetAbacPolicyStatistics([FromQuery] Guid? tenantId = null, [FromQuery] DateTime? fromDate = null, [FromQuery] DateTime? toDate = null)
     {
-        var query = new GetAbacPolicyStatisticsQuery { TenantId = tenantId, FromDate = fromDate ?? DateTime.UtcNow.AddDays(-30), ToDate = toDate ?? DateTime.UtcNow };
-        var result = await _mediator.Send(query);
+        var query = new GetAbacPolicyStatisticsQuery { TenantId = tenantId, FromDate = fromDate ?? SystemClock.UtcNow.AddDays(-30), ToDate = toDate ?? SystemClock.UtcNow };
+        var result = await _mediator.Send(query).ConfigureAwait(false);
 
         return Ok(result);
     }
@@ -190,8 +190,8 @@ public class AbacPolicyController(IMediator mediator, ILogger<AbacPolicyControll
     [HttpGet("{policyId}/usage")]
     public async Task<ActionResult<AbacPolicyUsageDto>> GetAbacPolicyUsage(Guid policyId, [FromQuery] DateTime? fromDate = null, [FromQuery] DateTime? toDate = null)
     {
-        var query = new GetAbacPolicyUsageQuery { PolicyId = policyId, FromDate = fromDate ?? DateTime.UtcNow.AddDays(-7), ToDate = toDate ?? DateTime.UtcNow };
-        var result = await _mediator.Send(query);
+        var query = new GetAbacPolicyUsageQuery { PolicyId = policyId, FromDate = fromDate ?? SystemClock.UtcNow.AddDays(-7), ToDate = toDate ?? SystemClock.UtcNow };
+        var result = await _mediator.Send(query).ConfigureAwait(false);
 
         return Ok(result);
     }
@@ -203,7 +203,7 @@ public class AbacPolicyController(IMediator mediator, ILogger<AbacPolicyControll
     public async Task<ActionResult<AbacPolicyAuditTrailDto>> GetAbacPolicyAuditTrail(Guid policyId, [FromQuery] int page = 1, [FromQuery] int pageSize = 50)
     {
         var query = new GetAbacPolicyAuditTrailQuery { PolicyId = policyId, Page = page, PageSize = pageSize };
-        var result = await _mediator.Send(query);
+        var result = await _mediator.Send(query).ConfigureAwait(false);
 
         return Ok(result);
     }
@@ -218,7 +218,7 @@ public class AbacPolicyController(IMediator mediator, ILogger<AbacPolicyControll
     [HttpPost(":validate")]
     public async Task<ActionResult<AbacPolicyValidationResult>> ValidateAbacPolicy([FromBody] ValidateAbacPolicyCommand command)
     {
-        var result = await _mediator.Send(command);
+        var result = await _mediator.Send(command).ConfigureAwait(false);
 
         return Ok(result);
     }
@@ -230,7 +230,7 @@ public class AbacPolicyController(IMediator mediator, ILogger<AbacPolicyControll
     public async Task<ActionResult<AbacPolicyConflictsDto>> GetAbacPolicyConflicts([FromQuery] Guid? tenantId = null)
     {
         var query = new GetAbacPolicyConflictsQuery { TenantId = tenantId };
-        var result = await _mediator.Send(query);
+        var result = await _mediator.Send(query).ConfigureAwait(false);
 
         return Ok(result);
     }
@@ -246,7 +246,7 @@ public class AbacPolicyController(IMediator mediator, ILogger<AbacPolicyControll
     public async Task<ActionResult<IEnumerable<AbacPolicyTemplateDto>>> GetAbacPolicyTemplates()
     {
         var query = new GetAbacPolicyTemplatesQuery();
-        var result = await _mediator.Send(query);
+        var result = await _mediator.Send(query).ConfigureAwait(false);
 
         return Ok(result);
     }
@@ -258,7 +258,7 @@ public class AbacPolicyController(IMediator mediator, ILogger<AbacPolicyControll
     public async Task<ActionResult<AbacPolicy>> CreateAbacPolicyFromTemplate(Guid templateId, [FromBody] CreateAbacPolicyFromTemplateCommand command)
     {
         command.TemplateId = templateId;
-        var result = await _mediator.Send(command);
+        var result = await _mediator.Send(command).ConfigureAwait(false);
 
         return CreatedAtAction(nameof(GetAbacPolicy), new { id = result.Id }, result);
     }

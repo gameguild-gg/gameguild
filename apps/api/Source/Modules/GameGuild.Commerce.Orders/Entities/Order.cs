@@ -265,7 +265,7 @@ public class Order : StatefulEntity<OrderStatus>
     public void MarkAsPaid(string? paymentProviderReference = null, string? paymentMethod = null, string? externalPaymentId = null)
     {
         TransitionToWithReason(OrderStatus.Completed, reason: null, externalPaymentId: externalPaymentId);
-        PaidAt = DateTime.UtcNow;
+        PaidAt = SystemClock.UtcNow;
         PaymentProviderReference = paymentProviderReference;
         PaymentMethod = paymentMethod;
         ExternalPaymentId = externalPaymentId;
@@ -283,7 +283,7 @@ public class Order : StatefulEntity<OrderStatus>
     {
         TransitionToWithReason(OrderStatus.Paid, reason: null, externalPaymentId: externalPaymentId);
         PaymentId = paymentId;
-        PaidAt = DateTime.UtcNow;
+        PaidAt = SystemClock.UtcNow;
         ExternalPaymentId = externalPaymentId;
         Touch();
     }
@@ -303,13 +303,13 @@ public class Order : StatefulEntity<OrderStatus>
         if (Status == OrderStatus.Completed)
         {
             // Legacy order already marked as Completed - just set FulfilledAt
-            FulfilledAt = DateTime.UtcNow;
+            FulfilledAt = SystemClock.UtcNow;
             Touch();
             return;
         }
 
         TransitionToWithReason(OrderStatus.Fulfilled, reason: "Entitlements granted");
-        FulfilledAt = DateTime.UtcNow;
+        FulfilledAt = SystemClock.UtcNow;
         Touch();
     }
 
@@ -365,7 +365,7 @@ public class Order : StatefulEntity<OrderStatus>
     /// <summary>Soft delete the order</summary>
     public new void SoftDelete()
     {
-        DeletedAt = DateTime.UtcNow;
+        DeletedAt = SystemClock.UtcNow;
         Touch();
     }
 
@@ -378,7 +378,7 @@ public class Order : StatefulEntity<OrderStatus>
         TransitionToWithReason(newStatus, reason: reason);
         RefundAmount = amount;
         RefundReason = reason;
-        RefundedAt = DateTime.UtcNow;
+        RefundedAt = SystemClock.UtcNow;
         Touch();
     }
 

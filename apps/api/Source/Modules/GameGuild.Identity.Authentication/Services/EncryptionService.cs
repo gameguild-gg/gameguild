@@ -39,147 +39,48 @@ public sealed class EncryptionService(ILogger<EncryptionService> logger, IConfig
     ///     Encrypts data using AES-256-GCM.
     ///     Returns Base64-encoded string: nonce + ciphertext + tag.
     /// </summary>
-    public async Task<string> EncryptAsync(string plaintext, CancellationToken cancellationToken = default)
+    public Task<string> EncryptAsync(string plaintext, CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrEmpty(plaintext)) { throw new ArgumentException("Plaintext cannot be empty", nameof(plaintext)); }
-
-        try
-        {
-            logger.LogDebug("Encrypting data with AES-256-GCM");
-
-            // Convert plaintext to bytes
-            var plaintextBytes = Encoding.UTF8.GetBytes(plaintext);
-
-            // Generate encryption key from configuration
-            var key = DeriveKey(EncryptionKey);
-
-            // Generate random nonce (96 bits)
-            var nonce = new byte[NonceSize];
-            using var rng = RandomNumberGenerator.Create();
-            rng.GetBytes(nonce);
-
-            // Prepare buffers
-            var ciphertext = new byte[plaintextBytes.Length];
-            var tag = new byte[TagSize];
-
-            // Encrypt using AES-GCM
-            using var aesGcm = new AesGcm(key, TagSize);
-            aesGcm.Encrypt(nonce, plaintextBytes, ciphertext, tag);
-
-            // Combine nonce + ciphertext + tag
-            var combined = new byte[NonceSize + ciphertext.Length + TagSize];
-            Buffer.BlockCopy(nonce, 0, combined, 0, NonceSize);
-            Buffer.BlockCopy(ciphertext, 0, combined, NonceSize, ciphertext.Length);
-            Buffer.BlockCopy(tag, 0, combined, NonceSize + ciphertext.Length, TagSize);
-
-            // Return Base64-encoded result
-            var encrypted = Convert.ToBase64String(combined);
-
-            logger.LogDebug("Data encrypted successfully, Length: {Length}", encrypted.Length);
-
-            return await Task.FromResult(encrypted);
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Error encrypting data");
-
-            throw;
-        }
+        return Task.FromResult(Encrypt(plaintext));
     }
 
     /// <summary>
     ///     Decrypts data encrypted with AES-256-GCM.
     ///     Expects Base64-encoded string: nonce + ciphertext + tag.
     /// </summary>
-    public async Task<string> DecryptAsync(string ciphertext, CancellationToken cancellationToken = default)
+    public Task<string> DecryptAsync(string ciphertext, CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrEmpty(ciphertext)) { throw new ArgumentException("Ciphertext cannot be empty", nameof(ciphertext)); }
-
-        try
-        {
-            logger.LogDebug("Decrypting data with AES-256-GCM");
-
-            // Decode Base64
-            var combined = Convert.FromBase64String(ciphertext);
-
-            if (combined.Length < NonceSize + TagSize) { throw new CryptographicException("Invalid ciphertext format"); }
-
-            // Extract nonce, ciphertext, and tag
-            var nonce = new byte[NonceSize];
-            var ciphertextBytes = new byte[combined.Length - NonceSize - TagSize];
-            var tag = new byte[TagSize];
-
-            Buffer.BlockCopy(combined, 0, nonce, 0, NonceSize);
-            Buffer.BlockCopy(combined, NonceSize, ciphertextBytes, 0, ciphertextBytes.Length);
-            Buffer.BlockCopy(combined, NonceSize + ciphertextBytes.Length, tag, 0, TagSize);
-
-            // Generate encryption key from configuration
-            var key = DeriveKey(EncryptionKey);
-
-            // Decrypt using AES-GCM
-            var plaintext = new byte[ciphertextBytes.Length];
-
-            using var aesGcm = new AesGcm(key, TagSize);
-            aesGcm.Decrypt(nonce, ciphertextBytes, tag, plaintext);
-
-            // Convert to string
-            var decrypted = Encoding.UTF8.GetString(plaintext);
-
-            logger.LogDebug("Data decrypted successfully");
-
-            return await Task.FromResult(decrypted);
-        }
-        catch (CryptographicException ex)
-        {
-            logger.LogError(ex, "Decryption failed - data may be corrupted or tampered");
-
-            throw;
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Error decrypting data");
-
-            throw;
-        }
+        return Task.FromResult(Decrypt(ciphertext));
     }
 
     /// <summary>
     ///     Generates a cryptographically secure random token.
     /// </summary>
-    public async Task<string> GenerateSecureTokenAsync(int length = 32, CancellationToken cancellationToken = default)
+    public Task<string> GenerateSecureTokenAsync(int length = 32, CancellationToken cancellationToken = default)
     {
         if (length <= 0) { throw new ArgumentException("Token length must be positive", nameof(length)); }
 
-        try
-        {
-            logger.LogDebug("Generating secure token, Length: {Length}", length);
+        logger.LogDebug("Generating secure token, Length: {Length}", length);
 
-            var tokenBytes = new byte[length];
+        var tokenBytes = new byte[length];
 
-            using var rng = RandomNumberGenerator.Create();
-            rng.GetBytes(tokenBytes);
+        using var rng = RandomNumberGenerator.Create();
+        rng.GetBytes(tokenBytes);
 
-            // Return Base64-encoded token (URL-safe)
-            var token = Convert.ToBase64String(tokenBytes).Replace("+", "-").Replace("/", "_").TrimEnd('=');
+        // Return Base64-encoded token (URL-safe)
+        var token = Convert.ToBase64String(tokenBytes).Replace("+", "-").Replace("/", "_").TrimEnd('=');
 
-            logger.LogDebug("Secure token generated, Length: {Length}", token.Length);
+        logger.LogDebug("Secure token generated, Length: {Length}", token.Length);
 
-            return await Task.FromResult(token);
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Error generating secure token");
-
-            throw;
-        }
+        return Task.FromResult(token);
     }
 
     /// <summary>
     ///     Validates a secure token format.
     /// </summary>
-    public async Task<bool> ValidateSecureTokenAsync(string token, CancellationToken cancellationToken = default)
+    public Task<bool> ValidateSecureTokenAsync(string token, CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrWhiteSpace(token)) { return false; }
+        if (string.IsNullOrWhiteSpace(token)) { return Task.FromResult(false); }
 
         try
         {
@@ -200,13 +101,13 @@ public sealed class EncryptionService(ILogger<EncryptionService> logger, IConfig
 
             logger.LogDebug("Token validation result: {IsValid}", isValid);
 
-            return await Task.FromResult(isValid);
+            return Task.FromResult(isValid);
         }
         catch (Exception ex)
         {
             logger.LogDebug(ex, "Token validation failed: Invalid format");
 
-            return false;
+            return Task.FromResult(false);
         }
     }
 
@@ -228,17 +129,95 @@ public sealed class EncryptionService(ILogger<EncryptionService> logger, IConfig
 
     #endregion
 
-    #region Interface Implementation (Synchronous Wrappers)
+    #region Interface Implementation (Synchronous Methods)
 
     /// <summary>
-    ///     Synchronous wrapper for EncryptAsync.
+    ///     Encrypts data using AES-256-GCM.
+    ///     Returns Base64-encoded string: nonce + ciphertext + tag.
     /// </summary>
-    public string Encrypt(string plainText) { return EncryptAsync(plainText, CancellationToken.None).GetAwaiter().GetResult(); }
+    public string Encrypt(string plainText)
+    {
+        if (string.IsNullOrEmpty(plainText)) { throw new ArgumentException("Plaintext cannot be empty", nameof(plainText)); }
+
+        try
+        {
+            logger.LogDebug("Encrypting data with AES-256-GCM");
+
+            var plaintextBytes = Encoding.UTF8.GetBytes(plainText);
+            var key = DeriveKey(EncryptionKey);
+
+            var nonce = new byte[NonceSize];
+            using var rng = RandomNumberGenerator.Create();
+            rng.GetBytes(nonce);
+
+            var ciphertext = new byte[plaintextBytes.Length];
+            var tag = new byte[TagSize];
+
+            using var aesGcm = new AesGcm(key, TagSize);
+            aesGcm.Encrypt(nonce, plaintextBytes, ciphertext, tag);
+
+            var combined = new byte[NonceSize + ciphertext.Length + TagSize];
+            Buffer.BlockCopy(nonce, 0, combined, 0, NonceSize);
+            Buffer.BlockCopy(ciphertext, 0, combined, NonceSize, ciphertext.Length);
+            Buffer.BlockCopy(tag, 0, combined, NonceSize + ciphertext.Length, TagSize);
+
+            var encrypted = Convert.ToBase64String(combined);
+            logger.LogDebug("Data encrypted successfully, Length: {Length}", encrypted.Length);
+
+            return encrypted;
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error encrypting data");
+            throw;
+        }
+    }
 
     /// <summary>
-    ///     Synchronous wrapper for DecryptAsync.
+    ///     Decrypts data encrypted with AES-256-GCM.
+    ///     Expects Base64-encoded string: nonce + ciphertext + tag.
     /// </summary>
-    public string Decrypt(string cipherText) { return DecryptAsync(cipherText, CancellationToken.None).GetAwaiter().GetResult(); }
+    public string Decrypt(string cipherText)
+    {
+        if (string.IsNullOrEmpty(cipherText)) { throw new ArgumentException("Ciphertext cannot be empty", nameof(cipherText)); }
+
+        try
+        {
+            logger.LogDebug("Decrypting data with AES-256-GCM");
+
+            var combined = Convert.FromBase64String(cipherText);
+            if (combined.Length < NonceSize + TagSize) { throw new CryptographicException("Invalid ciphertext format"); }
+
+            var nonce = new byte[NonceSize];
+            var ciphertextBytes = new byte[combined.Length - NonceSize - TagSize];
+            var tag = new byte[TagSize];
+
+            Buffer.BlockCopy(combined, 0, nonce, 0, NonceSize);
+            Buffer.BlockCopy(combined, NonceSize, ciphertextBytes, 0, ciphertextBytes.Length);
+            Buffer.BlockCopy(combined, NonceSize + ciphertextBytes.Length, tag, 0, TagSize);
+
+            var key = DeriveKey(EncryptionKey);
+            var plaintext = new byte[ciphertextBytes.Length];
+
+            using var aesGcm = new AesGcm(key, TagSize);
+            aesGcm.Decrypt(nonce, ciphertextBytes, tag, plaintext);
+
+            var decrypted = Encoding.UTF8.GetString(plaintext);
+            logger.LogDebug("Data decrypted successfully");
+
+            return decrypted;
+        }
+        catch (CryptographicException ex)
+        {
+            logger.LogError(ex, "Decryption failed - data may be corrupted or tampered");
+            throw;
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error decrypting data");
+            throw;
+        }
+    }
 
     /// <summary>
     ///     Generates a cryptographically secure random string.
@@ -260,9 +239,12 @@ public sealed class EncryptionService(ILogger<EncryptionService> logger, IConfig
     }
 
     /// <summary>
-    ///     Synchronous wrapper for GenerateSecureTokenAsync.
+    ///     Generates a cryptographically secure token.
     /// </summary>
-    public string GenerateSecureToken() { return GenerateSecureTokenAsync(32, CancellationToken.None).GetAwaiter().GetResult(); }
+    public string GenerateSecureToken()
+    {
+        return GenerateSecureTokenAsync(32, CancellationToken.None).GetAwaiter().GetResult();
+    }
 
     #endregion
 }

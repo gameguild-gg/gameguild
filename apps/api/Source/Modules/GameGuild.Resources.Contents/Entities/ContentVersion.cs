@@ -122,7 +122,7 @@ public class ContentVersion : EntityBase
         if (body != null) Body = body;
         if (metadata != null) Metadata = metadata;
         if (changeNotes != null) ChangeNotes = changeNotes.Trim();
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     public void SubmitForReview(Guid submittedBy)
@@ -132,8 +132,8 @@ public class ContentVersion : EntityBase
 
         Status = ContentVersionStatus.PendingReview;
         SubmittedBy = submittedBy;
-        SubmittedForReviewAt = DateTime.UtcNow;
-        UpdatedAt = DateTime.UtcNow;
+        SubmittedForReviewAt = SystemClock.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     public void Approve(Guid reviewedBy, string? reviewNotes = null)
@@ -143,9 +143,9 @@ public class ContentVersion : EntityBase
 
         Status = ContentVersionStatus.Approved;
         ReviewedBy = reviewedBy;
-        ReviewedAt = DateTime.UtcNow;
+        ReviewedAt = SystemClock.UtcNow;
         ReviewNotes = reviewNotes?.Trim();
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     public void Reject(Guid reviewedBy, string? reviewNotes = null)
@@ -155,9 +155,9 @@ public class ContentVersion : EntityBase
 
         Status = ContentVersionStatus.Rejected;
         ReviewedBy = reviewedBy;
-        ReviewedAt = DateTime.UtcNow;
+        ReviewedAt = SystemClock.UtcNow;
         ReviewNotes = reviewNotes?.Trim();
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     public void Publish(Guid publishedBy)
@@ -167,9 +167,9 @@ public class ContentVersion : EntityBase
 
         Status = ContentVersionStatus.Published;
         PublishedBy = publishedBy;
-        PublishedAt = DateTime.UtcNow;
+        PublishedAt = SystemClock.UtcNow;
         IsCurrentVersion = true;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     public void SchedulePublish(DateTime scheduledAt, Guid scheduledBy)
@@ -180,20 +180,20 @@ public class ContentVersion : EntityBase
         Status = ContentVersionStatus.Scheduled;
         ScheduledPublishAt = scheduledAt;
         PublishedBy = scheduledBy;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     public void Archive()
     {
         Status = ContentVersionStatus.Archived;
         IsCurrentVersion = false;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     public void SetAsCurrent(bool isCurrent)
     {
         IsCurrentVersion = isCurrent;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 }
 

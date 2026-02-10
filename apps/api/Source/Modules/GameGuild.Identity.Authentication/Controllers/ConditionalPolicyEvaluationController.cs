@@ -31,7 +31,7 @@ public class ConditionalPolicyEvaluationController(IMediator mediator, ILogger<C
     [HttpPost(":evaluate")]
     public async Task<ActionResult<ConditionalPolicyResult>> EvaluateConditionalPolicies([FromBody] EvaluateConditionalPoliciesCommand command)
     {
-        var result = await _mediator.Send(command);
+        var result = await _mediator.Send(command).ConfigureAwait(false);
 
         return Ok(result);
     }
@@ -42,7 +42,7 @@ public class ConditionalPolicyEvaluationController(IMediator mediator, ILogger<C
     [HttpPost(":evaluate-bulk")]
     public async Task<ActionResult<BulkConditionalPolicyResult>> BulkEvaluateConditionalPolicies([FromBody] BulkEvaluateConditionalPoliciesCommand command)
     {
-        var result = await _mediator.Send(command);
+        var result = await _mediator.Send(command).ConfigureAwait(false);
 
         return Ok(result);
     }
@@ -53,7 +53,7 @@ public class ConditionalPolicyEvaluationController(IMediator mediator, ILogger<C
     [HttpPost(":test-rule")]
     public async Task<ActionResult<ConditionalPolicyTestResult>> TestConditionalPolicyRule([FromBody] TestConditionalPolicyRuleCommand command)
     {
-        var result = await _mediator.Send(command);
+        var result = await _mediator.Send(command).ConfigureAwait(false);
 
         return Ok(result);
     }
@@ -68,8 +68,8 @@ public class ConditionalPolicyEvaluationController(IMediator mediator, ILogger<C
     [HttpGet("statistics")]
     public async Task<ActionResult<ConditionalPolicyStatisticsDto>> GetConditionalPolicyStatistics([FromQuery] Guid? tenantId = null, [FromQuery] DateTime? fromDate = null, [FromQuery] DateTime? toDate = null)
     {
-        var query = new GetConditionalPolicyStatisticsQuery { TenantId = tenantId, FromDate = fromDate ?? DateTime.UtcNow.AddDays(-30), ToDate = toDate ?? DateTime.UtcNow };
-        var result = await _mediator.Send(query);
+        var query = new GetConditionalPolicyStatisticsQuery { TenantId = tenantId, FromDate = fromDate ?? SystemClock.UtcNow.AddDays(-30), ToDate = toDate ?? SystemClock.UtcNow };
+        var result = await _mediator.Send(query).ConfigureAwait(false);
 
         return Ok(result);
     }
@@ -80,8 +80,8 @@ public class ConditionalPolicyEvaluationController(IMediator mediator, ILogger<C
     [HttpGet("{policyId}/usage")]
     public async Task<ActionResult<ConditionalPolicyUsageDto>> GetConditionalPolicyUsage(Guid policyId, [FromQuery] DateTime? fromDate = null, [FromQuery] DateTime? toDate = null)
     {
-        var query = new GetConditionalPolicyUsageQuery { PolicyId = policyId, FromDate = fromDate ?? DateTime.UtcNow.AddDays(-7), ToDate = toDate ?? DateTime.UtcNow };
-        var result = await _mediator.Send(query);
+        var query = new GetConditionalPolicyUsageQuery { PolicyId = policyId, FromDate = fromDate ?? SystemClock.UtcNow.AddDays(-7), ToDate = toDate ?? SystemClock.UtcNow };
+        var result = await _mediator.Send(query).ConfigureAwait(false);
 
         return Ok(result);
     }
@@ -93,7 +93,7 @@ public class ConditionalPolicyEvaluationController(IMediator mediator, ILogger<C
     public async Task<ActionResult<ConditionalPolicyEvaluationHistoryDto>> GetConditionalPolicyEvaluationHistory(Guid policyId, [FromQuery] int page = 1, [FromQuery] int pageSize = 50)
     {
         var query = new GetConditionalPolicyEvaluationHistoryQuery { PolicyId = policyId, Page = page, PageSize = pageSize };
-        var result = await _mediator.Send(query);
+        var result = await _mediator.Send(query).ConfigureAwait(false);
 
         return Ok(result);
     }
@@ -108,7 +108,7 @@ public class ConditionalPolicyEvaluationController(IMediator mediator, ILogger<C
     [HttpPost(":validate")]
     public async Task<ActionResult<ConditionalPolicyValidationResult>> ValidateConditionalPolicy([FromBody] ValidateConditionalPolicyCommand command)
     {
-        var result = await _mediator.Send(command);
+        var result = await _mediator.Send(command).ConfigureAwait(false);
 
         return Ok(result);
     }
@@ -120,7 +120,7 @@ public class ConditionalPolicyEvaluationController(IMediator mediator, ILogger<C
     public async Task<ActionResult<ConditionalPolicyConflictsDto>> GetConditionalPolicyConflicts([FromQuery] Guid? tenantId = null)
     {
         var query = new GetConditionalPolicyConflictsQuery { TenantId = tenantId };
-        var result = await _mediator.Send(query);
+        var result = await _mediator.Send(query).ConfigureAwait(false);
 
         return Ok(result);
     }
@@ -131,7 +131,7 @@ public class ConditionalPolicyEvaluationController(IMediator mediator, ILogger<C
     [HttpPost(":simulate")]
     public async Task<ActionResult<ConditionalPolicySimulationResult>> SimulateConditionalPolicy([FromBody] SimulateConditionalPolicyCommand command)
     {
-        var result = await _mediator.Send(command);
+        var result = await _mediator.Send(command).ConfigureAwait(false);
 
         return Ok(result);
     }
@@ -147,7 +147,7 @@ public class ConditionalPolicyEvaluationController(IMediator mediator, ILogger<C
     public async Task<ActionResult<IEnumerable<PolicyConditionTypeDto>>> GetPolicyConditionTypes()
     {
         var query = new GetPolicyConditionTypesQuery();
-        var result = await _mediator.Send(query);
+        var result = await _mediator.Send(query).ConfigureAwait(false);
 
         return Ok(result);
     }
@@ -158,7 +158,7 @@ public class ConditionalPolicyEvaluationController(IMediator mediator, ILogger<C
     [HttpPost(":validate-condition")]
     public async Task<ActionResult<ConditionValidationResult>> ValidateCondition([FromBody] ValidateConditionCommand command)
     {
-        var result = await _mediator.Send(command);
+        var result = await _mediator.Send(command).ConfigureAwait(false);
 
         return Ok(result);
     }

@@ -103,7 +103,7 @@ public record EffectivePermissions
     /// <summary>
     ///     When the permissions were resolved.
     /// </summary>
-    public DateTime ResolvedAt { get; init; } = DateTime.UtcNow;
+    public DateTime ResolvedAt { get; init; } = SystemClock.UtcNow;
 
     /// <summary>
     ///     Checks if a specific permission is present.

@@ -145,7 +145,7 @@ public class ProgramContent : EntityBase
     {
         ParentId = newParentId;
         SortOrder = newSortOrder;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     /// <summary>
@@ -154,7 +154,7 @@ public class ProgramContent : EntityBase
     public void Reorder(int newSortOrder)
     {
         SortOrder = newSortOrder;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     /// <summary>
@@ -163,7 +163,7 @@ public class ProgramContent : EntityBase
     public void MakeRequired()
     {
         IsRequired = true;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     /// <summary>
@@ -172,7 +172,7 @@ public class ProgramContent : EntityBase
     public void MakeOptional()
     {
         IsRequired = false;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     /// <summary>
@@ -182,7 +182,7 @@ public class ProgramContent : EntityBase
     {
         GradingMethod = method;
         MaxPoints = maxPoints;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     /// <summary>
@@ -191,7 +191,7 @@ public class ProgramContent : EntityBase
     public void UpdateEstimatedTime(int minutes)
     {
         EstimatedMinutes = minutes;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     /// <summary>

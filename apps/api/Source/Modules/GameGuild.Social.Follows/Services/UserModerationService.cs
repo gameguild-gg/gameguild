@@ -225,7 +225,7 @@ public class UserModerationService(
 
     public async Task<Result<List<Mute>>> GetMutedUsersAsync(Guid userId, int skip = 0, int take = 50, CancellationToken ct = default)
     {
-        var now = DateTime.UtcNow;
+        var now = SystemClock.UtcNow;
         var mutes = await context.Set<Mute>()
             .Where(m => m.MuterId == userId && (!m.ExpiresAt.HasValue || m.ExpiresAt.Value > now))
             .OrderByDescending(m => m.MutedAt)
@@ -238,7 +238,7 @@ public class UserModerationService(
 
     public async Task<Result<int>> CleanupExpiredMutesAsync(CancellationToken ct = default)
     {
-        var now = DateTime.UtcNow;
+        var now = SystemClock.UtcNow;
         var expiredMutes = await context.Set<Mute>()
             .Where(m => m.ExpiresAt.HasValue && m.ExpiresAt.Value <= now)
             .ToListAsync(ct).ConfigureAwait(false);

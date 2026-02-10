@@ -148,7 +148,7 @@ public class BillingCalculator : IBillingCalculator
     /// <inheritdoc />
     public int GetDaysRemainingInPeriod(DateTime periodEnd)
     {
-        return Math.Max(0, (periodEnd - DateTime.UtcNow).Days);
+        return Math.Max(0, (periodEnd - SystemClock.UtcNow).Days);
     }
 
     /// <inheritdoc />
@@ -157,7 +157,7 @@ public class BillingCalculator : IBillingCalculator
         if (!trialEndDate.HasValue)
             return null;
 
-        var remaining = (trialEndDate.Value - DateTime.UtcNow).Days;
+        var remaining = (trialEndDate.Value - SystemClock.UtcNow).Days;
         return Math.Max(0, remaining);
     }
 }

@@ -122,7 +122,7 @@ public sealed class SecurityAuditLogger : ISecurityAuditLogger
         {
             EventId = Guid.NewGuid(),
             EventType = SecurityEventType.PrivilegeEscalationAttempt,
-            Timestamp = DateTime.UtcNow,
+            Timestamp = SystemClock.UtcNow,
             SubjectId = actorContext.SubjectId,
             TenantId = actorContext.TenantId,
             ActorKind = actorContext.ActorKind,
@@ -151,7 +151,7 @@ public sealed class SecurityAuditLogger : ISecurityAuditLogger
         {
             EventId = Guid.NewGuid(),
             EventType = SecurityEventType.CrossTenantAccess,
-            Timestamp = DateTime.UtcNow,
+            Timestamp = SystemClock.UtcNow,
             SubjectId = actorContext.SubjectId,
             TenantId = targetTenantId,
             ActorKind = actorContext.ActorKind,

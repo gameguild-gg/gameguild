@@ -44,7 +44,7 @@ public class PrerequisitesController : BaseApiController
             request.DisplayOrder,
             request.PrerequisiteGroup);
 
-        var result = await _prerequisiteService.CreatePrerequisiteAsync(createRequest);
+        var result = await _prerequisiteService.CreatePrerequisiteAsync(createRequest).ConfigureAwait(false);
         
         if (!result.IsSuccess)
         {
@@ -63,7 +63,7 @@ public class PrerequisitesController : BaseApiController
     [HttpGet("{id:guid}")]
     public async Task<ActionResult<PrerequisiteDto>> GetPrerequisite(Guid id)
     {
-        var prerequisite = await _prerequisiteService.GetPrerequisiteByIdAsync(id);
+        var prerequisite = await _prerequisiteService.GetPrerequisiteByIdAsync(id).ConfigureAwait(false);
         
         if (prerequisite == null)
         {
@@ -80,7 +80,7 @@ public class PrerequisitesController : BaseApiController
     public async Task<ActionResult<IEnumerable<PrerequisiteDto>>> GetCoursePrerequisites(Guid courseId)
     {
         var actor = _actorContextAccessor.ActorContext;
-        var prerequisites = await _prerequisiteService.GetCoursePrerequisitesAsync(courseId, actor.TenantId);
+        var prerequisites = await _prerequisiteService.GetCoursePrerequisitesAsync(courseId, actor.TenantId).ConfigureAwait(false);
         
         return Ok(prerequisites.Select(PrerequisiteDto.FromEntity));
     }
@@ -92,7 +92,7 @@ public class PrerequisitesController : BaseApiController
     public async Task<ActionResult<IEnumerable<PrerequisiteDto>>> GetDependentCourses(Guid courseId)
     {
         var actor = _actorContextAccessor.ActorContext;
-        var dependents = await _prerequisiteService.GetDependentCoursesAsync(courseId, actor.TenantId);
+        var dependents = await _prerequisiteService.GetDependentCoursesAsync(courseId, actor.TenantId).ConfigureAwait(false);
         
         return Ok(dependents.Select(PrerequisiteDto.FromEntity));
     }
@@ -104,7 +104,7 @@ public class PrerequisitesController : BaseApiController
     public async Task<ActionResult<IEnumerable<PrerequisiteDto>>> GetPrerequisiteChain(Guid courseId)
     {
         var actor = _actorContextAccessor.ActorContext;
-        var chain = await _prerequisiteService.GetPrerequisiteChainAsync(courseId, actor.TenantId);
+        var chain = await _prerequisiteService.GetPrerequisiteChainAsync(courseId, actor.TenantId).ConfigureAwait(false);
         
         return Ok(chain.Select(PrerequisiteDto.FromEntity));
     }
@@ -125,7 +125,7 @@ public class PrerequisitesController : BaseApiController
         var result = await _prerequisiteService.CheckPrerequisitesAsync(
             courseId, 
             actor.SubjectIdAsGuid.Value, 
-            actor.TenantId);
+            actor.TenantId).ConfigureAwait(false);
 
         return Ok(new PrerequisiteCheckResultDto(
             result.IsSatisfied,
@@ -147,7 +147,7 @@ public class PrerequisitesController : BaseApiController
     public async Task<ActionResult<PrerequisiteCheckResultDto>> CheckPrerequisitesForUser(Guid courseId, Guid userId)
     {
         var actor = _actorContextAccessor.ActorContext;
-        var result = await _prerequisiteService.CheckPrerequisitesAsync(courseId, userId, actor.TenantId);
+        var result = await _prerequisiteService.CheckPrerequisitesAsync(courseId, userId, actor.TenantId).ConfigureAwait(false);
 
         return Ok(new PrerequisiteCheckResultDto(
             result.IsSatisfied,
@@ -177,7 +177,7 @@ public class PrerequisitesController : BaseApiController
             request.DisplayOrder,
             request.PrerequisiteGroup);
 
-        var result = await _prerequisiteService.UpdatePrerequisiteAsync(id, updateRequest);
+        var result = await _prerequisiteService.UpdatePrerequisiteAsync(id, updateRequest).ConfigureAwait(false);
         
         if (!result.IsSuccess)
         {
@@ -195,7 +195,7 @@ public class PrerequisitesController : BaseApiController
     [HttpDelete("{id:guid}")]
     public async Task<ActionResult> DeletePrerequisite(Guid id)
     {
-        var result = await _prerequisiteService.DeletePrerequisiteAsync(id);
+        var result = await _prerequisiteService.DeletePrerequisiteAsync(id).ConfigureAwait(false);
         
         if (!result.IsSuccess)
         {
@@ -213,7 +213,7 @@ public class PrerequisitesController : BaseApiController
     [HttpPost("course/{courseId:guid}/reorder")]
     public async Task<ActionResult> ReorderPrerequisites(Guid courseId, [FromBody] ReorderPrerequisitesRequest request)
     {
-        var result = await _prerequisiteService.ReorderPrerequisitesAsync(courseId, request.PrerequisiteIds);
+        var result = await _prerequisiteService.ReorderPrerequisitesAsync(courseId, request.PrerequisiteIds).ConfigureAwait(false);
         
         if (!result.IsSuccess)
         {
@@ -235,7 +235,7 @@ public class PrerequisitesController : BaseApiController
         var wouldCreateCycle = await _prerequisiteService.WouldCreateCircularDependencyAsync(
             courseId, 
             prerequisiteCourseId, 
-            actor.TenantId);
+            actor.TenantId).ConfigureAwait(false);
 
         return Ok(new CircularDependencyCheckResult(wouldCreateCycle));
     }

@@ -47,7 +47,7 @@ public sealed class TotpMfaService(
             mfaConfig.PreferredMethod = MfaMethod.Totp;
             mfaConfig.TotpSecretKey = encryptedSecret;
             mfaConfig.IsEnabled = false; // Enabled after first successful verification
-            mfaConfig.UpdatedAt = DateTime.UtcNow;
+            mfaConfig.UpdatedAt = SystemClock.UtcNow;
 
             if (existingConfig == null) { await mfaConfigRepository.CreateAsync(mfaConfig, cancellationToken).ConfigureAwait(false); }
             else { await mfaConfigRepository.UpdateAsync(mfaConfig, cancellationToken).ConfigureAwait(false); }
@@ -108,8 +108,8 @@ public sealed class TotpMfaService(
                 if (!mfaConfig.IsEnabled)
                 {
                     mfaConfig.IsEnabled = true;
-                    mfaConfig.EnabledAt = DateTime.UtcNow;
-                    mfaConfig.UpdatedAt = DateTime.UtcNow;
+                    mfaConfig.EnabledAt = SystemClock.UtcNow;
+                    mfaConfig.UpdatedAt = SystemClock.UtcNow;
                     await mfaConfigRepository.UpdateAsync(mfaConfig, cancellationToken).ConfigureAwait(false);
 
                     logger.LogInformation("MFA enabled for user: {UserId}", userId);

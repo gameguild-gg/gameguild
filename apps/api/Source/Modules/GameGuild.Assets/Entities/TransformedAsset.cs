@@ -63,7 +63,7 @@ public class TransformedAsset : EntityBase
     /// <summary>
     /// Last accessed (for cache eviction).
     /// </summary>
-    public DateTime LastAccessedAt { get; set; } = DateTime.UtcNow;
+    public DateTime LastAccessedAt { get; set; } = SystemClock.UtcNow;
 
     // Navigation
 
@@ -73,10 +73,10 @@ public class TransformedAsset : EntityBase
     /// <summary>
     /// Records an access to this transformed asset.
     /// </summary>
-    public void RecordAccess() => LastAccessedAt = DateTime.UtcNow;
+    public void RecordAccess() => LastAccessedAt = SystemClock.UtcNow;
 
     /// <summary>
     /// Returns true if this transformed asset should be evicted from cache.
     /// </summary>
-    public bool ShouldEvict(TimeSpan maxAge) => DateTime.UtcNow - LastAccessedAt > maxAge;
+    public bool ShouldEvict(TimeSpan maxAge) => SystemClock.UtcNow - LastAccessedAt > maxAge;
 }

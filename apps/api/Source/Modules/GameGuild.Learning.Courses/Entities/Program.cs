@@ -174,7 +174,7 @@ public class Program : EntityBase {
     /// Whether enrollment is currently open
     /// </summary>
     public bool IsEnrollmentOpen => EnrollmentStatus == EnrollmentStatus.Open
-        && (EnrollmentDeadline == null || EnrollmentDeadline > DateTime.UtcNow)
+        && (EnrollmentDeadline == null || EnrollmentDeadline > SystemClock.UtcNow)
         && (MaxEnrollments == null || CurrentEnrollments < MaxEnrollments);
 
     // Domain Methods
@@ -183,7 +183,7 @@ public class Program : EntityBase {
     /// </summary>
     public void OpenEnrollment() {
         EnrollmentStatus = EnrollmentStatus.Open;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     /// <summary>
@@ -191,7 +191,7 @@ public class Program : EntityBase {
     /// </summary>
     public void CloseEnrollment() {
         EnrollmentStatus = EnrollmentStatus.Closed;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     /// <summary>
@@ -199,7 +199,7 @@ public class Program : EntityBase {
     /// </summary>
     public void Publish() {
         Status = ContentStatus.Published;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     /// <summary>
@@ -208,7 +208,7 @@ public class Program : EntityBase {
     public void Archive() {
         Status = ContentStatus.Archived;
         EnrollmentStatus = EnrollmentStatus.Closed;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     /// <summary>
@@ -217,7 +217,7 @@ public class Program : EntityBase {
     public void CalculateEstimatedHours() {
         if (ProgramContents?.Any() == true) {
             EstimatedHours = (int?)Math.Ceiling(ProgramContents.Sum(pc => pc.EstimatedMinutes ?? 0) / 60.0);
-            UpdatedAt = DateTime.UtcNow;
+            UpdatedAt = SystemClock.UtcNow;
         }
     }
 
@@ -242,7 +242,7 @@ public class Program : EntityBase {
         var dict = GetMetadataDict();
         dict[key] = value;
         Metadata = System.Text.Json.JsonSerializer.Serialize(dict);
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     /// <summary>

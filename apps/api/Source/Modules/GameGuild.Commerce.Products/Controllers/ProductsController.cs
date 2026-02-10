@@ -27,7 +27,7 @@ public class ProductsController(IMediator mediator) : BaseApiController
     public async Task<ActionResult<ProductDto>> GetProduct(Guid productId, [FromQuery] bool includePricing = true)
     {
         var query = new GetProductByIdQuery(productId, includePricing);
-        var product = await mediator.Send(query);
+        var product = await mediator.Send(query).ConfigureAwait(false);
 
         if (product == null)
             return NotFound();
@@ -45,7 +45,7 @@ public class ProductsController(IMediator mediator) : BaseApiController
     public async Task<IActionResult> ProductExists(Guid productId)
     {
         var query = new ProductExistsQuery(productId);
-        var exists = await mediator.Send(query);
+        var exists = await mediator.Send(query).ConfigureAwait(false);
         return exists ? Ok() : NotFound();
     }
 
@@ -59,7 +59,7 @@ public class ProductsController(IMediator mediator) : BaseApiController
     public async Task<ActionResult<IReadOnlyList<ProductPricingDto>>> GetProductPricing(Guid productId)
     {
         var query = new GetProductPricingQuery(productId);
-        var pricing = await mediator.Send(query);
+        var pricing = await mediator.Send(query).ConfigureAwait(false);
         return Ok(pricing);
     }
 
@@ -88,7 +88,7 @@ public class ProductsController(IMediator mediator) : BaseApiController
         [FromQuery] string sortDirection = "DESC")
     {
         var query = new GetProductsPagedQuery(type, creatorId, searchTerm, isBundle, skip, take, sortBy, sortDirection);
-        var result = await mediator.Send(query);
+        var result = await mediator.Send(query).ConfigureAwait(false);
         return Ok(result);
     }
 
@@ -116,7 +116,7 @@ public class ProductsController(IMediator mediator) : BaseApiController
             request.TenantId
         );
 
-        var product = await mediator.Send(command);
+        var product = await mediator.Send(command).ConfigureAwait(false);
         return CreatedAtAction(nameof(GetProduct), new { productId = product.Id }, product);
     }
 
@@ -130,7 +130,7 @@ public class ProductsController(IMediator mediator) : BaseApiController
     public async Task<ActionResult<List<ProductDto>>> BatchCreateProducts([FromBody] BatchCreateProductsRequest request)
     {
         var command = new BatchCreateProductsCommand(request.Products, request.TenantId);
-        var products = await mediator.Send(command);
+        var products = await mediator.Send(command).ConfigureAwait(false);
         return StatusCode(StatusCodes.Status201Created, products);
     }
 
@@ -159,7 +159,7 @@ public class ProductsController(IMediator mediator) : BaseApiController
             request.ExpectedVersion
         );
 
-        var product = await mediator.Send(command);
+        var product = await mediator.Send(command).ConfigureAwait(false);
         return Ok(product);
     }
 
@@ -188,7 +188,7 @@ public class ProductsController(IMediator mediator) : BaseApiController
             request.ExpectedVersion
         );
 
-        var product = await mediator.Send(command);
+        var product = await mediator.Send(command).ConfigureAwait(false);
         return Ok(product);
     }
 
@@ -202,7 +202,7 @@ public class ProductsController(IMediator mediator) : BaseApiController
     public async Task<ActionResult<ProductDto>> ActivateProduct(Guid productId)
     {
         var command = new ActivateProductCommand(productId);
-        var product = await mediator.Send(command);
+        var product = await mediator.Send(command).ConfigureAwait(false);
         return Ok(product);
     }
 
@@ -216,7 +216,7 @@ public class ProductsController(IMediator mediator) : BaseApiController
     public async Task<ActionResult<ProductDto>> DeactivateProduct(Guid productId)
     {
         var command = new DeactivateProductCommand(productId);
-        var product = await mediator.Send(command);
+        var product = await mediator.Send(command).ConfigureAwait(false);
         return Ok(product);
     }
 
@@ -230,7 +230,7 @@ public class ProductsController(IMediator mediator) : BaseApiController
     public async Task<ActionResult<ProductDto>> ArchiveProduct(Guid productId)
     {
         var command = new ArchiveProductCommand(productId);
-        var product = await mediator.Send(command);
+        var product = await mediator.Send(command).ConfigureAwait(false);
         return Ok(product);
     }
 
@@ -249,7 +249,7 @@ public class ProductsController(IMediator mediator) : BaseApiController
         [FromQuery] string? reason = null)
     {
         var command = new DeleteProductCommand(productId, softDelete, reason);
-        await mediator.Send(command);
+        await mediator.Send(command).ConfigureAwait(false);
         return NoContent();
     }
 }

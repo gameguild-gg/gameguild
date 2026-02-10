@@ -185,9 +185,9 @@ public class FeatureFlagAnalyticsRepository : IFeatureFlagAnalyticsRepository
         {
             Content = System.Text.Encoding.UTF8.GetBytes(jsonData),
             ContentType = "application/json",
-            FileName = $"feature-flag-analytics-{DateTime.UtcNow:yyyyMMddHHmmss}.json",
+            FileName = $"feature-flag-analytics-{SystemClock.UtcNow:yyyyMMddHHmmss}.json",
             RecordCount = usages.Count,
-            GeneratedAt = DateTime.UtcNow
+            GeneratedAt = SystemClock.UtcNow
         };
     }
 }

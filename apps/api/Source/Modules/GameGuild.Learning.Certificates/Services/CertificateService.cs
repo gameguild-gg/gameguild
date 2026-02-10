@@ -187,7 +187,7 @@ public class CertificateService : ICertificateService
 
     public async Task<IEnumerable<Certificate>> GetExpiringCertificatesAsync(int thresholdDays = 30)
     {
-        var threshold = DateTime.UtcNow.AddDays(thresholdDays);
+        var threshold = SystemClock.UtcNow.AddDays(thresholdDays);
 
         return await _context.Set<Certificate>()
             .Where(c => c.Status == CertificateStatus.Active
@@ -258,7 +258,7 @@ public class CertificateService : ICertificateService
 
     public Task<string> GenerateCertificateNumberAsync()
     {
-        var number = $"CERT-{DateTime.UtcNow:yyyyMMdd}-{Guid.NewGuid().ToString("N")[..8].ToUpperInvariant()}";
+        var number = $"CERT-{SystemClock.UtcNow:yyyyMMdd}-{Guid.NewGuid().ToString("N")[..8].ToUpperInvariant()}";
         return Task.FromResult(number);
     }
 }

@@ -32,7 +32,7 @@ public class AccessReviewsController(ISender sender) : BaseApiController
         CancellationToken cancellationToken
     )
     {
-        var result = await sender.Send(command, cancellationToken);
+        var result = await sender.Send(command, cancellationToken).ConfigureAwait(false);
         return CreatedAtAction(nameof(GetCampaignById), new { id = result.Id }, result);
     }
 
@@ -45,7 +45,7 @@ public class AccessReviewsController(ISender sender) : BaseApiController
     public async Task<IActionResult> GetCampaignById(Guid id, CancellationToken cancellationToken)
     {
         var query = new GetAccessReviewCampaignByIdQuery(id);
-        var result = await sender.Send(query, cancellationToken);
+        var result = await sender.Send(query, cancellationToken).ConfigureAwait(false);
 
         if (result == null)
             return NotFound();
@@ -64,7 +64,7 @@ public class AccessReviewsController(ISender sender) : BaseApiController
     )
     {
         var query = new GetActiveAccessReviewCampaignsQuery(tenantId);
-        var result = await sender.Send(query, cancellationToken);
+        var result = await sender.Send(query, cancellationToken).ConfigureAwait(false);
         return Ok(result);
     }
 
@@ -77,7 +77,7 @@ public class AccessReviewsController(ISender sender) : BaseApiController
     public async Task<IActionResult> StartCampaign(Guid id, CancellationToken cancellationToken)
     {
         var command = new StartAccessReviewCampaignCommand(id);
-        var result = await sender.Send(command, cancellationToken);
+        var result = await sender.Send(command, cancellationToken).ConfigureAwait(false);
 
         if (!result)
             return NotFound();
@@ -98,7 +98,7 @@ public class AccessReviewsController(ISender sender) : BaseApiController
     )
     {
         var command = new CompleteAccessReviewCampaignCommand(id, request.CompletedBy);
-        var result = await sender.Send(command, cancellationToken);
+        var result = await sender.Send(command, cancellationToken).ConfigureAwait(false);
 
         if (!result)
             return NotFound();
@@ -115,7 +115,7 @@ public class AccessReviewsController(ISender sender) : BaseApiController
     public async Task<IActionResult> CancelCampaign(Guid id, CancellationToken cancellationToken)
     {
         var command = new CancelAccessReviewCampaignCommand(id);
-        var result = await sender.Send(command, cancellationToken);
+        var result = await sender.Send(command, cancellationToken).ConfigureAwait(false);
 
         if (!result)
             return NotFound();
@@ -131,7 +131,7 @@ public class AccessReviewsController(ISender sender) : BaseApiController
     public async Task<IActionResult> SendReminders(Guid id, CancellationToken cancellationToken)
     {
         var command = new SendAccessReviewRemindersCommand(id);
-        var result = await sender.Send(command, cancellationToken);
+        var result = await sender.Send(command, cancellationToken).ConfigureAwait(false);
         return Ok(new { RemindersSent = result });
     }
 
@@ -151,7 +151,7 @@ public class AccessReviewsController(ISender sender) : BaseApiController
     )
     {
         var query = new GetPendingReviewItemsQuery(reviewerId, tenantId);
-        var result = await sender.Send(query, cancellationToken);
+        var result = await sender.Send(query, cancellationToken).ConfigureAwait(false);
         return Ok(result);
     }
 
@@ -168,7 +168,7 @@ public class AccessReviewsController(ISender sender) : BaseApiController
     )
     {
         var command = new ApproveAccessReviewItemCommand(id, request?.Reason, request?.Notes);
-        var result = await sender.Send(command, cancellationToken);
+        var result = await sender.Send(command, cancellationToken).ConfigureAwait(false);
         return Ok(result);
     }
 
@@ -185,7 +185,7 @@ public class AccessReviewsController(ISender sender) : BaseApiController
     )
     {
         var command = new RevokeAccessReviewItemCommand(id, request.Reason, request.Notes);
-        var result = await sender.Send(command, cancellationToken);
+        var result = await sender.Send(command, cancellationToken).ConfigureAwait(false);
         return Ok(result);
     }
 
@@ -197,7 +197,7 @@ public class AccessReviewsController(ISender sender) : BaseApiController
     public async Task<IActionResult> ProcessExpiredCampaigns(CancellationToken cancellationToken)
     {
         var command = new ProcessExpiredCampaignsCommand();
-        var result = await sender.Send(command, cancellationToken);
+        var result = await sender.Send(command, cancellationToken).ConfigureAwait(false);
         return Ok(new { ProcessedCount = result });
     }
 }

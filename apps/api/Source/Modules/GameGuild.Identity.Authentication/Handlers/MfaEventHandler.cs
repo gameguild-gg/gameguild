@@ -20,7 +20,7 @@ public sealed class MfaEventHandler(ILogger<MfaEventHandler> logger) : INotifica
         // - Require additional verification for sensitive actions
         // - Log security audit trail
 
-        await Task.CompletedTask;
+        await Task.CompletedTask.ConfigureAwait(false);
     }
 
     public async Task Handle(MfaEnabledEvent notification, CancellationToken cancellationToken)
@@ -32,7 +32,7 @@ public sealed class MfaEventHandler(ILogger<MfaEventHandler> logger) : INotifica
         // - Update user security settings
         // - Log security audit trail
 
-        await Task.CompletedTask;
+        await Task.CompletedTask.ConfigureAwait(false);
     }
 
     public async Task Handle(MfaVerificationFailedEvent notification, CancellationToken cancellationToken)
@@ -45,7 +45,7 @@ public sealed class MfaEventHandler(ILogger<MfaEventHandler> logger) : INotifica
         // - Send security alert email
         // - Log to security monitoring system
 
-        await Task.CompletedTask;
+        await Task.CompletedTask.ConfigureAwait(false);
     }
 
     public async Task Handle(MfaVerificationSucceededEvent notification, CancellationToken cancellationToken)
@@ -57,6 +57,6 @@ public sealed class MfaEventHandler(ILogger<MfaEventHandler> logger) : INotifica
         // - Clear failed attempt counter
         // - Log successful verification for audit
 
-        await Task.CompletedTask;
+        await Task.CompletedTask.ConfigureAwait(false);
     }
 }

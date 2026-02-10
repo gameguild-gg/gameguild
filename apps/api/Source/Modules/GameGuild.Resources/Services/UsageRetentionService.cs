@@ -37,7 +37,7 @@ public class UsageRetentionService(IUsageRetentionPolicyRepository policyReposit
                 ArchiveAfterDays = archiveAfterDays,
                 EnableCompaction = enableCompaction,
                 IsActive = true,
-                NextExecutionAt = DateTime.UtcNow.AddDays(1)
+                NextExecutionAt = SystemClock.UtcNow.AddDays(1)
             };
 
             // Set TenantId using SetProperties (EntityBase has protected setter)
@@ -88,7 +88,7 @@ public class UsageRetentionService(IUsageRetentionPolicyRepository policyReposit
             if (policy.EnableCompaction) { result.RecordsCompacted = await CompactUsageRecordsAsync(policy.TenantId ?? Guid.Empty, policy.ResourceType, archiveThreshold, cancellationToken).ConfigureAwait(false); }
 
             // Update policy execution time
-            policy.LastExecutedAt = DateTime.UtcNow;
+            policy.LastExecutedAt = SystemClock.UtcNow;
             policy.NextExecutionAt = policy.CalculateNextCompaction();
             await policyRepository.UpdateAsync(policy, cancellationToken).ConfigureAwait(false);
 
@@ -113,7 +113,7 @@ public class UsageRetentionService(IUsageRetentionPolicyRepository policyReposit
             return 0;
         }
 
-        var threshold = olderThan ?? DateTime.UtcNow.AddDays(-30);
+        var threshold = olderThan ?? SystemClock.UtcNow.AddDays(-30);
 
         // If type is not specified, get all types for the tenant
         IEnumerable<UsageRecord> records;
@@ -156,7 +156,7 @@ public class UsageRetentionService(IUsageRetentionPolicyRepository policyReposit
 
     public async Task<int> ArchiveUsageRecordsAsync(Guid tenantId, ResourceUsageType? type = null, DateTime? olderThan = null, CancellationToken cancellationToken = default)
     {
-        var threshold = olderThan ?? DateTime.UtcNow.AddDays(-90);
+        var threshold = olderThan ?? SystemClock.UtcNow.AddDays(-90);
 
         return await usageRepository.ArchiveOlderThanAsync(threshold, cancellationToken).ConfigureAwait(false);
     }

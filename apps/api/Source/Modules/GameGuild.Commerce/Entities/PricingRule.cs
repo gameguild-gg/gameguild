@@ -107,7 +107,7 @@ public class PricingRule : EntityBase
     {
         if (!IsActive) return false;
 
-        var now = checkDate ?? DateTime.UtcNow;
+        var now = checkDate ?? SystemClock.UtcNow;
 
         return (StartDate == null || StartDate <= now) && (EndDate == null || EndDate > now);
     }

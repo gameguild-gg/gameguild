@@ -14,31 +14,6 @@ public interface IPipelineBehavior<in TRequest, TResponse> where TRequest : IReq
 }
 
 /// <summary>
-///     Defines a request pre-processor
-/// </summary>
-/// <typeparam name="TRequest">Request type</typeparam>
-public interface IRequestPreProcessor<in TRequest> where TRequest : IRequestBase
-{
-    /// <summary>
-    ///     Process method executed before the handler
-    /// </summary>
-    Task Process(TRequest request, CancellationToken cancellationToken);
-}
-
-/// <summary>
-///     Defines a request post-processor
-/// </summary>
-/// <typeparam name="TRequest">Request type</typeparam>
-/// <typeparam name="TResponse">Response type</typeparam>
-public interface IRequestPostProcessor<in TRequest, in TResponse> where TRequest : IRequestBase
-{
-    /// <summary>
-    ///     Process method executed after the handler
-    /// </summary>
-    Task Process(TRequest request, TResponse response, CancellationToken cancellationToken);
-}
-
-/// <summary>
 ///     Defines an exception handler for requests
 /// </summary>
 /// <typeparam name="TRequest">Request type</typeparam>

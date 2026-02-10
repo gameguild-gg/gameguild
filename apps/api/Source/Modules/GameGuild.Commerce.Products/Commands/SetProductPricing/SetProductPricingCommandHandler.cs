@@ -93,8 +93,8 @@ public sealed class SetProductPricingCommandHandler(
         await dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         var isSaleActive = pricing.SalePrice.HasValue &&
-                           (!pricing.SaleStartDate.HasValue || pricing.SaleStartDate <= DateTime.UtcNow) &&
-                           (!pricing.SaleEndDate.HasValue || pricing.SaleEndDate > DateTime.UtcNow);
+                           (!pricing.SaleStartDate.HasValue || pricing.SaleStartDate <= SystemClock.UtcNow) &&
+                           (!pricing.SaleEndDate.HasValue || pricing.SaleEndDate > SystemClock.UtcNow);
 
         var currentPrice = isSaleActive && pricing.SalePrice.HasValue
             ? pricing.SalePrice.Value

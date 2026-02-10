@@ -40,7 +40,7 @@ public class PermissionEvaluationController(IMediator mediator, ILogger<Permissi
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<bool>> CheckTenantPermission([FromBody] HasTenantPermissionQuery query)
     {
-        var result = await _mediator.Send(query);
+        var result = await _mediator.Send(query).ConfigureAwait(false);
 
         return Ok(result);
     }
@@ -56,7 +56,7 @@ public class PermissionEvaluationController(IMediator mediator, ILogger<Permissi
         [FromQuery] Guid tenantId)
     {
         var query = new GetTenantPermissionsQuery { UserId = userId, TenantId = tenantId };
-        var result = await _mediator.Send(query);
+        var result = await _mediator.Send(query).ConfigureAwait(false);
 
         return Ok(result);
     }
@@ -73,7 +73,7 @@ public class PermissionEvaluationController(IMediator mediator, ILogger<Permissi
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<bool>> CheckContentTypePermission([FromBody] HasContentTypePermissionQuery query)
     {
-        var result = await _mediator.Send(query);
+        var result = await _mediator.Send(query).ConfigureAwait(false);
 
         return Ok(result);
     }
@@ -90,7 +90,7 @@ public class PermissionEvaluationController(IMediator mediator, ILogger<Permissi
         [FromQuery] string? contentType = null)
     {
         var query = new GetContentTypePermissionsQuery { UserId = userId, TenantId = tenantId, ContentType = contentType };
-        var result = await _mediator.Send(query);
+        var result = await _mediator.Send(query).ConfigureAwait(false);
 
         return Ok(result);
     }
@@ -107,7 +107,7 @@ public class PermissionEvaluationController(IMediator mediator, ILogger<Permissi
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<bool>> CheckResourcePermission([FromBody] HasResourcePermissionQuery query)
     {
-        var result = await _mediator.Send(query);
+        var result = await _mediator.Send(query).ConfigureAwait(false);
 
         return Ok(result);
     }
@@ -123,7 +123,7 @@ public class PermissionEvaluationController(IMediator mediator, ILogger<Permissi
         [FromQuery] Guid resourceId)
     {
         var query = new GetResourcePermissionsQuery { UserId = userId, ResourceId = resourceId };
-        var result = await _mediator.Send(query);
+        var result = await _mediator.Send(query).ConfigureAwait(false);
 
         return Ok(result);
     }
@@ -141,7 +141,7 @@ public class PermissionEvaluationController(IMediator mediator, ILogger<Permissi
     public async Task<ActionResult<UserPermissionsDto>> GetUserPermissions(Guid userId, [FromQuery] Guid? tenantId = null)
     {
         var query = new GetUserPermissionsQuery { UserId = userId, TenantId = tenantId };
-        var result = await _mediator.Send(query);
+        var result = await _mediator.Send(query).ConfigureAwait(false);
 
         return Ok(result);
     }
@@ -158,7 +158,7 @@ public class PermissionEvaluationController(IMediator mediator, ILogger<Permissi
         [FromQuery] Guid? resourceId = null)
     {
         var query = new GetEffectivePermissionsQuery { UserId = userId, TenantId = tenantId, ResourceId = resourceId };
-        var result = await _mediator.Send(query);
+        var result = await _mediator.Send(query).ConfigureAwait(false);
 
         return Ok(result);
     }
@@ -171,7 +171,7 @@ public class PermissionEvaluationController(IMediator mediator, ILogger<Permissi
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<PermissionHierarchyResult>> ResolvePermissionHierarchy([FromBody] ResolvePermissionHierarchyQuery query)
     {
-        var result = await _mediator.Send(query);
+        var result = await _mediator.Send(query).ConfigureAwait(false);
 
         return Ok(result);
     }

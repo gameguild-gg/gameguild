@@ -38,7 +38,7 @@ public class KeyRotationController : BaseApiController
     {
         if (status?.ToLowerInvariant() == "active")
         {
-            var activeKey = await _keyRotationService.GetActiveSigningKeyAsync(cancellationToken);
+            var activeKey = await _keyRotationService.GetActiveSigningKeyAsync(cancellationToken).ConfigureAwait(false);
             if (activeKey == null)
                 return Ok(new List<JwtKeyInfoDto>());
             return Ok(new List<JwtKeyInfoDto> { JwtKeyInfoDto.FromEntity(activeKey) });
@@ -46,12 +46,12 @@ public class KeyRotationController : BaseApiController
 
         if (status?.ToLowerInvariant() == "valid")
         {
-            var validKeys = await _keyRotationService.GetValidationKeysAsync(cancellationToken);
+            var validKeys = await _keyRotationService.GetValidationKeysAsync(cancellationToken).ConfigureAwait(false);
             return Ok(validKeys.Select(JwtKeyInfoDto.FromEntity).ToList());
         }
 
         // Return all keys (active + valid)
-        var keys = await _keyRotationService.GetValidationKeysAsync(cancellationToken);
+        var keys = await _keyRotationService.GetValidationKeysAsync(cancellationToken).ConfigureAwait(false);
         return Ok(keys.Select(JwtKeyInfoDto.FromEntity).ToList());
     }
 
@@ -72,7 +72,7 @@ public class KeyRotationController : BaseApiController
         var newKey = await _keyRotationService.RotateKeyAsync(
             request.Reason ?? "manual-rotation",
             request.ValidityDays ?? 90,
-            cancellationToken);
+            cancellationToken).ConfigureAwait(false);
 
         return Ok(JwtKeyInfoDto.FromEntity(newKey));
     }
@@ -90,7 +90,7 @@ public class KeyRotationController : BaseApiController
     {
         var count = await _keyRotationService.CleanupExpiredKeysAsync(
             request?.RetentionDays ?? 30,
-            cancellationToken);
+            cancellationToken).ConfigureAwait(false);
 
         return Ok(new CleanupResult { DeletedCount = count });
     }

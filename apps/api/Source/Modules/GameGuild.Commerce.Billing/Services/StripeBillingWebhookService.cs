@@ -268,7 +268,7 @@ internal class StripeWebhookPayload
         Amount = Amount ?? 0,
         Currency = Currency ?? "USD",
         Status = Status ?? string.Empty,
-        PaidAt = PaidAt ?? DateTime.UtcNow
+        PaidAt = PaidAt ?? SystemClock.UtcNow
     };
 }
 

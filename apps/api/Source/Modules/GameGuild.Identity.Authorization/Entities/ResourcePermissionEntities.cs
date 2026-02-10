@@ -38,7 +38,7 @@ public class ResourceUserPermission : EntityBase<Guid>
     /// <summary>
     ///     Gets or sets the date and time the permissions were granted.
     /// </summary>
-    public DateTime GrantedAt { get; set; } = DateTime.UtcNow;
+    public DateTime GrantedAt { get; set; } = SystemClock.UtcNow;
 
     /// <summary>
     ///     Gets or sets the ID of the user who granted these permissions.
@@ -95,7 +95,7 @@ public class ResourceUserPermission : EntityBase<Guid>
     /// <summary>
     ///     Gets whether these permissions have expired.
     /// </summary>
-    public bool IsExpired => ExpiresAt.HasValue && ExpiresAt.Value <= DateTime.UtcNow;
+    public bool IsExpired => ExpiresAt.HasValue && ExpiresAt.Value <= SystemClock.UtcNow;
 
     /// <summary>
     ///     Gets whether the user can access the resource.
@@ -112,7 +112,7 @@ public class ResourceUserPermission : EntityBase<Guid>
     {
         if (RevokedAt.HasValue) { return false; }
 
-        RevokedAt = DateTime.UtcNow;
+        RevokedAt = SystemClock.UtcNow;
         RevokedByUserId = revokedByUserId;
         RevocationReason = reason;
 
@@ -137,7 +137,7 @@ public class ResourceUserPermission : EntityBase<Guid>
     /// <summary>
     ///     Records that the user accessed the resource.
     /// </summary>
-    public void RecordAccess() { LastAccessedAt = DateTime.UtcNow; }
+    public void RecordAccess() { LastAccessedAt = SystemClock.UtcNow; }
 
     /// <summary>
     ///     Checks if the user has a specific permission on this resource.
@@ -251,7 +251,7 @@ public class ResourceInvitation : EntityBase<Guid>
     /// <summary>
     ///     Gets or sets the date and time the invitation was sent.
     /// </summary>
-    public DateTime InvitedAt { get; set; } = DateTime.UtcNow;
+    public DateTime InvitedAt { get; set; } = SystemClock.UtcNow;
 
     /// <summary>
     ///     Gets or sets the date and time the invitation expires.
@@ -301,7 +301,7 @@ public class ResourceInvitation : EntityBase<Guid>
     /// <summary>
     ///     Gets whether the invitation has expired.
     /// </summary>
-    public bool IsExpired => ExpiresAt.HasValue && ExpiresAt.Value <= DateTime.UtcNow;
+    public bool IsExpired => ExpiresAt.HasValue && ExpiresAt.Value <= SystemClock.UtcNow;
 
     /// <summary>
     ///     Gets whether the invitation can be accepted.
@@ -323,7 +323,7 @@ public class ResourceInvitation : EntityBase<Guid>
         if (!CanBeAccepted) { return false; }
 
         Status = InvitationStatus.Accepted;
-        AcceptedAt = DateTime.UtcNow;
+        AcceptedAt = SystemClock.UtcNow;
         AcceptedByUserId = acceptingUserId;
 
         return true;
@@ -339,7 +339,7 @@ public class ResourceInvitation : EntityBase<Guid>
         if (Status != InvitationStatus.Pending) { return false; }
 
         Status = InvitationStatus.Declined;
-        DeclinedAt = DateTime.UtcNow;
+        DeclinedAt = SystemClock.UtcNow;
         DeclineReason = reason;
 
         return true;
@@ -355,7 +355,7 @@ public class ResourceInvitation : EntityBase<Guid>
         if (!CanBeRevoked) { return false; }
 
         Status = InvitationStatus.Revoked;
-        RevokedAt = DateTime.UtcNow;
+        RevokedAt = SystemClock.UtcNow;
         RevokedByUserId = revokedByUserId;
 
         return true;

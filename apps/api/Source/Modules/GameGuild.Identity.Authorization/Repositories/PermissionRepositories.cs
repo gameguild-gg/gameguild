@@ -99,7 +99,7 @@ public class TenantPermissionRepository(IApplicationDbContext context) : ITenant
     {
         return await TenantPermissions
             .AsNoTracking()
-            .Where(p => p.ExpiresAt.HasValue && p.ExpiresAt < DateTime.UtcNow)
+            .Where(p => p.ExpiresAt.HasValue && p.ExpiresAt < SystemClock.UtcNow)
             .ToListAsync(cancellationToken).ConfigureAwait(false);
     }
 }

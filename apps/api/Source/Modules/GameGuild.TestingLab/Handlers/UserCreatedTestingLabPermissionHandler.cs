@@ -29,7 +29,7 @@ internal class UserCreatedTestingLabPermissionHandler : IDomainEventHandler<User
 
     try {
       // Query the user's tenant associations since UserCreatedEvent doesn't include tenant context
-      var userTenants = await _context.TenantPermissions.Where(tp => tp.UserId == domainEvent.UserId && tp.DeletedAt == null && (tp.ExpiresAt == null || tp.ExpiresAt > DateTime.UtcNow))
+      var userTenants = await _context.TenantPermissions.Where(tp => tp.UserId == domainEvent.UserId && tp.DeletedAt == null && (tp.ExpiresAt == null || tp.ExpiresAt > SystemClock.UtcNow))
                                       .Select(tp => tp.TenantId)
                                       .Where(tenantId => tenantId.HasValue)
                                       .ToListAsync(cancellationToken);

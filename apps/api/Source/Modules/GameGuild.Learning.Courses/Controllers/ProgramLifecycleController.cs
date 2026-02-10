@@ -18,7 +18,7 @@ public class ProgramLifecycleController(IProgramLifecycleService lifecycleServic
   [HttpPost("{id}:submit")]
   [RequireResourcePermission<PermissionType, Program>(PermissionType.Submit)]
   public async Task<ActionResult<ProgramDto>> SubmitProgram(Guid id) {
-    var program = await lifecycleService.SubmitProgramAsync(id);
+    var program = await lifecycleService.SubmitProgramAsync(id).ConfigureAwait(false);
 
     if (program == null) return NotFound();
 
@@ -29,7 +29,7 @@ public class ProgramLifecycleController(IProgramLifecycleService lifecycleServic
   [HttpPost("{id}:approve")]
   [RequireResourcePermission<PermissionType, Program>(PermissionType.Approve)]
   public async Task<ActionResult<ProgramDto>> ApproveProgram(Guid id) {
-    var program = await lifecycleService.ApproveProgramAsync(id);
+    var program = await lifecycleService.ApproveProgramAsync(id).ConfigureAwait(false);
 
     if (program == null) return NotFound();
 
@@ -42,7 +42,7 @@ public class ProgramLifecycleController(IProgramLifecycleService lifecycleServic
   public async Task<ActionResult<ProgramDto>> RejectProgram(Guid id, [FromBody] RejectProgramDto rejectDto) {
     if (!ModelState.IsValid) return BadRequest(ModelState);
 
-    var program = await lifecycleService.RejectProgramAsync(id, rejectDto.Reason);
+    var program = await lifecycleService.RejectProgramAsync(id, rejectDto.Reason).ConfigureAwait(false);
 
     if (program == null) return NotFound();
 
@@ -53,7 +53,7 @@ public class ProgramLifecycleController(IProgramLifecycleService lifecycleServic
   [HttpPost("{id}:withdraw")]
   [RequireResourcePermission<PermissionType, Program>(PermissionType.Withdraw)]
   public async Task<ActionResult<ProgramDto>> WithdrawProgram(Guid id) {
-    var program = await lifecycleService.WithdrawProgramAsync(id);
+    var program = await lifecycleService.WithdrawProgramAsync(id).ConfigureAwait(false);
 
     if (program == null) return NotFound();
 
@@ -64,7 +64,7 @@ public class ProgramLifecycleController(IProgramLifecycleService lifecycleServic
   [HttpPost("{id}:archive")]
   [RequireResourcePermission<PermissionType, Program>(PermissionType.Archive)]
   public async Task<ActionResult<ProgramDto>> ArchiveProgram(Guid id) {
-    var program = await lifecycleService.ArchiveProgramAsync(id);
+    var program = await lifecycleService.ArchiveProgramAsync(id).ConfigureAwait(false);
 
     if (program == null) return NotFound();
 
@@ -75,7 +75,7 @@ public class ProgramLifecycleController(IProgramLifecycleService lifecycleServic
   [HttpPost("{id}:restore")]
   [RequireResourcePermission<PermissionType, Program>(PermissionType.Restore)]
   public async Task<ActionResult<ProgramDto>> RestoreProgram(Guid id) {
-    var program = await lifecycleService.RestoreProgramAsync(id);
+    var program = await lifecycleService.RestoreProgramAsync(id).ConfigureAwait(false);
 
     if (program == null) return NotFound();
 
@@ -86,7 +86,7 @@ public class ProgramLifecycleController(IProgramLifecycleService lifecycleServic
   [HttpPost("{id}:publish")]
   [RequireResourcePermission<PermissionType, Program>(PermissionType.Publish)]
   public async Task<ActionResult<ProgramDto>> PublishProgram(Guid id) {
-    var program = await lifecycleService.PublishProgramAsync(id);
+    var program = await lifecycleService.PublishProgramAsync(id).ConfigureAwait(false);
 
     if (program == null) return NotFound();
 
@@ -97,7 +97,7 @@ public class ProgramLifecycleController(IProgramLifecycleService lifecycleServic
   [HttpPost("{id}:unpublish")]
   [RequireResourcePermission<PermissionType, Program>(PermissionType.Unpublish)]
   public async Task<ActionResult<ProgramDto>> UnpublishProgram(Guid id) {
-    var program = await lifecycleService.UnpublishProgramAsync(id);
+    var program = await lifecycleService.UnpublishProgramAsync(id).ConfigureAwait(false);
 
     if (program == null) return NotFound();
 
@@ -110,7 +110,7 @@ public class ProgramLifecycleController(IProgramLifecycleService lifecycleServic
   public async Task<ActionResult<ProgramDto>> ScheduleProgram(Guid id, [FromBody] ScheduleProgramDto scheduleDto) {
     if (!ModelState.IsValid) return BadRequest(ModelState);
 
-    var program = await lifecycleService.ScheduleProgramAsync(id, scheduleDto.PublishAt);
+    var program = await lifecycleService.ScheduleProgramAsync(id, scheduleDto.PublishAt).ConfigureAwait(false);
 
     if (program == null) return NotFound();
 

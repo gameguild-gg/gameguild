@@ -111,7 +111,7 @@ public class CostAllocationService(
         if (report == null) return false;
 
         report.IsExported = true;
-        report.ExportedAt = DateTime.UtcNow;
+        report.ExportedAt = SystemClock.UtcNow;
         report.InvoiceReference = invoiceReference;
         report.Touch();
 

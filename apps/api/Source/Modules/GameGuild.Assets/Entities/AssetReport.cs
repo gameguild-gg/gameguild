@@ -97,7 +97,7 @@ public class AssetReport : EntityBase
         ReviewedByUserId = reviewerId;
         Decision = decision;
         ReviewNotes = notes;
-        ReviewedAt = DateTime.UtcNow;
+        ReviewedAt = SystemClock.UtcNow;
         Status = decision == ReviewDecision.NoAction ? ReportStatus.Dismissed : ReportStatus.Resolved;
     }
 }

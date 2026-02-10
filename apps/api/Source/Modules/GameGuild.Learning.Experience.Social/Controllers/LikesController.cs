@@ -37,7 +37,7 @@ public class LikesController : LearningControllerBase
     public async Task<IActionResult> LikeCourse(Guid courseId, CancellationToken cancellationToken = default)
     {
         var userId = GetRequiredUserId();
-        var result = await _likeService.LikeCourseAsync(courseId, userId, null, cancellationToken);
+        var result = await _likeService.LikeCourseAsync(courseId, userId, null, cancellationToken).ConfigureAwait(false);
 
         if (!result.IsSuccess)
         {
@@ -56,7 +56,7 @@ public class LikesController : LearningControllerBase
     public async Task<IActionResult> UnlikeCourse(Guid courseId, CancellationToken cancellationToken = default)
     {
         var userId = GetRequiredUserId();
-        var result = await _likeService.UnlikeCourseAsync(courseId, userId, cancellationToken);
+        var result = await _likeService.UnlikeCourseAsync(courseId, userId, cancellationToken).ConfigureAwait(false);
 
         if (!result.IsSuccess)
         {
@@ -74,7 +74,7 @@ public class LikesController : LearningControllerBase
     public async Task<IActionResult> HasLikedCourse(Guid courseId, CancellationToken cancellationToken = default)
     {
         var userId = GetRequiredUserId();
-        var result = await _likeService.HasUserLikedCourseAsync(courseId, userId, cancellationToken);
+        var result = await _likeService.HasUserLikedCourseAsync(courseId, userId, cancellationToken).ConfigureAwait(false);
 
         if (!result.IsSuccess)
         {
@@ -92,7 +92,7 @@ public class LikesController : LearningControllerBase
     [ProducesResponseType(typeof(int), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetCourseLikeCount(Guid courseId, CancellationToken cancellationToken = default)
     {
-        var result = await _likeService.GetCourseLikeCountAsync(courseId, cancellationToken);
+        var result = await _likeService.GetCourseLikeCountAsync(courseId, cancellationToken).ConfigureAwait(false);
 
         if (!result.IsSuccess)
         {
@@ -113,7 +113,7 @@ public class LikesController : LearningControllerBase
         CancellationToken cancellationToken = default)
     {
         var userId = GetRequiredUserId();
-        var result = await _likeService.GetUserLikedCoursesAsync(userId, skip, take, cancellationToken);
+        var result = await _likeService.GetUserLikedCoursesAsync(userId, skip, take, cancellationToken).ConfigureAwait(false);
 
         if (!result.IsSuccess)
         {

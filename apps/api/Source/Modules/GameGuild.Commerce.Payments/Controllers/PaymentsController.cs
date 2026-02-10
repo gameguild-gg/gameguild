@@ -75,7 +75,7 @@ public sealed class PaymentsController(ISender sender, IActorContextAccessor act
         if (page < 1) page = 1;
         if (pageSize < 1 || pageSize > 100) pageSize = 20;
 
-        return Ok(await sender.Send(new GetAllPaymentsQuery(tenantId, status, startDate, endDate, page, pageSize), ct));
+        return Ok(await sender.Send(new GetAllPaymentsQuery(tenantId, status, startDate, endDate, page, pageSize), ct).ConfigureAwait(false));
     }
 
     /// <summary>
@@ -130,7 +130,7 @@ public sealed class PaymentsController(ISender sender, IActorContextAccessor act
             return BadRequest(new { error = "PaymentMethodId is required" });
         }
 
-        var result = await sender.Send(new ProcessPaymentCommand(body.TenantId, body.SubscriptionId, body.Amount, body.PaymentMethodId), ct);
+        var result = await sender.Send(new ProcessPaymentCommand(body.TenantId, body.SubscriptionId, body.Amount, body.PaymentMethodId), ct).ConfigureAwait(false);
 
         return CreatedAtRoute("GetPaymentById", new { paymentId = result.PaymentId }, result);
     }
@@ -163,7 +163,7 @@ public sealed class PaymentsController(ISender sender, IActorContextAccessor act
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetById(Guid paymentId, CancellationToken ct)
     {
-        var r = await sender.Send(new GetPaymentByIdQuery(paymentId), ct);
+        var r = await sender.Send(new GetPaymentByIdQuery(paymentId), ct).ConfigureAwait(false);
 
         if (r == null) return NotFound();
 
@@ -214,7 +214,7 @@ public sealed class PaymentsController(ISender sender, IActorContextAccessor act
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> Cancel(Guid paymentId, [FromBody] CancelPaymentRequest body, CancellationToken ct)
     {
-        var result = await sender.Send(new CancelPaymentCommand(paymentId, body.CancellationReason, body.CanceledBy), ct);
+        var result = await sender.Send(new CancelPaymentCommand(paymentId, body.CancellationReason, body.CanceledBy), ct).ConfigureAwait(false);
 
         return Ok(result);
     }
@@ -255,7 +255,7 @@ public sealed class PaymentsController(ISender sender, IActorContextAccessor act
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> Refund(Guid paymentId, [FromBody] RefundRequest body, CancellationToken ct)
     {
-        var r = await sender.Send(new ProcessRefundCommand(paymentId, body.Amount ?? 0, body.Reason ?? "No reason provided"), ct);
+        var r = await sender.Send(new ProcessRefundCommand(paymentId, body.Amount ?? 0, body.Reason ?? "No reason provided"), ct).ConfigureAwait(false);
 
         return Ok(r);
     }
@@ -294,7 +294,7 @@ public sealed class PaymentsController(ISender sender, IActorContextAccessor act
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> Retry(Guid paymentId, CancellationToken ct)
     {
-        var r = await sender.Send(new RetryPaymentCommand(paymentId), ct);
+        var r = await sender.Send(new RetryPaymentCommand(paymentId), ct).ConfigureAwait(false);
 
         return Ok(r);
     }

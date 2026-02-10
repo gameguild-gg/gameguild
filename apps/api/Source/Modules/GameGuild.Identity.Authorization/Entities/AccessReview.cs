@@ -48,7 +48,7 @@ public class AccessReviewCampaign
 
     public string? NotificationTemplate { get; set; }
 
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime CreatedAt { get; set; } = SystemClock.UtcNow;
 
     public DateTime? UpdatedAt { get; set; }
 
@@ -59,14 +59,14 @@ public class AccessReviewCampaign
     /// </summary>
     public bool IsActive() =>
         Status == AccessReviewStatus.InProgress &&
-        DateTime.UtcNow >= StartDate &&
-        DateTime.UtcNow <= EndDate;
+        SystemClock.UtcNow >= StartDate &&
+        SystemClock.UtcNow <= EndDate;
 
     /// <summary>
     ///     Check if campaign has expired
     /// </summary>
     public bool IsExpired() =>
-        Status == AccessReviewStatus.InProgress && DateTime.UtcNow > EndDate;
+        Status == AccessReviewStatus.InProgress && SystemClock.UtcNow > EndDate;
 
     /// <summary>
     ///     Calculate completion percentage
@@ -86,7 +86,7 @@ public class AccessReviewCampaign
             throw new InvalidOperationException("Only draft campaigns can be started");
 
         Status = AccessReviewStatus.InProgress;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     /// <summary>
@@ -99,8 +99,8 @@ public class AccessReviewCampaign
 
         Status = AccessReviewStatus.Completed;
         CompletedBy = completedByUserId;
-        CompletedAt = DateTime.UtcNow;
-        UpdatedAt = DateTime.UtcNow;
+        CompletedAt = SystemClock.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     /// <summary>
@@ -112,7 +112,7 @@ public class AccessReviewCampaign
             throw new InvalidOperationException("Cannot cancel a completed campaign");
 
         Status = AccessReviewStatus.Expired; // Using Expired as cancelled state
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     /// <summary>
@@ -121,7 +121,7 @@ public class AccessReviewCampaign
     public void MarkExpired()
     {
         Status = AccessReviewStatus.Expired;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     /// <summary>
@@ -130,7 +130,7 @@ public class AccessReviewCampaign
     public void IncrementReviewed()
     {
         ReviewedItems++;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     /// <summary>
@@ -139,7 +139,7 @@ public class AccessReviewCampaign
     public void IncrementApproved()
     {
         ApprovedItems++;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     /// <summary>
@@ -148,7 +148,7 @@ public class AccessReviewCampaign
     public void IncrementRevoked()
     {
         RevokedItems++;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 }
 
@@ -185,7 +185,7 @@ public class AccessReviewItem
 
     public string? ReviewerNotes { get; set; }
 
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime CreatedAt { get; set; } = SystemClock.UtcNow;
 
     public DateTime? UpdatedAt { get; set; }
 
@@ -204,7 +204,7 @@ public class AccessReviewItem
         if (Status != AccessReviewItemStatus.Pending) return false;
         if (LastReminderSent == null) return true;
 
-        return (DateTime.UtcNow - LastReminderSent.Value).TotalDays >= reminderFrequencyDays;
+        return (SystemClock.UtcNow - LastReminderSent.Value).TotalDays >= reminderFrequencyDays;
     }
 
     /// <summary>
@@ -216,8 +216,8 @@ public class AccessReviewItem
         Decision = AccessReviewDecision.Approve;
         DecisionReason = reason;
         ReviewerNotes = notes;
-        ReviewedAt = DateTime.UtcNow;
-        UpdatedAt = DateTime.UtcNow;
+        ReviewedAt = SystemClock.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     /// <summary>
@@ -229,8 +229,8 @@ public class AccessReviewItem
         Decision = AccessReviewDecision.Revoke;
         DecisionReason = reason;
         ReviewerNotes = notes;
-        ReviewedAt = DateTime.UtcNow;
-        UpdatedAt = DateTime.UtcNow;
+        ReviewedAt = SystemClock.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     /// <summary>
@@ -238,8 +238,8 @@ public class AccessReviewItem
     /// </summary>
     public void RecordReminderSent()
     {
-        LastReminderSent = DateTime.UtcNow;
+        LastReminderSent = SystemClock.UtcNow;
         ReminderCount++;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 }

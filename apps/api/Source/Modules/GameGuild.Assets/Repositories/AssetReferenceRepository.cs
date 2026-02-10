@@ -83,6 +83,6 @@ public class AssetReferenceRepository : IAssetReferenceRepository
             .Where(x => x.Id == id)
             .ExecuteUpdateAsync(x => x
                 .SetProperty(p => p.AccessCount, p => p.AccessCount + 1)
-                .SetProperty(p => p.LastAccessedAt, DateTime.UtcNow), ct).ConfigureAwait(false);
+                .SetProperty(p => p.LastAccessedAt, SystemClock.UtcNow), ct).ConfigureAwait(false);
     }
 }

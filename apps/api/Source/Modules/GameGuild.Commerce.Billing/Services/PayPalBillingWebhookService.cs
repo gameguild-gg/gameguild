@@ -261,7 +261,7 @@ internal class PayPalWebhookPayload
         ExternalSubscriptionId = SubscriptionId ?? ResourceId ?? string.Empty,
         Status = Status ?? string.Empty,
         Amount = Amount,
-        StartDate = DateTime.UtcNow,
+        StartDate = SystemClock.UtcNow,
         EndDate = null,
         PayerId = CustomerId,
         BillingAgreementId = SubscriptionId
@@ -274,7 +274,7 @@ internal class PayPalWebhookPayload
         ExternalSubscriptionId = SubscriptionId ?? string.Empty,
         Amount = Amount,
         Currency = Currency ?? "USD",
-        PaidAt = DateTime.UtcNow,
+        PaidAt = SystemClock.UtcNow,
         FailureReason = null,
         TransactionId = PaymentId,
         PayerId = CustomerId

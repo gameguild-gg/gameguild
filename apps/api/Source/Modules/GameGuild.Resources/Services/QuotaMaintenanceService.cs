@@ -23,15 +23,15 @@ public class QuotaMaintenanceService(
     public async Task<ResourceUsageResponse> GetResourceUsageDetailsAsync(Guid tenantId, ResourceUsageType type, int historyDays = 30, CancellationToken cancellationToken = default)
     {
         var quota = await managementService.GetQuotaAsync(tenantId, type, cancellationToken).ConfigureAwait(false);
-        var fromDate = DateTime.UtcNow.AddDays(-historyDays);
+        var fromDate = SystemClock.UtcNow.AddDays(-historyDays);
         var history = await managementService.GetUsageHistoryAsync(tenantId, type, fromDate, null, cancellationToken).ConfigureAwait(false);
 
         var response = new ResourceUsageResponse
         {
             TenantId = tenantId,
             CurrentUsage = quota?.CurrentUsage ?? 0,
-            PeriodStart = quota?.LastReset ?? DateTime.UtcNow.AddMonths(-1),
-            PeriodEnd = DateTime.UtcNow,
+            PeriodStart = quota?.LastReset ?? SystemClock.UtcNow.AddMonths(-1),
+            PeriodEnd = SystemClock.UtcNow,
             RemainingQuota = Math.Max(0, (quota?.HardLimit ?? 0) - (quota?.CurrentUsage ?? 0)),
             History = history.Select(h => new ResourceUsageHistoryItem { Timestamp = h.PeriodStart, Amount = h.UsageAmount, PeakUsage = h.PeakUsage }).ToList()
         };
@@ -82,7 +82,7 @@ public class QuotaMaintenanceService(
                 HardLimit: quota.HardLimit,
                 Source: "ResetExpiredQuotasAsync",
                 ActorId: null,
-                Timestamp: DateTime.UtcNow), cancellationToken);
+                Timestamp: SystemClock.UtcNow), cancellationToken);
 
             resetCount++;
         }
@@ -123,9 +123,9 @@ public class QuotaMaintenanceService(
 
             activity?.SetTag("quota.exists", true);
 
-            var periodStart = quota.LastReset ?? DateTime.UtcNow.Date;
+            var periodStart = quota.LastReset ?? SystemClock.UtcNow.Date;
 
-            var usageRecords = await usageRepository.GetByDateRangeAsync(tenantId, type, periodStart, DateTime.UtcNow, cancellationToken).ConfigureAwait(false);
+            var usageRecords = await usageRepository.GetByDateRangeAsync(tenantId, type, periodStart, SystemClock.UtcNow, cancellationToken).ConfigureAwait(false);
 
             var previousUsage = quota.CurrentUsage;
             quota.CurrentUsage = usageRecords.Sum(u => u.UsageAmount);

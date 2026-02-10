@@ -75,7 +75,7 @@ public sealed class ComplianceEvidencePackage : EntityBase {
 
     public void MarkAsReviewed(string reviewedBy, string? notes = null) {
         ReviewedBy = reviewedBy;
-        ReviewedAt = DateTime.UtcNow;
+        ReviewedAt = SystemClock.UtcNow;
         Status = CompliancePackageStatus.Reviewed;
         if (!string.IsNullOrEmpty(notes))
             Notes = notes;
@@ -83,7 +83,7 @@ public sealed class ComplianceEvidencePackage : EntityBase {
 
     public void Approve(string approvedBy) {
         ApprovedBy = approvedBy;
-        ApprovedAt = DateTime.UtcNow;
+        ApprovedAt = SystemClock.UtcNow;
         Status = CompliancePackageStatus.Approved;
     }
 
@@ -95,7 +95,7 @@ public sealed class ComplianceEvidencePackage : EntityBase {
         DeliveryMethod = deliveryMethod;
         DeliveredTo = deliveredTo;
         DeliveryTrackingId = trackingId;
-        DeliveredAt = DateTime.UtcNow;
+        DeliveredAt = SystemClock.UtcNow;
         Status = CompliancePackageStatus.Delivered;
     }
 

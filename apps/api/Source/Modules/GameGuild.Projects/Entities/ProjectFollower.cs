@@ -25,7 +25,7 @@ public class ProjectFollower : EntityBase<Guid>
     public virtual User? User { get; set; }
 
     /// <summary> Date when the user started following </summary>
-    public DateTime FollowedAt { get; set; } = DateTime.UtcNow;
+    public DateTime FollowedAt { get; set; } = SystemClock.UtcNow;
 
     /// <summary> Notification preferences for this follow </summary>
     [MaxLength(1000)]

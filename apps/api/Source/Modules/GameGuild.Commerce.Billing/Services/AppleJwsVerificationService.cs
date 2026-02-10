@@ -140,7 +140,7 @@ public class AppleJwsVerificationService(
             var leafCert = certificates[0];
 
             // Verify certificate is not expired
-            var now = DateTime.UtcNow;
+            var now = SystemClock.UtcNow;
             if (now < leafCert.NotBefore || now > leafCert.NotAfter)
             {
                 logger.LogWarning("Leaf certificate is expired or not yet valid. NotBefore={NotBefore}, NotAfter={NotAfter}",

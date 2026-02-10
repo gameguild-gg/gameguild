@@ -149,9 +149,9 @@ public class SlaImpactAnalysis : EntityBase
     public void Resolve(Guid resolvedByUserId, string? mitigationActions = null)
     {
         IsResolved = true;
-        ResolvedAt = DateTime.UtcNow;
+        ResolvedAt = SystemClock.UtcNow;
         ResolvedByUserId = resolvedByUserId;
-        ViolationEndTime ??= DateTime.UtcNow;
+        ViolationEndTime ??= SystemClock.UtcNow;
 
         if (!string.IsNullOrEmpty(mitigationActions)) { MitigationActions = mitigationActions; }
 
@@ -168,7 +168,7 @@ public class SlaImpactAnalysis : EntityBase
     /// </summary>
     public bool ExceedsDuration(int thresholdMinutes)
     {
-        var endTime = ViolationEndTime ?? DateTime.UtcNow;
+        var endTime = ViolationEndTime ?? SystemClock.UtcNow;
         var duration = (endTime - ViolationStartTime).TotalMinutes;
 
         return duration > thresholdMinutes;

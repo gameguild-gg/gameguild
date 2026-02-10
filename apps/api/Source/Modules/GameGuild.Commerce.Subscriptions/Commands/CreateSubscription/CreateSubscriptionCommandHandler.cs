@@ -12,7 +12,7 @@ public sealed class CreateSubscriptionCommandHandler(
 {
     public async Task<Guid> Handle(CreateSubscriptionCommand request, CancellationToken cancellationToken)
     {
-        var startDate = request.StartDate ?? DateTime.UtcNow;
+        var startDate = request.StartDate ?? SystemClock.UtcNow;
         var trialEndDate = request.TrialDays.HasValue ? startDate.AddDays(request.TrialDays.Value) : (DateTime?) null;
 
         var subscription = new Subscription(

@@ -1,4 +1,4 @@
-﻿using GameGuild.CQRS;
+using GameGuild.CQRS;
 
 namespace GameGuild.Commerce.Payments;
 
@@ -19,6 +19,6 @@ public sealed class CreateLedgerEntryCommandHandler(IRevenueAuditService revenue
             request.RevenueEventId,
             request.ReferenceNumber,
             cancellationToken
-        );
+        ).ConfigureAwait(false);
     }
 }

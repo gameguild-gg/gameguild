@@ -134,7 +134,7 @@ public class CustomerTaxExemption : EntityBase
     /// <summary>
     ///     Checks if this exemption is valid now.
     /// </summary>
-    public bool IsCurrentlyValid() => IsValidOn(DateTime.UtcNow);
+    public bool IsCurrentlyValid() => IsValidOn(SystemClock.UtcNow);
 
     /// <summary>
     ///     Marks the exemption as verified.
@@ -144,9 +144,9 @@ public class CustomerTaxExemption : EntityBase
         ArgumentException.ThrowIfNullOrWhiteSpace(verifiedBy);
         
         VerificationStatus = ExemptionVerificationStatus.Verified;
-        LastVerifiedAt = DateTime.UtcNow;
+        LastVerifiedAt = SystemClock.UtcNow;
         VerifiedBy = verifiedBy;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     /// <summary>
@@ -158,11 +158,11 @@ public class CustomerTaxExemption : EntityBase
         
         VerificationStatus = ExemptionVerificationStatus.Rejected;
         Status = TaxExemptionStatus.Inactive;
-        LastVerifiedAt = DateTime.UtcNow;
+        LastVerifiedAt = SystemClock.UtcNow;
         VerifiedBy = rejectedBy;
         if (!string.IsNullOrEmpty(reason))
             Notes = $"{Notes}\nRejection reason: {reason}".Trim();
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     /// <summary>
@@ -178,7 +178,7 @@ public class CustomerTaxExemption : EntityBase
 
         Status = TaxExemptionStatus.Revoked;
         Notes = $"{Notes}\nRevoked by {revokedBy}: {reason}".Trim();
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     /// <summary>
@@ -187,7 +187,7 @@ public class CustomerTaxExemption : EntityBase
     public void SetCertificateDocument(string documentPath)
     {
         CertificateDocumentPath = documentPath;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     /// <summary>
@@ -202,7 +202,7 @@ public class CustomerTaxExemption : EntityBase
             throw new ArgumentException("New validity date must be after valid from date", nameof(newValidUntil));
 
         ValidUntil = newValidUntil;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 }
 

@@ -2,6 +2,7 @@
 
 
 using Microsoft.Extensions.Caching.Distributed;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -15,6 +16,24 @@ public static class FeaturesModule
     /// <summary> Registers all Features module services </summary>
     public static IServiceCollection AddFeaturesModule(this IServiceCollection services)
     {
+        // Register encryption service with factory to resolve encryption key from configuration
+        services.AddScoped<IFeatureFlagEncryptionService>(sp =>
+        {
+            var configuration = sp.GetRequiredService<IConfiguration>();
+            var encryptionKey = configuration["Encryption:EncryptionKey"]
+                ?? configuration["FeatureFlags:EncryptionKey"];
+
+            // Validate: if key is missing or a placeholder, use a dev-only default
+            if (string.IsNullOrWhiteSpace(encryptionKey)
+                || encryptionKey.StartsWith("CHANGE_THIS", StringComparison.OrdinalIgnoreCase))
+            {
+                // Dev-only 256-bit key (32 zero bytes in base64). NOT for production.
+                encryptionKey = Convert.ToBase64String(new byte[32]);
+            }
+
+            return new FeatureFlagEncryptionService(encryptionKey);
+        });
+
         // Register repositories (ISP-compliant)
         services.AddScoped<IFeatureFlagQueryRepository, FeatureFlagQueryRepository>();
         services.AddScoped<IFeatureFlagTargetingRepository, FeatureFlagTargetingRepository>();
@@ -73,14 +92,8 @@ public static class FeaturesModule
         // Register OpenFeature provider (singleton to maintain consistent state)
         services.AddSingleton<DatabaseFeatureFlagProvider>();
         
-        // Register OpenFeature API
-        services.AddSingleton(sp =>
-        {
-            var api = OpenFeature.Api.Instance;
-            var provider = sp.GetRequiredService<DatabaseFeatureFlagProvider>();
-            api.SetProviderAsync(provider).Wait();
-            return api;
-        });
+        // Register OpenFeature API (provider initialization is handled by OpenFeatureHostedInitializer)
+        services.AddSingleton(_ => OpenFeature.Api.Instance);
         
         // Register OpenFeature hosted service for initialization
         services.AddHostedService<OpenFeatureHostedInitializer>();

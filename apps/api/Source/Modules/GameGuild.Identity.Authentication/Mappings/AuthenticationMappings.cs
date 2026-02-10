@@ -27,7 +27,7 @@ public static class AuthenticationMappings
             AccessToken = domainResponse.AccessToken,
             RefreshToken = domainResponse.RefreshToken,
             ExpiresAt = domainResponse.ExpiresAt,
-            AccessTokenExpiresAt = DateTime.UtcNow.AddSeconds(domainResponse.ExpiresIn),
+            AccessTokenExpiresAt = SystemClock.UtcNow.AddSeconds(domainResponse.ExpiresIn),
             RefreshTokenExpiresAt = domainResponse.ExpiresAt,
             User = new Authentication_UserDto
             {
@@ -39,7 +39,7 @@ public static class AuthenticationMappings
                 PhoneNumber = null,
                 EmailVerified = user?.IsEmailVerified ?? false,
                 PhoneNumberVerified = false,
-                CreatedAt = user?.CreatedAt ?? DateTime.UtcNow,
+                CreatedAt = user?.CreatedAt ?? SystemClock.UtcNow,
                 LastLoginAt = user?.LastLoginAt
             },
             TenantId = domainResponse.TenantId,
@@ -53,6 +53,6 @@ public static class AuthenticationMappings
     /// </summary>
     public static Authentication_RefreshTokenResponse ToDto(this RefreshTokenResponse domainResponse)
     {
-        return new Authentication_RefreshTokenResponse { AccessToken = domainResponse.AccessToken, RefreshToken = domainResponse.RefreshToken, ExpiresAt = DateTime.UtcNow.AddSeconds(domainResponse.ExpiresIn) };
+        return new Authentication_RefreshTokenResponse { AccessToken = domainResponse.AccessToken, RefreshToken = domainResponse.RefreshToken, ExpiresAt = SystemClock.UtcNow.AddSeconds(domainResponse.ExpiresIn) };
     }
 }

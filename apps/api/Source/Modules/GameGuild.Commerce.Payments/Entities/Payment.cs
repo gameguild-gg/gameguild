@@ -204,7 +204,7 @@ public class Payment : EntityBase
         TransitionTo(PaymentStatus.Succeeded);
         ExternalPaymentId = externalPaymentId;
         ExternalTransactionId = externalTransactionId ?? ExternalTransactionId;
-        ProcessedAt = DateTime.UtcNow;
+        ProcessedAt = SystemClock.UtcNow;
     }
 
     /// <summary>Marks the payment as failed</summary>
@@ -213,14 +213,14 @@ public class Payment : EntityBase
         TransitionTo(PaymentStatus.Failed);
         FailureReason = failureReason;
         ErrorCode = errorCode;
-        ProcessedAt = DateTime.UtcNow;
+        ProcessedAt = SystemClock.UtcNow;
 
         // Calculate next retry if retries remaining
         if (RetryCount < MaxRetries)
         {
             // Exponential backoff: 1 min, 5 min, 30 min, etc.
             var delayMinutes = Math.Pow(5, RetryCount) * 1;
-            NextRetryAt = DateTime.UtcNow.AddMinutes(delayMinutes);
+            NextRetryAt = SystemClock.UtcNow.AddMinutes(delayMinutes);
         }
     }
 
@@ -237,7 +237,7 @@ public class Payment : EntityBase
         TransitionTo(PaymentStatus.Cancelled);
         CancellationReason = reason;
         CancelledByUserId = cancelledByUserId;
-        CancelledAt = DateTime.UtcNow;
+        CancelledAt = SystemClock.UtcNow;
     }
 
     /// <summary>Increments retry count and resets for retry</summary>
@@ -272,7 +272,7 @@ public class Payment : EntityBase
         RefundedAmount += refundAmount;
         RefundId = refundId;
         RefundReason = reason;
-        RefundedAt = DateTime.UtcNow;
+        RefundedAt = SystemClock.UtcNow;
 
         // If fully refunded, transition to Refunded status
         if (RefundedAmount >= Amount)

@@ -232,7 +232,7 @@ public class SlaIncidentEscalationService(
                     violation.ExpectedValue,
                     violation.ActualValue,
                     violation.DeviationPercentage,
-                    Timestamp = DateTime.UtcNow
+                    Timestamp = SystemClock.UtcNow
                 },
                 cancellationToken);
         }

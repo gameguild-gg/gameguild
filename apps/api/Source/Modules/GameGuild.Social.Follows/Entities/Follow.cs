@@ -34,26 +34,26 @@ public class Follow : EntityBase
             FollowedEntityId = followedEntityId,
             FollowedEntityType = followedEntityType,
             NotificationsEnabled = notificationsEnabled,
-            FollowedAt = DateTime.UtcNow
+            FollowedAt = SystemClock.UtcNow
         };
     }
 
     public void EnableNotifications()
     {
         NotificationsEnabled = true;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     public void DisableNotifications()
     {
         NotificationsEnabled = false;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     public void UpdateNotificationSettings(bool enabled)
     {
         NotificationsEnabled = enabled;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 }
 
@@ -85,7 +85,7 @@ public class Block : EntityBase
             BlockerId = blockerId,
             BlockedId = blockedId,
             Reason = reason,
-            BlockedAt = DateTime.UtcNow
+            BlockedAt = SystemClock.UtcNow
         };
     }
 }
@@ -121,19 +121,19 @@ public class Mute : EntityBase
             MuterId = muterId,
             MutedId = mutedId,
             Reason = reason,
-            MutedAt = DateTime.UtcNow,
+            MutedAt = SystemClock.UtcNow,
             ExpiresAt = expiresAt
         };
     }
 
     /// <summary>Check if this mute has expired</summary>
-    public bool IsExpired() => ExpiresAt.HasValue && ExpiresAt.Value <= DateTime.UtcNow;
+    public bool IsExpired() => ExpiresAt.HasValue && ExpiresAt.Value <= SystemClock.UtcNow;
 
     /// <summary>Extend the mute expiration</summary>
     public void ExtendExpiration(DateTime? newExpiresAt)
     {
         ExpiresAt = newExpiresAt;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 }
 
@@ -194,7 +194,7 @@ public class FollowPrivacySettings : EntityBase
         NotifyOnNewFollower = notifyOnNewFollower;
         ShowFollowerCount = showFollowerCount;
         ShowFollowingCount = showFollowingCount;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 }
 

@@ -90,7 +90,7 @@ public sealed class ServiceAccountService : IServiceAccountService
             _logger.LogWarning(
                 "Authentication failed: service account {ServiceAccountId} cannot authenticate (IsActive={IsActive}, IsLocked={IsLocked}, Expired={Expired})",
                 serviceAccount.Id, serviceAccount.IsActive, serviceAccount.IsLocked,
-                serviceAccount.ExpiresAt.HasValue && serviceAccount.ExpiresAt <= DateTime.UtcNow);
+                serviceAccount.ExpiresAt.HasValue && serviceAccount.ExpiresAt <= SystemClock.UtcNow);
             return null;
         }
 
@@ -194,7 +194,7 @@ public sealed class ServiceAccountService : IServiceAccountService
                              ?? throw new InvalidOperationException($"Service account {serviceAccountId} not found");
 
         serviceAccount.IsActive = false;
-        serviceAccount.UpdatedAt = DateTime.UtcNow;
+        serviceAccount.UpdatedAt = SystemClock.UtcNow;
         await _repository.UpdateAsync(serviceAccount, cancellationToken).ConfigureAwait(false);
 
         _logger.LogInformation("Deactivated service account {ServiceAccountId}", serviceAccountId);
@@ -207,7 +207,7 @@ public sealed class ServiceAccountService : IServiceAccountService
                              ?? throw new InvalidOperationException($"Service account {serviceAccountId} not found");
 
         serviceAccount.IsActive = true;
-        serviceAccount.UpdatedAt = DateTime.UtcNow;
+        serviceAccount.UpdatedAt = SystemClock.UtcNow;
         await _repository.UpdateAsync(serviceAccount, cancellationToken).ConfigureAwait(false);
 
         _logger.LogInformation("Reactivated service account {ServiceAccountId}", serviceAccountId);
@@ -220,7 +220,7 @@ public sealed class ServiceAccountService : IServiceAccountService
                              ?? throw new InvalidOperationException($"Service account {serviceAccountId} not found");
 
         serviceAccount.Scopes = scopes;
-        serviceAccount.UpdatedAt = DateTime.UtcNow;
+        serviceAccount.UpdatedAt = SystemClock.UtcNow;
         await _repository.UpdateAsync(serviceAccount, cancellationToken).ConfigureAwait(false);
 
         _logger.LogInformation(

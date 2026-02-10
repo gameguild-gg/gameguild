@@ -31,7 +31,7 @@ public class PromoCodeRepository(IApplicationDbContext context)
     /// <inheritdoc />
     public async Task<IEnumerable<PromoCode>> GetActiveCodesAsync(CancellationToken cancellationToken = default)
     {
-        var now = DateTime.UtcNow;
+        var now = SystemClock.UtcNow;
         return await Entities
             .Where(p => p.IsActive)
             .Where(p => p.ValidFrom == null || p.ValidFrom <= now)

@@ -142,7 +142,7 @@ public class TenantMember : EntityBase, ITenantable
     /// <summary>
     ///     When the user joined the tenant
     /// </summary>
-    public DateTime JoinedAt { get; set; } = DateTime.UtcNow;
+    public DateTime JoinedAt { get; set; } = SystemClock.UtcNow;
 
     /// <summary>
     ///     When the user left the tenant (null if still a member)
@@ -183,7 +183,7 @@ public class TenantMember : EntityBase, ITenantable
     public void Deactivate(string? reason = null)
     {
         IsActive = false;
-        LeftAt = DateTime.UtcNow;
+        LeftAt = SystemClock.UtcNow;
         LeaveReason = reason;
         Touch();
     }

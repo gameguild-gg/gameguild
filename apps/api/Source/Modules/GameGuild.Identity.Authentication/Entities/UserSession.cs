@@ -95,7 +95,7 @@ public class UserSession
 
     public DateTime UpdatedAt { get; set; }
 
-    public bool IsExpired { get => DateTime.UtcNow >= ExpiresAt; }
+    public bool IsExpired { get => SystemClock.UtcNow >= ExpiresAt; }
 
     public bool IsValid { get => IsActive && !IsExpired; }
 }

@@ -113,7 +113,7 @@ public class UserProductRepository(IApplicationDbContext context)
             .Where(up => up.AccessStatus == ProductAccessStatus.Active &&
                          up.AccessEndDate != null &&
                          up.AccessEndDate <= thresholdDate &&
-                         up.AccessEndDate > DateTime.UtcNow)
+                         up.AccessEndDate > SystemClock.UtcNow)
             .OrderBy(up => up.AccessEndDate)
             .ToListAsync(cancellationToken)
             ;
@@ -128,7 +128,7 @@ public class UserProductRepository(IApplicationDbContext context)
             .Where(up => up.AccessStatus == ProductAccessStatus.Active &&
                          up.AcquisitionType == ProductAcquisitionType.Subscription &&
                          up.AccessEndDate != null &&
-                         up.AccessEndDate <= DateTime.UtcNow)
+                         up.AccessEndDate <= SystemClock.UtcNow)
             .ToListAsync(cancellationToken)
             ;
     }

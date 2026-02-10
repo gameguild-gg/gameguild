@@ -32,8 +32,8 @@ public sealed class SubscriptionBillingController(ISender sender) : BaseApiContr
     public async Task<IActionResult> GetSubscriptionMetrics(CancellationToken ct)
     {
         // Get metrics via repository queries
-        var statusCounts = await sender.Send(new GetSubscriptionStatusCountsQuery(), ct);
-        var now = DateTime.UtcNow;
+        var statusCounts = await sender.Send(new GetSubscriptionStatusCountsQuery(), ct).ConfigureAwait(false);
+        var now = SystemClock.UtcNow;
         var startOfMonth = new DateTime(now.Year, now.Month, 1, 0, 0, 0, DateTimeKind.Utc);
 
         // Calculate metrics from status counts
@@ -51,7 +51,7 @@ public sealed class SubscriptionBillingController(ISender sender) : BaseApiContr
             PastDueSubscriptions = pastDueSubscriptions,
             CancelledSubscriptions = cancelledSubscriptions,
             StatusBreakdown = statusCounts,
-            ReportGeneratedAt = DateTime.UtcNow
+            ReportGeneratedAt = SystemClock.UtcNow
         });
     }
 
@@ -78,7 +78,7 @@ public sealed class SubscriptionBillingController(ISender sender) : BaseApiContr
         if (pageSize < 1) pageSize = 20;
         if (pageSize > 100) pageSize = 100;
 
-        var invoices = await sender.Send(new GetSubscriptionInvoicesQuery(subscriptionId, page, pageSize), ct);
+        var invoices = await sender.Send(new GetSubscriptionInvoicesQuery(subscriptionId, page, pageSize), ct).ConfigureAwait(false);
         return Ok(invoices);
     }
 
@@ -95,7 +95,7 @@ public sealed class SubscriptionBillingController(ISender sender) : BaseApiContr
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetSubscriptionUsage(Guid subscriptionId, CancellationToken ct)
     {
-        var usage = await sender.Send(new GetSubscriptionUsageQuery(subscriptionId), ct);
+        var usage = await sender.Send(new GetSubscriptionUsageQuery(subscriptionId), ct).ConfigureAwait(false);
         return Ok(usage);
     }
 
@@ -111,7 +111,7 @@ public sealed class SubscriptionBillingController(ISender sender) : BaseApiContr
     [ProducesResponseType<IEnumerable<BillingHistoryDto>>(StatusCodes.Status200OK)]
     public async Task<IActionResult> GetSubscriptionBillingHistory(Guid subscriptionId, CancellationToken ct)
     {
-        var history = await sender.Send(new GetSubscriptionBillingHistoryQuery(subscriptionId), ct);
+        var history = await sender.Send(new GetSubscriptionBillingHistoryQuery(subscriptionId), ct).ConfigureAwait(false);
         return Ok(history);
     }
 }

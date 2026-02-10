@@ -296,7 +296,7 @@ public class Subscription : StatefulEntity<SubscriptionStatus>, ISubscription
     {
         if (!IsTrialing || !TrialEndDate.HasValue) return null;
 
-        var remaining = (TrialEndDate.Value - DateTime.UtcNow).Days;
+        var remaining = (TrialEndDate.Value - SystemClock.UtcNow).Days;
 
         return Math.Max(0, remaining);
     }
@@ -308,7 +308,7 @@ public class Subscription : StatefulEntity<SubscriptionStatus>, ISubscription
     {
         if (!IsActive) return -1;
 
-        return Math.Max(0, (NextBillingDate - DateTime.UtcNow).Days);
+        return Math.Max(0, (NextBillingDate - SystemClock.UtcNow).Days);
     }
 
     /// <summary>
@@ -364,8 +364,8 @@ public class Subscription : StatefulEntity<SubscriptionStatus>, ISubscription
         TransitionTo(SubscriptionStatus.Cancelled);
         CancellationReason = reason;
         CancellationNote = note;
-        CancelledAt = DateTime.UtcNow;
-        EndDate = effectiveDate ?? DateTime.UtcNow;
+        CancelledAt = SystemClock.UtcNow;
+        EndDate = effectiveDate ?? SystemClock.UtcNow;
         AutoRenew = false;
 
         Raise(new SubscriptionCancelledEvent(Id, TenantId!.Value, reason, oldStatus));
@@ -411,7 +411,7 @@ public class Subscription : StatefulEntity<SubscriptionStatus>, ISubscription
         var oldAmount = Amount;
 
         // Calculate proration for the remaining period
-        var proration = CalculateProration(oldAmount, newAmount, effectiveDate ?? DateTime.UtcNow);
+        var proration = CalculateProration(oldAmount, newAmount, effectiveDate ?? SystemClock.UtcNow);
 
         PlanId = newPlanId;
         Amount = newAmount;

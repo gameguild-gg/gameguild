@@ -56,7 +56,7 @@ public class AssetsCdnController : BaseApiController
         CancellationToken ct = default)
     {
         // Validate token
-        var validation = await _accessService.ValidateAccessTokenAsync(referenceId, token, ct);
+        var validation = await _accessService.ValidateAccessTokenAsync(referenceId, token, ct).ConfigureAwait(false);
         if (!validation.IsValid)
         {
             return StatusCode(StatusCodes.Status403Forbidden, new ProblemDetails
@@ -67,21 +67,21 @@ public class AssetsCdnController : BaseApiController
         }
 
         // Get asset reference
-        var reference = await _referenceRepository.GetByIdAsync(referenceId, ct);
+        var reference = await _referenceRepository.GetByIdAsync(referenceId, ct).ConfigureAwait(false);
         if (reference == null)
         {
             return NotFound();
         }
 
         // Get content
-        var content = await _contentRepository.GetByIdAsync(reference.AssetContentId, ct);
+        var content = await _contentRepository.GetByIdAsync(reference.AssetContentId, ct).ConfigureAwait(false);
         if (content == null)
         {
             return NotFound();
         }
 
         // Stream content
-        var stream = await _storageService.DownloadAsync(content.BucketName, content.ObjectKey, ct);
+        var stream = await _storageService.DownloadAsync(content.BucketName, content.ObjectKey, ct).ConfigureAwait(false);
 
         // Set cache headers for CDN
         Response.Headers.CacheControl = "public, max-age=86400"; // 24 hours
@@ -109,7 +109,7 @@ public class AssetsCdnController : BaseApiController
         CancellationToken ct = default)
     {
         // Decode ephemeral token (contains asset ID and expiration)
-        var ephemeralInfo = await _accessService.ValidateEphemeralTokenAsync(token, ct);
+        var ephemeralInfo = await _accessService.ValidateEphemeralTokenAsync(token, ct).ConfigureAwait(false);
         if (!ephemeralInfo.IsValid)
         {
             if (ephemeralInfo.IsExpired)
@@ -129,21 +129,21 @@ public class AssetsCdnController : BaseApiController
         }
 
         // Get asset reference
-        var reference = await _referenceRepository.GetByIdAsync(ephemeralInfo.AssetReferenceId, ct);
+        var reference = await _referenceRepository.GetByIdAsync(ephemeralInfo.AssetReferenceId, ct).ConfigureAwait(false);
         if (reference == null)
         {
             return NotFound();
         }
 
         // Get content
-        var content = await _contentRepository.GetByIdAsync(reference.AssetContentId, ct);
+        var content = await _contentRepository.GetByIdAsync(reference.AssetContentId, ct).ConfigureAwait(false);
         if (content == null)
         {
             return NotFound();
         }
 
         // Stream content
-        var stream = await _storageService.DownloadAsync(content.BucketName, content.ObjectKey, ct);
+        var stream = await _storageService.DownloadAsync(content.BucketName, content.ObjectKey, ct).ConfigureAwait(false);
 
         // Set cache headers (shorter for ephemeral)
         Response.Headers.CacheControl = "private, max-age=300"; // 5 minutes
@@ -171,7 +171,7 @@ public class AssetsCdnController : BaseApiController
         CancellationToken ct = default)
     {
         // Validate token
-        var validation = await _accessService.ValidateAccessTokenAsync(referenceId, token, ct);
+        var validation = await _accessService.ValidateAccessTokenAsync(referenceId, token, ct).ConfigureAwait(false);
         if (!validation.IsValid)
         {
             return StatusCode(StatusCodes.Status403Forbidden, new ProblemDetails
@@ -193,7 +193,7 @@ public class AssetsCdnController : BaseApiController
         }
 
         // Get asset reference
-        var reference = await _referenceRepository.GetByIdAsync(referenceId, ct);
+        var reference = await _referenceRepository.GetByIdAsync(referenceId, ct).ConfigureAwait(false);
         if (reference == null)
         {
             return NotFound();
@@ -203,7 +203,7 @@ public class AssetsCdnController : BaseApiController
         var transformedAsset = await _accessService.GetOrCreateTransformationAsync(
             reference.AssetContentId,
             spec,
-            ct);
+            ct).ConfigureAwait(false);
 
         if (transformedAsset == null)
         {
@@ -218,7 +218,7 @@ public class AssetsCdnController : BaseApiController
         var stream = await _storageService.DownloadAsync(
             transformedAsset.BucketName,
             transformedAsset.ObjectKey,
-            ct);
+            ct).ConfigureAwait(false);
 
         // Set aggressive cache headers for transformed assets
         Response.Headers.CacheControl = "public, max-age=604800, immutable"; // 7 days, immutable

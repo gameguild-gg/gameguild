@@ -85,7 +85,7 @@ public class AccessControlListEntry : EntityBase
     ///     Gets or sets when this access was granted.
     /// </summary>
     [Required]
-    public DateTime GrantedAt { get; set; } = DateTime.UtcNow;
+    public DateTime GrantedAt { get; set; } = SystemClock.UtcNow;
 
     /// <summary>
     ///     Gets or sets optional expiration date for the access.
@@ -106,7 +106,7 @@ public class AccessControlListEntry : EntityBase
     /// <summary>
     ///     Returns true if this entry has not expired and is active.
     /// </summary>
-    public bool IsEffective => IsActive && (ExpiresAt == null || ExpiresAt > DateTime.UtcNow);
+    public bool IsEffective => IsActive && (ExpiresAt == null || ExpiresAt > SystemClock.UtcNow);
 
     /// <summary>
     ///     Creates a user-based ACL entry.
@@ -130,7 +130,7 @@ public class AccessControlListEntry : EntityBase
             AccessLevel = accessLevel,
             IsDenied = isDenied,
             GrantedBy = grantedBy,
-            GrantedAt = DateTime.UtcNow,
+            GrantedAt = SystemClock.UtcNow,
             IsActive = true
         };
     }
@@ -157,7 +157,7 @@ public class AccessControlListEntry : EntityBase
             AccessLevel = accessLevel,
             IsDenied = isDenied,
             GrantedBy = grantedBy,
-            GrantedAt = DateTime.UtcNow,
+            GrantedAt = SystemClock.UtcNow,
             IsActive = true
         };
     }
@@ -184,7 +184,7 @@ public class AccessControlListEntry : EntityBase
             AccessLevel = accessLevel,
             IsDenied = isDenied,
             GrantedBy = grantedBy,
-            GrantedAt = DateTime.UtcNow,
+            GrantedAt = SystemClock.UtcNow,
             IsActive = true
         };
     }
@@ -210,7 +210,7 @@ public class AccessControlListEntry : EntityBase
             AccessLevel = accessLevel,
             IsDenied = isDenied,
             GrantedBy = grantedBy,
-            GrantedAt = DateTime.UtcNow,
+            GrantedAt = SystemClock.UtcNow,
             IsActive = true
         };
     }

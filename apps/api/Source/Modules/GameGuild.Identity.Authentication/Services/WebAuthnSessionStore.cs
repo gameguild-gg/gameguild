@@ -42,7 +42,7 @@ internal static class WebAuthnSessionStore
     private static void CleanupExpiredSessions()
     {
         var expiredKeys = PendingSessions
-            .Where(p => p.Value.CreatedAt.AddMinutes(5) < DateTime.UtcNow)
+            .Where(p => p.Value.CreatedAt.AddMinutes(5) < SystemClock.UtcNow)
             .Select(p => p.Key)
             .ToList();
 
@@ -54,7 +54,7 @@ internal static class WebAuthnSessionStore
     {
         public Guid? UserId { get; init; }
         public byte[] Challenge { get; init; } = [];
-        public DateTime CreatedAt { get; init; } = DateTime.UtcNow;
+        public DateTime CreatedAt { get; init; } = SystemClock.UtcNow;
         public CredentialCreateOptions? RegistrationOptions { get; init; }
         public AssertionOptions? AssertionOptions { get; init; }
     }

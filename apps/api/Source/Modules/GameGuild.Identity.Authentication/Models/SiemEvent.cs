@@ -13,7 +13,7 @@ public class SiemEvent
     /// <summary>
     ///     Timestamp when the event occurred.
     /// </summary>
-    public DateTime Timestamp { get; set; } = DateTime.UtcNow;
+    public DateTime Timestamp { get; set; } = SystemClock.UtcNow;
 
     /// <summary>
     ///     Type of security event.

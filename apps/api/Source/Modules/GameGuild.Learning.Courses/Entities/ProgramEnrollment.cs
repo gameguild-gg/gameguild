@@ -48,7 +48,7 @@ public class ProgramEnrollment : EntityBase
     /// <summary>
     /// Date when user enrolled in the program
     /// </summary>
-    public DateTime EnrolledAt { get; set; } = DateTime.UtcNow;
+    public DateTime EnrolledAt { get; set; } = SystemClock.UtcNow;
 
     /// <summary>
     /// Date when enrollment started (may differ from EnrolledAt)
@@ -99,7 +99,7 @@ public class ProgramEnrollment : EntityBase
     public void MarkAsCompleted(decimal? finalGrade = null)
     {
         CompletionStatus = CompletionStatus.Completed;
-        CompletedAt = DateTime.UtcNow;
+        CompletedAt = SystemClock.UtcNow;
         ProgressPercentage = 100m;
         if (finalGrade.HasValue)
         {

@@ -29,7 +29,6 @@ public class PromoCodesController(IMediator mediator) : BaseApiController
     /// <param name="take">Items to take</param>
     /// <param name="cancellationToken">Cancellation token</param>
     [HttpGet]
-    [AllowAnonymous]
     public async Task<ActionResult<PagedResult<PromoCodeDto>>> GetPromoCodes(
         [FromQuery] string? status = null,
         [FromQuery] bool? isActive = null,
@@ -90,7 +89,6 @@ public class PromoCodesController(IMediator mediator) : BaseApiController
     /// <param name="code">The promo code string</param>
     /// <param name="cancellationToken">Cancellation token</param>
     [HttpGet("by-code/{code}")]
-    [AllowAnonymous]
     public async Task<ActionResult<PromoCodeDto>> GetPromoCodeByCode(
         string code,
         CancellationToken cancellationToken = default)
@@ -278,7 +276,6 @@ public class PromoCodesController(IMediator mediator) : BaseApiController
     /// Validate a promo code
     /// </summary>
     [HttpPost(":validate")]
-    [AllowAnonymous]
     public async Task<ActionResult<PromoCodeValidationResult>> ValidatePromoCode(
         [FromBody] ValidatePromoCodeRequest request,
         CancellationToken cancellationToken = default)
@@ -298,7 +295,6 @@ public class PromoCodesController(IMediator mediator) : BaseApiController
     /// Apply promo codes to an order
     /// </summary>
     [HttpPost(":apply")]
-    [AllowAnonymous]
     public async Task<ActionResult<PromoCodeApplicationResult>> ApplyPromoCodes(
         [FromBody] ApplyPromoCodesRequest request,
         CancellationToken cancellationToken = default)

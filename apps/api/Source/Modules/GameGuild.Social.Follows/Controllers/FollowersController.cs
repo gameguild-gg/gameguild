@@ -33,7 +33,7 @@ public class FollowersController : BaseApiController
     public async Task<ActionResult<FollowDto>> Follow([FromBody] FollowRequest request, CancellationToken ct)
     {
         var userId = GetCurrentUserId();
-        var result = await _followerService.FollowAsync(userId, request.EntityId, request.EntityType, request.NotificationsEnabled, ct);
+        var result = await _followerService.FollowAsync(userId, request.EntityId, request.EntityType, request.NotificationsEnabled, ct).ConfigureAwait(false);
 
         if (!result.IsSuccess)
         {
@@ -48,7 +48,7 @@ public class FollowersController : BaseApiController
     public async Task<ActionResult> Unfollow([FromQuery] Guid entityId, [FromQuery] string entityType, CancellationToken ct)
     {
         var userId = GetCurrentUserId();
-        var result = await _followerService.UnfollowAsync(userId, entityId, entityType, ct);
+        var result = await _followerService.UnfollowAsync(userId, entityId, entityType, ct).ConfigureAwait(false);
 
         if (!result.IsSuccess)
         {
@@ -63,7 +63,7 @@ public class FollowersController : BaseApiController
     public async Task<ActionResult<bool>> IsFollowing([FromQuery] Guid entityId, [FromQuery] string entityType, CancellationToken ct)
     {
         var userId = GetCurrentUserId();
-        var result = await _followerService.IsFollowingAsync(userId, entityId, entityType, ct);
+        var result = await _followerService.IsFollowingAsync(userId, entityId, entityType, ct).ConfigureAwait(false);
         return Ok(result.Value);
     }
 
@@ -72,7 +72,7 @@ public class FollowersController : BaseApiController
     public async Task<ActionResult<FollowDto>> UpdateNotifications([FromBody] UpdateNotificationsRequest request, CancellationToken ct)
     {
         var userId = GetCurrentUserId();
-        var result = await _followerService.UpdateNotificationSettingsAsync(userId, request.EntityId, request.EntityType, request.NotificationsEnabled, ct);
+        var result = await _followerService.UpdateNotificationSettingsAsync(userId, request.EntityId, request.EntityType, request.NotificationsEnabled, ct).ConfigureAwait(false);
 
         if (!result.IsSuccess)
         {
@@ -96,7 +96,7 @@ public class FollowersController : BaseApiController
         [FromQuery] int take = 50,
         CancellationToken ct = default)
     {
-        var result = await _followerService.GetFollowersAsync(entityId, entityType, skip, take, ct);
+        var result = await _followerService.GetFollowersAsync(entityId, entityType, skip, take, ct).ConfigureAwait(false);
         return Ok(result.Value.Select(MapToDto));
     }
 
@@ -109,7 +109,7 @@ public class FollowersController : BaseApiController
         CancellationToken ct = default)
     {
         var userId = GetCurrentUserId();
-        var result = await _followerService.GetFollowingAsync(userId, entityType, skip, take, ct);
+        var result = await _followerService.GetFollowingAsync(userId, entityType, skip, take, ct).ConfigureAwait(false);
         return Ok(result.Value.Select(MapToDto));
     }
 
@@ -118,7 +118,7 @@ public class FollowersController : BaseApiController
     [AllowAnonymous]
     public async Task<ActionResult<int>> GetFollowerCount(Guid entityId, [FromQuery] string entityType, CancellationToken ct)
     {
-        var result = await _followerService.GetFollowerCountAsync(entityId, entityType, ct);
+        var result = await _followerService.GetFollowerCountAsync(entityId, entityType, ct).ConfigureAwait(false);
         return Ok(result.Value);
     }
 
@@ -127,7 +127,7 @@ public class FollowersController : BaseApiController
     public async Task<ActionResult<int>> GetFollowingCount([FromQuery] string? entityType = null, CancellationToken ct = default)
     {
         var userId = GetCurrentUserId();
-        var result = await _followerService.GetFollowingCountAsync(userId, entityType, ct);
+        var result = await _followerService.GetFollowingCountAsync(userId, entityType, ct).ConfigureAwait(false);
         return Ok(result.Value);
     }
 
@@ -135,7 +135,7 @@ public class FollowersController : BaseApiController
     [HttpGet("mutual")]
     public async Task<ActionResult<bool>> AreMutualFollowers([FromQuery] Guid userId1, [FromQuery] Guid userId2, CancellationToken ct)
     {
-        var result = await _followerService.AreMutualFollowersAsync(userId1, userId2, ct);
+        var result = await _followerService.AreMutualFollowersAsync(userId1, userId2, ct).ConfigureAwait(false);
         return Ok(result.Value);
     }
 
@@ -144,7 +144,7 @@ public class FollowersController : BaseApiController
     public async Task<ActionResult<Dictionary<Guid, bool>>> GetFollowStatusBatch([FromBody] BatchStatusRequest request, CancellationToken ct)
     {
         var userId = GetCurrentUserId();
-        var result = await _followerService.GetFollowStatusBatchAsync(userId, request.EntityIds, request.EntityType, ct);
+        var result = await _followerService.GetFollowStatusBatchAsync(userId, request.EntityIds, request.EntityType, ct).ConfigureAwait(false);
         return Ok(result.Value);
     }
 
@@ -153,7 +153,7 @@ public class FollowersController : BaseApiController
     [AllowAnonymous]
     public async Task<ActionResult<Dictionary<Guid, int>>> GetFollowerCountsBatch([FromBody] BatchCountsRequest request, CancellationToken ct)
     {
-        var result = await _followerService.GetFollowerCountsBatchAsync(request.EntityIds, request.EntityType, ct);
+        var result = await _followerService.GetFollowerCountsBatchAsync(request.EntityIds, request.EntityType, ct).ConfigureAwait(false);
         return Ok(result.Value);
     }
 
@@ -166,7 +166,7 @@ public class FollowersController : BaseApiController
     public async Task<ActionResult<FollowPrivacySettingsDto>> GetPrivacySettings(CancellationToken ct)
     {
         var userId = GetCurrentUserId();
-        var result = await _followerService.GetPrivacySettingsAsync(userId, ct);
+        var result = await _followerService.GetPrivacySettingsAsync(userId, ct).ConfigureAwait(false);
         return Ok(MapToDto(result.Value));
     }
 
@@ -183,7 +183,7 @@ public class FollowersController : BaseApiController
             request.NotifyOnNewFollower,
             request.ShowFollowerCount,
             request.ShowFollowingCount,
-            ct);
+            ct).ConfigureAwait(false);
 
         return Ok(MapToDto(result.Value));
     }
@@ -197,7 +197,7 @@ public class FollowersController : BaseApiController
     public async Task<ActionResult<BlockDto>> BlockUser([FromBody] BlockRequest request, CancellationToken ct)
     {
         var userId = GetCurrentUserId();
-        var result = await _followerService.BlockUserAsync(userId, request.BlockedUserId, request.Reason, ct);
+        var result = await _followerService.BlockUserAsync(userId, request.BlockedUserId, request.Reason, ct).ConfigureAwait(false);
 
         if (!result.IsSuccess)
         {
@@ -212,7 +212,7 @@ public class FollowersController : BaseApiController
     public async Task<ActionResult> UnblockUser(Guid blockedUserId, CancellationToken ct)
     {
         var userId = GetCurrentUserId();
-        var result = await _followerService.UnblockUserAsync(userId, blockedUserId, ct);
+        var result = await _followerService.UnblockUserAsync(userId, blockedUserId, ct).ConfigureAwait(false);
 
         if (!result.IsSuccess)
         {
@@ -227,7 +227,7 @@ public class FollowersController : BaseApiController
     public async Task<ActionResult<bool>> IsUserBlocked(Guid blockedUserId, CancellationToken ct)
     {
         var userId = GetCurrentUserId();
-        var result = await _followerService.IsUserBlockedAsync(userId, blockedUserId, ct);
+        var result = await _followerService.IsUserBlockedAsync(userId, blockedUserId, ct).ConfigureAwait(false);
         return Ok(result.Value);
     }
 
@@ -239,7 +239,7 @@ public class FollowersController : BaseApiController
         CancellationToken ct = default)
     {
         var userId = GetCurrentUserId();
-        var result = await _followerService.GetBlockedUsersAsync(userId, skip, take, ct);
+        var result = await _followerService.GetBlockedUsersAsync(userId, skip, take, ct).ConfigureAwait(false);
         return Ok(result.Value.Select(MapToDto));
     }
 
@@ -252,7 +252,7 @@ public class FollowersController : BaseApiController
     public async Task<ActionResult<MuteDto>> MuteUser([FromBody] MuteRequest request, CancellationToken ct)
     {
         var userId = GetCurrentUserId();
-        var result = await _followerService.MuteUserAsync(userId, request.MutedUserId, request.Reason, request.ExpiresAt, ct);
+        var result = await _followerService.MuteUserAsync(userId, request.MutedUserId, request.Reason, request.ExpiresAt, ct).ConfigureAwait(false);
 
         if (!result.IsSuccess)
         {
@@ -267,7 +267,7 @@ public class FollowersController : BaseApiController
     public async Task<ActionResult> UnmuteUser(Guid mutedUserId, CancellationToken ct)
     {
         var userId = GetCurrentUserId();
-        var result = await _followerService.UnmuteUserAsync(userId, mutedUserId, ct);
+        var result = await _followerService.UnmuteUserAsync(userId, mutedUserId, ct).ConfigureAwait(false);
 
         if (!result.IsSuccess)
         {
@@ -282,7 +282,7 @@ public class FollowersController : BaseApiController
     public async Task<ActionResult<bool>> IsUserMuted(Guid mutedUserId, CancellationToken ct)
     {
         var userId = GetCurrentUserId();
-        var result = await _followerService.IsUserMutedAsync(userId, mutedUserId, ct);
+        var result = await _followerService.IsUserMutedAsync(userId, mutedUserId, ct).ConfigureAwait(false);
         return Ok(result.Value);
     }
 
@@ -294,7 +294,7 @@ public class FollowersController : BaseApiController
         CancellationToken ct = default)
     {
         var userId = GetCurrentUserId();
-        var result = await _followerService.GetMutedUsersAsync(userId, skip, take, ct);
+        var result = await _followerService.GetMutedUsersAsync(userId, skip, take, ct).ConfigureAwait(false);
         return Ok(result.Value.Select(MapToDto));
     }
 

@@ -42,7 +42,7 @@ public sealed class CountryTargetingHandler : ITargetingRuleHandler
                 RolloutPercentage = countryTarget.RolloutPercentage,
                 IsTargeted = true,
                 TargetType = countryTarget.TargetType,
-                EvaluatedAt = DateTime.UtcNow
+                EvaluatedAt = SystemClock.UtcNow
             }
         );
     }

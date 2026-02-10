@@ -41,7 +41,7 @@ public class DefaultIncidentTicketProvider : IIncidentTicketProvider
     public Task<string> CreateTicketAsync(SlaImpactAnalysis violation, CancellationToken cancellationToken = default)
     {
         // Generate a ticket ID based on violation details
-        var ticketId = $"INC-{DateTime.UtcNow:yyyyMMdd}-{violation.Id.ToString()[..8].ToUpper()}";
+        var ticketId = $"INC-{SystemClock.UtcNow:yyyyMMdd}-{violation.Id.ToString()[..8].ToUpper()}";
         return Task.FromResult(ticketId);
     }
 

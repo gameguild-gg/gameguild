@@ -140,5 +140,5 @@ public sealed record PostContentReferencedEvent(
 public abstract record DomainEventBase(Guid EntityId, string EntityType)
 {
     public Guid EventId { get; init; } = Guid.NewGuid();
-    public DateTime OccurredAt { get; init; } = DateTime.UtcNow;
+    public DateTime OccurredAt { get; init; } = SystemClock.UtcNow;
 }

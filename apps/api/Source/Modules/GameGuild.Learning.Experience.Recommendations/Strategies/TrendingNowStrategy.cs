@@ -21,7 +21,7 @@ public class TrendingNowStrategy(IApplicationDbContext context) : IRecommendatio
         CancellationToken cancellationToken = default)
     {
         var excludeSet = excludeCourseIds.ToHashSet();
-        var trendingCutoff = DateTime.UtcNow.Subtract(TrendingWindow);
+        var trendingCutoff = SystemClock.UtcNow.Subtract(TrendingWindow);
 
         // Get courses with high recent enrollment velocity
         var query = context.Set<Program>()
@@ -50,7 +50,7 @@ public class TrendingNowStrategy(IApplicationDbContext context) : IRecommendatio
             .OrderByDescending(p => p.RecentEnrollments)
             .ThenByDescending(p => p.AverageRating)
             .Take(maxResults)
-            .ToListAsync(cancellationToken);
+            .ToListAsync(cancellationToken).ConfigureAwait(false);
 
         return trendingCourses.Select((course, index) => new RecommendationCandidate(
             CourseId: course.Id,

@@ -30,7 +30,7 @@ public sealed class SubscriptionPlanOperationsController(ISender sender) : BaseA
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<IActionResult> GetSubscriptionPlanUsage(Guid planId, CancellationToken ct)
     {
-        return Ok(await sender.Send(new GetSubscriptionPlanUsageStatisticsQuery(planId), ct));
+        return Ok(await sender.Send(new GetSubscriptionPlanUsageStatisticsQuery(planId), ct).ConfigureAwait(false));
     }
 
     /// <summary>
@@ -48,7 +48,7 @@ public sealed class SubscriptionPlanOperationsController(ISender sender) : BaseA
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<IActionResult> GetSuggestedPlanUpgrades(Guid planId, [FromQuery] int users, [FromQuery] long storageMb, [FromQuery] long apiCalls, CancellationToken ct)
     {
-        return Ok(await sender.Send(new SuggestSubscriptionPlanUpgradesQuery(planId, users, storageMb, apiCalls), ct));
+        return Ok(await sender.Send(new SuggestSubscriptionPlanUpgradesQuery(planId, users, storageMb, apiCalls), ct).ConfigureAwait(false));
     }
 
     /// <summary>
@@ -66,7 +66,7 @@ public sealed class SubscriptionPlanOperationsController(ISender sender) : BaseA
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> CalculateSubscriptionPlanPricing(Guid planId, [FromQuery] Guid? tenantId, [FromQuery] string? discountCode, CancellationToken ct)
     {
-        return Ok(await sender.Send(new CalculatePricingQuery(planId, tenantId, discountCode), ct));
+        return Ok(await sender.Send(new CalculatePricingQuery(planId, tenantId, discountCode), ct).ConfigureAwait(false));
     }
 
     /// <summary>
@@ -84,7 +84,7 @@ public sealed class SubscriptionPlanOperationsController(ISender sender) : BaseA
     public async Task<IActionResult> ValidateSubscriptionPlanLimits(Guid planId, [FromBody] ValidateLimitsRequest body, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(body);
-        var result = await sender.Send(new ValidateSubscriptionPlanLimitsQuery(planId, body.Users, body.StorageMb, body.ApiCalls), ct);
+        var result = await sender.Send(new ValidateSubscriptionPlanLimitsQuery(planId, body.Users, body.StorageMb, body.ApiCalls), ct).ConfigureAwait(false);
         return Ok(result);
     }
 
@@ -108,7 +108,7 @@ public sealed class SubscriptionPlanOperationsController(ISender sender) : BaseA
     public async Task<IActionResult> UpdateSubscriptionPlanDetails(Guid planId, [FromBody] UpdateDetailsRequest body, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(body);
-        await sender.Send(new UpdateSubscriptionPlanCommand(planId, body.Name, body.Description, body.SortOrder), ct);
+        await sender.Send(new UpdateSubscriptionPlanCommand(planId, body.Name, body.Description, body.SortOrder), ct).ConfigureAwait(false);
         return NoContent();
     }
 
@@ -128,7 +128,7 @@ public sealed class SubscriptionPlanOperationsController(ISender sender) : BaseA
     public async Task<IActionResult> UpdateSubscriptionPlanPricing(Guid planId, [FromBody] UpdatePricingRequest body, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(body);
-        await sender.Send(new UpdateSubscriptionPlanPricingCommand(planId, body.MonthlyPriceInCents, body.AnnualPriceInCents), ct);
+        await sender.Send(new UpdateSubscriptionPlanPricingCommand(planId, body.MonthlyPriceInCents, body.AnnualPriceInCents), ct).ConfigureAwait(false);
         return NoContent();
     }
 
@@ -148,7 +148,7 @@ public sealed class SubscriptionPlanOperationsController(ISender sender) : BaseA
     public async Task<IActionResult> UpdateSubscriptionPlanLimits(Guid planId, [FromBody] UpdateLimitsRequest body, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(body);
-        await sender.Send(new UpdateSubscriptionPlanLimitsCommand(planId, body.MaxUsers, body.MaxStorageMb, body.MaxApiCallsPerMonth), ct);
+        await sender.Send(new UpdateSubscriptionPlanLimitsCommand(planId, body.MaxUsers, body.MaxStorageMb, body.MaxApiCallsPerMonth), ct).ConfigureAwait(false);
         return NoContent();
     }
 
@@ -168,7 +168,7 @@ public sealed class SubscriptionPlanOperationsController(ISender sender) : BaseA
     public async Task<IActionResult> UpdateSubscriptionPlanFeatures(Guid planId, [FromBody] UpdateFeaturesRequest body, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(body);
-        await sender.Send(new UpdateSubscriptionPlanFeaturesCommand(planId, body.HasPrioritySupport, body.HasAdvancedAnalytics, body.HasCustomBranding, body.Features), ct);
+        await sender.Send(new UpdateSubscriptionPlanFeaturesCommand(planId, body.HasPrioritySupport, body.HasAdvancedAnalytics, body.HasCustomBranding, body.Features), ct).ConfigureAwait(false);
         return NoContent();
     }
 
@@ -190,7 +190,7 @@ public sealed class SubscriptionPlanOperationsController(ISender sender) : BaseA
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> ActivateSubscriptionPlan(Guid planId, CancellationToken ct)
     {
-        await sender.Send(new ActivateSubscriptionPlanCommand(planId), ct);
+        await sender.Send(new ActivateSubscriptionPlanCommand(planId), ct).ConfigureAwait(false);
         return NoContent();
     }
 
@@ -208,7 +208,7 @@ public sealed class SubscriptionPlanOperationsController(ISender sender) : BaseA
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> DeactivateSubscriptionPlan(Guid planId, CancellationToken ct)
     {
-        await sender.Send(new DeactivateSubscriptionPlanCommand(planId), ct);
+        await sender.Send(new DeactivateSubscriptionPlanCommand(planId), ct).ConfigureAwait(false);
         return NoContent();
     }
 
@@ -226,7 +226,7 @@ public sealed class SubscriptionPlanOperationsController(ISender sender) : BaseA
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> ArchiveSubscriptionPlan(Guid planId, CancellationToken ct)
     {
-        await sender.Send(new ArchiveSubscriptionPlanCommand(planId), ct);
+        await sender.Send(new ArchiveSubscriptionPlanCommand(planId), ct).ConfigureAwait(false);
         return NoContent();
     }
 
@@ -246,7 +246,7 @@ public sealed class SubscriptionPlanOperationsController(ISender sender) : BaseA
     public async Task<IActionResult> CloneSubscriptionPlan(Guid planId, [FromBody] CloneSubscriptionPlanRequest body, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(body);
-        var newPlanId = await sender.Send(new CloneSubscriptionPlanCommand(planId, body.NewName, body.NewSlug), ct);
+        var newPlanId = await sender.Send(new CloneSubscriptionPlanCommand(planId, body.NewName, body.NewSlug), ct).ConfigureAwait(false);
         return CreatedAtAction("GetSubscriptionPlanById", "SubscriptionPlansCrud", new { planId = newPlanId }, new { id = newPlanId });
     }
 
@@ -266,7 +266,7 @@ public sealed class SubscriptionPlanOperationsController(ISender sender) : BaseA
     public async Task<IActionResult> SetSubscriptionPlanFeatured(Guid planId, [FromBody] SetFeaturedRequest body, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(body);
-        await sender.Send(new SetSubscriptionPlanFeaturedCommand(planId, body.Featured), ct);
+        await sender.Send(new SetSubscriptionPlanFeaturedCommand(planId, body.Featured), ct).ConfigureAwait(false);
         return NoContent();
     }
 
@@ -286,7 +286,7 @@ public sealed class SubscriptionPlanOperationsController(ISender sender) : BaseA
     public async Task<IActionResult> SetSubscriptionPlanExternalId(Guid planId, [FromBody] SetExternalIdRequest body, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(body);
-        await sender.Send(new SetSubscriptionPlanExternalIdCommand(planId, body.ExternalId), ct);
+        await sender.Send(new SetSubscriptionPlanExternalIdCommand(planId, body.ExternalId), ct).ConfigureAwait(false);
         return NoContent();
     }
 

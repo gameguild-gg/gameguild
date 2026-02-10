@@ -73,5 +73,5 @@ public abstract class AuthenticationFlowState
     /// <summary>
     ///     Gets whether the flow has expired.
     /// </summary>
-    public bool IsExpired { get => DateTime.UtcNow > ExpiresAt; }
+    public bool IsExpired { get => SystemClock.UtcNow > ExpiresAt; }
 }

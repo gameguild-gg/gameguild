@@ -43,7 +43,7 @@ public class TransformedAssetRepository : ITransformedAssetRepository
         int limit = 100,
         CancellationToken ct = default)
     {
-        var cutoff = DateTime.UtcNow - maxAge;
+        var cutoff = SystemClock.UtcNow - maxAge;
         
         return await _context.Set<TransformedAsset>()
             .Where(x => x.LastAccessedAt < cutoff)

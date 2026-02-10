@@ -61,7 +61,7 @@ public class TrustedDevice
 
     public DateTime UpdatedAt { get; set; }
 
-    public bool IsExpired { get => ExpiresAt.HasValue && DateTime.UtcNow >= ExpiresAt.Value; }
+    public bool IsExpired { get => ExpiresAt.HasValue && SystemClock.UtcNow >= ExpiresAt.Value; }
 
     public bool IsValid { get => IsActive && !IsExpired; }
 }

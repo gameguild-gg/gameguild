@@ -8,11 +8,11 @@ public class TestingRequestRepository : ITestingRequestRepository {
   public TestingRequestRepository(IApplicationDbContext context) { _context = context; }
 
   public async Task<IEnumerable<TestingRequest>> GetWithPaginationAsync(int skip = 0, int take = 50) {
-    return await _context.TestingRequests.Where(r => r.DeletedAt == null).Include(r => r.CreatedBy).Include(r => r.ProjectVersion).ThenInclude(pv => pv.Project).OrderByDescending(r => r.CreatedAt).Skip(skip).Take(take).ToListAsync();
+    return await _context.TestingRequests.Where(r => r.DeletedAt == null).Include(r => r.CreatedBy).Include(r => r.ProjectVersion).ThenInclude(pv => pv.Project).OrderByDescending(r => r.CreatedAt).Skip(skip).Take(take).ToListAsync().ConfigureAwait(false);
   }
 
   public async Task<TestingRequest?> GetByIdWithDetailsAsync(Guid id) {
-    return await _context.TestingRequests.Where(r => r.Id == id && r.DeletedAt == null).Include(r => r.CreatedBy).Include(r => r.ProjectVersion).ThenInclude(pv => pv.Project).FirstOrDefaultAsync();
+    return await _context.TestingRequests.Where(r => r.Id == id && r.DeletedAt == null).Include(r => r.CreatedBy).Include(r => r.ProjectVersion).ThenInclude(pv => pv.Project).FirstOrDefaultAsync().ConfigureAwait(false);
   }
 
   public async Task<IEnumerable<TestingRequest>> GetByProjectVersionAsync(Guid projectVersionId) {
@@ -21,11 +21,11 @@ public class TestingRequestRepository : ITestingRequestRepository {
                          .Include(r => r.ProjectVersion)
                          .ThenInclude(pv => pv.Project)
                          .OrderByDescending(r => r.CreatedAt)
-                         .ToListAsync();
+                         .ToListAsync().ConfigureAwait(false);
   }
 
   public async Task<IEnumerable<TestingRequest>> GetByStatusAsync(TestingRequestStatus status) {
-    return await _context.TestingRequests.Where(r => r.Status == status && r.DeletedAt == null).Include(r => r.CreatedBy).Include(r => r.ProjectVersion).ThenInclude(pv => pv.Project).OrderByDescending(r => r.CreatedAt).ToListAsync();
+    return await _context.TestingRequests.Where(r => r.Status == status && r.DeletedAt == null).Include(r => r.CreatedBy).Include(r => r.ProjectVersion).ThenInclude(pv => pv.Project).OrderByDescending(r => r.CreatedAt).ToListAsync().ConfigureAwait(false);
   }
 
   public async Task<IEnumerable<TestingRequest>> GetByStatusAsync(TestingRequestStatus status, int skip = 0, int take = 50) {
@@ -36,7 +36,7 @@ public class TestingRequestRepository : ITestingRequestRepository {
                          .OrderByDescending(r => r.CreatedAt)
                          .Skip(skip)
                          .Take(take)
-                         .ToListAsync();
+                         .ToListAsync().ConfigureAwait(false);
   }
 
   public async Task<IEnumerable<TestingRequest>> GetActiveRequestsAsync() {
@@ -46,11 +46,11 @@ public class TestingRequestRepository : ITestingRequestRepository {
                          .Include(r => r.CreatedBy)
                          .Include(r => r.ProjectVersion)
                          .ThenInclude(pv => pv.Project)
-                         .ToListAsync();
+                         .ToListAsync().ConfigureAwait(false);
   }
 
   public async Task<IEnumerable<TestingRequest>> GetByCreatedByAsync(Guid userId) {
-    return await _context.TestingRequests.Where(r => r.CreatedById == userId && r.DeletedAt == null).Include(r => r.CreatedBy).Include(r => r.ProjectVersion).ThenInclude(pv => pv.Project).OrderByDescending(r => r.CreatedAt).ToListAsync();
+    return await _context.TestingRequests.Where(r => r.CreatedById == userId && r.DeletedAt == null).Include(r => r.CreatedBy).Include(r => r.ProjectVersion).ThenInclude(pv => pv.Project).OrderByDescending(r => r.CreatedAt).ToListAsync().ConfigureAwait(false);
   }
 
   public async Task<IEnumerable<TestingRequest>> GetRequestsNeedingClosureAsync() {
@@ -61,7 +61,7 @@ public class TestingRequestRepository : ITestingRequestRepository {
                          .Include(r => r.ProjectVersion)
                          .ThenInclude(pv => pv.Project)
                          .OrderBy(r => r.EndDate)
-                         .ToListAsync();
+                         .ToListAsync().ConfigureAwait(false);
   }
 
   public async Task<IEnumerable<TestingRequest>> SearchAsync(string searchTerm) {
@@ -75,7 +75,7 @@ public class TestingRequestRepository : ITestingRequestRepository {
                                      r.ProjectVersion.Project.Title.ToLowerInvariant().Contains(lowerSearchTerm)
                          )
                          .OrderByDescending(r => r.CreatedAt)
-                         .ToListAsync();
+                         .ToListAsync().ConfigureAwait(false);
   }
 
   public async Task<IEnumerable<TestingRequest>> GetExpiredRequestsAsync() {
@@ -85,6 +85,6 @@ public class TestingRequestRepository : ITestingRequestRepository {
                          .Include(r => r.CreatedBy)
                          .Include(r => r.ProjectVersion)
                          .ThenInclude(pv => pv.Project)
-                         .ToListAsync();
+                         .ToListAsync().ConfigureAwait(false);
   }
 }

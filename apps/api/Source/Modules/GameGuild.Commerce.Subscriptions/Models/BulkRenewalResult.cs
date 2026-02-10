@@ -34,7 +34,7 @@ public abstract class BulkRenewalResult
     /// <summary>
     ///     Processing start time
     /// </summary>
-    public DateTime ProcessedAt { get; init; } = DateTime.UtcNow;
+    public DateTime ProcessedAt { get; init; } = SystemClock.UtcNow;
 
     /// <summary>
     ///     Success rate percentage

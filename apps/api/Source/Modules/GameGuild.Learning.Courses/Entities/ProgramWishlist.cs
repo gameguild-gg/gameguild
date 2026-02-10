@@ -88,7 +88,7 @@ public class ProgramWishlist : EntityBase
     /// <summary>
     /// Days since added to wishlist
     /// </summary>
-    public int DaysOnWishlist => (DateTime.UtcNow - AddedAt).Days;
+    public int DaysOnWishlist => (SystemClock.UtcNow - AddedAt).Days;
 
     /// <summary>
     /// Priority level description
@@ -115,7 +115,7 @@ public class ProgramWishlist : EntityBase
     public void SetPriority(int priority)
     {
         Priority = Math.Max(1, Math.Min(5, priority));
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     /// <summary>
@@ -124,7 +124,7 @@ public class ProgramWishlist : EntityBase
     public void UpdateNotes(string? notes)
     {
         Notes = notes;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     /// <summary>
@@ -134,7 +134,7 @@ public class ProgramWishlist : EntityBase
     {
         NotifyWhenAvailable = true;
         NotificationSent = false;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     /// <summary>
@@ -143,7 +143,7 @@ public class ProgramWishlist : EntityBase
     public void DisableNotifications()
     {
         NotifyWhenAvailable = false;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     /// <summary>
@@ -152,8 +152,8 @@ public class ProgramWishlist : EntityBase
     public void MarkNotificationSent()
     {
         NotificationSent = true;
-        LastNotificationSentAt = DateTime.UtcNow;
-        UpdatedAt = DateTime.UtcNow;
+        LastNotificationSentAt = SystemClock.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     /// <summary>
@@ -163,7 +163,7 @@ public class ProgramWishlist : EntityBase
     {
         NotificationSent = false;
         LastNotificationSentAt = null;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     /// <summary>
@@ -172,7 +172,7 @@ public class ProgramWishlist : EntityBase
     public void SetInterestedTags(params string[] tags)
     {
         InterestedTags = string.Join(",", tags.Where(t => !string.IsNullOrWhiteSpace(t)));
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     /// <summary>
@@ -201,7 +201,7 @@ public class ProgramWishlist : EntityBase
         if (Priority < 5)
         {
             Priority++;
-            UpdatedAt = DateTime.UtcNow;
+            UpdatedAt = SystemClock.UtcNow;
         }
     }
 
@@ -213,7 +213,7 @@ public class ProgramWishlist : EntityBase
         if (Priority > 1)
         {
             Priority--;
-            UpdatedAt = DateTime.UtcNow;
+            UpdatedAt = SystemClock.UtcNow;
         }
     }
 

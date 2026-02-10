@@ -39,7 +39,7 @@ public class RolesController(ILogger<RolesController> logger, ISender sender) : 
             IncludeInactive = includeInactive
         };
 
-        var roles = await sender.Send(query, cancellationToken);
+        var roles = await sender.Send(query, cancellationToken).ConfigureAwait(false);
         return Ok(roles);
     }
 
@@ -58,7 +58,7 @@ public class RolesController(ILogger<RolesController> logger, ISender sender) : 
         logger.LogInformation("Getting role by ID: {RoleId}", roleId);
 
         var query = new GetRoleByIdQuery { RoleId = roleId };
-        var role = await sender.Send(query, cancellationToken);
+        var role = await sender.Send(query, cancellationToken).ConfigureAwait(false);
 
         if (role == null)
         {
@@ -90,7 +90,7 @@ public class RolesController(ILogger<RolesController> logger, ISender sender) : 
             TenantId = request.TenantId
         };
 
-        var role = await sender.Send(command, cancellationToken);
+        var role = await sender.Send(command, cancellationToken).ConfigureAwait(false);
         return CreatedAtAction(nameof(GetById), new { id = role.Id }, role);
     }
 
@@ -118,7 +118,7 @@ public class RolesController(ILogger<RolesController> logger, ISender sender) : 
             IsActive = request.IsActive
         };
 
-        var role = await sender.Send(command, cancellationToken);
+        var role = await sender.Send(command, cancellationToken).ConfigureAwait(false);
         return Ok(role);
     }
 
@@ -137,7 +137,7 @@ public class RolesController(ILogger<RolesController> logger, ISender sender) : 
         logger.LogInformation("Deleting role: {RoleId}", roleId);
 
         var command = new DeleteRoleCommand { RoleId = roleId };
-        await sender.Send(command, cancellationToken);
+        await sender.Send(command, cancellationToken).ConfigureAwait(false);
         return NoContent();
     }
 
@@ -161,7 +161,7 @@ public class RolesController(ILogger<RolesController> logger, ISender sender) : 
             IncludeExpired = includeExpired
         };
 
-        var roles = await sender.Send(query, cancellationToken);
+        var roles = await sender.Send(query, cancellationToken).ConfigureAwait(false);
         return Ok(roles);
     }
 
@@ -186,7 +186,7 @@ public class RolesController(ILogger<RolesController> logger, ISender sender) : 
             ExpiresAt = request.ExpiresAt
         };
 
-        var userRole = await sender.Send(command, cancellationToken);
+        var userRole = await sender.Send(command, cancellationToken).ConfigureAwait(false);
         return CreatedAtAction(nameof(GetUserRoles), new { userId = request.UserId }, userRole);
     }
 
@@ -210,7 +210,7 @@ public class RolesController(ILogger<RolesController> logger, ISender sender) : 
             RoleId = request.RoleId
         };
 
-        await sender.Send(command, cancellationToken);
+        await sender.Send(command, cancellationToken).ConfigureAwait(false);
         return NoContent();
     }
 }

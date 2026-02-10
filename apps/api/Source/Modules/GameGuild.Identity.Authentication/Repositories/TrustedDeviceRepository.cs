@@ -23,7 +23,7 @@ public class TrustedDeviceRepository(IApplicationDbContext context) : ITrustedDe
 
     public async Task<List<TrustedDevice>> GetActiveByUserIdAsync(Guid userId, CancellationToken cancellationToken = default)
     {
-        var now = DateTime.UtcNow;
+        var now = SystemClock.UtcNow;
 
         return await TrustedDevices.Where(d => d.UserId == userId && d.IsActive && (!d.ExpiresAt.HasValue || d.ExpiresAt.Value > now)).OrderByDescending(d => d.LastUsedAt).ToListAsync(cancellationToken);
     }
@@ -31,9 +31,9 @@ public class TrustedDeviceRepository(IApplicationDbContext context) : ITrustedDe
     public async Task<TrustedDevice> CreateAsync(TrustedDevice device, CancellationToken cancellationToken = default)
     {
         device.Id = Guid.NewGuid();
-        device.UpdatedAt = DateTime.UtcNow;
-        device.TrustedAt = DateTime.UtcNow;
-        device.LastUsedAt = DateTime.UtcNow;
+        device.UpdatedAt = SystemClock.UtcNow;
+        device.TrustedAt = SystemClock.UtcNow;
+        device.LastUsedAt = SystemClock.UtcNow;
 
         TrustedDevices.Add(device);
         await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
@@ -43,7 +43,7 @@ public class TrustedDeviceRepository(IApplicationDbContext context) : ITrustedDe
 
     public async Task<TrustedDevice> UpdateAsync(TrustedDevice device, CancellationToken cancellationToken = default)
     {
-        device.UpdatedAt = DateTime.UtcNow;
+        device.UpdatedAt = SystemClock.UtcNow;
 
         TrustedDevices.Update(device);
         await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
@@ -58,7 +58,7 @@ public class TrustedDeviceRepository(IApplicationDbContext context) : ITrustedDe
         if (device == null) return;
 
         device.IsActive = false;
-        device.UpdatedAt = DateTime.UtcNow;
+        device.UpdatedAt = SystemClock.UtcNow;
 
         await UpdateAsync(device, cancellationToken).ConfigureAwait(false);
     }
@@ -69,7 +69,7 @@ public class TrustedDeviceRepository(IApplicationDbContext context) : ITrustedDe
 
         if (userDevices.Count == 0) return;
 
-        var now = DateTime.UtcNow;
+        var now = SystemClock.UtcNow;
 
         foreach (var device in userDevices)
         {
@@ -94,7 +94,7 @@ public class TrustedDeviceRepository(IApplicationDbContext context) : ITrustedDe
     // Helper methods for backward compatibility and service layer
     public async Task<bool> IsDeviceTrustedAsync(Guid userId, string deviceFingerprint, CancellationToken cancellationToken = default)
     {
-        var now = DateTime.UtcNow;
+        var now = SystemClock.UtcNow;
 
         return await TrustedDevices.AnyAsync(d => d.UserId == userId && d.DeviceFingerprint == deviceFingerprint && d.IsActive && (!d.ExpiresAt.HasValue || d.ExpiresAt.Value > now), cancellationToken);
     }
@@ -105,7 +105,7 @@ public class TrustedDeviceRepository(IApplicationDbContext context) : ITrustedDe
 
         if (device == null) return false;
 
-        var now = DateTime.UtcNow;
+        var now = SystemClock.UtcNow;
 
         if (!device.IsActive || device.ExpiresAt.HasValue && device.ExpiresAt.Value < now) { return false; }
 

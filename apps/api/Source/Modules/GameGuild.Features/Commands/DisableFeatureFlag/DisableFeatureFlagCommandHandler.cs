@@ -6,9 +6,8 @@ namespace GameGuild.Features;
 /// <summary>
 ///     Handler for DisableFeatureFlagCommand
 /// </summary>
-#pragma warning disable CS0618 // IFeatureFlagRepository migration pending
 public sealed class DisableFeatureFlagCommandHandler(
-    IFeatureFlagRepository repository,
+    IFeatureFlagQueryRepository repository,
     ILogger<DisableFeatureFlagCommandHandler> logger
 ) : IRequestHandler<DisableFeatureFlagCommand>
 {
@@ -27,4 +26,3 @@ public sealed class DisableFeatureFlagCommandHandler(
         return Unit.Value;
     }
 }
-#pragma warning restore CS0618

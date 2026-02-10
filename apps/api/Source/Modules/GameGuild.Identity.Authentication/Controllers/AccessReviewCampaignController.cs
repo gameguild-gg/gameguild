@@ -35,7 +35,7 @@ public class AccessReviewCampaignController(IMediator mediator, ILogger<AccessRe
     public async Task<ActionResult<AccessReviewCampaign>> CreateAccessReviewCampaign(
         [FromBody] CreateAccessReviewCampaignCommand command)
     {
-        var result = await _mediator.Send(command);
+        var result = await _mediator.Send(command).ConfigureAwait(false);
 
         return CreatedAtAction(nameof(GetAccessReviewCampaign), new { id = result.Id }, result);
     }
@@ -47,7 +47,7 @@ public class AccessReviewCampaignController(IMediator mediator, ILogger<AccessRe
     public async Task<ActionResult<AccessReviewCampaign>> GetAccessReviewCampaign(Guid campaignId)
     {
         var query = new GetAccessReviewCampaignQuery { CampaignId = campaignId };
-        var result = await _mediator.Send(query);
+        var result = await _mediator.Send(query).ConfigureAwait(false);
 
         return Ok(result);
     }
@@ -60,7 +60,7 @@ public class AccessReviewCampaignController(IMediator mediator, ILogger<AccessRe
         [FromBody] UpdateAccessReviewCampaignCommand command)
     {
         var updateCommand = command with { CampaignId = campaignId };
-        var result = await _mediator.Send(updateCommand);
+        var result = await _mediator.Send(updateCommand).ConfigureAwait(false);
 
         return Ok(result);
     }
@@ -72,7 +72,7 @@ public class AccessReviewCampaignController(IMediator mediator, ILogger<AccessRe
     public async Task<ActionResult> DeleteAccessReviewCampaign(Guid campaignId)
     {
         var command = new DeleteAccessReviewCampaignCommand { CampaignId = campaignId };
-        await _mediator.Send(command);
+        await _mediator.Send(command).ConfigureAwait(false);
 
         return NoContent();
     }
@@ -93,7 +93,7 @@ public class AccessReviewCampaignController(IMediator mediator, ILogger<AccessRe
         {
             TenantId = tenantId, Status = status, Type = type, Page = page, PageSize = pageSize
         };
-        var result = await _mediator.Send(query);
+        var result = await _mediator.Send(query).ConfigureAwait(false);
 
         return Ok(result);
     }
@@ -105,7 +105,7 @@ public class AccessReviewCampaignController(IMediator mediator, ILogger<AccessRe
     public async Task<ActionResult> StartAccessReviewCampaign(Guid campaignId)
     {
         var command = new StartAccessReviewCampaignCommand { CampaignId = campaignId };
-        await _mediator.Send(command);
+        await _mediator.Send(command).ConfigureAwait(false);
 
         return Ok(new { message = "Access review campaign started successfully" });
     }
@@ -117,7 +117,7 @@ public class AccessReviewCampaignController(IMediator mediator, ILogger<AccessRe
     public async Task<ActionResult<AccessReviewCampaignResult>> CompleteAccessReviewCampaign(Guid campaignId)
     {
         var command = new CompleteAccessReviewCampaignCommand { CampaignId = campaignId };
-        var result = await _mediator.Send(command);
+        var result = await _mediator.Send(command).ConfigureAwait(false);
 
         return Ok(result);
     }
@@ -133,7 +133,7 @@ public class AccessReviewCampaignController(IMediator mediator, ILogger<AccessRe
     public async Task<ActionResult<ReminderResult>> SendReviewReminders(Guid campaignId)
     {
         var command = new SendReviewRemindersCommand { CampaignId = campaignId };
-        var result = await _mediator.Send(command);
+        var result = await _mediator.Send(command).ConfigureAwait(false);
 
         return Ok(result);
     }
@@ -144,7 +144,7 @@ public class AccessReviewCampaignController(IMediator mediator, ILogger<AccessRe
     [HttpPost("reminder-settings")]
     public async Task<ActionResult> ConfigureReminderSettings([FromBody] ConfigureReminderSettingsCommand command)
     {
-        await _mediator.Send(command);
+        await _mediator.Send(command).ConfigureAwait(false);
 
         return Ok(new { message = "Reminder settings configured successfully" });
     }
@@ -160,7 +160,7 @@ public class AccessReviewCampaignController(IMediator mediator, ILogger<AccessRe
     public async Task<ActionResult<IEnumerable<AccessReviewTemplateDto>>> GetAccessReviewTemplates()
     {
         var query = new GetAccessReviewTemplatesQuery();
-        var result = await _mediator.Send(query);
+        var result = await _mediator.Send(query).ConfigureAwait(false);
 
         return Ok(result);
     }
@@ -173,7 +173,7 @@ public class AccessReviewCampaignController(IMediator mediator, ILogger<AccessRe
         [FromBody] CreateCampaignFromTemplateCommand command)
     {
         var createCommand = command with { TemplateId = templateId };
-        var result = await _mediator.Send(createCommand);
+        var result = await _mediator.Send(createCommand).ConfigureAwait(false);
 
         return CreatedAtAction(nameof(GetAccessReviewCampaign), new { id = result.Id }, result);
     }

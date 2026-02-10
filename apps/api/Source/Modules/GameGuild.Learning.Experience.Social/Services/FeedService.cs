@@ -27,7 +27,7 @@ public class FeedService : IFeedService
         CancellationToken cancellationToken = default)
     {
         var query = _context.Set<PersonalizedFeedItem>()
-            .Where(f => f.UserId == userId && !f.IsDismissed && f.ExpiresAt > DateTime.UtcNow);
+            .Where(f => f.UserId == userId && !f.IsDismissed && f.ExpiresAt > SystemClock.UtcNow);
 
         if (filterByType.HasValue)
         {
@@ -52,7 +52,7 @@ public class FeedService : IFeedService
 
         // Get trending discussions (most replied in last 7 days)
         var trendingDiscussions = await _context.Set<CourseDiscussion>()
-            .Where(d => d.LastActivityAt > DateTime.UtcNow.AddDays(-7))
+            .Where(d => d.LastActivityAt > SystemClock.UtcNow.AddDays(-7))
             .OrderByDescending(d => d.ReplyCount)
             .Take(5)
             .ToListAsync(cancellationToken).ConfigureAwait(false);
@@ -140,7 +140,7 @@ public class FeedService : IFeedService
     public async Task<Result<int>> ClearExpiredFeedItemsAsync(CancellationToken cancellationToken = default)
     {
         var expiredItems = await _context.Set<PersonalizedFeedItem>()
-            .Where(f => f.ExpiresAt < DateTime.UtcNow)
+            .Where(f => f.ExpiresAt < SystemClock.UtcNow)
             .ToListAsync(cancellationToken).ConfigureAwait(false);
 
         _context.Set<PersonalizedFeedItem>().RemoveRange(expiredItems);

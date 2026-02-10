@@ -33,7 +33,7 @@ public class PostStatistics : EntityBase
     public double TrendingScore { get; private set; }
 
     /// <summary>When statistics were last calculated</summary>
-    public DateTime LastCalculatedAt { get; private set; } = DateTime.UtcNow;
+    public DateTime LastCalculatedAt { get; private set; } = SystemClock.UtcNow;
 
     private PostStatistics() { } // EF Core
 
@@ -49,7 +49,7 @@ public class PostStatistics : EntityBase
             AverageEngagementTime = 0,
             EngagementScore = 0,
             TrendingScore = 0,
-            LastCalculatedAt = DateTime.UtcNow
+            LastCalculatedAt = SystemClock.UtcNow
         };
     }
 
@@ -57,13 +57,13 @@ public class PostStatistics : EntityBase
     {
         ViewsCount++;
         if (isUnique) UniqueViewersCount++;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     public void IncrementExternalShares()
     {
         ExternalSharesCount++;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     public void UpdateEngagementTime(double seconds)
@@ -72,7 +72,7 @@ public class PostStatistics : EntityBase
         AverageEngagementTime = ViewsCount > 0
             ? ((AverageEngagementTime * (ViewsCount - 1)) + seconds) / ViewsCount
             : seconds;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     public void RecalculateScores(int likesCount, int commentsCount, int sharesCount, int hoursOld)
@@ -84,8 +84,8 @@ public class PostStatistics : EntityBase
         var gravity = 1.8;
         TrendingScore = EngagementScore / Math.Pow(hoursOld + 2, gravity);
 
-        LastCalculatedAt = DateTime.UtcNow;
-        UpdatedAt = DateTime.UtcNow;
+        LastCalculatedAt = SystemClock.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 }
 
@@ -191,7 +191,7 @@ public class PostFollower : EntityBase
         if (notifyOnLikes.HasValue) NotifyOnLikes = notifyOnLikes.Value;
         if (notifyOnShares.HasValue) NotifyOnShares = notifyOnShares.Value;
         if (notifyOnUpdates.HasValue) NotifyOnUpdates = notifyOnUpdates.Value;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 }
 
@@ -245,9 +245,9 @@ public class PostTag : EntityBase
         };
     }
 
-    public void IncrementUsage() { UsageCount++; UpdatedAt = DateTime.UtcNow; }
-    public void DecrementUsage() { if (UsageCount > 0) UsageCount--; UpdatedAt = DateTime.UtcNow; }
-    public void SetFeatured(bool featured) { IsFeatured = featured; UpdatedAt = DateTime.UtcNow; }
+    public void IncrementUsage() { UsageCount++; UpdatedAt = SystemClock.UtcNow; }
+    public void DecrementUsage() { if (UsageCount > 0) UsageCount--; UpdatedAt = SystemClock.UtcNow; }
+    public void SetFeatured(bool featured) { IsFeatured = featured; UpdatedAt = SystemClock.UtcNow; }
 }
 
 /// <summary>
@@ -292,7 +292,7 @@ public class PostView : EntityBase
     public Guid PostId { get; private set; }
     public Guid? UserId { get; private set; }
 
-    public DateTime ViewedAt { get; private set; } = DateTime.UtcNow;
+    public DateTime ViewedAt { get; private set; } = SystemClock.UtcNow;
 
     /// <summary>IP address for anonymous tracking</summary>
     [MaxLength(45)]
@@ -326,7 +326,7 @@ public class PostView : EntityBase
             Id = Guid.NewGuid(),
             PostId = postId,
             UserId = userId,
-            ViewedAt = DateTime.UtcNow,
+            ViewedAt = SystemClock.UtcNow,
             IpAddress = ipAddress,
             UserAgent = userAgent,
             Referrer = referrer,
@@ -339,7 +339,7 @@ public class PostView : EntityBase
     {
         DurationSeconds = seconds;
         IsEngaged = engaged;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 }
 
@@ -375,6 +375,6 @@ public class PostLike : EntityBase
     public void ChangeReactionType(string newType)
     {
         ReactionType = newType;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 }

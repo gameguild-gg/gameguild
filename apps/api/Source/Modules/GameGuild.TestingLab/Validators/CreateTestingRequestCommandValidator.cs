@@ -15,7 +15,7 @@ public sealed class CreateTestingRequestCommandValidator : AbstractValidator<Cre
 
     RuleFor(x => x.MaxTesters).GreaterThan(0).When(x => x.MaxTesters.HasValue).WithMessage("Max testers must be greater than 0.");
 
-    RuleFor(x => x.StartDate).NotEmpty().GreaterThan(DateTime.UtcNow).WithMessage("Start date must be in the future.");
+    RuleFor(x => x.StartDate).NotEmpty().GreaterThan(SystemClock.UtcNow).WithMessage("Start date must be in the future.");
 
     RuleFor(x => x.EndDate).NotEmpty().GreaterThan(x => x.StartDate).WithMessage("End date must be after start date.");
   }

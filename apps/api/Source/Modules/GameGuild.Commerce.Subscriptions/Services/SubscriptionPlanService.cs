@@ -345,7 +345,7 @@ public class SubscriptionPlanService : ISubscriptionPlanService
     /// </summary>
     private class DefaultPlanUsageStatistics : PlanUsageStatistics
     {
-        public new DateTime CalculatedAt { get; set; } = DateTime.UtcNow;
+        public new DateTime CalculatedAt { get; set; } = SystemClock.UtcNow;
     }
 
     /// <summary>

@@ -22,6 +22,6 @@ public sealed class BulkEvaluateFeaturesQueryHandler(IFeatureFlagEvaluationServi
 
         var results = await Task.WhenAll(evaluationTasks).ConfigureAwait(false);
 
-        return new BulkEvaluateFeaturesResponse { Results = results.ToDictionary(kvp => kvp.Key, kvp => kvp.Value), EvaluatedAt = DateTime.UtcNow };
+        return new BulkEvaluateFeaturesResponse { Results = results.ToDictionary(kvp => kvp.Key, kvp => kvp.Value), EvaluatedAt = SystemClock.UtcNow };
     }
 }

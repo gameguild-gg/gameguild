@@ -42,7 +42,7 @@ public sealed class TenantPermissionsController(ISender sender, ILogger<TenantPe
             command.UserId,
             command.TenantId);
 
-        var permissionId = await sender.Send(command, cancellationToken);
+        var permissionId = await sender.Send(command, cancellationToken).ConfigureAwait(false);
 
         return Ok(new { PermissionId = permissionId });
     }
@@ -70,7 +70,7 @@ public sealed class TenantPermissionsController(ISender sender, ILogger<TenantPe
             command.UserId,
             command.TenantId);
 
-        var success = await sender.Send(command, cancellationToken);
+        var success = await sender.Send(command, cancellationToken).ConfigureAwait(false);
 
         return Ok(new { Success = success });
     }
@@ -103,7 +103,7 @@ public sealed class TenantPermissionsController(ISender sender, ILogger<TenantPe
             IncludeEffective = includeEffective
         };
 
-        var result = await sender.Send(query, cancellationToken);
+        var result = await sender.Send(query, cancellationToken).ConfigureAwait(false);
 
         return Ok(result);
     }
@@ -136,7 +136,7 @@ public sealed class TenantPermissionsController(ISender sender, ILogger<TenantPe
             IncludeEffective = true
         };
 
-        var result = await sender.Send(query, cancellationToken);
+        var result = await sender.Send(query, cancellationToken).ConfigureAwait(false);
 
         var hasPermission = result.Permissions.Contains(permission, StringComparer.OrdinalIgnoreCase);
 
@@ -170,7 +170,7 @@ public sealed class TenantPermissionsController(ISender sender, ILogger<TenantPe
             "Setting global default permissions: {Permissions}",
             string.Join(", ", command.Permissions));
 
-        var success = await sender.Send(command, cancellationToken);
+        var success = await sender.Send(command, cancellationToken).ConfigureAwait(false);
 
         return Ok(new { Success = success });
     }
@@ -199,7 +199,7 @@ public sealed class TenantPermissionsController(ISender sender, ILogger<TenantPe
             command.TenantId,
             string.Join(", ", command.Permissions));
 
-        var success = await sender.Send(command, cancellationToken);
+        var success = await sender.Send(command, cancellationToken).ConfigureAwait(false);
 
         return Ok(new { Success = success });
     }
@@ -233,7 +233,7 @@ public sealed class TenantPermissionsController(ISender sender, ILogger<TenantPe
             command.UserId,
             command.TenantId);
 
-        var permissionId = await sender.Send(command, cancellationToken);
+        var permissionId = await sender.Send(command, cancellationToken).ConfigureAwait(false);
 
         return Ok(new { PermissionId = permissionId });
     }
@@ -263,7 +263,7 @@ public sealed class TenantPermissionsController(ISender sender, ILogger<TenantPe
             command.UserId,
             command.TenantId);
 
-        var success = await sender.Send(command, cancellationToken);
+        var success = await sender.Send(command, cancellationToken).ConfigureAwait(false);
 
         return Ok(new { Success = success });
     }

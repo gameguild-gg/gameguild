@@ -20,7 +20,7 @@ public sealed class AddTenantMemberCommandHandler(ITenantRepository tenantReposi
         if (existingMember != null) { return new AddTenantMemberResponse { Success = false, Message = "User is already a member of this tenant" }; }
 
         // Create new member
-        var member = new TenantMember { TenantId = request.TenantId, UserId = request.UserId, Role = request.Role, JoinedAt = DateTime.UtcNow, IsActive = true };
+        var member = new TenantMember { TenantId = request.TenantId, UserId = request.UserId, Role = request.Role, JoinedAt = SystemClock.UtcNow, IsActive = true };
 
         var createdMember = await memberRepository.CreateAsync(member, cancellationToken).ConfigureAwait(false);
 

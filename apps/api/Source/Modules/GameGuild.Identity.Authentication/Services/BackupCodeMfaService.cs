@@ -49,7 +49,7 @@ public sealed class BackupCodeMfaService(
 
             // Store hashed codes
             mfaConfig.BackupCodes = string.Join(",", hashedCodes);
-            mfaConfig.UpdatedAt = DateTime.UtcNow;
+            mfaConfig.UpdatedAt = SystemClock.UtcNow;
 
             await mfaConfigRepository.UpdateAsync(mfaConfig, cancellationToken).ConfigureAwait(false);
 
@@ -117,7 +117,7 @@ public sealed class BackupCodeMfaService(
                 // Remove used code
                 hashedCodes.Remove(matchedHashedCode);
                 mfaConfig.BackupCodes = string.Join(",", hashedCodes);
-                mfaConfig.UpdatedAt = DateTime.UtcNow;
+                mfaConfig.UpdatedAt = SystemClock.UtcNow;
 
                 // Reset failed attempts
                 mfaConfig.FailedAttempts = 0;
@@ -204,7 +204,7 @@ public sealed class BackupCodeMfaService(
         }
 
         mfaConfig.BackupCodes = string.Join(",", hashedCodes);
-        mfaConfig.UpdatedAt = DateTime.UtcNow;
+        mfaConfig.UpdatedAt = SystemClock.UtcNow;
         await mfaConfigRepository.UpdateAsync(mfaConfig, cancellationToken).ConfigureAwait(false);
     }
 }

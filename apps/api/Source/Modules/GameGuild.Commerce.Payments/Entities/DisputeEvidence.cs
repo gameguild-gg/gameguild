@@ -55,7 +55,7 @@ public class DisputeEvidence : EntityBase
     public string? MimeType { get; set; }
 
     /// <summary>Submitted timestamp</summary>
-    public DateTime SubmittedAt { get; set; } = DateTime.UtcNow;
+    public DateTime SubmittedAt { get; set; } = SystemClock.UtcNow;
 
     /// <summary>Submitted by user ID</summary>
     [Required]

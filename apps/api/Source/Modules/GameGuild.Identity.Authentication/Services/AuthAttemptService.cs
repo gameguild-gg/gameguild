@@ -23,7 +23,7 @@ public class AuthAttemptService(
                 IpAddress = ipAddress,
                 UserAgent = userAgent,
                 IsSuccessful = true,
-                AttemptedAt = DateTime.UtcNow,
+                AttemptedAt = SystemClock.UtcNow,
                 ProcessingTime = processingTime
             };
 
@@ -48,7 +48,7 @@ public class AuthAttemptService(
                 UserAgent = userAgent,
                 IsSuccessful = false,
                 FailureReason = failureReason,
-                AttemptedAt = DateTime.UtcNow,
+                AttemptedAt = SystemClock.UtcNow,
                 ProcessingTime = processingTime
             };
 

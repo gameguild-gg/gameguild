@@ -23,7 +23,7 @@ public class TestingRequestsController(
     [RequireResourcePermission<TestingRequestPermission, TestingRequest>(PermissionType.Read)]
     public async Task<ActionResult<IEnumerable<TestingRequest>>> GetTestingRequests([FromQuery] int skip = 0, [FromQuery] int take = 50)
     {
-        var requests = await requestService.GetTestingRequestsAsync(skip, take);
+        var requests = await requestService.GetTestingRequestsAsync(skip, take).ConfigureAwait(false);
         return Ok(requests);
     }
 
@@ -32,7 +32,7 @@ public class TestingRequestsController(
     [RequireResourcePermission<TestingRequestPermission, TestingRequest>(PermissionType.Read)]
     public async Task<ActionResult<TestingRequest>> GetTestingRequest(Guid id)
     {
-        var request = await requestService.GetTestingRequestByIdAsync(id);
+        var request = await requestService.GetTestingRequestByIdAsync(id).ConfigureAwait(false);
         if (request == null) return NotFound();
         return Ok(request);
     }
@@ -42,7 +42,7 @@ public class TestingRequestsController(
     [RequireResourcePermission<TestingRequestPermission, TestingRequest>(PermissionType.Read)]
     public async Task<ActionResult<TestingRequest>> GetTestingRequestWithDetails(Guid id)
     {
-        var request = await requestService.GetTestingRequestByIdWithDetailsAsync(id);
+        var request = await requestService.GetTestingRequestByIdWithDetailsAsync(id).ConfigureAwait(false);
         if (request == null) return NotFound();
         return Ok(request);
     }
@@ -59,7 +59,7 @@ public class TestingRequestsController(
             return Unauthorized("User ID not found in token");
 
         var request = requestDto.ToTestingRequest(userId.Value);
-        var createdRequest = await requestService.CreateTestingRequestAsync(request);
+        var createdRequest = await requestService.CreateTestingRequestAsync(request).ConfigureAwait(false);
 
         return CreatedAtAction(nameof(GetTestingRequest), new { id = createdRequest.Id }, createdRequest);
     }
@@ -73,7 +73,7 @@ public class TestingRequestsController(
 
         try
         {
-            var updatedRequest = await requestService.UpdateTestingRequestAsync(request);
+            var updatedRequest = await requestService.UpdateTestingRequestAsync(request).ConfigureAwait(false);
             return Ok(updatedRequest);
         }
         catch (InvalidOperationException ex)
@@ -88,7 +88,7 @@ public class TestingRequestsController(
     [RequireResourcePermission<TestingRequestPermission, TestingRequest>(PermissionType.Delete)]
     public async Task<ActionResult> DeleteTestingRequest(Guid id)
     {
-        var result = await requestService.DeleteTestingRequestAsync(id);
+        var result = await requestService.DeleteTestingRequestAsync(id).ConfigureAwait(false);
         if (!result) return NotFound();
         return NoContent();
     }
@@ -98,7 +98,7 @@ public class TestingRequestsController(
     [RequireResourcePermission<TestingRequestPermission, TestingRequest>(PermissionType.Edit)]
     public async Task<ActionResult> RestoreTestingRequest(Guid id)
     {
-        var result = await requestService.RestoreTestingRequestAsync(id);
+        var result = await requestService.RestoreTestingRequestAsync(id).ConfigureAwait(false);
         if (!result) return NotFound();
         return Ok();
     }
@@ -108,7 +108,7 @@ public class TestingRequestsController(
     [RequireResourcePermission<TestingRequestPermission, TestingRequest>(PermissionType.Read)]
     public async Task<ActionResult<IEnumerable<TestingRequest>>> GetTestingRequestsByProjectVersion(Guid projectVersionId)
     {
-        var requests = await requestService.GetTestingRequestsByProjectVersionAsync(projectVersionId);
+        var requests = await requestService.GetTestingRequestsByProjectVersionAsync(projectVersionId).ConfigureAwait(false);
         return Ok(requests);
     }
 
@@ -117,7 +117,7 @@ public class TestingRequestsController(
     [RequireResourcePermission<TestingRequestPermission, TestingRequest>(PermissionType.Read)]
     public async Task<ActionResult<IEnumerable<TestingRequest>>> GetTestingRequestsByCreator(Guid creatorId)
     {
-        var requests = await requestService.GetTestingRequestsByCreatorAsync(creatorId);
+        var requests = await requestService.GetTestingRequestsByCreatorAsync(creatorId).ConfigureAwait(false);
         return Ok(requests);
     }
 
@@ -126,7 +126,7 @@ public class TestingRequestsController(
     [RequireResourcePermission<TestingRequestPermission, TestingRequest>(PermissionType.Read)]
     public async Task<ActionResult<IEnumerable<TestingRequest>>> GetTestingRequestsByStatus(TestingRequestStatus status)
     {
-        var requests = await requestService.GetTestingRequestsByStatusAsync(status);
+        var requests = await requestService.GetTestingRequestsByStatusAsync(status).ConfigureAwait(false);
         return Ok(requests);
     }
 
@@ -137,7 +137,7 @@ public class TestingRequestsController(
     {
         if (string.IsNullOrWhiteSpace(searchTerm)) return BadRequest("Search term is required");
 
-        var requests = await requestService.SearchTestingRequestsAsync(searchTerm);
+        var requests = await requestService.SearchTestingRequestsAsync(searchTerm).ConfigureAwait(false);
         return Ok(requests);
     }
 
@@ -152,7 +152,7 @@ public class TestingRequestsController(
         if (userId == null)
             return Unauthorized("User ID not found in token");
 
-        var request = await requestService.CreateSimpleTestingRequestAsync(requestDto, userId.Value);
+        var request = await requestService.CreateSimpleTestingRequestAsync(requestDto, userId.Value).ConfigureAwait(false);
 
         return CreatedAtAction(nameof(GetTestingRequest), new { id = request.Id }, request);
     }
@@ -166,7 +166,7 @@ public class TestingRequestsController(
         if (userId == null)
             return Unauthorized("User ID not found in token");
 
-        var requests = await requestService.GetTestingRequestsByCreatorAsync(userId.Value);
+        var requests = await requestService.GetTestingRequestsByCreatorAsync(userId.Value).ConfigureAwait(false);
         return Ok(requests);
     }
 
@@ -175,7 +175,7 @@ public class TestingRequestsController(
     [RequireResourcePermission<TestingRequestPermission, TestingRequest>(PermissionType.Read)]
     public async Task<ActionResult<IEnumerable<TestingRequest>>> GetAvailableTestingRequests()
     {
-        var requests = await requestService.GetActiveTestingRequestsAsync();
+        var requests = await requestService.GetActiveTestingRequestsAsync().ConfigureAwait(false);
         return Ok(requests);
     }
 
@@ -184,7 +184,7 @@ public class TestingRequestsController(
     [RequireResourcePermission<TestingRequestPermission, TestingRequest>(PermissionType.Read)]
     public async Task<ActionResult<object>> GetTestingRequestStatistics(Guid requestId, [FromServices] ITestingFeedbackOperations feedbackService)
     {
-        var statistics = await feedbackService.GetTestingRequestStatisticsAsync(requestId);
+        var statistics = await feedbackService.GetTestingRequestStatisticsAsync(requestId).ConfigureAwait(false);
         return Ok(statistics);
     }
 }

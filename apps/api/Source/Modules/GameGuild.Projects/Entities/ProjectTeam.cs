@@ -29,7 +29,7 @@ public class ProjectTeam : EntityBase<Guid>
     public string Role { get; set; } = "Development";
 
     /// <summary> Date when the team was assigned to the project </summary>
-    public DateTime AssignedAt { get; set; } = DateTime.UtcNow;
+    public DateTime AssignedAt { get; set; } = SystemClock.UtcNow;
 
     /// <summary> Date when the team's involvement ended (if applicable) </summary>
     public DateTime? EndedAt { get; set; }

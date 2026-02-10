@@ -26,7 +26,7 @@ public class PostCommentsController(IPostService postService, IActorContextAcces
     [AllowAnonymous]
     public async Task<IActionResult> GetComments(Guid postId, [FromQuery] int skip = 0, [FromQuery] int take = 50, CancellationToken cancellationToken = default)
     {
-        var result = await postService.GetPostCommentsAsync(postId, skip, take, cancellationToken);
+        var result = await postService.GetPostCommentsAsync(postId, skip, take, cancellationToken).ConfigureAwait(false);
         return result.IsSuccess
             ? Ok(result.Value!.Select(PostMappings.MapCommentToDto))
             : BadRequest(result.Error);
@@ -40,7 +40,7 @@ public class PostCommentsController(IPostService postService, IActorContextAcces
         if (userId == Guid.Empty)
             return Unauthorized();
 
-        var result = await postService.AddCommentAsync(postId, userId, request.Content, request.ParentCommentId, cancellationToken);
+        var result = await postService.AddCommentAsync(postId, userId, request.Content, request.ParentCommentId, cancellationToken).ConfigureAwait(false);
         return result.IsSuccess
             ? Created($"/api/v1/posts/{postId}/comments/{result.Value!.Id}", PostMappings.MapCommentToDto(result.Value))
             : BadRequest(result.Error);
@@ -55,13 +55,13 @@ public class PostCommentsController(IPostService postService, IActorContextAcces
             return Unauthorized();
 
         // Verify comment ownership before allowing update
-        var commentResult = await postService.GetCommentByIdAsync(commentId, cancellationToken);
+        var commentResult = await postService.GetCommentByIdAsync(commentId, cancellationToken).ConfigureAwait(false);
         if (!commentResult.IsSuccess)
             return NotFound(commentResult.Error);
         if (commentResult.Value!.AuthorId != userId)
             return Forbid();
 
-        var result = await postService.UpdateCommentAsync(commentId, request.Content, cancellationToken);
+        var result = await postService.UpdateCommentAsync(commentId, request.Content, cancellationToken).ConfigureAwait(false);
         return result.IsSuccess
             ? Ok(PostMappings.MapCommentToDto(result.Value!))
             : BadRequest(result.Error);
@@ -76,13 +76,13 @@ public class PostCommentsController(IPostService postService, IActorContextAcces
             return Unauthorized();
 
         // Verify comment ownership before allowing delete
-        var commentResult = await postService.GetCommentByIdAsync(commentId, cancellationToken);
+        var commentResult = await postService.GetCommentByIdAsync(commentId, cancellationToken).ConfigureAwait(false);
         if (!commentResult.IsSuccess)
             return NotFound(commentResult.Error);
         if (commentResult.Value!.AuthorId != userId)
             return Forbid();
 
-        var result = await postService.DeleteCommentAsync(commentId, cancellationToken);
+        var result = await postService.DeleteCommentAsync(commentId, cancellationToken).ConfigureAwait(false);
         return result.IsSuccess
             ? NoContent()
             : BadRequest(result.Error);
@@ -97,7 +97,7 @@ public class PostCommentsController(IPostService postService, IActorContextAcces
     [AllowAnonymous]
     public async Task<IActionResult> GetPopularTags([FromQuery] int count = 20, CancellationToken cancellationToken = default)
     {
-        var result = await postService.GetPopularTagsAsync(count, cancellationToken);
+        var result = await postService.GetPopularTagsAsync(count, cancellationToken).ConfigureAwait(false);
         return result.IsSuccess
             ? Ok(result.Value!.Select(PostMappings.MapTagToDto))
             : BadRequest(result.Error);
@@ -108,7 +108,7 @@ public class PostCommentsController(IPostService postService, IActorContextAcces
     [AllowAnonymous]
     public async Task<IActionResult> GetPostTags(Guid postId, CancellationToken cancellationToken = default)
     {
-        var result = await postService.GetPostTagsAsync(postId, cancellationToken);
+        var result = await postService.GetPostTagsAsync(postId, cancellationToken).ConfigureAwait(false);
         return result.IsSuccess
             ? Ok(result.Value!.Select(PostMappings.MapTagToDto))
             : BadRequest(result.Error);
@@ -119,7 +119,7 @@ public class PostCommentsController(IPostService postService, IActorContextAcces
     [AllowAnonymous]
     public async Task<IActionResult> SearchByTags([FromQuery] string[] tags, [FromQuery] int skip = 0, [FromQuery] int take = 50, CancellationToken cancellationToken = default)
     {
-        var result = await postService.GetPostsByTagsAsync(tags, skip, take, cancellationToken);
+        var result = await postService.GetPostsByTagsAsync(tags, skip, take, cancellationToken).ConfigureAwait(false);
         return result.IsSuccess
             ? Ok(result.Value!.Select(PostMappings.MapToDto))
             : BadRequest(result.Error);

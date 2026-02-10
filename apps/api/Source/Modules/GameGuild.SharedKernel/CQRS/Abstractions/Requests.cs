@@ -37,12 +37,6 @@ public interface ICommand : IRequest { }
 public interface IQuery<out TResponse> : IRequest<TResponse> { }
 
 /// <summary>
-///     Represents a request that can be streamed
-/// </summary>
-/// <typeparam name="TResponse">Response type</typeparam>
-public interface IStream<out TResponse> : IRequestBase { }
-
-/// <summary>
 ///     Base class for paginated queries.
 ///     Exposes Skip/Take offset parameters; return type is the unified <see cref="PagedResult{T}" />.
 /// </summary>

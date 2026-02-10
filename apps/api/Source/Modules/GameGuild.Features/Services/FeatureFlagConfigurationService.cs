@@ -138,7 +138,7 @@ public class FeatureFlagConfigurationService(IFeatureFlagQueryRepository queryRe
             _logger.LogError(ex, "Error generating config hash for environment '{Environment}'", environment);
 
             // Return a timestamp-based hash as fallback
-            return Convert.ToBase64String(Encoding.UTF8.GetBytes(DateTime.UtcNow.ToString("O")));
+            return Convert.ToBase64String(Encoding.UTF8.GetBytes(SystemClock.UtcNow.ToString("O")));
         }
     }
 

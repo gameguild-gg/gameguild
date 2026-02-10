@@ -154,7 +154,7 @@ public class NotificationTemplate : EntityBase
         MessageTemplate = messageTemplate;
         ActionUrlTemplate = actionUrlTemplate;
         DefaultIconUrl = defaultIconUrl;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     /// <summary>
@@ -170,7 +170,7 @@ public class NotificationTemplate : EntityBase
         Description = description;
         Category = category;
         DefaultPriority = defaultPriority;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     /// <summary>
@@ -179,7 +179,7 @@ public class NotificationTemplate : EntityBase
     public void Activate()
     {
         IsActive = true;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     /// <summary>
@@ -188,7 +188,7 @@ public class NotificationTemplate : EntityBase
     public void Deactivate()
     {
         IsActive = false;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     /// <summary>

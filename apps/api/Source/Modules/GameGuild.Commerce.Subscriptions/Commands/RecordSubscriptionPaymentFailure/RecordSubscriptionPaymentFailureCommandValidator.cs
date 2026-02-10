@@ -13,6 +13,6 @@ public sealed class RecordSubscriptionPaymentFailureCommandValidator : AbstractV
 
         RuleFor(x => x.Reason).NotEmpty().WithMessage("Reason is required").MaximumLength(500).WithMessage("Reason cannot exceed 500 characters");
 
-        RuleFor(x => x.FailureDate).LessThanOrEqualTo(DateTime.UtcNow).WithMessage("FailureDate cannot be in the future");
+        RuleFor(x => x.FailureDate).LessThanOrEqualTo(SystemClock.UtcNow).WithMessage("FailureDate cannot be in the future");
     }
 }

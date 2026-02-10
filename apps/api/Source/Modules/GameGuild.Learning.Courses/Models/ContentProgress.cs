@@ -74,19 +74,19 @@ public class ContentProgress : EntityBase {
   /// <summary> Mark content as accessed </summary>
   public void MarkAsAccessed() {
     if (FirstAccessedAt == null) {
-      FirstAccessedAt = DateTime.UtcNow;
+      FirstAccessedAt = SystemClock.UtcNow;
 
       if (CompletionStatus == ContentCompletionStatus.NotStarted) { CompletionStatus = ContentCompletionStatus.InProgress; }
     }
 
-    LastAccessedAt = DateTime.UtcNow;
+    LastAccessedAt = SystemClock.UtcNow;
     Touch();
   }
 
   /// <summary> Mark content as completed </summary>
   public void MarkAsCompleted(decimal? score = null, decimal? maxScore = null) {
     CompletionStatus = ContentCompletionStatus.Completed;
-    CompletedAt = DateTime.UtcNow;
+    CompletedAt = SystemClock.UtcNow;
     ProgressPercentage = 100;
 
     if (score.HasValue) Score = score.Value;
@@ -101,7 +101,7 @@ public class ContentProgress : EntityBase {
 
     if (ProgressPercentage == 100 && CompletionStatus != ContentCompletionStatus.Completed) {
       CompletionStatus = ContentCompletionStatus.Completed;
-      CompletedAt = DateTime.UtcNow;
+      CompletedAt = SystemClock.UtcNow;
     }
     else if (ProgressPercentage > 0 && CompletionStatus == ContentCompletionStatus.NotStarted) { CompletionStatus = ContentCompletionStatus.InProgress; }
 

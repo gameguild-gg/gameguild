@@ -74,7 +74,7 @@ public class LocalAuthService(
             }
 
             // Apply user enumeration protection timing
-            await enumerationProtection.AddTimingProtectionDelayAsync(userExists, DateTime.UtcNow).ConfigureAwait(false);
+            await enumerationProtection.AddTimingProtectionDelayAsync(userExists, SystemClock.UtcNow).ConfigureAwait(false);
 
             if (!authenticationSucceeded)
             {
@@ -90,7 +90,7 @@ public class LocalAuthService(
                 IpAddress = ipAddress,
                 UserAgent = userAgent ?? "Unknown",
                 DeviceFingerprint = httpContextAccessor.HttpContext?.Request.Headers["X-Device-Fingerprint"].FirstOrDefault(), // Extracted from request header
-                Timestamp = DateTime.UtcNow
+                Timestamp = SystemClock.UtcNow
             };
 
             var anomalyResult = await anomalyDetectionService.AnalyzeLoginAttemptAsync(attemptContext).ConfigureAwait(false);
@@ -102,7 +102,7 @@ public class LocalAuthService(
                     userId.Value, anomalyResult.RiskLevel, string.Join(", ", anomalyResult.DetectedAnomalies));
 
                 var stepUpToken = Guid.NewGuid().ToString("N");
-                var stepUpExpiresAt = DateTime.UtcNow.AddMinutes(5);
+                var stepUpExpiresAt = SystemClock.UtcNow.AddMinutes(5);
 
                 return new SignInResponse
                 {
@@ -132,7 +132,7 @@ public class LocalAuthService(
             var refreshToken = await jwtTokenService.GenerateRefreshTokenAsync(userId.Value, deviceInfo, cancellationToken).ConfigureAwait(false);
 
             var refreshTokenExpiryDays = int.Parse(configuration["Jwt:RefreshTokenExpiryInDays"] ?? "7");
-            var refreshTokenExpiresAt = DateTime.UtcNow.AddDays(refreshTokenExpiryDays);
+            var refreshTokenExpiresAt = SystemClock.UtcNow.AddDays(refreshTokenExpiryDays);
 
             // Record successful login attempt
             await authAttemptService.RecordSuccessfulAttemptAsync(request.Email, userId.Value, ipAddress, userAgent, stopwatch.Elapsed).ConfigureAwait(false);
@@ -144,7 +144,7 @@ public class LocalAuthService(
                 AccessToken = accessToken,
                 RefreshToken = refreshToken,
                 ExpiresAt = refreshTokenExpiresAt,
-                ExpiresIn = (int)(refreshTokenExpiresAt - DateTime.UtcNow).TotalSeconds,
+                ExpiresIn = (int)(refreshTokenExpiresAt - SystemClock.UtcNow).TotalSeconds,
                 UserId = userId.Value,
                 Email = request.Email,
                 SessionId = Guid.NewGuid(),
@@ -181,7 +181,7 @@ public class LocalAuthService(
 
             if (emailExists)
             {
-                await enumerationProtection.AddTimingProtectionDelayAsync(true, DateTime.UtcNow).ConfigureAwait(false);
+                await enumerationProtection.AddTimingProtectionDelayAsync(true, SystemClock.UtcNow).ConfigureAwait(false);
                 logger.LogWarning("Sign-up attempt with existing email: {Email}", request.Email);
 
                 throw new InvalidOperationException("User already exists");
@@ -211,7 +211,7 @@ public class LocalAuthService(
             var refreshToken = await jwtTokenService.GenerateRefreshTokenAsync(userId, deviceInfo, cancellationToken).ConfigureAwait(false);
 
             var refreshTokenExpiryDays = int.Parse(configuration["Jwt:RefreshTokenExpiryInDays"] ?? "7");
-            var refreshTokenExpiresAt = DateTime.UtcNow.AddDays(refreshTokenExpiryDays);
+            var refreshTokenExpiresAt = SystemClock.UtcNow.AddDays(refreshTokenExpiryDays);
 
             // Record successful registration
             await authAttemptService.RecordSuccessfulAttemptAsync(request.Email, userId, ipAddress, userAgent, stopwatch.Elapsed).ConfigureAwait(false);
@@ -227,7 +227,7 @@ public class LocalAuthService(
                 AccessToken = accessToken,
                 RefreshToken = refreshToken,
                 ExpiresAt = refreshTokenExpiresAt,
-                ExpiresIn = (int)(refreshTokenExpiresAt - DateTime.UtcNow).TotalSeconds,
+                ExpiresIn = (int)(refreshTokenExpiresAt - SystemClock.UtcNow).TotalSeconds,
                 UserId = userId,
                 Email = request.Email,
                 SessionId = Guid.NewGuid(),
@@ -263,7 +263,7 @@ public class LocalAuthService(
 
         logger.LogInformation("🔥 [AUTHSERVICE] Repository lookup result - storedToken is null: {IsNull}", storedToken == null);
 
-        if (storedToken == null || !storedToken.IsActive || storedToken.ExpiresAt <= DateTime.UtcNow)
+        if (storedToken == null || !storedToken.IsActive || storedToken.ExpiresAt <= SystemClock.UtcNow)
         {
             logger.LogWarning(
                 "🔥 [AUTHSERVICE] Invalid refresh token attempt from {IpAddress}. storedToken is null: {IsNull}, IsActive: {IsActive}, ExpiresAt: {ExpiresAt}",
@@ -287,11 +287,11 @@ public class LocalAuthService(
         var newRefreshToken = await jwtTokenService.GenerateRefreshTokenAsync(userId, deviceInfo, cancellationToken).ConfigureAwait(false);
 
         var refreshTokenExpiryDays = int.Parse(configuration["Jwt:RefreshTokenExpiryInDays"] ?? "7");
-        var refreshTokenExpiresAt = DateTime.UtcNow.AddDays(refreshTokenExpiryDays);
+        var refreshTokenExpiresAt = SystemClock.UtcNow.AddDays(refreshTokenExpiryDays);
 
         // Revoke old token (token rotation for security)
         storedToken.IsRevoked = true;
-        storedToken.RevokedAt = DateTime.UtcNow;
+        storedToken.RevokedAt = SystemClock.UtcNow;
         storedToken.RevokedByIp = ipAddress;
         storedToken.ReplacedByToken = newRefreshToken;
         await refreshTokenRepository.UpdateAsync(storedToken).ConfigureAwait(false);
@@ -305,7 +305,7 @@ public class LocalAuthService(
             AccessToken = accessToken,
             RefreshToken = newRefreshToken,
             ExpiresAt = refreshTokenExpiresAt,
-            ExpiresIn = (int)(refreshTokenExpiresAt - DateTime.UtcNow).TotalSeconds,
+            ExpiresIn = (int)(refreshTokenExpiresAt - SystemClock.UtcNow).TotalSeconds,
             UserId = userId,
             Email = userEmail,
             SessionId = Guid.NewGuid()
@@ -321,9 +321,9 @@ public class LocalAuthService(
         if (refreshToken == null || !refreshToken.IsActive) { throw new ArgumentException("Invalid token"); }
 
         refreshToken.IsRevoked = true;
-        refreshToken.RevokedAt = DateTime.UtcNow;
+        refreshToken.RevokedAt = SystemClock.UtcNow;
         refreshToken.RevokedByIp = ipAddress;
-        refreshToken.UpdatedAt = DateTime.UtcNow;
+        refreshToken.UpdatedAt = SystemClock.UtcNow;
 
         await refreshTokenRepository.UpdateAsync(refreshToken).ConfigureAwait(false);
     }

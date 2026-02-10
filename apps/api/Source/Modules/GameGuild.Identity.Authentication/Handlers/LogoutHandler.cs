@@ -68,7 +68,7 @@ public sealed class LogoutHandler : IRequestHandler<LogoutCommand, LogoutRespons
                 // Revoke only the current token
                 if (!string.IsNullOrEmpty(command.CurrentTokenJti))
                 {
-                    var expiresAt = command.CurrentTokenExpiresAt ?? DateTime.UtcNow.AddHours(1);
+                    var expiresAt = command.CurrentTokenExpiresAt ?? SystemClock.UtcNow.AddHours(1);
                     
                     await _tokenRevocationService.RevokeTokenAsync(
                         command.CurrentTokenJti,

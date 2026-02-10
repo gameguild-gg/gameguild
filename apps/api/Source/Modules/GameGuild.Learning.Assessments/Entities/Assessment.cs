@@ -45,7 +45,7 @@ public class Assessment : EntityBase
 
     public bool IsAvailable()
     {
-        var now = DateTime.UtcNow;
+        var now = SystemClock.UtcNow;
         if (AvailableFrom.HasValue && now < AvailableFrom.Value) return false;
         if (AvailableUntil.HasValue && now > AvailableUntil.Value) return false;
         return true;
@@ -54,26 +54,26 @@ public class Assessment : EntityBase
     public void SetDescription(string? description)
     {
         Description = description;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     public void SetTimeLimit(int? timeLimitMinutes)
     {
         TimeLimitMinutes = timeLimitMinutes;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     public void SetMaxAttempts(int? maxAttempts)
     {
         MaxAttempts = maxAttempts;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     public void SetAvailability(DateTime? availableFrom, DateTime? availableUntil)
     {
         AvailableFrom = availableFrom;
         AvailableUntil = availableUntil;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     public void Update(
@@ -96,7 +96,7 @@ public class Assessment : EntityBase
         if (isRequired.HasValue) IsRequired = isRequired.Value;
         AvailableFrom = availableFrom;
         AvailableUntil = availableUntil;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 }
 
@@ -129,27 +129,27 @@ public class AssessmentSubmission : EntityBase
             EnrollmentId = enrollmentId,
             UserId = userId,
             AttemptNumber = attemptNumber,
-            StartedAt = DateTime.UtcNow,
+            StartedAt = SystemClock.UtcNow,
             Status = SubmissionStatus.InProgress
         };
     }
 
     public void Submit()
     {
-        SubmittedAt = DateTime.UtcNow;
+        SubmittedAt = SystemClock.UtcNow;
         Status = SubmissionStatus.Submitted;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     public void Grade(int score, int passingScore, Guid? gradedBy = null, string? feedback = null)
     {
         Score = score;
         Passed = score >= passingScore;
-        GradedAt = DateTime.UtcNow;
+        GradedAt = SystemClock.UtcNow;
         GradedBy = gradedBy;
         Feedback = feedback;
         Status = SubmissionStatus.Graded;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 }
 

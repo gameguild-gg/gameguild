@@ -50,19 +50,19 @@ public class LearningPath : EntityBase
     {
         var item = new LearningPathCourse(Id, courseId, order, isRequired);
         _courses.Add(item);
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     public void Publish()
     {
         IsPublished = true;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     public void Unpublish()
     {
         IsPublished = false;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 }
 
@@ -113,7 +113,7 @@ public class LearningPathEnrollment : EntityBase
             Progress = 0,
             CoursesCompleted = 0,
             TotalCourses = totalCourses,
-            EnrolledAt = DateTime.UtcNow,
+            EnrolledAt = SystemClock.UtcNow,
             Status = LearningPathEnrollmentStatus.InProgress
         };
     }
@@ -122,7 +122,7 @@ public class LearningPathEnrollment : EntityBase
     {
         CoursesCompleted = coursesCompleted;
         Progress = TotalCourses > 0 ? (int)((double)coursesCompleted / TotalCourses * 100) : 0;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
 
         if (CoursesCompleted >= TotalCourses)
         {
@@ -133,9 +133,9 @@ public class LearningPathEnrollment : EntityBase
     public void Complete()
     {
         Status = LearningPathEnrollmentStatus.Completed;
-        CompletedAt = DateTime.UtcNow;
+        CompletedAt = SystemClock.UtcNow;
         Progress = 100;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 }
 

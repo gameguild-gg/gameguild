@@ -61,7 +61,7 @@ public class ServiceAccountRepository(IApplicationDbContext context) : IServiceA
         CancellationToken cancellationToken = default)
     {
         serviceAccount.Id = Guid.NewGuid();
-        serviceAccount.UpdatedAt = DateTime.UtcNow;
+        serviceAccount.UpdatedAt = SystemClock.UtcNow;
 
         ServiceAccounts.Add(serviceAccount);
         await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
@@ -74,7 +74,7 @@ public class ServiceAccountRepository(IApplicationDbContext context) : IServiceA
         ServiceAccount serviceAccount,
         CancellationToken cancellationToken = default)
     {
-        serviceAccount.UpdatedAt = DateTime.UtcNow;
+        serviceAccount.UpdatedAt = SystemClock.UtcNow;
 
         ServiceAccounts.Update(serviceAccount);
         await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
@@ -91,7 +91,7 @@ public class ServiceAccountRepository(IApplicationDbContext context) : IServiceA
         {
             // Soft delete by deactivating
             serviceAccount.IsActive = false;
-            serviceAccount.UpdatedAt = DateTime.UtcNow;
+            serviceAccount.UpdatedAt = SystemClock.UtcNow;
 
             await UpdateAsync(serviceAccount, cancellationToken).ConfigureAwait(false);
         }

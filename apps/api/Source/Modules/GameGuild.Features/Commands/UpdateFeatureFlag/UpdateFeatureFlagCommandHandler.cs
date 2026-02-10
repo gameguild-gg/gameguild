@@ -6,13 +6,11 @@ namespace GameGuild.Features;
 /// <summary>
 ///     Handler for UpdateFeatureFlagCommand
 /// </summary>
-#pragma warning disable CS0618 // Type or member is obsolete - IFeatureFlagRepository migration pending
-public sealed class UpdateFeatureFlagCommandHandler(IFeatureFlagRepository repository, ILogger<UpdateFeatureFlagCommandHandler> logger) : ICommandHandler<UpdateFeatureFlagCommand, bool>
+public sealed class UpdateFeatureFlagCommandHandler(IFeatureFlagQueryRepository repository, ILogger<UpdateFeatureFlagCommandHandler> logger) : ICommandHandler<UpdateFeatureFlagCommand, bool>
 {
     private readonly ILogger<UpdateFeatureFlagCommandHandler> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
-    private readonly IFeatureFlagRepository _repository = repository ?? throw new ArgumentNullException(nameof(repository));
-#pragma warning restore CS0618
+    private readonly IFeatureFlagQueryRepository _repository = repository ?? throw new ArgumentNullException(nameof(repository));
 
     public async Task<bool> Handle(UpdateFeatureFlagCommand request, CancellationToken cancellationToken)
     {

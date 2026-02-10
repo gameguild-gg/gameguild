@@ -31,7 +31,7 @@ public class KycService : IKycService
                 VerificationLevel = verificationLevel,
                 DocumentTypes = documentTypes,
                 DocumentCountry = documentCountry,
-                SubmittedAt = DateTime.UtcNow
+                SubmittedAt = SystemClock.UtcNow
             };
 
             await _repository.CreateAsync(verification, cancellationToken).ConfigureAwait(false);
@@ -63,11 +63,11 @@ public class KycService : IKycService
 
             verification.Status = status;
             verification.Notes = notes;
-            verification.CompletedAt = completedAt ?? (status == KycVerificationStatus.Approved || status == KycVerificationStatus.Rejected ? DateTime.UtcNow : null);
+            verification.CompletedAt = completedAt ?? (status == KycVerificationStatus.Approved || status == KycVerificationStatus.Rejected ? SystemClock.UtcNow : null);
 
             if (status == KycVerificationStatus.Approved)
             {
-                verification.ExpiresAt = DateTime.UtcNow.AddYears(1); // Set expiration to 1 year
+                verification.ExpiresAt = SystemClock.UtcNow.AddYears(1); // Set expiration to 1 year
             }
 
             await _repository.UpdateAsync(verification, cancellationToken).ConfigureAwait(false);
@@ -226,12 +226,12 @@ public class KycService : IKycService
             verification.Status = status;
             verification.ProviderData = providerData;
             verification.CompletedAt = status == KycVerificationStatus.Approved || status == KycVerificationStatus.Rejected
-                ? DateTime.UtcNow
+                ? SystemClock.UtcNow
                 : null;
 
             if (status == KycVerificationStatus.Approved)
             {
-                verification.ExpiresAt = DateTime.UtcNow.AddYears(1);
+                verification.ExpiresAt = SystemClock.UtcNow.AddYears(1);
             }
 
             await _repository.UpdateAsync(verification, cancellationToken).ConfigureAwait(false);

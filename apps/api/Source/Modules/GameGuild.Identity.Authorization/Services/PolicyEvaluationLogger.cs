@@ -271,7 +271,7 @@ public sealed class PolicyEvaluationLogger : IPolicyEvaluationLogger
         {
             TraceId = traceId;
             PolicyName = policyName;
-            StartTime = DateTime.UtcNow;
+            StartTime = SystemClock.UtcNow;
             _user = user;
             _resource = resource;
             _logger = logger;

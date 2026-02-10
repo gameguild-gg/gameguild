@@ -27,7 +27,7 @@ public sealed class GetUserNotificationsPagedQueryHandler(IUserNotificationRepos
             request.Priority,
             request.FromDate?.DateTime,
             request.ToDate?.DateTime,
-            cancellationToken);
+            cancellationToken).ConfigureAwait(false);
 
         // Map to DTOs
         var notificationDtos = notifications.Select(notification => new UserNotificationDto(

@@ -9,7 +9,7 @@ public sealed class CreateTestingSessionCommandValidator : AbstractValidator<Cre
 
     RuleFor(x => x.Title).NotEmpty().MaximumLength(255).WithMessage("Title is required and must be less than 255 characters.");
 
-    RuleFor(x => x.ScheduledDate).NotEmpty().GreaterThan(DateTime.UtcNow).WithMessage("Scheduled date must be in the future.");
+    RuleFor(x => x.ScheduledDate).NotEmpty().GreaterThan(SystemClock.UtcNow).WithMessage("Scheduled date must be in the future.");
 
     RuleFor(x => x.Duration).NotEmpty().GreaterThan(TimeSpan.Zero).LessThanOrEqualTo(TimeSpan.FromHours(8)).WithMessage("Duration must be between 0 and 8 hours.");
 

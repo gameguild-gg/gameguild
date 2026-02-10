@@ -292,7 +292,6 @@ public abstract class WebhookProcessorBase
 
                     await Task.Delay(delay, cancellationToken).ConfigureAwait(false);
                 }
-                throw;
             }
         }
 

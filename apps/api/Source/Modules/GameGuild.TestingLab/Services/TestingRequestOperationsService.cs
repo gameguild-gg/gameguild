@@ -204,7 +204,7 @@ public class TestingRequestOperationsService(IApplicationDbContext context) : IT
             DownloadUrl = requestDto.DownloadUrl,
             IsPrerelease = true,
             ReleaseType = "testing",
-            ReleasedAt = DateTime.UtcNow,
+            ReleasedAt = SystemClock.UtcNow,
         };
 
         context.ProjectReleases.Add(projectRelease);
@@ -222,8 +222,8 @@ public class TestingRequestOperationsService(IApplicationDbContext context) : IT
             InstructionsUrl = requestDto.InstructionsUrl,
             FeedbackFormContent = requestDto.FeedbackFormContent,
             MaxTesters = requestDto.MaxTesters,
-            StartDate = requestDto.StartDate ?? DateTime.UtcNow,
-            EndDate = requestDto.EndDate ?? DateTime.UtcNow.AddDays(30),
+            StartDate = requestDto.StartDate ?? SystemClock.UtcNow,
+            EndDate = requestDto.EndDate ?? SystemClock.UtcNow.AddDays(30),
             Status = TestingRequestStatus.Draft,
             CreatedById = userId,
         };

@@ -17,10 +17,10 @@ public class ActivityGradeController(IActivityGradeService activityGradeService)
     if (!ModelState.IsValid) return BadRequest(ModelState);
 
     try {
-      var grade = await activityGradeService.GradeActivityAsync(gradeDto.ContentInteractionId, gradeDto.GraderProgramUserId, gradeDto.Grade, gradeDto.Feedback, gradeDto.GradingDetails);
+      var grade = await activityGradeService.GradeActivityAsync(gradeDto.ContentInteractionId, gradeDto.GraderProgramUserId, gradeDto.Grade, gradeDto.Feedback, gradeDto.GradingDetails).ConfigureAwait(false);
 
       // Verify the grade belongs to the specified program
-      await ValidateGradeBelongsToProgram(grade.Id, programId);
+      await ValidateGradeBelongsToProgram(grade.Id, programId).ConfigureAwait(false);
 
       return Ok(grade.ToDto());
     }
@@ -32,12 +32,12 @@ public class ActivityGradeController(IActivityGradeService activityGradeService)
   [HttpGet("interaction/{contentInteractionId}")]
   [RequireResourcePermission<PermissionType, Program>(PermissionType.Read, "programId")]
   public async Task<ActionResult<ActivityGradeDto>> GetGrade(Guid programId, Guid contentInteractionId) {
-    var grade = await activityGradeService.GetGradeAsync(contentInteractionId);
+    var grade = await activityGradeService.GetGradeAsync(contentInteractionId).ConfigureAwait(false);
 
     if (grade == null) return NotFound("Grade not found for this content interaction");
 
     // Verify the grade belongs to the specified program
-    await ValidateGradeBelongsToProgram(grade.Id, programId);
+    await ValidateGradeBelongsToProgram(grade.Id, programId).ConfigureAwait(false);
 
     return Ok(grade.ToDto());
   }
@@ -46,7 +46,7 @@ public class ActivityGradeController(IActivityGradeService activityGradeService)
   [HttpGet("grader/{graderProgramUserId}")]
   [RequireResourcePermission<PermissionType, Program>(PermissionType.Read, "programId")]
   public async Task<ActionResult<IEnumerable<ActivityGradeDto>>> GetGradesByGrader(Guid programId, Guid graderProgramUserId) {
-    var grades = await activityGradeService.GetGradesByGraderAsync(graderProgramUserId);
+    var grades = await activityGradeService.GetGradesByGraderAsync(graderProgramUserId).ConfigureAwait(false);
 
     // Filter to only grades for this program (additional validation)
     var programGrades = grades.Where(g => g.ContentInteraction.Content.ProgramId == programId);
@@ -58,7 +58,7 @@ public class ActivityGradeController(IActivityGradeService activityGradeService)
   [HttpGet("student/{programUserId}")]
   [RequireResourcePermission<PermissionType, Program>(PermissionType.Read, "programId")]
   public async Task<ActionResult<IEnumerable<ActivityGradeDto>>> GetGradesByStudent(Guid programId, Guid programUserId) {
-    var grades = await activityGradeService.GetGradesByStudentAsync(programUserId);
+    var grades = await activityGradeService.GetGradesByStudentAsync(programUserId).ConfigureAwait(false);
 
     // Filter to only grades for this program (additional validation)
     var programGrades = grades.Where(g => g.ContentInteraction.Content.ProgramId == programId);
@@ -73,9 +73,9 @@ public class ActivityGradeController(IActivityGradeService activityGradeService)
     if (!ModelState.IsValid) return BadRequest(ModelState);
 
     // Verify the grade belongs to the specified program
-    await ValidateGradeBelongsToProgram(gradeId, programId);
+    await ValidateGradeBelongsToProgram(gradeId, programId).ConfigureAwait(false);
 
-    var updatedGrade = await activityGradeService.UpdateGradeAsync(gradeId, updateDto.Grade, updateDto.Feedback, updateDto.GradingDetails);
+    var updatedGrade = await activityGradeService.UpdateGradeAsync(gradeId, updateDto.Grade, updateDto.Feedback, updateDto.GradingDetails).ConfigureAwait(false);
 
     if (updatedGrade == null) return NotFound("Grade not found");
 
@@ -87,9 +87,9 @@ public class ActivityGradeController(IActivityGradeService activityGradeService)
   [RequireResourcePermission<PermissionType, Program>(PermissionType.Delete, "programId")]
   public async Task<ActionResult> DeleteGrade(Guid programId, Guid gradeId) {
     // Verify the grade belongs to the specified program
-    await ValidateGradeBelongsToProgram(gradeId, programId);
+    await ValidateGradeBelongsToProgram(gradeId, programId).ConfigureAwait(false);
 
-    var deleted = await activityGradeService.DeleteGradeAsync(gradeId);
+    var deleted = await activityGradeService.DeleteGradeAsync(gradeId).ConfigureAwait(false);
 
     if (!deleted) return NotFound("Grade not found");
 
@@ -100,7 +100,7 @@ public class ActivityGradeController(IActivityGradeService activityGradeService)
   [HttpGet("pending")]
   [RequireResourcePermission<PermissionType, Program>(PermissionType.Read, "programId")]
   public async Task<ActionResult<IEnumerable<ContentInteractionDto>>> GetPendingGrades(Guid programId) {
-    var pendingInteractions = await activityGradeService.GetPendingGradesAsync(programId);
+    var pendingInteractions = await activityGradeService.GetPendingGradesAsync(programId).ConfigureAwait(false);
 
     return Ok(pendingInteractions.ToDto());
   }
@@ -109,7 +109,7 @@ public class ActivityGradeController(IActivityGradeService activityGradeService)
   [HttpGet("statistics")]
   [RequireResourcePermission<PermissionType, Program>(PermissionType.Read, "programId")]
   public async Task<ActionResult<GradeStatisticsDto>> GetGradeStatistics(Guid programId) {
-    var statistics = await activityGradeService.GetGradeStatisticsAsync(programId);
+    var statistics = await activityGradeService.GetGradeStatisticsAsync(programId).ConfigureAwait(false);
 
     return Ok(statistics.ToDto());
   }
@@ -118,7 +118,7 @@ public class ActivityGradeController(IActivityGradeService activityGradeService)
   [HttpGet("content/{contentId}")]
   [RequireResourcePermission<PermissionType, Program>(PermissionType.Read, "programId")]
   public async Task<ActionResult<IEnumerable<ActivityGradeDto>>> GetGradesByContent(Guid programId, Guid contentId) {
-    var grades = await activityGradeService.GetGradesByContentAsync(contentId);
+    var grades = await activityGradeService.GetGradesByContentAsync(contentId).ConfigureAwait(false);
 
     // Filter to only grades for this program (additional validation)
     var programGrades = grades.Where(g => g.ContentInteraction.Content.ProgramId == programId);
@@ -128,7 +128,7 @@ public class ActivityGradeController(IActivityGradeService activityGradeService)
 
   /// <summary> Helper method to validate that a grade belongs to the specified program Implements the permission inheritance chain validation </summary>
   private async Task ValidateGradeBelongsToProgram(Guid gradeId, Guid programId) {
-    var grade = await activityGradeService.GetGradeByIdAsync(gradeId);
+    var grade = await activityGradeService.GetGradeByIdAsync(gradeId).ConfigureAwait(false);
 
     if (grade?.ContentInteraction?.Content?.ProgramId != programId) throw new UnauthorizedAccessException($"Grade {gradeId} does not belong to program {programId}");
   }

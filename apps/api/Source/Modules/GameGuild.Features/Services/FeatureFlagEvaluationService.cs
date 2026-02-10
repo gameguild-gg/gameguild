@@ -31,7 +31,7 @@ public class FeatureFlagEvaluationService(
         ArgumentException.ThrowIfNullOrWhiteSpace(featureKey);
         ArgumentNullException.ThrowIfNull(context);
 
-        var startTime = DateTime.UtcNow;
+        var startTime = SystemClock.UtcNow;
 
         // Security Note: Missing TenantId is logged for observability, but actual fail-closed 
         // enforcement happens in TenantTargetingHandler when tenant-specific rules exist.

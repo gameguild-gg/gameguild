@@ -96,7 +96,7 @@ public class FeatureFlagQueryRepository : IFeatureFlagQueryRepository
                 IsEnabled = flag.IsEnabled,
                 TotalEvaluations = (int)usages.Sum(u => u.AccessCount),
                 UniqueUsers = usages.Where(u => u.UserId.HasValue).Select(u => u.UserId!.Value).Distinct().Count(),
-                LastEvaluatedAt = usages.Any() ? usages.Max(u => u.LastAccessAt) : DateTime.UtcNow,
+                LastEvaluatedAt = usages.Any() ? usages.Max(u => u.LastAccessAt) : SystemClock.UtcNow,
                 CreatedAt = flag.CreatedAt
             }
         };
@@ -121,10 +121,10 @@ public class FeatureFlagQueryRepository : IFeatureFlagQueryRepository
             DisabledEvaluations = totalDisabled,
             EnabledPercentage = total > 0 ? (double)totalEnabled / total * 100 : 0,
             UniqueUsers = 0,
-            FirstEvaluationAt = startDate ?? DateTime.UtcNow,
-            LastEvaluationAt = endDate ?? DateTime.UtcNow,
-            PeriodStart = startDate ?? DateTime.UtcNow.AddMonths(-1),
-            PeriodEnd = endDate ?? DateTime.UtcNow
+            FirstEvaluationAt = startDate ?? SystemClock.UtcNow,
+            LastEvaluationAt = endDate ?? SystemClock.UtcNow,
+            PeriodStart = startDate ?? SystemClock.UtcNow.AddMonths(-1),
+            PeriodEnd = endDate ?? SystemClock.UtcNow
         };
     }
 
@@ -241,10 +241,10 @@ public class FeatureFlagQueryRepository : IFeatureFlagQueryRepository
             EnabledPercentage = usages.Any() ? (double)usages.Count(u => u.WasEnabled) / usages.Count * 100 : 0,
             UniqueUsers = usages.Where(u => u.UserId.HasValue).Select(u => u.UserId!.Value).Distinct().Count(),
             UniqueTenants = usages.Where(u => u.TenantId.HasValue).Select(u => u.TenantId!.Value).Distinct().Count(),
-            FirstAccess = usages.Any() ? usages.Min(u => u.FirstAccessAt) : DateTime.UtcNow,
-            LastAccess = usages.Any() ? usages.Max(u => u.LastAccessAt) : DateTime.UtcNow,
-            PeriodStart = startDate ?? DateTime.UtcNow.AddMonths(-1),
-            PeriodEnd = endDate ?? DateTime.UtcNow
+            FirstAccess = usages.Any() ? usages.Min(u => u.FirstAccessAt) : SystemClock.UtcNow,
+            LastAccess = usages.Any() ? usages.Max(u => u.LastAccessAt) : SystemClock.UtcNow,
+            PeriodStart = startDate ?? SystemClock.UtcNow.AddMonths(-1),
+            PeriodEnd = endDate ?? SystemClock.UtcNow
         };
     }
 

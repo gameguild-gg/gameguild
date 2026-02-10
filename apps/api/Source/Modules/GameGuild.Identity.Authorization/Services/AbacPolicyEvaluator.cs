@@ -261,8 +261,8 @@ public class AbacRequestContextBuilder
         string? userAgent = null,
         string? geoCountry = null)
     {
-        _environmentAttributes["environment.current-time"] = DateTime.UtcNow;
-        _environmentAttributes["environment.current-date"] = DateOnly.FromDateTime(DateTime.UtcNow);
+        _environmentAttributes["environment.current-time"] = SystemClock.UtcNow;
+        _environmentAttributes["environment.current-date"] = DateOnly.FromDateTime(SystemClock.UtcNow);
         
         if (!string.IsNullOrEmpty(ipAddress))
             _environmentAttributes["environment.ip-address"] = ipAddress;

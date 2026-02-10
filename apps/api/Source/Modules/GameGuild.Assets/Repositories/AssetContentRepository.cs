@@ -64,7 +64,7 @@ public class AssetContentRepository : IAssetContentRepository
         int limit = 100,
         CancellationToken ct = default)
     {
-        var cutoff = DateTime.UtcNow - gracePeriod;
+        var cutoff = SystemClock.UtcNow - gracePeriod;
         
         return await _context.Set<AssetContent>()
             .Where(x => x.ReferenceCount == 0)
@@ -96,7 +96,7 @@ public class AssetContentRepository : IAssetContentRepository
         await _context.Set<AssetContent>()
             .Where(x => x.Id == id && x.ReferenceCount <= 0 && x.MarkedForDeletionAt == null)
             .ExecuteUpdateAsync(x => x
-                .SetProperty(p => p.MarkedForDeletionAt, DateTime.UtcNow), ct).ConfigureAwait(false);
+                .SetProperty(p => p.MarkedForDeletionAt, SystemClock.UtcNow), ct).ConfigureAwait(false);
     }
 
     public async Task DeleteAsync(Guid id, CancellationToken ct = default)

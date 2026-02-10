@@ -526,7 +526,7 @@ public sealed class GetResourceUsersQueryHandler(
             GrantedByUserId = u.UserId, // Note: This should ideally come from the service
             ExpiresAt = u.ExpiresAt,
             LastAccessedAt = null,
-            IsActive = !u.ExpiresAt.HasValue || u.ExpiresAt.Value > DateTime.UtcNow
+            IsActive = !u.ExpiresAt.HasValue || u.ExpiresAt.Value > SystemClock.UtcNow
         }).ToList();
 
         // Filter out expired permissions if requested

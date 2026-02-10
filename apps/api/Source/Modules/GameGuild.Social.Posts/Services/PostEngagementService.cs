@@ -185,7 +185,7 @@ public class PostEngagementService : IPostEngagementService
             _context.Set<PostStatistics>().Add(statistics);
         }
 
-        var hoursOld = (int)(DateTime.UtcNow - post.CreatedAt).TotalHours;
+        var hoursOld = (int)(SystemClock.UtcNow - post.CreatedAt).TotalHours;
         statistics.RecalculateScores(post.LikesCount, post.CommentsCount, post.SharesCount, hoursOld);
 
         await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
@@ -214,7 +214,7 @@ public class PostEngagementService : IPostEngagementService
                 statsDict[post.Id] = stats;
             }
 
-            var hoursOld = (int)(DateTime.UtcNow - post.CreatedAt).TotalHours;
+            var hoursOld = (int)(SystemClock.UtcNow - post.CreatedAt).TotalHours;
             stats.RecalculateScores(post.LikesCount, post.CommentsCount, post.SharesCount, hoursOld);
             count++;
         }

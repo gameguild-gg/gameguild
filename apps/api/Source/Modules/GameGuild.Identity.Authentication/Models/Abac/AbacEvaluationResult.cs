@@ -33,7 +33,7 @@ public abstract class AbacEvaluationResult
     /// <summary>
     ///     Evaluation timestamp
     /// </summary>
-    public DateTime EvaluatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime EvaluatedAt { get; set; } = SystemClock.UtcNow;
 
     /// <summary>
     ///     Whether the decision allows access

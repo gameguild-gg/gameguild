@@ -51,8 +51,8 @@ public class FeatureFlagAnalyticsService(
                 Environment = context.Environment,
                 WasEnabled = wasEnabled,
                 ReturnedValue = value,
-                FirstAccessAt = DateTime.UtcNow,
-                LastAccessAt = DateTime.UtcNow,
+                FirstAccessAt = SystemClock.UtcNow,
+                LastAccessAt = SystemClock.UtcNow,
                 AccessCount = 1,
                 ContextData = JsonSerializer.Serialize(new { context.UserAgent, context.IpAddress, context.Country, context.RequestTime })
             };
@@ -71,8 +71,8 @@ public class FeatureFlagAnalyticsService(
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(featureKey);
 
-        var start = startDate ?? DateTime.UtcNow.AddDays(-30);
-        var end = endDate ?? DateTime.UtcNow;
+        var start = startDate ?? SystemClock.UtcNow.AddDays(-30);
+        var end = endDate ?? SystemClock.UtcNow;
 
         ValidateDateRange(start, end);
 
@@ -115,8 +115,8 @@ public class FeatureFlagAnalyticsService(
 
         if (!keysList.Any()) { return new Dictionary<string, FeatureFlagAnalytics>(); }
 
-        var start = startDate ?? DateTime.UtcNow.AddDays(-30);
-        var end = endDate ?? DateTime.UtcNow;
+        var start = startDate ?? SystemClock.UtcNow.AddDays(-30);
+        var end = endDate ?? SystemClock.UtcNow;
 
         ValidateDateRange(start, end);
 
@@ -145,8 +145,8 @@ public class FeatureFlagAnalyticsService(
     /// <inheritdoc />
     public async Task<TenantFeatureAnalytics> GetTenantAnalyticsAsync(Guid tenantId, DateTime? startDate = null, DateTime? endDate = null, CancellationToken cancellationToken = default)
     {
-        var start = startDate ?? DateTime.UtcNow.AddDays(-30);
-        var end = endDate ?? DateTime.UtcNow;
+        var start = startDate ?? SystemClock.UtcNow.AddDays(-30);
+        var end = endDate ?? SystemClock.UtcNow;
 
         ValidateDateRange(start, end);
 
@@ -212,8 +212,8 @@ public class FeatureFlagAnalyticsService(
     {
         if (topCount <= 0) { throw new ArgumentOutOfRangeException(nameof(topCount), "Top count must be greater than 0"); }
 
-        var start = startDate ?? DateTime.UtcNow.AddDays(-30);
-        var end = endDate ?? DateTime.UtcNow;
+        var start = startDate ?? SystemClock.UtcNow.AddDays(-30);
+        var end = endDate ?? SystemClock.UtcNow;
 
         ValidateDateRange(start, end);
 
@@ -257,7 +257,7 @@ public class FeatureFlagAnalyticsService(
     {
         try
         {
-            var now = DateTime.UtcNow;
+            var now = SystemClock.UtcNow;
             var oneHourAgo = now.AddHours(-1);
             var startOfDay = now.Date;
 
@@ -284,7 +284,7 @@ public class FeatureFlagAnalyticsService(
         {
             _logger.LogError(ex, "Error retrieving realtime stats");
 
-            return new RealtimeUsageStats { Timestamp = DateTime.UtcNow };
+            return new RealtimeUsageStats { Timestamp = SystemClock.UtcNow };
         }
     }
 
@@ -293,8 +293,8 @@ public class FeatureFlagAnalyticsService(
     {
         ArgumentNullException.ThrowIfNull(request);
 
-        var start = request.StartDate ?? DateTime.UtcNow.AddDays(-30);
-        var end = request.EndDate ?? DateTime.UtcNow;
+        var start = request.StartDate ?? SystemClock.UtcNow.AddDays(-30);
+        var end = request.EndDate ?? SystemClock.UtcNow;
 
         ValidateDateRange(start, end);
 
@@ -345,9 +345,9 @@ public class FeatureFlagAnalyticsService(
         {
             Content = Encoding.UTF8.GetBytes(json),
             ContentType = "application/json",
-            FileName = $"feature-analytics-{DateTime.UtcNow:yyyyMMdd-HHmmss}.json",
+            FileName = $"feature-analytics-{SystemClock.UtcNow:yyyyMMdd-HHmmss}.json",
             RecordCount = analyticsData.Count,
-            GeneratedAt = DateTime.UtcNow
+            GeneratedAt = SystemClock.UtcNow
         };
     }
 
@@ -374,9 +374,9 @@ public class FeatureFlagAnalyticsService(
         {
             Content = Encoding.UTF8.GetBytes(csv.ToString()),
             ContentType = "text/csv",
-            FileName = $"feature-analytics-{DateTime.UtcNow:yyyyMMdd-HHmmss}.csv",
+            FileName = $"feature-analytics-{SystemClock.UtcNow:yyyyMMdd-HHmmss}.csv",
             RecordCount = analyticsData.Count,
-            GeneratedAt = DateTime.UtcNow
+            GeneratedAt = SystemClock.UtcNow
         };
     }
 

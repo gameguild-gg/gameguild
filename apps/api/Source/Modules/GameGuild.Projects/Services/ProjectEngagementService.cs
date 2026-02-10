@@ -17,7 +17,7 @@ public class ProjectEngagementService(IApplicationDbContext context) : IProjectE
             TeamId = teamId,
             Role = role,
             Permissions = permissions,
-            AssignedAt = DateTime.UtcNow,
+            AssignedAt = SystemClock.UtcNow,
             IsActive = true
         };
 
@@ -35,7 +35,7 @@ public class ProjectEngagementService(IApplicationDbContext context) : IProjectE
         if (projectTeam == null) return false;
 
         projectTeam.IsActive = false;
-        projectTeam.EndedAt = DateTime.UtcNow;
+        projectTeam.EndedAt = SystemClock.UtcNow;
         await context.SaveChangesAsync().ConfigureAwait(false);
 
         return true;
@@ -77,7 +77,7 @@ public class ProjectEngagementService(IApplicationDbContext context) : IProjectE
         {
             ProjectId = projectId,
             UserId = userId,
-            FollowedAt = DateTime.UtcNow,
+            FollowedAt = SystemClock.UtcNow,
             EmailNotifications = emailNotifications,
             PushNotifications = pushNotifications
         };
@@ -226,7 +226,7 @@ public class ProjectEngagementService(IApplicationDbContext context) : IProjectE
         {
             ProjectId = projectId,
             JamId = jamId,
-            SubmittedAt = DateTime.UtcNow,
+            SubmittedAt = SystemClock.UtcNow,
             SubmissionNotes = submissionNotes,
             IsEligible = true
         };
@@ -289,7 +289,7 @@ public class ProjectEngagementService(IApplicationDbContext context) : IProjectE
         if (project == null)
             throw new ArgumentException("Project not found", nameof(projectId));
 
-        var thirtyDaysAgo = DateTime.UtcNow.AddDays(-30);
+        var thirtyDaysAgo = SystemClock.UtcNow.AddDays(-30);
 
         return new ProjectStatistics
         {
@@ -306,14 +306,14 @@ public class ProjectEngagementService(IApplicationDbContext context) : IProjectE
             JamSubmissionCount = project.JamSubmissions.Count,
             AwardCount = project.JamSubmissions.Count(js => js.HasAward),
             NewFollowersLast30Days = project.Followers.Count(f => f.FollowedAt >= thirtyDaysAgo),
-            CalculatedAt = DateTime.UtcNow,
+            CalculatedAt = SystemClock.UtcNow,
             TrendingScore = CalculateTrendingScore(project, thirtyDaysAgo),
         };
     }
 
     public async Task<IEnumerable<Project>> GetTrendingProjectsAsync(int take = 10, TimeSpan? timeWindow = null)
     {
-        var cutoffDate = DateTime.UtcNow.Subtract(timeWindow ?? TimeSpan.FromDays(7));
+        var cutoffDate = SystemClock.UtcNow.Subtract(timeWindow ?? TimeSpan.FromDays(7));
 
         var projects = await context.Set<Project>()
             .Include(p => p.CreatedBy)

@@ -136,7 +136,7 @@ public class ResourceQuota : EntityBase
 
         if (!nextReset.HasValue) return false;
 
-        return DateTime.UtcNow >= nextReset.Value;
+        return SystemClock.UtcNow >= nextReset.Value;
     }
 
     /// <summary>
@@ -176,8 +176,8 @@ public class ResourceQuota : EntityBase
     public void ResetUsage()
     {
         CurrentUsage = 0;
-        LastReset = DateTime.UtcNow;
-        UpdatedAt = DateTime.UtcNow;
+        LastReset = SystemClock.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     /// <summary>
@@ -193,7 +193,7 @@ public class ResourceQuota : EntityBase
         if (amount < 0) throw new ArgumentException("Usage amount cannot be negative", nameof(amount));
 
         CurrentUsage += amount;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     /// <summary>
@@ -204,6 +204,6 @@ public class ResourceQuota : EntityBase
         if (amount < 0) throw new ArgumentException("Usage amount cannot be negative", nameof(amount));
 
         CurrentUsage = Math.Max(0, CurrentUsage - amount);
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 }

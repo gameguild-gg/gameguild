@@ -92,21 +92,21 @@ public class Rating : EntityBase
         Value = value;
         ReviewText = reviewText?.Trim();
         ReviewTitle = reviewTitle?.Trim();
-        EditedAt = DateTime.UtcNow;
-        UpdatedAt = DateTime.UtcNow;
+        EditedAt = SystemClock.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
-    public void MarkAsVerified() { IsVerified = true; UpdatedAt = DateTime.UtcNow; }
+    public void MarkAsVerified() { IsVerified = true; UpdatedAt = SystemClock.UtcNow; }
 
-    public void IncrementHelpful() { HelpfulCount++; UpdatedAt = DateTime.UtcNow; }
-    public void DecrementHelpful() { if (HelpfulCount > 0) HelpfulCount--; UpdatedAt = DateTime.UtcNow; }
+    public void IncrementHelpful() { HelpfulCount++; UpdatedAt = SystemClock.UtcNow; }
+    public void DecrementHelpful() { if (HelpfulCount > 0) HelpfulCount--; UpdatedAt = SystemClock.UtcNow; }
 
-    public void IncrementReport() { ReportCount++; UpdatedAt = DateTime.UtcNow; }
+    public void IncrementReport() { ReportCount++; UpdatedAt = SystemClock.UtcNow; }
 
     public void SetModerationStatus(RatingModerationStatus status)
     {
         ModerationStatus = status;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 }
 
@@ -157,7 +157,7 @@ public class RatingHelpfulVote : EntityBase
     public void UpdateVote(bool isHelpful)
     {
         IsHelpful = isHelpful;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 }
 
@@ -202,7 +202,7 @@ public class RatingSummary : EntityBase
     public int TotalReviews { get; private set; }
 
     /// <summary>When statistics were last recalculated</summary>
-    public DateTime LastCalculatedAt { get; private set; } = DateTime.UtcNow;
+    public DateTime LastCalculatedAt { get; private set; } = SystemClock.UtcNow;
 
     private RatingSummary() { } // EF Core
 
@@ -221,7 +221,7 @@ public class RatingSummary : EntityBase
             FourStar = 0,
             FiveStar = 0,
             TotalReviews = 0,
-            LastCalculatedAt = DateTime.UtcNow
+            LastCalculatedAt = SystemClock.UtcNow
         };
     }
 
@@ -241,8 +241,8 @@ public class RatingSummary : EntityBase
             ? Math.Round((decimal)ratingsList.Average(r => r.Value), 2)
             : 0;
 
-        LastCalculatedAt = DateTime.UtcNow;
-        UpdatedAt = DateTime.UtcNow;
+        LastCalculatedAt = SystemClock.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     /// <summary>Gets the distribution as percentages</summary>

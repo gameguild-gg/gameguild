@@ -72,7 +72,7 @@ public class ProjectsController : BaseApiController {
       SortDirection = sortDirection,
     };
 
-    var projects = await _mediator.Send(query);
+    var projects = await _mediator.Send(query).ConfigureAwait(false);
 
     return Ok(projects);
   }
@@ -83,7 +83,7 @@ public class ProjectsController : BaseApiController {
   public async Task<ActionResult<Project>> GetProject(Guid id, [FromQuery] bool includeTeam = true, [FromQuery] bool includeReleases = true, [FromQuery] bool includeCollaborators = true, [FromQuery] bool includeStatistics = false) {
     var query = new GetProjectByIdQuery { ProjectId = id, IncludeTeam = includeTeam, IncludeReleases = includeReleases, IncludeCollaborators = includeCollaborators, IncludeStatistics = includeStatistics };
 
-    var project = await _mediator.Send(query);
+    var project = await _mediator.Send(query).ConfigureAwait(false);
 
     if (project == null) { return NotFound(); }
 
@@ -96,7 +96,7 @@ public class ProjectsController : BaseApiController {
   public async Task<ActionResult<Project>> GetProjectBySlug(string slug, [FromQuery] bool includeTeam = true, [FromQuery] bool includeReleases = true, [FromQuery] bool includeCollaborators = true) {
     var query = new GetProjectBySlugQuery { Slug = slug, IncludeTeam = includeTeam, IncludeReleases = includeReleases, IncludeCollaborators = includeCollaborators };
 
-    var project = await _mediator.Send(query);
+    var project = await _mediator.Send(query).ConfigureAwait(false);
 
     if (project == null) { return NotFound(); }
 
@@ -125,7 +125,7 @@ public class ProjectsController : BaseApiController {
       TenantId = _actorContextAccessor.ActorContext.TenantId,
     };
 
-    var result = await _mediator.Send(command);
+    var result = await _mediator.Send(command).ConfigureAwait(false);
 
     if (result.IsSuccess)
       return CreatedAtAction(nameof(GetProject), new { id = result.Value.Id }, result.Value);
@@ -153,7 +153,7 @@ public class ProjectsController : BaseApiController {
       UpdatedBy = _actorContextAccessor.ActorContext.SubjectIdAsGuid ?? Guid.Empty,
     };
 
-    var result = await _mediator.Send(command);
+    var result = await _mediator.Send(command).ConfigureAwait(false);
 
     return ToActionResult(result);
   }
@@ -163,7 +163,7 @@ public class ProjectsController : BaseApiController {
   public async Task<ActionResult<bool>> DeleteProject(Guid id, [FromQuery] bool softDelete = true, [FromQuery] string? reason = null) {
     var command = new DeleteProjectCommand { ProjectId = id, DeletedBy = _actorContextAccessor.ActorContext.SubjectIdAsGuid ?? Guid.Empty, SoftDelete = softDelete, Reason = reason };
 
-    var result = await _mediator.Send(command);
+    var result = await _mediator.Send(command).ConfigureAwait(false);
 
     return ToActionResult(result);
   }
@@ -173,7 +173,7 @@ public class ProjectsController : BaseApiController {
   public async Task<ActionResult<Project>> PublishProject(Guid id) {
     var command = new PublishProjectCommand { ProjectId = id, PublishedBy = _actorContextAccessor.ActorContext.SubjectIdAsGuid ?? Guid.Empty };
 
-    var result = await _mediator.Send(command);
+    var result = await _mediator.Send(command).ConfigureAwait(false);
 
     return ToActionResult(result);
   }
@@ -183,7 +183,7 @@ public class ProjectsController : BaseApiController {
   public async Task<ActionResult<Project>> UnpublishProject(Guid id) {
     var command = new UnpublishProjectCommand { ProjectId = id, UnpublishedBy = _actorContextAccessor.ActorContext.SubjectIdAsGuid ?? Guid.Empty };
 
-    var result = await _mediator.Send(command);
+    var result = await _mediator.Send(command).ConfigureAwait(false);
 
     return ToActionResult(result);
   }
@@ -193,7 +193,7 @@ public class ProjectsController : BaseApiController {
   public async Task<ActionResult<Project>> ArchiveProject(Guid id) {
     var command = new ArchiveProjectCommand { ProjectId = id, ArchivedBy = _actorContextAccessor.ActorContext.SubjectIdAsGuid ?? Guid.Empty };
 
-    var result = await _mediator.Send(command);
+    var result = await _mediator.Send(command).ConfigureAwait(false);
 
     return ToActionResult(result);
   }
@@ -214,7 +214,7 @@ public class ProjectsController : BaseApiController {
   ) {
     var query = new SearchProjectsQuery { SearchTerm = searchTerm, Type = type, CategoryId = categoryId, Status = status, Visibility = visibility, Skip = skip, Take = Math.Min(take, 100), SortBy = sortBy, SortDirection = sortDirection };
 
-    var projects = await _mediator.Send(query);
+    var projects = await _mediator.Send(query).ConfigureAwait(false);
 
     return Ok(projects);
   }
@@ -225,7 +225,7 @@ public class ProjectsController : BaseApiController {
   public async Task<ActionResult<IEnumerable<Project>>> GetPopularProjects([FromQuery] ProjectType? type = null, [FromQuery] int take = 10) {
     var query = new GetPopularProjectsQuery { Type = type, Take = Math.Min(take, 50) };
 
-    var projects = await _mediator.Send(query);
+    var projects = await _mediator.Send(query).ConfigureAwait(false);
 
     return Ok(projects);
   }
@@ -236,7 +236,7 @@ public class ProjectsController : BaseApiController {
   public async Task<ActionResult<IEnumerable<Project>>> GetRecentProjects([FromQuery] ProjectType? type = null, [FromQuery] int take = 10) {
     var query = new GetRecentProjectsQuery { Type = type, Take = Math.Min(take, 50) };
 
-    var projects = await _mediator.Send(query);
+    var projects = await _mediator.Send(query).ConfigureAwait(false);
 
     return Ok(projects);
   }
@@ -247,7 +247,7 @@ public class ProjectsController : BaseApiController {
   public async Task<ActionResult<IEnumerable<Project>>> GetFeaturedProjects([FromQuery] ProjectType? type = null, [FromQuery] int take = 10) {
     var query = new GetFeaturedProjectsQuery { Type = type, Take = Math.Min(take, 50) };
 
-    var projects = await _mediator.Send(query);
+    var projects = await _mediator.Send(query).ConfigureAwait(false);
 
     return Ok(projects);
   }
@@ -258,7 +258,7 @@ public class ProjectsController : BaseApiController {
   public async Task<ActionResult<ProjectStatistics>> GetProjectStatistics(Guid id, [FromQuery] DateTime? fromDate = null, [FromQuery] DateTime? toDate = null) {
     var query = new GetProjectStatisticsQuery { ProjectId = id, FromDate = fromDate, ToDate = toDate };
 
-    var statistics = await _mediator.Send(query);
+    var statistics = await _mediator.Send(query).ConfigureAwait(false);
 
     return Ok(statistics);
   }
@@ -269,7 +269,7 @@ public class ProjectsController : BaseApiController {
   public async Task<ActionResult<IEnumerable<Project>>> GetProjectsByCategory(Guid categoryId, [FromQuery] ContentStatus? status = null, [FromQuery] int skip = 0, [FromQuery] int take = 50) {
     var query = new GetProjectsByCategoryQuery { CategoryId = categoryId, Status = status, Skip = skip, Take = Math.Min(take, 100) };
 
-    var projects = await _mediator.Send(query);
+    var projects = await _mediator.Send(query).ConfigureAwait(false);
 
     return Ok(projects);
   }
@@ -280,7 +280,7 @@ public class ProjectsController : BaseApiController {
   public async Task<ActionResult<IEnumerable<Project>>> GetProjectsByCreator(Guid creatorId, [FromQuery] ContentStatus? status = null, [FromQuery] int skip = 0, [FromQuery] int take = 50) {
     var query = new GetProjectsByCreatorQuery { CreatorId = creatorId, Status = status, Skip = skip, Take = Math.Min(take, 100) };
 
-    var projects = await _mediator.Send(query);
+    var projects = await _mediator.Send(query).ConfigureAwait(false);
 
     return Ok(projects);
   }
@@ -359,7 +359,7 @@ public class ProjectsController : BaseApiController {
         JoinedAt = c.JoinedAt,
         IsActive = c.IsActive
       })
-      .ToListAsync();
+      .ToListAsync().ConfigureAwait(false);
 
     return Ok(collaborators);
   }
@@ -367,7 +367,7 @@ public class ProjectsController : BaseApiController {
   /// <summary> Add project collaborator </summary>
   [HttpPost("{id:guid}/collaborators")]
   public async Task<ActionResult<CollaboratorDto>> AddProjectCollaborator(Guid id, [FromBody] AddProjectCollaboratorRequest request) {
-    var project = await _context.Set<Project>().FindAsync(id);
+    var project = await _context.Set<Project>().FindAsync(id).ConfigureAwait(false);
     if (project == null) return NotFound();
 
     var actor = _actorContextAccessor.ActorContext;
@@ -380,7 +380,7 @@ public class ProjectsController : BaseApiController {
 
     // Check if user is already a collaborator
     var exists = await _context.Set<ProjectCollaborator>()
-      .AnyAsync(c => c.ProjectId == id && c.UserId == request.UserId && c.IsActive);
+      .AnyAsync(c => c.ProjectId == id && c.UserId == request.UserId && c.IsActive).ConfigureAwait(false);
     if (exists) return Conflict(new { Message = "User is already a collaborator" });
 
     var collaborator = new ProjectCollaborator {
@@ -389,11 +389,11 @@ public class ProjectsController : BaseApiController {
       Role = request.Role ?? "Collaborator",
       Permissions = request.Permissions ?? "read,comment",
       IsActive = true,
-      JoinedAt = DateTime.UtcNow
+      JoinedAt = SystemClock.UtcNow
     };
 
     _context.Set<ProjectCollaborator>().Add(collaborator);
-    await _context.SaveChangesAsync();
+    await _context.SaveChangesAsync().ConfigureAwait(false);
 
     _logger.LogInformation("User {AdminId} added collaborator {UserId} to project {ProjectId} with role {Role}", userId, request.UserId, id, collaborator.Role);
 
@@ -411,12 +411,12 @@ public class ProjectsController : BaseApiController {
   [HttpPut("{id:guid}/collaborators/{collaboratorId:guid}")]
   public async Task<ActionResult<CollaboratorDto>> UpdateProjectCollaborator(Guid id, Guid collaboratorId, [FromBody] UpdateProjectCollaboratorRequest request) {
     var collaborator = await _context.Set<ProjectCollaborator>()
-      .FirstOrDefaultAsync(c => c.Id == collaboratorId && c.ProjectId == id);
+      .FirstOrDefaultAsync(c => c.Id == collaboratorId && c.ProjectId == id).ConfigureAwait(false);
     if (collaborator == null) return NotFound();
 
     var actor = _actorContextAccessor.ActorContext;
     var userId = actor.SubjectIdAsGuid ?? Guid.Empty;
-    var project = await _context.Set<Project>().FindAsync(id);
+    var project = await _context.Set<Project>().FindAsync(id).ConfigureAwait(false);
     var isOwner = project?.CreatedById == userId;
     var isAdmin = actor.IsSystemAdmin || actor.IsTenantAdmin;
     if (!isOwner && !isAdmin) return Forbid();
@@ -424,7 +424,7 @@ public class ProjectsController : BaseApiController {
     if (request.Role != null) collaborator.Role = request.Role;
     if (request.Permissions != null) collaborator.Permissions = request.Permissions;
 
-    await _context.SaveChangesAsync();
+    await _context.SaveChangesAsync().ConfigureAwait(false);
 
     _logger.LogInformation("User {AdminId} updated collaborator {CollaboratorId} on project {ProjectId}", userId, collaboratorId, id);
 
@@ -442,20 +442,20 @@ public class ProjectsController : BaseApiController {
   [HttpDelete("{id:guid}/collaborators/{collaboratorId:guid}")]
   public async Task<ActionResult> RemoveProjectCollaborator(Guid id, Guid collaboratorId) {
     var collaborator = await _context.Set<ProjectCollaborator>()
-      .FirstOrDefaultAsync(c => c.Id == collaboratorId && c.ProjectId == id);
+      .FirstOrDefaultAsync(c => c.Id == collaboratorId && c.ProjectId == id).ConfigureAwait(false);
     if (collaborator == null) return NotFound();
 
     var actor = _actorContextAccessor.ActorContext;
     var userId = actor.SubjectIdAsGuid ?? Guid.Empty;
-    var project = await _context.Set<Project>().FindAsync(id);
+    var project = await _context.Set<Project>().FindAsync(id).ConfigureAwait(false);
     var isOwner = project?.CreatedById == userId;
     var isAdmin = actor.IsSystemAdmin || actor.IsTenantAdmin;
     if (!isOwner && !isAdmin) return Forbid();
 
     // Soft-delete: mark as inactive
     collaborator.IsActive = false;
-    collaborator.LeftAt = DateTime.UtcNow;
-    await _context.SaveChangesAsync();
+    collaborator.LeftAt = SystemClock.UtcNow;
+    await _context.SaveChangesAsync().ConfigureAwait(false);
 
     _logger.LogInformation("User {AdminId} removed collaborator {CollaboratorId} from project {ProjectId}", userId, collaboratorId, id);
 
@@ -465,7 +465,7 @@ public class ProjectsController : BaseApiController {
   /// <summary> Share project with a user by assigning a role </summary>
   [HttpPost("{id:guid}:share")]
   public async Task<ActionResult<CollaboratorDto>> ShareProject(Guid id, [FromBody] ShareProjectRequest request) {
-    var project = await _context.Set<Project>().FindAsync(id);
+    var project = await _context.Set<Project>().FindAsync(id).ConfigureAwait(false);
     if (project == null) return NotFound();
 
     var actor = _actorContextAccessor.ActorContext;
@@ -476,7 +476,7 @@ public class ProjectsController : BaseApiController {
 
     // Check if already shared
     var existing = await _context.Set<ProjectCollaborator>()
-      .FirstOrDefaultAsync(c => c.ProjectId == id && c.UserId == request.UserId);
+      .FirstOrDefaultAsync(c => c.ProjectId == id && c.UserId == request.UserId).ConfigureAwait(false);
 
     if (existing != null) {
       // Re-activate if previously removed, or update role
@@ -491,12 +491,12 @@ public class ProjectsController : BaseApiController {
         Role = request.Role ?? "Viewer",
         Permissions = request.Permissions ?? "read",
         IsActive = true,
-        JoinedAt = DateTime.UtcNow
+        JoinedAt = SystemClock.UtcNow
       };
       _context.Set<ProjectCollaborator>().Add(collaborator);
     }
 
-    await _context.SaveChangesAsync();
+    await _context.SaveChangesAsync().ConfigureAwait(false);
 
     _logger.LogInformation("User {AdminId} shared project {ProjectId} with user {TargetUserId} as {Role}", userId, id, request.UserId, request.Role ?? "Viewer");
 

@@ -99,7 +99,7 @@ public class UserProduct : EntityBase
     {
         if (AccessStatus != ProductAccessStatus.Active) return false;
 
-        var now = DateTime.UtcNow;
+        var now = SystemClock.UtcNow;
         return (AccessStartDate == null || AccessStartDate <= now) && (AccessEndDate == null || AccessEndDate > now);
     }
 
@@ -107,7 +107,7 @@ public class UserProduct : EntityBase
     public void GrantAccess(DateTime? endDate = null, decimal? pricePaid = null, string? currency = null, ProductAcquisitionType? acquisitionType = null)
     {
         AccessStatus = ProductAccessStatus.Active;
-        AccessStartDate ??= DateTime.UtcNow;
+        AccessStartDate ??= SystemClock.UtcNow;
         AccessEndDate = endDate;
         if (pricePaid.HasValue) PricePaid = pricePaid.Value;
         if (!string.IsNullOrEmpty(currency)) Currency = currency;
@@ -119,7 +119,7 @@ public class UserProduct : EntityBase
     public void RevokeAccess(string? reason = null)
     {
         AccessStatus = ProductAccessStatus.Revoked;
-        AccessEndDate = DateTime.UtcNow;
+        AccessEndDate = SystemClock.UtcNow;
         RevocationReason = reason;
         if (SubscriptionStatus.HasValue)
         {
@@ -147,7 +147,7 @@ public class UserProduct : EntityBase
             AccessStatus = ProductAccessStatus.Active,
             PricePaid = pricePaid,
             Currency = currency,
-            AccessStartDate = DateTime.UtcNow,
+            AccessStartDate = SystemClock.UtcNow,
             AccessEndDate = expiresAt,
             TenantId = tenantId
         };

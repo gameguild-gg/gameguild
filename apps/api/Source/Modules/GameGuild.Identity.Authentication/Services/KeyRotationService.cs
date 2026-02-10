@@ -15,14 +15,14 @@ public class KeyRotationService(
     public async Task<JwtSigningKey?> GetActiveSigningKeyAsync(CancellationToken cancellationToken = default)
     {
         return await _dbContext.Set<JwtSigningKey>()
-            .Where(k => k.IsActive && k.ValidFrom <= DateTime.UtcNow && k.ExpiresAt > DateTime.UtcNow)
+            .Where(k => k.IsActive && k.ValidFrom <= SystemClock.UtcNow && k.ExpiresAt > SystemClock.UtcNow)
             .OrderByDescending(k => k.KeyVersion)
             .FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<List<JwtSigningKey>> GetValidationKeysAsync(CancellationToken cancellationToken = default)
     {
-        var now = DateTime.UtcNow;
+        var now = SystemClock.UtcNow;
         return await _dbContext.Set<JwtSigningKey>()
             .Where(k => k.ValidFrom <= now && k.ExpiresAt > now)
             .OrderByDescending(k => k.KeyVersion)
@@ -44,7 +44,7 @@ public class KeyRotationService(
         var nextVersion = (currentKey?.KeyVersion ?? 0) + 1;
 
         // Create new key
-        var validFrom = DateTime.UtcNow;
+        var validFrom = SystemClock.UtcNow;
         var validity = TimeSpan.FromDays(validityDays);
         var newKey = JwtSigningKey.CreateNew(nextVersion, validFrom, validity);
 
@@ -76,7 +76,7 @@ public class KeyRotationService(
 
     public async Task<int> CleanupExpiredKeysAsync(int retentionDays = 30, CancellationToken cancellationToken = default)
     {
-        var cutoffDate = DateTime.UtcNow.AddDays(-retentionDays);
+        var cutoffDate = SystemClock.UtcNow.AddDays(-retentionDays);
         
         var expiredKeys = await _dbContext.Set<JwtSigningKey>()
             .Where(k => k.ExpiresAt < cutoffDate)

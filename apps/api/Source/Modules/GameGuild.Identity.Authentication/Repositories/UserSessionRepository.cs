@@ -18,7 +18,7 @@ public class UserSessionRepository(IApplicationDbContext context) : IUserSession
 
     public async Task<List<UserSession>> GetActiveByUserIdAsync(Guid userId, CancellationToken cancellationToken = default)
     {
-        return await UserSessions.Where(s => s.UserId == userId && s.IsActive && s.ExpiresAt > DateTime.UtcNow).OrderByDescending(s => s.LastUsedAt).ToListAsync(cancellationToken);
+        return await UserSessions.Where(s => s.UserId == userId && s.IsActive && s.ExpiresAt > SystemClock.UtcNow).OrderByDescending(s => s.LastUsedAt).ToListAsync(cancellationToken);
     }
 
     public async Task<List<UserSession>> GetByUserIdAsync(Guid userId, CancellationToken cancellationToken = default)
@@ -29,8 +29,8 @@ public class UserSessionRepository(IApplicationDbContext context) : IUserSession
     public async Task<UserSession> CreateAsync(UserSession session, CancellationToken cancellationToken = default)
     {
         session.Id = Guid.NewGuid();
-        session.UpdatedAt = DateTime.UtcNow;
-        session.LastUsedAt = DateTime.UtcNow;
+        session.UpdatedAt = SystemClock.UtcNow;
+        session.LastUsedAt = SystemClock.UtcNow;
 
         UserSessions.Add(session);
         await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
@@ -40,7 +40,7 @@ public class UserSessionRepository(IApplicationDbContext context) : IUserSession
 
     public async Task<UserSession> UpdateAsync(UserSession session, CancellationToken cancellationToken = default)
     {
-        session.UpdatedAt = DateTime.UtcNow;
+        session.UpdatedAt = SystemClock.UtcNow;
 
         UserSessions.Update(session);
         await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
@@ -56,8 +56,8 @@ public class UserSessionRepository(IApplicationDbContext context) : IUserSession
 
         session.IsActive = false;
         session.TerminationReason = reason;
-        session.TerminatedAt = DateTime.UtcNow;
-        session.UpdatedAt = DateTime.UtcNow;
+        session.TerminatedAt = SystemClock.UtcNow;
+        session.UpdatedAt = SystemClock.UtcNow;
 
         await UpdateAsync(session, cancellationToken).ConfigureAwait(false);
     }
@@ -68,7 +68,7 @@ public class UserSessionRepository(IApplicationDbContext context) : IUserSession
 
         if (activeSessions.Count == 0) return;
 
-        var now = DateTime.UtcNow;
+        var now = SystemClock.UtcNow;
 
         foreach (var session in activeSessions)
         {
@@ -88,7 +88,7 @@ public class UserSessionRepository(IApplicationDbContext context) : IUserSession
 
         if (activeSessions.Count == 0) return;
 
-        var now = DateTime.UtcNow;
+        var now = SystemClock.UtcNow;
 
         foreach (var session in activeSessions)
         {
@@ -114,7 +114,7 @@ public class UserSessionRepository(IApplicationDbContext context) : IUserSession
 
     public async Task<int> CountActiveSessionsAsync(Guid userId, CancellationToken cancellationToken = default)
     {
-        var now = DateTime.UtcNow;
+        var now = SystemClock.UtcNow;
 
         return await UserSessions.CountAsync(s => s.UserId == userId && s.IsActive && s.ExpiresAt > now, cancellationToken);
     }
@@ -124,7 +124,7 @@ public class UserSessionRepository(IApplicationDbContext context) : IUserSession
     {
         var query = UserSessions.Where(s => s.DeviceFingerprint == deviceFingerprint);
 
-        if (activeOnly) query = query.Where(s => s.IsActive && s.ExpiresAt > DateTime.UtcNow);
+        if (activeOnly) query = query.Where(s => s.IsActive && s.ExpiresAt > SystemClock.UtcNow);
 
         return await query.OrderByDescending(s => s.LastUsedAt).ToListAsync(cancellationToken);
     }
@@ -135,8 +135,8 @@ public class UserSessionRepository(IApplicationDbContext context) : IUserSession
 
         if (session is not { IsActive: true }) return false;
 
-        session.LastUsedAt = DateTime.UtcNow;
-        session.UpdatedAt = DateTime.UtcNow;
+        session.LastUsedAt = SystemClock.UtcNow;
+        session.UpdatedAt = SystemClock.UtcNow;
 
         await UpdateAsync(session, cancellationToken).ConfigureAwait(false);
 
@@ -150,8 +150,8 @@ public class UserSessionRepository(IApplicationDbContext context) : IUserSession
         if (session == null) return false;
 
         session.IsTrustedDevice = true;
-        session.TrustedAt = DateTime.UtcNow;
-        session.UpdatedAt = DateTime.UtcNow;
+        session.TrustedAt = SystemClock.UtcNow;
+        session.UpdatedAt = SystemClock.UtcNow;
 
         await UpdateAsync(session, cancellationToken).ConfigureAwait(false);
 

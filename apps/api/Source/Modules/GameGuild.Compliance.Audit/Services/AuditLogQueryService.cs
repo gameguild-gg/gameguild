@@ -12,17 +12,19 @@ namespace GameGuild.Compliance.Audit;
 public class AuditLogQueryService(
     IApplicationDbContext context,
     IPermissionAuditLogRepository permissionAuditRepository,
-    ILogger<AuditLogQueryService> logger) : IAuditLogQueryService
+    ILogger<AuditLogQueryService> _logger) : IAuditLogQueryService
 {
     public async Task<UnifiedSecurityAuditResponse> GetUnifiedAuditLogsAsync(
         UnifiedSecurityAuditRequest request,
         CancellationToken cancellationToken = default)
     {
+        _logger.LogDebug("Querying unified audit logs: SourceType={SourceType}, StartDate={StartDate}, EndDate={EndDate}", request.SourceType, request.StartDate, request.EndDate);
+
         var entries = new List<UnifiedSecurityAuditEntry>();
 
         // Determine date range
-        var startDate = request.StartDate ?? DateTime.UtcNow.AddDays(-30);
-        var endDate = request.EndDate ?? DateTime.UtcNow;
+        var startDate = request.StartDate ?? SystemClock.UtcNow.AddDays(-30);
+        var endDate = request.EndDate ?? SystemClock.UtcNow;
 
         // Fetch from different sources based on SourceType filter
         if (request.SourceType is null or SecurityAuditSourceType.All or SecurityAuditSourceType.Authentication)
@@ -85,8 +87,8 @@ public class AuditLogQueryService(
         AuthenticationAuditRequest request,
         CancellationToken cancellationToken = default)
     {
-        var startDate = request.StartDate ?? DateTime.UtcNow.AddDays(-30);
-        var endDate = request.EndDate ?? DateTime.UtcNow;
+        var startDate = request.StartDate ?? SystemClock.UtcNow.AddDays(-30);
+        var endDate = request.EndDate ?? SystemClock.UtcNow;
 
         var query = context.Set<AuthenticationAttempt>().AsNoTracking()
             .Where(a => a.AttemptedAt >= startDate && a.AttemptedAt <= endDate);
@@ -145,8 +147,8 @@ public class AuditLogQueryService(
         PermissionAuditRequest request,
         CancellationToken cancellationToken = default)
     {
-        var startDate = request.StartDate ?? DateTime.UtcNow.AddDays(-30);
-        var endDate = request.EndDate ?? DateTime.UtcNow;
+        var startDate = request.StartDate ?? SystemClock.UtcNow.AddDays(-30);
+        var endDate = request.EndDate ?? SystemClock.UtcNow;
 
         var logs = await permissionAuditRepository.GetByDateRangeAsync(
             startDate, endDate, request.TenantId, cancellationToken).ConfigureAwait(false);

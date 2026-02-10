@@ -50,7 +50,7 @@ public abstract class ResourcePermission<TResource> : WithPermissions where TRes
     {
         ResourceId = resourceId;
         ResourceTitle = resourceTitle;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     /// <summary>
@@ -60,7 +60,7 @@ public abstract class ResourcePermission<TResource> : WithPermissions where TRes
     public void UpdateResourceTitle(string? resourceTitle)
     {
         ResourceTitle = resourceTitle;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     /// <summary>

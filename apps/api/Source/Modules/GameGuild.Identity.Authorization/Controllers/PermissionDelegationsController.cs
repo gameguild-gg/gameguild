@@ -28,7 +28,7 @@ public class PermissionDelegationsController(ISender sender) : BaseApiController
         CancellationToken cancellationToken
     )
     {
-        var result = await sender.Send(command, cancellationToken);
+        var result = await sender.Send(command, cancellationToken).ConfigureAwait(false);
         return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
     }
 
@@ -41,7 +41,7 @@ public class PermissionDelegationsController(ISender sender) : BaseApiController
     public async Task<IActionResult> Revoke(Guid id, CancellationToken cancellationToken)
     {
         var command = new RevokeDelegationCommand(id);
-        var result = await sender.Send(command, cancellationToken);
+        var result = await sender.Send(command, cancellationToken).ConfigureAwait(false);
 
         if (!result)
             return NotFound();
@@ -58,7 +58,7 @@ public class PermissionDelegationsController(ISender sender) : BaseApiController
     public async Task<IActionResult> GetById(Guid id, CancellationToken cancellationToken)
     {
         var query = new GetDelegationByIdQuery(id);
-        var result = await sender.Send(query, cancellationToken);
+        var result = await sender.Send(query, cancellationToken).ConfigureAwait(false);
 
         if (result == null)
             return NotFound();
@@ -78,7 +78,7 @@ public class PermissionDelegationsController(ISender sender) : BaseApiController
     )
     {
         var query = new GetActiveDelegationsQuery(delegateUserId, tenantId);
-        var result = await sender.Send(query, cancellationToken);
+        var result = await sender.Send(query, cancellationToken).ConfigureAwait(false);
         return Ok(result);
     }
 
@@ -94,7 +94,7 @@ public class PermissionDelegationsController(ISender sender) : BaseApiController
     )
     {
         var query = new GetDelegationsByDelegatorQuery(delegatorUserId, tenantId);
-        var result = await sender.Send(query, cancellationToken);
+        var result = await sender.Send(query, cancellationToken).ConfigureAwait(false);
         return Ok(result);
     }
 
@@ -112,7 +112,7 @@ public class PermissionDelegationsController(ISender sender) : BaseApiController
     )
     {
         var query = new CheckDelegatedPermissionQuery(delegateUserId, permission, tenantId, resourceId);
-        var result = await sender.Send(query, cancellationToken);
+        var result = await sender.Send(query, cancellationToken).ConfigureAwait(false);
         return Ok(result);
     }
 
@@ -124,7 +124,7 @@ public class PermissionDelegationsController(ISender sender) : BaseApiController
     public async Task<IActionResult> CleanupExpired(CancellationToken cancellationToken)
     {
         var command = new CleanupExpiredDelegationsCommand();
-        var result = await sender.Send(command, cancellationToken);
+        var result = await sender.Send(command, cancellationToken).ConfigureAwait(false);
         return Ok(new { Count = result });
     }
 }

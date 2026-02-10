@@ -42,7 +42,7 @@ public sealed class PlanTargetingHandler : ITargetingRuleHandler
                 RolloutPercentage = planTarget.RolloutPercentage,
                 IsTargeted = true,
                 TargetType = planTarget.TargetType,
-                EvaluatedAt = DateTime.UtcNow
+                EvaluatedAt = SystemClock.UtcNow
             }
         );
     }

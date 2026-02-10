@@ -74,7 +74,7 @@ public class UsageRetentionPolicyRepository(IApplicationDbContext context) : IUs
 
     public async Task<IEnumerable<UsageRetentionPolicy>> GetPoliciesDueForExecutionAsync(CancellationToken cancellationToken = default)
     {
-        var now = DateTime.UtcNow;
+        var now = SystemClock.UtcNow;
 
         return await UsageRetentionPolicies.Where(p => p.IsActive && p.NextExecutionAt <= now).OrderBy(p => p.NextExecutionAt).ToListAsync(cancellationToken);
     }

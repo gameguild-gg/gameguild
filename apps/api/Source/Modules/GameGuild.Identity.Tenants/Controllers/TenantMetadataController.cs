@@ -29,7 +29,7 @@ public sealed class TenantMetadataController : BaseApiController
     public async Task<IActionResult> GetMetadata(Guid tenantId, CancellationToken ct)
     {
         // Placeholder implementation
-        await Task.CompletedTask;
+        await Task.CompletedTask.ConfigureAwait(false);
 
         var placeholderMetadata = new TenantMetadataDto(
             tenantId,
@@ -65,7 +65,7 @@ public sealed class TenantMetadataController : BaseApiController
         ArgumentNullException.ThrowIfNull(body);
 
         // Placeholder implementation
-        await Task.CompletedTask;
+        await Task.CompletedTask.ConfigureAwait(false);
 
         return NoContent();
     }
@@ -89,7 +89,7 @@ public sealed class TenantMetadataController : BaseApiController
         ArgumentNullException.ThrowIfNull(body);
 
         // Placeholder implementation
-        await Task.CompletedTask;
+        await Task.CompletedTask.ConfigureAwait(false);
 
         return NoContent();
     }
@@ -109,7 +109,7 @@ public sealed class TenantMetadataController : BaseApiController
     public async Task<IActionResult> GetCustomFields(Guid tenantId, CancellationToken ct)
     {
         // Placeholder implementation
-        await Task.CompletedTask;
+        await Task.CompletedTask.ConfigureAwait(false);
         var placeholderFields = new Dictionary<string, object?>();
 
         return Ok(placeholderFields);
@@ -134,7 +134,7 @@ public sealed class TenantMetadataController : BaseApiController
         ArgumentNullException.ThrowIfNull(customFields);
 
         // Placeholder implementation
-        await Task.CompletedTask;
+        await Task.CompletedTask.ConfigureAwait(false);
 
         return NoContent();
     }
@@ -154,7 +154,7 @@ public sealed class TenantMetadataController : BaseApiController
     public async Task<IActionResult> GetTags(Guid tenantId, CancellationToken ct)
     {
         // Placeholder implementation
-        await Task.CompletedTask;
+        await Task.CompletedTask.ConfigureAwait(false);
         var placeholderTags = new List<string>();
 
         return Ok(placeholderTags);
@@ -179,7 +179,7 @@ public sealed class TenantMetadataController : BaseApiController
         ArgumentNullException.ThrowIfNull(body);
 
         // Placeholder implementation
-        await Task.CompletedTask;
+        await Task.CompletedTask.ConfigureAwait(false);
 
         return NoContent();
     }
@@ -203,7 +203,7 @@ public sealed class TenantMetadataController : BaseApiController
         ArgumentNullException.ThrowIfNull(tags);
 
         // Placeholder implementation
-        await Task.CompletedTask;
+        await Task.CompletedTask.ConfigureAwait(false);
 
         return NoContent();
     }

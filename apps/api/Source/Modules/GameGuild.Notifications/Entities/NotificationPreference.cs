@@ -128,7 +128,7 @@ public class NotificationPreference : EntityBase
         PushEnabled = pushEnabled;
         InAppEnabled = inAppEnabled;
         SmsEnabled = smsEnabled;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     /// <summary>
@@ -144,7 +144,7 @@ public class NotificationPreference : EntityBase
         SocialEnabled = socialEnabled;
         LearningEnabled = learningEnabled;
         AchievementsEnabled = achievementsEnabled;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     /// <summary>
@@ -160,7 +160,7 @@ public class NotificationPreference : EntityBase
         QuietHoursEnd = end;
         Timezone = timezone;
         QuietHoursBypassPriority = bypassPriority;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     /// <summary>
@@ -170,7 +170,7 @@ public class NotificationPreference : EntityBase
     {
         QuietHoursStart = null;
         QuietHoursEnd = null;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     /// <summary>
@@ -179,7 +179,7 @@ public class NotificationPreference : EntityBase
     public void SetEmailDigestFrequency(DigestFrequency? frequency)
     {
         EmailDigestFrequency = frequency;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     /// <summary>
@@ -188,7 +188,7 @@ public class NotificationPreference : EntityBase
     public void SetMutedTypes(string? mutedTypesJson)
     {
         MutedTypes = mutedTypesJson;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 }
 

@@ -94,7 +94,7 @@ public class WebAuthnCredentialRepository(IApplicationDbContext context) : IWebA
         if (credential == null) return false;
 
         credential.IsActive = false;
-        credential.RevokedAt = DateTime.UtcNow;
+        credential.RevokedAt = SystemClock.UtcNow;
         await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         return true;
     }
@@ -105,7 +105,7 @@ public class WebAuthnCredentialRepository(IApplicationDbContext context) : IWebA
         if (credential != null)
         {
             credential.SignatureCounter = newCounter;
-            credential.LastUsedAt = DateTime.UtcNow;
+            credential.LastUsedAt = SystemClock.UtcNow;
             await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         }
     }

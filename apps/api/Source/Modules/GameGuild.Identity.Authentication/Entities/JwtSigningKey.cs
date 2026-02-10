@@ -105,7 +105,7 @@ public class JwtSigningKey : EntityBase
     public void Rotate(string reason)
     {
         IsActive = false;
-        RotatedAt = DateTime.UtcNow;
+        RotatedAt = SystemClock.UtcNow;
         RotationReason = reason;
         Touch();
     }

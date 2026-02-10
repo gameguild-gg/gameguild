@@ -37,7 +37,7 @@ public sealed class SubscriptionLifecycleController(ISender sender) : BaseApiCon
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> ActivateSubscription(Guid subscriptionId, CancellationToken ct)
     {
-        await sender.Send(new ActivateSubscriptionCommand(subscriptionId), ct);
+        await sender.Send(new ActivateSubscriptionCommand(subscriptionId), ct).ConfigureAwait(false);
         return NoContent();
     }
 
@@ -57,7 +57,7 @@ public sealed class SubscriptionLifecycleController(ISender sender) : BaseApiCon
     public async Task<IActionResult> StartSubscriptionTrial(Guid subscriptionId, [FromBody] StartTrialRequest body, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(body);
-        await sender.Send(new StartSubscriptionTrialCommand(subscriptionId, body.TrialDays), ct);
+        await sender.Send(new StartSubscriptionTrialCommand(subscriptionId, body.TrialDays), ct).ConfigureAwait(false);
         return NoContent();
     }
 
@@ -77,7 +77,7 @@ public sealed class SubscriptionLifecycleController(ISender sender) : BaseApiCon
     public async Task<IActionResult> EndSubscriptionTrial(Guid subscriptionId, [FromBody] EndTrialRequest body, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(body);
-        await sender.Send(new EndSubscriptionTrialCommand(subscriptionId, body.ConvertToPaid), ct);
+        await sender.Send(new EndSubscriptionTrialCommand(subscriptionId, body.ConvertToPaid), ct).ConfigureAwait(false);
         return NoContent();
     }
 
@@ -101,7 +101,7 @@ public sealed class SubscriptionLifecycleController(ISender sender) : BaseApiCon
     public async Task<IActionResult> CancelSubscription(Guid subscriptionId, [FromBody] CancelRequest body, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(body);
-        await sender.Send(new CancelSubscriptionCommand(subscriptionId, Enum.Parse<CancellationReason>(body.Reason, true), body.Note, body.EffectiveDate), ct);
+        await sender.Send(new CancelSubscriptionCommand(subscriptionId, Enum.Parse<CancellationReason>(body.Reason, true), body.Note, body.EffectiveDate), ct).ConfigureAwait(false);
         return NoContent();
     }
 
@@ -121,7 +121,7 @@ public sealed class SubscriptionLifecycleController(ISender sender) : BaseApiCon
     public async Task<IActionResult> SuspendSubscription(Guid subscriptionId, [FromBody] SuspendRequest body, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(body);
-        await sender.Send(new SuspendSubscriptionCommand(subscriptionId, body.Reason), ct);
+        await sender.Send(new SuspendSubscriptionCommand(subscriptionId, body.Reason), ct).ConfigureAwait(false);
         return NoContent();
     }
 
@@ -141,7 +141,7 @@ public sealed class SubscriptionLifecycleController(ISender sender) : BaseApiCon
     public async Task<IActionResult> PauseSubscription(Guid subscriptionId, [FromBody] PauseSubscriptionRequest body, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(body);
-        await sender.Send(new PauseSubscriptionCommand(subscriptionId, body.PauseUntil, body.Reason), ct);
+        await sender.Send(new PauseSubscriptionCommand(subscriptionId, body.PauseUntil, body.Reason), ct).ConfigureAwait(false);
         return NoContent();
     }
 
@@ -159,7 +159,7 @@ public sealed class SubscriptionLifecycleController(ISender sender) : BaseApiCon
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> ResumeSubscription(Guid subscriptionId, CancellationToken ct)
     {
-        await sender.Send(new ResumeSubscriptionCommand(subscriptionId), ct);
+        await sender.Send(new ResumeSubscriptionCommand(subscriptionId), ct).ConfigureAwait(false);
         return NoContent();
     }
 
@@ -177,7 +177,7 @@ public sealed class SubscriptionLifecycleController(ISender sender) : BaseApiCon
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> ReactivateSubscription(Guid subscriptionId, CancellationToken ct)
     {
-        await sender.Send(new ReactivateSubscriptionCommand(subscriptionId), ct);
+        await sender.Send(new ReactivateSubscriptionCommand(subscriptionId), ct).ConfigureAwait(false);
         return NoContent();
     }
 
@@ -201,7 +201,7 @@ public sealed class SubscriptionLifecycleController(ISender sender) : BaseApiCon
     public async Task<IActionResult> UpgradeSubscription(Guid subscriptionId, [FromBody] UpgradeRequest body, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(body);
-        var result = await sender.Send(new UpgradeSubscriptionPlanCommand(subscriptionId, body.NewPlanId, body.EffectiveDate), ct);
+        var result = await sender.Send(new UpgradeSubscriptionPlanCommand(subscriptionId, body.NewPlanId, body.EffectiveDate), ct).ConfigureAwait(false);
         return Ok(result);
     }
 
@@ -221,7 +221,7 @@ public sealed class SubscriptionLifecycleController(ISender sender) : BaseApiCon
     public async Task<IActionResult> DowngradeSubscription(Guid subscriptionId, [FromBody] DowngradeRequest body, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(body);
-        var result = await sender.Send(new DowngradeSubscriptionPlanCommand(subscriptionId, body.NewPlanId, body.EffectiveDate), ct);
+        var result = await sender.Send(new DowngradeSubscriptionPlanCommand(subscriptionId, body.NewPlanId, body.EffectiveDate), ct).ConfigureAwait(false);
         return Ok(result);
     }
 
@@ -239,7 +239,7 @@ public sealed class SubscriptionLifecycleController(ISender sender) : BaseApiCon
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> RenewSubscription(Guid subscriptionId, CancellationToken ct)
     {
-        await sender.Send(new ProcessSubscriptionRenewalCommand(subscriptionId), ct);
+        await sender.Send(new ProcessSubscriptionRenewalCommand(subscriptionId), ct).ConfigureAwait(false);
         return NoContent();
     }
 
@@ -259,7 +259,7 @@ public sealed class SubscriptionLifecycleController(ISender sender) : BaseApiCon
     public async Task<IActionResult> SetSubscriptionAutoRenew(Guid subscriptionId, [FromBody] AutoRenewRequest body, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(body);
-        await sender.Send(new SetSubscriptionAutoRenewCommand(subscriptionId, body.AutoRenew), ct);
+        await sender.Send(new SetSubscriptionAutoRenewCommand(subscriptionId, body.AutoRenew), ct).ConfigureAwait(false);
         return NoContent();
     }
 
@@ -283,7 +283,7 @@ public sealed class SubscriptionLifecycleController(ISender sender) : BaseApiCon
     public async Task<IActionResult> SetSubscriptionExternalIds(Guid subscriptionId, [FromBody] ExternalIdsRequest body, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(body);
-        await sender.Send(new SetSubscriptionExternalIdsCommand(subscriptionId, body.ExternalSubscriptionId, body.ExternalCustomerId), ct);
+        await sender.Send(new SetSubscriptionExternalIdsCommand(subscriptionId, body.ExternalSubscriptionId, body.ExternalCustomerId), ct).ConfigureAwait(false);
         return NoContent();
     }
 

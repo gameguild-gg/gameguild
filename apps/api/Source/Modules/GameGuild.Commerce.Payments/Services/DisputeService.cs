@@ -16,7 +16,7 @@ public class DisputeService(IApplicationDbContext context, ILogger<DisputeServic
     {
         logger.LogInformation("Creating dispute for payment {PaymentId} by user {UserId}", paymentId, userId);
 
-        var dueDate = DateTime.UtcNow.AddDays(14); // Default 14 days to respond
+        var dueDate = SystemClock.UtcNow.AddDays(14); // Default 14 days to respond
 
         var dispute = new PaymentDispute { PaymentId = paymentId, UserId = userId, Type = type, Amount = amount, Reason = reason, Description = description, Status = DisputeStatus.Submitted, DueDate = dueDate };
 
@@ -59,8 +59,8 @@ public class DisputeService(IApplicationDbContext context, ILogger<DisputeServic
         switch (newStatus)
         {
             case DisputeStatus.UnderReview : dispute.MoveToReview(); break;
-            case DisputeStatus.PendingCustomerResponse : dispute.RequestCustomerResponse(dueDate ?? DateTime.UtcNow.AddDays(7)); break;
-            case DisputeStatus.PendingMerchantResponse : dispute.RequestMerchantResponse(dueDate ?? DateTime.UtcNow.AddDays(7)); break;
+            case DisputeStatus.PendingCustomerResponse : dispute.RequestCustomerResponse(dueDate ?? SystemClock.UtcNow.AddDays(7)); break;
+            case DisputeStatus.PendingMerchantResponse : dispute.RequestMerchantResponse(dueDate ?? SystemClock.UtcNow.AddDays(7)); break;
             default :
                 dispute.Status = newStatus;
                 if (dueDate.HasValue) dispute.DueDate = dueDate.Value;
@@ -137,7 +137,7 @@ public class DisputeService(IApplicationDbContext context, ILogger<DisputeServic
             FileName = fileName,
             FileSize = fileSize,
             MimeType = mimeType,
-            SubmittedAt = DateTime.UtcNow
+            SubmittedAt = SystemClock.UtcNow
         };
 
         DisputeEvidences.Add(evidence);

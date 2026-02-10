@@ -32,7 +32,7 @@ public class ProgramEnrollmentService : IProgramEnrollmentService {
       // Reactivate if cancelled or expired
       if (existingEnrollment.EnrollmentStatus == EnrollmentStatus.Cancelled || existingEnrollment.EnrollmentStatus == EnrollmentStatus.Expired) {
         existingEnrollment.EnrollmentStatus = EnrollmentStatus.Active;
-        existingEnrollment.EnrolledAt = DateTime.UtcNow;
+        existingEnrollment.EnrolledAt = SystemClock.UtcNow;
         existingEnrollment.EnrollmentSource = source;
         existingEnrollment.Touch();
         await _context.SaveChangesAsync().ConfigureAwait(false);
@@ -49,7 +49,7 @@ public class ProgramEnrollmentService : IProgramEnrollmentService {
     if (program.EnrollmentStatus != EnrollmentStatus.Open) throw new InvalidOperationException("Program is not available for enrollment");
 
     // Create new enrollment
-    var enrollment = new ProgramEnrollment { UserId = userId, ProgramId = programId, EnrollmentSource = source, EnrolledAt = DateTime.UtcNow, StartDate = DateTime.UtcNow };
+    var enrollment = new ProgramEnrollment { UserId = userId, ProgramId = programId, EnrollmentSource = source, EnrolledAt = SystemClock.UtcNow, StartDate = SystemClock.UtcNow };
 
     _context.Set<ProgramEnrollment>().Add(enrollment);
     await _context.SaveChangesAsync().ConfigureAwait(false);
@@ -121,7 +121,7 @@ public class ProgramEnrollmentService : IProgramEnrollmentService {
     // Update completion status based on progress
     if (enrollment.ProgressPercentage == 100 && enrollment.CompletionStatus != CompletionStatus.Completed) {
       enrollment.CompletionStatus = CompletionStatus.Completed;
-      enrollment.CompletedAt = DateTime.UtcNow;
+      enrollment.CompletedAt = SystemClock.UtcNow;
     }
     else if (enrollment.ProgressPercentage > 0 && enrollment.CompletionStatus == CompletionStatus.NotStarted) { enrollment.CompletionStatus = CompletionStatus.InProgress; }
 
@@ -221,7 +221,7 @@ public class ProgramEnrollmentService : IProgramEnrollmentService {
 
     // Mark enrollment as having certificate issued
     enrollment.CertificateIssued = true;
-    enrollment.CertificateIssuedAt = DateTime.UtcNow;
+    enrollment.CertificateIssuedAt = SystemClock.UtcNow;
     enrollment.CompletionStatus = CompletionStatus.CompletedWithCertificate;
     enrollment.Touch();
 

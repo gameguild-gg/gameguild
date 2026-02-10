@@ -35,23 +35,23 @@ public class CourseRecommendation : EntityBase
             Reason = reason,
             IsViewed = false,
             IsDismissed = false,
-            ExpiresAt = DateTime.UtcNow.Add(validFor ?? TimeSpan.FromDays(30))
+            ExpiresAt = SystemClock.UtcNow.Add(validFor ?? TimeSpan.FromDays(30))
         };
     }
 
     public void MarkViewed()
     {
         IsViewed = true;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     public void Dismiss()
     {
         IsDismissed = true;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
-    public bool IsValid() => !IsDismissed && DateTime.UtcNow < ExpiresAt;
+    public bool IsValid() => !IsDismissed && SystemClock.UtcNow < ExpiresAt;
 }
 
 /// <summary>
@@ -84,15 +84,15 @@ public class UserLearningProfile : EntityBase
 
     public void UpdateActivity()
     {
-        LastActivityAt = DateTime.UtcNow;
-        UpdatedAt = DateTime.UtcNow;
+        LastActivityAt = SystemClock.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     public void IncrementCoursesCompleted(int hours)
     {
         TotalCoursesCompleted++;
         TotalHoursLearned += hours;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     public void UpdatePreferences(
@@ -107,7 +107,7 @@ public class UserLearningProfile : EntityBase
         if (preferredDuration != null) PreferredDuration = preferredDuration;
         if (learningGoals != null) LearningGoals = learningGoals;
         if (skills != null) Skills = skills;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     public void AddSkill(string skill)
@@ -120,7 +120,7 @@ public class UserLearningProfile : EntityBase
         {
             currentSkills.Add(skill);
             Skills = System.Text.Json.JsonSerializer.Serialize(currentSkills);
-            UpdatedAt = DateTime.UtcNow;
+            UpdatedAt = SystemClock.UtcNow;
         }
     }
 
@@ -131,7 +131,7 @@ public class UserLearningProfile : EntityBase
         var currentSkills = System.Text.Json.JsonSerializer.Deserialize<List<string>>(Skills) ?? new List<string>();
         currentSkills.RemoveAll(s => s.Equals(skill, StringComparison.OrdinalIgnoreCase));
         Skills = currentSkills.Count > 0 ? System.Text.Json.JsonSerializer.Serialize(currentSkills) : null;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 }
 

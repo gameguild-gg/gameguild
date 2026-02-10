@@ -27,41 +27,41 @@ public class ProgramCrudController(IProgramCrudService programService) : BaseApi
       [FromQuery] int skip = 0,
       [FromQuery] int take = 50) {
     if (!string.IsNullOrEmpty(q)) {
-      var searchResults = await programService.SearchProgramsAsync(q, skip, take);
+      var searchResults = await programService.SearchProgramsAsync(q, skip, take).ConfigureAwait(false);
       return Ok(searchResults.ToDtos());
     }
 
     if (status == "published") {
-      var publishedPrograms = await programService.GetPublishedProgramsAsync(skip, take);
+      var publishedPrograms = await programService.GetPublishedProgramsAsync(skip, take).ConfigureAwait(false);
       return Ok(publishedPrograms.ToDtos());
     }
 
     if (category.HasValue) {
-      var categoryPrograms = await programService.GetProgramsByCategoryAsync(category.Value, skip, take);
+      var categoryPrograms = await programService.GetProgramsByCategoryAsync(category.Value, skip, take).ConfigureAwait(false);
       return Ok(categoryPrograms.ToDtos());
     }
 
     if (difficulty.HasValue) {
-      var difficultyPrograms = await programService.GetProgramsByDifficultyAsync(difficulty.Value, skip, take);
+      var difficultyPrograms = await programService.GetProgramsByDifficultyAsync(difficulty.Value, skip, take).ConfigureAwait(false);
       return Ok(difficultyPrograms.ToDtos());
     }
 
     if (creatorId.HasValue) {
-      var creatorPrograms = await programService.GetProgramsByCreatorAsync(creatorId.Value, skip, take);
+      var creatorPrograms = await programService.GetProgramsByCreatorAsync(creatorId.Value, skip, take).ConfigureAwait(false);
       return Ok(creatorPrograms.ToDtos());
     }
 
     if (sort == "popular") {
-      var popularPrograms = await programService.GetPopularProgramsAsync(take);
+      var popularPrograms = await programService.GetPopularProgramsAsync(take).ConfigureAwait(false);
       return Ok(popularPrograms.ToDtos());
     }
 
     if (sort == "recent") {
-      var recentPrograms = await programService.GetRecentProgramsAsync(take);
+      var recentPrograms = await programService.GetRecentProgramsAsync(take).ConfigureAwait(false);
       return Ok(recentPrograms.ToDtos());
     }
 
-    var programs = await programService.GetProgramsAsync(skip, take);
+    var programs = await programService.GetProgramsAsync(skip, take).ConfigureAwait(false);
     return Ok(programs.ToDtos());
   }
 
@@ -71,7 +71,7 @@ public class ProgramCrudController(IProgramCrudService programService) : BaseApi
   public async Task<ActionResult<ProgramDto>> CreateProgram([FromBody] CreateProgramDto createDto) {
     if (!ModelState.IsValid) return BadRequest(ModelState);
 
-    var program = await programService.CreateProgramAsync(createDto);
+    var program = await programService.CreateProgramAsync(createDto).ConfigureAwait(false);
 
     return CreatedAtAction(nameof(GetProgram), new { id = program.Id }, program.ToDto());
   }
@@ -82,7 +82,7 @@ public class ProgramCrudController(IProgramCrudService programService) : BaseApi
   [HttpGet("{id}")]
   [RequireResourcePermission<PermissionType, Program>(PermissionType.Read)]
   public async Task<ActionResult<ProgramDto>> GetProgram(Guid id) {
-    var program = await programService.GetProgramByIdAsync(id);
+    var program = await programService.GetProgramByIdAsync(id).ConfigureAwait(false);
 
     if (program == null) return NotFound();
 
@@ -93,7 +93,7 @@ public class ProgramCrudController(IProgramCrudService programService) : BaseApi
   [HttpGet("{id}/with-content")]
   [RequireResourcePermission<PermissionType, Program>(PermissionType.Read)]
   public async Task<ActionResult<ProgramDto>> GetProgramWithContent(Guid id) {
-    var program = await programService.GetProgramWithContentAsync(id);
+    var program = await programService.GetProgramWithContentAsync(id).ConfigureAwait(false);
 
     if (program == null) return NotFound();
 
@@ -106,7 +106,7 @@ public class ProgramCrudController(IProgramCrudService programService) : BaseApi
   public async Task<ActionResult<ProgramDto>> UpdateProgram(Guid id, [FromBody] UpdateProgramDto updateDto) {
     if (!ModelState.IsValid) return BadRequest(ModelState);
 
-    var program = await programService.UpdateProgramAsync(id, updateDto);
+    var program = await programService.UpdateProgramAsync(id, updateDto).ConfigureAwait(false);
 
     if (program == null) return NotFound();
 
@@ -117,11 +117,11 @@ public class ProgramCrudController(IProgramCrudService programService) : BaseApi
   [HttpDelete("{id}")]
   [RequireResourcePermission<PermissionType, Program>(PermissionType.Delete)]
   public async Task<ActionResult> DeleteProgram(Guid id) {
-    var existingProgram = await programService.GetProgramByIdAsync(id);
+    var existingProgram = await programService.GetProgramByIdAsync(id).ConfigureAwait(false);
 
     if (existingProgram == null) return NotFound();
 
-    await programService.DeleteProgramAsync(id);
+    await programService.DeleteProgramAsync(id).ConfigureAwait(false);
 
     return NoContent();
   }
@@ -132,7 +132,7 @@ public class ProgramCrudController(IProgramCrudService programService) : BaseApi
   public async Task<ActionResult<ProgramDto>> CloneProgram(Guid id, [FromBody] CloneProgramDto cloneDto) {
     if (!ModelState.IsValid) return BadRequest(ModelState);
 
-    var program = await programService.CloneProgramAsync(id, cloneDto.NewTitle);
+    var program = await programService.CloneProgramAsync(id, cloneDto.NewTitle).ConfigureAwait(false);
 
     if (program == null) return NotFound();
 
@@ -147,10 +147,10 @@ public class ProgramCrudController(IProgramCrudService programService) : BaseApi
     Program? program;
 
     if (isAuthenticated) {
-      program = await programService.GetProgramBySlugAsync(slug);
+      program = await programService.GetProgramBySlugAsync(slug).ConfigureAwait(false);
     }
     else {
-      program = await programService.GetProgramBySlugAsync(slug);
+      program = await programService.GetProgramBySlugAsync(slug).ConfigureAwait(false);
 
       if (program != null) {
         if (program.Status != ContentStatus.Published || program.Visibility != ContentVisibility.Public) { return Unauthorized("Authentication required to access this program"); }
@@ -170,7 +170,7 @@ public class ProgramCrudController(IProgramCrudService programService) : BaseApi
   public async Task<ActionResult<ProgramContent>> AddContent(Guid id, [FromBody] CreateContentDto contentDto) {
     if (!ModelState.IsValid) return BadRequest(ModelState);
 
-    var content = await programService.AddContentAsync(id, contentDto);
+    var content = await programService.AddContentAsync(id, contentDto).ConfigureAwait(false);
 
     if (content == null) return NotFound("Program not found");
 
@@ -183,7 +183,7 @@ public class ProgramCrudController(IProgramCrudService programService) : BaseApi
   public async Task<ActionResult<ProgramContent>> UpdateContent(Guid id, Guid contentId, [FromBody] UpdateContentDto contentDto) {
     if (!ModelState.IsValid) return BadRequest(ModelState);
 
-    var content = await programService.UpdateContentAsync(id, contentId, contentDto);
+    var content = await programService.UpdateContentAsync(id, contentId, contentDto).ConfigureAwait(false);
 
     if (content == null) return NotFound();
 
@@ -194,7 +194,7 @@ public class ProgramCrudController(IProgramCrudService programService) : BaseApi
   [HttpDelete("{id}/content/{contentId}")]
   [RequireResourcePermission<PermissionType, Program>(PermissionType.Edit)]
   public async Task<ActionResult> RemoveContent(Guid id, Guid contentId) {
-    var success = await programService.RemoveContentAsync(id, contentId);
+    var success = await programService.RemoveContentAsync(id, contentId).ConfigureAwait(false);
 
     if (!success) return NotFound();
 
@@ -207,7 +207,7 @@ public class ProgramCrudController(IProgramCrudService programService) : BaseApi
   public async Task<ActionResult> ReorderContent(Guid id, [FromBody] ReorderContentDto reorderDto) {
     if (!ModelState.IsValid) return BadRequest(ModelState);
 
-    var program = await programService.ReorderContentAsync(id, reorderDto.ContentIds);
+    var program = await programService.ReorderContentAsync(id, reorderDto.ContentIds).ConfigureAwait(false);
 
     if (program == null) return NotFound();
 
@@ -220,7 +220,7 @@ public class ProgramCrudController(IProgramCrudService programService) : BaseApi
   [HttpPost("{id}/users/{userId}")]
   [RequireResourcePermission<PermissionType, Program>(PermissionType.Edit)]
   public async Task<ActionResult<UserProgressDto>> AddUserToProgram(Guid id, Guid userId) {
-    var progress = await programService.AddUserToProgramAsync(id, userId);
+    var progress = await programService.AddUserToProgramAsync(id, userId).ConfigureAwait(false);
 
     if (progress == null) return NotFound();
 
@@ -231,7 +231,7 @@ public class ProgramCrudController(IProgramCrudService programService) : BaseApi
   [HttpDelete("{id}/users/{userId}")]
   [RequireResourcePermission<PermissionType, Program>(PermissionType.Edit)]
   public async Task<ActionResult> RemoveUserFromProgram(Guid id, Guid userId) {
-    var success = await programService.RemoveUserFromProgramAsync(id, userId);
+    var success = await programService.RemoveUserFromProgramAsync(id, userId).ConfigureAwait(false);
 
     if (!success) return NotFound();
 
@@ -242,7 +242,7 @@ public class ProgramCrudController(IProgramCrudService programService) : BaseApi
   [HttpGet("{id}/users")]
   [RequireResourcePermission<PermissionType, Program>(PermissionType.Read)]
   public async Task<ActionResult<IEnumerable<UserProgressDto>>> GetProgramUsers(Guid id, [FromQuery] int skip = 0, [FromQuery] int take = 50) {
-    var users = await programService.GetProgramUsersAsync(id, skip, take);
+    var users = await programService.GetProgramUsersAsync(id, skip, take).ConfigureAwait(false);
 
     return Ok(users);
   }
@@ -251,7 +251,7 @@ public class ProgramCrudController(IProgramCrudService programService) : BaseApi
   [HttpGet("{id}/users/{userId}/progress")]
   [RequireResourcePermission<PermissionType, Program>(PermissionType.Read)]
   public async Task<ActionResult<UserProgressDto>> GetUserProgress(Guid id, Guid userId) {
-    var progress = await programService.GetUserProgressDtoAsync(id, userId);
+    var progress = await programService.GetUserProgressDtoAsync(id, userId).ConfigureAwait(false);
 
     if (progress == null) return NotFound();
 
@@ -264,7 +264,7 @@ public class ProgramCrudController(IProgramCrudService programService) : BaseApi
   public async Task<ActionResult<UserProgressDto>> UpdateUserProgress(Guid id, Guid userId, [FromBody] UpdateProgressDto progressDto) {
     if (!ModelState.IsValid) return BadRequest(ModelState);
 
-    var progress = await programService.UpdateUserProgressAsync(id, userId, progressDto);
+    var progress = await programService.UpdateUserProgressAsync(id, userId, progressDto).ConfigureAwait(false);
 
     if (progress == null) return NotFound();
 
@@ -275,7 +275,7 @@ public class ProgramCrudController(IProgramCrudService programService) : BaseApi
   [HttpPost("{id}/users/{userId}/content/{contentId}:complete")]
   [RequireResourcePermission<PermissionType, Program>(PermissionType.Edit)]
   public async Task<ActionResult> MarkContentCompleted(Guid id, Guid userId, Guid contentId) {
-    var success = await programService.MarkContentCompletedAsync(id, userId, contentId);
+    var success = await programService.MarkContentCompletedAsync(id, userId, contentId).ConfigureAwait(false);
 
     if (!success) return NotFound();
 
@@ -286,7 +286,7 @@ public class ProgramCrudController(IProgramCrudService programService) : BaseApi
   [HttpPost("{id}/users/{userId}:reset")]
   [RequireResourcePermission<PermissionType, Program>(PermissionType.Edit)]
   public async Task<ActionResult> ResetUserProgress(Guid id, Guid userId) {
-    var success = await programService.ResetUserProgressAsync(id, userId);
+    var success = await programService.ResetUserProgressAsync(id, userId).ConfigureAwait(false);
 
     if (!success) return NotFound();
 
@@ -301,7 +301,7 @@ public class ProgramCrudController(IProgramCrudService programService) : BaseApi
   public async Task<ActionResult<ProgramDto>> EnableMonetization(Guid id, [FromBody] MonetizationDto monetizationDto) {
     if (!ModelState.IsValid) return BadRequest(ModelState);
 
-    var program = await programService.EnableMonetizationAsync(id, monetizationDto);
+    var program = await programService.EnableMonetizationAsync(id, monetizationDto).ConfigureAwait(false);
 
     if (program == null) return NotFound();
 
@@ -312,7 +312,7 @@ public class ProgramCrudController(IProgramCrudService programService) : BaseApi
   [HttpPost("{id}:disable-monetization")]
   [RequireResourcePermission<PermissionType, Program>(PermissionType.Edit)]
   public async Task<ActionResult<ProgramDto>> DisableMonetization(Guid id) {
-    var program = await programService.DisableMonetizationAsync(id);
+    var program = await programService.DisableMonetizationAsync(id).ConfigureAwait(false);
 
     if (program == null) return NotFound();
 
@@ -323,7 +323,7 @@ public class ProgramCrudController(IProgramCrudService programService) : BaseApi
   [HttpGet("{id}/pricing")]
   [RequireResourcePermission<PermissionType, Program>(PermissionType.Read)]
   public async Task<ActionResult<PricingDto>> GetProgramPricing(Guid id) {
-    var pricing = await programService.GetProgramPricingAsync(id);
+    var pricing = await programService.GetProgramPricingAsync(id).ConfigureAwait(false);
 
     if (pricing == null) return NotFound();
 
@@ -336,7 +336,7 @@ public class ProgramCrudController(IProgramCrudService programService) : BaseApi
   public async Task<ActionResult<PricingDto>> UpdateProgramPricing(Guid id, [FromBody] UpdatePricingDto pricingDto) {
     if (!ModelState.IsValid) return BadRequest(ModelState);
 
-    var pricing = await programService.UpdateProgramPricingAsync(id, pricingDto);
+    var pricing = await programService.UpdateProgramPricingAsync(id, pricingDto).ConfigureAwait(false);
 
     if (pricing == null) return NotFound();
 
@@ -349,7 +349,7 @@ public class ProgramCrudController(IProgramCrudService programService) : BaseApi
   [HttpGet("{id}/analytics")]
   [RequireResourcePermission<PermissionType, Program>(PermissionType.Analytics)]
   public async Task<ActionResult<ProgramAnalyticsDto>> GetProgramAnalytics(Guid id) {
-    var analytics = await programService.GetProgramAnalyticsAsync(id);
+    var analytics = await programService.GetProgramAnalyticsAsync(id).ConfigureAwait(false);
 
     if (analytics == null) return NotFound();
 
@@ -360,7 +360,7 @@ public class ProgramCrudController(IProgramCrudService programService) : BaseApi
   [HttpGet("{id}/analytics/completion-rates")]
   [RequireResourcePermission<PermissionType, Program>(PermissionType.Analytics)]
   public async Task<ActionResult<CompletionRatesDto>> GetCompletionRates(Guid id) {
-    var rates = await programService.GetCompletionRatesAsync(id);
+    var rates = await programService.GetCompletionRatesAsync(id).ConfigureAwait(false);
 
     if (rates == null) return NotFound();
 
@@ -371,7 +371,7 @@ public class ProgramCrudController(IProgramCrudService programService) : BaseApi
   [HttpGet("{id}/analytics/engagement")]
   [RequireResourcePermission<PermissionType, Program>(PermissionType.Analytics)]
   public async Task<ActionResult<EngagementMetricsDto>> GetEngagementMetrics(Guid id) {
-    var metrics = await programService.GetEngagementMetricsAsync(id);
+    var metrics = await programService.GetEngagementMetricsAsync(id).ConfigureAwait(false);
 
     if (metrics == null) return NotFound();
 
@@ -382,7 +382,7 @@ public class ProgramCrudController(IProgramCrudService programService) : BaseApi
   [HttpGet("{id}/analytics/revenue")]
   [RequireResourcePermission<PermissionType, Program>(PermissionType.Read)]
   public async Task<ActionResult<RevenueAnalyticsDto>> GetRevenueAnalytics(Guid id) {
-    var revenue = await programService.GetRevenueAnalyticsAsync(id);
+    var revenue = await programService.GetRevenueAnalyticsAsync(id).ConfigureAwait(false);
 
     if (revenue == null) return NotFound();
 
@@ -397,7 +397,7 @@ public class ProgramCrudController(IProgramCrudService programService) : BaseApi
   public async Task<ActionResult<Guid>> CreateProductFromProgram(Guid id, [FromBody] CreateProductFromProgramDto productDto) {
     if (!ModelState.IsValid) return BadRequest(ModelState);
 
-    var productId = await programService.CreateProductFromProgramAsync(id, productDto);
+    var productId = await programService.CreateProductFromProgramAsync(id, productDto).ConfigureAwait(false);
 
     if (productId == null) return NotFound();
 
@@ -408,7 +408,7 @@ public class ProgramCrudController(IProgramCrudService programService) : BaseApi
   [HttpPost("{id}:link-product/{productId}")]
   [RequireResourcePermission<PermissionType, Program>(PermissionType.Edit)]
   public async Task<ActionResult> LinkProgramToProduct(Guid id, Guid productId) {
-    var success = await programService.LinkProgramToProductAsync(id, productId);
+    var success = await programService.LinkProgramToProductAsync(id, productId).ConfigureAwait(false);
 
     if (!success) return NotFound();
 
@@ -419,7 +419,7 @@ public class ProgramCrudController(IProgramCrudService programService) : BaseApi
   [HttpDelete("{id}:unlink-product/{productId}")]
   [RequireResourcePermission<PermissionType, Program>(PermissionType.Edit)]
   public async Task<ActionResult> UnlinkProgramFromProduct(Guid id, Guid productId) {
-    var success = await programService.UnlinkProgramFromProductAsync(id, productId);
+    var success = await programService.UnlinkProgramFromProductAsync(id, productId).ConfigureAwait(false);
 
     if (!success) return NotFound();
 
@@ -430,7 +430,7 @@ public class ProgramCrudController(IProgramCrudService programService) : BaseApi
   [HttpGet("{id}/products")]
   [RequireResourcePermission<PermissionType, Program>(PermissionType.Read)]
   public async Task<ActionResult<IEnumerable<Guid>>> GetLinkedProducts(Guid id) {
-    var productIds = await programService.GetLinkedProductsAsync(id);
+    var productIds = await programService.GetLinkedProductsAsync(id).ConfigureAwait(false);
 
     return Ok(productIds);
   }

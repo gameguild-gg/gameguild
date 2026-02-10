@@ -233,7 +233,7 @@ public class ProgramWriteService(IApplicationDbContext context) : IProgramWriteS
     if (existingUser != null) {
       if (!existingUser.IsActive) {
         existingUser.IsActive = true;
-        existingUser.JoinedAt = DateTime.UtcNow;
+        existingUser.JoinedAt = SystemClock.UtcNow;
         existingUser.Touch();
         await context.SaveChangesAsync().ConfigureAwait(false);
       }
@@ -241,7 +241,7 @@ public class ProgramWriteService(IApplicationDbContext context) : IProgramWriteS
       return existingUser;
     }
 
-    var programUser = new ProgramUser { ProgramId = programId, UserId = userId, IsActive = true, JoinedAt = DateTime.UtcNow };
+    var programUser = new ProgramUser { ProgramId = programId, UserId = userId, IsActive = true, JoinedAt = SystemClock.UtcNow };
 
     context.Set<ProgramUser>().Add(programUser);
     await context.SaveChangesAsync().ConfigureAwait(false);
@@ -275,8 +275,8 @@ public class ProgramWriteService(IApplicationDbContext context) : IProgramWriteS
       Id = Guid.NewGuid(),
       ProgramId = programId,
       UserId = userId,
-      JoinedAt = DateTime.UtcNow,
-      LastAccessedAt = DateTime.UtcNow,
+      JoinedAt = SystemClock.UtcNow,
+      LastAccessedAt = SystemClock.UtcNow,
       CompletionPercentage = 0,
     };
 
@@ -311,16 +311,16 @@ public class ProgramWriteService(IApplicationDbContext context) : IProgramWriteS
     var interaction = await context.Set<ContentInteraction>().Where(ci => !ci.IsDeleted && ci.ProgramUserId == programUser.Id && ci.ContentId == contentId).FirstOrDefaultAsync();
 
     if (interaction == null) {
-      interaction = new ContentInteraction { ProgramUserId = programUser.Id, ContentId = contentId, Status = status, FirstAccessedAt = DateTime.UtcNow, LastAccessedAt = DateTime.UtcNow, };
+      interaction = new ContentInteraction { ProgramUserId = programUser.Id, ContentId = contentId, Status = status, FirstAccessedAt = SystemClock.UtcNow, LastAccessedAt = SystemClock.UtcNow, };
 
       context.Set<ContentInteraction>().Add(interaction);
     }
     else {
       interaction.Status = status;
-      interaction.LastAccessedAt = DateTime.UtcNow;
+      interaction.LastAccessedAt = SystemClock.UtcNow;
 
       if (status == ProgressStatus.Completed && interaction.CompletedAt == null) {
-        interaction.CompletedAt = DateTime.UtcNow;
+        interaction.CompletedAt = SystemClock.UtcNow;
         interaction.CompletionPercentage = 100;
       }
 
@@ -364,7 +364,7 @@ public class ProgramWriteService(IApplicationDbContext context) : IProgramWriteS
 
     programUser.CompletionPercentage = 0;
     programUser.CompletedAt = null;
-    programUser.LastAccessedAt = DateTime.UtcNow;
+    programUser.LastAccessedAt = SystemClock.UtcNow;
     programUser.Touch();
 
     await context.SaveChangesAsync().ConfigureAwait(false);
@@ -451,7 +451,7 @@ public class ProgramWriteService(IApplicationDbContext context) : IProgramWriteS
 
     programUser.CompletionPercentage = (decimal)completedContent / totalContent * 100;
 
-    if (programUser is { CompletionPercentage: >= 100, CompletedAt: null }) programUser.CompletedAt = DateTime.UtcNow;
+    if (programUser is { CompletionPercentage: >= 100, CompletedAt: null }) programUser.CompletedAt = SystemClock.UtcNow;
 
     programUser.Touch();
   }

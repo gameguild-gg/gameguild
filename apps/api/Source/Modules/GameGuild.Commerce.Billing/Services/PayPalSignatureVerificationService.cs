@@ -119,7 +119,7 @@ public class PayPalSignatureVerificationService : IPayPalSignatureVerificationSe
     private async Task<string?> GetAccessTokenAsync(CancellationToken cancellationToken)
     {
         // Check cached token
-        if (!string.IsNullOrEmpty(_cachedAccessToken) && DateTime.UtcNow < _tokenExpiresAt)
+        if (!string.IsNullOrEmpty(_cachedAccessToken) && SystemClock.UtcNow < _tokenExpiresAt)
         {
             return _cachedAccessToken;
         }
@@ -128,7 +128,7 @@ public class PayPalSignatureVerificationService : IPayPalSignatureVerificationSe
         try
         {
             // Double-check after acquiring lock
-            if (!string.IsNullOrEmpty(_cachedAccessToken) && DateTime.UtcNow < _tokenExpiresAt)
+            if (!string.IsNullOrEmpty(_cachedAccessToken) && SystemClock.UtcNow < _tokenExpiresAt)
             {
                 return _cachedAccessToken;
             }
@@ -161,7 +161,7 @@ public class PayPalSignatureVerificationService : IPayPalSignatureVerificationSe
             {
                 _cachedAccessToken = tokenResponse.AccessToken;
                 // Expire token 5 minutes early to avoid edge cases
-                _tokenExpiresAt = DateTime.UtcNow.AddSeconds(tokenResponse.ExpiresIn - 300);
+                _tokenExpiresAt = SystemClock.UtcNow.AddSeconds(tokenResponse.ExpiresIn - 300);
                 return _cachedAccessToken;
             }
 

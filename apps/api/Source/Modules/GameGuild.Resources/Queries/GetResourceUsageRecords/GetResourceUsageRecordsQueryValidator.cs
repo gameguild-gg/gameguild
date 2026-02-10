@@ -10,9 +10,9 @@ public sealed class GetResourceUsageRecordsQueryValidator : AbstractValidator<Ge
 
         RuleFor(x => x.ResourceUsageType).IsInEnum().When(x => x.ResourceUsageType.HasValue).WithMessage("Invalid usage type when specified");
 
-        RuleFor(x => x.StartDate).LessThanOrEqualTo(DateTime.UtcNow).When(x => x.StartDate.HasValue).WithMessage("Start date cannot be in the future");
+        RuleFor(x => x.StartDate).LessThanOrEqualTo(SystemClock.UtcNow).When(x => x.StartDate.HasValue).WithMessage("Start date cannot be in the future");
 
-        RuleFor(x => x.EndDate).LessThanOrEqualTo(DateTime.UtcNow).When(x => x.EndDate.HasValue).WithMessage("End date cannot be in the future");
+        RuleFor(x => x.EndDate).LessThanOrEqualTo(SystemClock.UtcNow).When(x => x.EndDate.HasValue).WithMessage("End date cannot be in the future");
 
         RuleFor(x => x)
             .Must(x => !x.StartDate.HasValue || !x.EndDate.HasValue || x.EndDate >= x.StartDate)

@@ -78,19 +78,19 @@ public class ProgramTag : EntityBase
     public void UpdateProficiency(SkillProficiencyLevel level)
     {
         ProficiencyLevel = level;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     public void SetPrimary(bool isPrimary)
     {
         IsPrimary = isPrimary;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     public void SetDisplayOrder(int order)
     {
         DisplayOrder = order;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 }
 

@@ -24,7 +24,7 @@ public class RefreshTokenRepository(IApplicationDbContext context) : IRefreshTok
     public async Task<RefreshToken> CreateAsync(RefreshToken refreshToken, CancellationToken cancellationToken = default)
     {
         refreshToken.Id = Guid.NewGuid();
-        refreshToken.UpdatedAt = DateTime.UtcNow;
+        refreshToken.UpdatedAt = SystemClock.UtcNow;
 
         RefreshTokens.Add(refreshToken);
         await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
@@ -34,7 +34,7 @@ public class RefreshTokenRepository(IApplicationDbContext context) : IRefreshTok
 
     public async Task<RefreshToken> UpdateAsync(RefreshToken refreshToken, CancellationToken cancellationToken = default)
     {
-        refreshToken.UpdatedAt = DateTime.UtcNow;
+        refreshToken.UpdatedAt = SystemClock.UtcNow;
 
         RefreshTokens.Update(refreshToken);
         await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
@@ -49,10 +49,10 @@ public class RefreshTokenRepository(IApplicationDbContext context) : IRefreshTok
         if (refreshToken == null || refreshToken.IsRevoked) return;
 
         refreshToken.IsRevoked = true;
-        refreshToken.RevokedAt = DateTime.UtcNow;
+        refreshToken.RevokedAt = SystemClock.UtcNow;
         refreshToken.RevokedByIp = revokedByIp;
         refreshToken.ReplacedByToken = replacedByToken;
-        refreshToken.UpdatedAt = DateTime.UtcNow;
+        refreshToken.UpdatedAt = SystemClock.UtcNow;
 
         await UpdateAsync(refreshToken, cancellationToken).ConfigureAwait(false);
     }
@@ -63,7 +63,7 @@ public class RefreshTokenRepository(IApplicationDbContext context) : IRefreshTok
 
         if (activeTokens.Count == 0) return;
 
-        var now = DateTime.UtcNow;
+        var now = SystemClock.UtcNow;
 
         foreach (var token in activeTokens)
         {

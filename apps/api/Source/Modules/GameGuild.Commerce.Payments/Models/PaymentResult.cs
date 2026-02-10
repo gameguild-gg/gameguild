@@ -44,7 +44,7 @@ public class PaymentResult
             PaymentId = paymentId,
             TransactionId = transactionId,
             InvoiceId = invoiceId,
-            ProcessedAt = DateTime.UtcNow
+            ProcessedAt = SystemClock.UtcNow
         };
     }
 
@@ -59,7 +59,7 @@ public class PaymentResult
             Status = PaymentStatus.Failed,
             FailureReason = failureReason,
             InvoiceId = invoiceId,
-            ProcessedAt = DateTime.UtcNow
+            ProcessedAt = SystemClock.UtcNow
         };
     }
 
@@ -75,7 +75,7 @@ public class PaymentResult
             Amount = amount,
             PaymentId = paymentId,
             InvoiceId = invoiceId,
-            ProcessedAt = DateTime.UtcNow
+            ProcessedAt = SystemClock.UtcNow
         };
     }
 }

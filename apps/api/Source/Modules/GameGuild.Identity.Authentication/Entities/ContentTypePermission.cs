@@ -56,7 +56,7 @@ public class ContentTypePermission : WithPermissions
         if (string.IsNullOrWhiteSpace(newContentTypeName)) throw new ArgumentException("Content type name cannot be null or empty", nameof(newContentTypeName));
 
         ContentTypeName = newContentTypeName;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     /// <summary>
@@ -66,6 +66,6 @@ public class ContentTypePermission : WithPermissions
     public void UpdateDescription(string? newDescription)
     {
         Description = newDescription;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 }

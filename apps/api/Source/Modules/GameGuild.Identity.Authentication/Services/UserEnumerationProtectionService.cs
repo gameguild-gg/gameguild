@@ -28,7 +28,7 @@ public class UserEnumerationProtectionService(ILogger<UserEnumerationProtectionS
     public async Task AddTimingProtectionDelayAsync(bool isValidUser, DateTime startTime)
     {
         var stopwatch = Stopwatch.StartNew();
-        var elapsed = DateTime.UtcNow - startTime;
+        var elapsed = SystemClock.UtcNow - startTime;
 
         try
         {

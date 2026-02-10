@@ -172,7 +172,7 @@ public class VirusScanService : IVirusScanService
             return new VirusScanResult(true, "Scanning disabled");
         }
 
-        var startTime = DateTime.UtcNow;
+        var startTime = SystemClock.UtcNow;
 
         try
         {
@@ -192,7 +192,7 @@ public class VirusScanService : IVirusScanService
             // In production, integrate with ClamAV, Windows Defender, or commercial AV
             await Task.Delay(10, ct).ConfigureAwait(false); // Simulate scan time
 
-            var duration = DateTime.UtcNow - startTime;
+            var duration = SystemClock.UtcNow - startTime;
 
             _logger.LogDebug(
                 "Virus scan completed for {FileName}: Clean in {Duration}ms",

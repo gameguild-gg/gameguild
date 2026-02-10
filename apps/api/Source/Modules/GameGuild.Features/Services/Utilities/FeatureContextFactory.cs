@@ -30,7 +30,7 @@ public class FeatureContextFactory
             UserAgent = httpContext.Request.Headers.UserAgent.ToString(),
             Country = GetCountryFromContext(httpContext),
             Permissions = GetUserPermissionsFromContext(httpContext),
-            RequestTime = DateTime.UtcNow,
+            RequestTime = SystemClock.UtcNow,
             CustomAttributes = []
         };
     }
@@ -44,7 +44,7 @@ public class FeatureContextFactory
     /// <returns>Basic FeatureContext</returns>
     public static FeatureContext CreateBasic(Guid? tenantId = null, Guid? userId = null, string? environment = null)
     {
-        return new FeatureContext { TenantId = tenantId, UserId = userId, Environment = environment ?? FeatureFlagConstants.DefaultEnvironment, RequestTime = DateTime.UtcNow, CustomAttributes = [] };
+        return new FeatureContext { TenantId = tenantId, UserId = userId, Environment = environment ?? FeatureFlagConstants.DefaultEnvironment, RequestTime = SystemClock.UtcNow, CustomAttributes = [] };
     }
 
     /// <summary>

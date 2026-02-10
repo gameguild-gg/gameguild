@@ -47,7 +47,7 @@ public class ProjectStatisticsEntity : EntityBase<Guid>
     public int NewFollowersLast30Days { get; set; }
 
     /// <summary> Date when statistics were calculated </summary>
-    public DateTime CalculatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime CalculatedAt { get; set; } = SystemClock.UtcNow;
 
     /// <summary> Trending score (calculated based on recent activity) </summary>
     public decimal TrendingScore { get; set; }

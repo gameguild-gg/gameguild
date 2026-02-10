@@ -27,7 +27,7 @@ public class SessionProject : EntityBase {
   public string? Notes { get; set; }
 
   /// <summary> When this project was registered for the session </summary>
-  public DateTime RegisteredAt { get; set; } = DateTime.UtcNow;
+  public DateTime RegisteredAt { get; set; } = SystemClock.UtcNow;
 
   /// <summary> Foreign key to the user who registered this project for the session </summary>
   public Guid RegisteredById { get; set; }

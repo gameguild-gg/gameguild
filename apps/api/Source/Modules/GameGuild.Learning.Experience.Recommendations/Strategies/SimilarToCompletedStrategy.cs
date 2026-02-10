@@ -28,7 +28,7 @@ public class SimilarToCompletedStrategy(IApplicationDbContext context) : IRecomm
             .Include(pu => pu.Program)
             .Select(pu => pu.Program)
             .Where(p => p != null && p.DeletedAt == null)
-            .ToListAsync(cancellationToken);
+            .ToListAsync(cancellationToken).ConfigureAwait(false);
 
         if (!completedCourses.Any())
         {
@@ -88,7 +88,7 @@ public class SimilarToCompletedStrategy(IApplicationDbContext context) : IRecomm
                 AverageRating = p.ProgramRatings.Any() ? p.ProgramRatings.Average(r => r.Rating) : 0m
             })
             .Take(maxResults * 2) // Get more for better filtering
-            .ToListAsync(cancellationToken);
+            .ToListAsync(cancellationToken).ConfigureAwait(false);
 
         // Score and rank by similarity
         var scoredCourses = similarCourses

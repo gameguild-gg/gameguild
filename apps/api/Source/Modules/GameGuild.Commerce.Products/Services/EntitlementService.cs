@@ -183,7 +183,7 @@ public class EntitlementService(
         }
 
         // Check if subscription has expired
-        if (userProduct.AccessEndDate.HasValue && userProduct.AccessEndDate.Value < DateTime.UtcNow)
+        if (userProduct.AccessEndDate.HasValue && userProduct.AccessEndDate.Value < SystemClock.UtcNow)
         {
             userProduct.AccessStatus = ProductAccessStatus.Expired;
             userProduct.SubscriptionStatus = EntitlementSubscriptionStatus.Expired;
@@ -203,7 +203,7 @@ public class EntitlementService(
         int daysUntilExpiration = 7,
         CancellationToken cancellationToken = default)
     {
-        var threshold = DateTime.UtcNow.AddDays(daysUntilExpiration);
+        var threshold = SystemClock.UtcNow.AddDays(daysUntilExpiration);
         var expiringProducts = await userProductRepository.GetExpiringAccessAsync(threshold, cancellationToken).ConfigureAwait(false);
 
         return expiringProducts.Select(up => new EntitlementInfo(

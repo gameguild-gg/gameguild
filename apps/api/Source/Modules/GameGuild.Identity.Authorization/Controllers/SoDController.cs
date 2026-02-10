@@ -32,7 +32,7 @@ public class SoDController(ISender sender) : BaseApiController
         CancellationToken cancellationToken
     )
     {
-        var result = await sender.Send(command, cancellationToken);
+        var result = await sender.Send(command, cancellationToken).ConfigureAwait(false);
         return CreatedAtAction(nameof(GetRuleById), new { id = result.Id }, result);
     }
 
@@ -57,7 +57,7 @@ public class SoDController(ISender sender) : BaseApiController
             request.IsEnabled
         );
 
-        var result = await sender.Send(command, cancellationToken);
+        var result = await sender.Send(command, cancellationToken).ConfigureAwait(false);
         if (result == null)
             return NotFound();
 
@@ -73,7 +73,7 @@ public class SoDController(ISender sender) : BaseApiController
     public async Task<IActionResult> DeleteRule(Guid id, CancellationToken cancellationToken)
     {
         var command = new DeleteSoDRuleCommand(id);
-        var result = await sender.Send(command, cancellationToken);
+        var result = await sender.Send(command, cancellationToken).ConfigureAwait(false);
 
         if (!result)
             return NotFound();
@@ -90,7 +90,7 @@ public class SoDController(ISender sender) : BaseApiController
     public async Task<IActionResult> GetRuleById(Guid id, CancellationToken cancellationToken)
     {
         var query = new GetSoDRuleByIdQuery(id);
-        var result = await sender.Send(query, cancellationToken);
+        var result = await sender.Send(query, cancellationToken).ConfigureAwait(false);
 
         if (result == null)
             return NotFound();
@@ -112,12 +112,12 @@ public class SoDController(ISender sender) : BaseApiController
         if (activeOnly)
         {
             var activeQuery = new GetActiveSoDRulesQuery(tenantId);
-            var activeResult = await sender.Send(activeQuery, cancellationToken);
+            var activeResult = await sender.Send(activeQuery, cancellationToken).ConfigureAwait(false);
             return Ok(activeResult);
         }
 
         var query = new GetSoDRulesQuery(tenantId);
-        var result = await sender.Send(query, cancellationToken);
+        var result = await sender.Send(query, cancellationToken).ConfigureAwait(false);
         return Ok(result);
     }
 
@@ -137,7 +137,7 @@ public class SoDController(ISender sender) : BaseApiController
     )
     {
         var query = new DetectSoDViolationsQuery(userId, tenantId);
-        var result = await sender.Send(query, cancellationToken);
+        var result = await sender.Send(query, cancellationToken).ConfigureAwait(false);
         return Ok(result);
     }
 
@@ -153,7 +153,7 @@ public class SoDController(ISender sender) : BaseApiController
     )
     {
         var query = new GetUserSoDViolationsQuery(userId, tenantId);
-        var result = await sender.Send(query, cancellationToken);
+        var result = await sender.Send(query, cancellationToken).ConfigureAwait(false);
         return Ok(result);
     }
 
@@ -168,7 +168,7 @@ public class SoDController(ISender sender) : BaseApiController
     )
     {
         var query = new GetActiveSoDViolationsQuery(tenantId);
-        var result = await sender.Send(query, cancellationToken);
+        var result = await sender.Send(query, cancellationToken).ConfigureAwait(false);
         return Ok(result);
     }
 
@@ -185,7 +185,7 @@ public class SoDController(ISender sender) : BaseApiController
     )
     {
         var command = new ResolveSoDViolationCommand(id, request.ResolvedBy, request.Action, request.Notes);
-        var result = await sender.Send(command, cancellationToken);
+        var result = await sender.Send(command, cancellationToken).ConfigureAwait(false);
         return Ok(result);
     }
 
@@ -202,7 +202,7 @@ public class SoDController(ISender sender) : BaseApiController
     )
     {
         var command = new GrantSoDExceptionCommand(id, request.ApprovedBy, request.Justification);
-        var result = await sender.Send(command, cancellationToken);
+        var result = await sender.Send(command, cancellationToken).ConfigureAwait(false);
         return Ok(result);
     }
 
@@ -217,7 +217,7 @@ public class SoDController(ISender sender) : BaseApiController
     )
     {
         var command = new ScanSoDViolationsCommand(tenantId);
-        var result = await sender.Send(command, cancellationToken);
+        var result = await sender.Send(command, cancellationToken).ConfigureAwait(false);
         return Ok(new { ViolationsFound = result });
     }
 }

@@ -85,7 +85,7 @@ public class ContentReport : EntityBase {
   /// <summary> Assign report to a moderator </summary>
   public void AssignToModerator(Guid moderatorId) {
     ModeratorId = moderatorId;
-    AssignedAt = DateTime.UtcNow;
+    AssignedAt = SystemClock.UtcNow;
     Status = ReportStatus.InReview;
     Touch();
   }
@@ -93,7 +93,7 @@ public class ContentReport : EntityBase {
   /// <summary> Resolve the report </summary>
   public void Resolve(string resolutionNotes, string? actionTaken = null) {
     Status = ReportStatus.Resolved;
-    ResolvedAt = DateTime.UtcNow;
+    ResolvedAt = SystemClock.UtcNow;
     ResolutionNotes = resolutionNotes;
     ActionTaken = actionTaken;
     Touch();
@@ -102,7 +102,7 @@ public class ContentReport : EntityBase {
   /// <summary> Dismiss the report </summary>
   public void Dismiss(string reason) {
     Status = ReportStatus.Dismissed;
-    ResolvedAt = DateTime.UtcNow;
+    ResolvedAt = SystemClock.UtcNow;
     ResolutionNotes = reason;
     Touch();
   }

@@ -109,7 +109,7 @@ public class StripePaymentService(
                 ErrorCode: null,
                 ErrorMessage: null,
                 Status: StripeStatusMapper.MapPaymentStatus(paymentIntent.Status),
-                ProcessedAt: DateTime.UtcNow);
+                ProcessedAt: SystemClock.UtcNow);
         }
         catch (StripeException ex)
         {
@@ -124,7 +124,7 @@ public class StripePaymentService(
                 ErrorCode: ex.StripeError?.Code ?? "stripe_error",
                 ErrorMessage: ex.StripeError?.Message ?? ex.Message,
                 Status: PaymentStatus.Failed,
-                ProcessedAt: DateTime.UtcNow);
+                ProcessedAt: SystemClock.UtcNow);
         }
         catch (Exception ex)
         {
@@ -184,7 +184,7 @@ public class StripePaymentService(
                 AmountRefunded: StripeAmountConverter.FromStripeAmount(refund.Amount, refund.Currency),
                 ErrorCode: null,
                 ErrorMessage: null,
-                ProcessedAt: DateTime.UtcNow);
+                ProcessedAt: SystemClock.UtcNow);
         }
         catch (StripeException ex)
         {
@@ -198,7 +198,7 @@ public class StripePaymentService(
                 AmountRefunded: 0,
                 ErrorCode: ex.StripeError?.Code ?? "stripe_error",
                 ErrorMessage: ex.StripeError?.Message ?? ex.Message,
-                ProcessedAt: DateTime.UtcNow);
+                ProcessedAt: SystemClock.UtcNow);
         }
         catch (Exception ex)
         {

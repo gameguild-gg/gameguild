@@ -31,7 +31,7 @@ public class ProjectRelease : EntityBase<Guid>
     public string ReleaseVersion { get; set; } = string.Empty;
 
     /// <summary> Date when this version was released </summary>
-    public DateTime ReleasedAt { get; set; } = DateTime.UtcNow;
+    public DateTime ReleasedAt { get; set; } = SystemClock.UtcNow;
 
     /// <summary> Whether this is the latest release </summary>
     public bool IsLatest { get; set; } = false;

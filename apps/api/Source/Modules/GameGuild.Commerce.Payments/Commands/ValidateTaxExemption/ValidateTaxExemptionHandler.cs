@@ -14,8 +14,8 @@ public sealed class ValidateTaxExemptionHandler : ICommandHandler<ValidateTaxExe
             IsValid: true,
             ExemptionType: request.ExemptionType,
             ExemptionRate: 1.0m,
-            ValidFrom: DateTime.UtcNow.AddYears(-1),
-            ValidTo: DateTime.UtcNow.AddYears(1),
+            ValidFrom: SystemClock.UtcNow.AddYears(-1),
+            ValidTo: SystemClock.UtcNow.AddYears(1),
             ValidationMessage: "Exemption validated successfully",
             Warnings: null);
 

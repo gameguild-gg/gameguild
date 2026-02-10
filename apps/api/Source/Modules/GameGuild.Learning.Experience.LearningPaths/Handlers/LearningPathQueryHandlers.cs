@@ -299,7 +299,7 @@ public sealed class LearningPathQueryHandlers(IApplicationDbContext context, ILo
     {
         logger.LogInformation("Getting popular learning paths for last {Days} days", request.DaysBack);
 
-        var cutoffDate = DateTime.UtcNow.AddDays(-request.DaysBack);
+        var cutoffDate = SystemClock.UtcNow.AddDays(-request.DaysBack);
 
         // Get enrollment counts per path in the time period
         var popularPathIds = await context.Set<LearningPathEnrollment>()

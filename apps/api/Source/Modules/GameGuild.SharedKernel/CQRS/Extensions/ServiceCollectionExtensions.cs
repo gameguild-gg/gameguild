@@ -25,7 +25,7 @@ public static class ServiceCollectionExtensions
     /// </summary>
     private static readonly HashSet<Type> RequestHandlerInterfaceTypes =
     [
-        typeof(IRequestHandler<,>), typeof(IRequestHandler<>), typeof(IStreamRequestHandler<,>), typeof(ICommandHandler<,>), typeof(ICommandHandler<>), typeof(IQueryHandler<,>)
+        typeof(IRequestHandler<,>), typeof(IRequestHandler<>), typeof(ICommandHandler<,>), typeof(ICommandHandler<>), typeof(IQueryHandler<,>)
     ];
 
     /// <summary>
@@ -208,92 +208,4 @@ public static class ServiceCollectionExtensions
         return services;
     }
 
-    /// <summary>
-    ///     Adds request pre-processors from assembly (Transient)
-    /// </summary>
-    public static IServiceCollection AddRequestPreProcessors(this IServiceCollection services, Assembly assembly)
-    {
-        ArgumentNullException.ThrowIfNull(services);
-        ArgumentNullException.ThrowIfNull(assembly);
-        services.ScanAndRegister(assembly, typeof(IRequestPreProcessor<>));
-        return services;
-    }
-
-    /// <summary>
-    ///     Adds request post-processors from assembly (Transient)
-    /// </summary>
-    public static IServiceCollection AddRequestPostProcessors(this IServiceCollection services, Assembly assembly)
-    {
-        ArgumentNullException.ThrowIfNull(services);
-        ArgumentNullException.ThrowIfNull(assembly);
-        services.ScanAndRegister(assembly, typeof(IRequestPostProcessor<,>));
-        return services;
-    }
-
-    /// <summary>
-    ///     Adds exception handlers from assembly (Transient)
-    /// </summary>
-    public static IServiceCollection AddExceptionHandlers(this IServiceCollection services, Assembly assembly)
-    {
-        ArgumentNullException.ThrowIfNull(services);
-        ArgumentNullException.ThrowIfNull(assembly);
-        services.ScanAndRegister(assembly, typeof(IRequestExceptionHandler<,,>));
-        return services;
-    }
-
-    /// <summary>
-    ///     Adds advanced pipeline behaviors (pre/post processors, exception handling, observability)
-    /// </summary>
-    public static IServiceCollection AddAdvancedPipelineBehaviors(this IServiceCollection services)
-    {
-        ArgumentNullException.ThrowIfNull(services);
-
-        services.AddTransient(typeof(IPipelineBehavior<,>), typeof(RequestPreProcessorBehavior<,>));
-        services.AddTransient(typeof(IPipelineBehavior<,>), typeof(RequestPostProcessorBehavior<,>));
-        services.AddTransient(typeof(IPipelineBehavior<,>), typeof(RequestExceptionBehavior<,>));
-        services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ObservabilityBehavior<,>));
-
-        // Register default ObservabilityOptions if not already configured
-        services.TryAddSingleton(Microsoft.Extensions.Options.Options.Create(new ObservabilityOptions()));
-
-        return services;
-    }
-
-    /// <summary>
-    ///     Adds caching pipeline behavior
-    /// </summary>
-    public static IServiceCollection AddCachingBehavior(this IServiceCollection services)
-    {
-        ArgumentNullException.ThrowIfNull(services);
-        services.AddTransient(typeof(IPipelineBehavior<,>), typeof(CachingBehavior<,>));
-
-        return services;
-    }
-
-    /// <summary>
-    ///     Configures assembly scanning with more options
-    /// </summary>
-    public static IServiceCollection AddCqrsFromAssemblies(this IServiceCollection services, IEnumerable<Assembly> assemblies, Action<CqrsAssemblyConfiguration>? configurator = null)
-    {
-        ArgumentNullException.ThrowIfNull(services);
-        ArgumentNullException.ThrowIfNull(assemblies);
-
-        var config = new CqrsAssemblyConfiguration();
-        configurator?.Invoke(config);
-
-        foreach (var assembly in assemblies)
-        {
-            if (config.IncludeRequestHandlers) services.AddRequestHandlers(assembly);
-
-            if (config.IncludeNotificationHandlers) services.AddNotificationHandlers(assembly);
-
-            if (config.IncludePreProcessors) services.AddRequestPreProcessors(assembly);
-
-            if (config.IncludePostProcessors) services.AddRequestPostProcessors(assembly);
-
-            if (config.IncludeExceptionHandlers) services.AddExceptionHandlers(assembly);
-        }
-
-        return services;
-    }
 }

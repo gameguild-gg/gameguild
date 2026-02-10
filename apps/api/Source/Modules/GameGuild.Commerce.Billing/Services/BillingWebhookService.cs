@@ -173,7 +173,7 @@ public abstract class BillingWebhookService : IBillingWebhookService
                 subscription.Id,
                 payload.Amount,
                 payload.Currency,
-                payload.PaidAt ?? DateTime.UtcNow
+                payload.PaidAt ?? SystemClock.UtcNow
             ).ConfigureAwait(false);
 
             _logger.LogInformation("Successfully recorded payment {PaymentId} for subscription {SubscriptionId}",
@@ -210,7 +210,7 @@ public abstract class BillingWebhookService : IBillingWebhookService
             await _billingService.RecordPaymentFailureAsync(
                 subscription.Id,
                 payload.FailureReason ?? "Payment failed via webhook",
-                payload.PaidAt ?? DateTime.UtcNow
+                payload.PaidAt ?? SystemClock.UtcNow
             ).ConfigureAwait(false);
 
             _logger.LogInformation("Successfully recorded payment failure {PaymentId} for subscription {SubscriptionId}",

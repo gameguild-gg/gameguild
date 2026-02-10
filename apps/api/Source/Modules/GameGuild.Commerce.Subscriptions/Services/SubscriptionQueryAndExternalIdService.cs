@@ -147,7 +147,7 @@ public class SubscriptionQueryAndExternalIdService(
             },
             PeriodStart = subscription.CurrentPeriodStart,
             PeriodEnd = subscription.CurrentPeriodEnd,
-            LastUpdated = DateTime.UtcNow
+            LastUpdated = SystemClock.UtcNow
         };
     }
 

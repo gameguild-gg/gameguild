@@ -45,7 +45,7 @@ public class AuditTrail : EntityBase
     public Guid ChangedBy { get; set; }
 
     /// <summary>Changed timestamp</summary>
-    public DateTime ChangedAt { get; set; } = DateTime.UtcNow;
+    public DateTime ChangedAt { get; set; } = SystemClock.UtcNow;
 
     /// <summary>IP address</summary>
     [MaxLength(45)]

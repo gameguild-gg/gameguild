@@ -28,7 +28,7 @@ public class JitElevationsController(ISender sender) : BaseApiController
         CancellationToken cancellationToken
     )
     {
-        var result = await sender.Send(command, cancellationToken);
+        var result = await sender.Send(command, cancellationToken).ConfigureAwait(false);
         return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
     }
 
@@ -45,7 +45,7 @@ public class JitElevationsController(ISender sender) : BaseApiController
     )
     {
         var command = new ApproveJitElevationCommand(id, request.ReviewerId, request.Comments);
-        var result = await sender.Send(command, cancellationToken);
+        var result = await sender.Send(command, cancellationToken).ConfigureAwait(false);
         return Ok(result);
     }
 
@@ -62,7 +62,7 @@ public class JitElevationsController(ISender sender) : BaseApiController
     )
     {
         var command = new DenyJitElevationCommand(id, request.ReviewerId, request.Comments);
-        var result = await sender.Send(command, cancellationToken);
+        var result = await sender.Send(command, cancellationToken).ConfigureAwait(false);
         return Ok(result);
     }
 
@@ -79,7 +79,7 @@ public class JitElevationsController(ISender sender) : BaseApiController
     )
     {
         var command = new RevokeJitElevationCommand(id, request.RevokedBy, request.Reason);
-        await sender.Send(command, cancellationToken);
+        await sender.Send(command, cancellationToken).ConfigureAwait(false);
         return NoContent();
     }
 
@@ -92,7 +92,7 @@ public class JitElevationsController(ISender sender) : BaseApiController
     public async Task<IActionResult> GetById(Guid id, CancellationToken cancellationToken)
     {
         var query = new GetJitElevationByIdQuery(id);
-        var result = await sender.Send(query, cancellationToken);
+        var result = await sender.Send(query, cancellationToken).ConfigureAwait(false);
 
         if (result == null)
             return NotFound();
@@ -111,7 +111,7 @@ public class JitElevationsController(ISender sender) : BaseApiController
     )
     {
         var query = new GetPendingJitElevationsQuery(tenantId);
-        var result = await sender.Send(query, cancellationToken);
+        var result = await sender.Send(query, cancellationToken).ConfigureAwait(false);
         return Ok(result);
     }
 
@@ -127,7 +127,7 @@ public class JitElevationsController(ISender sender) : BaseApiController
     )
     {
         var query = new GetUserJitElevationsQuery(userId, tenantId);
-        var result = await sender.Send(query, cancellationToken);
+        var result = await sender.Send(query, cancellationToken).ConfigureAwait(false);
         return Ok(result);
     }
 
@@ -143,7 +143,7 @@ public class JitElevationsController(ISender sender) : BaseApiController
     )
     {
         var query = new GetActiveJitElevationsQuery(userId, tenantId);
-        var result = await sender.Send(query, cancellationToken);
+        var result = await sender.Send(query, cancellationToken).ConfigureAwait(false);
         return Ok(result);
     }
 
@@ -161,7 +161,7 @@ public class JitElevationsController(ISender sender) : BaseApiController
     )
     {
         var query = new HasActiveJitElevationQuery(userId, permission, tenantId, resourceId);
-        var result = await sender.Send(query, cancellationToken);
+        var result = await sender.Send(query, cancellationToken).ConfigureAwait(false);
         return Ok(result);
     }
 
@@ -173,7 +173,7 @@ public class JitElevationsController(ISender sender) : BaseApiController
     public async Task<IActionResult> CleanupExpired(CancellationToken cancellationToken)
     {
         var command = new CleanupExpiredElevationsCommand();
-        var result = await sender.Send(command, cancellationToken);
+        var result = await sender.Send(command, cancellationToken).ConfigureAwait(false);
         return Ok(new { Count = result });
     }
 }

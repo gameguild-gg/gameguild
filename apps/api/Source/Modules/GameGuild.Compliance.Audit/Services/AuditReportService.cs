@@ -14,7 +14,7 @@ public class AuditReportService(
     IApplicationDbContext context,
     IPermissionAuditLogRepository permissionAuditRepository,
     IAuditLogQueryService auditLogQueryService,
-    ILogger<AuditReportService> logger) : IAuditReportService
+    ILogger<AuditReportService> _logger) : IAuditReportService
 {
     public async Task<SecurityAuditDashboard> GetSecurityDashboardAsync(
         DateTime startDate,
@@ -22,6 +22,8 @@ public class AuditReportService(
         Guid? tenantId = null,
         CancellationToken cancellationToken = default)
     {
+        _logger.LogInformation("Generating security dashboard for period {StartDate} to {EndDate}, TenantId={TenantId}", startDate, endDate, tenantId);
+
         // Authentication statistics
         var authQuery = context.Set<AuthenticationAttempt>().AsNoTracking()
             .Where(a => a.AttemptedAt >= startDate && a.AttemptedAt <= endDate);

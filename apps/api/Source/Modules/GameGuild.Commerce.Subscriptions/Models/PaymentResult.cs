@@ -55,14 +55,14 @@ public class PaymentResult
     /// <summary>
     ///     When the payment was processed
     /// </summary>
-    public DateTime ProcessedAt { get; init; } = DateTime.UtcNow;
+    public DateTime ProcessedAt { get; init; } = SystemClock.UtcNow;
 
     /// <summary>
     ///     Creates a successful payment result
     /// </summary>
     public static PaymentResult CreateSuccess(Money amount, string? paymentId = null, string? transactionId = null, Guid? invoiceId = null, Dictionary<string, object>? metadata = null)
     {
-        return new PaymentResult { Success = true, Status = PaymentStatus.Succeeded, Amount = amount, PaymentId = paymentId, TransactionId = transactionId, InvoiceId = invoiceId, Metadata = metadata, ProcessedAt = DateTime.UtcNow };
+        return new PaymentResult { Success = true, Status = PaymentStatus.Succeeded, Amount = amount, PaymentId = paymentId, TransactionId = transactionId, InvoiceId = invoiceId, Metadata = metadata, ProcessedAt = SystemClock.UtcNow };
     }
 
     /// <summary>
@@ -70,7 +70,7 @@ public class PaymentResult
     /// </summary>
     public static PaymentResult Failed(string errorMessage, string? errorCode = null, PaymentStatus status = PaymentStatus.Failed, Guid? invoiceId = null)
     {
-        return new PaymentResult { Success = false, Status = status, Amount = Money.Zero(), ErrorMessage = errorMessage, ErrorCode = errorCode, InvoiceId = invoiceId, ProcessedAt = DateTime.UtcNow };
+        return new PaymentResult { Success = false, Status = status, Amount = Money.Zero(), ErrorMessage = errorMessage, ErrorCode = errorCode, InvoiceId = invoiceId, ProcessedAt = SystemClock.UtcNow };
     }
 
     /// <summary>
@@ -78,6 +78,6 @@ public class PaymentResult
     /// </summary>
     public static PaymentResult Pending(Money amount, string? paymentId = null, Guid? invoiceId = null)
     {
-        return new PaymentResult { Success = false, Status = PaymentStatus.Pending, Amount = amount, PaymentId = paymentId, InvoiceId = invoiceId, ProcessedAt = DateTime.UtcNow };
+        return new PaymentResult { Success = false, Status = PaymentStatus.Pending, Amount = amount, PaymentId = paymentId, InvoiceId = invoiceId, ProcessedAt = SystemClock.UtcNow };
     }
 }

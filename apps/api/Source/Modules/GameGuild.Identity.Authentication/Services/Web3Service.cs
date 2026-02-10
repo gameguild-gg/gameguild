@@ -19,7 +19,7 @@ public class Web3Service(ILogger<Web3Service> logger, IMemoryCache memoryCache) 
 
         var nonce = GenerateNonce();
         var message = GenerateChallengeMessage(walletAddress, nonce);
-        var issuedAt = DateTime.UtcNow;
+        var issuedAt = SystemClock.UtcNow;
         var expiresAt = issuedAt.AddMinutes(5); // 5-minute expiration
 
         var challenge = new Web3Challenge { Message = message, WalletAddress = walletAddress, Nonce = nonce, IssuedAt = issuedAt, ExpiresAt = expiresAt, TenantId = tenantId };

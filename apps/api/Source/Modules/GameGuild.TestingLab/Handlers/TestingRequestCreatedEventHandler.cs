@@ -17,6 +17,6 @@ public sealed class TestingRequestCreatedEventHandler : INotificationHandler<Tes
     // - Integrating with external systems
     // - Updating analytics/metrics
 
-    await Task.CompletedTask;
+    await Task.CompletedTask.ConfigureAwait(false);
   }
 }

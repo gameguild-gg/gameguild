@@ -44,8 +44,8 @@ public class CourseReview : EntityBase
     }
 
     public void MarkHelpful() => HelpfulCount++;
-    public void Approve() { IsApproved = true; UpdatedAt = DateTime.UtcNow; }
-    public void Feature() { IsFeatured = true; UpdatedAt = DateTime.UtcNow; }
+    public void Approve() { IsApproved = true; UpdatedAt = SystemClock.UtcNow; }
+    public void Feature() { IsFeatured = true; UpdatedAt = SystemClock.UtcNow; }
 }
 
 /// <summary>
@@ -110,15 +110,15 @@ public class CourseDiscussion : EntityBase
             IsResolved = false,
             ReplyCount = 0,
             ViewCount = 0,
-            LastActivityAt = DateTime.UtcNow
+            LastActivityAt = SystemClock.UtcNow
         };
     }
 
-    public void Pin() { IsPinned = true; UpdatedAt = DateTime.UtcNow; }
-    public void Unpin() { IsPinned = false; UpdatedAt = DateTime.UtcNow; }
-    public void MarkResolved() { IsResolved = true; UpdatedAt = DateTime.UtcNow; }
+    public void Pin() { IsPinned = true; UpdatedAt = SystemClock.UtcNow; }
+    public void Unpin() { IsPinned = false; UpdatedAt = SystemClock.UtcNow; }
+    public void MarkResolved() { IsResolved = true; UpdatedAt = SystemClock.UtcNow; }
     public void IncrementViews() => ViewCount++;
-    public void IncrementReplies() { ReplyCount++; LastActivityAt = DateTime.UtcNow; }
+    public void IncrementReplies() { ReplyCount++; LastActivityAt = SystemClock.UtcNow; }
 }
 
 /// <summary>
@@ -149,7 +149,7 @@ public class DiscussionReply : EntityBase
         };
     }
 
-    public void AcceptAsAnswer() { IsAcceptedAnswer = true; UpdatedAt = DateTime.UtcNow; }
+    public void AcceptAsAnswer() { IsAcceptedAnswer = true; UpdatedAt = SystemClock.UtcNow; }
     public void Upvote() => UpvoteCount++;
 }
 
@@ -222,12 +222,12 @@ public class PersonalizedFeedItem : EntityBase
             Reason = reason,
             IsViewed = false,
             IsDismissed = false,
-            ExpiresAt = DateTime.UtcNow.AddDays(expiresInDays)
+            ExpiresAt = SystemClock.UtcNow.AddDays(expiresInDays)
         };
     }
 
-    public void MarkViewed() { IsViewed = true; UpdatedAt = DateTime.UtcNow; }
-    public void Dismiss() { IsDismissed = true; UpdatedAt = DateTime.UtcNow; }
+    public void MarkViewed() { IsViewed = true; UpdatedAt = SystemClock.UtcNow; }
+    public void Dismiss() { IsDismissed = true; UpdatedAt = SystemClock.UtcNow; }
 }
 
 /// <summary>

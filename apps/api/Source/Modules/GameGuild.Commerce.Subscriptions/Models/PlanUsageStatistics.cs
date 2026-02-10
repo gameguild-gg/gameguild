@@ -48,5 +48,5 @@ public abstract class PlanUsageStatistics
     /// <summary>
     ///     When these statistics were calculated
     /// </summary>
-    public DateTime CalculatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime CalculatedAt { get; set; } = SystemClock.UtcNow;
 }

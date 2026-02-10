@@ -37,10 +37,6 @@ public class Mediator : IMediator
     public Task<object?> Send(object request, CancellationToken cancellationToken = default)
         => _sender.Send(request, cancellationToken);
 
-    /// <inheritdoc />
-    public IAsyncEnumerable<TResponse> CreateStream<TResponse>(IStream<TResponse> request, CancellationToken cancellationToken = default)
-        => _sender.CreateStream(request, cancellationToken);
-
     // ── IPublisher ─────────────────────────────────────────────────────────
 
     /// <inheritdoc />

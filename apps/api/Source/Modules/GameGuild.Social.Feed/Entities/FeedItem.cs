@@ -45,13 +45,13 @@ public class FeedItem : EntityBase
     public void MarkRead()
     {
         IsRead = true;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     public void Hide()
     {
         IsHidden = true;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 }
 

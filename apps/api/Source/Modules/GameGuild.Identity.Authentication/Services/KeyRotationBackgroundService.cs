@@ -59,7 +59,7 @@ public class KeyRotationBackgroundService : BackgroundService
                 }
                 else
                 {
-                    var timeUntilExpiry = activeKey.ExpiresAt - DateTime.UtcNow;
+                    var timeUntilExpiry = activeKey.ExpiresAt - SystemClock.UtcNow;
                     if (timeUntilExpiry <= _options.RotationThreshold)
                     {
                         _logger.LogInformation("Active key expires in {TimeUntilExpiry}. Rotating...", timeUntilExpiry);

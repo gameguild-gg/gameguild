@@ -66,7 +66,7 @@ public class ServiceAccount
     /// <summary>
     ///     When the service account was created.
     /// </summary>
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime CreatedAt { get; set; } = SystemClock.UtcNow;
 
     /// <summary>
     ///     Who created this service account (user ID or "system").
@@ -77,7 +77,7 @@ public class ServiceAccount
     /// <summary>
     ///     When the service account was last updated.
     /// </summary>
-    public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime UpdatedAt { get; set; } = SystemClock.UtcNow;
 
     /// <summary>
     ///     When the client secret was last rotated.
@@ -132,7 +132,7 @@ public class ServiceAccount
     public bool CanAuthenticate =>
         IsActive &&
         !IsLocked &&
-        (ExpiresAt == null || DateTime.UtcNow < ExpiresAt);
+        (ExpiresAt == null || SystemClock.UtcNow < ExpiresAt);
 
     /// <summary>
     ///     Gets the scopes as a set.
@@ -151,7 +151,7 @@ public class ServiceAccount
     /// </summary>
     public void RecordSuccessfulAuthentication(string? ipAddress)
     {
-        LastAuthenticatedAt = DateTime.UtcNow;
+        LastAuthenticatedAt = SystemClock.UtcNow;
         LastAuthenticatedFromIp = ipAddress;
         AuthenticationCount++;
         FailedAuthenticationAttempts = 0;
@@ -167,7 +167,7 @@ public class ServiceAccount
         if (FailedAuthenticationAttempts >= lockThreshold)
         {
             IsLocked = true;
-            LockedAt = DateTime.UtcNow;
+            LockedAt = SystemClock.UtcNow;
         }
     }
 
@@ -188,8 +188,8 @@ public class ServiceAccount
     public void Lock(string reason)
     {
         IsLocked = true;
-        LockedAt = DateTime.UtcNow;
-        UpdatedAt = DateTime.UtcNow;
+        LockedAt = SystemClock.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     /// <summary>
@@ -198,8 +198,8 @@ public class ServiceAccount
     public void RotateSecret(string newSecretHash)
     {
         ClientSecretHash = newSecretHash;
-        SecretRotatedAt = DateTime.UtcNow;
+        SecretRotatedAt = SystemClock.UtcNow;
         SecretRotationCount++;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 }

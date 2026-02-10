@@ -25,7 +25,7 @@ public sealed class ProjectJamSubmission : EntityBase<Guid>
     public Jam? Jam { get; set; }
 
     /// <summary> Date when the project was submitted to the jam </summary>
-    public DateTime SubmittedAt { get; set; } = DateTime.UtcNow;
+    public DateTime SubmittedAt { get; set; } = SystemClock.UtcNow;
 
     /// <summary> Whether the submission is eligible for judging </summary>
     public bool IsEligible { get; set; } = true;

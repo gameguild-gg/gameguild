@@ -52,7 +52,7 @@ public class TestingParticipant : EntityBase
     /// When participation started
     /// </summary>
     [Required]
-    public DateTime StartedAt { get; set; } = DateTime.UtcNow;
+    public DateTime StartedAt { get; set; } = SystemClock.UtcNow;
 
     /// <summary>
     /// When participation was completed
@@ -120,8 +120,8 @@ public class TestingParticipant : EntityBase
     public void AcknowledgeInstructions()
     {
         InstructionsAcknowledged = true;
-        InstructionsAcknowledgedAt = DateTime.UtcNow;
-        UpdatedAt = DateTime.UtcNow;
+        InstructionsAcknowledgedAt = SystemClock.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     /// <summary>
@@ -133,7 +133,7 @@ public class TestingParticipant : EntityBase
             throw new InvalidOperationException("Instructions must be acknowledged before starting");
 
         Status = ParticipationStatus.Active;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     /// <summary>
@@ -142,8 +142,8 @@ public class TestingParticipant : EntityBase
     public void Complete()
     {
         Status = ParticipationStatus.Completed;
-        CompletedAt = DateTime.UtcNow;
-        UpdatedAt = DateTime.UtcNow;
+        CompletedAt = SystemClock.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     /// <summary>
@@ -152,7 +152,7 @@ public class TestingParticipant : EntityBase
     public void Withdraw()
     {
         Status = ParticipationStatus.Withdrawn;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     /// <summary>
@@ -161,7 +161,7 @@ public class TestingParticipant : EntityBase
     public void RecordTimeSpent(int minutes)
     {
         TimeSpentMinutes = (TimeSpentMinutes ?? 0) + minutes;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     /// <summary>
@@ -170,7 +170,7 @@ public class TestingParticipant : EntityBase
     public void IncrementFeedbackCount()
     {
         FeedbackCount++;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     /// <summary>
@@ -179,6 +179,6 @@ public class TestingParticipant : EntityBase
     public void UpdateNotes(string? notes)
     {
         Notes = notes;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 }

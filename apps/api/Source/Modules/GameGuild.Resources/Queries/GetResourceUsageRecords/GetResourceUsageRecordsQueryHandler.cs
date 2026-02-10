@@ -28,6 +28,6 @@ public sealed class GetResourceUsageRecordsQueryHandler(IUsageRecordRepository u
             request.EndDate,
             skip,
             pageSize,
-            cancellationToken);
+            cancellationToken).ConfigureAwait(false);
     }
 }

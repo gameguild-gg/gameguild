@@ -109,7 +109,7 @@ public class RoleRepository(IApplicationDbContext context) : IRoleRepository
 
         if (!includeExpired)
         {
-            var now = DateTime.UtcNow;
+            var now = SystemClock.UtcNow;
             query = query.Where(ur => ur.ExpiresAt == null || ur.ExpiresAt > now);
         }
 
@@ -133,7 +133,7 @@ public class RoleRepository(IApplicationDbContext context) : IRoleRepository
         }
 
         userRole.Touch();
-        userRole.AssignedAt = DateTime.UtcNow;
+        userRole.AssignedAt = SystemClock.UtcNow;
 
         UserRoles.Add(userRole);
         await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
@@ -155,7 +155,7 @@ public class RoleRepository(IApplicationDbContext context) : IRoleRepository
 
     public async Task<bool> UserHasRoleAsync(Guid userId, Guid roleId, CancellationToken cancellationToken = default)
     {
-        var now = DateTime.UtcNow;
+        var now = SystemClock.UtcNow;
         return await UserRoles
             .AsNoTracking()
             .AnyAsync(ur => ur.UserId == userId 

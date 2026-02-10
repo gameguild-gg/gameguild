@@ -179,7 +179,7 @@ public class TestingSession : EntityBase
             throw new InvalidOperationException("Only scheduled sessions can be started");
 
         Status = SessionStatus.Active;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     /// <summary>
@@ -191,7 +191,7 @@ public class TestingSession : EntityBase
             throw new InvalidOperationException("Only active sessions can be completed");
 
         Status = SessionStatus.Completed;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     /// <summary>
@@ -203,7 +203,7 @@ public class TestingSession : EntityBase
             throw new InvalidOperationException("Completed sessions cannot be cancelled");
 
         Status = SessionStatus.Cancelled;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     /// <summary>
@@ -220,7 +220,7 @@ public class TestingSession : EntityBase
     public void IncrementTesterCount()
     {
         RegisteredTesterCount++;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     /// <summary>
@@ -229,6 +229,6 @@ public class TestingSession : EntityBase
     public void DecrementTesterCount()
     {
         RegisteredTesterCount = Math.Max(0, RegisteredTesterCount - 1);
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 }

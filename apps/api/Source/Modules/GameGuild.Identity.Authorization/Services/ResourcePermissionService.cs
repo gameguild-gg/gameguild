@@ -45,7 +45,7 @@ public class ResourcePermissionService : IResourcePermissionService
                 Permissions = request.Permissions,
                 InvitedByUserId = sharedByUserId,
                 Message = request.Message,
-                ExpiresAt = request.ExpiresAt ?? DateTime.UtcNow.AddDays(7)
+                ExpiresAt = request.ExpiresAt ?? SystemClock.UtcNow.AddDays(7)
             };
 
             _dbContext.Set<ResourceInvitation>().Add(invitation);
@@ -328,7 +328,7 @@ public class ResourcePermissionService : IResourcePermissionService
                 i.TenantId == tenantId &&
                 i.Email == email &&
                 i.Status == InvitationStatus.Pending &&
-                (i.ExpiresAt == null || i.ExpiresAt > DateTime.UtcNow))
+                (i.ExpiresAt == null || i.ExpiresAt > SystemClock.UtcNow))
             .ToListAsync(cancellationToken);
     }
 
@@ -458,7 +458,7 @@ public class ResourcePermissionService : IResourcePermissionService
                 ResourceType = resourceType,
                 ResourceId = resourceId,
                 Permissions = permissions,
-                GrantedAt = DateTime.UtcNow,
+                GrantedAt = SystemClock.UtcNow,
                 GrantedByUserId = ownerId, // Self-granted as owner/creator
                 GrantedByUserName = "System (Owner)",
                 IsOwner = true // Mark as owner permission

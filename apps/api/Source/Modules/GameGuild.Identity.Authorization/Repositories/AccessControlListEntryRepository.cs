@@ -31,7 +31,7 @@ public class AccessControlListEntryRepository(IApplicationDbContext context) : I
                      && e.ResourceId == resourceId
                      && e.DeletedAt == null
                      && e.IsActive
-                     && (e.ExpiresAt == null || e.ExpiresAt > DateTime.UtcNow),
+                     && (e.ExpiresAt == null || e.ExpiresAt > SystemClock.UtcNow),
                 cancellationToken)
             ;
     }
@@ -53,7 +53,7 @@ public class AccessControlListEntryRepository(IApplicationDbContext context) : I
                      && e.ResourceId == resourceId
                      && e.DeletedAt == null
                      && e.IsActive
-                     && (e.ExpiresAt == null || e.ExpiresAt > DateTime.UtcNow),
+                     && (e.ExpiresAt == null || e.ExpiresAt > SystemClock.UtcNow),
                 cancellationToken)
             ;
     }
@@ -76,7 +76,7 @@ public class AccessControlListEntryRepository(IApplicationDbContext context) : I
                         && e.ResourceId == resourceId
                         && e.DeletedAt == null
                         && e.IsActive
-                        && (e.ExpiresAt == null || e.ExpiresAt > DateTime.UtcNow));
+                        && (e.ExpiresAt == null || e.ExpiresAt > SystemClock.UtcNow));
 
         // Filter by principals - handle anonymous (null principalId) separately
         var anonymousPrincipals = principalList.Where(p => p.Id == null).ToList();
@@ -119,7 +119,7 @@ public class AccessControlListEntryRepository(IApplicationDbContext context) : I
                         && e.PrincipalId == userId
                         && e.DeletedAt == null
                         && e.IsActive
-                        && (e.ExpiresAt == null || e.ExpiresAt > DateTime.UtcNow))
+                        && (e.ExpiresAt == null || e.ExpiresAt > SystemClock.UtcNow))
             .ToListAsync(cancellationToken)
             ;
     }
@@ -136,7 +136,7 @@ public class AccessControlListEntryRepository(IApplicationDbContext context) : I
                         && e.ResourceId == resourceId
                         && e.DeletedAt == null
                         && e.IsActive
-                        && (e.ExpiresAt == null || e.ExpiresAt > DateTime.UtcNow))
+                        && (e.ExpiresAt == null || e.ExpiresAt > SystemClock.UtcNow))
             .ToListAsync(cancellationToken)
             ;
     }

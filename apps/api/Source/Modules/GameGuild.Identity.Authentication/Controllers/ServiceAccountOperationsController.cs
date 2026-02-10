@@ -31,7 +31,7 @@ public class ServiceAccountOperationsController(
     {
         try
         {
-            var newSecret = await serviceAccountService.RotateSecretAsync(serviceAccountId, cancellationToken);
+            var newSecret = await serviceAccountService.RotateSecretAsync(serviceAccountId, cancellationToken).ConfigureAwait(false);
             return Ok(new SecretRotationResponse
             {
                 ClientSecret = newSecret,
@@ -55,7 +55,7 @@ public class ServiceAccountOperationsController(
     {
         try
         {
-            await serviceAccountService.UnlockAsync(serviceAccountId, cancellationToken);
+            await serviceAccountService.UnlockAsync(serviceAccountId, cancellationToken).ConfigureAwait(false);
             return NoContent();
         }
         catch (InvalidOperationException)
@@ -79,13 +79,13 @@ public class ServiceAccountOperationsController(
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Lock(Guid serviceAccountId, [FromBody] LockServiceAccountRequest request, CancellationToken cancellationToken)
     {
-        var account = await serviceAccountService.GetByIdAsync(serviceAccountId, cancellationToken);
+        var account = await serviceAccountService.GetByIdAsync(serviceAccountId, cancellationToken).ConfigureAwait(false);
         if (account == null)
         {
             return NotFound();
         }
 
-        await serviceAccountService.LockAsync(serviceAccountId, request.Reason, cancellationToken);
+        await serviceAccountService.LockAsync(serviceAccountId, request.Reason, cancellationToken).ConfigureAwait(false);
         return NoContent();
     }
 
@@ -109,7 +109,7 @@ public class ServiceAccountOperationsController(
         [FromQuery] int pageSize = 20,
         CancellationToken cancellationToken = default)
     {
-        var account = await serviceAccountService.GetByIdAsync(serviceAccountId, cancellationToken);
+        var account = await serviceAccountService.GetByIdAsync(serviceAccountId, cancellationToken).ConfigureAwait(false);
         if (account == null)
         {
             return NotFound();
@@ -123,7 +123,7 @@ public class ServiceAccountOperationsController(
             serviceAccountId,
             (page - 1) * pageSize,
             pageSize,
-            cancellationToken);
+            cancellationToken).ConfigureAwait(false);
 
         return Ok(new ServiceAccountAuditLogResponse
         {
@@ -146,7 +146,7 @@ public class ServiceAccountOperationsController(
     {
         try
         {
-            await serviceAccountService.DeactivateAsync(serviceAccountId, cancellationToken);
+            await serviceAccountService.DeactivateAsync(serviceAccountId, cancellationToken).ConfigureAwait(false);
             return NoContent();
         }
         catch (InvalidOperationException)
@@ -166,7 +166,7 @@ public class ServiceAccountOperationsController(
     {
         try
         {
-            await serviceAccountService.ReactivateAsync(serviceAccountId, cancellationToken);
+            await serviceAccountService.ReactivateAsync(serviceAccountId, cancellationToken).ConfigureAwait(false);
             return NoContent();
         }
         catch (InvalidOperationException)
@@ -186,7 +186,7 @@ public class ServiceAccountOperationsController(
     {
         try
         {
-            await serviceAccountService.UpdateScopesAsync(serviceAccountId, request.Scopes, cancellationToken);
+            await serviceAccountService.UpdateScopesAsync(serviceAccountId, request.Scopes, cancellationToken).ConfigureAwait(false);
             return NoContent();
         }
         catch (InvalidOperationException)

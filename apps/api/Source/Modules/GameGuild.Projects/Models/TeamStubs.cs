@@ -33,7 +33,7 @@ public class TeamMember : EntityBase {
     [MaxLength(100)]
     public string Role { get; set; } = "Member";
     
-    public DateTime JoinedAt { get; set; } = DateTime.UtcNow;
+    public DateTime JoinedAt { get; set; } = SystemClock.UtcNow;
     
     public bool IsActive { get; set; } = true;
 }

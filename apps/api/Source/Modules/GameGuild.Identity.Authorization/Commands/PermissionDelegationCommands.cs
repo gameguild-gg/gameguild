@@ -31,7 +31,7 @@ public sealed class DelegatePermissionsValidator : AbstractValidator<DelegatePer
         RuleFor(x => x.Permissions).NotEmpty();
         RuleFor(x => x.DelegatorUserId).NotEqual(x => x.DelegateUserId)
             .WithMessage("Cannot delegate permissions to yourself");
-        RuleFor(x => x.ExpiresAt).GreaterThan(DateTime.UtcNow)
+        RuleFor(x => x.ExpiresAt).GreaterThan(SystemClock.UtcNow)
             .When(x => x.ExpiresAt.HasValue)
             .WithMessage("Expiration date must be in the future");
         RuleFor(x => x.UsageLimit).GreaterThan(0)

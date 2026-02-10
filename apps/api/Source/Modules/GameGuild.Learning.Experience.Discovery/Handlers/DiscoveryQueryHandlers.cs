@@ -27,7 +27,7 @@ public sealed class DiscoveryQueryHandlers(IApplicationDbContext context, ILogge
     {
         logger.LogInformation("Getting active featured content for tenant: {TenantId}", request.TenantId);
 
-        var now = DateTime.UtcNow;
+        var now = SystemClock.UtcNow;
         var query = context.Set<FeaturedContent>()
             .Where(fc => fc.DeletedAt == null && fc.IsActive)
             .Where(fc => !fc.StartsAt.HasValue || fc.StartsAt <= now)
@@ -52,7 +52,7 @@ public sealed class DiscoveryQueryHandlers(IApplicationDbContext context, ILogge
     {
         logger.LogInformation("Getting featured content by type: {Type}", request.Type);
 
-        var now = DateTime.UtcNow;
+        var now = SystemClock.UtcNow;
         var query = context.Set<FeaturedContent>()
             .Where(fc => fc.DeletedAt == null && fc.IsActive && fc.Type == request.Type)
             .Where(fc => !fc.StartsAt.HasValue || fc.StartsAt <= now)
@@ -240,7 +240,7 @@ public sealed class DiscoveryQueryHandlers(IApplicationDbContext context, ILogge
     {
         logger.LogInformation("Getting popular searches for last {Days} days", request.DaysBack);
 
-        var cutoffDate = DateTime.UtcNow.AddDays(-request.DaysBack);
+        var cutoffDate = SystemClock.UtcNow.AddDays(-request.DaysBack);
 
         var searchGroups = await context.Set<SearchHistory>()
             .Where(sh => sh.CreatedAt >= cutoffDate)

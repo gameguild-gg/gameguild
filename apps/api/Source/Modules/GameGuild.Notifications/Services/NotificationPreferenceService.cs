@@ -147,7 +147,7 @@ public class NotificationPreferenceService(
             return false;
         }
 
-        var now = TimeOnly.FromDateTime(DateTime.UtcNow);
+        var now = TimeOnly.FromDateTime(SystemClock.UtcNow);
         var start = preferences.QuietHoursStart.Value;
         var end = preferences.QuietHoursEnd.Value;
 

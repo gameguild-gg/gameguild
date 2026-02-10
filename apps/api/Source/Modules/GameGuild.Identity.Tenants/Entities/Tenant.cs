@@ -173,7 +173,7 @@ public class Tenant : EntityBase, ITenant
     public void Archive(string reason = "")
     {
         IsArchived = true;
-        ArchivedAt = DateTime.UtcNow;
+        ArchivedAt = SystemClock.UtcNow;
         IsActive = false; // Archived tenants are also inactive
         Touch();
 

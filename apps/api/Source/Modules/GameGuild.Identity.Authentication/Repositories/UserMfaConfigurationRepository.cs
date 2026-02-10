@@ -22,7 +22,7 @@ public class UserMfaConfigurationRepository(IApplicationDbContext context) : IUs
     public async Task<UserMfaConfiguration> CreateAsync(UserMfaConfiguration configuration, CancellationToken cancellationToken = default)
     {
         configuration.Id = Guid.NewGuid();
-        configuration.UpdatedAt = DateTime.UtcNow;
+        configuration.UpdatedAt = SystemClock.UtcNow;
 
         UserMfaConfigurations.Add(configuration);
         await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
@@ -32,7 +32,7 @@ public class UserMfaConfigurationRepository(IApplicationDbContext context) : IUs
 
     public async Task<UserMfaConfiguration> UpdateAsync(UserMfaConfiguration configuration, CancellationToken cancellationToken = default)
     {
-        configuration.UpdatedAt = DateTime.UtcNow;
+        configuration.UpdatedAt = SystemClock.UtcNow;
 
         UserMfaConfigurations.Update(configuration);
         await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
@@ -65,7 +65,7 @@ public class UserMfaConfigurationRepository(IApplicationDbContext context) : IUs
         if (configuration != null)
         {
             configuration.FailedAttempts++;
-            configuration.UpdatedAt = DateTime.UtcNow;
+            configuration.UpdatedAt = SystemClock.UtcNow;
             await UpdateAsync(configuration, cancellationToken).ConfigureAwait(false);
         }
     }
@@ -77,8 +77,8 @@ public class UserMfaConfigurationRepository(IApplicationDbContext context) : IUs
         if (configuration != null)
         {
             configuration.FailedAttempts = 0;
-            configuration.LastUsedAt = DateTime.UtcNow;
-            configuration.UpdatedAt = DateTime.UtcNow;
+            configuration.LastUsedAt = SystemClock.UtcNow;
+            configuration.UpdatedAt = SystemClock.UtcNow;
             await UpdateAsync(configuration, cancellationToken).ConfigureAwait(false);
         }
     }
@@ -90,7 +90,7 @@ public class UserMfaConfigurationRepository(IApplicationDbContext context) : IUs
         if (configuration != null)
         {
             configuration.LockedOutUntil = lockoutUntil;
-            configuration.UpdatedAt = DateTime.UtcNow;
+            configuration.UpdatedAt = SystemClock.UtcNow;
             await UpdateAsync(configuration, cancellationToken).ConfigureAwait(false);
         }
     }
@@ -109,8 +109,8 @@ public class UserMfaConfigurationRepository(IApplicationDbContext context) : IUs
         if (configuration == null) return false;
 
         configuration.IsEnabled = true;
-        configuration.EnabledAt = DateTime.UtcNow;
-        configuration.UpdatedAt = DateTime.UtcNow;
+        configuration.EnabledAt = SystemClock.UtcNow;
+        configuration.UpdatedAt = SystemClock.UtcNow;
 
         await UpdateAsync(configuration, cancellationToken).ConfigureAwait(false);
 
@@ -124,7 +124,7 @@ public class UserMfaConfigurationRepository(IApplicationDbContext context) : IUs
         if (configuration == null) return false;
 
         configuration.IsEnabled = false;
-        configuration.UpdatedAt = DateTime.UtcNow;
+        configuration.UpdatedAt = SystemClock.UtcNow;
 
         await UpdateAsync(configuration, cancellationToken).ConfigureAwait(false);
 
@@ -141,10 +141,10 @@ public class UserMfaConfigurationRepository(IApplicationDbContext context) : IUs
         else
         {
             configuration.FailedAttempts = 0;
-            configuration.LastUsedAt = DateTime.UtcNow;
+            configuration.LastUsedAt = SystemClock.UtcNow;
         }
 
-        configuration.UpdatedAt = DateTime.UtcNow;
+        configuration.UpdatedAt = SystemClock.UtcNow;
         await UpdateAsync(configuration, cancellationToken).ConfigureAwait(false);
 
         return configuration.FailedAttempts;
@@ -157,7 +157,7 @@ public class UserMfaConfigurationRepository(IApplicationDbContext context) : IUs
         if (configuration == null) return false;
 
         configuration.LockedOutUntil = lockoutUntil;
-        configuration.UpdatedAt = DateTime.UtcNow;
+        configuration.UpdatedAt = SystemClock.UtcNow;
 
         await UpdateAsync(configuration, cancellationToken).ConfigureAwait(false);
 
@@ -172,7 +172,7 @@ public class UserMfaConfigurationRepository(IApplicationDbContext context) : IUs
 
         configuration.LockedOutUntil = null;
         configuration.FailedAttempts = 0;
-        configuration.UpdatedAt = DateTime.UtcNow;
+        configuration.UpdatedAt = SystemClock.UtcNow;
 
         await UpdateAsync(configuration, cancellationToken).ConfigureAwait(false);
 

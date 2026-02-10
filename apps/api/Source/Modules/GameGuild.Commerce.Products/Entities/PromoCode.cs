@@ -98,7 +98,7 @@ public class PromoCode : EntityBase
     {
         if (!IsActive) return false;
 
-        var now = DateTime.UtcNow;
+        var now = SystemClock.UtcNow;
         return (ValidFrom == null || ValidFrom <= now) && (ValidUntil == null || ValidUntil > now);
     }
 

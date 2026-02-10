@@ -71,7 +71,7 @@ public class SecureAssetDeliveryController : BaseApiController
         }
 
         // Threat #1: Check asset rate limit (hotlinking protection)
-        var rateLimit = await _rateLimitService.CheckAssetAccessRateAsync(assetId, ct);
+        var rateLimit = await _rateLimitService.CheckAssetAccessRateAsync(assetId, ct).ConfigureAwait(false);
         if (!rateLimit.IsAllowed)
         {
             Response.Headers["Retry-After"] = rateLimit.RetryAfter?.TotalSeconds.ToString() ?? "3600";
@@ -83,10 +83,10 @@ public class SecureAssetDeliveryController : BaseApiController
         }
 
         // Get asset reference
-        var reference = await _referenceRepository.GetByIdWithContentAsync(assetId, ct);
+        var reference = await _referenceRepository.GetByIdWithContentAsync(assetId, ct).ConfigureAwait(false);
         if (reference == null || reference.Content == null)
         {
-            await Record403IfApplicable(clientIp, ct);
+            await Record403IfApplicable(clientIp, ct).ConfigureAwait(false);
             return NotFound();
         }
 
@@ -95,7 +95,7 @@ public class SecureAssetDeliveryController : BaseApiController
         {
             if (!_accessService.ValidateToken(token, assetId, actor.TenantId))
             {
-                await Record403IfApplicable(clientIp, ct);
+                await Record403IfApplicable(clientIp, ct).ConfigureAwait(false);
                 return Forbid("Invalid or expired token");
             }
         }
@@ -111,7 +111,7 @@ public class SecureAssetDeliveryController : BaseApiController
             _logger.LogWarning(
                 "Tenant validation failed for asset {AssetId}: {Error}",
                 assetId, tenantValidation.Error);
-            await Record403IfApplicable(clientIp, ct);
+            await Record403IfApplicable(clientIp, ct).ConfigureAwait(false);
             return Forbid(tenantValidation.Error ?? "Tenant access denied");
         }
 
@@ -178,7 +178,7 @@ public class SecureAssetDeliveryController : BaseApiController
             }
 
             var windowValidation = await _downloadWindowService.ValidateDownloadWindowAsync(
-                assetId, actor.SubjectIdAsGuid.Value, ct);
+                assetId, actor.SubjectIdAsGuid.Value, ct).ConfigureAwait(false);
 
             if (!windowValidation.IsValid)
             {
@@ -219,11 +219,11 @@ public class SecureAssetDeliveryController : BaseApiController
             actor.SubjectIdAsGuid,
             actor.TenantId,
             transformSpec,
-            ct);
+            ct).ConfigureAwait(false);
 
         if (accessUrl == null)
         {
-            await Record403IfApplicable(clientIp, ct);
+            await Record403IfApplicable(clientIp, ct).ConfigureAwait(false);
             return Forbid("Access denied");
         }
 
@@ -247,7 +247,7 @@ public class SecureAssetDeliveryController : BaseApiController
         var clientIp = GetClientIp();
 
         // Rate limit check
-        var rateLimit = await _rateLimitService.CheckAssetAccessRateAsync(assetId, ct);
+        var rateLimit = await _rateLimitService.CheckAssetAccessRateAsync(assetId, ct).ConfigureAwait(false);
         if (!rateLimit.IsAllowed)
         {
             Response.Headers["Retry-After"] = rateLimit.RetryAfter?.TotalSeconds.ToString() ?? "3600";
@@ -265,7 +265,7 @@ public class SecureAssetDeliveryController : BaseApiController
             transformSpec = TransformationSpec.Parse(request.Transform);
             if (transformSpec != null)
             {
-                var reference = await _referenceRepository.GetByIdWithContentAsync(assetId, ct);
+                var reference = await _referenceRepository.GetByIdWithContentAsync(assetId, ct).ConfigureAwait(false);
                 if (reference?.Content != null)
                 {
                     var transformValidation = _transformationValidator.Validate(
@@ -290,11 +290,11 @@ public class SecureAssetDeliveryController : BaseApiController
             actor.SubjectIdAsGuid,
             actor.TenantId,
             transformSpec,
-            ct);
+            ct).ConfigureAwait(false);
 
         if (accessUrl == null)
         {
-            await Record403IfApplicable(clientIp, ct);
+            await Record403IfApplicable(clientIp, ct).ConfigureAwait(false);
             return Forbid();
         }
 
@@ -316,7 +316,7 @@ public class SecureAssetDeliveryController : BaseApiController
     private async Task Record403IfApplicable(string clientIp, CancellationToken ct)
     {
         // Record 403 for brute force protection
-        var result = await _rateLimitService.Record403ResponseAsync(clientIp, ct);
+        var result = await _rateLimitService.Record403ResponseAsync(clientIp, ct).ConfigureAwait(false);
         if (!result.IsAllowed)
         {
             _logger.LogWarning(

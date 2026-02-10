@@ -20,8 +20,8 @@ public class ContentInteractionService(IApplicationDbContext context) : IContent
       if (existingInteraction.SubmittedAt.HasValue) return await CreateNewInteractionFromPreviousAsync(existingInteraction).ConfigureAwait(false);
 
       // Otherwise, resume the existing interaction
-      existingInteraction.FirstAccessedAt ??= DateTime.UtcNow;
-      existingInteraction.LastAccessedAt = DateTime.UtcNow;
+      existingInteraction.FirstAccessedAt ??= SystemClock.UtcNow;
+      existingInteraction.LastAccessedAt = SystemClock.UtcNow;
       existingInteraction.Status = ProgressStatus.InProgress;
 
       await context.SaveChangesAsync().ConfigureAwait(false);
@@ -30,7 +30,7 @@ public class ContentInteractionService(IApplicationDbContext context) : IContent
     }
 
     // Create new interaction
-    var newInteraction = new ContentInteraction { ProgramUserId = programUserId, ContentId = contentId, Status = ProgressStatus.InProgress, FirstAccessedAt = DateTime.UtcNow, LastAccessedAt = DateTime.UtcNow, CompletionPercentage = 0 };
+    var newInteraction = new ContentInteraction { ProgramUserId = programUserId, ContentId = contentId, Status = ProgressStatus.InProgress, FirstAccessedAt = SystemClock.UtcNow, LastAccessedAt = SystemClock.UtcNow, CompletionPercentage = 0 };
 
     context.Set<ContentInteraction>().Add(newInteraction);
     await context.SaveChangesAsync().ConfigureAwait(false);
@@ -45,11 +45,11 @@ public class ContentInteractionService(IApplicationDbContext context) : IContent
     if (interaction.SubmittedAt.HasValue) throw new InvalidOperationException("Cannot update progress on submitted interaction. Create a new interaction to continue work.");
 
     interaction.CompletionPercentage = Math.Min(100, Math.Max(0, completionPercentage));
-    interaction.LastAccessedAt = DateTime.UtcNow;
+    interaction.LastAccessedAt = SystemClock.UtcNow;
 
     if (interaction.CompletionPercentage >= 100) {
       interaction.Status = ProgressStatus.Completed;
-      interaction.CompletedAt = DateTime.UtcNow;
+      interaction.CompletedAt = SystemClock.UtcNow;
     }
     else if (interaction.Status == ProgressStatus.NotStarted) { interaction.Status = ProgressStatus.InProgress; }
 
@@ -65,10 +65,10 @@ public class ContentInteractionService(IApplicationDbContext context) : IContent
     if (interaction.SubmittedAt.HasValue) throw new InvalidOperationException("Interaction has already been submitted and cannot be changed.");
 
     interaction.SubmissionData = submissionData;
-    interaction.SubmittedAt = DateTime.UtcNow;
-    interaction.LastAccessedAt = DateTime.UtcNow;
+    interaction.SubmittedAt = SystemClock.UtcNow;
+    interaction.LastAccessedAt = SystemClock.UtcNow;
     interaction.Status = ProgressStatus.Completed; // Use Completed instead of Submitted
-    interaction.CompletedAt = DateTime.UtcNow;
+    interaction.CompletedAt = SystemClock.UtcNow;
     interaction.CompletionPercentage = 100;
 
     await context.SaveChangesAsync().ConfigureAwait(false);
@@ -83,8 +83,8 @@ public class ContentInteractionService(IApplicationDbContext context) : IContent
     if (interaction.SubmittedAt.HasValue) throw new InvalidOperationException("Cannot modify submitted interaction. Create a new interaction to continue work.");
 
     interaction.Status = ProgressStatus.Completed;
-    interaction.CompletedAt = DateTime.UtcNow;
-    interaction.LastAccessedAt = DateTime.UtcNow;
+    interaction.CompletedAt = SystemClock.UtcNow;
+    interaction.LastAccessedAt = SystemClock.UtcNow;
     interaction.CompletionPercentage = 100;
 
     await context.SaveChangesAsync().ConfigureAwait(false);
@@ -109,7 +109,7 @@ public class ContentInteractionService(IApplicationDbContext context) : IContent
     if (interaction.SubmittedAt.HasValue) throw new InvalidOperationException("Cannot update time spent on submitted interaction.");
 
     interaction.TimeSpentMinutes = (interaction.TimeSpentMinutes ?? 0) + additionalMinutes;
-    interaction.LastAccessedAt = DateTime.UtcNow;
+    interaction.LastAccessedAt = SystemClock.UtcNow;
 
     await context.SaveChangesAsync().ConfigureAwait(false);
 
@@ -131,8 +131,8 @@ public class ContentInteractionService(IApplicationDbContext context) : IContent
       ProgramUserId = previousInteraction.ProgramUserId,
       ContentId = previousInteraction.ContentId,
       Status = ProgressStatus.InProgress,
-      FirstAccessedAt = DateTime.UtcNow,
-      LastAccessedAt = DateTime.UtcNow,
+      FirstAccessedAt = SystemClock.UtcNow,
+      LastAccessedAt = SystemClock.UtcNow,
       CompletionPercentage = 0,
       // Initialize with previous submission data as starting point
       SubmissionData = previousInteraction.SubmissionData,

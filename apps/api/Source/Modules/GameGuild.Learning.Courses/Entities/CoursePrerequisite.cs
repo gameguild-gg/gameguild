@@ -115,7 +115,7 @@ public class CoursePrerequisite : EntityBase
             DisplayOrder = displayOrder.Value;
         
         PrerequisiteGroup = prerequisiteGroup;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     /// <summary>
@@ -129,7 +129,7 @@ public class CoursePrerequisite : EntityBase
         }
         
         MinimumGrade = grade;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 }
 

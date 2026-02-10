@@ -41,7 +41,7 @@ public class WishlistsController : LearningControllerBase
         CancellationToken cancellationToken = default)
     {
         var userId = GetRequiredUserId();
-        var result = await _wishlistService.AddToWishlistAsync(courseId, userId, notifyOnSale, notifyOnUpdate, cancellationToken);
+        var result = await _wishlistService.AddToWishlistAsync(courseId, userId, notifyOnSale, notifyOnUpdate, cancellationToken).ConfigureAwait(false);
 
         if (!result.IsSuccess)
         {
@@ -60,7 +60,7 @@ public class WishlistsController : LearningControllerBase
     public async Task<IActionResult> RemoveFromWishlist(Guid courseId, CancellationToken cancellationToken = default)
     {
         var userId = GetRequiredUserId();
-        var result = await _wishlistService.RemoveFromWishlistAsync(courseId, userId, cancellationToken);
+        var result = await _wishlistService.RemoveFromWishlistAsync(courseId, userId, cancellationToken).ConfigureAwait(false);
 
         if (!result.IsSuccess)
         {
@@ -81,7 +81,7 @@ public class WishlistsController : LearningControllerBase
         CancellationToken cancellationToken = default)
     {
         var userId = GetRequiredUserId();
-        var result = await _wishlistService.GetUserWishlistAsync(userId, skip, take, cancellationToken);
+        var result = await _wishlistService.GetUserWishlistAsync(userId, skip, take, cancellationToken).ConfigureAwait(false);
 
         if (!result.IsSuccess)
         {
@@ -100,7 +100,7 @@ public class WishlistsController : LearningControllerBase
     public async Task<IActionResult> IsInWishlist(Guid courseId, CancellationToken cancellationToken = default)
     {
         var userId = GetRequiredUserId();
-        var result = await _wishlistService.IsInWishlistAsync(courseId, userId, cancellationToken);
+        var result = await _wishlistService.IsInWishlistAsync(courseId, userId, cancellationToken).ConfigureAwait(false);
 
         if (!result.IsSuccess)
         {
@@ -123,7 +123,7 @@ public class WishlistsController : LearningControllerBase
     {
         var userId = GetRequiredUserId();
         var result = await _wishlistService.UpdateWishlistPreferencesAsync(
-            courseId, userId, request.NotifyOnSale, request.NotifyOnUpdate, cancellationToken);
+            courseId, userId, request.NotifyOnSale, request.NotifyOnUpdate, cancellationToken).ConfigureAwait(false);
 
         if (!result.IsSuccess)
         {

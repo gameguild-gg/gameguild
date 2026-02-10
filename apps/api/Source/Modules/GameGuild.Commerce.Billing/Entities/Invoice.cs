@@ -222,8 +222,8 @@ public class Invoice : EntityBase
             throw new InvalidOperationException("Cannot issue an invoice with zero or negative total");
 
         Status = InvoiceStatus.Open;
-        IssuedAt = DateTime.UtcNow;
-        DueDate = dueDate ?? DateTime.UtcNow.AddDays(30);
+        IssuedAt = SystemClock.UtcNow;
+        DueDate = dueDate ?? SystemClock.UtcNow.AddDays(30);
         Touch();
     }
 
@@ -265,7 +265,7 @@ public class Invoice : EntityBase
             return; // Idempotent
 
         Status = InvoiceStatus.Void;
-        VoidedAt = DateTime.UtcNow;
+        VoidedAt = SystemClock.UtcNow;
         VoidReason = reason;
         Touch();
     }
@@ -316,7 +316,7 @@ public class Invoice : EntityBase
 
     private static string GenerateInvoiceNumber()
     {
-        var timestamp = DateTime.UtcNow.ToString("yyyyMMddHHmmss");
+        var timestamp = SystemClock.UtcNow.ToString("yyyyMMddHHmmss");
         var random = Guid.NewGuid().ToString("N")[..6].ToUpperInvariant();
         return $"INV-{timestamp}-{random}";
     }

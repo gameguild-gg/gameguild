@@ -46,12 +46,12 @@ public class Post : EntityBase
     {
         Content = content;
         IsEdited = true;
-        EditedAt = DateTime.UtcNow;
-        UpdatedAt = DateTime.UtcNow;
+        EditedAt = SystemClock.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
-    public void Pin() { IsPinned = true; UpdatedAt = DateTime.UtcNow; }
-    public void Unpin() { IsPinned = false; UpdatedAt = DateTime.UtcNow; }
+    public void Pin() { IsPinned = true; UpdatedAt = SystemClock.UtcNow; }
+    public void Unpin() { IsPinned = false; UpdatedAt = SystemClock.UtcNow; }
     public void IncrementLikes() => LikesCount++;
     public void DecrementLikes() { if (LikesCount > 0) LikesCount--; }
     public void IncrementComments() => CommentsCount++;
@@ -94,8 +94,8 @@ public class PostComment : EntityBase
     {
         Content = content;
         IsEdited = true;
-        EditedAt = DateTime.UtcNow;
-        UpdatedAt = DateTime.UtcNow;
+        EditedAt = SystemClock.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     public void IncrementLikes() => LikesCount++;

@@ -126,7 +126,7 @@ public class UserNotification : EntityBase
         if (!IsRead)
         {
             IsRead = true;
-            ReadAt = DateTime.UtcNow;
+            ReadAt = SystemClock.UtcNow;
             Touch();
         }
     }
@@ -152,7 +152,7 @@ public class UserNotification : EntityBase
         if (!IsArchived)
         {
             IsArchived = true;
-            ArchivedAt = DateTime.UtcNow;
+            ArchivedAt = SystemClock.UtcNow;
             Touch();
         }
     }

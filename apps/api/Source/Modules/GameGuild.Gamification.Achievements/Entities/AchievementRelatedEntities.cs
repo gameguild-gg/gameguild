@@ -131,7 +131,7 @@ public class AchievementProgress : EntityBase
     public int TargetProgress { get; set; } = 1;
 
     /// <summary> When progress was last updated </summary>
-    public DateTime LastUpdated { get; set; } = DateTime.UtcNow;
+    public DateTime LastUpdated { get; set; } = SystemClock.UtcNow;
 
     /// <summary> Whether this achievement has been completed </summary>
     public bool IsCompleted { get; set; } = false;
@@ -165,13 +165,13 @@ public class AchievementProgress : EntityBase
     public void IncrementProgress(int amount = 1)
     {
         CurrentProgress = Math.Min(CurrentProgress + amount, TargetProgress);
-        LastUpdated = DateTime.UtcNow;
+        LastUpdated = SystemClock.UtcNow;
         
         if (CurrentProgress >= TargetProgress)
         {
             IsCompleted = true;
         }
         
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
     }
 }
