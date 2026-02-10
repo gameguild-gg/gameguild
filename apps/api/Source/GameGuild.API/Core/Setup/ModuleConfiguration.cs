@@ -10,7 +10,7 @@ public sealed class ModuleConfiguration
     ///     Default enabled modules for the application.
     /// </summary>
     public static readonly string[] DefaultEnabledModules =
-        ["Authentication", "Authorization", "Billing", "Features", "Payments", "Products", "Resources", "Subscriptions", "Tenants", "Users"];
+        ["Authentication", "Authorization", "Billing", "Courses", "Features", "Payments", "Products", "Resources", "Subscriptions", "Tenants", "Users"];
 
     /// <summary>
     ///     Gets or sets the list of enabled module names.

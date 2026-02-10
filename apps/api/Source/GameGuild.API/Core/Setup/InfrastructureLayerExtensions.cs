@@ -10,6 +10,7 @@ using GameGuild.Identity.Authorization;
 using GameGuild.Identity.Context;
 using GameGuild.Configuration.ConfigurationFromAPI.InfrastructureLayer;
 using GameGuild.Configuration.InfrastructureLayer;
+using GameGuild.Learning.Courses;
 using GameGuild.Resources;
 using Microsoft.EntityFrameworkCore;
 
@@ -197,6 +198,11 @@ public static class InfrastructureLayerExtensions
         stepStopwatch.Restart();
         services.AddFeaturesModule();
         logger.LogInformation("Features Module registered in {ElapsedMs}ms", stepStopwatch.ElapsedMilliseconds);
+
+        // 10f. Learning Courses Module (programs, content, enrollment, grading)
+        stepStopwatch.Restart();
+        services.AddCoursesModule();
+        logger.LogInformation("Courses Module registered in {ElapsedMs}ms", stepStopwatch.ElapsedMilliseconds);
 
         // 11. Repositories
         services.AddRepositories(logger);

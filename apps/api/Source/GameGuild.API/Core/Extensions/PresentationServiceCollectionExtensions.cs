@@ -115,6 +115,11 @@ public static class PresentationServiceCollectionExtensions
         services.AddControllers()
             .AddApplicationPart(typeof(GameGuild.Features.FeatureFlagsController).Assembly); // Features module
         LogControllersFromAssembly(typeof(GameGuild.Features.FeatureFlagsController).Assembly, logger, controllerStopwatch);
+
+        controllerStopwatch.Restart();
+        services.AddControllers()
+            .AddApplicationPart(typeof(GameGuild.Learning.Courses.ProgramCrudController).Assembly); // Courses module
+        LogControllersFromAssembly(typeof(GameGuild.Learning.Courses.ProgramCrudController).Assembly, logger, controllerStopwatch);
         
         services.AddControllers()
             .AddJsonOptions(jsonOptions =>
