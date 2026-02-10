@@ -67,10 +67,164 @@ export * from './generated/errors.gen.js';
 export { getRetryAfter } from './runtime/errors/guards.js';
 
 // Auth types
-export type { TokenProvider, TokenPair, AuthConfig } from './runtime/auth/types.js';
+export type {
+  TokenProvider,
+  TokenPair,
+  AuthConfig,
+  Session,
+  SessionUser,
+  JWTPayload,
+  GameGuildAuthConfig,
+  AuthCallbacks,
+  ProviderType,
+  ProviderConfig,
+  ProviderResult,
+  CredentialsProviderConfig,
+  OAuthProviderConfig,
+  Provider,
+  CookieConfig,
+  PagesConfig,
+  AuthInstance,
+  ResolvedAuthConfig,
+  SessionStatus,
+  UseSessionReturn,
+  SessionProviderProps,
+} from './runtime/auth/types.js';
+
+// Auth utilities
+export { encodeJWT, decodeJWT } from './runtime/auth/jwt.js';
+export { SessionStore, CsrfStore, CallbackStore, resolveCookieOptions } from './runtime/auth/cookies.js';
+export { createCSRFToken, validateCSRFToken } from './runtime/auth/csrf.js';
+export {
+  createJWTPayload,
+  toSession,
+  shouldRefreshToken,
+  refreshAccessToken,
+  processSession,
+  encodeSession,
+} from './runtime/auth/session.js';
+
+// Auth errors
+export {
+  AuthError,
+  CredentialsSignInError,
+  AccountLockedError,
+  MfaRequiredError,
+  SignUpError,
+  SessionExpiredError,
+  InvalidSessionError,
+  TokenRefreshError,
+  ConfigError,
+  MissingSecretError,
+  ProviderNotFoundError,
+  CSRFError,
+  OAuthError,
+  OAuthCallbackError,
+  isAuthError,
+  isReauthRequired,
+  isCredentialsError,
+} from './runtime/auth/errors.js';
+
+// Authorization utilities
+export {
+  hasRole,
+  hasAllRoles,
+  hasAnyRole,
+  hasPermission,
+  hasAllPermissions,
+  hasAnyPermission,
+  can,
+} from './runtime/auth/authorization.js';
+
+// Extended auth operations (MFA, password reset, email verification, session management)
+export {
+  verifyMfa,
+  setupTotpMfa,
+  getMfaMethods,
+  requestPasswordReset,
+  confirmPasswordReset,
+  changePassword,
+  sendVerificationEmail,
+  verifyEmail,
+  listSessions,
+  terminateSession,
+  terminateOtherSessions,
+  terminateAllSessions,
+  MfaVerificationError,
+  PasswordResetError,
+  EmailVerificationError,
+} from './runtime/auth/extended-operations.js';
+export type {
+  MfaVerifyInput,
+  MfaSetupResult,
+  PasswordResetRequestInput,
+  PasswordResetConfirmInput,
+  PasswordChangeInput,
+  EmailVerificationInput,
+  SessionInfo,
+} from './runtime/auth/extended-operations.js';
+
+// Auth providers
+export { CredentialsProvider } from './runtime/auth/providers/credentials.js';
+export { GoogleProvider } from './runtime/auth/providers/google.js';
+export { GitHubProvider } from './runtime/auth/providers/github.js';
 
 // Tenant types
 export type { TenantProvider, TenantConfig } from './runtime/tenant/types.js';
 
 // Transport types
 export type { RequestConfig, ApiResponse, Interceptor } from './runtime/transport/types.js';
+
+// ─── Next.js Integration ─────────────────────────────────────────
+export { GameGuildAuth } from './integrations/next/auth.js';
+export { parseCookieHeader, parseBackendAuthResponse } from './integrations/next/handlers.js';
+export type { OAuthProviderWithMethods } from './integrations/next/oauth-helpers.js';
+export {
+  createNextClient,
+  createNextAuthTokenProvider,
+  createNextTenantProvider,
+  createClientFromCookies,
+  createRouteClient,
+  type NextClientConfig,
+} from './integrations/next/index.js';
+
+// ─── React Integration ──────────────────────────────────────────
+export { SessionProvider, SessionContext } from './integrations/react/session-provider.js';
+export type { SessionContextValue } from './integrations/react/session-provider.js';
+export { useSession } from './integrations/react/use-session.js';
+export { useAuth } from './integrations/react/use-auth.js';
+export { createAuthBroadcast } from './integrations/react/broadcast.js';
+export type { AuthBroadcastMessage } from './integrations/react/broadcast.js';
+
+// React query hooks (require @tanstack/react-query peer dep)
+export * from './integrations/react/query-hooks.js';
+
+// ─── Plugins ─────────────────────────────────────────────────────
+export {
+  createRetryPlugin,
+  createRetryInterceptor,
+  type RetryConfig,
+} from './plugins/retry.js';
+export {
+  createAuthRetryPlugin,
+  type AuthRetryConfig,
+} from './plugins/auth-retry.js';
+export {
+  createLoggingInterceptor,
+  type LoggingConfig,
+  type LogLevel,
+  type LoggerFn,
+} from './plugins/logging.js';
+export {
+  createCacheInterceptor,
+  MemoryCache,
+  type CacheConfig,
+  type CacheInterceptor,
+} from './plugins/cache.js';
+export {
+  createMetricsInterceptor,
+  type MetricsConfig,
+  type RequestMetrics,
+  type AggregatedMetrics,
+  type MetricsInterceptor,
+} from './plugins/metrics.js';

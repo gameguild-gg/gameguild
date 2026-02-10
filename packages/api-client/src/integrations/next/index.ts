@@ -1,8 +1,50 @@
 /**
  * Next.js Integration
  *
- * Utilities for integrating the API client with Next.js applications.
+ * Provides the GameGuildAuth() factory, server-side API client utilities,
+ * and proxy helpers for Next.js applications.
+ *
+ * @example
+ * ```typescript
+ * // src/auth.ts
+ * import { GameGuildAuth, CredentialsProvider } from '@game-guild/client/next';
+ *
+ * export const { handlers, auth, signIn, signOut, signUp } = GameGuildAuth({
+ *   providers: [CredentialsProvider()],
+ * });
+ *
+ * // src/app/api/auth/[...auth]/route.ts
+ * import { handlers } from '@/auth';
+ * export const { GET, POST } = handlers;
+ * ```
  */
+
+// ─── GameGuildAuth Factory ───────────────────────────────────────
+export { GameGuildAuth } from './auth.js';
+
+// ─── Provider Factories (re-exported for convenience) ────────────
+export {
+  CredentialsProvider,
+  GoogleProvider,
+  GitHubProvider,
+} from '../../runtime/auth/providers/index.js';
+
+// ─── Auth Types ──────────────────────────────────────────────────
+export type {
+  GameGuildAuthConfig,
+  AuthInstance,
+  AuthCallbacks,
+  ResolvedAuthConfig,
+  Session,
+  SessionUser,
+  JWTPayload,
+  Provider,
+  ProviderResult,
+  CookieConfig,
+  PagesConfig,
+} from '../../runtime/auth/types.js';
+
+// ─── Server Client Utilities (existing) ──────────────────────────
 
 import { createServerClient, type ServerClientConfig } from '../../server.js';
 import type { ApiClient } from '../../runtime/client.js';
@@ -10,6 +52,7 @@ import type { TokenProvider } from '../../runtime/auth/types.js';
 import type { TenantProvider } from '../../runtime/tenant/types.js';
 
 export type { ServerClientConfig };
+
 
 /**
  * Configuration for Next.js API client
@@ -50,7 +93,7 @@ export function createNextAuthTokenProvider(
       return session?.refreshToken ?? null;
     },
     onAuthenticationRequired: async () => {
-      // In server context, we typically let the middleware handle redirects
+      // In server context, we typically let the proxy handle redirects
       // This callback is for notification purposes
       console.warn('[api-client] Authentication required but no session available');
     },

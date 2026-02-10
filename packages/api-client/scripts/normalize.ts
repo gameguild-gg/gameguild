@@ -7,7 +7,7 @@
 
 import type { OpenApiSpec } from './fetch-spec.js';
 import type { OpenAPIV3 } from 'openapi-types';
-import { toCamelCase, toPascalCase, capitalize } from './utils/naming.js';
+import { toCamelCase, toPascalCase, capitalize, sanitizeIdentifier } from './utils/naming.js';
 import { HTTP_METHODS, ASP_NET_PATTERNS } from './codegen/constants.js';
 
 /**
@@ -77,10 +77,14 @@ function generateOperationId(path: string, method: string, tag?: string): string
     .replace(/\{[^}]+\}/g, '') // Remove {param}
     .replace(/^\/api\/v\d+\/?/, '') // Remove /api/v1/
     .replace(/^\/v\d+\/?/, '') // Remove /v1/
+    .replace(/:/g, '_') // Convert custom action separators (:revoke) to _
     .replace(/\//g, '_') // Replace / with _
     .replace(/^_|_$/g, ''); // Remove leading/trailing _
 
-  const parts = cleanPath.split('_').filter(Boolean);
+  // Sanitize to valid identifier (handles dashes, remaining special chars)
+  const sanitized = sanitizeIdentifier(cleanPath);
+
+  const parts = sanitized.split('_').filter(Boolean);
 
   // Build operation name
   let name: string;
@@ -104,6 +108,9 @@ function normalizeOperationIdName(operationId: string): string {
     .replace(/^v\d+_/i, '')
     .replace(/_controller_/i, '_')
     .replace(/Controller$/i, '');
+
+  // Sanitize to valid identifier (removes colons, special chars)
+  normalized = sanitizeIdentifier(normalized);
 
   return toCamelCase(normalized);
 }
@@ -170,6 +177,11 @@ function normalizeSchemaNames(spec: OpenApiSpec): void {
  */
 function normalizeSchemaName(name: string): string {
   let normalized = name;
+
+  // Strip .NET generic arity and type parameters
+  // e.g. "PagedResult`1[[GameGuild_Identity_Users_UserDto, ..." -> "PagedResult"
+  // Note: ASP.NET may not close the brackets, so match from backtick to end
+  normalized = normalized.replace(/`\d+.*$/, '');
 
   // Remove any dotted namespace prefix (e.g., GameGuild.Identity.Users.UserDto -> UserDto)
   const lastDotIndex = normalized.lastIndexOf('.');

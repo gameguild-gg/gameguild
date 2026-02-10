@@ -10,6 +10,7 @@ import { BaseGenerator } from './core/BaseGenerator.js';
 import { TypeMapperChain } from './strategies/SchemaTypeMapper.js';
 import { HTTP_METHODS, SUCCESS_STATUS_PREFIX, CONTENT_TYPES, PARAMETER_LOCATIONS } from './constants.js';
 import { toPascalCase } from '../utils/naming.js';
+import { qualifyType } from '../utils/type-qualify.js';
 
 interface EndpointInfo {
   operationId: string;
@@ -240,7 +241,7 @@ class EndpointsGenerator extends BaseGenerator {
     const successResponse = endpoint.responses.find((r) => r.statusCode.startsWith(SUCCESS_STATUS_PREFIX));
     const outputType = successResponse?.type || 'void';
 
-    lines.push(`export type ${toPascalCase(endpoint.operationId)}Output = ${outputType};`);
+    lines.push(`export type ${toPascalCase(endpoint.operationId)}Output = ${qualifyType(outputType)};`);
 
     // Endpoint definition
     lines.push(`export const ${endpoint.operationId}Endpoint = {`);
@@ -272,7 +273,7 @@ class EndpointsGenerator extends BaseGenerator {
     // Path parameters
     for (const param of pathParams) {
       const optional = param.required ? '' : '?';
-      lines.push(`  ${param.name}${optional}: ${param.type};`);
+      lines.push(`  ${param.name}${optional}: ${qualifyType(param.type)};`);
     }
 
     // Query parameters
@@ -280,7 +281,7 @@ class EndpointsGenerator extends BaseGenerator {
       lines.push(`  query?: {`);
       for (const param of queryParams) {
         const optional = param.required ? '' : '?';
-        lines.push(`    ${param.name}${optional}: ${param.type};`);
+        lines.push(`    ${param.name}${optional}: ${qualifyType(param.type)};`);
       }
       lines.push(`  };`);
     }
@@ -288,7 +289,7 @@ class EndpointsGenerator extends BaseGenerator {
     // Request body
     if (hasBody) {
       const bodyOptional = endpoint.requestBody!.required ? '' : '?';
-      lines.push(`  body${bodyOptional}: ${endpoint.requestBody!.type};`);
+      lines.push(`  body${bodyOptional}: ${qualifyType(endpoint.requestBody!.type)};`);
     }
 
     lines.push('}');

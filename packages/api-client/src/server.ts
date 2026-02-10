@@ -5,7 +5,7 @@
  */
 
 import { createFetchTransport, createHeaderInterceptor } from './runtime/transport/fetch.js';
-import { ok } from './runtime/result/helpers.js';
+import { ok, err } from './runtime/result/helpers.js';
 import type { Result } from './runtime/result/types.js';
 import type { ApiError } from './runtime/errors/types.js';
 import type { TokenProvider } from './runtime/auth/types.js';
@@ -40,7 +40,7 @@ export interface ServerClientConfig {
  * - Server Components (RSC)
  * - Server Actions
  * - API Routes
- * - Middleware
+ * - Proxy
  *
  * Key differences from browser client:
  * - No automatic token refresh (handled by auth provider)
@@ -91,6 +91,12 @@ export function createServerClient(config: ServerClientConfig): ApiClient {
         const token = await config.auth.getAccessToken();
         if (!token) {
           await config.auth.onAuthenticationRequired?.();
+          return err({
+            name: 'ApiError' as const,
+            message: 'Authentication required',
+            status: 401,
+            code: 'TOKEN_MISSING' as const,
+          });
         }
       }
 

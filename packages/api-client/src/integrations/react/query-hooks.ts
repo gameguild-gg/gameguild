@@ -94,9 +94,9 @@ export function createMutationHook<TData, TVariables>(
     return useMutation<TData, ApiError, TVariables>({
       mutationFn: async (variables) => unwrapResult(await mutationFn(variables)),
 
-      onMutate: async (variables: TVariables) => {
+      onMutate: async (variables: TVariables, mutationContext) => {
         if (!optimistic?.optimisticData) {
-          return options?.onMutate?.(variables);
+          return options?.onMutate?.(variables, mutationContext);
         }
 
         // Cancel outgoing refetches
@@ -118,23 +118,23 @@ export function createMutationHook<TData, TVariables>(
           queryClient.setQueryData(key, optimisticValue);
         });
 
-        await options?.onMutate?.(variables);
+        await options?.onMutate?.(variables, mutationContext);
 
         return { previousData };
       },
 
-      onError: (error: ApiError, variables: TVariables, context: any) => {
+      onError: (error: ApiError, variables: TVariables, onMutateResult: any, mutationContext) => {
         // Rollback on error if configured
-        if (optimistic?.rollbackOnError !== false && context?.previousData) {
-          context.previousData.forEach(({ key, data }: { key: QueryKey; data: any }) => {
+        if (optimistic?.rollbackOnError !== false && onMutateResult?.previousData) {
+          onMutateResult.previousData.forEach(({ key, data }: { key: QueryKey; data: any }) => {
             queryClient.setQueryData(key, data);
           });
         }
 
-        options?.onError?.(error, variables, context);
+        options?.onError?.(error, variables, onMutateResult, mutationContext);
       },
 
-      onSuccess: async (data: TData, variables: TVariables, context: any) => {
+      onSuccess: async (data: TData, variables: TVariables, onMutateResult: any, mutationContext) => {
         // Invalidate queries
         if (optimistic?.invalidateKeys) {
           await Promise.all(
@@ -153,7 +153,7 @@ export function createMutationHook<TData, TVariables>(
           );
         }
 
-        await options?.onSuccess?.(data, variables, context);
+        await options?.onSuccess?.(data, variables, onMutateResult, mutationContext);
       },
 
       ...mutationOptions,

@@ -89,7 +89,7 @@ export class ArrayTypeMapper implements SchemaTypeMapper {
   map(schema: OpenAPIV3.SchemaObject | OpenAPIV3.ReferenceObject): string {
     if ('$ref' in schema) throw new Error('Reference schema');
     
-    const schemaObj = schema as OpenAPIV3.SchemaObject;
+    const schemaObj = schema as OpenAPIV3.ArraySchemaObject;
     const nullable = schemaObj.nullable ? ' | null' : '';
 
     if (schemaObj.items) {

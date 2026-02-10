@@ -14,6 +14,15 @@ import type { ApiError } from '../../runtime/errors/types.js';
 // Export React Query hooks
 export * from './query-hooks.js';
 
+// Export Auth components and hooks
+export { SessionProvider } from './session-provider.js';
+export { SessionContext } from './session-provider.js';
+export type { SessionContextValue } from './session-provider.js';
+export { useSession } from './use-session.js';
+export { useAuth } from './use-auth.js';
+export { createAuthBroadcast } from './broadcast.js';
+export type { AuthBroadcastMessage } from './broadcast.js';
+
 /**
  * Query state for async operations
  */

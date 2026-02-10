@@ -7,6 +7,7 @@
 import type { OpenApiSpec } from '../fetch-spec.js';
 import type { OpenAPIV3 } from 'openapi-types';
 import { toPascalCase, toCamelCase } from '../utils/naming.js';
+import { qualifyType } from '../utils/type-qualify.js';
 import { TypeMapperChain } from './strategies/SchemaTypeMapper.js';
 import { HTTP_METHODS } from './constants.js';
 
@@ -162,8 +163,8 @@ function generateModuleCode(moduleName: string, endpoints: ModuleEndpoint[]): st
 
 import type { ApiClient } from '../../runtime/client.js';
 import type { Result } from '../../runtime/result/types.js';
-import type * as Types from '../types.gen.js';
-import type * as Errors from '../errors.gen.js';
+import type { ApiError } from '../../runtime/errors/types.js';
+import * as Types from '../types.gen.js';
 import { safeParse } from '../../runtime/errors/validation.js';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -211,7 +212,7 @@ function generateEndpointMethod(endpoint: ModuleEndpoint): string {
 
   // Method signature
   const params = buildMethodParams(endpoint);
-  const returnType = `Promise<Result<${endpoint.responseType}, Errors.ErrorResponse>>`;
+  const returnType = `Promise<Result<${qualifyType(endpoint.responseType)}, ApiError>>`;
 
   lines.push(`  async ${methodName}(${params}): ${returnType} {`);
 
@@ -242,9 +243,9 @@ function generateEndpointMethod(endpoint: ModuleEndpoint): string {
   lines.push('');
   lines.push(`    const result = await this.client.request({`);
   lines.push(`      method: '${endpoint.method}',`);
-  lines.push(`      url,`);
+  lines.push(`      path: url,`);
   if (hasQuery) {
-    lines.push(`      query,`);
+    lines.push(`      params: query,`);
   }
   if (hasBody) {
     const bodyVar = endpoint.requestBodySchema ? 'validatedBody' : 'body';
@@ -264,8 +265,9 @@ function generateEndpointMethod(endpoint: ModuleEndpoint): string {
     lines.push('');
     lines.push(`    return result;`);
   } else {
+    const qualifiedReturn = qualifyType(endpoint.responseType);
     lines.push('');
-    lines.push(`    return result;`);
+    lines.push(`    return result as Result<${qualifiedReturn}, ApiError>;`);
   }
 
   lines.push('  }');
@@ -281,7 +283,7 @@ function buildMethodParams(endpoint: ModuleEndpoint): string {
 
   // Path parameters
   for (const param of endpoint.parameters.filter((p) => p.in === 'path')) {
-    params.push(`${param.name}: ${param.type}`);
+    params.push(`${param.name}: ${qualifyType(param.type)}`);
   }
 
   // Query parameters
@@ -290,7 +292,7 @@ function buildMethodParams(endpoint: ModuleEndpoint): string {
     const queryType = queryParams
       .map((p) => {
         const optional = p.required ? '' : '?';
-        return `${p.name}${optional}: ${p.type}`;
+        return `${p.name}${optional}: ${qualifyType(p.type)}`;
       })
       .join('; ');
     params.push(`query?: { ${queryType} }`);
@@ -298,7 +300,7 @@ function buildMethodParams(endpoint: ModuleEndpoint): string {
 
   // Request body
   if (endpoint.requestBodyType) {
-    params.push(`body: ${endpoint.requestBodyType}`);
+    params.push(`body: ${qualifyType(endpoint.requestBodyType)}`);
   }
 
   return params.join(', ');

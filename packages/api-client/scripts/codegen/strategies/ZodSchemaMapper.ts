@@ -137,7 +137,7 @@ export class ZodArrayMapper implements ZodSchemaMapper {
   map(schema: OpenAPIV3.SchemaObject | OpenAPIV3.ReferenceObject): string {
     if ('$ref' in schema) throw new Error('Reference schema');
     
-    const schemaObj = schema as OpenAPIV3.SchemaObject;
+    const schemaObj = schema as OpenAPIV3.ArraySchemaObject;
     let zodSchema: string;
 
     if (schemaObj.items) {
