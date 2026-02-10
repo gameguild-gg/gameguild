@@ -22,6 +22,14 @@ import networkingWeek04QuizMd from './04-tcp/03-quiz.md';
 import networkingWeek04AssignmentMd from './04-tcp/04-assignment.md';
 import networkingWeek05LectureReveal from './05-framing/01-reveal.md';
 import networkingWeek05LectureMd from './05-framing/02-lecture.md';
+import networkingWeek05FramingProblemMd from './05-framing/02a-framing-problem.md';
+import networkingWeek05FramingStrategiesMd from './05-framing/02b-framing-strategies.md';
+import networkingWeek05BufferManagementMd from './05-framing/02c-buffer-management.md';
+import networkingWeek05PartialIOMd from './05-framing/02d-partial-io.md';
+import networkingWeek05DeadlockPreventionMd from './05-framing/02e-deadlock-prevention.md';
+import networkingWeek05ConcurrencyModelsMd from './05-framing/02f-concurrency-models.md';
+import networkingWeek05CppConcurrencyMd from './05-framing/02g-cpp-concurrency.md';
+import networkingWeek05EdgeCasesMd from './05-framing/02h-edge-cases.md';
 import networkingWeek05ReadingsMd from './05-framing/03-readings.md';
 import networkingSyllabus from './syllabus.md';
 
@@ -641,10 +649,206 @@ export const networkingWeek05Readings: ProgramContent & { slug: string } = {
     updatedAt: '2023-01-01T00:00:00Z',
 };
 
+// Week 05 Lecture Sections (split from main lecture)
+
+export const networkingWeek05FramingProblem: ProgramContent & { slug: string } = {
+    id: 'week-05-framing-problem',
+    slug: 'framing-problem',
+    programId: 'networking-program-1',
+    parentId: 'week-05-lecture',
+    title: '1. The TCP Framing Problem',
+    description: 'Understanding why TCP requires message framing and how byte stream semantics work.',
+    type: 0, // Page
+    body: networkingWeek05FramingProblemMd,
+    sortOrder: 1,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 10,
+    visibility: 1, // Published
+    program: networkingProgram,
+    parent: networkingWeek05LectureContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const networkingWeek05FramingStrategies: ProgramContent & { slug: string } = {
+    id: 'week-05-framing-strategies',
+    slug: 'framing-strategies',
+    programId: 'networking-program-1',
+    parentId: 'week-05-lecture',
+    title: '2. Framing Strategies',
+    description: 'Length-prefix, delimiter-based, TLV, and fixed-length framing approaches.',
+    type: 0, // Page
+    body: networkingWeek05FramingStrategiesMd,
+    sortOrder: 2,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 15,
+    visibility: 1, // Published
+    program: networkingProgram,
+    parent: networkingWeek05LectureContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const networkingWeek05BufferManagement: ProgramContent & { slug: string } = {
+    id: 'week-05-buffer-management',
+    slug: 'buffer-management',
+    programId: 'networking-program-1',
+    parentId: 'week-05-lecture',
+    title: '3. Buffer Management',
+    description: 'Buffer types, receive patterns, and lifetime management in Boost.Asio.',
+    type: 0, // Page
+    body: networkingWeek05BufferManagementMd,
+    sortOrder: 3,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 10,
+    visibility: 1, // Published
+    program: networkingProgram,
+    parent: networkingWeek05LectureContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const networkingWeek05PartialIO: ProgramContent & { slug: string } = {
+    id: 'week-05-partial-io',
+    slug: 'partial-io',
+    programId: 'networking-program-1',
+    parentId: 'week-05-lecture',
+    title: '4. Handling Partial I/O',
+    description: 'Dealing with partial reads/writes and composed operations.',
+    type: 0, // Page
+    body: networkingWeek05PartialIOMd,
+    sortOrder: 4,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 15,
+    visibility: 1, // Published
+    program: networkingProgram,
+    parent: networkingWeek05LectureContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const networkingWeek05DeadlockPrevention: ProgramContent & { slug: string } = {
+    id: 'week-05-deadlock-prevention',
+    slug: 'deadlock-prevention',
+    programId: 'networking-program-1',
+    parentId: 'week-05-lecture',
+    title: '5. Deadlock Prevention',
+    description: 'Avoiding TCP deadlock scenarios and implementing write queues.',
+    type: 0, // Page
+    body: networkingWeek05DeadlockPreventionMd,
+    sortOrder: 5,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 15,
+    visibility: 1, // Published
+    program: networkingProgram,
+    parent: networkingWeek05LectureContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const networkingWeek05ConcurrencyModels: ProgramContent & { slug: string } = {
+    id: 'week-05-concurrency-models',
+    slug: 'concurrency-models',
+    programId: 'networking-program-1',
+    parentId: 'week-05-lecture',
+    title: '6. Concurrency Models',
+    description: 'OS threads, coroutines, fibers, and work stealing concepts.',
+    type: 0, // Page
+    body: networkingWeek05ConcurrencyModelsMd,
+    sortOrder: 6,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 25,
+    visibility: 1, // Published
+    program: networkingProgram,
+    parent: networkingWeek05LectureContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const networkingWeek05CppConcurrency: ProgramContent & { slug: string } = {
+    id: 'week-05-cpp-concurrency',
+    slug: 'cpp-concurrency',
+    programId: 'networking-program-1',
+    parentId: 'week-05-lecture',
+    title: '7. C++ Concurrency Implementation',
+    description: 'std::jthread, Boost.Asio callbacks, C++20 coroutines, and Boost.Fiber.',
+    type: 0, // Page
+    body: networkingWeek05CppConcurrencyMd,
+    sortOrder: 7,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 30,
+    visibility: 1, // Published
+    program: networkingProgram,
+    parent: networkingWeek05LectureContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const networkingWeek05EdgeCases: ProgramContent & { slug: string } = {
+    id: 'week-05-edge-cases',
+    slug: 'edge-cases',
+    programId: 'networking-program-1',
+    parentId: 'week-05-lecture',
+    title: '8. Edge Cases and Summary',
+    description: 'Connection termination, byte order, and assignment preparation.',
+    type: 0, // Page
+    body: networkingWeek05EdgeCasesMd,
+    sortOrder: 8,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 20,
+    visibility: 1, // Published
+    program: networkingProgram,
+    parent: networkingWeek05LectureContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
 networkingWeek01Intro.children = [networkingWeek01Readings, networkingWeek01Quiz, networkingWeek01Setup, networkingWeek01Assignment];
 networkingWeek02Intro.children = [networkingWeek02LectureSlides, networkingWeek02Readings, networkingWeek02Quiz, networkingWeek02Assignment];
 networkingWeek03Intro.children = [networkingWeek03LectureSlides, networkingWeek03Readings, networkingWeek03Quiz, networkingWeek03Assignment];
 networkingWeek04Intro.children = [networkingWeek04LectureContent, networkingWeek04Readings, networkingWeek04Quiz, networkingWeek04Assignment];
+networkingWeek05LectureContent.children = [
+    networkingWeek05FramingProblem,
+    networkingWeek05FramingStrategies,
+    networkingWeek05BufferManagement,
+    networkingWeek05PartialIO,
+    networkingWeek05DeadlockPrevention,
+    networkingWeek05ConcurrencyModels,
+    networkingWeek05CppConcurrency,
+    networkingWeek05EdgeCases,
+];
 networkingWeek05Intro.children = [networkingWeek05LectureContent, networkingWeek05Readings];
 networkingProgram.programContents = [networkingSyllabusContent, networkingWeek01Intro, networkingWeek02Intro, networkingWeek03Intro, networkingWeek04Intro, networkingWeek05Intro];
 networkingProduct.productPrograms = [networkingProductProgram];
