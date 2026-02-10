@@ -44,7 +44,7 @@
         <ProjectReference Include="..\Modules\GameGuild.Commerce.Payments\GameGuild.Commerce.Payments.csproj" />
         <ProjectReference Include="..\Modules\GameGuild.Commerce.Products\GameGuild.Commerce.Products.csproj" />
         <!-- Learning Modules — orphaned: not in EnabledModules, no DI registration, controllers would fail at runtime -->
-        <!-- <ProjectReference Include="..\Modules\GameGuild.Learning.Courses\GameGuild.Learning.Courses.csproj" /> -->
+        <ProjectReference Include="..\Modules\GameGuild.Learning.Courses\GameGuild.Learning.Courses.csproj" />
         <!-- <ProjectReference Include="..\Modules\GameGuild.Learning.Enrollments\GameGuild.Learning.Enrollments.csproj" /> -->
         <!-- <ProjectReference Include="..\Modules\GameGuild.Learning.Cohorts\GameGuild.Learning.Cohorts.csproj" /> -->
         <!-- <ProjectReference Include="..\Modules\GameGuild.Learning.Assessments\GameGuild.Learning.Assessments.csproj" /> -->
