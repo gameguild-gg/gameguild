@@ -1,5 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
+import createMiddleware from 'next-intl/middleware';
 import { auth } from '@/auth';
+import { routing } from '@/i18n';
+
+// next-intl middleware handles locale detection and redirects
+const intlMiddleware = createMiddleware(routing);
 
 export async function proxy(request: NextRequest): Promise<NextResponse> {
   // Public paths that don't require authentication
@@ -8,8 +13,11 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
     request.nextUrl.pathname.endsWith(path)
   );
 
+  // Always run i18n middleware first to handle locale routing
+  const intlResponse = intlMiddleware(request);
+
   if (isPublicPath) {
-    return NextResponse.next();
+    return intlResponse;
   }
 
   // Check session — auth() reads encrypted JWT from cookies
@@ -17,12 +25,12 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
 
   if (!session) {
     // Redirect unauthenticated users to sign-in
-    const signInUrl = new URL('/en/sign-in', request.url);
+    const signInUrl = new URL('/en-us/sign-in', request.url);
     signInUrl.searchParams.set('callbackUrl', request.nextUrl.pathname);
     return NextResponse.redirect(signInUrl);
   }
 
-  return NextResponse.next();
+  return intlResponse;
 }
 
 export const config = {

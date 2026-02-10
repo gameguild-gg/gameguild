@@ -1,13 +1,14 @@
 import type { MetadataRoute } from 'next';
 
+const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://gameguild.gg';
+
 export default function robots(): MetadataRoute.Robots {
   return {
     rules: {
       userAgent: '*',
       allow: '/',
-      disallow: '/api/',
+      disallow: ['/api/', '/dashboard/'],
     },
-    // TODO: Update the sitemap URL to match your production environment.
-    sitemap: 'https://acme.com/sitemap.xml',
+    sitemap: `${baseUrl}/sitemap.xml`,
   };
 }

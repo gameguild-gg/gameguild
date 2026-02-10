@@ -100,3 +100,4 @@ next-env.d.ts
 
 # Production
 /build
+nul
