@@ -1,6 +1,27 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { auth } from '@/auth';
 
-export async function middleware(request: NextRequest): Promise<NextResponse> {
+export async function proxy(request: NextRequest): Promise<NextResponse> {
+  // Public paths that don't require authentication
+  const publicPaths = ['/sign-in', '/sign-up', '/forgot-password'];
+  const isPublicPath = publicPaths.some((path) =>
+    request.nextUrl.pathname.endsWith(path)
+  );
+
+  if (isPublicPath) {
+    return NextResponse.next();
+  }
+
+  // Check session — auth() reads encrypted JWT from cookies
+  const session = await auth();
+
+  if (!session) {
+    // Redirect unauthenticated users to sign-in
+    const signInUrl = new URL('/en/sign-in', request.url);
+    signInUrl.searchParams.set('callbackUrl', request.nextUrl.pathname);
+    return NextResponse.redirect(signInUrl);
+  }
+
   return NextResponse.next();
 }
 

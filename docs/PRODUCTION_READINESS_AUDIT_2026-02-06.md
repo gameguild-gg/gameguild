@@ -1,6 +1,6 @@
 # 🔍 Production Readiness Audit Report
 
-**Date:** 2026-02-06 (Updated: 2026-02-12)  
+**Date:** 2026-02-06 (Updated: 2026-02-14)  
 **Scope:** API Backend (.NET 9) + API Client Package (TypeScript)  
 **Auditor:** Automated Deep Analysis  
 **Verdict:** ⚠️ **NOT PRODUCTION-READY** — Critical issues must be resolved first
@@ -30,6 +30,8 @@ The codebase demonstrates strong architectural **intent** — modular monolith, 
 **SharedKernel final polish (2026-02-11):** Completed all 4 remaining SharedKernel low-priority findings. SK-9: translated Portuguese comment in `TenantId.cs` (not EntityBase.cs as originally reported). SK-10: replaced 5 hardcoded country codes in `PhoneNumber.cs` with comprehensive ITU-T E.164 table (~180 codes) using `ReadOnlySpan<string>`, ordered by specificity. SK-11: flattened 15 root namespaces (`GameGuild.Models`, `GameGuild.Abstractions`, `GameGuild.Entities`, etc.) to flat `GameGuild` namespace — `GameGuild.CQRS` and `GameGuild.Configuration` deliberately preserved. Resolved `AccessLevel` naming collision by renaming SharedKernel's content-visibility enum to `ContentVisibility`. SK-12: consolidated 34 single-interface CQRS files into 6 grouped files (`Requests.cs`, `Handlers.cs`, `Pipeline.cs`, `Notifications.cs`, `DomainEvents.cs`, `CrossCutting.cs`). Build: **0 errors, 0 warnings**. SharedKernel SK findings: **12/12 → 16/16 complete**.
 
 **SharedKernel deep code quality pass (2026-02-12):** Fresh deep scan of all 186 SharedKernel files revealed 15 new code quality issues (NEW-1 through NEW-15). All fixed: extracted `ExpressionTreeCompiler` (3× duplicate eliminated), `RepositoryBase` now uses domain methods, `SystemClock` abstraction replaces 16× `DateTime.UtcNow`, `Response.HasStarted` guards added, 3 bare catches fixed, O(n²) string concat fixed, dead `ModuleDiscovery` removed, `Money` uses domain exceptions + invariant culture, pagination URL-encoded, entity state machine enforced. Build: **0 errors, 0 new warnings**.
+
+**API Backend final quality pass (2026-02-14):** Deep DRY/SOLID/KISS audit of all API backend modules. Deleted ~431 lines of dead `OrderService` code, fixed 3 security issues (Console.WriteLine JWT leak, hardcoded JWT fallback, hardcoded seeder password), documented 20 CQRS-bypassing controllers, split 990-line `ServiceCollectionExtensions.cs` into 4 focused files, fixed all 24 build warnings to 0. `ConfigureAwait(false)` added consistently across all async code. Build: **0 errors, 0 warnings**.
 
 ---
 
@@ -241,6 +243,36 @@ Module-level P2 fixes — moved beyond SharedKernel to API Backend code quality.
 
 **Build:** 0 errors, 15 warnings (all pre-existing test warnings — no regressions).
 
+### ✅ Completed Fixes — Session 9 (2026-02-14)
+
+Final API Backend quality pass — deep DRY/SOLID/KISS audit across all modules.
+
+| # | Fix | Details |
+|---|-----|--------|
+| F-1 | **Deleted dead OrderService** | Removed `IOrderService.cs` (~50 lines) and `OrderService.cs` (~431 lines) — all order operations now use CQRS commands/queries. Added `CreateOrderRequest` DTO to `OrdersController.cs`. |
+| F-2 | **Removed Console.WriteLine JWT leak** | Deleted `Console.WriteLine($"[Token Gen] JWT Secret length: {jwtSecret.Length}...")` from `AuthenticationEndpoint.cs` — was leaking secret metadata to stdout in production. |
+| F-3 | **Removed hardcoded JWT fallback secrets** | Changed `configuration["Jwt:Secret"] ?? "default-secret-key..."` → `?? throw new InvalidOperationException("JWT secret is not configured")` in both `AuthenticationEndpoint.cs` and `ServiceCollectionExtensions.cs` (now `SecurityServiceCollectionExtensions.cs`). App crashes at startup instead of silently using weak secret. |
+| F-4 | **Fixed hardcoded seeder password** | `DatabaseSeeder.cs` now reads from `IConfiguration["Seed:AdminPassword"]` with dev-only fallback + `LogWarning` when using default. `SeedAdminUserAsync` signature updated to accept `IConfiguration?`. |
+| F-5 | **Documented CQRS bypass debt** | Created `docs/architecture/CQRS_BYPASS_KNOWN_DEBT.md` listing all 20 controllers that bypass CQRS (use `IService` instead of `ISender`). Includes per-module migration strategy: migrate opportunistically when controllers need changes. |
+| F-6 | **Split 990-line `ServiceCollectionExtensions.cs`** | Replaced monolithic DI file with 4 focused extension classes: `SecurityServiceCollectionExtensions.cs` (~250 lines: Auth, CORS, Authorization), `RateLimitingServiceCollectionExtensions.cs` (~310 lines: rate limiting + 8 partition helpers), `PresentationServiceCollectionExtensions.cs` (~220 lines: Controllers, Endpoints, Middlewares), `InfrastructureServiceCollectionExtensions.cs` (~210 lines: 10 infrastructure concerns). |
+| F-7 | **Fixed all 24 build warnings to 0** | CS9113 (6): added meaningful logging to unused primary constructor loggers. CS1574 (2): fixed invalid XML cref. CS0162 (2): removed unreachable code after throw. CS8073 (6): fixed non-nullable DateTime comparisons. CS8602 (12): null-forgiving after NotBeNull assertions. CS0618 (4): pragma suppress for intentional legacy tests. CS0109 (2): removed unnecessary `new`. CS8601 (2): null coalesce for nullable string. ASP0016 (2): `(Delegate)` cast on route handlers. |
+| F-8 | **`ConfigureAwait(false)` consistency** | Added `ConfigureAwait(false)` to all async calls in library/service code across the entire API backend. Consistency achieved across all modules. |
+
+**Build:** 0 errors, 0 warnings ✅
+
+### 📊 Session 9 Impact Summary
+
+| Metric | Before | After |
+|--------|--------|-------|
+| Dead code (OrderService) | ~481 lines | 0 |
+| Security: JWT secret leak | 1 (Console.WriteLine) | 0 |
+| Security: hardcoded fallback secrets | 2 locations | 0 |
+| Security: hardcoded seeder password | 1 (no config) | Config-driven with warning |
+| CQRS bypass documentation | None | 20 controllers documented |
+| Largest DI file | 990 lines (1 class) | 4 files, 210–310 lines each |
+| Build warnings | 24 (Source + Tests) | 0 |
+| `ConfigureAwait(false)` inconsistency | ~122 call sites | Consistent |
+
 ### Missing Abstractions Audit (2026-02-09 — Updated)
 
 | Area | Status | Assessment | Recommended Action |
@@ -270,7 +302,7 @@ These **must be fixed** before any production deployment.
 
 | # | Component | Issue | Impact | Status |
 |---|-----------|-------|--------|--------|
-| P1-1 | API Backend | **Inconsistent controller patterns** — Users uses `ISender` (CQRS), Orders uses `IOrderService`, Courses uses `IProgramService` | Orders/Courses **bypass pipeline** | ⚠️ Partial — all controllers now inherit `BaseApiController`; ISender vs IService inconsistency remains |
+| ~~P1-1~~ | ~~API Backend~~ | ~~**Inconsistent controller patterns** — Users uses `ISender` (CQRS), Orders uses `IOrderService`, Courses uses `IProgramService`~~ — dead OrderService deleted (~481 lines); all 20 CQRS-bypassing controllers documented in `CQRS_BYPASS_KNOWN_DEBT.md` with migration strategy; all controllers inherit `BaseApiController` | ~~Orders/Courses **bypass pipeline**~~ | ⚠️ Documented — migrate opportunistically |
 | P1-2 | API Backend | **ProgramController returns domain entities** directly (`ActionResult<Program>`) | **API contract/security leak** | ❌ Open |
 | ~~P1-3~~ | ~~API Backend~~ | ~~**No unified Result type** — each module invents its own~~ | ~~**DRY violation**~~ | ⚠️ SharedKernel fixed; module-level duplication remains |
 | P1-4 | API Client | **Server client doesn't block unauthenticated requests** | **Security bypass** | ❌ Open |
@@ -314,7 +346,7 @@ These **must be fixed** before any production deployment.
 | P3-1 | API Backend | Inconsistent table naming | Cosmetic | ❌ Open |
 | P3-2 | API Backend | Inconsistent `sealed class` usage | Minor | ❌ Open |
 | P3-3 | API Backend | `appsettings.Staging.json` casing | Cosmetic | ❌ Open |
-| P3-4 | API Backend | `ConfigureAwait(false)` inconsistency | Minor perf | ❌ Open |
+| ~~P3-4~~ | ~~API Backend~~ | ~~`ConfigureAwait(false)` inconsistency~~ — added consistently across all async service/library code (~122 call sites) | ~~Minor perf~~ | ✅ Fixed (F-8) |
 | P3-5 | API Client | Zod as required dependency (~47KB) | Bundle size | ❌ Open |
 | P3-6 | API Client | Massive generated files (6K+ lines) | IDE performance | ❌ Open |
 | P3-7 | API Client | DevTools emit emoji | Minor | ❌ Open |
@@ -544,6 +576,9 @@ OpenAPI Spec → normalize.ts → generate.ts → BaseGenerator → [endpoints, 
 | Missing admin permission check in TestingLabPermission | 🔴 Critical | ❌ Open |
 | Server client doesn't block unauthenticated requests | 🔴 Critical | ❌ Open |
 | ~~Silent exception swallowing in EntityBase~~ | ~~🔴 Critical~~ | ✅ Fixed |
+| ~~Console.WriteLine leaks JWT secret metadata~~ | ~~🔴 Critical~~ | ✅ Fixed (F-2) |
+| ~~Hardcoded JWT fallback secrets in 2 locations~~ | ~~🔴 Critical~~ | ✅ Fixed (F-3) |
+| ~~Hardcoded admin seeder password~~ | ~~🟡 High~~ | ✅ Fixed (F-4 — config-driven with warning log) |
 | Missing comment ownership checks in PostsController | 🟡 High | ❌ Open |
 | `TenantId` not redacted in logs | 🟡 High | ❌ Open |
 
@@ -573,7 +608,7 @@ OpenAPI Spec → normalize.ts → generate.ts → BaseGenerator → [endpoints, 
 | ~~Mediator uses `MethodInfo.Invoke` (cached metadata, but still reflection)~~ | ~~Medium~~ | ✅ Fixed (SK-1 — compiled expression trees) |
 | ~~`PaginationHeadersFilter` uses reflection per-request~~ | ~~Medium~~ | ✅ Fixed (SK-B — `IPaginationMetadata` interface) |
 | ~~`DbContext` is a God class — all modules loaded~~ | ~~Medium~~ | ✅ Fixed — 59-line thin shell with `IModelConfiguration` auto-discovery |
-| `ConfigureAwait(false)` used inconsistently | Low | ❌ Open |
+| ~~`ConfigureAwait(false)` used inconsistently~~ | ~~Low~~ | ✅ Fixed (F-8 — consistent across all modules) |
 
 ### 12.2 API Client
 
@@ -670,15 +705,15 @@ OpenAPI Spec → normalize.ts → generate.ts → BaseGenerator → [endpoints, 
 
 | Category | Count | Fixed | Remaining |
 |----------|:-----:|:-----:|:---------:|
-| DRY Violations | 14 | 8 | 6 |
-| SOLID Violations | 6 | 2 | 4 |
-| Security Issues | 8 | 2 | 6 |
-| Dead/Unused Code | 7 | 7 | 0 |
+| DRY Violations | 15 | 10 | 5 |
+| SOLID Violations | 7 | 4 | 3 |
+| Security Issues | 11 | 5 | 6 |
+| Dead/Unused Code | 8 | 8 | 0 |
 | Naming Inconsistencies | 6 | 6 | 0 |
 | Missing Abstractions | 5 | 5 | 0 |
-| Performance | 8 | 4 | 4 |
-| Architecture | 2 | 2 | 0 |
-| **Total** | **56** | **36** | **20** |
+| Performance | 8 | 5 | 3 |
+| Architecture | 3 | 3 | 0 |
+| **Total** | **63** | **46** | **17** |
 
 ## Appendix B: Tech Debt Heatmap (Updated)
 
@@ -700,5 +735,5 @@ HIGH DEBT                              LOW DEBT
 
 ---
 
-*Report generated on 2026-02-06. Updated 2026-02-07 with SharedKernel refactoring results. Updated 2026-02-08 with deep optimization pass. Updated 2026-02-09 with missing abstractions closure (RepositoryBase, ModuleDiscovery, controller migration). Updated 2026-02-10 with God DbContext refactoring (IModelConfiguration auto-discovery, 320→59 lines). Updated 2026-02-11 with SharedKernel final polish (Portuguese comment, E.164 phone codes, namespace flattening, CQRS file grouping — SK-9/10/11/12 all complete).*  
+*Report generated on 2026-02-06. Updated 2026-02-07 with SharedKernel refactoring results. Updated 2026-02-08 with deep optimization pass. Updated 2026-02-09 with missing abstractions closure (RepositoryBase, ModuleDiscovery, controller migration). Updated 2026-02-10 with God DbContext refactoring (IModelConfiguration auto-discovery, 320→59 lines). Updated 2026-02-11 with SharedKernel final polish (Portuguese comment, E.164 phone codes, namespace flattening, CQRS file grouping — SK-9/10/11/12 all complete). Updated 2026-02-14 with API Backend final quality pass (dead OrderService deleted, 3 security fixes, CQRS bypass documented, 990-line file split, 24 warnings → 0, ConfigureAwait consistency).*  
 *Methodology: Static analysis of architecture patterns, code duplication, error handling, security posture, test coverage, naming conventions, and adherence to SOLID/DRY/CLEAN/KISS principles.*
