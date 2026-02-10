@@ -15,6 +15,17 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     /// <inheritdoc />
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
+        // Auto-increment Version on all tracked EntityBase instances for optimistic concurrency
+        foreach (var entry in ChangeTracker.Entries())
+        {
+            if (entry.Entity is EntityBase<Guid> entity &&
+                (entry.State == EntityState.Added || entry.State == EntityState.Modified))
+            {
+                entry.Property(nameof(EntityBase<Guid>.Version)).CurrentValue =
+                    (int)entry.Property(nameof(EntityBase<Guid>.Version)).CurrentValue! + 1;
+            }
+        }
+
         return await base.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
     }
 
