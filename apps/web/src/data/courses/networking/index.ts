@@ -20,6 +20,9 @@ import networkingWeek04LectureMd from './04-tcp/01-lecture.md';
 import networkingWeek04ReadingsMd from './04-tcp/02-readings.md';
 import networkingWeek04QuizMd from './04-tcp/03-quiz.md';
 import networkingWeek04AssignmentMd from './04-tcp/04-assignment.md';
+import networkingWeek05LectureReveal from './05-framing/01-reveal.md';
+import networkingWeek05LectureMd from './05-framing/02-lecture.md';
+import networkingWeek05ReadingsMd from './05-framing/03-readings.md';
 import networkingSyllabus from './syllabus.md';
 
 export const networkingProgram: Program = {
@@ -567,11 +570,83 @@ export const networkingWeek04Assignment: ProgramContent & { slug: string } = {
     updatedAt: '2023-01-01T00:00:00Z',
 };
 
+// Week 05: Message Framing, Buffering, and Concurrency
+
+export const networkingWeek05Intro: ProgramContent & { slug: string } = {
+    id: 'week-05',
+    slug: 'week-05',
+    programId: 'networking-program-1',
+    parentId: undefined,
+    title: 'Week 05 — Message Framing and Concurrency',
+    description: 'Message framing strategies, buffer management, partial I/O handling, deadlock prevention, and concurrency models.',
+    type: ProgramContentType.REVEAL,
+    body: networkingWeek05LectureReveal,
+    sortOrder: 6,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 90,
+    visibility: 1, // Published
+    program: networkingProgram,
+    parent: undefined,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const networkingWeek05LectureContent: ProgramContent & { slug: string } = {
+    id: 'week-05-lecture',
+    slug: 'lecture',
+    programId: 'networking-program-1',
+    parentId: 'week-05',
+    title: 'Lecture Notes',
+    description: 'Detailed lecture notes on framing strategies, buffer management, and concurrency models.',
+    type: 0, // Page
+    body: networkingWeek05LectureMd,
+    sortOrder: 1,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 60,
+    visibility: 1, // Published
+    program: networkingProgram,
+    parent: networkingWeek05Intro,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const networkingWeek05Readings: ProgramContent & { slug: string } = {
+    id: 'week-05-readings',
+    slug: 'readings',
+    programId: 'networking-program-1',
+    parentId: 'week-05',
+    title: 'Readings',
+    description: 'Required readings on message framing, buffering, and concurrency patterns.',
+    type: 0, // Page
+    body: networkingWeek05ReadingsMd,
+    sortOrder: 2,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 120,
+    visibility: 1, // Published
+    program: networkingProgram,
+    parent: networkingWeek05Intro,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
 networkingWeek01Intro.children = [networkingWeek01Readings, networkingWeek01Quiz, networkingWeek01Setup, networkingWeek01Assignment];
 networkingWeek02Intro.children = [networkingWeek02LectureSlides, networkingWeek02Readings, networkingWeek02Quiz, networkingWeek02Assignment];
 networkingWeek03Intro.children = [networkingWeek03LectureSlides, networkingWeek03Readings, networkingWeek03Quiz, networkingWeek03Assignment];
 networkingWeek04Intro.children = [networkingWeek04LectureContent, networkingWeek04Readings, networkingWeek04Quiz, networkingWeek04Assignment];
-networkingProgram.programContents = [networkingSyllabusContent, networkingWeek01Intro, networkingWeek02Intro, networkingWeek03Intro, networkingWeek04Intro];
+networkingWeek05Intro.children = [networkingWeek05LectureContent, networkingWeek05Readings];
+networkingProgram.programContents = [networkingSyllabusContent, networkingWeek01Intro, networkingWeek02Intro, networkingWeek03Intro, networkingWeek04Intro, networkingWeek05Intro];
 networkingProduct.productPrograms = [networkingProductProgram];
 
 export default networkingProgram;
