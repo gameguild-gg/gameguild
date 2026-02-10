@@ -17,6 +17,7 @@ import {
   PasswordResetError,
   EmailVerificationError,
 } from '../../src/runtime/auth/extended-operations.js';
+import { SessionTerminationError } from '../../src/runtime/auth/errors.js';
 
 const API_URL = 'https://api.test.com';
 const TOKEN = 'test-access-token';
@@ -197,6 +198,14 @@ describe('Extended Auth Operations', () => {
       expect(opts.method).toBe('DELETE');
     });
 
+    it('terminateSession throws SessionTerminationError on failure', async () => {
+      mockFetch.mockResolvedValueOnce({ ok: false });
+
+      await expect(
+        terminateSession(API_URL, 'session-bad', TOKEN)
+      ).rejects.toThrow(SessionTerminationError);
+    });
+
     it('terminateOtherSessions calls correct endpoint', async () => {
       mockFetch.mockResolvedValueOnce({ ok: true });
 
@@ -206,6 +215,17 @@ describe('Extended Auth Operations', () => {
         `${API_URL}/v1/auth/sessions:terminate-others`,
         expect.objectContaining({ method: 'POST' })
       );
+    });
+
+    it('terminateOtherSessions throws SessionTerminationError on failure', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        json: async () => ({ message: 'Failed' }),
+      });
+
+      await expect(
+        terminateOtherSessions(API_URL, TOKEN)
+      ).rejects.toThrow(SessionTerminationError);
     });
 
     it('terminateAllSessions calls correct endpoint', async () => {
@@ -239,6 +259,13 @@ describe('Extended Auth Operations', () => {
       const err = new EmailVerificationError();
       expect(err.name).toBe('EmailVerificationError');
       expect(err.status).toBe(400);
+    });
+
+    it('SessionTerminationError has correct properties', () => {
+      const err = new SessionTerminationError('Test');
+      expect(err.name).toBe('SessionTerminationError');
+      expect(err.status).toBe(500);
+      expect(err.type).toBe('SessionTerminationError');
     });
   });
 });

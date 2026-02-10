@@ -120,6 +120,12 @@ export {
   CSRFError,
   OAuthError,
   OAuthCallbackError,
+  MfaVerificationError,
+  PasswordResetError,
+  EmailVerificationError,
+  SessionTerminationError,
+  parseErrorBody,
+  extractErrorMessage,
   isAuthError,
   isReauthRequired,
   isCredentialsError,
@@ -150,9 +156,6 @@ export {
   terminateSession,
   terminateOtherSessions,
   terminateAllSessions,
-  MfaVerificationError,
-  PasswordResetError,
-  EmailVerificationError,
 } from './runtime/auth/extended-operations.js';
 export type {
   MfaVerifyInput,

@@ -60,18 +60,11 @@ export interface AuthRetryConfig {
 }
 
 /**
- * Mutex to prevent concurrent token refreshes.
- * Multiple requests failing with 401 at the same time should
- * only trigger ONE refresh, then all retry with the new token.
- */
-let refreshPromise: Promise<boolean> | null = null;
-
-/**
  * Create an auth retry plugin that handles 401 responses.
  *
  * Flow:
  * 1. Make request
- * 2. If 401 → refresh token (deduplicated via mutex)
+ * 2. If 401 → refresh token (deduplicated via per-instance mutex)
  * 3. If refresh succeeds → retry original request
  * 4. If refresh fails → call onAuthenticationRequired, return error
  */
@@ -80,6 +73,8 @@ export function createAuthRetryPlugin(config: AuthRetryConfig): {
 } {
   const maxRetries = config.maxRetries ?? 1;
   const shouldRetry = config.shouldRetryOnUnauthorized ?? (() => true);
+  // Per-instance mutex — each plugin instance gets its own refresh lock
+  let refreshPromise: Promise<boolean> | null = null;
 
   return {
     wrapTransport(transport: Transport): Transport {

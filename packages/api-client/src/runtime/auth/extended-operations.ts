@@ -29,9 +29,26 @@
  * ```
  */
 
-import type { ProviderResult, TokenPair, SessionUser } from './types.js';
+import type { ProviderResult } from './types.js';
+import { parseBackendAuthResponse } from '../../integrations/next/handlers.js';
+import {
+  MfaVerificationError,
+  PasswordResetError,
+  EmailVerificationError,
+  SessionTerminationError,
+  parseErrorBody,
+  extractErrorMessage,
+} from './errors.js';
 
-// ─── MFA Types ───────────────────────────────────────────────────
+// Re-export error classes so existing consumers don't break
+export {
+  MfaVerificationError,
+  PasswordResetError,
+  EmailVerificationError,
+  SessionTerminationError,
+} from './errors.js';
+
+// ─── Types ───────────────────────────────────────────────────────
 
 export interface MfaVerifyInput {
   /** MFA session ID returned by the sign-in attempt */
@@ -53,8 +70,6 @@ export interface MfaSetupResult {
   requiresVerification: boolean;
 }
 
-// ─── Password Types ──────────────────────────────────────────────
-
 export interface PasswordResetRequestInput {
   /** Email address to send reset link to */
   email: string;
@@ -74,14 +89,10 @@ export interface PasswordChangeInput {
   newPassword: string;
 }
 
-// ─── Email Verification Types ────────────────────────────────────
-
 export interface EmailVerificationInput {
   /** The verification token from the email link */
   token: string;
 }
-
-// ─── Session Management Types ────────────────────────────────────
 
 export interface SessionInfo {
   /** Session ID */
@@ -96,6 +107,51 @@ export interface SessionInfo {
   lastActiveAt: string;
   /** Whether this is the current session */
   isCurrent: boolean;
+}
+
+// ─── Shared Fetch Helpers (DRY) ──────────────────────────────────
+
+/**
+ * Build headers for an authenticated JSON request.
+ */
+function authHeaders(accessToken: string): Record<string, string> {
+  return {
+    'Content-Type': 'application/json',
+    Authorization: `Bearer ${accessToken}`,
+  };
+}
+
+const JSON_HEADERS: Record<string, string> = {
+  'Content-Type': 'application/json',
+};
+
+/**
+ * POST to a backend endpoint and throw a typed error on failure.
+ * Eliminates the repeated fetch + parse-error-body + throw pattern.
+ */
+async function postOrThrow(
+  url: string,
+  options: {
+    body?: unknown;
+    headers?: Record<string, string>;
+    errorClass: new (message: string) => Error;
+    fallbackMessage: string;
+  }
+): Promise<Response> {
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: options.headers ?? JSON_HEADERS,
+    body: options.body ? JSON.stringify(options.body) : undefined,
+  });
+
+  if (!response.ok) {
+    const errorData = await parseErrorBody(response);
+    throw new options.errorClass(
+      extractErrorMessage(errorData, options.fallbackMessage)
+    );
+  }
+
+  return response;
 }
 
 // ─── MFA Operations ─────────────────────────────────────────────
@@ -113,9 +169,7 @@ export async function verifyMfa(
   input: MfaVerifyInput,
   accessToken?: string
 ): Promise<ProviderResult> {
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-  };
+  const headers: Record<string, string> = { ...JSON_HEADERS };
   if (accessToken) {
     headers['Authorization'] = `Bearer ${accessToken}`;
   }
@@ -131,15 +185,15 @@ export async function verifyMfa(
   });
 
   if (!response.ok) {
-    const errorData = (await response.json().catch(() => ({}))) as Record<string, unknown>;
+    const errorData = await parseErrorBody(response);
     throw new MfaVerificationError(
-      (errorData.message as string) || (errorData.detail as string) || 'MFA verification failed',
+      extractErrorMessage(errorData, 'MFA verification failed'),
       { attemptsRemaining: errorData.attemptsRemaining as number | undefined }
     );
   }
 
   const data = (await response.json()) as Record<string, unknown>;
-  return parseAuthResponse(data);
+  return parseBackendAuthResponse(data);
 }
 
 /**
@@ -149,20 +203,11 @@ export async function setupTotpMfa(
   apiUrl: string,
   accessToken: string
 ): Promise<MfaSetupResult> {
-  const response = await fetch(`${apiUrl}/v1/auth/mfa/totp/setup`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${accessToken}`,
-    },
+  const response = await postOrThrow(`${apiUrl}/v1/auth/mfa/totp/setup`, {
+    headers: authHeaders(accessToken),
+    errorClass: MfaVerificationError,
+    fallbackMessage: 'TOTP setup failed',
   });
-
-  if (!response.ok) {
-    const errorData = (await response.json().catch(() => ({}))) as Record<string, unknown>;
-    throw new Error(
-      (errorData.message as string) || 'TOTP setup failed'
-    );
-  }
 
   return (await response.json()) as MfaSetupResult;
 }
@@ -197,7 +242,7 @@ export async function requestPasswordReset(
 ): Promise<void> {
   await fetch(`${apiUrl}/v1/auth/password:reset-request`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: JSON_HEADERS,
     body: JSON.stringify({ email: input.email }),
   });
   // Always succeed from the client's perspective (prevent email enumeration)
@@ -210,21 +255,11 @@ export async function confirmPasswordReset(
   apiUrl: string,
   input: PasswordResetConfirmInput
 ): Promise<void> {
-  const response = await fetch(`${apiUrl}/v1/auth/password:reset`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      token: input.token,
-      newPassword: input.newPassword,
-    }),
+  await postOrThrow(`${apiUrl}/v1/auth/password:reset`, {
+    body: { token: input.token, newPassword: input.newPassword },
+    errorClass: PasswordResetError,
+    fallbackMessage: 'Password reset failed',
   });
-
-  if (!response.ok) {
-    const errorData = (await response.json().catch(() => ({}))) as Record<string, unknown>;
-    throw new PasswordResetError(
-      (errorData.message as string) || (errorData.detail as string) || 'Password reset failed'
-    );
-  }
 }
 
 /**
@@ -235,24 +270,15 @@ export async function changePassword(
   input: PasswordChangeInput,
   accessToken: string
 ): Promise<void> {
-  const response = await fetch(`${apiUrl}/v1/auth/password:change`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${accessToken}`,
-    },
-    body: JSON.stringify({
+  await postOrThrow(`${apiUrl}/v1/auth/password:change`, {
+    headers: authHeaders(accessToken),
+    body: {
       currentPassword: input.currentPassword,
       newPassword: input.newPassword,
-    }),
+    },
+    errorClass: PasswordResetError,
+    fallbackMessage: 'Password change failed',
   });
-
-  if (!response.ok) {
-    const errorData = (await response.json().catch(() => ({}))) as Record<string, unknown>;
-    throw new PasswordResetError(
-      (errorData.message as string) || (errorData.detail as string) || 'Password change failed'
-    );
-  }
 }
 
 // ─── Email Verification ──────────────────────────────────────────
@@ -264,20 +290,11 @@ export async function sendVerificationEmail(
   apiUrl: string,
   accessToken: string
 ): Promise<void> {
-  const response = await fetch(`${apiUrl}/v1/auth/email:send-verification`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${accessToken}`,
-    },
+  await postOrThrow(`${apiUrl}/v1/auth/email:send-verification`, {
+    headers: authHeaders(accessToken),
+    errorClass: EmailVerificationError,
+    fallbackMessage: 'Failed to send verification email',
   });
-
-  if (!response.ok) {
-    const errorData = (await response.json().catch(() => ({}))) as Record<string, unknown>;
-    throw new EmailVerificationError(
-      (errorData.message as string) || 'Failed to send verification email'
-    );
-  }
 }
 
 /**
@@ -287,18 +304,11 @@ export async function verifyEmail(
   apiUrl: string,
   input: EmailVerificationInput
 ): Promise<void> {
-  const response = await fetch(`${apiUrl}/v1/auth/email:verify`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ token: input.token }),
+  await postOrThrow(`${apiUrl}/v1/auth/email:verify`, {
+    body: { token: input.token },
+    errorClass: EmailVerificationError,
+    fallbackMessage: 'Email verification failed',
   });
-
-  if (!response.ok) {
-    const errorData = (await response.json().catch(() => ({}))) as Record<string, unknown>;
-    throw new EmailVerificationError(
-      (errorData.message as string) || (errorData.detail as string) || 'Email verification failed'
-    );
-  }
 }
 
 // ─── Session Management ──────────────────────────────────────────
@@ -316,7 +326,9 @@ export async function listSessions(
 
   if (!response.ok) return [];
 
-  const data = (await response.json()) as { sessions?: SessionInfo[] } | SessionInfo[];
+  const data = (await response.json()) as
+    | { sessions?: SessionInfo[] }
+    | SessionInfo[];
   return Array.isArray(data) ? data : data.sessions ?? [];
 }
 
@@ -328,13 +340,16 @@ export async function terminateSession(
   sessionId: string,
   accessToken: string
 ): Promise<void> {
-  const response = await fetch(`${apiUrl}/v1/auth/sessions/${sessionId}`, {
-    method: 'DELETE',
-    headers: { Authorization: `Bearer ${accessToken}` },
-  });
+  const response = await fetch(
+    `${apiUrl}/v1/auth/sessions/${sessionId}`,
+    {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${accessToken}` },
+    }
+  );
 
   if (!response.ok) {
-    throw new Error('Failed to terminate session');
+    throw new SessionTerminationError('Failed to terminate session');
   }
 }
 
@@ -345,14 +360,11 @@ export async function terminateOtherSessions(
   apiUrl: string,
   accessToken: string
 ): Promise<void> {
-  const response = await fetch(`${apiUrl}/v1/auth/sessions:terminate-others`, {
-    method: 'POST',
-    headers: { Authorization: `Bearer ${accessToken}` },
+  await postOrThrow(`${apiUrl}/v1/auth/sessions:terminate-others`, {
+    headers: authHeaders(accessToken),
+    errorClass: SessionTerminationError,
+    fallbackMessage: 'Failed to terminate other sessions',
   });
-
-  if (!response.ok) {
-    throw new Error('Failed to terminate other sessions');
-  }
 }
 
 /**
@@ -362,89 +374,9 @@ export async function terminateAllSessions(
   apiUrl: string,
   accessToken: string
 ): Promise<void> {
-  const response = await fetch(`${apiUrl}/v1/auth/sessions:terminate-all`, {
-    method: 'POST',
-    headers: { Authorization: `Bearer ${accessToken}` },
+  await postOrThrow(`${apiUrl}/v1/auth/sessions:terminate-all`, {
+    headers: authHeaders(accessToken),
+    errorClass: SessionTerminationError,
+    fallbackMessage: 'Failed to terminate all sessions',
   });
-
-  if (!response.ok) {
-    throw new Error('Failed to terminate all sessions');
-  }
-}
-
-// ─── Error Classes ───────────────────────────────────────────────
-
-import { AuthError } from './errors.js';
-
-/**
- * MFA verification failed (wrong code, expired, etc.)
- */
-export class MfaVerificationError extends AuthError {
-  /** Remaining verification attempts before lockout */
-  readonly attemptsRemaining?: number;
-
-  constructor(
-    message = 'MFA verification failed',
-    options?: { attemptsRemaining?: number }
-  ) {
-    super(message, { type: 'MfaVerificationError', status: 401 });
-    this.name = 'MfaVerificationError';
-    this.attemptsRemaining = options?.attemptsRemaining;
-  }
-}
-
-/**
- * Password reset failed (invalid/expired token, policy violation)
- */
-export class PasswordResetError extends AuthError {
-  constructor(message = 'Password reset failed') {
-    super(message, { type: 'PasswordResetError', status: 400 });
-    this.name = 'PasswordResetError';
-  }
-}
-
-/**
- * Email verification failed (invalid/expired token)
- */
-export class EmailVerificationError extends AuthError {
-  constructor(message = 'Email verification failed') {
-    super(message, { type: 'EmailVerificationError', status: 400 });
-    this.name = 'EmailVerificationError';
-  }
-}
-
-// ─── Helpers ─────────────────────────────────────────────────────
-
-/**
- * Parse a standard backend auth response into a ProviderResult.
- */
-function parseAuthResponse(data: Record<string, unknown>): ProviderResult {
-  const backendUser = data.user as Record<string, unknown> | undefined;
-
-  return {
-    tokens: {
-      accessToken: data.accessToken as string,
-      refreshToken: data.refreshToken as string,
-      expiresIn: data.expiresIn as number | undefined,
-      accessTokenExpiresAt: data.accessTokenExpiresAt as string | undefined,
-      refreshTokenExpiresAt: data.refreshTokenExpiresAt as string | undefined,
-      tokenType: 'Bearer',
-    },
-    user: {
-      id: (data.userId as string) || (backendUser?.id as string) || '',
-      email: (data.email as string) || (backendUser?.email as string) || '',
-      name:
-        (backendUser?.displayName as string) ||
-        (backendUser?.username as string) ||
-        null,
-      image: (backendUser?.profilePictureUrl as string) || null,
-      roles: (data.roles as string[]) || (backendUser?.roles as string[]) || undefined,
-      permissions: (data.permissions as string[]) || (backendUser?.permissions as string[]) || undefined,
-    },
-    sessionId: data.sessionId as string | undefined,
-    tenantId: data.tenantId as string | undefined,
-    availableTenants: data.availableTenants as
-      | Array<{ id: string; name: string }>
-      | undefined,
-  };
 }

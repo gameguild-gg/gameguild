@@ -204,6 +204,77 @@ export class OAuthCallbackError extends AuthError {
   }
 }
 
+// ─── Extended Auth Errors ────────────────────────────────────────
+
+/**
+ * MFA verification failed (wrong code, expired, etc.)
+ */
+export class MfaVerificationError extends AuthError {
+  /** Remaining verification attempts before lockout */
+  readonly attemptsRemaining?: number;
+
+  constructor(
+    message = 'MFA verification failed',
+    options?: { attemptsRemaining?: number }
+  ) {
+    super(message, { type: 'MfaVerificationError', status: 401 });
+    this.name = 'MfaVerificationError';
+    this.attemptsRemaining = options?.attemptsRemaining;
+  }
+}
+
+/**
+ * Password reset failed (invalid/expired token, policy violation)
+ */
+export class PasswordResetError extends AuthError {
+  constructor(message = 'Password reset failed') {
+    super(message, { type: 'PasswordResetError', status: 400 });
+    this.name = 'PasswordResetError';
+  }
+}
+
+/**
+ * Email verification failed (invalid/expired token)
+ */
+export class EmailVerificationError extends AuthError {
+  constructor(message = 'Email verification failed') {
+    super(message, { type: 'EmailVerificationError', status: 400 });
+    this.name = 'EmailVerificationError';
+  }
+}
+
+/**
+ * Session termination failed
+ */
+export class SessionTerminationError extends AuthError {
+  constructor(message = 'Session termination failed') {
+    super(message, { type: 'SessionTerminationError', status: 500 });
+    this.name = 'SessionTerminationError';
+  }
+}
+
+// ─── Shared Helpers ──────────────────────────────────────────────
+
+/**
+ * Safely parse an error response body into a Record.
+ * Shared by all auth operations that need to extract error details.
+ */
+export async function parseErrorBody(
+  response: Response
+): Promise<Record<string, unknown>> {
+  return (await response.json().catch(() => ({}))) as Record<string, unknown>;
+}
+
+/**
+ * Extract a human-readable message from a parsed error body.
+ */
+export function extractErrorMessage(
+  body: Record<string, unknown>,
+  fallback: string
+): string {
+  return (body.message as string) || (body.detail as string) || fallback;
+}
+
 // ─── Type Guards ─────────────────────────────────────────────────
 
 /**
