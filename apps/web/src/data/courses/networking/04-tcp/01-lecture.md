@@ -737,8 +737,7 @@ public:
 // Forward declaration
 void handle_client(std::shared_ptr<tcp::socket> socket,
                    std::string username,
-                   UserRegistry& registry,
-                   std::stop_token stop_token);
+                   UserRegistry& registry);
 
 int main() {
     boost::asio::io_context io_context;
@@ -784,10 +783,8 @@ int main() {
             username + " joined the chatroom");
 
         // std::jthread automatically joins on destruction - no .detach() needed!
-        // Also provides cooperative cancellation via stop_token
-        client_threads.emplace_back([socket, username, &registry]
-            (std::stop_token stop_token) {
-            handle_client(socket, username, registry, stop_token);
+        client_threads.emplace_back([socket, username, &registry] () {
+            handle_client(socket, username, registry);
         });
     }
 
@@ -797,12 +794,11 @@ int main() {
 // Handle individual client with cooperative cancellation support
 void handle_client(std::shared_ptr<tcp::socket> socket,
                    std::string username,
-                   UserRegistry& registry,
-                   std::stop_token stop_token) {
+                   UserRegistry& registry) {
     try {
         boost::asio::streambuf buffer;
 
-        while (!stop_token.stop_requested()) {
+        while (true) {
             // Read message from client
             boost::asio::read_until(*socket, buffer, '\n');
 
@@ -847,7 +843,6 @@ void handle_client(std::shared_ptr<tcp::socket> socket,
 | Feature            | Benefit                                              |
 | ------------------ | ---------------------------------------------------- |
 | `std::jthread`     | Automatic thread joining on scope exit (C++20)       |
-| `std::stop_token`  | Cooperative cancellation without throwing exceptions |
 | `std::shared_lock` | Multiple readers can access simultaneously           |
 | `std::unique_lock` | Exclusive access for writers                         |
 | `std::atomic<>`    | Lock-free flag for connection status                 |
@@ -1243,7 +1238,7 @@ TCP provides reliable, ordered, byte-stream communication through:
 
 - Design a user registry that stores connected clients by username
 - Implement broadcast functionality to send messages to all users
-- Use `std::jthread` with `std::stop_token` for cooperative thread cancellation
+- Use `std::jthread` for automatic thread cleanup
 - Use `std::shared_lock` for reads, `std::unique_lock` for writes
 - Clean up resources when users disconnect
 - Compile with `-std=c++20` to access modern threading features
