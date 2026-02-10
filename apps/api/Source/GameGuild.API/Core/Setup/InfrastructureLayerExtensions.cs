@@ -11,6 +11,7 @@ using GameGuild.Identity.Context;
 using GameGuild.Configuration.ConfigurationFromAPI.InfrastructureLayer;
 using GameGuild.Configuration.InfrastructureLayer;
 using GameGuild.Learning.Courses;
+using GameGuild.Content.Pages;
 using GameGuild.Resources;
 using Microsoft.EntityFrameworkCore;
 
@@ -203,6 +204,11 @@ public static class InfrastructureLayerExtensions
         stepStopwatch.Restart();
         services.AddCoursesModule();
         logger.LogInformation("Courses Module registered in {ElapsedMs}ms", stepStopwatch.ElapsedMilliseconds);
+
+        // 10g. Content Pages Module (pages, sections, content resources, OpenGraph)
+        stepStopwatch.Restart();
+        services.AddContentPagesModule();
+        logger.LogInformation("Content Pages Module registered in {ElapsedMs}ms", stepStopwatch.ElapsedMilliseconds);
 
         // 11. Repositories
         services.AddRepositories(logger);

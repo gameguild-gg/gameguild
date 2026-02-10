@@ -8,6 +8,7 @@ using GameGuild.Commerce.Subscriptions;
 using GameGuild.Configuration;
 using GameGuild.Configuration.PresentationLayer.Controllers;
 using GameGuild.Configuration.PresentationLayer.Endpoints;
+using GameGuild.Content.Pages;
 using GameGuild.Identity.Authentication;
 using GameGuild.Identity.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -120,6 +121,11 @@ public static class PresentationServiceCollectionExtensions
         services.AddControllers()
             .AddApplicationPart(typeof(GameGuild.Learning.Courses.ProgramCrudController).Assembly); // Courses module
         LogControllersFromAssembly(typeof(GameGuild.Learning.Courses.ProgramCrudController).Assembly, logger, controllerStopwatch);
+
+        controllerStopwatch.Restart();
+        services.AddControllers()
+            .AddApplicationPart(typeof(GameGuild.Content.Pages.PageController).Assembly); // Content Pages module
+        LogControllersFromAssembly(typeof(GameGuild.Content.Pages.PageController).Assembly, logger, controllerStopwatch);
         
         services.AddControllers()
             .AddJsonOptions(jsonOptions =>
