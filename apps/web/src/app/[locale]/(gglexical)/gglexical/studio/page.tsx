@@ -160,11 +160,6 @@ export default function Page() {
   const [slideshowDeps, setSlideshowDeps] = useState<StorageProjectData[]>([])
   const [resolvedProjects, setResolvedProjects] = useState<Map<string, StorageProjectData | null>>(new Map())
   
-  // Debug: log when resolvedProjects changes
-  useEffect(() => {
-    console.log(`[studio/page] resolvedProjects state changed: size=${resolvedProjects.size}, keys=${Array.from(resolvedProjects.keys()).join(',')}`)
-  }, [resolvedProjects])
-  
   const [nextUrl, setNextUrl] = useState<string | null>(null)
   const [exitDialogOpen, setExitDialogOpen] = useState(false)
 
@@ -1300,18 +1295,14 @@ export default function Page() {
                         const independentSlides = layoutInfo.slideshowData.slides.filter(
                           (slide) => slide.projectRef && !slide.projectRef.isDependent
                         )
-                        console.log(`[onProjectLoad] Found ${independentSlides.length} independent slides`)
                         if (independentSlides.length > 0 && dbStorage.current) {
                           ;(async () => {
-                            console.log(`[onProjectLoad] Starting to load independent projects`)
                             const results = new Map<string, StorageProjectData | null>()
                             await Promise.all(
                               independentSlides.map(async (slide) => {
                                 const projectId = slide.projectRef!.projectId
-                                console.log(`[onProjectLoad] Loading project ${projectId} for slide ${slide.id}`)
                                 try {
                                   const project = await dbStorage.current!.load(projectId)
-                                  console.log(`[onProjectLoad] Loaded project for slide ${slide.id}:`, project ? project.name : 'null')
                                   results.set(slide.id, project)
                                 } catch (error) {
                                   console.error(`Failed to load independent project ${projectId}:`, error)
@@ -1319,11 +1310,8 @@ export default function Page() {
                                 }
                               })
                             )
-                            console.log(`[onProjectLoad] Setting resolvedProjects with ${results.size} entries, keys:`, Array.from(results.keys()))
                             setResolvedProjects(results)
                           })()
-                        } else {
-                          console.log(`[onProjectLoad] No independent slides or dbStorage not ready`)
                         }
                         
                         // Update URL hash with project ID
