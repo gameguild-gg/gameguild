@@ -26,7 +26,6 @@ Focus on **understanding the problem** before the solutions. The Stephen Cleary 
 | ------------------------------------------------------------------------------------------------------------------------------- | ------ | ---------------------------------------------------------------------------------- |
 | javidx9, ["Networking in C++"](https://www.youtube.com/watch?v=2hNdkYInj4g&list=PLIXt8mu2KcUJOwdLMp-Z-cDIZA1aZfVTN) (Parts 3–4) | 60 min | Message headers, body packing, variable-length messages, async write queues in C++ |
 | Computerphile, ["TCP vs UDP"](https://www.youtube.com/watch?v=uwoD5YsGACg)                                                      | 14 min | Stream vs datagram semantics—motivates why framing is only a TCP problem           |
-| Sunny Classroom, ["Application Layer Protocol"](https://www.youtube.com/watch?v=OkKnFEP4kOA)                                    | 12 min | How application-layer protocols define message structure over TCP/UDP              |
 
 ---
 
