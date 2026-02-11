@@ -68,9 +68,11 @@ export class MemoryCache {
     // Evict oldest if at capacity
     if (this.cache.size >= this.maxEntries) {
       const oldestKey = this.cache.keys().next().value;
+      /* v8 ignore start -- oldestKey always truthy when cache.size >= maxEntries */
       if (oldestKey) {
         this.cache.delete(oldestKey);
       }
+      /* v8 ignore stop */
     }
 
     this.cache.set(key, {

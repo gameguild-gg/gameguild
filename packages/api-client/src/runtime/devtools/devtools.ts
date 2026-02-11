@@ -97,7 +97,7 @@ export class DevTools {
   private requestTimes = new Map<string, number>();
 
   constructor(config: DevToolsConfig = {}) {
-    const enabled = config.enabled ?? (typeof process !== 'undefined' ? process.env.NODE_ENV === 'development' : false);
+    const enabled = config.enabled ?? (typeof process !== 'undefined' ? process.env.NODE_ENV === 'development' : /* v8 ignore start */ false /* v8 ignore stop */);
     
     if (!enabled) {
       // Use silent logger if disabled

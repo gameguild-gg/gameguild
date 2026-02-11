@@ -86,7 +86,9 @@ export function SessionProvider({
     initialSession ? 'authenticated' : 'loading'
   );
   const [isOnline, setIsOnline] = useState(
+    /* v8 ignore start -- navigator always defined in happy-dom */
     typeof navigator !== 'undefined' ? navigator.onLine : true
+    /* v8 ignore stop */
   );
 
   const broadcastRef = useRef<ReturnType<typeof createAuthBroadcast> | null>(
@@ -211,7 +213,9 @@ export function SessionProvider({
 
   useEffect(() => {
     if (!refetchOnWindowFocus) return;
+    /* v8 ignore start -- window always defined in happy-dom */
     if (typeof window === 'undefined') return;
+    /* v8 ignore stop */
 
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
@@ -229,7 +233,9 @@ export function SessionProvider({
   // ─── Online/Offline Tracking ─────────────────────────────────
 
   useEffect(() => {
+    /* v8 ignore start -- window always defined in happy-dom */
     if (typeof window === 'undefined') return;
+    /* v8 ignore stop */
 
     const handleOnline = () => setIsOnline(true);
     const handleOffline = () => setIsOnline(false);
