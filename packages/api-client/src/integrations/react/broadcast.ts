@@ -40,11 +40,13 @@ export function createAuthBroadcast(
   let channel: BroadcastChannel | null = null;
 
   try {
+    /* v8 ignore start -- requires real browser BroadcastChannel */
     channel = new BroadcastChannel(CHANNEL_NAME);
 
     channel.onmessage = (event: MessageEvent<AuthBroadcastMessage>) => {
       onMessage(event.data);
     };
+    /* v8 ignore stop */
   } catch {
     // BroadcastChannel not supported
   }
@@ -52,8 +54,9 @@ export function createAuthBroadcast(
   return {
     send: (message: AuthBroadcastMessage) => {
       try {
-        /* v8 ignore next -- requires real browser BroadcastChannel */
+        /* v8 ignore start -- requires real browser BroadcastChannel */
         channel?.postMessage(message);
+        /* v8 ignore stop */
       } catch {
         // Channel may be closed
       }

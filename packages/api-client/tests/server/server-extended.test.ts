@@ -149,4 +149,31 @@ describe('createServerClient — extended', () => {
 
     expect(client).toBeDefined();
   });
+
+  it('should return error result when transport returns ok:false', async () => {
+    const { createFetchTransport } = await import('../../src/runtime/transport/fetch.js');
+
+    const client = createServerClient({
+      baseUrl: 'http://localhost:5000',
+    });
+
+    // Get the latest mock transport returned by createFetchTransport
+    const mockCalls = (createFetchTransport as any).mock.results;
+    const latestTransport = mockCalls[mockCalls.length - 1].value;
+
+    // Override request to return error for the next call
+    latestTransport.request.mockResolvedValueOnce({
+      ok: false,
+      error: { name: 'ApiError', status: 500, code: 'INTERNAL', message: 'Server error' },
+      status: 500,
+      headers: new Headers(),
+    });
+
+    const result = await client.request({ path: '/fail', method: 'GET', headers: {} });
+
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.error.code).toBe('INTERNAL');
+    }
+  });
 });

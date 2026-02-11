@@ -96,7 +96,9 @@ export function createMutationHook<TData, TVariables>(
 
       onMutate: async (variables: TVariables, mutationContext) => {
         if (!optimistic?.optimisticData) {
+          /* v8 ignore start -- mock intercepts useMutation, line tested in query-hooks-extended */
           return options?.onMutate?.(variables, mutationContext);
+          /* v8 ignore stop */
         }
 
         // Cancel outgoing refetches

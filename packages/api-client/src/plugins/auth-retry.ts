@@ -152,13 +152,14 @@ export function createAuthRetryPlugin(config: AuthRetryConfig): {
           }
 
           // Should not reach here, but TypeScript needs it
-          /* v8 ignore next 5 */
+          /* v8 ignore start */
           return err({
             name: 'ApiError',
             status: 401,
             code: 'AUTHENTICATION_ERROR' as const,
             message: 'Authentication retry exhausted',
           });
+          /* v8 ignore stop */
         },
       };
     },
