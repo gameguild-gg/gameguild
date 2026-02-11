@@ -41,6 +41,7 @@ import networkingWeek05ConcurrencyModelsMd from './05-framing/02f-concurrency-mo
 import networkingWeek05CppConcurrencyMd from './05-framing/02g-cpp-concurrency.md';
 import networkingWeek05EdgeCasesMd from './05-framing/02h-edge-cases.md';
 import networkingWeek05ReadingsMd from './05-framing/03-readings.md';
+import networkingWeek05QuizMd from './05-framing/04-quiz.md';
 import networkingSyllabus from './syllabus.md';
 
 export const networkingProgram: Program = {
@@ -1103,7 +1104,30 @@ networkingWeek05LectureContent.children = [
     networkingWeek05CppConcurrency,
     networkingWeek05EdgeCases,
 ];
-networkingWeek05Intro.children = [networkingWeek05LectureContent, networkingWeek05Readings];
+export const networkingWeek05Quiz: ProgramContent & { slug: string } = {
+    id: 'week-05-quiz',
+    slug: 'quiz',
+    programId: 'networking-program-1',
+    parentId: 'week-05',
+    title: 'Quiz',
+    description: 'Quiz on message framing, buffering, and concurrency.',
+    type: 0, // Page
+    body: networkingWeek05QuizMd,
+    sortOrder: 3,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 30,
+    visibility: 1, // Published
+    program: networkingProgram,
+    parent: networkingWeek05Intro,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+networkingWeek05Intro.children = [networkingWeek05LectureContent, networkingWeek05Readings, networkingWeek05Quiz];
 networkingProgram.programContents = [networkingSyllabusContent, networkingWeek01Intro, networkingWeek02Intro, networkingWeek03Intro, networkingWeek04Intro, networkingWeek05Intro];
 networkingProduct.productPrograms = [networkingProductProgram];
 
