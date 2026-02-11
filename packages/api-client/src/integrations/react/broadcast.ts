@@ -52,6 +52,7 @@ export function createAuthBroadcast(
   return {
     send: (message: AuthBroadcastMessage) => {
       try {
+        /* v8 ignore next -- requires real browser BroadcastChannel */
         channel?.postMessage(message);
       } catch {
         // Channel may be closed
