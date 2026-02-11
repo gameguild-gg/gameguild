@@ -481,13 +481,14 @@ export default function Page() {
       current: Object.values(blockRefs.current)[0] ?? null
     } as React.RefObject<LexicalEditor | null>
     
-    // Always use currentProjectPreferences to ensure all settings are saved
-    const preferences = currentProjectPreferences || {
+    // Build preferences, always including current previewMode for slideshow
+    const preferences: ProjectPreferences = {
       global: {
+        ...currentProjectPreferences?.global,
         mode: currentProjectMode,
         ...(currentLayout === "slideshow" && { previewMode: previewMode })
       },
-      nodes: {}
+      nodes: currentProjectPreferences?.nodes || {}
     }
     
     await saveProject({
