@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef, useEffect } from "react"
+import { useRef } from "react"
 import type { LexicalEditor } from "lexical"
 import { Button } from "@/components/ui/button"
 import { Plus, Lock, Unlock, ExternalLink, Import } from "lucide-react"
@@ -8,7 +8,6 @@ import { toast } from "sonner"
 import type { ProjectMode } from "@/lib/storage/editor/project-modes"
 import type { ProjectPreferences } from "@/lib/storage/editor/project-preferences"
 import type { ProjectData } from "@/lib/storage/editor/enhanced-storage-adapter"
-import { cellsToLexical } from "@/lib/storage/editor/cell-structure"
 import type {
   SlideshowStructure,
 } from "@/lib/storage/editor/slideshow-structure"
@@ -71,9 +70,6 @@ export function EditorLayoutSlideshow({
   onImportProject,
 }: EditorLayoutSlideshowProps) {
   const slideContainerRefs = useRef<Map<string, HTMLDivElement>>(new Map())
-  
-  // Debug log on each render
-  console.log(`[EditorLayoutSlideshow] Render: resolvedProjects size=${resolvedProjects?.size || 0}`)
 
   const handleSidebarSlideSelect = (index: number) => {
     onSlideIndexChange(index)
@@ -159,58 +155,35 @@ export function EditorLayoutSlideshow({
     if (projectRef.isDependent) {
       return getDependentProject(deps, projectRef.projectId) || null
     } else {
-      const project = resolvedProjects?.get(slide.id) || null
-      console.log(`[EditorLayoutSlideshow] getSlideProjectData for ${slide.id}: found=${!!project}`)
-      return project
+      return resolvedProjects?.get(slide.id) || null
     }
   }
 
   /**
    * Gets the block states from a type2 project's data string.
-   * Converts from cells format to Lexical format for the editor.
+   * Returns data in cells format - Editor handles cells→Lexical conversion internally.
    */
   const getBlockStatesFromProject = (project: ProjectData | null): Record<string, string> => {
-    const emptyLexical = JSON.stringify(cellsToLexical([]))
+    const emptyCells = JSON.stringify([])
     if (!project?.data) {
-      console.log(`[getBlockStatesFromProject] No project data, returning empty`)
-      return { b1: emptyLexical }
+      return { b1: emptyCells }
     }
     try {
       const parsed = JSON.parse(project.data)
-      console.log(`[getBlockStatesFromProject] Parsed data:`, typeof parsed, parsed ? Object.keys(parsed) : 'null')
       if (typeof parsed === 'object' && parsed !== null) {
         // Type2 data format: { b1: [...cells...], b2: [...cells...], ... }
-        // Need to convert cells to Lexical format for the editor
+        // Pass cells directly - Editor converts to Lexical internally
         const result: Record<string, string> = {}
         for (const [key, value] of Object.entries(parsed)) {
-          console.log(`[getBlockStatesFromProject] Processing block ${key}, value type:`, typeof value)
-          // Parse cells data if it's a string
-          const cellsData = typeof value === 'string' ? JSON.parse(value) : value
-          const isArray = Array.isArray(cellsData)
-          const isLexicalFormat = !isArray && cellsData?.root !== undefined
-          console.log(`[getBlockStatesFromProject] cellsData for ${key}: isArray=${isArray}, isLexicalFormat=${isLexicalFormat}`)
-          
-          if (isLexicalFormat) {
-            // Already in Lexical format, use as-is
-            result[key] = typeof value === 'string' ? value : JSON.stringify(cellsData)
-          } else if (isArray) {
-            // Convert cells array to Lexical format
-            const lexicalState = cellsToLexical(cellsData)
-            result[key] = JSON.stringify(lexicalState)
-          } else {
-            // Unknown format, try to use as-is
-            console.warn(`[getBlockStatesFromProject] Unknown format for ${key}, using as-is`)
-            result[key] = typeof value === 'string' ? value : JSON.stringify(cellsData)
-          }
+          // Keep as cells format string
+          result[key] = typeof value === 'string' ? value : JSON.stringify(value)
         }
-        console.log(`[getBlockStatesFromProject] Result keys:`, Object.keys(result))
-        return Object.keys(result).length > 0 ? result : { b1: emptyLexical }
+        return Object.keys(result).length > 0 ? result : { b1: emptyCells }
       }
-      console.log(`[getBlockStatesFromProject] Parsed is not object, returning empty`)
-      return { b1: emptyLexical }
+      return { b1: emptyCells }
     } catch (e) {
       console.error(`[getBlockStatesFromProject] Error parsing:`, e)
-      return { b1: JSON.stringify(cellsToLexical([])) }
+      return { b1: emptyCells }
     }
   }
 
@@ -244,8 +217,6 @@ export function EditorLayoutSlideshow({
             const slideKey = isIndependent 
               ? `${slide.id}-${slideProject?.id || 'loading'}`
               : slide.id
-            
-            console.log(`[EditorLayoutSlideshow] Slide ${slide.id}: isDependent=${slide.projectRef.isDependent}, isIndependent=${isIndependent}, readOnly=${readOnly}, isSlideReadOnly=${isSlideReadOnly}`)
 
             return (
               <div
@@ -359,29 +330,20 @@ export function EditorLayoutSlideshow({
                         }, {} as Record<string, LexicalEditor | null>) }}
                       blockStates={blockStates}
                       onBlockChange={isSlideReadOnly ? () => {} : (blockId: string, newState: string) => {
-                        if (!slideProject || !slide.projectRef.isDependent) {
-                          console.log(`[slideshow onBlockChange] Skipped: slideProject=${!!slideProject}, isDependent=${slide.projectRef.isDependent}`)
-                          return
-                        }
-                        // newState is already in cells format (Editor converts via lexicalToCells)
+                        if (!slideProject || !slide.projectRef.isDependent) return
+                        // newState is already in cells format from Editor
                         try {
-                          console.log(`[slideshow onBlockChange] Processing block ${blockId} for slide ${slide.id}`)
-                          // Parse the cells data from the newState
                           const cellsData = JSON.parse(newState)
-                          console.log(`[slideshow onBlockChange] Cells data:`, Array.isArray(cellsData) ? `array[${cellsData.length}]` : typeof cellsData)
-                          // Update the dependent project's data
                           const currentData = JSON.parse(slideProject.data || '{}')
                           const updatedData = { ...currentData, [blockId]: cellsData }
-                          console.log(`[slideshow onBlockChange] Calling updateDependentProjectData for projectId=${slide.projectRef.projectId}`)
                           const newDeps = updateDependentProjectData(
                             deps,
                             slide.projectRef.projectId,
                             JSON.stringify(updatedData)
                           )
-                          console.log(`[slideshow onBlockChange] Calling onDepsChange with ${newDeps.length} deps`)
                           onDepsChange(newDeps)
                         } catch (e) {
-                          console.error('[slideshow onBlockChange] Error processing state:', e)
+                          console.error('[slideshow onBlockChange] Error:', e)
                         }
                       }}
                       onBlockAdd={isSlideReadOnly ? undefined : () => {

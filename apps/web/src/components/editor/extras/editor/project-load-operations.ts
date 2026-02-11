@@ -74,17 +74,13 @@ export async function checkSelectedProject(params: CheckSelectedProjectParams): 
   
   // Use directDbLoad if provided (avoids closure issues), otherwise fall back to storageAdapter
   const loadProject = directDbLoad || storageAdapter.load
-  console.log(`[project-load-ops] Using ${directDbLoad ? 'directDbLoad' : 'storageAdapter.load'}`)
 
   try {
     // First, check for project ID in URL hash
     const hash = window.location.hash.replace('#', '')
-    console.log(`[project-load-ops] Hash from URL: "${hash}"`)
     if (hash) {
       try {
-        console.log(`[project-load-ops] Loading project from hash: ${hash}`)
         const projectData = await loadProject(hash)
-        console.log(`[project-load-ops] Loaded project:`, projectData ? `${projectData.name} (type: ${projectData.type})` : 'null')
         if (projectData && projectData.data) {
           // Detect layout automaticamente from data structure
           const layoutInfo = detectProjectLayout(projectData.data)
@@ -150,17 +146,12 @@ export async function checkSelectedProject(params: CheckSelectedProjectParams): 
                   (s: any) => s.projectRef && !s.projectRef.isDependent
                 )
                 
-                console.log(`[project-load-ops] Found ${independentSlides.length} independent slides`)
-                
                 if (independentSlides.length > 0) {
                   const results = new Map<string, ProjectData | null>()
                   await Promise.all(
                     independentSlides.map(async (slide: any) => {
                       try {
-                        console.log(`[project-load-ops] Loading project ${slide.projectRef.projectId} for slide ${slide.id}`)
-                        // Use loadProject which prefers directDbLoad (avoids closure issues)
                         const project = await loadProject(slide.projectRef.projectId)
-                        console.log(`[project-load-ops] Loaded project for slide ${slide.id}:`, project ? project.name : 'null')
                         results.set(slide.id, project as ProjectData | null)
                       } catch (error) {
                         console.error(`Failed to load independent project for slide ${slide.id}:`, error)
@@ -168,7 +159,6 @@ export async function checkSelectedProject(params: CheckSelectedProjectParams): 
                       }
                     })
                   )
-                  console.log(`[project-load-ops] Calling setResolvedProjects with ${results.size} entries`)
                   setResolvedProjects(results)
                 } else {
                   setResolvedProjects(new Map())
