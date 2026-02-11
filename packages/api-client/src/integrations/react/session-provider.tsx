@@ -126,6 +126,7 @@ export function SessionProvider({
         setStatus('authenticated');
 
         // Notify other tabs
+        /* v8 ignore next 6 -- fetchSession is always called with notify=false */
         if (notify) {
           broadcastRef.current?.send({
             type: 'session-update',
