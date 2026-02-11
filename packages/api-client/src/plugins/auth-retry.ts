@@ -152,6 +152,7 @@ export function createAuthRetryPlugin(config: AuthRetryConfig): {
           }
 
           // Should not reach here, but TypeScript needs it
+          /* v8 ignore next 5 */
           return err({
             name: 'ApiError',
             status: 401,

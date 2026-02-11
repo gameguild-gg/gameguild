@@ -5,7 +5,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { ok, err, isOk, isErr, unwrap, unwrapOr, match } from '../../src/runtime/result/helpers.js';
+import { ok, err, isOk, isErr, unwrap, unwrapOr, unwrapOrElse, match, map, mapErr, flatMap, fromPromise, toPromise } from '../../src/runtime/result/helpers.js';
 import type { Result } from '../../src/runtime/result/types.js';
 
 describe('Result Helpers', () => {
@@ -198,6 +198,162 @@ describe('Result Helpers', () => {
       });
 
       expect(sideEffect).toBe('Got 42');
+    });
+  });
+
+  describe('unwrapOrElse', () => {
+    it('should return data for successful results', () => {
+      const result = ok(42);
+      expect(unwrapOrElse(result, () => 0)).toBe(42);
+    });
+
+    it('should call fn with error for error results', () => {
+      const result: Result<number, string> = err('bad');
+      const value = unwrapOrElse(result, (error) => error.length);
+      expect(value).toBe(3);
+    });
+
+    it('should pass error to the function', () => {
+      const result: Result<string, { code: number }> = err({ code: 404 });
+      const value = unwrapOrElse(result, (e) => `Error ${e.code}`);
+      expect(value).toBe('Error 404');
+    });
+  });
+
+  describe('map', () => {
+    it('should transform success value', () => {
+      const result = ok(5);
+      const mapped = map(result, (x) => x * 2);
+      expect(isOk(mapped)).toBe(true);
+      if (mapped.ok) expect(mapped.data).toBe(10);
+    });
+
+    it('should pass through error unchanged', () => {
+      const result: Result<number, string> = err('error');
+      const mapped = map(result, (x) => x * 2);
+      expect(isErr(mapped)).toBe(true);
+      if (!mapped.ok) expect(mapped.error).toBe('error');
+    });
+
+    it('should transform type', () => {
+      const result = ok(42);
+      const mapped = map(result, (x) => String(x));
+      if (mapped.ok) expect(mapped.data).toBe('42');
+    });
+  });
+
+  describe('mapErr', () => {
+    it('should transform error value', () => {
+      const result: Result<number, string> = err('not found');
+      const mapped = mapErr(result, (e) => ({ message: e, code: 404 }));
+      expect(isErr(mapped)).toBe(true);
+      if (!mapped.ok) {
+        expect(mapped.error).toEqual({ message: 'not found', code: 404 });
+      }
+    });
+
+    it('should pass through success unchanged', () => {
+      const result: Result<number, string> = ok(42);
+      const mapped = mapErr(result, (e) => ({ message: e }));
+      expect(isOk(mapped)).toBe(true);
+      if (mapped.ok) expect(mapped.data).toBe(42);
+    });
+  });
+
+  describe('flatMap', () => {
+    it('should chain successful results', () => {
+      const result = ok(10);
+      const chained = flatMap(result, (x) =>
+        x > 0 ? ok(x * 2) : err('negative'),
+      );
+      expect(isOk(chained)).toBe(true);
+      if (chained.ok) expect(chained.data).toBe(20);
+    });
+
+    it('should return error from fn', () => {
+      const result = ok(-5);
+      const chained = flatMap(result, (x) =>
+        x > 0 ? ok(x * 2) : err('negative'),
+      );
+      expect(isErr(chained)).toBe(true);
+      if (!chained.ok) expect(chained.error).toBe('negative');
+    });
+
+    it('should pass through original error', () => {
+      const result: Result<number, string> = err('initial error');
+      const chained = flatMap(result, (x) => ok(x * 2));
+      expect(isErr(chained)).toBe(true);
+      if (!chained.ok) expect(chained.error).toBe('initial error');
+    });
+
+    it('should support multi-step chaining', () => {
+      const parse = (s: string): Result<number, string> => {
+        const n = parseInt(s, 10);
+        return isNaN(n) ? err('not a number') : ok(n);
+      };
+      const double = (n: number): Result<number, string> =>
+        n > 100 ? err('too large') : ok(n * 2);
+
+      const result1 = flatMap(parse('21'), double);
+      expect(isOk(result1)).toBe(true);
+      if (result1.ok) expect(result1.data).toBe(42);
+
+      const result2 = flatMap(parse('abc'), double);
+      expect(isErr(result2)).toBe(true);
+
+      const result3 = flatMap(parse('200'), double);
+      expect(isErr(result3)).toBe(true);
+      if (!result3.ok) expect(result3.error).toBe('too large');
+    });
+  });
+
+  describe('fromPromise', () => {
+    it('should wrap resolved promise as ok', async () => {
+      const result = await fromPromise(Promise.resolve(42));
+      expect(isOk(result)).toBe(true);
+      if (result.ok) expect(result.data).toBe(42);
+    });
+
+    it('should wrap rejected promise as err', async () => {
+      const result = await fromPromise(Promise.reject(new Error('fail')));
+      expect(isErr(result)).toBe(true);
+      if (!result.ok) expect(result.error).toBeInstanceOf(Error);
+    });
+
+    it('should use custom error mapper', async () => {
+      const result = await fromPromise(
+        Promise.reject(new Error('fail')),
+        (e) => ({ code: 'FAIL', original: e }),
+      );
+      expect(isErr(result)).toBe(true);
+      if (!result.ok) {
+        expect(result.error.code).toBe('FAIL');
+      }
+    });
+
+    it('should handle non-Error rejections', async () => {
+      const result = await fromPromise(Promise.reject('string error'));
+      expect(isErr(result)).toBe(true);
+      if (!result.ok) expect(result.error).toBe('string error');
+    });
+  });
+
+  describe('toPromise', () => {
+    it('should resolve for ok result', async () => {
+      const result = ok(42);
+      const value = await toPromise(result);
+      expect(value).toBe(42);
+    });
+
+    it('should reject for err result', async () => {
+      const result = err('failure');
+      await expect(toPromise(result)).rejects.toBe('failure');
+    });
+
+    it('should reject with error object', async () => {
+      const error = new Error('something went wrong');
+      const result = err(error);
+      await expect(toPromise(result)).rejects.toThrow('something went wrong');
     });
   });
 

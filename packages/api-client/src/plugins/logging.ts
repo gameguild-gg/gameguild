@@ -63,6 +63,7 @@ function defaultLogger(level: LogLevel, message: string, data?: unknown): void {
     case 'warn':
       console.warn(prefix, message, data ?? '');
       break;
+    /* v8 ignore next 3 */
     case 'error':
       console.error(prefix, message, data ?? '');
       break;

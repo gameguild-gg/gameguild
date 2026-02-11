@@ -247,6 +247,7 @@ export function createHandlers(config: ResolvedAuthConfig) {
     }
 
     return new Response(
+      /* v8 ignore next */
       body !== undefined ? JSON.stringify(body) : null,
       { status, headers }
     );

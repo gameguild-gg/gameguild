@@ -1,0 +1,441 @@
+/**
+ * Extended Session Tests — processSession, encodeSession, refreshAccessToken
+ */
+
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import {
+  processSession,
+  encodeSession,
+  refreshAccessToken,
+  createJWTPayload,
+  toSession,
+  shouldRefreshToken,
+} from '../../src/runtime/auth/session.js';
+import type { JWTPayload, ResolvedAuthConfig, ProviderResult } from '../../src/runtime/auth/types.js';
+import { TokenRefreshError } from '../../src/runtime/auth/errors.js';
+
+// Mock JWT module
+vi.mock('../../src/runtime/auth/jwt.js', () => ({
+  decodeJWT: vi.fn(async ({ token, secret }: any) => {
+    if (token === 'valid-encrypted') {
+      return {
+        user: { id: '1', email: 'test@ex.com', name: 'Test', image: null },
+        accessToken: 'at',
+        refreshToken: 'rt',
+        accessTokenExpires: Date.now() + 3600000,
+        iat: Math.floor(Date.now() / 1000),
+        exp: Math.floor(Date.now() / 1000) + 86400,
+      };
+    }
+    if (token === 'needs-refresh') {
+      return {
+        user: { id: '1', email: 'test@ex.com', name: 'Test', image: null },
+        accessToken: 'old-at',
+        refreshToken: 'rt',
+        accessTokenExpires: Date.now() - 60000, // expired
+        iat: Math.floor(Date.now() / 1000),
+        exp: Math.floor(Date.now() / 1000) + 86400,
+      };
+    }
+    if (token === 'outer-expired') {
+      return {
+        user: { id: '1', email: 'test@ex.com', name: 'Test', image: null },
+        accessToken: 'at',
+        refreshToken: 'rt',
+        accessTokenExpires: Date.now() + 3600000,
+        iat: Math.floor(Date.now() / 1000) - 100000,
+        exp: Math.floor(Date.now() / 1000) - 100,
+      };
+    }
+    return null;
+  }),
+  encodeJWT: vi.fn(async ({ token, secret, maxAge }: any) => 'encoded-jwt'),
+}));
+
+function makeConfig(overrides?: Partial<ResolvedAuthConfig>): ResolvedAuthConfig {
+  return {
+    providers: [],
+    callbacks: {
+      jwt: async ({ token }) => token,
+      session: async ({ session }) => session,
+      signIn: async () => true,
+      redirect: async ({ url }) => url,
+      authorized: async ({ auth }) => !!auth,
+    },
+    secret: 'test-secret-32-chars-long-enough',
+    apiUrl: 'http://localhost:5000',
+    pages: {},
+    cookies: {
+      name: '__gg',
+      secure: false,
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 2592000,
+      httpOnly: true,
+    },
+    maxAge: 2592000,
+    updateAge: 0,
+    basePath: '/api/auth',
+    debug: false,
+    trustHost: false,
+    tenantHeader: 'X-Tenant-Id',
+    ...overrides,
+  };
+}
+
+describe('processSession', () => {
+  it('should return session for valid token', async () => {
+    const result = await processSession('valid-encrypted', makeConfig());
+
+    expect(result.session).toBeDefined();
+    expect(result.session?.user.id).toBe('1');
+    expect(result.token).toBeDefined();
+    expect(result.updated).toBe(false);
+  });
+
+  it('should return null session for invalid token', async () => {
+    const result = await processSession('invalid-token', makeConfig());
+
+    expect(result.session).toBeNull();
+    expect(result.token).toBeNull();
+    expect(result.updated).toBe(false);
+  });
+
+  it('should return null session for outer-expired token', async () => {
+    const result = await processSession('outer-expired', makeConfig());
+
+    expect(result.session).toBeNull();
+    expect(result.token).toBeNull();
+    expect(result.updated).toBe(false);
+  });
+
+  it('should attempt token refresh when access token expired', async () => {
+    // Mock the fetch for token refresh
+    const mockFetch = vi.spyOn(global, 'fetch').mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({
+          accessToken: 'new-at',
+          refreshToken: 'new-rt',
+          expiresIn: 3600,
+        }),
+        { status: 200 }
+      )
+    );
+
+    const result = await processSession('needs-refresh', makeConfig());
+
+    expect(result.session).toBeDefined();
+    expect(result.updated).toBe(true);
+
+    mockFetch.mockRestore();
+  });
+
+  it('should still return session if refresh fails (outer JWT valid)', async () => {
+    const mockFetch = vi.spyOn(global, 'fetch').mockRejectedValueOnce(
+      new Error('Network error')
+    );
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+    const result = await processSession('needs-refresh', makeConfig({ debug: true }));
+
+    expect(result.session).toBeDefined();
+    expect(result.updated).toBe(false);
+
+    mockFetch.mockRestore();
+    warnSpy.mockRestore();
+  });
+
+  it('should detect jwt callback modifications and mark as updated', async () => {
+    const modifiedToken = {
+      user: { id: '1', email: 'test@ex.com', name: 'Modified', image: null },
+      accessToken: 'at',
+      refreshToken: 'rt',
+      accessTokenExpires: Date.now() + 3600000,
+      iat: Math.floor(Date.now() / 1000),
+      exp: Math.floor(Date.now() / 1000) + 86400,
+    };
+
+    const config = makeConfig({
+      callbacks: {
+        jwt: async () => modifiedToken,
+        session: async ({ session }) => session,
+        signIn: async () => true,
+        redirect: async ({ url }) => url,
+        authorized: async ({ auth }) => !!auth,
+      },
+    });
+
+    const result = await processSession('valid-encrypted', config);
+
+    expect(result.session).toBeDefined();
+    expect(result.updated).toBe(true);
+  });
+});
+
+describe('encodeSession', () => {
+  it('should encode a token', async () => {
+    const token = {
+      user: { id: '1', email: 'a@b.com', name: 'T', image: null },
+      accessToken: 'at',
+      refreshToken: 'rt',
+      accessTokenExpires: Date.now() + 3600000,
+      iat: Math.floor(Date.now() / 1000),
+      exp: Math.floor(Date.now() / 1000) + 86400,
+    } as JWTPayload;
+
+    const result = await encodeSession(token, makeConfig());
+
+    expect(result).toBe('encoded-jwt');
+  });
+});
+
+describe('refreshAccessToken', () => {
+  it('should throw when no refresh token', async () => {
+    const token = { refreshToken: '' } as JWTPayload;
+    await expect(refreshAccessToken(token, makeConfig())).rejects.toThrow('No refresh token available');
+  });
+
+  it('should refresh token successfully', async () => {
+    const mockFetch = vi.spyOn(global, 'fetch').mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({
+          accessToken: 'new-at',
+          refreshToken: 'new-rt',
+          expiresIn: 3600,
+          refreshTokenExpiresAt: '2025-12-31T00:00:00Z',
+        }),
+        { status: 200 }
+      )
+    );
+
+    const token = {
+      user: { id: '1' },
+      accessToken: 'old-at',
+      refreshToken: 'old-rt',
+      accessTokenExpires: Date.now() - 1000,
+    } as JWTPayload;
+
+    const result = await refreshAccessToken(token, makeConfig());
+
+    expect(result.accessToken).toBe('new-at');
+    expect(result.refreshToken).toBe('new-rt');
+    expect(result.accessTokenExpires).toBeGreaterThan(Date.now());
+
+    mockFetch.mockRestore();
+  });
+
+  it('should throw TokenRefreshError on non-ok response', async () => {
+    const mockFetch = vi.spyOn(global, 'fetch').mockResolvedValueOnce(
+      new Response('', { status: 401 })
+    );
+
+    const token = { refreshToken: 'rt' } as JWTPayload;
+
+    await expect(refreshAccessToken(token, makeConfig())).rejects.toThrow(TokenRefreshError);
+
+    mockFetch.mockRestore();
+  });
+
+  it('should throw TokenRefreshError on network error', async () => {
+    const mockFetch = vi.spyOn(global, 'fetch').mockRejectedValueOnce(
+      new Error('Network error')
+    );
+
+    const token = { refreshToken: 'rt' } as JWTPayload;
+
+    await expect(refreshAccessToken(token, makeConfig())).rejects.toThrow(TokenRefreshError);
+
+    mockFetch.mockRestore();
+  });
+
+  it('should use accessTokenExpiresAt when available', async () => {
+    const futureDate = new Date(Date.now() + 7200000).toISOString();
+    const mockFetch = vi.spyOn(global, 'fetch').mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({
+          accessToken: 'new-at',
+          accessTokenExpiresAt: futureDate,
+        }),
+        { status: 200 }
+      )
+    );
+
+    const token = { refreshToken: 'rt', accessToken: 'at' } as JWTPayload;
+
+    const result = await refreshAccessToken(token, makeConfig());
+
+    expect(result.accessTokenExpires).toBe(new Date(futureDate).getTime());
+
+    mockFetch.mockRestore();
+  });
+
+  it('should default to 1 hour expiry when no expiry info', async () => {
+    const mockFetch = vi.spyOn(global, 'fetch').mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({
+          accessToken: 'new-at',
+        }),
+        { status: 200 }
+      )
+    );
+
+    const token = { refreshToken: 'rt', accessToken: 'at' } as JWTPayload;
+
+    const result = await refreshAccessToken(token, makeConfig());
+
+    // Should be about 1 hour from now
+    const oneHour = 60 * 60 * 1000;
+    expect(result.accessTokenExpires).toBeGreaterThan(Date.now() + oneHour - 5000);
+
+    mockFetch.mockRestore();
+  });
+
+  it('should keep old refresh token if new one not provided', async () => {
+    const mockFetch = vi.spyOn(global, 'fetch').mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({
+          accessToken: 'new-at',
+          expiresIn: 3600,
+        }),
+        { status: 200 }
+      )
+    );
+
+    const token = { refreshToken: 'keep-this-rt', accessToken: 'at' } as JWTPayload;
+
+    const result = await refreshAccessToken(token, makeConfig());
+
+    expect(result.refreshToken).toBe('keep-this-rt');
+
+    mockFetch.mockRestore();
+  });
+});
+
+describe('createJWTPayload', () => {
+  it('should create payload with accessTokenExpiresAt', () => {
+    const expiresAt = new Date(Date.now() + 3600000).toISOString();
+    const result: ProviderResult = {
+      tokens: {
+        accessToken: 'at',
+        refreshToken: 'rt',
+        tokenType: 'Bearer',
+        accessTokenExpiresAt: expiresAt,
+        refreshTokenExpiresAt: new Date(Date.now() + 86400000).toISOString(),
+      },
+      user: { id: '1', email: 'a@b.com', name: 'T', image: null },
+      sessionId: 'sid',
+      tenantId: 'tid',
+      availableTenants: [{ id: 't1', name: 'T1' }],
+    };
+
+    const payload = createJWTPayload(result, makeConfig());
+
+    expect(payload.accessToken).toBe('at');
+    expect(payload.refreshToken).toBe('rt');
+    expect(payload.accessTokenExpires).toBe(new Date(expiresAt).getTime());
+    expect(payload.refreshTokenExpires).toBeDefined();
+    expect(payload.sessionId).toBe('sid');
+    expect(payload.tenantId).toBe('tid');
+    expect(payload.availableTenants).toEqual([{ id: 't1', name: 'T1' }]);
+  });
+
+  it('should create payload with expiresIn', () => {
+    const result: ProviderResult = {
+      tokens: {
+        accessToken: 'at',
+        refreshToken: 'rt',
+        tokenType: 'Bearer',
+        expiresIn: 3600,
+      },
+      user: { id: '1', email: 'a@b.com', name: 'T', image: null },
+    };
+
+    const payload = createJWTPayload(result, makeConfig());
+
+    expect(payload.accessTokenExpires).toBeGreaterThan(Date.now());
+  });
+
+  it('should default to 1 hour when no expiry info', () => {
+    const result: ProviderResult = {
+      tokens: {
+        accessToken: 'at',
+        refreshToken: 'rt',
+        tokenType: 'Bearer',
+      },
+      user: { id: '1', email: 'a@b.com', name: 'T', image: null },
+    };
+
+    const payload = createJWTPayload(result, makeConfig());
+
+    const oneHour = 60 * 60 * 1000;
+    expect(payload.accessTokenExpires).toBeGreaterThan(Date.now() + oneHour - 5000);
+  });
+});
+
+describe('toSession', () => {
+  it('should convert token to session without exposing tokens', () => {
+    const token: JWTPayload = {
+      user: { id: '1', email: 'a@b.com', name: 'T', image: null, roles: ['admin'] },
+      accessToken: 'SHOULD_NOT_APPEAR',
+      refreshToken: 'SHOULD_NOT_APPEAR',
+      accessTokenExpires: Date.now() + 3600000,
+      iat: Math.floor(Date.now() / 1000),
+      exp: Math.floor(Date.now() / 1000) + 86400,
+      tenantId: 'tid',
+      availableTenants: [{ id: 't1', name: 'T1' }],
+    };
+
+    const session = toSession(token);
+
+    expect(session.user.id).toBe('1');
+    expect(session.user.roles).toEqual(['admin']);
+    expect(session.tenantId).toBe('tid');
+    expect(session.availableTenants).toEqual([{ id: 't1', name: 'T1' }]);
+    expect((session as any).accessToken).toBeUndefined();
+    expect((session as any).refreshToken).toBeUndefined();
+    expect(session.expires).toBeDefined();
+  });
+
+  it('should default expires to 30 days when no exp', () => {
+    const token = {
+      user: { id: '1', email: 'a@b.com', name: null, image: null },
+      accessToken: 'at',
+      refreshToken: 'rt',
+      accessTokenExpires: Date.now() + 3600000,
+    } as JWTPayload;
+
+    const session = toSession(token);
+
+    const thirtyDays = 30 * 24 * 60 * 60 * 1000;
+    const expires = new Date(session.expires).getTime();
+    expect(expires).toBeGreaterThan(Date.now() + thirtyDays - 5000);
+  });
+});
+
+describe('shouldRefreshToken', () => {
+  it('should return false when no accessTokenExpires', () => {
+    const token = {} as JWTPayload;
+    expect(shouldRefreshToken(token)).toBe(false);
+  });
+
+  it('should return false when token not near expiry', () => {
+    const token = {
+      accessTokenExpires: Date.now() + 3600000, // 1 hour
+    } as JWTPayload;
+    expect(shouldRefreshToken(token)).toBe(false);
+  });
+
+  it('should return true when token about to expire', () => {
+    const token = {
+      accessTokenExpires: Date.now() + 10000, // 10 seconds
+    } as JWTPayload;
+    expect(shouldRefreshToken(token)).toBe(true);
+  });
+
+  it('should return true when token already expired', () => {
+    const token = {
+      accessTokenExpires: Date.now() - 1000,
+    } as JWTPayload;
+    expect(shouldRefreshToken(token)).toBe(true);
+  });
+});

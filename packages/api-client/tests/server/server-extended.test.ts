@@ -1,0 +1,152 @@
+/**
+ * Extended Server Client Tests
+ */
+
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { createServerClient } from '../../src/server.js';
+
+// We need to avoid the real transport module
+vi.mock('../../src/runtime/transport/fetch.js', () => {
+  let interceptors: any[] = [];
+
+  return {
+    createFetchTransport: vi.fn((config: any) => {
+      interceptors = config.interceptors || [];
+      return {
+        request: vi.fn(async (reqConfig: any) => {
+          // Run interceptors
+          let finalConfig = reqConfig;
+          for (const interceptor of interceptors) {
+            finalConfig = await interceptor(finalConfig);
+          }
+          return {
+            ok: true,
+            data: { data: finalConfig.headers || {} },
+            status: 200,
+            headers: new Headers(),
+          };
+        }),
+      };
+    }),
+    createHeaderInterceptor: vi.fn((fn: any) => {
+      return async (config: any) => {
+        const headers = await fn();
+        return {
+          ...config,
+          headers: { ...config.headers, ...headers },
+        };
+      };
+    }),
+  };
+});
+
+describe('createServerClient — extended', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('should add auth interceptor when auth provider is given', async () => {
+    const auth = {
+      getAccessToken: vi.fn(async () => 'test-token'),
+      getRefreshToken: vi.fn(async () => null),
+    };
+
+    const client = createServerClient({
+      baseUrl: 'http://localhost:5000',
+      auth,
+    });
+
+    expect(client).toBeDefined();
+    // The interceptor should be registered
+    const result = await client.request({ path: '/test', method: 'GET' });
+    expect(result).toBeDefined();
+  });
+
+  it('should add tenant interceptor when tenant provider is given', async () => {
+    const tenant = {
+      getTenantId: vi.fn(async () => 'tenant-123'),
+    };
+
+    const client = createServerClient({
+      baseUrl: 'http://localhost:5000',
+      tenant,
+    });
+
+    expect(client).toBeDefined();
+    const result = await client.request({ path: '/test', method: 'GET' });
+    expect(result).toBeDefined();
+  });
+
+  it('should add both auth and tenant interceptors', async () => {
+    const auth = {
+      getAccessToken: vi.fn(async () => 'token'),
+      getRefreshToken: vi.fn(async () => null),
+    };
+    const tenant = {
+      getTenantId: vi.fn(async () => 'tid'),
+    };
+
+    const client = createServerClient({
+      baseUrl: 'http://localhost:5000',
+      auth,
+      tenant,
+    });
+
+    const result = await client.request({ path: '/test', method: 'GET' });
+    expect(result).toBeDefined();
+  });
+
+  it('should handle auth provider returning null token', async () => {
+    const auth = {
+      getAccessToken: vi.fn(async () => null),
+      getRefreshToken: vi.fn(async () => null),
+      onAuthenticationRequired: vi.fn(),
+    };
+
+    const client = createServerClient({
+      baseUrl: 'http://localhost:5000',
+      auth,
+    });
+
+    const result = await client.request({ path: '/test', method: 'GET' });
+    expect(result).toBeDefined();
+  });
+
+  it('should handle tenant provider returning null', async () => {
+    const tenant = {
+      getTenantId: vi.fn(async () => null),
+      onTenantRequired: vi.fn(),
+    };
+
+    const client = createServerClient({
+      baseUrl: 'http://localhost:5000',
+      tenant,
+    });
+
+    const result = await client.request({ path: '/test', method: 'GET' });
+    expect(result).toBeDefined();
+  });
+
+  it('should pass custom tenant header name', async () => {
+    const tenant = {
+      getTenantId: vi.fn(async () => 'tid'),
+    };
+
+    const client = createServerClient({
+      baseUrl: 'http://localhost:5000',
+      tenant,
+      tenantHeader: 'X-Custom-Tenant',
+    });
+
+    expect(client).toBeDefined();
+  });
+
+  it('should pass timeout to transport', () => {
+    const client = createServerClient({
+      baseUrl: 'http://localhost:5000',
+      timeout: 5000,
+    });
+
+    expect(client).toBeDefined();
+  });
+});

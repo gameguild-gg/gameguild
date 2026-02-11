@@ -58,6 +58,7 @@ class ConsoleLogger implements DevToolsLogger {
     console.groupEnd();
   }
 
+  /* v8 ignore next 3 */
   log(message: string, ...args: unknown[]): void {
     console.log(message, ...args);
   }

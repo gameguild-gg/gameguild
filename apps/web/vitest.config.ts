@@ -7,13 +7,22 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'jsdom',
-    setupFiles: [],
+    setupFiles: ['./src/test/setup.ts'],
     include: ['src/**/*.{test,spec}.{js,ts,jsx,tsx}'],
     exclude: ['src/**/*.{e2e,e2e.test}.{js,ts,jsx,tsx}'],
   },
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
+      '@game-guild/ui': path.resolve(__dirname, '../../packages/ui/src'),
+      '@game-guild/client/react': path.resolve(
+        __dirname,
+        '../../packages/api-client/src/integrations/react/index.ts'
+      ),
+      '@game-guild/client': path.resolve(
+        __dirname,
+        '../../packages/api-client/src/index.ts'
+      ),
     },
   },
 });

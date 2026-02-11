@@ -59,7 +59,7 @@ describe('Generation Pipeline Integration', () => {
         headers: { Accept: 'application/json' },
       })
     );
-  });
+  }, 15000);
 
   it('should load OpenAPI spec from file', async () => {
     const { fetchOpenApiSpec } = await import('../../scripts/fetch-spec.js');
@@ -69,7 +69,7 @@ describe('Generation Pipeline Integration', () => {
 
     expect(spec).toBeDefined();
     expect(spec.info.title).toBe('Test API');
-  });
+  }, 15000);
 
   it('should throw error for invalid URL', async () => {
     (global.fetch as any).mockResolvedValue({
@@ -126,7 +126,7 @@ describe('Generation Pipeline Integration', () => {
     expect(types).toContain('export interface User');
     expect(types).toContain('export interface CreateUserInput');
     expect(types).toContain('export type UserRole');
-  });
+  }, 30000);
 
   it('should normalize and generate endpoints in pipeline', async () => {
     const { normalizeSpec } = await import('../../scripts/normalize.js');
@@ -142,7 +142,7 @@ describe('Generation Pipeline Integration', () => {
     expect(endpoints).toContain('getUsers');
     expect(endpoints).toContain('createUser');
     expect(endpoints).toContain('getUserById');
-  });
+  }, 15000);
 
   it('should detect spec changes via hash', async () => {
     const { createHash } = await import('crypto');

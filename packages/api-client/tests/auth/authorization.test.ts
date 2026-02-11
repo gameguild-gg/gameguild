@@ -81,6 +81,15 @@ describe('Authorization Utilities', () => {
     it('returns true for empty roles array', () => {
       expect(hasAllRoles(adminUser, [])).toBe(true);
     });
+
+    it('returns false for null/undefined input', () => {
+      expect(hasAllRoles(null, ['admin'])).toBe(false);
+      expect(hasAllRoles(undefined, ['admin'])).toBe(false);
+    });
+
+    it('returns false when user has no roles array', () => {
+      expect(hasAllRoles(noRolesUser, ['admin'])).toBe(false);
+    });
   });
 
   describe('hasAnyRole', () => {
@@ -90,6 +99,15 @@ describe('Authorization Utilities', () => {
 
     it('returns false when user has none of the roles', () => {
       expect(hasAnyRole(viewerUser, ['admin', 'editor'])).toBe(false);
+    });
+
+    it('returns false for null/undefined input', () => {
+      expect(hasAnyRole(null, ['admin'])).toBe(false);
+      expect(hasAnyRole(undefined, ['admin'])).toBe(false);
+    });
+
+    it('returns false when user has no roles array', () => {
+      expect(hasAnyRole(noRolesUser, ['viewer'])).toBe(false);
     });
   });
 
@@ -115,6 +133,15 @@ describe('Authorization Utilities', () => {
     it('returns false when any permission is missing', () => {
       expect(hasAllPermissions(viewerUser, ['content:read', 'content:write'])).toBe(false);
     });
+
+    it('returns false for null/undefined input', () => {
+      expect(hasAllPermissions(null, ['content:read'])).toBe(false);
+      expect(hasAllPermissions(undefined, ['content:read'])).toBe(false);
+    });
+
+    it('returns false when user has no permissions array', () => {
+      expect(hasAllPermissions(noRolesUser, ['content:read'])).toBe(false);
+    });
   });
 
   describe('hasAnyPermission', () => {
@@ -124,6 +151,15 @@ describe('Authorization Utilities', () => {
 
     it('returns false when no permissions match', () => {
       expect(hasAnyPermission(viewerUser, ['content:write', 'user:manage'])).toBe(false);
+    });
+
+    it('returns false for null/undefined input', () => {
+      expect(hasAnyPermission(null, ['content:read'])).toBe(false);
+      expect(hasAnyPermission(undefined, ['content:read'])).toBe(false);
+    });
+
+    it('returns false when user has no permissions array', () => {
+      expect(hasAnyPermission(noRolesUser, ['content:read'])).toBe(false);
     });
   });
 
