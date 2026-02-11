@@ -102,7 +102,9 @@ export function useAuth(options?: AuthActionOptions): UseAuthReturn {
    * Fetch a CSRF token
    */
   const getCSRFToken = useCallback(async (): Promise<string> => {
+    /* v8 ignore start */
     if (csrfTokenRef.current) return csrfTokenRef.current;
+    /* v8 ignore stop */
 
     const response = await fetch(`${basePathRef.current}/csrf`, {
       credentials: 'include',

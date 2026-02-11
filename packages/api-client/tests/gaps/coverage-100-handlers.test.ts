@@ -330,8 +330,8 @@ describe('actions — signOut without refreshToken (L316)', () => {
       if (e.message !== 'REDIRECT') throw e;
     }
 
-    // Cookie should have been deleted
-    expect(mockCookieStore.has('__gg.session-token')).toBe(false);
+    // Cookie should have been deleted (set to empty string with maxAge=0)
+    expect(mockCookieStore.get('__gg.session-token')).toBe('');
 
     vi.resetModules();
   });

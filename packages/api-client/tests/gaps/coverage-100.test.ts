@@ -131,10 +131,11 @@ describe('logging interceptor — debug and warn levels', () => {
     expect(console.debug).toHaveBeenCalled();
   });
 
-  it('logs at warn level (L64)', async () => {
+  it('logs at warn level via onError (L64)', async () => {
     const { createLoggingInterceptor } = await import('../../src/plugins/logging.js');
 
-    // Create interceptor with custom logger that tracks levels
+    // At warn level, onRequest does NOT log (only debug/info do)
+    // But onError DOES log at warn level — that's the branch we need
     const levels: string[] = [];
     const interceptor = createLoggingInterceptor({
       level: 'warn',
@@ -143,9 +144,14 @@ describe('logging interceptor — debug and warn levels', () => {
       },
     });
 
-    // The request log should still emit at debug level, but our custom logger captures
-    await interceptor.onRequest!({ path: '/test', method: 'GET' as const, headers: {} });
-    expect(levels.length).toBeGreaterThan(0);
+    await interceptor.onError!({
+      name: 'ApiError',
+      message: 'Not found',
+      status: 404,
+      code: 'NOT_FOUND',
+    } as any);
+
+    expect(levels).toContain('warn');
   });
 });
 
@@ -162,55 +168,37 @@ describe('metrics interceptor — error path with timing data', () => {
       onMetrics: (m: any) => collectedMetrics.push(m),
     });
 
-    // First, trigger onRequest to register timing data
-    await interceptor.onRequest!({
-      path: '/api/first',
-      method: 'GET',
-      requestId: 'req-1',
-      headers: {},
-      _metricsKey: 'GET:/api/first:req-1',
-    } as any);
+    // onRequest generates an internal _metricsKey and attaches it to the request config.
+    // We must capture that key and propagate it to onResponse/onError.
+    const req1: any = { path: '/api/first', method: 'GET', headers: {} };
+    const req2: any = { path: '/api/second', method: 'POST', headers: {} };
+    const req3: any = { path: '/api/third', method: 'DELETE', headers: {} };
+    await interceptor.onRequest!(req1);
+    await interceptor.onRequest!(req2);
+    await interceptor.onRequest!(req3);
 
-    await interceptor.onRequest!({
-      path: '/api/second',
-      method: 'POST',
-      requestId: 'req-2',
-      headers: {},
-      _metricsKey: 'POST:/api/second:req-2',
-    } as any);
-
-    await interceptor.onRequest!({
-      path: '/api/third',
-      method: 'DELETE',
-      requestId: 'req-3',
-      headers: {},
-      _metricsKey: 'DELETE:/api/third:req-3',
-    } as any);
-
-    // Fill up with 2 success metrics
-    const okResponse = {
+    // Fill up with 2 success metrics — propagate _metricsKey from request
+    await interceptor.onResponse!({
       data: 'ok',
       status: 200,
       headers: new Headers(),
-      _metricsKey: 'GET:/api/first:req-1',
-    };
-    await interceptor.onResponse!(okResponse as any);
+      _metricsKey: req1._metricsKey,
+    } as any);
 
-    const okResponse2 = {
+    await interceptor.onResponse!({
       data: 'ok',
       status: 200,
       headers: new Headers(),
-      _metricsKey: 'POST:/api/second:req-2',
-    };
-    await interceptor.onResponse!(okResponse2 as any);
+      _metricsKey: req2._metricsKey,
+    } as any);
 
-    // Now trigger onError with a _metricsKey — should evict oldest
+    // Now trigger onError with the _metricsKey from req3 — should evict oldest
     const result = await interceptor.onError!({
       name: 'ApiError',
       message: 'Server error',
       status: 500,
       code: 'SERVER_ERROR',
-      _metricsKey: 'DELETE:/api/third:req-3',
+      _metricsKey: req3._metricsKey,
     } as any);
 
     expect(result.ok).toBe(false);
