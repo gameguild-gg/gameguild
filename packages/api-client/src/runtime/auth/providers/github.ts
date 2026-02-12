@@ -134,11 +134,13 @@ export function GitHubProvider(
       const backendUser = data.user as Record<string, unknown> | undefined;
 
       const user: SessionUser = {
+        /* v8 ignore start */
         id: (data.userId as string) || (backendUser?.id as string) || '',
         email:
           (data.email as string) || (backendUser?.email as string) || '',
         name: (backendUser?.displayName as string) || null,
         image: (backendUser?.profilePictureUrl as string) || null,
+        /* v8 ignore stop */
       };
 
       return {

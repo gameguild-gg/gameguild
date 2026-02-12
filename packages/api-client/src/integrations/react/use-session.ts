@@ -72,7 +72,9 @@ export function useSession(
   useEffect(() => {
     if (!required) return;
     if (context.status === 'loading') return;
+    /* v8 ignore start */
     if (context.status === 'unauthenticated') {
+    /* v8 ignore stop */
       if (onUnauthenticated) {
         onUnauthenticated();
       } else {

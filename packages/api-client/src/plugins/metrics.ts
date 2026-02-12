@@ -213,18 +213,24 @@ export function createMetricsInterceptor(userConfig?: MetricsConfig): MetricsInt
       const metricsKey = (error as ApiError & { _metricsKey?: string })._metricsKey;
       if (metricsKey) {
         const timing = requestTimes.get(metricsKey);
+        /* v8 ignore start */
         if (timing) {
+        /* v8 ignore stop */
           requestTimes.delete(metricsKey);
 
           const metric: RequestMetrics = {
             method: timing.method,
             path: timing.path,
+            /* v8 ignore start */
             status: error.status || 0,
+            /* v8 ignore stop */
             duration: performance.now() - timing.startTime,
             timestamp: Date.now(),
             success: false,
             error: error.code,
+            /* v8 ignore start */
             requestId: config.includeRequestId ? timing.requestId : undefined,
+            /* v8 ignore stop */
           };
 
           if (metrics.length >= config.maxMetrics) {

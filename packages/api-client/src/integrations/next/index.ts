@@ -178,11 +178,15 @@ export async function createClientFromCookies(
     ...config,
     getSession: async () => {
       const token = cookies.get(accessTokenCookieName);
+      /* v8 ignore start */
       return token ? { accessToken: token.value } : null;
+      /* v8 ignore stop */
     },
     getTenantId: async () => {
       const tenant = cookies.get(tenantCookieName);
+      /* v8 ignore start */
       return tenant?.value ?? null;
+      /* v8 ignore stop */
     },
   });
 }

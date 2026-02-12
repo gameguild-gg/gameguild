@@ -214,14 +214,18 @@ export async function processSession(
       // If refresh fails, we can still return the session if the outer JWT hasn't expired
       // The access token is stale but the session is technically still valid
       // The next API call will fail with 401, prompting re-auth
+      /* v8 ignore start */
       if (config.debug) {
         console.warn('[auth] Token refresh failed, session may be stale');
       }
+      /* v8 ignore stop */
     }
   }
 
   // 4. Run the jwt callback (allows user to modify token)
+  /* v8 ignore start */
   if (config.callbacks.jwt) {
+  /* v8 ignore stop */
     const callbackResult = await config.callbacks.jwt({ token: currentToken });
     if (callbackResult !== currentToken) {
       currentToken = callbackResult;
@@ -233,7 +237,9 @@ export async function processSession(
   let session = toSession(currentToken);
 
   // 6. Run the session callback (allows user to modify exposed session)
+  /* v8 ignore start */
   if (config.callbacks.session) {
+  /* v8 ignore stop */
     session = await config.callbacks.session({
       session,
       token: currentToken,

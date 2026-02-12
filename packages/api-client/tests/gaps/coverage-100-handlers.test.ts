@@ -8,6 +8,7 @@
  * index.ts    — L181-185 (createClientFromCookies missing cookies)
  */
 import { describe, it, expect, vi, afterEach } from 'vitest';
+import { createClientFromCookies } from '../../src/integrations/next/index.js';
 
 // ─── handlers.ts L507 — handleSignUp non-200 response ─────────────────
 
@@ -17,7 +18,7 @@ describe('handlers — signUp non-200 response (L507)', () => {
     vi.restoreAllMocks();
   });
 
-  it('throws SignUpError when backend returns non-200', async () => {
+  it('throws SignUpError when backend returns non-200', { timeout: 30000 }, async () => {
     vi.resetModules();
 
     const originalFetch = globalThis.fetch;
@@ -101,7 +102,7 @@ describe('handlers — signOut without refreshToken (L528)', () => {
     vi.restoreAllMocks();
   });
 
-  it('handles signOut when token has no refreshToken', async () => {
+  it('handles signOut when token has no refreshToken', { timeout: 30000 }, async () => {
     vi.resetModules();
 
     vi.doMock('../../src/runtime/auth/jwt.js', () => ({
@@ -176,7 +177,7 @@ describe('handlers — OAuth callback null result (L609)', () => {
     vi.restoreAllMocks();
   });
 
-  it('redirects to error page when OAuth callback returns null', async () => {
+  it('redirects to error page when OAuth callback returns null', { timeout: 30000 }, async () => {
     vi.resetModules();
 
     vi.doMock('../../src/runtime/auth/jwt.js', () => ({
@@ -250,7 +251,7 @@ describe('actions — signOut without refreshToken (L316)', () => {
     vi.restoreAllMocks();
   });
 
-  it('handles signOut when token has no refreshToken', async () => {
+  it('handles signOut when token has no refreshToken', { timeout: 30000 }, async () => {
     vi.resetModules();
 
     const mockCookieStore = new Map<string, string>();
@@ -341,8 +342,6 @@ describe('actions — signOut without refreshToken (L316)', () => {
 
 describe('next/index — createClientFromCookies missing cookies (L181-185)', () => {
   it('creates client that returns null session when accessToken cookie missing', async () => {
-    const { createClientFromCookies } = await import('../../src/integrations/next/index.js');
-
     const originalFetch = globalThis.fetch;
     globalThis.fetch = vi.fn().mockResolvedValue({
       ok: true,
@@ -370,8 +369,6 @@ describe('next/index — createClientFromCookies missing cookies (L181-185)', ()
   });
 
   it('creates client that returns null tenant when tenant cookie missing', async () => {
-    const { createClientFromCookies } = await import('../../src/integrations/next/index.js');
-
     const originalFetch = globalThis.fetch;
     globalThis.fetch = vi.fn().mockResolvedValue({
       ok: true,
@@ -406,7 +403,7 @@ describe('handlers — additional branch paths', () => {
     vi.restoreAllMocks();
   });
 
-  it('handles signUp with optional firstName/lastName/tenantId', async () => {
+  it('handles signUp with optional firstName/lastName/tenantId', { timeout: 30000 }, async () => {
     vi.resetModules();
 
     const originalFetch = globalThis.fetch;

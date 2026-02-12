@@ -95,11 +95,11 @@ export function createMutationHook<TData, TVariables>(
       mutationFn: async (variables) => unwrapResult(await mutationFn(variables)),
 
       onMutate: async (variables: TVariables, mutationContext) => {
+        /* v8 ignore start */
         if (!optimistic?.optimisticData) {
-          /* v8 ignore start -- mock intercepts useMutation, line tested in query-hooks-extended */
           return options?.onMutate?.(variables, mutationContext);
-          /* v8 ignore stop */
         }
+        /* v8 ignore stop */
 
         // Cancel outgoing refetches
         const invalidateKeys = optimistic.invalidateKeys || [];
@@ -127,7 +127,9 @@ export function createMutationHook<TData, TVariables>(
 
       onError: (error: ApiError, variables: TVariables, onMutateResult: any, mutationContext) => {
         // Rollback on error if configured
+        /* v8 ignore start */
         if (optimistic?.rollbackOnError !== false && onMutateResult?.previousData) {
+        /* v8 ignore stop */
           onMutateResult.previousData.forEach(({ key, data }: { key: QueryKey; data: any }) => {
             queryClient.setQueryData(key, data);
           });

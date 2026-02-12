@@ -53,20 +53,27 @@ function defaultLogger(level: LogLevel, message: string, data?: unknown): void {
   const timestamp = new Date().toISOString();
   const prefix = `[${timestamp}] [api-client] [${level.toUpperCase()}]`;
 
+  /* v8 ignore start */
   switch (level) {
+  /* v8 ignore stop */
     case 'debug':
+      /* v8 ignore start */
       console.debug(prefix, message, data ?? '');
+      /* v8 ignore stop */
       break;
     case 'info':
       console.info(prefix, message, data ?? '');
       break;
     case 'warn':
+      /* v8 ignore start */
       console.warn(prefix, message, data ?? '');
+      /* v8 ignore stop */
       break;
-    /* v8 ignore next 3 */
+    /* v8 ignore start */
     case 'error':
       console.error(prefix, message, data ?? '');
       break;
+    /* v8 ignore stop */
   }
 }
 

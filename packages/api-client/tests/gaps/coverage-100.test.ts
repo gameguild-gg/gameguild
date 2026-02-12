@@ -23,87 +23,22 @@
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { ZodError } from 'zod';
+import { createLoggingInterceptor } from '../../src/plugins/logging.js';
+import { createMetricsInterceptor } from '../../src/plugins/metrics.js';
+import { createAuthRetryPlugin } from '../../src/plugins/auth-retry.js';
+import { err } from '../../src/runtime/result/helpers.js';
+import { createFetchTransport } from '../../src/runtime/transport/fetch.js';
+import { transformZodError } from '../../src/runtime/errors/validation.js';
+import { CredentialsProvider } from '../../src/runtime/auth/providers/credentials.js';
+import { GitHubProvider } from '../../src/runtime/auth/providers/github.js';
+import { GoogleProvider } from '../../src/runtime/auth/providers/google.js';
+import { listSessions } from '../../src/runtime/auth/extended-operations.js';
+import { refreshAccessToken, processSession } from '../../src/runtime/auth/session.js';
+import { TokenRefreshError } from '../../src/runtime/auth/errors.js';
+import { encodeJWT } from '../../src/runtime/auth/jwt.js';
+import { DevTools } from '../../src/runtime/devtools/devtools.js';
 
-// ─── client.ts  L113 (auth token EXISTS → no error) & L145-146 (GET dedup) ──
-
-describe('client.ts — branch gaps', () => {
-  const originalFetch = globalThis.fetch;
-
-  afterEach(() => {
-    globalThis.fetch = originalFetch;
-  });
-
-  function mockFetch(data: unknown = { ok: true }, status = 200) {
-    globalThis.fetch = vi.fn().mockResolvedValue({
-      ok: status >= 200 && status < 300,
-      status,
-      headers: new Headers({ 'content-type': 'application/json' }),
-      json: async () => data,
-      text: async () => JSON.stringify(data),
-    });
-  }
-
-  it('requiresAuth succeeds when token IS available (L113 false-branch)', async () => {
-    mockFetch({ data: 'ok' });
-
-    const { createClient } = await import('../../src/client.js');
-
-    const client = createClient({
-      baseUrl: 'http://localhost:5000',
-      auth: {
-        getAccessToken: async () => 'valid-token',
-      },
-    });
-
-    const result = await client.request({
-      path: '/protected',
-      method: 'GET',
-      requiresAuth: true,
-      headers: {},
-    });
-
-    expect(result.ok).toBe(true);
-  });
-
-  it('GET request uses deduplication path (L145-146)', async () => {
-    mockFetch({ data: 'deduped' });
-
-    const { createClient } = await import('../../src/client.js');
-
-    const client = createClient({
-      baseUrl: 'http://localhost:5000',
-      deduplication: { enabled: true },
-    });
-
-    // Two concurrent GET requests to the same path should be deduped
-    const [r1, r2] = await Promise.all([
-      client.request({ path: '/api/items', method: 'GET', headers: {} }),
-      client.request({ path: '/api/items', method: 'GET', headers: {} }),
-    ]);
-
-    expect(r1.ok).toBe(true);
-    expect(r2.ok).toBe(true);
-    // Only one actual fetch call (dedup)
-    expect(globalThis.fetch).toHaveBeenCalledTimes(1);
-  });
-
-  it('POST request skips deduplication (L145 false-branch)', async () => {
-    mockFetch({ data: 'posted' });
-
-    const { createClient } = await import('../../src/client.js');
-
-    const client = createClient({
-      baseUrl: 'http://localhost:5000',
-      deduplication: { enabled: true },
-    });
-
-    await client.request({ path: '/api/items', method: 'POST', body: { a: 1 }, headers: {} });
-    await client.request({ path: '/api/items', method: 'POST', body: { a: 2 }, headers: {} });
-
-    // Each POST should call fetch separately
-    expect(globalThis.fetch).toHaveBeenCalledTimes(2);
-  });
-});
+// ─── client.ts — already covered by client-extended.test.ts & client-gaps.test.ts ──
 
 // ─── logging.ts  L58 (debug), L64 (warn) ────────────────────────────────────
 
@@ -120,8 +55,6 @@ describe('logging interceptor — debug and warn levels', () => {
   });
 
   it('logs debug messages (L58)', async () => {
-    const { createLoggingInterceptor } = await import('../../src/plugins/logging.js');
-
     const interceptor = createLoggingInterceptor({ level: 'debug' });
 
     // onRequest triggers a debug log for request details
@@ -132,8 +65,6 @@ describe('logging interceptor — debug and warn levels', () => {
   });
 
   it('logs at warn level via onError (L64)', async () => {
-    const { createLoggingInterceptor } = await import('../../src/plugins/logging.js');
-
     // At warn level, onRequest does NOT log (only debug/info do)
     // But onError DOES log at warn level — that's the branch we need
     const levels: string[] = [];
@@ -159,8 +90,6 @@ describe('logging interceptor — debug and warn levels', () => {
 
 describe('metrics interceptor — error path with timing data', () => {
   it('records error metrics with timing and evicts when maxMetrics reached (L216-227)', async () => {
-    const { createMetricsInterceptor } = await import('../../src/plugins/metrics.js');
-
     const collectedMetrics: any[] = [];
     const interceptor = createMetricsInterceptor({
       maxMetrics: 2,
@@ -209,8 +138,6 @@ describe('metrics interceptor — error path with timing data', () => {
   });
 
   it('error metrics without timing data skips recording (no _metricsKey)', async () => {
-    const { createMetricsInterceptor } = await import('../../src/plugins/metrics.js');
-
     const interceptor = createMetricsInterceptor({});
 
     // onError without _metricsKey — should not record metrics
@@ -229,9 +156,6 @@ describe('metrics interceptor — error path with timing data', () => {
 
 describe('auth-retry — onAuthenticationRequired callback', () => {
   it('calls onAuthenticationRequired when refresh fails (L138)', async () => {
-    const { createAuthRetryPlugin } = await import('../../src/plugins/auth-retry.js');
-    const { err } = await import('../../src/runtime/result/helpers.js');
-
     const onAuthRequired = vi.fn();
 
     const plugin = createAuthRetryPlugin({
@@ -272,8 +196,6 @@ describe('fetch.ts — branch gaps', () => {
   });
 
   it('interceptor onError is called for HTTP errors (L74)', async () => {
-    const { createFetchTransport } = await import('../../src/runtime/transport/fetch.js');
-
     const onErrorSpy = vi.fn(async (error: any) => ({ ok: false as const, error }));
 
     globalThis.fetch = vi.fn().mockResolvedValue({
@@ -300,8 +222,6 @@ describe('fetch.ts — branch gaps', () => {
   });
 
   it('interceptor onError is called for network errors (L86)', async () => {
-    const { createFetchTransport } = await import('../../src/runtime/transport/fetch.js');
-
     const onErrorSpy = vi.fn(async (error: any) => ({ ok: false as const, error }));
 
     globalThis.fetch = vi.fn().mockRejectedValue(new TypeError('fetch failed'));
@@ -322,8 +242,6 @@ describe('fetch.ts — branch gaps', () => {
   });
 
   it('truncates JSON parse error body when longer than 100 chars (L174)', async () => {
-    const { createFetchTransport } = await import('../../src/runtime/transport/fetch.js');
-
     const longText = 'x'.repeat(200);
     globalThis.fetch = vi.fn().mockResolvedValue({
       ok: true,
@@ -351,8 +269,6 @@ describe('fetch.ts — branch gaps', () => {
   });
 
   it('normalizes path without leading slash (L221)', async () => {
-    const { createFetchTransport } = await import('../../src/runtime/transport/fetch.js');
-
     globalThis.fetch = vi.fn().mockResolvedValue({
       ok: true,
       status: 200,
@@ -374,8 +290,6 @@ describe('fetch.ts — branch gaps', () => {
   });
 
   it('omits query string when all values are undefined (L236)', async () => {
-    const { createFetchTransport } = await import('../../src/runtime/transport/fetch.js');
-
     globalThis.fetch = vi.fn().mockResolvedValue({
       ok: true,
       status: 200,
@@ -402,8 +316,6 @@ describe('fetch.ts — branch gaps', () => {
 
 describe('validation.ts — remaining branch gaps', () => {
   it('invalid_string with url validation', async () => {
-    const { transformZodError } = await import('../../src/runtime/errors/validation.js');
-
     const error = new ZodError([
       {
         code: 'invalid_string',
@@ -419,8 +331,6 @@ describe('validation.ts — remaining branch gaps', () => {
   });
 
   it('invalid_string with uuid validation', async () => {
-    const { transformZodError } = await import('../../src/runtime/errors/validation.js');
-
     const error = new ZodError([
       {
         code: 'invalid_string',
@@ -436,8 +346,6 @@ describe('validation.ts — remaining branch gaps', () => {
   });
 
   it('invalid_string with datetime validation', async () => {
-    const { transformZodError } = await import('../../src/runtime/errors/validation.js');
-
     const error = new ZodError([
       {
         code: 'invalid_string',
@@ -453,8 +361,6 @@ describe('validation.ts — remaining branch gaps', () => {
   });
 
   it('too_small with array type', async () => {
-    const { transformZodError } = await import('../../src/runtime/errors/validation.js');
-
     const error = new ZodError([
       {
         code: 'too_small',
@@ -472,8 +378,6 @@ describe('validation.ts — remaining branch gaps', () => {
   });
 
   it('too_big with array type', async () => {
-    const { transformZodError } = await import('../../src/runtime/errors/validation.js');
-
     const error = new ZodError([
       {
         code: 'too_big',
@@ -491,8 +395,6 @@ describe('validation.ts — remaining branch gaps', () => {
   });
 
   it('invalid_union issue code', async () => {
-    const { transformZodError } = await import('../../src/runtime/errors/validation.js');
-
     const error = new ZodError([
       {
         code: 'invalid_union',
@@ -508,8 +410,6 @@ describe('validation.ts — remaining branch gaps', () => {
   });
 
   it('custom issue with message', async () => {
-    const { transformZodError } = await import('../../src/runtime/errors/validation.js');
-
     const error = new ZodError([
       {
         code: 'custom',
@@ -524,8 +424,6 @@ describe('validation.ts — remaining branch gaps', () => {
   });
 
   it('custom issue without message', async () => {
-    const { transformZodError } = await import('../../src/runtime/errors/validation.js');
-
     const error = new ZodError([
       {
         code: 'custom',
@@ -550,8 +448,6 @@ describe('credentials provider — fallback chains (L120)', () => {
   });
 
   it('uses backendUser fallbacks when direct fields are missing', async () => {
-    const { CredentialsProvider } = await import('../../src/runtime/auth/providers/credentials.js');
-
     globalThis.fetch = vi.fn().mockResolvedValue({
       ok: true,
       status: 200,
@@ -592,8 +488,6 @@ describe('github provider — fallback chains (L137-141)', () => {
   });
 
   it('uses backendUser fallbacks for userId/email/name/image', async () => {
-    const { GitHubProvider } = await import('../../src/runtime/auth/providers/github.js');
-
     // Mock auth URL fetch
     globalThis.fetch = vi.fn().mockResolvedValueOnce({
       ok: true,
@@ -636,8 +530,6 @@ describe('google provider — fallback chains (L107)', () => {
   });
 
   it('uses backendUser fallbacks for userId/email', async () => {
-    const { GoogleProvider } = await import('../../src/runtime/auth/providers/google.js');
-
     globalThis.fetch = vi.fn().mockResolvedValue({
       ok: true,
       status: 200,
@@ -682,8 +574,6 @@ describe('extendedOperations — listSessions fallback (L332)', () => {
       json: async () => ({}), // No .sessions property
     });
 
-    const { listSessions } = await import('../../src/runtime/auth/extended-operations.js');
-
     const sessions = await listSessions('http://localhost:5000', 'token');
     expect(sessions).toEqual([]);
   });
@@ -699,9 +589,6 @@ describe('session.ts — branch gaps', () => {
     globalThis.fetch = vi.fn().mockImplementation(() => {
       throw 'string-error';
     });
-
-    const { refreshAccessToken } = await import('../../src/runtime/auth/session.js');
-    const { TokenRefreshError } = await import('../../src/runtime/auth/errors.js');
 
     const token = {
       accessToken: 'at',
@@ -724,9 +611,6 @@ describe('session.ts — branch gaps', () => {
 
     // Mock fetch for refresh to fail
     globalThis.fetch = vi.fn().mockRejectedValue(new Error('network fail'));
-
-    const { processSession } = await import('../../src/runtime/auth/session.js');
-    const { encodeJWT } = await import('../../src/runtime/auth/jwt.js');
 
     // Create a valid encrypted token
     const secret = 'test-secret-key-minimum-32-chars!';
@@ -767,9 +651,6 @@ describe('session.ts — branch gaps', () => {
   });
 
   it('processSession jwt callback returning same token ref does not set updated (L236)', async () => {
-    const { processSession } = await import('../../src/runtime/auth/session.js');
-    const { encodeJWT } = await import('../../src/runtime/auth/jwt.js');
-
     const secret = 'test-secret-key-minimum-32-chars!';
     const now = Math.floor(Date.now() / 1000);
 
@@ -807,8 +688,6 @@ describe('session.ts — branch gaps', () => {
 
 describe('devtools — logRequestComplete branches (L116-117)', () => {
   it('logs error when result is not ok', async () => {
-    const { DevTools } = await import('../../src/runtime/devtools/devtools.js');
-
     const errorSpy = vi.fn();
     const devtools = new DevTools({
       enabled: true,

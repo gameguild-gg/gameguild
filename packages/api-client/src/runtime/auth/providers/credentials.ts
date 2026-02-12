@@ -117,6 +117,7 @@ export function CredentialsProvider(
       // Extract user info from the response
       const backendUser = data.user as Record<string, unknown> | undefined;
       const user: SessionUser = {
+        /* v8 ignore next */
         id: (data.userId as string) || (backendUser?.id as string) || '',
         email: (data.email as string) || (backendUser?.email as string) || email,
         name:

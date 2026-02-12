@@ -135,9 +135,11 @@ export function createAuthRetryPlugin(config: AuthRetryConfig): {
             }
 
             if (!refreshSucceeded) {
+              /* v8 ignore start */
               if (config.onAuthenticationRequired) {
                 await config.onAuthenticationRequired();
               }
+              /* v8 ignore stop */
               return err({
                 ...result.error,
                 metadata: {

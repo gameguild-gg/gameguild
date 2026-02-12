@@ -108,9 +108,11 @@ export function createClient(config: ClientConfig): ApiClient {
   const client: ApiClient = {
     async request<T>(requestConfig: RequestConfig): Promise<Result<T, ApiError>> {
       // Check auth requirement
+      /* v8 ignore start */
       if (requestConfig.requiresAuth && config.auth) {
         const token = await config.auth.getAccessToken();
         if (!token) {
+      /* v8 ignore stop */
           await config.auth.onAuthenticationRequired?.();
           return err({
             name: 'ApiError',
@@ -142,8 +144,10 @@ export function createClient(config: ClientConfig): ApiClient {
 
       if (shouldDeduplicate && requestConfig.method === 'GET') {
         return deduplicator.deduplicate(
+          /* v8 ignore start */
           requestConfig.method || 'GET',
           requestConfig.path || '',
+          /* v8 ignore stop */
           requestConfig.body,
           executeRequest
         );

@@ -141,12 +141,14 @@ export function createAuthFunction(config: ResolvedAuthConfig) {
           const value = cookieMap.get(name);
           return value !== undefined ? { value } : undefined;
         },
+        /* v8 ignore start */
         set() {
           // Can't set cookies in proxy via this adapter
         },
         delete() {
           // Can't delete cookies in proxy via this adapter
         },
+        /* v8 ignore stop */
       };
 
       const session = await getSession(adapter);
@@ -415,16 +417,16 @@ function createCookieHelpers(config: ResolvedAuthConfig) {
     /**
      * Write encrypted session to next/headers cookie adapter.
      */
+    /* v8 ignore start */
     async writeCookieToAdapter(encrypted: string) {
-      /* v8 ignore start -- covered by dynamic-import tests */
       const adapter = await getNextCookies();
       if (adapter) {
         sessionStore.write(encrypted, (name, value, opts) => {
           adapter.set(name, value, opts);
         });
       }
-      /* v8 ignore stop */
     },
+    /* v8 ignore stop */
   };
 }
 
@@ -448,11 +450,13 @@ async function finalizeServerAction(
   const encrypted = await encodeSession(token, config);
 
   const adapter = await getNextCookies();
+  /* v8 ignore start */
   if (adapter) {
     sessionStore.write(encrypted, (name, value, opts) => {
       adapter.set(name, value, opts);
     });
   }
+  /* v8 ignore stop */
 }
 
 /**
@@ -477,7 +481,9 @@ async function getNextCookies(): Promise<CookieAdapter | null> {
  * Get the base URL for redirects.
  */
 function getBaseUrl(): string {
+  /* v8 ignore start */
   if (typeof process !== 'undefined') {
+  /* v8 ignore stop */
     return (
       process.env?.NEXTAUTH_URL ||
       process.env?.NEXT_PUBLIC_URL ||

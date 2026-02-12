@@ -17,6 +17,8 @@ import React, { useEffect } from 'react';
 import { render, waitFor, act } from '@testing-library/react';
 import { SessionContext } from '../../src/integrations/react/session-provider.js';
 import { useSession } from '../../src/integrations/react/use-session.js';
+import { createMutationHook } from '../../src/integrations/react/query-hooks.js';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 // ─── use-session.ts L75  (required=true + status='loading' → early return) ──
 
@@ -61,9 +63,6 @@ describe('useSession — required + loading (L75)', () => {
 describe('query-hooks — optimistic branches', () => {
   it('optimistic without invalidateKeys (L98)', async () => {
     // This branch: optimisticData is provided but invalidateKeys is not
-    const { createMutationHook } = await import('../../src/integrations/react/query-hooks.js');
-
-    const { QueryClient, QueryClientProvider } = await import('@tanstack/react-query');
     const queryClient = new QueryClient({
       defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
     });
@@ -102,9 +101,6 @@ describe('query-hooks — optimistic branches', () => {
   });
 
   it('onError with rollbackOnError=false does not rollback (L128-130)', async () => {
-    const { createMutationHook } = await import('../../src/integrations/react/query-hooks.js');
-    const { QueryClient, QueryClientProvider } = await import('@tanstack/react-query');
-
     const queryClient = new QueryClient({
       defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
     });

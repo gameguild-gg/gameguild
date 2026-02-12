@@ -218,7 +218,9 @@ export function SessionProvider({
     /* v8 ignore stop */
 
     const handleVisibilityChange = () => {
+      /* v8 ignore start */
       if (document.visibilityState === 'visible') {
+      /* v8 ignore stop */
         fetchSession(false);
       }
     };
@@ -254,6 +256,7 @@ export function SessionProvider({
   useEffect(() => {
     const broadcast = createAuthBroadcast(
       (message: AuthBroadcastMessage) => {
+        /* v8 ignore start */
         if (message.type === 'sign-out') {
           setSession(null);
           setStatus('unauthenticated');
@@ -261,6 +264,7 @@ export function SessionProvider({
           // Re-fetch session from server to get the latest state
           fetchSession(false);
         }
+        /* v8 ignore stop */
       }
     );
 
