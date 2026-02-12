@@ -465,58 +465,7 @@ LEFT JOIN reviews r ON p.id = r.product_id;
 
 ## Join Visualization
 
-```mermaid
-flowchart TB
-	subgraph legend [" "]
-		direction LR
-		lk1["🟢 Included"]
-		lk2["🔴 Excluded"]
-	end
-
-	subgraph inner ["INNER JOIN"]
-		direction LR
-		il["❌ Left Only"]
-		im["✅ Matched"]
-		ir["❌ Right Only"]
-	end
-
-	subgraph left ["LEFT JOIN"]
-		direction LR
-		ll["✅ Left Only"]
-		lm["✅ Matched"]
-		lr["❌ Right Only"]
-	end
-
-	subgraph right ["RIGHT JOIN"]
-		direction LR
-		rl["❌ Left Only"]
-		rm["✅ Matched"]
-		rr["✅ Right Only"]
-	end
-
-	subgraph full ["FULL OUTER JOIN"]
-		direction LR
-		fl["✅ Left Only"]
-		fm["✅ Matched"]
-		fr["✅ Right Only"]
-	end
-
-	subgraph cross ["CROSS JOIN"]
-		direction LR
-		cl["✅ Every Left"]
-		cx["All Combinations"]
-		cr["✅ Every Right"]
-	end
-
-	classDef included fill:#22c55e,stroke:#166534,color:#fff
-	classDef excluded fill:#ef4444,stroke:#991b1b,color:#fff
-	classDef header fill:#3b82f6,stroke:#1e40af,color:#fff
-	classDef cross_op fill:#f59e0b,stroke:#92400e,color:#fff
-
-	class im,ll,lm,rm,rr,fl,fm,fr,cl,cr included
-	class il,ir,lr,rl excluded
-	class cx cross_op
-```
+![Imgur](https://i.imgur.com/pevay84.png)
 
 ---
 
@@ -586,15 +535,15 @@ JOIN customers c ON o.customer_id = c.id;
 
 ## Query Execution Order
 
-```
-1. FROM + JOINs  → Tables combined
-2. WHERE         → Filter rows
-3. GROUP BY      → Create groups
-4. HAVING        → Filter groups
-5. SELECT        → Compute expressions
-6. DISTINCT      → Remove duplicates
-7. ORDER BY      → Sort results
-8. LIMIT         → Limit results
+```mermaid
+flowchart LR
+    A["1. FROM + JOINs<br><i>Tables combined</i>"] --> B["2. WHERE<br><i>Filter rows</i>"]
+    B --> C["3. GROUP BY<br><i>Create groups</i>"]
+    C --> D["4. HAVING<br><i>Filter groups</i>"]
+    D --> E["5. SELECT<br><i>Compute expressions</i>"]
+    E --> F["6. DISTINCT<br><i>Remove duplicates</i>"]
+    F --> G["7. ORDER BY<br><i>Sort results</i>"]
+    G --> H["8. LIMIT<br><i>Limit results</i>"]
 ```
 
 ---
