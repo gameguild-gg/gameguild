@@ -115,11 +115,17 @@ Navigate down using UCB1 to pick the most promising node.
 
 ### UCB1 Formula
 
-$$UCB1 = \frac{w_i}{n_i} + C \sqrt{\frac{\ln N}{n_i}}$$
+$$UCB1 = \underbrace{\frac{w\_i}{n\_i}}\_{\text{exploit}} + \underbrace{C \sqrt{\frac{\ln N}{n\_i}}}\_{\text{explore}}$$
 
-- $\frac{w_i}{n_i}$ = **exploitation** (win rate)
-- $C\sqrt{\frac{\ln N}{n_i}}$ = **exploration** (visit less-explored nodes)
-- $C$ = exploration constant (typically $\sqrt{2}$)
+| Parameter                    | Meaning                                                                           |
+| ---------------------------- | --------------------------------------------------------------------------------- |
+| $w_i$                        | Total wins (or score) accumulated by node $i$                                     |
+| $n_i$                        | Number of times node $i$ has been visited                                         |
+| $N$                          | Total visits to the parent node (sum of all siblings' visits)                     |
+| $C$                          | Exploration constant (typically $\sqrt{2}$), controls exploration vs exploitation |
+| $\ln$                        | Natural logarithm                                                                 |
+| $\frac{w_i}{n_i}$            | Exploitation term (win rate of this node)                                         |
+| $C \sqrt{\frac{\ln N}{n_i}}$ | Exploration term (bonus for less-visited nodes)                                   |
 
 ---
 
