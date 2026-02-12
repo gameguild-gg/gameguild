@@ -35,6 +35,9 @@ public class DeleteUserCommandHandlerTests
         // Arrange
         var userId = Guid.NewGuid();
         var user = new User { Id = userId, Email = "test@example.com", Name = "Test User" };
+        // Simulate persisted entity (Version must be > 0 for SoftDelete)
+        typeof(EntityBase<Guid>).GetProperty(nameof(EntityBase.Version))!
+            .SetValue(user, 1);
         var command = new DeleteUserCommand(userId);
 
         _userRepositoryMock.Setup(x => x.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
@@ -73,6 +76,9 @@ public class DeleteUserCommandHandlerTests
         var userId = Guid.NewGuid();
         var tenantId = Guid.NewGuid();
         var user = new User { Id = userId, Email = "test@example.com", Name = "Test User" };
+        // Simulate persisted entity (Version must be > 0 for SoftDelete)
+        typeof(EntityBase<Guid>).GetProperty(nameof(EntityBase.Version))!
+            .SetValue(user, 1);
         user.SetProperties(new Dictionary<string, object?> { ["TenantId"] = tenantId });
         var command = new DeleteUserCommand(userId);
 

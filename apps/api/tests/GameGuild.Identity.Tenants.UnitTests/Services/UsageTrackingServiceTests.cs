@@ -88,6 +88,8 @@ public class UsageTrackingServiceTests
         context.UsageTracking.AddRange(oldRecord, recentRecord);
         await context.SaveChangesAsync();
 
+        typeof(EntityBase).GetProperty(nameof(EntityBase.Version))!.SetValue(oldRecord, 1);
+
         var service = new UsageTrackingService(context);
 
         var deletedCount = await service.CleanupOldUsageDataAsync(DateTime.UtcNow.AddDays(-7));

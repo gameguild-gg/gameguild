@@ -99,7 +99,8 @@ public class ApiKey : EntityBase
         string? ipWhitelist = null)
     {
         // Generate secure random key: gg_live_<32 random chars>
-        var randomBytes = new byte[24];
+        // Use 48 bytes (64 Base64 chars) to guarantee at least 32 alphanumeric chars after stripping
+        var randomBytes = new byte[48];
         using (var rng = RandomNumberGenerator.Create())
         {
             rng.GetBytes(randomBytes);

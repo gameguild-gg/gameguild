@@ -132,6 +132,8 @@ public class TenantRepositoryTests
         context.Set<Tenant>().Add(tenant);
         await context.SaveChangesAsync();
 
+        typeof(EntityBase).GetProperty(nameof(EntityBase.Version))!.SetValue(tenant, 1);
+
         await repo.DeleteAsync(tenant.Id);
 
         tenant.DeletedAt.Should().NotBeNull();
@@ -146,6 +148,8 @@ public class TenantRepositoryTests
         var tenant = new Tenant { Name = "Tenant", Slug = "tenant" };
         context.Set<Tenant>().Add(tenant);
         await context.SaveChangesAsync();
+
+        typeof(EntityBase).GetProperty(nameof(EntityBase.Version))!.SetValue(tenant, 1);
 
         await repo.DeleteAsync(tenant);
 

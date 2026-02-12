@@ -41,7 +41,7 @@ public class UsageRetentionService(IUsageRetentionPolicyRepository policyReposit
             };
 
             // Set TenantId using SetProperties (EntityBase has protected setter)
-            if (tenantId.HasValue) { existingPolicy.SetProperties(new Dictionary<string, object?> { ["TenantId"] = new TenantId(tenantId.Value) }); }
+            if (tenantId.HasValue) { existingPolicy.SetTenantId(tenantId.Value); }
 
             existingPolicy = await policyRepository.CreateAsync(existingPolicy, cancellationToken).ConfigureAwait(false);
         }

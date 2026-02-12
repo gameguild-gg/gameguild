@@ -100,7 +100,7 @@ public class ApiKeyEntityTests
         apiKey.UsageCount.Should().Be(100);
     }
 
-    [Fact(Skip = "ApiKey.Create has internal implementation issues with key generation")]
+    [Fact]
     public void Create_ShouldGenerateKeyAndHash()
     {
         // Arrange
@@ -124,7 +124,7 @@ public class ApiKeyEntityTests
         plaintext.Should().NotBeNullOrEmpty();
     }
 
-    [Fact(Skip = "ApiKey.Create has internal implementation issues with key generation")]
+    [Fact]
     public void Create_WithExpiration_ShouldSetExpiresAt()
     {
         // Arrange

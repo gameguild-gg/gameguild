@@ -17,8 +17,19 @@ public class PasswordHasherTests
     public PasswordHasherTests()
     {
         _loggerMock = new Mock<ILogger<PasswordHasher>>();
-        var configurationMock = new Mock<IConfiguration>();
-        _passwordHasher = new PasswordHasher(_loggerMock.Object, configurationMock.Object);
+        // Use in-memory configuration so GetValue<T>() works correctly
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["PasswordPolicy:MinPasswordLength"] = "8",
+                ["PasswordPolicy:MaxPasswordLength"] = "128",
+                ["PasswordPolicy:RequireUppercase"] = "true",
+                ["PasswordPolicy:RequireLowercase"] = "true",
+                ["PasswordPolicy:RequireDigit"] = "true",
+                ["PasswordPolicy:RequireSpecialChar"] = "true"
+            })
+            .Build();
+        _passwordHasher = new PasswordHasher(_loggerMock.Object, configuration);
     }
 
     [Fact]

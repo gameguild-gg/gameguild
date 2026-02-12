@@ -214,6 +214,9 @@ public class EntityBaseTests
     {
         // Arrange
         var entity = new TestEntity();
+        // Simulate persisted entity (Version must be > 0 for SoftDelete)
+        typeof(EntityBase<Guid>).GetProperty(nameof(EntityBase.Version))!
+            .SetValue(entity, 1);
         entity.SoftDelete();
 
         // Assert
@@ -252,6 +255,9 @@ public class EntityBaseTests
     {
         // Arrange
         var entity = new TestEntity();
+        // Simulate persisted entity (Version must be > 0 for SoftDelete)
+        typeof(EntityBase<Guid>).GetProperty(nameof(EntityBase.Version))!
+            .SetValue(entity, 1);
 
         // Act
         entity.SoftDelete();
@@ -267,6 +273,9 @@ public class EntityBaseTests
     {
         // Arrange
         var entity = new TestEntity();
+        // Simulate persisted entity (Version must be > 0 for SoftDelete)
+        typeof(EntityBase<Guid>).GetProperty(nameof(EntityBase.Version))!
+            .SetValue(entity, 1);
         entity.SoftDelete();
         var originalDeletedAt = entity.DeletedAt;
         
@@ -284,6 +293,9 @@ public class EntityBaseTests
     {
         // Arrange
         var entity = new TestEntity();
+        // Simulate persisted entity (Version must be > 0 for SoftDelete)
+        typeof(EntityBase<Guid>).GetProperty(nameof(EntityBase.Version))!
+            .SetValue(entity, 1);
         entity.SoftDelete();
         var updatedAtAfterDelete = entity.UpdatedAt;
         

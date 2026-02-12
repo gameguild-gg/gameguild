@@ -217,11 +217,31 @@ public class UsageTrendAnalysisService(IResourceUsageTrendRepository trendReposi
 
     private static int DetectAnomalyCount(List<long> values, double average, decimal stdDev)
     {
-        if (stdDev == 0) return 0;
+        if (stdDev == 0 || values.Count < 3) return 0;
 
-        var threshold = 2.0; // 2 standard deviations
+        // Use Median Absolute Deviation (MAD) for robust anomaly detection
+        // MAD is resistant to outlier contamination unlike mean/stddev
+        var sorted = values.OrderBy(v => v).ToList();
+        var median = sorted.Count % 2 == 0
+            ? (sorted[sorted.Count / 2 - 1] + sorted[sorted.Count / 2]) / 2.0
+            : sorted[sorted.Count / 2];
 
-        return values.Count(v => Math.Abs(v - average) > (double) stdDev * threshold);
+        var absDeviations = values.Select(v => Math.Abs(v - median)).OrderBy(d => d).ToList();
+        var mad = absDeviations.Count % 2 == 0
+            ? (absDeviations[absDeviations.Count / 2 - 1] + absDeviations[absDeviations.Count / 2]) / 2.0
+            : absDeviations[absDeviations.Count / 2];
+
+        if (mad == 0)
+        {
+            // Fall back to mean/stddev when MAD is 0 (most values identical)
+            var threshold = 2.0;
+            return values.Count(v => Math.Abs(v - average) > (double)stdDev * threshold);
+        }
+
+        // 1.4826 converts MAD to standard deviation equivalent for normal distributions
+        var madSigma = mad * 1.4826;
+        var madThreshold = 2.0;
+        return values.Count(v => Math.Abs(v - median) > madSigma * madThreshold);
     }
 
     private static string ClassifyPattern(decimal growthRate, decimal stdDev, double average)

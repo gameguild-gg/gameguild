@@ -1,6 +1,7 @@
 using FluentAssertions;
 
 using Microsoft.EntityFrameworkCore;
+using MockQueryable.Moq;
 using Moq;
 using Xunit;
 
@@ -9,7 +10,6 @@ namespace GameGuild.Resources.UnitTests.Repositories;
 public class ResourceQuotaRepositoryTests
 {
     private readonly Mock<IApplicationDbContext> _contextMock;
-    private readonly Mock<DbSet<ResourceQuota>> _quotaDbSetMock;
     private readonly ResourceQuotaRepository _repository;
     private readonly List<ResourceQuota> _quotasData;
 
@@ -17,16 +17,20 @@ public class ResourceQuotaRepositoryTests
     {
         _quotasData = new List<ResourceQuota>();
         _contextMock = new Mock<IApplicationDbContext>();
-        _quotaDbSetMock = CreateDbSetMock(_quotasData);
         
-        _contextMock.Setup(x => x.Set<ResourceQuota>()).Returns(_quotaDbSetMock.Object);
         _contextMock.Setup(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(1);
         
         _repository = new ResourceQuotaRepository(_contextMock.Object);
     }
 
-    [Fact(Skip = "Requires MockQueryable.EntityFrameworkCore package or should be converted to integration test with real DbContext")]
+    private void SetupDbSet()
+    {
+        var mockDbSet = _quotasData.AsQueryable().BuildMockDbSet();
+        _contextMock.Setup(x => x.Set<ResourceQuota>()).Returns(mockDbSet.Object);
+    }
+
+    [Fact]
     public async Task TryIncrementUsage_ReturnsFalse_WhenWouldExceedLimit()
     {
         // Arrange
@@ -34,6 +38,7 @@ public class ResourceQuotaRepositoryTests
         var resourceType = ResourceUsageType.Users;
         var quota = CreateQuota(tenantId, resourceType, hardLimit: 10, currentUsage: 8);
         _quotasData.Add(quota);
+        SetupDbSet();
 
         // Act
         var (success, returnedQuota) = await _repository.TryIncrementUsageAsync(
@@ -48,7 +53,7 @@ public class ResourceQuotaRepositoryTests
         returnedQuota!.CurrentUsage.Should().Be(8, "usage should not have been incremented");
     }
 
-    [Fact(Skip = "Requires MockQueryable.EntityFrameworkCore package or should be converted to integration test with real DbContext")]
+    [Fact]
     public async Task TryIncrementUsage_ReturnsTrue_WhenWithinLimit()
     {
         // Arrange
@@ -56,6 +61,7 @@ public class ResourceQuotaRepositoryTests
         var resourceType = ResourceUsageType.Users;
         var quota = CreateQuota(tenantId, resourceType, hardLimit: 10, currentUsage: 5);
         _quotasData.Add(quota);
+        SetupDbSet();
 
         // Act
         var (success, returnedQuota) = await _repository.TryIncrementUsageAsync(
@@ -70,13 +76,14 @@ public class ResourceQuotaRepositoryTests
         returnedQuota!.CurrentUsage.Should().Be(8, "usage should have been incremented from 5 to 8");
     }
 
-    [Fact(Skip = "Requires MockQueryable.EntityFrameworkCore package or should be converted to integration test with real DbContext")]
+    [Fact]
     public async Task TryIncrementUsage_ReturnsTrue_WhenNoQuotaExists()
     {
         // Arrange
         var tenantId = Guid.NewGuid();
         var resourceType = ResourceUsageType.Storage;
         // No quota exists = unlimited
+        SetupDbSet();
 
         // Act
         var (success, returnedQuota) = await _repository.TryIncrementUsageAsync(
@@ -90,7 +97,7 @@ public class ResourceQuotaRepositoryTests
         returnedQuota.Should().BeNull("quota doesn't exist");
     }
 
-    [Fact(Skip = "Requires MockQueryable.EntityFrameworkCore package or should be converted to integration test with real DbContext")]
+    [Fact]
     public async Task TryIncrementUsage_ReturnsTrue_WhenExactlyAtLimit()
     {
         // Arrange
@@ -98,6 +105,7 @@ public class ResourceQuotaRepositoryTests
         var resourceType = ResourceUsageType.Users;
         var quota = CreateQuota(tenantId, resourceType, hardLimit: 10, currentUsage: 9);
         _quotasData.Add(quota);
+        SetupDbSet();
 
         // Act
         var (success, returnedQuota) = await _repository.TryIncrementUsageAsync(
@@ -112,7 +120,7 @@ public class ResourceQuotaRepositoryTests
         returnedQuota!.CurrentUsage.Should().Be(10, "usage should be exactly at limit");
     }
 
-    [Fact(Skip = "Requires MockQueryable.EntityFrameworkCore package or should be converted to integration test with real DbContext")]
+    [Fact]
     public async Task DecrementUsage_SuccessfullyDecrementsUsage()
     {
         // Arrange
@@ -120,6 +128,7 @@ public class ResourceQuotaRepositoryTests
         var resourceType = ResourceUsageType.Users;
         var quota = CreateQuota(tenantId, resourceType, hardLimit: 10, currentUsage: 7);
         _quotasData.Add(quota);
+        SetupDbSet();
 
         // Act
         var result = await _repository.DecrementUsageAsync(
@@ -133,7 +142,7 @@ public class ResourceQuotaRepositoryTests
         quota.CurrentUsage.Should().Be(4, "usage should have been decremented from 7 to 4");
     }
 
-    [Fact(Skip = "Requires MockQueryable.EntityFrameworkCore package or should be converted to integration test with real DbContext")]
+    [Fact]
     public async Task DecrementUsage_NeverGoesNegative_WhenAmountExceedsUsage()
     {
         // Arrange
@@ -141,6 +150,7 @@ public class ResourceQuotaRepositoryTests
         var resourceType = ResourceUsageType.Users;
         var quota = CreateQuota(tenantId, resourceType, hardLimit: 10, currentUsage: 3);
         _quotasData.Add(quota);
+        SetupDbSet();
 
         // Act
         var result = await _repository.DecrementUsageAsync(
@@ -154,13 +164,14 @@ public class ResourceQuotaRepositoryTests
         quota.CurrentUsage.Should().Be(0, "usage should be clamped to 0, never negative");
     }
 
-    [Fact(Skip = "Requires MockQueryable.EntityFrameworkCore package or should be converted to integration test with real DbContext")]
+    [Fact]
     public async Task DecrementUsage_ReturnsFalse_WhenQuotaNotFound()
     {
         // Arrange
         var tenantId = Guid.NewGuid();
         var resourceType = ResourceUsageType.Storage;
         // No quota exists
+        SetupDbSet();
 
         // Act
         var result = await _repository.DecrementUsageAsync(
@@ -191,18 +202,5 @@ public class ResourceQuotaRepositoryTests
         };
         quota.SetProperties(new Dictionary<string, object?> { ["TenantId"] = tenantId });
         return quota;
-    }
-
-    private Mock<DbSet<T>> CreateDbSetMock<T>(List<T> data) where T : class
-    {
-        var queryable = data.AsQueryable();
-        var mockSet = new Mock<DbSet<T>>();
-        
-        mockSet.As<IQueryable<T>>().Setup(m => m.Provider).Returns(queryable.Provider);
-        mockSet.As<IQueryable<T>>().Setup(m => m.Expression).Returns(queryable.Expression);
-        mockSet.As<IQueryable<T>>().Setup(m => m.ElementType).Returns(queryable.ElementType);
-        mockSet.As<IQueryable<T>>().Setup(m => m.GetEnumerator()).Returns(() => queryable.GetEnumerator());
-        
-        return mockSet;
     }
 }

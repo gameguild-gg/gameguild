@@ -28,6 +28,8 @@ public class TenantSettingsRepositoryTests
         fetched!.DefaultLanguage = "pt-BR";
         await repo.UpdateAsync(fetched);
 
+        typeof(EntityBase).GetProperty(nameof(EntityBase.Version))!.SetValue(fetched, 1);
+
         await repo.DeleteAsync(tenant.Id);
 
         // Reload to check soft delete

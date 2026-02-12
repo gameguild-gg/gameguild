@@ -1,4 +1,5 @@
 using FluentAssertions;
+using System.Reflection;
 using GameGuild.Identity.Authentication;
 using Xunit;
 
@@ -120,7 +121,7 @@ public class PublicAttributeTests
     [Fact]
     public void Attribute_Can_Be_Applied_To_Test_Method()
     {
-        var methodInfo = GetType().GetMethod(nameof(TestMethodWithPublicAttribute));
+        var methodInfo = GetType().GetMethod(nameof(TestMethodWithPublicAttribute), BindingFlags.NonPublic | BindingFlags.Instance);
         
         methodInfo.Should().NotBeNull();
         var attribute = methodInfo!.GetCustomAttributes(typeof(PublicAttribute), false)
@@ -151,7 +152,7 @@ public class PublicAttributeTests
     [Fact]
     public void Attribute_With_False_Can_Be_Applied()
     {
-        var methodInfo = GetType().GetMethod(nameof(TestMethodWithPublicFalse));
+        var methodInfo = GetType().GetMethod(nameof(TestMethodWithPublicFalse), BindingFlags.NonPublic | BindingFlags.Instance);
         
         methodInfo.Should().NotBeNull();
         var attribute = methodInfo!.GetCustomAttributes(typeof(PublicAttribute), false)

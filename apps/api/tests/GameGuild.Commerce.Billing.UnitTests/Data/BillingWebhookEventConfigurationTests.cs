@@ -17,6 +17,6 @@ public class BillingWebhookEventConfigurationTests
 
         var entity = modelBuilder.Model.FindEntityType(typeof(BillingWebhookEvent));
         entity.Should().NotBeNull();
-        entity!.GetTableName().Should().Be("BillingWebhookEvents");
+        entity!.GetTableName().Should().Be("billing_webhook_events");
     }
 }

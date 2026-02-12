@@ -238,18 +238,19 @@ public class PaymentTests
         // Arrange
         var payment = CreatePendingPayment();
         
-        // Simulate max retries
+        // Exhaust all retries
         for (int i = 0; i < payment.MaxRetries; i++)
         {
             payment.MarkAsProcessing();
             payment.MarkAsFailed("Card declined");
-            if (i < payment.MaxRetries - 1) // Don't retry on last failure
-            {
-                payment.PrepareForRetry();
-            }
+            payment.PrepareForRetry();
         }
 
-        // Act & Assert
+        // One more failure to get back to Failed state
+        payment.MarkAsProcessing();
+        payment.MarkAsFailed("Card declined");
+
+        // Act & Assert — RetryCount should now equal MaxRetries
         var act = () => payment.PrepareForRetry();
         act.Should().Throw<InvalidOperationException>()
             .WithMessage("*Maximum retry attempts*reached*");

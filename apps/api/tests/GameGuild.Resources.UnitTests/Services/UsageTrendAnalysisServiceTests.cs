@@ -122,7 +122,7 @@ public class UsageTrendAnalysisServiceTests
         capturedTrend!.StandardDeviation.Should().Be(0);
     }
 
-    [Fact(Skip = "Anomaly detection threshold may vary based on implementation")]
+    [Fact]
     public async Task AnalyzeTrendAsync_DetectsAnomalies()
     {
         // Arrange

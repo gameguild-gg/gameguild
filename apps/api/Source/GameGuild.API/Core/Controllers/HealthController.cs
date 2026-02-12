@@ -43,27 +43,42 @@ public class HealthController(
     [ProducesResponseType<HealthinessResponse>(503)]
     public async Task<ActionResult<HealthinessResponse>> GetHealth()
     {
-        var healthReport = await _healthCheckService.CheckHealthAsync().ConfigureAwait(false);
-
-        var response = new HealthinessResponse
+        try
         {
-            Status = healthReport.Status.ToString(),
-            Duration = healthReport.TotalDuration,
-            Timestamp = SystemClock.UtcNow,
-            Checks = healthReport.Entries.ToDictionary(
-                kvp => kvp.Key,
-                kvp => new HealthinessResponseItem
-                {
-                    Status = kvp.Value.Status.ToString(),
-                    Duration = kvp.Value.Duration,
-                    Description = kvp.Value.Description,
-                    Data = kvp.Value.Data
-                })
-        };
+            var healthReport = await _healthCheckService.CheckHealthAsync().ConfigureAwait(false);
 
-        var statusCode = healthReport.Status == HealthStatus.Healthy ? 200 : 503;
+            var response = new HealthinessResponse
+            {
+                Status = healthReport.Status.ToString(),
+                Duration = healthReport.TotalDuration,
+                Timestamp = SystemClock.UtcNow,
+                Checks = healthReport.Entries.ToDictionary(
+                    kvp => kvp.Key,
+                    kvp => new HealthinessResponseItem
+                    {
+                        Status = kvp.Value.Status.ToString(),
+                        Duration = kvp.Value.Duration,
+                        Description = kvp.Value.Description,
+                        Data = kvp.Value.Data
+                    })
+            };
 
-        return StatusCode(statusCode, response);
+            var statusCode = healthReport.Status == HealthStatus.Healthy ? 200 : 503;
+
+            return StatusCode(statusCode, response);
+        }
+        catch (Exception ex)
+        {
+            var errorResponse = new HealthinessResponse
+            {
+                Status = "Unhealthy",
+                Duration = TimeSpan.Zero,
+                Timestamp = SystemClock.UtcNow,
+                Error = ex.Message
+            };
+
+            return StatusCode(503, errorResponse);
+        }
     }
 
     /// <summary>

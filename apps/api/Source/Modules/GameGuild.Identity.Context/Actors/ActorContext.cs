@@ -265,12 +265,19 @@ public sealed record ActorContext
 
     /// <summary>
     ///     Gets an attribute value by key.
+    ///     Checks both typed properties (e.g. "email" → Email) and custom attributes.
     /// </summary>
     /// <param name="key">The attribute key.</param>
     /// <returns>The attribute value, or null if not found.</returns>
     public string? GetAttribute(string key)
     {
-        return TypedAttributes.GetCustomAttribute(key);
+        // Check custom attributes first (fast path for unknown keys)
+        var customValue = TypedAttributes.GetCustomAttribute(key);
+        if (customValue != null) return customValue;
+
+        // Fall back to typed attributes (handles known keys like "email", "name", etc.)
+        var allAttributes = TypedAttributes.ToDictionary();
+        return allAttributes.TryGetValue(key, out var value) ? value : null;
     }
 
     /// <summary>

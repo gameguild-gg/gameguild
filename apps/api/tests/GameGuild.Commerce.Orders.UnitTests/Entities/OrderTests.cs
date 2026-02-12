@@ -225,8 +225,8 @@ public class OrderTests
 
         // Act & Assert
         var act = () => order.Cancel("Too late to cancel");
-        act.Should().Throw<InvalidOperationException>()
-            .WithMessage("*Invalid order state transition*");
+        act.Should().Throw<InvalidStateTransitionException>()
+            .WithMessage("*Invalid state transition*");
     }
 
     [Fact]
@@ -281,8 +281,8 @@ public class OrderTests
 
         // Act & Assert
         var act = () => order.ProcessRefund(10m, "Refund");
-        act.Should().Throw<InvalidOperationException>()
-            .WithMessage("*Invalid order state transition*");
+        act.Should().Throw<InvalidStateTransitionException>()
+            .WithMessage("*Invalid state transition*");
     }
 
     #endregion
@@ -350,8 +350,8 @@ public class OrderTests
 
         // Act & Assert
         var act = () => order.MarkAsFulfilled();
-        act.Should().Throw<InvalidOperationException>()
-            .WithMessage("*Invalid order state transition*");
+        act.Should().Throw<InvalidStateTransitionException>()
+            .WithMessage("*Invalid state transition*");
     }
 
     [Fact]
@@ -365,8 +365,8 @@ public class OrderTests
 
         // Act & Assert
         var act = () => order.MarkAsFulfilled();
-        act.Should().Throw<InvalidOperationException>()
-            .WithMessage("*Invalid order state transition*");
+        act.Should().Throw<InvalidStateTransitionException>()
+            .WithMessage("*Invalid state transition*");
     }
 
     [Fact]

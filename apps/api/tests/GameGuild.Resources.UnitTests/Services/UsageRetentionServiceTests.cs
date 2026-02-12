@@ -355,7 +355,7 @@ public class UsageRetentionServiceTests
     {
         // Arrange
         var tenantId = Guid.NewGuid();
-        var baseDate = DateTime.UtcNow.AddDays(-45);
+        var baseDate = new DateTime(2025, 1, 10);
 
         var storageRecords = new List<UsageRecord>
         {

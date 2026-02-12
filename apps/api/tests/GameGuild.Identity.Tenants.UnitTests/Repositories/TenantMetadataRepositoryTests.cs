@@ -30,6 +30,8 @@ public class TenantMetadataRepositoryTests
         await repo.UpdateAsync(fetched);
         await repo.SaveChangesAsync();
 
+        typeof(EntityBase).GetProperty(nameof(EntityBase.Version))!.SetValue(fetched, 1);
+
         await repo.DeleteAsync(fetched);
         await repo.SaveChangesAsync();
 

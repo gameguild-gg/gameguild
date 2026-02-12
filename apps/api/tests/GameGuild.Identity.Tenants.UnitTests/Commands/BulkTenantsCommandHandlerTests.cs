@@ -78,6 +78,7 @@ public class BulkTenantsCommandHandlerTests
         var repo = new Mock<ITenantRepository>();
         var ids = new[] { Guid.NewGuid() };
         var tenant = new Tenant { Id = ids[0], Name = "Tenant", Slug = "tenant" };
+        typeof(EntityBase).GetProperty(nameof(EntityBase.Version))!.SetValue(tenant, 1);
 
         repo.Setup(r => r.GetByIdAsync(ids[0], It.IsAny<CancellationToken>()))
             .ReturnsAsync(tenant);

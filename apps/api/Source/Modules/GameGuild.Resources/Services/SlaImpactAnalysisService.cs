@@ -57,7 +57,7 @@ public class SlaImpactAnalysisService(
             {
                 var escalationResult = await escalationService.EscalateViolationAsync(savedViolation, cancellationToken).ConfigureAwait(false);
 
-                if (escalationResult.WasEscalated)
+                if (escalationResult is { WasEscalated: true })
                 {
                     logger.LogInformation(
                         "Violation {ViolationId} auto-escalated: Incident={IncidentId}, NotifiedUsers={UserCount}",
@@ -68,7 +68,6 @@ public class SlaImpactAnalysisService(
             {
                 // Don't fail the violation recording if escalation fails
                 logger.LogError(ex, "Failed to auto-escalate violation {ViolationId}", savedViolation.Id);
-                throw;
             }
         }
 

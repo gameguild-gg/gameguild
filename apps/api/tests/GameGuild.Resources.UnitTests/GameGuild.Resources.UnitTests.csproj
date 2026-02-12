@@ -38,6 +38,7 @@
         </PackageReference>
         <PackageReference Include="coverlet.msbuild" />
         <PackageReference Include="Moq" />
+        <PackageReference Include="MockQueryable.Moq" />
         <PackageReference Include="FluentAssertions" />
         <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
         <PackageReference Include="AutoFixture" />

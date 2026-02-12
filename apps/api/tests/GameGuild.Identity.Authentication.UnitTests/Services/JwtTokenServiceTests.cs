@@ -122,6 +122,11 @@ public class JwtTokenServiceTests
             UserAgent = "Test User Agent"
         };
 
+        // The service hashes the token before storing, so set up the hasher mock
+        _refreshTokenHasherMock
+            .Setup(x => x.HashToken(It.IsAny<string>()))
+            .Returns((string t) => $"hashed_{t}");
+
         _refreshTokenRepositoryMock
             .Setup(x => x.CreateAsync(It.IsAny<RefreshToken>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((RefreshToken rt, CancellationToken _) => rt);
@@ -136,10 +141,10 @@ public class JwtTokenServiceTests
         // Assert
         token.Should().NotBeNullOrEmpty();
         
+        // Token stored in DB is the HASH, not the plaintext token
         _refreshTokenRepositoryMock.Verify(
             x => x.CreateAsync(It.Is<RefreshToken>(rt => 
                 rt.UserId == userId && 
-                rt.Token == token &&
                 !rt.IsRevoked), 
             It.IsAny<CancellationToken>()), 
             Times.Once);

@@ -140,6 +140,8 @@ public class TenantMemberRepositoryTests
         var member = new TenantMember { TenantId = tenant.Id, UserId = Guid.NewGuid(), Role = "Member", IsActive = true };
         await repo.CreateAsync(member);
 
+        typeof(EntityBase).GetProperty(nameof(EntityBase.Version))!.SetValue(member, 1);
+
         await repo.DeleteAsync(member.Id);
 
         // Need to reload from DB to check DeletedAt since the repository fetches fresh

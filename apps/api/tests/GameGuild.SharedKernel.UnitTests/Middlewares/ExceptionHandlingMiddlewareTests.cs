@@ -98,7 +98,7 @@ public class ExceptionHandlingMiddlewareTests
         await _middleware.InvokeAsync(_httpContext);
 
         // Assert
-        _httpContext.Response.ContentType.Should().Be("application/json");
+        _httpContext.Response.ContentType.Should().Be("application/problem+json");
     }
 
     [Fact]
@@ -133,13 +133,14 @@ public class ExceptionHandlingMiddlewareTests
         var responseBody = await reader.ReadToEndAsync();
         
         responseBody.Should().NotBeNullOrEmpty();
-        responseBody.Should().Contain("Test error message");
-        responseBody.Should().Contain("statusCode");
+        // ProblemDetails format: detail contains generic message (security: no exception details)
+        responseBody.Should().Contain("An unexpected error occurred");
+        responseBody.Should().Contain("status");
         responseBody.Should().Contain("500");
     }
 
     [Fact]
-    public async Task InvokeAsync_Should_Include_Exception_Message_In_Response()
+    public async Task InvokeAsync_Should_Include_Generic_Message_In_Response()
     {
         // Arrange
         var exceptionMessage = "Custom error message for testing";
@@ -155,17 +156,19 @@ public class ExceptionHandlingMiddlewareTests
         using var reader = new StreamReader(_httpContext.Response.Body);
         var responseBody = await reader.ReadToEndAsync();
         
-        responseBody.Should().Contain(exceptionMessage);
+        // SECURITY: Exception message should NOT be exposed to clients
+        responseBody.Should().NotContain(exceptionMessage);
+        // ProblemDetails uses generic safe message
+        responseBody.Should().Contain("An unexpected error occurred");
     }
 
     [Fact]
-    public async Task InvokeAsync_Should_Include_Timestamp_In_Response()
+    public async Task InvokeAsync_Should_Include_TraceId_In_Response()
     {
         // Arrange
         var exception = new InvalidOperationException("Test exception");
         _mockNext.Setup(x => x(It.IsAny<HttpContext>()))
             .ThrowsAsync(exception);
-        var beforeTimestamp = DateTime.UtcNow;
 
         // Act
         await _middleware.InvokeAsync(_httpContext);
@@ -174,16 +177,13 @@ public class ExceptionHandlingMiddlewareTests
         _httpContext.Response.Body.Seek(0, SeekOrigin.Begin);
         using var reader = new StreamReader(_httpContext.Response.Body);
         var responseBody = await reader.ReadToEndAsync();
-        var afterTimestamp = DateTime.UtcNow;
         
-        responseBody.Should().Contain("timestamp");
+        // ProblemDetails includes traceId instead of timestamp
+        responseBody.Should().Contain("traceId");
         
-        // Parse and verify timestamp is reasonable
+        // Parse and verify ProblemDetails structure
         var jsonDoc = JsonDocument.Parse(responseBody);
-        var timestampString = jsonDoc.RootElement.GetProperty("timestamp").GetString();
-        var timestamp = DateTime.Parse(timestampString!, null, System.Globalization.DateTimeStyles.AdjustToUniversal);
-        timestamp.Should().BeOnOrAfter(beforeTimestamp.AddSeconds(-1));
-        timestamp.Should().BeOnOrBefore(afterTimestamp.AddSeconds(1));
+        jsonDoc.RootElement.TryGetProperty("traceId", out _).Should().BeTrue();
     }
 
     [Fact]
@@ -203,7 +203,7 @@ public class ExceptionHandlingMiddlewareTests
         var responseBody = await reader.ReadToEndAsync();
         
         var jsonDoc = JsonDocument.Parse(responseBody);
-        var statusCode = jsonDoc.RootElement.GetProperty("statusCode").GetInt32();
+        var statusCode = jsonDoc.RootElement.GetProperty("status").GetInt32();
         statusCode.Should().Be(500);
     }
 

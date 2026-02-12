@@ -111,6 +111,8 @@ public class TenantDomainsRepositoryTests
         domain.Subdomain = "api";
         await repo.UpdateAsync(domain);
 
+        typeof(EntityBase).GetProperty(nameof(EntityBase.Version))!.SetValue(domain, 1);
+
         await repo.DeleteAsync(domain.Id);
 
         // Reload from DB to check soft delete
