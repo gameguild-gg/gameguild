@@ -6,14 +6,14 @@ Handling multiple connections requires concurrency. There are three main approac
 
 ```mermaid
 flowchart TB
-    subgraph Parallelism ["Parallelism (Multiple CPUs)"]
+    subgraph Parallelism ["Parallelism(Multi-CPUs)"]
         direction LR
         C1[CPU Core 1] --> T1[Thread 1<br/>Task A]
         C2[CPU Core 2] --> T2[Thread 2<br/>Task B]
         C3[CPU Core 3] --> T3[Thread 3<br/>Task C]
     end
 
-    subgraph Concurrency ["Concurrency (One CPU, time-slicing)"]
+    subgraph Concurrency ["Concurrency(time-slicing)"]
         direction TB
         CPU[Single CPU] --> S1[Task A<br/>runs]
         S1 --> S2[Task B<br/>runs]
@@ -62,14 +62,14 @@ sequenceDiagram
 
 ```mermaid
 stateDiagram-v2
-    [*] --> Created: std::thread()
-    Created --> Running: OS schedules
-    Running --> Blocked: I/O or mutex
-    Running --> Ready: Time slice expired
-    Blocked --> Ready: I/O complete
-    Ready --> Running: OS schedules
-    Running --> Terminated: Function returns
-    Terminated --> [*]: join()
+    [*] --> Created : thread created
+    Created --> Running : OS schedules
+    Running --> Blocked : I/O or mutex
+    Running --> Ready : Time slice expired
+    Blocked --> Ready : I/O complete
+    Ready --> Running : OS schedules
+    Running --> Terminated : Function returns
+    Terminated --> [*] : join called
 ```
 
 **What happens during context switch:**
