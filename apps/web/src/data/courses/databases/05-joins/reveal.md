@@ -550,24 +550,56 @@ flowchart LR
 
 ## Anti-Joins and Semi-Joins
 
-**Anti-Join:** Find rows with NO match
-
-```sql
-SELECT c.* FROM customers c
-WHERE NOT EXISTS (
-    SELECT 1 FROM orders o
-    WHERE o.customer_id = c.id
-);
+```mermaid
+flowchart LR
+    subgraph Anti-Join["Anti-Join: rows with NO match"]
+        direction LR
+        A1["Customers"] ---|"NOT EXISTS"| A2["Orders"]
+        A3["Result: customers<br>without orders"]
+    end
+    subgraph Semi-Join["Semi-Join: rows that HAVE a match"]
+        direction LR
+        S1["Customers"] ---|"EXISTS"| S2["Orders"]
+        S3["Result: customers<br>with orders"]
+    end
 ```
 
-**Semi-Join:** Find rows that HAVE a match
+---
+
+## Anti-Join
+
+Find rows with **no** match in the other table.
 
 ```sql
+-- Products that have never been sold
+SELECT p.* FROM products p
+WHERE NOT EXISTS (
+    SELECT 1 FROM order_items oi
+    WHERE oi.product_id = p.id
+);
+
+-- Equivalent with LEFT JOIN + IS NULL
+SELECT p.* FROM products p
+LEFT JOIN order_items oi ON p.id = oi.product_id
+WHERE oi.id IS NULL;
+```
+
+---
+
+## Semi-Join
+
+Find rows that **have** a match, without duplicating.
+
+```sql
+-- Customers who have at least one order
 SELECT c.* FROM customers c
 WHERE EXISTS (
     SELECT 1 FROM orders o
     WHERE o.customer_id = c.id
 );
+
+-- ⚠️ JOIN would duplicate rows if customer has multiple orders!
+-- EXISTS returns each customer only once
 ```
 
 ---
