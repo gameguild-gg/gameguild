@@ -106,6 +106,12 @@ int main() {
 }
 ```
 
+::: tip "Async alternatives"
+
+This example uses blocking `acceptor.accept()`. For async versions using callbacks (`async_accept`) and C++20 coroutines (`co_await async_accept`), read the next section.
+
+:::
+
 **Pros:**
 
 - Simple mental model (sequential code)
