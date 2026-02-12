@@ -122,7 +122,22 @@ public:
 
 **Thread safety considerations:**
 
-When multiple threads access shared data, you need synchronization:
+When multiple threads access shared data, you need synchronization.
+
+### `shared_lock` vs `unique_lock`
+
+C++ provides two lock types for `std::shared_mutex`, implementing a **readers-writer lock** pattern:
+
+| Lock Type          | Access                | Concurrent with other...         | Use for               |
+| ------------------ | --------------------- | -------------------------------- | --------------------- |
+| `std::unique_lock` | **Exclusive** (write) | Nothing — blocks all other locks | Modifying shared data |
+| `std::shared_lock` | **Shared** (read)     | Other `shared_lock`s only        | Reading shared data   |
+
+**How it works:**
+
+- Multiple threads can hold a `shared_lock` **simultaneously** (many readers)
+- A `unique_lock` waits until **all** shared locks are released, then blocks everyone else (single writer)
+- This is optimal when reads are much more frequent than writes
 
 ```cpp
 class SharedState {
@@ -131,18 +146,28 @@ class SharedState {
 
 public:
     void write(int key, std::string value) {
-        std::unique_lock lock(mutex_);  // Exclusive access
+        // unique_lock: exclusive access — no other thread can read or write
+        std::unique_lock lock(mutex_);
         data_[key] = std::move(value);
     }
 
     std::optional<std::string> read(int key) const {
-        std::shared_lock lock(mutex_);  // Shared access (multiple readers OK)
+        // shared_lock: multiple threads can read simultaneously
+        std::shared_lock lock(mutex_);
         auto it = data_.find(key);
         if (it != data_.end()) return it->second;
         return std::nullopt;
     }
 };
 ```
+
+::: warning "When to use which mutex"
+
+- Use `std::mutex` + `std::lock_guard` when all access is write (simplest, lowest overhead)
+- Use `std::shared_mutex` + `shared_lock`/`unique_lock` when you have many readers and few writers
+- Don't use `shared_mutex` if writes are frequent — the overhead of the readers-writer protocol isn't worth it
+
+:::
 
 ::: tip "std::jthread vs std::thread"
 
