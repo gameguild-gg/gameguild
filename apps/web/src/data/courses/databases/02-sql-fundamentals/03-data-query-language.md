@@ -264,8 +264,8 @@ Understanding the logical order of SQL clause evaluation:
 
 1. `FROM` - Source tables
 2. `WHERE` - Row filtering
-3. `GROUP BY` - Grouping (covered in Week 03)
-4. `HAVING` - Group filtering (covered in Week 03)
+3. `GROUP BY` - Grouping
+4. `HAVING` - Group filtering
 5. `SELECT` - Column selection and expressions
 6. `DISTINCT` - Duplicate removal
 7. `ORDER BY` - Sorting
