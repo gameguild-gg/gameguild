@@ -27,6 +27,10 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    </ItemGroup>
+
+    <ItemGroup>
         <PackageReference Include="coverlet.collector"/>
         <PackageReference Include="coverlet.msbuild"/>
         <PackageReference Include="FluentAssertions"/>
@@ -38,6 +42,7 @@
 
     <ItemGroup>
         <ProjectReference Include="..\..\Source\Modules\GameGuild.Commerce.Orders\GameGuild.Commerce.Orders.csproj"/>
+        <ProjectReference Include="..\..\Source\Modules\GameGuild.Commerce.Products\GameGuild.Commerce.Products.csproj"/>
         <ProjectReference Include="..\..\Source\Modules\GameGuild.SharedKernel\GameGuild.SharedKernel.csproj"/>
     </ItemGroup>
 

@@ -33,6 +33,9 @@ public class CommerceRepositoryBaseTests
         context.PricingRules.Add(entity);
         await context.SaveChangesAsync();
 
+        // InMemory provider doesn't auto-increment Version; simulate persistence
+        typeof(EntityBase<Guid>).GetProperty("Version")!.SetValue(entity, 1);
+
         entity.SoftDelete();
         await context.SaveChangesAsync();
 
@@ -151,6 +154,9 @@ public class CommerceRepositoryBaseTests
         var entity = new PricingRule { Name = "Rule", RuleType = PricingRuleType.Percentage, DiscountPercentage = 5 };
         context.PricingRules.Add(entity);
         await context.SaveChangesAsync();
+
+        // InMemory provider doesn't auto-increment Version; simulate persistence
+        typeof(EntityBase<Guid>).GetProperty("Version")!.SetValue(entity, 1);
 
         var deleted = await repository.DeleteAsync(entity.Id);
 

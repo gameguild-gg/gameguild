@@ -1,0 +1,420 @@
+using FluentAssertions;
+using GameGuild.Commerce.Orders;
+using Xunit;
+
+namespace GameGuild.Commerce.Orders.UnitTests;
+
+public class OrderLineItemTests
+{
+    [Fact]
+    public void Constructor_ShouldSetDefaults()
+    {
+        var item = new OrderLineItem();
+        item.ProductNameSnapshot.Should().BeEmpty();
+        item.UnitPriceSnapshot.Should().Be(0);
+        item.BasePriceSnapshot.Should().Be(0);
+        item.SalePriceSnapshot.Should().BeNull();
+        item.Quantity.Should().Be(1);
+        item.DiscountAmount.Should().Be(0);
+        item.LineTotal.Should().Be(0);
+        item.PricingTierId.Should().BeNull();
+        item.PricingTierNameSnapshot.Should().BeNull();
+        item.IsSubscription.Should().BeFalse();
+        item.SubscriptionPlanId.Should().BeNull();
+        item.BillingIntervalSnapshot.Should().BeNull();
+        item.UserProductId.Should().BeNull();
+        item.PromoCodesApplied.Should().BeNull();
+    }
+
+    [Fact]
+    public void Properties_ShouldBeSettable()
+    {
+        var orderId = Guid.NewGuid();
+        var productId = Guid.NewGuid();
+        var item = new OrderLineItem
+        {
+            OrderId = orderId,
+            ProductId = productId,
+            ProductNameSnapshot = "Product A",
+            UnitPriceSnapshot = 29.99m,
+            BasePriceSnapshot = 39.99m,
+            SalePriceSnapshot = 29.99m,
+            Quantity = 3,
+            DiscountAmount = 5.00m,
+            LineTotal = 84.97m,
+            PricingTierId = Guid.NewGuid(),
+            PricingTierNameSnapshot = "Premium",
+            IsSubscription = true,
+            SubscriptionPlanId = Guid.NewGuid(),
+            BillingIntervalSnapshot = "monthly",
+            UserProductId = Guid.NewGuid(),
+            PromoCodesApplied = "[\"SAVE10\"]"
+        };
+
+        item.OrderId.Should().Be(orderId);
+        item.ProductId.Should().Be(productId);
+        item.ProductNameSnapshot.Should().Be("Product A");
+        item.UnitPriceSnapshot.Should().Be(29.99m);
+        item.Quantity.Should().Be(3);
+        item.IsSubscription.Should().BeTrue();
+        item.BillingIntervalSnapshot.Should().Be("monthly");
+    }
+}
+
+public class OrderAuditLogTests
+{
+    [Fact]
+    public void Constructor_ShouldSetDefaults()
+    {
+        var log = new OrderAuditLog();
+        log.Reason.Should().BeNull();
+        log.ExternalPaymentId.Should().BeNull();
+        log.InitiatedBy.Should().BeNull();
+        log.IpAddress.Should().BeNull();
+        log.AdditionalContext.Should().BeNull();
+    }
+
+    [Fact]
+    public void FromEvent_ShouldMapAllProperties()
+    {
+        var orderId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+        var evt = new OrderStateChangedEvent(
+            orderId, tenantId,
+            OrderStatus.Pending, OrderStatus.Paid,
+            "Payment received", "ext-pay-123");
+
+        var log = OrderAuditLog.FromEvent(evt, "admin@test.com", "192.168.1.1", "{\"source\":\"api\"}");
+
+        log.OrderId.Should().Be(orderId);
+        log.TenantId.Should().Be(tenantId);
+        log.PreviousStatus.Should().Be(OrderStatus.Pending);
+        log.NewStatus.Should().Be(OrderStatus.Paid);
+        log.Reason.Should().Be("Payment received");
+        log.ExternalPaymentId.Should().Be("ext-pay-123");
+        log.InitiatedBy.Should().Be("admin@test.com");
+        log.IpAddress.Should().Be("192.168.1.1");
+        log.AdditionalContext.Should().Be("{\"source\":\"api\"}");
+        log.Id.Should().NotBeEmpty();
+    }
+
+    [Fact]
+    public void FromEvent_WithoutOptionals_ShouldSetSystemDefaults()
+    {
+        var evt = new OrderStateChangedEvent(
+            Guid.NewGuid(), Guid.NewGuid(),
+            OrderStatus.Pending, OrderStatus.Cancelled);
+
+        var log = OrderAuditLog.FromEvent(evt);
+
+        log.InitiatedBy.Should().Be("System");
+        log.IpAddress.Should().BeNull();
+        log.AdditionalContext.Should().BeNull();
+    }
+}
+
+public class OrderStateChangedEventTests
+{
+    [Fact]
+    public void Constructor_ShouldSetAllProperties()
+    {
+        var orderId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+        var evt = new OrderStateChangedEvent(
+            orderId, tenantId,
+            OrderStatus.Pending, OrderStatus.Completed,
+            "Payment confirmed", "pay-ext-1");
+
+        evt.OrderId.Should().Be(orderId);
+        evt.TenantId.Should().Be(tenantId);
+        evt.PreviousStatus.Should().Be(OrderStatus.Pending);
+        evt.NewStatus.Should().Be(OrderStatus.Completed);
+        evt.Reason.Should().Be("Payment confirmed");
+        evt.ExternalPaymentId.Should().Be("pay-ext-1");
+        evt.EventId.Should().NotBeEmpty();
+    }
+
+    [Fact]
+    public void Constructor_WithoutOptionals_ShouldDefaultToNull()
+    {
+        var evt = new OrderStateChangedEvent(
+            Guid.NewGuid(), Guid.NewGuid(),
+            OrderStatus.Pending, OrderStatus.Failed);
+
+        evt.Reason.Should().BeNull();
+        evt.ExternalPaymentId.Should().BeNull();
+    }
+}
+
+public class OrderEnumsTests
+{
+    [Theory]
+    [InlineData(OrderType.OneTimePurchase, 0)]
+    [InlineData(OrderType.Subscribe, 1)]
+    [InlineData(OrderType.Upgrade, 2)]
+    [InlineData(OrderType.Downgrade, 3)]
+    [InlineData(OrderType.AddOn, 4)]
+    [InlineData(OrderType.Renewal, 5)]
+    public void OrderType_ShouldHaveExpectedValues(OrderType type, int expected)
+    {
+        ((int)type).Should().Be(expected);
+    }
+
+    [Theory]
+    [InlineData(OrderStatus.Pending, 0)]
+    [InlineData(OrderStatus.Processing, 1)]
+    [InlineData(OrderStatus.Completed, 2)]
+    [InlineData(OrderStatus.Failed, 3)]
+    [InlineData(OrderStatus.Cancelled, 4)]
+    [InlineData(OrderStatus.Refunded, 5)]
+    [InlineData(OrderStatus.PartiallyRefunded, 6)]
+    [InlineData(OrderStatus.Disputed, 7)]
+    [InlineData(OrderStatus.Paid, 8)]
+    [InlineData(OrderStatus.Fulfilled, 9)]
+    [InlineData(OrderStatus.OnHold, 10)]
+    public void OrderStatus_ShouldHaveExpectedValues(OrderStatus status, int expected)
+    {
+        ((int)status).Should().Be(expected);
+    }
+}
+
+public class OrderOperationResultTests
+{
+    private static Order CreateTestOrder() =>
+        Order.Create(Guid.NewGuid(), Guid.NewGuid().ToString(), Guid.NewGuid());
+
+    [Fact]
+    public void Constructor_ShouldSetProperties()
+    {
+        var order = CreateTestOrder();
+        var result = new OrderOperationResult(order);
+        result.Order.Should().BeSameAs(order);
+        result.WasDuplicate.Should().BeFalse();
+    }
+
+    [Fact]
+    public void Constructor_WithDuplicate_ShouldSetFlag()
+    {
+        var order = CreateTestOrder();
+        var result = new OrderOperationResult(order, true);
+        result.WasDuplicate.Should().BeTrue();
+    }
+
+    [Fact]
+    public void FromOrder_ShouldCreateInstance()
+    {
+        var order = CreateTestOrder();
+        var result = OrderOperationResult.FromOrder(order, true);
+        result.Order.Should().BeSameAs(order);
+        result.WasDuplicate.Should().BeTrue();
+    }
+}
+
+public class CommandRecordTests
+{
+    [Fact]
+    public void CaptureOrderCommand_ShouldSetProperties()
+    {
+        var id = Guid.NewGuid();
+        var cmd = new CaptureOrderCommand(id, 50.00m);
+        cmd.OrderId.Should().Be(id);
+        cmd.Amount.Should().Be(50.00m);
+    }
+
+    [Fact]
+    public void CaptureOrderCommand_Defaults()
+    {
+        var cmd = new CaptureOrderCommand(Guid.NewGuid());
+        cmd.Amount.Should().BeNull();
+    }
+
+    [Fact]
+    public void HoldOrderCommand_ShouldSetProperties()
+    {
+        var id = Guid.NewGuid();
+        var cmd = new HoldOrderCommand(id, "Fraud review");
+        cmd.OrderId.Should().Be(id);
+        cmd.Reason.Should().Be("Fraud review");
+    }
+
+    [Fact]
+    public void HoldOrderCommand_Defaults()
+    {
+        var cmd = new HoldOrderCommand(Guid.NewGuid());
+        cmd.Reason.Should().BeNull();
+    }
+
+    [Fact]
+    public void ReleaseOrderCommand_ShouldSetProperties()
+    {
+        var id = Guid.NewGuid();
+        var cmd = new ReleaseOrderCommand(id);
+        cmd.OrderId.Should().Be(id);
+    }
+}
+
+public class QueryRecordTests
+{
+    [Fact]
+    public void GetAllOrdersQuery_ShouldSetDefaults()
+    {
+        var query = new GetAllOrdersQuery();
+        query.Status.Should().BeNull();
+    }
+
+    [Fact]
+    public void GetAllOrdersQuery_WithStatus()
+    {
+        var query = new GetAllOrdersQuery(OrderStatus.Pending);
+        query.Status.Should().Be(OrderStatus.Pending);
+    }
+
+    [Fact]
+    public void GetOrderQuery_ShouldSetProperties()
+    {
+        var id = Guid.NewGuid();
+        var query = new GetOrderQuery(id);
+        query.OrderId.Should().Be(id);
+    }
+
+    [Fact]
+    public void GetUserOrdersQuery_ShouldSetProperties()
+    {
+        var userId = Guid.NewGuid();
+        var query = new GetUserOrdersQuery(userId, OrderStatus.Completed);
+        query.UserId.Should().Be(userId);
+        query.Status.Should().Be(OrderStatus.Completed);
+    }
+
+    [Fact]
+    public void GetUserOrdersQuery_Defaults()
+    {
+        var query = new GetUserOrdersQuery(Guid.NewGuid());
+        query.Status.Should().BeNull();
+    }
+
+    [Fact]
+    public void OrderExistsQuery_ShouldSetProperties()
+    {
+        var id = Guid.NewGuid();
+        var query = new OrderExistsQuery(id);
+        query.OrderId.Should().Be(id);
+    }
+}
+
+public class OrderAdditionalMethodTests
+{
+    private static Order CreateTestOrder() =>
+        Order.Create(Guid.NewGuid(), Guid.NewGuid().ToString(), Guid.NewGuid());
+
+    [Fact]
+    public void AddLineItem_ShouldAddAndRecalculate()
+    {
+        var order = CreateTestOrder();
+        var item = order.AddLineItem(Guid.NewGuid(), "Product A", 25.00m, 2, 5.00m);
+
+        item.Should().NotBeNull();
+        item.ProductNameSnapshot.Should().Be("Product A");
+        item.UnitPriceSnapshot.Should().Be(25.00m);
+        item.Quantity.Should().Be(2);
+        item.DiscountAmount.Should().Be(5.00m);
+        item.LineTotal.Should().Be(45.00m); // (25*2) - 5
+        order.LineItems.Should().Contain(item);
+        order.Subtotal.Should().Be(50.00m); // 25*2
+    }
+
+    [Fact]
+    public void RecalculateTotals_WhenCompleted_ShouldThrow()
+    {
+        var order = CreateTestOrder();
+        order.MarkAsPaid(); // transitions to Completed
+
+        var act = () => order.RecalculateTotals();
+        act.Should().Throw<InvalidOperationException>();
+    }
+
+    [Fact]
+    public void PlaceOnHold_ShouldTransitionToOnHold()
+    {
+        var order = CreateTestOrder();
+        order.PlaceOnHold("Fraud review");
+        order.Status.Should().Be(OrderStatus.OnHold);
+        order.Metadata.Should().Be("Fraud review");
+    }
+
+    [Fact]
+    public void Release_ShouldTransitionBackToPending()
+    {
+        var order = CreateTestOrder();
+        order.PlaceOnHold("Review");
+        order.Release();
+        order.Status.Should().Be(OrderStatus.Pending);
+    }
+
+    [Fact]
+    public void SoftDelete_ShouldSetDeletedAt()
+    {
+        var order = CreateTestOrder();
+        order.SoftDelete();
+        order.DeletedAt.Should().NotBeNull();
+    }
+
+    [Fact]
+    public void IsSuccessfullyCompleted_WhenFulfilled_ShouldBeTrue()
+    {
+        var order = CreateTestOrder();
+        var paymentId = Guid.NewGuid();
+        order.MarkAsPaidPendingFulfillment(paymentId, "ext-1");
+        order.MarkAsFulfilled();
+
+        order.Status.Should().Be(OrderStatus.Fulfilled);
+        order.IsSuccessfullyCompleted.Should().BeTrue();
+    }
+
+    [Fact]
+    public void IsSuccessfullyCompleted_WhenPending_ShouldBeFalse()
+    {
+        var order = CreateTestOrder();
+        order.IsSuccessfullyCompleted.Should().BeFalse();
+    }
+
+    [Fact]
+    public void AssociatePayment_ShouldSetPaymentId()
+    {
+        var order = CreateTestOrder();
+        var paymentId = Guid.NewGuid();
+        order.AssociatePayment(paymentId);
+        order.PaymentId.Should().Be(paymentId);
+    }
+
+    [Fact]
+    public void AssociatePayment_DifferentPayment_ShouldThrow()
+    {
+        var order = CreateTestOrder();
+        order.AssociatePayment(Guid.NewGuid());
+        var act = () => order.AssociatePayment(Guid.NewGuid());
+        act.Should().Throw<InvalidOperationException>();
+    }
+
+    [Fact]
+    public void AssociatePayment_SamePayment_ShouldNotThrow()
+    {
+        var order = CreateTestOrder();
+        var paymentId = Guid.NewGuid();
+        order.AssociatePayment(paymentId);
+        order.AssociatePayment(paymentId); // idempotent
+        order.PaymentId.Should().Be(paymentId);
+    }
+
+    [Fact]
+    public void MarkAsFulfilled_AlreadyFulfilled_ShouldBeIdempotent()
+    {
+        var order = CreateTestOrder();
+        order.MarkAsPaidPendingFulfillment(Guid.NewGuid());
+        order.MarkAsFulfilled();
+        var fulfilledAt = order.FulfilledAt;
+
+        order.MarkAsFulfilled(); // idempotent
+        order.FulfilledAt.Should().Be(fulfilledAt);
+    }
+}

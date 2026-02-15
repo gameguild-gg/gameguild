@@ -6,6 +6,22 @@
         <IsPackable>false</IsPackable>
         <RootNamespace>GameGuild.Learning.Certificates.Tests</RootNamespace>
     </PropertyGroup>
+
+    <!-- Coverage Thresholds -->
+    <PropertyGroup>
+        <CollectCoverage>false</CollectCoverage>
+        <CoverletOutputFormat>cobertura</CoverletOutputFormat>
+        <CoverletOutput>./TestResults/coverage.xml</CoverletOutput>
+        <Threshold>80</Threshold>
+        <ThresholdType>line,branch,method</ThresholdType>
+        <ThresholdStat>total</ThresholdStat>
+        <ExcludeByFile>**/*Tests.cs,**/obj/**,**/Migrations/**</ExcludeByFile>
+        <ExcludeByAttribute>CompilerGenerated,GeneratedCodeAttribute</ExcludeByAttribute>
+        <Include>[GameGuild.Learning.Certificates]*</Include>
+    </PropertyGroup>
+    <ItemGroup>
+        <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    </ItemGroup>
     <ItemGroup>
         <PackageReference Include="coverlet.msbuild" />
         <PackageReference Include="FluentAssertions" />

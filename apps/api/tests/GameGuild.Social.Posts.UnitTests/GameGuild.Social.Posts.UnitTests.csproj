@@ -6,10 +6,27 @@
         <IsPackable>false</IsPackable>
         <RootNamespace>GameGuild.Social.Posts.Tests</RootNamespace>
     </PropertyGroup>
+
+    <!-- Coverage Thresholds -->
+    <PropertyGroup>
+        <CollectCoverage>false</CollectCoverage>
+        <CoverletOutputFormat>cobertura</CoverletOutputFormat>
+        <CoverletOutput>./TestResults/coverage.xml</CoverletOutput>
+        <Threshold>80</Threshold>
+        <ThresholdType>line,branch,method</ThresholdType>
+        <ThresholdStat>total</ThresholdStat>
+        <ExcludeByFile>**/*Tests.cs,**/obj/**,**/Migrations/**</ExcludeByFile>
+        <ExcludeByAttribute>CompilerGenerated,GeneratedCodeAttribute</ExcludeByAttribute>
+        <Include>[GameGuild.Social.Posts]*</Include>
+    </PropertyGroup>
+    <ItemGroup>
+        <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    </ItemGroup>
     <ItemGroup>
         <PackageReference Include="coverlet.msbuild" />
         <PackageReference Include="FluentAssertions" />
         <PackageReference Include="Microsoft.NET.Test.Sdk" />
+        <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
         <PackageReference Include="Moq" />
         <PackageReference Include="xunit" />
         <PackageReference Include="xunit.runner.visualstudio" />

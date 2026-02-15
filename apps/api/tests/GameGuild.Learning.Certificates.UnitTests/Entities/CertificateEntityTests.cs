@@ -141,3 +141,116 @@ public class CertificateTemplateEntityTests
         template.TenantId.Should().Be(tenantId);
     }
 }
+
+/// <summary>
+/// Tests for CertificateDto record and mapping.
+/// </summary>
+public class CertificateDtoTests
+{
+    [Fact]
+    public void FromEntity_ShouldMapAllProperties()
+    {
+        var cert = Certificate.Issue(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(),
+            "Alice Smith", "Game Dev 101", DateTime.UtcNow.AddYears(2));
+
+        var dto = CertificateDto.FromEntity(cert);
+
+        dto.Id.Should().Be(cert.Id);
+        dto.CertificateNumber.Should().Be(cert.CertificateNumber);
+        dto.RecipientName.Should().Be("Alice Smith");
+        dto.CourseName.Should().Be("Game Dev 101");
+        dto.IssuedAt.Should().Be(cert.IssuedAt);
+        dto.ExpiresAt.Should().Be(cert.ExpiresAt);
+        dto.Status.Should().Be(CertificateStatus.Active);
+    }
+
+    [Fact]
+    public void FromEntity_RevokedCertificate_ShouldMapRevokedStatus()
+    {
+        var cert = Certificate.Issue(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(),
+            "Bob Jones", "Security 201");
+        cert.Revoke("Policy");
+
+        var dto = CertificateDto.FromEntity(cert);
+
+        dto.Status.Should().Be(CertificateStatus.Revoked);
+    }
+
+    [Fact]
+    public void Constructor_ShouldSetAllProperties()
+    {
+        var id = Guid.NewGuid();
+        var dto = new CertificateDto(id, "CERT-123", "Name", "Course",
+            DateTime.UtcNow, DateTime.UtcNow.AddDays(30), CertificateStatus.Active);
+
+        dto.Id.Should().Be(id);
+        dto.CertificateNumber.Should().Be("CERT-123");
+        dto.RecipientName.Should().Be("Name");
+        dto.CourseName.Should().Be("Course");
+    }
+}
+
+/// <summary>
+/// Tests for CertificateVerificationResult record.
+/// </summary>
+public class CertificateVerificationResultTests
+{
+    [Fact]
+    public void Constructor_ShouldSetAllProperties()
+    {
+        var result = new CertificateVerificationResult(
+            true, "CERT-001", "Alice", "Course 1",
+            DateTime.UtcNow, DateTime.UtcNow.AddYears(1),
+            CertificateStatus.Active, "Valid certificate");
+
+        result.IsValid.Should().BeTrue();
+        result.CertificateNumber.Should().Be("CERT-001");
+        result.RecipientName.Should().Be("Alice");
+        result.CourseName.Should().Be("Course 1");
+        result.Status.Should().Be(CertificateStatus.Active);
+        result.Message.Should().Be("Valid certificate");
+    }
+
+    [Fact]
+    public void Constructor_WithNullOptionalFields_ShouldWork()
+    {
+        var result = new CertificateVerificationResult(
+            false, "CERT-002", null, null,
+            DateTime.UtcNow, null,
+            CertificateStatus.Revoked, null);
+
+        result.IsValid.Should().BeFalse();
+        result.RecipientName.Should().BeNull();
+        result.ExpiresAt.Should().BeNull();
+        result.Message.Should().BeNull();
+    }
+}
+
+/// <summary>
+/// Tests for request records.
+/// </summary>
+public class RequestRecordTests
+{
+    [Fact]
+    public void IssueCertificateRequest_ShouldSetAllProperties()
+    {
+        var templateId = Guid.NewGuid();
+        var enrollmentId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+        var courseId = Guid.NewGuid();
+
+        var request = new IssueCertificateRequest(templateId, enrollmentId, userId, courseId);
+
+        request.TemplateId.Should().Be(templateId);
+        request.EnrollmentId.Should().Be(enrollmentId);
+        request.UserId.Should().Be(userId);
+        request.CourseId.Should().Be(courseId);
+    }
+
+    [Fact]
+    public void RevokeCertificateRequest_ShouldSetReason()
+    {
+        var request = new RevokeCertificateRequest("Fraudulent activity");
+        request.Reason.Should().Be("Fraudulent activity");
+    }
+}

@@ -8,6 +8,22 @@
         <IsTestProject>true</IsTestProject>
     </PropertyGroup>
 
+    <!-- Coverage Thresholds -->
+    <PropertyGroup>
+        <CollectCoverage>false</CollectCoverage>
+        <CoverletOutputFormat>cobertura</CoverletOutputFormat>
+        <CoverletOutput>./TestResults/coverage.xml</CoverletOutput>
+        <Threshold>80</Threshold>
+        <ThresholdType>line,branch,method</ThresholdType>
+        <ThresholdStat>total</ThresholdStat>
+        <ExcludeByFile>**/*Tests.cs,**/obj/**,**/Migrations/**</ExcludeByFile>
+        <ExcludeByAttribute>CompilerGenerated,GeneratedCodeAttribute</ExcludeByAttribute>
+        <Include>[GameGuild.Notifications]*</Include>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    </ItemGroup>
     <ItemGroup>
         <PackageReference Include="Microsoft.NET.Test.Sdk" />
         <PackageReference Include="xunit" />

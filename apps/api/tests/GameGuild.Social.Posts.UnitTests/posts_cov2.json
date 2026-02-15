@@ -1,0 +1,1630 @@
+{
+  "GameGuild.Social.Posts.dll": {
+    "D:\\repositories\\game-guild\\game-guild\\apps\\api\\Source\\Modules\\GameGuild.Social.Posts\\Entities\\Post.cs": {
+      "GameGuild.Social.Posts.Post": {
+        "GameGuild.Social.Posts.Post GameGuild.Social.Posts.Post::Create(System.Guid,System.String,GameGuild.Social.Posts.PostVisibility,System.Nullable`1<System.Guid>)": {
+          "Lines": {
+            "28": 27,
+            "29": 27,
+            "30": 27,
+            "31": 27,
+            "32": 27,
+            "33": 27,
+            "34": 27,
+            "35": 27,
+            "36": 27,
+            "37": 27,
+            "38": 27,
+            "39": 27,
+            "40": 27,
+            "41": 27,
+            "42": 27,
+            "43": 27
+          },
+          "Branches": []
+        },
+        "System.Void GameGuild.Social.Posts.Post::Edit(System.String)": {
+          "Lines": {
+            "46": 2,
+            "47": 2,
+            "48": 2,
+            "49": 2,
+            "50": 2,
+            "51": 2
+          },
+          "Branches": []
+        },
+        "System.Void GameGuild.Social.Posts.Post::Pin()": {
+          "Lines": {
+            "53": 12
+          },
+          "Branches": []
+        },
+        "System.Void GameGuild.Social.Posts.Post::Unpin()": {
+          "Lines": {
+            "54": 4
+          },
+          "Branches": []
+        },
+        "System.Void GameGuild.Social.Posts.Post::IncrementLikes()": {
+          "Lines": {
+            "55": 5
+          },
+          "Branches": []
+        },
+        "System.Void GameGuild.Social.Posts.Post::DecrementLikes()": {
+          "Lines": {
+            "56": 7
+          },
+          "Branches": [
+            {
+              "Line": 56,
+              "Offset": 12,
+              "EndOffset": 14,
+              "Path": 0,
+              "Ordinal": 0,
+              "Hits": 1
+            },
+            {
+              "Line": 56,
+              "Offset": 12,
+              "EndOffset": 31,
+              "Path": 1,
+              "Ordinal": 1,
+              "Hits": 2
+            }
+          ]
+        },
+        "System.Void GameGuild.Social.Posts.Post::IncrementComments()": {
+          "Lines": {
+            "57": 4
+          },
+          "Branches": []
+        },
+        "System.Void GameGuild.Social.Posts.Post::DecrementComments()": {
+          "Lines": {
+            "58": 7
+          },
+          "Branches": [
+            {
+              "Line": 58,
+              "Offset": 12,
+              "EndOffset": 14,
+              "Path": 0,
+              "Ordinal": 0,
+              "Hits": 1
+            },
+            {
+              "Line": 58,
+              "Offset": 12,
+              "EndOffset": 31,
+              "Path": 1,
+              "Ordinal": 1,
+              "Hits": 2
+            }
+          ]
+        },
+        "System.Void GameGuild.Social.Posts.Post::IncrementShares()": {
+          "Lines": {
+            "59": 2
+          },
+          "Branches": []
+        },
+        "System.Void GameGuild.Social.Posts.Post::IncrementViews()": {
+          "Lines": {
+            "60": 3
+          },
+          "Branches": []
+        },
+        "System.Void GameGuild.Social.Posts.Post::Delete()": {
+          "Lines": {
+            "61": 0
+          },
+          "Branches": []
+        },
+        "System.Void GameGuild.Social.Posts.Post::.ctor()": {
+          "Lines": {
+            "25": 81
+          },
+          "Branches": []
+        }
+      },
+      "GameGuild.Social.Posts.PostComment": {
+        "GameGuild.Social.Posts.PostComment GameGuild.Social.Posts.PostComment::Create(System.Guid,System.Guid,System.String,System.Nullable`1<System.Guid>)": {
+          "Lines": {
+            "80": 11,
+            "81": 11,
+            "82": 11,
+            "83": 11,
+            "84": 11,
+            "85": 11,
+            "86": 11,
+            "87": 11,
+            "88": 11,
+            "89": 11,
+            "90": 11,
+            "91": 11
+          },
+          "Branches": []
+        },
+        "System.Void GameGuild.Social.Posts.PostComment::Edit(System.String)": {
+          "Lines": {
+            "94": 2,
+            "95": 2,
+            "96": 2,
+            "97": 2,
+            "98": 2,
+            "99": 2
+          },
+          "Branches": []
+        },
+        "System.Void GameGuild.Social.Posts.PostComment::IncrementLikes()": {
+          "Lines": {
+            "101": 4
+          },
+          "Branches": []
+        },
+        "System.Void GameGuild.Social.Posts.PostComment::DecrementLikes()": {
+          "Lines": {
+            "102": 7
+          },
+          "Branches": [
+            {
+              "Line": 102,
+              "Offset": 12,
+              "EndOffset": 14,
+              "Path": 0,
+              "Ordinal": 0,
+              "Hits": 1
+            },
+            {
+              "Line": 102,
+              "Offset": 12,
+              "EndOffset": 31,
+              "Path": 1,
+              "Ordinal": 1,
+              "Hits": 2
+            }
+          ]
+        },
+        "System.Void GameGuild.Social.Posts.PostComment::Delete()": {
+          "Lines": {
+            "103": 0
+          },
+          "Branches": []
+        },
+        "System.Void GameGuild.Social.Posts.PostComment::.ctor()": {
+          "Lines": {
+            "77": 33
+          },
+          "Branches": []
+        }
+      }
+    },
+    "D:\\repositories\\game-guild\\game-guild\\apps\\api\\Source\\Modules\\GameGuild.Social.Posts\\Entities\\PostRelatedEntities.cs": {
+      "GameGuild.Social.Posts.PostStatistics": {
+        "GameGuild.Social.Posts.PostStatistics GameGuild.Social.Posts.PostStatistics::Create(System.Guid)": {
+          "Lines": {
+            "41": 9,
+            "42": 9,
+            "43": 9,
+            "44": 9,
+            "45": 9,
+            "46": 9,
+            "47": 9,
+            "48": 9,
+            "49": 9,
+            "50": 9,
+            "51": 9,
+            "52": 9,
+            "53": 9,
+            "54": 9
+          },
+          "Branches": []
+        },
+        "System.Void GameGuild.Social.Posts.PostStatistics::IncrementViews(System.Boolean)": {
+          "Lines": {
+            "57": 9,
+            "58": 9,
+            "59": 16,
+            "60": 9,
+            "61": 9
+          },
+          "Branches": [
+            {
+              "Line": 59,
+              "Offset": 21,
+              "EndOffset": 23,
+              "Path": 0,
+              "Ordinal": 0,
+              "Hits": 7
+            },
+            {
+              "Line": 59,
+              "Offset": 21,
+              "EndOffset": 40,
+              "Path": 1,
+              "Ordinal": 1,
+              "Hits": 9
+            }
+          ]
+        },
+        "System.Void GameGuild.Social.Posts.PostStatistics::IncrementExternalShares()": {
+          "Lines": {
+            "64": 3,
+            "65": 3,
+            "66": 3,
+            "67": 3
+          },
+          "Branches": []
+        },
+        "System.Void GameGuild.Social.Posts.PostStatistics::UpdateEngagementTime(System.Double)": {
+          "Lines": {
+            "70": 3,
+            "72": 3,
+            "73": 3,
+            "74": 3,
+            "75": 3,
+            "76": 3
+          },
+          "Branches": [
+            {
+              "Line": 72,
+              "Offset": 9,
+              "EndOffset": 11,
+              "Path": 0,
+              "Ordinal": 0,
+              "Hits": 1
+            },
+            {
+              "Line": 72,
+              "Offset": 9,
+              "EndOffset": 14,
+              "Path": 1,
+              "Ordinal": 1,
+              "Hits": 2
+            }
+          ]
+        },
+        "System.Void GameGuild.Social.Posts.PostStatistics::RecalculateScores(System.Int32,System.Int32,System.Int32,System.Int32)": {
+          "Lines": {
+            "79": 2,
+            "81": 2,
+            "84": 2,
+            "85": 2,
+            "87": 2,
+            "88": 2,
+            "89": 2
+          },
+          "Branches": []
+        },
+        "System.Void GameGuild.Social.Posts.PostStatistics::.ctor()": {
+          "Lines": {
+            "38": 27
+          },
+          "Branches": []
+        }
+      },
+      "GameGuild.Social.Posts.PostContentReference": {
+        "GameGuild.Social.Posts.PostContentReference GameGuild.Social.Posts.PostContentReference::Create(System.Guid,System.Guid,System.String,System.String,System.String,System.Int32)": {
+          "Lines": {
+            "128": 3,
+            "129": 3,
+            "130": 3,
+            "131": 3,
+            "132": 3,
+            "133": 3,
+            "134": 3,
+            "135": 3,
+            "136": 3,
+            "137": 3,
+            "138": 3,
+            "139": 3
+          },
+          "Branches": []
+        },
+        "System.Void GameGuild.Social.Posts.PostContentReference::.ctor()": {
+          "Lines": {
+            "119": 9
+          },
+          "Branches": []
+        }
+      },
+      "GameGuild.Social.Posts.PostFollower": {
+        "GameGuild.Social.Posts.PostFollower GameGuild.Social.Posts.PostFollower::Create(System.Guid,System.Guid,System.Boolean,System.Boolean,System.Boolean,System.Boolean)": {
+          "Lines": {
+            "175": 6,
+            "176": 6,
+            "177": 6,
+            "178": 6,
+            "179": 6,
+            "180": 6,
+            "181": 6,
+            "182": 6,
+            "183": 6,
+            "184": 6,
+            "185": 6,
+            "186": 6
+          },
+          "Branches": []
+        },
+        "System.Void GameGuild.Social.Posts.PostFollower::UpdatePreferences(System.Nullable`1<System.Boolean>,System.Nullable`1<System.Boolean>,System.Nullable`1<System.Boolean>,System.Nullable`1<System.Boolean>)": {
+          "Lines": {
+            "189": 1,
+            "190": 2,
+            "191": 2,
+            "192": 1,
+            "193": 1,
+            "194": 1,
+            "195": 1
+          },
+          "Branches": [
+            {
+              "Line": 190,
+              "Offset": 10,
+              "EndOffset": 12,
+              "Path": 0,
+              "Ordinal": 0,
+              "Hits": 1
+            },
+            {
+              "Line": 190,
+              "Offset": 10,
+              "EndOffset": 26,
+              "Path": 1,
+              "Ordinal": 1,
+              "Hits": 1
+            },
+            {
+              "Line": 191,
+              "Offset": 35,
+              "EndOffset": 37,
+              "Path": 0,
+              "Ordinal": 2,
+              "Hits": 1
+            },
+            {
+              "Line": 191,
+              "Offset": 35,
+              "EndOffset": 51,
+              "Path": 1,
+              "Ordinal": 3,
+              "Hits": 1
+            },
+            {
+              "Line": 192,
+              "Offset": 60,
+              "EndOffset": 62,
+              "Path": 0,
+              "Ordinal": 4,
+              "Hits": 0
+            },
+            {
+              "Line": 192,
+              "Offset": 60,
+              "EndOffset": 76,
+              "Path": 1,
+              "Ordinal": 5,
+              "Hits": 1
+            },
+            {
+              "Line": 193,
+              "Offset": 85,
+              "EndOffset": 87,
+              "Path": 0,
+              "Ordinal": 6,
+              "Hits": 0
+            },
+            {
+              "Line": 193,
+              "Offset": 85,
+              "EndOffset": 101,
+              "Path": 1,
+              "Ordinal": 7,
+              "Hits": 1
+            }
+          ]
+        },
+        "System.Void GameGuild.Social.Posts.PostFollower::.ctor()": {
+          "Lines": {
+            "166": 18
+          },
+          "Branches": []
+        }
+      },
+      "GameGuild.Social.Posts.PostTag": {
+        "GameGuild.Social.Posts.PostTag GameGuild.Social.Posts.PostTag::Create(System.String,System.String,System.String,System.String,System.String)": {
+          "Lines": {
+            "234": 9,
+            "235": 9,
+            "236": 9,
+            "237": 9,
+            "238": 9,
+            "239": 9,
+            "240": 9,
+            "241": 9,
+            "242": 9,
+            "243": 9,
+            "244": 9,
+            "245": 9,
+            "246": 9
+          },
+          "Branches": [
+            {
+              "Line": 235,
+              "Offset": 39,
+              "EndOffset": 41,
+              "Path": 0,
+              "Ordinal": 0,
+              "Hits": 7
+            },
+            {
+              "Line": 235,
+              "Offset": 39,
+              "EndOffset": 43,
+              "Path": 1,
+              "Ordinal": 1,
+              "Hits": 9
+            }
+          ]
+        },
+        "System.Void GameGuild.Social.Posts.PostTag::IncrementUsage()": {
+          "Lines": {
+            "248": 20
+          },
+          "Branches": []
+        },
+        "System.Void GameGuild.Social.Posts.PostTag::DecrementUsage()": {
+          "Lines": {
+            "249": 9
+          },
+          "Branches": [
+            {
+              "Line": 249,
+              "Offset": 12,
+              "EndOffset": 14,
+              "Path": 0,
+              "Ordinal": 0,
+              "Hits": 1
+            },
+            {
+              "Line": 249,
+              "Offset": 12,
+              "EndOffset": 31,
+              "Path": 1,
+              "Ordinal": 1,
+              "Hits": 2
+            }
+          ]
+        },
+        "System.Void GameGuild.Social.Posts.PostTag::SetFeatured(System.Boolean)": {
+          "Lines": {
+            "250": 12
+          },
+          "Branches": []
+        },
+        "System.Void GameGuild.Social.Posts.PostTag::.ctor()": {
+          "Lines": {
+            "231": 27
+          },
+          "Branches": []
+        }
+      },
+      "GameGuild.Social.Posts.PostTagAssignment": {
+        "GameGuild.Social.Posts.PostTagAssignment GameGuild.Social.Posts.PostTagAssignment::Create(System.Guid,System.Guid,System.Int32)": {
+          "Lines": {
+            "271": 2,
+            "272": 2,
+            "273": 2,
+            "274": 2,
+            "275": 2,
+            "276": 2,
+            "277": 2,
+            "278": 2,
+            "279": 2
+          },
+          "Branches": []
+        },
+        "System.Void GameGuild.Social.Posts.PostTagAssignment::.ctor()": {
+          "Lines": {
+            "268": 6
+          },
+          "Branches": []
+        }
+      },
+      "GameGuild.Social.Posts.PostView": {
+        "GameGuild.Social.Posts.PostView GameGuild.Social.Posts.PostView::Create(System.Guid,System.Nullable`1<System.Guid>,System.String,System.String,System.String)": {
+          "Lines": {
+            "323": 3,
+            "324": 3,
+            "325": 3,
+            "326": 3,
+            "327": 3,
+            "328": 3,
+            "329": 3,
+            "330": 3,
+            "331": 3,
+            "332": 3,
+            "333": 3,
+            "334": 3,
+            "335": 3,
+            "336": 3
+          },
+          "Branches": []
+        },
+        "System.Void GameGuild.Social.Posts.PostView::UpdateDuration(System.Int32,System.Boolean)": {
+          "Lines": {
+            "339": 1,
+            "340": 1,
+            "341": 1,
+            "342": 1,
+            "343": 1
+          },
+          "Branches": []
+        },
+        "System.Void GameGuild.Social.Posts.PostView::.ctor()": {
+          "Lines": {
+            "315": 9
+          },
+          "Branches": []
+        }
+      },
+      "GameGuild.Social.Posts.PostLike": {
+        "GameGuild.Social.Posts.PostLike GameGuild.Social.Posts.PostLike::Create(System.Guid,System.Guid,System.String)": {
+          "Lines": {
+            "365": 3,
+            "366": 3,
+            "367": 3,
+            "368": 3,
+            "369": 3,
+            "370": 3,
+            "371": 3,
+            "372": 3,
+            "373": 3
+          },
+          "Branches": []
+        },
+        "System.Void GameGuild.Social.Posts.PostLike::ChangeReactionType(System.String)": {
+          "Lines": {
+            "376": 1,
+            "377": 1,
+            "378": 1,
+            "379": 1
+          },
+          "Branches": []
+        },
+        "System.Void GameGuild.Social.Posts.PostLike::.ctor()": {
+          "Lines": {
+            "362": 9
+          },
+          "Branches": []
+        }
+      }
+    },
+    "D:\\repositories\\game-guild\\game-guild\\apps\\api\\Source\\Modules\\GameGuild.Social.Posts\\PostsModule.cs": {
+      "GameGuild.Social.Posts.PostsModule": {
+        "Microsoft.Extensions.DependencyInjection.IServiceCollection GameGuild.Social.Posts.PostsModule::AddPostsModule(Microsoft.Extensions.DependencyInjection.IServiceCollection)": {
+          "Lines": {
+            "15": 0,
+            "17": 0,
+            "18": 0,
+            "19": 0,
+            "20": 0,
+            "21": 0,
+            "24": 0,
+            "26": 0,
+            "28": 0,
+            "29": 0
+          },
+          "Branches": []
+        }
+      }
+    },
+    "D:\\repositories\\game-guild\\game-guild\\apps\\api\\Source\\Modules\\GameGuild.Social.Posts\\Services\\PostAnnouncementService.cs": {
+      "GameGuild.Social.Posts.Services.PostAnnouncementService": {
+        "System.String GameGuild.Social.Posts.Services.PostAnnouncementService::FormatSystemAnnouncement(System.String,System.String,System.String)": {
+          "Lines": {
+            "144": 4,
+            "145": 4,
+            "146": 4,
+            "147": 1,
+            "148": 1,
+            "149": 2,
+            "150": 0,
+            "151": 0,
+            "152": 4,
+            "154": 4,
+            "155": 4
+          },
+          "Branches": [
+            {
+              "Line": 145,
+              "Offset": 16,
+              "EndOffset": 18,
+              "Path": 0,
+              "Ordinal": 0,
+              "Hits": 3
+            },
+            {
+              "Line": 145,
+              "Offset": 29,
+              "EndOffset": 31,
+              "Path": 0,
+              "Ordinal": 2,
+              "Hits": 2
+            },
+            {
+              "Line": 145,
+              "Offset": 42,
+              "EndOffset": 44,
+              "Path": 0,
+              "Ordinal": 4,
+              "Hits": 0
+            },
+            {
+              "Line": 145,
+              "Offset": 16,
+              "EndOffset": 59,
+              "Path": 1,
+              "Ordinal": 1,
+              "Hits": 1
+            },
+            {
+              "Line": 145,
+              "Offset": 29,
+              "EndOffset": 67,
+              "Path": 1,
+              "Ordinal": 3,
+              "Hits": 1
+            },
+            {
+              "Line": 145,
+              "Offset": 42,
+              "EndOffset": 75,
+              "Path": 1,
+              "Ordinal": 5,
+              "Hits": 2
+            },
+            {
+              "Line": 145,
+              "Offset": 55,
+              "EndOffset": 83,
+              "Path": 1,
+              "Ordinal": 7,
+              "Hits": 0
+            },
+            {
+              "Line": 145,
+              "Offset": 55,
+              "EndOffset": 91,
+              "Path": 0,
+              "Ordinal": 6,
+              "Hits": 0
+            }
+          ]
+        },
+        "System.String GameGuild.Social.Posts.Services.PostAnnouncementService::FormatMilestoneCelebration(System.String,System.String,System.DateTime)": {
+          "Lines": {
+            "158": 1,
+            "159": 1,
+            "160": 1,
+            "161": 1,
+            "162": 1
+          },
+          "Branches": []
+        },
+        "System.String GameGuild.Social.Posts.Services.PostAnnouncementService::FormatCommunityUpdate(System.String,System.String,System.String)": {
+          "Lines": {
+            "165": 2,
+            "166": 2,
+            "167": 2,
+            "168": 2
+          },
+          "Branches": [
+            {
+              "Line": 166,
+              "Offset": 12,
+              "EndOffset": 14,
+              "Path": 0,
+              "Ordinal": 0,
+              "Hits": 1
+            },
+            {
+              "Line": 166,
+              "Offset": 12,
+              "EndOffset": 21,
+              "Path": 1,
+              "Ordinal": 1,
+              "Hits": 1
+            }
+          ]
+        },
+        "System.String GameGuild.Social.Posts.Services.PostAnnouncementService::FormatWelcomePost(System.String)": {
+          "Lines": {
+            "171": 1,
+            "172": 1,
+            "173": 1,
+            "174": 1
+          },
+          "Branches": []
+        },
+        "System.Void GameGuild.Social.Posts.Services.PostAnnouncementService::.ctor(GameGuild.IApplicationDbContext,GameGuild.Social.Posts.Services.IPostService,Microsoft.Extensions.Logging.ILogger`1<GameGuild.Social.Posts.Services.PostAnnouncementService>)": {
+          "Lines": {
+            "14": 8,
+            "15": 8,
+            "16": 8,
+            "17": 8,
+            "18": 8,
+            "19": 8,
+            "20": 8,
+            "21": 8,
+            "22": 8
+          },
+          "Branches": []
+        }
+      }
+    },
+    "D:\\repositories\\game-guild\\game-guild\\apps\\api\\Source\\Modules\\GameGuild.Social.Posts\\Services\\PostCommentService.cs": {
+      "GameGuild.Social.Posts.Services.PostCommentService": {
+        "System.Void GameGuild.Social.Posts.Services.PostCommentService::.ctor(GameGuild.IApplicationDbContext,Microsoft.Extensions.Logging.ILogger`1<GameGuild.Social.Posts.Services.PostCommentService>)": {
+          "Lines": {
+            "21": 0,
+            "22": 0,
+            "23": 0,
+            "24": 0,
+            "25": 0
+          },
+          "Branches": []
+        }
+      },
+      "GameGuild.Social.Posts.Services.PostCommentService/PostErrors": {
+        "GameGuild.Error GameGuild.Social.Posts.Services.PostCommentService/PostErrors::get_NotFound()": {
+          "Lines": {
+            "16": 0
+          },
+          "Branches": []
+        },
+        "GameGuild.Error GameGuild.Social.Posts.Services.PostCommentService/PostErrors::get_CommentNotFound()": {
+          "Lines": {
+            "17": 0
+          },
+          "Branches": []
+        },
+        "GameGuild.Error GameGuild.Social.Posts.Services.PostCommentService/PostErrors::get_ParentCommentNotFound()": {
+          "Lines": {
+            "18": 0
+          },
+          "Branches": []
+        }
+      }
+    },
+    "D:\\repositories\\game-guild\\game-guild\\apps\\api\\Source\\Modules\\GameGuild.Social.Posts\\Services\\PostContentReferenceService.cs": {
+      "GameGuild.Social.Posts.Services.PostContentReferenceService": {
+        "System.Void GameGuild.Social.Posts.Services.PostContentReferenceService::.ctor(GameGuild.IApplicationDbContext,Microsoft.Extensions.Logging.ILogger`1<GameGuild.Social.Posts.Services.PostContentReferenceService>)": {
+          "Lines": {
+            "20": 0,
+            "21": 0,
+            "22": 0,
+            "23": 0,
+            "24": 0
+          },
+          "Branches": []
+        }
+      },
+      "GameGuild.Social.Posts.Services.PostContentReferenceService/PostErrors": {
+        "GameGuild.Error GameGuild.Social.Posts.Services.PostContentReferenceService/PostErrors::get_NotFound()": {
+          "Lines": {
+            "16": 0
+          },
+          "Branches": []
+        },
+        "GameGuild.Error GameGuild.Social.Posts.Services.PostContentReferenceService/PostErrors::get_ReferenceNotFound()": {
+          "Lines": {
+            "17": 0
+          },
+          "Branches": []
+        }
+      }
+    },
+    "D:\\repositories\\game-guild\\game-guild\\apps\\api\\Source\\Modules\\GameGuild.Social.Posts\\Services\\PostCrudService.cs": {
+      "GameGuild.Social.Posts.Services.PostCrudService": {
+        "System.Void GameGuild.Social.Posts.Services.PostCrudService::.ctor(GameGuild.IApplicationDbContext,Microsoft.Extensions.Logging.ILogger`1<GameGuild.Social.Posts.Services.PostCrudService>)": {
+          "Lines": {
+            "19": 0,
+            "20": 0,
+            "21": 0,
+            "22": 0,
+            "23": 0
+          },
+          "Branches": []
+        }
+      },
+      "GameGuild.Social.Posts.Services.PostCrudService/PostErrors": {
+        "GameGuild.Error GameGuild.Social.Posts.Services.PostCrudService/PostErrors::get_NotFound()": {
+          "Lines": {
+            "16": 0
+          },
+          "Branches": []
+        }
+      }
+    },
+    "D:\\repositories\\game-guild\\game-guild\\apps\\api\\Source\\Modules\\GameGuild.Social.Posts\\Services\\PostEngagementService.cs": {
+      "GameGuild.Social.Posts.Services.PostEngagementService": {
+        "System.Void GameGuild.Social.Posts.Services.PostEngagementService::.ctor(GameGuild.IApplicationDbContext,Microsoft.Extensions.Logging.ILogger`1<GameGuild.Social.Posts.Services.PostEngagementService>)": {
+          "Lines": {
+            "22": 0,
+            "23": 0,
+            "24": 0,
+            "25": 0,
+            "26": 0
+          },
+          "Branches": []
+        }
+      },
+      "GameGuild.Social.Posts.Services.PostEngagementService/PostErrors": {
+        "GameGuild.Error GameGuild.Social.Posts.Services.PostEngagementService/PostErrors::get_NotFound()": {
+          "Lines": {
+            "16": 0
+          },
+          "Branches": []
+        },
+        "GameGuild.Error GameGuild.Social.Posts.Services.PostEngagementService/PostErrors::get_StatisticsNotFound()": {
+          "Lines": {
+            "17": 0
+          },
+          "Branches": []
+        },
+        "GameGuild.Error GameGuild.Social.Posts.Services.PostEngagementService/PostErrors::get_ViewNotFound()": {
+          "Lines": {
+            "18": 0
+          },
+          "Branches": []
+        },
+        "GameGuild.Error GameGuild.Social.Posts.Services.PostEngagementService/PostErrors::get_NotFollowing()": {
+          "Lines": {
+            "19": 0
+          },
+          "Branches": []
+        }
+      }
+    },
+    "D:\\repositories\\game-guild\\game-guild\\apps\\api\\Source\\Modules\\GameGuild.Social.Posts\\Services\\PostService.cs": {
+      "GameGuild.Social.Posts.Services.PostService": {
+        "System.Threading.Tasks.Task`1<GameGuild.Result`1<GameGuild.Social.Posts.Post>> GameGuild.Social.Posts.Services.PostService::GetPostByIdAsync(System.Guid,System.Threading.CancellationToken)": {
+          "Lines": {
+            "33": 1
+          },
+          "Branches": []
+        },
+        "System.Threading.Tasks.Task`1<GameGuild.Result`1<GameGuild.Social.Posts.Post>> GameGuild.Social.Posts.Services.PostService::GetPostByIdWithDetailsAsync(System.Guid,System.Threading.CancellationToken)": {
+          "Lines": {
+            "36": 1
+          },
+          "Branches": []
+        },
+        "System.Threading.Tasks.Task`1<GameGuild.Result`1<System.Collections.Generic.IEnumerable`1<GameGuild.Social.Posts.Post>>> GameGuild.Social.Posts.Services.PostService::GetPostsAsync(System.Int32,System.Int32,System.Threading.CancellationToken)": {
+          "Lines": {
+            "39": 1
+          },
+          "Branches": []
+        },
+        "System.Threading.Tasks.Task`1<GameGuild.Result`1<GameGuild.Social.Posts.Post>> GameGuild.Social.Posts.Services.PostService::CreatePostAsync(System.Guid,System.String,GameGuild.Social.Posts.PostVisibility,System.String,System.Nullable`1<GameGuild.Social.Posts.MediaType>,System.Nullable`1<System.Guid>,System.Threading.CancellationToken)": {
+          "Lines": {
+            "42": 1
+          },
+          "Branches": []
+        },
+        "System.Threading.Tasks.Task`1<GameGuild.Result`1<GameGuild.Social.Posts.Post>> GameGuild.Social.Posts.Services.PostService::UpdatePostAsync(System.Guid,System.String,System.Threading.CancellationToken)": {
+          "Lines": {
+            "45": 1
+          },
+          "Branches": []
+        },
+        "System.Threading.Tasks.Task`1<GameGuild.Result> GameGuild.Social.Posts.Services.PostService::DeletePostAsync(System.Guid,System.Threading.CancellationToken)": {
+          "Lines": {
+            "48": 1
+          },
+          "Branches": []
+        },
+        "System.Threading.Tasks.Task`1<GameGuild.Result> GameGuild.Social.Posts.Services.PostService::RestorePostAsync(System.Guid,System.Threading.CancellationToken)": {
+          "Lines": {
+            "51": 1
+          },
+          "Branches": []
+        },
+        "System.Threading.Tasks.Task`1<GameGuild.Result`1<System.Collections.Generic.IEnumerable`1<GameGuild.Social.Posts.Post>>> GameGuild.Social.Posts.Services.PostService::GetPostsByAuthorAsync(System.Guid,System.Int32,System.Int32,System.Threading.CancellationToken)": {
+          "Lines": {
+            "54": 1
+          },
+          "Branches": []
+        },
+        "System.Threading.Tasks.Task`1<GameGuild.Result`1<System.Collections.Generic.IEnumerable`1<GameGuild.Social.Posts.Post>>> GameGuild.Social.Posts.Services.PostService::GetPostsByVisibilityAsync(GameGuild.Social.Posts.PostVisibility,System.Int32,System.Int32,System.Threading.CancellationToken)": {
+          "Lines": {
+            "57": 1
+          },
+          "Branches": []
+        },
+        "System.Threading.Tasks.Task`1<GameGuild.Result`1<System.Collections.Generic.IEnumerable`1<GameGuild.Social.Posts.Post>>> GameGuild.Social.Posts.Services.PostService::GetPinnedPostsAsync(System.Nullable`1<System.Guid>,System.Threading.CancellationToken)": {
+          "Lines": {
+            "60": 1
+          },
+          "Branches": []
+        },
+        "System.Threading.Tasks.Task`1<GameGuild.Result`1<System.Collections.Generic.IEnumerable`1<GameGuild.Social.Posts.Post>>> GameGuild.Social.Posts.Services.PostService::GetPublicPostsAsync(System.Int32,System.Int32,System.Threading.CancellationToken)": {
+          "Lines": {
+            "63": 1
+          },
+          "Branches": []
+        },
+        "System.Threading.Tasks.Task`1<GameGuild.Result`1<System.Collections.Generic.IEnumerable`1<GameGuild.Social.Posts.Post>>> GameGuild.Social.Posts.Services.PostService::GetPostsByTenantAsync(System.Guid,System.Int32,System.Int32,System.Threading.CancellationToken)": {
+          "Lines": {
+            "66": 1
+          },
+          "Branches": []
+        },
+        "System.Threading.Tasks.Task`1<GameGuild.Result`1<System.Collections.Generic.IEnumerable`1<GameGuild.Social.Posts.Post>>> GameGuild.Social.Posts.Services.PostService::SearchPostsAsync(System.String,System.Int32,System.Int32,System.Threading.CancellationToken)": {
+          "Lines": {
+            "69": 1
+          },
+          "Branches": []
+        },
+        "System.Threading.Tasks.Task`1<GameGuild.Result`1<System.Collections.Generic.IEnumerable`1<GameGuild.Social.Posts.Post>>> GameGuild.Social.Posts.Services.PostService::GetPostsByTagsAsync(System.String[],System.Int32,System.Int32,System.Threading.CancellationToken)": {
+          "Lines": {
+            "72": 1
+          },
+          "Branches": []
+        },
+        "System.Threading.Tasks.Task`1<GameGuild.Result`1<System.Collections.Generic.IEnumerable`1<GameGuild.Social.Posts.Post>>> GameGuild.Social.Posts.Services.PostService::GetTrendingPostsAsync(System.Int32,System.Int32,System.Threading.CancellationToken)": {
+          "Lines": {
+            "75": 1
+          },
+          "Branches": []
+        },
+        "System.Threading.Tasks.Task`1<GameGuild.Result`1<System.Collections.Generic.IEnumerable`1<GameGuild.Social.Posts.Post>>> GameGuild.Social.Posts.Services.PostService::GetFeedPostsAsync(System.Guid,System.Int32,System.Int32,System.Threading.CancellationToken)": {
+          "Lines": {
+            "78": 1
+          },
+          "Branches": []
+        },
+        "System.Threading.Tasks.Task`1<GameGuild.Result`1<System.Boolean>> GameGuild.Social.Posts.Services.PostService::CanUserPerformActionAsync(System.Guid,System.Guid,System.String,System.Threading.CancellationToken)": {
+          "Lines": {
+            "81": 1
+          },
+          "Branches": []
+        },
+        "System.Threading.Tasks.Task`1<GameGuild.Result`1<System.Boolean>> GameGuild.Social.Posts.Services.PostService::TogglePostLikeAsync(System.Guid,System.Guid,System.String,System.Threading.CancellationToken)": {
+          "Lines": {
+            "85": 1
+          },
+          "Branches": []
+        },
+        "System.Threading.Tasks.Task`1<GameGuild.Result`1<System.Boolean>> GameGuild.Social.Posts.Services.PostService::TogglePostPinAsync(System.Guid,System.Threading.CancellationToken)": {
+          "Lines": {
+            "88": 1
+          },
+          "Branches": []
+        },
+        "System.Threading.Tasks.Task`1<GameGuild.Result> GameGuild.Social.Posts.Services.PostService::SharePostAsync(System.Guid,System.Threading.CancellationToken)": {
+          "Lines": {
+            "91": 1
+          },
+          "Branches": []
+        },
+        "System.Threading.Tasks.Task`1<GameGuild.Result`1<GameGuild.Social.Posts.PostStatistics>> GameGuild.Social.Posts.Services.PostService::GetPostStatisticsAsync(System.Guid,System.Threading.CancellationToken)": {
+          "Lines": {
+            "94": 1
+          },
+          "Branches": []
+        },
+        "System.Threading.Tasks.Task`1<GameGuild.Result> GameGuild.Social.Posts.Services.PostService::RecordPostViewAsync(System.Guid,System.Nullable`1<System.Guid>,System.String,System.String,System.String,System.Threading.CancellationToken)": {
+          "Lines": {
+            "97": 1
+          },
+          "Branches": []
+        },
+        "System.Threading.Tasks.Task`1<GameGuild.Result> GameGuild.Social.Posts.Services.PostService::UpdateViewEngagementAsync(System.Guid,System.Int32,System.Boolean,System.Threading.CancellationToken)": {
+          "Lines": {
+            "100": 1
+          },
+          "Branches": []
+        },
+        "System.Threading.Tasks.Task`1<GameGuild.Result> GameGuild.Social.Posts.Services.PostService::RecalculateStatisticsAsync(System.Guid,System.Threading.CancellationToken)": {
+          "Lines": {
+            "103": 1
+          },
+          "Branches": []
+        },
+        "System.Threading.Tasks.Task`1<GameGuild.Result`1<System.Int32>> GameGuild.Social.Posts.Services.PostService::RecalculateAllTrendingScoresAsync(System.Threading.CancellationToken)": {
+          "Lines": {
+            "106": 1
+          },
+          "Branches": []
+        },
+        "System.Threading.Tasks.Task`1<GameGuild.Result`1<GameGuild.Social.Posts.PostFollower>> GameGuild.Social.Posts.Services.PostService::FollowPostAsync(System.Guid,System.Guid,System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Threading.CancellationToken)": {
+          "Lines": {
+            "109": 1
+          },
+          "Branches": []
+        },
+        "System.Threading.Tasks.Task`1<GameGuild.Result> GameGuild.Social.Posts.Services.PostService::UnfollowPostAsync(System.Guid,System.Guid,System.Threading.CancellationToken)": {
+          "Lines": {
+            "112": 1
+          },
+          "Branches": []
+        },
+        "System.Threading.Tasks.Task`1<GameGuild.Result> GameGuild.Social.Posts.Services.PostService::UpdateFollowPreferencesAsync(System.Guid,System.Guid,System.Nullable`1<System.Boolean>,System.Nullable`1<System.Boolean>,System.Nullable`1<System.Boolean>,System.Nullable`1<System.Boolean>,System.Threading.CancellationToken)": {
+          "Lines": {
+            "115": 1
+          },
+          "Branches": []
+        },
+        "System.Threading.Tasks.Task`1<GameGuild.Result`1<System.Collections.Generic.IEnumerable`1<GameGuild.Social.Posts.PostFollower>>> GameGuild.Social.Posts.Services.PostService::GetPostFollowersAsync(System.Guid,System.Threading.CancellationToken)": {
+          "Lines": {
+            "118": 1
+          },
+          "Branches": []
+        },
+        "System.Threading.Tasks.Task`1<GameGuild.Result`1<System.Boolean>> GameGuild.Social.Posts.Services.PostService::IsFollowingPostAsync(System.Guid,System.Guid,System.Threading.CancellationToken)": {
+          "Lines": {
+            "121": 1
+          },
+          "Branches": []
+        },
+        "System.Threading.Tasks.Task`1<GameGuild.Result`1<GameGuild.Social.Posts.PostComment>> GameGuild.Social.Posts.Services.PostService::GetCommentByIdAsync(System.Guid,System.Threading.CancellationToken)": {
+          "Lines": {
+            "125": 1
+          },
+          "Branches": []
+        },
+        "System.Threading.Tasks.Task`1<GameGuild.Result`1<GameGuild.Social.Posts.PostComment>> GameGuild.Social.Posts.Services.PostService::AddCommentAsync(System.Guid,System.Guid,System.String,System.Nullable`1<System.Guid>,System.Threading.CancellationToken)": {
+          "Lines": {
+            "128": 1
+          },
+          "Branches": []
+        },
+        "System.Threading.Tasks.Task`1<GameGuild.Result`1<GameGuild.Social.Posts.PostComment>> GameGuild.Social.Posts.Services.PostService::UpdateCommentAsync(System.Guid,System.String,System.Threading.CancellationToken)": {
+          "Lines": {
+            "131": 1
+          },
+          "Branches": []
+        },
+        "System.Threading.Tasks.Task`1<GameGuild.Result> GameGuild.Social.Posts.Services.PostService::DeleteCommentAsync(System.Guid,System.Threading.CancellationToken)": {
+          "Lines": {
+            "134": 1
+          },
+          "Branches": []
+        },
+        "System.Threading.Tasks.Task`1<GameGuild.Result`1<System.Collections.Generic.IEnumerable`1<GameGuild.Social.Posts.PostComment>>> GameGuild.Social.Posts.Services.PostService::GetPostCommentsAsync(System.Guid,System.Int32,System.Int32,System.Threading.CancellationToken)": {
+          "Lines": {
+            "137": 1
+          },
+          "Branches": []
+        },
+        "System.Threading.Tasks.Task`1<GameGuild.Result> GameGuild.Social.Posts.Services.PostService::AddTagsToPostAsync(System.Guid,System.String[],System.Threading.CancellationToken)": {
+          "Lines": {
+            "141": 1
+          },
+          "Branches": []
+        },
+        "System.Threading.Tasks.Task`1<GameGuild.Result> GameGuild.Social.Posts.Services.PostService::RemoveTagsFromPostAsync(System.Guid,System.String[],System.Threading.CancellationToken)": {
+          "Lines": {
+            "144": 1
+          },
+          "Branches": []
+        },
+        "System.Threading.Tasks.Task`1<GameGuild.Result`1<System.Collections.Generic.IEnumerable`1<GameGuild.Social.Posts.PostTag>>> GameGuild.Social.Posts.Services.PostService::GetPostTagsAsync(System.Guid,System.Threading.CancellationToken)": {
+          "Lines": {
+            "147": 1
+          },
+          "Branches": []
+        },
+        "System.Threading.Tasks.Task`1<GameGuild.Result`1<GameGuild.Social.Posts.PostTag>> GameGuild.Social.Posts.Services.PostService::GetOrCreateTagAsync(System.String,System.String,System.Threading.CancellationToken)": {
+          "Lines": {
+            "150": 1
+          },
+          "Branches": []
+        },
+        "System.Threading.Tasks.Task`1<GameGuild.Result`1<System.Collections.Generic.IEnumerable`1<GameGuild.Social.Posts.PostTag>>> GameGuild.Social.Posts.Services.PostService::GetPopularTagsAsync(System.Int32,System.Threading.CancellationToken)": {
+          "Lines": {
+            "153": 1
+          },
+          "Branches": []
+        },
+        "System.Threading.Tasks.Task`1<GameGuild.Result`1<GameGuild.Social.Posts.PostContentReference>> GameGuild.Social.Posts.Services.PostService::AddContentReferenceAsync(System.Guid,System.Guid,System.String,System.String,System.String,System.Threading.CancellationToken)": {
+          "Lines": {
+            "157": 1
+          },
+          "Branches": []
+        },
+        "System.Threading.Tasks.Task`1<GameGuild.Result> GameGuild.Social.Posts.Services.PostService::RemoveContentReferenceAsync(System.Guid,System.Threading.CancellationToken)": {
+          "Lines": {
+            "160": 1
+          },
+          "Branches": []
+        },
+        "System.Threading.Tasks.Task`1<GameGuild.Result`1<System.Collections.Generic.IEnumerable`1<GameGuild.Social.Posts.PostContentReference>>> GameGuild.Social.Posts.Services.PostService::GetPostContentReferencesAsync(System.Guid,System.Threading.CancellationToken)": {
+          "Lines": {
+            "163": 1
+          },
+          "Branches": []
+        },
+        "System.Void GameGuild.Social.Posts.Services.PostService::.ctor(GameGuild.Social.Posts.Services.IPostCrudService,GameGuild.Social.Posts.Services.IPostEngagementService,GameGuild.Social.Posts.Services.IPostCommentService,GameGuild.Social.Posts.Services.IPostTagService,GameGuild.Social.Posts.Services.IPostContentReferenceService)": {
+          "Lines": {
+            "17": 43,
+            "18": 43,
+            "19": 43,
+            "20": 43,
+            "21": 43,
+            "22": 43,
+            "23": 43,
+            "24": 43,
+            "25": 43,
+            "26": 43,
+            "27": 43,
+            "28": 43,
+            "29": 43
+          },
+          "Branches": []
+        }
+      }
+    },
+    "D:\\repositories\\game-guild\\game-guild\\apps\\api\\Source\\Modules\\GameGuild.Social.Posts\\Services\\PostTagService.cs": {
+      "GameGuild.Social.Posts.Services.PostTagService": {
+        "System.Void GameGuild.Social.Posts.Services.PostTagService::.ctor(GameGuild.IApplicationDbContext,Microsoft.Extensions.Logging.ILogger`1<GameGuild.Social.Posts.Services.PostTagService>)": {
+          "Lines": {
+            "19": 0,
+            "20": 0,
+            "21": 0,
+            "22": 0,
+            "23": 0
+          },
+          "Branches": []
+        }
+      },
+      "GameGuild.Social.Posts.Services.PostTagService/PostErrors": {
+        "GameGuild.Error GameGuild.Social.Posts.Services.PostTagService/PostErrors::get_NotFound()": {
+          "Lines": {
+            "16": 0
+          },
+          "Branches": []
+        }
+      }
+    },
+    "D:\\repositories\\game-guild\\game-guild\\apps\\api\\Source\\Modules\\GameGuild.Social.Posts\\Controllers\\PostCommentsController.cs": {
+      "GameGuild.Social.Posts.Controllers.PostCommentsController": {
+        "System.Guid GameGuild.Social.Posts.Controllers.PostCommentsController::GetCurrentUserId()": {
+          "Lines": {
+            "17": 0,
+            "18": 0,
+            "19": 0,
+            "20": 0
+          },
+          "Branches": [
+            {
+              "Line": 19,
+              "Offset": 14,
+              "EndOffset": 16,
+              "Path": 0,
+              "Ordinal": 0,
+              "Hits": 0
+            },
+            {
+              "Line": 19,
+              "Offset": 14,
+              "EndOffset": 27,
+              "Path": 1,
+              "Ordinal": 1,
+              "Hits": 0
+            },
+            {
+              "Line": 19,
+              "Offset": 41,
+              "EndOffset": 43,
+              "Path": 0,
+              "Ordinal": 2,
+              "Hits": 0
+            },
+            {
+              "Line": 19,
+              "Offset": 41,
+              "EndOffset": 50,
+              "Path": 1,
+              "Ordinal": 3,
+              "Hits": 0
+            }
+          ]
+        },
+        "System.Void GameGuild.Social.Posts.Controllers.PostCommentsController::.ctor(GameGuild.Social.Posts.Services.IPostService,GameGuild.Identity.Context.Actors.IActorContextAccessor)": {
+          "Lines": {
+            "13": 0
+          },
+          "Branches": []
+        }
+      }
+    },
+    "D:\\repositories\\game-guild\\game-guild\\apps\\api\\Source\\Modules\\GameGuild.Social.Posts\\Controllers\\PostInteractionsController.cs": {
+      "GameGuild.Social.Posts.Controllers.PostInteractionsController": {
+        "System.Guid GameGuild.Social.Posts.Controllers.PostInteractionsController::GetCurrentUserId()": {
+          "Lines": {
+            "17": 0,
+            "18": 0,
+            "19": 0,
+            "20": 0
+          },
+          "Branches": [
+            {
+              "Line": 19,
+              "Offset": 14,
+              "EndOffset": 16,
+              "Path": 0,
+              "Ordinal": 0,
+              "Hits": 0
+            },
+            {
+              "Line": 19,
+              "Offset": 14,
+              "EndOffset": 27,
+              "Path": 1,
+              "Ordinal": 1,
+              "Hits": 0
+            },
+            {
+              "Line": 19,
+              "Offset": 41,
+              "EndOffset": 43,
+              "Path": 0,
+              "Ordinal": 2,
+              "Hits": 0
+            },
+            {
+              "Line": 19,
+              "Offset": 41,
+              "EndOffset": 50,
+              "Path": 1,
+              "Ordinal": 3,
+              "Hits": 0
+            }
+          ]
+        },
+        "System.Void GameGuild.Social.Posts.Controllers.PostInteractionsController::.ctor(GameGuild.Social.Posts.Services.IPostService,GameGuild.Identity.Context.Actors.IActorContextAccessor)": {
+          "Lines": {
+            "13": 0
+          },
+          "Branches": []
+        }
+      }
+    },
+    "D:\\repositories\\game-guild\\game-guild\\apps\\api\\Source\\Modules\\GameGuild.Social.Posts\\Controllers\\PostMappings.cs": {
+      "GameGuild.Social.Posts.Controllers.PostMappings": {
+        "GameGuild.Social.Posts.Controllers.PostDto GameGuild.Social.Posts.Controllers.PostMappings::MapToDto(GameGuild.Social.Posts.Post)": {
+          "Lines": {
+            "8": 2,
+            "9": 2,
+            "10": 2,
+            "11": 2,
+            "12": 2,
+            "13": 2,
+            "14": 2,
+            "15": 2,
+            "16": 2,
+            "17": 2,
+            "18": 2,
+            "19": 2,
+            "20": 2,
+            "21": 2,
+            "22": 2,
+            "23": 2,
+            "24": 2,
+            "25": 2,
+            "26": 2,
+            "27": 2,
+            "28": 2
+          },
+          "Branches": [
+            {
+              "Line": 8,
+              "Offset": 86,
+              "EndOffset": 88,
+              "Path": 0,
+              "Ordinal": 0,
+              "Hits": 2
+            },
+            {
+              "Line": 8,
+              "Offset": 86,
+              "EndOffset": 92,
+              "Path": 1,
+              "Ordinal": 1,
+              "Hits": 0
+            }
+          ]
+        },
+        "GameGuild.Social.Posts.Controllers.CommentDto GameGuild.Social.Posts.Controllers.PostMappings::MapCommentToDto(GameGuild.Social.Posts.PostComment)": {
+          "Lines": {
+            "30": 2,
+            "31": 2,
+            "32": 2,
+            "33": 2,
+            "34": 2,
+            "35": 2,
+            "36": 2,
+            "37": 2,
+            "38": 2,
+            "39": 2,
+            "40": 2,
+            "41": 2
+          },
+          "Branches": []
+        },
+        "GameGuild.Social.Posts.Controllers.TagDto GameGuild.Social.Posts.Controllers.PostMappings::MapTagToDto(GameGuild.Social.Posts.PostTag)": {
+          "Lines": {
+            "43": 2,
+            "44": 2,
+            "45": 2,
+            "46": 2,
+            "47": 2,
+            "48": 2,
+            "49": 2,
+            "50": 2,
+            "51": 2,
+            "52": 2,
+            "53": 2
+          },
+          "Branches": []
+        },
+        "GameGuild.Social.Posts.Controllers.StatisticsDto GameGuild.Social.Posts.Controllers.PostMappings::MapStatisticsToDto(GameGuild.Social.Posts.PostStatistics)": {
+          "Lines": {
+            "55": 1,
+            "56": 1,
+            "57": 1,
+            "58": 1,
+            "59": 1,
+            "60": 1,
+            "61": 1,
+            "62": 1,
+            "63": 1,
+            "64": 1,
+            "65": 1
+          },
+          "Branches": []
+        },
+        "GameGuild.Social.Posts.Controllers.FollowerDto GameGuild.Social.Posts.Controllers.PostMappings::MapFollowerToDto(GameGuild.Social.Posts.PostFollower)": {
+          "Lines": {
+            "67": 2,
+            "68": 2,
+            "69": 2,
+            "70": 2,
+            "71": 2,
+            "72": 2,
+            "73": 2,
+            "74": 2,
+            "75": 2,
+            "76": 2
+          },
+          "Branches": []
+        }
+      }
+    },
+    "D:\\repositories\\game-guild\\game-guild\\apps\\api\\Source\\Modules\\GameGuild.Social.Posts\\Controllers\\PostsCrudController.cs": {
+      "GameGuild.Social.Posts.Controllers.PostsCrudController": {
+        "System.Guid GameGuild.Social.Posts.Controllers.PostsCrudController::GetCurrentUserId()": {
+          "Lines": {
+            "17": 0,
+            "18": 0,
+            "19": 0,
+            "20": 0
+          },
+          "Branches": [
+            {
+              "Line": 19,
+              "Offset": 14,
+              "EndOffset": 16,
+              "Path": 0,
+              "Ordinal": 0,
+              "Hits": 0
+            },
+            {
+              "Line": 19,
+              "Offset": 14,
+              "EndOffset": 27,
+              "Path": 1,
+              "Ordinal": 1,
+              "Hits": 0
+            },
+            {
+              "Line": 19,
+              "Offset": 41,
+              "EndOffset": 43,
+              "Path": 0,
+              "Ordinal": 2,
+              "Hits": 0
+            },
+            {
+              "Line": 19,
+              "Offset": 41,
+              "EndOffset": 50,
+              "Path": 1,
+              "Ordinal": 3,
+              "Hits": 0
+            }
+          ]
+        },
+        "System.Void GameGuild.Social.Posts.Controllers.PostsCrudController::.ctor(GameGuild.Social.Posts.Services.IPostService,GameGuild.Identity.Context.Actors.IActorContextAccessor)": {
+          "Lines": {
+            "13": 0
+          },
+          "Branches": []
+        }
+      }
+    },
+    "D:\\repositories\\game-guild\\game-guild\\apps\\api\\Source\\Modules\\GameGuild.Social.Posts\\Configuration\\PostEntityConfiguration.cs": {
+      "GameGuild.Social.Posts.Configuration.PostEntityConfiguration": {
+        "System.Void GameGuild.Social.Posts.Configuration.PostEntityConfiguration::Configure(Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder`1<GameGuild.Social.Posts.Post>)": {
+          "Lines": {
+            "12": 0,
+            "13": 0,
+            "15": 0,
+            "17": 0,
+            "18": 0,
+            "19": 0,
+            "21": 0,
+            "22": 0,
+            "24": 0,
+            "25": 0,
+            "26": 0,
+            "27": 0,
+            "28": 0,
+            "29": 0
+          },
+          "Branches": []
+        }
+      },
+      "GameGuild.Social.Posts.Configuration.PostCommentEntityConfiguration": {
+        "System.Void GameGuild.Social.Posts.Configuration.PostCommentEntityConfiguration::Configure(Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder`1<GameGuild.Social.Posts.PostComment>)": {
+          "Lines": {
+            "35": 0,
+            "36": 0,
+            "38": 0,
+            "40": 0,
+            "41": 0,
+            "42": 0,
+            "44": 0,
+            "45": 0,
+            "46": 0,
+            "47": 0
+          },
+          "Branches": []
+        }
+      },
+      "GameGuild.Social.Posts.Configuration.PostStatisticsEntityConfiguration": {
+        "System.Void GameGuild.Social.Posts.Configuration.PostStatisticsEntityConfiguration::Configure(Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder`1<GameGuild.Social.Posts.PostStatistics>)": {
+          "Lines": {
+            "53": 0,
+            "54": 0,
+            "56": 0,
+            "58": 0,
+            "59": 0,
+            "61": 0,
+            "62": 0,
+            "63": 0
+          },
+          "Branches": []
+        }
+      },
+      "GameGuild.Social.Posts.Configuration.PostContentReferenceEntityConfiguration": {
+        "System.Void GameGuild.Social.Posts.Configuration.PostContentReferenceEntityConfiguration::Configure(Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder`1<GameGuild.Social.Posts.PostContentReference>)": {
+          "Lines": {
+            "69": 0,
+            "70": 0,
+            "72": 0,
+            "74": 0,
+            "75": 0,
+            "77": 0,
+            "78": 0,
+            "80": 0,
+            "81": 0,
+            "83": 0,
+            "84": 0,
+            "85": 0,
+            "86": 0
+          },
+          "Branches": []
+        }
+      },
+      "GameGuild.Social.Posts.Configuration.PostFollowerEntityConfiguration": {
+        "System.Void GameGuild.Social.Posts.Configuration.PostFollowerEntityConfiguration::Configure(Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder`1<GameGuild.Social.Posts.PostFollower>)": {
+          "Lines": {
+            "92": 0,
+            "93": 0,
+            "95": 0,
+            "97": 0,
+            "98": 0,
+            "99": 0,
+            "100": 0,
+            "101": 0
+          },
+          "Branches": []
+        }
+      },
+      "GameGuild.Social.Posts.Configuration.PostTagEntityConfiguration": {
+        "System.Void GameGuild.Social.Posts.Configuration.PostTagEntityConfiguration::Configure(Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder`1<GameGuild.Social.Posts.PostTag>)": {
+          "Lines": {
+            "107": 0,
+            "108": 0,
+            "110": 0,
+            "112": 0,
+            "113": 0,
+            "114": 0,
+            "116": 0,
+            "117": 0,
+            "119": 0,
+            "120": 0,
+            "122": 0,
+            "123": 0,
+            "125": 0,
+            "126": 0,
+            "128": 0,
+            "129": 0,
+            "131": 0,
+            "132": 0,
+            "133": 0
+          },
+          "Branches": []
+        }
+      },
+      "GameGuild.Social.Posts.Configuration.PostTagAssignmentEntityConfiguration": {
+        "System.Void GameGuild.Social.Posts.Configuration.PostTagAssignmentEntityConfiguration::Configure(Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder`1<GameGuild.Social.Posts.PostTagAssignment>)": {
+          "Lines": {
+            "139": 0,
+            "140": 0,
+            "142": 0,
+            "144": 0,
+            "145": 0,
+            "146": 0,
+            "147": 0,
+            "148": 0
+          },
+          "Branches": []
+        }
+      },
+      "GameGuild.Social.Posts.Configuration.PostViewEntityConfiguration": {
+        "System.Void GameGuild.Social.Posts.Configuration.PostViewEntityConfiguration::Configure(Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder`1<GameGuild.Social.Posts.PostView>)": {
+          "Lines": {
+            "154": 0,
+            "155": 0,
+            "157": 0,
+            "159": 0,
+            "160": 0,
+            "162": 0,
+            "163": 0,
+            "165": 0,
+            "166": 0,
+            "168": 0,
+            "169": 0,
+            "170": 0,
+            "171": 0,
+            "172": 0
+          },
+          "Branches": []
+        }
+      },
+      "GameGuild.Social.Posts.Configuration.PostLikeEntityConfiguration": {
+        "System.Void GameGuild.Social.Posts.Configuration.PostLikeEntityConfiguration::Configure(Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder`1<GameGuild.Social.Posts.PostLike>)": {
+          "Lines": {
+            "178": 0,
+            "179": 0,
+            "181": 0,
+            "183": 0,
+            "184": 0,
+            "186": 0,
+            "187": 0,
+            "188": 0,
+            "189": 0,
+            "190": 0
+          },
+          "Branches": []
+        }
+      }
+    }
+  }
+}
