@@ -1,0 +1,492 @@
+using FluentAssertions;
+using GameGuild.TestingLab;
+using Xunit;
+
+namespace GameGuild.TestingLab.UnitTests;
+
+#region TestingLocation Tests
+
+public class TestingLocationTests
+{
+    [Fact]
+    public void DefaultValues_ShouldBeCorrect()
+    {
+        var location = new TestingLocation();
+
+        location.Name.Should().BeEmpty();
+        location.IsVirtual.Should().BeFalse();
+        location.Status.Should().Be(LocationStatus.Active);
+    }
+
+    [Fact]
+    public void Activate_ShouldSetStatus()
+    {
+        var location = new TestingLocation();
+        location.Deactivate();
+
+        location.Activate();
+
+        location.Status.Should().Be(LocationStatus.Active);
+    }
+
+    [Fact]
+    public void Deactivate_ShouldSetStatus()
+    {
+        var location = new TestingLocation();
+
+        location.Deactivate();
+
+        location.Status.Should().Be(LocationStatus.Inactive);
+    }
+
+    [Fact]
+    public void SetMaintenance_ShouldSetStatus()
+    {
+        var location = new TestingLocation();
+
+        location.SetMaintenance();
+
+        location.Status.Should().Be(LocationStatus.Maintenance);
+    }
+
+    [Fact]
+    public void SetCapacity_NegativeValue_ShouldThrow()
+    {
+        var location = new TestingLocation();
+
+        var act = () => location.SetCapacity(-1);
+
+        act.Should().Throw<ArgumentOutOfRangeException>();
+    }
+
+    [Fact]
+    public void SetCapacity_ValidValue_ShouldSet()
+    {
+        var location = new TestingLocation();
+
+        location.SetCapacity(50);
+
+        location.Capacity.Should().Be(50);
+    }
+
+    [Fact]
+    public void SetVirtualInfo_ShouldSetVirtualAndUrl()
+    {
+        var location = new TestingLocation();
+
+        location.SetVirtualInfo("https://meet.example.com/abc");
+
+        location.IsVirtual.Should().BeTrue();
+        location.VirtualUrl.Should().Be("https://meet.example.com/abc");
+    }
+
+    [Fact]
+    public void IsAvailable_WhenActive_ShouldBeTrue()
+    {
+        var location = new TestingLocation { Status = LocationStatus.Active };
+
+        location.IsAvailable.Should().BeTrue();
+    }
+
+    [Fact]
+    public void IsAvailable_WhenMaintenance_ShouldBeFalse()
+    {
+        var location = new TestingLocation();
+        location.SetMaintenance();
+
+        location.IsAvailable.Should().BeFalse();
+    }
+
+    [Fact]
+    public void CanAccommodate_WhenActiveAndSufficientCapacity_ShouldBeTrue()
+    {
+        var location = new TestingLocation { Capacity = 20 };
+
+        location.CanAccommodate(15).Should().BeTrue();
+    }
+
+    [Fact]
+    public void CanAccommodate_WhenInsufficientCapacity_ShouldBeFalse()
+    {
+        var location = new TestingLocation { Capacity = 10 };
+
+        location.CanAccommodate(15).Should().BeFalse();
+    }
+
+    [Fact]
+    public void CanAccommodate_WhenNullCapacity_ShouldBeTrue()
+    {
+        var location = new TestingLocation();
+
+        location.CanAccommodate(100).Should().BeTrue();
+    }
+
+    [Fact]
+    public void FullAddress_ShouldJoinNonEmptyParts()
+    {
+        var location = new TestingLocation
+        {
+            Address = "123 Main St",
+            City = "San Francisco",
+            State = "CA",
+            PostalCode = "94105",
+            Country = "US"
+        };
+
+        location.FullAddress.Should().Be("123 Main St, San Francisco, CA, 94105, US");
+    }
+
+    [Fact]
+    public void FullAddress_WithNulls_ShouldSkipBlanks()
+    {
+        var location = new TestingLocation
+        {
+            City = "Tokyo",
+            Country = "Japan"
+        };
+
+        location.FullAddress.Should().Be("Tokyo, Japan");
+    }
+}
+
+#endregion
+
+#region TestingParticipant Tests
+
+public class TestingParticipantTests
+{
+    [Fact]
+    public void DefaultValues_ShouldBeCorrect()
+    {
+        var participant = new TestingParticipant();
+
+        participant.InstructionsAcknowledged.Should().BeFalse();
+        participant.FeedbackCount.Should().Be(0);
+        participant.Status.Should().Be(ParticipationStatus.Registered);
+    }
+
+    [Fact]
+    public void AcknowledgeInstructions_ShouldSetFlag()
+    {
+        var participant = new TestingParticipant();
+
+        participant.AcknowledgeInstructions();
+
+        participant.InstructionsAcknowledged.Should().BeTrue();
+        participant.InstructionsAcknowledgedAt.Should().NotBeNull();
+    }
+
+    [Fact]
+    public void Start_WithoutAcknowledgement_ShouldThrow()
+    {
+        var participant = new TestingParticipant();
+
+        var act = () => participant.Start();
+
+        act.Should().Throw<InvalidOperationException>()
+            .WithMessage("*Instructions must be acknowledged*");
+    }
+
+    [Fact]
+    public void Start_WithAcknowledgement_ShouldSetActive()
+    {
+        var participant = new TestingParticipant();
+        participant.AcknowledgeInstructions();
+
+        participant.Start();
+
+        participant.Status.Should().Be(ParticipationStatus.Active);
+        participant.IsActive.Should().BeTrue();
+    }
+
+    [Fact]
+    public void Complete_ShouldSetStatus()
+    {
+        var participant = new TestingParticipant();
+        participant.AcknowledgeInstructions();
+        participant.Start();
+
+        participant.Complete();
+
+        participant.Status.Should().Be(ParticipationStatus.Completed);
+        participant.CompletedAt.Should().NotBeNull();
+        participant.IsCompleted.Should().BeTrue();
+    }
+
+    [Fact]
+    public void Withdraw_ShouldSetStatus()
+    {
+        var participant = new TestingParticipant();
+
+        participant.Withdraw();
+
+        participant.Status.Should().Be(ParticipationStatus.Withdrawn);
+    }
+
+    [Fact]
+    public void RecordTimeSpent_ShouldAccumulate()
+    {
+        var participant = new TestingParticipant();
+
+        participant.RecordTimeSpent(30);
+        participant.RecordTimeSpent(15);
+
+        participant.TimeSpentMinutes.Should().Be(45);
+    }
+
+    [Fact]
+    public void IncrementFeedbackCount_ShouldIncrement()
+    {
+        var participant = new TestingParticipant();
+
+        participant.IncrementFeedbackCount();
+        participant.IncrementFeedbackCount();
+
+        participant.FeedbackCount.Should().Be(2);
+    }
+
+    [Fact]
+    public void CanProvideFeedback_WhenAcknowledgedAndActive_ShouldBeTrue()
+    {
+        var participant = new TestingParticipant();
+        participant.AcknowledgeInstructions();
+        participant.Start();
+
+        participant.CanProvideFeedback.Should().BeTrue();
+    }
+
+    [Fact]
+    public void CanProvideFeedback_WhenNotAcknowledged_ShouldBeFalse()
+    {
+        var participant = new TestingParticipant();
+
+        participant.CanProvideFeedback.Should().BeFalse();
+    }
+}
+
+#endregion
+
+#region SessionRegistration Tests
+
+public class SessionRegistrationTests
+{
+    [Fact]
+    public void DefaultValues_ShouldBeCorrect()
+    {
+        var reg = new SessionRegistration();
+
+        reg.RegistrationType.Should().Be(RegistrationType.Tester);
+        reg.Status.Should().Be(RegistrationStatus.Registered);
+        reg.AttendanceStatus.Should().Be(AttendanceStatus.Registered);
+    }
+
+    [Fact]
+    public void Confirm_ShouldSetStatus()
+    {
+        var reg = new SessionRegistration();
+
+        reg.Confirm();
+
+        reg.Status.Should().Be(RegistrationStatus.Confirmed);
+        reg.IsConfirmed.Should().BeTrue();
+        reg.ConfirmedAt.Should().NotBeNull();
+    }
+
+    [Fact]
+    public void Cancel_ShouldSetStatusAndNoShow()
+    {
+        var reg = new SessionRegistration();
+
+        reg.Cancel();
+
+        reg.Status.Should().Be(RegistrationStatus.Cancelled);
+        reg.AttendanceStatus.Should().Be(AttendanceStatus.NoShow);
+    }
+
+    [Fact]
+    public void CheckIn_ShouldSetTimestampAndPresent()
+    {
+        var reg = new SessionRegistration();
+
+        reg.CheckIn();
+
+        reg.CheckedInAt.Should().NotBeNull();
+        reg.IsCheckedIn.Should().BeTrue();
+        reg.AttendanceStatus.Should().Be(AttendanceStatus.Present);
+    }
+
+    [Fact]
+    public void CheckOut_ShouldSetTimestampAndCompleted()
+    {
+        var reg = new SessionRegistration();
+        reg.CheckIn();
+
+        reg.CheckOut();
+
+        reg.CheckedOutAt.Should().NotBeNull();
+        reg.IsCheckedOut.Should().BeTrue();
+        reg.AttendanceStatus.Should().Be(AttendanceStatus.Completed);
+    }
+
+    [Fact]
+    public void AttendanceDuration_WhenBothSet_ShouldCalculate()
+    {
+        var reg = new SessionRegistration();
+        reg.CheckIn();
+        // Simulate time passing by checking out
+        reg.CheckOut();
+
+        reg.AttendanceDuration.Should().NotBeNull();
+    }
+
+    [Fact]
+    public void MarkNoShow_ShouldSetStatus()
+    {
+        var reg = new SessionRegistration();
+
+        reg.MarkNoShow();
+
+        reg.AttendanceStatus.Should().Be(AttendanceStatus.NoShow);
+    }
+}
+
+#endregion
+
+#region TestingFeedback Tests
+
+public class TestingFeedbackTests
+{
+    [Fact]
+    public void DefaultValues_ShouldBeCorrect()
+    {
+        var feedback = new TestingFeedback();
+
+        feedback.FeedbackData.Should().BeEmpty();
+        feedback.IsReported.Should().BeFalse();
+    }
+
+    [Fact]
+    public void SetOverallRating_ValidRange_ShouldSet()
+    {
+        var feedback = new TestingFeedback();
+
+        feedback.SetOverallRating(8);
+
+        feedback.OverallRating.Should().Be(8);
+    }
+
+    [Fact]
+    public void SetOverallRating_BelowRange_ShouldThrow()
+    {
+        var feedback = new TestingFeedback();
+
+        var act = () => feedback.SetOverallRating(0);
+
+        act.Should().Throw<ArgumentOutOfRangeException>();
+    }
+
+    [Fact]
+    public void SetOverallRating_AboveRange_ShouldThrow()
+    {
+        var feedback = new TestingFeedback();
+
+        var act = () => feedback.SetOverallRating(11);
+
+        act.Should().Throw<ArgumentOutOfRangeException>();
+    }
+
+    [Fact]
+    public void SetRecommendation_ShouldUpdateField()
+    {
+        var feedback = new TestingFeedback();
+
+        feedback.SetRecommendation(true);
+
+        feedback.WouldRecommend.Should().BeTrue();
+    }
+
+    [Fact]
+    public void Report_ShouldSetAllReportFields()
+    {
+        var feedback = new TestingFeedback();
+        var reporterId = Guid.NewGuid();
+
+        feedback.Report(reporterId, "Spam content");
+
+        feedback.IsReported.Should().BeTrue();
+        feedback.ReportedById.Should().Be(reporterId);
+        feedback.ReportReason.Should().Be("Spam content");
+        feedback.ReportedAt.Should().NotBeNull();
+    }
+
+    [Fact]
+    public void IsPositive_WhenHighRatingAndRecommend_ShouldBeTrue()
+    {
+        var feedback = new TestingFeedback
+        {
+            OverallRating = 9,
+            WouldRecommend = true
+        };
+
+        feedback.IsPositive.Should().BeTrue();
+    }
+
+    [Fact]
+    public void IsNegative_WhenLowRating_ShouldBeTrue()
+    {
+        var feedback = new TestingFeedback { OverallRating = 3 };
+
+        feedback.IsNegative.Should().BeTrue();
+    }
+}
+
+#endregion
+
+#region Enum Tests
+
+public class TestingLabEnumTests
+{
+    [Fact]
+    public void AttendanceStatus_ShouldHave4Values()
+    {
+        Enum.GetValues<AttendanceStatus>().Should().HaveCount(4);
+    }
+
+    [Fact]
+    public void LocationStatus_ShouldHave3Values()
+    {
+        Enum.GetValues<LocationStatus>().Should().HaveCount(3);
+    }
+
+    [Fact]
+    public void SessionStatus_ShouldHave4Values()
+    {
+        Enum.GetValues<SessionStatus>().Should().HaveCount(4);
+    }
+
+    [Fact]
+    public void TestingContext_ShouldHave2Values()
+    {
+        Enum.GetValues<TestingContext>().Should().HaveCount(2);
+    }
+
+    [Fact]
+    public void TestingMode_ShouldHave3Values()
+    {
+        Enum.GetValues<TestingMode>().Should().HaveCount(3);
+    }
+
+    [Fact]
+    public void RegistrationType_ShouldHave2Values()
+    {
+        Enum.GetValues<RegistrationType>().Should().HaveCount(2);
+    }
+
+    [Fact]
+    public void InstructionType_ShouldHave3Values()
+    {
+        Enum.GetValues<InstructionType>().Should().HaveCount(3);
+    }
+}
+
+#endregion
