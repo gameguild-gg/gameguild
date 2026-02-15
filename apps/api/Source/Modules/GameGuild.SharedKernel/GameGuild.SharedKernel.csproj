@@ -23,4 +23,8 @@
         <PackageReference Include="Microsoft.AspNetCore.Routing.Abstractions"/>
         <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions"/>
     </ItemGroup>
+
+    <ItemGroup>
+        <InternalsVisibleTo Include="GameGuild.SharedKernel.UnitTests"/>
+    </ItemGroup>
 </Project>

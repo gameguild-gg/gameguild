@@ -196,6 +196,7 @@ public class ResourceUsageItemTests
 
 #region ResourceUsageTypeRegistry Tests
 
+[Collection("ResourceUsageTypeRegistry")]
 public class ResourceUsageTypeRegistryTests
 {
     [Fact]

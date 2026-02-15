@@ -7,6 +7,10 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <InternalsVisibleTo Include="GameGuild.Commerce.Payments.UnitTests"/>
+    </ItemGroup>
+
+    <ItemGroup>
         <PackageReference Include="FluentValidation"/>
         <PackageReference Include="FluentValidation.DependencyInjectionExtensions"/>
         <PackageReference Include="Microsoft.AspNetCore.OpenApi"/>
