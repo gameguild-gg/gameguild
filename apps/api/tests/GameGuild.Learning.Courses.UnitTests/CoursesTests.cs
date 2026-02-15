@@ -739,3 +739,542 @@ public class CoursesEnumTests
 }
 
 #endregion
+
+#region StringExtensions Tests
+
+public class StringExtensionsTests
+{
+    [Fact]
+    public void ToSlugCase_NormalString()
+    {
+        "Hello World".ToSlugCase().Should().Be("hello-world");
+    }
+
+    [Fact]
+    public void ToSlugCase_WithSpecialCharacters()
+    {
+        "C# Programming!".ToSlugCase().Should().Be("c-programming");
+    }
+
+    [Fact]
+    public void ToSlugCase_WithUnderscores()
+    {
+        "my_cool_course".ToSlugCase().Should().Be("my-cool-course");
+    }
+
+    [Fact]
+    public void ToSlugCase_WithDots()
+    {
+        "version.2.0".ToSlugCase().Should().Be("version-2-0");
+    }
+
+    [Fact]
+    public void ToSlugCase_WithMultipleSpaces()
+    {
+        "lots   of   spaces".ToSlugCase().Should().Be("lots-of-spaces");
+    }
+
+    [Fact]
+    public void ToSlugCase_EmptyString()
+    {
+        "".ToSlugCase().Should().Be(string.Empty);
+    }
+
+    [Fact]
+    public void ToSlugCase_NullString()
+    {
+        string.Empty.ToSlugCase().Should().Be(string.Empty);
+    }
+
+    [Fact]
+    public void ToSlugCase_WhitespaceOnly()
+    {
+        "   ".ToSlugCase().Should().Be(string.Empty);
+    }
+
+    [Fact]
+    public void ToSlugCase_AlreadySlug()
+    {
+        "already-a-slug".ToSlugCase().Should().Be("already-a-slug");
+    }
+
+    [Fact]
+    public void ToSlugCase_LeadingTrailingDashes()
+    {
+        " -hello- ".ToSlugCase().Should().Be("hello");
+    }
+
+    [Fact]
+    public void ToSlugCase_MixedCase()
+    {
+        "UPPER lower MiXeD".ToSlugCase().Should().Be("upper-lower-mixed");
+    }
+}
+
+#endregion
+
+#region ContentInteraction Extended Tests
+
+public class ContentInteractionExtendedTests
+{
+    [Fact]
+    public void UpdateLastAccess_ShouldSetLastAccessedAt()
+    {
+        var interaction = new ContentInteraction
+        {
+            UserId = Guid.NewGuid(),
+            ContentId = Guid.NewGuid(),
+            ProgramUserId = Guid.NewGuid()
+        };
+
+        interaction.UpdateLastAccess();
+        interaction.LastAccessedAt.Should().NotBeNull();
+    }
+
+    [Fact]
+    public void AddTimeSpent_ShouldAccumulate()
+    {
+        var interaction = new ContentInteraction
+        {
+            UserId = Guid.NewGuid(),
+            ContentId = Guid.NewGuid(),
+            ProgramUserId = Guid.NewGuid()
+        };
+
+        interaction.AddTimeSpent(10);
+        interaction.AddTimeSpent(20);
+        interaction.TimeSpentMinutes.Should().Be(30);
+    }
+
+    [Fact]
+    public void RecordAttempt_ShouldTrackBestScore()
+    {
+        var interaction = new ContentInteraction
+        {
+            UserId = Guid.NewGuid(),
+            ContentId = Guid.NewGuid(),
+            ProgramUserId = Guid.NewGuid()
+        };
+
+        interaction.RecordAttempt(80);
+        interaction.RecordAttempt(60);
+        interaction.RecordAttempt(90);
+        interaction.AttemptCount.Should().Be(3);
+        interaction.BestScore.Should().Be(90);
+    }
+
+    [Fact]
+    public void RecordAttempt_NoScore_ShouldIncrementOnly()
+    {
+        var interaction = new ContentInteraction
+        {
+            UserId = Guid.NewGuid(),
+            ContentId = Guid.NewGuid(),
+            ProgramUserId = Guid.NewGuid()
+        };
+
+        interaction.RecordAttempt();
+        interaction.AttemptCount.Should().Be(1);
+        interaction.BestScore.Should().BeNull();
+    }
+
+    [Fact]
+    public void SetBookmark_ShouldSetPosition()
+    {
+        var interaction = new ContentInteraction
+        {
+            UserId = Guid.NewGuid(),
+            ContentId = Guid.NewGuid(),
+            ProgramUserId = Guid.NewGuid()
+        };
+
+        interaction.SetBookmark("page:42");
+        interaction.BookmarkPosition.Should().Be("page:42");
+    }
+
+    [Fact]
+    public void UpdateNotes_ShouldSetNotes()
+    {
+        var interaction = new ContentInteraction
+        {
+            UserId = Guid.NewGuid(),
+            ContentId = Guid.NewGuid(),
+            ProgramUserId = Guid.NewGuid()
+        };
+
+        interaction.UpdateNotes("Great lesson!");
+        interaction.Notes.Should().Be("Great lesson!");
+    }
+
+    [Fact]
+    public void Reset_ShouldClearAllProgress()
+    {
+        var interaction = new ContentInteraction
+        {
+            UserId = Guid.NewGuid(),
+            ContentId = Guid.NewGuid(),
+            ProgramUserId = Guid.NewGuid()
+        };
+
+        interaction.Start();
+        interaction.UpdateProgress(50);
+        interaction.RecordAttempt(80);
+        interaction.SetBookmark("page:10");
+
+        interaction.Reset();
+
+        interaction.IsCompleted.Should().BeFalse();
+        interaction.CompletedAt.Should().BeNull();
+        interaction.ProgressPercentage.Should().Be(0);
+        interaction.TimeSpentMinutes.Should().Be(0);
+        interaction.AttemptCount.Should().Be(0);
+        interaction.BestScore.Should().BeNull();
+        interaction.BookmarkPosition.Should().BeNull();
+    }
+
+    [Fact]
+    public void Complete_Idempotent_ShouldNotChangeTimestamp()
+    {
+        var interaction = new ContentInteraction
+        {
+            UserId = Guid.NewGuid(),
+            ContentId = Guid.NewGuid(),
+            ProgramUserId = Guid.NewGuid()
+        };
+
+        interaction.Complete();
+        var firstCompletion = interaction.CompletedAt;
+        interaction.Complete();
+        interaction.CompletedAt.Should().Be(firstCompletion);
+    }
+
+    [Fact]
+    public void DaysSinceLastAccess_WhenNotAccessed_ShouldBeNull()
+    {
+        var interaction = new ContentInteraction
+        {
+            UserId = Guid.NewGuid(),
+            ContentId = Guid.NewGuid(),
+            ProgramUserId = Guid.NewGuid()
+        };
+
+        interaction.DaysSinceLastAccess.Should().BeNull();
+    }
+
+    [Fact]
+    public void EngagementDuration_WhenNotComplete_ShouldBeNull()
+    {
+        var interaction = new ContentInteraction
+        {
+            UserId = Guid.NewGuid(),
+            ContentId = Guid.NewGuid(),
+            ProgramUserId = Guid.NewGuid()
+        };
+
+        interaction.Start();
+        interaction.EngagementDuration.Should().BeNull();
+    }
+
+    [Fact]
+    public void CalculateEngagementScore_WithProgress()
+    {
+        var interaction = new ContentInteraction
+        {
+            UserId = Guid.NewGuid(),
+            ContentId = Guid.NewGuid(),
+            ProgramUserId = Guid.NewGuid()
+        };
+
+        interaction.UpdateProgress(50);
+        var score = interaction.CalculateEngagementScore();
+        score.Should().BeGreaterThan(0);
+        score.Should().BeLessThanOrEqualTo(100);
+    }
+
+    [Fact]
+    public void CalculateEngagementScore_WhenCompleted_ShouldIncludeBonus()
+    {
+        var interaction = new ContentInteraction
+        {
+            UserId = Guid.NewGuid(),
+            ContentId = Guid.NewGuid(),
+            ProgramUserId = Guid.NewGuid()
+        };
+
+        interaction.Complete();
+        var score = interaction.CalculateEngagementScore();
+        score.Should().BeGreaterThanOrEqualTo(60); // 100*0.4 + 20
+    }
+}
+
+#endregion
+
+#region Validator Tests
+
+public class CreateProgramCommandValidatorTests
+{
+    private readonly CreateProgramCommandValidator _validator = new();
+
+    [Fact]
+    public void ValidCommand_ShouldPass()
+    {
+        var cmd = new CreateProgramCommand("My Course", "This is a valid description for the course");
+        _validator.Validate(cmd).IsValid.Should().BeTrue();
+    }
+
+    [Fact]
+    public void EmptyTitle_ShouldFail()
+    {
+        var cmd = new CreateProgramCommand("", "A valid description for the course");
+        _validator.Validate(cmd).IsValid.Should().BeFalse();
+    }
+
+    [Fact]
+    public void TitleTooShort_ShouldFail()
+    {
+        var cmd = new CreateProgramCommand("AB", "A valid description for the course");
+        _validator.Validate(cmd).IsValid.Should().BeFalse();
+    }
+
+    [Fact]
+    public void TitleTooLong_ShouldFail()
+    {
+        var cmd = new CreateProgramCommand(new string('x', 256), "A valid description for the course");
+        _validator.Validate(cmd).IsValid.Should().BeFalse();
+    }
+
+    [Fact]
+    public void EmptyDescription_ShouldFail()
+    {
+        var cmd = new CreateProgramCommand("Valid Title", "");
+        _validator.Validate(cmd).IsValid.Should().BeFalse();
+    }
+
+    [Fact]
+    public void DescriptionTooShort_ShouldFail()
+    {
+        var cmd = new CreateProgramCommand("Valid Title", "short");
+        _validator.Validate(cmd).IsValid.Should().BeFalse();
+    }
+
+    [Fact]
+    public void DescriptionTooLong_ShouldFail()
+    {
+        var cmd = new CreateProgramCommand("Valid Title", new string('x', 2001));
+        _validator.Validate(cmd).IsValid.Should().BeFalse();
+    }
+
+    [Fact]
+    public void InvalidThumbnailUrl_ShouldFail()
+    {
+        var cmd = new CreateProgramCommand("Valid Title", "A valid description for the course",
+            Thumbnail: "not-a-url");
+        _validator.Validate(cmd).IsValid.Should().BeFalse();
+    }
+
+    [Fact]
+    public void ValidThumbnailUrl_ShouldPass()
+    {
+        var cmd = new CreateProgramCommand("Valid Title", "A valid description for the course",
+            Thumbnail: "https://example.com/img.png");
+        _validator.Validate(cmd).IsValid.Should().BeTrue();
+    }
+
+    [Fact]
+    public void EstimatedHoursZero_ShouldFail()
+    {
+        var cmd = new CreateProgramCommand("Valid Title", "A valid description for the course",
+            EstimatedHours: 0);
+        _validator.Validate(cmd).IsValid.Should().BeFalse();
+    }
+
+    [Fact]
+    public void EstimatedHoursTooHigh_ShouldFail()
+    {
+        var cmd = new CreateProgramCommand("Valid Title", "A valid description for the course",
+            EstimatedHours: 1001);
+        _validator.Validate(cmd).IsValid.Should().BeFalse();
+    }
+
+    [Fact]
+    public void MaxEnrollmentsZero_ShouldFail()
+    {
+        var cmd = new CreateProgramCommand("Valid Title", "A valid description for the course",
+            MaxEnrollments: 0);
+        _validator.Validate(cmd).IsValid.Should().BeFalse();
+    }
+
+    [Fact]
+    public void MaxEnrollmentsTooHigh_ShouldFail()
+    {
+        var cmd = new CreateProgramCommand("Valid Title", "A valid description for the course",
+            MaxEnrollments: 10001);
+        _validator.Validate(cmd).IsValid.Should().BeFalse();
+    }
+
+    [Fact]
+    public void SummaryTooShort_ShouldFail()
+    {
+        var cmd = new CreateProgramCommand("Valid Title", "A valid description for the course",
+            Summary: "short");
+        _validator.Validate(cmd).IsValid.Should().BeFalse();
+    }
+
+    [Fact]
+    public void SummaryTooLong_ShouldFail()
+    {
+        var cmd = new CreateProgramCommand("Valid Title", "A valid description for the course",
+            Summary: new string('x', 501));
+        _validator.Validate(cmd).IsValid.Should().BeFalse();
+    }
+}
+
+public class RateProgramCommandValidatorTests
+{
+    private readonly RateProgramCommandValidator _validator = new();
+
+    [Fact]
+    public void ValidCommand_ShouldPass()
+    {
+        var cmd = new RateProgramCommand(Guid.NewGuid(), Guid.NewGuid().ToString(), 4, null);
+        _validator.Validate(cmd).IsValid.Should().BeTrue();
+    }
+
+    [Fact]
+    public void EmptyProgramId_ShouldFail()
+    {
+        var cmd = new RateProgramCommand(Guid.Empty, Guid.NewGuid().ToString(), 4, null);
+        _validator.Validate(cmd).IsValid.Should().BeFalse();
+    }
+
+    [Fact]
+    public void EmptyUserId_ShouldFail()
+    {
+        var cmd = new RateProgramCommand(Guid.NewGuid(), "", 4, null);
+        _validator.Validate(cmd).IsValid.Should().BeFalse();
+    }
+
+    [Fact]
+    public void RatingTooLow_ShouldFail()
+    {
+        var cmd = new RateProgramCommand(Guid.NewGuid(), Guid.NewGuid().ToString(), 0, null);
+        _validator.Validate(cmd).IsValid.Should().BeFalse();
+    }
+
+    [Fact]
+    public void RatingTooHigh_ShouldFail()
+    {
+        var cmd = new RateProgramCommand(Guid.NewGuid(), Guid.NewGuid().ToString(), 6, null);
+        _validator.Validate(cmd).IsValid.Should().BeFalse();
+    }
+
+    [Fact]
+    public void ReviewTooShort_ShouldFail()
+    {
+        var cmd = new RateProgramCommand(Guid.NewGuid(), Guid.NewGuid().ToString(), 4, "short");
+        _validator.Validate(cmd).IsValid.Should().BeFalse();
+    }
+
+    [Fact]
+    public void ReviewTooLong_ShouldFail()
+    {
+        var cmd = new RateProgramCommand(Guid.NewGuid(), Guid.NewGuid().ToString(), 4, new string('x', 1001));
+        _validator.Validate(cmd).IsValid.Should().BeFalse();
+    }
+}
+
+public class EnrollUserCommandValidatorTests
+{
+    private readonly EnrollUserCommandValidator _validator = new();
+
+    [Fact]
+    public void ValidCommand_ShouldPass()
+    {
+        var cmd = new EnrollUserCommand(Guid.NewGuid(), Guid.NewGuid().ToString());
+        _validator.Validate(cmd).IsValid.Should().BeTrue();
+    }
+
+    [Fact]
+    public void EmptyProgramId_ShouldFail()
+    {
+        var cmd = new EnrollUserCommand(Guid.Empty, Guid.NewGuid().ToString());
+        _validator.Validate(cmd).IsValid.Should().BeFalse();
+    }
+
+    [Fact]
+    public void EmptyUserId_ShouldFail()
+    {
+        var cmd = new EnrollUserCommand(Guid.NewGuid(), "");
+        _validator.Validate(cmd).IsValid.Should().BeFalse();
+    }
+}
+
+public class ProgramTagCommandValidatorTests
+{
+    [Fact]
+    public void AddTag_ValidCommand_ShouldPass()
+    {
+        var validator = new AddTagToProgramCommandValidator();
+        var cmd = new AddTagToProgramCommand(Guid.NewGuid(), Guid.NewGuid());
+        validator.Validate(cmd).IsValid.Should().BeTrue();
+    }
+
+    [Fact]
+    public void AddTag_EmptyProgramId_ShouldFail()
+    {
+        var validator = new AddTagToProgramCommandValidator();
+        var cmd = new AddTagToProgramCommand(Guid.Empty, Guid.NewGuid());
+        validator.Validate(cmd).IsValid.Should().BeFalse();
+    }
+
+    [Fact]
+    public void AddTag_EmptyTagId_ShouldFail()
+    {
+        var validator = new AddTagToProgramCommandValidator();
+        var cmd = new AddTagToProgramCommand(Guid.NewGuid(), Guid.Empty);
+        validator.Validate(cmd).IsValid.Should().BeFalse();
+    }
+
+    [Fact]
+    public void AddTag_NegativeDisplayOrder_ShouldFail()
+    {
+        var validator = new AddTagToProgramCommandValidator();
+        var cmd = new AddTagToProgramCommand(Guid.NewGuid(), Guid.NewGuid(), DisplayOrder: -1);
+        validator.Validate(cmd).IsValid.Should().BeFalse();
+    }
+
+    [Fact]
+    public void UpdateTag_ValidCommand_ShouldPass()
+    {
+        var validator = new UpdateProgramTagCommandValidator();
+        var cmd = new UpdateProgramTagCommand(Guid.NewGuid(), Guid.NewGuid());
+        validator.Validate(cmd).IsValid.Should().BeTrue();
+    }
+
+    [Fact]
+    public void RemoveTag_EmptyProgramId_ShouldFail()
+    {
+        var validator = new RemoveTagFromProgramCommandValidator();
+        var cmd = new RemoveTagFromProgramCommand(Guid.Empty, Guid.NewGuid());
+        validator.Validate(cmd).IsValid.Should().BeFalse();
+    }
+
+    [Fact]
+    public void BulkAdd_EmptyTags_ShouldFail()
+    {
+        var validator = new BulkAddTagsToProgramCommandValidator();
+        var cmd = new BulkAddTagsToProgramCommand(Guid.NewGuid(), Array.Empty<AddTagToProgramDto>());
+        validator.Validate(cmd).IsValid.Should().BeFalse();
+    }
+
+    [Fact]
+    public void BulkAdd_EmptyProgramId_ShouldFail()
+    {
+        var validator = new BulkAddTagsToProgramCommandValidator();
+        var cmd = new BulkAddTagsToProgramCommand(Guid.Empty,
+            new[] { new AddTagToProgramDto(Guid.NewGuid()) });
+        validator.Validate(cmd).IsValid.Should().BeFalse();
+    }
+}
+
+#endregion

@@ -149,13 +149,15 @@ public class LearningPathEnrollmentTests
     }
 
     [Fact]
-    public void UpdateProgress_WithZeroTotalCourses_ShouldBeZeroPercent()
+    public void UpdateProgress_WithZeroTotalCourses_ShouldAutoComplete()
     {
         var enrollment = LearningPathEnrollment.Create(Guid.NewGuid(), Guid.NewGuid(), 0);
 
         enrollment.UpdateProgress(0);
 
-        enrollment.Progress.Should().Be(0);
+        // 0 >= 0 triggers auto-complete
+        enrollment.Progress.Should().Be(100);
+        enrollment.Status.Should().Be(LearningPathEnrollmentStatus.Completed);
     }
 
     [Fact]
@@ -190,5 +192,215 @@ public class LearningPathEnrollmentStatusEnumTests
     public void ShouldHave3Values()
     {
         Enum.GetValues<LearningPathEnrollmentStatus>().Should().HaveCount(3);
+    }
+}
+
+// ===== VALIDATOR TESTS =====
+
+public class CreateLearningPathCommandValidatorTests
+{
+    private readonly CreateLearningPathCommandValidator _validator = new();
+
+    [Fact]
+    public void ValidCommand_ShouldPass()
+    {
+        var cmd = new CreateLearningPathCommand(Guid.NewGuid(), "My Path");
+        _validator.Validate(cmd).IsValid.Should().BeTrue();
+    }
+
+    [Fact]
+    public void EmptyCreatorId_ShouldFail()
+    {
+        var cmd = new CreateLearningPathCommand(Guid.Empty, "My Path");
+        _validator.Validate(cmd).IsValid.Should().BeFalse();
+    }
+
+    [Fact]
+    public void EmptyTitle_ShouldFail()
+    {
+        var cmd = new CreateLearningPathCommand(Guid.NewGuid(), "");
+        _validator.Validate(cmd).IsValid.Should().BeFalse();
+    }
+
+    [Fact]
+    public void TitleTooLong_ShouldFail()
+    {
+        var cmd = new CreateLearningPathCommand(Guid.NewGuid(), new string('x', 201));
+        _validator.Validate(cmd).IsValid.Should().BeFalse();
+    }
+
+    [Fact]
+    public void DescriptionTooLong_ShouldFail()
+    {
+        var cmd = new CreateLearningPathCommand(Guid.NewGuid(), "Path", Description: new string('x', 5001));
+        _validator.Validate(cmd).IsValid.Should().BeFalse();
+    }
+
+    [Fact]
+    public void ImageUrlTooLong_ShouldFail()
+    {
+        var cmd = new CreateLearningPathCommand(Guid.NewGuid(), "Path", ImageUrl: new string('x', 2001));
+        _validator.Validate(cmd).IsValid.Should().BeFalse();
+    }
+
+    [Fact]
+    public void NegativeEstimatedHours_ShouldFail()
+    {
+        var cmd = new CreateLearningPathCommand(Guid.NewGuid(), "Path", EstimatedHours: -1);
+        _validator.Validate(cmd).IsValid.Should().BeFalse();
+    }
+}
+
+public class UpdateLearningPathCommandValidatorTests
+{
+    private readonly UpdateLearningPathCommandValidator _validator = new();
+
+    [Fact]
+    public void ValidCommand_ShouldPass()
+    {
+        var cmd = new UpdateLearningPathCommand(Guid.NewGuid());
+        _validator.Validate(cmd).IsValid.Should().BeTrue();
+    }
+
+    [Fact]
+    public void EmptyId_ShouldFail()
+    {
+        var cmd = new UpdateLearningPathCommand(Guid.Empty);
+        _validator.Validate(cmd).IsValid.Should().BeFalse();
+    }
+
+    [Fact]
+    public void TitleTooLong_ShouldFail()
+    {
+        var cmd = new UpdateLearningPathCommand(Guid.NewGuid(), Title: new string('x', 201));
+        _validator.Validate(cmd).IsValid.Should().BeFalse();
+    }
+
+    [Fact]
+    public void DescriptionTooLong_ShouldFail()
+    {
+        var cmd = new UpdateLearningPathCommand(Guid.NewGuid(), Description: new string('x', 5001));
+        _validator.Validate(cmd).IsValid.Should().BeFalse();
+    }
+
+    [Fact]
+    public void NegativeEstimatedHours_ShouldFail()
+    {
+        var cmd = new UpdateLearningPathCommand(Guid.NewGuid(), EstimatedHours: -1);
+        _validator.Validate(cmd).IsValid.Should().BeFalse();
+    }
+}
+
+public class AddCourseToPathCommandValidatorTests
+{
+    private readonly AddCourseToPathCommandValidator _validator = new();
+
+    [Fact]
+    public void ValidCommand_ShouldPass()
+    {
+        var cmd = new AddCourseToPathCommand(Guid.NewGuid(), Guid.NewGuid(), 0);
+        _validator.Validate(cmd).IsValid.Should().BeTrue();
+    }
+
+    [Fact]
+    public void EmptyLearningPathId_ShouldFail()
+    {
+        var cmd = new AddCourseToPathCommand(Guid.Empty, Guid.NewGuid(), 0);
+        _validator.Validate(cmd).IsValid.Should().BeFalse();
+    }
+
+    [Fact]
+    public void EmptyCourseId_ShouldFail()
+    {
+        var cmd = new AddCourseToPathCommand(Guid.NewGuid(), Guid.Empty, 0);
+        _validator.Validate(cmd).IsValid.Should().BeFalse();
+    }
+
+    [Fact]
+    public void NegativeOrder_ShouldFail()
+    {
+        var cmd = new AddCourseToPathCommand(Guid.NewGuid(), Guid.NewGuid(), -1);
+        _validator.Validate(cmd).IsValid.Should().BeFalse();
+    }
+}
+
+public class EnrollInPathCommandValidatorTests
+{
+    private readonly EnrollInPathCommandValidator _validator = new();
+
+    [Fact]
+    public void ValidCommand_ShouldPass()
+    {
+        var cmd = new EnrollInPathCommand(Guid.NewGuid(), Guid.NewGuid());
+        _validator.Validate(cmd).IsValid.Should().BeTrue();
+    }
+
+    [Fact]
+    public void EmptyLearningPathId_ShouldFail()
+    {
+        var cmd = new EnrollInPathCommand(Guid.Empty, Guid.NewGuid());
+        _validator.Validate(cmd).IsValid.Should().BeFalse();
+    }
+
+    [Fact]
+    public void EmptyUserId_ShouldFail()
+    {
+        var cmd = new EnrollInPathCommand(Guid.NewGuid(), Guid.Empty);
+        _validator.Validate(cmd).IsValid.Should().BeFalse();
+    }
+}
+
+public class UpdatePathProgressCommandValidatorTests
+{
+    private readonly UpdatePathProgressCommandValidator _validator = new();
+
+    [Fact]
+    public void ValidCommand_ShouldPass()
+    {
+        var cmd = new UpdatePathProgressCommand(Guid.NewGuid(), Guid.NewGuid(), 5);
+        _validator.Validate(cmd).IsValid.Should().BeTrue();
+    }
+
+    [Fact]
+    public void NegativeCoursesCompleted_ShouldFail()
+    {
+        var cmd = new UpdatePathProgressCommand(Guid.NewGuid(), Guid.NewGuid(), -1);
+        _validator.Validate(cmd).IsValid.Should().BeFalse();
+    }
+
+    [Fact]
+    public void EmptyUserId_ShouldFail()
+    {
+        var cmd = new UpdatePathProgressCommand(Guid.NewGuid(), Guid.Empty, 1);
+        _validator.Validate(cmd).IsValid.Should().BeFalse();
+    }
+}
+
+public class ReorderPathCoursesCommandValidatorTests
+{
+    private readonly ReorderPathCoursesCommandValidator _validator = new();
+
+    [Fact]
+    public void ValidCommand_ShouldPass()
+    {
+        var cmd = new ReorderPathCoursesCommand(Guid.NewGuid(),
+            new[] { new CourseOrderDto(Guid.NewGuid(), 0) });
+        _validator.Validate(cmd).IsValid.Should().BeTrue();
+    }
+
+    [Fact]
+    public void EmptyLearningPathId_ShouldFail()
+    {
+        var cmd = new ReorderPathCoursesCommand(Guid.Empty,
+            new[] { new CourseOrderDto(Guid.NewGuid(), 0) });
+        _validator.Validate(cmd).IsValid.Should().BeFalse();
+    }
+
+    [Fact]
+    public void EmptyCoursesList_ShouldFail()
+    {
+        var cmd = new ReorderPathCoursesCommand(Guid.NewGuid(),
+            Array.Empty<CourseOrderDto>());
+        _validator.Validate(cmd).IsValid.Should().BeFalse();
     }
 }

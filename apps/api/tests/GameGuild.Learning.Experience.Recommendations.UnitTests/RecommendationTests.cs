@@ -229,3 +229,194 @@ public class RecommendationTypeEnumTests
         ((int)type).Should().Be(expected);
     }
 }
+
+// ===== VALIDATOR TESTS =====
+
+public class CreateOrUpdateLearningProfileCommandValidatorTests
+{
+    private readonly CreateOrUpdateLearningProfileCommandValidator _validator = new();
+
+    [Fact]
+    public void ValidCommand_ShouldPass()
+    {
+        var cmd = new CreateOrUpdateLearningProfileCommand(Guid.NewGuid(), null, null, null, null, null);
+        _validator.Validate(cmd).IsValid.Should().BeTrue();
+    }
+
+    [Fact]
+    public void EmptyUserId_ShouldFail()
+    {
+        var cmd = new CreateOrUpdateLearningProfileCommand(Guid.Empty, null, null, null, null, null);
+        _validator.Validate(cmd).IsValid.Should().BeFalse();
+    }
+
+    [Fact]
+    public void TooManyCategories_ShouldFail()
+    {
+        var cmd = new CreateOrUpdateLearningProfileCommand(Guid.NewGuid(),
+            Enumerable.Range(0, 11).Select(i => $"cat{i}").ToArray(), null, null, null, null);
+        _validator.Validate(cmd).IsValid.Should().BeFalse();
+    }
+
+    [Fact]
+    public void InvalidDuration_ShouldFail()
+    {
+        var cmd = new CreateOrUpdateLearningProfileCommand(Guid.NewGuid(), null, null, "huge", null, null);
+        _validator.Validate(cmd).IsValid.Should().BeFalse();
+    }
+
+    [Fact]
+    public void ValidDuration_Short_ShouldPass()
+    {
+        var cmd = new CreateOrUpdateLearningProfileCommand(Guid.NewGuid(), null, null, "short", null, null);
+        _validator.Validate(cmd).IsValid.Should().BeTrue();
+    }
+
+    [Fact]
+    public void ValidDuration_Medium_ShouldPass()
+    {
+        var cmd = new CreateOrUpdateLearningProfileCommand(Guid.NewGuid(), null, null, "medium", null, null);
+        _validator.Validate(cmd).IsValid.Should().BeTrue();
+    }
+
+    [Fact]
+    public void ValidDuration_Long_ShouldPass()
+    {
+        var cmd = new CreateOrUpdateLearningProfileCommand(Guid.NewGuid(), null, null, "long", null, null);
+        _validator.Validate(cmd).IsValid.Should().BeTrue();
+    }
+
+    [Fact]
+    public void TooManyGoals_ShouldFail()
+    {
+        var cmd = new CreateOrUpdateLearningProfileCommand(Guid.NewGuid(), null, null, null,
+            Enumerable.Range(0, 21).Select(i => $"goal{i}").ToArray(), null);
+        _validator.Validate(cmd).IsValid.Should().BeFalse();
+    }
+
+    [Fact]
+    public void TooManySkills_ShouldFail()
+    {
+        var cmd = new CreateOrUpdateLearningProfileCommand(Guid.NewGuid(), null, null, null, null,
+            Enumerable.Range(0, 51).Select(i => $"skill{i}").ToArray());
+        _validator.Validate(cmd).IsValid.Should().BeFalse();
+    }
+
+    [Fact]
+    public void PreferredDifficultyTooLong_ShouldFail()
+    {
+        var cmd = new CreateOrUpdateLearningProfileCommand(Guid.NewGuid(), null, new string('x', 51), null, null, null);
+        _validator.Validate(cmd).IsValid.Should().BeFalse();
+    }
+}
+
+public class AddSkillToProfileCommandValidatorTests
+{
+    private readonly AddSkillToProfileCommandValidator _validator = new();
+
+    [Fact]
+    public void ValidCommand_ShouldPass()
+    {
+        var cmd = new AddSkillToProfileCommand(Guid.NewGuid(), "C#");
+        _validator.Validate(cmd).IsValid.Should().BeTrue();
+    }
+
+    [Fact]
+    public void EmptyUserId_ShouldFail()
+    {
+        var cmd = new AddSkillToProfileCommand(Guid.Empty, "C#");
+        _validator.Validate(cmd).IsValid.Should().BeFalse();
+    }
+
+    [Fact]
+    public void EmptySkill_ShouldFail()
+    {
+        var cmd = new AddSkillToProfileCommand(Guid.NewGuid(), "");
+        _validator.Validate(cmd).IsValid.Should().BeFalse();
+    }
+}
+
+public class GenerateRecommendationsCommandValidatorTests
+{
+    private readonly GenerateRecommendationsCommandValidator _validator = new();
+
+    [Fact]
+    public void ValidCommand_ShouldPass()
+    {
+        var cmd = new GenerateRecommendationsCommand(Guid.NewGuid(), null, 10);
+        _validator.Validate(cmd).IsValid.Should().BeTrue();
+    }
+
+    [Fact]
+    public void EmptyUserId_ShouldFail()
+    {
+        var cmd = new GenerateRecommendationsCommand(Guid.Empty, null);
+        _validator.Validate(cmd).IsValid.Should().BeFalse();
+    }
+
+    [Fact]
+    public void MaxResultsTooLow_ShouldFail()
+    {
+        var cmd = new GenerateRecommendationsCommand(Guid.NewGuid(), null, 0);
+        _validator.Validate(cmd).IsValid.Should().BeFalse();
+    }
+
+    [Fact]
+    public void MaxResultsTooHigh_ShouldFail()
+    {
+        var cmd = new GenerateRecommendationsCommand(Guid.NewGuid(), null, 51);
+        _validator.Validate(cmd).IsValid.Should().BeFalse();
+    }
+}
+
+public class MarkRecommendationViewedCommandValidatorTests
+{
+    private readonly MarkRecommendationViewedCommandValidator _validator = new();
+
+    [Fact]
+    public void ValidCommand_ShouldPass()
+    {
+        var cmd = new MarkRecommendationViewedCommand(Guid.NewGuid(), Guid.NewGuid());
+        _validator.Validate(cmd).IsValid.Should().BeTrue();
+    }
+
+    [Fact]
+    public void EmptyRecommendationId_ShouldFail()
+    {
+        var cmd = new MarkRecommendationViewedCommand(Guid.Empty, Guid.NewGuid());
+        _validator.Validate(cmd).IsValid.Should().BeFalse();
+    }
+
+    [Fact]
+    public void EmptyUserId_ShouldFail()
+    {
+        var cmd = new MarkRecommendationViewedCommand(Guid.NewGuid(), Guid.Empty);
+        _validator.Validate(cmd).IsValid.Should().BeFalse();
+    }
+}
+
+public class DismissRecommendationCommandValidatorTests
+{
+    private readonly DismissRecommendationCommandValidator _validator = new();
+
+    [Fact]
+    public void ValidCommand_ShouldPass()
+    {
+        var cmd = new DismissRecommendationCommand(Guid.NewGuid(), Guid.NewGuid());
+        _validator.Validate(cmd).IsValid.Should().BeTrue();
+    }
+
+    [Fact]
+    public void EmptyRecommendationId_ShouldFail()
+    {
+        var cmd = new DismissRecommendationCommand(Guid.Empty, Guid.NewGuid());
+        _validator.Validate(cmd).IsValid.Should().BeFalse();
+    }
+
+    [Fact]
+    public void EmptyUserId_ShouldFail()
+    {
+        var cmd = new DismissRecommendationCommand(Guid.NewGuid(), Guid.Empty);
+        _validator.Validate(cmd).IsValid.Should().BeFalse();
+    }
+}
