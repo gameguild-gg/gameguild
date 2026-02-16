@@ -30,6 +30,9 @@ import ai4games2Week05Lecture from "./05-mcts/01-lecture.md";
 import ai4games2Week05Readings from "./05-mcts/02-readings.md";
 import ai4games2Week05Quiz from "./05-mcts/03-quiz.md";
 import ai4games2Week05Assignment from "./05-mcts/04-assignment.md";
+import ai4games2Week06Slides from "./06-chess/00-reveal.md";
+import ai4games2Week06Lecture from "./06-chess/01-lecture.md";
+import ai4games2Week06Readings from "./06-chess/02-readings.md";
 import ai4games2ExtraOldLecture from "./old/extras/llms.md";
 import ai4games2Week01OldLecture from "./old/week01/lecture.md";
 import ai4games2Week01OldReadings from "./old/week01/readings.md";
@@ -767,6 +770,76 @@ export const ai4games2Week05AssignmentContent: ProgramContent = {
   updatedAt: "2023-01-01T00:00:00Z",
 };
 
+// Week 06 Content (Chess Engine Core)
+export const ai4games2Week06SlidesContent: ProgramContent = {
+  id: "ai4games2-week-06-slides",
+  programId: "ai4games2-program",
+  parentId: undefined,
+  title: "Week 6: Chess Engine Core",
+  slug: "week-06",
+  description: "Chess engine architecture: board representation, evaluation functions, iterative deepening, aspiration windows, quiescence search, and time management",
+  type: ProgramContentType.REVEAL,
+  body: ai4games2Week06Slides,
+  sortOrder: 6,
+  isRequired: true,
+  gradingMethod: 0,
+  maxPoints: null,
+  estimatedMinutes: 60,
+  visibility: 1,
+  program: ai4games2Program,
+  parent: undefined,
+  children: [],
+  contentInteractions: [],
+  createdAt: "2023-01-01T00:00:00Z",
+  updatedAt: "2023-01-01T00:00:00Z",
+};
+
+export const ai4games2Week06LectureContent: ProgramContent = {
+  id: "ai4games2-week-06-lecture",
+  programId: "ai4games2-program",
+  parentId: "ai4games2-week-06-slides",
+  title: "Week 6: Lecture Notes",
+  slug: "lecture",
+  description: "Detailed lecture notes on chess engine board representation, evaluation, search, and time management",
+  type: ProgramContentType.PAGE,
+  body: ai4games2Week06Lecture,
+  sortOrder: 1,
+  isRequired: true,
+  gradingMethod: 0,
+  maxPoints: null,
+  estimatedMinutes: 90,
+  visibility: 1,
+  program: ai4games2Program,
+  parent: ai4games2Week06SlidesContent,
+  children: [],
+  contentInteractions: [],
+  createdAt: "2023-01-01T00:00:00Z",
+  updatedAt: "2023-01-01T00:00:00Z",
+};
+
+export const ai4games2Week06ReadingsContent: ProgramContent = {
+  id: "ai4games2-week-06-readings",
+  programId: "ai4games2-program",
+  parentId: "ai4games2-week-06-slides",
+  title: "Week 6: Readings",
+  slug: "readings",
+  description: "Required readings and videos for Chess Engine Core",
+  type: ProgramContentType.PAGE,
+  body: ai4games2Week06Readings,
+  sortOrder: 2,
+  isRequired: true,
+  gradingMethod: 0,
+  maxPoints: null,
+  estimatedMinutes: 120,
+  visibility: 1,
+  program: ai4games2Program,
+  parent: ai4games2Week06SlidesContent,
+  children: [],
+  contentInteractions: [],
+  createdAt: "2023-01-01T00:00:00Z",
+  updatedAt: "2023-01-01T00:00:00Z",
+};
+
 export const ai4games2Week02OldContent: ProgramContent = {
   id: "ai4games2-week-02",
   programId: "ai4games2-program",
@@ -1211,6 +1284,10 @@ ai4games2Week05SlidesContent.children = [
   ai4games2Week05QuizContent,
   ai4games2Week05AssignmentContent,
 ];
+ai4games2Week06SlidesContent.children = [
+  ai4games2Week06LectureContent,
+  ai4games2Week06ReadingsContent,
+];
 ai4games2Week02OldContent.children = [ai4games2Week02OldPcgContent];
 ai4games2Week03OldContent.children = [ai4games2Week03OldAstarContent];
 ai4games2Week04OldContent.children = [ai4games2Week04OldAssignmentContent];
@@ -1244,6 +1321,7 @@ ai4games2Program.programContents = [
   ai4games2Week03LectureContent,
   ai4games2Week04SlidesContent,
   ai4games2Week05SlidesContent,
+  ai4games2Week06SlidesContent,
   ai4games2OldContent,
 ];
 
