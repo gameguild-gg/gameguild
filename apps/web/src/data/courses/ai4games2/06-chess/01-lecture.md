@@ -872,7 +872,9 @@ double movePrior(const chess::Board& board, const chess::Move& move) {
     // Captures are usually worth exploring first
     if (board.isCapture(move)) {
         score += 5.0;
-        // MVV-LVA: capturing high-value pieces with low-value pieces
+        // MVV-LVA (Most Valuable Victim, Least Valuable Attacker):
+        // try capturing the highest-value enemy piece with the
+        // lowest-value friendly piece first (e.g. PxQ before QxP)
         score += victimValue(move) - attackerValue(move) * 0.1;
     }
 
@@ -1214,8 +1216,9 @@ At leaf nodes (where normal search reaches depth 0), instead of returning the st
 
 ```cpp
 int quiescence(chess::Board& board, int alpha, int beta) {
-    // Stand-pat: the static evaluation is a lower bound
-    // (we can always choose not to capture)
+    // "Stand pat" (from poker: playing your hand as-is without drawing)
+    // means we choose NOT to capture and accept the current evaluation.
+    // This is a lower bound: we can always do at least this well.
     int standPat = evaluate(board);
 
     if (standPat >= beta) return beta;  // position is already too good
