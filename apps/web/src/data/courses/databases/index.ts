@@ -46,6 +46,13 @@ import week05JoinsQuiz from './05-joins/quiz/joins-quiz.md';
 import week05Readings from './05-joins/readings-05.md';
 import week05Reveal from './05-joins/reveal.md';
 
+// Week 06 imports
+import week06CTEsAndViews from './06-subqueries-ctes-views/ctes-and-views.md';
+import week06SubqueriesCTEsViewsQuiz from './06-subqueries-ctes-views/quiz/subqueries-ctes-views-quiz.md';
+import week06Readings from './06-subqueries-ctes-views/readings-06.md';
+import week06Reveal from './06-subqueries-ctes-views/reveal.md';
+import week06SubqueriesAndSetOperations from './06-subqueries-ctes-views/subqueries-and-set-operations.md';
+
 // Program definition
 export const databasesProgram: Program = {
     id: 'databases-program-1',
@@ -975,6 +982,122 @@ export const week05JoinsQuizContent: ProgramContent = {
     updatedAt: '2023-01-01T00:00:00Z',
 };
 
+// Week 06: Subqueries, CTEs & Views - Parent content (Reveal)
+export const week06RevealContent: ProgramContent = {
+    id: 'databases-week-06-reveal',
+    programId: 'databases-program-1',
+    slug: 'subqueries-ctes-views',
+    parentId: undefined,
+    title: 'Subqueries, CTEs & Views',
+    description: 'Reveal.js presentation covering subqueries, set operations, CTEs, recursive CTEs, views, and materialized views',
+    type: ProgramContentType.REVEAL,
+    body: week06Reveal,
+    sortOrder: 7,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 50,
+    visibility: 1, // Published
+    program: databasesProgram,
+    parent: undefined,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const week06ReadingsContent: ProgramContent = {
+    id: 'databases-week-06-readings',
+    programId: 'databases-program-1',
+    slug: 'readings-06',
+    parentId: 'databases-week-06-reveal',
+    title: 'Week 06 Readings & Resources',
+    description: 'Readings for subqueries, set operations, CTEs, views, and materialized views',
+    type: 0, // Page
+    body: week06Readings,
+    sortOrder: 1,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 25,
+    visibility: 1, // Published
+    program: databasesProgram,
+    parent: week06RevealContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const week06SubqueriesAndSetOperationsContent: ProgramContent = {
+    id: 'databases-week-06-subqueries-set-operations',
+    programId: 'databases-program-1',
+    slug: 'subqueries-and-set-operations',
+    parentId: 'databases-week-06-readings',
+    title: 'Subqueries & Set Operations',
+    description: 'Scalar subqueries, IN, EXISTS, ANY/ALL, correlated subqueries, UNION, INTERSECT, EXCEPT',
+    type: 0, // Page
+    body: week06SubqueriesAndSetOperations,
+    sortOrder: 1,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 45,
+    visibility: 1, // Published
+    program: databasesProgram,
+    parent: week06ReadingsContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const week06CTEsAndViewsContent: ProgramContent = {
+    id: 'databases-week-06-ctes-views',
+    programId: 'databases-program-1',
+    slug: 'ctes-and-views',
+    parentId: 'databases-week-06-readings',
+    title: 'CTEs & Views',
+    description: 'Common Table Expressions, recursive CTEs, views, updatable views, and materialized views',
+    type: 0, // Page
+    body: week06CTEsAndViews,
+    sortOrder: 2,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 45,
+    visibility: 1, // Published
+    program: databasesProgram,
+    parent: week06ReadingsContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const week06SubqueriesCTEsViewsQuizContent: ProgramContent = {
+    id: 'databases-week-06-subqueries-ctes-views-quiz',
+    programId: 'databases-program-1',
+    slug: 'subqueries-ctes-views-quiz',
+    parentId: 'databases-week-06-reveal',
+    title: 'Quiz: Subqueries, CTEs & Views',
+    description: 'Practice subqueries, set operations, CTEs, views, and materialized views',
+    type: 0, // Page
+    body: week06SubqueriesCTEsViewsQuiz,
+    sortOrder: 2,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 40,
+    visibility: 1, // Published
+    program: databasesProgram,
+    parent: week06RevealContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
 // Wire program contents and product-program relations
 // only the parent contents go directly under the program
 databasesProgram.programContents = [
@@ -984,6 +1107,7 @@ databasesProgram.programContents = [
     week03RevealContent,
     week04RevealContent,
     week05RevealContent,
+    week06RevealContent,
 ];
 
 // Set up parent-child relationships
@@ -1036,6 +1160,16 @@ week05RevealContent.children = [
 week05ReadingsContent.children = [
     week05JoinFundamentalsContent,
     week05OuterJoinsContent,
+];
+
+week06RevealContent.children = [
+    week06ReadingsContent,
+    week06SubqueriesCTEsViewsQuizContent,
+];
+
+week06ReadingsContent.children = [
+    week06SubqueriesAndSetOperationsContent,
+    week06CTEsAndViewsContent,
 ];
 
 databasesProduct.productPrograms = [databasesProductProgram];

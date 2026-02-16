@@ -310,7 +310,7 @@ WITH RECURSIVE tree AS (
 SELECT * FROM tree;
 ```
 
-PostgreSQL 14+ has built-in cycle detection:
+PostgreSQL has built-in cycle detection:
 
 ```sql
 WITH RECURSIVE tree AS (
