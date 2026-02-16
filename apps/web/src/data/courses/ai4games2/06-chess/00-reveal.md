@@ -150,20 +150,62 @@ Piece board[8][8];
 
 ---
 
-### 0x88 Board
+### 0x88 Board: The Problem
 
-16×8 = 128-square array. Valid squares satisfy `(index & 0x88) == 0`.
+With an 8×8 array, every move needs bounds checking:
+
+```cpp
+// Knight wants to jump to target square
+int targetRank = rank + 2;
+int targetFile = file + 1;
+if (targetRank >= 0 && targetRank < 8
+ && targetFile >= 0 && targetFile < 8) { ... }
+```
+
+That's **4 comparisons** for every single move target. Knights have 8 possible jumps, so that's 32 comparisons per knight.
+
+---
+
+### 0x88 Board: The Trick
+
+Use a **16×8 = 128** array instead. Only the left half is the real board:
 
 ```
-Index in binary:  rrrr ffff
-
-0x88 mask:        1000 1000
-
-Valid (0x34=e4):  0011 0100 & 1000 1000 = 0  ✅
-Off-board (0x39): 0011 1001 & 1000 1000 ≠ 0  ❌
+     a   b   c   d   e   f   g   h    (padding)
+8: | 70  71  72  73  74  75  76  77 | 78 ... 7F |
+7: | 60  61  62  63  64  65  66  67 | 68 ... 6F |
+6: | 50  51  52  53  54  55  56  57 | 58 ... 5F |
+5: | 40  41  42  43  44  45  46  47 | 48 ... 4F |
+4: | 30  31  32  33  34  35  36  37 | 38 ... 3F |
+3: | 20  21  22  23  24  25  26  27 | 28 ... 2F |
+2: | 10  11  12  13  14  15  16  17 | 18 ... 1F |
+1: | 00  01  02  03  04  05  06  07 | 08 ... 0F |
+     ^^^^^^^^ real board ^^^^^^^^    ^^padding^^
 ```
 
-**One instruction replaces all bounds-checking!**
+Index = `(rank × 16) + file`. Valid squares have rank 0-7 AND file 0-7.
+
+---
+
+### 0x88 Board: One-Instruction Check
+
+The hex value `0x88` = binary `1000 1000`. It tests both nibbles at once:
+
+```
+index & 0x88:
+  rrrr ffff      ← index (rank in high nibble, file in low)
+& 1000 1000      ← 0x88 mask
+
+If rank > 7: high nibble sets bit 3 → result ≠ 0  ❌
+If file > 7: low nibble sets bit 3  → result ≠ 0  ❌
+Both 0-7:    no bits set             → result = 0  ✅
+```
+
+```cpp
+bool isOnBoard(int sq) { return (sq & 0x88) == 0; }
+```
+
+**4 comparisons → 1 bitwise AND.** That's the entire trick.
 
 ---
 
