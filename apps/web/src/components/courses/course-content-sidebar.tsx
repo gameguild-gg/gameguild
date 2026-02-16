@@ -2,13 +2,12 @@
 
 import { ThemeToggle } from '@/components/theme/theme-toggle';
 import { Button } from '@/components/ui/button';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { ProgramContent } from '@/lib/api/generated/types.gen';
 import { cn } from '@/lib/utils';
 import { BarChart3, ClipboardList, Code, FileText, Folder, FolderOpen, HelpCircle, MessageSquare, Trophy } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useState, type ReactElement } from 'react';
+import { useEffect, type ReactElement } from 'react';
 import { useSidebar } from './sidebar-context';
 
 function getContentSlug(content: ProgramContent): string {
@@ -56,6 +55,34 @@ function getContentIcon(type: number | null | undefined): typeof FileText {
   }
 }
 
+/**
+ * Collect the paths (built from slugs) of all ancestor items that contain
+ * the currently active pathname. This lets us auto-expand the tree to reveal
+ * whichever page the user is on.
+ */
+function collectAncestorPaths(
+  items: ProgramContent[],
+  courseSlug: string,
+  pathname: string,
+  parentPath = '',
+): string[] {
+  for (const item of items) {
+    const contentSlug = getContentSlug(item);
+    const currentPath = parentPath ? `${parentPath}/${contentSlug}` : contentSlug;
+    const href = `/p/${courseSlug}/${currentPath}`;
+
+    if (pathname === href || pathname.startsWith(`${href}/`)) {
+      const children = item.children ?? [];
+      if (children.length > 0) {
+        const deeper = collectAncestorPaths(children, courseSlug, pathname, currentPath);
+        return [currentPath, ...deeper];
+      }
+      return [currentPath];
+    }
+  }
+  return [];
+}
+
 interface ContentItemProps {
   item: ProgramContent;
   courseSlug: string;
@@ -67,7 +94,7 @@ interface ContentItemProps {
 
 function ContentItem({ item, courseSlug, level, parentPath = '', isMobile, closeSidebar }: ContentItemProps): ReactElement {
   const pathname = usePathname();
-  const [isExpanded, setIsExpanded] = useState(false);
+  const { expandedIds, toggleExpanded } = useSidebar();
 
   const totalMinutes = calculateTotalMinutes(item);
 
@@ -79,6 +106,7 @@ function ContentItem({ item, courseSlug, level, parentPath = '', isMobile, close
 
   const children = item.children ?? [];
   const hasChildren = children.length > 0;
+  const isExpanded = expandedIds.has(currentPath);
   const hasActiveChild = hasChildren && children.some((child) => {
     const childSlug = getContentSlug(child);
     const childPath = `${currentPath}/${childSlug}`;
@@ -89,7 +117,7 @@ function ContentItem({ item, courseSlug, level, parentPath = '', isMobile, close
 
   const handleItemClick = (): void => {
     if (hasChildren) {
-      setIsExpanded(!isExpanded);
+      toggleExpanded(currentPath);
     }
 
     if (isMobile) {
@@ -104,10 +132,10 @@ function ContentItem({ item, courseSlug, level, parentPath = '', isMobile, close
           "flex items-center gap-2 p-2 rounded-lg transition-colors cursor-pointer",
           level === 0
             ? (isActive && !hasActiveChild
-              ? "bg-primary text-primary-foreground"
+              ? "bg-primary text-primary-foreground font-semibold"
               : "hover:bg-muted")
             : (isActive
-              ? "bg-accent/80 text-accent-foreground font-medium border border-accent/40"
+              ? "bg-foreground text-background font-semibold dark:bg-white/90 dark:text-black"
               : "hover:bg-muted/50")
         )}
         style={{ paddingLeft: `${paddingLeft + 12}px` }}
@@ -129,7 +157,7 @@ function ContentItem({ item, courseSlug, level, parentPath = '', isMobile, close
           <div className="flex-1 min-w-0">
             <div className="font-medium text-sm wrap-break-word">{item.title || 'Untitled'}</div>
             {totalMinutes > 0 && (
-              <div className="text-xs text-muted-foreground">
+              <div className={cn("text-xs", isActive ? "text-background/70 dark:text-black/60" : "text-muted-foreground")}>
                 {formatDuration(totalMinutes)}
               </div>
             )}
@@ -164,9 +192,23 @@ function ContentItem({ item, courseSlug, level, parentPath = '', isMobile, close
 }
 
 export function CourseContentSidebar({ courseSlug, courseTitle, content }: CourseContentSidebarProps): ReactElement {
-  const { isSidebarOpen, closeSidebar, isMobile, mounted } = useSidebar();
+  const { isSidebarOpen, closeSidebar, isMobile, mounted, expandIds, scrollRef, restoreScroll } = useSidebar();
+  const pathname = usePathname();
   const rawTitle = courseTitle ?? '';
   const headerTitle = rawTitle.trim().length > 0 ? rawTitle : 'Course Content';
+
+  // Auto-expand ancestors of the currently active page
+  useEffect(() => {
+    const ancestors = collectAncestorPaths(content, courseSlug, pathname);
+    if (ancestors.length > 0) {
+      expandIds(ancestors);
+    }
+  }, [pathname, content, courseSlug, expandIds]);
+
+  // Restore saved scroll position after first render
+  useEffect(() => {
+    restoreScroll();
+  }, [restoreScroll]);
 
   return (
     <>
@@ -211,7 +253,7 @@ export function CourseContentSidebar({ courseSlug, courseTitle, content }: Cours
           </div>
         </div>
 
-        <ScrollArea className="flex-1 min-h-0">
+        <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto">
           <div className="p-2 space-y-1">
             {content.length === 0 ? (
               <div className="text-sm text-muted-foreground p-3 text-center">
@@ -230,7 +272,7 @@ export function CourseContentSidebar({ courseSlug, courseTitle, content }: Cours
               ))
             )}
           </div>
-        </ScrollArea>
+        </div>
       </div>
     </>
   );
