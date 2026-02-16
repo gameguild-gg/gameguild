@@ -2,8 +2,6 @@
 
 Subqueries (also called nested queries or inner queries) are queries embedded within another query. They enable complex data retrieval that would otherwise require multiple queries or application logic. Set operations combine results from multiple queries.
 
-![Joins and Subqueries meme](https://i.programmerhumor.io/2024/07/programmerhumor-io-databases-memes-programming-memes-d6df758c4d35dca.png)
-
 ---
 
 ## What is a Subquery?
@@ -20,6 +18,7 @@ WHERE price > (
 ```
 
 Subqueries can appear in:
+
 - `SELECT` clause (scalar subqueries)
 - `FROM` clause (derived tables)
 - `WHERE` clause (filtering)
@@ -35,7 +34,7 @@ A **scalar subquery** returns exactly **one value** (one row, one column). It ca
 
 ```sql
 -- Add average price to each product row
-SELECT 
+SELECT
     name,
     price,
     (SELECT AVG(price) FROM products) AS avg_price,
@@ -43,7 +42,7 @@ SELECT
 FROM products;
 
 -- Count related items
-SELECT 
+SELECT
     c.name AS category,
     (SELECT COUNT(*) FROM products p WHERE p.category_id = c.id) AS product_count
 FROM categories c;
@@ -64,10 +63,10 @@ WHERE created_at = (SELECT MAX(created_at) FROM orders);
 -- Customer with highest total spending
 SELECT * FROM customers
 WHERE id = (
-    SELECT customer_id 
-    FROM orders 
-    GROUP BY customer_id 
-    ORDER BY SUM(total_amount) DESC 
+    SELECT customer_id
+    FROM orders
+    GROUP BY customer_id
+    ORDER BY SUM(total_amount) DESC
     LIMIT 1
 );
 ```
@@ -110,7 +109,7 @@ WHERE id IN (
 -- Products ordered in January 2026
 SELECT * FROM products
 WHERE id IN (
-    SELECT DISTINCT product_id 
+    SELECT DISTINCT product_id
     FROM order_items oi
     JOIN orders o ON oi.order_id = o.id
     WHERE o.created_at >= '2026-01-01' AND o.created_at < '2026-02-01'
@@ -185,12 +184,12 @@ WHERE NOT EXISTS (
 
 ### EXISTS vs IN
 
-| Aspect | IN | EXISTS |
-|--------|-----|--------|
-| **Returns** | List of values | TRUE/FALSE |
-| **NULL handling** | Problematic with NOT IN | Handles NULLs correctly |
-| **Performance** | Better for small subquery results | Better for large outer tables |
-| **Readability** | More intuitive for simple cases | Better for correlated queries |
+| Aspect            | IN                                | EXISTS                        |
+| ----------------- | --------------------------------- | ----------------------------- |
+| **Returns**       | List of values                    | TRUE/FALSE                    |
+| **NULL handling** | Problematic with NOT IN           | Handles NULLs correctly       |
+| **Performance**   | Better for small subquery results | Better for large outer tables |
+| **Readability**   | More intuitive for simple cases   | Better for correlated queries |
 
 ```sql
 -- Equivalent queries:
@@ -242,13 +241,13 @@ WHERE price > (SELECT MAX(price) FROM products WHERE category_id = 1);
 
 ### ANY/ALL Comparison Table
 
-| Expression | Equivalent |
-|------------|------------|
-| `> ANY (subquery)` | `> MIN(subquery)` |
-| `< ANY (subquery)` | `< MAX(subquery)` |
-| `= ANY (subquery)` | `IN (subquery)` |
-| `> ALL (subquery)` | `> MAX(subquery)` |
-| `< ALL (subquery)` | `< MIN(subquery)` |
+| Expression          | Equivalent          |
+| ------------------- | ------------------- |
+| `> ANY (subquery)`  | `> MIN(subquery)`   |
+| `< ANY (subquery)`  | `< MAX(subquery)`   |
+| `= ANY (subquery)`  | `IN (subquery)`     |
+| `> ALL (subquery)`  | `> MAX(subquery)`   |
+| `< ALL (subquery)`  | `< MIN(subquery)`   |
 | `<> ALL (subquery)` | `NOT IN (subquery)` |
 
 ---
@@ -275,8 +274,8 @@ References columns from the outer query. Executes **once per row** of the outer 
 -- Correlated: subquery runs for each product row
 SELECT * FROM products p1
 WHERE price > (
-    SELECT AVG(price) 
-    FROM products p2 
+    SELECT AVG(price)
+    FROM products p2
     WHERE p2.category_id = p1.category_id  -- References outer query!
 );
 -- Find products priced above their category's average
@@ -288,8 +287,8 @@ WHERE price > (
 -- Products that are the most expensive in their category
 SELECT * FROM products p1
 WHERE price = (
-    SELECT MAX(price) 
-    FROM products p2 
+    SELECT MAX(price)
+    FROM products p2
     WHERE p2.category_id = p1.category_id
 );
 
@@ -328,7 +327,7 @@ JOIN (
     SELECT category_id, MAX(price) AS max_price
     FROM products
     GROUP BY category_id
-) cat_max ON p.category_id = cat_max.category_id 
+) cat_max ON p.category_id = cat_max.category_id
          AND p.price = cat_max.max_price;
 ```
 
@@ -341,7 +340,7 @@ A subquery in the FROM clause creates a temporary table (derived table or inline
 ```sql
 -- Calculate statistics, then filter
 SELECT * FROM (
-    SELECT 
+    SELECT
         category_id,
         COUNT(*) AS product_count,
         AVG(price) AS avg_price
@@ -351,13 +350,13 @@ SELECT * FROM (
 WHERE product_count > 10;
 
 -- Join with derived table
-SELECT 
+SELECT
     c.name,
     stats.product_count,
     stats.avg_price
 FROM categories c
 JOIN (
-    SELECT 
+    SELECT
         category_id,
         COUNT(*) AS product_count,
         AVG(price) AS avg_price
@@ -366,7 +365,7 @@ JOIN (
 ) AS stats ON c.id = stats.category_id;
 ```
 
-> **Note:** Derived tables **must** have an alias in most databases.
+> **Note:** Derived tables **must** have an alias in PostgreSQL.
 
 ---
 
@@ -391,10 +390,10 @@ UNION
 SELECT name, email FROM employees;
 
 -- All product IDs from orders in Jan or Feb
-SELECT product_id FROM order_items WHERE order_id IN 
+SELECT product_id FROM order_items WHERE order_id IN
     (SELECT id FROM orders WHERE created_at >= '2026-01-01' AND created_at < '2026-02-01')
 UNION
-SELECT product_id FROM order_items WHERE order_id IN 
+SELECT product_id FROM order_items WHERE order_id IN
     (SELECT id FROM orders WHERE created_at >= '2026-02-01' AND created_at < '2026-03-01');
 ```
 
@@ -417,11 +416,11 @@ ORDER BY timestamp DESC;
 
 ### When to Use UNION vs UNION ALL
 
-| Use UNION when... | Use UNION ALL when... |
-|-------------------|----------------------|
-| You need unique results | You want all rows (duplicates OK) |
-| Combining overlapping data | Combining non-overlapping data |
-| Correctness over performance | Performance is critical |
+| Use UNION when...            | Use UNION ALL when...             |
+| ---------------------------- | --------------------------------- |
+| You need unique results      | You want all rows (duplicates OK) |
+| Combining overlapping data   | Combining non-overlapping data    |
+| Correctness over performance | Performance is critical           |
 
 ### INTERSECT
 
@@ -443,7 +442,7 @@ JOIN orders o ON oi.order_id = o.id
 WHERE o.created_at >= '2026-02-01' AND o.created_at < '2026-03-01';
 ```
 
-### EXCEPT (MINUS in Oracle)
+### EXCEPT
 
 Returns rows from the first query that are **not in** the second query.
 
@@ -532,21 +531,25 @@ LEFT JOIN (
 ## Practice Exercises
 
 ### Exercise 1: Scalar Subqueries
+
 1. Find all products priced above the average price
 2. For each product, show its price and the category average price
 3. Find the customer who placed the most recent order
 
 ### Exercise 2: IN and EXISTS
+
 1. Find customers who have ordered products from category 'Electronics'
 2. Find products that have never been ordered (use both NOT IN and NOT EXISTS)
 3. Find categories where all products are priced above $50
 
 ### Exercise 3: Correlated Subqueries
+
 1. Find products that are the cheapest in their category
 2. Find orders with total above the customer's average order value
 3. Find employees who earn more than their manager
 
 ### Exercise 4: Set Operations
+
 1. Get a list of all emails (customers and newsletter subscribers), without duplicates
 2. Find customers who have ordered but never left a review
 3. Find products ordered in Q1 but not in Q2
