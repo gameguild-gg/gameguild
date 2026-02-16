@@ -840,8 +840,6 @@ awaitable<void> client_handler(tcp::socket socket) {
 
 Exceptions replace error codes in coroutines
 
-````
-
 ---
 
 ## Choosing a Model
@@ -868,7 +866,7 @@ try {
         // Error during transfer
     }
 }
-````
+```
 
 ---
 
