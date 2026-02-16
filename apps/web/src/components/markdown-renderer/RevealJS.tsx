@@ -1,11 +1,11 @@
 'use client';
 
 import { Maximize2, Minimize2 } from 'lucide-react';
+import { useTheme } from 'next-themes';
 import React, { useEffect, useRef, useState } from 'react';
-// Import RevealJS styles with scoping to prevent global layout issues
+// Import RevealJS base styles
 import 'highlight.js/styles/monokai.css';
 import 'reveal.js/dist/reveal.css';
-import 'reveal.js/dist/theme/white.css';
 
 // Custom styles to fix code block scrolling
 const revealCodeStyles = `
@@ -30,6 +30,63 @@ const revealCodeStyles = `
   }
 `;
 
+// Dark theme overrides applied on top of Reveal's own theme
+const darkModeOverrides = `
+  .reveal-container.theme-dark .reveal {
+    color: #e4e4e7;
+  }
+  .reveal-container.theme-dark .reveal h1,
+  .reveal-container.theme-dark .reveal h2,
+  .reveal-container.theme-dark .reveal h3,
+  .reveal-container.theme-dark .reveal h4,
+  .reveal-container.theme-dark .reveal h5,
+  .reveal-container.theme-dark .reveal h6 {
+    color: #fafafa;
+  }
+  .reveal-container.theme-dark .reveal {
+    background: #18181b;
+  }
+  .reveal-container.theme-dark .reveal .slide-background {
+    background: #18181b;
+  }
+  .reveal-container.theme-dark .reveal a {
+    color: #60a5fa;
+  }
+  .reveal-container.theme-dark .reveal strong {
+    color: #fafafa;
+  }
+  .reveal-container.theme-dark .reveal .controls button {
+    color: #a1a1aa;
+  }
+  .reveal-container.theme-dark .reveal .progress span {
+    background: #60a5fa;
+  }
+  .reveal-container.theme-dark .reveal .slide-number {
+    color: #a1a1aa;
+  }
+  .reveal-container.theme-dark .reveal table th,
+  .reveal-container.theme-dark .reveal table td {
+    border-color: #3f3f46;
+  }
+  .reveal-container.theme-dark .reveal table th {
+    color: #fafafa;
+  }
+  .reveal-container.theme-dark .reveal blockquote {
+    background: rgba(255,255,255,0.05);
+    border-left-color: #60a5fa;
+    color: #d4d4d8;
+  }
+`;
+
+const lightModeOverrides = `
+  .reveal-container.theme-light .reveal {
+    background: #ffffff;
+  }
+  .reveal-container.theme-light .reveal .slide-background {
+    background: #ffffff;
+  }
+`;
+
 interface RevealJSProps {
   content: string;
   height?: string;
@@ -51,14 +108,14 @@ const updateHashWithSlide = (slideIndex: number): void => {
 };
 
 // Helper function to render all mermaid diagrams in a container
-const renderMermaidDiagrams = async (container: HTMLElement): Promise<void> => {
+const renderMermaidDiagrams = async (container: HTMLElement, isDark: boolean): Promise<void> => {
   try {
     const mermaid = (await import('mermaid')).default;
 
-    // Initialize mermaid with default config
+    // Initialize mermaid with theme matching the current mode
     mermaid.initialize({
       startOnLoad: false,
-      theme: 'default',
+      theme: isDark ? 'dark' : 'default',
       securityLevel: 'loose',
       flowchart: {
         useMaxWidth: true,
@@ -121,6 +178,9 @@ const RevealJS: React.FC<RevealJSProps> = ({ content, height = '600px' }) => {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isClient, setIsClient] = useState(false);
+  const { resolvedTheme } = useTheme();
+  const isDark = resolvedTheme === 'dark';
+  const themeLoadedRef = useRef<string | null>(null);
 
   useEffect(() => {
     setIsClient(true);
@@ -232,7 +292,7 @@ const RevealJS: React.FC<RevealJSProps> = ({ content, height = '600px' }) => {
         // Render mermaid diagrams after markdown is processed
         setTimeout(async () => {
           if (containerRef.current) {
-            await renderMermaidDiagrams(containerRef.current);
+            await renderMermaidDiagrams(containerRef.current, isDark);
             // Re-layout after mermaid renders
             if (revealInstanceRef.current) {
               revealInstanceRef.current.layout();
@@ -299,7 +359,7 @@ const RevealJS: React.FC<RevealJSProps> = ({ content, height = '600px' }) => {
         resizeObserverRef.current = null;
       }
     };
-  }, [isClient]);
+  }, [isClient, isDark]);
 
   useEffect(() => {
     const updateContent = async () => {
@@ -311,7 +371,7 @@ const RevealJS: React.FC<RevealJSProps> = ({ content, height = '600px' }) => {
           // Render mermaid diagrams after content sync
           setTimeout(async () => {
             if (containerRef.current) {
-              await renderMermaidDiagrams(containerRef.current);
+              await renderMermaidDiagrams(containerRef.current, isDark);
               if (revealInstanceRef.current) {
                 revealInstanceRef.current.layout();
               }
@@ -325,7 +385,36 @@ const RevealJS: React.FC<RevealJSProps> = ({ content, height = '600px' }) => {
     };
 
     updateContent();
-  }, [content]);
+  }, [content, isDark]);
+
+  // Dynamically load the correct Reveal.js theme CSS
+  useEffect(() => {
+    if (!isClient) return;
+    const themeFile = isDark ? 'black' : 'white';
+    if (themeLoadedRef.current === themeFile) return;
+
+    // Remove previously injected theme link
+    const existingLink = document.getElementById('reveal-theme-link');
+    if (existingLink) existingLink.remove();
+
+    const link = document.createElement('link');
+    link.id = 'reveal-theme-link';
+    link.rel = 'stylesheet';
+    link.href = `https://cdn.jsdelivr.net/npm/reveal.js@5/dist/theme/${themeFile}.css`;
+    document.head.appendChild(link);
+    themeLoadedRef.current = themeFile;
+
+    // Re-layout after theme loads
+    link.onload = () => {
+      if (revealInstanceRef.current) {
+        revealInstanceRef.current.layout();
+      }
+    };
+
+    return () => {
+      // Cleanup only when component unmounts, not on theme switch
+    };
+  }, [isClient, isDark]);
 
   const toggleFullscreen = () => {
     if (!document.fullscreenElement) {
@@ -366,9 +455,13 @@ const RevealJS: React.FC<RevealJSProps> = ({ content, height = '600px' }) => {
   return (
     <div
       ref={containerRef}
-      className="reveal-container w-full flex-1 flex flex-col overflow-hidden border border-gray-200 dark:border-gray-700 rounded-lg"
+      className={`reveal-container w-full flex-1 flex flex-col overflow-hidden border rounded-lg ${
+        isDark
+          ? 'theme-dark border-gray-700 bg-[#18181b]'
+          : 'theme-light border-gray-200 bg-white'
+      }`}
     >
-      <style dangerouslySetInnerHTML={{ __html: revealCodeStyles }} />
+      <style dangerouslySetInnerHTML={{ __html: revealCodeStyles + darkModeOverrides + lightModeOverrides }} />
       <div className="reveal w-full flex-1">
         <div className="slides" ref={slidesRef}></div>
       </div>
