@@ -1388,6 +1388,101 @@ SELECT cron.schedule(
 
 ---
 
+## Cron Expression Format
+
+5 fields separated by spaces:
+
+```
+┌─── minute (0–59)
+│ ┌─── hour (0–23)
+│ │ ┌─── day of month (1–31)
+│ │ │ ┌─── month (1–12)
+│ │ │ │ ┌─── day of week (0–7, Sun=0 or 7)
+│ │ │ │ │
+* * * * *
+```
+
+| Symbol | Meaning              | Example                           |
+| ------ | -------------------- | --------------------------------- |
+| `*`    | Every possible value | `* * * * *` → every minute        |
+| `0`    | Specific value       | `0 * * * *` → top of every hour   |
+| `*/N`  | Every N intervals    | `*/15 * * * *` → every 15 min     |
+| `N,M`  | Multiple values      | `0,30 * * * *` → minute 0 and 30  |
+| `N-M`  | Range                | `0 9-17 * * *` → hourly 9 AM–5 PM |
+
+```
+0 * * * *       Every hour (at minute 0)
+*/5 * * * *     Every 5 minutes
+0 0 * * *       Daily at midnight
+0 0 * * 0       Weekly on Sunday at midnight
+0 0 1 * *       Monthly on the 1st at midnight
+30 2 * * 1-5    Weekdays at 2:30 AM
+```
+
+---
+
+## Trigger-Based Refresh
+
+Auto-refresh a materialized view when source tables change.
+
+```sql
+-- Step 1: Create a refresh function
+CREATE OR REPLACE FUNCTION refresh_sales_summary()
+RETURNS TRIGGER AS $$
+BEGIN
+    REFRESH MATERIALIZED VIEW CONCURRENTLY sales_summary;
+    RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Step 2: Attach triggers to source tables
+CREATE TRIGGER trg_refresh_sales_on_orders
+AFTER INSERT OR UPDATE OR DELETE ON orders
+FOR EACH STATEMENT          -- Not FOR EACH ROW!
+EXECUTE FUNCTION refresh_sales_summary();
+
+CREATE TRIGGER trg_refresh_sales_on_items
+AFTER INSERT OR UPDATE OR DELETE ON order_items
+FOR EACH STATEMENT
+EXECUTE FUNCTION refresh_sales_summary();
+```
+
+---
+
+## Trigger Refresh — Key Choices
+
+| Choice               | Why                                             |
+| -------------------- | ----------------------------------------------- |
+| `AFTER` not `BEFORE` | Data must be committed before the view reads it |
+| `FOR EACH STATEMENT` | Avoids refreshing once per row in bulk inserts  |
+| `RETURNS NULL`       | Return value is ignored for AFTER triggers      |
+| `CONCURRENTLY`       | Doesn't lock reads while rebuilding             |
+
+⚠️ **Caution:** On high-write tables, every statement triggers a full rebuild. Use a **debounced** pattern instead:
+
+```sql
+-- Flag the view as stale (cheap)
+CREATE TABLE mv_refresh_queue (
+    view_name TEXT PRIMARY KEY,
+    needs_refresh BOOLEAN DEFAULT TRUE
+);
+
+-- Trigger only sets a flag, doesn't rebuild
+CREATE OR REPLACE FUNCTION flag_stale()
+RETURNS TRIGGER AS $$
+BEGIN
+    INSERT INTO mv_refresh_queue VALUES ('sales_summary', TRUE)
+    ON CONFLICT (view_name) DO UPDATE SET needs_refresh = TRUE;
+    RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
+-- A cron job rebuilds only when the flag is set
+-- (runs every minute, but skips if nothing changed)
+```
+
+---
+
 ## Indexing Materialized Views
 
 Unlike regular views, materialized views can have **indexes**:
