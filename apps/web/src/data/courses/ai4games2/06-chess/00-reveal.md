@@ -688,7 +688,7 @@ Engine sees half a capture exchange → thinks it's winning → blunders.
 At depth 0, instead of returning `evaluate()`, continue searching **only captures** until the position is quiet:
 
 ```mermaid
-flowchart TD
+flowchart LR
     N["Normal search<br/>depth = 0"] --> Q["Quiescence<br/>(captures only)"]
     Q --> SP["Stand-pat = evaluate()"]
     SP --> CHK{"Captures<br/>available?"}
@@ -706,15 +706,19 @@ flowchart TD
 
 ### Stand-Pat Score
 
-The side to move can always **choose not to capture**.
+**Stand pat** = "stay put" (from poker: playing your hand as-is without drawing new cards). In quiescence search, it means the side to move **chooses not to capture** and accepts the current static evaluation.
+
+This matters because capturing isn't always good. If you're ahead, you don't have to trade pieces.
 
 ```cpp
 int quiescence(Board& board, int alpha, int beta) {
-    int standPat = evaluate(board);
+    int standPat = evaluate(board);  // score if we don't capture
     if (standPat >= beta) return beta;
     if (standPat > alpha) alpha = standPat;
 
     // Search only captures, ordered by MVV-LVA
+    // (Most Valuable Victim, Least Valuable Attacker:
+    //  try PxQ before QxP, so we see the best captures first)
     for (const auto& capture : captures) {
         board.makeMove(capture);
         int score = -quiescence(board, -beta, -alpha);
@@ -722,7 +726,7 @@ int quiescence(Board& board, int alpha, int beta) {
         if (score >= beta) return beta;
         if (score > alpha) alpha = score;
     }
-    return alpha;
+    return alpha;  // best of stand-pat vs any capture
 }
 ```
 
