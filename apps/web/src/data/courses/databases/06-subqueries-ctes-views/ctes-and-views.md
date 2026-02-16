@@ -22,7 +22,7 @@ SELECT * FROM cte_name;
 ```sql
 -- Without CTE (hard to read)
 SELECT * FROM (
-    SELECT 
+    SELECT
         customer_id,
         COUNT(*) AS order_count,
         SUM(total_amount) AS total_spent
@@ -33,7 +33,7 @@ WHERE order_count > 5;
 
 -- With CTE (cleaner)
 WITH customer_stats AS (
-    SELECT 
+    SELECT
         customer_id,
         COUNT(*) AS order_count,
         SUM(total_amount) AS total_spent
@@ -49,10 +49,10 @@ WHERE order_count > 5;
 Chain multiple CTEs with commas:
 
 ```sql
-WITH 
+WITH
 -- First CTE: customer order statistics
 customer_orders AS (
-    SELECT 
+    SELECT
         customer_id,
         COUNT(*) AS order_count,
         SUM(total_amount) AS total_spent
@@ -61,11 +61,11 @@ customer_orders AS (
 ),
 -- Second CTE: categorize customers
 customer_tiers AS (
-    SELECT 
+    SELECT
         customer_id,
         order_count,
         total_spent,
-        CASE 
+        CASE
             WHEN total_spent >= 10000 THEN 'Platinum'
             WHEN total_spent >= 5000 THEN 'Gold'
             WHEN total_spent >= 1000 THEN 'Silver'
@@ -74,7 +74,7 @@ customer_tiers AS (
     FROM customer_orders
 )
 -- Main query: join with customer details
-SELECT 
+SELECT
     c.name,
     c.email,
     ct.order_count,
@@ -90,9 +90,9 @@ ORDER BY ct.total_spent DESC;
 Later CTEs can reference earlier ones:
 
 ```sql
-WITH 
+WITH
 daily_sales AS (
-    SELECT 
+    SELECT
         DATE(created_at) AS sale_date,
         SUM(total_amount) AS daily_total
     FROM orders
@@ -102,7 +102,7 @@ weekly_avg AS (
     SELECT AVG(daily_total) AS avg_daily_sales
     FROM daily_sales
 )
-SELECT 
+SELECT
     ds.sale_date,
     ds.daily_total,
     wa.avg_daily_sales,
@@ -116,12 +116,12 @@ ORDER BY ds.sale_date;
 
 ## CTE vs Subquery
 
-| Aspect | CTE | Subquery |
-|--------|-----|----------|
-| **Readability** | Named, top-down | Nested, inside-out |
-| **Reusability** | Can reference multiple times | Must repeat |
-| **Recursion** | Supported | Not supported |
-| **Performance** | Usually same | Usually same |
+| Aspect          | CTE                          | Subquery           |
+| --------------- | ---------------------------- | ------------------ |
+| **Readability** | Named, top-down              | Nested, inside-out |
+| **Reusability** | Can reference multiple times | Must repeat        |
+| **Recursion**   | Supported                    | Not supported      |
+| **Performance** | Usually same                 | Usually same       |
 
 ### When to Use CTEs
 
@@ -135,8 +135,8 @@ ORDER BY ds.sale_date;
 SELECT * FROM orders
 WHERE total_amount > (SELECT AVG(total_amount) FROM orders)
   AND customer_id IN (
-      SELECT customer_id FROM orders 
-      GROUP BY customer_id 
+      SELECT customer_id FROM orders
+      GROUP BY customer_id
       HAVING AVG(total_amount) > (SELECT AVG(total_amount) FROM orders)
   );
 
@@ -147,7 +147,7 @@ WITH avg_order AS (
 SELECT o.* FROM orders o, avg_order a
 WHERE o.total_amount > a.avg_amount
   AND o.customer_id IN (
-      SELECT customer_id FROM orders, avg_order 
+      SELECT customer_id FROM orders, avg_order
       GROUP BY customer_id, avg_amount
       HAVING AVG(total_amount) > avg_amount
   );
@@ -164,10 +164,10 @@ Recursive CTEs reference themselves to process hierarchical or graph data.
 ```sql
 WITH RECURSIVE cte_name AS (
     -- Anchor member (base case)
-    SELECT ... 
-    
+    SELECT ...
+
     UNION [ALL]
-    
+
     -- Recursive member (references cte_name)
     SELECT ... FROM cte_name WHERE ...
 )
@@ -182,19 +182,19 @@ SELECT * FROM cte_name;
 
 WITH RECURSIVE org_chart AS (
     -- Anchor: top-level employees (no manager)
-    SELECT 
-        id, 
-        name, 
+    SELECT
+        id,
+        name,
         manager_id,
         1 AS level,
         name AS path
     FROM employees
     WHERE manager_id IS NULL
-    
+
     UNION ALL
-    
+
     -- Recursive: employees who report to someone in org_chart
-    SELECT 
+    SELECT
         e.id,
         e.name,
         e.manager_id,
@@ -208,6 +208,7 @@ ORDER BY path;
 ```
 
 **Result:**
+
 ```
 id | name    | manager_id | level | path
 ---+---------+------------+-------+------------------------
@@ -223,19 +224,19 @@ id | name    | manager_id | level | path
 ```sql
 WITH RECURSIVE category_tree AS (
     -- Root categories
-    SELECT 
-        id, 
-        name, 
+    SELECT
+        id,
+        name,
         parent_id,
         1 AS depth,
         ARRAY[id] AS path
     FROM categories
     WHERE parent_id IS NULL
-    
+
     UNION ALL
-    
+
     -- Child categories
-    SELECT 
+    SELECT
         c.id,
         c.name,
         c.parent_id,
@@ -244,7 +245,7 @@ WITH RECURSIVE category_tree AS (
     FROM categories c
     JOIN category_tree ct ON c.parent_id = ct.id
 )
-SELECT 
+SELECT
     id,
     REPEAT('  ', depth - 1) || name AS indented_name,
     depth
@@ -280,9 +281,9 @@ WITH RECURSIVE subordinates AS (
     SELECT id, name, manager_id
     FROM employees
     WHERE manager_id = 2
-    
+
     UNION ALL
-    
+
     SELECT e.id, e.name, e.manager_id
     FROM employees e
     JOIN subordinates s ON e.manager_id = s.id
@@ -299,9 +300,9 @@ WITH RECURSIVE tree AS (
     SELECT id, parent_id, 1 AS depth
     FROM nodes
     WHERE id = 1
-    
+
     UNION ALL
-    
+
     SELECT n.id, n.parent_id, t.depth + 1
     FROM nodes n
     JOIN tree t ON n.parent_id = t.id
@@ -316,9 +317,9 @@ PostgreSQL has built-in cycle detection:
 WITH RECURSIVE tree AS (
     SELECT id, parent_id, ARRAY[id] AS path, false AS cycle
     FROM nodes WHERE id = 1
-    
+
     UNION ALL
-    
+
     SELECT n.id, n.parent_id, t.path || n.id, n.id = ANY(t.path)
     FROM nodes n
     JOIN tree t ON n.parent_id = t.id
@@ -360,7 +361,7 @@ SELECT * FROM active_products WHERE price < 50;
 
 ```sql
 CREATE VIEW order_details AS
-SELECT 
+SELECT
     o.id AS order_id,
     o.created_at AS order_date,
     c.name AS customer_name,
@@ -423,7 +424,7 @@ WHERE state = 'CA';
 
 -- These work:
 UPDATE california_customers SET phone = '555-0100' WHERE id = 1;
-INSERT INTO california_customers (id, name, email, state) 
+INSERT INTO california_customers (id, name, email, state)
 VALUES (100, 'New Customer', 'new@email.com', 'CA');
 
 -- Row disappears from view if state changes:
@@ -460,7 +461,7 @@ SELECT ...;
 
 -- Example: Sales summary (expensive to compute)
 CREATE MATERIALIZED VIEW sales_summary AS
-SELECT 
+SELECT
     DATE_TRUNC('month', o.created_at) AS month,
     c.name AS category,
     COUNT(DISTINCT o.id) AS order_count,
@@ -489,12 +490,12 @@ REFRESH MATERIALIZED VIEW CONCURRENTLY sales_summary;
 
 ### Refresh Strategies
 
-| Strategy | When to Use |
-|----------|-------------|
-| **Manual** | Ad-hoc reporting, after batch loads |
-| **Scheduled** | Regular intervals (cron job, pg_cron) |
-| **Trigger-based** | After source table changes |
-| **On-demand** | Before critical queries |
+| Strategy          | When to Use                           |
+| ----------------- | ------------------------------------- |
+| **Manual**        | Ad-hoc reporting, after batch loads   |
+| **Scheduled**     | Regular intervals (cron job, pg_cron) |
+| **Trigger-based** | After source table changes            |
+| **On-demand**     | Before critical queries               |
 
 ```sql
 -- Scheduled refresh with pg_cron (PostgreSQL extension)
@@ -502,16 +503,130 @@ SELECT cron.schedule('refresh-sales', '0 * * * *',  -- Every hour
     'REFRESH MATERIALIZED VIEW CONCURRENTLY sales_summary');
 ```
 
+### Trigger-Based Refresh
+
+A trigger can automatically refresh a materialized view whenever the underlying source tables change. This keeps data fresh without manual intervention or cron jobs.
+
+**Step 1:** Create a function that refreshes the materialized view:
+
+```sql
+CREATE OR REPLACE FUNCTION refresh_sales_summary()
+RETURNS TRIGGER AS $$
+BEGIN
+    -- CONCURRENTLY avoids locking reads (requires unique index)
+    REFRESH MATERIALIZED VIEW CONCURRENTLY sales_summary;
+    RETURN NULL;  -- Result is ignored for AFTER triggers
+END;
+$$ LANGUAGE plpgsql;
+```
+
+**Step 2:** Attach the trigger to each source table:
+
+```sql
+-- Refresh after any change to the orders table
+CREATE TRIGGER trg_refresh_sales_on_orders
+AFTER INSERT OR UPDATE OR DELETE ON orders
+FOR EACH STATEMENT
+EXECUTE FUNCTION refresh_sales_summary();
+
+-- Also refresh when order_items change
+CREATE TRIGGER trg_refresh_sales_on_items
+AFTER INSERT OR UPDATE OR DELETE ON order_items
+FOR EACH STATEMENT
+EXECUTE FUNCTION refresh_sales_summary();
+```
+
+> **Key choices explained:**
+>
+> | Choice                                    | Why                                                   |
+> | ----------------------------------------- | ----------------------------------------------------- |
+> | `AFTER` (not `BEFORE`)                    | Source data must be committed before refresh reads it |
+> | `FOR EACH STATEMENT` (not `FOR EACH ROW`) | Avoids refreshing once per row in bulk operations     |
+> | `RETURNS NULL`                            | Return value is ignored for `AFTER` triggers          |
+
+**Caution:** Trigger-based refresh can be **expensive** on high-write tables. If the source table receives many writes per second, each statement triggers a full view rebuild. For high-write scenarios, prefer a **debounced** approach:
+
+```sql
+-- Instead of refreshing immediately, record that a refresh is needed
+CREATE TABLE mv_refresh_queue (
+    view_name TEXT PRIMARY KEY,
+    needs_refresh BOOLEAN DEFAULT TRUE,
+    last_refreshed TIMESTAMPTZ
+);
+
+-- Trigger just flags the view as stale
+CREATE OR REPLACE FUNCTION flag_sales_summary_stale()
+RETURNS TRIGGER AS $$
+BEGIN
+    INSERT INTO mv_refresh_queue (view_name, needs_refresh)
+    VALUES ('sales_summary', TRUE)
+    ON CONFLICT (view_name)
+    DO UPDATE SET needs_refresh = TRUE;
+    RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
+-- A scheduled job refreshes only when stale
+-- (runs every minute but only does work when needed)
+SELECT cron.schedule('check-mv-refresh', '* * * * *', $$
+    DO $$
+    BEGIN
+        IF EXISTS (
+            SELECT 1 FROM mv_refresh_queue
+            WHERE view_name = 'sales_summary' AND needs_refresh = TRUE
+        ) THEN
+            REFRESH MATERIALIZED VIEW CONCURRENTLY sales_summary;
+            UPDATE mv_refresh_queue
+            SET needs_refresh = FALSE, last_refreshed = NOW()
+            WHERE view_name = 'sales_summary';
+        END IF;
+    END $$;
+$$);
+```
+
+### Cron Expression Format
+
+A cron expression has **5 fields** separated by spaces:
+
+```
+┌───────────── minute (0–59)
+│ ┌───────────── hour (0–23)
+│ │ ┌───────────── day of month (1–31)
+│ │ │ ┌───────────── month (1–12)
+│ │ │ │ ┌───────────── day of week (0–7, 0 and 7 = Sunday)
+│ │ │ │ │
+* * * * *
+```
+
+| Symbol | Meaning              | Example                                       |
+| ------ | -------------------- | --------------------------------------------- |
+| `*`    | Every possible value | `* * * * *` = every minute                    |
+| `0`    | Specific value       | `0 * * * *` = at minute 0 (top of every hour) |
+| `*/N`  | Every N intervals    | `*/15 * * * *` = every 15 minutes             |
+| `N,M`  | Multiple values      | `0,30 * * * *` = at minute 0 and 30           |
+| `N-M`  | Range                | `0 9-17 * * *` = every hour from 9 AM to 5 PM |
+
+**Common examples:**
+
+```
+0 * * * *       Every hour (at minute 0)
+*/5 * * * *     Every 5 minutes
+0 0 * * *       Daily at midnight
+0 0 * * 0       Weekly on Sunday at midnight
+0 0 1 * *       Monthly on the 1st at midnight
+30 2 * * 1-5    Weekdays at 2:30 AM
+```
+
 ### Materialized View vs Regular View
 
-| Aspect | View | Materialized View |
-|--------|------|-------------------|
-| **Storage** | No data stored | Stores query result |
-| **Speed** | Runs query each time | Fast (precomputed) |
-| **Freshness** | Always current | May be stale |
-| **Updates** | N/A | Requires REFRESH |
-| **Indexes** | Cannot create | Can create indexes |
-| **Use case** | Simple queries, security | Complex aggregations, reporting |
+| Aspect        | View                     | Materialized View               |
+| ------------- | ------------------------ | ------------------------------- |
+| **Storage**   | No data stored           | Stores query result             |
+| **Speed**     | Runs query each time     | Fast (precomputed)              |
+| **Freshness** | Always current           | May be stale                    |
+| **Updates**   | N/A                      | Requires REFRESH                |
+| **Indexes**   | Cannot create            | Can create indexes              |
+| **Use case**  | Simple queries, security | Complex aggregations, reporting |
 
 ### Indexing Materialized Views
 
@@ -578,6 +693,7 @@ SELECT * FROM order_details WHERE customer_name = 'Alice';
 ### Materialized Views for Performance
 
 Use materialized views for:
+
 - Complex aggregations
 - Expensive joins
 - Reports and dashboards
@@ -607,21 +723,25 @@ SELECT * FROM orders WHERE total_amount > 1000 AND status = 'pending';
 ## Practice Exercises
 
 ### Exercise 1: CTEs
+
 1. Write a CTE to find customers with above-average order values
 2. Use multiple CTEs to: (a) calculate category totals, (b) rank categories, (c) show top 5
 3. Refactor a complex nested subquery into CTEs
 
 ### Exercise 2: Recursive CTEs
+
 1. Display an employee hierarchy with indentation showing levels
 2. Find all ancestors of a given category
 3. Generate a calendar of dates for a given month
 
 ### Exercise 3: Views
+
 1. Create a view showing order details with customer and product info
 2. Create an updatable view for "VIP customers" (spent > $10,000)
 3. Create a view that hides salary information from an employees table
 
 ### Exercise 4: Materialized Views
+
 1. Create a materialized view for monthly sales by category
 2. Add appropriate indexes to the materialized view
 3. Write a refresh schedule strategy for a real-time dashboard vs. weekly reports
@@ -649,7 +769,7 @@ WITH cte_name AS (SELECT ...)
 SELECT * FROM cte_name;
 
 -- Multiple CTEs
-WITH cte1 AS (...), cte2 AS (...) 
+WITH cte1 AS (...), cte2 AS (...)
 SELECT * FROM cte1 JOIN cte2 ...;
 
 -- Recursive CTE
