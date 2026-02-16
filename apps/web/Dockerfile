@@ -22,6 +22,8 @@ ENV NEXT_PUBLIC_WEB_URL=$NEXT_PUBLIC_WEB_URL
 ENV NEXT_PUBLIC_NEW_RELIC_ACCOUNT_ID=$NEXT_PUBLIC_NEW_RELIC_ACCOUNT_ID
 ENV NEXT_PUBLIC_GOOGLE_CLIENT_ID=$NEXT_PUBLIC_GOOGLE_CLIENT_ID
 ENV NODE_ENV=production
+# Increase Node.js memory limit for Next.js build
+ENV NODE_OPTIONS="--max_old_space_size=4096"
 
 # Copy package files first for better layer caching
 COPY package*.json ./
