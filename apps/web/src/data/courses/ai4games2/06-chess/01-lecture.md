@@ -112,24 +112,38 @@ Piece board[8][8];
 ```
 
 **Pros:** Intuitive, easy to implement, easy to debug.
-**Cons:** Checking attacks and generating moves requires looping through pieces and directions.
+**Cons:** Checking attacks and generating moves requires looping through pieces and directions. Every move target needs bounds checking:
+
+```cpp
+int targetRank = rank + 2;
+int targetFile = file + 1;
+if (targetRank >= 0 && targetRank < 8
+ && targetFile >= 0 && targetFile < 8) { ... }
+```
+
+That's **4 comparisons** for every single move target. A knight has 8 possible jumps, so that's 32 comparisons per knight per position. Multiply by millions of positions searched and this overhead adds up fast.
 
 ### 0x88 Board
 
-The **0x88 trick** is one of the most elegant hacks in chess programming. Instead of an 8×8 = 64-square array, you allocate a 16×8 = 128-square array. The left half (files a–h) represents the real board; the right half is unused padding. The key insight: any valid square's index satisfies `(index & 0x88) == 0`, giving you a **single-instruction bounds check** that replaces all the `if (rank >= 0 && rank < 8 && file >= 0 && file < 8)` gymnastics.
+The **0x88 trick** eliminates all of that. Instead of an 8×8 = 64-square array, you allocate a 16×8 = 128-square array. The left half (files a–h) is the real board; the right half is unused padding. Any valid square's index satisfies `(index & 0x88) == 0`, replacing those 4 comparisons with **one bitwise AND**.
 
 #### Why `0x88`?
 
-The name comes from the hex bitmask `0x88 = 1000 1000` in binary. In the 16-wide layout, valid board squares have indices `0x00`–`0x77` where both the high nibble (rank) and low nibble (file) are in the range 0–7. If either nibble exceeds 7, one of the two `1` bits in `0x88` will be set:
+Each index is `(rank × 16) + file`. Valid squares have rank 0–7 and file 0–7, so in hex they range from `0x00` to `0x77`. The mask `0x88 = 1000 1000` in binary tests both nibbles at once:
 
 ```
-Index in binary:  rrrr ffff
-                  ─┬── ─┬──
-                   │    └── file (0-7 valid, 8-15 off-board)
-                   └─────── rank (0-7 valid, 8-15 impossible in 128-array)
+index & 0x88:
+  rrrr ffff      ← index (rank in high nibble, file in low)
+& 1000 1000      ← 0x88 mask
 
-0x88 mask:        1000 1000
+If rank > 7: high nibble sets bit 3 → result ≠ 0  ❌
+If file > 7: low nibble sets bit 3  → result ≠ 0  ❌
+Both 0-7:    no bits set             → result = 0  ✅
+```
 
+Concrete examples:
+
+```
 Valid square:     0011 0100  (0x34 = e4)  →  0011 0100 & 1000 1000 = 0  ✅
 Off-board:        0011 1001  (0x39)       →  0011 1001 & 1000 1000 = 8  ❌
 ```
