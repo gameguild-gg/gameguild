@@ -42,6 +42,17 @@ import networkingWeek05CppConcurrencyMd from './05-framing/02g-cpp-concurrency.m
 import networkingWeek05EdgeCasesMd from './05-framing/02h-edge-cases.md';
 import networkingWeek05ReadingsMd from './05-framing/03-readings.md';
 import networkingWeek05QuizMd from './05-framing/04-quiz.md';
+import networkingWeek06LectureReveal from './06-serialization/01-reveal.md';
+import networkingWeek06LectureMd from './06-serialization/02-lecture.md';
+import networkingWeek06WhySerializationMd from './06-serialization/02a-why-serialization.md';
+import networkingWeek06EndiannessMd from './06-serialization/02b-endianness.md';
+import networkingWeek06StructPackingMd from './06-serialization/02c-struct-packing.md';
+import networkingWeek06TextFormatsMd from './06-serialization/02d-text-formats.md';
+import networkingWeek06BinaryFormatsMd from './06-serialization/02e-binary-formats.md';
+import networkingWeek06CustomBitpackingMd from './06-serialization/02f-custom-bitpacking.md';
+import networkingWeek06CompressionMd from './06-serialization/02g-compression.md';
+import networkingWeek06PerformanceComparisonMd from './06-serialization/02h-performance-comparison.md';
+import networkingWeek06ReadingsMd from './06-serialization/03-readings.md';
 import networkingSyllabus from './syllabus.md';
 
 export const networkingProgram: Program = {
@@ -1128,7 +1139,277 @@ export const networkingWeek05Quiz: ProgramContent & { slug: string } = {
 };
 
 networkingWeek05Intro.children = [networkingWeek05LectureContent, networkingWeek05Readings, networkingWeek05Quiz];
-networkingProgram.programContents = [networkingSyllabusContent, networkingWeek01Intro, networkingWeek02Intro, networkingWeek03Intro, networkingWeek04Intro, networkingWeek05Intro];
+
+// Week 06: Serialization
+
+export const networkingWeek06Intro: ProgramContent & { slug: string } = {
+    id: 'week-06',
+    slug: 'week-06',
+    programId: 'networking-program-1',
+    parentId: undefined,
+    title: 'Week 06 — Serialization',
+    description: 'Serialization and deserialization: endianness, struct packing, JSON, Protocol Buffers, FlatBuffers, custom bitpacking, and compression.',
+    type: ProgramContentType.REVEAL,
+    body: networkingWeek06LectureReveal,
+    sortOrder: 7,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 90,
+    visibility: 1, // Published
+    program: networkingProgram,
+    parent: undefined,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const networkingWeek06LectureContent: ProgramContent & { slug: string } = {
+    id: 'week-06-lecture',
+    slug: 'lecture',
+    programId: 'networking-program-1',
+    parentId: 'week-06',
+    title: 'Lecture Notes',
+    description: 'Detailed lecture notes on serialization: endianness, struct packing, text/binary formats, bitpacking, and compression.',
+    type: 0, // Page
+    body: networkingWeek06LectureMd,
+    sortOrder: 1,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 60,
+    visibility: 1, // Published
+    program: networkingProgram,
+    parent: networkingWeek06Intro,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const networkingWeek06Readings: ProgramContent & { slug: string } = {
+    id: 'week-06-readings',
+    slug: 'readings',
+    programId: 'networking-program-1',
+    parentId: 'week-06',
+    title: 'Readings',
+    description: 'Required readings on serialization formats, endianness, and bitpacking.',
+    type: 0, // Page
+    body: networkingWeek06ReadingsMd,
+    sortOrder: 2,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 100,
+    visibility: 1, // Published
+    program: networkingProgram,
+    parent: networkingWeek06Intro,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+// Week 06 Lecture Sections (split from main lecture)
+
+export const networkingWeek06WhySerialization: ProgramContent & { slug: string } = {
+    id: 'week-06-why-serialization',
+    slug: 'why-serialization',
+    programId: 'networking-program-1',
+    parentId: 'week-06-lecture',
+    title: '1. Why Serialization Matters',
+    description: 'Why memcpy of structs fails: endianness, padding, and versioning problems.',
+    type: 0, // Page
+    body: networkingWeek06WhySerializationMd,
+    sortOrder: 1,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 15,
+    visibility: 1, // Published
+    program: networkingProgram,
+    parent: networkingWeek06LectureContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const networkingWeek06Endianness: ProgramContent & { slug: string } = {
+    id: 'week-06-endianness',
+    slug: 'endianness',
+    programId: 'networking-program-1',
+    parentId: 'week-06-lecture',
+    title: '2. Endianness and Byte Order',
+    description: 'Big-endian vs little-endian, network byte order, and Boost.Endian conversions.',
+    type: 0, // Page
+    body: networkingWeek06EndiannessMd,
+    sortOrder: 2,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 15,
+    visibility: 1, // Published
+    program: networkingProgram,
+    parent: networkingWeek06LectureContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const networkingWeek06StructPacking: ProgramContent & { slug: string } = {
+    id: 'week-06-struct-packing',
+    slug: 'struct-packing',
+    programId: 'networking-program-1',
+    parentId: 'week-06-lecture',
+    title: '3. Struct Packing and Alignment',
+    description: 'Compiler padding, alignment rules, and why sizeof varies across platforms.',
+    type: 0, // Page
+    body: networkingWeek06StructPackingMd,
+    sortOrder: 3,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 15,
+    visibility: 1, // Published
+    program: networkingProgram,
+    parent: networkingWeek06LectureContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const networkingWeek06TextFormats: ProgramContent & { slug: string } = {
+    id: 'week-06-text-formats',
+    slug: 'text-formats',
+    programId: 'networking-program-1',
+    parentId: 'week-06-lecture',
+    title: '4. Text Formats: JSON and Beyond',
+    description: 'JSON grammar, C++ JSON libraries, and comparison with CSV, XML, YAML, TOML.',
+    type: 0, // Page
+    body: networkingWeek06TextFormatsMd,
+    sortOrder: 4,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 15,
+    visibility: 1, // Published
+    program: networkingProgram,
+    parent: networkingWeek06LectureContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const networkingWeek06BinaryFormats: ProgramContent & { slug: string } = {
+    id: 'week-06-binary-formats',
+    slug: 'binary-formats',
+    programId: 'networking-program-1',
+    parentId: 'week-06-lecture',
+    title: '5. Binary Serialization Formats',
+    description: 'Protocol Buffers, FlatBuffers, MessagePack, CBOR: varints, TLV, and zero-copy.',
+    type: 0, // Page
+    body: networkingWeek06BinaryFormatsMd,
+    sortOrder: 5,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 20,
+    visibility: 1, // Published
+    program: networkingProgram,
+    parent: networkingWeek06LectureContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const networkingWeek06CustomBitpacking: ProgramContent & { slug: string } = {
+    id: 'week-06-custom-bitpacking',
+    slug: 'custom-bitpacking',
+    programId: 'networking-program-1',
+    parentId: 'week-06-lecture',
+    title: '6. Custom Bitpacking',
+    description: 'BitWriter/BitReader pattern, range-based serialization, compressed floats, and quaternion encoding.',
+    type: 0, // Page
+    body: networkingWeek06CustomBitpackingMd,
+    sortOrder: 6,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 20,
+    visibility: 1, // Published
+    program: networkingProgram,
+    parent: networkingWeek06LectureContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const networkingWeek06Compression: ProgramContent & { slug: string } = {
+    id: 'week-06-compression',
+    slug: 'compression',
+    programId: 'networking-program-1',
+    parentId: 'week-06-lecture',
+    title: '7. Compression Techniques',
+    description: 'Delta encoding, quantization, variable-length quantities, LZ4, and Zstandard.',
+    type: 0, // Page
+    body: networkingWeek06CompressionMd,
+    sortOrder: 7,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 15,
+    visibility: 1, // Published
+    program: networkingProgram,
+    parent: networkingWeek06LectureContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const networkingWeek06PerformanceComparison: ProgramContent & { slug: string } = {
+    id: 'week-06-performance-comparison',
+    slug: 'performance-comparison',
+    programId: 'networking-program-1',
+    parentId: 'week-06-lecture',
+    title: '8. Performance Comparison and Summary',
+    description: 'Benchmarks: JSON vs Protobuf vs FlatBuffers vs custom bitpacking, and format selection guidelines.',
+    type: 0, // Page
+    body: networkingWeek06PerformanceComparisonMd,
+    sortOrder: 8,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 10,
+    visibility: 1, // Published
+    program: networkingProgram,
+    parent: networkingWeek06LectureContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+networkingWeek06Intro.children = [networkingWeek06LectureContent, networkingWeek06Readings];
+networkingWeek06LectureContent.children = [
+    networkingWeek06WhySerialization,
+    networkingWeek06Endianness,
+    networkingWeek06StructPacking,
+    networkingWeek06TextFormats,
+    networkingWeek06BinaryFormats,
+    networkingWeek06CustomBitpacking,
+    networkingWeek06Compression,
+    networkingWeek06PerformanceComparison,
+];
+
+networkingProgram.programContents = [networkingSyllabusContent, networkingWeek01Intro, networkingWeek02Intro, networkingWeek03Intro, networkingWeek04Intro, networkingWeek05Intro, networkingWeek06Intro];
 networkingProduct.productPrograms = [networkingProductProgram];
 
 export default networkingProgram;
