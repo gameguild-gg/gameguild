@@ -194,7 +194,7 @@ Data is accessed via **vtables** and **offsets**:
 ```
 Buffer layout:
 ┌──────────┬──────────┬───────────────────┐
-│  vtable  │ offsets  │    field data      │
+│  vtable  │ offsets  │    field data     │
 └──────────┴──────────┴───────────────────┘
 
 vtable maps field_id → offset into data region

@@ -5,13 +5,13 @@
 JSON (JavaScript Object Notation) is the dominant text interchange format. Defined by [RFC 8259](https://datatracker.ietf.org/doc/html/rfc8259) and visualized with railroad diagrams at [json.org](https://www.json.org/), it supports six value types:
 
 ```mermaid
-flowchart TD
-    V[JSON Value] --> O[Object: '{' key:value pairs '}']
-    V --> A[Array: '[' values ']']
-    V --> S["String: '\"text\"'"]
-    V --> N[Number: integer or float]
-    V --> B["Boolean: true / false"]
-    V --> NL["Null: null"]
+flowchart LR
+    V[JSON Value] --> O["Object:<br/>'{'key:value pairs'}'"]
+    V --> A["Array:<br/>'[' values ']'"]
+    V --> S["String:<br/>'#quot;text#quot;'"]
+    V --> N[Number:<br/>integer or float]
+    V --> B["Boolean:<br/>true / false"]
+    V --> NL["Null:<br/>null"]
 ```
 
 ### JSON Example: Game Player

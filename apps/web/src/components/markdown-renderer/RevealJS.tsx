@@ -455,11 +455,10 @@ const RevealJS: React.FC<RevealJSProps> = ({ content, height = '600px' }) => {
   return (
     <div
       ref={containerRef}
-      className={`reveal-container w-full flex-1 flex flex-col overflow-hidden border rounded-lg ${
-        isDark
+      className={`reveal-container w-full flex-1 flex flex-col overflow-hidden border rounded-lg ${isDark
           ? 'theme-dark border-gray-700 bg-[#18181b]'
           : 'theme-light border-gray-200 bg-white'
-      }`}
+        }`}
     >
       <style dangerouslySetInnerHTML={{ __html: revealCodeStyles + darkModeOverrides + lightModeOverrides }} />
       <div className="reveal w-full flex-1">
