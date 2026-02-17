@@ -53,6 +53,7 @@ import networkingWeek06CustomBitpackingMd from './06-serialization/02f-custom-bi
 import networkingWeek06CompressionMd from './06-serialization/02g-compression.md';
 import networkingWeek06PerformanceComparisonMd from './06-serialization/02h-performance-comparison.md';
 import networkingWeek06ReadingsMd from './06-serialization/03-readings.md';
+import networkingWeek06AssignmentMd from './06-serialization/04-assignment.md';
 import networkingSyllabus from './syllabus.md';
 
 export const networkingProgram: Program = {
@@ -1397,7 +1398,30 @@ export const networkingWeek06PerformanceComparison: ProgramContent & { slug: str
     updatedAt: '2023-01-01T00:00:00Z',
 };
 
-networkingWeek06Intro.children = [networkingWeek06LectureContent, networkingWeek06Readings];
+export const networkingWeek06Assignment: ProgramContent & { slug: string } = {
+    id: 'week-06-assignment',
+    slug: 'assignment',
+    programId: 'networking-program-1',
+    parentId: 'week-06',
+    title: 'Assignment 06',
+    description: 'Build a serialization library with endianness conversion, varint/ZigZag encoding, and bitpacking streams.',
+    type: 0, // Page
+    body: networkingWeek06AssignmentMd,
+    sortOrder: 3,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 120,
+    visibility: 1, // Published
+    program: networkingProgram,
+    parent: networkingWeek06Intro,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+networkingWeek06Intro.children = [networkingWeek06LectureContent, networkingWeek06Readings, networkingWeek06Assignment];
 networkingWeek06LectureContent.children = [
     networkingWeek06WhySerialization,
     networkingWeek06Endianness,
