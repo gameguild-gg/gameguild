@@ -18,7 +18,67 @@ $$\text{bits\_required}(\min, \max) = \lceil \log_2(\max - \min + 1) \rceil$$
 
 A player with position (10 bits × 3), health (7 bits), heading (9 bits), team (2 bits), and alive (1 bit) uses **40 bits (5 bytes)** instead of 20 bytes with raw types — **4× compression**.
 
-## BitWriter and BitReader
+## The Scratch Register Technique
+
+Before looking at the code, let's understand the core algorithm. The challenge: we want to write arbitrary numbers of bits (10, 7, 9, 2, 1...) but we can only send **whole bytes**. A 10-bit value straddles two bytes. A 7-bit value leaves 1 bit of the current byte unused for the next field.
+
+The solution is a **scratch register** — a 64-bit integer (`uint64_t`) used as a staging area for bits before they're committed to the output buffer.
+
+### How It Works
+
+The writer maintains two pieces of state:
+
+- `scratch_` — a `uint64_t` holding pending bits, packed from the LSB (least significant bit) side
+- `scratch_bits_` — an `int` counting how many bits in `scratch_` are live data
+
+```
+scratch_ (64 bits wide)
+┌──────────────────────────────────────────────────────────────────┐
+│     unused (zeros)            │    live pending bits            │
+│  bits 63 ─── scratch_bits_    │    bits (scratch_bits_-1) ─── 0 │
+└──────────────────────────────────────────────────────────────────┘
+```
+
+**Writing** `N` bits with value `V` follows three steps:
+
+1. **Shift and merge:** `scratch_ |= uint64_t(V) << scratch_bits_` — the new value slots in above the existing pending bits
+2. **Bump counter:** `scratch_bits_ += N`
+3. **Drain full bytes:** while `scratch_bits_ >= 8`, extract the lowest byte, push it to the output buffer, then `scratch_ >>= 8` and `scratch_bits_ -= 8`
+
+### Why 64 bits?
+
+Between drains, we can have up to 7 leftover bits from a previous write. A single `write_bits` call can add up to 32 new bits. That's 7 + 32 = 39 bits maximum in flight — too many for a 32-bit register, but well within 64 bits.
+
+### Step-by-Step Example
+
+Write `player.health = 42` (7 bits) then `player.heading = 180` (9 bits):
+
+| Step | Operation                                             | `scratch_` (binary, LSB→) | `scratch_bits_` | Buffer         |
+| ---- | ----------------------------------------------------- | ------------------------- | --------------- | -------------- |
+| 0    | Initial state                                         | `(empty)`                 | 0               | `[]`           |
+| 1    | `write_bits(42, 7)` — OR `0b0101010` at position 0    | `...0_0101010`            | 7               | `[]`           |
+| 1a   | 7 < 8 — no drain                                      | —                         | —               | —              |
+| 2    | `write_bits(180, 9)` — OR `0b010110100` at position 7 | `...010110100_0101010`    | 16              | `[]`           |
+| 2a   | 16 ≥ 8 — drain: emit `scratch_ & 0xFF` = `0x2A`       | `...0_10110100`           | 8               | `[0x2A]`       |
+| 2b   | 8 ≥ 8 — drain: emit `scratch_ & 0xFF` = `0x5A`        | `(empty)`                 | 0               | `[0x2A, 0x5A]` |
+
+Result: 16 bits packed into exactly 2 bytes with **zero** wasted bits between fields.
+
+### Reading (BitReader) — The Mirror
+
+The reader uses an identical scratch register, but in reverse:
+
+1. **Fill:** while `scratch_bits_ < N`, load the next byte from the input buffer into `scratch_` at position `scratch_bits_`, then `scratch_bits_ += 8`
+2. **Extract:** `value = scratch_ & ((1ULL << N) - 1)` — mask out the lowest N bits
+3. **Consume:** `scratch_ >>= N` and `scratch_bits_ -= N`
+
+The reader loads bytes on demand (not all at once), so it works identically to the writer but pulling bits out instead of pushing them in.
+
+### The Flush Problem
+
+After writing all fields, the scratch register may still hold 1–7 leftover bits that haven't been emitted as a complete byte. Calling `flush()` pushes that final partial byte (padded with zeros in the high bits). Forgetting to flush is the most common BitWriter bug — the last few bits silently vanish.
+
+## BitWriter and BitReader Implementation
 
 The fundamental abstractions for bitpacking are a `BitWriter` (serializer) and `BitReader` (deserializer) that work at the bit level:
 

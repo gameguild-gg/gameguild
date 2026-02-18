@@ -133,37 +133,33 @@ Floating-point numbers (IEEE 754) also have endianness. The standard approach is
 
 ```cpp
 #include <boost/endian/conversion.hpp>
-#include <cstring>
 
 // Serialize a float to network byte order
 void write_float(uint8_t* dest, float value) {
-    uint32_t bits;
-    std::memcpy(&bits, &value, sizeof(bits));  // type-punning via memcpy
-    bits = boost::endian::native_to_big(bits);
-    std::memcpy(dest, &bits, sizeof(bits));
+    *(uint32_t*)dest = boost::endian::native_to_big(*(uint32_t*)&value);
 }
 
 // Deserialize a float from network byte order
 float read_float(const uint8_t* src) {
-    uint32_t bits;
-    std::memcpy(&bits, src, sizeof(bits));
-    bits = boost::endian::big_to_native(bits);
-    float value;
-    std::memcpy(&value, &bits, sizeof(value));
-    return value;
+    uint32_t bits = boost::endian::big_to_native(*(const uint32_t*)src);
+    return *(float*)&bits;
 }
 ```
 
-::: tip "C++20: Use std::bit_cast instead of memcpy for type-punning"
+Cast the float's address to `uint32_t*` to reinterpret the bits, endian-swap, and write directly.
+
+::: tip "C++20 alternative: std::bit_cast"
+
+`std::bit_cast` does the same reinterpretation without raw pointer casts:
 
 ```cpp
 #include <bit>
 
-uint32_t bits = std::bit_cast<uint32_t>(my_float);
-float value = std::bit_cast<float>(bits);
+uint32_t bits = std::bit_cast<uint32_t>(my_float);  // float → uint32_t
+float value   = std::bit_cast<float>(bits);          // uint32_t → float
 ```
 
-`std::bit_cast` is constexpr-capable and clearer in intent than `memcpy`. Both are well-defined — `reinterpret_cast<uint32_t*>(&my_float)` is **not** (it violates strict aliasing).
+Constexpr-capable and less cryptic than the pointer cast kung fu.
 
 :::
 
@@ -186,6 +182,6 @@ This is a low-level primitive — prefer Boost.Endian's `native_to_big` / `big_t
 | ------------------------------------------- | -------------------------------------- |
 | Forgetting to convert before sending        | Receiver reads garbage values          |
 | Converting twice (send + receive both swap) | Double-swap = correct only by accident |
-| Using `htonl` on a `float`                  | Wrong — `htonl` takes `uint32_t`       |
+| Using `htonl` on a `float`                  | Wrong, `htonl` takes `uint32_t`        |
 | Assuming all platforms are little-endian    | Breaks on PowerPC, big-endian ARM mode |
 | Not converting length-prefix header bytes   | Framing logic reads wrong message size |
