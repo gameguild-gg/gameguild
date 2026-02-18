@@ -241,7 +241,7 @@ Requirements:
 - `serialize_game_object` must serialize **both** the `id` and the nested `position` (all 3 floats)
 - Round-trip: serialize a `GameObject`, deserialize into a new `GameObject`, verify all fields match
 - Float comparison: use an epsilon check (e.g., `std::abs(a - b) < 0.1f`) if you quantize, or exact equality if you serialize raw bytes
-- You may use `std::memcpy` to reinterpret floats as `uint32_t` for byte-level serialization, or use your compressed floats from the extra credit, or any other method
+- You may use `std::bit_cast<uint32_t>(float_val)` to reinterpret floats as `uint32_t` for byte-level serialization, or use your compressed floats from the extra credit, or any other method
 
 ---
 
@@ -252,7 +252,7 @@ Implement protobuf-style tag-value encoding functions in `protobuf.h`. This conn
 ```cpp
 #include "varint.h"
 #include "gameobject.h"
-#include <cstring>  // for memcpy
+#include <bit>  // for std::bit_cast
 
 // Wire types from the protobuf specification
 enum class WireType : uint8_t {
@@ -295,7 +295,7 @@ Requirements:
 - `encode_proto_game_object` must produce valid protobuf wire format:
   - Field 1 (`id`): write tag (field 1, VARINT) + varint-encoded id
   - Field 2 (`position`): write tag (field 2, LEN) + varint-encoded byte length + nested Position payload
-  - Nested Position: three I32 fields (tag + 4 raw bytes each), floats reinterpreted as `uint32_t` via `std::memcpy`
+  - Nested Position: three I32 fields (tag + 4 raw bytes each), floats reinterpreted as `uint32_t` via `std::bit_cast`
 - Round-trip: encode a `GameObject`, decode it, verify all fields match (exact float equality since no quantization)
 - **Verification hint**: you can check your encoding with `echo -n '\xAA\xBB...' | protoc --decode_raw` if you have protoc installed (not required)
 
