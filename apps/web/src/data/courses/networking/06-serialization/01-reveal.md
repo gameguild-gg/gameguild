@@ -134,14 +134,22 @@ std::vector<uint8_t> serialize(const Player& p) {
     };
 
     append(p.id);
-    // float → uint32_t via memcpy, then endian-swap
-    uint32_t fx; std::memcpy(&fx, &p.x, 4); append(fx);
-    uint32_t fy; std::memcpy(&fy, &p.y, 4); append(fy);
-    uint32_t fz; std::memcpy(&fz, &p.z, 4); append(fz);
+    // *(uint32_t*)&p.x reads the float's raw bits as a uint32_t:
+    //   &p.x       → address of the float
+    //   (uint32_t*)→ treat that address as a pointer to uint32_t
+    //   *          → dereference: read the 4 bytes as a uint32_t
+    append(*(uint32_t*)&p.x);
+    append(*(uint32_t*)&p.y);
+    append(*(uint32_t*)&p.z);
     append(p.health);
     return buf;
 }
 ```
+
+C++20 alternative, less cryptic:
+
+- `std::bit_cast<uint32_t>(my_float)`
+- `std::bit_cast<float>(bits)`
 
 ---
 
@@ -301,23 +309,14 @@ Floats also have endianness. Reinterpret as `uint32_t`, swap, transmit:
 
 ```cpp
 void write_float(uint8_t* dest, float value) {
-    uint32_t bits;
-    std::memcpy(&bits, &value, sizeof(bits));
-    bits = boost::endian::native_to_big(bits);
-    std::memcpy(dest, &bits, sizeof(bits));
+    *(uint32_t*)dest = boost::endian::native_to_big(*(uint32_t*)&value);
 }
 
 float read_float(const uint8_t* src) {
-    uint32_t bits;
-    std::memcpy(&bits, src, sizeof(bits));
-    bits = boost::endian::big_to_native(bits);
-    float value;
-    std::memcpy(&value, &bits, sizeof(value));
-    return value;
+    uint32_t bits = boost::endian::big_to_native(*(const uint32_t*)src);
+    return *(float*)&bits;
 }
 ```
-
-C++20 alternative: `std::bit_cast<uint32_t>(my_float)` — cleaner, constexpr.
 
 ---
 
@@ -562,17 +561,19 @@ message Player {
 
 ## Protobuf: Varints
 
-Variable-length integer encoding — small values use fewer bytes:
+Variable-length integer encoding, small values use fewer bytes (little-endian varint):
 
 ```
-Value 1:     0x01              → 1 byte
-Value 127:   0x7F              → 1 byte
-Value 128:   0x80 0x01         → 2 bytes
-Value 300:   0xAC 0x02         → 2 bytes
-Value 16384: 0x80 0x80 0x01    → 3 bytes
+Value 1:       0_0000001                          → 1 byte
+Value 127:     0_1111111                          → 1 byte
+Value 128:     1_0000000  0_0000001               → 2 bytes
+Value 300:     1_0101100  0_0000010               → 2 bytes
+Value 16384:   1_0000000  1_0000000  0_0000001    → 3 bytes
+               ↑                     ↑
+               MSB=1: more           MSB=0: last byte
 ```
 
-Each byte: 7 bits for data + 1 bit (MSB) as continuation flag.
+Each byte: 7 data bits + 1 continuation bit (MSB).
 
 **MSB** = **Most Significant Bit** — the highest-order (leftmost) bit in a byte.
 
@@ -580,19 +581,40 @@ MSB = 1 → "more bytes follow." MSB = 0 → "last byte."
 
 ---
 
+## Why Little-Endian Varint Order?
+
+Varints send the **least significant** 7-bit group first. This lets the decoder accumulate the result with a simple shift-and-OR as bytes arrive — no need to know the total length in advance:
+
+```cpp
+uint32_t result = 0;
+int shift = 0;
+for (;;) {
+    uint8_t byte = *ptr++;
+    result |= (uint32_t(byte & 0x7F) << shift);  // OR into position
+    if ((byte & 0x80) == 0) break;                // MSB=0 → done
+    shift += 7;
+}
+```
+
+Each new byte's 7 data bits slot into the **next higher** bit position. No buffering, no backtracking, no second pass — you build the integer incrementally as you read.
+
+Big-endian varint order would require knowing the total byte count first (to compute the initial shift), or buffering all bytes before decoding. Little-endian order is simpler for both hardware and software decoders.
+
+---
+
 ## Protobuf: Encoding 300 as a Varint
 
 ```
-300 in binary:   1 0010 1100
+300 in binary:   0b100101100
 
 Split into 7-bit groups:
-  0000010   0101100
+    0000010    0101100
 
 Add continuation bits:
-  00000010  10101100
+  0_0000010  1_0101100
 
 Reverse (little-endian varint order):
-  10101100  00000010
+  1_0101100  0_0000010
 
 Wire bytes: 0xAC  0x02
 ```
@@ -601,26 +623,59 @@ Only 2 bytes instead of 4 for a `uint32_t`.
 
 ---
 
-## Protobuf: Tag-Length-Value (TLV)
+## Varint Overhead: The 7/8 Tax
 
-Each field on the wire:
+Each varint byte carries only 7 data bits (the 8th is the continuation flag). This means large values need **more** bytes than their fixed-width counterparts:
 
-```mermaid
-packet-beta
-title "Protobuf Field Encoding"
-0-7: "Tag (varint)"
-8-15: "Length (varint)"
-16-47: "Value (variable)"
+| Type       | Fixed Size | Max Value Varint Size   | Breakeven Point                        |
+| ---------- | ---------- | ----------------------- | -------------------------------------- |
+| `uint8_t`  | 1 byte     | 2 bytes (255)           | Values > 127 cost more                 |
+| `uint16_t` | 2 bytes    | 3 bytes (65 535)        | Values > 16 383 cost more              |
+| `uint32_t` | 4 bytes    | 5 bytes (4 294 967 295) | Values > 2 097 151 (21 bits) cost more |
+| `uint64_t` | 8 bytes    | 10 bytes                | Values > 2^56 − 1 cost more            |
+
+At the extremes, varints are **worse** — a `uint32_t` max value costs 5 bytes instead of 4.
+
+---
+
+## Why Varints Win Anyway
+
+In practice, most integers are small:
+
 ```
+ Value Range     │ Varint Bytes │ Fixed uint32 │ Savings  │ Typical Game Probability
+─────────────────┼──────────────┼──────────────┼──────────┼─────────────────────────
+ 0     – 127     │ 1 byte       │ 4 bytes      │  75%     │ ~70%  (IDs, health, flags)
+ 128   – 16383   │ 2 bytes      │ 4 bytes      │  50%     │ ~20%  (positions, scores)
+ 16384 – 2097151 │ 3 bytes      │ 4 bytes      │  25%     │  ~8%  (timestamps, large coords)
+ 2097152+        │ 4-5 bytes    │ 4 bytes      │ 0 to -25%│  ~2%  (globally unique IDs)
+```
+
+Real-world data is heavily skewed toward small values:
+
+- **Entity IDs** in a 100-player game: 0–99 → 1 byte (75% savings)
+- **Array lengths**: usually < 100 → 1 byte
+- **Health, ammo, team**: all < 128 → 1 byte
+- **Deltas between frames**: usually ±small → 1-2 bytes (with ZigZag)
+
+You pay 1 extra byte on rare max-value cases to save 2-3 bytes on the **common** case. Over thousands of fields per second, the savings compound massively.
+
+---
+
+## Protobuf: Tag-Value Encoding
 
 Tag encodes field number + wire type: `tag = (field_number << 3) | wire_type`
 
-| Wire Type | Meaning | Used For                       |
-| --------- | ------- | ------------------------------ |
-| 0         | VARINT  | int32, uint32, bool, enum      |
-| 1         | I64     | fixed64, double                |
-| 2         | LEN     | string, bytes, nested messages |
-| 5         | I32     | fixed32, float                 |
+The wire type tells the decoder how to read the value — **no separate length field** is needed for most types:
+
+| Wire Type | Meaning | Size Known From            | Used For                       |
+| --------- | ------- | -------------------------- | ------------------------------ |
+| 0         | VARINT  | Self-delimiting (MSB=0)    | int32, uint32, bool, enum      |
+| 1         | I64     | Always 8 bytes             | fixed64, double                |
+| 2         | LEN     | **Length prefix (varint)** | string, bytes, nested messages |
+| 5         | I32     | Always 4 bytes             | fixed32, float                 |
+
+Only wire type 2 (LEN) uses the full Tag + Length + Value pattern. The others are just **Tag + Value** — the wire type itself tells the decoder how many bytes to consume.
 
 ---
 
@@ -631,35 +686,59 @@ Varints encode **unsigned** integers efficiently: small values use few bytes.
 But `int32 = -1` in two's complement is `0xFFFFFFFF` (all bits set) — varint treats this as a huge unsigned number:
 
 ```
--1 as uint32 = 4,294,967,295 → varint needs 10 bytes!
--2 as uint32 = 4,294,967,294 → varint needs 10 bytes!
+-1 as uint32 = 4,294,967,295 → varint needs 5 bytes!
+-2 as uint32 = 4,294,967,294 → varint needs 5 bytes!
 ```
 
-Every negative `int32` costs **10 bytes** because the MSB (sign bit) is always 1, so the upper bits are all set.
+Every negative `int32` costs **5 bytes** (the maximum for 32-bit varints) because the sign bit sets all upper bits to 1, leaving zero leading zeros for the encoder to skip.
 
 Varints are an encoding — they don't know about signs. We need a **preprocessing step**.
 
 ---
 
-## ZigZag: Making Signed Values Varint-Friendly
+## Why Negative Numbers Are Expensive
 
-**ZigZag is not a replacement for varints — it's a transform applied before varint encoding.**
-
-It interleaves positive and negative values so small-magnitude numbers map to small unsigned numbers:
+In two's complement, the sign bit fills all upper bits with 1s:
 
 ```
- 0 → 0        (small magnitude → small varint)
--1 → 1
- 1 → 2
--2 → 3
- 2 → 4
--3 → 5
- 3 → 6
+ Value   │ 32-bit Binary                          │ Leading 0s
+─────────┼────────────────────────────────────────┼──────────
+   1     │ 00000000 00000000 00000000 00000001    │ 31
+   5     │ 00000000 00000000 00000000 00000101    │ 29
+  -1     │ 11111111 11111111 11111111 11111111    │  0
+  -2     │ 11111111 11111111 11111111 11111110    │  0
+  -5     │ 11111111 11111111 11111111 11111011    │  0
 ```
+
+Varints stop encoding when the remaining bits are all zero. Leading 0s = free compression.
+
+**Negative numbers have zero leading 0s** → varint always uses the maximum 5-10 bytes.
+
+---
+
+## ZigZag: Maximizing Leading Zeros
+
+ZigZag transforms signed values so that **small magnitudes** (positive or negative) always have many leading zeros:
+
+```
+ Value │ Two's Compl. (32-bit)               │ ZigZag │ ZigZag Binary                       │ Leading 0s
+───────┼─────────────────────────────────────┼────────┼─────────────────────────────────────┼──────────
+   0   │ 00000000 00000000 00000000 00000000 │    0   │ 00000000 00000000 00000000 00000000 │ 32
+  -1   │ 11111111 11111111 11111111 11111111 │    1   │ 00000000 00000000 00000000 00000001 │ 31
+   1   │ 00000000 00000000 00000000 00000001 │    2   │ 00000000 00000000 00000000 00000010 │ 30
+  -2   │ 11111111 11111111 11111111 11111110 │    3   │ 00000000 00000000 00000000 00000011 │ 30
+   2   │ 00000000 00000000 00000000 00000010 │    4   │ 00000000 00000000 00000000 00000100 │ 29
+  -3   │ 11111111 11111111 11111111 11111101 │    5   │ 00000000 00000000 00000000 00000101 │ 29
+   3   │ 00000000 00000000 00000000 00000011 │    6   │ 00000000 00000000 00000000 00000110 │ 29
+```
+
+The key insight: **small magnitude → small unsigned → many leading zeros → fewer varint bytes**.
 
 Formula: `zigzag(n) = (n << 1) ^ (n >> 31)` (for 32-bit)
 
-Reverse: `original(z) = (z >>> 1) ^ -(z & 1)`
+Reverse: `original(z) = (z >> 1) ^ -(z & 1)`
+
+**Varint size caveat:** ZigZag maps `int32` → `uint32`, so the output can be up to $2^{32}-1$, which needs **5 varint bytes** ($\lceil 32/7 \rceil = 5$). To stay within 4 varint bytes (same cost as fixed `uint32`), you only get $4 \times 7 = 28$ data bits — max ZigZag output $2^{28}-1 = 268\,435\,455$. That covers signed values **−134,217,728 to +134,217,727** ($\pm 2^{27}$). Beyond that range, ZigZag + varint costs 5 bytes — one more than a fixed `uint32`.
 
 ---
 
@@ -673,13 +752,13 @@ Signed value → ZigZag transform → Varint encode → Wire bytes
 | ------------ | --------------------------- | -------------------- |
 | `0`          | 1 byte                      | 1 byte               |
 | `1`          | 1 byte                      | 1 byte               |
-| `-1`         | **10 bytes**                | 1 byte               |
+| `-1`         | **5 bytes**                 | 1 byte               |
 | `63`         | 1 byte                      | 1 byte               |
-| `-64`        | **10 bytes**                | 1 byte               |
+| `-64`        | **5 bytes**                 | 1 byte               |
 | `300`        | 2 bytes                     | 2 bytes              |
-| `-300`       | **10 bytes**                | 2 bytes              |
+| `-300`       | **5 bytes**                 | 2 bytes              |
 
-ZigZag saves **8 bytes per negative value** when magnitudes are small.
+ZigZag saves **4 bytes per negative value** when magnitudes are small.
 
 Protobuf uses `sint32`/`sint64` types for ZigZag; plain `int32` uses raw varint (wasteful for negatives).
 
@@ -691,14 +770,16 @@ Protobuf uses `sint32`/`sint64` types for ZigZag; plain `int32` uses raw varint 
 Player { id=42, x=1.5, y=2.0, z=3.7, health=100 }
 ```
 
-| Field     | Tag  | Wire Type | Value Bytes | Total   |
-| --------- | ---- | --------- | ----------- | ------- |
-| id        | 0x08 | VARINT    | 0x2A (1B)   | 2B      |
-| x         | 0x15 | I32       | 4 bytes     | 5B      |
-| y         | 0x1D | I32       | 4 bytes     | 5B      |
-| z         | 0x25 | I32       | 4 bytes     | 5B      |
-| health    | 0x28 | VARINT    | 0x64 (1B)   | 2B      |
-| **Total** |      |           |             | **19B** |
+| Field     | Tag (1B) | Wire Type | Value Bytes | Total   |
+| --------- | -------- | --------- | ----------- | ------- |
+| id        | 0x08     | VARINT    | 0x2A (1B)   | 2B      |
+| x         | 0x15     | I32       | 4 bytes     | 5B      |
+| y         | 0x1D     | I32       | 4 bytes     | 5B      |
+| z         | 0x25     | I32       | 4 bytes     | 5B      |
+| health    | 0x28     | VARINT    | 0x64 (1B)   | 2B      |
+| **Total** |          |           |             | **19B** |
+
+No length field here — all fields are VARINT or I32, so the decoder knows the size from the wire type alone.
 
 JSON `{"id":42,"x":1.5,"y":2.0,"z":3.7,"health":100}` = **49 bytes**. Protobuf = 2.6× smaller.
 
@@ -783,7 +864,7 @@ $$\text{bits\_required}(\min, \max) = \lceil \log_2(\max - \min + 1) \rceil$$
 
 ## Bitpacking: Maximum Compression
 
-Instead of 3 × `float` (96 bits) for position:
+Instead of 3 × `int` (96 bits) for position:
 
 ```
 Position range: 0–1023 → needs 10 bits each
@@ -799,6 +880,59 @@ void serialize(BitWriter& writer, const Position& pos) {
 ```
 
 Used by AAA games: Overwatch, Rocket League, Mortal Kombat
+
+---
+
+## The Problem: Bits Don't Fit Neatly Into Bytes
+
+We want to write 10 bits, then 7 bits, then 9 bits — but we can only send **whole bytes**.
+
+Naive approach: one byte per field → wastes the unused bits.
+
+We need a way to **accumulate bits** across field boundaries and **emit bytes** only when we have 8+.
+
+Solution: a **scratch register** — a 64-bit integer that acts as a staging area.
+
+---
+
+## The Scratch Register Technique
+
+A `uint64_t` scratch holds pending bits. A counter tracks how many bits are live:
+
+```
+ scratch_ (64 bits)
+┌──────────────────────────────────────────────────────┐
+│  unused high bits  │  pending bits (scratch_bits_)   │
+└──────────────────────────────────────────────────────┘
+                     ↑ LSB side
+```
+
+**Write:** shift new value to `scratch_bits_` position, OR it in, bump counter.
+
+**Drain:** while ≥ 8 bits pending, extract lowest byte → push to buffer, shift right by 8.
+
+**Why 64 bits?** We may have up to 7 leftover bits + 32 new bits = 39 bits. A 64-bit register handles this without overflow.
+
+---
+
+## Scratch Register: Step-by-Step
+
+Write `health = 42` (7 bits), then `heading = 180` (9 bits):
+
+```
+Step 1: write_bits(42, 7)     42 = 0b0101010
+  scratch_ = 00000000 ... 00_0101010      scratch_bits_ = 7
+  (7 < 8, no byte emitted yet)
+
+Step 2: write_bits(180, 9)    180 = 0b010110100
+  scratch_ = 00000000 ... 010110100_0101010  scratch_bits_ = 16
+  (16 ≥ 8 → emit byte)
+  emit 0x2A (0101010_0 from LSB)    scratch_ >>= 8   bits = 8
+  (8 ≥ 8 → emit byte)
+  emit 0x5A (01011010 from LSB)     scratch_ >>= 8   bits = 0
+```
+
+2 bytes emitted. 16 bits of data packed with **zero** wasted bits between fields.
 
 ---
 
@@ -940,7 +1074,7 @@ float decompress_float(uint32_t compressed,
 }
 ```
 
-Position in 100m × 100m with 0.1m precision: 10 bits per axis = 30 bits vs 96 bits.
+Position in 100m × 100m: 10 bits per axis → $100 / (2^{10}-1) = 100/1023 \approx 9.8\text{cm}$ step size. 30 bits total vs 96 bits for 3 raw floats.
 
 ---
 
@@ -956,6 +1090,34 @@ Quaternions: `(w, x, y, z)` where `w² + x² + y² + z² = 1`. Exploit the const
 **Size: 2 + 3 × 9 = 29 bits** vs 4 × 32 = 128 bits. **4.4× compression.**
 
 Overwatch uses 9 bits per component. Precision error: ~0.06° — imperceptible in gameplay.
+
+---
+
+## Smallest Three: Worked Example (Encode)
+
+Quaternion representing a 45° rotation around the Y axis:
+
+$$q = (w, x, y, z) = (0.924, 0.0, 0.383, 0.0)$$
+
+**Step 1 — Find the largest component:** $|w| = 0.924$ is the largest → store index `0` (2 bits).
+
+**Step 2 — Drop `w`, keep the other three:** $x = 0.0,\; y = 0.383,\; z = 0.0$
+
+Each is in $[-\frac{1}{\sqrt{2}}, \frac{1}{\sqrt{2}}] \approx [-0.707, 0.707]$.
+
+**Step 3 — Quantize each to 9 bits** (512 steps over the range 1.414):
+
+$$\text{encoded} = \left\lfloor \frac{v + 0.707}{1.414} \times 511 + 0.5 \right\rfloor$$
+
+| Component | Value | Encoded (9 bits) | Binary      |
+| --------- | ----- | ---------------- | ----------- |
+| x         | 0.0   | 256              | `100000000` |
+| y         | 0.383 | 394              | `110001010` |
+| z         | 0.0   | 256              | `100000000` |
+
+**Step 4 — Pack:** `[00][100000000][110001010][100000000]` = **29 bits total**.
+
+**Step 5 — Reconstruct `w`:** $w = \sqrt{1 - x^2 - y^2 - z^2} = \sqrt{1 - 0 - 0.147 - 0} \approx 0.924$
 
 ---
 
@@ -1166,6 +1328,80 @@ flowchart TD
     F -->|Yes| I["Custom Bitpacking"]
     F -->|No| J["Protobuf or<br/>MessagePack"]
 ```
+
+---
+
+## Deserialization Is an Attack Surface
+
+Every byte from the network is **untrusted input**. A malicious or buggy peer can send:
+
+- A varint that never terminates (MSB always 1) → infinite loop
+- A string length of 2 GB → out-of-memory crash
+- `health = 255` when max is 100 → game logic corruption
+- A truncated message → read past buffer end → undefined behavior
+
+Deserialization bugs are the #1 source of network security vulnerabilities (CVEs) in game servers.
+
+---
+
+## Defensive Deserialization: The Rules
+
+1. **Bound every read** — never read past the buffer:
+
+```cpp
+uint32_t read_bits(int bits) {
+    if (bits_read_ + bits > total_bits_)
+        throw std::runtime_error("buffer overrun");
+    // ... normal read ...
+}
+```
+
+2. **Validate ranges** — reject values outside expected bounds:
+
+```cpp
+player.health = reader.read_bits(7);  // 0-127 raw
+if (player.health > 100)
+    return false;  // invalid: health max is 100
+```
+
+3. **Cap varint length** — stop after 5 bytes for uint32, 10 for uint64:
+
+```cpp
+for (int i = 0; i < 5; i++) {  // max 5 bytes for uint32
+    uint8_t byte = *ptr++;
+    result |= (uint32_t(byte & 0x7F) << shift);
+    if ((byte & 0x80) == 0) return result;
+    shift += 7;
+}
+throw std::runtime_error("varint too long");
+```
+
+4. **Cap string/array lengths** — reject before allocating.
+
+---
+
+## Fuzz Testing Your Deserializer
+
+Feed random bytes to your deserializer. It should **never crash** — only return errors:
+
+```cpp
+// Fuzz test: 10,000 random buffers
+std::mt19937 rng(42);
+for (int i = 0; i < 10000; i++) {
+    size_t len = rng() % 256;
+    std::vector<uint8_t> garbage(len);
+    for (auto& b : garbage) b = rng() % 256;
+
+    BitReader reader(garbage.data(), garbage.size());
+    PlayerState player{};
+    // Must not crash — returning false is fine
+    serialize_player(reader, player);
+}
+```
+
+If any random input causes a crash, segfault, or infinite loop — you have a **security bug**.
+
+Professional tools: [AFL](https://lcamtuf.coredump.cx/afl/), [libFuzzer](https://llvm.org/docs/LibFuzzer.html), [Honggfuzz](https://honggfuzz.dev/).
 
 ---
 

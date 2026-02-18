@@ -117,16 +117,13 @@ std::vector<uint8_t> serialize(const Player& p) {
     };
 
     append(p.id);
-
-    // Floats: convert to uint32_t via bit_cast, then endian-swap
-    uint32_t fx, fy, fz;
-    std::memcpy(&fx, &p.x, 4);
-    std::memcpy(&fy, &p.y, 4);
-    std::memcpy(&fz, &p.z, 4);
-    append(fx);
-    append(fy);
-    append(fz);
-
+    // *(uint32_t*)&p.x reads the float's raw bits as a uint32_t:
+    //   &p.x       → address of the float
+    //   (uint32_t*)→ treat that address as a pointer to uint32_t
+    //   *          → dereference: read the 4 bytes as a uint32_t
+    append(*(uint32_t*)&p.x);
+    append(*(uint32_t*)&p.y);
+    append(*(uint32_t*)&p.z);
     append(p.health);
     return buf;
 }
@@ -146,9 +143,9 @@ Player deserialize(const uint8_t* data) {
 
     uint32_t fx, fy, fz;
     read(fx); read(fy); read(fz);
-    std::memcpy(&p.x, &fx, 4);
-    std::memcpy(&p.y, &fy, 4);
-    std::memcpy(&p.z, &fz, 4);
+    p.x = *(float*)&fx;
+    p.y = *(float*)&fy;
+    p.z = *(float*)&fz;
 
     read(p.health);
     return p;
