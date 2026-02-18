@@ -54,6 +54,7 @@ import networkingWeek06CompressionMd from './06-serialization/02g-compression.md
 import networkingWeek06PerformanceComparisonMd from './06-serialization/02h-performance-comparison.md';
 import networkingWeek06ReadingsMd from './06-serialization/03-readings.md';
 import networkingWeek06AssignmentMd from './06-serialization/04-assignment.md';
+import networkingWeek06QuizMd from './06-serialization/05-quiz.md';
 import networkingSyllabus from './syllabus.md';
 
 export const networkingProgram: Program = {
@@ -1212,6 +1213,29 @@ export const networkingWeek06Readings: ProgramContent & { slug: string } = {
     updatedAt: '2023-01-01T00:00:00Z',
 };
 
+export const networkingWeek06Quiz: ProgramContent & { slug: string } = {
+    id: 'week-06-quiz',
+    slug: 'quiz',
+    programId: 'networking-program-1',
+    parentId: 'week-06',
+    title: 'Quiz 06',
+    description: 'Test your understanding of serialization, endianness, struct packing, binary formats, and compression techniques.',
+    type: 0, // Page
+    body: networkingWeek06QuizMd,
+    sortOrder: 3,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 30,
+    visibility: 1, // Published
+    program: networkingProgram,
+    parent: networkingWeek06Intro,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
 // Week 06 Lecture Sections (split from main lecture)
 
 export const networkingWeek06WhySerialization: ProgramContent & { slug: string } = {
@@ -1407,7 +1431,7 @@ export const networkingWeek06Assignment: ProgramContent & { slug: string } = {
     description: 'Build a serialization library with endianness conversion, varint/ZigZag encoding, and bitpacking streams.',
     type: 0, // Page
     body: networkingWeek06AssignmentMd,
-    sortOrder: 3,
+    sortOrder: 4,
     isRequired: true,
     gradingMethod: 0, // None
     maxPoints: null,
@@ -1421,7 +1445,7 @@ export const networkingWeek06Assignment: ProgramContent & { slug: string } = {
     updatedAt: '2023-01-01T00:00:00Z',
 };
 
-networkingWeek06Intro.children = [networkingWeek06LectureContent, networkingWeek06Readings, networkingWeek06Assignment];
+networkingWeek06Intro.children = [networkingWeek06LectureContent, networkingWeek06Readings, networkingWeek06Quiz, networkingWeek06Assignment];
 networkingWeek06LectureContent.children = [
     networkingWeek06WhySerialization,
     networkingWeek06Endianness,
