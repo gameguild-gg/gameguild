@@ -2,6 +2,7 @@ import { Product, ProductProgram, Program, ProgramContent, ProgramContentType } 
 
 // Markdown content imports
 import dataanalysisNumpyReveal from './numpy/reveal.md';
+import dataanalysisPandasDataFrameReveal from './pandas-dataframe/reveal.md';
 import dataanalysisPandasReveal from './pandas/reveal.md';
 import dataanalysisSyllabus from './syllabus.md';
 
@@ -136,9 +137,32 @@ export const dataanalysisPandasContent: ProgramContent = {
     updatedAt: '2023-01-01T00:00:00Z',
 };
 
+export const dataanalysisPandasDataFrameContent: ProgramContent = {
+    id: 'dataanalysis-pandas-dataframe',
+    programId: 'dataanalysis-program-1',
+    parentId: undefined,
+    title: 'Pandas: DataFrames',
+    description: 'Two-dimensional data structures: creating, inspecting, selecting, modifying, and analyzing DataFrames',
+    type: ProgramContentType.REVEAL,
+    body: dataanalysisPandasDataFrameReveal,
+    sortOrder: 4,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 60,
+    visibility: 1, // Published
+    program: dataanalysisProgram,
+    parent: undefined,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
 // Wire program contents
 dataanalysisProgram.programContents = [
     dataanalysisSyllabusContent,
     dataanalysisNumpyContent,
     dataanalysisPandasContent,
+    dataanalysisPandasDataFrameContent,
 ];
