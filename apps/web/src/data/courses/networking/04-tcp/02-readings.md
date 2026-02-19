@@ -9,7 +9,7 @@ Beej's Guide uses C and POSIX/Linux system calls directly. In this course, we'll
 | #   | Reading                                                                                                                              | Time   | Covers                                                                 |
 | --- | ------------------------------------------------------------------------------------------------------------------------------------ | ------ | ---------------------------------------------------------------------- |
 | 1   | [RFC 793 (TCP)](https://datatracker.ietf.org/doc/html/rfc793) — Sections 1-3.4 only                                                  | 25 min | TCP header format, connection states, three-way handshake, termination |
-| 2   | Glenn Fiedler, ["UDP vs. TCP"](https://gafferongames.com/post/udp_vs_tcp/)                                                           | 15 min | Head-of-line blocking, latency implications, when TCP fits             |
+| 2   | Glenn Fiedler, ["UDP vs. TCP"](https://gafferongames.com/post/udp_vs_tcp/)                                                           | 15 min | latency implications, when TCP fits                                    |
 | 3   | Beej's Guide, [Ch. 5.4–5.7 "System Calls"](https://beej.us/guide/bgnet/html/split/system-calls-or-bust.html#connect)                 | 25 min | `connect()`, `listen()`, `accept()`, `send()`, `recv()`                |
 | 4   | Beej's Guide, [Ch. 6.1–6.2 "Client-Server Background"](https://beej.us/guide/bgnet/html/split/client-server-background.html)         | 20 min | Complete TCP client/server example, connection flow                    |
 | 5   | Beej's Guide, [Ch. 7.3 "Handling Partial send()s"](https://beej.us/guide/bgnet/html/split/slightly-advanced-techniques.html#sendall) | 10 min | Stream semantics, message boundaries, `sendall()` pattern              |
@@ -42,7 +42,7 @@ I couldn't find a working link for that specific Hussein Nasser video on TCP con
 | Resource                                                                                          | Time   | What it does                                             |
 | ------------------------------------------------------------------------------------------------- | ------ | -------------------------------------------------------- |
 | [Wireshark TCP capture lab](https://wiki.wireshark.org/SampleCaptures) (download `http.cap`)      | 25 min | Analyze handshake, sequence numbers, window size, FIN    |
-| [Kurose/Ross TCP Lab](https://gaia.cs.umass.edu/kurose_ross/interactive/)                  | 15 min | Self-quiz on TCP segment structure, sequence/ack numbers |
+| [Kurose/Ross TCP Lab](https://gaia.cs.umass.edu/kurose_ross/interactive/)                         | 15 min | Self-quiz on TCP segment structure, sequence/ack numbers |
 | [TCP State Diagram Practice](https://www.cs.umd.edu/~shankar/417-F01/Slides/chapter3b/sld010.htm) | 10 min | Trace through connection states manually                 |
 
 ---
