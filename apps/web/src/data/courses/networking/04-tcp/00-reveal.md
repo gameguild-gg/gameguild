@@ -317,34 +317,59 @@ When receiver buffer fills completely:
 
 ---
 
-## Congestion Control: Slow Start
+## Congestion Control: Two Phases
+
+TCP congestion control has **two growth phases** separated by a threshold called **ssthresh** (slow start threshold):
+
+| Phase                    | Growth      | When Active     |
+| ------------------------ | ----------- | --------------- |
+| **Slow Start**           | Exponential | cwnd < ssthresh |
+| **Congestion Avoidance** | Linear      | cwnd ≥ ssthresh |
+
+**ssthresh** starts high (e.g. 65535 bytes) and is updated on packet loss.
+
+---
+
+## Phase 1: Slow Start (Exponential)
 
 Despite the name, grows **exponentially**:
 
 1. Start with cwnd = 1 MSS
-2. For each ACK, increase cwnd by 1 MSS
-3. Doubles cwnd every RTT
+2. For each ACK received, increase cwnd by 1 MSS
+3. Effect: cwnd **doubles** every RTT
 
 ```
-RTT 0: cwnd = 1
-RTT 1: cwnd = 2
-RTT 2: cwnd = 4
-RTT 3: cwnd = 8
-RTT 4: cwnd = 16
+RTT 0: cwnd = 1   (send 1 segment)
+RTT 1: cwnd = 2   (send 2 segments)
+RTT 2: cwnd = 4   (send 4 segments)
+RTT 3: cwnd = 8   (send 8 segments)
+RTT 4: cwnd = 16  (send 16 segments)
 ```
+
+Slow Start **ends** when cwnd reaches ssthresh → switch to Congestion Avoidance.
 
 ---
 
-## Congestion Control: Congestion Avoidance
+## Phase 2: Congestion Avoidance (Linear)
 
-After cwnd reaches ssthresh, switch to **AIMD**
+Once cwnd ≥ ssthresh, growth **slows down** to avoid flooding the network:
 
-**Additive Increase, Multiplicative Decrease**
+- **Additive Increase:** Increase cwnd by ~1 MSS per RTT (linear growth)
+- This means cwnd goes: ssthresh, ssthresh+1, ssthresh+2, ...
 
-- **Additive:** Increase cwnd by ~1 MSS per RTT (linear)
-- **Multiplicative:** On loss, cut cwnd in half
+When packet loss is detected:
 
-Creates "sawtooth" pattern for fairness
+- **Multiplicative Decrease:** Cut cwnd in half
+
+This is called **AIMD** (Additive Increase, Multiplicative Decrease).
+
+---
+
+## The Transition Visualized
+
+![Congestion Control Transition](<https://quickchart.io/chart?c=%7B%22type%22%3A%22line%22%2C%22data%22%3A%7B%22labels%22%3A%5B%220%22%2C%221%22%2C%222%22%2C%223%22%2C%224%22%2C%225%22%2C%226%22%2C%227%22%2C%228%22%2C%229%22%2C%2210%22%5D%2C%22datasets%22%3A%5B%7B%22label%22%3A%22cwnd%20(segments)%22%2C%22data%22%3A%5B1%2C2%2C4%2C8%2C16%2C17%2C18%2C19%2C20%2C21%2C22%5D%2C%22fill%22%3Afalse%2C%22borderColor%22%3A%22rgb(255%2C%2099%2C%20132)%22%2C%22backgroundColor%22%3A%22rgb(255%2C%2099%2C%20132)%22%2C%22tension%22%3A0%7D%2C%7B%22label%22%3A%22ssthresh%20%3D%2016%22%2C%22data%22%3A%5B16%2C16%2C16%2C16%2C16%2C16%2C16%2C16%2C16%2C16%2C16%5D%2C%22fill%22%3Afalse%2C%22borderColor%22%3A%22rgb(54%2C%20162%2C%20235)%22%2C%22borderDash%22%3A%5B5%2C5%5D%2C%22pointRadius%22%3A0%2C%22tension%22%3A0%7D%5D%7D%2C%22options%22%3A%7B%22title%22%3A%7B%22display%22%3Atrue%2C%22text%22%3A%22Slow%20Start%20(Exponential)%20%E2%86%92%20Congestion%20Avoidance%20(Linear)%22%7D%2C%22scales%22%3A%7B%22xAxes%22%3A%5B%7B%22scaleLabel%22%3A%7B%22display%22%3Atrue%2C%22labelString%22%3A%22Time%20(RTT)%22%7D%7D%5D%2C%22yAxes%22%3A%5B%7B%22scaleLabel%22%3A%7B%22display%22%3Atrue%2C%22labelString%22%3A%22cwnd%20(segments)%22%7D%2C%22ticks%22%3A%7B%22beginAtZero%22%3Atrue%7D%7D%5D%7D%2C%22annotation%22%3A%7B%22annotations%22%3A%5B%7B%22type%22%3A%22box%22%2C%22xScaleID%22%3A%22x-axis-0%22%2C%22yScaleID%22%3A%22y-axis-0%22%2C%22xMin%22%3A%220%22%2C%22xMax%22%3A%224%22%2C%22backgroundColor%22%3A%22rgba(75%2C%20192%2C%20192%2C%200.15)%22%2C%22borderColor%22%3A%22rgba(75%2C%20192%2C%20192%2C%200.4)%22%2C%22label%22%3A%7B%22enabled%22%3Atrue%2C%22content%22%3A%22Exponential%22%2C%22position%22%3A%22top%22%2C%22fontSize%22%3A11%7D%7D%2C%7B%22type%22%3A%22box%22%2C%22xScaleID%22%3A%22x-axis-0%22%2C%22yScaleID%22%3A%22y-axis-0%22%2C%22xMin%22%3A%224%22%2C%22xMax%22%3A%2210%22%2C%22backgroundColor%22%3A%22rgba(255%2C%20159%2C%2064%2C%200.15)%22%2C%22borderColor%22%3A%22rgba(255%2C%20159%2C%2064%2C%200.4)%22%2C%22label%22%3A%7B%22enabled%22%3Atrue%2C%22content%22%3A%22Linear%22%2C%22position%22%3A%22top%22%2C%22fontSize%22%3A11%7D%7D%5D%7D%7D%7D>)
+
+**Key insight:** The switch from exponential to linear happens at ssthresh — not from a loss event, but as a **preventive** measure to probe for capacity carefully.
 
 ---
 
@@ -355,17 +380,23 @@ Creates "sawtooth" pattern for fairness
 | Timeout          | ssthresh = cwnd/2, cwnd = 1, restart slow start    |
 | 3 Duplicate ACKs | ssthresh = cwnd/2, cwnd = ssthresh (fast recovery) |
 
+After loss, the cycle restarts: slow start (exponential) up to the new ssthresh, then congestion avoidance (linear) again.
+
 ---
 
-## Loss Example
+## Loss Example: Full Cycle
 
-If cwnd = 12 and timeout occurs:
+If cwnd = 12 and **timeout** occurs:
 
 ```
-New ssthresh = 12 ÷ 2 = 6
-New cwnd = 1
-→ Restart slow start until cwnd reaches 6
+1. ssthresh = 12 ÷ 2 = 6
+2. cwnd = 1  (restart slow start)
+3. Slow start: cwnd = 1 → 2 → 4 → reaches ssthresh (6)
+4. Switch to congestion avoidance: cwnd = 6 → 7 → 8 → 9 → ...
+5. Eventually another loss → repeat
 ```
+
+This creates the **sawtooth** pattern: rapid exponential ramp-up, gentle linear increase, then a sharp drop on loss.
 
 ---
 
