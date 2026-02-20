@@ -87,6 +87,14 @@ jobs:
         run: |
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git config --global user.name "github-actions[bot]"
+          git fetch --tags --force
+          # Delete any tags pointing to HEAD (created by semantic-release before failure)
+          TAGS=$(git tag --points-at HEAD)
+          for tag in $TAGS; do
+            echo "Deleting tag: $tag"
+            git push origin :refs/tags/$tag || true
+            git tag -d $tag || true
+          done
           git reset --hard HEAD~1
           git push origin main --force
         env:
