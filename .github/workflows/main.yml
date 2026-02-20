@@ -71,6 +71,30 @@ jobs:
           publish_dir: ./contributors
           force_orphan: true
 
+      - name: Restore baseline tag if unreachable
+        run: |
+          # Find the highest version tag in the repo
+          LATEST=$(git tag --sort=-v:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | head -1)
+          echo "Latest tag in repo: $LATEST"
+          if [ -z "$LATEST" ]; then
+            echo "No version tags found — semantic-release will start fresh."
+            exit 0
+          fi
+          # Check if the tag is reachable (an ancestor) of HEAD
+          if git merge-base --is-ancestor "$LATEST" HEAD 2>/dev/null; then
+            echo "$LATEST is an ancestor of HEAD — no fix needed."
+          else
+            echo "$LATEST is NOT reachable from HEAD (force-push history rewrite detected)."
+            echo "Re-tagging $LATEST onto HEAD^ so semantic-release can detect the baseline."
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git config user.name "github-actions[bot]"
+            git tag -f "$LATEST" HEAD^
+            git push origin "refs/tags/$LATEST" --force
+            echo "Done — $LATEST now points to HEAD^."
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Semantic Release
         id: semantic
         uses: cycjimmy/semantic-release-action@v4
