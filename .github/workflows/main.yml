@@ -12,7 +12,6 @@ jobs:
       contents: write
       issues: write
       pull-requests: write
-      workflows: write
     steps:
       - run: git config --global --add safe.directory '*'
 
@@ -76,45 +75,6 @@ jobs:
           publish_dir: ./contributors
           force_orphan: true
 
-      - name: Restore baseline tag if unreachable
-        run: |
-          # Find the highest version tag in the repo
-          LATEST=$(git tag --sort=-v:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | head -1)
-          echo "Latest tag in repo: $LATEST"
-          if [ -z "$LATEST" ]; then
-            echo "No version tags found — semantic-release will start fresh."
-            exit 0
-          fi
-          # Check if the tag is reachable (an ancestor) of HEAD
-          if git merge-base --is-ancestor "$LATEST" HEAD 2>/dev/null; then
-            echo "$LATEST is an ancestor of HEAD — no fix needed."
-            exit 0
-          fi
-          echo "$LATEST is NOT reachable from HEAD (force-push history rewrite detected)."
-          echo "Searching for a safe ancestor commit that does not touch workflow files..."
-          SAFE_COMMIT=""
-          for i in $(seq 1 20); do
-            CANDIDATE=$(git rev-parse HEAD~$i 2>/dev/null) || continue
-            if ! git diff-tree --no-commit-id -r --name-only "$CANDIDATE" | grep -q "^\.github/workflows/"; then
-              SAFE_COMMIT="$CANDIDATE"
-              echo "Safe commit found at HEAD~$i: $SAFE_COMMIT"
-              break
-            else
-              echo "HEAD~$i touches workflow files — skipping."
-            fi
-          done
-          if [ -z "$SAFE_COMMIT" ]; then
-            echo "Could not find a safe commit in the last 20 — skipping re-tag."
-            exit 0
-          fi
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git config user.name "github-actions[bot]"
-          git tag -f "$LATEST" "$SAFE_COMMIT"
-          git push origin "refs/tags/$LATEST" --force
-          echo "Done — $LATEST now points to $SAFE_COMMIT."
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Semantic Release
         id: semantic
         uses: cycjimmy/semantic-release-action@v4
@@ -139,7 +99,8 @@ jobs:
             git push origin :refs/tags/$tag || true
             git tag -d $tag || true
           done
-          git reset --hard HEAD~1
-          git push origin main --force
+          # Revert instead of reset+force-push — preserves history so tags stay reachable
+          git revert HEAD --no-edit
+          git push origin main
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
