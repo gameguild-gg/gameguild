@@ -1,6 +1,7 @@
 import { Product, ProductProgram, Program, ProgramContent, ProgramContentType } from '@/lib/api/generated';
 
 // Markdown content imports
+import dataanalysisCustomerServicePerformanceReveal from './customer-service-performance/reveal.md';
 import dataanalysisNumpyReveal from './numpy/reveal.md';
 import dataanalysisPandasDataFrameReveal from './pandas-dataframe/reveal.md';
 import dataanalysisPandasReveal from './pandas/reveal.md';
@@ -159,10 +160,33 @@ export const dataanalysisPandasDataFrameContent: ProgramContent = {
     updatedAt: '2023-01-01T00:00:00Z',
 };
 
+export const dataanalysisCustomerServicePerformanceContent: ProgramContent = {
+    id: 'dataanalysis-customer-service-performance',
+    programId: 'dataanalysis-program-1',
+    parentId: undefined,
+    title: 'Customer Support Performance Analysis',
+    description: 'Exploratory data analysis using a real customer service dataset: correlation, segmentation, and theme-based insight generation',
+    type: ProgramContentType.REVEAL,
+    body: dataanalysisCustomerServicePerformanceReveal,
+    sortOrder: 5,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 60,
+    visibility: 1, // Published
+    program: dataanalysisProgram,
+    parent: undefined,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
 // Wire program contents
 dataanalysisProgram.programContents = [
     dataanalysisSyllabusContent,
     dataanalysisNumpyContent,
     dataanalysisPandasContent,
     dataanalysisPandasDataFrameContent,
+    dataanalysisCustomerServicePerformanceContent,
 ];
