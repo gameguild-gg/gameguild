@@ -69,13 +69,10 @@ jobs:
         id: semantic
         uses: cycjimmy/semantic-release-action@v4
         with:
-          semantic_version: 23.0.0
+          semantic_version: 23
           extra_plugins: |
-            @semantic-release/changelog@6.0.2
-            @semantic-release/git@10.0.1
-            @semantic-release/commit-analyzer@9.0.2
-            @semantic-release/github@8.0.7
-            @semantic-release/release-notes-generator@10.0.3
+            @semantic-release/changelog@6
+            @semantic-release/git@10
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
