@@ -11,12 +11,18 @@ jobs:
     steps:
       - run: git config --global --add safe.directory '*'
 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
-          # need for git operations
           fetch-depth: 0
+          fetch-tags: true
           lfs: false
           submodules: true
+
+      - name: Fetch all tags
+        run: |
+          git fetch --tags --force
+          echo "Latest tags:"
+          git tag --sort=-v:refname | head -5
 
       - name: Cache node modules
         uses: actions/cache@v4
@@ -25,7 +31,7 @@ jobs:
           key: node-${{ hashFiles('**/package-lock.json') }}
 
       - name: Install dotnet
-        uses: actions/setup-dotnet@v3
+        uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '9.0.x'
 
