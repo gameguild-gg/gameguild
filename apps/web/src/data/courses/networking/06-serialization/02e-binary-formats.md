@@ -147,12 +147,67 @@ The **tag** encodes both the field number and the wire type:
 tag = (field_number << 3) | wire_type
 ```
 
-| Wire Type | Meaning | Used For                       |
-| --------- | ------- | ------------------------------ |
-| 0         | VARINT  | int32, uint32, bool, enum      |
-| 1         | I64     | fixed64, double                |
-| 2         | LEN     | string, bytes, nested messages |
-| 5         | I32     | fixed32, float                 |
+| Wire Type | Meaning    | Used For                                        |
+| --------- | ---------- | ----------------------------------------------- |
+| 0         | VARINT     | int32, uint32, sint32, bool, enum               |
+| 1         | I64        | fixed64, sfixed64, double                       |
+| 2         | LEN        | string, bytes, nested messages, packed repeated |
+| 3         | ~~SGROUP~~ | ~~start group~~ (deprecated in proto3)          |
+| 4         | ~~EGROUP~~ | ~~end group~~ (deprecated in proto3)            |
+| 5         | I32        | fixed32, sfixed32, float                        |
+| 6-7       | Reserved   | Not used                                        |
+
+Since the wire type occupies the **3 least-significant bits** of the tag, and the field number fills the remaining upper bits, the tag byte packs both values into a single varint:
+
+```
+tag byte (binary):  [ field_number ][ wire_type ]
+                     ─── upper ────  ── 3 bits ──
+```
+
+#### Worked Example: Deriving Every Tag in the Player Message
+
+```protobuf
+message Player {
+    uint32 id     = 1;  // VARINT  (wire type 0)
+    float  x      = 2;  // I32     (wire type 5)
+    float  y      = 3;  // I32     (wire type 5)
+    float  z      = 4;  // I32     (wire type 5)
+    uint32 health = 5;  // VARINT  (wire type 0)
+}
+```
+
+| Field  | Field # | Wire Type  | `(field# << 3) \| wire_type`  | Tag (binary) | Tag (hex) |
+| ------ | ------- | ---------- | ----------------------------- | ------------ | --------- |
+| id     | 1       | 0 (VARINT) | `(1 << 3) \| 0 = 0b00001_000` | `00001 000`  | `0x08`    |
+| x      | 2       | 5 (I32)    | `(2 << 3) \| 5 = 0b00010_101` | `00010 101`  | `0x15`    |
+| y      | 3       | 5 (I32)    | `(3 << 3) \| 5 = 0b00011_101` | `00011 101`  | `0x1D`    |
+| z      | 4       | 5 (I32)    | `(4 << 3) \| 5 = 0b00100_101` | `00100 101`  | `0x25`    |
+| health | 5       | 0 (VARINT) | `(5 << 3) \| 0 = 0b00101_000` | `00101 000`  | `0x28`    |
+
+Step-by-step for **field `x`** (field number 2, wire type 5):
+
+```
+field_number = 2           →  binary: 00010
+wire_type    = 5  (I32)    →  binary:   101
+
+Shift field number left by 3:
+  00010 << 3  =  00010_000  =  16
+
+OR with wire type:
+  00010_000
+| 00000_101
+───────────
+  00010_101  =  21  =  0x15
+```
+
+The decoder reverses this with two operations:
+
+```
+wire_type    = tag & 0x07          // mask lowest 3 bits  → 5 (I32)
+field_number = tag >> 3            // shift right by 3    → 2
+```
+
+This is why wire types 3 and 4 are deprecated — only values 0, 1, 2, 5 are used, and they all fit in 3 bits. Field numbers up to 15 keep the tag in a single byte (since `15 << 3 | 7 = 127`, which is the largest value a 1-byte varint can hold). Field numbers 16+ cause the tag itself to spill into a 2-byte varint — so **assign your most frequently used fields to numbers 1–15**.
 
 ### ZigZag Encoding for Signed Integers
 
@@ -178,17 +233,21 @@ Varints stop encoding when the remaining bits are all zero. Leading 0s = free co
 
 ZigZag transforms signed values so that **small magnitudes** (positive or negative) always have many leading zeros:
 
-```
- Value   │ Two's Compl. (32-bit)                  │ ZigZag │ ZigZag Binary                          │ Leading 0s
-─────────┼────────────────────────────────────────┼────────┼────────────────────────────────────────┼──────────
-   0     │ 00000000 00000000 00000000 00000000    │    0   │ 00000000 00000000 00000000 00000000    │ 32
-  -1     │ 11111111 11111111 11111111 11111111    │    1   │ 00000000 00000000 00000000 00000001    │ 31
-   1     │ 00000000 00000000 00000000 00000001    │    2   │ 00000000 00000000 00000000 00000010    │ 30
-  -2     │ 11111111 11111111 11111111 11111110    │    3   │ 00000000 00000000 00000000 00000011    │ 30
-   2     │ 00000000 00000000 00000000 00000010    │    4   │ 00000000 00000000 00000000 00000100    │ 29
-  -3     │ 11111111 11111111 11111111 11111101    │    5   │ 00000000 00000000 00000000 00000101    │ 29
-   3     │ 00000000 00000000 00000000 00000011    │    6   │ 00000000 00000000 00000000 00000110    │ 29
-```
+| Value | Two's Compl. (32-bit)               | Leading 0s |
+| ----- | ----------------------------------- | ---------- |
+| 0     | 00000000 00000000 00000000 00000000 | 32         |
+| -1    | 11111111 11111111 11111111 11111111 | 31         |
+| 1     | 00000000 00000000 00000000 00000001 | 30         |
+| -2    | 11111111 11111111 11111111 11111110 | 30         |
+| 2     | 00000000 00000000 00000000 00000010 | 29         |
+
+| Value | ZigZag | ZigZag Binary                       | Leading 0s |
+| ----- | ------ | ----------------------------------- | ---------- |
+| 0     | 0      | 00000000 00000000 00000000 00000000 | 32         |
+| -1    | 1      | 00000000 00000000 00000000 00000001 | 31         |
+| 1     | 2      | 00000000 00000000 00000000 00000010 | 30         |
+| -2    | 3      | 00000000 00000000 00000000 00000011 | 30         |
+| 2     | 4      | 00000000 00000000 00000000 00000100 | 29         |
 
 The key insight: **small magnitude → small unsigned → many leading zeros → fewer varint bytes**.
 
@@ -204,7 +263,6 @@ This ensures small negative values also use few bytes: `-1` → `1` → 1 byte.
 Signed value → ZigZag transform → Varint encode → Wire bytes
 ```
 
-```
 | Signed Value | Without ZigZag (raw varint) | With ZigZag → Varint |
 | ------------ | --------------------------- | -------------------- |
 | `0`          | 1 byte                      | 1 byte               |
@@ -214,7 +272,6 @@ Signed value → ZigZag transform → Varint encode → Wire bytes
 | `-64`        | **5 bytes**                 | 1 byte               |
 | `300`        | 2 bytes                     | 2 bytes              |
 | `-300`       | **5 bytes**                 | 2 bytes              |
-```
 
 ZigZag saves **4 bytes per negative value** when magnitudes are small.
 
@@ -232,7 +289,13 @@ Protobuf uses `sint32`/`sint64` types for ZigZag; plain `int32` uses raw varint 
 ### Protobuf Example: Encoded Size
 
 ```protobuf
-Player { id=42, x=1.5, y=2.0, z=3.7, health=100 }
+Player {
+  id=42,
+  x=1.5,
+  y=2.0,
+  z=3.7,
+  health=100
+}
 ```
 
 | Field     | Tag  | Wire Type | Value Bytes | Total   |
