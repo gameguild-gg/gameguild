@@ -1,3 +1,10 @@
+## [2.41.1](https://github.com/gameguild-gg/gameguild/compare/v2.41.0...v2.41.1) (2026-02-22)
+
+
+### Bug Fixes
+
+* marp plugin ([e268a25](https://github.com/gameguild-gg/gameguild/commit/e268a25ff9fa327658ec64731d576ed920a4d7b8))
+
 # [2.40.0](https://github.com/gameguild-gg/gameguild/compare/v2.39.0...v2.40.0) (2026-01-20)
 
 
