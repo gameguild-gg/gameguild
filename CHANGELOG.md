@@ -1,3 +1,10 @@
+## [2.41.2](https://github.com/gameguild-gg/gameguild/compare/v2.41.1...v2.41.2) (2026-02-22)
+
+
+### Bug Fixes
+
+* not null logic ([e5829d9](https://github.com/gameguild-gg/gameguild/commit/e5829d9704483c1fb2826c3d43df0d7ec1a4cc85))
+
 ## [2.41.1](https://github.com/gameguild-gg/gameguild/compare/v2.41.0...v2.41.1) (2026-02-22)
 
 
