@@ -586,6 +586,29 @@ WHERE oi.id IS NULL;
 
 ---
 
+## NULL and Three-Valued Logic
+
+SQL comparisons with `NULL` return **UNKNOWN**, not TRUE or FALSE.
+
+```sql
+NULL = NULL   -- UNKNOWN (not true!)
+NULL <> 1     -- UNKNOWN
+```
+
+`NOT IN` expands to `AND`-chained `<>` checks:
+
+```sql
+-- x NOT IN (1, 2, NULL)
+-- expands to:
+x <> 1 AND x <> 2 AND x <> NULL  -- always UNKNOWN → no rows pass
+```
+
+`NOT EXISTS` checks **row presence**, so NULLs in the subquery are harmless.
+
+> **Rule:** if the subquery can return NULLs, always prefer `NOT EXISTS` over `NOT IN`.
+
+---
+
 ## Semi-Join
 
 Find rows that **have** a match, without duplicating.
