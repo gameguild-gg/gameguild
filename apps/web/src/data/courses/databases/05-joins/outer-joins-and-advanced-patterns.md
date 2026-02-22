@@ -6,12 +6,12 @@ While INNER JOIN returns only matching rows, outer joins include non-matching ro
 
 ## Outer Joins Overview
 
-| Join Type | Returns |
-|-----------|---------|
-| `INNER JOIN` | Only matching rows |
-| `LEFT JOIN` | All rows from left table + matches from right |
-| `RIGHT JOIN` | All rows from right table + matches from left |
-| `FULL OUTER JOIN` | All rows from both tables |
+| Join Type         | Returns                                       |
+| ----------------- | --------------------------------------------- |
+| `INNER JOIN`      | Only matching rows                            |
+| `LEFT JOIN`       | All rows from left table + matches from right |
+| `RIGHT JOIN`      | All rows from right table + matches from left |
+| `FULL OUTER JOIN` | All rows from both tables                     |
 
 ---
 
@@ -59,7 +59,7 @@ LEFT JOIN Result:
 
 ```sql
 -- All customers, with their orders (if any)
-SELECT 
+SELECT
     c.id,
     c.name,
     o.id AS order_id,
@@ -68,7 +68,7 @@ FROM customers c
 LEFT JOIN orders o ON c.id = o.customer_id;
 
 -- All products, with their category (even uncategorized)
-SELECT 
+SELECT
     p.name AS product,
     COALESCE(cat.name, 'Uncategorized') AS category
 FROM products p
@@ -199,14 +199,14 @@ FULL OUTER JOIN Result:
 
 ```sql
 -- All employees and departments, showing gaps
-SELECT 
+SELECT
     e.name AS employee,
     d.name AS department
 FROM employees e
 FULL OUTER JOIN departments d ON e.department_id = d.id;
 
 -- Find orphaned records on both sides
-SELECT 
+SELECT
     e.id AS orphan_employee_id,
     d.id AS empty_department_id
 FROM employees e
@@ -247,7 +247,7 @@ JOIN table t2 ON t1.column = t2.column;
 
 ```sql
 -- Employees with their manager names
-SELECT 
+SELECT
     e.name AS employee,
     m.name AS manager
 FROM employees e
@@ -255,6 +255,7 @@ LEFT JOIN employees m ON e.manager_id = m.id;
 ```
 
 **Data Example:**
+
 ```
 employees
 +----+-------+------------+
@@ -281,7 +282,7 @@ Result:
 
 ```sql
 -- Categories with parent category names
-SELECT 
+SELECT
     c.name AS category,
     p.name AS parent_category
 FROM categories c
@@ -292,7 +293,7 @@ LEFT JOIN categories p ON c.parent_id = p.id;
 
 ```sql
 -- Find products with the same price
-SELECT 
+SELECT
     p1.name AS product_1,
     p2.name AS product_2,
     p1.price
@@ -300,7 +301,7 @@ FROM products p1
 JOIN products p2 ON p1.price = p2.price AND p1.id < p2.id;
 
 -- Find employees hired on the same day
-SELECT 
+SELECT
     e1.name AS employee_1,
     e2.name AS employee_2,
     e1.hire_date
@@ -314,7 +315,7 @@ JOIN employees e2 ON e1.hire_date = e2.hire_date AND e1.id < e2.id;
 
 ```sql
 -- Three levels: Employee → Manager → Director
-SELECT 
+SELECT
     e.name AS employee,
     m.name AS manager,
     d.name AS director
@@ -370,9 +371,10 @@ CROSS JOIN Result (2 × 3 = 6 rows):
 ### Use Cases
 
 **1. Generate All Combinations:**
+
 ```sql
 -- All product variants (color × size)
-SELECT 
+SELECT
     c.name AS color,
     s.name AS size,
     CONCAT(p.name, ' - ', c.name, ' ', s.name) AS variant_name
@@ -382,19 +384,21 @@ CROSS JOIN sizes s;
 ```
 
 **2. Calendar/Time Series Generation:**
+
 ```sql
 -- All combinations of years and months
 SELECT y.year, m.month
-FROM 
+FROM
     (SELECT generate_series(2020, 2026) AS year) y
-CROSS JOIN 
+CROSS JOIN
     (SELECT generate_series(1, 12) AS month) m;
 ```
 
 **3. Comparison Matrix:**
+
 ```sql
 -- Compare each product with every other product
-SELECT 
+SELECT
     p1.name AS product_1,
     p2.name AS product_2,
     p1.price - p2.price AS price_difference
@@ -405,7 +409,8 @@ WHERE p1.id != p2.id;
 
 ### CROSS JOIN Warning
 
-⚠️ **Be careful with large tables!** 
+⚠️ **Be careful with large tables!**
+
 - 1,000 × 1,000 = 1,000,000 rows
 - 10,000 × 10,000 = 100,000,000 rows
 
@@ -429,12 +434,12 @@ INNER JOIN:      LEFT JOIN:       RIGHT JOIN:      FULL OUTER:
 
 Think of joins as matching rows:
 
-| Join Type | Left Unmatched | Both Matched | Right Unmatched |
-|-----------|----------------|--------------|-----------------|
-| INNER | ❌ | ✅ | ❌ |
-| LEFT | ✅ (+ NULLs) | ✅ | ❌ |
-| RIGHT | ❌ | ✅ | ✅ (+ NULLs) |
-| FULL OUTER | ✅ (+ NULLs) | ✅ | ✅ (+ NULLs) |
+| Join Type  | Left Unmatched | Both Matched | Right Unmatched |
+| ---------- | -------------- | ------------ | --------------- |
+| INNER      | ❌             | ✅           | ❌              |
+| LEFT       | ✅ (+ NULLs)   | ✅           | ❌              |
+| RIGHT      | ❌             | ✅           | ✅ (+ NULLs)    |
+| FULL OUTER | ✅ (+ NULLs)   | ✅           | ✅ (+ NULLs)    |
 
 ---
 
@@ -465,7 +470,7 @@ WHERE o.status = 'completed';
 -- All customers, but only show their 2026 orders
 SELECT c.name, o.id, o.created_at
 FROM customers c
-LEFT JOIN orders o ON c.id = o.customer_id 
+LEFT JOIN orders o ON c.id = o.customer_id
                    AND o.created_at >= '2026-01-01';
 
 -- Only customers who ordered in 2026
@@ -477,7 +482,7 @@ WHERE o.created_at >= '2026-01-01';
 -- All customers, show 2026 orders, filter by customer country
 SELECT c.name, o.id
 FROM customers c
-LEFT JOIN orders o ON c.id = o.customer_id 
+LEFT JOIN orders o ON c.id = o.customer_id
                    AND o.created_at >= '2026-01-01'
 WHERE c.country = 'USA';  -- Filter on LEFT table is OK in WHERE
 ```
@@ -490,7 +495,7 @@ You can mix join types in a single query:
 
 ```sql
 -- All products with category (inner) and optional reviews (left)
-SELECT 
+SELECT
     p.name AS product,
     c.name AS category,
     r.rating
@@ -499,7 +504,7 @@ INNER JOIN categories c ON p.category_id = c.id      -- Must have category
 LEFT JOIN reviews r ON p.id = r.product_id;          -- Reviews optional
 
 -- Complex multi-table query
-SELECT 
+SELECT
     c.name AS customer,
     o.id AS order_id,
     p.name AS product,
@@ -507,7 +512,7 @@ SELECT
 FROM customers c
 LEFT JOIN orders o ON c.id = o.customer_id           -- All customers
 LEFT JOIN order_items oi ON o.id = oi.order_id       -- Order items if order exists
-LEFT JOIN products p ON oi.product_id = p.id         -- Product if item exists  
+LEFT JOIN products p ON oi.product_id = p.id         -- Product if item exists
 LEFT JOIN inventory i ON p.id = i.product_id         -- Inventory if product exists
 LEFT JOIN warehouses w ON i.warehouse_id = w.id;     -- Warehouse if inventory exists
 ```
@@ -534,11 +539,18 @@ WHERE NOT EXISTS (
     SELECT 1 FROM orders o WHERE o.customer_id = c.id
 );
 
--- Using NOT IN (watch for NULLs!)
+-- Using NOT IN (DANGEROUS with NULLs — avoid unless you filter them out)
 SELECT c.*
 FROM customers c
 WHERE c.id NOT IN (SELECT customer_id FROM orders WHERE customer_id IS NOT NULL);
 ```
+
+> **NULL trap with NOT IN**
+>
+> SQL uses three-valued logic: comparisons with NULL yield **UNKNOWN**, not TRUE or FALSE — including `NULL = NULL`.
+> `NOT IN` expands to a chain of `<>` checks: `x NOT IN (1, 2, NULL)` becomes `x <> 1 AND x <> 2 AND x <> NULL`. Since `x <> NULL` is always UNKNOWN, the whole expression is UNKNOWN and **no rows ever pass**.
+> `NOT EXISTS` is safe because it tests row presence, not value equality.
+> **Rule: if the subquery can return NULLs, never use `NOT IN`.**
 
 ### Semi-Join (EXISTS)
 
@@ -602,21 +614,25 @@ JOIN customers c ON o.customer_id = c.id;
 ## Practice Exercises
 
 ### Exercise 1: Outer Joins
+
 1. List all customers with their orders (include customers with no orders)
 2. Find products that have never been ordered
 3. Show all departments with employee counts (including empty departments)
 
 ### Exercise 2: Self-Joins
+
 1. Display employees with their manager's name
 2. Find products with the same price
 3. Show categories and their parent categories (3 levels deep)
 
 ### Exercise 3: Mixed Joins
+
 1. All customers, their orders, and order items (all levels optional)
 2. Products with categories (required) and reviews (optional)
 3. Find customers who have ordered but never reviewed a product
 
 ### Exercise 4: Anti-Joins
+
 1. Categories with no products
 2. Customers who haven't ordered in 2026
 3. Products not in any warehouse inventory
