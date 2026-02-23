@@ -76,18 +76,50 @@ Reverse (little-endian varint order):
 Wire bytes: 0xAC  0x02
 ```
 
+#### Varint Encoding (C++)
+
+The encoder extracts 7 bits at a time from the least-significant end, sets MSB = 1 on every byte except the last:
+
+```cpp
+int encode_varint(uint32_t value, uint8_t* buf) {
+    int len = 0;
+    while (value > 0x7F) {
+        buf[len++] = (value & 0x7F) | 0x80;  // 7 data bits + MSB=1 (more follow)
+        value >>= 7;
+    }
+    buf[len++] = value & 0x7F;               // last byte: MSB=0 (done)
+    return len;
+}
+```
+
+Step-by-step for `value = 300` (`0b100101100`):
+
+```
+Iteration 1:  value = 300 (> 127, so emit with MSB=1)
+  300 & 0x7F = 0x2C  →  0x2C | 0x80 = 0xAC  →  buf[0] = 0xAC
+  300 >> 7   = 2
+Iteration 2:  value = 2   (≤ 127, so emit with MSB=0)
+  buf[1] = 0x02
+Result: [0xAC, 0x02]  →  2 bytes
+```
+
 ### Why Little-Endian Varint Order?
 
 Varints send the **least significant** 7-bit group first. This lets the decoder accumulate the result with a simple shift-and-OR as bytes arrive — no need to know the total length in advance:
 
+#### Varint Decoding (C++)
+
 ```cpp
-uint32_t result = 0;
-int shift = 0;
-for (;;) {
-    uint8_t byte = *ptr++;
-    result |= (uint32_t(byte & 0x7F) << shift);  // OR into position
-    if ((byte & 0x80) == 0) break;                // MSB=0 → done
-    shift += 7;
+uint32_t decode_varint(const uint8_t*& ptr) {
+    uint32_t result = 0;
+    int shift = 0;
+    for (;;) {
+        uint8_t byte = *ptr++;
+        result |= (uint32_t(byte & 0x7F) << shift);  // OR into position
+        if ((byte & 0x80) == 0) break;                // MSB=0 → done
+        shift += 7;
+    }
+    return result;
 }
 ```
 
