@@ -83,6 +83,8 @@ The encoder extracts 7 bits at a time from the least-significant end, sets MSB =
 ```cpp
 int encode_varint(uint32_t value, uint8_t* buf) {
     int len = 0;
+    // this assumes the buffer is large enough to hold the varint (up to 5 bytes for uint32_t)
+    // this assumption may lead to buffer overflow if the caller does not ensure sufficient space
     while (value > 0x7F) {
         buf[len++] = (value & 0x7F) | 0x80;  // 7 data bits + MSB=1 (more follow)
         value >>= 7;
@@ -113,7 +115,8 @@ Varints send the **least significant** 7-bit group first. This lets the decoder 
 uint32_t decode_varint(const uint8_t* buf, int& pos) {
     uint32_t result = 0;
     int shift = 0;
-    for (;;) {
+    // this have potential to keep reading ad infinitum if the data arriving always has MSB=1
+    for (;;) { 
         uint8_t byte = buf[pos++];
         result |= (uint32_t(byte & 0x7F) << shift);  // OR into position
         if ((byte & 0x80) == 0) break;                // MSB=0 → done
