@@ -1,3 +1,10 @@
+## [2.41.7](https://github.com/gameguild-gg/gameguild/compare/v2.41.6...v2.41.7) (2026-02-23)
+
+
+### Bug Fixes
+
+* **courses/databases:** mermaid renderer ([a58aa59](https://github.com/gameguild-gg/gameguild/commit/a58aa59fe143c7098dfd2c3846f7cb2ee69f0a7b))
+
 ## [2.41.6](https://github.com/gameguild-gg/gameguild/compare/v2.41.5...v2.41.6) (2026-02-23)
 
 
