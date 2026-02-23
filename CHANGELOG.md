@@ -1,3 +1,11 @@
+## [2.41.6](https://github.com/gameguild-gg/gameguild/compare/v2.41.5...v2.41.6) (2026-02-23)
+
+
+### Bug Fixes
+
+* **courses/databases:** add week07 content ([07f4f24](https://github.com/gameguild-gg/gameguild/commit/07f4f246aaa4eddb7d3a07a840e7930638052a93))
+* quiz week 07 ([28defdb](https://github.com/gameguild-gg/gameguild/commit/28defdb8762ae9d69150bc01e710e06eae45204b))
+
 ## [2.41.5](https://github.com/gameguild-gg/gameguild/compare/v2.41.4...v2.41.5) (2026-02-23)
 
 
