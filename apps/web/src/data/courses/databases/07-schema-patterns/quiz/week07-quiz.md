@@ -7,6 +7,7 @@ This quiz covers schema design patterns, referential actions, functions/procedur
 ## Schema Patterns
 
 ### Question 1
+
 What is the primary advantage of soft delete over hard delete?
 
 - A) Better query performance
@@ -15,6 +16,7 @@ What is the primary advantage of soft delete over hard delete?
 - D) Faster delete operations
 
 ### Question 2
+
 Which soft delete implementation correctly handles unique constraints?
 
 - A) `ALTER TABLE users ADD COLUMN deleted_at TIMESTAMP;`
@@ -23,10 +25,12 @@ Which soft delete implementation correctly handles unique constraints?
 - D) `ALTER TABLE users ADD CONSTRAINT uk_email UNIQUE (email, deleted_at);`
 
 ### Question 3
+
 What pattern is being implemented here?
+
 ```sql
 ALTER TABLE products ADD COLUMN version INT DEFAULT 1;
-UPDATE products SET name = 'New Name', version = version + 1 
+UPDATE products SET name = 'New Name', version = version + 1
 WHERE id = 1 AND version = 5;
 ```
 
@@ -36,6 +40,7 @@ WHERE id = 1 AND version = 5;
 - D) Checksum validation
 
 ### Question 4
+
 Which anti-pattern stores data like `'tag1,tag2,tag3'` in a single column?
 
 - A) Entity-Attribute-Value (EAV)
@@ -44,6 +49,7 @@ Which anti-pattern stores data like `'tag1,tag2,tag3'` in a single column?
 - D) One True Lookup Table (OTLT)
 
 ### Question 5
+
 What is the purpose of storing a checksum with data?
 
 - A) To encrypt the data
@@ -52,6 +58,7 @@ What is the purpose of storing a checksum with data?
 - D) To speed up queries
 
 ### Question 6
+
 Which statement about history tables is TRUE?
 
 - A) They replace the original table
@@ -60,6 +67,7 @@ Which statement about history tables is TRUE?
 - D) They require optimistic locking
 
 ### Question 7
+
 What is a key drawback of the Entity-Attribute-Value (EAV) pattern?
 
 - A) Uses too much disk space
@@ -68,6 +76,7 @@ What is a key drawback of the Entity-Attribute-Value (EAV) pattern?
 - D) Requires foreign keys
 
 ### Question 8
+
 Which SQL creates an audit trail for update operations?
 
 - A) `CREATE TRIGGER audit BEFORE UPDATE`
@@ -79,7 +88,42 @@ Which SQL creates an audit trail for update operations?
 
 ## Referential Actions
 
-### Question 9
+### Question 9 - ON DELETE SET NULL
+
+**Consider the following table:**
+
+```sql
+CREATE TABLE products (
+    id INT PRIMARY KEY,
+    sku VARCHAR(50) UNIQUE,
+    name VARCHAR(200) NOT NULL,
+    price DECIMAL(10, 2) NOT NULL CHECK (price > 0),
+    category_id INT REFERENCES categories(id) ON DELETE SET NULL
+);
+```
+
+**What happens when a category is deleted from the `categories` table?**
+
+- A) All products in that category are also deleted
+- B) The delete operation fails if any products reference that category
+- C) Products in that category have their `category_id` set to `NULL`
+- D) Products in that category have their `category_id` set to `0`
+
+---
+
+### Question 10 - ON DELETE CASCADE
+
+**Which `ON DELETE` action should you use when deleting a parent record should also delete all related child records?**
+
+- A) `ON DELETE RESTRICT`
+- B) `ON DELETE SET NULL`
+- C) `ON DELETE CASCADE`
+- D) `ON DELETE NO ACTION`
+
+---
+
+### Question 11
+
 What happens when you delete a parent row with `ON DELETE CASCADE`?
 
 - A) The delete fails
@@ -87,7 +131,8 @@ What happens when you delete a parent row with `ON DELETE CASCADE`?
 - C) Child foreign key columns are set to NULL
 - D) Child rows remain unchanged
 
-### Question 10
+### Question 12
+
 Which referential action sets the foreign key to its default value when the parent is deleted?
 
 - A) CASCADE
@@ -95,7 +140,8 @@ Which referential action sets the foreign key to its default value when the pare
 - C) SET DEFAULT
 - D) RESTRICT
 
-### Question 11
+### Question 13
+
 What is the difference between `RESTRICT` and `NO ACTION`?
 
 - A) RESTRICT allows deferred checks; NO ACTION doesn't
@@ -103,7 +149,8 @@ What is the difference between `RESTRICT` and `NO ACTION`?
 - C) They are completely identical
 - D) RESTRICT cascades; NO ACTION doesn't
 
-### Question 12
+### Question 14
+
 When is `ON DELETE SET NULL` most appropriate?
 
 - A) Parent-child hierarchies where children must be deleted
@@ -111,7 +158,8 @@ When is `ON DELETE SET NULL` most appropriate?
 - C) When the foreign key column is NOT NULL
 - D) Self-referencing tables with managers
 
-### Question 13
+### Question 15
+
 What happens with `ON UPDATE CASCADE` when a parent's primary key changes?
 
 - A) The update fails
@@ -119,7 +167,8 @@ What happens with `ON UPDATE CASCADE` when a parent's primary key changes?
 - C) Child rows are deleted
 - D) Child foreign keys become NULL
 
-### Question 14
+### Question 16
+
 Which SQL correctly defines multiple referential actions?
 
 - A) `FOREIGN KEY (dept_id) REFERENCES departments(id) ON DELETE SET NULL CASCADE`
@@ -127,7 +176,8 @@ Which SQL correctly defines multiple referential actions?
 - C) `FOREIGN KEY (dept_id) REFERENCES departments(id) CASCADE SET NULL`
 - D) `FOREIGN KEY (dept_id) ON DELETE SET NULL REFERENCES departments(id)`
 
-### Question 15
+### Question 17
+
 What is a cascading chain?
 
 - A) Multiple foreign keys in one table
@@ -135,7 +185,8 @@ What is a cascading chain?
 - C) Circular references between tables
 - D) Self-referencing foreign keys
 
-### Question 16
+### Question 18
+
 Which situation would cause a circular reference problem?
 
 - A) Table A references Table B, Table B references Table C
@@ -147,7 +198,8 @@ Which situation would cause a circular reference problem?
 
 ## Functions, Procedures & Triggers
 
-### Question 17
+### Question 19
+
 What is the main difference between a function and a procedure in PostgreSQL?
 
 - A) Functions can have parameters; procedures cannot
@@ -155,7 +207,8 @@ What is the main difference between a function and a procedure in PostgreSQL?
 - C) Functions are faster than procedures
 - D) Procedures can return values; functions cannot
 
-### Question 18
+### Question 20
+
 Which keyword is used to return a value from a PostgreSQL function?
 
 - A) OUTPUT
@@ -163,7 +216,8 @@ Which keyword is used to return a value from a PostgreSQL function?
 - C) YIELD
 - D) RESULT
 
-### Question 19
+### Question 21
+
 What does `RETURNS SETOF` indicate in a function definition?
 
 - A) The function returns a single row
@@ -171,7 +225,8 @@ What does `RETURNS SETOF` indicate in a function definition?
 - C) The function has no return value
 - D) The function returns a set of parameters
 
-### Question 20
+### Question 22
+
 How do you call a stored procedure in PostgreSQL?
 
 - A) `SELECT procedure_name()`
@@ -179,7 +234,8 @@ How do you call a stored procedure in PostgreSQL?
 - C) `CALL procedure_name()`
 - D) `RUN procedure_name()`
 
-### Question 21
+### Question 23
+
 What is the purpose of `RETURNS TRIGGER` in a function definition?
 
 - A) The function can create triggers
@@ -187,7 +243,8 @@ What is the purpose of `RETURNS TRIGGER` in a function definition?
 - C) The function will trigger other functions
 - D) The function returns trigger metadata
 
-### Question 22
+### Question 24
+
 Which trigger timing runs BEFORE the operation?
 
 - A) `CREATE TRIGGER trg AFTER INSERT`
@@ -195,7 +252,8 @@ Which trigger timing runs BEFORE the operation?
 - C) `CREATE TRIGGER trg INSTEAD OF INSERT`
 - D) `CREATE TRIGGER trg DURING INSERT`
 
-### Question 23
+### Question 25
+
 What does the `NEW` variable contain in an UPDATE trigger?
 
 - A) The original row before the update
@@ -203,7 +261,8 @@ What does the `NEW` variable contain in an UPDATE trigger?
 - C) The difference between old and new values
 - D) NULL for UPDATE operations
 
-### Question 24
+### Question 26
+
 What does `FOR EACH ROW` mean in a trigger definition?
 
 - A) The trigger fires once per statement
@@ -211,7 +270,8 @@ What does `FOR EACH ROW` mean in a trigger definition?
 - C) The trigger only affects one row
 - D) The trigger runs on every row in the table
 
-### Question 25
+### Question 27
+
 Which statement correctly creates a trigger?
 
 - A) `CREATE TRIGGER trg INSERT ON orders EXECUTE fn_audit()`
@@ -219,7 +279,8 @@ Which statement correctly creates a trigger?
 - C) `CREATE TRIGGER trg BEFORE INSERT ON orders EXECUTE FUNCTION fn_audit()`
 - D) `TRIGGER trg CREATE BEFORE INSERT orders fn_audit()`
 
-### Question 26
+### Question 28
+
 What value should a BEFORE INSERT trigger return to cancel the operation?
 
 - A) FALSE
@@ -227,7 +288,8 @@ What value should a BEFORE INSERT trigger return to cancel the operation?
 - C) 0
 - D) CANCEL
 
-### Question 27
+### Question 29
+
 What does `TG_OP` contain in a trigger function?
 
 - A) The name of the trigger
@@ -235,7 +297,8 @@ What does `TG_OP` contain in a trigger function?
 - C) The table name
 - D) The number of rows affected
 
-### Question 28
+### Question 30
+
 Which language is used for complex PostgreSQL trigger functions?
 
 - A) SQL
@@ -247,7 +310,8 @@ Which language is used for complex PostgreSQL trigger functions?
 
 ## Transactions (TCL)
 
-### Question 29
+### Question 31
+
 Which TCL command permanently saves all changes made in a transaction?
 
 - A) SAVE
@@ -255,7 +319,8 @@ Which TCL command permanently saves all changes made in a transaction?
 - C) PERSIST
 - D) END
 
-### Question 30
+### Question 32
+
 What does ROLLBACK do?
 
 - A) Saves changes and ends the transaction
@@ -263,7 +328,8 @@ What does ROLLBACK do?
 - C) Creates a savepoint
 - D) Ends the transaction without changes
 
-### Question 31
+### Question 33
+
 What command creates a point within a transaction to which you can roll back?
 
 - A) CHECKPOINT
@@ -271,7 +337,8 @@ What command creates a point within a transaction to which you can roll back?
 - C) MARK
 - D) BOOKMARK
 
-### Question 32
+### Question 34
+
 What does the "A" in ACID stand for?
 
 - A) Availability
@@ -279,7 +346,8 @@ What does the "A" in ACID stand for?
 - C) Authentication
 - D) Accuracy
 
-### Question 33
+### Question 35
+
 Which ACID property ensures that committed data survives system crashes?
 
 - A) Atomicity
@@ -287,7 +355,8 @@ Which ACID property ensures that committed data survives system crashes?
 - C) Isolation
 - D) Durability
 
-### Question 34
+### Question 36
+
 What isolation level allows reading uncommitted data from other transactions?
 
 - A) Read Committed
@@ -295,7 +364,8 @@ What isolation level allows reading uncommitted data from other transactions?
 - C) Repeatable Read
 - D) Serializable
 
-### Question 35
+### Question 37
+
 Which isolation level is the DEFAULT in PostgreSQL?
 
 - A) Read Uncommitted
@@ -303,7 +373,8 @@ Which isolation level is the DEFAULT in PostgreSQL?
 - C) Repeatable Read
 - D) Serializable
 
-### Question 36
+### Question 38
+
 What is a "dirty read"?
 
 - A) Reading data that was never committed
@@ -311,7 +382,8 @@ What is a "dirty read"?
 - C) Reading data that was added by another transaction
 - D) Reading corrupted data
 
-### Question 37
+### Question 39
+
 Which isolation level prevents phantom reads?
 
 - A) Read Uncommitted
@@ -319,7 +391,8 @@ Which isolation level prevents phantom reads?
 - C) Repeatable Read (in PostgreSQL)
 - D) Only Serializable
 
-### Question 38
+### Question 40
+
 What happens when a deadlock occurs?
 
 - A) Both transactions complete successfully
@@ -327,7 +400,8 @@ What happens when a deadlock occurs?
 - C) The database server crashes
 - D) All tables are locked indefinitely
 
-### Question 39
+### Question 41
+
 Which command would you use to lock specific rows for update?
 
 - A) `LOCK TABLE`
@@ -335,7 +409,8 @@ Which command would you use to lock specific rows for update?
 - C) `SELECT ... WITH LOCK`
 - D) `LOCK ROWS`
 
-### Question 40
+### Question 42
+
 What is a "non-repeatable read"?
 
 - A) A query returns different results when run twice in the same transaction
@@ -343,7 +418,8 @@ What is a "non-repeatable read"?
 - C) A query that times out
 - D) A query that reads uncommitted data
 
-### Question 41
+### Question 43
+
 How does `SELECT FOR UPDATE SKIP LOCKED` behave?
 
 - A) Waits until locked rows become available
@@ -351,7 +427,8 @@ How does `SELECT FOR UPDATE SKIP LOCKED` behave?
 - C) Skips over rows that are already locked
 - D) Locks all rows in the table
 
-### Question 42
+### Question 44
+
 What does `ROLLBACK TO SAVEPOINT name` do?
 
 - A) Ends the entire transaction
@@ -363,7 +440,8 @@ What does `ROLLBACK TO SAVEPOINT name` do?
 
 ## Access Control (DCL)
 
-### Question 43
+### Question 45
+
 Which command gives privileges to a role?
 
 - A) ALLOW
@@ -371,7 +449,8 @@ Which command gives privileges to a role?
 - C) GRANT
 - D) ENABLE
 
-### Question 44
+### Question 46
+
 Which command removes privileges from a role?
 
 - A) DENY
@@ -379,7 +458,8 @@ Which command removes privileges from a role?
 - C) REMOVE
 - D) DELETE
 
-### Question 45
+### Question 47
+
 In PostgreSQL, what is the relationship between users and roles?
 
 - A) Users can have multiple roles
@@ -387,7 +467,8 @@ In PostgreSQL, what is the relationship between users and roles?
 - C) Users and roles are the same thing
 - D) Users inherit from roles only
 
-### Question 46
+### Question 48
+
 Which privilege allows a role to access objects within a schema?
 
 - A) SELECT
@@ -395,7 +476,8 @@ Which privilege allows a role to access objects within a schema?
 - C) ACCESS
 - D) CONNECT
 
-### Question 47
+### Question 49
+
 What does `WITH GRANT OPTION` allow?
 
 - A) The role can revoke the privilege from others
@@ -403,7 +485,8 @@ What does `WITH GRANT OPTION` allow?
 - C) The privilege is automatically inherited
 - D) The grant is temporary
 
-### Question 48
+### Question 50
+
 Which command creates a role that can log in?
 
 - A) `CREATE ROLE app LOGIN`
@@ -411,7 +494,8 @@ Which command creates a role that can log in?
 - C) Both A and B
 - D) Neither A nor B
 
-### Question 49
+### Question 51
+
 What does Row-Level Security (RLS) control?
 
 - A) Which columns a user can see
@@ -419,7 +503,8 @@ What does Row-Level Security (RLS) control?
 - C) Which tables a user can access
 - D) Which schemas a user can use
 
-### Question 50
+### Question 52
+
 How do you enable Row-Level Security on a table?
 
 - A) `ENABLE RLS ON tablename`
@@ -427,7 +512,8 @@ How do you enable Row-Level Security on a table?
 - C) `SET ROW SECURITY = ON FOR tablename`
 - D) `GRANT ROW SECURITY ON tablename`
 
-### Question 51
+### Question 53
+
 Which command sets privileges for future objects?
 
 - A) `DEFAULT PRIVILEGES`
@@ -435,7 +521,8 @@ Which command sets privileges for future objects?
 - C) `SET DEFAULT GRANTS`
 - D) `GRANT DEFAULT`
 
-### Question 52
+### Question 54
+
 What happens if you try to drop a role that owns objects?
 
 - A) The objects are also dropped
@@ -443,7 +530,8 @@ What happens if you try to drop a role that owns objects?
 - C) Ownership transfers to the current user
 - D) The objects become orphaned
 
-### Question 53
+### Question 55
+
 Which SQL grants SELECT access to specific columns only?
 
 - A) `GRANT SELECT ON users TO role`
@@ -451,7 +539,8 @@ Which SQL grants SELECT access to specific columns only?
 - C) `GRANT COLUMN SELECT id, name ON users TO role`
 - D) `GRANT SELECT users.id, users.name TO role`
 
-### Question 54
+### Question 56
+
 What is the principle of least privilege?
 
 - A) Grant all privileges and revoke as needed
@@ -463,7 +552,8 @@ What is the principle of least privilege?
 
 ## Scalability
 
-### Question 55
+### Question 57
+
 What is the difference between vertical and horizontal scaling?
 
 - A) Vertical adds servers; horizontal adds resources
@@ -471,7 +561,8 @@ What is the difference between vertical and horizontal scaling?
 - C) Vertical scales reads; horizontal scales writes
 - D) They are the same thing
 
-### Question 56
+### Question 58
+
 What is a read replica?
 
 - A) A copy of the database that handles both reads and writes
@@ -479,7 +570,8 @@ What is a read replica?
 - C) A backup that is never accessed
 - D) A table that stores frequently read data
 
-### Question 57
+### Question 59
+
 In primary-replica replication, which server handles writes?
 
 - A) Replica
@@ -487,7 +579,8 @@ In primary-replica replication, which server handles writes?
 - C) Both equally
 - D) Neither
 
-### Question 58
+### Question 60
+
 What is database partitioning?
 
 - A) Distributing data across multiple servers
@@ -495,7 +588,8 @@ What is database partitioning?
 - C) Creating multiple schemas
 - D) Dividing queries across connections
 
-### Question 59
+### Question 61
+
 Which partitioning type divides data by value ranges?
 
 - A) List partitioning
@@ -503,7 +597,8 @@ Which partitioning type divides data by value ranges?
 - C) Range partitioning
 - D) Key partitioning
 
-### Question 60
+### Question 62
+
 What is database sharding?
 
 - A) Splitting a table by columns
@@ -511,7 +606,8 @@ What is database sharding?
 - C) Creating indexes on all columns
 - D) Compressing database files
 
-### Question 61
+### Question 63
+
 What makes a good shard key?
 
 - A) Low cardinality values
@@ -519,7 +615,8 @@ What makes a good shard key?
 - C) Even distribution with queries hitting single shards
 - D) Values that frequently change
 
-### Question 62
+### Question 64
+
 What is the purpose of connection pooling?
 
 - A) To speed up query execution
@@ -527,7 +624,8 @@ What is the purpose of connection pooling?
 - C) To encrypt connections
 - D) To balance load across replicas
 
-### Question 63
+### Question 65
+
 Which tool is commonly used for PostgreSQL connection pooling?
 
 - A) Redis
@@ -535,7 +633,8 @@ Which tool is commonly used for PostgreSQL connection pooling?
 - C) Nginx
 - D) HAProxy
 
-### Question 64
+### Question 66
+
 What is the main challenge of sharding?
 
 - A) Increased storage costs
@@ -543,7 +642,8 @@ What is the main challenge of sharding?
 - C) Reduced query performance
 - D) Data corruption
 
-### Question 65
+### Question 67
+
 What should you optimize FIRST before scaling horizontally?
 
 - A) Add more servers
@@ -555,7 +655,8 @@ What should you optimize FIRST before scaling horizontally?
 
 ## ORM & Query Builders
 
-### Question 66
+### Question 68
+
 What is the main advantage of using a query builder over raw SQL?
 
 - A) Faster query execution
@@ -563,7 +664,8 @@ What is the main advantage of using a query builder over raw SQL?
 - C) Smaller database size
 - D) Better indexing
 
-### Question 67
+### Question 69
+
 What does ORM stand for?
 
 - A) Object Relational Mapping
@@ -571,7 +673,8 @@ What does ORM stand for?
 - C) Ordered Record Model
 - D) Object Reference Method
 
-### Question 68
+### Question 70
+
 Which Drizzle function is used for equality comparisons?
 
 - A) `equals()`
@@ -579,7 +682,8 @@ Which Drizzle function is used for equality comparisons?
 - C) `equal()`
 - D) `is()`
 
-### Question 69
+### Question 71
+
 How does Drizzle handle SQL injection prevention?
 
 - A) It escapes all string values
@@ -587,7 +691,8 @@ How does Drizzle handle SQL injection prevention?
 - C) It validates all input
 - D) It encrypts all data
 
-### Question 70
+### Question 72
+
 Which SQL injection payload could return all rows?
 
 - A) `'; DELETE FROM users; --`
@@ -595,7 +700,8 @@ Which SQL injection payload could return all rows?
 - C) `DROP TABLE users`
 - D) `SELECT * FROM passwords`
 
-### Question 71
+### Question 73
+
 What is the correct way to prevent SQL injection?
 
 - A) Escape single quotes
@@ -604,7 +710,8 @@ What is the correct way to prevent SQL injection?
 - D) Use prepared statements
 - E) Both C and D
 
-### Question 72
+### Question 74
+
 How do you run a transaction in Drizzle?
 
 - A) `db.transaction(async (tx) => { ... })`
@@ -612,7 +719,8 @@ How do you run a transaction in Drizzle?
 - C) `db.start().transaction()`
 - D) `new Transaction(db)`
 
-### Question 73
+### Question 75
+
 What is "second-order SQL injection"?
 
 - A) Injection that runs twice
@@ -620,7 +728,8 @@ What is "second-order SQL injection"?
 - C) Injection in the second column
 - D) A backup injection method
 
-### Question 74
+### Question 76
+
 Which cannot be parameterized in SQL?
 
 - A) WHERE clause values
@@ -628,7 +737,8 @@ Which cannot be parameterized in SQL?
 - C) Table and column names
 - D) LIMIT values
 
-### Question 75
+### Question 77
+
 How should you handle dynamic column names in queries?
 
 - A) Use parameterized queries
@@ -636,7 +746,8 @@ How should you handle dynamic column names in queries?
 - C) Escape the column names
 - D) Use single quotes around names
 
-### Question 76
+### Question 78
+
 What is the advantage of Drizzle's `sql` template literal?
 
 - A) It concatenates strings directly
@@ -648,7 +759,8 @@ What is the advantage of Drizzle's `sql` template literal?
 
 ## Mixed/Integration Questions
 
-### Question 77
+### Question 79
+
 Which combination correctly implements an audit trigger with soft delete?
 
 - A) BEFORE DELETE trigger that sets deleted_at, then AFTER DELETE for audit log
@@ -656,7 +768,8 @@ Which combination correctly implements an audit trigger with soft delete?
 - C) BEFORE DELETE trigger to prevent delete, AFTER UPDATE for audit
 - D) AFTER DELETE trigger only
 
-### Question 78
+### Question 80
+
 Which is NOT a valid ACID property?
 
 - A) Atomicity
@@ -664,7 +777,8 @@ Which is NOT a valid ACID property?
 - C) Isolation
 - D) Durability
 
-### Question 79
+### Question 81
+
 What happens if a BEFORE INSERT trigger returns NULL?
 
 - A) The insert proceeds with NULL values
@@ -672,7 +786,8 @@ What happens if a BEFORE INSERT trigger returns NULL?
 - C) An error is raised
 - D) The trigger is skipped
 
-### Question 80
+### Question 82
+
 How would you implement multi-tenant data isolation?
 
 - A) Create separate databases for each tenant
@@ -680,7 +795,8 @@ How would you implement multi-tenant data isolation?
 - C) Create separate schemas for each tenant
 - D) All of the above are valid approaches
 
-### Question 81
+### Question 83
+
 Which statement about PostgreSQL replication is FALSE?
 
 - A) Replicas can handle read queries
@@ -688,7 +804,8 @@ Which statement about PostgreSQL replication is FALSE?
 - C) Replicas can handle write queries
 - D) Streaming replication uses WAL
 
-### Question 82
+### Question 84
+
 What is the purpose of `FOR UPDATE NOWAIT`?
 
 - A) Lock rows without waiting
@@ -696,7 +813,8 @@ What is the purpose of `FOR UPDATE NOWAIT`?
 - C) Fail immediately if rows are locked
 - D) Wait indefinitely for locks
 
-### Question 83
+### Question 85
+
 Which approach helps prevent lost updates in concurrent scenarios?
 
 - A) Soft delete pattern
@@ -704,7 +822,8 @@ Which approach helps prevent lost updates in concurrent scenarios?
 - C) Checksum validation
 - D) History tables
 
-### Question 84
+### Question 86
+
 How do you view all privileges on a table in PostgreSQL?
 
 - A) `SHOW GRANTS ON tablename`
@@ -712,7 +831,8 @@ How do you view all privileges on a table in PostgreSQL?
 - C) Query `information_schema.table_privileges`
 - D) `DESCRIBE tablename`
 
-### Question 85
+### Question 87
+
 What is the main risk of using `ON DELETE CASCADE` on all foreign keys?
 
 - A) Slower queries
@@ -720,7 +840,8 @@ What is the main risk of using `ON DELETE CASCADE` on all foreign keys?
 - C) Circular reference errors
 - D) Increased storage
 
-### Question 86
+### Question 88
+
 In Drizzle ORM, how do you perform a LEFT JOIN?
 
 - A) `db.select().from(a).leftJoin(b, eq(a.id, b.aId))`
@@ -728,7 +849,8 @@ In Drizzle ORM, how do you perform a LEFT JOIN?
 - C) `db.leftJoin(a, b)`
 - D) `db.select().from(a, b).where(leftJoin)`
 
-### Question 87
+### Question 89
+
 Which isolation level provides the strongest guarantees?
 
 - A) Read Uncommitted
@@ -736,7 +858,8 @@ Which isolation level provides the strongest guarantees?
 - C) Repeatable Read
 - D) Serializable
 
-### Question 88
+### Question 90
+
 What is the purpose of `ALTER DEFAULT PRIVILEGES`?
 
 - A) Change existing privileges
@@ -744,7 +867,8 @@ What is the purpose of `ALTER DEFAULT PRIVILEGES`?
 - C) Reset privileges to default
 - D) Grant privileges to the default role
 
-### Question 89
+### Question 91
+
 Why might you choose NOT to use an ORM?
 
 - A) You need maximum query performance with complex SQL
@@ -752,7 +876,8 @@ Why might you choose NOT to use an ORM?
 - C) You want protection from SQL injection
 - D) You want easier code maintenance
 
-### Question 90
+### Question 92
+
 Which pattern would you use to track who modified a record and when?
 
 - A) Soft delete
@@ -764,39 +889,41 @@ Which pattern would you use to track who modified a record and when?
 
 ## Answer Key
 
-| Q | A | Q | A | Q | A | Q | A | Q | A |
-|---|---|---|---|---|---|---|---|---|---|
-| 1 | B | 19 | B | 37 | C | 55 | B | 73 | B |
-| 2 | C | 20 | C | 38 | B | 56 | B | 74 | C |
-| 3 | C | 21 | B | 39 | B | 57 | B | 75 | B |
-| 4 | B | 22 | B | 40 | A | 58 | B | 76 | B |
-| 5 | C | 23 | B | 41 | C | 59 | C | 77 | B |
-| 6 | B | 24 | B | 42 | B | 60 | B | 78 | B |
-| 7 | B | 25 | C | 43 | C | 61 | C | 79 | B |
-| 8 | B | 26 | B | 44 | B | 62 | B | 80 | D |
-| 9 | B | 27 | B | 45 | C | 63 | B | 81 | C |
-| 10 | C | 28 | B | 46 | B | 64 | B | 82 | C |
-| 11 | B | 29 | B | 47 | B | 65 | C | 83 | B |
-| 12 | B | 30 | B | 48 | C | 66 | B | 84 | C |
-| 13 | B | 31 | B | 49 | B | 67 | A | 85 | B |
-| 14 | B | 32 | B | 50 | B | 68 | B | 86 | A |
-| 15 | B | 33 | D | 51 | B | 69 | B | 87 | D |
-| 16 | B | 34 | B | 52 | B | 70 | B | 88 | B |
-| 17 | B | 35 | B | 53 | B | 71 | E | 89 | A |
-| 18 | B | 36 | A | 54 | B | 72 | A | 90 | B |
+| Q   | A   | Q   | A   | Q   | A   | Q   | A   | Q   | A   |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1   | B   | 19  | B   | 37  | B   | 55  | B   | 73  | E   |
+| 2   | C   | 20  | B   | 38  | A   | 56  | B   | 74  | A   |
+| 3   | C   | 21  | B   | 39  | C   | 57  | B   | 75  | B   |
+| 4   | B   | 22  | C   | 40  | B   | 58  | B   | 76  | C   |
+| 5   | C   | 23  | B   | 41  | B   | 59  | B   | 77  | B   |
+| 6   | B   | 24  | B   | 42  | A   | 60  | B   | 78  | B   |
+| 7   | B   | 25  | B   | 43  | C   | 61  | C   | 79  | B   |
+| 8   | B   | 26  | B   | 44  | B   | 62  | B   | 80  | B   |
+| 9   | C   | 27  | C   | 45  | C   | 63  | C   | 81  | B   |
+| 10  | C   | 28  | B   | 46  | B   | 64  | B   | 82  | D   |
+| 11  | B   | 29  | B   | 47  | C   | 65  | B   | 83  | C   |
+| 12  | C   | 30  | B   | 48  | B   | 66  | B   | 84  | C   |
+| 13  | B   | 31  | B   | 49  | B   | 67  | C   | 85  | B   |
+| 14  | B   | 32  | B   | 50  | C   | 68  | B   | 86  | C   |
+| 15  | B   | 33  | B   | 51  | B   | 69  | A   | 87  | B   |
+| 16  | B   | 34  | B   | 52  | B   | 70  | B   | 88  | A   |
+| 17  | B   | 35  | D   | 53  | B   | 71  | B   | 89  | D   |
+| 18  | B   | 36  | B   | 54  | B   | 72  | B   | 90  | B   |
+| -   | -   | -   | -   | -   | -   | -   | -   | 91  | A   |
+| -   | -   | -   | -   | -   | -   | -   | -   | 92  | B   |
 
 ---
 
 ## Topic Distribution
 
-| Topic | Questions | Count |
-|-------|-----------|-------|
-| Schema Patterns | 1-8 | 8 |
-| Referential Actions | 9-16 | 8 |
-| Functions/Procedures/Triggers | 17-28 | 12 |
-| Transactions (TCL) | 29-42 | 14 |
-| Access Control (DCL) | 43-54 | 12 |
-| Scalability | 55-65 | 11 |
-| ORM & Query Builders | 66-76 | 11 |
-| Mixed/Integration | 77-90 | 14 |
-| **Total** | | **90** |
+| Topic                         | Questions | Count  |
+| ----------------------------- | --------- | ------ |
+| Schema Patterns               | 1-8       | 8      |
+| Referential Actions           | 9-18      | 10     |
+| Functions/Procedures/Triggers | 19-30     | 12     |
+| Transactions (TCL)            | 31-44     | 14     |
+| Access Control (DCL)          | 45-56     | 12     |
+| Scalability                   | 57-67     | 11     |
+| ORM & Query Builders          | 68-78     | 11     |
+| Mixed/Integration             | 79-92     | 14     |
+| **Total**                     |           | **92** |
