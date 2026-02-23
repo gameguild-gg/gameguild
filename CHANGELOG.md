@@ -1,3 +1,12 @@
+## [2.41.3](https://github.com/gameguild-gg/gameguild/compare/v2.41.2...v2.41.3) (2026-02-23)
+
+
+### Bug Fixes
+
+* add comments to the varint code ([3edeb3d](https://github.com/gameguild-gg/gameguild/commit/3edeb3dbb10099fc5649f5be5031dfbf17ac3d09))
+* binary formats varint ([c4df6d0](https://github.com/gameguild-gg/gameguild/commit/c4df6d0e970d485832440308e0023b54829b1b0a))
+* varints ([d9cea88](https://github.com/gameguild-gg/gameguild/commit/d9cea884328713bdcf8ca24bec83787369734e56))
+
 ## [2.41.2](https://github.com/gameguild-gg/gameguild/compare/v2.41.1...v2.41.2) (2026-02-22)
 
 
