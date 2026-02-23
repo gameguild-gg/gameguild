@@ -688,9 +688,19 @@ flowchart TB
 
 ```mermaid
 flowchart LR
-    U[UPDATE] -->|1. Write| W[(WAL)]
-    W -->|2. Stream| R[(Replica)]
-    W -->|3. Checkpoint| D[(Data Files)]
+    subgraph WAL_Process["WAL Write Process"]
+        W[(WAL)]
+    end
+    subgraph Distribution["Distribution"]
+        R[(Replica)]
+    end
+    subgraph Storage["Storage"]
+        D[(Data Files)]
+    end
+
+    U[UPDATE] --> W
+    W --> R
+    W --> D
 
     style W fill:#4CAF50
     style R fill:#2196F3
