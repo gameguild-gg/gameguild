@@ -81,18 +81,21 @@ Wire bytes: 0xAC  0x02
 The encoder extracts 7 bits at a time from the least-significant end, sets MSB = 1 on every byte except the last:
 
 ```cpp
-// buff points to the buffer at the position where the varint should be written
-// this asumes uint32_t, if you need to encode uint64_t, you know what to do
-int encode_varint(uint32_t value, uint8_t* buf) {
-    int len = 0;
+// buf points to the buffer at the position where the varint should be written
+// the buf pointer is incremented, so the caller will have the pointer advanced past the varint after encoding
+// if you need to encode uint64_t, you know what to do
+void encode_varint(uint32_t value, uint8_t*& buf) {
     // this assumes the buffer is large enough to hold the varint (up to 5 bytes for uint32_t)
     // this assumption may lead to buffer overflow if the caller does not ensure sufficient space
     while (value > 0x7F) {
-        buf[len++] = (value & 0x7F) | 0x80;  // 7 data bits + MSB=1 (more follow)
+        // 7 data bits + MSB=1 (more follow)
+        // walks 1 byte to the right
+        *buf++ = (value & 0x7F) | 0x80;  
         value >>= 7;
     }
-    buf[len++] = value & 0x7F;               // last byte: MSB=0 (done)
-    return len;
+    // last byte: MSB=0 (done)
+    // increment pointer
+    *buf++ = value & 0x7F;               
 }
 ```
 
@@ -100,11 +103,11 @@ Step-by-step for `value = 300` (`0b100101100`):
 
 ```
 Iteration 1:  value = 300 (> 127, so emit with MSB=1)
-  300 & 0x7F = 0x2C  →  0x2C | 0x80 = 0xAC  →  buf[0] = 0xAC
+  300 & 0x7F = 0x2C  →  0x2C | 0x80 = 0xAC  →  *buf++ = 0xAC
   300 >> 7   = 2
 Iteration 2:  value = 2   (≤ 127, so emit with MSB=0)
-  buf[1] = 0x02
-Result: [0xAC, 0x02]  →  2 bytes
+  *buf++ = 0x02
+Result: [0xAC, 0x02]  →  2 bytes, buf advanced by 2
 ```
 
 ### Why Little-Endian Varint Order?
@@ -116,18 +119,18 @@ Varints send the **least significant** 7-bit group first. This lets the decoder 
 ```cpp
 // buf points to the buffer at the position where the varint should be read
 // the buf pointer is incremented, so the caller will have the pointer advanced past the varint after decoding
-// this assumes uint32_t, if you need to decode uint64_t, eat your vegetables
-uint32_t decode_varint(const uint8_t*& buf) {
-    uint32_t result = 0;
+// if you need to decode uint64_t, eat your vegetables
+void decode_varint(uint32_t& value, const uint8_t*& buf) {
+    value = 0;
     int shift = 0;
     // this has potential to keep reading ad infinitum if the data arriving always has MSB=1
     for (;;) {
+        // get the byte and advance the pointer
         uint8_t byte = *buf++;
-        result |= (uint32_t(byte & 0x7F) << shift);  // OR into position
-        if ((byte & 0x80) == 0) break;                // MSB=0 → done
+        value |= (uint32_t(byte & 0x7F) << shift);  // OR into position
+        if ((byte & 0x80) == 0) break;               // MSB=0 → done
         shift += 7;
     }
-    return result;
 }
 ```
 
