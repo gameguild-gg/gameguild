@@ -53,6 +53,18 @@ import week06Readings from './06-subqueries-ctes-views/readings-06.md';
 import week06Reveal from './06-subqueries-ctes-views/reveal.md';
 import week06SubqueriesAndSetOperations from './06-subqueries-ctes-views/subqueries-and-set-operations.md';
 
+// Week 07 imports
+import week07AccessControl from './07-schema-patterns/access-control.md';
+import week07FunctionsProceduresTriggers from './07-schema-patterns/functions-procedures-triggers.md';
+import week07ORMQueryBuilders from './07-schema-patterns/orm-query-builders.md';
+import week07Quiz from './07-schema-patterns/quiz/week07-quiz.md';
+import week07Readings from './07-schema-patterns/readings-07.md';
+import week07ReferentialActions from './07-schema-patterns/referential-actions.md';
+import week07Reveal from './07-schema-patterns/reveal.md';
+import week07ScalabilityBasics from './07-schema-patterns/scalability-basics.md';
+import week07SchemaPatterns from './07-schema-patterns/schema-patterns.md';
+import week07Transactions from './07-schema-patterns/transactions.md';
+
 // Program definition
 export const databasesProgram: Program = {
     id: 'databases-program-1',
@@ -1098,6 +1110,237 @@ export const week06SubqueriesCTEsViewsQuizContent: ProgramContent = {
     updatedAt: '2023-01-01T00:00:00Z',
 };
 
+// Week 07 Content
+export const week07RevealContent: ProgramContent = {
+    id: 'databases-week-07-reveal',
+    programId: 'databases-program-1',
+    slug: 'schema-patterns-tcl-dcl-orm',
+    parentId: undefined,
+    title: 'Schema Patterns, TCL, DCL & ORM',
+    description: 'Reveal.js presentation covering schema patterns, data integrity, referential actions, functions, procedures, triggers, transactions, access control, scalability, and ORMs',
+    type: ProgramContentType.REVEAL,
+    body: week07Reveal,
+    sortOrder: 8,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 60,
+    visibility: 1, // Published
+    program: databasesProgram,
+    parent: undefined,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const week07ReadingsContent: ProgramContent = {
+    id: 'databases-week-07-readings',
+    programId: 'databases-program-1',
+    slug: 'readings-07',
+    parentId: 'databases-week-07-reveal',
+    title: 'Week 07 Readings & Resources',
+    description: 'Readings for schema patterns, referential actions, functions, procedures, triggers, transactions, access control, scalability, and ORMs',
+    type: 0, // Page
+    body: week07Readings,
+    sortOrder: 1,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 180,
+    visibility: 1, // Published
+    program: databasesProgram,
+    parent: week07RevealContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const week07SchemaPatternsContent: ProgramContent = {
+    id: 'databases-week-07-schema-patterns',
+    programId: 'databases-program-1',
+    slug: 'schema-patterns',
+    parentId: 'databases-week-07-readings',
+    title: 'Schema Patterns & Data Integrity',
+    description: 'Soft delete, optimistic locking, history tables, checksums, and audit trails',
+    type: 0, // Page
+    body: week07SchemaPatterns,
+    sortOrder: 1,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 25,
+    visibility: 1, // Published
+    program: databasesProgram,
+    parent: week07ReadingsContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const week07ReferentialActionsContent: ProgramContent = {
+    id: 'databases-week-07-referential-actions',
+    programId: 'databases-program-1',
+    slug: 'referential-actions',
+    parentId: 'databases-week-07-readings',
+    title: 'Referential Actions',
+    description: 'CASCADE, RESTRICT, SET NULL, SET DEFAULT, and managing foreign key relationships',
+    type: 0, // Page
+    body: week07ReferentialActions,
+    sortOrder: 2,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 20,
+    visibility: 1, // Published
+    program: databasesProgram,
+    parent: week07ReadingsContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const week07FunctionsProceduresTriggersContent: ProgramContent = {
+    id: 'databases-week-07-functions-procedures-triggers',
+    programId: 'databases-program-1',
+    slug: 'functions-procedures-triggers',
+    parentId: 'databases-week-07-readings',
+    title: 'Functions, Procedures & Triggers',
+    description: 'SQL functions, PL/pgSQL functions, stored procedures, and database triggers',
+    type: 0, // Page
+    body: week07FunctionsProceduresTriggers,
+    sortOrder: 3,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 30,
+    visibility: 1, // Published
+    program: databasesProgram,
+    parent: week07ReadingsContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const week07TransactionsContent: ProgramContent = {
+    id: 'databases-week-07-transactions',
+    programId: 'databases-program-1',
+    slug: 'transactions',
+    parentId: 'databases-week-07-readings',
+    title: 'Transactions & ACID Properties',
+    description: 'TCL commands, ACID properties, isolation levels, and concurrency control',
+    type: 0, // Page
+    body: week07Transactions,
+    sortOrder: 4,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 30,
+    visibility: 1, // Published
+    program: databasesProgram,
+    parent: week07ReadingsContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const week07AccessControlContent: ProgramContent = {
+    id: 'databases-week-07-access-control',
+    programId: 'databases-program-1',
+    slug: 'access-control',
+    parentId: 'databases-week-07-readings',
+    title: 'Access Control & DCL',
+    description: 'GRANT, REVOKE, roles, privileges, and Row-Level Security',
+    type: 0, // Page
+    body: week07AccessControl,
+    sortOrder: 5,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 25,
+    visibility: 1, // Published
+    program: databasesProgram,
+    parent: week07ReadingsContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const week07ScalabilityBasicsContent: ProgramContent = {
+    id: 'databases-week-07-scalability-basics',
+    programId: 'databases-program-1',
+    slug: 'scalability-basics',
+    parentId: 'databases-week-07-readings',
+    title: 'Scalability Basics',
+    description: 'Replication, partitioning, sharding, connection pooling, and scaling strategies',
+    type: 0, // Page
+    body: week07ScalabilityBasics,
+    sortOrder: 6,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 25,
+    visibility: 1, // Published
+    program: databasesProgram,
+    parent: week07ReadingsContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const week07ORMQueryBuildersContent: ProgramContent = {
+    id: 'databases-week-07-orm-query-builders',
+    programId: 'databases-program-1',
+    slug: 'orm-query-builders',
+    parentId: 'databases-week-07-readings',
+    title: 'ORMs & Query Builders',
+    description: 'Drizzle ORM, query builders, and SQL injection prevention',
+    type: 0, // Page
+    body: week07ORMQueryBuilders,
+    sortOrder: 7,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 30,
+    visibility: 1, // Published
+    program: databasesProgram,
+    parent: week07ReadingsContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const week07QuizContent: ProgramContent = {
+    id: 'databases-week-07-quiz',
+    programId: 'databases-program-1',
+    slug: 'schema-patterns-tcl-dcl-orm-quiz',
+    parentId: 'databases-week-07-reveal',
+    title: 'Quiz: Schema Patterns, TCL, DCL & ORM',
+    description: 'Practice schema patterns, referential actions, functions, procedures, triggers, transactions, access control, scalability, and ORMs',
+    type: 0, // Page
+    body: week07Quiz,
+    sortOrder: 2,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 90,
+    visibility: 1, // Published
+    program: databasesProgram,
+    parent: week07RevealContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
 // Wire program contents and product-program relations
 // only the parent contents go directly under the program
 databasesProgram.programContents = [
@@ -1108,6 +1351,7 @@ databasesProgram.programContents = [
     week04RevealContent,
     week05RevealContent,
     week06RevealContent,
+    week07RevealContent,
 ];
 
 // Set up parent-child relationships
@@ -1170,6 +1414,21 @@ week06RevealContent.children = [
 week06ReadingsContent.children = [
     week06SubqueriesAndSetOperationsContent,
     week06CTEsAndViewsContent,
+];
+
+week07RevealContent.children = [
+    week07ReadingsContent,
+    week07QuizContent,
+];
+
+week07ReadingsContent.children = [
+    week07SchemaPatternsContent,
+    week07ReferentialActionsContent,
+    week07FunctionsProceduresTriggersContent,
+    week07TransactionsContent,
+    week07AccessControlContent,
+    week07ScalabilityBasicsContent,
+    week07ORMQueryBuildersContent,
 ];
 
 databasesProduct.productPrograms = [databasesProductProgram];
