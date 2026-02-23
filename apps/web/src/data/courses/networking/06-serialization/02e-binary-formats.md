@@ -110,11 +110,11 @@ Varints send the **least significant** 7-bit group first. This lets the decoder 
 #### Varint Decoding (C++)
 
 ```cpp
-uint32_t decode_varint(const uint8_t*& ptr) {
+uint32_t decode_varint(const uint8_t* buf, int& pos) {
     uint32_t result = 0;
     int shift = 0;
     for (;;) {
-        uint8_t byte = *ptr++;
+        uint8_t byte = buf[pos++];
         result |= (uint32_t(byte & 0x7F) << shift);  // OR into position
         if ((byte & 0x80) == 0) break;                // MSB=0 → done
         shift += 7;
