@@ -1,3 +1,10 @@
+## [2.41.4](https://github.com/gameguild-gg/gameguild/compare/v2.41.3...v2.41.4) (2026-02-23)
+
+
+### Bug Fixes
+
+* add more varint comments ([65a0c7b](https://github.com/gameguild-gg/gameguild/commit/65a0c7be2101a2d9250c0cdf4d74c367025fbad3))
+
 ## [2.41.3](https://github.com/gameguild-gg/gameguild/compare/v2.41.2...v2.41.3) (2026-02-23)
 
 
