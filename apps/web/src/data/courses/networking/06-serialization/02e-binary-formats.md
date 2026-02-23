@@ -81,6 +81,8 @@ Wire bytes: 0xAC  0x02
 The encoder extracts 7 bits at a time from the least-significant end, sets MSB = 1 on every byte except the last:
 
 ```cpp
+// buff points to the buffer at the position where the varint should be written
+// this asumes uint32_t, if you need to encode uint64_t, you know what to do
 int encode_varint(uint32_t value, uint8_t* buf) {
     int len = 0;
     // this assumes the buffer is large enough to hold the varint (up to 5 bytes for uint32_t)
@@ -112,12 +114,15 @@ Varints send the **least significant** 7-bit group first. This lets the decoder 
 #### Varint Decoding (C++)
 
 ```cpp
-uint32_t decode_varint(const uint8_t* buf, int& pos) {
+// buf points to the buffer at the position where the varint should be read
+// the buf pointer is incremented, so the caller will have the pointer advanced past the varint after decoding
+// this assumes uint32_t, if you need to decode uint64_t, eat your vegetables
+uint32_t decode_varint(const uint8_t*& buf) {
     uint32_t result = 0;
     int shift = 0;
-    // this have potential to keep reading ad infinitum if the data arriving always has MSB=1
-    for (;;) { 
-        uint8_t byte = buf[pos++];
+    // this has potential to keep reading ad infinitum if the data arriving always has MSB=1
+    for (;;) {
+        uint8_t byte = *buf++;
         result |= (uint32_t(byte & 0x7F) << shift);  // OR into position
         if ((byte & 0x80) == 0) break;                // MSB=0 → done
         shift += 7;
