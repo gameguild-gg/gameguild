@@ -55,6 +55,14 @@ import networkingWeek06PerformanceComparisonMd from './06-serialization/02h-perf
 import networkingWeek06ReadingsMd from './06-serialization/03-readings.md';
 import networkingWeek06AssignmentMd from './06-serialization/04-assignment.md';
 import networkingWeek06QuizMd from './06-serialization/05-quiz.md';
+import networkingWeek07LectureReveal from './07-distributed-state-sync/01-reveal.md';
+import networkingWeek07LectureMd from './07-distributed-state-sync/02-lecture.md';
+import networkingWeek07StateSyncModelsMd from './07-distributed-state-sync/02a-state-sync-models.md';
+import networkingWeek07AuthoritativeServerMd from './07-distributed-state-sync/02b-authoritative-server.md';
+import networkingWeek07ServerReconciliationMd from './07-distributed-state-sync/02c-server-reconciliation.md';
+import networkingWeek07DeltaCompressionMd from './07-distributed-state-sync/02d-delta-compression.md';
+import networkingWeek07ReadingsMd from './07-distributed-state-sync/03-readings.md';
+import networkingWeek07AssignmentMd from './07-distributed-state-sync/04-assignment.md';
 import networkingSyllabus from './syllabus.md';
 
 export const networkingProgram: Program = {
@@ -1457,7 +1465,201 @@ networkingWeek06LectureContent.children = [
     networkingWeek06PerformanceComparison,
 ];
 
-networkingProgram.programContents = [networkingSyllabusContent, networkingWeek01Intro, networkingWeek02Intro, networkingWeek03Intro, networkingWeek04Intro, networkingWeek05Intro, networkingWeek06Intro];
+// Week 07: Distributed State and Synchronization
+
+export const networkingWeek07Intro: ProgramContent & { slug: string } = {
+    id: 'week-07',
+    slug: 'week-07',
+    programId: 'networking-program-1',
+    parentId: undefined,
+    title: 'Week 07 — Distributed State and Synchronization',
+    description: 'State sync models (client-server vs P2P), authoritative server, server reconciliation, delta compression.',
+    type: ProgramContentType.REVEAL,
+    body: networkingWeek07LectureReveal,
+    sortOrder: 8,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 90,
+    visibility: 1, // Published
+    program: networkingProgram,
+    parent: undefined,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const networkingWeek07LectureContent: ProgramContent & { slug: string } = {
+    id: 'week-07-lecture',
+    slug: 'lecture',
+    programId: 'networking-program-1',
+    parentId: 'week-07',
+    title: 'Lecture Notes',
+    description: 'State synchronization models, authoritative server, reconciliation, delta compression.',
+    type: 0, // Page
+    body: networkingWeek07LectureMd,
+    sortOrder: 1,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 60,
+    visibility: 1, // Published
+    program: networkingProgram,
+    parent: networkingWeek07Intro,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const networkingWeek07StateSyncModels: ProgramContent & { slug: string } = {
+    id: 'week-07-state-sync-models',
+    slug: 'state-sync-models',
+    programId: 'networking-program-1',
+    parentId: 'week-07-lecture',
+    title: '1. State Synchronization Models',
+    description: 'Client-server vs P2P, state sync vs input sync, P2P lockstep and host authority.',
+    type: 0, // Page
+    body: networkingWeek07StateSyncModelsMd,
+    sortOrder: 1,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 25,
+    visibility: 1, // Published
+    program: networkingProgram,
+    parent: networkingWeek07LectureContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const networkingWeek07AuthoritativeServer: ProgramContent & { slug: string } = {
+    id: 'week-07-authoritative-server',
+    slug: 'authoritative-server',
+    programId: 'networking-program-1',
+    parentId: 'week-07-lecture',
+    title: '2. Authoritative Server and Never Trust the Client',
+    description: 'Server as source of truth, zero-trust, host authority in P2P.',
+    type: 0, // Page
+    body: networkingWeek07AuthoritativeServerMd,
+    sortOrder: 2,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 20,
+    visibility: 1, // Published
+    program: networkingProgram,
+    parent: networkingWeek07LectureContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const networkingWeek07ServerReconciliation: ProgramContent & { slug: string } = {
+    id: 'week-07-server-reconciliation',
+    slug: 'server-reconciliation',
+    programId: 'networking-program-1',
+    parentId: 'week-07-lecture',
+    title: '3. Server Reconciliation',
+    description: 'Client-side prediction, server reconciliation, P2P conflict resolution.',
+    type: 0, // Page
+    body: networkingWeek07ServerReconciliationMd,
+    sortOrder: 3,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 25,
+    visibility: 1, // Published
+    program: networkingProgram,
+    parent: networkingWeek07LectureContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const networkingWeek07DeltaCompression: ProgramContent & { slug: string } = {
+    id: 'week-07-delta-compression',
+    slug: 'delta-compression',
+    programId: 'networking-program-1',
+    parentId: 'week-07-lecture',
+    title: '4. Delta Compression',
+    description: 'Send deltas instead of full state, selective updates, XOR trick.',
+    type: 0, // Page
+    body: networkingWeek07DeltaCompressionMd,
+    sortOrder: 4,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 20,
+    visibility: 1, // Published
+    program: networkingProgram,
+    parent: networkingWeek07LectureContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const networkingWeek07Assignment: ProgramContent & { slug: string } = {
+    id: 'week-07-assignment',
+    slug: 'assignment',
+    programId: 'networking-program-1',
+    parentId: 'week-07',
+    title: 'Assignment 07',
+    description: 'Build an authoritative game server and clients with client-side prediction, server reconciliation, and delta compression.',
+    type: 0, // Page
+    body: networkingWeek07AssignmentMd,
+    sortOrder: 3,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 180,
+    visibility: 1, // Published
+    program: networkingProgram,
+    parent: networkingWeek07Intro,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const networkingWeek07Readings: ProgramContent & { slug: string } = {
+    id: 'week-07-readings',
+    slug: 'readings',
+    programId: 'networking-program-1',
+    parentId: 'week-07',
+    title: 'Readings',
+    description: 'CAP theorem, P2P vs client-server, Gambetta, Fiedler, delta compression, never trust the client.',
+    type: 0, // Page
+    body: networkingWeek07ReadingsMd,
+    sortOrder: 2,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 105,
+    visibility: 1, // Published
+    program: networkingProgram,
+    parent: networkingWeek07Intro,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+networkingWeek07Intro.children = [networkingWeek07LectureContent, networkingWeek07Readings, networkingWeek07Assignment];
+networkingWeek07LectureContent.children = [
+    networkingWeek07StateSyncModels,
+    networkingWeek07AuthoritativeServer,
+    networkingWeek07ServerReconciliation,
+    networkingWeek07DeltaCompression,
+];
+
+networkingProgram.programContents = [networkingSyllabusContent, networkingWeek01Intro, networkingWeek02Intro, networkingWeek03Intro, networkingWeek04Intro, networkingWeek05Intro, networkingWeek06Intro, networkingWeek07Intro];
 networkingProduct.productPrograms = [networkingProductProgram];
 
 export default networkingProgram;
