@@ -237,16 +237,16 @@ _Focus: Fundamentals + Weekly Coding Assignments_
 
 ### Week 07: Feb 23–27 - Distributed State and Synchronization
 
-**Tuesday, Feb 24:** State synchronization models (CS: distributed systems patterns / GPR: client-server vs P2P), delta compression  
-**Friday, Feb 27:** Lag compensation principles, server reconciliation, "never trust the client"
+**Tuesday, Feb 24:** State synchronization models (CS: distributed systems patterns / GPR: client-server vs P2P), P2P state sync (lockstep, host authority, state broadcast), delta compression  
+**Friday, Feb 27:** Server reconciliation, "never trust the client", host authority in P2P (listen server), P2P conflict resolution
 
-**Quiz 07:** Synchronization patterns, lag compensation, reconciliation strategies  
+**Quiz 07:** Synchronization patterns, reconciliation strategies, P2P vs client-server  
 **Coding Assignment 07:** _State Sync_ - Replicate shared state between multiple clients with delta updates and basic reconciliation
 
 **Readings:**
 
 - _Academic:_ ["An Illustrated Proof of the CAP Theorem"](https://mwhittaker.github.io/blog/an_illustrated_proof_of_the_cap_theorem/)
-- _Practical:_ Gabriel Gambetta, ["Fast-Paced Multiplayer" Parts I-III](https://www.gabrielgambetta.com/client-server-game-architecture.html)
+- _Practical:_ Gabriel Gambetta, ["Fast-Paced Multiplayer" Parts I-II](https://www.gabrielgambetta.com/client-server-game-architecture.html), [OrbitDB: P2P vs Client-Server](https://github.com/orbitdb/field-manual/blob/main/02_Thinking_Peer_to_Peer/01_P2P_vs_Client-Server.md)
 - _Interactive Demo:_ [Client-side prediction live demo](https://www.gabrielgambetta.com/client-side-prediction-live-demo.html)
 
 ---
@@ -405,6 +405,8 @@ _No quiz this week (last week before finals)_
 
 This course serves both CS and GPR students. The following terms are equivalent:
 
+- Client-server ↔ Centralized authority
+- P2P / Peer-to-peer ↔ Distributed authority (listen server = host authority in P2P)
 - Tick rate ↔ Simulation frequency
 - Matchmaking ↔ Connection brokering
 - Lobby system ↔ Session management

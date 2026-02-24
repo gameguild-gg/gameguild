@@ -48,11 +48,16 @@
 - Kleppmann, [Designing Data-Intensive Applications](https://dataintensive.net/) — Ch. on replication and consistency (strong vs eventual)
 - [OrbitDB: P2P vs Client-Server](https://github.com/orbitdb/field-manual/blob/main/02_Thinking_Peer_to_Peer/01_P2P_vs_Client-Server.md) — Architectural comparison
 
+### P2P State Sync (Both audiences)
+
+- ["The TRIBES Engine Networking Model"](https://www.gamedeveloper.com/programming/the-tribes-engine-networking-model) (Frohnmayer & Gift) — Classic paper on P2P game networking; lockstep, host authority, state broadcast
+- ["1500 Archers on a 28.8: Network Programming in Age of Empires"](https://www.gamedeveloper.com/programming/1500-archers-on-a-28-8-network-programming-in-age-of-empires-and-beyond) (Bettner & Terrano) — Lockstep/deterministic simulation in RTS; input-only sync
+- [OrbitDB: P2P Architecture](https://github.com/orbitdb/field-manual) — P2P data sync, eventual consistency (CSI)
+
 ### Game Networking Context (GPR students)
 
 - Glenn Fiedler, ["Snapshot Interpolation"](https://gafferongames.com/post/snapshot_interpolation/) — Connects to Week 13; interpolation between snapshots
 - [Valve Source Multiplayer Networking](https://developer.valvesoftware.com/wiki/Source_Multiplayer_Networking) — Skim for state sync and authority patterns
-- "1500 Archers on a 28.8: Network Programming in Age of Empires" — Classic paper on state sync in RTS
 - [Demofox: A Neat Trick for Compressing Networked State Data](https://blog.demofox.org/2018/06/04/a-neat-trick-for-compressing-networked-state-data/) — XOR-based delta compression (different angle from Week 06 Snapshot Compression)
 
 ### Unity / Unreal Documentation
@@ -65,13 +70,14 @@
 
 ::: warning "What to pay attention to"
 
-1. **CAP Theorem**: Consistency vs availability under partition—why distributed systems can't have all three
+1. **CAP Theorem**: Consistency vs availability under partition—why distributed systems can't have all three; **P2P often chooses AP** (availability + partition tolerance)
 2. **P2P vs Client-Server**: Trade-offs—single authority vs distributed, scalability vs consistency
-3. **Gambetta Part I**: Why authoritative server? Why send inputs not state? "Never trust the client" as design principle
-4. **Gambetta Part II**: Server reconciliation flow—client predicts, server decides, client corrects. Input sequence numbers and when to accept authoritative state
-5. **Fiedler State Sync**: State vs input sync trade-offs; selective updates (send only changed objects); bandwidth vs determinism
-6. **Delta compression**: Send deltas (changes) instead of full state—reduces bandwidth when state changes incrementally
-7. **Never trust the client**: Server validates all inputs; applies to APIs, microservices, and games
+3. **P2P state sync**: Lockstep (input-only, deterministic), host authority (listen server), state broadcast; conflict resolution when peers disagree
+4. **Gambetta Part I**: Why authoritative server? Why send inputs not state? "Never trust the client" as design principle
+5. **Gambetta Part II**: Server reconciliation flow—client predicts, server decides, client corrects. Input sequence numbers and when to accept authoritative state
+6. **Fiedler State Sync**: State vs input sync trade-offs; selective updates (send only changed objects); bandwidth vs determinism
+7. **Delta compression**: Send deltas (changes) instead of full state—reduces bandwidth when state changes incrementally
+8. **Never trust the client**: Server validates all inputs; applies to APIs, microservices, and games; harder in full P2P (no central validator)
 
 :::
 
@@ -91,3 +97,4 @@
 - Assuming prediction and reconciliation apply only to games (optimistic concurrency is universal)
 - Confusing state sync (send state) with input sync (send inputs; server simulates)
 - Skipping delta compression and sending full state every tick (wastes bandwidth)
+- Ignoring conflict resolution in P2P—when peers disagree, you need a strategy (host decides, last-writer-wins, etc.)
