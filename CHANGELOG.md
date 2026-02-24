@@ -1,3 +1,11 @@
+# [2.42.0](https://github.com/gameguild-gg/gameguild/compare/v2.41.7...v2.42.0) (2026-02-24)
+
+
+### Features
+
+* **courses/networking:** add Week 07 lecture and readings on distributed state synchronization ([a24558e](https://github.com/gameguild-gg/gameguild/commit/a24558ea18eeb92291c578d5d5c617ff0db414fb))
+* **courses/networking:** distributed states ([43de5e2](https://github.com/gameguild-gg/gameguild/commit/43de5e2d9bbffa428b56e3392604d7ce951aa17b))
+
 ## [2.41.7](https://github.com/gameguild-gg/gameguild/compare/v2.41.6...v2.41.7) (2026-02-23)
 
 
