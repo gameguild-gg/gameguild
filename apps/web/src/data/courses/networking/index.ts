@@ -63,6 +63,7 @@ import networkingWeek07ServerReconciliationMd from './07-distributed-state-sync/
 import networkingWeek07DeltaCompressionMd from './07-distributed-state-sync/02d-delta-compression.md';
 import networkingWeek07ReadingsMd from './07-distributed-state-sync/03-readings.md';
 import networkingWeek07AssignmentMd from './07-distributed-state-sync/04-assignment.md';
+import networkingWeek07QuizMd from './07-distributed-state-sync/05-quiz.md';
 import networkingSyllabus from './syllabus.md';
 
 export const networkingProgram: Program = {
@@ -1651,7 +1652,30 @@ export const networkingWeek07Readings: ProgramContent & { slug: string } = {
     updatedAt: '2023-01-01T00:00:00Z',
 };
 
-networkingWeek07Intro.children = [networkingWeek07LectureContent, networkingWeek07Readings, networkingWeek07Assignment];
+export const networkingWeek07Quiz: ProgramContent & { slug: string } = {
+    id: 'week-07-quiz',
+    slug: 'quiz',
+    programId: 'networking-program-1',
+    parentId: 'week-07',
+    title: 'Quiz 07',
+    description: 'Test your understanding of distributed state, CAP, P2P sync, authoritative server, reconciliation, and delta compression.',
+    type: 0, // Page
+    body: networkingWeek07QuizMd,
+    sortOrder: 4,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 30,
+    visibility: 1, // Published
+    program: networkingProgram,
+    parent: networkingWeek07Intro,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+networkingWeek07Intro.children = [networkingWeek07LectureContent, networkingWeek07Readings, networkingWeek07Assignment, networkingWeek07Quiz];
 networkingWeek07LectureContent.children = [
     networkingWeek07StateSyncModels,
     networkingWeek07AuthoritativeServer,
