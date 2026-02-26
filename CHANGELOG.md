@@ -1,3 +1,10 @@
+## [2.42.1](https://github.com/gameguild-gg/gameguild/compare/v2.42.0...v2.42.1) (2026-02-26)
+
+
+### Bug Fixes
+
+* add quiz for week 07 networking ([ac1e58e](https://github.com/gameguild-gg/gameguild/commit/ac1e58e7635649a94c3705d1b76d2d432df096b5))
+
 # [2.42.0](https://github.com/gameguild-gg/gameguild/compare/v2.41.7...v2.42.0) (2026-02-24)
 
 
