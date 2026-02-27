@@ -2,6 +2,7 @@ import { Product, ProductProgram, Program, ProgramContent, ProgramContentType } 
 
 // Markdown content imports
 import dataanalysisCustomerServicePerformanceReveal from './customer-service-performance/reveal.md';
+import dataanalysisDataVisualizationReveal from './data-visualization/reveal.md';
 import dataanalysisNumpyReveal from './numpy/reveal.md';
 import dataanalysisPandasDataFrameReveal from './pandas-dataframe/reveal.md';
 import dataanalysisPandasReveal from './pandas/reveal.md';
@@ -182,6 +183,28 @@ export const dataanalysisCustomerServicePerformanceContent: ProgramContent = {
     updatedAt: '2023-01-01T00:00:00Z',
 };
 
+export const dataanalysisDataVisualizationContent: ProgramContent = {
+    id: 'dataanalysis-data-visualization',
+    programId: 'dataanalysis-program-1',
+    parentId: undefined,
+    title: 'Data Visualization with Plotly Express',
+    description: 'Interactive data visualization using Plotly Express: scatter plots, line charts, bar charts, histograms, maps, animations, and customization',
+    type: ProgramContentType.REVEAL,
+    body: dataanalysisDataVisualizationReveal,
+    sortOrder: 6,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 90,
+    visibility: 1, // Published
+    program: dataanalysisProgram,
+    parent: undefined,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
 // Wire program contents
 dataanalysisProgram.programContents = [
     dataanalysisSyllabusContent,
@@ -189,4 +212,5 @@ dataanalysisProgram.programContents = [
     dataanalysisPandasContent,
     dataanalysisPandasDataFrameContent,
     dataanalysisCustomerServicePerformanceContent,
+    dataanalysisDataVisualizationContent,
 ];
