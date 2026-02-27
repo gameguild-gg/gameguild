@@ -1,3 +1,10 @@
+## [2.42.2](https://github.com/gameguild-gg/gameguild/compare/v2.42.1...v2.42.2) (2026-02-27)
+
+
+### Bug Fixes
+
+* **data-analysis:** add workbook for data vis ([99b50ea](https://github.com/gameguild-gg/gameguild/commit/99b50ea8b4c499ad340f2d0463d7b334c87a193d))
+
 ## [2.42.1](https://github.com/gameguild-gg/gameguild/compare/v2.42.0...v2.42.1) (2026-02-26)
 
 
