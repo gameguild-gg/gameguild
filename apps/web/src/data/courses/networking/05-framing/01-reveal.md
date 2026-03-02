@@ -889,6 +889,37 @@ uint32_t received = boost::endian::big_to_native(net_len);
 
 ---
 
+## Why Do Byte Orders Differ?
+
+**Q:** _Why do different CPUs use different byte orders? And why not just tag each message with its endianness?_
+
+**Why it happened:** hardware design trade-offs.
+
+- **Little-endian** (x86): LSB at lowest address → multi-precision arithmetic is simpler (add starts at address 0, carry propagates naturally)
+- **Big-endian** (SPARC, network): MSB first → easier to compare/sort and matches how humans write numbers left-to-right
+
+Neither is objectively "correct" — the choice was baked into silicon in the 1970s-80s and couldn't change without breaking all existing software.
+
+---
+
+## Why Not Tag Every Message?
+
+Some formats **do** include a byte-order mark:
+
+- **Unicode BOM** (`U+FEFF`) — reader checks for `FEFF` vs `FFFE`
+- **TIFF** image files — header starts with `II` (little) or `MM` (big)
+
+But network protocols **chose a single standard** instead:
+
+- Extra tag = extra bytes on every message
+- Receiver must branch on every read ⇒ more complex, error-prone parsers
+- RFC 1700 settled it: **network byte order = big-endian**
+- Standardizing once is simpler than negotiating per-message
+
+**Takeaway:** convert at the boundary, use `native_to_big()` / `big_to_native()`, and forget about it.
+
+---
+
 ## Boost.Endian Functions
 
 | Boost.Endian Function  | Use Case        |

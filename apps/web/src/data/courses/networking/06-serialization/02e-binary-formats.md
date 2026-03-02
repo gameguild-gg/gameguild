@@ -90,12 +90,12 @@ void encode_varint(uint32_t value, uint8_t*& buf) {
     while (value > 0x7F) {
         // 7 data bits + MSB=1 (more follow)
         // walks 1 byte to the right
-        *buf++ = (value & 0x7F) | 0x80;  
+        *buf++ = (value & 0x7F) | 0x80;
         value >>= 7;
     }
     // last byte: MSB=0 (done)
     // increment pointer
-    *buf++ = value & 0x7F;               
+    *buf++ = value & 0x7F;
 }
 ```
 
@@ -296,7 +296,7 @@ The key insight: **small magnitude → small unsigned → many leading zeros →
 
 Formula: `zigzag(n) = (n << 1) ^ (n >> 31)` (for 32-bit)
 
-Reverse: `original(z) = (z >>> 1) ^ -(z & 1)`
+Reverse: `original(z) = (z >> 1) ^ -(z & 1)`
 
 This ensures small negative values also use few bytes: `-1` → `1` → 1 byte.
 
