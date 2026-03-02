@@ -128,6 +128,35 @@ This is why network protocols standardize on big-endian ("network byte order").
 
 :::
 
+::: info "Why do byte orders differ, and why not tag each message?"
+
+**Why do different CPUs use different byte orders?**
+
+It comes down to hardware design trade-offs made in the 1970s–80s that became permanently baked into instruction-set architectures:
+
+- **Little-endian** (x86, ARM in default mode): the least-significant byte sits at the lowest memory address. This simplifies multi-precision arithmetic — an ADD instruction can start reading at address 0 and let carries propagate upward without knowing the total width of the integer in advance.
+- **Big-endian** (PowerPC, SPARC, network protocols): the most-significant byte comes first, matching left-to-right human notation. Comparing and sorting numbers can begin at the first byte, and hex dumps read naturally.
+
+Neither representation is inherently superior; each optimizes for a different operation. Once millions of chips and their software ecosystems existed, backwards compatibility locked the choice in.
+
+**Why not include a flag that says "this message is little-endian" or "big-endian"?**
+
+Some formats actually do this:
+
+- **Unicode BOM** (`U+FEFF`): the reader checks whether the first two bytes are `FE FF` or `FF FE` to determine byte order.
+- **TIFF** image files: the header begins with `II` (Intel / little-endian) or `MM` (Motorola / big-endian).
+
+But network protocols took a different, simpler path — **standardize on one byte order**:
+
+- An endianness tag adds overhead to every message (even a 1-bit flag must be parsed).
+- Every receiver would need to branch on every multi-byte read, doubling parser complexity.
+- A per-message negotiation opens the door to mismatches if one side gets the flag wrong.
+- RFC 1700 settled the question decades ago: **network byte order is big-endian**.
+
+Standardizing once at the protocol level is simpler, faster, and less error-prone than negotiating per-message. The practical rule is: **convert at the boundary** using `native_to_big()` / `big_to_native()`, and the rest of your code never has to think about it.
+
+:::
+
 ## Byte Order Conversion
 
 **Header:** `#include <boost/endian/conversion.hpp>`
