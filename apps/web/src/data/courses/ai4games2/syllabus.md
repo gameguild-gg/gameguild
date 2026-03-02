@@ -298,6 +298,8 @@ This is a work in progress schedule. It is subject to change. Every change will 
 - Killer move heuristic, history tables
 - Opening book integration
 - Endgame considerations
+- Zobrist hashing and transposition tables
+- Syzygy tablebases overview
 
 **Thursday 2026/02/26** - Competition Preparation Workshop
 
