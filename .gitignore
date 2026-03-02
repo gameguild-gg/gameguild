@@ -99,3 +99,7 @@ next-env.d.ts
 
 # Production
 /build
+
+apps/web/test-results/
+
+test-results/

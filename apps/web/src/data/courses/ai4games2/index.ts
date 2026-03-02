@@ -37,6 +37,7 @@ import ai4games2Week06Quiz from "./06-chess/03-quiz.md";
 import ai4games2Week07Slides from "./07-chess/00-reveal.md";
 import ai4games2Week07Lecture from "./07-chess/01-lecture.md";
 import ai4games2Week07Readings from "./07-chess/02-readings.md";
+import ai4games2Week08Midterm from "./08-competition/midterm.md";
 import ai4games2ExtraOldLecture from "./old/extras/llms.md";
 import ai4games2Week01OldLecture from "./old/week01/lecture.md";
 import ai4games2Week01OldReadings from "./old/week01/readings.md";
@@ -939,6 +940,30 @@ export const ai4games2Week07ReadingsContent: ProgramContent = {
   updatedAt: "2023-01-01T00:00:00Z",
 };
 
+export const ai4games2Week08MidtermContent: ProgramContent = {
+  id: "ai4games2-week-08-midterm",
+  programId: "ai4games2-program",
+  parentId: undefined,
+  title: "Week 8: Midterm — Chess Competition",
+  slug: "week-08",
+  description:
+    "Midterm chess engine competition: implement advanced search techniques and compete in a class-wide tournament",
+  type: ProgramContentType.PAGE,
+  body: ai4games2Week08Midterm,
+  sortOrder: 8,
+  isRequired: true,
+  gradingMethod: 1,
+  maxPoints: 100,
+  estimatedMinutes: 600,
+  visibility: 1,
+  program: ai4games2Program,
+  parent: undefined,
+  children: [],
+  contentInteractions: [],
+  createdAt: "2023-01-01T00:00:00Z",
+  updatedAt: "2023-01-01T00:00:00Z",
+};
+
 export const ai4games2Week02OldContent: ProgramContent = {
   id: "ai4games2-week-02",
   programId: "ai4games2-program",
@@ -1427,6 +1452,7 @@ ai4games2Program.programContents = [
   ai4games2Week05SlidesContent,
   ai4games2Week06SlidesContent,
   ai4games2Week07SlidesContent,
+  ai4games2Week08MidtermContent,
   ai4games2OldContent,
 ];
 
