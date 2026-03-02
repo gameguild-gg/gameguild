@@ -34,6 +34,9 @@ import ai4games2Week06Slides from "./06-chess/00-reveal.md";
 import ai4games2Week06Lecture from "./06-chess/01-lecture.md";
 import ai4games2Week06Readings from "./06-chess/02-readings.md";
 import ai4games2Week06Quiz from "./06-chess/03-quiz.md";
+import ai4games2Week07Slides from "./07-chess/00-reveal.md";
+import ai4games2Week07Lecture from "./07-chess/01-lecture.md";
+import ai4games2Week07Readings from "./07-chess/02-readings.md";
 import ai4games2ExtraOldLecture from "./old/extras/llms.md";
 import ai4games2Week01OldLecture from "./old/week01/lecture.md";
 import ai4games2Week01OldReadings from "./old/week01/readings.md";
@@ -864,6 +867,78 @@ export const ai4games2Week06QuizContent: ProgramContent = {
   updatedAt: "2023-01-01T00:00:00Z",
 };
 
+// Week 07 Content (Advanced Chess Techniques)
+export const ai4games2Week07SlidesContent: ProgramContent = {
+  id: "ai4games2-week-07-slides",
+  programId: "ai4games2-program",
+  parentId: undefined,
+  title: "Week 7: Advanced Chess Techniques",
+  slug: "week-07",
+  description:
+    "Chess engine optimization: null-move pruning, LMR, move ordering, transposition tables, and endgames",
+  type: ProgramContentType.REVEAL,
+  body: ai4games2Week07Slides,
+  sortOrder: 7,
+  isRequired: true,
+  gradingMethod: 0,
+  maxPoints: null,
+  estimatedMinutes: 60,
+  visibility: 1,
+  program: ai4games2Program,
+  parent: undefined,
+  children: [],
+  contentInteractions: [],
+  createdAt: "2023-01-01T00:00:00Z",
+  updatedAt: "2023-01-01T00:00:00Z",
+};
+
+export const ai4games2Week07LectureContent: ProgramContent = {
+  id: "ai4games2-week-07-lecture",
+  programId: "ai4games2-program",
+  parentId: "ai4games2-week-07-slides",
+  title: "Week 7: Lecture Notes",
+  slug: "lecture",
+  description:
+    "Detailed lecture notes on chess engine optimization techniques and competition preparation",
+  type: ProgramContentType.PAGE,
+  body: ai4games2Week07Lecture,
+  sortOrder: 1,
+  isRequired: true,
+  gradingMethod: 0,
+  maxPoints: null,
+  estimatedMinutes: 90,
+  visibility: 1,
+  program: ai4games2Program,
+  parent: ai4games2Week07SlidesContent,
+  children: [],
+  contentInteractions: [],
+  createdAt: "2023-01-01T00:00:00Z",
+  updatedAt: "2023-01-01T00:00:00Z",
+};
+
+export const ai4games2Week07ReadingsContent: ProgramContent = {
+  id: "ai4games2-week-07-readings",
+  programId: "ai4games2-program",
+  parentId: "ai4games2-week-07-slides",
+  title: "Week 7: Readings",
+  slug: "readings",
+  description: "Required readings and videos for Advanced Chess Techniques",
+  type: ProgramContentType.PAGE,
+  body: ai4games2Week07Readings,
+  sortOrder: 2,
+  isRequired: true,
+  gradingMethod: 0,
+  maxPoints: null,
+  estimatedMinutes: 120,
+  visibility: 1,
+  program: ai4games2Program,
+  parent: ai4games2Week07SlidesContent,
+  children: [],
+  contentInteractions: [],
+  createdAt: "2023-01-01T00:00:00Z",
+  updatedAt: "2023-01-01T00:00:00Z",
+};
+
 export const ai4games2Week02OldContent: ProgramContent = {
   id: "ai4games2-week-02",
   programId: "ai4games2-program",
@@ -1313,6 +1388,10 @@ ai4games2Week06SlidesContent.children = [
   ai4games2Week06ReadingsContent,
   ai4games2Week06QuizContent,
 ];
+ai4games2Week07SlidesContent.children = [
+  ai4games2Week07LectureContent,
+  ai4games2Week07ReadingsContent,
+];
 ai4games2Week02OldContent.children = [ai4games2Week02OldPcgContent];
 ai4games2Week03OldContent.children = [ai4games2Week03OldAstarContent];
 ai4games2Week04OldContent.children = [ai4games2Week04OldAssignmentContent];
@@ -1347,6 +1426,7 @@ ai4games2Program.programContents = [
   ai4games2Week04SlidesContent,
   ai4games2Week05SlidesContent,
   ai4games2Week06SlidesContent,
+  ai4games2Week07SlidesContent,
   ai4games2OldContent,
 ];
 
