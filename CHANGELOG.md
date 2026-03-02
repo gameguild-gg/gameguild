@@ -1,3 +1,10 @@
+# [2.44.0](https://github.com/gameguild-gg/gameguild/compare/v2.43.0...v2.44.0) (2026-03-02)
+
+
+### Features
+
+* **ai4games2:** Add midterm chess engine competition ([dc6bffa](https://github.com/gameguild-gg/gameguild/commit/dc6bffa46424c4293e72eb7b7836cd927353d116))
+
 # [2.43.0](https://github.com/gameguild-gg/gameguild/compare/v2.42.2...v2.43.0) (2026-03-02)
 
 
