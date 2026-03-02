@@ -1,3 +1,10 @@
+# [2.43.0](https://github.com/gameguild-gg/gameguild/compare/v2.42.2...v2.43.0) (2026-03-02)
+
+
+### Features
+
+* **courses/ai4games2:** Add Week 07: Advanced Chess Techniques module ([8cdef58](https://github.com/gameguild-gg/gameguild/commit/8cdef58d66f2c1dca355c598da30193ec274818e))
+
 ## [2.42.2](https://github.com/gameguild-gg/gameguild/compare/v2.42.1...v2.42.2) (2026-02-27)
 
 
