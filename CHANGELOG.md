@@ -1,3 +1,10 @@
+# [2.45.0](https://github.com/gameguild-gg/gameguild/compare/v2.44.0...v2.45.0) (2026-03-04)
+
+
+### Features
+
+* **tools:** add Emception browser-based C/C++ toolchain ([b9d4e29](https://github.com/gameguild-gg/gameguild/commit/b9d4e2988b8dbcf686150bf9177c1867a45003c1))
+
 # [2.44.0](https://github.com/gameguild-gg/gameguild/compare/v2.43.0...v2.44.0) (2026-03-02)
 
 
