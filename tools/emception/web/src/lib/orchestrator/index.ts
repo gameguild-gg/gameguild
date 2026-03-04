@@ -48,7 +48,8 @@ export async function boot(manifestUrl: string, terminalContainer: HTMLElement):
   // Step 3: Initialize writable layers (MemFS, IDBFS)
   const t3 = performance.now();
   console.log(`${P} Step 3/6: Initializing MemFS + IDBFS...`);
-  const memFs = new MemFS();
+  const memFs = new MemFS();    // write-layer fallback (for unmounted paths)
+  const tmpFs = new MemFS();    // isolated /tmp mount — must NOT be the same as writeLayer
   const idbFs = new IDBFS('user-files');
   await idbFs.init();
   console.log(`${P} Step 3/6 done: writable FS layers ready in ${ms(t3)}`);
@@ -57,7 +58,7 @@ export async function boot(manifestUrl: string, terminalContainer: HTMLElement):
   const t4 = performance.now();
   console.log(`${P} Step 4/6: Assembling OverlayFS + VFSManager...`);
   const overlay = new OverlayFS(lazyFs, memFs);
-  overlay.mount('/tmp', memFs);
+  overlay.mount('/tmp', tmpFs);
   overlay.mount('/home', idbFs);
   await overlay.mkdir('/tmp');
   await overlay.mkdir('/home');
