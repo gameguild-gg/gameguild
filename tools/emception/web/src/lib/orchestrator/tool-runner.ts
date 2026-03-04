@@ -367,7 +367,10 @@ export class ToolRunner {
       locateFile: (path: string) => {
         if (path.endsWith('.wasm')) {
           const url = vfs.getUrl(descriptor.modulePath);
-          return url ? url.replace(/\.(br|gz)$/, '') : path;
+          if (url) {
+            // Blob URLs are ready to use; CDN URLs need compression suffix stripped
+            return url.startsWith('blob:') ? url : url.replace(/\.(br|gz)$/, '');
+          }
         }
         return path;
       },
@@ -1672,8 +1675,21 @@ sys.excepthook = _hook
 
   private async loadModuleFactory(wasmPath: string): Promise<ModuleFactory> {
     console.log(`${LOG_PREFIX}   loadModuleFactory: ${wasmPath}`);
+
+    // Preload the bundle containing this WASM so getUrl returns blob URLs
+    const bundleName = this.vfs.getBundleForFile(wasmPath);
+    if (bundleName) {
+      console.log(`${LOG_PREFIX}   loadModuleFactory: preloading bundle "${bundleName}" for ${wasmPath}`);
+      await this.vfs.preloadBundle(bundleName);
+    }
+
     return loadModuleFactory(wasmPath, {
       getGlueUrl: (path) => {
+        // For bundled files: get the .mjs blob URL directly
+        const mjsPath = path.replace(/\.wasm$/, '.mjs');
+        const mjsUrl = this.vfs.getUrl(mjsPath);
+        if (mjsUrl && mjsUrl.startsWith('blob:')) return mjsUrl;
+        // For non-bundled files: derive .mjs URL from .wasm URL
         const baseUrl = this.vfs.getUrl(path);
         if (baseUrl) {
           return baseUrl.replace(/\.(br|gz)$/, '').replace(/\.wasm$/, '.mjs');

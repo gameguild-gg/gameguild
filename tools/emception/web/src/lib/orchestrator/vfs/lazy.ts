@@ -37,6 +37,8 @@ export class LazyFS implements IFileSystem {
   private memCacheSize = 0;
   private readonly MAX_MEM_CACHE_BYTES = 128 * 1024 * 1024;
   private pendingFetches = new Map<string, Promise<Uint8Array>>();
+  private pendingBundles = new Map<string, Promise<void>>();
+  private blobUrls = new Map<string, string>();
   private idb: IDBDatabase | null = null;
   private dbName: string;
 
@@ -162,6 +164,12 @@ export class LazyFS implements IFileSystem {
       const oldData = this.memCache.get(oldest)!;
       this.memCacheSize -= oldData.length;
       this.memCache.delete(oldest);
+      // Revoke any blob URL created for this evicted entry
+      const blobUrl = this.blobUrls.get(oldest);
+      if (blobUrl) {
+        URL.revokeObjectURL(blobUrl);
+        this.blobUrls.delete(oldest);
+      }
     }
     this.memCache.set(path, data);
     this.memCacheSize += data.length;
@@ -216,14 +224,54 @@ export class LazyFS implements IFileSystem {
       console.log(`${P}   loadBundle: "${bundleName}" — all ${bundle.files.length} files already cached`);
       return;
     }
+    // Coalesce concurrent requests for the same bundle
+    if (this.pendingBundles.has(bundleName)) {
+      console.log(`${P}   loadBundle: "${bundleName}" — COALESCING with pending bundle fetch`);
+      return this.pendingBundles.get(bundleName)!;
+    }
+    const promise = this.loadBundleImpl(bundleName, bundle);
+    this.pendingBundles.set(bundleName, promise);
+    try {
+      await promise;
+    } finally {
+      this.pendingBundles.delete(bundleName);
+    }
+  }
+
+  private async loadBundleImpl(
+    bundleName: string,
+    bundle: FSManifest['bundles'][string],
+  ): Promise<void> {
+    const { P, fmtSize } = LazyFS;
     const t0 = performance.now();
     console.log(`${P}   loadBundle: fetching "${bundleName}" (${bundle.files.length} files, expected ${fmtSize(bundle.size)})...`);
     const response = await fetch(bundle.url);
-    if (!response.ok) throw new Error(`Failed to fetch bundle ${bundleName}`);
-    const tarData = new Uint8Array(await response.arrayBuffer());
-    console.log(`${P}   loadBundle: received ${fmtSize(tarData.length)}, extracting...`);
-    await this.extractTar(tarData);
-    console.log(`${P}   loadBundle: "${bundleName}" extracted in ${(performance.now() - t0).toFixed(1)}ms`);
+    if (!response.ok) throw new Error(`Failed to fetch bundle ${bundleName}: HTTP ${response.status}`);
+    let data = new Uint8Array(await response.arrayBuffer());
+    const rawSize = data.length;
+    console.log(`${P}   loadBundle: received ${fmtSize(rawSize)}`);
+
+    // Verify bundle hash (on compressed data)
+    const hash = await this.computeHash(data);
+    if (hash !== bundle.hash) {
+      console.error(`${P}   loadBundle: HASH MISMATCH for "${bundleName}": expected ${bundle.hash.slice(0, 12)}..., got ${hash.slice(0, 12)}...`);
+      throw new Error(`Bundle hash mismatch for ${bundleName}`);
+    }
+
+    // Decompress if the URL ends with .br (brotli-compressed tar)
+    if (bundle.url.endsWith('.tar.br') || bundle.url.endsWith('.br')) {
+      const tDecomp = performance.now();
+      data = new Uint8Array(await this.decompressBrotli(data));
+      console.log(`${P}   loadBundle: brotli decompressed ${fmtSize(rawSize)} → ${fmtSize(data.length)} in ${(performance.now() - tDecomp).toFixed(1)}ms`);
+    } else if (bundle.url.endsWith('.tar.gz') || bundle.url.endsWith('.gz')) {
+      const tDecomp = performance.now();
+      data = new Uint8Array(await this.decompressGzip(data));
+      console.log(`${P}   loadBundle: gzip decompressed ${fmtSize(rawSize)} → ${fmtSize(data.length)} in ${(performance.now() - tDecomp).toFixed(1)}ms`);
+    }
+
+    // Extract tar entries into mem cache + IDB
+    await this.extractTar(data);
+    console.log(`${P}   loadBundle: "${bundleName}" extracted ${bundle.files.length} files in ${(performance.now() - t0).toFixed(1)}ms`);
   }
 
   private async extractTar(data: Uint8Array): Promise<void> {
@@ -303,6 +351,40 @@ export class LazyFS implements IFileSystem {
     await Promise.all(paths.map((p) => this.readFile(p).catch(() => null)));
   }
 
+  /** Preload a specific bundle by name. Downloads and extracts all files into cache. */
+  async preloadBundle(bundleName: string): Promise<void> {
+    return this.loadBundle(bundleName);
+  }
+
+  /** Preload all bundles in parallel. */
+  async preloadAllBundles(): Promise<void> {
+    const bundleNames = Object.keys(this.manifest.bundles);
+    if (bundleNames.length === 0) return;
+    const { P } = LazyFS;
+    console.log(`${P} preloadAllBundles: loading ${bundleNames.length} bundles...`);
+    const t0 = performance.now();
+    await Promise.all(bundleNames.map(name => this.loadBundle(name)));
+    console.log(`${P} preloadAllBundles: done in ${(performance.now() - t0).toFixed(1)}ms`);
+  }
+
+  /** Get the bundle name a file belongs to, or undefined. */
+  getBundleForFile(path: string): string | undefined {
+    const normalized = this.normalizePath(path);
+    const entry = this.manifest.files[normalized];
+    return entry?.bundle;
+  }
+
+  /** Async version of getUrl: ensures the file's bundle is loaded first, then returns blob URL. */
+  async getUrlAsync(path: string): Promise<string> {
+    const normalized = this.normalizePath(path);
+    const entry = this.manifest.files[normalized];
+    if (!entry) return '';
+    if (entry.bundle) {
+      await this.loadBundle(entry.bundle);
+    }
+    return this.getUrl(path);
+  }
+
   async writeFile(): Promise<boolean> {
     return false;
   }
@@ -314,8 +396,26 @@ export class LazyFS implements IFileSystem {
   }
 
   getUrl(path: string): string {
-    const entry = this.manifest.files[this.normalizePath(path)];
+    const normalized = this.normalizePath(path);
+    const entry = this.manifest.files[normalized];
     if (!entry) return '';
+
+    // If the file is from a bundle and already in memCache, serve via blob URL
+    // so that import() and fetch() work for bundled .mjs/.wasm files.
+    if (entry.bundle && this.memCache.has(normalized)) {
+      const existing = this.blobUrls.get(normalized);
+      if (existing) return existing;
+      const data = this.memCache.get(normalized)!;
+      let mime = 'application/octet-stream';
+      if (normalized.endsWith('.wasm')) mime = 'application/wasm';
+      else if (normalized.endsWith('.mjs') || normalized.endsWith('.js'))
+        mime = 'text/javascript';
+      const blob = new Blob([data.buffer as ArrayBuffer], { type: mime });
+      const blobUrl = URL.createObjectURL(blob);
+      this.blobUrls.set(normalized, blobUrl);
+      return blobUrl;
+    }
+
     const ext = entry.compressed ? '.' + entry.compressed : '';
     return `${this.manifest.baseUrl}${path}${ext}`;
   }
@@ -392,9 +492,8 @@ export class LazyFS implements IFileSystem {
   }
 
   private async decompressBrotli(data: Uint8Array): Promise<Uint8Array> {
-    // Use DecompressionStream with 'deflate-raw' is not brotli;
-    // 'br' support in DecompressionStream is not yet widely available.
-    // Try native DecompressionStream('br') first, fall back to returning raw data.
+    const { P, fmtSize } = LazyFS;
+    // Try native DecompressionStream('br') first
     try {
       const ds = new DecompressionStream('br' as unknown as CompressionFormat);
       const writer = ds.writable.getWriter();
@@ -416,10 +515,20 @@ export class LazyFS implements IFileSystem {
       }
       return result;
     } catch {
-      throw new Error(
-        'Brotli decompression failed: DecompressionStream("br") is not supported in this browser. ' +
-        'Rebuild the manifest with SKIP_BROTLI=1 or use a browser that supports brotli decompression.'
-      );
+      // Native brotli not supported — fall back to brotli-wasm
+      console.warn(`${P} DecompressionStream("br") not supported, falling back to brotli-wasm (${fmtSize(data.length)})`);
+      try {
+        // brotli-wasm default export is a Promise<BrotliWasmInstance>
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const mod = await import('brotli-wasm') as any;
+        const instance = await mod.default;
+        return new Uint8Array(instance.decompress(data));
+      } catch (e) {
+        throw new Error(
+          `Brotli decompression failed: DecompressionStream("br") is not supported and ` +
+          `brotli-wasm fallback failed: ${e instanceof Error ? e.message : e}`
+        );
+      }
     }
   }
 }

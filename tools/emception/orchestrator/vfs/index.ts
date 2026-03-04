@@ -17,6 +17,12 @@ export interface VFSManager {
   fetchFile(path: string): Promise<Uint8Array | null>;
   /** Used by tool runner for Emscripten locateFile (WASM/JS glue URLs). */
   getUrl(path: string): string;
+  /** Async getUrl: ensures the file's bundle is loaded first, returns blob URL for bundled files. */
+  getUrlAsync(path: string): Promise<string>;
+  /** Preload a bundle by name so that subsequent getUrl calls return blob URLs. */
+  preloadBundle(bundleName: string): Promise<void>;
+  /** Get the bundle name a file belongs to, or undefined. */
+  getBundleForFile(path: string): string | undefined;
   /** Expose overlay for direct read/write (e.g. tests, shell). */
   readonly overlay: OverlayFS;
 }
@@ -29,6 +35,15 @@ export function createVFSManager(overlay: OverlayFS, lazyFs: LazyFS): VFSManager
     },
     getUrl(path: string): string {
       return lazyFs.getUrl(path);
+    },
+    async getUrlAsync(path: string): Promise<string> {
+      return lazyFs.getUrlAsync(path);
+    },
+    async preloadBundle(bundleName: string): Promise<void> {
+      return lazyFs.preloadBundle(bundleName);
+    },
+    getBundleForFile(path: string): string | undefined {
+      return lazyFs.getBundleForFile(path);
     },
   };
 }

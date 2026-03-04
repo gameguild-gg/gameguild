@@ -14,10 +14,11 @@
     "build:llvm": "tsx scripts/build-llvm.ts",
     "build:sysroot": "tsx scripts/populate-sysroot.ts",
     "build:manifest": "SKIP_BROTLI=1 tsx scripts/generate-manifest.ts",
+    "build:bundles": "tsx scripts/generate-bundles.ts",
     "patch:glue": "tsx scripts/patch-glue.ts",
     "deploy:cdn": "tsx scripts/deploy-cdn.ts",
-    "build:all": "run-s build:orchestrator build:emsdk build:binaryen build:cpython build:llvm build:sysroot patch:glue build:manifest deploy:cdn",
-    "build:pipeline": "npm run clean && run-s build:sysroot build:manifest",
+    "build:all": "run-s build:orchestrator build:emsdk build:binaryen build:cpython build:llvm build:sysroot patch:glue build:manifest build:bundles deploy:cdn",
+    "build:pipeline": "npm run clean && run-s build:sysroot build:manifest build:bundles",
     "web:dev": "cd web && npm run dev",
     "web:build": "cd web && npm run build",
     "web:start": "cd web && npm run start"
