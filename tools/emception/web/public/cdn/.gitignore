@@ -1,0 +1,4 @@
+*.zip
+etc/
+usr/
+*.json
