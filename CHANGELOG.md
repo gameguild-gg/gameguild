@@ -1,3 +1,10 @@
+# [2.46.0](https://github.com/gameguild-gg/gameguild/compare/v2.45.0...v2.46.0) (2026-03-04)
+
+
+### Features
+
+* **emception:** Add VFS asset bundling for faster loading ([5216ac6](https://github.com/gameguild-gg/gameguild/commit/5216ac66f826e9182e0f200a8df0edea80349139))
+
 # [2.45.0](https://github.com/gameguild-gg/gameguild/compare/v2.44.0...v2.45.0) (2026-03-04)
 
 
