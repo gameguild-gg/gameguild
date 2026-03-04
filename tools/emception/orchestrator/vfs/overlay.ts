@@ -87,6 +87,11 @@ export class OverlayFS implements IFileSystem {
 
   async mkdir(path: string): Promise<boolean> {
     const { fs, relativePath } = this.getFs(path);
+    // If the entry already exists in the target FS, treat as success.
+    // Without this check, the writeLayer fallback creates full-path entries
+    // that leak into mount-relative readdir results, causing phantom nested
+    // directories (e.g. /tmp/tmp/tmp/...).
+    if (await fs.exists(relativePath)) return true;
     const ok = await fs.mkdir(relativePath);
     if (!ok) return this.writeLayer.mkdir(path);
     return true;
