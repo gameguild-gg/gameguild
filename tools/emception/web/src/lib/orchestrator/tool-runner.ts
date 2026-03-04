@@ -177,6 +177,13 @@ interface EmscriptenInstance {
 export class ToolRunner {
   private vfs: VFSManager;
 
+  /**
+   * Cache for populateDirMapped — maps VFS source root to the flattened list
+   * of {srcPath, dstRelative} entries discovered by the first recursive scan.
+   * Subsequent calls reuse the cached listing, skipping the readdir+stat walk.
+   */
+  private dirMappingCache = new Map<string, Array<{ src: string; dstRel: string; type: 'file' | 'dir' }>>();
+
   constructor(vfs: VFSManager) {
     this.vfs = vfs;
   }
@@ -223,7 +230,15 @@ export class ToolRunner {
 
     // Use module-level OPTIONAL_TOOLS set (defined near TOOL_REGISTRY)
 
-    const descriptor = this.resolveToolDescriptor(tool);
+    let descriptor: ReturnType<typeof this.resolveToolDescriptor>;
+    try {
+      descriptor = this.resolveToolDescriptor(tool);
+    } catch {
+      const msg = `${toolBasename}: command not found`;
+      console.warn(`${LOG_PREFIX}   ${msg}`);
+      options.onStderr?.(msg);
+      return { exitCode: 127, stdout: '', stderr: msg };
+    }
     console.log(`${LOG_PREFIX}   Descriptor: module=${descriptor.modulePath}`);
 
     // Check if the tool's WASM module exists in the VFS. Optional post-processing
@@ -699,6 +714,13 @@ sys.excepthook = _hook
         try {
           const errContent = new TextDecoder().decode(instance.FS.readFile('/tmp/python_error.txt'));
           console.error(`${LOG_PREFIX}   [DEBUG] PYTHON EXCEPTION:\n${errContent}`);
+          // Forward to terminal so the user sees it
+          for (const line of errContent.split('\n')) {
+            if (line.length > 0) {
+              stderrChunks.push(line);
+              options.onStderr?.(line);
+            }
+          }
         } catch { /* file doesn't exist — no unhandled exception */ }
 
         // Read Python stderr log (redirected from broken fd 2)
@@ -706,6 +728,13 @@ sys.excepthook = _hook
           const stderrLog = new TextDecoder().decode(instance.FS.readFile('/tmp/stderr.log'));
           if (stderrLog.length > 0) {
             console.log(`${LOG_PREFIX}   [DEBUG] Python stderr.log:\n${stderrLog.slice(0, 2000)}`);
+            // Forward each line to the onStderr callback so it appears in the terminal
+            for (const line of stderrLog.split('\n')) {
+              if (line.length > 0) {
+                stderrChunks.push(line);
+                options.onStderr?.(line);
+              }
+            }
           }
         } catch { /* file doesn't exist — no stderr output */ }
       } catch (e) {
@@ -933,6 +962,11 @@ sys.excepthook = _hook
    * Populate a directory in the process FS from a DIFFERENT VFS path.
    * Reads from vfsSrcPath in the kernel VFS, writes to fsDstPath in the process FS.
    * This enables mapping pre-built cache files to the expected cache location.
+   *
+   * The first call for a given vfsSrcPath performs the full recursive readdir+stat
+   * scan and caches the flattened file listing.  Subsequent calls reuse the cache,
+   * avoiding the expensive VFS directory walk (which is the same every time for
+   * static content like the emscripten cache and sysroot headers).
    */
   private async populateDirMapped(
     FS: EmscriptenInstance['FS'],
@@ -940,36 +974,79 @@ sys.excepthook = _hook
     fsDstPath: string,
     recursive: boolean = true,
   ): Promise<void> {
-    try {
-      const entries = await this.vfs.overlay.readdir(vfsSrcPath);
-      for (const entry of entries) {
-        if (entry === '.' || entry === '..') continue;
-        const srcFull = vfsSrcPath === '/' ? `/${entry}` : `${vfsSrcPath}/${entry}`;
-        const dstFull = fsDstPath === '/' ? `/${entry}` : `${fsDstPath}/${entry}`;
-        try {
-          const stat = await this.vfs.overlay.stat(srcFull);
-          if (stat && stat.type === 'dir') {
-            try { FS.mkdirTree(dstFull); } catch { /* exists */ }
-            if (recursive) {
-              await this.populateDirMapped(FS, srcFull, dstFull, true);
-            }
-          } else if (stat) {
-            // Fetch file data from VFS source path, write to process FS dest path
-            const data = await this.vfs.fetchFile(srcFull);
-            if (data) {
-              const dir = dstFull.substring(0, dstFull.lastIndexOf('/'));
-              if (dir) {
-                try { FS.mkdirTree(dir); } catch { /* exists */ }
-              }
-              FS.writeFile(dstFull, data);
-            }
-          }
-        } catch {
-          // Stat failed — skip
-        }
+    let listing = this.dirMappingCache.get(vfsSrcPath);
+
+    if (!listing) {
+      // First call — scan and cache the directory listing
+      listing = [];
+      try {
+        await this.scanDirMappingRecursive(vfsSrcPath, '', listing, recursive);
+      } catch (e) {
+        console.warn(`${LOG_PREFIX}     populateDirMapped SCAN FAILED: ${vfsSrcPath}`, e);
+        return;
       }
-    } catch (e) {
-      console.warn(`${LOG_PREFIX}     populateDirMapped FAILED: ${vfsSrcPath} → ${fsDstPath}`, e);
+      this.dirMappingCache.set(vfsSrcPath, listing);
+      console.log(`${LOG_PREFIX}     populateDirMapped: cached ${listing.length} entries for ${vfsSrcPath}`);
+    }
+
+    // Replay the cached listing into the process FS
+    const BATCH_SIZE = 32;
+    const filesToFetch: Array<{ src: string; dst: string }> = [];
+
+    for (const entry of listing) {
+      const dstFull = fsDstPath === '/'
+        ? entry.dstRel
+        : `${fsDstPath}${entry.dstRel}`;
+
+      if (entry.type === 'dir') {
+        try { FS.mkdirTree(dstFull); } catch { /* exists */ }
+      } else {
+        filesToFetch.push({ src: entry.src, dst: dstFull });
+      }
+    }
+
+    // Fetch files in parallel batches (VFS fetchFile is already memory-cached)
+    for (let i = 0; i < filesToFetch.length; i += BATCH_SIZE) {
+      const batch = filesToFetch.slice(i, i + BATCH_SIZE);
+      await Promise.all(batch.map(async ({ src, dst }) => {
+        const data = await this.vfs.fetchFile(src);
+        if (data) {
+          const dir = dst.substring(0, dst.lastIndexOf('/'));
+          if (dir) { try { FS.mkdirTree(dir); } catch { /* exists */ } }
+          FS.writeFile(dst, data);
+        }
+      }));
+    }
+  }
+
+  /**
+   * Recursively scan a VFS directory and collect a flattened list of entries.
+   * Used by populateDirMapped to build the cache on first invocation.
+   */
+  private async scanDirMappingRecursive(
+    vfsSrcPath: string,
+    relPrefix: string,
+    out: Array<{ src: string; dstRel: string; type: 'file' | 'dir' }>,
+    recursive: boolean,
+  ): Promise<void> {
+    const entries = await this.vfs.overlay.readdir(vfsSrcPath);
+    for (const entry of entries) {
+      if (entry === '.' || entry === '..') continue;
+      const srcFull = vfsSrcPath === '/' ? `/${entry}` : `${vfsSrcPath}/${entry}`;
+      const dstRel = `${relPrefix}/${entry}`;
+      try {
+        const stat = await this.vfs.overlay.stat(srcFull);
+        if (stat && stat.type === 'dir') {
+          out.push({ src: srcFull, dstRel, type: 'dir' });
+          if (recursive) {
+            await this.scanDirMappingRecursive(srcFull, dstRel, out, true);
+          }
+        } else if (stat) {
+          out.push({ src: srcFull, dstRel, type: 'file' });
+        }
+      } catch {
+        // Stat failed — skip
+      }
     }
   }
 
