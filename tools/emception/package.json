@@ -1,0 +1,39 @@
+{
+  "name": "browser-toolchain",
+  "version": "0.1.0",
+  "description": "Emscripten C/C++ toolchain running in the browser via WebAssembly",
+  "type": "module",
+  "scripts": {
+    "build": "tsc --noEmit",
+    "dev": "cd web && npm run dev",
+    "clean": "tsx scripts/clean.ts",
+    "build:orchestrator": "tsc --noEmit",
+    "build:emsdk": "tsx scripts/setup-emsdk.ts",
+    "build:binaryen": "tsx scripts/build-binaryen.ts",
+    "build:cpython": "tsx scripts/build-cpython.ts",
+    "build:llvm": "tsx scripts/build-llvm.ts",
+    "build:sysroot": "tsx scripts/populate-sysroot.ts",
+    "build:manifest": "SKIP_BROTLI=1 tsx scripts/generate-manifest.ts",
+    "patch:glue": "tsx scripts/patch-glue.ts",
+    "deploy:cdn": "tsx scripts/deploy-cdn.ts",
+    "build:all": "run-s build:orchestrator build:emsdk build:binaryen build:cpython build:llvm build:sysroot patch:glue build:manifest deploy:cdn",
+    "build:pipeline": "npm run clean && run-s build:sysroot build:manifest",
+    "web:dev": "cd web && npm run dev",
+    "web:build": "cd web && npm run build",
+    "web:start": "cd web && npm run start"
+  },
+  "dependencies": {
+    "@xterm/xterm": "^5.5.0",
+    "monaco-editor": "^0.52.2"
+  },
+  "devDependencies": {
+    "@types/cli-progress": "^3.11.6",
+    "@types/shelljs": "^0.10.0",
+    "cli-progress": "^3.12.0",
+    "npm-run-all": "^4.1.5",
+    "shelljs": "^0.10.0",
+    "ts-node": "^10.9.2",
+    "tsx": "^4.7.0",
+    "typescript": "^5.3.0"
+  }
+}

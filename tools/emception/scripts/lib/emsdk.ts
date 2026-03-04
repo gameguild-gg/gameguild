@@ -1,0 +1,89 @@
+import fs from 'fs';
+import path from 'path';
+import shell from 'shelljs';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const ROOT = process.cwd(); // Assume run from project root
+const EMSDK_DIR = path.join(ROOT, 'tools', 'emsdk');
+
+// Ensure shell commands fail on error
+shell.config.fatal = true;
+
+/**
+ * Downloads, installs, activates EMSDK, and sets environment variables.
+ * Returns the environment variables map.
+ */
+export function setupEmsdk(version: string = 'latest'): NodeJS.ProcessEnv {
+  console.log(`>>> Setting up Emscripten SDK (${version})...`);
+
+  if (!fs.existsSync(path.join(EMSDK_DIR, 'emsdk'))) {
+    console.log(`    Cloning EMSDK to ${EMSDK_DIR}...`);
+    shell.mkdir('-p', path.dirname(EMSDK_DIR));
+    shell.exec(`git clone --depth 1 https://github.com/emscripten-core/emsdk.git "${EMSDK_DIR}"`);
+    // After a fresh clone there's no bundled Python yet — unset stale env vars
+    // so the emsdk script falls back to system python3 and system certs.
+    delete process.env.EMSDK_PYTHON;
+    delete process.env.SSL_CERT_FILE;
+    delete process.env.SSL_CERT_DIR;
+    delete process.env.CURL_CA_BUNDLE;
+    delete process.env.REQUESTS_CA_BUNDLE;
+  }
+
+  const originalCwd = process.cwd();
+  shell.cd(EMSDK_DIR);
+
+  const emsdkCmd = process.platform === 'win32' ? 'emsdk.bat' : './emsdk';
+
+  // Install if needed (or force install to be safe)
+  console.log(`    Installing ${version}...`);
+  shell.exec(`${emsdkCmd} install ${version}`);
+
+  console.log(`    Activating ${version}...`);
+  shell.exec(`${emsdkCmd} activate ${version}`);
+
+  // Capture environment variables
+  console.log('    Capturing environment variables...');
+  let envVars: Record<string, string> = {};
+
+  if (process.platform === 'win32') {
+    // On Windows, run emsdk_env.bat and capture output of set
+    // We use a temporary file to avoid parsing issues with pipe
+    const tempFile = path.join(EMSDK_DIR, 'env.txt');
+    shell.exec(`call emsdk_env.bat > NUL && set > "${tempFile}"`, { shell: 'cmd.exe' });
+    const output = fs.readFileSync(tempFile, 'utf8');
+    fs.unlinkSync(tempFile);
+
+    output.split('\r\n').forEach(line => {
+      const idx = line.indexOf('=');
+      if (idx > 0) {
+        const key = line.substring(0, idx);
+        const val = line.substring(idx + 1);
+        envVars[key] = val;
+      }
+    });
+  } else {
+    // On Unix, source emsdk_env.sh and print env
+    const output = shell.exec(`source ./emsdk_env.sh > /dev/null && env`, { shell: '/bin/bash', silent: true }).stdout;
+    output.split('\n').forEach(line => {
+      const idx = line.indexOf('=');
+      if (idx > 0) {
+        const key = line.substring(0, idx);
+        const val = line.substring(idx + 1);
+        envVars[key] = val;
+      }
+    });
+  }
+
+  shell.cd(originalCwd);
+
+  // Update current process env
+  Object.assign(process.env, envVars);
+
+  return process.env;
+}
+
+export function getEmsdkDir(): string {
+  return EMSDK_DIR;
+}
