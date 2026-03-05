@@ -13,9 +13,9 @@ A complete C/C++ development environment that runs entirely in the browser. Writ
 
 | Layer | Technology |
 |-------|-----------|
-| Compiler backend | LLVM 22.1.0 + Clang (compiled to WASM) |
-| Optimiser | Binaryen 126 (compiled to WASM) |
-| Emscripten driver | CPython 3.14.3 (compiled to WASM) running `emcc.py` |
+| Compiler backend | LLVM + Clang (compiled to WASM) |
+| Optimiser | Binaryen (compiled to WASM) |
+| Emscripten driver | CPython (compiled to WASM) running `emcc.py` |
 | Build system | Emscripten SDK (latest — em++ / emcc) |
 | Kernel | TypeScript (process manager, VFS, IPC, scheduler) |
 | Web frontend | Next.js 15 + React |
@@ -141,7 +141,7 @@ This eliminates the entire class of bugs caused by the previous MAIN_MODULE/SIDE
 │  │  /usr/include/   → LazyFS  (C/C++ system headers)                    │  │
 │  │  /usr/lib/python3.14/ → LazyFS  (stdlib zip + init files)            │  │
 │  │  /home/user/     → IDBFS   (persistent user files — IndexedDB)       │  │
-│  │  /tmp/           → MemFS   (volatile build artifacts)                │  │
+│  │  /tmp/           → IDBFS   (volatile — in-memory only, no IDB)       │  │
 │  └───────────────────────────────────────────────────────────────────────┘  │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
@@ -166,7 +166,7 @@ The TypeScript kernel (`orchestrator/`) provides OS-like services to WASM proces
 | Component | File(s) | Responsibility |
 |-----------|---------|---------------|
 | **Process Manager** | `tool-runner.ts` | Spawns WASM processes, manages lifecycle, captures exit codes |
-| **VFS** | `vfs/` | Layered filesystem (LazyFS, MemFS, IDBFS, OverlayFS) — single source of truth |
+| **VFS** | `vfs/` | Layered filesystem (LazyFS, IDBFS, OverlayFS) — single source of truth |
 | **IPC** | `async-bridge.ts` | Message passing between kernel and WASM processes (syscall dispatch) |
 | **Shell** | `shell.ts` | Command parser, pipeline support, process spawning |
 | **TTY** | `tty/xterm-bridge.ts`, `tty/line-buffer.ts` | xterm.js integration, stdin/stdout/stderr routing, line buffering |
@@ -200,9 +200,8 @@ The VFS is owned by the kernel and exposed to processes via syscalls. It is comp
 | Layer | File | Purpose |
 |-------|------|---------|
 | **LazyFS** | `lazy.ts` | Fetches files from the CDN on first access; backed by a manifest of available paths |
-| **MemFS** | `mem.ts` | In-memory read/write filesystem for temporary files and build artifacts |
-| **IDBFS** | `idb.ts` | Persists user files to IndexedDB across browser sessions |
-| **OverlayFS** | `overlay.ts` | Composes layers: writes go to MemFS, reads fall through LazyFS → IDBFS |
+| **IDBFS** | `idb.ts` | IndexedDB-backed filesystem with optional volatile (in-memory only) mode |
+| **OverlayFS** | `overlay.ts` | Composes layers: writes go to IDBFS write-layer, reads fall through LazyFS |
 
 Files are served via Brotli-compressed assets on the CDN and decompressed on the client using the loader (`orchestrator/loader/brotli.ts`).
 
@@ -242,7 +241,7 @@ This IPC mechanism allows the single-threaded browser environment to run multi-p
 | `/proc`, `/dev` | Kernel-managed VFS layers |
 | `fork`/`exec` | Kernel spawns new WASM instance from binary |
 | Pipes | Kernel routes stdout of one process to stdin of the next |
-| Filesystem | LazyFS + MemFS + IDBFS + OverlayFS stack |
+| Filesystem | LazyFS + IDBFS + OverlayFS stack |
 | Shared libraries | Not needed — each process statically links its dependencies |
 | Virtual memory | Each WASM instance has its own linear memory (up to 2GB) |
 
@@ -328,8 +327,7 @@ tools/emception/
 │   ├── index.ts              #   Public API
 │   ├── vfs/                  #   Virtual filesystem (kernel-managed)
 │   │   ├── lazy.ts           #     LazyFS — CDN-backed on-demand fetch
-│   │   ├── mem.ts            #     MemFS — in-memory read/write
-│   │   ├── idb.ts            #     IDBFS — IndexedDB persistence
+│   │   ├── idb.ts            #     IDBFS — IndexedDB persistence (+ volatile mode)
 │   │   ├── overlay.ts        #     OverlayFS — layer composition
 │   │   ├── interface.ts      #     Common VFS interface
 │   │   └── index.ts          #     VFS manager
