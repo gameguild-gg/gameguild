@@ -117,36 +117,36 @@ export class LazyFS implements IFileSystem {
     const normalized = this.normalizePath(path);
     const cached = this.memCache.get(normalized);
     if (cached) {
-      console.log(`${P} readFile: ${normalized} — MEM CACHE HIT (${fmtSize(cached.length)})`);
+      //console.log(`${P} readFile: ${normalized} — MEM CACHE HIT (${fmtSize(cached.length)})`);
       return cached;
     }
     const entry = this.manifest.files[normalized];
     if (!entry) {
-      console.log(`${P} readFile: ${normalized} — NOT IN MANIFEST`);
+      //console.log(`${P} readFile: ${normalized} — NOT IN MANIFEST`);
       return null;
     }
     if (entry.symlink) {
       const target = this.resolveSymlink(normalized, entry.symlink);
-      console.log(`${P} readFile: ${normalized} — symlink → ${target}`);
+      //console.log(`${P} readFile: ${normalized} — symlink → ${target}`);
       return this.readFile(target);
     }
     const idbCached = await this.idbGet(normalized);
     if (idbCached && idbCached.hash === entry.hash) {
-      console.log(`${P} readFile: ${normalized} — IDB CACHE HIT (${fmtSize(idbCached.data.length)})`);
+      //console.log(`${P} readFile: ${normalized} — IDB CACHE HIT (${fmtSize(idbCached.data.length)})`);
       this.addToMemCache(normalized, idbCached.data);
       return idbCached.data;
     }
     if (this.pendingFetches.has(normalized)) {
-      console.log(`${P} readFile: ${normalized} — COALESCING with pending fetch`);
+      //console.log(`${P} readFile: ${normalized} — COALESCING with pending fetch`);
       return this.pendingFetches.get(normalized)!;
     }
-    console.log(`${P} readFile: ${normalized} — CDN FETCH (expected ${fmtSize(entry.size)})`);
+    //console.log(`${P} readFile: ${normalized} — CDN FETCH (expected ${fmtSize(entry.size)})`);
     const t0 = performance.now();
     const fetchPromise = this.fetchFile(normalized, entry);
     this.pendingFetches.set(normalized, fetchPromise);
     try {
       const data = await fetchPromise;
-      console.log(`${P} readFile: ${normalized} — fetched ${fmtSize(data.length)} in ${(performance.now() - t0).toFixed(1)}ms`);
+      //console.log(`${P} readFile: ${normalized} — fetched ${fmtSize(data.length)} in ${(performance.now() - t0).toFixed(1)}ms`);
       this.addToMemCache(normalized, data);
       await this.idbPut(normalized, data, entry.hash);
       return data;

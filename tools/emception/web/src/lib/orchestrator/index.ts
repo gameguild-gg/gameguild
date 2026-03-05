@@ -11,7 +11,6 @@ import { IDBFS } from './vfs/idb';
 import { createVFSManager } from './vfs/index';
 import type { FSManifest } from './vfs/lazy';
 import { LazyFS } from './vfs/lazy';
-import { MemFS } from './vfs/mem';
 import { OverlayFS } from './vfs/overlay';
 
 export interface BootResult {
@@ -45,19 +44,22 @@ export async function boot(manifestUrl: string, terminalContainer: HTMLElement):
   await lazyFs.init();
   console.log(`${P} Step 2/6 done: LazyFS ready in ${ms(t2)}`);
 
-  // Step 3: Initialize writable layers (MemFS, IDBFS)
+  // Step 3: Initialize writable layers (all IDBFS)
   const t3 = performance.now();
-  console.log(`${P} Step 3/6: Initializing MemFS + IDBFS...`);
-  const memFs = new MemFS();    // write-layer fallback (for unmounted paths)
-  const tmpFs = new MemFS();    // isolated /tmp mount — must NOT be the same as writeLayer
-  const idbFs = new IDBFS('user-files');
+  const manifestVersion = `${manifest.baseUrl}:${fileCount}`;
+  console.log(`${P} Step 3/6: Initializing IDBFS layers (version=${manifestVersion})...`);
+  const writeFs = new IDBFS('overlay-writes', { version: manifestVersion }); // persistent write-layer with version invalidation
+  const tmpFs = new IDBFS('tmp-fs', { volatile: true });                     // volatile /tmp — ephemeral scratch space
+  const idbFs = new IDBFS('user-files');                                     // persistent /home
+  await writeFs.init();
+  await tmpFs.init();
   await idbFs.init();
   console.log(`${P} Step 3/6 done: writable FS layers ready in ${ms(t3)}`);
 
   // Step 4: Assemble OverlayFS + VFSManager
   const t4 = performance.now();
   console.log(`${P} Step 4/6: Assembling OverlayFS + VFSManager...`);
-  const overlay = new OverlayFS(lazyFs, memFs);
+  const overlay = new OverlayFS(lazyFs, writeFs);
   overlay.mount('/tmp', tmpFs);
   overlay.mount('/home', idbFs);
   await overlay.mkdir('/tmp');

@@ -7,9 +7,9 @@ import { LazyFS } from './lazy';
 import { OverlayFS } from './overlay';
 
 export { IDBFS } from './idb';
+export type { IDBFSOptions } from './idb';
 export type { FSStats, IFileSystem } from './interface';
 export { LazyFS, type FileEntry, type FSManifest } from './lazy';
-export { MemFS } from './mem';
 export { OverlayFS } from './overlay';
 
 export interface VFSManager {

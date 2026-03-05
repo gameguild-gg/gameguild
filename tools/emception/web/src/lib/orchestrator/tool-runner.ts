@@ -53,6 +53,12 @@ export interface RunOptions {
   stdin?: () => number | null;
   /** Additional dirs to populate recursively in the child process FS from VFS */
   extraPreloadDirs?: string[];
+  /**
+   * When true, the tool invocation is an info/version query (e.g. --version).
+   * populateProcessFS will skip expensive operations like populating /home/user,
+   * /tmp, sysroot cache, and include headers since the tool doesn't need them.
+   */
+  isInfoQuery?: boolean;
 }
 
 /* ------------------------------------------------------------------ */
@@ -432,13 +438,14 @@ export class ToolRunner {
             // Harvest files from the parent process FS into the kernel VFS.
             // This ensures child processes (e.g., clang) can access files that
             // the parent (emcc) created (e.g., sysroot cache, temp files).
-            // Also harvest /usr/lib/emscripten/system/lib so that clang can
-            // find system library sources when compiling them.
+            // Skip for version/info queries — they don't read or produce user files.
             const harvestPaths = ['/home/user', '/tmp'];
-            for (const hp of harvestPaths) {
-              try {
-                await runner.harvestDir(instanceRef.FS, hp);
-              } catch { /* ok if dir doesn't exist */ }
+            if (!isVersionCheck) {
+              for (const hp of harvestPaths) {
+                try {
+                  await runner.harvestDir(instanceRef.FS, hp);
+                } catch { /* ok if dir doesn't exist */ }
+              }
             }
 
             const subStdout: string[] = [];
@@ -447,16 +454,20 @@ export class ToolRunner {
               cwd: request.cwd || options.cwd,
               onStdout: (t) => subStdout.push(t),
               onStderr: (t) => subStderr.push(t),
+              isInfoQuery: isVersionCheck,
             });
 
             // Sync files from the kernel VFS back into the parent process FS.
             // The child process (e.g. clang) already harvested its output files
             // to the kernel VFS. Now we re-populate the parent's FS so emcc can
             // access them (e.g. reading /tmp/emscripten_temp_*/main.o).
-            for (const hp of harvestPaths) {
-              try {
-                await runner.populateDirFromVFS(instanceRef.FS, hp);
-              } catch { /* ok if dir doesn't exist */ }
+            // Skip for version/info queries — no files to sync.
+            if (!isVersionCheck) {
+              for (const hp of harvestPaths) {
+                try {
+                  await runner.populateDirFromVFS(instanceRef.FS, hp);
+                } catch { /* ok if dir doesn't exist */ }
+              }
             }
 
             // Write results back to the process FS
@@ -765,6 +776,10 @@ sys.excepthook = _hook
    *   - Explicit preloadFiles from the descriptor (e.g. Python stdlib)
    *   - Working directory contents
    *   - Any CWD setup
+   *
+   * When `options.isInfoQuery` is true, expensive operations (populating
+   * /home/user, /tmp, sysroot cache, include headers) are skipped since
+   * the tool is only being called for --version or similar info output.
    */
   private async populateProcessFS(
     instance: EmscriptenInstance,
@@ -772,10 +787,21 @@ sys.excepthook = _hook
     options: RunOptions,
   ): Promise<void> {
     const FS = instance.FS;
+    const isInfoQuery = options.isInfoQuery === true;
 
     // Ensure standard directories exist
     for (const dir of ['/tmp', '/home', '/home/user', '/usr', '/usr/lib', '/usr/bin', '/etc']) {
       try { FS.mkdirTree(dir); } catch { /* exists */ }
+    }
+
+    // For info queries (--version), skip all expensive file population.
+    // The tool only needs its WASM module + basic directories.
+    if (isInfoQuery) {
+      console.log(`${LOG_PREFIX}     [FAST] Info query — skipping FS population`);
+      const cwd = options.cwd || '/home/user';
+      try { FS.mkdirTree(cwd); } catch { /* exists */ }
+      try { FS.chdir(cwd); } catch { /* ignore */ }
+      return;
     }
 
     // Pre-load explicitly listed files
@@ -796,7 +822,6 @@ sys.excepthook = _hook
     // Pre-load directories recursively (full subtrees)
     const preloadDirsRecursive = descriptor.preloadDirsRecursive || [];
     for (const dirPath of preloadDirsRecursive) {
-      console.log(`${LOG_PREFIX}     preloadDirRecursive: ${dirPath}`);
       await this.populateDir(FS, dirPath, true);
     }
 
@@ -887,7 +912,7 @@ sys.excepthook = _hook
       }
 
       FS.writeFile(filePath, data);
-      console.log(`${LOG_PREFIX}     preloaded: ${filePath} (${data.length} bytes)`);
+      //console.log(`${LOG_PREFIX}     preloaded: ${filePath} (${data.length} bytes)`);
       return true;
     } catch (e) {
       console.warn(`${LOG_PREFIX}     Failed to write ${filePath} to process FS:`, e);
@@ -905,7 +930,7 @@ sys.excepthook = _hook
   ): Promise<void> {
     try {
       const entries = await this.vfs.overlay.readdir(dirPath);
-      console.log(`${LOG_PREFIX}     populateDir: ${dirPath} → ${entries.length} entries (recursive=${recursive})`);
+      //console.log(`${LOG_PREFIX}     populateDir: ${dirPath} → ${entries.length} entries (recursive=${recursive})`);
 
       // Separate entries into dirs and files for parallel fetching
       const dirs: string[] = [];
@@ -1721,28 +1746,17 @@ sys.excepthook = _hook
         ],
         // Top-level .py files (non-recursive)
         preloadDirs: ['/usr/lib/emscripten', '/usr/bin'],
-        // tools/ (Python package), src/ (JS libraries), third_party, and
-        // system headers (include + lib header subdirs needed by ensure_sysroot).
-        // system/lib/ (5565 source files) is NOT preloaded eagerly — the
-        // pre-built cache in cache-lib/ provides compiled .a files, so emcc
-        // doesn't need to recompile system libraries.  If a child process
-        // (clang) needs individual source files, populateDir is called on
-        // demand via extraPreloadDirs during subprocess dispatch.
-        // 
-        // However, ensure_sysroot() needs to copy certain subdirs like
-        // compiler-rt/include, libcxx/include, etc., so include those.
+        // tools/ (Python package), src/ (JS libraries), third_party.
+        // FROZEN_CACHE=True + sysroot_install.stamp + pre-built cache-lib
+        // means emcc never recompiles system libraries, so we do NOT need
+        // system/lib/ source trees (compiler-rt, libcxx, llvm-libc, etc.
+        // — those 3800+ files were the biggest bottleneck at ~70s).
+        // system/include is also unnecessary: clang reads headers from
+        // the sysroot populated via populateDirMapped (cache-lib + /usr/include).
         preloadDirsRecursive: [
           '/usr/lib/emscripten/tools',
           '/usr/lib/emscripten/src',
           '/usr/lib/emscripten/third_party',
-          '/usr/lib/emscripten/system/include',
-          '/usr/lib/emscripten/system/lib/compiler-rt',
-          '/usr/lib/emscripten/system/lib/libcxx',
-          '/usr/lib/emscripten/system/lib/libcxxabi',
-          '/usr/lib/emscripten/system/lib/libunwind',
-          '/usr/lib/emscripten/system/lib/llvm-libc',
-          '/usr/lib/emscripten/system/lib/mimalloc',
-          '/usr/lib/emscripten/system/bin',
         ],
       };
     }
