@@ -1,5 +1,10 @@
 /**
- * Async strategy detection: Asyncify (primary) vs JSPI (progressive enhancement).
+ * Async strategy detection: JSPI (primary) vs Asyncify (fallback).
+ *
+ * JSPI (JavaScript Promise Integration) enables transparent async I/O:
+ * WASM stack is suspended while JS awaits file fetches from CDN/IDB.
+ * The glue code patches wrap FS syscalls with WebAssembly.Suspending
+ * and callMain with WebAssembly.promising.
  */
 
 export function detectAsyncStrategy(): 'jspi' | 'asyncify' {

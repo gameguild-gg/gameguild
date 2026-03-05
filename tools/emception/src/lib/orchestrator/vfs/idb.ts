@@ -210,6 +210,81 @@ export class IDBFS implements IFileSystem {
     return entry.data;
   }
 
+  // ---------- Sync accessors (memCache only) ----------
+
+  /** Synchronous read from memCache. Returns null on miss. */
+  readFileSync(path: string): Uint8Array | null {
+    const entry = this.memCache.get(this.normalizePath(path));
+    return entry && !entry.dir ? entry.data : null;
+  }
+
+  /** Synchronous write: updates memCache immediately, fires async IDB persist. */
+  writeFileSync(path: string, data: Uint8Array): void {
+    const normalized = this.normalizePath(path);
+    this.ensureParentDirInCache(normalized);
+    const entry: StoredEntry = { path: normalized, data, dir: false, mtime: Date.now() };
+    this.memCache.set(normalized, entry);
+    if (!this.volatile && this.idb) {
+      this.dbPut(entry).catch(() => { /* fire-and-forget */ });
+    }
+  }
+
+  /** Synchronous stat from memCache. */
+  statSync(path: string): FSStats | null {
+    const entry = this.memCache.get(this.normalizePath(path));
+    if (!entry) return null;
+    return {
+      type: entry.dir ? 'dir' : 'file',
+      size: entry.data?.length ?? 0,
+      mode: entry.dir ? 0o755 : 0o644,
+      mtimeNs: BigInt(entry.mtime) * 1_000_000n,
+    };
+  }
+
+  /** Synchronous readdir from memCache keys. */
+  readdirSync(path: string): string[] {
+    const normalized = this.normalizePath(path);
+    const prefix = normalized === '/' ? '/' : normalized + '/';
+    const entries = new Set<string>();
+    for (const key of this.memCache.keys()) {
+      if (key.startsWith(prefix)) {
+        const rel = key.slice(prefix.length);
+        const first = rel.split('/')[0];
+        if (first) entries.add(first);
+      }
+    }
+    return [...entries];
+  }
+
+  /** Synchronous existence check from memCache. */
+  existsSync(path: string): boolean {
+    return this.memCache.has(this.normalizePath(path));
+  }
+
+  /** Synchronous mkdir: creates directory entry in memCache. */
+  mkdirSync(path: string): void {
+    const normalized = this.normalizePath(path);
+    if (this.memCache.has(normalized)) return;
+    this.ensureParentDirInCache(normalized);
+    const entry: StoredEntry = { path: normalized, data: new Uint8Array(0), dir: true, mtime: Date.now() };
+    this.memCache.set(normalized, entry);
+    if (!this.volatile && this.idb) {
+      this.dbPut(entry).catch(() => { /* fire-and-forget */ });
+    }
+  }
+
+  /** Synchronous delete from memCache. */
+  deleteFileSync(path: string): boolean {
+    const normalized = this.normalizePath(path);
+    const entry = this.memCache.get(normalized);
+    if (!entry || entry.dir) return false;
+    this.memCache.delete(normalized);
+    if (!this.volatile && this.idb) {
+      this.dbDelete(normalized).catch(() => { /* fire-and-forget */ });
+    }
+    return true;
+  }
+
   async writeFile(path: string, data: Uint8Array): Promise<boolean> {
     const normalized = this.normalizePath(path);
     this.ensureParentDirInCache(normalized);

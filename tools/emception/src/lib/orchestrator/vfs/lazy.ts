@@ -35,12 +35,24 @@ export class LazyFS implements IFileSystem {
   private manifest: FSManifest;
   private memCache = new Map<string, Uint8Array>();
   private memCacheSize = 0;
-  private readonly MAX_MEM_CACHE_BYTES = 128 * 1024 * 1024;
+  // 1.5 GB — large enough to hold all bundles (total uncompressed ≈ 763MB).
+  // The proxy relies on sync memCache reads during callMain, so files must
+  // not be LRU-evicted between pre-warm and use.  The old approach loaded
+  // similar data into WASM MEMFS, so total memory footprint is comparable.
+  private readonly MAX_MEM_CACHE_BYTES = 1536 * 1024 * 1024;
   private pendingFetches = new Map<string, Promise<Uint8Array>>();
   private pendingBundles = new Map<string, Promise<void>>();
   private blobUrls = new Map<string, string>();
   private idb: IDBDatabase | null = null;
   private dbName: string;
+
+  /**
+   * Pre-computed directory index: maps each directory path to the set of
+   * immediate child names (files and subdirectories). Built once from the
+   * manifest during construction. Enables O(1) readdir/exists lookups
+   * without scanning all manifest keys.
+   */
+  private dirIndex = new Map<string, Set<string>>();
 
   private static readonly P = '[Emception:LazyFS]';
   private static fmtSize(n: number): string {
@@ -52,6 +64,38 @@ export class LazyFS implements IFileSystem {
   constructor(manifest: FSManifest, dbName = 'lazyfs-cache') {
     this.manifest = manifest;
     this.dbName = dbName;
+    this.buildDirIndex();
+  }
+
+  /**
+   * Build the directory index from manifest file paths.
+   * For each file /a/b/c.txt, adds:
+   *   dirIndex['/a/b'] = { 'c.txt' }
+   *   dirIndex['/a']   = { 'b' }
+   *   dirIndex['/']    = { 'a' }
+   */
+  private buildDirIndex(): void {
+    for (const filePath of Object.keys(this.manifest.files)) {
+      let dir = filePath.substring(0, filePath.lastIndexOf('/')) || '/';
+      const name = filePath.substring(filePath.lastIndexOf('/') + 1);
+      if (!name) continue;
+
+      // Add file to its parent directory
+      let children = this.dirIndex.get(dir);
+      if (!children) { children = new Set(); this.dirIndex.set(dir, children); }
+      children.add(name);
+
+      // Add intermediate directory entries up to root
+      while (dir !== '/') {
+        const parent = dir.substring(0, dir.lastIndexOf('/')) || '/';
+        const dirName = dir.substring(dir.lastIndexOf('/') + 1);
+        let parentChildren = this.dirIndex.get(parent);
+        if (!parentChildren) { parentChildren = new Set(); this.dirIndex.set(parent, parentChildren); }
+        if (parentChildren.has(dirName)) break; // Already indexed ancestors
+        parentChildren.add(dirName);
+        dir = parent;
+      }
+    }
   }
 
   async init(): Promise<void> {
@@ -156,6 +200,12 @@ export class LazyFS implements IFileSystem {
   }
 
   private addToMemCache(path: string, data: Uint8Array): void {
+    // If replacing an existing entry, subtract old size first to keep
+    // memCacheSize accurate (avoids phantom inflation from bundle re-adds).
+    const existing = this.memCache.get(path);
+    if (existing) {
+      this.memCacheSize -= existing.length;
+    }
     while (
       this.memCacheSize + data.length > this.MAX_MEM_CACHE_BYTES &&
       this.memCache.size > 0
@@ -297,16 +347,22 @@ export class LazyFS implements IFileSystem {
 
   async exists(path: string): Promise<boolean> {
     const normalized = this.normalizePath(path);
+    return this.existsSync(normalized);
+  }
+
+  /** Synchronous existence check using manifest + dirIndex (O(1)). */
+  existsSync(path: string): boolean {
+    const normalized = this.normalizePath(path);
     if (normalized in this.manifest.files) return true;
-    // Check if path is a directory prefix
-    const prefix = normalized === '/' ? '/' : normalized + '/';
-    for (const filePath of Object.keys(this.manifest.files)) {
-      if (filePath.startsWith(prefix)) return true;
-    }
-    return false;
+    return this.dirIndex.has(normalized);
   }
 
   async stat(path: string): Promise<FSStats | null> {
+    return this.statSync(this.normalizePath(path));
+  }
+
+  /** Synchronous stat from manifest metadata + dirIndex (O(1)). */
+  statSync(path: string): FSStats | null {
     const normalized = this.normalizePath(path);
     const entry = this.manifest.files[normalized];
     if (entry) {
@@ -318,33 +374,43 @@ export class LazyFS implements IFileSystem {
         ...(entry.symlink ? { symlinkTarget: entry.symlink } : {}),
       };
     }
-    // Check if path is a directory (any manifest entry starts with path + '/')
-    const prefix = normalized === '/' ? '/' : normalized + '/';
-    for (const filePath of Object.keys(this.manifest.files)) {
-      if (filePath.startsWith(prefix)) {
-        return {
-          type: 'dir',
-          size: 0,
-          mode: 0o755,
-          mtimeNs: BigInt(Date.parse(this.manifest.generated)) * 1_000_000n,
-        };
-      }
+    // Check dirIndex for directory status (O(1))
+    if (this.dirIndex.has(normalized)) {
+      return {
+        type: 'dir',
+        size: 0,
+        mode: 0o755,
+        mtimeNs: BigInt(Date.parse(this.manifest.generated)) * 1_000_000n,
+      };
     }
     return null;
   }
 
   async readdir(path: string): Promise<string[]> {
+    return this.readdirSync(this.normalizePath(path));
+  }
+
+  /** Synchronous readdir from pre-computed dirIndex (O(1)). */
+  readdirSync(path: string): string[] {
     const normalized = this.normalizePath(path);
-    const prefix = normalized === '/' ? '/' : normalized + '/';
-    const entries = new Set<string>();
-    for (const filePath of Object.keys(this.manifest.files)) {
-      if (filePath.startsWith(prefix)) {
-        const relative = filePath.slice(prefix.length);
-        const firstPart = relative.split('/')[0];
-        if (firstPart) entries.add(firstPart);
-      }
+    const children = this.dirIndex.get(normalized);
+    return children ? [...children] : [];
+  }
+
+  /**
+   * Synchronous file read from memCache only.
+   * Returns null if the file is not in memCache (not yet fetched).
+   * Callers must pre-warm needed files via preload/preloadDir before
+   * relying on sync reads.
+   */
+  readFileSync(path: string): Uint8Array | null {
+    const normalized = this.normalizePath(path);
+    const entry = this.manifest.files[normalized];
+    if (entry?.symlink) {
+      const target = this.resolveSymlink(normalized, entry.symlink);
+      return this.readFileSync(target);
     }
-    return [...entries];
+    return this.memCache.get(normalized) ?? null;
   }
 
   async preload(paths: string[]): Promise<void> {
@@ -365,6 +431,40 @@ export class LazyFS implements IFileSystem {
     const t0 = performance.now();
     await Promise.all(bundleNames.map(name => this.loadBundle(name)));
     console.log(`${P} preloadAllBundles: done in ${(performance.now() - t0).toFixed(1)}ms`);
+  }
+
+  /**
+   * Preload all files under a directory path into memCache.
+   * Uses the dirIndex for efficient path enumeration instead of
+   * scanning all manifest keys.
+   */
+  async preloadDir(dirPath: string): Promise<void> {
+    const normalized = this.normalizePath(dirPath);
+    const files: string[] = [];
+    this.collectFilesInDir(normalized, files);
+    if (files.length > 0) {
+      const { P } = LazyFS;
+      console.log(`${P} preloadDir: ${normalized} → ${files.length} files`);
+      await this.preload(files);
+    }
+  }
+
+  /**
+   * Recursively collect all file paths under a directory using the dirIndex.
+   */
+  private collectFilesInDir(dir: string, out: string[]): void {
+    const children = this.dirIndex.get(dir);
+    if (!children) return;
+    for (const name of children) {
+      const fullPath = dir === '/' ? `/${name}` : `${dir}/${name}`;
+      if (this.manifest.files[fullPath]) {
+        out.push(fullPath);
+      }
+      // Recurse into subdirectories
+      if (this.dirIndex.has(fullPath)) {
+        this.collectFilesInDir(fullPath, out);
+      }
+    }
   }
 
   /** Get the bundle name a file belongs to, or undefined. */
@@ -520,7 +620,6 @@ export class LazyFS implements IFileSystem {
       try {
         // brotli-wasm default export is a Promise<BrotliWasmInstance>
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        // @ts-expect-error brotli-wasm is installed in the web package
         const mod = await import('brotli-wasm') as any;
         const instance = await mod.default;
         return new Uint8Array(instance.decompress(data));

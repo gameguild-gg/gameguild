@@ -19,7 +19,7 @@ const ROOT = process.cwd();
 // Ensure shell commands fail on error
 shell.config.fatal = true;
 
-const PYTHON_VERSION = process.env.PYTHON_VERSION || '3.14.3';
+const PYTHON_VERSION = process.env.PYTHON_VERSION || '3.14.3'; // todo: we should get the version from emsdk for better compatibility
 const EMSDK_VERSION = process.env.EMSDK_VERSION || 'latest';
 const CONCURRENCY = os.cpus().length;
 
