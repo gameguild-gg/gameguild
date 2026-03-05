@@ -1,3 +1,10 @@
+# [2.47.0](https://github.com/gameguild-gg/gameguild/compare/v2.46.0...v2.47.0) (2026-03-05)
+
+
+### Features
+
+* **orchestrator:** Enhance tool execution with Python error capture and VFS caching ([9eeaf7e](https://github.com/gameguild-gg/gameguild/commit/9eeaf7e9027635acb814e1552fd51301a926cce3))
+
 # [2.46.0](https://github.com/gameguild-gg/gameguild/compare/v2.45.0...v2.46.0) (2026-03-04)
 
 
