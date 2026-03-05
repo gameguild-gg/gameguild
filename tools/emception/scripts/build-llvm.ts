@@ -24,7 +24,7 @@ const LLVM_DIR = path.join(ROOT, 'userland/llvm');
 shell.config.fatal = true;
 
 const EMSDK_VERSION = process.env.EMSDK_VERSION || 'latest';
-const LLVM_VERSION = '22.1.0';
+const LLVM_VERSION = '22.1.0'; // todo: the llvm version should match the emsdk version for a better compatibility
 const LLVM_SRC_DIR = `llvm-project-${LLVM_VERSION}.src`;
 const LLVM_TARBALL = `${LLVM_SRC_DIR}.tar.xz`;
 const LLVM_URL = `https://github.com/llvm/llvm-project/releases/download/llvmorg-${LLVM_VERSION}/${LLVM_TARBALL}`;

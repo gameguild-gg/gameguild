@@ -16,6 +16,7 @@
 
 import { SUBPROCESS_SHIM } from './emscripten/subprocess-shim';
 import { loadModuleFactory } from './loader/wasm-module';
+import { mountVFSFS } from './vfs/emscripten-vfsfs';
 import type { VFSManager } from './vfs/index';
 
 const LOG_PREFIX = '[Emception:Kernel]';
@@ -51,12 +52,10 @@ export interface RunOptions {
   onStdout?: (text: string) => void;
   onStderr?: (text: string) => void;
   stdin?: () => number | null;
-  /** Additional dirs to populate recursively in the child process FS from VFS */
-  extraPreloadDirs?: string[];
   /**
    * When true, the tool invocation is an info/version query (e.g. --version).
-   * populateProcessFS will skip expensive operations like populating /home/user,
-   * /tmp, sysroot cache, and include headers since the tool doesn't need them.
+   * setupProcessFS will skip mounting VFSFS since the tool doesn't need
+   * filesystem access.
    */
   isInfoQuery?: boolean;
 }
@@ -68,36 +67,9 @@ export interface RunOptions {
 interface ToolDescriptor {
   /** Path to the standalone .wasm module (also used to derive the .mjs glue URL) */
   modulePath: string;
-  /** Files to pre-populate in the process FS before callMain() */
-  preloadFiles?: string[];
-  /** Directories to pre-populate (immediate children only from kernel VFS) */
-  preloadDirs?: string[];
-  /** Directories to pre-populate recursively (entire subtrees from kernel VFS) */
-  preloadDirsRecursive?: string[];
   /** Directories whose contents should be harvested back to kernel VFS after run */
   harvestDirs?: string[];
 }
-
-const PYTHON_PRELOAD_FILES = ['/usr/lib/python314.zip'];
-
-// Minimal Python stdlib files needed for early initialization
-const PYTHON_INIT_FILES = [
-  '/usr/lib/python3.14/os.py',
-  '/usr/lib/python3.14/stat.py',
-  '/usr/lib/python3.14/posixpath.py',
-  '/usr/lib/python3.14/genericpath.py',
-  '/usr/lib/python3.14/abc.py',
-  '/usr/lib/python3.14/_collections_abc.py',
-  '/usr/lib/python3.14/_sitebuiltins.py',
-  '/usr/lib/python3.14/codecs.py',
-  '/usr/lib/python3.14/io.py',
-  '/usr/lib/python3.14/site.py',
-  '/usr/lib/python3.14/encodings/__init__.py',
-  '/usr/lib/python3.14/encodings/aliases.py',
-  '/usr/lib/python3.14/encodings/utf_8.py',
-  '/usr/lib/python3.14/encodings/ascii.py',
-  '/usr/lib/python3.14/encodings/latin_1.py',
-];
 
 /**
  * Tool registry — maps tool names to standalone WASM module paths.
@@ -182,13 +154,6 @@ interface EmscriptenInstance {
 
 export class ToolRunner {
   private vfs: VFSManager;
-
-  /**
-   * Cache for populateDirMapped — maps VFS source root to the flattened list
-   * of {srcPath, dstRelative} entries discovered by the first recursive scan.
-   * Subsequent calls reuse the cached listing, skipping the readdir+stat walk.
-   */
-  private dirMappingCache = new Map<string, Array<{ src: string; dstRel: string; type: 'file' | 'dir' }>>();
 
   constructor(vfs: VFSManager) {
     this.vfs = vfs;
@@ -344,7 +309,7 @@ export class ToolRunner {
       ...(options.env || {}),
     };
 
-    // Capture a reference to the VFS for the onMissingFile callback
+    // Capture a reference to the VFS for locateFile
     const vfs = this.vfs;
 
     // Step 2: Configure and instantiate the WASM module
@@ -381,9 +346,6 @@ export class ToolRunner {
         options.onStderr?.(text);
       },
       stdin: options.stdin ?? (() => null),
-      // Lazy file fetch: when the process FS encounters a missing file,
-      // ask the kernel VFS for it
-      onMissingFile: async (path: string) => vfs.fetchFile(path),
       // Resolve .wasm URL from the CDN manifest
       locateFile: (path: string) => {
         if (path.endsWith('.wasm')) {
@@ -422,10 +384,6 @@ export class ToolRunner {
               return 0;
             }
 
-            // Skip optional tools entirely — don't even spawn them —
-            // UNLESS the call is a version check (emcc probes the tool version).
-            // wasm-opt, llvm-objcopy etc. may crash at runtime due to LLVM
-            // version mismatches, and the wasm-ld output is already valid.
             const subBasename = parts[0].split('/').pop() ?? parts[0];
             const isVersionCheck = parts.includes('--version') || parts.includes('-v');
             if (OPTIONAL_TOOLS.has(subBasename) && !isVersionCheck) {
@@ -435,18 +393,9 @@ export class ToolRunner {
               return (0 << 8) | 0;
             }
 
-            // Harvest files from the parent process FS into the kernel VFS.
-            // This ensures child processes (e.g., clang) can access files that
-            // the parent (emcc) created (e.g., sysroot cache, temp files).
-            // Skip for version/info queries — they don't read or produce user files.
-            const harvestPaths = ['/home/user', '/tmp'];
-            if (!isVersionCheck) {
-              for (const hp of harvestPaths) {
-                try {
-                  await runner.harvestDir(instanceRef.FS, hp);
-                } catch { /* ok if dir doesn't exist */ }
-              }
-            }
+            // With VFSFS write-through, writes from the parent process
+            // go to VFS immediately.  The child process's VFSFS mount
+            // will lazily read those files via JSPI.
 
             const subStdout: string[] = [];
             const subStderr: string[] = [];
@@ -457,18 +406,9 @@ export class ToolRunner {
               isInfoQuery: isVersionCheck,
             });
 
-            // Sync files from the kernel VFS back into the parent process FS.
-            // The child process (e.g. clang) already harvested its output files
-            // to the kernel VFS. Now we re-populate the parent's FS so emcc can
-            // access them (e.g. reading /tmp/emscripten_temp_*/main.o).
-            // Skip for version/info queries — no files to sync.
-            if (!isVersionCheck) {
-              for (const hp of harvestPaths) {
-                try {
-                  await runner.populateDirFromVFS(instanceRef.FS, hp);
-                } catch { /* ok if dir doesn't exist */ }
-              }
-            }
+            // With VFSFS write-through, the child's output files are
+            // already in VFS.  The parent's VFSFS will lazily load them
+            // on next access via JSPI.  No re-population needed.
 
             // Write results back to the process FS
             instanceRef.FS.writeFile('/tmp/.subprocess_stdout', subStdout.join('\n'));
@@ -537,16 +477,20 @@ export class ToolRunner {
       };
     }
 
-    // Step 3: Pre-populate the process FS with files from the kernel VFS
+    // Step 3: Mount VFSFS + install JSPI hooks for on-demand file loading
     const tFS = performance.now();
-    console.log(`${LOG_PREFIX}   Step 3/4: Populating process filesystem...`);
-    await this.populateProcessFS(instance, descriptor, options);
+    console.log(`${LOG_PREFIX}   Step 3/4: Mounting VFSFS + JSPI hooks...`);
+    moduleConfig['__modulePath'] = descriptor.modulePath;
+    const fileData = this.setupProcessFS(instance, moduleConfig, options);
 
     // For Python-based tools, inject the subprocess shim to replace stdlib subprocess
     if (isPythonTool) {
+      // Inject shim into the VFSFS fileData map (not MEMFS writeFile)
       try {
-        instance.FS.mkdirTree('/usr/lib/python3.14');
-        instance.FS.writeFile('/usr/lib/python3.14/subprocess.py', SUBPROCESS_SHIM);
+        const shimBytes = typeof SUBPROCESS_SHIM === 'string'
+          ? new TextEncoder().encode(SUBPROCESS_SHIM)
+          : SUBPROCESS_SHIM;
+        fileData.set('/usr/lib/python3.14/subprocess.py', shimBytes as Uint8Array);
         console.log(`${LOG_PREFIX}   Injected subprocess shim`);
       } catch {
         console.warn(`${LOG_PREFIX}   ⚠️ Failed to inject subprocess shim`);
@@ -590,7 +534,7 @@ def _hook(t, v, tb):
     except: pass
 sys.excepthook = _hook
 `;
-        instance.FS.writeFile('/usr/lib/python3.14/sitecustomize.py', SITE_CUSTOMIZE);
+        fileData.set('/usr/lib/python3.14/sitecustomize.py', new TextEncoder().encode(SITE_CUSTOMIZE));
         console.log(`${LOG_PREFIX}   Injected sitecustomize.py (safe stderr + exception capture)`);
       } catch {
         console.warn(`${LOG_PREFIX}   ⚠️ Failed to inject sitecustomize.py`);
@@ -601,8 +545,7 @@ sys.excepthook = _hook
       // get_binaryen_version) calls os.path.exists() on these paths.
       // The actual execution goes through the subprocess shim → ToolRunner,
       // but the existence check happens directly on the Emscripten FS.
-      // populateDir may fail silently for CDN-fetched stubs, so we create
-      // them explicitly here to guarantee os.path.exists() returns True.
+      // With VFSFS, these stubs go into the fileData map.
       const STUB = new TextEncoder().encode('stub\n');
       const TOOL_STUBS = [
         '/usr/bin/clang', '/usr/bin/clang++',
@@ -614,17 +557,12 @@ sys.excepthook = _hook
         '/usr/bin/wasm-metadce',
         '/usr/bin/node', '/usr/bin/python3',
       ];
-      try {
-        instance.FS.mkdirTree('/usr/bin');
-        for (const stubPath of TOOL_STUBS) {
-          try { instance.FS.writeFile(stubPath, STUB); } catch { /* ok */ }
-        }
-        console.log(`${LOG_PREFIX}   Created ${TOOL_STUBS.length} tool stubs in /usr/bin/`);
-      } catch {
-        console.warn(`${LOG_PREFIX}   ⚠️ Failed to create tool stubs`);
+      for (const stubPath of TOOL_STUBS) {
+        fileData.set(stubPath, STUB);
       }
+      console.log(`${LOG_PREFIX}   Created ${TOOL_STUBS.length} tool stubs in fileData`);
     }
-    console.log(`${LOG_PREFIX}   Step 3/4 done: FS populated in ${elapsed(tFS)}`);
+    console.log(`${LOG_PREFIX}   Step 3/4 done: FS set up in ${elapsed(tFS)}`);
 
     // Step 4: Call main(argc, argv) — the tool runs to completion
     const tRun = performance.now();
@@ -753,8 +691,8 @@ sys.excepthook = _hook
       }
     }
 
-    // Harvest output files from the process FS back to the kernel VFS
-    await this.harvestProcessFS(instance, descriptor);
+    // With VFSFS write-through, output files are already in VFS.
+    // No explicit harvest step needed.
 
     // Process is done — let GC reclaim the WASM linear memory
     console.log(`${LOG_PREFIX}   Process complete, releasing WASM instance (total spawn: ${elapsed(tSpawn)})`);
@@ -767,433 +705,76 @@ sys.excepthook = _hook
   }
 
   /* ---------------------------------------------------------------- */
-  /*  Process FS bridging                                              */
+  /*  Process FS bridging (VFSFS mount + JSPI hooks)                   */
   /* ---------------------------------------------------------------- */
 
   /**
-   * Pre-populate the isolated process's Emscripten FS with files needed
-   * for the tool to run. This includes:
-   *   - Explicit preloadFiles from the descriptor (e.g. Python stdlib)
-   *   - Working directory contents
-   *   - Any CWD setup
+   * Set up the process FS for a tool invocation using VFSFS mounts.
    *
-   * When `options.isInfoQuery` is true, expensive operations (populating
-   * /home/user, /tmp, sysroot cache, include headers) are skipped since
-   * the tool is only being called for --version or similar info output.
+   * Instead of copying files or patching lookupPath, this method:
+   *   1. Mounts VFSFS at /usr, /etc (backed by kernel VFS + JSPI on-demand fetch)
+   *   2. Registers path aliases for sysroot cache mapping
+   *   3. Creates essential synthetic files (shim, config, stubs)
+   *   4. Sets CWD
+   *
+   * File loading is entirely on-demand via JSPI: the patched glue code
+   * (patch 6) calls Module["onPreOpen"]/["onPreStat"] before each syscall,
+   * which fetches from CDN → IDB → memCache and suspends the WASM stack.
+   *
+   * When `options.isInfoQuery` is true, only basic dir creation + CWD is done.
    */
-  private async populateProcessFS(
+  private setupProcessFS(
     instance: EmscriptenInstance,
-    descriptor: ToolDescriptor,
+    moduleConfig: Record<string, unknown>,
     options: RunOptions,
-  ): Promise<void> {
+  ): Map<string, Uint8Array> {
     const FS = instance.FS;
     const isInfoQuery = options.isInfoQuery === true;
+    const isPythonDescriptor = (moduleConfig['__modulePath'] as string || '').includes('python');
 
-    // Ensure standard directories exist
-    for (const dir of ['/tmp', '/home', '/home/user', '/usr', '/usr/lib', '/usr/bin', '/etc']) {
-      try { FS.mkdirTree(dir); } catch { /* exists */ }
-    }
-
-    // For info queries (--version), skip all expensive file population.
-    // The tool only needs its WASM module + basic directories.
+    // For info queries (--version), just set CWD
     if (isInfoQuery) {
-      console.log(`${LOG_PREFIX}     [FAST] Info query — skipping FS population`);
+      console.log(`${LOG_PREFIX}     [FAST] Info query — skipping FS setup`);
       const cwd = options.cwd || '/home/user';
       try { FS.mkdirTree(cwd); } catch { /* exists */ }
       try { FS.chdir(cwd); } catch { /* ignore */ }
-      return;
+      return new Map();
     }
 
-    // Pre-load explicitly listed files
-    const preloadFiles = descriptor.preloadFiles || [];
-    if (preloadFiles.length > 0) {
-      console.log(`${LOG_PREFIX}     Preloading ${preloadFiles.length} file(s)...`);
-      for (const filePath of preloadFiles) {
-        await this.writeFileToProcessFS(FS, filePath);
-      }
+    // Path aliases for sysroot cache mapping
+    const pathAliases = new Map<string, string>();
+    if (isPythonDescriptor) {
+      pathAliases.set(
+        '/home/user/.emscripten_cache/sysroot/lib',
+        '/usr/lib/emscripten/cache-lib',
+      );
+      pathAliases.set(
+        '/home/user/.emscripten_cache/sysroot/include',
+        '/usr/include',
+      );
     }
 
-    // Pre-load explicit directories (shallow — only immediate children)
-    const preloadDirs = descriptor.preloadDirs || [];
-    for (const dirPath of preloadDirs) {
-      await this.populateDir(FS, dirPath, false);
-    }
+    // Mount VFSFS at system paths — all file access goes through VFS + JSPI
+    const fileData = mountVFSFS(FS, moduleConfig, this.vfs, {
+      mountPoints: ['/usr', '/etc'],
+      pathAliases,
+    });
 
-    // Pre-load directories recursively (full subtrees)
-    const preloadDirsRecursive = descriptor.preloadDirsRecursive || [];
-    for (const dirPath of preloadDirsRecursive) {
-      await this.populateDir(FS, dirPath, true);
+    // Sysroot scaffold (Python tools only)
+    if (isPythonDescriptor) {
+      try { FS.mkdirTree('/home/user/.emscripten_cache/sysroot'); } catch { /* exists */ }
+      FS.writeFile('/home/user/.emscripten_cache/sysroot_install.stamp', 'prebuilt');
+      try { FS.mkdirTree('/home/user/.emscripten_cache/sysroot/lib'); } catch { /* exists */ }
+      try { FS.mkdirTree('/home/user/.emscripten_cache/sysroot/include'); } catch { /* exists */ }
+      console.log(`${LOG_PREFIX}     Sysroot dirs created with ${pathAliases.size} path aliases`);
     }
 
     // Set CWD
     const cwd = options.cwd || '/home/user';
     try { FS.mkdirTree(cwd); } catch { /* exists */ }
+    try { FS.chdir(cwd); } catch { /* ignore */ }
 
-    // Copy files from the kernel VFS cwd into the process FS (recursively,
-    // so child processes like clang can access files created by the parent)
-    await this.populateDir(FS, cwd, true);
-
-    // Also populate /tmp from VFS — subprocess parents write temp files here
-    // (e.g. emcc creates /tmp/emscripten_temp_xxx/ with source/object files)
-    if (cwd !== '/tmp') {
-      await this.populateDir(FS, '/tmp', true);
-    }
-
-    // Populate additional directories from VFS (e.g. system lib sources
-    // needed by clang when compiling system libraries for emcc)
-    if (options.extraPreloadDirs) {
-      for (const dir of options.extraPreloadDirs) {
-        console.log(`${LOG_PREFIX}     extraPreloadDir: ${dir}`);
-        await this.populateDir(FS, dir, true);
-      }
-    }
-
-    // Pre-populate the Emscripten cache from VFS cache-lib so emcc doesn't
-    // try to compile system libraries at runtime. The pre-built cache lives
-    // at /usr/lib/emscripten/cache-lib/ in the VFS but emcc expects it at
-    // ~/.emscripten_cache/sysroot/lib/ (CACHE config + /sysroot/lib/).
-    const isPythonDescriptor = descriptor.modulePath.includes('python');
-    if (isPythonDescriptor) {
-      // Create the sysroot_install.stamp FIRST so emcc's ensure_sysroot() /
-      // cache.get() skips the install_system_headers step entirely.  Combined
-      // with FROZEN_CACHE=True in emscripten.config, this prevents emcc from
-      // ever trying to walk the source tree with os.scandir (which would fail
-      // in the WASM MEMFS that is populated on-demand).
-      console.log(`${LOG_PREFIX}     Creating sysroot_install.stamp...`);
-      try { FS.mkdirTree('/home/user/.emscripten_cache'); } catch { /* exists */ }
-      FS.writeFile('/home/user/.emscripten_cache/sysroot_install.stamp', 'prebuilt');
-
-      console.log(`${LOG_PREFIX}     Populating emscripten cache from VFS cache-lib...`);
-      await this.populateDirMapped(
-        FS,
-        '/usr/lib/emscripten/cache-lib',           // VFS source
-        '/home/user/.emscripten_cache/sysroot/lib', // process FS destination
-        true,
-      );
-
-      // Map system include headers into the sysroot cache.
-      // Clang uses --sysroot=~/.emscripten_cache/sysroot, so it looks for
-      // headers at sysroot/include/.  The headers live at /usr/include/ in
-      // the VFS (placed there by the Emscripten build).
-      console.log(`${LOG_PREFIX}     Populating sysroot include headers...`);
-      await this.populateDirMapped(
-        FS,
-        '/usr/include',                                  // VFS source
-        '/home/user/.emscripten_cache/sysroot/include',  // destination
-        true,
-      );
-    }
-
-    try {
-      FS.chdir(cwd);
-    } catch (e) {
-      console.warn(`${LOG_PREFIX}     Failed to chdir to ${cwd}`, e);
-    }
-  }
-
-  /**
-   * Write a single file from the kernel VFS into the process's Emscripten FS.
-   */
-  private async writeFileToProcessFS(
-    FS: EmscriptenInstance['FS'],
-    filePath: string,
-  ): Promise<boolean> {
-    try {
-      const data = await this.vfs.fetchFile(filePath);
-      if (!data) {
-        console.warn(`${LOG_PREFIX}     VFS miss: ${filePath}`);
-        return false;
-      }
-
-      // Ensure parent directory exists
-      const dir = filePath.substring(0, filePath.lastIndexOf('/'));
-      if (dir) {
-        try { FS.mkdirTree(dir); } catch { /* exists */ }
-      }
-
-      FS.writeFile(filePath, data);
-      //console.log(`${LOG_PREFIX}     preloaded: ${filePath} (${data.length} bytes)`);
-      return true;
-    } catch (e) {
-      console.warn(`${LOG_PREFIX}     Failed to write ${filePath} to process FS:`, e);
-      return false;
-    }
-  }
-
-  /**
-   * Recursively populate a directory in the process FS from the kernel VFS.
-   */
-  private async populateDir(
-    FS: EmscriptenInstance['FS'],
-    dirPath: string,
-    recursive: boolean = false,
-  ): Promise<void> {
-    try {
-      const entries = await this.vfs.overlay.readdir(dirPath);
-      //console.log(`${LOG_PREFIX}     populateDir: ${dirPath} → ${entries.length} entries (recursive=${recursive})`);
-
-      // Separate entries into dirs and files for parallel fetching
-      const dirs: string[] = [];
-      const files: { path: string; symlink?: string }[] = [];
-
-      for (const entry of entries) {
-        if (entry === '.' || entry === '..') continue;
-        const fullPath = dirPath === '/' ? `/${entry}` : `${dirPath}/${entry}`;
-        try {
-          const stat = await this.vfs.overlay.stat(fullPath);
-          if (stat && stat.type === 'dir') {
-            try { FS.mkdirTree(fullPath); } catch { /* exists */ }
-            if (recursive) dirs.push(fullPath);
-          } else if (stat && stat.type === 'symlink' && stat.symlinkTarget) {
-            files.push({ path: fullPath, symlink: stat.symlinkTarget });
-          } else if (stat) {
-            files.push({ path: fullPath });
-          }
-        } catch {
-          // Stat failed — skip
-        }
-      }
-
-      // Create symlinks synchronously, fetch regular files in parallel batches
-      const BATCH_SIZE = 32;
-      const regularFiles: string[] = [];
-      for (const f of files) {
-        if (f.symlink) {
-          const dir = f.path.substring(0, f.path.lastIndexOf('/'));
-          if (dir) { try { FS.mkdirTree(dir); } catch { /* exists */ } }
-          try { FS.symlink(f.symlink, f.path); } catch { /* exists */ }
-        } else {
-          regularFiles.push(f.path);
-        }
-      }
-
-      // Fetch files in parallel batches for much better throughput
-      for (let i = 0; i < regularFiles.length; i += BATCH_SIZE) {
-        const batch = regularFiles.slice(i, i + BATCH_SIZE);
-        await Promise.all(batch.map(p => this.writeFileToProcessFS(FS, p)));
-      }
-
-      // Recurse into subdirectories
-      for (const dir of dirs) {
-        await this.populateDir(FS, dir, true);
-      }
-    } catch (e) {
-      // Directory doesn't exist in kernel VFS — that's OK
-      console.warn(`${LOG_PREFIX}     populateDir FAILED: ${dirPath}`, e);
-    }
-  }
-
-  /**
-   * Populate a directory in the process FS from a DIFFERENT VFS path.
-   * Reads from vfsSrcPath in the kernel VFS, writes to fsDstPath in the process FS.
-   * This enables mapping pre-built cache files to the expected cache location.
-   *
-   * The first call for a given vfsSrcPath performs the full recursive readdir+stat
-   * scan and caches the flattened file listing.  Subsequent calls reuse the cache,
-   * avoiding the expensive VFS directory walk (which is the same every time for
-   * static content like the emscripten cache and sysroot headers).
-   */
-  private async populateDirMapped(
-    FS: EmscriptenInstance['FS'],
-    vfsSrcPath: string,
-    fsDstPath: string,
-    recursive: boolean = true,
-  ): Promise<void> {
-    let listing = this.dirMappingCache.get(vfsSrcPath);
-
-    if (!listing) {
-      // First call — scan and cache the directory listing
-      listing = [];
-      try {
-        await this.scanDirMappingRecursive(vfsSrcPath, '', listing, recursive);
-      } catch (e) {
-        console.warn(`${LOG_PREFIX}     populateDirMapped SCAN FAILED: ${vfsSrcPath}`, e);
-        return;
-      }
-      this.dirMappingCache.set(vfsSrcPath, listing);
-      console.log(`${LOG_PREFIX}     populateDirMapped: cached ${listing.length} entries for ${vfsSrcPath}`);
-    }
-
-    // Replay the cached listing into the process FS
-    const BATCH_SIZE = 32;
-    const filesToFetch: Array<{ src: string; dst: string }> = [];
-
-    for (const entry of listing) {
-      const dstFull = fsDstPath === '/'
-        ? entry.dstRel
-        : `${fsDstPath}${entry.dstRel}`;
-
-      if (entry.type === 'dir') {
-        try { FS.mkdirTree(dstFull); } catch { /* exists */ }
-      } else {
-        filesToFetch.push({ src: entry.src, dst: dstFull });
-      }
-    }
-
-    // Fetch files in parallel batches (VFS fetchFile is already memory-cached)
-    for (let i = 0; i < filesToFetch.length; i += BATCH_SIZE) {
-      const batch = filesToFetch.slice(i, i + BATCH_SIZE);
-      await Promise.all(batch.map(async ({ src, dst }) => {
-        const data = await this.vfs.fetchFile(src);
-        if (data) {
-          const dir = dst.substring(0, dst.lastIndexOf('/'));
-          if (dir) { try { FS.mkdirTree(dir); } catch { /* exists */ } }
-          FS.writeFile(dst, data);
-        }
-      }));
-    }
-  }
-
-  /**
-   * Recursively scan a VFS directory and collect a flattened list of entries.
-   * Used by populateDirMapped to build the cache on first invocation.
-   */
-  private async scanDirMappingRecursive(
-    vfsSrcPath: string,
-    relPrefix: string,
-    out: Array<{ src: string; dstRel: string; type: 'file' | 'dir' }>,
-    recursive: boolean,
-  ): Promise<void> {
-    const entries = await this.vfs.overlay.readdir(vfsSrcPath);
-    for (const entry of entries) {
-      if (entry === '.' || entry === '..') continue;
-      const srcFull = vfsSrcPath === '/' ? `/${entry}` : `${vfsSrcPath}/${entry}`;
-      const dstRel = `${relPrefix}/${entry}`;
-      try {
-        const stat = await this.vfs.overlay.stat(srcFull);
-        if (stat && stat.type === 'dir') {
-          out.push({ src: srcFull, dstRel, type: 'dir' });
-          if (recursive) {
-            await this.scanDirMappingRecursive(srcFull, dstRel, out, true);
-          }
-        } else if (stat) {
-          out.push({ src: srcFull, dstRel, type: 'file' });
-        }
-      } catch {
-        // Stat failed — skip
-      }
-    }
-  }
-
-  /**
-   * Harvest output files from the process FS back to the kernel VFS.
-   * Scans directories listed in descriptor.harvestDirs (default: CWD, /tmp).
-   */
-  private async harvestProcessFS(
-    instance: EmscriptenInstance,
-    descriptor: ToolDescriptor,
-  ): Promise<void> {
-    const FS = instance.FS;
-    const harvestDirs = descriptor.harvestDirs || ['/home/user', '/tmp'];
-
-    for (const dir of harvestDirs) {
-      try {
-        await this.harvestDir(FS, dir);
-      } catch {
-        // Directory may not exist in process FS
-      }
-    }
-  }
-
-  /**
-   * Recursively harvest files from a process FS directory into the kernel VFS.
-   * Only harvests files that are new or modified compared to what the kernel VFS has.
-   */
-  private async harvestDir(
-    FS: EmscriptenInstance['FS'],
-    dirPath: string,
-  ): Promise<void> {
-    let entries: string[];
-    try {
-      entries = FS.readdir(dirPath);
-    } catch {
-      return;
-    }
-
-    for (const entry of entries) {
-      if (entry === '.' || entry === '..') continue;
-      const fullPath = dirPath === '/' ? `/${entry}` : `${dirPath}/${entry}`;
-
-      try {
-        const stat = FS.stat(fullPath);
-        if (FS.isDir(stat.mode)) {
-          // Ensure directory exists in the kernel VFS (even if empty)
-          try { await this.vfs.overlay.mkdir(fullPath); } catch { /* exists */ }
-          // Recurse into subdirectories (with depth limit)
-          await this.harvestDir(FS, fullPath);
-        } else {
-          // Read the file from the process FS
-          const data = FS.readFile(fullPath, { encoding: undefined });
-          if (data && data.length > 0) {
-            // Write back to kernel VFS
-            await this.vfs.overlay.writeFile(fullPath, data);
-          }
-        }
-      } catch {
-        // Skip files that can't be read
-      }
-    }
-  }
-
-  /**
-   * Recursively populate a process FS directory from the kernel VFS.
-   * Used to sync child-process output files back into the parent process FS
-   * after a subprocess call. For example, if clang writes /tmp/emscripten_temp_xxx/main.o,
-   * this method copies that file from VFS into emcc's process FS so emcc can read it.
-   */
-  async populateDirFromVFS(
-    FS: EmscriptenInstance['FS'],
-    dirPath: string,
-  ): Promise<void> {
-    let entries: string[];
-    try {
-      entries = await this.vfs.overlay.readdir(dirPath);
-    } catch {
-      return; // Directory doesn't exist in VFS
-    }
-
-    if (!entries || entries.length === 0) return;
-
-    try { FS.mkdirTree(dirPath); } catch { /* exists */ }
-
-    for (const name of entries) {
-      if (name === '.' || name === '..') continue;
-      const fullPath = dirPath === '/' ? `/${name}` : `${dirPath}/${name}`;
-
-      try {
-        const stat = await this.vfs.overlay.stat(fullPath);
-        if (!stat) continue;
-
-        if (stat.type === 'dir') {
-          await this.populateDirFromVFS(FS, fullPath);
-        } else if (stat.type === 'symlink' && stat.symlinkTarget) {
-          try { FS.symlink(stat.symlinkTarget, fullPath); } catch { /* exists */ }
-        } else {
-          // Only write if the file doesn't already exist in the process FS,
-          // or if the size differs (a crude "modified" check)
-          let needsWrite = true;
-          try {
-            const existing = FS.stat(fullPath);
-            if (existing && existing.size === stat.size) {
-              needsWrite = false;
-            }
-          } catch {
-            // File doesn't exist in process FS; will write
-          }
-
-          if (needsWrite) {
-            const data = await this.vfs.fetchFile(fullPath);
-            if (data) {
-              const dir = fullPath.substring(0, fullPath.lastIndexOf('/'));
-              if (dir) { try { FS.mkdirTree(dir); } catch { /* exists */ } }
-              FS.writeFile(fullPath, data);
-            }
-          }
-        }
-      } catch {
-        // Skip entries that can't be stat'd
-      }
-    }
+    return fileData;
   }
 
   /* ---------------------------------------------------------------- */
@@ -1404,7 +985,7 @@ sys.excepthook = _hook
     };
 
     // 3. Compile and instantiate
-    // eslint-disable-next-line prefer-const -- assigned via import or export after instantiation
+
     let memory: WebAssembly.Memory = undefined as unknown as WebAssembly.Memory;
 
     try {
@@ -1717,10 +1298,7 @@ sys.excepthook = _hook
       }
       // Check for full path patterns
       if (basename === 'python3' || basename === 'python' || basename === 'python3.14') {
-        return {
-          modulePath: '/usr/lib/python.wasm',
-          preloadFiles: [...PYTHON_PRELOAD_FILES, ...PYTHON_INIT_FILES],
-        };
+        return { modulePath: '/usr/lib/python.wasm' };
       }
       if (basename === 'emcc' || basename === 'em++') {
         // Fall through to the emcc/em++ handler below
@@ -1728,37 +1306,13 @@ sys.excepthook = _hook
     }
 
     if (name === 'python3' || name === 'python') {
-      return {
-        modulePath: '/usr/lib/python.wasm',
-        preloadFiles: [...PYTHON_PRELOAD_FILES, ...PYTHON_INIT_FILES],
-      };
+      return { modulePath: '/usr/lib/python.wasm' };
     }
 
     // Normalize: use basename for emcc/em++ matching (handle /usr/lib/emscripten/emcc paths)
     const toolBasename = name.includes('/') ? (name.split('/').pop() || name) : name;
     if (toolBasename === 'emcc' || toolBasename === 'em++') {
-      return {
-        modulePath: '/usr/lib/python.wasm',
-        preloadFiles: [
-          ...PYTHON_PRELOAD_FILES,
-          ...PYTHON_INIT_FILES,
-          '/etc/emscripten.config',
-        ],
-        // Top-level .py files (non-recursive)
-        preloadDirs: ['/usr/lib/emscripten', '/usr/bin'],
-        // tools/ (Python package), src/ (JS libraries), third_party.
-        // FROZEN_CACHE=True + sysroot_install.stamp + pre-built cache-lib
-        // means emcc never recompiles system libraries, so we do NOT need
-        // system/lib/ source trees (compiler-rt, libcxx, llvm-libc, etc.
-        // — those 3800+ files were the biggest bottleneck at ~70s).
-        // system/include is also unnecessary: clang reads headers from
-        // the sysroot populated via populateDirMapped (cache-lib + /usr/include).
-        preloadDirsRecursive: [
-          '/usr/lib/emscripten/tools',
-          '/usr/lib/emscripten/src',
-          '/usr/lib/emscripten/third_party',
-        ],
-      };
+      return { modulePath: '/usr/lib/python.wasm' };
     }
 
     throw new Error(`Unknown tool: ${name}`);

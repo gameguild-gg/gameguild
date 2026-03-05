@@ -206,6 +206,64 @@ function patchCallMainPromising(content: string, filename: string): string {
 }
 
 /**
+ * Patch 6: JSPI wrapping for filesystem syscalls.
+ *
+ * Wraps key filesystem syscalls with async hooks + WebAssembly.Suspending
+ * so that on-demand file fetching is transparent to WASM processes.
+ *
+ * Each wrapped syscall:
+ *   1. Calls Module["onPreXxx"](path) if the hook exists
+ *   2. Awaits the hook's Promise (JSPI suspends the WASM stack)
+ *   3. Calls the original syscall (file data now available)
+ *
+ * The hooks are injected by the tool-runner at process setup time.
+ * This replaces the old FS proxy approach (lookupPath patching) which was
+ * broken because Emscripten's lookupNode bypassed the proxy.
+ *
+ * Wrapped syscalls and their hook + path-argument index:
+ *   ___syscall_openat   → onPreOpen  (arg 1: path ptr)
+ *   ___syscall_stat64   → onPreStat  (arg 0: path ptr)
+ *   ___syscall_lstat64  → onPreStat  (arg 0: path ptr)
+ *   ___syscall_faccessat→ onPreAccess(arg 1: path ptr)
+ *   ___syscall_readlinkat→onPreStat  (arg 1: path ptr)
+ */
+function patchFsSyscallJSPI(content: string, filename: string): string {
+    const wasmImportsNeedle = 'var wasmImports=';
+    if (!content.includes(wasmImportsNeedle)) {
+        return content;
+    }
+
+    if (content.includes('_jspi_wrap')) {
+        console.log(`  [${filename}] FS syscall JSPI already patched — skipping`);
+        return content;
+    }
+
+    // Helper: wraps a synchronous syscall fn into an async function that
+    // calls Module[hook](pathString) before delegating to the original.
+    // The outer WebAssembly.Suspending makes the async function a valid
+    // WASM import that suspends the stack until the Promise resolves.
+    const jspiCode = [
+        'function _jspi_wrap(fn,hook,pi){var o=fn;',
+        'return new WebAssembly.Suspending(async function(){',
+        'var h=Module[hook];',
+        'if(h&&arguments[pi]){try{await h(UTF8ToString(arguments[pi]))}catch(e){}}',
+        'return o.apply(null,arguments)})}',
+        'if(typeof WebAssembly!=="undefined"&&WebAssembly.Suspending){',
+        'if(typeof ___syscall_openat==="function")___syscall_openat=_jspi_wrap(___syscall_openat,"onPreOpen",1);',
+        'if(typeof ___syscall_stat64==="function")___syscall_stat64=_jspi_wrap(___syscall_stat64,"onPreStat",0);',
+        'if(typeof ___syscall_lstat64==="function")___syscall_lstat64=_jspi_wrap(___syscall_lstat64,"onPreStat",0);',
+        'if(typeof ___syscall_faccessat==="function")___syscall_faccessat=_jspi_wrap(___syscall_faccessat,"onPreAccess",1);',
+        'if(typeof ___syscall_readlinkat==="function")___syscall_readlinkat=_jspi_wrap(___syscall_readlinkat,"onPreStat",1);',
+        '}',
+    ].join('');
+
+    content = content.replace(wasmImportsNeedle, jspiCode + wasmImportsNeedle);
+    patchCount++;
+    console.log(`  [${filename}] Patched 6: JSPI wrappers for FS syscalls (openat, stat64, lstat64, faccessat, readlinkat)`);
+    return content;
+}
+
+/**
  * Apply all relevant patches to a single .mjs file.
  */
 function patchFile(filePath: string): void {
@@ -215,14 +273,16 @@ function patchFile(filePath: string): void {
     let content = fs.readFileSync(filePath, 'utf8');
     const originalContent = content;
 
-    // All tools get ENV merge and resolveGlobalSymbol patches
+    // All tools get ENV merge, resolveGlobalSymbol, callMain promising,
+    // and FS syscall JSPI patches
     content = patchEnvMerge(content, filename);
     content = patchResolveGlobalSymbol(content, filename);
+    content = patchCallMainPromising(content, filename);
+    content = patchFsSyscallJSPI(content, filename);
 
-    // Only python.mjs gets the systemCallback and callMain promising patches
+    // Only python.mjs gets the systemCallback patch
     if (filename === 'python.mjs') {
         content = patchSystemCallback(content, filename);
-        content = patchCallMainPromising(content, filename);
     }
 
     if (content !== originalContent) {
