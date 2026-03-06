@@ -51,7 +51,7 @@ export interface RunOptions {
   cwd?: string;
   onStdout?: (text: string) => void;
   onStderr?: (text: string) => void;
-  stdin?: () => number | null;
+  stdin?: () => number | null | Promise<number>;
   /**
    * When true, the tool invocation is an info/version query (e.g. --version).
    * setupProcessFS will skip mounting VFSFS since the tool doesn't need
@@ -864,32 +864,11 @@ sys.excepthook = _hook
         const text = decoder.decode(bytes, { stream: true });
         totalWritten += len;
         if (fd === 1) {
-          // Split on newlines and emit each line
-          const lines = text.split('\n');
-          for (let j = 0; j < lines.length; j++) {
-            const line = lines[j];
-            if (j < lines.length - 1) {
-              // Complete line
-              stdoutChunks.push(line);
-              options.onStdout?.(line);
-            } else if (line.length > 0) {
-              // Partial line (no trailing newline)
-              stdoutChunks.push(line);
-              options.onStdout?.(line);
-            }
-          }
+          stdoutChunks.push(text);
+          options.onStdout?.(text);
         } else if (fd === 2) {
-          const lines = text.split('\n');
-          for (let j = 0; j < lines.length; j++) {
-            const line = lines[j];
-            if (j < lines.length - 1) {
-              stderrChunks.push(line);
-              options.onStderr?.(line);
-            } else if (line.length > 0) {
-              stderrChunks.push(line);
-              options.onStderr?.(line);
-            }
-          }
+          stderrChunks.push(text);
+          options.onStderr?.(text);
         }
       }
       mem.setUint32(nwrittenPtr, totalWritten, true);
@@ -939,21 +918,83 @@ sys.excepthook = _hook
 
     const fd_close = (): number => 0;
     const fd_seek = (): number => 8; // EBADF — not seekable
-    const fd_read = (
-      _fd: number, _iovsPtr: number, _iovsLen: number, nreadPtr: number,
+    const stdinProvider = options.stdin ?? null;
+    const hasJSPI = typeof (WebAssembly as any).Suspending === 'function';
+    console.log(`${LOG_PREFIX}   [WASI-STDIN] stdinProvider=${stdinProvider ? 'SET' : 'NULL'}, hasJSPI=${hasJSPI}`);
+
+    // Synchronous fd_read: returns EOF for stdin (fallback when JSPI unavailable)
+    const fd_read_sync = (
+      fd: number, _iovsPtr: number, _iovsLen: number, nreadPtr: number,
     ): number => {
+      if (fd === 0 && stdinProvider) {
+        console.warn(`${LOG_PREFIX}   [WASI-STDIN] stdin requested but JSPI unavailable — returning EOF`);
+      }
       const mem = new DataView(memory.buffer);
-      mem.setUint32(nreadPtr, 0, true); // EOF
+      mem.setUint32(nreadPtr, 0, true);
       return 0;
     };
+
+    // Async fd_read: suspends WASM via JSPI while awaiting stdin input
+    const fd_read_async = async (
+      fd: number, iovsPtr: number, iovsLen: number, nreadPtr: number,
+    ): Promise<number> => {
+      console.log(`${LOG_PREFIX}   [WASI-STDIN] fd_read called: fd=${fd}, iovsLen=${iovsLen}`);
+      let mem = new DataView(memory.buffer);
+      if (fd !== 0 || !stdinProvider) {
+        mem.setUint32(nreadPtr, 0, true);
+        return 0;
+      }
+      let totalRead = 0;
+      for (let i = 0; i < iovsLen; i++) {
+        const base = iovsPtr + i * 8;
+        const ptr = mem.getUint32(base, true);
+        const len = mem.getUint32(base + 4, true);
+        for (let j = 0; j < len; j++) {
+          const result = stdinProvider();
+          let byte: number | null;
+          if (result === null) {
+            byte = null;
+          } else if (typeof (result as Promise<number>).then === 'function') {
+            byte = await (result as Promise<number>);
+            // Re-create DataView after JSPI resume — memory may have grown
+            mem = new DataView(memory.buffer);
+          } else {
+            byte = result as number;
+          }
+          if (byte === null || byte === undefined) {
+            mem.setUint32(nreadPtr, totalRead, true);
+            return 0;
+          }
+          // xterm sends CR (13) for Enter; POSIX/WASI programs expect LF (10)
+          if (byte === 13) byte = 10;
+          // Write byte to the iov buffer (re-create view in case memory grew)
+          new Uint8Array(memory.buffer, ptr, len)[j] = byte;
+          totalRead++;
+          // Line-buffered: stop after newline so C stdin returns a line
+          if (byte === 10) {
+            mem.setUint32(nreadPtr, totalRead, true);
+            return 0;
+          }
+        }
+      }
+      mem.setUint32(nreadPtr, totalRead, true);
+      return 0;
+    };
+
+    // Use async fd_read only when JSPI is available AND stdin is provided
+    const fd_read = (stdinProvider && hasJSPI) ? fd_read_async : fd_read_sync;
+
     const fd_fdstat_get = (fd: number, statPtr: number): number => {
       const mem = new DataView(memory.buffer);
       // fs_filetype: REGULAR_FILE=4, CHARACTER_DEVICE=2
       mem.setUint8(statPtr, fd <= 2 ? 2 : 4); // filetype
       mem.setUint16(statPtr + 2, 0, true); // fs_flags
-      // rights_base and rights_inheriting (8 bytes each, zero them)
-      mem.setBigUint64(statPtr + 8, BigInt(0), true);
-      mem.setBigUint64(statPtr + 16, BigInt(0), true);
+      // rights_base: FD_READ=0x2 for stdin, FD_WRITE=0x40 for stdout/stderr
+      let rights = BigInt(0);
+      if (fd === 0) rights = BigInt(0x2); // FD_READ
+      else if (fd === 1 || fd === 2) rights = BigInt(0x40); // FD_WRITE
+      mem.setBigUint64(statPtr + 8, rights, true);
+      mem.setBigUint64(statPtr + 16, BigInt(0), true); // rights_inheriting
       return 0;
     };
     const fd_prestat_get = (): number => 8; // EBADF — no preopened dirs
@@ -1005,7 +1046,20 @@ sys.excepthook = _hook
       fd_renumber: () => 63,
       fd_pwrite: () => 63,
       fd_pread: () => 63,
-      poll_oneoff: () => 63,
+      poll_oneoff: (inPtr: number, outPtr: number, nsubscriptions: number, neventsPtr: number): number => {
+        // Report all subscriptions as ready (data available).
+        // This unblocks musl's poll()/select() if called before fd_read.
+        const mem = new DataView(memory.buffer);
+        const out = new Uint8Array(memory.buffer, outPtr, nsubscriptions * 32);
+        out.fill(0);
+        for (let i = 0; i < nsubscriptions; i++) {
+          const base = outPtr + i * 32;
+          // nbytes = 1 at offset 16 (data available)
+          mem.setBigUint64(base + 16, BigInt(1), true);
+        }
+        mem.setUint32(neventsPtr, nsubscriptions, true);
+        return 0;
+      },
       sched_yield: () => 0,
       sock_accept: () => 63,
       sock_recv: () => 63,
@@ -1027,27 +1081,26 @@ sys.excepthook = _hook
 
       // Inspect required imports to build the import object dynamically
       const importDescs = WebAssembly.Module.imports(wasmModule);
+      console.log(`${LOG_PREFIX}   WASM imports: [${importDescs.map(i => `${i.module}.${i.name}(${i.kind})`).join(', ')}]`);
       const importObject: Record<string, Record<string, WebAssembly.ImportValue>> = {};
 
       for (const imp of importDescs) {
         if (!importObject[imp.module]) {
           importObject[imp.module] = {};
         }
-        if (imp.module === 'wasi_snapshot_preview1') {
-          importObject[imp.module][imp.name] =
+        if (imp.module === 'wasi_snapshot_preview1' || imp.module === 'wasi_unstable') {
+          let fn: Function =
             wasiImports[imp.name] ??
             ((..._args: unknown[]) => {
-              console.warn(`${LOG_PREFIX}   WASI stub called: ${imp.name}`);
+              console.warn(`${LOG_PREFIX}   WASI stub called: ${imp.module}.${imp.name}`);
               return 0;
             });
-        } else if (imp.module === 'wasi_unstable') {
-          // Older WASI — map the same implementations
-          importObject[imp.module][imp.name] =
-            wasiImports[imp.name] ??
-            ((..._args: unknown[]) => {
-              console.warn(`${LOG_PREFIX}   WASI unstable stub: ${imp.name}`);
-              return 0;
-            });
+          // Wrap fd_read with JSPI Suspending so WASM suspends while awaiting stdin
+          if (imp.name === 'fd_read' && stdinProvider && hasJSPI) {
+            console.log(`${LOG_PREFIX}   [WASI-STDIN] Wrapping fd_read with WebAssembly.Suspending`);
+            fn = new (WebAssembly as any).Suspending(fn);
+          }
+          importObject[imp.module][imp.name] = fn;
         } else if (imp.kind === 'memory') {
           const mem = new WebAssembly.Memory({ initial: 256, maximum: 16384 });
           importObject[imp.module][imp.name] = mem;
@@ -1082,7 +1135,7 @@ sys.excepthook = _hook
       console.log(`${LOG_PREFIX}   WASM exports: [${exportNames.join(', ')}]`);
 
       // 4. Call _start (WASI entry point) or main
-      const startFn = instance.exports._start as (() => void) | undefined;
+      let startFn = instance.exports._start as ((...args: any[]) => any) | undefined;
       const mainFn = instance.exports.main as ((argc: number, argv: number) => number) | undefined;
       const initFn = instance.exports.__wasm_call_ctors as (() => void) | undefined;
 
@@ -1091,10 +1144,20 @@ sys.excepthook = _hook
         try { initFn(); } catch { /* ok */ }
       }
 
+      // Wrap entry point with JSPI promising so it can await suspended
+      // imports (e.g. fd_read blocking on stdin)
+      if (stdinProvider && hasJSPI && startFn) {
+        console.log(`${LOG_PREFIX}   [WASI-STDIN] Wrapping _start with WebAssembly.promising`);
+        startFn = (WebAssembly as any).promising(startFn);
+      }
+
       if (startFn) {
         console.log(`${LOG_PREFIX}   Calling _start()...`);
         try {
-          startFn();
+          const result = startFn();
+          if (result && typeof result.then === 'function') {
+            await result;
+          }
         } catch (e) {
           if (e instanceof WasiExit) {
             exitCode = e.code;

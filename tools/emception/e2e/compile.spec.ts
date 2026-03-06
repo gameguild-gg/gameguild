@@ -38,13 +38,11 @@ const compileBtn = (page: Page) => page.getByTestId('compile-button');
 /**
  * Focus the interactive TTYBridge terminal.
  *
- * boot() creates a *second* xterm `Terminal` inside the same container used
- * by Ide.tsx, so there are two `textarea[aria-label="Terminal input"]`.
- * The TTYBridge terminal (which runs MiniShell and receives compile output)
- * is the **last** one appended, so we target `.last()`.
+ * There is now a single xterm Terminal instance shared between Ide.tsx and
+ * TTYBridge, so there is only one `textarea[aria-label="Terminal input"]`.
  */
 async function focusShellTerminal(page: Page) {
-    const textarea = page.locator('textarea[aria-label="Terminal input"]').last();
+    const textarea = page.locator('textarea[aria-label="Terminal input"]');
     await textarea.focus();
 }
 
@@ -147,6 +145,21 @@ test.describe('Compile & Run', () => {
             // The MiniShell banner should already be in the terminal
             await expect(terminal(page)).toContainText('Browser Toolchain Shell', { timeout: 10_000 });
 
+            // Override the editor with a simple hello-world (no stdin) so the
+            // test doesn't depend on whichever DEFAULT_CODE is in Ide.tsx.
+            await page.evaluate(() => {
+                const model = (window as any).monaco?.editor?.getModels?.()?.[0];
+                if (model) {
+                    model.setValue([
+                        '#include <iostream>',
+                        'int main() {',
+                        '  std::cout << "Hello from WebAssembly!" << std::endl;',
+                        '  return 0;',
+                        '}',
+                    ].join('\n'));
+                }
+            });
+
             console.log('Boot complete. Clicking Compile & Run...');
 
             // Click "Compile & Run"
@@ -246,5 +259,72 @@ test.describe('Compile & Run', () => {
 
         dumpLogs(logs, 'INTERACTIVE TERMINAL');
         assertLogContains(logs, 'BOOT COMPLETE', 'Boot completed');
+    });
+
+    // ------------------------------------------------------------------
+    // 3. stdin — compile a program that reads from stdin, type input,
+    //    verify the program echoes it back.
+    // ------------------------------------------------------------------
+    test('stdin works with JSPI — program reads user input', async ({ page }) => {
+        const logs = captureEmceptionLogs(page);
+
+        await page.goto('/', { waitUntil: 'networkidle' });
+        await expect(status(page)).toHaveText('Ready', { timeout: 120_000 });
+        await expect(compileBtn(page)).toBeEnabled();
+
+        // Replace editor content with a C program that reads stdin
+        const stdinProgram = [
+            '#include <stdio.h>',
+            'int main() {',
+            '    char buf[64];',
+            '    printf("PROMPT:\\n");',
+            '    fflush(stdout);',
+            '    if (fgets(buf, sizeof buf, stdin)) {',
+            '        printf("GOT:%s\\n", buf);',
+            '    } else {',
+            '        printf("GOT:EOF\\n");',
+            '    }',
+            '    return 0;',
+            '}',
+        ].join('\n');
+
+        // Set editor content via Monaco API
+        await page.evaluate((code) => {
+            // Monaco editor is accessible via the first editor instance
+            const model = (window as any).monaco?.editor?.getModels?.()?.[0];
+            if (model) {
+                model.setValue(code);
+            }
+        }, stdinProgram);
+
+        // Click compile & run
+        console.log('Compiling stdin test program...');
+        await compileBtn(page).click();
+        await expect(status(page)).toHaveText('Compiling...', { timeout: 5_000 });
+        await expect(status(page)).not.toHaveText('Compiling...', { timeout: 300_000 });
+
+        const finalStatus = await status(page).textContent();
+        console.log(`Compilation status: "${finalStatus}"`);
+        expect(finalStatus).toMatch(/Compilation successful/);
+
+        // Wait for "PROMPT:" in the terminal (program is now waiting for stdin)
+        const term = terminal(page);
+        await expect(term).toContainText('PROMPT:', { timeout: 60_000 });
+        console.log('Program printed PROMPT — now typing input...');
+
+        // Focus the terminal and type input
+        await focusShellTerminal(page);
+        await page.keyboard.type('hello', { delay: 50 });
+        await page.keyboard.press('Enter');
+
+        // The program should echo back what we typed
+        await expect(term).toContainText('GOT:hello', { timeout: 30_000 });
+        console.log('stdin test passed — program received input!');
+
+        // Verify fd_read was actually called (diagnostic log)
+        assertLogContains(logs, 'fd_read called', 'fd_read was invoked');
+        assertLogContains(logs, 'WASI COMPLETE', 'WASI execution completed');
+
+        dumpLogs(logs, 'STDIN TEST');
     });
 });
