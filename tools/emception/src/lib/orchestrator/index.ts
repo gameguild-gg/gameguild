@@ -75,7 +75,10 @@ export async function boot(manifestUrl: string, terminalContainer: HTMLElement):
     corsProxy: manifest.corsProxy ?? null,
   });
 
-  const runner = new ToolRunner(vfs);
+  const runner = new ToolRunner(vfs, {
+    pythonMajorMinor: manifest.toolVersions?.pythonMajorMinor ?? '3.13',
+    pythonMajorMinorCompact: manifest.toolVersions?.pythonMajorMinorCompact ?? '313',
+  });
   const tty = new TTYBridge(terminalContainer);
   const shell = new MiniShell(runner, tty, vfs);
   console.log(`${P} Step 5/6 done: all components created in ${ms(t5)}`);

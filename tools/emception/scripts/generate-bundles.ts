@@ -5,14 +5,19 @@
  * into bundles, creates tar archives, compresses them with brotli, writes the
  * bundles into build/cdn/, and rewrites manifest.json with bundle metadata.
  *
+ * EVERY file must belong to a bundle — no unbundled individual downloads.
+ *
  * Bundle groups:
+ *   <tool>               – paired .mjs + .wasm at /usr/lib/<tool>.{mjs,wasm}
  *   usr-include          – all files under /usr/include/
  *   usr-lib-emscripten   – all files under /usr/lib/emscripten/
- *   usr-lib-pkgconfig    – all files under /usr/lib/pkgconfig/
- *   usr-lib-python*      – all files under /usr/lib/python<ver>/
- *   <tool>               – paired .mjs + .wasm at /usr/lib/<tool>.{mjs,wasm}
+ *   python-runtime       – /usr/lib/python<ver>/ + /usr/lib/pkgconfig/ (same context)
+ *   usr-bin              – /usr/bin/ + /etc/ (small scripts & config)
+ *   usr-lib-misc         – remaining /usr/lib/ files (e.g. libpython3.13.a)
+ *   usr-share            – /usr/share/ files
  *
- * Files not matched by any rule remain unbundled (fetched individually).
+ * Version-specific paths like /usr/lib/python3.13/ are referenced in the
+ * manifest as-is but the bundle is named "python-runtime" (not "python3.13").
  */
 
 import { exec, execSync } from 'child_process';
@@ -202,76 +207,80 @@ async function main() {
     );
 
     // ── Define bundle groups ──
+    // EVERY non-symlink file must belong to exactly one bundle.
 
     // Collect all real file paths (skip symlinks)
     const allPaths = Object.keys(manifest.files).filter(
         (p) => !manifest.files[p].symlink,
     );
 
-    // Group definitions: { bundleName → prefix[] }
-    // Files matching the first prefix win.
-    const prefixGroups: { name: string; prefixes: string[]; outputPath: string }[] = [
-        { name: 'usr-include', prefixes: ['/usr/include/'], outputPath: '/usr/include.tar.br' },
-        { name: 'usr-lib-emscripten', prefixes: ['/usr/lib/emscripten/'], outputPath: '/usr/lib/emscripten.tar.br' },
-        { name: 'usr-lib-pkgconfig', prefixes: ['/usr/lib/pkgconfig/'], outputPath: '/usr/lib/pkgconfig.tar.br' },
-    ];
+    // Track which files have been assigned to a bundle
+    const assigned = new Set<string>();
+    const bundleFiles = new Map<string, string[]>();
 
-    // Auto-detect /usr/lib/python*/ directories
-    const pythonDirs = new Set<string>();
-    for (const p of allPaths) {
-        const m = p.match(/^\/usr\/lib\/(python[^/]+)\//);
-        if (m) pythonDirs.add(m[1]);
-    }
-    for (const pyDir of [...pythonDirs].sort()) {
-        prefixGroups.push({
-            name: `usr-lib-${pyDir}`,
-            prefixes: [`/usr/lib/${pyDir}/`],
-            outputPath: `/usr/lib/${pyDir}.tar.br`,
-        });
-    }
-
-    // Detect tool pairs at /usr/lib/ root: <name>.wasm + <name>.mjs
+    // --- 1. Tool pairs: <tool>.wasm + <tool>.mjs ---
     const toolBasenames = new Set<string>();
     for (const p of allPaths) {
         const m = p.match(/^\/usr\/lib\/([^/]+)\.(wasm|mjs)$/);
         if (m) toolBasenames.add(m[1]);
     }
-    // Only create a bundle if BOTH .wasm and .mjs exist
     const toolBundles: string[] = [];
     for (const base of [...toolBasenames].sort()) {
         const hasWasm = allPaths.includes(`/usr/lib/${base}.wasm`);
         const hasMjs = allPaths.includes(`/usr/lib/${base}.mjs`);
         if (hasWasm && hasMjs) {
             toolBundles.push(base);
+            const files = [`/usr/lib/${base}.mjs`, `/usr/lib/${base}.wasm`];
+            bundleFiles.set(base, files);
+            for (const f of files) assigned.add(f);
         }
     }
 
-    // ── Assign files to bundles ──
+    // --- 2. Prefix-based groups (order matters — first match wins) ---
+    // python-runtime: /usr/lib/python*/ + /usr/lib/pkgconfig/ bundled together
+    const pythonPrefixes: string[] = [];
+    for (const p of allPaths) {
+        const m = p.match(/^\/usr\/lib\/(python[^/]+)\//);
+        if (m && !pythonPrefixes.includes(`/usr/lib/${m[1]}/`)) {
+            pythonPrefixes.push(`/usr/lib/${m[1]}/`);
+        }
+    }
+    pythonPrefixes.push('/usr/lib/pkgconfig/');
 
-    const bundleFiles = new Map<string, string[]>();
+    const prefixGroups: { name: string; prefixes: string[]; outputPath: string }[] = [
+        { name: 'usr-include', prefixes: ['/usr/include/'], outputPath: '/usr/include.tar.br' },
+        { name: 'emscripten-cache', prefixes: ['/usr/lib/emscripten/cache-lib/'], outputPath: '/usr/lib/emscripten-cache.tar.br' },
+        { name: 'emscripten-core', prefixes: ['/usr/lib/emscripten/'], outputPath: '/usr/lib/emscripten-core.tar.br' },
+        { name: 'python-runtime', prefixes: pythonPrefixes, outputPath: '/usr/lib/python-runtime.tar.br' },
+        { name: 'usr-bin', prefixes: ['/usr/bin/', '/etc/'], outputPath: '/usr/bin.tar.br' },
+        { name: 'usr-share', prefixes: ['/usr/share/'], outputPath: '/usr/share.tar.br' },
+    ];
 
-    // Initialize prefix-based bundles
     for (const { name } of prefixGroups) {
         bundleFiles.set(name, []);
     }
 
-    // Assign prefix-based bundles
     for (const p of allPaths) {
+        if (assigned.has(p)) continue;
         for (const { name, prefixes } of prefixGroups) {
             if (prefixes.some((pfx) => p.startsWith(pfx))) {
                 bundleFiles.get(name)!.push(p);
+                assigned.add(p);
                 break; // first match wins
             }
         }
     }
 
-    // Assign tool pair bundles
-    for (const base of toolBundles) {
-        const files = [
-            `/usr/lib/${base}.mjs`,
-            `/usr/lib/${base}.wasm`,
-        ];
-        bundleFiles.set(base, files);
+    // --- 3. Catch-all: remaining files go into "usr-lib-misc" ---
+    const miscFiles: string[] = [];
+    for (const p of allPaths) {
+        if (!assigned.has(p)) {
+            miscFiles.push(p);
+            assigned.add(p);
+        }
+    }
+    if (miscFiles.length > 0) {
+        bundleFiles.set('usr-lib-misc', miscFiles);
     }
 
     // Remove empty bundles
@@ -282,10 +291,19 @@ async function main() {
         }
     }
 
+    // Verify ALL files are assigned
+    const unassigned = allPaths.filter((p) => !assigned.has(p));
+    if (unassigned.length > 0) {
+        console.error(`ERROR: ${unassigned.length} files are not assigned to any bundle:`);
+        for (const p of unassigned.slice(0, 10)) console.error(`  ${p}`);
+        process.exit(1);
+    }
+
     console.log(`\nBundle groups (${bundleFiles.size}):`);
     for (const [name, files] of bundleFiles) {
         console.log(`  ${name}: ${files.length} files`);
     }
+    console.log(`Total files: ${allPaths.length}, all assigned to bundles.`);
 
     // ── Generate tar.br archives ──
 
