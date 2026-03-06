@@ -4,12 +4,12 @@
  */
 
 import type { ToolRunner } from './tool-runner';
-import type { TTYBridge } from './tty/xterm-bridge';
+import type { IOProvider } from './tty/io-provider';
 import type { VFSManager } from './vfs/index';
 
 export class MiniShell {
   private runner: ToolRunner;
-  private tty: TTYBridge;
+  private tty: IOProvider;
   private vfs: VFSManager | null;
   private cwd = '/home/user';
   private env: Record<string, string> = {
@@ -21,7 +21,7 @@ export class MiniShell {
   private historyIndex = -1;
   private readonly MAX_HISTORY = 200;
 
-  constructor(runner: ToolRunner, tty: TTYBridge, vfs?: VFSManager) {
+  constructor(runner: ToolRunner, tty: IOProvider, vfs?: VFSManager) {
     this.runner = runner;
     this.tty = tty;
     this.vfs = vfs ?? null;
