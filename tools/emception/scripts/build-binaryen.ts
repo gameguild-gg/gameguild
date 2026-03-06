@@ -10,6 +10,7 @@ import os from 'os';
 import path from 'path';
 import shell from 'shelljs';
 import { fileURLToPath } from 'url';
+import { detectBinaryenVersion } from './lib/detect-versions.ts';
 import { setupEmsdk } from './lib/emsdk.ts';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -19,11 +20,12 @@ const ROOT = process.cwd();
 // Ensure shell commands fail on error
 shell.config.fatal = true;
 
-const BINARYEN_VERSION = process.env.BINARYEN_VERSION || '126';
 const EMSDK_VERSION = process.env.EMSDK_VERSION || 'latest';
 
-// Setup EMSDK
+// Setup EMSDK first so we can detect the bundled Binaryen version
 setupEmsdk(EMSDK_VERSION);
+
+const BINARYEN_VERSION = process.env.BINARYEN_VERSION || detectBinaryenVersion();
 
 const USERLAND_DIR = path.join(ROOT, 'userland', 'binaryen');
 const SOURCE_DIR = path.join(USERLAND_DIR, `binaryen-version_${BINARYEN_VERSION}`);
@@ -44,6 +46,9 @@ const STANDALONE_FLAGS = [
     '-sINVOKE_RUN=0',          // Don't auto-run main — kernel calls callMain()
     '-sEXPORTED_FUNCTIONS=_main',     // Keep main despite -Os
     '-sEXPORTED_RUNTIME_METHODS=FS,callMain',
+    // Use native WASM exception handling instead of JS-based invoke_*
+    // trampolines, enabling safe JSPI suspension inside any syscall.
+    '-fwasm-exceptions',
 ].join(' ');
 
 shell.mkdir('-p', USERLAND_DIR);
@@ -90,7 +95,8 @@ if (!fs.existsSync(path.join(BUILD_WASM_DIR, 'Makefile'))) {
     -DCMAKE_BUILD_TYPE=MinSizeRel \
     -DBUILD_TESTS=OFF \
     -DBYN_ENABLE_LTO=OFF \
-    -DBUILD_SHARED_LIBS=OFF`;
+    -DBUILD_SHARED_LIBS=OFF \
+    -DEMSCRIPTEN_ENABLE_WASM_EH=ON`;
 
     console.log(cmakeCmd);
     shell.exec(cmakeCmd);

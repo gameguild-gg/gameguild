@@ -494,7 +494,7 @@ function createVFSFS(
 /* ------------------------------------------------------------------ */
 
 export interface MountVFSFSOptions {
-    /** Mount points to create and mount VFSFS at (e.g. ['/usr', '/etc', '/home']) */
+    /** Mount points to create and mount VFSFS at (e.g. ['/usr', '/etc', '/home', '/tmp']) */
     mountPoints: string[];
     /** Path aliases for sysroot cache mapping */
     pathAliases?: Map<string, string>;
@@ -580,7 +580,9 @@ export function mountVFSFS(
         }
     }
 
-    // Install hooks on Module for the glue code's JSPI wrappers
+    // Install hooks on Module for the glue code's JSPI wrappers.
+    // These are called before each filesystem syscall (openat, stat64, etc.)
+    // to lazily fetch files from the kernel VFS / CDN into the local fileData map.
     moduleConfig['onPreOpen'] = ensureFile;
     moduleConfig['onPreStat'] = ensureStat;
     moduleConfig['onPreAccess'] = ensureStat;

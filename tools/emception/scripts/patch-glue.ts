@@ -190,7 +190,18 @@ function patchCallMainPromising(content: string, filename: string): string {
     const needle = 'var entryFunction=_main;';
     const replacement = 'var entryFunction=_main;if(WebAssembly.promising){entryFunction=WebAssembly.promising(entryFunction)}';
 
-    if (!content.includes(needle)) {
+    // Guard exitJS(ret,true): when promising wraps _main, ret is a Promise,
+    // not a number. Calling exitJS with a Promise sets ABORT=true and calls
+    // exitRuntime() while main() is still executing asynchronously, corrupting state.
+    const exitNeedle = 'exitJS(ret,true)';
+    const exitReplacement = 'if(!(ret&&typeof ret.then==="function"))exitJS(ret,true)';
+    if (content.includes(exitNeedle) && !content.includes('ret.then==="function"')) {
+        content = content.replace(exitNeedle, exitReplacement);
+        patchCount++;
+        console.log(`  [${filename}] Patched: exitJS guarded for async callMain`);
+    }
+
+    if (!content.includes(needle) && !content.includes('promising(entryFunction)')) {
         console.warn(`  [${filename}] Warning: callMain entryFunction pattern not found — skipping promising patch`);
         return content;
     }
@@ -245,6 +256,7 @@ function patchFsSyscallJSPI(content: string, filename: string): string {
     const jspiCode = [
         'function _jspi_wrap(fn,hook,pi){var o=fn;',
         'return new WebAssembly.Suspending(async function(){',
+
         'var h=Module[hook];',
         'if(h&&arguments[pi]){try{await h(UTF8ToString(arguments[pi]))}catch(e){}}',
         'return o.apply(null,arguments)})}',
@@ -254,6 +266,7 @@ function patchFsSyscallJSPI(content: string, filename: string): string {
         'if(typeof ___syscall_lstat64==="function")___syscall_lstat64=_jspi_wrap(___syscall_lstat64,"onPreStat",0);',
         'if(typeof ___syscall_faccessat==="function")___syscall_faccessat=_jspi_wrap(___syscall_faccessat,"onPreAccess",1);',
         'if(typeof ___syscall_readlinkat==="function")___syscall_readlinkat=_jspi_wrap(___syscall_readlinkat,"onPreStat",1);',
+        'if(typeof ___syscall_newfstatat==="function")___syscall_newfstatat=_jspi_wrap(___syscall_newfstatat,"onPreStat",1);',
         '}',
     ].join('');
 

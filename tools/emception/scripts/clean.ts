@@ -24,6 +24,8 @@ if (fs.existsSync(path.join(ROOT, 'dist'))) {
 shell.rm('-rf', path.join(ROOT, 'sysroot'));
 shell.rm('-rf', path.join(ROOT, 'sysroot-staging'));
 shell.rm('-rf', path.join(ROOT, 'tools'));
+shell.rm('-rf', path.join(ROOT, 'playwright-report'));
+shell.rm('-rf', path.join(ROOT, 'test-results'));
 
 // 2. Userland build artifacts
 console.log('Cleaning userland...');

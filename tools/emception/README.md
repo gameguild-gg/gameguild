@@ -216,6 +216,8 @@ The VFS is a critical substrate: it is **injected into every WASM process** and 
 - **Filesystem hijacking**: All POSIX filesystem calls (`open`, `read`, `write`, `stat`, etc.) are intercepted by a custom Emscripten FS implementation before being passed to the kernel.
 - **Stdin/Stdout/Stderr hijacking**: The standard I/O streams are also hijacked. Instead of direct browser console output, `stdin`, `stdout`, and `stderr` receive **callback functions** that read/write data through the kernel, allowing the shell to capture and route process output.
 - **Unified view**: All processes see the exact same filesystem tree via the kernel VFS — files written by one process are immediately visible to the next.
+- **JSPI integration**: For lazy-loaded files (e.g. from the CDN), the VFS uses JavaScript Promise Integration (JSPI) to suspend WASM execution while asynchronously fetching and unpacking files, providing a seamless blocking I/O experience to processes.
+- **Do not use MEMFS as cache to bypass async hooks**: The VFS must not use MEMFS as a cache layer for lazy-loaded files, as this would bypass the JSPI hooks and break the async loading mechanism. Instead, the VFS should directly manage file states and trigger JSPI suspension when a file is accessed that is not yet available in IndexedDB.
 
 #### VFS Layer Stack
 
@@ -225,7 +227,7 @@ The VFS is layered to provide different storage semantics:
 |---|---|---|---|
 | **`/tmp`** | **MemFS** | In-memory filesystem. Volatile (cleared on reload). Non-persistent. Used for temporary compilations, subprocess communication, intermediate files. | `mem.ts` — simple in-memory data structure (no IndexedDB) |
 | **`/home/user`** | **IDBFS** | IndexedDB-backed persistent filesystem. User project files, source code, configuration files. Survives page reload. | `idb.ts` — reads/writes to browser IndexedDB |
-| **`/usr`, `/lib`, `/etc`** | **LazyFS** | CDN-backed lazy filesystem. System files, headers, libraries, binaries. Files are **downloaded on-demand as Brotli-compressed bundles** and unpacked into IndexedDB. Bundles are cached — only downloaded if not already present. | `lazy.ts` — manifest-driven, bundle-based |
+| **`/usr`, `/lib`, `/etc`** | **LazyFS** | CDN-backed lazy filesystem. System files, headers, libraries, binaries. Files are **downloaded on-demand as Brotli-compressed bundles** and unpacked into IndexedDB. Bundles are cached — only downloaded if not already present on the IndexedDB. | `lazy.ts` — manifest-driven, bundle-based |
 
 #### LazyFS: Bundle-Based Lazy Loading
 
@@ -278,17 +280,6 @@ Exceptions to this principle are only related to `/dev`, `/proc`, and other virt
 - `/tmp` should not be persisted across sessions, so it uses MemFS.
 - `/home/user` should be persisted, so it uses IDBFS.
 - `/usr`, `/lib` and other system directories should be lazily loaded from the CDN, so they use LazyFS.
-
-#### OverlayFS (Optional Composition)
-
-For scenarios requiring both read-through and write-isolation:
-
-| Layer | Backend | Purpose |
-|---|---|---|
-| **Write layer** (top) | IDBFS | Captures all write operations |
-| **Read layer** (bottom) | LazyFS or IDBFS | Falls through for cache misses |
-
-This allows a process to write temporary files without affecting the shared system files.
 
 ### Process Lifecycle
 

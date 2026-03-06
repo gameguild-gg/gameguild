@@ -41,14 +41,42 @@ interface Manifest {
     version: number;
     generated: string;
     baseUrl: string;
+    toolVersions: {
+        pythonMajorMinor: string;
+        pythonMajorMinorCompact: string;
+    };
     files: Record<string, ManifestFile>;
     bundles: Record<string, any>;
 }
 
+// Detect Python version from sysroot directory structure
+function detectPythonVersionFromSysroot(syspath: string): { majorMinor: string; compact: string } {
+    const libDir = path.join(syspath, 'usr', 'lib');
+    if (fs.existsSync(libDir)) {
+        for (const entry of fs.readdirSync(libDir)) {
+            const match = entry.match(/^python(\d+)\.(\d+)$/);
+            if (match) {
+                const majorMinor = `${match[1]}.${match[2]}`;
+                const compact = `${match[1]}${match[2]}`;
+                console.log(`Detected Python version from sysroot: ${majorMinor}`);
+                return { majorMinor, compact };
+            }
+        }
+    }
+    console.warn('Could not detect Python version from sysroot, defaulting to 3.13');
+    return { majorMinor: '3.13', compact: '313' };
+}
+
+const pyVer = detectPythonVersionFromSysroot(SYSPATH);
+
 const manifest: Manifest = {
     version: 1,
-    generated: new Date().toISOString().replace(/\.\d+Z$/, 'Z'), // Format like date -u +%Y-%m-%dT%H:%M:%SZ
+    generated: new Date().toISOString().replace(/\.\d+Z$/, 'Z'),
     baseUrl: BASE_URL,
+    toolVersions: {
+        pythonMajorMinor: pyVer.majorMinor,
+        pythonMajorMinorCompact: pyVer.compact,
+    },
     files: {},
     bundles: {},
 };

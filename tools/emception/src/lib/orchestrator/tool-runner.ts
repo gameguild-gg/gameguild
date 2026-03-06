@@ -152,11 +152,18 @@ interface EmscriptenInstance {
 /*  Kernel (ToolRunner)                                                */
 /* ------------------------------------------------------------------ */
 
+export interface ToolVersionConfig {
+  pythonMajorMinor: string;       // e.g. "3.13"
+  pythonMajorMinorCompact: string; // e.g. "313"
+}
+
 export class ToolRunner {
   private vfs: VFSManager;
+  private versions: ToolVersionConfig;
 
-  constructor(vfs: VFSManager) {
+  constructor(vfs: VFSManager, versions: ToolVersionConfig = { pythonMajorMinor: '3.13', pythonMajorMinorCompact: '313' }) {
     this.vfs = vfs;
+    this.versions = versions;
   }
 
   /* ---------------------------------------------------------------- */
@@ -295,7 +302,7 @@ export class ToolRunner {
     // Build environment
     const envVars: Record<string, string> = {
       PYTHONHOME: '/usr',
-      PYTHONPATH: '/usr/lib/python3.14:/usr/lib/python314.zip:/usr/lib/emscripten',
+      PYTHONPATH: `/usr/lib/python${this.versions.pythonMajorMinor}:/usr/lib/emscripten`,
       PATH: '/usr/bin',
       HOME: '/home/user',
       TMPDIR: '/tmp',
@@ -490,7 +497,7 @@ export class ToolRunner {
         const shimBytes = typeof SUBPROCESS_SHIM === 'string'
           ? new TextEncoder().encode(SUBPROCESS_SHIM)
           : SUBPROCESS_SHIM;
-        fileData.set('/usr/lib/python3.14/subprocess.py', shimBytes as Uint8Array);
+        fileData.set(`/usr/lib/python${this.versions.pythonMajorMinor}/subprocess.py`, shimBytes as Uint8Array);
         console.log(`${LOG_PREFIX}   Injected subprocess shim`);
       } catch {
         console.warn(`${LOG_PREFIX}   ⚠️ Failed to inject subprocess shim`);
@@ -521,6 +528,25 @@ class _SafeStderr(io.TextIOBase):
     @property
     def errors(self): return 'backslashreplace'
 
+class _SafeStdout(io.TextIOBase):
+    """File-backed stdout replacement since WASM fd 1 may be None/invalid."""
+    def write(self, s):
+        try:
+            with open('/tmp/stdout.log', 'a') as f:
+                f.write(str(s))
+        except: pass
+        return len(str(s))
+    def flush(self): pass
+    def writable(self): return True
+    @property
+    def encoding(self): return 'utf-8'
+    @property
+    def errors(self): return 'backslashreplace'
+
+if sys.stdout is None:
+    sys.stdout = _SafeStdout()
+    sys.__stdout__ = sys.stdout
+
 sys.stderr = _SafeStderr()
 sys.__stderr__ = sys.stderr
 
@@ -534,7 +560,7 @@ def _hook(t, v, tb):
     except: pass
 sys.excepthook = _hook
 `;
-        fileData.set('/usr/lib/python3.14/sitecustomize.py', new TextEncoder().encode(SITE_CUSTOMIZE));
+        fileData.set(`/usr/lib/python${this.versions.pythonMajorMinor}/sitecustomize.py`, new TextEncoder().encode(SITE_CUSTOMIZE));
         console.log(`${LOG_PREFIX}   Injected sitecustomize.py (safe stderr + exception capture)`);
       } catch {
         console.warn(`${LOG_PREFIX}   ⚠️ Failed to inject sitecustomize.py`);
@@ -741,22 +767,25 @@ sys.excepthook = _hook
       return new Map();
     }
 
-    // Path aliases for sysroot cache mapping
+    // Path aliases for sysroot cache mapping — ALL tools need these,
+    // not just Python.  When emcc spawns clang as a child process, clang
+    // receives --sysroot=/home/user/.emscripten_cache/sysroot and looks for
+    // headers under that prefix.  The CDN stores them under /usr/include.
     const pathAliases = new Map<string, string>();
-    if (isPythonDescriptor) {
-      pathAliases.set(
-        '/home/user/.emscripten_cache/sysroot/lib',
-        '/usr/lib/emscripten/cache-lib',
-      );
-      pathAliases.set(
-        '/home/user/.emscripten_cache/sysroot/include',
-        '/usr/include',
-      );
-    }
+    pathAliases.set(
+      '/home/user/.emscripten_cache/sysroot/lib',
+      '/usr/lib/emscripten/cache-lib',
+    );
+    pathAliases.set(
+      '/home/user/.emscripten_cache/sysroot/include',
+      '/usr/include',
+    );
 
     // Mount VFSFS at system paths — all file access goes through VFS + JSPI
+    // /home is included so user files (e.g. main.cpp) written by the IDE are
+    // visible to child WASM processes via the kernel VFS overlay.
     const fileData = mountVFSFS(FS, moduleConfig, this.vfs, {
-      mountPoints: ['/usr', '/etc'],
+      mountPoints: ['/usr', '/etc', '/home', '/tmp'],
       pathAliases,
     });
 
@@ -1297,7 +1326,7 @@ sys.excepthook = _hook
         return baseDescriptor;
       }
       // Check for full path patterns
-      if (basename === 'python3' || basename === 'python' || basename === 'python3.14') {
+      if (basename === 'python3' || basename === 'python' || basename === `python${this.versions.pythonMajorMinor}`) {
         return { modulePath: '/usr/lib/python.wasm' };
       }
       if (basename === 'emcc' || basename === 'em++') {
