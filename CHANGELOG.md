@@ -1,3 +1,10 @@
+# [2.48.0](https://github.com/gameguild-gg/gameguild/compare/v2.47.0...v2.48.0) (2026-03-06)
+
+
+### Features
+
+* **emception:** Enhance JSPI with WASM exceptions and dynamic versioning ([c6b1387](https://github.com/gameguild-gg/gameguild/commit/c6b13877f071600dbb20937003d3fd5f96491ffb))
+
 # [2.47.0](https://github.com/gameguild-gg/gameguild/compare/v2.46.0...v2.47.0) (2026-03-05)
 
 
