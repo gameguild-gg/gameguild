@@ -1,3 +1,10 @@
+## [2.48.2](https://github.com/gameguild-gg/gameguild/compare/v2.48.1...v2.48.2) (2026-03-06)
+
+
+### Bug Fixes
+
+* stdin on emception ([92c4e33](https://github.com/gameguild-gg/gameguild/commit/92c4e3366a7375fe818fbb85d58848d3145a2bf4))
+
 ## [2.48.1](https://github.com/gameguild-gg/gameguild/compare/v2.48.0...v2.48.1) (2026-03-06)
 
 
