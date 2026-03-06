@@ -1,3 +1,10 @@
+## [2.48.3](https://github.com/gameguild-gg/gameguild/compare/v2.48.2...v2.48.3) (2026-03-06)
+
+
+### Bug Fixes
+
+* ci/cd ([caa0e1c](https://github.com/gameguild-gg/gameguild/commit/caa0e1c436a19e3d34859549fcee46dd2e476cc0))
+
 ## [2.48.2](https://github.com/gameguild-gg/gameguild/compare/v2.48.1...v2.48.2) (2026-03-06)
 
 
