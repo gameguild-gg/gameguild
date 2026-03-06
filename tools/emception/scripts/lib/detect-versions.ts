@@ -62,6 +62,21 @@ export function detectLLVMVersion(): string {
 }
 
 /**
+ * Detect the LLVM git commit hash from the emsdk clang binary.
+ * Parses the "(https:/github.com/llvm/llvm-project <commit>)" from `clang --version`.
+ * Returns the commit hash string, or null if not found.
+ */
+export function detectLLVMGitCommit(): string | null {
+    const emsdkDir = getEmsdkDir();
+    const clangBin = path.join(emsdkDir, 'upstream', 'bin', 'clang');
+    const result = shell.exec(`"${clangBin}" --version 2>&1`, { silent: true });
+    if (result.code !== 0) return null;
+    // Match the git commit hash after llvm-project URL
+    const match = result.stdout.match(/llvm-project\s+([0-9a-f]{40})/);
+    return match ? match[1] : null;
+}
+
+/**
  * Resolve a downloadable LLVM source release version.
  *
  * emsdk often bundles a pre-release Clang (e.g. 23.0.0) that does not
