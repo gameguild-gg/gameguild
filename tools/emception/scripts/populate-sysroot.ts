@@ -73,6 +73,20 @@ pythonFiles.forEach(f => {
     }
 });
 
+// Patch filelock.py: in the browser WASM environment, fcntl is unavailable
+// so the module falls back to SoftFileLock and emits a noisy warning.
+// Suppress it since soft locks work fine for our single-threaded context.
+const filelockPath = path.join(SYSROOT, 'usr/lib/emscripten/tools/filelock.py');
+if (fs.existsSync(filelockPath)) {
+    let filelockSrc = fs.readFileSync(filelockPath, 'utf-8');
+    filelockSrc = filelockSrc.replace(
+        'warnings.warn("only soft file lock is available")',
+        'pass  # suppressed: soft file lock is fine in browser WASM',
+    );
+    fs.writeFileSync(filelockPath, filelockSrc);
+    console.log('>> Patched filelock.py to suppress soft lock warning.');
+}
+
 // system/include directory — copy to both /usr/include/ (traditional Unix
 // location) AND /usr/lib/emscripten/system/include/ (where emcc's
 // ensure_sysroot / install_system_headers expects them under EMSCRIPTEN_ROOT).
