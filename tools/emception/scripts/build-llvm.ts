@@ -11,6 +11,7 @@ import os from 'os';
 import path from 'path';
 import shell from 'shelljs';
 import { fileURLToPath } from 'url';
+import { detectLLVMVersion, resolveAvailableLLVMRelease } from './lib/detect-versions.ts';
 import { setupEmsdk } from './lib/emsdk.ts';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -24,7 +25,14 @@ const LLVM_DIR = path.join(ROOT, 'userland/llvm');
 shell.config.fatal = true;
 
 const EMSDK_VERSION = process.env.EMSDK_VERSION || 'latest';
-const LLVM_VERSION = '22.1.0'; // todo: the llvm version should match the emsdk version for a better compatibility
+
+// Setup EMSDK first so we can detect the bundled LLVM version
+setupEmsdk(EMSDK_VERSION);
+
+// Detect LLVM version from emsdk, then resolve to the closest available
+// source release (emsdk may bundle a pre-release version with no tarball).
+const DETECTED_LLVM = process.env.LLVM_VERSION || detectLLVMVersion();
+const LLVM_VERSION = process.env.LLVM_VERSION || resolveAvailableLLVMRelease(DETECTED_LLVM);
 const LLVM_SRC_DIR = `llvm-project-${LLVM_VERSION}.src`;
 const LLVM_TARBALL = `${LLVM_SRC_DIR}.tar.xz`;
 const LLVM_URL = `https://github.com/llvm/llvm-project/releases/download/llvmorg-${LLVM_VERSION}/${LLVM_TARBALL}`;
@@ -44,13 +52,14 @@ const STANDALONE_FLAGS = [
     '-sEXPORTED_RUNTIME_METHODS=FS,callMain',
     // Emscripten ports needed by LLVM
     '-sUSE_ZLIB=1',    // LLVMSupport uses zlib for compression
+    // Use native WASM exception handling instead of JS-based invoke_*
+    // trampolines. This eliminates invoke_vi/invoke_ii which are
+    // incompatible with JSPI stack suspension ("function signature mismatch").
+    '-fwasm-exceptions',
     // NOTE: Asyncify is intentionally excluded — it's incompatible with
     // Emscripten's default reference-types feature. LLVM tools don't need
     // async unwinding for simple callMain() invocations.
 ].join(' ');
-
-// Setup EMSDK (sets env vars and PATH)
-setupEmsdk(EMSDK_VERSION);
 
 async function main() {
     console.log(`>>> Building LLVM ${LLVM_VERSION} (standalone micro-kernel modules)...`);
@@ -88,7 +97,7 @@ function setupSource() {
     if (!fs.existsSync(LLVM_SRC_DIR)) {
         if (!fs.existsSync(LLVM_TARBALL)) {
             console.log(`Downloading LLVM source from ${LLVM_URL}...`);
-            shell.exec(`curl -L -o "${LLVM_TARBALL}" "${LLVM_URL}"`);
+            shell.exec(`curl -fSL -o "${LLVM_TARBALL}" "${LLVM_URL}"`);
         }
         console.log('Extracting LLVM source...');
         shell.exec(`tar -xf "${LLVM_TARBALL}"`);
@@ -135,6 +144,8 @@ function buildStaticLLVM() {
         console.log('Configuring LLVM for WebAssembly (static)...');
         const cmd = `emcmake cmake -S "${LLVM_SRC_DIR}/llvm" -B "${wasmBuildDir}" \
             -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_CXX_FLAGS="-fwasm-exceptions" \
+            -DCMAKE_C_FLAGS="-fwasm-exceptions" \
             -DLLVM_TARGETS_TO_BUILD="WebAssembly" \
             -DLLVM_ENABLE_PROJECTS="clang;lld" \
             -DLLVM_TABLEGEN="${llvmTblGen}" \

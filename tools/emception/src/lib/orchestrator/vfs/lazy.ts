@@ -8,6 +8,10 @@ export interface FSManifest {
   version: number;
   generated: string;
   baseUrl: string;
+  toolVersions?: {
+    pythonMajorMinor: string;
+    pythonMajorMinorCompact: string;
+  };
   files: {
     [path: string]: FileEntry;
   };
@@ -226,44 +230,17 @@ export class LazyFS implements IFileSystem {
   }
 
   private async fetchFile(path: string, entry: FileEntry): Promise<Uint8Array> {
-    const { P, fmtSize } = LazyFS;
-    if (entry.bundle) {
-      console.log(`${P}   fetchFile: ${path} — loading from bundle "${entry.bundle}"`);
-      await this.loadBundle(entry.bundle);
-      const bundled = this.memCache.get(path);
-      if (bundled) return bundled;
-      throw new Error(`File ${path} not found in bundle ${entry.bundle}`);
+    const { P } = LazyFS;
+    if (!entry.bundle) {
+      // Every file should be in a bundle. If not, the manifest is stale.
+      console.error(`${P}   fetchFile: ${path} has no bundle assignment — regenerate bundles`);
+      throw new Error(`File ${path} is not assigned to any bundle. Run build:bundles to fix.`);
     }
-    const ext = entry.compressed ? '.' + entry.compressed : '';
-    const url = `${this.manifest.baseUrl}${path}${ext}`;
-    const t0 = performance.now();
-    console.log(`${P}   fetchFile: GET ${url}`);
-    const response = await fetch(url);
-    if (!response.ok) {
-      console.error(`${P}   fetchFile: HTTP ${response.status} for ${url}`);
-      throw new Error(`Failed to fetch ${path}: ${response.status}`);
-    }
-    let data: Uint8Array = new Uint8Array(await response.arrayBuffer());
-    const rawSize = data.length;
-    console.log(`${P}   fetchFile: received ${fmtSize(rawSize)} in ${(performance.now() - t0).toFixed(1)}ms`);
-
-    if (entry.compressed === 'gz') {
-      const tDecomp = performance.now();
-      data = new Uint8Array(await this.decompressGzip(data));
-      console.log(`${P}   fetchFile: gzip decompressed ${fmtSize(rawSize)} → ${fmtSize(data.length)} in ${(performance.now() - tDecomp).toFixed(1)}ms`);
-    } else if (entry.compressed === 'br') {
-      const tDecomp = performance.now();
-      data = await this.decompressBrotli(data);
-      console.log(`${P}   fetchFile: brotli decompressed ${fmtSize(rawSize)} → ${fmtSize(data.length)} in ${(performance.now() - tDecomp).toFixed(1)}ms`);
-    }
-    const tHash = performance.now();
-    const hash = await this.computeHash(new Uint8Array(data));
-    if (hash !== entry.hash) {
-      console.error(`${P}   fetchFile: HASH MISMATCH for ${path}: expected ${entry.hash.slice(0, 12)}..., got ${hash.slice(0, 12)}...`);
-      throw new Error(`Hash mismatch for ${path}: expected ${entry.hash}, got ${hash}`);
-    }
-    console.log(`${P}   fetchFile: hash verified in ${(performance.now() - tHash).toFixed(1)}ms (total fetch+process: ${(performance.now() - t0).toFixed(1)}ms)`);
-    return new Uint8Array(data);
+    console.log(`${P}   fetchFile: ${path} — loading from bundle "${entry.bundle}"`);
+    await this.loadBundle(entry.bundle);
+    const bundled = this.memCache.get(path);
+    if (bundled) return bundled;
+    throw new Error(`File ${path} not found in bundle ${entry.bundle}`);
   }
 
   private async loadBundle(bundleName: string): Promise<void> {
