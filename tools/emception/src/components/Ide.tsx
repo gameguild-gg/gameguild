@@ -11,9 +11,12 @@ import { useEffect, useRef, useState } from 'react';
 type BootResult = Awaited<ReturnType<typeof boot>>;
 
 const DEFAULT_CODE = `#include <iostream>
-
+#include <string>
 int main() {
-  std::cout << "Hello from WebAssembly!" << std::endl;
+  std::string name;
+  std::cout << "Enter your name: ";
+  std::getline(std::cin, name);
+  std::cout << "Hello, " << name << "! Welcome to WebAssembly!" << std::endl;
   return 0;
 }
 `;
@@ -27,7 +30,6 @@ export default function Ide() {
 
   const [status, setStatus] = useState('Initializing...');
   const [isReady, setIsReady] = useState(false);
-  const [programOutput, setProgramOutput] = useState('');
 
   useEffect(() => {
     let mounted = true;
@@ -38,6 +40,7 @@ export default function Ide() {
 
       const term = new Terminal({
         cursorBlink: true,
+        scrollback: 10000,
         theme: {
           background: '#181825',
           foreground: '#cdd6f4',
@@ -79,6 +82,8 @@ export default function Ide() {
       return () => {
         window.removeEventListener('resize', fitTerminal);
         term.dispose();
+        xtermRef.current = null;
+        fitAddonRef.current = null;
       };
     };
 
@@ -86,7 +91,7 @@ export default function Ide() {
 
     const startOrchestrator = async () => {
       try {
-        if (!terminalRef.current) return;
+        if (!terminalRef.current || !xtermRef.current) return;
 
         // Manifest URL points to public/cdn/manifest.json
         // In Next.js, public/cdn is served at /cdn
@@ -94,7 +99,9 @@ export default function Ide() {
 
         setStatus('Booting toolchain...');
         const t0 = performance.now();
-        const result = await boot(manifestUrl, terminalRef.current);
+        // Pass the existing Terminal instance so TTYBridge reuses it
+        // instead of creating a second one.
+        const result = await boot(manifestUrl, xtermRef.current);
         console.log(`[Ide] Boot completed in ${(performance.now() - t0).toFixed(1)}ms, mounted=${mounted}`);
 
         if (mounted) {
@@ -124,6 +131,7 @@ export default function Ide() {
     return () => {
       mounted = false;
       if (cleanup) cleanup();
+      orchestratorRef.current = null;
     };
   }, []);
 
@@ -142,7 +150,6 @@ export default function Ide() {
     const { runner, vfs, tty } = orchestratorRef.current;
 
     setStatus('Compiling...');
-    setProgramOutput('');
     tty.clear();
     tty.writeLine('Compiling main.cpp...');
     console.log(`${P} Source code: ${code.length} chars, ${code.split('\n').length} lines`);
@@ -193,14 +200,24 @@ export default function Ide() {
         console.log(`${P} Step 2/2: Running compiled WASM with WASI runtime...`);
         const tRun = performance.now();
 
+        // Claim exclusive stdin so the shell doesn't steal input bytes,
+        // and enable local echo so the user sees what they type.
+        tty.enterExclusiveStdin();
+        tty.setStdinEcho(true);
+
         // Run the standalone WASM directly using the built-in WASI runner.
-        const outputLines: string[] = [];
+        // Use tty.write (raw) instead of tty.writeLine — the WASM program
+        // already includes its own newlines; convert LF→CRLF for xterm.
         await runner.run('wasi-run', ['wasi-run', '/home/user/main.wasm'], {
           cwd: '/home/user',
-          onStdout: (t) => { tty.writeLine(t); outputLines.push(t); },
-          onStderr: (t) => { tty.writeError(t); outputLines.push(t); },
+          onStdout: (t) => { tty.write(t.replace(/\n/g, '\r\n')); },
+          onStderr: (t) => { tty.write(`\x1b[31m${t.replace(/\n/g, '\r\n')}\x1b[0m`); },
+          stdin: () => tty.readByteExclusive(),
         });
-        setProgramOutput(outputLines.join('\n'));
+
+        // Restore normal input routing and disable echo
+        tty.setStdinEcho(false);
+        tty.exitExclusiveStdin();
 
         console.log(`${P} Execution finished in ${((performance.now() - tRun) / 1000).toFixed(2)}s`);
 
@@ -263,9 +280,6 @@ export default function Ide() {
         <div className="flex-1 min-h-[300px] md:h-full bg-[#1e1e2e] p-2 overflow-hidden flex flex-col">
           <div className="text-xs text-[#a6adc8] mb-2 px-2">Terminal</div>
           <div data-testid="terminal" ref={terminalRef} className="flex-1 overflow-hidden rounded bg-[#181825] p-2">
-            {programOutput && (
-              <pre data-testid="program-output" className="text-[#cdd6f4] text-sm font-mono whitespace-pre-wrap">{programOutput}</pre>
-            )}
           </div>
         </div>
       </div>

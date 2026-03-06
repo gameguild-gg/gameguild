@@ -20,7 +20,7 @@ export interface BootResult {
   tty: TTYBridge;
 }
 
-export async function boot(manifestUrl: string, terminalContainer: HTMLElement): Promise<BootResult> {
+export async function boot(manifestUrl: string, terminalContainerOrTerminal: HTMLElement | import('@xterm/xterm').Terminal): Promise<BootResult> {
   const tBoot = performance.now();
   const P = '[Emception:Boot]';
   const ms = (t0: number) => `${(performance.now() - t0).toFixed(1)}ms`;
@@ -79,7 +79,9 @@ export async function boot(manifestUrl: string, terminalContainer: HTMLElement):
     pythonMajorMinor: manifest.toolVersions?.pythonMajorMinor ?? '3.13',
     pythonMajorMinorCompact: manifest.toolVersions?.pythonMajorMinorCompact ?? '313',
   });
-  const tty = new TTYBridge(terminalContainer);
+  const isTerminalInstance = typeof (terminalContainerOrTerminal as any).writeln === 'function';
+  console.log(`${P}   TTYBridge: reusing existing Terminal=${isTerminalInstance}`);
+  const tty = new TTYBridge(terminalContainerOrTerminal);
   const shell = new MiniShell(runner, tty, vfs);
   console.log(`${P} Step 5/6 done: all components created in ${ms(t5)}`);
 
@@ -99,6 +101,7 @@ export { decompressBrotli, isBrotliSupported } from './loader/brotli';
 export { clearModuleCache, loadModuleFactory } from './loader/wasm-module';
 export { resolveGitTarball, type TarballInfo } from './net/git-tarball';
 export type { RunOptions, ToolResult } from './tool-runner';
+export type { IOProvider } from './tty/io-provider';
 export { LineBuffer } from './tty/line-buffer';
 export type { VFSManager } from './vfs/index';
 export { createVFSManager, detectAsyncStrategy, MiniShell, ToolRunner, TTYBridge };
