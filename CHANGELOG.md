@@ -1,3 +1,10 @@
+## [2.48.1](https://github.com/gameguild-gg/gameguild/compare/v2.48.0...v2.48.1) (2026-03-06)
+
+
+### Bug Fixes
+
+* **emception:** Improve LLVM source acquisition and suppress filelock warning ([bf2488e](https://github.com/gameguild-gg/gameguild/commit/bf2488e56f37a1acf3229319fc0fc23e047ea7eb))
+
 # [2.48.0](https://github.com/gameguild-gg/gameguild/compare/v2.47.0...v2.48.0) (2026-03-06)
 
 
