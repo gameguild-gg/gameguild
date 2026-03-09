@@ -1,3 +1,10 @@
+## [2.49.3](https://github.com/gameguild-gg/gameguild/compare/v2.49.2...v2.49.3) (2026-03-09)
+
+
+### Bug Fixes
+
+* detect python ([6ca828a](https://github.com/gameguild-gg/gameguild/commit/6ca828a83b9d8ba10cda83ab38c9d38e09d73660))
+
 ## [2.49.2](https://github.com/gameguild-gg/gameguild/compare/v2.49.1...v2.49.2) (2026-03-09)
 
 
