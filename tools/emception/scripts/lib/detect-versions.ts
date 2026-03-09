@@ -11,6 +11,7 @@
  *   LLVM_VERSION, BINARYEN_VERSION, PYTHON_VERSION
  */
 
+import fs from 'fs';
 import path from 'path';
 import shell from 'shelljs';
 import { getEmsdkDir } from './emsdk.ts';
@@ -189,17 +190,69 @@ export function detectBinaryenVersion(): string {
  * Returns the full version string (e.g. "3.12.8").
  */
 export function detectPythonVersion(): string {
-    const emsdkPython = process.env.EMSDK_PYTHON;
-    if (!emsdkPython) {
+    const candidates: string[] = [];
+
+    // Legacy emsdk env var (not always present in newer SDK releases)
+    if (process.env.EMSDK_PYTHON) {
+        candidates.push(process.env.EMSDK_PYTHON);
+    }
+
+    // Some environments export PYTHON from emsdk_env.sh
+    if (process.env.PYTHON) {
+        candidates.push(process.env.PYTHON);
+    }
+
+    // Probe emsdk-managed Python installations directly from disk.
+    const emsdkFromEnv = process.env.EMSDK;
+    const emsdkDir = emsdkFromEnv || getEmsdkDir();
+    const emsdkPythonDir = path.join(emsdkDir, 'python');
+    if (fs.existsSync(emsdkPythonDir)) {
+        const entries = fs.readdirSync(emsdkPythonDir, { withFileTypes: true })
+            .filter(e => e.isDirectory())
+            .map(e => path.join(emsdkPythonDir, e.name));
+
+        for (const base of entries) {
+            candidates.push(path.join(base, 'bin', 'python3'));
+            candidates.push(path.join(base, 'bin', 'python'));
+            candidates.push(path.join(base, 'python.exe'));
+        }
+    }
+
+    // Final fallback: host python on PATH (common on GitHub runners).
+    candidates.push('python3');
+    candidates.push('python');
+
+    const uniqueCandidates = [...new Set(candidates.filter(Boolean))];
+
+    let chosenPython: string | null = null;
+    let result: shell.ExecOutputReturnValue | null = null;
+    for (const candidate of uniqueCandidates) {
+        const cmd = candidate === 'python3' || candidate === 'python'
+            ? `${candidate} --version 2>&1`
+            : `"${candidate}" --version 2>&1`;
+
+        const probe = shell.exec(cmd, { silent: true });
+        if (probe.code === 0) {
+            chosenPython = candidate;
+            result = probe;
+            break;
+        }
+    }
+
+    if (!chosenPython || !result) {
         throw new Error(
-            'EMSDK_PYTHON environment variable not set. ' +
-            'Call setupEmsdk() before detecting versions.'
+            'Could not find a usable Python interpreter for emsdk tool detection. ' +
+            'Tried EMSDK_PYTHON, PYTHON, emsdk/python/*, and system python3/python.'
         );
     }
-    const result = shell.exec(`"${emsdkPython}" --version 2>&1`, { silent: true });
+
+    if (chosenPython !== process.env.EMSDK_PYTHON) {
+        console.log(`    Using Python interpreter for detection: ${chosenPython}`);
+    }
+
     if (result.code !== 0) {
         throw new Error(
-            `Failed to run emsdk Python (${emsdkPython}).\n` +
+            `Failed to run Python (${chosenPython}).\n` +
             `stdout: ${result.stdout}\nstderr: ${result.stderr}`
         );
     }
