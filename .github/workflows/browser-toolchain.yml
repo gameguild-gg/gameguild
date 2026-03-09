@@ -36,8 +36,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
-          cache-dependency-path: tools/emception/package-lock.json
 
       - name: Setup Emscripten
         uses: mymindstorm/setup-emsdk@v14

@@ -25,8 +25,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-          cache: 'npm'
-          cache-dependency-path: tools/emception/package-lock.json
 
       - name: Install emception library
         run: cd tools/emception && npm install && npm run build:lib
