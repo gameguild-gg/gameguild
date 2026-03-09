@@ -192,6 +192,20 @@ try {
 } catch (e) { }
 fs.symlinkSync('/usr/lib/python.wasm', pythonDest);
 
+// 6b. Symlinks for build tools (ninja, cmake, curl)
+const buildTools = ['ninja', 'cmake', 'curl'];
+buildTools.forEach(tool => {
+    const dest = path.join(SYSROOT, 'usr/bin', tool);
+    try {
+        if (fs.existsSync(dest) || fs.lstatSync(dest).isSymbolicLink()) fs.unlinkSync(dest);
+    } catch (e) { }
+    // Only create symlink if the .wasm exists in sysroot
+    const wasmPath = path.join(SYSROOT, 'usr/lib', `${tool}.wasm`);
+    if (fs.existsSync(wasmPath)) {
+        fs.symlinkSync(`/usr/lib/${tool}.wasm`, dest);
+    }
+});
+
 // 7. Write emscripten.config
 const configContent = `import os
 

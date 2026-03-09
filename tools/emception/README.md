@@ -184,7 +184,7 @@ The TypeScript kernel (`orchestrator/`) provides OS-like services to WASM proces
 | **IPC** | `async-bridge.ts` | Message passing between kernel and WASM processes (syscall dispatch) |
 | **Shell** | `shell.ts` | Command parser, pipeline support, process spawning |
 | **TTY** | `tty/xterm-bridge.ts`, `tty/line-buffer.ts` | xterm.js integration, stdin/stdout/stderr routing, line buffering |
-| **Network** | `net/fetch-bridge.ts`, `net/cors-proxy.ts`, `net/git-tarball.ts` | fetch-based network access, CORS proxy, Git tarball download |
+| **Network** | `net/fetch-bridge.ts` | fetch-based network access |
 | **Loader** | `loader/wasm-module.ts`, `loader/brotli.ts` | WASM binary fetching, Brotli decompression, caching |
 | **Emscripten Bridge** | `emscripten/browser-bridge.ts`, `emscripten/subprocess-shim.ts` | Emscripten module patching, subprocess IPC shim for CPython |
 

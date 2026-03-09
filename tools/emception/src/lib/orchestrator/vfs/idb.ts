@@ -84,6 +84,29 @@ export class IDBFS implements IFileSystem {
     }
   }
 
+  /**
+   * Load all IDB entries into memCache so that sync accessors
+   * (statSync, readFileSync, readdirSync) work without async fetches.
+   */
+  async preloadAll(): Promise<void> {
+    if (!this.idb) return;
+    const entries = await new Promise<StoredEntry[]>((resolve) => {
+      const tx = this.idb!.transaction('files', 'readonly');
+      const request = tx.objectStore('files').getAll();
+      request.onsuccess = () => resolve(request.result ?? []);
+      request.onerror = () => resolve([]);
+    });
+    for (const entry of entries) {
+      if (entry.path === VERSION_KEY) continue;
+      if (!this.memCache.has(entry.path)) {
+        this.memCache.set(entry.path, entry);
+      }
+    }
+    if (entries.length > 0) {
+      console.log(`[IDBFS:${this.dbName}] Preloaded ${entries.length} entries into memCache`);
+    }
+  }
+
   // ---------- path helpers ----------
 
   private normalizePath(path: string): string {

@@ -3,3 +3,5 @@ etc/
 usr/
 *.json
 *.tar.br
+brotli_wasm.js
+brotli_wasm_bg.wasm
