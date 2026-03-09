@@ -39,6 +39,13 @@ export class LazyFS implements IFileSystem {
   private manifest: FSManifest;
   private memCache = new Map<string, Uint8Array>();
   private memCacheSize = 0;
+
+  /**
+   * Optional injected brotli decompressor.
+   * When set, used instead of dynamic `import('brotli-wasm')` which
+   * can fail in Worker contexts due to WASM URL resolution issues.
+   */
+  static customBrotliDecompressor: ((data: Uint8Array) => Uint8Array) | null = null;
   // 1.5 GB — large enough to hold all bundles (total uncompressed ≈ 763MB).
   // The proxy relies on sync memCache reads during callMain, so files must
   // not be LRU-evicted between pre-warm and use.  The old approach loaded
@@ -592,8 +599,14 @@ export class LazyFS implements IFileSystem {
       }
       return result;
     } catch {
-      // Native brotli not supported — fall back to brotli-wasm
+      // Native brotli not supported — fall back to injected or brotli-wasm
       console.warn(`${P} DecompressionStream("br") not supported, falling back to brotli-wasm (${fmtSize(data.length)})`);
+
+      // Use injected decompressor if available (avoids dynamic import issues in Workers)
+      if (LazyFS.customBrotliDecompressor) {
+        return new Uint8Array(LazyFS.customBrotliDecompressor(data));
+      }
+
       try {
         // brotli-wasm default export is a Promise<BrotliWasmInstance>
         // eslint-disable-next-line @typescript-eslint/no-explicit-any

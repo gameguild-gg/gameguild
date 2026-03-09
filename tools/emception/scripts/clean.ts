@@ -27,6 +27,7 @@ shell.rm('-rf', path.join(ROOT, 'tools'));
 shell.rm('-rf', path.join(ROOT, 'playwright-report'));
 shell.rm('-rf', path.join(ROOT, 'test-results'));
 
+
 // 2. Userland build artifacts
 console.log('Cleaning userland...');
 
@@ -52,13 +53,15 @@ shell.rm('-rf', path.join(ROOT, 'userland/llvm/gh-actions-bin'));
 // Runtime
 shell.rm('-rf', path.join(ROOT, 'userland/runtime/build'));
 
+
 // 3. Web app build artifacts and test outputs
 console.log('Cleaning web app artifacts...');
-shell.rm('-rf', path.join(ROOT, 'web/.next'));
-shell.rm('-rf', path.join(ROOT, 'web/playwright-report'));
-shell.rm('-rf', path.join(ROOT, 'web/test-results'));
+shell.rm('-rf', path.join(ROOT, '.next'));
+shell.rm('-rf', path.join(ROOT, 'playwright-report'));
+shell.rm('-rf', path.join(ROOT, 'test-results'));
+
 // CDN generated contents (keep the .gitignore)
-const cdnDir = path.join(ROOT, 'web/public/cdn');
+const cdnDir = path.join(ROOT, 'public/cdn');
 if (fs.existsSync(cdnDir)) {
     shell.rm('-rf', path.join(cdnDir, 'etc'));
     shell.rm('-rf', path.join(cdnDir, 'usr'));
@@ -67,5 +70,7 @@ if (fs.existsSync(cdnDir)) {
 
 // 4. Common / Emscripten caches if needed (optional)
 // Clean ports cache if desired, but skipping for now as per original script.
+
+shell.rm('-rf', path.join(ROOT, 'node_modules'));
 
 console.log('Clean complete.');

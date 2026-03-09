@@ -1,11 +1,12 @@
-# CI workflow for the Browser C/C++ Toolchain (Emception)
+# CI workflow for the Browser C/C++ Toolchain
 #
-# Micro-kernel architecture: each tool is a standalone WASM process.
-# Build pipeline uses TypeScript scripts (tsx) in tools/emception/scripts/.
+# Builds the WASM modules using Emscripten dynamic linking:
+#   - MAIN_MODULE runtime (libc, libc++, dlopen, filesystem)
+#   - libbinaryen.so.wasm + binaryen tool SIDE_MODULEs
+#   - cpython.wasm
+#   - libLLVM.so.wasm + clang/lld SIDE_MODULEs (optional, ~2-4h)
 #
-# Build order: emsdk → binaryen → cpython → llvm → sysroot → patch → manifest → bundles → cdn
-#
-# Each tool job produces standalone .wasm + .mjs pairs (no MAIN_MODULE/SIDE_MODULE).
+# Then packages everything for CDN deployment.
 
 name: Browser Toolchain
 
@@ -20,15 +21,15 @@ on:
   workflow_dispatch:
     inputs:
       build_llvm:
-        description: 'Build LLVM tools (clang, lld, llvm-ar, etc.) — takes ~2h'
+        description: 'Build libLLVM + clang + lld (takes ~2h)'
         type: boolean
         default: false
       build_binaryen:
-        description: 'Build Binaryen tools (wasm-opt, wasm-as, etc.)'
+        description: 'Build libbinaryen + tools'
         type: boolean
         default: true
       build_cpython:
-        description: 'Build CPython (for emcc/em++ driver)'
+        description: 'Build cpython'
         type: boolean
         default: true
       emsdk_version:
@@ -40,11 +41,8 @@ env:
   EMSDK_VERSION: ${{ inputs.emsdk_version || 'latest' }}
 
 jobs:
-  # -------------------------------------------------------------------
-  # Typecheck — fast gate before expensive builds
-  # -------------------------------------------------------------------
-  typecheck:
-    name: Typecheck
+  orchestrator:
+    name: Build Orchestrator
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -59,256 +57,196 @@ jobs:
           cache-dependency-path: tools/emception/package-lock.json
 
       - run: npm ci || npm install
-      - run: npm run typecheck
+      - run: npm run build
 
-  # -------------------------------------------------------------------
-  # Emsdk setup — shared by all build jobs via cache
-  # -------------------------------------------------------------------
-  emsdk:
-    name: Setup Emsdk
+      - uses: actions/upload-artifact@v4
+        with:
+          name: orchestrator-dist
+          path: tools/emception/dist/
+          retention-days: 7
+
+  runtime:
+    name: Build MAIN_MODULE Runtime
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
+      - name: Setup Emscripten
+        uses: mymindstorm/setup-emsdk@v14
         with:
-          node-version: 22
-          cache: npm
-          cache-dependency-path: tools/emception/package-lock.json
+          version: ${{ env.EMSDK_VERSION }}
 
-      - name: Install dependencies
-        working-directory: tools/emception
-        run: npm ci || npm install
+      - name: Build runtime
+        working-directory: tools/emception/userland/runtime
+        run: bash build-runtime.sh
 
-      - name: Setup Emscripten SDK
-        working-directory: tools/emception
-        run: npm run build:emsdk
-
-      - name: Cache emsdk
-        uses: actions/cache/save@v4
+      - uses: actions/upload-artifact@v4
         with:
-          path: tools/emception/userland/emsdk
-          key: emsdk-${{ env.EMSDK_VERSION }}-${{ runner.os }}-${{ hashFiles('tools/emception/scripts/setup-emsdk.ts') }}
+          name: runtime
+          path: |
+            tools/emception/build/runtime.mjs
+            tools/emception/build/runtime.wasm
+          retention-days: 30
 
-  # -------------------------------------------------------------------
-  # Binaryen — standalone WASM tools (wasm-opt, wasm-as, etc.)
-  # -------------------------------------------------------------------
   binaryen:
-    name: Build Binaryen Tools
-    needs: [typecheck, emsdk]
+    name: Build libbinaryen + tools
     if: ${{ github.event_name != 'workflow_dispatch' || inputs.build_binaryen }}
     runs-on: ubuntu-latest
     timeout-minutes: 60
-    defaults:
-      run:
-        working-directory: tools/emception
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
+      - name: Setup Emscripten
+        uses: mymindstorm/setup-emsdk@v14
         with:
-          node-version: 22
-          cache: npm
-          cache-dependency-path: tools/emception/package-lock.json
+          version: ${{ env.EMSDK_VERSION }}
 
-      - run: npm ci || npm install
-
-      - name: Restore emsdk cache
-        uses: actions/cache/restore@v4
-        with:
-          path: tools/emception/userland/emsdk
-          key: emsdk-${{ env.EMSDK_VERSION }}-${{ runner.os }}-${{ hashFiles('tools/emception/scripts/setup-emsdk.ts') }}
-
-      - name: Setup emsdk environment
-        run: npm run build:emsdk
-
-      - name: Cache Binaryen source
+      - name: Cache binaryen source
         uses: actions/cache@v4
         with:
-          path: tools/emception/userland/binaryen
-          key: binaryen-src-${{ hashFiles('tools/emception/scripts/build-binaryen.ts') }}
+          path: tools/emception/userland/binaryen/binaryen-*
+          key: binaryen-src-126
 
-      - name: Build Binaryen
-        run: npm run build:binaryen
+      - name: Build libbinaryen.so.wasm
+        working-directory: tools/emception/userland/binaryen
+        run: bash build-libbinaryen.sh
+
+      - name: Build binaryen tool modules
+        working-directory: tools/emception/userland/binaryen
+        run: bash build-tools.sh
 
       - uses: actions/upload-artifact@v4
         with:
           name: binaryen
           path: |
-            tools/emception/build/wasm-opt.wasm
-            tools/emception/build/wasm-opt.mjs
-            tools/emception/build/wasm-as.wasm
-            tools/emception/build/wasm-as.mjs
-            tools/emception/build/wasm-ctor-eval.wasm
-            tools/emception/build/wasm-ctor-eval.mjs
-            tools/emception/build/wasm-emscripten-finalize.wasm
-            tools/emception/build/wasm-emscripten-finalize.mjs
-            tools/emception/build/wasm-metadce.wasm
-            tools/emception/build/wasm-metadce.mjs
+            tools/emception/build/libbinaryen.so.wasm
+            tools/emception/build/wasm-opt.so.wasm
+            tools/emception/build/wasm-as.so.wasm
+            tools/emception/build/wasm-ctor-eval.so.wasm
+            tools/emception/build/wasm-emscripten-finalize.so.wasm
+            tools/emception/build/wasm-metadce.so.wasm
           retention-days: 30
 
-  # -------------------------------------------------------------------
-  # CPython — standalone WASM (emcc/em++ driver)
-  # -------------------------------------------------------------------
   cpython:
     name: Build CPython
-    needs: [typecheck, emsdk]
     if: ${{ github.event_name != 'workflow_dispatch' || inputs.build_cpython }}
     runs-on: ubuntu-latest
     timeout-minutes: 90
-    defaults:
-      run:
-        working-directory: tools/emception
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
+      - name: Setup Emscripten
+        uses: mymindstorm/setup-emsdk@v14
         with:
-          node-version: 22
-          cache: npm
-          cache-dependency-path: tools/emception/package-lock.json
-
-      - run: npm ci || npm install
-
-      - name: Restore emsdk cache
-        uses: actions/cache/restore@v4
-        with:
-          path: tools/emception/userland/emsdk
-          key: emsdk-${{ env.EMSDK_VERSION }}-${{ runner.os }}-${{ hashFiles('tools/emception/scripts/setup-emsdk.ts') }}
-
-      - name: Setup emsdk environment
-        run: npm run build:emsdk
+          version: ${{ env.EMSDK_VERSION }}
 
       - name: Cache CPython source
         uses: actions/cache@v4
         with:
-          path: tools/emception/userland/cpython
-          key: cpython-src-${{ hashFiles('tools/emception/scripts/build-cpython.ts') }}
+          path: tools/emception/userland/cpython/cpython-*
+          key: cpython-src-3.14.3
 
       - name: Build CPython
-        run: npm run build:cpython
+        working-directory: tools/emception/userland/cpython
+        run: bash build-cpython.sh
 
       - uses: actions/upload-artifact@v4
         with:
-          name: cpython
+          name: cpython-wasm
           path: |
-            tools/emception/build/python.wasm
-            tools/emception/build/python.mjs
+            tools/emception/build/cpython.*
+            tools/emception/build/cdn/python3.14-stdlib.zip
           retention-days: 30
 
-  # -------------------------------------------------------------------
-  # LLVM — standalone WASM tools (clang, lld, llvm-ar, llvm-nm, etc.)
-  # -------------------------------------------------------------------
   llvm:
-    name: Build LLVM Tools
-    needs: [typecheck, emsdk]
+    name: Build libLLVM + clang + lld
     if: ${{ github.event_name == 'workflow_dispatch' && inputs.build_llvm }}
     runs-on: ubuntu-latest
-    timeout-minutes: 240
-    defaults:
-      run:
-        working-directory: tools/emception
+    timeout-minutes: 180
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
+      - name: Setup Emscripten
+        uses: mymindstorm/setup-emsdk@v14
         with:
-          node-version: 22
-          cache: npm
-          cache-dependency-path: tools/emception/package-lock.json
-
-      - run: npm ci || npm install
-
-      - name: Restore emsdk cache
-        uses: actions/cache/restore@v4
-        with:
-          path: tools/emception/userland/emsdk
-          key: emsdk-${{ env.EMSDK_VERSION }}-${{ runner.os }}-${{ hashFiles('tools/emception/scripts/setup-emsdk.ts') }}
-
-      - name: Setup emsdk environment
-        run: npm run build:emsdk
+          version: ${{ env.EMSDK_VERSION }}
 
       - name: Cache LLVM source
         uses: actions/cache@v4
         with:
-          path: tools/emception/userland/llvm
-          key: llvm-src-${{ hashFiles('tools/emception/scripts/build-llvm.ts') }}
+          path: tools/emception/userland/llvm/llvm-project-*
+          key: llvm-src-22.1.0
 
-      - name: Build LLVM
-        run: npm run build:llvm
+      - name: Build libLLVM.so.wasm
+        working-directory: tools/emception/userland/llvm
+        run: bash build-libllvm.sh
+
+      - name: Build clang.so.wasm
+        working-directory: tools/emception/userland/llvm
+        run: bash build-clang.sh
+
+      - name: Build lld.so.wasm
+        working-directory: tools/emception/userland/llvm
+        run: bash build-lld.sh
 
       - uses: actions/upload-artifact@v4
         with:
           name: llvm
           path: |
-            tools/emception/build/clang.wasm
-            tools/emception/build/clang.mjs
-            tools/emception/build/lld.wasm
-            tools/emception/build/lld.mjs
-            tools/emception/build/llvm-nm.wasm
-            tools/emception/build/llvm-nm.mjs
-            tools/emception/build/llvm-ar.wasm
-            tools/emception/build/llvm-ar.mjs
-            tools/emception/build/llvm-objcopy.wasm
-            tools/emception/build/llvm-objcopy.mjs
-            tools/emception/build/llc.wasm
-            tools/emception/build/llc.mjs
+            tools/emception/build/libLLVM.so.wasm
+            tools/emception/build/clang.so.wasm
+            tools/emception/build/lld.so.wasm
           retention-days: 30
 
-  # -------------------------------------------------------------------
-  # Package — assemble sysroot, patch glue, generate manifest/bundles,
-  #            deploy to CDN directory, build Next.js web app
-  # -------------------------------------------------------------------
   package:
-    name: Package & Build Web
-    needs: [typecheck, emsdk, binaryen, cpython]
-    if: always() && needs.typecheck.result == 'success' && needs.emsdk.result == 'success'
+    name: Package for CDN
+    needs: [orchestrator, runtime, binaryen, cpython]
+    if: always() && needs.orchestrator.result == 'success' && needs.runtime.result == 'success'
     runs-on: ubuntu-latest
-    timeout-minutes: 30
     defaults:
       run:
         working-directory: tools/emception
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
+      - name: Download orchestrator
+        uses: actions/download-artifact@v4
         with:
-          node-version: 22
-          cache: npm
-          cache-dependency-path: tools/emception/package-lock.json
+          name: orchestrator-dist
+          path: tools/emception/dist/
 
-      - run: npm ci || npm install
-
-      - name: Restore emsdk cache
-        uses: actions/cache/restore@v4
+      - name: Download runtime
+        uses: actions/download-artifact@v4
         with:
-          path: tools/emception/userland/emsdk
-          key: emsdk-${{ env.EMSDK_VERSION }}-${{ runner.os }}-${{ hashFiles('tools/emception/scripts/setup-emsdk.ts') }}
+          name: runtime
+          path: tools/emception/build/
 
-      - name: Setup emsdk environment
-        run: npm run build:emsdk
-
-      - name: Download Binaryen artifacts
+      - name: Download binaryen
         uses: actions/download-artifact@v4
         with:
           name: binaryen
           path: tools/emception/build/
         continue-on-error: true
 
-      - name: Download CPython artifacts
+      - name: Download cpython
         uses: actions/download-artifact@v4
         with:
-          name: cpython
+          name: cpython-wasm
           path: tools/emception/build/
         continue-on-error: true
 
-      - name: Download LLVM artifacts
+      - name: Download LLVM
         uses: actions/download-artifact@v4
         with:
           name: llvm
           path: tools/emception/build/
         continue-on-error: true
+
+      - name: Setup Emscripten (for sysroot)
+        uses: mymindstorm/setup-emsdk@v14
+        with:
+          version: ${{ env.EMSDK_VERSION }}
 
       - name: Copy build artifacts to sysroot
         run: |
@@ -317,27 +255,22 @@ jobs:
           cp -f build/*.mjs sysroot/usr/lib/ 2>/dev/null || true
 
       - name: Populate sysroot
-        run: npm run build:sysroot
+        run: bash scripts/populate-sysroot.sh
 
-      - name: Patch glue files
-        run: npm run patch:glue
+      - name: Install brotli
+        run: sudo apt-get install -y brotli
 
       - name: Generate manifest
-        run: npm run build:manifest
+        run: bash scripts/generate-manifest.sh
 
-      - name: Generate bundles
-        run: npm run build:bundles
-
-      - name: Deploy to CDN directory
-        run: npm run deploy:cdn
-
-      - name: Build Next.js web app
-        run: npm run build
+      - name: Compress for CDN
+        run: bash scripts/compress-cdn.sh
 
       - uses: actions/upload-artifact@v4
         with:
           name: browser-toolchain-cdn
           path: |
             tools/emception/build/
-            tools/emception/.next/
+            tools/emception/dist/
+            tools/emception/web/
           retention-days: 30

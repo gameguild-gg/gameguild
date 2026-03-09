@@ -17,6 +17,8 @@ userland/**/build-*/
 userland/**/cpython-*/
 userland/**/llvm-project-*/
 userland/**/binaryen-version_*/
+userland/**/CMake-*/
+userland/**/ninja-*/
 userland/**/*.tar.gz
 userland/**/*.tar.xz
 userland/**/version_*.tar.gz

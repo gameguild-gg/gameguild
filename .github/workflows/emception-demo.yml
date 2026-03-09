@@ -1,0 +1,54 @@
+name: Emception — Deploy Demo to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'apps/emception/**'
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: tools/emception/package-lock.json
+
+      - name: Install emception library
+        run: cd tools/emception && npm install && npm run build:lib
+
+      - name: Install demo dependencies
+        run: cd apps/emception && npm install
+
+      - name: Build static export
+        run: cd apps/emception && npm run build
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: apps/emception/out
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

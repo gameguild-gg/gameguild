@@ -517,6 +517,11 @@ export function mountVFSFS(
     const pathAliases = options.pathAliases ?? new Map<string, string>();
     const fileData = new Map<string, Uint8Array>();
 
+    // Negative cache: tracks normalized paths confirmed absent from all backends.
+    // Avoids repeated async IDB lookups for paths the compiler probes but never exist
+    // (e.g. /home/user/lib during include-path search).
+    const negativeStatCache = new Set<string>();
+
     // Create the FS type
     const vfsfsType = createVFSFS(FS, vfs, pathAliases, fileData);
 
@@ -543,40 +548,66 @@ export function mountVFSFS(
     // (JSPI suspends the WASM stack while the fetch is in flight).
 
     /**
+     * Resolve a path that may be relative by prepending the Emscripten CWD.
+     */
+    function resolveWithCwd(path: string): string {
+        if (path.startsWith('/')) return path;
+        try {
+            const cwd: string = FS.cwd?.() ?? '/';
+            return cwd === '/' ? '/' + path : cwd + '/' + path;
+        } catch {
+            return '/' + path;
+        }
+    }
+
+    /**
      * Ensure a file and its parent directories are populated in fileData.
      */
     async function ensureFile(path: string): Promise<void> {
-        const normalized = normalizePath(path);
+        const normalized = normalizePath(resolveWithCwd(path));
         if (isMemfsPath(normalized) || normalized === '/') return;
 
         // Already loaded?
         if (fileData.has(normalized)) return;
 
+        // Skip if we already confirmed this path doesn't exist.
+        if (negativeStatCache.has(normalized)) return;
+
         const resolved = resolveAlias(normalized, pathAliases);
         const data = await vfs.fetchFile(resolved);
         if (data) {
             fileData.set(normalized, data);
+        } else {
+            negativeStatCache.add(normalized);
         }
     }
 
     /**
      * Ensure a path is stat-able: populate fileData if it's a file,
      * for directories we don't need data — the VFS manifest has metadata.
+     * Uses async stat so files persisted only in IDB (not memCache) are found.
      */
     async function ensureStat(path: string): Promise<void> {
-        const normalized = normalizePath(path);
+        const normalized = normalizePath(resolveWithCwd(path));
         if (isMemfsPath(normalized) || normalized === '/') return;
 
         // Already loaded?
         if (fileData.has(normalized)) return;
 
+        // Skip if we already confirmed this path doesn't exist.
+        if (negativeStatCache.has(normalized)) return;
+
         const resolved = resolveAlias(normalized, pathAliases);
-        const stat = vfs.statSync(resolved);
+        // Use async stat — statSync only checks memCache and misses
+        // files persisted in IDB from previous sessions.
+        const stat = await vfs.overlay.stat(resolved);
         if (stat && stat.type === 'file') {
             const data = await vfs.fetchFile(resolved);
             if (data) {
                 fileData.set(normalized, data);
             }
+        } else if (!stat) {
+            negativeStatCache.add(normalized);
         }
     }
 

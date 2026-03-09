@@ -37,6 +37,8 @@ const ALL_TOOLS = [
     'wasm-opt', 'wasm-as', 'wasm-ctor-eval', 'wasm-emscripten-finalize', 'wasm-metadce',
     // Additional LLVM tools that may have .mjs files
     'llvm-nm', 'llvm-ar', 'llvm-objcopy', 'llc',
+    // Build tools (linked against libcurl-lite, need systemCallback for __dispatch_curl)
+    'ninja', 'cmake', 'curl',
 ];
 
 // Only python.mjs needs the systemCallback patch
@@ -293,10 +295,9 @@ function patchFile(filePath: string): void {
     content = patchCallMainPromising(content, filename);
     content = patchFsSyscallJSPI(content, filename);
 
-    // Only python.mjs gets the systemCallback patch
-    if (filename === 'python.mjs') {
-        content = patchSystemCallback(content, filename);
-    }
+    // Apply systemCallback patch to any tool that has __emscripten_system
+    // (the function self-guards by checking for that symbol)
+    content = patchSystemCallback(content, filename);
 
     if (content !== originalContent) {
         fs.writeFileSync(filePath, content, 'utf8');
