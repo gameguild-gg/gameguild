@@ -10,13 +10,11 @@ name: Browser Toolchain
 on:
   push:
     branches: [main]
-    paths:
-      - 'tools/emception/scripts/**'
-      - 'tools/emception/userland/**'
+    # paths:
+    #   - 'tools/emception/**'
   pull_request:
     paths:
-      - 'tools/emception/scripts/**'
-      - 'tools/emception/userland/**'
+      - 'tools/emception/**'
   workflow_dispatch:
     inputs:
       build_llvm:
