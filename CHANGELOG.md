@@ -1,3 +1,17 @@
+# [2.49.0](https://github.com/gameguild-gg/gameguild/compare/v2.48.3...v2.49.0) (2026-03-09)
+
+
+### Bug Fixes
+
+* ci ([e3baebb](https://github.com/gameguild-gg/gameguild/commit/e3baebb376c09e10b2580ac8f27fd054ca2194d2))
+* ci ([3421884](https://github.com/gameguild-gg/gameguild/commit/3421884afd20a0da75cae6dea7f1d97909946dda))
+* ci ([a93c587](https://github.com/gameguild-gg/gameguild/commit/a93c587bef07f2d7f11e29cbba5d06ff5dc06854))
+
+
+### Features
+
+* break emception into 2 projects: app and tool ([16d69c6](https://github.com/gameguild-gg/gameguild/commit/16d69c69a256903581191e2134f0ece0a7e26d14))
+
 ## [2.48.3](https://github.com/gameguild-gg/gameguild/compare/v2.48.2...v2.48.3) (2026-03-06)
 
 
