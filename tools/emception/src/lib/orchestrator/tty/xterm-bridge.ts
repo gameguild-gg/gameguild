@@ -108,6 +108,11 @@ export class TTYBridge implements IOProvider {
     this._echoStdin = enabled;
   }
 
+  /** Whether exclusive stdin mode is currently active. */
+  get isExclusiveStdin(): boolean {
+    return this._exclusiveStdin;
+  }
+
   /**
    * Enter exclusive stdin mode. All terminal input is routed to the
    * exclusive channel (readByteExclusive) instead of the normal readByte
@@ -124,6 +129,12 @@ export class TTYBridge implements IOProvider {
   exitExclusiveStdin(): void {
     this._exclusiveStdin = false;
     this._exclusiveBuffer.length = 0;
+    // Resolve any pending exclusive readers with -1 (cancelled) so
+    // awaiting code (e.g. feedStdin loop) can exit immediately
+    // without consuming the next real keystroke.
+    for (const resolve of this._exclusiveResolvers) {
+      resolve(-1);
+    }
     this._exclusiveResolvers.length = 0;
   }
 

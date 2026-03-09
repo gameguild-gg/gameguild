@@ -32,7 +32,7 @@ export async function boot(manifestUrl: string, terminalContainerOrTerminal: HTM
   const t1 = performance.now();
   console.log(`${P} Step 1/6: Fetching manifest from ${manifestUrl}...`);
   const response = await fetch(manifestUrl);
-  const manifest = (await response.json()) as FSManifest & { corsProxy?: string };
+  const manifest = (await response.json()) as FSManifest;
   const fileCount = Object.keys(manifest.files).length;
   const bundleCount = Object.keys(manifest.bundles || {}).length;
   console.log(`${P} Step 1/6 done: manifest loaded (${fileCount} files, ${bundleCount} bundles, baseUrl=${manifest.baseUrl}) in ${ms(t1)}`);
@@ -71,9 +71,7 @@ export async function boot(manifestUrl: string, terminalContainerOrTerminal: HTM
   // Step 5: Create runner, TTY, shell
   const t5 = performance.now();
   console.log(`${P} Step 5/6: Creating ToolRunner, TTYBridge, MiniShell...`);
-  new FetchBridge({
-    corsProxy: manifest.corsProxy ?? null,
-  });
+  new FetchBridge();
 
   const runner = new ToolRunner(vfs, {
     pythonMajorMinor: manifest.toolVersions?.pythonMajorMinor ?? '3.13',
@@ -96,10 +94,77 @@ export async function boot(manifestUrl: string, terminalContainerOrTerminal: HTM
   return { runner, vfs, shell, tty };
 }
 
+/* ------------------------------------------------------------------ */
+/*  Worker-based boot (Phase 1)                                        */
+/* ------------------------------------------------------------------ */
+
+export interface WorkerBootResult {
+  client: import('./worker-client').WorkerClient;
+  tty: TTYBridge;
+}
+
+/**
+ * Boot the toolchain inside a Web Worker.
+ * The main thread only handles terminal I/O — all WASM execution
+ * happens off the main thread so the UI never freezes.
+ */
+export async function bootInWorker(
+  manifestUrl: string,
+  terminalContainerOrTerminal: HTMLElement | import('@xterm/xterm').Terminal,
+): Promise<WorkerBootResult> {
+  const P = '[Emception:Boot]';
+  const t0 = performance.now();
+  const ms = (t: number) => `${(performance.now() - t).toFixed(1)}ms`;
+
+  console.log(`${P} ===== BOOT (Worker mode) START =====`);
+
+  // Create the terminal (stays on main thread)
+  const isTerminalInstance = typeof (terminalContainerOrTerminal as any).writeln === 'function';
+  console.log(`${P} TTYBridge: reusing existing Terminal=${isTerminalInstance}`);
+  const tty = new TTYBridge(terminalContainerOrTerminal);
+
+  // Create the Worker.
+  // Next.js / webpack: `new Worker(new URL(...), { type: 'module' })` triggers
+  // the bundler's worker plugin to create a separate entry point.
+  const worker = new Worker(
+    new URL('./worker-entry', import.meta.url),
+    { type: 'module', name: 'emception-toolchain' },
+  );
+
+  // Create the client proxy
+  const { WorkerClient } = await import('./worker-client');
+  const client = new WorkerClient(worker, tty);
+
+  // Resolve to absolute URL — Workers may not share the page's base URL,
+  // so relative paths like "/cdn/manifest.json" would fail in fetch().
+  const absoluteManifestUrl = new URL(manifestUrl, self.location.href).href;
+
+  // Boot inside the Worker
+  console.log(`${P} Sending boot message to Worker...`);
+  await client.boot(absoluteManifestUrl);
+  console.log(`${P} ===== BOOT (Worker mode) COMPLETE in ${ms(t0)} =====`);
+
+  // Forward terminal keystrokes to the Worker (for the shell REPL).
+  // We hook at the xterm.js level: every character the user types gets
+  // sent to the Worker as individual bytes.  The Worker's IOProvider
+  // queues them for the MiniShell REPL.
+  // When exclusive stdin is active (a WASI program is reading stdin),
+  // keystrokes are routed through TTYBridge.readByteExclusive → feedStdin
+  // instead, so we must NOT also send them to the shell (id: 0).
+  const terminal = (tty as any).terminal as import('@xterm/xterm').Terminal;
+  terminal.onData((data: string) => {
+    if (tty.isExclusiveStdin) return;
+    for (let i = 0; i < data.length; i++) {
+      worker.postMessage({ type: 'stdin', id: 0, byte: data.charCodeAt(i) });
+    }
+  });
+
+  return { client, tty };
+}
+
 export { createBrowserBridge, SUBPROCESS_SHIM, type BrowserBridge } from './emscripten/index';
 export { decompressBrotli, isBrotliSupported } from './loader/brotli';
 export { clearModuleCache, loadModuleFactory } from './loader/wasm-module';
-export { resolveGitTarball, type TarballInfo } from './net/git-tarball';
 export type { RunOptions, ToolResult } from './tool-runner';
 export type { IOProvider } from './tty/io-provider';
 export { LineBuffer } from './tty/line-buffer';

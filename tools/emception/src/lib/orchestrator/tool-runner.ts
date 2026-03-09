@@ -115,6 +115,15 @@ const TOOL_REGISTRY: Record<string, ToolDescriptor> = {
   'wasm-metadce': {
     modulePath: '/usr/lib/wasm-metadce.wasm',
   },
+  'ninja': {
+    modulePath: '/usr/lib/ninja.wasm',
+  },
+  'cmake': {
+    modulePath: '/usr/lib/cmake.wasm',
+  },
+  'curl': {
+    modulePath: '/usr/lib/curl.wasm',
+  },
 };
 
 /**
@@ -219,15 +228,21 @@ export class ToolRunner {
     }
     console.log(`${LOG_PREFIX}   Descriptor: module=${descriptor.modulePath}`);
 
-    // Check if the tool's WASM module exists in the VFS. Optional post-processing
-    // tools (llvm-objcopy, wasm-opt, etc.) may not be compiled. Their absence
-    // doesn't prevent a working WASM binary — wasm-ld's output is already valid.
-    if (OPTIONAL_TOOLS.has(toolBasename)) {
+    // Check if the tool's WASM module exists in the VFS.
+    {
       const wasmExists = await this.vfs.fetchFile(descriptor.modulePath);
       if (!wasmExists) {
-        console.log(`${LOG_PREFIX}   [SKIP] Optional tool "${toolBasename}" — WASM module not found, returning no-op (exit 0)`);
-        console.log(`${LOG_PREFIX} ===== RUN COMPLETE: ${tool} — exitCode=0 (skipped), total=${elapsed(tTotal)} =====`);
-        return { exitCode: 0, stdout: '', stderr: '' };
+        if (OPTIONAL_TOOLS.has(toolBasename)) {
+          // Optional post-processing tools can be safely skipped
+          console.log(`${LOG_PREFIX}   [SKIP] Optional tool "${toolBasename}" — WASM module not found, returning no-op (exit 0)`);
+          console.log(`${LOG_PREFIX} ===== RUN COMPLETE: ${tool} — exitCode=0 (skipped), total=${elapsed(tTotal)} =====`);
+          return { exitCode: 0, stdout: '', stderr: '' };
+        }
+        // Required tool missing — return a clear error instead of crashing on dynamic import
+        const msg = `${toolBasename}: tool not available (WASM module not found at ${descriptor.modulePath}). Build it first with: npm run build:${toolBasename}`;
+        console.warn(`${LOG_PREFIX}   ${msg}`);
+        options.onStderr?.(msg);
+        return { exitCode: 127, stdout: '', stderr: msg };
       }
     }
 
@@ -368,12 +383,11 @@ export class ToolRunner {
       arguments: argv.slice(1),
     };
 
-    // For Python-based tools (emcc/em++), provide systemCallback for subprocess
-    // interception via JSPI. When Python calls os.system('__dispatch_subprocess'),
-    // this callback intercepts it, runs the tool via this.run(), and communicates
-    // results back through files in the process FS.
+    // Provide systemCallback for system() interception via JSPI.
+    // Python uses this for subprocess dispatch (__dispatch_subprocess).
+    // Any tool linked with libcurl-lite uses it for HTTP (__dispatch_curl).
     let instanceRef: EmscriptenInstance | null = null;
-    if (isPythonTool) {
+    {
       const runner = this;
       moduleConfig['systemCallback'] = async (cmdStr: string): Promise<number> => {
         if (cmdStr === '__dispatch_subprocess' && instanceRef) {
@@ -448,6 +462,87 @@ export class ToolRunner {
             return (1 << 8) | 0;
           }
         }
+
+        // --- __dispatch_curl: libcurl-lite HTTP bridge ---
+        if (cmdStr === '__dispatch_curl' && instanceRef) {
+          try {
+            const reqText = String(instanceRef.FS.readFile('/tmp/.curl_request', { encoding: 'utf8' }));
+            const lines = reqText.split('\n').filter(l => l.length > 0);
+            if (lines.length === 0) return (1 << 8) | 0;
+
+            // Line 0: "METHOD URL"
+            const spaceIdx = lines[0].indexOf(' ');
+            const method = spaceIdx > 0 ? lines[0].slice(0, spaceIdx) : 'GET';
+            const url = spaceIdx > 0 ? lines[0].slice(spaceIdx + 1) : lines[0];
+
+            // Remaining lines: headers (real + pseudo X-Curl-* directives)
+            const headers = new Headers();
+            let followRedirects = false;
+            let timeoutMs = 0;
+            for (let i = 1; i < lines.length; i++) {
+              const colonIdx = lines[i].indexOf(':');
+              if (colonIdx <= 0) continue;
+              const name = lines[i].slice(0, colonIdx).trim();
+              const value = lines[i].slice(colonIdx + 1).trim();
+              if (name === 'X-Curl-Follow') { followRedirects = value === '1'; continue; }
+              if (name === 'X-Curl-Timeout') { timeoutMs = parseInt(value, 10) * 1000; continue; }
+              headers.set(name, value);
+            }
+
+            // Read body if present
+            let body: Uint8Array | undefined;
+            try {
+              body = instanceRef.FS.readFile('/tmp/.curl_request_body');
+              if (body.length === 0) body = undefined;
+            } catch { body = undefined; }
+
+            console.log(`${LOG_PREFIX}   [curl] ${method} ${url.slice(0, 120)}...`);
+
+            const fetchInit: RequestInit = {
+              method,
+              headers,
+              redirect: followRedirects ? 'follow' : 'manual',
+            };
+            if (body && method !== 'GET' && method !== 'HEAD') {
+              fetchInit.body = body as unknown as BodyInit;
+            }
+
+            let response: Response;
+            if (timeoutMs > 0) {
+              const controller = new AbortController();
+              const timer = setTimeout(() => controller.abort(), timeoutMs);
+              fetchInit.signal = controller.signal;
+              try {
+                response = await fetch(url, fetchInit);
+              } finally {
+                clearTimeout(timer);
+              }
+            } else {
+              response = await fetch(url, fetchInit);
+            }
+
+            // Write response metadata: line1 = status, then headers
+            const respLines: string[] = [String(response.status)];
+            response.headers.forEach((v, k) => { respLines.push(`${k}: ${v}`); });
+            instanceRef.FS.writeFile('/tmp/.curl_response', respLines.join('\n') + '\n');
+
+            // Write response body
+            const respBody = new Uint8Array(await response.arrayBuffer());
+            instanceRef.FS.writeFile('/tmp/.curl_response_body', respBody);
+
+            console.log(`${LOG_PREFIX}   [curl] Done: status=${response.status} body=${respBody.length}B`);
+            return 0;
+          } catch (e) {
+            const msg = e instanceof Error ? e.message : String(e);
+            console.error(`${LOG_PREFIX}   [curl] Error: ${msg}`);
+            if (instanceRef) {
+              instanceRef.FS.writeFile('/tmp/.curl_response', '0\n');
+              instanceRef.FS.writeFile('/tmp/.curl_response_body', new Uint8Array(0));
+            }
+            return (1 << 8) | 0;
+          }
+        }
+
         // Unknown system() command — return ENOSYS
         return -52;
       };

@@ -25,6 +25,7 @@ shell.cp('-r', path.join(BUILD_DIR, 'cdn/*'), WEB_NEXT_CDN);
 const toolNames = [
     'clang', 'lld', 'python',
     'wasm-opt', 'wasm-as', 'wasm-ctor-eval', 'wasm-emscripten-finalize', 'wasm-metadce',
+    'ninja', 'cmake',
 ];
 const toolDest = path.join(WEB_NEXT_CDN, 'usr', 'lib');
 shell.mkdir('-p', toolDest);

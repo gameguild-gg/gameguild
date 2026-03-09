@@ -5,21 +5,21 @@
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
-    "noEmit": true,
     "esModuleInterop": true,
     "module": "esnext",
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "jsx": "react-jsx",
-    "paths": {
-      "@/*": ["./src/*"]
-    }
+    "emitDeclarationOnly": true,
+    "declaration": true,
+    "declarationMap": true,
+    "declarationDir": "dist",
+    "outDir": "dist",
+    "rootDir": "src/lib/orchestrator"
   },
   "include": [
-    "src/**/*.ts",
-    "src/**/*.tsx",
-    "src/**/*.d.ts"
+    "src/lib/**/*.ts",
+    "src/lib/**/*.d.ts"
   ],
-  "exclude": ["node_modules", "dist", "e2e", "build"]
+  "exclude": ["node_modules", "dist"]
 }

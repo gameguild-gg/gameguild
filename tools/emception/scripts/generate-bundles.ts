@@ -11,9 +11,9 @@
  *   <tool>               – paired .mjs + .wasm at /usr/lib/<tool>.{mjs,wasm}
  *   usr-include          – all files under /usr/include/
  *   usr-lib-emscripten   – all files under /usr/lib/emscripten/
- *   python-runtime       – /usr/lib/python<ver>/ + /usr/lib/pkgconfig/ (same context)
+ *   python-runtime       – /usr/lib/python<ver>/ + /usr/lib/pkgconfig/ + /usr/lib/libpython*
  *   usr-bin              – /usr/bin/ + /etc/ (small scripts & config)
- *   usr-lib-misc         – remaining /usr/lib/ files (e.g. libpython3.13.a)
+ *   libcurl              – /usr/lib/libcurl* (static library)
  *   usr-share            – /usr/share/ files
  *
  * Version-specific paths like /usr/lib/python3.13/ are referenced in the
@@ -246,6 +246,7 @@ async function main() {
         }
     }
     pythonPrefixes.push('/usr/lib/pkgconfig/');
+    pythonPrefixes.push('/usr/lib/libpython');
 
     const prefixGroups: { name: string; prefixes: string[]; outputPath: string }[] = [
         { name: 'usr-include', prefixes: ['/usr/include/'], outputPath: '/usr/include.tar.br' },
@@ -253,6 +254,7 @@ async function main() {
         { name: 'emscripten-core', prefixes: ['/usr/lib/emscripten/'], outputPath: '/usr/lib/emscripten-core.tar.br' },
         { name: 'python-runtime', prefixes: pythonPrefixes, outputPath: '/usr/lib/python-runtime.tar.br' },
         { name: 'usr-bin', prefixes: ['/usr/bin/', '/etc/'], outputPath: '/usr/bin.tar.br' },
+        { name: 'libcurl', prefixes: ['/usr/lib/libcurl'], outputPath: '/usr/lib/libcurl.tar.br' },
         { name: 'usr-share', prefixes: ['/usr/share/'], outputPath: '/usr/share.tar.br' },
     ];
 

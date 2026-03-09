@@ -84,13 +84,39 @@ export class MiniShell {
       case 'clear':
         this.tty.clear();
         return 0;
+      case 'curl':
+      case 'wget':
+        return this.builtinCurl(args);
       case 'help':
-        this.tty.writeLine('Built-in: cd, pwd, export, env, echo, ls, cat, mkdir, rm, touch, write, history, clear, help, exit');
-        this.tty.writeLine('Tools: emcc, em++, clang, clang++, python3, wasm-opt');
+        this.tty.writeLine('Built-in: cd, pwd, export, env, echo, ls, cat, mkdir, rm, touch, write, curl, wget, history, clear, help, exit');
+        this.tty.writeLine('Tools: emcc, em++, clang, clang++, python3, wasm-opt, ninja, cmake');
         return 0;
       case 'exit':
         return -1;
       default: {
+        // If the command is a .wasm file (e.g. ./main.wasm or main.wasm),
+        // run it with the built-in WASI runtime.
+        const cmdName = cmd.replace(/^\.\//, '');
+        if (cmdName.endsWith('.wasm')) {
+          const wasmPath = this.resolvePath(cmdName);
+          console.log(`${P} Running WASM binary: ${wasmPath}`);
+          const t0 = performance.now();
+          this.tty.setStdinEcho?.(true);
+          const result = await this.runner.run('wasi-run', ['wasi-run', wasmPath, ...args], {
+            env: this.env,
+            cwd: this.cwd,
+            onStdout: (t) => this.tty.write(t.replace(/\n/g, '\r\n')),
+            onStderr: (t) => this.tty.write(`\x1b[31m${t.replace(/\n/g, '\r\n')}\x1b[0m`),
+            stdin: () => this.tty.readByte(),
+          });
+          this.tty.setStdinEcho?.(false);
+          console.log(`${P} WASM "${wasmPath}" finished: exitCode=${result.exitCode} in ${(performance.now() - t0).toFixed(1)}ms`);
+          if (result.exitCode !== 0) {
+            this.tty.writeError(`Exit code: ${result.exitCode}`);
+          }
+          return result.exitCode;
+        }
+
         console.log(`${P} Executing external tool: ${cmd} [${[cmd, ...args].map(a => `"${a}"`).join(', ')}]`);
         const t0 = performance.now();
         const result = await this.runner.run(cmd, [cmd, ...args], {
@@ -246,6 +272,78 @@ export class MiniShell {
     return 0;
   }
 
+  /**
+   * curl/wget builtin — fetch a URL using the browser fetch API.
+   * Supports: curl [-o file] [-s] URL
+   */
+  private async builtinCurl(args: string[]): Promise<number> {
+    let outputFile: string | null = null;
+    let silent = false;
+    let url: string | null = null;
+
+    for (let i = 0; i < args.length; i++) {
+      if (args[i] === '-o' && i + 1 < args.length) {
+        outputFile = args[++i];
+      } else if (args[i] === '-O') {
+        // Save with remote filename
+        outputFile = '__auto__';
+      } else if (args[i] === '-s' || args[i] === '--silent' || args[i] === '-q') {
+        silent = true;
+      } else if (args[i] === '-L' || args[i] === '--location') {
+        // Follow redirects — fetch does this by default, ignore
+      } else if (!args[i].startsWith('-')) {
+        url = args[i];
+      }
+    }
+
+    if (!url) {
+      this.tty.writeError('Usage: curl [-o file] [-s] URL');
+      return 1;
+    }
+
+    // Derive filename from URL for -O
+    if (outputFile === '__auto__') {
+      const urlPath = new URL(url).pathname;
+      outputFile = urlPath.split('/').pop() || 'download';
+    }
+
+    if (!silent) {
+      this.tty.writeLine(`Fetching ${url}...`);
+    }
+
+    try {
+      const response = await fetch(url, { mode: 'cors', redirect: 'follow' });
+      if (!response.ok) {
+        this.tty.writeError(`curl: (${response.status}) ${response.statusText}`);
+        return 1;
+      }
+      const data = new Uint8Array(await response.arrayBuffer());
+
+      if (outputFile && this.vfs) {
+        const path = this.resolvePath(outputFile);
+        await this.vfs.overlay.writeFile(path, data);
+        if (!silent) {
+          this.tty.writeLine(`Saved ${data.length} bytes to ${outputFile}`);
+        }
+      } else {
+        // Print text to terminal
+        const text = new TextDecoder().decode(data);
+        this.tty.writeLine(text);
+      }
+      return 0;
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      if (msg.includes('Failed to fetch') || msg.includes('NetworkError') || msg.includes('CORS')) {
+        this.tty.writeError(`curl: CORS blocked by ${new URL(url).hostname}`);
+        this.tty.writeError('  The remote server does not allow cross-origin requests from the browser.');
+        this.tty.writeError('  Try a CORS-friendly API (e.g. httpbin.org, jsonplaceholder.typicode.com).');
+      } else {
+        this.tty.writeError(`curl: ${msg}`);
+      }
+      return 1;
+    }
+  }
+
   private addHistory(line: string): void {
     if (this.history.length > 0 && this.history[this.history.length - 1] === line) {
       return;
@@ -369,9 +467,10 @@ export class MiniShell {
       // Complete command names
       const commands = [
         'cd', 'pwd', 'env', 'echo', 'export', 'ls', 'cat', 'mkdir', 'rm',
-        'touch', 'write', 'history', 'clear', 'help', 'exit',
+        'touch', 'write', 'curl', 'wget', 'history', 'clear', 'help', 'exit',
         'clang', 'clang++', 'emcc', 'em++', 'python3', 'wasm-opt',
         'lld', 'wasm-ld', 'llvm-nm', 'llvm-ar', 'llvm-objcopy', 'llc',
+        'ninja', 'cmake',
       ];
       const matches = commands.filter((c) => c.startsWith(prefix));
       if (matches.length === 1) {

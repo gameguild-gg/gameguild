@@ -1,0 +1,36 @@
+{
+    "name": "@gameguild/emception-demo",
+    "version": "0.1.0",
+    "private": true,
+    "description": "Demo IDE for the emception browser C/C++ toolchain",
+    "type": "module",
+    "scripts": {
+        "dev": "next dev",
+        "build": "next build",
+        "start": "next start",
+        "lint": "eslint"
+    },
+    "dependencies": {
+        "@monaco-editor/react": "^4.7.0",
+        "@xterm/addon-fit": "^0.11.0",
+        "@xterm/addon-web-links": "^0.12.0",
+        "@xterm/xterm": "^6.0.0",
+        "clsx": "^2.1.1",
+        "emception": "*",
+        "lucide-react": "^0.575.0",
+        "monaco-editor": "^0.55.1",
+        "next": "16.1.6",
+        "react": "19.2.3",
+        "react-dom": "19.2.3"
+    },
+    "devDependencies": {
+        "@tailwindcss/postcss": "^4",
+        "@types/node": "^20",
+        "@types/react": "^19",
+        "@types/react-dom": "^19",
+        "eslint": "^9",
+        "eslint-config-next": "16.1.6",
+        "tailwindcss": "^4",
+        "typescript": "^5.3.0"
+    }
+}

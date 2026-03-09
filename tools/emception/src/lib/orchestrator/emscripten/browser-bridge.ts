@@ -50,6 +50,7 @@ export function createBrowserBridge(runner: ToolRunner): BrowserBridge {
         'clang', 'clang++', 'lld', 'wasm-ld', 'llvm-nm', 'llvm-ar',
         'llvm-objcopy', 'llc', 'wasm-opt', 'wasm-as', 'wasm-emscripten-finalize',
         'python3', 'emcc', 'em++',
+        'ninja', 'cmake', 'curl',
       ];
       if (knownTools.includes(name)) return `/usr/bin/${name}`;
       return null;
