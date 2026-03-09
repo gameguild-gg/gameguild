@@ -37,16 +37,8 @@ jobs:
         with:
           node-version: 22
 
-      - name: Setup Emscripten
-        uses: mymindstorm/setup-emsdk@v14
-        with:
-          version: latest
-
       - name: Install dependencies
         run: npm ci || npm install
-
-      - name: Setup Emsdk
-        run: npm run build:emsdk
 
       - name: Build Binaryen
         run: npm run build:binaryen
