@@ -5,7 +5,7 @@ on:
     branches:
       - main
     # paths:
-    #   - 'apps/emception/**'
+    #   - 'demos/emception-react/**'
 
 permissions:
   contents: read
@@ -29,16 +29,19 @@ jobs:
       - name: Install emception library
         run: cd tools/emception && npm install && npm run build:lib
 
+      - name: Install shared UI package
+        run: cd packages/emception && npm install
+
       - name: Install demo dependencies
-        run: cd apps/emception && npm install
+        run: cd demos/emception-react && npm install
 
       - name: Build static export
-        run: cd apps/emception && npm run build
+        run: cd demos/emception-react && npm run build
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: apps/emception/out
+          path: demos/emception-react/dist
 
   deploy:
     needs: build
