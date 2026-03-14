@@ -43,8 +43,44 @@ jobs:
           $SUDO apt-get update
           $SUDO apt-get install -y cmake ninja-build build-essential pkg-config brotli
 
-      - name: Build toolchain + CDN assets
-        run: npm run build:all
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Build Emsdk
+        run: npm run build:emsdk
+
+      - name: Build Binaryen
+        run: npm run build:binaryen
+
+      - name: Build CPython
+        run: npm run build:cpython
+
+      - name: Build LLVM
+        run: npm run build:llvm
+
+      - name: Build libcurl-lite
+        run: npm run build:libcurl-lite
+
+      - name: Build Ninja
+        run: npm run build:ninja
+
+      - name: Build CMake
+        run: npm run build:cmake
+
+      - name: Build Sysroot
+        run: npm run build:sysroot
+
+      - name: Patch Glue
+        run: npm run patch:glue
+
+      - name: Build Manifest
+        run: npm run build:manifest
+
+      - name: Build Bundles
+        run: npm run build:bundles
+
+      - name: Deploy CDN
+        run: npm run deploy:cdn
 
       - name: Upload emception CDN artifact
         uses: actions/upload-artifact@v4
