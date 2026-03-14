@@ -48,6 +48,9 @@ x86/
 # Node.js Dependencies
 **/node_modules
 
+# Embedded upstream repos (avoid nested .git metadata/tooling conflicts)
+tools/emception/userland/**/.git/
+
 # Node.js Package Managers
 /.pnp
 .pnp.*
