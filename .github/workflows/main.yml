@@ -1,13 +1,227 @@
-name: Main
+name: Main CI/CD Workflow
 
 on:
   push:
     branches:
       - main
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: main-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
-  build:
+  build-emception-toolchain:
+    name: Build tools/emception
     runs-on: ubuntu-latest
+    timeout-minutes: 240
+    defaults:
+      run:
+        working-directory: tools/emception
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install dependencies
+        run: npm ci || npm install
+
+      - name: Install native build tools
+        run: |
+          if command -v sudo >/dev/null 2>&1; then
+            SUDO=sudo
+          else
+            SUDO=""
+          fi
+          $SUDO apt-get update
+          $SUDO apt-get install -y cmake ninja-build build-essential pkg-config brotli
+
+      - name: Build toolchain + CDN assets
+        run: npm run build:all
+
+      - name: Upload emception CDN artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: emception-cdn
+          path: |
+            tools/emception/public/cdn/
+            tools/emception/build/manifest.json
+          retention-days: 30
+
+  build-web:
+    name: Build apps/web
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install web dependencies
+        run: cd apps/web && npm install
+
+      - name: Build web
+        run: cd apps/web && npm run build
+
+  build-api:
+    name: Build apps/api
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dotnet
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Build API
+        run: cd apps/api && dotnet build "GameGuild.Production.sln" -c Release
+
+      - name: Publish API
+        run: cd apps/api/Source/GameGuild.API && dotnet publish "GameGuild.API.csproj" -c Release
+
+  build-gource:
+    name: Build gource report
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install ffmpeg and gource
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --fix-missing ffmpeg gource
+
+      - name: Make gource script executable
+        run: chmod +x ./contributors/gource.sh
+
+      - name: Run headless gource
+        uses: coactions/setup-xvfb@v1
+        with:
+          run: ./contributors/gource.sh
+
+      - name: Upload gource artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: gource-media
+          path: |
+            contributors/gource.mp4
+            contributors/gource.gif
+          retention-days: 30
+
+  build-emception-demo:
+    name: Build demos/emception-react
+    runs-on: ubuntu-latest
+    needs:
+      - build-emception-toolchain
+      - build-web
+      - build-api
+      - build-gource
+    if: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/main' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download emception CDN artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: emception-cdn
+          path: .
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install emception library dependencies
+        run: cd tools/emception && npm install
+
+      - name: Build emception library
+        run: cd tools/emception && npm run build:lib
+
+      - name: Install shared UI package dependencies
+        run: cd packages/emception && npm install
+
+      - name: Install demo dependencies
+        run: cd demos/emception-react && npm install
+
+      - name: Build demo
+        run: cd demos/emception-react && npm run build
+
+      - name: Upload demo dist artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: emception-demo-dist
+          path: demos/emception-react/dist
+          retention-days: 30
+
+  bundle-pages:
+    name: Bundle GitHub Pages content
+    runs-on: ubuntu-latest
+    needs:
+      - build-emception-demo
+    if: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/main' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download demo dist artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: emception-demo-dist
+          path: /tmp/emception-demo
+
+      - name: Download gource artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: gource-media
+          path: /tmp/gource-media
+
+      - name: Assemble combined pages directory
+        run: |
+          rm -rf .pages
+          mkdir -p .pages/contributors
+
+          cp -R /tmp/emception-demo/* .pages/
+          cp -R contributors/* .pages/contributors/
+
+          cp /tmp/gource-media/contributors/gource.mp4 .pages/contributors/gource.mp4
+          cp /tmp/gource-media/contributors/gource.gif .pages/contributors/gource.gif
+
+      - name: Upload pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: .pages
+
+  deploy-pages:
+    name: Deploy GitHub Pages
+    runs-on: ubuntu-latest
+    needs:
+      - bundle-pages
+    if: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/main' }}
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+  release-root:
+    name: Update root tags & release notes
+    runs-on: ubuntu-latest
+    needs:
+      - deploy-pages
+    if: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/main' }}
     permissions:
       contents: write
       issues: write
@@ -28,54 +242,11 @@ jobs:
           echo "Latest tags:"
           git tag --sort=-v:refname | head -5
 
-      - name: Cache node modules
-        uses: actions/cache@v4
-        with:
-          path: '**/node_modules'
-          key: node-${{ hashFiles('**/package-lock.json') }}
-
-      - name: Install dotnet
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: '9.0.x'
-
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
 
-      - run: cd apps/web ; npm install
-        name: Install dependencies
-
-      - run: cd apps/web ; npm run build
-        name: Build
-
-      - run: cd apps/api ; dotnet build "GameGuild.Production.sln" -c Release
-        name: Build API
-
-      - run: cd apps/api/Source/GameGuild.API ; dotnet publish "GameGuild.API.csproj" -c Release
-        name: Publish API
-
-      - run: |
-          sudo apt-get update
-          sudo apt-get install -y --fix-missing ffmpeg gource
-        name: Install ffmpeg and gource
-
-      - name: Make gource script executable
-        run: chmod +x ./contributors/gource.sh
-
-      - name: Run headless gource
-        uses: coactions/setup-xvfb@v1
-        with:
-          run: ./contributors/gource.sh
-
-      - name: Publish
-        uses: peaceiris/actions-gh-pages@v3
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./contributors
-          force_orphan: true
-
-      - name: Semantic Release
+      - name: Semantic Release (root)
         id: semantic
         uses: cycjimmy/semantic-release-action@v4
         with:
@@ -86,21 +257,64 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Rollback commit on build failure
+      - name: Rollback commit on release failure
         if: failure()
         run: |
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git config --global user.name "github-actions[bot]"
           git fetch --tags --force
-          # Delete any tags pointing to HEAD (created by semantic-release before failure)
           TAGS=$(git tag --points-at HEAD)
           for tag in $TAGS; do
             echo "Deleting tag: $tag"
             git push origin :refs/tags/$tag || true
             git tag -d $tag || true
           done
-          # Revert instead of reset+force-push — preserves history so tags stay reachable
           git revert HEAD --no-edit
           git push origin main
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  publish-emception:
+    name: Publish emception package
+    runs-on: ubuntu-latest
+    needs:
+      - release-root
+      - build-emception-toolchain
+    if: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/main' }}
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Sync to latest main and tags
+        run: |
+          git fetch origin main --tags --force
+          git checkout -B main origin/main
+          git reset --hard origin/main
+
+      - name: Download emception CDN artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: emception-cdn
+          path: .
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install emception dependencies
+        run: cd tools/emception && npm install
+
+      - name: Build emception library
+        run: cd tools/emception && npm run build:lib
+
+      - name: Semantic Release (emception)
+        run: npx semantic-release --extends ./tools/emception/.releaserc.json
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

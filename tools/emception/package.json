@@ -18,6 +18,7 @@
   },
   "files": [
     "dist",
+    "public/cdn",
     "README.md",
     "LICENSE*"
   ],
