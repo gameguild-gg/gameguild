@@ -41,6 +41,16 @@ jobs:
       - name: Install dependencies
         run: npm ci || npm install
 
+      - name: Install native build tools
+        run: |
+          if command -v sudo >/dev/null 2>&1; then
+            SUDO=sudo
+          else
+            SUDO=""
+          fi
+          $SUDO apt-get update
+          $SUDO apt-get install -y cmake ninja-build build-essential pkg-config
+
       - name: Pre-install Emscripten SDK
         run: |
           # Pre-create emsdk so setupEmsdk() finds it and can capture env vars
