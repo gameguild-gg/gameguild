@@ -1,5 +1,3 @@
-'use client';
-
 import Editor, { OnMount } from '@monaco-editor/react';
 import { FitAddon } from '@xterm/addon-fit';
 import { Terminal } from '@xterm/xterm';
@@ -18,7 +16,14 @@ int main() {
 }
 `;
 
-export default function Ide() {
+export interface IdeProps {
+    /** Title displayed in the header bar. */
+    title?: string;
+    /** URL to the CDN manifest.json file. Defaults to '/cdn/manifest.json'. */
+    manifestUrl?: string;
+}
+
+export default function Ide({ title = 'WebAssembly C++ Toolchain', manifestUrl = '/cdn/manifest.json' }: IdeProps) {
     const editorRef = useRef<any>(null);
     const terminalRef = useRef<HTMLDivElement>(null);
     const xtermRef = useRef<Terminal | null>(null);
@@ -53,7 +58,6 @@ export default function Ide() {
 
             term.open(terminalRef.current);
 
-            // Delay fit to ensure DOM is ready and container has dimensions
             const fitTerminal = () => {
                 try {
                     if (terminalRef.current && terminalRef.current.clientWidth > 0) {
@@ -64,16 +68,14 @@ export default function Ide() {
                 }
             };
 
-            // Initial fit with delay
             setTimeout(fitTerminal, 200);
 
             xtermRef.current = term;
             fitAddonRef.current = fitAddon;
 
-            // Expose for e2e tests (read terminal buffer reliably)
+            // Expose for e2e tests
             (window as any).__xterm__ = term;
 
-            // Handle resize
             window.addEventListener('resize', fitTerminal);
 
             term.writeln('\x1b[32mWelcome to the Browser C/C++ Toolchain!\x1b[0m');
@@ -93,33 +95,23 @@ export default function Ide() {
             try {
                 if (!terminalRef.current || !xtermRef.current) return;
 
-                // Manifest URL points to public/cdn/manifest.json
-                // In Next.js, public/cdn is served at /cdn
-                const manifestUrl = '/cdn/manifest.json';
-
                 setStatus('Booting toolchain...');
                 const t0 = performance.now();
-                // Pass the existing Terminal instance so TTYBridge reuses it
-                // instead of creating a second one.
                 const result = await bootInWorker(manifestUrl, xtermRef.current);
                 console.log(`[Ide] Boot completed in ${(performance.now() - t0).toFixed(1)}ms, mounted=${mounted}`);
 
                 if (mounted) {
-                    console.log('[Ide] Setting orchestrator and status to Ready');
                     orchestratorRef.current = result;
                     setStatus('Ready');
                     setIsReady(true);
                     xtermRef.current?.writeln('\x1b[32mSystem Ready.\x1b[0m');
                     xtermRef.current?.writeln('Click "Compile & Run" to execute code.');
                     console.log('[Ide] Status and ready state set, elapsed:', (performance.now() - ts).toFixed(1) + 'ms');
-                } else {
-                    console.log('[Ide] Component unmounted, skipping status update');
                 }
             } catch (err) {
                 console.error('Failed to boot:', err);
                 if (mounted) {
                     const errMsg = err instanceof Error ? err.message : String(err);
-                    console.log('[Ide] Setting status to Error:', errMsg);
                     setStatus(`Error: ${errMsg}`);
                     xtermRef.current?.writeln(`\x1b[31mBoot failed: ${err}\x1b[0m`);
                 }
@@ -133,9 +125,9 @@ export default function Ide() {
             if (cleanup) cleanup();
             orchestratorRef.current = null;
         };
-    }, []);
+    }, [manifestUrl]);
 
-    const handleEditorDidMount: OnMount = (editor, monaco) => {
+    const handleEditorDidMount: OnMount = (editor) => {
         editorRef.current = editor;
     };
 
@@ -157,7 +149,6 @@ export default function Ide() {
         try {
             const enc = new TextEncoder();
 
-            // Write code to the virtual filesystem via the Worker proxy.
             const tWrite = performance.now();
             await client.writeFile('/home/user/main.cpp', enc.encode(code));
             console.log(`${P} Source written to VFS in ${(performance.now() - tWrite).toFixed(1)}ms`);
@@ -165,10 +156,6 @@ export default function Ide() {
             const startTime = performance.now();
             console.log(`${P} Step 1/2: Running emcc...`);
 
-            // Compile to standalone WASM (avoids the need for compiler.mjs JS
-            // generation, which requires a full Node.js runtime not available in
-            // the browser). The resulting WASM uses pure WASI imports and can be
-            // executed directly with a minimal WASI runtime.
             const result = await client.run('emcc', [
                 'emcc', '/home/user/main.cpp', '-o', '/home/user/main.wasm',
                 '-O2',
@@ -192,7 +179,6 @@ export default function Ide() {
                 setStatus(`Compilation successful (${duration}s)`);
                 tty.writeLine(`\x1b[32mCompilation successful in ${duration}s\x1b[0m`);
 
-                // Check output file
                 const wasmFile = await client.getFile('/home/user/main.wasm');
                 console.log(`${P} Compilation output: main.wasm=${wasmFile ? `${(wasmFile.length / 1024).toFixed(1)}KB` : 'MISSING'}`);
 
@@ -200,11 +186,6 @@ export default function Ide() {
                 console.log(`${P} Step 2/2: Running compiled WASM with WASI runtime...`);
                 const tRun = performance.now();
 
-                // Run the standalone WASM directly using the built-in WASI runner.
-                // Use tty.write (raw) instead of tty.writeLine — the WASM program
-                // already includes its own newlines; convert LF→CRLF for xterm.
-                // WorkerClient.feedStdin() handles exclusive stdin and echo
-                // automatically when a stdin provider is set.
                 await client.run('wasi-run', ['wasi-run', '/home/user/main.wasm'], {
                     cwd: '/home/user',
                     onStdout: (t) => { tty.write(t.replace(/\n/g, '\r\n')); },
@@ -231,28 +212,34 @@ export default function Ide() {
     };
 
     return (
-        <div className="flex flex-col h-full w-full">
-            <header className="flex items-center justify-between px-4 py-2 bg-[#181825] border-b border-[#313244]">
-                <h1 className="text-sm font-semibold text-[#cdd6f4]">WebAssembly C++ Toolchain (Next.js)</h1>
-                <div className="flex items-center gap-4">
-                    <span data-testid="status" className="text-xs text-[#a6adc8]">{status}</span>
+        <div className="emception-ide" style={{ display: 'flex', flexDirection: 'column', height: '100%', width: '100%' }}>
+            <header style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                padding: '0.5rem 1rem', background: '#181825', borderBottom: '1px solid #313244',
+            }}>
+                <h1 style={{ fontSize: '0.875rem', fontWeight: 600, color: '#cdd6f4', margin: 0 }}>{title}</h1>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                    <span data-testid="status" style={{ fontSize: '0.75rem', color: '#a6adc8' }}>{status}</span>
                     <button
                         data-testid="compile-button"
                         onClick={handleCompile}
                         disabled={!isReady}
-                        className={`px-3 py-1 text-sm font-medium rounded transition-colors ${isReady
-                            ? 'bg-[#a6e3a1] text-[#11111b] hover:opacity-90'
-                            : 'bg-[#313244] text-[#585b70] cursor-not-allowed'
-                            }`}
+                        style={{
+                            padding: '0.25rem 0.75rem', fontSize: '0.875rem', fontWeight: 500,
+                            borderRadius: '0.25rem', border: 'none', cursor: isReady ? 'pointer' : 'not-allowed',
+                            background: isReady ? '#a6e3a1' : '#313244',
+                            color: isReady ? '#11111b' : '#585b70',
+                            transition: 'opacity 0.15s',
+                        }}
                     >
                         Compile & Run
                     </button>
                 </div>
             </header>
 
-            <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'row', overflow: 'hidden' }}>
                 {/* Editor Pane */}
-                <div data-testid="editor-pane" className="flex-1 min-h-[300px] md:h-full border-b md:border-b-0 md:border-r border-[#313244]">
+                <div data-testid="editor-pane" style={{ flex: 1, minHeight: 300, borderRight: '1px solid #313244' }}>
                     <Editor
                         height="100%"
                         defaultLanguage="cpp"
@@ -270,9 +257,9 @@ export default function Ide() {
                 </div>
 
                 {/* Terminal Pane */}
-                <div className="flex-1 min-h-[300px] md:h-full bg-[#1e1e2e] p-2 overflow-hidden flex flex-col">
-                    <div className="text-xs text-[#a6adc8] mb-2 px-2">Terminal</div>
-                    <div data-testid="terminal" ref={terminalRef} className="flex-1 overflow-hidden rounded bg-[#181825] p-2">
+                <div style={{ flex: 1, minHeight: 300, background: '#1e1e2e', padding: '0.5rem', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+                    <div style={{ fontSize: '0.75rem', color: '#a6adc8', marginBottom: '0.5rem', paddingLeft: '0.5rem' }}>Terminal</div>
+                    <div data-testid="terminal" ref={terminalRef} style={{ flex: 1, overflow: 'hidden', borderRadius: '0.25rem', background: '#181825', padding: '0.5rem' }}>
                     </div>
                 </div>
             </div>

@@ -1,7 +1,4 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
+/* Emception IDE — Catppuccin Mocha theme variables */
 :root {
   --bg-base: #1e1e2e;
   --bg-surface: #181825;

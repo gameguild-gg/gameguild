@@ -1,4 +1,4 @@
-# CDN assets are symlinked from tools/emception/public/cdn for local dev
+# CDN assets are synchronized from tools/emception/public/cdn via predev/prebuild
 public/cdn
 
 # Next.js
