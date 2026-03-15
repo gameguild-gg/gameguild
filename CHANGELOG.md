@@ -1,3 +1,10 @@
+## [2.49.4](https://github.com/gameguild-gg/gameguild/compare/v2.49.3...v2.49.4) (2026-03-15)
+
+
+### Bug Fixes
+
+* organize emception demos ([f873a84](https://github.com/gameguild-gg/gameguild/commit/f873a84ecd3684e5b70d593d389503c86758e585))
+
 ## [2.49.3](https://github.com/gameguild-gg/gameguild/compare/v2.49.2...v2.49.3) (2026-03-09)
 
 
