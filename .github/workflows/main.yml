@@ -19,6 +19,10 @@ jobs:
     name: Build tools/emception
     runs-on: ubuntu-latest
     timeout-minutes: 240
+    outputs:
+      toolchain-changed: ${{ steps.cache-toolchain.outputs.cache-hit != 'true' }}
+    env:
+      EMSDK_VERSION: latest
     defaults:
       run:
         working-directory: tools/emception
@@ -32,6 +36,32 @@ jobs:
 
       - name: Install dependencies
         run: npm ci || npm install
+
+      - name: Resolve EMSDK version
+        id: emsdk-version
+        shell: bash
+        working-directory: .
+        run: |
+          set -euo pipefail
+          RAW_VERSION="${{ env.EMSDK_VERSION }}"
+          if [[ "${RAW_VERSION}" == "latest" || -z "${RAW_VERSION}" ]]; then
+            TAGS_JSON=$(curl -sf https://raw.githubusercontent.com/emscripten-core/emsdk/main/emscripten-releases-tags.json)
+            RESOLVED=$(echo "${TAGS_JSON}" | python3 -c "import sys,json; print(json.load(sys.stdin)['aliases']['latest'])")
+            echo "Resolved emsdk 'latest' → ${RESOLVED}"
+          else
+            RESOLVED="${RAW_VERSION}"
+            echo "Using explicit emsdk version: ${RESOLVED}"
+          fi
+          echo "resolved=${RESOLVED}" >> "$GITHUB_OUTPUT"
+
+      - name: Restore EMSDK cache
+        id: cache-emsdk
+        uses: actions/cache@v4
+        with:
+          path: tools/emsdk
+          key: ${{ runner.os }}-emception-emsdk-v2-${{ steps.emsdk-version.outputs.resolved }}-${{ hashFiles('tools/emception/scripts/setup-emsdk.ts', 'tools/emception/scripts/lib/emsdk.ts') }}
+          restore-keys: |
+            ${{ runner.os }}-emception-emsdk-v2-${{ steps.emsdk-version.outputs.resolved }}-
 
       - name: Install native build tools
         run: |
@@ -47,40 +77,124 @@ jobs:
         run: npm run typecheck
 
       - name: Build Emsdk
+        if: steps.cache-emsdk.outputs.cache-hit != 'true'
         run: npm run build:emsdk
 
+      - name: Detect tool versions for cache keys
+        id: tool-versions
+        run: |
+          set -euo pipefail
+
+          EMSDK_DIR="${GITHUB_WORKSPACE}/tools/emsdk"
+          CLANG_BIN="${EMSDK_DIR}/upstream/bin/clang"
+          WASMOPT_BIN="${EMSDK_DIR}/upstream/bin/wasm-opt"
+
+          if [[ ! -x "${CLANG_BIN}" || ! -x "${WASMOPT_BIN}" ]]; then
+            echo "::error::Required emsdk binaries were not found. Expected ${CLANG_BIN} and ${WASMOPT_BIN}."
+            exit 1
+          fi
+
+          CLANG_VERSION_OUT="$(${CLANG_BIN} --version 2>&1 | cat)"
+          LLVM_VERSION="$(echo "${CLANG_VERSION_OUT}" | sed -nE 's/.*clang version ([0-9]+\.[0-9]+\.[0-9]+).*/\1/p' | head -1)"
+          LLVM_COMMIT="$(echo "${CLANG_VERSION_OUT}" | grep -Eo 'llvm-project [0-9a-f]{40}' | awk '{print $2}' | head -1)"
+          BINARYEN_VERSION="$(${WASMOPT_BIN} --version 2>&1 | sed -nE 's/.*version ([0-9]+).*/\1/p' | head -1)"
+
+          PYTHON_BIN=""
+          if [[ -d "${EMSDK_DIR}/python" ]]; then
+            PYTHON_BIN="$(find "${EMSDK_DIR}/python" -type f \( -name python3 -o -name python \) | head -1 || true)"
+          fi
+
+          if [[ -n "${PYTHON_BIN}" ]]; then
+            PYTHON_VERSION="$(${PYTHON_BIN} --version 2>&1 | sed -nE 's/Python ([0-9]+\.[0-9]+\.[0-9]+).*/\1/p' | head -1)"
+          else
+            PYTHON_VERSION="$(python3 --version 2>&1 | sed -nE 's/Python ([0-9]+\.[0-9]+\.[0-9]+).*/\1/p' | head -1)"
+          fi
+
+          echo "llvm_version=${LLVM_VERSION}" >> "$GITHUB_OUTPUT"
+          echo "llvm_commit=${LLVM_COMMIT}" >> "$GITHUB_OUTPUT"
+          echo "binaryen_version=${BINARYEN_VERSION}" >> "$GITHUB_OUTPUT"
+          echo "python_version=${PYTHON_VERSION}" >> "$GITHUB_OUTPUT"
+
+          # Also read the emscripten version (stored in emsdk after install)
+          EMSCRIPTEN_VERSION_FILE="${EMSDK_DIR}/upstream/emscripten/emscripten-version.txt"
+          if [[ -f "${EMSCRIPTEN_VERSION_FILE}" ]]; then
+            EMSCRIPTEN_VERSION="$(tr -d '"' < "${EMSCRIPTEN_VERSION_FILE}" | tr -d '[:space:]')"
+          else
+            EMSCRIPTEN_VERSION="${{ steps.emsdk-version.outputs.resolved }}"
+          fi
+          echo "emscripten_version=${EMSCRIPTEN_VERSION}" >> "$GITHUB_OUTPUT"
+
+          echo "Detected versions for cache key:"
+          echo "  Emscripten:   ${EMSCRIPTEN_VERSION}"
+          echo "  LLVM version: ${LLVM_VERSION}"
+          echo "  LLVM commit:  ${LLVM_COMMIT}"
+          echo "  Binaryen:     ${BINARYEN_VERSION}"
+          echo "  Python:       ${PYTHON_VERSION}"
+
+      - name: Restore emception toolchain output cache
+        id: cache-toolchain
+        uses: actions/cache@v4
+        with:
+          path: |
+            tools/emception/build/cdn
+            tools/emception/build/manifest.json
+            tools/emception/public/cdn
+          key: ${{ runner.os }}-emception-toolchain-v4-emsdk-${{ steps.tool-versions.outputs.emscripten_version }}-llvm-${{ steps.tool-versions.outputs.llvm_version }}-${{ steps.tool-versions.outputs.llvm_commit }}-byn-${{ steps.tool-versions.outputs.binaryen_version }}-py-${{ steps.tool-versions.outputs.python_version }}-${{ hashFiles('tools/emception/scripts/**/*.ts', 'tools/emception/package.json', 'tools/emception/userland/libcurl-lite/src/curl_lite.c', 'tools/emception/userland/libcurl-lite/include/curl/curl.h') }}
+          restore-keys: |
+            ${{ runner.os }}-emception-toolchain-v4-emsdk-${{ steps.tool-versions.outputs.emscripten_version }}-llvm-${{ steps.tool-versions.outputs.llvm_version }}-${{ steps.tool-versions.outputs.llvm_commit }}-
+            ${{ runner.os }}-emception-toolchain-v4-emsdk-${{ steps.tool-versions.outputs.emscripten_version }}-
+
       - name: Build Binaryen
+        if: steps.cache-toolchain.outputs.cache-hit != 'true'
         run: npm run build:binaryen
 
       - name: Build CPython
+        if: steps.cache-toolchain.outputs.cache-hit != 'true'
         run: npm run build:cpython
 
       - name: Build LLVM
+        if: steps.cache-toolchain.outputs.cache-hit != 'true'
         run: npm run build:llvm
 
       - name: Build libcurl-lite
+        if: steps.cache-toolchain.outputs.cache-hit != 'true'
         run: npm run build:libcurl-lite
 
       - name: Build Ninja
+        if: steps.cache-toolchain.outputs.cache-hit != 'true'
         run: npm run build:ninja
 
       - name: Build CMake
+        if: steps.cache-toolchain.outputs.cache-hit != 'true'
         run: npm run build:cmake
 
       - name: Build Sysroot
+        if: steps.cache-toolchain.outputs.cache-hit != 'true'
         run: npm run build:sysroot
 
       - name: Patch Glue
+        if: steps.cache-toolchain.outputs.cache-hit != 'true'
         run: npm run patch:glue
 
       - name: Build Manifest
+        if: steps.cache-toolchain.outputs.cache-hit != 'true'
         run: npm run build:manifest
 
       - name: Build Bundles
+        if: steps.cache-toolchain.outputs.cache-hit != 'true'
         run: npm run build:bundles
 
       - name: Deploy CDN
+        if: steps.cache-toolchain.outputs.cache-hit != 'true'
         run: npm run deploy:cdn
+
+      - name: Toolchain cache status
+        run: |
+          if [[ "${{ steps.cache-toolchain.outputs.cache-hit }}" == 'true' ]]; then
+            echo "✅ emception toolchain cache hit — skipped heavy rebuild steps."
+          else
+            echo "ℹ️ emception toolchain cache miss — full rebuild executed and cache refreshed."
+          fi
 
       - name: Upload emception CDN artifact
         uses: actions/upload-artifact@v4
@@ -317,7 +431,7 @@ jobs:
     needs:
       - release-root
       - build-emception-toolchain
-    if: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/main' }}
+    if: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && needs.build-emception-toolchain.outputs.toolchain-changed == 'true' }}
     permissions:
       contents: write
       issues: write
@@ -352,6 +466,15 @@ jobs:
         run: cd tools/emception && npm run build:lib
 
       - name: Semantic Release (emception)
-        run: npx semantic-release --extends ./tools/emception/.releaserc.json
+        run: |
+          npx -y \
+            -p semantic-release@25.0.3 \
+            -p @semantic-release/commit-analyzer \
+            -p @semantic-release/release-notes-generator \
+            -p @semantic-release/changelog \
+            -p @semantic-release/npm \
+            -p @semantic-release/git \
+            -p @semantic-release/github \
+            semantic-release --extends ./tools/emception/.releaserc.json
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
