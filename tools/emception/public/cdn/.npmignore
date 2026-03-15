@@ -1,0 +1,11 @@
+# Publish only runtime bundle artifacts, not the expanded CDN tree.
+# Exclude everything by default, then whitelist required files.
+**
+
+# Core runtime metadata / helpers
+!manifest.json
+!brotli_wasm.js
+!brotli_wasm_bg.wasm
+
+# Bundle-only payloads
+!**/*.tar.br

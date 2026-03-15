@@ -450,7 +450,6 @@ jobs:
     name: Publish emception package
     runs-on: ubuntu-latest
     needs:
-      - release-root
       - build-emception-toolchain
     if: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && needs.build-emception-toolchain.outputs.toolchain-changed == 'true' }}
     permissions:
