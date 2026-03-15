@@ -40,7 +40,10 @@ A complete C/C++ development environment that runs entirely in the browser. Writ
 cd tools/emception
 npm install
 npm run build:all   # full toolchain build (~30 min first time)
-npm run web:dev     # start dev server (default http://localhost:3000)
+
+# Then run one of the demos:
+cd ../../demos/emception-react && npm install && npm run dev   # Vite/React demo (default http://localhost:5173)
+cd ../../demos/emception-next  && npm install && npm run dev   # Next.js demo  (default http://localhost:3000)
 ```
 
 ---
@@ -59,7 +62,7 @@ npm run web:dev     # start dev server (default http://localhost:3000)
 | 6 | `build:sysroot` | Populates `/usr/include`, `/usr/lib` with headers, libs, and Emscripten runtime files |
 | 7 | `build:manifest` | Generates file manifest metadata and stages raw CDN files |
 | 8 | `build:bundles` | Creates Brotli-compressed `.tar.br` bundles and updates manifest bundle metadata |
-| 9 | `deploy:cdn` | Copies CDN assets to `web/public/cdn/` for serving |
+| 9 | `deploy:cdn` | Copies CDN assets to `demos/emception-react/public/cdn/` and `demos/emception-next/public/cdn/` for serving |
 
 Individual steps can be run independently (e.g. `npm run build:llvm`).
 
@@ -390,61 +393,19 @@ This IPC mechanism allows the single-threaded browser environment to run multi-p
 
 ---
 
-## Web Frontend
+## Demos
 
-The web interface (`web/`) is a **Next.js** application providing:
+Two demo applications live under `demos/` at the repo root:
+
+| Demo | Path | Stack | Command |
+|------|------|-------|---------|
+| React + Vite | `demos/emception-react/` | React, Vite | `cd demos/emception-react && npm install && npm run dev` |
+| Next.js | `demos/emception-next/` | Next.js 15, React | `cd demos/emception-next && npm install && npm run dev` |
+
+Both demos automatically sync CDN assets from `tools/emception/public/cdn/` via a `predev`/`prebuild` script (`scripts/sync-emception-cdn.mjs`). Run `npm run build:all` in `tools/emception` first to populate the CDN assets.
+
+Each demo provides:
 
 - **Monaco-based code editor** for C/C++ source files
-- **xterm.js terminal** connected to the kernel shell
-    - Should connect with the stdin/stdout/stderr callbacks to provide an interactive terminal experience
+- **xterm.js terminal** connected to the kernel shell (stdin/stdout/stderr callbacks)
 - **File browser** backed by the VFS
-- **E2E tests** via Playwright (`web/e2e/compile.spec.ts`)
-
-```bash
-npm run web:dev    # development server
-npm run web:build  # production build
-npm run web:start  # serve production build
-```
-
----
-
-## AI Instructions for tools/emception
-
-When working in this directory, follow these rules. **Do not take shortcuts.**
-
-## No Shortcuts or Placeholders
-
-- **No stubs.** Do not add stub functions, empty implementations, or `TODO` placeholders that defer real work. Implement the full behavior.
-- **No bypasses.** Do not bypass, skip, or work around failing functionality. Fix the root cause.
-- **No fake/dummy implementations.** Do not add dummy values, mock returns, or no-op implementations to satisfy interfaces. Implement the real logic.
-- **No placeholder data.** Do not use placeholder strings, fake IDs, or synthetic data to get something "working." Use real data or proper configuration.
-- **Do not skip jobs or steps.** Do not skip or bypass any build steps or jobs. Fix the underlying issue.
-- **Do not ignore errors.** Do not ignore build errors or warnings. Address them promptly.
-- **No errors should go unoticed or unfixed.** If something is broken, fix it. Do not let errors linger.
-- **Do not modify code on build folders or git ignored files.** All changes must be in the source files and in the automated build scripts. Do not rely on manual patching or one-off fixes.
-
-## Tests
-
-- **Do not remove tests** to make a test suite pass. Fix the implementation so the tests pass.
-- **Do not disable or skip tests** (e.g., `it.skip`, `xit`, `@Disabled`) to avoid failures. Fix the code under test.
-- **Do not relax assertions** or weaken test expectations to get green. Strengthen the implementation instead.
-- **E2E timeouts**: Give around 5m for the timeout for the E2E tests.
-
-## Quality
-
-- **Fix the root cause.** When something fails, diagnose why and fix it there. Do not paper over symptoms.
-- **Preserve intended behavior.** Changes must not reduce functionality, hide errors, or mask bugs.
-- **Run the full workflow.** Prefer running the real build/test scripts over abbreviated or "quick" paths when validating changes.
-- **Use the latest version possible** do not hardcode versions or dependencies. Create ways to get the latest compatible versions if possible. Ex.: for the python, it should be the same as the latest emsdk uses.
-- **Do not use temporary files or manual steps** to get something working. Implement the proper automated solution.
-- **All patches should be applied at build time.** Do not rely on manual patching or one-off fixes. Implement build-time patches if necessary. Or post-build patches that run automatically after compilation.
-
-## If Unsure 
-- **If a proper fix seems complex, implement it anyway. Prefer correct over quick.**
-- **If blocked, explain the blocker and propose a concrete path forward rather than inserting a workaround.**
-
----
-
-## Project Structure
-
-// todo update this
