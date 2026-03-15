@@ -1,0 +1,2 @@
+# Intentionally minimal.
+# Publishing is controlled via package.json "files" whitelist.
