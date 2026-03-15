@@ -1,4 +1,3 @@
-import { exec } from 'child_process';
 import cliProgress from 'cli-progress';
 import * as crypto from 'crypto';
 import * as fs from 'fs';
@@ -15,7 +14,6 @@ const OUTPUT_DIR = process.env.OUTPUT_DIR || path.join(ROOT, 'build', 'cdn');
 const MANIFEST_FILE = process.env.MANIFEST_FILE || path.join(ROOT, 'build', 'manifest.json');
 const BASE_URL = process.env.CDN_BASE_URL || '/cdn';
 const SYSPATH = process.env.SYSPATH || path.join(ROOT, 'sysroot');
-const SKIP_BROTLI = process.env.SKIP_BROTLI === '1';
 
 // Ensure output directory exists
 shell.mkdir('-p', OUTPUT_DIR);
@@ -26,12 +24,10 @@ console.log(`Sysroot: ${SYSPATH}`);
 console.log(`Output: ${OUTPUT_DIR}`);
 console.log(`Manifest: ${MANIFEST_FILE}`);
 console.log(`Base URL: ${BASE_URL}`);
-console.log(`Skip Brotli: ${SKIP_BROTLI}`);
 
 interface ManifestFile {
     size?: number;
     hash?: string;
-    compressed?: string;
     executable?: boolean;
     priority?: string;
     symlink?: string;
@@ -152,23 +148,6 @@ async function processFile(fullPath: string) {
         const cdnPathRaw = path.join(OUTPUT_DIR, relPath.substring(1));
         shell.mkdir('-p', path.dirname(cdnPathRaw));
         fs.writeFileSync(cdnPathRaw, data);
-
-        // Optionally write brotli-compressed version alongside for future CDN
-        // content negotiation (Accept-Encoding: br). We do NOT set
-        // fileEntry.compressed so the manifest always references the raw URL —
-        // browsers need uncompressed .mjs for import() and .wasm for
-        // WebAssembly.instantiateStreaming().
-        if (!SKIP_BROTLI && shell.which('brotli')) {
-            const cdnPathBr = path.join(OUTPUT_DIR, relPath.substring(1) + '.br');
-            await new Promise<void>((resolve) => {
-                exec(`brotli -q 11 -f "${fullPath}" -o "${cdnPathBr}"`, (error) => {
-                    if (error) {
-                        console.warn(`Brotli compression failed for ${relPath}: ${error.message}`);
-                    }
-                    resolve();
-                });
-            });
-        }
 
         manifest.files[relPath] = fileEntry;
     }
