@@ -486,16 +486,18 @@ jobs:
       - name: Build emception library
         run: cd tools/emception && npm run build:lib
 
-      - name: Semantic Release (emception)
+      - name: Install semantic-release plugins
         run: |
-          npx -y \
-            -p semantic-release@25.0.3 \
-            -p @semantic-release/commit-analyzer \
-            -p @semantic-release/release-notes-generator \
-            -p @semantic-release/changelog \
-            -p @semantic-release/npm \
-            -p @semantic-release/git \
-            -p @semantic-release/github \
-            semantic-release --extends ./tools/emception/.releaserc.json
+          npm install --no-save \
+            semantic-release@25.0.3 \
+            @semantic-release/commit-analyzer \
+            @semantic-release/release-notes-generator \
+            @semantic-release/changelog \
+            @semantic-release/npm \
+            @semantic-release/git \
+            @semantic-release/github
+
+      - name: Semantic Release (emception)
+        run: npx semantic-release --extends ./tools/emception/.releaserc.json
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
