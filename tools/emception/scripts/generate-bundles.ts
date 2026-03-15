@@ -153,7 +153,6 @@ async function runParallel<T>(
 interface ManifestFile {
     size?: number;
     hash?: string;
-    compressed?: string;
     executable?: boolean;
     priority?: string;
     symlink?: string;

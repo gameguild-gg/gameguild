@@ -28,7 +28,6 @@ export interface FSManifest {
 export interface FileEntry {
   size: number;
   hash: string;
-  compressed?: 'br' | 'gz';
   executable?: boolean;
   symlink?: string;
   bundle?: string;
@@ -500,8 +499,7 @@ export class LazyFS implements IFileSystem {
       return blobUrl;
     }
 
-    const ext = entry.compressed ? '.' + entry.compressed : '';
-    return `${this.manifest.baseUrl}${path}${ext}`;
+    return `${this.manifest.baseUrl}${path}`;
   }
 
   private normalizePath(path: string): string {

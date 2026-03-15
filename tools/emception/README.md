@@ -57,8 +57,9 @@ npm run web:dev     # start dev server (default http://localhost:3000)
 | 4 | `build:cpython` | Cross-compiles CPython as a standalone WASM process |
 | 5 | `build:llvm` | Builds each LLVM tool as a standalone WASM process (clang, lld, llvm-nm, …) |
 | 6 | `build:sysroot` | Populates `/usr/include`, `/usr/lib` with headers, libs, and Emscripten runtime files |
-| 7 | `build:manifest` | Generates a file manifest for the CDN + optional Brotli compression |
-| 8 | `deploy:cdn` | Copies compressed assets to `web/public/cdn/` for serving |
+| 7 | `build:manifest` | Generates file manifest metadata and stages raw CDN files |
+| 8 | `build:bundles` | Creates Brotli-compressed `.tar.br` bundles and updates manifest bundle metadata |
+| 9 | `deploy:cdn` | Copies CDN assets to `web/public/cdn/` for serving |
 
 Individual steps can be run independently (e.g. `npm run build:llvm`).
 
