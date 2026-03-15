@@ -227,8 +227,9 @@ jobs:
           cp -R /tmp/emception-demo/* .pages/
           cp -R contributors/* .pages/contributors/
 
-          cp /tmp/gource-media/contributors/gource.mp4 .pages/contributors/gource.mp4
-          cp /tmp/gource-media/contributors/gource.gif .pages/contributors/gource.gif
+          # upload-artifact@v4 strips the common prefix, so files are at root
+          cp /tmp/gource-media/gource.mp4 .pages/contributors/gource.mp4 || echo "::warning::gource.mp4 not found, skipping"
+          cp /tmp/gource-media/gource.gif .pages/contributors/gource.gif || echo "::warning::gource.gif not found, skipping"
 
       - name: Upload pages artifact
         uses: actions/upload-pages-artifact@v3

@@ -38,7 +38,7 @@
     "build:ninja": "tsx scripts/build-ninja.ts",
     "build:cmake": "tsx scripts/build-cmake.ts",
     "build:sysroot": "tsx scripts/populate-sysroot.ts",
-    "build:manifest": "SKIP_BROTLI=1 tsx scripts/generate-manifest.ts",
+    "build:manifest": "tsx scripts/generate-manifest.ts",
     "build:bundles": "tsx scripts/generate-bundles.ts",
     "patch:glue": "tsx scripts/patch-glue.ts",
     "deploy:cdn": "tsx scripts/deploy-cdn.ts",
