@@ -1,3 +1,10 @@
+## [2.49.5](https://github.com/gameguild-gg/gameguild/compare/v2.49.4...v2.49.5) (2026-03-15)
+
+
+### Bug Fixes
+
+* run step if files have changed. fix emsdk folder path ([5284a7e](https://github.com/gameguild-gg/gameguild/commit/5284a7e8f0e2c9f5b7a1af12d2d28a05e580589f))
+
 ## [2.49.4](https://github.com/gameguild-gg/gameguild/compare/v2.49.3...v2.49.4) (2026-03-15)
 
 
