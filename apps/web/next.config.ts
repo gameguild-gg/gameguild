@@ -1,3 +1,4 @@
+import fs from 'fs';
 import { NextConfig } from 'next';
 import createNextIntlPlugin from 'next-intl/plugin';
 import path from 'path';
@@ -212,12 +213,19 @@ const nextConfig: NextConfig = {
       '.jsx': ['.jsx', '.tsx'],
     };
 
-    // Resolve vscode-jsonrpc and vscode-languageserver-types for langium
-    // These are nested inside vscode-languageserver/node_modules/ and not
-    // resolvable from langium's location in the monorepo.
-    const vscodeLsNodeModules = path.resolve(
-      __dirname, '../../node_modules/vscode-languageserver/node_modules'
-    );
+    // Resolve vscode-jsonrpc, vscode-languageserver-types, and
+    // vscode-languageserver-protocol for langium. These are transitive deps
+    // of vscode-languageserver but langium imports them directly. Depending
+    // on the install layout (monorepo hoisting vs Docker standalone) they may
+    // not be resolvable from langium's location. We search candidate paths.
+    const candidates = [
+      path.resolve(__dirname, 'node_modules/vscode-languageserver/node_modules'),       // Docker / standalone
+      path.resolve(__dirname, '../../node_modules/vscode-languageserver/node_modules'),  // monorepo
+    ];
+    const vscodeLsNodeModules =
+      candidates.find((p) => fs.existsSync(path.join(p, 'vscode-jsonrpc'))) ??
+      candidates[0]!;
+
     config.resolve.alias = {
       ...config.resolve.alias,
       'vscode-jsonrpc': path.join(vscodeLsNodeModules, 'vscode-jsonrpc'),
