@@ -70,10 +70,10 @@ import week10AggregationPipeline from './10-mongodb/aggregation-pipeline.md';
 import week10DrizzleMongoDB from './10-mongodb/drizzle-mongodb.md';
 import week10MongoDBCRUD from './10-mongodb/mongodb-crud.md';
 import week10MongoDBFundamentals from './10-mongodb/mongodb-fundamentals.md';
+import week10Quiz from './10-mongodb/quiz/mongodb-quiz.md';
 import week10Readings from './10-mongodb/readings-10.md';
 import week10Reveal from './10-mongodb/reveal.md';
 import week10SchemaDesignPatterns from './10-mongodb/schema-design-patterns.md';
-import week10Quiz from './10-mongodb/quiz/mongodb-quiz.md';
 
 // Program definition
 export const databasesProgram: Program = {

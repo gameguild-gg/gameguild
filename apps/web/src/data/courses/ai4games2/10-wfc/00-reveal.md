@@ -6,23 +6,12 @@
 
 ## Agenda
 
-1. What is Procedural Generation?
-2. WFC Introduction & Motivation
-3. WFC as Constraint Satisfaction
-4. The Tiled Model
-5. The Overlapping Model
-6. Observation: Minimum Entropy Heuristic
-7. Collapse: Weighted Random Selection
-8. Propagation & Arc Consistency
-9. The Complete Algorithm
-10. Step-by-Step Visual Example
-11. Handling Contradictions
-12. Tileset Design
-13. Implementation Details
-14. WFC in Commercial Games
-15. Extensions & Variants
-16. Practical Challenges
-17. Summary & Key Concepts
+1. Procedural Generation & WFC Motivation
+2. WFC as Constraint Satisfaction
+3. Tiled vs. Overlapping Models
+4. The Core Loop: Observe, Collapse, Propagate
+5. Contradictions, Backtracking & Tileset Design
+6. WFC in Commercial Games & Extensions
 
 ---
 
@@ -179,7 +168,7 @@ WFC is essentially **Sudoku generalized to arbitrary grids and rule sets**.
 The WFC solution strategy mirrors standard CSP solvers:
 
 ```mermaid
-flowchart TD
+flowchart LR
     A["Initialize:\nAll cells contain\nall possible tiles"] --> B["Select a cell\n(minimum entropy)"]
     B --> C["Collapse:\nAssign one tile\nrandomly by weight"]
     C --> D["Propagate:\nRemove incompatible\ntiles from neighbors"]
@@ -731,7 +720,7 @@ std::vector<std::vector<Cell>> runWFC(
 ### Algorithm Flowchart
 
 ```mermaid
-flowchart TD
+flowchart LR
     A["Start:\nInitialize wave\n(all tiles possible)"] --> B["Compute initial\nenablers &\nentropy heap"]
     B --> C{All cells\ncollapsed?}
     C -->|Yes| D["Extract output\nand return"]
@@ -918,7 +907,7 @@ Every adjacent pair respects the adjacency rules. The algorithm **succeeded with
 A **contradiction** occurs when a cell's domain becomes **empty**: no tile can legally occupy that cell given the current choices.
 
 ```mermaid
-flowchart TD
+flowchart LR
     A["Cell (3,3)\nwave = {}"] -->|"Empty domain!"| B["Contradiction!"]
     B --> C{"Strategy?"}
     C -->|Simple| D["Restart from scratch"]
@@ -1636,7 +1625,7 @@ This is the probabilistic foundation of why overlapping-model output visually re
 For open-world games requiring unlimited map generation:
 
 ```mermaid
-flowchart TD
+flowchart LR
     A["Player enters\nnew region"] --> B["Is chunk cached?"]
     B -->|Yes| C["Load from cache"]
     B -->|No| D["Seed RNG with\nchunk coordinates"]

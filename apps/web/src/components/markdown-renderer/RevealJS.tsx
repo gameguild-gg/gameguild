@@ -129,44 +129,39 @@ const renderMermaidDiagrams = async (container: HTMLElement, isDark: boolean): P
       'code.language-mermaid, code.mermaid, pre.language-mermaid > code, pre.mermaid > code'
     );
 
+    // Convert code blocks to <div class="mermaid"> elements so that
+    // mermaid.run() can process them.  Using mermaid.run() is more
+    // reliable than mermaid.render() for lazily-loaded diagram types
+    // (e.g. block / block-beta) because run() goes through the full
+    // diagram registration & lazy-load pipeline.
+    const nodes: Element[] = [];
     for (let i = 0; i < mermaidBlocks.length; i++) {
       const block = mermaidBlocks[i];
       if (!block) continue;
 
       const code = block.textContent ?? '';
-
       if (!code.trim()) continue;
 
-      try {
-        // Generate unique ID for this diagram
-        const id = `mermaid-diagram-${Date.now()}-${i}`;
+      const div = document.createElement('div');
+      div.className = 'mermaid';
+      div.textContent = code.trim();
+      div.style.display = 'flex';
+      div.style.justifyContent = 'center';
+      div.style.alignItems = 'center';
+      div.style.width = '100%';
 
-        // Render the mermaid diagram
-        const { svg } = await mermaid.render(id, code.trim());
-
-        // Create a container for the rendered SVG
-        const svgContainer = document.createElement('div');
-        svgContainer.className = 'mermaid-rendered';
-        svgContainer.innerHTML = svg;
-
-        // Style the container to center the diagram
-        svgContainer.style.display = 'flex';
-        svgContainer.style.justifyContent = 'center';
-        svgContainer.style.alignItems = 'center';
-        svgContainer.style.width = '100%';
-
-
-        // Replace the code block's parent (pre) or the block itself
-        const parent = block.closest('pre') ?? block.parentElement;
-        if (parent?.parentElement) {
-          parent.parentElement.replaceChild(svgContainer, parent);
-        }
-      } catch (renderError) {
-        console.warn('Failed to render mermaid diagram:', renderError);
+      const parent = block.closest('pre') ?? block.parentElement;
+      if (parent?.parentElement) {
+        parent.parentElement.replaceChild(div, parent);
+        nodes.push(div);
       }
     }
+
+    if (nodes.length > 0) {
+      await mermaid.run({ nodes });
+    }
   } catch (err) {
-    console.warn('Mermaid not available:', err);
+    console.warn('Mermaid rendering failed:', err);
   }
 };
 
@@ -229,7 +224,63 @@ const RevealJS: React.FC<RevealJSProps> = ({ content, height = '600px' }) => {
 
         if (!containerRef.current || !slidesRef.current) return;
 
-        slidesRef.current.innerHTML = `<section data-markdown><textarea data-template>${content}</textarea></section>`;
+        // Protect underscores inside math blocks from being interpreted
+        // as emphasis by the markdown parser (marked) before MathJax3
+        // processes them. We must skip fenced code blocks and inline
+        // code spans so that $operators (e.g. MongoDB's $lookup) aren't
+        // mistaken for math delimiters.
+        const protectedContent = (() => {
+          const out: string[] = [];
+          let i = 0;
+          while (i < content.length) {
+            // Skip fenced code blocks (``` ... ```)
+            if (content.startsWith('```', i)) {
+              const end = content.indexOf('```', i + 3);
+              if (end !== -1) {
+                out.push(content.slice(i, end + 3));
+                i = end + 3;
+                continue;
+              }
+            }
+            // Skip inline code (` ... `)
+            if (content[i] === '`') {
+              const end = content.indexOf('`', i + 1);
+              if (end !== -1) {
+                out.push(content.slice(i, end + 1));
+                i = end + 1;
+                continue;
+              }
+            }
+            // Display math: $$ ... $$
+            if (content.startsWith('$$', i)) {
+              const end = content.indexOf('$$', i + 2);
+              if (end !== -1) {
+                const math = content.slice(i + 2, end);
+                out.push('$$' + math.replace(/_/g, '\\_') + '$$');
+                i = end + 2;
+                continue;
+              }
+            }
+            // Inline math: $ ... $ (not followed by a word char, which
+            // would indicate a MongoDB operator like $match)
+            if (content[i] === '$' && !/[a-zA-Z]/.test(content[i + 1] ?? '')) {
+              const lineEnd = content.indexOf('\n', i + 1);
+              const searchEnd = lineEnd === -1 ? content.length : lineEnd;
+              const end = content.indexOf('$', i + 1);
+              if (end !== -1 && end < searchEnd) {
+                const math = content.slice(i + 1, end);
+                out.push('$' + math.replace(/_/g, '\\_') + '$');
+                i = end + 1;
+                continue;
+              }
+            }
+            out.push(content[i]);
+            i++;
+          }
+          return out.join('');
+        })();
+
+        slidesRef.current.innerHTML = `<section data-markdown><textarea data-template>${protectedContent}</textarea></section>`;
 
         // Get container dimensions for Reveal.js
         const containerWidth = containerRef.current.offsetWidth;
@@ -456,8 +507,8 @@ const RevealJS: React.FC<RevealJSProps> = ({ content, height = '600px' }) => {
     <div
       ref={containerRef}
       className={`reveal-container w-full flex-1 flex flex-col overflow-hidden border rounded-lg ${isDark
-          ? 'theme-dark border-gray-700 bg-[#18181b]'
-          : 'theme-light border-gray-200 bg-white'
+        ? 'theme-dark border-gray-700 bg-[#18181b]'
+        : 'theme-light border-gray-200 bg-white'
         }`}
     >
       <style dangerouslySetInnerHTML={{ __html: revealCodeStyles + darkModeOverrides + lightModeOverrides }} />

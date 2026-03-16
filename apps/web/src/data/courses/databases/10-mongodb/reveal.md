@@ -45,15 +45,15 @@ What is MongoDB and Why Document Databases?
 
 ## Terminology Mapping
 
-| Relational  | MongoDB      |
-| ----------- | ------------ |
-| Database    | Database     |
-| Table       | Collection   |
-| Row         | Document     |
-| Column      | Field        |
-| Index       | Index        |
-| JOIN        | `$lookup`    |
-| Primary Key | `_id` field  |
+| Relational  | MongoDB     |
+| ----------- | ----------- |
+| Database    | Database    |
+| Table       | Collection  |
+| Row         | Document    |
+| Column      | Field       |
+| Index       | Index       |
+| JOIN        | `$lookup`   |
+| Primary Key | `_id` field |
 
 ---
 
@@ -67,7 +67,7 @@ In MongoDB:
 Collections are created **implicitly** when you insert:
 
 ```javascript
-db.users.insertOne({ name: "Alice", email: "alice@example.com" })
+db.users.insertOne({ name: 'Alice', email: 'alice@example.com' });
 // Collection "users" is automatically created
 ```
 
@@ -223,16 +223,16 @@ MongoDB's binary-encoded serialization format:
 
 ## JSON vs BSON Summary
 
-| Feature        | JSON           | BSON             |
-| -------------- | -------------- | ---------------- |
-| Format         | Text           | Binary           |
-| Data types     | 6 basic types  | 20+ types        |
-| Date support   | No (strings)   | ISODate          |
-| Integer types  | Number only    | Int32, Int64     |
-| Decimal        | Floating point | Decimal128       |
-| Binary data    | Base64 string  | Native BinData   |
-| Traversal      | Parse all text | Length-prefixed   |
-| Human readable | ✅ Yes         | ❌ No            |
+| Feature        | JSON           | BSON            |
+| -------------- | -------------- | --------------- |
+| Format         | Text           | Binary          |
+| Data types     | 6 basic types  | 20+ types       |
+| Date support   | No (strings)   | ISODate         |
+| Integer types  | Number only    | Int32, Int64    |
+| Decimal        | Floating point | Decimal128      |
+| Binary data    | Base64 string  | Native BinData  |
+| Traversal      | Parse all text | Length-prefixed |
+| Human readable | ✅ Yes         | ❌ No           |
 
 ---
 
@@ -251,17 +251,16 @@ Every MongoDB document **must have** an `_id` field (primary key).
 
 ## ObjectId Structure (12 bytes)
 
-``` mermaid
-block-beta
-  columns 3
-  A["4 bytes\nTimestamp"]:1
-  B["5 bytes\nRandom Value"]:1
-  C["3 bytes\nCounter"]:1
+```mermaid
+packet-beta
+  0-31: "Timestamp (4 bytes)"
+  32-71: "Random Value (5 bytes)"
+  72-95: "Counter (3 bytes)"
 ```
 
-- **Bytes 0–3:** Unix timestamp (seconds since epoch)
-- **Bytes 4–8:** Random value (machine/process identifier)
-- **Bytes 9–11:** Incrementing counter
+- **Bytes 0–3:** Timestamp representing the ObjectId's creation, measured in seconds since the Unix epoch
+- **Bytes 4–8:** Random value generated once per client-side process, unique to the machine and process. Re-generated on process restart or primary node change
+- **Bytes 9–11:** Incrementing counter per client-side process, initialized to a random value. Resets when a process restarts
 
 Properties:
 
@@ -440,7 +439,7 @@ Posts & comments (posts can have **thousands** of comments):
 Query comments for a post:
 
 ```javascript
-db.comments.find({ post_id: ObjectId("post123") })
+db.comments.find({ post_id: ObjectId('post123') });
 ```
 
 ---
@@ -465,15 +464,16 @@ Fetch posts using `$lookup`:
 
 ```javascript
 db.users.aggregate([
-  { $match: { _id: ObjectId("user123") } },
-  { $lookup: {
-      from: "posts",
-      localField: "favorite_posts",
-      foreignField: "_id",
-      as: "favorites"
-    }
-  }
-])
+  { $match: { _id: ObjectId('user123') } },
+  {
+    $lookup: {
+      from: 'posts',
+      localField: 'favorite_posts',
+      foreignField: '_id',
+      as: 'favorites',
+    },
+  },
+]);
 ```
 
 ---
@@ -523,10 +523,10 @@ Product catalog with varying attributes:
 Index and query:
 
 ```javascript
-db.products.createIndex({ "attributes.k": 1, "attributes.v": 1 })
+db.products.createIndex({ 'attributes.k': 1, 'attributes.v': 1 });
 db.products.find({
-  attributes: { $elemMatch: { k: "brand", v: "Dell" } }
-})
+  attributes: { $elemMatch: { k: 'brand', v: 'Dell' } },
+});
 ```
 
 ---
@@ -588,7 +588,7 @@ Embed only a **subset** — popular products may have thousands of reviews:
 
 ## Schema Design Decision Tree
 
-``` mermaid
+```mermaid
 flowchart TD
     A["Is data accessed together?"]
     A -->|YES| B["Will it exceed 16 MB?"]
@@ -621,12 +621,12 @@ Create, Read, Update, Delete
 
 ## CRUD Overview
 
-| Operation      | Methods                                           |
-| -------------- | ------------------------------------------------- |
-| **C**reate     | `insertOne()`, `insertMany()`                     |
-| **R**ead       | `find()`, `findOne()`, `aggregate()`              |
-| **U**pdate     | `updateOne()`, `updateMany()`, `replaceOne()`     |
-| **D**elete     | `deleteOne()`, `deleteMany()`                     |
+| Operation  | Methods                                       |
+| ---------- | --------------------------------------------- |
+| **C**reate | `insertOne()`, `insertMany()`                 |
+| **R**ead   | `find()`, `findOne()`, `aggregate()`          |
+| **U**pdate | `updateOne()`, `updateMany()`, `replaceOne()` |
+| **D**elete | `deleteOne()`, `deleteMany()`                 |
 
 ---
 
@@ -703,13 +703,13 @@ Returns `null` if no match found.
 
 ```javascript
 // Find all users
-db.users.find()
+db.users.find();
 
 // Find with filter
-db.users.find({ age: { $gte: 30 } })
+db.users.find({ age: { $gte: 30 } });
 
 // Convert cursor to array
-db.users.find({ age: { $gte: 30 } }).toArray()
+db.users.find({ age: { $gte: 30 } }).toArray();
 ```
 
 `find()` returns a **cursor**, not an array.
@@ -720,21 +720,21 @@ db.users.find({ age: { $gte: 30 } }).toArray()
 
 ```javascript
 // Equal to
-db.users.find({ age: 28 })          // $eq implicit
-db.users.find({ age: { $eq: 28 } }) // explicit
+db.users.find({ age: 28 }); // $eq implicit
+db.users.find({ age: { $eq: 28 } }); // explicit
 
 // Not equal
-db.users.find({ age: { $ne: 28 } })
+db.users.find({ age: { $ne: 28 } });
 
 // Greater / Less than
-db.users.find({ age: { $gt: 25 } })
-db.users.find({ age: { $gte: 30 } })
-db.users.find({ age: { $lt: 30 } })
-db.users.find({ age: { $lte: 25 } })
+db.users.find({ age: { $gt: 25 } });
+db.users.find({ age: { $gte: 30 } });
+db.users.find({ age: { $lt: 30 } });
+db.users.find({ age: { $lte: 25 } });
 
 // In / Not in array
-db.users.find({ age: { $in: [25, 28, 32] } })
-db.users.find({ age: { $nin: [25, 28] } })
+db.users.find({ age: { $in: [25, 28, 32] } });
+db.users.find({ age: { $nin: [25, 28] } });
 ```
 
 ---
@@ -744,23 +744,23 @@ db.users.find({ age: { $nin: [25, 28] } })
 ```javascript
 // $and — match ALL conditions
 db.users.find({
-  $and: [{ age: { $gte: 25 } }, { age: { $lte: 30 } }]
-})
+  $and: [{ age: { $gte: 25 } }, { age: { $lte: 30 } }],
+});
 // Shorthand (implicit $and):
-db.users.find({ age: { $gte: 25, $lte: 30 } })
+db.users.find({ age: { $gte: 25, $lte: 30 } });
 
 // $or — match ANY condition
 db.users.find({
-  $or: [{ username: "alice" }, { username: "bob" }]
-})
+  $or: [{ username: 'alice' }, { username: 'bob' }],
+});
 
 // $nor — match NEITHER
 db.users.find({
-  $nor: [{ age: { $lt: 20 } }, { age: { $gt: 40 } }]
-})
+  $nor: [{ age: { $lt: 20 } }, { age: { $gt: 40 } }],
+});
 
 // $not — negate
-db.users.find({ age: { $not: { $gte: 30 } } })
+db.users.find({ age: { $not: { $gte: 30 } } });
 ```
 
 ---
@@ -769,15 +769,15 @@ db.users.find({ age: { $not: { $gte: 30 } } })
 
 ```javascript
 // $exists — field exists?
-db.users.find({ email: { $exists: true } })
-db.users.find({ phone: { $exists: false } })
+db.users.find({ email: { $exists: true } });
+db.users.find({ phone: { $exists: false } });
 
 // $type — field has specific BSON type
-db.users.find({ age: { $type: "int" } })
+db.users.find({ age: { $type: 'int' } });
 
 // $regex — pattern matching
-db.users.find({ username: { $regex: /^a/i } })
-db.users.find({ email: { $regex: /@example\.com$/ } })
+db.users.find({ username: { $regex: /^a/i } });
+db.users.find({ email: { $regex: /@example\.com$/ } });
 ```
 
 ---
@@ -786,17 +786,17 @@ db.users.find({ email: { $regex: /@example\.com$/ } })
 
 ```javascript
 // $all — array contains ALL specified values
-db.posts.find({ tags: { $all: ["mongodb", "database"] } })
+db.posts.find({ tags: { $all: ['mongodb', 'database'] } });
 
 // $elemMatch — array element matches ALL conditions
 db.users.find({
   scores: {
-    $elemMatch: { subject: "math", score: { $gte: 80 } }
-  }
-})
+    $elemMatch: { subject: 'math', score: { $gte: 80 } },
+  },
+});
 
 // $size — array has specific length
-db.posts.find({ tags: { $size: 3 } })
+db.posts.find({ tags: { $size: 3 } });
 ```
 
 ---
@@ -807,14 +807,11 @@ Select **specific fields** to return:
 
 ```javascript
 // Include only username and email
-db.users.find(
-  { age: { $gte: 30 } },
-  { username: 1, email: 1, _id: 0 }
-)
+db.users.find({ age: { $gte: 30 } }, { username: 1, email: 1, _id: 0 });
 // → [{ username: "bob", email: "bob@example.com" }, ...]
 
 // Exclude specific fields
-db.users.find({}, { password: 0, ssn: 0 })
+db.users.find({}, { password: 0, ssn: 0 });
 ```
 
 **Rules:**
@@ -828,23 +825,23 @@ db.users.find({}, { password: 0, ssn: 0 })
 
 ```javascript
 // Sort ascending / descending
-db.users.find().sort({ age: 1 })   // 1 = ASC
-db.users.find().sort({ age: -1 })  // -1 = DESC
+db.users.find().sort({ age: 1 }); // 1 = ASC
+db.users.find().sort({ age: -1 }); // -1 = DESC
 
 // Sort by multiple fields
-db.users.find().sort({ age: -1, username: 1 })
+db.users.find().sort({ age: -1, username: 1 });
 
 // Limit results
-db.users.find().limit(5)
+db.users.find().limit(5);
 
 // Skip + Limit = Pagination
-db.users.find().skip(10).limit(5)    // page 3, 5/page
+db.users.find().skip(10).limit(5); // page 3, 5/page
 
 // Top 3 oldest users
-db.users.find().sort({ age: -1 }).limit(3)
+db.users.find().sort({ age: -1 }).limit(3);
 
 // Counting
-db.users.countDocuments({ age: { $gte: 30 } })
+db.users.countDocuments({ age: { $gte: 30 } });
 ```
 
 ---
@@ -890,26 +887,20 @@ db.users.updateMany(
 
 ```javascript
 // $set — set value (creates if missing)
-db.users.updateOne(
-  { username: "alice" },
-  { $set: { email: "new@example.com", last_login: new Date() } }
-)
+db.users.updateOne({ username: 'alice' }, { $set: { email: 'new@example.com', last_login: new Date() } });
 
 // $unset — remove field
-db.users.updateOne(
-  { username: "alice" },
-  { $unset: { temp_field: "" } }
-)
+db.users.updateOne({ username: 'alice' }, { $unset: { temp_field: '' } });
 
 // $inc — increment numeric field
-db.posts.updateOne({ _id: id }, { $inc: { likes: 1 } })
-db.posts.updateOne({ _id: id }, { $inc: { likes: -5 } })
+db.posts.updateOne({ _id: id }, { $inc: { likes: 1 } });
+db.posts.updateOne({ _id: id }, { $inc: { likes: -5 } });
 
 // $mul — multiply
-db.products.updateOne({ _id: id }, { $mul: { price: 2 } })
+db.products.updateOne({ _id: id }, { $mul: { price: 2 } });
 
 // $rename — rename field
-db.users.updateMany({}, { $rename: { "username": "user_name" } })
+db.users.updateMany({}, { $rename: { username: 'user_name' } });
 ```
 
 ---
@@ -918,26 +909,21 @@ db.users.updateMany({}, { $rename: { "username": "user_name" } })
 
 ```javascript
 // $min — update only if new value is SMALLER
-db.users.updateOne(
-  { username: "alice" },
-  { $min: { age: 25 } }
-)
+db.users.updateOne({ username: 'alice' }, { $min: { age: 25 } });
 
 // $max — update only if new value is LARGER
-db.users.updateOne(
-  { username: "alice" },
-  { $max: { high_score: 100 } }
-)
+db.users.updateOne({ username: 'alice' }, { $max: { high_score: 100 } });
 
 // $currentDate — set to current date
 db.users.updateOne(
-  { username: "alice" },
-  { $currentDate: {
+  { username: 'alice' },
+  {
+    $currentDate: {
       last_modified: true,
-      last_access: { $type: "timestamp" }
-    }
-  }
-)
+      last_access: { $type: 'timestamp' },
+    },
+  },
+);
 ```
 
 ---
@@ -946,28 +932,27 @@ db.users.updateOne(
 
 ```javascript
 // $push — add element
-db.posts.updateOne({ _id: id }, { $push: { tags: "tutorial" } })
+db.posts.updateOne({ _id: id }, { $push: { tags: 'tutorial' } });
 
 // $push + $each + $sort — add multiple, sort
-db.posts.updateOne({ _id: id }, {
-  $push: { tags: { $each: ["beginner", "advanced"], $sort: 1 } }
-})
+db.posts.updateOne(
+  { _id: id },
+  {
+    $push: { tags: { $each: ['beginner', 'advanced'], $sort: 1 } },
+  },
+);
 
 // $addToSet — add only if NOT already present
-db.posts.updateOne({ _id: id },
-  { $addToSet: { tags: "mongodb" } }
-)
+db.posts.updateOne({ _id: id }, { $addToSet: { tags: 'mongodb' } });
 
 // $pop — remove first (-1) or last (1)
-db.posts.updateOne({ _id: id }, { $pop: { tags: 1 } })
+db.posts.updateOne({ _id: id }, { $pop: { tags: 1 } });
 
 // $pull — remove matching elements
-db.posts.updateOne({ _id: id }, { $pull: { tags: "outdated" } })
+db.posts.updateOne({ _id: id }, { $pull: { tags: 'outdated' } });
 
 // $pullAll — remove multiple specific values
-db.posts.updateOne({ _id: id },
-  { $pullAll: { tags: ["outdated", "deprecated"] } }
-)
+db.posts.updateOne({ _id: id }, { $pullAll: { tags: ['outdated', 'deprecated'] } });
 ```
 
 ---
@@ -976,23 +961,13 @@ db.posts.updateOne({ _id: id },
 
 ```javascript
 // $ — update FIRST matching array element
-db.users.updateOne(
-  { username: "alice", "scores.subject": "math" },
-  { $inc: { "scores.$.score": 5 } }
-)
+db.users.updateOne({ username: 'alice', 'scores.subject': 'math' }, { $inc: { 'scores.$.score': 5 } });
 
 // $[] — update ALL array elements
-db.users.updateOne(
-  { username: "alice" },
-  { $inc: { "scores.$[].score": 10 } }
-)
+db.users.updateOne({ username: 'alice' }, { $inc: { 'scores.$[].score': 10 } });
 
 // $[identifier] — update filtered elements
-db.users.updateOne(
-  { username: "alice" },
-  { $inc: { "scores.$[elem].score": 5 } },
-  { arrayFilters: [{ "elem.score": { $gte: 90 } }] }
-)
+db.users.updateOne({ username: 'alice' }, { $inc: { 'scores.$[elem].score': 5 } }, { arrayFilters: [{ 'elem.score': { $gte: 90 } }] });
 ```
 
 ---
@@ -1002,11 +977,7 @@ db.users.updateOne(
 Insert if not found, update if exists:
 
 ```javascript
-db.users.updateOne(
-  { username: "newuser" },
-  { $set: { email: "new@example.com", age: 22 } },
-  { upsert: true }
-)
+db.users.updateOne({ username: 'newuser' }, { $set: { email: 'new@example.com', age: 22 } }, { upsert: true });
 
 // If "newuser" exists → updated
 // If "newuser" missing → inserted as new document
@@ -1018,13 +989,13 @@ db.users.updateOne(
 
 ```javascript
 // Delete first matching document
-db.users.deleteOne({ username: "alice" })
+db.users.deleteOne({ username: 'alice' });
 
 // Delete ALL matching documents
-db.users.deleteMany({ age: { $lt: 18 } })
+db.users.deleteMany({ age: { $lt: 18 } });
 
 // Delete all documents (be careful!)
-db.users.deleteMany({})
+db.users.deleteMany({});
 ```
 
 ⚠️ `deleteMany({})` removes **everything** in the collection!
@@ -1051,7 +1022,7 @@ MongoDB's Powerful Data Analysis Framework
 
 Processes documents through a series of **stages**, each transforming the data:
 
-``` mermaid
+```mermaid
 flowchart LR
     D["Documents"] --> S1["Stage 1\n$match"]
     S1 --> S2["Stage 2\n$group"]
@@ -1060,29 +1031,25 @@ flowchart LR
 ```
 
 ```javascript
-db.collection.aggregate([
-  { stage1 },
-  { stage2 },
-  { stage3 }
-])
+db.collection.aggregate([{ stage1 }, { stage2 }, { stage3 }]);
 ```
 
 ---
 
 ## Common Pipeline Stages
 
-| Stage              | Purpose                         |
-| ------------------ | ------------------------------- |
-| `$match`           | Filter documents (like `find`)  |
-| `$project`         | Select / transform fields       |
-| `$group`           | Aggregate (like SQL GROUP BY)   |
-| `$sort`            | Sort documents                  |
-| `$limit` / `$skip` | Pagination                      |
-| `$unwind`          | Deconstruct arrays              |
-| `$lookup`          | Join collections (like JOIN)    |
-| `$addFields`       | Add computed fields             |
-| `$count`           | Count documents                 |
-| `$bucket`          | Group into ranges               |
+| Stage              | Purpose                        |
+| ------------------ | ------------------------------ |
+| `$match`           | Filter documents (like `find`) |
+| `$project`         | Select / transform fields      |
+| `$group`           | Aggregate (like SQL GROUP BY)  |
+| `$sort`            | Sort documents                 |
+| `$limit` / `$skip` | Pagination                     |
+| `$unwind`          | Deconstruct arrays             |
+| `$lookup`          | Join collections (like JOIN)   |
+| `$addFields`       | Add computed fields            |
+| `$count`           | Count documents                |
+| `$bucket`          | Group into ranges              |
 
 ---
 
@@ -1091,16 +1058,14 @@ db.collection.aggregate([
 ```javascript
 // Sample data
 db.orders.insertMany([
-  { customer: "Alice",   amount: 100, status: "completed" },
-  { customer: "Bob",     amount: 200, status: "pending" },
-  { customer: "Alice",   amount: 150, status: "completed" },
-  { customer: "Charlie", amount: 50,  status: "cancelled" }
-])
+  { customer: 'Alice', amount: 100, status: 'completed' },
+  { customer: 'Bob', amount: 200, status: 'pending' },
+  { customer: 'Alice', amount: 150, status: 'completed' },
+  { customer: 'Charlie', amount: 50, status: 'cancelled' },
+]);
 
 // Get only completed orders
-db.orders.aggregate([
-  { $match: { status: "completed" } }
-])
+db.orders.aggregate([{ $match: { status: 'completed' } }]);
 // → [
 //   { customer: "Alice", amount: 100, status: "completed" },
 //   { customer: "Alice", amount: 150, status: "completed" }
@@ -1115,23 +1080,21 @@ db.orders.aggregate([
 
 ```javascript
 // Select specific fields
-db.orders.aggregate([
-  { $match: { status: "completed" } },
-  { $project: { customer: 1, amount: 1, _id: 0 } }
-])
+db.orders.aggregate([{ $match: { status: 'completed' } }, { $project: { customer: 1, amount: 1, _id: 0 } }]);
 // → [{ customer: "Alice", amount: 100 },
 //    { customer: "Alice", amount: 150 }]
 
 // Computed fields
 db.orders.aggregate([
-  { $project: {
+  {
+    $project: {
       customer: 1,
       amount: 1,
-      tax: { $multiply: ["$amount", 0.1] },   // 10% tax
-      total: { $multiply: ["$amount", 1.1] }
-    }
-  }
-])
+      tax: { $multiply: ['$amount', 0.1] }, // 10% tax
+      total: { $multiply: ['$amount', 1.1] },
+    },
+  },
+]);
 // → [{ customer: "Alice", amount: 100, tax: 10, total: 110 }, ...]
 ```
 
@@ -1142,14 +1105,15 @@ db.orders.aggregate([
 ```javascript
 // Total amount per customer
 db.orders.aggregate([
-  { $match: { status: "completed" } },
-  { $group: {
-      _id: "$customer",               // Group by customer
-      total_spent: { $sum: "$amount" },
-      order_count: { $sum: 1 }
-    }
-  }
-])
+  { $match: { status: 'completed' } },
+  {
+    $group: {
+      _id: '$customer', // Group by customer
+      total_spent: { $sum: '$amount' },
+      order_count: { $sum: 1 },
+    },
+  },
+]);
 // → [{ _id: "Alice", total_spent: 250, order_count: 2 }]
 ```
 
@@ -1159,19 +1123,20 @@ db.orders.aggregate([
 
 ```javascript
 db.orders.aggregate([
-  { $group: {
-      _id: "$customer",
-      total:  { $sum: "$amount" },     // Sum
-      avg:    { $avg: "$amount" },     // Average
-      min:    { $min: "$amount" },     // Minimum
-      max:    { $max: "$amount" },     // Maximum
-      count:  { $sum: 1 },            // Count
-      first:  { $first: "$amount" },  // First value
-      last:   { $last: "$amount" },   // Last value
-      all:    { $push: "$amount" }    // Collect into array
-    }
-  }
-])
+  {
+    $group: {
+      _id: '$customer',
+      total: { $sum: '$amount' }, // Sum
+      avg: { $avg: '$amount' }, // Average
+      min: { $min: '$amount' }, // Minimum
+      max: { $max: '$amount' }, // Maximum
+      count: { $sum: 1 }, // Count
+      first: { $first: '$amount' }, // First value
+      last: { $last: '$amount' }, // Last value
+      all: { $push: '$amount' }, // Collect into array
+    },
+  },
+]);
 ```
 
 ---
@@ -1181,24 +1146,15 @@ db.orders.aggregate([
 ```javascript
 // Sort by total (descending)
 db.orders.aggregate([
-  { $group: { _id: "$customer", total: { $sum: "$amount" } } },
-  { $sort: { total: -1 } }   // 1 = ASC, -1 = DESC
-])
+  { $group: { _id: '$customer', total: { $sum: '$amount' } } },
+  { $sort: { total: -1 } }, // 1 = ASC, -1 = DESC
+]);
 
 // Top 5 customers
-db.orders.aggregate([
-  { $group: { _id: "$customer", total: { $sum: "$amount" } } },
-  { $sort: { total: -1 } },
-  { $limit: 5 }
-])
+db.orders.aggregate([{ $group: { _id: '$customer', total: { $sum: '$amount' } } }, { $sort: { total: -1 } }, { $limit: 5 }]);
 
 // Page 2 (skip 5, take 5)
-db.orders.aggregate([
-  { $group: { _id: "$customer", total: { $sum: "$amount" } } },
-  { $sort: { total: -1 } },
-  { $skip: 5 },
-  { $limit: 5 }
-])
+db.orders.aggregate([{ $group: { _id: '$customer', total: { $sum: '$amount' } } }, { $sort: { total: -1 } }, { $skip: 5 }, { $limit: 5 }]);
 ```
 
 ---
@@ -1207,11 +1163,11 @@ db.orders.aggregate([
 
 ```javascript
 db.posts.insertOne({
-  title: "MongoDB Tutorial",
-  tags: ["database", "nosql", "mongodb"]
-})
+  title: 'MongoDB Tutorial',
+  tags: ['database', 'nosql', 'mongodb'],
+});
 
-db.posts.aggregate([{ $unwind: "$tags" }])
+db.posts.aggregate([{ $unwind: '$tags' }]);
 // → [
 //   { title: "MongoDB Tutorial", tags: "database" },
 //   { title: "MongoDB Tutorial", tags: "nosql" },
@@ -1224,11 +1180,7 @@ db.posts.aggregate([{ $unwind: "$tags" }])
 ## `$unwind` Use Case: Tag Counts
 
 ```javascript
-db.posts.aggregate([
-  { $unwind: "$tags" },
-  { $group: { _id: "$tags", count: { $sum: 1 } } },
-  { $sort: { count: -1 } }
-])
+db.posts.aggregate([{ $unwind: '$tags' }, { $group: { _id: '$tags', count: { $sum: 1 } } }, { $sort: { count: -1 } }]);
 // → [
 //   { _id: "mongodb",  count: 5 },
 //   { _id: "database", count: 3 },
@@ -1243,26 +1195,27 @@ db.posts.aggregate([
 ```javascript
 // Customers collection
 db.customers.insertMany([
-  { _id: 1, name: "Alice", email: "alice@example.com" },
-  { _id: 2, name: "Bob",   email: "bob@example.com" }
-])
+  { _id: 1, name: 'Alice', email: 'alice@example.com' },
+  { _id: 2, name: 'Bob', email: 'bob@example.com' },
+]);
 
 // Orders collection
 db.orders.insertMany([
   { customer_id: 1, amount: 100 },
   { customer_id: 1, amount: 150 },
-  { customer_id: 2, amount: 200 }
-])
+  { customer_id: 2, amount: 200 },
+]);
 
 db.orders.aggregate([
-  { $lookup: {
-      from: "customers",
-      localField: "customer_id",
-      foreignField: "_id",
-      as: "customer_info"
-    }
-  }
-])
+  {
+    $lookup: {
+      from: 'customers',
+      localField: 'customer_id',
+      foreignField: '_id',
+      as: 'customer_info',
+    },
+  },
+]);
 // Each order now has a "customer_info" array
 ```
 
@@ -1272,21 +1225,23 @@ db.orders.aggregate([
 
 ```javascript
 db.orders.aggregate([
-  { $lookup: {
-      from: "customers",
-      localField: "customer_id",
-      foreignField: "_id",
-      as: "customer_info"
-    }
+  {
+    $lookup: {
+      from: 'customers',
+      localField: 'customer_id',
+      foreignField: '_id',
+      as: 'customer_info',
+    },
   },
-  { $unwind: "$customer_info" },
-  { $project: {
+  { $unwind: '$customer_info' },
+  {
+    $project: {
       amount: 1,
-      customer_name:  "$customer_info.name",
-      customer_email: "$customer_info.email"
-    }
-  }
-])
+      customer_name: '$customer_info.name',
+      customer_email: '$customer_info.email',
+    },
+  },
+]);
 // → [
 //   { amount: 100, customer_name: "Alice", customer_email: "alice@..." },
 //   { amount: 150, customer_name: "Alice", customer_email: "alice@..." },
@@ -1301,18 +1256,16 @@ db.orders.aggregate([
 ```javascript
 // $addFields — add computed fields (keeps existing)
 db.orders.aggregate([
-  { $addFields: {
-      tax:   { $multiply: ["$amount", 0.1] },
-      total: { $multiply: ["$amount", 1.1] }
-    }
-  }
-])
+  {
+    $addFields: {
+      tax: { $multiply: ['$amount', 0.1] },
+      total: { $multiply: ['$amount', 1.1] },
+    },
+  },
+]);
 
 // $count — count documents in pipeline
-db.orders.aggregate([
-  { $match: { status: "completed" } },
-  { $count: "completed_orders" }
-])
+db.orders.aggregate([{ $match: { status: 'completed' } }, { $count: 'completed_orders' }]);
 // → [{ completed_orders: 42 }]
 ```
 
@@ -1322,17 +1275,18 @@ db.orders.aggregate([
 
 ```javascript
 db.orders.aggregate([
-  { $bucket: {
-      groupBy: "$amount",
+  {
+    $bucket: {
+      groupBy: '$amount',
       boundaries: [0, 50, 100, 200, 500],
-      default: "Other",
+      default: 'Other',
       output: {
-        count:  { $sum: 1 },
-        orders: { $push: "$amount" }
-      }
-    }
-  }
-])
+        count: { $sum: 1 },
+        orders: { $push: '$amount' },
+      },
+    },
+  },
+]);
 // → [
 //   { _id: 0,   count: 5,  orders: [25, 30, 40] },
 //   { _id: 50,  count: 10, orders: [55, 60, ...] },
@@ -1347,28 +1301,33 @@ db.orders.aggregate([
 ```javascript
 db.sales.aggregate([
   // 1. Calculate revenue per item
-  { $addFields: {
-      revenue: { $multiply: ["$price", "$quantity"] }
-    }
+  {
+    $addFields: {
+      revenue: { $multiply: ['$price', '$quantity'] },
+    },
   },
   // 2. Group by category
-  { $group: {
-      _id: "$category",
-      total_revenue: { $sum: "$revenue" },
-      items_sold:    { $sum: "$quantity" },
-      avg_price:     { $avg: "$price" }
-    }
+  {
+    $group: {
+      _id: '$category',
+      total_revenue: { $sum: '$revenue' },
+      items_sold: { $sum: '$quantity' },
+      avg_price: { $avg: '$price' },
+    },
   },
   // 3. Sort by revenue
   { $sort: { total_revenue: -1 } },
   // 4. Rename _id → category
-  { $project: {
-      _id: 0, category: "$_id",
-      total_revenue: 1, items_sold: 1,
-      avg_price: { $round: ["$avg_price", 2] }
-    }
-  }
-])
+  {
+    $project: {
+      _id: 0,
+      category: '$_id',
+      total_revenue: 1,
+      items_sold: 1,
+      avg_price: { $round: ['$avg_price', 2] },
+    },
+  },
+]);
 ```
 
 ---
@@ -1378,28 +1337,31 @@ db.sales.aggregate([
 ```javascript
 db.activities.aggregate([
   // Match last 7 days
-  { $match: {
-      timestamp: { $gte: ISODate("2026-03-08T00:00:00Z") }
-    }
+  {
+    $match: {
+      timestamp: { $gte: ISODate('2026-03-08T00:00:00Z') },
+    },
   },
   // Group by user
-  { $group: {
-      _id: "$user_id",
+  {
+    $group: {
+      _id: '$user_id',
       total_actions: { $sum: 1 },
-      actions:    { $push: "$action" },
-      first_seen: { $min: "$timestamp" },
-      last_seen:  { $max: "$timestamp" }
-    }
+      actions: { $push: '$action' },
+      first_seen: { $min: '$timestamp' },
+      last_seen: { $max: '$timestamp' },
+    },
   },
   // Count unique actions
-  { $addFields: {
+  {
+    $addFields: {
       unique_actions: {
-        $size: { $setUnion: ["$actions", []] }
-      }
-    }
+        $size: { $setUnion: ['$actions', []] },
+      },
+    },
   },
-  { $sort: { total_actions: -1 } }
-])
+  { $sort: { total_actions: -1 } },
+]);
 ```
 
 ---
@@ -1410,29 +1372,39 @@ Find users with their posts and comments:
 
 ```javascript
 db.users.aggregate([
-  { $match: { username: "alice" } },
-  { $lookup: {
-      from: "posts", localField: "_id",
-      foreignField: "author_id", as: "posts"
-    }
+  { $match: { username: 'alice' } },
+  {
+    $lookup: {
+      from: 'posts',
+      localField: '_id',
+      foreignField: 'author_id',
+      as: 'posts',
+    },
   },
-  { $lookup: {
-      from: "comments", localField: "_id",
-      foreignField: "user_id", as: "comments"
-    }
+  {
+    $lookup: {
+      from: 'comments',
+      localField: '_id',
+      foreignField: 'user_id',
+      as: 'comments',
+    },
   },
-  { $addFields: {
-      post_count:    { $size: "$posts" },
-      comment_count: { $size: "$comments" }
-    }
+  {
+    $addFields: {
+      post_count: { $size: '$posts' },
+      comment_count: { $size: '$comments' },
+    },
   },
-  { $project: {
-      username: 1, email: 1,
-      post_count: 1, comment_count: 1,
-      recent_posts: { $slice: ["$posts.title", 5] }
-    }
-  }
-])
+  {
+    $project: {
+      username: 1,
+      email: 1,
+      post_count: 1,
+      comment_count: 1,
+      recent_posts: { $slice: ['$posts.title', 5] },
+    },
+  },
+]);
 ```
 
 ---
@@ -1442,21 +1414,41 @@ db.users.aggregate([
 **Arithmetic:**
 
 ```javascript
-{ $add: ["$price", "$tax"] }
-{ $subtract: ["$total", "$discount"] }
-{ $multiply: ["$price", "$quantity"] }
-{ $divide: ["$total", "$count"] }
-{ $mod: ["$value", 10] }
+{
+  $add: ['$price', '$tax'];
+}
+{
+  $subtract: ['$total', '$discount'];
+}
+{
+  $multiply: ['$price', '$quantity'];
+}
+{
+  $divide: ['$total', '$count'];
+}
+{
+  $mod: ['$value', 10];
+}
 ```
 
 **String:**
 
 ```javascript
-{ $concat: ["$firstName", " ", "$lastName"] }
-{ $toUpper: "$username" }
-{ $toLower: "$email" }
-{ $substr: ["$text", 0, 50] }
-{ $split: ["$tags", ","] }
+{
+  $concat: ['$firstName', ' ', '$lastName'];
+}
+{
+  $toUpper: '$username';
+}
+{
+  $toLower: '$email';
+}
+{
+  $substr: ['$text', 0, 50];
+}
+{
+  $split: ['$tags', ','];
+}
 ```
 
 ---
@@ -1540,8 +1532,7 @@ npm install -D drizzle-kit
 import { drizzle } from 'drizzle-orm/mongodb';
 import { MongoClient } from 'mongodb';
 
-const MONGO_URI = process.env.MONGO_URI
-  || 'mongodb://localhost:27017/mydb';
+const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/mydb';
 
 const client = new MongoClient(MONGO_URI);
 await client.connect();
@@ -1556,7 +1547,7 @@ With connection pooling:
 const client = new MongoClient(process.env.MONGO_URI!, {
   maxPoolSize: 10,
   minPoolSize: 2,
-  maxIdleTimeMS: 30000
+  maxIdleTimeMS: 30000,
 });
 ```
 
@@ -1570,14 +1561,14 @@ import { mongoCollection } from 'drizzle-orm/mongodb';
 
 export const users = mongoCollection('users', {
   _id: { type: 'ObjectId', default: () => new ObjectId() },
-  username:   { type: 'string',  required: true },
-  email:      { type: 'string',  required: true },
-  age:        { type: 'number' },
-  created_at: { type: 'date', default: () => new Date() }
+  username: { type: 'string', required: true },
+  email: { type: 'string', required: true },
+  age: { type: 'number' },
+  created_at: { type: 'date', default: () => new Date() },
 });
 
 // Infer TypeScript types
-export type User    = typeof users.$inferSelect;
+export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
 ```
 
@@ -1590,14 +1581,14 @@ export type NewUser = typeof users.$inferInsert;
 const newUser = await db.insert(users).values({
   username: 'alice',
   email: 'alice@example.com',
-  age: 28
+  age: 28,
 });
 console.log(newUser.insertedId); // ObjectId
 
 // Insert multiple
 const result = await db.insert(users).values([
-  { username: 'bob',     email: 'bob@example.com',     age: 32 },
-  { username: 'charlie', email: 'charlie@example.com', age: 25 }
+  { username: 'bob', email: 'bob@example.com', age: 32 },
+  { username: 'charlie', email: 'charlie@example.com', age: 25 },
 ]);
 console.log(result.insertedIds);
 ```
@@ -1613,24 +1604,21 @@ import { eq, gte, and, lte, desc } from 'drizzle-orm';
 const allUsers = await db.select().from(users);
 
 // Find with condition
-const adults = await db.select().from(users)
-  .where(gte(users.age, 18));
+const adults = await db.select().from(users).where(gte(users.age, 18));
 
 // Multiple conditions
-const result = await db.select().from(users)
+const result = await db
+  .select()
+  .from(users)
   .where(and(gte(users.age, 25), lte(users.age, 30)));
 
 // Projection
-const usernames = await db
-  .select({ username: users.username, email: users.email })
-  .from(users);
+const usernames = await db.select({ username: users.username, email: users.email }).from(users);
 
 // Sort + limit + pagination
-const topUsers = await db.select().from(users)
-  .orderBy(desc(users.age)).limit(10);
+const topUsers = await db.select().from(users).orderBy(desc(users.age)).limit(10);
 
-const page2 = await db.select().from(users)
-  .orderBy(desc(users.age)).offset(10).limit(10);
+const page2 = await db.select().from(users).orderBy(desc(users.age)).offset(10).limit(10);
 ```
 
 ---
@@ -1641,22 +1629,16 @@ const page2 = await db.select().from(users)
 import { eq, gte, lt } from 'drizzle-orm';
 
 // Update
-await db.update(users)
-  .set({ age: 29 })
-  .where(eq(users.username, 'alice'));
+await db.update(users).set({ age: 29 }).where(eq(users.username, 'alice'));
 
 // Update many
-await db.update(users)
-  .set({ status: 'verified' })
-  .where(gte(users.age, 30));
+await db.update(users).set({ status: 'verified' }).where(gte(users.age, 30));
 
 // Delete
-await db.delete(users)
-  .where(eq(users.username, 'alice'));
+await db.delete(users).where(eq(users.username, 'alice'));
 
 // Delete many
-await db.delete(users)
-  .where(lt(users.age, 18));
+await db.delete(users).where(lt(users.age, 18));
 ```
 
 ---
@@ -1664,24 +1646,19 @@ await db.delete(users)
 ## Drizzle Query Operators
 
 ```typescript
-import {
-  eq, ne, gt, gte, lt, lte,
-  and, or, not,
-  inArray, notInArray,
-  isNull, isNotNull
-} from 'drizzle-orm';
+import { eq, ne, gt, gte, lt, lte, and, or, not, inArray, notInArray, isNull, isNotNull } from 'drizzle-orm';
 
-eq(users.age, 28)             // age === 28
-ne(users.age, 28)             // age !== 28
-gt(users.age, 25)             // age > 25
-gte(users.age, 25)            // age >= 25
+eq(users.age, 28); // age === 28
+ne(users.age, 28); // age !== 28
+gt(users.age, 25); // age > 25
+gte(users.age, 25); // age >= 25
 
-and(gte(users.age, 25), lte(users.age, 30))
-or(eq(users.username, 'alice'), eq(users.username, 'bob'))
+and(gte(users.age, 25), lte(users.age, 30));
+or(eq(users.username, 'alice'), eq(users.username, 'bob'));
 
-inArray(users.age, [25, 28, 32])
-isNull(users.email)
-isNotNull(users.email)
+inArray(users.age, [25, 28, 32]);
+isNull(users.email);
+isNotNull(users.email);
 ```
 
 ---
@@ -1729,7 +1706,7 @@ Choosing the Right Tool
 
 ## MongoDB vs Relational: Decision Guide
 
-``` mermaid
+```mermaid
 flowchart TD
     A["What are your\naccess patterns?"]
     A -->|"Hierarchical reads\nflexible schema"| M["MongoDB"]
@@ -1753,7 +1730,7 @@ services:
     image: mongo:7
     container_name: mongodb
     ports:
-      - "27017:27017"
+      - '27017:27017'
     environment:
       MONGO_INITDB_ROOT_USERNAME: admin
       MONGO_INITDB_ROOT_PASSWORD: password
@@ -1786,22 +1763,22 @@ db.users.find()
 ## Collection Validation
 
 ```javascript
-db.createCollection("users", {
+db.createCollection('users', {
   validator: {
     $jsonSchema: {
-      bsonType: "object",
-      required: ["name", "email"],
+      bsonType: 'object',
+      required: ['name', 'email'],
       properties: {
-        name:  { bsonType: "string" },
+        name: { bsonType: 'string' },
         email: {
-          bsonType: "string",
-          pattern: "^.+@.+$"
-        }
-      }
-    }
+          bsonType: 'string',
+          pattern: '^.+@.+$',
+        },
+      },
+    },
   },
-  validationLevel: "strict"
-})
+  validationLevel: 'strict',
+});
 ```
 
 ---
@@ -1810,23 +1787,23 @@ db.createCollection("users", {
 
 ```javascript
 // Single field index
-db.users.createIndex({ email: 1 })    // ascending
-db.users.createIndex({ age: -1 })     // descending
+db.users.createIndex({ email: 1 }); // ascending
+db.users.createIndex({ age: -1 }); // descending
 
 // Compound index
-db.orders.createIndex({ customer: 1, amount: -1 })
+db.orders.createIndex({ customer: 1, amount: -1 });
 
 // Unique index
-db.users.createIndex({ email: 1 }, { unique: true })
+db.users.createIndex({ email: 1 }, { unique: true });
 
 // Index on nested field
-db.users.createIndex({ "address.city": 1 })
+db.users.createIndex({ 'address.city': 1 });
 
 // Index on array element
-db.posts.createIndex({ "comments.user": 1 })
+db.posts.createIndex({ 'comments.user': 1 });
 
 // Text index (full-text search)
-db.posts.createIndex({ title: "text", content: "text" })
+db.posts.createIndex({ title: 'text', content: 'text' });
 ```
 
 ---
@@ -1840,14 +1817,13 @@ db.posts.createIndex({ title: "text", content: "text" })
 
 ```javascript
 // Check if query uses an index
-db.users.find({ email: "alice@example.com" })
-  .explain("executionStats")
+db.users.find({ email: 'alice@example.com' }).explain('executionStats');
 
 // List indexes
-db.users.getIndexes()
+db.users.getIndexes();
 
 // Drop an index
-db.users.dropIndex({ email: 1 })
+db.users.dropIndex({ email: 1 });
 ```
 
 ---
@@ -1858,28 +1834,31 @@ db.users.dropIndex({ email: 1 })
 
 ```javascript
 // Single query — returns post with embedded comments
-db.posts.findOne({ _id: ObjectId("...") })
+db.posts.findOne({ _id: ObjectId('...') });
 ```
 
 **Referenced (Slower):**
 
 ```javascript
 // Two queries
-const post = db.posts.findOne({ _id: ObjectId("...") })
-const comments = db.comments.find({ post_id: post._id }).toArray()
+const post = db.posts.findOne({ _id: ObjectId('...') });
+const comments = db.comments.find({ post_id: post._id }).toArray();
 ```
 
 **Or use `$lookup` (JOIN):**
 
 ```javascript
 db.posts.aggregate([
-  { $match: { _id: ObjectId("...") } },
-  { $lookup: {
-      from: "comments", localField: "_id",
-      foreignField: "post_id", as: "comments"
-    }
-  }
-])
+  { $match: { _id: ObjectId('...') } },
+  {
+    $lookup: {
+      from: 'comments',
+      localField: '_id',
+      foreignField: 'post_id',
+      as: 'comments',
+    },
+  },
+]);
 ```
 
 ---
@@ -1971,15 +1950,16 @@ What does this code do?
 
 ```javascript
 db.orders.aggregate([
-  { $match: { status: "completed" } },
-  { $group: {
-      _id: "$customer",
-      total: { $sum: "$amount" }
-    }
+  { $match: { status: 'completed' } },
+  {
+    $group: {
+      _id: '$customer',
+      total: { $sum: '$amount' },
+    },
   },
   { $sort: { total: -1 } },
-  { $limit: 3 }
-])
+  { $limit: 3 },
+]);
 ```
 
 **Answer:** Finds the **top 3 customers** by total spending on completed orders.
