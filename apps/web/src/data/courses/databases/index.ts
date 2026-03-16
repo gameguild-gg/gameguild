@@ -65,6 +65,16 @@ import week07ScalabilityBasics from './07-schema-patterns/scalability-basics.md'
 import week07SchemaPatterns from './07-schema-patterns/schema-patterns.md';
 import week07Transactions from './07-schema-patterns/transactions.md';
 
+// Week 10 imports
+import week10AggregationPipeline from './10-mongodb/aggregation-pipeline.md';
+import week10DrizzleMongoDB from './10-mongodb/drizzle-mongodb.md';
+import week10MongoDBCRUD from './10-mongodb/mongodb-crud.md';
+import week10MongoDBFundamentals from './10-mongodb/mongodb-fundamentals.md';
+import week10Readings from './10-mongodb/readings-10.md';
+import week10Reveal from './10-mongodb/reveal.md';
+import week10SchemaDesignPatterns from './10-mongodb/schema-design-patterns.md';
+import week10Quiz from './10-mongodb/quiz/mongodb-quiz.md';
+
 // Program definition
 export const databasesProgram: Program = {
     id: 'databases-program-1',
@@ -1341,6 +1351,191 @@ export const week07QuizContent: ProgramContent = {
     updatedAt: '2023-01-01T00:00:00Z',
 };
 
+// Week 10: Document Databases - MongoDB
+export const week10RevealContent: ProgramContent = {
+    id: 'databases-week-10-reveal',
+    programId: 'databases-program-1',
+    slug: 'document-databases-mongodb',
+    parentId: undefined,
+    title: 'Document Databases: MongoDB',
+    description: 'Reveal.js presentation covering MongoDB fundamentals, schema design, CRUD operations, aggregation pipelines, and Drizzle ORM integration',
+    type: ProgramContentType.REVEAL,
+    body: week10Reveal,
+    sortOrder: 10,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 60,
+    visibility: 1, // Published
+    program: databasesProgram,
+    parent: undefined,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const week10ReadingsContent: ProgramContent = {
+    id: 'databases-week-10-readings',
+    programId: 'databases-program-1',
+    slug: 'readings-10',
+    parentId: 'databases-week-10-reveal',
+    title: 'Week 10 Readings & Resources',
+    description: 'Curated references for MongoDB documentation, schema design, CRUD, aggregation, and tooling',
+    type: 0, // Page
+    body: week10Readings,
+    sortOrder: 1,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 30,
+    visibility: 1, // Published
+    program: databasesProgram,
+    parent: week10RevealContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const week10MongoDBFundamentalsContent: ProgramContent = {
+    id: 'databases-week-10-mongodb-fundamentals',
+    programId: 'databases-program-1',
+    slug: 'mongodb-fundamentals',
+    parentId: 'databases-week-10-readings',
+    title: 'MongoDB Fundamentals',
+    description: 'Introduction to the document model, BSON types, ObjectId structure, and MongoDB use cases',
+    type: 0, // Page
+    body: week10MongoDBFundamentals,
+    sortOrder: 1,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 60,
+    visibility: 1, // Published
+    program: databasesProgram,
+    parent: week10ReadingsContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const week10SchemaDesignPatternsContent: ProgramContent = {
+    id: 'databases-week-10-schema-design-patterns',
+    programId: 'databases-program-1',
+    slug: 'schema-design-patterns',
+    parentId: 'databases-week-10-readings',
+    title: 'Schema Design Patterns',
+    description: 'Learn embedding vs referencing and practical MongoDB schema patterns for scalable systems',
+    type: 0, // Page
+    body: week10SchemaDesignPatterns,
+    sortOrder: 2,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 75,
+    visibility: 1, // Published
+    program: databasesProgram,
+    parent: week10ReadingsContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const week10MongoDBCRUDContent: ProgramContent = {
+    id: 'databases-week-10-mongodb-crud',
+    programId: 'databases-program-1',
+    slug: 'mongodb-crud',
+    parentId: 'databases-week-10-readings',
+    title: 'MongoDB CRUD Operations',
+    description: 'Master Create, Read, Update, and Delete operations using MongoDB query and update operators',
+    type: 0, // Page
+    body: week10MongoDBCRUD,
+    sortOrder: 3,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 90,
+    visibility: 1, // Published
+    program: databasesProgram,
+    parent: week10ReadingsContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const week10AggregationPipelineContent: ProgramContent = {
+    id: 'databases-week-10-aggregation-pipeline',
+    programId: 'databases-program-1',
+    slug: 'aggregation-pipeline',
+    parentId: 'databases-week-10-readings',
+    title: 'MongoDB Aggregation Pipeline',
+    description: 'Use pipeline stages like $match, $group, $project, and $lookup to transform and analyze data',
+    type: 0, // Page
+    body: week10AggregationPipeline,
+    sortOrder: 4,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 90,
+    visibility: 1, // Published
+    program: databasesProgram,
+    parent: week10ReadingsContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const week10DrizzleMongoDBContent: ProgramContent = {
+    id: 'databases-week-10-drizzle-mongodb',
+    programId: 'databases-program-1',
+    slug: 'drizzle-mongodb',
+    parentId: 'databases-week-10-readings',
+    title: 'Drizzle ORM with MongoDB',
+    description: 'Integrate MongoDB with Drizzle ORM for type-safe schema definitions and CRUD workflows',
+    type: 0, // Page
+    body: week10DrizzleMongoDB,
+    sortOrder: 5,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 60,
+    visibility: 1, // Published
+    program: databasesProgram,
+    parent: week10ReadingsContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const week10QuizContent: ProgramContent = {
+    id: 'databases-week-10-quiz',
+    programId: 'databases-program-1',
+    slug: 'mongodb-quiz',
+    parentId: 'databases-week-10-reveal',
+    title: 'Quiz 08: Document Databases - MongoDB Fundamentals',
+    description: 'Assess your understanding of MongoDB fundamentals, schema design, CRUD operations, and aggregation pipelines',
+    type: 0, // Page
+    body: week10Quiz,
+    sortOrder: 2,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 45,
+    visibility: 1, // Published
+    program: databasesProgram,
+    parent: week10RevealContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
 // Wire program contents and product-program relations
 // only the parent contents go directly under the program
 databasesProgram.programContents = [
@@ -1352,6 +1547,7 @@ databasesProgram.programContents = [
     week05RevealContent,
     week06RevealContent,
     week07RevealContent,
+    week10RevealContent,
 ];
 
 // Set up parent-child relationships
@@ -1429,6 +1625,19 @@ week07ReadingsContent.children = [
     week07AccessControlContent,
     week07ScalabilityBasicsContent,
     week07ORMQueryBuildersContent,
+];
+
+week10RevealContent.children = [
+    week10ReadingsContent,
+    week10QuizContent,
+];
+
+week10ReadingsContent.children = [
+    week10MongoDBFundamentalsContent,
+    week10SchemaDesignPatternsContent,
+    week10MongoDBCRUDContent,
+    week10AggregationPipelineContent,
+    week10DrizzleMongoDBContent,
 ];
 
 databasesProduct.productPrograms = [databasesProductProgram];

@@ -36,10 +36,6 @@ By the end of this week, you will be able to:
 - Collections and documents
 - Docker setup for MongoDB
 
-**Readings:**
-- [MongoDB Fundamentals](./mongodb-fundamentals.md)
-- [Schema Design Patterns](./schema-design-patterns.md)
-
 **Activities:**
 - Set up MongoDB Docker container
 - Connect to MongoDB using MongoDB Compass
@@ -69,12 +65,6 @@ By the end of this week, you will be able to:
   - Query operators (eq, gte, and, or)
   - Limitations and when to use native driver
 
-**Readings:**
-- [MongoDB CRUD Operations](./mongodb-crud.md)
-- [Aggregation Pipeline](./aggregation-pipeline.md)
-- [Drizzle + MongoDB](./drizzle-mongodb.md)
-- [Recommended Resources](./readings-10.md)
-
 **Activities:**
 - Practice CRUD operations on sample data
 - Write aggregation queries for analytics
@@ -97,7 +87,7 @@ By the end of this week, you will be able to:
 - Aggregation pipeline ($match, $group, $lookup)
 
 **Format:**
-- 12 multiple-choice questions
+- 20 multiple-choice questions
 - Requirement → MongoDB code
 - MongoDB code → Description
 - Schema design scenarios
@@ -107,8 +97,6 @@ By the end of this week, you will be able to:
 - Practice CRUD operations
 - Write aggregation queries
 - Review quiz materials
-
-[Take Quiz 8](./quiz/mongodb-quiz.md)
 
 ---
 
@@ -132,32 +120,6 @@ This week marks the start of your **final project**. You should:
 - E-commerce site (products/orders in SQL, product reviews/ratings in MongoDB)
 - Learning management system (courses/users in SQL, course content/quizzes in MongoDB)
 - Real-time analytics dashboard (time-series data in MongoDB, aggregated reports in SQL)
-
----
-
-## Weekly Content
-
-### Required Readings
-
-1. **[MongoDB Fundamentals](./mongodb-fundamentals.md)** (60 min)
-   - Document model, JSON/BSON, ObjectId, use cases
-
-2. **[Schema Design Patterns](./schema-design-patterns.md)** (75 min)
-   - Embedding vs referencing, one-to-many, attribute/bucket/subset patterns
-
-3. **[MongoDB CRUD Operations](./mongodb-crud.md)** (90 min)
-   - insertOne/Many, find with operators, update operators, delete operations
-
-4. **[Aggregation Pipeline](./aggregation-pipeline.md)** (90 min)
-   - Pipeline stages, $match, $group, $lookup, practical examples
-
-5. **[Drizzle + MongoDB](./drizzle-mongodb.md)** (60 min)
-   - Type-safe schemas, CRUD with Drizzle, query operators, limitations
-
-### Supplemental Resources
-
-6. **[MongoDB Readings & Resources](./readings-10.md)** (30 min)
-   - Official documentation, tutorials, best practices, tools
 
 ---
 
