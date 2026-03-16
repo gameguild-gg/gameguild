@@ -39,6 +39,11 @@ import ai4games2Week07Lecture from "./07-chess/01-lecture.md";
 import ai4games2Week07Readings from "./07-chess/02-readings.md";
 import ai4games2Week08Midterm from "./08-competition/midterm.md";
 import ai4games2Week09FinalProject from "./09-break/final-project.md";
+import ai4games2Week10Slides from "./10-wfc/00-reveal.md";
+import ai4games2Week10Lecture from "./10-wfc/01-lecture.md";
+import ai4games2Week10Readings from "./10-wfc/02-readings.md";
+import ai4games2Week10Assignment from "./10-wfc/03-assignment.md";
+import ai4games2Week10Quiz from "./10-wfc/04-quiz.md";
 import ai4games2ExtraOldLecture from "./old/extras/llms.md";
 import ai4games2Week01OldLecture from "./old/week01/lecture.md";
 import ai4games2Week01OldReadings from "./old/week01/readings.md";
@@ -989,6 +994,122 @@ export const ai4games2Week09FinalProjectContent: ProgramContent = {
   updatedAt: "2023-01-01T00:00:00Z",
 };
 
+// Week 10 Content (Wave Function Collapse)
+export const ai4games2Week10SlidesContent: ProgramContent = {
+  id: "ai4games2-week-10-slides",
+  programId: "ai4games2-program",
+  parentId: undefined,
+  title: "Week 10: Wave Function Collapse",
+  slug: "week-10",
+  description: "Constraint-based procedural generation: WFC algorithm, tiled and overlapping models, entropy heuristic, propagation, and tileset design",
+  type: ProgramContentType.REVEAL,
+  body: ai4games2Week10Slides,
+  sortOrder: 10,
+  isRequired: true,
+  gradingMethod: 0,
+  maxPoints: null,
+  estimatedMinutes: 60,
+  visibility: 1,
+  program: ai4games2Program,
+  parent: undefined,
+  children: [],
+  contentInteractions: [],
+  createdAt: "2023-01-01T00:00:00Z",
+  updatedAt: "2023-01-01T00:00:00Z",
+};
+
+export const ai4games2Week10LectureContent: ProgramContent = {
+  id: "ai4games2-week-10-lecture",
+  programId: "ai4games2-program",
+  parentId: "ai4games2-week-10-slides",
+  title: "Week 10: Lecture Notes",
+  slug: "lecture",
+  description: "Detailed lecture notes on WFC, CSP formulation, entropy, propagation, and backtracking",
+  type: ProgramContentType.PAGE,
+  body: ai4games2Week10Lecture,
+  sortOrder: 1,
+  isRequired: true,
+  gradingMethod: 0,
+  maxPoints: null,
+  estimatedMinutes: 45,
+  visibility: 1,
+  program: ai4games2Program,
+  parent: ai4games2Week10SlidesContent,
+  children: [],
+  contentInteractions: [],
+  createdAt: "2023-01-01T00:00:00Z",
+  updatedAt: "2023-01-01T00:00:00Z",
+};
+
+export const ai4games2Week10ReadingsContent: ProgramContent = {
+  id: "ai4games2-week-10-readings",
+  programId: "ai4games2-program",
+  parentId: "ai4games2-week-10-slides",
+  title: "Week 10: Readings",
+  slug: "readings",
+  description: "Required readings and videos for Wave Function Collapse",
+  type: ProgramContentType.PAGE,
+  body: ai4games2Week10Readings,
+  sortOrder: 2,
+  isRequired: true,
+  gradingMethod: 0,
+  maxPoints: null,
+  estimatedMinutes: 120,
+  visibility: 1,
+  program: ai4games2Program,
+  parent: ai4games2Week10SlidesContent,
+  children: [],
+  contentInteractions: [],
+  createdAt: "2023-01-01T00:00:00Z",
+  updatedAt: "2023-01-01T00:00:00Z",
+};
+
+export const ai4games2Week10QuizContent: ProgramContent = {
+  id: "ai4games2-week-10-quiz",
+  programId: "ai4games2-program",
+  parentId: "ai4games2-week-10-slides",
+  title: "Week 10: Quiz",
+  slug: "quiz",
+  description: "Test your understanding of WFC, constraint satisfaction, entropy heuristic, and propagation",
+  type: ProgramContentType.PAGE,
+  body: ai4games2Week10Quiz,
+  sortOrder: 3,
+  isRequired: true,
+  gradingMethod: 1,
+  maxPoints: 10,
+  estimatedMinutes: 15,
+  visibility: 1,
+  program: ai4games2Program,
+  parent: ai4games2Week10SlidesContent,
+  children: [],
+  contentInteractions: [],
+  createdAt: "2023-01-01T00:00:00Z",
+  updatedAt: "2023-01-01T00:00:00Z",
+};
+
+export const ai4games2Week10AssignmentContent: ProgramContent = {
+  id: "ai4games2-week-10-assignment",
+  programId: "ai4games2-program",
+  parentId: "ai4games2-week-10-slides",
+  title: "Week 10: Assignment",
+  slug: "assignment",
+  description: "Final Project — Checkpoint 1: Proposal",
+  type: ProgramContentType.PAGE,
+  body: ai4games2Week10Assignment,
+  sortOrder: 4,
+  isRequired: true,
+  gradingMethod: 1,
+  maxPoints: 100,
+  estimatedMinutes: 60,
+  visibility: 1,
+  program: ai4games2Program,
+  parent: ai4games2Week10SlidesContent,
+  children: [],
+  contentInteractions: [],
+  createdAt: "2023-01-01T00:00:00Z",
+  updatedAt: "2023-01-01T00:00:00Z",
+};
+
 export const ai4games2Week02OldContent: ProgramContent = {
   id: "ai4games2-week-02",
   programId: "ai4games2-program",
@@ -1442,6 +1563,12 @@ ai4games2Week07SlidesContent.children = [
   ai4games2Week07LectureContent,
   ai4games2Week07ReadingsContent,
 ];
+ai4games2Week10SlidesContent.children = [
+  ai4games2Week10LectureContent,
+  ai4games2Week10ReadingsContent,
+  ai4games2Week10QuizContent,
+  ai4games2Week10AssignmentContent,
+];
 ai4games2Week02OldContent.children = [ai4games2Week02OldPcgContent];
 ai4games2Week03OldContent.children = [ai4games2Week03OldAstarContent];
 ai4games2Week04OldContent.children = [ai4games2Week04OldAssignmentContent];
@@ -1479,6 +1606,7 @@ ai4games2Program.programContents = [
   ai4games2Week07SlidesContent,
   ai4games2Week08MidtermContent,
   ai4games2Week09FinalProjectContent,
+  ai4games2Week10SlidesContent,
   ai4games2OldContent,
 ];
 
