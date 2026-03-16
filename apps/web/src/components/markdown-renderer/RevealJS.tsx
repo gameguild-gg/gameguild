@@ -274,7 +274,7 @@ const RevealJS: React.FC<RevealJSProps> = ({ content, height = '600px' }) => {
                 continue;
               }
             }
-            out.push(content[i]);
+            out.push(content[i]!);
             i++;
           }
           return out.join('');
