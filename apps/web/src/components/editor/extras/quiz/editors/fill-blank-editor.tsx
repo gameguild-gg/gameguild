@@ -9,7 +9,7 @@
 
 "use client"
 
-import { useEffect } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useFieldArray, useFormContext } from "react-hook-form"
 import { Plus, X, Type, Hash, ChevronDown, LayoutGrid } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -26,12 +26,120 @@ import {
 import type { FillInTheBlankEntry, FillBlankInput } from "../types"
 import { FillBlankInputType } from "../types"
 
+const UNIT_CATEGORIES = [
+  {
+    label: "Computing",
+    units: ["b", "B", "KB", "MB", "GB", "TB", "PB", "Kbps", "Mbps", "Gbps", "Hz", "KHz", "MHz", "GHz", "ms", "μs", "ns", "FLOPS", "op/s", "iops"],
+  },
+  {
+    label: "Design",
+    units: ["px", "rem", "em", "vw", "vh", "vmin", "vmax", "%", "pt", "pc", "cm", "mm", "in", "ch", "ex", "fr", "dpi", "dpcm", "dppx", "svh"],
+  },
+  {
+    label: "Distance",
+    units: ["mm", "cm", "m", "km", "in", "ft", "yd", "mi", "nm", "μm", "Å", "au", "ly", "pc", "nmi", "fathom", "furlong", "league", "mil", "thou"],
+  },
+  {
+    label: "Speed",
+    units: ["m/s", "km/h", "mph", "kn", "ft/s", "cm/s", "mm/s", "Mach", "c", "km/s", "mi/s", "in/s", "yd/s", "m/min", "km/min", "ft/min", "rpm", "rad/s", "°/s", "rev/s"],
+  },
+  {
+    label: "Volume",
+    units: ["mL", "L", "m³", "cm³", "mm³", "gal", "qt", "pt", "cup", "fl oz", "tbsp", "tsp", "bbl", "ft³", "in³", "yd³", "dL", "hL", "kL", "μL"],
+  },
+  {
+    label: "Weight",
+    units: ["mg", "g", "kg", "t", "oz", "lb", "st", "μg", "ng", "ct", "grain", "cwt", "ton", "slug", "dram", "troy oz", "pennyweight", "Da", "kN", "N"],
+  },
+]
+
 const INPUT_TYPE_OPTIONS = [
   { value: FillBlankInputType.Text, label: "Text Input", icon: Type, description: "Type the answer" },
   { value: FillBlankInputType.Number, label: "Number", icon: Hash, description: "Type a number" },
   { value: FillBlankInputType.Dropdown, label: "Dropdown", icon: ChevronDown, description: "Select from options" },
   { value: FillBlankInputType.WordBank, label: "Word Bank", icon: LayoutGrid, description: "Drag from word pool" },
 ]
+
+function UnitPicker({ value, onChange }: { value: string; onChange: (value: string) => void }) {
+  const [open, setOpen] = useState(false)
+  const [activeCategory, setActiveCategory] = useState(0)
+  const containerRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!open) return
+    const handleClickOutside = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setOpen(false)
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside)
+    return () => document.removeEventListener("mousedown", handleClickOutside)
+  }, [open])
+
+  return (
+    <div className="relative" ref={containerRef}>
+      <div className="flex gap-1">
+        <Input
+          type="text"
+          placeholder="e.g. kg"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 flex-1 min-w-0"
+        />
+        <Button
+          type="button"
+          variant="outline"
+          size="icon"
+          onClick={() => setOpen((prev) => !prev)}
+          className="shrink-0 h-9 w-9 border-gray-300 dark:border-gray-600"
+        >
+          <ChevronDown className="h-3.5 w-3.5" />
+        </Button>
+      </div>
+      {open && (
+        <div className="absolute right-0 top-full mt-1 z-50 w-[480px] rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-lg">
+          <div className="flex border-b border-gray-200 dark:border-gray-700">
+            {UNIT_CATEGORIES.map((cat, idx) => (
+              <button
+                key={cat.label}
+                type="button"
+                onClick={() => setActiveCategory(idx)}
+                className={`flex-1 px-2 py-2 text-xs font-medium transition-colors ${
+                  activeCategory === idx
+                    ? "text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400"
+                    : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+                }`}
+              >
+                {cat.label}
+              </button>
+            ))}
+          </div>
+          <div className="p-2">
+            <div className="grid grid-cols-5 gap-1">
+              {UNIT_CATEGORIES[activeCategory]!.units.map((unit) => (
+                <button
+                  key={unit}
+                  type="button"
+                  onClick={() => {
+                    onChange(unit)
+                    setOpen(false)
+                  }}
+                  className={`px-2 py-1.5 text-xs rounded-md transition-colors text-center ${
+                    value === unit
+                      ? "bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 font-medium"
+                      : "bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                  }`}
+                >
+                  {unit}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
 
 function createDefaultInput(type: FillBlankInputType): FillBlankInput {
   switch (type) {
@@ -527,7 +635,7 @@ export function FillBlankEditor() {
                     )}
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-3 gap-3">
                   <div className="space-y-2">
                     <Label className="text-xs text-gray-600 dark:text-gray-400">
                       Tolerance (±)
@@ -567,59 +675,49 @@ export function FillBlankEditor() {
                       </p>
                     )}
                   </div>
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-xs text-gray-600 dark:text-gray-400">
-                    Unit <span className="text-gray-400">— expected unit suffix</span>
-                  </Label>
-                  <div className="flex items-center gap-2">
-                    <Input
-                      type="text"
-                      placeholder='e.g. kg, %, m/s, °C'
+                  <div className="space-y-2">
+                    <Label className="text-xs text-gray-600 dark:text-gray-400">
+                      Unit
+                    </Label>
+                    <UnitPicker
                       value={input.unit ?? ""}
-                      onChange={(e) => updateNumberUnit(blankIndex, e.target.value)}
-                      className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 flex-1"
+                      onChange={(value) => updateNumberUnit(blankIndex, value)}
                     />
-                    {input.unit && (
-                      <div className="flex items-center gap-2 shrink-0">
-                        <Checkbox
-                          id={`require-unit-${blankIndex}`}
-                          checked={input.requireUnit ?? false}
-                          onCheckedChange={(checked) =>
-                            setValue(`blanks.${blankIndex}.input.requireUnit`, !!checked)
-                          }
-                        />
-                        <Label
-                          htmlFor={`require-unit-${blankIndex}`}
-                          className="text-xs text-gray-600 dark:text-gray-400 cursor-pointer whitespace-nowrap"
-                        >
-                          Require unit
-                        </Label>
-                      </div>
-                    )}
+                  </div>
+                </div>
+                <div className="flex items-center gap-4 pt-1">
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      id={`allow-negative-${blankIndex}`}
+                      checked={input.allowNegative ?? true}
+                      onCheckedChange={(checked) =>
+                        setValue(`blanks.${blankIndex}.input.allowNegative`, !!checked)
+                      }
+                    />
+                    <Label
+                      htmlFor={`allow-negative-${blankIndex}`}
+                      className="text-xs text-gray-600 dark:text-gray-400 cursor-pointer"
+                    >
+                      Allow negative
+                    </Label>
                   </div>
                   {input.unit && (
-                    <p className="text-xs text-gray-500 dark:text-gray-400">
-                      {input.requireUnit
-                        ? `Student must type the unit "${input.unit}" (e.g. "${input.correctValue}${input.unit}" or "${input.correctValue} ${input.unit}")`
-                        : `Unit "${input.unit}" shown as hint — student may omit it`}
-                    </p>
+                    <div className="flex items-center gap-2">
+                      <Checkbox
+                        id={`require-unit-${blankIndex}`}
+                        checked={input.requireUnit ?? false}
+                        onCheckedChange={(checked) =>
+                          setValue(`blanks.${blankIndex}.input.requireUnit`, !!checked)
+                        }
+                      />
+                      <Label
+                        htmlFor={`require-unit-${blankIndex}`}
+                        className="text-xs text-gray-600 dark:text-gray-400 cursor-pointer"
+                      >
+                        Require unit in answer
+                      </Label>
+                    </div>
                   )}
-                </div>
-                <div className="flex items-center gap-2 pt-1">
-                  <Checkbox
-                    id={`allow-negative-${blankIndex}`}
-                    checked={input.allowNegative ?? true}
-                    onCheckedChange={(checked) =>
-                      setValue(`blanks.${blankIndex}.input.allowNegative`, !!checked)
-                    }
-                  />
-                  <Label
-                    htmlFor={`allow-negative-${blankIndex}`}
-                    className="text-xs text-gray-600 dark:text-gray-400 cursor-pointer"
-                  >
-                    Allow negative numbers
-                  </Label>
                 </div>
               </div>
             )}
