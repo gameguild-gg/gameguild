@@ -1,11 +1,13 @@
 import { NextConfig } from 'next';
 import createNextIntlPlugin from 'next-intl/plugin';
+import path from 'path';
 import webpack from 'webpack';
 
 const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts');
 
 const nextConfig: NextConfig = {
   /* config options here */
+  transpilePackages: ['mermaid', '@mermaid-js/parser', 'langium', 'vscode-jsonrpc', 'chevrotain'],
   output: 'standalone',
   // Force the app to use the correct base URL
   assetPrefix: process.env.NODE_ENV === 'production' ? undefined : '',
@@ -208,6 +210,19 @@ const nextConfig: NextConfig = {
     config.resolve.extensionAlias = {
       '.js': ['.js', '.ts'],
       '.jsx': ['.jsx', '.tsx'],
+    };
+
+    // Resolve vscode-jsonrpc and vscode-languageserver-types for langium
+    // These are nested inside vscode-languageserver/node_modules/ and not
+    // resolvable from langium's location in the monorepo.
+    const vscodeLsNodeModules = path.resolve(
+      __dirname, '../../node_modules/vscode-languageserver/node_modules'
+    );
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      'vscode-jsonrpc': path.join(vscodeLsNodeModules, 'vscode-jsonrpc'),
+      'vscode-languageserver-protocol': path.join(vscodeLsNodeModules, 'vscode-languageserver-protocol'),
+      'vscode-languageserver-types': path.join(vscodeLsNodeModules, 'vscode-languageserver-types'),
     };
 
     // Add fallbacks for Node.js modules used by wasmoon

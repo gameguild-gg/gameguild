@@ -1,16 +1,16 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import type { Monaco, OnMount } from "@monaco-editor/react"
 import Editor from "@monaco-editor/react"
-import type { editor } from "monaco-editor"
-import type { Monaco } from "@monaco-editor/react"
-import type { SupportedLanguage, ShikiTheme } from "./types"
-import { getShikiThemeName } from "./types"
 import { shikiToMonaco } from "@shikijs/monaco"
+import type { editor } from "monaco-editor"
 import { useTheme } from "next-themes"
+import { useEffect, useRef, useState } from "react"
 import { createHighlighter, type Highlighter } from "shiki"
-import { registerPathCompletionProvider } from "./monaco-file-system"
 import { LinkConfirmDialog } from "../dialogs/link-confirm-dialog"
+import { registerPathCompletionProvider } from "./monaco-file-system"
+import type { ShikiTheme, SupportedLanguage } from "./types"
+import { getShikiThemeName } from "./types"
 
 // Singleton para o highlighter do Shiki
 let shikiHighlighter: Highlighter | null = null
@@ -22,7 +22,7 @@ async function getShikiHighlighter(): Promise<Highlighter> {
   if (shikiHighlighter) {
     return shikiHighlighter
   }
-  
+
   if (!shikiPromise) {
     shikiPromise = createHighlighter({
       themes: [
@@ -67,7 +67,7 @@ async function getShikiHighlighter(): Promise<Highlighter> {
       return highlighter
     })
   }
-  
+
   return shikiPromise
 }
 
@@ -100,7 +100,7 @@ export function MonacoCodeEditor({
   filePath,
   instanceId,
 }: MonacoCodeEditorProps) {
-  const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null)
+  const editorRef = useRef<Parameters<OnMount>[0] | null>(null)
   const monacoRef = useRef<Monaco | null>(null)
   const [isShikiReady, setIsShikiReady] = useState(false)
   const [linkConfirmDialog, setLinkConfirmDialog] = useState<{ open: boolean; url: string }>({
@@ -108,7 +108,7 @@ export function MonacoCodeEditor({
     url: "",
   })
   const { resolvedTheme, theme: themeState } = useTheme()
-  
+
   // Determinar o tema atual (dark ou light) - usa theme como fallback
   const effectiveTheme = resolvedTheme || themeState
   const isDarkMode = effectiveTheme === "dark"
@@ -116,7 +116,7 @@ export function MonacoCodeEditor({
 
   const handleEditorWillMount = async (monaco: Monaco) => {
     monacoRef.current = monaco
-    
+
     // Configurar TypeScript/JavaScript compiler options
     monaco.languages.typescript.typescriptDefaults.setCompilerOptions({
       target: monaco.languages.typescript.ScriptTarget.ES2020,
@@ -165,12 +165,12 @@ export function MonacoCodeEditor({
       registerPathCompletionProvider(monaco)
       pathCompletionRegistered = true
     }
-    
+
     // Carregar Shiki ANTES de montar o editor (apenas uma vez globalmente)
     if (!shikiAppliedToMonaco) {
       try {
         const highlighter = await getShikiHighlighter()
-        
+
         // Apply Shiki to Monaco (apenas uma vez globalmente)
         shikiToMonaco(highlighter, monaco)
         shikiAppliedToMonaco = true
@@ -184,7 +184,7 @@ export function MonacoCodeEditor({
     }
   }
 
-  const handleEditorDidMount = (editor: editor.IStandaloneCodeEditor) => {
+  const handleEditorDidMount: OnMount = (editor) => {
     editorRef.current = editor
 
     // Interceptar cliques em links para mostrar dialog de confirmação (apenas com Ctrl pressionado)
@@ -218,7 +218,7 @@ export function MonacoCodeEditor({
 
     // Adicionar decorações para destacar links
     let decorationIds: string[] = []
-    
+
     const updateLinkDecorations = () => {
       const model = editor.getModel()
       if (!model) return
@@ -332,7 +332,7 @@ export function MonacoCodeEditor({
           setLinkConfirmDialog({ open: false, url: "" })
         }}
       />
-      
+
       <Editor
         key={fileId} // Força nova instância do Monaco para cada arquivo
         height={height}
@@ -362,7 +362,7 @@ export function MonacoCodeEditor({
             comments: false,
             strings: false,
           },
-          links: false, 
+          links: false,
         }}
       />
     </>
