@@ -112,7 +112,7 @@
         "katex": "^0.16.22",
         "lexical": "^0.38.2",
         "lucide-react": "^0.525.0",
-        "mermaid": "^11.12.2",
+        "mermaid": "^10.9.3",
         "monaco-editor": "^0.52.2",
         "newrelic": "latest",
         "next": "15.5.11",
@@ -153,6 +153,8 @@
         "use-immer": "^0.11.0",
         "vaul": "^1.1.2",
         "vega-schema": "^6.2.0",
+        "vscode-languageserver-types": "^3.17.5",
+        "vscode-uri": "^3.1.0",
         "wasmoon": "^1.16.0",
         "zod": "^4.1.9",
         "zustand": "^5.0.8"
