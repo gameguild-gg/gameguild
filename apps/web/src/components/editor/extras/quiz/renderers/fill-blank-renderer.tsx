@@ -153,6 +153,24 @@ export function FillBlankRenderer({
           />
         )
 
+      case FillBlankInputType.Number:
+        return (
+          <span className="inline-flex items-center mx-2">
+            <input
+              type={input.requireUnit ? "text" : "number"}
+              step="any"
+              className="inline-block w-40 px-3 py-2 border-2 border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:border-blue-500 focus:outline-none transition-colors [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+              placeholder={input.requiredPrecision ? `0.${"0".repeat(input.requiredPrecision)}` : "0"}
+              value={currentValue}
+              onChange={(e) => handleInputChange(blank.id, e.target.value)}
+              disabled={disabled || showFeedback}
+            />
+            {input.unit && !input.requireUnit && (
+              <span className="ml-1 text-sm text-gray-500 dark:text-gray-400">{input.unit}</span>
+            )}
+          </span>
+        )
+
       case FillBlankInputType.Dropdown:
         const options = shuffledDropdownOptions[blank.id] || []
         return (

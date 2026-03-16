@@ -23,6 +23,7 @@ export enum QuizEntryType {
 
 export enum FillBlankInputType {
   Text = "TEXT", // Free text input with regex validation
+  Number = "NUMBER", // Numeric input with tolerance
   Dropdown = "DROPDOWN", // Select from options
   WordBank = "WORDBANK", // Drag from word bank
 }
@@ -102,6 +103,16 @@ export interface FillBlankTextInput {
   caseSensitive?: boolean
 }
 
+export interface FillBlankNumberInput {
+  type: FillBlankInputType.Number
+  correctValue: number
+  tolerance?: number // Accepted margin of error (±)
+  requiredPrecision?: number // Required number of decimal places
+  unit?: string // Expected unit suffix (e.g. "kg", "%", "m/s")
+  requireUnit?: boolean // Whether the unit must be included in the answer
+  allowNegative?: boolean // Whether negative answers are accepted (default: true)
+}
+
 export interface FillBlankDropdownInput {
   type: FillBlankInputType.Dropdown
   options: string[] // First option is correct, rest are distractors
@@ -114,6 +125,7 @@ export interface FillBlankWordBankInput {
 
 export type FillBlankInput =
   | FillBlankTextInput
+  | FillBlankNumberInput
   | FillBlankDropdownInput
   | FillBlankWordBankInput
 
