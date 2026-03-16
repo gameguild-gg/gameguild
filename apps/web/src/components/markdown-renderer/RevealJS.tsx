@@ -134,7 +134,7 @@ const renderMermaidDiagrams = async (container: HTMLElement, isDark: boolean): P
     // reliable than mermaid.render() for lazily-loaded diagram types
     // (e.g. block / block-beta) because run() goes through the full
     // diagram registration & lazy-load pipeline.
-    const nodes: Element[] = [];
+    const nodes: HTMLElement[] = [];
     for (let i = 0; i < mermaidBlocks.length; i++) {
       const block = mermaidBlocks[i];
       if (!block) continue;
