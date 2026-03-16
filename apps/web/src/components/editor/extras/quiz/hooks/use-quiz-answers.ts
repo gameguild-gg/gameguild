@@ -12,6 +12,7 @@ import {
   QuizEntryType,
   createEmptyAnswerState,
   type FillBlankTextInput,
+  type FillBlankNumberInput,
   FillBlankInputType,
 } from "../types"
 
@@ -76,6 +77,28 @@ export function useQuizAnswers({ entry }: UseQuizAnswersProps): UseQuizAnswersRe
                   ? rawAnswer === accepted
                   : rawAnswer.toLowerCase() === accepted.toLowerCase()
               )
+            }
+            case FillBlankInputType.Number: {
+              const numberInput = blank.input as FillBlankNumberInput
+              // Strip unit suffix if present
+              let numericStr = rawAnswer
+              if (numberInput.unit) {
+                numericStr = numericStr.replace(new RegExp(`\\s*${numberInput.unit.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*$`), '').trim()
+                // If unit is required, ensure it was present
+                if (numberInput.requireUnit && numericStr === rawAnswer) return false
+              }
+              const userNumber = parseFloat(numericStr)
+              if (isNaN(userNumber)) return false
+              // Check negative constraint
+              if (!(numberInput.allowNegative ?? true) && userNumber < 0) return false
+              // Check required precision (decimal places)
+              if (numberInput.requiredPrecision !== undefined) {
+                const decimalPart = numericStr.includes('.') ? numericStr.split('.')[1] || '' : ''
+                if (decimalPart.length !== numberInput.requiredPrecision) return false
+              }
+              // Check tolerance
+              const tolerance = numberInput.tolerance ?? 0
+              return Math.abs(userNumber - numberInput.correctValue) <= tolerance
             }
             case FillBlankInputType.Dropdown:
               // First option is the correct answer

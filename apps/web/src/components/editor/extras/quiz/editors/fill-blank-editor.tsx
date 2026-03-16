@@ -1,16 +1,17 @@
 /**
  * Fill in the Blank Editor
- * Configure expected answers for each blank with three input modes:
+ * Configure expected answers for each blank with four input modes:
  * 1. Text - Type the answer
- * 2. Dropdown - Select from options (first is correct)
- * 3. Word Bank - Drag from shared pool (first is correct)
+ * 2. Number - Type a numeric answer (with optional tolerance)
+ * 3. Dropdown - Select from options (first is correct)
+ * 4. Word Bank - Drag from shared pool (first is correct)
  */
 
 "use client"
 
 import { useEffect } from "react"
 import { useFieldArray, useFormContext } from "react-hook-form"
-import { Plus, X, Type, ChevronDown, LayoutGrid } from "lucide-react"
+import { Plus, X, Type, Hash, ChevronDown, LayoutGrid } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
@@ -27,6 +28,7 @@ import { FillBlankInputType } from "../types"
 
 const INPUT_TYPE_OPTIONS = [
   { value: FillBlankInputType.Text, label: "Text Input", icon: Type, description: "Type the answer" },
+  { value: FillBlankInputType.Number, label: "Number", icon: Hash, description: "Type a number" },
   { value: FillBlankInputType.Dropdown, label: "Dropdown", icon: ChevronDown, description: "Select from options" },
   { value: FillBlankInputType.WordBank, label: "Word Bank", icon: LayoutGrid, description: "Drag from word pool" },
 ]
@@ -35,6 +37,8 @@ function createDefaultInput(type: FillBlankInputType): FillBlankInput {
   switch (type) {
     case FillBlankInputType.Text:
       return { type: FillBlankInputType.Text, acceptedAnswers: [""] }
+    case FillBlankInputType.Number:
+      return { type: FillBlankInputType.Number, correctValue: 0 }
     case FillBlankInputType.Dropdown:
       return { type: FillBlankInputType.Dropdown, options: ["", ""] }
     case FillBlankInputType.WordBank:
@@ -76,6 +80,13 @@ export function FillBlankEditor() {
             return { ...input, acceptedAnswers: [lockedAnswer, ...input.acceptedAnswers.slice(1)] }
           }
           break
+        case FillBlankInputType.Number: {
+          const num = parseFloat(lockedAnswer)
+          if (!isNaN(num) && input.correctValue !== num) {
+            return { ...input, correctValue: num }
+          }
+          break
+        }
         case FillBlankInputType.Dropdown:
           if (input.options[0] !== lockedAnswer) {
             return { ...input, options: [lockedAnswer, ...input.options.slice(1)] }
@@ -153,6 +164,9 @@ export function FillBlankEditor() {
       case FillBlankInputType.Text:
         existingValues = currentInput.acceptedAnswers.filter((v: string) => v.trim() !== "")
         break
+      case FillBlankInputType.Number:
+        existingValues = [String(currentInput.correctValue)]
+        break
       case FillBlankInputType.Dropdown:
         existingValues = currentInput.options.filter((v: string) => v.trim() !== "")
         break
@@ -178,6 +192,14 @@ export function FillBlankEditor() {
           acceptedAnswers: existingValues.length > 0 ? existingValues : [""] 
         }
         break
+      case FillBlankInputType.Number: {
+        const numVal = parseFloat(existingValues[0] || "0")
+        newInput = {
+          type: FillBlankInputType.Number,
+          correctValue: isNaN(numVal) ? 0 : numVal,
+        }
+        break
+      }
       case FillBlankInputType.Dropdown:
         // Dropdown needs at least 2 options
         const dropdownOptions = existingValues.length >= 2 ? existingValues : [...existingValues, ""]
@@ -227,6 +249,48 @@ export function FillBlankEditor() {
       newAnswers[answerIndex] = value
       setValue(`blanks.${blankIndex}.input.acceptedAnswers`, newAnswers)
     }
+  }
+
+  // ============================================================================
+  // Number Input Handlers
+  // ============================================================================
+
+  const updateNumberValue = (blankIndex: number, value: string) => {
+    const num = parseFloat(value)
+    if (!isNaN(num)) {
+      setValue(`blanks.${blankIndex}.input.correctValue`, num)
+    }
+  }
+
+  const updateNumberTolerance = (blankIndex: number, value: string) => {
+    if (value === "") {
+      setValue(`blanks.${blankIndex}.input.tolerance`, undefined)
+      return
+    }
+    const num = parseFloat(value)
+    if (!isNaN(num) && num >= 0) {
+      setValue(`blanks.${blankIndex}.input.tolerance`, num)
+    }
+  }
+
+  const updateNumberPrecision = (blankIndex: number, value: string) => {
+    if (value === "") {
+      setValue(`blanks.${blankIndex}.input.requiredPrecision`, undefined)
+      return
+    }
+    const num = parseInt(value, 10)
+    if (!isNaN(num) && num >= 0 && num <= 10) {
+      setValue(`blanks.${blankIndex}.input.requiredPrecision`, num)
+    }
+  }
+
+  const updateNumberUnit = (blankIndex: number, value: string) => {
+    if (value === "") {
+      setValue(`blanks.${blankIndex}.input.unit`, undefined)
+      setValue(`blanks.${blankIndex}.input.requireUnit`, undefined)
+      return
+    }
+    setValue(`blanks.${blankIndex}.input.unit`, value)
   }
 
   // ============================================================================
@@ -432,6 +496,129 @@ export function FillBlankEditor() {
                     className="text-xs text-gray-600 dark:text-gray-400 cursor-pointer"
                   >
                     Case-sensitive
+                  </Label>
+                </div>
+              </div>
+            )}
+
+            {/* Number Input Mode */}
+            {input.type === FillBlankInputType.Number && (
+              <div className="space-y-3">
+                <div className="space-y-2">
+                  <Label className="text-xs text-gray-600 dark:text-gray-400">
+                    Correct Value
+                  </Label>
+                  <div className="relative">
+                    <Input
+                      type="number"
+                      step="any"
+                      placeholder="e.g. 42"
+                      value={input.correctValue}
+                      onChange={(e) => updateNumberValue(blankIndex, e.target.value)}
+                      disabled={!!lockedAnswer}
+                      className={`bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 ${
+                        lockedAnswer ? "bg-gray-100 dark:bg-gray-700 cursor-not-allowed" : ""
+                      }`}
+                    />
+                    {lockedAnswer && (
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-500 dark:text-gray-400">
+                        🔒 Edit in source
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    <Label className="text-xs text-gray-600 dark:text-gray-400">
+                      Tolerance (±)
+                    </Label>
+                    <Input
+                      type="number"
+                      step="any"
+                      min="0"
+                      placeholder="exact if empty"
+                      value={input.tolerance ?? ""}
+                      onChange={(e) => updateNumberTolerance(blankIndex, e.target.value)}
+                      className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600"
+                    />
+                    {input.tolerance !== undefined && input.tolerance > 0 && (
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        {input.correctValue - input.tolerance} to {input.correctValue + input.tolerance}
+                      </p>
+                    )}
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-xs text-gray-600 dark:text-gray-400">
+                      Decimal Places
+                    </Label>
+                    <Input
+                      type="number"
+                      step="1"
+                      min="0"
+                      max="10"
+                      placeholder="any if empty"
+                      value={input.requiredPrecision ?? ""}
+                      onChange={(e) => updateNumberPrecision(blankIndex, e.target.value)}
+                      className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600"
+                    />
+                    {input.requiredPrecision !== undefined && input.requiredPrecision > 0 && (
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        e.g. {input.correctValue.toFixed(input.requiredPrecision)}
+                      </p>
+                    )}
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs text-gray-600 dark:text-gray-400">
+                    Unit <span className="text-gray-400">— expected unit suffix</span>
+                  </Label>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      type="text"
+                      placeholder='e.g. kg, %, m/s, °C'
+                      value={input.unit ?? ""}
+                      onChange={(e) => updateNumberUnit(blankIndex, e.target.value)}
+                      className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 flex-1"
+                    />
+                    {input.unit && (
+                      <div className="flex items-center gap-2 shrink-0">
+                        <Checkbox
+                          id={`require-unit-${blankIndex}`}
+                          checked={input.requireUnit ?? false}
+                          onCheckedChange={(checked) =>
+                            setValue(`blanks.${blankIndex}.input.requireUnit`, !!checked)
+                          }
+                        />
+                        <Label
+                          htmlFor={`require-unit-${blankIndex}`}
+                          className="text-xs text-gray-600 dark:text-gray-400 cursor-pointer whitespace-nowrap"
+                        >
+                          Require unit
+                        </Label>
+                      </div>
+                    )}
+                  </div>
+                  {input.unit && (
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      {input.requireUnit
+                        ? `Student must type the unit "${input.unit}" (e.g. "${input.correctValue}${input.unit}" or "${input.correctValue} ${input.unit}")`
+                        : `Unit "${input.unit}" shown as hint — student may omit it`}
+                    </p>
+                  )}
+                </div>
+                <div className="flex items-center gap-2 pt-1">
+                  <Checkbox
+                    id={`allow-negative-${blankIndex}`}
+                    checked={input.allowNegative ?? true}
+                    onCheckedChange={(checked) =>
+                      setValue(`blanks.${blankIndex}.input.allowNegative`, !!checked)
+                    }
+                  />
+                  <Label
+                    htmlFor={`allow-negative-${blankIndex}`}
+                    className="text-xs text-gray-600 dark:text-gray-400 cursor-pointer"
+                  >
+                    Allow negative numbers
                   </Label>
                 </div>
               </div>
