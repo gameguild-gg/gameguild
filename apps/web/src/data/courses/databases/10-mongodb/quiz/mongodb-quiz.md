@@ -4,8 +4,6 @@
 
 This quiz tests your understanding of MongoDB document databases, including schema design, CRUD operations, and aggregation pipelines. Some questions ask you to translate requirements into MongoDB code, while others ask you to explain what MongoDB operations do.
 
-**Total: 12 questions**
-
 Time estimate: 30-45 minutes
 
 ---

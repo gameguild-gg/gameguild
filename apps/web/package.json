@@ -115,7 +115,7 @@
         "mermaid": "^11",
         "monaco-editor": "^0.55.1",
         "newrelic": "latest",
-        "next": "15.5.11",
+        "next": "^15.5.12",
         "next-auth": "^5.0.0-beta.30",
         "next-intl": "^4.1.0",
         "next-themes": "^0.4.6",
