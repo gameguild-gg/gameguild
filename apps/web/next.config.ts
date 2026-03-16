@@ -214,23 +214,30 @@ const nextConfig: NextConfig = {
     };
 
     // Resolve vscode-jsonrpc, vscode-languageserver-types, and
-    // vscode-languageserver-protocol for langium. These are transitive deps
-    // of vscode-languageserver but langium imports them directly. Depending
-    // on the install layout (monorepo hoisting vs Docker standalone) they may
-    // not be resolvable from langium's location. We search candidate paths.
-    const candidates = [
-      path.resolve(__dirname, 'node_modules/vscode-languageserver/node_modules'),       // Docker / standalone
-      path.resolve(__dirname, '../../node_modules/vscode-languageserver/node_modules'),  // monorepo
-    ];
-    const vscodeLsNodeModules =
-      candidates.find((p) => fs.existsSync(path.join(p, 'vscode-jsonrpc'))) ??
-      candidates[0]!;
+    // vscode-languageserver-protocol for langium.  langium imports these
+    // directly but doesn't list them as dependencies.  Depending on the
+    // install layout (monorepo hoisting vs Docker flat) they may not be
+    // resolvable from langium's location, so we alias them explicitly.
+    // require.resolve works in every layout because these are direct deps
+    // in package.json.
+    const resolvePackageDir = (pkg: string): string => {
+      try {
+        return path.dirname(require.resolve(`${pkg}/package.json`));
+      } catch {
+        // Fallback: probe nested location inside vscode-languageserver
+        const nested = [
+          path.resolve(__dirname, 'node_modules/vscode-languageserver/node_modules', pkg),
+          path.resolve(__dirname, '../../node_modules/vscode-languageserver/node_modules', pkg),
+        ];
+        return nested.find((p) => fs.existsSync(p)) ?? pkg;
+      }
+    };
 
     config.resolve.alias = {
       ...config.resolve.alias,
-      'vscode-jsonrpc': path.join(vscodeLsNodeModules, 'vscode-jsonrpc'),
-      'vscode-languageserver-protocol': path.join(vscodeLsNodeModules, 'vscode-languageserver-protocol'),
-      'vscode-languageserver-types': path.join(vscodeLsNodeModules, 'vscode-languageserver-types'),
+      'vscode-jsonrpc': resolvePackageDir('vscode-jsonrpc'),
+      'vscode-languageserver-protocol': resolvePackageDir('vscode-languageserver-protocol'),
+      'vscode-languageserver-types': resolvePackageDir('vscode-languageserver-types'),
     };
 
     // Add fallbacks for Node.js modules used by wasmoon
