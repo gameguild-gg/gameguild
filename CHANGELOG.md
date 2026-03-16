@@ -1,3 +1,10 @@
+## [2.50.2](https://github.com/gameguild-gg/gameguild/compare/v2.50.1...v2.50.2) (2026-03-16)
+
+
+### Bug Fixes
+
+* reveal js ([c20758e](https://github.com/gameguild-gg/gameguild/commit/c20758e0f1e3a20c1c7e4d127468fa2a7917c833))
+
 ## [2.50.1](https://github.com/gameguild-gg/gameguild/compare/v2.50.0...v2.50.1) (2026-03-16)
 
 
