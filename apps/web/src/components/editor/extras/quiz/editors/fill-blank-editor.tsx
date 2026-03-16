@@ -12,6 +12,7 @@ import { useEffect } from "react"
 import { useFieldArray, useFormContext } from "react-hook-form"
 import { Plus, X, Type, ChevronDown, LayoutGrid } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
@@ -418,6 +419,21 @@ export function FillBlankEditor() {
                   <Plus className="h-4 w-4 mr-2" />
                   Add Alternative Answer
                 </Button>
+                <div className="flex items-center gap-2 pt-1">
+                  <Checkbox
+                    id={`case-sensitive-${blankIndex}`}
+                    checked={input.caseSensitive ?? false}
+                    onCheckedChange={(checked) =>
+                      setValue(`blanks.${blankIndex}.input.caseSensitive`, !!checked)
+                    }
+                  />
+                  <Label
+                    htmlFor={`case-sensitive-${blankIndex}`}
+                    className="text-xs text-gray-600 dark:text-gray-400 cursor-pointer"
+                  >
+                    Case-sensitive
+                  </Label>
+                </div>
               </div>
             )}
 
