@@ -1,3 +1,17 @@
+# [2.50.0](https://github.com/gameguild-gg/gameguild/compare/v2.49.6...v2.50.0) (2026-03-16)
+
+
+### Bug Fixes
+
+* **apps/web:** Fix Langium module resolution and update editor dependencies ([e8d672c](https://github.com/gameguild-gg/gameguild/commit/e8d672cd4f1acec9fbc0c7f743962f69102afb17))
+* **apps/web:** Improve Langium module resolution for diverse environments ([645cd5a](https://github.com/gameguild-gg/gameguild/commit/645cd5ab53bb2088afc24b2fd47196ea97686883))
+
+
+### Features
+
+* **apps/web/ai4games2:** Add comprehensive final project content and assignments ([66511cc](https://github.com/gameguild-gg/gameguild/commit/66511ccd04324802134128b3c3d28d1eec78c18f))
+* **apps/web/courses:** Add Wave Function Collapse and update MongoDB fundamentals for Week 10 ([0313c46](https://github.com/gameguild-gg/gameguild/commit/0313c46a725acf23bbfdbc1cdd5a0cee73e4ef37))
+
 ## [2.49.6](https://github.com/gameguild-gg/gameguild/compare/v2.49.5...v2.49.6) (2026-03-15)
 
 
