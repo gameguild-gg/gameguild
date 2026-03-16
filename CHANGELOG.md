@@ -1,3 +1,12 @@
+## [2.50.1](https://github.com/gameguild-gg/gameguild/compare/v2.50.0...v2.50.1) (2026-03-16)
+
+
+### Bug Fixes
+
+* **apps/web:** Fix underscore interpretation in math and improve Mermaid rendering in RevealJS ([8e4233d](https://github.com/gameguild-gg/gameguild/commit/8e4233d711461b1dc5fb1096b8259b4a6f3737c6))
+* mongodb graph ([079dd85](https://github.com/gameguild-gg/gameguild/commit/079dd852eb09a0ae69839a6ae7760e97b57b9668))
+* revealjs compilation issue ([ff7eb50](https://github.com/gameguild-gg/gameguild/commit/ff7eb50dd962c1bab0c974834e2c7f1729d5f590))
+
 # [2.50.0](https://github.com/gameguild-gg/gameguild/compare/v2.49.6...v2.50.0) (2026-03-16)
 
 
