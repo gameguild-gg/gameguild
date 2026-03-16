@@ -348,26 +348,13 @@ Use **bucketing** to group readings:
 
 ## Schema Design Decision Tree
 
-```
-┌─────────────────────────────────┐
-│ Is data accessed together?      │
-└────────┬───────────────┬────────┘
-         │ YES           │ NO
-         ▼               ▼
-    ┌────────┐      ┌──────────┐
-    │ Embed  │      │Reference │
-    └────┬───┘      └────┬─────┘
-         │               │
-         ▼               ▼
-    Will it           Will it
-    exceed 16MB?      change often?
-         │               │
-    YES  │  NO      YES  │  NO
-         ▼               ▼
-    ┌────────┐      ┌──────────┐
-    │Reference│     │ Your     │
-    │        │      │ choice   │
-    └────────┘      └──────────┘
+```mermaid
+flowchart TD
+    A["Is data accessed together?"]
+    A -->|YES| B["Will it exceed 16 MB?"]
+    A -->|NO| R1["Reference"]
+    B -->|YES| R2["Reference\n(or Subset Pattern)"]
+    B -->|NO| E["Embed"]
 ```
 
 ## Performance Considerations
