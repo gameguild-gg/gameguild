@@ -1,3 +1,11 @@
+## [2.50.3](https://github.com/gameguild-gg/gameguild/compare/v2.50.2...v2.50.3) (2026-03-17)
+
+
+### Bug Fixes
+
+* emception ci ([3dcfb4d](https://github.com/gameguild-gg/gameguild/commit/3dcfb4d37bd7d16a3c531020497fb283f1a0e8ec))
+* emception file path ([ca6fff4](https://github.com/gameguild-gg/gameguild/commit/ca6fff47c15632e2b35b9d5e4a12b80e3b66c47c))
+
 ## [2.50.2](https://github.com/gameguild-gg/gameguild/compare/v2.50.1...v2.50.2) (2026-03-16)
 
 
