@@ -215,6 +215,14 @@ jobs:
             echo "ℹ️ emception toolchain cache miss — full rebuild executed and cache refreshed."
           fi
 
+      - name: Prepare CDN for artifact upload
+        run: |
+          # Remove .gitignore files so upload-artifact doesn't skip CDN contents
+          find tools/emception/public/cdn -name '.gitignore' -delete
+          echo "CDN contents to upload:"
+          du -sh tools/emception/public/cdn/
+          ls tools/emception/public/cdn/
+
       - name: Upload emception CDN artifact
         uses: actions/upload-artifact@v4
         with:
@@ -222,6 +230,7 @@ jobs:
           path: |
             tools/emception/public/cdn/
             tools/emception/build/manifest.json
+          include-hidden-files: true
           retention-days: 30
 
   build-web:
@@ -305,7 +314,13 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: emception-cdn
-          path: .
+          path: tools/emception
+
+      - name: Verify CDN download
+        run: |
+          echo "CDN directory check:"
+          ls tools/emception/public/cdn/ | head -20
+          du -sh tools/emception/public/cdn/
 
       - uses: actions/setup-node@v4
         with:
@@ -325,12 +340,23 @@ jobs:
 
       - name: Build demo
         run: cd demos/emception-react && npm run build
+        env:
+          VITE_BASE: /gameguild/
+
+      - name: Prepare dist for artifact upload
+        run: |
+          # Remove .gitignore files so upload-artifact includes all CDN files
+          find demos/emception-react/dist -name '.gitignore' -delete
+          echo "Demo dist contents:"
+          du -sh demos/emception-react/dist/
+          du -sh demos/emception-react/dist/cdn/ 2>/dev/null || echo "No cdn/ in dist"
 
       - name: Upload demo dist artifact
         uses: actions/upload-artifact@v4
         with:
           name: emception-demo-dist
           path: demos/emception-react/dist
+          include-hidden-files: true
           retention-days: 30
 
   bundle-pages:
@@ -348,6 +374,12 @@ jobs:
           name: emception-demo-dist
           path: /tmp/emception-demo
 
+      - name: Download emception CDN artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: emception-cdn
+          path: /tmp/emception-cdn
+
       - name: Download gource artifact
         uses: actions/download-artifact@v4
         with:
@@ -359,12 +391,36 @@ jobs:
           rm -rf .pages
           mkdir -p .pages/contributors
 
+          # Copy the Vite build output (HTML, JS, CSS, assets)
           cp -R /tmp/emception-demo/* .pages/
+
+          # Remove the incomplete CDN from the Vite dist (blocked by .gitignore during artifact upload)
+          rm -rf .pages/cdn
+
+          # Copy the full CDN from the dedicated emception-cdn artifact
+          # The emception-cdn artifact has paths like tools/emception/public/cdn/...
+          if [ -d /tmp/emception-cdn/tools/emception/public/cdn ]; then
+            cp -R /tmp/emception-cdn/tools/emception/public/cdn .pages/cdn
+          elif [ -d /tmp/emception-cdn/public/cdn ]; then
+            cp -R /tmp/emception-cdn/public/cdn .pages/cdn
+          elif [ -d /tmp/emception-cdn/cdn ]; then
+            cp -R /tmp/emception-cdn/cdn .pages/cdn
+          else
+            echo "::warning::Could not find CDN directory in emception-cdn artifact"
+            echo "Contents of /tmp/emception-cdn:"
+            find /tmp/emception-cdn -maxdepth 3 -type d
+          fi
+
           cp -R contributors/* .pages/contributors/
 
           # upload-artifact@v4 strips the common prefix, so files are at root
           cp /tmp/gource-media/gource.mp4 .pages/contributors/gource.mp4 || echo "::warning::gource.mp4 not found, skipping"
           cp /tmp/gource-media/gource.gif .pages/contributors/gource.gif || echo "::warning::gource.gif not found, skipping"
+
+          echo "Pages directory summary:"
+          echo "  Total size: $(du -sh .pages | cut -f1)"
+          echo "  CDN size:   $(du -sh .pages/cdn 2>/dev/null | cut -f1 || echo 'MISSING')"
+          ls -la .pages/
 
       - name: Upload pages artifact
         uses: actions/upload-pages-artifact@v3
