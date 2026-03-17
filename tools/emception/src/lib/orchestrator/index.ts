@@ -33,6 +33,23 @@ export async function boot(manifestUrl: string, terminalContainerOrTerminal: HTM
   console.log(`${P} Step 1/6: Fetching manifest from ${manifestUrl}...`);
   const response = await fetch(manifestUrl);
   const manifest = (await response.json()) as FSManifest;
+  // Derive the CDN base URL from the manifest URL's directory.
+  // e.g. "https://host/gameguild/cdn/manifest.json" → "https://host/gameguild/cdn"
+  const manifestDir = manifestUrl.replace(/\/[^/]*$/, '');
+  manifest.baseUrl = manifestDir;
+
+  // Resolve bundle URLs relative to the manifest directory
+  if (manifest.bundles) {
+    for (const bundle of Object.values(manifest.bundles as Record<string, { url?: string }>)) {
+      if (bundle.url && !bundle.url.startsWith('http')) {
+        const bakedBase = '/cdn';
+        const relativePath = bundle.url.startsWith(bakedBase)
+          ? bundle.url.slice(bakedBase.length)
+          : bundle.url;
+        bundle.url = manifestDir + relativePath;
+      }
+    }
+  }
   const fileCount = Object.keys(manifest.files).length;
   const bundleCount = Object.keys(manifest.bundles || {}).length;
   console.log(`${P} Step 1/6 done: manifest loaded (${fileCount} files, ${bundleCount} bundles, baseUrl=${manifest.baseUrl}) in ${ms(t1)}`);

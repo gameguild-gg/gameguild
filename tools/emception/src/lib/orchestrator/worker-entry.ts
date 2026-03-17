@@ -166,16 +166,24 @@ async function handleBoot(manifestUrl: string, toolVersions?: { pythonMajorMinor
     const t1 = performance.now();
     const response = await fetch(manifestUrl);
     const manifest = (await response.json()) as FSManifest & { toolVersions?: Record<string, string> };
-    // Resolve relative baseUrl to absolute — Workers may lack the page origin
-    // as their implicit base, so fetch() of relative paths can fail.
-    if (manifest.baseUrl && !manifest.baseUrl.startsWith('http')) {
-        manifest.baseUrl = new URL(manifest.baseUrl, manifestUrl).href;
-    }
-    // Also resolve bundle URLs that were baked with the relative baseUrl
+    // Derive the CDN base URL from the manifest URL's directory.
+    // e.g. "https://host/gameguild/cdn/manifest.json" → "https://host/gameguild/cdn"
+    // This works regardless of deploy subpath (GitHub Pages, custom domain, etc.)
+    const manifestDir = manifestUrl.replace(/\/[^/]*$/, ''); // strip filename
+    manifest.baseUrl = manifestDir;
+
+    // Also resolve bundle URLs relative to the manifest directory
     if (manifest.bundles) {
         for (const bundle of Object.values(manifest.bundles as Record<string, { url?: string }>)) {
             if (bundle.url && !bundle.url.startsWith('http')) {
-                bundle.url = new URL(bundle.url, manifestUrl).href;
+                // Bundle URLs like "/cdn/usr/lib/clang.tar.br" need the same treatment.
+                // Strip the baseUrl prefix (e.g. "/cdn") from the baked-in URL to get
+                // the relative path, then resolve against the manifest directory.
+                const bakedBase = '/cdn';
+                const relativePath = bundle.url.startsWith(bakedBase)
+                    ? bundle.url.slice(bakedBase.length)
+                    : bundle.url;
+                bundle.url = manifestDir + relativePath;
             }
         }
     }
