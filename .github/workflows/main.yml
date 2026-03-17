@@ -218,10 +218,10 @@ jobs:
       - name: Prepare CDN for artifact upload
         run: |
           # Remove .gitignore files so upload-artifact doesn't skip CDN contents
-          find tools/emception/public/cdn -name '.gitignore' -delete
+          find public/cdn -name '.gitignore' -delete
           echo "CDN contents to upload:"
-          du -sh tools/emception/public/cdn/
-          ls tools/emception/public/cdn/
+          du -sh public/cdn/
+          ls public/cdn/
 
       - name: Upload emception CDN artifact
         uses: actions/upload-artifact@v4
