@@ -1,3 +1,10 @@
+## [2.50.4](https://github.com/gameguild-gg/gameguild/compare/v2.50.3...v2.50.4) (2026-03-17)
+
+
+### Bug Fixes
+
+* networking final project ([e244b3a](https://github.com/gameguild-gg/gameguild/commit/e244b3a60688c412cf6a9f3921c7b0f04c902660))
+
 ## [2.50.3](https://github.com/gameguild-gg/gameguild/compare/v2.50.2...v2.50.3) (2026-03-17)
 
 
