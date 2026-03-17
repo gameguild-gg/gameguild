@@ -64,6 +64,14 @@ import networkingWeek07DeltaCompressionMd from './07-distributed-state-sync/02d-
 import networkingWeek07ReadingsMd from './07-distributed-state-sync/03-readings.md';
 import networkingWeek07AssignmentMd from './07-distributed-state-sync/04-assignment.md';
 import networkingWeek07QuizMd from './07-distributed-state-sync/05-quiz.md';
+import networkingWeek09FinalProject from './09-break/finalproject.md';
+import networkingWeek10AssignmentMd from './10-http/assignment.md';
+import networkingWeek11AssignmentMd from './11-nonblocking/assignment.md';
+import networkingWeek12AssignmentMd from './12-performance/assignment.md';
+import networkingWeek13AssignmentMd from './13-prediction/assignment.md';
+import networkingWeek14AssignmentMd from './14-architecture/assignment.md';
+import networkingWeek15AssignmentMd from './15-security/assignment.md';
+import networkingWeek16AssignmentMd from './16-presentations/assignment.md';
 import networkingSyllabus from './syllabus.md';
 
 export const networkingProgram: Program = {
@@ -1683,7 +1691,374 @@ networkingWeek07LectureContent.children = [
     networkingWeek07DeltaCompression,
 ];
 
-networkingProgram.programContents = [networkingSyllabusContent, networkingWeek01Intro, networkingWeek02Intro, networkingWeek03Intro, networkingWeek04Intro, networkingWeek05Intro, networkingWeek06Intro, networkingWeek07Intro];
+// Week 09 — Spring Break / Final Project Description
+export const networkingWeek09FinalProjectContent: ProgramContent & { slug: string } = {
+    id: 'week-09-final-project',
+    slug: 'final-project',
+    programId: 'networking-program-1',
+    parentId: undefined,
+    title: 'Final Project',
+    description: 'Final project overview: deliverables, topic suggestions, milestones, and grading.',
+    type: 0, // Page
+    body: networkingWeek09FinalProject,
+    sortOrder: 9,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 30,
+    visibility: 1, // Published
+    program: networkingProgram,
+    parent: undefined,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+// Week 10 — HTTP, REST, WebSockets + Checkpoint 1: Proposal
+export const networkingWeek10Intro: ProgramContent & { slug: string } = {
+    id: 'week-10',
+    slug: 'week-10',
+    programId: 'networking-program-1',
+    parentId: undefined,
+    title: 'Week 10 — HTTP, REST APIs, and Real-Time Web Protocols',
+    description: 'HTTP fundamentals, REST API design, WebSockets for bidirectional communication.',
+    type: 0, // Page
+    body: '# Week 10 — HTTP, REST APIs, and Real-Time Web Protocols\n\nThis week covers HTTP fundamentals, REST API design principles, and WebSockets for bidirectional communication. See the lecture and readings for details.\n\n**Project Milestone 01:** Team formation + project proposal.',
+    sortOrder: 10,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 90,
+    visibility: 1, // Published
+    program: networkingProgram,
+    parent: undefined,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const networkingWeek10Assignment: ProgramContent & { slug: string } = {
+    id: 'week-10-assignment',
+    slug: 'assignment',
+    programId: 'networking-program-1',
+    parentId: 'week-10',
+    title: 'Checkpoint 1: Proposal',
+    description: 'Team formation and project proposal submission.',
+    type: 0, // Page
+    body: networkingWeek10AssignmentMd,
+    sortOrder: 1,
+    isRequired: true,
+    gradingMethod: 1, // Points
+    maxPoints: 100,
+    estimatedMinutes: 120,
+    visibility: 1, // Published
+    program: networkingProgram,
+    parent: networkingWeek10Intro,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+networkingWeek10Intro.children = [networkingWeek10Assignment];
+
+// Week 11 — Non-Blocking I/O and Concurrency + Checkpoint 2: Architecture Design
+export const networkingWeek11Intro: ProgramContent & { slug: string } = {
+    id: 'week-11',
+    slug: 'week-11',
+    programId: 'networking-program-1',
+    parentId: undefined,
+    title: 'Week 11 — Non-Blocking I/O and Concurrency',
+    description: 'Blocking vs non-blocking sockets, select/poll/epoll, multithreading, async patterns.',
+    type: 0, // Page
+    body: '# Week 11 — Non-Blocking I/O and Concurrency\n\nThis week covers blocking vs non-blocking sockets, select/poll/epoll, multithreading basics, and async patterns. See the lecture and readings for details.\n\n**Project Milestone 02:** Architecture document.',
+    sortOrder: 11,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 90,
+    visibility: 1, // Published
+    program: networkingProgram,
+    parent: undefined,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const networkingWeek11Assignment: ProgramContent & { slug: string } = {
+    id: 'week-11-assignment',
+    slug: 'assignment',
+    programId: 'networking-program-1',
+    parentId: 'week-11',
+    title: 'Checkpoint 2: Architecture Design',
+    description: 'Network protocol design document and architecture diagram.',
+    type: 0, // Page
+    body: networkingWeek11AssignmentMd,
+    sortOrder: 1,
+    isRequired: true,
+    gradingMethod: 1, // Points
+    maxPoints: 100,
+    estimatedMinutes: 180,
+    visibility: 1, // Published
+    program: networkingProgram,
+    parent: networkingWeek11Intro,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+networkingWeek11Intro.children = [networkingWeek11Assignment];
+
+// Week 12 — Performance, Simulation Frequency, and Reliability + Checkpoint 3: Networking Prototype
+export const networkingWeek12Intro: ProgramContent & { slug: string } = {
+    id: 'week-12',
+    slug: 'week-12',
+    programId: 'networking-program-1',
+    parentId: undefined,
+    title: 'Week 12 — Performance, Simulation Frequency, and Reliability',
+    description: 'Latency, jitter, packet loss measurement, tick rates, reliable UDP, bandwidth management.',
+    type: 0, // Page
+    body: '# Week 12 — Performance, Simulation Frequency, and Reliability\n\nThis week covers latency/jitter/packet loss measurement, tick rates and simulation frequency, reliable UDP implementation, and bandwidth management. See the lecture and readings for details.\n\n**Project Milestone 03:** Networking prototype.',
+    sortOrder: 12,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 90,
+    visibility: 1, // Published
+    program: networkingProgram,
+    parent: undefined,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const networkingWeek12Assignment: ProgramContent & { slug: string } = {
+    id: 'week-12-assignment',
+    slug: 'assignment',
+    programId: 'networking-program-1',
+    parentId: 'week-12',
+    title: 'Checkpoint 3: Networking Prototype',
+    description: 'Core networking implemented and demonstrable.',
+    type: 0, // Page
+    body: networkingWeek12AssignmentMd,
+    sortOrder: 1,
+    isRequired: true,
+    gradingMethod: 1, // Points
+    maxPoints: 100,
+    estimatedMinutes: 300,
+    visibility: 1, // Published
+    program: networkingProgram,
+    parent: networkingWeek12Intro,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+networkingWeek12Intro.children = [networkingWeek12Assignment];
+
+// Week 13 — Client Prediction and Interpolation + Checkpoint 4: Alpha Build
+export const networkingWeek13Intro: ProgramContent & { slug: string } = {
+    id: 'week-13',
+    slug: 'week-13',
+    programId: 'networking-program-1',
+    parentId: undefined,
+    title: 'Week 13 — Client Prediction and Interpolation',
+    description: 'Client-side prediction, entity interpolation, dead reckoning, input handling.',
+    type: 0, // Page
+    body: '# Week 13 — Client Prediction and Interpolation\n\nThis week covers client-side prediction, entity interpolation/smoothing, dead reckoning, and input handling. Guest lecturer: Photon Quantum.\n\n**Project Milestone 04:** Alpha build (in-class testing session).',
+    sortOrder: 13,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 90,
+    visibility: 1, // Published
+    program: networkingProgram,
+    parent: undefined,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const networkingWeek13Assignment: ProgramContent & { slug: string } = {
+    id: 'week-13-assignment',
+    slug: 'assignment',
+    programId: 'networking-program-1',
+    parentId: 'week-13',
+    title: 'Checkpoint 4: Alpha Build',
+    description: 'In-class testing session with peer feedback.',
+    type: 0, // Page
+    body: networkingWeek13AssignmentMd,
+    sortOrder: 1,
+    isRequired: true,
+    gradingMethod: 1, // Points
+    maxPoints: 100,
+    estimatedMinutes: 120,
+    visibility: 1, // Published
+    program: networkingProgram,
+    parent: networkingWeek13Intro,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+networkingWeek13Intro.children = [networkingWeek13Assignment];
+
+// Week 14 — Server Architecture and Session Management + Checkpoint 5: Beta Build & Feature Freeze
+export const networkingWeek14Intro: ProgramContent & { slug: string } = {
+    id: 'week-14',
+    slug: 'week-14',
+    programId: 'networking-program-1',
+    parentId: undefined,
+    title: 'Week 14 — Server Architecture and Session Management',
+    description: 'Authoritative servers, dedicated vs listen servers, rollback, session management, matchmaking.',
+    type: 0, // Page
+    body: '# Week 14 — Server Architecture and Session Management\n\nThis week covers authoritative servers, dedicated vs listen servers, rollback networking, session management, matchmaking, and scaling considerations. See the lecture and readings for details.\n\n**Project Milestone 05:** Beta build & feature freeze (in-class testing session).',
+    sortOrder: 14,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 90,
+    visibility: 1, // Published
+    program: networkingProgram,
+    parent: undefined,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const networkingWeek14Assignment: ProgramContent & { slug: string } = {
+    id: 'week-14-assignment',
+    slug: 'assignment',
+    programId: 'networking-program-1',
+    parentId: 'week-14',
+    title: 'Checkpoint 5: Beta Build & Feature Freeze',
+    description: 'Second testing session. Feature freeze after this week.',
+    type: 0, // Page
+    body: networkingWeek14AssignmentMd,
+    sortOrder: 1,
+    isRequired: true,
+    gradingMethod: 1, // Points
+    maxPoints: 100,
+    estimatedMinutes: 120,
+    visibility: 1, // Published
+    program: networkingProgram,
+    parent: networkingWeek14Intro,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+networkingWeek14Intro.children = [networkingWeek14Assignment];
+
+// Week 15 — NAT Traversal and Security + Checkpoint 6: Peer Evaluation & Code Freeze
+export const networkingWeek15Intro: ProgramContent & { slug: string } = {
+    id: 'week-15',
+    slug: 'week-15',
+    programId: 'networking-program-1',
+    parentId: undefined,
+    title: 'Week 15 — NAT Traversal and Security',
+    description: 'NAT types, hole punching, STUN/TURN/ICE, network security, encryption, anti-cheat.',
+    type: 0, // Page
+    body: '# Week 15 — NAT Traversal and Security\n\nThis week covers NAT types, hole punching, STUN/TURN/ICE concepts, network security, encryption basics, authentication, and anti-cheat principles. See the lecture and readings for details.\n\n**Project Milestone 06:** Peer evaluation & code freeze.',
+    sortOrder: 15,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 90,
+    visibility: 1, // Published
+    program: networkingProgram,
+    parent: undefined,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const networkingWeek15Assignment: ProgramContent & { slug: string } = {
+    id: 'week-15-assignment',
+    slug: 'assignment',
+    programId: 'networking-program-1',
+    parentId: 'week-15',
+    title: 'Checkpoint 6: Peer Evaluation & Code Freeze',
+    description: 'Peer code review, technical essay draft, and code freeze.',
+    type: 0, // Page
+    body: networkingWeek15AssignmentMd,
+    sortOrder: 1,
+    isRequired: true,
+    gradingMethod: 1, // Points
+    maxPoints: 100,
+    estimatedMinutes: 180,
+    visibility: 1, // Published
+    program: networkingProgram,
+    parent: networkingWeek15Intro,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+networkingWeek15Intro.children = [networkingWeek15Assignment];
+
+// Week 16 — Final Presentations + Checkpoint 7
+export const networkingWeek16Intro: ProgramContent & { slug: string } = {
+    id: 'week-16',
+    slug: 'week-16',
+    programId: 'networking-program-1',
+    parentId: undefined,
+    title: 'Week 16 — Final Project Delivery',
+    description: 'Final presentations, live demos, and all deliverables due.',
+    type: 0, // Page
+    body: '# Week 16 — Final Project Delivery\n\nThis is the final week. Each team delivers a 10-minute presentation with live demo, followed by 5-minute Q&A. All final deliverables are due by Thursday 2026/04/30.',
+    sortOrder: 16,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 60,
+    visibility: 1, // Published
+    program: networkingProgram,
+    parent: undefined,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const networkingWeek16Assignment: ProgramContent & { slug: string } = {
+    id: 'week-16-assignment',
+    slug: 'assignment',
+    programId: 'networking-program-1',
+    parentId: 'week-16',
+    title: 'Checkpoint 7: Final Presentations',
+    description: 'Final presentations, live demos, and all deliverables submission.',
+    type: 0, // Page
+    body: networkingWeek16AssignmentMd,
+    sortOrder: 1,
+    isRequired: true,
+    gradingMethod: 1, // Points
+    maxPoints: 100,
+    estimatedMinutes: 60,
+    visibility: 1, // Published
+    program: networkingProgram,
+    parent: networkingWeek16Intro,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+networkingWeek16Intro.children = [networkingWeek16Assignment];
+
+networkingProgram.programContents = [networkingSyllabusContent, networkingWeek01Intro, networkingWeek02Intro, networkingWeek03Intro, networkingWeek04Intro, networkingWeek05Intro, networkingWeek06Intro, networkingWeek07Intro, networkingWeek09FinalProjectContent, networkingWeek10Intro, networkingWeek11Intro, networkingWeek12Intro, networkingWeek13Intro, networkingWeek14Intro, networkingWeek15Intro, networkingWeek16Intro];
 networkingProduct.productPrograms = [networkingProductProgram];
 
 export default networkingProgram;
