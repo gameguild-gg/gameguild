@@ -1,3 +1,10 @@
+## [2.50.7](https://github.com/gameguild-gg/gameguild/compare/v2.50.6...v2.50.7) (2026-03-19)
+
+
+### Bug Fixes
+
+* database grading ([f5c9931](https://github.com/gameguild-gg/gameguild/commit/f5c99318e2f9e914e2ebf732390a87c558e44356))
+
 ## [2.50.6](https://github.com/gameguild-gg/gameguild/compare/v2.50.5...v2.50.6) (2026-03-19)
 
 
