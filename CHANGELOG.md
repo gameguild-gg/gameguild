@@ -1,3 +1,10 @@
+## [2.50.8](https://github.com/gameguild-gg/gameguild/compare/v2.50.7...v2.50.8) (2026-03-19)
+
+
+### Bug Fixes
+
+* improve the timings for the database final project ([0e91ebd](https://github.com/gameguild-gg/gameguild/commit/0e91ebdf24c67a3ece35d945322ce096ce13157f))
+
 ## [2.50.7](https://github.com/gameguild-gg/gameguild/compare/v2.50.6...v2.50.7) (2026-03-19)
 
 
