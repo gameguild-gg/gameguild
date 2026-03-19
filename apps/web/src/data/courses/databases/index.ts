@@ -67,6 +67,7 @@ import week07Transactions from './07-schema-patterns/transactions.md';
 
 // Week 10 imports
 import week10AggregationPipeline from './10-mongodb/aggregation-pipeline.md';
+import week10Assignment from './10-mongodb/assignment.md';
 import week10DrizzleMongoDB from './10-mongodb/drizzle-mongodb.md';
 import week10MongoDBCRUD from './10-mongodb/mongodb-crud.md';
 import week10MongoDBFundamentals from './10-mongodb/mongodb-fundamentals.md';
@@ -74,6 +75,27 @@ import week10Quiz from './10-mongodb/quiz/mongodb-quiz.md';
 import week10Readings from './10-mongodb/readings-10.md';
 import week10Reveal from './10-mongodb/reveal.md';
 import week10SchemaDesignPatterns from './10-mongodb/schema-design-patterns.md';
+
+// Week 11 checkpoint import
+import week11Assignment from './11-keyvalue-widecolumn/assignment.md';
+
+// Week 12 checkpoint import
+import week12Assignment from './12-graph-databases/assignment.md';
+
+// Week 13 checkpoint import
+import week13Assignment from './13-timeseries-search/assignment.md';
+
+// Week 14 checkpoint import
+import week14Assignment from './14-vector-streaming/assignment.md';
+
+// Week 15 checkpoint import
+import week15Assignment from './15-peer/assignment.md';
+
+// Week 16 checkpoint import
+import week16Assignment from './16-presentations/assignment.md';
+
+// Final project import
+import finalProjectIndex from './09-break/final-project.md';
 
 // Program definition
 export const databasesProgram: Program = {
@@ -1536,6 +1558,198 @@ export const week10QuizContent: ProgramContent = {
     updatedAt: '2023-01-01T00:00:00Z',
 };
 
+// Final Project - Parent content
+export const finalProjectContent: ProgramContent = {
+    id: 'databases-final-project',
+    programId: 'databases-program-1',
+    slug: 'final-project',
+    parentId: undefined,
+    title: 'Final Project',
+    description: 'Build a multi-database application using 3+ database types orchestrated via Docker Compose',
+    type: 0, // Page
+    body: finalProjectIndex,
+    sortOrder: 10,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 30,
+    visibility: 1, // Published
+    program: databasesProgram,
+    parent: undefined,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+// Checkpoint 1: Proposal (Week 10)
+export const week10AssignmentContent: ProgramContent = {
+    id: 'databases-week-10-assignment',
+    programId: 'databases-program-1',
+    slug: 'checkpoint-1-proposal',
+    parentId: 'databases-final-project',
+    title: 'Checkpoint 1: Proposal',
+    description: 'Form your team, select a topic, and submit a project proposal slideshow',
+    type: 1, // Assignment
+    body: week10Assignment,
+    sortOrder: 1,
+    isRequired: true,
+    gradingMethod: 1, // Graded
+    maxPoints: 100,
+    estimatedMinutes: 120,
+    visibility: 1, // Published
+    program: databasesProgram,
+    parent: finalProjectContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+// Checkpoint 2: Architecture Design (Week 11)
+export const week11AssignmentContent: ProgramContent = {
+    id: 'databases-week-11-assignment',
+    programId: 'databases-program-1',
+    slug: 'checkpoint-2-architecture',
+    parentId: 'databases-final-project',
+    title: 'Checkpoint 2: Architecture Design',
+    description: 'Design and document your multi-database system architecture with diagrams and data flow',
+    type: 1, // Assignment
+    body: week11Assignment,
+    sortOrder: 2,
+    isRequired: true,
+    gradingMethod: 1, // Graded
+    maxPoints: 100,
+    estimatedMinutes: 180,
+    visibility: 1, // Published
+    program: databasesProgram,
+    parent: finalProjectContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+// Checkpoint 3: Proof of Concept (Week 12)
+export const week12AssignmentContent: ProgramContent = {
+    id: 'databases-week-12-assignment',
+    programId: 'databases-program-1',
+    slug: 'checkpoint-3-poc',
+    parentId: 'databases-final-project',
+    title: 'Checkpoint 3: Proof of Concept',
+    description: 'Docker Compose running with at least one database operational and seed data loaded',
+    type: 1, // Assignment
+    body: week12Assignment,
+    sortOrder: 3,
+    isRequired: true,
+    gradingMethod: 1, // Graded
+    maxPoints: 100,
+    estimatedMinutes: 300,
+    visibility: 1, // Published
+    program: databasesProgram,
+    parent: finalProjectContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+// Checkpoint 4: Testing Session 1 (Week 13)
+export const week13AssignmentContent: ProgramContent = {
+    id: 'databases-week-13-assignment',
+    programId: 'databases-program-1',
+    slug: 'checkpoint-4-testing',
+    parentId: 'databases-final-project',
+    title: 'Checkpoint 4: Testing Session 1',
+    description: 'In-class peer testing session — demonstrate your system and collect feedback',
+    type: 1, // Assignment
+    body: week13Assignment,
+    sortOrder: 4,
+    isRequired: true,
+    gradingMethod: 1, // Graded
+    maxPoints: 100,
+    estimatedMinutes: 90,
+    visibility: 1, // Published
+    program: databasesProgram,
+    parent: finalProjectContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+// Checkpoint 5: Feature Freeze (Week 14)
+export const week14AssignmentContent: ProgramContent = {
+    id: 'databases-week-14-assignment',
+    programId: 'databases-program-1',
+    slug: 'checkpoint-5-feature-freeze',
+    parentId: 'databases-final-project',
+    title: 'Checkpoint 5: Testing Session 2 & Feature Freeze',
+    description: 'Second testing session and feature freeze — bug fixes and documentation only after this week',
+    type: 1, // Assignment
+    body: week14Assignment,
+    sortOrder: 5,
+    isRequired: true,
+    gradingMethod: 1, // Graded
+    maxPoints: 100,
+    estimatedMinutes: 90,
+    visibility: 1, // Published
+    program: databasesProgram,
+    parent: finalProjectContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+// Checkpoint 6: Peer Evaluation & Code Freeze (Week 15)
+export const week15AssignmentContent: ProgramContent = {
+    id: 'databases-week-15-assignment',
+    programId: 'databases-program-1',
+    slug: 'checkpoint-6-peer-eval',
+    parentId: 'databases-final-project',
+    title: 'Checkpoint 6: Peer Evaluation & Code Freeze',
+    description: 'Exchange repos for code review, submit writeup draft, and freeze code by Wednesday',
+    type: 1, // Assignment
+    body: week15Assignment,
+    sortOrder: 6,
+    isRequired: true,
+    gradingMethod: 1, // Graded
+    maxPoints: 100,
+    estimatedMinutes: 240,
+    visibility: 1, // Published
+    program: databasesProgram,
+    parent: finalProjectContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+// Checkpoint 7: Final Presentations (Week 16)
+export const week16AssignmentContent: ProgramContent = {
+    id: 'databases-week-16-assignment',
+    programId: 'databases-program-1',
+    slug: 'checkpoint-7-presentations',
+    parentId: 'databases-final-project',
+    title: 'Checkpoint 7: Final Presentations',
+    description: '10-minute presentation with live demo, Q&A, and all final deliverables due',
+    type: 1, // Assignment
+    body: week16Assignment,
+    sortOrder: 7,
+    isRequired: true,
+    gradingMethod: 1, // Graded
+    maxPoints: 100,
+    estimatedMinutes: 60,
+    visibility: 1, // Published
+    program: databasesProgram,
+    parent: finalProjectContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
 // Wire program contents and product-program relations
 // only the parent contents go directly under the program
 databasesProgram.programContents = [
@@ -1548,6 +1762,7 @@ databasesProgram.programContents = [
     week06RevealContent,
     week07RevealContent,
     week10RevealContent,
+    finalProjectContent,
 ];
 
 // Set up parent-child relationships
@@ -1638,6 +1853,16 @@ week10ReadingsContent.children = [
     week10MongoDBCRUDContent,
     week10AggregationPipelineContent,
     week10DrizzleMongoDBContent,
+];
+
+finalProjectContent.children = [
+    week10AssignmentContent,
+    week11AssignmentContent,
+    week12AssignmentContent,
+    week13AssignmentContent,
+    week14AssignmentContent,
+    week15AssignmentContent,
+    week16AssignmentContent,
 ];
 
 databasesProduct.productPrograms = [databasesProductProgram];
