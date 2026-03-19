@@ -1,3 +1,10 @@
+## [2.50.5](https://github.com/gameguild-gg/gameguild/compare/v2.50.4...v2.50.5) (2026-03-19)
+
+
+### Bug Fixes
+
+* reveal and minor typos ([77aa7cf](https://github.com/gameguild-gg/gameguild/commit/77aa7cf7dc4d2e3e70e450f63e8580d888ef4d58))
+
 ## [2.50.4](https://github.com/gameguild-gg/gameguild/compare/v2.50.3...v2.50.4) (2026-03-17)
 
 
