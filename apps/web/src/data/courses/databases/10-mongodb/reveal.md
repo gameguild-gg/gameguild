@@ -2019,7 +2019,8 @@ Design a MongoDB schema for a blog platform (users, posts, comments). Decide: em
 - [MongoDB CRUD Reference](https://www.mongodb.com/docs/manual/crud/)
 - [Aggregation Pipeline Docs](https://www.mongodb.com/docs/manual/core/aggregation-pipeline/)
 - [MongoDB Playground](https://mongoplayground.net/) — online query tester
-- [MongoDB Compass](https://www.mongodb.com/products/compass) — GUI client
+- [MongoDB Compass](https://www.mongodb.com/products/tools/compass) — GUI client
+- [Visualeaf](https://demo.visualeaf.com/#/) — visual aggregation pipeline builder
 - [Drizzle ORM Documentation](https://orm.drizzle.team/docs/overview)
 - [Practical MongoDB Aggregations](https://www.practical-mongodb-aggregations.com/) — free book
 - [MongoDB Docker Hub](https://hub.docker.com/_/mongo)

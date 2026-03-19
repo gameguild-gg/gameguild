@@ -16,7 +16,7 @@ The goal of this final project is to build a **multi-database application** that
 
 - Your application must use **at least 3 different database types** (e.g., PostgreSQL + MongoDB + Redis, or Neo4j + Elasticsearch + Kafka + PostgreSQL).
 - The entire system must run via a single `docker-compose up` command. A reviewer should be able to clone your repo and have everything running in one shot.
-- You may use AI assistant tools to help fill gaps in service development, but you must understand and be able to explain all code. As a Champlain student, you have free access to [Claude Code](https://claude.ai/) and [GitHub Copilot](https://github.com/features/copilot) (via the [GitHub Student Developer Pack](https://education.github.com/pack)), among others.
+- You may use AI assistant tools (GitHub Copilot, ChatGPT, etc.) to help fill gaps in service development, but you must understand and be able to explain all code.
 
 ::: tip
 
