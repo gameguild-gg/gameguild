@@ -199,20 +199,18 @@ In the **Tiled Model**, the designer provides:
 The algorithm creates output where every tile placement obeys the adjacency rules.
 
 ```mermaid
-flowchart LR
-    subgraph Tiles
+flowchart TD
+
         A["🟩 Grass"]
         B["🟦 Water"]
         C["🟫 Sand"]
         D["⬛ Road"]
-    end
-    subgraph Rules
+
         A -->|"can be adjacent"| A
         A -->|"can be adjacent"| C
         C -->|"can be adjacent"| B
         D -->|"can be adjacent"| D
         D -->|"can be adjacent"| A
-    end
 ```
 
 ---
@@ -280,10 +278,10 @@ A practical way to define adjacencies uses **sockets** (also called edge labels)
 - Two tiles are compatible in direction $d$ if their touching edges **match**
 
 ```
-Tile: GRASS        Tile: SAND
-  [G]                [G]
+Tile: GRASS       Tile: SAND
+   [G]               [G]
 [G][G][G]    ←→   [G][S][W]
-  [G]                [W]
+   [G]               [W]
 ```
 
 Edge labels: Grass edge = `G`, Water edge = `W`, Sand edge `S`  
@@ -592,12 +590,12 @@ The AC-3 algorithm processes a queue of arcs, similar to WFC's propagation queue
 ### Enabler Counts Data Structure
 
 Naively checking all neighbors every propagation step is slow.  
-WFC uses an **enabler count** table:
+WFC uses an **enabler count** table — one integer per (cell, tile, direction):
 
-$$\text{enablers}_{x,y,t,d} = \text{number of tiles in the opposite neighbor along } d \text{ that are compatible with tile } t$$
+> `enablers[cell][tile][dir]` = how many tiles in the neighbor along `dir` are still compatible with `tile`
 
-- When a tile $t'$ is removed from neighbor cell in direction $d$, for every tile $t$ that $t'$ enabled, decrement $\text{enablers}_{x,y,t,d}$.
-- If $\text{enablers}_{x,y,t,d}$ reaches **zero** for any direction $d$, tile $t$ has **no support** and must be removed from $(x, y)$.
+- When a tile is removed from a neighbor, decrement the enabler count for every tile it was supporting.
+- If any enabler count reaches **zero**, that tile has lost all support from that direction and must be removed too.
 
 This allows $O(1)$ per-tile-per-direction update checks.
 
@@ -2031,26 +2029,6 @@ Active research areas in WFC and related algorithms:
 5. **WFC for narrative**: applying constraint propagation to story generation, where "tiles" are story events with narrative compatibility constraints
 
 > The field is young — foundational papers are only ~10 years old. There is substantial room for novel contributions.
-
----
-
-### Assignment Preview
-
-In the upcoming **WFC Assignment**, you will:
-
-1. **Implement the tiled WFC** algorithm in C++ from scratch
-2. **Design a 5–8 tile tileset** for a 2D terrain (terrain type of your choice)
-3. **Run the algorithm** on a 32×32 grid and visualize the output
-4. **Measure contradiction rate** over 100 runs and identify which tile rule pairs most often cause contradictions
-5. **Extend**: implement one of (weighted tiles, backtracking, or a second tileset)
-
-**Deliverables**:
-
-- Commented C++ source code (compiles with `g++ -std=c++17`)
-- 5 sample output images (different seeds)
-- Short report (1–2 pages): tileset design decisions, contradiction analysis, one extension implemented
-
-**Grading criteria**: correctness of propagation, tileset quality, code clarity, analysis depth.
 
 ---
 

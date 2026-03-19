@@ -107,61 +107,227 @@ const updateHashWithSlide = (slideIndex: number): void => {
   window.history.replaceState(null, '', newUrl);
 };
 
-// Helper function to render all mermaid diagrams in a container
-const renderMermaidDiagrams = async (container: HTMLElement, isDark: boolean): Promise<void> => {
+// Helper function to render mermaid diagrams in a single slide element.
+// Render happens only for visible slides to avoid zero-size layout issues.
+const renderMermaidInSlide = async (slideEl: HTMLElement, isDark: boolean): Promise<void> => {
+  if (slideEl.dataset.mermaidRendered === 'true') return;
+
+  const mermaidBlocks = slideEl.querySelectorAll(
+    'code.language-mermaid, code.mermaid, pre.language-mermaid > code, pre.mermaid > code'
+  );
+  if (mermaidBlocks.length === 0) return;
+
   try {
     const mermaid = (await import('mermaid')).default;
 
-    // Initialize mermaid with theme matching the current mode
-    mermaid.initialize({
+    // Wait for web fonts so mermaid text measurement is stable.
+    if ('fonts' in document && document.fonts?.ready) {
+      await document.fonts.ready;
+    }
+
+    // Ensure slide has real dimensions before rendering mermaid.
+    let ready = false;
+    for (let i = 0; i < 6; i++) {
+      const rect = slideEl.getBoundingClientRect();
+      if (rect.width > 0 && rect.height > 0) {
+        ready = true;
+        break;
+      }
+      await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+    }
+    if (!ready) {
+      if (slideEl.dataset.mermaidRetrying !== 'true') {
+        slideEl.dataset.mermaidRetrying = 'true';
+        setTimeout(() => {
+          delete slideEl.dataset.mermaidRetrying;
+          void renderMermaidInSlide(slideEl, isDark);
+        }, 180);
+      }
+      return;
+    }
+
+    let hadRenderFailure = false;
+
+    const mermaidTheme: 'dark' | 'default' = isDark ? 'dark' : 'default';
+
+    const baseConfig = {
       startOnLoad: false,
-      theme: isDark ? 'dark' : 'default',
-      securityLevel: 'loose',
+      theme: mermaidTheme,
+      securityLevel: 'loose' as const,
+      fontFamily: 'Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif',
       flowchart: {
         useMaxWidth: true,
-        htmlLabels: true,
+        htmlLabels: false,
+        curve: 'linear' as const,
       },
-    });
+      suppressErrorRendering: true,
+    };
 
-    // Find all code blocks with mermaid language class
-    // Markdown ```mermaid blocks get rendered as <code class="language-mermaid"> or <code class="mermaid">
-    const mermaidBlocks = container.querySelectorAll(
-      'code.language-mermaid, code.mermaid, pre.language-mermaid > code, pre.mermaid > code'
-    );
+    mermaid.initialize(baseConfig);
 
-    // Convert code blocks to <div class="mermaid"> elements so that
-    // mermaid.run() can process them.  Using mermaid.run() is more
-    // reliable than mermaid.render() for lazily-loaded diagram types
-    // (e.g. block / block-beta) because run() goes through the full
-    // diagram registration & lazy-load pipeline.
     const nodes: HTMLElement[] = [];
     for (let i = 0; i < mermaidBlocks.length; i++) {
       const block = mermaidBlocks[i];
       if (!block) continue;
 
-      const code = block.textContent ?? '';
-      if (!code.trim()) continue;
+      const rawCode = (block.textContent ?? '').trim();
+      if (!rawCode) continue;
+
+      // Primary path uses htmlLabels:false (SVG text), so keep Mermaid newline
+      // escape syntax and normalize any accidental <br/> markup back to \n.
+      const processedCode = rawCode.replace(/<br\s*\/?>/gi, '\\n');
 
       const div = document.createElement('div');
       div.className = 'mermaid';
-      div.textContent = code.trim();
       div.style.display = 'flex';
       div.style.justifyContent = 'center';
       div.style.alignItems = 'center';
       div.style.width = '100%';
 
       const parent = block.closest('pre') ?? block.parentElement;
-      if (parent?.parentElement) {
-        parent.parentElement.replaceChild(div, parent);
-        nodes.push(div);
+      if (!parent?.parentElement) continue;
+
+      parent.parentElement.replaceChild(div, parent);
+      nodes.push(div);
+
+      const renderId = `reveal-mermaid-${Date.now()}-${i}`;
+      try {
+        const { svg } = await mermaid.render(renderId, processedCode);
+        div.innerHTML = svg;
+      } catch (primaryErr) {
+        // Fallback: enable htmlLabels and convert escaped newlines to <br/>.
+        try {
+          mermaid.initialize({
+            ...baseConfig,
+            flowchart: {
+              ...baseConfig.flowchart,
+              htmlLabels: true,
+            },
+          });
+          const fallbackId = `${renderId}-fallback`;
+          const fallbackCode = rawCode.replace(/\\n/g, '<br/>');
+          const { svg } = await mermaid.render(fallbackId, fallbackCode);
+          div.innerHTML = svg;
+          // Restore preferred config for next diagrams.
+          mermaid.initialize(baseConfig);
+        } catch (fallbackErr) {
+          hadRenderFailure = true;
+          console.warn('Mermaid render failed (primary + fallback):', {
+            primaryErr,
+            fallbackErr,
+            codePreview: rawCode.slice(0, 160),
+          });
+          div.innerHTML = '<div style="color:#ef4444;font-size:0.9rem;">Mermaid render failed</div>';
+        }
       }
     }
 
     if (nodes.length > 0) {
-      await mermaid.run({ nodes });
+      // Fit each mermaid SVG to available slide space and avoid edge clipping.
+      const slideRect = slideEl.getBoundingClientRect();
+
+      for (const node of nodes) {
+        const svg = node.querySelector('svg');
+        if (!svg) continue;
+
+        let siblingHeight = 0;
+        const parent = node.parentElement;
+        if (parent) {
+          for (let i = 0; i < parent.children.length; i++) {
+            const child = parent.children[i] as HTMLElement;
+            if (child !== node) {
+              siblingHeight += child.getBoundingClientRect().height || 0;
+            }
+          }
+        }
+
+        const availableHeight = Math.max(slideRect.height - siblingHeight - 32, 120);
+        const availableWidth = Math.max(slideRect.width - 24, 200);
+
+        const foreignObjects = svg.querySelectorAll('foreignObject');
+        foreignObjects.forEach((fo) => {
+          const widthAttr = fo.getAttribute('width');
+          const xAttr = fo.getAttribute('x');
+          const width = widthAttr != null ? Number(widthAttr) : NaN;
+          const x = xAttr != null ? Number(xAttr) : NaN;
+          if (!Number.isNaN(width) && width > 0) {
+            fo.setAttribute('width', String(width + 8));
+            if (!Number.isNaN(x)) {
+              fo.setAttribute('x', String(x - 4));
+            }
+          }
+          const labelDiv = fo.querySelector('div');
+          if (labelDiv instanceof HTMLElement) {
+            labelDiv.style.overflow = 'visible';
+            labelDiv.style.paddingRight = '4px';
+          }
+        });
+
+        svg.style.display = 'block';
+        svg.style.margin = '0 auto';
+        svg.style.overflow = 'visible';
+        svg.style.maxWidth = '100%';
+        svg.style.maxHeight = `${availableHeight}px`;
+        svg.style.width = 'auto';
+        svg.style.height = 'auto';
+        svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+
+        node.style.margin = '0 auto';
+        node.style.maxWidth = `${availableWidth}px`;
+        node.style.width = '100%';
+      }
+    }
+
+    if (!hadRenderFailure) {
+      slideEl.dataset.mermaidRendered = 'true';
+    } else if (slideEl.dataset.mermaidRetrying !== 'true') {
+      // Retry once more after layout settles if at least one diagram failed.
+      slideEl.dataset.mermaidRetrying = 'true';
+      setTimeout(() => {
+        delete slideEl.dataset.mermaidRetrying;
+        void renderMermaidInSlide(slideEl, isDark);
+      }, 220);
     }
   } catch (err) {
     console.warn('Mermaid rendering failed:', err);
+  }
+};
+
+// Detect if a slide's rendered content overflows its bounds.
+const isSlideOverflowing = (slideEl: HTMLElement): boolean => {
+  const slideRect = slideEl.getBoundingClientRect();
+  if (slideRect.width <= 0 || slideRect.height <= 0) return false;
+
+  let maxBottom = slideRect.top;
+  let maxRight = slideRect.left;
+
+  for (let i = 0; i < slideEl.children.length; i++) {
+    const child = slideEl.children[i] as HTMLElement;
+    const rect = child.getBoundingClientRect();
+    if (rect.width === 0 && rect.height === 0) continue;
+    maxBottom = Math.max(maxBottom, rect.bottom);
+    maxRight = Math.max(maxRight, rect.right);
+  }
+
+  // Add a tiny tolerance to avoid jitter on sub-pixel layouts.
+  return maxBottom > slideRect.bottom + 1 || maxRight > slideRect.right + 1;
+};
+
+// Reduce slide font size until all content fits inside the slide bounds.
+const fitSlideFontSize = (slideEl: HTMLElement): void => {
+  // Start from default size each time so resizing/navigation can recover.
+  slideEl.style.fontSize = '';
+
+  // If already fitting, keep default font size.
+  if (!isSlideOverflowing(slideEl)) return;
+
+  const minScale = 0.72; // Don't shrink below 72% for readability.
+  const step = 0.03;
+  let scale = 1;
+
+  while (scale > minScale && isSlideOverflowing(slideEl)) {
+    scale = Math.max(minScale, Number((scale - step).toFixed(2)));
+    slideEl.style.fontSize = `${Math.round(scale * 100)}%`;
   }
 };
 
@@ -318,11 +484,15 @@ const RevealJS: React.FC<RevealJSProps> = ({ content, height = '600px' }) => {
         await revealInstance.initialize();
         revealInstanceRef.current = revealInstance;
 
-        // Add event listener to update URL hash when slide changes
-        revealInstance.on('slidechanged', (event: { indexh: number; indexv: number }) => {
-          // Use horizontal index (indexh) as the slide number
-          // For vertical slides, could use format like "3/1" but keeping simple for now
+        // Add event listener to update URL hash and lazily render mermaid
+        revealInstance.on('slidechanged', async (event: { indexh: number; indexv: number; currentSlide: HTMLElement }) => {
           updateHashWithSlide(event.indexh);
+          // Render mermaid on the newly-visible slide
+          if (event.currentSlide) {
+            await renderMermaidInSlide(event.currentSlide, isDark);
+            fitSlideFontSize(event.currentSlide);
+            revealInstance.layout();
+          }
         });
 
         // Force layout after initialization to ensure proper sizing
@@ -340,21 +510,27 @@ const RevealJS: React.FC<RevealJSProps> = ({ content, height = '600px' }) => {
           }
         }, 100);
 
-        // Render mermaid diagrams after markdown is processed
+        // Render mermaid on the initially visible slide
         setTimeout(async () => {
-          if (containerRef.current) {
-            await renderMermaidDiagrams(containerRef.current, isDark);
-            // Re-layout after mermaid renders
-            if (revealInstanceRef.current) {
+          if (revealInstanceRef.current) {
+            const currentSlide = revealInstanceRef.current.getCurrentSlide();
+            if (currentSlide) {
+              await renderMermaidInSlide(currentSlide, isDark);
+              fitSlideFontSize(currentSlide);
               revealInstanceRef.current.layout();
             }
           }
         }, 200);
 
-        // Additional sync after a longer delay to handle any late rendering
+        // Re-layout after deferred rendering settles
         setTimeout(() => {
           if (revealInstanceRef.current) {
             revealInstanceRef.current.layout();
+            const currentSlide = revealInstanceRef.current.getCurrentSlide();
+            if (currentSlide) {
+              fitSlideFontSize(currentSlide);
+              revealInstanceRef.current.layout();
+            }
           }
         }, 500);
 
@@ -372,6 +548,11 @@ const RevealJS: React.FC<RevealJSProps> = ({ content, height = '600px' }) => {
                 height: height || 700,
               });
               revealInstanceRef.current.layout();
+              const currentSlide = revealInstanceRef.current.getCurrentSlide();
+              if (currentSlide) {
+                fitSlideFontSize(currentSlide);
+                revealInstanceRef.current.layout();
+              }
             }
           });
 
@@ -419,11 +600,17 @@ const RevealJS: React.FC<RevealJSProps> = ({ content, height = '600px' }) => {
           slidesRef.current.innerHTML = `<section data-markdown><textarea data-template>${content}</textarea></section>`;
           await revealInstanceRef.current.sync();
 
-          // Render mermaid diagrams after content sync
+          // Render mermaid on the current slide after content sync
           setTimeout(async () => {
-            if (containerRef.current) {
-              await renderMermaidDiagrams(containerRef.current, isDark);
-              if (revealInstanceRef.current) {
+            if (revealInstanceRef.current) {
+              // Reset mermaid-rendered flags since content changed
+              containerRef.current?.querySelectorAll('[data-mermaid-rendered]').forEach(el => {
+                delete (el as HTMLElement).dataset.mermaidRendered;
+              });
+              const currentSlide = revealInstanceRef.current.getCurrentSlide();
+              if (currentSlide) {
+                await renderMermaidInSlide(currentSlide, isDark);
+                fitSlideFontSize(currentSlide);
                 revealInstanceRef.current.layout();
               }
             }
