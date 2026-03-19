@@ -45,7 +45,7 @@
 !!! quiz
 {
 "title": "Question 4",
-"question": "Shannon entropy is computed as H = -sum(p_t \* ln(p_t)) where p_t = w_t / W. Given tiles with weights w1=40, w2=25, w3=20 and total weight W=85, which description matches this formula?",
+"question": "Shannon entropy is computed as H = −Σ p(t) × ln(p(t)), where p(t) = w(t) / W. Given tiles with weights w1=40, w2=25, w3=20 and total weight W=85, which description matches this formula?",
 "options": [
 "Sum of raw weights times their logarithms, without normalization",
 "Negative logarithm of the total weight only",
