@@ -205,37 +205,16 @@
 
 /* Ensure RevealJS doesn't interfere with page layout */
 .reveal-container {
-  position: relative !important;
+  position: relative;
   z-index: 1;
 }
 
 .reveal-container .reveal {
-  position: relative !important;
-  height: 100% !important;
+  height: 100%;
 }
 
 .reveal-container .slides {
-  position: relative !important;
-  height: 100% !important;
-}
-
-/* Override any global RevealJS styles that might affect layout */
-.reveal {
-  position: relative !important;
-  height: 100% !important;
-  width: 100% !important;
-  background: hsl(var(--background)) !important;
-}
-
-.reveal .slides {
-  position: relative !important;
-  height: 100% !important;
-  width: 100% !important;
-  background: hsl(var(--background)) !important;
-}
-
-.reveal .slides section {
-  background: hsl(var(--background)) !important;
+  height: 100%;
 }
 
 /* Ensure images inside reveal slides respect container bounds */
