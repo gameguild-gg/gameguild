@@ -1,3 +1,10 @@
+## [2.50.6](https://github.com/gameguild-gg/gameguild/compare/v2.50.5...v2.50.6) (2026-03-19)
+
+
+### Bug Fixes
+
+* **database-course:** mongodb and final project ([225844d](https://github.com/gameguild-gg/gameguild/commit/225844d6da12a95378188fff84e6864a56681a43))
+
 ## [2.50.5](https://github.com/gameguild-gg/gameguild/compare/v2.50.4...v2.50.5) (2026-03-19)
 
 
