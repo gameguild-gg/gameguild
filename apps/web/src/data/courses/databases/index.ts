@@ -1644,7 +1644,7 @@ export const week12AssignmentContent: ProgramContent = {
     isRequired: true,
     gradingMethod: 1, // Graded
     maxPoints: 100,
-    estimatedMinutes: 300,
+    estimatedMinutes: 240,
     visibility: 1, // Published
     program: databasesProgram,
     parent: finalProjectContent,
@@ -1668,7 +1668,7 @@ export const week13AssignmentContent: ProgramContent = {
     isRequired: true,
     gradingMethod: 1, // Graded
     maxPoints: 100,
-    estimatedMinutes: 90,
+    estimatedMinutes: 240,
     visibility: 1, // Published
     program: databasesProgram,
     parent: finalProjectContent,
@@ -1692,7 +1692,7 @@ export const week14AssignmentContent: ProgramContent = {
     isRequired: true,
     gradingMethod: 1, // Graded
     maxPoints: 100,
-    estimatedMinutes: 90,
+    estimatedMinutes: 240,
     visibility: 1, // Published
     program: databasesProgram,
     parent: finalProjectContent,
@@ -1740,7 +1740,7 @@ export const week16AssignmentContent: ProgramContent = {
     isRequired: true,
     gradingMethod: 1, // Graded
     maxPoints: 100,
-    estimatedMinutes: 60,
+    estimatedMinutes: 240,
     visibility: 1, // Published
     program: databasesProgram,
     parent: finalProjectContent,
