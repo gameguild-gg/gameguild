@@ -29,6 +29,7 @@ By the end of this week, you will be able to:
 ### Monday, March 16 - MongoDB Fundamentals
 
 **Topics:**
+
 - Document model vs relational model
 - JSON vs BSON (Binary JSON)
 - ObjectId structure and generation
@@ -37,6 +38,7 @@ By the end of this week, you will be able to:
 - Docker setup for MongoDB
 
 **Activities:**
+
 - Set up MongoDB Docker container
 - Connect to MongoDB using MongoDB Compass
 - Explore sample databases (restaurants, movies)
@@ -46,6 +48,7 @@ By the end of this week, you will be able to:
 ### Thursday, March 19 - CRUD & Aggregation
 
 **Topics:**
+
 - **CRUD Operations:**
   - insertOne/insertMany
   - find with query operators ($gte, $in, $regex)
@@ -66,6 +69,7 @@ By the end of this week, you will be able to:
   - Limitations and when to use native driver
 
 **Activities:**
+
 - Practice CRUD operations on sample data
 - Write aggregation queries for analytics
 - Build a simple Express + MongoDB API with Drizzle
@@ -77,6 +81,7 @@ By the end of this week, you will be able to:
 ### Quiz 8 - Document Databases (Due: Thursday, March 19)
 
 **Topics Covered:**
+
 - Document model vs relational model
 - JSON vs BSON data types
 - ObjectId structure
@@ -87,12 +92,14 @@ By the end of this week, you will be able to:
 - Aggregation pipeline ($match, $group, $lookup)
 
 **Format:**
+
 - 20 multiple-choice questions
 - Requirement → MongoDB code
 - MongoDB code → Description
 - Schema design scenarios
 
 **Preparation:**
+
 - Complete all readings
 - Practice CRUD operations
 - Write aggregation queries
@@ -116,6 +123,7 @@ This week marks the start of your **final project**. You should:
    - Timeline and milestones
 
 **Example Project Ideas:**
+
 - Social media platform (users/posts in PostgreSQL, comments/likes in MongoDB)
 - E-commerce site (products/orders in SQL, product reviews/ratings in MongoDB)
 - Learning management system (courses/users in SQL, course content/quizzes in MongoDB)
@@ -168,11 +176,13 @@ This week marks the start of your **final project**. You should:
 ### Exercise 1: Schema Design
 
 Design a MongoDB schema for a **blog platform**:
+
 - Users (username, email, created_at)
 - Posts (title, content, author, tags, likes, created_at)
 - Comments (post_id, user_id, text, created_at)
 
 **Decisions:**
+
 - Should comments be **embedded** in posts or in a **separate collection**?
 - Should user info be **duplicated** in comments or **referenced**?
 - How would you handle posts with **1000+ comments**?
@@ -200,6 +210,7 @@ Write aggregation queries to:
 ### Exercise 4: Drizzle Integration
 
 Build a simple Express API with:
+
 - `POST /users` - Create user
 - `GET /users/:id` - Get user by ID
 - `GET /posts?author_id=...` - Get posts by author
@@ -213,6 +224,7 @@ Build a simple Express API with:
 ### ❌ Embedding Too Much Data
 
 **Problem:** Embedding all comments in a post document
+
 ```javascript
 {
   title: "Popular Post",
@@ -225,6 +237,7 @@ Build a simple Express API with:
 ### ❌ Over-Normalizing
 
 **Problem:** Treating MongoDB like SQL with many references
+
 ```javascript
 // ❌ Too many collections
 users → posts → comments → likes → tags
@@ -235,18 +248,21 @@ users → posts → comments → likes → tags
 ### ❌ Ignoring Indexes
 
 **Problem:** Slow queries on large collections
+
 ```javascript
-db.posts.find({ author_id: ObjectId("...") })  // Slow without index
+db.posts.find({ author_id: ObjectId('...') }); // Slow without index
 ```
 
 **Solution:** Create indexes on frequently queried fields
+
 ```javascript
-db.posts.createIndex({ author_id: 1 })
+db.posts.createIndex({ author_id: 1 });
 ```
 
 ### ❌ Using $lookup Excessively
 
 **Problem:** Multiple $lookup stages (like SQL JOINs)
+
 ```javascript
 db.posts.aggregate([
   { $lookup: { from: "users", ... } },
@@ -271,7 +287,7 @@ services:
     image: mongo:7
     container_name: mongodb
     ports:
-      - "27017:27017"
+      - '27017:27017'
     environment:
       MONGO_INITDB_ROOT_USERNAME: admin
       MONGO_INITDB_ROOT_PASSWORD: password
@@ -288,12 +304,19 @@ docker-compose up -d
 
 ### MongoDB Compass
 
-Download and install: https://www.mongodb.com/products/compass
+Download and install: https://www.mongodb.com/products/tools/compass
 
 **Connection String:**
+
 ```
 mongodb://admin:password@localhost:27017
 ```
+
+### Visualeaf — Visual Aggregation Pipeline Builder
+
+Try it online: https://demo.visualeaf.com/#/
+
+Drag-and-drop aggregation pipeline stages to build and visualize complex queries before writing code.
 
 ### MongoDB Shell (mongosh)
 

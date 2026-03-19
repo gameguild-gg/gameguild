@@ -121,8 +121,11 @@
 
 ### GUI Clients
 
-- [MongoDB Compass](https://www.mongodb.com/products/compass)
+- [MongoDB Compass](https://www.mongodb.com/products/tools/compass)
   - Official GUI for MongoDB (free)
+
+- [Visualeaf](https://demo.visualeaf.com/#/)
+  - Visual aggregation pipeline builder — drag-and-drop stages
 
 - [Studio 3T](https://studio3t.com/)
   - Advanced MongoDB IDE (free tier available)
@@ -231,6 +234,7 @@
 ---
 
 **Related Content:**
+
 - [MongoDB Fundamentals](./mongodb-fundamentals.md)
 - [Schema Design Patterns](./schema-design-patterns.md)
 - [CRUD Operations](./mongodb-crud.md)
