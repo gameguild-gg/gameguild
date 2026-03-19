@@ -152,6 +152,6 @@ Late submissions will incur a penalty of **1% deduction per day** up to a maximu
 
 ::: warning
 
-Missing any checkpoint incurs a **5% penalty** on your final project grade. Stay on track — these checkpoints exist to prevent last-minute scrambles.
+Missing any checkpoint will result in a **grade of 0** for that checkpoint. Stay on track — these checkpoints exist to prevent last-minute scrambles.
 
 :::
