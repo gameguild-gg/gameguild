@@ -1,3 +1,10 @@
+## [2.50.10](https://github.com/gameguild-gg/gameguild/compare/v2.50.9...v2.50.10) (2026-03-20)
+
+
+### Bug Fixes
+
+* **networking:** add http topics ([46da8c6](https://github.com/gameguild-gg/gameguild/commit/46da8c6c81f2dacf13a5afe6a8540fef1e9488b7))
+
 ## [2.50.9](https://github.com/gameguild-gg/gameguild/compare/v2.50.8...v2.50.9) (2026-03-20)
 
 
