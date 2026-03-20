@@ -1,3 +1,10 @@
+## [2.50.11](https://github.com/gameguild-gg/gameguild/compare/v2.50.10...v2.50.11) (2026-03-20)
+
+
+### Bug Fixes
+
+* **networking:** Add Week 10 HTTP quiz ([f1d3afa](https://github.com/gameguild-gg/gameguild/commit/f1d3afa9bdee3ebc69ceb35007bdce9373efe1e5))
+
 ## [2.50.10](https://github.com/gameguild-gg/gameguild/compare/v2.50.9...v2.50.10) (2026-03-20)
 
 
