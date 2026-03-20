@@ -1,3 +1,10 @@
+## [2.50.9](https://github.com/gameguild-gg/gameguild/compare/v2.50.8...v2.50.9) (2026-03-20)
+
+
+### Bug Fixes
+
+* **emception:** print the reason a bundle is downloaded ([490c903](https://github.com/gameguild-gg/gameguild/commit/490c903aee04a31462192cfe39996e9a25b03324))
+
 ## [2.50.8](https://github.com/gameguild-gg/gameguild/compare/v2.50.7...v2.50.8) (2026-03-19)
 
 
