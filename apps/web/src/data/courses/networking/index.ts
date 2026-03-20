@@ -65,6 +65,18 @@ import networkingWeek07ReadingsMd from './07-distributed-state-sync/03-readings.
 import networkingWeek07AssignmentMd from './07-distributed-state-sync/04-assignment.md';
 import networkingWeek07QuizMd from './07-distributed-state-sync/05-quiz.md';
 import networkingWeek09FinalProject from './09-break/finalproject.md';
+import networkingWeek10RevealMd from './10-http/01-reveal.md';
+import networkingWeek10LectureMd from './10-http/02-lecture.md';
+import networkingWeek10HttpFundamentalsMd from './10-http/02a-http-fundamentals.md';
+import networkingWeek10HttpMessagesMd from './10-http/02b-http-messages.md';
+import networkingWeek10MethodsStatusCodesMd from './10-http/02c-methods-and-status-codes.md';
+import networkingWeek10UrlsHeadersMd from './10-http/02d-urls-and-headers.md';
+import networkingWeek10RestConstraintsMd from './10-http/02e-rest-constraints.md';
+import networkingWeek10HttpCachingMd from './10-http/02f-http-caching.md';
+import networkingWeek10HttpEvolutionMd from './10-http/02g-http-evolution.md';
+import networkingWeek10HttpCppBoostBeastMd from './10-http/02h-http-cpp-boost-beast.md';
+import networkingWeek10ReadingsMd from './10-http/03-readings.md';
+import networkingWeek10QuizMd from './10-http/04-quiz.md';
 import networkingWeek10AssignmentMd from './10-http/assignment.md';
 import networkingWeek11AssignmentMd from './11-nonblocking/assignment.md';
 import networkingWeek12AssignmentMd from './12-performance/assignment.md';
@@ -1715,16 +1727,16 @@ export const networkingWeek09FinalProjectContent: ProgramContent & { slug: strin
     updatedAt: '2023-01-01T00:00:00Z',
 };
 
-// Week 10 — HTTP, REST, WebSockets + Checkpoint 1: Proposal
+// Week 10 — HTTP: The Application-Layer Protocol + Checkpoint 1: Proposal
 export const networkingWeek10Intro: ProgramContent & { slug: string } = {
     id: 'week-10',
     slug: 'week-10',
     programId: 'networking-program-1',
     parentId: undefined,
-    title: 'Week 10 — HTTP, REST APIs, and Real-Time Web Protocols',
-    description: 'HTTP fundamentals, REST API design, WebSockets for bidirectional communication.',
-    type: 0, // Page
-    body: '# Week 10 — HTTP, REST APIs, and Real-Time Web Protocols\n\nThis week covers HTTP fundamentals, REST API design principles, and WebSockets for bidirectional communication. See the lecture and readings for details.\n\n**Project Milestone 01:** Team formation + project proposal.',
+    title: 'Week 10 — HTTP: The Application-Layer Protocol',
+    description: 'HTTP fundamentals, messages, methods, status codes, REST constraints, caching, HTTP evolution, and Boost.Beast.',
+    type: ProgramContentType.REVEAL,
+    body: networkingWeek10RevealMd,
     sortOrder: 10,
     isRequired: true,
     gradingMethod: 0, // None
@@ -1762,7 +1774,270 @@ export const networkingWeek10Assignment: ProgramContent & { slug: string } = {
     updatedAt: '2023-01-01T00:00:00Z',
 };
 
-networkingWeek10Intro.children = [networkingWeek10Assignment];
+export const networkingWeek10LectureContent: ProgramContent & { slug: string } = {
+    id: 'week-10-lecture',
+    slug: 'lecture',
+    programId: 'networking-program-1',
+    parentId: 'week-10',
+    title: 'Lecture Notes',
+    description: 'HTTP fundamentals, messages, methods, status codes, URLs, headers, REST, caching, evolution, and Boost.Beast.',
+    type: 0, // Page
+    body: networkingWeek10LectureMd,
+    sortOrder: 1,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 60,
+    visibility: 1, // Published
+    program: networkingProgram,
+    parent: networkingWeek10Intro,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const networkingWeek10HttpFundamentals: ProgramContent & { slug: string } = {
+    id: 'week-10-http-fundamentals',
+    slug: 'http-fundamentals',
+    programId: 'networking-program-1',
+    parentId: 'week-10-lecture',
+    title: '1. HTTP Fundamentals',
+    description: 'HTTP in the network stack, request/response cycle, statelessness, framing connection to Week 5.',
+    type: 0, // Page
+    body: networkingWeek10HttpFundamentalsMd,
+    sortOrder: 1,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 15,
+    visibility: 1, // Published
+    program: networkingProgram,
+    parent: networkingWeek10LectureContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const networkingWeek10HttpMessages: ProgramContent & { slug: string } = {
+    id: 'week-10-http-messages',
+    slug: 'http-messages',
+    programId: 'networking-program-1',
+    parentId: 'week-10-lecture',
+    title: '2. HTTP Messages: Requests and Responses',
+    description: 'Message anatomy, request line, status line, headers, body, chunked encoding.',
+    type: 0, // Page
+    body: networkingWeek10HttpMessagesMd,
+    sortOrder: 2,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 15,
+    visibility: 1, // Published
+    program: networkingProgram,
+    parent: networkingWeek10LectureContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const networkingWeek10MethodsStatusCodes: ProgramContent & { slug: string } = {
+    id: 'week-10-methods-status-codes',
+    slug: 'methods-and-status-codes',
+    programId: 'networking-program-1',
+    parentId: 'week-10-lecture',
+    title: '3. HTTP Methods and Status Codes',
+    description: 'CRUD mapping, safe vs idempotent, 5 status code families, key codes to know.',
+    type: 0, // Page
+    body: networkingWeek10MethodsStatusCodesMd,
+    sortOrder: 3,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 15,
+    visibility: 1, // Published
+    program: networkingProgram,
+    parent: networkingWeek10LectureContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const networkingWeek10UrlsHeaders: ProgramContent & { slug: string } = {
+    id: 'week-10-urls-headers',
+    slug: 'urls-and-headers',
+    programId: 'networking-program-1',
+    parentId: 'week-10-lecture',
+    title: '4. URLs, Headers, and Content Negotiation',
+    description: 'URL structure, percent encoding, Boost.URL, header categories, content negotiation.',
+    type: 0, // Page
+    body: networkingWeek10UrlsHeadersMd,
+    sortOrder: 4,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 15,
+    visibility: 1, // Published
+    program: networkingProgram,
+    parent: networkingWeek10LectureContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const networkingWeek10RestConstraints: ProgramContent & { slug: string } = {
+    id: 'week-10-rest-constraints',
+    slug: 'rest-constraints',
+    programId: 'networking-program-1',
+    parentId: 'week-10-lecture',
+    title: '5. REST Architectural Constraints',
+    description: 'Fielding\'s six REST constraints, Richardson Maturity Model, REST vs RPC.',
+    type: 0, // Page
+    body: networkingWeek10RestConstraintsMd,
+    sortOrder: 5,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 15,
+    visibility: 1, // Published
+    program: networkingProgram,
+    parent: networkingWeek10LectureContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const networkingWeek10HttpCaching: ProgramContent & { slug: string } = {
+    id: 'week-10-http-caching',
+    slug: 'http-caching',
+    programId: 'networking-program-1',
+    parentId: 'week-10-lecture',
+    title: '6. HTTP Caching',
+    description: 'Cache-Control directives, ETags, conditional requests, freshness vs validation.',
+    type: 0, // Page
+    body: networkingWeek10HttpCachingMd,
+    sortOrder: 6,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 15,
+    visibility: 1, // Published
+    program: networkingProgram,
+    parent: networkingWeek10LectureContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const networkingWeek10HttpEvolution: ProgramContent & { slug: string } = {
+    id: 'week-10-http-evolution',
+    slug: 'http-evolution',
+    programId: 'networking-program-1',
+    parentId: 'week-10-lecture',
+    title: '7. Evolution of HTTP: 1.0 → 1.1 → 2 → 3',
+    description: 'HTTP/1.0 to HTTP/3, persistent connections, multiplexing, QUIC, 0-RTT.',
+    type: 0, // Page
+    body: networkingWeek10HttpEvolutionMd,
+    sortOrder: 7,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 15,
+    visibility: 1, // Published
+    program: networkingProgram,
+    parent: networkingWeek10LectureContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const networkingWeek10HttpCppBoostBeast: ProgramContent & { slug: string } = {
+    id: 'week-10-http-cpp-boost-beast',
+    slug: 'http-cpp-boost-beast',
+    programId: 'networking-program-1',
+    parentId: 'week-10-lecture',
+    title: '8. HTTP in C++ with Boost.Beast',
+    description: 'Beast architecture, sync client/server, headers API, body types, cpp-httplib alternative.',
+    type: 0, // Page
+    body: networkingWeek10HttpCppBoostBeastMd,
+    sortOrder: 8,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 20,
+    visibility: 1, // Published
+    program: networkingProgram,
+    parent: networkingWeek10LectureContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const networkingWeek10Readings: ProgramContent & { slug: string } = {
+    id: 'week-10-readings',
+    slug: 'readings',
+    programId: 'networking-program-1',
+    parentId: 'week-10',
+    title: 'Readings',
+    description: 'MDN HTTP overview, messages, status codes, Fielding REST, HTTP evolution, caching.',
+    type: 0, // Page
+    body: networkingWeek10ReadingsMd,
+    sortOrder: 2,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 120,
+    visibility: 1, // Published
+    program: networkingProgram,
+    parent: networkingWeek10Intro,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const networkingWeek10Quiz: ProgramContent & { slug: string } = {
+    id: 'week-10-quiz',
+    slug: 'quiz',
+    programId: 'networking-program-1',
+    parentId: 'week-10',
+    title: 'Quiz 10',
+    description: 'Test your understanding of HTTP fundamentals, methods, status codes, REST, caching, and HTTP evolution.',
+    type: 0, // Page
+    body: networkingWeek10QuizMd,
+    sortOrder: 4,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 30,
+    visibility: 1, // Published
+    program: networkingProgram,
+    parent: networkingWeek10Intro,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+networkingWeek10Intro.children = [networkingWeek10LectureContent, networkingWeek10Readings, networkingWeek10Assignment, networkingWeek10Quiz];
+networkingWeek10LectureContent.children = [
+    networkingWeek10HttpFundamentals,
+    networkingWeek10HttpMessages,
+    networkingWeek10MethodsStatusCodes,
+    networkingWeek10UrlsHeaders,
+    networkingWeek10RestConstraints,
+    networkingWeek10HttpCaching,
+    networkingWeek10HttpEvolution,
+    networkingWeek10HttpCppBoostBeast,
+];
 
 // Week 11 — Non-Blocking I/O and Concurrency + Checkpoint 2: Architecture Design
 export const networkingWeek11Intro: ProgramContent & { slug: string } = {
