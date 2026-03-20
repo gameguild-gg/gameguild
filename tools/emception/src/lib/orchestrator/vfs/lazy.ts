@@ -243,13 +243,13 @@ export class LazyFS implements IFileSystem {
       throw new Error(`File ${path} is not assigned to any bundle. Run build:bundles to fix.`);
     }
     console.log(`${P}   fetchFile: ${path} — loading from bundle "${entry.bundle}"`);
-    await this.loadBundle(entry.bundle);
+    await this.loadBundle(entry.bundle, path);
     const bundled = this.memCache.get(path);
     if (bundled) return bundled;
     throw new Error(`File ${path} not found in bundle ${entry.bundle}`);
   }
 
-  private async loadBundle(bundleName: string): Promise<void> {
+  private async loadBundle(bundleName: string, triggeredBy?: string): Promise<void> {
     const { P, fmtSize } = LazyFS;
     const bundle = this.manifest.bundles[bundleName];
     if (!bundle) throw new Error(`Bundle not found: ${bundleName}`);
@@ -262,7 +262,7 @@ export class LazyFS implements IFileSystem {
       console.log(`${P}   loadBundle: "${bundleName}" — COALESCING with pending bundle fetch`);
       return this.pendingBundles.get(bundleName)!;
     }
-    const promise = this.loadBundleImpl(bundleName, bundle);
+    const promise = this.loadBundleImpl(bundleName, bundle, triggeredBy);
     this.pendingBundles.set(bundleName, promise);
     try {
       await promise;
@@ -274,10 +274,11 @@ export class LazyFS implements IFileSystem {
   private async loadBundleImpl(
     bundleName: string,
     bundle: FSManifest['bundles'][string],
+    triggeredBy?: string,
   ): Promise<void> {
     const { P, fmtSize } = LazyFS;
     const t0 = performance.now();
-    console.log(`${P}   loadBundle: fetching "${bundleName}" (${bundle.files.length} files, expected ${fmtSize(bundle.size)})...`);
+    console.log(`${P}   loadBundle: fetching "${bundleName}" (${bundle.files.length} files, expected ${fmtSize(bundle.size)}) — triggered by: ${triggeredBy ?? 'unknown'}`);
     const response = await fetch(bundle.url);
     if (!response.ok) throw new Error(`Failed to fetch bundle ${bundleName}: HTTP ${response.status}`);
     let data = new Uint8Array(await response.arrayBuffer());
