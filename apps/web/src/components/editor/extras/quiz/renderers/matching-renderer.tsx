@@ -5,7 +5,7 @@
 
 "use client"
 
-import { useState } from "react"
+import { useState, useRef, useEffect } from "react"
 import type { MatchingEntry, QuizAnswerState } from "../types"
 
 interface MatchingRendererProps {
@@ -16,6 +16,22 @@ interface MatchingRendererProps {
   showFeedback?: boolean
 }
 
+interface Point {
+  x: number
+  y: number
+}
+
+const CONNECTION_COLORS = [
+  { card: "border-blue-500 bg-blue-50 dark:bg-blue-950/30 dark:border-blue-500", line: "text-blue-500 dark:text-blue-400" },
+  { card: "border-green-500 bg-green-50 dark:bg-green-950/30 dark:border-green-500", line: "text-green-500 dark:text-green-400" },
+  { card: "border-purple-500 bg-purple-50 dark:bg-purple-950/30 dark:border-purple-500", line: "text-purple-500 dark:text-purple-400" },
+  { card: "border-orange-500 bg-orange-50 dark:bg-orange-950/30 dark:border-orange-500", line: "text-orange-500 dark:text-orange-400" },
+  { card: "border-pink-500 bg-pink-50 dark:bg-pink-950/30 dark:border-pink-500", line: "text-pink-500 dark:text-pink-400" },
+  { card: "border-teal-500 bg-teal-50 dark:bg-teal-950/30 dark:border-teal-500", line: "text-teal-500 dark:text-teal-400" },
+  { card: "border-indigo-500 bg-indigo-50 dark:bg-indigo-950/30 dark:border-indigo-500", line: "text-indigo-500 dark:text-indigo-400" },
+  { card: "border-rose-500 bg-rose-50 dark:bg-rose-950/30 dark:border-rose-500", line: "text-rose-500 dark:text-rose-400" },
+]
+
 export function MatchingRenderer({
   entry,
   answerState,
@@ -24,14 +40,18 @@ export function MatchingRenderer({
   showFeedback = false,
 }: MatchingRendererProps) {
   const [selectedLeft, setSelectedLeft] = useState<string | null>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
+  const leftRefs = useRef<Map<string, HTMLDivElement>>(new Map())
+  const rightRefs = useRef<Map<string, HTMLDivElement>>(new Map())
+  const [lines, setLines] = useState<Array<{ id: string; start: Point; end: Point; colorClass: string }>>([])
 
   // Build a map of left -> right assignments from selectedOptionIds
   // Format: "leftId:rightValue"
   const assignments = new Map<string, string>()
   answerState.selectedOptionIds.forEach((sel) => {
-    const [leftId, rightValue] = sel.split(":")
-    if (leftId && rightValue) {
-      assignments.set(leftId, rightValue)
+    const idx = sel.indexOf(":")
+    if (idx > 0) {
+      assignments.set(sel.substring(0, idx), sel.substring(idx + 1))
     }
   })
 
@@ -39,6 +59,52 @@ export function MatchingRenderer({
   const distractors = entry.distractors || []
   const allRightItems = [...rightItems, ...distractors]
   const usedRightItems = new Set(assignments.values())
+
+  const updateLines = () => {
+    if (!containerRef.current) return
+
+    const containerRect = containerRef.current.getBoundingClientRect()
+    const newLines: Array<{ id: string; start: Point; end: Point; colorClass: string }> = []
+
+    assignments.forEach((rightValue, leftId) => {
+      const leftEl = leftRefs.current.get(leftId)
+      // Find the right element by rightValue
+      // We need to find its key. We use rightValue directly as a key or store by rightValue.
+      const rightEl = rightRefs.current.get(rightValue)
+
+      const pairIndex = entry.pairs.findIndex((p) => p.id === leftId)
+      const colorIndex = pairIndex !== -1 ? pairIndex % CONNECTION_COLORS.length : 0
+      const color = CONNECTION_COLORS[colorIndex]
+
+      if (leftEl && rightEl) {
+        const leftRect = leftEl.getBoundingClientRect()
+        const rightRect = rightEl.getBoundingClientRect()
+
+        newLines.push({
+          id: `${leftId}-${rightValue}`,
+          start: {
+            x: leftRect.right - containerRect.left,
+            y: leftRect.top - containerRect.top + leftRect.height / 2,
+          },
+          end: {
+            x: rightRect.left - containerRect.left,
+            y: rightRect.top - containerRect.top + rightRect.height / 2,
+          },
+          colorClass: color!.line,
+        })
+      }
+    })
+
+    setLines(newLines)
+  }
+
+  // Update lines when assignments or window size changes
+  useEffect(() => {
+    updateLines()
+    window.addEventListener("resize", updateLines)
+    return () => window.removeEventListener("resize", updateLines)
+  }, [answerState.selectedOptionIds, assignments.size])
+
 
   const handleLeftClick = (leftId: string) => {
     if (disabled || showFeedback) return
@@ -84,44 +150,62 @@ export function MatchingRenderer({
   }
 
   return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-2 gap-8">
+    <div className="space-y-6 relative" ref={containerRef}>
+      {/* SVG Container for the lines */}
+      <svg
+        className="absolute inset-0 pointer-events-none w-full h-full z-10"
+        style={{ minHeight: "100%" }}
+      >
+        {lines.map((l) => (
+          <path
+            key={l.id}
+            d={`M ${l.start.x} ${l.start.y} C ${l.start.x + 50} ${l.start.y}, ${l.end.x - 50} ${l.end.y}, ${l.end.x} ${l.end.y}`}
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="3"
+            className={`${l.colorClass} opacity-60`}
+            strokeLinecap="round"
+          />
+        ))}
+      </svg>
+      <div className="grid grid-cols-2 gap-8 z-20 relative">
         {/* Left Column */}
         <div className="space-y-3">
           <h4 className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">Items</h4>
-          {entry.pairs.map((pair) => {
+          {entry.pairs.map((pair, index) => {
             const isSelected = selectedLeft === pair.id
             const isMatched = assignments.has(pair.id)
-            const matchedValue = assignments.get(pair.id)
+            const colorClass = CONNECTION_COLORS[index % CONNECTION_COLORS.length]!.card
 
             return (
               <div
                 key={pair.id}
+                ref={(el) => {
+                  if (el) leftRefs.current.set(pair.id, el)
+                  else leftRefs.current.delete(pair.id)
+                }}
                 className={`
-                  p-4 rounded-lg border-2 transition-all cursor-pointer
-                  ${isSelected ? "border-blue-500 bg-blue-50 dark:bg-blue-950/30" : "border-gray-200 dark:border-gray-700"}
-                  ${isMatched ? "bg-green-50 dark:bg-green-950/30 border-green-300 dark:border-green-700" : ""}
-                  ${disabled || showFeedback ? "cursor-not-allowed opacity-75" : "hover:border-gray-300 dark:hover:border-gray-600"}
+                  p-4 rounded-lg border-2 transition-all cursor-pointer relative z-20
+                  ${isSelected ? "border-blue-500 bg-blue-50 dark:bg-blue-950/30 ring-2 ring-blue-200 dark:ring-blue-800" : isMatched ? colorClass : "border-gray-200 bg-white dark:bg-gray-900 dark:border-gray-700"}
+                  ${disabled || showFeedback ? "cursor-not-allowed opacity-75" : isSelected ? "" : isMatched ? "hover:brightness-95" : "hover:border-blue-300 dark:hover:border-blue-600"}
                 `}
                 onClick={() => handleLeftClick(pair.id)}
               >
-                <div className="font-medium">{pair.left}</div>
-                {isMatched && (
-                  <div className="mt-2 flex items-center justify-between text-sm text-green-700 dark:text-green-400">
-                    <span>→ {matchedValue}</span>
-                    {!disabled && !showFeedback && (
-                      <button
-                        className="text-red-600 hover:text-red-700"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          handleRemoveAssignment(pair.id)
-                        }}
-                      >
-                        ×
-                      </button>
-                    )}
-                  </div>
-                )}
+                <div className="flex items-center justify-between">
+                  <div className="font-medium">{pair.left}</div>
+                  {isMatched && !disabled && !showFeedback && (
+                    <button
+                      className="text-red-500 hover:text-red-700 p-1 bg-white/50 dark:bg-gray-900/50 rounded-full w-6 h-6 flex items-center justify-center shrink-0"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleRemoveAssignment(pair.id)
+                      }}
+                      title="Remove connection"
+                    >
+                      ×
+                    </button>
+                  )}
+                </div>
               </div>
             )
           })}
@@ -132,13 +216,29 @@ export function MatchingRenderer({
           <h4 className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">Options</h4>
           {allRightItems.map((right, index) => {
             const isUsed = usedRightItems.has(right)
+            
+            // Find which left item connects to this right item to get its color
+            let colorClass = "border-gray-200 bg-white dark:bg-gray-900 dark:border-gray-700"
+            if (isUsed) {
+              const matchedLeftId = Array.from(assignments.entries()).find(([, r]) => r === right)?.[0]
+              if (matchedLeftId) {
+                const pairIndex = entry.pairs.findIndex((p) => p.id === matchedLeftId)
+                if (pairIndex !== -1) {
+                  colorClass = CONNECTION_COLORS[pairIndex % CONNECTION_COLORS.length]!.card
+                }
+              }
+            }
 
             return (
               <div
                 key={index}
+                ref={(el) => {
+                  if (el) rightRefs.current.set(right, el)
+                  else rightRefs.current.delete(right)
+                }}
                 className={`
-                  p-4 rounded-lg border-2 transition-all
-                  ${isUsed ? "bg-gray-100 dark:bg-gray-800 border-gray-200 dark:border-gray-700 opacity-50" : "border-gray-200 dark:border-gray-700"}
+                  p-4 rounded-lg border-2 transition-all relative z-20
+                  ${colorClass}
                   ${selectedLeft && !isUsed ? "cursor-pointer hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/30" : ""}
                   ${disabled || showFeedback ? "cursor-not-allowed" : ""}
                 `}
