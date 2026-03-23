@@ -110,6 +110,7 @@ export function OrderingEditor() {
           <Input
             placeholder="Enter item text"
             {...register(`items.${index}.text`, { required: true })}
+            autoComplete="off"
             className="flex-1 bg-white dark:bg-gray-800"
           />
 

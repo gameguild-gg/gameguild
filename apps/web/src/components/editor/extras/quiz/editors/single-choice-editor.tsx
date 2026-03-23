@@ -49,6 +49,7 @@ export function SingleChoiceEditor() {
           <Input
             placeholder="Enter answer option"
             {...register(`options.${index}.text`, { required: true })}
+            autoComplete="off"
             className="flex-1 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600"
           />
           <Button
