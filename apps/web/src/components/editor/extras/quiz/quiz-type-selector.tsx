@@ -143,16 +143,16 @@ export function QuizTypeSelector({ onSelect, onCancel }: QuizTypeSelectorProps) 
         <p className="text-gray-600 dark:text-gray-400">Select the type of question you want to create</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-w-6xl mx-auto">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 max-w-6xl mx-auto">
         {quizTemplates.map((template) => {
           const IconComponent = template.icon
           return (
             <Card
               key={template.type}
-              className="cursor-pointer hover:shadow-md transition-shadow border-2 hover:border-blue-300 dark:hover:border-blue-600"
+              className="cursor-pointer hover:shadow-md transition-shadow border-2 hover:border-blue-300 dark:hover:border-blue-600 h-full flex flex-col"
               onClick={() => onSelect(template.createEntry())}
             >
-              <CardHeader className="text-center pb-3">
+              <CardHeader className="text-center pb-3 flex-1 flex flex-col items-center">
                 <div className="mx-auto mb-2 p-3 bg-blue-100 dark:bg-blue-900/30 rounded-full w-fit">
                   <IconComponent className="h-6 w-6 text-blue-600 dark:text-blue-400" />
                 </div>
