@@ -102,13 +102,61 @@ export class MiniShell {
           console.log(`${P} Running WASM binary: ${wasmPath}`);
           const t0 = performance.now();
           this.tty.setStdinEcho?.(true);
+          // Line-buffered stdin: accumulate characters, process backspace,
+          // and only deliver complete lines to the WASM program (cooked mode).
+          let stdinLineBuf = '';
+          let stdinLineCursor = 0;
+          const stdinLineQueue: number[] = [];
+          const stdinLineResolvers: Array<(byte: number) => void> = [];
+          const lineBufferedStdin = (): number | Promise<number> => {
+            if (stdinLineQueue.length > 0) return stdinLineQueue.shift()!;
+            return new Promise<number>((resolve) => stdinLineResolvers.push(resolve));
+          };
+          const pumpStdin = async () => {
+            while (true) {
+              const b = this.tty.readByte();
+              let byte: number | null;
+              if (b !== null && typeof (b as Promise<number>).then === 'function') {
+                byte = await (b as Promise<number>);
+              } else {
+                byte = b as number | null;
+              }
+              if (byte === null) continue;
+              if (byte === 127 || byte === 8) {
+                if (stdinLineCursor > 0) {
+                  stdinLineBuf = stdinLineBuf.slice(0, stdinLineCursor - 1) + stdinLineBuf.slice(stdinLineCursor);
+                  stdinLineCursor--;
+                }
+                continue;
+              }
+              if (byte === 13 || byte === 10) {
+                const bytes: number[] = [];
+                for (let i = 0; i < stdinLineBuf.length; i++) bytes.push(stdinLineBuf.charCodeAt(i));
+                bytes.push(10);
+                stdinLineBuf = '';
+                stdinLineCursor = 0;
+                for (const b of bytes) {
+                  if (stdinLineResolvers.length > 0) stdinLineResolvers.shift()!(b);
+                  else stdinLineQueue.push(b);
+                }
+                continue;
+              }
+              if (byte >= 32) {
+                const ch = String.fromCharCode(byte);
+                stdinLineBuf = stdinLineBuf.slice(0, stdinLineCursor) + ch + stdinLineBuf.slice(stdinLineCursor);
+                stdinLineCursor++;
+              }
+            }
+          };
+          const stdinPump = pumpStdin();
           const result = await this.runner.run('wasi-run', ['wasi-run', wasmPath, ...args], {
             env: this.env,
             cwd: this.cwd,
             onStdout: (t) => this.tty.write(t.replace(/\n/g, '\r\n')),
             onStderr: (t) => this.tty.write(`\x1b[31m${t.replace(/\n/g, '\r\n')}\x1b[0m`),
-            stdin: () => this.tty.readByte(),
+            stdin: lineBufferedStdin,
           });
+          void stdinPump; // pump runs until WASM finishes; no cleanup needed
           this.tty.setStdinEcho?.(false);
           console.log(`${P} WASM "${wasmPath}" finished: exitCode=${result.exitCode} in ${(performance.now() - t0).toFixed(1)}ms`);
           if (result.exitCode !== 0) {

@@ -44,7 +44,7 @@
     "deploy:cdn": "tsx scripts/deploy-cdn.ts",
     "build:all": "run-s typecheck build:emsdk build:binaryen build:cpython build:llvm build:libcurl-lite build:ninja build:cmake build:sysroot patch:glue build:manifest build:bundles deploy:cdn",
     "build:pipeline": "npm run clean && run-s build:sysroot build:manifest build:bundles",
-    "e2e": "npx playwright test e2e/*.spec.ts"
+    "e2e": "npx playwright test --config=tools/emception/playwright.config.ts"
   },
   "dependencies": {
     "brotli-wasm": "^3.0.1"

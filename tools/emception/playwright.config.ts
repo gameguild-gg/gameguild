@@ -36,6 +36,7 @@ export default defineConfig({
     ],
     webServer: {
         command: `npx next dev --port ${PORT}`,
+        cwd: '../../demos/emception-next',
         url: `http://localhost:${PORT}`,
         reuseExistingServer: !process.env.CI,
         timeout: 120_000,

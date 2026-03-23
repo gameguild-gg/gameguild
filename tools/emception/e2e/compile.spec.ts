@@ -327,4 +327,55 @@ test.describe('Compile & Run', () => {
 
         dumpLogs(logs, 'STDIN TEST');
     });
+
+    // ------------------------------------------------------------------
+    // 4. stdin backspace — verify that backspace editing works correctly
+    //    so the WASM program receives the edited text, not raw bytes.
+    // ------------------------------------------------------------------
+    test('stdin backspace editing works correctly', async ({ page }) => {
+        const logs = captureEmceptionLogs(page);
+
+        await page.goto('/', { waitUntil: 'networkidle' });
+        await expect(status(page)).toHaveText('Ready', { timeout: 120_000 });
+        await expect(compileBtn(page)).toBeEnabled();
+
+        // C program that prints what it reads from stdin
+        await page.evaluate((code) => {
+            const model = (window as any).monaco?.editor?.getModels?.()?.[0];
+            if (model) model.setValue(code);
+        }, [
+            '#include <stdio.h>',
+            'int main() {',
+            '    char buf[64];',
+            '    printf("PROMPT:\\n");',
+            '    fflush(stdout);',
+            '    if (fgets(buf, sizeof buf, stdin)) {',
+            '        printf("GOT:%s", buf);',
+            '    }',
+            '    return 0;',
+            '}',
+        ].join('\n'));
+
+        // Compile & run
+        await compileBtn(page).click();
+        await expect(status(page)).toHaveText('Compiling...', { timeout: 5_000 });
+        await expect(status(page)).not.toHaveText('Compiling...', { timeout: 300_000 });
+        expect(await status(page).textContent()).toMatch(/Compilation successful/);
+
+        // Wait for the program to prompt for input
+        const term = terminal(page);
+        await expect(term).toContainText('PROMPT:', { timeout: 60_000 });
+
+        // Type "alu", backspace to delete 'u', then "ex" → should yield "alex"
+        await focusShellTerminal(page);
+        await page.keyboard.type('alu', { delay: 50 });
+        await page.keyboard.press('Backspace');
+        await page.keyboard.type('ex', { delay: 50 });
+        await page.keyboard.press('Enter');
+
+        // The program should print the edited text, not the raw keystrokes
+        await expect(term).toContainText('GOT:alex', { timeout: 30_000 });
+
+        dumpLogs(logs, 'BACKSPACE TEST');
+    });
 });
