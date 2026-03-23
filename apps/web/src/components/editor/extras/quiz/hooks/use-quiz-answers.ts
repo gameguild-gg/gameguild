@@ -20,6 +20,45 @@ interface UseQuizAnswersProps {
   entry: QuizEntry
 }
 
+/**
+ * Extracts a normalized formatting structure from Lexical serialized JSON.
+ * Returns an array of { type, format, children } per node, stripping text content
+ * so only structure + formatting flags are compared.
+ */
+function extractFormattingStructure(serialized: string): unknown[] | null {
+  try {
+    const state = JSON.parse(serialized)
+    const root = state?.root
+    if (!root?.children) return null
+
+    function normalizeNode(node: Record<string, unknown>): Record<string, unknown> {
+      const result: Record<string, unknown> = { type: node.type }
+
+      // Keep formatting flags (bold, italic, etc.) encoded in the format bitmask
+      if (node.format !== undefined) result.format = node.format
+      // Keep node-specific structural info
+      if (node.tag !== undefined) result.tag = node.tag
+      if (node.listType !== undefined) result.listType = node.listType
+
+      if (Array.isArray(node.children)) {
+        result.children = (node.children as Record<string, unknown>[]).map(normalizeNode)
+      }
+      return result
+    }
+
+    return (root.children as Record<string, unknown>[]).map(normalizeNode)
+  } catch {
+    return null
+  }
+}
+
+function compareFormattingStructure(expectedSerialized: string, userSerialized: string): boolean {
+  const expected = extractFormattingStructure(expectedSerialized)
+  const user = extractFormattingStructure(userSerialized)
+  if (!expected || !user) return false
+  return JSON.stringify(expected) === JSON.stringify(user)
+}
+
 interface UseQuizAnswersReturn {
   answerState: QuizAnswerState
   updateAnswerState: (updates: Partial<QuizAnswerState>) => void
@@ -127,8 +166,27 @@ export function useQuizAnswers({ entry }: UseQuizAnswersProps): UseQuizAnswersRe
       }
 
       case QuizEntryType.Essay: {
-        // Essays are manually graded, always show as "submitted"
-        correct = true
+        const expectedPlain = (entry.correctAnswerPlain || "").trim()
+        if (!expectedPlain) {
+          // No correct answer configured — treat as manually graded
+          correct = true
+          break
+        }
+
+        const userPlain = (answerState.textAnswers["main_plain"] || "").trim()
+        const textMatch = userPlain.toLowerCase() === expectedPlain.toLowerCase()
+
+        if (!textMatch) {
+          correct = false
+          break
+        }
+
+        if (entry.requireFormatting && entry.correctAnswer) {
+          const userSerialized = answerState.textAnswers["main"] || ""
+          correct = compareFormattingStructure(entry.correctAnswer, userSerialized)
+        } else {
+          correct = true
+        }
         break
       }
 

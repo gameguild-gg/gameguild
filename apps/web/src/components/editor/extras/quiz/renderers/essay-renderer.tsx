@@ -5,7 +5,7 @@
 
 "use client"
 
-import { useMemo, useCallback, useRef } from "react"
+import { useMemo, useCallback, useRef, useState, useEffect } from "react"
 import type { EssayEntry, QuizAnswerState } from "../types"
 import { EssayLexicalEditor } from "./essay-lexical-editor"
 
@@ -26,6 +26,19 @@ export function EssayRenderer({
 }: EssayRendererProps) {
   const serialized = answerState.textAnswers["main"] || ""
   const plainText = answerState.textAnswers["main_plain"] || ""
+
+  // Force full Lexical remount when the quiz resets (disabled → enabled transition)
+  const [resetKey, setResetKey] = useState(0)
+  const prevEffectiveDisabled = useRef(disabled || showFeedback)
+
+  useEffect(() => {
+    const wasDisabled = prevEffectiveDisabled.current
+    const isDisabled = disabled || showFeedback
+    prevEffectiveDisabled.current = isDisabled
+    if (wasDisabled && !isDisabled) {
+      setResetKey((k) => k + 1)
+    }
+  }, [disabled, showFeedback])
 
   const wordCount = useMemo(() => {
     return plainText.trim().split(/\s+/).filter(Boolean).length
@@ -54,6 +67,7 @@ export function EssayRenderer({
   return (
     <div className="space-y-3">
       <EssayLexicalEditor
+        key={resetKey}
         initialState={serialized || undefined}
         onChange={handleChange}
         disabled={disabled || showFeedback}
