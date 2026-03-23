@@ -1,3 +1,10 @@
+## [2.50.13](https://github.com/gameguild-gg/gameguild/compare/v2.50.12...v2.50.13) (2026-03-23)
+
+
+### Bug Fixes
+
+* **courses:** contents ([72f27ee](https://github.com/gameguild-gg/gameguild/commit/72f27ee99f8ea31becac2436b7c7b84d060964d4))
+
 ## [2.50.12](https://github.com/gameguild-gg/gameguild/compare/v2.50.11...v2.50.12) (2026-03-23)
 
 
