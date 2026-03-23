@@ -556,6 +556,7 @@ export function FillBlankEditor() {
                             value={answer}
                             onChange={(e) => updateTextAnswer(blankIndex, answerIndex, e.target.value)}
                             disabled={isLocked}
+                            autoComplete="off"
                             className={`bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 ${
                               isLocked ? "bg-gray-100 dark:bg-gray-700 cursor-not-allowed" : ""
                             }`}
@@ -624,6 +625,7 @@ export function FillBlankEditor() {
                       value={input.correctValue}
                       onChange={(e) => updateNumberValue(blankIndex, e.target.value)}
                       disabled={!!lockedAnswer}
+                      autoComplete="off"
                       className={`bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 ${
                         lockedAnswer ? "bg-gray-100 dark:bg-gray-700 cursor-not-allowed" : ""
                       }`}
@@ -647,6 +649,7 @@ export function FillBlankEditor() {
                       placeholder="exact if empty"
                       value={input.tolerance ?? ""}
                       onChange={(e) => updateNumberTolerance(blankIndex, e.target.value)}
+                      autoComplete="off"
                       className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600"
                     />
                     {input.tolerance !== undefined && input.tolerance > 0 && (
@@ -667,6 +670,7 @@ export function FillBlankEditor() {
                       placeholder="any if empty"
                       value={input.requiredPrecision ?? ""}
                       onChange={(e) => updateNumberPrecision(blankIndex, e.target.value)}
+                      autoComplete="off"
                       className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600"
                     />
                     {input.requiredPrecision !== undefined && input.requiredPrecision > 0 && (

@@ -29,6 +29,7 @@ export function RatingEditor() {
           <Input
             type="number"
             {...register("scale.min", { valueAsNumber: true })}
+            autoComplete="off"
             className="bg-white dark:bg-gray-800"
           />
         </div>
@@ -37,6 +38,7 @@ export function RatingEditor() {
           <Input
             type="number"
             {...register("scale.max", { valueAsNumber: true })}
+            autoComplete="off"
             className="bg-white dark:bg-gray-800"
           />
         </div>
@@ -45,6 +47,7 @@ export function RatingEditor() {
           <Input
             type="number"
             {...register("scale.step", { valueAsNumber: true })}
+            autoComplete="off"
             className="bg-white dark:bg-gray-800"
           />
         </div>
@@ -56,6 +59,7 @@ export function RatingEditor() {
           <Input
             placeholder="e.g., Strongly Disagree"
             {...register("scale.minLabel")}
+            autoComplete="off"
             className="bg-white dark:bg-gray-800"
           />
         </div>
@@ -64,6 +68,7 @@ export function RatingEditor() {
           <Input
             placeholder="e.g., Strongly Agree"
             {...register("scale.maxLabel")}
+            autoComplete="off"
             className="bg-white dark:bg-gray-800"
           />
         </div>
