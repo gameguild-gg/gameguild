@@ -5,7 +5,7 @@
 
 "use client"
 
-import { useState, useRef, useEffect } from "react"
+import { useState, useRef, useEffect, useMemo } from "react"
 import type { MatchingEntry, QuizAnswerState } from "../types"
 
 interface MatchingRendererProps {
@@ -59,6 +59,25 @@ export function MatchingRenderer({
   const distractors = entry.distractors || []
   const allRightItems = [...rightItems, ...distractors]
   const usedRightItems = new Set(assignments.values())
+
+  // Shuffle both columns once on mount
+  const shuffledPairs = useMemo(() => {
+    const arr = [...entry.pairs]
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j]!, arr[i]!]
+    }
+    return arr
+  }, [entry.pairs])
+
+  const shuffledRightItems = useMemo(() => {
+    const arr = [...allRightItems]
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j]!, arr[i]!]
+    }
+    return arr
+  }, [entry.pairs, entry.distractors])
 
   const updateLines = () => {
     if (!containerRef.current) return
@@ -186,10 +205,11 @@ export function MatchingRenderer({
         {/* Left Column */}
         <div className="space-y-3">
           <h4 className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">Items</h4>
-          {entry.pairs.map((pair, index) => {
+          {shuffledPairs.map((pair) => {
             const isSelected = selectedLeft === pair.id
             const isMatched = assignments.has(pair.id)
-            const colorClass = CONNECTION_COLORS[index % CONNECTION_COLORS.length]!.card
+            const originalIndex = entry.pairs.findIndex((p) => p.id === pair.id)
+            const colorClass = CONNECTION_COLORS[originalIndex % CONNECTION_COLORS.length]!.card
 
             return (
               <div
@@ -214,7 +234,7 @@ export function MatchingRenderer({
         {/* Right Column */}
         <div className="space-y-3">
           <h4 className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">Options</h4>
-          {allRightItems.map((right, index) => {
+          {shuffledRightItems.map((right, index) => {
             const isUsed = usedRightItems.has(right)
             
             // Find which left item connects to this right item to get its color
