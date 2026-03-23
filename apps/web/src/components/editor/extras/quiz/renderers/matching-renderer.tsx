@@ -88,7 +88,7 @@ export function MatchingRenderer({
       <div className="grid grid-cols-2 gap-8">
         {/* Left Column */}
         <div className="space-y-3">
-          <h4 className="text-sm font-medium text-gray-600 mb-2">Items</h4>
+          <h4 className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">Items</h4>
           {entry.pairs.map((pair) => {
             const isSelected = selectedLeft === pair.id
             const isMatched = assignments.has(pair.id)
@@ -99,15 +99,15 @@ export function MatchingRenderer({
                 key={pair.id}
                 className={`
                   p-4 rounded-lg border-2 transition-all cursor-pointer
-                  ${isSelected ? "border-blue-500 bg-blue-50" : "border-gray-200"}
-                  ${isMatched ? "bg-green-50 border-green-300" : ""}
-                  ${disabled || showFeedback ? "cursor-not-allowed opacity-75" : "hover:border-gray-300"}
+                  ${isSelected ? "border-blue-500 bg-blue-50 dark:bg-blue-950/30" : "border-gray-200 dark:border-gray-700"}
+                  ${isMatched ? "bg-green-50 dark:bg-green-950/30 border-green-300 dark:border-green-700" : ""}
+                  ${disabled || showFeedback ? "cursor-not-allowed opacity-75" : "hover:border-gray-300 dark:hover:border-gray-600"}
                 `}
                 onClick={() => handleLeftClick(pair.id)}
               >
                 <div className="font-medium">{pair.left}</div>
                 {isMatched && (
-                  <div className="mt-2 flex items-center justify-between text-sm text-green-700">
+                  <div className="mt-2 flex items-center justify-between text-sm text-green-700 dark:text-green-400">
                     <span>→ {matchedValue}</span>
                     {!disabled && !showFeedback && (
                       <button
@@ -129,7 +129,7 @@ export function MatchingRenderer({
 
         {/* Right Column */}
         <div className="space-y-3">
-          <h4 className="text-sm font-medium text-gray-600 mb-2">Options</h4>
+          <h4 className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">Options</h4>
           {allRightItems.map((right, index) => {
             const isUsed = usedRightItems.has(right)
 
@@ -138,8 +138,8 @@ export function MatchingRenderer({
                 key={index}
                 className={`
                   p-4 rounded-lg border-2 transition-all
-                  ${isUsed ? "bg-gray-100 border-gray-200 opacity-50" : "border-gray-200"}
-                  ${selectedLeft && !isUsed ? "cursor-pointer hover:border-blue-400 hover:bg-blue-50" : ""}
+                  ${isUsed ? "bg-gray-100 dark:bg-gray-800 border-gray-200 dark:border-gray-700 opacity-50" : "border-gray-200 dark:border-gray-700"}
+                  ${selectedLeft && !isUsed ? "cursor-pointer hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/30" : ""}
                   ${disabled || showFeedback ? "cursor-not-allowed" : ""}
                 `}
                 onClick={() => !isUsed && handleRightClick(right)}

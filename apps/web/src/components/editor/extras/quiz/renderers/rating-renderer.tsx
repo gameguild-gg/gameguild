@@ -39,10 +39,10 @@ export function RatingRenderer({
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <span className="text-sm text-gray-600 font-medium">
+        <span className="text-sm text-gray-600 dark:text-gray-400 font-medium">
           {scale.minLabel || `${scale.min} (Lowest)`}
         </span>
-        <span className="text-sm text-gray-600 font-medium">
+        <span className="text-sm text-gray-600 dark:text-gray-400 font-medium">
           {scale.maxLabel || `${scale.max} (Highest)`}
         </span>
       </div>
@@ -59,7 +59,7 @@ export function RatingRenderer({
                 w-12 h-12 rounded-lg border-2 font-bold text-lg transition-all duration-200
                 ${isSelected
                   ? "border-blue-500 bg-blue-500 text-white shadow-lg scale-110"
-                  : "border-gray-300 text-gray-700 hover:border-blue-300 hover:bg-blue-50"
+                  : "border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:border-blue-300 hover:bg-blue-50 dark:hover:bg-blue-950/30"
                 }
                 ${disabled || showFeedback ? "cursor-not-allowed opacity-75" : "hover:shadow-md cursor-pointer"}
               `}

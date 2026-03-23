@@ -221,7 +221,7 @@ export function QuizSettingsDialog({ isOpen, onClose, entry, onSave }: QuizSetti
                       <Label className="text-sm font-medium">Feedback Messages</Label>
                       <div className="space-y-3">
                         <div>
-                          <Label className="text-xs text-gray-600">Correct Answer Feedback</Label>
+                          <Label className="text-xs text-gray-600 dark:text-gray-400">Correct Answer Feedback</Label>
                           <Input
                             placeholder="Great job! That's correct!"
                             value={currentEntry.feedback?.correct || ""}
@@ -230,7 +230,7 @@ export function QuizSettingsDialog({ isOpen, onClose, entry, onSave }: QuizSetti
                           />
                         </div>
                         <div>
-                          <Label className="text-xs text-gray-600">Incorrect Answer Feedback</Label>
+                          <Label className="text-xs text-gray-600 dark:text-gray-400">Incorrect Answer Feedback</Label>
                           <Input
                             placeholder="Not quite right. Try again!"
                             value={currentEntry.feedback?.incorrect || ""}
@@ -307,7 +307,7 @@ export function QuizSettingsDialog({ isOpen, onClose, entry, onSave }: QuizSetti
                         </div>
                       ) : (
                         <div className="space-y-4">
-                          <div className="text-lg font-medium text-gray-400">Your question will appear here...</div>
+                          <div className="text-lg font-medium text-gray-400 dark:text-gray-500">Your question will appear here...</div>
                           <div className="text-sm text-gray-500 italic">Preview will update as you edit</div>
                         </div>
                       )}

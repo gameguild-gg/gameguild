@@ -38,7 +38,7 @@ export function ShortAnswerRenderer({
     <div className="space-y-2">
       <input
         type="text"
-        className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none transition-colors text-base"
+        className="w-full px-4 py-3 border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:border-blue-500 focus:outline-none transition-colors text-base bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
         placeholder="Type your answer..."
         value={answer}
         onChange={(e) => handleChange(e.target.value)}

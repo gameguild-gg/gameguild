@@ -38,8 +38,8 @@ export function TrueFalseRenderer({
           w-full p-4 rounded-lg border-2 font-medium text-lg transition-all duration-200
           ${
             selectedAnswer === true
-              ? "border-blue-500 bg-blue-50 text-blue-700 shadow-sm"
-              : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
+              ? "border-blue-500 bg-blue-50 dark:bg-blue-950/30 text-blue-700 dark:text-blue-400 shadow-sm"
+              : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800"
           }
           ${disabled || showFeedback ? "cursor-not-allowed opacity-75" : "hover:shadow-sm"}
         `}
@@ -68,8 +68,8 @@ export function TrueFalseRenderer({
           w-full p-4 rounded-lg border-2 font-medium text-lg transition-all duration-200
           ${
             selectedAnswer === false
-              ? "border-blue-500 bg-blue-50 text-blue-700 shadow-sm"
-              : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
+              ? "border-blue-500 bg-blue-50 dark:bg-blue-950/30 text-blue-700 dark:text-blue-400 shadow-sm"
+              : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800"
           }
           ${disabled || showFeedback ? "cursor-not-allowed opacity-75" : "hover:shadow-sm"}
         `}
