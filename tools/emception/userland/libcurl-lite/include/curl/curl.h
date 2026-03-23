@@ -276,7 +276,8 @@ extern "C"
         CURLVERSION_THIRD = 2,
         CURLVERSION_FOURTH = 3,
         CURLVERSION_FIFTH = 4,
-        CURLVERSION_NOW = CURLVERSION_FIFTH,
+        CURLVERSION_SIXTH = 5,
+        CURLVERSION_NOW = CURLVERSION_SIXTH,
     } CURLversion;
 
     typedef struct
@@ -290,6 +291,21 @@ extern "C"
         long ssl_version_num;
         const char *libz_version;
         const char *const *protocols;
+        /* CURLVERSION_FOURTH fields */
+        const char *ares;
+        int ares_num;
+        const char *libidn;
+        int iconv_ver_num;
+        const char *libssh_version;
+        /* CURLVERSION_FIFTH fields */
+        unsigned int brotli_ver_num;
+        const char *brotli_version;
+        unsigned int nghttp2_ver_num;
+        const char *nghttp2_version;
+        const char *quic_version;
+        /* CURLVERSION_SIXTH fields */
+        const char *cainfo;
+        const char *capath;
     } curl_version_info_data;
 
 /* Feature bits */
