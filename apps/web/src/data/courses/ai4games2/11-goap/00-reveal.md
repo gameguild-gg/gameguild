@@ -99,6 +99,7 @@ Before GOAP, game AI used **Finite State Machines** (FSMs).
 ```mermaid
 flowchart LR
     subgraph "Traditional FSM"
+        direction LR
         Idle -->|"see enemy"| Chase
         Chase -->|"in range"| Attack
         Attack -->|"low health"| Flee
