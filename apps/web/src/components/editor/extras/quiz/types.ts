@@ -160,6 +160,9 @@ export interface EssayEntry extends QuizEntryBase {
   minWordCount?: number
   maxWordCount?: number
   showWordCount?: boolean
+  correctAnswer?: string // Serialized Lexical JSON for the model/correct answer
+  correctAnswerPlain?: string // Plain text of the correct answer for comparison
+  requireFormatting?: boolean // Require formatting to match the model answer
 }
 
 // ============================================================================
