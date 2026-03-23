@@ -186,11 +186,52 @@ export default function Ide({ title = 'WebAssembly C++ Toolchain', manifestUrl =
                 console.log(`${P} Step 2/2: Running compiled WASM with WASI runtime...`);
                 const tRun = performance.now();
 
+                // Line-buffered stdin (cooked mode): accumulate characters,
+                // process backspace/delete, and only deliver the final edited
+                // line to the WASM program when the user presses Enter.
+                // This function is called by feedStdin AFTER enterExclusiveStdin(),
+                // so readByteExclusive() calls create resolvers that work correctly.
+                const lineQueue: number[] = [];
+                let lineBuf = '';
+                let lineCursor = 0;
+                const lineBufferedStdin = async (): Promise<number> => {
+                    // Return already-queued bytes from a completed line first
+                    if (lineQueue.length > 0) return lineQueue.shift()!;
+                    // Read raw bytes and line-edit until Enter is pressed
+                    while (true) {
+                        const raw = tty.readByteExclusive();
+                        const byte: number = typeof (raw as Promise<number>).then === 'function'
+                            ? await (raw as Promise<number>)
+                            : raw as number;
+                        if (byte === -1) return -1; // exclusive mode ended
+                        if (byte === 127 || byte === 8) {
+                            if (lineCursor > 0) {
+                                lineBuf = lineBuf.slice(0, lineCursor - 1) + lineBuf.slice(lineCursor);
+                                lineCursor--;
+                            }
+                            continue;
+                        }
+                        if (byte === 13 || byte === 10) {
+                            // Flush the edited line + LF
+                            for (let i = 0; i < lineBuf.length; i++) lineQueue.push(lineBuf.charCodeAt(i));
+                            lineQueue.push(10);
+                            lineBuf = '';
+                            lineCursor = 0;
+                            return lineQueue.shift()!;
+                        }
+                        if (byte >= 32) {
+                            const ch = String.fromCharCode(byte);
+                            lineBuf = lineBuf.slice(0, lineCursor) + ch + lineBuf.slice(lineCursor);
+                            lineCursor++;
+                        }
+                    }
+                };
+
                 await client.run('wasi-run', ['wasi-run', '/home/user/main.wasm'], {
                     cwd: '/home/user',
                     onStdout: (t) => { tty.write(t.replace(/\n/g, '\r\n')); },
                     onStderr: (t) => { tty.write(`\x1b[31m${t.replace(/\n/g, '\r\n')}\x1b[0m`); },
-                    stdin: () => tty.readByteExclusive(),
+                    stdin: lineBufferedStdin,
                 });
 
                 console.log(`${P} Execution finished in ${((performance.now() - tRun) / 1000).toFixed(2)}s`);
