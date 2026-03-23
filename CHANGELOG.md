@@ -1,3 +1,10 @@
+## [2.50.12](https://github.com/gameguild-gg/gameguild/compare/v2.50.11...v2.50.12) (2026-03-23)
+
+
+### Bug Fixes
+
+* **ai-course:** add goap content to ai ([996d1ff](https://github.com/gameguild-gg/gameguild/commit/996d1ff1c9ffd645e04e17c0c3550bec30e38cbe))
+
 ## [2.50.11](https://github.com/gameguild-gg/gameguild/compare/v2.50.10...v2.50.11) (2026-03-20)
 
 
