@@ -76,8 +76,13 @@ import week10Readings from './10-mongodb/readings-10.md';
 import week10Reveal from './10-mongodb/reveal.md';
 import week10SchemaDesignPatterns from './10-mongodb/schema-design-patterns.md';
 
-// Week 11 checkpoint import
+// Week 11 imports
 import week11Assignment from './11-keyvalue-widecolumn/assignment.md';
+import week11CassandraFundamentals from './11-keyvalue-widecolumn/cassandra-fundamentals.md';
+import week11Quiz from './11-keyvalue-widecolumn/quiz/redis-cassandra-quiz.md';
+import week11Readings from './11-keyvalue-widecolumn/readings-11.md';
+import week11RedisFundamentals from './11-keyvalue-widecolumn/redis-fundamentals.md';
+import week11Reveal from './11-keyvalue-widecolumn/reveal.md';
 
 // Week 12 checkpoint import
 import week12Assignment from './12-graph-databases/assignment.md';
@@ -1558,6 +1563,122 @@ export const week10QuizContent: ProgramContent = {
     updatedAt: '2023-01-01T00:00:00Z',
 };
 
+// Week 11: Key-Value & Wide-Column Stores
+export const week11RevealContent: ProgramContent = {
+    id: 'databases-week-11-reveal',
+    programId: 'databases-program-1',
+    slug: 'keyvalue-widecolumn',
+    parentId: undefined,
+    title: 'Key-Value & Wide-Column Stores',
+    description: 'Reveal.js presentation covering Redis, Cassandra, CAP theorem, CQL, and data modeling',
+    type: ProgramContentType.REVEAL,
+    body: week11Reveal,
+    sortOrder: 11,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 60,
+    visibility: 1, // Published
+    program: databasesProgram,
+    parent: undefined,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const week11ReadingsContent: ProgramContent = {
+    id: 'databases-week-11-readings',
+    programId: 'databases-program-1',
+    slug: 'readings-11',
+    parentId: 'databases-week-11-reveal',
+    title: 'Week 11 Readings & Resources',
+    description: 'Curated references for Redis, Cassandra, CAP theorem, and distributed systems',
+    type: 0, // Page
+    body: week11Readings,
+    sortOrder: 1,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 30,
+    visibility: 1, // Published
+    program: databasesProgram,
+    parent: week11RevealContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const week11RedisFundamentalsContent: ProgramContent = {
+    id: 'databases-week-11-redis-fundamentals',
+    programId: 'databases-program-1',
+    slug: 'redis-fundamentals',
+    parentId: 'databases-week-11-readings',
+    title: 'Redis Fundamentals',
+    description: 'In-memory key-value store: data structures, TTL, Pub/Sub, transactions, and ioredis',
+    type: 0, // Page
+    body: week11RedisFundamentals,
+    sortOrder: 1,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 90,
+    visibility: 1, // Published
+    program: databasesProgram,
+    parent: week11ReadingsContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const week11CassandraFundamentalsContent: ProgramContent = {
+    id: 'databases-week-11-cassandra-fundamentals',
+    programId: 'databases-program-1',
+    slug: 'cassandra-fundamentals',
+    parentId: 'databases-week-11-readings',
+    title: 'Cassandra Fundamentals',
+    description: 'Distributed wide-column store: architecture, CAP theorem, CQL, partition/clustering keys',
+    type: 0, // Page
+    body: week11CassandraFundamentals,
+    sortOrder: 2,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 120,
+    visibility: 1, // Published
+    program: databasesProgram,
+    parent: week11ReadingsContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const week11QuizContent: ProgramContent = {
+    id: 'databases-week-11-quiz',
+    programId: 'databases-program-1',
+    slug: 'redis-cassandra-quiz',
+    parentId: 'databases-week-11-reveal',
+    title: 'Quiz 09: Key-Value & Wide-Column Stores',
+    description: 'Assess your understanding of Redis, Cassandra, CAP theorem, and data modeling',
+    type: 0, // Page
+    body: week11Quiz,
+    sortOrder: 2,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 45,
+    visibility: 1, // Published
+    program: databasesProgram,
+    parent: week11RevealContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
 // Final Project - Parent content
 export const finalProjectContent: ProgramContent = {
     id: 'databases-final-project',
@@ -1762,6 +1883,7 @@ databasesProgram.programContents = [
     week06RevealContent,
     week07RevealContent,
     week10RevealContent,
+    week11RevealContent,
     finalProjectContent,
 ];
 
@@ -1853,6 +1975,16 @@ week10ReadingsContent.children = [
     week10MongoDBCRUDContent,
     week10AggregationPipelineContent,
     week10DrizzleMongoDBContent,
+];
+
+week11RevealContent.children = [
+    week11ReadingsContent,
+    week11QuizContent,
+];
+
+week11ReadingsContent.children = [
+    week11RedisFundamentalsContent,
+    week11CassandraFundamentalsContent,
 ];
 
 finalProjectContent.children = [
