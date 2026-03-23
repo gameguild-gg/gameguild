@@ -69,7 +69,7 @@ export function SingleChoiceEditor() {
         Add Option
       </Button>
 
-      <p className="text-xs text-gray-500">
+      <p className="text-xs text-gray-500 dark:text-gray-400">
         Select the radio button next to the correct answer
       </p>
     </div>
