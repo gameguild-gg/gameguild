@@ -108,11 +108,25 @@ export function MatchingRenderer({
 
   const handleLeftClick = (leftId: string) => {
     if (disabled || showFeedback) return
+    // If already matched, clicking removes the connection
+    if (assignments.has(leftId)) {
+      handleRemoveAssignment(leftId)
+      return
+    }
     setSelectedLeft(leftId === selectedLeft ? null : leftId)
   }
 
   const handleRightClick = (rightValue: string) => {
-    if (disabled || showFeedback || !selectedLeft) return
+    if (disabled || showFeedback) return
+
+    // If already used and no left selected, clicking removes the connection
+    if (usedRightItems.has(rightValue) && !selectedLeft) {
+      const matchedLeftId = Array.from(assignments.entries()).find(([, r]) => r === rightValue)?.[0]
+      if (matchedLeftId) handleRemoveAssignment(matchedLeftId)
+      return
+    }
+
+    if (!selectedLeft) return
 
     const newAssignments = new Map(assignments)
     
@@ -191,21 +205,7 @@ export function MatchingRenderer({
                 `}
                 onClick={() => handleLeftClick(pair.id)}
               >
-                <div className="flex items-center justify-between">
-                  <div className="font-medium">{pair.left}</div>
-                  {isMatched && !disabled && !showFeedback && (
-                    <button
-                      className="text-red-500 hover:text-red-700 p-1 bg-white/50 dark:bg-gray-900/50 rounded-full w-6 h-6 flex items-center justify-center shrink-0"
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        handleRemoveAssignment(pair.id)
-                      }}
-                      title="Remove connection"
-                    >
-                      ×
-                    </button>
-                  )}
-                </div>
+                <div className="font-medium">{pair.left}</div>
               </div>
             )
           })}
@@ -240,9 +240,10 @@ export function MatchingRenderer({
                   p-4 rounded-lg border-2 transition-all relative z-20
                   ${colorClass}
                   ${selectedLeft && !isUsed ? "cursor-pointer hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/30" : ""}
+                  ${isUsed && !disabled && !showFeedback ? "cursor-pointer hover:brightness-95" : ""}
                   ${disabled || showFeedback ? "cursor-not-allowed" : ""}
                 `}
-                onClick={() => !isUsed && handleRightClick(right)}
+                onClick={() => handleRightClick(right)}
               >
                 <span className="font-medium">{right}</span>
               </div>
