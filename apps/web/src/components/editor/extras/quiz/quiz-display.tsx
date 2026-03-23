@@ -51,7 +51,7 @@ export function QuizDisplay({ entry }: QuizDisplayProps) {
       )}
 
       {/* Feedback */}
-      {showFeedback && (
+      {showFeedback && (entry.settings.showFeedback ?? true) && (
         <QuizFeedback
           isCorrect={isCorrect}
           correctFeedback={entry.feedback?.correct || ""}
@@ -60,6 +60,21 @@ export function QuizDisplay({ entry }: QuizDisplayProps) {
           onRetry={resetQuiz}
           showRetryButton={entry.settings.allowRetry}
         />
+      )}
+
+      {/* Submitted without feedback */}
+      {showFeedback && !(entry.settings.showFeedback ?? true) && (
+        <div className="flex items-center justify-between gap-3 rounded-lg mt-3 px-4 py-3 text-sm border-l-4 bg-blue-50 dark:bg-blue-950/20 text-blue-700 dark:text-blue-400 border-blue-500">
+          <span className="font-medium">Answer submitted.</span>
+          {entry.settings.allowRetry && (
+            <button
+              onClick={resetQuiz}
+              className="shrink-0 flex items-center gap-1.5 text-xs font-medium border border-blue-300 dark:border-blue-600 text-blue-700 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-950/30 py-1.5 px-3 rounded-md transition-colors"
+            >
+              Try Again
+            </button>
+          )}
+        </div>
       )}
     </div>
   )

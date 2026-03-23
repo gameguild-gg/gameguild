@@ -7,7 +7,7 @@
 
 import { useState, useEffect } from "react"
 import { useForm, FormProvider } from "react-hook-form"
-import { X, BookOpen, Save, FileText, Users } from "lucide-react"
+import { X, BookOpen, Save, FileText, Users, RotateCcw } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -246,6 +246,16 @@ export function QuizSettingsDialog({ isOpen, onClose, entry, onSave }: QuizSetti
                       <Label className="text-sm font-medium">Settings</Label>
                       <div className="space-y-3">
                         <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg border">
+                          <div>
+                            <Label className="text-sm">Show Feedback</Label>
+                            <p className="text-xs text-gray-500 dark:text-gray-400">Show correct/incorrect result after submission</p>
+                          </div>
+                          <Switch
+                            checked={currentEntry.settings.showFeedback ?? true}
+                            onCheckedChange={(checked) => setValue("settings.showFeedback", checked)}
+                          />
+                        </div>
+                        <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg border">
                           <Label className="text-sm">Allow Retry</Label>
                           <Switch
                             checked={currentEntry.settings.allowRetry}
@@ -294,7 +304,7 @@ export function QuizSettingsDialog({ isOpen, onClose, entry, onSave }: QuizSetti
                           )}
 
                           {/* Feedback */}
-                          {showFeedback && (
+                          {showFeedback && (currentEntry.settings.showFeedback ?? true) && (
                             <QuizFeedback
                               isCorrect={isCorrect}
                               correctFeedback={currentEntry.feedback?.correct || ""}
@@ -303,6 +313,31 @@ export function QuizSettingsDialog({ isOpen, onClose, entry, onSave }: QuizSetti
                               onRetry={resetQuiz}
                               showRetryButton={true}
                             />
+                          )}
+
+                          {/* Submitted without feedback */}
+                          {showFeedback && !(currentEntry.settings.showFeedback ?? true) && (
+                            <div className="flex items-center justify-between gap-3 rounded-lg mt-3 px-4 py-3 text-sm border-l-4 bg-blue-50 dark:bg-blue-950/20 text-blue-700 dark:text-blue-400 border-blue-500">
+                              <span className="font-medium">Answer submitted.</span>
+                              {currentEntry.settings.allowRetry ? (
+                                <button
+                                  type="button"
+                                  onClick={resetQuiz}
+                                  className="shrink-0 flex items-center gap-1.5 text-xs font-medium border border-blue-300 dark:border-blue-600 text-blue-700 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-950/30 py-1.5 px-3 rounded-md transition-colors"
+                                >
+                                  <RotateCcw className="h-3 w-3" />
+                                  Try Again
+                                </button>
+                              ) : (
+                                <button
+                                  type="button"
+                                  onClick={resetQuiz}
+                                  className="shrink-0 bg-gray-600 hover:bg-gray-700 text-white font-medium py-1.5 px-4 rounded-md transition-colors duration-200 text-sm"
+                                >
+                                  Reset Quiz
+                                </button>
+                              )}
+                            </div>
                           )}
                         </div>
                       ) : (

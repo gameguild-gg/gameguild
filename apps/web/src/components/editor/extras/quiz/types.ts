@@ -41,6 +41,7 @@ export interface QuizFeedback {
 export interface QuizSettings {
   allowRetry: boolean
   shuffleOptions?: boolean
+  showFeedback?: boolean // Whether to show correct/incorrect feedback after submission
 }
 
 // ============================================================================
@@ -305,6 +306,7 @@ export function isRating(entry: QuizEntry): entry is RatingEntry {
 export function createDefaultSettings(): QuizSettings {
   return {
     allowRetry: true,
+    showFeedback: true,
   }
 }
 
