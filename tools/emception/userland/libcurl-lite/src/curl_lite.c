@@ -60,7 +60,7 @@ typedef struct
 static const char *s_protocols[] = {"http", "https", NULL};
 
 static curl_version_info_data s_version_info = {
-    CURLVERSION_FIFTH,
+    CURLVERSION_SIXTH,
     LIBCURL_VERSION,
     LIBCURL_VERSION_NUM,
     "wasm32-emscripten",
@@ -69,6 +69,21 @@ static curl_version_info_data s_version_info = {
     0,
     NULL,
     s_protocols,
+    /* CURLVERSION_FOURTH */
+    NULL,
+    0,
+    NULL,
+    0,
+    NULL,
+    /* CURLVERSION_FIFTH */
+    0,
+    NULL,
+    0,
+    NULL,
+    NULL,
+    /* CURLVERSION_SIXTH */
+    NULL,
+    NULL,
 };
 
 /* ------------------------------------------------------------------ */
