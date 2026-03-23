@@ -74,7 +74,7 @@ Remote Dictionary Server
 ## Redis Architecture
 
 ```mermaid
-flowchart TD
+flowchart LR
     subgraph APP["Application"]
         IO["ioredis client"]
     end
@@ -93,6 +93,14 @@ flowchart TD
         end
     end
 ```
+
+- **RDB (Redis Database):** periodic point-in-time snapshots to disk — fast restarts, may lose minutes of data
+- **AOF (Append-Only File):** logs every write command to disk — on restart, replays the log to rebuild state
+  - `appendfsync always` — safest (fsync every write), slowest
+  - `appendfsync everysec` — good balance, lose ≤ 1 second
+  - `appendfsync no` — OS decides when to flush, fastest
+- **AOF Rewrite:** Redis periodically compacts the AOF (e.g., 1000 INCRs → single SET) to keep file size manageable
+- Production recommendation: use **both** RDB + AOF for fast restarts and minimal data loss
 
 ---
 
@@ -564,7 +572,7 @@ Cassandra & Distributed Data at Scale
 - No joins — data is **denormalized**
 
 ```mermaid
-flowchart LR
+flowchart TD
     subgraph R1["Row Key: user123"]
         direction LR
         R1C1["name\nAlice"] ~~~ R1C2["email\na@..."] ~~~ R1C3["age\n28"] ~~~ R1C4["city\nBoston"]
@@ -1124,16 +1132,6 @@ Use **multiple databases**, each for its strengths:
 5. **Cassandra**: always query by partition key — model your queries first
 6. **Denormalize** in Cassandra — no joins, accept data duplication
 7. Use both together: Redis as cache layer, Cassandra for persistence
-
----
-
-## Resources
-
-- [Redis Fundamentals](./redis-fundamentals.md)
-- [Cassandra Fundamentals](./cassandra-fundamentals.md)
-- [Readings & Resources](./readings-11.md)
-- [Quiz 09: Key-Value & Wide-Column](./quiz/redis-cassandra-quiz.md)
-- [Final Project Checkpoint: Architecture Design](./assignment.md)
 
 ---
 
