@@ -379,7 +379,7 @@ The _appearance_ of communication emerges from each NPC **independently reasonin
 When the world changes, plans may become invalid:
 
 ```mermaid
-flowchart TD
+flowchart LR
     A["Execute Plan"] --> B{"World Changed?"}
     B -->|No| A
     B -->|Yes| C{"Plan Still Valid?"}
