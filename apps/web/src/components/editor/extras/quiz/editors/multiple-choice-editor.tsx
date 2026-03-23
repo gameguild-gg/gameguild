@@ -82,7 +82,7 @@ export function MultipleChoiceEditor() {
         Add Option
       </Button>
 
-      <p className="text-xs text-gray-500">
+      <p className="text-xs text-gray-500 dark:text-gray-400">
         Check all correct answers (multiple selections allowed)
       </p>
     </div>

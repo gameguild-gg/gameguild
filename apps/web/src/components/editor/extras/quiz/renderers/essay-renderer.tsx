@@ -75,7 +75,7 @@ export function EssayRenderer({
       />
 
       {entry.showWordCount && (
-        <div className="flex items-center justify-between text-sm text-gray-600">
+        <div className="flex items-center justify-between text-sm text-gray-600 dark:text-gray-400">
           <span className={!isWordCountValid ? "text-red-600" : ""}>
             {wordCount} word{wordCount !== 1 ? "s" : ""}
           </span>
