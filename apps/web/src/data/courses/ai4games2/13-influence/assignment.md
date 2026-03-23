@@ -2,12 +2,6 @@
 
 **In class:** 2026/04/06 – 2026/04/10
 
-::: warning
-
-Missing this checkpoint incurs a **5% penalty** on your final project grade. See the [Final Project](../09-break/final-project.md) page for full details.
-
-:::
-
 ## Overview
 
 This week is **in-class playtesting**. You will bring your current build and have classmates test your AI system. You will also test other teams' projects and provide feedback.

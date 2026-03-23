@@ -2,12 +2,6 @@
 
 **Due:** Sunday, 2026/04/05
 
-::: warning
-
-Missing this checkpoint incurs a **5% penalty** on your final project grade. See the [Final Project](../09-break/final-project.md) page for full details.
-
-:::
-
 ## Overview
 
 This week your team must demonstrate that the **core AI algorithm is working**. The goal is to show tangible progress — not a polished game, but clear evidence that the central AI mechanic functions.

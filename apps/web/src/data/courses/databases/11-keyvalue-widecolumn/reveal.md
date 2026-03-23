@@ -564,18 +564,16 @@ Cassandra & Distributed Data at Scale
 - No joins — data is **denormalized**
 
 ```mermaid
-block-beta
-  columns 5
-  block:r1:5
-    columns 5
-    r1h["Row Key: user123"]:5
-    c1["name<br/>Alice"] c2["email<br/>a@..."] c3["age<br/>28"] c4["city<br/>Boston"] space
-  end
-  block:r2:5
-    columns 5
-    r2h["Row Key: user456"]:5
-    c5["name<br/>Bob"] c6["email<br/>b@..."] c7["country<br/>USA"] space space
-  end
+flowchart LR
+    subgraph R1["Row Key: user123"]
+        direction LR
+        R1C1["name\nAlice"] ~~~ R1C2["email\na@..."] ~~~ R1C3["age\n28"] ~~~ R1C4["city\nBoston"]
+    end
+    subgraph R2["Row Key: user456"]
+        direction LR
+        R2C1["name\nBob"] ~~~ R2C2["email\nb@..."] ~~~ R2C3["country\nUSA"]
+    end
+    R1 ~~~ R2
 ```
 
 💡 Different rows can have **different columns** — schema-less per row.
@@ -605,6 +603,7 @@ Used by: Apple, Netflix, Instagram, Discord, Uber
 ```mermaid
 flowchart LR
     subgraph CLUSTER["Cassandra Cluster"]
+        direction LR
         N1(("Node 1")) <-->|gossip| N2(("Node 2"))
         N2 <-->|gossip| N3(("Node 3"))
         N3 <-->|gossip| N4(("Node 4"))

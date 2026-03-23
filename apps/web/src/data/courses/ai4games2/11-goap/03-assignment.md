@@ -2,12 +2,6 @@
 
 **Due:** Sunday, 2026/03/29
 
-::: warning
-
-Missing this checkpoint incurs a **5% penalty** on your final project grade. See the [Final Project](../09-break/final-project.md) page for full details.
-
-:::
-
 ## Overview
 
 This week you will design and document the architecture of your AI system. The deliverable is a **system diagram** showing every major component, data flow, and how the AI integrates with the game.
