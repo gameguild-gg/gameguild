@@ -8,11 +8,6 @@
 
 :::
 
-::: warning
-
-Missing this checkpoint incurs a **5% penalty** on your final project grade. See the [Final Project](../09-break/final-project.md) page for full details.
-
-:::
 
 ## Overview
 
