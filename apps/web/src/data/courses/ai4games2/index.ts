@@ -44,6 +44,11 @@ import ai4games2Week10Lecture from "./10-wfc/01-lecture.md";
 import ai4games2Week10Readings from "./10-wfc/02-readings.md";
 import ai4games2Week10Assignment from "./10-wfc/03-assignment.md";
 import ai4games2Week10Quiz from "./10-wfc/04-quiz.md";
+import ai4games2Week11Slides from "./11-goap/00-reveal.md";
+import ai4games2Week11Lecture from "./11-goap/01-lecture.md";
+import ai4games2Week11Readings from "./11-goap/02-readings.md";
+import ai4games2Week11Assignment from "./11-goap/03-assignment.md";
+import ai4games2Week11Quiz from "./11-goap/04-quiz.md";
 import ai4games2ExtraOldLecture from "./old/extras/llms.md";
 import ai4games2Week01OldLecture from "./old/week01/lecture.md";
 import ai4games2Week01OldReadings from "./old/week01/readings.md";
@@ -1110,6 +1115,122 @@ export const ai4games2Week10AssignmentContent: ProgramContent = {
   updatedAt: "2023-01-01T00:00:00Z",
 };
 
+// Week 11 Content (Goal-Oriented Action Planning)
+export const ai4games2Week11SlidesContent: ProgramContent = {
+  id: "ai4games2-week-11-slides",
+  programId: "ai4games2-program",
+  parentId: undefined,
+  title: "Week 11: Goal-Oriented Action Planning",
+  slug: "week-11",
+  description: "GOAP: STRIPS planning, A* through action space, F.E.A.R. case study, world state, preconditions/effects, replanning",
+  type: ProgramContentType.REVEAL,
+  body: ai4games2Week11Slides,
+  sortOrder: 11,
+  isRequired: true,
+  gradingMethod: 0,
+  maxPoints: null,
+  estimatedMinutes: 60,
+  visibility: 1,
+  program: ai4games2Program,
+  parent: undefined,
+  children: [],
+  contentInteractions: [],
+  createdAt: "2023-01-01T00:00:00Z",
+  updatedAt: "2023-01-01T00:00:00Z",
+};
+
+export const ai4games2Week11LectureContent: ProgramContent = {
+  id: "ai4games2-week-11-lecture",
+  programId: "ai4games2-program",
+  parentId: "ai4games2-week-11-slides",
+  title: "Week 11: Lecture Notes",
+  slug: "lecture",
+  description: "Detailed lecture notes on GOAP, STRIPS formalism, F.E.A.R. case study, solver design, and architecture comparison",
+  type: ProgramContentType.PAGE,
+  body: ai4games2Week11Lecture,
+  sortOrder: 1,
+  isRequired: true,
+  gradingMethod: 0,
+  maxPoints: null,
+  estimatedMinutes: 60,
+  visibility: 1,
+  program: ai4games2Program,
+  parent: ai4games2Week11SlidesContent,
+  children: [],
+  contentInteractions: [],
+  createdAt: "2023-01-01T00:00:00Z",
+  updatedAt: "2023-01-01T00:00:00Z",
+};
+
+export const ai4games2Week11ReadingsContent: ProgramContent = {
+  id: "ai4games2-week-11-readings",
+  programId: "ai4games2-program",
+  parentId: "ai4games2-week-11-slides",
+  title: "Week 11: Readings",
+  slug: "readings",
+  description: "Required readings and videos for Goal-Oriented Action Planning",
+  type: ProgramContentType.PAGE,
+  body: ai4games2Week11Readings,
+  sortOrder: 2,
+  isRequired: true,
+  gradingMethod: 0,
+  maxPoints: null,
+  estimatedMinutes: 120,
+  visibility: 1,
+  program: ai4games2Program,
+  parent: ai4games2Week11SlidesContent,
+  children: [],
+  contentInteractions: [],
+  createdAt: "2023-01-01T00:00:00Z",
+  updatedAt: "2023-01-01T00:00:00Z",
+};
+
+export const ai4games2Week11QuizContent: ProgramContent = {
+  id: "ai4games2-week-11-quiz",
+  programId: "ai4games2-program",
+  parentId: "ai4games2-week-11-slides",
+  title: "Week 11: Quiz",
+  slug: "quiz",
+  description: "Test your understanding of GOAP, STRIPS, F.E.A.R. AI, planning heuristics, and replanning",
+  type: ProgramContentType.PAGE,
+  body: ai4games2Week11Quiz,
+  sortOrder: 3,
+  isRequired: true,
+  gradingMethod: 1,
+  maxPoints: 10,
+  estimatedMinutes: 15,
+  visibility: 1,
+  program: ai4games2Program,
+  parent: ai4games2Week11SlidesContent,
+  children: [],
+  contentInteractions: [],
+  createdAt: "2023-01-01T00:00:00Z",
+  updatedAt: "2023-01-01T00:00:00Z",
+};
+
+export const ai4games2Week11AssignmentContent: ProgramContent = {
+  id: "ai4games2-week-11-assignment",
+  programId: "ai4games2-program",
+  parentId: "ai4games2-week-11-slides",
+  title: "Week 11: Assignment",
+  slug: "assignment",
+  description: "Final Project — Checkpoint 2: Architecture Design",
+  type: ProgramContentType.PAGE,
+  body: ai4games2Week11Assignment,
+  sortOrder: 4,
+  isRequired: true,
+  gradingMethod: 1,
+  maxPoints: 100,
+  estimatedMinutes: 60,
+  visibility: 1,
+  program: ai4games2Program,
+  parent: ai4games2Week11SlidesContent,
+  children: [],
+  contentInteractions: [],
+  createdAt: "2023-01-01T00:00:00Z",
+  updatedAt: "2023-01-01T00:00:00Z",
+};
+
 export const ai4games2Week02OldContent: ProgramContent = {
   id: "ai4games2-week-02",
   programId: "ai4games2-program",
@@ -1569,6 +1690,12 @@ ai4games2Week10SlidesContent.children = [
   ai4games2Week10QuizContent,
   ai4games2Week10AssignmentContent,
 ];
+ai4games2Week11SlidesContent.children = [
+  ai4games2Week11LectureContent,
+  ai4games2Week11ReadingsContent,
+  ai4games2Week11QuizContent,
+  ai4games2Week11AssignmentContent,
+];
 ai4games2Week02OldContent.children = [ai4games2Week02OldPcgContent];
 ai4games2Week03OldContent.children = [ai4games2Week03OldAstarContent];
 ai4games2Week04OldContent.children = [ai4games2Week04OldAssignmentContent];
@@ -1607,6 +1734,7 @@ ai4games2Program.programContents = [
   ai4games2Week08MidtermContent,
   ai4games2Week09FinalProjectContent,
   ai4games2Week10SlidesContent,
+  ai4games2Week11SlidesContent,
   ai4games2OldContent,
 ];
 
