@@ -191,8 +191,21 @@ export function useQuizAnswers({ entry }: UseQuizAnswersProps): UseQuizAnswersRe
       }
 
       case QuizEntryType.Matching: {
-        // TODO: Implement matching validation
-        correct = false
+        const userAssignments = new Map<string, string>()
+        answerState.selectedOptionIds.forEach((sel) => {
+          const idx = sel.indexOf(":")
+          if (idx > 0) {
+            userAssignments.set(sel.substring(0, idx), sel.substring(idx + 1))
+          }
+        })
+
+        if (userAssignments.size !== entry.pairs.length) {
+          correct = false
+        } else {
+          correct = entry.pairs.every(
+            (pair) => userAssignments.get(pair.id) === pair.right
+          )
+        }
         break
       }
 
