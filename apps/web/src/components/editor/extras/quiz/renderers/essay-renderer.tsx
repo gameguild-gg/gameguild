@@ -1,12 +1,13 @@
 /**
  * Essay Renderer
- * Multi-line text area for essay questions
+ * Rich text editor for essay questions using an isolated Lexical instance
  */
 
 "use client"
 
-import { useMemo } from "react"
+import { useMemo, useCallback, useRef } from "react"
 import type { EssayEntry, QuizAnswerState } from "../types"
+import { EssayLexicalEditor } from "./essay-lexical-editor"
 
 interface EssayRendererProps {
   entry: EssayEntry
@@ -23,21 +24,28 @@ export function EssayRenderer({
   disabled = false,
   showFeedback = false,
 }: EssayRendererProps) {
-  const answer = answerState.textAnswers["main"] || ""
+  const serialized = answerState.textAnswers["main"] || ""
+  const plainText = answerState.textAnswers["main_plain"] || ""
 
   const wordCount = useMemo(() => {
-    return answer.trim().split(/\s+/).filter(Boolean).length
-  }, [answer])
+    return plainText.trim().split(/\s+/).filter(Boolean).length
+  }, [plainText])
 
-  const handleChange = (value: string) => {
-    if (disabled || showFeedback) return
-    onAnswerChange({
-      textAnswers: {
-        ...answerState.textAnswers,
-        main: value,
-      },
-    })
-  }
+  const answerStateRef = useRef(answerState)
+  answerStateRef.current = answerState
+
+  const handleChange = useCallback(
+    (newSerialized: string, newPlainText: string) => {
+      onAnswerChange({
+        textAnswers: {
+          ...answerStateRef.current.textAnswers,
+          main: newSerialized,
+          main_plain: newPlainText,
+        },
+      })
+    },
+    [onAnswerChange],
+  )
 
   const isWordCountValid =
     (!entry.minWordCount || wordCount >= entry.minWordCount) &&
@@ -45,12 +53,11 @@ export function EssayRenderer({
 
   return (
     <div className="space-y-3">
-      <textarea
-        className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none transition-colors text-base min-h-[150px] resize-y"
-        placeholder="Write your answer..."
-        value={answer}
-        onChange={(e) => handleChange(e.target.value)}
+      <EssayLexicalEditor
+        initialState={serialized || undefined}
+        onChange={handleChange}
         disabled={disabled || showFeedback}
+        placeholder="Write your answer..."
       />
 
       {entry.showWordCount && (
