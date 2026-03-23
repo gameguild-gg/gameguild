@@ -55,6 +55,7 @@ export function EssayEditor() {
             type="number"
             placeholder="Optional"
             {...register("minWordCount", { valueAsNumber: true })}
+            autoComplete="off"
             className="bg-white dark:bg-gray-800"
           />
         </div>
@@ -64,6 +65,7 @@ export function EssayEditor() {
             type="number"
             placeholder="Optional"
             {...register("maxWordCount", { valueAsNumber: true })}
+            autoComplete="off"
             className="bg-white dark:bg-gray-800"
           />
         </div>

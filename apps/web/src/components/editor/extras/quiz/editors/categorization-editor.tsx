@@ -96,11 +96,13 @@ export function CategorizationEditor() {
                 <Input
                   placeholder="Category name"
                   {...register(`categories.${index}.name`)}
+                  autoComplete="off"
                   className="text-sm"
                 />
                 <Textarea
                   placeholder="Description (optional)"
                   {...register(`categories.${index}.description`)}
+                  autoComplete="off"
                   className="text-sm resize-none h-10"
                 />
               </div>
@@ -144,6 +146,7 @@ export function CategorizationEditor() {
                 <Input
                   placeholder="Item text"
                   {...register(`items.${itemIndex}.text`)}
+                  autoComplete="off"
                   className="text-sm flex-1"
                 />
                 <Button

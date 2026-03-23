@@ -27,6 +27,7 @@ export function ShortAnswerEditor() {
         <Input
           placeholder="e.g., Paris, paris, PARIS"
           {...register("acceptedAnswers.0")}
+          autoComplete="off"
           className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600"
         />
       </div>

@@ -57,12 +57,14 @@ export function MatchingEditor() {
           <Input
             placeholder="Left item"
             {...register(`pairs.${index}.left`, { required: true })}
+            autoComplete="off"
             className="bg-white dark:bg-gray-800"
           />
           <span className="text-gray-400">↔</span>
           <Input
             placeholder="Right item"
             {...register(`pairs.${index}.right`, { required: true })}
+            autoComplete="off"
             className="bg-white dark:bg-gray-800"
           />
           <Button
