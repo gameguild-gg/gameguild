@@ -1,3 +1,11 @@
+## [2.50.14](https://github.com/gameguild-gg/gameguild/compare/v2.50.13...v2.50.14) (2026-03-23)
+
+
+### Bug Fixes
+
+* **courses:** fixed reveal markdown orientation ([f699196](https://github.com/gameguild-gg/gameguild/commit/f6991963aa094ec57e5e6917ca7c78530a846d79))
+* **courses:** kv storage presentation ([fc65d27](https://github.com/gameguild-gg/gameguild/commit/fc65d278eec9bf138956c5d007ceeaa3ef2b35f0))
+
 ## [2.50.13](https://github.com/gameguild-gg/gameguild/compare/v2.50.12...v2.50.13) (2026-03-23)
 
 
