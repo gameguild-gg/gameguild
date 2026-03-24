@@ -58,6 +58,11 @@ export default defineConfig({
     worker: {
         format: 'es',
     },
+    // Exclude CDN sysroot files (contains .html docs) from dependency scanning
+    optimizeDeps: {
+        exclude: ['emception'],
+        entries: ['index.html', 'src/**/*.{ts,tsx}'],
+    },
     server: {
         headers: {
             // Required for SharedArrayBuffer (used by Emscripten threads / WASM).
