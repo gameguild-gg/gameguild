@@ -19,6 +19,7 @@ export enum QuizEntryType {
   Ordering = "ORDERING",
   Categorization = "CATEGORIZATION",
   Rating = "RATING",
+  Formula = "FORMULA",
 }
 
 export enum FillBlankInputType {
@@ -240,6 +241,27 @@ export interface RatingEntry extends QuizEntryBase {
 }
 
 // ============================================================================
+// Formula Entry
+// ============================================================================
+
+export interface FormulaVariable {
+  id: string
+  name: string // e.g. "x", "y", "r"
+  min: number
+  max: number
+  decimals: number // decimal places for generated values
+}
+
+export interface FormulaEntry extends QuizEntryBase {
+  type: QuizEntryType.Formula
+  variables: FormulaVariable[]
+  formula: string // math expression using variable names, e.g. "x^2 + 2*y"
+  toleranceType: "absolute" | "percentage"
+  tolerance: number // margin of error
+  decimalPlaces: number // answer decimal places
+}
+
+// ============================================================================
 // Union Type
 // ============================================================================
 
@@ -254,6 +276,7 @@ export type QuizEntry =
   | OrderingEntry
   | CategorizationEntry
   | RatingEntry
+  | FormulaEntry
 
 // ============================================================================
 // Type Guards
@@ -297,6 +320,10 @@ export function isCategorization(entry: QuizEntry): entry is CategorizationEntry
 
 export function isRating(entry: QuizEntry): entry is RatingEntry {
   return entry.type === QuizEntryType.Rating
+}
+
+export function isFormula(entry: QuizEntry): entry is FormulaEntry {
+  return entry.type === QuizEntryType.Formula
 }
 
 // ============================================================================
@@ -423,6 +450,22 @@ export function createRatingEntry(stem = ""): RatingEntry {
     type: QuizEntryType.Rating,
     stem,
     scale: { min: 1, max: 5, step: 1 },
+    settings: createDefaultSettings(),
+  }
+}
+
+export function createFormulaEntry(stem = ""): FormulaEntry {
+  return {
+    type: QuizEntryType.Formula,
+    stem,
+    variables: [
+      { id: "1", name: "x", min: 1, max: 10, decimals: 0 },
+      { id: "2", name: "y", min: 1, max: 10, decimals: 0 },
+    ],
+    formula: "x^2 + y",
+    toleranceType: "absolute",
+    tolerance: 0,
+    decimalPlaces: 2,
     settings: createDefaultSettings(),
   }
 }
