@@ -315,8 +315,10 @@ export function createSingleChoiceEntry(stem = ""): SingleChoiceEntry {
     type: QuizEntryType.SingleChoice,
     stem,
     options: [
-      { id: "1", text: "" },
-      { id: "2", text: "" },
+      { id: "1", text: "Paris" },
+      { id: "2", text: "London" },
+      { id: "3", text: "Berlin" },
+      { id: "4", text: "Madrid" },
     ],
     correctOptionId: "1",
     settings: createDefaultSettings(),
@@ -328,10 +330,12 @@ export function createMultipleChoiceEntry(stem = ""): MultipleChoiceEntry {
     type: QuizEntryType.MultipleChoice,
     stem,
     options: [
-      { id: "1", text: "" },
-      { id: "2", text: "" },
+      { id: "1", text: "2" },
+      { id: "2", text: "3" },
+      { id: "3", text: "4" },
+      { id: "4", text: "7" },
     ],
-    correctOptionIds: ["1"],
+    correctOptionIds: ["1", "2", "4"],
     settings: createDefaultSettings(),
   }
 }
@@ -358,7 +362,7 @@ export function createShortAnswerEntry(stem = ""): ShortAnswerEntry {
   return {
     type: QuizEntryType.ShortAnswer,
     stem,
-    acceptedAnswers: [],
+    acceptedAnswers: ["Tokyo"],
     settings: createDefaultSettings(),
   }
 }
@@ -375,7 +379,11 @@ export function createMatchingEntry(stem = ""): MatchingEntry {
   return {
     type: QuizEntryType.Matching,
     stem,
-    pairs: [],
+    pairs: [
+      { id: "1", left: "France", right: "Paris" },
+      { id: "2", left: "Japan", right: "Tokyo" },
+      { id: "3", left: "Brazil", right: "Brasília" },
+    ],
     settings: createDefaultSettings(),
   }
 }
@@ -384,7 +392,11 @@ export function createOrderingEntry(stem = ""): OrderingEntry {
   return {
     type: QuizEntryType.Ordering,
     stem,
-    items: [],
+    items: [
+      { id: "1", text: "World War I", correctPosition: 0 },
+      { id: "2", text: "World War II", correctPosition: 1 },
+      { id: "3", text: "Moon Landing", correctPosition: 2 },
+    ],
     settings: createDefaultSettings(),
   }
 }
@@ -393,8 +405,15 @@ export function createCategorizationEntry(stem = ""): CategorizationEntry {
   return {
     type: QuizEntryType.Categorization,
     stem,
-    categories: [],
-    items: [],
+    categories: [
+      { id: "1", name: "Fruits" },
+      { id: "2", name: "Vegetables" },
+    ],
+    items: [
+      { id: "1", text: "Apple", correctCategoryIds: ["1"] },
+      { id: "2", text: "Carrot", correctCategoryIds: ["2"] },
+      { id: "3", text: "Banana", correctCategoryIds: ["1"] },
+    ],
     settings: createDefaultSettings(),
   }
 }
