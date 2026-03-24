@@ -15,6 +15,7 @@ import {
   type FillBlankNumberInput,
   FillBlankInputType,
 } from "../types"
+import { evaluateFormula } from "../utils/formula-evaluator"
 
 interface UseQuizAnswersProps {
   entry: QuizEntry
@@ -238,6 +239,39 @@ export function useQuizAnswers({ entry }: UseQuizAnswersProps): UseQuizAnswersRe
         } else {
           // Any rating is accepted
           correct = answerState.rating !== undefined
+        }
+        break
+      }
+
+      case QuizEntryType.Formula: {
+        const userStr = (answerState.textAnswers["main"] || "").trim()
+        if (!userStr) {
+          correct = false
+          break
+        }
+        const userNum = parseFloat(userStr)
+        if (isNaN(userNum)) {
+          correct = false
+          break
+        }
+        // Retrieve the generated variable values from answer state
+        const storedVals = answerState.textAnswers["formula_values"]
+        if (!storedVals) {
+          correct = false
+          break
+        }
+        try {
+          const values = JSON.parse(storedVals) as Record<string, number>
+          const expected = evaluateFormula(entry.formula, values)
+          const diff = Math.abs(userNum - expected)
+          if (entry.toleranceType === "percentage") {
+            const threshold = Math.abs(expected) * (entry.tolerance / 100)
+            correct = diff <= threshold
+          } else {
+            correct = diff <= entry.tolerance
+          }
+        } catch {
+          correct = false
         }
         break
       }

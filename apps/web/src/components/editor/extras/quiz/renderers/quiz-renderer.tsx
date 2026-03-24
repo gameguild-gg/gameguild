@@ -20,6 +20,7 @@ import { MatchingRenderer } from "./matching-renderer"
 import { OrderingRenderer } from "./ordering-renderer"
 import { CategorizationRenderer } from "./categorization-renderer"
 import { RatingRenderer } from "./rating-renderer"
+import { FormulaRenderer } from "./formula-renderer"
 
 interface QuizRendererProps {
   entry: QuizEntry
@@ -73,6 +74,9 @@ export function QuizRenderer({
 
     case QuizEntryType.Rating:
       return <RatingRenderer entry={entry} {...commonProps} />
+
+    case QuizEntryType.Formula:
+      return <FormulaRenderer entry={entry} {...commonProps} />
 
     default:
       return (

@@ -19,6 +19,7 @@ import {
   Layers,
   Star,
   FileText,
+  Sigma,
 } from "lucide-react"
 import {
   QuizEntryType,
@@ -32,6 +33,7 @@ import {
   createOrderingEntry,
   createCategorizationEntry,
   createRatingEntry,
+  createFormulaEntry,
   type QuizEntry,
 } from "./types"
 
@@ -124,6 +126,14 @@ const quizTemplates: QuizTypeTemplate[] = [
     icon: Star,
     preview: "Rate from 1 to 5",
     createEntry: () => createRatingEntry("How satisfied are you with this course?"),
+  },
+  {
+    type: QuizEntryType.Formula,
+    title: "Formula",
+    description: "Compute answer from a formula with variables",
+    icon: Sigma,
+    preview: "If x=3, y=5: x² + y = ?",
+    createEntry: () => createFormulaEntry("Calculate the result of the formula given the variable values:"),
   },
 ]
 
