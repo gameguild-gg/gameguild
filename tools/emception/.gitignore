@@ -19,6 +19,11 @@ userland/**/llvm-project-*/
 userland/**/binaryen-version_*/
 userland/**/CMake-*/
 userland/**/ninja-*/
+userland/**/SDL-*/
+userland/**/SDL_image-*/
+userland/**/SDL_ttf-*/
+userland/**/SDL_mixer-*/
+userland/**/imgui-*/
 userland/**/*.tar.gz
 userland/**/*.tar.xz
 userland/**/version_*.tar.gz
