@@ -5,16 +5,29 @@
  * into bundles, creates tar archives, compresses them with brotli, writes the
  * bundles into build/cdn/, and rewrites manifest.json with bundle metadata.
  *
- * EVERY file must belong to a bundle — no unbundled individual downloads.
+ * EVERY file must belong to a bundle -- no unbundled individual downloads.
  *
  * Bundle groups:
- *   <tool>               – paired .mjs + .wasm at /usr/lib/<tool>.{mjs,wasm}
- *   usr-include          – all files under /usr/include/
- *   usr-lib-emscripten   – all files under /usr/lib/emscripten/
- *   python-runtime       – /usr/lib/python<ver>/ + /usr/lib/pkgconfig/ + /usr/lib/libpython*
- *   usr-bin              – /usr/bin/ + /etc/ (small scripts & config)
- *   libcurl              – /usr/lib/libcurl* (static library)
- *   usr-share            – /usr/share/ files
+ *   tool bundles        -- paired .mjs + .wasm at /usr/lib/tool.mjs,.wasm
+ *   cache-crt           -- CRT startup objects (crt1.o, crtbegin.o, etc.)
+ *   cache-core          -- default linker libs (libc, libc++, etc.)
+ *   cache-libcxx-variants -- non-default libc++/libc++abi/libunwind variants
+ *   cache-libc-variants -- non-default libc/allocator/compiler_rt variants
+ *   cache-gl-variants   -- libGL emulation variants (100+ tiny files)
+ *   cache-wasmfs        -- libwasmfs variants
+ *   cache-sanitizers    -- ASan/LSan/UBSan runtime libraries
+ *   cache-misc          -- embind, fetch, sqlite3, zlib, thinlto, etc.
+ *   usr-include         -- all files under /usr/include/
+ *   emscripten-core     -- all files under /usr/lib/emscripten/ (excl. cache-lib)
+ *   python-runtime      -- all files under /usr/lib/python + pkgconfig + libpython
+ *   usr-bin             -- /usr/bin/ + /etc/ (small scripts and config)
+ *   libcurl             -- /usr/lib/libcurl (static library)
+ *   sdl3               -- SDL3 core static lib + headers
+ *   sdl3-image          -- SDL3_image static lib + headers
+ *   sdl3-ttf            -- SDL3_ttf + FreeType static libs + headers
+ *   sdl3-mixer          -- SDL3_mixer static lib + headers
+ *   imgui              -- Dear ImGui static lib + headers
+ *   usr-share           -- /usr/share/ files
  *
  * Version-specific paths like /usr/lib/python3.13/ are referenced in the
  * manifest as-is but the bundle is named "python-runtime" (not "python3.13").
@@ -247,13 +260,90 @@ async function main() {
     pythonPrefixes.push('/usr/lib/pkgconfig/');
     pythonPrefixes.push('/usr/lib/libpython');
 
+    // --- 2a. Emscripten cache sub-bundles (pattern-based classification) ---
+    // The cache-lib directory has 361 files but a default hello-world only needs
+    // ~14 of them (~5MB). Split into 8 sub-bundles by library family so only
+    // the relevant group is downloaded on demand.
+    const CACHE_PREFIX = '/usr/lib/emscripten/cache-lib/';
+
+    // Libraries included by the default emcc link flags
+    const coreLibs = new Set([
+        'libc.a',
+        'libcompiler_rt.a',
+        'libc++-noexcept.a',
+        'libc++abi-noexcept.a',
+        'libdlmalloc.a',
+        'libGL-getprocaddr.a',
+        'libal.a',
+        'libhtml5.a',
+        'libstandalonewasm-nocatch.a',
+        'libstubs.a',
+        'libsockets.a',
+        'libunwind-noexcept.a',
+        'libjsmath.a',
+        'libnoexit.a',
+    ]);
+
+    function classifyCacheFile(filePath: string): string {
+        // Handle thinlto/ subdirectory
+        if (filePath.includes('/thinlto/')) return 'cache-misc';
+
+        const basename = path.basename(filePath);
+
+        // CRT startup objects
+        if (basename.endsWith('.o')) return 'cache-crt';
+
+        // Sanitizer runtimes
+        if (/^lib(asan|lsan|ubsan|sanitizer)/.test(basename)) return 'cache-sanitizers';
+
+        // WasmFS variants
+        if (basename.startsWith('libwasmfs')) return 'cache-wasmfs';
+
+        // Default-link core libraries (checked before family patterns)
+        if (coreLibs.has(basename)) return 'cache-core';
+
+        // GL emulation variants (after core check so libGL-getprocaddr.a lands in core)
+        if (basename.startsWith('libGL')) return 'cache-gl-variants';
+
+        // C++/unwind variant families
+        if (/^lib(c\+\+|c\+\+abi|unwind)/.test(basename)) return 'cache-libcxx-variants';
+
+        // C library / allocator / compiler-rt variant families
+        if (/^lib(c[-_.]|c_optz|compiler_rt-|dlmalloc-|emmalloc|mimalloc|printf_long_double)/.test(basename))
+            return 'cache-libc-variants';
+
+        // Everything else (embind, fetch, sqlite3, zlib, wasm_workers, etc.)
+        return 'cache-misc';
+    }
+
+    const cacheBundleNames = [
+        'cache-crt', 'cache-core', 'cache-libcxx-variants', 'cache-libc-variants',
+        'cache-gl-variants', 'cache-wasmfs', 'cache-sanitizers', 'cache-misc',
+    ];
+    for (const name of cacheBundleNames) {
+        bundleFiles.set(name, []);
+    }
+
+    for (const p of allPaths) {
+        if (assigned.has(p)) continue;
+        if (!p.startsWith(CACHE_PREFIX)) continue;
+        const bundle = classifyCacheFile(p);
+        bundleFiles.get(bundle)!.push(p);
+        assigned.add(p);
+    }
+
+    // --- 2b. Prefix-based groups (order matters — first match wins) ---
     const prefixGroups: { name: string; prefixes: string[]; outputPath: string }[] = [
         { name: 'usr-include', prefixes: ['/usr/include/'], outputPath: '/usr/include.tar.br' },
-        { name: 'emscripten-cache', prefixes: ['/usr/lib/emscripten/cache-lib/'], outputPath: '/usr/lib/emscripten-cache.tar.br' },
         { name: 'emscripten-core', prefixes: ['/usr/lib/emscripten/'], outputPath: '/usr/lib/emscripten-core.tar.br' },
         { name: 'python-runtime', prefixes: pythonPrefixes, outputPath: '/usr/lib/python-runtime.tar.br' },
         { name: 'usr-bin', prefixes: ['/usr/bin/', '/etc/'], outputPath: '/usr/bin.tar.br' },
         { name: 'libcurl', prefixes: ['/usr/lib/libcurl'], outputPath: '/usr/lib/libcurl.tar.br' },
+        { name: 'sdl3', prefixes: ['/usr/lib/libSDL3.', '/usr/include/SDL3/'], outputPath: '/usr/lib/sdl3.tar.br' },
+        { name: 'sdl3-image', prefixes: ['/usr/lib/libSDL3_image', '/usr/include/SDL3_image/'], outputPath: '/usr/lib/sdl3-image.tar.br' },
+        { name: 'sdl3-ttf', prefixes: ['/usr/lib/libSDL3_ttf', '/usr/lib/libfreetype', '/usr/include/SDL3_ttf/'], outputPath: '/usr/lib/sdl3-ttf.tar.br' },
+        { name: 'sdl3-mixer', prefixes: ['/usr/lib/libSDL3_mixer', '/usr/include/SDL3_mixer/'], outputPath: '/usr/lib/sdl3-mixer.tar.br' },
+        { name: 'imgui', prefixes: ['/usr/lib/libimgui', '/usr/include/imgui/'], outputPath: '/usr/lib/imgui.tar.br' },
         { name: 'usr-share', prefixes: ['/usr/share/'], outputPath: '/usr/share.tar.br' },
     ];
 
