@@ -11,6 +11,7 @@ import { useState, useMemo } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Switch } from "@/components/ui/switch"
 import {
   Select,
   SelectContent,
@@ -32,6 +33,7 @@ export function FormulaEditor() {
   const variables = watch("variables") || []
   const toleranceType = watch("toleranceType") || "absolute"
   const decimalPlaces = watch("decimalPlaces") ?? 2
+  const formulaMode = watch("formulaMode") || "compute"
 
   const [testResult, setTestResult] = useState<{
     values: Record<string, number>
@@ -76,6 +78,24 @@ export function FormulaEditor() {
 
   return (
     <div className="space-y-5">
+      {/* Mode Switch */}
+      <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg border">
+        <div>
+          <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            {formulaMode === "compute" ? "Compute Result" : "Discover Formula"}
+          </Label>
+          <p className="text-xs text-gray-500 dark:text-gray-400">
+            {formulaMode === "compute"
+              ? "Student computes the numeric result from the formula"
+              : "Student discovers the formula from variables and expected result"}
+          </p>
+        </div>
+        <Switch
+          checked={formulaMode === "discover"}
+          onCheckedChange={(checked) => setValue("formulaMode", checked ? "discover" : "compute")}
+        />
+      </div>
+
       {/* Variables Section */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
@@ -154,7 +174,7 @@ export function FormulaEditor() {
       {/* Formula Section */}
       <div className="space-y-2">
         <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-          Formula
+          {formulaMode === "compute" ? "Formula" : "Correct Formula (hidden from student)"}
         </Label>
         <div className="text-xs text-gray-500 dark:text-gray-400 bg-blue-50 dark:bg-blue-950/30 p-2 rounded border border-blue-200 dark:border-blue-800">
           Write the formula using the variable names above. Supported: +, -, *, /, ^ (power),
