@@ -15,7 +15,7 @@ import {
   type FillBlankNumberInput,
   FillBlankInputType,
 } from "../types"
-import { evaluateFormula } from "../utils/formula-evaluator"
+import { evaluateFormula, validateFormula, generateVariableValue } from "../utils/formula-evaluator"
 
 interface UseQuizAnswersProps {
   entry: QuizEntry
@@ -249,11 +249,6 @@ export function useQuizAnswers({ entry }: UseQuizAnswersProps): UseQuizAnswersRe
           correct = false
           break
         }
-        const userNum = parseFloat(userStr)
-        if (isNaN(userNum)) {
-          correct = false
-          break
-        }
         // Retrieve the generated variable values from answer state
         const storedVals = answerState.textAnswers["formula_values"]
         if (!storedVals) {
@@ -263,12 +258,85 @@ export function useQuizAnswers({ entry }: UseQuizAnswersProps): UseQuizAnswersRe
         try {
           const values = JSON.parse(storedVals) as Record<string, number>
           const expected = evaluateFormula(entry.formula, values)
-          const diff = Math.abs(userNum - expected)
-          if (entry.toleranceType === "percentage") {
-            const threshold = Math.abs(expected) * (entry.tolerance / 100)
-            correct = diff <= threshold
+
+          if (entry.formulaMode === "discover") {
+            // Discover mode: user submits a formula expression
+            // Run 5 unit tests with random variable values
+            const varNames = entry.variables.map((v) => v.name).filter(Boolean)
+            const validationError = validateFormula(userStr, varNames)
+            if (validationError) {
+              correct = false
+              break
+            }
+
+            const NUM_TESTS = 5
+            const testResults: Array<{
+              values: Record<string, number>
+              userResult: number
+              expected: number
+              passed: boolean
+            }> = []
+
+            // First test uses the displayed values
+            const userResult0 = evaluateFormula(userStr, values)
+            const expected0 = evaluateFormula(entry.formula, values)
+            const diff0 = Math.abs(userResult0 - expected0)
+            const threshold0 = entry.toleranceType === "percentage"
+              ? Math.abs(expected0) * (entry.tolerance / 100)
+              : entry.tolerance
+            testResults.push({
+              values: { ...values },
+              userResult: userResult0,
+              expected: expected0,
+              passed: diff0 <= threshold0,
+            })
+
+            // Run 4 more tests with random values
+            for (let i = 1; i < NUM_TESTS; i++) {
+              const testVals: Record<string, number> = {}
+              for (const v of entry.variables) {
+                if (v.name) {
+                  testVals[v.name] = generateVariableValue(v.min, v.max, v.decimals)
+                }
+              }
+              const userRes = evaluateFormula(userStr, testVals)
+              const expectedRes = evaluateFormula(entry.formula, testVals)
+              const diff = Math.abs(userRes - expectedRes)
+              const threshold = entry.toleranceType === "percentage"
+                ? Math.abs(expectedRes) * (entry.tolerance / 100)
+                : entry.tolerance
+              testResults.push({
+                values: testVals,
+                userResult: userRes,
+                expected: expectedRes,
+                passed: diff <= threshold,
+              })
+            }
+
+            // Store test results for the renderer to display
+            setAnswerState((prev) => ({
+              ...prev,
+              textAnswers: {
+                ...prev.textAnswers,
+                formula_test_results: JSON.stringify(testResults),
+              },
+            }))
+
+            correct = testResults.every((t) => t.passed)
           } else {
-            correct = diff <= entry.tolerance
+            // Compute mode: user submits a numeric answer
+            const userNum = parseFloat(userStr)
+            if (isNaN(userNum)) {
+              correct = false
+              break
+            }
+            const diff = Math.abs(userNum - expected)
+            if (entry.toleranceType === "percentage") {
+              const threshold = Math.abs(expected) * (entry.tolerance / 100)
+              correct = diff <= threshold
+            } else {
+              correct = diff <= entry.tolerance
+            }
           }
         } catch {
           correct = false

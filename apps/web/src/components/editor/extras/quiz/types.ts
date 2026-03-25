@@ -255,6 +255,7 @@ export interface FormulaVariable {
 
 export interface FormulaEntry extends QuizEntryBase {
   type: QuizEntryType.Formula
+  formulaMode: "compute" | "discover" // compute: find result; discover: find the formula
   variables: FormulaVariable[]
   formula: string // math expression using variable names, e.g. "x^2 + 2*y"
   toleranceType: "absolute" | "percentage"
@@ -460,6 +461,7 @@ export function createFormulaEntry(stem = ""): FormulaEntry {
   return {
     type: QuizEntryType.Formula,
     stem,
+    formulaMode: "compute",
     variables: [
       { id: "1", name: "x", min: 1, max: 10, decimals: 0 },
       { id: "2", name: "y", min: 1, max: 10, decimals: 0 },
