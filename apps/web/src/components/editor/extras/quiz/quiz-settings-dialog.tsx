@@ -35,6 +35,7 @@ import { MatchingEditor } from "./editors/matching-editor"
 import { OrderingEditor } from "./editors/ordering-editor"
 import { CategorizationEditor } from "./editors/categorization-editor"
 import { RatingEditor } from "./editors/rating-editor"
+import { NumericEditor } from "./editors/numeric-editor"
 import { FormulaEditor } from "./editors/formula-editor"
 
 interface QuizSettingsDialogProps {
@@ -66,6 +67,8 @@ function getEditorComponent(type: QuizEntryType) {
       return CategorizationEditor
     case QuizEntryType.Rating:
       return RatingEditor
+    case QuizEntryType.Numeric:
+      return NumericEditor
     case QuizEntryType.Formula:
       return FormulaEditor
     default:
@@ -85,6 +88,7 @@ function getTypeLabel(type: QuizEntryType): string {
     [QuizEntryType.Ordering]: "Ordering",
     [QuizEntryType.Categorization]: "Categorization",
     [QuizEntryType.Rating]: "Rating",
+    [QuizEntryType.Numeric]: "Numeric",
     [QuizEntryType.Formula]: "Formula",
   }
   return labels[type] || type
