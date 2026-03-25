@@ -256,7 +256,20 @@ export function QuizSettingsDialog({ isOpen, onClose, entry, onSave }: QuizSetti
                           </div>
                           <Switch
                             checked={currentEntry.settings.showFeedback ?? true}
-                            onCheckedChange={(checked) => setValue("settings.showFeedback", checked)}
+                            onCheckedChange={(checked) => {
+                              setValue("settings.showFeedback", checked)
+                              setValue("settings.showCorrectAnswer", checked)
+                            }}
+                          />
+                        </div>
+                        <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg border">
+                          <div>
+                            <Label className="text-sm">Show Correct Answer</Label>
+                            <p className="text-xs text-gray-500 dark:text-gray-400">Reveal the correct answer after submission</p>
+                          </div>
+                          <Switch
+                            checked={currentEntry.settings.showCorrectAnswer ?? true}
+                            onCheckedChange={(checked) => setValue("settings.showCorrectAnswer", checked)}
                           />
                         </div>
                         <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg border">
