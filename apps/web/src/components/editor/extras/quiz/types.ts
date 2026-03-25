@@ -43,6 +43,7 @@ export interface QuizSettings {
   allowRetry: boolean
   shuffleOptions?: boolean
   showFeedback?: boolean // Whether to show correct/incorrect feedback after submission
+  showCorrectAnswer?: boolean // Whether to reveal the correct answer after submission
 }
 
 // ============================================================================
@@ -334,6 +335,7 @@ export function createDefaultSettings(): QuizSettings {
   return {
     allowRetry: true,
     showFeedback: true,
+    showCorrectAnswer: true,
   }
 }
 
