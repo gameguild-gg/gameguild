@@ -21,6 +21,7 @@ export enum QuizEntryType {
   Rating = "RATING",
   Numeric = "NUMERIC",
   Formula = "FORMULA",
+  Hotspot = "HOTSPOT",
 }
 
 export enum FillBlankInputType {
@@ -277,6 +278,30 @@ export interface FormulaEntry extends QuizEntryBase {
 }
 
 // ============================================================================
+// Hotspot Entry (click on image to identify a point/area)
+// ============================================================================
+
+export interface HotspotZone {
+  radius: number // percentage of image width (0-50)
+  label: string  // e.g. "Exact", "Close", "Near"
+}
+
+export interface HotspotPoint {
+  id: string
+  x: number // 0-100, percentage of image width
+  y: number // 0-100, percentage of image height
+  zones: HotspotZone[] // from innermost to outermost
+}
+
+export interface HotspotEntry extends QuizEntryBase {
+  type: QuizEntryType.Hotspot
+  imageUrl: string       // base64 data URL or external URL
+  imageWidth: number     // natural width in pixels
+  imageHeight: number    // natural height in pixels
+  hotspots: HotspotPoint[]
+}
+
+// ============================================================================
 // Union Type
 // ============================================================================
 
@@ -293,6 +318,7 @@ export type QuizEntry =
   | RatingEntry
   | NumericEntry
   | FormulaEntry
+  | HotspotEntry
 
 // ============================================================================
 // Type Guards
@@ -344,6 +370,10 @@ export function isNumeric(entry: QuizEntry): entry is NumericEntry {
 
 export function isFormula(entry: QuizEntry): entry is FormulaEntry {
   return entry.type === QuizEntryType.Formula
+}
+
+export function isHotspot(entry: QuizEntry): entry is HotspotEntry {
+  return entry.type === QuizEntryType.Hotspot
 }
 
 // ============================================================================
@@ -503,6 +533,18 @@ export function createFormulaEntry(stem = ""): FormulaEntry {
     toleranceType: "absolute",
     tolerance: 0,
     decimalPlaces: 2,
+    settings: createDefaultSettings(),
+  }
+}
+
+export function createHotspotEntry(stem = ""): HotspotEntry {
+  return {
+    type: QuizEntryType.Hotspot,
+    stem,
+    imageUrl: "",
+    imageWidth: 0,
+    imageHeight: 0,
+    hotspots: [],
     settings: createDefaultSettings(),
   }
 }

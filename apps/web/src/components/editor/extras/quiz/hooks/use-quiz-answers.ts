@@ -357,6 +357,30 @@ export function useQuizAnswers({ entry }: UseQuizAnswersProps): UseQuizAnswersRe
         }
         break
       }
+
+      case QuizEntryType.Hotspot: {
+        const hx = parseFloat(answerState.textAnswers["hotspot_x"] || "")
+        const hy = parseFloat(answerState.textAnswers["hotspot_y"] || "")
+        if (isNaN(hx) || isNaN(hy)) {
+          correct = false
+          break
+        }
+        let withinAny = false
+        for (const hp of entry.hotspots) {
+          if (hp.zones.length === 0) continue
+          const outermostRadius = Math.max(...hp.zones.map(z => z.radius))
+          const dx = (hx - hp.x) / 100 * entry.imageWidth
+          const dy = (hy - hp.y) / 100 * entry.imageHeight
+          const distance = Math.sqrt(dx * dx + dy * dy)
+          const threshold = outermostRadius / 100 * entry.imageWidth
+          if (distance <= threshold) {
+            withinAny = true
+            break
+          }
+        }
+        correct = withinAny
+        break
+      }
     }
 
     setIsCorrect(correct)
