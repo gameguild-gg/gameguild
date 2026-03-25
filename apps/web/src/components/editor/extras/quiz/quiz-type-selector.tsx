@@ -21,6 +21,7 @@ import {
   FileText,
   Sigma,
   Hash,
+  Crosshair,
 } from "lucide-react"
 import {
   QuizEntryType,
@@ -36,6 +37,7 @@ import {
   createRatingEntry,
   createNumericEntry,
   createFormulaEntry,
+  createHotspotEntry,
   type QuizEntry,
 } from "./types"
 
@@ -144,6 +146,14 @@ const quizTemplates: QuizTypeTemplate[] = [
     icon: Sigma,
     preview: "x=3, y=5: ? = 14 → find the formula",
     createEntry: () => createFormulaEntry("Discover the formula that produces the given result:"),
+  },
+  {
+    type: QuizEntryType.Hotspot,
+    title: "Hotspot",
+    description: "Click on the correct area of an image",
+    icon: Crosshair,
+    preview: "Click on the correct point ⊕",
+    createEntry: () => createHotspotEntry("Click on the correct location in the image:"),
   },
 ]
 

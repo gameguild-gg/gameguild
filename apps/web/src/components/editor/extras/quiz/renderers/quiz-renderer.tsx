@@ -22,6 +22,7 @@ import { CategorizationRenderer } from "./categorization-renderer"
 import { RatingRenderer } from "./rating-renderer"
 import { NumericRenderer } from "./numeric-renderer"
 import { FormulaRenderer } from "./formula-renderer"
+import { HotspotRenderer } from "./hotspot-renderer"
 
 interface QuizRendererProps {
   entry: QuizEntry
@@ -81,6 +82,9 @@ export function QuizRenderer({
 
     case QuizEntryType.Formula:
       return <FormulaRenderer entry={entry} {...commonProps} />
+
+    case QuizEntryType.Hotspot:
+      return <HotspotRenderer entry={entry} {...commonProps} />
 
     default:
       return (
