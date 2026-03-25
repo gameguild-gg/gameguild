@@ -19,6 +19,7 @@ export enum QuizEntryType {
   Ordering = "ORDERING",
   Categorization = "CATEGORIZATION",
   Rating = "RATING",
+  Numeric = "NUMERIC",
   Formula = "FORMULA",
 }
 
@@ -242,7 +243,7 @@ export interface RatingEntry extends QuizEntryBase {
 }
 
 // ============================================================================
-// Formula Entry
+// Numeric Entry (compute numeric result from a formula)
 // ============================================================================
 
 export interface FormulaVariable {
@@ -253,11 +254,23 @@ export interface FormulaVariable {
   decimals: number // decimal places for generated values
 }
 
-export interface FormulaEntry extends QuizEntryBase {
-  type: QuizEntryType.Formula
-  formulaMode: "compute" | "discover" // compute: find result; discover: find the formula
+export interface NumericEntry extends QuizEntryBase {
+  type: QuizEntryType.Numeric
   variables: FormulaVariable[]
   formula: string // math expression using variable names, e.g. "x^2 + 2*y"
+  toleranceType: "absolute" | "percentage"
+  tolerance: number // margin of error
+  decimalPlaces: number // answer decimal places
+}
+
+// ============================================================================
+// Formula Entry (discover the formula from variables and expected result)
+// ============================================================================
+
+export interface FormulaEntry extends QuizEntryBase {
+  type: QuizEntryType.Formula
+  variables: FormulaVariable[]
+  formula: string // the correct formula (hidden from student)
   toleranceType: "absolute" | "percentage"
   tolerance: number // margin of error
   decimalPlaces: number // answer decimal places
@@ -278,6 +291,7 @@ export type QuizEntry =
   | OrderingEntry
   | CategorizationEntry
   | RatingEntry
+  | NumericEntry
   | FormulaEntry
 
 // ============================================================================
@@ -322,6 +336,10 @@ export function isCategorization(entry: QuizEntry): entry is CategorizationEntry
 
 export function isRating(entry: QuizEntry): entry is RatingEntry {
   return entry.type === QuizEntryType.Rating
+}
+
+export function isNumeric(entry: QuizEntry): entry is NumericEntry {
+  return entry.type === QuizEntryType.Numeric
 }
 
 export function isFormula(entry: QuizEntry): entry is FormulaEntry {
@@ -457,11 +475,26 @@ export function createRatingEntry(stem = ""): RatingEntry {
   }
 }
 
+export function createNumericEntry(stem = ""): NumericEntry {
+  return {
+    type: QuizEntryType.Numeric,
+    stem,
+    variables: [
+      { id: "1", name: "x", min: 1, max: 10, decimals: 0 },
+      { id: "2", name: "y", min: 1, max: 10, decimals: 0 },
+    ],
+    formula: "x^2 + y",
+    toleranceType: "absolute",
+    tolerance: 0,
+    decimalPlaces: 2,
+    settings: createDefaultSettings(),
+  }
+}
+
 export function createFormulaEntry(stem = ""): FormulaEntry {
   return {
     type: QuizEntryType.Formula,
     stem,
-    formulaMode: "compute",
     variables: [
       { id: "1", name: "x", min: 1, max: 10, decimals: 0 },
       { id: "2", name: "y", min: 1, max: 10, decimals: 0 },
