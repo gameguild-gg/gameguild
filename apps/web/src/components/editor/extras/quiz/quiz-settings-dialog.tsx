@@ -38,6 +38,7 @@ import { RatingEditor } from "./editors/rating-editor"
 import { NumericEditor } from "./editors/numeric-editor"
 import { FormulaEditor } from "./editors/formula-editor"
 import { HotspotEditor } from "./editors/hotspot-editor"
+import { HighlightEditor } from "./editors/highlight-editor"
 
 interface QuizSettingsDialogProps {
   isOpen: boolean
@@ -74,6 +75,8 @@ function getEditorComponent(type: QuizEntryType) {
       return FormulaEditor
     case QuizEntryType.Hotspot:
       return HotspotEditor
+    case QuizEntryType.Highlight:
+      return HighlightEditor
     default:
       return null
   }
@@ -94,6 +97,7 @@ function getTypeLabel(type: QuizEntryType): string {
     [QuizEntryType.Numeric]: "Numeric",
     [QuizEntryType.Formula]: "Formula",
     [QuizEntryType.Hotspot]: "Hotspot",
+    [QuizEntryType.Highlight]: "Highlight",
   }
   return labels[type] || type
 }
