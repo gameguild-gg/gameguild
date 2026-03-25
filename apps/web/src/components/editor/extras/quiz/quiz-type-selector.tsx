@@ -20,6 +20,7 @@ import {
   Star,
   FileText,
   Sigma,
+  Hash,
 } from "lucide-react"
 import {
   QuizEntryType,
@@ -33,6 +34,7 @@ import {
   createOrderingEntry,
   createCategorizationEntry,
   createRatingEntry,
+  createNumericEntry,
   createFormulaEntry,
   type QuizEntry,
 } from "./types"
@@ -128,12 +130,20 @@ const quizTemplates: QuizTypeTemplate[] = [
     createEntry: () => createRatingEntry("How satisfied are you with this course?"),
   },
   {
+    type: QuizEntryType.Numeric,
+    title: "Numeric",
+    description: "Compute numeric result from a formula with variables",
+    icon: Hash,
+    preview: "If x=3, y=5: x² + y = ?",
+    createEntry: () => createNumericEntry("Calculate the result of the formula given the variable values:"),
+  },
+  {
     type: QuizEntryType.Formula,
     title: "Formula",
-    description: "Compute answer from a formula with variables",
+    description: "Discover the formula from variables and expected result",
     icon: Sigma,
-    preview: "If x=3, y=5: x² + y = ?",
-    createEntry: () => createFormulaEntry("Calculate the result of the formula given the variable values:"),
+    preview: "x=3, y=5: ? = 14 → find the formula",
+    createEntry: () => createFormulaEntry("Discover the formula that produces the given result:"),
   },
 ]
 
