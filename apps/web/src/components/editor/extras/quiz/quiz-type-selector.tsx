@@ -22,6 +22,7 @@ import {
   Sigma,
   Hash,
   Crosshair,
+  Highlighter,
 } from "lucide-react"
 import {
   QuizEntryType,
@@ -38,6 +39,7 @@ import {
   createNumericEntry,
   createFormulaEntry,
   createHotspotEntry,
+  createHighlightEntry,
   type QuizEntry,
 } from "./types"
 
@@ -154,6 +156,14 @@ const quizTemplates: QuizTypeTemplate[] = [
     icon: Crosshair,
     preview: "Click on the correct point ⊕",
     createEntry: () => createHotspotEntry("Click on the correct location in the image:"),
+  },
+  {
+    type: QuizEntryType.Highlight,
+    title: "Highlight",
+    description: "Select the correct parts of a text",
+    icon: Highlighter,
+    preview: "The ██████ is the powerhouse",
+    createEntry: () => createHighlightEntry("Highlight the correct words in the text below:"),
   },
 ]
 

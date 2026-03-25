@@ -381,6 +381,27 @@ export function useQuizAnswers({ entry }: UseQuizAnswersProps): UseQuizAnswersRe
         correct = withinAny
         break
       }
+
+      case QuizEntryType.Highlight: {
+        try {
+          const studentSpans = JSON.parse(answerState.textAnswers["highlight_spans"] || "[]") as { start: number; end: number }[]
+          if (studentSpans.length === 0 && entry.highlights.length > 0) {
+            correct = false
+            break
+          }
+          // Every correct span must be covered by at least one student span, and vice-versa
+          const allCorrectCovered = entry.highlights.every((h) =>
+            studentSpans.some((s) => s.start < h.end && s.end > h.start)
+          )
+          const noFalsePositives = studentSpans.every((s) =>
+            entry.highlights.some((h) => s.start < h.end && s.end > h.start)
+          )
+          correct = allCorrectCovered && noFalsePositives
+        } catch {
+          correct = false
+        }
+        break
+      }
     }
 
     setIsCorrect(correct)

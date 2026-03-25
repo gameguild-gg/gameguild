@@ -22,6 +22,7 @@ export enum QuizEntryType {
   Numeric = "NUMERIC",
   Formula = "FORMULA",
   Hotspot = "HOTSPOT",
+  Highlight = "HIGHLIGHT",
 }
 
 export enum FillBlankInputType {
@@ -302,6 +303,25 @@ export interface HotspotEntry extends QuizEntryBase {
 }
 
 // ============================================================================
+// Highlight Entry (select/highlight correct spans in a text)
+// ============================================================================
+
+export interface HighlightSpan {
+  start: number // character offset in plain text
+  end: number   // character offset in plain text (exclusive)
+}
+
+export interface HighlightEntry extends QuizEntryBase {
+  type: QuizEntryType.Highlight
+  /** Raw text with __marked__ syntax for correct highlights */
+  sourceText: string
+  /** Plain text (markers stripped) shown to student */
+  plainText: string
+  /** Correct highlight spans (character offsets in plainText) */
+  highlights: HighlightSpan[]
+}
+
+// ============================================================================
 // Union Type
 // ============================================================================
 
@@ -319,6 +339,7 @@ export type QuizEntry =
   | NumericEntry
   | FormulaEntry
   | HotspotEntry
+  | HighlightEntry
 
 // ============================================================================
 // Type Guards
@@ -374,6 +395,10 @@ export function isFormula(entry: QuizEntry): entry is FormulaEntry {
 
 export function isHotspot(entry: QuizEntry): entry is HotspotEntry {
   return entry.type === QuizEntryType.Hotspot
+}
+
+export function isHighlight(entry: QuizEntry): entry is HighlightEntry {
+  return entry.type === QuizEntryType.Highlight
 }
 
 // ============================================================================
@@ -545,6 +570,43 @@ export function createHotspotEntry(stem = ""): HotspotEntry {
     imageWidth: 0,
     imageHeight: 0,
     hotspots: [],
+    settings: createDefaultSettings(),
+  }
+}
+
+/**
+ * Parse __marked__ text into plainText + highlight spans.
+ */
+export function parseHighlightSource(source: string): { plainText: string; highlights: HighlightSpan[] } {
+  const highlights: HighlightSpan[] = []
+  let plain = ""
+  let i = 0
+  while (i < source.length) {
+    if (source[i] === "_" && source[i + 1] === "_") {
+      const close = source.indexOf("__", i + 2)
+      if (close !== -1) {
+        const word = source.substring(i + 2, close)
+        highlights.push({ start: plain.length, end: plain.length + word.length })
+        plain += word
+        i = close + 2
+        continue
+      }
+    }
+    plain += source[i]
+    i++
+  }
+  return { plainText: plain, highlights }
+}
+
+export function createHighlightEntry(stem = ""): HighlightEntry {
+  const defaultSource = "The __mitochondria__ is the powerhouse of the __cell__."
+  const { plainText, highlights } = parseHighlightSource(defaultSource)
+  return {
+    type: QuizEntryType.Highlight,
+    stem,
+    sourceText: defaultSource,
+    plainText,
+    highlights,
     settings: createDefaultSettings(),
   }
 }
