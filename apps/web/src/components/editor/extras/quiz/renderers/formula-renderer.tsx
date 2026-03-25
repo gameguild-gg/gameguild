@@ -6,7 +6,7 @@
 
 "use client"
 
-import { useMemo } from "react"
+import { useMemo, useState, useEffect } from "react"
 import { Calculator, Braces, PenLine } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import type { FormulaEntry, QuizAnswerState } from "../types"
@@ -27,7 +27,18 @@ export function FormulaRenderer({
   disabled = false,
   showFeedback = false,
 }: FormulaRendererProps) {
-  // Generate variable values once (stable across re-renders)
+  // Track a seed that increments on retry (when stored values are cleared)
+  const [seed, setSeed] = useState(0)
+  const storedValues = answerState.textAnswers["formula_values"]
+
+  // When stored values disappear (retry clears answerState), bump the seed
+  useEffect(() => {
+    if (!storedValues) {
+      setSeed((s) => s + 1)
+    }
+  }, [storedValues])
+
+  // Generate variable values — re-randomizes when seed changes
   const generatedValues = useMemo(() => {
     const values: Record<string, number> = {}
     for (const v of entry.variables) {
@@ -36,11 +47,11 @@ export function FormulaRenderer({
       }
     }
     return values
-  }, [entry.variables])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [entry.variables, seed])
 
   // Store generated values in answer state so validation can use them
-  const storedValues = answerState.textAnswers["formula_values"]
-  useMemo(() => {
+  useEffect(() => {
     if (!storedValues) {
       onAnswerChange({
         textAnswers: {
@@ -49,7 +60,8 @@ export function FormulaRenderer({
         },
       })
     }
-  }, []) // Only on mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [generatedValues])
 
   // Use stored values if available, otherwise use generated
   const activeValues: Record<string, number> = useMemo(() => {
@@ -96,7 +108,7 @@ export function FormulaRenderer({
             Given Variable Values
           </h4>
         </div>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+        <div className="flex flex-wrap gap-3">
           {entry.variables.map((v) => (
             <div
               key={v.id}
@@ -128,7 +140,7 @@ export function FormulaRenderer({
         <div className="bg-white dark:bg-gray-900 rounded-lg px-5 py-4 border border-amber-100 dark:border-amber-900 text-center shadow-sm">
           <span className="font-mono text-2xl font-bold text-gray-900 dark:text-gray-100">
             {entry.formula}
-            {showFeedback && correctAnswer !== null && (
+            {showFeedback && correctAnswer !== null && (entry.settings?.showCorrectAnswer ?? true) && (
               <span className="text-amber-600 dark:text-amber-400">
                 {" "}= {parseFloat(correctAnswer.toFixed(entry.decimalPlaces))}
               </span>
