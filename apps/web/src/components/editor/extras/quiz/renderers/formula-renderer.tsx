@@ -6,11 +6,12 @@
 
 "use client"
 
-import { useMemo, useState, useEffect } from "react"
-import { Calculator, Braces, PenLine, Search, CheckCircle, XCircle } from "lucide-react"
+import { useMemo, useState, useEffect, useCallback } from "react"
+import { Calculator, Braces, PenLine, Search, CheckCircle, XCircle, FlaskConical } from "lucide-react"
 import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
 import type { FormulaEntry, QuizAnswerState } from "../types"
-import { generateVariableValue, evaluateFormula } from "../utils/formula-evaluator"
+import { generateVariableValue, evaluateFormula, validateFormula } from "../utils/formula-evaluator"
 
 interface FormulaRendererProps {
   entry: FormulaEntry
@@ -86,25 +87,83 @@ export function FormulaRenderer({
   const userAnswer = answerState.textAnswers["main"] || ""
   const isDiscoverMode = entry.formulaMode === "discover"
 
-  // In discover mode, parse the test results stored by validation
-  const testResults = useMemo(() => {
+  type TestResult = {
+    values: Record<string, number>
+    userResult: number
+    expected: number
+    passed: boolean
+  }
+
+  // Local test results (from Test button, before submission)
+  const [localTestResults, setLocalTestResults] = useState<TestResult[] | null>(null)
+
+  // In discover mode, parse the test results stored by validation (after submission)
+  const submittedTestResults = useMemo(() => {
     if (!isDiscoverMode || !showFeedback) return null
     const raw = answerState.textAnswers["formula_test_results"]
     if (!raw) return null
     try {
-      return JSON.parse(raw) as Array<{
-        values: Record<string, number>
-        userResult: number
-        expected: number
-        passed: boolean
-      }>
+      return JSON.parse(raw) as TestResult[]
     } catch {
       return null
     }
   }, [isDiscoverMode, showFeedback, answerState.textAnswers])
 
+  // Use submitted results when available, otherwise local test results
+  const testResults = submittedTestResults ?? localTestResults
+
   const passedCount = testResults?.filter((t) => t.passed).length ?? 0
   const totalTests = testResults?.length ?? 0
+
+  // Run tests locally without submitting
+  const runTests = useCallback(() => {
+    if (!userAnswer.trim()) return
+    const varNames = entry.variables.map((v) => v.name).filter(Boolean)
+    const validationError = validateFormula(userAnswer, varNames)
+    if (validationError) {
+      setLocalTestResults([])
+      return
+    }
+    const NUM_TESTS = 5
+    const results: TestResult[] = []
+    // First test uses the displayed values
+    try {
+      const userRes0 = evaluateFormula(userAnswer, activeValues)
+      const expected0 = evaluateFormula(entry.formula, activeValues)
+      const diff0 = Math.abs(userRes0 - expected0)
+      const threshold0 = entry.toleranceType === "percentage"
+        ? Math.abs(expected0) * (entry.tolerance / 100)
+        : entry.tolerance
+      results.push({ values: { ...activeValues }, userResult: userRes0, expected: expected0, passed: diff0 <= threshold0 })
+    } catch {
+      setLocalTestResults([])
+      return
+    }
+    // 4 more tests with random values
+    for (let i = 1; i < NUM_TESTS; i++) {
+      const testVals: Record<string, number> = {}
+      for (const v of entry.variables) {
+        if (v.name) testVals[v.name] = generateVariableValue(v.min, v.max, v.decimals)
+      }
+      try {
+        const userRes = evaluateFormula(userAnswer, testVals)
+        const expectedRes = evaluateFormula(entry.formula, testVals)
+        const diff = Math.abs(userRes - expectedRes)
+        const threshold = entry.toleranceType === "percentage"
+          ? Math.abs(expectedRes) * (entry.tolerance / 100)
+          : entry.tolerance
+        results.push({ values: testVals, userResult: userRes, expected: expectedRes, passed: diff <= threshold })
+      } catch {
+        results.push({ values: testVals, userResult: NaN, expected: 0, passed: false })
+      }
+    }
+    setLocalTestResults(results)
+  }, [userAnswer, entry, activeValues])
+
+  // Clear local test results when user edits formula
+  useEffect(() => {
+    setLocalTestResults(null)
+  }, [userAnswer])
 
   const handleChange = (value: string) => {
     onAnswerChange({
@@ -116,12 +175,10 @@ export function FormulaRenderer({
     })
   }
 
-  const showingTests = isDiscoverMode && showFeedback && !!testResults
-
   return (
     <div className="space-y-6">
-      {/* Step 1: Given variable values (hidden when discover mode shows test results) */}
-      {!showingTests && (
+      {/* Step 1: Given variable values (only in compute mode) */}
+      {!isDiscoverMode && (
       <div className="bg-blue-50 dark:bg-blue-950/30 rounded-xl border border-blue-200 dark:border-blue-800 p-5">
         <div className="flex items-center gap-2 mb-4">
           <div className="flex items-center justify-center w-7 h-7 rounded-full bg-blue-600 text-white text-sm font-bold">
@@ -154,7 +211,7 @@ export function FormulaRenderer({
       {/* Step 2: Formula / Expected Result */}
       <div className="bg-amber-50 dark:bg-amber-950/20 rounded-xl border border-amber-200 dark:border-amber-800 p-5">
         <div className="flex items-center gap-2 mb-4">
-          {!showingTests && (
+          {!isDiscoverMode && (
           <div className="flex items-center justify-center w-7 h-7 rounded-full bg-amber-600 text-white text-sm font-bold">
             2
           </div>
@@ -170,9 +227,18 @@ export function FormulaRenderer({
         </div>
         <div className="bg-white dark:bg-gray-900 rounded-lg px-5 py-4 border border-amber-100 dark:border-amber-900 text-center shadow-sm">
           {isDiscoverMode ? (
-            <span className="font-mono text-2xl font-bold text-amber-600 dark:text-amber-400">
-              ? = {correctAnswer !== null ? parseFloat(correctAnswer.toFixed(entry.decimalPlaces)) : "?"}
-            </span>
+            <div>
+              <div className="flex flex-wrap justify-center gap-2 mb-3">
+                {entry.variables.map((v) => (
+                  <span key={v.id} className="font-mono text-sm bg-blue-50 dark:bg-blue-950/30 text-blue-700 dark:text-blue-300 px-2 py-0.5 rounded border border-blue-200 dark:border-blue-800">
+                    {v.name}={activeValues[v.name] ?? "?"}
+                  </span>
+                ))}
+              </div>
+              <span className="font-mono text-2xl font-bold text-amber-600 dark:text-amber-400">
+                ? = {correctAnswer !== null ? parseFloat(correctAnswer.toFixed(entry.decimalPlaces)) : "?"}
+              </span>
+            </div>
           ) : (
             <span className="font-mono text-2xl font-bold text-gray-900 dark:text-gray-100">
               {entry.formula}
@@ -185,60 +251,81 @@ export function FormulaRenderer({
           )}
         </div>
 
-        {/* Discover mode: show test results */}
-        {isDiscoverMode && showFeedback && testResults && (
+        {/* Discover mode: always reserve space for 5 test rows */}
+        {isDiscoverMode && (
           <div className="mt-3 space-y-1">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-medium text-amber-700 dark:text-amber-300">
-                Tests: {passedCount}/{totalTests} passed
-              </span>
-              {passedCount === totalTests ? (
-                <span className="text-xs font-medium text-green-600 dark:text-green-400 flex items-center gap-1">
-                  <CheckCircle className="h-3 w-3" /> All passed
-                </span>
+            <div className="flex items-center justify-between h-4">
+              {testResults && testResults.length > 0 ? (
+                <>
+                  <span className="text-xs font-medium text-amber-700 dark:text-amber-300">
+                    Tests: {passedCount}/{totalTests} passed
+                  </span>
+                  {passedCount === totalTests ? (
+                    <span className="text-xs font-medium text-green-600 dark:text-green-400 flex items-center gap-1">
+                      <CheckCircle className="h-3 w-3" /> All passed
+                    </span>
+                  ) : (
+                    <span className="text-xs font-medium text-red-500 dark:text-red-400 flex items-center gap-1">
+                      <XCircle className="h-3 w-3" /> {totalTests - passedCount} failed
+                    </span>
+                  )}
+                </>
               ) : (
-                <span className="text-xs font-medium text-red-500 dark:text-red-400 flex items-center gap-1">
-                  <XCircle className="h-3 w-3" /> {totalTests - passedCount} failed
+                <span className="text-xs text-amber-400 dark:text-amber-600 flex items-center gap-1">
+                  <FlaskConical className="h-3 w-3" /> Test your formula
                 </span>
               )}
             </div>
             <div className="space-y-0.5">
-              {testResults.map((test, i) => (
-                <div
-                  key={i}
-                  className={`flex items-center gap-1.5 px-2 py-0.5 rounded border text-xs font-mono ${
-                    test.passed
-                      ? "bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-800"
-                      : "bg-red-50 dark:bg-red-950/20 border-red-200 dark:border-red-800"
-                  }`}
-                >
-                  {test.passed ? (
-                    <CheckCircle className="h-3 w-3 text-green-500 shrink-0" />
-                  ) : (
-                    <XCircle className="h-3 w-3 text-red-500 shrink-0" />
-                  )}
-                  <span className="text-gray-500 dark:text-gray-400 shrink-0">#{i + 1}</span>
-                  <span className="text-gray-600 dark:text-gray-300 truncate">
-                    {Object.entries(test.values).map(([k, v]) => `${k}=${v}`).join(", ")}
-                  </span>
-                  <span className="text-gray-400 ml-auto shrink-0">→</span>
-                  <span className={test.passed ? "text-green-600 dark:text-green-400" : "text-red-500 dark:text-red-400"}>
-                    {parseFloat(test.userResult.toFixed(entry.decimalPlaces))}
-                  </span>
-                  <span className="text-gray-400">
-                    {test.passed ? "=" : "≠"}
-                  </span>
-                  <span className="text-amber-600 dark:text-amber-400">
-                    {parseFloat(test.expected.toFixed(entry.decimalPlaces))}
-                  </span>
-                </div>
-              ))}
+              {Array.from({ length: 5 }).map((_, i) => {
+                const test = testResults?.[i]
+                if (test) {
+                  return (
+                    <div
+                      key={i}
+                      className={`flex items-center gap-1.5 px-2 py-0.5 rounded border text-xs font-mono ${
+                        test.passed
+                          ? "bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-800"
+                          : "bg-red-50 dark:bg-red-950/20 border-red-200 dark:border-red-800"
+                      }`}
+                    >
+                      {test.passed ? (
+                        <CheckCircle className="h-3 w-3 text-green-500 shrink-0" />
+                      ) : (
+                        <XCircle className="h-3 w-3 text-red-500 shrink-0" />
+                      )}
+                      <span className="text-gray-500 dark:text-gray-400 shrink-0">#{i + 1}</span>
+                      <span className="text-gray-600 dark:text-gray-300 truncate">
+                        {Object.entries(test.values).map(([k, v]) => `${k}=${v}`).join(", ")}
+                      </span>
+                      <span className="text-gray-400 ml-auto shrink-0">→</span>
+                      <span className={test.passed ? "text-green-600 dark:text-green-400" : "text-red-500 dark:text-red-400"}>
+                        {parseFloat(test.userResult.toFixed(entry.decimalPlaces))}
+                      </span>
+                      <span className="text-gray-400">
+                        {test.passed ? "=" : "≠"}
+                      </span>
+                      <span className="text-amber-600 dark:text-amber-400">
+                        {parseFloat(test.expected.toFixed(entry.decimalPlaces))}
+                      </span>
+                    </div>
+                  )
+                }
+                return (
+                  <div
+                    key={i}
+                    className="flex items-center gap-1.5 px-2 py-0.5 rounded border border-dashed border-amber-200/50 dark:border-amber-800/50 text-xs font-mono h-[22px]"
+                  >
+                    <span className="text-amber-300 dark:text-amber-700 shrink-0">#{i + 1}</span>
+                  </div>
+                )
+              })}
             </div>
           </div>
         )}
         <p className="text-sm text-amber-600 dark:text-amber-400 mt-3 text-center">
           {isDiscoverMode
-            ? "Find a formula using the variables above that produces this result."
+            ? "Find a formula using these variables that produces this result."
             : "Substitute the variable values above into this formula and compute the result."}
         </p>
       </div>
@@ -246,7 +333,7 @@ export function FormulaRenderer({
       {/* Step 3: Answer input */}
       <div className="bg-green-50 dark:bg-green-950/20 rounded-xl border border-green-200 dark:border-green-800 p-5">
         <div className="flex items-center gap-2 mb-4">
-          {!showingTests && (
+          {!isDiscoverMode && (
           <div className="flex items-center justify-center w-7 h-7 rounded-full bg-green-600 text-white text-sm font-bold">
             3
           </div>
@@ -257,15 +344,34 @@ export function FormulaRenderer({
           </h4>
         </div>
         {isDiscoverMode ? (
-          <Input
-            type="text"
-            value={userAnswer}
-            onChange={(e) => handleChange(e.target.value)}
-            disabled={disabled || showFeedback}
-            autoComplete="off"
-            placeholder="e.g., x^2 + y"
-            className="bg-white dark:bg-gray-900 border-green-300 dark:border-green-700 font-mono text-lg h-12"
-          />
+          <div className="flex gap-2">
+            <Input
+              type="text"
+              value={userAnswer}
+              onChange={(e) => handleChange(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault()
+                  runTests()
+                }
+              }}
+              disabled={disabled || showFeedback}
+              autoComplete="off"
+              placeholder="e.g., x^2 + y"
+              className="bg-white dark:bg-gray-900 border-green-300 dark:border-green-700 font-mono text-lg h-12 flex-1"
+            />
+            <Button
+              type="button"
+              variant="outline"
+              size="default"
+              onClick={runTests}
+              disabled={disabled || showFeedback || !userAnswer.trim()}
+              className="h-12 px-4 border-green-300 dark:border-green-700 text-green-700 dark:text-green-300 hover:bg-green-100 dark:hover:bg-green-900/30"
+            >
+              <FlaskConical className="h-4 w-4 mr-1.5" />
+              Test
+            </Button>
+          </div>
         ) : (
           <Input
             type="number"
