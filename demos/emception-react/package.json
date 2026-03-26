@@ -17,7 +17,8 @@
         "@xterm/xterm": "^6.0.0",
         "emception": "*",
         "react": "^19.0.0",
-        "react-dom": "^19.0.0"
+        "react-dom": "^19.0.0",
+        "react-resizable-panels": "^3.0.6"
     },
     "devDependencies": {
         "@types/react": "^19",
