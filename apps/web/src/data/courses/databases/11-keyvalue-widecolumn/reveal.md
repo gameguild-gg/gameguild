@@ -671,17 +671,20 @@ In a distributed system, network partitions **will happen** — so you must choo
 
 Cassandra lets you **choose** the trade-off per query:
 
-| Consistency Level | Nodes Required | Consistency | Availability |
-| ----------------- | -------------- | ----------- | ------------ |
-| ONE               | 1 replica      | Low         | High         |
-| QUORUM            | RF/2 + 1       | Medium      | Medium       |
-| ALL               | All replicas   | High        | Low          |
+| Consistency Level (CL) | Nodes Required             | Consistency | Availability |
+| ---------------------- | -------------------------- | ----------- | ------------ |
+| ONE                    | 1 replica                  | Low         | High         |
+| QUORUM                 | Replication Factor / 2 + 1 | Medium      | Medium       |
+| ALL                    | All replicas               | High        | Low          |
+
+- **CL (Consistency Level):** how many replicas must respond before the operation is considered successful
+- **RF (Replication Factor):** how many copies of each row Cassandra stores (e.g., RF = 3 → 3 copies)
 
 **Example with RF = 3:**
 
-- Write `CL = QUORUM` → 2 of 3 nodes must acknowledge
-- Read `CL = QUORUM` → 2 of 3 nodes must respond
-- **Result:** Strong consistency (Write CL + Read CL > RF)
+- Write CL = QUORUM → 2 of 3 nodes must acknowledge
+- Read CL = QUORUM → 2 of 3 nodes must respond
+- **Result:** Strong consistency (Write CL + Read CL > RF → 2 + 2 > 3 ✅)
 
 ---
 
@@ -807,7 +810,7 @@ SELECT * FROM posts WHERE title = 'Hello';
 UPDATE posts
 SET content = 'Updated content'
 WHERE user_id = 123e4567-e89b-12d3-a456-426614174000
-  AND post_id = now();
+  AND post_id = e4d2f1a0-ea6f-11ef-8b6e-43c130d1012a;
 
 -- Counter table
 CREATE TABLE post_stats (
@@ -820,7 +823,7 @@ WHERE post_id = 123e4567-e89b-12d3-a456-426614174000;
 -- Delete
 DELETE FROM posts
 WHERE user_id = 123e4567-e89b-12d3-a456-426614174000
-  AND post_id = now();
+  AND post_id = e4d2f1a0-ea6f-11ef-8b6e-43c130d1012a;
 ```
 
 ⚠️ Deletes create **tombstones** — actual removal happens during compaction.
