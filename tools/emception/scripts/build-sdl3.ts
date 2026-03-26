@@ -107,6 +107,11 @@ shell.exec([
     '-DSDL_EXAMPLES=OFF',
     '-DSDL_INSTALL=OFF',
     '-DSDL_DISABLE_INSTALL=ON',
+    // Disable subsystems that use emscripten pthread-only APIs
+    // (emscripten_asm_const_int_sync_on_main_thread), which cause
+    // undefined symbol errors when linking without -s USE_PTHREADS=1.
+    '-DSDL_CAMERA=OFF',
+    '-DSDL_SENSOR=OFF',
 ].join(' '));
 
 console.log(`Building SDL3 with ${CONCURRENCY} cores...`);
