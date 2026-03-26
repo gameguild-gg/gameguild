@@ -107,15 +107,52 @@ const updateHashWithSlide = (slideIndex: number): void => {
   window.history.replaceState(null, '', newUrl);
 };
 
-// Helper function to render mermaid diagrams in a single slide element.
-// Render happens only for visible slides to avoid zero-size layout issues.
-const renderMermaidInSlide = async (slideEl: HTMLElement, isDark: boolean): Promise<void> => {
-  if (slideEl.dataset.mermaidRendered === 'true') return;
+// ── Mermaid pipeline ──
+// Two-phase design:
+//   Phase 1 — extractMermaidSources: runs once per slide right after Reveal
+//     parses markdown. Replaces every <pre><code class="language-mermaid">
+//     block with a host <div> that stores the original source text in
+//     data-mermaid-source. After this, the original code blocks are gone from
+//     the DOM and can never be confused with rendered output.
+//   Phase 2 — renderMermaidInSlide: can be called many times (retries, theme
+//     changes, resize). It only reads from data-mermaid-source, never from
+//     innerHTML, so it is immune to re-parsing its own SVG output.
 
-  const mermaidBlocks = slideEl.querySelectorAll(
-    'code.language-mermaid, code.mermaid, pre.language-mermaid > code, pre.mermaid > code'
+/** Replace mermaid code blocks with host divs that preserve the source text. */
+const extractMermaidSources = (root: HTMLElement): void => {
+  const codeBlocks = root.querySelectorAll(
+    'pre > code.language-mermaid, pre > code.mermaid, pre.language-mermaid > code, pre.mermaid > code'
   );
-  if (mermaidBlocks.length === 0) return;
+  codeBlocks.forEach((block) => {
+    if (!(block instanceof HTMLElement)) return;
+    const source = (block.textContent ?? '').trim();
+    if (!source) return;
+
+    const host = document.createElement('div');
+    host.className = 'mermaid-host';
+    host.dataset.mermaidSource = source;
+    host.style.display = 'flex';
+    host.style.justifyContent = 'center';
+    host.style.alignItems = 'center';
+    host.style.width = '100%';
+
+    const pre = block.closest('pre') ?? block.parentElement;
+    pre?.parentElement?.replaceChild(host, pre);
+  });
+};
+
+/** Render all mermaid host divs inside a single slide that haven't been rendered yet. */
+const renderMermaidInSlide = async (slideEl: HTMLElement, isDark: boolean): Promise<void> => {
+  // Collect hosts that still need rendering.
+  const hosts = Array.from(
+    slideEl.querySelectorAll<HTMLDivElement>('div.mermaid-host[data-mermaid-source]')
+  ).filter((h) => h.dataset.mermaidRendered !== 'true');
+
+  if (hosts.length === 0) return;
+
+  // Prevent concurrent renders on the same slide.
+  if (slideEl.dataset.mermaidRendering === 'true') return;
+  slideEl.dataset.mermaidRendering = 'true';
 
   try {
     const mermaid = (await import('mermaid')).default;
@@ -125,141 +162,95 @@ const renderMermaidInSlide = async (slideEl: HTMLElement, isDark: boolean): Prom
       await document.fonts.ready;
     }
 
-    // Ensure slide has real dimensions before rendering mermaid.
+    // Ensure slide has real dimensions before rendering.
     let ready = false;
     for (let i = 0; i < 6; i++) {
       const rect = slideEl.getBoundingClientRect();
-      if (rect.width > 0 && rect.height > 0) {
-        ready = true;
-        break;
-      }
-      await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+      if (rect.width > 0 && rect.height > 0) { ready = true; break; }
+      await new Promise<void>((r) => requestAnimationFrame(() => r()));
     }
     if (!ready) {
-      if (slideEl.dataset.mermaidRetrying !== 'true') {
-        slideEl.dataset.mermaidRetrying = 'true';
-        setTimeout(() => {
-          delete slideEl.dataset.mermaidRetrying;
-          void renderMermaidInSlide(slideEl, isDark);
-        }, 180);
-      }
+      // Schedule a retry — slide may not be visible yet.
+      setTimeout(() => void renderMermaidInSlide(slideEl, isDark), 180);
       return;
     }
 
-    let hadRenderFailure = false;
-
     const mermaidTheme: 'dark' | 'default' = isDark ? 'dark' : 'default';
-
     const baseConfig = {
       startOnLoad: false,
       theme: mermaidTheme,
       securityLevel: 'loose' as const,
       fontFamily: 'Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif',
-      flowchart: {
-        useMaxWidth: true,
-        htmlLabels: false,
-        curve: 'linear' as const,
-      },
+      flowchart: { useMaxWidth: true, htmlLabels: false, curve: 'linear' as const },
       suppressErrorRendering: true,
     };
-
     mermaid.initialize(baseConfig);
 
-    const nodes: HTMLElement[] = [];
-    for (let i = 0; i < mermaidBlocks.length; i++) {
-      const block = mermaidBlocks[i];
-      if (!block) continue;
+    let hadFailure = false;
+    const rendered: HTMLDivElement[] = [];
 
-      const rawCode = (block.textContent ?? '').trim();
-      if (!rawCode) continue;
+    for (let i = 0; i < hosts.length; i++) {
+      const host = hosts[i]!;
+      const source = host.dataset.mermaidSource!;
+      // Normalize any <br/> from HTML into \n for the SVG-text primary path.
+      const code = source.replace(/<br\s*\/?>/gi, '\\n');
+      const id = `reveal-mermaid-${Date.now()}-${i}`;
 
-      // Primary path uses htmlLabels:false (SVG text), so keep Mermaid newline
-      // escape syntax and normalize any accidental <br/> markup back to \n.
-      const processedCode = rawCode.replace(/<br\s*\/?>/gi, '\\n');
+      host.innerHTML = '';
 
-      const div = document.createElement('div');
-      div.className = 'mermaid';
-      div.style.display = 'flex';
-      div.style.justifyContent = 'center';
-      div.style.alignItems = 'center';
-      div.style.width = '100%';
-
-      const parent = block.closest('pre') ?? block.parentElement;
-      if (!parent?.parentElement) continue;
-
-      parent.parentElement.replaceChild(div, parent);
-      nodes.push(div);
-
-      const renderId = `reveal-mermaid-${Date.now()}-${i}`;
       try {
-        const { svg } = await mermaid.render(renderId, processedCode);
-        div.innerHTML = svg;
+        const { svg } = await mermaid.render(id, code);
+        host.innerHTML = svg;
+        host.dataset.mermaidRendered = 'true';
+        rendered.push(host);
       } catch (primaryErr) {
-        // Fallback: enable htmlLabels and convert escaped newlines to <br/>.
+        // Fallback: htmlLabels:true with \n→<br/> conversion.
         try {
-          mermaid.initialize({
-            ...baseConfig,
-            flowchart: {
-              ...baseConfig.flowchart,
-              htmlLabels: true,
-            },
-          });
-          const fallbackId = `${renderId}-fallback`;
-          const fallbackCode = rawCode.replace(/\\n/g, '<br/>');
-          const { svg } = await mermaid.render(fallbackId, fallbackCode);
-          div.innerHTML = svg;
-          // Restore preferred config for next diagrams.
+          mermaid.initialize({ ...baseConfig, flowchart: { ...baseConfig.flowchart, htmlLabels: true } });
+          const { svg } = await mermaid.render(`${id}-fb`, source.replace(/\\n/g, '<br/>'));
+          host.innerHTML = svg;
+          host.dataset.mermaidRendered = 'true';
+          rendered.push(host);
           mermaid.initialize(baseConfig);
         } catch (fallbackErr) {
-          hadRenderFailure = true;
-          console.warn('Mermaid render failed (primary + fallback):', {
-            primaryErr,
-            fallbackErr,
-            codePreview: rawCode.slice(0, 160),
-          });
-          div.innerHTML = '<div style="color:#ef4444;font-size:0.9rem;">Mermaid render failed</div>';
+          hadFailure = true;
+          console.warn('Mermaid render failed:', { primaryErr, fallbackErr, codePreview: source.slice(0, 160) });
+          host.innerHTML = '<div style="color:#ef4444;font-size:0.9rem;">Mermaid render failed</div>';
         }
       }
     }
 
-    if (nodes.length > 0) {
-      // Fit each mermaid SVG to available slide space and avoid edge clipping.
+    // Post-render SVG sizing.
+    if (rendered.length > 0) {
       const slideRect = slideEl.getBoundingClientRect();
 
-      for (const node of nodes) {
+      for (const node of rendered) {
         const svg = node.querySelector('svg');
         if (!svg) continue;
 
         let siblingHeight = 0;
         const parent = node.parentElement;
         if (parent) {
-          for (let i = 0; i < parent.children.length; i++) {
-            const child = parent.children[i] as HTMLElement;
-            if (child !== node) {
-              siblingHeight += child.getBoundingClientRect().height || 0;
-            }
+          for (let c = 0; c < parent.children.length; c++) {
+            const child = parent.children[c] as HTMLElement;
+            if (child !== node) siblingHeight += child.getBoundingClientRect().height || 0;
           }
         }
 
-        const availableHeight = Math.max(slideRect.height - siblingHeight - 32, 120);
-        const availableWidth = Math.max(slideRect.width - 24, 200);
+        const availH = Math.max(slideRect.height - siblingHeight - 32, 120);
+        const availW = Math.max(slideRect.width - 24, 200);
 
-        const foreignObjects = svg.querySelectorAll('foreignObject');
-        foreignObjects.forEach((fo) => {
-          const widthAttr = fo.getAttribute('width');
-          const xAttr = fo.getAttribute('x');
-          const width = widthAttr != null ? Number(widthAttr) : NaN;
-          const x = xAttr != null ? Number(xAttr) : NaN;
-          if (!Number.isNaN(width) && width > 0) {
-            fo.setAttribute('width', String(width + 8));
-            if (!Number.isNaN(x)) {
-              fo.setAttribute('x', String(x - 4));
-            }
+        svg.querySelectorAll('foreignObject').forEach((fo) => {
+          const w = Number(fo.getAttribute('width'));
+          const x = Number(fo.getAttribute('x'));
+          if (w > 0) {
+            fo.setAttribute('width', String(w + 8));
+            if (!Number.isNaN(x)) fo.setAttribute('x', String(x - 4));
           }
-          const labelDiv = fo.querySelector('div');
-          if (labelDiv instanceof HTMLElement) {
-            labelDiv.style.overflow = 'visible';
-            labelDiv.style.paddingRight = '4px';
+          const label = fo.querySelector('div');
+          if (label instanceof HTMLElement) {
+            label.style.overflow = 'visible';
+            label.style.paddingRight = '4px';
           }
         });
 
@@ -267,29 +258,25 @@ const renderMermaidInSlide = async (slideEl: HTMLElement, isDark: boolean): Prom
         svg.style.margin = '0 auto';
         svg.style.overflow = 'visible';
         svg.style.maxWidth = '100%';
-        svg.style.maxHeight = `${availableHeight}px`;
+        svg.style.maxHeight = `${availH}px`;
         svg.style.width = 'auto';
         svg.style.height = 'auto';
         svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
 
         node.style.margin = '0 auto';
-        node.style.maxWidth = `${availableWidth}px`;
+        node.style.maxWidth = `${availW}px`;
         node.style.width = '100%';
       }
     }
 
-    if (!hadRenderFailure) {
-      slideEl.dataset.mermaidRendered = 'true';
-    } else if (slideEl.dataset.mermaidRetrying !== 'true') {
-      // Retry once more after layout settles if at least one diagram failed.
-      slideEl.dataset.mermaidRetrying = 'true';
-      setTimeout(() => {
-        delete slideEl.dataset.mermaidRetrying;
-        void renderMermaidInSlide(slideEl, isDark);
-      }, 220);
+    // Retry failed diagrams once after layout settles.
+    if (hadFailure) {
+      setTimeout(() => void renderMermaidInSlide(slideEl, isDark), 250);
     }
   } catch (err) {
     console.warn('Mermaid rendering failed:', err);
+  } finally {
+    delete slideEl.dataset.mermaidRendering;
   }
 };
 
@@ -484,6 +471,13 @@ const RevealJS: React.FC<RevealJSProps> = ({ content, height = '600px' }) => {
         await revealInstance.initialize();
         revealInstanceRef.current = revealInstance;
 
+        // Phase 1: extract mermaid sources from all slides immediately
+        // after Reveal parses markdown. This replaces code blocks with
+        // stable host divs before any render attempt can race.
+        if (containerRef.current) {
+          extractMermaidSources(containerRef.current);
+        }
+
         // Add event listener to update URL hash and lazily render mermaid
         revealInstance.on('slidechanged', async (event: { indexh: number; indexv: number; currentSlide: HTMLElement }) => {
           updateHashWithSlide(event.indexh);
@@ -600,13 +594,14 @@ const RevealJS: React.FC<RevealJSProps> = ({ content, height = '600px' }) => {
           slidesRef.current.innerHTML = `<section data-markdown><textarea data-template>${content}</textarea></section>`;
           await revealInstanceRef.current.sync();
 
+          // Re-extract mermaid sources after content change.
+          if (containerRef.current) {
+            extractMermaidSources(containerRef.current);
+          }
+
           // Render mermaid on the current slide after content sync
           setTimeout(async () => {
             if (revealInstanceRef.current) {
-              // Reset mermaid-rendered flags since content changed
-              containerRef.current?.querySelectorAll('[data-mermaid-rendered]').forEach(el => {
-                delete (el as HTMLElement).dataset.mermaidRendered;
-              });
               const currentSlide = revealInstanceRef.current.getCurrentSlide();
               if (currentSlide) {
                 await renderMermaidInSlide(currentSlide, isDark);
