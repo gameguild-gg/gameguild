@@ -154,4 +154,53 @@ if (fs.existsSync(generatedIncDir2)) {
 }
 console.log('Deployed SDL3 headers to sysroot/usr/include/SDL3/');
 
+// --------------- pre-populate port cache ---------------
+//
+// `FROZEN_CACHE=True` in sysroot/etc/emscripten.config prevents emscripten
+// from acquiring cache locks at browser runtime.  The lock is only attempted
+// when source or library files are *missing*.  By pre-seeding the cache we
+// trigger both early-outs (marker check + library exists check) so the port
+// system never calls cache.lock(), making -sUSE_SDL=3 viable at runtime.
+//
+// Two files are required:
+//   1. ports/sdl3/.emscripten_url  — skips source-download lock
+//   2. sysroot/lib/wasm32-emscripten/libSDL3.a — skips library-build lock
+
+// Derive the expected port URL from the sysroot's sdl3.py so the marker
+// always matches what the port system will compute, regardless of which
+// SDL3 version was passed to this build script.
+const sdl3PortPy = path.join(ROOT, 'sysroot', 'usr', 'lib', 'emscripten', 'tools', 'ports', 'sdl3.py');
+let sdl3PortUrl: string | null = null;
+if (fs.existsSync(sdl3PortPy)) {
+    const src = fs.readFileSync(sdl3PortPy, 'utf-8');
+    const m = src.match(/^VERSION\s*=\s*['"]([^'"]+)['"]/m);
+    if (m) {
+        sdl3PortUrl = `https://github.com/libsdl-org/SDL/archive/release-${m[1]}.zip`;
+        console.log(`SDL3 port URL (from sysroot sdl3.py): ${sdl3PortUrl}`);
+    }
+}
+
+if (sdl3PortUrl) {
+    // CACHE path in emscripten.config is ~/.emscripten_cache;
+    // in the browser WASM sandbox HOME=/home/user, so it resolves to:
+    //   /home/user/.emscripten_cache/
+    const homeCacheBase = path.join(ROOT, 'sysroot', 'home', 'user', '.emscripten_cache');
+
+    // 1. Port source marker — bypasses fetch_port_artifact's lock
+    const portDir = path.join(homeCacheBase, 'ports', 'sdl3');
+    shell.mkdir('-p', portDir);
+    fs.writeFileSync(path.join(portDir, '.emscripten_url'), sdl3PortUrl + '\n');
+    console.log(`Wrote port cache marker: ${path.relative(ROOT, portDir)}/.emscripten_url`);
+
+    // 2. Pre-built library — bypasses cache.get()'s lock
+    const libCacheDir = path.join(homeCacheBase, 'sysroot', 'lib', 'wasm32-emscripten');
+    shell.mkdir('-p', libCacheDir);
+    shell.cp('-f', path.join(SYSROOT_LIB, 'libSDL3.a'), libCacheDir);
+    console.log(`Copied libSDL3.a to port cache: ${path.relative(ROOT, libCacheDir)}`);
+} else {
+    console.warn('Warning: could not derive SDL3 port URL from sysroot sdl3.py — port cache not pre-populated.');
+    console.warn('  -sUSE_SDL=3 will fail at runtime with FROZEN_CACHE error.');
+    console.warn('  Fallback path (/usr/lib/libSDL3.a + --js-library) will still work.');
+}
+
 console.log('>>> SDL3 build complete.');

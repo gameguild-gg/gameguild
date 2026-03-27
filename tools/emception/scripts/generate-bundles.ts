@@ -28,6 +28,7 @@
  *   sdl3-mixer          -- SDL3_mixer static lib + headers
  *   imgui              -- Dear ImGui static lib + headers
  *   usr-share           -- /usr/share/ files
+ *   home               -- /home/ (emscripten port cache pre-seed)
  *
  * Version-specific paths like /usr/lib/python3.13/ are referenced in the
  * manifest as-is but the bundle is named "python-runtime" (not "python3.13").
@@ -345,6 +346,7 @@ async function main() {
         { name: 'sdl3-mixer', prefixes: ['/usr/lib/libSDL3_mixer', '/usr/include/SDL3_mixer/'], outputPath: '/usr/lib/sdl3-mixer.tar.br' },
         { name: 'imgui', prefixes: ['/usr/lib/libimgui', '/usr/include/imgui/'], outputPath: '/usr/lib/imgui.tar.br' },
         { name: 'usr-share', prefixes: ['/usr/share/'], outputPath: '/usr/share.tar.br' },
+        { name: 'home', prefixes: ['/home/'], outputPath: '/home.tar.br' },
     ];
 
     for (const { name } of prefixGroups) {
