@@ -21,7 +21,11 @@ Submit a document or diagram that includes:
    - [draw.io](https://draw.io/)
    - [Excalidraw](https://excalidraw.com/)
 
+Suggestion: Use the Architecture diagram from [mermaid.live](https://mermaid.live/)
+
 2. **Component Breakdown** — For each major component (client, server, relay, database, etc.), write 2–3 sentences describing its purpose, inputs, and outputs.
+
+Suggestion: You can make this plain text in the same document as the diagram, or use Mermaid's class diagrams to represent components and their interactions.
 
 3. **Message Format Specification** — Define the messages your application will exchange. For each message type, describe:
    - Message ID / type identifier
@@ -29,7 +33,11 @@ Submit a document or diagram that includes:
    - Serialization format (binary, JSON, Protobuf, etc.)
    - Direction (client→server, server→client, peer→peer)
 
+Suggestion: If you are creating custom packet you may want to use the packet from [mermaid.live](https://mermaid.live/) or use a table explaining that. If you are using an existing protocol (e.g., WebSockets, gRPC), describe how you will structure your messages within that protocol.
+
 4. **Data Flow** — Show how application state flows through the network. Include connection lifecycle (handshake, authentication, gameplay, disconnection) and any state synchronization strategy.
+
+Suggestion: Use a tools like [code2flow](https://code2flow.com/) or sequence diagrams in Mermaid to illustrate data flow on the [mermaid.live](https://mermaid.live/) platform.
 
 5. **Feasibility Notes** — Identify the riskiest part of your implementation and describe how you plan to address it. What will you prototype first?
 
