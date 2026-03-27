@@ -78,6 +78,17 @@ import networkingWeek10HttpCppBoostBeastMd from './10-http/02h-http-cpp-boost-be
 import networkingWeek10ReadingsMd from './10-http/03-readings.md';
 import networkingWeek10QuizMd from './10-http/04-quiz.md';
 import networkingWeek10AssignmentMd from './10-http/assignment.md';
+import networkingWeek11RevealMd from './11-nonblocking/01-reveal.md';
+import networkingWeek11LectureMd from './11-nonblocking/02-lecture.md';
+import networkingWeek11ParallelismVsConcurrencyMd from './11-nonblocking/02a-parallelism-vs-concurrency.md';
+import networkingWeek11BlockingVsNonblockingMd from './11-nonblocking/02b-blocking-vs-nonblocking.md';
+import networkingWeek11IOMultiplexingMd from './11-nonblocking/02c-io-multiplexing.md';
+import networkingWeek11EventLoopReactorMd from './11-nonblocking/02d-event-loop-reactor.md';
+import networkingWeek11WorkerThreadManagersMd from './11-nonblocking/02e-worker-thread-managers.md';
+import networkingWeek11ThreadSafetyMd from './11-nonblocking/02f-thread-safety.md';
+import networkingWeek11ModernCppConcurrencyMd from './11-nonblocking/02g-modern-cpp-concurrency.md';
+import networkingWeek11CsiVsGprPatternsMd from './11-nonblocking/02h-csi-vs-gpr-patterns.md';
+import networkingWeek11ReadingsMd from './11-nonblocking/03-readings.md';
 import networkingWeek11AssignmentMd from './11-nonblocking/assignment.md';
 import networkingWeek12AssignmentMd from './12-performance/assignment.md';
 import networkingWeek13AssignmentMd from './13-prediction/assignment.md';
@@ -2063,6 +2074,260 @@ export const networkingWeek11Intro: ProgramContent & { slug: string } = {
     updatedAt: '2023-01-01T00:00:00Z',
 };
 
+export const networkingWeek11LectureSlides: ProgramContent & { slug: string } = {
+    id: 'week-11-slides',
+    slug: 'slides',
+    programId: 'networking-program-1',
+    parentId: 'week-11',
+    title: 'Lecture Slides',
+    description: 'Presentation slides for Week 11 on non-blocking I/O, event loops, worker patterns, and modern concurrency.',
+    type: ProgramContentType.REVEAL,
+    body: networkingWeek11RevealMd,
+    sortOrder: 0,
+    isRequired: false,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 45,
+    visibility: 1, // Published
+    program: networkingProgram,
+    parent: networkingWeek11Intro,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const networkingWeek11LectureContent: ProgramContent & { slug: string } = {
+    id: 'week-11-lecture',
+    slug: 'lecture',
+    programId: 'networking-program-1',
+    parentId: 'week-11',
+    title: 'Lecture 11: Non-Blocking I/O, Parallelism, and Concurrency',
+    description:
+        'Core concepts: blocking vs non-blocking sockets, I/O multiplexing, reactor pattern, worker threads, thread safety, and modern C++ async tools.',
+    type: 0, // Page
+    body: networkingWeek11LectureMd,
+    sortOrder: 1,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 90,
+    visibility: 1, // Published
+    program: networkingProgram,
+    parent: networkingWeek11Intro,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const networkingWeek11ParallelismVsConcurrency: ProgramContent & { slug: string } = {
+    id: 'week-11-parallelism-vs-concurrency',
+    slug: 'parallelism-vs-concurrency',
+    programId: 'networking-program-1',
+    parentId: 'week-11-lecture',
+    title: '1. Parallelism vs Concurrency Fundamentals',
+    description: 'Conceptual differences, architectural implications, and when to use each model.',
+    type: 0, // Page
+    body: networkingWeek11ParallelismVsConcurrencyMd,
+    sortOrder: 1,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 15,
+    visibility: 1, // Published
+    program: networkingProgram,
+    parent: networkingWeek11LectureContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const networkingWeek11BlockingVsNonblocking: ProgramContent & { slug: string } = {
+    id: 'week-11-blocking-vs-nonblocking',
+    slug: 'blocking-vs-nonblocking',
+    programId: 'networking-program-1',
+    parentId: 'week-11-lecture',
+    title: '2. Blocking vs Non-Blocking Sockets',
+    description: 'Behavioral contract, trade-offs, and orchestration requirements for non-blocking design.',
+    type: 0, // Page
+    body: networkingWeek11BlockingVsNonblockingMd,
+    sortOrder: 2,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 15,
+    visibility: 1, // Published
+    program: networkingProgram,
+    parent: networkingWeek11LectureContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const networkingWeek11IOMultiplexing: ProgramContent & { slug: string } = {
+    id: 'week-11-io-multiplexing',
+    slug: 'io-multiplexing',
+    programId: 'networking-program-1',
+    parentId: 'week-11-lecture',
+    title: '3. I/O Multiplexing Concepts: select, poll, epoll',
+    description: 'Readiness-based orchestration and platform backend abstractions for scalable loops.',
+    type: 0, // Page
+    body: networkingWeek11IOMultiplexingMd,
+    sortOrder: 3,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 15,
+    visibility: 1, // Published
+    program: networkingProgram,
+    parent: networkingWeek11LectureContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const networkingWeek11EventLoopReactor: ProgramContent & { slug: string } = {
+    id: 'week-11-event-loop-reactor',
+    slug: 'event-loop-reactor',
+    programId: 'networking-program-1',
+    parentId: 'week-11-lecture',
+    title: '4. Event Loops and Reactor-Style Architecture',
+    description: 'Reactor flow, handler rules, backpressure, and cancellation-aware non-blocking design.',
+    type: 0, // Page
+    body: networkingWeek11EventLoopReactorMd,
+    sortOrder: 4,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 15,
+    visibility: 1, // Published
+    program: networkingProgram,
+    parent: networkingWeek11LectureContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const networkingWeek11WorkerThreadManagers: ProgramContent & { slug: string } = {
+    id: 'week-11-worker-thread-managers',
+    slug: 'worker-thread-managers',
+    programId: 'networking-program-1',
+    parentId: 'week-11-lecture',
+    title: '5. Worker Threads and Thread Managers',
+    description: 'Worker-pool orchestration, result handoff, lifecycle and cancellation responsibilities.',
+    type: 0, // Page
+    body: networkingWeek11WorkerThreadManagersMd,
+    sortOrder: 5,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 15,
+    visibility: 1, // Published
+    program: networkingProgram,
+    parent: networkingWeek11LectureContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const networkingWeek11ThreadSafety: ProgramContent & { slug: string } = {
+    id: 'week-11-thread-safety',
+    slug: 'thread-safety',
+    programId: 'networking-program-1',
+    parentId: 'week-11-lecture',
+    title: '6. Thread Safety and Shared-State Ownership',
+    description: 'Ownership-first concurrency design, serialized execution, and race-condition prevention.',
+    type: 0, // Page
+    body: networkingWeek11ThreadSafetyMd,
+    sortOrder: 6,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 15,
+    visibility: 1, // Published
+    program: networkingProgram,
+    parent: networkingWeek11LectureContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const networkingWeek11ModernCppConcurrency: ProgramContent & { slug: string } = {
+    id: 'week-11-modern-cpp-concurrency',
+    slug: 'modern-cpp-concurrency',
+    programId: 'networking-program-1',
+    parentId: 'week-11-lecture',
+    title: '7. Modern C++ Concurrency: jthread, Stop Tokens, Coroutines',
+    description: 'RAII thread lifecycle, cooperative cancellation, and coroutine-based async orchestration.',
+    type: 0, // Page
+    body: networkingWeek11ModernCppConcurrencyMd,
+    sortOrder: 7,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 15,
+    visibility: 1, // Published
+    program: networkingProgram,
+    parent: networkingWeek11LectureContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const networkingWeek11CsiVsGprPatterns: ProgramContent & { slug: string } = {
+    id: 'week-11-csi-vs-gpr-patterns',
+    slug: 'csi-vs-gpr-patterns',
+    programId: 'networking-program-1',
+    parentId: 'week-11-lecture',
+    title: '8. CSI vs GPR Architecture Patterns',
+    description: 'Applying shared non-blocking and concurrency primitives under different system constraints.',
+    type: 0, // Page
+    body: networkingWeek11CsiVsGprPatternsMd,
+    sortOrder: 8,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 15,
+    visibility: 1, // Published
+    program: networkingProgram,
+    parent: networkingWeek11LectureContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const networkingWeek11Readings: ProgramContent & { slug: string } = {
+    id: 'week-11-readings',
+    slug: 'readings',
+    programId: 'networking-program-1',
+    parentId: 'week-11',
+    title: 'Readings',
+    description: 'Required readings for non-blocking I/O architecture, worker models, and modern C++ concurrency.',
+    type: 0, // Page
+    body: networkingWeek11ReadingsMd,
+    sortOrder: 2,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 120,
+    visibility: 1, // Published
+    program: networkingProgram,
+    parent: networkingWeek11Intro,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
 export const networkingWeek11Assignment: ProgramContent & { slug: string } = {
     id: 'week-11-assignment',
     slug: 'assignment',
@@ -2072,7 +2337,7 @@ export const networkingWeek11Assignment: ProgramContent & { slug: string } = {
     description: 'Network protocol design document and architecture diagram.',
     type: 0, // Page
     body: networkingWeek11AssignmentMd,
-    sortOrder: 1,
+    sortOrder: 3,
     isRequired: true,
     gradingMethod: 1, // Points
     maxPoints: 100,
@@ -2086,7 +2351,22 @@ export const networkingWeek11Assignment: ProgramContent & { slug: string } = {
     updatedAt: '2023-01-01T00:00:00Z',
 };
 
-networkingWeek11Intro.children = [networkingWeek11Assignment];
+networkingWeek11Intro.children = [
+    networkingWeek11LectureSlides,
+    networkingWeek11LectureContent,
+    networkingWeek11Readings,
+    networkingWeek11Assignment,
+];
+networkingWeek11LectureContent.children = [
+    networkingWeek11ParallelismVsConcurrency,
+    networkingWeek11BlockingVsNonblocking,
+    networkingWeek11IOMultiplexing,
+    networkingWeek11EventLoopReactor,
+    networkingWeek11WorkerThreadManagers,
+    networkingWeek11ThreadSafety,
+    networkingWeek11ModernCppConcurrency,
+    networkingWeek11CsiVsGprPatterns,
+];
 
 // Week 12 — Performance, Simulation Frequency, and Reliability + Checkpoint 3: Networking Prototype
 export const networkingWeek12Intro: ProgramContent & { slug: string } = {

@@ -75,9 +75,10 @@ export const DEFAULT_IMAGE = `data:image/svg+xml;utf8,${encodeURIComponent(
 // Compile with: emcc sdl-main.cpp /usr/lib/libSDL3.a -I/usr/include -s SINGLE_FILE=1 -s ALLOW_MEMORY_GROWTH=1 -O1 -o main.html
 export const SDL_DEMO_CODE = `// SDL3 bouncing ball — compiled in the browser via Emscripten
 // Click "Compile & Run" to build and render to the SDL Canvas tab.
-// Links against precompiled libSDL3.a (built with emcmake).
+// Uses SDL3 app-lifecycle callbacks — no emscripten main-loop call needed.
+#define SDL_MAIN_USE_CALLBACKS
 #include <SDL3/SDL.h>
-#include <emscripten.h>
+#include <SDL3/SDL_main.h>
 #include <math.h>
 
 static SDL_Window   *window   = NULL;
@@ -91,12 +92,14 @@ static void draw_filled_circle(SDL_Renderer *r, float cx, float cy, float radius
     }
 }
 
-static void loop(void) {
+SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
+    SDL_Init(SDL_INIT_VIDEO);
+    SDL_CreateWindowAndRenderer("SDL3 Demo", 800, 600, 0, &window, &renderer);
+    return SDL_APP_CONTINUE;
+}
+
+SDL_AppResult SDL_AppIterate(void *appstate) {
     t += 0.016f;
-    SDL_Event e;
-    while (SDL_PollEvent(&e)) {
-        if (e.type == SDL_EVENT_QUIT) emscripten_cancel_main_loop();
-    }
 
     SDL_SetRenderDrawColor(renderer, 17, 17, 27, 255);
     SDL_RenderClear(renderer);
@@ -113,16 +116,18 @@ static void loop(void) {
     draw_filled_circle(renderer, cx, cy, 32.f);
 
     SDL_RenderPresent(renderer);
+    return SDL_APP_CONTINUE;
 }
 
-int main(void) {
-    SDL_Init(SDL_INIT_VIDEO);
-    SDL_CreateWindowAndRenderer("SDL3 Demo", 800, 600, 0, &window, &renderer);
-    emscripten_set_main_loop(loop, 60, 1);
+SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event) {
+    if (event->type == SDL_EVENT_QUIT) return SDL_APP_SUCCESS;
+    return SDL_APP_CONTINUE;
+}
+
+void SDL_AppQuit(void *appstate, SDL_AppResult result) {
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     SDL_Quit();
-    return 0;
 }
 `;
 
