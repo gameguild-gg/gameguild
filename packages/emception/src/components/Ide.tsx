@@ -7,7 +7,7 @@ import DockGroupPanel from './DockGroup';
 import FileExplorer from './FileExplorer';
 import type { DockGroup, OpenTab, TabType, TerminalTab, WorkspaceFile } from './ide-types';
 import { DEFAULT_IMAGE, INITIAL_FILES, WORKSPACE_STORAGE_KEY } from './ide-types';
-import { buildFileTree, buildSDL3Args, detectsSDL, inferLanguage, isSourceFile, isTextFile, toWorkspaceFsPath } from './ide-utils';
+import { buildFileTree, buildSDL3Args, buildSDL3ArgsPort, detectsSDL, inferLanguage, isSourceFile, isTextFile, SDL3_JS_LIB_STUB, toWorkspaceFsPath } from './ide-utils';
 import TerminalPanel from './TerminalPanel';
 
 export interface IdeProps {
@@ -325,8 +325,14 @@ export default function Ide({ title = 'WebAssembly C++ Toolchain', manifestUrl =
       // canvas HTML rather than using emscripten's default template.
       const t0 = performance.now();
       if (detectsSDL(files)) {
-        tty.writeLine('\x1b[36mSDL3 detected \u2014 compiling with precompiled libSDL3.a...\x1b[0m');
-        const sdlResult = await client.run('emcc', buildSDL3Args(toWorkspaceFsPath(compileTarget)), {
+        tty.writeLine('\x1b[36mSDL3 detected \u2014 compiling...\x1b[0m');
+
+        // ── Strategy 1: emscripten SDL3 port (-sUSE_SDL=3) ─────────────────
+        // The emscripten port is built cleanly without camera/sensor modules so
+        // there are no pthread EM_ASM undefined-symbol issues.  Try this first;
+        // it works when the port is cached in the emception sysroot.
+        tty.writeLine('\x1b[90m[1/2] Trying emscripten SDL3 port (-sUSE_SDL=3)...\x1b[0m');
+        let sdlResult = await client.run('emcc', buildSDL3ArgsPort(toWorkspaceFsPath(compileTarget)), {
           cwd: '/home/user',
           onStdout: (t: string) => {
             console.log(t);
@@ -337,6 +343,29 @@ export default function Ide({ title = 'WebAssembly C++ Toolchain', manifestUrl =
             tty.writeError(t);
           },
         });
+
+        if (sdlResult.exitCode !== 0) {
+          // ── Strategy 2: precompiled /usr/lib/libSDL3.a ─────────────────────
+          // The CDN libSDL3.a contains camera/sensor .o files with EM_ASM blocks
+          // that reference pthread-only symbols.  Two flags are required:
+          //   [wasm-ld]     -Wl,--unresolved-symbols=ignore-all
+          //   [compiler.js] --js-library __sdl_lib.js (mergeInto stub)
+          // NOTE: --pre-js is NOT sufficient — it is appended after compiler.js
+          // finishes and cannot prevent the "FORWARDED_DATA" assertion failure.
+          tty.writeLine('\x1b[90m[2/2] Port unavailable — falling back to /usr/lib/libSDL3.a + stubs...\x1b[0m');
+          await client.writeFile('/home/user/__sdl_lib.js', new TextEncoder().encode(SDL3_JS_LIB_STUB));
+          sdlResult = await client.run('emcc', buildSDL3Args(toWorkspaceFsPath(compileTarget)), {
+            cwd: '/home/user',
+            onStdout: (t: string) => {
+              console.log(t);
+              tty.writeLine(t);
+            },
+            onStderr: (t: string) => {
+              console.error(t);
+              tty.writeError(t);
+            },
+          });
+        }
         const sdlDuration = ((performance.now() - t0) / 1000).toFixed(2);
         if (sdlResult.exitCode !== 0) {
           setStatus(`SDL3 compilation failed (${sdlDuration}s)`);
@@ -346,13 +375,8 @@ export default function Ide({ title = 'WebAssembly C++ Toolchain', manifestUrl =
         tty.writeLine(`\x1b[32mSDL3 compiled in ${sdlDuration}s — loading...\x1b[0m`);
 
         // Read the self-contained JS (SINGLE_FILE=1 embeds wasm as base64)
-        const jsLines: string[] = [];
-        await client.run('cat', ['cat', '/home/user/main.js'], {
-          cwd: '/home/user',
-          onStdout: (line: string) => jsLines.push(line),
-          onStderr: () => {},
-        });
-        const jsContent = jsLines.join('\n');
+        const jsBytes = await client.getFile('/home/user/main.js');
+        const jsContent = jsBytes ? new TextDecoder().decode(jsBytes) : '';
 
         // Mark canvas tab as SDL-active (stops demo animation, keeps the canvas element visible)
         setFiles((prev) => ({
