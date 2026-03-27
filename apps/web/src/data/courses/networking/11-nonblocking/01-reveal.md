@@ -1,319 +1,3 @@
----
-## Part 6: Thread Safety and Shared-State Ownership
----
-
-## Ownership-First Strategy
-
-Thread safety is easiest when you don't share mutable state:
-
-1. **Single owner**: one thread owns each mutable object
-2. **Message passing**: other threads send requests and receive results
-3. **Immutable snapshots**: workers read copies, not live mutable state
-
----
-
-## When You Must Share
-
-| Mechanism             | Use Case                                   |
-| --------------------- | ------------------------------------------ |
-| `strand` (serialized) | Multiple handlers share one context        |
-| `std::mutex`          | Fine-grained locks — keep sections small   |
-| Lock-free queues      | Producer/consumer handoff without blocking |
-
----
-
-## Common Failure Modes
-
-```mermaid
-flowchart TD
-	R["Race condition"] --> RW["Read/write race on shared container"]
-	R --> TC["Check-then-act race (TOCTOU)"]
-	R --> SD["Shutdown race: thread reads freed memory"]
-	R --> CB["Mixed callback + thread paths, unclear owner"]
-```
-
----
-
-## Code: Serialized Access with `strand` (C++)
-
-```cpp
-#include <boost/asio.hpp>
-
-boost::asio::io_context io;
-auto strand = boost::asio::make_strand(io);
-int shared_counter = 0;
-
-void safe_increment() {
-	boost::asio::post(strand, [] {
-		++shared_counter; // serialized; no mutex needed
-	});
-}
-```
-
----
-
-## Code: Mailbox Pattern (C#)
-
-```csharp
-using System.Collections.Concurrent;
-
-var mailbox = new ConcurrentQueue<Action>();
-int sharedState = 0;
-
-// Worker thread submits mutation request:
-mailbox.Enqueue(() => sharedState++);
-
-// Owner thread drains:
-while (mailbox.TryDequeue(out var op))
-	op(); // only owner thread mutates sharedState
-```
-
----
-
-## Shutdown Order Pattern
-
-```
-1. Signal stop  (stop_token.request_stop / CancellationToken.Cancel)
-2. Wait for workers to drain queues
-3. Join all worker threads
-4. Release resources
-```
-
-Explicit shutdown order prevents read-after-free races.
-
----
-
-## CSI ↔ GPR: Thread Safety
-
-| Context | Pattern                                          |
-| ------- | ------------------------------------------------ |
-| CSI     | Strand-per-connection for async handler safety   |
-| GPR     | Mailbox drained during `Update()` by main thread |
-
----
-
-## Part 7: Modern C++ Concurrency
-
----
-
-## `std::jthread`
-
-Safer than `std::thread`:
-
-- **Auto-joins** on scope exit (no forgotten `join()` calls)
-- Integrates **cooperative cancellation** via `stop_token`
-- Reduces shutdown bugs from detached or abandoned threads
-
----
-
-## Stop Tokens: Cooperative Cancellation
-
-```mermaid
-flowchart LR
-	Owner["Owner calls\nrequest_stop()"] --> ST["stop_token\n(shared state)"]
-	ST --> W1["Worker checks\nstop_requested()"]
-	ST --> W2["Blocking wait\nwith stop callback"]
-```
-
-Workers decide when to stop — the OS doesn't kill them abruptly.
-
----
-
-## Coroutines: Structured Async Flow
-
-`co_await` turns callback chains into linear readable code:
-
-```cpp
-// Callback style:
-async_read(s, buf, [](ec, n) {
-	async_write(s2, buf, [](ec, n) { /* ... */ });
-});
-
-// Coroutine style:
-co_await async_read(s, buf);
-co_await async_write(s2, buf);
-```
-
-Coroutines improve readability — they don't remove the need for ownership or backpressure.
-
----
-
-## Code: `std::jthread` + Stop Token (C++)
-
-```cpp
-#include <thread>
-#include <chrono>
-
-std::jthread worker([](std::stop_token st) {
-	while (!st.stop_requested()) {
-		// periodic work
-		std::this_thread::sleep_for(std::chrono::milliseconds(5));
-	}
-	// auto-joins when worker goes out of scope
-});
-
-// Graceful shutdown:
-worker.request_stop();
-```
-
----
-
-## Code: CancellationToken Async Loop (C#)
-
-```csharp
-var cts = new CancellationTokenSource();
-
-var task = Task.Run(async () =>
-{
-	while (!cts.Token.IsCancellationRequested)
-	{
-		await Task.Delay(5, cts.Token);
-		// periodic async work
-	}
-}, cts.Token);
-
-cts.Cancel();
-await task;
-```
-
----
-
-## Coroutines + `io_context` (C++)
-
-```cpp
-#include <boost/asio.hpp>
-
-boost::asio::awaitable<void> echo(boost::asio::ip::tcp::socket socket) {
-	char buf[512];
-	for (;;) {
-		std::size_t n = co_await socket.async_read_some(
-			boost::asio::buffer(buf), boost::asio::use_awaitable);
-		co_await boost::asio::async_write(
-			socket, boost::asio::buffer(buf, n),
-			boost::asio::use_awaitable);
-	}
-}
-```
-
-Linear async code running on a non-blocking event loop.
-
----
-
-## CSI ↔ GPR: Modern C++
-
-| Feature        | CSI Use                            | GPR Use                                    |
-| -------------- | ---------------------------------- | ------------------------------------------ |
-| `std::jthread` | Worker threads in server daemons   | Background job threads in game engine      |
-| Stop tokens    | Graceful service shutdown          | Scene transition / game exit cleanup       |
-| Coroutines     | Structured async protocol handlers | Async asset load, sequence-safe operations |
-
----
-
-## Part 8: CSI vs GPR Architecture Patterns
-
----
-
-## Same Primitives, Different Priorities
-
-| Primitive          | CSI Priority                    | GPR Priority                            |
-| ------------------ | ------------------------------- | --------------------------------------- |
-| Event loop/reactor | Scale to many clients           | Keep frame loop responsive per tick     |
-| Worker pool        | Throughput + service isolation  | Offload expensive work from main thread |
-| Queue handoff      | Reliability and observability   | Deterministic integration per frame     |
-| Cancellation       | Service shutdown and resilience | Scene/state transition safety           |
-
----
-
-## CSI: Event-Driven Service Architecture
-
-```mermaid
-flowchart LR
-	Net[Network] --> EL["Event loop\n(io_context)"]
-	EL -->|"async read"| H["Handler\n(parse, route)"]
-	H -->|"heavy work"| WP["Worker pool"]
-	WP -->|"result"| EL
-	EL -->|"async write"| Net
-```
-
-One loop handles I/O; workers handle computation. Results flow back via post/channel.
-
----
-
-## GPR: Game Loop Integration
-
-```mermaid
-flowchart LR
-	GL["Game Update()"] -->|"enqueue"| Q["Job / channel"]
-	Q --> BG["Background worker"]
-	BG -->|"result"| R["Result queue"]
-	R -->|"drain each frame"| GL
-```
-
-Background work completes during the frame; main thread applies results at a safe point.
-
----
-
-## Decision Heuristic
-
-> If a task can **block** or is **CPU-heavy**, it must not run on the orchestrator loop.
-
-Move it to a managed worker path. Reintegrate results through explicit queue handoff.
-
----
-
-## Code: Worker Offload (C++ / CSI)
-
-```cpp
-boost::asio::post(worker_pool, [payload, &io]() {
-	auto result = transform(payload);
-	boost::asio::post(io, [result]() {
-		// write response on event-loop context
-	});
-});
-```
-
----
-
-## Code: Frame-Safe Result Apply (C# / GPR)
-
-```csharp
-ConcurrentQueue<Action> mainThreadApply = new();
-
-// Worker thread:
-Task.Run(() =>
-{
-	var delta = ComputeDelta();
-	mainThreadApply.Enqueue(() => ApplyDeltaToGameState(delta));
-});
-
-// Game Update():
-while (mainThreadApply.TryDequeue(out var apply))
-	apply(); // only main thread mutates engine-owned state
-```
-
----
-
-## Summary
-
-| Concept                 | Key Takeaway                                                             |
-| ----------------------- | ------------------------------------------------------------------------ |
-| Concurrency vs parallel | Concurrency manages many tasks; parallelism executes simultaneously      |
-| Blocking socket         | Call waits; simple but stalls responsiveness                             |
-| Non-blocking socket     | Returns immediately; needs readiness + retry strategy                    |
-| Multiplexing            | One loop watches many sockets, acts only on ready ones                   |
-| Reactor pattern         | Register → wait → dispatch → repeat                                      |
-| Worker thread manager   | Main loop orchestrates; workers process; queue handoff for results       |
-| Thread safety           | Prefer ownership boundaries and serialization over ad-hoc locking        |
-| `std::jthread`          | Safer thread lifecycle with cooperative cancellation                     |
-| Coroutines              | Structured async flow without blocking the event loop                    |
-| CSI vs GPR              | Same primitives; CSI optimizes throughput, GPR optimizes frame stability |
-
----
-
-## What's Next
-
-Week 12: Putting it all together — complete non-blocking server and game client using patterns from Weeks 1–11.
-
 # Week 11: Non-Blocking I/O, Parallelism, and Concurrency
 
 ---
@@ -900,3 +584,320 @@ if (results.Reader.TryRead(out var value))
 | Submit work     | `asio::post` to thread pool | Enqueue job before frame work         |
 | Collect results | Completion handler / future | Poll result queue during `Update()`   |
 | Ownership rule  | Handler context owns state  | Main thread owns engine-visible state |
+
+
+---
+## Part 6: Thread Safety and Shared-State Ownership
+---
+
+## Ownership-First Strategy
+
+Thread safety is easiest when you don't share mutable state:
+
+1. **Single owner**: one thread owns each mutable object
+2. **Message passing**: other threads send requests and receive results
+3. **Immutable snapshots**: workers read copies, not live mutable state
+
+---
+
+## When You Must Share
+
+| Mechanism             | Use Case                                   |
+| --------------------- | ------------------------------------------ |
+| `strand` (serialized) | Multiple handlers share one context        |
+| `std::mutex`          | Fine-grained locks — keep sections small   |
+| Lock-free queues      | Producer/consumer handoff without blocking |
+
+---
+
+## Common Failure Modes
+
+```mermaid
+flowchart TD
+	R["Race condition"] --> RW["Read/write race on shared container"]
+	R --> TC["Check-then-act race (TOCTOU)"]
+	R --> SD["Shutdown race: thread reads freed memory"]
+	R --> CB["Mixed callback + thread paths, unclear owner"]
+```
+
+---
+
+## Code: Serialized Access with `strand` (C++)
+
+```cpp
+#include <boost/asio.hpp>
+
+boost::asio::io_context io;
+auto strand = boost::asio::make_strand(io);
+int shared_counter = 0;
+
+void safe_increment() {
+	boost::asio::post(strand, [] {
+		++shared_counter; // serialized; no mutex needed
+	});
+}
+```
+
+---
+
+## Code: Mailbox Pattern (C#)
+
+```csharp
+using System.Collections.Concurrent;
+
+var mailbox = new ConcurrentQueue<Action>();
+int sharedState = 0;
+
+// Worker thread submits mutation request:
+mailbox.Enqueue(() => sharedState++);
+
+// Owner thread drains:
+while (mailbox.TryDequeue(out var op))
+	op(); // only owner thread mutates sharedState
+```
+
+---
+
+## Shutdown Order Pattern
+
+```
+1. Signal stop  (stop_token.request_stop / CancellationToken.Cancel)
+2. Wait for workers to drain queues
+3. Join all worker threads
+4. Release resources
+```
+
+Explicit shutdown order prevents read-after-free races.
+
+---
+
+## CSI ↔ GPR: Thread Safety
+
+| Context | Pattern                                          |
+| ------- | ------------------------------------------------ |
+| CSI     | Strand-per-connection for async handler safety   |
+| GPR     | Mailbox drained during `Update()` by main thread |
+
+---
+
+## Part 7: Modern C++ Concurrency
+
+---
+
+## `std::jthread`
+
+Safer than `std::thread`:
+
+- **Auto-joins** on scope exit (no forgotten `join()` calls)
+- Integrates **cooperative cancellation** via `stop_token`
+- Reduces shutdown bugs from detached or abandoned threads
+
+---
+
+## Stop Tokens: Cooperative Cancellation
+
+```mermaid
+flowchart LR
+	Owner["Owner calls\nrequest_stop()"] --> ST["stop_token\n(shared state)"]
+	ST --> W1["Worker checks\nstop_requested()"]
+	ST --> W2["Blocking wait\nwith stop callback"]
+```
+
+Workers decide when to stop — the OS doesn't kill them abruptly.
+
+---
+
+## Coroutines: Structured Async Flow
+
+`co_await` turns callback chains into linear readable code:
+
+```cpp
+// Callback style:
+async_read(s, buf, [](ec, n) {
+	async_write(s2, buf, [](ec, n) { /* ... */ });
+});
+
+// Coroutine style:
+co_await async_read(s, buf);
+co_await async_write(s2, buf);
+```
+
+Coroutines improve readability — they don't remove the need for ownership or backpressure.
+
+---
+
+## Code: `std::jthread` + Stop Token (C++)
+
+```cpp
+#include <thread>
+#include <chrono>
+
+std::jthread worker([](std::stop_token st) {
+	while (!st.stop_requested()) {
+		// periodic work
+		std::this_thread::sleep_for(std::chrono::milliseconds(5));
+	}
+	// auto-joins when worker goes out of scope
+});
+
+// Graceful shutdown:
+worker.request_stop();
+```
+
+---
+
+## Code: CancellationToken Async Loop (C#)
+
+```csharp
+var cts = new CancellationTokenSource();
+
+var task = Task.Run(async () =>
+{
+	while (!cts.Token.IsCancellationRequested)
+	{
+		await Task.Delay(5, cts.Token);
+		// periodic async work
+	}
+}, cts.Token);
+
+cts.Cancel();
+await task;
+```
+
+---
+
+## Coroutines + `io_context` (C++)
+
+```cpp
+#include <boost/asio.hpp>
+
+boost::asio::awaitable<void> echo(boost::asio::ip::tcp::socket socket) {
+	char buf[512];
+	for (;;) {
+		std::size_t n = co_await socket.async_read_some(
+			boost::asio::buffer(buf), boost::asio::use_awaitable);
+		co_await boost::asio::async_write(
+			socket, boost::asio::buffer(buf, n),
+			boost::asio::use_awaitable);
+	}
+}
+```
+
+Linear async code running on a non-blocking event loop.
+
+---
+
+## CSI ↔ GPR: Modern C++
+
+| Feature        | CSI Use                            | GPR Use                                    |
+| -------------- | ---------------------------------- | ------------------------------------------ |
+| `std::jthread` | Worker threads in server daemons   | Background job threads in game engine      |
+| Stop tokens    | Graceful service shutdown          | Scene transition / game exit cleanup       |
+| Coroutines     | Structured async protocol handlers | Async asset load, sequence-safe operations |
+
+---
+
+## Part 8: CSI vs GPR Architecture Patterns
+
+---
+
+## Same Primitives, Different Priorities
+
+| Primitive          | CSI Priority                    | GPR Priority                            |
+| ------------------ | ------------------------------- | --------------------------------------- |
+| Event loop/reactor | Scale to many clients           | Keep frame loop responsive per tick     |
+| Worker pool        | Throughput + service isolation  | Offload expensive work from main thread |
+| Queue handoff      | Reliability and observability   | Deterministic integration per frame     |
+| Cancellation       | Service shutdown and resilience | Scene/state transition safety           |
+
+---
+
+## CSI: Event-Driven Service Architecture
+
+```mermaid
+flowchart LR
+	Net[Network] --> EL["Event loop\n(io_context)"]
+	EL -->|"async read"| H["Handler\n(parse, route)"]
+	H -->|"heavy work"| WP["Worker pool"]
+	WP -->|"result"| EL
+	EL -->|"async write"| Net
+```
+
+One loop handles I/O; workers handle computation. Results flow back via post/channel.
+
+---
+
+## GPR: Game Loop Integration
+
+```mermaid
+flowchart LR
+	GL["Game Update()"] -->|"enqueue"| Q["Job / channel"]
+	Q --> BG["Background worker"]
+	BG -->|"result"| R["Result queue"]
+	R -->|"drain each frame"| GL
+```
+
+Background work completes during the frame; main thread applies results at a safe point.
+
+---
+
+## Decision Heuristic
+
+> If a task can **block** or is **CPU-heavy**, it must not run on the orchestrator loop.
+
+Move it to a managed worker path. Reintegrate results through explicit queue handoff.
+
+---
+
+## Code: Worker Offload (C++ / CSI)
+
+```cpp
+boost::asio::post(worker_pool, [payload, &io]() {
+	auto result = transform(payload);
+	boost::asio::post(io, [result]() {
+		// write response on event-loop context
+	});
+});
+```
+
+---
+
+## Code: Frame-Safe Result Apply (C# / GPR)
+
+```csharp
+ConcurrentQueue<Action> mainThreadApply = new();
+
+// Worker thread:
+Task.Run(() =>
+{
+	var delta = ComputeDelta();
+	mainThreadApply.Enqueue(() => ApplyDeltaToGameState(delta));
+});
+
+// Game Update():
+while (mainThreadApply.TryDequeue(out var apply))
+	apply(); // only main thread mutates engine-owned state
+```
+
+---
+
+## Summary
+
+| Concept                 | Key Takeaway                                                             |
+| ----------------------- | ------------------------------------------------------------------------ |
+| Concurrency vs parallel | Concurrency manages many tasks; parallelism executes simultaneously      |
+| Blocking socket         | Call waits; simple but stalls responsiveness                             |
+| Non-blocking socket     | Returns immediately; needs readiness + retry strategy                    |
+| Multiplexing            | One loop watches many sockets, acts only on ready ones                   |
+| Reactor pattern         | Register → wait → dispatch → repeat                                      |
+| Worker thread manager   | Main loop orchestrates; workers process; queue handoff for results       |
+| Thread safety           | Prefer ownership boundaries and serialization over ad-hoc locking        |
+| `std::jthread`          | Safer thread lifecycle with cooperative cancellation                     |
+| Coroutines              | Structured async flow without blocking the event loop                    |
+| CSI vs GPR              | Same primitives; CSI optimizes throughput, GPR optimizes frame stability |
+
+---
+
+## What's Next
+
+Week 12: Putting it all together — complete non-blocking server and game client using patterns from Weeks 1–11.
