@@ -91,45 +91,12 @@ function DockGroupPanelInner({
     onEditorMount: OnMount;
     onEditorChange: (path: string, value: string) => void;
 }) {
-    // Canvas animation when a canvas tab is active and SDL is not running
     const animFrameRef = useRef(0);
+    // Cancel any lingering RAF when SDL takes over (content becomes truthy)
     useEffect(() => {
-        if (localFile?.type !== 'canvas' || localFile.content || !canvasRef.current) return;
-
-        const canvas = canvasRef.current;
-        const ctx = canvas.getContext('2d');
-        if (!ctx) return;
-
-        const start = performance.now();
-        const draw = (t: number) => {
-            const elapsed = (t - start) / 1000;
-            const w = canvas.width;
-            const h = canvas.height;
-
-            ctx.fillStyle = '#11111b';
-            ctx.fillRect(0, 0, w, h);
-            for (let x = 0; x < w; x += 40) ctx.fillRect(x, 0, 1, h);
-            for (let y = 0; y < h; y += 40) ctx.fillRect(0, y, w, 1);
-
-            const px = 80 + (Math.sin(elapsed * 1.2) + 1) * 0.5 * (w - 160);
-            const py = 80 + (Math.cos(elapsed * 1.4) + 1) * 0.5 * (h - 160);
-
-            ctx.fillStyle = '#89b4fa';
-            ctx.beginPath();
-            ctx.arc(px, py, 32, 0, Math.PI * 2);
-            ctx.fill();
-
-            ctx.fillStyle = '#cdd6f4';
-            ctx.font = '16px Menlo, Monaco, monospace';
-            ctx.fillText('SDL Canvas Preview (dockable tab)', 16, 28);
-            ctx.fillStyle = '#a6adc8';
-            ctx.fillText(`time: ${elapsed.toFixed(2)}s`, 16, 52);
-
-            animFrameRef.current = window.requestAnimationFrame(draw);
-        };
-        animFrameRef.current = window.requestAnimationFrame(draw);
-        return () => window.cancelAnimationFrame(animFrameRef.current);
-    }, [localFile?.type, localFile?.content, canvasRef]);
+        if (localFile?.type !== 'canvas' || !localFile.content) return;
+        window.cancelAnimationFrame(animFrameRef.current);
+    }, [localFile?.type, localFile?.content]);
 
     return (
         <div
@@ -253,6 +220,7 @@ function DockGroupPanelInner({
                     <div data-testid="editor-pane" style={{ height: '100%' }}>
                         <Editor
                             height="100%"
+                            path={localFile.path}
                             language={inferLanguage(localFile.path)}
                             value={localFile.content}
                             theme="vs-dark"
@@ -290,10 +258,38 @@ function DockGroupPanelInner({
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
+                            position: 'relative',
                         }}
                     >
-                        {/* SDL renders directly into this canvas via window.Module.canvas */}
-                        <canvas data-testid="sdl-canvas" ref={canvasRef} width={900} height={460} style={{ width: '100%', height: '100%' }} />
+                        {/* SDL renders into this canvas — id="canvas" is required by SDL3's */}
+                        {/* Emscripten backend default selector (SDL_HINT_EMSCRIPTEN_CANVAS_SELECTOR). */}
+                        <canvas
+                            id="canvas"
+                            data-testid="sdl-canvas"
+                            ref={canvasRef}
+                            style={{ width: '100%', height: '100%', display: localFile.content ? 'block' : 'none' }}
+                        />
+                        {!localFile.content && (
+                            <div
+                                style={{
+                                    position: 'absolute',
+                                    inset: 0,
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    color: '#6c7086',
+                                    fontFamily: 'Menlo, Monaco, "Courier New", monospace',
+                                    gap: '0.6rem',
+                                    pointerEvents: 'none',
+                                    userSelect: 'none',
+                                }}
+                            >
+                                <span style={{ fontSize: '2.5rem' }}>🎮</span>
+                                <span style={{ fontSize: '1rem', color: '#a6adc8' }}>SDL Canvas</span>
+                                <span style={{ fontSize: '0.8rem' }}>Click <strong style={{ color: '#a6e3a1' }}>Compile &amp; Run</strong> to build and render the SDL3 demo</span>
+                            </div>
+                        )}
                     </div>
                 )}
             </div>

@@ -13,13 +13,14 @@ import fs from 'fs';
 import os from 'os';
 import path from 'path';
 import shell from 'shelljs';
-import { setupEmsdk } from './lib/emsdk.ts';
+import { ensureSdl3CmakeVersionShim, setupEmsdk } from './lib/emsdk.ts';
 
 const ROOT = process.cwd();
 shell.config.fatal = true;
 
 const EMSDK_VERSION = process.env.EMSDK_VERSION || 'latest';
 setupEmsdk(EMSDK_VERSION);
+ensureSdl3CmakeVersionShim();
 
 const CONCURRENCY = os.cpus().length;
 const USERLAND_DIR = path.join(ROOT, 'userland', 'sdl3-image');

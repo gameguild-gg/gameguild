@@ -7,7 +7,7 @@ import DockGroupPanel from './DockGroup';
 import FileExplorer from './FileExplorer';
 import type { DockGroup, OpenTab, TabType, TerminalTab, WorkspaceFile } from './ide-types';
 import { DEFAULT_IMAGE, INITIAL_FILES, WORKSPACE_STORAGE_KEY } from './ide-types';
-import { buildFileTree, buildSDL3Args, buildSDL3ArgsPort, detectsSDL, inferLanguage, isSourceFile, isTextFile, SDL3_JS_LIB_STUB, toWorkspaceFsPath } from './ide-utils';
+import { buildFileTree, buildSDL3ArgsPort, detectsSDL, inferLanguage, isSourceFile, isTextFile, makeWasiStubs, toWorkspaceFsPath } from './ide-utils';
 import TerminalPanel from './TerminalPanel';
 
 export interface IdeProps {
@@ -20,6 +20,7 @@ export default function Ide({ title = 'WebAssembly C++ Toolchain', manifestUrl =
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const orchestratorRef = useRef<WorkerBootResult | null>(null);
   const xtermRef = useRef<Terminal | null>(null);
+  const terminalLogRef = useRef<HTMLPreElement | null>(null);
   /** Tracks blob URLs created for SDL output so they can be revoked on reset/unmount */
   const sdlBlobUrlsRef = useRef<string[]>([]);
   /** Tracks the injected SDL script element for cleanup on recompile/reset/unmount */
@@ -107,6 +108,25 @@ export default function Ide({ title = 'WebAssembly C++ Toolchain', manifestUrl =
         setStatus('Booting toolchain...');
         const result = await bootInWorker(manifestUrl, xterm);
         if (mounted) {
+          // Mirror tty output to a hidden DOM element for Playwright E2E tests.
+          // eslint-disable-next-line no-control-regex
+          const stripAnsi = (s: string) => s.replace(/\u001b\[[\d;]*m/g, '');
+          const log = terminalLogRef;
+          const origWriteLine = result.tty.writeLine.bind(result.tty);
+          const origWriteError = result.tty.writeError.bind(result.tty);
+          const origClear = result.tty.clear.bind(result.tty);
+          result.tty.writeLine = (text: string) => {
+            origWriteLine(text);
+            if (log.current) log.current.textContent += stripAnsi(text) + '\n';
+          };
+          result.tty.writeError = (text: string) => {
+            origWriteError(text);
+            if (log.current) log.current.textContent += stripAnsi(text) + '\n';
+          };
+          result.tty.clear = () => {
+            origClear();
+            if (log.current) log.current.textContent = '';
+          };
           orchestratorRef.current = result;
           setStatus('Ready');
           setIsReady(true);
@@ -283,8 +303,10 @@ export default function Ide({ title = 'WebAssembly C++ Toolchain', manifestUrl =
     });
   }, []);
 
-  const handleEditorDidMount: OnMount = (editor) => {
+  const handleEditorDidMount: OnMount = (editor, monaco) => {
     editorRef.current = editor;
+    // Expose for e2e tests (e.g. Playwright can read file content via window.monaco)
+    (window as unknown as Record<string, unknown>).monaco = monaco;
   };
 
   const handleEditorChange = useCallback((path: string, value: string) => {
@@ -320,19 +342,14 @@ export default function Ide({ title = 'WebAssembly C++ Toolchain', manifestUrl =
       }
 
       // ── SDL3 path ─────────────────────────────────────────────────
-      // Detect SDL3 includes — links against precompiled /usr/lib/libSDL3.a.
-      // Output to main.js (SINGLE_FILE=1) so we can wrap it in our own
-      // canvas HTML rather than using emscripten's default template.
+      // Detect SDL3 includes — compiles to main.wasm (no JS glue generation).
+      // The pre-built sdl3-runtime.mjs shell loaded dynamically from the VFS
+      // provides all WebGL + emscripten bindings and runs the WASM binary.
       const t0 = performance.now();
       if (detectsSDL(files)) {
         tty.writeLine('\x1b[36mSDL3 detected \u2014 compiling...\x1b[0m');
 
-        // ── Strategy 1: emscripten SDL3 port (-sUSE_SDL=3) ─────────────────
-        // The emscripten port is built cleanly without camera/sensor modules so
-        // there are no pthread EM_ASM undefined-symbol issues.  Try this first;
-        // it works when the port is cached in the emception sysroot.
-        tty.writeLine('\x1b[90m[1/2] Trying emscripten SDL3 port (-sUSE_SDL=3)...\x1b[0m');
-        let sdlResult = await client.run('emcc', buildSDL3ArgsPort(toWorkspaceFsPath(compileTarget)), {
+        const sdlResult = await client.run('emcc', buildSDL3ArgsPort(toWorkspaceFsPath(compileTarget)), {
           cwd: '/home/user',
           onStdout: (t: string) => {
             console.log(t);
@@ -343,29 +360,6 @@ export default function Ide({ title = 'WebAssembly C++ Toolchain', manifestUrl =
             tty.writeError(t);
           },
         });
-
-        if (sdlResult.exitCode !== 0) {
-          // ── Strategy 2: precompiled /usr/lib/libSDL3.a ─────────────────────
-          // The CDN libSDL3.a contains camera/sensor .o files with EM_ASM blocks
-          // that reference pthread-only symbols.  Two flags are required:
-          //   [wasm-ld]     -Wl,--unresolved-symbols=ignore-all
-          //   [compiler.js] --js-library __sdl_lib.js (mergeInto stub)
-          // NOTE: --pre-js is NOT sufficient — it is appended after compiler.js
-          // finishes and cannot prevent the "FORWARDED_DATA" assertion failure.
-          tty.writeLine('\x1b[90m[2/2] Port unavailable — falling back to /usr/lib/libSDL3.a + stubs...\x1b[0m');
-          await client.writeFile('/home/user/__sdl_lib.js', new TextEncoder().encode(SDL3_JS_LIB_STUB));
-          sdlResult = await client.run('emcc', buildSDL3Args(toWorkspaceFsPath(compileTarget)), {
-            cwd: '/home/user',
-            onStdout: (t: string) => {
-              console.log(t);
-              tty.writeLine(t);
-            },
-            onStderr: (t: string) => {
-              console.error(t);
-              tty.writeError(t);
-            },
-          });
-        }
         const sdlDuration = ((performance.now() - t0) / 1000).toFixed(2);
         if (sdlResult.exitCode !== 0) {
           setStatus(`SDL3 compilation failed (${sdlDuration}s)`);
@@ -374,16 +368,32 @@ export default function Ide({ title = 'WebAssembly C++ Toolchain', manifestUrl =
         }
         tty.writeLine(`\x1b[32mSDL3 compiled in ${sdlDuration}s — loading...\x1b[0m`);
 
-        // Read the self-contained JS (SINGLE_FILE=1 embeds wasm as base64)
-        const jsBytes = await client.getFile('/home/user/main.js');
-        const jsContent = jsBytes ? new TextDecoder().decode(jsBytes) : '';
+        // Read the compiled WASM binary from the VFS.
+        // emcc outputs both main.js and main.wasm when targeting .js;
+        // only main.wasm is used — the generated JS glue is discarded.
+        const wasmBytes = await client.getFile('/home/user/main.wasm');
+        if (!wasmBytes) {
+          tty.writeError('main.wasm not found — emcc may have failed to produce it alongside main.js');
+          return;
+        }
 
-        // Mark canvas tab as SDL-active (stops demo animation, keeps the canvas element visible)
+        // Read the pre-built SDL3 JS runtime shell from the VFS
+        const runtimeBytes = await client.getFile('/usr/lib/emscripten/sdl3-runtime.mjs');
+        if (!runtimeBytes) {
+          tty.writeError('sdl3-runtime.mjs not found in VFS — rebuild the CDN bundle');
+          return;
+        }
+
+        // Mark canvas tab as SDL-active (keeps the canvas element visible)
         setFiles((prev) => ({
           ...prev,
           '/runtime/sdl-canvas': { ...prev['/runtime/sdl-canvas'], content: 'sdl' },
         }));
         ensureOpenTab('/runtime/sdl-canvas', 'right');
+        // Restore active tab to the source file so the compile button stays enabled
+        // for re-compile.  ensureOpenTab always sets the new tab as active, which
+        // would flip activeFile to type 'canvas', disabling the compile button.
+        setActiveTabId(`tab:${compileTarget}`);
 
         // Wait for React to flush + browser to paint so canvasRef.current is ready
         await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
@@ -394,31 +404,176 @@ export default function Ide({ title = 'WebAssembly C++ Toolchain', manifestUrl =
           return;
         }
 
-        // Reset canvas to clear any previous SDL frame (also destroys old WebGL context)
-        canvas.width = 800;
-        canvas.height = 600;
-
-        // Remove previous SDL script tag and blobs
+        // Revoke previous SDL blob URLs
         sdlScriptRef.current?.remove();
         sdlBlobUrlsRef.current.forEach((url) => URL.revokeObjectURL(url));
         sdlBlobUrlsRef.current = [];
 
-        // Point emscripten Module at the IDE canvas tab element
-        (window as Window & { Module?: unknown }).Module = {
-          canvas,
-          print: (line: string) => tty.writeLine(line),
-          printErr: (line: string) => tty.writeError(line),
-        };
+        // Patch sdl3-runtime.mjs before creating the blob URL.
+        // The pre-built runtime's ASM_CONSTS table keys are memory offsets from
+        // the stub WASM it was compiled with.  User WASM has different offsets.
+        // When a lookup misses, read the JS body from WASM linear memory via
+        // UTF8ToString (which is in-scope inside the module closure) and eval it —
+        // the resulting function captures the module's closure so UTF8ToString,
+        // Module, HEAPU8, etc. are all accessible inside the EM_ASM body.
+        let runtimeText = new TextDecoder().decode(runtimeBytes instanceof Uint8Array ? runtimeBytes : new Uint8Array(runtimeBytes as ArrayBuffer));
+        const emAsmFallback = (varName: string) =>
+          `if(!ASM_CONSTS[${varName}]){var _s=UTF8ToString(${varName});` + `ASM_CONSTS[${varName}]=eval("(function($0,$1,$2,$3,$4,$5,$6,$7,$8,$9){"+_s+"})");}`;
+        // Also patch assignWasmExports to fall back to SDL_malloc/SDL_free when
+        // the user's standalone WASM doesn't export plain malloc/free, and patch
+        // stringToNewUTF8 to use the best available allocator.
+        // _free is used in sdl3-runtime.mjs ASM_CONSTS but never declared in its var list.
+        // ES modules run in strict mode, so an undeclared assignment throws ReferenceError.
+        // Declare it at module scope and assign it from SDL_free.
+        runtimeText = runtimeText
+          .replace('var _main,_SDL_free,', 'var _free,_main,_SDL_free,')
+          .replace('_malloc=wasmExports["malloc"]', '_malloc=wasmExports["malloc"]||wasmExports["SDL_malloc"]')
+          .replace(
+            '_SDL_free=Module["_SDL_free"]=wasmExports["SDL_free"]',
+            '_SDL_free=Module["_SDL_free"]=wasmExports["SDL_free"];_free=wasmExports["free"]||_SDL_free',
+          )
 
-        const jsBlob = new Blob([jsContent], { type: 'text/javascript' });
-        const jsBlobUrl = URL.createObjectURL(jsBlob);
-        sdlBlobUrlsRef.current = [jsBlobUrl];
+          .replace(
+            'var stringToNewUTF8=str=>{var size=lengthBytesUTF8(str)+1;var ret=_malloc(size)',
+            'var stringToNewUTF8=str=>{var size=lengthBytesUTF8(str)+1;var allocFn=_malloc||_SDL_malloc;var ret=allocFn(size)',
+          );
+        const ORIG_RUNEMASM = 'var runEmAsmFunction=(code,sigPtr,argbuf)=>{var args=readEmAsmArgs(sigPtr,argbuf);return ASM_CONSTS[code](...args)}';
+        const ORIG_RUNMTEMASM =
+          'var runMainThreadEmAsm=(emAsmAddr,sigPtr,argbuf,sync)=>{var args=readEmAsmArgs(sigPtr,argbuf);return ASM_CONSTS[emAsmAddr](...args)}';
+        if (runtimeText.includes(ORIG_RUNEMASM)) {
+          runtimeText = runtimeText.replace(
+            ORIG_RUNEMASM,
+            `var runEmAsmFunction=(code,sigPtr,argbuf)=>{var args=readEmAsmArgs(sigPtr,argbuf);${emAsmFallback('code')}return ASM_CONSTS[code](...args)}`,
+          );
+        } else {
+          tty.writeError('sdl3-runtime patch: runEmAsmFunction not found — EM_ASM may fail');
+        }
+        if (runtimeText.includes(ORIG_RUNMTEMASM)) {
+          runtimeText = runtimeText.replace(
+            ORIG_RUNMTEMASM,
+            `var runMainThreadEmAsm=(emAsmAddr,sigPtr,argbuf,sync)=>{var args=readEmAsmArgs(sigPtr,argbuf);${emAsmFallback('emAsmAddr')}return ASM_CONSTS[emAsmAddr](...args)}`,
+          );
+        }
+        // Create a blob URL for the ES6 runtime module so we can dynamically import it
+        const runtimeBlob = new Blob([new TextEncoder().encode(runtimeText)], { type: 'application/javascript' });
+        const runtimeUrl = URL.createObjectURL(runtimeBlob);
+        sdlBlobUrlsRef.current = [runtimeUrl];
 
-        const script = document.createElement('script');
-        script.src = jsBlobUrl;
-        sdlScriptRef.current = script;
-        document.body.appendChild(script);
+        // Dynamically import the MODULARIZE ES6 factory and instantiate with WASM + canvas
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { default: createSDL3Module } = await import(/* @vite-ignore */ runtimeUrl as any);
 
+        // The user's WASM is compiled as standalone/WASI (-o main.wasm) because
+        // emcc's full JS-generation step (compiler.mjs) is not available in this
+        // environment.  Standalone WASM imports from wasi_snapshot_preview1 which
+        // sdl3-runtime.mjs doesn't provide.  We inject stubs via instantiateWasm
+        // so the user binary can be instantiated through the pre-built SDL3 runtime.
+        const wasmMemory: WebAssembly.Memory | null = null;
+        const wasiStubs = makeWasiStubs(
+          () => wasmMemory,
+          (s: string) => tty.writeLine(s),
+        );
+
+        let sdlLoadOk = true;
+        const moduleTimeout = new Promise<never>((_, reject) => setTimeout(() => reject(new Error('SDL3 module load timeout (30s)')), 30_000));
+        await Promise.race([
+          createSDL3Module({
+            canvas: canvas,
+            wasmBinary: wasmBytes,
+            // When loaded from a blob URL, import.meta.url is a blob URL and
+            // new URL('sdl3-runtime.wasm', blobUrl) throws "Invalid URL".
+            // Providing locateFile makes findWasmBinary() return the plain
+            // filename string; getBinarySync then uses the wasmBinary buffer
+            // directly because file == wasmBinaryFile && wasmBinary is truthy.
+            locateFile: (filename: string) => filename,
+            // Intercept WebAssembly instantiation to inject WASI stubs alongside
+            // the emscripten env imports provided by sdl3-runtime.mjs.
+            // emscripten_notify_memory_growth may be absent from the pre-built
+            // runtime's wasmImports (DCE removed it since the stub never grows
+            // memory), but user WASM compiled with ALLOW_MEMORY_GROWTH=1 imports
+            // it.  WebAssembly.Memory.buffer is always current after a grow, so
+            // a no-op handler is safe for canvas-only SDL3 apps.
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            instantiateWasm(info: any, receiveInstance: (inst: WebAssembly.Instance) => void) {
+              const env = {
+                ...info.env,
+                emscripten_notify_memory_growth: () => {
+                  // wasmMemory.buffer is updated automatically after memory.grow();
+                  // our WASI stubs re-read .buffer on every call so no action needed.
+                },
+              };
+              const imports = { ...info, env, wasi_snapshot_preview1: wasiStubs };
+              tty.writeLine('\x1b[90mSDL3: instantiating WASM…\x1b[0m');
+              WebAssembly.instantiate(new Uint8Array(wasmBytes as unknown as ArrayBuffer), imports)
+                .then((result) => {
+                  tty.writeLine('\x1b[90mSDL3: WASM ok, patching exports…\x1b[0m');
+                  // Standalone WASM (-o main.wasm) calls __wasm_call_ctors internally
+                  // from _start, so it is not re-exported as a standalone symbol.
+                  // The sdl3-runtime.mjs JS glue calls wasmExports.__wasm_call_ctors()
+                  // directly after instantiation.  WebAssembly.Instance.exports is
+                  // non-extensible, so we wrap it in a Proxy that fills in the gap.
+                  const origExports = result.instance.exports;
+                  const patchedExports =
+                    typeof origExports['__wasm_call_ctors'] === 'function' && typeof (origExports as Record<string, unknown>)['main'] === 'function'
+                      ? origExports
+                      : new Proxy(origExports, {
+                        get(target, prop) {
+                          // __wasm_call_ctors: called internally from _start in
+                          // standalone mode, so it is not re-exported.
+                          if (prop === '__wasm_call_ctors' && !(prop in target)) return () => { };
+                          // main: Emscripten 3.x exports look for wasmExports["main"]
+                          // (no underscore prefix). Standalone WASM uses _start (WASI
+                          // entry) instead. emscripten_set_main_loop with
+                          // simulate_infinite_loop unwinds via a thrown 'unwind' string;
+                          // proc_exit(0) also exits — absorb both so the animation-frame
+                          // loop keeps running.
+                          if ((prop === 'main' || prop === '_main') && !(prop in target)) {
+                            return () => {
+                              try {
+                                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                                (target as any)['_start']?.();
+                              } catch (e: unknown) {
+                                // 'unwind' string = emscripten_set_main_loop unwind (normal, loop is live).
+                                // Error with proc_exit message = SDL init failure — log it.
+                                const msg = e instanceof Error ? e.message : String(e);
+                                if (msg !== 'unwind' && !msg.startsWith('SDL3 proc_exit(0)')) {
+                                  tty.writeError(`SDL3 init error: ${msg}`);
+                                }
+                              }
+                              return 0;
+                            };
+                          }
+                          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                          return (target as any)[prop];
+                        },
+                      });
+                  const patchedInstance = new Proxy(result.instance, {
+                    get(target, prop) {
+                      if (prop === 'exports') return patchedExports;
+                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                      return (target as any)[prop];
+                    },
+                  });
+                  tty.writeLine('\x1b[90mSDL3: calling receiveInstance…\x1b[0m');
+                  receiveInstance(patchedInstance);
+                })
+                .catch((err: unknown) => {
+                  tty.writeError(`SDL3 WASM instantiation failed: ${err}`);
+                  setStatus('SDL3 load failed');
+                });
+              return {};
+            },
+            print: (line: string) => tty.writeLine(line),
+            printErr: (line: string) => tty.writeError(line),
+          }),
+          moduleTimeout,
+        ]).catch((e: unknown) => {
+          sdlLoadOk = false;
+          tty.writeError(`SDL3 module error: ${e}`);
+          setStatus('SDL3 load failed');
+        });
+
+        if (!sdlLoadOk) return;
         setStatus(`SDL3 done (${((performance.now() - tTotal) / 1000).toFixed(1)}s)`);
         tty.writeLine('\x1b[32mSDL3 rendering in canvas tab →\x1b[0m');
         return;
@@ -504,6 +659,8 @@ export default function Ide({ title = 'WebAssembly C++ Toolchain', manifestUrl =
 
   return (
     <div className="emception-ide" style={{ display: 'flex', flexDirection: 'column', height: '100%', width: '100%', fontFamily: 'system-ui, sans-serif' }}>
+      {/* Hidden log for Playwright E2E assertions — not visible to users */}
+      <pre data-testid="terminal" ref={terminalLogRef} hidden aria-hidden="true" style={{ display: 'none' }} />
       {/* ── Title bar ── */}
       <header
         style={{

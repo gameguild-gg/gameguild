@@ -267,6 +267,24 @@ async function main() {
     // the relevant group is downloaded on demand.
     const CACHE_PREFIX = '/usr/lib/emscripten/cache-lib/';
 
+    // SDL3 pre-assignment — must run before the cache-lib sweep (2a) and the
+    // usr-include prefix sweep (2b) so all SDL3 artefacts land in a single
+    // dedicated bundle rather than being split across cache-misc / usr-include.
+    const sdl3PrePrefixes = [
+        `${CACHE_PREFIX}wasm32-emscripten/libSDL3`, // libSDL3.a from emsdk port
+        '/usr/include/SDL3/',                        // SDL3 public headers
+        '/usr/lib/emscripten_ports/sdl3/',           // SDL3 port manifests
+    ];
+    const sdl3PreFiles: string[] = [];
+    for (const p of allPaths) {
+        if (assigned.has(p)) continue;
+        if (sdl3PrePrefixes.some((pfx) => p.startsWith(pfx))) {
+            sdl3PreFiles.push(p);
+            assigned.add(p);
+        }
+    }
+    bundleFiles.set('sdl3', sdl3PreFiles);
+
     // Libraries included by the default emcc link flags
     const coreLibs = new Set([
         'libc.a',
@@ -340,7 +358,9 @@ async function main() {
         { name: 'python-runtime', prefixes: pythonPrefixes, outputPath: '/usr/lib/python-runtime.tar.br' },
         { name: 'usr-bin', prefixes: ['/usr/bin/', '/etc/'], outputPath: '/usr/bin.tar.br' },
         { name: 'libcurl', prefixes: ['/usr/lib/libcurl'], outputPath: '/usr/lib/libcurl.tar.br' },
-        { name: 'sdl3', prefixes: ['/usr/lib/libSDL3.', '/usr/include/SDL3/'], outputPath: '/usr/lib/sdl3.tar.br' },
+        // Note: lib, headers and port manifests are pre-assigned above so these prefixes
+        // act only as documentation / forward-compat fallback (first-match wins, assigned files are skipped).
+        { name: 'sdl3', prefixes: ['/usr/include/SDL3/', '/usr/lib/emscripten_ports/sdl3/'], outputPath: '/usr/lib/sdl3.tar.br' },
         { name: 'sdl3-image', prefixes: ['/usr/lib/libSDL3_image', '/usr/include/SDL3_image/'], outputPath: '/usr/lib/sdl3-image.tar.br' },
         { name: 'sdl3-ttf', prefixes: ['/usr/lib/libSDL3_ttf', '/usr/lib/libfreetype', '/usr/include/SDL3_ttf/'], outputPath: '/usr/lib/sdl3-ttf.tar.br' },
         { name: 'sdl3-mixer', prefixes: ['/usr/lib/libSDL3_mixer', '/usr/include/SDL3_mixer/'], outputPath: '/usr/lib/sdl3-mixer.tar.br' },
@@ -350,7 +370,8 @@ async function main() {
     ];
 
     for (const { name } of prefixGroups) {
-        bundleFiles.set(name, []);
+        // Guard: do not overwrite bundles that were pre-assigned above (e.g. sdl3).
+        if (!bundleFiles.has(name)) bundleFiles.set(name, []);
     }
 
     for (const p of allPaths) {
