@@ -875,6 +875,14 @@ sys.excepthook = _hook
       '/home/user/.emscripten_cache/sysroot/include',
       '/usr/include',
     );
+    // Port source download markers — CACHE = ~/.emscripten_cache, so
+    // PORTS = ~/.emscripten_cache/ports.  Map to a CDN-served read-only path
+    // so fetch_port_artifact's up_to_date() check returns True without
+    // triggering cache.lock() which raises FROZEN_CACHE.
+    pathAliases.set(
+      '/home/user/.emscripten_cache/ports',
+      '/usr/lib/emscripten_ports',
+    );
 
     // Mount VFSFS at system paths — all file access goes through VFS + JSPI
     // /home is included so user files (e.g. main.cpp) written by the IDE are

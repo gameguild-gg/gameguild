@@ -87,6 +87,23 @@ if (fs.existsSync(filelockPath)) {
     console.log('>> Patched filelock.py to suppress soft lock warning.');
 }
 
+// Patch building.py: when compiler.mjs is skipped in the browser toolchain,
+// external_symbols is empty, which causes lld_flags_for_executable to skip
+// both the #STUB library and --import-undefined, making wasm-ld fail on
+// emscripten JS library symbols (emscripten_sleep, emscripten_get_now, etc.).
+// Always add --import-undefined when external_symbols is empty so wasm-ld
+// treats unmapped JS-library imports as host imports from the JS glue.
+const buildingPath = path.join(SYSROOT, 'usr/lib/emscripten/tools/building.py');
+if (fs.existsSync(buildingPath)) {
+    let buildingSrc = fs.readFileSync(buildingPath, 'utf-8');
+    buildingSrc = buildingSrc.replace(
+        '  if not settings.ERROR_ON_UNDEFINED_SYMBOLS:\n    cmd.append(\'--import-undefined\')',
+        '  if not external_symbols or not settings.ERROR_ON_UNDEFINED_SYMBOLS:\n    cmd.append(\'--import-undefined\')',
+    );
+    fs.writeFileSync(buildingPath, buildingSrc);
+    console.log('>> Patched building.py: --import-undefined when external_symbols is empty.');
+}
+
 // system/include directory — copy to both /usr/include/ (traditional Unix
 // location) AND /usr/lib/emscripten/system/include/ (where emcc's
 // ensure_sysroot / install_system_headers expects them under EMSCRIPTEN_ROOT).
@@ -220,6 +237,29 @@ FROZEN_CACHE = True
 COMPILER_OPTS = []
 `;
 fs.writeFileSync(path.join(SYSROOT, 'etc/emscripten.config'), configContent);
+
+// Pre-populate the SDL3 port cache marker so -sUSE_SDL=3 works under
+// FROZEN_CACHE=True.  Without this file emscripten tries to download SDL3
+// at browser runtime and fails because the cache is read-only.
+// The path alias in tool-runner.ts maps
+//   /home/user/.emscripten_cache/ports  →  /usr/lib/emscripten_ports
+const sdl3PortPy = path.join(SYSROOT, 'usr/lib/emscripten/tools/ports/sdl3.py');
+if (fs.existsSync(sdl3PortPy)) {
+    const src = fs.readFileSync(sdl3PortPy, 'utf-8');
+    const m = src.match(/^VERSION\s*=\s*['"](.*?)['"]/m);
+    if (m) {
+        const portUrl = `https://github.com/libsdl-org/SDL/archive/release-${m[1]}.zip`;
+        const portDir = path.join(SYSROOT, 'usr/lib/emscripten_ports/sdl3');
+        shell.mkdir('-p', portDir);
+        fs.writeFileSync(path.join(portDir, '.emscripten_url'), portUrl);
+        console.log(`>> SDL3 port cache marker written (${portUrl})`);
+    } else {
+        console.warn('>> Warning: could not parse VERSION from sdl3.py — port cache marker not written.');
+        console.warn('   -sUSE_SDL=3 will fail at runtime with FROZEN_CACHE error.');
+    }
+} else {
+    console.warn(`>> Warning: sdl3.py not found at ${sdl3PortPy} — port cache marker not written.`);
+}
 
 console.log('');
 console.log('=== Sysroot population complete ===');

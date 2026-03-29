@@ -158,13 +158,19 @@ console.log('Deployed SDL3 headers to sysroot/usr/include/SDL3/');
 //
 // `FROZEN_CACHE=True` in sysroot/etc/emscripten.config prevents emscripten
 // from acquiring cache locks at browser runtime.  The lock is only attempted
-// when source or library files are *missing*.  By pre-seeding the cache we
-// trigger both early-outs (marker check + library exists check) so the port
-// system never calls cache.lock(), making -sUSE_SDL=3 viable at runtime.
+// when source or library files are *missing*.  By pre-seeding the port cache
+// marker in the CDN sysroot we trigger the early-out in fetch_port_artifact
+// so the port system never calls cache.lock().
 //
-// Two files are required:
-//   1. ports/sdl3/.emscripten_url  — skips source-download lock
-//   2. sysroot/lib/wasm32-emscripten/libSDL3.a — skips library-build lock
+// The VFSFS path alias in tool-runner.ts maps:
+//   /home/user/.emscripten_cache/ports  →  /usr/lib/emscripten_ports  (CDN, r/o)
+//   /home/user/.emscripten_cache/sysroot/lib/wasm32-emscripten/libSDL3.a
+//                                       →  /usr/lib/libSDL3.a          (CDN, r/o)
+//
+// File required:
+//   1. sysroot/usr/lib/emscripten_ports/sdl3/.emscripten_url
+//      — served by LazyFS as /usr/lib/emscripten_ports/sdl3/.emscripten_url
+//        (path-aliased from /home/user/.emscripten_cache/ports/sdl3/)
 
 // Derive the expected port URL from the sysroot's sdl3.py so the marker
 // always matches what the port system will compute, regardless of which
@@ -181,26 +187,16 @@ if (fs.existsSync(sdl3PortPy)) {
 }
 
 if (sdl3PortUrl) {
-    // CACHE path in emscripten.config is ~/.emscripten_cache;
-    // in the browser WASM sandbox HOME=/home/user, so it resolves to:
-    //   /home/user/.emscripten_cache/
-    const homeCacheBase = path.join(ROOT, 'sysroot', 'home', 'user', '.emscripten_cache');
-
-    // 1. Port source marker — bypasses fetch_port_artifact's lock
-    const portDir = path.join(homeCacheBase, 'ports', 'sdl3');
+    // Write the marker to the CDN-served sysroot path.
+    // tool-runner.ts aliases /home/user/.emscripten_cache/ports → /usr/lib/emscripten_ports
+    // so Python's fetch_port_artifact reads this file via LazyFS (not IDB).
+    const portDir = path.join(ROOT, 'sysroot', 'usr', 'lib', 'emscripten_ports', 'sdl3');
     shell.mkdir('-p', portDir);
-    fs.writeFileSync(path.join(portDir, '.emscripten_url'), sdl3PortUrl + '\n');
+    fs.writeFileSync(path.join(portDir, '.emscripten_url'), sdl3PortUrl);
     console.log(`Wrote port cache marker: ${path.relative(ROOT, portDir)}/.emscripten_url`);
-
-    // 2. Pre-built library — bypasses cache.get()'s lock
-    const libCacheDir = path.join(homeCacheBase, 'sysroot', 'lib', 'wasm32-emscripten');
-    shell.mkdir('-p', libCacheDir);
-    shell.cp('-f', path.join(SYSROOT_LIB, 'libSDL3.a'), libCacheDir);
-    console.log(`Copied libSDL3.a to port cache: ${path.relative(ROOT, libCacheDir)}`);
 } else {
     console.warn('Warning: could not derive SDL3 port URL from sysroot sdl3.py — port cache not pre-populated.');
     console.warn('  -sUSE_SDL=3 will fail at runtime with FROZEN_CACHE error.');
-    console.warn('  Fallback path (/usr/lib/libSDL3.a + --js-library) will still work.');
 }
 
 console.log('>>> SDL3 build complete.');
