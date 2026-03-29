@@ -1,5 +1,5 @@
 import { SDL_DEMO_CODE } from './ide-types';
-import { buildFileTree, buildSDL3Args, buildSDL3ArgsPort, detectsSDL, fileName, inferLanguage, isSourceFile, isTextFile, SDL3_JS_LIB_STUB, toWorkspaceFsPath } from './ide-utils';
+import { buildFileTree, buildSDL3ArgsPort, detectsSDL, fileName, inferLanguage, isSourceFile, isTextFile, toWorkspaceFsPath } from './ide-utils';
 
 // ─── isSourceFile ────────────────────────────────────────────────────────────
 
@@ -119,59 +119,6 @@ describe('detectsSDL', () => {
   });
 });
 
-// ─── buildSDL3Args ───────────────────────────────────────────────────────────
-// Fallback path: links against the CDN /usr/lib/libSDL3.a with stubs to work
-// around the pthread EM_ASM symbols in the pre-built camera/audio .o files.
-
-describe('buildSDL3Args', () => {
-  const args = buildSDL3Args('/home/user/main.cpp');
-
-  it('starts with emcc', () => expect(args[0]).toBe('emcc'));
-  it('includes the target file as the second argument', () => expect(args[1]).toBe('/home/user/main.cpp'));
-  it('links against precompiled libSDL3.a', () => expect(args).toContain('/usr/lib/libSDL3.a'));
-  it('does NOT use -sUSE_SDL (no emscripten port — uses the prebuilt .a)', () =>
-    expect(args.some((a) => a.includes('USE_SDL'))).toBe(false));
-  it('enables SINGLE_FILE=1 to embed wasm as base64', () => expect(args).toContain('-sSINGLE_FILE=1'));
-  it('enables ALLOW_MEMORY_GROWTH=1', () => expect(args).toContain('-sALLOW_MEMORY_GROWTH=1'));
-  it('sets ENVIRONMENT=web for browser-only JS output', () => expect(args).toContain('-sENVIRONMENT=web'));
-  it('passes -Wl,--unresolved-symbols=ignore-all (wasm-ld stage: skip pthread EM_ASM symbols)', () =>
-    expect(args).toContain('-Wl,--unresolved-symbols=ignore-all'));
-  it('passes --js-library for the in-process compiler.js stub (not --pre-js)', () => {
-    // --pre-js is appended AFTER compiler.js finishes and cannot prevent the
-    // FORWARDED_DATA assertion crash.  --js-library is read BY compiler.js.
-    const idx = args.indexOf('--js-library');
-    expect(idx).toBeGreaterThan(-1);
-    expect(args[idx + 1]).toBe('/home/user/__sdl_lib.js');
-  });
-  it('does NOT use --pre-js (wrong stage — cannot fix compiler.js crash)', () =>
-    expect(args).not.toContain('--pre-js'));
-  it('does NOT use ERROR_ON_UNDEFINED_SYMBOLS (caused JS-stub generation crash)', () =>
-    expect(args.some((a) => a.includes('ERROR_ON_UNDEFINED_SYMBOLS'))).toBe(false));
-  it('outputs to /home/user/main.js', () => {
-    const oIdx = args.indexOf('-o');
-    expect(oIdx).toBeGreaterThan(-1);
-    expect(args[oIdx + 1]).toBe('/home/user/main.js');
-  });
-  it('uses the target path passed in', () => {
-    const custom = buildSDL3Args('/home/user/my_program.cpp');
-    expect(custom[1]).toBe('/home/user/my_program.cpp');
-  });
-});
-
-// ─── SDL3_JS_LIB_STUB ────────────────────────────────────────────────────────
-// The --js-library file content written to VFS before the fallback emcc call.
-
-describe('SDL3_JS_LIB_STUB', () => {
-  it('uses addToLibrary({...}) syntax (emscripten 5.0.4+ API — mergeInto was removed in 4.0)', () =>
-    expect(SDL3_JS_LIB_STUB).toContain('addToLibrary('));
-  it('stubs emscripten_asm_const_int_sync_on_main_thread', () =>
-    expect(SDL3_JS_LIB_STUB).toContain('emscripten_asm_const_int_sync_on_main_thread'));
-  it('stubs emscripten_asm_const_async_on_main_thread', () =>
-    expect(SDL3_JS_LIB_STUB).toContain('emscripten_asm_const_async_on_main_thread'));
-  it('provides a __sig declaration for the int variant', () =>
-    expect(SDL3_JS_LIB_STUB).toContain('emscripten_asm_const_int_sync_on_main_thread__sig'));
-});
-
 // ─── buildSDL3ArgsPort ───────────────────────────────────────────────────────
 // Primary (preferred) path: uses emscripten's built-in SDL3 port (-sUSE_SDL=3).
 // The port is built cleanly so no pthread EM_ASM stubs are needed.
@@ -181,21 +128,17 @@ describe('buildSDL3ArgsPort', () => {
 
   it('starts with emcc', () => expect(args[0]).toBe('emcc'));
   it('includes the target file as the second argument', () => expect(args[1]).toBe('/home/user/main.cpp'));
-  it('uses -sUSE_SDL=3 (emscripten port, not the prebuilt .a)', () =>
-    expect(args).toContain('-sUSE_SDL=3'));
-  it('does NOT link against /usr/lib/libSDL3.a', () =>
-    expect(args).not.toContain('/usr/lib/libSDL3.a'));
-  it('does NOT need --js-library stubs (port has no pthread EM_ASM symbols)', () =>
-    expect(args).not.toContain('--js-library'));
-  it('does NOT need -Wl,--unresolved-symbols (no undefined symbols in the port)', () =>
-    expect(args.some((a) => a.includes('unresolved-symbols'))).toBe(false));
-  it('enables SINGLE_FILE=1 to embed wasm as base64', () => expect(args).toContain('-sSINGLE_FILE=1'));
+  it('uses -sUSE_SDL=3 (emscripten port, not the prebuilt .a)', () => expect(args).toContain('-sUSE_SDL=3'));
+  it('does NOT link against /usr/lib/libSDL3.a', () => expect(args).not.toContain('/usr/lib/libSDL3.a'));
+  it('does NOT need --js-library stubs (port has no pthread EM_ASM symbols)', () => expect(args).not.toContain('--js-library'));
+  it('does NOT need -Wl,--unresolved-symbols (no undefined symbols in the port)', () => expect(args.some((a) => a.includes('unresolved-symbols'))).toBe(false));
+  it('does NOT use SINGLE_FILE (WASM-only output, no JS generated)', () => expect(args.some((a) => a.includes('SINGLE_FILE'))).toBe(false));
   it('enables ALLOW_MEMORY_GROWTH=1', () => expect(args).toContain('-sALLOW_MEMORY_GROWTH=1'));
-  it('sets ENVIRONMENT=web for browser-only JS output', () => expect(args).toContain('-sENVIRONMENT=web'));
-  it('outputs to /home/user/main.js', () => {
+  it('sets ENVIRONMENT=web for browser-only output', () => expect(args).toContain('-sENVIRONMENT=web'));
+  it('outputs to /home/user/main.wasm (WASM-only, skips compiler.mjs)', () => {
     const oIdx = args.indexOf('-o');
     expect(oIdx).toBeGreaterThan(-1);
-    expect(args[oIdx + 1]).toBe('/home/user/main.js');
+    expect(args[oIdx + 1]).toBe('/home/user/main.wasm');
   });
   it('uses the target path passed in', () => {
     const custom = buildSDL3ArgsPort('/home/user/my_program.cpp');

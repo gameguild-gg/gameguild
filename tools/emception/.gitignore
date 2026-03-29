@@ -47,7 +47,11 @@ build/*
 # test
 test-results/
 playwright-report/
+playwright-report-react/
 /coverage
+
+# misc
+nohup.out
 
 # env
 .env*

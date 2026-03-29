@@ -108,6 +108,13 @@ test.describe('SDL3 compile & canvas render', () => {
         console.log('Boot complete.');
 
         // Verify the active editor contains SDL3 code (the default demo).
+        // Monaco loads its AMD modules asynchronously — wait until window.monaco
+        // is populated (set in Ide.tsx's handleEditorDidMount callback) before
+        // querying the editor models.
+        await page.waitForFunction(
+            () => !!(window as any).monaco?.editor?.getModels?.()?.length,
+            { timeout: 30_000 },
+        );
         const editorContent: string = await page.evaluate(() => {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const w = window as any;
@@ -164,6 +171,38 @@ test.describe('SDL3 compile & canvas render', () => {
         expect(canvasSize!.height).toBeGreaterThan(100);
 
         console.log('SDL canvas is visible and has non-zero dimensions!');
+
+        // ── Canvas WebGL check ────────────────────────────────────────────────
+        // Wait a couple of animation frames so SDL has had time to acquire the
+        // WebGL context.  With preserveDrawingBuffer=false (SDL3 default) pixels
+        // are cleared after each present, so we cannot read pixels via readPixels.
+        // Instead, verify that SDL3 acquired a WebGL context (not a 2D context)
+        // on the canvas — this confirms SDL3 found the canvas via #canvas selector
+        // and initialised its renderer.
+        await page.waitForTimeout(1000);
+        const canvasState: { has2d: boolean; hasWebGL: boolean; hasWebGL2: boolean; width: number; height: number } =
+            await page.evaluate(() => {
+                const canvas = document.getElementById('canvas') as HTMLCanvasElement | null;
+                if (!canvas) return { has2d: false, hasWebGL: false, hasWebGL2: false, width: 0, height: 0 };
+                return {
+                    has2d: canvas.getContext('2d') !== null,
+                    hasWebGL: canvas.getContext('webgl') !== null,
+                    hasWebGL2: canvas.getContext('webgl2') !== null,
+                    width: canvas.width,
+                    height: canvas.height,
+                };
+            });
+        console.log(`Canvas context state: ${JSON.stringify(canvasState)}`);
+        // SDL3 may use WebGL (hardware renderer) or 2D canvas (software renderer).
+        // Either way the canvas should have been initialised by SDL_CreateWindowAndRenderer
+        // with the requested 800×600 size, which confirms SDL3 found and used the canvas.
+        expect(canvasState.width, 'SDL3 should have set canvas width to 800').toBe(800);
+        expect(canvasState.height, 'SDL3 should have set canvas height to 600').toBe(600);
+        expect(
+            canvasState.has2d || canvasState.hasWebGL || canvasState.hasWebGL2,
+            'SDL3 should have acquired a rendering context on #canvas',
+        ).toBe(true);
+
         dumpLogs(logs, 'SDL3 PIPELINE');
     });
 

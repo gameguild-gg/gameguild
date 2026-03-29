@@ -68,90 +68,122 @@ export function detectsSDL(files: Record<string, WorkspaceFile>): boolean {
 }
 
 /**
- * Content for a `--js-library` file written to the emception VFS before every
- * SDL3 compile.  `--js-library` files are read by emscripten's `jsifier.mjs`
- * subprocess *during* JS-glue generation.  Writing an `addToLibrary` stub here
- * makes `emscripten_asm_const_int_sync_on_main_thread` (a helper referenced by
- * the CDN libSDL3.a objects compiled with MAIN_THREAD_EM_ASM) available to
- * jsifier.mjs so it does not abort with an empty stdout, which would otherwise
- * trigger:
- *   AssertionError: Did not receive forwarded data in pre output
- *   (emscripten.py:427, phase_emscript → emscript → assert)
+ * Returns emcc args that use emscripten's built-in SDL3 port (-sUSE_SDL=3).
  *
- * NOTE: emscripten 5.0.4 (the sysroot version) uses `addToLibrary({...})` —
- * the old `mergeInto(LibraryManager.library, {...})` API was removed in
- * emscripten 4.0 and causes a ReferenceError in jsifier.mjs context.
- *
- * NOTE: `--pre-js` does NOT fix this because it is appended to the *final*
- * output after jsifier.mjs has already finished (or crashed).
+ * Output is main.wasm (standalone/WASI mode). The linker's JS-generation step
+ * (compiler.mjs) is not available in the Emception browser environment, so we
+ * cannot use -o main.js. Instead, the WASI imports required by the standalone
+ * binary are satisfied by makeWasiStubs() at runtime in Ide.tsx.
  */
-export const SDL3_JS_LIB_STUB = `// Stub implementations of EM_ASM main-thread helpers for single-threaded
-// SDL3 builds.  The CDN libSDL3.a includes object files compiled with
-// MAIN_THREAD_EM_ASM that reference these functions; providing no-op stubs
-// via --js-library prevents emscripten's jsifier.mjs from aborting during
-// JS-glue generation.
-// emscripten 5.0.4+ API: use addToLibrary (mergeInto was removed in 4.0).
-addToLibrary({
-  emscripten_asm_const_int_sync_on_main_thread__sig: 'ippp',
-  emscripten_asm_const_int_sync_on_main_thread: (code, sig_ptr, arg_buf) => 0,
-  emscripten_asm_const_async_on_main_thread__sig: 'vppp',
-  emscripten_asm_const_async_on_main_thread: (code, sig_ptr, arg_buf) => {},
-});
-`;
-
-/**
- * Returns emcc args that link against the CDN-deployed /usr/lib/libSDL3.a.
- *
- * Two flags are required at two different pipeline stages:
- *  1. `-Wl,--unresolved-symbols=ignore-all` (wasm-ld stage) — lets the linker
- *     continue despite undefined symbols from SDL3 camera/audio object files.
- *  2. `--js-library __sdl_lib.js` (compiler.js stage) — makes no-op stubs for
- *     the same pthread-only symbols available to the JS-glue generator so it
- *     does not crash.  The caller must write SDL3_JS_LIB_STUB to that VFS path
- *     before invoking emcc.
- */
-export function buildSDL3Args(targetFsPath: string): string[] {
+export function buildSDL3ArgsPort(targetFsPath: string): string[] {
     return [
-        'emcc',
-        targetFsPath,
-        '/usr/lib/libSDL3.a',
+        'emcc', targetFsPath,
+        '-sUSE_SDL=3',
         '-I/usr/include',
-        '-sSINGLE_FILE=1',
         '-sALLOW_MEMORY_GROWTH=1',
         '-sENVIRONMENT=web',
-        // [stage 1] wasm-ld: skip undefined pthread-only symbols from SDL3
-        // camera/sensor .o files so the linker does not abort early.
-        '-Wl,--unresolved-symbols=ignore-all',
-        // [stage 2] compiler.js: provide no-op JS stubs for the same symbols
-        // so the internal JS-glue generator does not crash.
-        // IMPORTANT: --js-library (not --pre-js) is required here because
-        // --pre-js content is appended AFTER compiler.js finishes — it cannot
-        // save compiler.js from an in-process crash.
-        '--js-library', '/home/user/__sdl_lib.js',
         '-O1',
-        '-o',
-        '/home/user/main.js',
+        '-o', '/home/user/main.wasm',
     ];
 }
 
 /**
- * Returns emcc args that use emscripten's built-in SDL3 port (-sUSE_SDL=3).
- * The port is built cleanly without camera/sensor modules so none of the
- * pthread EM_ASM issues apply.  Does NOT require /usr/lib/libSDL3.a or the
- * --js-library stub.  Preferred over buildSDL3Args when the port is cached in
- * the emception sysroot; falls back to buildSDL3Args otherwise.
+ * Build a wasi_snapshot_preview1 shim suitable for SDL3 canvas apps.
+ *
+ * Standalone WASM compiled with emcc -o main.wasm imports WASI symbols.
+ * SDL3 canvas apps don't use the filesystem or args at runtime; they only need
+ * basic clock/stdio stubs so the startup sequence doesn't abort.
+ *
+ * The `getMemory` callback lets the stubs lazily resolve the WASM linear memory
+ * (available only after WebAssembly.instantiate returns).
  */
-export function buildSDL3ArgsPort(targetFsPath: string): string[] {
-    return [
-        'emcc',
-        targetFsPath,
-        '-sUSE_SDL=3',
-        '-I/usr/include',
-        '-sSINGLE_FILE=1',
-        '-sALLOW_MEMORY_GROWTH=1',
-        '-sENVIRONMENT=web',
-        '-O1',
-        '-o',
-        '/home/user/main.js',
-    ];
+export function makeWasiStubs(
+    getMemory: () => WebAssembly.Memory | null,
+    writeLine: (s: string) => void,
+): Record<string, CallableFunction> {
+    // WASI error codes
+    const WASI_ESUCCESS = 0;
+    const WASI_EBADF = 8;
+    const WASI_ESPIPE = 70;
+
+    return {
+        // argc = 0, argv_buf_size = 0
+        args_sizes_get(argc_ptr: number, argv_buf_size_ptr: number): number {
+            const mem = getMemory();
+            if (mem) {
+                const v = new DataView(mem.buffer);
+                v.setUint32(argc_ptr, 0, true);
+                v.setUint32(argv_buf_size_ptr, 0, true);
+            }
+            return WASI_ESUCCESS;
+        },
+        args_get(): number { return WASI_ESUCCESS; },
+
+        // environ_count = 0, environ_buf_size = 0
+        environ_sizes_get(count_ptr: number, buf_size_ptr: number): number {
+            const mem = getMemory();
+            if (mem) {
+                const v = new DataView(mem.buffer);
+                v.setUint32(count_ptr, 0, true);
+                v.setUint32(buf_size_ptr, 0, true);
+            }
+            return WASI_ESUCCESS;
+        },
+        environ_get(): number { return WASI_ESUCCESS; },
+
+        // Write iov buffers (fd 1 = stdout, fd 2 = stderr)
+        fd_write(fd: number, iovs_ptr: number, iovs_len: number, nwritten_ptr: number): number {
+            const mem = getMemory();
+            if (!mem) return WASI_EBADF;
+            const v = new DataView(mem.buffer);
+            const u8 = new Uint8Array(mem.buffer);
+            let totalWritten = 0;
+            const decoder = new TextDecoder();
+            for (let i = 0; i < iovs_len; i++) {
+                const base = v.getUint32(iovs_ptr + i * 8, true);
+                const len = v.getUint32(iovs_ptr + i * 8 + 4, true);
+                if (len > 0) {
+                    writeLine(decoder.decode(u8.subarray(base, base + len)));
+                    totalWritten += len;
+                }
+            }
+            v.setUint32(nwritten_ptr, totalWritten, true);
+            return WASI_ESUCCESS;
+        },
+        fd_close(): number { return WASI_ESUCCESS; },
+        fd_seek(): number { return WASI_ESPIPE; },
+        fd_read(): number { return WASI_EBADF; },
+        fd_fdstat_get(): number { return WASI_EBADF; },
+        path_open(): number { return WASI_EBADF; },
+        path_filestat_get(): number { return WASI_EBADF; },
+        path_unlink_file(): number { return WASI_EBADF; },
+
+        // Monotonic clock → nanoseconds via performance.now()
+        clock_time_get(clk_id: number, _precision_lo: number, _precision_hi: number, time_ptr: number): number {
+            const mem = getMemory();
+            if (mem) {
+                const t = BigInt(Math.round(performance.now() * 1_000_000));
+                new DataView(mem.buffer).setBigUint64(time_ptr, t, true);
+            }
+            return WASI_ESUCCESS;
+        },
+        clock_res_get(clk_id: number, res_ptr: number): number {
+            const mem = getMemory();
+            if (mem) new DataView(mem.buffer).setBigUint64(res_ptr, 1n, true);
+            return WASI_ESUCCESS;
+        },
+
+        random_get(buf_ptr: number, buf_len: number): number {
+            const mem = getMemory();
+            if (mem) crypto.getRandomValues(new Uint8Array(mem.buffer, buf_ptr, buf_len));
+            return WASI_ESUCCESS;
+        },
+
+        proc_exit(code: number): void {
+            // code 0 = clean exit (SDL3 with SDL_MAIN_USE_CALLBACKS exits with 0
+            // after SDL_AppInit + emscripten_set_main_loop registration).  Let
+            // _start return normally; the animation-frame loop is already live.
+            if (code !== 0) throw new Error(`SDL3 proc_exit(${code})`);
+        },
+    };
 }
