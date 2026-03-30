@@ -261,6 +261,23 @@ if (fs.existsSync(sdl3PortPy)) {
     console.warn(`>> Warning: sdl3.py not found at ${sdl3PortPy} — port cache marker not written.`);
 }
 
+// Ensure libSDL3.a is present in the emscripten cache-lib path.
+// tool-runner.ts aliases /home/user/.emscripten_cache/sysroot/lib → /usr/lib/emscripten/cache-lib
+// so cache.py's FROZEN_CACHE check resolves libSDL3.a here.
+// build-sdl3.ts should have already done this; we repeat it here as a safety net for
+// incremental builds where only populate-sysroot.ts is re-run.
+const libSdl3Src = path.join(SYSROOT, 'usr/lib/libSDL3.a');
+const libSdl3CacheDir = path.join(SYSROOT, 'usr/lib/emscripten/cache-lib/wasm32-emscripten');
+const libSdl3Dst = path.join(libSdl3CacheDir, 'libSDL3.a');
+if (fs.existsSync(libSdl3Src)) {
+    shell.mkdir('-p', libSdl3CacheDir);
+    shell.cp('-f', libSdl3Src, libSdl3CacheDir);
+    console.log(`>> Copied libSDL3.a to cache-lib path: ${path.relative(SYSROOT, libSdl3Dst)}`);
+} else {
+    console.warn(`>> Warning: libSDL3.a not found at ${libSdl3Src} — FROZEN_CACHE check for SDL3 may fail.`);
+    console.warn('   Run build:sdl3 first if you need SDL3 support.');
+}
+
 console.log('');
 console.log('=== Sysroot population complete ===');
 console.log('');
