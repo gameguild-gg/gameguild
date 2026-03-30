@@ -84,8 +84,12 @@ import week11Readings from './11-keyvalue-widecolumn/readings-11.md';
 import week11RedisFundamentals from './11-keyvalue-widecolumn/redis-fundamentals.md';
 import week11Reveal from './11-keyvalue-widecolumn/reveal.md';
 
-// Week 12 checkpoint import
+// Week 12 imports
 import week12Assignment from './12-graph-databases/assignment.md';
+import week12Neo4jFundamentals from './12-graph-databases/neo4j-fundamentals.md';
+import week12Quiz from './12-graph-databases/quiz/graph-neo4j-quiz.md';
+import week12Readings from './12-graph-databases/readings-12.md';
+import week12Reveal from './12-graph-databases/reveal.md';
 
 // Week 13 checkpoint import
 import week13Assignment from './13-timeseries-search/assignment.md';
@@ -1751,6 +1755,98 @@ export const week11AssignmentContent: ProgramContent = {
     updatedAt: '2023-01-01T00:00:00Z',
 };
 
+export const week12RevealContent: ProgramContent = {
+    id: 'databases-week-12-reveal',
+    programId: 'databases-program-1',
+    slug: 'graph-databases',
+    parentId: undefined,
+    title: 'Graph Databases: Neo4j',
+    description: 'Reveal.js presentation covering Neo4j, Cypher query language, traversals, and use cases',
+    type: ProgramContentType.REVEAL,
+    body: week12Reveal,
+    sortOrder: 12,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 60,
+    visibility: 1, // Published
+    program: databasesProgram,
+    parent: undefined,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const week12ReadingsContent: ProgramContent = {
+    id: 'databases-week-12-readings',
+    programId: 'databases-program-1',
+    slug: 'readings-12',
+    parentId: 'databases-week-12-reveal',
+    title: 'Week 12 Readings & Resources',
+    description: 'Curated references for Neo4j, Cypher, graph algorithms, and graph data modeling',
+    type: 0, // Page
+    body: week12Readings,
+    sortOrder: 1,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 30,
+    visibility: 1, // Published
+    program: databasesProgram,
+    parent: week12RevealContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const week12Neo4jFundamentalsContent: ProgramContent = {
+    id: 'databases-week-12-neo4j-fundamentals',
+    programId: 'databases-program-1',
+    slug: 'neo4j-fundamentals',
+    parentId: 'databases-week-12-readings',
+    title: 'Neo4j Fundamentals',
+    description: 'Graph model, Cypher CRUD, variable-length paths, indexes, neo4j-driver, and use cases',
+    type: 0, // Page
+    body: week12Neo4jFundamentals,
+    sortOrder: 1,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 120,
+    visibility: 1, // Published
+    program: databasesProgram,
+    parent: week12ReadingsContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const week12QuizContent: ProgramContent = {
+    id: 'databases-week-12-quiz',
+    programId: 'databases-program-1',
+    slug: 'graph-neo4j-quiz',
+    parentId: 'databases-week-12-reveal',
+    title: 'Quiz 10: Graph Databases & Neo4j',
+    description: 'Assess your understanding of Neo4j, Cypher, traversals, and graph use cases',
+    type: 0, // Page
+    body: week12Quiz,
+    sortOrder: 2,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 45,
+    visibility: 1, // Published
+    program: databasesProgram,
+    parent: week12RevealContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
 // Checkpoint 3: Proof of Concept (Week 12)
 export const week12AssignmentContent: ProgramContent = {
     id: 'databases-week-12-assignment',
@@ -1884,6 +1980,7 @@ databasesProgram.programContents = [
     week07RevealContent,
     week10RevealContent,
     week11RevealContent,
+    week12RevealContent,
     finalProjectContent,
 ];
 
@@ -1985,6 +2082,15 @@ week11RevealContent.children = [
 week11ReadingsContent.children = [
     week11RedisFundamentalsContent,
     week11CassandraFundamentalsContent,
+];
+
+week12RevealContent.children = [
+    week12ReadingsContent,
+    week12QuizContent,
+];
+
+week12ReadingsContent.children = [
+    week12Neo4jFundamentalsContent,
 ];
 
 finalProjectContent.children = [
