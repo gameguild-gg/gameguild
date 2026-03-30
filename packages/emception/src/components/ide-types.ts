@@ -74,7 +74,7 @@ export const DEFAULT_IMAGE = `data:image/svg+xml;utf8,${encodeURIComponent(
 // SDL3 bouncing ball — compiled against precompiled libSDL3.a (emcmake build).
 // Compile with: emcc sdl-main.cpp /usr/lib/libSDL3.a -I/usr/include -s SINGLE_FILE=1 -s ALLOW_MEMORY_GROWTH=1 -O1 -o main.html
 export const SDL_DEMO_CODE = `// SDL3 bouncing ball — compiled in the browser via Emscripten
-// Click "Compile & Run" to build and render to the SDL Canvas tab.
+// Click ▶ to build and render to the SDL Canvas tab.
 // Uses SDL3 app-lifecycle callbacks — no emscripten main-loop call needed.
 #define SDL_MAIN_USE_CALLBACKS
 #include <SDL3/SDL.h>
