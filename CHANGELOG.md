@@ -1,3 +1,24 @@
+# [2.51.0](https://github.com/gameguild-gg/gameguild/compare/v2.50.14...v2.51.0) (2026-03-30)
+
+
+### Bug Fixes
+
+* descriptions of the final assignment checkpoint 2 ([4d392a8](https://github.com/gameguild-gg/gameguild/commit/4d392a89921feea2fdf3fded4f9720ac65300008))
+* **emception:** backspace issue on shell ([d3e8887](https://github.com/gameguild-gg/gameguild/commit/d3e8887da147c1245896c5e461cf5fbf12da84bf))
+* **emception:** Disable SDL_CAMERA and SDL_SENSOR in build script ([2473400](https://github.com/gameguild-gg/gameguild/commit/2473400fcd6dcf4b054d1958ae75d776e5efd199))
+* **emception:** fix curl_lite ([157e96c](https://github.com/gameguild-gg/gameguild/commit/157e96ce27e0eaaf6519e282ff39905bec523140))
+* **emception:** fix sdl build process ([31e86c0](https://github.com/gameguild-gg/gameguild/commit/31e86c0020dc246442c2b4d103380312a1c515f9))
+
+
+### Features
+
+* **course/networking/week11:** Introduce non-blocking I/O, parallelism, and concurrency module ([911d019](https://github.com/gameguild-gg/gameguild/commit/911d0199e3040fa261a0878a4523238da6657f6d))
+* **emception:** Add E2E tests for SDL3 compilation and rendering ([c53bb05](https://github.com/gameguild-gg/gameguild/commit/c53bb05a5624eb8f37162d520495c86f33f75181))
+* **emception:** add sdl ([6d5ade8](https://github.com/gameguild-gg/gameguild/commit/6d5ade83ef7e147e022ec8b33d4f8b7b007628b0))
+* **emception:** Enhance SDL3 integration with robust compilation and app lifecycle ([ef5da4b](https://github.com/gameguild-gg/gameguild/commit/ef5da4baaaaedf78a5692095f619b50c1bf730cd))
+* **emception:** Implement main IDE layout and functionality ([dfd0ad2](https://github.com/gameguild-gg/gameguild/commit/dfd0ad28387574b679f782bbb69285f168fbc741))
+* **emception:** Introduce core IDE components and utilities ([fa688e6](https://github.com/gameguild-gg/gameguild/commit/fa688e62eeae70d873f2bdb2479aeb1f4290a0d9))
+
 ## [2.50.14](https://github.com/gameguild-gg/gameguild/compare/v2.50.13...v2.50.14) (2026-03-23)
 
 
