@@ -12,11 +12,18 @@
             }
         ],
         [
+            "@semantic-release/exec",
+            {
+                "prepareCmd": "find . -name 'package.json' -not -path '*/node_modules/*' -not -path '*/.git/*' -exec node -e \"const fs=require('fs');const f=process.argv[1];const p=JSON.parse(fs.readFileSync(f,'utf8'));p.version='${nextRelease.version}';fs.writeFileSync(f,JSON.stringify(p,null,2)+'\\n')\" {} \\;"
+            }
+        ],
+        [
             "@semantic-release/git",
             {
                 "assets": [
                     "CHANGELOG.md",
-                    "package.json"
+                    "**/package.json",
+                    "!**/node_modules/**"
                 ],
                 "message": "chore(release): ${nextRelease.version} [skip ci]"
             }
