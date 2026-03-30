@@ -49,6 +49,10 @@ import ai4games2Week11Lecture from "./11-goap/01-lecture.md";
 import ai4games2Week11Readings from "./11-goap/02-readings.md";
 import ai4games2Week11Assignment from "./11-goap/03-assignment.md";
 import ai4games2Week11Quiz from "./11-goap/04-quiz.md";
+import ai4games2Week12Slides from "./12-multiagent/00-reveal.md";
+import ai4games2Week12Lecture from "./12-multiagent/01-lecture.md";
+import ai4games2Week12Readings from "./12-multiagent/02-readings.md";
+import ai4games2Week12Quiz from "./12-multiagent/03-quiz.md";
 import ai4games2ExtraOldLecture from "./old/extras/llms.md";
 import ai4games2Week01OldLecture from "./old/week01/lecture.md";
 import ai4games2Week01OldReadings from "./old/week01/readings.md";
@@ -1231,6 +1235,99 @@ export const ai4games2Week11AssignmentContent: ProgramContent = {
   updatedAt: "2023-01-01T00:00:00Z",
 };
 
+// Week 12 Content (Multi-Agent Coordination)
+export const ai4games2Week12SlidesContent: ProgramContent = {
+  id: "ai4games2-week-12-slides",
+  programId: "ai4games2-program",
+  parentId: undefined,
+  title: "Week 12: Multi-Agent Coordination",
+  slug: "week-12",
+  description: "Multi-agent coordination: communication patterns, blackboard architecture, Killzone hierarchical AI, token systems, companion AI",
+  type: ProgramContentType.REVEAL,
+  body: ai4games2Week12Slides,
+  sortOrder: 12,
+  isRequired: true,
+  gradingMethod: 0,
+  maxPoints: null,
+  estimatedMinutes: 60,
+  visibility: 1,
+  program: ai4games2Program,
+  parent: undefined,
+  children: [],
+  contentInteractions: [],
+  createdAt: "2023-01-01T00:00:00Z",
+  updatedAt: "2023-01-01T00:00:00Z",
+};
+
+export const ai4games2Week12LectureContent: ProgramContent = {
+  id: "ai4games2-week-12-lecture",
+  programId: "ai4games2-program",
+  parentId: "ai4games2-week-12-slides",
+  title: "Week 12: Lecture Notes",
+  slug: "lecture",
+  description: "Detailed lecture notes on multi-agent coordination, Observer/Event Queue/Pub-Sub patterns, blackboard architecture, Killzone case study, token systems, and companion AI",
+  type: ProgramContentType.PAGE,
+  body: ai4games2Week12Lecture,
+  sortOrder: 1,
+  isRequired: true,
+  gradingMethod: 0,
+  maxPoints: null,
+  estimatedMinutes: 90,
+  visibility: 1,
+  program: ai4games2Program,
+  parent: ai4games2Week12SlidesContent,
+  children: [],
+  contentInteractions: [],
+  createdAt: "2023-01-01T00:00:00Z",
+  updatedAt: "2023-01-01T00:00:00Z",
+};
+
+export const ai4games2Week12ReadingsContent: ProgramContent = {
+  id: "ai4games2-week-12-readings",
+  programId: "ai4games2-program",
+  parentId: "ai4games2-week-12-slides",
+  title: "Week 12: Readings",
+  slug: "readings",
+  description: "Required readings and videos for Multi-Agent Coordination",
+  type: ProgramContentType.PAGE,
+  body: ai4games2Week12Readings,
+  sortOrder: 2,
+  isRequired: true,
+  gradingMethod: 0,
+  maxPoints: null,
+  estimatedMinutes: 120,
+  visibility: 1,
+  program: ai4games2Program,
+  parent: ai4games2Week12SlidesContent,
+  children: [],
+  contentInteractions: [],
+  createdAt: "2023-01-01T00:00:00Z",
+  updatedAt: "2023-01-01T00:00:00Z",
+};
+
+export const ai4games2Week12QuizContent: ProgramContent = {
+  id: "ai4games2-week-12-quiz",
+  programId: "ai4games2-program",
+  parentId: "ai4games2-week-12-slides",
+  title: "Week 12: Quiz",
+  slug: "quiz",
+  description: "Test your understanding of multi-agent coordination, communication patterns, blackboard systems, token systems, and companion AI",
+  type: ProgramContentType.PAGE,
+  body: ai4games2Week12Quiz,
+  sortOrder: 3,
+  isRequired: true,
+  gradingMethod: 1,
+  maxPoints: 10,
+  estimatedMinutes: 15,
+  visibility: 1,
+  program: ai4games2Program,
+  parent: ai4games2Week12SlidesContent,
+  children: [],
+  contentInteractions: [],
+  createdAt: "2023-01-01T00:00:00Z",
+  updatedAt: "2023-01-01T00:00:00Z",
+};
+
 export const ai4games2Week02OldContent: ProgramContent = {
   id: "ai4games2-week-02",
   programId: "ai4games2-program",
@@ -1735,6 +1832,7 @@ ai4games2Program.programContents = [
   ai4games2Week09FinalProjectContent,
   ai4games2Week10SlidesContent,
   ai4games2Week11SlidesContent,
+  ai4games2Week12SlidesContent,
   ai4games2OldContent,
 ];
 
