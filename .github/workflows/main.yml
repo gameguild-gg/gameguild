@@ -21,6 +21,7 @@ jobs:
     outputs:
       web: ${{ steps.filter.outputs.web }}
       api: ${{ steps.filter.outputs.api }}
+      emception: ${{ steps.filter.outputs.emception }}
     steps:
       - uses: actions/checkout@v4
 
@@ -33,6 +34,9 @@ jobs:
               - 'packages/**'
             api:
               - 'apps/api/**'
+            emception:
+              - 'tools/emception/**'
+              - 'packages/emception/**'
 
   build-emception-toolchain:
     name: Build tools/emception
@@ -450,6 +454,9 @@ jobs:
     needs:
       - deploy-pages
     if: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/main' }}
+    outputs:
+      new_release_published: ${{ steps.semantic.outputs.new_release_published }}
+      new_release_version: ${{ steps.semantic.outputs.new_release_version }}
     permissions:
       contents: write
       issues: write
@@ -506,12 +513,12 @@ jobs:
     name: Publish emception package
     runs-on: ubuntu-latest
     needs:
+      - detect-changes
       - build-emception-toolchain
-    if: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && needs.build-emception-toolchain.outputs.toolchain-changed == 'true' }}
+      - release-root
+    if: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && needs.detect-changes.outputs.emception == 'true' && needs.release-root.outputs.new_release_published == 'true' }}
     permissions:
-      contents: write
-      issues: write
-      pull-requests: write
+      contents: read
       id-token: write
     steps:
       - uses: actions/checkout@v4
@@ -541,18 +548,38 @@ jobs:
       - name: Build emception library
         run: cd tools/emception && npm run build:lib
 
-      - name: Install semantic-release plugins
+      - name: Set emception package version from root release
         run: |
-          npm install --no-save \
-            semantic-release@25.0.3 \
-            @semantic-release/commit-analyzer \
-            @semantic-release/release-notes-generator \
-            @semantic-release/changelog \
-            @semantic-release/npm \
-            @semantic-release/git \
-            @semantic-release/github
+          set -euo pipefail
+          VERSION="${{ needs.release-root.outputs.new_release_version }}"
+          echo "Root semantic-release published version: ${VERSION}"
+          cd tools/emception
+          npm version "${VERSION}" --no-git-tag-version --allow-same-version
+          node -p "require('./package.json').version"
 
-      - name: Semantic Release (emception)
-        run: npx semantic-release --extends ./tools/emception/.releaserc.json
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Ensure publish-emception does not modify changelogs
+        run: |
+          set -euo pipefail
+          if ! git diff --quiet -- CHANGELOG.md tools/emception/CHANGELOG.md; then
+            echo "::error::Changelog modification detected in publish-emception job. Changelogs must be modified by root release job only."
+            git --no-pager diff -- CHANGELOG.md tools/emception/CHANGELOG.md | cat
+            exit 1
+          fi
+
+      - name: Check whether npm version already exists
+        id: npm-check
+        run: |
+          set -euo pipefail
+          VERSION="${{ needs.release-root.outputs.new_release_version }}"
+
+          if npm view "emception@${VERSION}" version >/dev/null 2>&1; then
+            echo "emception@${VERSION} is already published. Skipping publish step."
+            echo "already_published=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "emception@${VERSION} is not published yet."
+            echo "already_published=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Publish emception to npm
+        if: ${{ steps.npm-check.outputs.already_published != 'true' }}
+        run: cd tools/emception && npm publish --provenance --access public
