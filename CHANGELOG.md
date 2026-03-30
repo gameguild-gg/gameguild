@@ -1,3 +1,16 @@
+# [2.52.0](https://github.com/gameguild-gg/gameguild/compare/v2.51.0...v2.52.0) (2026-03-30)
+
+
+### Bug Fixes
+
+* **ci:** hopefully deploy npm ([a3180d9](https://github.com/gameguild-gg/gameguild/commit/a3180d90f3d5dd225c24c1b3bd8046e18fe11567))
+* **emception:** Correct SDL3 cache path and enhance package publishing ([a576427](https://github.com/gameguild-gg/gameguild/commit/a576427938d91e36f642d19997d99e9e7e3929f4))
+
+
+### Features
+
+* **courses:** Add multi-agent AI week and update graph databases content ([1ef830d](https://github.com/gameguild-gg/gameguild/commit/1ef830d8becb7081bfe4609e7dbc289c21c6bbec))
+
 # [2.51.0](https://github.com/gameguild-gg/gameguild/compare/v2.50.14...v2.51.0) (2026-03-30)
 
 
