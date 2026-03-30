@@ -266,6 +266,7 @@ function DockGroupPanelInner({
                         <canvas
                             id="canvas"
                             data-testid="sdl-canvas"
+                            tabIndex={0}
                             ref={canvasRef}
                             style={{ width: '100%', height: '100%', display: localFile.content ? 'block' : 'none' }}
                         />
@@ -287,7 +288,7 @@ function DockGroupPanelInner({
                             >
                                 <span style={{ fontSize: '2.5rem' }}>🎮</span>
                                 <span style={{ fontSize: '1rem', color: '#a6adc8' }}>SDL Canvas</span>
-                                <span style={{ fontSize: '0.8rem' }}>Click <strong style={{ color: '#a6e3a1' }}>Compile &amp; Run</strong> to build and render the SDL3 demo</span>
+                                <span style={{ fontSize: '0.8rem' }}>Click <strong style={{ color: '#a6e3a1' }}>&#9654;</strong> to build and render the SDL3 demo</span>
                             </div>
                         )}
                     </div>

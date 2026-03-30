@@ -152,6 +152,12 @@ export class WorkerClient {
             p.reject(new Error('Worker terminated'));
         }
         this.pending.clear();
+        this.runCallbacks.clear();
+        // Release any pending exclusive-stdin readers so the feedStdin loop
+        // exits immediately and keyboard input returns to normal (Monaco editor).
+        this.stdinFeeds.clear();
+        this.io.setStdinEcho?.(false);
+        this.io.exitExclusiveStdin?.();
     }
 
     /* ---------------------------------------------------------------- */
