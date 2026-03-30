@@ -1,3 +1,10 @@
+## [2.53.1](https://github.com/gameguild-gg/gameguild/compare/v2.53.0...v2.53.1) (2026-03-30)
+
+
+### Bug Fixes
+
+* **emception/ide:** Restore editor input after SDL3 canvas rendering ([d6f346f](https://github.com/gameguild-gg/gameguild/commit/d6f346fa8357229989b4b209d2727e2afa3c933c))
+
 # [2.53.0](https://github.com/gameguild-gg/gameguild/compare/v2.52.0...v2.53.0) (2026-03-30)
 
 
