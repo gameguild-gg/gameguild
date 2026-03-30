@@ -35,7 +35,11 @@ export default defineConfig({
         },
     ],
     webServer: {
-        command: `npx next dev --port ${PORT}`,
+        // Use `npm run dev` (not `npx next dev`) so the `predev` hook runs,
+        // which syncs CDN assets (libSDL3.a, port markers, etc.) from
+        // tools/emception/public/cdn/. Without this, SDL3 compilation fails
+        // with FROZEN_CACHE because the cache-lib and port markers are missing.
+        command: `npm run dev -- --port ${PORT}`,
         cwd: '../../demos/emception-next',
         url: `http://localhost:${PORT}`,
         reuseExistingServer: !process.env.CI,

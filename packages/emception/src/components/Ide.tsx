@@ -25,6 +25,9 @@ export default function Ide({ title = 'WebAssembly C++ Toolchain', manifestUrl =
   const sdlBlobUrlsRef = useRef<string[]>([]);
   /** Tracks the injected SDL script element for cleanup on recompile/reset/unmount */
   const sdlScriptRef = useRef<HTMLScriptElement | null>(null);
+  /** Tracks the live SDL3 Emscripten module so its RAF loop can be stopped */
+
+  const sdlModuleRef = useRef<{ pauseMainLoop?: () => void } | null>(null);
 
   const [files, setFiles] = useState<Record<string, WorkspaceFile>>(INITIAL_FILES);
   const [selectedPath, setSelectedPath] = useState('/src/main.cpp');
@@ -42,6 +45,9 @@ export default function Ide({ title = 'WebAssembly C++ Toolchain', manifestUrl =
   const [status, setStatus] = useState('Initializing...');
   const [isReady, setIsReady] = useState(false);
   const [terminalReady, setTerminalReady] = useState(false);
+  const [executionPhase, setExecutionPhase] = useState<'idle' | 'compiling' | 'running'>('idle');
+  /** Set to true by handleStop so the catch block in handleCompile knows it was intentional */
+  const stoppedRef = useRef(false);
 
   const fileTree = buildFileTree(Object.keys(files));
   const activeTab = openTabs.find((t) => t.id === activeTabId) ?? openTabs[0] ?? null;
@@ -99,53 +105,57 @@ export default function Ide({ title = 'WebAssembly C++ Toolchain', manifestUrl =
     setTerminalReady(true);
   }, []);
 
+  const doBootstrap = useCallback(
+    async (isMounted: () => boolean = () => true) => {
+      const xterm = xtermRef.current;
+      if (!xterm) return;
+      setIsReady(false);
+      setStatus('Booting toolchain...');
+      try {
+        const result = await bootInWorker(manifestUrl, xterm);
+        if (!isMounted()) return;
+        // Mirror tty output to a hidden DOM element for Playwright E2E tests.
+        // eslint-disable-next-line no-control-regex
+        const stripAnsi = (s: string) => s.replace(/\u001b\[[\d;]*m/g, '');
+        const log = terminalLogRef;
+        const origWriteLine = result.tty.writeLine.bind(result.tty);
+        const origWriteError = result.tty.writeError.bind(result.tty);
+        const origClear = result.tty.clear.bind(result.tty);
+        result.tty.writeLine = (text: string) => {
+          origWriteLine(text);
+          if (log.current) log.current.textContent += stripAnsi(text) + '\n';
+        };
+        result.tty.writeError = (text: string) => {
+          origWriteError(text);
+          if (log.current) log.current.textContent += stripAnsi(text) + '\n';
+        };
+        result.tty.clear = () => {
+          origClear();
+          if (log.current) log.current.textContent = '';
+        };
+        orchestratorRef.current = result;
+        setStatus('Ready');
+        setIsReady(true);
+        xterm.writeln('\x1b[32mSystem Ready.\x1b[0m');
+        xterm.writeln('Click \x1b[1m▶\x1b[0m to compile & run.');
+      } catch (err) {
+        if (!isMounted()) return;
+        setStatus(`Error: ${err instanceof Error ? err.message : String(err)}`);
+        xterm.writeln(`\x1b[31mBoot failed: ${err}\x1b[0m`);
+      }
+    },
+    [manifestUrl],
+  );
+
   useEffect(() => {
     if (!terminalReady || !xtermRef.current) return;
     let mounted = true;
-    const xterm = xtermRef.current;
-    const boot = async () => {
-      try {
-        setStatus('Booting toolchain...');
-        const result = await bootInWorker(manifestUrl, xterm);
-        if (mounted) {
-          // Mirror tty output to a hidden DOM element for Playwright E2E tests.
-          // eslint-disable-next-line no-control-regex
-          const stripAnsi = (s: string) => s.replace(/\u001b\[[\d;]*m/g, '');
-          const log = terminalLogRef;
-          const origWriteLine = result.tty.writeLine.bind(result.tty);
-          const origWriteError = result.tty.writeError.bind(result.tty);
-          const origClear = result.tty.clear.bind(result.tty);
-          result.tty.writeLine = (text: string) => {
-            origWriteLine(text);
-            if (log.current) log.current.textContent += stripAnsi(text) + '\n';
-          };
-          result.tty.writeError = (text: string) => {
-            origWriteError(text);
-            if (log.current) log.current.textContent += stripAnsi(text) + '\n';
-          };
-          result.tty.clear = () => {
-            origClear();
-            if (log.current) log.current.textContent = '';
-          };
-          orchestratorRef.current = result;
-          setStatus('Ready');
-          setIsReady(true);
-          xterm.writeln('\x1b[32mSystem Ready.\x1b[0m');
-          xterm.writeln('Click \x1b[1mCompile & Run\x1b[0m to execute code.');
-        }
-      } catch (err) {
-        if (mounted) {
-          setStatus(`Error: ${err instanceof Error ? err.message : String(err)}`);
-          xterm.writeln(`\x1b[31mBoot failed: ${err}\x1b[0m`);
-        }
-      }
-    };
-    boot();
+    doBootstrap(() => mounted);
     return () => {
       mounted = false;
       orchestratorRef.current = null;
     };
-  }, [terminalReady, manifestUrl]);
+  }, [terminalReady, manifestUrl, doBootstrap]);
 
   // Revoke SDL blob URLs and remove injected script on unmount
   useEffect(() => {
@@ -255,11 +265,22 @@ export default function Ide({ title = 'WebAssembly C++ Toolchain', manifestUrl =
 
   const resetWorkspace = useCallback(() => {
     if (!window.confirm('Reset the workspace to the default demo files and layout?')) return;
+    // Stop SDL3 loop if running
+    const sdlMod = sdlModuleRef.current;
+    if (sdlMod) {
+      try {
+        sdlMod.pauseMainLoop?.();
+      } catch {
+        /* ignore */
+      }
+      sdlModuleRef.current = null;
+    }
     // Revoke any outstanding SDL blob URLs and remove injected script
     sdlScriptRef.current?.remove();
     sdlScriptRef.current = null;
     sdlBlobUrlsRef.current.forEach((url) => URL.revokeObjectURL(url));
     sdlBlobUrlsRef.current = [];
+    setExecutionPhase('idle');
     setFiles(INITIAL_FILES);
     setSelectedPath('/src/sdl-main.cpp');
     setExpandedDirs(new Set(['/src', '/assets', '/runtime']));
@@ -315,8 +336,15 @@ export default function Ide({ title = 'WebAssembly C++ Toolchain', manifestUrl =
 
   const handleCompile = async () => {
     if (!orchestratorRef.current || !activeFile || activeFile.type !== 'text') return;
+    stoppedRef.current = false;
+    setExecutionPhase('compiling');
     setActiveTerminalId('terminal-1');
     const P = '[Emception:IDE]';
+    // Always return keyboard focus to the editor when done, regardless of exit path.
+    // xterm captures document-level keydown when it has focus, blocking Monaco input.
+    const restoreEditorFocus = () => {
+      editorRef.current?.focus();
+    };
     const tTotal = performance.now();
     const { client, tty } = orchestratorRef.current;
     const textFiles = Object.values(files).filter((f) => f.type === 'text' && isTextFile(f.path));
@@ -325,15 +353,16 @@ export default function Ide({ title = 'WebAssembly C++ Toolchain', manifestUrl =
       : Object.keys(files).includes('/src/main.cpp')
         ? '/src/main.cpp'
         : textFiles.find((f) => isSourceFile(f.path))?.path;
-    if (!compileTarget) {
-      setStatus('No compilable source file found');
-      tty.writeError('No .c/.cpp source file found in workspace.');
-      return;
-    }
-    setStatus('Compiling...');
-    tty.clear();
-    tty.writeLine(`Compiling ${compileTarget}...`);
     try {
+      if (!compileTarget) {
+        setExecutionPhase('idle');
+        setStatus('No compilable source file found');
+        tty.writeError('No .c/.cpp source file found in workspace.');
+        return;
+      }
+      setStatus('Compiling...');
+      tty.clear();
+      tty.writeLine(`Compiling ${compileTarget}...`);
       const enc = new TextEncoder();
       for (const file of textFiles) {
         const fsPath = toWorkspaceFsPath(file.path);
@@ -362,6 +391,7 @@ export default function Ide({ title = 'WebAssembly C++ Toolchain', manifestUrl =
         });
         const sdlDuration = ((performance.now() - t0) / 1000).toFixed(2);
         if (sdlResult.exitCode !== 0) {
+          setExecutionPhase('idle');
           setStatus(`SDL3 compilation failed (${sdlDuration}s)`);
           tty.writeLine(`\x1b[31mSDL3 compilation failed (exit ${sdlResult.exitCode})\x1b[0m`);
           return;
@@ -373,6 +403,7 @@ export default function Ide({ title = 'WebAssembly C++ Toolchain', manifestUrl =
         // only main.wasm is used — the generated JS glue is discarded.
         const wasmBytes = await client.getFile('/home/user/main.wasm');
         if (!wasmBytes) {
+          setExecutionPhase('idle');
           tty.writeError('main.wasm not found — emcc may have failed to produce it alongside main.js');
           return;
         }
@@ -380,6 +411,7 @@ export default function Ide({ title = 'WebAssembly C++ Toolchain', manifestUrl =
         // Read the pre-built SDL3 JS runtime shell from the VFS
         const runtimeBytes = await client.getFile('/usr/lib/emscripten/sdl3-runtime.mjs');
         if (!runtimeBytes) {
+          setExecutionPhase('idle');
           tty.writeError('sdl3-runtime.mjs not found in VFS — rebuild the CDN bundle');
           return;
         }
@@ -400,6 +432,7 @@ export default function Ide({ title = 'WebAssembly C++ Toolchain', manifestUrl =
 
         const canvas = canvasRef.current;
         if (!canvas) {
+          setExecutionPhase('idle');
           tty.writeError('SDL canvas element not found — open the SDL Canvas tab first');
           return;
         }
@@ -454,6 +487,23 @@ export default function Ide({ title = 'WebAssembly C++ Toolchain', manifestUrl =
             `var runMainThreadEmAsm=(emAsmAddr,sigPtr,argbuf,sync)=>{var args=readEmAsmArgs(sigPtr,argbuf);${emAsmFallback('emAsmAddr')}return ASM_CONSTS[emAsmAddr](...args)}`,
           );
         }
+
+        // Patch: Scope SDL3's keyboard event handlers to the canvas element.
+        // SDL3's emscripten backend registers keydown/keyup/keypress handlers
+        // on window/document (globally), which captures ALL keyboard input and
+        // calls e.preventDefault() — blocking Monaco editor, xterm, and any
+        // other UI element from receiving keystroke events.
+        // This patch inserts an early-return guard at the top of the keyboard
+        // event handler: if the event target is not the canvas, let it pass
+        // through to the rest of the page unblocked.
+        const ORIG_KEY_HANDLER = 'var keyEventHandlerFunc=e=>{var keyEventData=JSEvents.keyEvent';
+        const PATCHED_KEY_HANDLER = 'var keyEventHandlerFunc=e=>{if(Module["canvas"]&&e.target!==Module["canvas"])return;var keyEventData=JSEvents.keyEvent';
+        if (runtimeText.includes(ORIG_KEY_HANDLER)) {
+          runtimeText = runtimeText.replace(ORIG_KEY_HANDLER, PATCHED_KEY_HANDLER);
+        } else {
+          tty.writeError('sdl3-runtime patch: keyEventHandlerFunc not found — keyboard may be captured globally');
+        }
+
         // Create a blob URL for the ES6 runtime module so we can dynamically import it
         const runtimeBlob = new Blob([new TextEncoder().encode(runtimeText)], { type: 'application/javascript' });
         const runtimeUrl = URL.createObjectURL(runtimeBlob);
@@ -461,7 +511,7 @@ export default function Ide({ title = 'WebAssembly C++ Toolchain', manifestUrl =
 
         // Dynamically import the MODULARIZE ES6 factory and instantiate with WASM + canvas
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const { default: createSDL3Module } = await import(/* @vite-ignore */ runtimeUrl as any);
+        const { default: createSDL3Module } = await import(/* webpackIgnore: true */ /* @vite-ignore */ runtimeUrl as any);
 
         // The user's WASM is compiled as standalone/WASI (-o main.wasm) because
         // emcc's full JS-generation step (compiler.mjs) is not available in this
@@ -476,9 +526,10 @@ export default function Ide({ title = 'WebAssembly C++ Toolchain', manifestUrl =
 
         let sdlLoadOk = true;
         const moduleTimeout = new Promise<never>((_, reject) => setTimeout(() => reject(new Error('SDL3 module load timeout (30s)')), 30_000));
-        await Promise.race([
+        const sdlMod = await Promise.race([
           createSDL3Module({
             canvas: canvas,
+            keyboardListeningElement: canvas,
             wasmBinary: wasmBytes,
             // When loaded from a blob URL, import.meta.url is a blob URL and
             // new URL('sdl3-runtime.wasm', blobUrl) throws "Invalid URL".
@@ -571,9 +622,15 @@ export default function Ide({ title = 'WebAssembly C++ Toolchain', manifestUrl =
           sdlLoadOk = false;
           tty.writeError(`SDL3 module error: ${e}`);
           setStatus('SDL3 load failed');
+          return null;
         });
 
-        if (!sdlLoadOk) return;
+        if (!sdlLoadOk) {
+          setExecutionPhase('idle');
+          return;
+        }
+        sdlModuleRef.current = sdlMod as { pauseMainLoop?: () => void } | null;
+        setExecutionPhase('running');
         setStatus(`SDL3 done (${((performance.now() - tTotal) / 1000).toFixed(1)}s)`);
         tty.writeLine('\x1b[32mSDL3 rendering in canvas tab →\x1b[0m');
         return;
@@ -593,6 +650,7 @@ export default function Ide({ title = 'WebAssembly C++ Toolchain', manifestUrl =
       });
       const duration = ((performance.now() - t0) / 1000).toFixed(2);
       if (result.exitCode !== 0) {
+        setExecutionPhase('idle');
         setStatus('Compilation failed');
         tty.writeLine(`\x1b[31mCompilation failed (exit ${result.exitCode})\x1b[0m`);
         return;
@@ -630,6 +688,7 @@ export default function Ide({ title = 'WebAssembly C++ Toolchain', manifestUrl =
           }
         }
       };
+      setExecutionPhase('running');
       await client.run('wasi-run', ['wasi-run', '/home/user/main.wasm'], {
         cwd: '/home/user',
         onStdout: (t: string) => {
@@ -640,12 +699,64 @@ export default function Ide({ title = 'WebAssembly C++ Toolchain', manifestUrl =
         },
         stdin: lineBufferedStdin,
       });
+      setExecutionPhase('idle');
       setStatus(`Done (${((performance.now() - tTotal) / 1000).toFixed(1)}s)`);
     } catch (e) {
-      console.error(`${P} Exception:`, e);
-      setStatus('Error during execution');
-      tty.writeError(String(e));
+      setExecutionPhase('idle');
+      if (!stoppedRef.current) {
+        console.error(`${P} Exception:`, e);
+        setStatus('Error during execution');
+        tty.writeError(String(e));
+      }
+    } finally {
+      restoreEditorFocus();
     }
+  };
+
+  const handleStop = async () => {
+    if (executionPhase !== 'running') return;
+
+    // SDL3 path: the RAF loop runs on the main thread; pause it and clean up.
+    // The worker is idle (it only compiled), so we can keep it for re-compile.
+    const sdlMod = sdlModuleRef.current;
+    if (sdlMod) {
+      try {
+        sdlMod.pauseMainLoop?.();
+      } catch {
+        /* ignore */
+      }
+      sdlModuleRef.current = null;
+      sdlScriptRef.current?.remove();
+      sdlScriptRef.current = null;
+      sdlBlobUrlsRef.current.forEach((url) => URL.revokeObjectURL(url));
+      sdlBlobUrlsRef.current = [];
+      // Clear the canvas pixels so the placeholder overlay reappears
+      const canvas = canvasRef.current;
+      if (canvas) canvas.getContext('2d')?.clearRect(0, 0, canvas.width, canvas.height);
+      // Reset the file content sentinel so the placeholder is shown again
+      setFiles((prev) => ({
+        ...prev,
+        '/runtime/sdl-canvas': { ...prev['/runtime/sdl-canvas'], content: '' },
+      }));
+      setExecutionPhase('idle');
+      setStatus('Stopped');
+      xtermRef.current?.writeln('\x1b[33mExecution stopped.\x1b[0m');
+      editorRef.current?.focus();
+      return;
+    }
+
+    // WASI path: the worker is actively running wasi-run — terminate and reboot.
+    if (!orchestratorRef.current) return;
+    stoppedRef.current = true;
+    const { client } = orchestratorRef.current;
+    client.terminate();
+    orchestratorRef.current = null;
+    setExecutionPhase('idle');
+    setIsReady(false);
+    setStatus('Stopped — rebooting...');
+    xtermRef.current?.writeln('\x1b[33mExecution stopped.\x1b[0m');
+    await doBootstrap();
+    editorRef.current?.focus();
   };
 
   /** Shared resize-handle style for all PanelResizeHandle instances */
@@ -679,24 +790,44 @@ export default function Ide({ title = 'WebAssembly C++ Toolchain', manifestUrl =
           <span data-testid="status" style={{ fontSize: '0.72rem', color: '#a6adc8' }}>
             {status}
           </span>
-          <button
-            data-testid="compile-button"
-            onClick={handleCompile}
-            disabled={!isReady || activeFile?.type !== 'text'}
-            style={{
-              height: 24,
-              padding: '0 0.75rem',
-              fontSize: '0.8rem',
-              fontWeight: 500,
-              borderRadius: 4,
-              border: 'none',
-              cursor: isReady && activeFile?.type === 'text' ? 'pointer' : 'not-allowed',
-              background: isReady && activeFile?.type === 'text' ? '#a6e3a1' : '#313244',
-              color: isReady && activeFile?.type === 'text' ? '#11111b' : '#585b70',
-            }}
-          >
-            ▶ Compile &amp; Run
-          </button>
+          {executionPhase === 'running' ? (
+            <button
+              data-testid="stop-button"
+              onClick={handleStop}
+              style={{
+                height: 24,
+                padding: '0 0.75rem',
+                fontSize: '0.8rem',
+                fontWeight: 500,
+                borderRadius: 4,
+                border: 'none',
+                cursor: 'pointer',
+                background: '#f38ba8',
+                color: '#11111b',
+              }}
+            >
+              &#9632; Stop
+            </button>
+          ) : (
+            <button
+              data-testid="compile-button"
+              onClick={handleCompile}
+              disabled={executionPhase !== 'idle' || !isReady || activeFile?.type !== 'text'}
+              style={{
+                height: 24,
+                padding: '0 0.75rem',
+                fontSize: '0.8rem',
+                fontWeight: 500,
+                borderRadius: 4,
+                border: 'none',
+                cursor: executionPhase === 'idle' && isReady && activeFile?.type === 'text' ? 'pointer' : 'not-allowed',
+                background: executionPhase === 'idle' && isReady && activeFile?.type === 'text' ? '#a6e3a1' : '#313244',
+                color: executionPhase === 'idle' && isReady && activeFile?.type === 'text' ? '#11111b' : '#585b70',
+              }}
+            >
+              &#9654;
+            </button>
+          )}
           <button
             onClick={resetWorkspace}
             style={{
