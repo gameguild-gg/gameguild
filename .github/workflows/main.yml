@@ -497,6 +497,7 @@ jobs:
           extra_plugins: |
             @semantic-release/changelog@6
             @semantic-release/git@10
+            @semantic-release/exec@6
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -556,15 +557,6 @@ jobs:
 
       - name: Build emception library
         run: cd tools/emception && npm run build:lib
-
-      - name: Set emception package version from root release
-        run: |
-          set -euo pipefail
-          VERSION="${{ needs.release-root.outputs.new_release_version }}"
-          echo "Root semantic-release published version: ${VERSION}"
-          cd tools/emception
-          npm version "${VERSION}" --no-git-tag-version --allow-same-version
-          node -p "require('./package.json').version"
 
       - name: Ensure publish-emception does not modify changelogs
         run: |
