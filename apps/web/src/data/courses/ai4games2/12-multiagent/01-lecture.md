@@ -7,7 +7,7 @@ This lecture addresses the fundamental question: **how do multiple game AI agent
 We'll build from the communication patterns that enable coordination, through concrete architectures used in shipped games, to a C++ implementation you can extend.
 
 ```mermaid
-flowchart TD
+flowchart LR
     A["Multi-Agent Coordination"] --> B["Communication Patterns"] & C["Coordination Architectures"] & D["Case Studies"]
     B --> B1["Observer / Event Queue"]
     B --> B2["Blackboard System"]
@@ -105,7 +105,7 @@ In academic AI, a **Multi-Agent System (MAS)** is defined as a collection of aut
 4. **Coordinate** â€” to achieve individual or collective goals that require cooperation
 
 ```mermaid
-flowchart TD
+flowchart LR
     subgraph "Multi-Agent System"
         E["Shared Environment"]
         A1["Agent 1\n(Local View)"] -->|"perceive"| E
@@ -114,6 +114,7 @@ flowchart TD
         E -->|"affects"| A1 & A2 & A3
         A1 <-->|"communicate"| A2
         A2 <-->|"communicate"| A3
+        A1 <-->|"communicate"| A3
     end
 ```
 
@@ -1927,9 +1928,9 @@ Each of these could fill an entire lecture. The techniques we've covered today â
 This lecture covered the **practical systems** that make multi-agent coordination work in shipped games. Here's the complete map of what we covered and how it connects:
 
 ```mermaid
-flowchart TD
-    A["Week 11: GOAP<br/>(Individual Agent Planning)"] --> B["Week 12: Multi-Agent Coordination<br/>(This Lecture)"]
-    B --> C["Week 13: Influence Maps<br/>(Spatial Reasoning)"]
+flowchart LR
+    A["GOAP<br/>(Individual Agent Planning)"] --> B["Multi-Agent Coordination<br/>(This Lecture)"]
+    B --> C["Influence Maps<br/>(Spatial Reasoning)"]
 
     B --> D["Communication Patterns"]
     B --> E["Coordination Systems"]

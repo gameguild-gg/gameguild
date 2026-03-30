@@ -38,3 +38,9 @@ By the end of the week, each team should have:
 ## Submission
 
 No separate submission — graded based on in-class participation and feedback collected.
+
+::: info
+
+If you signed the [FERPA Waiver](https://gameguild.gg/ferpa-waiver), make sure your build is published to the [GPR440-26 itch.io jam](https://itch.io/jam/gpr440-26) so classmates can access it easily.
+
+:::

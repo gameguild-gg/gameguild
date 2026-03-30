@@ -8,7 +8,6 @@
 
 :::
 
-
 ## Overview
 
 This is your **second and final in-class testing session**. By now your AI system should be feature-complete. Use this week to validate bug fixes from last week's feedback and gather final polish notes.
@@ -42,3 +41,9 @@ This is your **second and final in-class testing session**. By now your AI syste
 ## Submission
 
 No separate submission — graded based on in-class participation and visible improvements.
+
+::: info
+
+If you signed the [FERPA Waiver](https://gameguild.gg/ferpa-waiver), update your build on the [GPR440-26 itch.io jam](https://itch.io/jam/gpr440-26).
+
+:::

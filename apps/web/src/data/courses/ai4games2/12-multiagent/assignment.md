@@ -38,3 +38,9 @@ Do not worry about polish, art, or edge cases yet. Focus on getting the AI loop 
 ## Submission
 
 Submit the link to your build or video via the course submission form.
+
+::: info
+
+If you signed the [FERPA Waiver](https://gameguild.gg/ferpa-waiver), publish your build to the [GPR440-26 itch.io jam](https://itch.io/jam/gpr440-26).
+
+:::
