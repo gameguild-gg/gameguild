@@ -53,6 +53,7 @@ import ai4games2Week12Slides from "./12-multiagent/00-reveal.md";
 import ai4games2Week12Lecture from "./12-multiagent/01-lecture.md";
 import ai4games2Week12Readings from "./12-multiagent/02-readings.md";
 import ai4games2Week12Quiz from "./12-multiagent/03-quiz.md";
+import ai4games2Week12Assignment from "./12-multiagent/assignment.md";
 import ai4games2ExtraOldLecture from "./old/extras/llms.md";
 import ai4games2Week01OldLecture from "./old/week01/lecture.md";
 import ai4games2Week01OldReadings from "./old/week01/readings.md";
@@ -1328,6 +1329,29 @@ export const ai4games2Week12QuizContent: ProgramContent = {
   updatedAt: "2023-01-01T00:00:00Z",
 };
 
+export const ai4games2Week12AssignmentContent: ProgramContent = {
+  id: "ai4games2-week-12-assignment",
+  programId: "ai4games2-program",
+  parentId: "ai4games2-week-12-slides",
+  title: "Week 12: Assignment",
+  slug: "assignment",
+  description: "Final Project — Checkpoint 3: Proof of Concept",
+  type: ProgramContentType.PAGE,
+  body: ai4games2Week12Assignment,
+  sortOrder: 4,
+  isRequired: true,
+  gradingMethod: 1,
+  maxPoints: 100,
+  estimatedMinutes: 60,
+  visibility: 1,
+  program: ai4games2Program,
+  parent: ai4games2Week12SlidesContent,
+  children: [],
+  contentInteractions: [],
+  createdAt: "2023-01-01T00:00:00Z",
+  updatedAt: "2023-01-01T00:00:00Z",
+};
+
 export const ai4games2Week02OldContent: ProgramContent = {
   id: "ai4games2-week-02",
   programId: "ai4games2-program",
@@ -1792,6 +1816,12 @@ ai4games2Week11SlidesContent.children = [
   ai4games2Week11ReadingsContent,
   ai4games2Week11QuizContent,
   ai4games2Week11AssignmentContent,
+];
+ai4games2Week12SlidesContent.children = [
+  ai4games2Week12LectureContent,
+  ai4games2Week12ReadingsContent,
+  ai4games2Week12QuizContent,
+  ai4games2Week12AssignmentContent,
 ];
 ai4games2Week02OldContent.children = [ai4games2Week02OldPcgContent];
 ai4games2Week03OldContent.children = [ai4games2Week03OldAstarContent];
