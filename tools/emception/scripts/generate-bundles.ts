@@ -22,10 +22,7 @@
  *   python-runtime      -- all files under /usr/lib/python + pkgconfig + libpython
  *   usr-bin             -- /usr/bin/ + /etc/ (small scripts and config)
  *   libcurl             -- /usr/lib/libcurl (static library)
- *   sdl3               -- SDL3 core static lib + headers
- *   sdl3-image          -- SDL3_image static lib + headers
- *   sdl3-ttf            -- SDL3_ttf + FreeType static libs + headers
- *   sdl3-mixer          -- SDL3_mixer static lib + headers
+ *   sdl3               -- SDL3 core static lib + headers (via emsdk port)
  *   imgui              -- Dear ImGui static lib + headers
  *   usr-share           -- /usr/share/ files
  *   home               -- /home/ (emscripten port cache pre-seed)
@@ -358,12 +355,9 @@ async function main() {
         { name: 'python-runtime', prefixes: pythonPrefixes, outputPath: '/usr/lib/python-runtime.tar.br' },
         { name: 'usr-bin', prefixes: ['/usr/bin/', '/etc/'], outputPath: '/usr/bin.tar.br' },
         { name: 'libcurl', prefixes: ['/usr/lib/libcurl'], outputPath: '/usr/lib/libcurl.tar.br' },
-        // Note: lib, headers and port manifests are pre-assigned above so these prefixes
-        // act only as documentation / forward-compat fallback (first-match wins, assigned files are skipped).
+        // Note: SDL3 lib, headers and port manifests are pre-assigned above (sdl3PrePrefixes).
+        // These prefixes act as forward-compat fallback only (first-match wins, assigned files are skipped).
         { name: 'sdl3', prefixes: ['/usr/include/SDL3/', '/usr/lib/emscripten_ports/sdl3/'], outputPath: '/usr/lib/sdl3.tar.br' },
-        { name: 'sdl3-image', prefixes: ['/usr/lib/libSDL3_image', '/usr/include/SDL3_image/'], outputPath: '/usr/lib/sdl3-image.tar.br' },
-        { name: 'sdl3-ttf', prefixes: ['/usr/lib/libSDL3_ttf', '/usr/lib/libfreetype', '/usr/include/SDL3_ttf/'], outputPath: '/usr/lib/sdl3-ttf.tar.br' },
-        { name: 'sdl3-mixer', prefixes: ['/usr/lib/libSDL3_mixer', '/usr/include/SDL3_mixer/'], outputPath: '/usr/lib/sdl3-mixer.tar.br' },
         { name: 'imgui', prefixes: ['/usr/lib/libimgui', '/usr/include/imgui/'], outputPath: '/usr/lib/imgui.tar.br' },
         { name: 'usr-share', prefixes: ['/usr/share/'], outputPath: '/usr/share.tar.br' },
         { name: 'home', prefixes: ['/home/'], outputPath: '/home.tar.br' },
