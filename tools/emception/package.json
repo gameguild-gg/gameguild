@@ -1,6 +1,6 @@
 {
   "name": "emception",
-  "version": "2.0.0",
+  "version": "2.53.1",
   "description": "Emscripten C/C++ toolchain running in the browser via WebAssembly",
   "type": "module",
   "main": "./dist/index.js",
@@ -23,8 +23,7 @@
     "LICENSE*"
   ],
   "publishConfig": {
-    "access": "public",
-    "provenance": true
+    "access": "public"
   },
   "repository": {
     "type": "git",
