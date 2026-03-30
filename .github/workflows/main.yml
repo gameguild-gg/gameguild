@@ -191,6 +191,14 @@ jobs:
         if: steps.cache-toolchain.outputs.cache-hit != 'true'
         run: npm run build:cmake
 
+      - name: Build SDL3
+        if: steps.cache-toolchain.outputs.cache-hit != 'true'
+        run: npm run build:sdl3
+
+      - name: Build ImGui
+        if: steps.cache-toolchain.outputs.cache-hit != 'true'
+        run: npm run build:imgui
+
       - name: Build Sysroot
         if: steps.cache-toolchain.outputs.cache-hit != 'true'
         run: npm run build:sysroot
