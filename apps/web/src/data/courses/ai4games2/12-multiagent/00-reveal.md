@@ -524,7 +524,7 @@ Both decouple agents, but they solve different problems:
 Guerrilla Games' Killzone 2/3 managed **24 multiplayer bots** with three layers:
 
 ```mermaid
-flowchart TD
+flowchart LR
     S["Strategic Layer\n(faction-wide)"]
     T["Tactical Layer\n(squad of 5-8)"]
     I["Individual Layer\n(single NPC)"]
@@ -592,7 +592,7 @@ $$\text{fitness}(a, r) = w_{\text{dist}} \cdot \text{proximity}(a, r) + w_{\text
 ### Tactical Decision Flowchart
 
 ```mermaid
-flowchart TD
+flowchart LR
     A["Read blackboard:\nenemy positions, agent status"] --> B{"Enemies detected?"}
     B -->|No| C["All agents: SCOUT role"]
     B -->|Yes| D{"Multiple enemies?"}
@@ -824,7 +824,7 @@ void CompanionAI::updatePlayerModel(const Player& player, float dt) {
 Concentric distance zones keep the companion near the player:
 
 ```mermaid
-flowchart TD
+flowchart LR
     A["Inner Zone (0-3m)\nToo close — back off"] --> B["Ideal Zone (3-8m)\nPerfect distance"]
     B --> C["Outer Zone (8-15m)\nMove closer"]
     C --> D["Panic Zone (>15m)\nTeleport!"]

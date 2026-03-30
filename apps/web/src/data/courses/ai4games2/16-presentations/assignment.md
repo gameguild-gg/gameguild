@@ -54,3 +54,9 @@ See the [Final Project](../09-break/final-project.md) page for full grading deta
 ## Submission
 
 Submit all links via the course submission form by Thursday 2026/04/30.
+
+::: info
+
+If you signed the [FERPA Waiver](https://gameguild.gg/ferpa-waiver), your final build must be published to the [GPR440-26 itch.io jam](https://itch.io/jam/gpr440-26).
+
+:::
