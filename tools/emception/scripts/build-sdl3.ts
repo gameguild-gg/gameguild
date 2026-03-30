@@ -1,17 +1,31 @@
 /**
- * Build SDL3 as a static library for Emscripten.
+ * Prepare SDL3 for the in-browser Emscripten toolchain.
  *
- * Detects the latest SDL3 release from GitHub (or uses SDL3_VERSION env var),
- * downloads the source, cross-compiles with emcmake/emmake, and deploys:
- *   - sysroot/usr/lib/libSDL3.a
- *   - sysroot/usr/include/SDL3/*.h
+ * Strategy: use the emsdk port system (emcc -sUSE_SDL=3) rather than building
+ * SDL3 from source.  Running emcc with -sUSE_SDL=3 on a minimal stub triggers
+ * the port download+build once and caches the result inside the emsdk tree.
+ *
+ * This script produces all SDL3 artifacts in one pass:
+ *   1. Compiles a minimal stub with -sUSE_SDL=3 -sMODULARIZE
+ *      → populates the emsdk cache with libSDL3.a + headers
+ *      → produces sdl3-runtime.mjs (the JS MODULARIZE factory used at runtime)
+ *   2. Copies libSDL3.a + SDL3 headers from the emsdk cache into our sysroot
+ *   3. Copies libSDL3.a to the FROZEN_CACHE path aliased by tool-runner.ts
+ *   4. Writes the .emscripten_url port marker so FROZEN_CACHE early-outs work
+ *
+ * Outputs:
+ *   sysroot/usr/lib/libSDL3.a
+ *   sysroot/usr/include/SDL3/*.h
+ *   sysroot/usr/lib/emscripten/cache-lib/wasm32-emscripten/libSDL3.a
+ *   sysroot/usr/lib/emscripten/sdl3-runtime.mjs
+ *   sysroot/usr/lib/emscripten_ports/sdl3/.emscripten_url
  */
 
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
 import shell from 'shelljs';
-import { setupEmsdk } from './lib/emsdk.ts';
+import { getEmsdkDir, setupEmsdk } from './lib/emsdk.ts';
 
 const ROOT = process.cwd();
 shell.config.fatal = true;
@@ -19,192 +33,182 @@ shell.config.fatal = true;
 const EMSDK_VERSION = process.env.EMSDK_VERSION || 'latest';
 setupEmsdk(EMSDK_VERSION);
 
-const CONCURRENCY = os.cpus().length;
-const USERLAND_DIR = path.join(ROOT, 'userland', 'sdl3');
-const SYSROOT_LIB = path.join(ROOT, 'sysroot', 'usr', 'lib');
-const SYSROOT_INC = path.join(ROOT, 'sysroot', 'usr', 'include');
+const EMSDK_DIR = getEmsdkDir();
+const EMCC = path.join(EMSDK_DIR, 'upstream', 'emscripten', 'emcc');
 
-shell.mkdir('-p', USERLAND_DIR);
+const SYSROOT = path.join(ROOT, 'sysroot');
+const SYSROOT_LIB = path.join(SYSROOT, 'usr', 'lib');
+const SYSROOT_INC = path.join(SYSROOT, 'usr', 'include');
+const EMSCRIPTEN_DIR = path.join(SYSROOT_LIB, 'emscripten');
+const CACHE_LIB_DIR = path.join(EMSCRIPTEN_DIR, 'cache-lib', 'wasm32-emscripten');
+
 shell.mkdir('-p', SYSROOT_LIB);
 shell.mkdir('-p', path.join(SYSROOT_INC, 'SDL3'));
+shell.mkdir('-p', EMSCRIPTEN_DIR);
+shell.mkdir('-p', CACHE_LIB_DIR);
 
-// --------------- version detection ---------------
+// ── Step 1: compile stub with -sUSE_SDL=3 / -sMODULARIZE ─────────────────
+//
+// This single emcc invocation does three things simultaneously:
+//   a) triggers the emsdk port system to download + build SDL3 (cached)
+//   b) produces the MODULARIZE JS factory (sdl3-runtime.mjs) we ship
+//   c) exercises SDL3 APIs needed in wasmImports (main_loop, memory growth…)
 
-function detectVersion(): string {
-    const envVer = process.env.SDL3_VERSION;
-    if (envVer) return envVer;
+const STUB_C = path.join(os.tmpdir(), 'sdl3_port_stub.c');
+const TMP_JS = path.join(os.tmpdir(), 'sdl3-runtime.js');
+const TMP_WASM = path.join(os.tmpdir(), 'sdl3-runtime.wasm');
 
-    console.log('Detecting latest SDL3 release...');
-    const result = shell.exec(
-        'curl -fsSL https://api.github.com/repos/libsdl-org/SDL/releases/latest',
-        { silent: true },
-    );
-    if (result.code !== 0) {
-        throw new Error('Failed to query GitHub for latest SDL3 release');
+fs.writeFileSync(
+    STUB_C,
+    `
+#include <SDL3/SDL.h>
+#include <emscripten.h>
+#include <stdlib.h>
+
+static SDL_Renderer *g_renderer;
+
+static void loop_iter(void) {
+    SDL_Event e;
+    while (SDL_PollEvent(&e)) {
+        if (e.type == SDL_EVENT_QUIT) emscripten_cancel_main_loop();
     }
-    const tag: string = JSON.parse(result.stdout).tag_name;
-    console.log(`  Latest SDL3 release: ${tag}`);
-    return tag;
+    SDL_SetRenderDrawColor(g_renderer, 30, 30, 30, 255);
+    SDL_RenderClear(g_renderer);
+    SDL_RenderPresent(g_renderer);
 }
 
-// --------------- source management ---------------
-
-function findExistingSourceDir(tag: string): string | null {
-    const candidates = [
-        path.join(USERLAND_DIR, `SDL-${tag}`),
-        path.join(USERLAND_DIR, `sdl3-${tag}`),
-    ];
-    for (const c of candidates) {
-        if (fs.existsSync(path.join(c, 'CMakeLists.txt'))) return c;
-    }
-    return null;
+/* Force emscripten_set_main_loop_arg into wasmImports. */
+__attribute__((used)) static void _force_loop_arg(void) {
+    emscripten_set_main_loop_arg(NULL, NULL, 0, 0);
 }
 
-function ensureSource(tag: string): string {
-    const existing = findExistingSourceDir(tag);
-    if (existing) {
-        console.log(`Using existing SDL3 source: ${path.basename(existing)}`);
-        return existing;
-    }
-
-    const destDir = path.join(USERLAND_DIR, `SDL-${tag}`);
-    const tarball = `${tag}.tar.gz`;
-
-    console.log(`Downloading SDL3 ${tag}...`);
-    shell.cd(USERLAND_DIR);
-    shell.exec(`curl -fSL -o "${tarball}" "https://github.com/libsdl-org/SDL/archive/refs/tags/${tarball}"`);
-
-    shell.rm('-rf', destDir);
-    shell.mkdir('-p', destDir);
-    shell.exec(`tar xzf "${tarball}" --strip-components=1 -C "${destDir}"`);
-    shell.rm('-f', tarball);
-
-    if (!fs.existsSync(path.join(destDir, 'CMakeLists.txt'))) {
-        throw new Error(`Extracted SDL3 source is invalid: ${destDir}`);
-    }
-    console.log(`Extracted SDL3 source to: ${path.basename(destDir)}`);
-    return destDir;
+/* Force emscripten_notify_memory_growth into wasmImports. */
+__attribute__((used)) static void _force_mem_growth(void) {
+    void *p = malloc(64 * 1024 * 1024);
+    if (p) free(p);
 }
 
-// --------------- build ---------------
+int main(void) {
+    if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS)) return 1;
+    SDL_Window *w = SDL_CreateWindow("sdl3-runtime", 640, 480,
+                                     SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
+    g_renderer = SDL_CreateRenderer(w, NULL);
+    emscripten_set_main_loop(loop_iter, 0, 1);
+    SDL_DestroyRenderer(g_renderer);
+    SDL_DestroyWindow(w);
+    SDL_Quit();
+    return 0;
+}
+`,
+);
 
-const TAG = detectVersion();
-const SOURCE_DIR = ensureSource(TAG);
-const BUILD_DIR = path.join(SOURCE_DIR, 'build-wasm');
+console.log('Building SDL3 via emsdk port (-sUSE_SDL=3) — downloads SDL3 on first run...');
+console.log(`  emcc: ${EMCC}`);
 
-shell.mkdir('-p', BUILD_DIR);
+const result = shell.exec(
+    [
+        `"${EMCC}"`,
+        `"${STUB_C}"`,
+        '-sUSE_SDL=3',
+        '-sENVIRONMENT=web',
+        '-sALLOW_MEMORY_GROWTH=1',
+        '-sMODULARIZE=1',
+        '-sEXPORT_NAME=createSDL3Module',
+        '-sEXPORT_ES6=1',
+        '-sEXPORTED_RUNTIME_METHODS=ccall,cwrap,getValue,setValue,UTF8ToString,stringToUTF8,lengthBytesUTF8',
+        '-O2',
+        `-o "${TMP_JS}"`,
+    ].join(' '),
+    { silent: false },
+);
 
-console.log('Configuring SDL3 with emcmake cmake...');
-shell.exec([
-    'emcmake cmake',
-    `-S "${SOURCE_DIR}"`,
-    `-B "${BUILD_DIR}"`,
-    '-DCMAKE_BUILD_TYPE=Release',
-    '-DSDL_SHARED=OFF',
-    '-DSDL_STATIC=ON',
-    '-DSDL_TEST=OFF',
-    '-DSDL_TESTS=OFF',
-    '-DSDL_EXAMPLES=OFF',
-    '-DSDL_INSTALL=OFF',
-    '-DSDL_DISABLE_INSTALL=ON',
-    // Disable subsystems that use emscripten pthread-only APIs
-    // (emscripten_asm_const_int_sync_on_main_thread), which cause
-    // undefined symbol errors when linking without -s USE_PTHREADS=1.
-    '-DSDL_CAMERA=OFF',
-    '-DSDL_SENSOR=OFF',
-].join(' '));
+if (result.code !== 0) {
+    console.error('emcc SDL3 stub compilation failed');
+    process.exit(1);
+}
 
-console.log(`Building SDL3 with ${CONCURRENCY} cores...`);
-shell.exec(`emmake make -C "${BUILD_DIR}" -j${CONCURRENCY} SDL3-static`);
+// ── Step 2: save sdl3-runtime.mjs ─────────────────────────────────────────
+const OUTPUT_MJS = path.join(EMSCRIPTEN_DIR, 'sdl3-runtime.mjs');
+fs.copyFileSync(TMP_JS, OUTPUT_MJS);
+const mjsSize = (fs.statSync(OUTPUT_MJS).size / 1024).toFixed(1);
+console.log(`Saved sdl3-runtime.mjs (${mjsSize} KB) → ${path.relative(ROOT, OUTPUT_MJS)}`);
 
-// --------------- deploy to sysroot ---------------
+// Clean up the stub WASM — users supply their own WASM at runtime.
+if (fs.existsSync(TMP_WASM)) fs.rmSync(TMP_WASM);
 
-// Find the static library (may be libSDL3.a or SDL3.a depending on CMake config)
-const libCandidates = [
-    path.join(BUILD_DIR, 'libSDL3.a'),
-    path.join(BUILD_DIR, 'SDL3.a'),
-];
-const libPath = libCandidates.find((p) => fs.existsSync(p));
-if (!libPath) {
-    // Search recursively
-    const found = shell.find(BUILD_DIR).filter((f: string) => f.endsWith('libSDL3.a') || f.endsWith('SDL3.a'));
+// ── Step 3: copy libSDL3.a + headers from the emsdk cache ─────────────────
+//
+// After emcc -sUSE_SDL=3 completes, SDL3 is compiled and cached at:
+//   <EM_CACHE>/sysroot/lib/wasm32-emscripten/libSDL3.a
+//   <EM_CACHE>/sysroot/include/SDL3/*.h
+//
+// EM_CACHE is set by emsdk_env.sh (captured by setupEmsdk()).
+// Fall back to the known default location inside the emsdk tree.
+const emCache =
+    process.env.EM_CACHE ||
+    path.join(EMSDK_DIR, 'upstream', 'emscripten', 'cache');
+
+const cacheLibSDL3 = path.join(emCache, 'sysroot', 'lib', 'wasm32-emscripten', 'libSDL3.a');
+const cacheIncSDL3 = path.join(emCache, 'sysroot', 'include', 'SDL3');
+
+// Locate libSDL3.a (may be in cache/sysroot or the port build dir)
+let libSrc = cacheLibSDL3;
+if (!fs.existsSync(libSrc)) {
+    const found = shell
+        .find(path.join(emCache, 'ports', 'sdl3'))
+        .filter((f: string) => f.endsWith('libSDL3.a') || f.endsWith('SDL3.a'));
     if (found.length === 0) {
-        throw new Error('libSDL3.a not found after build');
+        throw new Error(
+            `libSDL3.a not found in emsdk cache.\n` +
+            `  Expected: ${cacheLibSDL3}\n` +
+            `  EM_CACHE: ${emCache}`,
+        );
     }
-    shell.cp('-f', found[0], path.join(SYSROOT_LIB, 'libSDL3.a'));
+    libSrc = found[0];
+    console.log(`  libSDL3.a found via port build dir: ${libSrc}`);
+}
+
+shell.cp('-f', libSrc, path.join(SYSROOT_LIB, 'libSDL3.a'));
+console.log(`Deployed libSDL3.a → sysroot/usr/lib/`);
+
+// Also put libSDL3.a in the FROZEN_CACHE path.
+// tool-runner.ts aliases /home/user/.emscripten_cache/sysroot/lib
+//                      → /usr/lib/emscripten/cache-lib
+// so cache.py resolves libSDL3.a here without triggering cache.lock().
+shell.cp('-f', path.join(SYSROOT_LIB, 'libSDL3.a'), CACHE_LIB_DIR);
+console.log(`Deployed libSDL3.a → ${path.relative(ROOT, CACHE_LIB_DIR)}/`);
+
+// Copy SDL3 headers
+if (fs.existsSync(cacheIncSDL3)) {
+    shell.cp('-rf', path.join(cacheIncSDL3, '*.h'), path.join(SYSROOT_INC, 'SDL3', '/'));
+    console.log(`Deployed SDL3 headers → sysroot/usr/include/SDL3/`);
 } else {
-    shell.cp('-f', libPath, path.join(SYSROOT_LIB, 'libSDL3.a'));
-}
-console.log('Deployed libSDL3.a to sysroot/usr/lib/');
-
-// Also copy to the emscripten cache-lib path that tool-runner.ts aliases from
-// /home/user/.emscripten_cache/sysroot/lib → /usr/lib/emscripten/cache-lib
-// so that cache.py's FROZEN_CACHE check finds libSDL3.a at the expected path.
-const cacheLibDir = path.join(ROOT, 'sysroot', 'usr', 'lib', 'emscripten', 'cache-lib', 'wasm32-emscripten');
-shell.mkdir('-p', cacheLibDir);
-shell.cp('-f', path.join(SYSROOT_LIB, 'libSDL3.a'), cacheLibDir);
-console.log('Deployed libSDL3.a to sysroot/usr/lib/emscripten/cache-lib/wasm32-emscripten/ (FROZEN_CACHE path)');
-
-// Copy public headers
-const includeDir = path.join(SOURCE_DIR, 'include', 'SDL3');
-if (fs.existsSync(includeDir)) {
-    shell.cp('-f', path.join(includeDir, '*.h'), path.join(SYSROOT_INC, 'SDL3', '/'));
+    console.warn(`Warning: SDL3 headers not found in emsdk cache at ${cacheIncSDL3}`);
+    console.warn(`SDL3 headers are needed for user programs to compile with -sUSE_SDL=3.`);
 }
 
-// Copy generated headers (SDL_revision.h, SDL_config.h, etc.)
-const generatedIncDir = path.join(BUILD_DIR, 'include', 'SDL3');
-if (fs.existsSync(generatedIncDir)) {
-    shell.cp('-f', path.join(generatedIncDir, '*.h'), path.join(SYSROOT_INC, 'SDL3', '/'));
-}
-const generatedIncDir2 = path.join(BUILD_DIR, 'include-config-release', 'SDL3');
-if (fs.existsSync(generatedIncDir2)) {
-    shell.cp('-f', path.join(generatedIncDir2, '*.h'), path.join(SYSROOT_INC, 'SDL3', '/'));
-}
-console.log('Deployed SDL3 headers to sysroot/usr/include/SDL3/');
-
-// --------------- pre-populate port cache ---------------
+// ── Step 4: write the .emscripten_url port marker ─────────────────────────
 //
-// `FROZEN_CACHE=True` in sysroot/etc/emscripten.config prevents emscripten
-// from acquiring cache locks at browser runtime.  The lock is only attempted
-// when source or library files are *missing*.  By pre-seeding the port cache
-// marker in the CDN sysroot we trigger the early-out in fetch_port_artifact
-// so the port system never calls cache.lock().
-//
-// The VFSFS path alias in tool-runner.ts maps:
-//   /home/user/.emscripten_cache/ports  →  /usr/lib/emscripten_ports  (CDN, r/o)
-//   /home/user/.emscripten_cache/sysroot/lib/wasm32-emscripten/libSDL3.a
-//                                       →  /usr/lib/libSDL3.a          (CDN, r/o)
-//
-// File required:
-//   1. sysroot/usr/lib/emscripten_ports/sdl3/.emscripten_url
-//      — served by LazyFS as /usr/lib/emscripten_ports/sdl3/.emscripten_url
-//        (path-aliased from /home/user/.emscripten_cache/ports/sdl3/)
-
-// Derive the expected port URL from the sysroot's sdl3.py so the marker
-// always matches what the port system will compute, regardless of which
-// SDL3 version was passed to this build script.
-const sdl3PortPy = path.join(ROOT, 'sysroot', 'usr', 'lib', 'emscripten', 'tools', 'ports', 'sdl3.py');
-let sdl3PortUrl: string | null = null;
+// FROZEN_CACHE=True forces cache.py to check this marker before attempting
+// a file-system lock (which is forbidden in the browser sandbox).
+// tool-runner.ts aliases /home/user/.emscripten_cache/ports
+//                      → /usr/lib/emscripten_ports
+const sdl3PortPy = path.join(SYSROOT, 'usr', 'lib', 'emscripten', 'tools', 'ports', 'sdl3.py');
 if (fs.existsSync(sdl3PortPy)) {
     const src = fs.readFileSync(sdl3PortPy, 'utf-8');
     const m = src.match(/^VERSION\s*=\s*['"]([^'"]+)['"]/m);
     if (m) {
-        sdl3PortUrl = `https://github.com/libsdl-org/SDL/archive/release-${m[1]}.zip`;
-        console.log(`SDL3 port URL (from sysroot sdl3.py): ${sdl3PortUrl}`);
+        const portUrl = `https://github.com/libsdl-org/SDL/archive/release-${m[1]}.zip`;
+        const portDir = path.join(SYSROOT, 'usr', 'lib', 'emscripten_ports', 'sdl3');
+        shell.mkdir('-p', portDir);
+        fs.writeFileSync(path.join(portDir, '.emscripten_url'), portUrl);
+        console.log(`Wrote port marker for SDL3 ${m[1]} → ${path.relative(ROOT, portDir)}/.emscripten_url`);
+    } else {
+        console.warn('Warning: could not parse VERSION from sdl3.py — port marker not written.');
+        console.warn('  -sUSE_SDL=3 may fail at runtime with FROZEN_CACHE error.');
     }
-}
-
-if (sdl3PortUrl) {
-    // Write the marker to the CDN-served sysroot path.
-    // tool-runner.ts aliases /home/user/.emscripten_cache/ports → /usr/lib/emscripten_ports
-    // so Python's fetch_port_artifact reads this file via LazyFS (not IDB).
-    const portDir = path.join(ROOT, 'sysroot', 'usr', 'lib', 'emscripten_ports', 'sdl3');
-    shell.mkdir('-p', portDir);
-    fs.writeFileSync(path.join(portDir, '.emscripten_url'), sdl3PortUrl);
-    console.log(`Wrote port cache marker: ${path.relative(ROOT, portDir)}/.emscripten_url`);
 } else {
-    console.warn('Warning: could not derive SDL3 port URL from sysroot sdl3.py — port cache not pre-populated.');
-    console.warn('  -sUSE_SDL=3 will fail at runtime with FROZEN_CACHE error.');
+    console.warn(`Warning: sdl3.py not found at ${sdl3PortPy} — port marker not written.`);
 }
 
 console.log('>>> SDL3 build complete.');
