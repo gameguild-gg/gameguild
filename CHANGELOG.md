@@ -1,3 +1,10 @@
+# [2.53.0](https://github.com/gameguild-gg/gameguild/compare/v2.52.0...v2.53.0) (2026-03-30)
+
+
+### Features
+
+* **courses/ai4games2:** Integrate Week 12 assignment and refine course content ([3a86b2c](https://github.com/gameguild-gg/gameguild/commit/3a86b2c4c7b08945bd2056c9d966346846e0f053))
+
 # [2.52.0](https://github.com/gameguild-gg/gameguild/compare/v2.51.0...v2.52.0) (2026-03-30)
 
 
