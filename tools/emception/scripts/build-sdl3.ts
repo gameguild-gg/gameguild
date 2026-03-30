@@ -137,6 +137,14 @@ if (!libPath) {
 }
 console.log('Deployed libSDL3.a to sysroot/usr/lib/');
 
+// Also copy to the emscripten cache-lib path that tool-runner.ts aliases from
+// /home/user/.emscripten_cache/sysroot/lib → /usr/lib/emscripten/cache-lib
+// so that cache.py's FROZEN_CACHE check finds libSDL3.a at the expected path.
+const cacheLibDir = path.join(ROOT, 'sysroot', 'usr', 'lib', 'emscripten', 'cache-lib', 'wasm32-emscripten');
+shell.mkdir('-p', cacheLibDir);
+shell.cp('-f', path.join(SYSROOT_LIB, 'libSDL3.a'), cacheLibDir);
+console.log('Deployed libSDL3.a to sysroot/usr/lib/emscripten/cache-lib/wasm32-emscripten/ (FROZEN_CACHE path)');
+
 // Copy public headers
 const includeDir = path.join(SOURCE_DIR, 'include', 'SDL3');
 if (fs.existsSync(includeDir)) {
