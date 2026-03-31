@@ -56,14 +56,6 @@ A graph has four fundamental building blocks:
 
 ## Graph Example: Social Network
 
-```
-(Alice:Person {name: "Alice", age: 30})
-  -[:FRIENDS_WITH {since: 2020}]->
-(Bob:Person {name: "Bob", age: 28})
-  -[:LIKES]->
-(Neo4j:Product {name: "Neo4j", category: "Database"})
-```
-
 ```mermaid
 flowchart LR
     A["Alice<br/>(Person, age: 30)"]
@@ -84,12 +76,11 @@ flowchart LR
 
 Both nodes **and** relationships can have properties:
 
-```
-Node properties:
-  (alice:Person {name: "Alice", age: 30, email: "alice@example.com"})
-
-Relationship properties:
-  -[:FRIENDS_WITH {since: 2020, closeness: "best friend"}]->
+```mermaid
+flowchart LR
+    A["alice:Person<br/>name: Alice<br/>age: 30<br/>email: alice@example.com"]
+    B["bob:Person<br/>name: Bob"]
+    A -->|"FRIENDS_WITH<br/>since: 2020<br/>closeness: best friend"| B
 ```
 
 💡 This is called the **Labeled Property Graph** model — Neo4j's native data model.
@@ -252,21 +243,76 @@ flowchart TD
 
 The secret to Neo4j's speed:
 
-- Each node stores **direct pointers** to its neighbors
+- Each node stores **direct physical pointers** to its neighbors on disk
 - No index lookup needed when traversing relationships
-- Traversal time is **O(1)** per hop — independent of graph size
+- Traversal time is **O(1)** per hop — independent of total graph size
+
+---
+
+## How It Works: Relational vs Graph
+
+**Relational DB** — "Find Bob's friends":
+
+1. Look up Bob's `user_id` in the `users` table → **index scan O(log N)**
+2. Search the `friendships` table for rows where `user_id = Bob` → **index scan O(log N)**
+3. For each matching `friend_id`, look up the friend in `users` → **index scan O(log N)** × number of friends
+4. Every hop repeats steps 2–3. **Cost grows with table size.**
+
+**Neo4j** — "Find Bob's friends":
+
+1. Go to Bob's node record (fixed-size, direct address)
+2. Follow Bob's **relationship pointer** to the first relationship record
+3. Walk the **linked list** of Bob's relationships — each one contains the neighbor's node address
+4. Jump directly to each neighbor node. **No index. No table scan. O(1) per hop.**
+
+---
+
+## Physical Storage Layout
+
+Neo4j stores nodes and relationships in **fixed-size records**:
+
+| Store File             | Record Size | Key Contents                                     |
+| ---------------------- | :---------: | ------------------------------------------------ |
+| `neostore.nodestore`   |   15 bytes  | first relationship pointer, first property pointer, label pointer |
+| `neostore.relstore`    |   34 bytes  | start node, end node, relationship type, next/prev pointers for both nodes |
+
+Each node record contains the **address of its first relationship**. Each relationship record contains **next/prev pointers** forming a doubly-linked list per node — so you can walk all of a node's relationships without touching any index.
 
 ```mermaid
 flowchart LR
-    subgraph SQL["Relational: Index Lookup"]
-        T1["Table Scan<br/>O(log N)"] --> IX["Index"] --> T2["Table Scan<br/>O(log N)"]
+    subgraph NODE["Bob's Node Record (15 bytes)"]
+        NR["firstRelId: 42"]
     end
-    subgraph GRAPH["Graph: Direct Pointers"]
-        N1["Node A"] -->|"pointer"| N2["Node B"] -->|"pointer"| N3["Node C"]
+    subgraph REL1["Relationship #42"]
+        R1["Bob → Alice<br/>nextRelBob: 43"]
     end
+    subgraph REL2["Relationship #43"]
+        R2["Bob → Charlie<br/>nextRelBob: null"]
+    end
+    subgraph ALICE["Alice's Node Record"]
+        AN["..."]
+    end
+    subgraph CHARLIE["Charlie's Node Record"]
+        CN["..."]
+    end
+    NR -->|"direct pointer"| R1
+    R1 -->|"next pointer"| R2
+    R1 -->|"direct pointer"| AN
+    R2 -->|"direct pointer"| CN
 ```
 
-💡 **Relational**: performance degrades with data size. **Graph**: traversal speed stays constant.
+---
+
+## Why This Matters at Scale
+
+| Operation                        | Relational (B-tree index)          | Graph (pointer chase)              |
+| -------------------------------- | ---------------------------------- | ---------------------------------- |
+| Find one neighbor                | O(log N) — N = total rows in table | O(1) — follow one pointer          |
+| Find k neighbors                 | O(k × log N)                       | O(k) — walk k pointers             |
+| Traverse d hops                  | O(k^d × log N) — exponential scans | O(k^d) — no index overhead per hop |
+| Add 10× more data to the DB     | Every lookup slows down (log grows) | Traversal speed unchanged          |
+
+💡 **Relational**: cost per hop depends on how big the table is. **Graph**: cost per hop depends only on how many neighbors that specific node has — the rest of the database is irrelevant.
 
 ---
 
@@ -1398,8 +1444,9 @@ async function getFriendRecommendations(name: string, limit: number = 10) {
 
 **Model:**
 
-```
-(User)-[:PURCHASED]->(Product)
+```mermaid
+flowchart LR
+    U["User"] -->|"PURCHASED"| P["Product"]
 ```
 
 **Query**: "Users who bought X also bought Y"
@@ -1507,7 +1554,17 @@ flowchart TD
     style E fill:#e74c3c,color:#fff
 ```
 
-Alice ← Phone → Bob ← Email → Charlie = **fraud ring** 🚨
+```mermaid
+flowchart LR
+    A["Alice"] <-->|HAS_PHONE| P["Phone"]
+    B["Bob"] <-->|HAS_PHONE| P
+    B <-->|HAS_EMAIL| E["Email"]
+    C["Charlie"] <-->|HAS_EMAIL| E
+    style P fill:#e74c3c,color:#fff
+    style E fill:#e74c3c,color:#fff
+```
+
+**Fraud ring detected** 🚨
 
 ---
 
