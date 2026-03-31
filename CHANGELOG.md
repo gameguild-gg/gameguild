@@ -1,3 +1,12 @@
+## [2.54.1](https://github.com/gameguild-gg/gameguild/compare/v2.54.0...v2.54.1) (2026-03-31)
+
+
+### Bug Fixes
+
+* add npmrc to install dependencies nested ([4bc86ea](https://github.com/gameguild-gg/gameguild/commit/4bc86ea006176bf6c623e6a0c6bc983ef4f7ce3a))
+* **ci:** apps/web ([2b31bca](https://github.com/gameguild-gg/gameguild/commit/2b31bcad59a43f57c2db50167d403229afde64e4))
+* **neo4j:** fix reveal presentation ([5b5a543](https://github.com/gameguild-gg/gameguild/commit/5b5a543a580d75f6f19e3bf89158af2ce53bdf1b))
+
 # [2.54.0](https://github.com/gameguild-gg/gameguild/compare/v2.53.1...v2.54.0) (2026-03-31)
 
 
