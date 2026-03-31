@@ -8,7 +8,7 @@
   "type": "module",
   "main": "src/index.js",
   "dependencies": {
-    "@game-guild/prettier-config": "0.1.0"
+    "@game-guild/prettier-config": "*"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.0.0",

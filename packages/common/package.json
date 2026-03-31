@@ -20,14 +20,14 @@
     "lint": "eslint src --ext .ts,.tsx"
   },
   "dependencies": {
-    "@game-guild/ui": "0.1.0",
+    "@game-guild/ui": "*",
     "ethers": "^6.15.0"
   },
   "devDependencies": {
-    "@game-guild/eslint-config": "0.1.0",
-    "@game-guild/prettier-config": "0.1.0",
-    "@game-guild/tailwind-config": "0.1.0",
-    "@game-guild/typescript-config": "0.1.0",
+    "@game-guild/eslint-config": "*",
+    "@game-guild/prettier-config": "*",
+    "@game-guild/tailwind-config": "*",
+    "@game-guild/typescript-config": "*",
     "@types/node": "^20.0.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
