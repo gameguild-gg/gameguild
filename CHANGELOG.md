@@ -1,3 +1,15 @@
+# [2.54.0](https://github.com/gameguild-gg/gameguild/compare/v2.53.1...v2.54.0) (2026-03-31)
+
+
+### Bug Fixes
+
+* **courses:** broken links ([aef66b7](https://github.com/gameguild-gg/gameguild/commit/aef66b7d948bfc0130afdc5380f10679e3a6d97d))
+
+
+### Features
+
+* **courses/networking:** Add Week 12 content on performance, reliability, and packet budgets ([933277e](https://github.com/gameguild-gg/gameguild/commit/933277ed9e5e455feed88fcbfacbe795d171551d))
+
 ## [2.53.1](https://github.com/gameguild-gg/gameguild/compare/v2.53.0...v2.53.1) (2026-03-30)
 
 

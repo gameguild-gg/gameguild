@@ -1,6 +1,6 @@
 {
   "name": "@game-guild/common",
-  "version": "0.1.0",
+  "version": "2.54.0",
   "type": "module",
   "description": "Common utilities and types for Matheus Martins projects",
   "author": "Matheus Martins <contact@matheusmartins.com>",
