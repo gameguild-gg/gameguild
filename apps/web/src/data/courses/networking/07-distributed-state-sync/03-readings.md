@@ -6,15 +6,15 @@
 
 :::
 
-| #   | Reading                                                                                                                                                                                                          | Time   | Covers                                                                                          |
-| --- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ----------------------------------------------------------------------------------------------- |
-| 1   | ["An Illustrated Proof of the CAP Theorem"](https://mwhittaker.github.io/blog/an_illustrated_proof_of_the_cap_theorem/)                                                                                          | 15 min | Consistency, availability, partition tolerance—tradeoffs in distributed systems                 |
-| 2   | [OrbitDB: P2P vs Client-Server](https://github.com/orbitdb/field-manual/blob/main/02_Thinking_Peer_to_Peer/01_P2P_vs_Client-Server.md)                                                                           | 10 min | Client-server vs P2P architectures from a distributed systems perspective                       |
-| 3   | Gabriel Gambetta, ["Client-Server Game Architecture"](https://www.gabrielgambetta.com/client-server-game-architecture.html)                                                                                      | 15 min | State sync models, authoritative server, client-server vs naive, "never trust the client" intro |
-| 4   | Gabriel Gambetta, ["Client-Side Prediction and Server Reconciliation"](https://www.gabrielgambetta.com/client-side-prediction-server-reconciliation.html)                                                        | 20 min | Server reconciliation, input sequences, correction flow, responsiveness vs authority            |
-| 5   | Glenn Fiedler, ["State Synchronization"](https://gafferongames.com/post/state_synchronization/)                                                                                                                  | 20 min | State vs input sync, delta/selective updates, bandwidth vs accuracy tradeoffs                   |
-| 6   | [Delta Encoding (Wikipedia)](https://en.wikipedia.org/wiki/Delta_encoding) + [Demofox: Compressing Networked State Data](https://blog.demofox.org/2018/06/04/a-neat-trick-for-compressing-networked-state-data/) | 10 min | What delta compression is—send changes vs full state; XOR trick for networked state             |
-| 7   | ["Never Trust the Client"](https://www.gamedeveloper.com/business/never-trust-the-client-simple-techniques-against-cheating-in-multiplayer-and-spatialos) (Gamedeveloper.com)                                    | 15 min | Anti-cheat, server authority, input validation, why clients cannot be trusted                   |
+| #   | Reading                                                                                                                                                                                                                                  | Time   | Covers                                                                                          |
+| --- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ----------------------------------------------------------------------------------------------- |
+| 1   | ["An Illustrated Proof of the CAP Theorem"](https://mwhittaker.github.io/blog/an_illustrated_proof_of_the_cap_theorem/)                                                                                                                  | 15 min | Consistency, availability, partition tolerance—tradeoffs in distributed systems                 |
+| 2   | [OrbitDB: P2P vs Client-Server](https://github.com/orbitdb/field-manual/blob/main/02_Thinking_Peer_to_Peer/01_P2P_vs_Client-Server.md)                                                                                                   | 10 min | Client-server vs P2P architectures from a distributed systems perspective                       |
+| 3   | Gabriel Gambetta, ["Client-Server Game Architecture"](https://www.gabrielgambetta.com/client-server-game-architecture.html)                                                                                                              | 15 min | State sync models, authoritative server, client-server vs naive, "never trust the client" intro |
+| 4   | Gabriel Gambetta, ["Client-Side Prediction and Server Reconciliation"](https://www.gabrielgambetta.com/client-side-prediction-server-reconciliation.html)                                                                                | 20 min | Server reconciliation, input sequences, correction flow, responsiveness vs authority            |
+| 5   | Glenn Fiedler, ["State Synchronization"](https://gafferongames.com/post/state_synchronization/)                                                                                                                                          | 20 min | State vs input sync, delta/selective updates, bandwidth vs accuracy tradeoffs                   |
+| 6   | [State Synchronization Pattern](https://www.eventhelix.com/design-patterns/state-synchronization/) + [Demofox: Compressing Networked State Data](https://blog.demofox.org/2018/06/04/a-neat-trick-for-compressing-networked-state-data/) | 10 min | What delta compression is—send changes vs full state; XOR trick for networked state             |
+| 7   | ["Never Trust the Client"](https://www.gamedeveloper.com/business/never-trust-the-client-simple-techniques-against-cheating-in-multiplayer-and-spatialos) (Gamedeveloper.com)                                                            | 15 min | Anti-cheat, server authority, input validation, why clients cannot be trusted                   |
 
 **Total reading time: ~105 minutes (~1h 45m)**
 
@@ -45,20 +45,20 @@
 
 - Peterson & Davie, [Computer Networks: A Systems Approach](https://book.systemsapproach.org/) — Distributed systems chapter on client-server vs P2P
 - ["An Illustrated Proof of the CAP Theorem"](https://mwhittaker.github.io/blog/an_illustrated_proof_of_the_cap_theorem/) — Deeper dive into consistency tradeoffs
-- Kleppmann, [Designing Data-Intensive Applications](https://dataintensive.net/) — Ch. on replication and consistency (strong vs eventual)
+- Kleppmann, [Personal Site & Talks](https://martin.kleppmann.com/) — replication and consistency background context
 - [OrbitDB: P2P vs Client-Server](https://github.com/orbitdb/field-manual/blob/main/02_Thinking_Peer_to_Peer/01_P2P_vs_Client-Server.md) — Architectural comparison
 
 ### P2P State Sync (Both audiences)
 
 - ["The TRIBES Engine Networking Model"](https://www.gamedeveloper.com/programming/the-tribes-engine-networking-model) (Frohnmayer & Gift) — Classic paper on P2P game networking; lockstep, host authority, state broadcast
-- ["1500 Archers on a 28.8: Network Programming in Age of Empires"](https://www.gamedeveloper.com/programming/1500-archers-on-a-28-8-network-programming-in-age-of-empires-and-beyond) (Bettner & Terrano) — Lockstep/deterministic simulation in RTS; input-only sync
+- [Gabriel Gambetta, "Lag Compensation"](https://www.gabrielgambetta.com/lag-compensation.html) — Practical server-side rewind and fairness tradeoffs for hit validation
 - [OrbitDB: P2P Architecture](https://github.com/orbitdb/field-manual) — P2P data sync, eventual consistency (CSI)
 
 ### Game Networking Context (GPR students)
 
 - Glenn Fiedler, ["Snapshot Interpolation"](https://gafferongames.com/post/snapshot_interpolation/) — Connects to Week 13; interpolation between snapshots
 - [Valve Source Multiplayer Networking](https://developer.valvesoftware.com/wiki/Source_Multiplayer_Networking) — Skim for state sync and authority patterns
-- [Demofox: A Neat Trick for Compressing Networked State Data](https://blog.demofox.org/2018/06/04/a-neat-trick-for-compressing-networked-state-data/) — XOR-based delta compression (different angle from Week 06 Snapshot Compression)
+- [Conflict-free Replicated Data Types (CRDTs)](https://en.wikipedia.org/wiki/Conflict-free_replicated_data_type) — Conflict resolution patterns for eventually consistent shared state
 
 ### Unity / Unreal Documentation
 
