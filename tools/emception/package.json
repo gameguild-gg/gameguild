@@ -1,6 +1,6 @@
 {
   "name": "emception",
-  "version": "2.54.0",
+  "version": "2.54.1",
   "description": "Emscripten C/C++ toolchain running in the browser via WebAssembly",
   "type": "module",
   "main": "./dist/index.js",
