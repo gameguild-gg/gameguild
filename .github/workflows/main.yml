@@ -58,7 +58,8 @@ jobs:
           node-version: '22'
 
       - name: Install dependencies
-        run: npm ci || npm install
+        working-directory: .
+        run: npm install -w tools/emception
 
       - name: Resolve EMSDK version
         id: emsdk-version
