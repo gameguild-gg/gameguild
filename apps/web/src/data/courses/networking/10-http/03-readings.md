@@ -79,7 +79,7 @@ Start with the MDN overview to see how HTTP requests and responses are structure
 
 - [OpenAPI Specification 3.1](https://spec.openapis.org/oas/v3.1.0) — Industry standard for describing HTTP APIs, used by code generators
 - [CNCF Cloud Native Glossary — "API Gateway"](https://glossary.cncf.io/api-gateway/) — How HTTP is used as the transport for microservices communication
-- Kleppmann, [Designing Data-Intensive Applications](https://dataintensive.net/) — Ch. 4 §"REST and RPC" covers HTTP-based service communication patterns
+- Kleppmann, [Designing Data-Intensive Applications (O'Reilly)](https://www.oreilly.com/library/view/designing-data-intensive-applications/9781491903063/) — Ch. 4 §"REST and RPC" covers HTTP-based service communication patterns
 - [HTTP/2 in Infrastructure](https://www.nginx.com/blog/http2-module-nginx/) — How reverse proxies and load balancers use HTTP/2 multiplexing
 
 ### HTTP Debugging & Tools

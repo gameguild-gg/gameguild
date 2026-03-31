@@ -6,15 +6,15 @@ Focus on **understanding the problem** before the solutions. The Stephen Cleary 
 
 :::
 
-| #   | Reading                                                                                                                                                     | Time   | Covers                                                                          |
-| --- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ------------------------------------------------------------------------------- |
-| 1   | Stephen Cleary, ["TCP/IP Protocol Design: Message Framing"](https://www.codeproject.com/Articles/37496/TCP-IP-Protocol-Design-Message-Framing)              | 25 min | Three framing strategies: length-prefix, delimiter-based, and combined          |
-| 2   | Beej's Guide, [Ch. 7.3 "Handling Partial send()s"](https://beej.us/guide/bgnet/html/split/slightly-advanced-techniques.html#sendall)                        | 10 min | `sendall()` wrapper, why one `send()` call may not transmit all bytes           |
-| 3   | Beej's Guide, [Ch. 7.4–7.5 "Serialization & Data Encapsulation"](https://beej.us/guide/bgnet/html/split/slightly-advanced-techniques.html#serialization)    | 20 min | Packing structs for the wire, byte order, length-prefixed encapsulation pattern |
-| 4   | Beej's Guide, [Ch. 7.2 "select()—Synchronous I/O Multiplexing"](https://beej.us/guide/bgnet/html/split/slightly-advanced-techniques.html#select)            | 15 min | Multiplexing reads and writes on one thread, preventing blocking deadlock       |
-| 5   | Boost.Asio, [Buffers Overview](https://www.boost.org/doc/libs/latest/doc/html/boost_asio/overview/core/buffers.html)                                        | 15 min | `mutable_buffer`, `const_buffer`, `streambuf`, dynamic buffers, lifetime rules  |
-| 6   | Boost.Asio, [Chat Example](https://www.boost.org/doc/libs/latest/doc/html/boost_asio/examples/cpp11_examples.html) (`chat_message.hpp` + `chat_server.cpp`) | 20 min | Length-prefixed message protocol in practice, async write queue                 |
-| 7   | Glenn Fiedler, ["Serialization Strategies"](https://gafferongames.com/post/serialization_strategies/)                                                       | 15 min | Game-oriented serialization: read/write streams, bitpacking, versioning         |
+| #   | Reading                                                                                                                                                                           | Time   | Covers                                                                          |
+| --- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ------------------------------------------------------------------------------- |
+| 1   | Stephen Cleary, ["TCP/IP Protocol Design: Message Framing"](https://www.codeproject.com/Articles/37496/TCP-IP-Protocol-Design-Message-Framing)                                    | 25 min | Three framing strategies: length-prefix, delimiter-based, and combined          |
+| 2   | Beej's Guide, [Ch. 7 "Slightly Advanced Techniques"](https://beej.us/guide/bgnet/html/split/slightly-advanced-techniques.html)                                                    | 10 min | `sendall()` wrapper, why one `send()` call may not transmit all bytes           |
+| 3   | Beej's Guide, [Ch. 7 "Slightly Advanced Techniques"](https://beej.us/guide/bgnet/html/split/slightly-advanced-techniques.html#slightly-advanced-techniques)                       | 20 min | Packing structs for the wire, byte order, length-prefixed encapsulation pattern |
+| 4   | Beej's Guide, [Ch. 7 "Slightly Advanced Techniques"](https://beej.us/guide/bgnet/html/split/slightly-advanced-techniques.html#blocking)                                           | 15 min | Multiplexing reads and writes on one thread, preventing blocking deadlock       |
+| 5   | Boost.Asio, [Buffers Overview](https://www.boost.org/doc/libs/latest/doc/html/boost_asio/overview/core/buffers.html)                                                              | 15 min | `mutable_buffer`, `const_buffer`, `streambuf`, dynamic buffers, lifetime rules  |
+| 6   | Boost.Asio, [Chat Example (`chat_server`)](https://www.boost.org/doc/libs/latest/doc/html/boost_asio/examples/cpp11_examples.html#boost_asio.examples.cpp11_examples.chat_server) | 20 min | Length-prefixed message protocol in practice, async write queue                 |
+| 7   | Glenn Fiedler, ["Packet Fragmentation and Reassembly"](https://gafferongames.com/post/packet_fragmentation_and_reassembly/)                                                       | 15 min | Framing large payloads, fragmentation boundaries, and reassembly concerns       |
 
 **Total reading time: ~120 minutes (~2 hours)**
 
@@ -22,20 +22,20 @@ Focus on **understanding the problem** before the solutions. The Stephen Cleary 
 
 ## Videos (Pick One or Two)
 
-| Resource                                                                                                                        | Time   | What it covers                                                                     |
-| ------------------------------------------------------------------------------------------------------------------------------- | ------ | ---------------------------------------------------------------------------------- |
-| javidx9, ["Networking in C++"](https://www.youtube.com/watch?v=2hNdkYInj4g&list=PLIXt8mu2KcUJOwdLMp-Z-cDIZA1aZfVTN) (Parts 3–4) | 60 min | Message headers, body packing, variable-length messages, async write queues in C++ |
-| Computerphile, ["TCP vs UDP"](https://www.youtube.com/watch?v=uwoD5YsGACg)                                                      | 14 min | Stream vs datagram semantics—motivates why framing is only a TCP problem           |
+| Resource                                                                                                                      | Time   | What it covers                                                                     |
+| ----------------------------------------------------------------------------------------------------------------------------- | ------ | ---------------------------------------------------------------------------------- |
+| javidx9, ["Networking in C++" playlist](https://www.youtube.com/playlist?list=PLIXt8mu2KcUJOwdLMp-Z-cDIZA1aZfVTN) (Parts 3–4) | 60 min | Message headers, body packing, variable-length messages, async write queues in C++ |
+| Computerphile, ["TCP vs UDP"](https://www.youtube.com/watch?v=uwoD5YsGACg)                                                    | 14 min | Stream vs datagram semantics—motivates why framing is only a TCP problem           |
 
 ---
 
 ## Interactive Practice
 
-| Resource                                                                                     | Time   | What it does                                                                     |
-| -------------------------------------------------------------------------------------------- | ------ | -------------------------------------------------------------------------------- |
-| [Wireshark TCP capture lab](https://wiki.wireshark.org/SampleCaptures) (download `http.cap`) | 25 min | Find HTTP `Content-Length` headers and `\r\n\r\n` delimiters in real TCP streams |
-| [Kurose/Ross Interactive Exercises](https://gaia.cs.umass.edu/kurose_ross/interactive/)      | 15 min | Self-quiz on message structure, encapsulation, and protocol headers              |
-| Hands-on: Write a hex-dump of a length-prefixed message using `xxd` or a hex editor          | 15 min | Manually construct a `[4-byte length][payload]` frame and verify byte order      |
+| Resource                                                                                | Time   | What it does                                                                     |
+| --------------------------------------------------------------------------------------- | ------ | -------------------------------------------------------------------------------- |
+| [Wireshark HTTP protocol page](https://wiki.wireshark.org/HTTP)                         | 25 min | Find HTTP `Content-Length` headers and `\r\n\r\n` delimiters in real TCP streams |
+| [Kurose/Ross Interactive Exercises (alternate portal)](https://gaia.cs.umass.edu/kurose_ross/index.php?page=interactive) | 15 min | Self-quiz on message structure, encapsulation, and protocol headers              |
+| Hands-on: Write a hex-dump of a length-prefixed message using `xxd` or a hex editor     | 15 min | Manually construct a `[4-byte length][payload]` frame and verify byte order      |
 
 ---
 
@@ -61,17 +61,17 @@ Focus on **understanding the problem** before the solutions. The Stephen Cleary 
 
 ### Game Networking Context (GPR students)
 
-- Glenn Fiedler, ["Reading and Writing Packets"](https://gafferongames.com/post/reading_and_writing_packets/) — Bitpacking serialization for game state, read/write stream abstraction
-- Glenn Fiedler, ["Packet Fragmentation and Reassembly"](https://gafferongames.com/post/packet_fragmentation_and_reassembly/) — Splitting large messages across multiple packets (framing at a higher level)
-- [Multiplayer Game Programming](https://www.oreilly.com/library/view/multiplayer-game-programming/9780134034355/) — Ch. 5 covers message serialization, framing, and type-dispatching for game objects
-- [FlatBuffers Documentation](https://flatbuffers.dev/) — Zero-copy serialization used by game engines for efficient message framing
+- Glenn Fiedler, ["Sending Large Blocks of Data"](https://gafferongames.com/post/sending_large_blocks_of_data/) — Chunking and transfer reliability considerations for large payloads
+- Glenn Fiedler, ["Packet Fragmentation and Reassembly"](https://gafferongames.com/post/packet_fragmentation_and_reassembly/#fragmentation-overview) — Splitting large messages across multiple packets (framing at a higher level)
+- [Multiplayer Game Programming](https://www.oreilly.com/library/view/multiplayer-game-programming/9780134034355/#ch05) — Ch. 5 covers message serialization, framing, and type-dispatching for game objects
+- [Cap'n Proto Encoding](https://capnproto.org/encoding.html) — Zero-copy schema layout and framing-friendly message format
 
 ### Distributed Systems Context (CSI students)
 
-- [Protocol Buffers Encoding](https://protobuf.dev/programming-guides/encoding/) — Varint length-delimited wire format, real-world length-prefix design
-- [gRPC over HTTP/2](https://github.com/grpc/grpc/blob/master/doc/PROTOCOL-HTTP2.md) — How gRPC frames messages: 5-byte header (compressed flag + 4-byte length)
-- [The C10K Problem](http://www.kegel.com/c10k.html) — Non-blocking I/O strategies that prevent deadlock at scale
-- Kleppmann, [Designing Data-Intensive Applications](https://dataintensive.net/) — Ch. 4 discusses encoding/serialization formats and their trade-offs
+- [Protocol Buffers Overview](https://protobuf.dev/overview/) — Typed schema workflow and cross-language serialization model
+- [gRPC Core Concepts](https://grpc.io/docs/what-is-grpc/core-concepts/) — RPC framing, streaming, and message lifecycle over HTTP/2
+- [The C10K Problem](http://www.kegel.com/c10k.html#resources) — Non-blocking I/O strategies that prevent deadlock at scale
+- Kleppmann, [Technical writing archive](https://martin.kleppmann.com/archive.html) — practical deep dives on distributed systems and data architecture
 
 ### Boost.Asio Deep Dive
 
