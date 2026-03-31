@@ -6,15 +6,15 @@ Beej's Guide uses C and POSIX/Linux system calls directly. In this course, we'll
 
 :::
 
-| #   | Reading                                                                                                                              | Time   | Covers                                                                 |
-| --- | ------------------------------------------------------------------------------------------------------------------------------------ | ------ | ---------------------------------------------------------------------- |
-| 1   | [RFC 793 (TCP)](https://datatracker.ietf.org/doc/html/rfc793) — Sections 1-3.4 only                                                  | 25 min | TCP header format, connection states, three-way handshake, termination |
-| 2   | Glenn Fiedler, ["UDP vs. TCP"](https://gafferongames.com/post/udp_vs_tcp/)                                                           | 15 min | latency implications, when TCP fits                                    |
-| 3   | Beej's Guide, [Ch. 5.4–5.7 "System Calls"](https://beej.us/guide/bgnet/html/split/system-calls-or-bust.html#connect)                 | 25 min | `connect()`, `listen()`, `accept()`, `send()`, `recv()`                |
-| 4   | Beej's Guide, [Ch. 6.1–6.2 "Client-Server Background"](https://beej.us/guide/bgnet/html/split/client-server-background.html)         | 20 min | Complete TCP client/server example, connection flow                    |
-| 5   | Beej's Guide, [Ch. 7.3 "Handling Partial send()s"](https://beej.us/guide/bgnet/html/split/slightly-advanced-techniques.html#sendall) | 10 min | Stream semantics, message boundaries, `sendall()` pattern              |
-| 6   | Peterson & Davie, [Ch. 5.2 "Reliable Byte Stream (TCP)"](https://book.systemsapproach.org/e2e/tcp.html)                              | 30 min | Sliding window, sequence numbers, retransmission, flow control         |
-| 7   | Peterson & Davie, [Ch. 6.3 "TCP Congestion Control"](https://book.systemsapproach.org/congestion/tcpcc.html)                         | 25 min | Slow start, congestion avoidance, AIMD, fast retransmit/recovery       |
+| #   | Reading                                                                                                                              | Time   | Covers                                                                                        |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------ | ------ | --------------------------------------------------------------------------------------------- |
+| 1   | [RFC 793 (TCP)](https://datatracker.ietf.org/doc/html/rfc793) — Sections 1-3.4 only                                                  | 25 min | TCP header format, connection states, three-way handshake, termination                        |
+| 2   | Glenn Fiedler, ["Client/Server Connection over UDP"](https://gafferongames.com/post/client_server_connection/)                       | 15 min | head-of-line blocking motivation, connection semantics, and time-critical transport tradeoffs |
+| 3   | Beej's Guide, [Ch. 5.4–5.7 "System Calls"](https://beej.us/guide/bgnet/html/split/system-calls-or-bust.html#connect)                 | 25 min | `connect()`, `listen()`, `accept()`, `send()`, `recv()`                                       |
+| 4   | Beej's Guide, [Ch. 6.1–6.2 "Client-Server Background"](https://beej.us/guide/bgnet/html/split/client-server-background.html)         | 20 min | Complete TCP client/server example, connection flow                                           |
+| 5   | Beej's Guide, [Ch. 7.3 "Handling Partial send()s"](https://beej.us/guide/bgnet/html/split/slightly-advanced-techniques.html#sendall) | 10 min | Stream semantics, message boundaries, `sendall()` pattern                                     |
+| 6   | Peterson & Davie, [Ch. 5.2 "Reliable Byte Stream (TCP)"](https://book.systemsapproach.org/e2e/tcp.html)                              | 30 min | Sliding window, sequence numbers, retransmission, flow control                                |
+| 7   | Peterson & Davie, [Ch. 6.3 "TCP Congestion Control"](https://book.systemsapproach.org/congestion/tcpcc.html)                         | 25 min | Slow start, congestion avoidance, AIMD, fast retransmit/recovery                              |
 
 **Total reading time: ~150 minutes (~2.5 hours)**
 
@@ -39,11 +39,11 @@ I couldn't find a working link for that specific Hussein Nasser video on TCP con
 
 ## Interactive Practice
 
-| Resource                                                                                          | Time   | What it does                                             |
-| ------------------------------------------------------------------------------------------------- | ------ | -------------------------------------------------------- |
-| [Wireshark TCP capture lab](https://wiki.wireshark.org/SampleCaptures) (download `http.cap`)      | 25 min | Analyze handshake, sequence numbers, window size, FIN    |
-| [Kurose/Ross TCP Lab](https://gaia.cs.umass.edu/kurose_ross/interactive/)                         | 15 min | Self-quiz on TCP segment structure, sequence/ack numbers |
-| [TCP State Diagram Practice](https://www.cs.umd.edu/~shankar/417-F01/Slides/chapter3b/sld010.htm) | 10 min | Trace through connection states manually                 |
+| Resource                                                                                               | Time   | What it does                                                                    |
+| ------------------------------------------------------------------------------------------------------ | ------ | ------------------------------------------------------------------------------- |
+| [Wireshark TCP analysis guide](https://www.wireshark.org/docs/wsug_html_chunked/ChAdvTCPAnalysis.html) | 25 min | Analyze handshake, retransmissions, sequence behavior, and flow-control signals |
+| [Kurose/Ross TCP Lab](https://gaia.cs.umass.edu/kurose_ross/interactive/)                              | 15 min | Self-quiz on TCP segment structure, sequence/ack numbers                        |
+| [TCP State Diagram Practice](https://www.cs.umd.edu/~shankar/417-F01/Slides/chapter3b/sld010.htm)      | 10 min | Trace through connection states manually                                        |
 
 ---
 
@@ -70,13 +70,13 @@ I couldn't find a working link for that specific Hussein Nasser video on TCP con
 ### Game Networking Context (GPR students)
 
 - Glenn Fiedler, ["Reliability and Flow Control"](https://gafferongames.com/post/reliability_ordering_and_congestion_avoidance_over_udp/) — Building TCP-like features over UDP for games
-- [Multiplayer Game Programming](https://www.oreilly.com/library/view/multiplayer-game-programming/9780134034355/) — Ch. 4 covers when TCP is acceptable (lobby, login, chat)
+- [Multiplayer Game Programming](https://www.oreilly.com/library/view/multiplayer-game-programming/9780134034355/#toc) — Ch. 4 covers when TCP is acceptable (lobby, login, chat)
 
 ### Distributed Systems Context (CSI students)
 
 - Peterson & Davie, [Ch. 5.2.6 "TCP Extensions"](https://book.systemsapproach.org/e2e/tcp.html#tcp-extensions) — Large windows, timestamps, SACK
-- [The C10K Problem](http://www.kegel.com/c10k.html) — Managing many TCP connections efficiently
-- Kleppmann, [Designing Data-Intensive Applications](https://dataintensive.net/) — Ch. 8 discusses TCP guarantees in distributed systems
+- [The C10K Problem](http://www.kegel.com/c10k.html#simul) — Managing many TCP connections efficiently
+- Kleppmann, [Designing Data-Intensive Applications: notes and resources](https://martin.kleppmann.com/2015/05/27/logs-for-data-infrastructure.html) — distributed-systems context for transport guarantees and system behavior
 
 ### Socket API Deep Dive
 
