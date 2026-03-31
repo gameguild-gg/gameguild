@@ -107,6 +107,19 @@ const updateHashWithSlide = (slideIndex: number): void => {
   window.history.replaceState(null, '', newUrl);
 };
 
+// ── MathJax scoped typeset ──
+// Typeset only a single slide element instead of the entire document.
+// Slides already typeset are skipped (marked via data-mathjax-typeset).
+const typesetSlide = async (slideEl: HTMLElement): Promise<void> => {
+  if (slideEl.dataset.mathjaxTypeset === 'true') return;
+  const MJ = (window as any).MathJax;
+  if (!MJ?.typesetPromise) return;
+  try {
+    await MJ.typesetPromise([slideEl]);
+    slideEl.dataset.mathjaxTypeset = 'true';
+  } catch { /* MathJax errors are non-fatal */ }
+};
+
 // ── Mermaid pipeline ──
 // Two-phase design:
 //   Phase 1 — extractMermaidSources: runs once per slide right after Reveal
@@ -300,13 +313,27 @@ const isSlideOverflowing = (slideEl: HTMLElement): boolean => {
   return maxBottom > slideRect.bottom + 1 || maxRight > slideRect.right + 1;
 };
 
+// Cache of computed font-size percentages per slide element.
+// Invalidated on resize or content change by calling fontSizeCache.clear().
+const fontSizeCache = new WeakMap<HTMLElement, string>();
+
 // Reduce slide font size until all content fits inside the slide bounds.
 const fitSlideFontSize = (slideEl: HTMLElement): void => {
+  // Check cache first — avoids expensive reflow loop on revisited slides.
+  const cached = fontSizeCache.get(slideEl);
+  if (cached !== undefined) {
+    slideEl.style.fontSize = cached;
+    return;
+  }
+
   // Start from default size each time so resizing/navigation can recover.
   slideEl.style.fontSize = '';
 
   // If already fitting, keep default font size.
-  if (!isSlideOverflowing(slideEl)) return;
+  if (!isSlideOverflowing(slideEl)) {
+    fontSizeCache.set(slideEl, '');
+    return;
+  }
 
   const minScale = 0.72; // Don't shrink below 72% for readability.
   const step = 0.03;
@@ -316,6 +343,22 @@ const fitSlideFontSize = (slideEl: HTMLElement): void => {
     scale = Math.max(minScale, Number((scale - step).toFixed(2)));
     slideEl.style.fontSize = `${Math.round(scale * 100)}%`;
   }
+
+  fontSizeCache.set(slideEl, slideEl.style.fontSize);
+};
+
+// O(1) vertical centering for a single slide. Avoids Reveal's layout()
+// which iterates ALL slides and forces O(n) reflows.
+const centerSlide = (slideEl: HTMLElement): void => {
+  const parentEl = slideEl.parentElement;
+  if (!parentEl) return;
+  const parentHeight = parentEl.offsetHeight;
+  const slideHeight = slideEl.scrollHeight;
+  if (slideHeight < parentHeight) {
+    slideEl.style.top = `${Math.max(0, (parentHeight - slideHeight) / 2)}px`;
+  } else {
+    slideEl.style.top = '0px';
+  }
 };
 
 const RevealJS: React.FC<RevealJSProps> = ({ content, height = '600px' }) => {
@@ -323,6 +366,7 @@ const RevealJS: React.FC<RevealJSProps> = ({ content, height = '600px' }) => {
   const slidesRef = useRef<HTMLDivElement>(null);
   const revealInstanceRef = useRef<any>(null);
   const resizeObserverRef = useRef<ResizeObserver | null>(null);
+  const resizeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isClient, setIsClient] = useState(false);
@@ -340,7 +384,6 @@ const RevealJS: React.FC<RevealJSProps> = ({ content, height = '600px' }) => {
     let Reveal: any;
     let Markdown: any;
     let Highlight: any;
-    let RevealMath: any;
 
     const loadRevealJS = async () => {
       try {
@@ -368,12 +411,9 @@ const RevealJS: React.FC<RevealJSProps> = ({ content, height = '600px' }) => {
         const highlightModule = await import(
           'reveal.js/plugin/highlight/highlight.esm.js'
         );
-        const mathModule = await import('reveal.js/plugin/math/math.esm.js');
-
         Reveal = revealModule.default;
         Markdown = markdownModule.default;
         Highlight = highlightModule.default;
-        RevealMath = mathModule.default;
 
         if (!containerRef.current || !slidesRef.current) return;
 
@@ -441,7 +481,7 @@ const RevealJS: React.FC<RevealJSProps> = ({ content, height = '600px' }) => {
 
         // Initialize Reveal.js with markdown and auto-resize support
         const revealInstance = new Reveal(containerRef.current, {
-          plugins: [Markdown, Highlight, RevealMath.MathJax3],
+          plugins: [Markdown, Highlight],
           width: containerWidth || 960,
           height: containerHeight || 700,
           margin: 0.04,
@@ -478,65 +518,77 @@ const RevealJS: React.FC<RevealJSProps> = ({ content, height = '600px' }) => {
           extractMermaidSources(containerRef.current);
         }
 
-        // Add event listener to update URL hash and lazily render mermaid
-        revealInstance.on('slidechanged', async (event: { indexh: number; indexv: number; currentSlide: HTMLElement }) => {
-          updateHashWithSlide(event.indexh);
-          // Render mermaid on the newly-visible slide
-          if (event.currentSlide) {
-            await renderMermaidInSlide(event.currentSlide, isDark);
-            fitSlideFontSize(event.currentSlide);
-            revealInstance.layout();
+        // Load MathJax once — the built-in RevealMath.MathJax3 plugin calls
+        // MathJax.typeset() (whole document) on every slidechanged which is O(n).
+        // We load MathJax ourselves and typeset only the current slide.
+        const mathjaxReady = new Promise<void>((resolve) => {
+          if (typeof window !== 'undefined' && !(window as any).MathJax?.startup) {
+            (window as any).MathJax = {
+              tex: { inlineMath: [['$', '$'], ['\\(', '\\)']] },
+              options: { skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'] },
+              startup: {
+                ready: () => {
+                  (window as any).MathJax.startup.defaultReady();
+                  (window as any).MathJax.startup.promise.then(() => resolve());
+                },
+              },
+            };
+            const script = document.createElement('script');
+            script.id = 'MathJax-script';
+            script.async = true;
+            script.src = 'https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js';
+            document.head.appendChild(script);
+          } else {
+            resolve(); // MathJax already loaded
           }
         });
 
-        // Force layout after initialization to ensure proper sizing
-        setTimeout(() => {
-          if (revealInstanceRef.current) {
-            revealInstanceRef.current.layout();
-            // Navigate to slide from URL hash, or first slide if no hash
-            const initialSlide = getSlideFromHash();
-            revealInstanceRef.current.slide(initialSlide ?? 0);
-            // Update hash to reflect current slide (in case hash was invalid)
-            const currentSlide = revealInstanceRef.current.getIndices().h;
-            updateHashWithSlide(currentSlide);
-            // Force sync to make sure markdown is rendered
-            revealInstanceRef.current.sync();
+        // slidechanged: O(1) — only process the current slide.
+        revealInstance.on('slidechanged', async (event: { indexh: number; indexv: number; currentSlide: HTMLElement }) => {
+          updateHashWithSlide(event.indexh);
+          if (event.currentSlide) {
+            await typesetSlide(event.currentSlide);
+            await renderMermaidInSlide(event.currentSlide, isDark);
+            fitSlideFontSize(event.currentSlide);
+            centerSlide(event.currentSlide);
           }
-        }, 100);
+        });
 
-        // Render mermaid on the initially visible slide
+        // Single post-init sequence: wait for MathJax, layout once, navigate, then render.
         setTimeout(async () => {
-          if (revealInstanceRef.current) {
-            const currentSlide = revealInstanceRef.current.getCurrentSlide();
-            if (currentSlide) {
-              await renderMermaidInSlide(currentSlide, isDark);
-              fitSlideFontSize(currentSlide);
-              revealInstanceRef.current.layout();
-            }
+          if (!revealInstanceRef.current) return;
+          await mathjaxReady;
+          revealInstanceRef.current.layout();
+          const initialSlide = getSlideFromHash();
+          revealInstanceRef.current.slide(initialSlide ?? 0);
+          updateHashWithSlide(revealInstanceRef.current.getIndices().h);
+          revealInstanceRef.current.sync();
+          const currentSlide = revealInstanceRef.current.getCurrentSlide();
+          if (currentSlide) {
+            await typesetSlide(currentSlide);
+            await renderMermaidInSlide(currentSlide, isDark);
+            fitSlideFontSize(currentSlide);
+            centerSlide(currentSlide);
           }
-        }, 200);
+        }, 150);
 
-        // Re-layout after deferred rendering settles
-        setTimeout(() => {
-          if (revealInstanceRef.current) {
-            revealInstanceRef.current.layout();
-            const currentSlide = revealInstanceRef.current.getCurrentSlide();
-            if (currentSlide) {
-              fitSlideFontSize(currentSlide);
-              revealInstanceRef.current.layout();
-            }
-          }
-        }, 500);
-
-        // Setup ResizeObserver to auto-resize presentation when container changes
+        // Setup ResizeObserver with debounce to avoid rapid-fire layouts.
         if (containerRef.current) {
           if (resizeObserverRef.current) {
             resizeObserverRef.current.disconnect();
           }
 
           resizeObserverRef.current = new ResizeObserver((entries) => {
-            if (revealInstanceRef.current && entries[0]) {
-              const { width, height } = entries[0].contentRect;
+            if (!revealInstanceRef.current || !entries[0]) return;
+            // Debounce: collapse rapid resize events into one layout pass.
+            if (resizeTimerRef.current) clearTimeout(resizeTimerRef.current);
+            resizeTimerRef.current = setTimeout(() => {
+              if (!revealInstanceRef.current) return;
+              const { width, height } = entries[0]!.contentRect;
+              // Invalidate font-size cache since slide dimensions changed.
+              containerRef.current?.querySelectorAll<HTMLElement>('.slides section').forEach((s) => {
+                fontSizeCache.delete(s);
+              });
               revealInstanceRef.current.configure({
                 width: width || 960,
                 height: height || 700,
@@ -545,9 +597,9 @@ const RevealJS: React.FC<RevealJSProps> = ({ content, height = '600px' }) => {
               const currentSlide = revealInstanceRef.current.getCurrentSlide();
               if (currentSlide) {
                 fitSlideFontSize(currentSlide);
-                revealInstanceRef.current.layout();
+                centerSlide(currentSlide);
               }
-            }
+            }, 150);
           });
 
           resizeObserverRef.current.observe(containerRef.current);
@@ -576,6 +628,7 @@ const RevealJS: React.FC<RevealJSProps> = ({ content, height = '600px' }) => {
 
     return () => {
       window.removeEventListener('hashchange', handleHashChange);
+      if (resizeTimerRef.current) clearTimeout(resizeTimerRef.current);
       if (revealInstanceRef.current) {
         revealInstanceRef.current.destroy();
         revealInstanceRef.current = null;
@@ -599,14 +652,21 @@ const RevealJS: React.FC<RevealJSProps> = ({ content, height = '600px' }) => {
             extractMermaidSources(containerRef.current);
           }
 
+          // Invalidate font-size cache and MathJax typeset flags since content changed.
+          containerRef.current?.querySelectorAll<HTMLElement>('.slides section').forEach((s) => {
+            fontSizeCache.delete(s);
+            delete s.dataset.mathjaxTypeset;
+          });
+
           // Render mermaid on the current slide after content sync
           setTimeout(async () => {
             if (revealInstanceRef.current) {
               const currentSlide = revealInstanceRef.current.getCurrentSlide();
               if (currentSlide) {
+                await typesetSlide(currentSlide);
                 await renderMermaidInSlide(currentSlide, isDark);
                 fitSlideFontSize(currentSlide);
-                revealInstanceRef.current.layout();
+                centerSlide(currentSlide);
               }
             }
           }, 100);
@@ -655,11 +715,13 @@ const RevealJS: React.FC<RevealJSProps> = ({ content, height = '600px' }) => {
       setIsFullscreen(true);
       if (revealInstanceRef.current) {
         revealInstanceRef.current.configure({ embedded: false });
-        // Force layout recalculation in fullscreen
+        // Invalidate cache & re-layout for new dimensions.
         setTimeout(() => {
-          if (revealInstanceRef.current) {
-            revealInstanceRef.current.layout();
-          }
+          if (!revealInstanceRef.current) return;
+          containerRef.current?.querySelectorAll<HTMLElement>('.slides section').forEach((s) => fontSizeCache.delete(s));
+          revealInstanceRef.current.layout();
+          const cs = revealInstanceRef.current.getCurrentSlide();
+          if (cs) { fitSlideFontSize(cs); centerSlide(cs); }
         }, 100);
       }
     } else {
@@ -667,11 +729,12 @@ const RevealJS: React.FC<RevealJSProps> = ({ content, height = '600px' }) => {
       setIsFullscreen(false);
       if (revealInstanceRef.current) {
         revealInstanceRef.current.configure({ embedded: true });
-        // Force layout recalculation when exiting fullscreen
         setTimeout(() => {
-          if (revealInstanceRef.current) {
-            revealInstanceRef.current.layout();
-          }
+          if (!revealInstanceRef.current) return;
+          containerRef.current?.querySelectorAll<HTMLElement>('.slides section').forEach((s) => fontSizeCache.delete(s));
+          revealInstanceRef.current.layout();
+          const cs = revealInstanceRef.current.getCurrentSlide();
+          if (cs) { fitSlideFontSize(cs); centerSlide(cs); }
         }, 100);
       }
     }
