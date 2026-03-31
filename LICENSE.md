@@ -2,22 +2,22 @@
 
 GameGuild is licensed under a **dual licensing model**:
 
-- **AGPL-3.0+** for open source use
-- **Commercial License** for proprietary use
+- **MIT License** for open source use
+- **Commercial License** for organizations that need contractual support and guarantees
 
 ## How to Choose Your License
 
-### Use the AGPL v3 License if:
+### Use the MIT License if:
 
-- You are using GameGuild for personal, educational, or non-commercial purposes
-- You are developing an open source project and can comply with AGPL v3 requirements
-- You are willing to make your source code available under AGPL v3
+- You want to use, modify, and distribute the software under a permissive open source license
+- You do not require contractual support commitments from GameGuild
+- You accept that the software is provided without warranty, maintenance obligations, or service guarantees
 
 ### Use the Commercial License if:
 
-- You are using GameGuild in a commercial product or service
-- You cannot or do not want to comply with AGPL v3 copyleft requirements
-- You need proprietary use without source code disclosure obligations
+- You are adopting GameGuild in a business or production-critical context
+- You need support, maintenance, onboarding, or priority response from the GameGuild team
+- You need contractual guarantees, service terms, or other commercial commitments beyond the MIT License
 
 **Need help deciding?** Contact us at [https://gameguild.gg/contact](https://gameguild.gg/contact) for licensing guidance.
 
@@ -25,62 +25,54 @@ GameGuild is licensed under a **dual licensing model**:
 
 ## Open Source License
 
-This project is available under the **GNU Affero General Public License v3.0 or later**.
+This project is available under the **MIT License**.
 
-- **Full AGPL v3 text or the repository**: See [LICENSE-AGPLv3](https://github.com/gameguild-gg/gameguild/blob/main/LICENSE-AGPLv3) file
-- **Online**: [agpl-3.0](https://www.gnu.org/licenses/agpl-3.0.html)
-- **Learn more about AGPL v3**: [GNU AGPL v3 Guide](https://www.gnu.org/licenses/quick-guide-gplv3.html)
-- **GNU Licenses FAQ**: [https://www.gnu.org/licenses/gpl-faq.html](https://www.gnu.org/licenses/gpl-faq.html)
+- **Full MIT text in this repository**: See [LICENSE-MIT.md](https://github.com/gameguild-gg/gameguild/blob/main/LICENSE-MIT.md)
+- **Online reference**: [https://opensource.org/license/mit](https://opensource.org/license/mit)
 
 ---
 
 ## Commercial License
 
-**Version 1.0 | Effective Date: 2025-01-07**
+**Version 1.0 | Effective Date: 2026-03-31**
 
-This Commercial License is a legal agreement between GameGuild.gg ("Licensor") and the individual or entity ("Licensee") using the software ("Software"). By using the Software under this License, the Licensee agrees to the terms outlined below.
+The Commercial License is a separate legal agreement between GameGuild.gg ("Licensor") and the individual or entity ("Licensee") using the software ("Software"). It is intended for cases where the Licensee needs business terms that go beyond the default MIT License.
 
 ### 1. Grant of License
 
-The Licensor grants the Licensee a non-exclusive, non-transferable, and revocable license to use the Software under the terms of this License for commercial purposes.
+The Licensor grants the Licensee a non-exclusive, non-transferable, and revocable license to use the Software under the negotiated commercial terms.
 
-### 2. Fees
+### 2. Commercial Scope
 
-Licensee must choose one of the following options based on their usage of the Software:
+The Commercial License may include services and commitments such as:
 
-#### Option 1: Financial Support through Open Collective
+- Technical support and troubleshooting
+- Maintenance and upgrade guidance
+- Onboarding or implementation assistance
+- Response times, availability expectations, or service levels defined by contract
+- Commercial warranties or other guarantees expressly stated in the signed agreement
 
-- The Licensee agrees to pay $1 USD per monthly active user (MAU) per month for all users of the Software
-- Payments must be made through the Licensor's Open Collective account
+No support, warranty, or guarantee exists unless it is explicitly included in the commercial agreement.
 
-#### Option 2: Developer Support
+### 3. Fees and Terms
 
-- The Licensee is responsible for hiring and paying developers to support the project
-- The Licensor will manage the developers on behalf of the Licensee
-- The cost and terms for developer support will be negotiated separately between the Licensee and the Licensor
-
-### 3. Usage Reporting
-
-The Licensee must provide accurate reports on the number of users of the Software upon request by the Licensor. Failure to do so may result in termination of this License.
+Fees, scope, duration, and delivery terms will be defined in the applicable order form, statement of work, or other signed commercial agreement.
 
 ### 4. Restrictions
 
-- This License applies only to commercial use cases
-- Non-commercial use of the Software is governed by the open-source license AGPL v3 available in this repository
+- This License applies only when both parties have entered into a separate commercial agreement
+- Rights, guarantees, and support obligations are limited to what is expressly stated in that agreement
+- If no commercial agreement is in force, use of the software is governed by the MIT License
 
 ### 5. Term and Termination
 
-- This License remains in effect until terminated
-- The Licensor may terminate this License if the Licensee fails to comply with its terms
-- Upon termination, the Licensee must cease all use of the Software for commercial purposes
+- The Commercial License remains in effect for the term defined in the signed agreement
+- Either party may terminate it according to the termination clauses in that agreement
+- On termination, the Licensee's commercial rights and service entitlements end except where the agreement states otherwise
 
-### 6. Disclaimer of Warranty
+### 6. Warranty and Liability
 
-The Software is provided "AS IS," without warranty of any kind. The Licensor disclaims all implied warranties, including but not limited to the implied warranties of merchantability, fitness for a particular purpose, and non-infringement.
-
-### 7. Limitation of Liability
-
-To the maximum extent permitted by law, the Licensor shall not be liable for any damages arising out of or related to the use of the Software, including but not limited to direct, indirect, incidental, or consequential damages.
+Any warranty, support commitment, service level, indemnity, or limitation of liability will be governed exclusively by the signed commercial agreement. Unless expressly stated there, the software is provided "AS IS".
 
 ---
 
@@ -109,4 +101,4 @@ To the maximum extent permitted by law, the Licensor shall not be liable for any
 **GameGuild Platform**  
 Copyright (C) 2023-2025 [GameGuild.gg](https://gameguild.gg)
 
-This program is dual-licensed under AGPL-3.0+ and a commercial license. See the respective license files for full terms.
+This program is dual-licensed under the MIT License and a commercial license. See the respective license files and agreements for full terms.
