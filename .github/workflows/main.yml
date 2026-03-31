@@ -259,10 +259,10 @@ jobs:
           node-version: '22'
 
       - name: Install web dependencies
-        run: cd apps/web && npm install
+        run: npm install -w apps/web
 
       - name: Build web
-        run: cd apps/web && npm run build
+        run: npm run build -w apps/web
 
   build-api:
     name: Build apps/api
