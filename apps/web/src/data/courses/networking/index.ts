@@ -90,6 +90,17 @@ import networkingWeek11ModernCppConcurrencyMd from './11-nonblocking/02g-modern-
 import networkingWeek11CsiVsGprPatternsMd from './11-nonblocking/02h-csi-vs-gpr-patterns.md';
 import networkingWeek11ReadingsMd from './11-nonblocking/03-readings.md';
 import networkingWeek11AssignmentMd from './11-nonblocking/assignment.md';
+import networkingWeek12RevealMd from './12-performance/01-reveal.md';
+import networkingWeek12LectureMd from './12-performance/02-lecture.md';
+import networkingWeek12MeasuringLatencyJitterLossMd from './12-performance/02a-measuring-latency-jitter-loss.md';
+import networkingWeek12TickRateAndSimulationFrequencyMd from './12-performance/02b-tick-rate-and-simulation-frequency.md';
+import networkingWeek12InterpolationAndJitterBuffersMd from './12-performance/02c-interpolation-and-jitter-buffers.md';
+import networkingWeek12ReliableUdpSequenceAcksMd from './12-performance/02d-reliable-udp-sequence-acks.md';
+import networkingWeek12RetransmissionAndLossDetectionMd from './12-performance/02e-retransmission-and-loss-detection.md';
+import networkingWeek12CongestionPacingAndFairnessMd from './12-performance/02f-congestion-pacing-and-fairness.md';
+import networkingWeek12PacketBudgetsPrioritizationDegradationMd from './12-performance/02g-packet-budgets-prioritization-degradation.md';
+import networkingWeek12CsiVsGprPerformancePatternsMd from './12-performance/02h-csi-vs-gpr-performance-patterns.md';
+import networkingWeek12ReadingsMd from './12-performance/03-readings.md';
 import networkingWeek12AssignmentMd from './12-performance/assignment.md';
 import networkingWeek13AssignmentMd from './13-prediction/assignment.md';
 import networkingWeek14AssignmentMd from './14-architecture/assignment.md';
@@ -2392,6 +2403,260 @@ export const networkingWeek12Intro: ProgramContent & { slug: string } = {
     updatedAt: '2023-01-01T00:00:00Z',
 };
 
+export const networkingWeek12LectureSlides: ProgramContent & { slug: string } = {
+    id: 'week-12-slides',
+    slug: 'slides',
+    programId: 'networking-program-1',
+    parentId: 'week-12',
+    title: 'Lecture Slides',
+    description: 'Presentation slides for Week 12 on performance measurement, reliability, congestion, and packet budgets.',
+    type: ProgramContentType.REVEAL,
+    body: networkingWeek12RevealMd,
+    sortOrder: 0,
+    isRequired: false,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 45,
+    visibility: 1, // Published
+    program: networkingProgram,
+    parent: networkingWeek12Intro,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const networkingWeek12LectureContent: ProgramContent & { slug: string } = {
+    id: 'week-12-lecture',
+    slug: 'lecture',
+    programId: 'networking-program-1',
+    parentId: 'week-12',
+    title: 'Lecture 12: Performance, Reliability, and Packet Budgets',
+    description:
+        'Core concepts: latency/jitter/loss measurement, tick rate tradeoffs, interpolation buffers, reliable UDP, retransmission strategy, congestion control, and packet budgeting.',
+    type: 0, // Page
+    body: networkingWeek12LectureMd,
+    sortOrder: 1,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 90,
+    visibility: 1, // Published
+    program: networkingProgram,
+    parent: networkingWeek12Intro,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const networkingWeek12MeasuringLatencyJitterLoss: ProgramContent & { slug: string } = {
+    id: 'week-12-measuring-latency-jitter-loss',
+    slug: 'measuring-latency-jitter-loss',
+    programId: 'networking-program-1',
+    parentId: 'week-12-lecture',
+    title: '1. Measuring the Right Signals: Latency, Jitter, and Packet Loss',
+    description: 'Measurement-first mindset, RTT/jitter/loss distinctions, and tail-metric instrumentation.',
+    type: 0, // Page
+    body: networkingWeek12MeasuringLatencyJitterLossMd,
+    sortOrder: 1,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 15,
+    visibility: 1, // Published
+    program: networkingProgram,
+    parent: networkingWeek12LectureContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const networkingWeek12TickRateAndSimulationFrequency: ProgramContent & { slug: string } = {
+    id: 'week-12-tick-rate-and-simulation-frequency',
+    slug: 'tick-rate-and-simulation-frequency',
+    programId: 'networking-program-1',
+    parentId: 'week-12-lecture',
+    title: '2. Tick Rate and Simulation Frequency as Budget Decisions',
+    description: 'How update cadence trades freshness against bandwidth, packet pressure, and CPU cost.',
+    type: 0, // Page
+    body: networkingWeek12TickRateAndSimulationFrequencyMd,
+    sortOrder: 2,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 15,
+    visibility: 1, // Published
+    program: networkingProgram,
+    parent: networkingWeek12LectureContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const networkingWeek12InterpolationAndJitterBuffers: ProgramContent & { slug: string } = {
+    id: 'week-12-interpolation-and-jitter-buffers',
+    slug: 'interpolation-and-jitter-buffers',
+    programId: 'networking-program-1',
+    parentId: 'week-12-lecture',
+    title: '3. Interpolation, Jitter Buffers, and Player-Visible Smoothness',
+    description: 'Buffer sizing, delay-for-smoothness tradeoffs, and handling packet clumping/loss artifacts.',
+    type: 0, // Page
+    body: networkingWeek12InterpolationAndJitterBuffersMd,
+    sortOrder: 3,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 15,
+    visibility: 1, // Published
+    program: networkingProgram,
+    parent: networkingWeek12LectureContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const networkingWeek12ReliableUdpSequenceAcks: ProgramContent & { slug: string } = {
+    id: 'week-12-reliable-udp-sequence-acks',
+    slug: 'reliable-udp-sequence-acks',
+    programId: 'networking-program-1',
+    parentId: 'week-12-lecture',
+    title: '4. Reliable UDP Fundamentals: Sequence Numbers, ACKs, and Selective Reliability',
+    description: 'Sequence windows, ACK bitfields, message reliability classes, and selective guarantees.',
+    type: 0, // Page
+    body: networkingWeek12ReliableUdpSequenceAcksMd,
+    sortOrder: 4,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 15,
+    visibility: 1, // Published
+    program: networkingProgram,
+    parent: networkingWeek12LectureContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const networkingWeek12RetransmissionAndLossDetection: ProgramContent & { slug: string } = {
+    id: 'week-12-retransmission-and-loss-detection',
+    slug: 'retransmission-and-loss-detection',
+    programId: 'networking-program-1',
+    parentId: 'week-12-lecture',
+    title: '5. Retransmission and Loss Detection Strategy',
+    description: 'Timeout and NACK inference tradeoffs, RTO estimation, backoff, and recovery safety.',
+    type: 0, // Page
+    body: networkingWeek12RetransmissionAndLossDetectionMd,
+    sortOrder: 5,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 15,
+    visibility: 1, // Published
+    program: networkingProgram,
+    parent: networkingWeek12LectureContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const networkingWeek12CongestionPacingAndFairness: ProgramContent & { slug: string } = {
+    id: 'week-12-congestion-pacing-and-fairness',
+    slug: 'congestion-pacing-and-fairness',
+    programId: 'networking-program-1',
+    parentId: 'week-12-lecture',
+    title: '6. Congestion, Pacing, and Fairness Under Load',
+    description: 'Hybrid congestion signals, paced sending, send-rate adaptation, and coexistence fairness.',
+    type: 0, // Page
+    body: networkingWeek12CongestionPacingAndFairnessMd,
+    sortOrder: 6,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 15,
+    visibility: 1, // Published
+    program: networkingProgram,
+    parent: networkingWeek12LectureContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const networkingWeek12PacketBudgetsPrioritizationDegradation: ProgramContent & { slug: string } = {
+    id: 'week-12-packet-budgets-prioritization-degradation',
+    slug: 'packet-budgets-prioritization-degradation',
+    programId: 'networking-program-1',
+    parentId: 'week-12-lecture',
+    title: '7. Packet Budgets, Prioritization, and Degradation Strategy',
+    description: 'Budget equations, class-based prioritization, anti-starvation, and graceful degradation.',
+    type: 0, // Page
+    body: networkingWeek12PacketBudgetsPrioritizationDegradationMd,
+    sortOrder: 7,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 15,
+    visibility: 1, // Published
+    program: networkingProgram,
+    parent: networkingWeek12LectureContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const networkingWeek12CsiVsGprPerformancePatterns: ProgramContent & { slug: string } = {
+    id: 'week-12-csi-vs-gpr-performance-patterns',
+    slug: 'csi-vs-gpr-performance-patterns',
+    programId: 'networking-program-1',
+    parentId: 'week-12-lecture',
+    title: '8. CSI vs GPR Decision Patterns',
+    description: 'Reconciling systems-level constraints with player-experience goals for network tuning.',
+    type: 0, // Page
+    body: networkingWeek12CsiVsGprPerformancePatternsMd,
+    sortOrder: 8,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 15,
+    visibility: 1, // Published
+    program: networkingProgram,
+    parent: networkingWeek12LectureContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const networkingWeek12Readings: ProgramContent & { slug: string } = {
+    id: 'week-12-readings',
+    slug: 'readings',
+    programId: 'networking-program-1',
+    parentId: 'week-12',
+    title: 'Readings',
+    description: 'Required readings on latency/jitter/loss, reliable UDP, retransmission timing, pacing, and packet budgets.',
+    type: 0, // Page
+    body: networkingWeek12ReadingsMd,
+    sortOrder: 2,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 120,
+    visibility: 1, // Published
+    program: networkingProgram,
+    parent: networkingWeek12Intro,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
 export const networkingWeek12Assignment: ProgramContent & { slug: string } = {
     id: 'week-12-assignment',
     slug: 'assignment',
@@ -2401,7 +2666,7 @@ export const networkingWeek12Assignment: ProgramContent & { slug: string } = {
     description: 'Core networking implemented and demonstrable.',
     type: 0, // Page
     body: networkingWeek12AssignmentMd,
-    sortOrder: 1,
+    sortOrder: 3,
     isRequired: true,
     gradingMethod: 1, // Points
     maxPoints: 100,
@@ -2415,7 +2680,22 @@ export const networkingWeek12Assignment: ProgramContent & { slug: string } = {
     updatedAt: '2023-01-01T00:00:00Z',
 };
 
-networkingWeek12Intro.children = [networkingWeek12Assignment];
+networkingWeek12Intro.children = [
+    networkingWeek12LectureSlides,
+    networkingWeek12LectureContent,
+    networkingWeek12Readings,
+    networkingWeek12Assignment,
+];
+networkingWeek12LectureContent.children = [
+    networkingWeek12MeasuringLatencyJitterLoss,
+    networkingWeek12TickRateAndSimulationFrequency,
+    networkingWeek12InterpolationAndJitterBuffers,
+    networkingWeek12ReliableUdpSequenceAcks,
+    networkingWeek12RetransmissionAndLossDetection,
+    networkingWeek12CongestionPacingAndFairness,
+    networkingWeek12PacketBudgetsPrioritizationDegradation,
+    networkingWeek12CsiVsGprPerformancePatterns,
+];
 
 // Week 13 — Client Prediction and Interpolation + Checkpoint 4: Alpha Build
 export const networkingWeek13Intro: ProgramContent & { slug: string } = {

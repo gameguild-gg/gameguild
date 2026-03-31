@@ -37,11 +37,51 @@ This week is about **measuring what players actually feel** (latency, jitter, lo
 
 ## Optional Deep Dive
 
+- IETF RFC 3550 §6.4.4, ["Analyzing Sender and Receiver Reports"](https://datatracker.ietf.org/doc/html/rfc3550#section-6.4.4) — practical jitter/loss analysis and round-trip interpretation
 - Boost.Asio Reference: [`ip::udp::socket`](https://www.boost.org/doc/libs/latest/doc/html/boost_asio/reference/ip__udp/socket.html) + [`steady_timer`](https://www.boost.org/doc/libs/latest/doc/html/boost_asio/reference/steady_timer.html) — practical building blocks for resend timers and paced send loops
 - .NET Docs: [`Stopwatch`](https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.stopwatch) — high-resolution timing for RTT and jitter instrumentation
 - .NET Docs: [`Socket.SendTo`](https://learn.microsoft.com/en-us/dotnet/api/system.net.sockets.socket.sendto) + [`Socket.ReceiveFrom`](https://learn.microsoft.com/en-us/dotnet/api/system.net.sockets.socket.receivefrom) — low-level UDP send/receive control points
-- IETF RFC 3550 §6.4.4, ["Analyzing Sender and Receiver Reports"](https://datatracker.ietf.org/doc/html/rfc3550#section-6.4.4) — practical jitter/loss analysis and round-trip interpretation
 - Glenn Fiedler, ["Networked Physics"](https://gafferongames.com/post/networked_physics_2004/) — authoritative simulation synchronization tradeoffs
+
+### Measurement: latency, jitter, loss (CSI + GPR)
+
+- IETF RFC 3393, ["IP Packet Delay Variation Metric"](https://datatracker.ietf.org/doc/html/rfc3393) — formal jitter/ipdv metric definitions, sampling methodology, and uncertainty discussion
+- IETF RFC 6298, ["Computing TCP's Retransmission Timer"](https://datatracker.ietf.org/doc/html/rfc6298) — SRTT/RTTVAR/RTO math and backoff behavior (great for designing your own RTT/loss estimator)
+- IETF RFC 8961, ["Requirements for Time-Based Loss Detection"](https://datatracker.ietf.org/doc/html/rfc8961) — modern guidance on timeout-based loss detection tradeoffs (correctness vs responsiveness)
+
+### Tick rate, simulation frequency, and bandwidth tradeoffs
+
+- Glenn Fiedler, ["Snapshot Interpolation"](https://gafferongames.com/post/snapshot_interpolation/) — interpolation delay vs send-rate tradeoffs under jitter/loss
+- Glenn Fiedler, ["Snapshot Compression"](https://gafferongames.com/post/snapshot_compression/) — practical packet-budget engineering and delta/quantization wins
+- Glenn Fiedler, ["State Synchronization"](https://gafferongames.com/post/state_synchronization/) — priority accumulators and adaptive bandwidth allocation by gameplay importance
+
+### Reliable UDP design patterns (ACKs, retransmission, prioritization)
+
+- Glenn Fiedler, ["Virtual Connection over UDP"](https://gafferongames.com/post/virtual_connection_over_udp/) — connection semantics, packet filtering, and timeout lifecycle on top of UDP
+- Glenn Fiedler, ["Reliability and Congestion Avoidance over UDP"](https://gafferongames.com/post/reliability_ordering_and_congestion_avoidance_over_udp/) — sequence/ack/ack-bitfield design, loss inference, and RTT-driven send-rate adaptation
+- Glenn Fiedler, ["Reliable Ordered Messages"](https://gafferongames.com/post/reliable_ordered_messages/) — packet-level ACK mapping to message-level reliability with prioritization
+- IETF RFC 2018, ["TCP Selective Acknowledgment Options"](https://datatracker.ietf.org/doc/html/rfc2018) — the SACK model behind selective retransmission strategies
+- IETF RFC 6675, ["Conservative SACK-Based Loss Recovery"](https://datatracker.ietf.org/doc/html/rfc6675) — robust retransmission behavior under multiple losses
+- IETF RFC 3448, ["TCP-Friendly Rate Control (TFRC)"](https://datatracker.ietf.org/doc/html/rfc3448) — smooth rate adaptation ideas for UDP-style media/game flows
+- IETF RFC 9221, ["Unreliable Datagram Extension to QUIC"](https://datatracker.ietf.org/doc/html/rfc9221) — selective reliability over QUIC + shared congestion control
+
+### Videos / talks (validated links)
+
+- GDC Vault, ["Physics for Game Programmers: Networking for Physics Programmers"](https://www.gdcvault.com/play/1022195/Physics-for-Game-Programmers-Networking) — practical net-physics sync and bandwidth decisions
+- GDC Vault, ["Overwatch Gameplay Architecture and Netcode"](https://www.gdcvault.com/play/1024001/Overwatch-Gameplay-Architecture-and-Netcode) — responsive netcode architecture in production
+- YouTube (GDC Festival of Gaming), ["I Shot You First: Networking the Gameplay of Halo: Reach"](https://www.youtube.com/watch?v=h47zZrqjgLc) — fairness/lag-compensation case study (full talk)
+
+### Optional exploration path (~120 minutes total)
+
+Pick **any 5–7** from the list above to go deeper while staying near 2 hours:
+
+1. RFC 3393 (20 min)
+2. Snapshot Compression (20 min)
+3. Reliability and Congestion Avoidance over UDP (20 min)
+4. RFC 6298 (20 min)
+5. Overwatch GDC talk (20 min)
+6. RFC 9221 (10 min)
+7. State Synchronization (15 min)
 
 ---
 
@@ -61,8 +101,8 @@ This week is about **measuring what players actually feel** (latency, jitter, lo
 
 1. Cloudflare latency primer
 2. Gaffer "Fix Your Timestep!"
-3. Gaffer "Snapshot Interpolation"
-4. Gaffer "Reliability over UDP"
+3. Gambetta "Entity Interpolation"
+4. Gaffer "Reliable Ordered Messages"
 5. RFC 9002 (selected sections)
 6. RFC 8085 (selected sections)
 7. Overwatch talk segment

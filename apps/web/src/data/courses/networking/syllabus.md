@@ -332,8 +332,6 @@ _Focus: Advanced Topics + Final Project Milestones_
 
 **Tuesday, Apr 7:** Client-side prediction, entity interpolation / smoothing (CS: optimistic updates / GPR: dead reckoning), input handling
 
-**Guest Lecturer:** Photon Quantum (confirmed, Tuesday)
-
 **Friday, Apr 10:** _NO CLASS - Day Off_
 
 **Quiz 11:** Prediction, interpolation / smoothing, input delay concepts  
