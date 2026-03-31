@@ -49,10 +49,10 @@
     "npm": ">=10.0.0"
   },
   "devDependencies": {
-    "@game-guild/eslint-config": "0.1.0",
-    "@game-guild/prettier-config": "0.1.0",
-    "@game-guild/tailwind-config": "0.1.0",
-    "@game-guild/typescript-config": "0.1.0",
+    "@game-guild/eslint-config": "*",
+    "@game-guild/prettier-config": "*",
+    "@game-guild/tailwind-config": "*",
+    "@game-guild/typescript-config": "*",
     "@types/node": "^20.0.0",
     "eslint": "^9.0.0",
     "npm-run-all": "^4.1.5",
