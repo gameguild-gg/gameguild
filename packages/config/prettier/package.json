@@ -1,6 +1,6 @@
 {
   "name": "@game-guild/prettier-config",
-  "version": "2.54.1",
+  "version": "2.54.2",
   "description": "Prettier configuration for matheusmartins.com website and related projects",
   "license": "UNLICENSED",
   "author": "Matheus Martins <contact@matheusmartins.com>",

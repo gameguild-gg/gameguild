@@ -1,6 +1,6 @@
 {
   "name": "@game-guild/ui",
-  "version": "2.54.1",
+  "version": "2.54.2",
   "type": "module",
   "description": "UI components and utilities for the website and related projects",
   "author": "Matheus Martins <contact@matheusmartins.com>",

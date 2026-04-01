@@ -1,6 +1,6 @@
 {
   "name": "@game-guild/jest-config",
-  "version": "2.54.1",
+  "version": "2.54.2",
   "description": "Jest testing configuration for matheusmartins.com website and related projects",
   "license": "UNLICENSED",
   "author": "Matheus Martins <contact@matheusmartins.com>",

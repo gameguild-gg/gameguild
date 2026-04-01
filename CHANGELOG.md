@@ -1,3 +1,10 @@
+## [2.54.2](https://github.com/gameguild-gg/gameguild/compare/v2.54.1...v2.54.2) (2026-04-01)
+
+
+### Bug Fixes
+
+* **reveal:** do not recalculate font size on every slide change ([4087f59](https://github.com/gameguild-gg/gameguild/commit/4087f596008a8a6794a970cffdff228df56982be))
+
 ## [2.54.1](https://github.com/gameguild-gg/gameguild/compare/v2.54.0...v2.54.1) (2026-03-31)
 
 
