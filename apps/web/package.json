@@ -1,7 +1,7 @@
 {
   "name": "@gameguild/web",
   "description": "",
-  "version": "2.54.1",
+  "version": "2.54.2",
   "private": true,
   "type": "module",
   "scripts": {
