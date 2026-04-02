@@ -28,8 +28,8 @@
 
 | #   | Video                                                                                        | Time   | Covers                                                                                  |
 | --- | -------------------------------------------------------------------------------------------- | ------ | --------------------------------------------------------------------------------------- |
-| A   | AI and Games — [The AI of Killzone](https://www.youtube.com/watch?v=jS0VBLmEb0A)             | 20 min | Killzone 2/3 AI breakdown: hierarchical coordination, squad behaviors, tactical regions |
-| B   | AI and Games — [The Buddy AI of The Last of Us](https://www.youtube.com/watch?v=dnGzEn3NQ5k) | 15 min | Companion AI coordination, buddy positioning, shared knowledge, role-based behaviors    |
+| A   | Guerrilla Games — [Killzone 2 AI Demo](https://www.youtube.com/watch?v=7oWKCLdsGTE)                              | 5 min  | Killzone 2 hierarchical AI system in action: squad coordination, tactical behaviors     |
+| B   | AI and Games — [The AI of The Last of Us Part II](https://www.youtube.com/watch?v=BghECmeLda0) | 20 min | Companion AI coordination, buddy positioning, shared knowledge, role-based behaviors    |
 
 **Focus while watching:**
 

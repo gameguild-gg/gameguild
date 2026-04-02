@@ -1134,6 +1134,10 @@ Tokens create **natural variety**: the rusher waits in tick 0 (tokens at capacit
 | **Best for**           | 2-agent pairs    | Knowledge sharing   | Squads, formations      | Discrete reactions |
 | **Real examples**      | Escort missions  | F.E.A.R.            | Killzone 2/3, Halo Wars | Sound propagation  |
 
+---
+
+### Communication Architectures
+
 These architectures are **not mutually exclusive** — most shipped games combine them:
 
 ```mermaid
