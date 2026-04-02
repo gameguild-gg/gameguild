@@ -1,3 +1,10 @@
+## [2.54.3](https://github.com/gameguild-gg/gameguild/compare/v2.54.2...v2.54.3) (2026-04-02)
+
+
+### Bug Fixes
+
+* **ai4games2:** fix some readings and contents ([98b6865](https://github.com/gameguild-gg/gameguild/commit/98b6865981140f76931a4f93ec2a9ddcdaf0a451))
+
 ## [2.54.2](https://github.com/gameguild-gg/gameguild/compare/v2.54.1...v2.54.2) (2026-04-01)
 
 
