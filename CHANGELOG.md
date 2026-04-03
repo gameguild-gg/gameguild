@@ -1,3 +1,10 @@
+# [2.55.0](https://github.com/gameguild-gg/gameguild/compare/v2.54.3...v2.55.0) (2026-04-03)
+
+
+### Features
+
+* **networking:** Add Week 12 performance and reliability quiz ([7f26276](https://github.com/gameguild-gg/gameguild/commit/7f2627669c0f3ac9bbaed0cae13c5734a9353a1b))
+
 ## [2.54.3](https://github.com/gameguild-gg/gameguild/compare/v2.54.2...v2.54.3) (2026-04-02)
 
 
