@@ -1,6 +1,6 @@
 {
   "name": "@game-guild/typescript-config",
-  "version": "2.54.3",
+  "version": "2.55.0",
   "description": "TypeScript configuration for matheusmartins.com website and related projects",
   "license": "UNLICENSED",
   "author": "Matheus Martins <contact@matheusmartins.com>",
