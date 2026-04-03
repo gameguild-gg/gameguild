@@ -102,6 +102,7 @@ import networkingWeek12PacketBudgetsPrioritizationDegradationMd from './12-perfo
 import networkingWeek12CsiVsGprPerformancePatternsMd from './12-performance/02h-csi-vs-gpr-performance-patterns.md';
 import networkingWeek12ReadingsMd from './12-performance/03-readings.md';
 import networkingWeek12AssignmentMd from './12-performance/assignment.md';
+import networkingWeek12QuizMd from './12-performance/quiz.md';
 import networkingWeek13AssignmentMd from './13-prediction/assignment.md';
 import networkingWeek14AssignmentMd from './14-architecture/assignment.md';
 import networkingWeek15AssignmentMd from './15-security/assignment.md';
@@ -2680,11 +2681,35 @@ export const networkingWeek12Assignment: ProgramContent & { slug: string } = {
     updatedAt: '2023-01-01T00:00:00Z',
 };
 
+export const networkingWeek12Quiz: ProgramContent & { slug: string } = {
+    id: 'week-12-quiz',
+    slug: 'quiz',
+    programId: 'networking-program-1',
+    parentId: 'week-12',
+    title: 'Quiz 12',
+    description: 'Test your understanding of latency/jitter/loss, tick rate, interpolation, reliable UDP, retransmission, congestion, packet budgets, and CSI vs GPR patterns.',
+    type: 0, // Page
+    body: networkingWeek12QuizMd,
+    sortOrder: 4,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 30,
+    visibility: 1, // Published
+    program: networkingProgram,
+    parent: networkingWeek12Intro,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
 networkingWeek12Intro.children = [
     networkingWeek12LectureSlides,
     networkingWeek12LectureContent,
     networkingWeek12Readings,
     networkingWeek12Assignment,
+    networkingWeek12Quiz,
 ];
 networkingWeek12LectureContent.children = [
     networkingWeek12MeasuringLatencyJitterLoss,
