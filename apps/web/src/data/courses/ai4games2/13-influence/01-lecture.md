@@ -875,12 +875,7 @@ Cover is the most important tactical factor in modern action games. An NPC that 
 
 A cover point is defined by its **position**, its **facing direction** (the direction from which it provides protection), and its **protection arc** (how wide the protection is):
 
-```mermaid
-flowchart TD
-    E["Enemy\n↓ threat direction"] -->|"blocked by"| C["████ Cover Geometry ████"]
-    C --- A["Agent\n(protected)"]
-    A --- Arc["← protection arc →"]
-```
+![Cover Point Diagram](<https://quickchart.io/chart?bkg=white&c={type:'scatter',data:{datasets:[{label:'Enemy',data:[{x:3,y:6}],pointRadius:14,pointStyle:'triangle',backgroundColor:'rgb(220,53,69)'},{label:'Agent (protected)',data:[{x:3,y:2}],pointRadius:14,pointStyle:'circle',backgroundColor:'rgb(40,167,69)'},{label:'Protection Arc',data:[{x:1,y:2},{x:1.5,y:1.2},{x:2.2,y:0.7},{x:3,y:0.5},{x:3.8,y:0.7},{x:4.5,y:1.2},{x:5,y:2}],showLine:true,fill:true,borderColor:'rgba(40,167,69,0.4)',backgroundColor:'rgba(40,167,69,0.15)',borderWidth:2,pointRadius:0,tension:0.4}]},options:{plugins:{legend:{display:true,position:'bottom'},annotation:{annotations:{coverWall:{type:'box',xMin:1,xMax:5,yMin:3.7,yMax:4.3,backgroundColor:'rgba(108,117,125,0.6)',borderColor:'rgb(80,80,80)',borderWidth:3,label:{display:true,content:'COVER WALL',color:'white',font:{size:13,weight:'bold'}}},threatArrow:{type:'line',yMin:5.8,yMax:4.5,xMin:3,xMax:3,borderColor:'rgb(220,53,69)',borderWidth:3,label:{display:true,content:'threat direction',position:'start',color:'rgb(220,53,69)',font:{size:11}}},arcLabel:{type:'label',xValue:3,yValue:0.2,content:'← 120° protection arc →',color:'rgb(40,167,69)',font:{size:12,weight:'bold'}}}}},scales:{x:{display:false,min:-0.5,max:6.5},y:{display:false,min:-0.5,max:7}}}}>)
 
 ### 6.2. Cover Quality Factors
 
