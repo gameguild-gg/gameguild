@@ -54,6 +54,10 @@ import ai4games2Week12Lecture from "./12-multiagent/01-lecture.md";
 import ai4games2Week12Readings from "./12-multiagent/02-readings.md";
 import ai4games2Week12Quiz from "./12-multiagent/03-quiz.md";
 import ai4games2Week12Assignment from "./12-multiagent/assignment.md";
+import ai4games2Week13Slides from "./13-influence/00-reveal.md";
+import ai4games2Week13Lecture from "./13-influence/01-lecture.md";
+import ai4games2Week13Readings from "./13-influence/02-readings.md";
+import ai4games2Week13Assignment from "./13-influence/assignment.md";
 import ai4games2ExtraOldLecture from "./old/extras/llms.md";
 import ai4games2Week01OldLecture from "./old/week01/lecture.md";
 import ai4games2Week01OldReadings from "./old/week01/readings.md";
@@ -1352,6 +1356,99 @@ export const ai4games2Week12AssignmentContent: ProgramContent = {
   updatedAt: "2023-01-01T00:00:00Z",
 };
 
+// Week 13 Content (Influence Maps & Tactical Position Evaluation)
+export const ai4games2Week13SlidesContent: ProgramContent = {
+  id: "ai4games2-week-13-slides",
+  programId: "ai4games2-program",
+  parentId: undefined,
+  title: "Week 13: Influence Maps & Tactical Position Evaluation",
+  slug: "week-13",
+  description: "Influence maps, value propagation, decay functions, layered maps, tactical position evaluation, cover points, flanking detection, tactical pathfinding",
+  type: ProgramContentType.REVEAL,
+  body: ai4games2Week13Slides,
+  sortOrder: 13,
+  isRequired: true,
+  gradingMethod: 0,
+  maxPoints: null,
+  estimatedMinutes: 60,
+  visibility: 1,
+  program: ai4games2Program,
+  parent: undefined,
+  children: [],
+  contentInteractions: [],
+  createdAt: "2023-01-01T00:00:00Z",
+  updatedAt: "2023-01-01T00:00:00Z",
+};
+
+export const ai4games2Week13LectureContent: ProgramContent = {
+  id: "ai4games2-week-13-lecture",
+  programId: "ai4games2-program",
+  parentId: "ai4games2-week-13-slides",
+  title: "Week 13: Lecture Notes",
+  slug: "lecture",
+  description: "Detailed lecture notes on influence maps, value propagation, decay functions, layered maps, tactical position evaluation, cover points, flanking detection, and tactical pathfinding",
+  type: ProgramContentType.PAGE,
+  body: ai4games2Week13Lecture,
+  sortOrder: 1,
+  isRequired: true,
+  gradingMethod: 0,
+  maxPoints: null,
+  estimatedMinutes: 90,
+  visibility: 1,
+  program: ai4games2Program,
+  parent: ai4games2Week13SlidesContent,
+  children: [],
+  contentInteractions: [],
+  createdAt: "2023-01-01T00:00:00Z",
+  updatedAt: "2023-01-01T00:00:00Z",
+};
+
+export const ai4games2Week13ReadingsContent: ProgramContent = {
+  id: "ai4games2-week-13-readings",
+  programId: "ai4games2-program",
+  parentId: "ai4games2-week-13-slides",
+  title: "Week 13: Readings",
+  slug: "readings",
+  description: "Required readings and videos for Influence Maps & Tactical Position Evaluation",
+  type: ProgramContentType.PAGE,
+  body: ai4games2Week13Readings,
+  sortOrder: 2,
+  isRequired: true,
+  gradingMethod: 0,
+  maxPoints: null,
+  estimatedMinutes: 120,
+  visibility: 1,
+  program: ai4games2Program,
+  parent: ai4games2Week13SlidesContent,
+  children: [],
+  contentInteractions: [],
+  createdAt: "2023-01-01T00:00:00Z",
+  updatedAt: "2023-01-01T00:00:00Z",
+};
+
+export const ai4games2Week13AssignmentContent: ProgramContent = {
+  id: "ai4games2-week-13-assignment",
+  programId: "ai4games2-program",
+  parentId: "ai4games2-week-13-slides",
+  title: "Week 13: Assignment",
+  slug: "assignment",
+  description: "Final Project — Checkpoint 4",
+  type: ProgramContentType.PAGE,
+  body: ai4games2Week13Assignment,
+  sortOrder: 3,
+  isRequired: true,
+  gradingMethod: 1,
+  maxPoints: 100,
+  estimatedMinutes: 60,
+  visibility: 1,
+  program: ai4games2Program,
+  parent: ai4games2Week13SlidesContent,
+  children: [],
+  contentInteractions: [],
+  createdAt: "2023-01-01T00:00:00Z",
+  updatedAt: "2023-01-01T00:00:00Z",
+};
+
 export const ai4games2Week02OldContent: ProgramContent = {
   id: "ai4games2-week-02",
   programId: "ai4games2-program",
@@ -1823,6 +1920,11 @@ ai4games2Week12SlidesContent.children = [
   ai4games2Week12QuizContent,
   ai4games2Week12AssignmentContent,
 ];
+ai4games2Week13SlidesContent.children = [
+  ai4games2Week13LectureContent,
+  ai4games2Week13ReadingsContent,
+  ai4games2Week13AssignmentContent,
+];
 ai4games2Week02OldContent.children = [ai4games2Week02OldPcgContent];
 ai4games2Week03OldContent.children = [ai4games2Week03OldAstarContent];
 ai4games2Week04OldContent.children = [ai4games2Week04OldAssignmentContent];
@@ -1863,6 +1965,7 @@ ai4games2Program.programContents = [
   ai4games2Week10SlidesContent,
   ai4games2Week11SlidesContent,
   ai4games2Week12SlidesContent,
+  ai4games2Week13SlidesContent,
   ai4games2OldContent,
 ];
 
