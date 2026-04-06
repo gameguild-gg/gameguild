@@ -91,8 +91,13 @@ import week12Quiz from './12-graph-databases/quiz/graph-neo4j-quiz.md';
 import week12Readings from './12-graph-databases/readings-12.md';
 import week12Reveal from './12-graph-databases/reveal.md';
 
-// Week 13 checkpoint import
+// Week 13 imports
 import week13Assignment from './13-timeseries-search/assignment.md';
+import week13ElasticsearchFundamentals from './13-timeseries-search/elasticsearch-fundamentals.md';
+import week13Quiz from './13-timeseries-search/quiz/quiz.md';
+import week13Readings from './13-timeseries-search/readings-13.md';
+import week13Reveal from './13-timeseries-search/reveal.md';
+import week13TimescaledbFundamentals from './13-timeseries-search/timescaledb-fundamentals.md';
 
 // Week 14 checkpoint import
 import week14Assignment from './14-vector-streaming/assignment.md';
@@ -1871,6 +1876,121 @@ export const week12AssignmentContent: ProgramContent = {
     updatedAt: '2023-01-01T00:00:00Z',
 };
 
+export const week13RevealContent: ProgramContent = {
+    id: 'databases-week-13-reveal',
+    programId: 'databases-program-1',
+    slug: 'timeseries-search',
+    parentId: undefined,
+    title: 'Time Series & Search Engines: TimescaleDB & Elasticsearch',
+    description: 'Reveal.js presentation covering TimescaleDB hypertables, compression, continuous aggregates, Elasticsearch inverted indices, Query DSL, and aggregations',
+    type: ProgramContentType.REVEAL,
+    body: week13Reveal,
+    sortOrder: 13,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 60,
+    visibility: 1, // Published
+    program: databasesProgram,
+    parent: undefined,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const week13ReadingsContent: ProgramContent = {
+    id: 'databases-week-13-readings',
+    programId: 'databases-program-1',
+    slug: 'readings-13',
+    parentId: 'databases-week-13-reveal',
+    title: 'Week 13 Readings & Resources',
+    description: 'Curated references for TimescaleDB, Elasticsearch, inverted indices, and aggregations',
+    type: 0, // Page
+    body: week13Readings,
+    sortOrder: 1,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 30,
+    visibility: 1, // Published
+    program: databasesProgram,
+    parent: week13RevealContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const week13TimescaledbFundamentalsContent: ProgramContent = {
+    id: 'databases-week-13-timescaledb-fundamentals',
+    programId: 'databases-program-1',
+    slug: 'timescaledb-fundamentals',
+    parentId: 'databases-week-13-readings',
+    title: 'TimescaleDB Fundamentals',
+    description: 'Hypertables, chunks, time_bucket(), compression, retention policies, continuous aggregates, and Drizzle ORM integration',
+    type: 0, // Page
+    body: week13TimescaledbFundamentals,
+    sortOrder: 1,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 120,
+    visibility: 1, // Published
+    program: databasesProgram,
+    parent: week13ReadingsContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const week13ElasticsearchFundamentalsContent: ProgramContent = {
+    id: 'databases-week-13-elasticsearch-fundamentals',
+    programId: 'databases-program-1',
+    slug: 'elasticsearch-fundamentals',
+    parentId: 'databases-week-13-readings',
+    title: 'Elasticsearch Fundamentals',
+    description: 'Inverted indices, documents, indices, mappings, analyzers, Query DSL, aggregations, and @elastic/elasticsearch client',
+    type: 0, // Page
+    body: week13ElasticsearchFundamentals,
+    sortOrder: 2,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 120,
+    visibility: 1, // Published
+    program: databasesProgram,
+    parent: week13ReadingsContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const week13QuizContent: ProgramContent = {
+    id: 'databases-week-13-quiz',
+    programId: 'databases-program-1',
+    slug: 'timeseries-search-quiz',
+    parentId: 'databases-week-13-reveal',
+    title: 'Quiz 11: Time Series & Search Engines',
+    description: 'Assess your understanding of TimescaleDB, Elasticsearch, inverted indices, and Query DSL',
+    type: 0, // Page
+    body: week13Quiz,
+    sortOrder: 2,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 45,
+    visibility: 1, // Published
+    program: databasesProgram,
+    parent: week13RevealContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
 // Checkpoint 4: Testing Session 1 (Week 13)
 export const week13AssignmentContent: ProgramContent = {
     id: 'databases-week-13-assignment',
@@ -1981,6 +2101,7 @@ databasesProgram.programContents = [
     week10RevealContent,
     week11RevealContent,
     week12RevealContent,
+    week13RevealContent,
     finalProjectContent,
 ];
 
@@ -2091,6 +2212,16 @@ week12RevealContent.children = [
 
 week12ReadingsContent.children = [
     week12Neo4jFundamentalsContent,
+];
+
+week13RevealContent.children = [
+    week13ReadingsContent,
+    week13QuizContent,
+];
+
+week13ReadingsContent.children = [
+    week13TimescaledbFundamentalsContent,
+    week13ElasticsearchFundamentalsContent,
 ];
 
 finalProjectContent.children = [
