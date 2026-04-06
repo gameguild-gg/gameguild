@@ -998,19 +998,9 @@ If even **one** enemy can see the agent from around the cover, the position is c
 
 **Flanking** is approaching an enemy from a direction they are not protected against — their side or rear.
 
-```mermaid
-flowchart LR
-    subgraph Bad ["Direct Assault ❌"]
-        direction LR
-        A1["Attacker"] -->|"→ → →"| D1["Defender\n🛡️ cover"]
-    end
-    subgraph Good ["Flanking ✅"]
-        direction TB
-        A2["Attacker"] -->|"↓ ↓ ↓"| D2["Defender →\ncover faces →"]
-    end
-```
+![Direct Assault vs Flanking](<https://quickchart.io/chart?bkg=white&c={type:'scatter',data:{datasets:[{label:'Direct Assault',data:[{x:0,y:3},{x:2.5,y:3}],showLine:true,fill:false,borderColor:'rgb(220,53,69)',borderWidth:4,pointRadius:0,borderDash:[8,5]},{label:'Flank Route',data:[{x:0,y:3},{x:0,y:1},{x:2,y:0},{x:4,y:0},{x:4,y:2}],showLine:true,fill:false,borderColor:'rgb(40,167,69)',borderWidth:4,pointRadius:0},{label:'Attacker',data:[{x:0,y:3}],pointRadius:14,pointStyle:'triangle',backgroundColor:'rgb(255,165,0)'},{label:'Defender',data:[{x:4,y:3}],pointRadius:14,pointStyle:'circle',backgroundColor:'rgb(0,123,255)'}]},options:{plugins:{legend:{display:true,position:'bottom'},annotation:{annotations:{cover:{type:'box',xMin:2.5,xMax:3.5,yMin:2.5,yMax:3.5,backgroundColor:'rgba(108,117,125,0.5)',borderColor:'rgb(80,80,80)',borderWidth:3,label:{display:true,content:'COVER',color:'white',font:{size:14,weight:'bold'}}},blocked:{type:'label',xValue:1.2,yValue:3.5,content:'BLOCKED ❌',color:'rgb(220,53,69)',font:{size:14,weight:'bold'}},success:{type:'label',xValue:2,yValue:-0.5,content:'FLANKS AROUND ✅',color:'rgb(40,167,69)',font:{size:14,weight:'bold'}},coverDir:{type:'label',xValue:3,yValue:1.8,content:'Cover faces ←',color:'rgb(100,100,100)',font:{size:11,style:'italic'}}}}},scales:{x:{display:false,min:-1,max:5.5},y:{display:false,min:-1.2,max:4.5}}}}>)
 
-The direct assault runs into the defender's cover. The flank approaches from a direction the cover does not protect.
+The **red dashed** line runs straight into the cover wall — blocked. The **green** line flanks around below to the defender's unprotected side, where the cover provides no protection.
 
 ---
 
