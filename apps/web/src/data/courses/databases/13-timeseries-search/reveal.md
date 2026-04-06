@@ -14,6 +14,11 @@ TimescaleDB · Elasticsearch · Hypertables · Inverted Indices · Query DSL
 - Compression — Columnar Storage
 - Retention Policies — Automatic Cleanup
 - Continuous Aggregates — Materialized Analytics
+
+---
+
+## Agenda (continued)
+
 - Search Engine Paradigm
 - Elasticsearch Architecture — Inverted Indices
 - Documents, Indices & Mappings
@@ -469,14 +474,16 @@ TimescaleDB uses **columnar compression** — groups similar values together and
 ## How Columnar Compression Works
 
 ```mermaid
-flowchart TD
+flowchart LR
     subgraph ROW["Row Storage (Uncompressed)"]
+        direction LR
         R1["time | sensor_id | temp | humidity"]
         R2["time | sensor_id | temp | humidity"]
         R3["time | sensor_id | temp | humidity"]
         R4["time | sensor_id | temp | humidity"]
     end
     subgraph COL["Columnar Storage (Compressed)"]
+        direction LR
         CT["time column<br/>(sorted, delta-encoded)"]
         CS["sensor_id column<br/>(run-length encoded)"]
         CTemp["temp column<br/>(gorilla compressed)"]
@@ -728,7 +735,7 @@ SELECT add_continuous_aggregate_policy(
 ## Multi-Level Aggregation
 
 ```mermaid
-flowchart TD
+flowchart LR
     RAW["Raw sensor_data<br/>1 reading / 10 sec"]
     HOURLY["sensor_data_hourly<br/>1 row / hour / sensor"]
     DAILY["sensor_data_daily<br/>1 row / day / sensor"]
@@ -1240,7 +1247,7 @@ Find in-stock Electronics under $50 with "wireless" in the description:
   "query": {
     "bool": {
       "must": [{ "match": { "description": "wireless" } }],
-      "filter": [{ "term": { "category": "Electronics" } }, { "range": { "price": { "lte": 50 } } }, { "term": { "in_stock": true } }],
+      "filter": [{ "term": { "category": "Electronics" } }, { "range": { "price": { "lte": 50 } } }],
       "must_not": [{ "term": { "discontinued": true } }]
     }
   }
@@ -2187,7 +2194,7 @@ When to Use What
 ## The Polyglot Architecture
 
 ```mermaid
-flowchart LR
+flowchart TD
     APP["Your Application"]
     APP -->|"Users, Orders"| PG["PostgreSQL"]
     APP -->|"Sessions, Cache"| RD["Redis"]
@@ -2208,34 +2215,48 @@ flowchart LR
 
 ---
 
-## Quick Reference: TimescaleDB Cheat Sheet
+## TimescaleDB Cheat Sheet — Setup & Queries
+
+| Operation         | SQL                                                  |
+| ----------------- | ---------------------------------------------------- |
+| Enable extension  | `CREATE EXTENSION IF NOT EXISTS timescaledb;`        |
+| Create hypertable | `SELECT create_hypertable('table', 'time');`         |
+| Downsample        | `SELECT time_bucket('1 hour', time) ... GROUP BY 1;` |
+| Gap fill          | `SELECT time_bucket_gapfill('1 hour', time) ...;`    |
+| View chunks       | `SELECT * FROM timescaledb_information.chunks;`      |
+
+---
+
+## TimescaleDB Cheat Sheet — Policies
 
 | Operation            | SQL                                                                  |
 | -------------------- | -------------------------------------------------------------------- |
-| Enable extension     | `CREATE EXTENSION IF NOT EXISTS timescaledb;`                        |
-| Create hypertable    | `SELECT create_hypertable('table', 'time');`                         |
-| Downsample           | `SELECT time_bucket('1 hour', time) ... GROUP BY 1;`                 |
-| Gap fill             | `SELECT time_bucket_gapfill('1 hour', time) ...;`                    |
 | Enable compression   | `ALTER TABLE t SET (timescaledb.compress);`                          |
 | Compression policy   | `SELECT add_compression_policy('t', INTERVAL '7d');`                 |
 | Retention policy     | `SELECT add_retention_policy('t', INTERVAL '90d');`                  |
 | Continuous aggregate | `CREATE MATERIALIZED VIEW ... WITH (timescaledb.continuous) AS ...;` |
-| View chunks          | `SELECT * FROM timescaledb_information.chunks;`                      |
 | Drop old chunks      | `SELECT drop_chunks('t', INTERVAL '90 days');`                       |
 
 ---
 
-## Quick Reference: Elasticsearch Cheat Sheet
+## Elasticsearch Cheat Sheet — Queries
+
+| Operation         | Query DSL                                            |
+| ----------------- | ---------------------------------------------------- |
+| Full-text search  | `{ "match": { "field": "query" } }`                  |
+| Exact match       | `{ "term": { "field": "value" } }`                   |
+| Range filter      | `{ "range": { "price": { "gte": 10, "lte": 50 } } }` |
+| Bool AND          | `{ "bool": { "must": [...] } }`                      |
+| Bool OR           | `{ "bool": { "should": [...] } }`                    |
+| Bool NOT          | `{ "bool": { "must_not": [...] } }`                  |
+| Filter (no score) | `{ "bool": { "filter": [...] } }`                    |
+
+---
+
+## Elasticsearch Cheat Sheet — Search & Aggregations
 
 | Operation             | Query DSL                                                        |
 | --------------------- | ---------------------------------------------------------------- |
-| Full-text search      | `{ "match": { "field": "query" } }`                              |
-| Exact match           | `{ "term": { "field": "value" } }`                               |
-| Range filter          | `{ "range": { "price": { "gte": 10, "lte": 50 } } }`             |
-| Bool AND              | `{ "bool": { "must": [...] } }`                                  |
-| Bool OR               | `{ "bool": { "should": [...] } }`                                |
-| Bool NOT              | `{ "bool": { "must_not": [...] } }`                              |
-| Filter (no score)     | `{ "bool": { "filter": [...] } }`                                |
 | Multi-field search    | `{ "multi_match": { "query": "q", "fields": [...] } }`           |
 | Fuzzy search          | `{ "fuzzy": { "name": { "value": "q", "fuzziness": "AUTO" } } }` |
 | Prefix (autocomplete) | `{ "prefix": { "name": "wir" } }`                                |
