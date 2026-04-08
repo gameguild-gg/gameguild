@@ -147,7 +147,7 @@ function createVFSFS(
 ): Record<string, unknown> {
     // Permission modes
     const DIR_MODE = 0o40755;  // S_IFDIR | 0755
-    const FILE_MODE = 0o100644; // S_IFREG | 0644
+    const FILE_MODE = 0o100755; // S_IFREG | 0755 — needs execute for access(X_OK)
 
     /**
      * Get the full VFS path for a node by walking up to the mount root.
@@ -614,9 +614,16 @@ export function mountVFSFS(
     // Install hooks on Module for the glue code's JSPI wrappers.
     // These are called before each filesystem syscall (openat, stat64, etc.)
     // to lazily fetch files from the kernel VFS / CDN into the local fileData map.
-    moduleConfig['onPreOpen'] = ensureFile;
-    moduleConfig['onPreStat'] = ensureStat;
-    moduleConfig['onPreAccess'] = ensureStat;
+
+    moduleConfig['onPreOpen'] = async (path: string) => {
+        await ensureFile(path);
+    };
+    moduleConfig['onPreStat'] = async (path: string) => {
+        await ensureStat(path);
+    };
+    moduleConfig['onPreAccess'] = async (path: string) => {
+        await ensureStat(path);
+    };
 
     return fileData;
 }

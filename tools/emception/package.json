@@ -50,7 +50,8 @@
     "patch:glue": "tsx scripts/patch-glue.ts",
     "deploy:cdn": "tsx scripts/deploy-cdn.ts",
     "build:all": "run-s typecheck build:emsdk build:binaryen build:cpython build:llvm build:libcurl-lite build:ninja build:cmake build:sdl3 build:imgui build:sysroot patch:glue build:manifest build:bundles build:lib deploy:cdn",
-    "build:pipeline": "npm run clean && run-s build:sysroot build:manifest build:bundles",
+    "build:cdn": "run-s build:manifest build:bundles deploy:cdn",
+    "build:pipeline": "run-s build:sysroot patch:glue build:cdn build:lib",
     "e2e": "npx playwright test --config=tools/emception/playwright.config.ts",
     "e2e:react": "npx playwright test --config=playwright.config.react.ts"
   },

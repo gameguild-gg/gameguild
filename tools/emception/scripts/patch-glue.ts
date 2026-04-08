@@ -279,6 +279,90 @@ function patchFsSyscallJSPI(content: string, filename: string): string {
 }
 
 /**
+ * Patch 7: Fix broken callMain that ignores arguments.
+ *
+ * Some Emscripten builds generate a simplified callMain() that hardcodes
+ * argc=0 and argv=0, ignoring the args parameter entirely. This happens
+ * when the linker produces a reduced callMain stub (e.g. ninja.mjs).
+ *
+ * We detect the pattern `var argc=0;var argv=0;` and replace callMain
+ * with a full implementation that properly marshals arguments into WASM
+ * memory. Since these builds typically lack stackAlloc/stringToUTF8OnStack,
+ * we grow WASM memory by 1 page (64KB) to get safe scratch space.
+ */
+function patchCallMainArgs(content: string, filename: string): string {
+    const brokenPattern = 'var argc=0;var argv=0;';
+
+    if (!content.includes(brokenPattern)) {
+        return content;
+    }
+
+    if (content.includes('args.unshift(thisProgram)')) {
+        console.log(`  [${filename}] callMain args already patched — skipping`);
+        return content;
+    }
+
+    // Replace the entire broken callMain function.
+    // The broken pattern: function callMain(){...var argc=0;var argv=0;...}
+    // We replace just the body between the opening { and the matching }.
+    const fnStart = content.indexOf('function callMain()');
+    if (fnStart === -1) {
+        console.warn(`  [${filename}] Warning: broken argc=0 pattern found but callMain() not found — skipping`);
+        return content;
+    }
+
+    // Find the start of the function body
+    const bodyStart = content.indexOf('{', fnStart);
+    if (bodyStart === -1) return content;
+
+    // Find the matching closing brace by counting braces
+    let depth = 0;
+    let bodyEnd = -1;
+    for (let i = bodyStart; i < content.length; i++) {
+        if (content[i] === '{') depth++;
+        else if (content[i] === '}') {
+            depth--;
+            if (depth === 0) { bodyEnd = i; break; }
+        }
+    }
+    if (bodyEnd === -1) return content;
+
+    // Build the replacement callMain with proper arg handling.
+    // Uses wasmMemory.grow(1) for scratch space since stackAlloc may be unavailable.
+    const newCallMain = [
+        'function callMain(args=[])',
+        '{',
+        'var entryFunction=_main;',
+        'if(WebAssembly.promising){entryFunction=WebAssembly.promising(entryFunction)}',
+        'args.unshift(thisProgram);',
+        'var argc=args.length;',
+        // Grow memory by 1 page (64KB) to get safe scratch space
+        'var oldPages=(wasmMemory.buffer.byteLength/65536)|0;',
+        'wasmMemory.grow(1);',
+        'updateMemoryViews();',
+        'var scratch=oldPages*65536;',
+        'var argv=scratch;',
+        'var strBase=scratch+(argc+1)*4;',
+        'for(var i=0;i<argc;i++){',
+        'HEAPU32[(argv>>2)+i]=strBase;',
+        'var len=lengthBytesUTF8(args[i])+1;',
+        'stringToUTF8Array(args[i],HEAPU8,strBase,len);',
+        'strBase+=len;',
+        '}',
+        'HEAPU32[(argv>>2)+argc]=0;',
+        'try{var ret=entryFunction(argc,argv);',
+        'if(!(ret&&typeof ret.then==="function"))exitJS(ret,true);',
+        'return ret}catch(e){return handleException(e)}',
+        '}',
+    ].join('');
+
+    content = content.substring(0, fnStart) + newCallMain + content.substring(bodyEnd + 1);
+    patchCount++;
+    console.log(`  [${filename}] Patched 7: callMain args handling (was broken: argc=0, argv=0)`);
+    return content;
+}
+
+/**
  * Apply all relevant patches to a single .mjs file.
  */
 function patchFile(filePath: string): void {
@@ -288,10 +372,11 @@ function patchFile(filePath: string): void {
     let content = fs.readFileSync(filePath, 'utf8');
     const originalContent = content;
 
-    // All tools get ENV merge, resolveGlobalSymbol, callMain promising,
-    // and FS syscall JSPI patches
+    // All tools get ENV merge, resolveGlobalSymbol, callMain args fix,
+    // callMain promising, and FS syscall JSPI patches
     content = patchEnvMerge(content, filename);
     content = patchResolveGlobalSymbol(content, filename);
+    content = patchCallMainArgs(content, filename);
     content = patchCallMainPromising(content, filename);
     content = patchFsSyscallJSPI(content, filename);
 

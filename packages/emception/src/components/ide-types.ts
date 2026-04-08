@@ -28,6 +28,69 @@ export interface TreeNode {
   children: TreeNode[];
 }
 
+// ── Workspace configuration types ───────────────────────────────
+
+export type RunType = 'sdl3-canvas' | 'wasi-terminal' | 'cmake-build' | 'python-script';
+
+export interface CompileConfig {
+  tool: string;
+  args: string[];
+  cwd?: string;
+  output: string;
+  sourceDetect?: {
+    extensions: string[];
+    entryPoint?: string;
+  };
+}
+
+export interface RunConfig {
+  type: RunType;
+  tool?: string;
+  args?: string[];
+}
+
+export interface TestConfig {
+  tool: string;
+  compileArgs?: string[];
+  runArgs: string[];
+  framework?: 'doctest' | 'pytest' | 'unittest' | 'custom';
+}
+
+export interface WorkspaceFeatures {
+  canvas?: boolean;
+  terminalInput?: boolean;
+  showTestButton?: boolean;
+}
+
+export interface LayoutTabConfig {
+  path: string;
+  group: DockGroup;
+}
+
+export interface LayoutConfig {
+  activeFile: string;
+  openTabs: LayoutTabConfig[];
+  expandedDirs?: string[];
+}
+
+export interface BundleFile {
+  encoding: 'text' | 'base64';
+  content: string;
+}
+
+export interface WorkspaceConfig {
+  id: string;
+  label: string;
+  description?: string;
+  version?: number;
+  compile: CompileConfig;
+  run: RunConfig;
+  test?: TestConfig;
+  features: WorkspaceFeatures;
+  layout: LayoutConfig;
+  files: Record<string, BundleFile>;
+}
+
 export const TERMINAL_THEME = {
   background: '#181825',
   foreground: '#cdd6f4',
@@ -138,3 +201,63 @@ export const INITIAL_FILES: Record<string, WorkspaceFile> = {
   '/assets/workspace-preview.svg': { path: '/assets/workspace-preview.svg', type: 'image', content: DEFAULT_IMAGE },
   '/runtime/sdl-canvas': { path: '/runtime/sdl-canvas', type: 'canvas', content: '' },
 };
+
+// ── Workspace bundle helpers ────────────────────────────────────
+
+/** Infer the TabType for a file path within a workspace bundle. */
+function inferTabType(path: string): TabType {
+  if (path.startsWith('/runtime/') && path.includes('canvas')) return 'canvas';
+  const ext = path.split('.').pop()?.toLowerCase() ?? '';
+  if (['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg'].includes(ext)) return 'image';
+  return 'text';
+}
+
+/** Convert a WorkspaceConfig's files map + layout into IDE-ready WorkspaceFile records and OpenTab arrays. */
+export function workspaceConfigToState(config: WorkspaceConfig): {
+  files: Record<string, WorkspaceFile>;
+  openTabs: OpenTab[];
+  activeTabId: string;
+  expandedDirs: Set<string>;
+} {
+  const wsFiles: Record<string, WorkspaceFile> = {};
+  for (const [path, bundle] of Object.entries(config.files)) {
+    const type = inferTabType(path);
+    const content = bundle.encoding === 'base64' ? `data:application/octet-stream;base64,${bundle.content}` : bundle.content;
+    wsFiles[path] = { path, type, content };
+  }
+  // Add a canvas entry if the workspace uses SDL3 and one isn't already defined
+  if (config.features.canvas && !Object.keys(wsFiles).some((p) => inferTabType(p) === 'canvas')) {
+    wsFiles['/runtime/sdl-canvas'] = { path: '/runtime/sdl-canvas', type: 'canvas', content: '' };
+  }
+
+  const openTabs: OpenTab[] = config.layout.openTabs.map((t) => {
+    const file = wsFiles[t.path];
+    return {
+      id: `tab:${t.path}`,
+      path: t.path,
+      type: file?.type ?? 'text',
+      group: t.group,
+    };
+  });
+
+  const activeTabId = `tab:${config.layout.activeFile}`;
+  const expandedDirs = new Set(config.layout.expandedDirs ?? ['/src']);
+
+  return { files: wsFiles, openTabs, activeTabId, expandedDirs };
+}
+
+/** Parse a .workspace.json bundle string into a WorkspaceConfig. Throws on invalid input. */
+export function parseWorkspaceBundle(json: string): WorkspaceConfig {
+  const raw = JSON.parse(json);
+  if (!raw || typeof raw !== 'object') throw new Error('Invalid workspace bundle: not an object');
+  if (!raw.id || typeof raw.id !== 'string') throw new Error('Invalid workspace bundle: missing id');
+  if (!raw.compile || !raw.run || !raw.features || !raw.layout || !raw.files) {
+    throw new Error('Invalid workspace bundle: missing required fields (compile, run, features, layout, files)');
+  }
+  return raw as WorkspaceConfig;
+}
+
+/** Resolve {sourceFile} placeholder in args arrays with the actual source path. */
+export function resolveArgs(args: string[], sourceFile: string): string[] {
+  return args.map((a) => a.replace(/\{sourceFile\}/g, sourceFile));
+}
