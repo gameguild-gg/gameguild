@@ -69,6 +69,8 @@ interface ToolDescriptor {
   modulePath: string;
   /** Directories whose contents should be harvested back to kernel VFS after run */
   harvestDirs?: string[];
+  /** Extra environment variables injected when this tool is spawned */
+  env?: Record<string, string>;
 }
 
 /**
@@ -120,6 +122,7 @@ const TOOL_REGISTRY: Record<string, ToolDescriptor> = {
   },
   'cmake': {
     modulePath: '/usr/lib/cmake.wasm',
+    env: { CMAKE_ROOT: '/usr/share/cmake-4.3' },
   },
   'curl': {
     modulePath: '/usr/lib/curl.wasm',
@@ -328,6 +331,7 @@ export class ToolRunner {
       // before flushing C stdio buffers).
       PYTHONUNBUFFERED: '1',
       ...(isPythonTool ? { EMCC_SKIP_SANITY_CHECK: '1' } : {}),
+      ...(descriptor.env || {}),
       ...(options.env || {}),
     };
 
@@ -338,13 +342,19 @@ export class ToolRunner {
     const tInst = performance.now();
     console.log(`${LOG_PREFIX}   Step 2/4: Instantiating isolated WASM process...`);
 
+    // Use an absolute path for argv[0] so tools that self-locate by inspecting
+    // their executable path (e.g. cmake's FindCMakeResources) can resolve their
+    // install prefix.  /usr/bin/<tool> entries exist in the manifest as symlinks.
+    const program = argv[0] || 'tool';
+    const thisProgram = program.startsWith('/') ? program : `/usr/bin/${program}`;
+
     const moduleConfig: Record<string, unknown> = {
       // Skip callMain during init — we call it manually after FS population
       noInitialRun: true,
       // Allow the process to exit normally
       noExitRuntime: false,
-      // Pass argv[0] as thisProgram
-      thisProgram: argv[0] || 'tool',
+      // Pass absolute argv[0] as thisProgram
+      thisProgram,
       // ENV injection strategy:
       // python.mjs (Emscripten glue at /usr/lib/python.mjs) is patched to
       // merge moduleArg.ENV into local ENV variable:
@@ -685,6 +695,21 @@ sys.excepthook = _hook
     }
     console.log(`${LOG_PREFIX}   Step 3/4 done: FS set up in ${elapsed(tFS)}`);
 
+    // Preload bundles required by specific tools so that their data files
+    // are in memCache before callMain.  This is critical because cmake
+    // checks CMAKE_ROOT existence very early during startup, and the JSPI
+    // hooks may not have fetched the data in time (or JSPI may not be
+    // available in all browser versions).
+    if (descriptor.modulePath === '/usr/lib/cmake.wasm') {
+      const tPreload = performance.now();
+      try {
+        await this.vfs.preloadBundle('usr-share');
+        console.log(`${LOG_PREFIX}   Preloaded usr-share bundle for cmake in ${elapsed(tPreload)}`);
+      } catch (e) {
+        console.warn(`${LOG_PREFIX}   ⚠️ Failed to preload usr-share bundle:`, e);
+      }
+    }
+
     // Step 4: Call main(argc, argv) — the tool runs to completion
     const tRun = performance.now();
     const mainArgv = argv.slice(1); // Emscripten's callMain expects argv without argv[0]
@@ -750,41 +775,12 @@ sys.excepthook = _hook
       exitCode = 0;
     }
 
-    // Debug: dump process FS state after Python tool exits to diagnose linking failures
+    // Read Python exception/stderr capture files and forward to terminal
     if (isPythonTool && instance.FS) {
       try {
-        // List files in home directory to see what emcc produced
-        const homeFiles = instance.FS.readdir('/home/user').filter((f: string) => f !== '.' && f !== '..');
-        console.log(`${LOG_PREFIX}   [DEBUG] /home/user/ files: ${JSON.stringify(homeFiles)}`);
-
-        // List files in /tmp/ for any emcc temp artifacts
-        const tmpFiles = instance.FS.readdir('/tmp').filter((f: string) => f !== '.' && f !== '..');
-        console.log(`${LOG_PREFIX}   [DEBUG] /tmp/ files: ${JSON.stringify(tmpFiles)}`);
-
-        // Check if the emscripten cache was populated correctly
-        try {
-          const cacheFiles = instance.FS.readdir('/home/user/.emscripten_cache/sysroot/lib/wasm32-emscripten')
-            .filter((f: string) => f !== '.' && f !== '..');
-          console.log(`${LOG_PREFIX}   [DEBUG] Cache lib files (first 10): ${JSON.stringify(cacheFiles.slice(0, 10))} (total: ${cacheFiles.length})`);
-        } catch {
-          console.error(`${LOG_PREFIX}   [DEBUG] Cache lib dir NOT FOUND at /home/user/.emscripten_cache/sysroot/lib/wasm32-emscripten`);
-        }
-
-        // Check for emcc-generated temp files in /tmp
-        for (const f of tmpFiles) {
-          if (f.startsWith('emscripten_temp') || f.endsWith('.json') || f.endsWith('.txt')) {
-            try {
-              const content = new TextDecoder().decode(instance.FS.readFile(`/tmp/${f}`));
-              console.log(`${LOG_PREFIX}   [DEBUG] /tmp/${f}: ${content.slice(0, 500)}`);
-            } catch { /* skip binary files */ }
-          }
-        }
-
         // Read Python exception capture file if it exists
         try {
           const errContent = new TextDecoder().decode(instance.FS.readFile('/tmp/python_error.txt'));
-          console.error(`${LOG_PREFIX}   [DEBUG] PYTHON EXCEPTION:\n${errContent}`);
-          // Forward to terminal so the user sees it
           for (const line of errContent.split('\n')) {
             if (line.length > 0) {
               stderrChunks.push(line);
@@ -797,8 +793,6 @@ sys.excepthook = _hook
         try {
           const stderrLog = new TextDecoder().decode(instance.FS.readFile('/tmp/stderr.log'));
           if (stderrLog.length > 0) {
-            console.log(`${LOG_PREFIX}   [DEBUG] Python stderr.log:\n${stderrLog.slice(0, 2000)}`);
-            // Forward each line to the onStderr callback so it appears in the terminal
             for (const line of stderrLog.split('\n')) {
               if (line.length > 0) {
                 stderrChunks.push(line);
@@ -807,8 +801,8 @@ sys.excepthook = _hook
             }
           }
         } catch { /* file doesn't exist — no stderr output */ }
-      } catch (e) {
-        console.warn(`${LOG_PREFIX}   [DEBUG] FS dump failed:`, e);
+      } catch {
+        // FS dump failed — non-critical
       }
     }
 

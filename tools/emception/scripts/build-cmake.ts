@@ -138,6 +138,119 @@ function patchSource(relPath: string, needle: string, replacement: string, label
     console.log(`  [${label}] applied`);
 }
 
+// Emscripten subprocess dispatch: bypass libuv process chain in cmSystemTools.
+// On Emscripten, fork/posix_spawn are not available.  Instead, route subprocess
+// execution through system() → __emscripten_system → ToolRunner.systemCallback.
+// This enables cmake's project() / ninja version / compiler detection to work.
+patchSource(
+    'Source/cmSystemTools.cxx',
+    `bool cmSystemTools::RunSingleCommand(std::vector<std::string> const& command,
+                                     std::string* captureStdOut,
+                                     std::string* captureStdErr, int* retVal,
+                                     char const* dir, OutputOption outputflag,
+                                     cmDuration timeout, Encoding encoding)
+{
+  cmUVProcessChainBuilder builder;`,
+    `bool cmSystemTools::RunSingleCommand(std::vector<std::string> const& command,
+                                     std::string* captureStdOut,
+                                     std::string* captureStdErr, int* retVal,
+                                     char const* dir, OutputOption outputflag,
+                                     cmDuration timeout, Encoding encoding)
+{
+#ifdef __EMSCRIPTEN__
+  /* On Emscripten, fork/posix_spawn are not available (ENOSYS).
+   * Bypass the libuv process chain and dispatch through system(),
+   * which routes through __emscripten_system → systemCallback → ToolRunner.
+   * The ToolRunner recursively spawns the target tool's WASM module. */
+  {
+    /* Build a shell-safe command string from the argv vector. */
+    std::string cmdStr;
+    for (size_t i = 0; i < command.size(); ++i) {
+      if (i > 0) cmdStr += ' ';
+      cmdStr += '"';
+      for (char c : command[i]) {
+        if (c == '"' || c == '\\\\') cmdStr += '\\\\';
+        cmdStr += c;
+      }
+      cmdStr += '"';
+    }
+
+    /* Build the subprocess-request JSON.
+     * The ToolRunner's systemCallback reads this file when it receives
+     * the "__dispatch_subprocess" command. */
+    std::string cwd;
+    if (dir) {
+      cwd = dir;
+    } else {
+      char cwdBuf[4096];
+      if (getcwd(cwdBuf, sizeof(cwdBuf))) cwd = cwdBuf;
+      else cwd = ".";
+    }
+    {
+      FILE* f = fopen("/tmp/.subprocess_request", "w");
+      if (f) {
+        /* Simple JSON escaping for cmd and cwd strings. */
+        std::string jCmd, jCwd;
+        for (char c : cmdStr) {
+          if (c == '"' || c == '\\\\') jCmd += '\\\\';
+          jCmd += c;
+        }
+        for (char c : cwd) {
+          if (c == '"' || c == '\\\\') jCwd += '\\\\';
+          jCwd += c;
+        }
+        fprintf(f, "{\\"cmd\\":\\"%s\\",\\"cwd\\":\\"%s\\"}", jCmd.c_str(), jCwd.c_str());
+        fclose(f);
+      }
+    }
+
+    /* Dispatch — blocks via JSPI until the ToolRunner finishes. */
+    int rc = std::system("__dispatch_subprocess");
+    int exitCode = (rc >> 8) & 0xFF;
+
+    /* Helper to slurp a file into a string. */
+    auto readTempFile = [](const char* path) -> std::string {
+      FILE* f = fopen(path, "r");
+      if (!f) return {};
+      std::string result;
+      char buf[4096];
+      size_t n;
+      while ((n = fread(buf, 1, sizeof(buf), f)) > 0) {
+        result.append(buf, n);
+      }
+      fclose(f);
+      return result;
+    };
+
+    if (captureStdOut) {
+      *captureStdOut = readTempFile("/tmp/.subprocess_stdout");
+    }
+    if (captureStdErr) {
+      *captureStdErr = readTempFile("/tmp/.subprocess_stderr");
+    }
+    if (retVal) {
+      *retVal = exitCode;
+    }
+    if (outputflag == OUTPUT_PASSTHROUGH) {
+      std::string out = readTempFile("/tmp/.subprocess_stdout");
+      std::string err = readTempFile("/tmp/.subprocess_stderr");
+      if (!out.empty()) cmSystemTools::Stdout(out);
+      if (!err.empty()) cmSystemTools::Stderr(err);
+    }
+    return true;
+  }
+#endif /* __EMSCRIPTEN__ */
+
+  cmUVProcessChainBuilder builder;`,
+    'cmSystemTools-emscripten-subprocess',
+);
+
+// TODO: Emscripten subprocess dispatch for execute_process() / libuv.
+// The cmSystemTools::RunSingleCommand patch above handles the critical path
+// (ninja --version, compiler detection).  A full libuv-level patch for
+// execute_process() requires handling the process lifecycle (waitpid, SIGCHLD,
+// event loop completion) — and is left for a future iteration.
+
 // Emscripten libuv: add platform-specific stubs (posix-poll, posix-hrtime, no-fsevents, etc.)
 // Without this, libuv fails to link because Emscripten doesn't match any platform block.
 patchSource(
@@ -254,11 +367,81 @@ if (!fs.existsSync(toolWasm)) {
 }
 console.log(`Created ${toolWasm} + ${toolMjs}`);
 
+// 4b. Patch Emscripten glue: fix PIPEFS.poll to return POLLHUP on closed pipe ends
+// Without this, kwsys ProcessUNIX.c's poll() loop spins forever because
+// Emscripten's PIPEFS.poll returns 0 (no events) instead of POLLHUP when the
+// other end of a pipe is closed, and Emscripten's ___syscall_poll ignores the
+// timeout parameter.
+{
+    const mjsContent = fs.readFileSync(toolMjs, 'utf8');
+    const pipefsNeedle = 'poll(stream,timeout,notifyCallback){var pipe=stream.node.pipe;if((stream.flags&2097155)===1){return 256|4}for(var bucket of pipe.buckets){if(bucket.offset-bucket.roffset>0){return 64|1}}return 0}';
+    const pipefsReplacement = 'poll(stream,timeout,notifyCallback){var pipe=stream.node.pipe;if((stream.flags&2097155)===1){if(pipe.refcnt<=1)return 4|8;return 256|4}if(pipe.refcnt<=1){for(var bucket of pipe.buckets){if(bucket.offset-bucket.roffset>0){return 64|1|16}}return 16}for(var bucket of pipe.buckets){if(bucket.offset-bucket.roffset>0){return 64|1}}return 0}';
+    if (mjsContent.includes(pipefsReplacement)) {
+        console.log('  [pipefs-pollhup] already applied — skipping');
+    } else if (!mjsContent.includes(pipefsNeedle)) {
+        console.warn('  [pipefs-pollhup] needle not found in cmake.mjs — upstream Emscripten may have changed');
+    } else {
+        fs.writeFileSync(toolMjs, mjsContent.replace(pipefsNeedle, pipefsReplacement));
+        console.log('  [pipefs-pollhup] applied');
+    }
+}
+
+// 4c. Patch ___syscall_poll: return POLLHUP on pipe fds with infinite timeout
+// Emscripten's ___syscall_poll ignores the timeout parameter — it returns 0
+// immediately even when timeout=-1.  Since Emscripten can never spawn child
+// processes (no fork/clone), an infinite-timeout poll on a pipe will never
+// succeed.  Inject POLLHUP (read-end) / POLLERR (write-end) so callers like
+// kwsys ProcessUNIX.c break out of their retry loops.
+{
+    const mjsContent = fs.readFileSync(toolMjs, 'utf8');
+    const pollNeedle = 'if(stream.stream_ops.poll){flags=stream.stream_ops.poll(stream,-1)}else{flags=5}';
+    const pollReplacement = 'if(stream.stream_ops.poll){flags=stream.stream_ops.poll(stream,-1);if(flags===0&&timeout<0&&stream.node&&stream.node.pipe){flags=(stream.flags&2097155)===1?12:16}}else{flags=5}';
+    if (mjsContent.includes(pollReplacement)) {
+        console.log('  [syscall-poll-pipe-hup] already applied — skipping');
+    } else if (!mjsContent.includes(pollNeedle)) {
+        console.warn('  [syscall-poll-pipe-hup] needle not found in cmake.mjs — upstream Emscripten may have changed');
+    } else {
+        fs.writeFileSync(toolMjs, mjsContent.replace(pollNeedle, pollReplacement));
+        console.log('  [syscall-poll-pipe-hup] applied');
+    }
+}
+
 // 5. Deploy to sysroot
 console.log('Deploying to sysroot...');
 for (const ext of ['.wasm', '.mjs']) {
     const src = path.join(OUTPUT_DIR, `cmake${ext}`);
     if (fs.existsSync(src)) shell.cp('-f', src, SYSROOT_LIB);
+}
+
+// 6. Copy CMake data files (Modules/, Templates/) to sysroot.
+// Without these, cmake fails at runtime with "Could not find CMAKE_ROOT".
+const CMAKE_MAJOR_MINOR = CMAKE_VERSION.split('.').slice(0, 2).join('.');
+const SYSROOT_CMAKE_DATA = path.join(ROOT, 'sysroot', 'usr', 'share', `cmake-${CMAKE_MAJOR_MINOR}`);
+shell.mkdir('-p', SYSROOT_CMAKE_DATA);
+
+const modulesDir = path.join(SOURCE_DIR, 'Modules');
+if (fs.existsSync(modulesDir)) {
+    console.log(`Copying CMake Modules/ to ${SYSROOT_CMAKE_DATA}/Modules/`);
+    shell.cp('-r', modulesDir, SYSROOT_CMAKE_DATA);
+} else {
+    console.warn('WARNING: CMake Modules/ directory not found in source tree');
+}
+
+const templatesDir = path.join(SOURCE_DIR, 'Templates');
+if (fs.existsSync(templatesDir)) {
+    console.log(`Copying CMake Templates/ to ${SYSROOT_CMAKE_DATA}/Templates/`);
+    shell.cp('-r', templatesDir, SYSROOT_CMAKE_DATA);
+} else {
+    console.warn('WARNING: CMake Templates/ directory not found in source tree');
+}
+
+// 7. Apply glue patches (systemCallback, JSPI, ENV merge) to the freshly
+// deployed cmake.mjs in both build/ and sysroot/. Without these patches,
+// std::system() returns -52 (ENOSYS) and callMain() cannot suspend for async I/O.
+console.log('Applying glue patches to cmake.mjs...');
+const patchGlueResult = shell.exec('npx tsx scripts/patch-glue.ts', { silent: false });
+if (patchGlueResult.code !== 0) {
+    console.error('WARNING: patch:glue failed — cmake.mjs may be missing JSPI/systemCallback patches');
 }
 
 console.log('>>> CMake build complete.');
