@@ -1,5 +1,6 @@
 using GameGuild.API;
 using GameGuild.API.Setup;
+using Microsoft.EntityFrameworkCore;
 
 // ===========================================================================================
 // GameGuild API - Entry Point
@@ -61,6 +62,13 @@ builder.AddPresentationLayer();
 
 // Build the configured web application
 var app = builder.Build();
+
+// Apply pending EF Core migrations automatically before starting the service
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<GameGuild.API.Database.ApplicationDbContext>();
+    await db.Database.MigrateAsync().ConfigureAwait(false);
+}
 
 // Configure the HTTP request pipeline (middleware, routing, endpoints)
 app.ConfigurePipeline();

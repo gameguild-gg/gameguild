@@ -10,6 +10,7 @@
     "dev": "turbo run dev",
     "dev:api": "pnpm --filter @game-guild/api run dev",
     "dev:web": "pnpm --filter @game-guild/web run dev",
+    "prebuild": "pnpm run generate",
     "build": "turbo run build",
     "build:api": "pnpm --filter @game-guild/api run build",
     "build:web": "pnpm --filter @game-guild/web run build",
