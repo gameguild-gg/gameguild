@@ -59,7 +59,7 @@ export default async function Page({ params }: { params: Promise<{ locale: strin
     },
     {
       label: 'Upload a cover image',
-      done: !!course.thumbnailUrl,
+      done: !!course.thumbnail,
       href: `/${locale}/dashboard/learning/courses/${courseId}/listing/media`,
       icon: Image,
     },

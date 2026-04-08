@@ -14,9 +14,7 @@ export default function ApiExamplePage() {
   const [client] = useState(() =>
     createClient({
       baseUrl: 'http://localhost:5295',
-      headers: {
-        'X-Tenant-Id': 'default',
-      },
+      tenant: { getTenantId: async () => 'default' },
     })
   );
 
@@ -40,7 +38,7 @@ export default function ApiExamplePage() {
       });
 
       if (result.ok) {
-        setHealthData(result.value);
+        setHealthData(result.data);
         setHealthStatus('healthy');
       } else {
         const apiError = result.error as ApiError;

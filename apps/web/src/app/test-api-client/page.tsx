@@ -62,9 +62,7 @@ export default function ApiClientTestPage() {
       // Create a test client
       const client = createClient({
         baseUrl: 'http://localhost:5295',
-        headers: {
-          'X-Tenant-Id': 'test-tenant',
-        },
+        tenant: { getTenantId: async () => 'test-tenant' },
       });
       
       setResult({

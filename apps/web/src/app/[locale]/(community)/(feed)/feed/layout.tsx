@@ -1,7 +1,6 @@
-import { PropsWithModal } from '@/types';
 import React, { PropsWithChildren } from 'react';
 
-export default function Layout({ children, modal }: PropsWithChildren<PropsWithModal>): React.JSX.Element {
+export default function Layout({ children, modal }: PropsWithChildren<{ modal?: React.ReactNode }>): React.JSX.Element {
   return (
     <>
       {children}
