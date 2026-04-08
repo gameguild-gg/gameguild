@@ -1,10 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { screen, waitFor } from '@testing-library/react';
-import {
-  createMockUseAuth,
-  renderWithUser,
-  type MockUseAuthReturn,
-} from '@/test/auth-test-helpers';
+import { createMockUseAuth, renderWithUser, type MockUseAuthReturn } from '@/test/auth-test-helpers';
 
 /* ------------------------------------------------------------------ */
 /*  Module mocks                                                       */
@@ -17,14 +13,7 @@ vi.mock('@game-guild/client/react', () => ({
 }));
 
 vi.mock('next/link', () => ({
-  default: ({
-    children,
-    href,
-    ...rest
-  }: {
-    children: React.ReactNode;
-    href: string;
-  }) => (
+  default: ({ children, href, ...rest }: { children: React.ReactNode; href: string }) => (
     <a href={href} {...rest}>
       {children}
     </a>
@@ -32,13 +21,13 @@ vi.mock('next/link', () => ({
 }));
 
 // Must import AFTER mocks
-const { LoginForm } = await import('@/components/login-form');
+const { SignInForm } = await import('@/components/sign-in-form');
 
 /* ------------------------------------------------------------------ */
 /*  Tests                                                              */
 /* ------------------------------------------------------------------ */
 
-describe('LoginForm', () => {
+describe('SignInForm', () => {
   beforeEach(() => {
     mockAuth = createMockUseAuth();
   });
@@ -46,42 +35,29 @@ describe('LoginForm', () => {
   /* ---------- Rendering ---------- */
 
   it('renders the login form with all required elements', () => {
-    renderWithUser(<LoginForm />);
+    renderWithUser(<SignInForm />);
 
     expect(screen.getByText('Welcome back')).toBeInTheDocument();
     expect(screen.getByLabelText('Email')).toBeInTheDocument();
     expect(screen.getByLabelText('Password')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /login$/i })).toBeInTheDocument();
-    expect(
-      screen.getByRole('button', { name: /login with apple/i })
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole('button', { name: /login with google/i })
-    ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /login with apple/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /login with google/i })).toBeInTheDocument();
   });
 
   it('renders navigation links', () => {
-    renderWithUser(<LoginForm />);
+    renderWithUser(<SignInForm />);
 
     expect(screen.getByText('Sign up')).toHaveAttribute('href', '/sign-up');
-    expect(screen.getByText('Forgot your password?')).toHaveAttribute(
-      'href',
-      '/forgot-password'
-    );
-    expect(screen.getByText('Terms of Service')).toHaveAttribute(
-      'href',
-      '/terms'
-    );
-    expect(screen.getByText('Privacy Policy')).toHaveAttribute(
-      'href',
-      '/privacy'
-    );
+    expect(screen.getByText('Forgot your password?')).toHaveAttribute('href', '/forgot-password');
+    expect(screen.getByText('Terms of Service')).toHaveAttribute('href', '/terms');
+    expect(screen.getByText('Privacy Policy')).toHaveAttribute('href', '/privacy');
   });
 
   /* ---------- Client-side validation ---------- */
 
   it('shows error when email is empty on submit', async () => {
-    const { user } = renderWithUser(<LoginForm />);
+    const { user } = renderWithUser(<SignInForm />);
 
     await user.click(screen.getByRole('button', { name: /login$/i }));
 
@@ -90,7 +66,7 @@ describe('LoginForm', () => {
   });
 
   it('shows error when password is empty on submit', async () => {
-    const { user } = renderWithUser(<LoginForm />);
+    const { user } = renderWithUser(<SignInForm />);
 
     await user.type(screen.getByLabelText('Email'), 'test@example.com');
     await user.click(screen.getByRole('button', { name: /login$/i }));
@@ -100,7 +76,7 @@ describe('LoginForm', () => {
   });
 
   it('clears field error when user starts typing', async () => {
-    const { user } = renderWithUser(<LoginForm />);
+    const { user } = renderWithUser(<SignInForm />);
 
     // Trigger email error
     await user.click(screen.getByRole('button', { name: /login$/i }));
@@ -114,7 +90,7 @@ describe('LoginForm', () => {
   /* ---------- Successful submission ---------- */
 
   it('calls signIn with credentials on valid submission', async () => {
-    const { user } = renderWithUser(<LoginForm />);
+    const { user } = renderWithUser(<SignInForm />);
 
     await user.type(screen.getByLabelText('Email'), 'test@example.com');
     await user.type(screen.getByLabelText('Password'), 'password123');
@@ -131,11 +107,9 @@ describe('LoginForm', () => {
   /* ---------- OAuth ---------- */
 
   it('calls signIn with apple provider when Apple button is clicked', async () => {
-    const { user } = renderWithUser(<LoginForm />);
+    const { user } = renderWithUser(<SignInForm />);
 
-    await user.click(
-      screen.getByRole('button', { name: /login with apple/i })
-    );
+    await user.click(screen.getByRole('button', { name: /login with apple/i }));
 
     expect(mockAuth.signIn).toHaveBeenCalledWith('apple', {
       redirectTo: '/dashboard',
@@ -143,11 +117,9 @@ describe('LoginForm', () => {
   });
 
   it('calls signIn with google provider when Google button is clicked', async () => {
-    const { user } = renderWithUser(<LoginForm />);
+    const { user } = renderWithUser(<SignInForm />);
 
-    await user.click(
-      screen.getByRole('button', { name: /login with google/i })
-    );
+    await user.click(screen.getByRole('button', { name: /login with google/i }));
 
     expect(mockAuth.signIn).toHaveBeenCalledWith('google', {
       redirectTo: '/dashboard',
@@ -158,17 +130,13 @@ describe('LoginForm', () => {
 
   it('shows loading text and disables inputs while loading', () => {
     mockAuth = createMockUseAuth({ isLoading: true });
-    renderWithUser(<LoginForm />);
+    renderWithUser(<SignInForm />);
 
     expect(screen.getByRole('button', { name: /signing in/i })).toBeDisabled();
     expect(screen.getByLabelText('Email')).toBeDisabled();
     expect(screen.getByLabelText('Password')).toBeDisabled();
-    expect(
-      screen.getByRole('button', { name: /login with apple/i })
-    ).toBeDisabled();
-    expect(
-      screen.getByRole('button', { name: /login with google/i })
-    ).toBeDisabled();
+    expect(screen.getByRole('button', { name: /login with apple/i })).toBeDisabled();
+    expect(screen.getByRole('button', { name: /login with google/i })).toBeDisabled();
   });
 
   /* ---------- Error display ---------- */
@@ -177,13 +145,13 @@ describe('LoginForm', () => {
     mockAuth = createMockUseAuth({
       error: new Error('Invalid credentials'),
     });
-    renderWithUser(<LoginForm />);
+    renderWithUser(<SignInForm />);
 
     expect(screen.getByText('Invalid credentials')).toBeInTheDocument();
   });
 
   it('clears error on new submission', async () => {
-    const { user } = renderWithUser(<LoginForm />);
+    const { user } = renderWithUser(<SignInForm />);
 
     await user.type(screen.getByLabelText('Email'), 'test@example.com');
     await user.type(screen.getByLabelText('Password'), 'pass');
@@ -195,26 +163,20 @@ describe('LoginForm', () => {
   /* ---------- Accessibility ---------- */
 
   it('sets aria-invalid on email field when validation fails', async () => {
-    const { user } = renderWithUser(<LoginForm />);
+    const { user } = renderWithUser(<SignInForm />);
 
     await user.click(screen.getByRole('button', { name: /login$/i }));
 
-    expect(screen.getByLabelText('Email')).toHaveAttribute(
-      'aria-invalid',
-      'true'
-    );
+    expect(screen.getByLabelText('Email')).toHaveAttribute('aria-invalid', 'true');
   });
 
   it('sets aria-invalid on password field when validation fails', async () => {
-    const { user } = renderWithUser(<LoginForm />);
+    const { user } = renderWithUser(<SignInForm />);
 
     await user.type(screen.getByLabelText('Email'), 'test@example.com');
     await user.click(screen.getByRole('button', { name: /login$/i }));
 
-    expect(screen.getByLabelText('Password')).toHaveAttribute(
-      'aria-invalid',
-      'true'
-    );
+    expect(screen.getByLabelText('Password')).toHaveAttribute('aria-invalid', 'true');
   });
 
   /* ---------- Handles signIn rejection ---------- */
@@ -223,7 +185,7 @@ describe('LoginForm', () => {
     mockAuth = createMockUseAuth({
       signIn: vi.fn().mockRejectedValue(new Error('Network error')),
     });
-    const { user } = renderWithUser(<LoginForm />);
+    const { user } = renderWithUser(<SignInForm />);
 
     await user.type(screen.getByLabelText('Email'), 'test@example.com');
     await user.type(screen.getByLabelText('Password'), 'password123');
@@ -235,9 +197,7 @@ describe('LoginForm', () => {
   /* ---------- className forwarding ---------- */
 
   it('forwards className prop', () => {
-    const { container } = renderWithUser(
-      <LoginForm className="custom-class" />
-    );
+    const { container } = renderWithUser(<SignInForm className="custom-class" />);
 
     expect(container.firstChild).toHaveClass('custom-class');
   });

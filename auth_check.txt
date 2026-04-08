@@ -1,0 +1,9 @@
+Error 500
+{
+  "type": "https://tools.ietf.org/html/rfc9110#section-15.6.1",
+  "title": "System.UnauthorizedAccessException",
+  "status": 500,
+  "detail": "Invalid credentials. Please check your email and password.",
+  "instance": "/v1/auth/sign-in",
+  "exception": {
+    "details": "System.UnauthorizedA

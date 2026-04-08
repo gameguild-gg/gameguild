@@ -84,7 +84,9 @@ public class AssessmentService : IAssessmentService
                 request.MaxAttempts,
                 request.IsRequired,
                 request.AvailableFrom,
-                request.AvailableUntil);
+                request.AvailableUntil,
+                request.ContentId,
+                request.ClearContentId);
 
             _context.Set<Assessment>().Update(assessment);
             await _context.SaveChangesAsync().ConfigureAwait(false);

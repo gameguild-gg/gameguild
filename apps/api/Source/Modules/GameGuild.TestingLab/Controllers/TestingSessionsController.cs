@@ -20,7 +20,7 @@ public class TestingSessionsController(
 {
     // GET: testing/sessions
     [HttpGet("sessions")]
-    [RequireResourcePermission<TestingSessionPermission, TestingSession>(PermissionType.Read)]
+    [RequireResourcePermission<PermissionType, TestingSession>(PermissionType.Read)]
     public async Task<ActionResult<IEnumerable<TestingSession>>> GetTestingSessions([FromQuery] int skip = 0, [FromQuery] int take = 50)
     {
         var sessions = await sessionService.GetTestingSessionsAsync(skip, take).ConfigureAwait(false);
@@ -29,7 +29,7 @@ public class TestingSessionsController(
 
     // GET: testing/sessions/{id}
     [HttpGet("sessions/{id}")]
-    [RequireResourcePermission<TestingSessionPermission, TestingSession>(PermissionType.Read)]
+    [RequireResourcePermission<PermissionType, TestingSession>(PermissionType.Read)]
     public async Task<ActionResult<TestingSession>> GetTestingSession(Guid id)
     {
         var session = await sessionService.GetTestingSessionByIdAsync(id).ConfigureAwait(false);
@@ -39,7 +39,7 @@ public class TestingSessionsController(
 
     // GET: testing/sessions/{id}/details
     [HttpGet("sessions/{id}/details")]
-    [RequireResourcePermission<TestingSessionPermission, TestingSession>(PermissionType.Read)]
+    [RequireResourcePermission<PermissionType, TestingSession>(PermissionType.Read)]
     public async Task<ActionResult<TestingSession>> GetTestingSessionWithDetails(Guid id)
     {
         var session = await sessionService.GetTestingSessionByIdWithDetailsAsync(id).ConfigureAwait(false);
@@ -49,7 +49,7 @@ public class TestingSessionsController(
 
     // POST: testing/sessions
     [HttpPost("sessions")]
-    [RequireResourcePermission<TestingSessionPermission, TestingSession>(PermissionType.Create)]
+    [RequireResourcePermission<PermissionType, TestingSession>(PermissionType.Create)]
     public async Task<ActionResult<TestingSession>> CreateTestingSession(TestingSession session)
     {
         var userId = actorContextAccessor.ActorContext.SubjectIdAsGuid;
@@ -64,7 +64,7 @@ public class TestingSessionsController(
 
     // PUT: testing/sessions/{id}
     [HttpPut("sessions/{id}")]
-    [RequireResourcePermission<TestingSessionPermission, TestingSession>(PermissionType.Edit)]
+    [RequireResourcePermission<PermissionType, TestingSession>(PermissionType.Edit)]
     public async Task<ActionResult<TestingSession>> UpdateTestingSession(Guid id, TestingSession session)
     {
         if (id != session.Id) return BadRequest("ID mismatch");
@@ -83,7 +83,7 @@ public class TestingSessionsController(
 
     // DELETE: testing/sessions/{id}
     [HttpDelete("sessions/{id}")]
-    [RequireResourcePermission<TestingSessionPermission, TestingSession>(PermissionType.Delete)]
+    [RequireResourcePermission<PermissionType, TestingSession>(PermissionType.Delete)]
     public async Task<ActionResult> DeleteTestingSession(Guid id)
     {
         var result = await sessionService.DeleteTestingSessionAsync(id).ConfigureAwait(false);
@@ -93,7 +93,7 @@ public class TestingSessionsController(
 
     // POST: testing/sessions/{id}:restore
     [HttpPost("sessions/{id}:restore")]
-    [RequireResourcePermission<TestingSessionPermission, TestingSession>(PermissionType.Edit)]
+    [RequireResourcePermission<PermissionType, TestingSession>(PermissionType.Edit)]
     public async Task<ActionResult> RestoreTestingSession(Guid id)
     {
         var result = await sessionService.RestoreTestingSessionAsync(id).ConfigureAwait(false);
@@ -115,7 +115,7 @@ public class TestingSessionsController(
 
     // GET: testing/sessions/by-request/{testingRequestId}
     [HttpGet("sessions/by-request/{testingRequestId}")]
-    [RequireResourcePermission<TestingSessionPermission, TestingSession>(PermissionType.Read)]
+    [RequireResourcePermission<PermissionType, TestingSession>(PermissionType.Read)]
     public async Task<ActionResult<IEnumerable<TestingSession>>> GetTestingSessionsByRequest(Guid testingRequestId)
     {
         var sessions = await sessionService.GetTestingSessionsByRequestAsync(testingRequestId).ConfigureAwait(false);
@@ -124,7 +124,7 @@ public class TestingSessionsController(
 
     // GET: testing/sessions/by-location/{locationId}
     [HttpGet("sessions/by-location/{locationId}")]
-    [RequireResourcePermission<TestingSessionPermission, TestingSession>(PermissionType.Read)]
+    [RequireResourcePermission<PermissionType, TestingSession>(PermissionType.Read)]
     public async Task<ActionResult<IEnumerable<TestingSession>>> GetTestingSessionsByLocation(Guid locationId)
     {
         var sessions = await sessionService.GetTestingSessionsByLocationAsync(locationId).ConfigureAwait(false);
@@ -133,7 +133,7 @@ public class TestingSessionsController(
 
     // GET: testing/sessions/by-status/{status}
     [HttpGet("sessions/by-status/{status}")]
-    [RequireResourcePermission<TestingSessionPermission, TestingSession>(PermissionType.Read)]
+    [RequireResourcePermission<PermissionType, TestingSession>(PermissionType.Read)]
     public async Task<ActionResult<IEnumerable<TestingSession>>> GetTestingSessionsByStatus(SessionStatus status)
     {
         var sessions = await sessionService.GetTestingSessionsByStatusAsync(status).ConfigureAwait(false);
@@ -142,7 +142,7 @@ public class TestingSessionsController(
 
     // GET: testing/sessions/by-manager/{managerId}
     [HttpGet("sessions/by-manager/{managerId}")]
-    [RequireResourcePermission<TestingSessionPermission, TestingSession>(PermissionType.Read)]
+    [RequireResourcePermission<PermissionType, TestingSession>(PermissionType.Read)]
     public async Task<ActionResult<IEnumerable<TestingSession>>> GetTestingSessionsByManager(Guid managerId)
     {
         var sessions = await sessionService.GetTestingSessionsByManagerAsync(managerId).ConfigureAwait(false);
@@ -151,7 +151,7 @@ public class TestingSessionsController(
 
     // GET: testing/sessions/search
     [HttpGet("sessions/search")]
-    [RequireResourcePermission<TestingSessionPermission, TestingSession>(PermissionType.Read)]
+    [RequireResourcePermission<PermissionType, TestingSession>(PermissionType.Read)]
     public async Task<ActionResult<IEnumerable<TestingSession>>> SearchTestingSessions([FromQuery] string searchTerm)
     {
         if (string.IsNullOrWhiteSpace(searchTerm)) return BadRequest("Search term is required");
@@ -162,7 +162,7 @@ public class TestingSessionsController(
 
     // GET: testing/sessions/{sessionId}/statistics
     [HttpGet("sessions/{sessionId}/statistics")]
-    [RequireResourcePermission<TestingSessionPermission, TestingSession>(PermissionType.Read, "sessionId")]
+    [RequireResourcePermission<PermissionType, TestingSession>(PermissionType.Read, "sessionId")]
     public async Task<ActionResult<object>> GetTestingSessionStatistics(Guid sessionId)
     {
         var statistics = await sessionService.GetTestingSessionStatisticsAsync(sessionId).ConfigureAwait(false);
@@ -171,7 +171,7 @@ public class TestingSessionsController(
 
     // GET: testing/attendance/sessions
     [HttpGet("attendance/sessions")]
-    [RequireResourcePermission<SessionRegistrationPermission, SessionRegistration>(PermissionType.Read)]
+    [RequireResourcePermission<PermissionType, SessionRegistration>(PermissionType.Read)]
     public async Task<ActionResult<object>> GetSessionAttendanceReport()
     {
         var report = await sessionService.GetSessionAttendanceReportAsync().ConfigureAwait(false);
@@ -180,7 +180,7 @@ public class TestingSessionsController(
 
     // POST: testing/sessions/{id}/attendance
     [HttpPost("sessions/{sessionId}/attendance")]
-    [RequireResourcePermission<SessionRegistrationPermission, SessionRegistration>(PermissionType.Edit, "sessionId")]
+    [RequireResourcePermission<PermissionType, SessionRegistration>(PermissionType.Edit, "sessionId")]
     public async Task<ActionResult> UpdateAttendance(Guid sessionId, UpdateAttendanceDto attendanceDto)
     {
         var currentUserId = actorContextAccessor.ActorContext.SubjectIdAsGuid;

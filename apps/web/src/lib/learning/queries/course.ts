@@ -1,289 +1,275 @@
 import { cache } from 'react';
+import {
+  createServerClient,
+  type LearningCoursesProgram,
+  type LearningCoursesProgramContent,
+  type LearningCoursesProgramContentType,
+  type LearningCoursesProgramAnalytics,
+  type ContentStatus,
+  type ContentVisibility,
+} from '@game-guild/client';
+import { getToken } from '@/auth';
 
-// =============================================================================
-// SINGLE COURSE DATA QUERIES
-// =============================================================================
-// All functions are wrapped with React's cache() for request deduplication.
-// When layout preloads data, pages calling the same function with same args
-// will either get cached data instantly or await the same in-flight promise.
-// =============================================================================
+// Types are defined in a separate file so client components can import them
+// without pulling in server-only modules (auth, next/headers).
+export type {
+  CourseDeliveryMode,
+  CoursePricingModel,
+  CourseFeatures,
+  CourseDetails,
+  CourseAnalytics,
+  ContentItem,
+  CourseContent,
+  ContentItemDetail,
+  CourseStudents,
+} from '@/lib/learning/types';
 
-/**
- * Course delivery mode - determines available features and routes
- */
-export type CourseDeliveryMode =
-  | 'on-demand'   // Self-paced, no live sessions
-  | 'live'        // Scheduled live sessions (virtual)
-  | 'presential'  // In-person classes
-  | 'hybrid';     // Mix of live/presential + on-demand content
+import type {
+  CourseDetails,
+  CourseAnalytics,
+  ContentItem,
+  CourseContent,
+  ContentItemDetail,
+  CourseStudents,
+} from '@/lib/learning/types';
 
-/**
- * Course pricing model
- */
-export type CoursePricingModel =
-  | 'free'         // No payment required
-  | 'paid'         // One-time purchase
-  | 'subscription' // Access via subscription plan
-  | 'freemium';    // Free with paid upgrades/certificates
+// Re-export generated types for consumers
+export type { LearningCoursesProgram, LearningCoursesProgramContent, LearningCoursesProgramContentType };
 
-/**
- * Feature flags derived from delivery mode and pricing
- * These determine which subroutes are available
- */
-export interface CourseFeatures {
-  hasClasses: boolean;        // live, presential, hybrid → true
-  hasRecordings: boolean;     // live, hybrid → true (if recordings enabled)
-  hasSchedule: boolean;       // live, presential, hybrid → true
-  hasOnDemandContent: boolean; // on-demand, hybrid → true
-  hasPricing: boolean;        // paid, subscription, freemium → true
-  hasCertificate: boolean;    // Configurable per course
-  hasAssessments: boolean;    // Configurable per course
-  hasDiscussions: boolean;    // Configurable per course
+function getApiClient() {
+  const apiUrl = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5295';
+  return createServerClient({
+    baseUrl: apiUrl,
+    auth: { getAccessToken: () => getToken() },
+  });
+}
+
+// Map ContentStatus string union to simplified frontend status
+function mapStatus(s: ContentStatus | undefined): 'draft' | 'published' | 'archived' {
+  if (s === 'Published') return 'published';
+  if (s === 'Archived') return 'archived';
+  return 'draft';
+}
+
+// Map ContentVisibility string union to simplified frontend visibility
+function mapVisibility(v: ContentVisibility | undefined): 'public' | 'private' | 'unlisted' {
+  if (v === 'Public') return 'public';
+  return 'private';
 }
 
 /**
- * Course full details
- */
-export interface CourseDetails {
-  id: string;
-  title: string;
-  description: string;
-  status: 'draft' | 'published' | 'archived';
-  visibility: 'public' | 'private' | 'unlisted';
-  deliveryMode: CourseDeliveryMode;
-  pricingModel: CoursePricingModel;
-  features: CourseFeatures;
-  createdAt: string;
-  updatedAt: string;
-}
-
-/**
- * Course analytics raw data
- */
-export interface CourseAnalytics {
-  enrollments: Array<{
-    id: string;
-    enrolledAt: string;
-    completedAt: string | null;
-    progress: number;
-  }>;
-  ratings: Array<{
-    score: number;
-    createdAt: string;
-  }>;
-  revenue: Array<{
-    amount: number;
-    currency: string;
-    createdAt: string;
-  }>;
-}
-
-/**
- * Content item types for flexible course structure
- */
-export type ContentItemType =
-  | 'module'
-  | 'chapter'
-  | 'section'
-  | 'lesson'
-  | 'video'
-  | 'article'
-  | 'quiz'
-  | 'assessment'
-  | 'assignment'
-  | 'resource'
-  | 'discussion';
-
-/**
- * Content item in the learning sequence (flat list with parent references)
- * Client builds tree structure from parentId relationships
- */
-export interface ContentItem {
-  id: string;
-  parentId: string | null; // null = root level item
-  order: number;
-  type: ContentItemType;
-  title: string;
-  description: string | null;
-  status: 'draft' | 'published' | 'archived';
-  duration: number | null; // minutes, if applicable
-  metadata: Record<string, unknown>; // type-specific metadata
-  createdAt: string;
-  updatedAt: string;
-}
-
-/**
- * Course content (flat list for tree rendering)
- */
-export interface CourseContent {
-  items: ContentItem[];
-  total: number;
-}
-
-/**
- * Content item detail (full data for editing)
- */
-export interface ContentItemDetail extends ContentItem {
-  content: string | null; // Rich text content for lessons/articles
-  settings: Record<string, unknown>; // Type-specific settings
-  // Type-specific data loaded based on item.type:
-  // - quiz: questions[], passingScore, timeLimit
-  // - assignment: rubric, dueDate, maxAttempts
-  // - video: videoUrl, transcript, captions
-  // - etc.
-}
-
-/**
- * Course student data
- */
-export interface CourseStudents {
-  students: Array<{
-    id: string;
-    name: string;
-    email: string;
-    enrolledAt: string;
-    progress: number;
-    completedAt: string | null;
-    lastActivity: string;
-  }>;
-  total: number;
-}
-
-/**
- * Fetch course details.
- *
- * @param courseId - The course ID from route params
- * @returns Course with full details
- *
- * Fetch Type: GraphQL
- * Cache: revalidate 120s, deduplicated via React cache()
- * Endpoint: TBD - GraphQL query `course`
+ * Fetch course details from the API.
  */
 export const getCourse = cache(async (courseId: string): Promise<CourseDetails | null> => {
-  // TODO: Implement GraphQL fetch
-  // const query = gql`
-  //   query Course($courseId: ID!) {
-  //     course(id: $courseId) {
-  //       id
-  //       title
-  //       description
-  //       status
-  //       visibility
-  //       createdAt
-  //       updatedAt
-  //     }
-  //   }
-  // `;
-  // return graphqlClient.request(query, { courseId }, { next: { revalidate: 120 } });
+  try {
+    const client = getApiClient();
+    const result = await client.request<LearningCoursesProgram>({
+      method: 'GET',
+      path: `/v1/courses/${courseId}`,
+      requiresAuth: true,
+    });
 
-  void courseId; // Suppress unused warning in stub
-  return null;
+    if (!result.ok) {
+      const err = result.error as { status?: number; code?: string; message?: string; detail?: string } | undefined;
+      console.error(`[getCourse] Failed for ${courseId}: status=${err?.status}, code=${err?.code}, detail=${err?.detail || err?.message}`);
+      return null;
+    }
+
+    const dto = result.data;
+    return {
+      id: dto.id!,
+      title: dto.title ?? '',
+      description: dto.description ?? '',
+      slug: dto.slug ?? '',
+      status: mapStatus(dto.status),
+      visibility: mapVisibility(dto.visibility),
+      thumbnail: dto.thumbnail ?? null,
+      videoShowcaseUrl: dto.videoShowcaseUrl ?? null,
+      estimatedHours: dto.estimatedHours ?? null,
+      category: dto.category ?? 'GeneralEducation',
+      difficulty: dto.difficulty ?? 'Beginner',
+      skillsRequired: dto.skillsRequired ?? null,
+      skillsProvided: dto.skillsProvided ?? null,
+      enrollmentStatus: dto.enrollmentStatus ?? 'Open',
+      maxEnrollments: dto.maxEnrollments ?? null,
+      enrollmentDeadline: dto.enrollmentDeadline ?? null,
+      currentEnrollments: dto.currentEnrollments ?? 0,
+      averageRating: dto.averageRating ?? 0,
+      totalRatings: dto.totalRatings ?? 0,
+      isEnrollmentOpen: dto.isEnrollmentOpen ?? true,
+      deliveryMode: 'on-demand',
+      pricingModel: 'free',
+      features: {
+        hasClasses: false,
+        hasRecordings: false,
+        hasSchedule: false,
+        hasOnDemandContent: true,
+        hasPricing: false,
+        hasCertificate: false,
+        hasAssessments: true,
+        hasDiscussions: false,
+      },
+      createdAt: dto.createdAt ?? new Date().toISOString(),
+      updatedAt: dto.updatedAt ?? dto.createdAt ?? new Date().toISOString(),
+    };
+  } catch {
+    return null;
+  }
 });
 
 /**
- * Fetch course analytics data.
- *
- * @param courseId - The course ID from route params
- * @returns Raw analytics data for computation
- *
- * Fetch Type: GraphQL
- * Cache: revalidate 120s, deduplicated via React cache()
- * Endpoint: TBD - GraphQL query `courseAnalytics`
- *
- * Computed client-side:
- * - enrollmentTrend: groupByDate(enrollments, 'enrolledAt')
- * - completionFunnel: { enrolled, started, completed } stages
- * - ratingDistribution: groupByScore(ratings)
- * - totalRevenue: sum(revenue[].amount)
- * - revenueOverTime: groupByDate(revenue, 'createdAt')
+ * Fetch course analytics data from the API.
  */
 export const getCourseAnalytics = cache(async (courseId: string): Promise<CourseAnalytics> => {
-  // TODO: Implement GraphQL fetch
-  // const query = gql`
-  //   query CourseAnalytics($courseId: ID!) {
-  //     courseAnalytics(courseId: $courseId) {
-  //       enrollments { id enrolledAt completedAt progress }
-  //       ratings { score createdAt }
-  //       revenue { amount currency createdAt }
-  //     }
-  //   }
-  // `;
-  // return graphqlClient.request(query, { courseId }, { next: { revalidate: 120 } });
+  const empty: CourseAnalytics = { enrollments: [], ratings: [], revenue: [] };
+  try {
+    const client = getApiClient();
+    const result = await client.request<LearningCoursesProgramAnalytics>({
+      method: 'GET',
+      path: `/v1/courses/${courseId}/analytics`,
+      requiresAuth: true,
+    });
 
-  void courseId; // Suppress unused warning in stub
-  return { enrollments: [], ratings: [], revenue: [] };
+    if (!result.ok) return empty;
+
+    const dto = result.data;
+    // Synthesize enrollment-like entries from aggregate counts
+    const enrollments: CourseAnalytics['enrollments'] = [];
+    const totalUsers = dto.totalUsers ?? 0;
+    const completedUsers = dto.completedUsers ?? 0;
+    const completionRate = dto.completionRate ?? 0;
+    for (let i = 0; i < totalUsers; i++) {
+      enrollments.push({
+        id: `e${i}`,
+        enrolledAt: new Date().toISOString(),
+        completedAt: i < completedUsers ? new Date().toISOString() : null,
+        progress: i < completedUsers ? 100 : Math.round((completionRate / 100) * 100),
+      });
+    }
+
+    return { enrollments, ratings: [], revenue: [] };
+  } catch {
+    return empty;
+  }
 });
 
 /**
- * Fetch course content items (flat list for tree rendering).
- *
- * @param courseId - The course ID from route params
- * @returns Flat list of content items with parent references
- *
- * Fetch Type: REST
- * Cache: revalidate 120s, deduplicated via React cache()
- * Endpoint: GET /api/learning/courses/:courseId/content
- *
- * Client-side: Build tree from parentId relationships for UI rendering
+ * Map a LearningCoursesProgramContent DTO to the frontend ContentItem shape.
+ */
+function mapContentDto(dto: LearningCoursesProgramContent): ContentItem {
+  return {
+    id: dto.id!,
+    parentId: dto.parentId ?? null,
+    order: dto.sortOrder ?? 0,
+    type: dto.type ?? 'Lesson',
+    title: dto.title ?? '',
+    description: dto.description ?? null,
+    status: dto.visibility === 'Public' ? 'published' : 'draft',
+    duration: dto.estimatedMinutes ?? null,
+    metadata: {},
+    createdAt: dto.createdAt ?? new Date().toISOString(),
+    updatedAt: dto.updatedAt ?? dto.createdAt ?? new Date().toISOString(),
+  };
+}
+
+/**
+ * Fetch course content items from the API (flat list for tree rendering).
  */
 export const getCourseContent = cache(async (courseId: string): Promise<CourseContent> => {
-  // TODO: Implement REST fetch
-  // const response = await fetch(`${API_BASE_URL}/api/learning/courses/${courseId}/content`, {
-  //   next: { revalidate: 120 },
-  //   headers: { Authorization: `Bearer ${token}` },
-  // });
-  // if (!response.ok) throw new Error('Failed to fetch content');
-  // return response.json();
+  try {
+    const client = getApiClient();
+    const result = await client.request<Array<LearningCoursesProgramContent>>({
+      method: 'GET',
+      path: `/v1/courses/${courseId}/content`,
+      requiresAuth: true,
+    });
 
-  void courseId; // Suppress unused warning in stub
-  return { items: [], total: 0 };
+    if (!result.ok) return { items: [], total: 0 };
+
+    // Flatten the tree if children are nested
+    const items: ContentItem[] = [];
+    for (const dto of result.data) {
+      items.push(mapContentDto(dto));
+      if (dto.children) {
+        for (const child of dto.children) {
+          items.push(mapContentDto(child));
+        }
+      }
+    }
+
+    return { items, total: items.length };
+  } catch {
+    return { items: [], total: 0 };
+  }
 });
 
 /**
- * Fetch single content item detail for editing.
- *
- * @param contentId - The content item ID from route params
- * @returns Full content item data including type-specific fields
- *
- * Fetch Type: REST
- * Cache: revalidate 120s, deduplicated via React cache()
- * Endpoint: GET /api/learning/content/:contentId
+ * Fetch single content item detail.
  */
-export const getContentItem = cache(async (contentId: string): Promise<ContentItemDetail | null> => {
-  // TODO: Implement REST fetch
-  // const response = await fetch(`${API_BASE_URL}/api/learning/content/${contentId}`, {
-  //   next: { revalidate: 120 },
-  //   headers: { Authorization: `Bearer ${token}` },
-  // });
-  // if (response.status === 404) return null;
-  // if (!response.ok) throw new Error('Failed to fetch content item');
-  // return response.json();
+export const getContentItem = cache(async (courseId: string, contentId: string): Promise<ContentItemDetail | null> => {
+  try {
+    const client = getApiClient();
+    const result = await client.request<LearningCoursesProgramContent>({
+      method: 'GET',
+      path: `/v1/courses/${courseId}/content/${contentId}`,
+      requiresAuth: true,
+    });
 
-  void contentId; // Suppress unused warning in stub
-  return null;
+    if (!result.ok) return null;
+
+    const dto = result.data;
+    return {
+      ...mapContentDto(dto),
+      content: dto.body != null ? (typeof dto.body === 'string' ? dto.body : JSON.stringify(dto.body)) : null,
+      settings: {
+        isRequired: dto.isRequired,
+        gradingMethod: dto.gradingMethod ?? null,
+        maxPoints: dto.maxPoints ?? null,
+      },
+    };
+  } catch {
+    return null;
+  }
 });
 
 /**
- * Fetch course students list.
- *
- * @param courseId - The course ID from route params
- * @returns Students enrolled in the course with progress
- *
- * Fetch Type: REST
- * Cache: revalidate 60s, deduplicated via React cache()
- * Endpoint: GET /api/learning/courses/:courseId/students
+ * Fetch course students from the API.
  */
 export const getCourseStudents = cache(async (courseId: string): Promise<CourseStudents> => {
-  // TODO: Implement REST fetch
-  // const response = await fetch(`${API_BASE_URL}/api/learning/courses/${courseId}/students`, {
-  //   next: { revalidate: 60 },
-  //   headers: { Authorization: `Bearer ${token}` },
-  // });
-  // if (!response.ok) throw new Error('Failed to fetch students');
-  // return response.json();
+  try {
+    const client = getApiClient();
+    const result = await client.request<
+      Array<{
+        userId?: string;
+        userName?: string;
+        userEmail?: string;
+        completionPercentage: number;
+        lastAccessedAt?: string;
+        startedAt?: string;
+        completedAt?: string;
+      }>
+    >({
+      method: 'GET',
+      path: `/v1/courses/${courseId}/users`,
+      requiresAuth: true,
+    });
 
-  void courseId; // Suppress unused warning in stub
-  return { students: [], total: 0 };
+    if (!result.ok) return { students: [], total: 0 };
+
+    const students = result.data.map((dto, i) => ({
+      id: dto.userId ?? `user-${i}`,
+      name: dto.userName ?? `Student ${i + 1}`,
+      email: dto.userEmail ?? '',
+      enrolledAt: dto.startedAt ?? new Date().toISOString(),
+      progress: Math.round(dto.completionPercentage),
+      completedAt: dto.completedAt ?? null,
+      lastActivity: dto.lastAccessedAt ?? new Date().toISOString(),
+    }));
+
+    return { students, total: students.length };
+  } catch {
+    return { students: [], total: 0 };
+  }
 });
 
 // =============================================================================
@@ -294,10 +280,10 @@ export const getCourseStudents = cache(async (courseId: string): Promise<CourseS
  * Class/session status
  */
 export type ClassStatus =
-  | 'scheduled'  // Upcoming, not started
-  | 'live'       // Currently in progress
-  | 'completed'  // Finished
-  | 'cancelled'  // Was cancelled
+  | 'scheduled' // Upcoming, not started
+  | 'live' // Currently in progress
+  | 'completed' // Finished
+  | 'cancelled' // Was cancelled
   | 'rescheduled'; // Moved to different time
 
 /**
@@ -308,14 +294,15 @@ export interface CourseClass {
   title: string;
   description: string;
   status: ClassStatus;
-  scheduledAt: string;      // ISO datetime
-  duration: number;         // minutes
-  timezone: string;         // IANA timezone
-  location?: {              // For presential/hybrid
+  scheduledAt: string; // ISO datetime
+  duration: number; // minutes
+  timezone: string; // IANA timezone
+  location?: {
+    // For presential/hybrid
     type: 'physical' | 'virtual' | 'hybrid';
-    address?: string;       // Physical location
+    address?: string; // Physical location
     roomName?: string;
-    meetingUrl?: string;    // Zoom, Teams, etc.
+    meetingUrl?: string; // Zoom, Teams, etc.
     meetingId?: string;
   };
   instructor?: {
@@ -325,7 +312,7 @@ export interface CourseClass {
   };
   attendeeCount: number;
   maxAttendees?: number;
-  recordingUrl?: string;    // Available after class ends (if recorded)
+  recordingUrl?: string; // Available after class ends (if recorded)
   materials: Array<{
     id: string;
     title: string;
@@ -416,4 +403,3 @@ export const getCourseClass = cache(async (classId: string): Promise<CourseClass
   void classId; // Suppress unused warning in stub
   return null;
 });
-

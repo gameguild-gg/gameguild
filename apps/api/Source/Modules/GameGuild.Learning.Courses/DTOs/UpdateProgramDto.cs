@@ -1,9 +1,18 @@
 namespace GameGuild.Learning.Courses;
 
-public sealed record UpdateProgramDto(string? Title = null, string? Description = null, string? Thumbnail = null) {
-  public string? Title { get; init; } = Title;
-
-  public string? Description { get; init; } = Description;
-
-  public string? Thumbnail { get; init; } = Thumbnail;
+public sealed record UpdateProgramDto {
+  public string? Title { get; init; }
+  public string? Description { get; init; }
+  public string? Slug { get; init; }
+  public string? Thumbnail { get; init; }
+  public string? VideoShowcaseUrl { get; init; }
+  public int? EstimatedHours { get; init; }
+  public ContentVisibility? Visibility { get; init; }
+  public ProgramCategory? Category { get; init; }
+  public ProgramDifficulty? Difficulty { get; init; }
+  public string? SkillsRequired { get; init; }
+  public string? SkillsProvided { get; init; }
+  public EnrollmentStatus? EnrollmentStatus { get; init; }
+  public int? MaxEnrollments { get; init; }
+  public DateTime? EnrollmentDeadline { get; init; }
 }

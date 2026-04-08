@@ -50,11 +50,24 @@ export interface ServerClientConfig {
 export function createServerClient(config: ServerClientConfig): ApiClient {
   const interceptors: Interceptor[] = [...(config.interceptors || [])];
 
+  // Shared token cache for the current request cycle.
+  // This prevents calling getAccessToken() multiple times per request,
+  // which is critical when the backend does refresh-token rotation
+  // (the first call revokes the old refresh token, causing subsequent calls to fail).
+  let cachedTokenPromise: Promise<string | null> | null = null;
+
+  function getCachedAccessToken(): Promise<string | null> {
+    if (!cachedTokenPromise) {
+      cachedTokenPromise = config.auth!.getAccessToken();
+    }
+    return cachedTokenPromise;
+  }
+
   // Add auth interceptor
   if (config.auth) {
     interceptors.push(
       createHeaderInterceptor(async (): Promise<Record<string, string>> => {
-        const token = await config.auth!.getAccessToken();
+        const token = await getCachedAccessToken();
         if (token) {
           return { Authorization: `Bearer ${token}` };
         }
@@ -86,9 +99,12 @@ export function createServerClient(config: ServerClientConfig): ApiClient {
   // Create client
   const client: ApiClient = {
     async request<T>(requestConfig: RequestConfig): Promise<Result<T, ApiError>> {
+      // Reset token cache for each request
+      cachedTokenPromise = null;
+
       // Check auth requirement
       if (requestConfig.requiresAuth && config.auth) {
-        const token = await config.auth.getAccessToken();
+        const token = await getCachedAccessToken();
         if (!token) {
           await config.auth.onAuthenticationRequired?.();
           return err({

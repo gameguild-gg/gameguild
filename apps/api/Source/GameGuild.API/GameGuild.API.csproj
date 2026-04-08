@@ -47,7 +47,7 @@
         <ProjectReference Include="..\Modules\GameGuild.Learning.Courses\GameGuild.Learning.Courses.csproj" />
         <!-- <ProjectReference Include="..\Modules\GameGuild.Learning.Enrollments\GameGuild.Learning.Enrollments.csproj" /> -->
         <!-- <ProjectReference Include="..\Modules\GameGuild.Learning.Cohorts\GameGuild.Learning.Cohorts.csproj" /> -->
-        <!-- <ProjectReference Include="..\Modules\GameGuild.Learning.Assessments\GameGuild.Learning.Assessments.csproj" /> -->
+        <ProjectReference Include="..\Modules\GameGuild.Learning.Assessments\GameGuild.Learning.Assessments.csproj" />
         <!-- <ProjectReference Include="..\Modules\GameGuild.Learning.Certificates\GameGuild.Learning.Certificates.csproj" /> -->
         <!-- <ProjectReference Include="..\Modules\GameGuild.Learning.Experience.Discovery\GameGuild.Learning.Experience.Discovery.csproj" /> -->
         <!-- <ProjectReference Include="..\Modules\GameGuild.Learning.Experience.Recommendations\GameGuild.Learning.Experience.Recommendations.csproj" /> -->

@@ -1,6 +1,6 @@
 import React from 'react';
-import { LoginForm } from "@/components/login-form"
+import { SignInForm } from '@/components/sign-in-form';
 
 export default async function Page({ params }: PageProps<'/[locale]/sign-in'>): Promise<React.JSX.Element> {
-  return <LoginForm />;
+  return <SignInForm />;
 }

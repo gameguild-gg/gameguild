@@ -85,7 +85,9 @@ public class Assessment : EntityBase
         int? maxAttempts,
         bool? isRequired,
         DateTime? availableFrom,
-        DateTime? availableUntil)
+        DateTime? availableUntil,
+        Guid? contentId = null,
+        bool clearContentId = false)
     {
         if (title != null) Title = title;
         Description = description;
@@ -96,6 +98,8 @@ public class Assessment : EntityBase
         if (isRequired.HasValue) IsRequired = isRequired.Value;
         AvailableFrom = availableFrom;
         AvailableUntil = availableUntil;
+        if (clearContentId) ContentId = null;
+        else if (contentId.HasValue) ContentId = contentId.Value;
         UpdatedAt = SystemClock.UtcNow;
     }
 }

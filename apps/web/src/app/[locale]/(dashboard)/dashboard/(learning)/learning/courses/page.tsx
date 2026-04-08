@@ -1,0 +1,68 @@
+import React from 'react';
+import Link from 'next/link';
+import { getCourses } from '@/lib/learning';
+import { Card, CardContent } from '@game-guild/ui/components/card';
+import { Button } from '@game-guild/ui/components/button';
+import { Plus, BookOpen, ArrowLeft } from 'lucide-react';
+import { CourseList } from './course-list';
+
+export default async function Page({ params }: PageProps<'/[locale]/dashboard/learning/courses'>): Promise<React.JSX.Element> {
+  const { locale } = await params;
+
+  const { courses, error } = await getCourses();
+
+  const enriched = courses.map((course) => ({
+    ...course,
+    enrolledCount: course.enrollments.length,
+    completionPercent:
+      course.enrollments.length > 0 ? Math.round((course.enrollments.filter((e) => e.completedAt).length / course.enrollments.length) * 100) : 0,
+    avgRating: course.ratings.length > 0 ? (course.ratings.reduce((acc, r) => acc + r.score, 0) / course.ratings.length).toFixed(1) : null,
+  }));
+
+  return (
+    <div className="flex flex-col gap-6 p-6">
+      {/* Header */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-4">
+          <Button variant="ghost" size="icon" asChild>
+            <Link href={`/${locale}/dashboard/learning`}>
+              <ArrowLeft className="size-5" />
+            </Link>
+          </Button>
+          <div className="flex size-12 items-center justify-center rounded-lg bg-linear-to-br from-emerald-500 to-teal-600">
+            <BookOpen className="size-6 text-white" />
+          </div>
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Courses</h1>
+            <p className="text-muted-foreground">Manage your courses and track performance.</p>
+          </div>
+        </div>
+        <Button asChild>
+          <Link href={`/${locale}/dashboard/learning/courses/new`}>
+            <Plus className="mr-2 size-4" />
+            Create Course
+          </Link>
+        </Button>
+      </div>
+
+      {error && (
+        <div className="rounded-md border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-900 dark:bg-red-950 dark:text-red-300">
+          <p className="font-medium">API Error</p>
+          <p>{error}</p>
+        </div>
+      )}
+
+      {enriched.length === 0 ? (
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-12 text-center">
+            <BookOpen className="mb-4 size-12 text-muted-foreground" />
+            <h3 className="text-lg font-semibold">No courses yet</h3>
+            <p className="text-sm text-muted-foreground">Create your first course to start teaching.</p>
+          </CardContent>
+        </Card>
+      ) : (
+        <CourseList courses={enriched} locale={locale} />
+      )}
+    </div>
+  );
+}

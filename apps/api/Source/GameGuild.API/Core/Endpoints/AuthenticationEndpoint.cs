@@ -135,13 +135,14 @@ public static class AuthenticationEndpoint
 
     private static Task<IResult> RefreshToken(RefreshTokenRequest request, IConfiguration configuration, ILogger<Program> logger)
     {
-        // Simple refresh token implementation for testing
-        // In production, this would validate the refresh token and issue new tokens
-        logger.LogInformation("Token refresh requested");
+        // This stub endpoint is deprecated — the real refresh endpoint is POST /v1/auth/tokens:refresh
+        logger.LogWarning("Deprecated /auth/refresh endpoint called — use POST /v1/auth/tokens:refresh instead");
 
         return Task.FromResult(
-            Results.Ok(
-                new RefreshTokenResponseDto { AccessToken = "new-access-token", RefreshToken = "new-refresh-token", AccessTokenExpiresAt = SystemClock.UtcNow.AddHours(1), RefreshTokenExpiresAt = SystemClock.UtcNow.AddDays(7) }
+            Results.Problem(
+                detail: "Use POST /v1/auth/tokens:refresh instead",
+                title: "Deprecated Endpoint",
+                statusCode: StatusCodes.Status410Gone
             )
         );
     }

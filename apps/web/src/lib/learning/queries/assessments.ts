@@ -1,36 +1,45 @@
 import { cache } from 'react';
+import {
+  createServerClient,
+  type LearningAssessmentsAssessment,
+  type LearningAssessmentsAssessmentType,
+} from '@game-guild/client';
+import { getToken } from '@/auth';
 
 // =============================================================================
-// COURSE ASSESSMENTS & CERTIFICATES QUERIES
+// API CLIENT
 // =============================================================================
 
-/**
- * Assessment types
- */
-export type AssessmentType = 'quiz' | 'exam' | 'assignment' | 'project' | 'peer-review';
+function getApiClient() {
+  const apiUrl = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5295';
+  return createServerClient({
+    baseUrl: apiUrl,
+    auth: { getAccessToken: () => getToken() },
+  });
+}
 
-/**
- * Assessment summary
- */
+// =============================================================================
+// TYPES (re-exported for convenience)
+// =============================================================================
+
+export type AssessmentType = LearningAssessmentsAssessmentType;
+
 export interface Assessment {
   id: string;
   courseId: string;
+  contentId: string | null;
   title: string;
-  description: string;
+  description: string | null;
   type: AssessmentType;
-  status: 'draft' | 'published' | 'archived';
-  passingScore: number;
   maxScore: number;
-  timeLimit?: number;           // minutes
-  attempts: 'unlimited' | number;
-  availableFrom?: string;
-  availableUntil?: string;
-  questionCount: number;
-  submissionCount: number;
-  avgScore: number;
+  passingScore: number;
+  timeLimitMinutes: number | null;
+  maxAttempts: number | null;
+  isRequired: boolean;
   order: number;
-  createdAt: string;
-  updatedAt: string;
+  availableFrom: string | null;
+  availableUntil: string | null;
+  isAvailable: boolean;
 }
 
 export interface CourseAssessments {
@@ -38,61 +47,87 @@ export interface CourseAssessments {
   total: number;
 }
 
-/**
- * Assessment question
- */
-export interface AssessmentQuestion {
-  id: string;
-  assessmentId: string;
-  type: 'multiple-choice' | 'multiple-select' | 'true-false' | 'short-answer' | 'essay' | 'code' | 'file-upload';
-  question: string;
-  points: number;
-  order: number;
-  options?: Array<{
-    id: string;
-    text: string;
-    isCorrect: boolean;
-  }>;
-  correctAnswer?: string;
-  rubric?: string;
-  explanation?: string;
-}
+// =============================================================================
+// MAPPERS
+// =============================================================================
 
-export interface AssessmentDetail extends Assessment {
-  questions: AssessmentQuestion[];
-  settings: {
-    shuffleQuestions: boolean;
-    shuffleOptions: boolean;
-    showResults: 'immediately' | 'after-deadline' | 'manual';
-    allowReview: boolean;
-    proctored: boolean;
+function mapAssessment(dto: LearningAssessmentsAssessment): Assessment {
+  return {
+    id: dto.id ?? '',
+    courseId: dto.courseId ?? '',
+    contentId: dto.contentId ?? null,
+    title: dto.title ?? '',
+    description: dto.description ?? null,
+    type: dto.type ?? 'Quiz',
+    maxScore: dto.maxScore ?? 100,
+    passingScore: dto.passingScore ?? 70,
+    timeLimitMinutes: dto.timeLimitMinutes ?? null,
+    maxAttempts: dto.maxAttempts ?? null,
+    isRequired: dto.isRequired ?? true,
+    order: dto.order ?? 0,
+    availableFrom: dto.availableFrom ?? null,
+    availableUntil: dto.availableUntil ?? null,
+    isAvailable: dto.isAvailable ?? true,
   };
 }
 
+// =============================================================================
+// FETCH FUNCTIONS
+// =============================================================================
+
 /**
- * Certificate template
+ * Fetch course assessments (conditional: hasAssessments).
  */
+export const getCourseAssessments = cache(async (courseId: string): Promise<CourseAssessments> => {
+  try {
+    const client = getApiClient();
+    const result = await client.request<LearningAssessmentsAssessment[]>({
+      method: 'GET',
+      path: `/v1/assessments/course/${courseId}`,
+      requiresAuth: true,
+    });
+    if (!result.ok) {
+      console.error('Failed to fetch assessments:', result.error);
+      return { assessments: [], total: 0 };
+    }
+    const assessments = (result.data ?? []).map(mapAssessment);
+    return { assessments, total: assessments.length };
+  } catch (err) {
+    console.error('Error fetching course assessments:', err);
+    return { assessments: [], total: 0 };
+  }
+});
+
+/**
+ * Fetch single assessment by ID.
+ */
+export const getAssessment = cache(async (assessmentId: string): Promise<Assessment | null> => {
+  try {
+    const client = getApiClient();
+    const result = await client.request<LearningAssessmentsAssessment>({
+      method: 'GET',
+      path: `/v1/assessments/${assessmentId}`,
+      requiresAuth: true,
+    });
+    if (!result.ok) {
+      return null;
+    }
+    return mapAssessment(result.data);
+  } catch {
+    return null;
+  }
+});
+
+// =============================================================================
+// CERTIFICATE STUBS (module not yet enabled)
+// =============================================================================
+
 export interface CertificateTemplate {
   id: string;
   courseId: string;
   name: string;
   description: string;
   status: 'draft' | 'active' | 'archived';
-  design: {
-    templateType: 'standard' | 'custom';
-    backgroundColor: string;
-    logoUrl?: string;
-    signatureUrl?: string;
-    signatureName: string;
-    signatureTitle: string;
-  };
-  fields: Array<{
-    id: string;
-    type: 'text' | 'date' | 'dynamic';
-    value: string;
-    position: { x: number; y: number };
-    style: Record<string, unknown>;
-  }>;
   issuedCount: number;
   createdAt: string;
   updatedAt: string;
@@ -106,50 +141,13 @@ export interface CourseCertificates {
 
 export interface CertificateTemplateDetail extends CertificateTemplate {
   previewUrl: string;
-  issuedCertificates: Array<{
-    id: string;
-    studentId: string;
-    studentName: string;
-    issuedAt: string;
-    downloadUrl: string;
-  }>;
 }
 
-// =============================================================================
-// FETCH FUNCTIONS
-// =============================================================================
-
-/**
- * Fetch course assessments (conditional: hasAssessments).
- * Cache: revalidate 120s
- */
-export const getCourseAssessments = cache(async (courseId: string): Promise<CourseAssessments> => {
-  void courseId;
-  return { assessments: [], total: 0 };
-});
-
-/**
- * Fetch single assessment detail.
- * Cache: revalidate 120s
- */
-export const getAssessment = cache(async (assessmentId: string): Promise<AssessmentDetail | null> => {
-  void assessmentId;
-  return null;
-});
-
-/**
- * Fetch course certificates (conditional: hasCertificate).
- * Cache: revalidate 300s
- */
 export const getCourseCertificates = cache(async (courseId: string): Promise<CourseCertificates> => {
   void courseId;
   return { templates: [], total: 0, issuedCount: 0 };
 });
 
-/**
- * Fetch single certificate template detail.
- * Cache: revalidate 300s
- */
 export const getCertificateTemplate = cache(async (templateId: string): Promise<CertificateTemplateDetail | null> => {
   void templateId;
   return null;

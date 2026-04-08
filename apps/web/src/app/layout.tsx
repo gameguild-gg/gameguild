@@ -1,8 +1,13 @@
 import React from 'react';
+import { getLocale } from 'next-intl/server';
 import '@/styles/globals.css';
 
-// Since we have a `not-found.tsx` page on the root, a layout file
-// is required, even if it's just passing children through.
-export default async function Layout({ children }: LayoutProps<'/[locale]'>): Promise<React.JSX.Element> {
-  return <>{children}</>;
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const locale = await getLocale();
+
+  return (
+    <html lang={locale} suppressHydrationWarning>
+      <body>{children}</body>
+    </html>
+  );
 }

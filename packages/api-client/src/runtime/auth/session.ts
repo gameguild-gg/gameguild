@@ -8,13 +8,7 @@
  * JWT encryption, cookies, and callbacks.
  */
 
-import type {
-  JWTPayload,
-  Session,
-  SessionUser,
-  ProviderResult,
-  ResolvedAuthConfig,
-} from './types.js';
+import type { JWTPayload, Session, SessionUser, ProviderResult, ResolvedAuthConfig } from './types.js';
 import { encodeJWT, decodeJWT } from './jwt.js';
 import { TokenRefreshError } from './errors.js';
 
@@ -28,10 +22,7 @@ const REFRESH_THRESHOLD_MS = 30_000;
  * @param config - Resolved auth configuration
  * @returns The initial JWT payload
  */
-export function createJWTPayload(
-  result: ProviderResult,
-  config: ResolvedAuthConfig
-): JWTPayload {
+export function createJWTPayload(result: ProviderResult, config: ResolvedAuthConfig): JWTPayload {
   const now = Date.now();
 
   // Calculate access token expiry
@@ -84,9 +75,7 @@ export function toSession(token: JWTPayload): Session {
       roles: token.user.roles,
       permissions: token.user.permissions,
     },
-    expires: new Date(
-      token.exp ? token.exp * 1000 : Date.now() + 30 * 24 * 60 * 60 * 1000
-    ).toISOString(),
+    expires: new Date(token.exp ? token.exp * 1000 : Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
     tenantId: token.tenantId,
     availableTenants: token.availableTenants,
   };
@@ -111,10 +100,7 @@ export function shouldRefreshToken(token: JWTPayload): boolean {
  * @returns Updated JWT payload with new tokens
  * @throws TokenRefreshError if refresh fails
  */
-export async function refreshAccessToken(
-  token: JWTPayload,
-  config: ResolvedAuthConfig
-): Promise<JWTPayload> {
+export async function refreshAccessToken(token: JWTPayload, config: ResolvedAuthConfig): Promise<JWTPayload> {
   if (!token.refreshToken) {
     throw new TokenRefreshError('No refresh token available');
   }
@@ -129,9 +115,7 @@ export async function refreshAccessToken(
     });
 
     if (!response.ok) {
-      throw new TokenRefreshError(
-        `Token refresh failed with status ${response.status}`
-      );
+      throw new TokenRefreshError(`Token refresh failed with status ${response.status}`);
     }
 
     const data = (await response.json()) as Record<string, unknown>;
@@ -160,10 +144,7 @@ export async function refreshAccessToken(
     };
   } catch (error) {
     if (error instanceof TokenRefreshError) throw error;
-    throw new TokenRefreshError(
-      'Token refresh failed',
-      error instanceof Error ? error : undefined
-    );
+    throw new TokenRefreshError('Token refresh failed', error instanceof Error ? error : undefined);
   }
 }
 
@@ -181,7 +162,7 @@ export async function refreshAccessToken(
  */
 export async function processSession(
   encryptedToken: string,
-  config: ResolvedAuthConfig
+  config: ResolvedAuthConfig,
 ): Promise<{
   session: Session | null;
   token: JWTPayload | null;
@@ -211,12 +192,22 @@ export async function processSession(
       currentToken = await refreshAccessToken(currentToken, config);
       tokenUpdated = true;
     } catch {
-      // If refresh fails, we can still return the session if the outer JWT hasn't expired
-      // The access token is stale but the session is technically still valid
-      // The next API call will fail with 401, prompting re-auth
+      // If the access token is already expired (not just near-expiry) and
+      // refresh failed, the session is unusable — force re-authentication.
+      const accessExpired = currentToken.accessTokenExpires != null && Date.now() >= currentToken.accessTokenExpires;
+      if (accessExpired) {
+        /* v8 ignore start */
+        if (config.debug) {
+          console.warn('[auth] Access token expired and refresh failed, invalidating session');
+        }
+        /* v8 ignore stop */
+        return { session: null, token: null, updated: false };
+      }
+      // Access token is near-expiry but not yet expired — keep the session
+      // alive so the current request can still succeed.
       /* v8 ignore start */
       if (config.debug) {
-        console.warn('[auth] Token refresh failed, session may be stale');
+        console.warn('[auth] Token refresh failed, session may become stale soon');
       }
       /* v8 ignore stop */
     }
@@ -225,7 +216,7 @@ export async function processSession(
   // 4. Run the jwt callback (allows user to modify token)
   /* v8 ignore start */
   if (config.callbacks.jwt) {
-  /* v8 ignore stop */
+    /* v8 ignore stop */
     const callbackResult = await config.callbacks.jwt({ token: currentToken });
     if (callbackResult !== currentToken) {
       currentToken = callbackResult;
@@ -239,7 +230,7 @@ export async function processSession(
   // 6. Run the session callback (allows user to modify exposed session)
   /* v8 ignore start */
   if (config.callbacks.session) {
-  /* v8 ignore stop */
+    /* v8 ignore stop */
     session = await config.callbacks.session({
       session,
       token: currentToken,
@@ -252,10 +243,7 @@ export async function processSession(
 /**
  * Encode a JWT payload into an encrypted cookie value.
  */
-export async function encodeSession(
-  token: JWTPayload,
-  config: ResolvedAuthConfig
-): Promise<string> {
+export async function encodeSession(token: JWTPayload, config: ResolvedAuthConfig): Promise<string> {
   return encodeJWT({
     token,
     secret: config.secret,

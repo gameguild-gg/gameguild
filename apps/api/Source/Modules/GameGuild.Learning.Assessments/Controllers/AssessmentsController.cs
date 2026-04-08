@@ -1,3 +1,4 @@
+using Asp.Versioning;
 using GameGuild.Identity.Context.Actors;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -8,7 +9,8 @@ namespace GameGuild.Learning.Assessments;
 /// <summary>
 /// Controller for assessment management and submission handling
 /// </summary>
-[Route("api/assessments")]
+[ApiVersion("1.0")]
+[Route("v{version:apiVersion}/assessments")]
 [Authorize]
 public class AssessmentsController : BaseApiController
 {

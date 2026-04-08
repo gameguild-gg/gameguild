@@ -94,11 +94,12 @@ export async function encodeJWT(params: {
 
   const now = Math.floor(Date.now() / 1000);
 
-  // Build the payload, preserving any existing iat/exp or setting new ones
+  // Build the payload — always slide exp forward so the JWE envelope
+  // doesn't expire before the next token refresh opportunity.
   const payload: JoseJWTPayload & Record<string, unknown> = {
     ...token,
-    iat: token.iat ?? now,
-    exp: token.exp ?? now + maxAge,
+    iat: now,
+    exp: now + maxAge,
     jti: token.jti ?? generateId(),
   };
 

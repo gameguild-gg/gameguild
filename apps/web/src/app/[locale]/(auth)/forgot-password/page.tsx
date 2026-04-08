@@ -1,8 +1,6 @@
-import type { PageProps } from 'next';
 import { ForgotPasswordForm } from '@/components/forgot-password-form';
+import { requestPasswordResetAction } from '../actions';
 
-export default function ForgotPasswordPage(
-  _props: PageProps<'/[locale]/forgot-password'>
-) {
-  return <ForgotPasswordForm />;
+export default function ForgotPasswordPage() {
+  return <ForgotPasswordForm onRequestReset={requestPasswordResetAction} />;
 }

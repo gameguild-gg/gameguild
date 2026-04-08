@@ -137,6 +137,8 @@ public class LocalAuthService(
             // Record successful login attempt
             await authAttemptService.RecordSuccessfulAttemptAsync(request.Email, userId.Value, ipAddress, userAgent, stopwatch.Elapsed).ConfigureAwait(false);
 
+            var accessTokenExpirationMinutes = int.Parse(configuration["Jwt:AccessTokenExpirationMinutes"] ?? "60");
+
             return new SignInResponse
             {
                 Success = true,
@@ -144,7 +146,9 @@ public class LocalAuthService(
                 AccessToken = accessToken,
                 RefreshToken = refreshToken,
                 ExpiresAt = refreshTokenExpiresAt,
-                ExpiresIn = (int)(refreshTokenExpiresAt - SystemClock.UtcNow).TotalSeconds,
+                ExpiresIn = accessTokenExpirationMinutes * 60,
+                AccessTokenExpiresAt = SystemClock.UtcNow.AddMinutes(accessTokenExpirationMinutes),
+                RefreshTokenExpiresAt = refreshTokenExpiresAt,
                 UserId = userId.Value,
                 Email = request.Email,
                 SessionId = Guid.NewGuid(),
@@ -298,6 +302,8 @@ public class LocalAuthService(
 
         logger.LogInformation("Refresh token rotated for user {UserId}", userId);
 
+        var accessTokenExpirationMinutes = int.Parse(configuration["Jwt:AccessTokenExpirationMinutes"] ?? "60");
+
         return new SignInResponse
         {
             Success = true,
@@ -305,7 +311,9 @@ public class LocalAuthService(
             AccessToken = accessToken,
             RefreshToken = newRefreshToken,
             ExpiresAt = refreshTokenExpiresAt,
-            ExpiresIn = (int)(refreshTokenExpiresAt - SystemClock.UtcNow).TotalSeconds,
+            ExpiresIn = accessTokenExpirationMinutes * 60,
+            AccessTokenExpiresAt = SystemClock.UtcNow.AddMinutes(accessTokenExpirationMinutes),
+            RefreshTokenExpiresAt = refreshTokenExpiresAt,
             UserId = userId,
             Email = userEmail,
             SessionId = Guid.NewGuid()

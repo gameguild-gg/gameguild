@@ -27,14 +27,7 @@ export type { Result, Ok, Err, ResultData, ResultError } from './runtime/result/
 export { ok, err, isOk, isErr, unwrap, unwrapOr, match } from './runtime/result/helpers.js';
 
 // Error types and guards
-export type {
-  ApiError,
-  ApiErrorCode,
-  AuthenticationError,
-  AuthorizationError,
-  NotFoundError,
-  ValidationError,
-} from './runtime/errors/types.js';
+export type { ApiError, ApiErrorCode, AuthenticationError, AuthorizationError, NotFoundError, ValidationError } from './runtime/errors/types.js';
 
 export {
   isApiError,
@@ -95,14 +88,7 @@ export type {
 export { encodeJWT, decodeJWT } from './runtime/auth/jwt.js';
 export { SessionStore, CsrfStore, CallbackStore, resolveCookieOptions } from './runtime/auth/cookies.js';
 export { createCSRFToken, validateCSRFToken } from './runtime/auth/csrf.js';
-export {
-  createJWTPayload,
-  toSession,
-  shouldRefreshToken,
-  refreshAccessToken,
-  processSession,
-  encodeSession,
-} from './runtime/auth/session.js';
+export { createJWTPayload, toSession, shouldRefreshToken, refreshAccessToken, processSession, encodeSession } from './runtime/auth/session.js';
 
 // Auth errors
 export {
@@ -132,15 +118,7 @@ export {
 } from './runtime/auth/errors.js';
 
 // Authorization utilities
-export {
-  hasRole,
-  hasAllRoles,
-  hasAnyRole,
-  hasPermission,
-  hasAllPermissions,
-  hasAnyPermission,
-  can,
-} from './runtime/auth/authorization.js';
+export { hasRole, hasAllRoles, hasAnyRole, hasPermission, hasAllPermissions, hasAnyPermission, can } from './runtime/auth/authorization.js';
 
 // Extended auth operations (MFA, password reset, email verification, session management)
 export {
@@ -151,6 +129,7 @@ export {
   confirmPasswordReset,
   changePassword,
   sendVerificationEmail,
+  resendVerificationEmail,
   verifyEmail,
   listSessions,
   terminateSession,
@@ -203,31 +182,8 @@ export type { AuthBroadcastMessage } from './integrations/react/broadcast.js';
 export * from './integrations/react/query-hooks.js';
 
 // ─── Plugins ─────────────────────────────────────────────────────
-export {
-  createRetryPlugin,
-  createRetryInterceptor,
-  type RetryConfig,
-} from './plugins/retry.js';
-export {
-  createAuthRetryPlugin,
-  type AuthRetryConfig,
-} from './plugins/auth-retry.js';
-export {
-  createLoggingInterceptor,
-  type LoggingConfig,
-  type LogLevel,
-  type LoggerFn,
-} from './plugins/logging.js';
-export {
-  createCacheInterceptor,
-  MemoryCache,
-  type CacheConfig,
-  type CacheInterceptor,
-} from './plugins/cache.js';
-export {
-  createMetricsInterceptor,
-  type MetricsConfig,
-  type RequestMetrics,
-  type AggregatedMetrics,
-  type MetricsInterceptor,
-} from './plugins/metrics.js';
+export { createRetryPlugin, createRetryInterceptor, type RetryConfig } from './plugins/retry.js';
+export { createAuthRetryPlugin, type AuthRetryConfig } from './plugins/auth-retry.js';
+export { createLoggingInterceptor, type LoggingConfig, type LogLevel, type LoggerFn } from './plugins/logging.js';
+export { createCacheInterceptor, MemoryCache, type CacheConfig, type CacheInterceptor } from './plugins/cache.js';
+export { createMetricsInterceptor, type MetricsConfig, type RequestMetrics, type AggregatedMetrics, type MetricsInterceptor } from './plugins/metrics.js';

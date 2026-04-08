@@ -5,6 +5,9 @@ const nextConfig: NextConfig = {
   reactCompiler: true,
   output: "standalone",
   transpilePackages: ["@game-guild/ui"],
+  experimental: {
+    authInterrupts: true,
+  },
 };
 
 const withNextIntl = createNextIntlPlugin();

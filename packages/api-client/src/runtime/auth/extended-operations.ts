@@ -31,22 +31,10 @@
 
 import type { ProviderResult } from './types.js';
 import { parseBackendAuthResponse } from '../../integrations/next/handlers.js';
-import {
-  MfaVerificationError,
-  PasswordResetError,
-  EmailVerificationError,
-  SessionTerminationError,
-  parseErrorBody,
-  extractErrorMessage,
-} from './errors.js';
+import { MfaVerificationError, PasswordResetError, EmailVerificationError, SessionTerminationError, parseErrorBody, extractErrorMessage } from './errors.js';
 
 // Re-export error classes so existing consumers don't break
-export {
-  MfaVerificationError,
-  PasswordResetError,
-  EmailVerificationError,
-  SessionTerminationError,
-} from './errors.js';
+export { MfaVerificationError, PasswordResetError, EmailVerificationError, SessionTerminationError } from './errors.js';
 
 // ─── Types ───────────────────────────────────────────────────────
 
@@ -136,7 +124,7 @@ async function postOrThrow(
     headers?: Record<string, string>;
     errorClass: new (message: string) => Error;
     fallbackMessage: string;
-  }
+  },
 ): Promise<Response> {
   const response = await fetch(url, {
     method: 'POST',
@@ -146,9 +134,7 @@ async function postOrThrow(
 
   if (!response.ok) {
     const errorData = await parseErrorBody(response);
-    throw new options.errorClass(
-      extractErrorMessage(errorData, options.fallbackMessage)
-    );
+    throw new options.errorClass(extractErrorMessage(errorData, options.fallbackMessage));
   }
 
   return response;
@@ -164,11 +150,7 @@ async function postOrThrow(
  * @param accessToken - Optional access token (if partial auth was returned)
  * @returns ProviderResult with full tokens on success
  */
-export async function verifyMfa(
-  apiUrl: string,
-  input: MfaVerifyInput,
-  accessToken?: string
-): Promise<ProviderResult> {
+export async function verifyMfa(apiUrl: string, input: MfaVerifyInput, accessToken?: string): Promise<ProviderResult> {
   const headers: Record<string, string> = { ...JSON_HEADERS };
   if (accessToken) {
     headers['Authorization'] = `Bearer ${accessToken}`;
@@ -186,10 +168,9 @@ export async function verifyMfa(
 
   if (!response.ok) {
     const errorData = await parseErrorBody(response);
-    throw new MfaVerificationError(
-      extractErrorMessage(errorData, 'MFA verification failed'),
-      { attemptsRemaining: errorData.attemptsRemaining as number | undefined }
-    );
+    throw new MfaVerificationError(extractErrorMessage(errorData, 'MFA verification failed'), {
+      attemptsRemaining: errorData.attemptsRemaining as number | undefined,
+    });
   }
 
   const data = (await response.json()) as Record<string, unknown>;
@@ -199,10 +180,7 @@ export async function verifyMfa(
 /**
  * Set up TOTP-based MFA for the authenticated user.
  */
-export async function setupTotpMfa(
-  apiUrl: string,
-  accessToken: string
-): Promise<MfaSetupResult> {
+export async function setupTotpMfa(apiUrl: string, accessToken: string): Promise<MfaSetupResult> {
   const response = await postOrThrow(`${apiUrl}/v1/auth/mfa/totp/setup`, {
     headers: authHeaders(accessToken),
     errorClass: MfaVerificationError,
@@ -215,10 +193,7 @@ export async function setupTotpMfa(
 /**
  * Get available MFA methods for the authenticated user.
  */
-export async function getMfaMethods(
-  apiUrl: string,
-  accessToken: string
-): Promise<string[]> {
+export async function getMfaMethods(apiUrl: string, accessToken: string): Promise<string[]> {
   const response = await fetch(`${apiUrl}/v1/auth/mfa/methods`, {
     headers: { Authorization: `Bearer ${accessToken}` },
   });
@@ -236,10 +211,7 @@ export async function getMfaMethods(
  *
  * Always returns void (never reveals whether the email exists).
  */
-export async function requestPasswordReset(
-  apiUrl: string,
-  input: PasswordResetRequestInput
-): Promise<void> {
+export async function requestPasswordReset(apiUrl: string, input: PasswordResetRequestInput): Promise<void> {
   await fetch(`${apiUrl}/v1/auth/password:reset-request`, {
     method: 'POST',
     headers: JSON_HEADERS,
@@ -251,10 +223,7 @@ export async function requestPasswordReset(
 /**
  * Confirm a password reset with the token from the email.
  */
-export async function confirmPasswordReset(
-  apiUrl: string,
-  input: PasswordResetConfirmInput
-): Promise<void> {
+export async function confirmPasswordReset(apiUrl: string, input: PasswordResetConfirmInput): Promise<void> {
   await postOrThrow(`${apiUrl}/v1/auth/password:reset`, {
     body: { token: input.token, newPassword: input.newPassword },
     errorClass: PasswordResetError,
@@ -265,11 +234,7 @@ export async function confirmPasswordReset(
 /**
  * Change password for the authenticated user.
  */
-export async function changePassword(
-  apiUrl: string,
-  input: PasswordChangeInput,
-  accessToken: string
-): Promise<void> {
+export async function changePassword(apiUrl: string, input: PasswordChangeInput, accessToken: string): Promise<void> {
   await postOrThrow(`${apiUrl}/v1/auth/password:change`, {
     headers: authHeaders(accessToken),
     body: {
@@ -286,10 +251,7 @@ export async function changePassword(
 /**
  * Send a verification email to the authenticated user.
  */
-export async function sendVerificationEmail(
-  apiUrl: string,
-  accessToken: string
-): Promise<void> {
+export async function sendVerificationEmail(apiUrl: string, accessToken: string): Promise<void> {
   await postOrThrow(`${apiUrl}/v1/auth/email:send-verification`, {
     headers: authHeaders(accessToken),
     errorClass: EmailVerificationError,
@@ -298,12 +260,23 @@ export async function sendVerificationEmail(
 }
 
 /**
+ * Resend a verification email by email address (unauthenticated).
+ *
+ * The backend endpoint is AllowAnonymous and accepts { email } in the body.
+ * This variant is used when the user is not yet authenticated (e.g. post-signup).
+ */
+export async function resendVerificationEmail(apiUrl: string, input: { email: string }): Promise<void> {
+  await postOrThrow(`${apiUrl}/v1/auth/email:send-verification`, {
+    body: { email: input.email },
+    errorClass: EmailVerificationError,
+    fallbackMessage: 'Failed to resend verification email',
+  });
+}
+
+/**
  * Verify email with the token from the verification email.
  */
-export async function verifyEmail(
-  apiUrl: string,
-  input: EmailVerificationInput
-): Promise<void> {
+export async function verifyEmail(apiUrl: string, input: EmailVerificationInput): Promise<void> {
   await postOrThrow(`${apiUrl}/v1/auth/email:verify`, {
     body: { token: input.token },
     errorClass: EmailVerificationError,
@@ -316,37 +289,25 @@ export async function verifyEmail(
 /**
  * List all active sessions for the authenticated user.
  */
-export async function listSessions(
-  apiUrl: string,
-  accessToken: string
-): Promise<SessionInfo[]> {
+export async function listSessions(apiUrl: string, accessToken: string): Promise<SessionInfo[]> {
   const response = await fetch(`${apiUrl}/v1/auth/sessions`, {
     headers: { Authorization: `Bearer ${accessToken}` },
   });
 
   if (!response.ok) return [];
 
-  const data = (await response.json()) as
-    | { sessions?: SessionInfo[] }
-    | SessionInfo[];
-  return Array.isArray(data) ? data : data.sessions ?? [];
+  const data = (await response.json()) as { sessions?: SessionInfo[] } | SessionInfo[];
+  return Array.isArray(data) ? data : (data.sessions ?? []);
 }
 
 /**
  * Terminate a specific session by ID.
  */
-export async function terminateSession(
-  apiUrl: string,
-  sessionId: string,
-  accessToken: string
-): Promise<void> {
-  const response = await fetch(
-    `${apiUrl}/v1/auth/sessions/${sessionId}`,
-    {
-      method: 'DELETE',
-      headers: { Authorization: `Bearer ${accessToken}` },
-    }
-  );
+export async function terminateSession(apiUrl: string, sessionId: string, accessToken: string): Promise<void> {
+  const response = await fetch(`${apiUrl}/v1/auth/sessions/${sessionId}`, {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
 
   if (!response.ok) {
     throw new SessionTerminationError('Failed to terminate session');
@@ -356,10 +317,7 @@ export async function terminateSession(
 /**
  * Terminate all sessions except the current one.
  */
-export async function terminateOtherSessions(
-  apiUrl: string,
-  accessToken: string
-): Promise<void> {
+export async function terminateOtherSessions(apiUrl: string, accessToken: string): Promise<void> {
   await postOrThrow(`${apiUrl}/v1/auth/sessions:terminate-others`, {
     headers: authHeaders(accessToken),
     errorClass: SessionTerminationError,
@@ -370,10 +328,7 @@ export async function terminateOtherSessions(
 /**
  * Terminate all sessions (including current — forces re-login).
  */
-export async function terminateAllSessions(
-  apiUrl: string,
-  accessToken: string
-): Promise<void> {
+export async function terminateAllSessions(apiUrl: string, accessToken: string): Promise<void> {
   await postOrThrow(`${apiUrl}/v1/auth/sessions:terminate-all`, {
     headers: authHeaders(accessToken),
     errorClass: SessionTerminationError,

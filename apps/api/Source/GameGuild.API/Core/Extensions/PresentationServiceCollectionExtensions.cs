@@ -124,6 +124,11 @@ public static class PresentationServiceCollectionExtensions
 
         controllerStopwatch.Restart();
         services.AddControllers()
+            .AddApplicationPart(typeof(GameGuild.Learning.Assessments.AssessmentsController).Assembly); // Assessments module
+        LogControllersFromAssembly(typeof(GameGuild.Learning.Assessments.AssessmentsController).Assembly, logger, controllerStopwatch);
+
+        controllerStopwatch.Restart();
+        services.AddControllers()
             .AddApplicationPart(typeof(GameGuild.Content.Pages.PageController).Assembly); // Content Pages module
         LogControllersFromAssembly(typeof(GameGuild.Content.Pages.PageController).Assembly, logger, controllerStopwatch);
         

@@ -105,7 +105,9 @@ public sealed record UpdateAssessmentRequest(
     int? MaxAttempts = null,
     bool? IsRequired = null,
     DateTime? AvailableFrom = null,
-    DateTime? AvailableUntil = null
+    DateTime? AvailableUntil = null,
+    Guid? ContentId = null,
+    bool ClearContentId = false
 );
 
 /// <summary>

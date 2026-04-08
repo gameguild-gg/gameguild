@@ -107,7 +107,18 @@ public class ProgramWriteService(IApplicationDbContext context) : IProgramWriteS
 
     if (updateDto.Title != null) program.Title = updateDto.Title;
     if (updateDto.Description != null) program.Description = updateDto.Description;
+    if (updateDto.Slug != null) program.Slug = updateDto.Slug;
     if (updateDto.Thumbnail != null) program.Thumbnail = updateDto.Thumbnail;
+    if (updateDto.VideoShowcaseUrl != null) program.VideoShowcaseUrl = updateDto.VideoShowcaseUrl;
+    if (updateDto.EstimatedHours.HasValue) program.EstimatedHours = updateDto.EstimatedHours.Value;
+    if (updateDto.Visibility.HasValue) program.Visibility = updateDto.Visibility.Value;
+    if (updateDto.Category.HasValue) program.Category = updateDto.Category.Value;
+    if (updateDto.Difficulty.HasValue) program.Difficulty = updateDto.Difficulty.Value;
+    if (updateDto.SkillsRequired != null) program.SkillsRequired = updateDto.SkillsRequired;
+    if (updateDto.SkillsProvided != null) program.SkillsProvided = updateDto.SkillsProvided;
+    if (updateDto.EnrollmentStatus.HasValue) program.EnrollmentStatus = updateDto.EnrollmentStatus.Value;
+    if (updateDto.MaxEnrollments.HasValue) program.MaxEnrollments = updateDto.MaxEnrollments.Value;
+    if (updateDto.EnrollmentDeadline.HasValue) program.EnrollmentDeadline = updateDto.EnrollmentDeadline.Value;
 
     program.Touch();
     await context.SaveChangesAsync().ConfigureAwait(false);
