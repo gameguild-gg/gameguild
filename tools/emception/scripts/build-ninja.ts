@@ -122,9 +122,10 @@ shell.exec(`emmake make -C "${BUILD_WASM_DIR}" -j${CONCURRENCY} ninja`);
 // 4. Re-link as standalone module with libcurl-lite
 console.log('Linking Ninja as standalone WASM module...');
 
-// Find all .o files from the ninja build
+// Find all .o files from the ninja build, excluding CMake internal test artifacts
+// (e.g. _CMakeLTOTest-CXX which contains its own main() returning 0x42=66)
 const ninjaObjs = shell.find(BUILD_WASM_DIR)
-    .filter(f => f.endsWith('.o') && !f.includes('CMakeFiles/CMakeTmp'));
+    .filter(f => f.endsWith('.o') && !f.includes('CMakeFiles/CMakeTmp') && !f.includes('_CMakeLTOTest'));
 
 const toolWasm = path.join(OUTPUT_DIR, 'ninja.wasm');
 const toolMjs = path.join(OUTPUT_DIR, 'ninja.mjs');

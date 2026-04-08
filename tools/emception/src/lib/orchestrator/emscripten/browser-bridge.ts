@@ -41,6 +41,7 @@ export function createBrowserBridge(runner: ToolRunner): BrowserBridge {
         EMSCRIPTEN_ROOT: '/usr/lib/emscripten',
         LLVM_ROOT: '/usr/bin',
         BINARYEN_ROOT: '/usr',
+        CMAKE_ROOT: '/usr/share/cmake-4.3',
       };
       return env[name] ?? defaultValue;
     },
