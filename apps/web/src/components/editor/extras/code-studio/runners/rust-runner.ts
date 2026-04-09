@@ -1,6 +1,6 @@
 import type { CodeRunner, RunnerResult, RunnerOptions, FileMap } from './types'
 import { setDownloadNotificationCallback, installRustFetchInterceptor } from './wasm-loader'
-import { RustCompiler, type RustFile, type RustResult } from '@game-guild/rust-wasm'
+//import { RustCompiler, type RustFile, type RustResult } from '@game-guild/rust-wasm'
 
 /**
  * RustRunner - Rust Code Execution using rustc WebAssembly
