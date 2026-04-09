@@ -3,13 +3,18 @@ packages:
   - "apps/*"
 
   # Shared libraries
-  - "packages/common"
-  - "packages/ui"
   - "packages/analytics"
-  - "packages/cookies"
-  - "packages/errors"
-  - "packages/web3"
   - "packages/api-client"
+  - "packages/common"
+  - "packages/cookies"
+  - "packages/emception"
+  - "packages/errors"
+  - "packages/ui"
+  - "packages/web3"
 
   # Config packages
   - "packages/configs/*"
+
+  # Tools & demos
+  - "tools/*"
+  - "demos/*"

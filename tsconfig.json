@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "@game-guild/typescript-config",
+  "display": "Root",
+  "files": [],
+  "references": [
+    {
+      "path": "./apps/web"
+    },
+    {
+      "path": "./packages/api-client"
+    },
+    {
+      "path": "./packages/common"
+    },
+    {
+      "path": "./packages/ui"
+    },
+    {
+      "path": "./packages/analytics"
+    },
+    {
+      "path": "./packages/cookies"
+    },
+    {
+      "path": "./packages/errors"
+    },
+    {
+      "path": "./packages/web3"
+    },
+    {
+      "path": "./packages/emception"
+    }
+  ]
+}

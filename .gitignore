@@ -1,4 +1,4 @@
-# See https://help.github.com/articles/ignoring-files/ for more (project) ignoring files.
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
 # OS
 .DS_Store
@@ -21,6 +21,8 @@ Desktop.ini
 .settings/
 *.sublime-workspace
 .vscode
+public/pyodide/*
+public/wasm/*
 
 # .NET
 /bin/
@@ -44,7 +46,10 @@ x86/
 /[Tt]estResults/
 /[Ll]ogs/
 # Node.js Dependencies
-node_modules
+**/node_modules
+
+# Embedded upstream repos (avoid nested .git metadata/tooling conflicts)
+tools/emception/userland/**/.git/
 
 # Node.js Package Managers
 /.pnp
@@ -100,6 +105,9 @@ next-env.d.ts
 
 # Production
 /build
-nul
 
+# Turbo
 .turbo
+
+apps/web/test-results/
+test-results/

@@ -1,0 +1,64 @@
+# Browser toolchain
+node_modules/
+dist/
+.tsbuildinfo
+
+# Build outputs (keep manifest.json; ignore generated CDN blobs)
+build/cdn/
+build/*.wasm
+build/*.mjs
+build/*.br
+
+# Emscripten / userland builds
+tools/
+userland/**/build/
+userland/**/build-*/
+# Ignore downloaded/extracted source trees (not our build scripts)
+userland/**/cpython-*/
+userland/**/llvm-project-*/
+userland/**/binaryen-version_*/
+userland/**/CMake-*/
+userland/**/ninja-*/
+userland/**/SDL-*/
+userland/**/SDL_image-*/
+userland/**/SDL_ttf-*/
+userland/**/SDL_mixer-*/
+userland/**/imgui-*/
+userland/**/*.tar.gz
+userland/**/*.tar.xz
+userland/**/version_*.tar.gz
+
+# Sysroot staging (install outputs from userland builds)
+sysroot-staging/
+sysroot/
+
+# IDE / OS
+.DS_Store
+*.swp
+*.swo
+*.log
+*.pem
+
+# build
+build/*
+.next/
+/out/
+
+# test
+test-results/
+playwright-report/
+playwright-report-react/
+/coverage
+
+# misc
+nohup.out
+
+# env
+.env*
+
+# misc
+npm-debug.log*
+yarn-debug.log*
+.vercel
+*.tsbuildinfo
+package-lock.json

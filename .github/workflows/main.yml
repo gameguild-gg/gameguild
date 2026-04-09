@@ -1,0 +1,119 @@
+name: Main
+
+on:
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-web:
+    name: Build Web
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build web app
+        run: pnpm turbo run build --filter=@gameguild/web
+
+  build-api:
+    name: Build API
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "9.0.x"
+
+      - name: Restore NuGet packages
+        run: dotnet restore apps/api/GameGuild.sln
+
+      - name: Build API
+        run: dotnet build apps/api/GameGuild.sln -c Release --no-restore
+
+      - name: Run API tests
+        run: dotnet test apps/api/GameGuild.sln -c Release --no-build --verbosity minimal
+
+      - name: Publish API
+        run: dotnet publish apps/api/Source/GameGuild.API/GameGuild.API.csproj -c Release --no-build -o publish/
+
+  contributors:
+    name: Contributors Visualization
+    runs-on: ubuntu-latest
+    needs: [build-web, build-api]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install ffmpeg and gource
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --fix-missing ffmpeg gource
+
+      - name: Make gource script executable
+        run: chmod +x ./contributors/gource.sh
+
+      - name: Run headless gource
+        uses: coactions/setup-xvfb@v1
+        with:
+          run: ./contributors/gource.sh
+
+      - name: Publish to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./contributors
+          force_orphan: true
+
+  release:
+    name: Changesets Release
+    runs-on: ubuntu-latest
+    needs: [build-web, build-api]
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Create Release Pull Request or Publish
+        uses: changesets/action@v1
+        with:
+          publish: pnpm run release
+          version: pnpm run version
+          title: "chore: version packages"
+          commit: "chore: version packages"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
