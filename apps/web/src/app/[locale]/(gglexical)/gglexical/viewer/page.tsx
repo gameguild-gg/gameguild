@@ -14,11 +14,12 @@ import { PreviewRendererSlideshowSlide } from "@/components/editor/extras/previe
 import { useRouter } from "next/navigation"
 import { ExitConfirmDialog } from "@/components/editor/extras/dialogs/exit-confirm-dialog"
 import { detectProjectLayout, extractEditorStates } from "@/lib/storage/editor/layout-detector"
-import { getLayoutFromType, type ProjectType, type InternalLayout } from "@/lib/storage/editor/project-types"
+import { getLayoutFromType, type ProjectType, type InternalLayout, ENGINE_TYPES } from "@/lib/storage/editor/project-types"
 import { checkSelectedProject as checkProjectPreview } from "@/components/editor/extras/preview/preview-load-operations"
 import type { ProjectData } from "@/components/editor/extras/preview/preview-load-operations"
 import type { ProjectData as StorageProjectData } from "@/lib/storage/editor/enhanced-storage-adapter"
 import { cellsToLexical } from "@/lib/storage/editor/cell-structure"
+import { BlockArrayViewer } from "@/components/editor/extras/editor/block-array-viewer"
 
 
 export default function PreviewPage() {
@@ -188,12 +189,28 @@ export default function PreviewPage() {
     slideshowData?: any;
     projectType?: ProjectType;
     previewMode?: "continuous" | "slide";
+    isBlocksEngine?: boolean;
+    blocksCells?: any[];
   } => {
     if (!currentProject) {
       return {
         layout: "single",
         states: { blocks: {} },
         hasSlides: false,
+      }
+    }
+    
+    // Check if project uses blocks engine
+    const projectEngine = (currentProject as any).engine
+    if (projectEngine === ENGINE_TYPES.BLOCKS) {
+      const cellStates = extractEditorStates(currentProject.data, currentProject.type)
+      const cellsData = cellStates.blocks.b1 || []
+      return {
+        layout: "single",
+        states: { blocks: {} },
+        hasSlides: false,
+        isBlocksEngine: true,
+        blocksCells: Array.isArray(cellsData) ? cellsData : [],
       }
     }
     
@@ -225,7 +242,7 @@ export default function PreviewPage() {
     }
   }
 
-  const { layout: currentLayout, states, hasSlides, slideshowData, projectType, previewMode } = getLayoutAndStates()
+  const { layout: currentLayout, states, hasSlides, slideshowData, projectType, previewMode, isBlocksEngine, blocksCells } = getLayoutAndStates()
 
   return (
     <>
@@ -339,7 +356,11 @@ export default function PreviewPage() {
               </div>
             </div>
 
-            {currentProject && (Object.keys(states.blocks).length > 0 || hasSlides) ? (
+            {currentProject && isBlocksEngine ? (
+              <div className="border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900 p-6">
+                <BlockArrayViewer cells={blocksCells || []} />
+              </div>
+            ) : currentProject && (Object.keys(states.blocks).length > 0 || hasSlides) ? (
               <>
                 {hasSlides && slideshowData ? (
                   previewMode === "slide" ? (

@@ -3,7 +3,7 @@ import { GoogleDriveSync } from "../../sync/editor/google-drive-sync"
 import { HashManager } from "../../sync/editor/hash-manager"
 import { getHistoryManager, type CommitInfo, type SnapshotInfo } from "../git"
 import type { ProjectPreferences } from "./project-preferences"
-import { type ProjectType, PROJECT_TYPES } from "./project-types"
+import { type ProjectType, PROJECT_TYPES, type EngineType, ENGINE_TYPES } from "./project-types"
 import { type StorageType, STORAGE_TYPES, type SyncStatus, SYNC_STATUS } from "./storage-types"
 
 export type { ProjectPreferences } from "./project-preferences"
@@ -14,6 +14,7 @@ export interface ProjectData {
   id: string
   name: string
   type: ProjectType // Project type (not layout - layout is auto-detected from data structure)
+  engine?: EngineType // Engine type: "lexical" or "blocks"
   data: string // Serialized project data (format detected by layout-detector)
   tags: string[]
   size: number
@@ -37,6 +38,7 @@ interface ProjectMetadata {
   id: string
   name: string
   type: ProjectType // Project type (not layout)
+  engine?: EngineType
   tags: string[]
   size: number
   hash: string
@@ -173,7 +175,7 @@ export class EnhancedStorageAdapter {
     }
   }
 
-  async save(id: string, name: string, data: string, tags: string[] = [], storageType: StorageType = STORAGE_TYPES.LOCAL, preferences?: ProjectPreferences, type: ProjectType = PROJECT_TYPES.TYPE1, deps?: ProjectData[]): Promise<void> {
+  async save(id: string, name: string, data: string, tags: string[] = [], storageType: StorageType = STORAGE_TYPES.LOCAL, preferences?: ProjectPreferences, type: ProjectType = PROJECT_TYPES.TYPE1, deps?: ProjectData[], engine: EngineType = ENGINE_TYPES.LEXICAL): Promise<void> {
     if (!this.isInitialized) throw new Error("Storage adapter not initialized")
 
     const hash = await HashManager.generateHash(data)
@@ -187,6 +189,7 @@ export class EnhancedStorageAdapter {
       id,
       name,
       type: type || existing?.type || PROJECT_TYPES.TYPE1, // Preserve existing type or use provided
+      engine: engine || existing?.engine || ENGINE_TYPES.LEXICAL, // Preserve existing engine or use provided
       data,
       tags,
       size: this.estimateSize(data),
@@ -262,6 +265,7 @@ export class EnhancedStorageAdapter {
         id: projectData.id,
         name: projectData.name,
         type: projectData.type,
+        engine: projectData.engine,
         tags: projectData.tags,
         size: projectData.size,
         hash: projectData.hash!,
