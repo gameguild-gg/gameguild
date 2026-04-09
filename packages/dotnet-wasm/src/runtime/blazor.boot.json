@@ -1,7 +1,7 @@
 {
   "mainAssemblyName": "RoslynWrapper.dll",
   "resources": {
-    "hash": "sha256-g1xcbNlcuqhKPOD2y/PMce0Gr0npB2C6gSgsRAYaluE=",
+    "hash": "sha256-fz3gnJQqul4uz7eIIUZjHYteomEi4P98/NSQm/xNDrk=",
     "jsModuleNative": {
       "dotnet.native.js": "sha256-vtotCeXt2UD6oc459laJT32vBgigZ+eLoUmdeFkvYDk="
     },
@@ -30,7 +30,7 @@
       "Microsoft.Win32.Registry.wasm": "sha256-WikETbTUvFxCn+89X/DiN0eLOLknyDNc2s8+QTaBTh8=",
       "mscorlib.wasm": "sha256-K9gNrsN9UmPqLs6J/FrkiKpmkVGnHjjqUsc7YGvesCY=",
       "netstandard.wasm": "sha256-4emjlXLM9qW3t2tlII20SDylBgG4ueI0wy9nh5FMd8g=",
-      "RoslynWrapper.wasm": "sha256-9gdm421SanFDiD5fSiZeWLVKP8LoNkI4JXzaba5jIaI=",
+      "RoslynWrapper.wasm": "sha256-GnkTyb7P7g5ElR19Ke6u36gKEqjdJBHxGUNr0Y2QZRQ=",
       "System.AppContext.wasm": "sha256-SV93JD2EsL/jqMCHy9tmZqyxxvCRkHug8CcFrRGTp08=",
       "System.Buffers.wasm": "sha256-pOzy5RfoeZWgMnq0Vlg/NsrHZoOPQoSnjl1BKe8gBzM=",
       "System.Collections.Concurrent.wasm": "sha256-bHkAj7tdd6tiTapH4QknYJO0H+niLEzOZ5Q1xQRyyII=",
