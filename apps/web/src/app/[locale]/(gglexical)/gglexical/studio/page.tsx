@@ -33,7 +33,7 @@ import { syncConfig } from "@/lib/sync/editor/sync-config"
 import { SaveAsDialog } from "@/components/editor/extras/editor/save-as-dialog"
 import { type ProjectMode } from "@/lib/storage/editor/project-modes"
 import { detectProjectLayout, extractEditorStates, createProjectData } from "@/lib/storage/editor/layout-detector"
-import { getLayoutFromType, type ProjectType, type InternalLayout, PROJECT_TYPES } from "@/lib/storage/editor/project-types"
+import { getLayoutFromType, type ProjectType, type InternalLayout, PROJECT_TYPES, type EngineType, ENGINE_TYPES } from "@/lib/storage/editor/project-types"
 import { ExitConfirmDialog } from "@/components/editor/extras/dialogs/exit-confirm-dialog"
 import { ProjectHistoryDialog } from "@/components/editor/extras/dialogs/project-history-dialog"
 import { PreviewRenderer } from "@/components/editor/extras/preview/preview-renderer"
@@ -53,6 +53,8 @@ import {
 } from "@/lib/storage/editor/slideshow-structure"
 import type { ProjectData as StorageProjectData } from "@/lib/storage/editor/enhanced-storage-adapter"
 import type { CellularContent } from "@/lib/storage/editor/cell-structure"
+import { BlockArrayEditor } from "@/components/editor/extras/editor/block-array-editor"
+import { BlockArrayViewer } from "@/components/editor/extras/editor/block-array-viewer"
 
 interface ProjectData {
   id: string
@@ -96,6 +98,10 @@ export default function Page() {
   // Layout detection and state management
   const [currentLayout, setCurrentLayout] = useState<InternalLayout>("single")
   const [currentProjectType, setCurrentProjectType] = useState<ProjectType>(PROJECT_TYPES.TYPE1)
+  const [currentEngine, setCurrentEngine] = useState<EngineType>(ENGINE_TYPES.LEXICAL)
+  
+  // Block Array engine state
+  const [blockArrayCells, setBlockArrayCells] = useState<CellularContent>([])
   
   // Type1 states (single editor with b1)
   const [editorState, setEditorState] = useState<string>("")
@@ -457,8 +463,38 @@ export default function Page() {
   }, [isDbInitialized])
 
   const handleSave = async () => {
-    // Prepare the correct state based on layout type
+    // Prepare the correct state based on engine and layout type
     let dataToSave: string
+    
+    if (currentEngine === ENGINE_TYPES.BLOCKS) {
+      // Block Array engine: save cells directly
+      dataToSave = createProjectData(currentProjectType, {
+        blocks: { b1: blockArrayCells },
+      })
+      
+      const preferences: ProjectPreferences = {
+        global: {
+          ...currentProjectPreferences?.global,
+          mode: currentProjectMode,
+        },
+        nodes: currentProjectPreferences?.nodes || {}
+      }
+      
+      await saveProject({
+        currentProjectId,
+        currentProjectName,
+        currentProjectStorageType,
+        editorState: dataToSave,
+        editorRef: { current: null } as React.RefObject<LexicalEditor | null>,
+        projectTags,
+        storageAdapter,
+        calculateProjectAssetsSize,
+        setSaveAsDialogOpen,
+        preferences,
+        type: currentProjectType,
+      })
+      return
+    }
     
     if (currentLayout === "slideshow" && slideshowStructure) {
       // Slideshow layout: serialize the structure
@@ -1252,6 +1288,31 @@ export default function Page() {
                     blockRefs={blockRefs}
                     setLoadingRef={setLoadingRef}
                     onProjectLoad={(projectData) => {
+                      // Detect engine type
+                      const projectEngine: EngineType = (projectData as any).engine || ENGINE_TYPES.LEXICAL
+                      setCurrentEngine(projectEngine)
+                      
+                      if (projectEngine === ENGINE_TYPES.BLOCKS) {
+                        // Block Array engine: load cells directly
+                        const states = extractEditorStates(projectData.data, projectData.type)
+                        const cellsData = states.blocks.b1 || []
+                        setBlockArrayCells(Array.isArray(cellsData) ? cellsData : [])
+                        
+                        setCurrentProjectId(projectData.id)
+                        setCurrentProjectName(projectData.name)
+                        setCurrentProjectType(projectData.type)
+                        setCurrentLayout("single")
+                        setCurrentProjectStorageType(projectData.storageType || "local")
+                        setProjectTags(projectData.tags || [])
+                        setCurrentProjectMode(projectData.preferences?.global?.mode || "free-page")
+                        setCurrentProjectPreferences(projectData.preferences)
+                        setIsFirstTime(false)
+                        setLastProjectLoadTime(Date.now())
+                        window.history.pushState(null, '', `#${projectData.id}`)
+                        return
+                      }
+                      
+                      // Lexical engine: existing flow
                       // Detectar layout automaticamente baseado na estrutura de data
                       const layoutInfo = detectProjectLayout(projectData.data)
                       
@@ -1499,6 +1560,26 @@ export default function Page() {
               storageAdapter={storageAdapter}
               availableTags={availableTags}
               onProjectCreate={(projectData) => {
+                // Set engine
+                setCurrentEngine(projectData.engine || ENGINE_TYPES.LEXICAL)
+                
+                if (projectData.engine === ENGINE_TYPES.BLOCKS) {
+                  // Block Array engine: just set empty cells, no Lexical needed
+                  setBlockArrayCells([])
+                  setCurrentLayout("single")
+                  setCurrentProjectType((projectData.type || "type1") as ProjectType)
+                  setCurrentProjectMode(projectData.mode || "free-page")
+                  setLastProjectLoadTime(Date.now())
+                  setCurrentProjectId(projectData.id)
+                  setCurrentProjectName(projectData.name)
+                  setCurrentProjectStorageType(projectData.storageType)
+                  setProjectTags(projectData.tags)
+                  setIsFirstTime(false)
+                  window.history.pushState(null, '', `#${projectData.id}`)
+                  return
+                }
+                
+                // Lexical engine: existing flow
                 // Create empty cells structure (basilar format)
                 const emptyCells: CellularContent = []
                 
@@ -1593,8 +1674,16 @@ export default function Page() {
               generateProjectId={generateProjectId}
             />
 
-            {/* Editor Container - Render based on layout type */}
-            {currentLayout === "slideshow" && slideshowStructure ? (
+            {/* Editor Container - Render based on engine and layout type */}
+            {currentEngine === ENGINE_TYPES.BLOCKS ? (
+              <div className="border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 p-4">
+                <BlockArrayEditor
+                  cells={blockArrayCells}
+                  onChange={setBlockArrayCells}
+                  readOnly={isViewingHistory}
+                />
+              </div>
+            ) : currentLayout === "slideshow" && slideshowStructure ? (
               <EditorLayoutSlideshow
                 structure={slideshowStructure}
                 onStructureChange={setSlideshowStructure}
@@ -1725,7 +1814,12 @@ export default function Page() {
           <DialogHeader>
             <DialogTitle>Preview</DialogTitle>
           </DialogHeader>
-          {previewLayout === "single" && previewState && (
+          {currentEngine === ENGINE_TYPES.BLOCKS && (
+            <div className="w-full max-h-[80vh] overflow-y-auto">
+              <BlockArrayViewer cells={blockArrayCells} />
+            </div>
+          )}
+          {currentEngine !== ENGINE_TYPES.BLOCKS && previewLayout === "single" && previewState && (
             <PreviewRenderer serializedState={previewState} />
           )}
           {previewLayout === "multiple" && Object.keys(previewBlockStates).length >= 1 && (

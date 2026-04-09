@@ -5,6 +5,26 @@
  * Extensível - adicionar novos tipos é simples, basta adicionar em PROJECT_TYPES
  */
 
+// ============================================================================
+// Engine Types
+// ============================================================================
+
+/**
+ * Engine types available for projects.
+ * - "lexical": Rich-text Lexical editor with decorator nodes embedded in text.
+ * - "blocks": Simple array of decorator blocks (no text between blocks).
+ */
+export const ENGINE_TYPES = {
+  LEXICAL: 'lexical',
+  BLOCKS: 'blocks',
+} as const
+
+export type EngineType = typeof ENGINE_TYPES[keyof typeof ENGINE_TYPES]
+
+// ============================================================================
+// Project Types
+// ============================================================================
+
 /**
  * Tipos de projeto disponíveis
  * Usar este objeto para referenciar tipos em vez de strings hardcoded

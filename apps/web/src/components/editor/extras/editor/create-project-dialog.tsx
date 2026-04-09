@@ -15,6 +15,7 @@ import {
 } from "@/lib/storage/editor/project-modes"
 import { createProjectData } from "@/lib/storage/editor/layout-detector"
 import { type ProjectType, PROJECT_TYPES, getLayoutFromType } from "@/lib/storage/editor/project-types"
+import { type EngineType, ENGINE_TYPES } from "@/lib/storage/editor/project-types"
 
 interface ProjectData {
   id: string
@@ -28,7 +29,7 @@ interface ProjectData {
 
 interface StorageAdapter {
   list: () => Promise<ProjectData[]>
-  save: (id: string, name: string, data: string, tags: string[], storageType?: "local" | "gameguild-cloud" | "google-drive", preferences?: any, type?: string) => Promise<void>
+  save: (id: string, name: string, data: string, tags: string[], storageType?: "local" | "gameguild-cloud" | "google-drive", preferences?: any, type?: string, deps?: any, engine?: EngineType) => Promise<void>
 }
 
 interface CreateProjectDialogProps {
@@ -44,6 +45,7 @@ interface CreateProjectDialogProps {
     storageType: "local" | "gameguild-cloud" | "google-drive"
     type: ProjectType // Project type
     mode: ProjectMode
+    engine: EngineType
   }) => void
   onProjectsListUpdate: () => void
   onAvailableTagsUpdate: () => void
@@ -68,6 +70,7 @@ export function CreateProjectDialog({
   const [storageOption, setStorageOption] = useState<StorageOption>("local")
   const [projectMode, setProjectMode] = useState<ProjectMode>("free-page")
   const [projectType, setProjectType] = useState<ProjectType>(PROJECT_TYPES.TYPE1)
+  const [engine, setEngine] = useState<EngineType>(ENGINE_TYPES.LEXICAL)
 
   // Close tag dropdown when clicking outside
   useEffect(() => {
@@ -169,20 +172,28 @@ export function CreateProjectDialog({
         nodes: {}
       }
       
-      // Create data structure based on project type
-      // For slideshow layout, the parent component will create the structure
+      // Create data structure based on project type and engine
       let projectData: string
-      const layoutType = getLayoutFromType(projectType)
       
-      if (layoutType === "slideshow") {
-        // Temporary placeholder - will be replaced by parent component
-        projectData = JSON.stringify({ version: "slideshow-v1", slides: [] })
-      } else {
+      if (engine === ENGINE_TYPES.BLOCKS) {
+        // Block Array engine: empty Cell[] array
         projectData = createProjectData(projectType, {
-          blocks: {
-            b1: emptyState,
-          },
+          blocks: { b1: [] },
         })
+      } else {
+        // Lexical engine: standard layout-based data
+        const layoutType = getLayoutFromType(projectType)
+        
+        if (layoutType === "slideshow") {
+          // Temporary placeholder - will be replaced by parent component
+          projectData = JSON.stringify({ version: "slideshow-v1", slides: [] })
+        } else {
+          projectData = createProjectData(projectType, {
+            blocks: {
+              b1: emptyState,
+            },
+          })
+        }
       }
       
       await storageAdapter.save(
@@ -192,7 +203,9 @@ export function CreateProjectDialog({
         projectTags, 
         storageOption, 
         preferences,
-        projectType // Project type
+        projectType, // Project type
+        undefined, // deps
+        engine // Engine type
       )
 
       // Call the callback to update parent state
@@ -203,6 +216,7 @@ export function CreateProjectDialog({
         storageType: storageOption,
         type: projectType,
         mode: projectMode,
+        engine,
       })
 
       // Reset form state
@@ -213,6 +227,7 @@ export function CreateProjectDialog({
       setStorageOption("local")
       setProjectMode("free-page")
       setProjectType(PROJECT_TYPES.TYPE1)
+      setEngine(ENGINE_TYPES.LEXICAL)
       onOpenChange(false)
 
       // Update lists
@@ -242,6 +257,7 @@ export function CreateProjectDialog({
     setStorageOption("local")
     setProjectMode("free-page")
     setProjectType("type1")
+    setEngine(ENGINE_TYPES.LEXICAL)
     onOpenChange(false)
   }
 
@@ -409,6 +425,89 @@ export function CreateProjectDialog({
                 </p>
                 <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-500">
                   <span className="px-2 py-0.5 bg-gray-100 dark:bg-gray-800 rounded text-[10px]">Slideshow Layout</span>
+                </div>
+              </button>
+            </div>
+          </div>
+
+          {/* Engine Selection */}
+          <div>
+            <Label className="text-sm font-semibold mb-2 block">Editor Engine *</Label>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {/* Lexical Engine */}
+              <button
+                type="button"
+                onClick={() => setEngine(ENGINE_TYPES.LEXICAL)}
+                className={`relative p-3 rounded-lg border-2 transition-all text-left ${
+                  engine === ENGINE_TYPES.LEXICAL
+                    ? "border-indigo-500 bg-indigo-50 dark:bg-indigo-950"
+                    : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600"
+                }`}
+              >
+                {engine === ENGINE_TYPES.LEXICAL && (
+                  <div className="absolute top-2 right-2">
+                    <div className="w-5 h-5 bg-indigo-500 rounded-full flex items-center justify-center">
+                      <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                    </div>
+                  </div>
+                )}
+                <div className="mb-2 flex justify-center">
+                  <div className="w-full h-16 bg-linear-to-br from-indigo-100 to-indigo-200 dark:from-indigo-900 dark:to-indigo-800 rounded border border-indigo-300 dark:border-indigo-600 flex items-center justify-center">
+                    <div className="space-y-1 w-3/4">
+                      <div className="h-1.5 w-full bg-white dark:bg-gray-700 rounded"></div>
+                      <div className="h-1.5 w-4/5 bg-white dark:bg-gray-700 rounded"></div>
+                      <div className="h-1.5 w-3/5 bg-white dark:bg-gray-700 rounded"></div>
+                    </div>
+                  </div>
+                </div>
+                <h3 className="font-semibold text-base mb-1">Rich Document</h3>
+                <p className="text-xs text-gray-600 dark:text-gray-400 mb-1.5">
+                  Full rich-text editor with paragraphs, headings, lists, and embedded blocks.
+                </p>
+                <div className="flex items-center gap-2 text-xs text-gray-500">
+                  <span className="px-2 py-0.5 bg-gray-100 dark:bg-gray-800 rounded text-[10px]">Lexical</span>
+                </div>
+              </button>
+
+              {/* Block Array Engine */}
+              <button
+                type="button"
+                onClick={() => setEngine(ENGINE_TYPES.BLOCKS)}
+                className={`relative p-3 rounded-lg border-2 transition-all text-left ${
+                  engine === ENGINE_TYPES.BLOCKS
+                    ? "border-amber-500 bg-amber-50 dark:bg-amber-950"
+                    : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600"
+                }`}
+              >
+                {engine === ENGINE_TYPES.BLOCKS && (
+                  <div className="absolute top-2 right-2">
+                    <div className="w-5 h-5 bg-amber-500 rounded-full flex items-center justify-center">
+                      <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                    </div>
+                  </div>
+                )}
+                <div className="mb-2 flex justify-center">
+                  <div className="w-full h-16 bg-linear-to-br from-amber-100 to-amber-200 dark:from-amber-900 dark:to-amber-800 rounded border border-amber-300 dark:border-amber-600 flex flex-col items-center justify-center gap-1 p-1.5">
+                    <div className="w-full h-4 bg-white dark:bg-gray-700 rounded flex items-center px-1.5">
+                      <div className="w-2 h-2 bg-amber-400 dark:bg-amber-500 rounded-sm mr-1"></div>
+                      <div className="h-1 w-8 bg-amber-200 dark:bg-amber-700 rounded"></div>
+                    </div>
+                    <div className="w-full h-4 bg-white dark:bg-gray-700 rounded flex items-center px-1.5">
+                      <div className="w-2 h-2 bg-amber-400 dark:bg-amber-500 rounded-sm mr-1"></div>
+                      <div className="h-1 w-6 bg-amber-200 dark:bg-amber-700 rounded"></div>
+                    </div>
+                  </div>
+                </div>
+                <h3 className="font-semibold text-base mb-1">Block Stack</h3>
+                <p className="text-xs text-gray-600 dark:text-gray-400 mb-1.5">
+                  Stack of decorator blocks (quiz, code, image, etc.) without rich text.
+                </p>
+                <div className="flex items-center gap-2 text-xs text-gray-500">
+                  <span className="px-2 py-0.5 bg-gray-100 dark:bg-gray-800 rounded text-[10px]">Block Array</span>
                 </div>
               </button>
             </div>
