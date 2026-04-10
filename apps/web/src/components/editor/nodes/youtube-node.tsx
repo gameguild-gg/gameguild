@@ -136,7 +136,7 @@ function YouTubeComponent({ data, nodeKey }: YouTubeComponentProps) {
 
   // Build YouTube embed URL with parameters
   const getYouTubeEmbedUrl = () => {
-    let url = `https://www.youtube.com/embed/${data.videoId}?enablejsapi=1`
+    let url = `https://www.youtube-nocookie.com/embed/${data.videoId}?enablejsapi=1`
 
     // Add start time if specified
     if (data.startAt && data.startAt > 0) {
@@ -206,6 +206,8 @@ function YouTubeComponent({ data, nodeKey }: YouTubeComponentProps) {
                   setIsLoading(false)
                   setHasError(true)
                 }}
+                // @ts-expect-error credentialless is not yet in React's iframe types
+                credentialless="true"
               ></iframe>
 
               {isLoading && (

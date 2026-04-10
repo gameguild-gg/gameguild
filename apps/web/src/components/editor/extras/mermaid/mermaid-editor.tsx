@@ -52,18 +52,12 @@ export function MermaidEditor({ initialData, onSave, onCancel }: MermaidEditorPr
 
   // Block body scroll and pointer events when modal is open
   useEffect(() => {
-    // Store original values
-    const originalOverflow = document.body.style.overflow
-    const originalPointerEvents = document.body.style.pointerEvents
-    
-    // Disable scroll and pointer events on body
     document.body.style.overflow = 'hidden'
     document.body.style.pointerEvents = 'none'
     
-    // Cleanup on unmount
     return () => {
-      document.body.style.overflow = originalOverflow
-      document.body.style.pointerEvents = originalPointerEvents
+      document.body.style.overflow = ''
+      document.body.style.pointerEvents = ''
     }
   }, [])
 
@@ -131,18 +125,10 @@ export function MermaidEditor({ initialData, onSave, onCancel }: MermaidEditorPr
       return
     }
 
-    // Restore body styles before closing
-    document.body.style.overflow = ''
-    document.body.style.pointerEvents = ''
-
     onSave(data)
   }
 
   const handleCancel = () => {
-    // Restore body styles before closing
-    document.body.style.overflow = ''
-    document.body.style.pointerEvents = ''
-    
     onCancel()
   }
 

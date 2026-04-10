@@ -37,15 +37,12 @@ export function MarkdownEditor({ initialData, onSave, onCancel }: MarkdownEditor
 
   // Block body scroll and pointer events when modal is open
   useEffect(() => {
-    const originalOverflow = document.body.style.overflow
-    const originalPointerEvents = document.body.style.pointerEvents
-    
     document.body.style.overflow = 'hidden'
     document.body.style.pointerEvents = 'none'
     
     return () => {
-      document.body.style.overflow = originalOverflow
-      document.body.style.pointerEvents = originalPointerEvents
+      document.body.style.overflow = ''
+      document.body.style.pointerEvents = ''
     }
   }, [])
 
@@ -71,10 +68,6 @@ export function MarkdownEditor({ initialData, onSave, onCancel }: MarkdownEditor
   }, [searchTerm, selectedCategory])
 
   const handleSave = () => {
-    // Restore body styles before closing
-    document.body.style.overflow = ''
-    document.body.style.pointerEvents = ''
-    
     onSave({
       content,
       title: initialData?.title,
@@ -83,9 +76,6 @@ export function MarkdownEditor({ initialData, onSave, onCancel }: MarkdownEditor
   }
 
   const handleCancel = () => {
-    // Restore body styles before closing
-    document.body.style.overflow = ''
-    document.body.style.pointerEvents = ''
     onCancel()
   }
 
