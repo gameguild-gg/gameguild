@@ -270,7 +270,7 @@ export function MediaPreview({ data }: MediaPreviewProps) {
       const match = data.src.match(/(?:youtube\.com\/(?:[^/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?/\s]{11})/i)
       if (match && match[1]) {
         videoId = match[1]
-        embedUrl = `https://www.youtube.com/embed/${videoId}?enablejsapi=1`
+        embedUrl = `https://www.youtube-nocookie.com/embed/${videoId}?enablejsapi=1`
       }
     } else if (data.embedType === "vimeo") {
       const match = data.src.match(/(?:vimeo\.com\/(?:video\/)?|player\.vimeo\.com\/video\/)([0-9]+)/i)
@@ -411,7 +411,7 @@ export function MediaPreview({ data }: MediaPreviewProps) {
       const match = data.src.match(/(?:youtube\.com\/(?:[^/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?/\s]{11})/i)
       if (match && match[1]) {
         audioId = match[1]
-        embedUrl = `https://www.youtube.com/embed/${audioId}?feature=oembed&enablejsapi=1&showinfo=0&controls=1&disablekb=1&rel=0&modestbranding=1&vq=small&iv_load_policy=3&fs=0`
+        embedUrl = `https://www.youtube-nocookie.com/embed/${audioId}?feature=oembed&enablejsapi=1&showinfo=0&controls=1&disablekb=1&rel=0&modestbranding=1&vq=small&iv_load_policy=3&fs=0`
         height = "60"
       }
     } else if (data.embedAudioType === "spotify") {

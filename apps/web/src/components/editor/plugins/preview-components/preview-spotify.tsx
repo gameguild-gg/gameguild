@@ -55,6 +55,8 @@ export function PreviewSpotify({ node }: { node: SerializedSpotifyNode }) {
             loading="lazy"
             title={title || `Spotify ${type}`}
             className="rounded-lg"
+            // @ts-expect-error credentialless is not yet in React's iframe types
+            credentialless="true"
           ></iframe>
         </div>
       </div>

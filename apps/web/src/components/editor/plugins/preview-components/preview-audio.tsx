@@ -68,7 +68,7 @@ export function PreviewAudio({ node }: { node: SerializedAudioNode }) {
       case "youtube":
         // Adicionar parâmetros para ocultar o vídeo e mostrar apenas os controles
         // Adicionando vq=small para forçar qualidade 144p e economizar recursos
-        embedUrl = `https://www.youtube.com/embed/${embedInfo.id}?feature=oembed&enablejsapi=1&showinfo=0&controls=1&disablekb=1&rel=0&modestbranding=1&vq=small&iv_load_policy=3&fs=0`
+        embedUrl = `https://www.youtube-nocookie.com/embed/${embedInfo.id}?feature=oembed&enablejsapi=1&showinfo=0&controls=1&disablekb=1&rel=0&modestbranding=1&vq=small&iv_load_policy=3&fs=0`
         embedTitle = "YouTube audio player"
         height = "60" // Altura reduzida para mostrar apenas os controles
         className = "w-full rounded-lg border youtube-audio-embed" // Classe especial para estilização
@@ -96,6 +96,8 @@ export function PreviewAudio({ node }: { node: SerializedAudioNode }) {
           height={height}
           allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
           loading="lazy"
+          // @ts-expect-error credentialless is not yet in React's iframe types
+          credentialless="true"
         ></iframe>
         {caption && <div className="mt-2 text-sm text-muted-foreground text-center">{caption}</div>}
       </div>
