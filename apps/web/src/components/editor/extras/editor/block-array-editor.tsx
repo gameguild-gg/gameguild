@@ -1,13 +1,143 @@
 "use client"
 
 import { useState, useCallback } from "react"
-import { Button } from "@/components/ui/button"
-import { Plus, GripVertical, Trash2, ChevronUp, ChevronDown } from "lucide-react"
+import { Plus, GripVertical, Trash2, ChevronUp, ChevronDown, Pencil } from "lucide-react"
 import { BlockTypePicker } from "./block-type-picker"
+import { BlockEditorModal } from "./block-editor-modal"
 import { BLOCK_REGISTRY, type BlockCellType } from "./block-component-registry"
-import { CELL_TO_LEXICAL_TYPE, type CellType } from "@/lib/storage/editor/cell-converters/cell-data"
+import { DeleteConfirmDialog } from "@/components/editor/extras/dialogs/delete-confirm-dialog"
+import { type CellType } from "@/lib/storage/editor/cell-converters/cell-data"
 import type { Cell, CellularContent } from "@/lib/storage/editor/cell-structure"
-import { cellToSerializedNode, BlockContentRenderer } from "@/components/editor/extras/editor/block-array-viewer"
+import { BlockContentRenderer } from "@/components/editor/extras/editor/block-array-viewer"
+
+// ============================================================================
+// Insert Line — the "seam" between blocks where new blocks can be added
+// ============================================================================
+
+function InsertLine({ onInsert }: { onInsert: () => void }) {
+  return (
+    <div className="group/insert relative flex items-center py-1.5">
+      {/* Horizontal line */}
+      <div className="flex-1 h-px bg-gray-200 dark:bg-gray-700 group-hover/insert:bg-blue-400 dark:group-hover/insert:bg-blue-500 transition-colors" />
+      {/* Centered + button */}
+      <button
+        type="button"
+        onClick={onInsert}
+        className="relative z-10 flex items-center justify-center w-7 h-7 mx-2 rounded-full border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-400 opacity-40 group-hover/insert:opacity-100 group-hover/insert:border-blue-400 group-hover/insert:text-blue-500 dark:group-hover/insert:border-blue-500 dark:group-hover/insert:text-blue-400 hover:scale-110 transition-all cursor-pointer"
+        title="Insert block here"
+      >
+        <Plus className="h-4 w-4" />
+      </button>
+      <div className="flex-1 h-px bg-gray-200 dark:bg-gray-700 group-hover/insert:bg-blue-400 dark:group-hover/insert:bg-blue-500 transition-colors" />
+    </div>
+  )
+}
+
+// ============================================================================
+// Block Card — a single block with header bar and content area
+// ============================================================================
+
+interface BlockCardProps {
+  cell: Cell
+  index: number
+  total: number
+  onMoveUp: () => void
+  onMoveDown: () => void
+  onRemove: () => void
+  onEdit: () => void
+  readOnly: boolean
+}
+
+function BlockCard({ cell, index, total, onMoveUp, onMoveDown, onRemove, onEdit, readOnly }: BlockCardProps) {
+  const [, meta] = cell
+  const cellType = meta.t as CellType
+  const config = BLOCK_REGISTRY[cellType as BlockCellType]
+
+  if (!config) return null
+
+  const Icon = config.icon
+
+  return (
+    <div className="group/card rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm hover:shadow-md transition-shadow overflow-hidden">
+      {/* Header bar */}
+      <div className="flex items-center gap-2 px-3 py-2 bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+        {/* Grip handle */}
+        {!readOnly && (
+          <GripVertical className="h-4 w-4 text-gray-300 dark:text-gray-600 shrink-0 cursor-grab" />
+        )}
+
+        {/* Type icon + label */}
+        <div className="flex items-center gap-1.5 min-w-0">
+          <Icon className="h-4 w-4 text-gray-500 dark:text-gray-400 shrink-0" />
+          <span className="text-xs font-medium text-gray-600 dark:text-gray-300 truncate">{config.label}</span>
+        </div>
+
+        {/* Index badge */}
+        <span className="text-[11px] font-mono text-gray-400 dark:text-gray-500 bg-gray-100 dark:bg-gray-700 px-1.5 py-0.5 rounded shrink-0">
+          #{index + 1}
+        </span>
+
+        {/* Spacer */}
+        <div className="flex-1" />
+
+        {/* Action buttons */}
+        {!readOnly && (
+          <div className="flex items-center gap-0.5">
+            {/* Edit button — always visible */}
+            <button
+              type="button"
+              onClick={onEdit}
+              className="p-1 rounded text-blue-500 hover:text-blue-700 hover:bg-blue-50 dark:text-blue-400 dark:hover:text-blue-300 dark:hover:bg-blue-950/40 transition-colors"
+              title="Edit block"
+            >
+              <Pencil className="h-3.5 w-3.5" />
+            </button>
+            {/* Move/delete — visible on hover */}
+            <div className="flex items-center gap-0.5 opacity-0 group-hover/card:opacity-100 transition-opacity">
+              <button
+                type="button"
+                onClick={onMoveUp}
+                disabled={index === 0}
+                className="p-1 rounded text-gray-400 hover:text-gray-700 hover:bg-gray-200/60 dark:hover:text-gray-200 dark:hover:bg-gray-700/60 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                title="Move up"
+              >
+                <ChevronUp className="h-3.5 w-3.5" />
+              </button>
+              <button
+                type="button"
+                onClick={onMoveDown}
+                disabled={index === total - 1}
+                className="p-1 rounded text-gray-400 hover:text-gray-700 hover:bg-gray-200/60 dark:hover:text-gray-200 dark:hover:bg-gray-700/60 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                title="Move down"
+              >
+                <ChevronDown className="h-3.5 w-3.5" />
+              </button>
+              <button
+                type="button"
+                onClick={onRemove}
+                className="p-1 rounded text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:text-red-400 dark:hover:bg-red-950/40 transition-colors"
+                title="Remove block"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Content area */}
+      <div className="p-4">
+        <div className="prose prose-sm dark:prose-invert max-w-none">
+          <BlockContentRenderer cell={cell} />
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ============================================================================
+// Block Array Editor — main component
+// ============================================================================
 
 interface BlockArrayEditorProps {
   cells: CellularContent
@@ -19,17 +149,66 @@ export function BlockArrayEditor({ cells, onChange, readOnly = false }: BlockArr
   const [pickerOpen, setPickerOpen] = useState(false)
   const [insertIndex, setInsertIndex] = useState<number | null>(null)
 
+  // Editor modal state
+  const [editorOpen, setEditorOpen] = useState(false)
+  const [editingIndex, setEditingIndex] = useState<number | null>(null)
+  const [editingCell, setEditingCell] = useState<Cell | null>(null)
+  const [editingCellType, setEditingCellType] = useState<CellType | null>(null)
+
+  // Delete confirmation state
+  const [deleteIndex, setDeleteIndex] = useState<number | null>(null)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+
   const handleAddBlock = useCallback((cell: Cell) => {
     const idx = insertIndex ?? cells.length
     const next = [...cells]
     next.splice(idx, 0, cell)
     onChange(next)
+
+    // Immediately open editor for the newly added block
+    const [, meta] = cell
+    setEditingIndex(idx)
+    setEditingCell(cell)
+    setEditingCellType(meta.t as CellType)
+    setEditorOpen(true)
+
     setInsertIndex(null)
   }, [cells, onChange, insertIndex])
 
+  const handleEditBlock = useCallback((index: number) => {
+    const cell = cells[index]
+    if (!cell) return
+    const [, meta] = cell
+    setEditingIndex(index)
+    setEditingCell(cell)
+    setEditingCellType(meta.t as CellType)
+    setEditorOpen(true)
+  }, [cells])
+
+  const handleEditorSave = useCallback((data: any) => {
+    if (editingIndex === null || !editingCell) return
+    const [, meta] = editingCell
+    const updatedCell: Cell = [{ d: data }, meta]
+    const next = [...cells]
+    next[editingIndex] = updatedCell
+    onChange(next)
+    setEditorOpen(false)
+    setEditingIndex(null)
+    setEditingCell(null)
+    setEditingCellType(null)
+  }, [editingIndex, editingCell, cells, onChange])
+
   const handleRemoveBlock = useCallback((index: number) => {
-    onChange(cells.filter((_, i) => i !== index))
-  }, [cells, onChange])
+    setDeleteIndex(index)
+    setDeleteDialogOpen(true)
+  }, [])
+
+  const handleConfirmDelete = useCallback(() => {
+    if (deleteIndex === null) return
+    onChange(cells.filter((_, i) => i !== deleteIndex))
+    setDeleteIndex(null)
+    setDeleteDialogOpen(false)
+  }, [deleteIndex, cells, onChange])
 
   const handleMoveUp = useCallback((index: number) => {
     if (index <= 0) return
@@ -45,130 +224,84 @@ export function BlockArrayEditor({ cells, onChange, readOnly = false }: BlockArr
     onChange(next)
   }, [cells, onChange])
 
-  const handleUpdateBlock = useCallback((index: number, newCell: Cell) => {
-    const next = [...cells]
-    next[index] = newCell
-    onChange(next)
-  }, [cells, onChange])
-
   const openPickerAt = (index: number) => {
     setInsertIndex(index)
     setPickerOpen(true)
   }
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-0">
+      {/* Empty state */}
       {cells.length === 0 && !readOnly && (
-        <div className="flex flex-col items-center justify-center py-16 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg">
-          <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">No blocks yet. Add your first block.</p>
-          <Button
-            variant="outline"
-            size="sm"
+        <div className="flex flex-col items-center justify-center py-20">
+          <button
+            type="button"
             onClick={() => openPickerAt(0)}
-            className="gap-2"
+            className="flex items-center justify-center w-14 h-14 rounded-full border-2 border-dashed border-gray-300 dark:border-gray-600 text-gray-400 hover:border-blue-400 hover:text-blue-500 dark:hover:border-blue-500 dark:hover:text-blue-400 hover:scale-110 transition-all cursor-pointer mb-4"
           >
-            <Plus className="h-4 w-4" />
-            Add Block
-          </Button>
+            <Plus className="h-7 w-7" />
+          </button>
+          <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Add your first block</p>
+          <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">Choose from 20 different block types</p>
         </div>
       )}
 
-      {cells.map((cell, index) => {
-        const [, meta] = cell
-        const cellType = meta.t as CellType
-        const config = BLOCK_REGISTRY[cellType as BlockCellType]
+      {/* Block list with insert lines */}
+      {cells.length > 0 && (
+        <>
+          {/* Insert line before first block */}
+          {!readOnly && <InsertLine onInsert={() => openPickerAt(0)} />}
 
-        if (!config) return null
-
-        const Icon = config.icon
-
-        return (
-          <div key={index} className="group relative">
-            {/* Insert-before button (between blocks) */}
-            {!readOnly && (
-              <div className="flex justify-center -mb-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                <button
-                  type="button"
-                  onClick={() => openPickerAt(index)}
-                  className="flex items-center gap-1 px-2 py-0.5 text-[10px] text-gray-400 hover:text-blue-500 dark:hover:text-blue-400 transition-colors"
-                >
-                  <Plus className="h-3 w-3" />
-                  Insert
-                </button>
-              </div>
-            )}
-
-            <div className="flex gap-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 overflow-hidden">
-              {/* Drag handle + controls */}
-              {!readOnly && (
-                <div className="flex flex-col items-center justify-between py-2 px-1.5 bg-gray-50 dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700">
-                  <div className="flex flex-col gap-0.5">
-                    <button
-                      type="button"
-                      onClick={() => handleMoveUp(index)}
-                      disabled={index === 0}
-                      className="p-0.5 text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 disabled:opacity-30 disabled:cursor-not-allowed"
-                    >
-                      <ChevronUp className="h-3.5 w-3.5" />
-                    </button>
-                    <GripVertical className="h-3.5 w-3.5 text-gray-300 dark:text-gray-600 mx-auto" />
-                    <button
-                      type="button"
-                      onClick={() => handleMoveDown(index)}
-                      disabled={index === cells.length - 1}
-                      className="p-0.5 text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 disabled:opacity-30 disabled:cursor-not-allowed"
-                    >
-                      <ChevronDown className="h-3.5 w-3.5" />
-                    </button>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveBlock(index)}
-                    className="p-0.5 text-gray-400 hover:text-red-500 dark:hover:text-red-400 transition-colors"
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </button>
-                </div>
-              )}
-
-              {/* Block content */}
-              <div className="flex-1 min-w-0 p-3">
-                {/* Type badge */}
-                <div className="flex items-center gap-1.5 mb-2 text-xs text-gray-500 dark:text-gray-400">
-                  <Icon className="h-3.5 w-3.5" />
-                  <span className="font-medium">{config.label}</span>
-                  <span className="text-gray-300 dark:text-gray-600">#{index + 1}</span>
-                </div>
-
-                {/* Rendered content preview */}
-                <div className="prose prose-sm dark:prose-invert max-w-none">
-                  <BlockContentRenderer cell={cell} />
-                </div>
-              </div>
+          {cells.map((cell, index) => (
+            <div key={index}>
+              <BlockCard
+                cell={cell}
+                index={index}
+                total={cells.length}
+                onMoveUp={() => handleMoveUp(index)}
+                onMoveDown={() => handleMoveDown(index)}
+                onRemove={() => handleRemoveBlock(index)}
+                onEdit={() => handleEditBlock(index)}
+                readOnly={readOnly}
+              />
+              {/* Insert line after each block */}
+              {!readOnly && <InsertLine onInsert={() => openPickerAt(index + 1)} />}
             </div>
-          </div>
-        )
-      })}
-
-      {/* Add block button at the end */}
-      {cells.length > 0 && !readOnly && (
-        <div className="flex justify-center pt-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => openPickerAt(cells.length)}
-            className="gap-2"
-          >
-            <Plus className="h-4 w-4" />
-            Add Block
-          </Button>
-        </div>
+          ))}
+        </>
       )}
 
       <BlockTypePicker
         open={pickerOpen}
         onOpenChange={setPickerOpen}
         onSelect={handleAddBlock}
+      />
+
+      <BlockEditorModal
+        open={editorOpen}
+        onOpenChange={(v) => {
+          setEditorOpen(v)
+          if (!v) {
+            setEditingIndex(null)
+            setEditingCell(null)
+            setEditingCellType(null)
+          }
+        }}
+        cell={editingCell}
+        cellType={editingCellType}
+        onSave={handleEditorSave}
+      />
+
+      <DeleteConfirmDialog
+        open={deleteDialogOpen}
+        onOpenChange={(v) => {
+          setDeleteDialogOpen(v)
+          if (!v) setDeleteIndex(null)
+        }}
+        title="Delete Block"
+        itemName={deleteIndex !== null && cells[deleteIndex] ? BLOCK_REGISTRY[cells[deleteIndex]![1].t as BlockCellType]?.label ?? "Block" : "Block"}
+        itemType="block"
+        onConfirm={handleConfirmDelete}
       />
     </div>
   )

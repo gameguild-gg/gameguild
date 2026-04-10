@@ -73,7 +73,7 @@ export const BLOCK_REGISTRY: Record<BlockCellType, BlockTypeConfig> = {
     label: "Code Studio",
     description: "Code editor with multiple files",
     createEmpty: () => [
-      { d: { id: crypto.randomUUID(), files: [], folders: [], openTabs: [], activeFileId: null, mode: "single", language: "javascript", readonly: false, showLineNumbers: true, fontSize: 14, theme: "system", shikiTheme: "github", testCases: {} } },
+      { d: { id: crypto.randomUUID(), files: [], folders: [], openTabs: [], activeFileId: null, mode: "execution", language: "javascript", readonly: false, showLineNumbers: true, fontSize: 14, theme: "system", shikiTheme: "github", testCases: {} } },
       createDecoratorMeta("code"),
     ],
   },
