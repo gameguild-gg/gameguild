@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback } from "react"
+import { useState, useCallback, useRef, useEffect } from "react"
 import { Plus, GripVertical, Trash2, ChevronUp, ChevronDown, Pencil } from "lucide-react"
 import { BlockTypePicker } from "./block-type-picker"
 import { BlockEditorModal } from "./block-editor-modal"
@@ -159,6 +159,22 @@ export function BlockArrayEditor({ cells, onChange, readOnly = false }: BlockArr
   const [deleteIndex, setDeleteIndex] = useState<number | null>(null)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
 
+  // Scroll-to-block after move
+  const scrollToIndexRef = useRef<number | null>(null)
+  const blockRefsMap = useRef<Map<number, HTMLDivElement>>(new Map())
+
+  // Stable keys for cells — avoids remount on reorder
+  const cellKeyMap = useRef(new WeakMap<Cell, string>())
+  const cellKeyCounter = useRef(0)
+  const getCellKey = useCallback((cell: Cell) => {
+    let key = cellKeyMap.current.get(cell)
+    if (!key) {
+      key = `block-${++cellKeyCounter.current}`
+      cellKeyMap.current.set(cell, key)
+    }
+    return key
+  }, [])
+
   const handleAddBlock = useCallback((cell: Cell) => {
     const idx = insertIndex ?? cells.length
     const next = [...cells]
@@ -215,6 +231,7 @@ export function BlockArrayEditor({ cells, onChange, readOnly = false }: BlockArr
     const next = [...cells]
     ;[next[index - 1], next[index]] = [next[index]!, next[index - 1]!]
     onChange(next)
+    scrollToIndexRef.current = index - 1
   }, [cells, onChange])
 
   const handleMoveDown = useCallback((index: number) => {
@@ -222,7 +239,20 @@ export function BlockArrayEditor({ cells, onChange, readOnly = false }: BlockArr
     const next = [...cells]
     ;[next[index], next[index + 1]] = [next[index + 1]!, next[index]!]
     onChange(next)
+    scrollToIndexRef.current = index + 1
   }, [cells, onChange])
+
+  // Scroll to moved block after render
+  useEffect(() => {
+    if (scrollToIndexRef.current !== null) {
+      const idx = scrollToIndexRef.current
+      scrollToIndexRef.current = null
+      requestAnimationFrame(() => {
+        const el = blockRefsMap.current.get(idx)
+        el?.scrollIntoView({ behavior: "smooth", block: "center" })
+      })
+    }
+  })
 
   const openPickerAt = (index: number) => {
     setInsertIndex(index)
@@ -253,7 +283,7 @@ export function BlockArrayEditor({ cells, onChange, readOnly = false }: BlockArr
           {!readOnly && <InsertLine onInsert={() => openPickerAt(0)} />}
 
           {cells.map((cell, index) => (
-            <div key={index}>
+            <div key={getCellKey(cell)} ref={(el) => { if (el) blockRefsMap.current.set(index, el); else blockRefsMap.current.delete(index) }}>
               <BlockCard
                 cell={cell}
                 index={index}
