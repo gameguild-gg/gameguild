@@ -1,3 +1,6 @@
 export { BaseSettingsMenu, type SettingsTab } from './base-settings-menu'
 export { SystemSettings } from './system-settings'
 export { CodeStudioStyleSettings } from './code-studio-style-settings'
+export { MonacoStyleSettings } from './monaco-style-settings'
+export { useEditorSettings, type EditorSettings } from './use-editor-settings'
+export { EditorSettingsButton } from './editor-settings-button'

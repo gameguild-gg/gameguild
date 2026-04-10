@@ -22,6 +22,8 @@ interface MonacoMermaidEditorProps {
   height?: string | number
   theme?: "light" | "dark"
   readOnly?: boolean
+  fontSize?: number
+  lineNumbers?: boolean
 }
 
 export function MonacoMermaidEditor({
@@ -30,8 +32,8 @@ export function MonacoMermaidEditor({
   onValidationChange,
   height = "100%",
   theme = "light",
-  readOnly = false,
-}: MonacoMermaidEditorProps) {
+  readOnly = false,  fontSize = 14,
+  lineNumbers = true,}: MonacoMermaidEditorProps) {
   const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null)
   const isLanguageRegistered = useRef(false)
   const completionProviderDisposable = useRef<IDisposable | null>(null)
@@ -212,8 +214,8 @@ export function MonacoMermaidEditor({
       options={{
         minimap: { enabled: false },
         scrollBeyondLastLine: false,
-        fontSize: 14,
-        lineNumbers: "on",
+        fontSize: fontSize,
+        lineNumbers: lineNumbers ? "on" : "off",
         wordWrap: "on",
         automaticLayout: true,
         tabSize: 2,

@@ -1595,39 +1595,39 @@ export function CodeStudioEditor({
             </div>
           </div>
           
-          <Button variant="ghost" size="sm" onClick={handleCancelClick}>
-            <X className="h-4 w-4" />
-          </Button>
+          <div className="flex items-center gap-2">
+            <div className="relative settings-menu-container">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowSettingsMenu(!showSettingsMenu)}
+                className="h-8 w-8 p-0"
+                title="Settings"
+              >
+                <Menu className="h-4 w-4" />
+              </Button>
+              
+              {/* Settings Dropdown Menu */}
+              {showSettingsMenu && (
+                <SettingsMenu
+                  data={localData}
+                  onDataChange={handleDataChange}
+                  onClose={() => setShowSettingsMenu(false)}
+                  nodeType="code-studio"
+                  onModalSizeChange={(size) => setModalSize(size)}
+                  projectId={projectId}
+                  onShikiThemePreview={(theme) => setEffectiveShikiTheme(theme)}
+                />
+              )}
+            </div>
+            <Button variant="ghost" size="sm" onClick={handleCancelClick}>
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
 
         {/* Settings Bar */}
         <div className="flex items-center gap-4 p-4 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900">
-          {/* Settings Menu Button */}
-          <div className="relative settings-menu-container">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowSettingsMenu(!showSettingsMenu)}
-              className="h-8 w-8 p-0"
-              title="Settings"
-            >
-              <Menu className="h-4 w-4" />
-            </Button>
-            
-            {/* Settings Dropdown Menu */}
-            {showSettingsMenu && (
-              <SettingsMenu
-                data={localData}
-                onDataChange={handleDataChange}
-                onClose={() => setShowSettingsMenu(false)}
-                nodeType="code-studio"
-                onModalSizeChange={(size) => setModalSize(size)}
-                projectId={projectId}
-                onShikiThemePreview={(theme) => setEffectiveShikiTheme(theme)}
-              />
-            )}
-          </div>
-          
           <div className="flex items-center gap-2">
             <Label htmlFor="title" className="text-sm font-medium">
               Title:
