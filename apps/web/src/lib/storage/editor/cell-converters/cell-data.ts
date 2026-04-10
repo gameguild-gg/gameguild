@@ -28,6 +28,7 @@ import type { DividerData } from "@/components/editor/nodes/divider-node"
 import type { AdmonitionData } from "@/components/editor/nodes/admonition-node"
 import type { MarkdownData } from "@/components/editor/nodes/markdown-node"
 import type { HTMLData } from "@/components/editor/nodes/html-node"
+import type { RichTextData } from "@/components/editor/nodes/rich-text-node"
 import type { TableData } from "@/components/editor/nodes/table-node"
 import type { ProjectData as ProjectNodeData_Internal } from "@/components/editor/nodes/project-node"
 
@@ -54,6 +55,7 @@ export type CellType =
   | "src"    // source
   | "md"     // markdown
   | "html"
+  | "rt"     // rich-text
   | "hdr"    // header
   | "div"    // divider
   | "btn"    // button
@@ -81,6 +83,7 @@ export const LEXICAL_TO_CELL_TYPE: Record<string, CellType> = {
   "source": "src",
   "markdown": "md",
   "html": "html",
+  "rich-text": "rt",
   "header": "hdr",
   "divider": "div",
   "button": "btn",
@@ -108,6 +111,7 @@ export const CELL_TO_LEXICAL_TYPE: Record<CellType, string> = {
   "src": "source",
   "md": "markdown",
   "html": "html",
+  "rt": "rich-text",
   "hdr": "header",
   "div": "divider",
   "btn": "button",
@@ -152,6 +156,7 @@ export type PresentationCellData = DecoratorCellData<PresentationData>
 export type SourceCellData = DecoratorCellData<SourceData>
 export type MarkdownCellData = DecoratorCellData<MarkdownData>
 export type HTMLCellData = DecoratorCellData<HTMLData>
+export type RichTextCellData = DecoratorCellData<RichTextData>
 export type HeaderCellData = DecoratorCellData<HeaderData>
 export type DividerCellData = DecoratorCellData<DividerData>
 export type ButtonCellData = DecoratorCellData<ButtonData>
@@ -180,6 +185,7 @@ export type CellData =
   | SourceCellData
   | MarkdownCellData
   | HTMLCellData
+  | RichTextCellData
   | HeaderCellData
   | DividerCellData
   | ButtonCellData

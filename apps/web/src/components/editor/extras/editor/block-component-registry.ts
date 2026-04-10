@@ -48,7 +48,7 @@ export interface BlockTypeConfig {
 /** Decorator CellTypes supported by the Block Array Engine */
 export const BLOCK_CELL_TYPES = [
   "quiz", "code", "img", "vid", "aud", "gal", "yt", "spot",
-  "mmd", "vega", "pres", "src", "md", "html", "hdr", "div",
+  "mmd", "vega", "pres", "src", "md", "html", "rt", "hdr", "div",
   "btn", "adm", "tbl", "proj",
 ] as const satisfies readonly CellType[]
 
@@ -183,6 +183,15 @@ export const BLOCK_REGISTRY: Record<BlockCellType, BlockTypeConfig> = {
     createEmpty: () => [
       { d: { content: "" } },
       createDecoratorMeta("html"),
+    ],
+  },
+  rt: {
+    icon: FileText,
+    label: "Rich Text",
+    description: "Rich text content with formatting",
+    createEmpty: () => [
+      { d: { content: "" } },
+      createDecoratorMeta("rt"),
     ],
   },
   hdr: {

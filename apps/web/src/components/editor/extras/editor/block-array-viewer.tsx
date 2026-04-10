@@ -24,6 +24,7 @@ import { PreviewVegaLite } from "@/components/editor/plugins/preview-components/
 import { PreviewTable } from "@/components/editor/plugins/preview-components/preview-table"
 import { PreviewCodeStudio } from "@/components/editor/plugins/preview-components/preview-code-studio"
 import { PreviewProject } from "@/components/editor/plugins/preview-components/preview-project"
+import { PreviewRichText } from "@/components/editor/plugins/preview-components/preview-rich-text"
 
 // ============================================================================
 // Cell → Serialized Node converter
@@ -91,6 +92,8 @@ export function BlockContentRenderer({ cell }: BlockContentRendererProps) {
       return <PreviewMarkdown node={node} />
     case "html":
       return <PreviewHTML node={node} />
+    case "rt":
+      return <PreviewRichText node={node} />
     case "hdr":
       return <PreviewHeader node={node} />
     case "div":

@@ -104,6 +104,7 @@ export const INSERT_MERMAID_COMMAND = createCommand<MermaidData>("INSERT_MERMAID
 export const INSERT_VEGA_LITE_COMMAND = createCommand<VegaLiteData>("INSERT_VEGA_LITE_COMMAND")
 export const INSERT_TABLE_COMMAND = createCommand<Partial<TableData>>("INSERT_TABLE_COMMAND")
 export const INSERT_PROJECT_COMMAND = createCommand<ImportedProjectData>("INSERT_PROJECT_COMMAND")
+export const INSERT_RICH_TEXT_COMMAND = createCommand("INSERT_RICH_TEXT_COMMAND")
 
 interface FloatingContentInsertPluginProps {
   mode?: ProjectMode
