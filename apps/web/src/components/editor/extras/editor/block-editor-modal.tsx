@@ -26,6 +26,7 @@ import { UnifiedMediaEditor } from "@/components/editor/extras/media/unified-med
 import type { BaseMediaData } from "@/components/editor/nodes/base/media-node-base"
 import { TableEditor } from "@/components/editor/extras/table/table-editor"
 import { HTMLEditor } from "@/components/editor/extras/html/html-editor"
+import { RichTextEditor } from "@/components/editor/extras/rich-text/rich-text-editor"
 
 // ============================================================================
 // Simple form editors for Pattern B types (no standalone editor exists)
@@ -400,6 +401,12 @@ export function BlockEditorModal({ open, onOpenChange, cell, cellType, onSave }:
   if (cellType === "html") {
     if (!open) return null
     return <HTMLEditor initialData={currentData} onSave={handleSave} onCancel={handleCancel} />
+  }
+
+  // Rich Text — renders its own full-screen overlay
+  if (cellType === "rt") {
+    if (!open) return null
+    return <RichTextEditor initialData={currentData} onSave={handleSave} onCancel={handleCancel} />
   }
 
   // ─── Pattern B: Simple form editors for Lexical-coupled types ───

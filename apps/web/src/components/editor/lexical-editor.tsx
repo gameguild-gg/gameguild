@@ -16,6 +16,7 @@ import { LinkPlugin } from "@lexical/react/LexicalLinkPlugin"
 import { AutoLinkPlugin } from "@lexical/react/LexicalAutoLinkPlugin"
 import type { LinkMatcher } from "@lexical/react/LexicalAutoLinkPlugin"
 import { HTMLNode } from "./nodes/html-node"
+import { RichTextNode } from "./nodes/rich-text-node"
 
 import { cn } from "@/lib/utils"
 import { ImageNode } from "./nodes/image-node"
@@ -28,6 +29,7 @@ import { ImagePlugin } from "./plugins/image-plugin"
 import { QuizPlugin } from "./plugins/quiz-plugin"
 import { MarkdownPlugin } from "./plugins/markdown-plugin"
 import { HTMLPlugin } from "./plugins/html-plugin"
+import { RichTextPlugin as RichTextNodePlugin } from "./plugins/rich-text-plugin"
 import { VideoPlugin } from "./plugins/video-plugin"
 import { EditorToolbar } from "./editor-toolbar"
 import { AudioNode } from "./nodes/audio-node"
@@ -305,6 +307,7 @@ const initialConfig = {
     QuizNode,
     MarkdownNode,
     HTMLNode,
+    RichTextNode,
     VideoNode,
     AudioNode,
     HeaderNode,
@@ -505,6 +508,7 @@ export function Editor({
             <QuizPlugin />
             <MarkdownPlugin />
             <HTMLPlugin />
+            <RichTextNodePlugin />
             <VideoPlugin />
             <AudioPlugin />
             <HeaderPlugin />
