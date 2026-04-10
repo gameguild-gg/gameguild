@@ -2,6 +2,7 @@ import { LexicalEditor } from "lexical"
 import { toast } from "sonner"
 import { assetManager } from "@/lib/storage/assets/asset-manager"
 import type { ProjectData } from "@/lib/storage/editor/enhanced-storage-adapter"
+import type { EngineType } from "@/lib/storage/editor/project-types"
 
 // Parameter interfaces
 export interface SaveParams {
@@ -12,13 +13,14 @@ export interface SaveParams {
   editorRef: React.RefObject<LexicalEditor | null>
   projectTags: string[]
   storageAdapter: {
-    save: (id: string, name: string, data: string, tags: string[], storageType: "local" | "gameguild-cloud" | "google-drive", preferences?: any, type?: string, deps?: ProjectData[]) => Promise<void>
+    save: (id: string, name: string, data: string, tags: string[], storageType: "local" | "gameguild-cloud" | "google-drive", preferences?: any, type?: string, deps?: ProjectData[], engine?: EngineType) => Promise<void>
   }
   calculateProjectAssetsSize: (projectId: string) => Promise<void>
   setSaveAsDialogOpen: (open: boolean) => void
   preferences?: any
   type?: string // Project type (type1, type2, type3)
   deps?: ProjectData[] // Dependent projects (for type3 slideshow)
+  engine?: EngineType // Engine type (lexical, blocks)
 }
 
 export interface SaveAsParams {
@@ -58,6 +60,7 @@ export async function handleSave(params: SaveParams): Promise<void> {
     preferences,
     type,
     deps,
+    engine,
   } = params
 
   if (!currentProjectId) {
@@ -92,7 +95,7 @@ export async function handleSave(params: SaveParams): Promise<void> {
   }
 
   try {
-    await storageAdapter.save(currentProjectId, currentProjectName, stateToSave, projectTags, currentProjectStorageType, preferences, type, deps)
+    await storageAdapter.save(currentProjectId, currentProjectName, stateToSave, projectTags, currentProjectStorageType, preferences, type, deps, engine)
 
     // Sync asset index with the saved project data
     await assetManager.syncProjectAssets(currentProjectId, stateToSave)

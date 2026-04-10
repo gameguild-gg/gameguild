@@ -1,9 +1,10 @@
 import { LexicalEditor } from "lexical"
 import { toast } from "sonner"
 import { detectProjectLayout, extractEditorStates } from "@/lib/storage/editor/layout-detector"
-import { getLayoutFromType, type ProjectType, type InternalLayout } from "@/lib/storage/editor/project-types"
+import { getLayoutFromType, type ProjectType, type InternalLayout, ENGINE_TYPES, type EngineType } from "@/lib/storage/editor/project-types"
 import type { SlideshowStructure, PreviewMode } from "@/lib/storage/editor/slideshow-structure"
 import type { ProjectData } from "@/lib/storage/editor/enhanced-storage-adapter"
+import type { CellularContent } from "@/lib/storage/editor/cell-structure"
 
 // Parameter interface
 export interface CheckSelectedProjectParams {
@@ -41,6 +42,8 @@ export interface CheckSelectedProjectParams {
   setCurrentProjectMode?: (mode: any) => void
   setLastProjectLoadTime?: (time: number) => void
   setCurrentProjectPreferences?: (preferences: any) => void
+  setCurrentEngine?: (engine: EngineType) => void
+  setBlockArrayCells?: (cells: CellularContent) => void
 }
 
 /**
@@ -70,6 +73,8 @@ export async function checkSelectedProject(params: CheckSelectedProjectParams): 
     setCurrentProjectMode,
     setLastProjectLoadTime,
     setCurrentProjectPreferences,
+    setCurrentEngine,
+    setBlockArrayCells,
   } = params
   
   // Use directDbLoad if provided (avoids closure issues), otherwise fall back to storageAdapter
@@ -115,6 +120,32 @@ export async function checkSelectedProject(params: CheckSelectedProjectParams): 
           // Mark project load time if setter provided
           if (setLastProjectLoadTime) {
             setLastProjectLoadTime(Date.now())
+          }
+          
+          // Restore engine type
+          const projectEngine: EngineType = (projectData as any).engine || ENGINE_TYPES.LEXICAL
+          if (setCurrentEngine) {
+            setCurrentEngine(projectEngine)
+          }
+          
+          // Handle blocks engine: restore cells and exit early
+          if (projectEngine === ENGINE_TYPES.BLOCKS && setBlockArrayCells) {
+            const states = extractEditorStates(projectData.data, projectData.type as ProjectType)
+            const cellsData = states.blocks?.b1 || []
+            setBlockArrayCells(Array.isArray(cellsData) ? cellsData as CellularContent : [])
+            
+            // Update URL hash if not already set
+            if (window.location.hash !== `#${projectData.id}`) {
+              window.history.pushState(null, '', `#${projectData.id}`)
+            }
+            
+            toast.success("Projeto carregado", {
+              description: `"${projectData.name}" foi aberto com sucesso`,
+              duration: 2500,
+              icon: "📂",
+            })
+            
+            return // Exit early for blocks engine
           }
           
           // Handle slideshow layout
