@@ -2,16 +2,19 @@
 
 ## Overview
 
-Added comprehensive Zod schema generation to the `@game-guild/api-client` package for runtime validation of API types. The generator now produces both TypeScript interfaces (for compile-time safety) and Zod schemas (for runtime validation).
+Added comprehensive Zod schema generation to the `@game-guild/client` package for runtime validation of API types. The generator now produces both TypeScript interfaces (for compile-time safety) and Zod schemas (for runtime validation).
 
 ## Changes Made
 
 ### 1. Added Zod Dependency
+
 **File**: `package.json`
+
 - Added `"zod": "^3.23.8"` as a runtime dependency
 - Zod schemas are exported in the generated client, so it's needed by consumers
 
 ### 2. Created Zod Schema Mapper
+
 **File**: `scripts/codegen/strategies/ZodSchemaMapper.ts` (New)
 
 Implements Strategy Pattern for mapping OpenAPI schemas to Zod schemas:
@@ -26,6 +29,7 @@ Implements Strategy Pattern for mapping OpenAPI schemas to Zod schemas:
 - **ZodSchemaMapperChain** - Chain of Responsibility coordinator
 
 ### 3. Enhanced Types Generator
+
 **File**: `scripts/codegen/types.ts` (Modified)
 
 Updated to generate both TypeScript types AND Zod schemas:
@@ -49,13 +53,16 @@ Updated to generate both TypeScript types AND Zod schemas:
   - Optional fields
 
 ### 4. Documentation
+
 **File**: `README.md` (Updated)
+
 - Added Zod to features list
 - Updated dependencies note
 - Added comprehensive "Runtime Validation with Zod" section
 - Documented validation patterns and custom rules
 
 **File**: `examples/zod-validation.ts` (New)
+
 - Created 10 practical examples:
   1. Basic validation with `.parse()`
   2. Safe validation with `.safeParse()`
@@ -71,6 +78,7 @@ Updated to generate both TypeScript types AND Zod schemas:
 ## Generated Output Examples
 
 ### TypeScript Interface + Zod Schema
+
 ```typescript
 export interface Commerce_Payments_TaxJurisdictionDto {
   id?: string;
@@ -85,20 +93,20 @@ export const Commerce_Payments_TaxJurisdictionDtoSchema = z.object({
   code: z.string().nullable().optional(),
   name: z.string().nullable().optional(),
   defaultRate: z.number().optional(),
-  isActive: z.boolean().optional()
+  isActive: z.boolean().optional(),
 });
 ```
 
 ### Enum + Zod Enum Schema
-```typescript
-export type ObjectsAttestationConveyancePreference = 
-  'none' | 'indirect' | 'direct' | 'enterprise';
 
-export const ObjectsAttestationConveyancePreferenceSchema = 
-  z.enum(['none', 'indirect', 'direct', 'enterprise']);
+```typescript
+export type ObjectsAttestationConveyancePreference = 'none' | 'indirect' | 'direct' | 'enterprise';
+
+export const ObjectsAttestationConveyancePreferenceSchema = z.enum(['none', 'indirect', 'direct', 'enterprise']);
 ```
 
 ### Array + Zod Array Schema
+
 ```typescript
 export interface APIControllersDependencyHealthOutput {
   dependencies?: Array<APIControllersDependencyHealthItem> | null;
@@ -114,10 +122,9 @@ export const APIControllersDependencyHealthOutputSchema = z.object({
 ## Usage Examples
 
 ### Basic Validation
+
 ```typescript
-import { 
-  Commerce_Payments_TaxJurisdictionDtoSchema 
-} from '@game-guild/api-client';
+import { Commerce_Payments_TaxJurisdictionDtoSchema } from '@game-guild/client';
 
 // Validate API response
 const response = await fetch('/api/tax-jurisdictions/123');
@@ -128,6 +135,7 @@ const validated = Commerce_Payments_TaxJurisdictionDtoSchema.parse(data);
 ```
 
 ### Safe Validation
+
 ```typescript
 const result = Commerce_Payments_TaxJurisdictionDtoSchema.safeParse(data);
 
@@ -139,12 +147,12 @@ if (result.success) {
 ```
 
 ### Custom Validation Rules
+
 ```typescript
-const CustomSchema = Commerce_Payments_TaxJurisdictionDtoSchema
-  .refine(
-    (data) => !data.isActive || !!data.name,
-    { message: 'Active jurisdictions must have a name', path: ['name'] }
-  );
+const CustomSchema = Commerce_Payments_TaxJurisdictionDtoSchema.refine((data) => !data.isActive || !!data.name, {
+  message: 'Active jurisdictions must have a name',
+  path: ['name'],
+});
 ```
 
 ## Benefits

@@ -23,11 +23,7 @@
 export { GameGuildAuth } from './auth.js';
 
 // ─── Provider Factories (re-exported for convenience) ────────────
-export {
-  CredentialsProvider,
-  GoogleProvider,
-  GitHubProvider,
-} from '../../runtime/auth/providers/index.js';
+export { CredentialsProvider, GoogleProvider, GitHubProvider } from '../../runtime/auth/providers/index.js';
 
 // ─── Auth Types ──────────────────────────────────────────────────
 export type {
@@ -52,7 +48,6 @@ import type { TokenProvider } from '../../runtime/auth/types.js';
 import type { TenantProvider } from '../../runtime/tenant/types.js';
 
 export type { ServerClientConfig };
-
 
 /**
  * Configuration for Next.js API client
@@ -80,9 +75,7 @@ export interface NextClientConfig extends Omit<ServerClientConfig, 'auth' | 'ten
 /**
  * Create a token provider from NextAuth session
  */
-export function createNextAuthTokenProvider(
-  getSession: NonNullable<NextClientConfig['getSession']>
-): TokenProvider {
+export function createNextAuthTokenProvider(getSession: NonNullable<NextClientConfig['getSession']>): TokenProvider {
   return {
     async getAccessToken() {
       const session = await getSession();
@@ -95,7 +88,7 @@ export function createNextAuthTokenProvider(
     onAuthenticationRequired: async () => {
       // In server context, we typically let the proxy handle redirects
       // This callback is for notification purposes
-      console.warn('[api-client] Authentication required but no session available');
+      console.warn('[client] Authentication required but no session available');
     },
   };
 }
@@ -103,13 +96,11 @@ export function createNextAuthTokenProvider(
 /**
  * Create a tenant provider for Next.js
  */
-export function createNextTenantProvider(
-  getTenantId: NonNullable<NextClientConfig['getTenantId']>
-): TenantProvider {
+export function createNextTenantProvider(getTenantId: NonNullable<NextClientConfig['getTenantId']>): TenantProvider {
   return {
     getTenantId,
     onTenantRequired: async () => {
-      console.warn('[api-client] Tenant ID required but not available');
+      console.warn('[client] Tenant ID required but not available');
     },
   };
 }
@@ -120,7 +111,7 @@ export function createNextTenantProvider(
  * @example
  * ```typescript
  * // In a Server Component or Server Action
- * import { createNextClient } from '@game-guild/api-client/next';
+ * import { createNextClient } from '@game-guild/client/next';
  * import { auth } from '@/auth';
  *
  * export async function getUser(id: string) {
@@ -167,7 +158,7 @@ export async function createClientFromCookies(
     getCookies: () => Promise<{
       get: (name: string) => { value: string } | undefined;
     }>;
-  }
+  },
 ): Promise<ApiClient> {
   const cookies = await config.getCookies();
 
@@ -198,9 +189,9 @@ export function createRouteClient(
   config: NextClientConfig & {
     /** Request headers to extract auth/tenant from */
     headers?: Headers;
-  }
+  },
 ): ApiClient {
-  let effectiveConfig = { ...config };
+  const effectiveConfig = { ...config };
 
   if (config.headers) {
     // Extract auth from Authorization header if not using session getter

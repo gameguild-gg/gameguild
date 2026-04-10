@@ -17,11 +17,11 @@ export default defineConfig({
       '@game-guild/ui': path.resolve(__dirname, '../../packages/ui/src'),
       '@game-guild/client/react': path.resolve(
         __dirname,
-        '../../packages/api-client/src/integrations/react/index.ts'
+        '../../packages/client/src/integrations/react/index.ts'
       ),
       '@game-guild/client': path.resolve(
         __dirname,
-        '../../packages/api-client/src/index.ts'
+        '../../packages/client/src/index.ts'
       ),
     },
   },

@@ -19,7 +19,6 @@
         <Include>[GameGuild.Content.Pages]*</Include>
     </PropertyGroup>
     <ItemGroup>
-        <FrameworkReference Include="Microsoft.AspNetCore.App" />
     </ItemGroup>
     <ItemGroup>
         <PackageReference Include="coverlet.msbuild" />

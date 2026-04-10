@@ -1,5 +1,5 @@
 /**
- * @game-guild/api-client - Code Generation Pipeline
+ * @game-guild/client - Code Generation Pipeline
  *
  * Main entry point for generating typed API client from OpenAPI specification.
  *
@@ -45,7 +45,9 @@ interface GeneratorMetadata {
  * Calculate SHA256 hash of the OpenAPI spec for change detection
  */
 function calculateHash(spec: OpenApiSpec): string {
-  return createHash('sha256').update(JSON.stringify(spec, null, 0)).digest('hex');
+  return createHash('sha256')
+    .update(JSON.stringify(spec, null, 0))
+    .digest('hex');
 }
 
 /**
@@ -109,7 +111,7 @@ async function writeGeneratedFile(filename: string, content: string): Promise<vo
  * Main generation pipeline
  */
 async function generate(): Promise<void> {
-  console.log('🚀 @game-guild/api-client Code Generator\n');
+  console.log('🚀 @game-guild/client Code Generator\n');
   console.log(`📡 Fetching OpenAPI spec from: ${CONFIG.apiUrl}`);
 
   try {
@@ -176,7 +178,7 @@ function generateIndex(moduleNames: string[]): string {
   const moduleExports = moduleNames.map((name) => `export * from './modules/${name}.gen.js';`).join('\n');
 
   return `/**
- * @game-guild/api-client - Generated API Types and Endpoints
+ * @game-guild/client - Generated API Types and Endpoints
  *
  * ⚠️  AUTO-GENERATED FILE - DO NOT EDIT MANUALLY
  *

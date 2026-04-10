@@ -51,11 +51,11 @@ const DEFAULT_REDACT_HEADERS = ['authorization', 'cookie', 'set-cookie', 'x-api-
  */
 function defaultLogger(level: LogLevel, message: string, data?: unknown): void {
   const timestamp = new Date().toISOString();
-  const prefix = `[${timestamp}] [api-client] [${level.toUpperCase()}]`;
+  const prefix = `[${timestamp}] [client] [${level.toUpperCase()}]`;
 
   /* v8 ignore start */
   switch (level) {
-  /* v8 ignore stop */
+    /* v8 ignore stop */
     case 'debug':
       /* v8 ignore start */
       console.debug(prefix, message, data ?? '');

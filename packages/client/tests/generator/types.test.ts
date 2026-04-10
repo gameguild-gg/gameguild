@@ -157,10 +157,7 @@ describe('Type Generator', () => {
       components: {
         schemas: {
           Response: {
-            oneOf: [
-              { $ref: '#/components/schemas/SuccessResponse' },
-              { $ref: '#/components/schemas/ErrorResponse' },
-            ],
+            oneOf: [{ $ref: '#/components/schemas/SuccessResponse' }, { $ref: '#/components/schemas/ErrorResponse' }],
           },
           SuccessResponse: {
             type: 'object',
@@ -266,7 +263,7 @@ describe('Type Generator', () => {
     const spec = simpleSpec as OpenApiSpec;
     const output = generateTypes(spec);
 
-    expect(output).toContain('@game-guild/api-client - Generated Types');
+    expect(output).toContain('@game-guild/client - Generated Types');
     expect(output).toContain('AUTO-GENERATED FILE - DO NOT EDIT MANUALLY');
     expect(output).toContain('Generated from: Test API');
   });

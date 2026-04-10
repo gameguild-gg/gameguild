@@ -6,4 +6,8 @@
         <Nullable>enable</Nullable>
     </PropertyGroup>
 
+    <ItemGroup>
+        <Using Remove="Microsoft.EntityFrameworkCore" />
+    </ItemGroup>
+
 </Project>

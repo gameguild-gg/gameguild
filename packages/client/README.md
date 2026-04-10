@@ -42,7 +42,7 @@ if (result.ok) {
 ### With Authentication
 
 ```typescript
-import { createClient } from '@game-guild/api-client';
+import { createClient } from '@game-guild/client';
 
 const client = createClient({
   baseUrl: 'https://api.gameguild.gg',
@@ -97,6 +97,7 @@ pnpm generate -- --force
 ```
 
 The generator creates:
+
 - **TypeScript interfaces** - Compile-time type safety
 - **Zod schemas** - Runtime validation
 - **Endpoint modules** - Organized API methods
@@ -107,10 +108,7 @@ The generator creates:
 All generated types include Zod schemas for runtime validation:
 
 ```typescript
-import { 
-  Commerce_Payments_TaxJurisdictionDto,
-  Commerce_Payments_TaxJurisdictionDtoSchema 
-} from '@game-guild/client';
+import { Commerce_Payments_TaxJurisdictionDto, Commerce_Payments_TaxJurisdictionDtoSchema } from '@game-guild/client';
 
 // Validate API response
 const response = await fetch('/api/tax-jurisdictions/123');
@@ -134,7 +132,7 @@ export async function createTaxJurisdiction(formData: FormData) {
     name: formData.get('name'),
     defaultRate: parseFloat(formData.get('defaultRate') as string),
   };
-  
+
   // Validate before sending to API
   const validated = Commerce_Payments_TaxJurisdictionDtoSchema.parse(data);
   return client.taxJurisdictions.create(validated);
@@ -149,28 +147,31 @@ Extend generated schemas with custom validation:
 import { z } from 'zod';
 import { Commerce_Payments_TaxJurisdictionDtoSchema } from '@game-guild/client';
 
-const CustomTaxJurisdictionSchema = Commerce_Payments_TaxJurisdictionDtoSchema
-  .refine((data) => {
+const CustomTaxJurisdictionSchema = Commerce_Payments_TaxJurisdictionDtoSchema.refine(
+  (data) => {
     // Custom rule: active jurisdictions must have a name
     if (data.isActive && !data.name) {
       return false;
     }
     return true;
-  }, {
+  },
+  {
     message: 'Active tax jurisdictions must have a name',
     path: ['name'],
-  })
-  .refine((data) => {
+  },
+).refine(
+  (data) => {
     // Custom rule: rate must be between 0 and 100
-    if (data.defaultRate !== undefined && 
-        (data.defaultRate < 0 || data.defaultRate > 100)) {
+    if (data.defaultRate !== undefined && (data.defaultRate < 0 || data.defaultRate > 100)) {
       return false;
     }
     return true;
-  }, {
+  },
+  {
     message: 'Default rate must be between 0 and 100',
     path: ['defaultRate'],
-  });
+  },
+);
 ```
 
 For more examples, see [examples/zod-validation.ts](./examples/zod-validation.ts).
@@ -222,11 +223,7 @@ import { retry, logging, cache } from '@game-guild/client/plugins';
 
 const client = createClient({
   baseUrl: 'https://api.gameguild.gg',
-  plugins: [
-    retry({ maxRetries: 3, backoff: 'exponential' }),
-    logging({ level: 'debug' }),
-    cache({ ttl: 60_000 }),
-  ],
+  plugins: [retry({ maxRetries: 3, backoff: 'exponential' }), logging({ level: 'debug' }), cache({ ttl: 60_000 })],
 });
 ```
 

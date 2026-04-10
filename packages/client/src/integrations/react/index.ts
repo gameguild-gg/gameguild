@@ -83,11 +83,11 @@ export type { ApiClient, Result, ApiError };
 /**
  * The actual hook implementations require React.
  * These are type-only exports for documentation purposes.
- * 
+ *
  * Usage example:
  * ```tsx
- * import { ApiClientProvider, useApiClient, useQuery, useMutation } from '@game-guild/api-client/react';
- * 
+ * import { ApiClientProvider, useApiClient, useQuery, useMutation } from '@game-guild/client/react';
+ *
  * // Wrap your app with the provider
  * function App() {
  *   const client = createClient({ baseUrl: 'https://api.example.com' });
@@ -97,7 +97,7 @@ export type { ApiClient, Result, ApiError };
  *     </ApiClientProvider>
  *   );
  * }
- * 
+ *
  * // Use hooks in components
  * function MyComponent() {
  *   const client = useApiClient();
@@ -105,7 +105,7 @@ export type { ApiClient, Result, ApiError };
  *     ['user', userId],
  *     () => client.users.get(userId)
  *   );
- *   
+ *
  *   if (isLoading) return <Loading />;
  *   if (error) return <Error error={error} />;
  *   return <User data={data} />;
@@ -145,55 +145,41 @@ export interface ApiClientProviderProps {
  * @throws If used outside of ApiClientProvider
  */
 export function useApiClient(): ApiClient {
-  throw new Error(
-    'useApiClient requires React. Make sure you have React installed as a peer dependency.'
-  );
+  throw new Error('useApiClient requires React. Make sure you have React installed as a peer dependency.');
 }
 
 /**
  * Hook for data fetching with caching and automatic refetching
- * 
+ *
  * @param queryKey - Unique key for the query (used for caching)
  * @param queryFn - Function that returns a Promise<Result<T, ApiError>>
  * @param options - Query options
  */
-export function useQuery<T>(
-  _queryKey: unknown[],
-  _queryFn: () => Promise<Result<T, ApiError>>,
-  _options?: UseQueryOptions<T>
-): QueryState<T> {
-  throw new Error(
-    'useQuery requires React. Make sure you have React installed as a peer dependency.'
-  );
+export function useQuery<T>(_queryKey: unknown[], _queryFn: () => Promise<Result<T, ApiError>>, _options?: UseQueryOptions<T>): QueryState<T> {
+  throw new Error('useQuery requires React. Make sure you have React installed as a peer dependency.');
 }
 
 /**
  * Hook for data mutations (create, update, delete)
- * 
+ *
  * @param mutationFn - Function that performs the mutation
  * @param options - Mutation options
  */
 export function useMutation<T, TVariables>(
   _mutationFn: (variables: TVariables) => Promise<Result<T, ApiError>>,
-  _options?: UseMutationOptions<T, TVariables>
+  _options?: UseMutationOptions<T, TVariables>,
 ): MutationState<T, TVariables> {
-  throw new Error(
-    'useMutation requires React. Make sure you have React installed as a peer dependency.'
-  );
+  throw new Error('useMutation requires React. Make sure you have React installed as a peer dependency.');
 }
 
 /**
  * Hook for optimistic updates
- * 
+ *
  * @param queryKey - Key of the query to update optimistically
  */
-export function useOptimisticUpdate<T>(
-  _queryKey: unknown[]
-): {
+export function useOptimisticUpdate<T>(_queryKey: unknown[]): {
   update: (updater: (old: T | undefined) => T) => void;
   rollback: () => void;
 } {
-  throw new Error(
-    'useOptimisticUpdate requires React. Make sure you have React installed as a peer dependency.'
-  );
+  throw new Error('useOptimisticUpdate requires React. Make sure you have React installed as a peer dependency.');
 }

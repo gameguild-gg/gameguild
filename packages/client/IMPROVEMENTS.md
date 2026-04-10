@@ -1,16 +1,19 @@
 # API Client Improvements - Completed
 
 ## Overview
-Successfully implemented all 9 major improvements to transform `@game-guild/api-client` into `@game-guild/client` with enterprise-grade features.
+
+Successfully implemented all 9 major improvements to transform the client package into `@game-guild/client` with enterprise-grade features.
 
 ## ✅ Completed Tasks
 
 ### 1. Package Rename ✅
-- **Changed**: `@game-guild/api-client` → `@game-guild/client`
+
+- **Changed**: package naming to `@game-guild/client`
 - **Files Updated**: `package.json`, `README.md`
 - **Status**: Complete
 
 ### 2. Automatic Response Validation with Zod ✅
+
 - **Implementation**: `src/runtime/errors/validation.ts`
 - **Features**:
   - Automatic validation of API responses using Zod schemas
@@ -20,6 +23,7 @@ Successfully implemented all 9 major improvements to transform `@game-guild/api-
 - **Status**: Complete & Tested
 
 ### 3. Request Body Validation ✅
+
 - **Implementation**: Same validation.ts module
 - **Features**:
   - Validate request bodies before sending
@@ -29,6 +33,7 @@ Successfully implemented all 9 major improvements to transform `@game-guild/api-
 - **Status**: Complete & Tested
 
 ### 4. Better Type Exports ✅
+
 - **Implementation**: `src/index.ts`, `scripts/codegen/types.ts`
 - **Features**:
   - All types exported from main index
@@ -39,6 +44,7 @@ Successfully implemented all 9 major improvements to transform `@game-guild/api-
 - **Status**: Complete
 
 ### 5. React Query Hooks ✅
+
 - **Implementation**: `src/integrations/react/query-hooks.ts`
 - **Features**:
   - `createQueryHook()` factory for queries
@@ -49,6 +55,7 @@ Successfully implemented all 9 major improvements to transform `@game-guild/api-
 - **Status**: Complete (runtime working, DTS generation pending)
 
 ### 6. Validation Error Transformation ✅
+
 - **Implementation**: `src/runtime/errors/validation.ts`
 - **Features**:
   - Zod errors → User-friendly format
@@ -59,6 +66,7 @@ Successfully implemented all 9 major improvements to transform `@game-guild/api-
 - **Status**: Complete & Tested
 
 ### 7. Optimistic Updates Support ✅
+
 - **Implementation**: Part of React Query hooks
 - **Features**:
   - `OptimisticUpdateConfig<TData, TVariables>`
@@ -68,6 +76,7 @@ Successfully implemented all 9 major improvements to transform `@game-guild/api-
 - **Status**: Complete
 
 ### 8. Request Deduplication ✅
+
 - **Implementation**: `src/runtime/deduplication/deduplicator.ts`
 - **Features**:
   - Prevents duplicate in-flight GET requests
@@ -77,6 +86,7 @@ Successfully implemented all 9 major improvements to transform `@game-guild/api-
 - **Status**: Complete & Tested
 
 ### 9. DevTools Integration ✅
+
 - **Implementation**: `src/runtime/devtools/devtools.ts`
 - **Features**:
   - Development mode logging
@@ -90,6 +100,7 @@ Successfully implemented all 9 major improvements to transform `@game-guild/api-
 ## 🏗️ Code Generation Updates
 
 ### Module Generator Enhancement
+
 - **File**: `scripts/codegen/modules.ts`
 - **Changes**:
   - Track request body schemas
@@ -98,6 +109,7 @@ Successfully implemented all 9 major improvements to transform `@game-guild/api-
   - Import validation utilities
 
 ### Type Generator Enhancement
+
 - **File**: `scripts/codegen/types.ts`
 - **Changes**:
   - Added `sanitizeIdentifier()` and `toPascalCase()` for type names
@@ -122,18 +134,19 @@ Successfully implemented all 9 major improvements to transform `@game-guild/api-
 ## 📚 Usage Examples
 
 ### Basic Client with New Features
+
 ```typescript
 import { createClient } from '@game-guild/client';
 
 const client = createClient({
   baseUrl: process.env.API_URL,
-  
+
   // DevTools (auto-enabled in dev)
   devtools: {
     enabled: true,
     logLevel: 'info',
   },
-  
+
   // Request deduplication
   deduplication: {
     enabled: true,
@@ -153,35 +166,35 @@ if (!result.ok) {
 ```
 
 ### React Query Integration
+
 ```typescript
 import { createQueryHook, createMutationHook } from '@game-guild/client/integrations/react';
 
 // Create a query hook
 const useUsers = createQueryHook(
   (tenantId) => ['users', tenantId],
-  async (tenantId) => client.users.getUsers({ tenantId })
+  async (tenantId) => client.users.getUsers({ tenantId }),
 );
 
 // Create a mutation hook with optimistic updates
-const useCreateUser = createMutationHook(
-  async (data) => client.users.postUsers(data),
-);
+const useCreateUser = createMutationHook(async (data) => client.users.postUsers(data));
 
 function UsersList() {
   const { data, isLoading } = useUsers('tenant-123');
-  
+
   const createUser = useCreateUser({
     optimistic: {
       invalidateKeys: [['users', 'tenant-123']],
       rollbackOnError: true,
     },
   });
-  
+
   // ...
 }
 ```
 
 ### Validation Error Handling
+
 ```typescript
 import { safeParse, isZodError } from '@game-guild/client';
 import { UserSchema } from '@game-guild/client';
@@ -200,18 +213,21 @@ if (isZodError(error)) {
 ## 🚧 Known Issues & TODOs
 
 ### 1. DTS Generation Disabled
+
 - **Issue**: Circular dependencies in generated Zod schemas
 - **Impact**: No `.d.ts` files in dist/
 - **Workaround**: TypeScript consumers can use source files
 - **Fix Required**: Refactor Zod schema generation to handle circular refs
 
 ### 2. React Query Type Signatures
+
 - **Issue**: React Query v5 API changes
 - **Impact**: Type errors in query-hooks.ts (runtime works)
 - **Status**: Runtime code functional, types need alignment
 - **Fix Required**: Update callback signatures for React Query v5
 
 ### 3. Prettier Warnings
+
 - **Issue**: Some generated files fail Prettier formatting
 - **Impact**: None (files are valid TypeScript)
 - **Status**: Non-critical, can address later
@@ -220,6 +236,7 @@ if (isZodError(error)) {
 
 **Before**: Basic typed API client with manual validation  
 **After**: Enterprise-grade SDK with:
+
 - ✅ Runtime safety (automatic Zod validation)
 - ✅ Better DX (DevTools logging, React hooks)
 - ✅ Performance optimization (request deduplication)

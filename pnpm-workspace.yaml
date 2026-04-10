@@ -4,7 +4,7 @@ packages:
 
   # Shared libraries
   - "packages/analytics"
-  - "packages/api-client"
+  - "packages/client"
   - "packages/common"
   - "packages/cookies"
   - "packages/emception"

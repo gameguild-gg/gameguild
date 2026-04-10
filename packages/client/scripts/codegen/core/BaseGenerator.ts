@@ -5,14 +5,14 @@
 import type { OpenApiSpec } from '../../fetch-spec.js';
 
 export abstract class BaseGenerator {
-  constructor(protected spec: OpenApiSpec) {}
+  constructor(protected spec: OpenApiSpec) { }
 
   /**
    * Template method defining the generation algorithm
    */
   generate(): string {
     const lines: string[] = [];
-    
+
     lines.push(this.generateHeader());
     lines.push('');
     lines.push(this.generateImports());
@@ -28,7 +28,7 @@ export abstract class BaseGenerator {
 
   protected generateHeader(): string {
     return `/**
- * @game-guild/api-client - Generated ${this.getFileDescription()}
+ * @game-guild/client - Generated ${this.getFileDescription()}
  *
  * ⚠️  AUTO-GENERATED FILE - DO NOT EDIT MANUALLY
  *

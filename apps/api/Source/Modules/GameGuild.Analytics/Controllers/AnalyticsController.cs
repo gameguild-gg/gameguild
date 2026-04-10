@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using GameGuild.CQRS;
 
@@ -8,12 +9,12 @@ namespace GameGuild.Analytics;
 [ApiController]
 [Route("api/analytics")]
 [Tags("Analytics")]
-public class AnalyticsController(IDispatcher dispatcher) : ControllerBase
+public class AnalyticsController(ISender sender) : ControllerBase
 {
     [HttpPost("events")]
     public async Task<IActionResult> TrackEvent([FromBody] TrackAnalyticsEventCommand command, CancellationToken ct)
     {
-        var result = await dispatcher.Send(command, ct);
+        var result = await sender.Send(command, ct);
         return Ok(result);
     }
 
@@ -27,7 +28,7 @@ public class AnalyticsController(IDispatcher dispatcher) : ControllerBase
         CancellationToken ct = default)
     {
         var query = new GetTimeSeriesQuery(eventName, startDate, endDate, granularity, tenantId);
-        var result = await dispatcher.Send(query, ct);
+        var result = await sender.Send(query, ct);
         return Ok(result);
     }
 
@@ -40,14 +41,14 @@ public class AnalyticsController(IDispatcher dispatcher) : ControllerBase
         CancellationToken ct = default)
     {
         var query = new CalculateKpiQuery(kpiName, startDate, endDate, tenantId);
-        var result = await dispatcher.Send(query, ct);
+        var result = await sender.Send(query, ct);
         return Ok(result);
     }
 
     [HttpPost("funnel")]
     public async Task<IActionResult> AnalyzeFunnel([FromBody] AnalyzeFunnelQuery query, CancellationToken ct)
     {
-        var result = await dispatcher.Send(query, ct);
+        var result = await sender.Send(query, ct);
         return Ok(result);
     }
 }

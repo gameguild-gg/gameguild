@@ -8,7 +8,7 @@
       "path": "./apps/web"
     },
     {
-      "path": "./packages/api-client"
+      "path": "./packages/client"
     },
     {
       "path": "./packages/common"

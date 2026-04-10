@@ -99,7 +99,7 @@
   },
   "keywords": [
     "gameguild",
-    "api-client",
+    "client",
     "typescript",
     "openapi",
     "sdk",
@@ -110,7 +110,7 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/game-guild/game-guild.git",
-    "directory": "packages/api-client"
+    "directory": "packages/client"
   },
   "bugs": {
     "url": "https://github.com/game-guild/game-guild/issues"
