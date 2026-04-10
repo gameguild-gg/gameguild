@@ -11,6 +11,7 @@ import { useTheme } from "next-themes"
 import { MonacoErrorBoundary } from "@/components/editor/extras/code-studio/monaco-error-boundary"
 import { isShikiActive } from "@/components/editor/extras/code-studio/monaco-code-editor"
 import type { MarkdownData } from "@/components/editor/nodes/markdown-node"
+import { useEditorSettings, EditorSettingsButton } from "../settings-menu"
 import { getAllTemplates, searchTemplates, type MarkdownTemplate } from "./markdown-templates"
 import { Input } from "@/components/ui/input"
 import { useMarkdownComponents } from "./markdown-components"
@@ -32,6 +33,7 @@ export function MarkdownEditor({ initialData, onSave, onCancel }: MarkdownEditor
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState("")
   const [templates, setTemplates] = useState<MarkdownTemplate[]>([])
+  const settings = useEditorSettings("markdown")
   const editorRef = useRef<any>(null)
 
   // Get unique categories
@@ -133,7 +135,7 @@ export function MarkdownEditor({ initialData, onSave, onCancel }: MarkdownEditor
       onKeyPress={(e) => e.stopPropagation()}
     >
       <div 
-        className="bg-white dark:bg-gray-900 border dark:border-gray-700 shadow-2xl w-full max-w-7xl h-[90vh] flex flex-col"
+        className={`bg-white dark:bg-gray-900 border dark:border-gray-700 shadow-2xl flex flex-col ${settings.modalClassName}`}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -152,6 +154,7 @@ export function MarkdownEditor({ initialData, onSave, onCancel }: MarkdownEditor
               <Plus className="h-4 w-4 mr-1" />
               Templates
             </Button>
+            <EditorSettingsButton settings={settings} />
             <Button variant="ghost" size="sm" onClick={handleCancel} className="hover:bg-gray-100 dark:hover:bg-gray-800">
               <X className="h-4 w-4" />
             </Button>
@@ -298,8 +301,8 @@ export function MarkdownEditor({ initialData, onSave, onCancel }: MarkdownEditor
                   theme={isDarkMode ? (isShikiActive() ? "dark-plus" : "vs-dark") : (isShikiActive() ? "light-plus" : "light")}
                   options={{
                     minimap: { enabled: false },
-                    fontSize: 14,
-                    lineNumbers: "on",
+                    fontSize: settings.editorFontSize,
+                    lineNumbers: settings.editorLineNumbers ? "on" : "off",
                     roundedSelection: true,
                     scrollBeyondLastLine: false,
                     wordWrap: "on",

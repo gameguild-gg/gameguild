@@ -12,6 +12,8 @@ interface MonacoVegaLiteEditorProps {
   height?: string | number
   theme?: "light" | "dark"
   readOnly?: boolean
+  fontSize?: number
+  lineNumbers?: boolean
 }
 
 export function MonacoVegaLiteEditor({
@@ -21,6 +23,8 @@ export function MonacoVegaLiteEditor({
   height = "400px",
   theme = "light",
   readOnly = false,
+  fontSize = 14,
+  lineNumbers = true,
 }: MonacoVegaLiteEditorProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null)
@@ -78,8 +82,8 @@ export function MonacoVegaLiteEditor({
       minimap: { enabled: false },
       scrollBeyondLastLine: false,
       wordWrap: "on",
-      fontSize: 14,
-      lineNumbers: "on",
+      fontSize: fontSize,
+      lineNumbers: lineNumbers ? "on" : "off",
       folding: true,
       bracketPairColorization: { enabled: true },
       formatOnPaste: true,
@@ -260,6 +264,14 @@ export function MonacoVegaLiteEditor({
   useEffect(() => {
     monaco.editor.setTheme(theme === "dark" ? "vs-dark" : "vs")
   }, [theme])
+
+  // Update editor options when fontSize/lineNumbers change
+  useEffect(() => {
+    editorRef.current?.updateOptions({
+      fontSize,
+      lineNumbers: lineNumbers ? "on" : "off",
+    })
+  }, [fontSize, lineNumbers])
 
   return (
     <div

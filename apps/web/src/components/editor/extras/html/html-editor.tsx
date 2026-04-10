@@ -11,6 +11,7 @@ import { MonacoErrorBoundary } from "@/components/editor/extras/code-studio/mona
 import { isShikiActive } from "@/components/editor/extras/code-studio/monaco-code-editor"
 import DOMPurify from "dompurify"
 import type { HTMLData } from "@/components/editor/nodes/html-node"
+import { useEditorSettings, EditorSettingsButton } from "../settings-menu"
 import { TemplateBar } from "./components/template-bar"
 import type { HTMLTemplate } from "./templates"
 
@@ -28,6 +29,7 @@ export function HTMLEditor({ initialData, onSave, onCancel }: HTMLEditorProps) {
   const [sandboxScripts, setSandboxScripts] = useState(false)
   const [showTemplates, setShowTemplates] = useState(!initialData?.content)
   const [selectedTemplate, setSelectedTemplate] = useState<HTMLTemplate | null>(null)
+  const settings = useEditorSettings("html")
   const iframeRef = useRef<HTMLIFrameElement>(null)
   const editorRef = useRef<any>(null)
 
@@ -131,7 +133,7 @@ export function HTMLEditor({ initialData, onSave, onCancel }: HTMLEditorProps) {
       onKeyUp={(e) => e.stopPropagation()}
     >
       <div
-        className="bg-white dark:bg-gray-900 border dark:border-gray-700 shadow-2xl w-full max-w-7xl h-[90vh] flex flex-col"
+        className={`bg-white dark:bg-gray-900 border dark:border-gray-700 shadow-2xl flex flex-col ${settings.modalClassName}`}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -160,6 +162,7 @@ export function HTMLEditor({ initialData, onSave, onCancel }: HTMLEditorProps) {
               <Plus className="h-4 w-4 mr-1" />
               Templates
             </Button>
+            <EditorSettingsButton settings={settings} />
             <Button variant="ghost" size="sm" onClick={onCancel} className="hover:bg-gray-100 dark:hover:bg-gray-800">
               <X className="h-4 w-4" />
             </Button>
@@ -194,8 +197,8 @@ export function HTMLEditor({ initialData, onSave, onCancel }: HTMLEditorProps) {
                   theme={isDarkMode ? (isShikiActive() ? "dark-plus" : "vs-dark") : (isShikiActive() ? "light-plus" : "light")}
                   options={{
                     minimap: { enabled: false },
-                    fontSize: 14,
-                    lineNumbers: "on",
+                    fontSize: settings.editorFontSize,
+                    lineNumbers: settings.editorLineNumbers ? "on" : "off",
                     roundedSelection: true,
                     scrollBeyondLastLine: false,
                     wordWrap: "on",

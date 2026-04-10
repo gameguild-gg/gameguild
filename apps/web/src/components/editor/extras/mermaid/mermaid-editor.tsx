@@ -8,6 +8,7 @@ import { Switch } from "@/components/ui/switch"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { X, Save, FileText, GitBranch, Users, AlertCircle, CheckCircle } from "lucide-react"
 import type { MermaidData } from "@/components/editor/nodes/mermaid-node"
+import { useEditorSettings, EditorSettingsButton } from "../settings-menu"
 import { MermaidTemplateSelector } from "./mermaid-template-selector"
 import { MonacoMermaidEditor } from "./monaco-mermaid-editor"
 import { MermaidValidator, type MermaidValidationResult } from "./mermaid-validator"
@@ -48,6 +49,7 @@ export function MermaidEditor({ initialData, onSave, onCancel }: MermaidEditorPr
   const [validationResult, setValidationResult] = useState<MermaidValidationResult>({ isValid: true })
   const [errorPanelCollapsed, setErrorPanelCollapsed] = useState(false)
   const [alwaysCollapseErrors, setAlwaysCollapseErrors] = useState(false)
+  const settings = useEditorSettings("mermaid")
   const updateTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   // Block body scroll and pointer events when modal is open
@@ -156,7 +158,7 @@ export function MermaidEditor({ initialData, onSave, onCancel }: MermaidEditorPr
       }}
     >
       <div 
-        className="bg-white dark:bg-gray-900 border dark:border-gray-700 shadow-2xl w-full max-w-7xl h-[90vh] flex flex-col"
+        className={`bg-white dark:bg-gray-900 border dark:border-gray-700 shadow-2xl flex flex-col ${settings.modalClassName}`}
         style={{ pointerEvents: 'auto' }}
         onClick={(e) => e.stopPropagation()}
         onKeyDown={(e) => e.stopPropagation()}
@@ -209,9 +211,12 @@ export function MermaidEditor({ initialData, onSave, onCancel }: MermaidEditorPr
               )}
             </div>
           </div>
-          <Button variant="ghost" size="sm" onClick={handleCancel} className="hover:bg-gray-100 dark:hover:bg-gray-800">
-            <X className="h-4 w-4" />
-          </Button>
+          <div className="flex items-center gap-2">
+            <EditorSettingsButton settings={settings} />
+            <Button variant="ghost" size="sm" onClick={handleCancel} className="hover:bg-gray-100 dark:hover:bg-gray-800">
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
 
         {/* Template Selector */}
@@ -339,6 +344,8 @@ export function MermaidEditor({ initialData, onSave, onCancel }: MermaidEditorPr
                         onValidationChange={handleValidationChange}
                         height="100%"
                         theme={isDarkMode ? "dark" : "light"}
+                        fontSize={settings.editorFontSize}
+                        lineNumbers={settings.editorLineNumbers}
                       />
                     </div>
                   </div>
