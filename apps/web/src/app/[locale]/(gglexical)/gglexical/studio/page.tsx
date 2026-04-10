@@ -251,6 +251,8 @@ export default function Page() {
         setCurrentProjectMode,
         setLastProjectLoadTime,
         setCurrentProjectPreferences,
+        setCurrentEngine,
+        setBlockArrayCells,
       })
     }
     
@@ -299,7 +301,7 @@ export default function Page() {
   }, [currentProjectId, isDbInitialized, editorState, blockStates, slideshowStructure])
 
   const storageAdapter = {
-    save: async (id: string, name: string, data: string, tags: string[] = [], storageType: "local" | "gameguild-cloud" | "google-drive" = "local", preferences?: ProjectPreferences, type: string = "type1", deps?: StorageProjectData[]) => {
+    save: async (id: string, name: string, data: string, tags: string[] = [], storageType: "local" | "gameguild-cloud" | "google-drive" = "local", preferences?: ProjectPreferences, type: string = "type1", deps?: StorageProjectData[], engine?: EngineType) => {
       if (!id || !name || !data) {
         console.warn("Invalid id, name or data")
         return
@@ -313,7 +315,7 @@ export default function Page() {
       console.log(`Saving project "${name}" (${id}) to ${storageType} - Size: ${formatSize(originalSize)}`)
 
       try {
-        await dbStorage.current.save(id, name, data, tags, storageType, preferences, type as any, deps)
+        await dbStorage.current.save(id, name, data, tags, storageType, preferences, type as any, deps, engine)
         console.log(`Saved project "${name}" (${id}) to ${storageType} successfully`)
       } catch (error) {
         console.error("Failed to save project:", error)
@@ -492,6 +494,7 @@ export default function Page() {
         setSaveAsDialogOpen,
         preferences,
         type: currentProjectType,
+        engine: currentEngine,
       })
       return
     }
@@ -540,6 +543,7 @@ export default function Page() {
       preferences,
       type: currentProjectType,
       deps: currentLayout === "slideshow" ? slideshowDeps : undefined,
+      engine: currentEngine,
     })
   }
 
@@ -629,9 +633,11 @@ export default function Page() {
     if (!autoSaveEnabled || !currentProjectId || !isDbInitialized || isViewingHistory) return
 
     // Check if we have any content to save
-    const hasContent = currentLayout === "single" 
-      ? editorState 
-      : Object.keys(blockStates).length > 0
+    const hasContent = currentEngine === ENGINE_TYPES.BLOCKS
+      ? blockArrayCells.length > 0
+      : currentLayout === "single" 
+        ? editorState 
+        : Object.keys(blockStates).length > 0
     
     if (!hasContent) return
 
@@ -643,17 +649,26 @@ export default function Page() {
 
     const autoSaveTimer = setTimeout(async () => {
       try {
-        // Prepare the correct state based on layout type
-        const blocks: Record<string, any> = {}
-        if (currentLayout === "single") {
-          blocks.b1 = editorState ? JSON.parse(editorState) : null
-        } else {
-          // Multi-block: parse all block states
-          Object.entries(blockStates).forEach(([blockId, state]) => {
-            blocks[blockId] = state ? JSON.parse(state) : null
+        let dataToSave: string
+        
+        if (currentEngine === ENGINE_TYPES.BLOCKS) {
+          // Block Array engine: save cells directly
+          dataToSave = createProjectData(currentProjectType, {
+            blocks: { b1: blockArrayCells },
           })
+        } else {
+          // Prepare the correct state based on layout type
+          const blocks: Record<string, any> = {}
+          if (currentLayout === "single") {
+            blocks.b1 = editorState ? JSON.parse(editorState) : null
+          } else {
+            // Multi-block: parse all block states
+            Object.entries(blockStates).forEach(([blockId, state]) => {
+              blocks[blockId] = state ? JSON.parse(state) : null
+            })
+          }
+          dataToSave = createProjectData(currentProjectType, { blocks })
         }
-        const dataToSave = createProjectData(currentProjectType, { blocks })
         
         await storageAdapter.save(
           currentProjectId, 
@@ -662,7 +677,9 @@ export default function Page() {
           projectTags,
           currentProjectStorageType,
           currentProjectPreferences,
-          currentProjectType
+          currentProjectType,
+          undefined,
+          currentEngine
         )
         
         // Show a very subtle auto-save notification
@@ -687,7 +704,7 @@ export default function Page() {
     }, 2000) // Auto-save after 2 seconds of inactivity
 
     return () => clearTimeout(autoSaveTimer)
-  }, [editorState, blockStates, autoSaveEnabled, currentProjectId, currentProjectName, projectTags, isDbInitialized, currentLayout, currentProjectType, currentProjectStorageType, lastProjectLoadTime, isViewingHistory])
+  }, [editorState, blockStates, blockArrayCells, currentEngine, autoSaveEnabled, currentProjectId, currentProjectName, projectTags, isDbInitialized, currentLayout, currentProjectType, currentProjectStorageType, lastProjectLoadTime, isViewingHistory])
 
 
 
