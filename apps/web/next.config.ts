@@ -58,31 +58,31 @@ const nextConfig: NextConfig = {
         source: '/pyodide/:file*.js',
         destination: '/pyodide/:file*.js.gz',
       },
-      // .NET managed runtime - rewrite .wasm to .wasm.gz
-      {
-        source: '/managed/:path*.wasm',
-        destination: '/managed/:path*.wasm.gz',
-      },
-      // .NET managed runtime - rewrite .dll to .dll.gz
-      {
-        source: '/managed/:path*.dll',
-        destination: '/managed/:path*.dll.gz',
-      },
-      // .NET managed runtime - rewrite .dat to .dat.gz
-      {
-        source: '/managed/:path*.dat',
-        destination: '/managed/:path*.dat.gz',
-      },
+      // .NET managed runtime files are served directly (not gzipped)
     ];
   },
   // Set headers for compressed files
   async headers() {
     return [
       // Enable SharedArrayBuffer for @runno/runtime (required for WASM threads)
-      // Only on the editor route where code-studio actually needs it
+      // Only on gglexical routes where code-studio actually needs it
       // Applying globally breaks cross-origin iframes (YouTube, Spotify, etc.) in Firefox
+      // Matches both /gglexical/... (default locale hidden) and /pt-BR/gglexical/...
       {
-        source: '/:locale/gglexical',
+        source: '/gglexical/:path*',
+        headers: [
+          {
+            key: 'Cross-Origin-Opener-Policy',
+            value: 'same-origin',
+          },
+          {
+            key: 'Cross-Origin-Embedder-Policy',
+            value: 'credentialless',
+          },
+        ],
+      },
+      {
+        source: '/:locale/gglexical/:path*',
         headers: [
           {
             key: 'Cross-Origin-Opener-Policy',
@@ -229,94 +229,10 @@ const nextConfig: NextConfig = {
           },
         ],
       },
-      // .NET WASM runtime files
+      // .NET WASM runtime files (served directly, not gzipped)
       {
-        source: '/managed/:path*.js',
+        source: '/managed/:path*',
         headers: [
-          {
-            key: 'Content-Type',
-            value: 'application/javascript',
-          },
-          {
-            key: 'Cache-Control',
-            value: 'public, max-age=31536000, immutable',
-          },
-          {
-            key: 'Cross-Origin-Resource-Policy',
-            value: 'cross-origin',
-          },
-        ],
-      },
-      {
-        source: '/managed/:path*.wasm',
-        headers: [
-          {
-            key: 'Content-Encoding',
-            value: 'gzip',
-          },
-          {
-            key: 'Content-Type',
-            value: 'application/wasm',
-          },
-          {
-            key: 'Cache-Control',
-            value: 'public, max-age=31536000, immutable',
-          },
-          {
-            key: 'Cross-Origin-Resource-Policy',
-            value: 'cross-origin',
-          },
-        ],
-      },
-      {
-        source: '/managed/:path*.dll',
-        headers: [
-          {
-            key: 'Content-Encoding',
-            value: 'gzip',
-          },
-          {
-            key: 'Content-Type',
-            value: 'application/octet-stream',
-          },
-          {
-            key: 'Cache-Control',
-            value: 'public, max-age=31536000, immutable',
-          },
-          {
-            key: 'Cross-Origin-Resource-Policy',
-            value: 'cross-origin',
-          },
-        ],
-      },
-      {
-        source: '/managed/:path*.json',
-        headers: [
-          {
-            key: 'Content-Type',
-            value: 'application/json',
-          },
-          {
-            key: 'Cache-Control',
-            value: 'public, max-age=31536000, immutable',
-          },
-          {
-            key: 'Cross-Origin-Resource-Policy',
-            value: 'cross-origin',
-          },
-        ],
-      },
-      {
-        source: '/managed/:path*.dat',
-        headers: [
-          {
-            key: 'Content-Encoding',
-            value: 'gzip',
-          },
-          {
-            key: 'Content-Type',
-            value: 'application/octet-stream',
-          },
           {
             key: 'Cache-Control',
             value: 'public, max-age=31536000, immutable',
