@@ -20,7 +20,7 @@ export function BaseSettingsMenu({ tabs, defaultTab, onClose }: BaseSettingsMenu
   const [activeTab, setActiveTab] = useState(defaultTab || tabs[0]?.id || '')
   
   return (
-    <div className="absolute top-10 left-0 z-50 w-72 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg">
+    <div className="absolute top-10 right-0 z-50 w-72 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg">
       <div className="flex flex-col h-full">
         {/* Header */}
         <div className="flex items-center justify-between p-4 pb-0">
