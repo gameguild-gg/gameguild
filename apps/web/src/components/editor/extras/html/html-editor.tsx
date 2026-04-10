@@ -7,6 +7,8 @@ import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
 import Editor from "@monaco-editor/react"
 import { useTheme } from "next-themes"
+import { MonacoErrorBoundary } from "@/components/editor/extras/code-studio/monaco-error-boundary"
+import { isShikiActive } from "@/components/editor/extras/code-studio/monaco-code-editor"
 import DOMPurify from "dompurify"
 import type { HTMLData } from "@/components/editor/nodes/html-node"
 import { TemplateBar } from "./components/template-bar"
@@ -182,29 +184,31 @@ export function HTMLEditor({ initialData, onSave, onCancel }: HTMLEditorProps) {
               <h3 className="text-sm font-medium text-gray-800 dark:text-gray-200 uppercase tracking-wide">Editor</h3>
             </div>
             <div className="flex-1 overflow-hidden">
-              <Editor
-                height="100%"
-                defaultLanguage="html"
-                value={content}
-                onChange={(value) => setContent(value || "")}
-                onMount={handleEditorMount}
-                theme={isDarkMode ? "vs-dark" : "light"}
-                options={{
-                  minimap: { enabled: false },
-                  fontSize: 14,
-                  lineNumbers: "on",
-                  roundedSelection: true,
-                  scrollBeyondLastLine: false,
-                  wordWrap: "on",
-                  automaticLayout: true,
-                  tabSize: 2,
-                  insertSpaces: true,
-                  autoClosingBrackets: "always",
-                  autoClosingQuotes: "always",
-                  formatOnPaste: true,
-                  suggest: { showWords: true },
-                }}
-              />
+              <MonacoErrorBoundary>
+                <Editor
+                  height="100%"
+                  defaultLanguage="html"
+                  value={content}
+                  onChange={(value) => setContent(value || "")}
+                  onMount={handleEditorMount}
+                  theme={isDarkMode ? (isShikiActive() ? "dark-plus" : "vs-dark") : (isShikiActive() ? "light-plus" : "light")}
+                  options={{
+                    minimap: { enabled: false },
+                    fontSize: 14,
+                    lineNumbers: "on",
+                    roundedSelection: true,
+                    scrollBeyondLastLine: false,
+                    wordWrap: "on",
+                    automaticLayout: true,
+                    tabSize: 2,
+                    insertSpaces: true,
+                    autoClosingBrackets: "always",
+                    autoClosingQuotes: "always",
+                    formatOnPaste: true,
+                    suggest: { showWords: true },
+                  }}
+                />
+              </MonacoErrorBoundary>
             </div>
           </div>
 

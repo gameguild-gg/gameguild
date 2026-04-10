@@ -7,6 +7,8 @@ import type { OnMount } from "@monaco-editor/react"
 import { mermaidLanguageConfig, mermaidTokensProvider, mermaidTheme } from "./mermaid-language"
 import { MermaidValidator, type MermaidValidationResult } from "./mermaid-validator"
 import { createMermaidCompletionProvider } from "./mermaid-completion-provider"
+import { MonacoErrorBoundary } from "@/components/editor/extras/code-studio/monaco-error-boundary"
+import { isShikiActive } from "@/components/editor/extras/code-studio/monaco-code-editor"
 
 const MonacoEditor = dynamic(() => import("@monaco-editor/react"), {
   ssr: false,
@@ -127,41 +129,44 @@ export function MonacoMermaidEditor({
       // Set syntax highlighting
       monaco.languages.setMonarchTokensProvider("mermaid", mermaidTokensProvider)
 
-      // Define custom theme
-      monaco.editor.defineTheme("mermaid-light", mermaidTheme)
+      // Define custom themes only if Shiki hasn't taken over
+      if (!isShikiActive()) {
+        // Define custom theme
+        monaco.editor.defineTheme("mermaid-light", mermaidTheme)
 
-      // Define dark theme
-      monaco.editor.defineTheme("mermaid-dark", {
-        ...mermaidTheme,
-        base: "vs-dark",
-        rules: [
-          { token: "comment", foreground: "6a737d", fontStyle: "italic" },
-          { token: "keyword.diagram", foreground: "ff7b72", fontStyle: "bold" },
-          { token: "keyword.direction", foreground: "79c0ff", fontStyle: "bold" },
-          { token: "keyword", foreground: "ff7b72" },
-          { token: "operator.arrow", foreground: "ffa657", fontStyle: "bold" },
-          { token: "string", foreground: "a5d6ff" },
-          { token: "string.escape", foreground: "ffa657" },
-          { token: "identifier", foreground: "d2a8ff" },
-          { token: "number", foreground: "79c0ff" },
-          { token: "delimiter.bracket", foreground: "f0f6fc" },
-          { token: "type.entity", foreground: "7ee787", fontStyle: "bold" },
-          { token: "keyword.relationship", foreground: "f85149" },
-          { token: "operator.er", foreground: "ffa657", fontStyle: "bold" },
-          { token: "keyword.state.start", foreground: "ff7b72", fontStyle: "bold" },
-          { token: "keyword.state.definition", foreground: "d2a8ff" },
-          { token: "keyword.state", foreground: "79c0ff" },
-          { token: "keyword.pie", foreground: "ff7b72", fontStyle: "bold" },
-          { token: "string.pie.data", foreground: "7ee787" },
-          { token: "keyword.pie.option", foreground: "d2a8ff" },
-        ],
-        colors: {
-          "editor.background": "#0d1117",
-          "editor.foreground": "#f0f6fc",
-          "editorLineNumber.foreground": "#7d8590",
-          "editorLineNumber.activeForeground": "#f0f6fc",
-        },
-      })
+        // Define dark theme
+        monaco.editor.defineTheme("mermaid-dark", {
+          ...mermaidTheme,
+          base: "vs-dark",
+          rules: [
+            { token: "comment", foreground: "6a737d", fontStyle: "italic" },
+            { token: "keyword.diagram", foreground: "ff7b72", fontStyle: "bold" },
+            { token: "keyword.direction", foreground: "79c0ff", fontStyle: "bold" },
+            { token: "keyword", foreground: "ff7b72" },
+            { token: "operator.arrow", foreground: "ffa657", fontStyle: "bold" },
+            { token: "string", foreground: "a5d6ff" },
+            { token: "string.escape", foreground: "ffa657" },
+            { token: "identifier", foreground: "d2a8ff" },
+            { token: "number", foreground: "79c0ff" },
+            { token: "delimiter.bracket", foreground: "f0f6fc" },
+            { token: "type.entity", foreground: "7ee787", fontStyle: "bold" },
+            { token: "keyword.relationship", foreground: "f85149" },
+            { token: "operator.er", foreground: "ffa657", fontStyle: "bold" },
+            { token: "keyword.state.start", foreground: "ff7b72", fontStyle: "bold" },
+            { token: "keyword.state.definition", foreground: "d2a8ff" },
+            { token: "keyword.state", foreground: "79c0ff" },
+            { token: "keyword.pie", foreground: "ff7b72", fontStyle: "bold" },
+            { token: "string.pie.data", foreground: "7ee787" },
+            { token: "keyword.pie.option", foreground: "d2a8ff" },
+          ],
+          colors: {
+            "editor.background": "#0d1117",
+            "editor.foreground": "#f0f6fc",
+            "editorLineNumber.foreground": "#7d8590",
+            "editorLineNumber.activeForeground": "#f0f6fc",
+          },
+        })
+      }
 
       // Register completion provider and store disposable
       completionProviderDisposable.current = monaco.languages.registerCompletionItemProvider(
@@ -172,8 +177,10 @@ export function MonacoMermaidEditor({
       isLanguageRegistered.current = true
     }
 
-    // Set the theme
-    monaco.editor.setTheme(theme === "dark" ? "mermaid-dark" : "mermaid-light")
+    // Set the theme (skip custom themes when Shiki is active)
+    if (!isShikiActive()) {
+      monaco.editor.setTheme(theme === "dark" ? "mermaid-dark" : "mermaid-light")
+    }
 
     editor.onDidChangeModelContent(() => {
       const currentValue = editor.getValue()
@@ -194,13 +201,14 @@ export function MonacoMermaidEditor({
   )
 
   return (
+    <MonacoErrorBoundary>
     <MonacoEditor
       height={height}
       language="mermaid"
       value={value}
       onChange={handleChange}
       onMount={handleEditorDidMount}
-      theme={theme === "dark" ? "mermaid-dark" : "mermaid-light"}
+      theme={theme === "dark" ? (isShikiActive() ? "dark-plus" : "mermaid-dark") : (isShikiActive() ? "light-plus" : "mermaid-light")}
       options={{
         minimap: { enabled: false },
         scrollBeyondLastLine: false,
@@ -231,5 +239,6 @@ export function MonacoMermaidEditor({
         showDeprecated: true,
       }}
     />
+    </MonacoErrorBoundary>
   )
 }

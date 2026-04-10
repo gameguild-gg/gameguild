@@ -8,6 +8,8 @@ import remarkGfm from "remark-gfm"
 import rehypeRaw from "rehype-raw"
 import Editor from "@monaco-editor/react"
 import { useTheme } from "next-themes"
+import { MonacoErrorBoundary } from "@/components/editor/extras/code-studio/monaco-error-boundary"
+import { isShikiActive } from "@/components/editor/extras/code-studio/monaco-code-editor"
 import type { MarkdownData } from "@/components/editor/nodes/markdown-node"
 import { getAllTemplates, searchTemplates, type MarkdownTemplate } from "./markdown-templates"
 import { Input } from "@/components/ui/input"
@@ -286,25 +288,27 @@ export function MarkdownEditor({ initialData, onSave, onCancel }: MarkdownEditor
             </div>
             
             <div className="flex-1 overflow-hidden">
-              <Editor
-                height="100%"
-                defaultLanguage="markdown"
-                value={content}
-                onChange={(value) => setContent(value || "")}
-                onMount={handleEditorMount}
-                theme={isDarkMode ? "vs-dark" : "light"}
-                options={{
-                  minimap: { enabled: false },
-                  fontSize: 14,
-                  lineNumbers: "on",
-                  roundedSelection: true,
-                  scrollBeyondLastLine: false,
-                  wordWrap: "on",
-                  automaticLayout: true,
-                  tabSize: 2,
-                  insertSpaces: true,
-                }}
-              />
+              <MonacoErrorBoundary>
+                <Editor
+                  height="100%"
+                  defaultLanguage="markdown"
+                  value={content}
+                  onChange={(value) => setContent(value || "")}
+                  onMount={handleEditorMount}
+                  theme={isDarkMode ? (isShikiActive() ? "dark-plus" : "vs-dark") : (isShikiActive() ? "light-plus" : "light")}
+                  options={{
+                    minimap: { enabled: false },
+                    fontSize: 14,
+                    lineNumbers: "on",
+                    roundedSelection: true,
+                    scrollBeyondLastLine: false,
+                    wordWrap: "on",
+                    automaticLayout: true,
+                    tabSize: 2,
+                    insertSpaces: true,
+                  }}
+                />
+              </MonacoErrorBoundary>
             </div>
           </div>
 
