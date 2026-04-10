@@ -117,18 +117,10 @@ export function VegaLiteEditor({ initialData, onSave, onCancel }: VegaLiteEditor
       return
     }
 
-    // Restore body styles before closing
-    document.body.style.overflow = ''
-    document.body.style.pointerEvents = ''
-    
     onSave(data)
   }
 
   const handleCancel = () => {
-    // Restore body styles before closing
-    document.body.style.overflow = ''
-    document.body.style.pointerEvents = ''
-    
     onCancel()
   }
 
