@@ -11,12 +11,18 @@ import { useTheme } from "next-themes"
 import { createHighlighter, type Highlighter } from "shiki"
 import { registerPathCompletionProvider } from "./monaco-file-system"
 import { LinkConfirmDialog } from "../dialogs/link-confirm-dialog"
+import { MonacoErrorBoundary } from "./monaco-error-boundary"
 
 // Singleton para o highlighter do Shiki
 let shikiHighlighter: Highlighter | null = null
 let shikiPromise: Promise<Highlighter> | null = null
 let shikiAppliedToMonaco = false
 let pathCompletionRegistered = false
+
+/** Whether Shiki has replaced Monaco's built-in theme system globally. */
+export function isShikiActive(): boolean {
+  return shikiAppliedToMonaco
+}
 
 async function getShikiHighlighter(): Promise<Highlighter> {
   if (shikiHighlighter) {
@@ -350,39 +356,41 @@ export function MonacoCodeEditor({
         }}
       />
       
-      <Editor
-        key={fileId} // Força nova instância do Monaco para cada arquivo
-        height={height}
-        language={language}
-        defaultValue={value} // Usar defaultValue ao invés de value para modo não-controlado
-        path={filePath && instanceId ? `file:///${instanceId}/${filePath}` : filePath ? `file:///${filePath}` : undefined} // URI único com instanceId
-        keepCurrentModel={true} // Não destruir o modelo ao desmontar (evita quebrar preview quando modal fecha)
-        onChange={handleChange}
-        beforeMount={handleEditorWillMount}
-        onMount={handleEditorDidMount}
-        theme={currentTheme}
-        loading="" // Remove mensagem "Loading..."
-        options={{
-          readOnly: readonly,
-          fontSize,
-          lineNumbers: showLineNumbers ? "on" : "off",
-          minimap: { enabled: false },
-          scrollBeyondLastLine: false,
-          wordWrap: "on",
-          automaticLayout: true,
-          padding: { top: 8, bottom: 8 },
-          suggest: {
-            showKeywords: true,
-            showSnippets: true,
-          },
-          quickSuggestions: {
-            other: true,
-            comments: false,
-            strings: false,
-          },
-          links: false, 
-        }}
-      />
+      <MonacoErrorBoundary>
+        <Editor
+          key={fileId} // Força nova instância do Monaco para cada arquivo
+          height={height}
+          language={language}
+          defaultValue={value} // Usar defaultValue ao invés de value para modo não-controlado
+          path={filePath && instanceId ? `file:///${instanceId}/${filePath}` : filePath ? `file:///${filePath}` : undefined} // URI único com instanceId
+          keepCurrentModel={true} // Não destruir o modelo ao desmontar (evita quebrar preview quando modal fecha)
+          onChange={handleChange}
+          beforeMount={handleEditorWillMount}
+          onMount={handleEditorDidMount}
+          theme={currentTheme}
+          loading="" // Remove mensagem "Loading..."
+          options={{
+            readOnly: readonly,
+            fontSize,
+            lineNumbers: showLineNumbers ? "on" : "off",
+            minimap: { enabled: false },
+            scrollBeyondLastLine: false,
+            wordWrap: "on",
+            automaticLayout: true,
+            padding: { top: 8, bottom: 8 },
+            suggest: {
+              showKeywords: true,
+              showSnippets: true,
+            },
+            quickSuggestions: {
+              other: true,
+              comments: false,
+              strings: false,
+            },
+            links: false, 
+          }}
+        />
+      </MonacoErrorBoundary>
     </>
   )
 }
