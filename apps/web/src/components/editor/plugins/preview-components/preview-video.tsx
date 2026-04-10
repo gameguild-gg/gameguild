@@ -44,7 +44,7 @@ function EmbeddedVideoPreview({
 
   switch (embedInfo.type) {
     case "youtube":
-      embedUrl = `https://www.youtube.com/embed/${embedInfo.id}`
+      embedUrl = `https://www.youtube-nocookie.com/embed/${embedInfo.id}`
       title = "YouTube video player"
       break
     case "vimeo":
@@ -70,6 +70,8 @@ function EmbeddedVideoPreview({
           className="absolute top-0 left-0 w-full h-full rounded-lg"
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
           allowFullScreen
+          // @ts-expect-error credentialless is not yet in React's iframe types
+          credentialless="true"
         ></iframe>
       </div>
     </div>
@@ -85,7 +87,14 @@ export function PreviewVideo({ node }: { node: SerializedVideoNode }) {
   }
 
   const { src, alt, caption, size = 100 } = node.data
-  const embedInfo = src ? getVideoEmbedInfo(src) : null
+  if (!src) {
+    return (
+      <div className="my-4 flex items-center justify-center min-h-[120px] bg-gray-100 dark:bg-gray-800 rounded-lg text-gray-400 text-sm">
+        No video source configured
+      </div>
+    )
+  }
+  const embedInfo = getVideoEmbedInfo(src)
 
   const renderErrorMessage = () => (
     <div
