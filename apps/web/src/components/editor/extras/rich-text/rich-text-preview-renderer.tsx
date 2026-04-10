@@ -1,0 +1,88 @@
+"use client"
+
+import { useMemo } from "react"
+import { LexicalComposer } from "@lexical/react/LexicalComposer"
+import { RichTextPlugin } from "@lexical/react/LexicalRichTextPlugin"
+import { ContentEditable } from "@lexical/react/LexicalContentEditable"
+import { LexicalErrorBoundary } from "@lexical/react/LexicalErrorBoundary"
+import { HeadingNode, QuoteNode } from "@lexical/rich-text"
+import { ListNode, ListItemNode } from "@lexical/list"
+import { LinkNode, AutoLinkNode } from "@lexical/link"
+import { CodeNode } from "@lexical/code"
+
+const PREVIEW_THEME = {
+  text: {
+    bold: "font-bold",
+    italic: "italic",
+    underline: "underline",
+    strikethrough: "line-through",
+    code: "bg-gray-100 dark:bg-gray-800 px-1 py-0.5 rounded font-mono text-sm",
+  },
+  paragraph: "my-1",
+  heading: {
+    h1: "text-2xl font-bold my-2",
+    h2: "text-xl font-bold my-2",
+    h3: "text-lg font-bold my-1",
+    h4: "text-base font-bold my-1",
+    h5: "text-sm font-bold my-1",
+  },
+  list: {
+    ul: "list-disc list-inside ml-4 my-1",
+    ol: "list-decimal list-inside ml-4 my-1",
+    listitem: "my-0.5",
+    nested: {
+      listitem: "ml-4",
+    },
+  },
+  quote: "border-l-4 border-gray-300 dark:border-gray-600 pl-3 italic text-gray-600 dark:text-gray-400 my-1",
+  code: "bg-gray-100 dark:bg-gray-800 p-2 rounded font-mono text-sm my-1",
+  link: "text-blue-600 dark:text-blue-400 underline",
+}
+
+const PREVIEW_NODES = [
+  HeadingNode,
+  QuoteNode,
+  ListNode,
+  ListItemNode,
+  CodeNode,
+  LinkNode,
+  AutoLinkNode,
+]
+
+interface RichTextPreviewRendererProps {
+  content: string
+  className?: string
+}
+
+export function RichTextPreviewRenderer({ content, className }: RichTextPreviewRendererProps) {
+  const initialConfig = useMemo(
+    () => ({
+      namespace: "RichTextPreview",
+      nodes: PREVIEW_NODES,
+      theme: PREVIEW_THEME,
+      editable: false,
+      editorState: content || undefined,
+      onError: (error: Error) => {
+        console.error("[RichTextPreview]", error)
+      },
+    }),
+    [content],
+  )
+
+  if (!content) return null
+
+  return (
+    <LexicalComposer key={content} initialConfig={initialConfig}>
+      <RichTextPlugin
+        contentEditable={
+          <ContentEditable
+            className={className || "text-sm text-foreground"}
+            readOnly
+          />
+        }
+        placeholder={null}
+        ErrorBoundary={LexicalErrorBoundary}
+      />
+    </LexicalComposer>
+  )
+}

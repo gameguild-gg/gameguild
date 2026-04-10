@@ -29,6 +29,7 @@ import { PreviewVegaLite } from "@/components/editor/plugins/preview-components/
 import { PreviewTable } from "@/components/editor/plugins/preview-components/preview-table"
 import { PreviewCodeStudio } from "@/components/editor/plugins/preview-components/preview-code-studio"
 import { PreviewProject } from "@/components/editor/plugins/preview-components/preview-project"
+import { PreviewRichText } from "@/components/editor/plugins/preview-components/preview-rich-text"
 
 interface SerializedContentRendererProps {
   serializedState: SerializedEditorState
@@ -89,6 +90,11 @@ export function SerializedContentRenderer({
     // Handle HTML nodes
     if (node.type === "html") {
       return <PreviewHTML key={uniqueKey} node={node} />
+    }
+
+    // Handle Rich Text nodes
+    if (node.type === "rich-text") {
+      return <PreviewRichText key={uniqueKey} node={node} />
     }
 
     // Handle video nodes
