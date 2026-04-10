@@ -1543,7 +1543,7 @@ export function CodeStudioEditor({
       <>
         {/* Layout renderizado com base no Display Base */}
         <div 
-          className="grid gap-3 w-full max-h-[500px]"
+          className="grid gap-3 w-full h-[500px]"
           style={{
             gridTemplateColumns: `repeat(${actualCols}, 1fr)`,
             gridTemplateRows: `repeat(${actualRows}, minmax(0, 1fr))`,
@@ -1556,7 +1556,7 @@ export function CodeStudioEditor({
                 gridColumn: `${panel.col + 1} / span ${panel.colSpan}`,
                 gridRow: `${panel.row + 1} / span ${panel.rowSpan}`,
               }}
-              className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-auto bg-white dark:bg-gray-800 h-full"
+              className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden bg-white dark:bg-gray-800 h-full min-h-0"
             >
               {renderPanelContent(panel, baseDisplay)}
             </div>
