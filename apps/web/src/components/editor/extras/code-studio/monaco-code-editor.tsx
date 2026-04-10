@@ -356,6 +356,7 @@ export function MonacoCodeEditor({
         language={language}
         defaultValue={value} // Usar defaultValue ao invés de value para modo não-controlado
         path={filePath && instanceId ? `file:///${instanceId}/${filePath}` : filePath ? `file:///${filePath}` : undefined} // URI único com instanceId
+        keepCurrentModel={true} // Não destruir o modelo ao desmontar (evita quebrar preview quando modal fecha)
         onChange={handleChange}
         beforeMount={handleEditorWillMount}
         onMount={handleEditorDidMount}
