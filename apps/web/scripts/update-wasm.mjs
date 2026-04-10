@@ -302,15 +302,14 @@ async function copyDotNetManagedFiles(hashCache) {
     mkdirSync(publicManagedDir, { recursive: true })
   }
 
-  // Criar managed.tar.gz com todos os arquivos
-  const { statSync } = await import('fs')
+  const { statSync, copyFileSync } = await import('fs')
   const { execSync } = await import('child_process')
+  const { readdirSync } = await import('fs')
   
   const tarGzPath = join(publicWasmDir, 'managed.tar.gz')
   const cacheKey = 'dotnet:managed.tar.gz'
   
   // Calcular hash de todos os arquivos para detectar mudanças
-  const { readdirSync } = await import('fs')
   let combinedHash = ''
   
   function hashDirectory(dir) {
@@ -328,43 +327,73 @@ async function copyDotNetManagedFiles(hashCache) {
   hashDirectory(dotnetWasmPackage)
   const dirHash = createHash('sha1').update(combinedHash).digest('hex')
   
+  // Check if public/managed has the actual files (not just main.js stub)
+  const managedFileCount = readdirSync(publicManagedDir, { recursive: true }).length
+  const managedHasFiles = managedFileCount > 10 // Should have ~198 files
+
   // Verificar se precisa atualizar
-  if (!needsUpdate(hashCache, cacheKey, dirHash) && existsSync(tarGzPath)) {
+  if (!needsUpdate(hashCache, cacheKey, dirHash) && existsSync(tarGzPath) && managedHasFiles) {
     const compressedSize = statSync(tarGzPath).size
-    console.log(`⏭️  Skipped managed.tar.gz (unchanged, SHA1: ${dirHash.substring(0, 8)}...)`)
+    console.log(`⏭️  Skipped managed files (unchanged, SHA1: ${dirHash.substring(0, 8)}...)`)
     console.log(`   Size: ${(compressedSize / 1024 / 1024).toFixed(2)}MB\n`)
     
     return { original: 0, compressed: compressedSize, skipped: 1 }
   }
 
-  // Criar tar.gz
-  console.log(`📦 Creating managed.tar.gz...`)
+  // Copy all managed files directly to public/managed/
+  // JS files must be served directly (loaded via <script> and ES module imports)
+  // Binary files (.wasm, .dll, .dat) are also copied directly
+  console.log(`📦 Copying managed files to public/managed/...`)
+  
+  let totalOriginal = 0
+  let fileCount = 0
+  
+  function copyDirectory(srcDir, destDir) {
+    if (!existsSync(destDir)) {
+      mkdirSync(destDir, { recursive: true })
+    }
+    const entries = readdirSync(srcDir, { withFileTypes: true })
+    for (const entry of entries) {
+      const srcPath = join(srcDir, entry.name)
+      const destPath = join(destDir, entry.name)
+      if (entry.isDirectory()) {
+        copyDirectory(srcPath, destPath)
+      } else {
+        copyFileSync(srcPath, destPath)
+        totalOriginal += statSync(srcPath).size
+        fileCount++
+      }
+    }
+  }
   
   try {
-    // Usar tar para criar arquivo comprimido
+    copyDirectory(dotnetWasmPackage, publicManagedDir)
+    console.log(`   ✅ Copied ${fileCount} files (${(totalOriginal / 1024 / 1024).toFixed(2)}MB)`)
+
+    // Also create managed.tar.gz for the fetch interceptor fallback
+    console.log(`📦 Creating managed.tar.gz...`)
     execSync(`tar -czf "${tarGzPath}" -C "${dotnetWasmPackage}" .`, { 
       stdio: 'inherit',
       cwd: rootDir 
     })
     
-    const originalSize = parseInt(execSync(`du -sb "${dotnetWasmPackage}" | cut -f1`).toString().trim())
     const compressedSize = statSync(tarGzPath).size
-    const ratio = ((1 - compressedSize / originalSize) * 100).toFixed(1)
+    const ratio = ((1 - compressedSize / totalOriginal) * 100).toFixed(1)
     
-    console.log(`   ✅ Created: ${(originalSize / 1024 / 1024).toFixed(2)}MB → ${(compressedSize / 1024 / 1024).toFixed(2)}MB (${ratio}% reduction)`)
+    console.log(`   ✅ Created tar.gz: ${(totalOriginal / 1024 / 1024).toFixed(2)}MB → ${(compressedSize / 1024 / 1024).toFixed(2)}MB (${ratio}% reduction)`)
     console.log(`   SHA1: ${dirHash.substring(0, 8)}...\n`)
     
     // Update cache
     hashCache[cacheKey] = {
       sha1: dirHash,
-      size: originalSize,
+      size: totalOriginal,
       compressedSize,
       timestamp: new Date().toISOString()
     }
     
-    return { original: originalSize, compressed: compressedSize, skipped: 0 }
+    return { original: totalOriginal, compressed: compressedSize, skipped: 0 }
   } catch (error) {
-    console.error(`❌ Failed to create managed.tar.gz:`, error.message)
+    console.error(`❌ Failed to process managed files:`, error.message)
     return { original: 0, compressed: 0, skipped: 0 }
   }
 }
