@@ -12,7 +12,7 @@ export function PreviewYouTube({ node }: { node: SerializedYouTubeNode }) {
 
   // Build YouTube embed URL with parameters
   const getYouTubeEmbedUrl = () => {
-    let url = `https://www.youtube.com/embed/${videoId}?enablejsapi=1`
+    let url = `https://www.youtube-nocookie.com/embed/${videoId}?enablejsapi=1`
 
     // Add start time if specified
     if (startAt && startAt > 0) {
@@ -46,6 +46,8 @@ export function PreviewYouTube({ node }: { node: SerializedYouTubeNode }) {
               className="absolute top-0 left-0 w-full h-full rounded-lg"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
               allowFullScreen
+              // @ts-expect-error credentialless is not yet in React's iframe types
+              credentialless="true"
             ></iframe>
           </div>
         </div>

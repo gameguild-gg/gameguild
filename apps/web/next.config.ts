@@ -79,9 +79,23 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       // Enable SharedArrayBuffer for @runno/runtime (required for WASM threads)
-      // Using 'credentialless' for COEP allows external images while still enabling SharedArrayBuffer
+      // Only on the editor route where code-studio actually needs it
+      // Applying globally breaks cross-origin iframes (YouTube, Spotify, etc.) in Firefox
       {
-        source: '/:path*',
+        source: '/:locale/gglexical',
+        headers: [
+          {
+            key: 'Cross-Origin-Opener-Policy',
+            value: 'same-origin',
+          },
+          {
+            key: 'Cross-Origin-Embedder-Policy',
+            value: 'credentialless',
+          },
+        ],
+      },
+      {
+        source: '/:path*editor/:file*',
         headers: [
           {
             key: 'Cross-Origin-Opener-Policy',
