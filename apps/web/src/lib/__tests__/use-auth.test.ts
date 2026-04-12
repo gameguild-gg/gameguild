@@ -1,6 +1,11 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook, act, waitFor } from '@testing-library/react';
 import React from 'react';
+import {
+  SessionContext,
+  useAuth,
+  type SessionContextValue,
+} from '@game-guild/client/react';
 
 /* ------------------------------------------------------------------ */
 /*  Mock fetch                                                         */
@@ -40,19 +45,18 @@ afterEach(() => {
 
 const mockSessionUpdate = vi.fn().mockResolvedValue(undefined);
 
-vi.mock('@game-guild/client/react', async (importOriginal) => {
-  const mod = await importOriginal<typeof import('@game-guild/client/react')>();
-  return {
-    ...mod,
-    SessionContext: React.createContext({
-      data: null,
-      status: 'unauthenticated' as const,
-      update: mockSessionUpdate,
-    }),
+function createWrapper(sessionValue?: Partial<SessionContextValue>) {
+  const value: SessionContextValue = {
+    data: null,
+    status: 'unauthenticated',
+    update: mockSessionUpdate,
+    ...sessionValue,
   };
-});
 
-const { useAuth } = await import('@game-guild/client/react');
+  return function Wrapper({ children }: { children: React.ReactNode }) {
+    return React.createElement(SessionContext.Provider, { value }, children);
+  };
+}
 
 /* ------------------------------------------------------------------ */
 /*  Helper: mock CSRF response                                         */
@@ -93,7 +97,9 @@ describe('useAuth', () => {
   /* ---------- Initial state ---------- */
 
   it('returns initial state with isLoading false and no error', () => {
-    const { result } = renderHook(() => useAuth());
+    const { result } = renderHook(() => useAuth(), {
+      wrapper: createWrapper(),
+    });
 
     expect(result.current.isLoading).toBe(false);
     expect(result.current.error).toBeNull();
@@ -110,7 +116,9 @@ describe('useAuth', () => {
       mockCSRFResponse();
       mockSignInSuccess();
 
-      const { result } = renderHook(() => useAuth());
+      const { result } = renderHook(() => useAuth(), {
+        wrapper: createWrapper(),
+      });
 
       await act(async () => {
         await result.current.signIn('credentials', {
@@ -131,7 +139,9 @@ describe('useAuth', () => {
         status: 500,
       });
 
-      const { result } = renderHook(() => useAuth());
+      const { result } = renderHook(() => useAuth(), {
+        wrapper: createWrapper(),
+      });
 
       await act(async () => {
         try {
@@ -157,7 +167,9 @@ describe('useAuth', () => {
       mockCSRFResponse();
       mockSignInSuccess();
 
-      const { result } = renderHook(() => useAuth());
+      const { result } = renderHook(() => useAuth(), {
+        wrapper: createWrapper(),
+      });
 
       await act(async () => {
         await result.current.signIn('credentials', {
@@ -203,9 +215,13 @@ describe('useAuth', () => {
         });
       });
 
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(true);
+      });
+
       // Resolve to clean up
       await act(async () => {
-        resolveSignIn!({
+        resolveSignIn?.({
           ok: true,
           json: () => Promise.resolve({}),
         });
@@ -215,13 +231,16 @@ describe('useAuth', () => {
           // ignore
         }
       });
+      expect(result.current.isLoading).toBe(false);
     });
 
     it('sets error on signIn failure', async () => {
       mockCSRFResponse();
       mockSignInFailure('Invalid credentials');
 
-      const { result } = renderHook(() => useAuth());
+      const { result } = renderHook(() => useAuth(), {
+        wrapper: createWrapper(),
+      });
 
       await act(async () => {
         try {
@@ -263,7 +282,9 @@ describe('useAuth', () => {
 
       const { result } = renderHook(() =>
         useAuth({ basePath: '/custom/auth' })
-      );
+        , {
+          wrapper: createWrapper(),
+        });
 
       await act(async () => {
         await result.current.signIn('credentials', {
@@ -285,7 +306,9 @@ describe('useAuth', () => {
       mockCSRFResponse();
       mockSignInSuccess();
 
-      const { result } = renderHook(() => useAuth());
+      const { result } = renderHook(() => useAuth(), {
+        wrapper: createWrapper(),
+      });
 
       await act(async () => {
         await result.current.signIn('credentials', {
@@ -309,7 +332,9 @@ describe('useAuth', () => {
         json: () => Promise.resolve({}),
       });
 
-      const { result } = renderHook(() => useAuth());
+      const { result } = renderHook(() => useAuth(), {
+        wrapper: createWrapper(),
+      });
 
       await act(async () => {
         await result.current.signUp({
@@ -343,7 +368,9 @@ describe('useAuth', () => {
         json: () => Promise.resolve({ message: 'Email already exists' }),
       });
 
-      const { result } = renderHook(() => useAuth());
+      const { result } = renderHook(() => useAuth(), {
+        wrapper: createWrapper(),
+      });
 
       await act(async () => {
         try {
@@ -368,7 +395,9 @@ describe('useAuth', () => {
         json: () => Promise.resolve({}),
       });
 
-      const { result } = renderHook(() => useAuth());
+      const { result } = renderHook(() => useAuth(), {
+        wrapper: createWrapper(),
+      });
 
       await act(async () => {
         await result.current.signUp({
@@ -393,7 +422,9 @@ describe('useAuth', () => {
         json: () => Promise.resolve({}),
       });
 
-      const { result } = renderHook(() => useAuth());
+      const { result } = renderHook(() => useAuth(), {
+        wrapper: createWrapper(),
+      });
 
       await act(async () => {
         await result.current.signOut({ redirect: false });
@@ -414,7 +445,9 @@ describe('useAuth', () => {
         status: 500,
       });
 
-      const { result } = renderHook(() => useAuth());
+      const { result } = renderHook(() => useAuth(), {
+        wrapper: createWrapper(),
+      });
 
       await act(async () => {
         try {

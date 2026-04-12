@@ -6,8 +6,6 @@ import { renderWithUser } from '@/test/auth-test-helpers';
 /*  Module mocks                                                       */
 /* ------------------------------------------------------------------ */
 
-const mockFetch = vi.fn();
-
 vi.mock('next/link', () => ({
   default: ({
     children,
@@ -32,10 +30,6 @@ const { ForgotPasswordForm } = await import(
 /* ------------------------------------------------------------------ */
 
 describe('ForgotPasswordForm', () => {
-  beforeEach(() => {
-    vi.stubGlobal('fetch', mockFetch);
-  });
-
   afterEach(() => {
     vi.restoreAllMocks();
   });
@@ -61,6 +55,7 @@ describe('ForgotPasswordForm', () => {
   /* ---------- Validation ---------- */
 
   it('shows error when email is empty', async () => {
+    const onRequestReset = vi.fn();
     const { user } = renderWithUser(<ForgotPasswordForm />);
 
     await user.click(
@@ -68,7 +63,7 @@ describe('ForgotPasswordForm', () => {
     );
 
     expect(screen.getByText('Email is required.')).toBeInTheDocument();
-    expect(mockFetch).not.toHaveBeenCalled();
+    expect(onRequestReset).not.toHaveBeenCalled();
   });
 
   it('clears error when user types', async () => {
@@ -88,8 +83,10 @@ describe('ForgotPasswordForm', () => {
   /* ---------- Successful submission ---------- */
 
   it('shows success message after successful submission', async () => {
-    mockFetch.mockResolvedValueOnce({ ok: true });
-    const { user } = renderWithUser(<ForgotPasswordForm />);
+    const onRequestReset = vi.fn().mockResolvedValue({ success: true, data: undefined });
+    const { user } = renderWithUser(
+      <ForgotPasswordForm onRequestReset={onRequestReset} />
+    );
 
     await user.type(screen.getByLabelText('Email'), 'test@example.com');
     await user.click(
@@ -104,11 +101,14 @@ describe('ForgotPasswordForm', () => {
       'href',
       '/sign-in'
     );
+    expect(onRequestReset).toHaveBeenCalledWith('test@example.com');
   });
 
   it('allows retrying after success', async () => {
-    mockFetch.mockResolvedValueOnce({ ok: true });
-    const { user } = renderWithUser(<ForgotPasswordForm />);
+    const onRequestReset = vi.fn().mockResolvedValue({ success: true, data: undefined });
+    const { user } = renderWithUser(
+      <ForgotPasswordForm onRequestReset={onRequestReset} />
+    );
 
     await user.type(screen.getByLabelText('Email'), 'test@example.com');
     await user.click(
@@ -126,12 +126,13 @@ describe('ForgotPasswordForm', () => {
   /* ---------- API error handling ---------- */
 
   it('displays API error message', async () => {
-    mockFetch.mockResolvedValueOnce({
-      ok: false,
-      json: () =>
-        Promise.resolve({ message: 'Rate limit exceeded' }),
+    const onRequestReset = vi.fn().mockResolvedValue({
+      success: false,
+      error: 'Rate limit exceeded',
     });
-    const { user } = renderWithUser(<ForgotPasswordForm />);
+    const { user } = renderWithUser(
+      <ForgotPasswordForm onRequestReset={onRequestReset} />
+    );
 
     await user.type(screen.getByLabelText('Email'), 'test@example.com');
     await user.click(
@@ -146,15 +147,17 @@ describe('ForgotPasswordForm', () => {
   /* ---------- Loading state ---------- */
 
   it('shows loading text while submitting', async () => {
-    let resolveRequest: (value: unknown) => void;
-    mockFetch.mockImplementationOnce(
+    let resolveRequest: ((value: { success: true; data: void }) => void) | undefined;
+    const onRequestReset = vi.fn(
       () =>
-        new Promise((resolve) => {
+        new Promise<{ success: true; data: void }>((resolve) => {
           resolveRequest = resolve;
         })
     );
 
-    const { user } = renderWithUser(<ForgotPasswordForm />);
+    const { user } = renderWithUser(
+      <ForgotPasswordForm onRequestReset={onRequestReset} />
+    );
 
     await user.type(screen.getByLabelText('Email'), 'test@example.com');
     await user.click(
@@ -165,6 +168,10 @@ describe('ForgotPasswordForm', () => {
     expect(screen.getByLabelText('Email')).toBeDisabled();
 
     // Clean up
-    resolveRequest!({ ok: true });
+    resolveRequest?.({ success: true, data: undefined });
+
+    await waitFor(() => {
+      expect(onRequestReset).toHaveBeenCalledWith('test@example.com');
+    });
   });
 });

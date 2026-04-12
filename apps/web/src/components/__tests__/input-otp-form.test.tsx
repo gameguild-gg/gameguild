@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { InputOTPForm } from '@/components/input-otp-form';
 
@@ -20,6 +20,34 @@ vi.mock('next/link', () => ({
       {children}
     </a>
   ),
+}));
+
+vi.mock('@game-guild/ui/components/input-otp', () => ({
+  InputOTP: ({
+    id,
+    value,
+    onChange,
+    disabled,
+    maxLength,
+  }: {
+    id?: string;
+    value?: string;
+    onChange?: (value: string) => void;
+    disabled?: boolean;
+    maxLength?: number;
+  }) => (
+    <input
+      id={id}
+      data-input-otp
+      value={value ?? ''}
+      disabled={disabled}
+      maxLength={maxLength}
+      onChange={(event) => onChange?.(event.target.value)}
+    />
+  ),
+  InputOTPGroup: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  InputOTPSeparator: () => <span>-</span>,
+  InputOTPSlot: ({ index }: { index: number }) => <span data-slot-index={index} />,
 }));
 
 /* ------------------------------------------------------------------ */
@@ -95,15 +123,14 @@ describe('InputOTPForm', () => {
   /* ---------- Error when incomplete code submitted ---------- */
 
   it('shows error for incomplete code on form submit', async () => {
-    const user = userEvent.setup();
     render(<InputOTPForm {...defaultProps} />);
 
-    // Programmatically submit the form (bypassing disabled button)
+    // Submit the form directly so the component validation handles the incomplete code path.
     const form = screen.getByRole('button', { name: /verify$/i }).closest('form')!;
-    form.requestSubmit();
+    fireEvent.submit(form);
 
-    // The onVerify should not be called for incomplete input
     expect(defaultProps.onVerify).not.toHaveBeenCalled();
+    expect(screen.getByText('Please enter the full 6-digit code.')).toBeInTheDocument();
   });
 
   /* ---------- Verification error display ---------- */
@@ -120,21 +147,14 @@ describe('InputOTPForm', () => {
     );
 
     // Type 6 digits into the OTP input
-    const otpInput = document.querySelector('input[data-input-otp]') as HTMLInputElement;
-    if (otpInput) {
-      await user.click(otpInput);
-      await user.keyboard('123456');
+    const otpInput = screen.getByLabelText(/verification code/i);
+    await user.type(otpInput, '123456');
 
-      // Click verify
-      const verifyButton = screen.getByRole('button', { name: /verify$/i });
-      if (!verifyButton.hasAttribute('disabled')) {
-        await user.click(verifyButton);
+    const verifyButton = screen.getByRole('button', { name: /verify$/i });
+    await user.click(verifyButton);
 
-        // Wait for error to display
-        const errorMessage = await screen.findByText('Invalid code');
-        expect(errorMessage).toBeInTheDocument();
-      }
-    }
+    const errorMessage = await screen.findByText('Invalid code');
+    expect(errorMessage).toBeInTheDocument();
   });
 
   /* ---------- Resend code ---------- */

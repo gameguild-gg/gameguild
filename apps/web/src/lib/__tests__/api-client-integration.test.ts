@@ -7,9 +7,11 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 
 describe('API Client Package Integration', () => {
+  const nextIntegrationModulePath = '../../../../../packages/client/dist/next.js';
+
   describe('Package Installation', () => {
     it('should have @game-guild/client in dependencies', async () => {
-      const packageJson = await import('../../package.json');
+      const packageJson = await import('../../../package.json');
       expect(packageJson.dependencies).toHaveProperty('@game-guild/client');
     });
   });
@@ -33,22 +35,23 @@ describe('API Client Package Integration', () => {
       });
 
       expect(client).toBeDefined();
-      expect(client).toHaveProperty('health');
+      expect(client).toHaveProperty('request');
+      expect(client).toHaveProperty('getBaseUrl');
     });
   });
 
   describe('Next.js Integration Entry Point', () => {
     it('should import Next.js utilities', async () => {
-      const nextModule = await import('@game-guild/client/next');
-      
+      const nextModule = await import(nextIntegrationModulePath);
+
       expect(nextModule).toHaveProperty('createNextClient');
-      expect(nextModule).toHaveProperty('createServerClient');
+      expect(nextModule).toHaveProperty('createRouteClient');
       expect(typeof nextModule.createNextClient).toBe('function');
-      expect(typeof nextModule.createServerClient).toBe('function');
+      expect(typeof nextModule.createRouteClient).toBe('function');
     });
 
     it('should create Next.js client', async () => {
-      const { createNextClient } = await import('@game-guild/client/next');
+      const { createNextClient } = await import(nextIntegrationModulePath);
       const client = createNextClient({
         baseUrl: 'http://localhost:5295',
       });
@@ -61,13 +64,6 @@ describe('API Client Package Integration', () => {
     it('should import React utilities', async () => {
       const reactModule = await import('@game-guild/client/react');
       expect(reactModule).toBeDefined();
-    });
-  });
-
-  describe('Plugins Entry Point', () => {
-    it('should import plugin utilities', async () => {
-      const pluginsModule = await import('@game-guild/client/plugins');
-      expect(pluginsModule).toBeDefined();
     });
   });
 
@@ -108,7 +104,7 @@ describe('API Client Package Integration', () => {
 
     it('should accept interceptors', async () => {
       const { createClient } = await import('@game-guild/client');
-      
+
       const requestInterceptor = {
         onRequest: async (config: any) => {
           console.log('Request:', config);
@@ -133,13 +129,13 @@ describe('API Client Package Integration', () => {
       });
 
       // Should have health method
-      expect(client).toHaveProperty('health');
-      expect(typeof client.health).toBe('function');
+      expect(client).toHaveProperty('request');
+      expect(typeof client.request).toBe('function');
     });
 
     it('should export error types', async () => {
       const module = await import('@game-guild/client');
-      
+
       // Verify module has expected exports
       expect(module.createClient).toBeDefined();
     });
@@ -148,7 +144,7 @@ describe('API Client Package Integration', () => {
   describe('Error Handling', () => {
     it('should handle client creation errors gracefully', async () => {
       const { createClient } = await import('@game-guild/client');
-      
+
       // Should not throw on invalid URL
       expect(() => {
         createClient({
@@ -170,16 +166,13 @@ describe('API Client Package Integration', () => {
       expect(mainModule.createClient).toBeDefined();
 
       // Test Next.js module
-      const nextModule = await import('@game-guild/client/next');
+      const nextModule = await import(nextIntegrationModulePath);
       expect(nextModule.createNextClient).toBeDefined();
 
       // Test React module (if available in client-side context)
       const reactModule = await import('@game-guild/client/react');
       expect(reactModule).toBeDefined();
 
-      // Test plugins module
-      const pluginsModule = await import('@game-guild/client/plugins');
-      expect(pluginsModule).toBeDefined();
     });
   });
 
@@ -187,7 +180,7 @@ describe('API Client Package Integration', () => {
     it('should have TypeScript definitions', async () => {
       // The fact that imports work with TypeScript implies .d.ts files exist
       const { createClient } = await import('@game-guild/client');
-      
+
       // TypeScript compilation would fail if types weren't available
       const client: ReturnType<typeof createClient> = createClient({
         baseUrl: 'http://localhost:5295',

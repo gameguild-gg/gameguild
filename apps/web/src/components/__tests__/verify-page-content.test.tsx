@@ -35,6 +35,34 @@ vi.mock('next/link', () => ({
   ),
 }));
 
+vi.mock('@game-guild/ui/components/input-otp', () => ({
+  InputOTP: ({
+    id,
+    value,
+    onChange,
+    disabled,
+    maxLength,
+  }: {
+    id?: string;
+    value?: string;
+    onChange?: (value: string) => void;
+    disabled?: boolean;
+    maxLength?: number;
+  }) => (
+    <input
+      id={id}
+      data-input-otp
+      value={value ?? ''}
+      disabled={disabled}
+      maxLength={maxLength}
+      onChange={(event) => onChange?.(event.target.value)}
+    />
+  ),
+  InputOTPGroup: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  InputOTPSeparator: () => <span>-</span>,
+  InputOTPSlot: ({ index }: { index: number }) => <span data-slot-index={index} />,
+}));
+
 // Mock useAuth for the verify page content (it imports InputOTPForm which doesn't use auth)
 vi.mock('@game-guild/client/react', () => ({
   useAuth: () => ({
