@@ -4,6 +4,7 @@
 .DS_Store
 Thumbs.db
 Desktop.ini
+nul
 
 # Caches directories and files
 .cache
