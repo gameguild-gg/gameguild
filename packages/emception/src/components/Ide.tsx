@@ -54,6 +54,7 @@ export interface IdeProps {
 
 export default function Ide({ title = 'Emception', manifestUrl = '/cdn/manifest.json', workspaceConfig, workspaceUrl }: IdeProps) {
   const editorRef = useRef<Parameters<OnMount>[0] | null>(null);
+  const monacoRef = useRef<Parameters<OnMount>[1] | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const orchestratorRef = useRef<WorkerBootResult | null>(null);
   const xtermRef = useRef<Terminal | null>(null);
@@ -191,6 +192,20 @@ export default function Ide({ title = 'Emception', manifestUrl = '/cdn/manifest.
     setExpandedDirs(state.expandedDirs);
     setSelectedPath(preset.layout.activeFile);
 
+    // Dispose stale Monaco models and pre-create models for all new preset files
+    // so that getModels() reflects the new workspace immediately.
+    const mc = monacoRef.current;
+    if (mc) {
+      mc.editor.getModels().forEach((m) => m.dispose());
+      for (const [path, file] of Object.entries(state.files)) {
+        if (file.type !== 'text') continue;
+        const uri = mc.Uri.parse(`file://${path}`);
+        if (!mc.editor.getModel(uri)) {
+          mc.editor.createModel(file.content, inferLanguage(path), uri);
+        }
+      }
+    }
+
     if (orchestratorRef.current) {
       orchestratorRef.current.tty.clear();
       orchestratorRef.current.tty.writeLine(`\x1b[32mSwitched to workspace: ${preset.label}\x1b[0m`);
@@ -220,6 +235,7 @@ export default function Ide({ title = 'Emception', manifestUrl = '/cdn/manifest.
         const log = terminalLogRef;
         const origWriteLine = result.tty.writeLine.bind(result.tty);
         const origWriteError = result.tty.writeError.bind(result.tty);
+        const origWrite = result.tty.write.bind(result.tty);
         const origClear = result.tty.clear.bind(result.tty);
         result.tty.writeLine = (text: string) => {
           origWriteLine(text);
@@ -228,6 +244,10 @@ export default function Ide({ title = 'Emception', manifestUrl = '/cdn/manifest.
         result.tty.writeError = (text: string) => {
           origWriteError(text);
           if (log.current) log.current.textContent += stripAnsi(text) + '\n';
+        };
+        result.tty.write = (text: string) => {
+          origWrite(text);
+          if (log.current) log.current.textContent += stripAnsi(text);
         };
         result.tty.clear = () => {
           origClear();
@@ -426,6 +446,7 @@ export default function Ide({ title = 'Emception', manifestUrl = '/cdn/manifest.
 
   const handleEditorDidMount: OnMount = (editor, monaco) => {
     editorRef.current = editor;
+    monacoRef.current = monaco;
     // Expose for e2e tests (e.g. Playwright can read file content via window.monaco)
     (window as unknown as Record<string, unknown>).monaco = monaco;
   };
@@ -567,6 +588,7 @@ export default function Ide({ title = 'Emception', manifestUrl = '/cdn/manifest.
           tty.writeError('No .c/.cpp source file found in workspace.');
           return;
         }
+        setStatus('Compiling...');
         tty.writeLine(`Compiling ${compileTarget}...`);
         tty.writeLine('\x1b[36mSDL3 detected \u2014 compiling...\x1b[0m');
         const compileArgs =

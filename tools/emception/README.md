@@ -94,7 +94,7 @@ em++  -sALLOW_MEMORY_GROWTH=1  -sMAXIMUM_MEMORY=2147483648
       -sEXPORTED_RUNTIME_METHODS=FS,callMain
 ```
 
-**Asyncify is intentionally excluded** — it is incompatible with Emscripten's default reference-types feature. Tools don't need async unwinding for simple `callMain()` invocations.
+**Asyncify is enabled** for async suspension/resume (lazy file loading, subprocess dispatch, stdin). Tools are compiled with `-sASYNCIFY`, `-sASYNCIFY_STACK_SIZE`, `-sASYNCIFY_IMPORTS=[...]`, and `-mno-reference-types` (required for Asyncify compatibility).
 
 Additional per-tool flags:
 
@@ -220,8 +220,8 @@ The VFS is a critical substrate: it is **injected into every WASM process** and 
 - **Filesystem hijacking**: All POSIX filesystem calls (`open`, `read`, `write`, `stat`, etc.) are intercepted by a custom Emscripten FS implementation before being passed to the kernel.
 - **Stdin/Stdout/Stderr hijacking**: The standard I/O streams are also hijacked. Instead of direct browser console output, `stdin`, `stdout`, and `stderr` receive **callback functions** that read/write data through the kernel, allowing the shell to capture and route process output.
 - **Unified view**: All processes see the exact same filesystem tree via the kernel VFS — files written by one process are immediately visible to the next.
-- **JSPI integration**: For lazy-loaded files (e.g. from the CDN), the VFS uses JavaScript Promise Integration (JSPI) to suspend WASM execution while asynchronously fetching and unpacking files, providing a seamless blocking I/O experience to processes.
-- **Do not use MEMFS as cache to bypass async hooks**: The VFS must not use MEMFS as a cache layer for lazy-loaded files, as this would bypass the JSPI hooks and break the async loading mechanism. Instead, the VFS should directly manage file states and trigger JSPI suspension when a file is accessed that is not yet available in IndexedDB.
+- **Asyncify integration**: For lazy-loaded files (e.g. from the CDN), the VFS uses Emscripten's Asyncify mechanism to suspend WASM execution while asynchronously fetching and unpacking files, providing a seamless blocking I/O experience to processes. This works in all modern browsers (Chrome, Firefox, Safari).
+- **Do not use MEMFS as cache to bypass async hooks**: The VFS must not use MEMFS as a cache layer for lazy-loaded files, as this would bypass the Asyncify hooks and break the async loading mechanism. Instead, the VFS should directly manage file states and trigger Asyncify suspension when a file is accessed that is not yet available in IndexedDB.
 
 #### VFS Layer Stack
 
@@ -296,40 +296,38 @@ Exceptions to this principle are only related to `/dev`, `/proc`, and other virt
 7. **Process exits** → kernel captures exit code, stdout, stderr; memory is reclaimed
 8. **Shell continues** with the next command in the pipeline
 
-#### Async Filesystem Operations via JSPI (JavaScript Promise Integration)
+#### Async Filesystem Operations via Asyncify
 
-Emscripten ordinarily requires **synchronous** filesystem operations — POSIX APIs like `open()`, `read()`, `write()` must complete immediately within the same call stack. However, lazy-loading from a CDN and IndexedDB requires **asynchronous I/O** (network fetch, async IndexedDB queries). To bridge this gap, Emception uses **JavaScript Promise Integration (JSPI)**, a WebAssembly standard that allows WASM to suspend and resume execution asynchronously.
+Emscripten ordinarily requires **synchronous** filesystem operations — POSIX APIs like `open()`, `read()`, `write()` must complete immediately within the same call stack. However, lazy-loading from a CDN and IndexedDB requires **asynchronous I/O** (network fetch, async IndexedDB queries). To bridge this gap, Emception uses **Emscripten's Asyncify** mechanism, which instruments the WASM binary at compile time to support suspension and resumption of the call stack.
 
-**JSPI Strategy**:
+**Asyncify Strategy**:
 
-1. **Enable JSPI in Emscripten**: Compile tools with `-sJSPI=1` flag to enable promise-returning functions:
+1. **Enable Asyncify in Emscripten**: Compile tools with `-sASYNCIFY` and related flags:
    ```
-   em++ file.cpp -sJSPI=1 -sEXIT_RUNTIME=1 ...
+   em++ file.cpp -sASYNCIFY -sASYNCIFY_STACK_SIZE=65536 -sASYNCIFY_IMPORTS=[...] -mno-reference-types ...
    ```
 
-2. **Async Syscall Bridge**: The FS layer exposes syscalls as **promise-returning** JavaScript functions. When a WASM process calls `open()` or `read()`:
+2. **Async Syscall Bridge**: The FS layer exposes syscalls as **promise-returning** JavaScript functions listed in `ASYNCIFY_IMPORTS`. When a WASM process calls `open()` or `read()`:
    - The syscall handler checks if the file needs to be fetched from the CDN (LazyFS)
    - If a fetch is needed, the syscall **returns a Promise**
-   - JSPI **suspends** the WASM execution
+   - Asyncify **suspends** the WASM execution (unwinding the stack)
    - JavaScript **does** the async I/O (fetch, decompress, IndexedDB write)
-   - JavaScript **resumes** the WASM execution with the result
+   - Asyncify **resumes** the WASM execution (rewinding the stack) with the result
    - WASM continues as if the syscall completed synchronously
 
-3. **Transparent to user code**: The process code (C/C++ or Python) sees **blocking I/O** semantics. Under the hood, JSPI transparently converts the blocking syscall into an async operation:
+3. **Transparent to user code**: The process code (C/C++ or Python) sees **blocking I/O** semantics. Under the hood, Asyncify transparently converts the blocking syscall into an async operation:
    ```c
    // User code sees this as a synchronous open
    FILE *f = fopen("/usr/include/stdio.h", "r");
    // Internally:
    // - syscall: open("/usr/include/stdio.h") → Promise
-   // - JSPI suspends WASM
+   // - Asyncify suspends WASM (unwinds stack)
    // - fetch from CDN, decompress, unpack to IDB
-   // - JSPI resumes WASM
+   // - Asyncify resumes WASM (rewinds stack)
    // - open() returns normally
    ```
 
-4. **Fallback strategies** (if JSPI unavailable):
-   - **Asyncify**: Emscripten's older mechanism (slower, larger binary, runtime overhead) that replays execution to unwind and resume the stack.
-   - **WebWorker + SharedArrayBuffer**: Offload blocking I/O to a worker thread with shared memory, allowing the main thread to block-wait without freezing the browser.
+4. **Cross-browser compatibility**: Unlike JSPI (which only works in Chrome/Edge 137+), Asyncify works in **all modern browsers** including Safari and Firefox, since the suspension logic is compiled into the WASM binary itself.
 
 > **❌ NOT ACCEPTABLE**: Do NOT preload or "warm" the filesystem at startup. Preloading defeats the purpose of lazy loading and wastes bandwidth/storage. The system must download files on-demand when accessed.
 
@@ -366,14 +364,14 @@ When `emcc` (CPython running `emcc.py`) needs to invoke sub-tools (clang, lld, w
 
 1. **emcc calls `subprocess.run(['clang', '-o', 'hello.o', 'hello.c'])`**
 2. **Shim intercepts** → serializes the command as JSON to `/tmp/.subprocess_request`
-3. **Shim calls `os.system('__dispatch_subprocess')`** → triggers JSPI suspension
+3. **Shim calls `os.system('__dispatch_subprocess')`** → triggers Asyncify suspension
 4. **Kernel reads** the JSON request from the VFS
 5. **Kernel spawns** the requested tool (clang.wasm) as a new isolated process with:
    - **stdin callback**: Feeds data from the parent process's stdin buffer to the child process
    - **stdout callback**: Captures the child's stdout and routes to the parent's stdout buffer
    - **stderr callback**: Captures the child's stderr and routes to the parent's stderr buffer
 6. **Tool runs**, reads/writes via callbacks, exits
-7. **JSPI resumes** CPython → shim reads exit code from VFS → returns to emcc
+7. **Asyncify resumes** CPython → shim reads exit code from VFS → returns to emcc
 
 This IPC mechanism allows the single-threaded browser environment to run multi-process compilation pipelines synchronously from Python's perspective, with all I/O flowing through callback-based streams rather than temporary files.
 

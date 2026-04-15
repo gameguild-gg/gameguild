@@ -1,27 +1,15 @@
 /**
- * Async strategy detection: JSPI (primary) vs Asyncify (fallback).
+ * Async strategy: Asyncify.
  *
- * JSPI (JavaScript Promise Integration) enables transparent async I/O:
- * WASM stack is suspended while JS awaits file fetches from CDN/IDB.
- * The glue code patches wrap FS syscalls with WebAssembly.Suspending
- * and callMain with WebAssembly.promising.
+ * Emscripten's Asyncify instruments WASM binaries at compile time to support
+ * stack unwinding/rewinding. Async JS imports (FS hooks, subprocess dispatch)
+ * are declared via -sASYNCIFY_IMPORTS and handled transparently by Emscripten.
+ * This works in ALL browsers (Chrome, Safari, Firefox, Edge).
+ *
+ * JSPI (JavaScript Promise Integration) was previously used but has been
+ * removed: it only works in Chrome/Edge 137+ (~24% global browser share).
  */
 
-export function detectAsyncStrategy(): 'jspi' | 'asyncify' {
-  try {
-    if (typeof (WebAssembly as unknown as { Suspending?: unknown }).Suspending === 'function') {
-      return 'jspi';
-    }
-  } catch {
-    // ignore
-  }
+export function detectAsyncStrategy(): 'asyncify' {
   return 'asyncify';
-}
-
-export function getEmscriptenFlags(): string[] {
-  return [
-    '-sASYNCIFY',
-    '-sASYNCIFY_STACK_SIZE=65536',
-    '-sASYNCIFY_IMPORTS=["emscripten_sleep","__syscall_read","__syscall_poll","fetch_async"]',
-  ];
 }

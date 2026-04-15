@@ -2,19 +2,20 @@
  * IndexedDB-backed filesystem.
  *
  * Modes:
- *  - **persistent** (default): reads/writes go through IDB with an in-memory cache.
+ *  - **persistent** (default): reads/writes go through IDB. An in-memory write
+ *    cache ensures write-then-read consistency for recently written files.
+ *    Reads are NOT cached in RAM — data is fetched from IDB on demand.
  *  - **persistent + versioned**: same as persistent, but clears all data when the
  *    supplied version string differs from the one stored in the DB (used for the
  *    overlay write-layer so stale toolchain writes are invalidated on manifest change).
  *  - **volatile** (`{ volatile: true }`): operates purely on an in-memory Map —
- *    no IndexedDB is opened at all.  Functionally equivalent to the old MemFS
- *    but reuses the same code path.
+ *    no IndexedDB is opened at all.  Used for /tmp and other ephemeral paths.
  */
 
 import { FSStats, IFileSystem } from './interface';
 
 export interface IDBFSOptions {
-  /** When true, skip all IndexedDB I/O — data lives only in memCache. */
+  /** When true, skip all IndexedDB I/O — data lives only in writeCache. */
   volatile?: boolean;
   /**
    * Version tag for cache invalidation.  On `init()` the stored version is
@@ -38,7 +39,9 @@ export class IDBFS implements IFileSystem {
   private volatile: boolean;
   private version: string | undefined;
   private idb: IDBDatabase | null = null;
-  private memCache = new Map<string, StoredEntry>();
+  // Write cache: holds recently-written entries for sync read-after-write consistency.
+  // NOT a general read cache — IDB reads are not cached here.
+  private writeCache = new Map<string, StoredEntry>();
 
   constructor(dbName: string, options?: IDBFSOptions) {
     this.dbName = dbName;
@@ -85,26 +88,11 @@ export class IDBFS implements IFileSystem {
   }
 
   /**
-   * Load all IDB entries into memCache so that sync accessors
-   * (statSync, readFileSync, readdirSync) work without async fetches.
+   * @deprecated No longer preloads IDB into RAM. Use async readFile() instead.
    */
   async preloadAll(): Promise<void> {
-    if (!this.idb) return;
-    const entries = await new Promise<StoredEntry[]>((resolve) => {
-      const tx = this.idb!.transaction('files', 'readonly');
-      const request = tx.objectStore('files').getAll();
-      request.onsuccess = () => resolve(request.result ?? []);
-      request.onerror = () => resolve([]);
-    });
-    for (const entry of entries) {
-      if (entry.path === VERSION_KEY) continue;
-      if (!this.memCache.has(entry.path)) {
-        this.memCache.set(entry.path, entry);
-      }
-    }
-    if (entries.length > 0) {
-      console.log(`[IDBFS:${this.dbName}] Preloaded ${entries.length} entries into memCache`);
-    }
+    // Intentionally empty — we no longer bulk-load IDB entries into RAM.
+    // Async reads via Asyncify hooks handle on-demand loading from IDB.
   }
 
   // ---------- path helpers ----------
@@ -120,16 +108,16 @@ export class IDBFS implements IFileSystem {
   }
 
   /**
-   * Synchronously creates all ancestor directory entries in memCache.
+   * Synchronously creates all ancestor directory entries in writeCache.
    * Mirrors MemFS.ensureParentDir — works for both volatile and persistent
    * modes (persistent will persist dirs via the normal writeFile/mkdir path
    * later; this just ensures the cache is coherent for fast lookups).
    */
   private ensureParentDirInCache(path: string): void {
     const dir = path.substring(0, path.lastIndexOf('/')) || '/';
-    if (dir !== '/' && !this.memCache.has(dir)) {
+    if (dir !== '/' && !this.writeCache.has(dir)) {
       this.ensureParentDirInCache(dir);
-      this.memCache.set(dir, {
+      this.writeCache.set(dir, {
         path: dir,
         data: new Uint8Array(0),
         dir: true,
@@ -177,7 +165,7 @@ export class IDBFS implements IFileSystem {
       const tx = this.idb!.transaction('files', 'readwrite');
       const request = tx.objectStore('files').clear();
       request.onsuccess = () => {
-        this.memCache.clear();
+        this.writeCache.clear();
         resolve();
       };
       request.onerror = () => reject(request.error);
@@ -208,11 +196,11 @@ export class IDBFS implements IFileSystem {
     });
   }
 
-  /** Collect keys from memCache matching a prefix (for volatile readdir). */
+  /** Collect keys from writeCache matching a prefix (for volatile readdir). */
   private memKeys(prefix: string): string[] {
     const keys: string[] = [];
     const dirPrefix = prefix.endsWith('/') ? prefix : prefix + '/';
-    for (const key of this.memCache.keys()) {
+    for (const key of this.writeCache.keys()) {
       if (key === prefix || key.startsWith(dirPrefix)) {
         keys.push(key);
       }
@@ -224,37 +212,38 @@ export class IDBFS implements IFileSystem {
 
   async readFile(path: string): Promise<Uint8Array | null> {
     const normalized = this.normalizePath(path);
-    const cached = this.memCache.get(normalized);
+    // Check write cache first (recently written files not yet confirmed in IDB)
+    const cached = this.writeCache.get(normalized);
     if (cached) return cached.dir ? null : cached.data;
     if (this.volatile) return null;
+    // Read directly from IDB — no in-memory caching of reads
     const entry = await this.dbGet(normalized);
     if (!entry || entry.dir) return null;
-    this.memCache.set(normalized, entry);
     return entry.data;
   }
 
-  // ---------- Sync accessors (memCache only) ----------
+  // ---------- Sync accessors (writeCache for recently-written files) ----------
 
-  /** Synchronous read from memCache. Returns null on miss. */
+  /** Synchronous read from writeCache. Returns null on miss. */
   readFileSync(path: string): Uint8Array | null {
-    const entry = this.memCache.get(this.normalizePath(path));
+    const entry = this.writeCache.get(this.normalizePath(path));
     return entry && !entry.dir ? entry.data : null;
   }
 
-  /** Synchronous write: updates memCache immediately, fires async IDB persist. */
+  /** Synchronous write: updates writeCache immediately, fires async IDB persist. */
   writeFileSync(path: string, data: Uint8Array): void {
     const normalized = this.normalizePath(path);
     this.ensureParentDirInCache(normalized);
     const entry: StoredEntry = { path: normalized, data, dir: false, mtime: Date.now() };
-    this.memCache.set(normalized, entry);
+    this.writeCache.set(normalized, entry);
     if (!this.volatile && this.idb) {
       this.dbPut(entry).catch(() => { /* fire-and-forget */ });
     }
   }
 
-  /** Synchronous stat from memCache. */
+  /** Synchronous stat from writeCache. */
   statSync(path: string): FSStats | null {
-    const entry = this.memCache.get(this.normalizePath(path));
+    const entry = this.writeCache.get(this.normalizePath(path));
     if (!entry) return null;
     return {
       type: entry.dir ? 'dir' : 'file',
@@ -264,12 +253,12 @@ export class IDBFS implements IFileSystem {
     };
   }
 
-  /** Synchronous readdir from memCache keys. */
+  /** Synchronous readdir from writeCache keys. */
   readdirSync(path: string): string[] {
     const normalized = this.normalizePath(path);
     const prefix = normalized === '/' ? '/' : normalized + '/';
     const entries = new Set<string>();
-    for (const key of this.memCache.keys()) {
+    for (const key of this.writeCache.keys()) {
       if (key.startsWith(prefix)) {
         const rel = key.slice(prefix.length);
         const first = rel.split('/')[0];
@@ -279,29 +268,29 @@ export class IDBFS implements IFileSystem {
     return [...entries];
   }
 
-  /** Synchronous existence check from memCache. */
+  /** Synchronous existence check from writeCache. */
   existsSync(path: string): boolean {
-    return this.memCache.has(this.normalizePath(path));
+    return this.writeCache.has(this.normalizePath(path));
   }
 
-  /** Synchronous mkdir: creates directory entry in memCache. */
+  /** Synchronous mkdir: creates directory entry in writeCache. */
   mkdirSync(path: string): void {
     const normalized = this.normalizePath(path);
-    if (this.memCache.has(normalized)) return;
+    if (this.writeCache.has(normalized)) return;
     this.ensureParentDirInCache(normalized);
     const entry: StoredEntry = { path: normalized, data: new Uint8Array(0), dir: true, mtime: Date.now() };
-    this.memCache.set(normalized, entry);
+    this.writeCache.set(normalized, entry);
     if (!this.volatile && this.idb) {
       this.dbPut(entry).catch(() => { /* fire-and-forget */ });
     }
   }
 
-  /** Synchronous delete from memCache. */
+  /** Synchronous delete from writeCache. */
   deleteFileSync(path: string): boolean {
     const normalized = this.normalizePath(path);
-    const entry = this.memCache.get(normalized);
+    const entry = this.writeCache.get(normalized);
     if (!entry || entry.dir) return false;
-    this.memCache.delete(normalized);
+    this.writeCache.delete(normalized);
     if (!this.volatile && this.idb) {
       this.dbDelete(normalized).catch(() => { /* fire-and-forget */ });
     }
@@ -317,13 +306,13 @@ export class IDBFS implements IFileSystem {
       dir: false,
       mtime: Date.now(),
     };
-    this.memCache.set(normalized, entry);
+    this.writeCache.set(normalized, entry);
 
     if (!this.volatile) {
       // Persist parent dirs that only exist in cache
       const dir = normalized.substring(0, normalized.lastIndexOf('/')) || '/';
       if (dir !== '/') {
-        const dirEntry = this.memCache.get(dir);
+        const dirEntry = this.writeCache.get(dir);
         if (dirEntry && !(await this.dbGet(dir))) {
           await this.persistDirChain(dir);
         }
@@ -337,12 +326,12 @@ export class IDBFS implements IFileSystem {
   private async persistDirChain(dirPath: string): Promise<void> {
     const parent = dirPath.substring(0, dirPath.lastIndexOf('/')) || '/';
     if (parent !== '/') {
-      const parentEntry = this.memCache.get(parent);
+      const parentEntry = this.writeCache.get(parent);
       if (parentEntry && !(await this.dbGet(parent))) {
         await this.persistDirChain(parent);
       }
     }
-    const entry = this.memCache.get(dirPath);
+    const entry = this.writeCache.get(dirPath);
     if (entry) {
       await this.dbPut(entry);
     }
@@ -350,19 +339,19 @@ export class IDBFS implements IFileSystem {
 
   async exists(path: string): Promise<boolean> {
     const normalized = this.normalizePath(path);
-    if (this.memCache.has(normalized)) return true;
+    if (this.writeCache.has(normalized)) return true;
     if (this.volatile) return false;
     const entry = await this.dbGet(normalized);
-    if (entry) this.memCache.set(normalized, entry);
+    if (entry) this.writeCache.set(normalized, entry);
     return entry !== null;
   }
 
   async stat(path: string): Promise<FSStats | null> {
     const normalized = this.normalizePath(path);
-    let entry = this.memCache.get(normalized);
+    let entry = this.writeCache.get(normalized);
     if (!entry && !this.volatile) {
       entry = (await this.dbGet(normalized)) ?? undefined;
-      if (entry) this.memCache.set(normalized, entry);
+      if (entry) this.writeCache.set(normalized, entry);
     }
     if (!entry) return null;
     return {
@@ -378,7 +367,7 @@ export class IDBFS implements IFileSystem {
     const prefix = normalized === '/' ? '/' : normalized + '/';
     const keys = this.volatile ? this.memKeys(prefix) : await this.dbKeys(prefix);
 
-    // In persistent mode, also merge memCache keys (may have dirs not yet flushed)
+    // In persistent mode, also merge writeCache keys (may have dirs not yet flushed)
     if (!this.volatile) {
       const memOnlyKeys = this.memKeys(prefix);
       for (const k of memOnlyKeys) {
@@ -399,10 +388,10 @@ export class IDBFS implements IFileSystem {
 
   async deleteFile(path: string): Promise<boolean> {
     const normalized = this.normalizePath(path);
-    const cached = this.memCache.get(normalized);
+    const cached = this.writeCache.get(normalized);
     if (cached) {
       if (cached.dir) return false;
-      this.memCache.delete(normalized);
+      this.writeCache.delete(normalized);
       if (!this.volatile) await this.dbDelete(normalized);
       return true;
     }
@@ -415,7 +404,7 @@ export class IDBFS implements IFileSystem {
 
   async mkdir(path: string): Promise<boolean> {
     const normalized = this.normalizePath(path);
-    if (this.memCache.has(normalized)) return false;
+    if (this.writeCache.has(normalized)) return false;
     if (!this.volatile && (await this.dbGet(normalized))) return false;
 
     this.ensureParentDirInCache(normalized);
@@ -425,7 +414,7 @@ export class IDBFS implements IFileSystem {
       dir: true,
       mtime: Date.now(),
     };
-    this.memCache.set(normalized, entry);
+    this.writeCache.set(normalized, entry);
 
     if (!this.volatile) {
       await this.persistDirChain(normalized);

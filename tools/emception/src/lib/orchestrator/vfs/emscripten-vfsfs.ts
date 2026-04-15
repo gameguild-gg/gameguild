@@ -10,18 +10,21 @@
  *
  *  Architecture:
  *   - Backed by a JS object store (`fileData: Map<string, Uint8Array>`) for
- *     file content. This store is populated on-demand by the JSPI hooks in
- *     the patched glue code (patch 6: `onPreOpen`, `onPreStat`, `onPreAccess`).
+ *     file content. This store is populated on-demand by the Asyncify hooks
+ *     (onPreOpen, onPreStat, onPreAccess) installed on the Module. File data
+ *     is fetched from IDB/CDN — no persistent in-memory cache is used.
  *   - Directory structure + stat metadata come from the kernel VFS
  *     (LazyFS manifest + IDBFS write layer).
  *   - Write-through: writes update both the local store and the kernel VFS.
  *
- *  JSPI integration:
- *   The glue code's patched syscalls (___syscall_openat, etc.) call
- *   Module["onPreOpen"](path) / Module["onPreStat"](path) BEFORE the
- *   actual syscall.  These async hooks fetch the file from the kernel VFS
- *   (CDN → IDB cache → memCache) and populate our `fileData` map.  By the
- *   time the real syscall runs, the data is available synchronously.
+ *  Asyncify integration:
+ *   The Emscripten glue code's ASYNCIFY_IMPORTS list includes the FS
+ *   syscalls (___syscall_openat, etc.) which call Module["onPreOpen"](path) /
+ *   Module["onPreStat"](path) BEFORE the actual syscall. These async hooks
+ *   fetch the file from the kernel VFS (IDB → CDN fallback) and populate
+ *   our `fileData` map. Asyncify suspends/resumes the WASM stack while the
+ *   fetch is in flight. By the time the real syscall runs, the data is
+ *   available synchronously.
  *
  *  Usage: call `mountVFSFS(FS, vfs, mountPoints)` after WASM instantiation
  *  but before callMain().
@@ -144,6 +147,7 @@ function createVFSFS(
     vfs: VFSManager,
     pathAliases: Map<string, string>,
     fileData: Map<string, Uint8Array>,
+    protectedPaths: Set<string>,
 ): Record<string, unknown> {
     // Permission modes
     const DIR_MODE = 0o40755;  // S_IFDIR | 0755
@@ -195,6 +199,25 @@ function createVFSFS(
                     child.usedBytes = fileData.get(childPath)!.length;
                     return child;
                 }
+
+                // Check for implicit directories: if any fileData key starts
+                // with childPath + '/', then childPath is a directory that
+                // contains pre-seeded files (e.g. cmake build dir files).
+                // Without this, mkdirTree failures on VFSFS leave intermediate
+                // directories unresolvable, causing cmake to fail with
+                // "Could not find cmake module file: .../CMakeCXXCompiler.cmake"
+                const childPrefix = childPath + '/';
+                for (const key of fileData.keys()) {
+                    if (key.startsWith(childPrefix)) {
+                        const child = FS.createNode(parent, name, DIR_MODE, 0);
+                        child.__vfsPath = childPath;
+                        child.node_ops = node_ops;
+                        child.stream_ops = stream_ops;
+                        child.contents = {};
+                        return child;
+                    }
+                }
+
                 throw new (FS.ErrnoError)(44); // ENOENT
             }
 
@@ -297,16 +320,23 @@ function createVFSFS(
 
         /**
          * unlink: remove a file.
+         * Protected paths (e.g. pre-seeded cmake compiler info files) are
+         * kept in fileData so that a subsequent lookup() can recover them
+         * even after cmake's C++ code removes the file during EnableLanguage.
          */
         unlink(parent: EmNode, name: string): void {
             const parentPath = getNodePath(parent);
             const childPath = normalizePath(parentPath + '/' + name);
-            fileData.delete(childPath);
+            if (!protectedPaths.has(childPath)) {
+                fileData.delete(childPath);
+            }
             // Remove from parent contents if tracked
             if (parent.contents) {
                 delete parent.contents[name];
             }
-            try { vfs.deleteFileSync(childPath); } catch { /* non-fatal */ }
+            if (!protectedPaths.has(childPath)) {
+                try { vfs.deleteFileSync(childPath); } catch { /* non-fatal */ }
+            }
         },
 
         /**
@@ -376,7 +406,8 @@ function createVFSFS(
     const stream_ops = {
         /**
          * open: called when a file is opened.
-         * Data should already be in `fileData` thanks to the JSPI onPreOpen hook.
+         * Data should already be in `fileData` thanks to the Asyncify onPreOpen hook.
+         * The sync fallback below handles edge cases (e.g. files written by the process).
          */
         open(stream: EmStream): void {
             const node = stream.node;
@@ -384,7 +415,7 @@ function createVFSFS(
 
             const nodePath = getNodePath(node);
 
-            // If we don't have the data yet, try sync read from VFS memCache
+            // If we don't have the data yet, try sync read from IDBFS write layer
             if (!fileData.has(nodePath)) {
                 const resolved = resolveAlias(nodePath, pathAliases);
                 const data = vfs.readFileSync(resolved);
@@ -501,11 +532,11 @@ export interface MountVFSFSOptions {
 }
 
 /**
- * Mount VFSFS at the given mount points and install JSPI hooks on the Module.
+ * Mount VFSFS at the given mount points and install Asyncify hooks on the Module.
  *
  * Call after WASM instantiation but before callMain().
  *
- * @returns The shared fileData map (useful for injecting synthetic files)
+ * @returns Object with fileData map and protectedPaths set
  */
 export function mountVFSFS(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -513,17 +544,18 @@ export function mountVFSFS(
     moduleConfig: Record<string, unknown>,
     vfs: VFSManager,
     options: MountVFSFSOptions,
-): Map<string, Uint8Array> {
+): { fileData: Map<string, Uint8Array>; protectedPaths: Set<string> } {
     const pathAliases = options.pathAliases ?? new Map<string, string>();
     const fileData = new Map<string, Uint8Array>();
+    const protectedPaths = new Set<string>();
 
     // Negative cache: tracks normalized paths confirmed absent from all backends.
-    // Avoids repeated async IDB lookups for paths the compiler probes but never exist
-    // (e.g. /home/user/lib during include-path search).
+    // Also used for known directories (which don't need fileData).
+    // Avoids repeated async IDB lookups for paths the compiler probes.
     const negativeStatCache = new Set<string>();
 
     // Create the FS type
-    const vfsfsType = createVFSFS(FS, vfs, pathAliases, fileData);
+    const vfsfsType = createVFSFS(FS, vfs, pathAliases, fileData, protectedPaths);
 
     // Register the type
     FS.filesystems = FS.filesystems || {};
@@ -542,10 +574,10 @@ export function mountVFSFS(
         }
     }
 
-    // ── Install JSPI hooks on the Module ──────────────────────────────
-    // These hooks are called by the patched glue code (patch 6) BEFORE each
-    // filesystem syscall. They fetch file data from the kernel VFS asynchronously
-    // (JSPI suspends the WASM stack while the fetch is in flight).
+    // ── Install Asyncify hooks on the Module ─────────────────────────
+    // These hooks are called by the Emscripten glue code BEFORE each
+    // filesystem syscall (via ASYNCIFY_IMPORTS). They fetch file data from
+    // the kernel VFS asynchronously (Asyncify suspends/resumes the WASM stack).
 
     /**
      * Resolve a path that may be relative by prepending the Emscripten CWD.
@@ -566,40 +598,64 @@ export function mountVFSFS(
     async function ensureFile(path: string): Promise<void> {
         const normalized = normalizePath(resolveWithCwd(path));
         if (isMemfsPath(normalized) || normalized === '/') return;
-
-        // Already loaded?
         if (fileData.has(normalized)) return;
-
-        // Skip if we already confirmed this path doesn't exist.
         if (negativeStatCache.has(normalized)) return;
 
         const resolved = resolveAlias(normalized, pathAliases);
+
+        // Fast path: check IDBFS write layer for recently-written files.
+        // LazyFS no longer caches in RAM — files are in IDB only.
+        const syncData = vfs.readFileSync(resolved);
+        if (syncData) {
+            fileData.set(normalized, syncData);
+            return;
+        }
+        // Also check if it's a known directory (no data needed)
+        const syncStat = vfs.statSync(resolved);
+        if (syncStat && syncStat.type !== 'file') return;
+
+        // Slow path: async fetch from IDB/CDN
         const data = await vfs.fetchFile(resolved);
         if (data) {
             fileData.set(normalized, data);
         } else {
-            negativeStatCache.add(normalized);
+            // Don't cache as negative if it's an implicit directory
+            const prefix = normalized + '/';
+            let isImplicitDir = false;
+            for (const key of fileData.keys()) {
+                if (key.startsWith(prefix)) { isImplicitDir = true; break; }
+            }
+            if (!isImplicitDir) {
+                negativeStatCache.add(normalized);
+            }
         }
     }
 
     /**
      * Ensure a path is stat-able: populate fileData if it's a file,
      * for directories we don't need data — the VFS manifest has metadata.
-     * Uses async stat so files persisted only in IDB (not memCache) are found.
      */
     async function ensureStat(path: string): Promise<void> {
         const normalized = normalizePath(resolveWithCwd(path));
         if (isMemfsPath(normalized) || normalized === '/') return;
-
-        // Already loaded?
         if (fileData.has(normalized)) return;
-
-        // Skip if we already confirmed this path doesn't exist.
         if (negativeStatCache.has(normalized)) return;
 
         const resolved = resolveAlias(normalized, pathAliases);
-        // Use async stat — statSync only checks memCache and misses
-        // files persisted in IDB from previous sessions.
+
+        // Fast path: check IDBFS write layer for recently-written files.
+        // Files in the usr-share bundle are in IDB, not RAM — the async
+        // path below handles loading via Asyncify suspension.
+        const syncStat = vfs.statSync(resolved);
+        if (syncStat !== null) {
+            if (syncStat.type === 'file') {
+                const syncData = vfs.readFileSync(resolved);
+                if (syncData) fileData.set(normalized, syncData);
+            }
+            return;
+        }
+
+        // Slow path: async stat checks IDB write layer + CDN fallback.
         const stat = await vfs.overlay.stat(resolved);
         if (stat && stat.type === 'file') {
             const data = await vfs.fetchFile(resolved);
@@ -607,23 +663,103 @@ export function mountVFSFS(
                 fileData.set(normalized, data);
             }
         } else if (!stat) {
-            negativeStatCache.add(normalized);
+            // Before adding to negativeStatCache, check for implicit directories
+            // (paths that are prefixes of fileData entries). Without this check,
+            // runtime-created directories for pre-seeded cmake build files would
+            // be permanently marked as non-existent.
+            const prefix = normalized + '/';
+            let isImplicitDir = false;
+            for (const key of fileData.keys()) {
+                if (key.startsWith(prefix)) { isImplicitDir = true; break; }
+            }
+            if (!isImplicitDir) {
+                negativeStatCache.add(normalized);
+            }
         }
     }
 
-    // Install hooks on Module for the glue code's JSPI wrappers.
+    // Install hooks on Module for the Asyncify-wrapped syscalls.
     // These are called before each filesystem syscall (openat, stat64, etc.)
     // to lazily fetch files from the kernel VFS / CDN into the local fileData map.
 
+    let _hookCallCount = 0;
+    let _lastHookDesc = '';
+    let _asyncHits = 0;
+
+    // Activity monitor: logs every 5s so we can see if hooks are still firing
+    const _activityTimer = setInterval(() => {
+        if (_hookCallCount > 0 || _syncBypass > 0) {
+            console.log(`${LOG_PREFIX} [activity] bypass=${_syncBypass} asyncHooks=${_asyncHits} last="${_lastHookDesc}"`);
+        }
+    }, 5000);
+
+    // Stop the activity timer when this WASM process finishes
+    // (the timer reference is captured in the closure; GC will handle it,
+    // but being explicit avoids log noise from completed processes)
+    const origOnExit = moduleConfig['onExit'] as (() => void) | undefined;
+    moduleConfig['onExit'] = () => {
+        clearInterval(_activityTimer);
+        origOnExit?.();
+    };
+
+    const _hookLog = (op: string, path: string) => {
+        _hookCallCount++;
+        _lastHookDesc = `${op}: ${path}`;
+        if (_hookCallCount <= 100 || _hookCallCount % 100 === 0) {
+            console.log(`${LOG_PREFIX} [hook #${_hookCallCount}] ${op}: ${path} (bypass=${_syncBypass} async=${_asyncHits})`);
+        }
+    };
+
+    // ── isCachedSync: called before any async hook. Returns true →    ──
+    // ── the original syscall runs directly (no Asyncify suspend).       ──
+    // ── Returns false → the async hook runs (Asyncify suspends). This  ──
+    // ── eliminates Asyncify suspend/resume overhead for files already   ──
+    // ── in the per-process fileData or negativeStatCache.               ──
+    let _syncBypass = 0;
+    moduleConfig['isCachedSync'] = (path: string): boolean => {
+        const n = normalizePath(resolveWithCwd(path));
+        if (isMemfsPath(n) || n === '/') { _syncBypass++; return true; }
+        if (fileData.has(n) || negativeStatCache.has(n)) { _syncBypass++; return true; }
+        const r = resolveAlias(n, pathAliases);
+        const ss = vfs.statSync(r);
+        if (ss !== null) {
+            if (ss.type === 'file') {
+                // Try sync read — returns null if data is only in IDB/CDN
+                const d = vfs.readFileSync(r);
+                if (d) { fileData.set(n, d); _syncBypass++; return true; }
+                // File exists but data not available synchronously — need async fetch
+                return false;
+            }
+            // Directory — no file data needed
+            _syncBypass++;
+            return true;
+        }
+        // Check for implicit directories: fileData entries with this path as prefix.
+        // Without this, cmake stat() on runtime-created dirs (e.g. build/CMakeFiles/)
+        // falls through to async hooks which add the path to negativeStatCache,
+        // making the dir permanently invisible.
+        const prefix = n + '/';
+        for (const key of fileData.keys()) {
+            if (key.startsWith(prefix)) { _syncBypass++; return true; }
+        }
+        return false;
+    };
+
     moduleConfig['onPreOpen'] = async (path: string) => {
+        _hookLog('open', path);
+        _asyncHits++;
         await ensureFile(path);
     };
     moduleConfig['onPreStat'] = async (path: string) => {
+        _hookLog('stat', path);
+        _asyncHits++;
         await ensureStat(path);
     };
     moduleConfig['onPreAccess'] = async (path: string) => {
+        _hookLog('access', path);
+        _asyncHits++;
         await ensureStat(path);
     };
 
-    return fileData;
+    return { fileData, protectedPaths };
 }

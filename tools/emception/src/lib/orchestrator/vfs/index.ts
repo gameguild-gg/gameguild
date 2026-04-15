@@ -24,27 +24,29 @@ export interface VFSManager {
   preloadBundle(bundleName: string): Promise<void>;
   /** Get the bundle name a file belongs to, or undefined. */
   getBundleForFile(path: string): string | undefined;
+  /** Get all file paths belonging to a bundle. */
+  getBundleFilePaths(bundleName: string): string[];
   /** Expose overlay for direct read/write (e.g. tests, shell). */
   readonly overlay: OverlayFS;
   /** Expose LazyFS for CDN asset loading (bundle preloading, URL resolution). */
   readonly lazyFs: LazyFS;
 
   // ---------- Sync VFS access for Emscripten FS proxy ----------
-  /** Sync file read from memCache (null on miss). VFSFS uses fetchFile for on-demand loading. */
+  /** Sync file read from write cache (null on miss). VFSFS uses fetchFile for on-demand loading. */
   readFileSync(path: string): Uint8Array | null;
-  /** Sync file write to overlay write layer (memCache + fire-and-forget IDB). */
+  /** Sync file write to overlay write layer (write cache + fire-and-forget IDB). */
   writeFileSync(path: string, data: Uint8Array): void;
-  /** Sync stat from manifest metadata or memCache. */
+  /** Sync stat from manifest metadata or write cache. */
   statSync(path: string): FSStats | null;
-  /** Sync readdir from dirIndex + memCache keys. */
+  /** Sync readdir from dirIndex + write cache keys. */
   readdirSync(path: string): string[];
-  /** Sync existence check from manifest + memCache. */
+  /** Sync existence check from manifest + write cache. */
   existsSync(path: string): boolean;
   /** Sync mkdir in overlay. */
   mkdirSync(path: string): void;
   /** Sync delete from overlay. */
   deleteFileSync(path: string): boolean;
-  /** Preload all files under a directory into LazyFS memCache. */
+  /** Preload all files under a directory into IDB. */
   preloadDir(path: string): Promise<void>;
 }
 
@@ -66,6 +68,9 @@ export function createVFSManager(overlay: OverlayFS, lazyFs: LazyFS): VFSManager
     },
     getBundleForFile(path: string): string | undefined {
       return lazyFs.getBundleForFile(path);
+    },
+    getBundleFilePaths(bundleName: string): string[] {
+      return lazyFs.getBundleFilePaths(bundleName);
     },
 
     // Sync methods delegate to overlay's sync methods

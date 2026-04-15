@@ -4,9 +4,9 @@
  * Instead of copying thousands of files into each WASM process's MEMFS before
  * callMain(), this module patches the Emscripten FS object to:
  *
- *   1. **Lazy-load** files on first access from the kernel VFS memCache.
+ *   1. **Lazy-load** files on first access from the kernel VFS (IDB/CDN).
  *      When Emscripten's lookupPath encounters ENOENT, the proxy checks the
- *      VFS and lazily creates the file/dir in MEMFS with data from memCache.
+ *      VFS and lazily creates the file/dir in MEMFS with data from IDB.
  *
  *   2. **Write-through** file mutations to the kernel VFS overlay.
  *      When the process writes/creates/deletes files, the proxy mirrors the
@@ -16,9 +16,9 @@
  *   3. **Merge readdir** results with VFS entries, so directory listings
  *      include files that haven't been lazily loaded into MEMFS yet.
  *
- * Pre-warming: Callers must pre-warm LazyFS memCache (via preloadDir or
- * preloadBundle) before callMain so that sync reads succeed.  Files NOT in
- * memCache will be treated as non-existent (lazy read returns null → ENOENT).
+ * Pre-warming: Callers should preload bundles to IDB (via preloadBundle) before
+ * callMain so that sync reads succeed.  Files NOT in IDB/write cache will be
+ * treated as non-existent (lazy read returns null → ENOENT).
  *
  * Lifecycle: call patchEmscriptenFS once per process, after instantiation
  * but before callMain.
@@ -167,10 +167,10 @@ export function patchEmscriptenFS(
                         if (dir) { try { FS.mkdirTree(dir); } catch { /* exists */ } }
                         try { FS.symlink(stat.symlinkTarget, normalized); } catch { /* exists */ }
                     } else {
-                        // Regular file — load from VFS memCache
+                        // Regular file — load from VFS (IDB/CDN)
                         const data = vfs.readFileSync(resolved);
                         if (!data) {
-                            console.log(`${LOG_PREFIX}   → FILE IN MANIFEST BUT NOT IN MEMCACHE: ${resolved}`);
+                            console.log(`${LOG_PREFIX}   → FILE IN MANIFEST BUT NOT IN VFS: ${resolved}`);
                             throw e;
                         }
 
@@ -256,9 +256,9 @@ export function patchEmscriptenFS(
                                 if (entryStat.type === 'dir') {
                                     origMkdir(entryPath);
                                 } else {
-                                    // Load actual content from VFS memCache so
+                                    // Load actual content from VFS so
                                     // reads return correct data (not an empty stub).
-                                    // If not in memCache, fall back to 0-byte stub
+                                    // If not in VFS cache, fall back to 0-byte stub
                                     // (lookupPath proxy will overwrite on access).
                                     const fileData = vfs.readFileSync(resolvedEntry);
                                     origWriteFile(entryPath, fileData ?? new Uint8Array(0));

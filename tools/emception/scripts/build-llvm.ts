@@ -69,13 +69,22 @@ const STANDALONE_FLAGS = [
     '-sEXPORTED_RUNTIME_METHODS=FS,callMain',
     // Emscripten ports needed by LLVM
     '-sUSE_ZLIB=1',    // LLVMSupport uses zlib for compression
-    // Use native WASM exception handling instead of JS-based invoke_*
-    // trampolines. This eliminates invoke_vi/invoke_ii which are
-    // incompatible with JSPI stack suspension ("function signature mismatch").
-    '-fwasm-exceptions',
-    // NOTE: Asyncify is intentionally excluded — it's incompatible with
-    // Emscripten's default reference-types feature. LLVM tools don't need
-    // async unwinding for simple callMain() invocations.
+    // Enable Emscripten JS-based exception handling (compatible with Asyncify).
+    // Native -fwasm-exceptions requires reference-types, which conflicts with
+    // -mno-reference-types needed for Asyncify instrumentation.
+    '-sDISABLE_EXCEPTION_CATCHING=0',
+    // Asyncify: instrument the binary so async JS imports (FS hooks,
+    // subprocess dispatch) transparently suspend/resume the WASM stack.
+    // Works in ALL browsers (Chrome, Safari, Firefox) — unlike JSPI.
+    '-sASYNCIFY',
+    '-sASYNCIFY_STACK_SIZE=131072',   // 128 KB — deep IR recursion in clang
+    `-sASYNCIFY_IMPORTS=${JSON.stringify([
+        '__syscall_openat', '__syscall_stat64', '__syscall_lstat64',
+        '__syscall_faccessat', '__syscall_readlinkat', '__syscall_newfstatat',
+        '__emscripten_system',
+    ])}`,
+    // Disable reference-types — incompatible with asyncify instrumentation
+    '-mno-reference-types',
 ].join(' ');
 
 async function main() {
@@ -178,8 +187,8 @@ function buildStaticLLVM() {
         console.log('Configuring LLVM for WebAssembly (static)...');
         const cmd = `emcmake cmake -S "${LLVM_SRC_DIR}/llvm" -B "${wasmBuildDir}" \
             -DCMAKE_BUILD_TYPE=Release \
-            -DCMAKE_CXX_FLAGS="-fwasm-exceptions" \
-            -DCMAKE_C_FLAGS="-fwasm-exceptions" \
+            -DCMAKE_CXX_FLAGS="" \
+            -DCMAKE_C_FLAGS="" \
             -DLLVM_TARGETS_TO_BUILD="WebAssembly" \
             -DLLVM_ENABLE_PROJECTS="clang;lld" \
             -DLLVM_TABLEGEN="${llvmTblGen}" \
