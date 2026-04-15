@@ -23,14 +23,18 @@ export default defineConfig({
             name: 'chromium',
             use: {
                 ...devices['Desktop Chrome'],
-                launchOptions: {
-                    // JSPI (WebAssembly.promising / Suspending) is required for
-                    // subprocess dispatch — emcc calls clang, lld, etc. via JSPI.
-                    args: [
-                        '--enable-features=WebAssemblyJSPromiseIntegration',
-                        '--js-flags=--experimental-wasm-jspi',
-                    ],
-                },
+            },
+        },
+        {
+            name: 'firefox',
+            use: {
+                ...devices['Desktop Firefox'],
+            },
+        },
+        {
+            name: 'webkit',
+            use: {
+                ...devices['Desktop Safari'],
             },
         },
     ],

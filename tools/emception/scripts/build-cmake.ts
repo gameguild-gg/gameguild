@@ -36,7 +36,17 @@ const STANDALONE_FLAGS = [
     '-sINVOKE_RUN=0',
     '-sEXPORTED_FUNCTIONS=_main',
     '-sEXPORTED_RUNTIME_METHODS=FS,callMain',
-    '-fwasm-exceptions',
+    // Emscripten JS-based exception handling — compatible with Asyncify.
+    '-sDISABLE_EXCEPTION_CATCHING=0',
+    // Asyncify: transparent async suspension for FS hooks + subprocess dispatch.
+    '-sASYNCIFY',
+    '-sASYNCIFY_STACK_SIZE=65536',    // 64 KB
+    `-sASYNCIFY_IMPORTS=${JSON.stringify([
+        '__syscall_openat', '__syscall_stat64', '__syscall_lstat64',
+        '__syscall_faccessat', '__syscall_readlinkat', '__syscall_newfstatat',
+        '__emscripten_system',
+    ])}`,
+    '-mno-reference-types',
 ].join(' ');
 
 shell.mkdir('-p', USERLAND_DIR);
@@ -124,10 +134,12 @@ const BUILD_WASM_DIR = path.join(SOURCE_DIR, 'build-wasm');
 shell.cd(SOURCE_DIR);
 
 // 2. Apply source patches (TS-based, not .patch files)
-function patchSource(relPath: string, needle: string, replacement: string, label: string) {
+function patchSource(relPath: string, needle: string, replacement: string, label: string, marker?: string) {
     const filePath = path.join(SOURCE_DIR, relPath);
     const content = fs.readFileSync(filePath, 'utf8');
-    if (content.includes(replacement)) {
+    // Use an explicit marker (if provided) or the full replacement to detect "already applied".
+    const alreadyApplied = marker ? content.includes(marker) : content.includes(replacement);
+    if (alreadyApplied) {
         console.log(`  [${label}] already applied — skipping`);
         return;
     }
@@ -204,7 +216,7 @@ patchSource(
       }
     }
 
-    /* Dispatch — blocks via JSPI until the ToolRunner finishes. */
+    /* Dispatch — blocks via Asyncify until the ToolRunner finishes. */
     int rc = std::system("__dispatch_subprocess");
     int exitCode = (rc >> 8) & 0xFF;
 
@@ -243,6 +255,7 @@ patchSource(
 
   cmUVProcessChainBuilder builder;`,
     'cmSystemTools-emscripten-subprocess',
+    '__dispatch_subprocess',  // marker: detect any variant of the patch
 );
 
 // TODO: Emscripten subprocess dispatch for execute_process() / libuv.
@@ -435,13 +448,20 @@ if (fs.existsSync(templatesDir)) {
     console.warn('WARNING: CMake Templates/ directory not found in source tree');
 }
 
-// 7. Apply glue patches (systemCallback, JSPI, ENV merge) to the freshly
+// Deploy Emception runtime toolchain file for cmake compiler detection
+const toolchainSrc = path.join(ROOT, 'sysroot', 'usr', 'share', `cmake-${CMAKE_MAJOR_MINOR}`, 'toolchain-emception.cmake');
+if (!fs.existsSync(toolchainSrc)) {
+    console.warn('WARNING: toolchain-emception.cmake not found — cmake compiler detection may fail');
+}
+console.log(`Toolchain file: ${toolchainSrc}`);
+
+// 7. Apply glue patches (systemCallback, Asyncify hooks, ENV merge) to the freshly
 // deployed cmake.mjs in both build/ and sysroot/. Without these patches,
 // std::system() returns -52 (ENOSYS) and callMain() cannot suspend for async I/O.
 console.log('Applying glue patches to cmake.mjs...');
 const patchGlueResult = shell.exec('npx tsx scripts/patch-glue.ts', { silent: false });
 if (patchGlueResult.code !== 0) {
-    console.error('WARNING: patch:glue failed — cmake.mjs may be missing JSPI/systemCallback patches');
+    console.error('WARNING: patch:glue failed — cmake.mjs may be missing systemCallback patches');
 }
 
 console.log('>>> CMake build complete.');

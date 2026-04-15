@@ -50,4 +50,18 @@ if (fs.existsSync(manifestSrc)) {
     console.warn(`Warning: manifest.json not found at ${manifestSrc}`);
 }
 
+// Copy brotli-wasm files (needed by the worker for decompressing .tar.br bundles
+// when DecompressionStream("br") is not available)
+const brotliPkgDir = path.join(ROOT, 'node_modules', 'brotli-wasm', 'pkg.web');
+const brotliFiles = ['brotli_wasm.js', 'brotli_wasm_bg.wasm'];
+for (const file of brotliFiles) {
+    const src = path.join(brotliPkgDir, file);
+    if (fs.existsSync(src)) {
+        console.log(`Copying ${file} to ${WEB_NEXT_CDN}...`);
+        shell.cp(src, WEB_NEXT_CDN);
+    } else {
+        console.warn(`Warning: ${file} not found at ${src}`);
+    }
+}
+
 console.log('CDN files deployed.');

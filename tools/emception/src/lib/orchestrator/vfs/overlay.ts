@@ -98,9 +98,10 @@ export class OverlayFS implements IFileSystem {
   }
 
   // ---------- Synchronous accessors ----------
-  // These operate on memCache only (no IDB/CDN). All our FS implementations
-  // (LazyFS, IDBFS) expose sync methods that read from in-memory caches.
-  // Used by the Emscripten FS proxy for zero-copy file access.
+  // These check the IDBFS write cache and LazyFS manifest metadata.
+  // LazyFS no longer caches file data in RAM — readFileSync returns null
+  // for CDN files; the async Asyncify hooks handle on-demand loading.
+  // Used by the Emscripten VFSFS for fast-path bypass when data is available.
 
   /** Sync helper: check if FS supports a sync method */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

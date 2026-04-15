@@ -7,7 +7,7 @@
  *
  * This shim is injected into CPython's module path as `subprocess.py`,
  * replacing the standard library's subprocess module so that
- * subprocess.run() / Popen() route through the ToolRunner via JSPI.
+ * subprocess.run() / Popen() route through the ToolRunner via Asyncify.
  */
 
 import SUBPROCESS_SHIM from './subprocess_shim.py';

@@ -30,13 +30,6 @@ export default defineConfig({
             name: 'chromium',
             use: {
                 ...devices['Desktop Chrome'],
-                launchOptions: {
-                    // JSPI is required for subprocess dispatch (emcc → clang/lld via JSPI).
-                    args: [
-                        '--enable-features=WebAssemblyJSPromiseIntegration',
-                        '--js-flags=--experimental-wasm-jspi',
-                    ],
-                },
             },
         },
     ],

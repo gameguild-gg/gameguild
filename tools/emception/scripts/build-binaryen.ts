@@ -46,9 +46,19 @@ const STANDALONE_FLAGS = [
     '-sINVOKE_RUN=0',          // Don't auto-run main — kernel calls callMain()
     '-sEXPORTED_FUNCTIONS=_main',     // Keep main despite -Os
     '-sEXPORTED_RUNTIME_METHODS=FS,callMain',
-    // Use native WASM exception handling instead of JS-based invoke_*
-    // trampolines, enabling safe JSPI suspension inside any syscall.
-    '-fwasm-exceptions',
+    // Enable Emscripten JS-based exception handling (compatible with Asyncify).
+    // Native -fwasm-exceptions requires reference-types, which conflicts with
+    // -mno-reference-types needed for Asyncify instrumentation.
+    '-sDISABLE_EXCEPTION_CATCHING=0',
+    // Asyncify: transparent async suspension for FS hooks.
+    '-sASYNCIFY',
+    '-sASYNCIFY_STACK_SIZE=65536',    // 64 KB
+    `-sASYNCIFY_IMPORTS=${JSON.stringify([
+        '__syscall_openat', '__syscall_stat64', '__syscall_lstat64',
+        '__syscall_faccessat', '__syscall_readlinkat', '__syscall_newfstatat',
+        '__emscripten_system',
+    ])}`,
+    '-mno-reference-types',
 ].join(' ');
 
 shell.mkdir('-p', USERLAND_DIR);
@@ -96,7 +106,7 @@ if (!fs.existsSync(path.join(BUILD_WASM_DIR, 'Makefile'))) {
     -DBUILD_TESTS=OFF \
     -DBYN_ENABLE_LTO=OFF \
     -DBUILD_SHARED_LIBS=OFF \
-    -DEMSCRIPTEN_ENABLE_WASM_EH=ON`;
+    -DEMSCRIPTEN_ENABLE_WASM_EH=OFF`;
 
     console.log(cmakeCmd);
     shell.exec(cmakeCmd);
@@ -151,6 +161,7 @@ for (const tool of TOOLS) {
         `-I "${path.join(SOURCE_DIR, 'third_party', 'FP16', 'include')}"`,
         ...extraIncludes,
         STANDALONE_FLAGS,
+        '-std=c++20',
         '-Os',
         `-o "${toolMjs}"`,
     ];

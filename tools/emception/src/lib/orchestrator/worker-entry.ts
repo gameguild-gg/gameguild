@@ -6,8 +6,8 @@
  * main thread via the postMessage protocol defined in worker-protocol.ts.
  *
  * The main thread never touches WASM — all compilation happens here.
- * JSPI works in Workers, and IndexedDB is available, so the entire
- * existing architecture works unchanged inside the Worker.
+ * Asyncify handles async suspension/resume within Workers, and IndexedDB
+ * is available, so the entire existing architecture works unchanged.
  */
 
 import { detectAsyncStrategy } from './async-bridge';

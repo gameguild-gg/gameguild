@@ -36,8 +36,6 @@ export interface FileEntry {
 
 export class LazyFS implements IFileSystem {
   private manifest: FSManifest;
-  private memCache = new Map<string, Uint8Array>();
-  private memCacheSize = 0;
 
   /**
    * Optional injected brotli decompressor.
@@ -45,14 +43,11 @@ export class LazyFS implements IFileSystem {
    * can fail in Worker contexts due to WASM URL resolution issues.
    */
   static customBrotliDecompressor: ((data: Uint8Array) => Uint8Array) | null = null;
-  // 1.5 GB — large enough to hold all bundles (total uncompressed ≈ 763MB).
-  // The proxy relies on sync memCache reads during callMain, so files must
-  // not be LRU-evicted between pre-warm and use.  The old approach loaded
-  // similar data into WASM MEMFS, so total memory footprint is comparable.
-  private readonly MAX_MEM_CACHE_BYTES = 1536 * 1024 * 1024;
   private pendingFetches = new Map<string, Promise<Uint8Array>>();
   private pendingBundles = new Map<string, Promise<void>>();
   private blobUrls = new Map<string, string>();
+  /** Track which bundles have been fully extracted to IDB. */
+  private loadedBundles = new Set<string>();
   private idb: IDBDatabase | null = null;
   private dbName: string;
 
@@ -169,11 +164,6 @@ export class LazyFS implements IFileSystem {
   async readFile(path: string): Promise<Uint8Array | null> {
     const { P, fmtSize } = LazyFS;
     const normalized = this.normalizePath(path);
-    const cached = this.memCache.get(normalized);
-    if (cached) {
-      //console.log(`${P} readFile: ${normalized} — MEM CACHE HIT (${fmtSize(cached.length)})`);
-      return cached;
-    }
     const entry = this.manifest.files[normalized];
     if (!entry) {
       //console.log(`${P} readFile: ${normalized} — NOT IN MANIFEST`);
@@ -187,7 +177,6 @@ export class LazyFS implements IFileSystem {
     const idbCached = await this.idbGet(normalized);
     if (idbCached && idbCached.hash === entry.hash) {
       //console.log(`${P} readFile: ${normalized} — IDB CACHE HIT (${fmtSize(idbCached.data.length)})`);
-      this.addToMemCache(normalized, idbCached.data);
       return idbCached.data;
     }
     if (this.pendingFetches.has(normalized)) {
@@ -201,38 +190,20 @@ export class LazyFS implements IFileSystem {
     try {
       const data = await fetchPromise;
       //console.log(`${P} readFile: ${normalized} — fetched ${fmtSize(data.length)} in ${(performance.now() - t0).toFixed(1)}ms`);
-      this.addToMemCache(normalized, data);
-      await this.idbPut(normalized, data, entry.hash);
       return data;
     } finally {
       this.pendingFetches.delete(normalized);
     }
   }
 
-  private addToMemCache(path: string, data: Uint8Array): void {
-    // If replacing an existing entry, subtract old size first to keep
-    // memCacheSize accurate (avoids phantom inflation from bundle re-adds).
-    const existing = this.memCache.get(path);
-    if (existing) {
-      this.memCacheSize -= existing.length;
-    }
-    while (
-      this.memCacheSize + data.length > this.MAX_MEM_CACHE_BYTES &&
-      this.memCache.size > 0
-    ) {
-      const oldest = this.memCache.keys().next().value!;
-      const oldData = this.memCache.get(oldest)!;
-      this.memCacheSize -= oldData.length;
-      this.memCache.delete(oldest);
-      // Revoke any blob URL created for this evicted entry
-      const blobUrl = this.blobUrls.get(oldest);
-      if (blobUrl) {
-        URL.revokeObjectURL(blobUrl);
-        this.blobUrls.delete(oldest);
-      }
-    }
-    this.memCache.set(path, data);
-    this.memCacheSize += data.length;
+  /** Create a blob URL for a file (used for .wasm/.mjs/.js that need URL-based loading). */
+  private createBlobUrl(path: string, data: Uint8Array): void {
+    if (this.blobUrls.has(path)) return;
+    let mime = 'application/octet-stream';
+    if (path.endsWith('.wasm')) mime = 'application/wasm';
+    else if (path.endsWith('.mjs') || path.endsWith('.js')) mime = 'text/javascript';
+    const blob = new Blob([data.buffer as ArrayBuffer], { type: mime });
+    this.blobUrls.set(path, URL.createObjectURL(blob));
   }
 
   private async fetchFile(path: string, entry: FileEntry): Promise<Uint8Array> {
@@ -244,17 +215,17 @@ export class LazyFS implements IFileSystem {
     }
     console.log(`${P}   fetchFile: ${path} — loading from bundle "${entry.bundle}"`);
     await this.loadBundle(entry.bundle, path);
-    const bundled = this.memCache.get(path);
-    if (bundled) return bundled;
-    throw new Error(`File ${path} not found in bundle ${entry.bundle}`);
+    // Files are now in IDB after bundle extraction
+    const idbEntry = await this.idbGet(path);
+    if (idbEntry) return idbEntry.data;
+    throw new Error(`File ${path} not found in IDB after loading bundle ${entry.bundle}`);
   }
 
   private async loadBundle(bundleName: string, triggeredBy?: string): Promise<void> {
     const { P, fmtSize } = LazyFS;
     const bundle = this.manifest.bundles[bundleName];
     if (!bundle) throw new Error(`Bundle not found: ${bundleName}`);
-    if (bundle.files.every((f) => this.memCache.has(f))) {
-      console.log(`${P}   loadBundle: "${bundleName}" — all ${bundle.files.length} files already cached`);
+    if (this.loadedBundles.has(bundleName)) {
       return;
     }
     // Coalesce concurrent requests for the same bundle
@@ -303,12 +274,31 @@ export class LazyFS implements IFileSystem {
       console.log(`${P}   loadBundle: gzip decompressed ${fmtSize(rawSize)} → ${fmtSize(data.length)} in ${(performance.now() - tDecomp).toFixed(1)}ms`);
     }
 
-    // Extract tar entries into mem cache + IDB
+    // Extract tar entries into IDB (no in-memory cache)
     await this.extractTar(data);
+    this.loadedBundles.add(bundleName);
     console.log(`${P}   loadBundle: "${bundleName}" extracted ${bundle.files.length} files in ${(performance.now() - t0).toFixed(1)}ms`);
   }
 
+  /**
+   * Batch-write multiple entries to IDB in a single transaction.
+   * Much faster than one transaction per file for large bundles.
+   */
+  private async idbPutBatch(entries: Array<{ path: string; data: Uint8Array; hash: string }>): Promise<void> {
+    if (!this.idb || entries.length === 0) return;
+    return new Promise((resolve, reject) => {
+      const tx = this.idb!.transaction('files', 'readwrite');
+      const store = tx.objectStore('files');
+      for (const entry of entries) {
+        store.put({ path: entry.path, data: entry.data, hash: entry.hash });
+      }
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error);
+    });
+  }
+
   private async extractTar(data: Uint8Array): Promise<void> {
+    const idbEntries: Array<{ path: string; data: Uint8Array; hash: string }> = [];
     let offset = 0;
     while (offset < data.length) {
       const header = data.slice(offset, offset + 512);
@@ -320,13 +310,20 @@ export class LazyFS implements IFileSystem {
       const content = data.slice(offset, offset + size);
       offset += Math.ceil(size / 512) * 512;
       if (typeFlag === 48 || typeFlag === 0) {
-        this.addToMemCache(name, new Uint8Array(content));
+        const fileData = new Uint8Array(content);
         const entry = this.manifest.files[name];
         if (entry) {
-          await this.idbPut(name, content, entry.hash);
+          idbEntries.push({ path: name, data: fileData, hash: entry.hash });
+        }
+        // Create blob URLs for module files (.wasm, .mjs, .js) so that
+        // import() and fetch() work for bundled tool binaries.
+        if (name.endsWith('.wasm') || name.endsWith('.mjs') || name.endsWith('.js')) {
+          this.createBlobUrl(name, fileData);
         }
       }
     }
+    // Batch-write all extracted files to IDB in a single transaction
+    await this.idbPutBatch(idbEntries);
   }
 
   async exists(path: string): Promise<boolean> {
@@ -382,26 +379,19 @@ export class LazyFS implements IFileSystem {
   }
 
   /**
-   * Synchronous file read from memCache only.
-   * Returns null if the file is not in memCache (not yet fetched).
-   * Callers must pre-warm needed files via preload/preloadDir before
-   * relying on sync reads.
+   * Synchronous file read — always returns null.
+   * File data is no longer cached in RAM; use the async readFile() path
+   * (via Asyncify hooks) to load from IDB/CDN on demand.
    */
-  readFileSync(path: string): Uint8Array | null {
-    const normalized = this.normalizePath(path);
-    const entry = this.manifest.files[normalized];
-    if (entry?.symlink) {
-      const target = this.resolveSymlink(normalized, entry.symlink);
-      return this.readFileSync(target);
-    }
-    return this.memCache.get(normalized) ?? null;
+  readFileSync(_path: string): Uint8Array | null {
+    return null;
   }
 
   async preload(paths: string[]): Promise<void> {
     await Promise.all(paths.map((p) => this.readFile(p).catch(() => null)));
   }
 
-  /** Preload a specific bundle by name. Downloads and extracts all files into cache. */
+  /** Preload a specific bundle by name. Downloads and extracts all files into IDB. */
   async preloadBundle(bundleName: string): Promise<void> {
     return this.loadBundle(bundleName);
   }
@@ -418,7 +408,7 @@ export class LazyFS implements IFileSystem {
   }
 
   /**
-   * Preload all files under a directory path into memCache.
+   * Preload all files under a directory path into IDB.
    * Uses the dirIndex for efficient path enumeration instead of
    * scanning all manifest keys.
    */
@@ -458,6 +448,12 @@ export class LazyFS implements IFileSystem {
     return entry?.bundle;
   }
 
+  /** Get all file paths belonging to a bundle. */
+  getBundleFilePaths(bundleName: string): string[] {
+    const bundle = this.manifest.bundles[bundleName];
+    return bundle?.files ?? [];
+  }
+
   /** Async version of getUrl: ensures the file's bundle is loaded first, then returns blob URL. */
   async getUrlAsync(path: string): Promise<string> {
     const normalized = this.normalizePath(path);
@@ -484,21 +480,9 @@ export class LazyFS implements IFileSystem {
     const entry = this.manifest.files[normalized];
     if (!entry) return '';
 
-    // If the file is from a bundle and already in memCache, serve via blob URL
-    // so that import() and fetch() work for bundled .mjs/.wasm files.
-    if (entry.bundle && this.memCache.has(normalized)) {
-      const existing = this.blobUrls.get(normalized);
-      if (existing) return existing;
-      const data = this.memCache.get(normalized)!;
-      let mime = 'application/octet-stream';
-      if (normalized.endsWith('.wasm')) mime = 'application/wasm';
-      else if (normalized.endsWith('.mjs') || normalized.endsWith('.js'))
-        mime = 'text/javascript';
-      const blob = new Blob([data.buffer as ArrayBuffer], { type: mime });
-      const blobUrl = URL.createObjectURL(blob);
-      this.blobUrls.set(normalized, blobUrl);
-      return blobUrl;
-    }
+    // Serve via blob URL for bundled .wasm/.mjs/.js files (created during extraction)
+    const existing = this.blobUrls.get(normalized);
+    if (existing) return existing;
 
     return `${this.manifest.baseUrl}${path}`;
   }

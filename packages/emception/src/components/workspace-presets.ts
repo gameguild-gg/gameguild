@@ -81,7 +81,7 @@ export const CPP_TERMINAL_PRESET: WorkspaceConfig = {
 const CMAKE_LISTS = `cmake_minimum_required(VERSION 3.20)
 project(hello LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
-add_executable(hello src/main.cpp)
+add_executable(hello main.cpp)
 `;
 
 const CMAKE_MAIN = `#include <iostream>
@@ -99,21 +99,7 @@ export const CMAKE_PRESET: WorkspaceConfig = {
   version: 1,
   compile: {
     tool: 'cmake',
-    args: [
-      'cmake',
-      '-B',
-      '/home/user/build',
-      '-G',
-      'Ninja',
-      '-S',
-      '/home/user',
-      '-DCMAKE_MAKE_PROGRAM=/usr/bin/ninja',
-      '-DCMAKE_SYSTEM_NAME=Generic',
-      '-DCMAKE_CXX_COMPILER=/usr/bin/clang++',
-      '-DCMAKE_CXX_COMPILER_FORCED=TRUE',
-      '-DCMAKE_C_COMPILER=/usr/bin/clang',
-      '-DCMAKE_C_COMPILER_FORCED=TRUE',
-    ],
+    args: ['cmake', '-B', '/home/user/build', '-G', 'Ninja', '-S', '/home/user'],
     cwd: '/home/user',
     output: '/home/user/build/hello',
     sourceDetect: { extensions: ['.cpp', '.c'], entryPoint: '/src/main.cpp' },
