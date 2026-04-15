@@ -46,7 +46,10 @@ x86/
 /[Tt]estResults/
 /[Ll]ogs/
 # Node.js Dependencies
-/node_modules
+**/node_modules
+
+# Embedded upstream repos (avoid nested .git metadata/tooling conflicts)
+tools/emception/userland/**/.git/
 
 # Node.js Package Managers
 /.pnp
@@ -99,3 +102,7 @@ next-env.d.ts
 
 # Production
 /build
+
+apps/web/test-results/
+
+test-results/

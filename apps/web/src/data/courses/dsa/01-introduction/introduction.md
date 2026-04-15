@@ -15,8 +15,7 @@ Day 2:
 - Review expectations in class;
 - Final project;
 - CI/CD;
-- Why start building your portfolio now
-    - Itchio, github pages, your own domain, etc.
+- Why start building your portfolio now - Itchio, github pages, your own domain, etc.
 </details>
 
 ## Table of Contents
@@ -25,10 +24,10 @@ Day 2:
 - Safe and welcoming space
 - Privacy and FERPA Compliance
 - Activities
-    - Setup Github repository
-    - Setup your IDE
-    - Setup your Assignments project
-    - Check Github Actions
+  - Setup Github repository
+  - Setup your IDE
+  - Setup your Assignments project
+  - Check Github Actions
 - Homework
 
 ## Safe and welcoming space
@@ -49,7 +48,7 @@ In order for me and you to be protected, about using external tools and publishi
 
 :::
 
-<iframe src="https://giphy.com/embed/e7yNPQmGUozyU" width="480" height="336" frameBorder="0" class="giphy-embed" allowFullScreen></iframe><p><a href="https://giphy.com/gifs/facebook-posts-privacy-e7yNPQmGUozyU">via GIPHY</a></p>
+[![Facebook privacy](https://media.giphy.com/media/e7yNPQmGUozyU/giphy.gif)](https://giphy.com/gifs/facebook-posts-privacy-e7yNPQmGUozyU)
 
 This class will use github extensively, in order to keep you safe, we will use private repositories. This means that only you and me will be able to see your code. In your final project, you must share it with your pair partner, and with me.
 
@@ -57,8 +56,8 @@ This class will use github extensively, in order to keep you safe, we will use p
 
 - **Data Structure** - A way of organizing data in memory for efficient access and modification.
 - **Abstract Data Type** - A higher-level interface to use data conveniently from the end-programmer’s point of view.
-    - Built out of data structures.
-    - Provides a way to use data without knowing how it is implemented.
+  - Built out of data structures.
+  - Provides a way to use data without knowing how it is implemented.
 - **Algorithm** - A formula, process, or set of steps to solve a problem.
 
 ## Data Structures
@@ -84,7 +83,7 @@ This class will use github extensively, in order to keep you safe, we will use p
 - Search: Binary, Breadth-First, Depth-First
 - Graph: Dijkstra, Prims(Jarnik), Bellman-Ford
 - Hash tables: Collision avoidance via chaining and linear probing
-- Heap: A* algorithm
+- Heap: A\* algorithm
 
 ## Activities
 
@@ -139,7 +138,7 @@ Your machine might not have git on your path. If so, install it from [git-scm.co
 ::: note "Github Actions"
 
 Github Actions is a CI/CD tool that will run your tests automatically when you push your code to github. It will also run your tests when you create a pull request. It is a great tool to make sure your code is always working.
-    
+
 You might want to explore the folder `.github/workflows` to see how it works, but you don't need to change anything there.
 
 :::
