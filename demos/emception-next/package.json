@@ -5,9 +5,9 @@
   "description": "Demo IDE for the emception browser C/C++ toolchain",
   "type": "module",
   "scripts": {
-    "predev": "node ../../scripts/sync-emception-cdn.mjs demos/emception-next",
+    "predev": "cd ../../tools/emception && npx tsup --config tsup.config.ts && cd ../../demos/emception-next && node ../../scripts/sync-emception-cdn.mjs demos/emception-next",
     "dev": "next dev",
-    "prebuild": "node ../../scripts/sync-emception-cdn.mjs demos/emception-next",
+    "prebuild": "cd ../../tools/emception && npx tsup --config tsup.config.ts && cd ../../demos/emception-next && node ../../scripts/sync-emception-cdn.mjs demos/emception-next",
     "build": "next build",
     "start": "next start",
     "lint": "eslint"

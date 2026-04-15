@@ -123,15 +123,6 @@ test.describe('Compile & Run', () => {
         // Navigate and wait for the page to fully load
         await page.goto('/', { waitUntil: 'networkidle' });
 
-        // Debug: Check JSPI availability
-        const jspiInfo = await page.evaluate(() => ({
-            promising: typeof (WebAssembly as any).promising,
-            Suspending: typeof (WebAssembly as any).Suspending,
-            Function: typeof (WebAssembly as any).Function,
-            keys: Object.getOwnPropertyNames(WebAssembly).sort(),
-        }));
-        console.log('JSPI availability:', JSON.stringify(jspiInfo));
-
         try {
             // Wait for the toolchain to boot
             console.log('Waiting for boot (Ready status)...');
@@ -265,7 +256,7 @@ test.describe('Compile & Run', () => {
     // 3. stdin — compile a program that reads from stdin, type input,
     //    verify the program echoes it back.
     // ------------------------------------------------------------------
-    test('stdin works with JSPI — program reads user input', async ({ page }) => {
+    test('stdin works — program reads user input', async ({ page }) => {
         const logs = captureEmceptionLogs(page);
 
         await page.goto('/', { waitUntil: 'networkidle' });
