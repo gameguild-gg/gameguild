@@ -18,6 +18,7 @@ namespace GameGuild.Commerce.Subscriptions;
 ///     - Api policy for query endpoints
 /// </summary>
 [ApiVersion("1.0")]
+[Route("api")]
 [Tags("subscriptions")]
 [Authorize]
 [EnableRateLimiting(RateLimitPolicies.ExpensiveOperations)]
@@ -46,13 +47,13 @@ public sealed class SubscriptionsController(ISender sender, IActorContextAccesso
         if (validationError != null) return validationError;
 
         var id = await sender.Send(new CreateSubscriptionCommand(
-            body.TenantId, 
-            body.PlanId, 
-            body.CreatedByUserId, 
-            body.BillingCycle, 
-            body.Amount, 
+            body.TenantId,
+            body.PlanId,
+            body.CreatedByUserId,
+            body.BillingCycle,
+            body.Amount,
             FulfilledOrderId: body.FulfilledOrderId,
-            StartDate: body.StartDate, 
+            StartDate: body.StartDate,
             TrialDays: body.TrialDays), ct).ConfigureAwait(false);
 
         return CreatedAtAction(nameof(GetSubscriptionById), new { subscriptionId = id }, new { id });
@@ -137,7 +138,13 @@ public sealed class SubscriptionsController(ISender sender, IActorContextAccesso
     public async Task<IActionResult> GetSubscriptionById(Guid subscriptionId, CancellationToken ct)
     {
         var subscription = await sender.Send(new GetSubscriptionByIdQuery(subscriptionId), ct).ConfigureAwait(false);
-        return subscription is null ? NotFound() : Ok(subscription);
+        if (subscription is null) return NotFound();
+
+        var tenantIdClaim = User.FindFirst("tenant_id")?.Value;
+        if (tenantIdClaim is not null && Guid.TryParse(tenantIdClaim, out var claimTenantId) && claimTenantId != subscription.TenantId)
+            return Forbid();
+
+        return Ok(subscription);
     }
 
     /// <summary>
@@ -226,14 +233,14 @@ public sealed class SubscriptionsController(ISender sender, IActorContextAccesso
     /// <param name="StartDate">Optional start date</param>
     /// <param name="TrialDays">Optional trial period in days</param>
     public sealed record CreateSubscriptionRequest(
-        Guid TenantId, 
-        Guid PlanId, 
-        Guid CreatedByUserId, 
-        BillingCycle BillingCycle, 
-        decimal Amount, 
-        string Currency, 
+        Guid TenantId,
+        Guid PlanId,
+        Guid CreatedByUserId,
+        BillingCycle BillingCycle,
+        decimal Amount,
+        string Currency,
         Guid? FulfilledOrderId = null,
-        DateTime? StartDate = null, 
+        DateTime? StartDate = null,
         int? TrialDays = null);
 
     /// <summary>Request to partially update a subscription</summary>

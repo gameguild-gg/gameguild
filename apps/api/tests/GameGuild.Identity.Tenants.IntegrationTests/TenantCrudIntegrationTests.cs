@@ -2,6 +2,7 @@ using FluentAssertions;
 using GameGuild.API.Database;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
@@ -24,22 +25,21 @@ public class TenantCrudIntegrationTests : IClassFixture<WebApplicationFactory<Ga
         _factory = factory.WithWebHostBuilder(builder =>
         {
             builder.UseEnvironment("Testing");
-            builder.ConfigureServices(services =>
+            builder.ConfigureTestServices(services =>
             {
-                // Remove existing DbContext registrations
-                var dbContextDescriptor = services.SingleOrDefault(d => d.ServiceType == typeof(DbContextOptions<ApplicationDbContext>));
-                if (dbContextDescriptor != null)
+                // Remove all EF Core and Npgsql service registrations
+                var descriptorsToRemove = services
+                    .Where(d => d.ServiceType == typeof(DbContextOptions<ApplicationDbContext>) ||
+                                d.ServiceType == typeof(ApplicationDbContext) ||
+                                d.ServiceType.FullName?.Contains("EntityFramework") == true ||
+                                d.ImplementationType?.FullName?.Contains("Npgsql") == true)
+                    .ToList();
+
+                foreach (var descriptor in descriptorsToRemove)
                 {
-                    services.Remove(dbContextDescriptor);
+                    services.Remove(descriptor);
                 }
 
-                var dbContextDescriptor2 = services.SingleOrDefault(d => d.ServiceType == typeof(ApplicationDbContext));
-                if (dbContextDescriptor2 != null)
-                {
-                    services.Remove(dbContextDescriptor2);
-                }
-
-                // Add in-memory database
                 services.AddDbContext<ApplicationDbContext>(options =>
                 {
                     options.UseInMemoryDatabase($"TenantTestDb_{Guid.NewGuid()}");
@@ -253,7 +253,7 @@ public class TenantCrudIntegrationTests : IClassFixture<WebApplicationFactory<Ga
         var deletedTenant = await _dbContext.Set<Tenant>()
             .IgnoreQueryFilters()
             .FirstOrDefaultAsync(t => t.Id == tenant.Id);
-        
+
         deletedTenant.Should().NotBeNull();
         deletedTenant!.IsDeleted.Should().BeTrue();
         deletedTenant.DeletedAt.Should().NotBeNull();

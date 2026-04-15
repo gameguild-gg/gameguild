@@ -11,7 +11,7 @@ namespace GameGuild.Commerce.Payments;
 ///     Provides endpoints for managing tax rules.
 /// </summary>
 [ApiVersion("1.0")]
-[Route("v{version:apiVersion}/tax-rules")]
+[Route("api/v{version:apiVersion}/tax-rules")]
 [Tags("tax-rules")]
 [Authorize]
 public sealed class TaxRulesController(ISender sender) : BaseApiController
@@ -28,9 +28,9 @@ public sealed class TaxRulesController(ISender sender) : BaseApiController
     [ProducesResponseType(typeof(IEnumerable<TaxRate>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> GetRules(
-        [FromQuery] string jurisdictionCode, 
-        [FromQuery] string customerType = "Individual", 
-        [FromQuery] DateTime? effectiveDate = null, 
+        [FromQuery] string jurisdictionCode,
+        [FromQuery] string customerType = "Individual",
+        [FromQuery] DateTime? effectiveDate = null,
         CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(jurisdictionCode))

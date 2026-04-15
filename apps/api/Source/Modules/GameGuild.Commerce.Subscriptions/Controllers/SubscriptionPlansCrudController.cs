@@ -12,6 +12,7 @@ namespace GameGuild.Commerce.Subscriptions;
 ///     full updates, and collection-level queries (search, filter, compare).
 /// </summary>
 [ApiVersion("1.0")]
+[Route("api")]
 [Tags("subscriptions-plans")]
 [Authorize]
 public sealed class SubscriptionPlansCrudController(ISender sender) : BaseApiController

@@ -13,5 +13,6 @@ public sealed class PaymentsModelConfiguration : IModelConfiguration
         modelBuilder.ApplyConfiguration(new TaxJurisdictionConfiguration());
         modelBuilder.ApplyConfiguration(new TaxRateConfiguration());
         modelBuilder.ApplyConfiguration(new TaxRuleConfiguration());
+        modelBuilder.ApplyConfiguration(new UserWalletConfiguration());
     }
 }

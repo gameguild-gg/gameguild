@@ -1,3 +1,4 @@
+using System.Text.Json;
 using GameGuild.CQRS.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -16,13 +17,13 @@ public class JitElevationRequestConfiguration : IEntityTypeConfiguration<JitElev
         builder.HasIndex(e => e.TenantId);
         builder.HasIndex(e => e.Status);
         builder.HasIndex(e => e.ExpiresAt);
-        
+
         // TenantId value conversion
         builder.Property(e => e.TenantId)
             .HasConversion(
                 v => v.HasValue ? v.Value.Value : (Guid?)null,
                 v => v.HasValue ? new TenantId(v.Value) : null);
-        
+
         builder.Property(e => e.Permission).IsRequired().HasMaxLength(256);
         builder.Property(e => e.Justification).IsRequired().HasMaxLength(2000);
         builder.Property(e => e.ResourceType).HasMaxLength(256);
@@ -44,13 +45,13 @@ public class PermissionDelegationConfiguration : IEntityTypeConfiguration<Permis
         builder.HasIndex(e => e.TenantId);
         builder.HasIndex(e => e.IsActive);
         builder.HasIndex(e => e.ExpiresAt);
-        
+
         // TenantId value conversion
         builder.Property(e => e.TenantId)
             .HasConversion(
                 v => v.HasValue ? v.Value.Value : (Guid?)null,
                 v => v.HasValue ? new TenantId(v.Value) : null);
-        
+
         builder.Property(e => e.Reason).HasMaxLength(2000);
     }
 }
@@ -65,13 +66,13 @@ public class SoDRuleConfiguration : IEntityTypeConfiguration<SoDRule>
         builder.HasKey(e => e.Id);
         builder.HasIndex(e => e.TenantId);
         builder.HasIndex(e => e.IsEnabled);
-        
+
         // TenantId value conversion
         builder.Property(e => e.TenantId)
             .HasConversion(
                 v => v.HasValue ? v.Value.Value : (Guid?)null,
                 v => v.HasValue ? new TenantId(v.Value) : null);
-        
+
         builder.Property(e => e.Name).IsRequired().HasMaxLength(256);
         builder.Property(e => e.Description).HasMaxLength(2000);
         builder.Property(e => e.ConflictingPermissions).IsRequired();
@@ -96,13 +97,13 @@ public class SoDViolationConfiguration : IEntityTypeConfiguration<SoDViolation>
         builder.HasIndex(e => e.UserId);
         builder.HasIndex(e => e.TenantId);
         builder.HasIndex(e => e.Status);
-        
+
         // TenantId value conversion
         builder.Property(e => e.TenantId)
             .HasConversion(
                 v => v.HasValue ? v.Value.Value : (Guid?)null,
                 v => v.HasValue ? new TenantId(v.Value) : null);
-        
+
         builder.Property(e => e.ViolationDetails).IsRequired();
         builder.Property(e => e.ConflictingItems).IsRequired();
         builder.Property(e => e.ResolutionNotes).HasMaxLength(2000);
@@ -121,13 +122,13 @@ public class AccessReviewCampaignConfiguration : IEntityTypeConfiguration<Access
         builder.HasIndex(e => e.TenantId);
         builder.HasIndex(e => e.Status);
         builder.HasIndex(e => new { e.StartDate, e.EndDate });
-        
+
         // TenantId value conversion
         builder.Property(e => e.TenantId)
             .HasConversion(
                 v => v.HasValue ? v.Value.Value : (Guid?)null,
                 v => v.HasValue ? new TenantId(v.Value) : null);
-        
+
         builder.Property(e => e.Name).IsRequired().HasMaxLength(256);
         builder.Property(e => e.Description).HasMaxLength(2000);
         builder.Property(e => e.ScopeFilter).HasMaxLength(4000);
@@ -152,7 +153,7 @@ public class AccessReviewItemConfiguration : IEntityTypeConfiguration<AccessRevi
         builder.HasIndex(e => e.SubjectUserId);
         builder.HasIndex(e => e.ReviewerId);
         builder.HasIndex(e => e.Decision);
-        
+
         builder.Property(e => e.PermissionDetails).IsRequired();
         builder.Property(e => e.ResourceType).HasMaxLength(256);
         builder.Property(e => e.DecisionReason).HasMaxLength(2000);
@@ -172,13 +173,13 @@ public class DelegatedAdminScopeConfiguration : IEntityTypeConfiguration<Delegat
         builder.HasIndex(e => e.TenantId);
         builder.HasIndex(e => e.IsActive);
         builder.HasIndex(e => new { e.StartsAt, e.ExpiresAt });
-        
+
         // TenantId value conversion
         builder.Property(e => e.TenantId)
             .HasConversion(
                 v => v.HasValue ? v.Value.Value : (Guid?)null,
                 v => v.HasValue ? new TenantId(v.Value) : null);
-        
+
         builder.Property(e => e.Name).IsRequired().HasMaxLength(256);
         builder.Property(e => e.Description).HasMaxLength(2000);
     }
@@ -195,13 +196,13 @@ public class AbacPolicyConfiguration : IEntityTypeConfiguration<AbacPolicy>
         builder.HasIndex(e => e.TenantId);
         builder.HasIndex(e => e.IsEnabled);
         builder.HasIndex(e => e.Priority);
-        
+
         // TenantId value conversion
         builder.Property(e => e.TenantId)
             .HasConversion(
                 v => v.HasValue ? v.Value.Value : (Guid?)null,
                 v => v.HasValue ? new TenantId(v.Value) : null);
-        
+
         builder.Property(e => e.Name).IsRequired().HasMaxLength(256);
         builder.Property(e => e.Description).HasMaxLength(2000);
     }
@@ -218,13 +219,13 @@ public class ConditionalPolicyConfiguration : IEntityTypeConfiguration<Condition
         builder.HasIndex(e => e.TenantId);
         builder.HasIndex(e => e.IsEnabled);
         builder.HasIndex(e => e.Priority);
-        
+
         // TenantId value conversion
         builder.Property(e => e.TenantId)
             .HasConversion(
                 v => v.HasValue ? v.Value.Value : (Guid?)null,
                 v => v.HasValue ? new TenantId(v.Value) : null);
-        
+
         builder.Property(e => e.Name).IsRequired().HasMaxLength(256);
         builder.Property(e => e.Description).HasMaxLength(2000);
     }
@@ -241,13 +242,13 @@ public class DataMaskingRuleConfiguration : IEntityTypeConfiguration<DataMasking
         builder.HasIndex(e => e.TenantId);
         builder.HasIndex(e => e.IsEnabled);
         builder.HasIndex(e => e.ResourceType);
-        
+
         // TenantId value conversion
         builder.Property(e => e.TenantId)
             .HasConversion(
                 v => v.HasValue ? v.Value.Value : (Guid?)null,
                 v => v.HasValue ? new TenantId(v.Value) : null);
-        
+
         builder.Property(e => e.Name).IsRequired().HasMaxLength(256);
         builder.Property(e => e.Description).HasMaxLength(2000);
         builder.Property(e => e.FieldName).IsRequired().HasMaxLength(500);
@@ -267,8 +268,37 @@ public class TenantPermissionConfiguration : IEntityTypeConfiguration<TenantPerm
         builder.HasIndex(e => e.UserId);
         builder.HasIndex(e => new { e.TenantId, e.UserId }).IsUnique();
         builder.HasIndex(e => e.ExpiresAt);
-        
+
         builder.Property(e => e.Permissions).IsRequired();
         builder.Property(e => e.Reason).HasMaxLength(500);
+
+        // Explicitly map Metadata as a JSON-serialized property (not a navigation)
+        // so both Npgsql and InMemory providers handle Dictionary<string, object> correctly
+        builder.Property(e => e.Metadata)
+            .HasColumnType("jsonb")
+            .HasConversion(
+                v => v == null ? null : JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
+                v => v == null ? null : JsonSerializer.Deserialize<Dictionary<string, object>>(v, (JsonSerializerOptions?)null)
+            );
+    }
+}
+
+/// <summary>
+///     EF Core configuration for PermissionTemplate entity
+/// </summary>
+public class PermissionTemplateConfiguration : IEntityTypeConfiguration<PermissionTemplate>
+{
+    public void Configure(EntityTypeBuilder<PermissionTemplate> builder)
+    {
+        builder.HasKey(e => e.Id);
+
+        // Explicitly map Metadata as a JSON-serialized property (not a navigation)
+        // so both Npgsql and InMemory providers handle Dictionary<string, object> correctly
+        builder.Property(e => e.Metadata)
+            .HasColumnType("jsonb")
+            .HasConversion(
+                v => v == null ? null : JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
+                v => v == null ? null : JsonSerializer.Deserialize<Dictionary<string, object>>(v, (JsonSerializerOptions?)null)
+            );
     }
 }

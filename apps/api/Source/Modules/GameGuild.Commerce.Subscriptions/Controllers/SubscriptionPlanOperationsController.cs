@@ -12,6 +12,7 @@ namespace GameGuild.Commerce.Subscriptions;
 ///     (activate/deactivate/archive/clone), analytics, pricing, and plan configuration.
 /// </summary>
 [ApiVersion("1.0")]
+[Route("api")]
 [Tags("subscriptions-plans")]
 [Authorize]
 public sealed class SubscriptionPlanOperationsController(ISender sender) : BaseApiController

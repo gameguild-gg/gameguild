@@ -13,7 +13,7 @@ namespace GameGuild.Commerce.Billing;
 ///     Controller for handling billing webhooks from external payment providers
 /// </summary>
 [ApiVersion("1.0")]
-[Route("v{version:apiVersion}/billing/webhooks")]
+[Route("api/v{version:apiVersion}/billing/webhooks")]
 [Tags("billing/webhooks")]
 [AllowAnonymous]
 public sealed class BillingWebhooksController(ISender sender, ILogger<BillingWebhooksController> logger) : BaseApiController
@@ -217,8 +217,8 @@ public sealed class BillingWebhooksController(ISender sender, ILogger<BillingWeb
         var certUrl = Request.Headers["PayPal-Cert-Url"].ToString();
         var authAlgo = Request.Headers["PayPal-Auth-Algo"].ToString();
 
-        if (string.IsNullOrEmpty(transmissionId) || 
-            string.IsNullOrEmpty(transmissionTime) || 
+        if (string.IsNullOrEmpty(transmissionId) ||
+            string.IsNullOrEmpty(transmissionTime) ||
             string.IsNullOrEmpty(transmissionSig))
         {
             logger.LogWarning("Missing required PayPal IPN headers");
@@ -226,9 +226,9 @@ public sealed class BillingWebhooksController(ISender sender, ILogger<BillingWeb
         }
 
         var result = await sender.Send(new ProcessPayPalWebhookCommand(
-            payload, 
-            transmissionId, 
-            transmissionSig, 
+            payload,
+            transmissionId,
+            transmissionSig,
             transmissionTime,
             string.IsNullOrEmpty(certUrl) ? null : certUrl,
             string.IsNullOrEmpty(authAlgo) ? null : authAlgo), ct);

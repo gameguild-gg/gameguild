@@ -64,10 +64,15 @@ builder.AddPresentationLayer();
 var app = builder.Build();
 
 // Apply pending EF Core migrations automatically before starting the service
-using (var scope = app.Services.CreateScope())
+try
 {
+    using var scope = app.Services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<GameGuild.API.Database.ApplicationDbContext>();
     await db.Database.MigrateAsync().ConfigureAwait(false);
+}
+catch (Exception ex)
+{
+    app.Logger.LogWarning(ex, "Database migration failed — API will start without a database. Swagger/OpenAPI will still be available.");
 }
 
 // Configure the HTTP request pipeline (middleware, routing, endpoints)

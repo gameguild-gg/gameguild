@@ -15,6 +15,7 @@ namespace GameGuild.Commerce.Subscriptions;
 ///     Rate limiting uses Api policy for query endpoints.
 /// </summary>
 [ApiVersion("1.0")]
+[Route("api")]
 [Tags("subscriptions")]
 [Authorize]
 [EnableRateLimiting(RateLimitPolicies.Api)]

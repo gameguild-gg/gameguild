@@ -3,6 +3,7 @@ using GameGuild.API.Database;
 using GameGuild.Identity.Users;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
@@ -25,22 +26,21 @@ public class UserCrudIntegrationTests : IClassFixture<WebApplicationFactory<Game
         _factory = factory.WithWebHostBuilder(builder =>
         {
             builder.UseEnvironment("Testing");
-            builder.ConfigureServices(services =>
+            builder.ConfigureTestServices(services =>
             {
-                // Remove existing DbContext registrations
-                var dbContextDescriptor = services.SingleOrDefault(d => d.ServiceType == typeof(DbContextOptions<ApplicationDbContext>));
-                if (dbContextDescriptor != null)
+                // Remove all EF Core and Npgsql service registrations
+                var descriptorsToRemove = services
+                    .Where(d => d.ServiceType == typeof(DbContextOptions<ApplicationDbContext>) ||
+                                d.ServiceType == typeof(ApplicationDbContext) ||
+                                d.ServiceType.FullName?.Contains("EntityFramework") == true ||
+                                d.ImplementationType?.FullName?.Contains("Npgsql") == true)
+                    .ToList();
+
+                foreach (var descriptor in descriptorsToRemove)
                 {
-                    services.Remove(dbContextDescriptor);
+                    services.Remove(descriptor);
                 }
 
-                var dbContextDescriptor2 = services.SingleOrDefault(d => d.ServiceType == typeof(ApplicationDbContext));
-                if (dbContextDescriptor2 != null)
-                {
-                    services.Remove(dbContextDescriptor2);
-                }
-
-                // Add in-memory database
                 services.AddDbContext<ApplicationDbContext>(options =>
                 {
                     options.UseInMemoryDatabase($"UserTestDb_{Guid.NewGuid()}");
@@ -53,7 +53,7 @@ public class UserCrudIntegrationTests : IClassFixture<WebApplicationFactory<Game
         _dbContext.Database.EnsureCreated();
     }
 
-        [Fact]
+    [Fact]
     public async Task CreateUser_WithValidData_ShouldSucceed()
     {
         // Arrange
@@ -135,7 +135,7 @@ public class UserCrudIntegrationTests : IClassFixture<WebApplicationFactory<Game
         await act.Should().NotThrowAsync();
     }
 
-        [Fact]
+    [Fact]
     public async Task GetUser_WhenExists_ShouldReturnUser()
     {
         // Arrange
@@ -197,7 +197,7 @@ public class UserCrudIntegrationTests : IClassFixture<WebApplicationFactory<Game
         retrievedUser!.Id.Should().Be(user.Id);
     }
 
-        [Fact]
+    [Fact]
     public async Task UpdateUser_WithValidData_ShouldUpdateSuccessfully()
     {
         // Arrange
@@ -294,7 +294,7 @@ public class UserCrudIntegrationTests : IClassFixture<WebApplicationFactory<Game
         updatedUser.IsActive.Should().BeFalse();
     }
 
-        [Fact]
+    [Fact]
     public async Task DeleteUser_WhenExists_ShouldMarkAsDeleted()
     {
         // Arrange

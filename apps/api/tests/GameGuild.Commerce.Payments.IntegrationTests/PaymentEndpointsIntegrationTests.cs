@@ -1,7 +1,9 @@
 using FluentAssertions;
 using GameGuild.API.Database;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using System.Net;
@@ -25,26 +27,31 @@ public class PaymentEndpointsIntegrationTests : IClassFixture<WebApplicationFact
         _factory = factory.WithWebHostBuilder(builder =>
         {
             builder.UseEnvironment("Testing");
-            builder.ConfigureServices(services =>
+            builder.ConfigureTestServices(services =>
             {
-                // Remove existing DbContext registrations
-                var dbContextDescriptor = services.SingleOrDefault(d => d.ServiceType == typeof(DbContextOptions<ApplicationDbContext>));
-                if (dbContextDescriptor != null)
+                // Remove all EF Core and Npgsql service registrations
+                var descriptorsToRemove = services
+                    .Where(d => d.ServiceType == typeof(DbContextOptions<ApplicationDbContext>) ||
+                                d.ServiceType == typeof(ApplicationDbContext) ||
+                                d.ServiceType.FullName?.Contains("EntityFramework") == true ||
+                                d.ImplementationType?.FullName?.Contains("Npgsql") == true)
+                    .ToList();
+
+                foreach (var descriptor in descriptorsToRemove)
                 {
-                    services.Remove(dbContextDescriptor);
+                    services.Remove(descriptor);
                 }
 
-                var dbContextDescriptor2 = services.SingleOrDefault(d => d.ServiceType == typeof(ApplicationDbContext));
-                if (dbContextDescriptor2 != null)
-                {
-                    services.Remove(dbContextDescriptor2);
-                }
-
-                // Add in-memory database with shared name for all requests
                 services.AddDbContext<ApplicationDbContext>(options =>
                 {
                     options.UseInMemoryDatabase(DatabaseName);
                 });
+
+                services.AddAuthentication(options =>
+                {
+                    options.DefaultAuthenticateScheme = TestAuthHandler.SchemeName;
+                    options.DefaultChallengeScheme = TestAuthHandler.SchemeName;
+                }).AddScheme<AuthenticationSchemeOptions, TestAuthHandler>(TestAuthHandler.SchemeName, _ => { });
             });
         });
 
@@ -133,7 +140,7 @@ public class PaymentEndpointsIntegrationTests : IClassFixture<WebApplicationFact
     public async Task GetCanceledPayments_ShouldReturn200()
     {
         // Act
-        var response = await _client.GetAsync("/api/v1/payments/canceled");
+        var response = await _client.GetAsync("/api/v1/payments?status=cancelled");
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);

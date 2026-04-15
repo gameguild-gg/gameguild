@@ -1,7 +1,9 @@
 using FluentAssertions;
 using GameGuild.API.Database;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using System.Net;
@@ -25,26 +27,31 @@ public class WalletEndpointsIntegrationTests : IClassFixture<WebApplicationFacto
         _factory = factory.WithWebHostBuilder(builder =>
         {
             builder.UseEnvironment("Testing");
-            builder.ConfigureServices(services =>
+            builder.ConfigureTestServices(services =>
             {
-                // Remove existing DbContext registrations
-                var dbContextDescriptor = services.SingleOrDefault(d => d.ServiceType == typeof(DbContextOptions<ApplicationDbContext>));
-                if (dbContextDescriptor != null)
+                // Remove all EF Core and Npgsql service registrations
+                var descriptorsToRemove = services
+                    .Where(d => d.ServiceType == typeof(DbContextOptions<ApplicationDbContext>) ||
+                                d.ServiceType == typeof(ApplicationDbContext) ||
+                                d.ServiceType.FullName?.Contains("EntityFramework") == true ||
+                                d.ImplementationType?.FullName?.Contains("Npgsql") == true)
+                    .ToList();
+
+                foreach (var descriptor in descriptorsToRemove)
                 {
-                    services.Remove(dbContextDescriptor);
+                    services.Remove(descriptor);
                 }
 
-                var dbContextDescriptor2 = services.SingleOrDefault(d => d.ServiceType == typeof(ApplicationDbContext));
-                if (dbContextDescriptor2 != null)
-                {
-                    services.Remove(dbContextDescriptor2);
-                }
-
-                // Add in-memory database with shared name for all requests
                 services.AddDbContext<ApplicationDbContext>(options =>
                 {
                     options.UseInMemoryDatabase(DatabaseName);
                 });
+
+                services.AddAuthentication(options =>
+                {
+                    options.DefaultAuthenticateScheme = TestAuthHandler.SchemeName;
+                    options.DefaultChallengeScheme = TestAuthHandler.SchemeName;
+                }).AddScheme<AuthenticationSchemeOptions, TestAuthHandler>(TestAuthHandler.SchemeName, _ => { });
             });
         });
 
@@ -62,10 +69,10 @@ public class WalletEndpointsIntegrationTests : IClassFixture<WebApplicationFacto
         };
 
         // Act
-        var response = await _client.PostAsJsonAsync("/api/v1/wallet/create", request);
+        var response = await _client.PostAsJsonAsync("/api/v1/wallets", request);
 
         // Assert
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        response.StatusCode.Should().Be(HttpStatusCode.Created);
         var content = await response.Content.ReadAsStringAsync();
         content.Should().NotBeNullOrEmpty();
     }
@@ -81,7 +88,7 @@ public class WalletEndpointsIntegrationTests : IClassFixture<WebApplicationFacto
         };
 
         // Act
-        var response = await _client.PostAsJsonAsync("/api/v1/wallet/create", request);
+        var response = await _client.PostAsJsonAsync("/api/v1/wallets", request);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
@@ -94,7 +101,7 @@ public class WalletEndpointsIntegrationTests : IClassFixture<WebApplicationFacto
         var nonExistentUserId = Guid.NewGuid();
 
         // Act
-        var response = await _client.GetAsync($"/api/v1/wallet/{nonExistentUserId}");
+        var response = await _client.GetAsync($"/api/v1/users/{nonExistentUserId}/wallet");
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.NotFound);
@@ -112,11 +119,11 @@ public class WalletEndpointsIntegrationTests : IClassFixture<WebApplicationFacto
         };
 
         // Act - Create wallet
-        var createResponse = await _client.PostAsJsonAsync("/api/v1/wallet/create", createRequest);
+        var createResponse = await _client.PostAsJsonAsync("/api/v1/wallets", createRequest);
         createResponse.EnsureSuccessStatusCode();
 
         // Act - Get wallet
-        var getResponse = await _client.GetAsync($"/api/v1/wallet/{userId}");
+        var getResponse = await _client.GetAsync($"/api/v1/users/{userId}/wallet");
 
         // Assert
         getResponse.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -135,10 +142,10 @@ public class WalletEndpointsIntegrationTests : IClassFixture<WebApplicationFacto
             Currency = "USD"
         };
 
-        await _client.PostAsJsonAsync("/api/v1/wallet/create", createRequest);
+        await _client.PostAsJsonAsync("/api/v1/wallets", createRequest);
 
         // Act
-        var response = await _client.GetAsync($"/api/v1/wallet/{userId}/balance");
+        var response = await _client.GetAsync($"/api/v1/users/{userId}/wallet/balance");
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);

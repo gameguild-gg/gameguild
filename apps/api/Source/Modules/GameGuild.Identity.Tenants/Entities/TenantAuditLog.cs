@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -105,15 +106,28 @@ public class TenantAuditLogConfiguration : IEntityTypeConfiguration<TenantAuditL
         builder.Property(x => x.CorrelationId)
             .HasMaxLength(100);
 
-        // Configure JSON columns - PostgreSQL natively supports jsonb
+        // Configure JSON columns with explicit conversion so InMemory and Npgsql
+        // both treat dictionary properties as scalar JSON-backed values.
         builder.Property(x => x.BeforeValues)
-            .HasColumnType("jsonb");
+            .HasColumnType("jsonb")
+            .HasConversion(
+                v => v == null ? null : JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
+                v => v == null ? null : JsonSerializer.Deserialize<Dictionary<string, object?>>(v, (JsonSerializerOptions?)null)
+            );
 
         builder.Property(x => x.AfterValues)
-            .HasColumnType("jsonb");
+            .HasColumnType("jsonb")
+            .HasConversion(
+                v => v == null ? null : JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
+                v => v == null ? null : JsonSerializer.Deserialize<Dictionary<string, object?>>(v, (JsonSerializerOptions?)null)
+            );
 
         builder.Property(x => x.Metadata)
-            .HasColumnType("jsonb");
+            .HasColumnType("jsonb")
+            .HasConversion(
+                v => v == null ? null : JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
+                v => v == null ? null : JsonSerializer.Deserialize<Dictionary<string, string>>(v, (JsonSerializerOptions?)null)
+            );
 
         // Relationships
         builder.HasOne(x => x.Tenant)

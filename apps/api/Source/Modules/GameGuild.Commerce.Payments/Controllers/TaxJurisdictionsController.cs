@@ -11,7 +11,7 @@ namespace GameGuild.Commerce.Payments;
 ///     Provides endpoints for managing tax jurisdictions.
 /// </summary>
 [ApiVersion("1.0")]
-[Route("v{version:apiVersion}/tax-jurisdictions")]
+[Route("api/v{version:apiVersion}/tax-jurisdictions")]
 [Tags("tax-jurisdictions")]
 [Authorize]
 public sealed class TaxJurisdictionsController(ISender sender) : BaseApiController

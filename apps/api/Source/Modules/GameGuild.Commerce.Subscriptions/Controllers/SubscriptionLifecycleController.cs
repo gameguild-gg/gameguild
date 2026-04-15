@@ -16,6 +16,7 @@ namespace GameGuild.Commerce.Subscriptions;
 ///     Rate limiting uses ExpensiveOperations policy for mutations.
 /// </summary>
 [ApiVersion("1.0")]
+[Route("api")]
 [Tags("subscriptions")]
 [Authorize]
 [EnableRateLimiting(RateLimitPolicies.ExpensiveOperations)]

@@ -1,6 +1,7 @@
 using FluentAssertions;
 using GameGuild.API.Database;
 using GameGuild.Commerce.Subscriptions.IntegrationTests.Infrastructure;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
@@ -44,22 +45,31 @@ public class SubscriptionEndpointIntegrationTests : IClassFixture<WebApplication
 
                 // Add in-memory database with custom context that includes Subscription entities
                 var databaseName = $"SubscriptionTestDb_{Guid.NewGuid()}";
-                
+
                 // create options for ApplicationDbContext since the base constructor requires them
                 var options = new DbContextOptionsBuilder<ApplicationDbContext>()
                     .UseInMemoryDatabase(databaseName)
                     .Options;
-                    
+
                 services.AddSingleton(options);
                 services.AddScoped<SubscriptionTestDbContext>();
                 services.AddScoped<ApplicationDbContext>(p => p.GetRequiredService<SubscriptionTestDbContext>());
 
                 // Add HTTP logging services (required by the pipeline)
                 services.AddHttpLogging(o => { });
+
+                // Override authentication with the test handler
+                services.AddAuthentication(options =>
+                {
+                    options.DefaultAuthenticateScheme = TestAuthHandler.SchemeName;
+                    options.DefaultChallengeScheme = TestAuthHandler.SchemeName;
+                }).AddScheme<AuthenticationSchemeOptions, TestAuthHandler>(TestAuthHandler.SchemeName, _ => { });
             });
         });
 
         _client = _factory.CreateClient();
+        _client.DefaultRequestHeaders.Authorization =
+            new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", "test");
     }
 
     [Fact]

@@ -19,7 +19,7 @@ public class TaxCalculationService : ITaxCalculationService
     // Cache configuration constants
     private static readonly TimeSpan CacheSlidingExpiration = TimeSpan.FromMinutes(30);
     private static readonly TimeSpan CacheAbsoluteExpiration = TimeSpan.FromHours(2);
-    
+
     // Cache key prefixes
     private const string TaxRateCacheKeyPrefix = "TaxRate:";
     private const string JurisdictionCacheKeyPrefix = "TaxJurisdiction:";
@@ -27,7 +27,7 @@ public class TaxCalculationService : ITaxCalculationService
     private const string AllJurisdictionsCacheKey = "TaxJurisdictions:All";
 
     public TaxCalculationService(
-        IApplicationDbContext context, 
+        IApplicationDbContext context,
         ILogger<TaxCalculationService> logger,
         IMemoryCache cache)
     {
@@ -42,7 +42,7 @@ public class TaxCalculationService : ITaxCalculationService
     private DbSet<TaxRule> TaxRules => _context.Set<TaxRule>();
 
     private DbSet<TaxRate> TaxRates => _context.Set<TaxRate>();
-    
+
     private DbSet<CustomerTaxExemption> CustomerTaxExemptions => _context.Set<CustomerTaxExemption>();
 
     /// <summary>
@@ -51,7 +51,8 @@ public class TaxCalculationService : ITaxCalculationService
     private static MemoryCacheEntryOptions CreateCacheEntryOptions() => new()
     {
         SlidingExpiration = CacheSlidingExpiration,
-        AbsoluteExpirationRelativeToNow = CacheAbsoluteExpiration
+        AbsoluteExpirationRelativeToNow = CacheAbsoluteExpiration,
+        Size = 1
     };
 
     public async Task<TaxCalculationResult> CalculateTaxAsync(TaxCalculationRequest request, CancellationToken cancellationToken = default)
@@ -112,7 +113,7 @@ public class TaxCalculationService : ITaxCalculationService
         }
 
         _logger.LogDebug("Cache miss for jurisdiction {JurisdictionCode}, loading from database", jurisdictionCode);
-        
+
         var jurisdiction = await TaxJurisdictions
             .Include(j => j.TaxRules)
             .ThenInclude(r => r.DefaultTaxRate)
@@ -129,7 +130,7 @@ public class TaxCalculationService : ITaxCalculationService
     public async Task<TaxRate?> GetTaxRateAsync(string jurisdictionCode, TaxType taxType, string? productCategory = null, DateTime? effectiveDate = null, CancellationToken cancellationToken = default)
     {
         var date = effectiveDate ?? SystemClock.UtcNow;
-        
+
         // Create a cache key that includes all relevant parameters
         // Note: We cache based on date truncated to the day to allow reasonable caching while still
         // respecting effective date ranges
@@ -167,12 +168,12 @@ public class TaxCalculationService : ITaxCalculationService
 
     public async Task<bool> ValidateTaxExemptionAsync(Guid customerId, string jurisdictionCode, CancellationToken cancellationToken = default)
     {
-        _logger.LogDebug("Validating tax exemption for customer {CustomerId} in jurisdiction {JurisdictionCode}", 
+        _logger.LogDebug("Validating tax exemption for customer {CustomerId} in jurisdiction {JurisdictionCode}",
             customerId, jurisdictionCode);
 
         var now = SystemClock.UtcNow;
         var normalizedJurisdiction = jurisdictionCode.ToUpperInvariant();
-        
+
         // Check cache first for tax exemption status
         var cacheKey = $"{ExemptionCacheKeyPrefix}{customerId}:{normalizedJurisdiction}";
         if (_cache.TryGetValue(cacheKey, out bool cachedResult))
@@ -225,7 +226,7 @@ public class TaxCalculationService : ITaxCalculationService
             }
         }
 
-        _logger.LogDebug("No valid tax exemption found for customer {CustomerId} in jurisdiction {JurisdictionCode}", 
+        _logger.LogDebug("No valid tax exemption found for customer {CustomerId} in jurisdiction {JurisdictionCode}",
             customerId, jurisdictionCode);
         _cache.Set(cacheKey, false, CreateCacheEntryOptions());
         return false;
@@ -241,7 +242,7 @@ public class TaxCalculationService : ITaxCalculationService
         }
 
         _logger.LogDebug("Cache miss for all tax jurisdictions, loading from database");
-        
+
         var jurisdictions = await TaxJurisdictions
             .Include(j => j.ParentJurisdiction)
             .Include(j => j.ChildJurisdictions)
@@ -267,10 +268,10 @@ public class TaxCalculationService : ITaxCalculationService
         // Current implementation: Basic format validation (safe fallback)
         // This allows B2B transactions to proceed with format-valid VAT numbers.
         // Invalid formats are rejected, preventing obvious data entry errors.
-        
-        _logger.LogDebug("Validating VAT number {VatNumber} for country {CountryCode}", 
+
+        _logger.LogDebug("Validating VAT number {VatNumber} for country {CountryCode}",
             vatNumber, countryCode);
-            
+
         await Task.CompletedTask;
 
         if (string.IsNullOrWhiteSpace(vatNumber)) return false;
@@ -295,22 +296,27 @@ public class TaxCalculationService : ITaxCalculationService
 
         if (request.IsTaxInclusive || taxRule.IsTaxInclusive)
         {
-            // Tax is included in the amount
+            // Tax is included in the amount; Rate is stored as a decimal fraction (e.g. 0.19 for 19%)
             total = request.Amount;
-            subtotal = total / (1 + taxRate.Rate / 100);
+            subtotal = total / (1 + taxRate.Rate);
             taxAmount = total - subtotal;
         }
         else
         {
-            // Tax is added to the amount
+            // Tax is added to the amount; Rate is stored as a decimal fraction (e.g. 0.19 for 19%)
             subtotal = request.Amount;
-            taxAmount = subtotal * (taxRate.Rate / 100);
+            taxAmount = subtotal * taxRate.Rate;
             total = subtotal + taxAmount;
         }
 
         var breakdown = new TaxBreakdown
         {
-            TaxType = taxRate.TaxType, Description = taxRate.Description ?? string.Empty, Rate = taxRate.Rate, TaxableAmount = subtotal, TaxAmount = taxAmount, JurisdictionCode = jurisdiction.Code
+            TaxType = taxRate.TaxType,
+            Description = taxRate.Description ?? string.Empty,
+            Rate = taxRate.Rate,
+            TaxableAmount = subtotal,
+            TaxAmount = taxAmount,
+            JurisdictionCode = jurisdiction.Code
         };
 
         return new TaxCalculationResult

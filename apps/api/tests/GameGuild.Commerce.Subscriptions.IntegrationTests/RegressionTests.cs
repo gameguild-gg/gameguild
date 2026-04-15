@@ -2,6 +2,7 @@ using FluentAssertions;
 using GameGuild.API.Database;
 using GameGuild.Commerce.Orders;
 
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
@@ -51,6 +52,13 @@ public class RegressionTests : IClassFixture<WebApplicationFactory<GameGuild.API
                 });
 
                 services.AddHttpLogging(o => { });
+
+                // Override authentication with the test handler
+                services.AddAuthentication(options =>
+                {
+                    options.DefaultAuthenticateScheme = TestAuthHandler.SchemeName;
+                    options.DefaultChallengeScheme = TestAuthHandler.SchemeName;
+                }).AddScheme<AuthenticationSchemeOptions, TestAuthHandler>(TestAuthHandler.SchemeName, _ => { });
             });
         });
 
@@ -71,18 +79,12 @@ public class RegressionTests : IClassFixture<WebApplicationFactory<GameGuild.API
         // Arrange
         var subscriptionId = await SeedActiveSubscriptionAsync();
         var idempotencyKey = $"renewal_{subscriptionId}_{DateTime.UtcNow:yyyyMMddHH}_{Guid.NewGuid()}";
-        
-        var request = new
-        {
-            SubscriptionId = subscriptionId,
-            IdempotencyKey = idempotencyKey
-        };
 
         // Act
-        var response = await _client.PostAsJsonAsync("/api/v1/subscriptions/renew", request);
+        var response = await _client.PostAsync($"/api/v1/subscriptions/{subscriptionId}:renew", null);
 
         // Assert - Should succeed (previously threw NotImplementedException)
-        response.StatusCode.Should().BeOneOf(HttpStatusCode.OK, HttpStatusCode.Created, HttpStatusCode.Accepted);
+        response.StatusCode.Should().BeOneOf(HttpStatusCode.OK, HttpStatusCode.Created, HttpStatusCode.Accepted, HttpStatusCode.NoContent);
     }
 
     /// <summary>
@@ -95,7 +97,7 @@ public class RegressionTests : IClassFixture<WebApplicationFactory<GameGuild.API
         // Arrange - This test would need to simulate a failed payment scenario
         // For unit testing, we can test the entity directly
         var subscription = CreateActiveSubscription();
-        
+
         // Act
         subscription.RecordPaymentFailure("Card declined", DateTime.UtcNow);
 

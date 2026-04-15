@@ -21,7 +21,7 @@ namespace GameGuild.Commerce.Payments;
 ///     wallet-ID-based operations (/wallets/{walletId}).
 /// </summary>
 [ApiVersion("1.0")]
-[Route("v{version:apiVersion}")]
+[Route("api/v{version:apiVersion}")]
 [Tags("wallets")]
 [Authorize]
 public sealed class WalletsController(ISender sender) : BaseApiController

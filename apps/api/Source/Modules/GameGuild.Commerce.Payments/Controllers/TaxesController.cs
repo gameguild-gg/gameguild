@@ -12,7 +12,8 @@ namespace GameGuild.Commerce.Payments;
 ///     Provides endpoints for calculating taxes and validating exemptions.
 /// </summary>
 [ApiVersion("1.0")]
-[Route("v{version:apiVersion}/taxes")]
+[Route("api/v{version:apiVersion}/payments/tax")]
+[Route("api/v{version:apiVersion}/taxes")]
 [Tags("taxes")]
 [Authorize]
 public sealed class TaxesController(ISender sender) : BaseApiController
@@ -20,7 +21,7 @@ public sealed class TaxesController(ISender sender) : BaseApiController
     /// <summary>
     ///     Calculate tax for a transaction
     /// </summary>
-    [HttpPost(":calculate")]
+    [HttpPost("calculate")]
     [ProducesResponseType(typeof(TaxCalculationResult), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> CalculateTax([FromBody] CalculateTaxRequest request, CancellationToken ct)
@@ -50,7 +51,8 @@ public sealed class TaxesController(ISender sender) : BaseApiController
     /// <param name="request">Exemption validation request</param>
     /// <param name="ct">Cancellation token</param>
     /// <returns>Validation result</returns>
-    [HttpPost(":validate-exemption")]
+    [HttpPost("validate-vat")]
+    [HttpPost("validate-exemption")]
     [EndpointSummary("Validate tax exemption")]
     [EndpointDescription("Validates whether a tax exemption certificate or status is valid for a given transaction.")]
     [ProducesResponseType(typeof(TaxExemptionValidationResult), StatusCodes.Status200OK)]
