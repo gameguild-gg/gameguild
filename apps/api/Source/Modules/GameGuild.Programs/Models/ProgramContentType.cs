@@ -1,9 +1,9 @@
-using GameGuild.SharedKernel.Enums;
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using Microsoft.EntityFrameworkCore;
+using GameGuild.SharedKernel.Enums;
 using GameGuild.Users.Entities;
-﻿using System.ComponentModel;
+using Microsoft.EntityFrameworkCore;
 
 namespace GameGuild.Modules.Programs.Models;
 
@@ -15,7 +15,8 @@ namespace GameGuild.Modules.Programs.Models;
 /// features are available (submissions, grading, discussions, etc.).
 /// Each type has specific UI rendering and business logic requirements.
 /// </remarks>
-public enum ProgramContentType {
+public enum ProgramContentType
+{
   [Description("Instructional lesson content")] Lesson,
 
   [Description("Instructional content page")] Page,
@@ -33,4 +34,10 @@ public enum ProgramContentType {
   [Description("Student reflections on learning or experiences")] Reflection,
 
   [Description("Data collection activity without grading")] Survey,
+
+  [Description("Reveal Presentation")] Reveal,
+
+  [Description("Marp Presentation")] Marp,
+
+  [Description("Remark Presentation")] Remark,
 }

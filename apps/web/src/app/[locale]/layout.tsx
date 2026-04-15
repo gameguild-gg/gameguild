@@ -51,7 +51,7 @@ export default async function Layout({ children, params }: PropsWithChildren<Pro
 
   return (
     <html lang={locale} suppressHydrationWarning>
-      <body className={inter.className}>
+      <body className={inter.className} suppressHydrationWarning>
         <WebVitals />
 
         {/* Initialize Google Consent Mode early */}

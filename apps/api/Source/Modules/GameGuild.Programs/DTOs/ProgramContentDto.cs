@@ -1,8 +1,8 @@
-using GameGuild.SharedKernel.Enums;
-using GameGuild.Modules.Programs.Models;
-using GameGuild.Modules.Programs.Entities;
 using System.ComponentModel.DataAnnotations;
-﻿using System.Text.Json;
+using System.Text.Json;
+using GameGuild.Modules.Programs.Entities;
+using GameGuild.Modules.Programs.Models;
+using GameGuild.SharedKernel.Enums;
 
 
 namespace GameGuild.Modules.Programs;
@@ -10,7 +10,8 @@ namespace GameGuild.Modules.Programs;
 /// <summary>
 /// DTO for program content responses
 /// </summary>
-public class ProgramContentDto {
+public class ProgramContentDto
+{
   public Guid Id { get; set; }
 
   public Guid ProgramId { get; set; }
@@ -18,6 +19,8 @@ public class ProgramContentDto {
   public Guid? ParentId { get; set; }
 
   public string Title { get; set; } = string.Empty;
+
+  public string? Slug { get; set; }
 
   public string Description { get; set; } = string.Empty;
 

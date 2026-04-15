@@ -13,7 +13,7 @@
 
 ## **Applying Design Principles to Game Developer Demo Reels**
 
-Your demo reel is a **visual resume**—it should be **engaging, informative, and clear**. The **principles of design** help ensure your reel is visually appealing and structured effectively.
+Your demo reel is a **visual resume**-it should be **engaging, informative, and clear**. The **principles of design** help ensure your reel is visually appealing and structured effectively.
 
 ::: tip
 This content is inspired by:
@@ -27,7 +27,7 @@ This content is inspired by:
 
 1. **Balance & Composition**
     - Use **rule of thirds** and framing techniques to guide the viewer’s focus.
-    - Avoid clutter—ensure clarity by highlighting essential elements.
+    - Avoid clutter-ensure clarity by highlighting essential elements.
 
 2. **Contrast & Hierarchy**
     - Emphasize the most impressive features of your work.
@@ -57,17 +57,17 @@ This content is inspired by:
 A great demo reel is **not just about content** but also how you **present it dynamically**.
 
 ### **Pacing**
-- **Keep it snappy**—most viewers lose interest after a few seconds.
-- Follow a **crescendo structure**—start with a strong highlight, maintain energy, and end on an impactful note.
+- **Keep it snappy**-most viewers lose interest after a few seconds.
+- Follow a **crescendo structure**-start with a strong highlight, maintain energy, and end on an impactful note.
 - **Fast cuts for action, slower cuts for detail.**
 
 ### **Transitions**
 - **Cut on motion** to make edits feel seamless.
-- Use **crossfades and wipes sparingly**—hard cuts often work best.
+- Use **crossfades and wipes sparingly**-hard cuts often work best.
 - Match transitions to the **tempo of the background music**.
 
 ### **Clarity**
-- **Avoid excessive effects**—keep the focus on the content.
+- **Avoid excessive effects**-keep the focus on the content.
 - Use **subtle text overlays** to describe what’s being shown.
 - Ensure **readable fonts** (avoid small, cursive, or highly stylized text).
 
@@ -78,12 +78,12 @@ A great demo reel is **not just about content** but also how you **present it dy
 ### **Music Selection**
 - Use royalty-free or self-composed music.
 - Match the **tone** to your project (e.g., upbeat for arcade games, atmospheric for horror).
-- Keep **background music subtle**—avoid overpowering your visuals.
+- Keep **background music subtle**-avoid overpowering your visuals.
 
 ### **Voiceover Tips**
 - Keep narration **short and to the point**.
-- Maintain **consistent volume levels**—avoid sudden spikes.
-- Speak **clearly and confidently**—practice your script before recording.
+- Maintain **consistent volume levels**-avoid sudden spikes.
+- Speak **clearly and confidently**-practice your script before recording.
 
 ---
 
@@ -100,7 +100,7 @@ Inspired by [Donald A. Norman’s Emotional Design Model](https://www.interactio
     - Use **before-and-after comparisons** or split-screen effects to highlight progress.
 
 3. **Reflective Level (Deeper Meaning)**
-    - End with a **memorable moment**—a great mechanic, a unique style, or a creative innovation.
+    - End with a **memorable moment**-a great mechanic, a unique style, or a creative innovation.
     - Use a **tagline or logo** to reinforce your personal brand.
 
 ![Image: Three Levels of Emotional Processing](https://miro.medium.com/v2/resize:fit:1400/1*O-9lWJHrE0CwMkgin5yoFQ.png)
@@ -135,7 +135,7 @@ A polished demo reel isn't just about fixing mistakes after they occur, it is ab
 Before diving into editing, **plan out the flow** of your demo reel. A rough **storyboard or text-based timeline** helps ensure:
 
 - ✅ A strong **opening hook** and impactful ending.  
-- ✅ **Balanced pacing**—not too rushed or too slow.  
+- ✅ **Balanced pacing**-not too rushed or too slow.  
 - ✅ Logical **progression of shots** to maintain clarity.
 
 ::: tip
@@ -150,7 +150,7 @@ Sketch out key moments or list timestamps with descriptions (e.g., *“00:03 - C
 
 - 👀 **Watch your reel without sound** to test if visuals alone communicate your message.  
 - 🎭 **Desaturate (black & white mode)** to check if contrast is strong enough.  
-- 📏 **Pause at random frames**—each shot should be **visually readable** without excessive clutter.
+- 📏 **Pause at random frames**-each shot should be **visually readable** without excessive clutter.
 - 🔍 **Focus in on text** to ensure it’s legible at different sizes, add overlays, and backgrounds behind the texts to improve readability.
 - 🖌️ **Use color theory** to ensure your color palette is visually appealing and accessible, and test for color blindness.
 
@@ -159,7 +159,7 @@ Sketch out key moments or list timestamps with descriptions (e.g., *“00:03 - C
 ### **3. Listen for Audio Issues**
 
 - 🔊 **Play your reel at different volumes** to ensure no sound is overpowering.  
-- 🎙️ **Check voiceovers** for clarity and balance—avoid music drowning out narration.  
+- 🎙️ **Check voiceovers** for clarity and balance-avoid music drowning out narration.  
 - 🎵 **Test with and without sound** to ensure key moments aren’t entirely dependent on audio.
 
 ::: tip

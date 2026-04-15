@@ -1,8 +1,7 @@
 .markdown-content {
   line-height: 1.7;
-  width: 100% !important;
-  max-width: none !important;
-  min-width: 100% !important;
+  width: 100%;
+  max-width: 100%;
   color: hsl(var(--foreground)) !important;
 }
 
@@ -55,7 +54,7 @@
 
 .markdown-content img {
   max-width: 100% !important;
-  width: 100% !important;
+  width: auto !important;
   height: auto !important;
   display: block !important;
   margin: 1rem auto !important;
@@ -90,15 +89,29 @@
 
 .syntax-highlighter pre {
   white-space: pre-wrap !important;
-  word-break: keep-all !important;
+  word-break: break-word !important;
+  word-wrap: break-word !important;
   overflow-wrap: break-word !important;
   margin: 0 !important;
   background-color: transparent !important;
+  max-width: 100% !important;
 }
 
 .syntax-highlighter code {
   font-family: ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace !important;
   color: hsl(var(--foreground)) !important;
+  white-space: pre-wrap !important;
+  word-break: break-word !important;
+  word-wrap: break-word !important;
+  overflow-wrap: break-word !important;
+}
+
+/* Inline code alignment and wrapping */
+.markdown-content code {
+  vertical-align: baseline;
+  white-space: normal;
+  word-break: break-word;
+  overflow-wrap: anywhere;
 }
 
 /* KaTeX LaTeX formula styling */
@@ -192,37 +205,60 @@
 
 /* Ensure RevealJS doesn't interfere with page layout */
 .reveal-container {
-  position: relative !important;
+  position: relative;
   z-index: 1;
 }
 
 .reveal-container .reveal {
-  position: relative !important;
-  height: 100% !important;
+  height: 100%;
 }
 
 .reveal-container .slides {
-  position: relative !important;
-  height: 100% !important;
+  height: 100%;
 }
 
-/* Override any global RevealJS styles that might affect layout */
-.reveal {
-  position: relative !important;
-  height: 100% !important;
+/* Ensure images inside reveal slides respect container bounds */
+.reveal .slides img {
+  max-width: 100% !important;
+  max-height: 70vh !important;
+  width: auto !important;
+  height: auto !important;
+  object-fit: contain !important;
+  margin: 0 auto !important;
+  display: block !important;
+}
+
+.reveal .slides section img {
+  max-width: 100% !important;
+  max-height: 60vh !important;
+  object-fit: contain !important;
+}
+
+/* Ensure slide number and progress bar are visible */
+.reveal .slide-number {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  color: hsl(var(--foreground)) !important;
+  background: hsl(var(--muted)) !important;
+  padding: 5px 10px !important;
+  border-radius: 4px !important;
+  position: fixed !important;
+  bottom: 8px !important;
+  right: 8px !important;
+  z-index: 31 !important;
+  font-size: 14px !important;
+}
+
+.reveal .progress {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  position: fixed !important;
+  bottom: 0 !important;
+  left: 0 !important;
   width: 100% !important;
-  background: hsl(var(--background)) !important;
-}
-
-.reveal .slides {
-  position: relative !important;
-  height: 100% !important;
-  width: 100% !important;
-  background: hsl(var(--background)) !important;
-}
-
-.reveal .slides section {
-  background: hsl(var(--background)) !important;
+  z-index: 30 !important;
 }
 
 /* Ensure proper width constraints for markdown content */
@@ -298,4 +334,9 @@
 
 .katex .sqrt > .root {
   color: hsl(var(--foreground)) !important;
+}
+
+/* Hide Reveal.js resume presentation overlay */
+.reveal-container .pause-overlay {
+  display: none !important;
 }

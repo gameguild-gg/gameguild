@@ -54,7 +54,7 @@ export default async function CourseContentLayout({ children, params }: CourseCo
   }
 
   return (
-    <SidebarProvider>
+    <SidebarProvider courseSlug={slug}>
       <CourseContentLayoutClient
         courseSlug={slug}
         courseTitle={programData.title}

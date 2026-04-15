@@ -1,0 +1,146 @@
+/* RemarkJS presentation styles */
+
+.remarkjs-container {
+    width: 100%;
+    background: var(--background);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.remarkjs-fullscreen {
+    border-radius: 0;
+}
+
+.remarkjs-slides-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+}
+
+/* Override RemarkJS default styles to fit theme */
+.remark-container {
+    background-color: var(--background) !important;
+}
+
+.remark-slide-scaler {
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;
+}
+
+.remark-slide-content {
+    background-color: var(--card) !important;
+    color: var(--card-foreground) !important;
+    padding: 2rem !important;
+}
+
+.remark-slide-content h1,
+.remark-slide-content h2,
+.remark-slide-content h3,
+.remark-slide-content h4,
+.remark-slide-content h5,
+.remark-slide-content h6 {
+    color: var(--foreground) !important;
+}
+
+.remark-slide-content code {
+    background-color: var(--muted) !important;
+    color: var(--foreground) !important;
+    padding: 0.2em 0.4em !important;
+    border-radius: 3px !important;
+}
+
+.remark-slide-content pre {
+    background-color: var(--muted) !important;
+    border-radius: 6px !important;
+    padding: 1em !important;
+}
+
+.remark-slide-content pre code {
+    background-color: transparent !important;
+    padding: 0 !important;
+}
+
+.remark-slide-content a {
+    color: var(--primary) !important;
+}
+
+.remark-slide-content a:hover {
+    text-decoration: underline !important;
+}
+
+/* Slide numbers */
+.remark-slide-number {
+    color: var(--muted-foreground) !important;
+    background-color: var(--card) !important;
+    padding: 0.5em 0.8em !important;
+    border-radius: 4px !important;
+    opacity: 0.8 !important;
+}
+
+/* Table styles */
+.remark-slide-content table {
+    border-color: var(--border) !important;
+}
+
+.remark-slide-content th,
+.remark-slide-content td {
+    border-color: var(--border) !important;
+}
+
+.remark-slide-content th {
+    background-color: var(--muted) !important;
+}
+
+/* Image styles */
+.remark-slide-content img {
+    border-radius: 4px !important;
+    max-width: 100% !important;
+    max-height: 70vh !important;
+    width: auto !important;
+    height: auto !important;
+    object-fit: contain !important;
+    display: block !important;
+    margin: 0 auto !important;
+}
+
+/* Blockquote styles */
+.remark-slide-content blockquote {
+    border-left-color: var(--primary) !important;
+    color: var(--muted-foreground) !important;
+    border-left-width: 4px !important;
+    padding-left: 1em !important;
+    margin-left: 0 !important;
+}
+
+/* List styles */
+.remark-slide-content ul,
+.remark-slide-content ol {
+    line-height: 1.6 !important;
+}
+
+/* Code highlighting - monokai theme adjustments */
+.remark-code {
+    background-color: var(--muted) !important;
+}
+
+.hljs-comment,
+.hljs-quote {
+    color: var(--muted-foreground) !important;
+}
+
+/* Navigation hints */
+.remark-container:focus {
+    outline: 2px solid var(--primary) !important;
+    outline-offset: 2px !important;
+}
+
+/* Presenter mode */
+.remark-presenter-mode .remark-slide-container {
+    background-color: var(--card) !important;
+}
+
+/* Loading state */
+.remarkjs-container .absolute.inset-0 {
+    background-color: var(--background);
+    color: var(--foreground);
+}

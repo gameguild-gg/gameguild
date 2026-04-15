@@ -1,0 +1,25 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "emitDeclarationOnly": true,
+    "declaration": true,
+    "declarationMap": true,
+    "declarationDir": "dist",
+    "outDir": "dist",
+    "rootDir": "src/lib/orchestrator"
+  },
+  "include": [
+    "src/lib/**/*.ts",
+    "src/lib/**/*.d.ts"
+  ],
+  "exclude": ["node_modules", "dist"]
+}

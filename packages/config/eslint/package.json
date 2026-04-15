@@ -1,6 +1,6 @@
 {
   "name": "@game-guild/eslint-config",
-  "version": "0.1.0",
+  "version": "2.55.0",
   "description": "ESLint configuration for matheusmartins.com website and related projects",
   "license": "UNLICENSED",
   "author": "Matheus Martins <contact@matheusmartins.com>",
@@ -8,7 +8,7 @@
   "type": "module",
   "main": "src/index.js",
   "dependencies": {
-    "@game-guild/prettier-config": "0.1.0"
+    "@game-guild/prettier-config": "*"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.0.0",

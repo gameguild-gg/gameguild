@@ -153,7 +153,7 @@ I am excited about the opportunity to contribute to **Company Name** and would l
 
 ## Using the Right Tone for the Game Industry
 
-Unlike corporate environments where cover letters tend to be formal and rigid, the game industry allows for a more relaxed and passionate tone. However, balance is key—you still need to remain professional.
+Unlike corporate environments where cover letters tend to be formal and rigid, the game industry allows for a more relaxed and passionate tone. However, balance is key-you still need to remain professional.
 
 - Be Passionate: Show excitement about their games and the opportunity.
 - Be Personal: Mention specific games, mechanics, or design choices that resonate with you.
@@ -240,7 +240,7 @@ Even the best content can be undermined by common errors. Here are some pitfalls
     - Expose yourself on linkedin or other platforms to get feedback from professionals.
 
 ::: tip "Best Practices Tip"
-**Tip:** Your cover letter and resume are living documents—regularly refine and update them as you grow in your career and take on new challenges.
+**Tip:** Your cover letter and resume are living documents-regularly refine and update them as you grow in your career and take on new challenges.
 :::
 
 ---

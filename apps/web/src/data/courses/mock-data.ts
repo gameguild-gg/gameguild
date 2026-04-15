@@ -1,55 +1,73 @@
 import { Product, ProductProgram, Program, ProgramContent } from '@/lib/api/generated';
 import { ai4gamesProduct, ai4gamesProductProgram, ai4gamesProgram } from './ai4games';
 import { ai4games2Product, ai4games2ProductProgram, ai4games2Program } from './ai4games2';
+import { dataanalysisProduct, dataanalysisProductProgram, dataanalysisProgram } from './dataanalysis';
+import databasesProgram, { databasesProduct, databasesProductProgram } from './databases';
 import { dsaProduct, dsaProductProgram, dsaProgram } from './dsa';
 import gamePublishingProgram, { gamePublishingProduct, gamePublishingProductProgram } from './game-publishing';
 import intro2gproProgram, { intro2gproProduct, intro2gproProductProgram } from './intro2gpro';
+import networkingProgram, { networkingProduct, networkingProductProgram } from './networking';
 import portfolioProgram, { portfolioProduct, portfolioProductProgram } from './portfolio';
 import { pythonProduct, pythonProductProgram, pythonProgram } from './python';
 
 pythonProduct.productPrograms = [pythonProductProgram];
 ai4gamesProduct.productPrograms = [ai4gamesProductProgram];
 ai4games2Product.productPrograms = [ai4games2ProductProgram];
+databasesProduct.productPrograms = [databasesProductProgram];
+networkingProduct.productPrograms = [networkingProductProgram];
 dsaProduct.productPrograms = [dsaProductProgram];
+dataanalysisProduct.productPrograms = [dataanalysisProductProgram];
 
 export const mockPrograms: Program[] = [
+  ai4games2Program,
+  networkingProgram,
+  databasesProgram,
   pythonProgram,
   ai4gamesProgram,
-  ai4games2Program,
   portfolioProgram,
   dsaProgram,
   intro2gproProgram,
   gamePublishingProgram,
+  dataanalysisProgram,
 ];
 
 export const mockProducts: Product[] = [
+  ai4games2Product,
+  networkingProduct,
+  databasesProduct,
   pythonProduct,
   ai4gamesProduct,
-  ai4games2Product,
   portfolioProduct,
   dsaProduct,
   intro2gproProduct,
   gamePublishingProduct,
+  dataanalysisProduct,
 ];
 
 export const mockProductPrograms: ProductProgram[] = [
+  ai4games2ProductProgram,
+  networkingProductProgram,
+  databasesProductProgram,
   pythonProductProgram,
   ai4gamesProductProgram,
-  ai4games2ProductProgram,
   portfolioProductProgram,
   dsaProductProgram,
   intro2gproProductProgram,
   gamePublishingProductProgram,
+  dataanalysisProductProgram,
 ];
 
 export const mockProgramContents: ProgramContent[] = [
+  ...(ai4games2Program.programContents ?? []),
+  ...(networkingProgram.programContents ?? []),
+  ...(databasesProgram.programContents ?? []),
   ...(pythonProgram.programContents ?? []),
   ...(ai4gamesProgram.programContents ?? []),
-  ...(ai4games2Program.programContents ?? []),
   ...(portfolioProgram.programContents ?? []),
   ...(dsaProgram.programContents ?? []),
   ...(intro2gproProgram.programContents ?? []),
   ...(gamePublishingProgram.programContents ?? []),
+  ...(dataanalysisProgram.programContents ?? []),
 ];
 
 export function getProgramBySlug(slug: string): Program | null {

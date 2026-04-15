@@ -1,10 +1,10 @@
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using GameGuild.Modules.Programs.DTOs;
 using GameGuild.Modules.Programs.Models;
 using GameGuild.SharedKernel.Enums;
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-using Microsoft.EntityFrameworkCore;
 using GameGuild.Users.Entities;
+using Microsoft.EntityFrameworkCore;
 
 // using GameGuild.Modules.Contents.Models;
 
@@ -45,6 +45,12 @@ public class ProgramContent : EntityBase
     /// </summary>
     [MaxLength(1000)]
     public string? Description { get; set; }
+
+    /// <summary>
+    /// URL-friendly identifier
+    /// </summary>
+    [MaxLength(200)]
+    public string? Slug { get; set; }
 
     /// <summary>
     /// Content type (lesson, quiz, assignment, etc.)

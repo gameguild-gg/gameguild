@@ -1,19 +1,23 @@
+using System.Text.Json;
 using GameGuild.Modules.Programs.Entities;
 using GameGuild.Modules.Programs.Models;
-using System.Text.Json;
 
 
 namespace GameGuild.Modules.Programs;
 
 /// <summary> Extension methods for mapping between ProgramContent entities and DTOs </summary>
-public static class ProgramContentMappingExtensions {
+public static class ProgramContentMappingExtensions
+{
   /// <summary> Maps ProgramContent entity to DTO </summary>
-  public static ProgramContentDto ToDto(this ProgramContent content) {
-    return new ProgramContentDto {
+  public static ProgramContentDto ToDto(this ProgramContent content)
+  {
+    return new ProgramContentDto
+    {
       Id = content.Id,
       ProgramId = content.ProgramId,
       ParentId = content.ParentId,
       Title = content.Title,
+      Slug = content.Slug,
       Description = content.Description,
       Type = content.Type,
       Body = string.IsNullOrEmpty(content.Body) ? null : JsonDocument.Parse(content.Body),
@@ -36,12 +40,15 @@ public static class ProgramContentMappingExtensions {
   public static IEnumerable<ProgramContentDto> ToDtos(this IEnumerable<ProgramContent> contents) { return contents.Select(c => c.ToDto()); }
 
   /// <summary> Maps CreateProgramContentDto to ProgramContent entity </summary>
-  public static ProgramContent ToEntity(this CreateProgramContentDto dto) {
-    return new ProgramContent {
+  public static ProgramContent ToEntity(this CreateProgramContentDto dto)
+  {
+    return new ProgramContent
+    {
       Id = Guid.NewGuid(),
       ProgramId = dto.ProgramId,
       ParentId = dto.ParentId,
       Title = dto.Title,
+      Slug = dto.Slug,
       Description = dto.Description,
       Type = dto.Type,
       Body = dto.Body,
@@ -55,8 +62,10 @@ public static class ProgramContentMappingExtensions {
   }
 
   /// <summary> Applies updates from UpdateProgramContentDto to ProgramContent entity </summary>
-  public static void ApplyUpdates(this ProgramContent content, UpdateProgramContentDto dto) {
+  public static void ApplyUpdates(this ProgramContent content, UpdateProgramContentDto dto)
+  {
     if (dto.Title != null) content.Title = dto.Title;
+    if (dto.Slug != null) content.Slug = dto.Slug;
     if (dto.Description != null) content.Description = dto.Description;
     if (dto.Type != null) content.Type = dto.Type.Value;
     if (dto.Body != null) content.Body = dto.Body;

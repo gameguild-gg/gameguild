@@ -1,7 +1,7 @@
 'use client';
 
 import { Program } from '@/lib/api/generated';
-import React, { createContext, useContext, useEffect, useMemo, useReducer } from 'react';
+import React, { createContext, useContext, useMemo, useReducer } from 'react';
 
 interface CourseFilters {
   search: string;
@@ -92,14 +92,12 @@ interface CourseContextType {
 const CourseContext = createContext<CourseContextType | undefined>(undefined);
 
 export function CourseProvider({ children, initialCourses = [] }: { children: React.ReactNode; initialCourses?: Program[] }) {
-  const [state, dispatch] = useReducer(courseReducer, initialState);
-
-  // Load initial courses
-  useEffect(() => {
-    if (initialCourses.length > 0) {
-      dispatch({ type: 'SET_COURSES', payload: initialCourses });
-    }
-  }, [initialCourses]);
+  // Initialize state with courses already loaded to prevent layout shift
+  const [state, dispatch] = useReducer(courseReducer, {
+    ...initialState,
+    courses: initialCourses,
+    isLoading: false, // Set to false since we have initial data
+  });
 
   // Filter courses based on current filters
   const filteredCourses = useMemo(() => {

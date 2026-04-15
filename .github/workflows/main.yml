@@ -1,54 +1,300 @@
-name: Main
+name: Main CI/CD Workflow
 
 on:
   push:
     branches:
       - main
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: main-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
-  build:
+  detect-changes:
+    name: Detect path changes
     runs-on: ubuntu-latest
+    outputs:
+      web: ${{ steps.filter.outputs.web }}
+      api: ${{ steps.filter.outputs.api }}
+      emception: ${{ steps.filter.outputs.emception }}
     steps:
-      - run: git config --global --add safe.directory '*'
+      - uses: actions/checkout@v4
 
-      - uses: actions/checkout@v3
+      - uses: dorny/paths-filter@v3
+        id: filter
         with:
-          # need for git operations
-          fetch-depth: 0
-          lfs: false
-          submodules: true
+          filters: |
+            web:
+              - 'apps/web/**'
+              - 'packages/**'
+            api:
+              - 'apps/api/**'
+            emception:
+              - 'tools/emception/**'
+              - 'packages/emception/**'
 
-      - name: Cache node modules
-        uses: actions/cache@v4
-        with:
-          path: '**/node_modules'
-          key: node-${{ hashFiles('**/package-lock.json') }}
-
-      - name: Install dotnet
-        uses: actions/setup-dotnet@v3
-        with:
-          dotnet-version: '9.0.x'
+  build-emception-toolchain:
+    name: Build tools/emception
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    outputs:
+      toolchain-changed: ${{ steps.cache-toolchain.outputs.cache-hit != 'true' }}
+    env:
+      EMSDK_VERSION: latest
+    defaults:
+      run:
+        working-directory: tools/emception
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
 
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
 
-      - run: cd apps/web ; npm install
-        name: Install dependencies
+      - name: Install dependencies
+        working-directory: .
+        run: npm install -w tools/emception
 
-      - run: cd apps/web ; npm run build
-        name: Build
+      - name: Resolve EMSDK version
+        id: emsdk-version
+        shell: bash
+        working-directory: .
+        run: |
+          set -euo pipefail
+          RAW_VERSION="${{ env.EMSDK_VERSION }}"
+          if [[ "${RAW_VERSION}" == "latest" || -z "${RAW_VERSION}" ]]; then
+            TAGS_JSON=$(curl -sf https://raw.githubusercontent.com/emscripten-core/emsdk/main/emscripten-releases-tags.json)
+            RESOLVED=$(echo "${TAGS_JSON}" | python3 -c "import sys,json; print(json.load(sys.stdin)['aliases']['latest'])")
+            echo "Resolved emsdk 'latest' → ${RESOLVED}"
+          else
+            RESOLVED="${RAW_VERSION}"
+            echo "Using explicit emsdk version: ${RESOLVED}"
+          fi
+          echo "resolved=${RESOLVED}" >> "$GITHUB_OUTPUT"
 
-      - run: cd apps/api ; dotnet build "GameGuild.Production.sln" -c Release
-        name: Build API
+      - name: Restore EMSDK cache
+        id: cache-emsdk
+        uses: actions/cache@v4
+        with:
+          path: tools/emception/tools/emsdk
+          key: ${{ runner.os }}-emception-emsdk-v2-${{ steps.emsdk-version.outputs.resolved }}-${{ hashFiles('tools/emception/scripts/setup-emsdk.ts', 'tools/emception/scripts/lib/emsdk.ts') }}
+          restore-keys: |
+            ${{ runner.os }}-emception-emsdk-v2-${{ steps.emsdk-version.outputs.resolved }}-
 
-      - run: cd apps/api/Source/GameGuild.API ; dotnet publish "GameGuild.API.csproj" -c Release
-        name: Publish API
+      - name: Install native build tools
+        run: |
+          if command -v sudo >/dev/null 2>&1; then
+            SUDO=sudo
+          else
+            SUDO=""
+          fi
+          $SUDO apt-get update
+          $SUDO apt-get install -y cmake ninja-build build-essential pkg-config brotli
 
-      - run: |
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Build Emsdk
+        if: steps.cache-emsdk.outputs.cache-hit != 'true'
+        run: npm run build:emsdk
+
+      - name: Detect tool versions for cache keys
+        id: tool-versions
+        run: |
+          set -euo pipefail
+
+          EMSDK_DIR="${GITHUB_WORKSPACE}/tools/emception/tools/emsdk"
+          CLANG_BIN="${EMSDK_DIR}/upstream/bin/clang"
+          WASMOPT_BIN="${EMSDK_DIR}/upstream/bin/wasm-opt"
+
+          if [[ ! -x "${CLANG_BIN}" || ! -x "${WASMOPT_BIN}" ]]; then
+            echo "::error::Required emsdk binaries were not found. Expected ${CLANG_BIN} and ${WASMOPT_BIN}."
+            exit 1
+          fi
+
+          CLANG_VERSION_OUT="$(${CLANG_BIN} --version 2>&1 | cat)"
+          LLVM_VERSION="$(echo "${CLANG_VERSION_OUT}" | sed -nE 's/.*clang version ([0-9]+\.[0-9]+\.[0-9]+).*/\1/p' | head -1)"
+          LLVM_COMMIT="$(echo "${CLANG_VERSION_OUT}" | grep -Eo 'llvm-project [0-9a-f]{40}' | awk '{print $2}' | head -1)"
+          BINARYEN_VERSION="$(${WASMOPT_BIN} --version 2>&1 | sed -nE 's/.*version ([0-9]+).*/\1/p' | head -1)"
+
+          PYTHON_BIN=""
+          if [[ -d "${EMSDK_DIR}/python" ]]; then
+            PYTHON_BIN="$(find "${EMSDK_DIR}/python" -type f \( -name python3 -o -name python \) | head -1 || true)"
+          fi
+
+          if [[ -n "${PYTHON_BIN}" ]]; then
+            PYTHON_VERSION="$(${PYTHON_BIN} --version 2>&1 | sed -nE 's/Python ([0-9]+\.[0-9]+\.[0-9]+).*/\1/p' | head -1)"
+          else
+            PYTHON_VERSION="$(python3 --version 2>&1 | sed -nE 's/Python ([0-9]+\.[0-9]+\.[0-9]+).*/\1/p' | head -1)"
+          fi
+
+          echo "llvm_version=${LLVM_VERSION}" >> "$GITHUB_OUTPUT"
+          echo "llvm_commit=${LLVM_COMMIT}" >> "$GITHUB_OUTPUT"
+          echo "binaryen_version=${BINARYEN_VERSION}" >> "$GITHUB_OUTPUT"
+          echo "python_version=${PYTHON_VERSION}" >> "$GITHUB_OUTPUT"
+
+          # Also read the emscripten version (stored in emsdk after install)
+          EMSCRIPTEN_VERSION_FILE="${EMSDK_DIR}/upstream/emscripten/emscripten-version.txt"
+          if [[ -f "${EMSCRIPTEN_VERSION_FILE}" ]]; then
+            EMSCRIPTEN_VERSION="$(tr -d '"' < "${EMSCRIPTEN_VERSION_FILE}" | tr -d '[:space:]')"
+          else
+            EMSCRIPTEN_VERSION="${{ steps.emsdk-version.outputs.resolved }}"
+          fi
+          echo "emscripten_version=${EMSCRIPTEN_VERSION}" >> "$GITHUB_OUTPUT"
+
+          echo "Detected versions for cache key:"
+          echo "  Emscripten:   ${EMSCRIPTEN_VERSION}"
+          echo "  LLVM version: ${LLVM_VERSION}"
+          echo "  LLVM commit:  ${LLVM_COMMIT}"
+          echo "  Binaryen:     ${BINARYEN_VERSION}"
+          echo "  Python:       ${PYTHON_VERSION}"
+
+      - name: Restore emception toolchain output cache
+        id: cache-toolchain
+        uses: actions/cache@v4
+        with:
+          path: |
+            tools/emception/build/cdn
+            tools/emception/build/manifest.json
+            tools/emception/public/cdn
+          key: ${{ runner.os }}-emception-toolchain-v4-emsdk-${{ steps.tool-versions.outputs.emscripten_version }}-llvm-${{ steps.tool-versions.outputs.llvm_version }}-${{ steps.tool-versions.outputs.llvm_commit }}-byn-${{ steps.tool-versions.outputs.binaryen_version }}-py-${{ steps.tool-versions.outputs.python_version }}-${{ hashFiles('tools/emception/scripts/**/*.ts', 'tools/emception/package.json', 'tools/emception/userland/libcurl-lite/src/curl_lite.c', 'tools/emception/userland/libcurl-lite/include/curl/curl.h') }}
+          restore-keys: |
+            ${{ runner.os }}-emception-toolchain-v4-emsdk-${{ steps.tool-versions.outputs.emscripten_version }}-llvm-${{ steps.tool-versions.outputs.llvm_version }}-${{ steps.tool-versions.outputs.llvm_commit }}-
+            ${{ runner.os }}-emception-toolchain-v4-emsdk-${{ steps.tool-versions.outputs.emscripten_version }}-
+
+      - name: Build Binaryen
+        if: steps.cache-toolchain.outputs.cache-hit != 'true'
+        run: npm run build:binaryen
+
+      - name: Build CPython
+        if: steps.cache-toolchain.outputs.cache-hit != 'true'
+        run: npm run build:cpython
+
+      - name: Build LLVM
+        if: steps.cache-toolchain.outputs.cache-hit != 'true'
+        run: npm run build:llvm
+
+      - name: Build libcurl-lite
+        if: steps.cache-toolchain.outputs.cache-hit != 'true'
+        run: npm run build:libcurl-lite
+
+      - name: Build Ninja
+        if: steps.cache-toolchain.outputs.cache-hit != 'true'
+        run: npm run build:ninja
+
+      - name: Build CMake
+        if: steps.cache-toolchain.outputs.cache-hit != 'true'
+        run: npm run build:cmake
+
+      - name: Build SDL3
+        if: steps.cache-toolchain.outputs.cache-hit != 'true'
+        run: npm run build:sdl3
+
+      - name: Build ImGui
+        if: steps.cache-toolchain.outputs.cache-hit != 'true'
+        run: npm run build:imgui
+
+      - name: Build Sysroot
+        if: steps.cache-toolchain.outputs.cache-hit != 'true'
+        run: npm run build:sysroot
+
+      - name: Patch Glue
+        if: steps.cache-toolchain.outputs.cache-hit != 'true'
+        run: npm run patch:glue
+
+      - name: Build Manifest
+        if: steps.cache-toolchain.outputs.cache-hit != 'true'
+        run: npm run build:manifest
+
+      - name: Build Bundles
+        if: steps.cache-toolchain.outputs.cache-hit != 'true'
+        run: npm run build:bundles
+
+      - name: Deploy CDN
+        if: steps.cache-toolchain.outputs.cache-hit != 'true'
+        run: npm run deploy:cdn
+
+      - name: Toolchain cache status
+        run: |
+          if [[ "${{ steps.cache-toolchain.outputs.cache-hit }}" == 'true' ]]; then
+            echo "✅ emception toolchain cache hit — skipped heavy rebuild steps."
+          else
+            echo "ℹ️ emception toolchain cache miss — full rebuild executed and cache refreshed."
+          fi
+
+      - name: Prepare CDN for artifact upload
+        run: |
+          # Remove .gitignore files so upload-artifact doesn't skip CDN contents
+          find public/cdn -name '.gitignore' -delete
+          echo "CDN contents to upload:"
+          du -sh public/cdn/
+          ls public/cdn/
+
+      - name: Upload emception CDN artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: emception-cdn
+          path: |
+            tools/emception/public/cdn/
+            tools/emception/build/manifest.json
+          include-hidden-files: true
+          retention-days: 30
+
+  build-web:
+    name: Build apps/web
+    runs-on: ubuntu-latest
+    needs: detect-changes
+    if: ${{ needs.detect-changes.outputs.web == 'true' || github.event_name == 'workflow_dispatch' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install web dependencies
+        run: npm install -w apps/web
+
+      - name: Build web
+        run: npm run build -w apps/web
+
+  build-api:
+    name: Build apps/api
+    runs-on: ubuntu-latest
+    needs: detect-changes
+    if: ${{ needs.detect-changes.outputs.api == 'true' || github.event_name == 'workflow_dispatch' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dotnet
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Build API
+        run: cd apps/api && dotnet build "GameGuild.Production.sln" -c Release
+
+      - name: Publish API
+        run: cd apps/api/Source/GameGuild.API && dotnet publish "GameGuild.API.csproj" -c Release
+
+  build-gource:
+    name: Build gource report
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install ffmpeg and gource
+        run: |
           sudo apt-get update
           sudo apt-get install -y --fix-missing ffmpeg gource
-        name: Install ffmpeg and gource
 
       - name: Make gource script executable
         run: chmod +x ./contributors/gource.sh
@@ -58,33 +304,284 @@ jobs:
         with:
           run: ./contributors/gource.sh
 
-      - name: Publish
-        uses: peaceiris/actions-gh-pages@v3
+      - name: Upload gource artifacts
+        uses: actions/upload-artifact@v4
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./contributors
-          force_orphan: true
+          name: gource-media
+          path: |
+            contributors/gource.mp4
+            contributors/gource.gif
+          retention-days: 30
 
-      - name: Semantic Release
+  build-emception-demo:
+    name: Build demos/emception-react
+    runs-on: ubuntu-latest
+    needs:
+      - build-emception-toolchain
+      - build-gource
+    if: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/main' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download emception CDN artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: emception-cdn
+          path: tools/emception
+
+      - name: Verify CDN download
+        run: |
+          echo "CDN directory check:"
+          ls tools/emception/public/cdn/ | head -20
+          du -sh tools/emception/public/cdn/
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install emception library dependencies
+        run: cd tools/emception && npm install
+
+      - name: Build emception library
+        run: cd tools/emception && npm run build:lib
+
+      - name: Install shared UI package dependencies
+        run: cd packages/emception && npm install
+
+      - name: Install demo dependencies
+        run: cd demos/emception-react && npm install
+
+      - name: Build demo
+        run: cd demos/emception-react && npm run build
+        env:
+          VITE_BASE: /gameguild/
+
+      - name: Prepare dist for artifact upload
+        run: |
+          # Remove .gitignore files so upload-artifact includes all CDN files
+          find demos/emception-react/dist -name '.gitignore' -delete
+          echo "Demo dist contents:"
+          du -sh demos/emception-react/dist/
+          du -sh demos/emception-react/dist/cdn/ 2>/dev/null || echo "No cdn/ in dist"
+
+      - name: Upload demo dist artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: emception-demo-dist
+          path: demos/emception-react/dist
+          include-hidden-files: true
+          retention-days: 30
+
+  bundle-pages:
+    name: Bundle GitHub Pages content
+    runs-on: ubuntu-latest
+    needs:
+      - build-emception-demo
+    if: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/main' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download demo dist artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: emception-demo-dist
+          path: /tmp/emception-demo
+
+      - name: Download emception CDN artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: emception-cdn
+          path: /tmp/emception-cdn
+
+      - name: Download gource artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: gource-media
+          path: /tmp/gource-media
+
+      - name: Assemble combined pages directory
+        run: |
+          rm -rf .pages
+          mkdir -p .pages/contributors
+
+          # Copy the Vite build output (HTML, JS, CSS, assets)
+          cp -R /tmp/emception-demo/* .pages/
+
+          # Remove the incomplete CDN from the Vite dist (blocked by .gitignore during artifact upload)
+          rm -rf .pages/cdn
+
+          # Copy the full CDN from the dedicated emception-cdn artifact
+          # The emception-cdn artifact has paths like tools/emception/public/cdn/...
+          if [ -d /tmp/emception-cdn/tools/emception/public/cdn ]; then
+            cp -R /tmp/emception-cdn/tools/emception/public/cdn .pages/cdn
+          elif [ -d /tmp/emception-cdn/public/cdn ]; then
+            cp -R /tmp/emception-cdn/public/cdn .pages/cdn
+          elif [ -d /tmp/emception-cdn/cdn ]; then
+            cp -R /tmp/emception-cdn/cdn .pages/cdn
+          else
+            echo "::warning::Could not find CDN directory in emception-cdn artifact"
+            echo "Contents of /tmp/emception-cdn:"
+            find /tmp/emception-cdn -maxdepth 3 -type d
+          fi
+
+          cp -R contributors/* .pages/contributors/
+
+          # upload-artifact@v4 strips the common prefix, so files are at root
+          cp /tmp/gource-media/gource.mp4 .pages/contributors/gource.mp4 || echo "::warning::gource.mp4 not found, skipping"
+          cp /tmp/gource-media/gource.gif .pages/contributors/gource.gif || echo "::warning::gource.gif not found, skipping"
+
+          echo "Pages directory summary:"
+          echo "  Total size: $(du -sh .pages | cut -f1)"
+          echo "  CDN size:   $(du -sh .pages/cdn 2>/dev/null | cut -f1 || echo 'MISSING')"
+          ls -la .pages/
+
+      - name: Upload pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: .pages
+
+  deploy-pages:
+    name: Deploy GitHub Pages
+    runs-on: ubuntu-latest
+    needs:
+      - bundle-pages
+    if: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/main' }}
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+  release-root:
+    name: Update root tags & release notes
+    runs-on: ubuntu-latest
+    needs:
+      - deploy-pages
+    if: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/main' }}
+    outputs:
+      new_release_published: ${{ steps.semantic.outputs.new_release_published }}
+      new_release_version: ${{ steps.semantic.outputs.new_release_version }}
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+    steps:
+      - run: git config --global --add safe.directory '*'
+
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+          lfs: false
+          submodules: true
+
+      - name: Fetch all tags
+        run: |
+          git fetch --tags --force
+          echo "Latest tags:"
+          git tag --sort=-v:refname | head -5
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Semantic Release (root)
         id: semantic
         uses: cycjimmy/semantic-release-action@v4
         with:
-          semantic_version: 23.0.0
+          semantic_version: 23
           extra_plugins: |
-            @semantic-release/changelog@6.0.2
-            @semantic-release/git@10.0.1
-            @semantic-release/commit-analyzer@9.0.2
-            @semantic-release/github@8.0.7
-            @semantic-release/release-notes-generator@10.0.3
+            @semantic-release/changelog@6
+            @semantic-release/git@10
+            @semantic-release/exec@6
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Rollback commit on build failure
+      - name: Rollback commit on release failure
         if: failure()
         run: |
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git config --global user.name "github-actions[bot]"
-          git reset --hard HEAD~1
-          git push origin main --force
+          git fetch --tags --force
+          TAGS=$(git tag --points-at HEAD)
+          for tag in $TAGS; do
+            echo "Deleting tag: $tag"
+            git push origin :refs/tags/$tag || true
+            git tag -d $tag || true
+          done
+          git revert HEAD --no-edit
+          git push origin main
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  publish-emception:
+    name: Publish emception package
+    runs-on: ubuntu-latest
+    needs:
+      - detect-changes
+      - build-emception-toolchain
+      - release-root
+    if: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && needs.detect-changes.outputs.emception == 'true' && needs.release-root.outputs.new_release_published == 'true' }}
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Sync to latest main and tags
+        run: |
+          git fetch origin main --tags --force
+          git checkout -B main origin/main
+          git reset --hard origin/main
+
+      - name: Download emception CDN artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: emception-cdn
+          path: .
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install emception dependencies
+        run: cd tools/emception && npm install
+
+      - name: Build emception library
+        run: cd tools/emception && npm run build:lib
+
+      - name: Ensure publish-emception does not modify changelogs
+        run: |
+          set -euo pipefail
+          if ! git diff --quiet -- CHANGELOG.md tools/emception/CHANGELOG.md; then
+            echo "::error::Changelog modification detected in publish-emception job. Changelogs must be modified by root release job only."
+            git --no-pager diff -- CHANGELOG.md tools/emception/CHANGELOG.md | cat
+            exit 1
+          fi
+
+      - name: Check whether npm version already exists
+        id: npm-check
+        run: |
+          set -euo pipefail
+          VERSION="${{ needs.release-root.outputs.new_release_version }}"
+
+          if npm view "emception@${VERSION}" version >/dev/null 2>&1; then
+            echo "emception@${VERSION} is already published. Skipping publish step."
+            echo "already_published=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "emception@${VERSION} is not published yet."
+            echo "already_published=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Publish emception to npm
+        if: ${{ steps.npm-check.outputs.already_published != 'true' }}
+        run: cd tools/emception && npm publish
