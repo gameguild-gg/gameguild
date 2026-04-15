@@ -5,6 +5,7 @@ const config = {
     '<rootDir>/apps/website/jest.config.mjs',
     '<rootDir>/apps/academy/jest.config.mjs',
     '<rootDir>/apps/console/jest.config.mjs',
+    '<rootDir>/packages/emception/jest.config.mjs',
   ],
   collectCoverageFrom: [
     'apps/*/src/**/*.{js,jsx,ts,tsx}',

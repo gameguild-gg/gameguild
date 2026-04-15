@@ -1,9 +1,7 @@
 'use client';
 
 import 'katex/dist/katex.min.css';
-import './markdown-renderer.css';
 import { useTheme } from 'next-themes';
-import NextImage from 'next/image';
 import React, { useEffect, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
@@ -13,13 +11,16 @@ import rehypeRaw from 'rehype-raw';
 import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
 import { Admonition } from './Admonition';
+import './markdown-renderer.css';
 import { MarkdownCodeActivity } from './MarkdownCodeActivity';
 import { MarkdownErrorBoundary } from './MarkdownErrorBoundary';
 import { MarkdownQuizActivity } from './MarkdownQuizActivity';
+import Marp from './Marp';
 import Mermaid from './Mermaid';
+import RemarkJS from './RemarkJS';
 import RevealJS from './RevealJS';
 
-export type RendererType = 'markdown' | 'reveal';
+export type RendererType = 'markdown' | 'reveal' | 'marp' | 'remark';
 
 export interface MarkdownRendererProps {
   content: string;
@@ -37,8 +38,24 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, renderer =
 
   if (renderer === 'reveal') {
     return (
-      <div className="gameguild-revealjs-wrapper">
+      <div className="gameguild-revealjs-wrapper relative w-full flex-1 flex flex-col min-h-[50vh] sm:min-h-[60vh] md:min-h-[70vh] lg:min-h-[80vh]">
         <RevealJS content={content} />
+      </div>
+    );
+  }
+
+  if (renderer === 'marp') {
+    return (
+      <div className="gameguild-marp-wrapper">
+        <Marp content={content} />
+      </div>
+    );
+  }
+
+  if (renderer === 'remark') {
+    return (
+      <div className="gameguild-remarkjs-wrapper">
+        <RemarkJS content={content} />
       </div>
     );
   }
@@ -64,14 +81,14 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, renderer =
     h5: (props) => <h5 className="text-lg font-semibold mt-2 mb-1 text-foreground" {...props} />,
     h6: (props) => <h6 className="text-base font-semibold mt-2 mb-1 text-foreground" {...props} />,
     p: (props) => <p className="mb-4 text-foreground" {...props} />,
-    img: (props) => (
-      <NextImage
-        className="max-w-full h-auto rounded-lg shadow-sm"
-        width={0}
-        height={0}
-        sizes="100vw"
-        style={{ width: '100%', height: 'auto', maxWidth: '100%' }}
-        {...props}
+    img: ({ node, ...props }) => (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={props.src}
+        alt={props.alt ?? ''}
+        className="rounded-lg shadow-sm"
+        style={{ maxWidth: '100%', height: 'auto', width: 'auto' }}
+        loading="lazy"
       />
     ),
     ul: (props) => <ul className="list-disc pl-5 mb-4 text-foreground" {...props} />,
@@ -88,9 +105,10 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, renderer =
       }
 
       const codeContent = String(children).replace(/\n$/, '');
-      const inline = !codeContent.includes('\n');
+      const isFenced = !!match; // fenced code blocks provide a language class
+      const isBlock = isFenced || codeContent.includes('\n');
 
-      if (!inline) {
+      if (isBlock) {
         return (
           <SyntaxHighlighter
             style={isDark ? vscDarkPlus : vs}
@@ -103,11 +121,18 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, renderer =
               backgroundColor: isDark ? 'hsl(var(--muted))' : 'hsl(var(--background))',
               border: '1px solid hsl(var(--border))',
               color: 'hsl(var(--foreground))',
+              overflow: 'visible',
+              maxWidth: '100%',
+              whiteSpace: 'pre-wrap',
+              wordBreak: 'break-word',
+              wordWrap: 'break-word',
+              overflowWrap: 'break-word',
             }}
             codeTagProps={{
               style: {
                 whiteSpace: 'pre-wrap',
-                wordBreak: 'keep-all',
+                wordBreak: 'break-word',
+                wordWrap: 'break-word',
                 overflowWrap: 'break-word',
                 fontSize: '0.875rem',
                 lineHeight: '1.6',
@@ -124,7 +149,11 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, renderer =
       }
 
       return (
-        <code className="bg-muted border border-border rounded px-1.5 py-0.5 font-mono text-sm inline whitespace-nowrap text-foreground font-medium" {...props}>
+        <code
+          className="bg-muted border border-border rounded px-1 py-0.5 font-mono text-sm inline text-foreground font-medium"
+          style={{ wordBreak: 'break-word', overflowWrap: 'anywhere', whiteSpace: 'normal', verticalAlign: 'baseline' }}
+          {...props}
+        >
           {children}
         </code>
       );

@@ -1,8 +1,8 @@
 'use client';
 
-import MarkdownRenderer from '@/components/markdown-renderer/markdown-renderer';
+import MarkdownRenderer, { RendererType } from '@/components/markdown-renderer/markdown-renderer';
 import { Card, CardContent } from '@/components/ui/card';
-import { ProgramContentDto } from '@/lib/api/generated/types.gen';
+import { ProgramContentDto, ProgramContentType } from '@/lib/api/generated/types.gen';
 
 interface CourseContentPageClientProps {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -13,6 +13,22 @@ interface CourseContentPageClientProps {
     children?: React.ReactNode;
 }
 
+/**
+ * Determines the renderer type based on content type
+ */
+function getRendererType(contentType: ProgramContentType | undefined): RendererType {
+    if (contentType === ProgramContentType.REVEAL) {
+        return 'reveal';
+    }
+    if (contentType === ProgramContentType.MARP) {
+        return 'marp';
+    }
+    if (contentType === 11) {
+        return 'remark';
+    }
+    return 'markdown';
+}
+
 export function CourseContentPageClient({
     programData: _programData, // eslint-disable-line @typescript-eslint/no-unused-vars
     content,
@@ -21,17 +37,24 @@ export function CourseContentPageClient({
     children
 }: CourseContentPageClientProps) {
 
+    const bodyContent = typeof content.body === 'string' ? content.body : '';
+    const renderer = getRendererType(content.type);
+    const isReveal = renderer === 'reveal';
+    const isMarp = renderer === 'marp';
+    const isRemark = renderer === 'remark';
+    const isPresentationMode = isReveal || isMarp || isRemark;
+
     return (
-        <div className="flex-1 flex flex-col min-h-0">
-            <div className="mx-auto max-w-4xl w-full">
+        <div className={isPresentationMode ? "flex-1 flex flex-col h-full" : "flex-1 flex flex-col min-h-0"}>
+            <div className={isPresentationMode ? "w-full h-full flex-1 flex flex-col" : "mx-auto max-w-4xl w-full"}>
                 {/* Content */}
-                <Card className="transition-all duration-300 py-0">
-                    <CardContent className="px-6 py-6">
+                <Card className={`transition-all duration-300 py-0 ${isPresentationMode ? 'border-0 shadow-none h-full flex-1 flex flex-col' : ''}`}>
+                    <CardContent className={isPresentationMode ? "px-0 py-0 h-full flex-1 flex flex-col" : "px-6 py-6"}>
                         {/* Content Body */}
                         {content.body !== undefined && content.body !== null && (
-                            <div className="prose max-w-none">
+                            <div className={isPresentationMode ? "h-full flex-1 flex flex-col" : "prose max-w-none"}>
                                 {typeof content.body === 'string' ? (
-                                    <MarkdownRenderer content={content.body} />
+                                    <MarkdownRenderer content={bodyContent} renderer={renderer} />
                                 ) : (
                                     <pre className="whitespace-pre-wrap">
                                         {String(content.body)}
@@ -40,21 +63,23 @@ export function CourseContentPageClient({
                             </div>
                         )}
 
-                        {/* Content Metadata */}
-                        <div className="flex items-center gap-4 text-sm text-muted-foreground border-t pt-4">
-                            {content.estimatedMinutes && (
-                                <span>Estimated time: {content.estimatedMinutes} minutes</span>
-                            )}
-                            {content.maxPoints && (
-                                <span>Points: {content.maxPoints}</span>
-                            )}
-                            {content.isRequired && (
-                                <span className="text-orange-600">Required</span>
-                            )}
-                        </div>
+                        {/* Content Metadata - Hidden in presentation mode */}
+                        {!isPresentationMode && (
+                            <div className="flex items-center gap-4 text-sm text-muted-foreground border-t pt-4">
+                                {content.estimatedMinutes != null && content.estimatedMinutes > 0 && (
+                                    <span>Estimated time: {content.estimatedMinutes} minutes</span>
+                                )}
+                                {content.maxPoints != null && content.maxPoints > 0 && (
+                                    <span>Points: {content.maxPoints}</span>
+                                )}
+                                {content.isRequired === true && (
+                                    <span className="text-orange-600">Required</span>
+                                )}
+                            </div>
+                        )}
 
                         {/* Children Content */}
-                        {children && (
+                        {children != null && (
                             <div className="space-y-4">
                                 {children}
                             </div>

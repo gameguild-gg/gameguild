@@ -1,6 +1,6 @@
 {
   "name": "game-guild",
-  "version": "0.1.0",
+  "version": "2.55.0",
   "description": "",
   "author": "Matheus Martins <contact@matheusmartins.com>",
   "homepage": "https://gameguild.gg",
@@ -8,12 +8,14 @@
   "private": true,
   "workspaces": [
     "apps/**",
-    "packages/**"
+    "demos/**",
+    "packages/**",
+    "tools/**"
   ],
   "scripts": {
-    "dev": "npm run start --workspaces --if-present",
-    "dev:api": "npm run start:dev --workspace=apps/api",
-    "dev:web": "npm run dev --workspace=apps/website",
+    "dev": "npm-run-all --parallel dev:api dev:web",
+    "dev:api": "dotnet watch --project apps/api/Source/GameGuild.API/GameGuild.API.csproj",
+    "dev:web": "npm run dev --workspace=apps/web",
     "build": "npm run build --workspaces --if-present",
     "build:api": "npm run build --workspace=apps/api",
     "build:web": "npm run build --workspace=apps/website",
@@ -47,23 +49,16 @@
     "npm": ">=10.0.0"
   },
   "devDependencies": {
-    "@game-guild/eslint-config": "0.1.0",
-    "@game-guild/prettier-config": "0.1.0",
-    "@game-guild/tailwind-config": "0.1.0",
-    "@game-guild/typescript-config": "0.1.0",
-    "@next/third-parties": "^15.4.6",
-    "@tailwindcss/postcss": "^4.0.0",
+    "@game-guild/eslint-config": "*",
+    "@game-guild/prettier-config": "*",
+    "@game-guild/tailwind-config": "*",
+    "@game-guild/typescript-config": "*",
     "@types/node": "^20.0.0",
-    "@types/react": "^19.0.0",
-    "@types/react-dom": "^19.0.0",
     "eslint": "^9.0.0",
-    "next": "^15.4.8",
+    "npm-run-all": "^4.1.5",
     "prettier": "^3.5.0",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
     "rimraf": "^6.0.0",
     "syncpack": "^12.0.0",
-    "tailwindcss": "^4.0.0",
     "typescript": "^5.5.0"
   }
 }

@@ -1,0 +1,96 @@
+/* Marp presentation styles */
+
+.marp-container {
+  width: 100%;
+  background: var(--background);
+  border-radius: 8px;
+  overflow: auto;
+}
+
+.marp-fullscreen {
+  border-radius: 0;
+}
+
+.marp-slides-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+}
+
+/* Override Marp default styles to fit theme */
+.marp section {
+  background-color: var(--card) !important;
+  color: var(--card-foreground) !important;
+  padding: 2rem !important;
+  margin: 1rem auto !important;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;
+  border-radius: 8px !important;
+  max-width: 960px !important;
+  width: 100% !important;
+}
+
+.marp section h1,
+.marp section h2,
+.marp section h3,
+.marp section h4,
+.marp section h5,
+.marp section h6 {
+  color: var(--foreground) !important;
+}
+
+.marp section code {
+  background-color: var(--muted) !important;
+  color: var(--foreground) !important;
+  padding: 0.2em 0.4em !important;
+  border-radius: 3px !important;
+}
+
+.marp section pre {
+  background-color: var(--muted) !important;
+  border-radius: 6px !important;
+  padding: 1em !important;
+}
+
+.marp section pre code {
+  background-color: transparent !important;
+  padding: 0 !important;
+}
+
+.marp section a {
+  color: var(--primary) !important;
+}
+
+.marp section a:hover {
+  text-decoration: underline !important;
+}
+
+/* Pagination styles */
+.marp section::after {
+  color: var(--muted-foreground) !important;
+}
+
+/* Table styles */
+.marp section table {
+  border-color: var(--border) !important;
+}
+
+.marp section th,
+.marp section td {
+  border-color: var(--border) !important;
+}
+
+.marp section th {
+  background-color: var(--muted) !important;
+}
+
+/* Image styles */
+.marp section img {
+  border-radius: 4px !important;
+}
+
+/* Blockquote styles */
+.marp section blockquote {
+  border-left-color: var(--primary) !important;
+  color: var(--muted-foreground) !important;
+}

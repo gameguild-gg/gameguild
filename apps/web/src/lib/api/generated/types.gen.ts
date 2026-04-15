@@ -1800,6 +1800,9 @@ export type ContentStatsDto = {
     Challenge?: number;
     Reflection?: number;
     Survey?: number;
+    Reveal?: number;
+    Marp?: number;
+    Remark?: number;
   } | null;
   contentByVisibility?: {
     Public?: number;
@@ -1893,6 +1896,7 @@ export type CreateProgramContentDto = {
   parentId?: string | null;
   title: string;
   description?: string | null;
+  slug?: string | null;
   type: ProgramContentType;
   body?: string | null;
   sortOrder?: number;
@@ -3466,6 +3470,7 @@ export type ProgramContent = {
   parentId?: string | null;
   title: string;
   description?: string | null;
+  slug?: string | null;
   type?: ProgramContentType;
   body?: string | null;
   sortOrder?: number;
@@ -3489,6 +3494,7 @@ export type ProgramContentDto = {
   programId?: string;
   parentId?: string | null;
   title?: string | null;
+  slug?: string | null;
   description?: string | null;
   type?: ProgramContentType;
   body?: unknown;
@@ -3543,6 +3549,18 @@ export enum ProgramContentType {
    * Survey
    */
   SURVEY = 8,
+  /**
+   * Reveal
+   */
+  REVEAL = 9,
+  /**
+   * Marp
+   */
+  MARP = 10,
+  /**
+   * Remark
+   */
+  REMARK = 11,
 }
 
 export enum ProgramDifficulty {
@@ -4963,6 +4981,7 @@ export type UpdateProgramContentDto = {
   id: string;
   title?: string | null;
   description?: string | null;
+  slug?: string | null;
   type?: ProgramContentType;
   body?: string | null;
   sortOrder?: number | null;

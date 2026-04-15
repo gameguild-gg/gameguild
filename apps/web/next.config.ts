@@ -1,11 +1,14 @@
+import fs from 'fs';
 import { NextConfig } from 'next';
 import createNextIntlPlugin from 'next-intl/plugin';
+import path from 'path';
 import webpack from 'webpack';
 
 const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts');
 
 const nextConfig: NextConfig = {
   /* config options here */
+  transpilePackages: ['mermaid', '@mermaid-js/parser', 'langium', 'vscode-jsonrpc', 'chevrotain'],
   output: 'standalone',
   // Force the app to use the correct base URL
   assetPrefix: process.env.NODE_ENV === 'production' ? undefined : '',
@@ -251,6 +254,33 @@ const nextConfig: NextConfig = {
     config.resolve.extensionAlias = {
       '.js': ['.js', '.ts'],
       '.jsx': ['.jsx', '.tsx'],
+    };
+
+    // Resolve vscode-jsonrpc, vscode-languageserver-types, and
+    // vscode-languageserver-protocol for langium.  langium imports these
+    // directly but doesn't list them as dependencies.  Depending on the
+    // install layout (monorepo hoisting vs Docker flat) they may not be
+    // resolvable from langium's location, so we alias them explicitly.
+    // require.resolve works in every layout because these are direct deps
+    // in package.json.
+    const resolvePackageDir = (pkg: string): string => {
+      try {
+        return path.dirname(require.resolve(`${pkg}/package.json`));
+      } catch {
+        // Fallback: probe nested location inside vscode-languageserver
+        const nested = [
+          path.resolve(__dirname, 'node_modules/vscode-languageserver/node_modules', pkg),
+          path.resolve(__dirname, '../../node_modules/vscode-languageserver/node_modules', pkg),
+        ];
+        return nested.find((p) => fs.existsSync(p)) ?? pkg;
+      }
+    };
+
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      'vscode-jsonrpc': resolvePackageDir('vscode-jsonrpc'),
+      'vscode-languageserver-protocol': resolvePackageDir('vscode-languageserver-protocol'),
+      'vscode-languageserver-types': resolvePackageDir('vscode-languageserver-types'),
     };
 
     // Add fallbacks for Node.js modules used by wasmoon

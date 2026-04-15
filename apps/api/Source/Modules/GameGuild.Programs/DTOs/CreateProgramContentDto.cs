@@ -1,11 +1,12 @@
-using GameGuild.SharedKernel.Enums;
-using GameGuild.Modules.Programs.Models;
-using GameGuild.Modules.Programs.Entities;
 using System.ComponentModel.DataAnnotations;
+using GameGuild.Modules.Programs.Entities;
+using GameGuild.Modules.Programs.Models;
+using GameGuild.SharedKernel.Enums;
 namespace GameGuild.Modules.Programs;
 
 /// <summary> DTO for creating new program content </summary>
-public class CreateProgramContentDto {
+public class CreateProgramContentDto
+{
   [Required] public Guid ProgramId { get; set; }
 
   public Guid? ParentId { get; set; }
@@ -13,6 +14,8 @@ public class CreateProgramContentDto {
   [Required][StringLength(255)] public string Title { get; set; } = string.Empty;
 
   public string Description { get; set; } = string.Empty;
+
+  [StringLength(255)] public string? Slug { get; set; }
 
   [Required] public ProgramContentType Type { get; set; }
 
