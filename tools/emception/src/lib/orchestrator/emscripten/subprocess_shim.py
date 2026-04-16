@@ -7,11 +7,13 @@ spawning a real process (impossible in the browser).
 
 Communication protocol:
   1. Write JSON request to /tmp/.subprocess_request
-  2. Call os.system('__dispatch_subprocess') which goes through
-     Emscripten's __emscripten_system -> Module.systemCallback -> JSPI
-  3. The JS callback runs the tool, captures stdout/stderr, writes to
-     /tmp/.subprocess_stdout and /tmp/.subprocess_stderr
-  4. Read stdout/stderr from those files
+  2. Open /tmp/__dispatch_subprocess__ for reading — this triggers the
+     patched ___syscall_openat in python.mjs which calls
+     Module["subprocessDispatch"]() via Asyncify.handleAsync
+  3. subprocessDispatch runs the tool and writes results to /tmp/
+  4. Read exit code from /tmp/__dispatch_subprocess__
+  5. Read stdout/stderr from /tmp/.subprocess_stdout and /tmp/.subprocess_stderr
+  6. Remove /tmp/__dispatch_subprocess__ so next dispatch re-triggers the hook
 
 This file is injected into CPython's module path as `subprocess.py`,
 replacing the standard library's subprocess module.
@@ -37,7 +39,7 @@ def _dispatch(cmd_str, cwd=None, input_data=None):
     # Log every dispatch for debugging
     try:
         with open('/tmp/subprocess_dispatch.log', 'a') as _dlog:
-            _dlog.write(f'_dispatch called: cmd={cmd_str[:200]}\n')
+            _dlog.write(f'_dispatch called: cmd={cmd_str}\n')
     except: pass
 
     request = json.dumps({'cmd': cmd_str, 'cwd': cwd or ''})
@@ -56,11 +58,22 @@ def _dispatch(cmd_str, cwd=None, input_data=None):
         except (FileNotFoundError, OSError):
             pass
 
-    # This calls __emscripten_system('__dispatch_subprocess') which the
-    # JS systemCallback intercepts. JSPI suspends WASM while the tool runs.
-    rc_raw = os.system('__dispatch_subprocess')
-    # os.system returns wait-status; extract exit code via WEXITSTATUS
-    rc = (rc_raw >> 8) & 0xFF if rc_raw >= 0 else rc_raw
+    # Trigger dispatch via file open — uses __syscall_openat → Asyncify.
+    # os.system() uses __emscripten_system which is NOT properly Asyncify-
+    # instrumented through CPython's indirect call dispatch (tp_call etc.),
+    # causing 'unreachable' WASM traps. File open goes through __syscall_openat
+    # which IS in ASYNCIFY_IMPORTS and works reliably.
+    # The patched ___syscall_openat in python.mjs intercepts this path,
+    # calls Module["subprocessDispatch"]() via Asyncify.handleAsync,
+    # which runs the tool and writes results to /tmp/.
+    with open('/tmp/__dispatch_subprocess__', 'r') as f:
+        rc = int(f.read().strip() or '1')
+    # Remove trigger file so next dispatch re-triggers the async onPreOpen hook
+    # (otherwise isCachedSync finds stale data and skips the hook)
+    try:
+        os.unlink('/tmp/__dispatch_subprocess__')
+    except (FileNotFoundError, OSError):
+        pass
 
     stdout = ''
     stderr = ''

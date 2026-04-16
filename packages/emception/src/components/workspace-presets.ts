@@ -47,7 +47,7 @@ export const CPP_TERMINAL_PRESET: WorkspaceConfig = {
   version: 1,
   compile: {
     tool: 'emcc',
-    args: ['emcc', '{sourceFile}', '-o', '/home/user/main.wasm', '-O2'],
+    args: ['emcc', '{sourceFile}', '-o', '/home/user/main.wasm', '-O2', '-sASYNCIFY'],
     cwd: '/home/user',
     output: '/home/user/main.wasm',
     sourceDetect: { extensions: ['.cpp', '.c'], entryPoint: '/src/main.cpp' },

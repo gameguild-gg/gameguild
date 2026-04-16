@@ -103,6 +103,19 @@ export interface StderrMessage {
 export interface StdinRequestMessage {
     type: 'stdinRequest';
     id: number;
+    /** Shared ring-buffer control block: [readIndex, writeIndex, closed]. */
+    controlBuffer: SharedArrayBuffer;
+    /** Shared ring-buffer payload bytes. */
+    dataBuffer: SharedArrayBuffer;
+}
+
+/** Shell needs a shared stdin channel for a foreground interactive WASI run. */
+export interface ShellStdinRequestMessage {
+    type: 'shellStdinRequest';
+    /** Shared ring-buffer control block: [readIndex, writeIndex, closed]. */
+    controlBuffer: SharedArrayBuffer;
+    /** Shared ring-buffer payload bytes. */
+    dataBuffer: SharedArrayBuffer;
 }
 
 /** A run completed. */
@@ -184,6 +197,7 @@ export type WorkerToMainMessage =
     | StdoutMessage
     | StderrMessage
     | StdinRequestMessage
+    | ShellStdinRequestMessage
     | RunResultMessage
     | GetFileResultMessage
     | WriteFileResultMessage

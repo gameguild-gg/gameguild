@@ -23,4 +23,16 @@ export interface IOProvider {
 
     /** Enable/disable local echo of stdin input (for interactive programs). */
     setStdinEcho?(enabled: boolean): void;
+
+    /** Enter an exclusive stdin mode used by foreground interactive programs. */
+    enterExclusiveStdin?(): void;
+
+    /** Exit exclusive stdin mode. */
+    exitExclusiveStdin?(): void;
+
+    /** Read a byte from the exclusive stdin channel when available. */
+    readByteExclusive?(): number | null | Promise<number>;
+
+    /** True when exclusive stdin reads can be served synchronously. */
+    supportsSynchronousExclusiveStdin?: boolean;
 }
