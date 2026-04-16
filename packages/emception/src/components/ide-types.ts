@@ -99,13 +99,11 @@ export const TERMINAL_THEME = {
 } as const;
 
 export const DEFAULT_CODE = `#include <iostream>
-#include "greetings.h"
 #include <string>
 int main() {
   std::string name;
   std::cout << "Enter your name: ";
   std::getline(std::cin, name);
-  std::cout << greeting() << std::endl;
   std::cout << "Hello, " << name << "! Welcome to WebAssembly!" << std::endl;
   return 0;
 }

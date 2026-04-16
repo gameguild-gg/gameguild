@@ -20,8 +20,15 @@ function makeLineBufferedStdin(tty: { readByteExclusive: () => number | Promise<
     if (lineQueue.length > 0) return lineQueue.shift()!;
     while (true) {
       const raw = tty.readByteExclusive();
+      if (raw === null) {
+        await new Promise<void>((resolve) => setTimeout(resolve, 8));
+        continue;
+      }
       const byte: number = typeof (raw as Promise<number>).then === 'function' ? await (raw as Promise<number>) : (raw as number);
-      if (byte === -1) return -1;
+      if (byte === -1 || byte === 0) {
+        await new Promise<void>((resolve) => setTimeout(resolve, 8));
+        continue;
+      }
       if (byte === 127 || byte === 8) {
         if (lineCursor > 0) {
           lineBuf = lineBuf.slice(0, lineCursor - 1) + lineBuf.slice(lineCursor);
@@ -30,6 +37,13 @@ function makeLineBufferedStdin(tty: { readByteExclusive: () => number | Promise<
         continue;
       }
       if (byte === 13 || byte === 10) {
+        // Ignore empty/whitespace-only CR/LF lines to avoid delivering stale
+        // terminal newlines as immediate blank stdin records.
+        if (lineBuf.trim().length === 0) {
+          lineBuf = '';
+          lineCursor = 0;
+          continue;
+        }
         for (let i = 0; i < lineBuf.length; i++) lineQueue.push(lineBuf.charCodeAt(i));
         lineQueue.push(10);
         lineBuf = '';
@@ -196,7 +210,7 @@ export default function Ide({ title = 'Emception', manifestUrl = '/cdn/manifest.
     // so that getModels() reflects the new workspace immediately.
     const mc = monacoRef.current;
     if (mc) {
-      mc.editor.getModels().forEach((m) => m.dispose());
+      mc.editor.getModels().forEach((m: { dispose: () => void }) => m.dispose());
       for (const [path, file] of Object.entries(state.files)) {
         if (file.type !== 'text') continue;
         const uri = mc.Uri.parse(`file://${path}`);
@@ -227,28 +241,35 @@ export default function Ide({ title = 'Emception', manifestUrl = '/cdn/manifest.
       setIsReady(false);
       setStatus('Booting toolchain...');
       try {
-        const result = await bootInWorker(manifestUrl, xterm);
-        if (!isMounted()) return;
-        // Mirror tty output to a hidden DOM element for Playwright E2E tests.
+        // Mirror ALL xterm output to a hidden DOM element for Playwright E2E tests.
+        // Must be patched BEFORE bootInWorker so the MiniShell banner (sent by the
+        // Worker before the 'booted' reply) is also captured in the log.
         // eslint-disable-next-line no-control-regex
         const stripAnsi = (s: string) => s.replace(/\u001b\[[\d;]*m/g, '');
         const log = terminalLogRef;
-        const origWriteLine = result.tty.writeLine.bind(result.tty);
-        const origWriteError = result.tty.writeError.bind(result.tty);
-        const origWrite = result.tty.write.bind(result.tty);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const xtermAny = xterm as any;
+        if (!xtermAny.__emceptionLogPatched) {
+          const origXtermWriteln = xtermAny.writeln.bind(xterm);
+          xtermAny.writeln = (data: string | Uint8Array, callback?: () => void) => {
+            origXtermWriteln(data, callback);
+            if (log.current && typeof data === 'string') log.current.textContent += stripAnsi(data) + '\n';
+          };
+          const origXtermWrite = xtermAny.write.bind(xterm);
+          xtermAny.write = (data: string | Uint8Array, callback?: () => void) => {
+            origXtermWrite(data, callback);
+            if (log.current && typeof data === 'string') log.current.textContent += stripAnsi(data);
+          };
+          xtermAny.__emceptionLogPatched = true;
+        }
+
+        const result = await bootInWorker(manifestUrl, xterm);
+        if (!isMounted()) {
+          result.client.terminate();
+          return;
+        }
+        // Patch tty.clear to also clear the mirror log so each compile run starts fresh.
         const origClear = result.tty.clear.bind(result.tty);
-        result.tty.writeLine = (text: string) => {
-          origWriteLine(text);
-          if (log.current) log.current.textContent += stripAnsi(text) + '\n';
-        };
-        result.tty.writeError = (text: string) => {
-          origWriteError(text);
-          if (log.current) log.current.textContent += stripAnsi(text) + '\n';
-        };
-        result.tty.write = (text: string) => {
-          origWrite(text);
-          if (log.current) log.current.textContent += stripAnsi(text);
-        };
         result.tty.clear = () => {
           origClear();
           if (log.current) log.current.textContent = '';
@@ -276,6 +297,7 @@ export default function Ide({ title = 'Emception', manifestUrl = '/cdn/manifest.
     doBootstrap(() => mounted);
     return () => {
       mounted = false;
+      orchestratorRef.current?.client.terminate();
       orchestratorRef.current = null;
     };
   }, [terminalReady, manifestUrl, doBootstrap]);
@@ -481,6 +503,7 @@ export default function Ide({ title = 'Emception', manifestUrl = '/cdn/manifest.
     try {
       // ── Sync all text files to VFS ──────────────────────────────
       tty.clear();
+      console.log(`${P} COMPILE & RUN START`);
       const enc = new TextEncoder();
       for (const file of textFiles) {
         const fsPath = toWorkspaceFsPath(file.path);
@@ -825,8 +848,121 @@ export default function Ide({ title = 'Emception', manifestUrl = '/cdn/manifest.
         tty.writeLine(`\x1b[31mCompilation failed (exit ${result.exitCode})\x1b[0m`);
         return;
       }
-      setStatus(`Compiled (${duration}s)`);
+      setStatus('Compilation successful');
       tty.writeLine(`\x1b[32mCompilation successful in ${duration}s\x1b[0m`);
+      const wasmPath = resolvedConfig.compile.output || '/home/user/main.wasm';
+      let wasmBytes = await client.getFile(wasmPath);
+
+      // emcc may return before all subprocess-linked outputs are flushed to VFS.
+      // Give the canonical artifact a short grace window before triggering fallback.
+      if ((!wasmBytes || wasmBytes.length === 0) && resolvedConfig.run.type === 'wasi-terminal') {
+        const waitUntil = performance.now() + 12_000;
+        while ((!wasmBytes || wasmBytes.length === 0) && performance.now() < waitUntil) {
+          await new Promise<void>((resolve) => setTimeout(resolve, 120));
+          wasmBytes = await client.getFile(wasmPath);
+        }
+      }
+
+      if ((!wasmBytes || wasmBytes.length === 0) && resolvedConfig.run.type === 'wasi-terminal') {
+        tty.writeLine('\x1b[33mOutput artifact missing after emcc; attempting fallback link pipeline...\x1b[0m');
+        const fallbackObj = '/tmp/emception-fallback-main.o';
+        const sourceFsPath = toWorkspaceFsPath(compileTarget);
+
+        const clangFallback = await client.run(
+          'clang',
+          [
+            'clang',
+            '--target=wasm32-unknown-emscripten',
+            '--sysroot=/usr/lib/emscripten/cache/sysroot',
+            '-Xclang',
+            '-iwithsysroot/include/fakesdl',
+            '-Xclang',
+            '-iwithsysroot/include/compat',
+            '-O2',
+            '-c',
+            sourceFsPath,
+            '-o',
+            fallbackObj,
+          ],
+          {
+            cwd: resolvedConfig.compile.cwd ?? '/home/user',
+            onStdout: (t: string) => tty.writeLine(t),
+            onStderr: (t: string) => tty.writeError(t),
+          },
+        );
+
+        if (clangFallback.exitCode === 0) {
+          const crtPath = '/usr/lib/emscripten/cache-lib/wasm32-emscripten/crt1.o';
+          const crtBytes = await client.getFile(crtPath);
+          const magic = crtBytes
+            ? Array.from(crtBytes.slice(0, 8))
+              .map((b) => b.toString(16).padStart(2, '0'))
+              .join('')
+            : 'none';
+          tty.writeLine(`crt1.o probe: bytes=${crtBytes?.length ?? 0}, head=${magic}`);
+
+          const lldFallback = await client.run(
+            'wasm-ld',
+            [
+              'wasm-ld',
+              '-o',
+              wasmPath,
+              '--entry=main',
+              '--import-undefined',
+              '--strip-debug',
+              '--export-if-defined=__start_em_asm',
+              '--export-if-defined=__stop_em_asm',
+              '--export-if-defined=__start_em_lib_deps',
+              '--export-if-defined=__stop_em_lib_deps',
+              '--export-if-defined=__start_em_js',
+              '--export-if-defined=__stop_em_js',
+              '--export-table',
+              '-z',
+              'stack-size=65536',
+              '--no-growable-memory',
+              '--initial-heap=16777216',
+              '--no-stack-first',
+              '--table-base=1',
+              '--global-base=1024',
+              fallbackObj,
+              '-L/usr/lib/emscripten/cache/sysroot/lib/wasm32-emscripten',
+              '-L/usr/lib/emscripten/src/lib',
+              '/usr/lib/emscripten/cache/sysroot/lib/wasm32-emscripten/crt1.o',
+              '-lGL-getprocaddr',
+              '-lal',
+              '-lhtml5',
+              '-lstandalonewasm-nocatch',
+              '-lstubs',
+              '-lc',
+              '-ldlmalloc',
+              '-lcompiler_rt',
+              '-lc++-noexcept',
+              '-lc++abi-noexcept',
+              '-lsockets',
+              '-mllvm',
+              '-combiner-global-alias-analysis=false',
+              '-mllvm',
+              '-enable-emscripten-sjlj',
+              '-mllvm',
+              '-disable-lsr',
+            ],
+            {
+              cwd: resolvedConfig.compile.cwd ?? '/home/user',
+              onStdout: (t: string) => tty.writeLine(t),
+              onStderr: (t: string) => tty.writeError(t),
+            },
+          );
+
+          if (lldFallback.exitCode !== 0) {
+            tty.writeLine('\x1b[31mFallback linker step failed.\x1b[0m');
+          }
+        } else {
+          tty.writeLine('\x1b[31mFallback compile step failed.\x1b[0m');
+        }
+
+        wasmBytes = await client.getFile(wasmPath);
+      }
+      console.log(`${P} Compilation output: main.wasm=${wasmBytes?.length ?? 0}`);
       tty.writeLine('Running...');
       const lineBufferedStdin = makeLineBufferedStdin(tty);
       const runArgs = resolvedConfig.run.args ?? ['wasi-run', resolvedConfig.compile.output || '/home/user/main.wasm'];
@@ -851,6 +987,7 @@ export default function Ide({ title = 'Emception', manifestUrl = '/cdn/manifest.
         tty.writeError(String(e));
       }
     } finally {
+      console.log(`${P} COMPILE & RUN COMPLETE`);
       restoreEditorFocus();
     }
   };
