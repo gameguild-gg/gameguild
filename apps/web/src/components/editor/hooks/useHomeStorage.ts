@@ -22,8 +22,15 @@ export interface HomeStorageAdapter {
   load: (id: string) => Promise<ProjectData | null>
   list: () => Promise<ProjectData[]>
   delete: (id: string) => Promise<void>
-  save: (id: string, name: string, data: string, tags: string[], storageType?: "local" | "gameguild-cloud" | "google-drive") => Promise<void>
+  save: (id: string, name: string, data: string, tags: string[], storageType?: "local" | "gameguild-cloud" | "google-drive", preferences?: any, type?: string, deps?: any, engine?: string) => Promise<void>
   searchProjects: (searchTerm: string, tags: string[], filterMode: "all" | "any", storageTypeFilter?: "local" | "gameguild-cloud" | "google-drive") => Promise<ProjectData[]>
+}
+
+function generateProjectId(): string {
+  if (typeof crypto !== "undefined" && crypto.randomUUID) {
+    return crypto.randomUUID()
+  }
+  return "proj_" + Date.now().toString(36) + "_" + Math.random().toString(36).substr(2, 9)
 }
 
 export interface UseHomeStorageReturn {
@@ -31,6 +38,7 @@ export interface UseHomeStorageReturn {
   availableTags: Array<{ name: string }>
   loadAvailableTags: () => Promise<void>
   storageAdapter: HomeStorageAdapter
+  generateProjectId: () => string
 }
 
 export function useHomeStorage(): UseHomeStorageReturn {
@@ -100,10 +108,10 @@ export function useHomeStorage(): UseHomeStorageReturn {
       }
     },
 
-    save: async (id: string, name: string, data: string, tags: string[], storageType?: "local" | "gameguild-cloud" | "google-drive") => {
+    save: async (id: string, name: string, data: string, tags: string[], storageType?: "local" | "gameguild-cloud" | "google-drive", preferences?: any, type?: string, deps?: any, engine?: string) => {
       if (!isDbInitialized) throw new Error("Database not initialized")
       try {
-        await dbStorage.current.save(id, name, data, tags, storageType)
+        await dbStorage.current.save(id, name, data, tags, storageType, preferences, type as any, deps, engine as any)
       } catch (error) {
         console.error("Failed to save project:", error)
         throw error
@@ -126,5 +134,6 @@ export function useHomeStorage(): UseHomeStorageReturn {
     availableTags,
     loadAvailableTags,
     storageAdapter,
+    generateProjectId,
   }
 }
