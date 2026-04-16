@@ -131,8 +131,8 @@ export async function checkSelectedProject(params: CheckSelectedProjectParams): 
           // Handle blocks engine: restore cells and exit early
           if (projectEngine === ENGINE_TYPES.BLOCKS && setBlockArrayCells) {
             const states = extractEditorStates(projectData.data, projectData.type as ProjectType)
-            const cellsData = states.blocks?.b1 || []
-            setBlockArrayCells(Array.isArray(cellsData) ? cellsData as CellularContent : [])
+            const cellsData = states.blocks?.b1 || { order: [], blocks: {} }
+            setBlockArrayCells(cellsData as any)
             
             // Update URL hash if not already set
             if (window.location.hash !== `#${projectData.id}`) {
