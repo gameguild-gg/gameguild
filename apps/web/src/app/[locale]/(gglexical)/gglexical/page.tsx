@@ -14,6 +14,7 @@ import {
 import { MediaUploadDialog } from "@/components/editor/extras/media-upload-dialog"
 import { DeleteConfirmDialog } from "@/components/editor/extras/dialogs/delete-confirm-dialog"
 import { InfoDialog } from "@/components/editor/extras/editor/info-dialog"
+import { CreateProjectDialog } from "@/components/editor/extras/editor/create-project-dialog"
 import { ProjectPagination } from "@/components/editor/extras/project-dialog/project-pagination"
 
 import { useHomeStorage } from "@/components/editor/hooks/useHomeStorage"
@@ -47,7 +48,7 @@ export default function HomePage() {
   const [currentPage, setCurrentPage] = useState(1)
 
   // Storage hook
-  const { isDbInitialized, availableTags, loadAvailableTags, storageAdapter } = useHomeStorage()
+  const { isDbInitialized, availableTags, loadAvailableTags, storageAdapter, generateProjectId } = useHomeStorage()
 
   // Project manager hook
   const {
@@ -57,12 +58,11 @@ export default function HomePage() {
     projectActions,
     filteredCount: projectFilteredCount,
     additionalFilteredProjects,
-    newProjectDialogOpen,
-    setNewProjectDialogOpen,
-    selectedProjectType,
-    setSelectedProjectType,
+    createDialogOpen,
+    setCreateDialogOpen,
     handleCreateNewProject,
-    handleConfirmNewProject,
+    handleProjectCreate,
+    refreshProjects,
   } = useProjectManager({
     isDbInitialized,
     storageAdapter,
@@ -230,59 +230,18 @@ export default function HomePage() {
         )}
       </ManagerLayout>
 
-      {/* New Project Type Selection Dialog */}
-      <Dialog open={newProjectDialogOpen} onOpenChange={setNewProjectDialogOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Create New Project</DialogTitle>
-            <DialogDescription>
-              Choose the layout type for your new project
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-3">
-              <button
-                onClick={() => setSelectedProjectType("type1")}
-                className={`w-full p-4 rounded-lg border-2 text-left transition-all ${
-                  selectedProjectType === "type1"
-                    ? "border-blue-500 bg-blue-50 dark:bg-blue-950"
-                    : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600"
-                }`}
-              >
-                <div className="font-semibold mb-1">Type 1 - Single Vertical Editor</div>
-                <div className="text-sm text-gray-600 dark:text-gray-400">
-                  Traditional layout with a single editor panel for focused content creation
-                </div>
-              </button>
-              
-              <button
-                onClick={() => setSelectedProjectType("type2")}
-                className={`w-full p-4 rounded-lg border-2 text-left transition-all ${
-                  selectedProjectType === "type2"
-                    ? "border-blue-500 bg-blue-50 dark:bg-blue-950"
-                    : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600"
-                }`}
-              >
-                <div className="font-semibold mb-1">Type 2 - Dual Horizontal Editors</div>
-                <div className="text-sm text-gray-600 dark:text-gray-400">
-                  Side-by-side layout with left and right editor panels for comparative or parallel work
-                </div>
-              </button>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setNewProjectDialogOpen(false)}
-            >
-              Cancel
-            </Button>
-            <Button onClick={handleConfirmNewProject}>
-              Create Project
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {/* Create New Project Dialog */}
+      <CreateProjectDialog
+        open={createDialogOpen}
+        onOpenChange={setCreateDialogOpen}
+        isDbInitialized={isDbInitialized}
+        storageAdapter={storageAdapter}
+        availableTags={availableTags}
+        onProjectCreate={handleProjectCreate}
+        onProjectsListUpdate={refreshProjects}
+        onAvailableTagsUpdate={loadAvailableTags}
+        generateProjectId={generateProjectId}
+      />
 
       {/* Project Delete Confirmation Dialog */}
       <DeleteConfirmDialog
