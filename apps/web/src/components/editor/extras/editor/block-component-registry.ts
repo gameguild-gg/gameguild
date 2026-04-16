@@ -29,7 +29,12 @@ import {
   Table2,
   FolderOpen,
 } from "lucide-react"
-import type { Block } from "./block-types"
+import type { Block, BlockCellType } from "@/lib/storage/editor/block-structure"
+import { BLOCK_CELL_TYPES } from "@/lib/storage/editor/block-structure"
+
+// Re-export for consumers that import from here
+export type { BlockCellType } from "@/lib/storage/editor/block-structure"
+export { BLOCK_CELL_TYPES } from "@/lib/storage/editor/block-structure"
 
 // ============================================================================
 // Block Type Configuration
@@ -41,15 +46,6 @@ export interface BlockTypeConfig {
   description: string
   createEmpty: () => Block
 }
-
-/** Decorator CellTypes supported by the Block Array Engine */
-export const BLOCK_CELL_TYPES = [
-  "quiz", "code", "img", "vid", "aud", "gal", "yt", "spot",
-  "mmd", "vega", "pres", "src", "md", "html", "rt", "hdr", "div",
-  "btn", "adm", "tbl", "proj",
-] as const
-
-export type BlockCellType = typeof BLOCK_CELL_TYPES[number]
 
 // ============================================================================
 // Registry

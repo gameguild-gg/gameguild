@@ -6,7 +6,7 @@ import { BlockTypePicker } from "./block-type-picker"
 import { BlockEditorModal } from "./block-editor-modal"
 import { BLOCK_REGISTRY, type BlockCellType } from "./block-component-registry"
 import { DeleteConfirmDialog } from "@/components/editor/extras/dialogs/delete-confirm-dialog"
-import type { Block, BlockArray } from "./block-types"
+import type { Block, BlockArray } from "@/lib/storage/editor/block-structure"
 import { BlockContentRenderer } from "@/components/editor/extras/editor/block-array-viewer"
 
 // ============================================================================
