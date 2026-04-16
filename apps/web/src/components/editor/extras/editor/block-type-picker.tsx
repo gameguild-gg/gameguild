@@ -7,8 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip"
 import { BLOCK_REGISTRY, BLOCK_CELL_TYPES, type BlockCellType } from "./block-component-registry"
-import type { Cell } from "@/lib/storage/editor/cell-structure"
-import { createDecoratorMeta } from "@/lib/storage/editor/cell-converters/cell-metadata"
+import type { Block } from "./block-types"
 import { Search, LayoutGrid, FileText, ArrowRight } from "lucide-react"
 import {
   CheckCircle,
@@ -190,7 +189,7 @@ const BLOCK_CATEGORIES: { label: string; types: BlockCellType[] }[] = [
 interface BlockTypePickerProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  onSelect: (cell: Cell) => void
+  onSelect: (block: Block) => void
 }
 
 export function BlockTypePicker({ open, onOpenChange, onSelect }: BlockTypePickerProps) {
@@ -220,8 +219,8 @@ export function BlockTypePicker({ open, onOpenChange, onSelect }: BlockTypePicke
 
   const handleSelect = (type: BlockCellType) => {
     const config = BLOCK_REGISTRY[type]
-    const [data, meta] = config.createEmpty()
-    onSelect([data, meta] as Cell)
+    const block = config.createEmpty()
+    onSelect(block)
     onOpenChange(false)
     setSearch("")
     setTab("blocks")
@@ -229,11 +228,8 @@ export function BlockTypePicker({ open, onOpenChange, onSelect }: BlockTypePicke
 
   const handleSelectQuizTemplate = (template: QuizTemplate) => {
     const entry = template.createEntry()
-    const cell: Cell = [
-      { d: entry },
-      createDecoratorMeta("quiz"),
-    ]
-    onSelect(cell)
+    const block: Block = { type: "quiz", data: entry }
+    onSelect(block)
     onOpenChange(false)
     setSearch("")
     setTab("blocks")

@@ -20,6 +20,7 @@ import type { ProjectData } from "@/components/editor/extras/preview/preview-loa
 import type { ProjectData as StorageProjectData } from "@/lib/storage/editor/enhanced-storage-adapter"
 import { cellsToLexical } from "@/lib/storage/editor/cell-structure"
 import { BlockArrayViewer } from "@/components/editor/extras/editor/block-array-viewer"
+import { cellsToBlocks } from "@/components/editor/extras/editor/block-converters"
 
 
 export default function PreviewPage() {
@@ -358,7 +359,7 @@ export default function PreviewPage() {
 
             {currentProject && isBlocksEngine ? (
               <div className="border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900 p-6">
-                <BlockArrayViewer cells={blocksCells || []} />
+                <BlockArrayViewer blocks={cellsToBlocks(blocksCells || [])} />
               </div>
             ) : currentProject && (Object.keys(states.blocks).length > 0 || hasSlides) ? (
               <>

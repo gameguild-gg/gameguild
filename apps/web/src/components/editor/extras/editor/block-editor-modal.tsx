@@ -6,9 +6,9 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import type { CellType } from "@/lib/storage/editor/cell-converters/cell-data"
-import type { Cell } from "@/lib/storage/editor/cell-structure"
-import { BLOCK_REGISTRY, type BlockCellType } from "./block-component-registry"
+import type { Block } from "./block-types"
+import type { BlockCellType } from "./block-component-registry"
+import { BLOCK_REGISTRY } from "./block-component-registry"
 
 // Pattern A standalone editors
 import { QuizSettingsDialog } from "@/components/editor/extras/quiz/quiz-settings-dialog"
@@ -211,17 +211,17 @@ function SourceForm({ data, onChange }: { data: any; onChange: (d: any) => void 
 interface BlockEditorModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  cell: Cell | null
-  cellType: CellType | null
+  block: Block | null
+  blockType: BlockCellType | null
   onSave: (data: any) => void
 }
 
-export function BlockEditorModal({ open, onOpenChange, cell, cellType, onSave }: BlockEditorModalProps) {
+export function BlockEditorModal({ open, onOpenChange, block, blockType, onSave }: BlockEditorModalProps) {
   const [editData, setEditData] = useState<any>(null)
   const [showModeSelection, setShowModeSelection] = useState(false)
 
-  // Initialize editData when cell changes
-  const currentData = editData ?? (cell ? (cell[0] as any).d : null)
+  // Initialize editData when block changes
+  const currentData = editData ?? block?.data ?? null
 
   const handleSave = useCallback((data: any) => {
     onSave(data)
@@ -265,15 +265,15 @@ export function BlockEditorModal({ open, onOpenChange, cell, cellType, onSave }:
     setEditData(newData)
   }, [])
 
-  if (!cellType || !currentData) return null
+  if (!blockType || !currentData) return null
 
-  const config = BLOCK_REGISTRY[cellType as BlockCellType]
+  const config = BLOCK_REGISTRY[blockType as BlockCellType]
   if (!config) return null
 
   // ─── Pattern A: Standalone editors that manage their own UI ───
 
   // Quiz — has its own dialog
-  if (cellType === "quiz") {
+  if (blockType === "quiz") {
     return (
       <QuizSettingsDialog
         isOpen={open}
@@ -285,7 +285,7 @@ export function BlockEditorModal({ open, onOpenChange, cell, cellType, onSave }:
   }
 
   // Code Studio — mode selection for new blocks, then full-screen editor
-  if (cellType === "code") {
+  if (blockType === "code") {
     if (!open) return null
     const isNewCodeStudio = !currentData.files || currentData.files.length === 0
     if (isNewCodeStudio && !showModeSelection && !editData) {
@@ -296,27 +296,27 @@ export function BlockEditorModal({ open, onOpenChange, cell, cellType, onSave }:
   }
 
   // Markdown — renders its own full-screen overlay
-  if (cellType === "md") {
+  if (blockType === "md") {
     if (!open) return null
     return <MarkdownEditor initialData={currentData} onSave={handleSave} onCancel={handleCancel} />
   }
 
   // Mermaid — renders its own full-screen overlay
-  if (cellType === "mmd") {
+  if (blockType === "mmd") {
     if (!open) return null
     return <MermaidEditor initialData={currentData} onSave={handleSave} onCancel={handleCancel} />
   }
 
   // Vega-Lite — renders its own full-screen overlay
-  if (cellType === "vega") {
+  if (blockType === "vega") {
     if (!open) return null
     return <VegaLiteEditor initialData={currentData} onSave={handleSave} onCancel={handleCancel} />
   }
 
   // Media types (image, video, audio) — UnifiedMediaEditor renders its own overlay
-  if (cellType === "img" || cellType === "vid" || cellType === "aud") {
+  if (blockType === "img" || blockType === "vid" || blockType === "aud") {
     if (!open) return null
-    const mediaType = cellType === "img" ? "image" : cellType === "vid" ? "video" : "audio"
+    const mediaType = blockType === "img" ? "image" : blockType === "vid" ? "video" : "audio"
     return (
       <UnifiedMediaEditor
         data={{ ...currentData, type: mediaType } as BaseMediaData}
@@ -334,7 +334,7 @@ export function BlockEditorModal({ open, onOpenChange, cell, cellType, onSave }:
   }
 
   // Gallery — UnifiedMediaEditor in gallery mode, renders its own overlay
-  if (cellType === "gal") {
+  if (blockType === "gal") {
     if (!open) return null
     const galleryImages: BaseMediaData[] = (currentData.images || []).map((img: any) => ({
       type: "image" as const,
@@ -376,35 +376,35 @@ export function BlockEditorModal({ open, onOpenChange, cell, cellType, onSave }:
   }
 
   // Divider, Button, Admonition — render their own full-screen overlay
-  if (cellType === "div") {
+  if (blockType === "div") {
     if (!open) return null
     return <DividerEditor initialData={currentData} onSave={handleSave} onCancel={handleCancel} />
   }
 
-  if (cellType === "btn") {
+  if (blockType === "btn") {
     if (!open) return null
     return <ButtonEditor initialData={currentData} onSave={handleSave} onCancel={handleCancel} />
   }
 
-  if (cellType === "adm") {
+  if (blockType === "adm") {
     if (!open) return null
     return <AdmonitionEditor initialData={currentData} onSave={handleSave} onCancel={handleCancel} />
   }
 
   // Table — renders its own full-screen overlay
-  if (cellType === "tbl") {
+  if (blockType === "tbl") {
     if (!open) return null
     return <TableEditor initialData={currentData} onSave={handleSave} onCancel={handleCancel} />
   }
 
   // HTML — renders its own full-screen overlay
-  if (cellType === "html") {
+  if (blockType === "html") {
     if (!open) return null
     return <HTMLEditor initialData={currentData} onSave={handleSave} onCancel={handleCancel} />
   }
 
   // Rich Text — renders its own full-screen overlay
-  if (cellType === "rt") {
+  if (blockType === "rt") {
     if (!open) return null
     return <RichTextEditor initialData={currentData} onSave={handleSave} onCancel={handleCancel} />
   }
@@ -417,10 +417,10 @@ export function BlockEditorModal({ open, onOpenChange, cell, cellType, onSave }:
     hdr: HeaderForm,
     src: SourceForm,
   }
-  const FormComponent = formMap[cellType]
+  const FormComponent = formMap[blockType]
 
   // Presentation and Project get a simple form too
-  if (cellType === "pres") {
+  if (blockType === "pres") {
     return (
       <Dialog open={open} onOpenChange={(v) => { if (!v) handleCancel() }}>
         <DialogContent className="max-w-2xl">
@@ -445,7 +445,7 @@ export function BlockEditorModal({ open, onOpenChange, cell, cellType, onSave }:
     )
   }
 
-  if (cellType === "proj") {
+  if (blockType === "proj") {
     return (
       <Dialog open={open} onOpenChange={(v) => { if (!v) handleCancel() }}>
         <DialogContent className="max-w-2xl">

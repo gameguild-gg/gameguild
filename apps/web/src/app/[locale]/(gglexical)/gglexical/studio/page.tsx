@@ -53,6 +53,8 @@ import {
 } from "@/lib/storage/editor/slideshow-structure"
 import type { ProjectData as StorageProjectData } from "@/lib/storage/editor/enhanced-storage-adapter"
 import type { CellularContent } from "@/lib/storage/editor/cell-structure"
+import type { BlockArray } from "@/components/editor/extras/editor/block-types"
+import { blocksToCells, cellsToBlocks } from "@/components/editor/extras/editor/block-converters"
 import { BlockArrayEditor } from "@/components/editor/extras/editor/block-array-editor"
 import { BlockArrayViewer } from "@/components/editor/extras/editor/block-array-viewer"
 
@@ -101,7 +103,7 @@ export default function Page() {
   const [currentEngine, setCurrentEngine] = useState<EngineType>(ENGINE_TYPES.LEXICAL)
   
   // Block Array engine state
-  const [blockArrayCells, setBlockArrayCells] = useState<CellularContent>([])
+  const [blockArrayBlocks, setBlockArrayBlocks] = useState<BlockArray>([])
   
   // Type1 states (single editor with b1)
   const [editorState, setEditorState] = useState<string>("")
@@ -252,7 +254,7 @@ export default function Page() {
         setLastProjectLoadTime,
         setCurrentProjectPreferences,
         setCurrentEngine,
-        setBlockArrayCells,
+        setBlockArrayCells: (cells) => setBlockArrayBlocks(cellsToBlocks(Array.isArray(cells) ? cells : [])),
       })
     }
     
@@ -471,7 +473,7 @@ export default function Page() {
     if (currentEngine === ENGINE_TYPES.BLOCKS) {
       // Block Array engine: save cells directly
       dataToSave = createProjectData(currentProjectType, {
-        blocks: { b1: blockArrayCells },
+        blocks: { b1: blocksToCells(blockArrayBlocks) },
       })
       
       const preferences: ProjectPreferences = {
@@ -634,7 +636,7 @@ export default function Page() {
 
     // Check if we have any content to save
     const hasContent = currentEngine === ENGINE_TYPES.BLOCKS
-      ? blockArrayCells.length > 0
+      ? blockArrayBlocks.length > 0
       : currentLayout === "single" 
         ? editorState 
         : Object.keys(blockStates).length > 0
@@ -654,7 +656,7 @@ export default function Page() {
         if (currentEngine === ENGINE_TYPES.BLOCKS) {
           // Block Array engine: save cells directly
           dataToSave = createProjectData(currentProjectType, {
-            blocks: { b1: blockArrayCells },
+            blocks: { b1: blocksToCells(blockArrayBlocks) },
           })
         } else {
           // Prepare the correct state based on layout type
@@ -704,7 +706,7 @@ export default function Page() {
     }, 2000) // Auto-save after 2 seconds of inactivity
 
     return () => clearTimeout(autoSaveTimer)
-  }, [editorState, blockStates, blockArrayCells, currentEngine, autoSaveEnabled, currentProjectId, currentProjectName, projectTags, isDbInitialized, currentLayout, currentProjectType, currentProjectStorageType, lastProjectLoadTime, isViewingHistory])
+  }, [editorState, blockStates, blockArrayBlocks, currentEngine, autoSaveEnabled, currentProjectId, currentProjectName, projectTags, isDbInitialized, currentLayout, currentProjectType, currentProjectStorageType, lastProjectLoadTime, isViewingHistory])
 
 
 
@@ -1310,10 +1312,10 @@ export default function Page() {
                       setCurrentEngine(projectEngine)
                       
                       if (projectEngine === ENGINE_TYPES.BLOCKS) {
-                        // Block Array engine: load cells directly
+                        // Block Array engine: load cells and convert to blocks
                         const states = extractEditorStates(projectData.data, projectData.type)
                         const cellsData = states.blocks.b1 || []
-                        setBlockArrayCells(Array.isArray(cellsData) ? cellsData : [])
+                        setBlockArrayBlocks(cellsToBlocks(Array.isArray(cellsData) ? cellsData : []))
                         
                         setCurrentProjectId(projectData.id)
                         setCurrentProjectName(projectData.name)
@@ -1581,8 +1583,8 @@ export default function Page() {
                 setCurrentEngine(projectData.engine || ENGINE_TYPES.LEXICAL)
                 
                 if (projectData.engine === ENGINE_TYPES.BLOCKS) {
-                  // Block Array engine: just set empty cells, no Lexical needed
-                  setBlockArrayCells([])
+                  // Block Array engine: just set empty blocks, no Lexical needed
+                  setBlockArrayBlocks([])
                   setCurrentLayout("single")
                   setCurrentProjectType((projectData.type || "type1") as ProjectType)
                   setCurrentProjectMode(projectData.mode || "free-page")
@@ -1695,8 +1697,8 @@ export default function Page() {
             {currentEngine === ENGINE_TYPES.BLOCKS ? (
               <div className="border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 p-4">
                 <BlockArrayEditor
-                  cells={blockArrayCells}
-                  onChange={setBlockArrayCells}
+                  blocks={blockArrayBlocks}
+                  onChange={setBlockArrayBlocks}
                   readOnly={isViewingHistory}
                 />
               </div>
@@ -1833,7 +1835,7 @@ export default function Page() {
           </DialogHeader>
           {currentEngine === ENGINE_TYPES.BLOCKS && (
             <div className="w-full max-h-[80vh] overflow-y-auto">
-              <BlockArrayViewer cells={blockArrayCells} />
+              <BlockArrayViewer blocks={blockArrayBlocks} />
             </div>
           )}
           {currentEngine !== ENGINE_TYPES.BLOCKS && previewLayout === "single" && previewState && (
