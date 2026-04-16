@@ -20,7 +20,7 @@ import type { ProjectData } from "@/components/editor/extras/preview/preview-loa
 import type { ProjectData as StorageProjectData } from "@/lib/storage/editor/enhanced-storage-adapter"
 import { cellsToLexical } from "@/lib/storage/editor/cell-structure"
 import { BlockArrayViewer } from "@/components/editor/extras/editor/block-array-viewer"
-import { storageToBlocks } from "@/components/editor/extras/editor/block-converters"
+import { storageToBlocks } from "@/lib/storage/editor/cell-converters/blocks"
 
 
 export default function PreviewPage() {
