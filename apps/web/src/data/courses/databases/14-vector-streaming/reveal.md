@@ -357,7 +357,7 @@ Best for: specific ML models that output unnormalized vectors.
 ## Which Metric to Choose?
 
 ```mermaid
-flowchart TD
+flowchart LR
     A[What type of embeddings?] --> B{Text embeddings?}
     B -->|Yes| C["Cosine <=>"]
     B -->|No| D{Image embeddings?}
@@ -684,7 +684,7 @@ LIMIT 10;
 ## Choosing an Index Strategy
 
 ```mermaid
-flowchart TD
+flowchart LR
     A[How many vectors?] --> B{"< 10K?"}
     B -->|Yes| C[No index needed<br/>Exact search is fast]
     B -->|No| D{"< 1M?"}
@@ -1032,7 +1032,7 @@ Events are **immutable facts** that happened at a point in time.
 ## When to Use Event Streaming
 
 ```mermaid
-flowchart TD
+flowchart LR
     A[What's your use case?] --> B{Real-time data?}
     B -->|Yes| C{High throughput?}
     C -->|Yes| D[Kafka]
@@ -1348,7 +1348,7 @@ async function consumeEvents(topic: string) {
 ## Consumer Lifecycle
 
 ```mermaid
-flowchart TD
+flowchart LR
     A[consumer.connect] --> B[consumer.subscribe]
     B --> C[consumer.run]
     C --> D{New message?}
@@ -2219,7 +2219,7 @@ When to Use What
 ## Decision Flowchart
 
 ```mermaid
-flowchart TD
+flowchart LR
     A[What do you need?] --> B{Search by meaning?}
     B -->|Yes| C[pgvector]
     B -->|No| D{Real-time events?}
