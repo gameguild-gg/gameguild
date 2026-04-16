@@ -53,8 +53,8 @@ import {
 } from "@/lib/storage/editor/slideshow-structure"
 import type { ProjectData as StorageProjectData } from "@/lib/storage/editor/enhanced-storage-adapter"
 import type { CellularContent } from "@/lib/storage/editor/cell-structure"
-import type { BlockArray } from "@/components/editor/extras/editor/block-types"
-import { blocksToStorage, storageToBlocks } from "@/components/editor/extras/editor/block-converters"
+import type { BlockArray } from "@/lib/storage/editor/block-structure"
+import { blocksToStorage, storageToBlocks } from "@/lib/storage/editor/cell-converters/blocks"
 import { BlockArrayEditor } from "@/components/editor/extras/editor/block-array-editor"
 import { BlockArrayViewer } from "@/components/editor/extras/editor/block-array-viewer"
 

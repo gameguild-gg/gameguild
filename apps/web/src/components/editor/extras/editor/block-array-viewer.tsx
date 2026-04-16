@@ -1,8 +1,7 @@
 "use client"
 
-import { CELL_TO_LEXICAL_TYPE } from "@/lib/storage/editor/cell-converters/cell-data"
-import type { Block, BlockArray } from "./block-types"
-import type { BlockCellType } from "./block-component-registry"
+import type { Block, BlockArray, BlockCellType } from "@/lib/storage/editor/block-structure"
+import { blockToSerializedNode } from "@/lib/storage/editor/cell-converters/blocks"
 
 // Import all preview components
 import { PreviewQuiz } from "@/components/editor/plugins/preview-components/preview-quiz"
@@ -26,27 +25,6 @@ import { PreviewTable } from "@/components/editor/plugins/preview-components/pre
 import { PreviewCodeStudio } from "@/components/editor/plugins/preview-components/preview-code-studio"
 import { PreviewProject } from "@/components/editor/plugins/preview-components/preview-project"
 import { PreviewRichText } from "@/components/editor/plugins/preview-components/preview-rich-text"
-
-// ============================================================================
-// Cell → Serialized Node converter
-// ============================================================================
-
-/**
- * Convert a Block to a fake serialized Lexical node
- * that the preview components can consume.
- *
- * Most decorators use `{ type, data, version }`.
- * Quiz is the exception: it uses `entry` instead of `data`.
- */
-export function blockToSerializedNode(block: Block): any {
-  const lexicalType = CELL_TO_LEXICAL_TYPE[block.type as keyof typeof CELL_TO_LEXICAL_TYPE]
-
-  if (block.type === "quiz") {
-    return { type: lexicalType, entry: block.data, version: 1 }
-  }
-
-  return { type: lexicalType, data: block.data, version: 1 }
-}
 
 // ============================================================================
 // Block Content Renderer — maps CellType → Preview component

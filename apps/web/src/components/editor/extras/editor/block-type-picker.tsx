@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip"
 import { BLOCK_REGISTRY, BLOCK_CELL_TYPES, type BlockCellType } from "./block-component-registry"
-import type { Block } from "./block-types"
+import type { Block } from "@/lib/storage/editor/block-structure"
 import { Search, LayoutGrid, FileText, ArrowRight } from "lucide-react"
 import {
   CheckCircle,

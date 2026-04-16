@@ -10,6 +10,7 @@ import type { CellularDocument, UIOrigin } from "../cell-structure"
 
 // Converters por UI
 import * as lexicalConverter from "./lexical"
+import * as blocksConverter from "./blocks"
 
 // ============================================================================
 // Registry de Converters
@@ -89,7 +90,13 @@ export function getSupportedUIs(): UIOrigin[] {
 
 // Re-export converters específicos para uso direto
 export { lexicalConverter }
+export { blocksConverter }
 
 // Re-export funções Lexical para compatibilidade
 export const lexicalToCells = lexicalConverter.lexicalToCells
 export const cellsToLexical = lexicalConverter.cellsToLexical
+
+// Re-export funções Block para uso direto
+export const blocksToStorage = blocksConverter.blocksToStorage
+export const storageToBlocks = blocksConverter.storageToBlocks
+export const blockToSerializedNode = blocksConverter.blockToSerializedNode
