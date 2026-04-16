@@ -179,52 +179,74 @@ export default function Ide({ title = 'Emception', manifestUrl = '/cdn/manifest.
   }, [workspaceUrl]);
 
   // ── Switch workspace preset ───────────────────────────────────
-  const switchWorkspace = useCallback((presetId: string) => {
-    const preset = PRESETS[presetId];
-    if (!preset) return;
-    // Stop SDL3 loop if running
-    const sdlMod = sdlModuleRef.current;
-    if (sdlMod) {
-      try {
-        sdlMod.pauseMainLoop?.();
-      } catch {
-        /* ignore */
+  const switchWorkspace = useCallback(
+    async (presetId: string) => {
+      const preset = PRESETS[presetId];
+      if (!preset) return;
+      const P = '[Emception:IDE]';
+      console.log(`${P} ===== WORKSPACE SWITCH: "${activePresetId}" → "${presetId}" =====`);
+
+      // Stop SDL3 loop if running
+      const sdlMod = sdlModuleRef.current;
+      if (sdlMod) {
+        try {
+          sdlMod.pauseMainLoop?.();
+        } catch {
+          /* ignore */
+        }
+        sdlModuleRef.current = null;
       }
-      sdlModuleRef.current = null;
-    }
-    sdlScriptRef.current?.remove();
-    sdlScriptRef.current = null;
-    sdlBlobUrlsRef.current.forEach((url) => URL.revokeObjectURL(url));
-    sdlBlobUrlsRef.current = [];
-    setExecutionPhase('idle');
+      sdlScriptRef.current?.remove();
+      sdlScriptRef.current = null;
+      sdlBlobUrlsRef.current.forEach((url) => URL.revokeObjectURL(url));
+      sdlBlobUrlsRef.current = [];
+      setExecutionPhase('idle');
+      stoppedRef.current = true;
 
-    setActivePresetId(presetId);
-    const state = workspaceConfigToState(preset);
-    setFiles(state.files);
-    setOpenTabs(state.openTabs);
-    setActiveTabId(state.activeTabId);
-    setExpandedDirs(state.expandedDirs);
-    setSelectedPath(preset.layout.activeFile);
-
-    // Dispose stale Monaco models and pre-create models for all new preset files
-    // so that getModels() reflects the new workspace immediately.
-    const mc = monacoRef.current;
-    if (mc) {
-      mc.editor.getModels().forEach((m: { dispose: () => void }) => m.dispose());
-      for (const [path, file] of Object.entries(state.files)) {
-        if (file.type !== 'text') continue;
-        const uri = mc.Uri.parse(`file://${path}`);
-        if (!mc.editor.getModel(uri)) {
-          mc.editor.createModel(file.content, inferLanguage(path), uri);
+      // Reset VFS in the Worker to clear stale build artifacts from the previous workspace
+      if (orchestratorRef.current) {
+        const { client, tty } = orchestratorRef.current;
+        tty.clear();
+        tty.writeLine(`\x1b[33mSwitching workspace...\x1b[0m`);
+        try {
+          console.log(`${P} Resetting Worker VFS (clearing /tmp and /home/user)...`);
+          await client.resetVfs();
+          console.log(`${P} Worker VFS reset complete`);
+        } catch (err) {
+          console.warn(`${P} VFS reset failed, continuing:`, err);
         }
       }
-    }
 
-    if (orchestratorRef.current) {
-      orchestratorRef.current.tty.clear();
-      orchestratorRef.current.tty.writeLine(`\x1b[32mSwitched to workspace: ${preset.label}\x1b[0m`);
-    }
-  }, []);
+      stoppedRef.current = false;
+      setActivePresetId(presetId);
+      const state = workspaceConfigToState(preset);
+      setFiles(state.files);
+      setOpenTabs(state.openTabs);
+      setActiveTabId(state.activeTabId);
+      setExpandedDirs(state.expandedDirs);
+      setSelectedPath(preset.layout.activeFile);
+
+      // Dispose stale Monaco models and pre-create models for all new preset files
+      // so that getModels() reflects the new workspace immediately.
+      const mc = monacoRef.current;
+      if (mc) {
+        mc.editor.getModels().forEach((m: { dispose: () => void }) => m.dispose());
+        for (const [path, file] of Object.entries(state.files)) {
+          if (file.type !== 'text') continue;
+          const uri = mc.Uri.parse(`file://${path}`);
+          if (!mc.editor.getModel(uri)) {
+            mc.editor.createModel(file.content, inferLanguage(path), uri);
+          }
+        }
+      }
+
+      if (orchestratorRef.current) {
+        orchestratorRef.current.tty.writeLine(`\x1b[32mSwitched to workspace: ${preset.label}\x1b[0m`);
+      }
+      console.log(`${P} ===== WORKSPACE SWITCH COMPLETE =====`);
+    },
+    [activePresetId],
+  );
 
   const handleBootTerminalReady = useCallback((term: Terminal) => {
     xtermRef.current = term;
@@ -408,8 +430,10 @@ export default function Ide({ title = 'Emception', manifestUrl = '/cdn/manifest.
     setSelectedPath(Object.keys(files).find((p) => p !== selectedPath) ?? '');
   }, [selectedPath, files, closeTab]);
 
-  const resetWorkspace = useCallback(() => {
+  const resetWorkspace = useCallback(async () => {
     if (!window.confirm('Reset the workspace to the default demo files and layout?')) return;
+    const P = '[Emception:IDE]';
+    console.log(`${P} ===== WORKSPACE RESET =====`);
     // Stop SDL3 loop if running
     const sdlMod = sdlModuleRef.current;
     if (sdlMod) {
@@ -426,6 +450,20 @@ export default function Ide({ title = 'Emception', manifestUrl = '/cdn/manifest.
     sdlBlobUrlsRef.current.forEach((url) => URL.revokeObjectURL(url));
     sdlBlobUrlsRef.current = [];
     setExecutionPhase('idle');
+    stoppedRef.current = true;
+
+    // Reset VFS in the Worker to clear stale build artifacts
+    if (orchestratorRef.current) {
+      try {
+        console.log(`${P} Resetting Worker VFS...`);
+        await orchestratorRef.current.client.resetVfs();
+        console.log(`${P} Worker VFS reset complete`);
+      } catch (err) {
+        console.warn(`${P} VFS reset failed, continuing:`, err);
+      }
+    }
+
+    stoppedRef.current = false;
     const state = workspaceConfigToState(resolvedConfig);
     setFiles(state.files);
     setSelectedPath(resolvedConfig.layout.activeFile);
@@ -973,12 +1011,6 @@ export default function Ide({ title = 'Emception', manifestUrl = '/cdn/manifest.
       }
       setStatus('Compiling...');
       tty.writeLine(`Compiling ${compileTarget}...`);
-      // Clear any stale output artifact (e.g. a previous SDL3 WASM at the same
-      // path) before invoking the compiler.  Without this, a non-empty stale
-      // file would prevent the fallback link pipeline from triggering if the
-      // emcc link step silently fails to produce a new output.
-      const staleWasmPath = resolvedConfig.compile.output || '/home/user/main.wasm';
-      await client.writeFile(staleWasmPath, new Uint8Array(0));
       const compileArgs =
         resolvedConfig.compile.args.length > 0
           ? resolveArgs(resolvedConfig.compile.args, toWorkspaceFsPath(compileTarget))

@@ -483,6 +483,29 @@ self.onmessage = async (ev: MessageEvent<MainToWorkerMessage>) => {
         post({ type: 'listDirResult', id: msg.id, entries: [] });
       }
       break;
+
+    case 'resetVfs':
+      if (!vfs) {
+        post({ type: 'resetVfsResult', id: msg.id, ok: false, error: 'Not booted' });
+        break;
+      }
+      try {
+        console.log(`${P} ===== VFS RESET START =====`);
+        const t0 = performance.now();
+        // Clear /tmp (volatile IDBFS)
+        await vfs.overlay.clearMount('/tmp');
+        await vfs.overlay.mkdir('/tmp');
+        // Clear /home (persistent IDBFS) — wipes user build artifacts
+        await vfs.overlay.clearMount('/home');
+        await vfs.overlay.mkdir('/home');
+        await vfs.overlay.mkdir('/home/user');
+        console.log(`${P} ===== VFS RESET COMPLETE in ${(performance.now() - t0).toFixed(1)}ms =====`);
+        post({ type: 'resetVfsResult', id: msg.id, ok: true });
+      } catch (err) {
+        console.error(`${P} VFS reset failed:`, err);
+        post({ type: 'resetVfsResult', id: msg.id, ok: false, error: String(err) });
+      }
+      break;
   }
 };
 

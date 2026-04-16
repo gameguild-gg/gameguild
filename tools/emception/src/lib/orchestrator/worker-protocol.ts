@@ -62,13 +62,20 @@ export interface ListDirMessage {
     path: string;
 }
 
+/** Reset VFS writable layers (clear /tmp, /home/user, overlay writes). */
+export interface ResetVfsMessage {
+    type: 'resetVfs';
+    id: number;
+}
+
 export type MainToWorkerMessage =
     | BootMessage
     | RunMessage
     | StdinMessage
     | GetFileMessage
     | WriteFileMessage
-    | ListDirMessage;
+    | ListDirMessage
+    | ResetVfsMessage;
 
 /* ------------------------------------------------------------------ */
 /*  Worker → Main messages                                             */
@@ -150,6 +157,14 @@ export interface ListDirResultMessage {
     entries: string[];
 }
 
+/** resetVfs result. */
+export interface ResetVfsResultMessage {
+    type: 'resetVfsResult';
+    id: number;
+    ok: boolean;
+    error?: string;
+}
+
 /** Shell output line (for when MiniShell runs in the Worker). */
 export interface ShellOutputMessage {
     type: 'shellOutput';
@@ -202,6 +217,7 @@ export type WorkerToMainMessage =
     | GetFileResultMessage
     | WriteFileResultMessage
     | ListDirResultMessage
+    | ResetVfsResultMessage
     | ShellOutputMessage
     | ShellWriteMessage
     | ShellReadRequest

@@ -148,6 +148,18 @@ export class WorkerClient {
         });
     }
 
+    /** Reset the Worker VFS writable layers (clear /tmp, /home/user). */
+    async resetVfs(): Promise<void> {
+        const id = this.nextId++;
+        return new Promise<void>((resolve, reject) => {
+            this.pending.set(id, {
+                resolve: () => resolve(),
+                reject,
+            });
+            this.send({ type: 'resetVfs', id });
+        });
+    }
+
     /* ---------------------------------------------------------------- */
     /*  Cleanup                                                          */
     /* ---------------------------------------------------------------- */
@@ -270,6 +282,19 @@ export class WorkerClient {
                 if (p) {
                     this.pending.delete(msg.id);
                     p.resolve(msg.entries);
+                }
+                break;
+            }
+
+            case 'resetVfsResult': {
+                const p = this.pending.get(msg.id);
+                if (p) {
+                    this.pending.delete(msg.id);
+                    if (msg.ok) {
+                        p.resolve(undefined);
+                    } else {
+                        p.reject(new Error(msg.error ?? 'resetVfs failed'));
+                    }
                 }
                 break;
             }
