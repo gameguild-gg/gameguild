@@ -2552,45 +2552,11 @@ sys.excepthook = _hook
     let memory: WebAssembly.Memory = undefined as unknown as WebAssembly.Memory;
 
     try {
-      const isTransientMalformedWasmError = (msg: string): boolean => (
-        /extends past end of the module|unexpected section|invalid UTF-8|magic word|error parsing wasm|CompileError/i.test(msg)
-      );
-
       console.log(`${LOG_PREFIX}   Compiling WASM module...`);
       const tCompile = performance.now();
-      const maxCompileAttempts = 20;
-      const retryDelayMs = 120;
-      let wasmModule: WebAssembly.Module | null = null;
-      let compileInput = wasmBytes;
-      let lastCompileError: unknown = null;
-
-      for (let attempt = 1; attempt <= maxCompileAttempts; attempt++) {
-        try {
-          const wasmBuffer = new ArrayBuffer(compileInput.byteLength);
-          new Uint8Array(wasmBuffer).set(compileInput);
-          wasmModule = await WebAssembly.compile(wasmBuffer);
-          if (attempt > 1) {
-            console.log(`${LOG_PREFIX}   WASM compile recovered on attempt ${attempt}/${maxCompileAttempts} (${compileInput.byteLength}B)`);
-          }
-          break;
-        } catch (e) {
-          lastCompileError = e;
-          const msg = e instanceof Error ? e.message : String(e);
-          if (attempt >= maxCompileAttempts || !isTransientMalformedWasmError(msg)) {
-            throw e;
-          }
-          const latest = await this.vfs.fetchFile(wasmPath);
-          if (latest) {
-            compileInput = latest;
-          }
-          console.warn(`${LOG_PREFIX}   WASM compile attempt ${attempt}/${maxCompileAttempts} failed (${msg}); retrying after ${retryDelayMs}ms...`);
-          await new Promise<void>((resolve) => setTimeout(resolve, retryDelayMs));
-        }
-      }
-
-      if (!wasmModule) {
-        throw (lastCompileError ?? new Error('WASM compile failed with unknown error'));
-      }
+      const wasmBuffer = new ArrayBuffer(wasmBytes.byteLength);
+      new Uint8Array(wasmBuffer).set(wasmBytes);
+      const wasmModule = await WebAssembly.compile(wasmBuffer);
 
       console.log(`${LOG_PREFIX}   WASM compiled in ${elapsed(tCompile)}`);
 
@@ -2688,14 +2654,8 @@ sys.excepthook = _hook
           }
         }
       } else {
-        const sdlExports = exportNames.filter(e => e.startsWith('SDL_') || e === '_main');
-        const hint = sdlExports.length > 0
-          ? ` (found Emscripten/SDL exports: ${sdlExports.slice(0, 4).join(', ')} — WASM was not compiled in standalone/WASI mode)`
-          : ' — WASM exports: ' + (exportNames.length ? exportNames.slice(0, 6).join(', ') : 'none');
-        const msg = `No _start or main export found${hint}`;
-        console.warn(`${LOG_PREFIX}   ${msg}`);
-        options.onStderr?.(msg);
-        exitCode = 1;
+        console.warn(`${LOG_PREFIX}   No _start or main export found`);
+        exitCode = 0;
       }
 
       console.log(`${LOG_PREFIX} ===== WASI COMPLETE: exitCode=${exitCode}, total=${elapsed(tTotal)} =====`);

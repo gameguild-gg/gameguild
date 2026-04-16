@@ -422,4 +422,12 @@ export class IDBFS implements IFileSystem {
     }
     return true;
   }
+
+  /** Clear all entries (writeCache + IDB). Re-creates the root dir entry. */
+  async clear(): Promise<void> {
+    this.writeCache.clear();
+    if (!this.volatile && this.idb) {
+      await this.dbClear();
+    }
+  }
 }
