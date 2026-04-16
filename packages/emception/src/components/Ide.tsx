@@ -7,7 +7,7 @@ import DockGroupPanel from './DockGroup';
 import FileExplorer from './FileExplorer';
 import type { DockGroup, OpenTab, TabType, TerminalTab, WorkspaceConfig, WorkspaceFile } from './ide-types';
 import { DEFAULT_IMAGE, WORKSPACE_STORAGE_KEY, parseWorkspaceBundle, resolveArgs, workspaceConfigToState } from './ide-types';
-import { buildFileTree, buildSDL3ArgsPort, inferLanguage, isSourceFile, isTextFile, makeWasiStubs, toWorkspaceFsPath } from './ide-utils';
+import { buildFileTree, inferLanguage, isSourceFile, isTextFile, makeWasiStubs, toWorkspaceFsPath } from './ide-utils';
 import TerminalPanel from './TerminalPanel';
 import { DEFAULT_PRESET, PRESETS, PRESET_IDS } from './workspace-presets';
 
@@ -613,34 +613,111 @@ export default function Ide({ title = 'Emception', manifestUrl = '/cdn/manifest.
         }
         setStatus('Compiling...');
         tty.writeLine(`Compiling ${compileTarget}...`);
-        tty.writeLine('\x1b[36mSDL3 detected \u2014 compiling...\x1b[0m');
-        const compileArgs =
-          resolvedConfig.compile.args.length > 0
-            ? resolveArgs(resolvedConfig.compile.args, toWorkspaceFsPath(compileTarget))
-            : buildSDL3ArgsPort(toWorkspaceFsPath(compileTarget));
+        tty.writeLine('\x1b[36mSDL3 detected \u2014 compiling object...\x1b[0m');
 
-        const sdlResult = await client.run('emcc', compileArgs, {
-          cwd: resolvedConfig.compile.cwd ?? '/home/user',
-          onStdout: (t: string) => {
-            console.log(t);
-            tty.writeLine(t);
+        const sourceFsPath = toWorkspaceFsPath(compileTarget);
+        const sdlObjPath = '/tmp/emception-sdl-main.o';
+        const wasmPath = resolvedConfig.compile.output || '/home/user/main.wasm';
+
+        // Compile with clang directly (no emcc phase) to avoid emcc subprocess
+        // execution issues and standalone archive auto-selection.
+        const sdlCompile = await client.run(
+          'clang',
+          [
+            'clang',
+            '--target=wasm32-unknown-emscripten',
+            '--sysroot=/usr/lib/emscripten/cache/sysroot',
+            '-Xclang',
+            '-iwithsysroot/include/fakesdl',
+            '-Xclang',
+            '-iwithsysroot/include/compat',
+            '-I/usr/include',
+            '-O1',
+            '-c',
+            sourceFsPath,
+            '-o',
+            sdlObjPath,
+          ],
+          {
+            cwd: resolvedConfig.compile.cwd ?? '/home/user',
+            onStdout: (t: string) => {
+              console.log(t);
+              tty.writeLine(t);
+            },
+            onStderr: (t: string) => {
+              console.error(t);
+              tty.writeError(t);
+            },
           },
-          onStderr: (t: string) => {
-            console.error(t);
-            tty.writeError(t);
-          },
-        });
+        );
+
         const sdlDuration = ((performance.now() - t0) / 1000).toFixed(2);
-        if (sdlResult.exitCode !== 0) {
+        if (sdlCompile.exitCode !== 0) {
           setExecutionPhase('idle');
           setStatus(`SDL3 compilation failed (${sdlDuration}s)`);
-          tty.writeLine(`\x1b[31mSDL3 compilation failed (exit ${sdlResult.exitCode})\x1b[0m`);
+          tty.writeLine(`\x1b[31mSDL3 compile step failed (exit ${sdlCompile.exitCode})\x1b[0m`);
           return;
         }
+
+        tty.writeLine('\x1b[36mSDL3 linking (wasm-ld)...\x1b[0m');
+
+        const sdlLink = await client.run(
+          'wasm-ld',
+          [
+            'wasm-ld',
+            sdlObjPath,
+            '-o',
+            wasmPath,
+            '-L/usr/lib/emscripten/cache/sysroot/lib/wasm32-emscripten',
+            '-L/usr/lib/emscripten/src/lib',
+            '/usr/lib/emscripten/cache/sysroot/lib/wasm32-emscripten/crt1.o',
+            '/usr/lib/emscripten/cache/sysroot/lib/wasm32-emscripten/libSDL3.a',
+            '--no-entry',
+            '--import-undefined',
+            '--allow-undefined',
+            '--export-if-defined=SDL_AppInit',
+            '--export-if-defined=SDL_AppIterate',
+            '--export-if-defined=SDL_AppEvent',
+            '--export-if-defined=SDL_AppQuit',
+            '--export-table',
+            '--table-base=1',
+            '-z',
+            'stack-size=65536',
+            '-lGL-getprocaddr',
+            '-lal',
+            '-lhtml5',
+            '-lstubs',
+            '-lc',
+            '-ldlmalloc',
+            '-lcompiler_rt',
+            '-lc++-noexcept',
+            '-lc++abi-noexcept',
+            '-lsockets',
+          ],
+          {
+            cwd: resolvedConfig.compile.cwd ?? '/home/user',
+            onStdout: (t: string) => {
+              console.log(t);
+              tty.writeLine(t);
+            },
+            onStderr: (t: string) => {
+              console.error(t);
+              tty.writeError(t);
+            },
+          },
+        );
+
+        if (sdlLink.exitCode !== 0) {
+          setExecutionPhase('idle');
+          setStatus(`SDL3 compilation failed (${sdlDuration}s)`);
+          tty.writeLine(`\x1b[31mSDL3 link step failed (exit ${sdlLink.exitCode})\x1b[0m`);
+          return;
+        }
+
         tty.writeLine(`\x1b[32mSDL3 compiled in ${sdlDuration}s — loading...\x1b[0m`);
 
         // Read the compiled WASM binary from the VFS.
-        const wasmBytes = await client.getFile('/home/user/main.wasm');
+        const wasmBytes = await client.getFile(wasmPath);
         if (!wasmBytes) {
           setExecutionPhase('idle');
           tty.writeError('main.wasm not found — emcc may have failed to produce it alongside main.js');
@@ -672,6 +749,11 @@ export default function Ide({ title = 'Emception', manifestUrl = '/cdn/manifest.
           tty.writeError('SDL canvas element not found — open the SDL Canvas tab first');
           return;
         }
+
+        // Initialize to the SDL demo's expected render size so the runtime
+        // attaches to a correctly sized target immediately.
+        canvas.width = 800;
+        canvas.height = 600;
 
         // Revoke previous SDL blob URLs
         sdlScriptRef.current?.remove();
@@ -736,6 +818,7 @@ export default function Ide({ title = 'Emception', manifestUrl = '/cdn/manifest.
         );
 
         let sdlLoadOk = true;
+        let sdlCallbackFns: { init?: (appstate: number, argc: number, argv: number) => number; iterate?: (appstate: number) => number } | null = null;
         const moduleTimeout = new Promise<never>((_, reject) => setTimeout(() => reject(new Error('SDL3 module load timeout (30s)')), 30_000));
         const sdlMod = await Promise.race([
           createSDL3Module({
@@ -755,6 +838,15 @@ export default function Ide({ title = 'Emception', manifestUrl = '/cdn/manifest.
                 .then((result) => {
                   tty.writeLine('\x1b[90mSDL3: WASM ok, patching exports…\x1b[0m');
                   const origExports = result.instance.exports;
+                  // Capture callback exports directly from raw WASM exports so
+                  // we can drive callback-only SDL apps even when glue doesn't
+                  // surface these as Module methods.
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  const raw = origExports as any;
+                  sdlCallbackFns = {
+                    init: typeof raw.SDL_AppInit === 'function' ? raw.SDL_AppInit.bind(raw) : undefined,
+                    iterate: typeof raw.SDL_AppIterate === 'function' ? raw.SDL_AppIterate.bind(raw) : undefined,
+                  };
                   const patchedExports =
                     typeof origExports['__wasm_call_ctors'] === 'function' && typeof (origExports as Record<string, unknown>)['main'] === 'function'
                       ? origExports
@@ -762,18 +854,10 @@ export default function Ide({ title = 'Emception', manifestUrl = '/cdn/manifest.
                         get(target, prop) {
                           if (prop === '__wasm_call_ctors' && !(prop in target)) return () => { };
                           if ((prop === 'main' || prop === '_main') && !(prop in target)) {
-                            return () => {
-                              try {
-                                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                                (target as any)['_start']?.();
-                              } catch (e: unknown) {
-                                const msg = e instanceof Error ? e.message : String(e);
-                                if (msg !== 'unwind' && !msg.startsWith('SDL3 proc_exit(0)')) {
-                                  tty.writeError(`SDL3 init error: ${msg}`);
-                                }
-                              }
-                              return 0;
-                            };
+                            const noOpMain = () => 0;
+                            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                            (noOpMain as any).__emceptionNoop = true;
+                            return noOpMain;
                           }
                           // eslint-disable-next-line @typescript-eslint/no-explicit-any
                           return (target as any)[prop];
@@ -810,9 +894,72 @@ export default function Ide({ title = 'Emception', manifestUrl = '/cdn/manifest.
           setExecutionPhase('idle');
           return;
         }
+
+        // Some SDL callback builds linked with --no-entry need an explicit kick
+        // from JS to start their lifecycle callbacks/main loop.
+        try {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const sdlAny = sdlMod as any;
+          let started = false;
+          const callbackFns = sdlCallbackFns as {
+            init?: (appstate: number, argc: number, argv: number) => number;
+            iterate?: (appstate: number) => number;
+          } | null;
+          const wasmFns = sdlAny?.asm ?? sdlAny?.wasmExports ?? {};
+          const appInit = callbackFns?.init ?? sdlAny?._SDL_AppInit ?? sdlAny?.SDL_AppInit ?? wasmFns?._SDL_AppInit ?? wasmFns?.SDL_AppInit;
+          const appIterate = callbackFns?.iterate ?? sdlAny?._SDL_AppIterate ?? sdlAny?.SDL_AppIterate ?? wasmFns?._SDL_AppIterate ?? wasmFns?.SDL_AppIterate;
+
+          // Prefer explicit callback lifecycle startup when exported.
+          if (typeof appInit === 'function' && typeof appIterate === 'function') {
+            tty.writeLine('\x1b[90mSDL3: starting callback lifecycle loop…\x1b[0m');
+            const initResult = appInit(0, 0, 0);
+            if (initResult !== 0) {
+              tty.writeLine(`\x1b[33mSDL3: AppInit returned non-continue (${initResult})\x1b[0m`);
+            }
+            const step = () => {
+              if (!sdlModuleRef.current) return;
+              try {
+                const iterateResult = appIterate(0);
+                // SDL_APP_CONTINUE == 0
+                if (iterateResult !== 0) {
+                  tty.writeLine(`\x1b[90mSDL3: iterate requested stop (${iterateResult})\x1b[0m`);
+                  return;
+                }
+              } catch (err: unknown) {
+                const msg = err instanceof Error ? err.message : String(err);
+                if (msg !== 'unwind') tty.writeError(`SDL3 iterate error: ${msg}`);
+                return;
+              }
+              requestAnimationFrame(step);
+            };
+            requestAnimationFrame(step);
+            started = true;
+          } else if (typeof sdlAny?.callMain === 'function') {
+            tty.writeLine('\x1b[90mSDL3: calling main entry…\x1b[0m');
+            sdlAny.callMain([]);
+            started = true;
+          } else if (typeof sdlAny?._main === 'function' && !sdlAny._main.__emceptionNoop) {
+            tty.writeLine('\x1b[90mSDL3: invoking _main…\x1b[0m');
+            sdlAny._main(0, 0);
+            started = true;
+          } else if (typeof sdlAny?._SDL_main === 'function') {
+            tty.writeLine('\x1b[90mSDL3: invoking _SDL_main…\x1b[0m');
+            sdlAny._SDL_main(0, 0);
+            started = true;
+          }
+
+          if (!started) tty.writeLine('\x1b[33mSDL3 warning: no runnable entry/callback exports found.\x1b[0m');
+        } catch (e: unknown) {
+          const msg = e instanceof Error ? e.message : String(e);
+          // Emscripten may throw "unwind" to enter async main loop; ignore that.
+          if (msg !== 'unwind') {
+            tty.writeError(`SDL3 entry invocation error: ${msg}`);
+          }
+        }
+
         sdlModuleRef.current = sdlMod as { pauseMainLoop?: () => void } | null;
         setExecutionPhase('running');
-        setStatus(`SDL3 done (${((performance.now() - tTotal) / 1000).toFixed(1)}s)`);
+        setStatus(`SDL3 done (${((performance.now() - tTotal) / 1000).toFixed(1)}s) — running`);
         tty.writeLine('\x1b[32mSDL3 rendering in canvas tab →\x1b[0m');
         return;
       }
@@ -895,8 +1042,8 @@ export default function Ide({ title = 'Emception', manifestUrl = '/cdn/manifest.
           const crtPath = '/usr/lib/emscripten/cache-lib/wasm32-emscripten/crt1.o';
           const crtBytes = await client.getFile(crtPath);
           const magic = crtBytes
-            ? Array.from(crtBytes.slice(0, 8))
-              .map((b) => b.toString(16).padStart(2, '0'))
+            ? Array.from((crtBytes as Uint8Array).slice(0, 8))
+              .map((b: number) => b.toString(16).padStart(2, '0'))
               .join('')
             : 'none';
           tty.writeLine(`crt1.o probe: bytes=${crtBytes?.length ?? 0}, head=${magic}`);
@@ -905,33 +1052,23 @@ export default function Ide({ title = 'Emception', manifestUrl = '/cdn/manifest.
             'wasm-ld',
             [
               'wasm-ld',
+              fallbackObj,
               '-o',
               wasmPath,
-              '--entry=main',
-              '--import-undefined',
-              '--strip-debug',
-              '--export-if-defined=__start_em_asm',
-              '--export-if-defined=__stop_em_asm',
-              '--export-if-defined=__start_em_lib_deps',
-              '--export-if-defined=__stop_em_lib_deps',
-              '--export-if-defined=__start_em_js',
-              '--export-if-defined=__stop_em_js',
-              '--export-table',
-              '-z',
-              'stack-size=65536',
-              '--no-growable-memory',
-              '--initial-heap=16777216',
-              '--no-stack-first',
-              '--table-base=1',
-              '--global-base=1024',
-              fallbackObj,
               '-L/usr/lib/emscripten/cache/sysroot/lib/wasm32-emscripten',
               '-L/usr/lib/emscripten/src/lib',
               '/usr/lib/emscripten/cache/sysroot/lib/wasm32-emscripten/crt1.o',
+              '--entry=main',
+              '--import-undefined',
+              '--allow-undefined',
+              '--export-table',
+              '--table-base=1',
+              '--global-base=1024',
+              '-z',
+              'stack-size=65536',
               '-lGL-getprocaddr',
               '-lal',
               '-lhtml5',
-              '-lstandalonewasm-nocatch',
               '-lstubs',
               '-lc',
               '-ldlmalloc',
@@ -939,12 +1076,6 @@ export default function Ide({ title = 'Emception', manifestUrl = '/cdn/manifest.
               '-lc++-noexcept',
               '-lc++abi-noexcept',
               '-lsockets',
-              '-mllvm',
-              '-combiner-global-alias-analysis=false',
-              '-mllvm',
-              '-enable-emscripten-sjlj',
-              '-mllvm',
-              '-disable-lsr',
             ],
             {
               cwd: resolvedConfig.compile.cwd ?? '/home/user',
