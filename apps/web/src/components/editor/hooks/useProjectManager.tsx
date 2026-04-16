@@ -43,12 +43,11 @@ export interface UseProjectManagerReturn {
   projectActions: ReturnType<typeof useProjectActions>
   filteredCount: number
   additionalFilteredProjects: ProjectData[]
-  newProjectDialogOpen: boolean
-  setNewProjectDialogOpen: (open: boolean) => void
-  selectedProjectType: "type1" | "type2"
-  setSelectedProjectType: (type: "type1" | "type2") => void
+  createDialogOpen: boolean
+  setCreateDialogOpen: (open: boolean) => void
   handleCreateNewProject: () => void
-  handleConfirmNewProject: () => void
+  handleProjectCreate: (projectData: { id: string; name: string; tags: string[]; storageType: string; type: string; mode: string; engine: string }) => void
+  refreshProjects: () => Promise<void>
 }
 
 export function useProjectManager({
@@ -61,8 +60,7 @@ export function useProjectManager({
   itemsPerPage,
 }: UseProjectManagerProps): UseProjectManagerReturn {
   // New project dialog state
-  const [newProjectDialogOpen, setNewProjectDialogOpen] = useState(false)
-  const [selectedProjectType, setSelectedProjectType] = useState<"type1" | "type2">("type1")
+  const [createDialogOpen, setCreateDialogOpen] = useState(false)
 
   // Use the project dialog hook
   const {
@@ -237,14 +235,13 @@ export function useProjectManager({
 
   // New project handlers
   const handleCreateNewProject = useCallback(() => {
-    setNewProjectDialogOpen(true)
+    setCreateDialogOpen(true)
   }, [])
 
-  const handleConfirmNewProject = useCallback(() => {
-    localStorage.setItem('newProjectType', selectedProjectType)
-    setNewProjectDialogOpen(false)
-    window.location.href = '/gglexical/studio'
-  }, [selectedProjectType])
+  const handleProjectCreate = useCallback((projectData: { id: string; name: string; tags: string[]; storageType: string; type: string; mode: string; engine: string }) => {
+    // Navigate to studio with the newly created project's ID
+    window.location.href = `/gglexical/studio#${projectData.id}`
+  }, [])
 
   return {
     projectCards,
@@ -253,11 +250,10 @@ export function useProjectManager({
     projectActions,
     filteredCount: additionalFilteredProjects.length,
     additionalFilteredProjects,
-    newProjectDialogOpen,
-    setNewProjectDialogOpen,
-    selectedProjectType,
-    setSelectedProjectType,
+    createDialogOpen,
+    setCreateDialogOpen,
     handleCreateNewProject,
-    handleConfirmNewProject,
+    handleProjectCreate,
+    refreshProjects,
   }
 }
