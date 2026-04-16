@@ -105,7 +105,8 @@ import type { LexicalEditor } from "lexical"
 import type React from "react"
 import type { ProjectMode } from "@/lib/storage/editor/project-modes"
 import { type ProjectType} from "@/lib/storage/editor/project-types"
-import { lexicalToCells, cellsToLexical, type CellularContent } from "@/lib/storage/editor/cell-structure"
+import { lexicalToCells, cellsToLexical } from "@/lib/storage/editor/cell-converters/lexical"
+import type { CellularContent } from "@/lib/storage/editor/cell-structure"
 
 // Create and export the EditorLoadingContext
 export const EditorLoadingContext = createContext<boolean>(false)

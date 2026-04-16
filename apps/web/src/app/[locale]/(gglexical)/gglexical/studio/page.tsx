@@ -820,7 +820,7 @@ export default function Page() {
         
         // Parse cells and convert to Lexical for preview
         const parsed = JSON.parse(editorState)
-        const { cellsToLexical } = require("@/lib/storage/editor/cell-structure")
+        const { cellsToLexical } = require("@/lib/storage/editor/cell-converters/lexical")
         const lexicalState = cellsToLexical(parsed)
         setPreviewState(lexicalState)
         setPreviewLayout("single")
@@ -836,7 +836,7 @@ export default function Page() {
         }
         
         // Parse all block states dynamically
-        const { cellsToLexical } = require("@/lib/storage/editor/cell-structure")
+        const { cellsToLexical } = require("@/lib/storage/editor/cell-converters/lexical")
         const parsedStates: Record<string, SerializedEditorState> = {}
         for (const [blockId, state] of Object.entries(blockStates)) {
           if (state) {
@@ -894,7 +894,7 @@ export default function Page() {
           } else if (currentLayout === "single" && states.blocks.b1) {
             setEditorState(JSON.stringify(states.blocks.b1))
             if (editorRef.current) {
-              const { cellsToLexical } = require("@/lib/storage/editor/cell-structure")
+              const { cellsToLexical } = require("@/lib/storage/editor/cell-converters/lexical")
               const lexicalState = cellsToLexical(states.blocks.b1)
               const editorState = editorRef.current.parseEditorState(JSON.stringify(lexicalState))
               editorRef.current.setEditorState(editorState)
@@ -975,7 +975,7 @@ export default function Page() {
       } else if (currentLayout === "single" && states.blocks.b1) {
         setEditorState(JSON.stringify(states.blocks.b1))
         if (editorRef.current) {
-          const { cellsToLexical } = require("@/lib/storage/editor/cell-structure")
+          const { cellsToLexical } = require("@/lib/storage/editor/cell-converters/lexical")
           const lexicalState = cellsToLexical(states.blocks.b1)
           const editorState = editorRef.current.parseEditorState(JSON.stringify(lexicalState))
           editorRef.current.setEditorState(editorState)
@@ -1054,7 +1054,7 @@ export default function Page() {
     } else if (currentLayout === "single" && states.blocks.b1) {
       setEditorState(JSON.stringify(states.blocks.b1))
       if (editorRef.current) {
-        const { cellsToLexical } = require("@/lib/storage/editor/cell-structure")
+        const { cellsToLexical } = require("@/lib/storage/editor/cell-converters/lexical")
         const lexicalState = cellsToLexical(states.blocks.b1)
         const editorState = editorRef.current.parseEditorState(JSON.stringify(lexicalState))
         editorRef.current.setEditorState(editorState)
@@ -1412,7 +1412,7 @@ export default function Page() {
                             setEditorState(JSON.stringify(states.blocks.b1))
                             
                             // Convert cells to Lexical for UI
-                            const { cellsToLexical } = require("@/lib/storage/editor/cell-structure")
+                            const { cellsToLexical } = require("@/lib/storage/editor/cell-converters/lexical")
                             const lexicalState = cellsToLexical(states.blocks.b1)
                             const editorState = editorRef.current.parseEditorState(JSON.stringify(lexicalState))
                             editorRef.current.setEditorState(editorState)
@@ -1422,7 +1422,7 @@ export default function Page() {
                             blockRefs.current = {}
                             
                             const newBlockStates: Record<string, string> = {}
-                            const { cellsToLexical } = require("@/lib/storage/editor/cell-structure")
+                            const { cellsToLexical } = require("@/lib/storage/editor/cell-converters/lexical")
                             
                             Object.entries(states.blocks).forEach(([blockId, blockState]: [string, any]) => {
                               if (blockState) {
@@ -1658,7 +1658,7 @@ export default function Page() {
                 // Wait for layout to render, then initialize editors
                 setTimeout(() => {
                   // Convert cells to Lexical for editor initialization
-                  const { cellsToLexical } = require("@/lib/storage/editor/cell-structure")
+                  const { cellsToLexical } = require("@/lib/storage/editor/cell-converters/lexical")
                   const lexicalState = cellsToLexical(emptyCells)
                   const lexicalStateString = JSON.stringify(lexicalState)
                   

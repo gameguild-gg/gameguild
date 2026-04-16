@@ -18,7 +18,7 @@ import { getLayoutFromType, type ProjectType, type InternalLayout, ENGINE_TYPES 
 import { checkSelectedProject as checkProjectPreview } from "@/components/editor/extras/preview/preview-load-operations"
 import type { ProjectData } from "@/components/editor/extras/preview/preview-load-operations"
 import type { ProjectData as StorageProjectData } from "@/lib/storage/editor/enhanced-storage-adapter"
-import { cellsToLexical } from "@/lib/storage/editor/cell-structure"
+import { cellsToLexical } from "@/lib/storage/editor/cell-converters/lexical"
 import { BlockArrayViewer } from "@/components/editor/extras/editor/block-array-viewer"
 import { storageToBlocks } from "@/lib/storage/editor/cell-converters/blocks"
 

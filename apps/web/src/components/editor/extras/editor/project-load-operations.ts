@@ -223,7 +223,7 @@ export async function checkSelectedProject(params: CheckSelectedProjectParams): 
                 setEditorState(JSON.stringify(states.blocks.b1))
                 
                 // Convert cells to Lexical for UI
-                const { cellsToLexical } = require("@/lib/storage/editor/cell-structure")
+                const { cellsToLexical } = require("@/lib/storage/editor/cell-converters/lexical")
                 const lexicalState = cellsToLexical(states.blocks.b1)
                 const editorState = editorRef.current.parseEditorState(JSON.stringify(lexicalState))
                 editorRef.current.setEditorState(editorState)
@@ -234,7 +234,7 @@ export async function checkSelectedProject(params: CheckSelectedProjectParams): 
                 blockRefs.current = {}
                 
                 const newBlockStates: Record<string, string> = {}
-                const { cellsToLexical } = require("@/lib/storage/editor/cell-structure")
+                const { cellsToLexical } = require("@/lib/storage/editor/cell-converters/lexical")
                 
                 Object.entries(states.blocks).forEach(([blockId, blockState]: [string, any]) => {
                   if (blockState) {
