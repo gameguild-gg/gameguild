@@ -84,7 +84,7 @@ export function StorageOptionSelector({
   }
 
   return (
-    <div className={`space-y-2 ${className}`}>
+    <div className={`space-y-2 overflow-hidden ${className}`}>
       <div className="flex items-center justify-between">
         <Label className="text-sm font-medium">
           Storage Type
@@ -112,8 +112,8 @@ export function StorageOptionSelector({
                   : "border-gray-200 dark:border-gray-700"
               } ${isDisabled ? "opacity-50" : "hover:border-gray-300 dark:hover:border-gray-600"}`}
             >
-              <CardContent className="p-2">
-                <div className="flex items-center space-x-2">
+              <CardContent className="p-2 overflow-hidden">
+                <div className="flex items-center space-x-2 min-w-0">
                   <RadioGroupItem
                     value={option.id}
                     id={option.id}
@@ -125,11 +125,11 @@ export function StorageOptionSelector({
                     {option.icon}
                   </div>
                   
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between">
+                  <div className="flex-1 min-w-0 overflow-hidden">
+                    <div className="flex items-center justify-between gap-1 min-w-0">
                       <Label 
                         htmlFor={option.id}
-                        className={`text-sm font-medium cursor-pointer block ${
+                        className={`text-sm font-medium cursor-pointer block truncate ${
                           isDisabled ? "cursor-not-allowed" : ""
                         } ${isSelected ? "text-blue-900 dark:text-blue-100" : ""}`}
                       >
