@@ -973,6 +973,12 @@ export default function Ide({ title = 'Emception', manifestUrl = '/cdn/manifest.
       }
       setStatus('Compiling...');
       tty.writeLine(`Compiling ${compileTarget}...`);
+      // Clear any stale output artifact (e.g. a previous SDL3 WASM at the same
+      // path) before invoking the compiler.  Without this, a non-empty stale
+      // file would prevent the fallback link pipeline from triggering if the
+      // emcc link step silently fails to produce a new output.
+      const staleWasmPath = resolvedConfig.compile.output || '/home/user/main.wasm';
+      await client.writeFile(staleWasmPath, new Uint8Array(0));
       const compileArgs =
         resolvedConfig.compile.args.length > 0
           ? resolveArgs(resolvedConfig.compile.args, toWorkspaceFsPath(compileTarget))

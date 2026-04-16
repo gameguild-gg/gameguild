@@ -2688,8 +2688,14 @@ sys.excepthook = _hook
           }
         }
       } else {
-        console.warn(`${LOG_PREFIX}   No _start or main export found`);
-        exitCode = 0;
+        const sdlExports = exportNames.filter(e => e.startsWith('SDL_') || e === '_main');
+        const hint = sdlExports.length > 0
+          ? ` (found Emscripten/SDL exports: ${sdlExports.slice(0, 4).join(', ')} — WASM was not compiled in standalone/WASI mode)`
+          : ' — WASM exports: ' + (exportNames.length ? exportNames.slice(0, 6).join(', ') : 'none');
+        const msg = `No _start or main export found${hint}`;
+        console.warn(`${LOG_PREFIX}   ${msg}`);
+        options.onStderr?.(msg);
+        exitCode = 1;
       }
 
       console.log(`${LOG_PREFIX} ===== WASI COMPLETE: exitCode=${exitCode}, total=${elapsed(tTotal)} =====`);
