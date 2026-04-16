@@ -54,7 +54,7 @@ import {
 import type { ProjectData as StorageProjectData } from "@/lib/storage/editor/enhanced-storage-adapter"
 import type { CellularContent } from "@/lib/storage/editor/cell-structure"
 import type { BlockArray } from "@/components/editor/extras/editor/block-types"
-import { blocksToCells, cellsToBlocks } from "@/components/editor/extras/editor/block-converters"
+import { blocksToStorage, storageToBlocks } from "@/components/editor/extras/editor/block-converters"
 import { BlockArrayEditor } from "@/components/editor/extras/editor/block-array-editor"
 import { BlockArrayViewer } from "@/components/editor/extras/editor/block-array-viewer"
 
@@ -254,7 +254,7 @@ export default function Page() {
         setLastProjectLoadTime,
         setCurrentProjectPreferences,
         setCurrentEngine,
-        setBlockArrayCells: (cells) => setBlockArrayBlocks(cellsToBlocks(Array.isArray(cells) ? cells : [])),
+        setBlockArrayCells: (cells) => setBlockArrayBlocks(storageToBlocks(cells && typeof cells === 'object' && !Array.isArray(cells) ? cells : { order: [], blocks: {} })),
       })
     }
     
@@ -473,7 +473,7 @@ export default function Page() {
     if (currentEngine === ENGINE_TYPES.BLOCKS) {
       // Block Array engine: save cells directly
       dataToSave = createProjectData(currentProjectType, {
-        blocks: { b1: blocksToCells(blockArrayBlocks) },
+        blocks: { b1: blocksToStorage(blockArrayBlocks) },
       })
       
       const preferences: ProjectPreferences = {
@@ -656,7 +656,7 @@ export default function Page() {
         if (currentEngine === ENGINE_TYPES.BLOCKS) {
           // Block Array engine: save cells directly
           dataToSave = createProjectData(currentProjectType, {
-            blocks: { b1: blocksToCells(blockArrayBlocks) },
+            blocks: { b1: blocksToStorage(blockArrayBlocks) },
           })
         } else {
           // Prepare the correct state based on layout type
@@ -1312,10 +1312,10 @@ export default function Page() {
                       setCurrentEngine(projectEngine)
                       
                       if (projectEngine === ENGINE_TYPES.BLOCKS) {
-                        // Block Array engine: load cells and convert to blocks
+                        // Block Array engine: load storage and convert to blocks
                         const states = extractEditorStates(projectData.data, projectData.type)
-                        const cellsData = states.blocks.b1 || []
-                        setBlockArrayBlocks(cellsToBlocks(Array.isArray(cellsData) ? cellsData : []))
+                        const storageData = states.blocks.b1 || { order: [], blocks: {} }
+                        setBlockArrayBlocks(storageToBlocks(storageData && typeof storageData === 'object' && !Array.isArray(storageData) ? storageData : { order: [], blocks: {} }))
                         
                         setCurrentProjectId(projectData.id)
                         setCurrentProjectName(projectData.name)
