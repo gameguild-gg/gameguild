@@ -1,14 +1,7 @@
-# CDN assets are synchronized from tools/emception/public/cdn via predev/prebuild
-public/cdn
+# Synced CDN assets
+public/cdn/
 
-# Next.js
+# Next.js local output
 .next/
 out/
 next-env.d.ts
-
-# Dependencies
-node_modules/
-
-# Misc
-.DS_Store
-*.log

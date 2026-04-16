@@ -1,5 +1,5 @@
+# Vite build output
 dist/
-node_modules/
-public/cdn
-.DS_Store
-*.log
+
+# Synced CDN assets
+public/cdn/

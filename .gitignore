@@ -1,78 +1,46 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+# Repository-wide ignore rules
 
-# OS
+# OS metadata
 .DS_Store
 Thumbs.db
 Desktop.ini
 
-# Caches directories and files
-.cache
-
-# Temporary directories and files
-.temp
-.tmp
-
-# IDE's and Editors
-/.idea
+# Editors and IDEs
+.idea/
 .project
 .classpath
 .c9/
 *.launch
 .settings/
 *.sublime-workspace
-.vscode
-public/pyodide/*
-public/wasm/*
+.vscode/
 
-# .NET
-/bin/
-/obj/
-*.user
-*.suo
-*.cache
-*.docstates
-[Dd]ebug/
-[Rr]elease/
-build/
-[Bb]in/
-[Oo]bj/
-x64/
-x86/
-*.exe
-*.dll
-*.pdb
+# Cache and temp files
+.cache/
+.temp/
+.tmp/
 
-
-/[Tt]estResults/
-/[Ll]ogs/
-# Node.js Dependencies
-**/node_modules
-
-# Embedded upstream repos (avoid nested .git metadata/tooling conflicts)
-tools/emception/userland/**/.git/
-
-# Node.js Package Managers
-/.pnp
+# Package manager state
+**/node_modules/
+.pnp
 .pnp.*
 .yarn/*
 !.yarn/patches
 !.yarn/plugins
 !.yarn/releases
 !.yarn/versions
-
-# Node.js Package Managers Lockfiles
 package-lock.json
 yarn.lock
 pnpm-lock.yaml
 
-# Environment Variables
+# Environment files
 .env
 .env.*
 !.env.example
 !.env.*.example
 
 # Logs
-logs
+logs/
 *.log
 npm-debug.log*
 pnpm-debug.log*
@@ -80,31 +48,17 @@ yarn-debug.log*
 yarn-error.log*
 lerna-debug.log*
 
+# Generic build and test output
+build/
+dist/
+coverage/
+test-results/
+playwright-report/
+playwright-report-react/
+*.tsbuildinfo
+
 # Miscellaneous
 *.pem
 
-# Typescript
-*.tsbuildinfo
-
-# Compiled Output
-/dist
-
-# Next.js
-next-env.d.ts
-/.next/
-/out/
-
-# Vercel
-.vercel
-
-# Testing
-/coverage
-
-# Production
-/build
-
-apps/web/test-results/
-
-test-results/
-
-tools/emception/userland/brotli/
+# Embedded upstream repos
+tools/emception/userland/**/.git/
