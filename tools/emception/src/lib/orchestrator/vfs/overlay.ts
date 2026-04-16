@@ -18,6 +18,15 @@ export class OverlayFS implements IFileSystem {
     this.mounts.set(this.normalizePath(path), fs);
   }
 
+  /** Clear all data in a mounted filesystem (e.g. /tmp, /home). */
+  async clearMount(path: string): Promise<void> {
+    const normalized = this.normalizePath(path);
+    const fs = this.mounts.get(normalized);
+    if (fs && typeof (fs as any).clear === 'function') {
+      await (fs as any).clear();
+    }
+  }
+
   private getFs(path: string): { fs: IFileSystem; relativePath: string } {
     const normalized = this.normalizePath(path);
     let bestMatch = '';
