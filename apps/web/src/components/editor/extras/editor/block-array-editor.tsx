@@ -6,8 +6,7 @@ import { BlockTypePicker } from "./block-type-picker"
 import { BlockEditorModal } from "./block-editor-modal"
 import { BLOCK_REGISTRY, type BlockCellType } from "./block-component-registry"
 import { DeleteConfirmDialog } from "@/components/editor/extras/dialogs/delete-confirm-dialog"
-import { type CellType } from "@/lib/storage/editor/cell-converters/cell-data"
-import type { Cell, CellularContent } from "@/lib/storage/editor/cell-structure"
+import type { Block, BlockArray } from "./block-types"
 import { BlockContentRenderer } from "@/components/editor/extras/editor/block-array-viewer"
 
 // ============================================================================
@@ -38,7 +37,7 @@ function InsertLine({ onInsert }: { onInsert: () => void }) {
 // ============================================================================
 
 interface BlockCardProps {
-  cell: Cell
+  block: Block
   index: number
   total: number
   onMoveUp: () => void
@@ -48,10 +47,8 @@ interface BlockCardProps {
   readOnly: boolean
 }
 
-function BlockCard({ cell, index, total, onMoveUp, onMoveDown, onRemove, onEdit, readOnly }: BlockCardProps) {
-  const [, meta] = cell
-  const cellType = meta.t as CellType
-  const config = BLOCK_REGISTRY[cellType as BlockCellType]
+function BlockCard({ block, index, total, onMoveUp, onMoveDown, onRemove, onEdit, readOnly }: BlockCardProps) {
+  const config = BLOCK_REGISTRY[block.type]
 
   if (!config) return null
 
@@ -128,7 +125,7 @@ function BlockCard({ cell, index, total, onMoveUp, onMoveDown, onRemove, onEdit,
       {/* Content area */}
       <div className="p-4">
         <div className="prose prose-sm dark:prose-invert max-w-none">
-          <BlockContentRenderer cell={cell} />
+          <BlockContentRenderer block={block} />
         </div>
       </div>
     </div>
@@ -140,20 +137,20 @@ function BlockCard({ cell, index, total, onMoveUp, onMoveDown, onRemove, onEdit,
 // ============================================================================
 
 interface BlockArrayEditorProps {
-  cells: CellularContent
-  onChange: (cells: CellularContent) => void
+  blocks: BlockArray
+  onChange: (blocks: BlockArray) => void
   readOnly?: boolean
 }
 
-export function BlockArrayEditor({ cells, onChange, readOnly = false }: BlockArrayEditorProps) {
+export function BlockArrayEditor({ blocks, onChange, readOnly = false }: BlockArrayEditorProps) {
   const [pickerOpen, setPickerOpen] = useState(false)
   const [insertIndex, setInsertIndex] = useState<number | null>(null)
 
   // Editor modal state
   const [editorOpen, setEditorOpen] = useState(false)
   const [editingIndex, setEditingIndex] = useState<number | null>(null)
-  const [editingCell, setEditingCell] = useState<Cell | null>(null)
-  const [editingCellType, setEditingCellType] = useState<CellType | null>(null)
+  const [editingBlock, setEditingBlock] = useState<Block | null>(null)
+  const [editingBlockType, setEditingBlockType] = useState<BlockCellType | null>(null)
 
   // Delete confirmation state
   const [deleteIndex, setDeleteIndex] = useState<number | null>(null)
@@ -163,56 +160,53 @@ export function BlockArrayEditor({ cells, onChange, readOnly = false }: BlockArr
   const scrollToIndexRef = useRef<number | null>(null)
   const blockRefsMap = useRef<Map<number, HTMLDivElement>>(new Map())
 
-  // Stable keys for cells — avoids remount on reorder
-  const cellKeyMap = useRef(new WeakMap<Cell, string>())
-  const cellKeyCounter = useRef(0)
-  const getCellKey = useCallback((cell: Cell) => {
-    let key = cellKeyMap.current.get(cell)
+  // Stable keys for blocks — avoids remount on reorder
+  const blockKeyMap = useRef(new WeakMap<Block, string>())
+  const blockKeyCounter = useRef(0)
+  const getBlockKey = useCallback((block: Block) => {
+    let key = blockKeyMap.current.get(block)
     if (!key) {
-      key = `block-${++cellKeyCounter.current}`
-      cellKeyMap.current.set(cell, key)
+      key = `block-${++blockKeyCounter.current}`
+      blockKeyMap.current.set(block, key)
     }
     return key
   }, [])
 
-  const handleAddBlock = useCallback((cell: Cell) => {
-    const idx = insertIndex ?? cells.length
-    const next = [...cells]
-    next.splice(idx, 0, cell)
+  const handleAddBlock = useCallback((block: Block) => {
+    const idx = insertIndex ?? blocks.length
+    const next = [...blocks]
+    next.splice(idx, 0, block)
     onChange(next)
 
     // Immediately open editor for the newly added block
-    const [, meta] = cell
     setEditingIndex(idx)
-    setEditingCell(cell)
-    setEditingCellType(meta.t as CellType)
+    setEditingBlock(block)
+    setEditingBlockType(block.type)
     setEditorOpen(true)
 
     setInsertIndex(null)
-  }, [cells, onChange, insertIndex])
+  }, [blocks, onChange, insertIndex])
 
   const handleEditBlock = useCallback((index: number) => {
-    const cell = cells[index]
-    if (!cell) return
-    const [, meta] = cell
+    const block = blocks[index]
+    if (!block) return
     setEditingIndex(index)
-    setEditingCell(cell)
-    setEditingCellType(meta.t as CellType)
+    setEditingBlock(block)
+    setEditingBlockType(block.type)
     setEditorOpen(true)
-  }, [cells])
+  }, [blocks])
 
   const handleEditorSave = useCallback((data: any) => {
-    if (editingIndex === null || !editingCell) return
-    const [, meta] = editingCell
-    const updatedCell: Cell = [{ d: data }, meta]
-    const next = [...cells]
-    next[editingIndex] = updatedCell
+    if (editingIndex === null || !editingBlock) return
+    const updatedBlock: Block = { type: editingBlock.type, data }
+    const next = [...blocks]
+    next[editingIndex] = updatedBlock
     onChange(next)
     setEditorOpen(false)
     setEditingIndex(null)
-    setEditingCell(null)
-    setEditingCellType(null)
-  }, [editingIndex, editingCell, cells, onChange])
+    setEditingBlock(null)
+    setEditingBlockType(null)
+  }, [editingIndex, editingBlock, blocks, onChange])
 
   const handleRemoveBlock = useCallback((index: number) => {
     setDeleteIndex(index)
@@ -221,26 +215,26 @@ export function BlockArrayEditor({ cells, onChange, readOnly = false }: BlockArr
 
   const handleConfirmDelete = useCallback(() => {
     if (deleteIndex === null) return
-    onChange(cells.filter((_, i) => i !== deleteIndex))
+    onChange(blocks.filter((_, i) => i !== deleteIndex))
     setDeleteIndex(null)
     setDeleteDialogOpen(false)
-  }, [deleteIndex, cells, onChange])
+  }, [deleteIndex, blocks, onChange])
 
   const handleMoveUp = useCallback((index: number) => {
     if (index <= 0) return
-    const next = [...cells]
+    const next = [...blocks]
     ;[next[index - 1], next[index]] = [next[index]!, next[index - 1]!]
     onChange(next)
     scrollToIndexRef.current = index - 1
-  }, [cells, onChange])
+  }, [blocks, onChange])
 
   const handleMoveDown = useCallback((index: number) => {
-    if (index >= cells.length - 1) return
-    const next = [...cells]
+    if (index >= blocks.length - 1) return
+    const next = [...blocks]
     ;[next[index], next[index + 1]] = [next[index + 1]!, next[index]!]
     onChange(next)
     scrollToIndexRef.current = index + 1
-  }, [cells, onChange])
+  }, [blocks, onChange])
 
   // Scroll to moved block after render
   useEffect(() => {
@@ -262,7 +256,7 @@ export function BlockArrayEditor({ cells, onChange, readOnly = false }: BlockArr
   return (
     <div className="space-y-0">
       {/* Empty state */}
-      {cells.length === 0 && !readOnly && (
+      {blocks.length === 0 && !readOnly && (
         <div className="flex flex-col items-center justify-center py-20">
           <button
             type="button"
@@ -277,17 +271,17 @@ export function BlockArrayEditor({ cells, onChange, readOnly = false }: BlockArr
       )}
 
       {/* Block list with insert lines */}
-      {cells.length > 0 && (
+      {blocks.length > 0 && (
         <>
           {/* Insert line before first block */}
           {!readOnly && <InsertLine onInsert={() => openPickerAt(0)} />}
 
-          {cells.map((cell, index) => (
-            <div key={getCellKey(cell)} ref={(el) => { if (el) blockRefsMap.current.set(index, el); else blockRefsMap.current.delete(index) }}>
+          {blocks.map((block, index) => (
+            <div key={getBlockKey(block)} ref={(el) => { if (el) blockRefsMap.current.set(index, el); else blockRefsMap.current.delete(index) }}>
               <BlockCard
-                cell={cell}
+                block={block}
                 index={index}
-                total={cells.length}
+                total={blocks.length}
                 onMoveUp={() => handleMoveUp(index)}
                 onMoveDown={() => handleMoveDown(index)}
                 onRemove={() => handleRemoveBlock(index)}
@@ -313,12 +307,12 @@ export function BlockArrayEditor({ cells, onChange, readOnly = false }: BlockArr
           setEditorOpen(v)
           if (!v) {
             setEditingIndex(null)
-            setEditingCell(null)
-            setEditingCellType(null)
+            setEditingBlock(null)
+            setEditingBlockType(null)
           }
         }}
-        cell={editingCell}
-        cellType={editingCellType}
+        block={editingBlock}
+        blockType={editingBlockType}
         onSave={handleEditorSave}
       />
 
@@ -329,7 +323,7 @@ export function BlockArrayEditor({ cells, onChange, readOnly = false }: BlockArr
           if (!v) setDeleteIndex(null)
         }}
         title="Delete Block"
-        itemName={deleteIndex !== null && cells[deleteIndex] ? BLOCK_REGISTRY[cells[deleteIndex]![1].t as BlockCellType]?.label ?? "Block" : "Block"}
+        itemName={deleteIndex !== null && blocks[deleteIndex] ? BLOCK_REGISTRY[blocks[deleteIndex]!.type]?.label ?? "Block" : "Block"}
         itemType="block"
         onConfirm={handleConfirmDelete}
       />

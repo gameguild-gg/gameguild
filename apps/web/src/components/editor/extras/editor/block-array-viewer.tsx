@@ -1,7 +1,8 @@
 "use client"
 
-import { CELL_TO_LEXICAL_TYPE, type CellType } from "@/lib/storage/editor/cell-converters/cell-data"
-import type { Cell, CellularContent } from "@/lib/storage/editor/cell-structure"
+import { CELL_TO_LEXICAL_TYPE } from "@/lib/storage/editor/cell-converters/cell-data"
+import type { Block, BlockArray } from "./block-types"
+import type { BlockCellType } from "./block-component-registry"
 
 // Import all preview components
 import { PreviewQuiz } from "@/components/editor/plugins/preview-components/preview-quiz"
@@ -31,23 +32,20 @@ import { PreviewRichText } from "@/components/editor/plugins/preview-components/
 // ============================================================================
 
 /**
- * Convert a Cell tuple to a fake serialized Lexical node
+ * Convert a Block to a fake serialized Lexical node
  * that the preview components can consume.
  *
  * Most decorators use `{ type, data, version }`.
  * Quiz is the exception: it uses `entry` instead of `data`.
  */
-export function cellToSerializedNode(cell: Cell): any {
-  const [cellData, meta] = cell
-  const cellType = meta.t as CellType
-  const lexicalType = CELL_TO_LEXICAL_TYPE[cellType]
-  const d = (cellData as any).d
+export function blockToSerializedNode(block: Block): any {
+  const lexicalType = CELL_TO_LEXICAL_TYPE[block.type as keyof typeof CELL_TO_LEXICAL_TYPE]
 
-  if (cellType === "quiz") {
-    return { type: lexicalType, entry: d, version: meta.v }
+  if (block.type === "quiz") {
+    return { type: lexicalType, entry: block.data, version: 1 }
   }
 
-  return { type: lexicalType, data: d, version: meta.v }
+  return { type: lexicalType, data: block.data, version: 1 }
 }
 
 // ============================================================================
@@ -55,15 +53,13 @@ export function cellToSerializedNode(cell: Cell): any {
 // ============================================================================
 
 interface BlockContentRendererProps {
-  cell: Cell
+  block: Block
 }
 
-export function BlockContentRenderer({ cell }: BlockContentRendererProps) {
-  const [, meta] = cell
-  const cellType = meta.t as CellType
-  const node = cellToSerializedNode(cell)
+export function BlockContentRenderer({ block }: BlockContentRendererProps) {
+  const node = blockToSerializedNode(block)
 
-  switch (cellType) {
+  switch (block.type as BlockCellType) {
     case "quiz":
       return <PreviewQuiz node={node} />
     case "code":
@@ -109,7 +105,7 @@ export function BlockContentRenderer({ cell }: BlockContentRendererProps) {
     default:
       return (
         <div className="p-3 border border-gray-200 dark:border-gray-700 rounded text-sm text-gray-500 dark:text-gray-400">
-          Unknown block type: {cellType}
+          Unknown block type: {block.type}
         </div>
       )
   }
@@ -120,12 +116,12 @@ export function BlockContentRenderer({ cell }: BlockContentRendererProps) {
 // ============================================================================
 
 interface BlockArrayViewerProps {
-  cells: CellularContent
+  blocks: BlockArray
   className?: string
 }
 
-export function BlockArrayViewer({ cells, className }: BlockArrayViewerProps) {
-  if (!cells || cells.length === 0) {
+export function BlockArrayViewer({ blocks, className }: BlockArrayViewerProps) {
+  if (!blocks || blocks.length === 0) {
     return (
       <div className="py-16 text-center text-sm text-gray-500 dark:text-gray-400">
         This project has no content yet.
@@ -135,8 +131,8 @@ export function BlockArrayViewer({ cells, className }: BlockArrayViewerProps) {
 
   return (
     <div className={className ?? "prose prose-stone dark:prose-invert max-w-none space-y-4"}>
-      {cells.map((cell, index) => (
-        <BlockContentRenderer key={index} cell={cell} />
+      {blocks.map((block, index) => (
+        <BlockContentRenderer key={index} block={block} />
       ))}
     </div>
   )
