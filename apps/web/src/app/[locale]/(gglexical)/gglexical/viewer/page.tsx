@@ -20,7 +20,7 @@ import type { ProjectData } from "@/components/editor/extras/preview/preview-loa
 import type { ProjectData as StorageProjectData } from "@/lib/storage/editor/enhanced-storage-adapter"
 import { cellsToLexical } from "@/lib/storage/editor/cell-structure"
 import { BlockArrayViewer } from "@/components/editor/extras/editor/block-array-viewer"
-import { cellsToBlocks } from "@/components/editor/extras/editor/block-converters"
+import { storageToBlocks } from "@/components/editor/extras/editor/block-converters"
 
 
 export default function PreviewPage() {
@@ -191,7 +191,7 @@ export default function PreviewPage() {
     projectType?: ProjectType;
     previewMode?: "continuous" | "slide";
     isBlocksEngine?: boolean;
-    blocksCells?: any[];
+    blocksCells?: any;
   } => {
     if (!currentProject) {
       return {
@@ -205,13 +205,13 @@ export default function PreviewPage() {
     const projectEngine = (currentProject as any).engine
     if (projectEngine === ENGINE_TYPES.BLOCKS) {
       const cellStates = extractEditorStates(currentProject.data, currentProject.type)
-      const cellsData = cellStates.blocks.b1 || []
+      const storageData = cellStates.blocks.b1 || { order: [], blocks: {} }
       return {
         layout: "single",
         states: { blocks: {} },
         hasSlides: false,
         isBlocksEngine: true,
-        blocksCells: Array.isArray(cellsData) ? cellsData : [],
+        blocksCells: storageData && typeof storageData === 'object' && !Array.isArray(storageData) ? storageData : { order: [], blocks: {} },
       }
     }
     
@@ -359,7 +359,7 @@ export default function PreviewPage() {
 
             {currentProject && isBlocksEngine ? (
               <div className="border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900 p-6">
-                <BlockArrayViewer blocks={cellsToBlocks(blocksCells || [])} />
+                <BlockArrayViewer blocks={storageToBlocks(blocksCells || { order: [], blocks: {} })} />
               </div>
             ) : currentProject && (Object.keys(states.blocks).length > 0 || hasSlides) ? (
               <>

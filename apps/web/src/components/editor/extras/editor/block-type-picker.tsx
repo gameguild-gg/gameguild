@@ -228,7 +228,7 @@ export function BlockTypePicker({ open, onOpenChange, onSelect }: BlockTypePicke
 
   const handleSelectQuizTemplate = (template: QuizTemplate) => {
     const entry = template.createEntry()
-    const block: Block = { type: "quiz", data: entry }
+    const block: Block = { id: crypto.randomUUID(), type: "quiz", data: entry }
     onSelect(block)
     onOpenChange(false)
     setSearch("")
