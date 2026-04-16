@@ -14,6 +14,7 @@ export class TTYBridge implements IOProvider {
   private inputBuffer: number[] = [];
   private inputResolvers: Array<(byte: number) => void> = [];
   private _echoStdin = false;
+  private _echoedInputLength = 0;
 
   // Exclusive stdin: when active, terminal input is routed to a separate
   // channel so that the WASM program receives bytes instead of the shell.
@@ -50,10 +51,15 @@ export class TTYBridge implements IOProvider {
         if (this._echoStdin) {
           if (byte === 13) {
             this.terminal.write('\r\n');
+            this._echoedInputLength = 0;
           } else if (byte === 127 || byte === 8) {
-            this.terminal.write('\b \b');
+            if (this._echoedInputLength > 0) {
+              this.terminal.write('\b \b');
+              this._echoedInputLength--;
+            }
           } else if (byte >= 32) {
             this.terminal.write(data[i]);
+            this._echoedInputLength++;
           }
         }
         // When exclusive stdin is active, route to the exclusive channel
@@ -106,6 +112,9 @@ export class TTYBridge implements IOProvider {
   /** Enable/disable local echo of stdin input (for interactive WASI programs). */
   setStdinEcho(enabled: boolean): void {
     this._echoStdin = enabled;
+    if (!enabled) {
+      this._echoedInputLength = 0;
+    }
   }
 
   /** Whether exclusive stdin mode is currently active. */

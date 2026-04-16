@@ -3,15 +3,20 @@
  * When the CDN serves .br with Content-Encoding: br, the browser decompresses
  * automatically. This helper is for when we fetch .br without that header
  * (e.g. from a static file server or custom CDN).
+ *
+ * The bundled brotli WASM fallback is loaded at runtime by worker-entry.ts
+ * and injected into LazyFS.customBrotliDecompressor. This module only
+ * provides the native DecompressionStream path for library consumers.
  */
 
 /**
  * Decompress Brotli-encoded data. Uses the native DecompressionStream when
- * available (Chrome 80+, modern browsers). Otherwise returns the buffer
- * unchanged and the caller may need to use a WASM Brotli decoder.
+ * available (Chrome 80+, modern browsers). Otherwise falls back to the
+ * injected WASM decompressor (set by worker-entry.ts via LazyFS.customBrotliDecompressor).
  */
 export async function decompressBrotli(data: Uint8Array): Promise<Uint8Array> {
   try {
+    // Try native DecompressionStream('br') first
     const ds = new DecompressionStream('br' as unknown as CompressionFormat);
     const writer = ds.writable.getWriter();
     writer.write(new Uint8Array(data));

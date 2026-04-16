@@ -32,6 +32,9 @@ userland/**/version_*.tar.gz
 sysroot-staging/
 sysroot/
 
+# Generated brotli WASM files (built by scripts/build-brotli.ts, loaded from CDN at runtime)
+src/lib/orchestrator/loader/cdn/
+
 # IDE / OS
 .DS_Store
 *.swp

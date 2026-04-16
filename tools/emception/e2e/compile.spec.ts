@@ -136,6 +136,9 @@ test.describe('Compile & Run', () => {
             // The MiniShell banner should already be in the terminal
             await expect(terminal(page)).toContainText('Browser Toolchain Shell', { timeout: 10_000 });
 
+            // Switch to cpp-terminal workspace so the compile path uses WASI (not SDL3)
+            await page.getByTestId('workspace-picker').selectOption('cpp-terminal');
+
             // Override the editor with a simple hello-world (no stdin) so the
             // test doesn't depend on whichever DEFAULT_CODE is in Ide.tsx.
             await page.evaluate(() => {
@@ -232,9 +235,8 @@ test.describe('Compile & Run', () => {
         await page.goto('/', { waitUntil: 'networkidle' });
         await expect(status(page)).toHaveText('Ready', { timeout: 120_000 });
 
-        // Verify the MiniShell banner is visible
+        // Verify the MiniShell banner is in the terminal log
         const term = terminal(page);
-        await expect(term).toBeVisible();
         await expect(term).toContainText('Browser Toolchain Shell', { timeout: 10_000 });
         await expect(term).toContainText('Type "help" for available commands', { timeout: 5_000 });
 
@@ -262,6 +264,9 @@ test.describe('Compile & Run', () => {
         await page.goto('/', { waitUntil: 'networkidle' });
         await expect(status(page)).toHaveText('Ready', { timeout: 120_000 });
         await expect(compileBtn(page)).toBeEnabled();
+
+        // Switch to cpp-terminal workspace so the compile path uses WASI (not SDL3)
+        await page.getByTestId('workspace-picker').selectOption('cpp-terminal');
 
         // Replace editor content with a C program that reads stdin
         const stdinProgram = [
@@ -329,6 +334,9 @@ test.describe('Compile & Run', () => {
         await page.goto('/', { waitUntil: 'networkidle' });
         await expect(status(page)).toHaveText('Ready', { timeout: 120_000 });
         await expect(compileBtn(page)).toBeEnabled();
+
+        // Switch to cpp-terminal workspace so the compile path uses WASI (not SDL3)
+        await page.getByTestId('workspace-picker').selectOption('cpp-terminal');
 
         // C program that prints what it reads from stdin
         await page.evaluate((code) => {

@@ -46,6 +46,12 @@ export class WorkerClient {
     /** Per-run stdin feed functions. */
     private stdinFeeds = new Map<number, () => number | null | Promise<number>>();
 
+    /** Shared-memory stdin channels for interactive WASI runs. */
+    private stdinSharedChannels = new Map<number, { control: Int32Array; data: Uint8Array }>();
+
+    /** Shared-memory stdin channel used by shell-launched foreground WASI runs. */
+    private shellStdinChannel: { control: Int32Array; data: Uint8Array } | null = null;
+
     private bootResolve: ((value: void) => void) | null = null;
     private bootReject: ((reason: unknown) => void) | null = null;
 
@@ -156,6 +162,14 @@ export class WorkerClient {
         // Release any pending exclusive-stdin readers so the feedStdin loop
         // exits immediately and keyboard input returns to normal (Monaco editor).
         this.stdinFeeds.clear();
+        for (const [, channel] of this.stdinSharedChannels) {
+            this.closeSharedChannel(channel);
+        }
+        this.stdinSharedChannels.clear();
+        if (this.shellStdinChannel) {
+            this.closeSharedChannel(this.shellStdinChannel);
+            this.shellStdinChannel = null;
+        }
         this.io.setStdinEcho?.(false);
         this.io.exitExclusiveStdin?.();
     }
@@ -195,7 +209,11 @@ export class WorkerClient {
             }
 
             case 'stdinRequest':
-                this.feedStdin(msg.id);
+                this.feedStdin(msg.id, msg.controlBuffer, msg.dataBuffer);
+                break;
+
+            case 'shellStdinRequest':
+                this.feedShellStdin(msg.controlBuffer, msg.dataBuffer);
                 break;
 
             case 'runResult': {
@@ -210,6 +228,11 @@ export class WorkerClient {
                         this.stdinFeeds.delete(msg.id);
                         this.io.setStdinEcho?.(false);
                         this.io.exitExclusiveStdin?.();
+                    }
+                    const channel = this.stdinSharedChannels.get(msg.id);
+                    if (channel) {
+                        this.closeSharedChannel(channel);
+                        this.stdinSharedChannels.delete(msg.id);
                     }
                     p.resolve({
                         exitCode: msg.exitCode,
@@ -269,9 +292,12 @@ export class WorkerClient {
                 break;
 
             case 'shellExclusiveStdin':
-                if (msg.enter) {
-                    this.io.enterExclusiveStdin?.();
-                } else {
+                if (!msg.enter) {
+                    if (this.shellStdinChannel) {
+                        this.closeSharedChannel(this.shellStdinChannel);
+                        this.shellStdinChannel = null;
+                    }
+                    this.io.setStdinEcho?.(false);
                     this.io.exitExclusiveStdin?.();
                 }
                 break;
@@ -293,9 +319,15 @@ export class WorkerClient {
      * Feed stdin bytes to the Worker for a specific run.
      * Continuously reads from the stdin provider and sends bytes.
      */
-    private async feedStdin(id: number): Promise<void> {
+    private async feedStdin(id: number, controlBuffer: SharedArrayBuffer, dataBuffer: SharedArrayBuffer): Promise<void> {
         const stdinFn = this.stdinFeeds.get(id);
         if (!stdinFn) return;
+
+        const channel = {
+            control: new Int32Array(controlBuffer),
+            data: new Uint8Array(dataBuffer),
+        };
+        this.stdinSharedChannels.set(id, channel);
 
         // Enable exclusive stdin so the shell doesn't steal input
         this.io.enterExclusiveStdin?.();
@@ -313,15 +345,131 @@ export class WorkerClient {
                 }
 
                 if (byte === null || byte === -1 || !this.stdinFeeds.has(id)) break;
-                this.send({ type: 'stdin', id, byte });
+                const wrote = await this.writeByteToSharedChannel(channel, byte);
+                if (!wrote) break;
             }
 
             // Restore normal input mode
             this.io.setStdinEcho?.(false);
             this.io.exitExclusiveStdin?.();
+            this.closeSharedChannel(channel);
+            this.stdinSharedChannels.delete(id);
         };
 
         feed();
+    }
+
+    private async feedShellStdin(controlBuffer: SharedArrayBuffer, dataBuffer: SharedArrayBuffer): Promise<void> {
+        const channel = {
+            control: new Int32Array(controlBuffer),
+            data: new Uint8Array(dataBuffer),
+        };
+        this.shellStdinChannel = channel;
+
+        this.io.enterExclusiveStdin?.();
+        this.io.setStdinEcho?.(true);
+
+        let lineBuf = '';
+        let lineCursor = 0;
+        const lineQueue: number[] = [];
+
+        const nextByte = async (): Promise<number | null> => {
+            while (this.shellStdinChannel === channel) {
+                if (lineQueue.length > 0) {
+                    return lineQueue.shift()!;
+                }
+
+                const raw = this.io.readByteExclusive?.() ?? this.io.readByte();
+                let byte: number | null;
+                if (raw !== null && typeof raw === 'object' && 'then' in raw) {
+                    byte = await raw;
+                } else {
+                    byte = raw as number | null;
+                }
+
+                if (byte === null || byte === -1) {
+                    if (this.shellStdinChannel !== channel) return null;
+                    continue;
+                }
+
+                if (byte === 127 || byte === 8) {
+                    if (lineCursor > 0) {
+                        lineBuf = lineBuf.slice(0, lineCursor - 1) + lineBuf.slice(lineCursor);
+                        lineCursor--;
+                    }
+                    continue;
+                }
+
+                if (byte === 13 || byte === 10) {
+                    for (let i = 0; i < lineBuf.length; i++) {
+                        lineQueue.push(lineBuf.charCodeAt(i));
+                    }
+                    lineQueue.push(10);
+                    lineBuf = '';
+                    lineCursor = 0;
+                    return lineQueue.shift()!;
+                }
+
+                if (byte >= 32) {
+                    const ch = String.fromCharCode(byte);
+                    lineBuf = lineBuf.slice(0, lineCursor) + ch + lineBuf.slice(lineCursor);
+                    lineCursor++;
+                }
+            }
+
+            return null;
+        };
+
+        const feed = async () => {
+            while (this.shellStdinChannel === channel) {
+                const byte = await nextByte();
+                if (byte === null) break;
+                const wrote = await this.writeByteToSharedChannel(channel, byte);
+                if (!wrote) break;
+            }
+
+            if (this.shellStdinChannel === channel) {
+                this.io.setStdinEcho?.(false);
+                this.io.exitExclusiveStdin?.();
+                this.closeSharedChannel(channel);
+                this.shellStdinChannel = null;
+            }
+        };
+
+        feed();
+    }
+
+    private async writeByteToSharedChannel(channel: { control: Int32Array; data: Uint8Array }, byte: number): Promise<boolean> {
+        const readIndex = 0;
+        const writeIndex = 1;
+        const closedIndex = 2;
+        const ringSize = channel.data.length;
+
+        while (true) {
+            if (Atomics.load(channel.control, closedIndex) === 1) {
+                return false;
+            }
+
+            const read = Atomics.load(channel.control, readIndex);
+            const write = Atomics.load(channel.control, writeIndex);
+            const nextWrite = (write + 1) % ringSize;
+
+            if (nextWrite !== read) {
+                channel.data[write] = byte & 0xff;
+                Atomics.store(channel.control, writeIndex, nextWrite);
+                Atomics.notify(channel.control, writeIndex, 1);
+                return true;
+            }
+
+            await new Promise<void>((resolve) => setTimeout(resolve, 1));
+        }
+    }
+
+    private closeSharedChannel(channel: { control: Int32Array; data: Uint8Array }): void {
+        const closedIndex = 2;
+        const writeIndex = 1;
+        Atomics.store(channel.control, closedIndex, 1);
+        Atomics.notify(channel.control, writeIndex, 1);
     }
 
     /**

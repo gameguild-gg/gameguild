@@ -98,66 +98,32 @@ export class MiniShell {
         // run it with the built-in WASI runtime.
         const cmdName = cmd.replace(/^\.\//, '');
         if (cmdName.endsWith('.wasm')) {
+          const interactiveTty = this.tty as IOProvider & {
+            enterExclusiveStdin?: () => void;
+            exitExclusiveStdin?: () => void;
+            readByteExclusive?: () => number | null | Promise<number>;
+            supportsSynchronousExclusiveStdin?: boolean;
+          };
           const wasmPath = this.resolvePath(cmdName);
           console.log(`${P} Running WASM binary: ${wasmPath}`);
           const t0 = performance.now();
-          this.tty.setStdinEcho?.(true);
-          // Line-buffered stdin: accumulate characters, process backspace,
-          // and only deliver complete lines to the WASM program (cooked mode).
-          let stdinLineBuf = '';
-          let stdinLineCursor = 0;
-          const stdinLineQueue: number[] = [];
-          const stdinLineResolvers: Array<(byte: number) => void> = [];
-          const lineBufferedStdin = (): number | Promise<number> => {
-            if (stdinLineQueue.length > 0) return stdinLineQueue.shift()!;
-            return new Promise<number>((resolve) => stdinLineResolvers.push(resolve));
-          };
-          const pumpStdin = async () => {
-            while (true) {
-              const b = this.tty.readByte();
-              let byte: number | null;
-              if (b !== null && typeof (b as Promise<number>).then === 'function') {
-                byte = await (b as Promise<number>);
-              } else {
-                byte = b as number | null;
-              }
-              if (byte === null) continue;
-              if (byte === 127 || byte === 8) {
-                if (stdinLineCursor > 0) {
-                  stdinLineBuf = stdinLineBuf.slice(0, stdinLineCursor - 1) + stdinLineBuf.slice(stdinLineCursor);
-                  stdinLineCursor--;
-                }
-                continue;
-              }
-              if (byte === 13 || byte === 10) {
-                const bytes: number[] = [];
-                for (let i = 0; i < stdinLineBuf.length; i++) bytes.push(stdinLineBuf.charCodeAt(i));
-                bytes.push(10);
-                stdinLineBuf = '';
-                stdinLineCursor = 0;
-                for (const b of bytes) {
-                  if (stdinLineResolvers.length > 0) stdinLineResolvers.shift()!(b);
-                  else stdinLineQueue.push(b);
-                }
-                continue;
-              }
-              if (byte >= 32) {
-                const ch = String.fromCharCode(byte);
-                stdinLineBuf = stdinLineBuf.slice(0, stdinLineCursor) + ch + stdinLineBuf.slice(stdinLineCursor);
-                stdinLineCursor++;
-              }
-            }
-          };
-          const stdinPump = pumpStdin();
-          const result = await this.runner.run('wasi-run', ['wasi-run', wasmPath, ...args], {
-            env: this.env,
-            cwd: this.cwd,
-            onStdout: (t) => this.tty.write(t.replace(/\n/g, '\r\n')),
-            onStderr: (t) => this.tty.write(`\x1b[31m${t.replace(/\n/g, '\r\n')}\x1b[0m`),
-            stdin: lineBufferedStdin,
-          });
-          void stdinPump; // pump runs until WASM finishes; no cleanup needed
-          this.tty.setStdinEcho?.(false);
+          interactiveTty.enterExclusiveStdin?.();
+          interactiveTty.setStdinEcho?.(true);
+          let result;
+          try {
+            result = await this.runner.run('wasi-run', ['wasi-run', wasmPath, ...args], {
+              env: this.env,
+              cwd: this.cwd,
+              onStdout: (t) => this.tty.write(t.replace(/\n/g, '\r\n')),
+              onStderr: (t) => this.tty.write(`\x1b[31m${t.replace(/\n/g, '\r\n')}\x1b[0m`),
+              stdin: interactiveTty.supportsSynchronousExclusiveStdin && interactiveTty.readByteExclusive
+                ? () => interactiveTty.readByteExclusive!()
+                : () => -1,
+            });
+          } finally {
+            interactiveTty.setStdinEcho?.(false);
+            interactiveTty.exitExclusiveStdin?.();
+          }
           console.log(`${P} WASM "${wasmPath}" finished: exitCode=${result.exitCode} in ${(performance.now() - t0).toFixed(1)}ms`);
           if (result.exitCode !== 0) {
             this.tty.writeError(`Exit code: ${result.exitCode}`);
@@ -479,7 +445,7 @@ export class MiniShell {
 
       // Tab — attempt completion
       if (byte === 9) {
-        const completed = this.tabComplete(line, cursor);
+        const completed = this.tabComplete(line);
         if (completed && completed !== line) {
           this.clearLine(line);
           line = completed;
@@ -506,7 +472,7 @@ export class MiniShell {
     }
   }
 
-  private tabComplete(line: string, _cursor: number): string | null {
+  private tabComplete(line: string): string | null {
     const parts = line.split(/\s+/);
     const prefix = parts[parts.length - 1] ?? '';
     if (!prefix) return null;

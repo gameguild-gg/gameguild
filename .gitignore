@@ -106,3 +106,5 @@ next-env.d.ts
 apps/web/test-results/
 
 test-results/
+
+tools/emception/userland/brotli/

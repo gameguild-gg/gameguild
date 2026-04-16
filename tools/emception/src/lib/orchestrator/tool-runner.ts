@@ -359,6 +359,27 @@ export class ToolRunner {
     this.versions = versions;
   }
 
+  /** Resolve an explicit output artifact path from argv (-o <path>). */
+  private getOutputPathFromArgv(argv: string[], cwd?: string): string | null {
+    const outIdx = argv.lastIndexOf('-o');
+    if (outIdx < 0 || outIdx + 1 >= argv.length) return null;
+    const outPath = argv[outIdx + 1];
+    if (!outPath) return null;
+    if (outPath.startsWith('/')) return outPath;
+    const base = cwd && cwd.startsWith('/') ? cwd : '/home/user';
+    return `${base.replace(/\/$/, '')}/${outPath}`;
+  }
+
+  private tryReadProcessFile(fs: EmscriptenInstance['FS'], path: string): Uint8Array | null {
+    try {
+      const data = fs.readFile(path);
+      return data && data.length > 0 ? data : null;
+    } catch {
+      return null;
+    }
+  }
+
+
   /* ---------------------------------------------------------------- */
   /*  Public API                                                       */
   /* ---------------------------------------------------------------- */
@@ -411,6 +432,23 @@ export class ToolRunner {
         argv = [tool, scriptPath];
       }
       console.log(`${LOG_PREFIX}   Injected Python script: ${scriptPath}`);
+    }
+
+    // Normalize linker library paths to canonical cache-lib locations.
+    // Some code paths pass /usr/lib/emscripten/cache/sysroot/lib/... which can
+    // contain stale or non-object payloads; the prebuilt immutable artifacts
+    // live under /usr/lib/emscripten/cache-lib/...
+    if (toolBasename === 'wasm-ld' || toolBasename === 'lld') {
+      argv = argv.map((a) =>
+        a
+          .replace('/usr/lib/emscripten/cache/sysroot/lib', '/usr/lib/emscripten/cache-lib')
+          .replace('/home/user/.emscripten_cache/sysroot/lib', '/usr/lib/emscripten/cache-lib'),
+      );
+      const hadCrt1 = argv.some((a) => a.endsWith('/crt1.o'));
+      argv = argv.filter((a) => !a.endsWith('/crt1.o'));
+      if (hadCrt1 && !argv.some((a) => a.startsWith('--entry=') || a === '--entry' || a === '--no-entry')) {
+        argv.push('--entry=main');
+      }
     }
 
     // cmake: inject Emception environment flags via -D cache variables.
@@ -555,6 +593,7 @@ export class ToolRunner {
         this.vfs.preloadBundle('clang'),
         this.vfs.preloadBundle('lld'),
         this.vfs.preloadBundle('usr-include'),
+        this.vfs.preloadBundle('sdl3'),
         this.vfs.preloadBundle('cache-core'),
         this.vfs.preloadBundle('python-runtime'),
         this.vfs.preloadBundle('emscripten-core'),
@@ -798,8 +837,8 @@ export class ToolRunner {
 
         // Skip phony rules and cmake internal rules
         if (ruleName === 'phony' || ruleName === 'RERUN_CMAKE' ||
-            ruleName === 'CLEAN' || ruleName === 'HELP' ||
-            ruleName === 'CUSTOM_COMMAND') { i++; continue; }
+          ruleName === 'CLEAN' || ruleName === 'HELP' ||
+          ruleName === 'CUSTOM_COMMAND') { i++; continue; }
 
         currentEdge = {
           outputs: outputsPart.split(/\s+/).filter(Boolean),
@@ -815,7 +854,7 @@ export class ToolRunner {
         const value = line.slice(eqIdx + 3);
         globalVars.set(key, value);
       } else if (line.startsWith('default ') || line.startsWith('pool ') ||
-                 line.startsWith('include ') || line.startsWith('subninja ')) {
+        line.startsWith('include ') || line.startsWith('subninja ')) {
         // Skip directives we don't need
       }
 
@@ -1424,21 +1463,27 @@ sys.excepthook = _hook
             );
             patched = true;
           }
-          // Patch 2: skip fetch_port_artifact when FROZEN_CACHE is set.
-          // All ports are pre-built; the library existence check in cache.get()
-          // handles the rest via path aliases.
+          // Patch 2: skip fetch_port_artifact unconditionally.
+          // All ports are pre-built in CDN bundles; the library existence
+          // check in cache.get() handles the rest via path aliases.
+          // We cannot rely on FROZEN_CACHE (must be False to avoid unreachable
+          // traps) nor on up_to_date() (VFSFS async alias resolution is
+          // fragile during os.makedirs + marker read).
           const fetchSig = '    """This function only fetches the port and returns True when the port is up to date, False otherwise"""\n    # To compute the sha512 hash';
-          console.log(`${LOG_PREFIX}   fetchSig match: ${src.includes(fetchSig)}, src has docstring: ${src.includes('only fetches the port')}, src has comput: ${src.includes('To compute the sha512')}`);
           if (src.includes(fetchSig)) {
             src = src.replace(
               fetchSig,
-              '    """This function only fetches the port and returns True when the port is up to date, False otherwise"""\n    if config.FROZEN_CACHE:\n      return True\n    # To compute the sha512 hash',
+              '    """This function only fetches the port and returns True when the port is up to date, False otherwise"""\n    return True  # Emception: all ports pre-built in CDN bundles\n    # To compute the sha512 hash',
             );
             patched = true;
           }
           if (patched) {
             fileData.set(portsInitPath, new TextEncoder().encode(src));
-            console.log(`${LOG_PREFIX}   Patched ports/__init__.py (lazy urlopen + FROZEN_CACHE skip)`);
+            // Poison the compiled .pyc so Python falls back to our patched .py
+            const pyVer = this.versions.pythonMajorMinor.replace('.', '');
+            const pycPath = `/usr/lib/emscripten/tools/ports/__pycache__/__init__.cpython-${pyVer}.pyc`;
+            fileData.set(pycPath, new Uint8Array(0));
+            console.log(`${LOG_PREFIX}   Patched ports/__init__.py + poisoned ${pycPath}`);
           }
         }
       } catch (e) {
@@ -1631,16 +1676,17 @@ sys.excepthook = _hook
       try {
         await Promise.all([
           this.vfs.preloadBundle('usr-include'),
+          this.vfs.preloadBundle('sdl3'),
           this.vfs.preloadBundle('cache-core'),
         ]);
-        console.log(`${LOG_PREFIX}   Preloaded usr-include + cache-core bundles for clang in ${elapsed(tPreload)}`);
+        console.log(`${LOG_PREFIX}   Preloaded usr-include + sdl3 + cache-core bundles for clang in ${elapsed(tPreload)}`);
       } catch (e) {
         console.warn(`${LOG_PREFIX}   ⚠️ Failed to preload clang bundles:`, e);
       }
 
       // Pre-warm header files into clang's Emscripten FS
       const tWarm = performance.now();
-      const bundlesToWarm = ['usr-include'];
+      const bundlesToWarm = ['usr-include', 'sdl3'];
       const headerPaths: string[] = [];
       for (const bundleName of bundlesToWarm) {
         for (const fp of this.vfs.getBundleFilePaths(bundleName)) {
@@ -1706,8 +1752,9 @@ sys.excepthook = _hook
         await Promise.all([
           this.vfs.preloadBundle('python-runtime'),
           this.vfs.preloadBundle('emscripten-core'),
+          this.vfs.preloadBundle('sdl3'),
         ]);
-        console.log(`${LOG_PREFIX}   Preloaded python-runtime + emscripten-core bundles in ${elapsed(tPreload)}`);
+        console.log(`${LOG_PREFIX}   Preloaded python-runtime + emscripten-core + sdl3 bundles in ${elapsed(tPreload)}`);
       } catch (e) {
         console.warn(`${LOG_PREFIX}   ⚠️ Failed to preload python bundles:`, e);
       }
@@ -1720,7 +1767,7 @@ sys.excepthook = _hook
       // bypass our shims entirely.
       const tWarm = performance.now();
       const shimmedModules = new Set(['subprocess', 'sitecustomize']);
-      const bundlesToWarm = ['python-runtime', 'emscripten-core'];
+      const bundlesToWarm = ['python-runtime', 'emscripten-core', 'sdl3'];
       const pyPaths: string[] = [];
       for (const bundleName of bundlesToWarm) {
         for (const fp of this.vfs.getBundleFilePaths(bundleName)) {
@@ -1750,6 +1797,118 @@ sys.excepthook = _hook
         }
       }
       console.log(`${LOG_PREFIX}   Pre-warmed ${warmed}/${pyPaths.length} python files in ${elapsed(tWarm)}`);
+
+      // ── Subprocess dispatch via Asyncify ___syscall_openat hook ──────
+      // Python's os.system() uses __emscripten_system which crashes with
+      // 'unreachable' WASM traps due to Asyncify stack-unwind failures in
+      // CPython's indirect call dispatch. Instead, the subprocess shim
+      // opens /tmp/__dispatch_subprocess__ for reading. The patched
+      // python.mjs glue intercepts this path in ___syscall_openat and
+      // calls Module["subprocessDispatch"]() via Asyncify.handleAsync.
+      // After it resolves, the glue opens the file normally (FS.open).
+      {
+        // eslint-disable-next-line @typescript-eslint/no-this-alias
+        const toolRunner = this;
+
+        moduleConfig['subprocessDispatch'] = async (): Promise<void> => {
+          if (!instanceRef) {
+            console.error(`${LOG_PREFIX}   [dispatch] No instance ref — cannot dispatch subprocess`);
+            return;
+          }
+
+          let request: { cmd: string; cwd: string };
+          try {
+            const requestData = String(instanceRef.FS.readFile('/tmp/.subprocess_request', { encoding: 'utf8' }));
+            request = JSON.parse(requestData) as { cmd: string; cwd: string };
+          } catch (e) {
+            console.error(`${LOG_PREFIX}   [dispatch] Failed to read subprocess request: ${e}`);
+            instanceRef.FS.writeFile('/tmp/__dispatch_subprocess__', '1');
+            instanceRef.FS.writeFile('/tmp/.subprocess_stdout', '');
+            instanceRef.FS.writeFile('/tmp/.subprocess_stderr', 'Failed to read subprocess request');
+            return;
+          }
+
+          console.log(`${LOG_PREFIX}   [subprocess] Dispatching: ${request.cmd.slice(0, 120)}...`);
+
+          const parts = toolRunner.parseCommand(request.cmd);
+          if (parts.length === 0) {
+            instanceRef.FS.writeFile('/tmp/__dispatch_subprocess__', '0');
+            instanceRef.FS.writeFile('/tmp/.subprocess_stdout', '');
+            instanceRef.FS.writeFile('/tmp/.subprocess_stderr', '');
+            return;
+          }
+
+          const subBasename = parts[0].split('/').pop() ?? parts[0];
+          const isVersionCheck = parts.includes('--version') || parts.includes('-v');
+
+          // Handle optional tools
+          if (OPTIONAL_TOOLS.has(subBasename) && !isVersionCheck) {
+            console.log(`${LOG_PREFIX}   [subprocess] Skipping optional tool "${subBasename}" — returning no-op`);
+            instanceRef.FS.writeFile('/tmp/__dispatch_subprocess__', '0');
+            instanceRef.FS.writeFile('/tmp/.subprocess_stdout', '');
+            instanceRef.FS.writeFile('/tmp/.subprocess_stderr', '');
+            return;
+          }
+
+          // Ninja version probe fast-path
+          if (subBasename === 'ninja' && isVersionCheck) {
+            console.log(`${LOG_PREFIX}   [subprocess] Fast-path: ninja --version → 1.12.1`);
+            instanceRef.FS.writeFile('/tmp/__dispatch_subprocess__', '0');
+            instanceRef.FS.writeFile('/tmp/.subprocess_stdout', '1.12.1\n');
+            instanceRef.FS.writeFile('/tmp/.subprocess_stderr', '');
+            return;
+          }
+
+          // Run the subprocess through the tool runner
+          const subStdout: string[] = [];
+          const subStderr: string[] = [];
+          try {
+            const subResult = await toolRunner.run(parts[0], parts, {
+              cwd: request.cwd || options.cwd,
+              onStdout: (t: string) => subStdout.push(t),
+              onStderr: (t: string) => subStderr.push(t),
+              isInfoQuery: isVersionCheck,
+            });
+
+            let effectiveExitCode = subResult.exitCode;
+
+            // Ninja version probe normalization
+            if (subBasename === 'ninja' && isVersionCheck) {
+              const versionText = subStdout.join('\n').trim();
+              if (!versionText || effectiveExitCode !== 0) {
+                subStdout.length = 0;
+                subStdout.push('1.12.1\n');
+                effectiveExitCode = 0;
+              }
+            }
+
+            // Optional tools: treat failures as non-fatal
+            if (effectiveExitCode !== 0 && OPTIONAL_TOOLS.has(subBasename)) {
+              console.log(`${LOG_PREFIX}   [subprocess] Optional tool "${subBasename}" failed (exit ${effectiveExitCode}) — treating as non-fatal`);
+              effectiveExitCode = 0;
+            }
+
+            instanceRef.FS.writeFile('/tmp/__dispatch_subprocess__', String(effectiveExitCode));
+            instanceRef.FS.writeFile('/tmp/.subprocess_stdout', subStdout.join('\n'));
+            instanceRef.FS.writeFile('/tmp/.subprocess_stderr', subStderr.join('\n'));
+
+            console.log(`${LOG_PREFIX}   [subprocess] Done: exitCode=${effectiveExitCode}`);
+            if (subStderr.length > 0) {
+              for (const line of subStderr) {
+                console.error(`${LOG_PREFIX}   [subprocess] stderr: ${line}`);
+              }
+            }
+          } catch (e) {
+            const msg = e instanceof Error ? e.message : String(e);
+            console.error(`${LOG_PREFIX}   [subprocess] Error: ${msg}`);
+            instanceRef.FS.writeFile('/tmp/__dispatch_subprocess__', '1');
+            instanceRef.FS.writeFile('/tmp/.subprocess_stdout', '');
+            instanceRef.FS.writeFile('/tmp/.subprocess_stderr', msg);
+          }
+        };
+
+        console.log(`${LOG_PREFIX}   Installed subprocess dispatch via subprocessDispatch hook`);
+      }
     }
 
     // Step 4: Call main(argc, argv) — the tool runs to completion
@@ -1833,6 +1992,20 @@ sys.excepthook = _hook
       exitCode = 0;
     }
 
+    // Persist explicit output artifacts (e.g. -o /home/user/main.wasm) into
+    // shared VFS so subsequent steps (wasi-run) can read them.
+    // Keep this strict: only copy the exact -o path when it exists.
+    if (exitCode === 0 && instance.FS) {
+      const outputPath = this.getOutputPathFromArgv(argv, options.cwd);
+      if (outputPath) {
+        const outputData = this.tryReadProcessFile(instance.FS, outputPath);
+        if (outputData) {
+          this.vfs.writeFileSync(outputPath, outputData);
+          console.log(`${LOG_PREFIX}   Persisted output artifact: ${outputPath} (${outputData.length}B)`);
+        }
+      }
+    }
+
     // Read Python exception/stderr capture files and forward to terminal
     if (isPythonTool && instance.FS) {
       try {
@@ -1859,6 +2032,7 @@ sys.excepthook = _hook
             }
           }
         } catch { /* file doesn't exist — no stderr output */ }
+
       } catch {
         // FS dump failed — non-critical
       }
@@ -2096,16 +2270,6 @@ sys.excepthook = _hook
       const emscriptenConfig = `import os\nEMSCRIPTEN_ROOT = '/usr/lib/emscripten'\nLLVM_ROOT = '/usr/bin'\nBINARYEN_ROOT = '/usr'\nNODE_JS = '/usr/bin/node'\nPYTHON = '/usr/bin/python3'\nCACHE = '/usr/lib/emscripten/cache'\nFROZEN_CACHE = False\nCOMPILER_OPTS = []\n`;
       fileData.set('/etc/emscripten.config', new TextEncoder().encode(emscriptenConfig));
 
-      // Seed SDL3 port marker so fetch_port_artifact's up_to_date() returns
-      // True without trying to download from GitHub.  The marker file at
-      // {CACHE}/ports/sdl3/.emscripten_url must contain the exact URL.
-      // IMPORTANT: fileData keys must use POST-alias paths because VFSFS
-      // resolves aliases before looking up fileData.  The alias
-      //   /usr/lib/emscripten/cache/ports → /usr/lib/emscripten_ports
-      // means the effective key is /usr/lib/emscripten_ports/sdl3/.emscripten_url.
-      const sdl3Url = 'https://github.com/libsdl-org/SDL/archive/release-3.4.2.zip';
-      fileData.set('/usr/lib/emscripten_ports/sdl3/.emscripten_url', new TextEncoder().encode(sdl3Url + '\n'));
-
       console.log(`${LOG_PREFIX}     Sysroot dirs created with ${pathAliases.size} path aliases`);
     }
 
@@ -2232,68 +2396,52 @@ sys.excepthook = _hook
     const stdinProvider = options.stdin ?? null;
     console.log(`${LOG_PREFIX}   [WASI-STDIN] stdinProvider=${stdinProvider ? 'SET' : 'NULL'}`);
 
-    // Synchronous fd_read: returns EOF for stdin (fallback when stdin not provided)
-    const fd_read_sync = (
-      fd: number, _iovsPtr: number, _iovsLen: number, nreadPtr: number,
-    ): number => {
-      if (fd === 0 && stdinProvider) {
-        console.warn(`${LOG_PREFIX}   [WASI-STDIN] stdin requested — returning EOF`);
-      }
-      const mem = new DataView(memory.buffer);
-      mem.setUint32(nreadPtr, 0, true);
-      return 0;
-    };
-
-    // Async fd_read: Asyncify will unwind/rewind the WASM stack while
-    // awaiting stdin input from the main thread.
-    const fd_read_async = async (
+    // Synchronous fd_read for standalone WASI binaries.
+    // The worker provides stdin through a SharedArrayBuffer-backed callback,
+    // so a call here can block until a byte is available without falling
+    // through to EOF or leaking the keystrokes back to the shell.
+    const fd_read = (
       fd: number, iovsPtr: number, iovsLen: number, nreadPtr: number,
-    ): Promise<number> => {
+    ): number => {
+      const mem = new DataView(memory.buffer);
       console.log(`${LOG_PREFIX}   [WASI-STDIN] fd_read called: fd=${fd}, iovsLen=${iovsLen}`);
-      let mem = new DataView(memory.buffer);
-      if (fd !== 0 || !stdinProvider) {
+
+      if (fd !== 0) {
+        mem.setUint32(nreadPtr, 0, true);
+        return 8; // EBADF
+      }
+
+      if (!stdinProvider) {
         mem.setUint32(nreadPtr, 0, true);
         return 0;
       }
-      let totalRead = 0;
+
       for (let i = 0; i < iovsLen; i++) {
         const base = iovsPtr + i * 8;
         const ptr = mem.getUint32(base, true);
         const len = mem.getUint32(base + 4, true);
-        for (let j = 0; j < len; j++) {
-          const result = stdinProvider();
-          let byte: number | null;
-          if (result === null) {
-            byte = null;
-          } else if (typeof (result as Promise<number>).then === 'function') {
-            byte = await (result as Promise<number>);
-            // Re-create DataView after async resume — memory may have grown
-            mem = new DataView(memory.buffer);
-          } else {
-            byte = result as number;
-          }
-          if (byte === null || byte === undefined) {
-            mem.setUint32(nreadPtr, totalRead, true);
-            return 0;
-          }
-          // xterm sends CR (13) for Enter; POSIX/WASI programs expect LF (10)
-          if (byte === 13) byte = 10;
-          // Write byte to the iov buffer (re-create view in case memory grew)
-          new Uint8Array(memory.buffer, ptr, len)[j] = byte;
-          totalRead++;
-          // Line-buffered: stop after newline so C stdin returns a line
-          if (byte === 10) {
-            mem.setUint32(nreadPtr, totalRead, true);
-            return 0;
-          }
+        if (len === 0) continue;
+        const out = new Uint8Array(memory.buffer, ptr, len);
+
+        const raw = stdinProvider();
+        if (raw !== null && typeof raw === 'object' && 'then' in raw) {
+          throw new Error('WASI stdin provider must be synchronous');
         }
+
+        const byte = raw as number | null;
+        if (byte === null || byte === -1) {
+          mem.setUint32(nreadPtr, 0, true);
+          return 0;
+        }
+
+        out[0] = byte === 13 ? 10 : byte;
+        mem.setUint32(nreadPtr, 1, true);
+        return 0;
       }
-      mem.setUint32(nreadPtr, totalRead, true);
+
+      mem.setUint32(nreadPtr, 0, true);
       return 0;
     };
-
-    // Use async fd_read when stdin is provided (Asyncify handles stack suspension)
-    const fd_read = stdinProvider ? fd_read_async : fd_read_sync;
 
     const fd_fdstat_get = (fd: number, statPtr: number): number => {
       const mem = new DataView(memory.buffer);
@@ -2357,18 +2505,31 @@ sys.excepthook = _hook
       fd_renumber: () => 63,
       fd_pwrite: () => 63,
       fd_pread: () => 63,
+      // Minimal poll_oneoff implementation for stdin-driven interactive apps.
+      // We report subscriptions as ready and let fd_read_async actually block
+      // on input when needed.
       poll_oneoff: (inPtr: number, outPtr: number, nsubscriptions: number, neventsPtr: number): number => {
-        // Report all subscriptions as ready (data available).
-        // This unblocks musl's poll()/select() if called before fd_read.
         const mem = new DataView(memory.buffer);
-        const out = new Uint8Array(memory.buffer, outPtr, nsubscriptions * 32);
-        out.fill(0);
+        const SUB_SIZE = 48;
+        const EVT_SIZE = 32;
+        let nevents = 0;
         for (let i = 0; i < nsubscriptions; i++) {
-          const base = outPtr + i * 32;
-          // nbytes = 1 at offset 16 (data available)
-          mem.setBigUint64(base + 16, BigInt(1), true);
+          const subPtr = inPtr + i * SUB_SIZE;
+          const evPtr = outPtr + nevents * EVT_SIZE;
+          const userdata = mem.getBigUint64(subPtr, true);
+          const eventType = mem.getUint8(subPtr + 8);
+
+          // __wasi_event_t
+          mem.setBigUint64(evPtr, userdata, true); // userdata
+          mem.setUint16(evPtr + 8, 0, true); // error = ESUCCESS
+          mem.setUint8(evPtr + 10, eventType); // type
+          // __wasi_event_fd_readwrite_t (union payload)
+          mem.setBigUint64(evPtr + 16, BigInt(1), true); // nbytes (non-zero readiness)
+          mem.setUint16(evPtr + 24, 0, true); // flags
+
+          nevents++;
         }
-        mem.setUint32(neventsPtr, nsubscriptions, true);
+        mem.setUint32(neventsPtr, nevents, true);
         return 0;
       },
       sched_yield: () => 0,
@@ -2468,7 +2629,21 @@ sys.excepthook = _hook
         }
       } else if (mainFn) {
         console.log(`${LOG_PREFIX}   Calling main()...`);
-        exitCode = mainFn(0, 0);
+        try {
+          const result = mainFn(0, 0) as unknown;
+          if (result && typeof (result as Promise<unknown>).then === 'function') {
+            await (result as Promise<unknown>);
+            exitCode = 0;
+          } else {
+            exitCode = Number(result ?? 0);
+          }
+        } catch (e) {
+          if (e instanceof WasiExit) {
+            exitCode = e.code;
+          } else {
+            throw e;
+          }
+        }
       } else {
         console.warn(`${LOG_PREFIX}   No _start or main export found`);
         exitCode = 0;
@@ -2721,6 +2896,8 @@ sys.excepthook = _hook
       await this.vfs.preloadBundle(bundleName);
     }
 
+    const isPython = wasmPath.includes('python');
+
     return loadModuleFactory(wasmPath, {
       getGlueUrl: (path) => {
         // For bundled files: get the .mjs blob URL directly
@@ -2735,6 +2912,34 @@ sys.excepthook = _hook
         // Fallback: add /cdn prefix for files not in manifest
         return `/cdn${path.replace('.wasm', '.mjs')}`;
       },
+      // For python.mjs: patch ___syscall_openat at runtime to intercept
+      // the /tmp/__dispatch_subprocess__ magic path for subprocess dispatch.
+      ...(isPython ? {
+        patchGlueContent: (source: string): string => {
+          if (source.includes('__dispatch_subprocess__')) {
+            console.log(`${LOG_PREFIX}   patchGlueContent: python.mjs already patched`);
+            return source;
+          }
+          const needle =
+            'path=SYSCALLS.getStr(path);path=SYSCALLS.calculateAt(dirfd,path);' +
+            'var mode=varargs?syscallGetVarargI():0;return FS.open(path,flags,mode).fd';
+          const replacement =
+            'path=SYSCALLS.getStr(path);path=SYSCALLS.calculateAt(dirfd,path);' +
+            'if(path==="/tmp/__dispatch_subprocess__"&&Module["subprocessDispatch"]){' +
+            'return Asyncify.handleAsync(function(){' +
+            'return Module["subprocessDispatch"]().then(function(){' +
+            'var mode=varargs?syscallGetVarargI():0;return FS.open(path,flags,mode).fd})})' +
+            '}' +
+            'var mode=varargs?syscallGetVarargI():0;return FS.open(path,flags,mode).fd';
+          if (!source.includes(needle)) {
+            console.warn(`${LOG_PREFIX}   patchGlueContent: needle not found in python.mjs, skipping patch`);
+            return source;
+          }
+          const patched = source.replace(needle, replacement);
+          console.log(`${LOG_PREFIX}   patchGlueContent: patched ___syscall_openat for subprocess dispatch`);
+          return patched;
+        },
+      } : {}),
     }) as Promise<ModuleFactory>;
   }
 
