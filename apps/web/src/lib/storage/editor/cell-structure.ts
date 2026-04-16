@@ -10,15 +10,7 @@
  * { v: 0, u: "lexical", c: [[data, meta], [data, meta], ...] }
  */
 
-// Re-export dos tipos componentizados
-export * from "./cell-converters/cell-data"
-export * from "./cell-converters/cell-metadata"
-
-// Re-export dos converters (inclui lexicalToCells, cellsToLexical, toCells, fromCells)
-export * from "./cell-converters"
-
 import type { 
-  CellData,
   AnyCellData,
   TextCellData,
   DecoratorCellData,
@@ -31,7 +23,6 @@ import type {
   ListLexicalMeta,
   DecoratorLexicalMeta,
 } from "./cell-converters/cell-metadata"
-import { createParagraphMeta } from "./cell-converters/cell-metadata"
 
 // ============================================================================
 // Cell Tuple: [Data, Metadata]
@@ -69,18 +60,3 @@ export interface CellularDocument {
 
 /** Alias para compatibilidade - agora é o array de células */
 export type CellularContent = Cell[]
-
-// ============================================================================
-// Helpers para criar documentos
-// ============================================================================
-
-export function createEmptyDocument(origin: UIOrigin = "lexical"): CellularDocument {
-  return {
-    v: 0,
-    u: origin,
-    c: [[
-      { c: [] },
-      createParagraphMeta()
-    ]]
-  }
-}

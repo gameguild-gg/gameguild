@@ -159,7 +159,7 @@ export function PreviewRendererSlideshowSlide({
             {Object.keys(blockStates).length > 0 ? (
               <PreviewRendererType2
                 blockStates={(() => {
-                  const { cellsToLexical } = require("@/lib/storage/editor/cell-structure")
+                  const { cellsToLexical } = require("@/lib/storage/editor/cell-converters/lexical")
                   return Object.entries(blockStates).reduce((acc, [blockId, blockState]) => {
                     const cellsData = typeof blockState === "string"
                       ? JSON.parse(blockState)
