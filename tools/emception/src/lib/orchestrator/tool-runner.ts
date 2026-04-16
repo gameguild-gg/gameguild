@@ -535,7 +535,7 @@ export class ToolRunner {
     }
 
     // Spawn an isolated WASM process
-    const result = await this.spawnProcess(descriptor, argv, options);
+    const result = await this.spawnProcess(descriptor, argv, options, toolBasename);
 
     console.log(`${LOG_PREFIX} ===== RUN COMPLETE: ${tool} — exitCode=${result.exitCode}, total=${elapsed(tTotal)} =====`);
     return result;
@@ -691,7 +691,6 @@ export class ToolRunner {
       ...objFiles,
       '-o', outputFile,
       '-L/usr/lib/emscripten/cache-lib/wasm32-emscripten',
-      '-lstandalonewasm-nocatch',
       '-lc++-noexcept', '-lc++abi-noexcept',
       '-lc',
       '-ldlmalloc',
@@ -970,6 +969,7 @@ export class ToolRunner {
     descriptor: ToolDescriptor,
     argv: string[],
     options: RunOptions,
+    toolBasename: string,
   ): Promise<ToolResult> {
     const tSpawn = performance.now();
     const stdoutChunks: string[] = [];
@@ -1139,12 +1139,6 @@ export class ToolRunner {
 
             const subBasename = parts[0].split('/').pop() ?? parts[0];
             const isVersionCheck = parts.includes('--version') || parts.includes('-v');
-            if (OPTIONAL_TOOLS.has(subBasename) && !isVersionCheck) {
-              console.log(`${LOG_PREFIX}   [subprocess] Skipping optional tool "${subBasename}" — returning no-op (exit 0)`);
-              instanceRef.FS.writeFile('/tmp/.subprocess_stdout', '');
-              instanceRef.FS.writeFile('/tmp/.subprocess_stderr', '');
-              return (0 << 8) | 0;
-            }
 
             // With VFSFS write-through, writes from the parent process
             // go to VFS immediately.  The child process's VFSFS mount
@@ -1841,15 +1835,6 @@ sys.excepthook = _hook
           const subBasename = parts[0].split('/').pop() ?? parts[0];
           const isVersionCheck = parts.includes('--version') || parts.includes('-v');
 
-          // Handle optional tools
-          if (OPTIONAL_TOOLS.has(subBasename) && !isVersionCheck) {
-            console.log(`${LOG_PREFIX}   [subprocess] Skipping optional tool "${subBasename}" — returning no-op`);
-            instanceRef.FS.writeFile('/tmp/__dispatch_subprocess__', '0');
-            instanceRef.FS.writeFile('/tmp/.subprocess_stdout', '');
-            instanceRef.FS.writeFile('/tmp/.subprocess_stderr', '');
-            return;
-          }
-
           // Ninja version probe fast-path
           if (subBasename === 'ninja' && isVersionCheck) {
             console.log(`${LOG_PREFIX}   [subprocess] Fast-path: ninja --version → 1.12.1`);
@@ -1908,6 +1893,20 @@ sys.excepthook = _hook
         };
 
         console.log(`${LOG_PREFIX}   Installed subprocess dispatch via subprocessDispatch hook`);
+      }
+    }
+
+    const isOptionalTool = OPTIONAL_TOOLS.has(toolBasename);
+    const outputPath = this.getOutputPathFromArgv(argv, options.cwd);
+    let preRunOutputSnapshot: Uint8Array | null = null;
+    if (isOptionalTool && outputPath) {
+      try {
+        const existing = await this.vfs.fetchFile(outputPath);
+        if (existing) {
+          preRunOutputSnapshot = new Uint8Array(existing);
+        }
+      } catch {
+        // Non-fatal: snapshot is best-effort.
       }
     }
 
@@ -1992,11 +1991,20 @@ sys.excepthook = _hook
       exitCode = 0;
     }
 
+    // Optional post-processing tools can fail non-fatally in parent subprocess
+    // dispatch. Because VFSFS is write-through, a failed in-place `-o` rewrite
+    // may leave a corrupted artifact in shared VFS (e.g. /home/user/main.wasm)
+    // and break the same run's subsequent steps. Restore the pre-run snapshot
+    // on optional-tool failure.
+    if (isOptionalTool && exitCode !== 0 && outputPath && preRunOutputSnapshot) {
+      this.vfs.writeFileSync(outputPath, preRunOutputSnapshot);
+      console.log(`${LOG_PREFIX}   Restored output artifact after optional tool failure: ${outputPath} (${preRunOutputSnapshot.length}B)`);
+    }
+
     // Persist explicit output artifacts (e.g. -o /home/user/main.wasm) into
     // shared VFS so subsequent steps (wasi-run) can read them.
     // Keep this strict: only copy the exact -o path when it exists.
     if (exitCode === 0 && instance.FS) {
-      const outputPath = this.getOutputPathFromArgv(argv, options.cwd);
       if (outputPath) {
         const outputData = this.tryReadProcessFile(instance.FS, outputPath);
         if (outputData) {
@@ -2544,11 +2552,46 @@ sys.excepthook = _hook
     let memory: WebAssembly.Memory = undefined as unknown as WebAssembly.Memory;
 
     try {
+      const isTransientMalformedWasmError = (msg: string): boolean => (
+        /extends past end of the module|unexpected section|invalid UTF-8|magic word|error parsing wasm|CompileError/i.test(msg)
+      );
+
       console.log(`${LOG_PREFIX}   Compiling WASM module...`);
       const tCompile = performance.now();
-      const wasmBuffer = new ArrayBuffer(wasmBytes.byteLength);
-      new Uint8Array(wasmBuffer).set(wasmBytes);
-      const wasmModule = await WebAssembly.compile(wasmBuffer);
+      const maxCompileAttempts = 20;
+      const retryDelayMs = 120;
+      let wasmModule: WebAssembly.Module | null = null;
+      let compileInput = wasmBytes;
+      let lastCompileError: unknown = null;
+
+      for (let attempt = 1; attempt <= maxCompileAttempts; attempt++) {
+        try {
+          const wasmBuffer = new ArrayBuffer(compileInput.byteLength);
+          new Uint8Array(wasmBuffer).set(compileInput);
+          wasmModule = await WebAssembly.compile(wasmBuffer);
+          if (attempt > 1) {
+            console.log(`${LOG_PREFIX}   WASM compile recovered on attempt ${attempt}/${maxCompileAttempts} (${compileInput.byteLength}B)`);
+          }
+          break;
+        } catch (e) {
+          lastCompileError = e;
+          const msg = e instanceof Error ? e.message : String(e);
+          if (attempt >= maxCompileAttempts || !isTransientMalformedWasmError(msg)) {
+            throw e;
+          }
+          const latest = await this.vfs.fetchFile(wasmPath);
+          if (latest) {
+            compileInput = latest;
+          }
+          console.warn(`${LOG_PREFIX}   WASM compile attempt ${attempt}/${maxCompileAttempts} failed (${msg}); retrying after ${retryDelayMs}ms...`);
+          await new Promise<void>((resolve) => setTimeout(resolve, retryDelayMs));
+        }
+      }
+
+      if (!wasmModule) {
+        throw (lastCompileError ?? new Error('WASM compile failed with unknown error'));
+      }
+
       console.log(`${LOG_PREFIX}   WASM compiled in ${elapsed(tCompile)}`);
 
       // Inspect required imports to build the import object dynamically
