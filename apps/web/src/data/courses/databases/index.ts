@@ -103,8 +103,7 @@ import week13TimescaledbFundamentals from './13-timeseries-search/timescaledb-fu
 import week14Assignment from './14-vector-streaming/assignment.md';
 import week14KafkaFundamentals from './14-vector-streaming/kafka-fundamentals.md';
 import week14PgvectorFundamentals from './14-vector-streaming/pgvector-fundamentals.md';
-import week14Quiz from './14-vector-streaming/quiz/vector-streaming-quiz.md';
-import week14QuizSimplified from './14-vector-streaming/quiz/quiz-simplified.md';
+import week14Quiz from './14-vector-streaming/quiz/quiz.md';
 import week14Readings from './14-vector-streaming/readings-14.md';
 import week14Reveal from './14-vector-streaming/reveal.md';
 
@@ -2038,7 +2037,7 @@ export const week14RevealContent: ProgramContent = {
     estimatedMinutes: 120,
     visibility: 1, // Published
     program: databasesProgram,
-    parent: null,
+    parent: undefined,
     children: [],
     contentInteractions: [],
     createdAt: '2023-01-01T00:00:00Z',
@@ -2131,29 +2130,6 @@ export const week14QuizContent: ProgramContent = {
     visibility: 1, // Published
     program: databasesProgram,
     parent: week14RevealContent,
-    children: [],
-    contentInteractions: [],
-    createdAt: '2023-01-01T00:00:00Z',
-    updatedAt: '2023-01-01T00:00:00Z',
-};
-
-export const week14QuizSimplifiedContent: ProgramContent = {
-    id: 'databases-week-14-quiz-simplified',
-    programId: 'databases-program-1',
-    slug: 'vector-streaming-quiz-simplified',
-    parentId: 'databases-week-14-quiz',
-    title: 'Quiz 14: Vector Databases & Event Streaming (Canvas)',
-    description: 'Canvas-format quiz covering pgvector, embeddings, similarity metrics, Kafka topics, partitions, consumer groups, and offsets',
-    type: 0, // Page
-    body: week14QuizSimplified,
-    sortOrder: 1,
-    isRequired: false,
-    gradingMethod: 0, // None
-    maxPoints: null,
-    estimatedMinutes: 30,
-    visibility: 1, // Published
-    program: databasesProgram,
-    parent: week14QuizContent,
     children: [],
     contentInteractions: [],
     createdAt: '2023-01-01T00:00:00Z',
@@ -2373,10 +2349,6 @@ week13ReadingsContent.children = [
 week14RevealContent.children = [
     week14ReadingsContent,
     week14QuizContent,
-];
-
-week14QuizContent.children = [
-    week14QuizSimplifiedContent,
 ];
 
 week14ReadingsContent.children = [
