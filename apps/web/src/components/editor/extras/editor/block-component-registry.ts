@@ -61,6 +61,7 @@ export const BLOCK_REGISTRY: Record<BlockCellType, BlockTypeConfig> = {
     label: "Quiz",
     description: "Interactive quiz question",
     createEmpty: () => ({
+      id: crypto.randomUUID(),
       type: "quiz",
       data: { type: "SINGLE_CHOICE", stem: "", options: [{ id: "o1", text: "" }], correctOptionId: "o1", settings: {} },
     }),
@@ -70,6 +71,7 @@ export const BLOCK_REGISTRY: Record<BlockCellType, BlockTypeConfig> = {
     label: "Code Studio",
     description: "Code editor with multiple files",
     createEmpty: () => ({
+      id: crypto.randomUUID(),
       type: "code",
       data: { id: crypto.randomUUID(), files: [], folders: [], openTabs: [], activeFileId: null, mode: "execution", language: "javascript", readonly: false, showLineNumbers: true, fontSize: 14, theme: "system", shikiTheme: "github", testCases: {} },
     }),
@@ -79,6 +81,7 @@ export const BLOCK_REGISTRY: Record<BlockCellType, BlockTypeConfig> = {
     label: "Image",
     description: "Image with caption",
     createEmpty: () => ({
+      id: crypto.randomUUID(),
       type: "img",
       data: { src: "", alt: "", caption: "", size: 100, isNew: true },
     }),
@@ -88,6 +91,7 @@ export const BLOCK_REGISTRY: Record<BlockCellType, BlockTypeConfig> = {
     label: "Video",
     description: "Video player",
     createEmpty: () => ({
+      id: crypto.randomUUID(),
       type: "vid",
       data: { src: "", alt: "", caption: "", size: 100, isNew: true },
     }),
@@ -97,6 +101,7 @@ export const BLOCK_REGISTRY: Record<BlockCellType, BlockTypeConfig> = {
     label: "Audio",
     description: "Audio player",
     createEmpty: () => ({
+      id: crypto.randomUUID(),
       type: "aud",
       data: { src: "", caption: "", size: 100, isNew: true },
     }),
@@ -106,6 +111,7 @@ export const BLOCK_REGISTRY: Record<BlockCellType, BlockTypeConfig> = {
     label: "Gallery",
     description: "Image gallery",
     createEmpty: () => ({
+      id: crypto.randomUUID(),
       type: "gal",
       data: { images: [], layout: "2", caption: "", defaultDisplayMode: "crop", isNew: true },
     }),
@@ -115,6 +121,7 @@ export const BLOCK_REGISTRY: Record<BlockCellType, BlockTypeConfig> = {
     label: "YouTube",
     description: "YouTube video embed",
     createEmpty: () => ({
+      id: crypto.randomUUID(),
       type: "yt",
       data: { videoId: "", title: "", caption: "", size: 100, isNew: true, startAt: 0, showControls: true, showInfo: true, showRelated: false },
     }),
@@ -124,6 +131,7 @@ export const BLOCK_REGISTRY: Record<BlockCellType, BlockTypeConfig> = {
     label: "Spotify",
     description: "Spotify embed",
     createEmpty: () => ({
+      id: crypto.randomUUID(),
       type: "spot",
       data: { spotifyId: "", type: "track", title: "", caption: "", size: 100, isNew: true },
     }),
@@ -133,6 +141,7 @@ export const BLOCK_REGISTRY: Record<BlockCellType, BlockTypeConfig> = {
     label: "Mermaid",
     description: "Mermaid diagram",
     createEmpty: () => ({
+      id: crypto.randomUUID(),
       type: "mmd",
       data: { code: "", type: "flowchart", direction: "TD", theme: "default", themeMode: "system" },
     }),
@@ -142,6 +151,7 @@ export const BLOCK_REGISTRY: Record<BlockCellType, BlockTypeConfig> = {
     label: "Vega-Lite",
     description: "Data visualization chart",
     createEmpty: () => ({
+      id: crypto.randomUUID(),
       type: "vega",
       data: { spec: "", title: "", caption: "", theme: "default", themeMode: "system" },
     }),
@@ -151,6 +161,7 @@ export const BLOCK_REGISTRY: Record<BlockCellType, BlockTypeConfig> = {
     label: "Presentation",
     description: "Slide presentation",
     createEmpty: () => ({
+      id: crypto.randomUUID(),
       type: "pres",
       data: { slides: [], title: "Untitled Presentation", theme: "light", transitionEffect: "fade", autoAdvance: false, autoAdvanceDelay: 5, autoAdvanceLoop: false, showControls: true, isNew: true },
     }),
@@ -160,6 +171,7 @@ export const BLOCK_REGISTRY: Record<BlockCellType, BlockTypeConfig> = {
     label: "Sources",
     description: "Reference sources",
     createEmpty: () => ({
+      id: crypto.randomUUID(),
       type: "src",
       data: { sources: [], title: "References", style: "apa", isNew: true },
     }),
@@ -169,6 +181,7 @@ export const BLOCK_REGISTRY: Record<BlockCellType, BlockTypeConfig> = {
     label: "Markdown",
     description: "Markdown content",
     createEmpty: () => ({
+      id: crypto.randomUUID(),
       type: "md",
       data: { content: "", title: "", caption: "" },
     }),
@@ -178,6 +191,7 @@ export const BLOCK_REGISTRY: Record<BlockCellType, BlockTypeConfig> = {
     label: "HTML",
     description: "Raw HTML content",
     createEmpty: () => ({
+      id: crypto.randomUUID(),
       type: "html",
       data: { content: "" },
     }),
@@ -187,6 +201,7 @@ export const BLOCK_REGISTRY: Record<BlockCellType, BlockTypeConfig> = {
     label: "Rich Text",
     description: "Rich text content with formatting",
     createEmpty: () => ({
+      id: crypto.randomUUID(),
       type: "rt",
       data: { content: "" },
     }),
@@ -196,6 +211,7 @@ export const BLOCK_REGISTRY: Record<BlockCellType, BlockTypeConfig> = {
     label: "Header",
     description: "Section header",
     createEmpty: () => ({
+      id: crypto.randomUUID(),
       type: "hdr",
       data: { text: "", level: 1, style: "default" },
     }),
@@ -205,6 +221,7 @@ export const BLOCK_REGISTRY: Record<BlockCellType, BlockTypeConfig> = {
     label: "Divider",
     description: "Visual divider",
     createEmpty: () => ({
+      id: crypto.randomUUID(),
       type: "div",
       data: { style: "simple", thickness: "thin", spacing: "md", colorPalette: "blue", isNew: true },
     }),
@@ -214,6 +231,7 @@ export const BLOCK_REGISTRY: Record<BlockCellType, BlockTypeConfig> = {
     label: "Button",
     description: "Clickable button",
     createEmpty: () => ({
+      id: crypto.randomUUID(),
       type: "btn",
       data: { text: "Button", url: "", actionType: "url", variant: "solid", size: "md", showIcon: false, iconVariant: 0, iconPosition: "left", iconSize: "md", colorPalette: "blue", fontFamily: "sans", fontSize: "md", isNew: true },
     }),
@@ -223,6 +241,7 @@ export const BLOCK_REGISTRY: Record<BlockCellType, BlockTypeConfig> = {
     label: "Admonition",
     description: "Info/warning callout",
     createEmpty: () => ({
+      id: crypto.randomUUID(),
       type: "adm",
       data: { title: "", content: "", type: "note", design: "default", isNew: true },
     }),
@@ -232,6 +251,7 @@ export const BLOCK_REGISTRY: Record<BlockCellType, BlockTypeConfig> = {
     label: "Table",
     description: "Data table",
     createEmpty: () => ({
+      id: crypto.randomUUID(),
       type: "tbl",
       data: { rows: 3, columns: 3, style: "default", showHeader: true, showBorders: true, cells: {}, caption: "", isNew: false },
     }),
@@ -241,6 +261,7 @@ export const BLOCK_REGISTRY: Record<BlockCellType, BlockTypeConfig> = {
     label: "Project",
     description: "Embedded project",
     createEmpty: () => ({
+      id: crypto.randomUUID(),
       type: "proj",
       data: { projectId: "", projectName: "", projectType: "type1", editorState: null, isLocalCopy: false },
     }),

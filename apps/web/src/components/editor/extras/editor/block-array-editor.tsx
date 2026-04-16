@@ -160,17 +160,7 @@ export function BlockArrayEditor({ blocks, onChange, readOnly = false }: BlockAr
   const scrollToIndexRef = useRef<number | null>(null)
   const blockRefsMap = useRef<Map<number, HTMLDivElement>>(new Map())
 
-  // Stable keys for blocks — avoids remount on reorder
-  const blockKeyMap = useRef(new WeakMap<Block, string>())
-  const blockKeyCounter = useRef(0)
-  const getBlockKey = useCallback((block: Block) => {
-    let key = blockKeyMap.current.get(block)
-    if (!key) {
-      key = `block-${++blockKeyCounter.current}`
-      blockKeyMap.current.set(block, key)
-    }
-    return key
-  }, [])
+
 
   const handleAddBlock = useCallback((block: Block) => {
     const idx = insertIndex ?? blocks.length
@@ -198,7 +188,7 @@ export function BlockArrayEditor({ blocks, onChange, readOnly = false }: BlockAr
 
   const handleEditorSave = useCallback((data: any) => {
     if (editingIndex === null || !editingBlock) return
-    const updatedBlock: Block = { type: editingBlock.type, data }
+    const updatedBlock: Block = { id: editingBlock.id, type: editingBlock.type, data }
     const next = [...blocks]
     next[editingIndex] = updatedBlock
     onChange(next)
@@ -277,7 +267,7 @@ export function BlockArrayEditor({ blocks, onChange, readOnly = false }: BlockAr
           {!readOnly && <InsertLine onInsert={() => openPickerAt(0)} />}
 
           {blocks.map((block, index) => (
-            <div key={getBlockKey(block)} ref={(el) => { if (el) blockRefsMap.current.set(index, el); else blockRefsMap.current.delete(index) }}>
+            <div key={block.id} ref={(el) => { if (el) blockRefsMap.current.set(index, el); else blockRefsMap.current.delete(index) }}>
               <BlockCard
                 block={block}
                 index={index}

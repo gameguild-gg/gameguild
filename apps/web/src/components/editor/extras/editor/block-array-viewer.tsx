@@ -131,8 +131,8 @@ export function BlockArrayViewer({ blocks, className }: BlockArrayViewerProps) {
 
   return (
     <div className={className ?? "prose prose-stone dark:prose-invert max-w-none space-y-4"}>
-      {blocks.map((block, index) => (
-        <BlockContentRenderer key={index} block={block} />
+      {blocks.map((block) => (
+        <BlockContentRenderer key={block.id} block={block} />
       ))}
     </div>
   )
