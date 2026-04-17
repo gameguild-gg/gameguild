@@ -15,79 +15,79 @@ import { AutoLinkNode, LinkNode } from "@lexical/link"
 import { LinkPlugin } from "@lexical/react/LexicalLinkPlugin"
 import { AutoLinkPlugin } from "@lexical/react/LexicalAutoLinkPlugin"
 import type { LinkMatcher } from "@lexical/react/LexicalAutoLinkPlugin"
-import { HTMLNode } from "./nodes/html-node"
-import { RichTextNode } from "./nodes/rich-text-node"
+import { HTMLNode } from "@/components/editor/nodes/html-node"
+import { RichTextNode } from "@/components/editor/nodes/rich-text-node"
 
 import { cn } from "@/lib/utils"
-import { ImageNode } from "./nodes/image-node"
-import { QuizNode } from "./nodes/quiz-node"
-import { MarkdownNode } from "./nodes/markdown-node"
-import { VideoNode } from "./nodes/video-node"
-import { FloatingContentInsertPlugin } from "./plugins/floating-content-insert-plugin"
-import { FloatingTextFormatToolbarPlugin } from "./plugins/floating-text-format-toolbar-plugin"
-import { ImagePlugin } from "./plugins/image-plugin"
-import { QuizPlugin } from "./plugins/quiz-plugin"
-import { MarkdownPlugin } from "./plugins/markdown-plugin"
-import { HTMLPlugin } from "./plugins/html-plugin"
-import { RichTextPlugin as RichTextNodePlugin } from "./plugins/rich-text-plugin"
-import { VideoPlugin } from "./plugins/video-plugin"
-import { EditorToolbar } from "./editor-toolbar"
-import { AudioNode } from "./nodes/audio-node"
-import { AudioPlugin } from "./plugins/audio-plugin"
-import { YouTubeAudioStyle } from "./youtube-audio-style"
+import { ImageNode } from "@/components/editor/nodes/image-node"
+import { QuizNode } from "@/components/editor/nodes/quiz-node"
+import { MarkdownNode } from "@/components/editor/nodes/markdown-node"
+import { VideoNode } from "@/components/editor/nodes/video-node"
+import { FloatingContentInsertPlugin } from "@/components/editor/plugins/floating-content-insert-plugin"
+import { FloatingTextFormatToolbarPlugin } from "@/components/editor/plugins/floating-text-format-toolbar-plugin"
+import { ImagePlugin } from "@/components/editor/plugins/image-plugin"
+import { QuizPlugin } from "@/components/editor/plugins/quiz-plugin"
+import { MarkdownPlugin } from "@/components/editor/plugins/markdown-plugin"
+import { HTMLPlugin } from "@/components/editor/plugins/html-plugin"
+import { RichTextPlugin as RichTextNodePlugin } from "@/components/editor/plugins/rich-text-plugin"
+import { VideoPlugin } from "@/components/editor/plugins/video-plugin"
+import { EditorToolbar } from "@/components/editor/editor-toolbar"
+import { AudioNode } from "@/components/editor/nodes/audio-node"
+import { AudioPlugin } from "@/components/editor/plugins/audio-plugin"
+import { YouTubeAudioStyle } from "@/components/editor/youtube-audio-style"
 // Adicione o import para o HeaderNode
-import { HeaderNode } from "./nodes/header-node"
+import { HeaderNode } from "@/components/editor/nodes/header-node"
 
 // Adicione o import para o HeaderPlugin
-import { HeaderPlugin } from "./plugins/header-plugin"
+import { HeaderPlugin } from "@/components/editor/plugins/header-plugin"
 
-import { DividerNode } from "./nodes/divider-node"
-import { DividerPlugin } from "./plugins/divider-plugin"
-import { CodePlugin } from "./plugins/code-plugin"
-
-// Add these imports
-import { ButtonNode } from "./nodes/button-node"
-import { ButtonPlugin } from "./plugins/button-plugin"
+import { DividerNode } from "@/components/editor/nodes/divider-node"
+import { DividerPlugin } from "@/components/editor/plugins/divider-plugin"
+import { CodePlugin } from "@/components/editor/plugins/code-plugin"
 
 // Add these imports
-import { AdmonitionNode } from "./nodes/admonition-node"
-import { AdmonitionPlugin } from "./plugins/admonition-plugin"
+import { ButtonNode } from "@/components/editor/nodes/button-node"
+import { ButtonPlugin } from "@/components/editor/plugins/button-plugin"
 
 // Add these imports
-import { GalleryNode } from "./nodes/gallery-node"
-import { GalleryPlugin } from "./plugins/gallery-plugin"
+import { AdmonitionNode } from "@/components/editor/nodes/admonition-node"
+import { AdmonitionPlugin } from "@/components/editor/plugins/admonition-plugin"
+
+// Add these imports
+import { GalleryNode } from "@/components/editor/nodes/gallery-node"
+import { GalleryPlugin } from "@/components/editor/plugins/gallery-plugin"
 
 // Add the import for the PresentationNode:
-import { PresentationNode } from "./nodes/presentation-node"
+import { PresentationNode } from "@/components/editor/nodes/presentation-node"
 
 // Add the import for the PresentationPlugin:
-import { PresentationPlugin } from "./plugins/presentation-plugin"
+import { PresentationPlugin } from "@/components/editor/plugins/presentation-plugin"
 
 // Add the import for the SourceNode and SourcePlugin:
-import { SourceNode } from "./nodes/source-node"
-import { SourcePlugin } from "./plugins/source-plugin"
+import { SourceNode } from "@/components/editor/nodes/source-node"
+import { SourcePlugin } from "@/components/editor/plugins/source-plugin"
 
 // Add the import for the YouTubeNode and YouTubePlugin:
-import { YouTubeNode } from "./nodes/youtube-node"
-import { YouTubePlugin } from "./plugins/youtube-plugin"
+import { YouTubeNode } from "@/components/editor/nodes/youtube-node"
+import { YouTubePlugin } from "@/components/editor/plugins/youtube-plugin"
 
 // Add these imports
-import { SpotifyNode } from "./nodes/spotify-node"
-import { SpotifyPlugin } from "./plugins/spotify-plugin"
+import { SpotifyNode } from "@/components/editor/nodes/spotify-node"
+import { SpotifyPlugin } from "@/components/editor/plugins/spotify-plugin"
 
 // Add the import for the CodeStudioNode and CodeStudioPlugin:
-import { CodeStudioNode } from "./nodes/code-studio-node"
-import { CodeStudioPlugin } from "./plugins/code-studio-plugin"
+import { CodeStudioNode } from "@/components/editor/nodes/code-studio-node"
+import { CodeStudioPlugin } from "@/components/editor/plugins/code-studio-plugin"
 
-import { MermaidNode } from "./nodes/mermaid-node"
-import { MermaidPlugin } from "./plugins/mermaid-plugin"
-import { VegaLiteNode } from "./nodes/vega-lite-node"
-import { VegaLitePlugin } from "./plugins/vega-lite-plugin"
-import { CustomListNode } from "./nodes/custom-list-node"
-import { TableNode as CustomTableNode } from "./nodes/table-node"
-import { TablePlugin } from "./plugins/table-plugin"
-import { ProjectNode } from "./nodes/project-node"
-import { ProjectPlugin } from "./plugins/project-plugin"
+import { MermaidNode } from "@/components/editor/nodes/mermaid-node"
+import { MermaidPlugin } from "@/components/editor/plugins/mermaid-plugin"
+import { VegaLiteNode } from "@/components/editor/nodes/vega-lite-node"
+import { VegaLitePlugin } from "@/components/editor/plugins/vega-lite-plugin"
+import { CustomListNode } from "@/components/editor/nodes/custom-list-node"
+import { TableNode as CustomTableNode } from "@/components/editor/nodes/table-node"
+import { TablePlugin } from "@/components/editor/plugins/table-plugin"
+import { ProjectNode } from "@/components/editor/nodes/project-node"
+import { ProjectPlugin } from "@/components/editor/plugins/project-plugin"
 
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext"
 import {
@@ -98,7 +98,7 @@ import {
   COMMAND_PRIORITY_HIGH,
 } from "lexical"
 import { useEffect, createContext } from "react"
-import { DeleteConfirmDialog } from "./extras/dialogs/delete-confirm-dialog"
+import { DeleteConfirmDialog } from "@/components/editor/extras/dialogs/delete-confirm-dialog"
 import { useState } from "react"
 import { OnChangePlugin } from "@lexical/react/LexicalOnChangePlugin"
 import type { LexicalEditor } from "lexical"

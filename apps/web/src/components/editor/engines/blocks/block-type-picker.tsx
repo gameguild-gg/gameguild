@@ -40,7 +40,7 @@ import {
   createHotspotEntry,
   createHighlightEntry,
   type QuizEntry,
-} from "../quiz/types"
+} from "@/components/editor/extras/quiz/types"
 
 // ============================================================================
 // Quiz Templates
