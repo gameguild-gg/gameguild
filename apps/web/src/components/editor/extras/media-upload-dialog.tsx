@@ -16,7 +16,7 @@ import { Switch } from "@/components/ui/switch"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { WebPConverter } from "@/lib/editor/webp-converter"
 import { assetManager } from "@/lib/storage/assets/asset-manager"
-import { ProjectIdContext } from "../lexical-editor"
+import { ProjectIdContext } from "@/components/editor/engines/lexical/lexical-editor"
 import type { CollectionMetadata } from "@/lib/storage/assets/collection-types"
 
 export interface MediaUploadResult {

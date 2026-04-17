@@ -11,7 +11,7 @@ import { PreviewRendererSlideshowContinuous } from "@/components/editor/extras/p
 import { PreviewRendererSlideshowSlide } from "@/components/editor/extras/preview/preview-renderer-slideshow-slide"
 import { useRouter } from "next/navigation"
 import { ExitConfirmDialog } from "@/components/editor/extras/dialogs/exit-confirm-dialog"
-import { BlockArrayViewer } from "@/components/editor/extras/editor/block-array-viewer"
+import { BlockArrayViewer } from "@/components/editor/engines/blocks/block-array-viewer"
 import { useViewerStorage } from "@/components/editor/hooks/useViewerStorage"
 
 
