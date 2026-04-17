@@ -193,18 +193,19 @@ void SDL_AppQuit(void *appstate, SDL_AppResult result) {
 `;
 
 export const INITIAL_FILES: Record<string, WorkspaceFile> = {
-  '/src/sdl-main.cpp': { path: '/src/sdl-main.cpp', type: 'text', content: SDL_DEMO_CODE },
-  '/src/main.cpp': { path: '/src/main.cpp', type: 'text', content: DEFAULT_CODE },
-  '/src/greetings.h': { path: '/src/greetings.h', type: 'text', content: DEFAULT_HEADER },
-  '/assets/workspace-preview.svg': { path: '/assets/workspace-preview.svg', type: 'image', content: DEFAULT_IMAGE },
-  '/runtime/sdl-canvas': { path: '/runtime/sdl-canvas', type: 'canvas', content: '' },
+  '/user/sdl-main.cpp': { path: '/user/sdl-main.cpp', type: 'text', content: SDL_DEMO_CODE },
+  '/user/main.cpp': { path: '/user/main.cpp', type: 'text', content: DEFAULT_CODE },
+  '/user/greetings.h': { path: '/user/greetings.h', type: 'text', content: DEFAULT_HEADER },
+  '/user/workspace-preview.svg': { path: '/user/workspace-preview.svg', type: 'image', content: DEFAULT_IMAGE },
+  '/user/sdl-canvas': { path: '/user/sdl-canvas', type: 'canvas', content: '' },
 };
 
 // ── Workspace bundle helpers ────────────────────────────────────
 
 /** Infer the TabType for a file path within a workspace bundle. */
 function inferTabType(path: string): TabType {
-  if (path.startsWith('/runtime/') && path.includes('canvas')) return 'canvas';
+  const name = path.split('/').pop() ?? '';
+  if (name.includes('canvas') && !name.includes('.')) return 'canvas';
   const ext = path.split('.').pop()?.toLowerCase() ?? '';
   if (['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg'].includes(ext)) return 'image';
   return 'text';
@@ -225,7 +226,7 @@ export function workspaceConfigToState(config: WorkspaceConfig): {
   }
   // Add a canvas entry if the workspace uses SDL3 and one isn't already defined
   if (config.features.canvas && !Object.keys(wsFiles).some((p) => inferTabType(p) === 'canvas')) {
-    wsFiles['/runtime/sdl-canvas'] = { path: '/runtime/sdl-canvas', type: 'canvas', content: '' };
+    wsFiles['/user/sdl-canvas'] = { path: '/user/sdl-canvas', type: 'canvas', content: '' };
   }
 
   const openTabs: OpenTab[] = config.layout.openTabs.map((t) => {
@@ -239,7 +240,7 @@ export function workspaceConfigToState(config: WorkspaceConfig): {
   });
 
   const activeTabId = `tab:${config.layout.activeFile}`;
-  const expandedDirs = new Set(config.layout.expandedDirs ?? ['/src']);
+  const expandedDirs = new Set(config.layout.expandedDirs ?? ['/user']);
 
   return { files: wsFiles, openTabs, activeTabId, expandedDirs };
 }

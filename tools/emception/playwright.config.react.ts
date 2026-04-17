@@ -37,7 +37,7 @@ export default defineConfig({
         // Run `vite --port PORT` directly; the `predev` CDN-sync step is a
         // one-time setup that must have been run beforehand (npm run dev once,
         // or `node ../../scripts/sync-emception-cdn.mjs demos/emception-react`).
-        command: `npx vite --port ${PORT}`,
+        command: `npx vite --strictPort --port ${PORT}`,
         cwd: '../../demos/emception-react',
         url: `http://localhost:${PORT}`,
         reuseExistingServer: !process.env.CI,

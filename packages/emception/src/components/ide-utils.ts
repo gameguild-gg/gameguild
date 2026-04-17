@@ -11,7 +11,7 @@ export function isTextFile(path: string): boolean {
 }
 
 export function toWorkspaceFsPath(path: string): string {
-    if (path.startsWith('/src/')) return `/home/user/${path.slice('/src/'.length)}`;
+    if (path.startsWith('/user/')) return `/home${path}`;
     return `/home/user/${fileName(path)}`;
 }
 

@@ -35,7 +35,7 @@ export async function loadModuleFactory(
   }
 
   const t0 = performance.now();
-  const importFn = options.importFn ?? ((url: string) => import(/* webpackIgnore: true */ url));
+  const importFn = options.importFn ?? ((url: string) => import(/* @vite-ignore */ /* webpackIgnore: true */ url));
   let glueUrl = options.getGlueUrl(wasmPath);
   console.log(`${P} loadModuleFactory: ${wasmPath} — importing glue from ${glueUrl}...`);
 

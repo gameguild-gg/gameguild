@@ -984,6 +984,9 @@ export class ToolRunner {
     // Is this a Python-based tool (emcc/em++)?
     const isPythonTool = descriptor.modulePath.includes('python');
 
+    // Is stdin provided? (interactive script mode vs build-tool mode)
+    const isInteractive = !!options.stdin;
+
     // Build environment
     const envVars: Record<string, string> = {
       PYTHONHOME: '/usr',
@@ -998,12 +1001,20 @@ export class ToolRunner {
       // before flushing C stdio buffers).
       PYTHONUNBUFFERED: '1',
       ...(isPythonTool ? { EMCC_SKIP_SANITY_CHECK: '1' } : {}),
+      // Tell sitecustomize.py not to replace sys.stdout/sys.stderr
+      // when running interactively — we need Emscripten's TTY I/O.
+      ...(isInteractive ? { _EMCEPTION_INTERACTIVE: '1' } : {}),
       ...(descriptor.env || {}),
       ...(options.env || {}),
     };
 
     // Capture a reference to the VFS for locateFile
     const vfs = this.vfs;
+
+    // Mutable flush hook — set after instance is created so the stdin
+    // wrapper can drain the Emscripten TTY stdout buffer before blocking.
+
+    let flushStdoutTTY: (() => void) | undefined;
 
     // Step 2: Configure and instantiate the WASM module
     const tInst = performance.now();
@@ -1044,7 +1055,37 @@ export class ToolRunner {
         console.error(`${LOG_PREFIX}   [printErr] ${text}`);
         options.onStderr?.(text);
       },
-      stdin: options.stdin ?? (() => null),
+      // For interactive scripts, wrap stdin to flush the Emscripten TTY
+      // stdout buffer before blocking on Atomics.wait(). Without this,
+      // input() prompts (no trailing newline) stay buffered in the TTY
+      // device and never reach the print callback, causing a deadlock:
+      // the user can't see the prompt, so they never type, so stdin
+      // never returns.  flushStdoutTTY is set after instance creation.
+      //
+      // CRITICAL: After returning a newline byte (10), the next call
+      // must return null to signal "end of available data" to
+      // Emscripten's FS.createDevice read handler. Without this, the
+      // read handler loops calling input() for `length` bytes (often
+      // 8192), blocking on Atomics.wait after the line is consumed.
+      // The read() syscall never returns the already-read bytes, and
+      // Python's input() deadlocks. Returning null mimics the behavior
+      // of Emscripten's default FS_stdin_getChar which returns null
+      // when its internal buffer is exhausted.
+      stdin: options.stdin
+        ? (() => {
+          let afterNewline = false;
+          return () => {
+            flushStdoutTTY?.();
+            if (afterNewline) {
+              afterNewline = false;
+              return null;
+            }
+            const byte = options.stdin!();
+            if (byte === 10) afterNewline = true;
+            return byte;
+          };
+        })()
+        : (() => null),
       // Resolve .wasm URL from the CDN manifest
       locateFile: (path: string) => {
         if (path.endsWith('.wasm')) {
@@ -1332,6 +1373,53 @@ export class ToolRunner {
     moduleConfig['__modulePath'] = descriptor.modulePath;
     const { fileData, protectedPaths } = this.setupProcessFS(instance, moduleConfig, options);
 
+    // For interactive scripts, replace the Emscripten TTY output ops with
+    // character-at-a-time forwarding. The default TTY buffers until \n and
+    // only then calls the `print` callback — this means input() prompts
+    // (no trailing \n) never appear and the process deadlocks.  By
+    // overriding put_char we forward every byte (including \n) to
+    // onStdout/onStderr immediately, giving the user a live terminal.
+    if (isInteractive) {
+      try {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const streams = (instance.FS as any).streams;
+        if (streams) {
+          for (const fd of [1, 2]) {
+            const stream = streams[fd];
+            if (!stream?.tty) continue;
+            const isFd1 = fd === 1;
+            // Clear any pre-existing buffer
+            stream.tty.output = [];
+            // Override put_char: forward every character immediately
+            const origOps = stream.stream_ops;
+            stream.stream_ops = {
+              ...origOps,
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              write: (s: any, buffer: Uint8Array, offset: number, length: number, _pos: unknown) => {
+                if (!length) return 0;
+                const text = new TextDecoder().decode(buffer.subarray(offset, offset + length));
+                console.log(`${LOG_PREFIX}   [TTY-fd${fd}] write ${length}B: ${JSON.stringify(text.slice(0, 120))}`);
+                if (isFd1) {
+                  stdoutChunks.push(text);
+                  options.onStdout?.(text);
+                } else {
+                  stderrChunks.push(text);
+                  options.onStderr?.(text);
+                }
+                return length;
+              },
+            };
+          }
+          console.log(`${LOG_PREFIX}   Installed unbuffered TTY output for interactive mode`);
+        }
+      } catch (e) {
+        console.warn(`${LOG_PREFIX}   ⚠️ Failed to install unbuffered TTY:`, e);
+      }
+      // flushStdoutTTY is no longer needed — output is unbuffered.
+      // Keep it as a no-op so the stdin wrapper doesn't break.
+      flushStdoutTTY = () => { };
+    }
+
     // For Python-based tools, inject the subprocess shim to replace stdlib subprocess
     if (isPythonTool) {
       // Inject shim into the VFSFS fileData map (not MEMFS writeFile)
@@ -1362,13 +1450,18 @@ export class ToolRunner {
 
       // Inject a sitecustomize.py that:
       // 1. Replaces sys.stderr with a safe file-backed writer (fd 2 is
-      //    broken in WASM — WASI errno EBADF=8 on write).
+      //    broken in WASM — WASI errno EBADF=8 on write) for build tools.
       // 2. Installs a custom excepthook that writes unhandled exceptions
       //    to /tmp/python_error.txt so the tool-runner can read them after
       //    the process exits (Python's normal stderr is broken in WASM).
+      // 3. In interactive mode (_EMCEPTION_INTERACTIVE=1), skips the
+      //    stdout/stderr replacement so Emscripten's TTY I/O works
+      //    (print/printErr callbacks fire for every write).
       try {
         const SITE_CUSTOMIZE = `
-import sys, io, traceback as _tb
+import sys, io, os, traceback as _tb
+
+_interactive = os.environ.get('_EMCEPTION_INTERACTIVE') == '1'
 
 # Write a marker file so we know sitecustomize.py ran
 try:
@@ -1376,44 +1469,77 @@ try:
         _f.write('sitecustomize loaded\\n')
         _f.write(f'sys.path = {sys.path}\\n')
         _f.write(f'sys.argv = {sys.argv}\\n')
+        _f.write(f'interactive = {_interactive}\\n')
+        _f.write(f'sys.stdout = {sys.stdout!r}\\n')
+        _f.write(f'sys.stderr = {sys.stderr!r}\\n')
+        _f.write(f'sys.stdin  = {sys.stdin!r}\\n')
 except: pass
 
-class _SafeStderr(io.TextIOBase):
-    """File-backed stderr replacement since WASM fd 2 yields EBADF."""
-    def write(self, s):
-        try:
-            with open('/tmp/stderr.log', 'a') as f:
-                f.write(str(s))
-        except: pass
-        return len(str(s))
-    def flush(self): pass
-    def writable(self): return True
-    @property
-    def encoding(self): return 'utf-8'
-    @property
-    def errors(self): return 'backslashreplace'
+if not _interactive:
+    class _SafeStderr(io.TextIOBase):
+        """File-backed stderr replacement since WASM fd 2 yields EBADF."""
+        def write(self, s):
+            try:
+                with open('/tmp/stderr.log', 'a') as f:
+                    f.write(str(s))
+            except: pass
+            return len(str(s))
+        def flush(self): pass
+        def writable(self): return True
+        @property
+        def encoding(self): return 'utf-8'
+        @property
+        def errors(self): return 'backslashreplace'
 
-class _SafeStdout(io.TextIOBase):
-    """File-backed stdout replacement since WASM fd 1 may be None/invalid."""
-    def write(self, s):
-        try:
-            with open('/tmp/stdout.log', 'a') as f:
-                f.write(str(s))
-        except: pass
-        return len(str(s))
-    def flush(self): pass
-    def writable(self): return True
-    @property
-    def encoding(self): return 'utf-8'
-    @property
-    def errors(self): return 'backslashreplace'
+    class _SafeStdout(io.TextIOBase):
+        """File-backed stdout replacement since WASM fd 1 may be None/invalid."""
+        def write(self, s):
+            try:
+                with open('/tmp/stdout.log', 'a') as f:
+                    f.write(str(s))
+            except: pass
+            return len(str(s))
+        def flush(self): pass
+        def writable(self): return True
+        @property
+        def encoding(self): return 'utf-8'
+        @property
+        def errors(self): return 'backslashreplace'
 
-if sys.stdout is None:
-    sys.stdout = _SafeStdout()
-    sys.__stdout__ = sys.stdout
+    if sys.stdout is None:
+        sys.stdout = _SafeStdout()
+        sys.__stdout__ = sys.stdout
 
-sys.stderr = _SafeStderr()
-sys.__stderr__ = sys.stderr
+    sys.stderr = _SafeStderr()
+    sys.__stderr__ = sys.stderr
+else:
+    # Interactive mode: Emscripten's TTY is wired to forward output to
+    # the browser terminal, but CPython may set sys.stdout/sys.stderr to
+    # None when it cannot detect a valid terminal at startup.  Always
+    # re-create stdio wrappers around fd 0/1/2 so print()/input() work.
+    try:
+        sys.stdout = io.TextIOWrapper(
+            io.BufferedWriter(io.FileIO(1, 'w', closefd=False)),
+            line_buffering=True, write_through=True)
+        sys.__stdout__ = sys.stdout
+    except Exception as _e:
+        with open('/tmp/site_init.ok', 'a') as _f:
+            _f.write(f'stdout reconstruction failed: {_e}\\n')
+    try:
+        sys.stderr = io.TextIOWrapper(
+            io.BufferedWriter(io.FileIO(2, 'w', closefd=False)),
+            line_buffering=True, write_through=True)
+        sys.__stderr__ = sys.stderr
+    except Exception as _e:
+        with open('/tmp/site_init.ok', 'a') as _f:
+            _f.write(f'stderr reconstruction failed: {_e}\\n')
+    try:
+        sys.stdin = io.TextIOWrapper(
+            io.BufferedReader(io.FileIO(0, 'r', closefd=False)))
+        sys.__stdin__ = sys.stdin
+    except Exception as _e:
+        with open('/tmp/site_init.ok', 'a') as _f:
+            _f.write(f'stdin reconstruction failed: {_e}\\n')
 
 _orig = sys.excepthook
 def _hook(t, v, tb):
@@ -1980,6 +2106,10 @@ sys.excepthook = _hook
       }
     }
 
+    // Drain any remaining TTY output after the process exits (e.g. final
+    // print() without trailing newline in interactive mode).
+    flushStdoutTTY?.();
+
     // CPython-WASM finalization fix: Py_FinalizeEx() often fails in WASM
     // environments, causing Py_RunMain() to return exitcode=120 even though
     // the Python script (emcc.py) completed successfully. Exit code 120 is
@@ -2014,9 +2144,15 @@ sys.excepthook = _hook
       }
     }
 
-    // Read Python exception/stderr capture files and forward to terminal
+    // Read Python exception/stderr/stdout capture files and forward to terminal
     if (isPythonTool && instance.FS) {
       try {
+        // Log sitecustomize diagnostics
+        try {
+          const siteInit = new TextDecoder().decode(instance.FS.readFile('/tmp/site_init.ok'));
+          console.log(`${LOG_PREFIX}   site_init.ok:\n${siteInit}`);
+        } catch { /* not found */ }
+
         // Read Python exception capture file if it exists
         try {
           const errContent = new TextDecoder().decode(instance.FS.readFile('/tmp/python_error.txt'));
@@ -2040,6 +2176,19 @@ sys.excepthook = _hook
             }
           }
         } catch { /* file doesn't exist — no stderr output */ }
+
+        // Read Python stdout log (when _SafeStdout was active, non-interactive mode)
+        try {
+          const stdoutLog = new TextDecoder().decode(instance.FS.readFile('/tmp/stdout.log'));
+          if (stdoutLog.length > 0) {
+            for (const line of stdoutLog.split('\n')) {
+              if (line.length > 0) {
+                stdoutChunks.push(line);
+                options.onStdout?.(line);
+              }
+            }
+          }
+        } catch { /* file doesn't exist — no redirected stdout */ }
 
       } catch {
         // FS dump failed — non-critical

@@ -13,7 +13,7 @@ export const CPP_SDL3_PRESET: WorkspaceConfig = {
     args: ['emcc', '{sourceFile}', '-sUSE_SDL=3', '-I/usr/include', '-sALLOW_MEMORY_GROWTH=1', '-sENVIRONMENT=web', '-O1', '-o', '/home/user/main.wasm'],
     cwd: '/home/user',
     output: '/home/user/main.wasm',
-    sourceDetect: { extensions: ['.cpp', '.c'], entryPoint: '/src/sdl-main.cpp' },
+    sourceDetect: { extensions: ['.cpp', '.c'], entryPoint: '/user/sdl-main.cpp' },
   },
   run: {
     type: 'sdl3-canvas',
@@ -24,17 +24,17 @@ export const CPP_SDL3_PRESET: WorkspaceConfig = {
     showTestButton: false,
   },
   layout: {
-    activeFile: '/src/sdl-main.cpp',
+    activeFile: '/user/sdl-main.cpp',
     openTabs: [
-      { path: '/src/sdl-main.cpp', group: 'main' },
-      { path: '/runtime/sdl-canvas', group: 'right' },
+      { path: '/user/sdl-main.cpp', group: 'main' },
+      { path: '/user/sdl-canvas', group: 'right' },
     ],
-    expandedDirs: ['/src', '/assets', '/runtime'],
+    expandedDirs: ['/user'],
   },
   files: {
-    '/src/sdl-main.cpp': { encoding: 'text', content: SDL_DEMO_CODE },
-    '/assets/workspace-preview.svg': { encoding: 'text', content: DEFAULT_IMAGE },
-    '/runtime/sdl-canvas': { encoding: 'text', content: '' },
+    '/user/sdl-main.cpp': { encoding: 'text', content: SDL_DEMO_CODE },
+    '/user/workspace-preview.svg': { encoding: 'text', content: DEFAULT_IMAGE },
+    '/user/sdl-canvas': { encoding: 'text', content: '' },
   },
 };
 
@@ -46,11 +46,15 @@ export const CPP_TERMINAL_PRESET: WorkspaceConfig = {
   description: 'Standard C++ program with stdin/stdout in the terminal',
   version: 1,
   compile: {
-    tool: 'emcc',
-    args: ['emcc', '{sourceFile}', '-o', '/home/user/main.wasm', '-O2', '-sASYNCIFY'],
+    // Direct clang + wasm-ld fast path — bypasses the emcc Python pipeline
+    // (~13s savings: no Python boot, no 8970-file pre-warm, no wasm-opt
+    // asyncify pass). The WASI runtime handles blocking stdin natively via
+    // SharedArrayBuffer + Atomics.wait, so -sASYNCIFY is not needed.
+    tool: 'clang',
+    args: [],
     cwd: '/home/user',
     output: '/home/user/main.wasm',
-    sourceDetect: { extensions: ['.cpp', '.c'], entryPoint: '/src/main.cpp' },
+    sourceDetect: { extensions: ['.cpp', '.c'], entryPoint: '/user/main.cpp' },
   },
   run: {
     type: 'wasi-terminal',
@@ -63,16 +67,16 @@ export const CPP_TERMINAL_PRESET: WorkspaceConfig = {
     showTestButton: false,
   },
   layout: {
-    activeFile: '/src/main.cpp',
+    activeFile: '/user/main.cpp',
     openTabs: [
-      { path: '/src/main.cpp', group: 'main' },
-      { path: '/src/greetings.h', group: 'main' },
+      { path: '/user/main.cpp', group: 'main' },
+      { path: '/user/greetings.h', group: 'main' },
     ],
-    expandedDirs: ['/src'],
+    expandedDirs: ['/user'],
   },
   files: {
-    '/src/main.cpp': { encoding: 'text', content: DEFAULT_CODE },
-    '/src/greetings.h': { encoding: 'text', content: DEFAULT_HEADER },
+    '/user/main.cpp': { encoding: 'text', content: DEFAULT_CODE },
+    '/user/greetings.h': { encoding: 'text', content: DEFAULT_HEADER },
   },
 };
 
@@ -102,7 +106,7 @@ export const CMAKE_PRESET: WorkspaceConfig = {
     args: ['cmake', '-B', '/home/user/build', '-G', 'Ninja', '-S', '/home/user'],
     cwd: '/home/user',
     output: '/home/user/build/hello',
-    sourceDetect: { extensions: ['.cpp', '.c'], entryPoint: '/src/main.cpp' },
+    sourceDetect: { extensions: ['.cpp', '.c'], entryPoint: '/user/main.cpp' },
   },
   run: {
     type: 'cmake-build',
@@ -115,16 +119,16 @@ export const CMAKE_PRESET: WorkspaceConfig = {
     showTestButton: false,
   },
   layout: {
-    activeFile: '/src/main.cpp',
+    activeFile: '/user/main.cpp',
     openTabs: [
-      { path: '/src/main.cpp', group: 'main' },
-      { path: '/CMakeLists.txt', group: 'main' },
+      { path: '/user/main.cpp', group: 'main' },
+      { path: '/user/CMakeLists.txt', group: 'main' },
     ],
-    expandedDirs: ['/src'],
+    expandedDirs: ['/user'],
   },
   files: {
-    '/src/main.cpp': { encoding: 'text', content: CMAKE_MAIN },
-    '/CMakeLists.txt': { encoding: 'text', content: CMAKE_LISTS },
+    '/user/main.cpp': { encoding: 'text', content: CMAKE_MAIN },
+    '/user/CMakeLists.txt': { encoding: 'text', content: CMAKE_LISTS },
   },
 };
 
@@ -148,7 +152,7 @@ export const PYTHON_PRESET: WorkspaceConfig = {
     args: ['python3', '{sourceFile}'],
     cwd: '/home/user',
     output: '',
-    sourceDetect: { extensions: ['.py'], entryPoint: '/src/main.py' },
+    sourceDetect: { extensions: ['.py'], entryPoint: '/user/main.py' },
   },
   run: {
     type: 'python-script',
@@ -161,12 +165,12 @@ export const PYTHON_PRESET: WorkspaceConfig = {
     showTestButton: false,
   },
   layout: {
-    activeFile: '/src/main.py',
-    openTabs: [{ path: '/src/main.py', group: 'main' }],
-    expandedDirs: ['/src'],
+    activeFile: '/user/main.py',
+    openTabs: [{ path: '/user/main.py', group: 'main' }],
+    expandedDirs: ['/user'],
   },
   files: {
-    '/src/main.py': { encoding: 'text', content: PYTHON_HELLO },
+    '/user/main.py': { encoding: 'text', content: PYTHON_HELLO },
   },
 };
 
