@@ -109,6 +109,8 @@ export default function Ide({ title = 'Emception', manifestUrl = '/cdn/manifest.
   /** Tracks latest files for use in callbacks that can't close over state */
   const filesRef = useRef(files);
   filesRef.current = files;
+  // Expose filesRef for e2e tests so Playwright can verify file content was updated
+  (window as unknown as Record<string, unknown>).__emception_filesRef__ = filesRef;
 
   const fileTree = buildFileTree(Object.keys(files));
   const activeTab = openTabs.find((t) => t.id === activeTabId) ?? openTabs[0] ?? null;
@@ -596,7 +598,13 @@ export default function Ide({ title = 'Emception', manifestUrl = '/cdn/manifest.
   };
 
   const handleEditorChange = useCallback((path: string, value: string) => {
-    setFiles((prev) => ({ ...prev, [path]: { ...prev[path], content: value } }));
+    setFiles((prev) => {
+      const next = { ...prev, [path]: { ...prev[path], content: value } };
+      // Update ref immediately so handleCompile (which reads filesRef.current)
+      // always sees the latest content even if React hasn't re-rendered yet.
+      filesRef.current = next;
+      return next;
+    });
   }, []);
 
   // Expose for e2e tests so Playwright can update file content directly in React state
@@ -615,13 +623,17 @@ export default function Ide({ title = 'Emception', manifestUrl = '/cdn/manifest.
     };
     const tTotal = performance.now();
     const { client, tty } = orchestratorRef.current;
-    const textFiles = Object.values(files).filter((f) => f.type === 'text' && isTextFile(f.path));
+    // Read from filesRef.current (updated immediately by handleEditorChange)
+    // instead of the render-time `files` closure, so e2e __setFileContent
+    // updates are always picked up even before React re-renders.
+    const currentFiles = filesRef.current;
+    const textFiles = Object.values(currentFiles).filter((f) => f.type === 'text' && isTextFile(f.path));
 
     // Determine which source file to compile/run
     const entryPoint = resolvedConfig.compile.sourceDetect?.entryPoint;
     const compileTarget = isSourceFile(activeFile.path)
       ? activeFile.path
-      : entryPoint && files[entryPoint]
+      : entryPoint && currentFiles[entryPoint]
         ? entryPoint
         : textFiles.find((f) => isSourceFile(f.path))?.path;
 
@@ -1097,11 +1109,106 @@ export default function Ide({ title = 'Emception', manifestUrl = '/cdn/manifest.
       if (!compileTarget) {
         setExecutionPhase('idle');
         setStatus('No compilable source file found');
-        tty.writeError('No .c/.cpp source file found in workspace.');
+        tty.writeError('No source file found in workspace.');
         return;
       }
       setStatus('Compiling...');
       tty.writeLine(`Compiling ${compileTarget}...`);
+
+      // ── Rust two-step compile path (rustc → wasm-ld) ───────────
+      // rustc.wasm cannot invoke wasm-ld as a subprocess (no __dispatch_subprocess
+      // support yet), so we use a two-step approach: rustc --emit=obj then wasm-ld.
+      if (resolvedConfig.compile.tool === 'rustc' && resolvedConfig.run.type === 'wasi-terminal') {
+        const sourceFsPath = toWorkspaceFsPath(compileTarget);
+        const objPath = '/tmp/emception-rust-main.o';
+        const wasmPath = resolvedConfig.compile.output || '/home/user/main.wasm';
+
+        tty.writeLine('\x1b[36mRust compile (rustc --emit=obj)...\x1b[0m');
+        const rustcArgs = resolveArgs(resolvedConfig.compile.args, sourceFsPath).map((a) => {
+          // Override output to obj path and add --emit=obj for two-step linking
+          if (a === wasmPath) return objPath;
+          return a;
+        });
+        // Ensure --emit=obj is present for two-step linking
+        if (!rustcArgs.includes('--emit=obj')) {
+          rustcArgs.push('--emit=obj');
+        }
+        // Remove -o objPath if it was already set, then add it explicitly
+        const oIdx = rustcArgs.indexOf('-o');
+        if (oIdx >= 0 && oIdx + 1 < rustcArgs.length) {
+          rustcArgs[oIdx + 1] = objPath;
+        }
+
+        const rustcResult = await client.run('rustc', rustcArgs, {
+          cwd: resolvedConfig.compile.cwd ?? '/home/user',
+          onStdout: (t: string) => {
+            console.log(t);
+            tty.writeLine(t);
+          },
+          onStderr: (t: string) => {
+            console.error(t);
+            tty.writeError(t);
+          },
+        });
+
+        if (rustcResult.exitCode !== 0) {
+          const dur = ((performance.now() - t0) / 1000).toFixed(2);
+          setExecutionPhase('idle');
+          setStatus(`Compilation failed (${dur}s)`);
+          tty.writeLine(`\x1b[31mRust compilation failed (exit ${rustcResult.exitCode})\x1b[0m`);
+          return;
+        }
+
+        tty.writeLine('\x1b[36mLinking (wasm-ld)...\x1b[0m');
+        const lldResult = await client.run(
+          'wasm-ld',
+          ['wasm-ld', objPath, '-o', wasmPath, '-L/usr/lib/rust/lib/rustlib/wasm32-wasip1/lib', '--entry=main', '--allow-undefined'],
+          {
+            cwd: resolvedConfig.compile.cwd ?? '/home/user',
+            onStdout: (t: string) => {
+              console.log(t);
+              tty.writeLine(t);
+            },
+            onStderr: (t: string) => {
+              console.error(t);
+              tty.writeError(t);
+            },
+          },
+        );
+
+        if (lldResult.exitCode !== 0) {
+          const dur = ((performance.now() - t0) / 1000).toFixed(2);
+          setExecutionPhase('idle');
+          setStatus(`Link failed (${dur}s)`);
+          tty.writeLine(`\x1b[31mRust linker step failed (exit ${lldResult.exitCode})\x1b[0m`);
+          return;
+        }
+
+        const dur = ((performance.now() - t0) / 1000).toFixed(2);
+        setStatus('Compilation successful');
+        tty.writeLine(`\x1b[32mRust compilation successful in ${dur}s\x1b[0m`);
+
+        const wasmFile = await client.getFile(wasmPath);
+        console.log(`${P} Compilation output: main.wasm=${wasmFile ? wasmFile.length : 0}B`);
+
+        tty.writeLine('Running...');
+        const lineBufferedStdin = makeLineBufferedStdin(tty);
+        const runArgs = resolvedConfig.run.args ?? ['wasi-run', wasmPath];
+        setExecutionPhase('running');
+        await client.run(runArgs[0], runArgs, {
+          cwd: resolvedConfig.compile.cwd ?? '/home/user',
+          onStdout: (t: string) => {
+            tty.write(t.replace(/\n/g, '\r\n'));
+          },
+          onStderr: (t: string) => {
+            tty.write(`\x1b[31m${t.replace(/\n/g, '\r\n')}\x1b[0m`);
+          },
+          stdin: lineBufferedStdin,
+        });
+        setExecutionPhase('idle');
+        setStatus(`Done (${((performance.now() - tTotal) / 1000).toFixed(1)}s)`);
+        return;
+      }
 
       // ── Direct clang+wasm-ld fast path ──────────────────────────
       // When compile.args is empty, bypass the emcc Python pipeline entirely
