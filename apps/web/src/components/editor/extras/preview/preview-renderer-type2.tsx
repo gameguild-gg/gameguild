@@ -2,7 +2,7 @@
 
 import type { SerializedEditorState } from "lexical"
 import type { ProjectPreferences, PanelData } from "@/lib/storage/editor/project-preferences"
-import { AdvancedMultiBlockPreview } from "./multi-block-preview"
+import { AdvancedMultiBlockPreview } from "@/components/editor/engines/lexical/multi-block-preview"
 
 interface PreviewRendererType2Props {
   blockStates: Record<string, SerializedEditorState>

@@ -11,7 +11,7 @@ import type { SerializedEditorState } from "lexical"
 import { PreviewRenderer } from "../extras/preview/preview-renderer"
 import { PreviewRendererType2 } from "../extras/preview/preview-renderer-type2"
 import { RefreshConfirmDialog } from "../extras/dialogs/refresh-confirm-dialog"
-import { StorageAdapterContext, Editor } from "../lexical-editor"
+import { StorageAdapterContext, Editor } from "@/components/editor/engines/lexical/lexical-editor"
 
 export interface ProjectData {
   projectId: string
