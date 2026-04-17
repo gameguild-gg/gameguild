@@ -359,6 +359,27 @@ export class ToolRunner {
     this.versions = versions;
   }
 
+  /** Resolve an explicit output artifact path from argv (-o <path>). */
+  private getOutputPathFromArgv(argv: string[], cwd?: string): string | null {
+    const outIdx = argv.lastIndexOf('-o');
+    if (outIdx < 0 || outIdx + 1 >= argv.length) return null;
+    const outPath = argv[outIdx + 1];
+    if (!outPath) return null;
+    if (outPath.startsWith('/')) return outPath;
+    const base = cwd && cwd.startsWith('/') ? cwd : '/home/user';
+    return `${base.replace(/\/$/, '')}/${outPath}`;
+  }
+
+  private tryReadProcessFile(fs: EmscriptenInstance['FS'], path: string): Uint8Array | null {
+    try {
+      const data = fs.readFile(path);
+      return data && data.length > 0 ? data : null;
+    } catch {
+      return null;
+    }
+  }
+
+
   /* ---------------------------------------------------------------- */
   /*  Public API                                                       */
   /* ---------------------------------------------------------------- */
@@ -411,6 +432,23 @@ export class ToolRunner {
         argv = [tool, scriptPath];
       }
       console.log(`${LOG_PREFIX}   Injected Python script: ${scriptPath}`);
+    }
+
+    // Normalize linker library paths to canonical cache-lib locations.
+    // Some code paths pass /usr/lib/emscripten/cache/sysroot/lib/... which can
+    // contain stale or non-object payloads; the prebuilt immutable artifacts
+    // live under /usr/lib/emscripten/cache-lib/...
+    if (toolBasename === 'wasm-ld' || toolBasename === 'lld') {
+      argv = argv.map((a) =>
+        a
+          .replace('/usr/lib/emscripten/cache/sysroot/lib', '/usr/lib/emscripten/cache-lib')
+          .replace('/home/user/.emscripten_cache/sysroot/lib', '/usr/lib/emscripten/cache-lib'),
+      );
+      const hadCrt1 = argv.some((a) => a.endsWith('/crt1.o'));
+      argv = argv.filter((a) => !a.endsWith('/crt1.o'));
+      if (hadCrt1 && !argv.some((a) => a.startsWith('--entry=') || a === '--entry' || a === '--no-entry')) {
+        argv.push('--entry=main');
+      }
     }
 
     // cmake: inject Emception environment flags via -D cache variables.
@@ -497,7 +535,7 @@ export class ToolRunner {
     }
 
     // Spawn an isolated WASM process
-    const result = await this.spawnProcess(descriptor, argv, options);
+    const result = await this.spawnProcess(descriptor, argv, options, toolBasename);
 
     console.log(`${LOG_PREFIX} ===== RUN COMPLETE: ${tool} — exitCode=${result.exitCode}, total=${elapsed(tTotal)} =====`);
     return result;
@@ -555,6 +593,7 @@ export class ToolRunner {
         this.vfs.preloadBundle('clang'),
         this.vfs.preloadBundle('lld'),
         this.vfs.preloadBundle('usr-include'),
+        this.vfs.preloadBundle('sdl3'),
         this.vfs.preloadBundle('cache-core'),
         this.vfs.preloadBundle('python-runtime'),
         this.vfs.preloadBundle('emscripten-core'),
@@ -652,7 +691,6 @@ export class ToolRunner {
       ...objFiles,
       '-o', outputFile,
       '-L/usr/lib/emscripten/cache-lib/wasm32-emscripten',
-      '-lstandalonewasm-nocatch',
       '-lc++-noexcept', '-lc++abi-noexcept',
       '-lc',
       '-ldlmalloc',
@@ -798,8 +836,8 @@ export class ToolRunner {
 
         // Skip phony rules and cmake internal rules
         if (ruleName === 'phony' || ruleName === 'RERUN_CMAKE' ||
-            ruleName === 'CLEAN' || ruleName === 'HELP' ||
-            ruleName === 'CUSTOM_COMMAND') { i++; continue; }
+          ruleName === 'CLEAN' || ruleName === 'HELP' ||
+          ruleName === 'CUSTOM_COMMAND') { i++; continue; }
 
         currentEdge = {
           outputs: outputsPart.split(/\s+/).filter(Boolean),
@@ -815,7 +853,7 @@ export class ToolRunner {
         const value = line.slice(eqIdx + 3);
         globalVars.set(key, value);
       } else if (line.startsWith('default ') || line.startsWith('pool ') ||
-                 line.startsWith('include ') || line.startsWith('subninja ')) {
+        line.startsWith('include ') || line.startsWith('subninja ')) {
         // Skip directives we don't need
       }
 
@@ -931,6 +969,7 @@ export class ToolRunner {
     descriptor: ToolDescriptor,
     argv: string[],
     options: RunOptions,
+    toolBasename: string,
   ): Promise<ToolResult> {
     const tSpawn = performance.now();
     const stdoutChunks: string[] = [];
@@ -944,6 +983,9 @@ export class ToolRunner {
 
     // Is this a Python-based tool (emcc/em++)?
     const isPythonTool = descriptor.modulePath.includes('python');
+
+    // Is stdin provided? (interactive script mode vs build-tool mode)
+    const isInteractive = !!options.stdin;
 
     // Build environment
     const envVars: Record<string, string> = {
@@ -959,12 +1001,20 @@ export class ToolRunner {
       // before flushing C stdio buffers).
       PYTHONUNBUFFERED: '1',
       ...(isPythonTool ? { EMCC_SKIP_SANITY_CHECK: '1' } : {}),
+      // Tell sitecustomize.py not to replace sys.stdout/sys.stderr
+      // when running interactively — we need Emscripten's TTY I/O.
+      ...(isInteractive ? { _EMCEPTION_INTERACTIVE: '1' } : {}),
       ...(descriptor.env || {}),
       ...(options.env || {}),
     };
 
     // Capture a reference to the VFS for locateFile
     const vfs = this.vfs;
+
+    // Mutable flush hook — set after instance is created so the stdin
+    // wrapper can drain the Emscripten TTY stdout buffer before blocking.
+
+    let flushStdoutTTY: (() => void) | undefined;
 
     // Step 2: Configure and instantiate the WASM module
     const tInst = performance.now();
@@ -1005,7 +1055,37 @@ export class ToolRunner {
         console.error(`${LOG_PREFIX}   [printErr] ${text}`);
         options.onStderr?.(text);
       },
-      stdin: options.stdin ?? (() => null),
+      // For interactive scripts, wrap stdin to flush the Emscripten TTY
+      // stdout buffer before blocking on Atomics.wait(). Without this,
+      // input() prompts (no trailing newline) stay buffered in the TTY
+      // device and never reach the print callback, causing a deadlock:
+      // the user can't see the prompt, so they never type, so stdin
+      // never returns.  flushStdoutTTY is set after instance creation.
+      //
+      // CRITICAL: After returning a newline byte (10), the next call
+      // must return null to signal "end of available data" to
+      // Emscripten's FS.createDevice read handler. Without this, the
+      // read handler loops calling input() for `length` bytes (often
+      // 8192), blocking on Atomics.wait after the line is consumed.
+      // The read() syscall never returns the already-read bytes, and
+      // Python's input() deadlocks. Returning null mimics the behavior
+      // of Emscripten's default FS_stdin_getChar which returns null
+      // when its internal buffer is exhausted.
+      stdin: options.stdin
+        ? (() => {
+          let afterNewline = false;
+          return () => {
+            flushStdoutTTY?.();
+            if (afterNewline) {
+              afterNewline = false;
+              return null;
+            }
+            const byte = options.stdin!();
+            if (byte === 10) afterNewline = true;
+            return byte;
+          };
+        })()
+        : (() => null),
       // Resolve .wasm URL from the CDN manifest
       locateFile: (path: string) => {
         if (path.endsWith('.wasm')) {
@@ -1100,12 +1180,6 @@ export class ToolRunner {
 
             const subBasename = parts[0].split('/').pop() ?? parts[0];
             const isVersionCheck = parts.includes('--version') || parts.includes('-v');
-            if (OPTIONAL_TOOLS.has(subBasename) && !isVersionCheck) {
-              console.log(`${LOG_PREFIX}   [subprocess] Skipping optional tool "${subBasename}" — returning no-op (exit 0)`);
-              instanceRef.FS.writeFile('/tmp/.subprocess_stdout', '');
-              instanceRef.FS.writeFile('/tmp/.subprocess_stderr', '');
-              return (0 << 8) | 0;
-            }
 
             // With VFSFS write-through, writes from the parent process
             // go to VFS immediately.  The child process's VFSFS mount
@@ -1299,6 +1373,53 @@ export class ToolRunner {
     moduleConfig['__modulePath'] = descriptor.modulePath;
     const { fileData, protectedPaths } = this.setupProcessFS(instance, moduleConfig, options);
 
+    // For interactive scripts, replace the Emscripten TTY output ops with
+    // character-at-a-time forwarding. The default TTY buffers until \n and
+    // only then calls the `print` callback — this means input() prompts
+    // (no trailing \n) never appear and the process deadlocks.  By
+    // overriding put_char we forward every byte (including \n) to
+    // onStdout/onStderr immediately, giving the user a live terminal.
+    if (isInteractive) {
+      try {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const streams = (instance.FS as any).streams;
+        if (streams) {
+          for (const fd of [1, 2]) {
+            const stream = streams[fd];
+            if (!stream?.tty) continue;
+            const isFd1 = fd === 1;
+            // Clear any pre-existing buffer
+            stream.tty.output = [];
+            // Override put_char: forward every character immediately
+            const origOps = stream.stream_ops;
+            stream.stream_ops = {
+              ...origOps,
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              write: (s: any, buffer: Uint8Array, offset: number, length: number, _pos: unknown) => {
+                if (!length) return 0;
+                const text = new TextDecoder().decode(buffer.subarray(offset, offset + length));
+                console.log(`${LOG_PREFIX}   [TTY-fd${fd}] write ${length}B: ${JSON.stringify(text.slice(0, 120))}`);
+                if (isFd1) {
+                  stdoutChunks.push(text);
+                  options.onStdout?.(text);
+                } else {
+                  stderrChunks.push(text);
+                  options.onStderr?.(text);
+                }
+                return length;
+              },
+            };
+          }
+          console.log(`${LOG_PREFIX}   Installed unbuffered TTY output for interactive mode`);
+        }
+      } catch (e) {
+        console.warn(`${LOG_PREFIX}   ⚠️ Failed to install unbuffered TTY:`, e);
+      }
+      // flushStdoutTTY is no longer needed — output is unbuffered.
+      // Keep it as a no-op so the stdin wrapper doesn't break.
+      flushStdoutTTY = () => { };
+    }
+
     // For Python-based tools, inject the subprocess shim to replace stdlib subprocess
     if (isPythonTool) {
       // Inject shim into the VFSFS fileData map (not MEMFS writeFile)
@@ -1329,13 +1450,18 @@ export class ToolRunner {
 
       // Inject a sitecustomize.py that:
       // 1. Replaces sys.stderr with a safe file-backed writer (fd 2 is
-      //    broken in WASM — WASI errno EBADF=8 on write).
+      //    broken in WASM — WASI errno EBADF=8 on write) for build tools.
       // 2. Installs a custom excepthook that writes unhandled exceptions
       //    to /tmp/python_error.txt so the tool-runner can read them after
       //    the process exits (Python's normal stderr is broken in WASM).
+      // 3. In interactive mode (_EMCEPTION_INTERACTIVE=1), skips the
+      //    stdout/stderr replacement so Emscripten's TTY I/O works
+      //    (print/printErr callbacks fire for every write).
       try {
         const SITE_CUSTOMIZE = `
-import sys, io, traceback as _tb
+import sys, io, os, traceback as _tb
+
+_interactive = os.environ.get('_EMCEPTION_INTERACTIVE') == '1'
 
 # Write a marker file so we know sitecustomize.py ran
 try:
@@ -1343,44 +1469,77 @@ try:
         _f.write('sitecustomize loaded\\n')
         _f.write(f'sys.path = {sys.path}\\n')
         _f.write(f'sys.argv = {sys.argv}\\n')
+        _f.write(f'interactive = {_interactive}\\n')
+        _f.write(f'sys.stdout = {sys.stdout!r}\\n')
+        _f.write(f'sys.stderr = {sys.stderr!r}\\n')
+        _f.write(f'sys.stdin  = {sys.stdin!r}\\n')
 except: pass
 
-class _SafeStderr(io.TextIOBase):
-    """File-backed stderr replacement since WASM fd 2 yields EBADF."""
-    def write(self, s):
-        try:
-            with open('/tmp/stderr.log', 'a') as f:
-                f.write(str(s))
-        except: pass
-        return len(str(s))
-    def flush(self): pass
-    def writable(self): return True
-    @property
-    def encoding(self): return 'utf-8'
-    @property
-    def errors(self): return 'backslashreplace'
+if not _interactive:
+    class _SafeStderr(io.TextIOBase):
+        """File-backed stderr replacement since WASM fd 2 yields EBADF."""
+        def write(self, s):
+            try:
+                with open('/tmp/stderr.log', 'a') as f:
+                    f.write(str(s))
+            except: pass
+            return len(str(s))
+        def flush(self): pass
+        def writable(self): return True
+        @property
+        def encoding(self): return 'utf-8'
+        @property
+        def errors(self): return 'backslashreplace'
 
-class _SafeStdout(io.TextIOBase):
-    """File-backed stdout replacement since WASM fd 1 may be None/invalid."""
-    def write(self, s):
-        try:
-            with open('/tmp/stdout.log', 'a') as f:
-                f.write(str(s))
-        except: pass
-        return len(str(s))
-    def flush(self): pass
-    def writable(self): return True
-    @property
-    def encoding(self): return 'utf-8'
-    @property
-    def errors(self): return 'backslashreplace'
+    class _SafeStdout(io.TextIOBase):
+        """File-backed stdout replacement since WASM fd 1 may be None/invalid."""
+        def write(self, s):
+            try:
+                with open('/tmp/stdout.log', 'a') as f:
+                    f.write(str(s))
+            except: pass
+            return len(str(s))
+        def flush(self): pass
+        def writable(self): return True
+        @property
+        def encoding(self): return 'utf-8'
+        @property
+        def errors(self): return 'backslashreplace'
 
-if sys.stdout is None:
-    sys.stdout = _SafeStdout()
-    sys.__stdout__ = sys.stdout
+    if sys.stdout is None:
+        sys.stdout = _SafeStdout()
+        sys.__stdout__ = sys.stdout
 
-sys.stderr = _SafeStderr()
-sys.__stderr__ = sys.stderr
+    sys.stderr = _SafeStderr()
+    sys.__stderr__ = sys.stderr
+else:
+    # Interactive mode: Emscripten's TTY is wired to forward output to
+    # the browser terminal, but CPython may set sys.stdout/sys.stderr to
+    # None when it cannot detect a valid terminal at startup.  Always
+    # re-create stdio wrappers around fd 0/1/2 so print()/input() work.
+    try:
+        sys.stdout = io.TextIOWrapper(
+            io.BufferedWriter(io.FileIO(1, 'w', closefd=False)),
+            line_buffering=True, write_through=True)
+        sys.__stdout__ = sys.stdout
+    except Exception as _e:
+        with open('/tmp/site_init.ok', 'a') as _f:
+            _f.write(f'stdout reconstruction failed: {_e}\\n')
+    try:
+        sys.stderr = io.TextIOWrapper(
+            io.BufferedWriter(io.FileIO(2, 'w', closefd=False)),
+            line_buffering=True, write_through=True)
+        sys.__stderr__ = sys.stderr
+    except Exception as _e:
+        with open('/tmp/site_init.ok', 'a') as _f:
+            _f.write(f'stderr reconstruction failed: {_e}\\n')
+    try:
+        sys.stdin = io.TextIOWrapper(
+            io.BufferedReader(io.FileIO(0, 'r', closefd=False)))
+        sys.__stdin__ = sys.stdin
+    except Exception as _e:
+        with open('/tmp/site_init.ok', 'a') as _f:
+            _f.write(f'stdin reconstruction failed: {_e}\\n')
 
 _orig = sys.excepthook
 def _hook(t, v, tb):
@@ -1424,21 +1583,27 @@ sys.excepthook = _hook
             );
             patched = true;
           }
-          // Patch 2: skip fetch_port_artifact when FROZEN_CACHE is set.
-          // All ports are pre-built; the library existence check in cache.get()
-          // handles the rest via path aliases.
+          // Patch 2: skip fetch_port_artifact unconditionally.
+          // All ports are pre-built in CDN bundles; the library existence
+          // check in cache.get() handles the rest via path aliases.
+          // We cannot rely on FROZEN_CACHE (must be False to avoid unreachable
+          // traps) nor on up_to_date() (VFSFS async alias resolution is
+          // fragile during os.makedirs + marker read).
           const fetchSig = '    """This function only fetches the port and returns True when the port is up to date, False otherwise"""\n    # To compute the sha512 hash';
-          console.log(`${LOG_PREFIX}   fetchSig match: ${src.includes(fetchSig)}, src has docstring: ${src.includes('only fetches the port')}, src has comput: ${src.includes('To compute the sha512')}`);
           if (src.includes(fetchSig)) {
             src = src.replace(
               fetchSig,
-              '    """This function only fetches the port and returns True when the port is up to date, False otherwise"""\n    if config.FROZEN_CACHE:\n      return True\n    # To compute the sha512 hash',
+              '    """This function only fetches the port and returns True when the port is up to date, False otherwise"""\n    return True  # Emception: all ports pre-built in CDN bundles\n    # To compute the sha512 hash',
             );
             patched = true;
           }
           if (patched) {
             fileData.set(portsInitPath, new TextEncoder().encode(src));
-            console.log(`${LOG_PREFIX}   Patched ports/__init__.py (lazy urlopen + FROZEN_CACHE skip)`);
+            // Poison the compiled .pyc so Python falls back to our patched .py
+            const pyVer = this.versions.pythonMajorMinor.replace('.', '');
+            const pycPath = `/usr/lib/emscripten/tools/ports/__pycache__/__init__.cpython-${pyVer}.pyc`;
+            fileData.set(pycPath, new Uint8Array(0));
+            console.log(`${LOG_PREFIX}   Patched ports/__init__.py + poisoned ${pycPath}`);
           }
         }
       } catch (e) {
@@ -1631,16 +1796,17 @@ sys.excepthook = _hook
       try {
         await Promise.all([
           this.vfs.preloadBundle('usr-include'),
+          this.vfs.preloadBundle('sdl3'),
           this.vfs.preloadBundle('cache-core'),
         ]);
-        console.log(`${LOG_PREFIX}   Preloaded usr-include + cache-core bundles for clang in ${elapsed(tPreload)}`);
+        console.log(`${LOG_PREFIX}   Preloaded usr-include + sdl3 + cache-core bundles for clang in ${elapsed(tPreload)}`);
       } catch (e) {
         console.warn(`${LOG_PREFIX}   ⚠️ Failed to preload clang bundles:`, e);
       }
 
       // Pre-warm header files into clang's Emscripten FS
       const tWarm = performance.now();
-      const bundlesToWarm = ['usr-include'];
+      const bundlesToWarm = ['usr-include', 'sdl3'];
       const headerPaths: string[] = [];
       for (const bundleName of bundlesToWarm) {
         for (const fp of this.vfs.getBundleFilePaths(bundleName)) {
@@ -1706,8 +1872,9 @@ sys.excepthook = _hook
         await Promise.all([
           this.vfs.preloadBundle('python-runtime'),
           this.vfs.preloadBundle('emscripten-core'),
+          this.vfs.preloadBundle('sdl3'),
         ]);
-        console.log(`${LOG_PREFIX}   Preloaded python-runtime + emscripten-core bundles in ${elapsed(tPreload)}`);
+        console.log(`${LOG_PREFIX}   Preloaded python-runtime + emscripten-core + sdl3 bundles in ${elapsed(tPreload)}`);
       } catch (e) {
         console.warn(`${LOG_PREFIX}   ⚠️ Failed to preload python bundles:`, e);
       }
@@ -1720,7 +1887,7 @@ sys.excepthook = _hook
       // bypass our shims entirely.
       const tWarm = performance.now();
       const shimmedModules = new Set(['subprocess', 'sitecustomize']);
-      const bundlesToWarm = ['python-runtime', 'emscripten-core'];
+      const bundlesToWarm = ['python-runtime', 'emscripten-core', 'sdl3'];
       const pyPaths: string[] = [];
       for (const bundleName of bundlesToWarm) {
         for (const fp of this.vfs.getBundleFilePaths(bundleName)) {
@@ -1750,6 +1917,123 @@ sys.excepthook = _hook
         }
       }
       console.log(`${LOG_PREFIX}   Pre-warmed ${warmed}/${pyPaths.length} python files in ${elapsed(tWarm)}`);
+
+      // ── Subprocess dispatch via Asyncify ___syscall_openat hook ──────
+      // Python's os.system() uses __emscripten_system which crashes with
+      // 'unreachable' WASM traps due to Asyncify stack-unwind failures in
+      // CPython's indirect call dispatch. Instead, the subprocess shim
+      // opens /tmp/__dispatch_subprocess__ for reading. The patched
+      // python.mjs glue intercepts this path in ___syscall_openat and
+      // calls Module["subprocessDispatch"]() via Asyncify.handleAsync.
+      // After it resolves, the glue opens the file normally (FS.open).
+      {
+        // eslint-disable-next-line @typescript-eslint/no-this-alias
+        const toolRunner = this;
+
+        moduleConfig['subprocessDispatch'] = async (): Promise<void> => {
+          if (!instanceRef) {
+            console.error(`${LOG_PREFIX}   [dispatch] No instance ref — cannot dispatch subprocess`);
+            return;
+          }
+
+          let request: { cmd: string; cwd: string };
+          try {
+            const requestData = String(instanceRef.FS.readFile('/tmp/.subprocess_request', { encoding: 'utf8' }));
+            request = JSON.parse(requestData) as { cmd: string; cwd: string };
+          } catch (e) {
+            console.error(`${LOG_PREFIX}   [dispatch] Failed to read subprocess request: ${e}`);
+            instanceRef.FS.writeFile('/tmp/__dispatch_subprocess__', '1');
+            instanceRef.FS.writeFile('/tmp/.subprocess_stdout', '');
+            instanceRef.FS.writeFile('/tmp/.subprocess_stderr', 'Failed to read subprocess request');
+            return;
+          }
+
+          console.log(`${LOG_PREFIX}   [subprocess] Dispatching: ${request.cmd.slice(0, 120)}...`);
+
+          const parts = toolRunner.parseCommand(request.cmd);
+          if (parts.length === 0) {
+            instanceRef.FS.writeFile('/tmp/__dispatch_subprocess__', '0');
+            instanceRef.FS.writeFile('/tmp/.subprocess_stdout', '');
+            instanceRef.FS.writeFile('/tmp/.subprocess_stderr', '');
+            return;
+          }
+
+          const subBasename = parts[0].split('/').pop() ?? parts[0];
+          const isVersionCheck = parts.includes('--version') || parts.includes('-v');
+
+          // Ninja version probe fast-path
+          if (subBasename === 'ninja' && isVersionCheck) {
+            console.log(`${LOG_PREFIX}   [subprocess] Fast-path: ninja --version → 1.12.1`);
+            instanceRef.FS.writeFile('/tmp/__dispatch_subprocess__', '0');
+            instanceRef.FS.writeFile('/tmp/.subprocess_stdout', '1.12.1\n');
+            instanceRef.FS.writeFile('/tmp/.subprocess_stderr', '');
+            return;
+          }
+
+          // Run the subprocess through the tool runner
+          const subStdout: string[] = [];
+          const subStderr: string[] = [];
+          try {
+            const subResult = await toolRunner.run(parts[0], parts, {
+              cwd: request.cwd || options.cwd,
+              onStdout: (t: string) => subStdout.push(t),
+              onStderr: (t: string) => subStderr.push(t),
+              isInfoQuery: isVersionCheck,
+            });
+
+            let effectiveExitCode = subResult.exitCode;
+
+            // Ninja version probe normalization
+            if (subBasename === 'ninja' && isVersionCheck) {
+              const versionText = subStdout.join('\n').trim();
+              if (!versionText || effectiveExitCode !== 0) {
+                subStdout.length = 0;
+                subStdout.push('1.12.1\n');
+                effectiveExitCode = 0;
+              }
+            }
+
+            // Optional tools: treat failures as non-fatal
+            if (effectiveExitCode !== 0 && OPTIONAL_TOOLS.has(subBasename)) {
+              console.log(`${LOG_PREFIX}   [subprocess] Optional tool "${subBasename}" failed (exit ${effectiveExitCode}) — treating as non-fatal`);
+              effectiveExitCode = 0;
+            }
+
+            instanceRef.FS.writeFile('/tmp/__dispatch_subprocess__', String(effectiveExitCode));
+            instanceRef.FS.writeFile('/tmp/.subprocess_stdout', subStdout.join('\n'));
+            instanceRef.FS.writeFile('/tmp/.subprocess_stderr', subStderr.join('\n'));
+
+            console.log(`${LOG_PREFIX}   [subprocess] Done: exitCode=${effectiveExitCode}`);
+            if (subStderr.length > 0) {
+              for (const line of subStderr) {
+                console.error(`${LOG_PREFIX}   [subprocess] stderr: ${line}`);
+              }
+            }
+          } catch (e) {
+            const msg = e instanceof Error ? e.message : String(e);
+            console.error(`${LOG_PREFIX}   [subprocess] Error: ${msg}`);
+            instanceRef.FS.writeFile('/tmp/__dispatch_subprocess__', '1');
+            instanceRef.FS.writeFile('/tmp/.subprocess_stdout', '');
+            instanceRef.FS.writeFile('/tmp/.subprocess_stderr', msg);
+          }
+        };
+
+        console.log(`${LOG_PREFIX}   Installed subprocess dispatch via subprocessDispatch hook`);
+      }
+    }
+
+    const isOptionalTool = OPTIONAL_TOOLS.has(toolBasename);
+    const outputPath = this.getOutputPathFromArgv(argv, options.cwd);
+    let preRunOutputSnapshot: Uint8Array | null = null;
+    if (isOptionalTool && outputPath) {
+      try {
+        const existing = await this.vfs.fetchFile(outputPath);
+        if (existing) {
+          preRunOutputSnapshot = new Uint8Array(existing);
+        }
+      } catch {
+        // Non-fatal: snapshot is best-effort.
+      }
     }
 
     // Step 4: Call main(argc, argv) — the tool runs to completion
@@ -1822,6 +2106,10 @@ sys.excepthook = _hook
       }
     }
 
+    // Drain any remaining TTY output after the process exits (e.g. final
+    // print() without trailing newline in interactive mode).
+    flushStdoutTTY?.();
+
     // CPython-WASM finalization fix: Py_FinalizeEx() often fails in WASM
     // environments, causing Py_RunMain() to return exitcode=120 even though
     // the Python script (emcc.py) completed successfully. Exit code 120 is
@@ -1833,9 +2121,38 @@ sys.excepthook = _hook
       exitCode = 0;
     }
 
-    // Read Python exception/stderr capture files and forward to terminal
+    // Optional post-processing tools can fail non-fatally in parent subprocess
+    // dispatch. Because VFSFS is write-through, a failed in-place `-o` rewrite
+    // may leave a corrupted artifact in shared VFS (e.g. /home/user/main.wasm)
+    // and break the same run's subsequent steps. Restore the pre-run snapshot
+    // on optional-tool failure.
+    if (isOptionalTool && exitCode !== 0 && outputPath && preRunOutputSnapshot) {
+      this.vfs.writeFileSync(outputPath, preRunOutputSnapshot);
+      console.log(`${LOG_PREFIX}   Restored output artifact after optional tool failure: ${outputPath} (${preRunOutputSnapshot.length}B)`);
+    }
+
+    // Persist explicit output artifacts (e.g. -o /home/user/main.wasm) into
+    // shared VFS so subsequent steps (wasi-run) can read them.
+    // Keep this strict: only copy the exact -o path when it exists.
+    if (exitCode === 0 && instance.FS) {
+      if (outputPath) {
+        const outputData = this.tryReadProcessFile(instance.FS, outputPath);
+        if (outputData) {
+          this.vfs.writeFileSync(outputPath, outputData);
+          console.log(`${LOG_PREFIX}   Persisted output artifact: ${outputPath} (${outputData.length}B)`);
+        }
+      }
+    }
+
+    // Read Python exception/stderr/stdout capture files and forward to terminal
     if (isPythonTool && instance.FS) {
       try {
+        // Log sitecustomize diagnostics
+        try {
+          const siteInit = new TextDecoder().decode(instance.FS.readFile('/tmp/site_init.ok'));
+          console.log(`${LOG_PREFIX}   site_init.ok:\n${siteInit}`);
+        } catch { /* not found */ }
+
         // Read Python exception capture file if it exists
         try {
           const errContent = new TextDecoder().decode(instance.FS.readFile('/tmp/python_error.txt'));
@@ -1859,6 +2176,20 @@ sys.excepthook = _hook
             }
           }
         } catch { /* file doesn't exist — no stderr output */ }
+
+        // Read Python stdout log (when _SafeStdout was active, non-interactive mode)
+        try {
+          const stdoutLog = new TextDecoder().decode(instance.FS.readFile('/tmp/stdout.log'));
+          if (stdoutLog.length > 0) {
+            for (const line of stdoutLog.split('\n')) {
+              if (line.length > 0) {
+                stdoutChunks.push(line);
+                options.onStdout?.(line);
+              }
+            }
+          }
+        } catch { /* file doesn't exist — no redirected stdout */ }
+
       } catch {
         // FS dump failed — non-critical
       }
@@ -2096,16 +2427,6 @@ sys.excepthook = _hook
       const emscriptenConfig = `import os\nEMSCRIPTEN_ROOT = '/usr/lib/emscripten'\nLLVM_ROOT = '/usr/bin'\nBINARYEN_ROOT = '/usr'\nNODE_JS = '/usr/bin/node'\nPYTHON = '/usr/bin/python3'\nCACHE = '/usr/lib/emscripten/cache'\nFROZEN_CACHE = False\nCOMPILER_OPTS = []\n`;
       fileData.set('/etc/emscripten.config', new TextEncoder().encode(emscriptenConfig));
 
-      // Seed SDL3 port marker so fetch_port_artifact's up_to_date() returns
-      // True without trying to download from GitHub.  The marker file at
-      // {CACHE}/ports/sdl3/.emscripten_url must contain the exact URL.
-      // IMPORTANT: fileData keys must use POST-alias paths because VFSFS
-      // resolves aliases before looking up fileData.  The alias
-      //   /usr/lib/emscripten/cache/ports → /usr/lib/emscripten_ports
-      // means the effective key is /usr/lib/emscripten_ports/sdl3/.emscripten_url.
-      const sdl3Url = 'https://github.com/libsdl-org/SDL/archive/release-3.4.2.zip';
-      fileData.set('/usr/lib/emscripten_ports/sdl3/.emscripten_url', new TextEncoder().encode(sdl3Url + '\n'));
-
       console.log(`${LOG_PREFIX}     Sysroot dirs created with ${pathAliases.size} path aliases`);
     }
 
@@ -2232,68 +2553,52 @@ sys.excepthook = _hook
     const stdinProvider = options.stdin ?? null;
     console.log(`${LOG_PREFIX}   [WASI-STDIN] stdinProvider=${stdinProvider ? 'SET' : 'NULL'}`);
 
-    // Synchronous fd_read: returns EOF for stdin (fallback when stdin not provided)
-    const fd_read_sync = (
-      fd: number, _iovsPtr: number, _iovsLen: number, nreadPtr: number,
-    ): number => {
-      if (fd === 0 && stdinProvider) {
-        console.warn(`${LOG_PREFIX}   [WASI-STDIN] stdin requested — returning EOF`);
-      }
-      const mem = new DataView(memory.buffer);
-      mem.setUint32(nreadPtr, 0, true);
-      return 0;
-    };
-
-    // Async fd_read: Asyncify will unwind/rewind the WASM stack while
-    // awaiting stdin input from the main thread.
-    const fd_read_async = async (
+    // Synchronous fd_read for standalone WASI binaries.
+    // The worker provides stdin through a SharedArrayBuffer-backed callback,
+    // so a call here can block until a byte is available without falling
+    // through to EOF or leaking the keystrokes back to the shell.
+    const fd_read = (
       fd: number, iovsPtr: number, iovsLen: number, nreadPtr: number,
-    ): Promise<number> => {
+    ): number => {
+      const mem = new DataView(memory.buffer);
       console.log(`${LOG_PREFIX}   [WASI-STDIN] fd_read called: fd=${fd}, iovsLen=${iovsLen}`);
-      let mem = new DataView(memory.buffer);
-      if (fd !== 0 || !stdinProvider) {
+
+      if (fd !== 0) {
+        mem.setUint32(nreadPtr, 0, true);
+        return 8; // EBADF
+      }
+
+      if (!stdinProvider) {
         mem.setUint32(nreadPtr, 0, true);
         return 0;
       }
-      let totalRead = 0;
+
       for (let i = 0; i < iovsLen; i++) {
         const base = iovsPtr + i * 8;
         const ptr = mem.getUint32(base, true);
         const len = mem.getUint32(base + 4, true);
-        for (let j = 0; j < len; j++) {
-          const result = stdinProvider();
-          let byte: number | null;
-          if (result === null) {
-            byte = null;
-          } else if (typeof (result as Promise<number>).then === 'function') {
-            byte = await (result as Promise<number>);
-            // Re-create DataView after async resume — memory may have grown
-            mem = new DataView(memory.buffer);
-          } else {
-            byte = result as number;
-          }
-          if (byte === null || byte === undefined) {
-            mem.setUint32(nreadPtr, totalRead, true);
-            return 0;
-          }
-          // xterm sends CR (13) for Enter; POSIX/WASI programs expect LF (10)
-          if (byte === 13) byte = 10;
-          // Write byte to the iov buffer (re-create view in case memory grew)
-          new Uint8Array(memory.buffer, ptr, len)[j] = byte;
-          totalRead++;
-          // Line-buffered: stop after newline so C stdin returns a line
-          if (byte === 10) {
-            mem.setUint32(nreadPtr, totalRead, true);
-            return 0;
-          }
+        if (len === 0) continue;
+        const out = new Uint8Array(memory.buffer, ptr, len);
+
+        const raw = stdinProvider();
+        if (raw !== null && typeof raw === 'object' && 'then' in raw) {
+          throw new Error('WASI stdin provider must be synchronous');
         }
+
+        const byte = raw as number | null;
+        if (byte === null || byte === -1) {
+          mem.setUint32(nreadPtr, 0, true);
+          return 0;
+        }
+
+        out[0] = byte === 13 ? 10 : byte;
+        mem.setUint32(nreadPtr, 1, true);
+        return 0;
       }
-      mem.setUint32(nreadPtr, totalRead, true);
+
+      mem.setUint32(nreadPtr, 0, true);
       return 0;
     };
-
-    // Use async fd_read when stdin is provided (Asyncify handles stack suspension)
-    const fd_read = stdinProvider ? fd_read_async : fd_read_sync;
 
     const fd_fdstat_get = (fd: number, statPtr: number): number => {
       const mem = new DataView(memory.buffer);
@@ -2357,18 +2662,31 @@ sys.excepthook = _hook
       fd_renumber: () => 63,
       fd_pwrite: () => 63,
       fd_pread: () => 63,
+      // Minimal poll_oneoff implementation for stdin-driven interactive apps.
+      // We report subscriptions as ready and let fd_read_async actually block
+      // on input when needed.
       poll_oneoff: (inPtr: number, outPtr: number, nsubscriptions: number, neventsPtr: number): number => {
-        // Report all subscriptions as ready (data available).
-        // This unblocks musl's poll()/select() if called before fd_read.
         const mem = new DataView(memory.buffer);
-        const out = new Uint8Array(memory.buffer, outPtr, nsubscriptions * 32);
-        out.fill(0);
+        const SUB_SIZE = 48;
+        const EVT_SIZE = 32;
+        let nevents = 0;
         for (let i = 0; i < nsubscriptions; i++) {
-          const base = outPtr + i * 32;
-          // nbytes = 1 at offset 16 (data available)
-          mem.setBigUint64(base + 16, BigInt(1), true);
+          const subPtr = inPtr + i * SUB_SIZE;
+          const evPtr = outPtr + nevents * EVT_SIZE;
+          const userdata = mem.getBigUint64(subPtr, true);
+          const eventType = mem.getUint8(subPtr + 8);
+
+          // __wasi_event_t
+          mem.setBigUint64(evPtr, userdata, true); // userdata
+          mem.setUint16(evPtr + 8, 0, true); // error = ESUCCESS
+          mem.setUint8(evPtr + 10, eventType); // type
+          // __wasi_event_fd_readwrite_t (union payload)
+          mem.setBigUint64(evPtr + 16, BigInt(1), true); // nbytes (non-zero readiness)
+          mem.setUint16(evPtr + 24, 0, true); // flags
+
+          nevents++;
         }
-        mem.setUint32(neventsPtr, nsubscriptions, true);
+        mem.setUint32(neventsPtr, nevents, true);
         return 0;
       },
       sched_yield: () => 0,
@@ -2388,6 +2706,7 @@ sys.excepthook = _hook
       const wasmBuffer = new ArrayBuffer(wasmBytes.byteLength);
       new Uint8Array(wasmBuffer).set(wasmBytes);
       const wasmModule = await WebAssembly.compile(wasmBuffer);
+
       console.log(`${LOG_PREFIX}   WASM compiled in ${elapsed(tCompile)}`);
 
       // Inspect required imports to build the import object dynamically
@@ -2468,7 +2787,21 @@ sys.excepthook = _hook
         }
       } else if (mainFn) {
         console.log(`${LOG_PREFIX}   Calling main()...`);
-        exitCode = mainFn(0, 0);
+        try {
+          const result = mainFn(0, 0) as unknown;
+          if (result && typeof (result as Promise<unknown>).then === 'function') {
+            await (result as Promise<unknown>);
+            exitCode = 0;
+          } else {
+            exitCode = Number(result ?? 0);
+          }
+        } catch (e) {
+          if (e instanceof WasiExit) {
+            exitCode = e.code;
+          } else {
+            throw e;
+          }
+        }
       } else {
         console.warn(`${LOG_PREFIX}   No _start or main export found`);
         exitCode = 0;
@@ -2721,6 +3054,8 @@ sys.excepthook = _hook
       await this.vfs.preloadBundle(bundleName);
     }
 
+    const isPython = wasmPath.includes('python');
+
     return loadModuleFactory(wasmPath, {
       getGlueUrl: (path) => {
         // For bundled files: get the .mjs blob URL directly
@@ -2735,6 +3070,34 @@ sys.excepthook = _hook
         // Fallback: add /cdn prefix for files not in manifest
         return `/cdn${path.replace('.wasm', '.mjs')}`;
       },
+      // For python.mjs: patch ___syscall_openat at runtime to intercept
+      // the /tmp/__dispatch_subprocess__ magic path for subprocess dispatch.
+      ...(isPython ? {
+        patchGlueContent: (source: string): string => {
+          if (source.includes('__dispatch_subprocess__')) {
+            console.log(`${LOG_PREFIX}   patchGlueContent: python.mjs already patched`);
+            return source;
+          }
+          const needle =
+            'path=SYSCALLS.getStr(path);path=SYSCALLS.calculateAt(dirfd,path);' +
+            'var mode=varargs?syscallGetVarargI():0;return FS.open(path,flags,mode).fd';
+          const replacement =
+            'path=SYSCALLS.getStr(path);path=SYSCALLS.calculateAt(dirfd,path);' +
+            'if(path==="/tmp/__dispatch_subprocess__"&&Module["subprocessDispatch"]){' +
+            'return Asyncify.handleAsync(function(){' +
+            'return Module["subprocessDispatch"]().then(function(){' +
+            'var mode=varargs?syscallGetVarargI():0;return FS.open(path,flags,mode).fd})})' +
+            '}' +
+            'var mode=varargs?syscallGetVarargI():0;return FS.open(path,flags,mode).fd';
+          if (!source.includes(needle)) {
+            console.warn(`${LOG_PREFIX}   patchGlueContent: needle not found in python.mjs, skipping patch`);
+            return source;
+          }
+          const patched = source.replace(needle, replacement);
+          console.log(`${LOG_PREFIX}   patchGlueContent: patched ___syscall_openat for subprocess dispatch`);
+          return patched;
+        },
+      } : {}),
     }) as Promise<ModuleFactory>;
   }
 
