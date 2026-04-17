@@ -1,6 +1,6 @@
 "use client"
 
-import { Editor } from "@/components/editor/lexical-editor"
+import { Editor } from "./lexical-editor"
 import type { LexicalEditor } from "lexical"
 import type React from "react"
 import type { ProjectMode } from "@/lib/storage/editor/project-modes"
