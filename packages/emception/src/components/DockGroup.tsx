@@ -1,5 +1,6 @@
 import Editor, { type OnMount } from '@monaco-editor/react';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import DockDropOverlay, { dropZoneToGroup, type DropZone } from './DockDropOverlay';
 import { tabIcon } from './FileExplorer';
 import type { DockGroup, OpenTab, WorkspaceFile } from './ide-types';
 import { fileName, inferLanguage } from './ide-utils';
@@ -16,10 +17,13 @@ interface DockGroupPanelProps {
     /** The globally active tab id. This group shows the matching tab or falls back to the first one. */
     activeTabId: string;
     files: Record<string, WorkspaceFile>;
-    canvasRef: React.RefObject<HTMLCanvasElement | null>;
+    /** Called when this panel mounts/unmounts a canvas host container. Ide reparents the real canvas into it. */
+    onCanvasHost: (el: HTMLDivElement | null) => void;
     onSetActiveTab: (id: string) => void;
     onCloseTab: (id: string) => void;
     onMoveTab: (tabId: string, group: DockGroup) => void;
+    /** Reorder a tab within the global openTabs array (drag within same group). */
+    onReorderTab: (tabId: string, beforeTabId: string) => void;
     onEditorMount: OnMount;
     onEditorChange: (path: string, value: string) => void;
 }
@@ -29,10 +33,11 @@ export default function DockGroupPanel({
     tabs,
     activeTabId,
     files,
-    canvasRef,
+    onCanvasHost,
     onSetActiveTab,
     onCloseTab,
     onMoveTab,
+    onReorderTab,
     onEditorMount,
     onEditorChange,
 }: DockGroupPanelProps) {
@@ -50,12 +55,13 @@ export default function DockGroupPanel({
             localActive={localActive}
             localFile={localFile}
             files={files}
-            canvasRef={canvasRef}
+            onCanvasHost={onCanvasHost}
             draggingTabId={draggingTabId}
             setDraggingTabId={setDraggingTabId}
             onSetActiveTab={onSetActiveTab}
             onCloseTab={onCloseTab}
             onMoveTab={onMoveTab}
+            onReorderTab={onReorderTab}
             onEditorMount={onEditorMount}
             onEditorChange={onEditorChange}
         />
@@ -68,12 +74,13 @@ function DockGroupPanelInner({
     tabs,
     localActive,
     localFile,
-    canvasRef,
+    onCanvasHost,
     draggingTabId,
     setDraggingTabId,
     onSetActiveTab,
     onCloseTab,
     onMoveTab,
+    onReorderTab,
     onEditorMount,
     onEditorChange,
 }: {
@@ -82,21 +89,46 @@ function DockGroupPanelInner({
     localActive: OpenTab;
     localFile: WorkspaceFile | undefined;
     files: Record<string, WorkspaceFile>;
-    canvasRef: React.RefObject<HTMLCanvasElement | null>;
+    onCanvasHost: (el: HTMLDivElement | null) => void;
     draggingTabId: string | null;
     setDraggingTabId: (id: string | null) => void;
     onSetActiveTab: (id: string) => void;
     onCloseTab: (id: string) => void;
     onMoveTab: (tabId: string, group: DockGroup) => void;
+    onReorderTab: (tabId: string, beforeTabId: string) => void;
     onEditorMount: OnMount;
     onEditorChange: (path: string, value: string) => void;
 }) {
     const animFrameRef = useRef(0);
+    const [isDragOver, setIsDragOver] = useState(false);
+    const [dropIndicatorTabId, setDropIndicatorTabId] = useState<string | null>(null);
+    const dragCounterRef = useRef(0);
     // Cancel any lingering RAF when SDL takes over (content becomes truthy)
     useEffect(() => {
         if (localFile?.type !== 'canvas' || !localFile.content) return;
         window.cancelAnimationFrame(animFrameRef.current);
     }, [localFile?.type, localFile?.content]);
+
+    const handleOverlayDrop = useCallback(
+        (zone: DropZone, e: React.DragEvent) => {
+            // Read tab id from dataTransfer (works for cross-panel drags),
+            // fall back to local draggingTabId for same-panel drags.
+            const tabId = e.dataTransfer.getData('text/tab-id') || draggingTabId || lastDataTransferTabRef.current;
+            if (!tabId) return;
+            const targetGroup = dropZoneToGroup(zone, group);
+            onMoveTab(tabId, targetGroup);
+            setDraggingTabId(null);
+            setIsDragOver(false);
+            dragCounterRef.current = 0;
+            lastDataTransferTabRef.current = null;
+        },
+        [draggingTabId, group, onMoveTab, setDraggingTabId],
+    );
+
+    /** Stash the tab id from dataTransfer for cross-panel drops (dragOver fires
+     *  before drop, so we can read it there for Firefox; Chrome restricts reads
+     *  to the drop event only, but we fall back to the stashed value). */
+    const lastDataTransferTabRef = useRef<string | null>(null);
 
     return (
         <div
@@ -107,15 +139,41 @@ function DockGroupPanelInner({
                 border: '1px solid #313244',
                 background: '#1e1e2e',
                 overflow: 'hidden',
+                position: 'relative',
             }}
             onDragOver={(e) => e.preventDefault()}
+            onDragEnter={(e) => {
+                e.preventDefault();
+                dragCounterRef.current++;
+                // Show overlay for local drags (draggingTabId) or cross-panel
+                // drags (dataTransfer contains 'text/tab-id' type).
+                const hasTabType = e.dataTransfer.types.includes('text/tab-id');
+                if (draggingTabId || hasTabType) setIsDragOver(true);
+            }}
+            onDragLeave={() => {
+                dragCounterRef.current--;
+                if (dragCounterRef.current <= 0) {
+                    setIsDragOver(false);
+                    dragCounterRef.current = 0;
+                }
+            }}
             onDrop={(e) => {
                 e.preventDefault();
+                // Fallback: if dropped outside a specific zone, treat as center
                 const tabId = e.dataTransfer.getData('text/tab-id') || draggingTabId;
                 if (tabId) onMoveTab(tabId, group);
                 setDraggingTabId(null);
+                setIsDragOver(false);
+                dragCounterRef.current = 0;
+                lastDataTransferTabRef.current = null;
             }}
         >
+            {/* VS Code–style drop zone overlay */}
+            <DockDropOverlay
+                visible={isDragOver}
+                currentGroup={group}
+                onDrop={handleOverlayDrop}
+            />
             {/* Tab strip */}
             <div
                 style={{
@@ -148,7 +206,33 @@ function DockGroupPanelInner({
                                     setDraggingTabId(tab.id);
                                     e.dataTransfer.setData('text/tab-id', tab.id);
                                 }}
-                                onDragEnd={() => setDraggingTabId(null)}
+                                onDragEnd={() => {
+                                    setDraggingTabId(null);
+                                    setDropIndicatorTabId(null);
+                                    setIsDragOver(false);
+                                    dragCounterRef.current = 0;
+                                }}
+                                onDragOver={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    const srcId = e.dataTransfer.types.includes('text/tab-id') ? (draggingTabId ?? e.dataTransfer.getData('text/tab-id')) : null;
+                                    if (srcId && srcId !== tab.id) setDropIndicatorTabId(tab.id);
+                                }}
+                                onDragLeave={() => {
+                                    setDropIndicatorTabId((prev) => (prev === tab.id ? null : prev));
+                                }}
+                                onDrop={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    const srcId = e.dataTransfer.getData('text/tab-id') || draggingTabId;
+                                    if (srcId && srcId !== tab.id) {
+                                        onReorderTab(srcId, tab.id);
+                                    }
+                                    setDropIndicatorTabId(null);
+                                    setDraggingTabId(null);
+                                    setIsDragOver(false);
+                                    dragCounterRef.current = 0;
+                                }}
                                 style={{
                                     display: 'flex',
                                     alignItems: 'center',
@@ -156,12 +240,15 @@ function DockGroupPanelInner({
                                     padding: '0.3rem 0.55rem',
                                     borderRight: '1px solid #313244',
                                     borderBottom: isActive ? '2px solid #89b4fa' : '2px solid transparent',
+                                    borderLeft: dropIndicatorTabId === tab.id ? '2px solid #89b4fa' : '2px solid transparent',
                                     color: isActive ? '#cdd6f4' : '#9399b2',
                                     background: isActive ? '#1e1e2e' : '#181825',
                                     fontSize: '0.75rem',
                                     minWidth: 90,
-                                    cursor: 'pointer',
+                                    cursor: 'grab',
                                     userSelect: 'none',
+                                    opacity: draggingTabId === tab.id ? 0.5 : 1,
+                                    transition: 'opacity 0.15s, border-left-color 0.1s',
                                 }}
                                 onClick={() => onSetActiveTab(tab.id)}
                                 title={tab.path}
@@ -191,24 +278,30 @@ function DockGroupPanelInner({
                         );
                     })}
                 </div>
-                {/* Dock target buttons */}
-                <div style={{ display: 'flex', gap: '0.3rem', padding: '0.25rem 0.4rem', flexShrink: 0 }}>
-                    {(['main', 'right', 'bottom'] as DockGroup[]).map((target) => (
+                {/* Split/dock buttons — VS Code style */}
+                <div style={{ display: 'flex', gap: '0.15rem', padding: '0.25rem 0.4rem', flexShrink: 0, alignItems: 'center' }}>
+                    {([
+                        { target: 'main' as DockGroup, icon: '⬅', title: 'Move to main editor' },
+                        { target: 'right' as DockGroup, icon: '⬌', title: 'Split right' },
+                        { target: 'bottom' as DockGroup, icon: '⬍', title: 'Split down' },
+                    ]).map(({ target, icon, title }) => (
                         <button
                             key={target}
                             onClick={() => onMoveTab(localActive.id, target)}
                             style={{
-                                border: '1px solid #45475a',
-                                background: target === group ? '#313244' : '#1e1e2e',
-                                color: '#a6adc8',
-                                borderRadius: 4,
-                                fontSize: '0.66rem',
-                                padding: '0.1rem 0.3rem',
+                                border: 'none',
+                                background: target === group ? '#313244' : 'transparent',
+                                color: target === group ? '#cdd6f4' : '#6c7086',
+                                borderRadius: 3,
+                                fontSize: '0.8rem',
+                                padding: '0.08rem 0.25rem',
                                 cursor: 'pointer',
+                                lineHeight: 1,
+                                transition: 'color 0.12s, background 0.12s',
                             }}
-                            title={`Dock to ${target}`}
+                            title={title}
                         >
-                            {target[0].toUpperCase()}
+                            {icon}
                         </button>
                     ))}
                 </div>
@@ -251,6 +344,7 @@ function DockGroupPanelInner({
                 )}
                 {localFile?.type === 'canvas' && (
                     <div
+                        ref={onCanvasHost}
                         style={{
                             height: '100%',
                             width: '100%',
@@ -261,15 +355,7 @@ function DockGroupPanelInner({
                             position: 'relative',
                         }}
                     >
-                        {/* SDL renders into this canvas — id="canvas" is required by SDL3's */}
-                        {/* Emscripten backend default selector (SDL_HINT_EMSCRIPTEN_CANVAS_SELECTOR). */}
-                        <canvas
-                            id="canvas"
-                            data-testid="sdl-canvas"
-                            tabIndex={0}
-                            ref={canvasRef}
-                            style={{ width: '100%', height: '100%', display: localFile.content ? 'block' : 'none' }}
-                        />
+                        {/* Ide.tsx reparents the persistent <canvas> into this host div */}
                         {!localFile.content && (
                             <div
                                 style={{

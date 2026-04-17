@@ -409,7 +409,7 @@ self.onmessage = async (ev: MessageEvent<MainToWorkerMessage>) => {
           const jsBlob = new Blob([jsText], { type: 'text/javascript' });
           const jsBlobUrl = URL.createObjectURL(jsBlob);
 
-          const brotliMod = (await import(/* webpackIgnore: true */ jsBlobUrl)) as any;
+          const brotliMod = (await import(/* @vite-ignore */ /* webpackIgnore: true */ jsBlobUrl)) as any;
           // Pass the WASM URL directly; passing Promise<Response> breaks some
           // wasm-bindgen loaders and can resolve to invalid fetch targets.
           await brotliMod.default(wasmUrl);

@@ -139,20 +139,25 @@ test.describe('Compile & Run', () => {
             // Switch to cpp-terminal workspace so the compile path uses WASI (not SDL3)
             await page.getByTestId('workspace-picker').selectOption('cpp-terminal');
 
-            // Override the editor with a simple hello-world (no stdin) so the
-            // test doesn't depend on whichever DEFAULT_CODE is in Ide.tsx.
-            await page.evaluate(() => {
-                const model = (window as any).monaco?.editor?.getModels?.()?.[0];
-                if (model) {
-                    model.setValue([
-                        '#include <iostream>',
-                        'int main() {',
-                        '  std::cout << "Hello from WebAssembly!" << std::endl;',
-                        '  return 0;',
-                        '}',
-                    ].join('\n'));
-                }
-            });
+            // Wait for workspace switch to render
+            await page.waitForTimeout(1000);
+
+            // Override file content directly in React state (bypasses Monaco timing issues).
+            // The __setFileContent helper is exposed by Ide.tsx for e2e tests.
+            const helloCode = [
+                '#include <iostream>',
+                'int main() {',
+                '  std::cout << "Hello from WebAssembly!" << std::endl;',
+                '  return 0;',
+                '}',
+            ].join('\n');
+            await page.evaluate(({ path, code }) => {
+                const setContent = (window as any).__setFileContent;
+                if (setContent) setContent(path, code);
+            }, { path: '/user/main.cpp', code: helloCode });
+
+            // Wait for React state update to propagate
+            await page.waitForTimeout(500);
 
             console.log('Boot complete. Clicking Compile & Run...');
 
@@ -176,13 +181,14 @@ test.describe('Compile & Run', () => {
                 expect(finalStatus, 'Compilation ended with error status').not.toMatch(/Error/);
             }
 
-            // Dump logs for debugging if not successful
-            if (finalStatus && !/Compilation successful/.test(finalStatus)) {
+            // Status may show "Compilation successful" or "Done (Xs)" if the
+            // program already finished (no-stdin programs are very fast).
+            if (finalStatus && !/Compilation successful|Done/.test(finalStatus)) {
                 dumpLogs(logs, 'COMPILE NOT SUCCESSFUL');
             }
 
-            // Verify it was successful
-            expect(finalStatus).toMatch(/Compilation successful/);
+            // Verify it was successful — accept both "Compilation successful" and "Done (Xs)"
+            expect(finalStatus).toMatch(/Compilation successful|Done/);
 
             console.log('Compilation successful! Checking for output...');
 
@@ -200,14 +206,12 @@ test.describe('Compile & Run', () => {
             assertLogContains(logs, 'Step 2/6 done: LazyFS ready', 'LazyFS initialized');
             assertLogContains(logs, 'Step 5/6 done: all components created', 'Components created');
 
-            // Compile (emcc run)
+            // Compile (direct clang + wasm-ld fast path)
             assertLogContains(logs, 'COMPILE & RUN START', 'IDE compile started');
-            assertLogContains(logs, 'RUN: emcc', 'emcc tool run started');
-            assertLogContains(logs, 'Step 1/4', 'Module factory loading');
-            assertLogContains(logs, 'Step 2/4', 'Process instantiation');
-            assertLogContains(logs, 'Step 3/4', 'Process FS population');
-            assertLogContains(logs, 'Step 4/4', 'callMain execution');
-            assertLogContains(logs, 'RUN COMPLETE: emcc', 'emcc completed');
+            assertLogContains(logs, 'RUN: clang', 'clang tool run started');
+            assertLogContains(logs, 'RUN COMPLETE: clang', 'clang completed');
+            assertLogContains(logs, 'RUN: wasm-ld', 'wasm-ld tool run started');
+            assertLogContains(logs, 'RUN COMPLETE: wasm-ld', 'wasm-ld completed');
 
             // Compilation output
             assertLogContains(logs, 'Compilation output: main.wasm=', 'Output files generated');
@@ -222,6 +226,79 @@ test.describe('Compile & Run', () => {
             // Always dump logs, even on failure
             if (logs.length > 0) {
                 dumpLogs(logs, 'FINAL LOG DUMP (test end)');
+            }
+        }
+    });
+
+    // ------------------------------------------------------------------
+    // 1b. Compile timing — verify the direct clang+wasm-ld fast path
+    //     completes within a reasonable time budget (< 15s compile).
+    // ------------------------------------------------------------------
+    test('cpp-terminal compiles within time budget (direct path)', async ({ page }) => {
+        const logs = captureEmceptionLogs(page);
+
+        await page.goto('/', { waitUntil: 'networkidle' });
+
+        try {
+            await expect(status(page)).toHaveText('Ready', { timeout: 120_000 });
+            await expect(compileBtn(page)).toBeEnabled();
+
+            // Switch to cpp-terminal workspace (uses DEFAULT_CODE which prompts
+            // "Enter your name:" and echoes "Hello, <name>! Welcome to WebAssembly!")
+            await page.getByTestId('workspace-picker').selectOption('cpp-terminal');
+
+            // Record compilation start time
+            const compileStart = Date.now();
+
+            await compileBtn(page).click();
+            await expect(status(page)).toHaveText('Compiling...', { timeout: 5_000 });
+            console.log('Compilation started. Timing...');
+
+            // Wait for compilation to finish
+            await expect(status(page)).not.toHaveText('Compiling...', { timeout: 300_000 });
+            const compileEnd = Date.now();
+            const compileDuration = (compileEnd - compileStart) / 1000;
+
+            const finalStatus = await status(page).textContent();
+            console.log(`Compilation status: "${finalStatus}" — took ${compileDuration.toFixed(1)}s`);
+            expect(finalStatus).toMatch(/Compilation successful/);
+
+            // Wait for "Enter your name:" in terminal (program is running, waiting for stdin)
+            const term = terminal(page);
+            await expect(term).toContainText('Enter your name:', { timeout: 60_000 });
+            console.log('Program is running and waiting for stdin.');
+
+            // Verify stdin still works without ASYNCIFY
+            await focusShellTerminal(page);
+            await page.keyboard.type('timing-test', { delay: 30 });
+            await page.keyboard.press('Enter');
+            await expect(term).toContainText('Hello, timing-test! Welcome to WebAssembly!', { timeout: 30_000 });
+
+            const totalEnd = Date.now();
+            const totalDuration = (totalEnd - compileStart) / 1000;
+            console.log(`Total compile+run+stdin: ${totalDuration.toFixed(1)}s`);
+            console.log(`Compile-only: ${compileDuration.toFixed(1)}s`);
+
+            // Extract timing from logs
+            const clangRun = logs.find(l => l.text.includes('RUN COMPLETE: clang'));
+            const lldRun = logs.find(l => l.text.includes('RUN COMPLETE: wasm-ld'));
+            if (clangRun) console.log(`  clang finished at: +${(clangRun.timestamp / 1000).toFixed(1)}s`);
+            if (lldRun) console.log(`  wasm-ld finished at: +${(lldRun.timestamp / 1000).toFixed(1)}s`);
+
+            // Verify NO emcc/Python overhead
+            const emccLog = logs.find(l => l.text.includes('RUN: emcc'));
+            expect(emccLog, 'Should NOT use emcc Python pipeline').toBeUndefined();
+            const wasmOptLog = logs.find(l => l.text.includes('wasm-opt') && l.text.includes('asyncify'));
+            expect(wasmOptLog, 'Should NOT run wasm-opt asyncify').toBeUndefined();
+
+            // Timing assertion: direct path should compile in < 15s
+            // (old emcc path was ~20s; direct path should be ~5s)
+            expect(compileDuration, `Compile took ${compileDuration.toFixed(1)}s — should be < 15s`).toBeLessThan(15);
+
+            dumpLogs(logs, 'TIMING TEST');
+        } finally {
+            if (logs.length > 0) {
+                dumpLogs(logs, 'TIMING TEST (final)');
             }
         }
     });
@@ -268,6 +345,9 @@ test.describe('Compile & Run', () => {
         // Switch to cpp-terminal workspace so the compile path uses WASI (not SDL3)
         await page.getByTestId('workspace-picker').selectOption('cpp-terminal');
 
+        // Wait for workspace switch to render
+        await page.waitForTimeout(1000);
+
         // Replace editor content with a C program that reads stdin
         const stdinProgram = [
             '#include <stdio.h>',
@@ -284,14 +364,14 @@ test.describe('Compile & Run', () => {
             '}',
         ].join('\n');
 
-        // Set editor content via Monaco API
-        await page.evaluate((code) => {
-            // Monaco editor is accessible via the first editor instance
-            const model = (window as any).monaco?.editor?.getModels?.()?.[0];
-            if (model) {
-                model.setValue(code);
-            }
-        }, stdinProgram);
+        // Set file content directly in React state (bypasses Monaco timing issues)
+        await page.evaluate(({ path, code }) => {
+            const setContent = (window as any).__setFileContent;
+            if (setContent) setContent(path, code);
+        }, { path: '/user/main.cpp', code: stdinProgram });
+
+        // Wait for React state update to propagate
+        await page.waitForTimeout(500);
 
         // Click compile & run
         console.log('Compiling stdin test program...');
@@ -325,7 +405,65 @@ test.describe('Compile & Run', () => {
     });
 
     // ------------------------------------------------------------------
-    // 4. stdin backspace — verify that backspace editing works correctly
+    // 4. Python stdin — switch to Python workspace, run the default script
+    //    that calls input() + print(), type a name, verify output appears.
+    // ------------------------------------------------------------------
+    test('python stdin works — input() and print() round-trip', async ({ page }) => {
+        const logs = captureEmceptionLogs(page);
+
+        await page.goto('/', { waitUntil: 'networkidle' });
+        await expect(status(page)).toHaveText('Ready', { timeout: 120_000 });
+        await expect(compileBtn(page)).toBeEnabled();
+
+        // Switch to Python workspace
+        await page.getByTestId('workspace-picker').selectOption('python');
+
+        // Wait for workspace switch to complete
+        await page.waitForFunction(() => {
+            const logs = (window as any).__emceptionLogs as string[] | undefined;
+            return document.querySelector('[data-testid="compile-button"]')?.textContent?.includes('Run');
+        }, { timeout: 10_000 });
+
+        // Wait a moment for Monaco to settle and set our custom script
+        await page.waitForTimeout(500);
+        const modelSet = await page.evaluate((code) => {
+            const models = (window as any).monaco?.editor?.getModels?.() ?? [];
+            // Find the Python model (main.py)
+            const pyModel = models.find((m: any) => m.uri?.path?.endsWith('.py')) ?? models[0];
+            if (pyModel) {
+                pyModel.setValue(code);
+                return true;
+            }
+            return false;
+        }, [
+            'name = input("PROMPT:")',
+            'print(f"GOT:{name}")',
+        ].join('\n'));
+        console.log(`Monaco model set: ${modelSet}`);
+
+        // Click Run
+        console.log('Running Python stdin test program...');
+        await compileBtn(page).click();
+
+        // Wait for "PROMPT:" in the terminal (Python is running, waiting for stdin)
+        const term = terminal(page);
+        await expect(term).toContainText('PROMPT:', { timeout: 120_000 });
+        console.log('Python printed PROMPT — now typing input...');
+
+        // Focus the terminal and type input
+        await focusShellTerminal(page);
+        await page.keyboard.type('alice', { delay: 50 });
+        await page.keyboard.press('Enter');
+
+        // The program should print back what we typed
+        await expect(term).toContainText('GOT:alice', { timeout: 60_000 });
+        console.log('Python stdin test passed — input()/print() round-trip works!');
+
+        dumpLogs(logs, 'PYTHON STDIN TEST');
+    });
+
+    // ------------------------------------------------------------------
+    // 5. stdin backspace — verify that backspace editing works correctly
     //    so the WASM program receives the edited text, not raw bytes.
     // ------------------------------------------------------------------
     test('stdin backspace editing works correctly', async ({ page }) => {
@@ -338,11 +476,11 @@ test.describe('Compile & Run', () => {
         // Switch to cpp-terminal workspace so the compile path uses WASI (not SDL3)
         await page.getByTestId('workspace-picker').selectOption('cpp-terminal');
 
+        // Wait for workspace switch to render
+        await page.waitForTimeout(1000);
+
         // C program that prints what it reads from stdin
-        await page.evaluate((code) => {
-            const model = (window as any).monaco?.editor?.getModels?.()?.[0];
-            if (model) model.setValue(code);
-        }, [
+        const backspaceProgram = [
             '#include <stdio.h>',
             'int main() {',
             '    char buf[64];',
@@ -353,7 +491,17 @@ test.describe('Compile & Run', () => {
             '    }',
             '    return 0;',
             '}',
-        ].join('\n'));
+        ].join('\n');
+
+        // Set file content directly in React state (bypasses Monaco timing issues)
+        await page.evaluate(({ path, code }) => {
+            const setContent = (window as any).__setFileContent;
+            if (setContent) setContent(path, code);
+        }, { path: '/user/main.cpp', code: backspaceProgram });
+
+        // Wait for React state update to propagate
+        await page.waitForTimeout(500);
+        await page.waitForTimeout(500);
 
         // Compile & run
         await compileBtn(page).click();
