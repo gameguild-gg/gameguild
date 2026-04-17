@@ -39,8 +39,8 @@ export class LazyFS implements IFileSystem {
 
   /**
    * Optional injected brotli decompressor.
-   * When set, used instead of dynamic `import('brotli-wasm')` which
-   * can fail in Worker contexts due to WASM URL resolution issues.
+   * When set, used instead of the bundled Emscripten-compiled Brotli WASM
+   * module (brotli_wasm.js) which is loaded from the CDN at runtime.
    */
   static customBrotliDecompressor: ((data: Uint8Array) => Uint8Array) | null = null;
   private pendingFetches = new Map<string, Promise<Uint8Array>>();
@@ -66,7 +66,9 @@ export class LazyFS implements IFileSystem {
     return `${(n / (1024 * 1024)).toFixed(1)}MB`;
   }
 
-  constructor(manifest: FSManifest, dbName = 'lazyfs-cache') {
+  // Cache name is versioned so we can invalidate previously persisted bundle
+  // extractions when file integrity logic changes.
+  constructor(manifest: FSManifest, dbName = 'lazyfs-cache-v3') {
     this.manifest = manifest;
     this.dbName = dbName;
     this.buildDirIndex();
@@ -87,7 +89,10 @@ export class LazyFS implements IFileSystem {
 
       // Add file to its parent directory
       let children = this.dirIndex.get(dir);
-      if (!children) { children = new Set(); this.dirIndex.set(dir, children); }
+      if (!children) {
+        children = new Set();
+        this.dirIndex.set(dir, children);
+      }
       children.add(name);
 
       // Add intermediate directory entries up to root
@@ -95,7 +100,10 @@ export class LazyFS implements IFileSystem {
         const parent = dir.substring(0, dir.lastIndexOf('/')) || '/';
         const dirName = dir.substring(dir.lastIndexOf('/') + 1);
         let parentChildren = this.dirIndex.get(parent);
-        if (!parentChildren) { parentChildren = new Set(); this.dirIndex.set(parent, parentChildren); }
+        if (!parentChildren) {
+          parentChildren = new Set();
+          this.dirIndex.set(parent, parentChildren);
+        }
         if (parentChildren.has(dirName)) break; // Already indexed ancestors
         parentChildren.add(dirName);
         dir = parent;
@@ -242,14 +250,12 @@ export class LazyFS implements IFileSystem {
     }
   }
 
-  private async loadBundleImpl(
-    bundleName: string,
-    bundle: FSManifest['bundles'][string],
-    triggeredBy?: string,
-  ): Promise<void> {
+  private async loadBundleImpl(bundleName: string, bundle: FSManifest['bundles'][string], triggeredBy?: string): Promise<void> {
     const { P, fmtSize } = LazyFS;
     const t0 = performance.now();
-    console.log(`${P}   loadBundle: fetching "${bundleName}" (${bundle.files.length} files, expected ${fmtSize(bundle.size)}) — triggered by: ${triggeredBy ?? 'unknown'}`);
+    console.log(
+      `${P}   loadBundle: fetching "${bundleName}" (${bundle.files.length} files, expected ${fmtSize(bundle.size)}) — triggered by: ${triggeredBy ?? 'unknown'}`,
+    );
     const response = await fetch(bundle.url);
     if (!response.ok) throw new Error(`Failed to fetch bundle ${bundleName}: HTTP ${response.status}`);
     let data = new Uint8Array(await response.arrayBuffer());
@@ -403,7 +409,7 @@ export class LazyFS implements IFileSystem {
     const { P } = LazyFS;
     console.log(`${P} preloadAllBundles: loading ${bundleNames.length} bundles...`);
     const t0 = performance.now();
-    await Promise.all(bundleNames.map(name => this.loadBundle(name)));
+    await Promise.all(bundleNames.map((name) => this.loadBundle(name)));
     console.log(`${P} preloadAllBundles: done in ${(performance.now() - t0).toFixed(1)}ms`);
   }
 
@@ -531,9 +537,7 @@ export class LazyFS implements IFileSystem {
 
   private async computeHash(data: Uint8Array): Promise<string> {
     const hashBuffer = await crypto.subtle.digest('SHA-256', data.buffer as ArrayBuffer);
-    return [...new Uint8Array(hashBuffer)]
-      .map((b) => b.toString(16).padStart(2, '0'))
-      .join('');
+    return [...new Uint8Array(hashBuffer)].map((b) => b.toString(16).padStart(2, '0')).join('');
   }
 
   private async decompressGzip(data: Uint8Array): Promise<Uint8Array> {
@@ -582,26 +586,18 @@ export class LazyFS implements IFileSystem {
       }
       return result;
     } catch {
-      // Native brotli not supported — fall back to injected or brotli-wasm
-      console.warn(`${P} DecompressionStream("br") not supported, falling back to brotli-wasm (${fmtSize(data.length)})`);
+      // Native brotli not supported — fall back to injected or bundled WASM
+      console.warn(`${P} DecompressionStream("br") not supported, falling back to bundled WASM (${fmtSize(data.length)})`);
 
       // Use injected decompressor if available (avoids dynamic import issues in Workers)
       if (LazyFS.customBrotliDecompressor) {
         return new Uint8Array(LazyFS.customBrotliDecompressor(data));
       }
 
-      try {
-        // brotli-wasm default export is a Promise<BrotliWasmInstance>
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const mod = await import('brotli-wasm') as any;
-        const instance = await mod.default;
-        return new Uint8Array(instance.decompress(data));
-      } catch (e) {
-        throw new Error(
-          `Brotli decompression failed: DecompressionStream("br") is not supported and ` +
-          `brotli-wasm fallback failed: ${e instanceof Error ? e.message : e}`
-        );
-      }
+      throw new Error(
+        `Brotli decompression failed: DecompressionStream("br") is not supported and ` +
+        `no customBrotliDecompressor was injected. Use a browser that supports Brotli natively.`,
+      );
     }
   }
 }

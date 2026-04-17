@@ -62,13 +62,20 @@ export interface ListDirMessage {
     path: string;
 }
 
+/** Reset VFS writable layers (clear /tmp, /home/user, overlay writes). */
+export interface ResetVfsMessage {
+    type: 'resetVfs';
+    id: number;
+}
+
 export type MainToWorkerMessage =
     | BootMessage
     | RunMessage
     | StdinMessage
     | GetFileMessage
     | WriteFileMessage
-    | ListDirMessage;
+    | ListDirMessage
+    | ResetVfsMessage;
 
 /* ------------------------------------------------------------------ */
 /*  Worker → Main messages                                             */
@@ -103,6 +110,19 @@ export interface StderrMessage {
 export interface StdinRequestMessage {
     type: 'stdinRequest';
     id: number;
+    /** Shared ring-buffer control block: [readIndex, writeIndex, closed]. */
+    controlBuffer: SharedArrayBuffer;
+    /** Shared ring-buffer payload bytes. */
+    dataBuffer: SharedArrayBuffer;
+}
+
+/** Shell needs a shared stdin channel for a foreground interactive WASI run. */
+export interface ShellStdinRequestMessage {
+    type: 'shellStdinRequest';
+    /** Shared ring-buffer control block: [readIndex, writeIndex, closed]. */
+    controlBuffer: SharedArrayBuffer;
+    /** Shared ring-buffer payload bytes. */
+    dataBuffer: SharedArrayBuffer;
 }
 
 /** A run completed. */
@@ -135,6 +155,14 @@ export interface ListDirResultMessage {
     type: 'listDirResult';
     id: number;
     entries: string[];
+}
+
+/** resetVfs result. */
+export interface ResetVfsResultMessage {
+    type: 'resetVfsResult';
+    id: number;
+    ok: boolean;
+    error?: string;
 }
 
 /** Shell output line (for when MiniShell runs in the Worker). */
@@ -184,10 +212,12 @@ export type WorkerToMainMessage =
     | StdoutMessage
     | StderrMessage
     | StdinRequestMessage
+    | ShellStdinRequestMessage
     | RunResultMessage
     | GetFileResultMessage
     | WriteFileResultMessage
     | ListDirResultMessage
+    | ResetVfsResultMessage
     | ShellOutputMessage
     | ShellWriteMessage
     | ShellReadRequest

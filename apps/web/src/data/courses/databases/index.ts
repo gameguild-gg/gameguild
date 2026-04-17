@@ -99,8 +99,13 @@ import week13Readings from './13-timeseries-search/readings-13.md';
 import week13Reveal from './13-timeseries-search/reveal.md';
 import week13TimescaledbFundamentals from './13-timeseries-search/timescaledb-fundamentals.md';
 
-// Week 14 checkpoint import
+// Week 14 imports
 import week14Assignment from './14-vector-streaming/assignment.md';
+import week14KafkaFundamentals from './14-vector-streaming/kafka-fundamentals.md';
+import week14PgvectorFundamentals from './14-vector-streaming/pgvector-fundamentals.md';
+import week14Quiz from './14-vector-streaming/quiz/quiz.md';
+import week14Readings from './14-vector-streaming/readings-14.md';
+import week14Reveal from './14-vector-streaming/reveal.md';
 
 // Week 15 checkpoint import
 import week15Assignment from './15-peer/assignment.md';
@@ -2015,6 +2020,122 @@ export const week13AssignmentContent: ProgramContent = {
     updatedAt: '2023-01-01T00:00:00Z',
 };
 
+// Week 14: Vector Databases & Event Streaming
+export const week14RevealContent: ProgramContent = {
+    id: 'databases-week-14-reveal',
+    programId: 'databases-program-1',
+    slug: 'vector-streaming-lecture',
+    parentId: 'databases-program-1',
+    title: 'Week 14: Vector Databases & Event Streaming',
+    description: 'pgvector, embeddings, similarity search, RAG, Apache Kafka, topics, partitions, producers, consumers, consumer groups',
+    type: ProgramContentType.REVEAL,
+    body: week14Reveal,
+    sortOrder: 14,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 120,
+    visibility: 1, // Published
+    program: databasesProgram,
+    parent: undefined,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const week14ReadingsContent: ProgramContent = {
+    id: 'databases-week-14-readings',
+    programId: 'databases-program-1',
+    slug: 'vector-streaming-readings',
+    parentId: 'databases-week-14-reveal',
+    title: 'Week 14 Readings',
+    description: 'Curated readings on pgvector, embeddings, RAG, Kafka architecture, kafkajs, and event-driven systems',
+    type: 0, // Page
+    body: week14Readings,
+    sortOrder: 1,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 90,
+    visibility: 1, // Published
+    program: databasesProgram,
+    parent: week14RevealContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const week14PgvectorFundamentalsContent: ProgramContent = {
+    id: 'databases-week-14-pgvector-fundamentals',
+    programId: 'databases-program-1',
+    slug: 'pgvector-fundamentals',
+    parentId: 'databases-week-14-readings',
+    title: 'pgvector Fundamentals',
+    description: 'Vector similarity search, embeddings, cosine/euclidean/inner product metrics, IVFFlat, HNSW indexing, RAG, and Drizzle ORM integration',
+    type: 0, // Page
+    body: week14PgvectorFundamentals,
+    sortOrder: 1,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 120,
+    visibility: 1, // Published
+    program: databasesProgram,
+    parent: week14ReadingsContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const week14KafkaFundamentalsContent: ProgramContent = {
+    id: 'databases-week-14-kafka-fundamentals',
+    programId: 'databases-program-1',
+    slug: 'kafka-fundamentals',
+    parentId: 'databases-week-14-readings',
+    title: 'Kafka Fundamentals',
+    description: 'Event streaming, topics, partitions, producers, consumers, consumer groups, offsets, and kafkajs client',
+    type: 0, // Page
+    body: week14KafkaFundamentals,
+    sortOrder: 2,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 120,
+    visibility: 1, // Published
+    program: databasesProgram,
+    parent: week14ReadingsContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const week14QuizContent: ProgramContent = {
+    id: 'databases-week-14-quiz',
+    programId: 'databases-program-1',
+    slug: 'vector-streaming-quiz',
+    parentId: 'databases-week-14-reveal',
+    title: 'Quiz 12: Vector Databases & Event Streaming',
+    description: 'Assess your understanding of pgvector, embeddings, similarity search, RAG, Kafka, and event streaming',
+    type: 0, // Page
+    body: week14Quiz,
+    sortOrder: 2,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 45,
+    visibility: 1, // Published
+    program: databasesProgram,
+    parent: week14RevealContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
 // Checkpoint 5: Feature Freeze (Week 14)
 export const week14AssignmentContent: ProgramContent = {
     id: 'databases-week-14-assignment',
@@ -2102,6 +2223,7 @@ databasesProgram.programContents = [
     week11RevealContent,
     week12RevealContent,
     week13RevealContent,
+    week14RevealContent,
     finalProjectContent,
 ];
 
@@ -2222,6 +2344,16 @@ week13RevealContent.children = [
 week13ReadingsContent.children = [
     week13TimescaledbFundamentalsContent,
     week13ElasticsearchFundamentalsContent,
+];
+
+week14RevealContent.children = [
+    week14ReadingsContent,
+    week14QuizContent,
+];
+
+week14ReadingsContent.children = [
+    week14PgvectorFundamentalsContent,
+    week14KafkaFundamentalsContent,
 ];
 
 finalProjectContent.children = [

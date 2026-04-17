@@ -13,6 +13,39 @@ import type { FSManifest } from './vfs/lazy';
 import { LazyFS } from './vfs/lazy';
 import { OverlayFS } from './vfs/overlay';
 
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function fetchManifestWithRetry(manifestUrl: string, attempts = 3): Promise<FSManifest> {
+  let lastError: unknown;
+
+  for (let attempt = 1; attempt <= attempts; attempt++) {
+    try {
+      const response = await fetch(manifestUrl, { cache: 'no-store' });
+      const raw = await response.text();
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status} ${response.statusText}`);
+      }
+
+      const trimmed = raw.trimStart();
+      if (trimmed.startsWith('<')) {
+        throw new Error('received HTML instead of manifest JSON');
+      }
+
+      return JSON.parse(raw) as FSManifest;
+    } catch (err) {
+      lastError = err;
+      if (attempt < attempts) {
+        await sleep(200 * attempt);
+      }
+    }
+  }
+
+  throw new Error(`Failed to load manifest from ${manifestUrl}: ${lastError instanceof Error ? lastError.message : String(lastError)}`);
+}
+
 export interface BootResult {
   runner: ToolRunner;
   vfs: ReturnType<typeof createVFSManager>;
@@ -31,8 +64,7 @@ export async function boot(manifestUrl: string, terminalContainerOrTerminal: HTM
   // Step 1: Fetch manifest
   const t1 = performance.now();
   console.log(`${P} Step 1/6: Fetching manifest from ${manifestUrl}...`);
-  const response = await fetch(manifestUrl);
-  const manifest = (await response.json()) as FSManifest;
+  const manifest = await fetchManifestWithRetry(manifestUrl);
   // Derive the CDN base URL from the manifest URL's directory.
   // e.g. "https://host/gameguild/cdn/manifest.json" → "https://host/gameguild/cdn"
   const manifestDir = manifestUrl.replace(/\/[^/]*$/, '');
@@ -63,7 +95,12 @@ export async function boot(manifestUrl: string, terminalContainerOrTerminal: HTM
 
   // Step 3: Initialize writable layers (all IDBFS)
   const t3 = performance.now();
-  const manifestVersion = `${manifest.baseUrl}:${fileCount}`;
+  const manifestVersion = [
+    manifest.baseUrl,
+    String(manifest.version),
+    manifest.generated,
+    String(fileCount),
+  ].join(':');
   console.log(`${P} Step 3/6: Initializing IDBFS layers (version=${manifestVersion})...`);
   const writeFs = new IDBFS('overlay-writes', { version: manifestVersion }); // persistent write-layer with version invalidation
   const tmpFs = new IDBFS('tmp-fs', { volatile: true });                     // volatile /tmp — ephemeral scratch space

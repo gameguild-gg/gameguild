@@ -59,6 +59,15 @@ function isMemfsPath(path: string): boolean {
 }
 
 /**
+ * Dynamic subprocess IPC files used by the Python subprocess shim.
+ * These must always go through async syscall hooks (no sync cache bypass),
+ * otherwise follow-up subprocess calls can be skipped.
+ */
+function isDynamicIpcPath(path: string): boolean {
+    return path === '/tmp/__dispatch_subprocess__' || path.startsWith('/tmp/.subprocess_');
+}
+
+/**
  * Resolve a path through registered aliases.
  */
 function resolveAlias(path: string, aliases: Map<string, string>): string {
@@ -598,6 +607,7 @@ export function mountVFSFS(
     async function ensureFile(path: string): Promise<void> {
         const normalized = normalizePath(resolveWithCwd(path));
         if (isMemfsPath(normalized) || normalized === '/') return;
+        if (isDynamicIpcPath(normalized)) return;
         if (fileData.has(normalized)) return;
         if (negativeStatCache.has(normalized)) return;
 
@@ -638,6 +648,7 @@ export function mountVFSFS(
     async function ensureStat(path: string): Promise<void> {
         const normalized = normalizePath(resolveWithCwd(path));
         if (isMemfsPath(normalized) || normalized === '/') return;
+        if (isDynamicIpcPath(normalized)) return;
         if (fileData.has(normalized)) return;
         if (negativeStatCache.has(normalized)) return;
 
@@ -718,6 +729,7 @@ export function mountVFSFS(
     let _syncBypass = 0;
     moduleConfig['isCachedSync'] = (path: string): boolean => {
         const n = normalizePath(resolveWithCwd(path));
+        if (isDynamicIpcPath(n)) return false;
         if (isMemfsPath(n) || n === '/') { _syncBypass++; return true; }
         if (fileData.has(n) || negativeStatCache.has(n)) { _syncBypass++; return true; }
         const r = resolveAlias(n, pathAliases);

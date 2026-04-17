@@ -50,17 +50,37 @@ if (fs.existsSync(manifestSrc)) {
     console.warn(`Warning: manifest.json not found at ${manifestSrc}`);
 }
 
-// Copy brotli-wasm files (needed by the worker for decompressing .tar.br bundles
-// when DecompressionStream("br") is not available)
-const brotliPkgDir = path.join(ROOT, 'node_modules', 'brotli-wasm', 'pkg.web');
-const brotliFiles = ['brotli_wasm.js', 'brotli_wasm_bg.wasm'];
-for (const file of brotliFiles) {
-    const src = path.join(brotliPkgDir, file);
-    if (fs.existsSync(src)) {
-        console.log(`Copying ${file} to ${WEB_NEXT_CDN}...`);
-        shell.cp(src, WEB_NEXT_CDN);
+// Copy bundled brotli WASM files (needed by the worker for decompressing .tar.br bundles
+// when DecompressionStream("br") is not available).
+// Use the wasm-bindgen `brotli-wasm` npm package which provides the library API
+// (default init + decompress) expected by worker-entry.ts.
+// NOTE: The Emscripten build (build-brotli.ts) produces a CLI tool, NOT the library
+// module the worker needs. Do NOT use build/cdn/brotli_wasm.* here.
+const BROTLI_WASM_PKG = path.resolve(ROOT, '..', '..', '..', 'node_modules', 'brotli-wasm', 'pkg.web');
+const brotliCandidates: Array<{ srcCandidates: string[]; dest: string }> = [
+    {
+        srcCandidates: [
+            path.join(BROTLI_WASM_PKG, 'brotli_wasm.js'),
+            path.join(ROOT, 'src', 'lib', 'orchestrator', 'loader', 'cdn', 'brotli_wasm.js'),
+        ],
+        dest: 'brotli_wasm.js',
+    },
+    {
+        srcCandidates: [
+            path.join(BROTLI_WASM_PKG, 'brotli_wasm_bg.wasm'),
+            path.join(ROOT, 'src', 'lib', 'orchestrator', 'loader', 'cdn', 'brotli_wasm_bg.wasm'),
+        ],
+        dest: 'brotli_wasm_bg.wasm',
+    },
+];
+
+for (const { srcCandidates, dest } of brotliCandidates) {
+    const existing = srcCandidates.find((p) => fs.existsSync(p));
+    if (existing) {
+        console.log(`Copying ${existing} to ${WEB_NEXT_CDN}/${dest}...`);
+        shell.cp(existing, path.join(WEB_NEXT_CDN, dest));
     } else {
-        console.warn(`Warning: ${file} not found at ${src}`);
+        console.warn(`Warning: no source found for ${dest}. Checked: ${srcCandidates.join(', ')}`);
     }
 }
 
