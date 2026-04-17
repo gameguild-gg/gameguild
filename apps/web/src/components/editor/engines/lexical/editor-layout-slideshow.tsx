@@ -19,7 +19,7 @@ import {
   updateDependentProjectData,
   getDependentProject,
 } from "@/lib/storage/editor/slideshow-structure"
-import { SlideNavigationSidebar } from "./slide-navigation-sidebar"
+import { SlideNavigationSidebar } from "@/components/editor/extras/editor/slide-navigation-sidebar"
 import { EditorLayoutType2 } from "./editor-layout-type2"
 import { type ProjectType } from "@/lib/storage/editor/project-types"
 

@@ -1,6 +1,6 @@
 "use client"
 
-import { Editor } from "@/components/editor/lexical-editor"
+import { Editor } from "./lexical-editor"
 import type { LexicalEditor } from "lexical"
 import type React from "react"
 import { useEffect, useRef, useState } from "react"
@@ -40,8 +40,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { DeleteConfirmDialog } from "../dialogs/delete-confirm-dialog"
-import { RestrictionsConfigDialog } from "./restrictions-config-dialog"
+import { DeleteConfirmDialog } from "@/components/editor/extras/dialogs/delete-confirm-dialog"
+import { RestrictionsConfigDialog } from "@/components/editor/extras/editor/restrictions-config-dialog"
 import { 
   DraggableTab, 
   DraggableTabButton, 
@@ -55,7 +55,7 @@ import {
   sortBlocks,
   DEFAULT_PANEL_SIZE,
   NEW_PANEL_SIZE,
-} from "../multi-block"
+} from "@/components/editor/extras/multi-block"
 
 interface AdvancedMultiBlockEditorProps {
   blockRefs: React.MutableRefObject<Record<string, LexicalEditor | null>>

@@ -7,7 +7,7 @@ import { BlockEditorModal } from "./block-editor-modal"
 import { BLOCK_REGISTRY, type BlockCellType } from "./block-component-registry"
 import { DeleteConfirmDialog } from "@/components/editor/extras/dialogs/delete-confirm-dialog"
 import type { Block, BlockArray } from "@/lib/storage/editor/block-structure"
-import { BlockContentRenderer } from "@/components/editor/extras/editor/block-array-viewer"
+import { BlockContentRenderer } from "./block-array-viewer"
 
 // ============================================================================
 // Insert Line — the "seam" between blocks where new blocks can be added

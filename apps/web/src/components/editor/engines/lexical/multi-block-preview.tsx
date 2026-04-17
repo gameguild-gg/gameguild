@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import type { SerializedEditorState } from "lexical"
 import type { ProjectPreferences } from "@/lib/storage/editor/project-preferences"
-import { PreviewRenderer } from "./preview-renderer"
+import { PreviewRenderer } from "@/components/editor/extras/preview/preview-renderer"
 import { 
   Maximize2, Minimize2,
   ChevronsLeft, ChevronsRight
@@ -38,7 +38,7 @@ import {
   sortBlocks,
   DRAG_ACTIVATION_DISTANCE,
   type PanelData,
-} from "../multi-block"
+} from "@/components/editor/extras/multi-block"
 
 interface AdvancedMultiBlockPreviewProps {
   blockStates: Record<string, SerializedEditorState>
