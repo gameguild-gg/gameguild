@@ -5,7 +5,7 @@ import { $getNodeByKey } from "lexical"
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext"
 import type { JSX } from "react/jsx-runtime"
 import { useContext, useState, useEffect } from "react"
-import { EditorLoadingContext, ProjectIdContext } from "../lexical-editor"
+import { EditorLoadingContext, ProjectIdContext } from "@/components/editor/engines/lexical/lexical-editor"
 import { Edit } from "lucide-react"
 
 import type { CodeStudioData, CodeStudioMode } from "../extras/code-studio/types"

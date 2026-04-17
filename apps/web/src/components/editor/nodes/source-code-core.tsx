@@ -5,7 +5,7 @@ import { Code, Play, Settings } from "lucide-react"
 import { useCallback, useContext, useEffect, useMemo, useRef, useState } from "react"
 import { SourceCodeRenderer } from "../extras/source-code/source-code-renderer"
 import type { CodeFile, LanguageType, ProgrammingLanguage } from "../extras/source-code/types"
-import { EditorLoadingContext } from "../lexical-editor"
+import { EditorLoadingContext } from "@/components/editor/engines/lexical/lexical-editor"
 
 // Import hooks
 import { useCodeExecution } from "@/hooks/editor/use-code-execution"

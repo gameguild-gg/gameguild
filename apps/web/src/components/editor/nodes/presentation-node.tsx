@@ -9,7 +9,7 @@ import type { MediaUploadResult } from "@/components/editor/extras/media-upload-
 import { SlidePlayer } from "@/components/editor/extras/presentation/slide-player"
 import { Button } from "@/components/ui/button"
 import type { JSX } from "react/jsx-runtime"
-import { EditorLoadingContext } from "../lexical-editor"
+import { EditorLoadingContext } from "@/components/editor/engines/lexical/lexical-editor"
 
 // Import the componentized parts
 import { ODPParser } from "./presentation/parsers/odp-parser"

@@ -7,7 +7,7 @@ import { Edit, FileText } from "lucide-react"
 import { RichTextEditor } from "@/components/editor/extras/rich-text/rich-text-editor"
 import { RichTextPreviewRenderer } from "@/components/editor/extras/rich-text/rich-text-preview-renderer"
 import type { JSX } from "react/jsx-runtime"
-import { EditorLoadingContext } from "../lexical-editor"
+import { EditorLoadingContext } from "@/components/editor/engines/lexical/lexical-editor"
 
 export interface RichTextData {
   /** Serialized Lexical EditorState JSON string */

@@ -7,7 +7,7 @@ import { $getNodeByKey, DecoratorNode, type SerializedLexicalNode } from "lexica
 import { ImageIcon } from "lucide-react"
 import { useContext, useEffect, useState } from "react"
 import type { JSX } from "react/jsx-runtime"
-import { EditorLoadingContext } from "../lexical-editor"
+import { EditorLoadingContext } from "@/components/editor/engines/lexical/lexical-editor"
 import type { BaseMediaData } from "./base/media-node-base"
 import { AssetImage } from "../extras/media/asset-image"
 
