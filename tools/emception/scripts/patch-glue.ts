@@ -224,6 +224,63 @@ function patchCallMainArgs(content: string, filename: string): string {
 }
 
 /**
+ * Patch 8+9: Intercept ___syscall_openat for VFS on-demand loading + subprocess dispatch.
+ *
+ * Two async hooks are injected into the try-block body of ___syscall_openat:
+ *
+ * Hook A — VFS on-demand file loading (ALL tools):
+ *   Checks Module["isCachedSync"](path). If the file is already in the VFSFS
+ *   fileData map (pre-warmed or previously fetched), isCachedSync returns true
+ *   and we fall through to FS.open() directly (no Asyncify overhead).
+ *   If the file is not cached, Module["onPreOpen"](path) is called via
+ *   Asyncify.handleAsync. onPreOpen fetches the file from IDB/CDN and places
+ *   it in fileData before FS.open() runs synchronously.
+ *
+ * Hook B — Subprocess dispatch (Python only, via Module["subprocessDispatch"]):
+ *   When Python's subprocess shim opens /tmp/__dispatch_subprocess__, dispatch
+ *   a child process through the host's tool runner via Asyncify.handleAsync.
+ *   Runs before the VFS hook so the magic path is intercepted first.
+ *
+ * Ordering: subprocess dispatch → VFS hook → sync FS.open() fallback.
+ */
+function patchOpenat(content: string, filename: string): string {
+    const needle = 'path=SYSCALLS.getStr(path);path=SYSCALLS.calculateAt(dirfd,path);var mode=varargs?syscallGetVarargI():0;return FS.open(path,flags,mode).fd';
+
+    if (!content.includes(needle)) {
+        if (content.includes('onPreOpen')) {
+            console.log(`  [${filename}] openat already patched — skipping`);
+        }
+        return content;
+    }
+
+    // Hook B: subprocess dispatch (Python's /tmp/__dispatch_subprocess__ magic path)
+    const subprocessBlock =
+        'if(path==="/tmp/__dispatch_subprocess__"&&Module["subprocessDispatch"]){' +
+        'return Asyncify.handleAsync(function(){' +
+        'return Module["subprocessDispatch"]().then(function(){' +
+        'var mode=varargs?syscallGetVarargI():0;return FS.open(path,flags,mode).fd})})' +
+        '}';
+
+    // Hook A: VFS on-demand loading — bypass when isCachedSync returns true
+    const vfsBlock =
+        'if((!Module["isCachedSync"]||!Module["isCachedSync"](path))&&Module["onPreOpen"]){' +
+        'return Asyncify.handleAsync(function(){' +
+        'return Module["onPreOpen"](path).then(function(){' +
+        'var mode=varargs?syscallGetVarargI():0;return FS.open(path,flags,mode).fd})})' +
+        '}';
+
+    const replacement =
+        'path=SYSCALLS.getStr(path);path=SYSCALLS.calculateAt(dirfd,path);' +
+        subprocessBlock +
+        vfsBlock +
+        'var mode=varargs?syscallGetVarargI():0;return FS.open(path,flags,mode).fd';
+
+    patchCount++;
+    console.log(`  [${filename}] Patched 8+9: openat VFS hook + subprocess dispatch via Asyncify`);
+    return content.replace(needle, replacement);
+}
+
+/**
  * Apply all relevant patches to a single .mjs file.
  */
 function patchFile(filePath: string): void {
@@ -240,6 +297,9 @@ function patchFile(filePath: string): void {
     // Apply systemCallback patch to any tool that has __emscripten_system
     // (the function self-guards by checking for that symbol)
     content = patchSystemCallback(content, filename);
+
+    // Apply openat VFS hook + subprocess dispatch (all tools; subprocess block self-guards)
+    content = patchOpenat(content, filename);
 
     if (content !== originalContent) {
         fs.writeFileSync(filePath, content, 'utf8');

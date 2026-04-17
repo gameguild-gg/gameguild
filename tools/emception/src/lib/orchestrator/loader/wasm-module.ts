@@ -12,6 +12,12 @@ export interface WasmModuleLoaderOptions {
   getGlueUrl: (wasmPath: string) => string;
   /** Optional: custom import for dynamic loading (e.g. for Workers). */
   importFn?: (url: string) => Promise<unknown>;
+  /**
+   * Optional: transform glue JS source before importing.
+   * When provided, the loader fetches the glue URL as text, applies this
+   * transform, and imports a blob URL with the patched content.
+   */
+  patchGlueContent?: (source: string) => string;
 }
 
 /**
@@ -29,9 +35,25 @@ export async function loadModuleFactory(
   }
 
   const t0 = performance.now();
-  const importFn = options.importFn ?? ((url: string) => import(/* webpackIgnore: true */ url));
-  const glueUrl = options.getGlueUrl(wasmPath);
+  const importFn = options.importFn ?? ((url: string) => import(/* @vite-ignore */ /* webpackIgnore: true */ url));
+  let glueUrl = options.getGlueUrl(wasmPath);
   console.log(`${P} loadModuleFactory: ${wasmPath} — importing glue from ${glueUrl}...`);
+
+  // If a patchGlueContent transform is provided, fetch the glue source,
+  // apply the patch, and create a new blob URL to import from.
+  if (options.patchGlueContent) {
+    try {
+      const resp = await fetch(glueUrl);
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+      let source = await resp.text();
+      source = options.patchGlueContent(source);
+      const blob = new Blob([source], { type: 'application/javascript' });
+      glueUrl = URL.createObjectURL(blob);
+      console.log(`${P}   Glue patched at runtime, new blob URL created`);
+    } catch (err) {
+      console.warn(`${P}   Failed to patch glue content, using original:`, err);
+    }
+  }
 
   let factory: (config: Record<string, unknown>) => Promise<unknown>;
   try {

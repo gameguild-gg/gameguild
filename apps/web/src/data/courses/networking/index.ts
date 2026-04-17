@@ -104,6 +104,17 @@ import networkingWeek12ReadingsMd from './12-performance/03-readings.md';
 import networkingWeek12AssignmentMd from './12-performance/assignment.md';
 import networkingWeek12QuizMd from './12-performance/quiz.md';
 import networkingWeek13AssignmentMd from './13-prediction/assignment.md';
+import networkingWeek14RevealMd from './14-architecture/01-reveal.md';
+import networkingWeek14LectureMd from './14-architecture/02-lecture.md';
+import networkingWeek14AuthorityModelsMd from './14-architecture/02a-authority-models.md';
+import networkingWeek14DedicatedVsListenServersMd from './14-architecture/02b-dedicated-vs-listen-servers.md';
+import networkingWeek14RollbackNetworkingMd from './14-architecture/02c-rollback-networking.md';
+import networkingWeek14SessionManagementMd from './14-architecture/02d-session-management.md';
+import networkingWeek14MatchmakingMd from './14-architecture/02e-matchmaking.md';
+import networkingWeek14ScalingGameServersMd from './14-architecture/02f-scaling-game-servers.md';
+import networkingWeek14DistributedSystemsFoundationsMd from './14-architecture/02g-distributed-systems-foundations.md';
+import networkingWeek14ArchitectureDecisionPatternsMd from './14-architecture/02h-architecture-decision-patterns.md';
+import networkingWeek14ReadingsMd from './14-architecture/03-readings.md';
 import networkingWeek14AssignmentMd from './14-architecture/assignment.md';
 import networkingWeek15AssignmentMd from './15-security/assignment.md';
 import networkingWeek16AssignmentMd from './16-presentations/assignment.md';
@@ -2804,7 +2815,7 @@ export const networkingWeek14Assignment: ProgramContent & { slug: string } = {
     description: 'Second testing session. Feature freeze after this week.',
     type: 0, // Page
     body: networkingWeek14AssignmentMd,
-    sortOrder: 1,
+    sortOrder: 3,
     isRequired: true,
     gradingMethod: 1, // Points
     maxPoints: 100,
@@ -2818,7 +2829,276 @@ export const networkingWeek14Assignment: ProgramContent & { slug: string } = {
     updatedAt: '2023-01-01T00:00:00Z',
 };
 
-networkingWeek14Intro.children = [networkingWeek14Assignment];
+export const networkingWeek14LectureSlides: ProgramContent & { slug: string } = {
+    id: 'week-14-slides',
+    slug: 'slides',
+    programId: 'networking-program-1',
+    parentId: 'week-14',
+    title: 'Lecture Slides',
+    description: 'Presentation slides for Week 14 on server architecture, session management, matchmaking, and scaling.',
+    type: ProgramContentType.REVEAL,
+    body: networkingWeek14RevealMd,
+    sortOrder: 0,
+    isRequired: false,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 45,
+    visibility: 1, // Published
+    program: networkingProgram,
+    parent: networkingWeek14Intro,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const networkingWeek14LectureContent: ProgramContent & { slug: string } = {
+    id: 'week-14-lecture',
+    slug: 'lecture',
+    programId: 'networking-program-1',
+    parentId: 'week-14',
+    title: 'Lecture 14: Server Architecture and Session Management',
+    description:
+        'Core concepts: authority models, dedicated vs listen servers, rollback networking, session management, matchmaking, scaling, distributed systems foundations, and architecture decision patterns.',
+    type: 0, // Page
+    body: networkingWeek14LectureMd,
+    sortOrder: 1,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 90,
+    visibility: 1, // Published
+    program: networkingProgram,
+    parent: networkingWeek14Intro,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const networkingWeek14AuthorityModels: ProgramContent & { slug: string } = {
+    id: 'week-14-authority-models',
+    slug: 'authority-models',
+    programId: 'networking-program-1',
+    parentId: 'week-14-lecture',
+    title: '1. Authority Models: Who Owns the Truth?',
+    description: 'Client vs server authority, distributed authority, genre fitness, and the trust boundary.',
+    type: 0, // Page
+    body: networkingWeek14AuthorityModelsMd,
+    sortOrder: 1,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 15,
+    visibility: 1, // Published
+    program: networkingProgram,
+    parent: networkingWeek14LectureContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const networkingWeek14DedicatedVsListenServers: ProgramContent & { slug: string } = {
+    id: 'week-14-dedicated-vs-listen-servers',
+    slug: 'dedicated-vs-listen-servers',
+    programId: 'networking-program-1',
+    parentId: 'week-14-lecture',
+    title: '2. Dedicated vs Listen Servers',
+    description: 'Server types, host advantage, host migration, hybrid models, and decision framework.',
+    type: 0, // Page
+    body: networkingWeek14DedicatedVsListenServersMd,
+    sortOrder: 2,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 15,
+    visibility: 1, // Published
+    program: networkingProgram,
+    parent: networkingWeek14LectureContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const networkingWeek14RollbackNetworking: ProgramContent & { slug: string } = {
+    id: 'week-14-rollback-networking',
+    slug: 'rollback-networking',
+    programId: 'networking-program-1',
+    parentId: 'week-14-lecture',
+    title: '3. Rollback Networking Concepts',
+    description: 'Rollback algorithm, determinism requirements, state save/restore, fighting vs shooter rollback.',
+    type: 0, // Page
+    body: networkingWeek14RollbackNetworkingMd,
+    sortOrder: 3,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 15,
+    visibility: 1, // Published
+    program: networkingProgram,
+    parent: networkingWeek14LectureContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const networkingWeek14SessionManagement: ProgramContent & { slug: string } = {
+    id: 'week-14-session-management',
+    slug: 'session-management',
+    programId: 'networking-program-1',
+    parentId: 'week-14-lecture',
+    title: '4. Session Management and Connection Lifecycle',
+    description: 'Session lifecycle, discovery, connection brokering, and platform services.',
+    type: 0, // Page
+    body: networkingWeek14SessionManagementMd,
+    sortOrder: 4,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 15,
+    visibility: 1, // Published
+    program: networkingProgram,
+    parent: networkingWeek14LectureContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const networkingWeek14Matchmaking: ProgramContent & { slug: string } = {
+    id: 'week-14-matchmaking',
+    slug: 'matchmaking',
+    programId: 'networking-program-1',
+    parentId: 'week-14-lecture',
+    title: '5. Matchmaking: Finding Fair, Fast, Fun Games',
+    description: 'Skill rating systems, expanding windows, matchmaking architecture, and population health.',
+    type: 0, // Page
+    body: networkingWeek14MatchmakingMd,
+    sortOrder: 5,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 15,
+    visibility: 1, // Published
+    program: networkingProgram,
+    parent: networkingWeek14LectureContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const networkingWeek14ScalingGameServers: ProgramContent & { slug: string } = {
+    id: 'week-14-scaling-game-servers',
+    slug: 'scaling-game-servers',
+    programId: 'networking-program-1',
+    parentId: 'week-14-lecture',
+    title: '6. Scaling Game Servers',
+    description: 'Stateful vs stateless, fleet management, Agones/PlayFab, multi-region, and monitoring.',
+    type: 0, // Page
+    body: networkingWeek14ScalingGameServersMd,
+    sortOrder: 6,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 15,
+    visibility: 1, // Published
+    program: networkingProgram,
+    parent: networkingWeek14LectureContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const networkingWeek14DistributedSystemsFoundations: ProgramContent & { slug: string } = {
+    id: 'week-14-distributed-systems-foundations',
+    slug: 'distributed-systems-foundations',
+    programId: 'networking-program-1',
+    parentId: 'week-14-lecture',
+    title: '7. Distributed Systems Foundations for Game Networking',
+    description: 'Consensus, failure detection, CAP theorem, replication strategies, and coordination avoidance.',
+    type: 0, // Page
+    body: networkingWeek14DistributedSystemsFoundationsMd,
+    sortOrder: 7,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 15,
+    visibility: 1, // Published
+    program: networkingProgram,
+    parent: networkingWeek14LectureContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const networkingWeek14ArchitectureDecisionPatterns: ProgramContent & { slug: string } = {
+    id: 'week-14-architecture-decision-patterns',
+    slug: 'architecture-decision-patterns',
+    programId: 'networking-program-1',
+    parentId: 'week-14-lecture',
+    title: '8. Architecture Decision Patterns: Putting It All Together',
+    description: 'Genre-driven patterns, decision flow, common mistakes, and cost estimation frameworks.',
+    type: 0, // Page
+    body: networkingWeek14ArchitectureDecisionPatternsMd,
+    sortOrder: 8,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 15,
+    visibility: 1, // Published
+    program: networkingProgram,
+    parent: networkingWeek14LectureContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const networkingWeek14Readings: ProgramContent & { slug: string } = {
+    id: 'week-14-readings',
+    slug: 'readings',
+    programId: 'networking-program-1',
+    parentId: 'week-14',
+    title: 'Readings',
+    description: 'Required readings on authority models, rollback networking, matchmaking, server scaling, and distributed systems.',
+    type: 0, // Page
+    body: networkingWeek14ReadingsMd,
+    sortOrder: 2,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 124,
+    visibility: 1, // Published
+    program: networkingProgram,
+    parent: networkingWeek14Intro,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+networkingWeek14Intro.children = [
+    networkingWeek14LectureSlides,
+    networkingWeek14LectureContent,
+    networkingWeek14Readings,
+    networkingWeek14Assignment,
+];
+networkingWeek14LectureContent.children = [
+    networkingWeek14AuthorityModels,
+    networkingWeek14DedicatedVsListenServers,
+    networkingWeek14RollbackNetworking,
+    networkingWeek14SessionManagement,
+    networkingWeek14Matchmaking,
+    networkingWeek14ScalingGameServers,
+    networkingWeek14DistributedSystemsFoundations,
+    networkingWeek14ArchitectureDecisionPatterns,
+];
 
 // Week 15 — NAT Traversal and Security + Checkpoint 6: Peer Evaluation & Code Freeze
 export const networkingWeek15Intro: ProgramContent & { slug: string } = {
