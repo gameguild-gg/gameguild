@@ -36,9 +36,9 @@ describe('fileName', () => {
 // ─── toWorkspaceFsPath ───────────────────────────────────────────────────────
 
 describe('toWorkspaceFsPath', () => {
-  it('maps /src/* to /home/user/*', () => expect(toWorkspaceFsPath('/src/main.cpp')).toBe('/home/user/main.cpp'));
-  it('maps a nested /src path correctly', () => expect(toWorkspaceFsPath('/src/lib/utils.cpp')).toBe('/home/user/lib/utils.cpp'));
-  it('falls back to /home/user/<basename> for non-/src/ paths', () => expect(toWorkspaceFsPath('/runtime/canvas')).toBe('/home/user/canvas'));
+  it('maps /user/* to /home/user/*', () => expect(toWorkspaceFsPath('/user/main.cpp')).toBe('/home/user/main.cpp'));
+  it('maps a nested /user path correctly', () => expect(toWorkspaceFsPath('/user/lib/utils.cpp')).toBe('/home/user/lib/utils.cpp'));
+  it('falls back to /home/user/<basename> for non-/user/ paths', () => expect(toWorkspaceFsPath('/other/canvas')).toBe('/home/user/canvas'));
 });
 
 // ─── inferLanguage ───────────────────────────────────────────────────────────
@@ -105,7 +105,7 @@ describe('detectsSDL', () => {
 
   it('ignores non-source files (e.g. .md)', () => expect(detectsSDL({ f: makeFile('/src/README.md', '#include <SDL3/SDL.h>') })).toBe(false));
 
-  it('ignores canvas/runtime entries', () => expect(detectsSDL({ r: { path: '/runtime/sdl-canvas', type: 'canvas' as const, content: 'sdl' } })).toBe(false));
+  it('ignores canvas/runtime entries', () => expect(detectsSDL({ r: { path: '/user/sdl-canvas', type: 'canvas' as const, content: 'sdl' } })).toBe(false));
 
   it('returns false for an empty workspace', () => expect(detectsSDL({})).toBe(false));
 

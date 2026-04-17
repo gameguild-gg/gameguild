@@ -1,7 +1,7 @@
 import type { OnMount } from '@monaco-editor/react';
 import { Terminal } from '@xterm/xterm';
 import { bootInWorker, type WorkerBootResult } from 'emception';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import DockGroupPanel from './DockGroup';
 import FileExplorer from './FileExplorer';
@@ -70,6 +70,10 @@ export default function Ide({ title = 'Emception', manifestUrl = '/cdn/manifest.
   const editorRef = useRef<Parameters<OnMount>[0] | null>(null);
   const monacoRef = useRef<Parameters<OnMount>[1] | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  /** Hidden holder div that keeps the <canvas> alive across dock group moves */
+  const canvasHolderRef = useRef<HTMLDivElement | null>(null);
+  /** The div inside whichever DockGroupPanel currently shows the canvas tab */
+  const canvasHostElRef = useRef<HTMLDivElement | null>(null);
   const orchestratorRef = useRef<WorkerBootResult | null>(null);
   const xtermRef = useRef<Terminal | null>(null);
   const terminalLogRef = useRef<HTMLPreElement | null>(null);
@@ -102,6 +106,9 @@ export default function Ide({ title = 'Emception', manifestUrl = '/cdn/manifest.
   const [executionPhase, setExecutionPhase] = useState<'idle' | 'compiling' | 'running'>('idle');
   /** Set to true by handleStop so the catch block in handleCompile knows it was intentional */
   const stoppedRef = useRef(false);
+  /** Tracks latest files for use in callbacks that can't close over state */
+  const filesRef = useRef(files);
+  filesRef.current = files;
 
   const fileTree = buildFileTree(Object.keys(files));
   const activeTab = openTabs.find((t) => t.id === activeTabId) ?? openTabs[0] ?? null;
@@ -178,6 +185,22 @@ export default function Ide({ title = 'Emception', manifestUrl = '/cdn/manifest.
     };
   }, [workspaceUrl]);
 
+  // ── Sync workspace files into the Worker VFS (/home/user) ─────
+  const syncFilesToVfs = useCallback(async (filesToSync: Record<string, WorkspaceFile>) => {
+    const orch = orchestratorRef.current;
+    if (!orch) return;
+    const P = '[Emception:IDE]';
+    const { client } = orch;
+    const enc = new TextEncoder();
+    const textFiles = Object.values(filesToSync).filter((f) => f.type === 'text' && isTextFile(f.path));
+    for (const file of textFiles) {
+      const fsPath = toWorkspaceFsPath(file.path);
+      await client.writeFile(fsPath, enc.encode(file.content));
+      console.log(`${P} VFS sync: ${file.path} -> ${fsPath}`);
+    }
+    console.log(`${P} VFS sync complete (${textFiles.length} files)`);
+  }, []);
+
   // ── Switch workspace preset ───────────────────────────────────
   const switchWorkspace = useCallback(
     async (presetId: string) => {
@@ -200,6 +223,12 @@ export default function Ide({ title = 'Emception', manifestUrl = '/cdn/manifest.
       sdlScriptRef.current = null;
       sdlBlobUrlsRef.current.forEach((url) => URL.revokeObjectURL(url));
       sdlBlobUrlsRef.current = [];
+      // Reset canvas state
+      const canvas = canvasRef.current;
+      if (canvas) {
+        delete canvas.dataset.sdlRunning;
+        canvas.style.display = 'none';
+      }
       setExecutionPhase('idle');
       stoppedRef.current = true;
 
@@ -226,26 +255,31 @@ export default function Ide({ title = 'Emception', manifestUrl = '/cdn/manifest.
       setExpandedDirs(state.expandedDirs);
       setSelectedPath(preset.layout.activeFile);
 
-      // Dispose stale Monaco models and pre-create models for all new preset files
-      // so that getModels() reflects the new workspace immediately.
+      // Dispose stale Monaco models from the OLD workspace after React re-renders.
+      // We defer disposal so @monaco-editor/react can cleanly unmount its model
+      // reference first (the DockGroupPanel remounts via key={activePresetId}).
       const mc = monacoRef.current;
       if (mc) {
-        mc.editor.getModels().forEach((m: { dispose: () => void }) => m.dispose());
-        for (const [path, file] of Object.entries(state.files)) {
-          if (file.type !== 'text') continue;
-          const uri = mc.Uri.parse(`file://${path}`);
-          if (!mc.editor.getModel(uri)) {
-            mc.editor.createModel(file.content, inferLanguage(path), uri);
+        const oldModels = mc.editor.getModels().slice();
+        queueMicrotask(() => {
+          for (const m of oldModels) {
+            try {
+              m.dispose();
+            } catch {
+              /* already disposed */
+            }
           }
-        }
+        });
       }
 
       if (orchestratorRef.current) {
         orchestratorRef.current.tty.writeLine(`\x1b[32mSwitched to workspace: ${preset.label}\x1b[0m`);
+        // Sync new workspace files into VFS so /home/user is populated immediately
+        await syncFilesToVfs(state.files);
       }
       console.log(`${P} ===== WORKSPACE SWITCH COMPLETE =====`);
     },
-    [activePresetId],
+    [activePresetId, syncFilesToVfs],
   );
 
   const handleBootTerminalReady = useCallback((term: Terminal) => {
@@ -300,6 +334,8 @@ export default function Ide({ title = 'Emception', manifestUrl = '/cdn/manifest.
         // Expose worker client on window for E2E / debug access
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (window as any).__emception_client__ = result.client;
+        // Sync current workspace files into VFS so /home/user is populated on boot
+        await syncFilesToVfs(filesRef.current);
         setStatus('Ready');
         setIsReady(true);
         xterm.writeln('\x1b[32mSystem Ready.\x1b[0m');
@@ -310,7 +346,7 @@ export default function Ide({ title = 'Emception', manifestUrl = '/cdn/manifest.
         xterm.writeln(`\x1b[31mBoot failed: ${err}\x1b[0m`);
       }
     },
-    [manifestUrl],
+    [manifestUrl, syncFilesToVfs],
   );
 
   useEffect(() => {
@@ -365,9 +401,51 @@ export default function Ide({ title = 'Emception', manifestUrl = '/cdn/manifest.
     setActiveTabId(tabId);
   }, []);
 
+  /** Reorder a tab by placing it just before `beforeTabId` in the openTabs array. */
+  const reorderTab = useCallback((tabId: string, beforeTabId: string) => {
+    setOpenTabs((prev) => {
+      const srcIdx = prev.findIndex((t) => t.id === tabId);
+      const dstIdx = prev.findIndex((t) => t.id === beforeTabId);
+      if (srcIdx === -1 || dstIdx === -1 || srcIdx === dstIdx) return prev;
+      const tab = { ...prev[srcIdx], group: prev[dstIdx].group };
+      const next = prev.filter((_, i) => i !== srcIdx);
+      const insertIdx = next.findIndex((t) => t.id === beforeTabId);
+      next.splice(insertIdx, 0, tab);
+      return next;
+    });
+    setActiveTabId(tabId);
+  }, []);
+
+  /** Called by DockGroupPanel when a canvas host div mounts/unmounts.
+   *  Reparents the persistent <canvas> element into the new host. */
+  const handleCanvasHost = useCallback((el: HTMLDivElement | null) => {
+    canvasHostElRef.current = el;
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    if (el) {
+      // Move the canvas into the new host panel
+      el.prepend(canvas);
+      canvas.style.display = canvas.dataset.sdlRunning ? 'block' : 'none';
+    } else {
+      // Host unmounted — park canvas back in the hidden holder
+      canvasHolderRef.current?.appendChild(canvas);
+    }
+  }, []);
+
+  // Safety net: if handleCanvasHost fired before canvasRef was set (rare timing
+  // edge on initial mount), reparent once both refs are available.
+  useLayoutEffect(() => {
+    const host = canvasHostElRef.current;
+    const canvas = canvasRef.current;
+    if (host && canvas && canvas.parentElement !== host) {
+      host.prepend(canvas);
+      canvas.style.display = canvas.dataset.sdlRunning ? 'block' : 'none';
+    }
+  });
+
   const createFile = useCallback(
     (kind: TabType) => {
-      const baseDir = kind === 'canvas' ? '/runtime' : kind === 'image' ? '/assets' : '/src';
+      const baseDir = '/user';
       const defaultName = kind === 'canvas' ? 'new-canvas' : kind === 'image' ? 'new-image.svg' : 'new-file.cpp';
       const input = window.prompt(`Create new ${kind} file`, `${baseDir}/${defaultName}`);
       if (!input) return;
@@ -449,6 +527,12 @@ export default function Ide({ title = 'Emception', manifestUrl = '/cdn/manifest.
     sdlScriptRef.current = null;
     sdlBlobUrlsRef.current.forEach((url) => URL.revokeObjectURL(url));
     sdlBlobUrlsRef.current = [];
+    // Reset canvas state
+    const resetCanvas = canvasRef.current;
+    if (resetCanvas) {
+      delete resetCanvas.dataset.sdlRunning;
+      resetCanvas.style.display = 'none';
+    }
     setExecutionPhase('idle');
     stoppedRef.current = true;
 
@@ -515,6 +599,9 @@ export default function Ide({ title = 'Emception', manifestUrl = '/cdn/manifest.
     setFiles((prev) => ({ ...prev, [path]: { ...prev[path], content: value } }));
   }, []);
 
+  // Expose for e2e tests so Playwright can update file content directly in React state
+  (window as unknown as Record<string, unknown>).__setFileContent = handleEditorChange;
+
   const handleCompile = async () => {
     if (!orchestratorRef.current || !activeFile || activeFile.type !== 'text') return;
     stoppedRef.current = false;
@@ -554,7 +641,7 @@ export default function Ide({ title = 'Emception', manifestUrl = '/cdn/manifest.
 
       // ── Python script path ──────────────────────────────────────
       if (runType === 'python-script') {
-        const pyFile = compileTarget ?? entryPoint ?? '/src/main.py';
+        const pyFile = compileTarget ?? entryPoint ?? '/user/main.py';
         const fsPath = toWorkspaceFsPath(pyFile);
         const args = resolvedConfig.run.args ? resolveArgs(resolvedConfig.run.args, fsPath) : ['python3', fsPath];
         setStatus('Running Python...');
@@ -773,9 +860,9 @@ export default function Ide({ title = 'Emception', manifestUrl = '/cdn/manifest.
         // Mark canvas tab as SDL-active (keeps the canvas element visible)
         setFiles((prev) => ({
           ...prev,
-          '/runtime/sdl-canvas': { ...prev['/runtime/sdl-canvas'], content: 'sdl' },
+          '/user/sdl-canvas': { ...prev['/user/sdl-canvas'], content: 'sdl' },
         }));
-        ensureOpenTab('/runtime/sdl-canvas', 'right');
+        ensureOpenTab('/user/sdl-canvas', 'right');
         setActiveTabId(`tab:${compileTarget}`);
 
         // Wait for React to flush + browser to paint so canvasRef.current is ready
@@ -787,6 +874,10 @@ export default function Ide({ title = 'Emception', manifestUrl = '/cdn/manifest.
           tty.writeError('SDL canvas element not found — open the SDL Canvas tab first');
           return;
         }
+
+        // Flag the canvas as SDL-active so the host callback shows it
+        canvas.dataset.sdlRunning = 'true';
+        canvas.style.display = 'block';
 
         // Initialize to the SDL demo's expected render size so the runtime
         // attaches to a correctly sized target immediately.
@@ -1011,6 +1102,134 @@ export default function Ide({ title = 'Emception', manifestUrl = '/cdn/manifest.
       }
       setStatus('Compiling...');
       tty.writeLine(`Compiling ${compileTarget}...`);
+
+      // ── Direct clang+wasm-ld fast path ──────────────────────────
+      // When compile.args is empty, bypass the emcc Python pipeline entirely
+      // and use direct clang → wasm-ld (same approach as SDL3 path).  This
+      // eliminates ~13s of overhead: Python boot, 8970-file pre-warm,
+      // wasm-opt asyncify pass, and wasm-emscripten-finalize.
+      // The WASI runtime handles blocking stdin via SharedArrayBuffer +
+      // Atomics.wait, so -sASYNCIFY is not needed.
+      const useDirectPath = resolvedConfig.compile.args.length === 0 && resolvedConfig.run.type === 'wasi-terminal';
+
+      if (useDirectPath) {
+        const sourceFsPath = toWorkspaceFsPath(compileTarget);
+        const objPath = '/tmp/emception-terminal-main.o';
+        const wasmPath = resolvedConfig.compile.output || '/home/user/main.wasm';
+
+        tty.writeLine('\x1b[36mDirect compile (clang)...\x1b[0m');
+        const clangResult = await client.run(
+          'clang',
+          [
+            'clang',
+            '--target=wasm32-unknown-emscripten',
+            '-fignore-exceptions',
+            '-isystem',
+            '/usr/include/c++/v1',
+            '-isystem',
+            '/usr/include/compat',
+            '-isystem',
+            '/usr/include',
+            '-O1',
+            '-c',
+            sourceFsPath,
+            '-o',
+            objPath,
+          ],
+          {
+            cwd: resolvedConfig.compile.cwd ?? '/home/user',
+            onStdout: (t: string) => {
+              console.log(t);
+              tty.writeLine(t);
+            },
+            onStderr: (t: string) => {
+              console.error(t);
+              tty.writeError(t);
+            },
+          },
+        );
+
+        if (clangResult.exitCode !== 0) {
+          const dur = ((performance.now() - t0) / 1000).toFixed(2);
+          setExecutionPhase('idle');
+          setStatus(`Compilation failed (${dur}s)`);
+          tty.writeLine(`\x1b[31mCompilation failed (exit ${clangResult.exitCode})\x1b[0m`);
+          return;
+        }
+
+        tty.writeLine('\x1b[36mLinking (wasm-ld)...\x1b[0m');
+        const lldResult = await client.run(
+          'wasm-ld',
+          [
+            'wasm-ld',
+            objPath,
+            '-o',
+            wasmPath,
+            '-L/usr/lib/emscripten/cache-lib/wasm32-emscripten',
+            '--entry=main',
+            '--import-undefined',
+            '--allow-undefined',
+            '--export-table',
+            '--table-base=1',
+            '--export=__wasm_call_ctors',
+            '-lc',
+            '-ldlmalloc',
+            '-lcompiler_rt',
+            '-lc++-noexcept',
+            '-lc++abi-noexcept',
+            '-lsockets',
+          ],
+          {
+            cwd: resolvedConfig.compile.cwd ?? '/home/user',
+            onStdout: (t: string) => {
+              console.log(t);
+              tty.writeLine(t);
+            },
+            onStderr: (t: string) => {
+              console.error(t);
+              tty.writeError(t);
+            },
+          },
+        );
+
+        if (lldResult.exitCode !== 0) {
+          const dur = ((performance.now() - t0) / 1000).toFixed(2);
+          setExecutionPhase('idle');
+          setStatus(`Link failed (${dur}s)`);
+          tty.writeLine(`\x1b[31mLinker step failed (exit ${lldResult.exitCode})\x1b[0m`);
+          return;
+        }
+
+        const dur = ((performance.now() - t0) / 1000).toFixed(2);
+        setStatus('Compilation successful');
+        tty.writeLine(`\x1b[32mCompilation successful in ${dur}s\x1b[0m`);
+
+        // Log output size for test verification
+        const wasmFile = await client.getFile(wasmPath);
+        const wasmSize = wasmFile ? wasmFile.length : 0;
+        console.log(`${P} Compilation output: main.wasm=${wasmSize}B`);
+
+        // Go directly to run phase
+        tty.writeLine('Running...');
+        const lineBufferedStdin = makeLineBufferedStdin(tty);
+        const runArgs = resolvedConfig.run.args ?? ['wasi-run', wasmPath];
+        setExecutionPhase('running');
+        await client.run(runArgs[0], runArgs, {
+          cwd: resolvedConfig.compile.cwd ?? '/home/user',
+          onStdout: (t: string) => {
+            tty.write(t.replace(/\n/g, '\r\n'));
+          },
+          onStderr: (t: string) => {
+            tty.write(`\x1b[31m${t.replace(/\n/g, '\r\n')}\x1b[0m`);
+          },
+          stdin: lineBufferedStdin,
+        });
+        setExecutionPhase('idle');
+        setStatus(`Done (${((performance.now() - tTotal) / 1000).toFixed(1)}s)`);
+        return;
+      }
+
+      // ── emcc path (Python-based pipeline) ───────────────────────
       const compileArgs =
         resolvedConfig.compile.args.length > 0
           ? resolveArgs(resolvedConfig.compile.args, toWorkspaceFsPath(compileTarget))
@@ -1258,11 +1477,15 @@ export default function Ide({ title = 'Emception', manifestUrl = '/cdn/manifest.
       sdlBlobUrlsRef.current = [];
       // Clear the canvas pixels so the placeholder overlay reappears
       const canvas = canvasRef.current;
-      if (canvas) canvas.getContext('2d')?.clearRect(0, 0, canvas.width, canvas.height);
+      if (canvas) {
+        canvas.getContext('2d')?.clearRect(0, 0, canvas.width, canvas.height);
+        delete canvas.dataset.sdlRunning;
+        canvas.style.display = 'none';
+      }
       // Reset the file content sentinel so the placeholder is shown again
       setFiles((prev) => ({
         ...prev,
-        '/runtime/sdl-canvas': { ...prev['/runtime/sdl-canvas'], content: '' },
+        '/user/sdl-canvas': { ...prev['/user/sdl-canvas'], content: '' },
       }));
       setExecutionPhase('idle');
       setStatus('Stopped');
@@ -1298,6 +1521,11 @@ export default function Ide({ title = 'Emception', manifestUrl = '/cdn/manifest.
     <div className="emception-ide" style={{ display: 'flex', flexDirection: 'column', height: '100%', width: '100%', fontFamily: 'system-ui, sans-serif' }}>
       {/* Hidden log for Playwright E2E assertions — not visible to users */}
       <pre data-testid="terminal" ref={terminalLogRef} hidden aria-hidden="true" style={{ display: 'none' }} />
+      {/* Hidden holder keeps the SDL <canvas> alive when no dock group hosts it.
+          Rendered early so canvasRef is set before any DockGroupPanel host ref fires. */}
+      <div ref={canvasHolderRef} style={{ position: 'absolute', width: 0, height: 0, overflow: 'hidden', pointerEvents: 'none' }}>
+        <canvas id="canvas" data-testid="sdl-canvas" tabIndex={0} ref={canvasRef} style={{ width: '100%', height: '100%', display: 'none' }} />
+      </div>
       {/* ── Title bar ── */}
       <header
         style={{
@@ -1451,14 +1679,16 @@ export default function Ide({ title = 'Emception', manifestUrl = '/cdn/manifest.
               <PanelGroup direction="horizontal" style={{ flex: 1, overflow: 'hidden' }}>
                 <Panel minSize={20} style={{ overflow: 'hidden' }}>
                   <DockGroupPanel
+                    key={activePresetId}
                     group="main"
                     tabs={groupTabs('main')}
                     activeTabId={activeTabId}
                     files={files}
-                    canvasRef={canvasRef}
+                    onCanvasHost={handleCanvasHost}
                     onSetActiveTab={setActiveTabId}
                     onCloseTab={closeTab}
                     onMoveTab={moveTabToGroup}
+                    onReorderTab={reorderTab}
                     onEditorMount={handleEditorDidMount}
                     onEditorChange={handleEditorChange}
                   />
@@ -1469,14 +1699,16 @@ export default function Ide({ title = 'Emception', manifestUrl = '/cdn/manifest.
                     <PanelResizeHandle style={resizerStyle} />
                     <Panel defaultSize={35} minSize={15} style={{ overflow: 'hidden' }}>
                       <DockGroupPanel
+                        key={`${activePresetId}-right`}
                         group="right"
                         tabs={groupTabs('right')}
                         activeTabId={activeTabId}
                         files={files}
-                        canvasRef={canvasRef}
+                        onCanvasHost={handleCanvasHost}
                         onSetActiveTab={setActiveTabId}
                         onCloseTab={closeTab}
                         onMoveTab={moveTabToGroup}
+                        onReorderTab={reorderTab}
                         onEditorMount={handleEditorDidMount}
                         onEditorChange={handleEditorChange}
                       />
@@ -1491,14 +1723,16 @@ export default function Ide({ title = 'Emception', manifestUrl = '/cdn/manifest.
                 <PanelResizeHandle style={resizerVStyle} />
                 <Panel defaultSize={25} minSize={10} style={{ overflow: 'hidden' }}>
                   <DockGroupPanel
+                    key={`${activePresetId}-bottom`}
                     group="bottom"
                     tabs={groupTabs('bottom')}
                     activeTabId={activeTabId}
                     files={files}
-                    canvasRef={canvasRef}
+                    onCanvasHost={handleCanvasHost}
                     onSetActiveTab={setActiveTabId}
                     onCloseTab={closeTab}
                     onMoveTab={moveTabToGroup}
+                    onReorderTab={reorderTab}
                     onEditorMount={handleEditorDidMount}
                     onEditorChange={handleEditorChange}
                   />
