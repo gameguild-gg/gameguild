@@ -4,9 +4,9 @@ import { EditorProvider } from "@/components/editor/engines/editor-provider"
 import { EditorToolbar } from "@/components/editor/engines/editor-toolbar"
 import { EditorField } from "@/components/editor/engines/editor-field"
 import { EditorDialogs } from "@/components/editor/engines/editor-dialogs"
-import { StudioLayout } from "./studio-layout"
+import { StudioLayout } from "../studio/studio-layout"
 
-export default function Page() {
+export default function FullEditorPage() {
   return (
     <EditorProvider>
       <StudioLayout>

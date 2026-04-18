@@ -50,6 +50,10 @@ interface CreateProjectDialogProps {
   onProjectsListUpdate: () => void
   onAvailableTagsUpdate: () => void
   generateProjectId: () => string
+  allowedEngines?: EngineType[]
+  allowedLayouts?: ProjectType[]
+  allowedModes?: ProjectMode[]
+  defaultMode?: ProjectMode
 }
 
 export function CreateProjectDialog({
@@ -62,13 +66,17 @@ export function CreateProjectDialog({
   onProjectsListUpdate,
   onAvailableTagsUpdate,
   generateProjectId,
+  allowedEngines,
+  allowedLayouts,
+  allowedModes,
+  defaultMode,
 }: CreateProjectDialogProps) {
   const [newCreateProjectName, setNewCreateProjectName] = useState("")
   const [projectTags, setProjectTags] = useState<string[]>([])
   const [tagInput, setTagInput] = useState("")
   const [showTagDropdown, setShowTagDropdown] = useState(false)
   const [storageOption, setStorageOption] = useState<StorageOption>("local")
-  const [projectMode, setProjectMode] = useState<ProjectMode>("free-page")
+  const [projectMode, setProjectMode] = useState<ProjectMode>(defaultMode || "free-page")
   const [projectType, setProjectType] = useState<ProjectType>(PROJECT_TYPES.TYPE1)
   const [engine, setEngine] = useState<EngineType>(ENGINE_TYPES.LEXICAL)
 
@@ -225,7 +233,7 @@ export function CreateProjectDialog({
       setTagInput("")
       setShowTagDropdown(false)
       setStorageOption("local")
-      setProjectMode("free-page")
+      setProjectMode(defaultMode || "free-page")
       setProjectType(PROJECT_TYPES.TYPE1)
       setEngine(ENGINE_TYPES.LEXICAL)
       onOpenChange(false)
@@ -255,11 +263,18 @@ export function CreateProjectDialog({
     setTagInput("")
     setShowTagDropdown(false)
     setStorageOption("local")
-    setProjectMode("free-page")
+    setProjectMode(defaultMode || "free-page")
     setProjectType("type1")
     setEngine(ENGINE_TYPES.LEXICAL)
     onOpenChange(false)
   }
+
+  const allModes: { value: ProjectMode; label: string }[] = [
+    { value: "free-page", label: "Free Page - No restrictions" },
+    { value: "code-page", label: "Code Page - Code studio focused" },
+    { value: "quiz-page", label: "Quiz Page - Quiz focused" },
+  ]
+  const visibleModes = allowedModes ? allModes.filter(m => allowedModes.includes(m.value)) : allModes
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -292,7 +307,7 @@ export function CreateProjectDialog({
               <Label className="text-sm font-semibold mb-1.5 block">Project Layout *</Label>
               <div className="grid grid-cols-3 gap-2">
                 {/* Type 1 - Simple */}
-                <button
+                {(!allowedLayouts || allowedLayouts.includes(PROJECT_TYPES.TYPE1)) && <button
                   type="button"
                   onClick={() => setProjectType(PROJECT_TYPES.TYPE1)}
                   className={`relative p-2 rounded-lg border-2 transition-all text-left ${
@@ -322,10 +337,10 @@ export function CreateProjectDialog({
                   <p className="text-[10px] text-gray-600 dark:text-gray-400 leading-tight">
                     Single vertical editor
                   </p>
-                </button>
+                </button>}
 
                 {/* Type 2 - Multi-Panel */}
-                <button
+                {(!allowedLayouts || allowedLayouts.includes(PROJECT_TYPES.TYPE2)) && <button
                   type="button"
                   onClick={() => setProjectType(PROJECT_TYPES.TYPE2)}
                   className={`relative p-2 rounded-lg border-2 transition-all text-left ${
@@ -354,10 +369,10 @@ export function CreateProjectDialog({
                   <p className="text-[10px] text-gray-600 dark:text-gray-400 leading-tight">
                     Side-by-side panels
                   </p>
-                </button>
+                </button>}
 
                 {/* Type 3 - Slideshow */}
-                <button
+                {(!allowedLayouts || allowedLayouts.includes(PROJECT_TYPES.TYPE3)) && <button
                   type="button"
                   onClick={() => setProjectType(PROJECT_TYPES.TYPE3)}
                   className={`relative p-2 rounded-lg border-2 transition-all text-left ${
@@ -392,7 +407,7 @@ export function CreateProjectDialog({
                   <p className="text-[10px] text-gray-600 dark:text-gray-400 leading-tight">
                     Sequential slides
                   </p>
-                </button>
+                </button>}
               </div>
             </div>
 
@@ -401,7 +416,7 @@ export function CreateProjectDialog({
               <Label className="text-sm font-semibold mb-1.5 block">Editor Engine *</Label>
               <div className="grid grid-cols-2 gap-2">
                 {/* Lexical Engine */}
-                <button
+                {(!allowedEngines || allowedEngines.includes(ENGINE_TYPES.LEXICAL)) && <button
                   type="button"
                   onClick={() => setEngine(ENGINE_TYPES.LEXICAL)}
                   className={`relative p-2 rounded-lg border-2 transition-all text-left ${
@@ -432,10 +447,10 @@ export function CreateProjectDialog({
                   <p className="text-[10px] text-gray-600 dark:text-gray-400 leading-tight">
                     Rich-text with headings, lists, embeds
                   </p>
-                </button>
+                </button>}
 
                 {/* Block Array Engine */}
-                <button
+                {(!allowedEngines || allowedEngines.includes(ENGINE_TYPES.BLOCKS)) && <button
                   type="button"
                   onClick={() => setEngine(ENGINE_TYPES.BLOCKS)}
                   className={`relative p-2 rounded-lg border-2 transition-all text-left ${
@@ -469,11 +484,12 @@ export function CreateProjectDialog({
                   <p className="text-[10px] text-gray-600 dark:text-gray-400 leading-tight">
                     Stack of decorator blocks (quiz, code, etc.)
                   </p>
-                </button>
+                </button>}
               </div>
             </div>
 
             {/* Content Mode */}
+            {visibleModes.length > 1 ? (
             <div>
               <Label htmlFor="project-mode" className="text-sm font-semibold">Content Mode *</Label>
               <select
@@ -482,11 +498,12 @@ export function CreateProjectDialog({
                 onChange={(e) => setProjectMode(e.target.value as ProjectMode)}
                 className="w-full px-3 py-2 mt-1.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
               >
-                <option value="free-page">Free Page - No restrictions</option>
-                <option value="code-page">Code Page - Code studio focused</option>
-                <option value="quiz-page">Quiz Page - Quiz focused</option>
+                {visibleModes.map(m => (
+                  <option key={m.value} value={m.value}>{m.label}</option>
+                ))}
               </select>
             </div>
+            ) : null}
 
             {/* Tags Section */}
             <div className="space-y-1.5">
