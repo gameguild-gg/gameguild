@@ -171,7 +171,13 @@ function estimateSize(data: string): number {
 
 // ─── Hook ────────────────────────────────────────────────────────────────────
 
-export function useProjectStorage(): UseProjectStorageReturn {
+export interface ProjectStorageDefaults {
+  engine?: EngineType
+  layout?: ProjectType
+  mode?: ProjectMode
+}
+
+export function useProjectStorage(initialDefaults?: ProjectStorageDefaults): UseProjectStorageReturn {
   // ── DB ──
   const dbStorage = useRef<EnhancedStorageAdapter>(new EnhancedStorageAdapter())
   const [isDbInitialized, setIsDbInitialized] = useState(false)
@@ -181,10 +187,10 @@ export function useProjectStorage(): UseProjectStorageReturn {
   const [currentProjectName, setCurrentProjectName] = useState<string>("")
   const [currentProjectStorageType, setCurrentProjectStorageType] = useState<StorageType>("local")
   const [projectTags, setProjectTags] = useState<string[]>([])
-  const [currentLayout, setCurrentLayout] = useState<InternalLayout>("single")
-  const [currentProjectType, setCurrentProjectType] = useState<ProjectType>(PROJECT_TYPES.TYPE1)
-  const [currentEngine, setCurrentEngine] = useState<EngineType>(ENGINE_TYPES.LEXICAL)
-  const [currentProjectMode, setCurrentProjectMode] = useState<ProjectMode>("free-page")
+  const [currentLayout, setCurrentLayout] = useState<InternalLayout>(initialDefaults?.layout ? getLayoutFromType(initialDefaults.layout) : "single")
+  const [currentProjectType, setCurrentProjectType] = useState<ProjectType>(initialDefaults?.layout || PROJECT_TYPES.TYPE1)
+  const [currentEngine, setCurrentEngine] = useState<EngineType>(initialDefaults?.engine || ENGINE_TYPES.LEXICAL)
+  const [currentProjectMode, setCurrentProjectMode] = useState<ProjectMode>(initialDefaults?.mode || "free-page")
   const [currentProjectPreferences, setCurrentProjectPreferences] = useState<ProjectPreferences | undefined>(undefined)
   const [isFirstTime, setIsFirstTime] = useState(true)
 

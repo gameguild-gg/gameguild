@@ -190,13 +190,20 @@ interface BlockTypePickerProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   onSelect: (block: Block) => void
+  allowedBlockTypes?: BlockCellType[]
+  /** Which tab to show by default */
+  defaultTab?: "blocks" | "templates"
+  /** Hide the Block Types tab entirely (e.g. when only 1 block type) */
+  hideBlockTypesTab?: boolean
 }
 
-export function BlockTypePicker({ open, onOpenChange, onSelect }: BlockTypePickerProps) {
+export function BlockTypePicker({ open, onOpenChange, onSelect, allowedBlockTypes, defaultTab = "blocks", hideBlockTypesTab }: BlockTypePickerProps) {
+  const effectiveDefault = hideBlockTypesTab ? "templates" : defaultTab
   const [search, setSearch] = useState("")
-  const [tab, setTab] = useState<"blocks" | "templates">("blocks")
+  const [tab, setTab] = useState<"blocks" | "templates">(effectiveDefault)
 
   const filtered = BLOCK_CELL_TYPES.filter((type) => {
+    if (allowedBlockTypes && !allowedBlockTypes.includes(type)) return false
     if (!search.trim()) return true
     const config = BLOCK_REGISTRY[type]
     const q = search.toLowerCase()
@@ -232,14 +239,14 @@ export function BlockTypePicker({ open, onOpenChange, onSelect }: BlockTypePicke
     onSelect(block)
     onOpenChange(false)
     setSearch("")
-    setTab("blocks")
+    setTab(effectiveDefault)
   }
 
   const handleClose = (v: boolean) => {
     onOpenChange(v)
     if (!v) {
       setSearch("")
-      setTab("blocks")
+      setTab(effectiveDefault)
     }
   }
 
@@ -252,11 +259,13 @@ export function BlockTypePicker({ open, onOpenChange, onSelect }: BlockTypePicke
 
         <Tabs value={tab} onValueChange={(v) => setTab(v as "blocks" | "templates")} className="flex flex-col flex-1 overflow-hidden">
           <div className="px-6 pt-2 pb-0 flex flex-col gap-2">
-            <TabsList className="w-full grid grid-cols-2">
-              <TabsTrigger value="blocks" className="gap-2">
-                <LayoutGrid className="h-4 w-4" />
-                Block Types
-              </TabsTrigger>
+            <TabsList className={`w-full ${hideBlockTypesTab ? '' : 'grid grid-cols-2'}`}>
+              {!hideBlockTypesTab && (
+                <TabsTrigger value="blocks" className="gap-2">
+                  <LayoutGrid className="h-4 w-4" />
+                  Block Types
+                </TabsTrigger>
+              )}
               <TabsTrigger value="templates" className="gap-2">
                 <FileText className="h-4 w-4" />
                 Templates
