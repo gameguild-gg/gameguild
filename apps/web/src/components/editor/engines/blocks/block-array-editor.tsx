@@ -140,9 +140,14 @@ interface BlockArrayEditorProps {
   blocks: BlockArray
   onChange: (blocks: BlockArray) => void
   readOnly?: boolean
+  allowedBlockTypes?: import("@/lib/storage/editor/block-structure").BlockCellType[]
+  /** Which tab to show by default in the picker */
+  defaultPickerTab?: "blocks" | "templates"
+  /** Hide the Block Types tab in the picker */
+  hideBlockTypesTab?: boolean
 }
 
-export function BlockArrayEditor({ blocks, onChange, readOnly = false }: BlockArrayEditorProps) {
+export function BlockArrayEditor({ blocks, onChange, readOnly = false, allowedBlockTypes, defaultPickerTab, hideBlockTypesTab }: BlockArrayEditorProps) {
   const [pickerOpen, setPickerOpen] = useState(false)
   const [insertIndex, setInsertIndex] = useState<number | null>(null)
 
@@ -289,6 +294,9 @@ export function BlockArrayEditor({ blocks, onChange, readOnly = false }: BlockAr
         open={pickerOpen}
         onOpenChange={setPickerOpen}
         onSelect={handleAddBlock}
+        allowedBlockTypes={allowedBlockTypes}
+        defaultTab={defaultPickerTab}
+        hideBlockTypesTab={hideBlockTypesTab}
       />
 
       <BlockEditorModal
