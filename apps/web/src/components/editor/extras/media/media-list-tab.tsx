@@ -175,7 +175,6 @@ export function MediaListTab({ items, onItemsChange, allowMixedTypes = false, de
         onOpenChange={setShowUploadDialog}
         onMediaSelected={handleMediaSelected}
         title={`Add ${uploadType}`}
-        mode={0}
         acceptTypes={uploadType === "image" ? "image/*" : uploadType === "video" ? "video/*" : "audio/*"}
         urlPlaceholder={`https://example.com/${uploadType}.${uploadType === "image" ? "jpg" : uploadType === "video" ? "mp4" : "mp3"}`}
         multiple={true}
