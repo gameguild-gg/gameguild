@@ -8,6 +8,7 @@ import { BLOCK_REGISTRY, type BlockCellType } from "./block-component-registry"
 import { DeleteConfirmDialog } from "@/components/editor/extras/dialogs/delete-confirm-dialog"
 import type { Block, BlockArray } from "@/lib/storage/editor/block-structure"
 import { BlockContentRenderer } from "./block-array-viewer"
+import { DragPreview, useBlockDragDrop } from "./block-drag-drop"
 
 // ============================================================================
 // Insert Line — the "seam" between blocks where new blocks can be added
@@ -45,9 +46,15 @@ interface BlockCardProps {
   onRemove: () => void
   onEdit: () => void
   readOnly: boolean
+  onDragStart?: () => void
+  onDragEnd?: () => void
+  isDragSource?: boolean
+  /** Called during drag with the insertion index (before=index, after=index+1) */
+  onDragHover?: (insertIndex: number) => void
+  onDropHere?: () => void
 }
 
-function BlockCard({ block, index, total, onMoveUp, onMoveDown, onRemove, onEdit, readOnly }: BlockCardProps) {
+function BlockCard({ block, index, total, onMoveUp, onMoveDown, onRemove, onEdit, readOnly, onDragStart, onDragEnd, isDragSource, onDragHover, onDropHere }: BlockCardProps) {
   const config = BLOCK_REGISTRY[block.type]
 
   if (!config) return null
@@ -55,12 +62,39 @@ function BlockCard({ block, index, total, onMoveUp, onMoveDown, onRemove, onEdit
   const Icon = config.icon
 
   return (
-    <div className="group/card rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm hover:shadow-md transition-shadow overflow-hidden">
+    <div
+      data-block-card
+      onDragOver={onDragHover ? (e) => {
+        e.preventDefault()
+        e.dataTransfer.dropEffect = "move"
+        const rect = e.currentTarget.getBoundingClientRect()
+        const midY = rect.top + rect.height / 2
+        onDragHover(e.clientY < midY ? index : index + 1)
+      } : undefined}
+      onDrop={onDropHere ? (e) => { e.preventDefault(); onDropHere() } : undefined}
+      className={`group/card rounded-lg border bg-white dark:bg-gray-900 overflow-hidden transition-all duration-300 ${
+        isDragSource
+          ? "border-dashed border-blue-300 dark:border-blue-600 opacity-30"
+          : "border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md"
+      }`}
+    >
       {/* Header bar */}
       <div className="flex items-center gap-2 px-3 py-2 bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
         {/* Grip handle */}
         {!readOnly && (
-          <GripVertical className="h-4 w-4 text-gray-300 dark:text-gray-600 shrink-0 cursor-grab" />
+          <div
+            draggable
+            onDragStart={(e) => {
+              const card = e.currentTarget.closest("[data-block-card]") as HTMLElement
+              if (card) e.dataTransfer.setDragImage(card, card.offsetWidth / 2, 20)
+              e.dataTransfer.effectAllowed = "move"
+              onDragStart?.()
+            }}
+            onDragEnd={() => onDragEnd?.()}
+            className="shrink-0 cursor-grab active:cursor-grabbing"
+          >
+            <GripVertical className="h-4 w-4 text-gray-300 dark:text-gray-600" />
+          </div>
         )}
 
         {/* Type icon + label */}
@@ -145,9 +179,11 @@ interface BlockArrayEditorProps {
   defaultPickerTab?: "blocks" | "templates"
   /** Hide the Block Types tab in the picker */
   hideBlockTypesTab?: boolean
+  /** Called when drag state changes (for parent zoom) */
+  onDragStateChange?: (dragging: boolean) => void
 }
 
-export function BlockArrayEditor({ blocks, onChange, readOnly = false, allowedBlockTypes, defaultPickerTab, hideBlockTypesTab }: BlockArrayEditorProps) {
+export function BlockArrayEditor({ blocks, onChange, readOnly = false, allowedBlockTypes, defaultPickerTab, hideBlockTypesTab, onDragStateChange }: BlockArrayEditorProps) {
   const [pickerOpen, setPickerOpen] = useState(false)
   const [insertIndex, setInsertIndex] = useState<number | null>(null)
 
@@ -164,6 +200,9 @@ export function BlockArrayEditor({ blocks, onChange, readOnly = false, allowedBl
   // Scroll-to-block after move
   const scrollToIndexRef = useRef<number | null>(null)
   const blockRefsMap = useRef<Map<number, HTMLDivElement>>(new Map())
+
+  // Drag-and-drop (extracted to useBlockDragDrop)
+  const drag = useBlockDragDrop({ blocks, onChange, onDragStateChange, scrollToIndexRef })
 
 
 
@@ -236,10 +275,13 @@ export function BlockArrayEditor({ blocks, onChange, readOnly = false, allowedBl
     if (scrollToIndexRef.current !== null) {
       const idx = scrollToIndexRef.current
       scrollToIndexRef.current = null
-      requestAnimationFrame(() => {
-        const el = blockRefsMap.current.get(idx)
-        el?.scrollIntoView({ behavior: "smooth", block: "center" })
-      })
+      // Delay scroll to let any scale transition finish (300ms in editor-field)
+      setTimeout(() => {
+        requestAnimationFrame(() => {
+          const el = blockRefsMap.current.get(idx)
+          el?.scrollIntoView({ behavior: "smooth", block: "center" })
+        })
+      }, 150)
     }
   })
 
@@ -265,11 +307,20 @@ export function BlockArrayEditor({ blocks, onChange, readOnly = false, allowedBl
         </div>
       )}
 
-      {/* Block list with insert lines */}
+      {/* Block list with insert lines / drag preview */}
       {blocks.length > 0 && (
-        <>
-          {/* Insert line before first block */}
-          {!readOnly && <InsertLine onInsert={() => openPickerAt(0)} />}
+        <div
+          ref={drag.containerRef}
+          onDragOver={drag.isDragging ? drag.handleContainerDragOver : undefined}
+          onDragLeave={drag.isDragging ? drag.handleContainerDragLeave : undefined}
+        >
+          {/* Insert line before first block (normal mode) */}
+          {!readOnly && !drag.isDragging && <InsertLine onInsert={() => openPickerAt(0)} />}
+
+          {/* Drag preview before first block */}
+          {drag.isDragging && drag.dropTargetIndex === 0 && drag.dragIndex !== null && (
+            <DragPreview onDragOver={drag.handleContainerDragOver} onDrop={() => drag.handleDragEnd()} />
+          )}
 
           {blocks.map((block, index) => (
             <div key={block.id} ref={(el) => { if (el) blockRefsMap.current.set(index, el); else blockRefsMap.current.delete(index) }}>
@@ -282,12 +333,23 @@ export function BlockArrayEditor({ blocks, onChange, readOnly = false, allowedBl
                 onRemove={() => handleRemoveBlock(index)}
                 onEdit={() => handleEditBlock(index)}
                 readOnly={readOnly}
+                onDragStart={() => drag.handleDragStart(index)}
+                onDragEnd={drag.handleDragEnd}
+                isDragSource={drag.dragIndex === index}
+                onDragHover={drag.isDragging ? (targetIdx) => drag.setDropTargetIndex(targetIdx) : undefined}
+                onDropHere={drag.isDragging ? () => drag.handleDragEnd() : undefined}
               />
-              {/* Insert line after each block */}
-              {!readOnly && <InsertLine onInsert={() => openPickerAt(index + 1)} />}
+
+              {/* Drag preview after this block */}
+              {drag.isDragging && drag.dropTargetIndex === index + 1 && drag.dragIndex !== null && (
+                <DragPreview onDragOver={drag.handleContainerDragOver} onDrop={() => drag.handleDragEnd()} />
+              )}
+
+              {/* Insert line after each block (normal mode) */}
+              {!readOnly && !drag.isDragging && <InsertLine onInsert={() => openPickerAt(index + 1)} />}
             </div>
           ))}
-        </>
+        </div>
       )}
 
       <BlockTypePicker
