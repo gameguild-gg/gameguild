@@ -4,12 +4,10 @@ import type React from "react"
 import { Button } from "@/components/ui/button"
 import { FolderOpen, Trash2, Download, Info, HardDrive, Cloud, Database, Wifi, WifiOff, Eye, Blocks } from "lucide-react"
 import { useGoogleDriveAuth } from "@/hooks/editor/use-google-drive-auth"
-import { type ProjectType} from "@/lib/storage/editor/project-types"
 
 interface ProjectData {
   id: string
   name: string
-  type: ProjectType
   data: string
   tags: string[]
   size: number
@@ -50,17 +48,8 @@ export function ProjectCard({
   const { isAuthenticated: isGoogleDriveAuthenticated } = useGoogleDriveAuth()
 
   // Get project type label
-  const getProjectTypeLabel = (type: ProjectType): string => {
-    switch (type) {
-      case "type1":
-        return "Single Project"
-      case "type2":
-        return "Multiple Project"
-      case "type3":
-        return "Sequential Project"
-      default:
-        return "Project"
-    }
+  const getProjectTypeLabel = (): string => {
+    return "Single Project"
   }
 
   // Format file size
@@ -144,7 +133,7 @@ export function ProjectCard({
                 {project.name}
               </span>
               <span className="text-[10px] text-gray-500 dark:text-gray-400 font-medium">
-                {getProjectTypeLabel(project.type)}
+                {getProjectTypeLabel()}
               </span>
             </div>
             {renderStorageIndicator(project.storageType, project.isLocallyAvailable)}
@@ -332,7 +321,7 @@ export function ProjectCard({
                 {project.name}
               </span>
               <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">
-                {getProjectTypeLabel(project.type)}
+                {getProjectTypeLabel()}
               </span>
             </div>
             {renderStorageIndicator(project.storageType, project.isLocallyAvailable)}

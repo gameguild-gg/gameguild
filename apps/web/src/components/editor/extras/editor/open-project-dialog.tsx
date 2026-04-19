@@ -23,7 +23,6 @@ import type { ProjectPreferences } from "@/lib/storage/editor/enhanced-storage-a
 interface ProjectData {
   id: string
   name: string
-  type: "type1" | "type2" | "type3"
   data: string
   tags: string[]
   size: number
@@ -32,11 +31,10 @@ interface ProjectData {
   storageType?: "local" | "gameguild-cloud" | "google-drive"
   isLocallyAvailable?: boolean
   preferences?: ProjectPreferences
-  deps?: any[]
 }
 
 interface StorageAdapter {
-  save: (id: string, name: string, data: string, tags: string[], storageType?: StorageOption, preferences?: any, type?: "type1" | "type2" | "type3") => Promise<void>
+  save: (id: string, name: string, data: string, tags: string[], storageType?: StorageOption, preferences?: any) => Promise<void>
   list: () => Promise<ProjectData[]>
   load: (id: string) => Promise<ProjectData | null>
   delete: (id: string) => Promise<void>
@@ -51,11 +49,10 @@ interface OpenProjectDialogProps {
   storageAdapter: StorageAdapter
   availableTags: Array<{ name: string }>
   editorRef: React.RefObject<LexicalEditor | null>
-  blockRefs: React.MutableRefObject<Record<string, LexicalEditor | null>>
   setLoadingRef: React.RefObject<((loading: boolean) => void) | null>
   onProjectLoad: (projectData: ProjectData) => void
   onProjectsListUpdate: () => void
-  onCreateNew: (type: "type1" | "type2") => void
+  onCreateNew: () => void
   currentProjectName: string
 }
 
@@ -67,7 +64,6 @@ export function OpenProjectDialog({
   storageAdapter,
   availableTags,
   editorRef,
-  blockRefs,
   setLoadingRef,
   onProjectLoad,
   onProjectsListUpdate,
@@ -279,7 +275,7 @@ export function OpenProjectDialog({
                   variant="ghost"
                   onClick={() => {
                     onOpenChange(false)
-                    onCreateNew("type1")
+                    onCreateNew()
                   }}
                   className="gap-2"
                   disabled={!isDbInitialized}
@@ -343,7 +339,6 @@ export function OpenProjectDialog({
           const { id, name, tags } = projectData
           onProjectLoad({
             id, name, tags,
-            type: "type1",
             data: "",
             size: 0,
             createdAt: "",

@@ -1,8 +1,7 @@
 import { LexicalEditor } from "lexical"
 import { toast } from "sonner"
-import { detectProjectLayout, extractEditorStates } from "@/lib/storage/editor/layout-detector"
-import { getLayoutFromType, type ProjectType, type InternalLayout, ENGINE_TYPES, type EngineType } from "@/lib/storage/editor/project-types"
-import type { SlideshowStructure, PreviewMode } from "@/lib/storage/editor/slideshow-structure"
+import { extractEditorStates } from "@/lib/storage/editor/layout-detector"
+import { ENGINE_TYPES, type EngineType } from "@/lib/storage/editor/project-types"
 import type { ProjectData } from "@/lib/storage/editor/enhanced-storage-adapter"
 import type { CellularContent } from "@/lib/storage/editor/cell-structure"
 
@@ -12,33 +11,21 @@ export interface CheckSelectedProjectParams {
     load: (id: string) => Promise<{
       id: string
       name: string
-      type: string // Project type (type1, type2, type3, etc.)
-      data: string // Layout auto-detected from data structure
+      data: string
       tags: string[]
       storageType?: "local" | "gameguild-cloud" | "google-drive"
       preferences?: any
-      deps?: ProjectData[]
     } | null>
   }
   // Direct DB load function that bypasses closure issues with isDbInitialized
   directDbLoad?: (id: string) => Promise<ProjectData | null>
   editorRef: React.RefObject<LexicalEditor | null>
-  blockRefs: React.MutableRefObject<Record<string, LexicalEditor | null>>
   setCurrentProjectId: (id: string) => void
   setCurrentProjectName: (name: string) => void
   setCurrentProjectStorageType: (type: "local" | "gameguild-cloud" | "google-drive") => void
   setProjectTags: (tags: string[]) => void
   setIsFirstTime: (value: boolean) => void
-  setCurrentLayout: (layout: InternalLayout) => void // Layout auto-detected (single, multiple, or slideshow)
-  setCurrentProjectType: (type: ProjectType) => void // Project type
   setEditorState: (state: string) => void
-  setBlockStates: (states: Record<string, string> | ((prev: Record<string, string>) => Record<string, string>)) => void
-  setSlideshowStructure?: (structure: SlideshowStructure) => void
-  setDeps?: (deps: ProjectData[]) => void
-  setResolvedProjects?: (resolved: Map<string, ProjectData | null>) => void
-  setCurrentSlideIndex?: (index: number) => void
-  setSlideEditorRefs?: (refs: Map<string, React.RefObject<LexicalEditor>>) => void
-  setPreviewMode?: (mode: PreviewMode) => void
   setCurrentProjectMode?: (mode: any) => void
   setLastProjectLoadTime?: (time: number) => void
   setCurrentProjectPreferences?: (preferences: any) => void
@@ -54,22 +41,12 @@ export async function checkSelectedProject(params: CheckSelectedProjectParams): 
     storageAdapter,
     directDbLoad,
     editorRef,
-    blockRefs,
     setCurrentProjectId,
     setCurrentProjectName,
     setCurrentProjectStorageType,
     setProjectTags,
     setIsFirstTime,
-    setCurrentLayout,
-    setCurrentProjectType,
     setEditorState,
-    setBlockStates,
-    setSlideshowStructure,
-    setDeps,
-    setResolvedProjects,
-    setCurrentSlideIndex,
-    setSlideEditorRefs,
-    setPreviewMode,
     setCurrentProjectMode,
     setLastProjectLoadTime,
     setCurrentProjectPreferences,
@@ -87,18 +64,8 @@ export async function checkSelectedProject(params: CheckSelectedProjectParams): 
       try {
         const projectData = await loadProject(hash)
         if (projectData && projectData.data) {
-          // Detect layout automaticamente from data structure
-          const layoutInfo = detectProjectLayout(projectData.data)
-          
           // Extract mode from preferences or default to free-page
           const projectMode = projectData.preferences?.global?.mode || "free-page"
-          
-          // Layout \u00e9 derivado diretamente do tipo de projeto
-          const finalLayout = getLayoutFromType(projectData.type as ProjectType)
-          
-          // Set layout and type
-          setCurrentLayout(finalLayout)
-          setCurrentProjectType(projectData.type as ProjectType)
           
           // Set project metadata immediately
           setCurrentProjectId(projectData.id)
@@ -130,7 +97,7 @@ export async function checkSelectedProject(params: CheckSelectedProjectParams): 
           
           // Handle blocks engine: restore cells and exit early
           if (projectEngine === ENGINE_TYPES.BLOCKS && setBlockArrayCells) {
-            const states = extractEditorStates(projectData.data, projectData.type as ProjectType)
+            const states = extractEditorStates(projectData.data)
             const cellsData = states.blocks?.b1 || { order: [], blocks: {} }
             setBlockArrayCells(cellsData as any)
             
@@ -148,78 +115,14 @@ export async function checkSelectedProject(params: CheckSelectedProjectParams): 
             return // Exit early for blocks engine
           }
           
-          // Handle slideshow layout
-          if (layoutInfo.hasSlides && layoutInfo.slideshowData) {
-            if (setSlideshowStructure && setCurrentSlideIndex && setSlideEditorRefs && setPreviewMode) {
-              setSlideshowStructure(layoutInfo.slideshowData)
-              
-              // Load deps from ProjectData
-              if (setDeps) {
-                setDeps(projectData.deps || [])
-              }
-              
-              setCurrentSlideIndex(0)
-              
-              // Load previewMode from preferences or default to continuous
-              const savedPreviewMode = projectData.preferences?.global?.previewMode || "continuous"
-              setPreviewMode(savedPreviewMode as PreviewMode)
-              
-              // Initialize editor refs for all slides
-              const newRefs = new Map<string, React.RefObject<LexicalEditor>>()
-              layoutInfo.slideshowData.slides.forEach(slide => {
-                newRefs.set(slide.id, { current: undefined as any })
-              })
-              setSlideEditorRefs(newRefs)
-              
-              // Load independent projects if setResolvedProjects is provided
-              if (setResolvedProjects) {
-                const independentSlides = layoutInfo.slideshowData.slides.filter(
-                  (s: any) => s.projectRef && !s.projectRef.isDependent
-                )
-                
-                if (independentSlides.length > 0) {
-                  const results = new Map<string, ProjectData | null>()
-                  await Promise.all(
-                    independentSlides.map(async (slide: any) => {
-                      try {
-                        const project = await loadProject(slide.projectRef.projectId)
-                        results.set(slide.id, project as ProjectData | null)
-                      } catch (error) {
-                        console.error(`Failed to load independent project for slide ${slide.id}:`, error)
-                        results.set(slide.id, null)
-                      }
-                    })
-                  )
-                  setResolvedProjects(results)
-                } else {
-                  setResolvedProjects(new Map())
-                }
-              }
-              
-              // Update URL hash if not already set
-              if (window.location.hash !== `#${projectData.id}`) {
-                window.history.pushState(null, '', `#${projectData.id}`)
-              }
-              
-              toast.success("Projeto carregado", {
-                description: `"${projectData.name}" foi aberto com sucesso`,
-                duration: 2500,
-                icon: "📂",
-              })
-              
-              return // Exit early for slideshow layout
-            }
-          }
-          
-          // Extract editor states using project type
-          const states = extractEditorStates(projectData.data, projectData.type as ProjectType)
+          // Extract editor states (single block b1)
+          const states = extractEditorStates(projectData.data)
           
           // Wait for layout to render before loading editor data
           setTimeout(() => {
             try {
-              if (finalLayout === "single" && editorRef.current && states.blocks.b1) {
+              if (editorRef.current && states.blocks.b1) {
                 // Single panel layout - uses b1
-                // States are in cells format - store them directly
                 setEditorState(JSON.stringify(states.blocks.b1))
                 
                 // Convert cells to Lexical for UI
@@ -227,44 +130,6 @@ export async function checkSelectedProject(params: CheckSelectedProjectParams): 
                 const lexicalState = cellsToLexical(states.blocks.b1)
                 const editorState = editorRef.current.parseEditorState(JSON.stringify(lexicalState))
                 editorRef.current.setEditorState(editorState)
-                
-              } else if (finalLayout === "multiple" && states.blocks) {
-                // Multi panel layout - load all blocks dynamically
-                // Clear existing blockRefs when loading a new project
-                blockRefs.current = {}
-                
-                const newBlockStates: Record<string, string> = {}
-                const { cellsToLexical } = require("@/lib/storage/editor/cell-converters/lexical")
-                
-                Object.entries(states.blocks).forEach(([blockId, blockState]: [string, any]) => {
-                  if (blockState) {
-                    // Initialize ref for each block
-                    blockRefs.current[blockId] = null
-                    // Store state in cells format
-                    newBlockStates[blockId] = JSON.stringify(blockState)
-                  }
-                })
-                
-                // Set the new block states - this will trigger re-render
-                setBlockStates(newBlockStates)
-                
-                // Wait for refs to be populated and load states into editors
-                setTimeout(() => {
-                  Object.entries(newBlockStates).forEach(([blockId, stateString]) => {
-                    const ref = blockRefs.current[blockId]
-                    if (ref) {
-                      try {
-                        // Convert cells to Lexical for UI
-                        const cellsData = JSON.parse(stateString)
-                        const lexicalState = cellsToLexical(cellsData)
-                        const editorState = ref.parseEditorState(JSON.stringify(lexicalState))
-                        ref.setEditorState(editorState)
-                      } catch (error) {
-                        console.error(`Failed to load state for block ${blockId}:`, error)
-                      }
-                    }
-                  })
-                }, 150)
               }
             } catch (error) {
               console.error("Failed to load editor data:", error)

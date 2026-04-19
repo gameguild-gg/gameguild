@@ -11,10 +11,8 @@ import {
   type ProjectMode, 
   PROJECT_MODES, 
   NODE_RESTRICTIONS,
-  getSuggestedLayoutForMode
 } from "@/lib/storage/editor/project-modes"
 import { createProjectData } from "@/lib/storage/editor/layout-detector"
-import { type ProjectType, PROJECT_TYPES, getLayoutFromType } from "@/lib/storage/editor/project-types"
 import { type EngineType, ENGINE_TYPES } from "@/lib/storage/editor/project-types"
 
 interface ProjectData {
@@ -29,7 +27,7 @@ interface ProjectData {
 
 interface StorageAdapter {
   list: () => Promise<ProjectData[]>
-  save: (id: string, name: string, data: string, tags: string[], storageType?: "local" | "gameguild-cloud" | "google-drive", preferences?: any, type?: string, deps?: any, engine?: EngineType) => Promise<void>
+  save: (id: string, name: string, data: string, tags: string[], storageType?: "local" | "gameguild-cloud" | "google-drive", preferences?: any, engine?: EngineType) => Promise<void>
 }
 
 interface CreateProjectDialogProps {
@@ -43,7 +41,6 @@ interface CreateProjectDialogProps {
     name: string
     tags: string[]
     storageType: "local" | "gameguild-cloud" | "google-drive"
-    type: ProjectType // Project type
     mode: ProjectMode
     engine: EngineType
   }) => void
@@ -51,7 +48,6 @@ interface CreateProjectDialogProps {
   onAvailableTagsUpdate: () => void
   generateProjectId: () => string
   allowedEngines?: EngineType[]
-  allowedLayouts?: ProjectType[]
   allowedModes?: ProjectMode[]
   defaultMode?: ProjectMode
 }
@@ -67,7 +63,6 @@ export function CreateProjectDialog({
   onAvailableTagsUpdate,
   generateProjectId,
   allowedEngines,
-  allowedLayouts,
   allowedModes,
   defaultMode,
 }: CreateProjectDialogProps) {
@@ -77,7 +72,6 @@ export function CreateProjectDialog({
   const [showTagDropdown, setShowTagDropdown] = useState(false)
   const [storageOption, setStorageOption] = useState<StorageOption>("local")
   const [projectMode, setProjectMode] = useState<ProjectMode>(defaultMode || "free-page")
-  const [projectType, setProjectType] = useState<ProjectType>(PROJECT_TYPES.TYPE1)
   const [engine, setEngine] = useState<EngineType>(ENGINE_TYPES.LEXICAL)
 
   // Close tag dropdown when clicking outside
@@ -180,28 +174,21 @@ export function CreateProjectDialog({
         nodes: {}
       }
       
-      // Create data structure based on project type and engine
+      // Create data structure based on engine
       let projectData: string
       
       if (engine === ENGINE_TYPES.BLOCKS) {
         // Block Array engine: empty Cell[] array
-        projectData = createProjectData(projectType, {
+        projectData = createProjectData({
           blocks: { b1: [] },
         })
       } else {
-        // Lexical engine: standard layout-based data
-        const layoutType = getLayoutFromType(projectType)
-        
-        if (layoutType === "slideshow") {
-          // Temporary placeholder - will be replaced by parent component
-          projectData = JSON.stringify({ version: "slideshow-v1", slides: [] })
-        } else {
-          projectData = createProjectData(projectType, {
-            blocks: {
-              b1: emptyState,
-            },
-          })
-        }
+        // Lexical engine: single editor
+        projectData = createProjectData({
+          blocks: {
+            b1: emptyState,
+          },
+        })
       }
       
       await storageAdapter.save(
@@ -211,8 +198,6 @@ export function CreateProjectDialog({
         projectTags, 
         storageOption, 
         preferences,
-        projectType, // Project type
-        undefined, // deps
         engine // Engine type
       )
 
@@ -222,7 +207,6 @@ export function CreateProjectDialog({
         name: newCreateProjectName,
         tags: projectTags,
         storageType: storageOption,
-        type: projectType,
         mode: projectMode,
         engine,
       })
@@ -234,7 +218,6 @@ export function CreateProjectDialog({
       setShowTagDropdown(false)
       setStorageOption("local")
       setProjectMode(defaultMode || "free-page")
-      setProjectType(PROJECT_TYPES.TYPE1)
       setEngine(ENGINE_TYPES.LEXICAL)
       onOpenChange(false)
 
@@ -264,7 +247,6 @@ export function CreateProjectDialog({
     setShowTagDropdown(false)
     setStorageOption("local")
     setProjectMode(defaultMode || "free-page")
-    setProjectType("type1")
     setEngine(ENGINE_TYPES.LEXICAL)
     onOpenChange(false)
   }
@@ -301,115 +283,6 @@ export function CreateProjectDialog({
 
           {/* ─── Left Column: Structure ─── */}
           <div className="space-y-3">
-
-            {/* Project Layout */}
-            <div>
-              <Label className="text-sm font-semibold mb-1.5 block">Project Layout *</Label>
-              <div className="grid grid-cols-3 gap-2">
-                {/* Type 1 - Simple */}
-                {(!allowedLayouts || allowedLayouts.includes(PROJECT_TYPES.TYPE1)) && <button
-                  type="button"
-                  onClick={() => setProjectType(PROJECT_TYPES.TYPE1)}
-                  className={`relative p-2 rounded-lg border-2 transition-all text-left ${
-                    projectType === PROJECT_TYPES.TYPE1
-                      ? "border-blue-500 bg-blue-50 dark:bg-blue-950"
-                      : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600"
-                  }`}
-                >
-                  {projectType === PROJECT_TYPES.TYPE1 && (
-                    <div className="absolute top-1.5 right-1.5">
-                      <div className="w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center">
-                        <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                        </svg>
-                      </div>
-                    </div>
-                  )}
-                  <div className="mb-1.5 flex justify-center">
-                    <div className="w-full h-16 bg-linear-to-br from-blue-100 to-blue-200 dark:from-blue-900 dark:to-blue-800 rounded border border-blue-300 dark:border-blue-600 flex items-center justify-center">
-                      <div className="text-center">
-                        <div className="w-8 h-8 mx-auto bg-white dark:bg-gray-800 rounded shadow-sm mb-1"></div>
-                        <div className="h-1 w-10 bg-white dark:bg-gray-700 rounded mx-auto"></div>
-                      </div>
-                    </div>
-                  </div>
-                  <h3 className="font-semibold text-sm">Simple</h3>
-                  <p className="text-[10px] text-gray-600 dark:text-gray-400 leading-tight">
-                    Single vertical editor
-                  </p>
-                </button>}
-
-                {/* Type 2 - Multi-Panel */}
-                {(!allowedLayouts || allowedLayouts.includes(PROJECT_TYPES.TYPE2)) && <button
-                  type="button"
-                  onClick={() => setProjectType(PROJECT_TYPES.TYPE2)}
-                  className={`relative p-2 rounded-lg border-2 transition-all text-left ${
-                    projectType === PROJECT_TYPES.TYPE2
-                      ? "border-green-500 bg-green-50 dark:bg-green-950"
-                      : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600"
-                  }`}
-                >
-                  {projectType === PROJECT_TYPES.TYPE2 && (
-                    <div className="absolute top-1.5 right-1.5">
-                      <div className="w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
-                        <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                        </svg>
-                      </div>
-                    </div>
-                  )}
-                  <div className="mb-1.5 flex justify-center">
-                    <div className="w-full h-16 bg-linear-to-br from-green-100 to-green-200 dark:from-green-900 dark:to-green-800 rounded border border-green-300 dark:border-green-600 flex items-center justify-center gap-0.5 p-1.5">
-                      <div className="flex-1 h-full bg-white dark:bg-gray-800 rounded shadow-sm"></div>
-                      <div className="w-0.5 h-full bg-green-400 dark:bg-green-600 rounded"></div>
-                      <div className="flex-1 h-full bg-white dark:bg-gray-800 rounded shadow-sm"></div>
-                    </div>
-                  </div>
-                  <h3 className="font-semibold text-sm">Multi-Panel</h3>
-                  <p className="text-[10px] text-gray-600 dark:text-gray-400 leading-tight">
-                    Side-by-side panels
-                  </p>
-                </button>}
-
-                {/* Type 3 - Slideshow */}
-                {(!allowedLayouts || allowedLayouts.includes(PROJECT_TYPES.TYPE3)) && <button
-                  type="button"
-                  onClick={() => setProjectType(PROJECT_TYPES.TYPE3)}
-                  className={`relative p-2 rounded-lg border-2 transition-all text-left ${
-                    projectType === PROJECT_TYPES.TYPE3
-                      ? "border-purple-500 bg-purple-50 dark:bg-purple-950"
-                      : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600"
-                  }`}
-                >
-                  {projectType === PROJECT_TYPES.TYPE3 && (
-                    <div className="absolute top-1.5 right-1.5">
-                      <div className="w-4 h-4 bg-purple-500 rounded-full flex items-center justify-center">
-                        <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                        </svg>
-                      </div>
-                    </div>
-                  )}
-                  <div className="mb-1.5 flex justify-center">
-                    <div className="w-full h-16 bg-linear-to-br from-purple-100 to-purple-200 dark:from-purple-900 dark:to-purple-800 rounded border border-purple-300 dark:border-purple-600 flex flex-col items-center justify-center gap-0.5 p-1">
-                      <div className="w-full h-4 bg-white dark:bg-gray-800 rounded shadow-sm flex items-center px-1">
-                        <div className="w-2.5 h-2.5 bg-purple-300 dark:bg-purple-600 rounded-full text-[6px] font-bold text-purple-700 dark:text-purple-200 flex items-center justify-center">1</div>
-                      </div>
-                      <div className="w-full h-4 bg-white dark:bg-gray-800 rounded shadow-sm flex items-center px-1">
-                        <div className="w-2.5 h-2.5 bg-purple-300 dark:bg-purple-600 rounded-full text-[6px] font-bold text-purple-700 dark:text-purple-200 flex items-center justify-center">2</div>
-                      </div>
-                      <div className="w-full h-4 bg-white dark:bg-gray-800 rounded shadow-sm flex items-center px-1">
-                        <div className="w-2.5 h-2.5 bg-purple-300 dark:bg-purple-600 rounded-full text-[6px] font-bold text-purple-700 dark:text-purple-200 flex items-center justify-center">3</div>
-                      </div>
-                    </div>
-                  </div>
-                  <h3 className="font-semibold text-sm">Slideshow</h3>
-                  <p className="text-[10px] text-gray-600 dark:text-gray-400 leading-tight">
-                    Sequential slides
-                  </p>
-                </button>}
-              </div>
-            </div>
 
             {/* Engine Selection */}
             <div>
