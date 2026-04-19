@@ -11,7 +11,6 @@ import { PreviewVideo } from "@/components/editor/plugins/preview-components/pre
 import { PreviewAudio } from "@/components/editor/plugins/preview-components/preview-audio"
 import { PreviewHeader } from "@/components/editor/plugins/preview-components/preview-header"
 import { PreviewDivider } from "@/components/editor/plugins/preview-components/preview-divider"
-import { PreviewPresentation } from "@/components/editor/plugins/preview-components/preview-presentation"
 import { PreviewSource } from "@/components/editor/plugins/preview-components/preview-source"
 import { PreviewYouTube } from "@/components/editor/plugins/preview-components/preview-youtube"
 import { PreviewSpotify } from "@/components/editor/plugins/preview-components/preview-spotify"
@@ -125,11 +124,6 @@ export function SerializedContentRenderer({
     // Handle admonition nodes
     if (node.type === "admonition") {
       return <PreviewAdmonition key={uniqueKey} node={node} />
-    }
-
-    // Handle presentation nodes
-    if (node.type === "presentation") {
-      return <PreviewPresentation key={uniqueKey} node={node} />
     }
 
     // Handle source nodes
