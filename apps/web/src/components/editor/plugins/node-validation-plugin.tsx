@@ -43,7 +43,7 @@ export function NodeValidationPlugin({ mode, blockId, panelId, customRestriction
         const { nodeType } = payload
         
         // Check if node is allowed (considering panel and custom restrictions)
-        if (!isNodeAllowed(nodeType, blockId, mode, panelId, customRestrictions)) {
+        if (!isNodeAllowed(nodeType, blockId, mode, customRestrictions)) {
           // Get friendly names for nodes
           const nodeFriendlyNames: Record<string, string> = {
             "code-studio": "Code Studio",

@@ -112,12 +112,11 @@ interface FloatingContentInsertPluginProps {
   panelId?: string  // Panel identifier (panel-1, panel-2, etc.)
   customRestrictions?: NodeRestrictions  // Custom project-specific restrictions
   currentProjectId?: string
-  currentProjectType?: "type1" | "type2" | "type3"
   storageAdapter?: any
   currentStorageType?: "local" | "gameguild-cloud" | "google-drive"
 }
 
-export function FloatingContentInsertPlugin({ mode = "free-page", blockId, panelId, customRestrictions, currentProjectId, currentProjectType, storageAdapter, currentStorageType = "local" }: FloatingContentInsertPluginProps = {}) {
+export function FloatingContentInsertPlugin({ mode = "free-page", blockId, panelId, customRestrictions, currentProjectId, storageAdapter, currentStorageType = "local" }: FloatingContentInsertPluginProps = {}) {
   const [editor] = useLexicalComposerContext()
   const [show, setShow] = useState(false)
   const [showMenu, setShowMenu] = useState(false)
@@ -623,7 +622,7 @@ export function FloatingContentInsertPlugin({ mode = "free-page", blockId, panel
     }
     
     // Verificar se o node é permitido neste blockId para este modo (considerando panel e custom restrictions)
-    return isNodeAllowed(nodeType, blockId, mode, panelId, customRestrictions)
+    return isNodeAllowed(nodeType, blockId, mode, customRestrictions)
   })
 
   if (
@@ -1094,11 +1093,6 @@ export function FloatingContentInsertPlugin({ mode = "free-page", blockId, panel
         <SelectProjectDialog
           open={showProjectDialog}
           onOpenChange={setShowProjectDialog}
-          allowedTypes={
-            currentProjectType === "type1" ? ["type1"] :
-            currentProjectType === "type2" ? ["type1"] :
-            ["type1", "type2"]  // type3 can import both
-          }
           currentProjectId={currentProjectId}
           storageAdapter={storageAdapter}
           onProjectSelect={async (project) => {
@@ -1110,9 +1104,7 @@ export function FloatingContentInsertPlugin({ mode = "free-page", blockId, panel
               const projectData: ImportedProjectData = {
                 projectId: project.id,
                 projectName: project.name,
-                projectType: project.type as "type1" | "type2",
                 editorState: null,
-                blockStates: undefined,
                 isLocalCopy: false,
                 isReference: true,
                 size: project.size,
@@ -1139,20 +1131,15 @@ export function FloatingContentInsertPlugin({ mode = "free-page", blockId, panel
               return
             }
 
-            // Parse project data based on type
+            // Parse project data
             let editorState = null
-            let blockStates: Record<string, SerializedEditorState | null> | undefined = undefined
 
             try {
               const data = JSON.parse(fullProject.data)
-              
-              if (fullProject.type === "type1") {
+              if (data.blocks && data.blocks.b1) {
+                editorState = data.blocks.b1
+              } else {
                 editorState = data
-              } else if (fullProject.type === "type2") {
-                // Expect blocks format: {blocks: {b1, b2, b3...}}
-                if (data.blocks) {
-                  blockStates = data.blocks
-                }
               }
             } catch (error) {
               console.error("Failed to parse project data:", error)
@@ -1167,9 +1154,7 @@ export function FloatingContentInsertPlugin({ mode = "free-page", blockId, panel
             const projectData: ImportedProjectData = {
               projectId: project.id,
               projectName: project.name,
-              projectType: project.type as "type1" | "type2",
               editorState,
-              blockStates,
               isLocalCopy: false,
               isReference: false,
               size: project.size,
