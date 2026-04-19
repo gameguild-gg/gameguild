@@ -12,7 +12,6 @@ import { SqlRunner } from './sql-runner'
 import { RubyRunner } from './ruby-runner'
 import { WatRunner } from './wat-runner'
 import { DotNetRunner } from './dotnet-runner'
-import { RustRunner } from './rust-runner'
 
 /**
  * Runner Selection Configuration
@@ -150,8 +149,6 @@ export class UnifiedCodeRunner {
         return new DotNetRunner(this.options)
       
       case 'rust':
-        return new RustRunner(this.options)
-      
       case 'forth':
       case 'ocaml':
       case 'haskell':
@@ -179,5 +176,4 @@ export { SqlRunner } from './sql-runner'
 export { RubyRunner } from './ruby-runner'
 export { WatRunner } from './wat-runner'
 export { DotNetRunner, preloadDotNetCompiler, disposeDotNetCompiler } from './dotnet-runner'
-export { RustRunner } from './rust-runner'
 export { setDownloadNotificationCallback, clearWasmCache } from './wasm-loader'
