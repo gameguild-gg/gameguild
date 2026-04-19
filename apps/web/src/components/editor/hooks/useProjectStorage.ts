@@ -53,6 +53,7 @@ export interface UseProjectStorageReturn {
   projectName: string
   setProjectName: Dispatch<SetStateAction<string>>
   engine: EngineType
+  setEngine: Dispatch<SetStateAction<EngineType>>
   projectMode: ProjectMode
   storageType: StorageType
   tags: string[]
@@ -644,6 +645,7 @@ export function useProjectStorage(initialDefaults?: ProjectStorageDefaults): Use
     projectName: currentProjectName,
     setProjectName: setCurrentProjectName,
     engine: currentEngine,
+    setEngine: setCurrentEngine,
     projectMode: currentProjectMode,
     storageType: currentProjectStorageType,
     tags: projectTags,
