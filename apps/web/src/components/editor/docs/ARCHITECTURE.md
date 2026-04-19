@@ -13,7 +13,7 @@
 4. [Provider Layer](#provider-layer)
 5. [Configuration System](#configuration-system)
 6. [Engines](#engines)
-7. [Layouts](#layouts)
+7. [Layout](#layout)
 8. [Content Modes & Node Restrictions](#content-modes--node-restrictions)
 9. [Storage Layer](#storage-layer)
 10. [Data Flow & Conversion Pipeline](#data-flow--conversion-pipeline)
@@ -28,7 +28,7 @@
 
 ## Overview
 
-The GameGuild Editor is a composable, multi-engine content editor built with Next.js and React. It supports two editing engines (Lexical rich-text and Block Array), three layout types, three content modes, and three storage backends. Pages are assembled by combining **Provider → Layout → Toolbar + Field + Dialogs** components, with behavior controlled through two configuration objects: `FieldConfig` and `ToolbarConfig`.
+The GameGuild Editor is a composable, multi-engine content editor built with Next.js and React. It supports two editing engines (Lexical rich-text and Block Array), a single layout, three content modes, and three storage backends. Pages are assembled by combining **Provider → Layout → Toolbar + Field + Dialogs** components, with behavior controlled through two configuration objects: `FieldConfig` and `ToolbarConfig`.
 
 ### Design Principles
 
@@ -46,7 +46,7 @@ The GameGuild Editor is a composable, multi-engine content editor built with Nex
 ┌─────────────────────────────────────────────────────┐
 │                      Page                           │
 │  ┌───────────────────────────────────────────────┐  │
-│  │           EditorProvider / ViewerProvider      │  │
+│  │           EditorProvider / ViewerProvider     │  │
 │  │  ┌─────────────────────────────────────────┐  │  │
 │  │  │           Layout (Studio/Viewer)        │  │  │
 │  │  │  ┌───────────────────────────────────┐  │  │  │
@@ -79,11 +79,9 @@ Every editor page follows the same pattern:
 // Minimal page — quiz-only editor
 const fieldConfig: Partial<FieldConfig> = {
   engines: ["blocks"],
-  layouts: ["type1"],
   allowedBlockTypes: [],
   allowedModes: ["quiz-page"],
   defaultEngine: "blocks",
-  defaultLayout: "type1",
 }
 
 export default function QuizEditorPage() {
@@ -168,21 +166,19 @@ Controls **what** the editor supports.
 ```typescript
 interface FieldConfig {
   engines: EngineType[]              // ["lexical", "blocks"]
-  layouts: ProjectType[]             // ["type1", "type2", "type3"]
   allowedBlockTypes?: BlockCellType[] // For blocks engine picker
   allowedNodeTypes?: string[]         // For lexical node restrictions
   allowedModes?: ProjectMode[]        // Restricts content mode selector
   defaultEngine?: EngineType
-  defaultLayout?: ProjectType
   defaultMode?: ProjectMode
 }
 ```
 
 **Behavior:**
-- `engines` / `layouts` — filter options in Create Project dialog.
+- `engines` — filter options in Create Project dialog.
 - `allowedBlockTypes` — filters Block Types tab in block picker. Empty array or single entry hides the tab.
 - `allowedModes` — filters Content Mode dropdown in Create Project dialog. Single entry hides it. First entry becomes the effective initial mode.
-- `defaultEngine` / `defaultLayout` — initial state when no project is loaded.
+- `defaultEngine` — initial state when no project is loaded.
 - `defaultMode` — UI hint for dialog default; overridden by `allowedModes[0]` when set.
 
 ### ToolbarConfig
@@ -203,7 +199,7 @@ interface ToolbarConfig {
   showProjectTitle?: boolean
   showModeIndicator?: boolean
   showStorageInfo?: boolean
-  showPreviewModeSelector?: boolean
+  showPreviewModeSelector?: boolean  // REMOVED — always single layout
   showNavHome?: boolean
   showNavViewer?: boolean
   showNavStudio?: boolean
@@ -234,7 +230,7 @@ A rich-text editor powered by Meta's Lexical framework. Content is a tree of Lex
 - Registers ~28 node types (base + custom decorators)
 - Loads ~16 plugins (formatting, insertion, validation, etc.)
 - Provides context for project ID, storage adapter, and loading state
-- Supports three layouts: single, multiple (multi-panel), slideshow
+- Uses a single layout (one editor pane)
 
 ### Blocks Engine (`"blocks"`)
 
@@ -285,23 +281,13 @@ The picker has two tabs: **Block Types** and **Templates** (quiz presets).
 
 ---
 
-## Layouts
+## Layout
 
-Layouts determine how the editor area is structured. Only applies to the Lexical engine.
+The editor uses a single layout for the Lexical engine: one editor pane for simple document editing. The Blocks engine always uses a flat list.
 
-| ProjectType | Internal Layout | Description |
-|-------------|-----------------|-------------|
-| `type1`     | `single`        | One editor pane. Simple document editing. |
-| `type2`     | `multiple`      | Multiple panels with dynamic block management. Side-by-side editing. |
-| `type3`     | `slideshow`     | Presentation-style with slides. Each slide is an independent or dependent sub-project. |
-
-**Layout components:**
+**Layout component:**
 
 - `EditorLayoutType1` — Single editor pane
-- `EditorLayoutType2` — Multi-panel with block add/remove
-- `EditorLayoutSlideshow` — Slide management with import/convert/navigate
-
-The Blocks engine always uses a flat list (no layout variants).
 
 ---
 
@@ -322,16 +308,14 @@ Three content modes control which node types are allowed:
 ```typescript
 interface NodeRestrictions {
   blocks?: Record<string, [blocked, allowed]>
-  panels?: Record<string, [blocked, allowed]>
 }
 // blocked/allowed can be: null | "*" | "nodeType" | string[]
 ```
 
 **Resolution rules (priority order):**
-1. Panel-level restriction (highest priority)
-2. Block-specific restriction
-3. Fallback to `b2` then `b1` defaults
-4. Tuple interpretation:
+1. Block-specific restriction
+2. Fallback to `b2` then `b1` defaults
+3. Tuple interpretation:
    - `allowed === "*"` → permit all
    - `allowed` is list → ONLY those types permitted
    - `allowed === null` → check blocked list
@@ -374,7 +358,7 @@ IndexedDB schema (v3):
 - `tag_data` — Tag→ProjectIds relationships
 
 Key operations:
-- `save(id, name, data, tags, storageType, preferences, type, deps, engine)` — Persist + auto-commit + sync queue
+- `save(id, name, data, tags, storageType, preferences, engine)` — Persist + auto-commit + sync queue
 - `load(id)` — IndexedDB first, then remote fallback
 - `list()` — Merges local + remote metadata
 - `delete(id)` — Removes from all stores
@@ -393,10 +377,8 @@ interface ProjectData {
   updatedAt: string
   hash?: string
   storageType?: StorageType // "local" | "gameguild-cloud" | "google-drive"
-  type?: ProjectType        // "type1" | "type2" | "type3"
   engine?: EngineType       // "lexical" | "blocks"
   preferences?: ProjectPreferences
-  deps?: StorageProjectData[]
   syncStatus?: SyncStatus
 }
 ```
@@ -448,10 +430,9 @@ type Cell = [data: object, metadata: CellMetadata]
 
 ### Layout Detection
 
-`layout-detector.ts` analyzes raw project data to determine layout:
-- `detectProjectLayout(data)` → `{ layout, blockCount, hasSlides }`
-- `extractEditorStates(data, type)` → per-block editor states
-- `createProjectData(type, states)` → serialize states for storage
+`layout-detector.ts` handles project data parsing:
+- `extractEditorStates(data)` → extracts editor state from stored data
+- `createProjectData(states)` → serialize states for storage
 
 ---
 
@@ -540,14 +521,12 @@ Located in `plugins/floating-text-components/`:
 
 The main hook. Manages all project state and persistence.
 
-**Accepts:** `ProjectStorageDefaults?` — optional initial `engine`, `layout`, `mode`.
+**Accepts:** `ProjectStorageDefaults?` — optional initial `engine`, `mode`.
 
 **Returns:**
-- Project metadata: `projectId`, `projectName`, `projectType`, `layout`, `engine`, `projectMode`, `storageType`, `tags`, `preferences`
-- Editor states: `editorState`, `blockStates`, `blockArrayBlocks`, `slideshowStructure`, `slideshowDeps`
+- Project metadata: `projectId`, `projectName`, `engine`, `projectMode`, `storageType`, `tags`, `preferences`
+- Editor states: `editorState`, `blockArrayBlocks`
 - Operations: `save()`, `saveAs()`, `loadProject()`, `createProject()`
-- Slideshow: `convertToIndependent()`, `convertToDependent()`, `importConfirm()`
-- Block ops: `addBlock()`, `removeBlock()`
 - Lists: `savedProjects`, `availableTags`, `refreshProjects()`, `refreshTags()`
 - Size: `projectSize`, `assetsSize`, `assets`
 - Sync: `syncStats`, `autoSaveEnabled`
@@ -586,8 +565,7 @@ Preview dialog management.
 Read-only storage for the viewer page.
 
 - Loads project from URL hash
-- Computes layout info (layout type, per-block states, slideshow resolution)
-- Returns `layoutInfo` with states, blocksArray, slideshowData, previewMode
+- Returns `layoutInfo` with editor state for rendering
 
 ---
 
@@ -655,9 +633,7 @@ engines/
 │   └── block-type-picker.tsx
 └── lexical/                   # Lexical engine
     ├── lexical-editor.tsx
-    ├── editor-layout-type1.tsx
-    ├── editor-layout-type2.tsx
-    └── editor-layout-slideshow.tsx
+    └── editor-layout-type1.tsx
 ```
 
 ### Hooks
@@ -675,17 +651,13 @@ hooks/
 ```
 lib/storage/editor/
 ├── enhanced-storage-adapter.ts  # IndexedDB + sync + Drive adapter
-├── project-types.ts             # EngineType, ProjectType, layout helpers
+├── project-types.ts             # EngineType constants
 ├── project-modes.ts             # ProjectMode, NodeRestrictions, isNodeAllowed()
 ├── project-preferences.ts       # ProjectPreferences, per-panel config
 ├── block-structure.ts           # Block, BlockArray, BlockStorage types
 ├── cell-structure.ts            # Cell, CellularDocument, CellularContent
 ├── layout-detector.ts           # detectProjectLayout(), extractEditorStates()
-├── slideshow-structure.ts       # SlideshowStructure, slide helpers
 ├── storage-types.ts             # StorageType, SyncStatus constants
-├── multi-block-layout.ts        # Multi-panel layout config
-├── panel-structure.ts           # Panel layout types
-├── project-resolver.ts          # Slide/dependent project resolution
 ├── editor-preferences.ts        # Editor preferences DB
 └── cell-converters/
     ├── index.ts                 # Router for cell conversion
