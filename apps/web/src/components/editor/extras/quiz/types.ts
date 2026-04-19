@@ -453,10 +453,21 @@ export function createTrueFalseEntry(stem = ""): TrueFalseEntry {
 }
 
 export function createFillInTheBlankEntry(stem = ""): FillInTheBlankEntry {
+  // Pre-parse blanks from stem so the form starts with correct data
+  const parsedBlanks = stem.match(/___|\b_[^_]+_\b/g) || []
+  const blanks: FillBlankField[] = parsedBlanks.map((match, i) => {
+    const extractedAnswer = match === "___" ? null : match.slice(1, -1)
+    const acceptedAnswers = extractedAnswer ? [extractedAnswer] : [""]
+    return {
+      id: Math.random().toString(36).substring(7),
+      position: i,
+      input: { type: FillBlankInputType.Text, acceptedAnswers } as FillBlankTextInput,
+    }
+  })
   return {
     type: QuizEntryType.FillInTheBlank,
     stem,
-    blanks: [],
+    blanks,
     settings: createDefaultSettings(),
   }
 }
