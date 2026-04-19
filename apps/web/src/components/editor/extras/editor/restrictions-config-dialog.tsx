@@ -23,9 +23,7 @@ import { X, Plus, Shield } from "lucide-react"
 import {
   type NodeRestrictions,
   setBlockRestriction,
-  setPanelRestriction,
   removeBlockRestriction,
-  removePanelRestriction,
   getRestrictions,
   describeRestrictions,
 } from "@/lib/storage/editor/project-modes"
@@ -88,14 +86,6 @@ export function RestrictionsConfigDialog({
         // These nodes blocked
         newRestrictions = setBlockRestriction(newRestrictions, selectedId, selectedNodes, null)
       }
-    } else {
-      if (restrictionType === "allow") {
-        // Only these nodes allowed in panel
-        newRestrictions = setPanelRestriction(newRestrictions, selectedId, "*", selectedNodes)
-      } else {
-        // These nodes blocked in panel
-        newRestrictions = setPanelRestriction(newRestrictions, selectedId, selectedNodes, null)
-      }
     }
 
     onRestrictionsChange(newRestrictions)
@@ -115,8 +105,6 @@ export function RestrictionsConfigDialog({
 
     if (target === "block") {
       newRestrictions = removeBlockRestriction(newRestrictions, id)
-    } else {
-      newRestrictions = removePanelRestriction(newRestrictions, id)
     }
 
     onRestrictionsChange(newRestrictions)
@@ -176,31 +164,7 @@ export function RestrictionsConfigDialog({
                 </div>
               )}
 
-              {/* Panel Restrictions */}
-              {currentRestrictions?.panels && Object.entries(currentRestrictions.panels).length > 0 && (
-                <div className="space-y-1">
-                  <p className="text-xs text-muted-foreground">Panel Restrictions:</p>
-                  {Object.entries(currentRestrictions.panels).map(([panelId, restriction]) => (
-                    <div key={panelId} className="flex items-center justify-between p-2 border rounded-lg">
-                      <div>
-                        <span className="font-medium text-sm">Panel {panelId}</span>
-                        <p className="text-xs text-muted-foreground">{describeRestrictions(restriction)}</p>
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleRemoveRestriction("panel", panelId)}
-                        className="h-7 w-7 p-0"
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {(!currentRestrictions?.blocks || Object.keys(currentRestrictions.blocks).length === 0) &&
-               (!currentRestrictions?.panels || Object.keys(currentRestrictions.panels).length === 0) && (
+              {(!currentRestrictions?.blocks || Object.keys(currentRestrictions.blocks).length === 0) && (
                 <p className="text-sm text-muted-foreground">No custom restrictions configured</p>
               )}
             </div>
