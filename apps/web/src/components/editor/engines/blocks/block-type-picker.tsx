@@ -16,11 +16,11 @@ import { QUIZ_TEMPLATES, type QuizTypeTemplate } from "@/components/editor/extra
 // ============================================================================
 
 const BLOCK_CATEGORIES: { label: string; types: BlockCellType[] }[] = [
-  { label: "Content", types: ["rt", "md", "html", "hdr"] },
-  { label: "Media", types: ["img", "vid", "aud", "gal", "yt", "spot"] },
+  { label: "Content", types: ["rt", "md", "html"] },
+  { label: "Media", types: ["img", "vid", "aud", "gal"] },
   { label: "Interactive", types: ["quiz", "code", "btn"] },
-  { label: "Data & Diagrams", types: ["mmd", "vega", "tbl", "pres"] },
-  { label: "Structure", types: ["div", "adm", "src", "proj"] },
+  { label: "Data & Diagrams", types: ["mmd", "vega", "tbl"] },
+  { label: "Structure", types: ["div", "adm", "proj"] },
 ]
 
 // ============================================================================
