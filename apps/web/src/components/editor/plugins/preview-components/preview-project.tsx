@@ -10,9 +10,7 @@ import type { SerializedEditorState } from "lexical"
 interface ProjectNodeData {
   projectId: string
   projectName: string
-  projectType: "type1" | "type2"
   editorState: any
-  blockStates?: Record<string, SerializedEditorState | null>
   isLocalCopy: boolean
   isReference?: boolean
   wasReference?: boolean
@@ -52,17 +50,13 @@ export function PreviewProject({ node, storageAdapter }: PreviewProjectProps) {
 
           // Parse project data
           let editorState = null
-          let blockStates: Record<string, SerializedEditorState | null> | undefined = undefined
 
           try {
             const data = JSON.parse(fullProject.data)
-            if (fullProject.type === "type1") {
+            if (data.blocks && data.blocks.b1) {
+              editorState = data.blocks.b1
+            } else {
               editorState = data
-            } else if (fullProject.type === "type2") {
-              // Parse blocks from data
-              if (data.blocks && typeof data.blocks === "object") {
-                blockStates = data.blocks
-              }
             }
           } catch (error) {
             console.error("Failed to parse project data:", error)
@@ -71,7 +65,6 @@ export function PreviewProject({ node, storageAdapter }: PreviewProjectProps) {
           const loadedProjectData: ProjectNodeData = {
             ...node.data,
             editorState,
-            blockStates,
             size: fullProject.size,
           }
 
@@ -127,9 +120,7 @@ export function PreviewProject({ node, storageAdapter }: PreviewProjectProps) {
               )}
             </div>
             <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
-              <span className="capitalize">
-                {node.data.projectType === "type1" ? "Single Project" : "Multiple Project"}
-              </span>
+              <span className="capitalize">Single Project</span>
               <span>•</span>
               <span>{formatSize(node.data.size)}</span>
               {node.data.isLocalCopy && node.data.originalProjectId && (
@@ -179,28 +170,16 @@ export function PreviewProject({ node, storageAdapter }: PreviewProjectProps) {
               <p className="text-sm">Failed to load project</p>
             </div>
           </div>
-        ) : loadedData.projectType === "type1" && loadedData.editorState ? (
+        ) : loadedData.editorState ? (
           <div className="w-full">
             <SerializedContentRenderer serializedState={loadedData.editorState} />
-          </div>
-        ) : loadedData.projectType === "type2" && loadedData.blockStates && Object.keys(loadedData.blockStates).length > 0 ? (
-          <div className="w-full grid gap-4" style={{ gridTemplateColumns: `repeat(${Math.min(Object.keys(loadedData.blockStates).length, 3)}, minmax(0, 1fr))` }}>
-            {Object.entries(loadedData.blockStates).map(([blockId, state]) => 
-              state ? (
-                <div key={blockId}>
-                  <SerializedContentRenderer serializedState={state} />
-                </div>
-              ) : null
-            )}
           </div>
         ) : (
           <div className="flex items-center justify-center py-12 px-4">
             <div className="text-center text-gray-500 dark:text-gray-400">
               <FileText className="h-12 w-12 mx-auto mb-2 opacity-50" />
               <p className="text-sm">No content available</p>
-              <p className="text-xs mt-1">
-                {loadedData.projectType === "type1" ? "Single Layout" : "Dual Layout"}
-              </p>
+              <p className="text-xs mt-1">Single Layout</p>
             </div>
           </div>
         )}
