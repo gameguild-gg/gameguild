@@ -7,12 +7,10 @@
 import JSZip from "jszip"
 import { assetManager } from "@/lib/storage/assets/asset-manager"
 import type { AssetData, AssetUsage } from "@/lib/storage/assets/types"
-import type { ProjectType } from "@/lib/storage/editor/project-types"
 
 export interface ProjectData {
   id: string
   name: string
-  type: ProjectType // Project type (not layout)
   data: string
   tags: string[]
   size: number
@@ -27,7 +25,6 @@ export interface ProjectData {
 export interface ProjectMetadata {
   id: string
   name: string
-  type: "type1" | "type2" | "type3"
   tags: string[]
   size: number
   hash: string
@@ -74,7 +71,6 @@ export class ProjectExporter {
     const metadata: ProjectMetadata = {
       id: projectData.id,
       name: projectData.name,
-      type: projectData.type || "type1",
       tags: projectData.tags,
       size: projectData.size,
       hash,
@@ -90,7 +86,6 @@ export class ProjectExporter {
     console.log('[ProjectExporter] Metadata prepared:', {
       id: metadata.id,
       name: metadata.name,
-      type: metadata.type,
       assetsCount: metadata.assetsCount,
       hasPreferences: !!metadata.preferences
     })
@@ -255,7 +250,6 @@ export class ProjectExporter {
     return !!(
       projectData.id &&
       projectData.name &&
-      projectData.type &&
       projectData.data &&
       Array.isArray(projectData.tags) &&
       projectData.createdAt &&
