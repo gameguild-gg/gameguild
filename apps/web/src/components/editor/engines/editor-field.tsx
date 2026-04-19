@@ -26,9 +26,9 @@ export function EditorField() {
   }
 
   if (project.engine === ENGINE_TYPES.BLOCKS) {
-    const noBlockTypes = !fieldConfig.allowedBlockTypes || fieldConfig.allowedBlockTypes.length <= 1
+    const hasRestrictedBlockTypes = fieldConfig.allowedBlockTypes && fieldConfig.allowedBlockTypes.length <= 1
     const isQuizMode = fieldConfig.allowedModes?.includes("quiz-page")
-    const hideBlocks = noBlockTypes || (isQuizMode && !fieldConfig.allowedBlockTypes?.length)
+    const hideBlocks = hasRestrictedBlockTypes || (isQuizMode && !fieldConfig.allowedBlockTypes?.length)
     return (
       <div className="border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 p-4">
         <BlockArrayEditor
