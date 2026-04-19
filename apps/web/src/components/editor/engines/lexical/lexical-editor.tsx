@@ -57,12 +57,6 @@ import { AdmonitionPlugin } from "@/components/editor/plugins/admonition-plugin"
 import { GalleryNode } from "@/components/editor/nodes/gallery-node"
 import { GalleryPlugin } from "@/components/editor/plugins/gallery-plugin"
 
-// Add the import for the PresentationNode:
-import { PresentationNode } from "@/components/editor/nodes/presentation-node"
-
-// Add the import for the PresentationPlugin:
-import { PresentationPlugin } from "@/components/editor/plugins/presentation-plugin"
-
 // Add the import for the SourceNode and SourcePlugin:
 import { SourceNode } from "@/components/editor/nodes/source-node"
 import { SourcePlugin } from "@/components/editor/plugins/source-plugin"
@@ -315,7 +309,6 @@ const initialConfig = {
     ButtonNode,
     AdmonitionNode,
     GalleryNode,
-    PresentationNode,
     SourceNode,
     YouTubeNode,
     SpotifyNode,
@@ -513,7 +506,6 @@ export function Editor({
             <ButtonPlugin />
             <AdmonitionPlugin />
             <GalleryPlugin />
-            <PresentationPlugin />
             <SourcePlugin />
             <YouTubePlugin />
             <SpotifyPlugin />

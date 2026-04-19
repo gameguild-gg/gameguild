@@ -13,7 +13,6 @@ import { PreviewVideo } from "@/components/editor/plugins/preview-components/pre
 import { PreviewAudio } from "@/components/editor/plugins/preview-components/preview-audio"
 import { PreviewHeader } from "@/components/editor/plugins/preview-components/preview-header"
 import { PreviewDivider } from "@/components/editor/plugins/preview-components/preview-divider"
-import { PreviewPresentation } from "@/components/editor/plugins/preview-components/preview-presentation"
 import { PreviewSource } from "@/components/editor/plugins/preview-components/preview-source"
 import { PreviewYouTube } from "@/components/editor/plugins/preview-components/preview-youtube"
 import { PreviewSpotify } from "@/components/editor/plugins/preview-components/preview-spotify"
@@ -58,8 +57,6 @@ export function BlockContentRenderer({ block }: BlockContentRendererProps) {
       return <PreviewMermaid data={node.data} />
     case "vega":
       return <PreviewVegaLite node={node} />
-    case "pres":
-      return <PreviewPresentation node={node} />
     case "src":
       return <PreviewSource node={node} />
     case "md":
