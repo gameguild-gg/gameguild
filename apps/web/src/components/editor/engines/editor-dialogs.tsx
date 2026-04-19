@@ -4,13 +4,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { CreateProjectDialog } from "@/components/editor/extras/editor/create-project-dialog"
 import { SizeDetailsDialog } from "@/components/editor/extras/editor/size-details-dialog"
 import { SyncStatusDialog } from "@/components/editor/extras/editor/sync-status-dialog"
-import { ProjectImportDialog } from "@/components/editor/extras/editor/project-import-dialog"
 import { ExitConfirmDialog } from "@/components/editor/extras/dialogs/exit-confirm-dialog"
 import { ProjectHistoryDialog } from "@/components/editor/extras/dialogs/project-history-dialog"
 import { PreviewRenderer } from "@/components/editor/extras/preview/preview-renderer"
-import { PreviewRendererType2 } from "@/components/editor/extras/preview/preview-renderer-type2"
-import { PreviewRendererSlideshowContinuous } from "@/components/editor/extras/preview/preview-renderer-slideshow-continuous"
-import { PreviewRendererSlideshowSlide } from "@/components/editor/extras/preview/preview-renderer-slideshow-slide"
 import { BlockArrayViewer } from "@/components/editor/engines/blocks/block-array-viewer"
 import { ENGINE_TYPES } from "@/lib/storage/editor/project-types"
 import { useEditor } from "./editor-provider"
@@ -36,7 +32,7 @@ export function EditorDialogs() {
         onAvailableTagsUpdate={project.refreshTags}
         generateProjectId={project.generateProjectId}
         allowedEngines={fieldConfig.engines}
-        allowedLayouts={fieldConfig.layouts}
+
         allowedModes={fieldConfig.allowedModes}
         defaultMode={fieldConfig.allowedModes?.[0] ?? fieldConfig.defaultMode}
       />
@@ -71,10 +67,7 @@ export function EditorDialogs() {
 
       {/* Preview Dialog */}
       <Dialog open={preview.previewOpen} onOpenChange={preview.setPreviewOpen}>
-        <DialogContent
-          className={(preview.previewLayout === "multiple" || preview.previewLayout === "slideshow") ? "max-w-none! p-6" : "max-w-4xl max-h-[90vh] overflow-y-auto"}
-          style={(preview.previewLayout === "multiple" || preview.previewLayout === "slideshow") ? { width: '95vw', maxWidth: '95vw' } : undefined}
-        >
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Preview</DialogTitle>
           </DialogHeader>
@@ -83,53 +76,8 @@ export function EditorDialogs() {
               <BlockArrayViewer blocks={project.blockArrayBlocks} />
             </div>
           )}
-          {project.engine !== ENGINE_TYPES.BLOCKS && preview.previewLayout === "single" && preview.previewState && (
+          {project.engine !== ENGINE_TYPES.BLOCKS && preview.previewState && (
             <PreviewRenderer serializedState={preview.previewState} />
-          )}
-          {preview.previewLayout === "multiple" && Object.keys(preview.previewBlockStates).length >= 1 && (
-            <div className="w-full max-h-[80vh] overflow-y-auto">
-              <PreviewRendererType2
-                blockStates={preview.previewBlockStates}
-                preferences={project.preferences}
-                onLayoutChange={(panels, direction) => {
-                  if (project.preferences) {
-                    project.setPreferences({
-                      ...project.preferences,
-                      global: {
-                        ...project.preferences.global,
-                        advancedMultiBlockPanels: panels,
-                        multiBlockDirection: direction,
-                      }
-                    })
-                  }
-                }}
-              />
-            </div>
-          )}
-          {preview.previewLayout === "slideshow" && preview.previewSlideshowStructure && (
-            <div className="w-full max-h-[80vh] overflow-y-auto">
-              {preview.previewSlideshowMode === "slide" ? (
-                <PreviewRendererSlideshowSlide
-                  structure={preview.previewSlideshowStructure}
-                  projectId={project.projectId}
-                  projectName={project.projectName}
-                  deps={project.slideshowDeps}
-                  resolvedProjects={project.resolvedProjects}
-                  storageAdapter={project.storageAdapter}
-                  preferences={project.preferences}
-                />
-              ) : (
-                <PreviewRendererSlideshowContinuous
-                  structure={preview.previewSlideshowStructure}
-                  projectId={project.projectId}
-                  projectName={project.projectName}
-                  deps={project.slideshowDeps}
-                  resolvedProjects={project.resolvedProjects}
-                  storageAdapter={project.storageAdapter}
-                  preferences={project.preferences}
-                />
-              )}
-            </div>
           )}
         </DialogContent>
       </Dialog>
@@ -150,17 +98,6 @@ export function EditorDialogs() {
         listSnapshots={(id) => project.db.listSnapshots(id)}
       />
 
-      {/* Project Import Dialog for slideshow slides */}
-      <ProjectImportDialog
-        open={ui.importDialogOpen}
-        onOpenChange={ui.setImportDialogOpen}
-        storageAdapter={{
-          list: () => project.storageAdapter.list(),
-          listSnapshots: (id: string) => project.db.listSnapshots(id),
-        }}
-        onConfirm={ui.handleImportConfirm}
-        currentProjectId={project.projectId}
-      />
     </>
   )
 }

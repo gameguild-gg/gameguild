@@ -44,17 +44,11 @@ export interface EditorUIState {
   setNextUrl: (url: string | null) => void
   exitDialogOpen: boolean
   setExitDialogOpen: (open: boolean) => void
-  importDialogOpen: boolean
-  setImportDialogOpen: (open: boolean) => void
-  importTargetSlideId: string | null
-  setImportTargetSlideId: (id: string | null) => void
   // Derived helpers
   handleSave: () => Promise<void>
   handleSaveAndExit: () => Promise<void>
   handleLinkNavigation: (event: React.MouseEvent<HTMLAnchorElement>, url: string) => void
   handleNavigation: (url: string) => void
-  handleImportProject: (slideId: string) => void
-  handleImportConfirm: (projectId: string, loadMode: "snapshot" | "head", snapshotTag?: string) => void
   handleExitConfirm: () => void
   getSizeIndicatorColor: () => string
   formatSize: (sizeInKB: number) => string
@@ -95,7 +89,6 @@ export function EditorProvider({ fieldConfig: fieldPartial, toolbarConfig: toolb
 
   const project = useProjectStorage({
     engine: fieldConfig.defaultEngine,
-    layout: fieldConfig.defaultLayout,
     mode: effectiveMode,
   })
   const history = useProjectHistory(project)
@@ -118,8 +111,6 @@ export function EditorProvider({ fieldConfig: fieldPartial, toolbarConfig: toolb
   const [historyDialogOpen, setHistoryDialogOpen] = useState(false)
   const [nextUrl, setNextUrl] = useState<string | null>(null)
   const [exitDialogOpen, setExitDialogOpen] = useState(false)
-  const [importDialogOpen, setImportDialogOpen] = useState(false)
-  const [importTargetSlideId, setImportTargetSlideId] = useState<string | null>(null)
 
   // ── Keyboard shortcut: Ctrl+S ──
   const handleSaveRef = useRef(async () => {
@@ -183,18 +174,6 @@ export function EditorProvider({ fieldConfig: fieldPartial, toolbarConfig: toolb
     setExitDialogOpen(false)
   }
 
-  const handleImportProject = (slideId: string) => {
-    setImportTargetSlideId(slideId)
-    setImportDialogOpen(true)
-  }
-
-  const handleImportConfirm = (projectId: string, loadMode: "snapshot" | "head", snapshotTag?: string) => {
-    if (!importTargetSlideId) return
-    project.importConfirm(importTargetSlideId, projectId, loadMode, snapshotTag)
-    setImportDialogOpen(false)
-    setImportTargetSlideId(null)
-  }
-
   const handleExitConfirm = () => {
     if (nextUrl) router.push(nextUrl)
   }
@@ -211,14 +190,10 @@ export function EditorProvider({ fieldConfig: fieldPartial, toolbarConfig: toolb
     historyDialogOpen, setHistoryDialogOpen,
     nextUrl, setNextUrl,
     exitDialogOpen, setExitDialogOpen,
-    importDialogOpen, setImportDialogOpen,
-    importTargetSlideId, setImportTargetSlideId,
     handleSave,
     handleSaveAndExit,
     handleLinkNavigation,
     handleNavigation,
-    handleImportProject,
-    handleImportConfirm,
     handleExitConfirm,
     getSizeIndicatorColor,
     formatSize,

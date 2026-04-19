@@ -8,7 +8,7 @@
  * Pages compose freely by passing different configs to EditorField/EditorToolbar.
  */
 
-import type { EngineType, ProjectType } from "@/lib/storage/editor/project-types"
+import type { EngineType } from "@/lib/storage/editor/project-types"
 import type { ProjectMode, NodeRestrictions } from "@/lib/storage/editor/project-modes"
 import type { BlockCellType } from "@/lib/storage/editor/block-structure"
 
@@ -19,8 +19,6 @@ import type { BlockCellType } from "@/lib/storage/editor/block-structure"
 export interface FieldConfig {
   /** Which engines are available (default: both) */
   engines: EngineType[]
-  /** Which layout types are available (default: all three) */
-  layouts: ProjectType[]
   /** For blocks engine: which block types to show in the picker (undefined = all) */
   allowedBlockTypes?: BlockCellType[]
   /** For lexical engine: which decorator node types are allowed (undefined = all) */
@@ -29,17 +27,13 @@ export interface FieldConfig {
   allowedModes?: ProjectMode[]
   /** Default engine when creating a project */
   defaultEngine?: EngineType
-  /** Default layout when creating a project */
-  defaultLayout?: ProjectType
   /** Default project mode */
   defaultMode?: ProjectMode
 }
 
 export const DEFAULT_FIELD_CONFIG: FieldConfig = {
   engines: ["lexical", "blocks"],
-  layouts: ["type1", "type2", "type3"],
   defaultEngine: "lexical",
-  defaultLayout: "type1",
   defaultMode: "free-page",
 }
 
@@ -60,7 +54,6 @@ export interface ToolbarConfig {
   showProjectTitle?: boolean
   showModeIndicator?: boolean
   showStorageInfo?: boolean
-  showPreviewModeSelector?: boolean
   showNavHome?: boolean
   showNavViewer?: boolean
   showNavStudio?: boolean
@@ -79,7 +72,6 @@ export const DEFAULT_TOOLBAR_CONFIG: ToolbarConfig = {
   showProjectTitle: true,
   showModeIndicator: true,
   showStorageInfo: true,
-  showPreviewModeSelector: true,
   showNavHome: true,
   showNavViewer: true,
   showNavStudio: true,
@@ -109,7 +101,6 @@ export function configToRestrictions(config: FieldConfig): NodeRestrictions | un
   return {
     blocks: {
       b1: ["*", config.allowedNodeTypes],
-      b2: ["*", config.allowedNodeTypes],
     },
   }
 }

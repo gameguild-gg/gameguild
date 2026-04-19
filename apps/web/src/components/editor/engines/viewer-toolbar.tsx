@@ -66,7 +66,7 @@ export function ViewerToolbar() {
       {/* Action Bar */}
       <div className="flex items-center justify-between gap-4 p-4 bg-white dark:bg-gray-900">
         <div className="flex items-center gap-3">
-          {viewer.currentProject && viewer.layoutInfo.layout === "single" && (
+          {viewer.currentProject && (
             <Button
               variant="outline"
               size="sm"

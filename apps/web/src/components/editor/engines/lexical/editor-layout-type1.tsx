@@ -4,7 +4,6 @@ import { Editor } from "./lexical-editor"
 import type { LexicalEditor } from "lexical"
 import type React from "react"
 import type { ProjectMode } from "@/lib/storage/editor/project-modes"
-import { type ProjectType} from "@/lib/storage/editor/project-types"
 
 interface EditorLayoutType1Props {
   editorRef: React.MutableRefObject<LexicalEditor | null>
@@ -13,7 +12,6 @@ interface EditorLayoutType1Props {
   onLoadingChange?: (setLoading: (loading: boolean) => void) => void
   projectId: string
   mode?: ProjectMode
-  currentProjectType?: ProjectType
   storageAdapter?: any
   readOnly?: boolean
 }
@@ -29,7 +27,6 @@ export function EditorLayoutType1({
   onLoadingChange,
   projectId,
   mode = "free-page",
-  currentProjectType,
   storageAdapter,
   readOnly = false,
 }: EditorLayoutType1Props) {
@@ -48,7 +45,6 @@ export function EditorLayoutType1({
           projectId={projectId}
           mode={mode}
           blockId="b1"
-          currentProjectType={currentProjectType}
           storageAdapter={storageAdapter}
           readOnly={readOnly}
         />
