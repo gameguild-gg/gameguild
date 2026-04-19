@@ -6,12 +6,10 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { FileText, Search, X, HardDrive, Cloud, Database } from "lucide-react"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { type ProjectType} from "@/lib/storage/editor/project-types"
 
 interface ProjectData {
   id: string
   name: string
-  type: ProjectType
   data: string
   tags: string[]
   size: number
@@ -24,7 +22,6 @@ interface SelectProjectDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   onProjectSelect: (project: ProjectData) => void
-  allowedTypes?: ("type1" | "type2")[]
   currentProjectId?: string
   storageAdapter: {
     list: () => Promise<ProjectData[]>
@@ -41,7 +38,6 @@ export function SelectProjectDialog({
   open,
   onOpenChange,
   onProjectSelect,
-  allowedTypes = ["type1", "type2"],
   currentProjectId,
   storageAdapter,
 }: SelectProjectDialogProps) {
@@ -55,9 +51,9 @@ export function SelectProjectDialog({
     try {
       let allProjects = await storageAdapter.list()
       
-      // Filter by allowed types and exclude current project
+      // Exclude current project
       allProjects = allProjects.filter(
-        (p) => allowedTypes.includes(p.type as any) && p.id !== currentProjectId
+        (p) => p.id !== currentProjectId
       )
 
       // Apply search filter
@@ -107,17 +103,8 @@ export function SelectProjectDialog({
   }
 
   // Get project type label
-  const getTypeLabel = (type: string): string => {
-    switch (type) {
-      case "type1":
-        return "Single Project"
-      case "type2":
-        return "Multiple Project"
-      case "type3":
-        return "Sequential Project"
-      default:
-        return type
-    }
+  const getTypeLabel = (): string => {
+    return "Single Project"
   }
 
   const handleSelect = (project: ProjectData) => {
@@ -169,7 +156,7 @@ export function SelectProjectDialog({
 
         {/* Filter info */}
         <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
-          <span>Showing: {allowedTypes.map(getTypeLabel).join(", ")}</span>
+          <span>Showing: Single Projects</span>
         </div>
 
         {/* Projects list */}
@@ -185,7 +172,7 @@ export function SelectProjectDialog({
               <div className="text-xs text-gray-400 mt-1">
                 {searchTerm
                   ? "Try adjusting your search"
-                  : `Create a ${allowedTypes.map(getTypeLabel).join(" or ")} to import`}
+                  : "Create a project to import"}
               </div>
             </div>
           ) : (
@@ -207,7 +194,7 @@ export function SelectProjectDialog({
 
                       <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 flex-wrap">
                         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-gray-100 dark:bg-gray-800">
-                          {getTypeLabel(project.type)}
+                          {getTypeLabel()}
                         </span>
                         <span className="inline-flex items-center gap-1">
                           {getStorageIcon(project.storageType)}

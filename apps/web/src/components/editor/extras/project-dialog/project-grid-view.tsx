@@ -2,12 +2,10 @@
 
 import type React from "react"
 import { ProjectCard } from "./project-card"
-import { type ProjectType} from "@/lib/storage/editor/project-types"
 
 interface ProjectData {
   id: string
   name: string
-  type: ProjectType
   data: string
   tags: string[]
   size: number

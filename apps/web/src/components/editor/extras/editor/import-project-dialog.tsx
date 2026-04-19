@@ -10,12 +10,10 @@ import { useState, useEffect, useRef } from "react"
 import { toast } from "sonner"
 import { Upload, FileText, Archive, X } from "lucide-react"
 import { ProjectImporter, type ImportedProjectData } from "@/lib/interopAdapter/project-importer"
-import { type ProjectType} from "@/lib/storage/editor/project-types"
 
 interface ProjectData {
   id: string
   name: string
-  type: ProjectType
   data: string
   tags: string[]
   size: number
@@ -26,7 +24,7 @@ interface ProjectData {
 
 interface StorageAdapter {
   list: () => Promise<ProjectData[]>
-  save: (id: string, name: string, data: string, tags: string[], storageType?: any, preferences?: any, type?: "type1" | "type2" | "type3") => Promise<void>
+  save: (id: string, name: string, data: string, tags: string[], storageType?: any, preferences?: any) => Promise<void>
 }
 
 interface ImportProjectDialogProps {
@@ -200,15 +198,14 @@ export function ImportProjectDialog({
     try {
       const newProjectId = generateProjectId()
       
-      // Save project with type and preferences
+      // Save project with preferences
       await storageAdapter.save(
         newProjectId, 
         projectName.trim(), 
         importedProject.data, 
         projectTags,
         undefined, // storageType
-        importedProject.preferences || importedProject.metadata?.preferences,
-        importedProject.type || "type1"
+        importedProject.preferences || importedProject.metadata?.preferences
       )
 
       // Import assets if present

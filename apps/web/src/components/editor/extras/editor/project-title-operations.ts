@@ -1,6 +1,8 @@
 import { toast } from "sonner"
 import type { LexicalEditor } from "lexical"
 
+import type { EngineType } from "@/lib/storage/editor/project-types"
+
 interface ProjectData {
   id: string
   name: string
@@ -8,7 +10,7 @@ interface ProjectData {
 }
 
 interface StorageAdapter {
-  save: (id: string, name: string, data: string, tags?: string[], storageType?: "local" | "gameguild-cloud" | "google-drive", preferences?: any, type?: string) => Promise<void>
+  save: (id: string, name: string, data: string, tags?: string[], storageType?: "local" | "gameguild-cloud" | "google-drive", preferences?: any, engine?: EngineType) => Promise<void>
   list: () => Promise<ProjectData[]>
 }
 

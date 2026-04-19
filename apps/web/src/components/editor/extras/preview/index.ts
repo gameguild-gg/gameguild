@@ -1,7 +1,4 @@
 export { PreviewRenderer } from "./preview-renderer"
 export { PreviewRendererType1 } from "./preview-renderer-type1"
-export { PreviewRendererType2 } from "./preview-renderer-type2"
-export { PreviewRendererSlideshowContinuous } from "./preview-renderer-slideshow-continuous"
-export { PreviewRendererSlideshowSlide } from "./preview-renderer-slideshow-slide"
 export { SerializedContentRenderer } from "./serialized-content-renderer"
 export { PreviewHeader } from "./preview-header"
