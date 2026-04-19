@@ -9,15 +9,12 @@ import type { FieldConfig, ToolbarConfig } from "@/components/editor/engines/edi
 
 const fieldConfig: Partial<FieldConfig> = {
   engines: ["blocks"],
-  layouts: ["type1"],
   allowedBlockTypes: [],
   allowedModes: ["quiz-page"],
   defaultEngine: "blocks",
-  defaultLayout: "type1",
 }
 
 const toolbarConfig: Partial<ToolbarConfig> = {
-  showPreviewModeSelector: false,
 }
 
 export default function QuizEditorPage() {
