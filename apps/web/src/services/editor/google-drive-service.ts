@@ -16,7 +16,6 @@ interface GoogleDriveFile {
 interface GoogleDriveProjectData {
   id: string
   name: string
-  type?: "type1" | "type2"
   data: string
   tags: string[]
   size: number

@@ -2,12 +2,10 @@ import { ApiClient } from "../../api/editor/api-client"
 import { SyncQueue } from "./sync-queue"
 import { HashManager } from "./hash-manager"
 import { syncConfig } from "./sync-config"
-import { type ProjectType} from "@/lib/storage/editor/project-types"
 
 interface ProjectData {
   id: string
   name: string
-  type: ProjectType
   data: string
   tags: string[]
   size: number
@@ -125,8 +123,7 @@ export class SyncManager {
         console.log("Downloaded project from server:", project.name)
       }
 
-      // Ensure type field exists with default value
-      return project ? { ...project, type: project.type || "type1" } : null
+      return project || null
     } catch (error) {
       if (syncConfig.getConfig().debugMode) {
         if (error instanceof Error) {
