@@ -12,7 +12,6 @@ import { SyncStatusIndicator } from "@/components/editor/extras/editor/sync-stat
 import { EditableProjectTitle } from "@/components/editor/extras/editor/editable-project-title"
 import { ProjectStorageInfo } from "@/components/editor/extras/editor/project-storage-info"
 import { ProjectModeIndicator } from "@/components/editor/extras/editor/project-mode-indicator"
-import { PreviewModeSelector } from "@/components/editor/extras/editor/preview-mode-selector"
 import { syncConfig } from "@/lib/sync/editor/sync-config"
 import { useEditor } from "./editor-provider"
 
@@ -111,11 +110,13 @@ export function EditorToolbar() {
               onOpenChange={ui.setSaveAsDialogOpen}
               projectName={ui.newProjectName}
               onProjectNameChange={ui.setNewProjectName}
-              onSave={(storageOption) => project.saveAs(ui.newProjectName, storageOption)}
+              onSave={(storageOption, tags) => project.saveAs(ui.newProjectName, storageOption, tags)}
               currentProjectSize={project.projectSize}
               getSizeIndicatorColor={ui.getSizeIndicatorColor}
               formatSize={ui.formatSize}
               isDbInitialized={project.isDbInitialized}
+              availableTags={project.availableTags}
+              initialTags={project.tags}
             />
           )}
 
@@ -128,7 +129,6 @@ export function EditorToolbar() {
               storageAdapter={project.storageAdapter}
               availableTags={project.availableTags}
               editorRef={project.editorRef}
-              blockRefs={project.blockRefs}
               setLoadingRef={project.setLoadingRef}
               onProjectLoad={project.loadProject}
               onProjectsListUpdate={project.refreshProjects}
@@ -170,12 +170,6 @@ export function EditorToolbar() {
             </Button>
           )}
 
-          {tc.showPreviewModeSelector !== false && project.layout === "slideshow" && project.slideshowStructure && (
-            <PreviewModeSelector
-              previewMode={project.previewMode}
-              onPreviewModeChange={project.setPreviewMode}
-            />
-          )}
         </div>
 
         {/* Status Indicators */}

@@ -259,7 +259,7 @@ export const BLOCK_REGISTRY: Record<BlockCellType, BlockTypeConfig> = {
     createEmpty: () => ({
       id: crypto.randomUUID(),
       type: "proj",
-      data: { projectId: "", projectName: "", projectType: "type1", editorState: null, isLocalCopy: false },
+      data: { projectId: "", projectName: "", editorState: null, isLocalCopy: false },
     }),
   },
 }

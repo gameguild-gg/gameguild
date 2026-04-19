@@ -104,7 +104,6 @@ import { OnChangePlugin } from "@lexical/react/LexicalOnChangePlugin"
 import type { LexicalEditor } from "lexical"
 import type React from "react"
 import type { ProjectMode } from "@/lib/storage/editor/project-modes"
-import { type ProjectType} from "@/lib/storage/editor/project-types"
 import { lexicalToCells, cellsToLexical } from "@/lib/storage/editor/cell-converters/lexical"
 import type { CellularContent } from "@/lib/storage/editor/cell-structure"
 
@@ -367,7 +366,6 @@ interface EditorProps {
   blockId?: string
   panelId?: string
   customRestrictions?: any
-  currentProjectType?: ProjectType
   storageAdapter?: any
   currentStorageType?: "local" | "gameguild-cloud" | "google-drive"
   readOnly?: boolean
@@ -439,7 +437,6 @@ export function Editor({
   blockId, 
   panelId, 
   customRestrictions, 
-  currentProjectType, 
   storageAdapter, 
   currentStorageType,
   readOnly = false
@@ -497,7 +494,6 @@ export function Editor({
                 panelId={panelId}
                 customRestrictions={customRestrictions}
                 currentProjectId={projectId || undefined}
-                currentProjectType={currentProjectType}
                 storageAdapter={storageAdapter}
                 currentStorageType={currentStorageType}
               />
