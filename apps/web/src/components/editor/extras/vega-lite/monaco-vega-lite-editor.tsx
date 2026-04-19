@@ -48,7 +48,7 @@ export function MonacoVegaLiteEditor({
       const vegaLiteSchema = await fetchJson('https://cdn.jsdelivr.net/npm/vega-lite@5/build/vega-lite-schema.json')
       const vegaSchema = await fetchJson('https://cdn.jsdelivr.net/npm/vega@5/build/vega-schema.json')
 
-      const schemas: monaco.languages.json.DiagnosticsOptions["schemas"] = []
+      const schemas: Array<{ uri: string; fileMatch?: string[]; schema?: unknown }> = []
       if (vegaLiteSchema) {
         schemas.push({
           uri: "https://vega.github.io/schema/vega-lite/v5.json",
@@ -65,7 +65,7 @@ export function MonacoVegaLiteEditor({
         })
       }
 
-      monaco.languages.json.jsonDefaults.setDiagnosticsOptions({
+      ;(monaco.languages as any).json?.jsonDefaults?.setDiagnosticsOptions({
         validate: true,
         enableSchemaRequest: false,
         schemas,
