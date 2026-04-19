@@ -1,124 +1,25 @@
 /**
  * Layout Detection System
  * 
- * Detecta automaticamente o tipo de layout baseado na estrutura dos dados do projeto.
- * - Single: dados com estrutura {blocks: {b1}}
- * - Multi-Panel: dados com estrutura {blocks: {b1, b2, b3...}}
- * - Slideshow: array de slides (estrutura v1 com slides[])
+ * Single-pane layout only. Detects and extracts editor state from project data.
  */
-
-import { isSlideshowStructure, parseSlideshowStructure, type SlideshowStructure } from './slideshow-structure'
-import { getLayoutFromType, type ProjectType, type InternalLayout } from './project-types'
-
-export interface LayoutDetectionResult {
-  layoutType: InternalLayout
-  isSinglePanel: boolean
-  isMultiPanel: boolean
-  hasSlides: boolean
-  slideshowData?: SlideshowStructure
-  blockCount?: number // Number of blocks (b1, b2, b3...)
-  blocks?: string[] // Block identifiers: ["b1", "b2", "b3"...]
-}
 
 export interface EditorStates {
-  blocks: Record<string, any> // {b1: state, b2: state, b3: state...} - single usa apenas b1
+  blocks: Record<string, any> // {b1: state} - single block only
 }
 
 /**
- * Analisa os dados do projeto e determina qual layout usar
+ * Extrai os estados dos editores (always single block b1)
  * @param data - String JSON com os dados do projeto
- * @returns Informações sobre o layout detectado
- */
-export function detectProjectLayout(data: string): LayoutDetectionResult {
-  try {
-    // Check if it's slideshow structure first
-    if (isSlideshowStructure(data)) {
-      const slideshowData = parseSlideshowStructure(data)
-      return {
-        layoutType: "slideshow",
-        isSinglePanel: false,
-        isMultiPanel: false,
-        hasSlides: true,
-        slideshowData,
-      }
-    }
-    
-    const parsed = JSON.parse(data)
-    
-    // Check for block structure (b1, b2, b3...)
-    const blockKeys = Object.keys(parsed).filter(key => /^b\d+$/.test(key))
-    if (blockKeys.length >= 2) {
-      return {
-        layoutType: "multiple",
-        isSinglePanel: false,
-        isMultiPanel: true,
-        hasSlides: false,
-        blockCount: blockKeys.length,
-        blocks: blockKeys.sort((a, b) => {
-          const numA = parseInt(a.slice(1))
-          const numB = parseInt(b.slice(1))
-          return numA - numB
-        }),
-      }
-    }
-    
-    // Single panel: anything else (uses b1)
-    return {
-      layoutType: "single",
-      isSinglePanel: true,
-      isMultiPanel: false,
-      hasSlides: false,
-      blockCount: 1,
-      blocks: ["b1"],
-    }
-  } catch (error) {
-    console.error("Failed to parse project data for layout detection:", error)
-    return {
-      layoutType: "single",
-      isSinglePanel: true,
-      isMultiPanel: false,
-      hasSlides: false,
-    }
-  }
-}
-
-/**
- * Extrai os estados dos editores baseado no tipo de projeto
- * @param data - String JSON com os dados do projeto
- * @param projectType - Tipo de projeto (type1, type2, type3)
  * @returns Objetos com os estados dos editores
  */
-export function extractEditorStates(data: string, projectType: ProjectType): EditorStates {
-  const layoutType = getLayoutFromType(projectType)
+export function extractEditorStates(data: string): EditorStates {
   try {
     const parsed = JSON.parse(data)
-    
-    if (layoutType === "multiple") {
-      // Extract block structure (b1, b2, b3...)
-      const blockKeys = Object.keys(parsed).filter(key => /^b\d+$/.test(key))
-      
-      if (blockKeys.length >= 1) {
-        const blocks: Record<string, any> = {}
-        blockKeys.forEach(key => {
-          blocks[key] = typeof parsed[key] === 'string' ? JSON.parse(parsed[key]) : parsed[key]
-        })
-        
-        return {
-          blocks,
-        }
-      }
-      
-      // No valid blocks found
-      return {
-        blocks: {},
-      }
-    } else {
-      // Single panel: dados diretos em b1
-      return {
-        blocks: {
-          b1: parsed,
-        },
-      }
+    return {
+      blocks: {
+        b1: parsed,
+      },
     }
   } catch (error) {
     console.error("Failed to extract editor states:", error)
@@ -129,41 +30,14 @@ export function extractEditorStates(data: string, projectType: ProjectType): Edi
 }
 
 /**
- * Cria a estrutura de dados correta baseado no tipo de projeto
- * @param projectType - Tipo de projeto
- * @param states - Estados dos editores (ou estrutura sequencial)
+ * Cria a estrutura de dados para single-pane layout
+ * @param states - Estados dos editores
  * @returns String JSON formatada corretamente
  */
-export function createProjectData(projectType: ProjectType, states: Partial<EditorStates> | SlideshowStructure, blockCount?: number): string {
-  const layoutType = getLayoutFromType(projectType)
-  // Se for estrutura slideshow completa, apenas serializar
-  if ('version' in states && 'slides' in states) {
-    return JSON.stringify(states)
-  }
-  
-  if (layoutType === "multiple") {
-    const editorStates = states as EditorStates
-    
-    // If blocks are provided, use them
-    if (editorStates.blocks && Object.keys(editorStates.blocks).length > 0) {
-      return JSON.stringify(editorStates.blocks)
-    }
-    
-    // Create new block structure with specified count (default 2)
-    const count = blockCount || 2
-    const blocks: Record<string, any> = {}
-    
-    for (let i = 1; i <= count; i++) {
-      blocks[`b${i}`] = createEmptyEditorState()
-    }
-    
-    return JSON.stringify(blocks)
-  } else {
-    // Single panel: usa b1
-    const editorStates = states as EditorStates
-    const b1State = editorStates.blocks?.b1 || createEmptyEditorState()
-    return JSON.stringify(b1State)
-  }
+export function createProjectData(states: Partial<EditorStates>): string {
+  const editorStates = states as EditorStates
+  const b1State = editorStates.blocks?.b1 || createEmptyEditorState()
+  return JSON.stringify(b1State)
 }
 
 /**
