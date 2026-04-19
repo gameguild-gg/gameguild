@@ -9,16 +9,13 @@ import { Edit2, ExternalLink, RefreshCw, FileText, Copy } from "lucide-react"
 import { toast } from "sonner"
 import type { SerializedEditorState } from "lexical"
 import { PreviewRenderer } from "../extras/preview/preview-renderer"
-import { PreviewRendererType2 } from "../extras/preview/preview-renderer-type2"
 import { RefreshConfirmDialog } from "../extras/dialogs/refresh-confirm-dialog"
 import { StorageAdapterContext, Editor } from "@/components/editor/engines/lexical/lexical-editor"
 
 export interface ProjectData {
   projectId: string
   projectName: string
-  projectType: "type1" | "type2"
   editorState: SerializedEditorState | null
-  blockStates?: Record<string, SerializedEditorState | null> // For type2: {b1, b2, b3...}
   isLocalCopy: boolean
   isReference?: boolean // True when same level - only stores projectId reference
   wasReference?: boolean // Track if it was originally a reference before becoming local copy
@@ -123,17 +120,14 @@ function ProjectComponent({ nodeKey, data, editor }: { nodeKey: NodeKey; data: P
 
           // Parse project data
           let editorState = null
-          let blockStates: Record<string, SerializedEditorState | null> | undefined = undefined
 
           try {
             const data = JSON.parse(fullProject.data)
-            if (fullProject.type === "type1") {
+            // Single layout: data is the editor state directly, or data.blocks.b1
+            if (data.blocks && data.blocks.b1) {
+              editorState = data.blocks.b1
+            } else {
               editorState = data
-            } else if (fullProject.type === "type2") {
-              // Expect blocks format: {blocks: {b1, b2, b3...}}
-              if (data.blocks) {
-                blockStates = data.blocks
-              }
             }
           } catch (error) {
             console.error("Failed to parse project data:", error)
@@ -142,7 +136,6 @@ function ProjectComponent({ nodeKey, data, editor }: { nodeKey: NodeKey; data: P
           const loadedProjectData: ProjectData = {
             ...projectData,
             editorState,
-            blockStates,
             size: fullProject.size,
           }
 
@@ -193,25 +186,7 @@ function ProjectComponent({ nodeKey, data, editor }: { nodeKey: NodeKey; data: P
   }
 
   // Handle block editor changes - update node data
-  const handleBlockEditorChange = (blockId: string, newState: string) => {
-    editor.update(() => {
-      const node = $getNodeByKey(nodeKey)
-      if (!node || !$isProjectNode(node)) return
-
-      const parsedState = JSON.parse(newState)
-      const updatedData: ProjectData = {
-        ...projectData,
-        blockStates: {
-          ...(projectData.blockStates || {}),
-          [blockId]: parsedState
-        }
-      }
-
-      const writableNode = node.getWritable() as ProjectNode
-      writableNode.setData(updatedData)
-      setProjectData(updatedData)
-    })
-  }
+  // Handle block editor changes - removed (type2 no longer supported)
 
   // Handle edit - creates local copy (permanent, no going back except refresh)
   const handleEdit = async () => {
@@ -312,9 +287,7 @@ function ProjectComponent({ nodeKey, data, editor }: { nodeKey: NodeKey; data: P
         const originalData: ProjectData = {
           projectId: projectData.originalProjectId,
           projectName: projectData.projectName,
-          projectType: projectData.projectType,
           editorState: null,
-          blockStates: undefined,
           isLocalCopy: false,
           isReference: true,
           wasReference: undefined,
@@ -353,20 +326,16 @@ function ProjectComponent({ nodeKey, data, editor }: { nodeKey: NodeKey; data: P
         return
       }
 
-      // Parse project data based on type
+      // Parse project data
       let editorState = null
-      let blockStates: Record<string, SerializedEditorState | null> | undefined = undefined
 
       try {
         const data = JSON.parse(originalProject.data)
         
-        if (originalProject.type === "type1") {
+        if (data.blocks && data.blocks.b1) {
+          editorState = data.blocks.b1
+        } else {
           editorState = data
-        } else if (originalProject.type === "type2") {
-          // Expect blocks format: {blocks: {b1, b2, b3...}}
-          if (data.blocks) {
-            blockStates = data.blocks
-          }
         }
       } catch (error) {
         console.error("Failed to parse project data:", error)
@@ -381,9 +350,7 @@ function ProjectComponent({ nodeKey, data, editor }: { nodeKey: NodeKey; data: P
       const originalData: ProjectData = {
         projectId: originalProject.id,
         projectName: originalProject.name,
-        projectType: originalProject.type,
         editorState,
-        blockStates,
         isLocalCopy: false,
         isReference: false,
         wasReference: undefined,
@@ -449,7 +416,7 @@ function ProjectComponent({ nodeKey, data, editor }: { nodeKey: NodeKey; data: P
               )}
             </div>
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <span className="capitalize">{projectData.projectType === "type1" ? "Single Project" : "Multiple Project"}</span>
+              <span className="capitalize">Single Project</span>
               <span>•</span>
               <span>{formatSize(projectData.size)}</span>
               {projectData.isLocalCopy && projectData.originalProjectId && (
@@ -524,7 +491,7 @@ function ProjectComponent({ nodeKey, data, editor }: { nodeKey: NodeKey; data: P
               <p className="text-sm">Failed to load project</p>
             </div>
           </div>
-        ) : loadedData.projectType === "type1" && loadedData.editorState ? (
+        ) : loadedData.editorState ? (
           <div className="w-full">
             {loadedData.isLocalCopy ? (
               <Editor
@@ -537,35 +504,12 @@ function ProjectComponent({ nodeKey, data, editor }: { nodeKey: NodeKey; data: P
               <PreviewRenderer serializedState={loadedData.editorState} />
             )}
           </div>
-        ) : loadedData.projectType === "type2" && loadedData.blockStates && Object.keys(loadedData.blockStates).length >= 2 ? (
-          <div className="w-full">
-            {loadedData.isLocalCopy ? (
-              <div className="grid grid-cols-2 gap-4">
-                {Object.entries(loadedData.blockStates).slice(0, 2).map(([blockId, blockState]) => (
-                  <Editor
-                    key={blockId}
-                    initialState={JSON.stringify(blockState)}
-                    onChange={(newState) => handleBlockEditorChange(blockId, newState)}
-                    className="border-0"
-                    mode="free-page"
-                    blockId={blockId}
-                  />
-                ))}
-              </div>
-            ) : (
-              <PreviewRendererType2 
-                blockStates={loadedData.blockStates as Record<string, SerializedEditorState>}
-              />
-            )}
-          </div>
         ) : (
           <div className="flex items-center justify-center py-12 px-4">
             <div className="text-center text-muted-foreground">
               <FileText className="h-12 w-12 mx-auto mb-2 opacity-50" />
               <p className="text-sm">No content available</p>
-              <p className="text-xs mt-1">
-                {projectData.projectType === "type1" ? "Single Layout" : "Dual Layout"}
-              </p>
+              <p className="text-xs mt-1">Single Layout</p>
             </div>
           </div>
         )}
