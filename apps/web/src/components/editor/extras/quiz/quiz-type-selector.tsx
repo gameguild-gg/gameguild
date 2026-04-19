@@ -43,7 +43,7 @@ import {
   type QuizEntry,
 } from "./types"
 
-interface QuizTypeTemplate {
+export interface QuizTypeTemplate {
   type: QuizEntryType
   title: string
   description: string
@@ -52,7 +52,7 @@ interface QuizTypeTemplate {
   createEntry: () => QuizEntry
 }
 
-const quizTemplates: QuizTypeTemplate[] = [
+export const QUIZ_TEMPLATES: QuizTypeTemplate[] = [
   {
     type: QuizEntryType.SingleChoice,
     title: "Single Choice",
@@ -82,8 +82,8 @@ const quizTemplates: QuizTypeTemplate[] = [
     title: "Fill in the Blank",
     description: "Complete sentences with missing words",
     icon: Type,
-    preview: "The ___ is the largest planet.",
-    createEntry: () => createFillInTheBlankEntry("The ___ is the largest planet in our solar system."),
+    preview: "The _Jupiter_ is the largest planet.",
+    createEntry: () => createFillInTheBlankEntry("The _Jupiter_ is the largest planet in our solar system."),
   },
   {
     type: QuizEntryType.ShortAnswer,
@@ -184,7 +184,7 @@ export function QuizTypeSelector({ onSelect, onCancel }: QuizTypeSelectorProps) 
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 max-w-6xl mx-auto">
-        {quizTemplates.map((template) => {
+        {QUIZ_TEMPLATES.map((template) => {
           const IconComponent = template.icon
           return (
             <Card
