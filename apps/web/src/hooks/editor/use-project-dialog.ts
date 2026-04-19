@@ -8,7 +8,6 @@ import { toast } from "sonner"
 interface ProjectData {
   id: string
   name: string
-  type: "type1" | "type2" | "type3"
   data: string
   tags: string[]
   size: number
@@ -81,7 +80,6 @@ export function useProjectDialog({ isDbInitialized, storageAdapter }: UseProject
     projectTags: string[],
     createdAt: string,
     updatedAt: string,
-    projectType?: "type1" | "type2" | "type3",
     projectPreferences?: any
   ) => {
     try {
@@ -92,7 +90,6 @@ export function useProjectDialog({ isDbInitialized, storageAdapter }: UseProject
       const exportProjectData: ExportProjectData = {
         id: projectId,
         name: projectName,
-        type: projectType || "type1",
         data: projectData,
         tags: projectTags,
         size: new Blob([projectData]).size,

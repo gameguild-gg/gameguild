@@ -131,7 +131,6 @@ export function useProjectActions({
     projectTags: string[],
     createdAt: string,
     updatedAt: string,
-    projectType?: "type1" | "type2" | "type3",
     projectPreferences?: any
   ) => {
     try {
@@ -150,7 +149,6 @@ export function useProjectActions({
       const exportProjectData = {
         id: projectId,
         name: projectName,
-        type: projectType || "type1" as "type1" | "type2",
         data: projectData,
         tags: projectTags,
         size: new Blob([projectData]).size,
