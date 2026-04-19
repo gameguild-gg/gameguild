@@ -7,17 +7,8 @@ import { EnhancedStorageAdapter, type ProjectPreferences } from "@/lib/storage/e
 import type { ProjectData as StorageProjectData } from "@/lib/storage/editor/enhanced-storage-adapter"
 import { syncConfig } from "@/lib/sync/editor/sync-config"
 import { type ProjectMode } from "@/lib/storage/editor/project-modes"
-import { detectProjectLayout, extractEditorStates, createProjectData } from "@/lib/storage/editor/layout-detector"
-import { getLayoutFromType, type ProjectType, type InternalLayout, PROJECT_TYPES, type EngineType, ENGINE_TYPES } from "@/lib/storage/editor/project-types"
-import {
-  type SlideshowStructure,
-  type PreviewMode,
-  createEmptySlideshowStructure,
-  serializeSlideshowStructure,
-  convertToIndependent,
-  convertToDependent,
-  importProjectToSlide,
-} from "@/lib/storage/editor/slideshow-structure"
+import { extractEditorStates, createProjectData } from "@/lib/storage/editor/layout-detector"
+import { type EngineType, ENGINE_TYPES } from "@/lib/storage/editor/project-types"
 import type { CellularContent } from "@/lib/storage/editor/cell-structure"
 import type { BlockArray } from "@/lib/storage/editor/block-structure"
 import { blocksToStorage, storageToBlocks } from "@/lib/storage/editor/cell-converters/blocks"
@@ -32,7 +23,6 @@ import { checkSelectedProject as checkProject } from "@/components/editor/extras
 export interface ProjectData {
   id: string
   name: string
-  type: ProjectType
   data: string
   tags: string[]
   size: number
@@ -40,13 +30,12 @@ export interface ProjectData {
   updatedAt: string
   storageType?: "local" | "gameguild-cloud" | "google-drive"
   preferences?: ProjectPreferences
-  deps?: StorageProjectData[]
 }
 
 type StorageType = "local" | "gameguild-cloud" | "google-drive"
 
 export interface StorageAdapterInterface {
-  save: (id: string, name: string, data: string, tags?: string[], storageType?: StorageType, preferences?: ProjectPreferences, type?: string, deps?: StorageProjectData[], engine?: EngineType) => Promise<void>
+  save: (id: string, name: string, data: string, tags?: string[], storageType?: StorageType, preferences?: ProjectPreferences, engine?: EngineType) => Promise<void>
   load: (id: string) => Promise<ProjectData | null>
   delete: (id: string) => Promise<void>
   list: () => Promise<ProjectData[]>
@@ -63,8 +52,6 @@ export interface UseProjectStorageReturn {
   projectId: string
   projectName: string
   setProjectName: Dispatch<SetStateAction<string>>
-  projectType: ProjectType
-  layout: InternalLayout
   engine: EngineType
   projectMode: ProjectMode
   storageType: StorageType
@@ -78,32 +65,13 @@ export interface UseProjectStorageReturn {
   editorRef: React.RefObject<LexicalEditor | null>
   setEditorState: Dispatch<SetStateAction<string>>
 
-  // Editor content (Lexical multi-block)
-  blockStates: Record<string, string>
-  blockRefs: React.MutableRefObject<Record<string, LexicalEditor | null>>
-  setBlockStates: Dispatch<SetStateAction<Record<string, string>>>
-
   // Editor content (Block Array)
   blockArrayBlocks: BlockArray
   setBlockArrayBlocks: Dispatch<SetStateAction<BlockArray>>
 
-  // Slideshow
-  slideshowStructure: SlideshowStructure | null
-  setSlideshowStructure: Dispatch<SetStateAction<SlideshowStructure | null>>
-  slideshowDeps: StorageProjectData[]
-  setSlideshowDeps: Dispatch<SetStateAction<StorageProjectData[]>>
-  currentSlideIndex: number
-  setCurrentSlideIndex: Dispatch<SetStateAction<number>>
-  slideEditorRefs: Map<string, React.RefObject<LexicalEditor>>
-  setSlideEditorRefs: Dispatch<SetStateAction<Map<string, React.RefObject<LexicalEditor>>>>
-  previewMode: PreviewMode
-  setPreviewMode: Dispatch<SetStateAction<PreviewMode>>
-  resolvedProjects: Map<string, StorageProjectData | null>
-  setResolvedProjects: Dispatch<SetStateAction<Map<string, StorageProjectData | null>>>
-
   // Operations
   save(): Promise<{ needsSaveAs: boolean }>
-  saveAs(name: string, storageOption: StorageType): Promise<void>
+  saveAs(name: string, storageOption: StorageType, tags?: string[]): Promise<void>
   loadProject(projectData: any): void
   createProject(projectData: any): void
 
@@ -111,15 +79,8 @@ export interface UseProjectStorageReturn {
   titleEdit(setEditingProjectName: (n: string) => void, setIsEditingTitle: (b: boolean) => void): void
   titleSave(editingName: string, setEditingProjectName: (n: string) => void, setIsEditingTitle: (b: boolean) => void): Promise<void>
 
-  // Slideshow ops
-  convertToIndependent(slideId: string): Promise<void>
-  convertToDependent(slideId: string): Promise<void>
-  importConfirm(slideId: string, projectId: string, loadMode: "snapshot" | "head", snapshotTag?: string): void
+  // Snapshot
   createSnapshot(name?: string): Promise<void>
-
-  // Block ops (Type2 layout)
-  addBlock(): void
-  removeBlock(blockId: string): void
 
   // ID generation
   generateProjectId(): string
@@ -173,7 +134,6 @@ function estimateSize(data: string): number {
 
 export interface ProjectStorageDefaults {
   engine?: EngineType
-  layout?: ProjectType
   mode?: ProjectMode
 }
 
@@ -187,8 +147,6 @@ export function useProjectStorage(initialDefaults?: ProjectStorageDefaults): Use
   const [currentProjectName, setCurrentProjectName] = useState<string>("")
   const [currentProjectStorageType, setCurrentProjectStorageType] = useState<StorageType>("local")
   const [projectTags, setProjectTags] = useState<string[]>([])
-  const [currentLayout, setCurrentLayout] = useState<InternalLayout>(initialDefaults?.layout ? getLayoutFromType(initialDefaults.layout) : "single")
-  const [currentProjectType, setCurrentProjectType] = useState<ProjectType>(initialDefaults?.layout || PROJECT_TYPES.TYPE1)
   const [currentEngine, setCurrentEngine] = useState<EngineType>(initialDefaults?.engine || ENGINE_TYPES.LEXICAL)
   const [currentProjectMode, setCurrentProjectMode] = useState<ProjectMode>(initialDefaults?.mode || "free-page")
   const [currentProjectPreferences, setCurrentProjectPreferences] = useState<ProjectPreferences | undefined>(undefined)
@@ -198,20 +156,8 @@ export function useProjectStorage(initialDefaults?: ProjectStorageDefaults): Use
   const [editorState, setEditorState] = useState<string>("")
   const editorRef = useRef<LexicalEditor | null>(null)
 
-  // ── Editor content (Lexical multi-block) ──
-  const [blockStates, setBlockStates] = useState<Record<string, string>>({})
-  const blockRefs = useRef<Record<string, LexicalEditor | null>>({})
-
   // ── Editor content (Block Array) ──
   const [blockArrayBlocks, setBlockArrayBlocks] = useState<BlockArray>([])
-
-  // ── Slideshow ──
-  const [slideshowStructure, setSlideshowStructure] = useState<SlideshowStructure | null>(null)
-  const [slideshowDeps, setSlideshowDeps] = useState<StorageProjectData[]>([])
-  const [currentSlideIndex, setCurrentSlideIndex] = useState(0)
-  const [slideEditorRefs, setSlideEditorRefs] = useState<Map<string, React.RefObject<LexicalEditor>>>(new Map())
-  const [previewMode, setPreviewMode] = useState<PreviewMode>("continuous")
-  const [resolvedProjects, setResolvedProjects] = useState<Map<string, StorageProjectData | null>>(new Map())
 
   // ── Lists ──
   const [savedProjects, setSavedProjects] = useState<ProjectData[]>([])
@@ -240,11 +186,11 @@ export function useProjectStorage(initialDefaults?: ProjectStorageDefaults): Use
   // ═══════════════════════════════════════════════════════════════════════════
 
   const storageAdapter: StorageAdapterInterface = {
-    save: async (id, name, data, tags = [], storageType = "local", preferences?, type = "type1", deps?, engine?) => {
+    save: async (id, name, data, tags = [], storageType = "local", preferences?, engine?) => {
       if (!id || !name || !data) { console.warn("Invalid id, name or data"); return }
       if (!isDbInitialized) throw new Error("Database not initialized")
       try {
-        await dbStorage.current.save(id, name, data, tags, storageType, preferences, type as any, deps, engine)
+        await dbStorage.current.save(id, name, data, tags, storageType, preferences, engine)
       } catch (error) { console.error("Failed to save project:", error); throw error }
     },
     load: async (id) => {
@@ -333,22 +279,12 @@ export function useProjectStorage(initialDefaults?: ProjectStorageDefaults): Use
       storageAdapter,
       directDbLoad: (id: string) => dbStorage.current.load(id),
       editorRef,
-      blockRefs,
       setCurrentProjectId,
       setCurrentProjectName,
       setCurrentProjectStorageType,
       setProjectTags,
       setIsFirstTime,
-      setCurrentLayout,
-      setCurrentProjectType: (type: string) => setCurrentProjectType(type as ProjectType),
       setEditorState,
-      setBlockStates,
-      setSlideshowStructure,
-      setDeps: setSlideshowDeps,
-      setResolvedProjects,
-      setCurrentSlideIndex,
-      setSlideEditorRefs,
-      setPreviewMode,
       setCurrentProjectMode,
       setLastProjectLoadTime,
       setCurrentProjectPreferences,
@@ -365,21 +301,13 @@ export function useProjectStorage(initialDefaults?: ProjectStorageDefaults): Use
 
   useEffect(() => {
     let dataToCalculate: string
-    if (currentLayout === "slideshow" && slideshowStructure) {
-      dataToCalculate = serializeSlideshowStructure(slideshowStructure)
+    if (currentEngine === ENGINE_TYPES.BLOCKS) {
+      dataToCalculate = createProjectData({ blocks: { b1: blocksToStorage(blockArrayBlocks) } })
     } else {
-      const blocks: Record<string, any> = {}
-      if (currentLayout === "single") {
-        blocks.b1 = editorState ? JSON.parse(editorState) : null
-      } else {
-        Object.entries(blockStates).forEach(([blockId, state]) => {
-          blocks[blockId] = state ? JSON.parse(state) : null
-        })
-      }
-      dataToCalculate = createProjectData(currentProjectType, { blocks })
+      dataToCalculate = createProjectData({ blocks: { b1: editorState ? JSON.parse(editorState) : null } })
     }
     setCurrentProjectSize(estimateSize(dataToCalculate))
-  }, [editorState, blockStates, currentLayout, slideshowStructure])
+  }, [editorState, blockArrayBlocks, currentEngine])
 
   // Assets size
   useEffect(() => {
@@ -388,7 +316,7 @@ export function useProjectStorage(initialDefaults?: ProjectStorageDefaults): Use
     } else {
       setCurrentProjectAssetsSize(0)
     }
-  }, [currentProjectId, isDbInitialized, editorState, blockStates, slideshowStructure])
+  }, [currentProjectId, isDbInitialized, editorState])
 
   // ═══════════════════════════════════════════════════════════════════════════
   // Sync monitoring
@@ -435,9 +363,7 @@ export function useProjectStorage(initialDefaults?: ProjectStorageDefaults): Use
 
     const hasContent = currentEngine === ENGINE_TYPES.BLOCKS
       ? blockArrayBlocks.length > 0
-      : currentLayout === "single"
-        ? editorState
-        : Object.keys(blockStates).length > 0
+      : !!editorState
 
     if (!hasContent) return
 
@@ -448,23 +374,14 @@ export function useProjectStorage(initialDefaults?: ProjectStorageDefaults): Use
       try {
         let dataToSave: string
         if (currentEngine === ENGINE_TYPES.BLOCKS) {
-          dataToSave = createProjectData(currentProjectType, { blocks: { b1: blocksToStorage(blockArrayBlocks) } })
+          dataToSave = createProjectData({ blocks: { b1: blocksToStorage(blockArrayBlocks) } })
         } else {
-          const blocks: Record<string, any> = {}
-          if (currentLayout === "single") {
-            blocks.b1 = editorState ? JSON.parse(editorState) : null
-          } else {
-            Object.entries(blockStates).forEach(([blockId, state]) => {
-              blocks[blockId] = state ? JSON.parse(state) : null
-            })
-          }
-          dataToSave = createProjectData(currentProjectType, { blocks })
+          dataToSave = createProjectData({ blocks: { b1: editorState ? JSON.parse(editorState) : null } })
         }
 
         await storageAdapter.save(
           currentProjectId, currentProjectName, dataToSave, projectTags,
-          currentProjectStorageType, currentProjectPreferences, currentProjectType,
-          undefined, currentEngine
+          currentProjectStorageType, currentProjectPreferences, currentEngine
         )
         toast.success("Auto-saved", {
           description: "Changes saved automatically", duration: 1500, icon: "💾",
@@ -477,7 +394,7 @@ export function useProjectStorage(initialDefaults?: ProjectStorageDefaults): Use
     }, 2000)
 
     return () => clearTimeout(autoSaveTimer)
-  }, [editorState, blockStates, blockArrayBlocks, currentEngine, autoSaveEnabled, currentProjectId, currentProjectName, projectTags, isDbInitialized, currentLayout, currentProjectType, currentProjectStorageType, lastProjectLoadTime])
+  }, [editorState, blockArrayBlocks, currentEngine, autoSaveEnabled, currentProjectId, currentProjectName, projectTags, isDbInitialized, currentProjectStorageType, lastProjectLoadTime])
 
   // ═══════════════════════════════════════════════════════════════════════════
   // Save
@@ -489,7 +406,7 @@ export function useProjectStorage(initialDefaults?: ProjectStorageDefaults): Use
     let dataToSave: string
 
     if (currentEngine === ENGINE_TYPES.BLOCKS) {
-      dataToSave = createProjectData(currentProjectType, {
+      dataToSave = createProjectData({
         blocks: { b1: blocksToStorage(blockArrayBlocks) },
       })
       const preferences: ProjectPreferences = {
@@ -501,93 +418,68 @@ export function useProjectStorage(initialDefaults?: ProjectStorageDefaults): Use
         editorState: dataToSave,
         editorRef: { current: null } as React.RefObject<LexicalEditor | null>,
         projectTags, storageAdapter, calculateProjectAssetsSize: calcAssets,
-        setSaveAsDialogOpen: () => {}, // no-op: we return needsSaveAs
-        preferences, type: currentProjectType, engine: currentEngine,
+        setSaveAsDialogOpen: () => {},
+        preferences, engine: currentEngine,
       })
       return { needsSaveAs: false }
     }
 
-    if (currentLayout === "slideshow" && slideshowStructure) {
-      dataToSave = serializeSlideshowStructure(slideshowStructure)
-    } else {
-      const blocks: Record<string, any> = {}
-      if (currentLayout === "single") {
-        blocks.b1 = editorState ? JSON.parse(editorState) : null
-      } else {
-        Object.entries(blockStates).forEach(([blockId, state]) => {
-          blocks[blockId] = state ? JSON.parse(state) : null
-        })
-      }
-      dataToSave = createProjectData(currentProjectType, { blocks })
-    }
-
-    const refToUse = currentLayout === "single" ? editorRef : {
-      current: Object.values(blockRefs.current)[0] ?? null,
-    } as React.RefObject<LexicalEditor | null>
+    dataToSave = createProjectData({ blocks: { b1: editorState ? JSON.parse(editorState) : null } })
 
     const preferences: ProjectPreferences = {
       global: {
         ...currentProjectPreferences?.global,
         mode: currentProjectMode,
-        ...(currentLayout === "slideshow" && { previewMode }),
       },
       nodes: currentProjectPreferences?.nodes || {},
     }
 
     await saveProject({
       currentProjectId, currentProjectName, currentProjectStorageType,
-      editorState: dataToSave, editorRef: refToUse, projectTags,
+      editorState: dataToSave, editorRef, projectTags,
       storageAdapter, calculateProjectAssetsSize: calcAssets,
-      setSaveAsDialogOpen: () => {}, // no-op
-      preferences, type: currentProjectType,
-      deps: currentLayout === "slideshow" ? slideshowDeps : undefined,
-      engine: currentEngine,
+      setSaveAsDialogOpen: () => {},
+      preferences, engine: currentEngine,
     })
     return { needsSaveAs: false }
-  }, [currentProjectId, currentEngine, currentProjectType, currentProjectName, currentProjectStorageType, editorState, blockStates, blockArrayBlocks, projectTags, currentProjectPreferences, currentProjectMode, previewMode, currentLayout, slideshowStructure, slideshowDeps, isDbInitialized])
+  }, [currentProjectId, currentEngine, currentProjectName, currentProjectStorageType, editorState, blockArrayBlocks, projectTags, currentProjectPreferences, currentProjectMode, isDbInitialized])
 
   // ═══════════════════════════════════════════════════════════════════════════
   // Save As
   // ═══════════════════════════════════════════════════════════════════════════
 
-  const saveAs = useCallback(async (name: string, storageOption: StorageType) => {
+  const saveAs = useCallback(async (name: string, storageOption: StorageType, tags?: string[]) => {
     let dataToSave: string
-    if (currentLayout === "slideshow" && slideshowStructure) {
-      dataToSave = serializeSlideshowStructure(slideshowStructure)
+    if (currentEngine === ENGINE_TYPES.BLOCKS) {
+      dataToSave = createProjectData({ blocks: { b1: blocksToStorage(blockArrayBlocks) } })
     } else {
-      const blocks: Record<string, any> = {}
-      if (currentLayout === "single") {
-        blocks.b1 = editorState ? JSON.parse(editorState) : null
-      } else {
-        Object.entries(blockStates).forEach(([blockId, state]) => {
-          blocks[blockId] = state ? JSON.parse(state) : null
-        })
-      }
-      dataToSave = createProjectData(currentProjectType, { blocks })
+      dataToSave = createProjectData({ blocks: { b1: editorState ? JSON.parse(editorState) : null } })
     }
 
-    const refToUse = currentLayout === "single" ? editorRef : {
-      current: Object.values(blockRefs.current)[0] ?? null,
-    } as React.RefObject<LexicalEditor | null>
+    const tagsToSave = tags ?? projectTags
 
-    // We call the operation with a thin adapter that sets our internal state
     await saveAsProject({
       newProjectName: name,
       editorState: dataToSave,
-      editorRef: refToUse,
-      projectTags,
+      editorRef,
+      projectTags: tagsToSave,
       storageOption,
       storageAdapter,
       generateProjectId,
       setCurrentProjectId,
       setCurrentProjectName,
       setCurrentProjectStorageType,
-      setNewProjectName: () => {}, // page handles its own input
-      setSaveAsDialogOpen: () => {}, // page handles dialog
+      setNewProjectName: () => {},
+      setSaveAsDialogOpen: () => {},
       loadSavedProjectsList: refreshProjects,
       calculateProjectAssetsSize: calcAssets,
+      engine: currentEngine,
     })
-  }, [currentLayout, editorState, blockStates, slideshowStructure, currentProjectType, projectTags, isDbInitialized])
+
+    if (tags) {
+      setProjectTags(tagsToSave)
+    }
+  }, [editorState, blockArrayBlocks, projectTags, currentEngine, isDbInitialized])
 
   // ═══════════════════════════════════════════════════════════════════════════
   // Load project (called from OpenProjectDialog onProjectLoad)
@@ -598,15 +490,13 @@ export function useProjectStorage(initialDefaults?: ProjectStorageDefaults): Use
     setCurrentEngine(projectEngine)
 
     if (projectEngine === ENGINE_TYPES.BLOCKS) {
-      const states = extractEditorStates(projectData.data, projectData.type)
+      const states = extractEditorStates(projectData.data)
       const storageData = states.blocks.b1 || { order: [], blocks: {} }
       setBlockArrayBlocks(storageToBlocks(
         storageData && typeof storageData === "object" && !Array.isArray(storageData) ? storageData : { order: [], blocks: {} }
       ))
       setCurrentProjectId(projectData.id)
       setCurrentProjectName(projectData.name)
-      setCurrentProjectType(projectData.type)
-      setCurrentLayout("single")
       setCurrentProjectStorageType(projectData.storageType || "local")
       setProjectTags(projectData.tags || [])
       setCurrentProjectMode(projectData.preferences?.global?.mode || "free-page")
@@ -618,14 +508,10 @@ export function useProjectStorage(initialDefaults?: ProjectStorageDefaults): Use
     }
 
     // Lexical engine
-    const layoutInfo = detectProjectLayout(projectData.data)
-    const finalLayout = getLayoutFromType(projectData.type)
     const projectMode = projectData.preferences?.global?.mode || "free-page"
 
     setCurrentProjectId(projectData.id)
     setCurrentProjectName(projectData.name)
-    setCurrentProjectType(projectData.type)
-    setCurrentLayout(finalLayout)
     setCurrentProjectStorageType(projectData.storageType || "local")
     setProjectTags(projectData.tags || [])
     setCurrentProjectMode(projectMode)
@@ -633,78 +519,16 @@ export function useProjectStorage(initialDefaults?: ProjectStorageDefaults): Use
     setIsFirstTime(false)
     setLastProjectLoadTime(Date.now())
 
-    // Slideshow
-    if (layoutInfo.hasSlides && layoutInfo.slideshowData) {
-      setSlideshowStructure(layoutInfo.slideshowData)
-      setSlideshowDeps(projectData.deps || [])
-      setCurrentSlideIndex(0)
-      const savedPreviewMode = projectData.preferences?.global?.previewMode || "continuous"
-      setPreviewMode(savedPreviewMode as PreviewMode)
-
-      const newRefs = new Map<string, React.RefObject<LexicalEditor>>()
-      layoutInfo.slideshowData.slides.forEach((slide: any) => {
-        newRefs.set(slide.id, { current: undefined as any })
-      })
-      setSlideEditorRefs(newRefs)
-
-      // Load independent projects
-      const independentSlides = layoutInfo.slideshowData.slides.filter(
-        (slide: any) => slide.projectRef && !slide.projectRef.isDependent
-      )
-      if (independentSlides.length > 0 && dbStorage.current) {
-        ;(async () => {
-          const results = new Map<string, StorageProjectData | null>()
-          await Promise.all(
-            independentSlides.map(async (slide: any) => {
-              try {
-                const project = await dbStorage.current!.load(slide.projectRef!.projectId)
-                results.set(slide.id, project)
-              } catch (error) {
-                console.error(`Failed to load independent project ${slide.projectRef!.projectId}:`, error)
-                results.set(slide.id, null)
-              }
-            })
-          )
-          setResolvedProjects(results)
-        })()
-      }
-      window.history.pushState(null, "", `#${projectData.id}`)
-      return
-    }
-
-    // Non-slideshow: extract editor states
-    const states = extractEditorStates(projectData.data, projectData.type)
+    // Extract editor states (single block)
+    const states = extractEditorStates(projectData.data)
 
     setTimeout(() => {
       try {
-        if (finalLayout === "single" && editorRef.current && states.blocks.b1) {
+        if (editorRef.current && states.blocks.b1) {
           setEditorState(JSON.stringify(states.blocks.b1))
           const lexicalState = cellsToLexical(states.blocks.b1)
           const parsed = editorRef.current.parseEditorState(JSON.stringify(lexicalState))
           editorRef.current.setEditorState(parsed)
-        } else if (finalLayout === "multiple" && states.blocks) {
-          blockRefs.current = {}
-          const newBlockStates: Record<string, string> = {}
-          Object.entries(states.blocks).forEach(([blockId, blockState]: [string, any]) => {
-            if (blockState) {
-              blockRefs.current[blockId] = null
-              newBlockStates[blockId] = JSON.stringify(blockState)
-            }
-          })
-          setBlockStates(newBlockStates)
-          setTimeout(() => {
-            Object.entries(newBlockStates).forEach(([blockId, stateString]) => {
-              const ref = blockRefs.current[blockId]
-              if (ref) {
-                try {
-                  const cellsData = JSON.parse(stateString)
-                  const lexicalState = cellsToLexical(cellsData)
-                  const parsed = ref.parseEditorState(JSON.stringify(lexicalState))
-                  ref.setEditorState(parsed)
-                } catch (error) { console.error(`Failed to load state for block ${blockId}:`, error) }
-              }
-            })
-          }, 150)
         }
       } catch (error) {
         console.error("Failed to load editor data:", error)
@@ -727,8 +551,6 @@ export function useProjectStorage(initialDefaults?: ProjectStorageDefaults): Use
 
     if (projectData.engine === ENGINE_TYPES.BLOCKS) {
       setBlockArrayBlocks([])
-      setCurrentLayout("single")
-      setCurrentProjectType((projectData.type || "type1") as ProjectType)
       setCurrentProjectMode(projectData.mode || "free-page")
       setLastProjectLoadTime(Date.now())
       setCurrentProjectId(projectData.id)
@@ -742,52 +564,18 @@ export function useProjectStorage(initialDefaults?: ProjectStorageDefaults): Use
 
     // Lexical engine
     const emptyCells: CellularContent = []
-    let dataString: string
-    const layoutType = getLayoutFromType(projectData.type)
+    const dataString = createProjectData({ blocks: { b1: emptyCells } })
 
-    if (layoutType === "slideshow") {
-      const { structure: initialStructure, deps: initialDeps } = createEmptySlideshowStructure(projectData.id)
-      dataString = serializeSlideshowStructure(initialStructure)
-      setSlideshowStructure(initialStructure)
-      setSlideshowDeps(initialDeps)
-      setCurrentSlideIndex(0)
-      const newRefs = new Map<string, React.RefObject<LexicalEditor>>()
-      if (initialStructure.slides[0]) {
-        newRefs.set(initialStructure.slides[0].id, { current: undefined as any })
-      }
-      setSlideEditorRefs(newRefs)
-      // Save slideshow structure
-      setTimeout(async () => {
-        try {
-          await storageAdapter.save(
-            projectData.id, projectData.name, dataString,
-            projectData.tags, projectData.storageType,
-            undefined, projectData.type, initialDeps,
-          )
-        } catch (error) { console.error("Failed to save slideshow structure:", error) }
-      }, 200)
-    } else if (layoutType === "multiple") {
-      dataString = createProjectData(projectData.type, { blocks: { b1: emptyCells } })
-    } else {
-      dataString = createProjectData(projectData.type, { blocks: { b1: emptyCells } })
-    }
-
-    setCurrentLayout(layoutType)
-    setCurrentProjectType((projectData.type || "type1") as ProjectType)
     setCurrentProjectMode(projectData.mode || "free-page")
     setLastProjectLoadTime(Date.now())
 
-    // Initialize editors after layout renders
+    // Initialize editor after layout renders
     setTimeout(() => {
       const lexicalState = cellsToLexical(emptyCells)
       const lexicalStateString = JSON.stringify(lexicalState)
-      if (layoutType === "single") {
-        setEditorState(JSON.stringify(emptyCells))
-        if (editorRef.current) {
-          editorRef.current.setEditorState(editorRef.current.parseEditorState(lexicalStateString))
-        }
-      } else if (layoutType === "multiple") {
-        setBlockStates({ b1: JSON.stringify(emptyCells) })
+      setEditorState(JSON.stringify(emptyCells))
+      if (editorRef.current) {
+        editorRef.current.setEditorState(editorRef.current.parseEditorState(lexicalStateString))
       }
     }, 100)
 
@@ -815,25 +603,14 @@ export function useProjectStorage(initialDefaults?: ProjectStorageDefaults): Use
     setEditingProjectName: (n: string) => void,
     setIsEditingTitle: (b: boolean) => void,
   ) => {
-    const blocks: Record<string, any> = {}
-    if (currentLayout === "single") {
-      blocks.b1 = editorState ? JSON.parse(editorState) : null
-    } else {
-      Object.entries(blockStates).forEach(([blockId, state]) => {
-        blocks[blockId] = state ? JSON.parse(state) : null
-      })
-    }
-    const stateToUse = createProjectData(currentProjectType, { blocks })
-    const refToUse = currentLayout === "single" ? editorRef : {
-      current: Object.values(blockRefs.current)[0] ?? null,
-    } as React.RefObject<LexicalEditor | null>
+    const stateToUse = createProjectData({ blocks: { b1: editorState ? JSON.parse(editorState) : null } })
 
     await titleSave({
       editingProjectName: editingName,
       currentProjectName,
       currentProjectId,
       editorState: stateToUse,
-      editorRef: refToUse,
+      editorRef,
       projectTags,
       storageAdapter,
       setCurrentProjectName,
@@ -841,114 +618,17 @@ export function useProjectStorage(initialDefaults?: ProjectStorageDefaults): Use
       setIsEditingTitle,
       loadSavedProjectsList: refreshProjects,
     })
-  }, [currentProjectId, currentProjectName, currentLayout, editorState, blockStates, currentProjectType, projectTags, isDbInitialized])
+  }, [currentProjectId, currentProjectName, editorState, projectTags, isDbInitialized])
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // Slideshow handlers
+  // Snapshot
   // ═══════════════════════════════════════════════════════════════════════════
-
-  const handleConvertToIndependent = useCallback(async (slideId: string) => {
-    if (!slideshowStructure || !currentProjectId) return
-    try {
-      const newIndependentId = generateProjectId()
-      const result = convertToIndependent(slideshowStructure, slideId, slideshowDeps, newIndependentId)
-      await storageAdapter.save(
-        result.extractedProject.id,
-        result.extractedProject.name || `Slide ${slideId}`,
-        result.extractedProject.data,
-        result.extractedProject.tags || [],
-        (result.extractedProject.storageType || "local") as StorageType,
-        undefined, "type2",
-      )
-      setSlideshowStructure(result.structure)
-      setSlideshowDeps(result.deps)
-      toast.success("Slide converted to independent", {
-        description: "The project was saved as a standalone type2 project.",
-        duration: 3000, icon: "🔓",
-      })
-    } catch (error) {
-      console.error("Failed to convert to independent:", error)
-      toast.error("Conversion failed", {
-        description: error instanceof Error ? error.message : "Unknown error",
-        duration: 4000,
-      })
-    }
-  }, [slideshowStructure, currentProjectId, slideshowDeps, isDbInitialized])
-
-  const handleConvertToDependent = useCallback(async (slideId: string) => {
-    if (!slideshowStructure || !currentProjectId) return
-    try {
-      const slide = slideshowStructure.slides.find(s => s.id === slideId)
-      if (!slide || slide.projectRef.isDependent) return
-      const independentProject = await storageAdapter.load(slide.projectRef.projectId)
-      if (!independentProject) {
-        toast.error("Project not found", { description: "Could not load the independent project", duration: 3000 })
-        return
-      }
-      const result = convertToDependent(
-        slideshowStructure, slideId, slideshowDeps,
-        independentProject as StorageProjectData, currentProjectId,
-      )
-      setSlideshowStructure(result.structure)
-      setSlideshowDeps(result.deps)
-      toast.success("Slide unlocked for editing", {
-        description: "A dependent copy was created. Changes won't affect the original.",
-        duration: 3000, icon: "🔓",
-      })
-    } catch (error) {
-      console.error("Failed to convert to dependent:", error)
-      toast.error("Unlock failed", {
-        description: error instanceof Error ? error.message : "Unknown error",
-        duration: 4000,
-      })
-    }
-  }, [slideshowStructure, currentProjectId, slideshowDeps, isDbInitialized])
-
-  const importConfirm = useCallback((
-    slideId: string, projectId: string, loadMode: "snapshot" | "head", snapshotTag?: string,
-  ) => {
-    if (!slideshowStructure) return
-    const slide = slideshowStructure.slides.find(s => s.id === slideId)
-    let updatedDeps = slideshowDeps
-    if (slide?.projectRef.isDependent) {
-      updatedDeps = slideshowDeps.filter(d => d.id !== slide.projectRef.projectId)
-    }
-    const newStructure = importProjectToSlide(slideshowStructure, slideId, projectId, loadMode, snapshotTag)
-    setSlideshowStructure(newStructure)
-    setSlideshowDeps(updatedDeps)
-    toast.success("Project imported", {
-      description: `Slide now references project ${projectId.substring(0, 8)}...`,
-      duration: 3000, icon: "📥",
-    })
-  }, [slideshowStructure, slideshowDeps])
 
   const handleCreateSnapshot = useCallback(async (name?: string) => {
     if (!currentProjectId) return
     await save()
     await dbStorage.current.createSnapshot(currentProjectId, name)
   }, [currentProjectId, save])
-
-  // ═══════════════════════════════════════════════════════════════════════════
-  // Block ops (Type2 layout)
-  // ═══════════════════════════════════════════════════════════════════════════
-
-  const addBlock = useCallback(() => {
-    const blockNumbers = Object.keys(blockStates).map(key => parseInt(key.slice(1)))
-    const nextNum = Math.max(...blockNumbers, 0) + 1
-    const newBlockId = `b${nextNum}`
-    setBlockStates(prev => ({ ...prev, [newBlockId]: JSON.stringify([]) }))
-    blockRefs.current[newBlockId] = null
-  }, [blockStates])
-
-  const removeBlock = useCallback((blockId: string) => {
-    if (Object.keys(blockStates).length <= 1) return
-    setBlockStates(prev => {
-      const newStates = { ...prev }
-      delete newStates[blockId]
-      return newStates
-    })
-    delete blockRefs.current[blockId]
-  }, [blockStates])
 
   // ═══════════════════════════════════════════════════════════════════════════
   // Return
@@ -963,8 +643,6 @@ export function useProjectStorage(initialDefaults?: ProjectStorageDefaults): Use
     projectId: currentProjectId,
     projectName: currentProjectName,
     setProjectName: setCurrentProjectName,
-    projectType: currentProjectType,
-    layout: currentLayout,
     engine: currentEngine,
     projectMode: currentProjectMode,
     storageType: currentProjectStorageType,
@@ -978,22 +656,9 @@ export function useProjectStorage(initialDefaults?: ProjectStorageDefaults): Use
     editorRef,
     setEditorState,
 
-    // Editor content (Lexical multi-block)
-    blockStates,
-    blockRefs,
-    setBlockStates,
-
     // Editor content (Block Array)
     blockArrayBlocks,
     setBlockArrayBlocks,
-
-    // Slideshow
-    slideshowStructure, setSlideshowStructure,
-    slideshowDeps, setSlideshowDeps,
-    currentSlideIndex, setCurrentSlideIndex,
-    slideEditorRefs, setSlideEditorRefs,
-    previewMode, setPreviewMode,
-    resolvedProjects, setResolvedProjects,
 
     // Operations
     save,
@@ -1005,15 +670,8 @@ export function useProjectStorage(initialDefaults?: ProjectStorageDefaults): Use
     titleEdit: handleTitleEdit,
     titleSave: handleTitleSave,
 
-    // Slideshow ops
-    convertToIndependent: handleConvertToIndependent,
-    convertToDependent: handleConvertToDependent,
-    importConfirm,
+    // Snapshot
     createSnapshot: handleCreateSnapshot,
-
-    // Block ops
-    addBlock,
-    removeBlock,
 
     // ID generation
     generateProjectId,
