@@ -7,12 +7,10 @@
 import JSZip from "jszip"
 import { assetManager } from "@/lib/storage/assets/asset-manager"
 import type { AssetData, AssetUsage } from "@/lib/storage/assets/types"
-import type { ProjectType } from "@/lib/storage/editor/project-types"
 
 export interface ProjectData {
   id: string
   name: string
-  type: ProjectType
   data: string
   tags: string[]
   size: number
@@ -26,7 +24,6 @@ export interface ProjectData {
 export interface ProjectMetadata {
   id: string
   name: string
-  type: "type1" | "type2" | "type3"
   tags: string[]
   size: number
   hash: string
@@ -42,7 +39,6 @@ export interface ProjectMetadata {
 export interface ImportedProjectData {
   id: string
   name: string
-  type: "type1" | "type2" | "type3"
   data: string
   tags: string[]
   metadata: ProjectMetadata | null
@@ -165,7 +161,6 @@ export class ProjectImporter {
       return {
         id: metadata.id,
         name: metadata.name,
-        type: metadata.type || "type1",
         data: dataContent,
         tags: metadata.tags,
         metadata,
@@ -195,7 +190,6 @@ export class ProjectImporter {
     return {
       id: '',
       name: baseName || 'Imported Project',
-      type: "type1",
       data: content,
       tags: [],
       metadata: null
@@ -222,7 +216,6 @@ export class ProjectImporter {
       return {
         id: metadata.id,
         name: metadata.name,
-        type: metadata.type || "type1",
         data: folderData.dataContent,
         tags: metadata.tags,
         metadata,
@@ -246,7 +239,6 @@ export class ProjectImporter {
     return {
       id: newId || importedData.id || '',
       name: importedData.name,
-      type: importedData.type || "type1",
       data: importedData.data,
       tags: importedData.tags,
       size: new Blob([importedData.data]).size,
