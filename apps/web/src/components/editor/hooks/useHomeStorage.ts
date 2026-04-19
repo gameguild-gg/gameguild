@@ -8,7 +8,6 @@ import { toast } from "sonner"
 interface ProjectData {
   id: string
   name: string
-  type: "type1" | "type2" | "type3"
   data: string
   tags: string[]
   size: number
@@ -108,10 +107,10 @@ export function useHomeStorage(): UseHomeStorageReturn {
       }
     },
 
-    save: async (id: string, name: string, data: string, tags: string[], storageType?: "local" | "gameguild-cloud" | "google-drive", preferences?: any, type?: string, deps?: any, engine?: string) => {
+    save: async (id: string, name: string, data: string, tags: string[], storageType?: "local" | "gameguild-cloud" | "google-drive", preferences?: any, engine?: string) => {
       if (!isDbInitialized) throw new Error("Database not initialized")
       try {
-        await dbStorage.current.save(id, name, data, tags, storageType, preferences, type as any, deps, engine as any)
+        await dbStorage.current.save(id, name, data, tags, storageType, preferences, engine as any)
       } catch (error) {
         console.error("Failed to save project:", error)
         throw error

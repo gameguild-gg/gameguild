@@ -12,11 +12,12 @@ import {
 } from "@/components/editor/extras/manager-page"
 import { toast } from "sonner"
 import type { HomeStorageAdapter } from "./useHomeStorage"
+import type { ProjectMode } from "@/lib/storage/editor/project-modes"
+import type { EngineType } from "@/lib/storage/editor/project-types"
 
 interface ProjectData {
   id: string
   name: string
-  type: "type1" | "type2" | "type3"
   data: string
   tags: string[]
   size: number
@@ -46,7 +47,7 @@ export interface UseProjectManagerReturn {
   createDialogOpen: boolean
   setCreateDialogOpen: (open: boolean) => void
   handleCreateNewProject: () => void
-  handleProjectCreate: (projectData: { id: string; name: string; tags: string[]; storageType: string; type: string; mode: string; engine: string }) => void
+  handleProjectCreate: (projectData: { id: string; name: string; tags: string[]; storageType: "local" | "gameguild-cloud" | "google-drive"; mode: ProjectMode; engine: EngineType }) => void
   refreshProjects: () => Promise<void>
 }
 
@@ -168,10 +169,9 @@ export function useProjectManager({
     projectTags: string[],
     createdAt: string,
     updatedAt: string,
-    projectType?: "type1" | "type2",
     projectPreferences?: any
   ) => {
-    projectActions.handleDownload(projectId, projectName, projectData, projectTags, createdAt, updatedAt, projectType, projectPreferences)
+    projectActions.handleDownload(projectId, projectName, projectData, projectTags, createdAt, updatedAt, projectPreferences)
   }, [projectActions])
 
   // Convert to ManagerCard format
@@ -238,7 +238,7 @@ export function useProjectManager({
     setCreateDialogOpen(true)
   }, [])
 
-  const handleProjectCreate = useCallback((projectData: { id: string; name: string; tags: string[]; storageType: string; type: string; mode: string; engine: string }) => {
+  const handleProjectCreate = useCallback((projectData: { id: string; name: string; tags: string[]; storageType: "local" | "gameguild-cloud" | "google-drive"; mode: ProjectMode; engine: EngineType }) => {
     // Navigate to studio with the newly created project's ID
     window.location.href = `/gglexical/studio#${projectData.id}`
   }, [])
