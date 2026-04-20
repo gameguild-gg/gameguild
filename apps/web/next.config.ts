@@ -1,12 +1,11 @@
 import fs from 'fs';
-import { NextConfig } from 'next';
 import createNextIntlPlugin from 'next-intl/plugin';
 import path from 'path';
 import webpack from 'webpack';
 
 const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts');
 
-const nextConfig: NextConfig = {
+const nextConfig = {
   /* config options here */
   transpilePackages: ['mermaid', '@mermaid-js/parser', 'langium', 'vscode-jsonrpc', 'chevrotain'],
   output: 'standalone',
@@ -245,7 +244,7 @@ const nextConfig: NextConfig = {
       },
     ];
   },
-  webpack: (config, { isServer }) => {
+  webpack: (config: any, { isServer }: { isServer: boolean }) => {
     // Allow importing .js files from TypeScript files
     // the api client generation requires this
     config.resolve.extensionAlias = {
@@ -311,7 +310,7 @@ const nextConfig: NextConfig = {
 
     return config;
   },
-};
+} satisfies Parameters<typeof withNextIntl>[0];
 
 // Export config with next-intl plugin
 export default withNextIntl(nextConfig);
