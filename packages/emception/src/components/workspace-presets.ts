@@ -34,7 +34,6 @@ export const CPP_SDL3_PRESET: WorkspaceConfig = {
   files: {
     '/user/sdl-main.cpp': { encoding: 'text', content: SDL_DEMO_CODE },
     '/user/workspace-preview.svg': { encoding: 'text', content: DEFAULT_IMAGE },
-    '/user/sdl-canvas': { encoding: 'text', content: '' },
   },
 };
 
@@ -174,6 +173,72 @@ export const PYTHON_PRESET: WorkspaceConfig = {
   },
 };
 
+// ── Rust Terminal (stdin/stdout) ────────────────────────────────
+
+const RUST_HELLO = `use std::io::{self, BufRead, Write};
+
+fn main() {
+    print!("Enter your name: ");
+    io::stdout().flush().unwrap();
+
+    let stdin = io::stdin();
+    let name = stdin.lock().lines().next().unwrap().unwrap();
+
+    println!("Hello, {}! Welcome to Rust in the browser.", name);
+
+    for i in 1..=5 {
+      println!("  {}. rustc + LLVM + WebAssembly = 🦀", i);
+    }
+}
+`;
+
+export const RUST_TERMINAL_PRESET: WorkspaceConfig = {
+  id: 'rust-terminal',
+  label: 'Rust Terminal',
+  description: 'Rust compiled in-browser via rustc → WASI WASM',
+  version: 1,
+  compile: {
+    tool: 'rustc',
+    // Backend selection is provided by the shipped rustc.wasm artifact.
+    // wasm32-wasip1 is the user-program output target (run via wasi-run).
+    args: [
+      'rustc',
+      '{sourceFile}',
+      '--target',
+      'wasm32-wasip1',
+      '--edition',
+      '2021',
+      '-C',
+      'opt-level=2',
+      '--sysroot',
+      '/usr/lib/rust',
+      '-o',
+      '/home/user/main.wasm',
+    ],
+    cwd: '/home/user',
+    output: '/home/user/main.wasm',
+    sourceDetect: { extensions: ['.rs'], entryPoint: '/user/main.rs' },
+  },
+  run: {
+    type: 'wasi-terminal',
+    tool: 'wasi-run',
+    args: ['wasi-run', '/home/user/main.wasm'],
+  },
+  features: {
+    canvas: false,
+    terminalInput: true,
+    showTestButton: false,
+  },
+  layout: {
+    activeFile: '/user/main.rs',
+    openTabs: [{ path: '/user/main.rs', group: 'main' }],
+    expandedDirs: ['/user'],
+  },
+  files: {
+    '/user/main.rs': { encoding: 'text', content: RUST_HELLO },
+  },
+};
+
 // ── Preset registry ─────────────────────────────────────────────
 
 export const PRESETS: Record<string, WorkspaceConfig> = {
@@ -181,6 +246,7 @@ export const PRESETS: Record<string, WorkspaceConfig> = {
   'cpp-terminal': CPP_TERMINAL_PRESET,
   cmake: CMAKE_PRESET,
   python: PYTHON_PRESET,
+  'rust-terminal': RUST_TERMINAL_PRESET,
 };
 
 export const PRESET_IDS = Object.keys(PRESETS);

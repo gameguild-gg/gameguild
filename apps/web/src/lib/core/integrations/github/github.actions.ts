@@ -12,16 +12,16 @@ const GITHUB_REPO = 'gameguild';
 const CACHE_REVALIDATE_SECONDS = 3600; // 1 hour
 
 // Types - Use GitHub's official types for better maintainability
-type Issue = RestEndpointMethodTypes['issues']['listForRepo']['response']['data'][0];
-type PullRequest = RestEndpointMethodTypes['pulls']['list']['response']['data'][0];
-type Contributor = RestEndpointMethodTypes['repos']['listContributors']['response']['data'][0];
-type Repository = RestEndpointMethodTypes['repos']['get']['response']['data'];
+export type Issue = RestEndpointMethodTypes['issues']['listForRepo']['response']['data'][0];
+export type PullRequest = RestEndpointMethodTypes['pulls']['list']['response']['data'][0];
+export type Contributor = RestEndpointMethodTypes['repos']['listContributors']['response']['data'][0];
+export type Repository = RestEndpointMethodTypes['repos']['get']['response']['data'];
 // Extract the array type from the contributor stats response and get individual items
 type GitHubCommitStatsResponse = RestEndpointMethodTypes['repos']['getContributorsStats']['response']['data'];
-type GitHubCommitStat = Extract<GitHubCommitStatsResponse, readonly unknown[]>[0];
+export type GitHubCommitStat = Extract<GitHubCommitStatsResponse, readonly unknown[]>[0];
 
 // Enhanced contributor type with additional stats
-type EnhancedContributor = Contributor & {
+export type EnhancedContributor = Contributor & {
   additions?: number;
   deletions?: number;
   total_commits?: number;
@@ -373,4 +373,4 @@ export async function getLicenseContent(): Promise<{ content: string; name: stri
 }
 
 // Re-export types for convenience
-export type { Contributor, EnhancedContributor, GitHubCommitStat, Repository, Issue, PullRequest };
+

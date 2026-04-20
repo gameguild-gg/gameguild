@@ -2,7 +2,7 @@ import Editor, { type OnMount } from '@monaco-editor/react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import DockDropOverlay, { dropZoneToGroup, type DropZone } from './DockDropOverlay';
 import { tabIcon } from './FileExplorer';
-import type { DockGroup, OpenTab, WorkspaceFile } from './ide-types';
+import { SDL_CANVAS_PATH, type DockGroup, type OpenTab, type WorkspaceFile } from './ide-types';
 import { fileName, inferLanguage } from './ide-utils';
 
 const DOCK_LABELS: Record<DockGroup, string> = {
@@ -26,6 +26,7 @@ interface DockGroupPanelProps {
     onReorderTab: (tabId: string, beforeTabId: string) => void;
     onEditorMount: OnMount;
     onEditorChange: (path: string, value: string) => void;
+    canvasIsRunning: boolean;
 }
 
 export default function DockGroupPanel({
@@ -40,13 +41,18 @@ export default function DockGroupPanel({
     onReorderTab,
     onEditorMount,
     onEditorChange,
+    canvasIsRunning,
 }: DockGroupPanelProps) {
     const [draggingTabId, setDraggingTabId] = useState<string | null>(null);
 
     if (tabs.length === 0) return null;
 
     const localActive = tabs.find((t) => t.id === activeTabId) ?? tabs[0];
-    const localFile = files[localActive.path];
+    const localFile =
+        files[localActive.path] ??
+        (localActive.type === 'canvas' || localActive.path === SDL_CANVAS_PATH
+            ? { path: SDL_CANVAS_PATH, type: 'canvas' as const, content: canvasIsRunning ? 'sdl' : '' }
+            : undefined);
 
     return (
         <DockGroupPanelInner
@@ -64,6 +70,7 @@ export default function DockGroupPanel({
             onReorderTab={onReorderTab}
             onEditorMount={onEditorMount}
             onEditorChange={onEditorChange}
+            canvasIsRunning={canvasIsRunning}
         />
     );
 }
@@ -83,6 +90,7 @@ function DockGroupPanelInner({
     onReorderTab,
     onEditorMount,
     onEditorChange,
+    canvasIsRunning,
 }: {
     group: DockGroup;
     tabs: OpenTab[];
@@ -98,16 +106,17 @@ function DockGroupPanelInner({
     onReorderTab: (tabId: string, beforeTabId: string) => void;
     onEditorMount: OnMount;
     onEditorChange: (path: string, value: string) => void;
+    canvasIsRunning: boolean;
 }) {
     const animFrameRef = useRef(0);
     const [isDragOver, setIsDragOver] = useState(false);
     const [dropIndicatorTabId, setDropIndicatorTabId] = useState<string | null>(null);
     const dragCounterRef = useRef(0);
-    // Cancel any lingering RAF when SDL takes over (content becomes truthy)
+    // Cancel any lingering RAF when SDL takes over the canvas
     useEffect(() => {
-        if (localFile?.type !== 'canvas' || !localFile.content) return;
+        if (!canvasIsRunning) return;
         window.cancelAnimationFrame(animFrameRef.current);
-    }, [localFile?.type, localFile?.content]);
+    }, [canvasIsRunning]);
 
     const handleOverlayDrop = useCallback(
         (zone: DropZone, e: React.DragEvent) => {
@@ -356,7 +365,7 @@ function DockGroupPanelInner({
                         }}
                     >
                         {/* Ide.tsx reparents the persistent <canvas> into this host div */}
-                        {!localFile.content && (
+                        {!canvasIsRunning && (
                             <div
                                 style={{
                                     position: 'absolute',

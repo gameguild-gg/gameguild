@@ -62,5 +62,6 @@ playwright-report-react/
 
 # Embedded upstream repos
 tools/emception/userland/**/.git/
+tools/emception/userland/**/
 
 .next/

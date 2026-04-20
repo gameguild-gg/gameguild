@@ -1,8 +1,8 @@
 /**
- * Generate .tar.gz bundle archives from the CDN file tree.
+ * Generate .tar.br bundle archives from the CDN file tree.
  *
  * Reads build/manifest.json (produced by generate-manifest.ts), groups files
- * into bundles, creates tar archives, compresses them with gzip, writes the
+ * into bundles, creates tar archives, compresses them with brotli, writes the
  * bundles into build/cdn/, and rewrites manifest.json with bundle metadata.
  *
  * EVERY file must belong to a bundle -- no unbundled individual downloads.
@@ -100,13 +100,15 @@ function sha256(data: Buffer): string {
   return crypto.createHash('sha256').update(data).digest('hex');
 }
 
-/** Compress a buffer with gzip using Node.js zlib. */
-function gzipCompress(data: Buffer, outPath: string): Promise<Buffer> {
+/** Compress a buffer with brotli using Node.js zlib. */
+function brotliCompress(data: Buffer, outPath: string): Promise<Buffer> {
   return new Promise((resolve, reject) => {
-    zlib.gzip(
+    zlib.brotliCompress(
       data,
       {
-        level: zlib.constants.Z_BEST_COMPRESSION,
+        params: {
+          [zlib.constants.BROTLI_PARAM_QUALITY]: 5,
+        },
       },
       (err, result) => {
         if (err) return reject(err);
@@ -173,6 +175,15 @@ async function main() {
   console.log(`Manifest: ${MANIFEST_FILE}`);
   console.log(`CDN dir:  ${OUTPUT_DIR}`);
 
+  // Enforce brotli-only bundle artifacts.
+  // Remove stale .tar.gz files from previous runs so they can't be served accidentally.
+  for (const entry of fs.readdirSync(OUTPUT_DIR, { recursive: true })) {
+    const rel = String(entry);
+    if (!rel.endsWith('.tar.gz')) continue;
+    const full = path.join(OUTPUT_DIR, rel);
+    if (fs.existsSync(full)) fs.unlinkSync(full);
+  }
+
   if (!fs.existsSync(MANIFEST_FILE)) {
     console.error(`Manifest not found at ${MANIFEST_FILE}. Run build:manifest first.`);
     process.exit(1);
@@ -189,6 +200,24 @@ async function main() {
   // Track which files have been assigned to a bundle
   const assigned = new Set<string>();
   const bundleFiles = new Map<string, string[]>();
+
+  // --- 0. Rust toolchain: rustc.wasm + all rlibs for all targets ---
+  // Must run FIRST so Rust files get a dedicated 'rustc' bundle rather than
+  // falling through to usr-lib-misc. The tool-runner expects getBundleForFile
+  // of /usr/lib/rust/rustc.wasm to return 'rustc' so it can preload the right
+  // set of files before invoking the compiler.
+  const rustFiles: string[] = [];
+  for (const p of allPaths) {
+    if (assigned.has(p)) continue;
+    if (p.startsWith('/usr/lib/rust/')) {
+      rustFiles.push(p);
+      assigned.add(p);
+    }
+  }
+  if (rustFiles.length > 0) {
+    bundleFiles.set('rustc', rustFiles);
+    console.log(`  rustc bundle: ${rustFiles.length} files`);
+  }
 
   // --- 1. Tool pairs: <tool>.wasm + <tool>.mjs ---
   const toolBasenames = new Set<string>();
@@ -317,17 +346,17 @@ async function main() {
 
   // --- 2b. Prefix-based groups (order matters — first match wins) ---
   const prefixGroups: { name: string; prefixes: string[]; outputPath: string }[] = [
-    { name: 'usr-include', prefixes: ['/usr/include/'], outputPath: '/usr/include.tar.gz' },
-    { name: 'emscripten-core', prefixes: ['/usr/lib/emscripten/'], outputPath: '/usr/lib/emscripten-core.tar.gz' },
-    { name: 'python-runtime', prefixes: pythonPrefixes, outputPath: '/usr/lib/python-runtime.tar.gz' },
-    { name: 'usr-bin', prefixes: ['/usr/bin/', '/etc/'], outputPath: '/usr/bin.tar.gz' },
-    { name: 'libcurl', prefixes: ['/usr/lib/libcurl'], outputPath: '/usr/lib/libcurl.tar.gz' },
+    { name: 'usr-include', prefixes: ['/usr/include/'], outputPath: '/usr/include.tar.br' },
+    { name: 'emscripten-core', prefixes: ['/usr/lib/emscripten/'], outputPath: '/usr/lib/emscripten-core.tar.br' },
+    { name: 'python-runtime', prefixes: pythonPrefixes, outputPath: '/usr/lib/python-runtime.tar.br' },
+    { name: 'usr-bin', prefixes: ['/usr/bin/', '/etc/'], outputPath: '/usr/bin.tar.br' },
+    { name: 'libcurl', prefixes: ['/usr/lib/libcurl'], outputPath: '/usr/lib/libcurl.tar.br' },
     // Note: SDL3 lib, headers and port manifests are pre-assigned above (sdl3PrePrefixes).
     // These prefixes act as forward-compat fallback only (first-match wins, assigned files are skipped).
-    { name: 'sdl3', prefixes: ['/usr/include/SDL3/', '/usr/lib/emscripten_ports/sdl3/'], outputPath: '/usr/lib/sdl3.tar.gz' },
-    { name: 'imgui', prefixes: ['/usr/lib/libimgui', '/usr/include/imgui/'], outputPath: '/usr/lib/imgui.tar.gz' },
-    { name: 'usr-share', prefixes: ['/usr/share/'], outputPath: '/usr/share.tar.gz' },
-    { name: 'home', prefixes: ['/home/'], outputPath: '/home.tar.gz' },
+    { name: 'sdl3', prefixes: ['/usr/include/SDL3/', '/usr/lib/emscripten_ports/sdl3/'], outputPath: '/usr/lib/sdl3.tar.br' },
+    { name: 'imgui', prefixes: ['/usr/lib/libimgui', '/usr/include/imgui/'], outputPath: '/usr/lib/imgui.tar.br' },
+    { name: 'usr-share', prefixes: ['/usr/share/'], outputPath: '/usr/share.tar.br' },
+    { name: 'home', prefixes: ['/home/'], outputPath: '/home.tar.br' },
   ];
 
   for (const { name } of prefixGroups) {
@@ -380,10 +409,10 @@ async function main() {
   }
   console.log(`Total files: ${allPaths.length}, all assigned to bundles.`);
 
-  // ── Generate tar.gz archives ──
+  // ── Generate tar.br archives ──
 
   const cpuCount = os.cpus().length;
-  console.log(`\nUsing ${cpuCount} CPU cores for parallel gzip compression`);
+  console.log(`\nUsing ${cpuCount} CPU cores for parallel brotli compression`);
 
   manifest.bundles = {};
   let totalCompressed = 0;
@@ -430,7 +459,7 @@ async function main() {
     // Determine output path
     let bundleRelPath: string;
     if (toolBundles.includes(bundleName)) {
-      bundleRelPath = `/usr/lib/${bundleName}.tar.gz`;
+      bundleRelPath = `/usr/lib/${bundleName}.tar.br`;
     } else {
       // Use the stored output path from the prefix group definition
       const group = prefixGroups.find((g) => g.name === bundleName);
@@ -438,7 +467,7 @@ async function main() {
         bundleRelPath = group.outputPath;
       } else {
         // Fallback (shouldn't happen)
-        bundleRelPath = `/usr/lib/${bundleName}.tar.gz`;
+        bundleRelPath = `/usr/lib/${bundleName}.tar.br`;
       }
     }
 
@@ -453,11 +482,11 @@ async function main() {
 
   console.log(`\nCompressing ${jobs.length} bundles across ${cpuCount} cores...`);
 
-  // Phase 2: Compress all bundles in parallel (one gzip job per core)
+  // Phase 2: Compress all bundles in parallel (one brotli job per core)
   const compressionJobs = jobs.map((job) => () => {
     const t0 = Date.now();
     console.log(`  [start] ${job.bundleName}: ${job.entries.length} files, ${(job.tar.length / (1024 * 1024)).toFixed(1)}MB tar`);
-    return gzipCompress(job.tar, job.outPath).then((compressed) => {
+    return brotliCompress(job.tar, job.outPath).then((compressed) => {
       const elapsed = Date.now() - t0;
       const ratio = job.tar.length > 0 ? ((1 - compressed.length / job.tar.length) * 100).toFixed(1) : '0';
       console.log(

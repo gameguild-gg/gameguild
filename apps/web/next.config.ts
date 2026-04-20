@@ -15,9 +15,6 @@ const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: false,
   },
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
   images: {
     remotePatterns: [
       {
@@ -240,25 +237,27 @@ const nextConfig: NextConfig = {
       'vscode-languageserver-types': resolvePackageDir('vscode-languageserver-types'),
     };
 
-    // Add fallbacks for Node.js modules used by wasmoon
+    // Add fallbacks for Node.js modules used by wasmoon and other packages
     config.resolve.fallback = {
       ...config.resolve.fallback,
       module: false,
       fs: false,
       path: false,
       canvas: false, // vega-canvas uses canvas which is Node.js only
+      crypto: false,
+      stream: false,
     };
 
-    // Add rule to handle markdown files as raw text
+    // Handle markdown imports as raw text (webpack build path)
     config.module.rules.push({
       test: /\.md$/,
       type: 'asset/source',
     });
 
     // Fix for "self is not defined" error in server-side rendering
-    if (typeof isServer !== 'undefined' && isServer) {
+    if (isServer) {
       // Define self for server-side to prevent ReferenceError
-      config.plugins = config.plugins || [];
+      config.plugins ??= [];
       config.plugins.push(
         new webpack.DefinePlugin({
           self: 'globalThis',
@@ -271,4 +270,5 @@ const nextConfig: NextConfig = {
 };
 
 // Export config with next-intl plugin
-export default withNextIntl(nextConfig as any);
+export default withNextIntl(nextConfig);
+
