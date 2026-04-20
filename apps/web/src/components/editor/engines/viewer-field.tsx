@@ -2,8 +2,7 @@
 
 import { Button } from "@/components/ui/button"
 import { Eye, Menu } from "lucide-react"
-import { PreviewRendererType1 } from "@/components/editor/extras/preview/preview-renderer-type1"
-import { BlockArrayViewer } from "@/components/editor/engines/blocks/block-array-viewer"
+import { ProjectContentRenderer } from "@/components/editor/engines/project-content-renderer"
 import { useViewer } from "./viewer-provider"
 
 export function ViewerField() {
@@ -11,19 +10,17 @@ export function ViewerField() {
 
   const { states, isBlocksEngine, blocksArray } = viewer.layoutInfo
 
-  if (viewer.currentProject && isBlocksEngine) {
-    return (
-      <div className="border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900 p-6">
-        <BlockArrayViewer blocks={blocksArray || []} />
-      </div>
-    )
-  }
+  if (viewer.currentProject) {
+    const serializedState = !isBlocksEngine && Object.keys(states.blocks).length > 0
+      ? Object.values(states.blocks)[0] as any
+      : undefined
 
-  if (viewer.currentProject && Object.keys(states.blocks).length > 0) {
     return (
-      <PreviewRendererType1
-        serializedState={Object.values(states.blocks)[0] as any}
-        currentProject={viewer.currentProject}
+      <ProjectContentRenderer
+        project={viewer.currentProject}
+        isBlocksEngine={!!isBlocksEngine}
+        blocksArray={blocksArray}
+        serializedState={serializedState}
         storageAdapter={viewer.storageAdapter}
         availableTags={viewer.availableTags}
         isDbInitialized={viewer.isDbInitialized}
