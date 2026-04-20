@@ -211,15 +211,27 @@ export function DisplayManager({
         </button>
         <button
           draggable
-          data-panel-type="editor"
-          onDragStart={(e) => handlePanelDragStart("editor", e)}
+          data-panel-type="full-editor"
+          onDragStart={(e) => handlePanelDragStart("full-editor", e)}
           onDragEnd={handlePanelDragEnd}
           className={cn(
             "px-2 py-1 text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded hover:bg-blue-200 dark:hover:bg-blue-900/50 cursor-grab active:cursor-grabbing transition-opacity",
-            draggedPanelType === "editor" && "opacity-50"
+            draggedPanelType === "full-editor" && "opacity-50"
           )}
         >
-          Editor
+          Full Editor
+        </button>
+        <button
+          draggable
+          data-panel-type="focus-editor"
+          onDragStart={(e) => handlePanelDragStart("focus-editor", e)}
+          onDragEnd={handlePanelDragEnd}
+          className={cn(
+            "px-2 py-1 text-xs bg-cyan-100 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-400 rounded hover:bg-cyan-200 dark:hover:bg-cyan-900/50 cursor-grab active:cursor-grabbing transition-opacity",
+            draggedPanelType === "focus-editor" && "opacity-50"
+          )}
+        >
+          Focus Editor
         </button>
         <button
           draggable

@@ -11,11 +11,9 @@ import { PreviewVideo } from "@/components/editor/plugins/preview-components/pre
 import { PreviewAudio } from "@/components/editor/plugins/preview-components/preview-audio"
 import { PreviewHeader } from "@/components/editor/plugins/preview-components/preview-header"
 import { PreviewDivider } from "@/components/editor/plugins/preview-components/preview-divider"
-import { PreviewPresentation } from "@/components/editor/plugins/preview-components/preview-presentation"
 import { PreviewSource } from "@/components/editor/plugins/preview-components/preview-source"
 import { PreviewYouTube } from "@/components/editor/plugins/preview-components/preview-youtube"
 import { PreviewSpotify } from "@/components/editor/plugins/preview-components/preview-spotify"
-import { PreviewSourceCode } from "@/components/editor/plugins/preview-components/preview-source-code"
 import { PreviewAdmonition } from "@/components/editor/plugins/preview-components/preview-admonition"
 import { PreviewButton } from "@/components/editor/plugins/preview-components/preview-button"
 import { PreviewText } from "@/components/editor/plugins/preview-components/preview-text"
@@ -29,17 +27,40 @@ import { PreviewHeading } from "@/components/editor/plugins/preview-components/p
 import { PreviewVegaLite } from "@/components/editor/plugins/preview-components/preview-vega-lite"
 import { PreviewTable } from "@/components/editor/plugins/preview-components/preview-table"
 import { PreviewCodeStudio } from "@/components/editor/plugins/preview-components/preview-code-studio"
+import { PreviewProject } from "@/components/editor/plugins/preview-components/preview-project"
+import { PreviewRichText } from "@/components/editor/plugins/preview-components/preview-rich-text"
 
 interface SerializedContentRendererProps {
   serializedState: SerializedEditorState
   className?: string
+  projectId?: string
+  storageAdapter?: {
+    load: (id: string) => Promise<any>
+  }
 }
 
 export function SerializedContentRenderer({
   serializedState,
   className = "prose prose-stone dark:prose-invert max-w-none",
+  projectId,
+  storageAdapter,
 }: SerializedContentRendererProps) {
   let headingCounter = 0
+
+  // Validate serializedState structure
+  if (!serializedState || !serializedState.root || !serializedState.root.children) {
+    console.error("Invalid serializedState:", serializedState)
+    return (
+      <div className="p-8 text-center border border-red-200 bg-red-50 dark:border-red-700 dark:bg-red-900/20">
+        <p className="text-red-600 dark:text-red-400 font-medium">
+          Unable to render content: Invalid data structure
+        </p>
+        <p className="text-sm text-red-500 dark:text-red-500 mt-2">
+          The editor state is missing required properties (root.children)
+        </p>
+      </div>
+    )
+  }
 
   const renderNode = (node: any, index = 0, parentPath = "") => {
     // Create unique key using path and index
@@ -68,6 +89,11 @@ export function SerializedContentRenderer({
     // Handle HTML nodes
     if (node.type === "html") {
       return <PreviewHTML key={uniqueKey} node={node} />
+    }
+
+    // Handle Rich Text nodes
+    if (node.type === "rich-text") {
+      return <PreviewRichText key={uniqueKey} node={node} />
     }
 
     // Handle video nodes
@@ -100,11 +126,6 @@ export function SerializedContentRenderer({
       return <PreviewAdmonition key={uniqueKey} node={node} />
     }
 
-    // Handle presentation nodes
-    if (node.type === "presentation") {
-      return <PreviewPresentation key={uniqueKey} node={node} />
-    }
-
     // Handle source nodes
     if (node.type === "source") {
       return <PreviewSource key={uniqueKey} node={node} />
@@ -118,11 +139,6 @@ export function SerializedContentRenderer({
     // Handle Spotify nodes
     if (node.type === "spotify") {
       return <PreviewSpotify key={uniqueKey} node={node} />
-    }
-
-    // Handle source code nodes
-    if (node.type === "source-code") {
-      return <PreviewSourceCode key={uniqueKey} node={node} />
     }
 
     // For text content - now using the new component
@@ -147,7 +163,12 @@ export function SerializedContentRenderer({
 
     // For CodeStudio nodes
     if (node.type === "code-studio") {
-      return <PreviewCodeStudio key={uniqueKey} data={node.data} />
+      return <PreviewCodeStudio key={uniqueKey} data={node.data} projectId={projectId} />
+    }
+
+    // For Project nodes
+    if (node.type === "project") {
+      return <PreviewProject key={uniqueKey} node={node} storageAdapter={storageAdapter} />
     }
 
     if (node.children) {

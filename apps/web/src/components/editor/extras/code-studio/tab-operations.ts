@@ -54,7 +54,7 @@ export function reorderTabs(
   
   // Atualizar a ordem das abas
   const hasUniqueEditor = display?.panels.some(
-    p => p.type === "editor" && p.editorInstance === "unique"
+    p => (p.type === "full-editor" || p.type === "focus-editor") && p.editorInstance === "unique"
   )
 
   if (hasUniqueEditor && display) {

@@ -1,0 +1,15 @@
+# .NET build artifacts
+dotnet-runtime/bin/
+dotnet-runtime/obj/
+public/managed/
+
+# Build output
+*.tsbuildinfo
+
+# Development
+src/
+*.ts
+!*.d.ts
+
+# Docs
+*.md

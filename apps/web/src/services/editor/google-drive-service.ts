@@ -247,7 +247,7 @@ export class GoogleDriveService {
         storageType: "google-drive"
       }
 
-      const exportedProject = ProjectExporter.prepareForExport(projectData, hash)
+      const exportedProject = await ProjectExporter.prepareForExport(projectData, hash)
 
       // 2. Create or find project folder
       let projectFolderId = await this.findProjectFolder(exportedProject.folderName)
