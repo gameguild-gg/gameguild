@@ -25,8 +25,9 @@
     "preview": "vite preview",
     "type-check": "tsc --noEmit",
     "clean-dotnet-artifacts": "rm -rf dotnet-runtime/bin dotnet-runtime/obj && find . -name 'package.json' -path '*/managed/*' -delete 2>/dev/null || true",
-    "build-runtime": "./build-dotnet.sh",
-    "compress": "./compress-assets.sh",
+    "build-runtime": "tsx scripts/build-dotnet.ts",
+    "compress": "tsx scripts/compress-assets.ts",
+    "create-blazor-template": "tsx scripts/create-blazor-template.ts",
     "setup": "npm run build-runtime && npm run build"
   },
   "keywords": [
