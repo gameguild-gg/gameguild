@@ -29,3 +29,5 @@ Thumbs.db
 .env
 .env.local
 public/managed/*
+dotnet-runtime/bin/
+dotnet-runtime/obj/

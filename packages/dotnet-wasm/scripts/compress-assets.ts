@@ -1,22 +1,17 @@
-import { execSync } from 'node:child_process';
-import { existsSync, readdirSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync, readdirSync, rmSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
+import { gzipSync } from 'node:zlib';
+import { fileURLToPath } from 'node:url';
 
-const root = resolve(dirname(new URL(import.meta.url).pathname), '..');
+const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
 function gzipFile(filePath: string) {
-  execSync(`gzip -9 -c "${filePath}" > "${filePath}.gz"`);
+  const input = readFileSync(filePath);
+  const compressed = gzipSync(input, { level: 9 });
+  writeFileSync(`${filePath}.gz`, compressed);
 }
 
 console.log('=== Compressing DotNet Runtime Assets ===');
-
-// Check if gzip is available
-try {
-  execSync('gzip --version', { stdio: 'pipe' });
-} catch {
-  console.error('Error: gzip not found');
-  process.exit(1);
-}
 
 const managedDir = resolve(root, 'public/managed');
 
@@ -27,7 +22,6 @@ if (existsSync(managedDir)) {
   // Remove package.json that causes npm workspace conflicts
   const pkgJson = resolve(managedDir, 'package.json');
   if (existsSync(pkgJson)) {
-    const { rmSync } = await import('node:fs');
     rmSync(pkgJson, { force: true });
   }
 
