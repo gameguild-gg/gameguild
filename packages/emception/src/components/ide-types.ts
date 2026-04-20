@@ -2,6 +2,7 @@ export type TabType = 'text' | 'image' | 'canvas';
 export type DockGroup = 'main' | 'right' | 'bottom';
 
 export const WORKSPACE_STORAGE_KEY = 'gameguild.emception.workspace.v1';
+export const SDL_CANVAS_PATH = '/user/sdl-canvas';
 
 export interface WorkspaceFile {
   path: string;
@@ -197,7 +198,6 @@ export const INITIAL_FILES: Record<string, WorkspaceFile> = {
   '/user/main.cpp': { path: '/user/main.cpp', type: 'text', content: DEFAULT_CODE },
   '/user/greetings.h': { path: '/user/greetings.h', type: 'text', content: DEFAULT_HEADER },
   '/user/workspace-preview.svg': { path: '/user/workspace-preview.svg', type: 'image', content: DEFAULT_IMAGE },
-  '/user/sdl-canvas': { path: '/user/sdl-canvas', type: 'canvas', content: '' },
 };
 
 // ── Workspace bundle helpers ────────────────────────────────────
@@ -221,12 +221,9 @@ export function workspaceConfigToState(config: WorkspaceConfig): {
   const wsFiles: Record<string, WorkspaceFile> = {};
   for (const [path, bundle] of Object.entries(config.files)) {
     const type = inferTabType(path);
+    if (type === 'canvas') continue;
     const content = bundle.encoding === 'base64' ? `data:application/octet-stream;base64,${bundle.content}` : bundle.content;
     wsFiles[path] = { path, type, content };
-  }
-  // Add a canvas entry if the workspace uses SDL3 and one isn't already defined
-  if (config.features.canvas && !Object.keys(wsFiles).some((p) => inferTabType(p) === 'canvas')) {
-    wsFiles['/user/sdl-canvas'] = { path: '/user/sdl-canvas', type: 'canvas', content: '' };
   }
 
   const openTabs: OpenTab[] = config.layout.openTabs.map((t) => {
@@ -234,7 +231,7 @@ export function workspaceConfigToState(config: WorkspaceConfig): {
     return {
       id: `tab:${t.path}`,
       path: t.path,
-      type: file?.type ?? 'text',
+      type: file?.type ?? inferTabType(t.path),
       group: t.group,
     };
   });

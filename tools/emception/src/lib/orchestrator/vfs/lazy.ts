@@ -275,9 +275,7 @@ export class LazyFS implements IFileSystem {
       data = new Uint8Array(await this.decompressBrotli(data));
       console.log(`${P}   loadBundle: brotli decompressed ${fmtSize(rawSize)} → ${fmtSize(data.length)} in ${(performance.now() - tDecomp).toFixed(1)}ms`);
     } else if (bundle.url.endsWith('.tar.gz') || bundle.url.endsWith('.gz')) {
-      const tDecomp = performance.now();
-      data = new Uint8Array(await this.decompressGzip(data));
-      console.log(`${P}   loadBundle: gzip decompressed ${fmtSize(rawSize)} → ${fmtSize(data.length)} in ${(performance.now() - tDecomp).toFixed(1)}ms`);
+      throw new Error(`Unsupported bundle format for ${bundleName}: ${bundle.url}. Expected .tar.br`);
     }
 
     // Extract tar entries into IDB (no in-memory cache)

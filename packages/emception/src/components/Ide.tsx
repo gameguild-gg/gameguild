@@ -6,7 +6,7 @@ import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import DockGroupPanel from './DockGroup';
 import FileExplorer from './FileExplorer';
 import type { DockGroup, OpenTab, TabType, TerminalTab, WorkspaceConfig, WorkspaceFile } from './ide-types';
-import { DEFAULT_IMAGE, WORKSPACE_STORAGE_KEY, parseWorkspaceBundle, resolveArgs, workspaceConfigToState } from './ide-types';
+import { DEFAULT_IMAGE, SDL_CANVAS_PATH, WORKSPACE_STORAGE_KEY, parseWorkspaceBundle, resolveArgs, workspaceConfigToState } from './ide-types';
 import { buildFileTree, inferLanguage, isSourceFile, isTextFile, makeWasiStubs, toWorkspaceFsPath } from './ide-utils';
 import TerminalPanel from './TerminalPanel';
 import { DEFAULT_PRESET, PRESETS, PRESET_IDS } from './workspace-presets';
@@ -96,6 +96,7 @@ export default function Ide({ title = 'Emception', manifestUrl = '/cdn/manifest.
   const [expandedDirs, setExpandedDirs] = useState<Set<string>>(initialState.expandedDirs);
   const [openTabs, setOpenTabs] = useState<OpenTab[]>(initialState.openTabs);
   const [activeTabId, setActiveTabId] = useState(initialState.activeTabId);
+  const [canvasIsRunning, setCanvasIsRunning] = useState(false);
 
   const [terminalTabs, setTerminalTabs] = useState<TerminalTab[]>([{ id: 'terminal-1', title: 'bash' }]);
   const [activeTerminalId, setActiveTerminalId] = useState('terminal-1');
@@ -112,9 +113,14 @@ export default function Ide({ title = 'Emception', manifestUrl = '/cdn/manifest.
   // Expose filesRef for e2e tests so Playwright can verify file content was updated
   (window as unknown as Record<string, unknown>).__emception_filesRef__ = filesRef;
 
-  const fileTree = buildFileTree(Object.keys(files));
+  const fileTree = buildFileTree(Object.keys(files).filter((path) => path !== SDL_CANVAS_PATH && files[path]?.type !== 'canvas'));
   const activeTab = openTabs.find((t) => t.id === activeTabId) ?? openTabs[0] ?? null;
-  const activeFile = activeTab ? files[activeTab.path] : null;
+  const activeFile = activeTab
+    ? (files[activeTab.path] ??
+      (activeTab.type === 'canvas' || activeTab.path === SDL_CANVAS_PATH
+        ? { path: SDL_CANVAS_PATH, type: 'canvas' as const, content: canvasIsRunning ? 'sdl' : '' }
+        : null))
+    : null;
   const activeFileName = activeFile ? (activeFile.path.split('/').filter(Boolean).pop() ?? '') : '';
   const groupTabs = (group: DockGroup) => openTabs.filter((t) => t.group === group);
   const hasRightGroup = groupTabs('right').length > 0;
@@ -131,7 +137,10 @@ export default function Ide({ title = 'Emception', manifestUrl = '/cdn/manifest.
         openTabs?: OpenTab[];
         activeTabId?: string;
       };
-      if (parsed.files && Object.keys(parsed.files).length > 0) setFiles(parsed.files);
+      if (parsed.files && Object.keys(parsed.files).length > 0) {
+        const nextFiles = Object.fromEntries(Object.entries(parsed.files).filter(([path, file]) => path !== SDL_CANVAS_PATH && file?.type !== 'canvas'));
+        setFiles(nextFiles);
+      }
       if (parsed.selectedPath) setSelectedPath(parsed.selectedPath);
       if (parsed.expandedDirs) setExpandedDirs(new Set(parsed.expandedDirs));
       if (parsed.openTabs && parsed.openTabs.length > 0) setOpenTabs(parsed.openTabs);
@@ -143,8 +152,8 @@ export default function Ide({ title = 'Emception', manifestUrl = '/cdn/manifest.
 
   useEffect(() => {
     try {
-      // Clear canvas blob URLs (not valid across reloads)
-      const filesToSave = Object.fromEntries(Object.entries(files).map(([k, v]) => [k, v.type === 'canvas' ? { ...v, content: '' } : v]));
+      // Exclude runtime-only canvas entries from persisted workspace files
+      const filesToSave = Object.fromEntries(Object.entries(files).filter(([path, file]) => path !== SDL_CANVAS_PATH && file.type !== 'canvas'));
       window.localStorage.setItem(
         WORKSPACE_STORAGE_KEY,
         JSON.stringify({
@@ -231,6 +240,7 @@ export default function Ide({ title = 'Emception', manifestUrl = '/cdn/manifest.
         delete canvas.dataset.sdlRunning;
         canvas.style.display = 'none';
       }
+      setCanvasIsRunning(false);
       setExecutionPhase('idle');
       stoppedRef.current = true;
 
@@ -373,12 +383,13 @@ export default function Ide({ title = 'Emception', manifestUrl = '/cdn/manifest.
   const ensureOpenTab = useCallback(
     (path: string, group: DockGroup = 'main') => {
       const file = files[path];
-      if (!file) return;
+      const type: TabType | null = file?.type ?? (path === SDL_CANVAS_PATH ? 'canvas' : null);
+      if (!type) return;
       const id = `tab:${path}`;
       setOpenTabs((prev) => {
         const existing = prev.find((t) => t.id === id);
         if (existing) return prev.map((t) => (t.id === id ? { ...t, group } : t));
-        return [...prev, { id, path, type: file.type, group }];
+        return [...prev, { id, path, type, group }];
       });
       setActiveTabId(id);
     },
@@ -535,6 +546,7 @@ export default function Ide({ title = 'Emception', manifestUrl = '/cdn/manifest.
       delete resetCanvas.dataset.sdlRunning;
       resetCanvas.style.display = 'none';
     }
+    setCanvasIsRunning(false);
     setExecutionPhase('idle');
     stoppedRef.current = true;
 
@@ -870,11 +882,8 @@ export default function Ide({ title = 'Emception', manifestUrl = '/cdn/manifest.
         }
 
         // Mark canvas tab as SDL-active (keeps the canvas element visible)
-        setFiles((prev) => ({
-          ...prev,
-          '/user/sdl-canvas': { ...prev['/user/sdl-canvas'], content: 'sdl' },
-        }));
-        ensureOpenTab('/user/sdl-canvas', 'right');
+        setCanvasIsRunning(true);
+        ensureOpenTab(SDL_CANVAS_PATH, 'right');
         setActiveTabId(`tab:${compileTarget}`);
 
         // Wait for React to flush + browser to paint so canvasRef.current is ready
@@ -1129,6 +1138,14 @@ export default function Ide({ title = 'Emception', manifestUrl = '/cdn/manifest.
           if (a === wasmPath) return objPath;
           return a;
         });
+        // Strip any explicit -Z codegen-backend=... from persisted/stale configs.
+        // The rustc.wasm Emscripten module has the LLVM backend baked in via
+        // CFG_DEFAULT_CODEGEN_BACKEND — no runtime override needed.
+        for (let i = rustcArgs.length - 2; i >= 0; i--) {
+          if (rustcArgs[i] === '-Z' && /^codegen-backend=/.test(rustcArgs[i + 1])) {
+            rustcArgs.splice(i, 2);
+          }
+        }
         // Ensure --emit=obj is present for two-step linking
         if (!rustcArgs.includes('--emit=obj')) {
           rustcArgs.push('--emit=obj');
@@ -1139,17 +1156,20 @@ export default function Ide({ title = 'Emception', manifestUrl = '/cdn/manifest.
           rustcArgs[oIdx + 1] = objPath;
         }
 
-        const rustcResult = await client.run('rustc', rustcArgs, {
-          cwd: resolvedConfig.compile.cwd ?? '/home/user',
-          onStdout: (t: string) => {
-            console.log(t);
-            tty.writeLine(t);
-          },
-          onStderr: (t: string) => {
-            console.error(t);
-            tty.writeError(t);
-          },
-        });
+        const runRustc = async (args: string[]) =>
+          client.run('rustc', args, {
+            cwd: resolvedConfig.compile.cwd ?? '/home/user',
+            onStdout: (t: string) => {
+              console.log(t);
+              tty.writeLine(t);
+            },
+            onStderr: (t: string) => {
+              console.error(t);
+              tty.writeError(t);
+            },
+          });
+
+        const rustcResult = await runRustc(rustcArgs);
 
         if (rustcResult.exitCode !== 0) {
           const dur = ((performance.now() - t0) / 1000).toFixed(2);
@@ -1159,10 +1179,74 @@ export default function Ide({ title = 'Emception', manifestUrl = '/cdn/manifest.
           return;
         }
 
+        // Determine user-program output target from compile args (default: wasm32-wasip1,
+        // which is the WASI output target for programs run via wasi-run).
+        // Note: rustc.wasm itself is an Emscripten module with LLVM backend — this target
+        // here is for the USER PROGRAM output, not the compiler host.
+        const rustTarget = (() => {
+          const tIdx = rustcArgs.indexOf('--target');
+          const inlineTarget = rustcArgs.find((a) => a.startsWith('--target='));
+          const rawTarget =
+            tIdx >= 0
+              ? rustcArgs[tIdx + 1]
+              : inlineTarget
+                ? inlineTarget.slice('--target='.length)
+                : 'wasm32-wasip1';
+          return rawTarget;
+        })();
+        let rustLibsDir = `/usr/lib/rust/lib/rustlib/${rustTarget}/lib`;
+        if (rustTarget === 'wasm32-wasi') {
+          const mappedRustLibsDir = '/usr/lib/rust/lib/rustlib/wasm32-wasip1/lib';
+          const mappedEntries = await client.listDir(mappedRustLibsDir);
+          if (mappedEntries.length > 0) {
+            rustLibsDir = mappedRustLibsDir;
+          }
+        }
+
+        // List all Rust rlibs for the target so wasm-ld can resolve stdlib symbols.
+        tty.writeLine('\x1b[36mResolving Rust rlibs...\x1b[0m');
+        const rustLibEntries = await client.listDir(rustLibsDir);
+        const rlibs = rustLibEntries
+          .filter((e: string) => e.endsWith('.rlib'))
+          .map((e: string) => `${rustLibsDir}/${e}`);
+        console.log(`${P} Rust rlibs: ${rlibs.length} files from ${rustLibsDir}`);
+
+        // For wasm32-wasip1 targets: link with the WASI self-contained crt + libc.
+        // For wasm32-unknown-emscripten targets: link with Emscripten cache libs.
+        const isWasiTarget = rustTarget === 'wasm32-wasi' || rustTarget === 'wasm32-wasip1' || rustTarget === 'wasm32-wasip2';
+        const wasiSelfContained = `${rustLibsDir}/self-contained`;
+
         tty.writeLine('\x1b[36mLinking (wasm-ld)...\x1b[0m');
         const lldResult = await client.run(
           'wasm-ld',
-          ['wasm-ld', objPath, '-o', wasmPath, '-L/usr/lib/rust/lib/rustlib/wasm32-wasip1/lib', '--entry=main', '--allow-undefined'],
+          [
+            'wasm-ld',
+            objPath,
+            ...rlibs,
+            '-o', wasmPath,
+            ...(isWasiTarget ? [
+              `${wasiSelfContained}/crt1-command.o`,
+              `${wasiSelfContained}/libc.a`,
+              `--library-path=${rustLibsDir}`,
+              '--no-entry',
+              '--import-undefined',
+              '--allow-undefined',
+              '-z', 'stack-size=2097152',
+            ] : [
+              '-L/usr/lib/emscripten/cache-lib/wasm32-emscripten',
+              `--library-path=${rustLibsDir}`,
+              '--entry=main',
+              '--import-undefined',
+              '--allow-undefined',
+              '--export-table',
+              '--table-base=1',
+              '--export=__wasm_call_ctors',
+              '-lc',
+              '-ldlmalloc',
+              '-lcompiler_rt',
+              '-z', 'stack-size=2097152',
+            ]),
+          ],
           {
             cwd: resolvedConfig.compile.cwd ?? '/home/user',
             onStdout: (t: string) => {
@@ -1589,11 +1673,8 @@ export default function Ide({ title = 'Emception', manifestUrl = '/cdn/manifest.
         delete canvas.dataset.sdlRunning;
         canvas.style.display = 'none';
       }
-      // Reset the file content sentinel so the placeholder is shown again
-      setFiles((prev) => ({
-        ...prev,
-        '/user/sdl-canvas': { ...prev['/user/sdl-canvas'], content: '' },
-      }));
+      // Reset canvas sentinel so placeholder is shown again
+      setCanvasIsRunning(false);
       setExecutionPhase('idle');
       setStatus('Stopped');
       xtermRef.current?.writeln('\x1b[33mExecution stopped.\x1b[0m');
@@ -1798,6 +1879,7 @@ export default function Ide({ title = 'Emception', manifestUrl = '/cdn/manifest.
                     onReorderTab={reorderTab}
                     onEditorMount={handleEditorDidMount}
                     onEditorChange={handleEditorChange}
+                    canvasIsRunning={canvasIsRunning}
                   />
                 </Panel>
 
@@ -1818,6 +1900,7 @@ export default function Ide({ title = 'Emception', manifestUrl = '/cdn/manifest.
                         onReorderTab={reorderTab}
                         onEditorMount={handleEditorDidMount}
                         onEditorChange={handleEditorChange}
+                        canvasIsRunning={canvasIsRunning}
                       />
                     </Panel>
                   </>
@@ -1842,6 +1925,7 @@ export default function Ide({ title = 'Emception', manifestUrl = '/cdn/manifest.
                     onReorderTab={reorderTab}
                     onEditorMount={handleEditorDidMount}
                     onEditorChange={handleEditorChange}
+                    canvasIsRunning={canvasIsRunning}
                   />
                 </Panel>
               </>

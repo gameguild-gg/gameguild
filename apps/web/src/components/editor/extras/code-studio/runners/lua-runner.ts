@@ -1,16 +1,17 @@
 import type { CodeRunner, RunnerResult, RunnerOptions, FileMap } from './types'
-import { LuaFactory, type LuaEngine } from 'wasmoon'
 
-let luaFactory: LuaFactory | null = null
+let luaFactory: any = null
 
-async function getLuaFactory(): Promise<LuaFactory> {
+async function getLuaFactory(): Promise<any> {
   if (!luaFactory) {
+    // Dynamically import wasmoon to avoid loading it during SSR/build
+    const { LuaFactory } = await import('wasmoon')
     luaFactory = new LuaFactory()
   }
   return luaFactory
 }
 
-async function createFreshLuaEngine(): Promise<LuaEngine> {
+async function createFreshLuaEngine(): Promise<any> {
   const factory = await getLuaFactory()
   return await factory.createEngine()
 }
@@ -33,7 +34,7 @@ export class LuaRunner implements CodeRunner {
     let stdout = ''
     let stderr = ''
     let exitCode = 0
-    let lua: LuaEngine | null = null
+    let lua: any = null
 
     try {
       lua = await createFreshLuaEngine()
@@ -95,7 +96,7 @@ export class LuaRunner implements CodeRunner {
         lua.global.set('_request_input_js', (prompt?: string) => {
           // Get current output before requesting input
           if (!lua) return Promise.reject(new Error('Lua engine not initialized'))
-          return lua.doString('return get_output()').then((currentOutput) => {
+          return lua.doString('return get_output()').then((currentOutput: unknown) => {
             const outputStr = String(currentOutput || '')
             return requestInput(prompt, outputStr)
           })
@@ -151,7 +152,7 @@ export class LuaRunner implements CodeRunner {
     let stdout = ''
     let stderr = ''
     let exitCode = 0
-    let lua: LuaEngine | null = null
+    let lua: any = null
 
     try {
       lua = await createFreshLuaEngine()
@@ -302,7 +303,7 @@ export class LuaRunner implements CodeRunner {
         lua.global.set('_request_input_js', (prompt?: string) => {
           // Get current output before requesting input
           if (!lua) return Promise.reject(new Error('Lua engine not initialized'))
-          return lua.doString('return get_output()').then((currentOutput) => {
+          return lua.doString('return get_output()').then((currentOutput: unknown) => {
             const outputStr = String(currentOutput || '')
             return requestInput(prompt, outputStr)
           })

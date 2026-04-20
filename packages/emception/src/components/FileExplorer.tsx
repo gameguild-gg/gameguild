@@ -156,9 +156,6 @@ export default function FileExplorer({
                 <button onClick={() => onCreateFile('image')} style={actionBtnStyle} title="New image file">
                     +Img
                 </button>
-                <button onClick={() => onCreateFile('canvas')} style={actionBtnStyle} title="New SDL canvas">
-                    +SDL
-                </button>
             </div>
 
             {/* Workspace label */}
