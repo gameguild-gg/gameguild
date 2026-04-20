@@ -1,6 +1,9 @@
 # Dependencies
 node_modules/
 
+# Local .NET SDK
+.dotnet/
+
 # Build output
 dist/
 *.tsbuildinfo
