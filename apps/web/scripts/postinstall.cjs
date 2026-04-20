@@ -1,15 +1,47 @@
 #!/usr/bin/env node
 
-const WASM_PACKAGES = ['esbuild-wasm', 'quickjs-emscripten', '@runno/sandbox', 'wabt']
+const { existsSync } = require('fs')
+const { resolve } = require('path')
+const { spawnSync } = require('child_process')
 
-const changedPackages = process.env.npm_package_json
-  ? require(process.env.npm_package_json).dependencies || {}
-  : {}
+const webDir = resolve(__dirname, '..')
+const repoRoot = resolve(webDir, '..', '..')
+const dotnetWasmDir = resolve(repoRoot, 'packages/dotnet-wasm')
 
-const needsUpdate = WASM_PACKAGES.some(pkg => pkg in changedPackages)
+function getNpmInvocation() {
+  if (process.env.npm_execpath) {
+    return {
+      command: process.execPath,
+      args: [process.env.npm_execpath],
+    }
+  }
 
-if (needsUpdate) {
-  console.log('\n⚠️  WASM packages detected!')
-  console.log('💡 Run: npm run update-wasm')
-  console.log('   To update compressed WASM files in public/wasm/\n')
+  return {
+    command: process.platform === 'win32' ? 'npm.cmd' : 'npm',
+    args: [],
+  }
 }
+
+function runNpmScript(cwd, scriptName) {
+  const npm = getNpmInvocation()
+  const result = spawnSync(npm.command, [...npm.args, 'run', scriptName], {
+    cwd,
+    env: process.env,
+    stdio: 'inherit',
+  })
+
+  if (result.status !== 0) {
+    process.exit(result.status || 1)
+  }
+}
+
+if (!existsSync(dotnetWasmDir)) {
+  console.warn('\n⚠️  packages/dotnet-wasm not found. Skipping WASM preparation.\n')
+  process.exit(0)
+}
+
+console.log('\n🔧 Building dotnet-wasm assets...')
+runNpmScript(dotnetWasmDir, 'setup')
+
+console.log('\n📦 Updating web WASM assets...')
+runNpmScript(webDir, 'update-wasm')
