@@ -7,8 +7,9 @@ import { $getNodeByKey, DecoratorNode, type SerializedLexicalNode } from "lexica
 import { ImageIcon } from "lucide-react"
 import { useContext, useEffect, useState } from "react"
 import type { JSX } from "react/jsx-runtime"
-import { EditorLoadingContext } from "../lexical-editor"
+import { EditorLoadingContext } from "@/components/editor/engines/lexical/lexical-editor"
 import type { BaseMediaData } from "./base/media-node-base"
+import { AssetImage } from "../extras/media/asset-image"
 
 export type GalleryLayout = "1" | "2" | "3" | "4"
 
@@ -272,7 +273,7 @@ function GalleryComponent({ data, nodeKey }: GalleryComponentProps) {
                           <div className="h-full w-full" />
                         ) : (
                           // Render actual image
-                          <img
+                          <AssetImage
                             src={image.src}
                             alt={image.alt}
                             className={
@@ -341,7 +342,7 @@ function GalleryComponent({ data, nodeKey }: GalleryComponentProps) {
                         <div className="h-full w-full" />
                       ) : (
                         // Render actual image
-                        <img
+                        <AssetImage
                           src={image.src}
                           alt={image.alt}
                           className={

@@ -19,6 +19,8 @@ import {
 import { Pencil } from "lucide-react"
 import { MediaNodeBase, type BaseMediaData } from "./base/media-node-base"
 import { UnifiedMediaEditor } from "@/components/editor/extras/media/unified-media-editor"
+import { resolveAssetUrl, isAssetUrl } from "@/lib/storage/assets"
+import { AssetImage } from "../extras/media/asset-image"
 
 interface MediaComponentProps {
   nodeKey: NodeKey
@@ -32,7 +34,35 @@ export function MediaComponent({ nodeKey, data, NodeClass }: MediaComponentProps
   const [showEditor, setShowEditor] = useState(data.isNew || false)
   const [showMenu, setShowMenu] = useState(false)
   const [hasAutoOpened, setHasAutoOpened] = useState(false)
+  const [resolvedSrc, setResolvedSrc] = useState<string | null>(null)
+  const [isLoadingAsset, setIsLoadingAsset] = useState(false)
   const mediaRef = useRef<HTMLDivElement>(null)
+
+  // Resolve asset URL if needed
+  useEffect(() => {
+    async function loadAsset() {
+      if (!data.src) {
+        setResolvedSrc(null)
+        return
+      }
+
+      if (isAssetUrl(data.src)) {
+        setIsLoadingAsset(true)
+        try {
+          const url = await resolveAssetUrl(data.src)
+          setResolvedSrc(url)
+        } catch (error) {
+          console.error("Failed to resolve asset URL:", error)
+          setResolvedSrc(null)
+        } finally {
+          setIsLoadingAsset(false)
+        }
+      } else {
+        setResolvedSrc(data.src)
+      }
+    }
+    loadAsset()
+  }, [data.src])
 
   const onDelete = useCallback(
     (payload: KeyboardEvent) => {
@@ -144,11 +174,21 @@ export function MediaComponent({ nodeKey, data, NodeClass }: MediaComponentProps
     }
   }, [data, hasAutoOpened, editor, nodeKey, NodeClass])
 
-  const renderMediaContent = () => {
+  const renderContent = () => {
     switch (data.type) {
       case "image":
+        if (isLoadingAsset) {
+          return (
+            <div
+              style={{ width: `${data.size}%` }}
+              className="h-48 rounded-lg bg-muted flex items-center justify-center mx-auto"
+            >
+              <div className="text-muted-foreground">Loading asset...</div>
+            </div>
+          )
+        }
         return (
-          <img
+          <AssetImage
             src={data.src || "/placeholder.svg"}
             alt={data.alt || ""}
             style={{ width: `${data.size}%` }}
@@ -174,14 +214,16 @@ export function MediaComponent({ nodeKey, data, NodeClass }: MediaComponentProps
       return renderVideoEmbed()
     }
 
+    const src = resolvedSrc || data.src
+
     return (
       <video
-        src={data.src}
+        src={src}
         className="w-full h-auto rounded-lg"
         controls
         style={{ width: `${data.size}%` }}
       >
-        <source src={data.src} type={data.videoType || "video/mp4"} />
+        <source src={src} type={data.videoType || "video/mp4"} />
         Seu navegador não suporta vídeo.
       </video>
     )
@@ -194,7 +236,7 @@ export function MediaComponent({ nodeKey, data, NodeClass }: MediaComponentProps
     if (embedType === "youtube") {
       const match = data.src.match(/(?:youtube\.com\/(?:[^/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?/\s]{11})/i)
       if (match && match[1]) {
-        embedUrl = `https://www.youtube.com/embed/${match[1]}?enablejsapi=1`
+        embedUrl = `https://www.youtube-nocookie.com/embed/${match[1]}?enablejsapi=1`
       }
     } else if (embedType === "vimeo") {
       const match = data.src.match(/(?:vimeo\.com\/(?:video\/)?|player\.vimeo\.com\/video\/)([0-9]+)/i)
@@ -220,6 +262,8 @@ export function MediaComponent({ nodeKey, data, NodeClass }: MediaComponentProps
             className="absolute inset-0 w-full h-full rounded-lg"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
             allowFullScreen
+            // @ts-expect-error credentialless is not yet in React's iframe types
+            credentialless="true"
           />
         </div>
       </div>
@@ -233,11 +277,13 @@ export function MediaComponent({ nodeKey, data, NodeClass }: MediaComponentProps
       return renderAudioEmbed()
     }
 
+    const src = resolvedSrc || data.src
+
     return (
       <div style={{ width: `${data.size}%` }} className="mx-auto">
         <div className="bg-card border rounded-lg p-4">
-          <audio src={data.src} controls className="w-full">
-            <source src={data.src} type={data.audioType || "audio/mpeg"} />
+          <audio src={src} controls className="w-full">
+            <source src={src} type={data.audioType || "audio/mpeg"} />
             Seu navegador não suporta áudio.
           </audio>
         </div>
@@ -253,7 +299,7 @@ export function MediaComponent({ nodeKey, data, NodeClass }: MediaComponentProps
     if (embedType === "youtube") {
       const match = data.src.match(/(?:youtube\.com\/(?:[^/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?/\s]{11})/i)
       if (match && match[1]) {
-        embedUrl = `https://www.youtube.com/embed/${match[1]}?feature=oembed&enablejsapi=1&showinfo=0&controls=1&disablekb=1&rel=0&modestbranding=1&vq=small&iv_load_policy=3&fs=0`
+        embedUrl = `https://www.youtube-nocookie.com/embed/${match[1]}?feature=oembed&enablejsapi=1&showinfo=0&controls=1&disablekb=1&rel=0&modestbranding=1&vq=small&iv_load_policy=3&fs=0`
         height = "60"
       }
     } else if (embedType === "spotify") {
@@ -281,6 +327,8 @@ export function MediaComponent({ nodeKey, data, NodeClass }: MediaComponentProps
           className="w-full rounded-lg border"
           allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
           loading="lazy"
+          // @ts-expect-error credentialless is not yet in React's iframe types
+          credentialless="true"
         />
       </div>
     )
@@ -309,7 +357,7 @@ export function MediaComponent({ nodeKey, data, NodeClass }: MediaComponentProps
       >
         <div className="relative flex justify-center">
           <div className="w-full">
-            {renderMediaContent()}
+            {renderContent()}
           </div>
 
           {/* Settings button */}

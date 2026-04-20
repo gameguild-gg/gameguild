@@ -58,13 +58,42 @@ const nextConfig: NextConfig = {
         source: '/pyodide/:file*.js',
         destination: '/pyodide/:file*.js.gz',
       },
+      // .NET managed runtime files are served directly (not gzipped)
     ];
   },
   // Set headers for compressed files
   async headers() {
     return [
       // Enable SharedArrayBuffer for @runno/runtime (required for WASM threads)
-      // Using 'credentialless' for COEP allows external images while still enabling SharedArrayBuffer
+      // Only on gglexical routes where code-studio actually needs it
+      // Applying globally breaks cross-origin iframes (YouTube, Spotify, etc.) in Firefox
+      // Matches both /gglexical/... (default locale hidden) and /pt-BR/gglexical/...
+      {
+        source: '/gglexical/:path*',
+        headers: [
+          {
+            key: 'Cross-Origin-Opener-Policy',
+            value: 'same-origin',
+          },
+          {
+            key: 'Cross-Origin-Embedder-Policy',
+            value: 'credentialless',
+          },
+        ],
+      },
+      {
+        source: '/:locale/gglexical/:path*',
+        headers: [
+          {
+            key: 'Cross-Origin-Opener-Policy',
+            value: 'same-origin',
+          },
+          {
+            key: 'Cross-Origin-Embedder-Policy',
+            value: 'credentialless',
+          },
+        ],
+      },
       {
         source: '/:path*',
         headers: [
@@ -200,6 +229,20 @@ const nextConfig: NextConfig = {
           },
         ],
       },
+      // .NET WASM runtime files (served directly, not gzipped)
+      {
+        source: '/managed/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+          {
+            key: 'Cross-Origin-Resource-Policy',
+            value: 'cross-origin',
+          },
+        ],
+      },
     ];
   },
   webpack: (config, { isServer }) => {
@@ -246,6 +289,7 @@ const nextConfig: NextConfig = {
       canvas: false, // vega-canvas uses canvas which is Node.js only
       crypto: false,
       stream: false,
+      buffer: false,
     };
 
     // Handle markdown imports as raw text (webpack build path)

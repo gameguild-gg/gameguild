@@ -11,7 +11,7 @@ import { ChevronDown } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { EditorLoadingContext } from "../lexical-editor"
+import { EditorLoadingContext } from "@/components/editor/engines/lexical/lexical-editor"
 
 // Update the HeaderData interface to include the style
 export interface HeaderData {

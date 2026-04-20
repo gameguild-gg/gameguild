@@ -1,0 +1,34 @@
+# Dependencies
+node_modules/
+
+# Local .NET SDK
+.dotnet/
+
+# Build output
+dist/
+*.tsbuildinfo
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+.env.local
+public/managed/*
+dotnet-runtime/bin/
+dotnet-runtime/obj/
+src/runtime/blazor.boot.json

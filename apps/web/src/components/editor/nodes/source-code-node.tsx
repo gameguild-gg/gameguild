@@ -3,7 +3,7 @@ import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext
 import { $getNodeByKey, DecoratorNode, type SerializedLexicalNode } from "lexical";
 import { useContext } from "react";
 import type { JSX } from "react/jsx-runtime"; // Import JSX to fix the undeclared variable error
-import { EditorLoadingContext } from "../lexical-editor";
+import { EditorLoadingContext } from "@/components/editor/engines/lexical/lexical-editor";
 
 // Import types
 import { SourceCodeCore, type SourceCodeNodeData } from "./source-code-core";

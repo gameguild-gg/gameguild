@@ -13,10 +13,12 @@ interface ProjectData {
   updatedAt: string
   storageType?: "local" | "gameguild-cloud" | "google-drive"
   isLocallyAvailable?: boolean
+  preferences?: any
 }
 
 interface ProjectListViewProps {
   projects: ProjectData[]
+  columns?: number
   onOpen: (projectId: string, event?: React.MouseEvent) => void
   onView?: (projectId: string, event?: React.MouseEvent) => void
   onDelete?: (projectId: string, projectName: string) => void
@@ -30,6 +32,7 @@ interface ProjectListViewProps {
 
 export function ProjectListView({
   projects,
+  columns = 1,
   onOpen,
   onView,
   onDelete,
@@ -41,7 +44,7 @@ export function ProjectListView({
   openButtonIcon,
 }: ProjectListViewProps) {
   return (
-    <div className="space-y-4">
+    <div className={columns === 2 ? "grid grid-cols-1 lg:grid-cols-2 gap-4" : "space-y-4"}>
       {projects.map((project) => (
         <ProjectCard
           key={project.id}

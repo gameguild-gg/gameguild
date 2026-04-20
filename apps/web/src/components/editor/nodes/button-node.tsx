@@ -9,7 +9,7 @@ import {
   Link, Link2, ArrowDownToLine, FileDown, ClipboardCopy, CopyCheck, AtSign, Send
 } from "lucide-react"
 import type { JSX } from "react/jsx-runtime"
-import { EditorLoadingContext } from "../lexical-editor"
+import { EditorLoadingContext } from "@/components/editor/engines/lexical/lexical-editor"
 import { ButtonEditor } from "@/components/editor/extras/button"
 import { ContentEditMenu } from "@/components/editor/extras/content-edit-menu"
 import {
