@@ -31,3 +31,4 @@ Thumbs.db
 public/managed/*
 dotnet-runtime/bin/
 dotnet-runtime/obj/
+src/runtime/blazor.boot.json
