@@ -20,8 +20,9 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
+    "prepare:wasm": "node scripts/postinstall.cjs",
     "update-wasm": "node scripts/update-wasm.mjs",
-    "postinstall": "node scripts/postinstall.cjs"
+    "postinstall": "npm run prepare:wasm"
   },
   "dependencies": {
     "@apollo/client": "^3.13.9",
