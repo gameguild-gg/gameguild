@@ -24,6 +24,8 @@ interface PreviewRendererType1Props {
   onProjectSelect: (project: ProjectData) => void
   sidebarOpen: boolean
   setSidebarOpen: (open: boolean) => void
+  showSidebar?: boolean
+  showTableOfContents?: boolean
 }
 
 export function PreviewRendererType1({
@@ -35,23 +37,27 @@ export function PreviewRendererType1({
   onProjectSelect,
   sidebarOpen,
   setSidebarOpen,
+  showSidebar = true,
+  showTableOfContents = true,
 }: PreviewRendererType1Props) {
   return (
     <div className="flex flex-col lg:flex-row lg:gap-8">
       {/* Desktop Sidebar */}
-      <aside className="hidden lg:block lg:w-1/3 xl:w-1/4">
-        <ProjectSidebarList
-          storageAdapter={storageAdapter}
-          availableTags={availableTags}
-          currentProject={currentProject}
-          onProjectSelect={onProjectSelect}
-          isDbInitialized={isDbInitialized}
-          isSticky={true}
-        />
-      </aside>
+      {showSidebar && (
+        <aside className="hidden lg:block lg:w-1/3 xl:w-1/4">
+          <ProjectSidebarList
+            storageAdapter={storageAdapter}
+            availableTags={availableTags}
+            currentProject={currentProject}
+            onProjectSelect={onProjectSelect}
+            isDbInitialized={isDbInitialized}
+            isSticky={true}
+          />
+        </aside>
+      )}
 
       {/* Mobile Sidebar Overlay */}
-      {sidebarOpen && (
+      {showSidebar && sidebarOpen && (
         <div className="fixed inset-0 z-50 flex lg:hidden">
           <div className="fixed inset-0 bg-black bg-opacity-50" onClick={() => setSidebarOpen(false)} />
           <div className="relative h-full w-80 bg-white shadow-xl dark:bg-gray-900">
@@ -80,9 +86,9 @@ export function PreviewRendererType1({
         </div>
       )}
 
-      <main className="flex-1 lg:w-3/4 xl:w-3/4">
-        <div className="grid grid-cols-1 gap-4 xl:grid-cols-7">
-          <div className="xl:col-span-5">
+      <main className={`flex-1 ${showSidebar ? 'lg:w-3/4 xl:w-3/4' : 'w-full'}`}>
+        <div className={`grid grid-cols-1 gap-4 ${showTableOfContents ? 'xl:grid-cols-7' : ''}`}>
+          <div className={showTableOfContents ? 'xl:col-span-5' : ''}>
             <div className="border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
               <div className="p-6 sm:p-8 md:p-12">
                 <PreviewRenderer serializedState={serializedState} projectId={currentProject.id} storageAdapter={storageAdapter} />
@@ -90,11 +96,13 @@ export function PreviewRendererType1({
             </div>
           </div>
 
-          <aside className="xl:col-span-2">
-            <div className="sticky top-24">
-              <PreviewTableOfContents serializedState={serializedState} />
-            </div>
-          </aside>
+          {showTableOfContents && (
+            <aside className="xl:col-span-2">
+              <div className="sticky top-24">
+                <PreviewTableOfContents serializedState={serializedState} />
+              </div>
+            </aside>
+          )}
         </div>
       </main>
     </div>
