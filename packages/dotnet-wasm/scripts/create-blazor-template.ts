@@ -1,23 +1,42 @@
 import { execSync } from 'node:child_process';
 import { existsSync, cpSync, rmSync, readdirSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
+import { homedir, platform } from 'node:os';
+import { fileURLToPath } from 'node:url';
 
-const root = resolve(dirname(new URL(import.meta.url).pathname), '..');
+const isWindows = platform() === 'win32';
+const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const dotnetRuntime = resolve(root, 'dotnet-runtime');
 const publicManaged = resolve(root, 'public/managed');
+const dotnetExeName = isWindows ? 'dotnet.exe' : 'dotnet';
+
+function findDotnetBin(): string {
+
+  const userBin = resolve(homedir(), '.dotnet', dotnetExeName);
+  if (existsSync(userBin)) return userBin;
+
+  return 'dotnet';
+}
+
+const dotnetBin = findDotnetBin();
 
 function run(cmd: string, cwd?: string) {
   console.log(`> ${cmd}`);
-  execSync(cmd, { cwd, stdio: 'inherit' });
+  execSync(cmd, {
+    cwd,
+    stdio: 'inherit',
+    shell: isWindows ? 'cmd.exe' : '/bin/bash',
+    env: { ...process.env, DOTNET_ROOT: dirname(dotnetBin) },
+  });
 }
 
 console.log('Creating Blazor WASM template...');
-run('dotnet new blazorwasm-empty -n BlazorTemplate -o BlazorTemplate --force', dotnetRuntime);
+run(`"${dotnetBin}" new blazorwasm-empty -n BlazorTemplate -o BlazorTemplate --force`, dotnetRuntime);
 
 const templateDir = resolve(dotnetRuntime, 'BlazorTemplate');
 
 console.log('Building Blazor template...');
-run('dotnet publish -c Release -o ../blazor-output', templateDir);
+run(`"${dotnetBin}" publish -c Release -o ../blazor-output`, templateDir);
 
 const blazorOutput = resolve(dotnetRuntime, 'blazor-output/wwwroot/_framework');
 
