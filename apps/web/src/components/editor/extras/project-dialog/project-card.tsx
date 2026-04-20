@@ -15,6 +15,7 @@ interface ProjectData {
   updatedAt: string
   storageType?: "local" | "gameguild-cloud" | "google-drive"
   isLocallyAvailable?: boolean
+  preferences?: any
 }
 
 interface ProjectCardProps {
@@ -45,6 +46,11 @@ export function ProjectCard({
   openButtonIcon,
 }: ProjectCardProps) {
   const { isAuthenticated: isGoogleDriveAuthenticated } = useGoogleDriveAuth()
+
+  // Get project type label
+  const getProjectTypeLabel = (): string => {
+    return "Single Project"
+  }
 
   // Format file size
   const formatSize = (sizeInKB: number): string => {
@@ -114,40 +120,46 @@ export function ProjectCard({
   if (viewMode === 'grid') {
     return (
       <div
-        className="group relative flex h-40 cursor-pointer flex-col justify-between overflow-hidden rounded-lg border bg-card text-card-foreground shadow-sm transition-all duration-200 ease-in-out hover:shadow-md dark:border-gray-800 dark:hover:border-gray-700"
+        className="group relative flex min-h-[180px] cursor-pointer flex-col justify-between overflow-hidden rounded-lg border bg-card text-card-foreground shadow-sm transition-all duration-200 ease-in-out hover:shadow-lg hover:border-gray-300 dark:border-gray-800 dark:hover:border-gray-600"
         onClick={(e) => !showStudioViewerButtons && onOpen(project.id, e)}
       >
-        <div className="flex flex-col p-4">
-          <div className="mb-2 flex items-start justify-between">
-            <span
-              className="block truncate font-semibold text-gray-900 dark:text-gray-100"
-              title={project.name}
-            >
-              {project.name}
-            </span>
+        <div className="flex flex-col p-3 sm:p-4">
+          <div className="mb-1.5 sm:mb-2 flex items-start justify-between gap-1">
+            <div className="flex-1 min-w-0">
+              <span
+                className="block truncate text-sm sm:text-base font-semibold text-gray-900 dark:text-gray-100 leading-tight"
+                title={project.name}
+              >
+                {project.name}
+              </span>
+              <span className="text-[10px] text-gray-500 dark:text-gray-400 font-medium">
+                {getProjectTypeLabel()}
+              </span>
+            </div>
             {renderStorageIndicator(project.storageType, project.isLocallyAvailable)}
           </div>
           
           {project.tags && project.tags.length > 0 && (
-            <div className="mb-3 flex flex-wrap gap-1" title={project.tags.join(", ")}>
-              {project.tags.slice(0, 3).map((tag) => (
+            <div className="mb-2 sm:mb-3 flex flex-wrap gap-1" title={project.tags.join(", ")}>
+              {project.tags.slice(0, 2).map((tag) => (
                 <span
                   key={tag}
-                  className="inline-flex items-center rounded-md bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10 dark:bg-blue-900/50 dark:text-blue-300 dark:ring-blue-700/30"
+                  className="inline-flex items-center rounded-md bg-blue-50 px-1.5 sm:px-2 py-0.5 text-[10px] sm:text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10 dark:bg-blue-900/50 dark:text-blue-300 dark:ring-blue-700/30 truncate max-w-[100px]"
                 >
                   {tag}
                 </span>
               ))}
-              {project.tags.length > 3 && (
-                <span className="text-xs text-gray-500 dark:text-gray-400">+{project.tags.length - 3}</span>
+              {project.tags.length > 2 && (
+                <span className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400">+{project.tags.length - 2}</span>
               )}
             </div>
           )}
           
-          <div className="mt-auto text-xs text-gray-500 dark:text-gray-400">
+          <div className="mt-auto text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 truncate">
             <span>{formatSize(project.size)}</span>
-            <span className="mx-1.5">•</span>
-            <span>Updated {new Date(project.updatedAt).toLocaleDateString()}</span>
+            <span className="mx-1">•</span>
+            <span className="hidden sm:inline">{new Date(project.updatedAt).toLocaleDateString()}</span>
+            <span className="sm:hidden">{new Date(project.updatedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
           </div>
         </div>
 
@@ -300,13 +312,18 @@ export function ProjectCard({
 
   // List view
   return (
-    <div className="group rounded-lg border bg-card p-4 shadow-sm transition-all duration-200 hover:shadow-md dark:border-gray-800">
+    <div className="group rounded-lg border bg-card p-4 shadow-sm transition-all duration-200 hover:shadow-lg hover:border-gray-300 dark:border-gray-800 dark:hover:border-gray-600">
       <div className="flex items-center justify-between">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-3 mb-2">
-            <span className="font-semibold text-gray-900 dark:text-gray-100 truncate" title={project.name}>
-              {project.name}
-            </span>
+            <div className="flex flex-col gap-0.5 min-w-0">
+              <span className="font-semibold text-gray-900 dark:text-gray-100 truncate" title={project.name}>
+                {project.name}
+              </span>
+              <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">
+                {getProjectTypeLabel()}
+              </span>
+            </div>
             {renderStorageIndicator(project.storageType, project.isLocallyAvailable)}
           </div>
           

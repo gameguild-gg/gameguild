@@ -5,6 +5,8 @@
  */
 
 import JSZip from "jszip"
+import { assetManager } from "@/lib/storage/assets/asset-manager"
+import type { AssetData, AssetUsage } from "@/lib/storage/assets/types"
 
 export interface ProjectData {
   id: string
@@ -16,6 +18,7 @@ export interface ProjectData {
   updatedAt: string
   hash?: string
   storageType?: "local" | "gameguild-cloud" | "google-drive"
+  preferences?: any
 }
 
 export interface ProjectMetadata {
@@ -29,6 +32,8 @@ export interface ProjectMetadata {
   storageType: string
   version: string
   exportedAt?: string
+  assetsCount?: number
+  preferences?: any
 }
 
 export interface ImportedProjectData {
@@ -37,6 +42,9 @@ export interface ImportedProjectData {
   data: string
   tags: string[]
   metadata: ProjectMetadata | null
+  assets?: Record<string, AssetData>
+  assetIndex?: Record<string, AssetUsage[]>
+  preferences?: any
 }
 
 export interface FolderStructureData {
@@ -49,6 +57,8 @@ export class ProjectImporter {
   private static readonly SUPPORTED_EXTENSIONS = ['.zip', '.gglexical']
   private static readonly METADATA_FILENAME = 'index.json'
   private static readonly DATA_FILENAME = 'data.gglexical'
+  private static readonly ASSETS_FOLDER = 'assets'
+  private static readonly ASSET_INDEX_FILENAME = 'asset_index.json'
 
   /**
    * Import from file (ZIP or .gglexical)
@@ -117,12 +127,46 @@ export class ProjectImporter {
       // Validate lexical data
       JSON.parse(dataContent)
 
+      // Import assets if present
+      const assets: Record<string, AssetData> = {}
+      let assetIndex: Record<string, AssetUsage[]> = {}
+
+      // Check for asset_index.json
+      const assetIndexPath = `${projectFolderPath}/${ProjectImporter.ASSET_INDEX_FILENAME}`
+      const assetIndexFile = zipContent.files[assetIndexPath]
+      
+      if (assetIndexFile) {
+        const assetIndexContent = await assetIndexFile.async('text')
+        assetIndex = JSON.parse(assetIndexContent)
+      }
+
+      // Check for assets folder
+      const assetsPath = `${projectFolderPath}/${ProjectImporter.ASSETS_FOLDER}/`
+      const assetFiles = Object.keys(zipContent.files).filter(path => 
+        path.startsWith(assetsPath) && path.endsWith('.json')
+      )
+
+      for (const assetPath of assetFiles) {
+        const assetFile = zipContent.files[assetPath]
+        if (assetFile && !assetFile.dir) {
+          const assetContent = await assetFile.async('text')
+          const assetData: AssetData = JSON.parse(assetContent)
+          const assetId = assetPath.split('/').pop()?.replace('.json', '')
+          if (assetId) {
+            assets[assetId] = assetData
+          }
+        }
+      }
+
       return {
         id: metadata.id,
         name: metadata.name,
         data: dataContent,
         tags: metadata.tags,
-        metadata
+        metadata,
+        assets: Object.keys(assets).length > 0 ? assets : undefined,
+        assetIndex: Object.keys(assetIndex).length > 0 ? assetIndex : undefined,
+        preferences: metadata.preferences,
       }
     } catch (error) {
       throw new Error(`Failed to parse project data: ${error instanceof Error ? error.message : 'Unknown error'}`)
@@ -174,7 +218,8 @@ export class ProjectImporter {
         name: metadata.name,
         data: folderData.dataContent,
         tags: metadata.tags,
-        metadata
+        metadata,
+        preferences: metadata.preferences,
       }
     } catch (error) {
       throw new Error(`Failed to import from folder structure: ${error instanceof Error ? error.message : 'Unknown error'}`)
@@ -200,7 +245,42 @@ export class ProjectImporter {
       createdAt: importedData.metadata?.createdAt || now,
       updatedAt: now, // Always update to current time on import
       hash: importedData.metadata?.hash,
-      storageType: newStorageType || (importedData.metadata?.storageType as "local" | "gameguild-cloud" | "google-drive") || "local"
+      storageType: newStorageType || (importedData.metadata?.storageType as "local" | "gameguild-cloud" | "google-drive") || "local",
+      preferences: importedData.preferences || importedData.metadata?.preferences,
+    }
+  }
+
+  /**
+   * Import assets into AssetManager for the target project
+   * Returns stats about imported assets
+   */
+  static async importProjectAssets(
+    importedData: ImportedProjectData,
+    targetProjectId: string
+  ): Promise<{ imported: number; skipped: number; updated: number }> {
+    if (!importedData.assets || !importedData.assetIndex) {
+      console.log('[ProjectImporter] No assets to import')
+      return { imported: 0, skipped: 0, updated: 0 }
+    }
+
+    console.log('[ProjectImporter] Importing assets:', {
+      assetsCount: Object.keys(importedData.assets).length,
+      indexCount: Object.keys(importedData.assetIndex).length,
+      targetProjectId
+    })
+
+    try {
+      const result = await assetManager.importProjectAssets(
+        importedData.assets,
+        importedData.assetIndex,
+        targetProjectId
+      )
+
+      console.log('[ProjectImporter] Assets imported successfully:', result)
+      return result
+    } catch (error) {
+      console.error('[ProjectImporter] Failed to import assets:', error)
+      throw error
     }
   }
 

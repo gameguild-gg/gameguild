@@ -8,7 +8,10 @@ import remarkGfm from "remark-gfm"
 import rehypeRaw from "rehype-raw"
 import Editor from "@monaco-editor/react"
 import { useTheme } from "next-themes"
+import { MonacoErrorBoundary } from "@/components/editor/extras/code-studio/monaco-error-boundary"
+import { isShikiActive } from "@/components/editor/extras/code-studio/monaco-code-editor"
 import type { MarkdownData } from "@/components/editor/nodes/markdown-node"
+import { useEditorSettings, EditorSettingsButton } from "../settings-menu"
 import { getAllTemplates, searchTemplates, type MarkdownTemplate } from "./markdown-templates"
 import { Input } from "@/components/ui/input"
 import { useMarkdownComponents } from "./markdown-components"
@@ -30,6 +33,7 @@ export function MarkdownEditor({ initialData, onSave, onCancel }: MarkdownEditor
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState("")
   const [templates, setTemplates] = useState<MarkdownTemplate[]>([])
+  const settings = useEditorSettings("markdown")
   const editorRef = useRef<any>(null)
 
   // Get unique categories
@@ -37,15 +41,12 @@ export function MarkdownEditor({ initialData, onSave, onCancel }: MarkdownEditor
 
   // Block body scroll and pointer events when modal is open
   useEffect(() => {
-    const originalOverflow = document.body.style.overflow
-    const originalPointerEvents = document.body.style.pointerEvents
-    
     document.body.style.overflow = 'hidden'
     document.body.style.pointerEvents = 'none'
     
     return () => {
-      document.body.style.overflow = originalOverflow
-      document.body.style.pointerEvents = originalPointerEvents
+      document.body.style.overflow = ''
+      document.body.style.pointerEvents = ''
     }
   }, [])
 
@@ -71,10 +72,6 @@ export function MarkdownEditor({ initialData, onSave, onCancel }: MarkdownEditor
   }, [searchTerm, selectedCategory])
 
   const handleSave = () => {
-    // Restore body styles before closing
-    document.body.style.overflow = ''
-    document.body.style.pointerEvents = ''
-    
     onSave({
       content,
       title: initialData?.title,
@@ -83,9 +80,6 @@ export function MarkdownEditor({ initialData, onSave, onCancel }: MarkdownEditor
   }
 
   const handleCancel = () => {
-    // Restore body styles before closing
-    document.body.style.overflow = ''
-    document.body.style.pointerEvents = ''
     onCancel()
   }
 
@@ -141,7 +135,7 @@ export function MarkdownEditor({ initialData, onSave, onCancel }: MarkdownEditor
       onKeyPress={(e) => e.stopPropagation()}
     >
       <div 
-        className="bg-white dark:bg-gray-900 border dark:border-gray-700 shadow-2xl w-full max-w-7xl h-[90vh] flex flex-col"
+        className={`bg-white dark:bg-gray-900 border dark:border-gray-700 shadow-2xl flex flex-col ${settings.modalClassName}`}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -160,6 +154,7 @@ export function MarkdownEditor({ initialData, onSave, onCancel }: MarkdownEditor
               <Plus className="h-4 w-4 mr-1" />
               Templates
             </Button>
+            <EditorSettingsButton settings={settings} />
             <Button variant="ghost" size="sm" onClick={handleCancel} className="hover:bg-gray-100 dark:hover:bg-gray-800">
               <X className="h-4 w-4" />
             </Button>
@@ -296,25 +291,27 @@ export function MarkdownEditor({ initialData, onSave, onCancel }: MarkdownEditor
             </div>
             
             <div className="flex-1 overflow-hidden">
-              <Editor
-                height="100%"
-                defaultLanguage="markdown"
-                value={content}
-                onChange={(value) => setContent(value || "")}
-                onMount={handleEditorMount}
-                theme={isDarkMode ? "vs-dark" : "light"}
-                options={{
-                  minimap: { enabled: false },
-                  fontSize: 14,
-                  lineNumbers: "on",
-                  roundedSelection: true,
-                  scrollBeyondLastLine: false,
-                  wordWrap: "on",
-                  automaticLayout: true,
-                  tabSize: 2,
-                  insertSpaces: true,
-                }}
-              />
+              <MonacoErrorBoundary>
+                <Editor
+                  height="100%"
+                  defaultLanguage="markdown"
+                  value={content}
+                  onChange={(value) => setContent(value || "")}
+                  onMount={handleEditorMount}
+                  theme={isDarkMode ? (isShikiActive() ? "dark-plus" : "vs-dark") : (isShikiActive() ? "light-plus" : "light")}
+                  options={{
+                    minimap: { enabled: false },
+                    fontSize: settings.editorFontSize,
+                    lineNumbers: settings.editorLineNumbers ? "on" : "off",
+                    roundedSelection: true,
+                    scrollBeyondLastLine: false,
+                    wordWrap: "on",
+                    automaticLayout: true,
+                    tabSize: 2,
+                    insertSpaces: true,
+                  }}
+                />
+              </MonacoErrorBoundary>
             </div>
           </div>
 

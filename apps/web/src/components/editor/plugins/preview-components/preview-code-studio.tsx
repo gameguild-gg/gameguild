@@ -10,14 +10,16 @@ const CodeStudioEditor = dynamic(
 
 interface PreviewCodeStudioProps {
   data: CodeStudioData
+  projectId?: string
 }
 
-export function PreviewCodeStudio({ data }: PreviewCodeStudioProps) {
+export function PreviewCodeStudio({ data, projectId }: PreviewCodeStudioProps) {
   return (
     <CodeStudioEditor
       data={data}
       isPreview={true}
       onUpdate={() => {}}
+      projectId={projectId}
     />
   )
 }

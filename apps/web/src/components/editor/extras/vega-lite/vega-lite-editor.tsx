@@ -8,6 +8,7 @@ import { Switch } from "@/components/ui/switch"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { X, Save, FileText, BarChart3, AlertCircle, CheckCircle, Square, RectangleHorizontal } from "lucide-react"
 import type { VegaLiteData } from "@/components/editor/nodes/vega-lite-node"
+import { useEditorSettings, EditorSettingsButton } from "../settings-menu"
 import { VegaLiteTemplateSelector } from "./vega-lite-template-selector"
 import { MonacoVegaLiteEditor } from "./monaco-vega-lite-editor"
 import { type VegaLiteValidationResult } from "./vega-lite-validator"
@@ -45,6 +46,7 @@ export function VegaLiteEditor({ initialData, onSave, onCancel }: VegaLiteEditor
   const [errorPanelCollapsed, setErrorPanelCollapsed] = useState(false)
   const [alwaysCollapseErrors, setAlwaysCollapseErrors] = useState(false)
   const [manualUpdateKey, setManualUpdateKey] = useState(0)
+  const settings = useEditorSettings("vega")
   const [previewSpec, setPreviewSpec] = useState(initialData?.spec || "")
   const [previewData, setPreviewData] = useState<VegaLiteData>(initialData || {
     spec: "",
@@ -117,18 +119,10 @@ export function VegaLiteEditor({ initialData, onSave, onCancel }: VegaLiteEditor
       return
     }
 
-    // Restore body styles before closing
-    document.body.style.overflow = ''
-    document.body.style.pointerEvents = ''
-    
     onSave(data)
   }
 
   const handleCancel = () => {
-    // Restore body styles before closing
-    document.body.style.overflow = ''
-    document.body.style.pointerEvents = ''
-    
     onCancel()
   }
 
@@ -189,7 +183,7 @@ export function VegaLiteEditor({ initialData, onSave, onCancel }: VegaLiteEditor
       onKeyPress={(e) => e.stopPropagation()}
     >
       <div 
-        className="bg-white dark:bg-gray-900 border dark:border-gray-700 shadow-2xl w-full max-w-7xl h-[90vh] flex flex-col"
+        className={`bg-white dark:bg-gray-900 border dark:border-gray-700 shadow-2xl flex flex-col ${settings.modalClassName}`}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -238,9 +232,12 @@ export function VegaLiteEditor({ initialData, onSave, onCancel }: VegaLiteEditor
               )}
             </div>
           </div>
-          <Button variant="ghost" size="sm" onClick={handleCancel} className="hover:bg-gray-100 dark:hover:bg-gray-800">
-            <X className="h-4 w-4" />
-          </Button>
+          <div className="flex items-center gap-2">
+            <EditorSettingsButton settings={settings} />
+            <Button variant="ghost" size="sm" onClick={handleCancel} className="hover:bg-gray-100 dark:hover:bg-gray-800">
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
 
         {/* Template Selector */}
@@ -363,6 +360,8 @@ export function VegaLiteEditor({ initialData, onSave, onCancel }: VegaLiteEditor
                         onValidationChange={handleValidationChange}
                         height="100%"
                         theme={isDarkMode ? "dark" : "light"}
+                        fontSize={settings.editorFontSize}
+                        lineNumbers={settings.editorLineNumbers}
                       />
                     </div>
                   </div>

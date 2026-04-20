@@ -34,7 +34,7 @@ export function createFile(
     name,
     content,
     language,
-    isMain: draft.files.length === 0,
+    isFile: 'f', // Arquivo padrão
     isVisible: true,
     path: fullPath,
   }
@@ -56,6 +56,7 @@ export function createFolder(
     name,
     path: fullPath,
     isExpanded: true,
+    isVisible: true,
     children: [],
     type: "folder",
   }
@@ -242,4 +243,211 @@ export function reorderFiles(
 ): void {
   // Substituir a lista de arquivos pela nova ordem
   draft.files = newOrder
+}
+
+export function addFileFromAsset(
+  draft: CodeStudioData,
+  path: string,
+  assetId: string,
+  fileName: string,
+  content: string,
+  activeDisplayId: string = 'display-1'
+): void {
+  const language = getLanguageFromExtension(fileName)
+  const fullPath = path ? `${path}/${fileName}` : fileName
+  
+  // Verificar se arquivo já existe
+  const existingFile = draft.files.find(f => f.path === fullPath)
+  if (existingFile) {
+    // Se arquivo existe, apenas abrir
+    openFile(draft, activeDisplayId, existingFile.id)
+    return
+  }
+  
+  // Criar novo arquivo referenciando o asset original
+  // Em vez de duplicar o conteúdo, armazenar apenas referência
+  const newFileId = Date.now().toString()
+  const newFile: CodeFile = {
+    id: newFileId,
+    name: fileName,
+    content: `asset://${assetId}`, // Referência ao asset, não o conteúdo completo
+    language,
+    isFile: 'f', // Arquivo padrão
+    isVisible: true,
+    path: fullPath,
+    assetId, // Guardar referência ao asset original
+    isModified: false, // Marcar como não modificado inicialmente
+  }
+
+  draft.files.push(newFile)
+  
+  // Abrir o novo arquivo
+  openFile(draft, activeDisplayId, newFileId)
+}
+
+export function markFileAsModified(
+  draft: CodeStudioData,
+  fileId: string
+): void {
+  const file = draft.files.find(f => f.id === fileId)
+  if (file && file.assetId) {
+    file.isModified = true
+  }
+}
+
+export function createCopyOnSave(
+  draft: CodeStudioData,
+  fileId: string
+): string | null {
+  const file = draft.files.find(f => f.id === fileId)
+  if (!file || !file.assetId || !file.isModified) {
+    return null // Não precisa processar
+  }
+
+  // Simplesmente remover a referência ao asset, mantendo o mesmo nome
+  // O arquivo passa a ser local com o conteúdo já modificado
+  file.assetId = undefined
+  file.isModified = false
+  
+  return fileId // Retorna o mesmo ID pois não criamos novo arquivo
+}
+
+/**
+ * Verifica se o content é uma referência a asset e retorna true
+ */
+export function isAssetReference(content: string): boolean {
+  return content.startsWith('asset://')
+}
+
+/**
+ * Extrai o assetId de uma referência asset://id
+ */
+export function extractAssetId(content: string): string | null {
+  if (!isAssetReference(content)) return null
+  return content.replace('asset://', '')
+}
+
+/**
+ * Resolve o conteúdo de um arquivo, buscando do asset se necessário
+ */
+export async function resolveFileContent(file: CodeFile): Promise<string> {
+  // Se não é referência, retornar o conteúdo direto
+  if (!isAssetReference(file.content)) {
+    return file.content
+  }
+  
+  // É referência a asset, buscar o conteúdo
+  const assetId = extractAssetId(file.content)
+  if (!assetId) return file.content
+  
+  try {
+    const { assetManager } = await import("@/lib/storage/assets/asset-manager")
+    const assetData = await assetManager.getAsset(assetId)
+    
+    if (assetData?.data) {
+      // Se for um dataURL, converter para texto
+      if (assetData.data.startsWith("data:")) {
+        const base64Data = assetData.data.split(",")[1]
+        if (base64Data) {
+          return atob(base64Data)
+        }
+      }
+      return assetData.data
+    }
+  } catch (error) {
+    console.error('Failed to resolve asset content:', error)
+  }
+  
+  return '' // Fallback para string vazia se falhar
+}
+
+export function toggleFileVisibility(
+  draft: CodeStudioData,
+  fileId: string
+): void {
+  const file = draft.files.find(f => f.id === fileId)
+  if (file) {
+    file.isVisible = !file.isVisible
+  }
+}
+
+export function toggleFolderVisibility(
+  draft: CodeStudioData,
+  folderId: string
+): void {
+  const folder = draft.folders?.find(f => f.id === folderId)
+  if (folder) {
+    folder.isVisible = !folder.isVisible
+  }
+}
+
+export function toggleFileReadonly(
+  draft: CodeStudioData,
+  fileId: string
+): void {
+  const file = draft.files.find(f => f.id === fileId)
+  if (file) {
+    file.readonly = !file.readonly
+  }
+}
+
+export function toggleFolderReadonly(
+  draft: CodeStudioData,
+  folderId: string
+): void {
+  const folder = draft.folders?.find(f => f.id === folderId)
+  if (folder) {
+    folder.readonly = !folder.readonly
+  }
+}
+
+export function toggleFocusFolder(
+  draft: CodeStudioData,
+  folderId: string
+): void {
+  const folder = draft.folders?.find(f => f.id === folderId)
+  if (folder) {
+    // Desmarcar todas as outras pastas como focus
+    draft.folders?.forEach(f => {
+      if (f.id !== folderId) {
+        f.isFocusFolder = false
+      }
+    })
+    // Toggle na pasta selecionada
+    folder.isFocusFolder = !folder.isFocusFolder
+  }
+}
+
+export function setAllFilesReadonly(
+  draft: CodeStudioData,
+  readonly: boolean
+): void {
+  // Setar em todos os arquivos
+  draft.files.forEach(file => {
+    file.readonly = readonly
+  })
+  
+  // Setar em todas as pastas
+  if (draft.folders) {
+    draft.folders.forEach(folder => {
+      folder.readonly = readonly
+    })
+  }
+}
+
+export function setAllFilesHidden(
+  draft: CodeStudioData,
+  hidden: boolean
+): void {
+  // Setar em todos os arquivos
+  draft.files.forEach(file => {
+    file.isVisible = !hidden
+  })
+  
+  // Setar em todas as pastas
+  if (draft.folders) {
+    draft.folders.forEach(folder => {
+      folder.isVisible = !hidden
+    })
+  }
 }

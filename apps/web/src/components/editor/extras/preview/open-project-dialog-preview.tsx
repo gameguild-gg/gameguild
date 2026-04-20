@@ -11,18 +11,7 @@ import { toast } from "sonner"
 import { GoogleDriveAuthDialog } from "../editor/google-drive-auth-dialog"
 import { useGoogleDriveAuth } from "@/hooks/editor/use-google-drive-auth"
 import { useState } from "react"
-
-interface ProjectData {
-  id: string
-  name: string
-  data: string
-  tags: string[]
-  size: number
-  createdAt: string
-  updatedAt: string
-  storageType?: "local" | "gameguild-cloud" | "google-drive"
-  isLocallyAvailable?: boolean
-}
+import type { ProjectData } from "./preview-load-operations"
 
 interface StorageAdapter {
   list: () => Promise<ProjectData[]>
