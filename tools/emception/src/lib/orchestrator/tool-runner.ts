@@ -58,12 +58,6 @@ export interface RunOptions {
    * filesystem access.
    */
   isInfoQuery?: boolean;
-  /**
-   * When true, the WASI runtime provides full filesystem access backed by
-   * the kernel VFS. Required for tools that need to read source
-   * files and write output files.
-   */
-  enableFS?: boolean;
 }
 
 /* ------------------------------------------------------------------ */
@@ -540,7 +534,7 @@ export class ToolRunner {
       }
     }
 
-    // Spawn an isolated WASM process (Emscripten path — default for all tools)
+    // Spawn an isolated WASM process
     const result = await this.spawnProcess(descriptor, argv, options, toolBasename);
 
     console.log(`${LOG_PREFIX} ===== RUN COMPLETE: ${tool} — exitCode=${result.exitCode}, total=${elapsed(tTotal)} =====`);
@@ -2139,23 +2133,14 @@ sys.excepthook = _hook
 
     // Persist explicit output artifacts (e.g. -o /home/user/main.wasm) into
     // shared VFS so subsequent steps (wasi-run) can read them.
-    // Primary source: fileData (VFSFS local store) — always accurate after callMain
-    // because wasm-ld writes to fileData synchronously via stream_ops.write.
-    // Fallback: instance.FS.readFile — may fail after process exit but used as backup.
-    if (exitCode === 0) {
+    // Keep this strict: only copy the exact -o path when it exists.
+    if (exitCode === 0 && instance.FS) {
       if (outputPath) {
-        const fdData = fileData.get(outputPath) ?? null;
-        console.log(`${LOG_PREFIX}   [artifact-check] outputPath=${outputPath} fileData.has=${fileData.has(outputPath)} fdSize=${fdData?.length ?? 'null'} fileData.size=${fileData.size}`);
-        const outputData = fdData ||
-          (instance.FS ? this.tryReadProcessFile(instance.FS, outputPath) : null);
-        if (outputData && outputData.length > 0) {
+        const outputData = this.tryReadProcessFile(instance.FS, outputPath);
+        if (outputData) {
           this.vfs.writeFileSync(outputPath, outputData);
           console.log(`${LOG_PREFIX}   Persisted output artifact: ${outputPath} (${outputData.length}B)`);
-        } else {
-          console.warn(`${LOG_PREFIX}   ⚠️ Output artifact not found: ${outputPath} (fileData size=${fileData.get(outputPath)?.length ?? 'missing'})`);
         }
-      } else {
-        console.log(`${LOG_PREFIX}   [artifact-check] outputPath is null — no artifact to persist`);
       }
     }
 
@@ -2468,7 +2453,6 @@ sys.excepthook = _hook
    */
   private async runWasi(argv: string[], options: RunOptions = {}): Promise<ToolResult> {
     const tTotal = performance.now();
-    const vfs = this.vfs;
     // argv: ['wasi-run', '/home/user/main.wasm', ...extra args]
     const wasmPath = argv.length > 1 ? argv[1] : '/home/user/main.wasm';
     console.log(`${LOG_PREFIX} ===== WASI RUN: ${wasmPath} =====`);
@@ -2489,82 +2473,6 @@ sys.excepthook = _hook
 
     // 2. Build minimal WASI imports
     const decoder = new TextDecoder();
-    const encoder = new TextEncoder();
-
-    /* ── VFS-backed filesystem state (when enableFS is true) ─────── */
-    const enableFS = options.enableFS ?? false;
-
-    // WASI file type constants
-    const FILETYPE_UNKNOWN = 0;
-    const FILETYPE_BLOCK_DEVICE = 1;
-    const FILETYPE_CHARACTER_DEVICE = 2;
-    const FILETYPE_DIRECTORY = 3;
-    const FILETYPE_REGULAR_FILE = 4;
-    const FILETYPE_SYMBOLIC_LINK = 7;
-
-    // WASI errno constants
-    const ERRNO_SUCCESS = 0;
-    const ERRNO_BADF = 8;
-    const ERRNO_NOENT = 44;
-    const ERRNO_NOSYS = 52;
-    const ERRNO_NOTDIR = 54;
-    const ERRNO_ISDIR = 21;
-    const ERRNO_INVAL = 28;
-    const ERRNO_EXIST = 20;
-
-    // WASI rights
-    const RIGHT_FD_READ = BigInt(0x2);
-    const RIGHT_FD_WRITE = BigInt(0x40);
-    const RIGHT_FD_SEEK = BigInt(0x4);
-    const RIGHT_FD_READDIR = BigInt(0x4000);
-    const RIGHT_PATH_OPEN = BigInt(0x2000);
-    const ALL_RIGHTS = BigInt('0x1FFFFFFF');
-
-    interface OpenFile {
-      path: string;
-      data: Uint8Array;
-      offset: number;
-      writable: boolean;
-      isDir: boolean;
-    }
-
-    // File descriptor table: 0=stdin, 1=stdout, 2=stderr, 3+=preopens/opened files
-    const fdTable = new Map<number, OpenFile>();
-    let nextFd = 3;
-
-    // Preopened directories for filesystem access
-    const preopenDirs: { fd: number; path: string }[] = [];
-
-    // Writable file buffers (harvested back to VFS after execution)
-    const writtenFiles = new Map<string, Uint8Array>();
-
-    if (enableFS) {
-      // Preopen root directories for WASI filesystem access
-      const dirs = ['/', '/tmp', '/home', '/home/user', '/usr'];
-      for (const dir of dirs) {
-        const fd = nextFd++;
-        fdTable.set(fd, { path: dir, data: new Uint8Array(0), offset: 0, writable: false, isDir: true });
-        preopenDirs.push({ fd, path: dir });
-      }
-      console.log(`${LOG_PREFIX}   [WASI-FS] Preopened ${preopenDirs.length} directories, next fd=${nextFd}`);
-    }
-
-    /** Resolve a path relative to a directory fd */
-    const resolvePath = (dirFd: number, relPath: string): string | null => {
-      const dir = fdTable.get(dirFd);
-      if (!dir) return null;
-      const base = dir.path.endsWith('/') ? dir.path : dir.path + '/';
-      // Normalize: combine base + relPath, handle . and ..
-      const combined = relPath.startsWith('/') ? relPath : base + relPath;
-      const parts = combined.split('/').filter(Boolean);
-      const resolved: string[] = [];
-      for (const p of parts) {
-        if (p === '.') continue;
-        if (p === '..') { resolved.pop(); continue; }
-        resolved.push(p);
-      }
-      return '/' + resolved.join('/');
-    };
 
     // WASI fd_write: write iovs to a file descriptor and return bytes written.
     // fd 1 = stdout, fd 2 = stderr
@@ -2576,37 +2484,10 @@ sys.excepthook = _hook
     ): number => {
       if (!memory) {
         console.error(`${LOG_PREFIX}   [WASI] fd_write called but memory is not set!`);
-        return ERRNO_BADF;
+        return 8; // EBADF
       }
       const mem = new DataView(memory.buffer);
       let totalWritten = 0;
-
-      // Check if this is a file fd
-      if (enableFS && fd >= 3) {
-        const file = fdTable.get(fd);
-        if (!file || file.isDir) return ERRNO_BADF;
-        for (let i = 0; i < iovsLen; i++) {
-          const base = iovsPtr + i * 8;
-          const ptr = mem.getUint32(base, true);
-          const len = mem.getUint32(base + 4, true);
-          const bytes = new Uint8Array(memory.buffer, ptr, len);
-          // Grow the file buffer if needed
-          const needed = file.offset + len;
-          if (needed > file.data.length) {
-            const newBuf = new Uint8Array(Math.max(needed, file.data.length * 2));
-            newBuf.set(file.data);
-            file.data = newBuf;
-          }
-          file.data.set(bytes, file.offset);
-          file.offset += len;
-          totalWritten += len;
-        }
-        // Track written files for VFS harvest
-        writtenFiles.set(file.path, file.data.slice(0, Math.max(file.offset, file.data.length)));
-        mem.setUint32(nwrittenPtr, totalWritten, true);
-        return ERRNO_SUCCESS;
-      }
-
       for (let i = 0; i < iovsLen; i++) {
         const base = iovsPtr + i * 8;
         const ptr = mem.getUint32(base, true);
@@ -2620,41 +2501,22 @@ sys.excepthook = _hook
         } else if (fd === 2) {
           stderrChunks.push(text);
           options.onStderr?.(text);
-          if (text.trim()) console.error(`${LOG_PREFIX}   [WASI-STDERR] ${text.trimEnd()}`);
         }
       }
       mem.setUint32(nwrittenPtr, totalWritten, true);
-      return ERRNO_SUCCESS;
+      return 0; // ESUCCESS
     };
 
-    // Environment variables for WASI tools
-    const envVars: string[] = enableFS ? [
-      'HOME=/home/user',
-      'TMPDIR=/tmp',
-    ] : [];
-    const encodedEnvVars = envVars.map((e) => new TextEncoder().encode(e + '\0'));
-    const totalEnvSize = encodedEnvVars.reduce((sum, e) => sum + e.length, 0);
-
-    // environ_sizes_get: return env var count and total size
+    // environ_sizes_get: return 0 env vars
     const environ_sizes_get = (countPtr: number, sizePtr: number): number => {
       const mem = new DataView(memory.buffer);
-      mem.setUint32(countPtr, envVars.length, true);
-      mem.setUint32(sizePtr, totalEnvSize, true);
+      mem.setUint32(countPtr, 0, true);
+      mem.setUint32(sizePtr, 0, true);
       return 0;
     };
 
-    // environ_get: write env var pointers and data
-    const environ_get = (environPtr: number, environBufPtr: number): number => {
-      const mem = new DataView(memory.buffer);
-      const buf = new Uint8Array(memory.buffer);
-      let bufOffset = environBufPtr;
-      for (let i = 0; i < encodedEnvVars.length; i++) {
-        mem.setUint32(environPtr + i * 4, bufOffset, true);
-        buf.set(encodedEnvVars[i], bufOffset);
-        bufOffset += encodedEnvVars[i].length;
-      }
-      return 0;
-    };
+    // environ_get: no-op (zero env vars)
+    const environ_get = (): number => 0;
 
     // args: return program name + any extra args
     const programArgs = argv.slice(1); // ['main.wasm', ...extra]
@@ -2686,410 +2548,73 @@ sys.excepthook = _hook
       throw new WasiExit(code);
     };
 
-    const fd_close = (fd: number): number => {
-      if (enableFS && fd >= 3) {
-        const file = fdTable.get(fd);
-        if (!file) return ERRNO_BADF;
-        // If file was written, store final data for VFS harvest
-        if (file.writable && file.data.length > 0) {
-          writtenFiles.set(file.path, file.data.slice(0, file.offset));
-        }
-        fdTable.delete(fd);
-      }
-      return ERRNO_SUCCESS;
-    };
-
-    const fd_seek = (
-      fd: number,
-      offsetOrLo: number | bigint,
-      offsetHiOrWhence: number,
-      whenceOrNewOffsetPtr: number,
-      maybeNewOffsetPtr?: number,
-    ): number => {
-      if (!memory) return ERRNO_BADF;
-      const mem = new DataView(memory.buffer);
-      if (enableFS && fd >= 3) {
-        const file = fdTable.get(fd);
-        if (!file) return ERRNO_BADF;
-
-        // WebAssembly i64 import args can arrive as a BigInt (modern engines)
-        // or as lo/hi 32-bit parts (older/polyfilled paths). Support both.
-        let whence: number;
-        let newOffsetPtr: number;
-        let offsetBig: bigint;
-
-        if (typeof offsetOrLo === 'bigint') {
-          whence = offsetHiOrWhence;
-          newOffsetPtr = whenceOrNewOffsetPtr;
-          offsetBig = offsetOrLo;
-        } else {
-          whence = whenceOrNewOffsetPtr;
-          newOffsetPtr = maybeNewOffsetPtr ?? 0;
-          const lo = BigInt(offsetOrLo >>> 0);
-          const hiSigned = BigInt(offsetHiOrWhence | 0);
-          offsetBig = (hiSigned << 32n) | lo;
-        }
-
-        if (newOffsetPtr === 0) return ERRNO_INVAL;
-
-        const cur = BigInt(file.offset);
-        const len = BigInt(file.data.length);
-        let newOffsetBig: bigint;
-        if (whence === 0) newOffsetBig = offsetBig; // SEEK_SET
-        else if (whence === 1) newOffsetBig = cur + offsetBig; // SEEK_CUR
-        else if (whence === 2) newOffsetBig = len + offsetBig; // SEEK_END
-        else return ERRNO_INVAL;
-
-        if (newOffsetBig < 0n) return ERRNO_INVAL;
-        if (newOffsetBig > BigInt(Number.MAX_SAFE_INTEGER)) return ERRNO_INVAL;
-
-        const newOffset = Number(newOffsetBig);
-        file.offset = newOffset;
-        mem.setBigUint64(newOffsetPtr, newOffsetBig, true);
-        return ERRNO_SUCCESS;
-      }
-      return ERRNO_BADF;
-    };
-
+    const fd_close = (): number => 0;
+    const fd_seek = (): number => 8; // EBADF — not seekable
     const stdinProvider = options.stdin ?? null;
     console.log(`${LOG_PREFIX}   [WASI-STDIN] stdinProvider=${stdinProvider ? 'SET' : 'NULL'}`);
 
+    // Synchronous fd_read for standalone WASI binaries.
+    // The worker provides stdin through a SharedArrayBuffer-backed callback,
+    // so a call here can block until a byte is available without falling
+    // through to EOF or leaking the keystrokes back to the shell.
     const fd_read = (
       fd: number, iovsPtr: number, iovsLen: number, nreadPtr: number,
     ): number => {
-      if (!memory) return ERRNO_BADF;
       const mem = new DataView(memory.buffer);
+      console.log(`${LOG_PREFIX}   [WASI-STDIN] fd_read called: fd=${fd}, iovsLen=${iovsLen}`);
 
-      // File fd reads
-      if (enableFS && fd >= 3) {
-        const file = fdTable.get(fd);
-        if (!file || file.isDir) return ERRNO_BADF;
-        let totalRead = 0;
-        for (let i = 0; i < iovsLen; i++) {
-          const base = iovsPtr + i * 8;
-          const ptr = mem.getUint32(base, true);
-          const len = mem.getUint32(base + 4, true);
-          const available = file.data.length - file.offset;
-          const toRead = Math.min(len, available);
-          if (toRead <= 0) break;
-          new Uint8Array(memory.buffer, ptr, toRead).set(
-            file.data.subarray(file.offset, file.offset + toRead)
-          );
-          file.offset += toRead;
-          totalRead += toRead;
-        }
-        mem.setUint32(nreadPtr, totalRead, true);
-        return ERRNO_SUCCESS;
-      }
-
-      // stdin (fd 0)
       if (fd !== 0) {
         mem.setUint32(nreadPtr, 0, true);
-        return ERRNO_BADF;
+        return 8; // EBADF
       }
+
       if (!stdinProvider) {
         mem.setUint32(nreadPtr, 0, true);
-        return ERRNO_SUCCESS;
+        return 0;
       }
+
       for (let i = 0; i < iovsLen; i++) {
         const base = iovsPtr + i * 8;
         const ptr = mem.getUint32(base, true);
         const len = mem.getUint32(base + 4, true);
         if (len === 0) continue;
         const out = new Uint8Array(memory.buffer, ptr, len);
+
         const raw = stdinProvider();
         if (raw !== null && typeof raw === 'object' && 'then' in raw) {
           throw new Error('WASI stdin provider must be synchronous');
         }
+
         const byte = raw as number | null;
         if (byte === null || byte === -1) {
           mem.setUint32(nreadPtr, 0, true);
-          return ERRNO_SUCCESS;
+          return 0;
         }
+
         out[0] = byte === 13 ? 10 : byte;
         mem.setUint32(nreadPtr, 1, true);
-        return ERRNO_SUCCESS;
+        return 0;
       }
+
       mem.setUint32(nreadPtr, 0, true);
-      return ERRNO_SUCCESS;
+      return 0;
     };
 
     const fd_fdstat_get = (fd: number, statPtr: number): number => {
-      if (!memory) return ERRNO_BADF;
       const mem = new DataView(memory.buffer);
-      if (enableFS && fd >= 3) {
-        const file = fdTable.get(fd);
-        if (!file) return ERRNO_BADF;
-        mem.setUint8(statPtr, file.isDir ? FILETYPE_DIRECTORY : FILETYPE_REGULAR_FILE);
-        mem.setUint16(statPtr + 2, 0, true); // fs_flags
-        mem.setBigUint64(statPtr + 8, ALL_RIGHTS, true); // rights_base
-        mem.setBigUint64(statPtr + 16, ALL_RIGHTS, true); // rights_inheriting
-        return ERRNO_SUCCESS;
-      }
-      mem.setUint8(statPtr, fd <= 2 ? FILETYPE_CHARACTER_DEVICE : FILETYPE_REGULAR_FILE);
-      mem.setUint16(statPtr + 2, 0, true);
+      // fs_filetype: REGULAR_FILE=4, CHARACTER_DEVICE=2
+      mem.setUint8(statPtr, fd <= 2 ? 2 : 4); // filetype
+      mem.setUint16(statPtr + 2, 0, true); // fs_flags
+      // rights_base: FD_READ=0x2 for stdin, FD_WRITE=0x40 for stdout/stderr
       let rights = BigInt(0);
-      if (fd === 0) rights = RIGHT_FD_READ;
-      else if (fd === 1 || fd === 2) rights = RIGHT_FD_WRITE;
+      if (fd === 0) rights = BigInt(0x2); // FD_READ
+      else if (fd === 1 || fd === 2) rights = BigInt(0x40); // FD_WRITE
       mem.setBigUint64(statPtr + 8, rights, true);
-      mem.setBigUint64(statPtr + 16, BigInt(0), true);
-      return ERRNO_SUCCESS;
+      mem.setBigUint64(statPtr + 16, BigInt(0), true); // rights_inheriting
+      return 0;
     };
-
-    const fd_prestat_get = (fd: number, bufPtr: number): number => {
-      if (!enableFS) return ERRNO_BADF;
-      if (!memory) return ERRNO_BADF;
-      const preopen = preopenDirs.find(p => p.fd === fd);
-      if (!preopen) return ERRNO_BADF;
-      const mem = new DataView(memory.buffer);
-      // __wasi_prestat_t: u8 tag (0=dir) + u32 name_len
-      mem.setUint8(bufPtr, 0); // tag = __WASI_PREOPENTYPE_DIR
-      mem.setUint32(bufPtr + 4, encoder.encode(preopen.path).length, true);
-      return ERRNO_SUCCESS;
-    };
-
-    const fd_prestat_dir_name = (fd: number, pathPtr: number, pathLen: number): number => {
-      if (!enableFS) return ERRNO_BADF;
-      if (!memory) return ERRNO_BADF;
-      const preopen = preopenDirs.find(p => p.fd === fd);
-      if (!preopen) return ERRNO_BADF;
-      const encoded = encoder.encode(preopen.path);
-      new Uint8Array(memory.buffer, pathPtr, pathLen).set(encoded.subarray(0, pathLen));
-      return ERRNO_SUCCESS;
-    };
-
-    // VFS-backed path_open (synchronous — reads from pre-loaded fileCache)
-    const path_open_fn = (
-      dirFd: number, _dirflags: number,
-      pathPtr: number, pathLen: number,
-      oflags: number, _fsRightsBase: bigint, _fsRightsInheriting: bigint,
-      _fdflags: number, fdPtr: number,
-    ): number => {
-      if (!enableFS) return ERRNO_NOENT;
-      if (!memory) return ERRNO_BADF;
-      const mem = new DataView(memory.buffer);
-      const relPath = decoder.decode(new Uint8Array(memory.buffer, pathPtr, pathLen));
-      const absPath = resolvePath(dirFd, relPath);
-      if (!absPath) return ERRNO_BADF;
-      console.log(`${LOG_PREFIX}   [WASI] path_open(fd=${dirFd}, "${relPath}", oflags=${oflags}) → abs="${absPath}"`);
-
-      const O_CREAT = 1;
-      const O_DIRECTORY = 2;
-      const O_TRUNC = 8;
-      const isCreate = (oflags & O_CREAT) !== 0;
-      const isDirectory = (oflags & O_DIRECTORY) !== 0;
-      const isTrunc = (oflags & O_TRUNC) !== 0;
-
-      // Try fileCache first, then writtenFiles
-      const data = fileCache.get(absPath) ?? writtenFiles.get(absPath) ?? null;
-
-      if (isDirectory || absPath.endsWith('/')) {
-        const fd = nextFd++;
-        fdTable.set(fd, { path: absPath, data: new Uint8Array(0), offset: 0, writable: false, isDir: true });
-        mem.setUint32(fdPtr, fd, true);
-        return ERRNO_SUCCESS;
-      }
-
-      if (!data && !isCreate) {
-        // Check if it's a directory (files exist under this path)
-        const prefix = absPath + '/';
-        const isDir = [...fileCache.keys(), ...writtenFiles.keys()].some(k => k.startsWith(prefix));
-        if (isDir) {
-          const fd = nextFd++;
-          fdTable.set(fd, { path: absPath, data: new Uint8Array(0), offset: 0, writable: false, isDir: true });
-          mem.setUint32(fdPtr, fd, true);
-          return ERRNO_SUCCESS;
-        }
-        return ERRNO_NOENT;
-      }
-
-      const fd = nextFd++;
-      const fileData = (isTrunc || !data) ? new Uint8Array(0) : data;
-      fdTable.set(fd, { path: absPath, data: new Uint8Array(fileData), offset: 0, writable: isCreate || isTrunc, isDir: false });
-      mem.setUint32(fdPtr, fd, true);
-      return ERRNO_SUCCESS;
-    };
-
-    // fd_filestat_get: return file size and type info
-    const fd_filestat_get = (fd: number, bufPtr: number): number => {
-      if (!memory) return ERRNO_BADF;
-      const mem = new DataView(memory.buffer);
-      if (enableFS && fd >= 3) {
-        const file = fdTable.get(fd);
-        if (!file) return ERRNO_BADF;
-        // __wasi_filestat_t: dev(u64) ino(u64) filetype(u8) nlink(u64) size(u64) atim(u64) mtim(u64) ctim(u64)
-        mem.setBigUint64(bufPtr + 0, BigInt(0), true); // dev
-        mem.setBigUint64(bufPtr + 8, BigInt(0), true); // ino
-        mem.setUint8(bufPtr + 16, file.isDir ? FILETYPE_DIRECTORY : FILETYPE_REGULAR_FILE);
-        mem.setBigUint64(bufPtr + 24, BigInt(1), true); // nlink
-        mem.setBigUint64(bufPtr + 32, BigInt(file.data.length), true); // size
-        mem.setBigUint64(bufPtr + 40, BigInt(0), true); // atim
-        mem.setBigUint64(bufPtr + 48, BigInt(0), true); // mtim
-        mem.setBigUint64(bufPtr + 56, BigInt(0), true); // ctim
-        return ERRNO_SUCCESS;
-      }
-      return ERRNO_BADF;
-    };
-
-    // path_filestat_get: stat by path
-    const path_filestat_get_fn = (
-      dirFd: number, _flags: number,
-      pathPtr: number, pathLen: number,
-      bufPtr: number,
-    ): number => {
-      if (!enableFS) return ERRNO_NOENT;
-      if (!memory) return ERRNO_BADF;
-      const mem = new DataView(memory.buffer);
-      const relPath = decoder.decode(new Uint8Array(memory.buffer, pathPtr, pathLen));
-      const absPath = resolvePath(dirFd, relPath);
-      if (!absPath) return ERRNO_BADF;
-
-      const data = fileCache.get(absPath) ?? writtenFiles.get(absPath) ?? null;
-      const prefix = absPath + '/';
-      const isDir = [...fileCache.keys(), ...writtenFiles.keys()].some(k => k.startsWith(prefix));
-
-      console.log(`${LOG_PREFIX}   [WASI] path_filestat_get(fd=${dirFd}, "${relPath}") → abs="${absPath}", found=${!!data}, isDir=${isDir}`);
-
-      if (!data && !isDir) return ERRNO_NOENT;
-
-      mem.setBigUint64(bufPtr + 0, BigInt(0), true);
-      mem.setBigUint64(bufPtr + 8, BigInt(0), true);
-      mem.setUint8(bufPtr + 16, isDir ? FILETYPE_DIRECTORY : FILETYPE_REGULAR_FILE);
-      mem.setBigUint64(bufPtr + 24, BigInt(1), true);
-      mem.setBigUint64(bufPtr + 32, BigInt(data ? data.length : 0), true);
-      mem.setBigUint64(bufPtr + 40, BigInt(0), true);
-      mem.setBigUint64(bufPtr + 48, BigInt(0), true);
-      mem.setBigUint64(bufPtr + 56, BigInt(0), true);
-      return ERRNO_SUCCESS;
-    };
-
-    // fd_readdir: list directory entries
-    const fd_readdir_fn = (
-      fd: number, bufPtr: number, bufLen: number,
-      cookie: bigint, usedPtr: number,
-    ): number => {
-      if (!enableFS) return ERRNO_NOSYS;
-      if (!memory) return ERRNO_BADF;
-      const mem = new DataView(memory.buffer);
-      const dir = fdTable.get(fd);
-      if (!dir || !dir.isDir) return ERRNO_NOTDIR;
-
-      const prefix = dir.path === '/' ? '/' : dir.path + '/';
-      const entries = new Set<string>();
-
-      // Collect immediate children
-      for (const key of [...fileCache.keys(), ...writtenFiles.keys()]) {
-        if (key.startsWith(prefix)) {
-          const rest = key.slice(prefix.length);
-          const child = rest.split('/')[0];
-          if (child) entries.add(child);
-        }
-      }
-
-      const sortedEntries = [...entries].sort();
-      const cookieNum = Number(cookie);
-      let offset = 0;
-      let idx = 0;
-
-      for (const name of sortedEntries) {
-        if (idx < cookieNum) { idx++; continue; }
-        const encoded = encoder.encode(name);
-        // __wasi_dirent_t: d_next(u64) + d_ino(u64) + d_namlen(u32) + d_type(u8) = 24 bytes + name
-        const entrySize = 24 + encoded.length;
-        if (offset + entrySize > bufLen) break;
-
-        const childPath = prefix + name;
-        const isChildDir = [...fileCache.keys(), ...writtenFiles.keys()].some(
-          k => k.startsWith(childPath + '/')
-        );
-
-        mem.setBigUint64(bufPtr + offset, BigInt(idx + 1), true); // d_next
-        mem.setBigUint64(bufPtr + offset + 8, BigInt(0), true); // d_ino
-        mem.setUint32(bufPtr + offset + 16, encoded.length, true); // d_namlen
-        mem.setUint8(bufPtr + offset + 20, isChildDir ? FILETYPE_DIRECTORY : FILETYPE_REGULAR_FILE);
-        new Uint8Array(memory.buffer, bufPtr + offset + 24, encoded.length).set(encoded);
-
-        offset += entrySize;
-        idx++;
-      }
-
-      mem.setUint32(usedPtr, offset, true);
-      return ERRNO_SUCCESS;
-    };
-
-    // path_create_directory
-    const path_create_directory_fn = (
-      dirFd: number, pathPtr: number, pathLen: number,
-    ): number => {
-      if (!enableFS) return ERRNO_NOSYS;
-      // Directories are implicit in our flat file cache — just succeed
-      return ERRNO_SUCCESS;
-    };
-
-    // Pre-loaded file cache: populated before WASM execution starts.
-    // All files are fetched async, then path_open reads from this cache synchronously.
-    const fileCache = new Map<string, Uint8Array>();
-
-    if (enableFS) {
-      console.log(`${LOG_PREFIX}   [WASI-FS] Pre-loading VFS files for WASI tool...`);
-      const tPreload = performance.now();
-      // Preload the tool's bundle so files are in IDB
-      const bundleName = vfs.getBundleForFile(wasmPath);
-      if (bundleName) {
-        console.log(`${LOG_PREFIX}   [WASI-FS] Preloading bundle: ${bundleName}`);
-        await vfs.preloadBundle(bundleName);
-      }
-      // Load all files listed in the manifest that the tool might need
-      const filePaths = bundleName ? vfs.getBundleFilePaths(bundleName) : [];
-      console.log(`${LOG_PREFIX}   [WASI-FS] Fetching ${filePaths.length} files from bundle...`);
-      // Batch-fetch in parallel.
-      // Some manifest bundle lists may include entries that cannot be read as
-      // regular files in this phase (e.g. stale entries, platform-specific
-      // symlink metadata, or generated placeholders). Those should not abort
-      // the tool startup; tools can still proceed with lazily-resolved
-      // files via path_open and the preloaded cache we do have.
-      const skippedEntries: string[] = [];
-      let rejectedFetches = 0;
-      const candidates = filePaths;
-      const BATCH_SIZE = 8;
-      for (let i = 0; i < candidates.length; i += BATCH_SIZE) {
-        const batch = candidates.slice(i, i + BATCH_SIZE);
-        const fetchResults = await Promise.allSettled(
-          batch.map(async (p) => {
-            const st = vfs.statSync(p);
-            if (st?.type === 'dir') {
-              skippedEntries.push(p);
-              return;
-            }
-            const data = await vfs.fetchFile(p);
-            if (data) fileCache.set(p, data);
-            else skippedEntries.push(p);
-          }),
-        );
-        rejectedFetches += fetchResults.filter((r) => r.status === 'rejected').length;
-      }
-      if (rejectedFetches > 0 || skippedEntries.length > 0) {
-        console.warn(
-          `${LOG_PREFIX}   [WASI-FS] Preload completed with ${rejectedFetches} fetch error(s) and ${skippedEntries.length} skipped/missing entr${skippedEntries.length === 1 ? 'y' : 'ies'}`,
-        );
-        if (skippedEntries.length > 0) {
-          const preview = skippedEntries.slice(0, 10).join(', ');
-          console.warn(`${LOG_PREFIX}   [WASI-FS] Skipped/missing sample: ${preview}${skippedEntries.length > 10 ? ', ...' : ''}`);
-        }
-      }
-      // Also load user source file(s) referenced in argv
-      for (const arg of argv) {
-        if (arg.startsWith('/') && !arg.startsWith('--') && !fileCache.has(arg)) {
-          try {
-            const data = await vfs.fetchFile(arg);
-            if (data) fileCache.set(arg, data);
-          } catch (e) {
-            console.warn(`${LOG_PREFIX}   [WASI-FS] Could not preload argv file "${arg}": ${e instanceof Error ? e.message : String(e)}`);
-          }
-        }
-      }
-      console.log(`${LOG_PREFIX}   [WASI-FS] Pre-loaded ${fileCache.size} files in ${elapsed(tPreload)}`);
-    }
+    const fd_prestat_get = (): number => 8; // EBADF — no preopened dirs
+    const fd_prestat_dir_name = (): number => 8;
     const clock_time_get = (
       _id: number, _precision: bigint, timePtr: number,
     ): number => {
@@ -3110,7 +2635,6 @@ sys.excepthook = _hook
       fd_close,
       fd_seek,
       fd_fdstat_get,
-      fd_filestat_get,
       fd_prestat_get,
       fd_prestat_dir_name,
       proc_exit,
@@ -3120,34 +2644,24 @@ sys.excepthook = _hook
       args_get,
       clock_time_get,
       random_get,
-      path_open: path_open_fn,
-      path_filestat_get: path_filestat_get_fn,
-      path_create_directory: path_create_directory_fn,
-      fd_readdir: fd_readdir_fn,
-      fd_fdstat_set_flags: () => ERRNO_SUCCESS,
-      path_remove_directory: () => ERRNO_SUCCESS,
-      path_unlink_file: () => ERRNO_SUCCESS,
-      path_rename: () => ERRNO_SUCCESS,
-      path_readlink: () => ERRNO_NOENT,
-      path_symlink: () => ERRNO_NOSYS,
-      path_link: () => ERRNO_NOSYS,
-      fd_advise: () => ERRNO_SUCCESS,
-      fd_allocate: () => ERRNO_NOSYS,
-      fd_datasync: () => ERRNO_SUCCESS,
-      fd_sync: () => ERRNO_SUCCESS,
-      fd_tell: (fd: number, offsetPtr: number): number => {
-        if (!memory) return ERRNO_BADF;
-        if (enableFS && fd >= 3) {
-          const file = fdTable.get(fd);
-          if (!file) return ERRNO_BADF;
-          new DataView(memory.buffer).setBigUint64(offsetPtr, BigInt(file.offset), true);
-          return ERRNO_SUCCESS;
-        }
-        return ERRNO_NOSYS;
-      },
-      fd_renumber: () => ERRNO_NOSYS,
-      fd_pwrite: () => ERRNO_NOSYS,
-      fd_pread: () => ERRNO_NOSYS,
+      // Stubs for less common WASI calls
+      path_open: () => 44, // ENOENT
+      path_filestat_get: () => 44,
+      path_create_directory: () => 63, // ENOSYS
+      path_remove_directory: () => 63,
+      path_unlink_file: () => 63,
+      path_rename: () => 63,
+      path_readlink: () => 63,
+      path_symlink: () => 63,
+      fd_advise: () => 0,
+      fd_allocate: () => 63,
+      fd_datasync: () => 0,
+      fd_sync: () => 0,
+      fd_tell: () => 63,
+      fd_readdir: () => 63,
+      fd_renumber: () => 63,
+      fd_pwrite: () => 63,
+      fd_pread: () => 63,
       // Minimal poll_oneoff implementation for stdin-driven interactive apps.
       // We report subscriptions as ready and let fd_read_async actually block
       // on input when needed.
@@ -3199,59 +2713,6 @@ sys.excepthook = _hook
       const importDescs = WebAssembly.Module.imports(wasmModule);
       console.log(`${LOG_PREFIX}   WASM imports: [${importDescs.map(i => `${i.module}.${i.name}(${i.kind})`).join(', ')}]`);
       const importObject: Record<string, Record<string, WebAssembly.ImportValue>> = {};
-      const importedTables: WebAssembly.Table[] = [];
-      let resolvedIndirectFunctionTable: WebAssembly.Table | null = null;
-      let tempRet0 = 0;
-      let activeCppException: number = 0;
-      let emittedLlvmImportHint = false;
-
-      const isLikelyLlvmHostImport = (name: string): boolean => {
-        if (name.startsWith('LLVMInitialize')) return true;
-        if (name === 'LLVMIsMultithreaded') return true;
-        if (name.startsWith('_ZN4llvm27install_fatal_error_handler')) return true;
-        if (name.startsWith('_ZN4llvm31install_bad_alloc_error_handler')) return true;
-        if (name.startsWith('_ZN4llvm33install_out_of_memory_new_handler')) return true;
-        return false;
-      };
-
-      const getIndirectFunctionTable = (): WebAssembly.Table | null => {
-        if (resolvedIndirectFunctionTable) return resolvedIndirectFunctionTable;
-        if (importedTables.length > 0) return importedTables[0]!;
-        return null;
-      };
-
-      const invokeViaTable = (index: number, args: unknown[]): unknown => {
-        const table = getIndirectFunctionTable();
-        if (!table) {
-          throw new WebAssembly.RuntimeError('null function');
-        }
-        const fn = table.get(index) as ((...fnArgs: unknown[]) => unknown) | null;
-        if (!fn) {
-          throw new WebAssembly.RuntimeError('null function');
-        }
-        return fn(...args);
-      };
-
-      const createInvokeStub = (_name: string) => {
-        return (index: number, ...args: unknown[]) => {
-          try {
-            const result = invokeViaTable(index, args);
-            return result ?? 0;
-          } catch (e) {
-            // Emscripten invoke_* trampolines swallow C++ exceptions and return 0.
-            // This is sufficient for WASM runtime initialization paths that
-            // depend on these imports.
-            tempRet0 = 0;
-            return 0;
-          }
-        };
-      };
-
-      const createCppException = (ptr: number) => {
-        const err = new Error(`C++ exception: ${ptr}`) as Error & { __cppExceptionPtr?: number };
-        err.__cppExceptionPtr = ptr | 0;
-        return err;
-      };
 
       for (const imp of importDescs) {
         if (!importObject[imp.module]) {
@@ -3270,73 +2731,10 @@ sys.excepthook = _hook
           importObject[imp.module][imp.name] = mem;
           memory = mem;
         } else if (imp.kind === 'table') {
-          const table = new WebAssembly.Table({
-            // Emscripten-style invoke_* trampolines rely on a populated indirect
-            // function table. A non-zero initial size avoids null-function traps
-            // when element segments/table init target high indices.
-            initial: 131072,
+          importObject[imp.module][imp.name] = new WebAssembly.Table({
+            initial: 0,
             element: 'anyfunc',
           });
-          importedTables.push(table);
-          importObject[imp.module][imp.name] = table;
-        } else if (imp.module === 'env' && imp.kind === 'function' && imp.name === 'getTempRet0') {
-          importObject[imp.module][imp.name] = () => tempRet0;
-        } else if (imp.module === 'env' && imp.kind === 'function' && imp.name === 'setTempRet0') {
-          importObject[imp.module][imp.name] = (value: number) => {
-            tempRet0 = value | 0;
-          };
-        } else if (imp.module === 'env' && imp.kind === 'function' && imp.name === '__cxa_throw') {
-          importObject[imp.module][imp.name] = (ptr: number) => {
-            activeCppException = ptr | 0;
-            throw createCppException(activeCppException);
-          };
-        } else if (imp.module === 'env' && imp.kind === 'function' && imp.name === '__resumeException') {
-          importObject[imp.module][imp.name] = (ptr: number) => {
-            activeCppException = ptr | 0;
-            throw createCppException(activeCppException);
-          };
-        } else if (imp.module === 'env' && imp.kind === 'function' && imp.name === '__cxa_rethrow') {
-          importObject[imp.module][imp.name] = () => {
-            throw createCppException(activeCppException);
-          };
-        } else if (imp.module === 'env' && imp.kind === 'function' && imp.name === '__cxa_begin_catch') {
-          importObject[imp.module][imp.name] = (ptr: number) => {
-            activeCppException = ptr | 0;
-            return activeCppException;
-          };
-        } else if (imp.module === 'env' && imp.kind === 'function' && imp.name === '__cxa_end_catch') {
-          importObject[imp.module][imp.name] = () => {
-            activeCppException = 0;
-          };
-        } else if (imp.module === 'env' && imp.kind === 'function' && imp.name === '__cxa_uncaught_exceptions') {
-          importObject[imp.module][imp.name] = () => (activeCppException ? 1 : 0);
-        } else if (imp.module === 'env' && imp.kind === 'function' && (imp.name === '__cxa_find_matching_catch_2' || imp.name === '__cxa_find_matching_catch_3')) {
-          importObject[imp.module][imp.name] = (...args: number[]) => {
-            tempRet0 = 0;
-            return activeCppException || (args[0] ?? 0) || 0;
-          };
-        } else if (imp.module === 'env' && imp.kind === 'function' && imp.name === 'LLVMIsMultithreaded') {
-          // In-browser execution is still single-threaded, but this capability probe
-          // must report enabled to avoid an early compiler ICE.
-          importObject[imp.module][imp.name] = () => 1;
-        } else if (imp.module === 'env' && imp.kind === 'function' && imp.name === '_ZN4llvm7codegen20RegisterCodeGenFlagsC1Ev') {
-          // Constructor for global codegen flags registration. No-op is sufficient.
-          importObject[imp.module][imp.name] = () => {
-            // no-op
-          };
-        } else if (imp.module === 'env' && imp.kind === 'function' && imp.name.startsWith('invoke_')) {
-          importObject[imp.module][imp.name] = createInvokeStub(imp.name);
-        } else if (imp.module === 'env' && imp.kind === 'function' && isLikelyLlvmHostImport(imp.name)) {
-          importObject[imp.module][imp.name] = (..._args: unknown[]) => {
-            if (!emittedLlvmImportHint) {
-              emittedLlvmImportHint = true;
-              const hint =
-                'WASM module is calling unresolved LLVM host imports; this artifact likely needs a rebuild with a browser-compatible backend.';
-              console.warn(`${LOG_PREFIX}   ${hint}`);
-              options.onStderr?.(hint);
-            }
-            return 0;
-          };
         } else {
           // Stub unknown import (Emscripten env functions, etc.)
           importObject[imp.module][imp.name] = (..._args: unknown[]) => {
@@ -3351,20 +2749,6 @@ sys.excepthook = _hook
       const tInst = performance.now();
       const instance = await WebAssembly.instantiate(wasmModule, importObject);
       console.log(`${LOG_PREFIX}   WASM instantiated in ${elapsed(tInst)}`);
-
-      // Resolve indirect function table for invoke_* wrappers after instantiation.
-      // Prefer imported table, fall back to exported Emscripten table names.
-      resolvedIndirectFunctionTable = importedTables[0] ?? null;
-      if (!resolvedIndirectFunctionTable) {
-        const maybeExports = instance.exports as Record<string, unknown>;
-        const exportedTable =
-          maybeExports.__indirect_function_table ??
-          maybeExports.__indirect_function_table_0 ??
-          maybeExports.table;
-        if (exportedTable instanceof WebAssembly.Table) {
-          resolvedIndirectFunctionTable = exportedTable;
-        }
-      }
 
       // Get the memory export (most WASM modules export their memory)
       if (!memory && instance.exports.memory) {
@@ -3436,25 +2820,11 @@ sys.excepthook = _hook
         }
         stderrChunks.push(msg);
         options.onStderr?.(msg);
-        // Still harvest written files on error
-        if (enableFS && writtenFiles.size > 0) {
-          for (const [path, data] of writtenFiles) {
-            vfs.writeFileSync(path, data);
-          }
-        }
         return {
           exitCode: 1,
           stdout: stdoutChunks.join('\n'),
           stderr: stderrChunks.join('\n'),
         };
-      }
-    }
-
-    // Harvest written files back to VFS
-    if (enableFS && writtenFiles.size > 0) {
-      console.log(`${LOG_PREFIX}   [WASI-FS] Harvesting ${writtenFiles.size} written files to VFS...`);
-      for (const [path, data] of writtenFiles) {
-        vfs.writeFileSync(path, data);
       }
     }
 
