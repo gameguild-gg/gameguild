@@ -275,7 +275,9 @@ export class LazyFS implements IFileSystem {
       data = new Uint8Array(await this.decompressBrotli(data));
       console.log(`${P}   loadBundle: brotli decompressed ${fmtSize(rawSize)} → ${fmtSize(data.length)} in ${(performance.now() - tDecomp).toFixed(1)}ms`);
     } else if (bundle.url.endsWith('.tar.gz') || bundle.url.endsWith('.gz')) {
-      throw new Error(`Unsupported bundle format for ${bundleName}: ${bundle.url}. Expected .tar.br`);
+      const tDecomp = performance.now();
+      data = new Uint8Array(await this.decompressGzip(data));
+      console.log(`${P}   loadBundle: gzip decompressed ${fmtSize(rawSize)} → ${fmtSize(data.length)} in ${(performance.now() - tDecomp).toFixed(1)}ms`);
     }
 
     // Extract tar entries into IDB (no in-memory cache)
@@ -477,11 +479,6 @@ export class LazyFS implements IFileSystem {
   }
   async mkdir(): Promise<boolean> {
     return false;
-  }
-
-  /** Returns the CDN base URL from the manifest (e.g. "/cdn"). */
-  getBaseUrl(): string {
-    return this.manifest.baseUrl;
   }
 
   getUrl(path: string): string {

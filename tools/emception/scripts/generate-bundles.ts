@@ -107,7 +107,7 @@ function brotliCompress(data: Buffer, outPath: string): Promise<Buffer> {
       data,
       {
         params: {
-          [zlib.constants.BROTLI_PARAM_QUALITY]: 5,
+          [zlib.constants.BROTLI_PARAM_QUALITY]: 11,
         },
       },
       (err, result) => {
@@ -214,18 +214,23 @@ async function main() {
     if (hasWasm && hasMjs) {
       toolBundles.push(base);
       const files = [`/usr/lib/${base}.mjs`, `/usr/lib/${base}.wasm`];
-      // If a bundle with the same name already exists, merge the tool-pair files instead of
-      // overwriting the existing bundle contents.
-      const existing = bundleFiles.get(base);
-      if (existing) {
-        const merged = [...existing];
-        for (const f of files) {
-          if (!merged.includes(f)) merged.push(f);
-        }
-        bundleFiles.set(base, merged);
-      } else {
-        bundleFiles.set(base, files);
-      }
+
+      // note: block commented out because i don't know if it is better to have or not
+      // todo: decide if it is better to use this merging logic or just overwrite.
+      // // If a bundle with the same name already exists, merge the tool-pair files instead of
+      // // overwriting the existing bundle contents.
+      // const existing = bundleFiles.get(base);
+      // if (existing) {
+      //   const merged = [...existing];
+      //   for (const f of files) {
+      //     if (!merged.includes(f)) merged.push(f);
+      //   }
+      //   bundleFiles.set(base, merged);
+      // } else {
+      //   bundleFiles.set(base, files);
+      // }
+
+      bundleFiles.set(base, files);
       for (const f of files) assigned.add(f);
     }
   }
