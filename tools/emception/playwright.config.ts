@@ -12,7 +12,10 @@ async function isPortFree(port: number): Promise<boolean> {
             server.close(() => resolve(true));
         });
 
-        server.listen(port, '127.0.0.1');
+        // Probe the port on the default interface set (IPv4/IPv6), not just
+        // 127.0.0.1. This catches cases where another process is bound on
+        // "::" and avoids false "free" readings.
+        server.listen(port);
     });
 }
 

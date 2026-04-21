@@ -479,6 +479,11 @@ export class LazyFS implements IFileSystem {
     return false;
   }
 
+  /** Returns the CDN base URL from the manifest (e.g. "/cdn"). */
+  getBaseUrl(): string {
+    return this.manifest.baseUrl;
+  }
+
   getUrl(path: string): string {
     const normalized = this.normalizePath(path);
     const entry = this.manifest.files[normalized];

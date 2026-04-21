@@ -1,36 +1,25 @@
-import type { NextConfig } from "next";
-import path from "path";
+import type { NextConfig } from 'next';
+
+const isProduction = process.env.NODE_ENV === 'production';
 
 const nextConfig: NextConfig = {
-    output: "export",
-    // @wasmer/wasi is an optional runtime dependency whose npm package is
-    // incomplete (WASM binary missing). Alias it to a stub so Turbopack/webpack
-    // doesn't fail trying to resolve wasmer_wasi_js_bg.wasm.
-    // WasmerRustAdapter catches the resulting runtime error and falls back to
-    // the built-in WASI runtime automatically.
-    turbopack: {
-        resolveAlias: {
-            "@wasmer/wasi": path.resolve(__dirname, "src/wasmer-wasi-stub.ts"),
-        },
-    },
-    webpack: (config, { webpack }) => {
-        config.plugins.push(
-            new webpack.IgnorePlugin({ resourceRegExp: /^@wasmer\/wasi$/ }),
-        );
-        return config;
-    },
+    output: isProduction ? 'export' : undefined,
     headers: async () => {
         return [
             {
-                source: "/:path*",
+                source: '/:path*',
                 headers: [
                     {
-                        key: "Cross-Origin-Opener-Policy",
-                        value: "same-origin",
+                        key: 'Cross-Origin-Opener-Policy',
+                        value: 'same-origin',
                     },
                     {
-                        key: "Cross-Origin-Embedder-Policy",
-                        value: "require-corp",
+                        key: 'Cross-Origin-Embedder-Policy',
+                        // 'credentialless' enables SharedArrayBuffer (required by Wasmer)
+                        // while allowing cross-origin resources (like unpkg CDN) that do
+                        // not set Cross-Origin-Resource-Policy headers.
+                        // 'require-corp' is stricter but blocks external CDN imports.
+                        value: 'credentialless',
                     },
                 ],
             },

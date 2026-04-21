@@ -484,6 +484,9 @@ function createVFSFS(
 
             // Write-through to VFS (fire-and-forget)
             if (!isMemfsPath(nodePath)) {
+                if (nodePath.includes('main.wasm')) {
+                    console.log(`${LOG_PREFIX} [write] ${nodePath} pos=${position} len=${length} total=${existing.length}B`);
+                }
                 try { vfs.writeFileSync(nodePath, existing); } catch { /* non-fatal */ }
             }
 
@@ -509,6 +512,23 @@ function createVFSFS(
 
             if (pos < 0) throw new (FS.ErrnoError)(28); // EINVAL
             return pos;
+        },
+
+        /**
+         * close: flush file data to VFS when the fd is closed.
+         * This is the most reliable write-through point — called once per open()
+         * after all writes are done. Supplements the write-by-write write-through
+         * to ensure the final file content reaches the kernel VFS.
+         */
+        close(stream: EmStream): void {
+            const node = stream.node;
+            if (FS.isDir(node.mode)) return;
+            const nodePath = getNodePath(node);
+            if (isMemfsPath(nodePath)) return;
+            const data = fileData.get(nodePath);
+            if (data && data.length > 0) {
+                try { vfs.writeFileSync(nodePath, data); } catch { /* non-fatal */ }
+            }
         },
     };
 

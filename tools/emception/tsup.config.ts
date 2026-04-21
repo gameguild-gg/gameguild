@@ -35,5 +35,5 @@ export default defineConfig({
             },
         },
     ],
-    external: ['@xterm/xterm', '@wasmer/wasi'],
+    external: ['@xterm/xterm'],
 });

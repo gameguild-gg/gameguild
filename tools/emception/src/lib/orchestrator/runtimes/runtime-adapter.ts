@@ -7,7 +7,6 @@ export interface RuntimeAdapterContext {
     argv: string[];
     options: RunOptions;
     vfs: VFSManager;
-    runWasiFallback: (argv: string[], options: RunOptions) => Promise<ToolResult>;
     log: (message: string) => void;
 }
 

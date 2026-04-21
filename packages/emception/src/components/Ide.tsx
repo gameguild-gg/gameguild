@@ -1124,176 +1124,6 @@ export default function Ide({ title = 'Emception', manifestUrl = '/cdn/manifest.
       setStatus('Compiling...');
       tty.writeLine(`Compiling ${compileTarget}...`);
 
-      // ── Rust two-step compile path (rustc → wasm-ld) ───────────
-      // rustc.wasm cannot invoke wasm-ld as a subprocess (no __dispatch_subprocess
-      // support yet), so we use a two-step approach: rustc --emit=obj then wasm-ld.
-      if (resolvedConfig.compile.tool === 'rustc' && resolvedConfig.run.type === 'wasi-terminal') {
-        const sourceFsPath = toWorkspaceFsPath(compileTarget);
-        const objPath = '/tmp/emception-rust-main.o';
-        const wasmPath = resolvedConfig.compile.output || '/home/user/main.wasm';
-
-        tty.writeLine('\x1b[36mRust compile (rustc --emit=obj)...\x1b[0m');
-        const rustcArgs = resolveArgs(resolvedConfig.compile.args, sourceFsPath).map((a) => {
-          // Override output to obj path and add --emit=obj for two-step linking
-          if (a === wasmPath) return objPath;
-          return a;
-        });
-        // Strip any explicit -Z codegen-backend=... from persisted/stale configs.
-        // The rustc.wasm Emscripten module has the LLVM backend baked in via
-        // CFG_DEFAULT_CODEGEN_BACKEND — no runtime override needed.
-        for (let i = rustcArgs.length - 2; i >= 0; i--) {
-          if (rustcArgs[i] === '-Z' && /^codegen-backend=/.test(rustcArgs[i + 1])) {
-            rustcArgs.splice(i, 2);
-          }
-        }
-        // Ensure --emit=obj is present for two-step linking
-        if (!rustcArgs.includes('--emit=obj')) {
-          rustcArgs.push('--emit=obj');
-        }
-        // Remove -o objPath if it was already set, then add it explicitly
-        const oIdx = rustcArgs.indexOf('-o');
-        if (oIdx >= 0 && oIdx + 1 < rustcArgs.length) {
-          rustcArgs[oIdx + 1] = objPath;
-        }
-
-        const runRustc = async (args: string[]) =>
-          client.run('rustc', args, {
-            cwd: resolvedConfig.compile.cwd ?? '/home/user',
-            onStdout: (t: string) => {
-              console.log(t);
-              tty.writeLine(t);
-            },
-            onStderr: (t: string) => {
-              console.error(t);
-              tty.writeError(t);
-            },
-          });
-
-        const rustcResult = await runRustc(rustcArgs);
-
-        if (rustcResult.exitCode !== 0) {
-          const dur = ((performance.now() - t0) / 1000).toFixed(2);
-          setExecutionPhase('idle');
-          setStatus(`Compilation failed (${dur}s)`);
-          tty.writeLine(`\x1b[31mRust compilation failed (exit ${rustcResult.exitCode})\x1b[0m`);
-          return;
-        }
-
-        // Determine user-program output target from compile args (default: wasm32-wasip1,
-        // which is the WASI output target for programs run via wasi-run).
-        // Note: rustc.wasm itself is an Emscripten module with LLVM backend — this target
-        // here is for the USER PROGRAM output, not the compiler host.
-        const rustTarget = (() => {
-          const tIdx = rustcArgs.indexOf('--target');
-          const inlineTarget = rustcArgs.find((a) => a.startsWith('--target='));
-          const rawTarget =
-            tIdx >= 0
-              ? rustcArgs[tIdx + 1]
-              : inlineTarget
-                ? inlineTarget.slice('--target='.length)
-                : 'wasm32-wasip1';
-          return rawTarget;
-        })();
-        let rustLibsDir = `/usr/lib/rust/lib/rustlib/${rustTarget}/lib`;
-        if (rustTarget === 'wasm32-wasi') {
-          const mappedRustLibsDir = '/usr/lib/rust/lib/rustlib/wasm32-wasip1/lib';
-          const mappedEntries = await client.listDir(mappedRustLibsDir);
-          if (mappedEntries.length > 0) {
-            rustLibsDir = mappedRustLibsDir;
-          }
-        }
-
-        // List all Rust rlibs for the target so wasm-ld can resolve stdlib symbols.
-        tty.writeLine('\x1b[36mResolving Rust rlibs...\x1b[0m');
-        const rustLibEntries = await client.listDir(rustLibsDir);
-        const rlibs = rustLibEntries
-          .filter((e: string) => e.endsWith('.rlib'))
-          .map((e: string) => `${rustLibsDir}/${e}`);
-        console.log(`${P} Rust rlibs: ${rlibs.length} files from ${rustLibsDir}`);
-
-        // For wasm32-wasip1 targets: link with the WASI self-contained crt + libc.
-        // For wasm32-unknown-emscripten targets: link with Emscripten cache libs.
-        const isWasiTarget = rustTarget === 'wasm32-wasi' || rustTarget === 'wasm32-wasip1' || rustTarget === 'wasm32-wasip2';
-        const wasiSelfContained = `${rustLibsDir}/self-contained`;
-
-        tty.writeLine('\x1b[36mLinking (wasm-ld)...\x1b[0m');
-        const lldResult = await client.run(
-          'wasm-ld',
-          [
-            'wasm-ld',
-            objPath,
-            ...rlibs,
-            '-o', wasmPath,
-            ...(isWasiTarget ? [
-              `${wasiSelfContained}/crt1-command.o`,
-              `${wasiSelfContained}/libc.a`,
-              `--library-path=${rustLibsDir}`,
-              '--no-entry',
-              '--import-undefined',
-              '--allow-undefined',
-              '-z', 'stack-size=2097152',
-            ] : [
-              '-L/usr/lib/emscripten/cache-lib/wasm32-emscripten',
-              `--library-path=${rustLibsDir}`,
-              '--entry=main',
-              '--import-undefined',
-              '--allow-undefined',
-              '--export-table',
-              '--table-base=1',
-              '--export=__wasm_call_ctors',
-              '-lc',
-              '-ldlmalloc',
-              '-lcompiler_rt',
-              '-z', 'stack-size=2097152',
-            ]),
-          ],
-          {
-            cwd: resolvedConfig.compile.cwd ?? '/home/user',
-            onStdout: (t: string) => {
-              console.log(t);
-              tty.writeLine(t);
-            },
-            onStderr: (t: string) => {
-              console.error(t);
-              tty.writeError(t);
-            },
-          },
-        );
-
-        if (lldResult.exitCode !== 0) {
-          const dur = ((performance.now() - t0) / 1000).toFixed(2);
-          setExecutionPhase('idle');
-          setStatus(`Link failed (${dur}s)`);
-          tty.writeLine(`\x1b[31mRust linker step failed (exit ${lldResult.exitCode})\x1b[0m`);
-          return;
-        }
-
-        const dur = ((performance.now() - t0) / 1000).toFixed(2);
-        setStatus('Compilation successful');
-        tty.writeLine(`\x1b[32mRust compilation successful in ${dur}s\x1b[0m`);
-
-        const wasmFile = await client.getFile(wasmPath);
-        console.log(`${P} Compilation output: main.wasm=${wasmFile ? wasmFile.length : 0}B`);
-
-        tty.writeLine('Running...');
-        const lineBufferedStdin = makeLineBufferedStdin(tty);
-        const runArgs = resolvedConfig.run.args ?? ['wasi-run', wasmPath];
-        setExecutionPhase('running');
-        await client.run(runArgs[0], runArgs, {
-          cwd: resolvedConfig.compile.cwd ?? '/home/user',
-          onStdout: (t: string) => {
-            tty.write(t.replace(/\n/g, '\r\n'));
-          },
-          onStderr: (t: string) => {
-            tty.write(`\x1b[31m${t.replace(/\n/g, '\r\n')}\x1b[0m`);
-          },
-          stdin: lineBufferedStdin,
-        });
-        setExecutionPhase('idle');
-        setStatus(`Done (${((performance.now() - tTotal) / 1000).toFixed(1)}s)`);
-        return;
-      }
-
       // ── Direct clang+wasm-ld fast path ──────────────────────────
       // When compile.args is empty, bypass the emcc Python pipeline entirely
       // and use direct clang → wasm-ld (same approach as SDL3 path).  This
@@ -1450,7 +1280,7 @@ export default function Ide({ title = 'Emception', manifestUrl = '/cdn/manifest.
 
       // emcc may return before all subprocess-linked outputs are flushed to VFS.
       // Give the canonical artifact a short grace window before triggering fallback.
-      if ((!wasmBytes || wasmBytes.length === 0) && resolvedConfig.run.type === 'wasi-terminal') {
+      if ((!wasmBytes || wasmBytes.length === 0) && resolvedConfig.run.type === 'wasi-terminal' && resolvedConfig.compile.tool === 'emcc') {
         const waitUntil = performance.now() + 12_000;
         while ((!wasmBytes || wasmBytes.length === 0) && performance.now() < waitUntil) {
           await new Promise<void>((resolve) => setTimeout(resolve, 120));
@@ -1458,7 +1288,7 @@ export default function Ide({ title = 'Emception', manifestUrl = '/cdn/manifest.
         }
       }
 
-      if ((!wasmBytes || wasmBytes.length === 0) && resolvedConfig.run.type === 'wasi-terminal') {
+      if ((!wasmBytes || wasmBytes.length === 0) && resolvedConfig.run.type === 'wasi-terminal' && resolvedConfig.compile.tool === 'emcc') {
         tty.writeLine('\x1b[33mOutput artifact missing after emcc; attempting fallback link pipeline...\x1b[0m');
         const fallbackObj = '/tmp/emception-fallback-main.o';
         const sourceFsPath = toWorkspaceFsPath(compileTarget);

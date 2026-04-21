@@ -16,8 +16,6 @@
 
 import { SUBPROCESS_SHIM } from './emscripten/subprocess-shim';
 import { loadModuleFactory } from './loader/wasm-module';
-import { selectRustRuntimeForTool } from './runtimes/rust-runtime';
-import { WasmerRustAdapter } from './runtimes/wasmer-rust-adapter';
 import { mountVFSFS } from './vfs/emscripten-vfsfs';
 import type { VFSManager } from './vfs/index';
 
@@ -62,7 +60,7 @@ export interface RunOptions {
   isInfoQuery?: boolean;
   /**
    * When true, the WASI runtime provides full filesystem access backed by
-   * the kernel VFS. Required for tools like rustc that need to read source
+   * the kernel VFS. Required for tools that need to read source
    * files and write output files.
    */
   enableFS?: boolean;
@@ -138,13 +136,6 @@ const TOOL_REGISTRY: Record<string, ToolDescriptor> = {
   },
   'curl': {
     modulePath: '/usr/lib/curl.wasm',
-  },
-  'rustc': {
-    modulePath: '/usr/lib/rustc.wasm',
-    env: {
-      SYSROOT: '/usr/lib/rust',
-      RUSTC_ICE: '0',          // disable ICE reports (no network in browser)
-    },
   },
 };
 
@@ -368,12 +359,10 @@ export interface ToolVersionConfig {
 export class ToolRunner {
   private vfs: VFSManager;
   private versions: ToolVersionConfig;
-  private wasmerRustAdapter: WasmerRustAdapter;
 
   constructor(vfs: VFSManager, versions: ToolVersionConfig = { pythonMajorMinor: '3.13', pythonMajorMinorCompact: '313' }) {
     this.vfs = vfs;
     this.versions = versions;
-    this.wasmerRustAdapter = new WasmerRustAdapter();
   }
 
   /** Resolve an explicit output artifact path from argv (-o <path>). */
@@ -424,16 +413,6 @@ export class ToolRunner {
     if (toolBasename === 'wasi-run') {
       console.log(`${LOG_PREFIX}   Dispatching to runWasi (WASI runtime)`);
       return this.runWasi(argv, options);
-    }
-
-    // Special case: 'rustc'.
-    // Ensure --sysroot is always present so the compiler finds its rlibs.
-    if (toolBasename === 'rustc') {
-      const hasSysrootArg = argv.slice(1).some((a) => a === '--sysroot' || a.startsWith('--sysroot='));
-      if (!hasSysrootArg) {
-        argv = [...argv, '--sysroot=/usr/lib/rust'];
-      }
-      console.log(`${LOG_PREFIX}   rustc: sysroot=/usr/lib/rust`);
     }
 
     // Special case: 'ninja' for actual builds (not --version or -t queries).
@@ -561,28 +540,7 @@ export class ToolRunner {
       }
     }
 
-    // Runtime selection (Rust-only migration scaffolding).
-    // Non-Rust tools are always Emscripten.
-    const rustRuntime = selectRustRuntimeForTool(toolBasename);
-    if (toolBasename === 'rustc') {
-      console.log(`${LOG_PREFIX}   rustc runtime selected: ${rustRuntime}`);
-      if (rustRuntime === 'wasmer-browser') {
-        const result = await this.wasmerRustAdapter.run({
-          tool: toolBasename,
-          modulePath: descriptor.modulePath,
-          argv,
-          options: { ...options, enableFS: true },
-          vfs: this.vfs,
-          runWasiFallback: (adapterArgv, adapterOptions) => this.runWasi(adapterArgv, adapterOptions),
-          log: (message: string) => console.log(`${LOG_PREFIX}   ${message}`),
-        });
-
-        console.log(`${LOG_PREFIX} ===== RUN COMPLETE: ${tool} — exitCode=${result.exitCode}, total=${elapsed(tTotal)} =====`);
-        return result;
-      }
-    }
-
-    // Spawn an isolated WASM process (Emscripten path — default for all tools, fallback for Rust)
+    // Spawn an isolated WASM process (Emscripten path — default for all tools)
     const result = await this.spawnProcess(descriptor, argv, options, toolBasename);
 
     console.log(`${LOG_PREFIX} ===== RUN COMPLETE: ${tool} — exitCode=${result.exitCode}, total=${elapsed(tTotal)} =====`);
@@ -1908,48 +1866,6 @@ sys.excepthook = _hook
       console.log(`${LOG_PREFIX}   Pre-warmed ${warmed}/${libPaths.length} library files for lld in ${elapsed(tWarm)}`);
     }
 
-    // rustc: preload and pre-warm sysroot rlib files so Rust compilation works.
-    // rustc.wasm reads rlibs from /usr/lib/rust/lib/rustlib/<target>/lib/ via VFSFS.
-    // Without pre-warming, these reads trigger Asyncify async hooks which may fail.
-    if (descriptor.modulePath === '/usr/lib/rustc.wasm') {
-      const tPreload = performance.now();
-      try {
-        await this.vfs.preloadBundle('rustc');
-        console.log(`${LOG_PREFIX}   Preloaded rustc bundle in ${elapsed(tPreload)}`);
-      } catch (e) {
-        console.warn(`${LOG_PREFIX}   ⚠️ Failed to preload rustc bundle:`, e);
-      }
-
-      // Pre-warm rlib files into rustc's Emscripten FS.
-      // Only warm files for the specific --target to avoid loading unnecessary rlibs.
-      const tWarm = performance.now();
-      const rustTargetArgIdx = argv.findIndex((a) => a === '--target');
-      const rustTarget = rustTargetArgIdx >= 0 && rustTargetArgIdx + 1 < argv.length
-        ? argv[rustTargetArgIdx + 1]
-        : (argv.find((a) => a.startsWith('--target='))?.slice('--target='.length) ?? 'wasm32-wasip1');
-      const allFiles = this.vfs.getBundleFilePaths('rustc');
-      // Filter to only the target's rustlib directory
-      const targetFiles = allFiles.filter((p) => {
-        if (!p.includes('/rustlib/')) return true;
-        return p.includes(`/rustlib/${rustTarget}/`);
-      });
-      let warmed = 0;
-      const BATCH = 50;
-      for (let i = 0; i < targetFiles.length; i += BATCH) {
-        const batch = targetFiles.slice(i, i + BATCH);
-        const results = await Promise.all(batch.map(p => this.vfs.fetchFile(p).catch(() => null)));
-        for (let j = 0; j < batch.length; j++) {
-          if (results[j]) {
-            try {
-              instance.FS.writeFile(batch[j], results[j]!);
-              warmed++;
-            } catch { /* ignore */ }
-          }
-        }
-      }
-      console.log(`${LOG_PREFIX}   Pre-warmed ${warmed}/${targetFiles.length} rustc sysroot files (target=${rustTarget}) in ${elapsed(tWarm)}`);
-    }
-
     // python (emcc/em++): preload and pre-warm Python stdlib + emscripten scripts.
     // Python's Py_Initialize() needs the `encodings` module synchronously during
     // startup. Without pre-warming, the python-runtime files are only in IDB
@@ -2223,14 +2139,23 @@ sys.excepthook = _hook
 
     // Persist explicit output artifacts (e.g. -o /home/user/main.wasm) into
     // shared VFS so subsequent steps (wasi-run) can read them.
-    // Keep this strict: only copy the exact -o path when it exists.
-    if (exitCode === 0 && instance.FS) {
+    // Primary source: fileData (VFSFS local store) — always accurate after callMain
+    // because wasm-ld writes to fileData synchronously via stream_ops.write.
+    // Fallback: instance.FS.readFile — may fail after process exit but used as backup.
+    if (exitCode === 0) {
       if (outputPath) {
-        const outputData = this.tryReadProcessFile(instance.FS, outputPath);
-        if (outputData) {
+        const fdData = fileData.get(outputPath) ?? null;
+        console.log(`${LOG_PREFIX}   [artifact-check] outputPath=${outputPath} fileData.has=${fileData.has(outputPath)} fdSize=${fdData?.length ?? 'null'} fileData.size=${fileData.size}`);
+        const outputData = fdData ||
+          (instance.FS ? this.tryReadProcessFile(instance.FS, outputPath) : null);
+        if (outputData && outputData.length > 0) {
           this.vfs.writeFileSync(outputPath, outputData);
           console.log(`${LOG_PREFIX}   Persisted output artifact: ${outputPath} (${outputData.length}B)`);
+        } else {
+          console.warn(`${LOG_PREFIX}   ⚠️ Output artifact not found: ${outputPath} (fileData size=${fileData.get(outputPath)?.length ?? 'missing'})`);
         }
+      } else {
+        console.log(`${LOG_PREFIX}   [artifact-check] outputPath is null — no artifact to persist`);
       }
     }
 
@@ -2614,7 +2539,7 @@ sys.excepthook = _hook
     const writtenFiles = new Map<string, Uint8Array>();
 
     if (enableFS) {
-      // Preopen root directories that rustc needs
+      // Preopen root directories for WASI filesystem access
       const dirs = ['/', '/tmp', '/home', '/home/user', '/usr'];
       for (const dir of dirs) {
         const fd = nextFd++;
@@ -2638,21 +2563,7 @@ sys.excepthook = _hook
         if (p === '..') { resolved.pop(); continue; }
         resolved.push(p);
       }
-      let result = '/' + resolved.join('/');
-      // Alias: rustc on wasm32 targets uses "lib32" but our sysroot has "lib"
-      if (result.includes('/lib32/')) {
-        result = result.replace('/lib32/', '/lib/');
-      }
-      return result;
-    };
-
-    // Some rustc.wasm builds expect the codegen-backends directory to exist
-    // under the sysroot even when backends are statically linked and no files
-    // are emitted there. The browser manifest may therefore contain no entries
-    // for that directory. Treat it as a virtual existing directory so rustc's
-    // sysroot probe doesn't fatally abort.
-    const isVirtualDir = (absPath: string): boolean => {
-      return /^\/usr\/lib\/rust\/lib\/rustlib\/[^/]+\/codegen-backends$/.test(absPath);
+      return '/' + resolved.join('/');
     };
 
     // WASI fd_write: write iovs to a file descriptor and return bytes written.
@@ -2718,8 +2629,6 @@ sys.excepthook = _hook
 
     // Environment variables for WASI tools
     const envVars: string[] = enableFS ? [
-      'SYSROOT=/usr/lib/rust',
-      'RUSTC_ICE=0',
       'HOME=/home/user',
       'TMPDIR=/tmp',
     ] : [];
@@ -2749,12 +2658,6 @@ sys.excepthook = _hook
 
     // args: return program name + any extra args
     const programArgs = argv.slice(1); // ['main.wasm', ...extra]
-    // For rustc: override argv[0] so sysroot detection works.
-    // rustc's from_env_args_next() pops 2 components from argv[0] to find sysroot.
-    // /usr/lib/rust/bin/rustc -> pop 2 -> /usr/lib/rust (= sysroot)
-    if (enableFS && wasmPath.includes('rustc.wasm')) {
-      programArgs[0] = '/usr/lib/rust/bin/rustc';
-    }
     const encodedArgs = programArgs.map((a) => new TextEncoder().encode(a + '\0'));
     const totalArgSize = encodedArgs.reduce((sum, a) => sum + a.length, 0);
 
@@ -2980,7 +2883,7 @@ sys.excepthook = _hook
       // Try fileCache first, then writtenFiles
       const data = fileCache.get(absPath) ?? writtenFiles.get(absPath) ?? null;
 
-      if (isDirectory || absPath.endsWith('/') || isVirtualDir(absPath)) {
+      if (isDirectory || absPath.endsWith('/')) {
         const fd = nextFd++;
         fdTable.set(fd, { path: absPath, data: new Uint8Array(0), offset: 0, writable: false, isDir: true });
         mem.setUint32(fdPtr, fd, true);
@@ -2990,7 +2893,7 @@ sys.excepthook = _hook
       if (!data && !isCreate) {
         // Check if it's a directory (files exist under this path)
         const prefix = absPath + '/';
-        const isDir = isVirtualDir(absPath) || [...fileCache.keys(), ...writtenFiles.keys()].some(k => k.startsWith(prefix));
+        const isDir = [...fileCache.keys(), ...writtenFiles.keys()].some(k => k.startsWith(prefix));
         if (isDir) {
           const fd = nextFd++;
           fdTable.set(fd, { path: absPath, data: new Uint8Array(0), offset: 0, writable: false, isDir: true });
@@ -3043,7 +2946,7 @@ sys.excepthook = _hook
 
       const data = fileCache.get(absPath) ?? writtenFiles.get(absPath) ?? null;
       const prefix = absPath + '/';
-      const isDir = isVirtualDir(absPath) || [...fileCache.keys(), ...writtenFiles.keys()].some(k => k.startsWith(prefix));
+      const isDir = [...fileCache.keys(), ...writtenFiles.keys()].some(k => k.startsWith(prefix));
 
       console.log(`${LOG_PREFIX}   [WASI] path_filestat_get(fd=${dirFd}, "${relPath}") → abs="${absPath}", found=${!!data}, isDir=${isDir}`);
 
@@ -3130,40 +3033,24 @@ sys.excepthook = _hook
     if (enableFS) {
       console.log(`${LOG_PREFIX}   [WASI-FS] Pre-loading VFS files for WASI tool...`);
       const tPreload = performance.now();
-      // Preload the rustc bundle so files are in IDB
+      // Preload the tool's bundle so files are in IDB
       const bundleName = vfs.getBundleForFile(wasmPath);
       if (bundleName) {
         console.log(`${LOG_PREFIX}   [WASI-FS] Preloading bundle: ${bundleName}`);
         await vfs.preloadBundle(bundleName);
       }
-      // Load all files listed in the manifest that rustc might need
-      // This includes the source file, sysroot libs, etc.
-      const filePaths = vfs.getBundleFilePaths(bundleName || 'rustc');
+      // Load all files listed in the manifest that the tool might need
+      const filePaths = bundleName ? vfs.getBundleFilePaths(bundleName) : [];
       console.log(`${LOG_PREFIX}   [WASI-FS] Fetching ${filePaths.length} files from bundle...`);
-      const rustTargetArgIdx = argv.findIndex((a) => a === '--target');
-      const rustTarget = rustTargetArgIdx >= 0 && rustTargetArgIdx + 1 < argv.length
-        ? argv[rustTargetArgIdx + 1]
-        : (argv.find((a) => a.startsWith('--target='))?.slice('--target='.length) ?? 'wasm32-wasip1');
-      const selectedFilePaths = wasmPath.includes('rustc.wasm')
-        ? filePaths.filter((p) => {
-          if (!p.includes('/rustlib/')) return true;
-          return p.includes(`/rustlib/${rustTarget}/`);
-        })
-        : filePaths;
-      if (selectedFilePaths.length !== filePaths.length) {
-        console.log(
-          `${LOG_PREFIX}   [WASI-FS] Filtered rustlib preload for target ${rustTarget}: ${selectedFilePaths.length}/${filePaths.length} files`,
-        );
-      }
-      // Batch-fetch in parallel (skip rustc.wasm itself — it's huge).
+      // Batch-fetch in parallel.
       // Some manifest bundle lists may include entries that cannot be read as
       // regular files in this phase (e.g. stale entries, platform-specific
       // symlink metadata, or generated placeholders). Those should not abort
-      // the entire rustc startup; rustc can still proceed with lazily-resolved
+      // the tool startup; tools can still proceed with lazily-resolved
       // files via path_open and the preloaded cache we do have.
       const skippedEntries: string[] = [];
       let rejectedFetches = 0;
-      const candidates = selectedFilePaths.filter((p) => !p.endsWith('rustc.wasm'));
+      const candidates = filePaths;
       const BATCH_SIZE = 8;
       for (let i = 0; i < candidates.length; i += BATCH_SIZE) {
         const batch = candidates.slice(i, i + BATCH_SIZE);
@@ -3241,24 +3128,7 @@ sys.excepthook = _hook
       path_remove_directory: () => ERRNO_SUCCESS,
       path_unlink_file: () => ERRNO_SUCCESS,
       path_rename: () => ERRNO_SUCCESS,
-      path_readlink: (dirFd: number, pathPtr: number, pathLen: number, bufPtr: number, bufLen: number, bufUsedPtr: number): number => {
-        if (!enableFS || !memory) return ERRNO_NOENT;
-        const relPath = decoder.decode(new Uint8Array(memory.buffer, pathPtr, pathLen));
-        const absPath = resolvePath(dirFd, relPath);
-        console.log(`${LOG_PREFIX}   [WASI] path_readlink(fd=${dirFd}, "${relPath}") → abs="${absPath}"`);
-        // Make /usr/lib/rust/bin/rustc appear as a symlink to itself
-        // so rustc's from_env_args_next() doesn't bail out
-        if (absPath === '/usr/lib/rust/bin/rustc') {
-          const target = encoder.encode('/usr/lib/rust/bin/rustc');
-          if (target.length > bufLen) return ERRNO_INVAL;
-          new Uint8Array(memory.buffer, bufPtr, target.length).set(target);
-          new DataView(memory.buffer).setUint32(bufUsedPtr, target.length, true);
-          console.log(`${LOG_PREFIX}   [WASI] path_readlink → SUCCESS (symlink to self)`);
-          return ERRNO_SUCCESS;
-        }
-        console.log(`${LOG_PREFIX}   [WASI] path_readlink → ENOENT`);
-        return ERRNO_NOENT;
-      },
+      path_readlink: () => ERRNO_NOENT,
       path_symlink: () => ERRNO_NOSYS,
       path_link: () => ERRNO_NOSYS,
       fd_advise: () => ERRNO_SUCCESS,
@@ -3369,7 +3239,7 @@ sys.excepthook = _hook
             return result ?? 0;
           } catch (e) {
             // Emscripten invoke_* trampolines swallow C++ exceptions and return 0.
-            // This is sufficient for the rustc.wasm runtime initialization paths that
+            // This is sufficient for WASM runtime initialization paths that
             // depend on these imports.
             tempRet0 = 0;
             return 0;
@@ -3446,13 +3316,11 @@ sys.excepthook = _hook
             return activeCppException || (args[0] ?? 0) || 0;
           };
         } else if (imp.module === 'env' && imp.kind === 'function' && imp.name === 'LLVMIsMultithreaded') {
-          // rustc_codegen_llvm asserts that LLVM was built with multithreading support.
           // In-browser execution is still single-threaded, but this capability probe
           // must report enabled to avoid an early compiler ICE.
           importObject[imp.module][imp.name] = () => 1;
         } else if (imp.module === 'env' && imp.kind === 'function' && imp.name === '_ZN4llvm7codegen20RegisterCodeGenFlagsC1Ev') {
-          // Constructor for global codegen flags registration. No-op is sufficient
-          // in the WASI-hosted rustc runtime path.
+          // Constructor for global codegen flags registration. No-op is sufficient.
           importObject[imp.module][imp.name] = () => {
             // no-op
           };
@@ -3463,7 +3331,7 @@ sys.excepthook = _hook
             if (!emittedLlvmImportHint) {
               emittedLlvmImportHint = true;
               const hint =
-                'rustc.wasm is calling unresolved LLVM host imports; this artifact likely needs a rebuild with a browser-compatible backend.';
+                'WASM module is calling unresolved LLVM host imports; this artifact likely needs a rebuild with a browser-compatible backend.';
               console.warn(`${LOG_PREFIX}   ${hint}`);
               options.onStderr?.(hint);
             }

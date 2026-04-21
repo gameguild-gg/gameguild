@@ -1,4 +1,4 @@
-import type { CodeRunner, RunnerResult, RunnerOptions, FileMap } from './types'
+import type { CodeRunner, FileMap, RunnerOptions, RunnerResult } from './types'
 
 let luaFactory: any = null
 
@@ -71,13 +71,13 @@ export class LuaRunner implements CodeRunner {
           _stdin_lines = {}
           _stdin_index = 1
         `)
-        
+
         // Load stdin lines into Lua
         for (const line of stdinLines) {
           const escapedLine = line.replace(/\\/g, '\\\\').replace(/"/g, '\\"')
           await lua.doString(`table.insert(_stdin_lines, "${escapedLine}")`)
         }
-        
+
         // Override io.read to use stdin
         await lua.doString(`
           io.read = function()
@@ -92,7 +92,7 @@ export class LuaRunner implements CodeRunner {
       } else if (this.options.onRequestInput) {
         // Interactive input via callback
         const requestInput = this.options.onRequestInput
-        
+
         lua.global.set('_request_input_js', (prompt?: string) => {
           // Get current output before requesting input
           if (!lua) return Promise.reject(new Error('Lua engine not initialized'))
@@ -101,7 +101,7 @@ export class LuaRunner implements CodeRunner {
             return requestInput(prompt, outputStr)
           })
         })
-        
+
         await lua.doString(`
           io.read = function(prompt)
             local promise = _request_input_js(prompt)
@@ -253,7 +253,7 @@ export class LuaRunner implements CodeRunner {
       for (const [filePath, content] of Object.entries(files)) {
         // Normalize path (remove leading ./ or /)
         const normalizedPath = filePath.replace(/^\.?\//, '')
-        
+
         // Escape the content for Lua string
         const escapedContent = content
           .replace(/\\/g, '\\\\')
@@ -261,10 +261,10 @@ export class LuaRunner implements CodeRunner {
           .replace(/\n/g, '\\n')
           .replace(/\r/g, '\\r')
           .replace(/\t/g, '\\t')
-        
+
         // Add to virtual FS with original path
         await lua.doString(`_virtual_fs["${normalizedPath}"] = "${escapedContent}"`)
-        
+
         // Also add without .lua extension if present (for easier require)
         if (normalizedPath.endsWith('.lua')) {
           const pathWithoutExt = normalizedPath.slice(0, -4)
@@ -280,12 +280,12 @@ export class LuaRunner implements CodeRunner {
           _stdin_lines = {}
           _stdin_index = 1
         `)
-        
+
         for (const line of stdinLines) {
           const escapedLine = line.replace(/\\/g, '\\\\').replace(/"/g, '\\"')
           await lua.doString(`table.insert(_stdin_lines, "${escapedLine}")`)
         }
-        
+
         await lua.doString(`
           io.read = function()
             if _stdin_index <= #_stdin_lines then
@@ -299,7 +299,7 @@ export class LuaRunner implements CodeRunner {
       } else if (this.options.onRequestInput) {
         // Interactive input via callback
         const requestInput = this.options.onRequestInput
-        
+
         lua.global.set('_request_input_js', (prompt?: string) => {
           // Get current output before requesting input
           if (!lua) return Promise.reject(new Error('Lua engine not initialized'))
@@ -308,7 +308,7 @@ export class LuaRunner implements CodeRunner {
             return requestInput(prompt, outputStr)
           })
         })
-        
+
         await lua.doString(`
           io.read = function(prompt)
             local promise = _request_input_js(prompt)
