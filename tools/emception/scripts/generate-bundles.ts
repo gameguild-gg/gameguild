@@ -201,24 +201,6 @@ async function main() {
   const assigned = new Set<string>();
   const bundleFiles = new Map<string, string[]>();
 
-  // --- 0. Rust toolchain: rustc.wasm + all rlibs for all targets ---
-  // Must run FIRST so Rust files get a dedicated 'rustc' bundle rather than
-  // falling through to usr-lib-misc. The tool-runner expects getBundleForFile
-  // of /usr/lib/rust/rustc.wasm to return 'rustc' so it can preload the right
-  // set of files before invoking the compiler.
-  const rustFiles: string[] = [];
-  for (const p of allPaths) {
-    if (assigned.has(p)) continue;
-    if (p.startsWith('/usr/lib/rust/')) {
-      rustFiles.push(p);
-      assigned.add(p);
-    }
-  }
-  if (rustFiles.length > 0) {
-    bundleFiles.set('rustc', rustFiles);
-    console.log(`  rustc bundle: ${rustFiles.length} files`);
-  }
-
   // --- 1. Tool pairs: <tool>.wasm + <tool>.mjs ---
   const toolBasenames = new Set<string>();
   for (const p of allPaths) {
@@ -232,7 +214,18 @@ async function main() {
     if (hasWasm && hasMjs) {
       toolBundles.push(base);
       const files = [`/usr/lib/${base}.mjs`, `/usr/lib/${base}.wasm`];
-      bundleFiles.set(base, files);
+      // If a bundle with the same name already exists, merge the tool-pair files instead of
+      // overwriting the existing bundle contents.
+      const existing = bundleFiles.get(base);
+      if (existing) {
+        const merged = [...existing];
+        for (const f of files) {
+          if (!merged.includes(f)) merged.push(f);
+        }
+        bundleFiles.set(base, merged);
+      } else {
+        bundleFiles.set(base, files);
+      }
       for (const f of files) assigned.add(f);
     }
   }

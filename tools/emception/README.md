@@ -22,24 +22,6 @@ A complete C/C++ development environment that runs entirely in the browser. Writ
 | Terminal          | xterm.js                                          |
 | Testing           | Playwright (E2E)                                  |
 
-## Rust Runtime Migration (Wasmer/Browserpod, Rust-only)
-
-A Rust-specific runtime migration is being introduced in phases:
-
-- Rust (`rustc`) may use a Wasmer/browser runtime path behind a feature flag.
-- Non-Rust tools (`clang`, `lld`, `python`, `cmake`, `ninja`, etc.) remain on the existing Emscripten runtime.
-- Fallback to Emscripten Rust runtime remains available during rollout.
-
-Detailed plan: [`RUST_RUNTIME_MIGRATION_PLAN.md`](./RUST_RUNTIME_MIGRATION_PLAN.md)
-
-Runtime flag:
-
-- `globalThis.__EMCEPTION_RUST_RUNTIME = "emscripten" | "wasmer-browser"`
-- `"wasmer-browser"` now executes `rustc` through a Wasmer-based adapter.
-- If the Wasmer path errors at runtime, execution falls back to the internal WASI path for resilience.
-
----
-
 ## Quick Start
 
 ### Prerequisites

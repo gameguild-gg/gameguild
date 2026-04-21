@@ -23,7 +23,7 @@ shell.cp('-r', path.join(BUILD_DIR, 'cdn/*'), WEB_NEXT_CDN);
 
 // Copy standalone tool modules (.wasm + .mjs)
 const toolNames = [
-    'clang', 'lld', 'python', 'rustc',
+    'clang', 'lld', 'python',
     'wasm-opt', 'wasm-as', 'wasm-ctor-eval', 'wasm-emscripten-finalize', 'wasm-metadce',
     'ninja', 'cmake',
 ];
