@@ -46,7 +46,7 @@
     "@lexical/table": "^0.38.2",
     "@lexical/utils": "^0.38.2",
     "@marp-team/marp-core": "^4.0.0",
-    "@monaco-editor/react": "^4.8.0-rc.3",
+    "@monaco-editor/react": "^4.7.0",
     "@next/third-parties": "^16.2.4",
     "@octokit/rest": "^22.0.0",
     "@playwright/test": "^1.54.2",

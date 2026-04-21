@@ -9,7 +9,7 @@ import type { JSX } from "react/jsx-runtime"
 
 import { Admonition as UIAdmonition, type AdmonitionType } from "@/components/editor/extras/admonition"
 import { ContentEditMenu } from "@/components/editor/extras/content-edit-menu"
-import { AdmonitionEditor } from "@/components/editor/extras/admonition/admonition-editor"
+import { AdmonitionEditor } from "@/components/editor/lazy-client-components"
 import { EditorLoadingContext } from "@/components/editor/engines/lexical/lexical-editor"
 
 export interface AdmonitionData {
