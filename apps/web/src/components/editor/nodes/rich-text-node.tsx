@@ -4,7 +4,7 @@ import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext
 import { $getNodeByKey, DecoratorNode, type NodeKey, type SerializedLexicalNode } from "lexical"
 import { useContext, useEffect, useRef, useState } from "react"
 import { Edit, FileText } from "lucide-react"
-import { RichTextEditor } from "@/components/editor/extras/rich-text/rich-text-editor"
+import { RichTextEditor } from "@/components/editor/lazy-client-components"
 import { RichTextPreviewRenderer } from "@/components/editor/extras/rich-text/rich-text-preview-renderer"
 import type { JSX } from "react/jsx-runtime"
 import { EditorLoadingContext } from "@/components/editor/engines/lexical/lexical-editor"

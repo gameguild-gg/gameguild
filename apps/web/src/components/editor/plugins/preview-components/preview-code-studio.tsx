@@ -1,12 +1,7 @@
 "use client"
 
-import dynamic from "next/dynamic"
 import type { CodeStudioData } from "@/components/editor/extras/code-studio/types"
-
-const CodeStudioEditor = dynamic(
-  () => import("@/components/editor/extras/code-studio/code-studio-editor").then(mod => ({ default: mod.CodeStudioEditor })),
-  { ssr: false }
-)
+import { CodeStudioEditor } from "@/components/editor/lazy-client-components"
 
 interface PreviewCodeStudioProps {
   data: CodeStudioData

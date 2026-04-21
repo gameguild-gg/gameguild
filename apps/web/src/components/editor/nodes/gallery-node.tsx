@@ -1,7 +1,7 @@
 "use client"
 
 import { ContentEditMenu, type EditMenuOption } from "@/components/editor/extras/content-edit-menu"
-import { UnifiedMediaEditor } from "@/components/editor/extras/media/unified-media-editor"
+import { UnifiedMediaEditor } from "@/components/editor/lazy-client-components"
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext"
 import { $getNodeByKey, DecoratorNode, type SerializedLexicalNode } from "lexical"
 import { ImageIcon } from "lucide-react"

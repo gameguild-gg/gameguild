@@ -9,24 +9,26 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import type { Block } from "@/lib/storage/editor/block-structure"
 import type { BlockCellType } from "@/lib/storage/editor/block-structure"
 import { BLOCK_REGISTRY } from "./block-component-registry"
+import {
+  AdmonitionEditor,
+  ButtonEditor,
+  CodeStudioEditor,
+  DividerEditor,
+  HTMLEditor,
+  MarkdownEditor,
+  MermaidEditor,
+  ModeSelectionDialog,
+  QuizSettingsDialog,
+  RichTextEditor,
+  TableEditor,
+  UnifiedMediaEditor,
+  VegaLiteEditor,
+} from "@/components/editor/lazy-client-components"
 
 // Pattern A standalone editors
-import { QuizSettingsDialog } from "@/components/editor/extras/quiz/quiz-settings-dialog"
-import { CodeStudioEditor } from "@/components/editor/extras/code-studio/code-studio-editor"
-import { ModeSelectionDialog } from "@/components/editor/extras/code-studio/mode-selection-dialog"
 import type { CodeStudioMode } from "@/components/editor/extras/code-studio/types"
 import { LANGUAGE_CONFIGS } from "@/components/editor/extras/code-studio/types"
-import { MarkdownEditor } from "@/components/editor/extras/markdown/markdown-editor"
-import { MermaidEditor } from "@/components/editor/extras/mermaid/mermaid-editor"
-import { VegaLiteEditor } from "@/components/editor/extras/vega-lite/vega-lite-editor"
-import { DividerEditor } from "@/components/editor/extras/divider/divider-editor"
-import { ButtonEditor } from "@/components/editor/extras/button/button-editor"
-import { AdmonitionEditor } from "@/components/editor/extras/admonition/admonition-editor"
-import { UnifiedMediaEditor } from "@/components/editor/extras/media/unified-media-editor"
 import type { BaseMediaData } from "@/components/editor/nodes/base/media-node-base"
-import { TableEditor } from "@/components/editor/extras/table/table-editor"
-import { HTMLEditor } from "@/components/editor/extras/html/html-editor"
-import { RichTextEditor } from "@/components/editor/extras/rich-text/rich-text-editor"
 
 // ============================================================================
 // Simple form editors for Pattern B types (no standalone editor exists)

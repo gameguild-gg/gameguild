@@ -1,7 +1,8 @@
 "use client"
 
 import type { SerializedQuizNode } from "../../nodes/quiz-node"
-import { QuizWrapper, QuizDisplay } from "@/components/editor/extras/quiz"
+import { QuizDisplay } from "@/components/editor/extras/quiz/quiz-display"
+import { QuizWrapper } from "@/components/editor/extras/quiz/quiz-wrapper"
 
 export function PreviewQuiz({ node }: { node: SerializedQuizNode }) {
   if (!node?.entry) {

@@ -18,7 +18,7 @@ import {
 } from "lexical"
 import { Pencil } from "lucide-react"
 import { MediaNodeBase, type BaseMediaData } from "./base/media-node-base"
-import { UnifiedMediaEditor } from "@/components/editor/extras/media/unified-media-editor"
+import { UnifiedMediaEditor } from "@/components/editor/lazy-client-components"
 import { resolveAssetUrl, isAssetUrl } from "@/lib/storage/assets"
 import { AssetImage } from "../extras/media/asset-image"
 

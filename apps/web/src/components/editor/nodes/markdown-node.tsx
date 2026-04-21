@@ -18,7 +18,7 @@ import {
 } from "lexical"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { Edit } from "lucide-react"
-import { MarkdownEditor } from "@/components/editor/extras/markdown/markdown-editor"
+import { MarkdownEditor } from "@/components/editor/lazy-client-components"
 import { ContentEditMenu } from "@/components/editor/extras/content-edit-menu"
 import { useMarkdownComponents } from "@/components/editor/extras/markdown/markdown-components"
 import ReactMarkdown from "react-markdown"
