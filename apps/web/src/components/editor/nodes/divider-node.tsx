@@ -8,7 +8,7 @@ import { Pencil } from "lucide-react"
 import type { JSX } from "react/jsx-runtime"
 
 import { EditorLoadingContext } from "@/components/editor/engines/lexical/lexical-editor"
-import { DividerEditor } from "@/components/editor/extras/divider"
+import { DividerEditor } from "@/components/editor/lazy-client-components"
 import { ContentEditMenu } from "@/components/editor/extras/content-edit-menu"
 import {
   getThicknessStyles,

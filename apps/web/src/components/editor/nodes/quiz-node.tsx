@@ -17,11 +17,11 @@ import { ContentEditMenu } from "@/components/editor/extras/content-edit-menu"
 import {
   QuizDisplay,
   QuizWrapper,
-  QuizSettingsDialog,
   type QuizEntry,
   QuizEntryType,
   createSingleChoiceEntry,
 } from "@/components/editor/extras/quiz"
+import { QuizSettingsDialog } from "@/components/editor/lazy-client-components"
 
 // ============================================================================
 // Serialization Types
