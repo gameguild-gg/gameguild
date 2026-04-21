@@ -2,13 +2,13 @@ import { routing } from '@/i18n/routing';
 import createMiddleware from 'next-intl/middleware';
 import { NextRequest, NextResponse } from 'next/server';
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const hostname = request.headers.get('host') || '';
   const locale = request.cookies.get('NEXT_LOCALE')?.value || 'en';
   const pathname = request.nextUrl.pathname;
 
   // Debug logging
-  console.log('Middleware processing:', {
+  console.log('Proxy processing:', {
     url: request.url,
     pathname: request.nextUrl.pathname,
     method: request.method,
