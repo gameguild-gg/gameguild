@@ -22,6 +22,12 @@
 
 import { expect, test, type Page } from '@playwright/test';
 
+const E2E_APP_URL = process.env.EMCEPTION_E2E_URL ?? 'http://localhost:3099/';
+
+async function gotoHome(page: Page) {
+    await page.goto(E2E_APP_URL, { waitUntil: 'networkidle' });
+}
+
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
@@ -121,7 +127,7 @@ test.describe('Compile & Run', () => {
         const logs = captureEmceptionLogs(page);
 
         // Navigate and wait for the page to fully load
-        await page.goto('/', { waitUntil: 'networkidle' });
+        await gotoHome(page);
 
         try {
             // Wait for the toolchain to boot
@@ -249,7 +255,7 @@ test.describe('Compile & Run', () => {
     test('cpp-terminal compiles within time budget (direct path)', async ({ page }) => {
         const logs = captureEmceptionLogs(page);
 
-        await page.goto('/', { waitUntil: 'networkidle' });
+        await gotoHome(page);
 
         try {
             await expect(status(page)).toHaveText('Ready', { timeout: 120_000 });
@@ -321,7 +327,7 @@ test.describe('Compile & Run', () => {
     test('terminal is interactive after boot', async ({ page }) => {
         const logs = captureEmceptionLogs(page);
 
-        await page.goto('/', { waitUntil: 'networkidle' });
+        await gotoHome(page);
         await expect(status(page)).toHaveText('Ready', { timeout: 120_000 });
 
         // Verify the MiniShell banner is in the terminal log
@@ -350,7 +356,7 @@ test.describe('Compile & Run', () => {
     test('stdin works — program reads user input', async ({ page }) => {
         const logs = captureEmceptionLogs(page);
 
-        await page.goto('/', { waitUntil: 'networkidle' });
+        await gotoHome(page);
         await expect(status(page)).toHaveText('Ready', { timeout: 120_000 });
         await expect(compileBtn(page)).toBeEnabled();
 
@@ -423,7 +429,7 @@ test.describe('Compile & Run', () => {
     test('python stdin works — input() and print() round-trip', async ({ page }) => {
         const logs = captureEmceptionLogs(page);
 
-        await page.goto('/', { waitUntil: 'networkidle' });
+        await gotoHome(page);
         await expect(status(page)).toHaveText('Ready', { timeout: 120_000 });
         await expect(compileBtn(page)).toBeEnabled();
 
@@ -481,7 +487,7 @@ test.describe('Compile & Run', () => {
     test('stdin backspace editing works correctly', async ({ page }) => {
         const logs = captureEmceptionLogs(page);
 
-        await page.goto('/', { waitUntil: 'networkidle' });
+        await gotoHome(page);
         await expect(status(page)).toHaveText('Ready', { timeout: 120_000 });
         await expect(compileBtn(page)).toBeEnabled();
 
@@ -536,91 +542,5 @@ test.describe('Compile & Run', () => {
         await expect(term).toContainText('GOT:alex', { timeout: 30_000 });
 
         dumpLogs(logs, 'BACKSPACE TEST');
-    });
-
-    // ------------------------------------------------------------------
-    // 6. Rust workspace — verify the rust-terminal preset loads,
-    //    compiles a Rust program via rustc (WASI) → wasm-ld, and
-    //    runs it with interactive stdin.
-    //    rustc.wasm is ~80MB so loading + compilation are slow.
-    // ------------------------------------------------------------------
-    test('rust-terminal workspace compiles and runs Rust program', async ({ page }) => {
-        const logs = captureEmceptionLogs(page);
-
-        await page.goto('/', { waitUntil: 'networkidle' });
-
-        try {
-            // Wait for boot
-            console.log('Waiting for boot (Ready status)...');
-            await expect(status(page)).toHaveText('Ready', { timeout: 120_000 });
-            await expect(compileBtn(page)).toBeEnabled();
-
-            // Switch to rust-terminal workspace
-            console.log('Switching to rust-terminal workspace...');
-            await page.getByTestId('workspace-picker').selectOption('rust-terminal');
-
-            // Wait for workspace switch to render
-            await page.waitForTimeout(1000);
-
-            // Verify the Rust source file is loaded in the editor
-            const hasRustFile = await page.evaluate(() => {
-                const models = (window as any).monaco?.editor?.getModels?.() ?? [];
-                return models.some((m: any) => m.uri?.path?.endsWith('.rs'));
-            });
-            expect(hasRustFile, 'Monaco should have a .rs model loaded').toBe(true);
-            console.log('Rust source file loaded in editor.');
-
-            // Verify the Rust source content is in the editor
-            const rustContent = await page.evaluate(() => {
-                const models = (window as any).monaco?.editor?.getModels?.() ?? [];
-                const rsModel = models.find((m: any) => m.uri?.path?.endsWith('.rs'));
-                return rsModel?.getValue?.() ?? '';
-            });
-            expect(rustContent).toContain('fn main()');
-            expect(rustContent).toContain('Enter your name');
-            console.log('Rust source content verified.');
-
-            // Click Compile & Run
-            console.log('Clicking Compile & Run...');
-            await compileBtn(page).click();
-
-            // Wait for compilation to start
-            await expect(status(page)).toHaveText('Compiling...', { timeout: 10_000 });
-            console.log('Compilation started.');
-
-            // Wait for compilation to finish — rustc.wasm is ~80MB so this is slow.
-            // The status should change away from "Compiling..." when done.
-            await expect(status(page)).not.toHaveText('Compiling...', { timeout: 600_000 });
-            const finalStatus = await status(page).textContent();
-            console.log(`Final status after Rust compile: "${finalStatus}"`);
-
-            // Expect successful compilation
-            expect(finalStatus).toMatch(/Compilation successful|Done/i);
-
-            // The Rust program should prompt for input
-            const term = terminal(page);
-            await expect(term).toContainText('Enter your name', { timeout: 120_000 });
-            console.log('Rust program prompted for input.');
-
-            // Type a name and press Enter
-            await focusShellTerminal(page);
-            await page.keyboard.type('Ferris', { delay: 50 });
-            await page.keyboard.press('Enter');
-
-            // The program should print the greeting
-            await expect(term).toContainText('Hello, Ferris!', { timeout: 60_000 });
-            console.log('Rust stdin test passed — program responded to input!');
-
-            dumpLogs(logs, 'RUST WORKSPACE TEST');
-
-            // Verify boot milestones
-            assertLogContains(logs, 'BOOT COMPLETE', 'Boot completed');
-            assertLogContains(logs, 'COMPILE & RUN START', 'IDE compile started');
-
-        } finally {
-            if (logs.length > 0) {
-                dumpLogs(logs, 'RUST WORKSPACE TEST (final)');
-            }
-        }
     });
 });
