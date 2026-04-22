@@ -186,10 +186,10 @@ jobs:
             tools/emception/build/cdn
             tools/emception/build/manifest.json
             tools/emception/public/cdn
-          key: ${{ runner.os }}-emception-toolchain-v4-emsdk-${{ steps.tool-versions.outputs.emscripten_version }}-llvm-${{ steps.tool-versions.outputs.llvm_version }}-${{ steps.tool-versions.outputs.llvm_commit }}-byn-${{ steps.tool-versions.outputs.binaryen_version }}-py-${{ steps.tool-versions.outputs.python_version }}-${{ hashFiles('tools/emception/scripts/**/*.ts', 'tools/emception/package.json', 'tools/emception/userland/libcurl-lite/src/curl_lite.c', 'tools/emception/userland/libcurl-lite/include/curl/curl.h') }}
+          key: ${{ runner.os }}-emception-toolchain-v5-emsdk-${{ steps.tool-versions.outputs.emscripten_version }}-llvm-${{ steps.tool-versions.outputs.llvm_version }}-${{ steps.tool-versions.outputs.llvm_commit }}-byn-${{ steps.tool-versions.outputs.binaryen_version }}-py-${{ steps.tool-versions.outputs.python_version }}-${{ hashFiles('tools/emception/scripts/**/*.ts', 'tools/emception/package.json', 'tools/emception/userland/libcurl-lite/src/curl_lite.c', 'tools/emception/userland/libcurl-lite/include/curl/curl.h', 'tools/emception/userland/brotli/brotli-wrapper.c') }}
           restore-keys: |
-            ${{ runner.os }}-emception-toolchain-v4-emsdk-${{ steps.tool-versions.outputs.emscripten_version }}-llvm-${{ steps.tool-versions.outputs.llvm_version }}-${{ steps.tool-versions.outputs.llvm_commit }}-
-            ${{ runner.os }}-emception-toolchain-v4-emsdk-${{ steps.tool-versions.outputs.emscripten_version }}-
+            ${{ runner.os }}-emception-toolchain-v5-emsdk-${{ steps.tool-versions.outputs.emscripten_version }}-llvm-${{ steps.tool-versions.outputs.llvm_version }}-${{ steps.tool-versions.outputs.llvm_commit }}-
+            ${{ runner.os }}-emception-toolchain-v5-emsdk-${{ steps.tool-versions.outputs.emscripten_version }}-
 
       - name: Build Binaryen
         if: steps.cache-toolchain.outputs.cache-hit != 'true'
@@ -226,6 +226,10 @@ jobs:
       - name: Build Sysroot
         if: steps.cache-toolchain.outputs.cache-hit != 'true'
         run: npm run build:sysroot
+
+      - name: Build Brotli
+        if: steps.cache-toolchain.outputs.cache-hit != 'true'
+        run: npm run build:brotli
 
       - name: Patch Glue
         if: steps.cache-toolchain.outputs.cache-hit != 'true'
