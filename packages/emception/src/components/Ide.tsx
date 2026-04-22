@@ -1,6 +1,6 @@
 import type { OnMount } from '@monaco-editor/react';
 import { Terminal } from '@xterm/xterm';
-import { bootInWorker, type WorkerBootResult } from 'emception';
+import { bootInWorker } from 'emception';
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import DockGroupPanel from './DockGroup';
@@ -66,6 +66,8 @@ export interface IdeProps {
   workspaceUrl?: string;
 }
 
+type WorkerBoot = Awaited<ReturnType<typeof bootInWorker>>;
+
 export default function Ide({ title = 'Emception', manifestUrl = '/cdn/manifest.json', workspaceConfig, workspaceUrl }: IdeProps) {
   const editorRef = useRef<Parameters<OnMount>[0] | null>(null);
   const monacoRef = useRef<Parameters<OnMount>[1] | null>(null);
@@ -74,7 +76,7 @@ export default function Ide({ title = 'Emception', manifestUrl = '/cdn/manifest.
   const canvasHolderRef = useRef<HTMLDivElement | null>(null);
   /** The div inside whichever DockGroupPanel currently shows the canvas tab */
   const canvasHostElRef = useRef<HTMLDivElement | null>(null);
-  const orchestratorRef = useRef<WorkerBootResult | null>(null);
+  const orchestratorRef = useRef<WorkerBoot | null>(null);
   const xtermRef = useRef<Terminal | null>(null);
   const terminalLogRef = useRef<HTMLPreElement | null>(null);
   /** Tracks blob URLs created for SDL output so they can be revoked on reset/unmount */
@@ -607,6 +609,7 @@ export default function Ide({ title = 'Emception', manifestUrl = '/cdn/manifest.
     monacoRef.current = monaco;
     // Expose for e2e tests (e.g. Playwright can read file content via window.monaco)
     (window as unknown as Record<string, unknown>).monaco = monaco;
+    syncMonacoModels();
   };
 
   const handleEditorChange = useCallback((path: string, value: string) => {
@@ -619,8 +622,76 @@ export default function Ide({ title = 'Emception', manifestUrl = '/cdn/manifest.
     });
   }, []);
 
+  const syncMonacoModels = useCallback(() => {
+    const monaco = monacoRef.current;
+    if (!monaco) return;
+
+    const desiredPaths = new Set<string>();
+
+    const ensureModel = (path: string) => {
+      const file = filesRef.current[path];
+      if (!file || file.type !== 'text') return;
+
+      desiredPaths.add(path);
+      const uri = monaco.Uri.file(path);
+      const existing = monaco.editor.getModel(uri);
+
+      if (!existing) {
+        monaco.editor.createModel(file.content, inferLanguage(path), uri);
+        return;
+      }
+
+      if (existing.getValue() !== file.content && activeTabId !== `tab:${path}`) {
+        existing.setValue(file.content);
+      }
+    };
+
+    for (const tab of openTabs) ensureModel(tab.path);
+    if (selectedPath) ensureModel(selectedPath);
+
+    const activePath = activeTabId.startsWith('tab:') ? activeTabId.slice(4) : null;
+    for (const model of monaco.editor.getModels()) {
+      if (model.uri.scheme !== 'file') continue;
+      const modelPath = model.uri.path;
+      if (!desiredPaths.has(modelPath) && modelPath !== activePath) {
+        model.dispose();
+      }
+    }
+  }, [activeTabId, openTabs, selectedPath]);
+
+  useEffect(() => {
+    syncMonacoModels();
+  }, [files, syncMonacoModels]);
+
   // Expose for e2e tests so Playwright can update file content directly in React state
   (window as unknown as Record<string, unknown>).__setFileContent = handleEditorChange;
+
+  const teardownSdlRuntime = useCallback(() => {
+    const sdlMod = sdlModuleRef.current;
+    if (!sdlMod && !sdlScriptRef.current && sdlBlobUrlsRef.current.length === 0) return false;
+
+    try {
+      sdlMod?.pauseMainLoop?.();
+    } catch {
+      /* ignore */
+    }
+
+    sdlModuleRef.current = null;
+    sdlScriptRef.current?.remove();
+    sdlScriptRef.current = null;
+    sdlBlobUrlsRef.current.forEach((url) => URL.revokeObjectURL(url));
+    sdlBlobUrlsRef.current = [];
+
+    const canvas = canvasRef.current;
+    if (canvas) {
+      canvas.getContext('2d')?.clearRect(0, 0, canvas.width, canvas.height);
+      delete canvas.dataset.sdlRunning;
+      canvas.style.display = 'none';
+    }
+
+    setCanvasIsRunning(false);
+    return true;
+  }, []);
 
   const handleCompile = async () => {
     if (!orchestratorRef.current || !activeFile || activeFile.type !== 'text') return;
@@ -639,6 +710,11 @@ export default function Ide({ title = 'Emception', manifestUrl = '/cdn/manifest.
     // instead of the render-time `files` closure, so e2e __setFileContent
     // updates are always picked up even before React re-renders.
     const currentFiles = filesRef.current;
+
+    if (resolvedConfig.run.type === 'sdl3-canvas' && executionPhase === 'running') {
+      teardownSdlRuntime();
+    }
+
     const textFiles = Object.values(currentFiles).filter((f) => f.type === 'text' && isTextFile(f.path));
 
     // Determine which source file to compile/run
@@ -768,24 +844,60 @@ export default function Ide({ title = 'Emception', manifestUrl = '/cdn/manifest.
         const sdlObjPath = '/tmp/emception-sdl-main.o';
         const wasmPath = resolvedConfig.compile.output || '/home/user/main.wasm';
 
-        // Compile with clang directly (no emcc phase) to avoid emcc subprocess
-        // execution issues and standalone archive auto-selection.
+        // Compile with clang -cc1 directly (driver mode silently exits in
+        // browser because cc1 cannot be spawned as a subprocess; cc1_main is
+        // linked into clang.wasm so direct -cc1 invocation works in-process).
+        // Includes mirror what the driver would inject for SDL3 + Emscripten
+        // sysroot, plus the shipped fakesdl/compat/SDL3 headers.
         const sdlCompile = await client.run(
           'clang',
           [
             'clang',
-            '--target=wasm32-unknown-emscripten',
-            '--sysroot=/usr/lib/emscripten/cache/sysroot',
-            '-Xclang',
-            '-iwithsysroot/include/fakesdl',
-            '-Xclang',
-            '-iwithsysroot/include/compat',
-            '-I/usr/include',
+            '-cc1',
+            '-triple',
+            'wasm32-unknown-emscripten',
+            '-emit-obj',
             '-O1',
-            '-c',
-            sourceFsPath,
+            '-disable-free',
+            '-clear-ast-before-backend',
+            '-disable-llvm-verifier',
+            '-discard-value-names',
+            '-main-file-name',
+            'main.cpp',
+            '-mrelocation-model',
+            'static',
+            '-mframe-pointer=none',
+            '-ffp-contract=on',
+            '-fno-rounding-math',
+            '-mconstructor-aliases',
+            '-target-cpu',
+            'generic',
+            '-fvisibility=hidden',
+            '-internal-isystem',
+            '/usr/include/c++/v1',
+            '-internal-isystem',
+            '/usr/include/compat',
+            '-internal-isystem',
+            '/usr/lib/clang/23/include',
+            '-internal-isystem',
+            '/usr/include/fakesdl',
+            '-internal-isystem',
+            '/usr/include/SDL3',
+            '-resource-dir',
+            '/usr/lib/clang/23',
+            '-internal-isystem',
+            '/usr/include',
+            '-fdeprecated-macro',
+            '-ferror-limit',
+            '19',
+            '-fgnuc-version=4.2.1',
+            '-fcxx-exceptions',
+            '-fexceptions',
             '-o',
             sdlObjPath,
+            '-x',
+            'c++',
+            sourceFsPath,
           ],
           {
             cwd: resolvedConfig.compile.cwd ?? '/home/user',
@@ -1138,24 +1250,60 @@ export default function Ide({ title = 'Emception', manifestUrl = '/cdn/manifest.
         const objPath = '/tmp/emception-terminal-main.o';
         const wasmPath = resolvedConfig.compile.output || '/home/user/main.wasm';
 
-        tty.writeLine('\x1b[36mDirect compile (clang)...\x1b[0m');
+        tty.writeLine('\x1b[36mDirect compile (clang -cc1)...\x1b[0m');
+        // Use clang -cc1 directly (not driver mode). The driver tries to
+        // posix_spawn cc1 as a subprocess which fails silently in the browser
+        // (no fork/posix_spawn in emscripten libc), causing clang to exit 0
+        // in ~35ms with no output. cc1_main is linked into clang.wasm so the
+        // frontend runs in-process when invoked with -cc1 directly.
+        // Args mirror the native `clang++ -###` driver dump for an equivalent
+        // command line, with the resource-dir set to our shipped /usr/lib/clang/23
+        // and compat shims enabled for libc++ headers such as xlocale.h.
         const clangResult = await client.run(
           'clang',
           [
             'clang',
-            '--target=wasm32-unknown-emscripten',
-            '-fignore-exceptions',
-            '-isystem',
-            '/usr/include/c++/v1',
-            '-isystem',
-            '/usr/include/compat',
-            '-isystem',
-            '/usr/include',
+            '-cc1',
+            '-triple',
+            'wasm32-unknown-emscripten',
+            '-emit-obj',
             '-O1',
-            '-c',
-            sourceFsPath,
+            '-disable-free',
+            '-clear-ast-before-backend',
+            '-disable-llvm-verifier',
+            '-discard-value-names',
+            '-main-file-name',
+            'main.cpp',
+            '-mrelocation-model',
+            'static',
+            '-mframe-pointer=none',
+            '-ffp-contract=on',
+            '-fno-rounding-math',
+            '-mconstructor-aliases',
+            '-target-cpu',
+            'generic',
+            '-fvisibility=hidden',
+            '-internal-isystem',
+            '/usr/include/c++/v1',
+            '-internal-isystem',
+            '/usr/include/compat',
+            '-internal-isystem',
+            '/usr/lib/clang/23/include',
+            '-resource-dir',
+            '/usr/lib/clang/23',
+            '-internal-isystem',
+            '/usr/include',
+            '-fdeprecated-macro',
+            '-ferror-limit',
+            '19',
+            '-fgnuc-version=4.2.1',
+            '-fcxx-exceptions',
+            '-fexceptions',
             '-o',
             objPath,
+            '-x',
+            'c++',
+            sourceFsPath,
           ],
           {
             cwd: resolvedConfig.compile.cwd ?? '/home/user',
@@ -1484,27 +1632,7 @@ export default function Ide({ title = 'Emception', manifestUrl = '/cdn/manifest.
 
     // SDL3 path: the RAF loop runs on the main thread; pause it and clean up.
     // The worker is idle (it only compiled), so we can keep it for re-compile.
-    const sdlMod = sdlModuleRef.current;
-    if (sdlMod) {
-      try {
-        sdlMod.pauseMainLoop?.();
-      } catch {
-        /* ignore */
-      }
-      sdlModuleRef.current = null;
-      sdlScriptRef.current?.remove();
-      sdlScriptRef.current = null;
-      sdlBlobUrlsRef.current.forEach((url) => URL.revokeObjectURL(url));
-      sdlBlobUrlsRef.current = [];
-      // Clear the canvas pixels so the placeholder overlay reappears
-      const canvas = canvasRef.current;
-      if (canvas) {
-        canvas.getContext('2d')?.clearRect(0, 0, canvas.width, canvas.height);
-        delete canvas.dataset.sdlRunning;
-        canvas.style.display = 'none';
-      }
-      // Reset canvas sentinel so placeholder is shown again
-      setCanvasIsRunning(false);
+    if (teardownSdlRuntime()) {
       setExecutionPhase('idle');
       setStatus('Stopped');
       xtermRef.current?.writeln('\x1b[33mExecution stopped.\x1b[0m');
@@ -1534,6 +1662,9 @@ export default function Ide({ title = 'Emception', manifestUrl = '/cdn/manifest.
     transition: 'background 0.15s',
   };
   const resizerVStyle: React.CSSProperties = { ...resizerStyle, width: '100%', height: 4, cursor: 'row-resize' };
+  const canRecompileWhileRunning = executionPhase === 'running' && resolvedConfig.run.type === 'sdl3-canvas';
+  const canCompile = isReady && activeFile?.type === 'text' && (executionPhase === 'idle' || canRecompileWhileRunning);
+  const showCompileButton = executionPhase !== 'running' || canRecompileWhileRunning;
 
   return (
     <div className="emception-ide" style={{ display: 'flex', flexDirection: 'column', height: '100%', width: '100%', fontFamily: 'system-ui, sans-serif' }}>
@@ -1586,7 +1717,27 @@ export default function Ide({ title = 'Emception', manifestUrl = '/cdn/manifest.
           <span data-testid="status" style={{ fontSize: '0.72rem', color: '#a6adc8' }}>
             {status}
           </span>
-          {executionPhase === 'running' ? (
+          {showCompileButton && (
+            <button
+              data-testid="compile-button"
+              onClick={handleCompile}
+              disabled={!canCompile}
+              style={{
+                height: 24,
+                padding: '0 0.75rem',
+                fontSize: '0.8rem',
+                fontWeight: 500,
+                borderRadius: 4,
+                border: 'none',
+                cursor: canCompile ? 'pointer' : 'not-allowed',
+                background: canCompile ? '#a6e3a1' : '#313244',
+                color: canCompile ? '#11111b' : '#585b70',
+              }}
+            >
+              {resolvedConfig.run.type === 'python-script' ? '▶ Run' : canRecompileWhileRunning ? '↻' : '▶'}
+            </button>
+          )}
+          {executionPhase === 'running' && (
             <button
               data-testid="stop-button"
               onClick={handleStop}
@@ -1603,25 +1754,6 @@ export default function Ide({ title = 'Emception', manifestUrl = '/cdn/manifest.
               }}
             >
               &#9632; Stop
-            </button>
-          ) : (
-            <button
-              data-testid="compile-button"
-              onClick={handleCompile}
-              disabled={executionPhase !== 'idle' || !isReady || activeFile?.type !== 'text'}
-              style={{
-                height: 24,
-                padding: '0 0.75rem',
-                fontSize: '0.8rem',
-                fontWeight: 500,
-                borderRadius: 4,
-                border: 'none',
-                cursor: executionPhase === 'idle' && isReady && activeFile?.type === 'text' ? 'pointer' : 'not-allowed',
-                background: executionPhase === 'idle' && isReady && activeFile?.type === 'text' ? '#a6e3a1' : '#313244',
-                color: executionPhase === 'idle' && isReady && activeFile?.type === 'text' ? '#11111b' : '#585b70',
-              }}
-            >
-              {resolvedConfig.run.type === 'python-script' ? '▶ Run' : '▶'}
             </button>
           )}
           {resolvedConfig.features.showTestButton && resolvedConfig.test && (

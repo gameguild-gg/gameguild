@@ -68,7 +68,7 @@ test('editor accepts input after SDL3 compilation', async ({ page }) => {
 
     // 1. Boot IDE
     console.log('1. Booting IDE...');
-    await page.goto('/', { waitUntil: 'networkidle', timeout: 30_000 });
+    await page.goto('/', { waitUntil: 'domcontentloaded', timeout: 30_000 });
     await expect(status(page)).toContainText('Ready', { timeout: 120_000 });
     console.log('   ✓ Ready\n');
 

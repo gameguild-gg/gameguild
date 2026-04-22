@@ -120,8 +120,10 @@ test.describe('Compile & Run', () => {
     test('default hello-world compiles and prints output', async ({ page }) => {
         const logs = captureEmceptionLogs(page);
 
-        // Navigate and wait for the page to fully load
-        await page.goto('/', { waitUntil: 'networkidle' });
+        // Navigate and wait for the page to fully load.
+        // Use 'domcontentloaded' rather than 'networkidle' because Next.js dev
+        // mode keeps an HMR websocket open, so networkidle never fires.
+        await page.goto('/', { waitUntil: 'domcontentloaded' });
 
         try {
             // Wait for the toolchain to boot
@@ -249,7 +251,7 @@ test.describe('Compile & Run', () => {
     test('cpp-terminal compiles within time budget (direct path)', async ({ page }) => {
         const logs = captureEmceptionLogs(page);
 
-        await page.goto('/', { waitUntil: 'networkidle' });
+        await page.goto('/', { waitUntil: 'domcontentloaded' });
 
         try {
             await expect(status(page)).toHaveText('Ready', { timeout: 120_000 });
@@ -321,7 +323,7 @@ test.describe('Compile & Run', () => {
     test('terminal is interactive after boot', async ({ page }) => {
         const logs = captureEmceptionLogs(page);
 
-        await page.goto('/', { waitUntil: 'networkidle' });
+        await page.goto('/', { waitUntil: 'domcontentloaded' });
         await expect(status(page)).toHaveText('Ready', { timeout: 120_000 });
 
         // Verify the MiniShell banner is in the terminal log
@@ -350,7 +352,7 @@ test.describe('Compile & Run', () => {
     test('stdin works — program reads user input', async ({ page }) => {
         const logs = captureEmceptionLogs(page);
 
-        await page.goto('/', { waitUntil: 'networkidle' });
+        await page.goto('/', { waitUntil: 'domcontentloaded' });
         await expect(status(page)).toHaveText('Ready', { timeout: 120_000 });
         await expect(compileBtn(page)).toBeEnabled();
 
@@ -423,7 +425,7 @@ test.describe('Compile & Run', () => {
     test('python stdin works — input() and print() round-trip', async ({ page }) => {
         const logs = captureEmceptionLogs(page);
 
-        await page.goto('/', { waitUntil: 'networkidle' });
+        await page.goto('/', { waitUntil: 'domcontentloaded' });
         await expect(status(page)).toHaveText('Ready', { timeout: 120_000 });
         await expect(compileBtn(page)).toBeEnabled();
 
@@ -481,7 +483,7 @@ test.describe('Compile & Run', () => {
     test('stdin backspace editing works correctly', async ({ page }) => {
         const logs = captureEmceptionLogs(page);
 
-        await page.goto('/', { waitUntil: 'networkidle' });
+        await page.goto('/', { waitUntil: 'domcontentloaded' });
         await expect(status(page)).toHaveText('Ready', { timeout: 120_000 });
         await expect(compileBtn(page)).toBeEnabled();
 

@@ -68,6 +68,29 @@ function isDynamicIpcPath(path: string): boolean {
 }
 
 /**
+ * Writable per-process work paths.
+ *
+ * These paths are expected to be created or updated by the running tool
+ * itself (temporary objects, build outputs, user workspace files). They
+ * should never trigger async CDN/IDB fetches before open/stat/access — doing
+ * so can suspend open(O_CREAT) on files that do not exist yet and wedge the
+ * Asyncify state machine while the tool is trying to create a temp output.
+ */
+function isWritableWorkPath(path: string): boolean {
+    const normalized = normalizePath(path);
+
+    if (normalized === '/tmp' || normalized.startsWith('/tmp/')) {
+        return !isDynamicIpcPath(normalized);
+    }
+
+    if (normalized === '/home/user' || normalized.startsWith('/home/user/')) {
+        return !normalized.startsWith('/home/user/.emscripten_cache');
+    }
+
+    return false;
+}
+
+/**
  * Resolve a path through registered aliases.
  */
 function resolveAlias(path: string, aliases: Map<string, string>): string {
@@ -115,6 +138,12 @@ interface EmStream {
     flags: number;
 }
 
+export interface VFSFSRuntime {
+    HEAP8?: Int8Array;
+    HEAPU8?: Uint8Array;
+    _malloc?: (size: number) => number;
+}
+
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /** Emscripten FS object — only methods we use */
 interface EmscriptenFS {
@@ -157,6 +186,8 @@ function createVFSFS(
     pathAliases: Map<string, string>,
     fileData: Map<string, Uint8Array>,
     protectedPaths: Set<string>,
+    stats: { opens: number; writes: number; bytes: number; mmaps: number },
+    runtime: VFSFSRuntime | undefined,
 ): Record<string, unknown> {
     // Permission modes
     const DIR_MODE = 0o40755;  // S_IFDIR | 0755
@@ -177,6 +208,16 @@ function createVFSFS(
         const mountpoint = node.mount?.mountpoint || '';
         const subpath = parts.join('/');
         return normalizePath(mountpoint + (subpath ? '/' + subpath : ''));
+    }
+
+    function getHeapU8(): Uint8Array | null {
+        if (runtime?.HEAPU8 instanceof Uint8Array) {
+            return runtime.HEAPU8;
+        }
+        if (runtime?.HEAP8 instanceof Int8Array) {
+            return new Uint8Array(runtime.HEAP8.buffer);
+        }
+        return null;
     }
 
     // ── node_ops ──────────────────────────────────────────────────────
@@ -423,6 +464,10 @@ function createVFSFS(
             if (FS.isDir(node.mode)) return;
 
             const nodePath = getNodePath(node);
+            stats.opens++;
+            if (stats.opens <= 20) {
+                console.log(`${LOG_PREFIX} [stream.open #${stats.opens}] ${nodePath} hasData=${fileData.has(nodePath)}`);
+            }
 
             // If we don't have the data yet, try sync read from IDBFS write layer
             if (!fileData.has(nodePath)) {
@@ -482,12 +527,94 @@ function createVFSFS(
             fileData.set(nodePath, existing);
             node.usedBytes = existing.length;
 
+            stats.writes++;
+            stats.bytes += length;
+            if (stats.writes <= 20 || stats.writes % 100 === 0) {
+                console.log(`${LOG_PREFIX} [stream.write #${stats.writes}] ${nodePath} +${length}B @${position} (total=${existing.length}B, accBytes=${stats.bytes})`);
+            }
+
             // Write-through to VFS (fire-and-forget)
             if (!isMemfsPath(nodePath)) {
                 try { vfs.writeFileSync(nodePath, existing); } catch { /* non-fatal */ }
             }
 
             return length;
+        },
+
+        /**
+         * close: flush the latest file contents back to the shared VFS.
+         * This is mostly redundant with write-through, but it helps tools that
+         * finish writes at close time and mirrors MEMFS/IDBFS behavior.
+         */
+        close(stream: EmStream): void {
+            const node = stream.node;
+            if (FS.isDir(node.mode)) return;
+
+            const nodePath = getNodePath(node);
+            const data = fileData.get(nodePath);
+            if (!data || isMemfsPath(nodePath)) return;
+
+            try {
+                vfs.writeFileSync(nodePath, data);
+            } catch {
+                // Non-fatal: process-local fileData still holds the latest bytes.
+            }
+        },
+
+        /**
+         * mmap: back file mappings with WASM linear memory so tools like clang
+         * and lld can write output files through FileOutputBuffer.
+         */
+        mmap(
+            stream: EmStream,
+            length: number,
+            position: number,
+            _prot: number,
+            _flags: number,
+        ): { ptr: number; allocated: boolean } {
+            const node = stream.node;
+            if (!FS.isFile(node.mode)) {
+                throw new (FS.ErrnoError)(43); // ENODEV
+            }
+
+            const malloc = runtime?._malloc;
+            const heap = getHeapU8();
+            if (typeof malloc !== 'function' || !heap) {
+                throw new (FS.ErrnoError)(43); // ENODEV
+            }
+
+            const ptr = malloc(length);
+            if (!ptr) {
+                throw new (FS.ErrnoError)(48); // ENOMEM
+            }
+
+            const nodePath = getNodePath(node);
+            const existing = fileData.get(nodePath);
+            if (existing && position < existing.length) {
+                const end = Math.min(existing.length, position + length);
+                heap.set(existing.subarray(position, end), ptr);
+            }
+
+            stats.mmaps++;
+            if (stats.mmaps <= 20 || stats.mmaps % 100 === 0) {
+                console.log(`${LOG_PREFIX} [stream.mmap #${stats.mmaps}] ${nodePath} len=${length} pos=${position} ptr=${ptr}`);
+            }
+
+            return { ptr, allocated: true };
+        },
+
+        /**
+         * msync: copy the mapped bytes back into fileData and the shared VFS.
+         */
+        msync(
+            stream: EmStream,
+            buffer: Uint8Array,
+            offset: number,
+            length: number,
+            _mmapFlags: number,
+        ): number {
+            stream_ops.write(stream, buffer, 0, length, offset);
+            return 0;
         },
 
         /**
@@ -538,6 +665,8 @@ export interface MountVFSFSOptions {
     mountPoints: string[];
     /** Path aliases for sysroot cache mapping */
     pathAliases?: Map<string, string>;
+    /** Access to the module's linear memory for mmap/msync support. */
+    runtime?: VFSFSRuntime;
 }
 
 /**
@@ -563,8 +692,11 @@ export function mountVFSFS(
     // Avoids repeated async IDB lookups for paths the compiler probes.
     const negativeStatCache = new Set<string>();
 
+    // Per-process stream stats
+    const stats = { opens: 0, writes: 0, bytes: 0, mmaps: 0 };
+
     // Create the FS type
-    const vfsfsType = createVFSFS(FS, vfs, pathAliases, fileData, protectedPaths);
+    const vfsfsType = createVFSFS(FS, vfs, pathAliases, fileData, protectedPaths, stats, options.runtime);
 
     // Register the type
     FS.filesystems = FS.filesystems || {};
@@ -608,6 +740,7 @@ export function mountVFSFS(
         const normalized = normalizePath(resolveWithCwd(path));
         if (isMemfsPath(normalized) || normalized === '/') return;
         if (isDynamicIpcPath(normalized)) return;
+        if (isWritableWorkPath(normalized)) return;
         if (fileData.has(normalized)) return;
         if (negativeStatCache.has(normalized)) return;
 
@@ -620,9 +753,12 @@ export function mountVFSFS(
             fileData.set(normalized, syncData);
             return;
         }
-        // Also check if it's a known directory (no data needed)
         const syncStat = vfs.statSync(resolved);
-        if (syncStat && syncStat.type !== 'file') return;
+        if (!syncStat) {
+            negativeStatCache.add(normalized);
+            return;
+        }
+        if (syncStat.type !== 'file') return;
 
         // Slow path: async fetch from IDB/CDN
         const data = await vfs.fetchFile(resolved);
@@ -649,6 +785,7 @@ export function mountVFSFS(
         const normalized = normalizePath(resolveWithCwd(path));
         if (isMemfsPath(normalized) || normalized === '/') return;
         if (isDynamicIpcPath(normalized)) return;
+        if (isWritableWorkPath(normalized)) return;
         if (fileData.has(normalized)) return;
         if (negativeStatCache.has(normalized)) return;
 
@@ -666,26 +803,16 @@ export function mountVFSFS(
             return;
         }
 
-        // Slow path: async stat checks IDB write layer + CDN fallback.
-        const stat = await vfs.overlay.stat(resolved);
-        if (stat && stat.type === 'file') {
-            const data = await vfs.fetchFile(resolved);
-            if (data) {
-                fileData.set(normalized, data);
-            }
-        } else if (!stat) {
-            // Before adding to negativeStatCache, check for implicit directories
-            // (paths that are prefixes of fileData entries). Without this check,
-            // runtime-created directories for pre-seeded cmake build files would
-            // be permanently marked as non-existent.
-            const prefix = normalized + '/';
-            let isImplicitDir = false;
-            for (const key of fileData.keys()) {
-                if (key.startsWith(prefix)) { isImplicitDir = true; break; }
-            }
-            if (!isImplicitDir) {
-                negativeStatCache.add(normalized);
-            }
+        // Missing from both the overlay write layer and LazyFS manifest:
+        // treat as a synchronous miss so the real syscall can report ENOENT
+        // without taking the Asyncify path.
+        const prefix = normalized + '/';
+        let isImplicitDir = false;
+        for (const key of fileData.keys()) {
+            if (key.startsWith(prefix)) { isImplicitDir = true; break; }
+        }
+        if (!isImplicitDir) {
+            negativeStatCache.add(normalized);
         }
     }
 
@@ -710,6 +837,15 @@ export function mountVFSFS(
     const origOnExit = moduleConfig['onExit'] as (() => void) | undefined;
     moduleConfig['onExit'] = () => {
         clearInterval(_activityTimer);
+        // Final per-process diagnostics
+        const writtenPaths: string[] = [];
+        for (const [k, v] of fileData) {
+            if (v.length > 0 && !k.startsWith('/usr/') && !k.startsWith('/etc/')) {
+                writtenPaths.push(`${k}(${v.length}B)`);
+            }
+        }
+        console.log(`${LOG_PREFIX} [onExit] streams: opens=${stats.opens} writes=${stats.writes} bytes=${stats.bytes}; mmaps=${stats.mmaps}`);
+        console.log(`${LOG_PREFIX} [onExit] non-/usr fileData entries (${writtenPaths.length}): ${writtenPaths.slice(0, 30).join(', ')}${writtenPaths.length > 30 ? ', ...' : ''}`);
         origOnExit?.();
     };
 
@@ -730,6 +866,7 @@ export function mountVFSFS(
     moduleConfig['isCachedSync'] = (path: string): boolean => {
         const n = normalizePath(resolveWithCwd(path));
         if (isDynamicIpcPath(n)) return false;
+        if (isWritableWorkPath(n)) { _syncBypass++; return true; }
         if (isMemfsPath(n) || n === '/') { _syncBypass++; return true; }
         if (fileData.has(n) || negativeStatCache.has(n)) { _syncBypass++; return true; }
         const r = resolveAlias(n, pathAliases);
@@ -754,7 +891,9 @@ export function mountVFSFS(
         for (const key of fileData.keys()) {
             if (key.startsWith(prefix)) { _syncBypass++; return true; }
         }
-        return false;
+        negativeStatCache.add(n);
+        _syncBypass++;
+        return true;
     };
 
     moduleConfig['onPreOpen'] = async (path: string) => {
