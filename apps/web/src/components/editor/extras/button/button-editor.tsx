@@ -159,31 +159,20 @@ export function ButtonEditor({ initialData, onSave, onCancel }: ButtonEditorProp
 
   // Block body scroll and pointer events when modal is open
   useEffect(() => {
-    const originalOverflow = document.body.style.overflow
-    const originalPointerEvents = document.body.style.pointerEvents
-
     document.body.style.overflow = "hidden"
     document.body.style.pointerEvents = "none"
 
     return () => {
-      document.body.style.overflow = originalOverflow
-      document.body.style.pointerEvents = originalPointerEvents
+      document.body.style.overflow = ""
+      document.body.style.pointerEvents = ""
     }
   }, [])
 
   const handleSave = () => {
-    // Restore body styles before closing
-    document.body.style.overflow = ""
-    document.body.style.pointerEvents = ""
-
     onSave(data)
   }
 
   const handleCancel = () => {
-    // Restore body styles before closing
-    document.body.style.overflow = ""
-    document.body.style.pointerEvents = ""
-
     onCancel()
   }
 

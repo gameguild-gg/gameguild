@@ -123,7 +123,7 @@ export class SyncManager {
         console.log("Downloaded project from server:", project.name)
       }
 
-      return project
+      return project || null
     } catch (error) {
       if (syncConfig.getConfig().debugMode) {
         if (error instanceof Error) {

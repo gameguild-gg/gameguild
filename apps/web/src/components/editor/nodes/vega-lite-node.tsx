@@ -17,7 +17,7 @@ import {
 } from "lexical"
 import { useCallback, useEffect, useState } from "react"
 import { Edit } from "lucide-react"
-import { VegaLiteEditor } from "@/components/editor/extras/vega-lite/vega-lite-editor"
+import { VegaLiteEditor } from "@/components/editor/lazy-client-components"
 import { ContentEditMenu } from "@/components/editor/extras/content-edit-menu"
 import { VegaLiteViewer } from "@/components/ui/vega-lite-viewer"
 import { getThemePair } from "@/lib/vega-theme-helper"

@@ -7,7 +7,7 @@ export function PreviewAdmonition({ node }: { node: SerializedAdmonitionNode }) 
     return null
   }
 
-  const { title, content, type } = node.data
+  const { title, content, type, design, customBorderColor, customTextColor } = node.data
 
-  return <UIAdmonition title={title} content={content} type={type} />
+  return <UIAdmonition title={title} content={content} type={type} design={design} customBorderColor={customBorderColor} customTextColor={customTextColor} />
 }

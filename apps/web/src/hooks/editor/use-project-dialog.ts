@@ -80,6 +80,7 @@ export function useProjectDialog({ isDbInitialized, storageAdapter }: UseProject
     projectTags: string[],
     createdAt: string,
     updatedAt: string,
+    projectPreferences?: any
   ) => {
     try {
       // Generate hash for the project
@@ -95,7 +96,8 @@ export function useProjectDialog({ isDbInitialized, storageAdapter }: UseProject
         createdAt: createdAt,
         updatedAt: updatedAt,
         hash: hash,
-        storageType: "local"
+        storageType: "local",
+        preferences: projectPreferences
       }
 
       // Use ProjectExporter to create the ZIP file

@@ -11,12 +11,14 @@ let isInitialized = false
 let currentFiles: CodeFile[] = []
 let completionDisposables: Array<{ dispose: () => void }> = []
 let monacoInstance: Monaco | null = null
+let fsConsumerCount = 0
 
 export function setMonacoInstance(monaco: Monaco) {
   monacoInstance = monaco
 }
 
 export async function initializeMonacoFileSystem() {
+  fsConsumerCount++
   if (isInitialized) return fileSystemProvider
 
   try {
@@ -188,6 +190,11 @@ export function getFileSystemProvider() {
 }
 
 export function disposeMonacoFileSystem() {
+  fsConsumerCount--
+  if (fsConsumerCount > 0) {
+    console.log('[Monaco FS] Skipping dispose, still', fsConsumerCount, 'consumer(s)')
+    return
+  }
   if (disposable) {
     disposable.dispose()
     disposable = null

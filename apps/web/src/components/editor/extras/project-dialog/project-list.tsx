@@ -18,6 +18,7 @@ interface ProjectData {
   updatedAt: string
   storageType?: "local" | "gameguild-cloud" | "google-drive"
   isLocallyAvailable?: boolean
+  preferences?: any
 }
 
 interface ProjectListProps {
@@ -27,6 +28,8 @@ interface ProjectListProps {
   searchTerm: string
   selectedTags: string[]
   viewMode?: 'grid' | 'list'
+  gridColumns?: number
+  listColumns?: number
   onOpen: (projectId: string, event?: React.MouseEvent) => void
   onView?: (projectId: string, event?: React.MouseEvent) => void
   onDelete?: (projectId: string, projectName: string) => void
@@ -38,6 +41,7 @@ interface ProjectListProps {
     projectTags: string[],
     createdAt: string,
     updatedAt: string,
+    projectPreferences?: any
   ) => void
   showDeleteButton?: boolean
   showStudioViewerButtons?: boolean
@@ -52,6 +56,8 @@ export function ProjectList({
   searchTerm,
   selectedTags,
   viewMode = 'grid',
+  gridColumns = 5,
+  listColumns = 1,
   onOpen,
   onView,
   onDelete,
@@ -91,6 +97,7 @@ export function ProjectList({
           downloadDialog.project.tags,
           downloadDialog.project.createdAt,
           downloadDialog.project.updatedAt,
+          downloadDialog.project.preferences
         )
       } else {
         // If no onDownload provided, implement download locally
@@ -101,8 +108,11 @@ export function ProjectList({
             import("@/lib/interopAdapter/project-exporter")
           ])
 
+          console.log('[Download] Starting download for project:', downloadDialog.project.id)
+
           // Generate hash for the project
           const hash = await HashManager.generateHash(downloadDialog.project.data)
+          console.log('[Download] Generated hash:', hash)
 
           // Prepare project data for export using ProjectExporter
           const exportProjectData = {
@@ -114,11 +124,19 @@ export function ProjectList({
             createdAt: downloadDialog.project.createdAt,
             updatedAt: downloadDialog.project.updatedAt,
             hash: hash,
-            storageType: "local" as const
+            storageType: "local" as const,
+            preferences: downloadDialog.project.preferences
           }
+
+          console.log('[Download] Export project data prepared:', {
+            id: exportProjectData.id,
+            name: exportProjectData.name,
+            hasPreferences: !!exportProjectData.preferences
+          })
 
           // Use ProjectExporter to create the ZIP file
           const zipBlob = await ProjectExporter.createZipFile(exportProjectData, hash)
+          console.log('[Download] ZIP file created, size:', zipBlob.size)
 
           // Create download link
           const url = URL.createObjectURL(zipBlob)
@@ -127,6 +145,8 @@ export function ProjectList({
           link.download = ProjectExporter.getDownloadFilename(exportProjectData)
           document.body.appendChild(link)
           link.click()
+
+          console.log('[Download] Download initiated:', link.download)
 
           // Cleanup
           document.body.removeChild(link)
@@ -174,6 +194,7 @@ export function ProjectList({
         {viewMode === 'grid' ? (
           <ProjectGridView
             projects={paginatedProjects}
+            columns={gridColumns}
             onOpen={onOpen}
             onView={onView}
             onDelete={onDelete}
@@ -187,6 +208,7 @@ export function ProjectList({
         ) : (
           <ProjectListView
             projects={paginatedProjects}
+            columns={listColumns}
             onOpen={onOpen}
             onView={onView}
             onDelete={onDelete}
