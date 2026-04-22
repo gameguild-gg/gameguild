@@ -9,6 +9,7 @@ import fs from 'fs';
 import os from 'os';
 import path from 'path';
 import shell from 'shelljs';
+import { standaloneFlags } from './lib/emcc-flags.ts';
 import { setupEmsdk } from './lib/emsdk.ts';
 import { enableBuildKeepalive } from './lib/keepalive.ts';
 
@@ -29,29 +30,8 @@ const SYSROOT_LIB = path.join(ROOT, 'sysroot', 'usr', 'lib');
 const LIBCURL_INC = path.join(ROOT, 'userland', 'libcurl-lite', 'include');
 const LIBCURL_A = path.join(OUTPUT_DIR, 'libcurl.a');
 
-/** Common Emscripten flags for standalone tool modules */
-const STANDALONE_FLAGS = [
-    '-sALLOW_MEMORY_GROWTH=1',
-    '-sSTACK_SIZE=2097152',    // 2 MB stack
-    '-sFORCE_FILESYSTEM=1',
-    '-sMODULARIZE=1',
-    '-sEXPORT_ES6=1',
-    '-sEXIT_RUNTIME=1',
-    '-sINVOKE_RUN=0',
-    '-sEXPORTED_FUNCTIONS=_main',
-    '-sEXPORTED_RUNTIME_METHODS=FS,callMain',
-    // Emscripten JS-based exception handling — compatible with Asyncify.
-    '-sDISABLE_EXCEPTION_CATCHING=0',
-    // Asyncify: transparent async suspension for FS hooks + subprocess dispatch.
-    '-sASYNCIFY',
-    '-sASYNCIFY_STACK_SIZE=131072',   // 128 KB — ninja needs a deep stack for builder→subprocess→system() unwind
-    `-sASYNCIFY_IMPORTS=${JSON.stringify([
-        '__syscall_openat', '__syscall_stat64', '__syscall_lstat64',
-        '__syscall_faccessat', '__syscall_readlinkat', '__syscall_newfstatat',
-        '__emscripten_system',
-    ])}`,
-    '-mno-reference-types',
-].join(' ');
+// 2 MB stack; 128 KB Asyncify stack — ninja needs a deep unwind for builder→subprocess→system().
+const STANDALONE_FLAGS = standaloneFlags({ stackSize: 2 * 1024 * 1024, asyncifyStackSize: 131072 });
 
 shell.mkdir('-p', USERLAND_DIR);
 shell.mkdir('-p', OUTPUT_DIR);
@@ -59,21 +39,21 @@ shell.mkdir('-p', SYSROOT_LIB);
 
 // Detect latest Ninja release from GitHub
 function detectNinjaVersion(): string {
-    const envVer = process.env.NINJA_VERSION;
-    if (envVer) return envVer;
+  const envVer = process.env.NINJA_VERSION;
+  if (envVer) return envVer;
 
-    console.log('Detecting latest Ninja release...');
-    const result = shell.exec(
-        'curl -fsSL https://api.github.com/repos/ninja-build/ninja/releases/latest',
-        { silent: true },
-    );
-    if (result.code !== 0) {
-        throw new Error('Failed to query GitHub for latest Ninja release');
-    }
-    const data = JSON.parse(result.stdout);
-    const tag = (data.tag_name as string).replace(/^v/, '');
-    console.log(`  Latest Ninja release: ${tag}`);
-    return tag;
+  console.log('Detecting latest Ninja release...');
+  const result = shell.exec(
+    'curl -fsSL https://api.github.com/repos/ninja-build/ninja/releases/latest',
+    { silent: true },
+  );
+  if (result.code !== 0) {
+    throw new Error('Failed to query GitHub for latest Ninja release');
+  }
+  const data = JSON.parse(result.stdout);
+  const tag = (data.tag_name as string).replace(/^v/, '');
+  console.log(`  Latest Ninja release: ${tag}`);
+  return tag;
 }
 
 const NINJA_VERSION = detectNinjaVersion();
@@ -82,37 +62,37 @@ const BUILD_WASM_DIR = path.join(SOURCE_DIR, 'build-wasm');
 
 // 1. Download source
 if (!fs.existsSync(SOURCE_DIR)) {
-    console.log(`Downloading Ninja ${NINJA_VERSION}...`);
-    shell.cd(USERLAND_DIR);
-    const tarball = `v${NINJA_VERSION}.tar.gz`;
-    shell.exec(`curl -fSL -o "${tarball}" "https://github.com/ninja-build/ninja/archive/refs/tags/${tarball}"`);
-    shell.exec(`tar xzf "${tarball}"`);
-    shell.rm(tarball);
+  console.log(`Downloading Ninja ${NINJA_VERSION}...`);
+  shell.cd(USERLAND_DIR);
+  const tarball = `v${NINJA_VERSION}.tar.gz`;
+  shell.exec(`curl -fSL -o "${tarball}" "https://github.com/ninja-build/ninja/archive/refs/tags/${tarball}"`);
+  shell.exec(`tar xzf "${tarball}"`);
+  shell.rm(tarball);
 }
 
 shell.cd(SOURCE_DIR);
 
 // 2. Apply source patches (TS-based, not .patch files)
 function patchSource(relPath: string, needle: string, replacement: string, label: string) {
-    const filePath = path.join(SOURCE_DIR, relPath);
-    const content = fs.readFileSync(filePath, 'utf8');
-    if (content.includes(replacement)) {
-        console.log(`  [${label}] already applied — skipping`);
-        return;
-    }
-    if (!content.includes(needle)) {
-        throw new Error(`[${label}] needle not found in ${relPath} — upstream may have changed`);
-    }
-    fs.writeFileSync(filePath, content.replace(needle, replacement));
-    console.log(`  [${label}] applied`);
+  const filePath = path.join(SOURCE_DIR, relPath);
+  const content = fs.readFileSync(filePath, 'utf8');
+  if (content.includes(replacement)) {
+    console.log(`  [${label}] already applied — skipping`);
+    return;
+  }
+  if (!content.includes(needle)) {
+    throw new Error(`[${label}] needle not found in ${relPath} — upstream may have changed`);
+  }
+  fs.writeFileSync(filePath, content.replace(needle, replacement));
+  console.log(`  [${label}] applied`);
 }
 
 // Emscripten has no sched_getaffinity — return 1 (single-threaded WASM)
 patchSource(
-    'src/util.cc',
-    'int GetProcessorCount() {\n#ifdef _WIN32',
-    'int GetProcessorCount() {\n#ifdef __EMSCRIPTEN__\n  return 1;  // WASM is single-threaded\n#elif defined(_WIN32)',
-    'GetProcessorCount-emscripten',
+  'src/util.cc',
+  'int GetProcessorCount() {\n#ifdef _WIN32',
+  'int GetProcessorCount() {\n#ifdef __EMSCRIPTEN__\n  return 1;  // WASM is single-threaded\n#elif defined(_WIN32)',
+  'GetProcessorCount-emscripten',
 );
 
 // Emscripten: replace posix_spawn with system("__dispatch_subprocess") dispatch.
@@ -292,21 +272,21 @@ void SubprocessSet::Clear() {
 
 const emscriptenSubprocessPath = path.join(SOURCE_DIR, 'src', 'subprocess-emscripten.cc');
 if (!fs.existsSync(emscriptenSubprocessPath) || !fs.readFileSync(emscriptenSubprocessPath, 'utf8').includes('__dispatch_subprocess')) {
-    console.log('Writing subprocess-emscripten.cc...');
-    fs.writeFileSync(emscriptenSubprocessPath, SUBPROCESS_EMSCRIPTEN_CC);
-    console.log('  [subprocess-emscripten.cc] created');
+  console.log('Writing subprocess-emscripten.cc...');
+  fs.writeFileSync(emscriptenSubprocessPath, SUBPROCESS_EMSCRIPTEN_CC);
+  console.log('  [subprocess-emscripten.cc] created');
 } else {
-    console.log('  [subprocess-emscripten.cc] already exists — skipping');
+  console.log('  [subprocess-emscripten.cc] already exists — skipping');
 }
 
 // Patch CMakeLists.txt to use subprocess-emscripten.cc for Emscripten builds
 patchSource(
-    'CMakeLists.txt',
-    `\ttarget_sources(libninja PRIVATE
+  'CMakeLists.txt',
+  `\ttarget_sources(libninja PRIVATE
 \t\tsrc/jobserver-posix.cc
 \t\tsrc/subprocess-posix.cc
 \t)`,
-    `\ttarget_sources(libninja PRIVATE
+  `\ttarget_sources(libninja PRIVATE
 \t\tsrc/jobserver-posix.cc
 \t)
 \tif(EMSCRIPTEN)
@@ -314,7 +294,7 @@ patchSource(
 \telse()
 \t\ttarget_sources(libninja PRIVATE src/subprocess-posix.cc)
 \tendif()`,
-    'emscripten-subprocess-cmakelists',
+  'emscripten-subprocess-cmakelists',
 );
 
 // 3. Build with emcmake
@@ -323,11 +303,11 @@ if (fs.existsSync(BUILD_WASM_DIR)) shell.rm('-rf', BUILD_WASM_DIR);
 shell.mkdir('-p', BUILD_WASM_DIR);
 
 const cmakeCmd = [
-    'emcmake cmake',
-    `-S "${SOURCE_DIR}"`,
-    `-B "${BUILD_WASM_DIR}"`,
-    '-DCMAKE_BUILD_TYPE=MinSizeRel',
-    '-DBUILD_TESTING=OFF',
+  'emcmake cmake',
+  `-S "${SOURCE_DIR}"`,
+  `-B "${BUILD_WASM_DIR}"`,
+  '-DCMAKE_BUILD_TYPE=MinSizeRel',
+  '-DBUILD_TESTING=OFF',
 ].join(' ');
 console.log(cmakeCmd);
 shell.exec(cmakeCmd);
@@ -340,35 +320,35 @@ console.log('Linking Ninja as standalone WASM module...');
 // Find all .o files from the ninja build, excluding CMake internal test artifacts
 // (e.g. _CMakeLTOTest-CXX which contains its own main() returning 0x42=66)
 const ninjaObjs = shell.find(BUILD_WASM_DIR)
-    .filter(f => f.endsWith('.o') && !f.includes('CMakeFiles/CMakeTmp') && !f.includes('_CMakeLTOTest'));
+  .filter(f => f.endsWith('.o') && !f.includes('CMakeFiles/CMakeTmp') && !f.includes('_CMakeLTOTest'));
 
 const toolWasm = path.join(OUTPUT_DIR, 'ninja.wasm');
 const toolMjs = path.join(OUTPUT_DIR, 'ninja.mjs');
 
 const linkCmd = [
-    'em++',
-    ...ninjaObjs.map(o => `"${o}"`),
-    fs.existsSync(LIBCURL_A) ? `"${LIBCURL_A}"` : '',
-    fs.existsSync(LIBCURL_A) ? `-I "${LIBCURL_INC}"` : '',
-    STANDALONE_FLAGS,
-    '-Os',
-    `-o "${toolMjs}"`,
+  'em++',
+  ...ninjaObjs.map(o => `"${o}"`),
+  fs.existsSync(LIBCURL_A) ? `"${LIBCURL_A}"` : '',
+  fs.existsSync(LIBCURL_A) ? `-I "${LIBCURL_INC}"` : '',
+  STANDALONE_FLAGS,
+  '-Os',
+  `-o "${toolMjs}"`,
 ].filter(Boolean).join(' \\\n    ');
 
 console.log(linkCmd);
 shell.exec(linkCmd);
 
 if (!fs.existsSync(toolWasm)) {
-    console.error('ERROR: ninja.wasm not generated');
-    process.exit(1);
+  console.error('ERROR: ninja.wasm not generated');
+  process.exit(1);
 }
 console.log(`Created ${toolWasm} + ${toolMjs}`);
 
 // 5. Deploy to sysroot
 console.log('Deploying to sysroot...');
 for (const ext of ['.wasm', '.mjs']) {
-    const src = path.join(OUTPUT_DIR, `ninja${ext}`);
-    if (fs.existsSync(src)) shell.cp('-f', src, SYSROOT_LIB);
+  const src = path.join(OUTPUT_DIR, `ninja${ext}`);
+  if (fs.existsSync(src)) shell.cp('-f', src, SYSROOT_LIB);
 }
 
 console.log('>>> Ninja build complete.');

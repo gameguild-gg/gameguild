@@ -54,15 +54,25 @@ cd ../../demos/emception-next  && npm install && npm run dev   # Next.js demo  (
 
 | #   | Script               | What it does                                                                                                |
 | --- | -------------------- | ----------------------------------------------------------------------------------------------------------- |
-| 1   | `build:orchestrator` | TypeScript type-check (`tsc --noEmit`)                                                                      |
+| 1   | `typecheck`          | TypeScript type-check (`tsc --noEmit`)                                                                      |
 | 2   | `build:emsdk`        | Downloads & configures the Emscripten SDK                                                                   |
 | 3   | `build:binaryen`     | Builds each Binaryen tool as a standalone WASM process (wasm-opt, wasm-as, …)                               |
 | 4   | `build:cpython`      | Cross-compiles CPython as a standalone WASM process                                                         |
 | 5   | `build:llvm`         | Builds each LLVM tool as a standalone WASM process (clang, lld, llvm-nm, …)                                 |
-| 6   | `build:sysroot`      | Populates `/usr/include`, `/usr/lib` with headers, libs, and Emscripten runtime files                       |
-| 7   | `build:manifest`     | Generates file manifest metadata and stages raw CDN files                                                   |
-| 8   | `build:bundles`      | Creates Brotli-compressed `.tar.br` bundles and updates manifest bundle metadata                            |
-| 9   | `deploy:cdn`         | Copies CDN assets to `demos/emception-react/public/cdn/` and `demos/emception-next/public/cdn/` for serving |
+| 6   | `build:libcurl-lite` | Builds a minimal `libcurl.a` for tools that need HTTP fetch                                                 |
+| 7   | `build:ninja`        | Builds the Ninja build system as a standalone WASM process                                                  |
+| 8   | `build:cmake`        | Builds CMake as a standalone WASM process                                                                   |
+| 9   | `build:sdl3`         | Builds SDL3 as a static library staged into the sysroot                                                     |
+| 10  | `build:imgui`        | Builds Dear ImGui as a static library staged into the sysroot                                               |
+| 11  | `build:sysroot`      | Populates `/usr/include`, `/usr/lib` with headers, libs, and Emscripten runtime files                       |
+| 12  | `build:brotli`       | Builds the native Brotli CLI plus the in-browser Brotli WASM decoder                                        |
+| 13  | `patch:glue`         | Post-processes Emscripten `.mjs` glue files for VFS + async-bridge integration                              |
+| 14  | `build:manifest`     | Generates file manifest metadata and stages raw CDN files                                                   |
+| 15  | `build:bundles`      | Creates Brotli-compressed `.tar.br` bundles and updates manifest bundle metadata                            |
+| 16  | `build:lib`          | Builds the publishable runtime library (`tsup` + `tsc -p tsconfig.lib.json`)                                |
+| 17  | `deploy:cdn`         | Copies CDN assets to `demos/emception-react/public/cdn/` and `demos/emception-next/public/cdn/` for serving |
+
+Convenience aggregates: `build:cdn` (= manifest + bundles + deploy) and `build:pipeline` (= sysroot + brotli + patch + cdn + lib) re-run only the parts that depend on already-built tool WASMs.
 
 **Bundle layout note**: `generate-bundles.ts` ships a dedicated `clang-headers` bundle (`/usr/lib/clang/<ver>/include`) so that the compiler's resource-dir headers can be fetched independently of `clang.wasm`. `populate-sysroot.ts` auto-detects the active LLVM version under `tools/emsdk/upstream/lib/clang/<ver>/include` and copies it into the sysroot at the same path.
 
@@ -110,6 +120,36 @@ Additional per-tool flags:
 | CPython  | `-sSTACK_SIZE=2097152` (2 MB — import chain), `-sUSE_ZLIB=1`, `-sUSE_BZIP2=1`, `-sUSE_SQLITE3=1` |
 
 Each tool statically links what it needs (libc, libc++, LLVM libs, etc.) and gets its own isolated WASM linear memory.
+
+---
+
+## Embedding in Your App
+
+The smallest integration is the `createEmception` factory. It mounts a terminal, boots the toolchain inside a Web Worker, and returns a tiny async API — perfect for course widgets / LMS playgrounds:
+
+```ts
+import { createEmception } from 'emception';
+
+const ide = await createEmception({
+  container: document.getElementById('terminal')!,
+  manifestUrl: '/cdn/manifest.json',
+});
+
+await ide.writeFile(
+  '/home/user/main.c',
+  `#include <stdio.h>
+int main(){ puts("hi"); return 0; }`,
+);
+
+const compile = await ide.run('clang', ['/home/user/main.c', '-o', '/home/user/a.out']);
+console.log('exit:', compile.exitCode, compile.stderr);
+
+ide.dispose(); // tear down the worker when done
+```
+
+The full surface is documented inline in `src/createEmception.ts` (`run`, `readFile`, `writeFile`, `listDir`, `resetVfs`, `dispose`). Advanced consumers can still import `boot` / `bootInWorker` for direct access to `ToolRunner`, `MiniShell`, and the VFS internals.
+
+**Peer dependency:** consumers must install `@xterm/xterm` (declared as an optional peer). A real working example lives under `demos/emception-react/`.
 
 ---
 

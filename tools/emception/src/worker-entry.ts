@@ -394,32 +394,28 @@ self.onmessage = async (ev: MessageEvent<MainToWorkerMessage>) => {
         pageOrigin = msg.origin || '';
         // Pre-load the locally-built brotli decompressor (Emscripten module
         // produced by tools/emception/scripts/build-brotli.ts) and inject it
-        // into LazyFS before boot. We deliberately do NOT depend on the npm
-        // `brotli-wasm` package — only the artefacts shipped under public/cdn/.
+        // into LazyFS before boot. This is required for browsers (or worker
+        // contexts) where DecompressionStream('br') is not available.
+        //
+        // The brotli build is a MODULARIZE'd ES module (-sMODULARIZE=1
+        // -sEXPORT_ES6=1 -sINVOKE_RUN=0): importing it does NOT auto-fetch
+        // the .wasm; we pass `wasmBinary` explicitly to the factory.
         try {
           const manifestDir = msg.manifestUrl.replace(/\/[^/]*$/, '');
           const jsUrl = `${manifestDir}/brotli_wasm.js`;
-          // We must actually GET the bytes (HEAD is unreliable behind SPA dev
-          // servers like Vite that return 200 + index.html for unknown paths).
           const wasmCandidate = `${manifestDir}/brotli_wasm.wasm`;
-          let wasmUrl: string | null = null;
-          let wasmBinary: ArrayBuffer | null = null;
-          {
-            const resp = await nativeFetch(wasmCandidate, { cache: 'no-store' }).catch(() => null);
-            if (resp && resp.ok) {
-              const buf = await resp.arrayBuffer();
-              // Validate WebAssembly magic: 00 61 73 6d
-              const view = new Uint8Array(buf);
-              if (view.length >= 4 && view[0] === 0x00 && view[1] === 0x61 && view[2] === 0x73 && view[3] === 0x6d) {
-                wasmUrl = wasmCandidate;
-                wasmBinary = buf;
-              } else {
-                console.warn(`${P} brotli candidate ${wasmCandidate} is not a wasm module (got ${view.length}B starting with ${[...view.subarray(0, 4)].map(b => b.toString(16).padStart(2, '0')).join(' ')})`);
-              }
-            }
+
+          // Fetch the .wasm bytes (HEAD is unreliable behind SPA dev servers
+          // like Vite that return 200 + index.html for unknown paths).
+          const wasmResp = await nativeFetch(wasmCandidate, { cache: 'no-store' }).catch(() => null);
+          if (!wasmResp || !wasmResp.ok) {
+            throw new Error(`Failed to fetch ${wasmCandidate}: HTTP ${wasmResp?.status ?? 'no response'}`);
           }
-          if (!wasmUrl || !wasmBinary) {
-            throw new Error(`Failed to locate a valid brotli_wasm.wasm under ${manifestDir}`);
+          const wasmBinary = await wasmResp.arrayBuffer();
+          const view = new Uint8Array(wasmBinary);
+          if (view.length < 4 || view[0] !== 0x00 || view[1] !== 0x61 || view[2] !== 0x73 || view[3] !== 0x6d) {
+            const head = [...view.subarray(0, 4)].map(b => b.toString(16).padStart(2, '0')).join(' ');
+            throw new Error(`${wasmCandidate} is not a wasm module (got ${view.length}B starting with ${head})`);
           }
 
           const jsResp = await nativeFetch(jsUrl, { cache: 'no-store' });
@@ -434,19 +430,25 @@ self.onmessage = async (ev: MessageEvent<MainToWorkerMessage>) => {
           const jsBlobUrl = URL.createObjectURL(jsBlob);
 
           const brotliMod = (await import(/* @vite-ignore */ /* webpackIgnore: true */ jsBlobUrl)) as any;
-          // brotli_wasm.js exports an Emscripten MODULARIZE factory as default.
-          // Pass `wasmBinary` directly so the factory skips its own fetch (which
-          // would re-trigger the SPA-fallback HTML problem).
+          if (typeof brotliMod.default !== 'function') {
+            URL.revokeObjectURL(jsBlobUrl);
+            throw new Error(
+              `brotli_wasm.js does not export a default factory — rebuild with ` +
+              `-sMODULARIZE=1 -sEXPORT_ES6=1 (see tools/emception/scripts/build-brotli.ts).`,
+            );
+          }
           const brotliModule: any = await brotliMod.default({
             wasmBinary,
-            locateFile: (p: string) => (p === 'brotli_wasm.wasm' ? wasmUrl! : p),
+            // Defensive: if the factory ever tries to fetch on its own, point
+            // it back at the same URL we already validated.
+            locateFile: (p: string) => (p.endsWith('.wasm') ? wasmCandidate : p),
           });
           URL.revokeObjectURL(jsBlobUrl);
 
-          // Wrappers exposed by the locally-built brotli module:
-          //   int   brotli_decompress_buffer(const uint8_t* in, size_t in_len, size_t* out_len) -> uint8_t*
-          //   void  brotli_free_buffer(uint8_t* ptr)
-          //   const char* brotli_get_last_error_message(void)
+          // Wrappers exposed by tools/emception/userland/brotli/brotli-wrapper.c:
+          //   uint8_t* brotli_decompress_buffer(const uint8_t* in, size_t in_len, size_t* out_len);
+          //   void     brotli_free_buffer(uint8_t* ptr);
+          //   const char* brotli_get_last_error_message(void);
           const brotliDecompressBuffer = brotliModule.cwrap('brotli_decompress_buffer', 'number', [
             'number', 'number', 'number',
           ]) as (inputPtr: number, inputLen: number, outLenPtr: number) => number;
@@ -475,9 +477,9 @@ self.onmessage = async (ev: MessageEvent<MainToWorkerMessage>) => {
               brotliModule._free(inputPtr);
             }
           };
-          console.log(`${P} local brotli (Emscripten) loaded from ${wasmUrl} and injected into LazyFS`);
+          console.log(`${P} local brotli (Emscripten) loaded from ${wasmCandidate} and injected into LazyFS`);
         } catch (e) {
-          console.warn(`${P} brotli pre-load failed, relying on DecompressionStream:`, e);
+          console.warn(`${P} brotli pre-load failed, will rely on DecompressionStream:`, e);
         }
         await handleBoot(msg.manifestUrl, msg.toolVersions);
         post({ type: 'booted' });
