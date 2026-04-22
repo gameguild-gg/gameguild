@@ -16,11 +16,18 @@ const dotnetExeName = isWindows ? 'dotnet.exe' : 'dotnet';
 
 // --- CLI flags ---
 const args = process.argv.slice(2);
+const envAutoInstall =
+  process.env.DOTNET_WASM_AUTO_INSTALL === '1' ||
+  process.env.CI === 'true' ||
+  process.env.CI === '1' ||
+  !!process.env.npm_config_yes;
+const nonInteractive = !process.stdin.isTTY;
 const flags = {
   help:            args.includes('--help'),
   fakeNoDotnet:    args.includes('--fake-no-dotnet'),
   fakeNoWorkload:  args.includes('--fake-no-workload'),
   dryRun:          args.includes('--dry-run'),
+  autoInstall:     args.includes('--auto-install') || args.includes('--yes') || args.includes('-y') || envAutoInstall || nonInteractive,
 };
 
 if (flags.help) {
@@ -29,8 +36,13 @@ if (flags.help) {
 Flags:
   --help               Show this help message
   --dry-run            Run detection and prompts but skip actual build steps
+  --auto-install, -y   Non-interactively install .NET 8 SDK and wasm-tools workload to the project-local .dotnet/ directory
   --fake-no-dotnet     Pretend .NET 8 SDK is not installed (test install prompt)
   --fake-no-workload   Pretend wasm-tools workload is missing (test workload install)
+
+Environment variables:
+  DOTNET_WASM_AUTO_INSTALL=1   Same as --auto-install
+  CI=true                      Same as --auto-install
 `);
   process.exit(0);
 }
@@ -38,6 +50,7 @@ Flags:
 if (flags.dryRun) console.log('[DRY-RUN mode: no build steps will execute]');
 if (flags.fakeNoDotnet) console.log('[TEST: pretending .NET 8 is not installed]');
 if (flags.fakeNoWorkload) console.log('[TEST: pretending wasm-tools is not installed]');
+if (flags.autoInstall) console.log('[AUTO-INSTALL mode: missing prerequisites will be installed to project-local .dotnet/ without prompting]');
 
 let activeDotnetPath: string | null = null;
 
@@ -213,6 +226,11 @@ if (!activeDotnetPath) {
 
     if (existing.isLocal) {
       // User-local dotnet: offer auto-install or show commands
+      if (flags.autoInstall) {
+        console.log(`Auto-installing .NET 8 SDK to ${projectDotnet} ...`);
+        installDotnet(projectDotnet);
+        // Skip the prompt branches below
+      } else {
       console.log('Options:');
       console.log('  1) Show commands to install .NET 8 manually');
       console.log('  2) Install .NET 8 to ~/.dotnet          (alongside current version)');
@@ -252,6 +270,11 @@ if (!activeDotnetPath) {
         console.error('Aborted.');
         process.exit(1);
       }
+      }
+    } else if (flags.autoInstall) {
+      // System-wide dotnet but auto-install requested: install project-locally to avoid sudo
+      console.log(`Auto-installing .NET 8 SDK to ${projectDotnet} (avoiding system-wide install) ...`);
+      installDotnet(projectDotnet);
     } else {
       // System-wide dotnet (admin): user must install manually
       console.log(`The .NET SDK at "${existing.bin}" is installed system-wide (requires elevated privileges).`);
@@ -278,6 +301,11 @@ if (!activeDotnetPath) {
       console.log('');
       process.exit(1);
     }
+  } else if (flags.autoInstall) {
+    // No dotnet at all + auto-install: install project-locally
+    console.log('.NET SDK not found.');
+    console.log(`Auto-installing .NET 8 SDK to ${projectDotnet} ...`);
+    installDotnet(projectDotnet);
   } else {
     // No dotnet at all
     console.log('.NET SDK not found.');
@@ -350,6 +378,11 @@ if (!hasWorkload) {
     console.log('');
     console.log('The wasm-tools workload is required but not installed.');
     console.log('');
+    if (flags.autoInstall) {
+      console.log('Auto-installing wasm-tools workload...');
+      dotnet('workload install wasm-tools', dotnetRuntime);
+      console.log('✓ wasm-tools workload installed');
+    } else {
     console.log('Options:');
     console.log('  1) Install wasm-tools now');
     console.log('  2) Show command to install manually');
@@ -371,6 +404,7 @@ if (!hasWorkload) {
       console.log('  npm run build-runtime');
       console.log('');
       process.exit(1);
+    }
     }
   } else {
     // System dotnet: requires elevated privileges, user must install manually
