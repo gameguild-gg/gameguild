@@ -70,7 +70,7 @@ function dumpLogs(logs: CapturedLog[], label: string) {
  * Shared setup for all build-tool tests.
  */
 async function bootToolchain(page: Page) {
-    await page.goto('/', { waitUntil: 'networkidle' });
+    await page.goto('/', { waitUntil: 'domcontentloaded' });
     await expect(status(page)).toHaveText('Ready', { timeout: 120_000 });
     await expect(terminal(page)).toContainText('Browser Toolchain Shell', { timeout: 10_000 });
     await focusShellTerminal(page);

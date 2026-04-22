@@ -392,11 +392,39 @@ self.onmessage = async (ev: MessageEvent<MainToWorkerMessage>) => {
     case 'boot':
       try {
         pageOrigin = msg.origin || '';
-        // Pre-load brotli-wasm and inject into LazyFS before boot.
+        // Pre-load the locally-built brotli decompressor (Emscripten module
+        // produced by tools/emception/scripts/build-brotli.ts) and inject it
+        // into LazyFS before boot. We deliberately do NOT depend on the npm
+        // `brotli-wasm` package — only the artefacts shipped under public/cdn/.
         try {
           const manifestDir = msg.manifestUrl.replace(/\/[^/]*$/, '');
-          const wasmUrl = `${manifestDir}/brotli_wasm_bg.wasm`;
           const jsUrl = `${manifestDir}/brotli_wasm.js`;
+          // build-brotli.ts currently writes the WASM as `brotli_wasm_bg.wasm`
+          // (legacy name kept for cache compatibility). Try both.
+          // We must actually GET the bytes (HEAD is unreliable behind SPA dev
+          // servers like Vite that return 200 + index.html for unknown paths).
+          const wasmUrlCandidates = [
+            `${manifestDir}/brotli_wasm.wasm`,
+            `${manifestDir}/brotli_wasm_bg.wasm`,
+          ];
+          let wasmUrl: string | null = null;
+          let wasmBinary: ArrayBuffer | null = null;
+          for (const u of wasmUrlCandidates) {
+            const resp = await nativeFetch(u, { cache: 'no-store' }).catch(() => null);
+            if (!resp || !resp.ok) continue;
+            const buf = await resp.arrayBuffer();
+            // Validate WebAssembly magic: 00 61 73 6d
+            const view = new Uint8Array(buf);
+            if (view.length >= 4 && view[0] === 0x00 && view[1] === 0x61 && view[2] === 0x73 && view[3] === 0x6d) {
+              wasmUrl = u;
+              wasmBinary = buf;
+              break;
+            }
+            console.warn(`${P} brotli candidate ${u} is not a wasm module (got ${view.length}B starting with ${[...view.subarray(0, 4)].map(b => b.toString(16).padStart(2, '0')).join(' ')}); trying next`);
+          }
+          if (!wasmUrl || !wasmBinary) {
+            throw new Error(`Failed to locate a valid brotli_wasm.wasm under ${manifestDir}`);
+          }
 
           const jsResp = await nativeFetch(jsUrl, { cache: 'no-store' });
           if (!jsResp.ok) {
@@ -410,15 +438,50 @@ self.onmessage = async (ev: MessageEvent<MainToWorkerMessage>) => {
           const jsBlobUrl = URL.createObjectURL(jsBlob);
 
           const brotliMod = (await import(/* @vite-ignore */ /* webpackIgnore: true */ jsBlobUrl)) as any;
-          // Pass the WASM URL directly; passing Promise<Response> breaks some
-          // wasm-bindgen loaders and can resolve to invalid fetch targets.
-          await brotliMod.default(wasmUrl);
+          // brotli_wasm.js exports an Emscripten MODULARIZE factory as default.
+          // Pass `wasmBinary` directly so the factory skips its own fetch (which
+          // would re-trigger the SPA-fallback HTML problem).
+          const brotliModule: any = await brotliMod.default({
+            wasmBinary,
+            locateFile: (p: string) => (p === 'brotli_wasm.wasm' ? wasmUrl! : p),
+          });
           URL.revokeObjectURL(jsBlobUrl);
 
-          LazyFS.customBrotliDecompressor = (data: Uint8Array) => brotliMod.decompress(data);
-          console.log(`${P} brotli-wasm loaded from CDN and injected into LazyFS`);
+          // Wrappers exposed by the locally-built brotli module:
+          //   int   brotli_decompress_buffer(const uint8_t* in, size_t in_len, size_t* out_len) -> uint8_t*
+          //   void  brotli_free_buffer(uint8_t* ptr)
+          //   const char* brotli_get_last_error_message(void)
+          const brotliDecompressBuffer = brotliModule.cwrap('brotli_decompress_buffer', 'number', [
+            'number', 'number', 'number',
+          ]) as (inputPtr: number, inputLen: number, outLenPtr: number) => number;
+          const brotliFreeBuffer = brotliModule.cwrap('brotli_free_buffer', null, ['number']) as (
+            ptr: number,
+          ) => void;
+          const brotliGetLastError = brotliModule.cwrap('brotli_get_last_error_message', 'string', []) as () => string;
+
+          LazyFS.customBrotliDecompressor = (data: Uint8Array): Uint8Array => {
+            const inputPtr = brotliModule._malloc(Math.max(data.length, 1));
+            const outLenPtr = brotliModule._malloc(4);
+            let outputPtr = 0;
+            try {
+              if (data.length > 0) brotliModule.HEAPU8.set(data, inputPtr);
+              brotliModule.HEAPU32[outLenPtr >>> 2] = 0;
+              outputPtr = brotliDecompressBuffer(inputPtr, data.length, outLenPtr);
+              if (!outputPtr) {
+                throw new Error(brotliGetLastError() || 'brotli decompression failed');
+              }
+              const outLen = brotliModule.HEAPU32[outLenPtr >>> 2] >>> 0;
+              // Copy out before freeing; HEAPU8.subarray would alias WASM memory.
+              return new Uint8Array(brotliModule.HEAPU8.subarray(outputPtr, outputPtr + outLen));
+            } finally {
+              if (outputPtr) brotliFreeBuffer(outputPtr);
+              brotliModule._free(outLenPtr);
+              brotliModule._free(inputPtr);
+            }
+          };
+          console.log(`${P} local brotli (Emscripten) loaded from ${wasmUrl} and injected into LazyFS`);
         } catch (e) {
-          console.warn(`${P} brotli-wasm pre-load failed, relying on DecompressionStream:`, e);
+          console.warn(`${P} brotli pre-load failed, relying on DecompressionStream:`, e);
         }
         await handleBoot(msg.manifestUrl, msg.toolVersions);
         post({ type: 'booted' });

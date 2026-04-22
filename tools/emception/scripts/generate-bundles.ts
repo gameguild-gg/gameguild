@@ -344,6 +344,11 @@ async function main() {
 
   // --- 2b. Prefix-based groups (order matters — first match wins) ---
   const prefixGroups: { name: string; prefixes: string[]; outputPath: string }[] = [
+    // Clang resource-dir builtin headers (stddef.h, stdarg.h, *intrin.h).
+    // Required for `clang -cc1` direct invocation in the browser, since cc1
+    // mode bypasses the driver's auto-resource-dir detection.
+    // Placed first so it wins over any future overlap with /usr/lib/* groups.
+    { name: 'clang-headers', prefixes: ['/usr/lib/clang/'], outputPath: '/usr/lib/clang-headers.tar.br' },
     { name: 'usr-include', prefixes: ['/usr/include/'], outputPath: '/usr/include.tar.br' },
     { name: 'emscripten-core', prefixes: ['/usr/lib/emscripten/'], outputPath: '/usr/lib/emscripten-core.tar.br' },
     { name: 'python-runtime', prefixes: pythonPrefixes, outputPath: '/usr/lib/python-runtime.tar.br' },
