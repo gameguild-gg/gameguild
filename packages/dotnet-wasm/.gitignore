@@ -31,4 +31,8 @@ Thumbs.db
 public/managed/*
 dotnet-runtime/bin/
 dotnet-runtime/obj/
+# Generated runtime files copied by vite.config.ts copy-dotnet-runtime plugin
 src/runtime/blazor.boot.json
+src/runtime/dotnet.js
+src/runtime/dotnet.native.js
+src/runtime/dotnet.runtime.js
