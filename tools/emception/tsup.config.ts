@@ -4,8 +4,8 @@ import { defineConfig } from 'tsup';
 
 export default defineConfig({
     entry: {
-        index: 'src/lib/orchestrator/index.ts',
-        'worker-entry': 'src/lib/orchestrator/worker-entry.ts',
+        index: 'src/index.ts',
+        'worker-entry': 'src/worker-entry.ts',
     },
     format: ['esm'],
     // DTS generated via separate tsc step (see build:lib script)

@@ -51,17 +51,26 @@ if (fs.existsSync(manifestSrc)) {
 }
 
 // Brotli decompressor (browser-side) is built locally by `npm run build:brotli`
-// (see scripts/build-brotli.ts). The output (`brotli_wasm.js` + `brotli_wasm.wasm`,
-// also archived as `brotli_wasm_bg.wasm` for legacy URLs) lives in build/cdn/ and
-// is already shipped to public/cdn/ by the wildcard copy above. We do NOT depend
-// on the npm `brotli-wasm` package.
+// (see scripts/build-brotli.ts). The output (`brotli_wasm.js` + `brotli_wasm.wasm`)
+// lives in build/cdn/ and is already shipped to public/cdn/ by the wildcard copy
+// above. We do NOT depend on the npm `brotli-wasm` package.
 const brotliJs = path.join(BUILD_DIR, 'cdn', 'brotli_wasm.js');
 const brotliWasm = path.join(BUILD_DIR, 'cdn', 'brotli_wasm.wasm');
-const brotliWasmLegacy = path.join(BUILD_DIR, 'cdn', 'brotli_wasm_bg.wasm');
-if (!fs.existsSync(brotliJs) || (!fs.existsSync(brotliWasm) && !fs.existsSync(brotliWasmLegacy))) {
+if (!fs.existsSync(brotliJs) || !fs.existsSync(brotliWasm)) {
     throw new Error(
         `Locally-built brotli not found in ${path.join(BUILD_DIR, 'cdn')}. Run \`npm run build:brotli\` first.`,
     );
+}
+// Remove the legacy filename if a previous build left it behind.
+const legacyBrotliWasm = path.join(WEB_NEXT_CDN, 'brotli_wasm_bg.wasm');
+if (fs.existsSync(legacyBrotliWasm)) {
+    console.log(`Removing legacy ${legacyBrotliWasm}`);
+    shell.rm('-f', legacyBrotliWasm);
+}
+// Verify the new filename actually landed in the deploy target.
+const deployedBrotliWasm = path.join(WEB_NEXT_CDN, 'brotli_wasm.wasm');
+if (!fs.existsSync(deployedBrotliWasm)) {
+    throw new Error(`Brotli wasm missing after deploy: expected ${deployedBrotliWasm}`);
 }
 console.log(`Deployed locally-built brotli decompressor from ${path.join(BUILD_DIR, 'cdn')}.`);
 
