@@ -153,6 +153,18 @@ function patchSystemCallback(content: string, filename: string): string {
  * we grow WASM memory by 1 page (64KB) to get safe scratch space.
  */
 function patchCallMainArgs(content: string, filename: string): string {
+    // Upgrade pass: if an older version of this patch is already present
+    // (lacking the Asyncify.currData Promise return), rewrite it in-place.
+    // The old body ended with: try{var ret=entryFunction(argc,argv);exitJS(ret,true);return ret}catch(e){return handleException(e)}
+    const oldTail = 'try{var ret=entryFunction(argc,argv);exitJS(ret,true);return ret}catch(e){return handleException(e)}';
+    const newTail = 'try{var ret=entryFunction(argc,argv);if(typeof Asyncify!=="undefined"&&Asyncify.currData){return Asyncify.whenDone().then(function(r){try{exitJS(r,true);return r}catch(e){return handleException(e)}},function(e){return handleException(e)});}exitJS(ret,true);return ret}catch(e){return handleException(e)}';
+    if (content.includes('args.unshift(thisProgram)') && content.includes(oldTail)) {
+        content = content.replace(oldTail, newTail);
+        patchCount++;
+        console.log(`  [${filename}] Upgraded callMain: await Asyncify.whenDone() when unwinding`);
+        return content;
+    }
+
     const brokenPattern = 'var argc=0;var argv=0;';
 
     if (!content.includes(brokenPattern)) {
@@ -212,6 +224,15 @@ function patchCallMainArgs(content: string, filename: string): string {
         '}',
         'HEAPU32[(argv>>2)+argc]=0;',
         'try{var ret=entryFunction(argc,argv);',
+        // If Asyncify unwound during main (e.g. async openat hook), the WASM
+        // hasn't actually finished yet — we must return a Promise that resolves
+        // once Asyncify rewinds and the program truly exits. Without this, the
+        // orchestrator sees exitCode=0 immediately and tears down the instance
+        // before any file writes happen, producing silent 15-55ms "success"
+        // runs with no output artifact.
+        'if(typeof Asyncify!=="undefined"&&Asyncify.currData){',
+        'return Asyncify.whenDone().then(function(r){try{exitJS(r,true);return r}catch(e){return handleException(e)}},function(e){return handleException(e)});',
+        '}',
         'exitJS(ret,true);',
         'return ret}catch(e){return handleException(e)}',
         '}',

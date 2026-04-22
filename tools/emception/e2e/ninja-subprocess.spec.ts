@@ -77,7 +77,7 @@ async function getTerminalText(page: Page): Promise<string> {
 }
 
 async function bootToolchain(page: Page) {
-    await page.goto('/', { waitUntil: 'networkidle' });
+    await page.goto('/', { waitUntil: 'domcontentloaded' });
     await expect(status(page)).toHaveText('Ready', { timeout: 120_000 });
     // Wait for shell prompt to appear in xterm buffer
     await expect(async () => {

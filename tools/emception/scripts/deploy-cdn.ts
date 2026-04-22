@@ -50,38 +50,19 @@ if (fs.existsSync(manifestSrc)) {
     console.warn(`Warning: manifest.json not found at ${manifestSrc}`);
 }
 
-// Copy bundled brotli WASM files (needed by the worker for decompressing .tar.br bundles
-// when DecompressionStream("br") is not available).
-// Use the wasm-bindgen `brotli-wasm` npm package which provides the library API
-// (default init + decompress) expected by worker-entry.ts.
-// NOTE: The Emscripten build (build-brotli.ts) produces a CLI tool, NOT the library
-// module the worker needs. Do NOT use build/cdn/brotli_wasm.* here.
-const BROTLI_WASM_PKG = path.resolve(ROOT, '..', '..', '..', 'node_modules', 'brotli-wasm', 'pkg.web');
-const brotliCandidates: Array<{ srcCandidates: string[]; dest: string }> = [
-    {
-        srcCandidates: [
-            path.join(BROTLI_WASM_PKG, 'brotli_wasm.js'),
-            path.join(ROOT, 'src', 'lib', 'orchestrator', 'loader', 'cdn', 'brotli_wasm.js'),
-        ],
-        dest: 'brotli_wasm.js',
-    },
-    {
-        srcCandidates: [
-            path.join(BROTLI_WASM_PKG, 'brotli_wasm_bg.wasm'),
-            path.join(ROOT, 'src', 'lib', 'orchestrator', 'loader', 'cdn', 'brotli_wasm_bg.wasm'),
-        ],
-        dest: 'brotli_wasm_bg.wasm',
-    },
-];
-
-for (const { srcCandidates, dest } of brotliCandidates) {
-    const existing = srcCandidates.find((p) => fs.existsSync(p));
-    if (existing) {
-        console.log(`Copying ${existing} to ${WEB_NEXT_CDN}/${dest}...`);
-        shell.cp(existing, path.join(WEB_NEXT_CDN, dest));
-    } else {
-        console.warn(`Warning: no source found for ${dest}. Checked: ${srcCandidates.join(', ')}`);
-    }
+// Brotli decompressor (browser-side) is built locally by `npm run build:brotli`
+// (see scripts/build-brotli.ts). The output (`brotli_wasm.js` + `brotli_wasm.wasm`,
+// also archived as `brotli_wasm_bg.wasm` for legacy URLs) lives in build/cdn/ and
+// is already shipped to public/cdn/ by the wildcard copy above. We do NOT depend
+// on the npm `brotli-wasm` package.
+const brotliJs = path.join(BUILD_DIR, 'cdn', 'brotli_wasm.js');
+const brotliWasm = path.join(BUILD_DIR, 'cdn', 'brotli_wasm.wasm');
+const brotliWasmLegacy = path.join(BUILD_DIR, 'cdn', 'brotli_wasm_bg.wasm');
+if (!fs.existsSync(brotliJs) || (!fs.existsSync(brotliWasm) && !fs.existsSync(brotliWasmLegacy))) {
+    throw new Error(
+        `Locally-built brotli not found in ${path.join(BUILD_DIR, 'cdn')}. Run \`npm run build:brotli\` first.`,
+    );
 }
+console.log(`Deployed locally-built brotli decompressor from ${path.join(BUILD_DIR, 'cdn')}.`);
 
 console.log('CDN files deployed.');

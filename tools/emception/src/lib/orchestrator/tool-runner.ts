@@ -16,7 +16,7 @@
 
 import { SUBPROCESS_SHIM } from './emscripten/subprocess-shim';
 import { loadModuleFactory } from './loader/wasm-module';
-import { mountVFSFS } from './vfs/emscripten-vfsfs';
+import { mountVFSFS, type VFSFSRuntime } from './vfs/emscripten-vfsfs';
 import type { VFSManager } from './vfs/index';
 
 const LOG_PREFIX = '[Emception:Kernel]';
@@ -370,13 +370,85 @@ export class ToolRunner {
     return `${base.replace(/\/$/, '')}/${outPath}`;
   }
 
-  private tryReadProcessFile(fs: EmscriptenInstance['FS'], path: string): Uint8Array | null {
-    try {
-      const data = fs.readFile(path);
+  private escapeRegExp(value: string): string {
+    return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  }
+
+  private tryReadProcessFile(
+    fs: EmscriptenInstance['FS'],
+    path: string,
+    fileData?: Map<string, Uint8Array>,
+  ): Uint8Array | null {
+    const tryFsRead = (candidate: string): Uint8Array | null => {
+      try {
+        const data = fs.readFile(candidate);
+        return data && data.length > 0 ? data : null;
+      } catch {
+        return null;
+      }
+    };
+
+    const tryFileDataRead = (candidate: string): Uint8Array | null => {
+      const data = fileData?.get(candidate) ?? null;
       return data && data.length > 0 ? data : null;
-    } catch {
-      return null;
+    };
+
+    const exact = tryFsRead(path) ?? tryFileDataRead(path);
+    if (exact) return exact;
+
+    if (!fileData) return null;
+
+    const lastSlash = path.lastIndexOf('/');
+    const dir = lastSlash >= 0 ? (lastSlash === 0 ? '/' : path.slice(0, lastSlash)) : '/';
+    const base = lastSlash >= 0 ? path.slice(lastSlash + 1) : path;
+    const extIdx = base.lastIndexOf('.');
+    const stem = extIdx > 0 ? base.slice(0, extIdx) : base;
+    const ext = extIdx > 0 ? base.slice(extIdx) : '';
+    const dirPrefix = dir === '/' ? '/' : `${dir}/`;
+    const tmpNameRe = new RegExp(
+      `^(?:${this.escapeRegExp(base)}\\.tmp|${this.escapeRegExp(stem)}-[0-9a-f]+${this.escapeRegExp(ext)}\\.tmp)$`,
+      'i',
+    );
+
+    const candidatePaths = new Set<string>();
+    candidatePaths.add(`${path}.tmp`);
+
+    for (const key of fileData.keys()) {
+      if (!key.startsWith(dirPrefix)) continue;
+      const name = key.slice(dirPrefix.length);
+      if (name.includes('/')) continue;
+      if (tmpNameRe.test(name)) {
+        candidatePaths.add(key);
+      }
     }
+
+    try {
+      const entries = fs.readdir(dir).filter((name: string) => name !== '.' && name !== '..');
+      for (const name of entries) {
+        if (tmpNameRe.test(name)) {
+          candidatePaths.add(`${dirPrefix}${name}`.replace(/^\/\//, '/'));
+        }
+      }
+    } catch {
+      // Ignore missing directories while probing fallback candidates.
+    }
+
+    let bestCandidate: Uint8Array | null = null;
+    let bestPath: string | null = null;
+    for (const candidatePath of candidatePaths) {
+      const candidate = tryFsRead(candidatePath) ?? tryFileDataRead(candidatePath);
+      if (!candidate) continue;
+      if (!bestCandidate || candidate.length > bestCandidate.length) {
+        bestCandidate = candidate;
+        bestPath = candidatePath;
+      }
+    }
+
+    if (bestCandidate && bestPath) {
+      console.warn(`${LOG_PREFIX}   Falling back to temp output artifact: ${bestPath} → ${path} (${bestCandidate.length}B)`);
+    }
+
+    return bestCandidate;
   }
 
 
@@ -576,7 +648,7 @@ export class ToolRunner {
 
     // Resolve include/subninja directives by reading referenced files
     const resolvedContent = await this.resolveNinjaIncludes(buildContent, buildDir);
-    const commands = this.parseBuildNinja(resolvedContent, buildDir);
+    const commands = this.parseBuildNinja(resolvedContent);
     console.log(`${LOG_PREFIX}   [ninja-bypass] Parsed ${commands.length} build command(s)`);
 
     if (commands.length === 0) {
@@ -737,7 +809,7 @@ export class ToolRunner {
    * Handles CMake-generated ninja files: rules with command templates,
    * build edges with variable substitution ($in, $out, edge variables).
    */
-  private parseBuildNinja(content: string, buildDir: string): string[] {
+  private parseBuildNinja(content: string): string[] {
     const rules = new Map<string, string>();  // ruleName → command template
     const globalVars = new Map<string, string>();
 
@@ -1110,15 +1182,13 @@ export class ToolRunner {
     // systemCallback is the async fallback that uses Asyncify.handleAsync.
     let instanceRef: EmscriptenInstance | null = null;
     {
-      const runner = this;
-
       // ── Synchronous fast-path ──────────────────────────────────
       moduleConfig['systemCallbackSync'] = (cmdStr: string): number | undefined => {
         if (cmdStr === '__dispatch_subprocess' && instanceRef) {
           try {
             const requestData = String(instanceRef.FS.readFile('/tmp/.subprocess_request', { encoding: 'utf8' }));
             const request = JSON.parse(requestData) as { cmd: string; cwd: string };
-            const parts = runner.parseCommand(request.cmd);
+            const parts = this.parseCommand(request.cmd);
             if (parts.length === 0) {
               instanceRef.FS.writeFile('/tmp/.subprocess_stdout', '');
               instanceRef.FS.writeFile('/tmp/.subprocess_stderr', '');
@@ -1171,7 +1241,7 @@ export class ToolRunner {
             console.log(`${LOG_PREFIX}   [subprocess] Dispatching: ${request.cmd.slice(0, 120)}...`);
 
             // Parse the command and run through the tool runner
-            const parts = runner.parseCommand(request.cmd);
+            const parts = this.parseCommand(request.cmd);
             if (parts.length === 0) {
               instanceRef.FS.writeFile('/tmp/.subprocess_stdout', '');
               instanceRef.FS.writeFile('/tmp/.subprocess_stderr', '');
@@ -1187,7 +1257,7 @@ export class ToolRunner {
 
             const subStdout: string[] = [];
             const subStderr: string[] = [];
-            const subResult = await runner.run(parts[0], parts, {
+            const subResult = await this.run(parts[0], parts, {
               cwd: request.cwd || options.cwd,
               onStdout: (t) => subStdout.push(t),
               onStderr: (t) => subStderr.push(t),
@@ -1352,6 +1422,13 @@ export class ToolRunner {
 
     console.log(`${LOG_PREFIX}   Step 2/4 done: process instantiated in ${elapsed(tInst)}`);
 
+    if ((toolBasename === 'clang' || toolBasename === 'wasm-ld' || toolBasename === 'lld') && typeof instance.callMain === 'function') {
+      const callMainSource = String(instance.callMain);
+      console.log(
+        `${LOG_PREFIX}   callMain patch probe: hasWhenDone=${callMainSource.includes('Asyncify.whenDone')} hasCurrData=${callMainSource.includes('Asyncify.currData')} head=${JSON.stringify(callMainSource.slice(0, 220))}`,
+      );
+    }
+
     // Guard: if the factory returned an object without FS (stub .mjs that
     // has no real WASM module behind it), treat the tool as a no-op.
     // Tools like llvm-objcopy, llvm-ar, llvm-nm, llc may not have compiled
@@ -1395,7 +1472,7 @@ export class ToolRunner {
             stream.stream_ops = {
               ...origOps,
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              write: (s: any, buffer: Uint8Array, offset: number, length: number, _pos: unknown) => {
+              write: (s: any, buffer: Uint8Array, offset: number, length: number) => {
                 if (!length) return 0;
                 const text = new TextDecoder().decode(buffer.subarray(offset, offset + length));
                 console.log(`${LOG_PREFIX}   [TTY-fd${fd}] write ${length}B: ${JSON.stringify(text.slice(0, 120))}`);
@@ -1795,18 +1872,19 @@ sys.excepthook = _hook
       const tPreload = performance.now();
       try {
         await Promise.all([
+          this.vfs.preloadBundle('clang-headers'),
           this.vfs.preloadBundle('usr-include'),
           this.vfs.preloadBundle('sdl3'),
           this.vfs.preloadBundle('cache-core'),
         ]);
-        console.log(`${LOG_PREFIX}   Preloaded usr-include + sdl3 + cache-core bundles for clang in ${elapsed(tPreload)}`);
+        console.log(`${LOG_PREFIX}   Preloaded clang-headers + usr-include + sdl3 + cache-core bundles for clang in ${elapsed(tPreload)}`);
       } catch (e) {
         console.warn(`${LOG_PREFIX}   ⚠️ Failed to preload clang bundles:`, e);
       }
 
       // Pre-warm header files into clang's Emscripten FS
       const tWarm = performance.now();
-      const bundlesToWarm = ['usr-include', 'sdl3'];
+      const bundlesToWarm = ['clang-headers', 'usr-include', 'sdl3'];
       const headerPaths: string[] = [];
       for (const bundleName of bundlesToWarm) {
         for (const fp of this.vfs.getBundleFilePaths(bundleName)) {
@@ -2136,10 +2214,38 @@ sys.excepthook = _hook
     // Keep this strict: only copy the exact -o path when it exists.
     if (exitCode === 0 && instance.FS) {
       if (outputPath) {
-        const outputData = this.tryReadProcessFile(instance.FS, outputPath);
+        const outputData = this.tryReadProcessFile(instance.FS, outputPath, fileData);
         if (outputData) {
           this.vfs.writeFileSync(outputPath, outputData);
           console.log(`${LOG_PREFIX}   Persisted output artifact: ${outputPath} (${outputData.length}B)`);
+        } else {
+          // Diagnostic: file not found at expected path. Dump dir listing and
+          // siblings to help diagnose silent linker / cwd-relative writes.
+          console.warn(`${LOG_PREFIX}   ⚠ Output artifact MISSING at ${outputPath}`);
+          try {
+            const dir = outputPath.substring(0, outputPath.lastIndexOf('/')) || '/';
+            const entries = instance.FS.readdir(dir).filter((n: string) => n !== '.' && n !== '..');
+            console.warn(`${LOG_PREFIX}     readdir(${dir}) = [${entries.join(', ')}]`);
+            for (const name of entries) {
+              try {
+                const full = (dir === '/' ? '' : dir) + '/' + name;
+                const st = instance.FS.stat(full);
+                console.warn(`${LOG_PREFIX}     ${full} size=${st.size} mode=0o${(st.mode & 0o7777).toString(8)}`);
+              } catch (e) {
+                console.warn(`${LOG_PREFIX}     stat(${name}) failed: ${(e as Error).message}`);
+              }
+            }
+          } catch (e) {
+            console.warn(`${LOG_PREFIX}     readdir failed: ${(e as Error).message}`);
+          }
+          // Also try /tmp and cwd
+          for (const probe of ['/tmp', '/home/user']) {
+            if (probe === outputPath.substring(0, outputPath.lastIndexOf('/'))) continue;
+            try {
+              const entries = instance.FS.readdir(probe).filter((n: string) => n !== '.' && n !== '..');
+              console.warn(`${LOG_PREFIX}     readdir(${probe}) = [${entries.join(', ')}]`);
+            } catch { /* ignore */ }
+          }
         }
       }
     }
@@ -2405,6 +2511,7 @@ sys.excepthook = _hook
     const { fileData, protectedPaths } = mountVFSFS(FS, moduleConfig, this.vfs, {
       mountPoints: ['/usr', '/etc', '/home', '/tmp'],
       pathAliases,
+      runtime: instance as unknown as VFSFSRuntime,
     });
 
     // Sysroot scaffold (Python tools only)
@@ -2629,7 +2736,9 @@ sys.excepthook = _hook
       return 0;
     };
 
-    const wasiImports: Record<string, Function> = {
+    type WasiImportFn = (...args: never[]) => unknown;
+
+    const wasiImports: Record<string, WasiImportFn> = {
       fd_write,
       fd_read,
       fd_close,
@@ -2719,9 +2828,9 @@ sys.excepthook = _hook
           importObject[imp.module] = {};
         }
         if (imp.module === 'wasi_snapshot_preview1' || imp.module === 'wasi_unstable') {
-          const fn: Function =
+          const fn: WasiImportFn =
             wasiImports[imp.name] ??
-            ((..._args: unknown[]) => {
+            (() => {
               console.warn(`${LOG_PREFIX}   WASI stub called: ${imp.module}.${imp.name}`);
               return 0;
             });
@@ -2737,7 +2846,7 @@ sys.excepthook = _hook
           });
         } else {
           // Stub unknown import (Emscripten env functions, etc.)
-          importObject[imp.module][imp.name] = (..._args: unknown[]) => {
+          importObject[imp.module][imp.name] = () => {
             // Only warn once per import to avoid log spam
             console.warn(`${LOG_PREFIX}   Unknown import stub: ${imp.module}.${imp.name}`);
             return 0;
@@ -2760,7 +2869,7 @@ sys.excepthook = _hook
       console.log(`${LOG_PREFIX}   WASM exports: [${exportNames.join(', ')}]`);
 
       // 4. Call _start (WASI entry point) or main
-      const startFn = instance.exports._start as ((...args: any[]) => any) | undefined;
+      const startFn = instance.exports._start as (() => unknown) | undefined;
       const mainFn = instance.exports.main as ((argc: number, argv: number) => number) | undefined;
       const initFn = instance.exports.__wasm_call_ctors as (() => void) | undefined;
 
@@ -2775,8 +2884,8 @@ sys.excepthook = _hook
         console.log(`${LOG_PREFIX}   Calling _start()...`);
         try {
           const result = startFn();
-          if (result && typeof result.then === 'function') {
-            await result;
+          if (result && typeof (result as Promise<unknown>).then === 'function') {
+            await (result as Promise<unknown>);
           }
         } catch (e) {
           if (e instanceof WasiExit) {
@@ -2933,7 +3042,7 @@ sys.excepthook = _hook
             writeFileSync: () => { },
             promises: { readFile: () => '' },
           },
-          path: { resolve: (...args: any[]) => args[args.length - 1] },
+          path: { resolve: (...args: string[]) => args[args.length - 1] ?? '' },
           process: { argv: [], exit: () => { }, cwd: () => '/' },
           module: { exports: {} },
           require: (id: string) => createNodeModuleLoader()[id as keyof ReturnType<typeof createNodeModuleLoader>] || {},

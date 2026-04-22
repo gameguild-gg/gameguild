@@ -77,7 +77,7 @@ test.describe('CMake Workspace Preset', () => {
         const logs = captureEmceptionLogs(page);
 
         // Navigate and wait for the page to load
-        await page.goto('/', { waitUntil: 'networkidle' });
+        await page.goto('/', { waitUntil: 'domcontentloaded' });
 
         try {
             // Wait for the toolchain to boot
@@ -167,7 +167,7 @@ test.describe('CMake Workspace Preset', () => {
     test('cmake preset files are loaded correctly after workspace switch', async ({ page }) => {
         const logs = captureEmceptionLogs(page);
 
-        await page.goto('/', { waitUntil: 'networkidle' });
+        await page.goto('/', { waitUntil: 'domcontentloaded' });
 
         try {
             console.log('Waiting for boot...');
