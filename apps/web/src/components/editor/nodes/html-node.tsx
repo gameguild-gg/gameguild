@@ -12,7 +12,7 @@ import { Switch } from "@/components/ui/switch"
 import { Textarea } from "@/components/ui/textarea"
 import type React from "react"; // Import React
 import type { JSX } from "react"
-import { EditorLoadingContext } from "../lexical-editor"
+import { EditorLoadingContext } from "@/components/editor/engines/lexical/lexical-editor"
 
 export interface HTMLData {
   content: string

@@ -1,19 +1,29 @@
 import { SyncManager } from "../../sync/editor/sync-manager"
 import { GoogleDriveSync } from "../../sync/editor/google-drive-sync"
 import { HashManager } from "../../sync/editor/hash-manager"
+import { getHistoryManager, type CommitInfo, type SnapshotInfo } from "../git"
+import type { ProjectPreferences } from "./project-preferences"
+import { type EngineType, ENGINE_TYPES } from "./project-types"
+import { type StorageType, STORAGE_TYPES, type SyncStatus, SYNC_STATUS } from "./storage-types"
 
-interface ProjectData {
+export type { ProjectPreferences } from "./project-preferences"
+export type { StorageType, SyncStatus } from "./storage-types"
+export type { CommitInfo, SnapshotInfo } from "../git"
+
+export interface ProjectData {
   id: string
   name: string
-  data: string
+  engine?: EngineType // Engine type: "lexical" or "blocks"
+  data: string // Serialized project data
   tags: string[]
   size: number
   createdAt: string
   updatedAt: string
   hash: string
-  syncStatus?: "synced" | "pending" | "conflict" | "local-only"
-  storageType: "local" | "gameguild-cloud" | "google-drive"
+  syncStatus?: SyncStatus
+  storageType: StorageType
   isLocallyAvailable?: boolean // Computed dynamically based on local storage check
+  preferences?: ProjectPreferences // Project-level preferences
 }
 
 interface TagData {
@@ -25,13 +35,15 @@ interface TagData {
 interface ProjectMetadata {
   id: string
   name: string
+  engine?: EngineType
   tags: string[]
   size: number
   hash: string
   createdAt: string
   updatedAt: string
-  syncStatus?: "synced" | "pending" | "conflict" | "local-only"
-  storageType: "local" | "gameguild-cloud" | "google-drive"
+  syncStatus?: SyncStatus
+  storageType: StorageType
+  preferences?: ProjectPreferences
 }
 
 export class EnhancedStorageAdapter {
@@ -41,7 +53,7 @@ export class EnhancedStorageAdapter {
   private isInitialized = false
 
   private readonly DB_NAME = "GGEditorDB"
-  private readonly DB_VERSION = 3 // Incremented for storageType support
+  private readonly DB_VERSION = 3 // Incremented for preferences support
   private readonly STORE_NAME = "projects"
   private readonly TAGS_STORE_NAME = "tags" // Kept for migration/compatibility, can be removed later
   private readonly METADATA_STORE_NAME = "project_metadata"
@@ -126,7 +138,7 @@ export class EnhancedStorageAdapter {
           if (!project.storageType) {
             const updatedProject: ProjectData = {
               ...project,
-              storageType: "local", // Default to local for existing projects
+              storageType: STORAGE_TYPES.LOCAL, // Default to local for existing projects
             }
             projectStore.put(updatedProject)
 
@@ -140,7 +152,7 @@ export class EnhancedStorageAdapter {
               createdAt: project.createdAt,
               updatedAt: project.updatedAt,
               syncStatus: project.syncStatus,
-              storageType: "local",
+              storageType: STORAGE_TYPES.LOCAL,
             }
             metadataStore.put(metadata)
           }
@@ -159,27 +171,29 @@ export class EnhancedStorageAdapter {
     }
   }
 
-  async save(id: string, name: string, data: string, tags: string[] = [], storageType: "local" | "gameguild-cloud" | "google-drive" = "local"): Promise<void> {
+  async save(id: string, name: string, data: string, tags: string[] = [], storageType: StorageType = STORAGE_TYPES.LOCAL, preferences?: ProjectPreferences, engine?: EngineType): Promise<void> {
     if (!this.isInitialized) throw new Error("Storage adapter not initialized")
 
     const hash = await HashManager.generateHash(data)
     const now = new Date().toISOString()
 
-    // Check if project exists to preserve createdAt and get old tags
+    // Check if project exists to preserve createdAt, old tags, and preferences
     const existing = await this.loadFromIndexedDB(id)
     const oldTags = existing ? existing.tags : []
 
     const projectData: ProjectData = {
       id,
       name,
+      engine: engine ?? existing?.engine ?? ENGINE_TYPES.LEXICAL, // Preserve existing engine or use provided
       data,
       tags,
       size: this.estimateSize(data),
       hash,
       createdAt: existing ? existing.createdAt : now,
       updatedAt: now,
-      syncStatus: "pending",
+      syncStatus: SYNC_STATUS.PENDING,
       storageType,
+      preferences: preferences || existing?.preferences, // Preserve existing preferences if not provided
     }
 
     // Save to IndexedDB
@@ -189,7 +203,7 @@ export class EnhancedStorageAdapter {
     await this.updateTagProjectRelationships(id, oldTags, tags)
 
     // Handle sync based on storage type
-    if (storageType === "google-drive") {
+    if (storageType === STORAGE_TYPES.GOOGLE_DRIVE) {
       // Sync to Google Drive
       console.log("Attempting Google Drive sync for project:", name)
       console.log("GoogleDriveService isReady:", this.googleDriveSync ? "GoogleDriveSync initialized" : "GoogleDriveSync NOT initialized")
@@ -199,7 +213,7 @@ export class EnhancedStorageAdapter {
         if (syncResult.success) {
           console.log("Google Drive sync successful for project:", name)
           // Update sync status to synced
-          projectData.syncStatus = "synced"
+          projectData.syncStatus = SYNC_STATUS.SYNCED
           await this.saveToIndexedDB(projectData)
         } else {
           console.error("Google Drive sync failed:", syncResult.error)
@@ -209,11 +223,22 @@ export class EnhancedStorageAdapter {
         console.error("Google Drive sync error:", error)
         // Keep as pending for retry
       }
-    } else if (storageType === "gameguild-cloud") {
+    } else if (storageType === STORAGE_TYPES.GAMEGUILD_CLOUD) {
       // Queue for GameGuild cloud sync
       await this.syncManager.queueProjectUpdate(projectData)
     }
     // For local storage, no additional sync needed
+
+    // Auto-commit to Git for history tracking
+    try {
+      const historyManager = getHistoryManager()
+      // Commit the full project data object (not just the data field)
+      // This ensures we can restore complete project state from history
+      await historyManager.commitProject(id, JSON.stringify(projectData))
+    } catch (error) {
+      console.warn("Git commit failed (non-blocking):", error)
+      // Git commit failure should not block the save operation
+    }
 
     console.log(`Saved project "${name}" (${id}) to ${storageType} - Size: ${this.formatSize(projectData.size)}`)
   }
@@ -233,6 +258,7 @@ export class EnhancedStorageAdapter {
       const metadata: ProjectMetadata = {
         id: projectData.id,
         name: projectData.name,
+        engine: projectData.engine,
         tags: projectData.tags,
         size: projectData.size,
         hash: projectData.hash!,
@@ -240,6 +266,7 @@ export class EnhancedStorageAdapter {
         updatedAt: projectData.updatedAt,
         syncStatus: projectData.syncStatus,
         storageType: projectData.storageType,
+        preferences: projectData.preferences,
       }
       metadataStore.put(metadata)
 
@@ -269,13 +296,13 @@ export class EnhancedStorageAdapter {
           await this.saveToIndexedDB({
             ...googleDriveProject,
             hash,
-            syncStatus: "synced",
-            storageType: "google-drive",
+            syncStatus: SYNC_STATUS.SYNCED,
+            storageType: STORAGE_TYPES.GOOGLE_DRIVE,
           })
           return {
             ...googleDriveProject,
             hash,
-            storageType: "google-drive" as const,
+            storageType: STORAGE_TYPES.GOOGLE_DRIVE,
           }
         }
       }
@@ -290,13 +317,13 @@ export class EnhancedStorageAdapter {
         await this.saveToIndexedDB({
           ...serverProject,
           hash,
-          syncStatus: "synced",
-          storageType: "gameguild-cloud", // Server projects are cloud-based
+          syncStatus: SYNC_STATUS.SYNCED,
+          storageType: STORAGE_TYPES.GAMEGUILD_CLOUD, // Server projects are cloud-based
         })
         return {
           ...serverProject,
           hash,
-          storageType: "gameguild-cloud" as const,
+          storageType: STORAGE_TYPES.GAMEGUILD_CLOUD,
         }
       }
 
@@ -304,7 +331,7 @@ export class EnhancedStorageAdapter {
     }
 
     // Handle sync based on storage type
-    if (localProject.storageType === "google-drive") {
+    if (localProject.storageType === STORAGE_TYPES.GOOGLE_DRIVE) {
       // For Google Drive projects, always check if we have the latest version
       if (await this.googleDriveSync.isGoogleDriveAvailable()) {
         try {
@@ -317,13 +344,13 @@ export class EnhancedStorageAdapter {
             await this.saveToIndexedDB({
               ...googleDriveProject,
               hash,
-              syncStatus: "synced",
-              storageType: "google-drive",
+              syncStatus: SYNC_STATUS.SYNCED,
+              storageType: STORAGE_TYPES.GOOGLE_DRIVE,
             })
             return {
               ...googleDriveProject,
               hash,
-              storageType: "google-drive" as const,
+              storageType: STORAGE_TYPES.GOOGLE_DRIVE,
             }
           }
         } catch (error) {
@@ -331,7 +358,7 @@ export class EnhancedStorageAdapter {
           // Continue with local version
         }
       }
-    } else if (localProject.storageType === "gameguild-cloud") {
+    } else if (localProject.storageType === STORAGE_TYPES.GAMEGUILD_CLOUD) {
       // Check if local project needs sync with server
       const syncedProject = await this.syncManager.syncProjectIfNeeded(localProject)
       if (syncedProject) {
@@ -342,7 +369,7 @@ export class EnhancedStorageAdapter {
         await this.saveToIndexedDB({
           ...syncedProject,
           hash,
-          syncStatus: "synced",
+          syncStatus: SYNC_STATUS.SYNCED,
           storageType: localProject.storageType,
         })
         return {
@@ -378,6 +405,14 @@ export class EnhancedStorageAdapter {
 
     // Delete from IndexedDB
     await this.deleteFromIndexedDB(id)
+
+    // Delete Git history
+    try {
+      const historyManager = getHistoryManager()
+      await historyManager.deleteProjectRepo(id)
+    } catch (error) {
+      console.warn("Failed to delete Git repo (non-blocking):", error)
+    }
 
     // Update tag relationships
     if (tagsToRemove.length > 0) {
@@ -427,7 +462,7 @@ export class EnhancedStorageAdapter {
     // Efficiently determine which projects are locally available
     const localGoogleDriveProjectIds = new Set(
       localProjects
-        .filter(p => p.storageType === "google-drive")
+        .filter(p => p.storageType === STORAGE_TYPES.GOOGLE_DRIVE)
         .map(p => p.id)
     )
     
@@ -512,7 +547,7 @@ export class EnhancedStorageAdapter {
     searchTerm: string,
     tags: string[],
     filterMode: "all" | "any" = "any",
-    storageTypeFilter?: "local" | "gameguild-cloud" | "google-drive",
+    storageTypeFilter?: StorageType,
   ): Promise<ProjectData[]> {
     if (!this.db) throw new Error("IndexedDB not initialized")
 
@@ -738,7 +773,7 @@ export class EnhancedStorageAdapter {
   }
 
   // Storage type management
-  async updateProjectStorageType(id: string, storageType: "local" | "gameguild-cloud" | "google-drive"): Promise<void> {
+  async updateProjectStorageType(id: string, storageType: StorageType): Promise<void> {
     if (!this.isInitialized) throw new Error("Storage adapter not initialized")
 
     const project = await this.loadFromIndexedDB(id)
@@ -750,7 +785,7 @@ export class EnhancedStorageAdapter {
       ...project,
       storageType,
       updatedAt: new Date().toISOString(),
-      syncStatus: "pending",
+      syncStatus: SYNC_STATUS.PENDING,
     }
 
     await this.saveToIndexedDB(updatedProject)
@@ -759,9 +794,36 @@ export class EnhancedStorageAdapter {
     console.log(`Updated storage type for project "${project.name}" to: ${storageType}`)
   }
 
-  async getProjectsByStorageType(storageType: "local" | "gameguild-cloud" | "google-drive"): Promise<ProjectData[]> {
+  async getProjectsByStorageType(storageType: StorageType): Promise<ProjectData[]> {
     const allProjects = await this.listFromIndexedDB()
     return allProjects.filter((project) => project.storageType === storageType)
+  }
+
+  // Project preferences management
+  async updateProjectPreferences(id: string, preferences: ProjectPreferences): Promise<void> {
+    if (!this.isInitialized) throw new Error("Storage adapter not initialized")
+
+    const project = await this.loadFromIndexedDB(id)
+    if (!project) {
+      throw new Error(`Project ${id} not found`)
+    }
+
+    const updatedProject: ProjectData = {
+      ...project,
+      preferences,
+      updatedAt: new Date().toISOString(),
+      syncStatus: SYNC_STATUS.PENDING,
+    }
+
+    await this.saveToIndexedDB(updatedProject)
+    await this.syncManager.queueProjectUpdate(updatedProject)
+
+    console.log(`Updated preferences for project "${project.name}"`)
+  }
+
+  async getProjectPreferences(id: string): Promise<ProjectPreferences | undefined> {
+    const project = await this.loadFromIndexedDB(id)
+    return project?.preferences
   }
 
   async getStorageTypeStats(): Promise<{
@@ -780,13 +842,13 @@ export class EnhancedStorageAdapter {
 
     allProjects.forEach((project) => {
       switch (project.storageType) {
-        case "local":
+        case STORAGE_TYPES.LOCAL:
           stats.local++
           break
-        case "gameguild-cloud":
+        case STORAGE_TYPES.GAMEGUILD_CLOUD:
           stats.gameguildCloud++
           break
-        case "google-drive":
+        case STORAGE_TYPES.GOOGLE_DRIVE:
           stats.googleDrive++
           break
       }
@@ -814,6 +876,170 @@ export class EnhancedStorageAdapter {
 
   onSyncError(callback: (error: Error) => void): void {
     this.syncManager.onSyncError(callback)
+  }
+
+  // ==========================================
+  // Git History & Snapshot Management
+  // ==========================================
+
+  /**
+   * Create a snapshot (tag) of the current project state
+   * @param id - Project ID
+   * @param name - Snapshot name (optional, auto-generated if not provided)
+   */
+  async createSnapshot(id: string, name?: string): Promise<SnapshotInfo | null> {
+    if (!this.isInitialized) throw new Error("Storage adapter not initialized")
+
+    const project = await this.loadFromIndexedDB(id)
+    if (!project) {
+      console.error(`Cannot create snapshot: Project ${id} not found`)
+      return null
+    }
+
+    try {
+      const historyManager = getHistoryManager()
+      
+      // Generate tag name if not provided
+      let tag: string
+      if (name) {
+        tag = name
+      } else {
+        const version = await historyManager.getNextVersionNumber(id, project.name)
+        tag = `${project.name}-v${version}`
+      }
+
+      const snapshot = await historyManager.createSnapshot(id, tag)
+      console.log(`Created snapshot "${snapshot.tag}" for project "${project.name}"`)
+      return snapshot
+    } catch (error) {
+      console.error(`Failed to create snapshot for project ${id}:`, error)
+      throw error
+    }
+  }
+
+  /**
+   * List all snapshots for a project
+   */
+  async listSnapshots(id: string): Promise<SnapshotInfo[]> {
+    if (!this.isInitialized) throw new Error("Storage adapter not initialized")
+
+    const historyManager = getHistoryManager()
+    return await historyManager.listSnapshots(id)
+  }
+
+  /**
+   * List commit history for a project
+   * @param id - Project ID
+   * @param maxCount - Maximum number of commits to return (default 50)
+   */
+  async listHistory(id: string, maxCount: number = 50): Promise<CommitInfo[]> {
+    if (!this.isInitialized) throw new Error("Storage adapter not initialized")
+
+    const historyManager = getHistoryManager()
+    return await historyManager.listHistory(id, maxCount)
+  }
+
+  /**
+   * Load a snapshot and replace the current IndexedDB state
+   * @param id - Project ID
+   * @param tag - Snapshot tag to load
+   */
+  async loadFromSnapshot(id: string, tag: string): Promise<ProjectData | null> {
+    if (!this.isInitialized) throw new Error("Storage adapter not initialized")
+
+    const historyManager = getHistoryManager()
+    const snapshotData = await historyManager.loadSnapshot(id, tag)
+    
+    if (!snapshotData) {
+      console.error(`Snapshot "${tag}" not found for project ${id}`)
+      return null
+    }
+
+    // Parse the snapshot data
+    let projectData: ProjectData
+    try {
+      projectData = JSON.parse(snapshotData)
+    } catch (error) {
+      console.error(`Failed to parse snapshot data for ${tag}:`, error)
+      return null
+    }
+
+    // Ensure required fields and update timestamp
+    const now = new Date().toISOString()
+    const updatedProject: ProjectData = {
+      ...projectData,
+      id,
+      updatedAt: now,
+      hash: await HashManager.generateHash(projectData.data),
+      syncStatus: SYNC_STATUS.PENDING,
+    }
+
+    // Save to IndexedDB (replaces current state)
+    await this.saveToIndexedDB(updatedProject)
+
+    console.log(`Loaded snapshot "${tag}" for project "${updatedProject.name}" - now the current version`)
+    return updatedProject
+  }
+
+  /**
+   * Load a specific commit from history for viewing (READ-ONLY)
+   * Does NOT modify IndexedDB - just returns the historical data for display
+   * @param id - Project ID
+   * @param sha - Commit SHA to load
+   */
+  async loadFromHistory(id: string, sha: string): Promise<ProjectData | null> {
+    if (!this.isInitialized) throw new Error("Storage adapter not initialized")
+
+    const historyManager = getHistoryManager()
+    const commitData = await historyManager.loadCommit(id, sha)
+    
+    if (!commitData) {
+      console.error(`Commit ${sha} not found for project ${id}`)
+      return null
+    }
+
+    // Parse the commit data
+    let projectData: ProjectData
+    try {
+      projectData = JSON.parse(commitData)
+    } catch (error) {
+      console.error(`Failed to parse commit data for ${sha}:`, error)
+      return null
+    }
+
+    // Return the historical data AS-IS for viewing (don't modify anything)
+    console.log(`Loaded commit ${sha.substring(0, 7)} for project "${projectData.name}" - viewing historical version (read-only)`)
+    return projectData
+  }
+
+  /**
+   * Delete a snapshot
+   */
+  async deleteSnapshot(id: string, tag: string): Promise<boolean> {
+    if (!this.isInitialized) throw new Error("Storage adapter not initialized")
+
+    const historyManager = getHistoryManager()
+    return await historyManager.deleteSnapshot(id, tag)
+  }
+
+  /**
+   * Check if a project has any snapshots
+   */
+  async hasSnapshots(id: string): Promise<boolean> {
+    if (!this.isInitialized) throw new Error("Storage adapter not initialized")
+
+    const historyManager = getHistoryManager()
+    return await historyManager.hasSnapshots(id)
+  }
+
+  /**
+   * Check if a project has any history
+   */
+  async hasHistory(id: string): Promise<boolean> {
+    if (!this.isInitialized) throw new Error("Storage adapter not initialized")
+
+    const historyManager = getHistoryManager()
+    return await historyManager.hasHistory(id)
   }
 
   // Utility methods

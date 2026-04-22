@@ -2,6 +2,7 @@
 
 import { ImageIcon } from 'lucide-react'
 import type { SerializedGalleryNode } from "../../nodes/gallery-node"
+import { AssetImage } from "../../extras/media/asset-image"
 
 export function PreviewGallery({ node }: { node: SerializedGalleryNode }) {
   if (!node?.data) {
@@ -9,7 +10,8 @@ export function PreviewGallery({ node }: { node: SerializedGalleryNode }) {
     return null
   }
 
-  const { images, layout, caption, captionStyle } = node.data
+  const { layout, caption, images } = node.data
+  const captionStyle = (node.data as any).captionStyle
 
   // Get caption style classes
   const getCaptionStyleClasses = () => {
@@ -82,7 +84,7 @@ export function PreviewGallery({ node }: { node: SerializedGalleryNode }) {
                   <div className="h-full w-full" />
                 ) : (
                   // Render actual image
-                  <img
+                  <AssetImage
                     src={image.src}
                     alt={image.alt}
                     className={

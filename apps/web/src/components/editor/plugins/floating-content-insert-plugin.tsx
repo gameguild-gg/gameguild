@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react"
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext"
-import { $getSelection, $isRangeSelection, SELECTION_CHANGE_COMMAND, createCommand } from "lexical"
+import { $getSelection, $isRangeSelection, SELECTION_CHANGE_COMMAND, createCommand, type SerializedEditorState } from "lexical"
 import {
   AlertCircle,
   BoxIcon as ButtonIcon,
@@ -25,10 +25,12 @@ import {
   GitBranch,
   Table,
   BarChart3,
+  FolderOpen,
 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { toast } from "sonner"
 import { MediaUploadDialog, type MediaUploadResult } from "@/components/editor/extras/media-upload-dialog"
 import type { ImageData } from "../nodes/image-node"
 import type { VideoData } from "../nodes/video-node"
@@ -57,6 +59,10 @@ import type { VegaLiteData } from "../nodes/vega-lite-node"
 import type { TableData } from "../nodes/table-node"
 import { ModeSelectionDialog } from "../extras/code-studio/mode-selection-dialog"
 import type { CodeStudioMode } from "../extras/code-studio/types"
+import type { ProjectMode, NodeRestrictions } from "@/lib/storage/editor/project-modes"
+import { isNodeAllowed } from "@/lib/storage/editor/project-modes"
+import type { ProjectData as ImportedProjectData } from "../nodes/project-node"
+import { SelectProjectDialog } from "../extras/project/select-project-dialog"
 
 // Image insertion mode: 0 = both upload and URL, 1 = only upload, 2 = only URL
 const IMAGE_INSERTION_MODE = 0
@@ -97,8 +103,20 @@ export const INSERT_CODE_STUDIO_COMMAND = createCommand<CodeStudioMode>("INSERT_
 export const INSERT_MERMAID_COMMAND = createCommand<MermaidData>("INSERT_MERMAID_COMMAND")
 export const INSERT_VEGA_LITE_COMMAND = createCommand<VegaLiteData>("INSERT_VEGA_LITE_COMMAND")
 export const INSERT_TABLE_COMMAND = createCommand<Partial<TableData>>("INSERT_TABLE_COMMAND")
+export const INSERT_PROJECT_COMMAND = createCommand<ImportedProjectData>("INSERT_PROJECT_COMMAND")
+export const INSERT_RICH_TEXT_COMMAND = createCommand("INSERT_RICH_TEXT_COMMAND")
 
-export function FloatingContentInsertPlugin() {
+interface FloatingContentInsertPluginProps {
+  mode?: ProjectMode
+  blockId?: string  // Block identifier (b1, b2, b3, etc.)
+  panelId?: string  // Panel identifier (panel-1, panel-2, etc.)
+  customRestrictions?: NodeRestrictions  // Custom project-specific restrictions
+  currentProjectId?: string
+  storageAdapter?: any
+  currentStorageType?: "local" | "gameguild-cloud" | "google-drive"
+}
+
+export function FloatingContentInsertPlugin({ mode = "free-page", blockId, panelId, customRestrictions, currentProjectId, storageAdapter, currentStorageType = "local" }: FloatingContentInsertPluginProps = {}) {
   const [editor] = useLexicalComposerContext()
   const [show, setShow] = useState(false)
   const [showMenu, setShowMenu] = useState(false)
@@ -118,6 +136,7 @@ export function FloatingContentInsertPlugin() {
   const [spotifyShowTheme, setSpotifyShowTheme] = useState(true)
   const [spotifyError, setSpotifyError] = useState("")
   const [showModeSelectionDialog, setShowModeSelectionDialog] = useState(false)
+  const [showProjectDialog, setShowProjectDialog] = useState(false)
 
   const menuRef = useRef<HTMLDivElement>(null)
   const buttonRef = useRef<HTMLButtonElement>(null)
@@ -367,7 +386,32 @@ export function FloatingContentInsertPlugin() {
     setShowMenu(false)
   }
 
-  const primaryOptions = [
+  // Mapeamento de nodes para validação
+  const nodeTypeMap: Record<string, string> = {
+    "Image": "image",
+    "Gallery": "gallery",
+    "Video": "video",
+    "Audio": "audio",
+    "Quiz": "quiz",
+    "Markdown": "markdown",
+    "Divider": "divider",
+    "Button": "button",
+    "Admonition": "admonition",
+    "Mermaid Diagram": "mermaid",
+    "Code Studio": "code-studio",
+    "Vega-Lite Chart": "vega-lite",
+    "Table": "table",
+    "Import Project": "project",
+  }
+
+  const allPrimaryOptions = [
+    {
+      icon: FolderOpen,
+      label: "Import Project",
+      action: () => {        setShowProjectDialog(true)
+        setShowMenu(false)
+      },
+    },
     /*
     {
       icon: Heading,
@@ -568,6 +612,19 @@ export function FloatingContentInsertPlugin() {
     { icon: MoreHorizontal, label: "Other...", action: () => console.log("Other clicked") },
   ]
 
+  // Filtrar opções baseado nas restrições do modo
+  const primaryOptions = allPrimaryOptions.filter((option) => {
+    const nodeType = nodeTypeMap[option.label]
+    
+    // Se não há mapeamento ou não há blockId (single panel), permitir todos
+    if (!nodeType || !blockId) {
+      return true
+    }
+    
+    // Verificar se o node é permitido neste blockId para este modo (considerando panel e custom restrictions)
+    return isNodeAllowed(nodeType, blockId, mode, customRestrictions)
+  })
+
   if (
     !show &&
     !showMenu &&
@@ -695,7 +752,6 @@ export function FloatingContentInsertPlugin() {
         onOpenChange={setShowImageDialog}
         onMediaSelected={handleImageSelected}
         title="Insert Image"
-        mode={IMAGE_INSERTION_MODE}
         acceptTypes="image/*"
         urlPlaceholder="https://example.com/image.jpg"
         uploadLabel="Select an image from your device"
@@ -708,7 +764,6 @@ export function FloatingContentInsertPlugin() {
         onOpenChange={setShowVideoDialog}
         onMediaSelected={handleVideoSelected}
         title="Insert Video"
-        mode={VIDEO_INSERTION_MODE}
         acceptTypes="video/*"
         urlPlaceholder="https://example.com/video.mp4"
         uploadLabel="Select a video from your device"
@@ -721,7 +776,6 @@ export function FloatingContentInsertPlugin() {
         onOpenChange={setShowAudioDialog}
         onMediaSelected={handleAudioSelected}
         title="Insert Audio"
-        mode={AUDIO_INSERTION_MODE}
         acceptTypes="audio/*"
         urlPlaceholder="https://example.com/audio.mp3"
         uploadLabel="Select an audio file from your device"
@@ -1031,6 +1085,90 @@ export function FloatingContentInsertPlugin() {
             setShowModeSelectionDialog(false)
           }}
           onCancel={() => setShowModeSelectionDialog(false)}
+        />
+      )}
+
+      {/* Project Import Dialog */}
+      {showProjectDialog && storageAdapter && (
+        <SelectProjectDialog
+          open={showProjectDialog}
+          onOpenChange={setShowProjectDialog}
+          currentProjectId={currentProjectId}
+          storageAdapter={storageAdapter}
+          onProjectSelect={async (project) => {
+            // Check if it's the same storage level
+            const isSameLevel = project.storageType === currentStorageType
+            
+            if (isSameLevel) {
+              // Same level - create reference only
+              const projectData: ImportedProjectData = {
+                projectId: project.id,
+                projectName: project.name,
+                editorState: null,
+                isLocalCopy: false,
+                isReference: true,
+                size: project.size,
+                caption: ""
+              }
+
+              // Insert project node
+              editor.dispatchCommand(INSERT_PROJECT_COMMAND, projectData)
+              
+              toast.success("Project referenced", {
+                description: `"${project.name}" has been added as a reference`,
+                duration: 3000
+              })
+              return
+            }
+
+            // Different level - load full data
+            const fullProject = await storageAdapter.load(project.id)
+            if (!fullProject) {
+              toast.error("Failed to load project", {
+                description: "Could not load project data",
+                duration: 3000
+              })
+              return
+            }
+
+            // Parse project data
+            let editorState = null
+
+            try {
+              const data = JSON.parse(fullProject.data)
+              if (data.blocks && data.blocks.b1) {
+                editorState = data.blocks.b1
+              } else {
+                editorState = data
+              }
+            } catch (error) {
+              console.error("Failed to parse project data:", error)
+              toast.error("Invalid project data", {
+                description: "Could not parse project content",
+                duration: 3000
+              })
+              return
+            }
+
+            // Create project node data
+            const projectData: ImportedProjectData = {
+              projectId: project.id,
+              projectName: project.name,
+              editorState,
+              isLocalCopy: false,
+              isReference: false,
+              size: project.size,
+              caption: ""
+            }
+
+            // Insert project node
+            editor.dispatchCommand(INSERT_PROJECT_COMMAND, projectData)
+            
+            toast.success("Project imported", {
+              description: `"${project.name}" has been added to your content`,
+              duration: 3000
+            })
+          }}
         />
       )}
     </>

@@ -22,6 +22,7 @@ interface XTermTerminalProps {
 export interface XTermTerminalHandle {
   requestInput: () => Promise<string>
   write: (text: string) => void
+  clear: () => void
   search: (term: string, searchOptions?: { incremental?: boolean }) => boolean
   searchNext: () => boolean
   searchPrevious: () => boolean
@@ -108,6 +109,11 @@ export const XTermTerminal = forwardRef<XTermTerminalHandle, XTermTerminalProps>
           xtermRef.current.write(text)
         }
       },
+      clear: () => {
+        if (xtermRef.current) {
+          xtermRef.current.clear()
+        }
+      },
       search: (term: string, searchOptions?: { incremental?: boolean }) => {
         if (searchAddonRef.current) {
           return searchAddonRef.current.findNext(term, searchOptions)
@@ -177,18 +183,32 @@ export const XTermTerminal = forwardRef<XTermTerminalHandle, XTermTerminalProps>
     terminal.loadAddon(unicode11Addon)
     terminal.unicode.activeVersion = '11' // Activate Unicode 11
 
-    terminal.open(terminalRef.current)
-    
-    // Try to load WebGL addon for better performance
-    try {
-      const webglAddon = new WebglAddon()
-      terminal.loadAddon(webglAddon)
-    } catch (e) {
-      // WebGL not supported, fallback to canvas renderer
-      console.warn('WebGL addon could not be loaded, using canvas renderer')
-    }
-    
-    fitTerminal()
+    // Defer open to next frame so container is visible and has dimensions.
+    // xterm's renderer crashes with "dimensions is undefined" if the
+    // container has 0 width/height when open() is called.
+    const openFrame = requestAnimationFrame(() => {
+      if (!terminalRef.current) return
+      try {
+        terminal.open(terminalRef.current)
+      } catch (e) {
+        console.warn('[XTermTerminal] Failed to open terminal:', e)
+        return
+      }
+
+      // Try to load WebGL addon for better performance
+      try {
+        const webglAddon = new WebglAddon()
+        terminal.loadAddon(webglAddon)
+      } catch (e) {
+        // WebGL not supported, fallback to canvas renderer
+        console.warn('WebGL addon could not be loaded, using canvas renderer')
+      }
+
+      // Delay fit to ensure container has dimensions
+      requestAnimationFrame(() => {
+        fitTerminal()
+      })
+    })
 
     // Handle keyboard shortcuts for copy/paste
     terminal.attachCustomKeyEventHandler((event) => {
@@ -246,6 +266,7 @@ export const XTermTerminal = forwardRef<XTermTerminalHandle, XTermTerminalProps>
     window.addEventListener("resize", fitTerminal)
 
     return () => {
+      cancelAnimationFrame(openFrame)
       window.removeEventListener("resize", fitTerminal)
       terminal.dispose()
       xtermRef.current = null
@@ -261,14 +282,14 @@ export const XTermTerminal = forwardRef<XTermTerminalHandle, XTermTerminalProps>
   useEffect(() => {
     if (!xtermRef.current) return
 
-    // Não limpar durante execução - o handleExecute já faz isso
+    // Quando começar uma execução, limpar o terminal
     if (isExecuting) {
+      xtermRef.current.clear()
       return
     }
     
-    // Só limpar e mostrar output quando não está executando
+    // Só mostrar output quando não está executando (já foi limpo quando isExecuting=true)
     if (output) {
-      xtermRef.current.clear()
       xtermRef.current.writeln(output.replace(/\n/g, "\r\n"))
       xtermRef.current.scrollToBottom()
     }

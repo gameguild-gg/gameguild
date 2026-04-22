@@ -19,11 +19,12 @@ interface ProjectData {
   size: number
   createdAt: string
   updatedAt: string
+  preferences?: any
 }
 
 interface StorageAdapter {
   list: () => Promise<ProjectData[]>
-  save: (id: string, name: string, data: string, tags: string[]) => Promise<void>
+  save: (id: string, name: string, data: string, tags: string[], storageType?: any, preferences?: any) => Promise<void>
 }
 
 interface ImportProjectDialogProps {
@@ -196,7 +197,35 @@ export function ImportProjectDialog({
 
     try {
       const newProjectId = generateProjectId()
-      await storageAdapter.save(newProjectId, projectName.trim(), importedProject.data, projectTags)
+      
+      // Save project with preferences
+      await storageAdapter.save(
+        newProjectId, 
+        projectName.trim(), 
+        importedProject.data, 
+        projectTags,
+        undefined, // storageType
+        importedProject.preferences || importedProject.metadata?.preferences
+      )
+
+      // Import assets if present
+      if (importedProject.assets && importedProject.assetIndex) {
+        const { ProjectImporter } = await import("@/lib/interopAdapter/project-importer")
+        const importResult = await ProjectImporter.importProjectAssets(
+          importedProject,
+          newProjectId
+        )
+
+        console.log("Assets import result:", importResult)
+        
+        if (importResult.imported > 0 || importResult.updated > 0) {
+          toast.info("Assets imported", {
+            description: `${importResult.imported} new assets, ${importResult.updated} updated`,
+            duration: 3000,
+            icon: "📦",
+          })
+        }
+      }
 
       const projectData = {
         id: newProjectId,

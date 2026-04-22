@@ -239,6 +239,8 @@ function SpotifyComponent({ data, nodeKey }: SpotifyComponentProps) {
             loading="lazy"
             title={data.title || `Spotify ${data.type}`}
             className="rounded-lg"
+            // @ts-expect-error credentialless is not yet in React's iframe types
+            credentialless="true"
           ></iframe>
         </div>
 

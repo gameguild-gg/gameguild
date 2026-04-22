@@ -5,6 +5,8 @@
  */
 
 import JSZip from "jszip"
+import { assetManager } from "@/lib/storage/assets/asset-manager"
+import type { AssetData, AssetUsage } from "@/lib/storage/assets/types"
 
 export interface ProjectData {
   id: string
@@ -16,6 +18,8 @@ export interface ProjectData {
   updatedAt: string
   hash?: string
   storageType?: "local" | "gameguild-cloud" | "google-drive"
+  isLocallyAvailable?: boolean
+  preferences?: any // ProjectPreferences from @/lib/storage/editor/project-preferences
 }
 
 export interface ProjectMetadata {
@@ -29,26 +33,41 @@ export interface ProjectMetadata {
   storageType: string
   version: string
   exportedAt: string
+  assetsCount?: number
+  preferences?: any
 }
 
 export interface ExportedProjectStructure {
   metadata: ProjectMetadata
   data: string
   folderName: string
+  assets?: Record<string, AssetData>
+  assetIndex?: Record<string, AssetUsage[]>
 }
 
 export class ProjectExporter {
-  private static readonly EXPORT_VERSION = "1.0"
+  private static readonly EXPORT_VERSION = "2.0" // Updated to include assets
   private static readonly METADATA_FILENAME = "index.json"
   private static readonly DATA_FILENAME = "data.gglexical"
+  private static readonly ASSETS_FOLDER = "assets"
+  private static readonly ASSET_INDEX_FILENAME = "asset_index.json"
 
   /**
    * Prepare project data for export with standardized structure
    */
-  static prepareForExport(
+  static async prepareForExport(
     projectData: ProjectData,
     hash: string
-  ): ExportedProjectStructure {
+  ): Promise<ExportedProjectStructure> {
+    console.log('[ProjectExporter] Preparing project for export:', projectData.id)
+    
+    // Export project assets
+    const projectAssets = await assetManager.exportProjectAssets(projectData.id)
+    console.log('[ProjectExporter] Exported assets:', Object.keys(projectAssets).length)
+    
+    const assetIndex = await assetManager.exportProjectAssetIndex(projectData.id)
+    console.log('[ProjectExporter] Exported asset index entries:', Object.keys(assetIndex).length)
+
     const metadata: ProjectMetadata = {
       id: projectData.id,
       name: projectData.name,
@@ -59,13 +78,24 @@ export class ProjectExporter {
       updatedAt: projectData.updatedAt,
       storageType: projectData.storageType || "local",
       version: ProjectExporter.EXPORT_VERSION,
-      exportedAt: new Date().toISOString()
+      exportedAt: new Date().toISOString(),
+      assetsCount: Object.keys(projectAssets).length,
+      preferences: projectData.preferences,
     }
+
+    console.log('[ProjectExporter] Metadata prepared:', {
+      id: metadata.id,
+      name: metadata.name,
+      assetsCount: metadata.assetsCount,
+      hasPreferences: !!metadata.preferences
+    })
 
     return {
       metadata,
       data: projectData.data,
-      folderName: `projeto-${projectData.id}`
+      folderName: `projeto-${projectData.id}`,
+      assets: projectAssets,
+      assetIndex,
     }
   }
 
@@ -95,7 +125,9 @@ export class ProjectExporter {
     projectData: ProjectData,
     hash: string
   ): Promise<Blob> {
-    const exportedProject = ProjectExporter.prepareForExport(projectData, hash)
+    console.log('[ProjectExporter] Creating ZIP file for project:', projectData.id)
+    
+    const exportedProject = await ProjectExporter.prepareForExport(projectData, hash)
     const folderStructure = ProjectExporter.createFolderStructure(exportedProject)
 
     const zip = new JSZip()
@@ -109,18 +141,53 @@ export class ProjectExporter {
 
     // Add metadata file
     projectFolder.file(folderStructure.indexFileName, folderStructure.indexContent)
+    console.log('[ProjectExporter] Added metadata file')
     
     // Add data file
     projectFolder.file(folderStructure.dataFileName, folderStructure.dataContent)
+    console.log('[ProjectExporter] Added data file')
+
+    // Add assets if present
+    if (exportedProject.assets && Object.keys(exportedProject.assets).length > 0) {
+      console.log('[ProjectExporter] Adding assets folder with', Object.keys(exportedProject.assets).length, 'assets')
+      const assetsFolder = projectFolder.folder(ProjectExporter.ASSETS_FOLDER)
+      
+      if (assetsFolder) {
+        // Add each asset file
+        for (const assetId in exportedProject.assets) {
+          const assetData = exportedProject.assets[assetId]
+          if (assetData) {
+            // Save asset metadata and data as JSON
+            assetsFolder.file(`${assetId}.json`, JSON.stringify(assetData, null, 2))
+            console.log('[ProjectExporter] Added asset:', assetId)
+          }
+        }
+
+        // Add asset index
+        if (exportedProject.assetIndex) {
+          projectFolder.file(
+            ProjectExporter.ASSET_INDEX_FILENAME,
+            JSON.stringify(exportedProject.assetIndex, null, 2)
+          )
+          console.log('[ProjectExporter] Added asset index with', Object.keys(exportedProject.assetIndex).length, 'entries')
+        }
+      }
+    } else {
+      console.log('[ProjectExporter] No assets to add')
+    }
 
     // Generate ZIP blob
-    return await zip.generateAsync({ 
+    console.log('[ProjectExporter] Generating ZIP blob...')
+    const blob = await zip.generateAsync({ 
       type: "blob",
       compression: "DEFLATE",
       compressionOptions: {
         level: 6
       }
     })
+    
+    console.log('[ProjectExporter] ZIP blob generated, size:', blob.size)
+    return blob
   }
 
   /**
@@ -168,11 +235,12 @@ export class ProjectExporter {
   /**
    * Get metadata only (for quick sync checks)
    */
-  static getMetadataOnly(
+  static async getMetadataOnly(
     projectData: ProjectData,
     hash: string
-  ): ProjectMetadata {
-    return ProjectExporter.prepareForExport(projectData, hash).metadata
+  ): Promise<ProjectMetadata> {
+    const exportedProject = await ProjectExporter.prepareForExport(projectData, hash)
+    return exportedProject.metadata
   }
 
   /**

@@ -3,6 +3,7 @@ import { syncConfig } from "../../sync/editor/sync-config"
 interface ProjectMetadata {
   id: string
   name: string
+  type?: "type1" | "type2"
   tags: string[]
   size: number
   hash: string

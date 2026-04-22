@@ -131,6 +131,7 @@ export function useProjectActions({
     projectTags: string[],
     createdAt: string,
     updatedAt: string,
+    projectPreferences?: any
   ) => {
     try {
       // Dynamic imports to avoid issues if these aren't available
@@ -154,7 +155,8 @@ export function useProjectActions({
         createdAt: createdAt,
         updatedAt: updatedAt,
         hash: hash,
-        storageType: "local" as const
+        storageType: "local" as const,
+        preferences: projectPreferences
       }
 
       // Use ProjectExporter to create the ZIP file

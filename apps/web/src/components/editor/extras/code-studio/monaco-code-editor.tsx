@@ -1,16 +1,17 @@
 "use client"
 
-import type { Monaco, OnMount } from "@monaco-editor/react"
-import Editor from "@monaco-editor/react"
-import { shikiToMonaco } from "@shikijs/monaco"
-import type { editor } from "monaco-editor"
-import { useTheme } from "next-themes"
 import { useEffect, useRef, useState } from "react"
+import Editor from "@monaco-editor/react"
+import type { editor } from "monaco-editor"
+import type { Monaco } from "@monaco-editor/react"
+import type { SupportedLanguage, ShikiTheme } from "./types"
+import { getShikiThemeName, SHIKI_LANGS } from "./types"
+import { shikiToMonaco } from "@shikijs/monaco"
+import { useTheme } from "next-themes"
 import { createHighlighter, type Highlighter } from "shiki"
-import { LinkConfirmDialog } from "../dialogs/link-confirm-dialog"
 import { registerPathCompletionProvider } from "./monaco-file-system"
-import type { ShikiTheme, SupportedLanguage } from "./types"
-import { getShikiThemeName } from "./types"
+import { LinkConfirmDialog } from "../dialogs/link-confirm-dialog"
+import { MonacoErrorBoundary } from "./monaco-error-boundary"
 
 // Singleton para o highlighter do Shiki
 let shikiHighlighter: Highlighter | null = null
@@ -18,11 +19,16 @@ let shikiPromise: Promise<Highlighter> | null = null
 let shikiAppliedToMonaco = false
 let pathCompletionRegistered = false
 
+/** Whether Shiki has replaced Monaco's built-in theme system globally. */
+export function isShikiActive(): boolean {
+  return shikiAppliedToMonaco
+}
+
 async function getShikiHighlighter(): Promise<Highlighter> {
   if (shikiHighlighter) {
     return shikiHighlighter
   }
-
+  
   if (!shikiPromise) {
     shikiPromise = createHighlighter({
       themes: [
@@ -33,41 +39,23 @@ async function getShikiHighlighter(): Promise<Highlighter> {
         'github-dark-dimmed',
         'dark-plus',
         'light-plus',
+        'catppuccin-mocha',
+        'catppuccin-latte',
+        'vitesse-dark',
+        'vitesse-light',
+        'monokai',
+        'solarized-dark',
+        'solarized-light',
+        'dracula',
+        'nord',
       ],
-      langs: [
-        'javascript',
-        'typescript',
-        'python',
-        'lua',
-        'c',
-        'cpp',
-        'html',
-        'css',
-        'markdown',
-        'java',
-        'go',
-        'rust',
-        'php',
-        'ruby',
-        'swift',
-        'kotlin',
-        'csharp',
-        'sql',
-        'bash',
-        'powershell',
-        'r',
-        'scala',
-        'dart',
-        'json',
-        'yaml',
-        'xml',
-      ],
+      langs: SHIKI_LANGS,
     }).then((highlighter) => {
       shikiHighlighter = highlighter
       return highlighter
     })
   }
-
+  
   return shikiPromise
 }
 
@@ -100,7 +88,7 @@ export function MonacoCodeEditor({
   filePath,
   instanceId,
 }: MonacoCodeEditorProps) {
-  const editorRef = useRef<Parameters<OnMount>[0] | null>(null)
+  const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null)
   const monacoRef = useRef<Monaco | null>(null)
   const [isShikiReady, setIsShikiReady] = useState(false)
   const [linkConfirmDialog, setLinkConfirmDialog] = useState<{ open: boolean; url: string }>({
@@ -108,7 +96,9 @@ export function MonacoCodeEditor({
     url: "",
   })
   const { resolvedTheme, theme: themeState } = useTheme()
-
+  const isUserTypingRef = useRef(false)
+  const lastValueRef = useRef(value)
+  
   // Determinar o tema atual (dark ou light) - usa theme como fallback
   const effectiveTheme = resolvedTheme || themeState
   const isDarkMode = effectiveTheme === "dark"
@@ -116,7 +106,7 @@ export function MonacoCodeEditor({
 
   const handleEditorWillMount = async (monaco: Monaco) => {
     monacoRef.current = monaco
-
+    
     // Configurar TypeScript/JavaScript compiler options
     monaco.languages.typescript.typescriptDefaults.setCompilerOptions({
       target: monaco.languages.typescript.ScriptTarget.ES2020,
@@ -165,12 +155,12 @@ export function MonacoCodeEditor({
       registerPathCompletionProvider(monaco)
       pathCompletionRegistered = true
     }
-
+    
     // Carregar Shiki ANTES de montar o editor (apenas uma vez globalmente)
     if (!shikiAppliedToMonaco) {
       try {
         const highlighter = await getShikiHighlighter()
-
+        
         // Apply Shiki to Monaco (apenas uma vez globalmente)
         shikiToMonaco(highlighter, monaco)
         shikiAppliedToMonaco = true
@@ -184,7 +174,7 @@ export function MonacoCodeEditor({
     }
   }
 
-  const handleEditorDidMount: OnMount = (editor) => {
+  const handleEditorDidMount = (editor: editor.IStandaloneCodeEditor) => {
     editorRef.current = editor
 
     // Interceptar cliques em links para mostrar dialog de confirmação (apenas com Ctrl pressionado)
@@ -218,7 +208,7 @@ export function MonacoCodeEditor({
 
     // Adicionar decorações para destacar links
     let decorationIds: string[] = []
-
+    
     const updateLinkDecorations = () => {
       const model = editor.getModel()
       if (!model) return
@@ -297,10 +287,43 @@ export function MonacoCodeEditor({
   }
 
   const handleChange = (value: string | undefined) => {
+    isUserTypingRef.current = true
     if (onChange && !readonly) {
       onChange(value || "")
     }
   }
+
+  // Atualizar conteúdo do editor quando value mudar externamente (reset)
+  useEffect(() => {
+    if (editorRef.current && !isUserTypingRef.current && value !== lastValueRef.current) {
+      const editor = editorRef.current
+      const model = editor.getModel()
+      if (model) {
+        const currentValue = model.getValue()
+        if (currentValue !== value) {
+          // Salvar posição do cursor
+          const position = editor.getPosition()
+          
+          // Atualizar conteúdo
+          model.setValue(value)
+          
+          // Restaurar posição do cursor se ainda válida
+          if (position) {
+            editor.setPosition(position)
+          }
+        }
+      }
+      lastValueRef.current = value
+    }
+    
+    // Resetar flag após um breve delay
+    if (isUserTypingRef.current) {
+      const timeout = setTimeout(() => {
+        isUserTypingRef.current = false
+      }, 100)
+      return () => clearTimeout(timeout)
+    }
+  }, [value])
 
   // Atualizar opções quando props mudarem
   useEffect(() => {
@@ -332,39 +355,42 @@ export function MonacoCodeEditor({
           setLinkConfirmDialog({ open: false, url: "" })
         }}
       />
-
-      <Editor
-        key={fileId} // Força nova instância do Monaco para cada arquivo
-        height={height}
-        language={language}
-        value={value}
-        path={filePath && instanceId ? `file:///${instanceId}/${filePath}` : filePath ? `file:///${filePath}` : undefined} // URI único com instanceId
-        onChange={handleChange}
-        beforeMount={handleEditorWillMount}
-        onMount={handleEditorDidMount}
-        theme={currentTheme}
-        loading="" // Remove mensagem "Loading..."
-        options={{
-          readOnly: readonly,
-          fontSize,
-          lineNumbers: showLineNumbers ? "on" : "off",
-          minimap: { enabled: false },
-          scrollBeyondLastLine: false,
-          wordWrap: "on",
-          automaticLayout: true,
-          padding: { top: 8, bottom: 8 },
-          suggest: {
-            showKeywords: true,
-            showSnippets: true,
-          },
-          quickSuggestions: {
-            other: true,
-            comments: false,
-            strings: false,
-          },
-          links: false,
-        }}
-      />
+      
+      <MonacoErrorBoundary>
+        <Editor
+          key={fileId} // Força nova instância do Monaco para cada arquivo
+          height={height}
+          language={language}
+          defaultValue={value} // Usar defaultValue ao invés de value para modo não-controlado
+          path={filePath && instanceId ? `file:///${instanceId}/${filePath}` : filePath ? `file:///${filePath}` : undefined} // URI único com instanceId
+          keepCurrentModel={true} // Não destruir o modelo ao desmontar (evita quebrar preview quando modal fecha)
+          onChange={handleChange}
+          beforeMount={handleEditorWillMount}
+          onMount={handleEditorDidMount}
+          theme={currentTheme}
+          loading="" // Remove mensagem "Loading..."
+          options={{
+            readOnly: readonly,
+            fontSize,
+            lineNumbers: showLineNumbers ? "on" : "off",
+            minimap: { enabled: false },
+            scrollBeyondLastLine: false,
+            wordWrap: "on",
+            automaticLayout: true,
+            padding: { top: 8, bottom: 8 },
+            suggest: {
+              showKeywords: true,
+              showSnippets: true,
+            },
+            quickSuggestions: {
+              other: true,
+              comments: false,
+              strings: false,
+            },
+            links: false, 
+          }}
+        />
+      </MonacoErrorBoundary>
     </>
   )
 }

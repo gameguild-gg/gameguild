@@ -18,7 +18,7 @@ import {
 import { useCallback, useEffect, useRef, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Edit, Trash2 } from "lucide-react"
-import { MermaidEditor } from "@/components/editor/extras/mermaid/mermaid-editor"
+import { MermaidEditor } from "@/components/editor/lazy-client-components"
 import { ContentEditMenu } from "@/components/editor/extras/content-edit-menu"
 import { MermaidViewer } from "@/components/ui/mermaid-viewer"
 import type { JSX } from "react/jsx-runtime"

@@ -16,6 +16,7 @@ import { $createHeadingNode, $createQuoteNode, $isHeadingNode, type HeadingTagTy
 import { $setBlocksType } from "@lexical/selection"
 import {
   $createParagraphNode,
+  $getRoot,
   $getSelection,
   $isRangeSelection,
   FORMAT_ELEMENT_COMMAND,
@@ -27,6 +28,7 @@ import {
   AlignJustify,
   AlignLeft,
   AlignRight,
+  ArrowUp,
   Bold,
   Check,
   Italic,
@@ -81,6 +83,20 @@ export function FloatingTextFormatToolbarPlugin() {
   const [currentAlignment, setCurrentAlignment] = useState<string>("")
   const [currentListType, setCurrentListType] = useState<string>("")
   const [openDropdown, setOpenDropdown] = useState<string | null>(null)
+
+  const addNewLineAtTop = useCallback(() => {
+    editor.update(() => {
+      const root = $getRoot()
+      const firstChild = root.getFirstChild()
+      const newParagraph = $createParagraphNode()
+
+      if (firstChild) {
+        firstChild.insertBefore(newParagraph)
+      } else {
+        root.append(newParagraph)
+      }
+    })
+  }, [editor])
 
   const updateToolbar = useCallback(() => {
     const selection = $getSelection()
@@ -399,6 +415,16 @@ export function FloatingTextFormatToolbarPlugin() {
             setOpenDropdown(null)
           }}
         >
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-12 w-12 hover:bg-accent/80 transition-colors duration-150"
+            onClick={addNewLineAtTop}
+            title="Add new line at top"
+          >
+            <ArrowUp className="h-5 w-5" />
+          </Button>
+
           <DropdownMenu
             open={openDropdown === "formatting"}
             onOpenChange={(open) => setOpenDropdown(open ? "formatting" : null)}

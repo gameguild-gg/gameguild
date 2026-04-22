@@ -1,12 +1,11 @@
 import fs from 'fs';
-import { NextConfig } from 'next';
 import createNextIntlPlugin from 'next-intl/plugin';
 import path from 'path';
 import webpack from 'webpack';
 
 const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts');
 
-const nextConfig: NextConfig = {
+const nextConfig = {
   /* config options here */
   transpilePackages: ['mermaid', '@mermaid-js/parser', 'langium', 'vscode-jsonrpc', 'chevrotain'],
   output: 'standalone',
@@ -58,13 +57,42 @@ const nextConfig: NextConfig = {
         source: '/pyodide/:file*.js',
         destination: '/pyodide/:file*.js.gz',
       },
+      // .NET managed runtime files are served directly (not gzipped)
     ];
   },
   // Set headers for compressed files
   async headers() {
     return [
       // Enable SharedArrayBuffer for @runno/runtime (required for WASM threads)
-      // Using 'credentialless' for COEP allows external images while still enabling SharedArrayBuffer
+      // Only on gglexical routes where code-studio actually needs it
+      // Applying globally breaks cross-origin iframes (YouTube, Spotify, etc.) in Firefox
+      // Matches both /gglexical/... (default locale hidden) and /pt-BR/gglexical/...
+      {
+        source: '/gglexical/:path*',
+        headers: [
+          {
+            key: 'Cross-Origin-Opener-Policy',
+            value: 'same-origin',
+          },
+          {
+            key: 'Cross-Origin-Embedder-Policy',
+            value: 'credentialless',
+          },
+        ],
+      },
+      {
+        source: '/:locale/gglexical/:path*',
+        headers: [
+          {
+            key: 'Cross-Origin-Opener-Policy',
+            value: 'same-origin',
+          },
+          {
+            key: 'Cross-Origin-Embedder-Policy',
+            value: 'credentialless',
+          },
+        ],
+      },
       {
         source: '/:path*',
         headers: [
@@ -200,9 +228,23 @@ const nextConfig: NextConfig = {
           },
         ],
       },
+      // .NET WASM runtime files (served directly, not gzipped)
+      {
+        source: '/managed/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+          {
+            key: 'Cross-Origin-Resource-Policy',
+            value: 'cross-origin',
+          },
+        ],
+      },
     ];
   },
-  webpack: (config, { isServer }) => {
+  webpack: (config: any, { isServer }: { isServer: boolean }) => {
     // Allow importing .js files from TypeScript files
     // the api client generation requires this
     config.resolve.extensionAlias = {
@@ -246,6 +288,7 @@ const nextConfig: NextConfig = {
       canvas: false, // vega-canvas uses canvas which is Node.js only
       crypto: false,
       stream: false,
+      buffer: false,
     };
 
     // Handle markdown imports as raw text (webpack build path)
@@ -267,7 +310,7 @@ const nextConfig: NextConfig = {
 
     return config;
   },
-};
+} satisfies Parameters<typeof withNextIntl>[0];
 
 // Export config with next-intl plugin
 export default withNextIntl(nextConfig);

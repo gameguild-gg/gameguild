@@ -1,6 +1,11 @@
+/**
+ * Quiz Node
+ * Lexical decorator node for quiz questions
+ */
+
 "use client"
 
-import { useState, useEffect, createContext, useContext, useRef } from "react"
+import { useState, useEffect } from "react"
 import { DecoratorNode, type SerializedLexicalNode } from "lexical"
 import { Pencil } from "lucide-react"
 import { $getNodeByKey } from "lexical"
@@ -8,103 +13,44 @@ import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext
 import type { JSX } from "react/jsx-runtime"
 
 import { Button } from "@/components/ui/button"
-import { QuizDisplay } from "@/components/editor/extras/quiz/quiz-display"
-import { QuizWrapper } from "@/components/editor/extras/quiz/quiz-wrapper"
-import { useQuizLogic } from "@/hooks/editor/use-quiz-logic"
 import { ContentEditMenu } from "@/components/editor/extras/content-edit-menu"
-import { QuizSettingsDialog } from "./quiz/quiz-settings-dialog"
+import {
+  QuizDisplay,
+  QuizWrapper,
+  type QuizEntry,
+  QuizEntryType,
+  createSingleChoiceEntry,
+} from "@/components/editor/extras/quiz"
+import { QuizSettingsDialog } from "@/components/editor/lazy-client-components"
 
-// Adicionar no topo do arquivo, após os imports
-const EditorLoadingContext = createContext<boolean>(false)
-
-export const EditorLoadingProvider = EditorLoadingContext.Provider
-export const useEditorLoading = () => useContext(EditorLoadingContext)
-
-export type QuestionType =
-  | "multiple-choice"
-  | "true-false"
-  | "fill-blank"
-  | "short-answer"
-  | "essay"
-  | "matching"
-  | "ordering"
-  | "rating"
-
-export interface QuizAnswer {
-  id: string
-  text: string
-  isCorrect: boolean
-}
-
-export interface MatchingPair {
-  id: string
-  left: string
-  right: string
-}
-
-export interface OrderingItem {
-  id: string
-  text: string
-  order: number
-}
-
-export interface FillBlankAlternative {
-  id: string
-  words: string[] // Array of words for each blank position
-  isCorrect: boolean
-}
-
-export interface FillBlankField {
-  id: string
-  position: number // Position in the question text
-  expectedWords: string[] // Array of acceptable words for this blank
-  alternatives: FillBlankAlternative[] // Alternative word sets for this blank
-}
-
-export interface QuizData {
-  question: string
-  questionType: QuestionType
-  answers: QuizAnswer[]
-  correctFeedback?: string
-  incorrectFeedback?: string
-  allowRetry: boolean
-  backgroundColor?: string
-  // For fill-in-the-blank - NEW STRUCTURE
-  fillBlankFields?: FillBlankField[] // Array of blank fields with their expected words
-  // For matching questions
-  matchingPairs?: MatchingPair[]
-  // For ordering questions
-  orderingItems?: OrderingItem[]
-  // For rating questions
-  ratingScale?: { min: number; max: number; step: number }
-  correctRating?: number
-}
+// ============================================================================
+// Serialization Types
+// ============================================================================
 
 export interface SerializedQuizNode extends SerializedLexicalNode {
   type: "quiz"
-  data: QuizData
+  entry: QuizEntry
   version: 1
 }
 
+// ============================================================================
+// Lexical Node
+// ============================================================================
+
 export class QuizNode extends DecoratorNode<JSX.Element> {
-  __data: QuizData
+  __entry: QuizEntry
 
   static getType(): string {
     return "quiz"
   }
 
   static clone(node: QuizNode): QuizNode {
-    return new QuizNode(node.__data, node.__key)
+    return new QuizNode(node.__entry, node.__key)
   }
 
-  constructor(data: QuizData, key?: string) {
+  constructor(entry: QuizEntry, key?: string) {
     super(key)
-    this.__data = {
-      ...data,
-      correctFeedback: data.correctFeedback || "",
-      incorrectFeedback: data.incorrectFeedback || "",
-      allowRetry: data.allowRetry !== undefined ? data.allowRetry : true,
-    }
+    this.__entry = entry
   }
 
   createDOM(): HTMLElement {
@@ -115,91 +61,66 @@ export class QuizNode extends DecoratorNode<JSX.Element> {
     return false
   }
 
-  setData(data: QuizData): void {
+  setEntry(entry: QuizEntry): void {
     const writable = this.getWritable()
-    writable.__data = data
+    writable.__entry = entry
+  }
+
+  getEntry(): QuizEntry {
+    return this.__entry
   }
 
   exportJSON(): SerializedQuizNode {
     return {
       type: "quiz",
-      data: this.__data,
+      entry: this.__entry,
       version: 1,
     }
   }
 
   static importJSON(serializedNode: SerializedQuizNode): QuizNode {
-    return new QuizNode(serializedNode.data)
+    return new QuizNode(serializedNode.entry)
   }
 
   decorate(): JSX.Element {
-    return <QuizComponent data={this.__data} nodeKey={this.__key} />
+    return <QuizComponent entry={this.__entry} nodeKey={this.__key} />
   }
 }
 
+// ============================================================================
+// React Component
+// ============================================================================
+
 interface QuizComponentProps {
-  data: QuizData
+  entry: QuizEntry
   nodeKey: string
 }
 
-function QuizComponent({ data, nodeKey }: QuizComponentProps) {
+function QuizComponent({ entry, nodeKey }: QuizComponentProps) {
   const [editor] = useLexicalComposerContext()
-  const isLoading = useEditorLoading()
-
   const [isEditing, setIsEditing] = useState(false)
   const [hasAutoOpened, setHasAutoOpened] = useState(false)
-  const previousAnswersRef = useRef<string>("")
-  const previousQuestionRef = useRef<string>("")
 
-  const {
-    selectedAnswers,
-    setSelectedAnswers,
-    showFeedback,
-    setShowFeedback,
-    isCorrect,
-    setIsCorrect,
-    resetQuiz,
-    checkAnswers,
-    toggleAnswer,
-  } = useQuizLogic({
-    answers: data.answers || [],
-    allowRetry: data.allowRetry !== undefined ? data.allowRetry : true,
-    correctFeedback: data.correctFeedback || "",
-    incorrectFeedback: data.incorrectFeedback || "",
-    questionType: data.questionType,
-    fillBlankFields: data.fillBlankFields,
-  })
-
+  // Auto-open editor for new quiz
   useEffect(() => {
-    // Só resetar o quiz quando as respostas ou perguntas mudarem realmente
-    const currentAnswers = JSON.stringify(data.answers)
-    const currentQuestion = data.question
-    
-    if (currentAnswers !== previousAnswersRef.current || currentQuestion !== previousQuestionRef.current) {
-      resetQuiz()
-      previousAnswersRef.current = currentAnswers
-      previousQuestionRef.current = currentQuestion
-    }
-  }, [data.answers, data.question, resetQuiz])
-
-  useEffect(() => {
-    const isNewQuiz = !data.question || data.question.trim() === ""
+    const isNewQuiz = !entry.stem || entry.stem.trim() === ""
     if (isNewQuiz && !hasAutoOpened) {
       setIsEditing(true)
       setHasAutoOpened(true)
     }
-  }, [data.question, hasAutoOpened])
+  }, [entry.stem, hasAutoOpened])
 
-  const handleSave = (newData: QuizData) => {
+  const handleSave = (newEntry: QuizEntry) => {
     editor.update(() => {
       const node = $getNodeByKey(nodeKey)
       if (node instanceof QuizNode) {
-        node.setData(newData)
+        node.setEntry(newEntry)
       }
     })
   }
 
-  if (!data.question) {
+  // Empty state
+  if (!entry.stem) {
     return (
       <div className="my-6 p-8 border-2 border-dashed border-gray-300 rounded-xl text-center">
         <div className="flex flex-col items-center gap-4">
@@ -213,15 +134,25 @@ function QuizComponent({ data, nodeKey }: QuizComponentProps) {
           <Button onClick={() => setIsEditing(true)}>Configure Quiz</Button>
         </div>
 
-        <QuizSettingsDialog isOpen={isEditing} onClose={() => setIsEditing(false)} data={data} onSave={handleSave} />
+        <QuizSettingsDialog
+          isOpen={isEditing}
+          onClose={() => setIsEditing(false)}
+          entry={entry}
+          onSave={handleSave}
+        />
       </div>
     )
   }
 
+  // Configured state
   return (
     <>
-      <div className="relative group my-4">
-        <QuizWrapper backgroundColor={data.backgroundColor}>
+      <div className="my-8 relative group">
+        <div className="relative">
+          <QuizWrapper>
+            <QuizDisplay entry={entry} />
+          </QuizWrapper>
+
           <ContentEditMenu
             options={[
               {
@@ -231,55 +162,25 @@ function QuizComponent({ data, nodeKey }: QuizComponentProps) {
                 action: () => setIsEditing(true),
               },
             ]}
+            className="opacity-100"
           />
-
-          <QuizDisplay
-            question={data.question}
-            questionType={data.questionType}
-            answers={data.answers || []}
-            selectedAnswers={selectedAnswers}
-            setSelectedAnswers={setSelectedAnswers}
-            showFeedback={showFeedback}
-            isCorrect={isCorrect}
-            correctFeedback={data.correctFeedback || ""}
-            incorrectFeedback={data.incorrectFeedback || ""}
-            allowRetry={data.allowRetry !== undefined ? data.allowRetry : true}
-            checkAnswers={checkAnswers}
-            toggleAnswer={toggleAnswer}
-            resetQuiz={resetQuiz}
-            fillBlankFields={data.fillBlankFields}
-            ratingScale={data.ratingScale}
-            correctRating={data.correctRating}
-          />
-        </QuizWrapper>
-
-        <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setIsEditing(true)}
-            className="h-8 w-8 p-0 bg-white/90 hover:bg-white shadow-sm border"
-            title="Edit Quiz"
-          >
-            <Pencil className="h-4 w-4" />
-          </Button>
         </div>
       </div>
 
-      <QuizSettingsDialog isOpen={isEditing} onClose={() => setIsEditing(false)} data={data} onSave={handleSave} />
+      <QuizSettingsDialog
+        isOpen={isEditing}
+        onClose={() => setIsEditing(false)}
+        entry={entry}
+        onSave={handleSave}
+      />
     </>
   )
 }
 
+// ============================================================================
+// Factory Function
+// ============================================================================
+
 export function $createQuizNode(): QuizNode {
-  return new QuizNode({
-    question: "",
-    questionType: "multiple-choice",
-    answers: [
-      { id: "1", text: "", isCorrect: false },
-      { id: "2", text: "", isCorrect: false },
-    ],
-    allowRetry: true,
-    backgroundColor: "white",
-  })
+  return new QuizNode(createSingleChoiceEntry())
 }

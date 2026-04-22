@@ -30,11 +30,11 @@ export function QuizFeedback({
     >
       <div className="flex items-center gap-2 flex-1">
         {isCorrect ? (
-          <div className="flex-shrink-0 w-5 h-5 rounded-full bg-green-500 flex items-center justify-center">
+          <div className="shrink-0 w-5 h-5 rounded-full bg-green-500 flex items-center justify-center">
             <Check className="h-3 w-3 text-white" />
           </div>
         ) : (
-          <div className="flex-shrink-0 w-5 h-5 rounded-full bg-red-500 flex items-center justify-center">
+          <div className="shrink-0 w-5 h-5 rounded-full bg-red-500 flex items-center justify-center">
             <X className="h-3 w-3 text-white" />
           </div>
         )}
@@ -45,7 +45,7 @@ export function QuizFeedback({
         </span>
       </div>
 
-      {showRetryButton && !allowRetry && onRetry && (
+      {showRetryButton && allowRetry && onRetry && (
         <Button
           variant="outline"
           size="sm"
@@ -59,6 +59,15 @@ export function QuizFeedback({
           <RotateCcw className="h-3 w-3" />
           Try Again
         </Button>
+      )}
+
+      {showRetryButton && !allowRetry && onRetry && (
+        <button
+          onClick={onRetry}
+          className="shrink-0 bg-gray-600 hover:bg-gray-700 text-white font-medium py-1.5 px-4 rounded-md transition-colors duration-200 text-sm"
+        >
+          Reset Quiz
+        </button>
       )}
     </div>
   )

@@ -1,0 +1,51 @@
+{
+  "name": "@game-guild/dotnet-wasm",
+  "version": "0.1.0",
+  "description": "C# compiler and runtime for browser using Mono WebAssembly and Roslyn",
+  "type": "module",
+  "author": "Miguel Moroni <miguelmcontato@gmail.com>",
+  "homepage": "https://miguelmoroni.com",
+  "main": "dist/dotnet-web.umd.js",
+  "module": "dist/dotnet-web.es.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/dotnet-web.es.js",
+      "require": "./dist/dotnet-web.umd.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./managed/*": "./dist/managed/*"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "dev": "npm run clean-dotnet-artifacts && vite",
+    "build": "npm run clean-dotnet-artifacts && vite build && tsc --listEmittedFiles",
+    "preview": "vite preview",
+    "type-check": "tsc --noEmit",
+    "clean-dotnet-artifacts": "tsx scripts/clean-dotnet-artifacts.ts",
+    "build-runtime": "tsx scripts/build-dotnet.ts",
+    "compress": "tsx scripts/compress-assets.ts",
+    "create-blazor-template": "tsx scripts/create-blazor-template.ts",
+    "setup": "npm run build-runtime && npm run build"
+  },
+  "keywords": [
+    "csharp",
+    "dotnet",
+    "mono",
+    "wasm",
+    "roslyn",
+    "compiler"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "pako": "^2.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.19.39",
+    "@types/pako": "^2.0.3",
+    "typescript": "^5.3.3",
+    "vite": "^8.0.8"
+  }
+}
