@@ -26,7 +26,8 @@ userland/**/imgui-*/
 userland/**/*.tar.gz
 userland/**/*.tar.xz
 userland/**/version_*.tar.gz
-userland/brotli/
+# Ignore only the extracted upstream brotli source, not our hand-written wrapper.
+userland/brotli/brotli-*/
 
 # Sysroot staging
 sysroot/
