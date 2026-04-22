@@ -1,10 +1,19 @@
+/**
+ * Set up the Emscripten SDK at the version specified on the CLI
+ * (or `EMSDK_VERSION`, or `'latest'`).
+ *
+ * Canonical example of the `defineBuildScript` helper: a build entrypoint
+ * should be ~10 lines of declarative configuration.
+ */
+
+import { defineBuildScript } from './lib/build-script.ts';
 import { setupEmsdk } from './lib/emsdk.ts';
-import { enableBuildKeepalive } from './lib/keepalive.ts';
 
-enableBuildKeepalive('setup-emsdk');
+const version = process.argv[2] || process.env.EMSDK_VERSION || 'latest';
 
-const EMSDK_VERSION = process.argv[2] || 'latest';
-
-console.log(`>>> Setting up Emscripten SDK (${EMSDK_VERSION})...`);
-setupEmsdk(EMSDK_VERSION);
-console.log('>>> Emscripten SDK setup complete.');
+defineBuildScript({
+    label: 'setup-emsdk',
+    run: ({ step }) => step(`install emsdk@${version}`, () => {
+        setupEmsdk(version);
+    }),
+});

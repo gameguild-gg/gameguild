@@ -9,6 +9,7 @@ import fs from 'fs';
 import os from 'os';
 import path from 'path';
 import shell from 'shelljs';
+import { standaloneFlags } from './lib/emcc-flags.ts';
 import { setupEmsdk } from './lib/emsdk.ts';
 import { enableBuildKeepalive } from './lib/keepalive.ts';
 
@@ -28,29 +29,8 @@ const SYSROOT_LIB = path.join(ROOT, 'sysroot', 'usr', 'lib');
 const LIBCURL_INC = path.join(ROOT, 'userland', 'libcurl-lite', 'include');
 const LIBCURL_A = path.join(OUTPUT_DIR, 'libcurl.a');
 
-/** Common Emscripten flags for standalone tool modules */
-const STANDALONE_FLAGS = [
-    '-sALLOW_MEMORY_GROWTH=1',
-    '-sSTACK_SIZE=4194304',    // 4 MB stack — CMake can do deep recursion
-    '-sFORCE_FILESYSTEM=1',
-    '-sMODULARIZE=1',
-    '-sEXPORT_ES6=1',
-    '-sEXIT_RUNTIME=1',
-    '-sINVOKE_RUN=0',
-    '-sEXPORTED_FUNCTIONS=_main',
-    '-sEXPORTED_RUNTIME_METHODS=FS,callMain',
-    // Emscripten JS-based exception handling — compatible with Asyncify.
-    '-sDISABLE_EXCEPTION_CATCHING=0',
-    // Asyncify: transparent async suspension for FS hooks + subprocess dispatch.
-    '-sASYNCIFY',
-    '-sASYNCIFY_STACK_SIZE=65536',    // 64 KB
-    `-sASYNCIFY_IMPORTS=${JSON.stringify([
-        '__syscall_openat', '__syscall_stat64', '__syscall_lstat64',
-        '__syscall_faccessat', '__syscall_readlinkat', '__syscall_newfstatat',
-        '__emscripten_system',
-    ])}`,
-    '-mno-reference-types',
-].join(' ');
+// 4 MB stack — CMake can do deep recursion.
+const STANDALONE_FLAGS = standaloneFlags({ stackSize: 4 * 1024 * 1024, asyncifyStackSize: 65536 });
 
 shell.mkdir('-p', USERLAND_DIR);
 shell.mkdir('-p', OUTPUT_DIR);

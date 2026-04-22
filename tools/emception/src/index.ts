@@ -216,6 +216,7 @@ export async function bootInWorker(
   return { client, tty };
 }
 
+export { createEmception, type CreateEmceptionOptions, type EmceptionAPI } from './createEmception';
 export { createBrowserBridge, SUBPROCESS_SHIM, type BrowserBridge } from './emscripten/index';
 export { decompressBrotli, isBrotliSupported } from './loader/brotli';
 export { clearModuleCache, loadModuleFactory } from './loader/wasm-module';
