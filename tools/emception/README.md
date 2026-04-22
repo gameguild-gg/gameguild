@@ -66,7 +66,7 @@ cd ../../demos/emception-next  && npm install && npm run dev   # Next.js demo  (
 
 **Bundle layout note**: `generate-bundles.ts` ships a dedicated `clang-headers` bundle (`/usr/lib/clang/<ver>/include`) so that the compiler's resource-dir headers can be fetched independently of `clang.wasm`. `populate-sysroot.ts` auto-detects the active LLVM version under `tools/emsdk/upstream/lib/clang/<ver>/include` and copies it into the sysroot at the same path.
 
-**Brotli decompressor (browser side)**: LazyFS uses `DecompressionStream("br")` when available and otherwise falls back to a **locally-built** Emscripten brotli module — built from the upstream brotli C source by `tools/emception/scripts/build-brotli.ts` and shipped as `build/cdn/brotli_wasm.js` + `brotli_wasm.wasm` (also archived as `brotli_wasm_bg.wasm` for legacy URLs). `deploy:cdn` copies these files into `public/cdn/` via the wildcard sync; **no `brotli-wasm` npm dependency**. The worker pre-loads the module via `createBrotliModule({ locateFile })`, then calls `Module.cwrap('brotli_decompress_buffer', ...)` (returning a heap pointer + `size_t` written through `HEAPU32`) and exposes the resulting `(Uint8Array) => Uint8Array` function as `LazyFS.customBrotliDecompressor`. The native CLI binary (also produced by `build:brotli`) is used by `generate-bundles.ts` to compress bundles at build time.
+**Brotli decompressor (browser side)**: LazyFS uses `DecompressionStream("br")` when available and otherwise falls back to a **locally-built** Emscripten brotli module — built from the upstream brotli C source by `tools/emception/scripts/build-brotli.ts` and shipped as `build/cdn/brotli_wasm.js` + `brotli_wasm.wasm`. `deploy:cdn` copies these files into `public/cdn/` via the wildcard sync; **no `brotli-wasm` npm dependency**. The worker pre-loads the module via `createBrotliModule({ locateFile })`, then calls `Module.cwrap('brotli_decompress_buffer', ...)` (returning a heap pointer + `size_t` written through `HEAPU32`) and exposes the resulting `(Uint8Array) => Uint8Array` function as `LazyFS.customBrotliDecompressor`. The native CLI binary (also produced by `build:brotli`) is used by `generate-bundles.ts` to compress bundles at build time.
 
 Individual steps can be run independently (e.g. `npm run build:llvm`).
 
@@ -268,7 +268,7 @@ LazyFS is optimized for large directory trees (e.g. `/usr/include` with thousand
    - Checks the manifest → finds that it belongs to bundle `crt0`
    - Checks if bundle `crt0` is already downloaded and unpacked → if **yes**, return the file immediately
    - If **no**, **fetch the bundle from the CDN** as a Brotli-compressed tarball (`/cdn/crt0.tar.br`)
-   - **Decompress** the Brotli archive on the client using `orchestrator/loader/brotli.ts`
+   - **Decompress** the Brotli archive on the client using `loader/brotli.ts`
    - **Unpack** the tar into IndexedDB under `/usr` (batch writes for performance)
    - **Return the file** to the process
 

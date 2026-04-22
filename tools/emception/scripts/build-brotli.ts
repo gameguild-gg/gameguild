@@ -123,7 +123,7 @@ if (!fs.existsSync(brotliWasmJs) || !fs.existsSync(brotliWasmWasm)) {
 
 // Rename to standard names
 const wasmJs = path.join(CDN_DIR, 'brotli_wasm.js');
-const wasmWasm = path.join(CDN_DIR, 'brotli_wasm_bg.wasm');
+const wasmWasm = path.join(CDN_DIR, 'brotli_wasm.wasm');
 shell.mv(brotliWasmJs, wasmJs);
 shell.mv(brotliWasmWasm, wasmWasm);
 

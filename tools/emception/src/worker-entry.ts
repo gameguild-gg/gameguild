@@ -399,28 +399,24 @@ self.onmessage = async (ev: MessageEvent<MainToWorkerMessage>) => {
         try {
           const manifestDir = msg.manifestUrl.replace(/\/[^/]*$/, '');
           const jsUrl = `${manifestDir}/brotli_wasm.js`;
-          // build-brotli.ts currently writes the WASM as `brotli_wasm_bg.wasm`
-          // (legacy name kept for cache compatibility). Try both.
           // We must actually GET the bytes (HEAD is unreliable behind SPA dev
           // servers like Vite that return 200 + index.html for unknown paths).
-          const wasmUrlCandidates = [
-            `${manifestDir}/brotli_wasm.wasm`,
-            `${manifestDir}/brotli_wasm_bg.wasm`,
-          ];
+          const wasmCandidate = `${manifestDir}/brotli_wasm.wasm`;
           let wasmUrl: string | null = null;
           let wasmBinary: ArrayBuffer | null = null;
-          for (const u of wasmUrlCandidates) {
-            const resp = await nativeFetch(u, { cache: 'no-store' }).catch(() => null);
-            if (!resp || !resp.ok) continue;
-            const buf = await resp.arrayBuffer();
-            // Validate WebAssembly magic: 00 61 73 6d
-            const view = new Uint8Array(buf);
-            if (view.length >= 4 && view[0] === 0x00 && view[1] === 0x61 && view[2] === 0x73 && view[3] === 0x6d) {
-              wasmUrl = u;
-              wasmBinary = buf;
-              break;
+          {
+            const resp = await nativeFetch(wasmCandidate, { cache: 'no-store' }).catch(() => null);
+            if (resp && resp.ok) {
+              const buf = await resp.arrayBuffer();
+              // Validate WebAssembly magic: 00 61 73 6d
+              const view = new Uint8Array(buf);
+              if (view.length >= 4 && view[0] === 0x00 && view[1] === 0x61 && view[2] === 0x73 && view[3] === 0x6d) {
+                wasmUrl = wasmCandidate;
+                wasmBinary = buf;
+              } else {
+                console.warn(`${P} brotli candidate ${wasmCandidate} is not a wasm module (got ${view.length}B starting with ${[...view.subarray(0, 4)].map(b => b.toString(16).padStart(2, '0')).join(' ')})`);
+              }
             }
-            console.warn(`${P} brotli candidate ${u} is not a wasm module (got ${view.length}B starting with ${[...view.subarray(0, 4)].map(b => b.toString(16).padStart(2, '0')).join(' ')}); trying next`);
           }
           if (!wasmUrl || !wasmBinary) {
             throw new Error(`Failed to locate a valid brotli_wasm.wasm under ${manifestDir}`);

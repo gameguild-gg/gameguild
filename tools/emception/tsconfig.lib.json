@@ -15,11 +15,11 @@
     "declarationMap": true,
     "declarationDir": "dist",
     "outDir": "dist",
-    "rootDir": "src/lib/orchestrator"
+    "rootDir": "src"
   },
   "include": [
-    "src/lib/**/*.ts",
-    "src/lib/**/*.d.ts"
+    "src/**/*.ts",
+    "src/**/*.d.ts"
   ],
   "exclude": ["node_modules", "dist"]
 }
