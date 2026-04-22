@@ -11,6 +11,7 @@ import path from 'path';
 import shell from 'shelljs';
 import { fileURLToPath } from 'url';
 import { detectBinaryenVersion } from './lib/detect-versions.ts';
+import { standaloneFlags } from './lib/emcc-flags.ts';
 import { setupEmsdk } from './lib/emsdk.ts';
 import { enableBuildKeepalive } from './lib/keepalive.ts';
 
@@ -38,31 +39,8 @@ const OUTPUT_DIR = path.join(ROOT, 'build');
 const SYSROOT_LIB = path.join(ROOT, 'sysroot', 'usr', 'lib');
 const CONCURRENCY = os.cpus().length;
 
-/** Common Emscripten flags for standalone tool modules */
-const STANDALONE_FLAGS = [
-    '-sALLOW_MEMORY_GROWTH=1',
-    '-sSTACK_SIZE=4194304',    // 4 MB stack — binaryen tools do deep recursion on ASTs
-    '-sFORCE_FILESYSTEM=1',
-    '-sMODULARIZE=1',
-    '-sEXPORT_ES6=1',
-    '-sEXIT_RUNTIME=1',
-    '-sINVOKE_RUN=0',          // Don't auto-run main — kernel calls callMain()
-    '-sEXPORTED_FUNCTIONS=_main',     // Keep main despite -Os
-    '-sEXPORTED_RUNTIME_METHODS=FS,callMain',
-    // Enable Emscripten JS-based exception handling (compatible with Asyncify).
-    // Native -fwasm-exceptions requires reference-types, which conflicts with
-    // -mno-reference-types needed for Asyncify instrumentation.
-    '-sDISABLE_EXCEPTION_CATCHING=0',
-    // Asyncify: transparent async suspension for FS hooks.
-    '-sASYNCIFY',
-    '-sASYNCIFY_STACK_SIZE=65536',    // 64 KB
-    `-sASYNCIFY_IMPORTS=${JSON.stringify([
-        '__syscall_openat', '__syscall_stat64', '__syscall_lstat64',
-        '__syscall_faccessat', '__syscall_readlinkat', '__syscall_newfstatat',
-        '__emscripten_system',
-    ])}`,
-    '-mno-reference-types',
-].join(' ');
+// 4 MB stack — binaryen tools do deep recursion on ASTs.
+const STANDALONE_FLAGS = standaloneFlags({ stackSize: 4 * 1024 * 1024, asyncifyStackSize: 65536 });
 
 shell.mkdir('-p', USERLAND_DIR);
 shell.mkdir('-p', OUTPUT_DIR);

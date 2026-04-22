@@ -1,80 +1,79 @@
+/**
+ * Copy build artifacts (CDN payload + standalone tool modules + manifest +
+ * brotli decompressor) into `public/cdn` for Next.js / Vite static serving.
+ */
+
 import fs from 'fs';
 import path from 'path';
 import shell from 'shelljs';
-import { fileURLToPath } from 'url';
-import { enableBuildKeepalive } from './lib/keepalive.ts';
+import { defineBuildScript } from './lib/build-script.ts';
+import { paths } from './lib/paths.ts';
 
-enableBuildKeepalive('deploy-cdn');
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const ROOT = process.cwd();
-const BUILD_DIR = path.join(ROOT, 'build');
-
-// Ensure shell commands fail on error
-shell.config.fatal = true;
-
-// Copy CDN files to public/cdn for Next.js static serving.
-// The Next.js app root is the emception directory itself (not a separate web/ subdir).
-const WEB_NEXT_CDN = fs.existsSync(path.join(ROOT, 'web'))
-    ? path.join(ROOT, 'web/public/cdn')
-    : path.join(ROOT, 'public/cdn');
-
-console.log(`Copying CDN files to ${WEB_NEXT_CDN}...`);
-shell.mkdir('-p', WEB_NEXT_CDN);
-shell.cp('-r', path.join(BUILD_DIR, 'cdn/*'), WEB_NEXT_CDN);
-
-// Copy standalone tool modules (.wasm + .mjs)
-const toolNames = [
+const TOOL_NAMES = [
     'clang', 'lld', 'python',
     'wasm-opt', 'wasm-as', 'wasm-ctor-eval', 'wasm-emscripten-finalize', 'wasm-metadce',
     'ninja', 'cmake',
-];
-const toolDest = path.join(WEB_NEXT_CDN, 'usr', 'lib');
-shell.mkdir('-p', toolDest);
-for (const tool of toolNames) {
-    for (const ext of ['.wasm', '.mjs']) {
-        const src = path.join(BUILD_DIR, `${tool}${ext}`);
-        if (fs.existsSync(src)) {
-            console.log(`Copying ${tool}${ext} to ${toolDest}...`);
-            shell.cp(src, toolDest);
-        } else {
-            console.warn(`Warning: ${tool}${ext} not found at ${src}`);
-        }
-    }
-}
+] as const;
 
-// Copy manifest.json
-const manifestSrc = path.join(BUILD_DIR, 'manifest.json');
-if (fs.existsSync(manifestSrc)) {
-    console.log(`Copying manifest.json to ${WEB_NEXT_CDN}...`);
-    shell.cp(manifestSrc, WEB_NEXT_CDN);
-} else {
-    console.warn(`Warning: manifest.json not found at ${manifestSrc}`);
-}
+defineBuildScript({
+    label: 'deploy-cdn',
+    run: async ({ step, log }) => {
+        const P = paths();
+        // The Next.js app root is the emception directory itself (not a separate web/ subdir).
+        const dest = fs.existsSync(path.join(P.root, 'web'))
+            ? path.join(P.root, 'web/public/cdn')
+            : P.publicCdn;
 
-// Brotli decompressor (browser-side) is built locally by `npm run build:brotli`
-// (see scripts/build-brotli.ts). The output (`brotli_wasm.js` + `brotli_wasm.wasm`)
-// lives in build/cdn/ and is already shipped to public/cdn/ by the wildcard copy
-// above. We do NOT depend on the npm `brotli-wasm` package.
-const brotliJs = path.join(BUILD_DIR, 'cdn', 'brotli_wasm.js');
-const brotliWasm = path.join(BUILD_DIR, 'cdn', 'brotli_wasm.wasm');
-if (!fs.existsSync(brotliJs) || !fs.existsSync(brotliWasm)) {
-    throw new Error(
-        `Locally-built brotli not found in ${path.join(BUILD_DIR, 'cdn')}. Run \`npm run build:brotli\` first.`,
-    );
-}
-// Remove the legacy filename if a previous build left it behind.
-const legacyBrotliWasm = path.join(WEB_NEXT_CDN, 'brotli_wasm_bg.wasm');
-if (fs.existsSync(legacyBrotliWasm)) {
-    console.log(`Removing legacy ${legacyBrotliWasm}`);
-    shell.rm('-f', legacyBrotliWasm);
-}
-// Verify the new filename actually landed in the deploy target.
-const deployedBrotliWasm = path.join(WEB_NEXT_CDN, 'brotli_wasm.wasm');
-if (!fs.existsSync(deployedBrotliWasm)) {
-    throw new Error(`Brotli wasm missing after deploy: expected ${deployedBrotliWasm}`);
-}
-console.log(`Deployed locally-built brotli decompressor from ${path.join(BUILD_DIR, 'cdn')}.`);
+        await step(`copy build/cdn → ${dest}`, () => {
+            shell.mkdir('-p', dest);
+            shell.cp('-r', path.join(P.buildCdn, '*'), dest);
+        });
 
-console.log('CDN files deployed.');
+        await step('copy standalone tool modules', () => {
+            const toolDest = path.join(dest, 'usr', 'lib');
+            shell.mkdir('-p', toolDest);
+            for (const tool of TOOL_NAMES) {
+                for (const ext of ['.wasm', '.mjs']) {
+                    const src = path.join(P.build, `${tool}${ext}`);
+                    if (fs.existsSync(src)) {
+                        shell.cp(src, toolDest);
+                    } else {
+                        log(`WARN: ${tool}${ext} not found at ${src}`);
+                    }
+                }
+            }
+        });
+
+        await step('copy manifest.json', () => {
+            if (fs.existsSync(P.manifestFile)) {
+                shell.cp(P.manifestFile, dest);
+            } else {
+                log(`WARN: manifest.json not found at ${P.manifestFile}`);
+            }
+        });
+
+        await step('verify brotli decompressor', () => {
+            // Brotli decompressor (browser-side) is built locally by `npm run build:brotli`.
+            // Output (`brotli_wasm.js` + `brotli_wasm.wasm`) lives in build/cdn/ and is
+            // already shipped to the deploy target by the wildcard copy above.
+            const brotliJs = path.join(P.buildCdn, 'brotli_wasm.js');
+            const brotliWasm = path.join(P.buildCdn, 'brotli_wasm.wasm');
+            if (!fs.existsSync(brotliJs) || !fs.existsSync(brotliWasm)) {
+                throw new Error(
+                    `Locally-built brotli not found in ${P.buildCdn}. Run \`npm run build:brotli\` first.`,
+                );
+            }
+            // Remove the legacy filename if a previous build left it behind.
+            const legacy = path.join(dest, 'brotli_wasm_bg.wasm');
+            if (fs.existsSync(legacy)) {
+                shell.rm('-f', legacy);
+            }
+            const deployed = path.join(dest, 'brotli_wasm.wasm');
+            if (!fs.existsSync(deployed)) {
+                throw new Error(`Brotli wasm missing after deploy: expected ${deployed}`);
+            }
+        });
+
+        log('CDN files deployed.');
+    },
+});
