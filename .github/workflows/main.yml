@@ -97,6 +97,29 @@ jobs:
           $SUDO apt-get update
           $SUDO apt-get install -y cmake ninja-build build-essential pkg-config brotli
 
+      - name: Free disk space and add swap
+        shell: bash
+        run: |
+          # Reclaim ~25 GB by removing toolchains we don't need (Android, .NET, Haskell, GHC, CodeQL).
+          # The LLVM/clang link step needs the disk for swap.
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL || true
+          sudo docker image prune --all --force || true
+          df -h /
+
+          # The em++ link of clang+LLVM with -sASYNCIFY needs >7 GB RAM.
+          # GitHub-hosted ubuntu runners have 7 GB RAM; without swap the link
+          # hangs/OOMs silently. Add 24 GB swap on the SSD.
+          sudo swapoff -a || true
+          sudo rm -f /mnt/swapfile /swapfile || true
+          sudo fallocate -l 24G /mnt/swapfile
+          sudo chmod 600 /mnt/swapfile
+          sudo mkswap /mnt/swapfile
+          sudo swapon /mnt/swapfile
+          # Prefer swapping rather than OOM-killing
+          echo 80 | sudo tee /proc/sys/vm/swappiness
+          echo 1  | sudo tee /proc/sys/vm/overcommit_memory
+          free -h
+
       - name: Typecheck
         run: npm run typecheck
 
