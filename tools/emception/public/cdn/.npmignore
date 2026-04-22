@@ -5,7 +5,7 @@
 # Core runtime metadata / helpers
 !manifest.json
 !brotli_wasm.js
-!brotli_wasm_bg.wasm
+!brotli_wasm.wasm
 
 # Bundle-only payloads
 !**/*.tar.br

@@ -5,4 +5,4 @@ usr/
 *.tar.br
 *.zip
 brotli_wasm.js
-brotli_wasm_bg.wasm
+brotli_wasm.wasm

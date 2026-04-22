@@ -33,7 +33,7 @@ sysroot/
 sysroot-staging/
 
 # Generated runtime loader assets
-src/lib/orchestrator/loader/cdn/
+src/loader/cdn/
 
 # Test artifacts
 coverage/
