@@ -1,5 +1,87 @@
+# Deny-all, then allow what's needed, then deny build artifacts.
+# IMPORTANT: order matters — later patterns override earlier ones.
+# So the structure is:
+#   1. exclude everything
+#   2. include source dirs/files
+#   3. exclude noisy/large subpaths within those (node_modules, build outputs)
+
+# 1) Exclude everything
+**/*
+
+# 2) Allow root files used by Docker builds
+!package.json
+!package-lock.json
+!compose.yaml
+
+# 2) Allow workspaces needed by Dockerfile.web / Dockerfile.api
+!apps/api/**
+!apps/web/**
+!packages/**
+
+# (intentionally NOT including apps/academy, apps/blog, apps/console,
+#  apps/website, demos/, tools/, docs/, scripts/, contributors/ —
+#  not needed by the api/web image builds.)
+
+# 3) Re-exclude noisy/large paths under the allowed roots.
+#    Anything below this point WILL be excluded from the build context
+#    even though step 2 included it.
+
+# Node tooling
+**/node_modules/
+**/.next/
+**/.turbo/
+**/.swc/
+**/.cache/
+**/dist/
+**/build/
+**/out/
+**/coverage/
+**/.nyc_output/
+**/playwright-report/
+**/test-results/
+
+# .NET build outputs
+**/bin/
+**/obj/
+
+# dotnet-wasm specific generated artifacts
+packages/dotnet-wasm/.dotnet/
+packages/dotnet-wasm/public/managed/
+packages/dotnet-wasm/dotnet-runtime/bin/
+packages/dotnet-wasm/dotnet-runtime/obj/
+packages/dotnet-wasm/src/runtime/dotnet.js
+packages/dotnet-wasm/src/runtime/dotnet.native.js
+packages/dotnet-wasm/src/runtime/dotnet.runtime.js
+packages/dotnet-wasm/src/runtime/blazor.boot.json
+
+# Logs / env / editor / VCS
+**/*.log
+**/npm-debug.log*
+**/.env
+**/.env.*
+**/.DS_Store
+.git/
+.github/
+.vscode/
+.idea/
+**/*.tsbuildinfo
+**/tsconfig.tsbuildinfo
+**/.eslintcache
+**/.prettiercache
 # Deny-all, allow-only-what's-needed .dockerignore for building services/web
 **/*
+
+# Allow root API Dockerfile build (apps/api)
+apps/api/bin/
+apps/api/obj/
+apps/api/**/bin/
+apps/api/**/obj/
+!apps/api/**
+
+# Allow root Web Dockerfile build (apps/web + workspace deps)
+apps/web/node_modules/
+apps/web/.next/
+!apps/web/**
 
 # Allow academy app and its contents
 apps/academy/node_modules/
@@ -27,4 +109,9 @@ package-lock.json
 
 # Allow the packages directory and its contents, but exclude node_modules inside it
 packages/**/node_modules/
+packages/dotnet-wasm/.dotnet/
+packages/dotnet-wasm/dist/
+packages/dotnet-wasm/dotnet-runtime/bin/
+packages/dotnet-wasm/dotnet-runtime/obj/
+packages/dotnet-wasm/public/managed/
 !packages/**

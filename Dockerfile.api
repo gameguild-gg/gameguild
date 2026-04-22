@@ -1,8 +1,11 @@
 ﻿# Stage 1: Build stage
+# Build context: monorepo root.
 FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 WORKDIR /src
 
-COPY . .
+# Copy only the .NET sources we need (apps/api). Everything else is
+# excluded by .dockerignore anyway.
+COPY apps/api/ ./
 
 # Restore dependencies
 RUN dotnet restore "GameGuild.Production.sln"
