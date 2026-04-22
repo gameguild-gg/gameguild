@@ -2,6 +2,9 @@ import * as fs from 'fs';
 import * as path from 'path';
 import shell from 'shelljs';
 import { fileURLToPath } from 'url';
+import { enableBuildKeepalive } from './lib/keepalive.ts';
+
+enableBuildKeepalive('clean');
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

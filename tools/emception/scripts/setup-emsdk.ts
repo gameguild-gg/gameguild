@@ -1,4 +1,7 @@
 import { setupEmsdk } from './lib/emsdk.ts';
+import { enableBuildKeepalive } from './lib/keepalive.ts';
+
+enableBuildKeepalive('setup-emsdk');
 
 const EMSDK_VERSION = process.argv[2] || 'latest';
 

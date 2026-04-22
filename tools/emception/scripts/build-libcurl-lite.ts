@@ -12,6 +12,9 @@
 import path from 'path';
 import shell from 'shelljs';
 import { setupEmsdk } from './lib/emsdk.ts';
+import { enableBuildKeepalive } from './lib/keepalive.ts';
+
+enableBuildKeepalive('build-libcurl-lite');
 
 const ROOT = process.cwd();
 

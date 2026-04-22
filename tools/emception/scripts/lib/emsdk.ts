@@ -45,7 +45,7 @@ export function setupEmsdk(version: string = 'latest'): NodeJS.ProcessEnv {
 
   // Capture environment variables
   console.log('    Capturing environment variables...');
-  let envVars: Record<string, string> = {};
+  const envVars: Record<string, string> = {};
 
   if (process.platform === 'win32') {
     // On Windows, run emsdk_env.bat and capture output of set
