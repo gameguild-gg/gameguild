@@ -1,278 +1,46 @@
+/**
+ * Quiz Display
+ * Renders a complete quiz with question, renderer, submit button, and feedback
+ */
+
 "use client"
+
 import { QuizFeedback } from "./quiz-feedback"
-import type { QuizAnswer, QuestionType, FillBlankAlternative, FillBlankField } from "../../nodes/quiz-node"
+import { QuizRenderer } from "./renderers/quiz-renderer"
+import { useQuizAnswers } from "./hooks/use-quiz-answers"
+import { type QuizEntry, QuizEntryType } from "./types"
 
 interface QuizDisplayProps {
-  question: string
-  questionType: QuestionType
-  answers: QuizAnswer[]
-  selectedAnswers: string[]
-  setSelectedAnswers: (answers: string[]) => void
-  showFeedback: boolean
-  isCorrect: boolean
-  correctFeedback: string
-  incorrectFeedback: string
-  allowRetry: boolean
-  checkAnswers: () => void
-  toggleAnswer: (answerId: string) => void
-  resetQuiz?: () => void
-  // Fill-in-the-blank support (optional)
-  blanks?: string[]
-  fillBlankMode?: "text" | "multiple-choice"
-  fillBlankAlternatives?: FillBlankAlternative[]
-  fillBlankFields?: FillBlankField[]
-  ratingScale?: { min: number; max: number; step: number }
-  correctRating?: number
+  entry: QuizEntry
 }
 
-export function QuizDisplay({
-  question,
-  questionType,
-  answers,
-  selectedAnswers,
-  setSelectedAnswers,
-  showFeedback,
-  isCorrect,
-  correctFeedback,
-  incorrectFeedback,
-  allowRetry,
-  checkAnswers,
-  toggleAnswer,
-  resetQuiz,
-  ratingScale = { min: 1, max: 5, step: 1 },
-  correctRating = 3,
-}: QuizDisplayProps) {
-  const maxSelections = questionType === "multiple-choice" ? answers.filter((a) => a.isCorrect).length : 1
-  const canSelectMore = selectedAnswers.length < maxSelections
-
-  const renderQuestionContent = () => {
-    switch (questionType) {
-      case "multiple-choice":
-        return (
-          <div className="space-y-3">
-            {maxSelections > 1 && (
-              <div className="text-sm text-gray-600 bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
-                <span className="font-medium">
-                  Select {maxSelections} answer{maxSelections > 1 ? "s" : ""}({selectedAnswers.length}/{maxSelections}{" "}
-                  selected)
-                </span>
-              </div>
-            )}
-            {answers.map((answer) => (
-              <div
-                key={answer.id}
-                className={`
-                relative flex items-center p-4 rounded-lg border-2 cursor-pointer transition-all duration-200
-                ${
-                  selectedAnswers.includes(answer.id)
-                    ? "border-blue-500 bg-blue-50 shadow-sm"
-                    : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
-                }
-                ${showFeedback ? "cursor-not-allowed opacity-75" : "hover:shadow-sm"}
-                ${!showFeedback && !selectedAnswers.includes(answer.id) && !canSelectMore ? "cursor-not-allowed opacity-50" : ""}
-              `}
-                onClick={() => {
-                  if (!showFeedback) {
-                    if (selectedAnswers.includes(answer.id) || canSelectMore) {
-                      toggleAnswer(answer.id)
-                    }
-                  }
-                }}
-              >
-                <div
-                  className={`
-                flex items-center justify-center w-5 h-5 rounded border-2 mr-3 transition-colors
-                ${selectedAnswers.includes(answer.id) ? "border-blue-500 bg-blue-500" : "border-gray-300"}
-              `}
-                >
-                  {selectedAnswers.includes(answer.id) && (
-                    <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
-                      <path
-                        fillRule="evenodd"
-                        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                  )}
-                </div>
-                <span className="text-base font-medium text-gray-800">{answer.text}</span>
-              </div>
-            ))}
-          </div>
-        )
-
-      case "true-false":
-        return (
-          <div className="space-y-3">
-            <button
-              className={`
-              w-full p-4 rounded-lg border-2 font-medium text-lg transition-all duration-200
-              ${
-                selectedAnswers.includes("true")
-                  ? "border-blue-500 bg-blue-50 text-blue-700 shadow-sm"
-                  : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
-              }
-              ${showFeedback ? "cursor-not-allowed opacity-75" : "hover:shadow-sm"}
-            `}
-              onClick={() => (!showFeedback ? setSelectedAnswers(["true"]) : undefined)}
-              disabled={showFeedback}
-            >
-              <svg
-                className={`w-5 h-5 inline mr-3 transition-colors ${
-                  selectedAnswers.includes("true") ? "text-blue-500" : "text-gray-400"
-                }`}
-                fill="currentColor"
-                viewBox="0 0 20 20"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                  clipRule="evenodd"
-                />
-              </svg>
-              True
-            </button>
-            <button
-              className={`
-              w-full p-4 rounded-lg border-2 font-medium text-lg transition-all duration-200
-              ${
-                selectedAnswers.includes("false")
-                  ? "border-blue-500 bg-blue-50 text-blue-700 shadow-sm"
-                  : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
-              }
-              ${showFeedback ? "cursor-not-allowed opacity-75" : "hover:shadow-sm"}
-            `}
-              onClick={() => (!showFeedback ? setSelectedAnswers(["false"]) : undefined)}
-              disabled={showFeedback}
-            >
-              <svg
-                className={`w-5 h-5 inline mr-3 transition-colors ${
-                  selectedAnswers.includes("false") ? "text-blue-500" : "text-gray-400"
-                }`}
-                fill="currentColor"
-                viewBox="0 0 20 20"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                  clipRule="evenodd"
-                />
-              </svg>
-              False
-            </button>
-          </div>
-        )
-
-      case "fill-blank":
-        // Parse the question to find blanks and render input fields
-        const questionParts = question.split("___")
-        return (
-          <div className="space-y-4">
-            <div className="text-lg leading-relaxed">
-              {questionParts.map((part, index) => (
-                <span key={index}>
-                  {part}
-                  {index < questionParts.length - 1 && (
-                    <input
-                      type="text"
-                      className="inline-block w-40 mx-2 px-3 py-2 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none transition-colors"
-                      placeholder="..."
-                      value={selectedAnswers[index] || ""}
-                      onChange={(e) => {
-                        const newAnswers = [...selectedAnswers]
-                        newAnswers[index] = e.target.value
-                        setSelectedAnswers(newAnswers)
-                      }}
-                      disabled={showFeedback}
-                    />
-                  )}
-                </span>
-              ))}
-            </div>
-          </div>
-        )
-
-      case "short-answer":
-        return (
-          <div className="space-y-2">
-            <input
-              className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none transition-colors text-base"
-              placeholder="Enter your answer..."
-              value={selectedAnswers[0] || ""}
-              onChange={(e) => setSelectedAnswers([e.target.value])}
-              disabled={showFeedback}
-            />
-          </div>
-        )
-
-      case "essay":
-        return (
-          <div className="space-y-2">
-            <textarea
-              className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none transition-colors text-base resize-vertical"
-              placeholder="Write your essay here..."
-              value={selectedAnswers[0] || ""}
-              onChange={(e) => setSelectedAnswers([e.target.value])}
-              disabled={showFeedback}
-              rows={6}
-            />
-          </div>
-        )
-
-      case "rating":
-        return (
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600 font-medium">{ratingScale.min} (Lowest)</span>
-              <span className="text-sm text-gray-600 font-medium">{ratingScale.max} (Highest)</span>
-            </div>
-            <div className="flex items-center justify-center space-x-3">
-              {Array.from({ length: ratingScale.max - ratingScale.min + 1 }, (_, i) => ratingScale.min + i).map(
-                (value) => (
-                  <button
-                    key={value}
-                    className={`
-                    w-12 h-12 rounded-lg border-2 font-bold text-lg transition-all duration-200
-                    ${
-                      selectedAnswers.includes(value.toString())
-                        ? "border-blue-500 bg-blue-500 text-white shadow-lg scale-110"
-                        : "border-gray-300 text-gray-700 hover:border-blue-300 hover:bg-blue-50"
-                    }
-                    ${showFeedback ? "cursor-not-allowed opacity-75" : "hover:shadow-md cursor-pointer"}
-                  `}
-                    onClick={() => (!showFeedback ? setSelectedAnswers([value.toString()]) : undefined)}
-                    disabled={showFeedback}
-                  >
-                    {value}
-                  </button>
-                ),
-              )}
-            </div>
-          </div>
-        )
-
-      default:
-        return null
-    }
-  }
+export function QuizDisplay({ entry }: QuizDisplayProps) {
+  const {
+    answerState,
+    updateAnswerState,
+    showFeedback,
+    isCorrect,
+    checkAnswers,
+    resetQuiz,
+  } = useQuizAnswers({ entry })
 
   return (
     <div className="space-y-4">
-      {showFeedback && allowRetry && resetQuiz && (
-        <div className="flex justify-center">
-          <button
-            onClick={resetQuiz}
-            className="bg-gray-600 hover:bg-gray-700 text-white font-semibold py-2 px-6 rounded-lg transition-colors duration-200 shadow-sm hover:shadow-md"
-          >
-            Reset Quiz
-          </button>
-        </div>
+      {/* Question text - hide for fill-blank as it's rendered inline */}
+      {entry.type !== QuizEntryType.FillInTheBlank && (
+        <div className="text-lg font-medium">{entry.stem}</div>
       )}
 
-      {questionType !== "fill-blank" ? <div className="text-lg font-medium">{question}</div> : null}
+      {/* Render appropriate question type */}
+      <QuizRenderer
+        entry={entry}
+        answerState={answerState}
+        onAnswerChange={updateAnswerState}
+        disabled={false}
+        showFeedback={showFeedback}
+      />
 
-      {renderQuestionContent()}
-
+      {/* Submit button */}
       {!showFeedback && (
         <button
           onClick={checkAnswers}
@@ -282,13 +50,31 @@ export function QuizDisplay({
         </button>
       )}
 
-      {showFeedback && (
+      {/* Feedback */}
+      {showFeedback && (entry.settings.showFeedback ?? true) && (
         <QuizFeedback
           isCorrect={isCorrect}
-          correctFeedback={correctFeedback}
-          incorrectFeedback={incorrectFeedback}
-          allowRetry={allowRetry}
+          correctFeedback={entry.feedback?.correct || ""}
+          incorrectFeedback={entry.feedback?.incorrect || ""}
+          allowRetry={entry.settings.allowRetry}
+          onRetry={resetQuiz}
+          showRetryButton={entry.settings.allowRetry}
         />
+      )}
+
+      {/* Submitted without feedback */}
+      {showFeedback && !(entry.settings.showFeedback ?? true) && (
+        <div className="flex items-center justify-between gap-3 rounded-lg mt-3 px-4 py-3 text-sm border-l-4 bg-blue-50 dark:bg-blue-950/20 text-blue-700 dark:text-blue-400 border-blue-500">
+          <span className="font-medium">Answer submitted.</span>
+          {entry.settings.allowRetry && (
+            <button
+              onClick={resetQuiz}
+              className="shrink-0 flex items-center gap-1.5 text-xs font-medium border border-blue-300 dark:border-blue-600 text-blue-700 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-950/30 py-1.5 px-3 rounded-md transition-colors"
+            >
+              Try Again
+            </button>
+          )}
+        </div>
       )}
     </div>
   )

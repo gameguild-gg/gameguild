@@ -1,5 +1,5 @@
 # Generated browser runtime assets
-public/langs/
+public/langs/*
 public/pyodide/
 public/wasm/
 
@@ -13,3 +13,5 @@ next-env.d.ts
 # Test artifacts
 coverage/
 test-results/
+
+public/managed/*

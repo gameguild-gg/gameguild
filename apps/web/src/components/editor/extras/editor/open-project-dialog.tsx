@@ -18,6 +18,7 @@ import { InfoDialog } from "./info-dialog"
 import type { StorageOption } from "./storage-option-selector"
 import { GoogleDriveAuthDialog } from "./google-drive-auth-dialog"
 import { useGoogleDriveAuth } from "@/hooks/editor/use-google-drive-auth"
+import type { ProjectPreferences } from "@/lib/storage/editor/enhanced-storage-adapter"
 
 interface ProjectData {
   id: string
@@ -29,10 +30,11 @@ interface ProjectData {
   updatedAt: string
   storageType?: "local" | "gameguild-cloud" | "google-drive"
   isLocallyAvailable?: boolean
+  preferences?: ProjectPreferences
 }
 
 interface StorageAdapter {
-  save: (id: string, name: string, data: string, tags: string[], storageType?: StorageOption) => Promise<void>
+  save: (id: string, name: string, data: string, tags: string[], storageType?: StorageOption, preferences?: any) => Promise<void>
   list: () => Promise<ProjectData[]>
   load: (id: string) => Promise<ProjectData | null>
   delete: (id: string) => Promise<void>
@@ -102,92 +104,48 @@ export function OpenProjectDialog({
 
   const handleOpen = async (projectId: string) => {
     const projectData = await loadProject(projectId)
-    if (projectData && editorRef.current) {
-      try {
-        if (setLoadingRef.current) {
-          setLoadingRef.current(true)
-        }
+    if (!projectData) {
+      console.error("Project data not found")
+      return
+    }
 
-        // Validate project data structure
-        if (!projectData.data) {
-          throw new Error("Project data is missing")
-        }
-
-        // Validate that the data is valid JSON
-        let parsedData
-        try {
-          parsedData = typeof projectData.data === 'string' ? JSON.parse(projectData.data) : projectData.data
-        } catch (parseError) {
-          throw new Error("Project data is not valid JSON")
-        }
-
-        // Validate that it has the expected Lexical structure
-        if (!parsedData || typeof parsedData !== 'object') {
-          throw new Error("Project data is not in expected format")
-        }
-
-        // Additional check for Lexical editor state structure
-        if (!parsedData.root || !parsedData.root.children) {
-          console.warn("Project data doesn't have expected Lexical structure, attempting to create minimal state")
-          // Create a minimal valid Lexical state if the structure is missing
-          parsedData = {
-            root: {
-              children: [{
-                children: [{
-                  detail: 0,
-                  format: 0,
-                  mode: "normal",
-                  style: "",
-                  text: projectData.data || "Empty project",
-                  type: "text",
-                  version: 1
-                }],
-                direction: "ltr",
-                format: "",
-                indent: 0,
-                type: "paragraph",
-                version: 1
-              }],
-              direction: "ltr",
-              format: "",
-              indent: 0,
-              type: "root",
-              version: 1
-            }
-          }
-        }
-
-        // Parse and set the editor state with the validated/corrected data
-        const editorState = editorRef.current.parseEditorState(JSON.stringify(parsedData))
-        editorRef.current.setEditorState(editorState)
-
-        await new Promise((resolve) => setTimeout(resolve, 100))
-
-        if (setLoadingRef.current) {
-          setLoadingRef.current(false)
-        }
-
-        onProjectLoad(projectData)
-        onOpenChange(false)
-        toast.success("Projeto carregado", {
-          description: `"${projectData.name}" foi aberto com sucesso`,
-          duration: 2500,
-          icon: "📂",
-        })
-      } catch (error) {
-        console.error("Failed to load project:", error, "Project data:", projectData)
-        if (setLoadingRef.current) {
-          setLoadingRef.current(false)
-        }
-        const errorMessage = error instanceof Error ? error.message : "Unknown error"
-        toast.error("Erro ao carregar projeto", {
-          description: `O arquivo do projeto está corrompido ou em formato inválido: ${errorMessage}`,
-          duration: 4000,
-          icon: "❌",
-        })
+    try {
+      if (setLoadingRef.current) {
+        setLoadingRef.current(true)
       }
-    } else {
-      console.error("Missing project data or editor ref:", { projectData, editorRef: editorRef.current })
+
+      // Validate project data structure
+      if (!projectData.data) {
+        throw new Error("Project data is missing")
+      }
+
+      // First, notify parent to change layout type and let it handle loading
+      onProjectLoad(projectData)
+      onOpenChange(false)
+
+      // Give React time to re-render with new layout type
+      await new Promise((resolve) => setTimeout(resolve, 100))
+
+      if (setLoadingRef.current) {
+        setLoadingRef.current(false)
+      }
+
+      toast.success("Projeto carregado", {
+        description: `"${projectData.name}" foi aberto com sucesso`,
+        duration: 2500,
+        icon: "📂",
+      })
+    } catch (error) {
+      console.error("Failed to load project:", error, "Project data:", projectData)
+      if (setLoadingRef.current) {
+        setLoadingRef.current(false)
+      }
+      const errorMessage = error instanceof Error ? error.message : "Unknown error"
+      toast.error("Erro ao carregar projeto", {
+        description: `O arquivo do projeto está corrompido ou em formato inválido: ${errorMessage}`,
+        duration: 4000,
+        icon: "❌",
+      })
     }
   }
 
@@ -219,7 +177,7 @@ export function OpenProjectDialog({
           className="max-w-2xl lg:max-w-4xl w-full h-[95vh] overflow-hidden flex flex-col"
           onInteractOutside={(e) => e.preventDefault()}
         >
-          <DialogHeader className="flex-shrink-0">
+          <DialogHeader className="shrink-0">
             <div className="flex items-center justify-between">
               <div>
                 <DialogTitle>{isFirstTime ? "Welcome! Choose an Option" : "Open Project"}</DialogTitle>
@@ -266,7 +224,7 @@ export function OpenProjectDialog({
           </DialogHeader>
 
           <div className="flex flex-col flex-1 min-h-0 space-y-4">
-            <div className="flex-shrink-0">
+            <div className="shrink-0">
               <ProjectSearchFilters
                 searchTerm={searchTerm}
                 onSearchChange={setSearchTerm}
@@ -302,7 +260,7 @@ export function OpenProjectDialog({
               />
             </div>
 
-            <div className="flex-shrink-0 h-12 flex items-center justify-center">
+            <div className="shrink-0 h-12 flex items-center justify-center">
               <ProjectPagination
                 currentPage={currentPage}
                 totalProjects={totalProjects}
@@ -311,7 +269,7 @@ export function OpenProjectDialog({
               />
             </div>
 
-            <div className="flex justify-between items-center pt-4 border-t dark:border-gray-700 flex-shrink-0 h-16">
+            <div className="flex justify-between items-center pt-4 border-t dark:border-gray-700 shrink-0 h-16">
               <div className="flex gap-2">
                 <Button
                   variant="ghost"

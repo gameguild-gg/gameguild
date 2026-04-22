@@ -5,12 +5,11 @@ import { $getNodeByKey } from "lexical"
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext"
 import type { JSX } from "react/jsx-runtime"
 import { useContext, useState, useEffect } from "react"
-import { EditorLoadingContext } from "../lexical-editor"
+import { EditorLoadingContext, ProjectIdContext } from "@/components/editor/engines/lexical/lexical-editor"
 import { Edit } from "lucide-react"
+import { CodeStudioEditor, ModeSelectionDialog } from "@/components/editor/lazy-client-components"
 
 import type { CodeStudioData, CodeStudioMode } from "../extras/code-studio/types"
-import { CodeStudioEditor } from "../extras/code-studio/code-studio-editor"
-import { ModeSelectionDialog } from "../extras/code-studio/mode-selection-dialog"
 import { LANGUAGE_CONFIGS } from "../extras/code-studio/types"
 import { ContentEditMenu } from "@/components/editor/extras/content-edit-menu"
 
@@ -89,6 +88,7 @@ export class CodeStudioNode extends DecoratorNode<JSX.Element> {
 function CodeStudioComponent({ data, nodeKey }: { data: CodeStudioData; nodeKey: string }) {
   const [editor] = useLexicalComposerContext()
   const isLoading = useContext(EditorLoadingContext)
+  const projectId = useContext(ProjectIdContext)
   const [showEditor, setShowEditor] = useState(false)
   const [showModeSelection, setShowModeSelection] = useState(false)
   const [hasAutoOpened, setHasAutoOpened] = useState(false)
@@ -129,7 +129,7 @@ function CodeStudioComponent({ data, nodeKey }: { data: CodeStudioData; nodeKey:
               name: `main${languageConfig.defaultExtension}`,
               content: languageConfig.defaultTemplate,
               language: defaultLanguage,
-              isMain: true,
+              isFile: 'f',
               isVisible: true,
               path: `main${languageConfig.defaultExtension}`,
             },
@@ -197,6 +197,7 @@ function CodeStudioComponent({ data, nodeKey }: { data: CodeStudioData; nodeKey:
           onUpdate={handleUpdateCodeStudio}
           onSave={handleSave}
           onCancel={handleCancel}
+          projectId={projectId || undefined}
         />
       ) : (
         <div className="relative">
@@ -206,6 +207,7 @@ function CodeStudioComponent({ data, nodeKey }: { data: CodeStudioData; nodeKey:
             onUpdate={handleUpdateCodeStudio}
             onSave={handleSave}
             onEdit={handleEdit}
+            projectId={projectId || undefined}
           />
           
           {/* ContentEditMenu for lateral edit button */}

@@ -4,6 +4,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Input } from "@/components/ui/input"
 import type { BaseMediaData } from "@/components/editor/nodes/base/media-node-base"
+import { AssetImage } from "./asset-image"
 
 interface CaptionsTabProps {
   items: BaseMediaData[]
@@ -70,9 +71,9 @@ export function CaptionsTab({ items, onItemsChange, globalCaption, onGlobalCapti
               >
                 {/* Item Preview */}
                 <div className="flex items-center gap-3 mb-2">
-                  <div className="w-12 h-12 bg-gray-200 dark:bg-gray-700 rounded overflow-hidden flex-shrink-0">
+                  <div className="w-12 h-12 bg-gray-200 dark:bg-gray-700 rounded overflow-hidden shrink-0">
                     {item.type === "image" && item.src && (
-                      <img src={item.src} alt="" className="w-full h-full object-cover" />
+                      <AssetImage src={item.src} alt="" className="w-full h-full object-cover" />
                     )}
                     {item.type !== "image" && (
                       <div className="w-full h-full flex items-center justify-center text-xs text-gray-500">

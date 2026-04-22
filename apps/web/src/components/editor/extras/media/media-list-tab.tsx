@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Plus, Trash2, Image, Video, Music } from "lucide-react"
 import { MediaUploadDialog } from "@/components/editor/extras/media-upload-dialog"
 import type { BaseMediaData } from "@/components/editor/nodes/base/media-node-base"
+import { AssetImage } from "./asset-image"
 
 interface MediaListTabProps {
   items: BaseMediaData[]
@@ -124,9 +125,9 @@ export function MediaListTab({ items, onItemsChange, allowMixedTypes = false, de
               className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
             >
               {/* Thumbnail */}
-              <div className="w-16 h-16 bg-gray-200 dark:bg-gray-700 rounded overflow-hidden flex-shrink-0">
+              <div className="w-16 h-16 bg-gray-200 dark:bg-gray-700 rounded overflow-hidden shrink-0">
                 {item.type === "image" && item.src && (
-                  <img src={item.src} alt={item.alt || ""} className="w-full h-full object-cover" />
+                  <AssetImage src={item.src} alt={item.alt || ""} className="w-full h-full object-cover" />
                 )}
                 {item.type === "video" && (
                   <div className="w-full h-full flex items-center justify-center">
@@ -174,7 +175,6 @@ export function MediaListTab({ items, onItemsChange, allowMixedTypes = false, de
         onOpenChange={setShowUploadDialog}
         onMediaSelected={handleMediaSelected}
         title={`Add ${uploadType}`}
-        mode={0}
         acceptTypes={uploadType === "image" ? "image/*" : uploadType === "video" ? "video/*" : "audio/*"}
         urlPlaceholder={`https://example.com/${uploadType}.${uploadType === "image" ? "jpg" : uploadType === "video" ? "mp4" : "mp3"}`}
         multiple={true}
