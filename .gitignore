@@ -60,8 +60,9 @@ playwright-report-react/
 # Miscellaneous
 *.pem
 
-# Embedded upstream repos
+# Embedded upstream repos (extracted source trees only — hand-written wrappers
+# under userland/<pkg>/ must remain tracked). Per-package ignores live in
+# tools/emception/.gitignore.
 tools/emception/userland/**/.git/
-tools/emception/userland/**/
 
 .next/
