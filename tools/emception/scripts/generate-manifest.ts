@@ -5,6 +5,7 @@ import * as os from 'os';
 import * as path from 'path';
 import shell from 'shelljs';
 import { fileURLToPath } from 'url';
+import { enableBuildKeepalive } from './lib/keepalive.ts';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -14,6 +15,8 @@ const OUTPUT_DIR = process.env.OUTPUT_DIR || path.join(ROOT, 'build', 'cdn');
 const MANIFEST_FILE = process.env.MANIFEST_FILE || path.join(ROOT, 'build', 'manifest.json');
 const BASE_URL = process.env.CDN_BASE_URL || '/cdn';
 const SYSPATH = process.env.SYSPATH || path.join(ROOT, 'sysroot');
+
+enableBuildKeepalive('generate-manifest');
 
 // Ensure output directory exists
 shell.mkdir('-p', OUTPUT_DIR);

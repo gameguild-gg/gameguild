@@ -14,6 +14,9 @@ import fs from 'fs';
 import path from 'path';
 import shell from 'shelljs';
 import { setupEmsdk } from './lib/emsdk.ts';
+import { enableBuildKeepalive } from './lib/keepalive.ts';
+
+enableBuildKeepalive('build-imgui');
 
 const ROOT = process.cwd();
 shell.config.fatal = true;
