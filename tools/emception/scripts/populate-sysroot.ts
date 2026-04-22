@@ -3,6 +3,9 @@ import * as path from 'path';
 import shell from 'shelljs';
 import { fileURLToPath } from 'url';
 import { getEmsdkDir, setupEmsdk } from './lib/emsdk.ts';
+import { enableBuildKeepalive } from './lib/keepalive.ts';
+
+enableBuildKeepalive('populate-sysroot');
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

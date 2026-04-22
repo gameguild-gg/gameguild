@@ -13,6 +13,9 @@ import shell from 'shelljs';
 import { fileURLToPath } from 'url';
 import { detectLLVMGitCommit, detectLLVMVersion, resolveAvailableLLVMRelease } from './lib/detect-versions.ts';
 import { setupEmsdk } from './lib/emsdk.ts';
+import { enableBuildKeepalive } from './lib/keepalive.ts';
+
+enableBuildKeepalive('build-llvm');
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

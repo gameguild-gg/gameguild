@@ -37,12 +37,15 @@ import * as os from 'os';
 import * as path from 'path';
 import { fileURLToPath } from 'url';
 import * as zlib from 'zlib';
+import { enableBuildKeepalive } from './lib/keepalive.ts';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const ROOT = process.cwd();
 const OUTPUT_DIR = process.env.OUTPUT_DIR || path.join(ROOT, 'build', 'cdn');
 const MANIFEST_FILE = process.env.MANIFEST_FILE || path.join(ROOT, 'build', 'manifest.json');
+
+enableBuildKeepalive('generate-bundles');
 
 // ──────────────────── helpers ────────────────────
 

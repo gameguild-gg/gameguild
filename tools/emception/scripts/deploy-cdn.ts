@@ -2,6 +2,9 @@ import fs from 'fs';
 import path from 'path';
 import shell from 'shelljs';
 import { fileURLToPath } from 'url';
+import { enableBuildKeepalive } from './lib/keepalive.ts';
+
+enableBuildKeepalive('deploy-cdn');
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

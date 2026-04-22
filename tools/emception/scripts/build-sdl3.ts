@@ -26,6 +26,9 @@ import os from 'os';
 import path from 'path';
 import shell from 'shelljs';
 import { getEmsdkDir, setupEmsdk } from './lib/emsdk.ts';
+import { enableBuildKeepalive } from './lib/keepalive.ts';
+
+enableBuildKeepalive('build-sdl3');
 
 const ROOT = process.cwd();
 shell.config.fatal = true;

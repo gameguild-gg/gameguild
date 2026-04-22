@@ -10,6 +10,9 @@ import os from 'os';
 import path from 'path';
 import shell from 'shelljs';
 import { setupEmsdk } from './lib/emsdk.ts';
+import { enableBuildKeepalive } from './lib/keepalive.ts';
+
+enableBuildKeepalive('build-cmake');
 
 const ROOT = process.cwd();
 shell.config.fatal = true;
