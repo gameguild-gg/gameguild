@@ -1,0 +1,135 @@
+# syntax=docker/dockerfile:1.7
+
+# ============================================================
+# Base image with system deps + .NET 8 SDK (needed by
+# packages/dotnet-wasm postinstall to build the WASM runtime)
+# ============================================================
+FROM node:lts-bookworm-slim AS base
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# .NET 8 runtime/sdk dependencies + tools we need at build time
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates \
+    curl \
+    wget \
+    bash \
+    git \
+    libicu72 \
+    libssl3 \
+    libstdc++6 \
+    zlib1g \
+    krb5-user \
+    libkrb5-3 \
+    tzdata \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install .NET 8 SDK system-wide (so dotnet-wasm postinstall finds it
+# without prompting). Auto-install env var also makes the postinstall
+# script non-interactive on first run.
+ENV DOTNET_ROOT=/usr/share/dotnet
+ENV PATH="${DOTNET_ROOT}:${PATH}"
+ENV DOTNET_CLI_TELEMETRY_OPTOUT=1
+ENV DOTNET_NOLOGO=1
+ENV DOTNET_WASM_AUTO_INSTALL=1
+
+RUN curl -sSL https://dot.net/v1/dotnet-install.sh -o /tmp/dotnet-install.sh \
+    && bash /tmp/dotnet-install.sh --channel 8.0 --install-dir "${DOTNET_ROOT}" \
+    && rm /tmp/dotnet-install.sh \
+    && dotnet --version
+
+# Pre-install the wasm-tools workload so the postinstall step doesn't
+# have to do it (faster, and avoids any interactive paths).
+RUN dotnet workload install wasm-tools --skip-sign-check
+
+# ============================================================
+# Build stage - runs from the monorepo root so the workspace
+# dependency `@game-guild/dotnet-wasm` (file:../../packages/...)
+# resolves correctly.
+# ============================================================
+FROM base AS builder
+WORKDIR /repo
+
+# Build-time public env vars (baked into Next.js client bundle)
+ARG NEXT_PUBLIC_API_URL
+ARG NEXT_PUBLIC_WEB_URL
+ARG NEXT_PUBLIC_NEW_RELIC_ACCOUNT_ID
+ARG NEXT_PUBLIC_GOOGLE_CLIENT_ID
+
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_WEB_URL=$NEXT_PUBLIC_WEB_URL
+ENV NEXT_PUBLIC_NEW_RELIC_ACCOUNT_ID=$NEXT_PUBLIC_NEW_RELIC_ACCOUNT_ID
+ENV NEXT_PUBLIC_GOOGLE_CLIENT_ID=$NEXT_PUBLIC_GOOGLE_CLIENT_ID
+ENV NODE_ENV=production
+ENV NODE_OPTIONS="--max_old_space_size=4096"
+
+# --- Layer 1: copy only manifests for cache-friendly install ---
+# Root + workspaces referenced by apps/web (web app + dotnet-wasm
+# package + the shared config packages declared as devDependencies).
+COPY package.json package-lock.json* ./
+COPY apps/web/package.json ./apps/web/package.json
+COPY apps/web/scripts/ ./apps/web/scripts/
+COPY packages/config/ ./packages/config/
+
+# dotnet-wasm runs a full .NET build during its `postinstall` lifecycle
+# (npm install -> dotnet-wasm setup -> tsx scripts/build-dotnet.ts ->
+# dotnet publish). That requires the entire package to be present before
+# `npm install`, so copy it now (this layer invalidates whenever the
+# package changes, which is fine — the wasm assets must be rebuilt then).
+COPY packages/dotnet-wasm/ ./packages/dotnet-wasm/
+
+# --- Layer 2: install all workspaces (triggers dotnet-wasm setup) ---
+RUN npm install --include=dev --workspaces --include-workspace-root \
+    && npm cache clean --force
+
+# --- Layer 3: copy the rest of the sources we need to build ---
+COPY apps/web/ ./apps/web/
+
+# Build the Next.js app
+RUN npm run build:prod --workspace=apps/web
+
+# ============================================================
+# Production runtime stage
+# ============================================================
+FROM node:lts-bookworm-slim AS runner
+WORKDIR /app
+
+ENV NODE_ENV=production
+ENV HOSTNAME=0.0.0.0
+ENV PORT=3000
+
+# New Relic (optional, kept for parity with previous image)
+ENV NEW_RELIC_NO_CONFIG_FILE=true
+ENV NEW_RELIC_DISTRIBUTED_TRACING_ENABLED=true
+ENV NEW_RELIC_LOG=stdout
+ENV NEW_RELIC_AI_MONITORING_ENABLED=true
+ENV NEW_RELIC_CUSTOM_INSIGHTS_EVENTS_MAX_SAMPLES_STORED=100k
+ENV NEW_RELIC_SPAN_EVENTS_MAX_SAMPLES_STORED=10k
+ENV NODE_OPTIONS="--dns-result-order=ipv4first"
+
+ARG DOMAIN_NAME
+ENV DOMAIN_NAME=$DOMAIN_NAME
+
+# Minimal runtime deps (curl kept for healthcheck convenience)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates \
+    curl \
+    tzdata \
+    && rm -rf /var/lib/apt/lists/* \
+    && groupadd --system --gid 1001 nodejs \
+    && useradd  --system --uid 1001 --gid nodejs nextjs
+
+# Next.js standalone output for monorepos preserves the workspace
+# layout: server.js + node_modules live under apps/web/.
+COPY --from=builder --chown=nextjs:nodejs /repo/apps/web/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /repo/apps/web/.next/static ./apps/web/.next/static
+COPY --from=builder --chown=nextjs:nodejs /repo/apps/web/public ./apps/web/public
+
+USER nextjs
+
+EXPOSE 3000
+
+HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
+    CMD curl -fsS http://localhost:3000/ >/dev/null || exit 1
+
+CMD ["node", "apps/web/server.js"]

@@ -14,8 +14,8 @@ networks:
 services:
   api:
     build:
-      context: ./apps/api
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: ./Dockerfile.api
     container_name: api
     image: game-guild-api
     restart: always
@@ -267,8 +267,8 @@ services:
 
   web:
     build:
-      context: ./apps/web
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: ./Dockerfile.web
       args:
         # Build-time variables (bundled into client-side code)
         - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:5295}
