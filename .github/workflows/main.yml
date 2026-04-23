@@ -615,5 +615,3 @@ jobs:
       - name: Publish emception to npm
         if: ${{ steps.npm-check.outputs.already_published != 'true' }}
         run: cd tools/emception && npm publish --provenance --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
