@@ -41,8 +41,11 @@ function detectVersion(): string {
     if (envVer) return envVer;
 
     console.log('Detecting latest ImGui release...');
+    const authHeader = process.env.GITHUB_TOKEN
+        ? `-H "Authorization: Bearer ${process.env.GITHUB_TOKEN}"`
+        : '';
     const result = shell.exec(
-        'curl -fsSL https://api.github.com/repos/ocornut/imgui/releases/latest',
+        `curl -fsSL ${authHeader} https://api.github.com/repos/ocornut/imgui/releases/latest`,
         { silent: true },
     );
     if (result.code !== 0) {
