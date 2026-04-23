@@ -550,10 +550,13 @@ jobs:
     name: Publish emception package
     runs-on: ubuntu-latest
     needs:
-      - detect-changes
       - build-emception-toolchain
       - release-root
-    if: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && needs.detect-changes.outputs.emception == 'true' && needs.release-root.outputs.new_release_published == 'true' }}
+    # Run on every release. The emception package is versioned in lockstep with
+    # the root release tag, so any new release ships an emception version too.
+    # The npm-check step below short-circuits if that version was already
+    # published, making this safe to run unconditionally.
+    if: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && needs.release-root.outputs.new_release_published == 'true' }}
     permissions:
       contents: read
       id-token: write
@@ -611,4 +614,6 @@ jobs:
 
       - name: Publish emception to npm
         if: ${{ steps.npm-check.outputs.already_published != 'true' }}
-        run: cd tools/emception && npm publish
+        run: cd tools/emception && npm publish --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
