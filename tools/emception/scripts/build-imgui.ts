@@ -41,13 +41,23 @@ function detectVersion(): string {
     if (envVer) return envVer;
 
     console.log('Detecting latest ImGui release...');
-    const authHeader = process.env.GITHUB_TOKEN
-        ? `-H "Authorization: Bearer ${process.env.GITHUB_TOKEN}"`
-        : '';
-    const result = shell.exec(
-        `curl -fsSL ${authHeader} https://api.github.com/repos/ocornut/imgui/releases/latest`,
-        { silent: true },
-    );
+    const url = 'https://api.github.com/repos/ocornut/imgui/releases/latest';
+
+    const execCurl = (extraArgs = '') =>
+        shell.exec(`curl -fsSL ${extraArgs} ${url}`, {
+            silent: true,
+            fatal: false,
+        });
+
+    let result = process.env.GITHUB_TOKEN
+        ? execCurl(`-H "Authorization: Bearer ${process.env.GITHUB_TOKEN}"`)
+        : execCurl();
+
+    if (result.code !== 0 && process.env.GITHUB_TOKEN) {
+        console.warn('  Authenticated GitHub API call failed; retrying without token...');
+        result = execCurl();
+    }
+
     if (result.code !== 0) {
         throw new Error('Failed to query GitHub for latest ImGui release');
     }
