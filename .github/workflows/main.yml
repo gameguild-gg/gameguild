@@ -222,6 +222,8 @@ jobs:
       - name: Build ImGui
         if: steps.cache-toolchain.outputs.cache-hit != 'true'
         run: npm run build:imgui
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build Sysroot
         if: steps.cache-toolchain.outputs.cache-hit != 'true'
