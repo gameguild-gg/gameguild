@@ -20,7 +20,7 @@
     ],
     "paths": {
       "@/*": ["./src/*"],
-      "@game-guild/ui/*": ["../../packages/ui/src/*"]
+      "@game-guild/ui/*": ["../../packages/infrastructure/ui/src/*"]
     }
   },
   "include": [

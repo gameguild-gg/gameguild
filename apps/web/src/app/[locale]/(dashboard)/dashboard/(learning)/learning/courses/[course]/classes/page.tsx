@@ -5,7 +5,7 @@ import { getCourse, getCourseClasses } from '@/lib/learning';
 /**
  * L6: Course Classes/Schedule Page
  *
- * Route: /dashboard/learning/courses/[course]/classes
+ * Route: /learning/courses/[course]/classes
  *
  * Lists all scheduled and past classes for live/presential/hybrid courses.
  * Only available when course.features.hasClasses = true.

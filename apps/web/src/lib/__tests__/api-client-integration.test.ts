@@ -1,13 +1,13 @@
 /**
  * API Client Integration Verification
- * 
+ *
  * Comprehensive tests to verify the API client works correctly in the web app
  */
 
-import { describe, it, expect, beforeAll } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 describe('API Client Package Integration', () => {
-  const nextIntegrationModulePath = '../../../../../packages/client/dist/next.js';
+  const nextIntegrationModulePath = '../../../../../packages/infrastructure/client/dist/next.js';
 
   describe('Package Installation', () => {
     it('should have @game-guild/client in dependencies', async () => {

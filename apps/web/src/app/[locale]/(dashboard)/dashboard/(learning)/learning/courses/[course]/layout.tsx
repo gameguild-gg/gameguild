@@ -1,5 +1,6 @@
+import { getCourse, getCourseAnalytics, getCourseClasses, getCourseContent, getCourseStudents } from '@/lib/learning';
+import { notFound } from 'next/navigation';
 import React from 'react';
-import { getCourse, getCourseAnalytics, getCourseContent, getCourseStudents, getCourseClasses } from '@/lib/learning';
 import { CourseNav } from './course-nav';
 
 /**
@@ -9,8 +10,7 @@ import { CourseNav } from './course-nav';
  * Uses Parallel Data Preload Pattern for optimal performance.
  */
 export default async function Layout({ children, params }: LayoutProps<'/[locale]/dashboard/learning/courses/[course]'>): Promise<React.JSX.Element> {
-  const { locale, course: courseId } = await params;
-  void locale;
+  const { course: courseId } = await params;
 
   // Parallel preload: fire core fetches immediately
   const coursePromise = getCourse(courseId);
@@ -20,17 +20,22 @@ export default async function Layout({ children, params }: LayoutProps<'/[locale
 
   const course = await coursePromise;
 
+  if (!course) {
+    notFound();
+  }
+
   // Conditional preload based on features
-  if (course?.features.hasClasses) {
+  if (course.features.hasClasses) {
     getCourseClasses(courseId);
   }
 
-  if (!course) {
-    return <>{children}</>;
-  }
-
   return (
-    <CourseNav courseTitle={course.title} courseDescription={course.description} courseStatus={course.status}>
+    <CourseNav
+      courseTitle={course.title}
+      courseDescription={course.description}
+      courseStatus={course.status}
+      features={course.features}
+    >
       {children}
     </CourseNav>
   );

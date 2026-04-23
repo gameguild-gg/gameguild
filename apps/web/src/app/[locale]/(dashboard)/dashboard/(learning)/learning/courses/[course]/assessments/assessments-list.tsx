@@ -1,27 +1,26 @@
 'use client';
 
-import React, { useState, useTransition } from 'react';
-import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
-import { Card, CardContent, CardHeader, CardTitle } from '@game-guild/ui/components/card';
+import { Link, usePathname, useRouter } from '@/i18n/navigation';
+import { createAssessment } from '@/lib/learning/actions';
+import type { Assessment, AssessmentType } from '@/lib/learning/queries/assessments';
+import type { ContentItem } from '@/lib/learning/types';
 import { Badge } from '@game-guild/ui/components/badge';
 import { Button } from '@game-guild/ui/components/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@game-guild/ui/components/card';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from '@game-guild/ui/components/dialog';
 import { Input } from '@game-guild/ui/components/input';
 import { Label } from '@game-guild/ui/components/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@game-guild/ui/components/select';
 import { Switch } from '@game-guild/ui/components/switch';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@game-guild/ui/components/dialog';
 import { ClipboardList, FileText, LinkIcon, Loader2, Plus, Target, Trophy } from 'lucide-react';
-import type { Assessment, AssessmentType } from '@/lib/learning/queries/assessments';
-import type { ContentItem } from '@/lib/learning/types';
-import { createAssessment } from '@/lib/learning/actions';
+import React, { useState, useTransition } from 'react';
 
 const ASSESSMENT_TYPE_OPTIONS: { value: AssessmentType; label: string }[] = [
   { value: 'Quiz', label: 'Quiz' },

@@ -5,7 +5,7 @@ import { getCourse, getCourseClass } from '@/lib/learning';
 /**
  * L6a: Single Class Detail/Editor Page
  *
- * Route: /dashboard/learning/courses/[course]/classes/[classId]
+ * Route: /learning/courses/[course]/classes/[classId]
  *
  * Displays full class detail for viewing or editing.
  * Only available when course.features.hasClasses = true.

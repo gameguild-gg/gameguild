@@ -1,6 +1,6 @@
-import React from 'react';
-import { notFound, forbidden } from 'next/navigation';
 import { getCourse, getCourseCertificates } from '@/lib/learning';
+import { notFound } from 'next/navigation';
+import React from 'react';
 
 /**
  * Certificates Layout
@@ -14,26 +14,17 @@ import { getCourse, getCourseCertificates } from '@/lib/learning';
 export default async function CertificatesLayout({
   children,
   params,
-}: {
-  children: React.ReactNode;
-  params: Promise<{ locale: string; course: string }>;
-}): Promise<React.JSX.Element> {
+}: LayoutProps<'/[locale]/dashboard/learning/courses/[course]/certificates'>): Promise<React.JSX.Element> {
   const { course: courseId } = await params;
 
   const course = await getCourse(courseId);
-  
-  if (!course) {
+
+  if (!course || !course.features.hasCertificate) {
     notFound();
-  }
-  
-  if (!course.features.hasCertificate) {
-    forbidden();
   }
 
   // Preload certificates
   getCourseCertificates(courseId);
-
-  void course;
 
   return <>{children}</>;
 }

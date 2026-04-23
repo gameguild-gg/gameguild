@@ -9,9 +9,9 @@
   "scripts": {
     "dev": "turbo run dev",
     "dev:api": "dotnet run --project apps/api/Source/GameGuild.API/GameGuild.API.csproj --urls http://localhost:5295",
-    "dev:web": "pnpm --filter @gameguild/web run dev",
+    "dev:web": "pnpm --filter @game-guild/web run dev",
     "build": "turbo run build",
-    "build:web": "pnpm --filter @gameguild/web run build",
+    "build:web": "pnpm --filter @game-guild/web run build",
     "test": "turbo run test",
     "test:coverage": "turbo run test:coverage",
     "test:e2e": "turbo run test:e2e",

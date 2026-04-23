@@ -1,6 +1,6 @@
-import React from 'react';
-import { notFound } from 'next/navigation';
 import { getCourse } from '@/lib/learning';
+import { notFound } from 'next/navigation';
+import React from 'react';
 
 /**
  * Settings Group Layout
@@ -17,18 +17,13 @@ import { getCourse } from '@/lib/learning';
 export default async function SettingsLayout({
   children,
   params,
-}: {
-  children: React.ReactNode;
-  params: Promise<{ locale: string; course: string }>;
-}): Promise<React.JSX.Element> {
+}: LayoutProps<'/[locale]/dashboard/learning/courses/[course]/settings'>): Promise<React.JSX.Element> {
   const { course: courseId } = await params;
 
   const course = await getCourse(courseId);
   if (!course) {
     notFound();
   }
-
-  void course;
 
   return <>{children}</>;
 }

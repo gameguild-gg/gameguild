@@ -1,14 +1,14 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
-import Link from 'next/link';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@game-guild/ui/components/card';
+import { Link } from '@/i18n/navigation';
 import { Badge } from '@game-guild/ui/components/badge';
 import { Button } from '@game-guild/ui/components/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@game-guild/ui/components/card';
 import { Input } from '@game-guild/ui/components/input';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@game-guild/ui/components/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@game-guild/ui/components/select';
-import { BookOpen, Grid3X3, List, Search, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@game-guild/ui/components/table';
+import { ArrowDown, ArrowUp, ArrowUpDown, BookOpen, Grid3X3, List, Search } from 'lucide-react';
+import { useMemo, useState } from 'react';
 import { CourseCard, CourseTableActions } from './course-card';
 
 interface EnrichedCourse {
@@ -238,7 +238,7 @@ export function CourseList({ courses, locale }: { courses: EnrichedCourse[]; loc
                   {filtered.map((course) => (
                     <TableRow key={course.id} className="cursor-pointer">
                       <TableCell>
-                        <Link href={`/${locale}/dashboard/learning/courses/${course.id}`} className="flex items-center gap-3">
+                        <Link href={`/dashboard/learning/courses/${course.id}`} className="flex items-center gap-3">
                           <div className="flex size-10 shrink-0 items-center justify-center rounded bg-muted">
                             <BookOpen className="size-5 text-muted-foreground" />
                           </div>

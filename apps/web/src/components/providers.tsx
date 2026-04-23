@@ -1,12 +1,18 @@
 'use client';
 
-import { SessionProvider } from '@game-guild/client/react';
 import { StoreProvider } from '@/store/StoreProvider';
+import { SessionProvider } from '@game-guild/client/react';
+import { TooltipProvider } from '@game-guild/ui/components/tooltip';
+import { ThemeProvider } from 'next-themes';
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
-    <SessionProvider>
-      <StoreProvider>{children}</StoreProvider>
-    </SessionProvider>
+    <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+      <SessionProvider>
+        <StoreProvider>
+          <TooltipProvider>{children}</TooltipProvider>
+        </StoreProvider>
+      </SessionProvider>
+    </ThemeProvider>
   );
 }

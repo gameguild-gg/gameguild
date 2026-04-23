@@ -1,23 +1,8 @@
 'use client';
 
-import * as React from 'react';
-import { usePathname } from 'next/navigation';
-import { Button } from '@game-guild/ui/components/button';
-import { Input } from '@game-guild/ui/components/input';
-import { Badge } from '@game-guild/ui/components/badge';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@game-guild/ui/components/dropdown-menu';
-import { Bell, Command, Search } from 'lucide-react';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
-import Link from 'next/link';
-import { SidebarTrigger } from '@game-guild/ui/components/sidebar';
-import { Separator } from '@game-guild/ui/components/separator';
+import { Link, usePathname } from '@/i18n/navigation';
+import { Badge } from '@game-guild/ui/components/badge';
 import {
   Breadcrumb,
   BreadcrumbEllipsis,
@@ -27,6 +12,7 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from '@game-guild/ui/components/breadcrumb';
+import { Button } from '@game-guild/ui/components/button';
 import {
   Drawer,
   DrawerClose,
@@ -37,6 +23,19 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from '@game-guild/ui/components/drawer';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@game-guild/ui/components/dropdown-menu';
+import { Input } from '@game-guild/ui/components/input';
+import { Separator } from '@game-guild/ui/components/separator';
+import { SidebarTrigger } from '@game-guild/ui/components/sidebar';
+import { Bell, Command, Search } from 'lucide-react';
+import * as React from 'react';
 
 const ITEMS_TO_DISPLAY = 3;
 

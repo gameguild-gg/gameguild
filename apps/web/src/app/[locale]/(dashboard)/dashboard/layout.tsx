@@ -1,14 +1,17 @@
-import React from 'react';
-import { redirect } from 'next/navigation';
 import { auth } from '@/auth';
 import { DashboardShell } from '@/components/layout';
+import { redirect } from '@/i18n/navigation';
+import React from 'react';
 
-export default async function Layout({ children }: LayoutProps<'/[locale]/dashboard'>): Promise<React.JSX.Element> {
+export default async function Layout({ children, params }: LayoutProps<'/[locale]/dashboard'>): Promise<React.JSX.Element> {
+  const { locale } = await params;
+
   // auth() internally handles token refresh and cookie persistence
   const session = await auth();
 
   if (!session) {
-    redirect('/sign-in');
+    // Preserve locale via the i18n-aware redirect helper
+    redirect({ href: { pathname: '/sign-in', query: { callbackUrl: '/dashboard' } }, locale });
   }
 
   return <DashboardShell>{children}</DashboardShell>;

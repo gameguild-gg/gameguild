@@ -1,6 +1,6 @@
-import React from 'react';
+import { getCourse, getCourseCompletionAnalytics, getCourseEngagementAnalytics, getCourseRevenueAnalytics } from '@/lib/learning';
 import { notFound } from 'next/navigation';
-import { getCourse, getCourseEngagementAnalytics, getCourseCompletionAnalytics, getCourseRevenueAnalytics } from '@/lib/learning';
+import React from 'react';
 
 /**
  * Analytics Group Layout
@@ -16,10 +16,7 @@ import { getCourse, getCourseEngagementAnalytics, getCourseCompletionAnalytics, 
 export default async function AnalyticsLayout({
   children,
   params,
-}: {
-  children: React.ReactNode;
-  params: Promise<{ locale: string; course: string }>;
-}): Promise<React.JSX.Element> {
+}: LayoutProps<'/[locale]/dashboard/learning/courses/[course]/analytics'>): Promise<React.JSX.Element> {
   const { course: courseId } = await params;
 
   const course = await getCourse(courseId);
@@ -30,12 +27,10 @@ export default async function AnalyticsLayout({
   // Preload analytics data
   getCourseEngagementAnalytics(courseId);
   getCourseCompletionAnalytics(courseId);
-  
+
   if (course.features.hasPricing) {
     getCourseRevenueAnalytics(courseId);
   }
-
-  void course;
 
   return <>{children}</>;
 }

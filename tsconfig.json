@@ -8,28 +8,28 @@
       "path": "./apps/web"
     },
     {
-      "path": "./packages/client"
+      "path": "./packages/infrastructure/client"
     },
     {
-      "path": "./packages/common"
+      "path": "./packages/infrastructure/ui"
     },
     {
-      "path": "./packages/ui"
+      "path": "./packages/infrastructure/ui-emception"
     },
     {
-      "path": "./packages/analytics"
+      "path": "./packages/infrastructure/wasm/dotnet"
     },
     {
-      "path": "./packages/cookies"
+      "path": "./packages/features/analytics"
     },
     {
-      "path": "./packages/errors"
+      "path": "./packages/features/cookies"
     },
     {
-      "path": "./packages/web3"
+      "path": "./packages/features/errors"
     },
     {
-      "path": "./packages/emception"
+      "path": "./packages/features/web3"
     }
   ]
 }

@@ -1,25 +1,25 @@
-import React from 'react';
-import Link from 'next/link';
-import { notFound } from 'next/navigation';
+import { Link } from '@/i18n/navigation';
 import { getCourse, getCourseAnalytics, getCourseContent } from '@/lib/learning';
-import { Card, CardContent, CardHeader, CardTitle } from '@game-guild/ui/components/card';
 import { Badge } from '@game-guild/ui/components/badge';
 import { Button } from '@game-guild/ui/components/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@game-guild/ui/components/card';
 import { Progress } from '@game-guild/ui/components/progress';
 import {
-  AlertCircle,
-  BookOpen,
-  CheckCircle2,
-  ClipboardList,
-  Clock,
-  Edit,
-  FileText,
-  Image,
-  Settings,
-  Star,
-  TrendingUp,
-  Users,
+    AlertCircle,
+    BookOpen,
+    CheckCircle2,
+    ClipboardList,
+    Clock,
+    Edit,
+    FileText,
+    Image,
+    Settings,
+    Star,
+    TrendingUp,
+    Users,
 } from 'lucide-react';
+import { notFound } from 'next/navigation';
+import React from 'react';
 import { CourseLifecycleActions } from './course-lifecycle-actions';
 
 function formatDate(dateString: string) {
@@ -30,7 +30,7 @@ function formatDate(dateString: string) {
   });
 }
 
-export default async function Page({ params }: { params: Promise<{ locale: string; course: string }> }): Promise<React.JSX.Element> {
+export default async function Page({ params }: PageProps<'/[locale]/dashboard/learning/courses/[course]/overview'>): Promise<React.JSX.Element> {
   const { locale, course: courseId } = await params;
 
   const [course, analytics, content] = await Promise.all([getCourse(courseId), getCourseAnalytics(courseId), getCourseContent(courseId)]);
@@ -54,25 +54,25 @@ export default async function Page({ params }: { params: Promise<{ locale: strin
     {
       label: 'Add a description',
       done: !!course.description?.trim(),
-      href: `/${locale}/dashboard/learning/courses/${courseId}/listing/info`,
+      href: `/dashboard/learning/courses/${courseId}/listing/info` as const,
       icon: FileText,
     },
     {
       label: 'Upload a cover image',
       done: !!course.thumbnail,
-      href: `/${locale}/dashboard/learning/courses/${courseId}/listing/media`,
+      href: `/dashboard/learning/courses/${courseId}/listing/media` as const,
       icon: Image,
     },
     {
       label: 'Create at least one module',
       done: modules.length > 0,
-      href: `/${locale}/dashboard/learning/courses/${courseId}/content`,
+      href: `/dashboard/learning/courses/${courseId}/content` as const,
       icon: BookOpen,
     },
     {
       label: 'Add a lesson to a module',
       done: lessons.length > 0,
-      href: `/${locale}/dashboard/learning/courses/${courseId}/content`,
+      href: `/dashboard/learning/courses/${courseId}/content` as const,
       icon: ClipboardList,
     },
   ];
@@ -231,25 +231,25 @@ export default async function Page({ params }: { params: Promise<{ locale: strin
             </CardHeader>
             <CardContent className="space-y-2">
               <Button variant="outline" className="w-full justify-start" asChild>
-                <Link href={`/${locale}/dashboard/learning/courses/${courseId}/listing/info`}>
+                <Link href={`/dashboard/learning/courses/${courseId}/listing/info`}>
                   <Edit className="mr-2 size-4" />
                   Edit Course Info
                 </Link>
               </Button>
               <Button variant="outline" className="w-full justify-start" asChild>
-                <Link href={`/${locale}/dashboard/learning/courses/${courseId}/content`}>
+                <Link href={`/dashboard/learning/courses/${courseId}/content`}>
                   <BookOpen className="mr-2 size-4" />
                   Manage Content
                 </Link>
               </Button>
               <Button variant="outline" className="w-full justify-start" asChild>
-                <Link href={`/${locale}/dashboard/learning/courses/${courseId}/students`}>
+                <Link href={`/dashboard/learning/courses/${courseId}/students`}>
                   <Users className="mr-2 size-4" />
                   Manage Students
                 </Link>
               </Button>
               <Button variant="outline" className="w-full justify-start" asChild>
-                <Link href={`/${locale}/dashboard/learning/courses/${courseId}/settings`}>
+                <Link href={`/dashboard/learning/courses/${courseId}/settings`}>
                   <Settings className="mr-2 size-4" />
                   Course Settings
                 </Link>

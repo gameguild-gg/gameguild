@@ -1,11 +1,11 @@
-import React from 'react';
-import Link from 'next/link';
-import { notFound } from 'next/navigation';
+import { Link } from '@/i18n/navigation';
 import { getMember } from '@/lib/community';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@game-guild/ui/components/card';
 import { Badge } from '@game-guild/ui/components/badge';
 import { Button } from '@game-guild/ui/components/button';
-import { ArrowLeft, Mail, MapPin, Globe, Clock, Phone, Calendar, User } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@game-guild/ui/components/card';
+import { ArrowLeft, Calendar, Clock, Globe, Mail, MapPin, Phone, User } from 'lucide-react';
+import { notFound } from 'next/navigation';
+import React from 'react';
 
 interface Props {
   params: Promise<{ userId: string }>;

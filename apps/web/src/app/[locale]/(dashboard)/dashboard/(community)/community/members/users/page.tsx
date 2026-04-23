@@ -1,11 +1,11 @@
-import React from 'react';
-import Link from 'next/link';
+import { Link } from '@/i18n/navigation';
 import { getMembers } from '@/lib/community';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@game-guild/ui/components/card';
 import { Badge } from '@game-guild/ui/components/badge';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@game-guild/ui/components/table';
 import { Button } from '@game-guild/ui/components/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@game-guild/ui/components/card';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@game-guild/ui/components/table';
 import { UserPlus } from 'lucide-react';
+import React from 'react';
 
 export default async function Page(): Promise<React.JSX.Element> {
   const { members, total } = await getMembers({ limit: 50 });

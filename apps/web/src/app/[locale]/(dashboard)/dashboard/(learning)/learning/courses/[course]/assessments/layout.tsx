@@ -1,6 +1,6 @@
-import React from 'react';
-import { notFound, forbidden } from 'next/navigation';
 import { getCourse, getCourseAssessments } from '@/lib/learning';
+import { notFound } from 'next/navigation';
+import React from 'react';
 
 /**
  * Assessments Layout
@@ -14,26 +14,17 @@ import { getCourse, getCourseAssessments } from '@/lib/learning';
 export default async function AssessmentsLayout({
   children,
   params,
-}: {
-  children: React.ReactNode;
-  params: Promise<{ locale: string; course: string }>;
-}): Promise<React.JSX.Element> {
+}: LayoutProps<'/[locale]/dashboard/learning/courses/[course]/assessments'>): Promise<React.JSX.Element> {
   const { course: courseId } = await params;
 
   const course = await getCourse(courseId);
-  
-  if (!course) {
+
+  if (!course || !course.features.hasAssessments) {
     notFound();
-  }
-  
-  if (!course.features.hasAssessments) {
-    forbidden();
   }
 
   // Preload assessments
   getCourseAssessments(courseId);
-
-  void course;
 
   return <>{children}</>;
 }

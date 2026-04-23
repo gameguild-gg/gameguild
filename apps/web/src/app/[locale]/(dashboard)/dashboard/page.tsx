@@ -1,12 +1,9 @@
-import React from 'react';
+import { Link } from '@/i18n/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@game-guild/ui/components/card';
-import { BookOpen, Users, Activity, TrendingUp } from 'lucide-react';
-import Link from 'next/link';
+import { Activity, BookOpen, GraduationCap, Users } from 'lucide-react';
+import React from 'react';
 
-export default async function Page({ params }: PageProps<'/[locale]/dashboard'>): Promise<React.JSX.Element> {
-  const { locale } = await params;
-  void locale;
-
+export default async function Page(): Promise<React.JSX.Element> {
   const sections = [
     {
       title: 'Community',
@@ -26,17 +23,17 @@ export default async function Page({ params }: PageProps<'/[locale]/dashboard'>)
       title: 'Activity',
       description: 'Recent platform activity',
       icon: Activity,
-      href: '/dashboard/community',
+      href: '/dashboard/learning/overview',
       stats: 'View engagement trends',
     },
     {
-      title: 'Growth',
-      description: 'Platform growth metrics',
-      icon: TrendingUp,
-      href: '/dashboard/platform',
-      stats: 'Track platform KPIs',
+      title: 'Instructor',
+      description: 'Teaching tools and analytics',
+      icon: GraduationCap,
+      href: '/dashboard/learning/courses',
+      stats: 'Manage your courses',
     },
-  ];
+  ] as const;
 
   return (
     <div className="flex flex-col gap-6 p-6">

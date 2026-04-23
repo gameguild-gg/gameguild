@@ -1,25 +1,6 @@
 'use client';
 
-import * as React from 'react';
-import { usePathname } from 'next/navigation';
-import Link from 'next/link';
-import {
-  ChevronRight,
-  LayoutDashboard,
-  type LucideIcon,
-  Users,
-  Layers,
-  CreditCard,
-  Building2,
-  UserCog,
-  HeadphonesIcon,
-  BadgeDollarSign,
-  BookOpen,
-  FileText,
-  FolderOpen,
-  Gamepad2,
-  GraduationCap,
-} from 'lucide-react';
+import { Link, usePathname } from '@/i18n/navigation';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@game-guild/ui/components/collapsible';
 import {
   Sidebar,
@@ -37,29 +18,22 @@ import {
   SidebarMenuSubItem,
   SidebarRail,
 } from '@game-guild/ui/components/sidebar';
+import {
+  BookOpen,
+  ChevronRight,
+  FileText,
+  FolderOpen,
+  HeadphonesIcon,
+  LayoutDashboard,
+  UserCog,
+  Users,
+  type LucideIcon,
+} from 'lucide-react';
+import * as React from 'react';
 import { TenantSwitcher, type Tenant } from './tenant-switcher';
 
 // Sample tenants data
-const sampleTenants: Tenant[] = [
-  {
-    id: '1',
-    name: 'Game Guild',
-    logo: Gamepad2,
-    plan: 'Enterprise',
-  },
-  {
-    id: '2',
-    name: 'Indie Studio',
-    logo: Layers,
-    plan: 'Startup',
-  },
-  {
-    id: '3',
-    name: 'Learning Hub',
-    logo: GraduationCap,
-    plan: 'Free',
-  },
-];
+const sampleTenants: Tenant[] = [];
 
 // Types for navigation structure
 interface NavSubItem {
@@ -104,46 +78,27 @@ const navigationData: NavGroup[] = [
     ],
   },
   {
-    label: 'Platform Management',
+    label: 'Learning',
     items: [
       {
         title: 'Overview',
-        url: '/dashboard/platform',
+        url: '/dashboard/learning',
         icon: LayoutDashboard,
       },
       {
-        title: 'Subscription Plans',
-        url: '/dashboard/platform/subscriptions',
-        icon: CreditCard,
+        title: 'Courses',
+        url: '/dashboard/learning/courses',
+        icon: BookOpen,
       },
       {
-        title: 'Customers',
-        icon: Building2,
-        subGroups: [
-          {
-            title: 'Overview',
-            url: '/dashboard/platform/customers',
-            icon: LayoutDashboard,
-            items: [],
-          },
-          {
-            title: 'Accounts',
-            url: '/dashboard/platform/customers/accounts',
-            icon: UserCog,
-            items: [],
-          },
-          {
-            title: 'Support',
-            url: '/dashboard/platform/customers/support',
-            icon: HeadphonesIcon,
-            items: [],
-          },
-        ],
+        title: 'Tutorials',
+        url: '/dashboard/learning/tutorials',
+        icon: FileText,
       },
       {
-        title: 'Billing & Revenue',
-        url: '/dashboard/platform/billing',
-        icon: BadgeDollarSign,
+        title: 'Resources',
+        url: '/dashboard/learning/resources',
+        icon: FolderOpen,
       },
     ],
   },
@@ -182,32 +137,6 @@ const navigationData: NavGroup[] = [
             url: '/dashboard/community/members/support',
             icon: HeadphonesIcon,
             items: [],
-          },
-        ],
-      },
-      {
-        title: 'Learning',
-        icon: BookOpen,
-        items: [
-          {
-            title: 'Overview',
-            url: '/dashboard/learning',
-            icon: LayoutDashboard,
-          },
-          {
-            title: 'Courses',
-            url: '/dashboard/learning/courses',
-            icon: BookOpen,
-          },
-          {
-            title: 'Tutorials',
-            url: '/dashboard/learning/tutorials',
-            icon: FileText,
-          },
-          {
-            title: 'Resources',
-            url: '/dashboard/learning/resources',
-            icon: FolderOpen,
           },
         ],
       },

@@ -1,11 +1,10 @@
-import React from 'react';
+import { Providers } from '@/components/providers';
+import { routing } from '@/i18n';
 import type { Metadata } from 'next';
-import { notFound } from 'next/navigation';
 import { hasLocale, NextIntlClientProvider } from 'next-intl';
 import { getMessages, setRequestLocale } from 'next-intl/server';
-import { ThemeProvider } from 'next-themes';
-import { routing } from '@/i18n';
-import { Providers } from '@/components/providers';
+import { notFound } from 'next/navigation';
+import React from 'react';
 
 export async function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));
@@ -14,8 +13,8 @@ export async function generateStaticParams() {
 export async function generateMetadata(): Promise<Metadata> {
   return {
     title: {
-      template: '%s | Dashboard | Game Guild',
-      default: 'Dashboard | Game Guild',
+      template: '%s | Game Guild',
+      default: 'Game Guild',
     },
   };
 }
@@ -32,12 +31,10 @@ export default async function Layout({ children, params }: LayoutProps<'/[locale
   const messages = await getMessages();
 
   return (
-    <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+    <NextIntlClientProvider locale={locale} messages={messages}>
       <Providers>
-        <NextIntlClientProvider locale={locale} messages={messages}>
-          {children}
-        </NextIntlClientProvider>
+        {children}
       </Providers>
-    </ThemeProvider>
+    </NextIntlClientProvider>
   );
 }

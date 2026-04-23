@@ -1,5 +1,5 @@
-import type { WorkspaceConfig } from '@gameguild/emception-ui';
-import { Ide, PRESETS } from '@gameguild/emception-ui';
+import type { WorkspaceConfig } from '@game-guild/emception-ui';
+import { Ide, PRESETS } from '@game-guild/emception-ui';
 
 // Vite injects BASE_URL from the `base` config (e.g. '/gameguild/' on GitHub Pages).
 // Use it to build the manifest URL so the CDN is found regardless of deploy path.

@@ -1,13 +1,9 @@
 'use client';
 
+import { Button } from '@game-guild/ui/components/button';
+import { AlertTriangle } from 'lucide-react';
 import React from 'react';
 
-/**
- * Course Error Boundary
- *
- * Catches errors in all course subroutes and provides recovery options.
- * This is a client component as required by Next.js error boundaries.
- */
 export default function Error({
   error,
   reset,
@@ -15,15 +11,19 @@ export default function Error({
   error: Error & { digest?: string };
   reset: () => void;
 }): React.JSX.Element {
-  // TODO: Implement error UI with:
-  // - User-friendly error message
-  // - Error digest for support reference
-  // - Retry button (calls reset())
-  // - Link back to courses list
-  // - Log error to monitoring service
+  React.useEffect(() => {
+    console.error('Course error:', error);
+  }, [error]);
 
-  void error;
-  void reset;
-
-  return <></>;
+  return (
+    <div className="flex flex-col items-center justify-center gap-4 p-12 text-center">
+      <AlertTriangle className="size-12 text-destructive" />
+      <div>
+        <h2 className="text-xl font-semibold">Something went wrong</h2>
+        <p className="text-sm text-muted-foreground">{error.message || 'An unexpected error occurred while loading this course.'}</p>
+        {error.digest && <p className="mt-1 text-xs text-muted-foreground">Reference: {error.digest}</p>}
+      </div>
+      <Button onClick={reset}>Try again</Button>
+    </div>
+  );
 }

@@ -1,6 +1,6 @@
-import React from 'react';
+import { getCourse, getCourseDiscussions, getCourseSupportTickets } from '@/lib/learning';
 import { notFound } from 'next/navigation';
-import { getCourse, getCourseSupportTickets, getCourseDiscussions } from '@/lib/learning';
+import React from 'react';
 
 /**
  * Support Group Layout
@@ -18,10 +18,7 @@ import { getCourse, getCourseSupportTickets, getCourseDiscussions } from '@/lib/
 export default async function SupportLayout({
   children,
   params,
-}: {
-  children: React.ReactNode;
-  params: Promise<{ locale: string; course: string }>;
-}): Promise<React.JSX.Element> {
+}: LayoutProps<'/[locale]/dashboard/learning/courses/[course]/support'>): Promise<React.JSX.Element> {
   const { course: courseId } = await params;
 
   const course = await getCourse(courseId);
@@ -31,12 +28,10 @@ export default async function SupportLayout({
 
   // Preload support data
   getCourseSupportTickets(courseId);
-  
+
   if (course.features.hasDiscussions) {
     getCourseDiscussions(courseId);
   }
-
-  void course;
 
   return <>{children}</>;
 }

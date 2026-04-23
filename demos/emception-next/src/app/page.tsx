@@ -1,10 +1,10 @@
 'use client';
 
-import { PRESETS } from '@gameguild/emception-ui';
+import { PRESETS } from '@game-guild/emception-ui';
 import dynamic from 'next/dynamic';
 import { useSearchParams } from 'next/navigation';
 
-const Ide = dynamic(() => import('@gameguild/emception-ui').then((m) => ({ default: m.Ide })), { ssr: false });
+const Ide = dynamic(() => import('@game-guild/emception-ui').then((m) => ({ default: m.Ide })), { ssr: false });
 
 export default function Home() {
   const params = useSearchParams();

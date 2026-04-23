@@ -80,7 +80,7 @@ export function ContentTree({ courseId, modules, allItems, assessments }: Conten
   const [isPending, startTransition] = useTransition();
   const [openModules, setOpenModules] = useState<Set<string>>(() => new Set(modules.map((m) => m.id)));
 
-  // Derive the base path for navigation (e.g. /en-US/dashboard/learning/courses/{id}/content)
+  // Derive the base path for navigation (e.g. /en-US/learning/courses/{id}/content)
   const contentBasePath = pathname.endsWith('/content') ? pathname : pathname.replace(/\/content\/.*$/, '/content');
 
   // Add Module dialog state

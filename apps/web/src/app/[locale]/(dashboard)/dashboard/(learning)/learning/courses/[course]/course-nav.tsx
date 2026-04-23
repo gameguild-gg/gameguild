@@ -1,14 +1,18 @@
 'use client';
 
-import Link from 'next/link';
-import { useParams, usePathname } from 'next/navigation';
+import { Link, usePathname } from '@/i18n/navigation';
+import type { CourseFeatures } from '@/lib/learning/types';
+import { Badge } from '@game-guild/ui/components/badge';
+import { Button } from '@game-guild/ui/components/button';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@game-guild/ui/components/dropdown-menu';
 import {
   ArrowLeft,
+  Award,
   BarChart3,
   BookOpen,
+  CalendarDays,
   Edit,
   Eye,
-  FileText,
   GraduationCap,
   Info,
   LayoutDashboard,
@@ -18,16 +22,23 @@ import {
   Share2,
   Trash2,
   Users,
+  type LucideIcon,
 } from 'lucide-react';
-import { Button } from '@game-guild/ui/components/button';
-import { Badge } from '@game-guild/ui/components/badge';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@game-guild/ui/components/dropdown-menu';
+import { useParams } from 'next/navigation';
 
 interface CourseNavProps {
   courseTitle: string;
   courseDescription: string;
   courseStatus: 'draft' | 'published' | 'archived';
+  features: CourseFeatures;
   children: React.ReactNode;
+}
+
+interface NavItem {
+  title: string;
+  icon: LucideIcon;
+  segment: string;
+  enabled: boolean;
 }
 
 function getStatusBadge(status: string) {
@@ -43,23 +54,36 @@ function getStatusBadge(status: string) {
   }
 }
 
-const navItems = [
-  { title: 'Overview', icon: LayoutDashboard, href: '/overview' },
-  { title: 'Course Info', icon: Info, href: '/listing' },
-  { title: 'Content', icon: BookOpen, href: '/content' },
-  { title: 'Assessments', icon: GraduationCap, href: '/assessments' },
-  { title: 'Students', icon: Users, href: '/students' },
-  { title: 'Analytics', icon: BarChart3, href: '/analytics' },
-  { title: 'Support', icon: MessageSquare, href: '/support' },
-  { title: 'Settings', icon: Settings, href: '/settings' },
-];
+function buildNavItems(features: CourseFeatures): NavItem[] {
+  return [
+    { title: 'Overview', icon: LayoutDashboard, segment: 'overview', enabled: true },
+    { title: 'Course Info', icon: Info, segment: 'listing', enabled: true },
+    { title: 'Content', icon: BookOpen, segment: 'content', enabled: true },
+    { title: 'Classes', icon: CalendarDays, segment: 'classes', enabled: features.hasClasses },
+    { title: 'Assessments', icon: GraduationCap, segment: 'assessments', enabled: features.hasAssessments },
+    { title: 'Certificates', icon: Award, segment: 'certificates', enabled: features.hasCertificate },
+    { title: 'Students', icon: Users, segment: 'students', enabled: true },
+    { title: 'Analytics', icon: BarChart3, segment: 'analytics', enabled: true },
+    { title: 'Support', icon: MessageSquare, segment: 'support', enabled: true },
+    { title: 'Settings', icon: Settings, segment: 'settings', enabled: true },
+  ].filter((item) => item.enabled);
+}
 
-export function CourseNav({ courseTitle, courseDescription, courseStatus, children }: CourseNavProps) {
+export function CourseNav({ courseTitle, courseDescription, courseStatus, features, children }: CourseNavProps) {
   const params = useParams();
-  const pathname = usePathname();
-  const locale = params.locale as string;
+  const pathname = usePathname() ?? '';
   const courseId = params.course as string;
-  const basePath = `/${locale}/dashboard/learning/courses/${courseId}`;
+  const basePath = `/dashboard/learning/courses/${courseId}`;
+
+  const navItems = buildNavItems(features);
+
+  // Match the active segment after the courseId
+  const activeSegment = (() => {
+    const idx = pathname.indexOf(`/courses/${courseId}/`);
+    if (idx === -1) return '';
+    const tail = pathname.slice(idx + `/courses/${courseId}/`.length);
+    return tail.split('/')[0] ?? '';
+  })();
 
   return (
     <div className="flex flex-col gap-6">
@@ -67,7 +91,7 @@ export function CourseNav({ courseTitle, courseDescription, courseStatus, childr
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="icon" asChild>
-            <Link href={`/${locale}/dashboard/learning/courses`}>
+            <Link href="/dashboard/learning/courses">
               <ArrowLeft className="size-5" />
             </Link>
           </Button>
@@ -127,15 +151,13 @@ export function CourseNav({ courseTitle, courseDescription, courseStatus, childr
         {/* Sidebar Nav */}
         <nav className="hidden w-48 shrink-0 flex-col gap-1 lg:flex">
           {navItems.map((item) => {
-            const href = `${basePath}${item.href}`;
-            const isActive = pathname.startsWith(href);
+            const isActive = activeSegment === item.segment;
             return (
               <Link
-                key={item.title}
-                href={href}
-                className={`flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
-                  isActive ? 'bg-muted text-foreground' : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
-                }`}
+                key={item.segment}
+                href={`${basePath}/${item.segment}`}
+                className={`flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors ${isActive ? 'bg-muted text-foreground' : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
+                  }`}
               >
                 <item.icon className="size-4" />
                 {item.title}
@@ -148,15 +170,13 @@ export function CourseNav({ courseTitle, courseDescription, courseStatus, childr
         <div className="flex w-full flex-col gap-6 lg:hidden">
           <div className="flex gap-1 overflow-x-auto border-b pb-2">
             {navItems.map((item) => {
-              const href = `${basePath}${item.href}`;
-              const isActive = pathname.startsWith(href);
+              const isActive = activeSegment === item.segment;
               return (
                 <Link
-                  key={item.title}
-                  href={href}
-                  className={`flex shrink-0 items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
-                    isActive ? 'bg-muted text-foreground' : 'text-muted-foreground hover:text-foreground'
-                  }`}
+                  key={item.segment}
+                  href={`${basePath}/${item.segment}`}
+                  className={`flex shrink-0 items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${isActive ? 'bg-muted text-foreground' : 'text-muted-foreground hover:text-foreground'
+                    }`}
                 >
                   <item.icon className="size-3.5" />
                   {item.title}

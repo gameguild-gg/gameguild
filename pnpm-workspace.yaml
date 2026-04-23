@@ -2,15 +2,12 @@ packages:
   # Applications
   - "apps/*"
 
-  # Shared libraries
-  - "packages/analytics"
-  - "packages/client"
-  - "packages/common"
-  - "packages/cookies"
-  - "packages/emception"
-  - "packages/errors"
-  - "packages/ui"
-  - "packages/web3"
+  # Domain features
+  - "packages/features/*"
+
+  # Framework / runtime infrastructure
+  - "packages/infrastructure/*"
+  - "packages/infrastructure/wasm/*"
 
   # Tooling (build/dev configs)
   - "packages/tooling/*"

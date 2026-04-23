@@ -1,12 +1,12 @@
 /**
  * API Client Integration Tests
- * 
+ *
  * Server-side integration tests for @game-guild/client
  */
 
 import { createClient } from '@game-guild/client';
 
-const nextIntegrationModulePath = '../../../../../packages/client/dist/next.js';
+const nextIntegrationModulePath = '../../../../../packages/infrastructure/client/dist/next.js';
 
 describe('API Client Integration', () => {
   describe('Basic Client Creation', () => {

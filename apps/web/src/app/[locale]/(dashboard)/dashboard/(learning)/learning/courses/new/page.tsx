@@ -1,23 +1,22 @@
 'use client';
 
-import React, { useState, useTransition } from 'react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
+import { Link, useRouter } from '@/i18n/navigation';
+import { createCourse, updateCourse } from '@/lib/learning/actions';
+import {
+  CONTENT_VISIBILITIES,
+  ENROLLMENT_STATUSES,
+  formatEnumLabel,
+  PROGRAM_CATEGORIES,
+  PROGRAM_DIFFICULTIES,
+} from '@/lib/learning/enums';
 import { Button } from '@game-guild/ui/components/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@game-guild/ui/components/card';
 import { Input } from '@game-guild/ui/components/input';
 import { Label } from '@game-guild/ui/components/label';
-import { Textarea } from '@game-guild/ui/components/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@game-guild/ui/components/select';
-import { ArrowLeft, ArrowRight, Loader2, Check } from 'lucide-react';
-import { createCourse, updateCourse } from '@/lib/learning/actions';
-import {
-  PROGRAM_CATEGORIES,
-  PROGRAM_DIFFICULTIES,
-  CONTENT_VISIBILITIES,
-  ENROLLMENT_STATUSES,
-  formatEnumLabel,
-} from '@/lib/learning/enums';
+import { Textarea } from '@game-guild/ui/components/textarea';
+import { ArrowLeft, ArrowRight, Check, Loader2 } from 'lucide-react';
+import React, { useState, useTransition } from 'react';
 
 function slugify(text: string): string {
   return text
@@ -30,12 +29,14 @@ function slugify(text: string): string {
 
 const STEPS = ['Basics', 'Details', 'Settings'] as const;
 
-export default function CreateCoursePage({ params }: { params: Promise<{ locale: string }> }) {
+export default function CreateCoursePage({ params }: PageProps<'/[locale]/dashboard/learning/courses/new'>) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [step, setStep] = useState(0);
   const [error, setError] = useState<string | null>(null);
-  const [locale, setLocale] = useState('en');
+
+  // params is unused now (locale handled by next-intl router)
+  void params;
 
   // Step 1: Basics
   const [title, setTitle] = useState('');
@@ -58,8 +59,8 @@ export default function CreateCoursePage({ params }: { params: Promise<{ locale:
   const [skillsProvided, setSkillsProvided] = useState('');
 
   React.useEffect(() => {
-    params.then((p) => setLocale(p.locale));
-  }, [params]);
+    // no-op
+  }, []);
 
   function handleTitleChange(value: string) {
     setTitle(value);
@@ -118,7 +119,7 @@ export default function CreateCoursePage({ params }: { params: Promise<{ locale:
         console.warn('[CreateCourse] Update failed after creation:', updateResult.error);
       }
 
-      router.push(`/${locale}/dashboard/learning/courses/${courseId}`);
+      router.push(`/dashboard/learning/courses/${courseId}`);
     });
   }
 
@@ -126,7 +127,7 @@ export default function CreateCoursePage({ params }: { params: Promise<{ locale:
     <div className="mx-auto flex max-w-2xl flex-col gap-6 p-6">
       <div className="flex items-center gap-4">
         <Button variant="ghost" size="icon" asChild>
-          <Link href={`/${locale}/dashboard/learning/courses`}>
+          <Link href="/dashboard/learning/courses">
             <ArrowLeft className="size-5" />
           </Link>
         </Button>
@@ -146,13 +147,12 @@ export default function CreateCoursePage({ params }: { params: Promise<{ locale:
               type="button"
               onClick={() => i < step && setStep(i)}
               disabled={i > step}
-              className={`flex size-8 items-center justify-center rounded-full text-sm font-medium transition-colors ${
-                i < step
+              className={`flex size-8 items-center justify-center rounded-full text-sm font-medium transition-colors ${i < step
                   ? 'bg-primary text-primary-foreground cursor-pointer'
                   : i === step
                     ? 'bg-primary text-primary-foreground'
                     : 'bg-muted text-muted-foreground'
-              }`}
+                }`}
             >
               {i < step ? <Check className="size-4" /> : i + 1}
             </button>

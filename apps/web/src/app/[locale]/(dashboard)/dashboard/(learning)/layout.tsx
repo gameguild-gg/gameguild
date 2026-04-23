@@ -1,13 +1,12 @@
 import React from 'react';
 
 /**
- * Learning Section Layout
+ * Learning Section Layout (route group pass-through)
  *
- * Shared layout for all learning routes. The API handles tenant/permissions
- * via auth context, so no explicit data fetching is needed here.
- *
- * Future: May add learning-specific navigation or context providers.
+ * The API handles tenant/permissions via auth context, so no explicit data
+ * fetching is needed here. Kept as a pure pass-through; consider deleting the
+ * (learning) route group folder if no future learning-specific layout is added.
  */
-export default async function Layout({ children }: LayoutProps<'/[locale]'>): Promise<React.JSX.Element> {
+export default function Layout({ children }: { children: React.ReactNode }): React.JSX.Element {
   return <>{children}</>;
 }

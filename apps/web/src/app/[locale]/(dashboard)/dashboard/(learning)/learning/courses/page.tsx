@@ -1,9 +1,9 @@
-import React from 'react';
-import Link from 'next/link';
+import { Link } from '@/i18n/navigation';
 import { getCourses } from '@/lib/learning';
-import { Card, CardContent } from '@game-guild/ui/components/card';
 import { Button } from '@game-guild/ui/components/button';
-import { Plus, BookOpen, ArrowLeft } from 'lucide-react';
+import { Card, CardContent } from '@game-guild/ui/components/card';
+import { ArrowLeft, BookOpen, Plus } from 'lucide-react';
+import React from 'react';
 import { CourseList } from './course-list';
 
 export default async function Page({ params }: PageProps<'/[locale]/dashboard/learning/courses'>): Promise<React.JSX.Element> {
@@ -25,7 +25,7 @@ export default async function Page({ params }: PageProps<'/[locale]/dashboard/le
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="icon" asChild>
-            <Link href={`/${locale}/dashboard/learning`}>
+            <Link href="/dashboard/learning">
               <ArrowLeft className="size-5" />
             </Link>
           </Button>
@@ -38,7 +38,7 @@ export default async function Page({ params }: PageProps<'/[locale]/dashboard/le
           </div>
         </div>
         <Button asChild>
-          <Link href={`/${locale}/dashboard/learning/courses/new`}>
+          <Link href="/dashboard/learning/courses/new">
             <Plus className="mr-2 size-4" />
             Create Course
           </Link>

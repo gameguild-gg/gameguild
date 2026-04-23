@@ -1,5 +1,5 @@
 {
-  "name": "@gameguild/emception-demo-react",
+  "name": "@game-guild/emception-demo-react",
   "version": "2.55.0",
   "private": true,
   "type": "module",
@@ -11,7 +11,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@gameguild/emception-ui": "*",
+    "@game-guild/emception-ui": "workspace:*",
     "@monaco-editor/react": "^4.7.0",
     "@xterm/addon-fit": "^0.11.0",
     "@xterm/xterm": "^6.0.0",
