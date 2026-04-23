@@ -1,3 +1,9 @@
+# [3.0.2](https://github.com/gameguild-gg/gameguild/compare/v3.0.1...v3.0.2) (2026-04-23)
+
+### Bug Fixes
+
+* **emception:** imgui build without gh_token ([3c559a0](https://github.com/gameguild-gg/gameguild/commit/3c559a00642c8dc989c603509abf036c302bc0d4))
+
 # [3.0.1](https://github.com/gameguild-gg/gameguild/compare/v3.0.0...v3.0.1) (2026-04-23)
 
 ### Bug Fixes

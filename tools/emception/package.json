@@ -1,6 +1,6 @@
 {
   "name": "emception",
-  "version": "3.0.1",
+  "version": "3.0.2",
   "description": "Emscripten C/C++ toolchain running in the browser via WebAssembly",
   "license": "MIT",
   "type": "module",
