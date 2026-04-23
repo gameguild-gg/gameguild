@@ -1,3 +1,9 @@
+# [3.0.1](https://github.com/gameguild-gg/gameguild/compare/v3.0.0...v3.0.1) (2026-04-23)
+
+### Bug Fixes
+
+* **emception:** pass GITHUB_TOKEN to imgui release detection to avoid 403 rate-limit ([a58c318](https://github.com/gameguild-gg/gameguild/commit/a58c3186b933f679d4e8fb8b97d6b0b22fd6890b))
+
 # [3.0.0](https://github.com/gameguild-gg/gameguild/compare/v2.55.0...v3.0.0) (2026-04-23)
 
 ### BREAKING CHANGES
