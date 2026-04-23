@@ -1,6 +1,6 @@
 {
   "name": "@gameguild/emception-ui",
-  "version": "2.55.0",
+  "version": "3.0.0",
   "private": true,
   "type": "module",
   "main": "./src/index.ts",
