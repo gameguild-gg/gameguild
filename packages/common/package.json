@@ -2,9 +2,9 @@
   "name": "@game-guild/common",
   "version": "3.0.1",
   "type": "module",
-  "description": "Common utilities and types for Matheus Martins projects",
-  "author": "Matheus Martins <contact@matheusmartins.com>",
-  "homepage": "https://matheusmartins.com",
+  "description": "Common utilities and types for GameGuild",
+  "author": "GameGuild <contact@gameguild.gg>",
+  "homepage": "https://gameguild.gg",
   "license": "UNLICENSED",
   "private": true,
   "exports": {
