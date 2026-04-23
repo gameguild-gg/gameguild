@@ -11,7 +11,11 @@ import path from 'path';
 import shell from 'shelljs';
 import { fileURLToPath } from 'url';
 import { detectBinaryenVersion } from './lib/detect-versions.ts';
+import { standaloneFlags } from './lib/emcc-flags.ts';
 import { setupEmsdk } from './lib/emsdk.ts';
+import { enableBuildKeepalive } from './lib/keepalive.ts';
+
+enableBuildKeepalive('build-binaryen');
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -35,21 +39,8 @@ const OUTPUT_DIR = path.join(ROOT, 'build');
 const SYSROOT_LIB = path.join(ROOT, 'sysroot', 'usr', 'lib');
 const CONCURRENCY = os.cpus().length;
 
-/** Common Emscripten flags for standalone tool modules */
-const STANDALONE_FLAGS = [
-    '-sALLOW_MEMORY_GROWTH=1',
-    '-sSTACK_SIZE=4194304',    // 4 MB stack — binaryen tools do deep recursion on ASTs
-    '-sFORCE_FILESYSTEM=1',
-    '-sMODULARIZE=1',
-    '-sEXPORT_ES6=1',
-    '-sEXIT_RUNTIME=1',
-    '-sINVOKE_RUN=0',          // Don't auto-run main — kernel calls callMain()
-    '-sEXPORTED_FUNCTIONS=_main',     // Keep main despite -Os
-    '-sEXPORTED_RUNTIME_METHODS=FS,callMain',
-    // Use native WASM exception handling instead of JS-based invoke_*
-    // trampolines, enabling safe JSPI suspension inside any syscall.
-    '-fwasm-exceptions',
-].join(' ');
+// 4 MB stack — binaryen tools do deep recursion on ASTs.
+const STANDALONE_FLAGS = standaloneFlags({ stackSize: 4 * 1024 * 1024, asyncifyStackSize: 65536 });
 
 shell.mkdir('-p', USERLAND_DIR);
 shell.mkdir('-p', OUTPUT_DIR);
@@ -96,7 +87,7 @@ if (!fs.existsSync(path.join(BUILD_WASM_DIR, 'Makefile'))) {
     -DBUILD_TESTS=OFF \
     -DBYN_ENABLE_LTO=OFF \
     -DBUILD_SHARED_LIBS=OFF \
-    -DEMSCRIPTEN_ENABLE_WASM_EH=ON`;
+    -DEMSCRIPTEN_ENABLE_WASM_EH=OFF`;
 
     console.log(cmakeCmd);
     shell.exec(cmakeCmd);
@@ -151,6 +142,7 @@ for (const tool of TOOLS) {
         `-I "${path.join(SOURCE_DIR, 'third_party', 'FP16', 'include')}"`,
         ...extraIncludes,
         STANDALONE_FLAGS,
+        '-std=c++20',
         '-Os',
         `-o "${toolMjs}"`,
     ];

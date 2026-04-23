@@ -12,6 +12,9 @@
 import path from 'path';
 import shell from 'shelljs';
 import { setupEmsdk } from './lib/emsdk.ts';
+import { enableBuildKeepalive } from './lib/keepalive.ts';
+
+enableBuildKeepalive('build-libcurl-lite');
 
 const ROOT = process.cwd();
 
@@ -38,7 +41,7 @@ shell.exec([
     'emcc',
     `-I "${path.join(LIBCURL_DIR, 'include')}"`,
     '-Os',
-    '-fwasm-exceptions',
+    // No -fwasm-exceptions: incompatible with -mno-reference-types (Asyncify).
     '-c',
     `"${SRC_FILE}"`,
     `-o "${objFile}"`,

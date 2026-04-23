@@ -12,8 +12,8 @@ packages:
   - "packages/ui"
   - "packages/web3"
 
-  # Config packages
-  - "packages/configs/*"
+  # Tooling (build/dev configs)
+  - "packages/tooling/*"
 
   # Tools & demos
   - "tools/*"

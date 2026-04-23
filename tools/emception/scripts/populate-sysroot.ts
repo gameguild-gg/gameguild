@@ -3,6 +3,9 @@ import * as path from 'path';
 import shell from 'shelljs';
 import { fileURLToPath } from 'url';
 import { getEmsdkDir, setupEmsdk } from './lib/emsdk.ts';
+import { enableBuildKeepalive } from './lib/keepalive.ts';
+
+enableBuildKeepalive('populate-sysroot');
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -151,6 +154,26 @@ if (fs.existsSync(path.join(CACHE_DIR, 'sysroot'))) {
 if (fs.existsSync(path.join(BINARYEN_DIR, 'lib/binaryen'))) {
     console.log('>> Copying Binaryen support files...');
     shell.cp('-r', path.join(BINARYEN_DIR, 'lib/binaryen/*'), path.join(SYSROOT, 'usr/lib/binaryen/'));
+}
+
+// 5b. Copy clang resource-dir (builtin headers like stddef.h, stdarg.h, *intrin.h).
+// These are required when invoking `clang -cc1` directly because cc1 mode
+// bypasses the driver's auto-resource-dir detection. Without these, libc++
+// headers fail to compile (they include <stddef.h> etc. from clang builtins).
+// We auto-detect the major version (e.g. 23) under upstream/lib/clang/.
+const CLANG_RESOURCE_ROOT = path.join(EMSDK_DIR, 'upstream/lib/clang');
+if (fs.existsSync(CLANG_RESOURCE_ROOT)) {
+    const versions = fs.readdirSync(CLANG_RESOURCE_ROOT).filter(v => /^\d+$/.test(v));
+    for (const ver of versions) {
+        const srcInclude = path.join(CLANG_RESOURCE_ROOT, ver, 'include');
+        if (!fs.existsSync(srcInclude)) continue;
+        const destDir = path.join(SYSROOT, 'usr/lib/clang', ver, 'include');
+        console.log(`>> Copying clang ${ver} resource-dir headers to ${destDir}...`);
+        shell.mkdir('-p', destDir);
+        shell.cp('-r', path.join(srcInclude, '*'), destDir);
+    }
+} else {
+    console.warn(`>> WARN: clang resource-dir not found at ${CLANG_RESOURCE_ROOT}`);
 }
 
 // 6. Create shell wrappers for /usr/bin

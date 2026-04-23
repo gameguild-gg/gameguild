@@ -12,17 +12,26 @@
  * 2. **systemCallback** — Python's `os.system()` maps to `__emscripten_system`,
  *    which returns -52 (ENOSYS) in the browser.  We patch it to call
  *    `Module.systemCallback(cmd)` so the subprocess dispatch shim works.
+ *    With Asyncify, __emscripten_system is listed in ASYNCIFY_IMPORTS,
+ *    so Emscripten handles the async suspension/resume automatically.
  *
  * These patches are applied to the build output in `build/` before
  * `deploy:cdn` copies them to `web/public/cdn/`.
  *
  * Additionally, patches are applied to any `.mjs` files already present in
  * `sysroot/usr/lib/` so the manifest generation picks up the correct hashes.
+ *
+ * NOTE: JSPI patches (resolveGlobalSymbol, WebAssembly.promising, _jspi_wrap)
+ * have been removed. All async suspension is now handled by Emscripten's
+ * Asyncify runtime (-sASYNCIFY + -sASYNCIFY_IMPORTS in build scripts).
  */
 
 import * as fs from 'fs';
 import * as path from 'path';
 import { fileURLToPath } from 'url';
+import { enableBuildKeepalive } from './lib/keepalive.ts';
+
+enableBuildKeepalive('patch-glue');
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -81,201 +90,218 @@ function patchEnvMerge(content: string, filename: string): string {
  * Patch 2: systemCallback for os.system() interception.
  *
  * Emscripten generates __emscripten_system which, in browser mode, returns -52.
- * We patch it to check for Module.systemCallback first.  The callback is async
- * (it spawns child WASM processes), so the function must also be wrapped with
- * WebAssembly.Suspending for JSPI stack-switching to work.
+ * We patch it to first check Module.systemCallbackSync (synchronous fast-path
+ * for version probes etc.) then fall through to Module.systemCallback via
+ * Asyncify.handleAsync for full subprocess dispatch.
  *
- * Two sub-patches:
- *
- * 2a.  In the function body, call Module["systemCallback"] before returning -52:
+ * The sync fast-path avoids Asyncify issues where the cmake WASM binary may not
+ * have the system() call path properly instrumented for stack unwinding.
+ * The ToolRunner provides systemCallbackSync for commands it can answer
+ * immediately (like ninja --version), and systemCallback for the rest.
  *
  *   Before: if(!command)return 0;return-52
- *   After:  if(!command)return 0;if(Module["systemCallback"]){return Module["systemCallback"](UTF8ToString(command))}return-52
- *
- * 2b.  Wrap __emscripten_system with WebAssembly.Suspending so JSPI can await
- *      the Promise returned by the async systemCallback:
- *
- *   Inject: if(WebAssembly.Suspending){__emscripten_system=new WebAssembly.Suspending(__emscripten_system)}
+ *   After:  if(!command)return 0;if(Module["systemCallbackSync"]){var sr=Module["systemCallbackSync"](UTF8ToString(command));if(sr!==undefined)return sr}if(Module["systemCallback"]){return Asyncify.handleAsync(function(){return Module["systemCallback"](UTF8ToString(command))})}return-52
  */
 function patchSystemCallback(content: string, filename: string): string {
     let patched = content;
 
-    // Check that this file actually has __emscripten_system (only python.mjs does)
+    // Check that this file actually has __emscripten_system
     if (!patched.includes('__emscripten_system')) {
         return patched;
     }
 
-    // 2a: Hook systemCallback into the __emscripten_system browser fallback
+    // Hook systemCallbackSync (synchronous fast-path) + systemCallback (async via Asyncify)
+    // into the __emscripten_system browser fallback.
     const needle = 'if(!command)return 0;return-52';
-    const replacement = 'if(!command)return 0;if(Module["systemCallback"]){return Module["systemCallback"](UTF8ToString(command))}return-52';
+    const replacement = 'if(!command)return 0;if(Module["systemCallbackSync"]){var sr=Module["systemCallbackSync"](UTF8ToString(command));if(sr!==undefined)return sr}if(Module["systemCallback"]){return Asyncify.handleAsync(function(){return Module["systemCallback"](UTF8ToString(command))})}return-52';
 
-    if (patched.includes('Module["systemCallback"]')) {
-        console.log(`  [${filename}] systemCallback already patched — skipping 2a`);
+    // Previous patch variants to upgrade
+    const oldPatchAsyncOnly = 'if(!command)return 0;if(Module["systemCallback"]){return Asyncify.handleAsync(function(){return Module["systemCallback"](UTF8ToString(command))})}return-52';
+    const oldPatchBare = 'if(!command)return 0;if(Module["systemCallback"]){return Module["systemCallback"](UTF8ToString(command))}return-52';
+
+    // Check for the SPECIFIC combined pattern that includes systemCallbackSync
+    if (patched.includes('Module["systemCallbackSync"]')) {
+        console.log(`  [${filename}] systemCallback already patched with systemCallbackSync — skipping`);
+    } else if (patched.includes(oldPatchAsyncOnly)) {
+        // Upgrade: add sync fast-path before the existing Asyncify path
+        patched = patched.replace(oldPatchAsyncOnly, replacement);
+        patchCount++;
+        console.log(`  [${filename}] Patched 2: upgraded systemCallback to include sync fast-path`);
+    } else if (patched.includes(oldPatchBare)) {
+        // Upgrade old bare patch
+        patched = patched.replace(oldPatchBare, replacement);
+        patchCount++;
+        console.log(`  [${filename}] Patched 2: upgraded bare systemCallback to sync+async`);
     } else if (patched.includes(needle)) {
         patched = patched.replace(needle, replacement);
         patchCount++;
-        console.log(`  [${filename}] Patched 2a: systemCallback hook in __emscripten_system`);
+        console.log(`  [${filename}] Patched 2: systemCallback hook with sync fast-path + Asyncify`);
     } else {
-        console.warn(`  [${filename}] Warning: __emscripten_system exists but browser fallback pattern not found — 2a skipped`);
-    }
-
-    // 2b: Wrap __emscripten_system with WebAssembly.Suspending for JSPI.
-    // We look for the wasmImports binding  _emscripten_system:__emscripten_system
-    // and inject the wrapping right before the wasmImports object.
-    const suspendingNeedle = 'Suspending(__emscripten_system)';
-    if (patched.includes(suspendingNeedle)) {
-        console.log(`  [${filename}] __emscripten_system Suspending already patched — skipping 2b`);
-    } else {
-        // Insert immediately before `var wasmImports=`
-        const wasmImportsNeedle = 'var wasmImports=';
-        if (patched.includes(wasmImportsNeedle)) {
-            const suspendingCode = 'if(WebAssembly.Suspending){__emscripten_system=new WebAssembly.Suspending(__emscripten_system)}';
-            patched = patched.replace(
-                wasmImportsNeedle,
-                suspendingCode + wasmImportsNeedle,
-            );
-            patchCount++;
-            console.log(`  [${filename}] Patched 2b: __emscripten_system wrapped with WebAssembly.Suspending`);
-        } else {
-            console.warn(`  [${filename}] Warning: Could not find 'var wasmImports=' — skipping Suspending patch`);
-        }
+        console.warn(`  [${filename}] Warning: __emscripten_system exists but browser fallback pattern not found — skipped`);
     }
 
     return patched;
 }
 
 /**
- * Patch 3: resolveGlobalSymbol stub for JSPI in standalone builds.
+ * Patch 7: Fix broken callMain that ignores arguments.
  *
- * Emscripten's JSPI code references `resolveGlobalSymbol`, which only exists
- * in dynamic-linking builds. We provide a stub that resolves symbols from
- * wasmExports so JSPI async I/O still works.
+ * Some Emscripten builds generate a simplified callMain() that hardcodes
+ * argc=0 and argv=0, ignoring the args parameter entirely. This happens
+ * when the linker produces a reduced callMain stub (e.g. ninja.mjs).
+ *
+ * We detect the pattern `var argc=0;var argv=0;` and replace callMain
+ * with a full implementation that properly marshals arguments into WASM
+ * memory. Since these builds typically lack stackAlloc/stringToUTF8OnStack,
+ * we grow WASM memory by 1 page (64KB) to get safe scratch space.
  */
-function patchResolveGlobalSymbol(content: string, filename: string): string {
-    const needle = 'if(!WebAssembly.promising){return}const origResolveGlobalSymbol=resolveGlobalSymbol';
-    const replacement = 'if(!WebAssembly.promising){return}if(typeof resolveGlobalSymbol==="undefined"){var resolveGlobalSymbol=function(n){return{sym:wasmExports[n]}}}const origResolveGlobalSymbol=resolveGlobalSymbol';
-
-    if (!content.includes(needle)) {
-        // Not an error — not all .mjs files have JSPI code
-        return content;
-    }
-
-    if (content.includes('typeof resolveGlobalSymbol==="undefined"')) {
-        console.log(`  [${filename}] resolveGlobalSymbol already patched — skipping`);
-        return content;
-    }
-
-    patchCount++;
-    console.log(`  [${filename}] Patched: resolveGlobalSymbol stub for JSPI`);
-    return content.replace(needle, replacement);
-}
-
-/**
- * Patch 5: Wrap _main with WebAssembly.promising in callMain().
- *
- * In standalone builds (no MAIN_MODULE/SIDE_MODULE), Emscripten's built-in
- * JSPI code defines a resolveGlobalSymbol override that would wrap `main`
- * with WebAssembly.promising — but that override is never called because
- * $applySignatureConversions doesn't exist in standalone builds.
- *
- * As a result, callMain() calls _main directly without the promising
- * wrapper, and any Suspending-wrapped import (like __emscripten_system)
- * fails with "trying to suspend without WebAssembly.promising".
- *
- * We patch callMain to wrap entryFunction with WebAssembly.promising
- * if available:
- *
- *   Before: var entryFunction=_main;
- *   After:  var entryFunction=_main;if(WebAssembly.promising){entryFunction=WebAssembly.promising(entryFunction)}
- */
-function patchCallMainPromising(content: string, filename: string): string {
-    const needle = 'var entryFunction=_main;';
-    const replacement = 'var entryFunction=_main;if(WebAssembly.promising){entryFunction=WebAssembly.promising(entryFunction)}';
-
-    // Guard exitJS(ret,true): when promising wraps _main, ret is a Promise,
-    // not a number. Calling exitJS with a Promise sets ABORT=true and calls
-    // exitRuntime() while main() is still executing asynchronously, corrupting state.
-    const exitNeedle = 'exitJS(ret,true)';
-    const exitReplacement = 'if(!(ret&&typeof ret.then==="function"))exitJS(ret,true)';
-    if (content.includes(exitNeedle) && !content.includes('ret.then==="function"')) {
-        content = content.replace(exitNeedle, exitReplacement);
+function patchCallMainArgs(content: string, filename: string): string {
+    // Upgrade pass: if an older version of this patch is already present
+    // (lacking the Asyncify.currData Promise return), rewrite it in-place.
+    // The old body ended with: try{var ret=entryFunction(argc,argv);exitJS(ret,true);return ret}catch(e){return handleException(e)}
+    const oldTail = 'try{var ret=entryFunction(argc,argv);exitJS(ret,true);return ret}catch(e){return handleException(e)}';
+    const newTail = 'try{var ret=entryFunction(argc,argv);if(typeof Asyncify!=="undefined"&&Asyncify.currData){return Asyncify.whenDone().then(function(r){try{exitJS(r,true);return r}catch(e){return handleException(e)}},function(e){return handleException(e)});}exitJS(ret,true);return ret}catch(e){return handleException(e)}';
+    if (content.includes('args.unshift(thisProgram)') && content.includes(oldTail)) {
+        content = content.replace(oldTail, newTail);
         patchCount++;
-        console.log(`  [${filename}] Patched: exitJS guarded for async callMain`);
-    }
-
-    if (!content.includes(needle) && !content.includes('promising(entryFunction)')) {
-        console.warn(`  [${filename}] Warning: callMain entryFunction pattern not found — skipping promising patch`);
+        console.log(`  [${filename}] Upgraded callMain: await Asyncify.whenDone() when unwinding`);
         return content;
     }
 
-    if (content.includes('promising(entryFunction)')) {
-        console.log(`  [${filename}] callMain promising already patched — skipping`);
+    const brokenPattern = 'var argc=0;var argv=0;';
+
+    if (!content.includes(brokenPattern)) {
         return content;
     }
 
-    patchCount++;
-    console.log(`  [${filename}] Patched: callMain entryFunction wrapped with WebAssembly.promising`);
-    return content.replace(needle, replacement);
-}
-
-/**
- * Patch 6: JSPI wrapping for filesystem syscalls.
- *
- * Wraps key filesystem syscalls with async hooks + WebAssembly.Suspending
- * so that on-demand file fetching is transparent to WASM processes.
- *
- * Each wrapped syscall:
- *   1. Calls Module["onPreXxx"](path) if the hook exists
- *   2. Awaits the hook's Promise (JSPI suspends the WASM stack)
- *   3. Calls the original syscall (file data now available)
- *
- * The hooks are injected by the tool-runner at process setup time.
- * This replaces the old FS proxy approach (lookupPath patching) which was
- * broken because Emscripten's lookupNode bypassed the proxy.
- *
- * Wrapped syscalls and their hook + path-argument index:
- *   ___syscall_openat   → onPreOpen  (arg 1: path ptr)
- *   ___syscall_stat64   → onPreStat  (arg 0: path ptr)
- *   ___syscall_lstat64  → onPreStat  (arg 0: path ptr)
- *   ___syscall_faccessat→ onPreAccess(arg 1: path ptr)
- *   ___syscall_readlinkat→onPreStat  (arg 1: path ptr)
- */
-function patchFsSyscallJSPI(content: string, filename: string): string {
-    const wasmImportsNeedle = 'var wasmImports=';
-    if (!content.includes(wasmImportsNeedle)) {
+    if (content.includes('args.unshift(thisProgram)')) {
+        console.log(`  [${filename}] callMain args already patched — skipping`);
         return content;
     }
 
-    if (content.includes('_jspi_wrap')) {
-        console.log(`  [${filename}] FS syscall JSPI already patched — skipping`);
+    // Replace the entire broken callMain function.
+    // The broken pattern: function callMain(){...var argc=0;var argv=0;...}
+    // We replace just the body between the opening { and the matching }.
+    const fnStart = content.indexOf('function callMain()');
+    if (fnStart === -1) {
+        console.warn(`  [${filename}] Warning: broken argc=0 pattern found but callMain() not found — skipping`);
         return content;
     }
 
-    // Helper: wraps a synchronous syscall fn into an async function that
-    // calls Module[hook](pathString) before delegating to the original.
-    // The outer WebAssembly.Suspending makes the async function a valid
-    // WASM import that suspends the stack until the Promise resolves.
-    const jspiCode = [
-        'function _jspi_wrap(fn,hook,pi){var o=fn;',
-        'return new WebAssembly.Suspending(async function(){',
+    // Find the start of the function body
+    const bodyStart = content.indexOf('{', fnStart);
+    if (bodyStart === -1) return content;
 
-        'var h=Module[hook];',
-        'if(h&&arguments[pi]){try{await h(UTF8ToString(arguments[pi]))}catch(e){}}',
-        'return o.apply(null,arguments)})}',
-        'if(typeof WebAssembly!=="undefined"&&WebAssembly.Suspending){',
-        'if(typeof ___syscall_openat==="function")___syscall_openat=_jspi_wrap(___syscall_openat,"onPreOpen",1);',
-        'if(typeof ___syscall_stat64==="function")___syscall_stat64=_jspi_wrap(___syscall_stat64,"onPreStat",0);',
-        'if(typeof ___syscall_lstat64==="function")___syscall_lstat64=_jspi_wrap(___syscall_lstat64,"onPreStat",0);',
-        'if(typeof ___syscall_faccessat==="function")___syscall_faccessat=_jspi_wrap(___syscall_faccessat,"onPreAccess",1);',
-        'if(typeof ___syscall_readlinkat==="function")___syscall_readlinkat=_jspi_wrap(___syscall_readlinkat,"onPreStat",1);',
-        'if(typeof ___syscall_newfstatat==="function")___syscall_newfstatat=_jspi_wrap(___syscall_newfstatat,"onPreStat",1);',
+    // Find the matching closing brace by counting braces
+    let depth = 0;
+    let bodyEnd = -1;
+    for (let i = bodyStart; i < content.length; i++) {
+        if (content[i] === '{') depth++;
+        else if (content[i] === '}') {
+            depth--;
+            if (depth === 0) { bodyEnd = i; break; }
+        }
+    }
+    if (bodyEnd === -1) return content;
+
+    // Build the replacement callMain with proper arg handling.
+    // Uses wasmMemory.grow(1) for scratch space since stackAlloc may be unavailable.
+    const newCallMain = [
+        'function callMain(args=[])',
+        '{',
+        'var entryFunction=_main;',
+        'args.unshift(thisProgram);',
+        'var argc=args.length;',
+        // Grow memory by 1 page (64KB) to get safe scratch space
+        'var oldPages=(wasmMemory.buffer.byteLength/65536)|0;',
+        'wasmMemory.grow(1);',
+        'updateMemoryViews();',
+        'var scratch=oldPages*65536;',
+        'var argv=scratch;',
+        'var strBase=scratch+(argc+1)*4;',
+        'for(var i=0;i<argc;i++){',
+        'HEAPU32[(argv>>2)+i]=strBase;',
+        'var len=lengthBytesUTF8(args[i])+1;',
+        'stringToUTF8Array(args[i],HEAPU8,strBase,len);',
+        'strBase+=len;',
+        '}',
+        'HEAPU32[(argv>>2)+argc]=0;',
+        'try{var ret=entryFunction(argc,argv);',
+        // If Asyncify unwound during main (e.g. async openat hook), the WASM
+        // hasn't actually finished yet — we must return a Promise that resolves
+        // once Asyncify rewinds and the program truly exits. Without this, the
+        // orchestrator sees exitCode=0 immediately and tears down the instance
+        // before any file writes happen, producing silent 15-55ms "success"
+        // runs with no output artifact.
+        'if(typeof Asyncify!=="undefined"&&Asyncify.currData){',
+        'return Asyncify.whenDone().then(function(r){try{exitJS(r,true);return r}catch(e){return handleException(e)}},function(e){return handleException(e)});',
+        '}',
+        'exitJS(ret,true);',
+        'return ret}catch(e){return handleException(e)}',
         '}',
     ].join('');
 
-    content = content.replace(wasmImportsNeedle, jspiCode + wasmImportsNeedle);
+    content = content.substring(0, fnStart) + newCallMain + content.substring(bodyEnd + 1);
     patchCount++;
-    console.log(`  [${filename}] Patched 6: JSPI wrappers for FS syscalls (openat, stat64, lstat64, faccessat, readlinkat)`);
+    console.log(`  [${filename}] Patched 7: callMain args handling (was broken: argc=0, argv=0)`);
     return content;
+}
+
+/**
+ * Patch 8+9: Intercept ___syscall_openat for VFS on-demand loading + subprocess dispatch.
+ *
+ * Two async hooks are injected into the try-block body of ___syscall_openat:
+ *
+ * Hook A — VFS on-demand file loading (ALL tools):
+ *   Checks Module["isCachedSync"](path). If the file is already in the VFSFS
+ *   fileData map (pre-warmed or previously fetched), isCachedSync returns true
+ *   and we fall through to FS.open() directly (no Asyncify overhead).
+ *   If the file is not cached, Module["onPreOpen"](path) is called via
+ *   Asyncify.handleAsync. onPreOpen fetches the file from IDB/CDN and places
+ *   it in fileData before FS.open() runs synchronously.
+ *
+ * Hook B — Subprocess dispatch (Python only, via Module["subprocessDispatch"]):
+ *   When Python's subprocess shim opens /tmp/__dispatch_subprocess__, dispatch
+ *   a child process through the host's tool runner via Asyncify.handleAsync.
+ *   Runs before the VFS hook so the magic path is intercepted first.
+ *
+ * Ordering: subprocess dispatch → VFS hook → sync FS.open() fallback.
+ */
+function patchOpenat(content: string, filename: string): string {
+    const needle = 'path=SYSCALLS.getStr(path);path=SYSCALLS.calculateAt(dirfd,path);var mode=varargs?syscallGetVarargI():0;return FS.open(path,flags,mode).fd';
+
+    if (!content.includes(needle)) {
+        if (content.includes('onPreOpen')) {
+            console.log(`  [${filename}] openat already patched — skipping`);
+        }
+        return content;
+    }
+
+    // Hook B: subprocess dispatch (Python's /tmp/__dispatch_subprocess__ magic path)
+    const subprocessBlock =
+        'if(path==="/tmp/__dispatch_subprocess__"&&Module["subprocessDispatch"]){' +
+        'return Asyncify.handleAsync(function(){' +
+        'return Module["subprocessDispatch"]().then(function(){' +
+        'var mode=varargs?syscallGetVarargI():0;return FS.open(path,flags,mode).fd})})' +
+        '}';
+
+    // Hook A: VFS on-demand loading — bypass when isCachedSync returns true
+    const vfsBlock =
+        'if((!Module["isCachedSync"]||!Module["isCachedSync"](path))&&Module["onPreOpen"]){' +
+        'return Asyncify.handleAsync(function(){' +
+        'return Module["onPreOpen"](path).then(function(){' +
+        'var mode=varargs?syscallGetVarargI():0;return FS.open(path,flags,mode).fd})})' +
+        '}';
+
+    const replacement =
+        'path=SYSCALLS.getStr(path);path=SYSCALLS.calculateAt(dirfd,path);' +
+        subprocessBlock +
+        vfsBlock +
+        'var mode=varargs?syscallGetVarargI():0;return FS.open(path,flags,mode).fd';
+
+    patchCount++;
+    console.log(`  [${filename}] Patched 8+9: openat VFS hook + subprocess dispatch via Asyncify`);
+    return content.replace(needle, replacement);
 }
 
 /**
@@ -288,16 +314,16 @@ function patchFile(filePath: string): void {
     let content = fs.readFileSync(filePath, 'utf8');
     const originalContent = content;
 
-    // All tools get ENV merge, resolveGlobalSymbol, callMain promising,
-    // and FS syscall JSPI patches
+    // All tools get ENV merge and callMain args fix patches
     content = patchEnvMerge(content, filename);
-    content = patchResolveGlobalSymbol(content, filename);
-    content = patchCallMainPromising(content, filename);
-    content = patchFsSyscallJSPI(content, filename);
+    content = patchCallMainArgs(content, filename);
 
     // Apply systemCallback patch to any tool that has __emscripten_system
     // (the function self-guards by checking for that symbol)
     content = patchSystemCallback(content, filename);
+
+    // Apply openat VFS hook + subprocess dispatch (all tools; subprocess block self-guards)
+    content = patchOpenat(content, filename);
 
     if (content !== originalContent) {
         fs.writeFileSync(filePath, content, 'utf8');
@@ -382,6 +408,17 @@ if (fs.existsSync(SYSROOT_LIB)) {
     console.log(`Patching files in ${SYSROOT_LIB}/...`);
     for (const tool of ALL_TOOLS) {
         const mjsPath = path.join(SYSROOT_LIB, `${tool}.mjs`);
+        patchFile(mjsPath);
+    }
+}
+
+// Patch files in build/cdn/usr/lib/ (used by generate-bundles to create .tar.br)
+const CDN_LIB = path.join(BUILD_DIR, 'cdn', 'usr', 'lib');
+if (fs.existsSync(CDN_LIB)) {
+    console.log('');
+    console.log(`Patching files in ${CDN_LIB}/...`);
+    for (const tool of ALL_TOOLS) {
+        const mjsPath = path.join(CDN_LIB, `${tool}.mjs`);
         patchFile(mjsPath);
     }
 }

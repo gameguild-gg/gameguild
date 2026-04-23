@@ -11,16 +11,16 @@ A complete C/C++ development environment that runs entirely in the browser. Writ
 
 ## Key Technologies
 
-| Layer | Technology |
-|-------|-----------|
-| Compiler backend | LLVM + Clang (compiled to WASM) |
-| Optimiser | Binaryen (compiled to WASM) |
-| Emscripten driver | CPython (compiled to WASM) running `emcc.py` |
-| Build system | Emscripten SDK (latest — em++ / emcc) |
-| Kernel | TypeScript (process manager, VFS, IPC, scheduler) |
-| Web frontend | Next.js 15 + React |
-| Terminal | xterm.js |
-| Testing | Playwright (E2E) |
+| Layer             | Technology                                        |
+| ----------------- | ------------------------------------------------- |
+| Compiler backend  | LLVM + Clang (compiled to WASM)                   |
+| Optimiser         | Binaryen (compiled to WASM)                       |
+| Emscripten driver | CPython (compiled to WASM) running `emcc.py`      |
+| Build system      | Emscripten SDK (latest — em++ / emcc)             |
+| Kernel            | TypeScript (process manager, VFS, IPC, scheduler) |
+| Web frontend      | Next.js 15 + React                                |
+| Terminal          | xterm.js                                          |
+| Testing           | Playwright (E2E)                                  |
 
 ---
 
@@ -52,17 +52,31 @@ cd ../../demos/emception-next  && npm install && npm run dev   # Next.js demo  (
 
 `npm run build:all` runs sequential steps via `run-s`:
 
-| # | Script | What it does |
-|---|--------|-------------|
-| 1 | `build:orchestrator` | TypeScript type-check (`tsc --noEmit`) |
-| 2 | `build:emsdk` | Downloads & configures the Emscripten SDK |
-| 3 | `build:binaryen` | Builds each Binaryen tool as a standalone WASM process (wasm-opt, wasm-as, …) |
-| 4 | `build:cpython` | Cross-compiles CPython as a standalone WASM process |
-| 5 | `build:llvm` | Builds each LLVM tool as a standalone WASM process (clang, lld, llvm-nm, …) |
-| 6 | `build:sysroot` | Populates `/usr/include`, `/usr/lib` with headers, libs, and Emscripten runtime files |
-| 7 | `build:manifest` | Generates file manifest metadata and stages raw CDN files |
-| 8 | `build:bundles` | Creates Brotli-compressed `.tar.br` bundles and updates manifest bundle metadata |
-| 9 | `deploy:cdn` | Copies CDN assets to `demos/emception-react/public/cdn/` and `demos/emception-next/public/cdn/` for serving |
+| #   | Script               | What it does                                                                                                |
+| --- | -------------------- | ----------------------------------------------------------------------------------------------------------- |
+| 1   | `typecheck`          | TypeScript type-check (`tsc --noEmit`)                                                                      |
+| 2   | `build:emsdk`        | Downloads & configures the Emscripten SDK                                                                   |
+| 3   | `build:binaryen`     | Builds each Binaryen tool as a standalone WASM process (wasm-opt, wasm-as, …)                               |
+| 4   | `build:cpython`      | Cross-compiles CPython as a standalone WASM process                                                         |
+| 5   | `build:llvm`         | Builds each LLVM tool as a standalone WASM process (clang, lld, llvm-nm, …)                                 |
+| 6   | `build:libcurl-lite` | Builds a minimal `libcurl.a` for tools that need HTTP fetch                                                 |
+| 7   | `build:ninja`        | Builds the Ninja build system as a standalone WASM process                                                  |
+| 8   | `build:cmake`        | Builds CMake as a standalone WASM process                                                                   |
+| 9   | `build:sdl3`         | Builds SDL3 as a static library staged into the sysroot                                                     |
+| 10  | `build:imgui`        | Builds Dear ImGui as a static library staged into the sysroot                                               |
+| 11  | `build:sysroot`      | Populates `/usr/include`, `/usr/lib` with headers, libs, and Emscripten runtime files                       |
+| 12  | `build:brotli`       | Builds the native Brotli CLI plus the in-browser Brotli WASM decoder                                        |
+| 13  | `patch:glue`         | Post-processes Emscripten `.mjs` glue files for VFS + async-bridge integration                              |
+| 14  | `build:manifest`     | Generates file manifest metadata and stages raw CDN files                                                   |
+| 15  | `build:bundles`      | Creates Brotli-compressed `.tar.br` bundles and updates manifest bundle metadata                            |
+| 16  | `build:lib`          | Builds the publishable runtime library (`tsup` + `tsc -p tsconfig.lib.json`)                                |
+| 17  | `deploy:cdn`         | Copies CDN assets to `demos/emception-react/public/cdn/` and `demos/emception-next/public/cdn/` for serving |
+
+Convenience aggregates: `build:cdn` (= manifest + bundles + deploy) and `build:pipeline` (= sysroot + brotli + patch + cdn + lib) re-run only the parts that depend on already-built tool WASMs.
+
+**Bundle layout note**: `generate-bundles.ts` ships a dedicated `clang-headers` bundle (`/usr/lib/clang/<ver>/include`) so that the compiler's resource-dir headers can be fetched independently of `clang.wasm`. `populate-sysroot.ts` auto-detects the active LLVM version under `tools/emsdk/upstream/lib/clang/<ver>/include` and copies it into the sysroot at the same path.
+
+**Brotli decompressor (browser side)**: LazyFS uses `DecompressionStream("br")` when available and otherwise falls back to a **locally-built** Emscripten brotli module — built from the upstream brotli C source by `tools/emception/scripts/build-brotli.ts` and shipped as `build/cdn/brotli_wasm.js` + `brotli_wasm.wasm`. `deploy:cdn` copies these files into `public/cdn/` via the wildcard sync; **no `brotli-wasm` npm dependency**. The worker pre-loads the module via `createBrotliModule({ locateFile })`, then calls `Module.cwrap('brotli_decompress_buffer', ...)` (returning a heap pointer + `size_t` written through `HEAPU32`) and exposes the resulting `(Uint8Array) => Uint8Array` function as `LazyFS.customBrotliDecompressor`. The native CLI binary (also produced by `build:brotli`) is used by `generate-bundles.ts` to compress bundles at build time.
 
 Individual steps can be run independently (e.g. `npm run build:llvm`).
 
@@ -76,6 +90,7 @@ All build scripts are **TypeScript** (in `scripts/`), executed via **tsx**, for 
 - **Python version**: Detected from `emsdk` after `build:emsdk` step. The build scripts read the SDK's Python version, download/cross-compile that exact CPython version as a WASM process, and configure the VFS with the matching Python stdlib (e.g. `/usr/lib/python3.14/` if emsdk uses 3.14).
 
 This approach guarantees that:
+
 - The browser-based toolchain is compatible with the emcc that drives the compilation
 - No version mismatches occur between LLVM, Python, Binaryen, and Emscripten
 - Updates to emsdk automatically propagate to the browser toolchain without manual configuration changes
@@ -94,17 +109,47 @@ em++  -sALLOW_MEMORY_GROWTH=1  -sMAXIMUM_MEMORY=2147483648
       -sEXPORTED_RUNTIME_METHODS=FS,callMain
 ```
 
-**Asyncify is intentionally excluded** — it is incompatible with Emscripten's default reference-types feature. Tools don't need async unwinding for simple `callMain()` invocations.
+**Asyncify is enabled** for async suspension/resume (lazy file loading, subprocess dispatch, stdin). Tools are compiled with `-sASYNCIFY`, `-sASYNCIFY_STACK_SIZE`, `-sASYNCIFY_IMPORTS=[...]`, and `-mno-reference-types` (required for Asyncify compatibility).
 
 Additional per-tool flags:
 
-| Tool | Extra Flags |
-|------|-------------|
-| Binaryen | `-sSTACK_SIZE=4194304` (4 MB — deep AST recursion) |
-| LLVM | `-sSTACK_SIZE=8388608` (8 MB — deep parsing recursion), `-sUSE_ZLIB=1` |
-| CPython | `-sSTACK_SIZE=2097152` (2 MB — import chain), `-sUSE_ZLIB=1`, `-sUSE_BZIP2=1`, `-sUSE_SQLITE3=1` |
+| Tool     | Extra Flags                                                                                      |
+| -------- | ------------------------------------------------------------------------------------------------ |
+| Binaryen | `-sSTACK_SIZE=4194304` (4 MB — deep AST recursion)                                               |
+| LLVM     | `-sSTACK_SIZE=8388608` (8 MB — deep parsing recursion), `-sUSE_ZLIB=1`                           |
+| CPython  | `-sSTACK_SIZE=2097152` (2 MB — import chain), `-sUSE_ZLIB=1`, `-sUSE_BZIP2=1`, `-sUSE_SQLITE3=1` |
 
 Each tool statically links what it needs (libc, libc++, LLVM libs, etc.) and gets its own isolated WASM linear memory.
+
+---
+
+## Embedding in Your App
+
+The smallest integration is the `createEmception` factory. It mounts a terminal, boots the toolchain inside a Web Worker, and returns a tiny async API — perfect for course widgets / LMS playgrounds:
+
+```ts
+import { createEmception } from 'emception';
+
+const ide = await createEmception({
+  container: document.getElementById('terminal')!,
+  manifestUrl: '/cdn/manifest.json',
+});
+
+await ide.writeFile(
+  '/home/user/main.c',
+  `#include <stdio.h>
+int main(){ puts("hi"); return 0; }`,
+);
+
+const compile = await ide.run('clang', ['/home/user/main.c', '-o', '/home/user/a.out']);
+console.log('exit:', compile.exitCode, compile.stderr);
+
+ide.dispose(); // tear down the worker when done
+```
+
+The full surface is documented inline in `src/createEmception.ts` (`run`, `readFile`, `writeFile`, `listDir`, `resetVfs`, `dispose`). Advanced consumers can still import `boot` / `bootInWorker` for direct access to `ToolRunner`, `MiniShell`, and the VFS internals.
+
+**Peer dependency:** consumers must install `@xterm/xterm` (declared as an optional peer). A real working example lives under `demos/emception-react/`.
 
 ---
 
@@ -168,48 +213,54 @@ This eliminates the entire class of bugs caused by the previous MAIN_MODULE/SIDE
 
 The previous architecture used Emscripten's `MAIN_MODULE` + `SIDE_MODULE` dynamic linking — one shared WASM runtime with tools loaded via `dlopen`/`dlsym` into shared linear memory. This caused systemic issues:
 
-| Problem | Cause | Micro-kernel fix |
-|---------|-------|-----------------|
-| **BSS corruption** | SIDE_MODULE loading zeros BSS segments overlapping MAIN_MODULE globals (e.g. musl's `__environ`) | Each process has its own BSS — no overlap possible |
-| **Environment variable loss** | Loading side modules after `callMain()` corrupts the environ table in shared memory | Each process has its own environ, set by kernel before `main()` |
-| **Symbol conflicts** | All modules share one symbol table; name collisions cause silent corruption | Each process has its own symbol table — fully isolated |
-| **Memory pressure** | LLVM (~30MB) + Binaryen (~10MB) + CPython coexist in a single 2GB space | Each process gets its own 2GB address space |
-| **No standard builds** | MAIN_MODULE/SIDE_MODULE require non-standard Emscripten flags and manual patches | Standard `emcc` builds — no patches needed |
-| **Fragile initialization** | Tools must be loaded in specific order; workarounds needed (setenv after dlopen, ENV injection patches) | Each tool initializes independently with its own clean state |
+| Problem                       | Cause                                                                                                   | Micro-kernel fix                                                |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------- |
+| **BSS corruption**            | SIDE_MODULE loading zeros BSS segments overlapping MAIN_MODULE globals (e.g. musl's `__environ`)        | Each process has its own BSS — no overlap possible              |
+| **Environment variable loss** | Loading side modules after `callMain()` corrupts the environ table in shared memory                     | Each process has its own environ, set by kernel before `main()` |
+| **Symbol conflicts**          | All modules share one symbol table; name collisions cause silent corruption                             | Each process has its own symbol table — fully isolated          |
+| **Memory pressure**           | LLVM (~30MB) + Binaryen (~10MB) + CPython coexist in a single 2GB space                                 | Each process gets its own 2GB address space                     |
+| **No standard builds**        | MAIN_MODULE/SIDE_MODULE require non-standard Emscripten flags and manual patches                        | Standard `emcc` builds — no patches needed                      |
+| **Fragile initialization**    | Tools must be loaded in specific order; workarounds needed (setenv after dlopen, ENV injection patches) | Each tool initializes independently with its own clean state    |
 
 ### Kernel Components
 
 The TypeScript kernel (`orchestrator/`) provides OS-like services to WASM processes:
 
-| Component | File(s) | Responsibility |
-|-----------|---------|---------------|
-| **Process Manager** | `tool-runner.ts` | Spawns WASM processes, manages lifecycle, captures exit codes |
-| **VFS** | `vfs/` | Layered filesystem (LazyFS, IDBFS, OverlayFS) — single source of truth |
-| **IPC** | `async-bridge.ts` | Message passing between kernel and WASM processes (syscall dispatch) |
-| **Shell** | `shell.ts` | Command parser, pipeline support, process spawning |
-| **TTY** | `tty/xterm-bridge.ts`, `tty/line-buffer.ts` | xterm.js integration, stdin/stdout/stderr routing, line buffering |
-| **Network** | `net/fetch-bridge.ts` | fetch-based network access |
-| **Loader** | `loader/wasm-module.ts`, `loader/brotli.ts` | WASM binary fetching, Brotli decompression, caching |
-| **Emscripten Bridge** | `emscripten/browser-bridge.ts`, `emscripten/subprocess-shim.ts` | Emscripten module patching, subprocess IPC shim for CPython |
+| Component             | File(s)                                                         | Responsibility                                                         |
+| --------------------- | --------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| **Process Manager**   | `tool-runner.ts`                                                | Spawns WASM processes, manages lifecycle, captures exit codes          |
+| **VFS**               | `vfs/`                                                          | Layered filesystem (LazyFS, IDBFS, OverlayFS) — single source of truth |
+| **IPC**               | `async-bridge.ts`                                               | Message passing between kernel and WASM processes (syscall dispatch)   |
+| **Shell**             | `shell.ts`                                                      | Command parser, pipeline support, process spawning                     |
+| **TTY**               | `tty/xterm-bridge.ts`, `tty/line-buffer.ts`                     | xterm.js integration, stdin/stdout/stderr routing, line buffering      |
+| **Network**           | `net/fetch-bridge.ts`                                           | fetch-based network access                                             |
+| **Loader**            | `loader/wasm-module.ts`, `loader/brotli.ts`                     | WASM binary fetching, Brotli decompression, caching                    |
+| **Emscripten Bridge** | `emscripten/browser-bridge.ts`, `emscripten/subprocess-shim.ts` | Emscripten module patching, subprocess IPC shim for CPython            |
 
 ### Tool Processes
 
 Each tool is a standalone WASM module. The kernel knows how to spawn them via a **TOOL_REGISTRY**:
 
-| Tool | WASM Binary | Statically Links |
-|------|-------------|-----------------|
-| `clang`, `clang++` | clang.wasm | libc, libc++, LLVM |
-| `lld`, `wasm-ld` | lld.wasm | libc, libc++, LLVM |
-| `llvm-nm` | llvm-nm.wasm | libc, libc++, LLVM |
-| `llvm-ar` | llvm-ar.wasm | libc, libc++, LLVM |
-| `llvm-objcopy` | llvm-objcopy.wasm | libc, libc++, LLVM |
-| `llc` | llc.wasm | libc, libc++, LLVM |
-| `wasm-opt` | wasm-opt.wasm | libc, libc++, Binaryen |
-| `wasm-as` | wasm-as.wasm | libc, libc++, Binaryen |
-| `wasm-ctor-eval` | wasm-ctor-eval.wasm | libc, libc++, Binaryen |
-| `wasm-emscripten-finalize` | wasm-emscripten-finalize.wasm | libc, libc++, Binaryen |
-| `wasm-metadce` | wasm-metadce.wasm | libc, libc++, Binaryen |
-| `emcc`, `em++` | python.wasm | libc, libc++, libpython |
+| Tool                       | WASM Binary                   | Statically Links        |
+| -------------------------- | ----------------------------- | ----------------------- |
+| `clang`, `clang++`         | clang.wasm                    | libc, libc++, LLVM      |
+| `lld`, `wasm-ld`           | lld.wasm                      | libc, libc++, LLVM      |
+| `llvm-nm`                  | llvm-nm.wasm                  | libc, libc++, LLVM      |
+| `llvm-ar`                  | llvm-ar.wasm                  | libc, libc++, LLVM      |
+| `llvm-objcopy`             | llvm-objcopy.wasm             | libc, libc++, LLVM      |
+| `llc`                      | llc.wasm                      | libc, libc++, LLVM      |
+| `wasm-opt`                 | wasm-opt.wasm                 | libc, libc++, Binaryen  |
+| `wasm-as`                  | wasm-as.wasm                  | libc, libc++, Binaryen  |
+| `wasm-ctor-eval`           | wasm-ctor-eval.wasm           | libc, libc++, Binaryen  |
+| `wasm-emscripten-finalize` | wasm-emscripten-finalize.wasm | libc, libc++, Binaryen  |
+| `wasm-metadce`             | wasm-metadce.wasm             | libc, libc++, Binaryen  |
+| `emcc`, `em++`             | python.wasm                   | libc, libc++, libpython |
+
+#### Browser cc1 mode (direct invocation)
+
+`clang.wasm` cannot fork a `cc1` subprocess in the browser — there is no `posix_spawn`. When run in the default driver mode (`clang foo.cpp -o foo.o`), the driver tries to spawn a separate `cc1` process for the actual compilation, that spawn fails silently, and the driver exits 0 in ~35ms with no diagnostics.
+
+`cc1_main` is statically linked into `clang.wasm`, so the IDE invokes it directly with `clang -cc1 ...` from the browser, supplying all the flags the driver would normally compute. Required arguments include `-triple wasm32-unknown-emscripten`, `-resource-dir /usr/lib/clang/<ver>`, the `-internal-isystem` chain (`/usr/lib/clang/<ver>/include`, `/usr/include/c++/v1`, `/usr/include`), and exception flags (`-fcxx-exceptions -fexceptions`). See `packages/emception/src/components/Ide.tsx` for the canonical browser cc1 argv.
 
 ### Virtual Filesystem (VFS) Architecture
 
@@ -220,24 +271,25 @@ The VFS is a critical substrate: it is **injected into every WASM process** and 
 - **Filesystem hijacking**: All POSIX filesystem calls (`open`, `read`, `write`, `stat`, etc.) are intercepted by a custom Emscripten FS implementation before being passed to the kernel.
 - **Stdin/Stdout/Stderr hijacking**: The standard I/O streams are also hijacked. Instead of direct browser console output, `stdin`, `stdout`, and `stderr` receive **callback functions** that read/write data through the kernel, allowing the shell to capture and route process output.
 - **Unified view**: All processes see the exact same filesystem tree via the kernel VFS — files written by one process are immediately visible to the next.
-- **JSPI integration**: For lazy-loaded files (e.g. from the CDN), the VFS uses JavaScript Promise Integration (JSPI) to suspend WASM execution while asynchronously fetching and unpacking files, providing a seamless blocking I/O experience to processes.
-- **Do not use MEMFS as cache to bypass async hooks**: The VFS must not use MEMFS as a cache layer for lazy-loaded files, as this would bypass the JSPI hooks and break the async loading mechanism. Instead, the VFS should directly manage file states and trigger JSPI suspension when a file is accessed that is not yet available in IndexedDB.
+- **Asyncify integration**: For lazy-loaded files (e.g. from the CDN), the VFS uses Emscripten's Asyncify mechanism to suspend WASM execution while asynchronously fetching and unpacking files, providing a seamless blocking I/O experience to processes. This works in all modern browsers (Chrome, Firefox, Safari).
+- **Do not use MEMFS as cache to bypass async hooks**: The VFS must not use MEMFS as a cache layer for lazy-loaded files, as this would bypass the Asyncify hooks and break the async loading mechanism. Instead, the VFS should directly manage file states and trigger Asyncify suspension when a file is accessed that is not yet available in IndexedDB.
 
 #### VFS Layer Stack
 
 The VFS is layered to provide different storage semantics:
 
-| Mount Point | Backend Layer | Behavior | Implementation |
-|---|---|---|---|
-| **`/tmp`** | **MemFS** | In-memory filesystem. Volatile (cleared on reload). Non-persistent. Used for temporary compilations, subprocess communication, intermediate files. | `mem.ts` — simple in-memory data structure (no IndexedDB) |
-| **`/home/user`** | **IDBFS** | IndexedDB-backed persistent filesystem. User project files, source code, configuration files. Survives page reload. | `idb.ts` — reads/writes to browser IndexedDB |
-| **`/usr`, `/lib`, `/etc`** | **LazyFS** | CDN-backed lazy filesystem. System files, headers, libraries, binaries. Files are **downloaded on-demand as Brotli-compressed bundles** and unpacked into IndexedDB. Bundles are cached — only downloaded if not already present on the IndexedDB. | `lazy.ts` — manifest-driven, bundle-based |
+| Mount Point                | Backend Layer | Behavior                                                                                                                                                                                                                                           | Implementation                                            |
+| -------------------------- | ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------- |
+| **`/tmp`**                 | **MemFS**     | In-memory filesystem. Volatile (cleared on reload). Non-persistent. Used for temporary compilations, subprocess communication, intermediate files.                                                                                                 | `mem.ts` — simple in-memory data structure (no IndexedDB) |
+| **`/home/user`**           | **IDBFS**     | IndexedDB-backed persistent filesystem. User project files, source code, configuration files. Survives page reload.                                                                                                                                | `idb.ts` — reads/writes to browser IndexedDB              |
+| **`/usr`, `/lib`, `/etc`** | **LazyFS**    | CDN-backed lazy filesystem. System files, headers, libraries, binaries. Files are **downloaded on-demand as Brotli-compressed bundles** and unpacked into IndexedDB. Bundles are cached — only downloaded if not already present on the IndexedDB. | `lazy.ts` — manifest-driven, bundle-based                 |
 
 #### LazyFS: Bundle-Based Lazy Loading
 
 LazyFS is optimized for large directory trees (e.g. `/usr/include` with thousands of headers, `/usr/lib` with WASM binaries and system libraries):
 
 1. **Manifest**: At build time, the manifest (`build/manifest.json`) describes all available files, their paths, sizes, and which **bundle** they belong to.
+
    ```json
    {
      "files": {
@@ -256,7 +308,7 @@ LazyFS is optimized for large directory trees (e.g. `/usr/include` with thousand
    - Checks the manifest → finds that it belongs to bundle `crt0`
    - Checks if bundle `crt0` is already downloaded and unpacked → if **yes**, return the file immediately
    - If **no**, **fetch the bundle from the CDN** as a Brotli-compressed tarball (`/cdn/crt0.tar.br`)
-   - **Decompress** the Brotli archive on the client using `orchestrator/loader/brotli.ts`
+   - **Decompress** the Brotli archive on the client using `loader/brotli.ts`
    - **Unpack** the tar into IndexedDB under `/usr` (batch writes for performance)
    - **Return the file** to the process
 
@@ -274,6 +326,7 @@ LazyFS is optimized for large directory trees (e.g. `/usr/include` with thousand
 - **No anticipatory downloads**: Avoid speculative fetching of related files (e.g., downloading all headers in a directory when one header is accessed).
 
 This ensures:
+
 - **Fast startup**: No blocking network I/O before the user can run code
 - **Minimal bandwidth**: Only tools and files actually used are transferred
 - **Responsive UI**: The terminal appears immediately; compilation can start while assets stream in
@@ -296,40 +349,40 @@ Exceptions to this principle are only related to `/dev`, `/proc`, and other virt
 7. **Process exits** → kernel captures exit code, stdout, stderr; memory is reclaimed
 8. **Shell continues** with the next command in the pipeline
 
-#### Async Filesystem Operations via JSPI (JavaScript Promise Integration)
+#### Async Filesystem Operations via Asyncify
 
-Emscripten ordinarily requires **synchronous** filesystem operations — POSIX APIs like `open()`, `read()`, `write()` must complete immediately within the same call stack. However, lazy-loading from a CDN and IndexedDB requires **asynchronous I/O** (network fetch, async IndexedDB queries). To bridge this gap, Emception uses **JavaScript Promise Integration (JSPI)**, a WebAssembly standard that allows WASM to suspend and resume execution asynchronously.
+Emscripten ordinarily requires **synchronous** filesystem operations — POSIX APIs like `open()`, `read()`, `write()` must complete immediately within the same call stack. However, lazy-loading from a CDN and IndexedDB requires **asynchronous I/O** (network fetch, async IndexedDB queries). To bridge this gap, Emception uses **Emscripten's Asyncify** mechanism, which instruments the WASM binary at compile time to support suspension and resumption of the call stack.
 
-**JSPI Strategy**:
+**Asyncify Strategy**:
 
-1. **Enable JSPI in Emscripten**: Compile tools with `-sJSPI=1` flag to enable promise-returning functions:
+1. **Enable Asyncify in Emscripten**: Compile tools with `-sASYNCIFY` and related flags:
+
    ```
-   em++ file.cpp -sJSPI=1 -sEXIT_RUNTIME=1 ...
+   em++ file.cpp -sASYNCIFY -sASYNCIFY_STACK_SIZE=65536 -sASYNCIFY_IMPORTS=[...] -mno-reference-types ...
    ```
 
-2. **Async Syscall Bridge**: The FS layer exposes syscalls as **promise-returning** JavaScript functions. When a WASM process calls `open()` or `read()`:
+2. **Async Syscall Bridge**: The FS layer exposes syscalls as **promise-returning** JavaScript functions listed in `ASYNCIFY_IMPORTS`. When a WASM process calls `open()` or `read()`:
    - The syscall handler checks if the file needs to be fetched from the CDN (LazyFS)
    - If a fetch is needed, the syscall **returns a Promise**
-   - JSPI **suspends** the WASM execution
+   - Asyncify **suspends** the WASM execution (unwinding the stack)
    - JavaScript **does** the async I/O (fetch, decompress, IndexedDB write)
-   - JavaScript **resumes** the WASM execution with the result
+   - Asyncify **resumes** the WASM execution (rewinding the stack) with the result
    - WASM continues as if the syscall completed synchronously
 
-3. **Transparent to user code**: The process code (C/C++ or Python) sees **blocking I/O** semantics. Under the hood, JSPI transparently converts the blocking syscall into an async operation:
+3. **Transparent to user code**: The process code (C/C++ or Python) sees **blocking I/O** semantics. Under the hood, Asyncify transparently converts the blocking syscall into an async operation:
+
    ```c
    // User code sees this as a synchronous open
    FILE *f = fopen("/usr/include/stdio.h", "r");
    // Internally:
    // - syscall: open("/usr/include/stdio.h") → Promise
-   // - JSPI suspends WASM
+   // - Asyncify suspends WASM (unwinds stack)
    // - fetch from CDN, decompress, unpack to IDB
-   // - JSPI resumes WASM
+   // - Asyncify resumes WASM (rewinds stack)
    // - open() returns normally
    ```
 
-4. **Fallback strategies** (if JSPI unavailable):
-   - **Asyncify**: Emscripten's older mechanism (slower, larger binary, runtime overhead) that replays execution to unwind and resume the stack.
-   - **WebWorker + SharedArrayBuffer**: Offload blocking I/O to a worker thread with shared memory, allowing the main thread to block-wait without freezing the browser.
+4. **Cross-browser compatibility**: Unlike JSPI (which only works in Chrome/Edge 137+), Asyncify works in **all modern browsers** including Safari and Firefox, since the suspension logic is compiled into the WASM binary itself.
 
 > **❌ NOT ACCEPTABLE**: Do NOT preload or "warm" the filesystem at startup. Preloading defeats the purpose of lazy loading and wastes bandwidth/storage. The system must download files on-demand when accessed.
 
@@ -337,13 +390,14 @@ Emscripten ordinarily requires **synchronous** filesystem operations — POSIX A
 
 In addition to filesystem hijacking, `stdin`, `stdout`, and `stderr` are hijacked and replaced with **callback functions**:
 
-| Stream | Callback | Purpose |
-|--------|----------|---------|
-| **stdin** | `async (size: number) => Uint8Array` | Read up to `size` bytes from the input stream. Allows the shell to feed data to processes (interactive terminal input, piped data from previous processes). |
+| Stream     | Callback                              | Purpose                                                                                                                                                           |
+| ---------- | ------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **stdin**  | `async (size: number) => Uint8Array`  | Read up to `size` bytes from the input stream. Allows the shell to feed data to processes (interactive terminal input, piped data from previous processes).       |
 | **stdout** | `(data: Uint8Array) => Promise<void>` | Write data to the output stream. Called whenever a process outputs text. The kernel routes this to the terminal UI or pipes it to the next process in a pipeline. |
-| **stderr** | `(data: Uint8Array) => Promise<void>` | Write diagnostic/error data. Like stdout but semantically separate, allowing the shell to color or route differently. |
+| **stderr** | `(data: Uint8Array) => Promise<void>` | Write diagnostic/error data. Like stdout but semantically separate, allowing the shell to color or route differently.                                             |
 
 **Example flow** (interactive terminal):
+
 1. User types `echo hello` + Enter in the terminal UI
 2. Shell parses command → spawns `echo.wasm`
 3. `echo` calls `write(1, "hello\n", 6)` (write to stdout)
@@ -352,6 +406,7 @@ In addition to filesystem hijacking, `stdin`, `stdout`, and `stderr` are hijacke
 6. TTY layer routes to xterm.js → user sees "hello" in the terminal
 
 **Example flow** (piped commands):
+
 1. User types `cat file.txt | wc -l`
 2. Shell spawns `cat.wasm` and `wc.wasm` with pipes connected
 3. `cat` writes to stdout → TTY routes to intermediate buffer
@@ -366,30 +421,30 @@ When `emcc` (CPython running `emcc.py`) needs to invoke sub-tools (clang, lld, w
 
 1. **emcc calls `subprocess.run(['clang', '-o', 'hello.o', 'hello.c'])`**
 2. **Shim intercepts** → serializes the command as JSON to `/tmp/.subprocess_request`
-3. **Shim calls `os.system('__dispatch_subprocess')`** → triggers JSPI suspension
+3. **Shim calls `os.system('__dispatch_subprocess')`** → triggers Asyncify suspension
 4. **Kernel reads** the JSON request from the VFS
 5. **Kernel spawns** the requested tool (clang.wasm) as a new isolated process with:
    - **stdin callback**: Feeds data from the parent process's stdin buffer to the child process
    - **stdout callback**: Captures the child's stdout and routes to the parent's stdout buffer
    - **stderr callback**: Captures the child's stderr and routes to the parent's stderr buffer
 6. **Tool runs**, reads/writes via callbacks, exits
-7. **JSPI resumes** CPython → shim reads exit code from VFS → returns to emcc
+7. **Asyncify resumes** CPython → shim reads exit code from VFS → returns to emcc
 
 This IPC mechanism allows the single-threaded browser environment to run multi-process compilation pipelines synchronously from Python's perspective, with all I/O flowing through callback-based streams rather than temporary files.
 
 ### Comparison to OS Design
 
-| OS Concept | Emception Equivalent |
-|-----------|---------------------|
-| Kernel | TypeScript orchestrator |
-| Process | Isolated WASM instance |
-| Syscalls | `postMessage` / `SharedArrayBuffer` bridge |
-| `/proc`, `/dev` | Kernel-managed VFS layers |
-| `fork`/`exec` | Kernel spawns new WASM instance from binary |
-| Pipes | Kernel routes stdout of one process to stdin of the next |
-| Filesystem | LazyFS + IDBFS + OverlayFS stack |
+| OS Concept       | Emception Equivalent                                        |
+| ---------------- | ----------------------------------------------------------- |
+| Kernel           | TypeScript orchestrator                                     |
+| Process          | Isolated WASM instance                                      |
+| Syscalls         | `postMessage` / `SharedArrayBuffer` bridge                  |
+| `/proc`, `/dev`  | Kernel-managed VFS layers                                   |
+| `fork`/`exec`    | Kernel spawns new WASM instance from binary                 |
+| Pipes            | Kernel routes stdout of one process to stdin of the next    |
+| Filesystem       | LazyFS + IDBFS + OverlayFS stack                            |
 | Shared libraries | Not needed — each process statically links its dependencies |
-| Virtual memory | Each WASM instance has its own linear memory (up to 2GB) |
+| Virtual memory   | Each WASM instance has its own linear memory (up to 2GB)    |
 
 ---
 
@@ -397,10 +452,10 @@ This IPC mechanism allows the single-threaded browser environment to run multi-p
 
 Two demo applications live under `demos/` at the repo root:
 
-| Demo | Path | Stack | Command |
-|------|------|-------|---------|
-| React + Vite | `demos/emception-react/` | React, Vite | `cd demos/emception-react && npm install && npm run dev` |
-| Next.js | `demos/emception-next/` | Next.js 15, React | `cd demos/emception-next && npm install && npm run dev` |
+| Demo         | Path                     | Stack             | Command                                                  |
+| ------------ | ------------------------ | ----------------- | -------------------------------------------------------- |
+| React + Vite | `demos/emception-react/` | React, Vite       | `cd demos/emception-react && npm install && npm run dev` |
+| Next.js      | `demos/emception-next/`  | Next.js 15, React | `cd demos/emception-next && npm install && npm run dev`  |
 
 Both demos automatically sync CDN assets from `tools/emception/public/cdn/` via a `predev`/`prebuild` script (`scripts/sync-emception-cdn.mjs`). Run `npm run build:all` in `tools/emception` first to populate the CDN assets.
 

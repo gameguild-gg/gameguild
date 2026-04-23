@@ -1,0 +1,38 @@
+# Dependencies
+node_modules/
+
+# Local .NET SDK
+.dotnet/
+
+# Build output
+dist/
+*.tsbuildinfo
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+.env.local
+public/managed/*
+dotnet-runtime/bin/
+dotnet-runtime/obj/
+# Generated runtime files copied by vite.config.ts copy-dotnet-runtime plugin
+src/runtime/blazor.boot.json
+src/runtime/dotnet.js
+src/runtime/dotnet.native.js
+src/runtime/dotnet.runtime.js

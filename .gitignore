@@ -1,29 +1,63 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+# Repository-wide ignore rules
 
-# OS
+# OS metadata
 .DS_Store
 Thumbs.db
 Desktop.ini
 nul
 
-# Caches directories and files
-.cache
-
-# Temporary directories and files
-.temp
-.tmp
-
-# IDE's and Editors
-/.idea
+# Editors and IDEs
+.idea/
 .project
 .classpath
 .c9/
 *.launch
 .settings/
 *.sublime-workspace
-.vscode
-public/pyodide/*
-public/wasm/*
+.vscode/
+
+# Cache and temp files
+.cache/
+.temp/
+.tmp/
+
+# Package manager state
+**/node_modules/
+.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+package-lock.json
+yarn.lock
+.pnpm-store/
+
+# Environment files
+.env
+.env.*
+!.env.example
+!.env.*.example
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# Generic build and test output
+build/
+dist/
+coverage/
+test-results/
+playwright-report/
+playwright-report-react/
+*.tsbuildinfo
+apps/web/test-results/
 
 # .NET
 /bin/
@@ -34,7 +68,6 @@ public/wasm/*
 *.docstates
 [Dd]ebug/
 [Rr]elease/
-build/
 [Bb]in/
 [Oo]bj/
 x64/
@@ -42,73 +75,26 @@ x86/
 *.exe
 *.dll
 *.pdb
-
-
 /[Tt]estResults/
 /[Ll]ogs/
-# Node.js Dependencies
-**/node_modules
-
-# Embedded upstream repos (avoid nested .git metadata/tooling conflicts)
-tools/emception/userland/**/.git/
-
-# Node.js Package Managers
-/.pnp
-.pnp.*
-.yarn/*
-!.yarn/patches
-!.yarn/plugins
-!.yarn/releases
-!.yarn/versions
-
-# Node.js Package Managers Lockfiles
-package-lock.json
-yarn.lock
-pnpm-lock.yaml
-
-# pnpm store
-.pnpm-store/
-
-# Environment Variables
-.env
-.env.*
-!.env.example
-!.env.*.example
-
-# Logs
-logs
-*.log
-npm-debug.log*
-pnpm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-lerna-debug.log*
-
-# Miscellaneous
-*.pem
-
-# Typescript
-*.tsbuildinfo
-
-# Compiled Output
-/dist
 
 # Next.js
 next-env.d.ts
-/.next/
+.next/
 /out/
 
 # Vercel
 .vercel
 
-# Testing
-/coverage
-
-# Production
-/build
-
 # Turbo
 .turbo
 
-apps/web/test-results/
-test-results/
+# Public assets generated at build time
+public/pyodide/*
+public/wasm/*
+
+# Embedded upstream repos (avoid nested .git metadata/tooling conflicts)
+tools/emception/userland/**/.git/
+
+# Miscellaneous
+*.pem

@@ -1,0 +1,14 @@
+{
+  "name": "@game-guild/typescript-config",
+  "version": "0.1.0",
+  "description": "TypeScript configuration for GameGuild monorepo projects",
+  "license": "UNLICENSED",
+  "author": "Matheus Martins <contact@matheusmartins.com>",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./tsconfig.json",
+    "./tsconfig.json": "./tsconfig.json",
+    "./react.library.tsconfig.json": "./react.library.tsconfig.json"
+  }
+}

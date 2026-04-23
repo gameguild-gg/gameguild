@@ -1,0 +1,121 @@
+{
+  "name": "@game-guild/client",
+  "version": "0.0.1",
+  "description": "Type-safe API client for GameGuild platform with automatic code generation from OpenAPI",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    },
+    "./react": {
+      "import": {
+        "types": "./dist/react.d.ts",
+        "default": "./dist/react.js"
+      },
+      "require": {
+        "types": "./dist/react.d.cts",
+        "default": "./dist/react.cjs"
+      }
+    },
+    "./next": {
+      "import": {
+        "types": "./dist/next.d.ts",
+        "default": "./dist/next.js"
+      },
+      "require": {
+        "types": "./dist/next.d.cts",
+        "default": "./dist/next.cjs"
+      }
+    }
+  },
+  "sideEffects": false,
+  "files": [
+    "dist",
+    "README.md",
+    "CHANGELOG.md"
+  ],
+  "scripts": {
+    "generate": "tsx scripts/generate.ts",
+    "generate:watch": "tsx scripts/generate.ts --watch",
+    "generate:diff": "tsx scripts/diff.ts",
+    "build": "tsup",
+    "build:watch": "tsup --watch",
+    "dev": "tsup --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "lint": "eslint src --ext .ts,.tsx",
+    "typecheck": "tsc --noEmit",
+    "clean": "rimraf dist .turbo"
+  },
+  "peerDependencies": {
+    "@tanstack/react-query": "^5.0.0",
+    "next": "^14.0.0 || ^15.0.0 || ^16.0.0",
+    "react": "^18.0.0 || ^19.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@tanstack/react-query": {
+      "optional": true
+    },
+    "next": {
+      "optional": true
+    },
+    "react": {
+      "optional": true
+    }
+  },
+  "dependencies": {
+    "jose": "^6.1.3",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@game-guild/typescript-config": "workspace:*",
+    "@tanstack/react-query": "^5.90.20",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
+    "@types/node": "^20.0.0",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "@vitest/coverage-v8": "^4.0.18",
+    "handlebars": "^4.7.8",
+    "happy-dom": "^20.6.1",
+    "openapi-types": "^12.1.3",
+    "prettier": "^3.5.0",
+    "rimraf": "^6.0.0",
+    "tsup": "^8.3.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.5.0",
+    "vitest": "^4.0.18"
+  },
+  "keywords": [
+    "gameguild",
+    "client",
+    "typescript",
+    "openapi",
+    "sdk",
+    "codegen"
+  ],
+  "author": "GameGuild Team",
+  "license": "UNLICENSED",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/game-guild/game-guild.git",
+    "directory": "packages/infrastructure/client"
+  },
+  "bugs": {
+    "url": "https://github.com/game-guild/game-guild/issues"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

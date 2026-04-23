@@ -14,6 +14,9 @@ import fs from 'fs';
 import path from 'path';
 import shell from 'shelljs';
 import { setupEmsdk } from './lib/emsdk.ts';
+import { enableBuildKeepalive } from './lib/keepalive.ts';
+
+enableBuildKeepalive('build-imgui');
 
 const ROOT = process.cwd();
 shell.config.fatal = true;
@@ -100,7 +103,7 @@ const backendFiles = [
 // Compile flags
 const CXXFLAGS = [
     '-Os',
-    '-fwasm-exceptions',
+    // No -fwasm-exceptions: incompatible with -mno-reference-types (Asyncify).
     `-I"${SOURCE_DIR}"`,
     `-I"${SOURCE_DIR}/backends"`,
     `-I"${path.join(SYSROOT_INC)}"`,  // For SDL3/SDL.h

@@ -1,0 +1,29 @@
+{
+  "name": "@game-guild/eslint-config",
+  "version": "2.55.0",
+  "description": "ESLint configuration for matheusmartins.com website and related projects",
+  "license": "UNLICENSED",
+  "author": "Matheus Martins <contact@matheusmartins.com>",
+  "private": true,
+  "type": "module",
+  "main": "src/index.js",
+  "dependencies": {
+    "@game-guild/prettier-config": "*"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3.0.0",
+    "@eslint/js": "^9.0.0",
+    "@next/eslint-plugin-next": "^15.4.6",
+    "@typescript-eslint/eslint-plugin": "^8.36.0",
+    "@typescript-eslint/parser": "^8.36.0",
+    "eslint": "^9.0.0",
+    "eslint-config-next": "^15.5.2",
+    "eslint-config-prettier": "^10.1.5",
+    "eslint-plugin-prettier": "^5.2.5",
+    "eslint-plugin-react": "^7.37.4",
+    "eslint-plugin-react-hooks": "^5.1.0",
+    "globals": "^16.0.0",
+    "prettier": "^3.5.0",
+    "typescript-eslint": "^8.25.0"
+  }
+}

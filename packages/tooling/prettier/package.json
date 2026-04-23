@@ -1,0 +1,16 @@
+{
+  "name": "@game-guild/prettier-config",
+  "version": "0.1.0",
+  "description": "Prettier configuration for GameGuild monorepo projects",
+  "license": "UNLICENSED",
+  "author": "Matheus Martins <contact@matheusmartins.com>",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.js",
+  "exports": {
+    ".": "./src/index.js"
+  },
+  "devDependencies": {
+    "prettier": "^3.5.0"
+  }
+}

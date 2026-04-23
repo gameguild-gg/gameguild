@@ -15,6 +15,9 @@ import shell from 'shelljs';
 import { fileURLToPath } from 'url';
 import { detectPythonVersion, pythonMajorMinor } from './lib/detect-versions.ts';
 import { setupEmsdk } from './lib/emsdk.ts';
+import { enableBuildKeepalive } from './lib/keepalive.ts';
+
+enableBuildKeepalive('build-cpython');
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -46,9 +49,18 @@ const STANDALONE_FLAGS = [
     '-sUSE_ZLIB=1',     // binascii, zlib modules (crc32, deflate, etc.)
     '-sUSE_BZIP2=1',    // _bz2 module
     '-sUSE_SQLITE3=1',  // _sqlite3 module
-    // NOTE: Asyncify is intentionally excluded — it's incompatible with
-    // Emscripten's default reference-types feature. CPython doesn't need
-    // async unwinding for simple callMain() invocations.
+    // Asyncify: instrument the binary so async JS imports (FS hooks,
+    // subprocess dispatch) transparently suspend/resume the WASM stack.
+    // Works in ALL browsers (Chrome, Safari, Firefox) — unlike JSPI.
+    '-sASYNCIFY',
+    '-sASYNCIFY_STACK_SIZE=65536',    // 64 KB
+    `-sASYNCIFY_IMPORTS=${JSON.stringify([
+        '__syscall_openat', '__syscall_stat64', '__syscall_lstat64',
+        '__syscall_faccessat', '__syscall_readlinkat', '__syscall_newfstatat',
+        '__emscripten_system',
+    ])}`,
+    // Disable reference-types — incompatible with asyncify instrumentation
+    '-mno-reference-types',
 ].join(' ');
 
 const USERLAND_DIR = path.join(ROOT, 'userland', 'cpython');
@@ -222,8 +234,8 @@ console.log(cmd);
 shell.exec(cmd);
 console.log(`Created ${pythonWasm} + ${pythonMjs}`);
 
-// NOTE: Post-processing patches (ENV merge, systemCallback, JSPI
-// resolveGlobalSymbol stub) are applied by scripts/patch-glue.ts
+// NOTE: Post-processing patches (ENV merge, systemCallback, Asyncify
+// hooks) are applied by scripts/patch-glue.ts
 // which runs as the `patch:glue` step in the build:all pipeline.
 // This keeps patching logic centralized and applies to ALL .mjs files.
 

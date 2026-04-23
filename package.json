@@ -8,7 +8,7 @@
   "private": true,
   "scripts": {
     "dev": "turbo run dev",
-    "dev:api": "pnpm --filter @gameguild/web run dev",
+    "dev:api": "dotnet run --project apps/api/Source/GameGuild.API/GameGuild.API.csproj --urls http://localhost:5295",
     "dev:web": "pnpm --filter @gameguild/web run dev",
     "build": "turbo run build",
     "build:web": "pnpm --filter @gameguild/web run build",
@@ -28,10 +28,10 @@
     "version": "changeset version",
     "release": "turbo run build && changeset publish"
   },
-  "packageManager": "pnpm@9.15.0",
+  "packageManager": "pnpm@10.0.0",
   "engines": {
-    "node": ">=18.0.0",
-    "pnpm": ">=9.0.0"
+    "node": ">=20.0.0",
+    "pnpm": ">=10.0.0"
   },
   "devDependencies": {
     "@changesets/changelog-github": "^0.5.0",
@@ -39,11 +39,11 @@
     "@game-guild/eslint-config": "workspace:*",
     "@game-guild/prettier-config": "workspace:*",
     "@game-guild/typescript-config": "workspace:*",
-    "eslint": "^9.0.0",
+    "eslint": "^9.18.0",
     "prettier": "^3.5.0",
     "rimraf": "^6.0.0",
-    "syncpack": "^12.0.0",
-    "turbo": "^2.3.0",
-    "typescript": "^5.5.0"
+    "syncpack": "^13.0.4",
+    "turbo": "^2.8.20",
+    "typescript": "^5.8.3"
   }
 }

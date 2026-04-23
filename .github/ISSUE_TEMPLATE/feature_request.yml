@@ -1,7 +1,7 @@
 name: 💎 Feature Request
 description: "Propose a new feature, service, or improvement, prioritize your request with an attached bounty."
 title: "[Enhancement]: "
-labels: [ "enhancement", "triage" ]
+labels: ["enhancement", "triage"]
 type: feature
 body:
   - type: markdown
@@ -52,7 +52,7 @@ body:
   - type: textarea
     attributes:
       label: 💡 Proposed Solution
-      description: Provide a detailed description of the feature, improvement, or service you are proposing. Be specific (project) functionality, user experience, or design.
+      description: Provide a detailed description of the feature, improvement, or service you are proposing. Be specific about functionality, user experience, or design.
       placeholder: "The solution should include... Users would interact with it by... The UI/UX would feature..."
     validations:
       required: true

@@ -428,7 +428,7 @@ volumes:
   #  minio-data:
   #    driver: local
   postgres:
-    name: postgresa
+    name: postgres
     driver: local
   redis:
     name: redis
