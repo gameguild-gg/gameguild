@@ -28,7 +28,19 @@ We are an **open source platform** where game developers **find each other**, **
 
 ---
 
-![screenshot](documentation/Page1.png)
+## Table of contents
+
+- [Why GameGuild](#why-gameguild)
+- [Screenshots](#screenshots)
+- [Architecture](#architecture)
+- [Tech stack](#tech-stack)
+- [Quick start](#quick-start)
+- [Get involved](#get-involved)
+- [FAQ](#faq)
+- [Community](#community)
+- [Project health](#project-health)
+- [License](#license)
+- [Legal](#legal)
 
 ## Why GameGuild
 
@@ -55,6 +67,33 @@ Showcase your game, get playtesting feedback, and reach players. Keep ownership 
 
 This isn't a marketplace. It's a guild — a place where developers grow by helping each other grow.
 
+## Screenshots
+
+A quick look at what you can do inside GameGuild.
+
+<table>
+<tr>
+<td align="center" width="50%">
+<b>Home</b><br/>
+<img src="documentation/Page1.png" alt="GameGuild home" width="100%"/>
+</td>
+<td align="center" width="50%">
+<b>Course management</b><br/>
+<img src="documentation/screenshots/course-management.png" alt="Course management dashboard" width="100%"/>
+</td>
+</tr>
+<tr>
+<td align="center" width="50%">
+<b>Online course editor</b><br/>
+<img src="documentation/screenshots/course-editor.png" alt="Online course editor" width="100%"/>
+</td>
+<td align="center" width="50%">
+<b>Online IDE</b><br/>
+<img src="documentation/screenshots/online-ide.png" alt="Browser-based IDE" width="100%"/>
+</td>
+</tr>
+</table>
+
 ## Architecture
 
 Monorepo managed with npm workspaces.
@@ -66,16 +105,45 @@ Monorepo managed with npm workspaces.
 | Shared packages | `packages/` | TypeScript |
 | Documentation | `docs/` | Markdown |
 
-![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)
-![React](https://img.shields.io/badge/React-61DAFB?style=for-the-badge&logo=react&logoColor=black)
-![Next.js](https://img.shields.io/badge/Next.js-000000?style=for-the-badge&logo=nextdotjs&logoColor=white)
-![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white)
-![.NET](https://img.shields.io/badge/.NET_9-512BD4?style=for-the-badge&logo=dotnet&logoColor=white)
-![GraphQL](https://img.shields.io/badge/GraphQL-E10098?style=for-the-badge&logo=graphql&logoColor=white)
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?style=for-the-badge&logo=postgresql&logoColor=white)
-![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)
-![WebAssembly](https://img.shields.io/badge/WebAssembly-654FF0?style=for-the-badge&logo=webassembly&logoColor=white)
-![GitHub Actions](https://img.shields.io/badge/GitHub_Actions-2088FF?style=for-the-badge&logo=githubactions&logoColor=white)
+## Tech stack
+
+Click any badge to visit the project's homepage.
+
+**Frontend**
+
+[![Next.js](https://img.shields.io/badge/Next.js_16-000000?style=for-the-badge&logo=nextdotjs&logoColor=white)](https://nextjs.org/)
+[![React](https://img.shields.io/badge/React_19-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
+[![shadcn/ui](https://img.shields.io/badge/shadcn%2Fui-000000?style=for-the-badge&logo=shadcnui&logoColor=white)](https://ui.shadcn.com/)
+
+**Backend**
+
+[![.NET](https://img.shields.io/badge/.NET_9-512BD4?style=for-the-badge&logo=dotnet&logoColor=white)](https://dotnet.microsoft.com/)
+[![HotChocolate](https://img.shields.io/badge/HotChocolate-E10098?style=for-the-badge&logo=graphql&logoColor=white)](https://chillicream.com/docs/hotchocolate)
+[![Entity Framework Core](https://img.shields.io/badge/EF_Core-512BD4?style=for-the-badge&logo=dotnet&logoColor=white)](https://learn.microsoft.com/en-us/ef/core/)
+[![GraphQL](https://img.shields.io/badge/GraphQL-E10098?style=for-the-badge&logo=graphql&logoColor=white)](https://graphql.org/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+
+**Platform & runtime**
+
+[![WebAssembly](https://img.shields.io/badge/WebAssembly-654FF0?style=for-the-badge&logo=webassembly&logoColor=white)](https://webassembly.org/)
+[![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/)
+[![GitHub Actions](https://img.shields.io/badge/GitHub_Actions-2088FF?style=for-the-badge&logo=githubactions&logoColor=white)](https://github.com/features/actions)
+
+**Languages supported by the online IDE**
+
+[![C](https://img.shields.io/badge/C-00599C?style=for-the-badge&logo=c&logoColor=white)](https://en.cppreference.com/w/c)
+[![C++](https://img.shields.io/badge/C%2B%2B-00599C?style=for-the-badge&logo=cplusplus&logoColor=white)](https://isocpp.org/)
+[![C#](https://img.shields.io/badge/C%23-239120?style=for-the-badge&logo=csharp&logoColor=white)](https://learn.microsoft.com/en-us/dotnet/csharp/)
+[![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
+[![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)](https://developer.mozilla.org/docs/Web/JavaScript)
+[![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Ruby](https://img.shields.io/badge/Ruby-CC342D?style=for-the-badge&logo=ruby&logoColor=white)](https://www.ruby-lang.org/)
+[![PHP](https://img.shields.io/badge/PHP-777BB4?style=for-the-badge&logo=php&logoColor=white)](https://www.php.net/)
+[![Lua](https://img.shields.io/badge/Lua-2C2D72?style=for-the-badge&logo=lua&logoColor=white)](https://www.lua.org/)
+[![WAT](https://img.shields.io/badge/WAT-654FF0?style=for-the-badge&logo=webassembly&logoColor=white)](https://webassembly.github.io/spec/core/text/index.html)
+[![SQL](https://img.shields.io/badge/SQL-4479A1?style=for-the-badge&logo=postgresql&logoColor=white)](https://en.wikipedia.org/wiki/SQL)
 
 ## Quick start
 
@@ -102,7 +170,44 @@ GameGuild is built by its community. There's a place for you whether you write c
 2. Pick an issue labeled [`good first issue`](https://github.com/gameguild-gg/gameguild/labels/good%20first%20issue)
 3. Fork, branch, and open a pull request
 
-By contributing, you agree to the [CLA](CLA.md). Please review our [Code of Conduct](CODE_OF_CONDUCT.md).
+By contributing, you agree to the [CLA](CONTRIBUTOR_LICENSE_AGREEMENT.md.md). Please review our [Code of Conduct](CODE_OF_CONDUCT.md).
+
+## FAQ
+
+<details>
+<summary><b>Is GameGuild really free?</b></summary>
+
+Yes. The platform is open source under the [MIT License](LICENSE-MIT.md) and the hosted version at [gameguild.gg](https://gameguild.gg) is free to use. A [Commercial License](LICENSE.md) exists only for organizations that need contractual support and guarantees.
+
+</details>
+
+<details>
+<summary><b>Can I self-host GameGuild?</b></summary>
+
+Yes. The entire stack runs locally with `docker compose up -d` and can be deployed to any infrastructure you control. See [DEVELOPMENT.md](DEVELOPMENT.md) for details.
+
+</details>
+
+<details>
+<summary><b>How is this different from itch.io, or online course platforms?</b></summary>
+
+Itch.io is for distribution, and course platforms are for lessons. GameGuild combines **collaboration, learning, and launching** in one open platform designed specifically for game developers — with an online IDE, course editor, playtesting tools, and team coordination built in.
+
+</details>
+
+<details>
+<summary><b>Do I need to know C# and TypeScript to contribute?</b></summary>
+
+No. There are [`good first issue`](https://github.com/gameguild-gg/gameguild/labels/good%20first%20issue) tasks across docs, design, content, QA, and translations. Code contributions are welcome in the language of the area you want to touch.
+
+</details>
+
+<details>
+<summary><b>Where do I report a security issue?</b></summary>
+
+Please follow the responsible disclosure process in [SECURITY.md](SECURITY.md). Do not open public issues for security vulnerabilities.
+
+</details>
 
 ## Community
 
@@ -110,6 +215,7 @@ Join us where the conversation happens:
 
 <div style="display: flex; flex-wrap: wrap; gap: 12px; align-items: center;">
   <a href="https://discord.com/invite/9CdJeQ2XKB?ref=gameguild.gg" title="Discord"><img width="40" src="https://img.icons8.com/color/48/000000/discord-logo.png" alt="Discord"/></a>
+  <a href="https://instagram.com/" title="Instagram"><img width="40" src="https://img.icons8.com/color/48/000000/instagram-new.png" alt="Instagram"/></a>
   <a href="https://www.youtube.com/@AwesomeGamedevGuild" title="YouTube"><img width="40" src="https://img.icons8.com/color/48/000000/youtube-play.png" alt="YouTube"/></a>
   <a href="https://chat.whatsapp.com/CAboWKtosP673f9EkzxKNb" title="WhatsApp"><img width="40" src="https://img.icons8.com/color/48/000000/whatsapp.png" alt="WhatsApp"/></a>
   <a href="https://x.com/GameGuildDev" title="X"><img width="40" src="https://img.icons8.com/?size=100&id=phOKFKYpe00C&format=png&color=000000" alt="X"/></a>
@@ -125,9 +231,21 @@ Join us where the conversation happens:
 
 ## Project health
 
+### Star history
+
+How the project's popularity has grown over time.
+
 [![Star History Chart](https://api.star-history.com/svg?repos=gameguild-gg/gameguild&type=Date)](https://star-history.com/#gameguild-gg/gameguild&Date)
 
+### Repository evolution (Gource)
+
+Animated visualization of the repository history — every file and contributor over time. Generated with [Gource](https://gource.io/).
+
 [![Gource](https://gameguild-gg.github.io/gameguild/gource.gif)](https://gameguild-gg.github.io/gameguild/gource.mp4)
+
+### Branching model (GitFlow)
+
+We follow the [GitFlow](https://nvie.com/posts/a-successful-git-branching-model/) branching model: `main` holds production-ready code, `develop` integrates ongoing work, and short-lived `feature/*`, `release/*`, and `hotfix/*` branches feed into them. See our full workflow guide: [link em breve]().
 
 ![gitflow.png](documentation/gitflow.png)
 
