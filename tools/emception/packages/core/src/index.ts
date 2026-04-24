@@ -31,6 +31,7 @@ export type {
     WorkspaceStoreHandle,
     WorkspaceStoreOptions
 } from './runtime/adapter';
+export { runTests, type TestKindHandler } from './testing/engine';
 export { HeadlessIOProvider, type HeadlessIOProviderOptions } from './tty/headless';
 export type { IOProvider } from './tty/io-provider';
 export { LineBuffer } from './tty/line-buffer';
@@ -38,7 +39,6 @@ export type { FSStats, IFileSystem } from './vfs/interface';
 export type { FSManifest, ManifestBundle, ManifestEntry } from './vfs/manifest';
 export { OverlayFS } from './vfs/overlay';
 export type { MainToWorkerMessage, WorkerToMainMessage } from './worker-protocol';
-export { runTests, type TestKindHandler } from './testing/engine';
 export {
     resolveBuild,
     type ResolveBuildInput,
@@ -53,4 +53,9 @@ export type {
     WorkspaceHandle,
     WorkspaceManager
 } from './workspace/manager';
+export { hashSeed, normalizeSeedEntry } from './workspace/seed';
+export {
+    createMemoryWorkspaceManager,
+    MemoryWorkspaceManager
+} from './workspace/store-memory';
 
