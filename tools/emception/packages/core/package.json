@@ -1,0 +1,44 @@
+{
+    "name": "@emception/core",
+    "version": "0.1.0-alpha.0",
+    "description": "Runtime-agnostic core: types, EmceptionCore, VFS, tool registry, build resolver, test engine, presets, RuntimeAdapter.",
+    "license": "MIT",
+    "type": "module",
+    "main": "./dist/index.js",
+    "module": "./dist/index.js",
+    "types": "./dist/index.d.ts",
+    "sideEffects": false,
+    "exports": {
+        ".": {
+            "import": "./dist/index.js",
+            "types": "./dist/index.d.ts"
+        },
+        "./errors": {
+            "import": "./dist/errors.js",
+            "types": "./dist/errors.d.ts"
+        },
+        "./presets": {
+            "import": "./dist/presets.js",
+            "types": "./dist/presets.d.ts"
+        },
+        "./testing": {
+            "import": "./dist/testing/index.js",
+            "types": "./dist/testing/index.d.ts"
+        }
+    },
+    "files": [
+        "dist",
+        "README.md"
+    ],
+    "publishConfig": {
+        "access": "public"
+    },
+    "scripts": {
+        "build": "tsc -p tsconfig.json",
+        "typecheck": "tsc --noEmit",
+        "clean": "rm -rf dist"
+    },
+    "devDependencies": {
+        "typescript": "^5.3.0"
+    }
+}

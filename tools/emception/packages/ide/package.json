@@ -1,0 +1,60 @@
+{
+  "name": "@emception/ide",
+  "version": "0.1.0-alpha.0",
+  "description": "Reactive <Ide> React 19 component + <emception-ide> custom-element wrapper for raw HTML / Next.",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "sideEffects": ["./dist/webcomponent/emception-ide.js", "./src/styles/theme.css"],
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./webcomponent": {
+      "import": "./dist/webcomponent/emception-ide.js",
+      "types": "./dist/webcomponent/emception-ide.d.ts"
+    },
+    "./bundled": {
+      "import": "./dist/bundled.js",
+      "types": "./dist/bundled.d.ts"
+    },
+    "./styles/theme.css": "./src/styles/theme.css"
+  },
+  "files": ["dist", "src/styles", "README.md"],
+  "publishConfig": { "access": "public" },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc --noEmit",
+    "test": "jest",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@emception/browser": "0.1.0-alpha.0",
+    "@emception/core": "0.1.0-alpha.0"
+  },
+  "peerDependencies": {
+    "@emception/xterm": "0.1.0-alpha.0",
+    "@monaco-editor/react": "^4.7.0",
+    "@xterm/addon-fit": "^0.11.0",
+    "@xterm/xterm": "^6.0.0",
+    "react": "^19",
+    "react-dom": "^19",
+    "react-resizable-panels": "^3.0.6"
+  },
+  "peerDependenciesMeta": {
+    "@emception/xterm": { "optional": true },
+    "@xterm/addon-fit": { "optional": true },
+    "@xterm/xterm": { "optional": true }
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.14",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "react": "^19",
+    "react-dom": "^19",
+    "typescript": "^5.3.0"
+  }
+}
