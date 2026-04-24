@@ -12,7 +12,7 @@
 //   .emception/build.json  — WorkspaceBuildConfig (Phase 3.4)
 //   .emception/seed.lock   — seed-hash marker (Phase 3.2 'once' policy)
 
-import type { FileEntry, WorkspaceBuildConfig, WorkspaceSeed } from '../types';
+import type { FileEntry, WorkspaceBuildConfig, WorkspaceSeed } from '../types.js';
 
 /** How a seed is reconciled against an existing workspace on switch/open. */
 export type SeedPolicy = 'once' | 'overwrite' | 'merge';
