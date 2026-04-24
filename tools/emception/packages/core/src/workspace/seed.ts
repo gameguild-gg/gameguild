@@ -6,7 +6,7 @@
 // but is plenty for "did this seed change" tamper-detection and works
 // identically in browser and Node without WebCrypto async overhead.
 
-import type { FileEntry, WorkspaceSeed } from '../types';
+import type { FileEntry, WorkspaceSeed } from '../types.js';
 
 /**
  * Normalize a `WorkspaceSeed` value to the canonical FileEntry shape so a

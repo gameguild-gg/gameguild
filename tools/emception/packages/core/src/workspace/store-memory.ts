@@ -8,13 +8,13 @@
 //
 // No DOM, no Node, no IDB references — safe to import anywhere.
 
-import { BuildConfigError, WorkspaceConflictError } from '../errors';
+import { BuildConfigError, WorkspaceConflictError } from '../errors.js';
 import type {
     FileEntry,
     WorkspaceBuildConfig,
     WorkspaceSeed,
-} from '../types';
-import { hashSeed, normalizeSeedEntry } from './seed';
+} from '../types.js';
+import { hashSeed, normalizeSeedEntry } from './seed.js';
 import type {
     FileMeta,
     OpenWorkspaceOptions,
@@ -22,7 +22,7 @@ import type {
     SeedPolicy,
     WorkspaceHandle,
     WorkspaceManager,
-} from './manager';
+} from './manager.js';
 
 interface MemFile {
     bytes: Uint8Array;

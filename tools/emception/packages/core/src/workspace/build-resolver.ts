@@ -17,9 +17,9 @@
  * impossible combos (e.g. cmake + sources both set).
  */
 
-import { BuildConfigError } from '../errors';
-import { PRESETS, type PresetName } from '../presets';
-import type { WorkspaceBuildConfig } from '../types';
+import { BuildConfigError } from '../errors.js';
+import { PRESETS, type PresetName } from '../presets.js';
+import type { WorkspaceBuildConfig } from '../types.js';
 
 export interface ResolveBuildInput {
     preset?: PresetName;
