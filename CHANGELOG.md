@@ -1,3 +1,24 @@
+# [3.1.0](https://github.com/gameguild-gg/gameguild/compare/v3.0.2...v3.1.0) (2026-04-24)
+
+### Features
+
+* design a better develeper experience for emception ([91e7774](https://github.com/gameguild-gg/gameguild/commit/91e7774846c933d86a8c4b5f98faad830cc3a6bd))
+* GameGuild Readme ([a65e260](https://github.com/gameguild-gg/gameguild/commit/a65e2600c40c1a53ac4879bd5d7430b64e0f48e3))
+* Security Policy ([fd7c03b](https://github.com/gameguild-gg/gameguild/commit/fd7c03be3cc1ac49f7de6bd7121e9d0c66c5933e))
+* Development Setup ([c5d04ed](https://github.com/gameguild-gg/gameguild/commit/c5d04ed12408355333e76d6eea2292ae5a50f958))
+* Legal and Dispute Process terms ([98221ec](https://github.com/gameguild-gg/gameguild/commit/98221ecd7cb47660c1dcead2df146891b4c1cadd))
+* Contributor License Agreement (CLA) ([23b2ff9](https://github.com/gameguild-gg/gameguild/commit/23b2ff9d8f6f4b325870fd1e2a55ff87807ed6d1))
+
+### Bug Fixes
+
+* **docs:** fix readme ([cf69e02](https://github.com/gameguild-gg/gameguild/commit/cf69e02fff56ffc57e7ae0ab89e886ce507dfc34))
+* **docs:** link for CLA ([7b155f6](https://github.com/gameguild-gg/gameguild/commit/7b155f6f1d549afe9189fd923f825831f4ad06cc))
+* name ([5a2e0d6](https://github.com/gameguild-gg/gameguild/commit/5a2e0d64679890944c3e4d3d9f7c18ae305933c4))
+* Code of Conduct ([5fb160e](https://github.com/gameguild-gg/gameguild/commit/5fb160ef48209e9d9c83b38a119eaf5242c4f535))
+* Contributing to GameGuild ([c95a7a4](https://github.com/gameguild-gg/gameguild/commit/c95a7a4c67f3e4b11aaaffaf32b05f7cb15b281b))
+* dual license MIT and commercial ([b9b5bf3](https://github.com/gameguild-gg/gameguild/commit/b9b5bf3977989175da2dbd032519389a672d9fb1))
+* update license AGPL to MIT ([38d265a](https://github.com/gameguild-gg/gameguild/commit/38d265adbdef3c727cb33b311406214f5937e98a))
+
 # [3.0.2](https://github.com/gameguild-gg/gameguild/compare/v3.0.1...v3.0.2) (2026-04-23)
 
 ### Bug Fixes
