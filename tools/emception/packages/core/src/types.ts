@@ -1,6 +1,6 @@
 // Public type surface for emception. Phase 0 placeholder shapes; refined in later phases.
 
-import type { EmceptionEventMap, EmceptionEventName, EmceptionEventListener, Unsubscribe } from './events';
+import type { EmceptionEventListener, EmceptionEventName, Unsubscribe } from './events';
 
 export interface FileEntry {
     content: string | Uint8Array;
