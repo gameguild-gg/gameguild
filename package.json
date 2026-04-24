@@ -11,7 +11,8 @@
     "demos/*",
     "packages/*",
     "packages/config/*",
-    "tools/*"
+    "tools/*",
+    "tools/emception/packages/*"
   ],
   "scripts": {
     "dev": "npm-run-all --parallel dev:api dev:web",
