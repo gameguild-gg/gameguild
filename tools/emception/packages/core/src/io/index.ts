@@ -3,5 +3,5 @@
 export {
     decodeCollected, normalizeStdin,
     normalizeStdout, type NormalizedStdout
-} from './streams';
+} from './streams.js';
 

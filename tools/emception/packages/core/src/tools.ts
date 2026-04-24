@@ -8,7 +8,7 @@
 // The registry is a pure data table; no behavior, no DOM, no runtime deps —
 // safe to import from any package and any environment.
 
-import type { RunOptions, ToolResult } from './types';
+import type { RunOptions, ToolResult } from './types.js';
 
 /**
  * Metadata for a single tool that can be invoked through em.run / em.tools.

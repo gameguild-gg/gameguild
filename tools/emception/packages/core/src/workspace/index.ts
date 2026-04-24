@@ -3,7 +3,7 @@ export {
     resolveBuild,
     type ResolveBuildInput,
     type ResolvedBuild
-} from './build-resolver';
+} from './build-resolver.js';
 export type {
     FileMeta,
     MetaSidecar,
@@ -12,10 +12,10 @@ export type {
     SeedPolicy,
     WorkspaceHandle,
     WorkspaceManager
-} from './manager';
-export { hashSeed, normalizeSeedEntry } from './seed';
+} from './manager.js';
+export { hashSeed, normalizeSeedEntry } from './seed.js';
 export {
     createMemoryWorkspaceManager,
     MemoryWorkspaceManager
-} from './store-memory';
+} from './store-memory.js';
 

@@ -12,14 +12,14 @@
 // vendoring) land. Stubs throw a descriptive "not yet implemented" error
 // rather than silently passing so partial wiring can't ship false greens.
 
-import { TestFailureError } from '../errors';
+import { TestFailureError } from '../errors.js';
 import type {
     EmceptionAPI,
     TestCase,
     TestCaseResult,
     TestPlan,
     TestReport,
-} from '../types';
+} from '../types.js';
 
 /**
  * Signature every per-kind handler implements. Receives the live API plus

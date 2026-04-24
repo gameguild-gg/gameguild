@@ -1,6 +1,6 @@
 // Preset definitions. Phase 4 wires bundlesToPreload + tools.
 
-import type { WorkspaceBuildConfig } from './types';
+import type { WorkspaceBuildConfig } from './types.js';
 
 export type PresetName = 'c' | 'cpp' | 'python' | 'sdl' | 'cmake' | 'full';
 
