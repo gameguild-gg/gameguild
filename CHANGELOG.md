@@ -1,3 +1,9 @@
+# [3.1.1](https://github.com/gameguild-gg/gameguild/compare/v3.1.0...v3.1.1) (2026-04-24)
+
+### Bug Fixes
+
+* **ci:** force OIDC trusted publishing for emception npm publish ([a3261af](https://github.com/gameguild-gg/gameguild/commit/a3261af760d836082dde820a04944e2240c6a356))
+
 # [3.1.0](https://github.com/gameguild-gg/gameguild/compare/v3.0.2...v3.1.0) (2026-04-24)
 
 ### Features
