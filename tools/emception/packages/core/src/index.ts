@@ -12,6 +12,7 @@ export * as runtime from './runtime/adapter';
 export * as tty from './tty';
 export * as vfs from './vfs';
 export * as workerProtocol from './worker-protocol';
+export * as workspace from './workspace';
 
 // Top-level re-exports for the most commonly imported helpers.
 export type {
@@ -31,6 +32,11 @@ export {
     normalizeStdout,
     type NormalizedStdout,
 } from './io/streams';
+export {
+    resolveBuild,
+    type ResolveBuildInput,
+    type ResolvedBuild,
+} from './workspace/build-resolver';
 export type { FSStats, IFileSystem } from './vfs/interface';
 export type { FSManifest, ManifestBundle, ManifestEntry } from './vfs/manifest';
 export { OverlayFS } from './vfs/overlay';
