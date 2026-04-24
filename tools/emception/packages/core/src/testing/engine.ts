@@ -109,8 +109,8 @@ const handlers: { [K in TestCase['kind']]: TestKindHandler<K> } = {
             diagnostic: passed
                 ? undefined
                 : result.timedOut
-                  ? `Timed out reading ${test.inFile}.`
-                  : `stdout mismatch for ${test.inFile}:\n  expected: ${JSON.stringify(expectedStdout)}\n  actual:   ${JSON.stringify(result.stdout)}`,
+                    ? `Timed out reading ${test.inFile}.`
+                    : `stdout mismatch for ${test.inFile}:\n  expected: ${JSON.stringify(expectedStdout)}\n  actual:   ${JSON.stringify(result.stdout)}`,
         };
     },
     'clang-query': async () => {

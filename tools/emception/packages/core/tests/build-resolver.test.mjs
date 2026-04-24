@@ -3,8 +3,8 @@
 // Uses node:test (zero-dep) against the compiled ESM. Run via:
 //   node --test tools/emception/packages/core/tests/build-resolver.test.mjs
 
-import test from 'node:test';
 import assert from 'node:assert/strict';
+import test from 'node:test';
 
 import { BuildConfigError, resolveBuild } from '../dist/index.js';
 
