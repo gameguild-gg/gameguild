@@ -583,7 +583,13 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-          registry-url: 'https://registry.npmjs.org'
+
+      - name: Ensure npm supports OIDC Trusted Publishing
+        run: |
+          # Trusted Publishing requires npm >= 11.5.1.
+          # Node 22 ships an older npm; upgrade in place for this job.
+          npm install -g npm@latest
+          npm --version
 
       - name: Install emception dependencies
         run: cd tools/emception && npm install
@@ -616,4 +622,14 @@ jobs:
 
       - name: Publish emception to npm
         if: ${{ steps.npm-check.outputs.already_published != 'true' }}
-        run: cd tools/emception && npm publish --provenance --access public
+        run: |
+          # Force npm to use OIDC Trusted Publishing instead of any token
+          # leaked into the env (NODE_AUTH_TOKEN from setup-node + .npmrc, or
+          # a stale repo/org secret). With no token configured, npm CLI 11.5.1+
+          # detects ACTIONS_ID_TOKEN_REQUEST_URL and authenticates via OIDC.
+          unset NODE_AUTH_TOKEN
+          rm -f "$HOME/.npmrc" "$RUNNER_TEMP/.npmrc" || true
+          cd tools/emception && npm publish --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ''
+          NPM_CONFIG_USERCONFIG: ''
