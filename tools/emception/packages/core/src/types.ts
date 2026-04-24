@@ -1,5 +1,7 @@
 // Public type surface for emception. Phase 0 placeholder shapes; refined in later phases.
 
+import type { EmceptionEventMap, EmceptionEventName, EmceptionEventListener, Unsubscribe } from './events';
+
 export interface FileEntry {
     content: string | Uint8Array;
     visibility?: 'public' | 'hidden' | 'solution';
@@ -127,9 +129,7 @@ export interface EmceptionAPI {
     run(cmd: string, argv?: string[], opts?: RunOptions): Promise<ToolResult>;
     compileAndRun(sourceOrFiles?: string | string[], opts?: CompileOptions): Promise<ToolResult>;
     runTests(plan: TestPlan, opts?: { signal?: AbortSignal }): Promise<TestReport>;
-    on(
-        event: 'progress' | 'ready' | 'bundle-loaded' | 'stdout' | 'stderr' | 'exit' | 'test-case',
-        fn: (ev: unknown) => void
-    ): () => void;
+    /** Subscribe to a typed runtime event. Returns an unsubscribe function. */
+    on<E extends EmceptionEventName>(event: E, listener: EmceptionEventListener<E>): Unsubscribe;
     dispose(): void;
 }
