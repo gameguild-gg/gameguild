@@ -2,17 +2,17 @@
 
 9 packages implementing the [DX overhaul plan](../docs/dx-overhaul-plan.md).
 
-| Package                                              | Tier    | Purpose                                                                                          |
-| ---------------------------------------------------- | ------- | ------------------------------------------------------------------------------------------------ |
-| [`@emception/core`](core/)                           | Core    | Types, EmceptionCore, VFS, tool registry, build resolver, test engine, presets, RuntimeAdapter.  |
-| [`@emception/sysroot`](sysroot/)                     | Assets  | `.tar.br` toolchain bundles + `manifest.json` + `coi-serviceworker.js`. JS-free.                 |
-| [`@emception/browser`](browser/)                     | Adapter | Web Worker spawn, IDB workspace store, OffscreenCanvas + SDL helpers, COI preflight.             |
-| [`@emception/node`](node/)                           | Adapter | `worker_threads` spawn, fs workspace store, disk manifest.                                       |
-| [`@emception/xterm`](xterm/)                         | I/O     | xterm.js stdin/stdout/stderr bridge.                                                             |
-| [`@emception/react`](react/)                         | UI      | `<EmceptionRun>`, `<EmceptionTerminal>`, `<EmceptionCanvas>`, `useEmception()`.                  |
-| [`@emception/webcomponent`](webcomponent/)           | UI      | `<emception-run>` custom element. No framework deps.                                             |
-| [`@emception/ide`](ide/)                             | UI      | Reactive `<Ide>` React 19 + `<emception-ide>` custom-element wrapper (light DOM).                |
-| [`@emception/cli`](cli/)                             | Tool    | `doctor`, `cdn-export`, `run`, `test`.                                                           |
+| Package                                    | Tier    | Purpose                                                                                         |
+| ------------------------------------------ | ------- | ----------------------------------------------------------------------------------------------- |
+| [`@emception/core`](core/)                 | Core    | Types, EmceptionCore, VFS, tool registry, build resolver, test engine, presets, RuntimeAdapter. |
+| [`@emception/sysroot`](sysroot/)           | Assets  | `.tar.br` toolchain bundles + `manifest.json` + `coi-serviceworker.js`. JS-free.                |
+| [`@emception/browser`](browser/)           | Adapter | Web Worker spawn, IDB workspace store, OffscreenCanvas + SDL helpers, COI preflight.            |
+| [`@emception/node`](node/)                 | Adapter | `worker_threads` spawn, fs workspace store, disk manifest.                                      |
+| [`@emception/xterm`](xterm/)               | I/O     | xterm.js stdin/stdout/stderr bridge.                                                            |
+| [`@emception/react`](react/)               | UI      | `<EmceptionRun>`, `<EmceptionTerminal>`, `<EmceptionCanvas>`, `useEmception()`.                 |
+| [`@emception/webcomponent`](webcomponent/) | UI      | `<emception-run>` custom element. No framework deps.                                            |
+| [`@emception/ide`](ide/)                   | UI      | Reactive `<Ide>` React 19 + `<emception-ide>` custom-element wrapper (light DOM).               |
+| [`@emception/cli`](cli/)                   | Tool    | `doctor`, `cdn-export`, `run`, `test`.                                                          |
 
 The unscoped meta-package [`emception`](../package.json) at `tools/emception/` re-exports `@emception/browser` + `@emception/xterm` for back-compat.
 
