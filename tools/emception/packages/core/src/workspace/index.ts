@@ -13,4 +13,9 @@ export type {
     WorkspaceHandle,
     WorkspaceManager
 } from './manager';
+export { hashSeed, normalizeSeedEntry } from './seed';
+export {
+    createMemoryWorkspaceManager,
+    MemoryWorkspaceManager
+} from './store-memory';
 
