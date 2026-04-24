@@ -12,7 +12,6 @@
 // vendoring) land. Stubs throw a descriptive "not yet implemented" error
 // rather than silently passing so partial wiring can't ship false greens.
 
-import { TestFailureError } from '../errors.js';
 import type {
     EmceptionAPI,
     TestCase,
@@ -20,6 +19,8 @@ import type {
     TestPlan,
     TestReport,
 } from '../types.js';
+import { compileMatcher, runMatcher, type ClangAstNode, type MatchResult } from './clang-query/matcher.js';
+import { parseDoctestConsole } from './doctest/parse.js';
 
 /**
  * Signature every per-kind handler implements. Receives the live API plus
@@ -113,15 +114,131 @@ const handlers: { [K in TestCase['kind']]: TestKindHandler<K> } = {
                     : `stdout mismatch for ${test.inFile}:\n  expected: ${JSON.stringify(expectedStdout)}\n  actual:   ${JSON.stringify(result.stdout)}`,
         };
     },
-    'clang-query': async () => {
-        throw new TestFailureError(
-            'clang-query kind not yet implemented (Phase 5.4 pending AST-dump pipeline).',
-        );
+    'clang-query': async (em, test, plan, timeoutMs) => {
+        // Phase 5.4 — runtime-agnostic half is the matcher engine; the
+        // adapter half is `clang -Xclang -ast-dump=json`. We assume the
+        // resolved sources are already on disk in the workspace and shell
+        // out via `em.run('clang', ...)`. The plan's `build` is consulted
+        // for include paths / std / defines so the AST sees the same
+        // declarations the build does; we deliberately skip cflags that
+        // would change AST shape (e.g. `-O*`) by relying on `clang`'s
+        // dump mode ignoring most codegen flags.
+        const start = nowMs();
+        const sources = (plan.build?.sources ?? []) as string[];
+        if (sources.length === 0) {
+            return {
+                name: test.name ?? 'clang-query',
+                passed: false,
+                durationMs: nowMs() - start,
+                diagnostic: 'clang-query: plan.build.sources is empty.',
+            };
+        }
+        const argv: string[] = ['-Xclang', '-ast-dump=json', '-fsyntax-only'];
+        if (plan.build?.std) argv.push(`-std=${plan.build.std}`);
+        for (const inc of plan.build?.includePaths ?? []) argv.push(`-I${inc}`);
+        if (plan.build?.defines) {
+            for (const key of Object.keys(plan.build.defines).sort()) {
+                const v = plan.build.defines[key];
+                argv.push(v === true ? `-D${key}` : `-D${key}=${v}`);
+            }
+        }
+        argv.push(...sources);
+
+        const result = await em.run('clang', argv, {
+            stdout: 'capture',
+            stderr: 'capture',
+            timeoutMs,
+        });
+        if (result.timedOut) {
+            return {
+                name: test.name ?? 'clang-query',
+                passed: false,
+                durationMs: nowMs() - start,
+                diagnostic: `clang-query: ast-dump timed out after ${timeoutMs}ms.`,
+            };
+        }
+        if (result.exitCode !== 0) {
+            return {
+                name: test.name ?? 'clang-query',
+                passed: false,
+                durationMs: nowMs() - start,
+                diagnostic: `clang-query: ast-dump failed (exit ${result.exitCode}).\n${result.stderr}`,
+            };
+        }
+
+        let root: ClangAstNode;
+        try {
+            root = JSON.parse(result.stdout) as ClangAstNode;
+        } catch (err) {
+            return {
+                name: test.name ?? 'clang-query',
+                passed: false,
+                durationMs: nowMs() - start,
+                diagnostic: `clang-query: ast-dump JSON parse failed: ${err instanceof Error ? err.message : String(err)}`,
+            };
+        }
+
+        let match: MatchResult;
+        try {
+            match = runMatcher(compileMatcher(test.matcher), root);
+        } catch (err) {
+            return {
+                name: test.name ?? 'clang-query',
+                passed: false,
+                durationMs: nowMs() - start,
+                diagnostic: err instanceof Error ? err.message : String(err),
+            };
+        }
+
+        const passed = evalClangQueryExpect(match, test.expect);
+        return {
+            name: test.name ?? 'clang-query',
+            passed,
+            durationMs: nowMs() - start,
+            diagnostic: passed ? undefined : describeClangQueryFailure(match, test.expect),
+        };
     },
-    doctest: async () => {
-        throw new TestFailureError(
-            'doctest kind not yet implemented (Phase 5.5 pending doctest.h vendoring).',
-        );
+    doctest: async (em, test, plan, timeoutMs) => {
+        // Phase 5.5 — compile the doctest sources together with whatever
+        // the workspace's resolved build already specifies (student code
+        // + `doctest_main.cpp` typically), then run the produced binary
+        // and parse its console reporter output.
+        const start = nowMs();
+        const planBuild = plan.build ?? {};
+        const planSources = (planBuild.sources ?? []) as string[];
+        const sources = [...planSources, ...test.sourceFiles];
+        if (sources.length === 0) {
+            return {
+                name: test.name ?? 'doctest',
+                passed: false,
+                durationMs: nowMs() - start,
+                diagnostic: 'doctest: no source files (set plan.build.sources or test.sourceFiles).',
+            };
+        }
+        const result = await em.compileAndRun(undefined, {
+            build: { ...planBuild, sources },
+            stdin: 'none',
+            stdout: 'capture',
+            stderr: 'capture',
+            timeoutMs,
+        });
+        if (result.timedOut) {
+            return {
+                name: test.name ?? 'doctest',
+                passed: false,
+                durationMs: nowMs() - start,
+                diagnostic: `doctest: timed out after ${timeoutMs}ms.`,
+            };
+        }
+
+        const report = parseDoctestConsole(result.stdout);
+        const passed = report.status === 'success' && report.cases.failed === 0 && report.assertions.failed === 0;
+        return {
+            name: test.name ?? 'doctest',
+            passed,
+            durationMs: nowMs() - start,
+            diagnostic: passed ? undefined : describeDoctestFailure(report, result),
+        };
     },
 };
 
@@ -275,4 +392,50 @@ function nowMs(): number {
         return performance.now();
     }
     return Date.now();
+}
+
+function evalClangQueryExpect(
+    match: MatchResult,
+    expect: Extract<TestCase, { kind: 'clang-query' }>['expect'],
+): boolean {
+    if (expect === 'found') return match.count > 0;
+    if (expect === 'not-found') return match.count === 0;
+    return match.count >= expect.minCount;
+}
+
+function describeClangQueryFailure(
+    match: MatchResult,
+    expect: Extract<TestCase, { kind: 'clang-query' }>['expect'],
+): string {
+    const sample = match.samples
+        .map((s) => `${s.kind ?? '?'}${s.name ? ` "${s.name}"` : ''}`)
+        .join(', ');
+    if (expect === 'found') {
+        return `clang-query: expected at least one match, found 0.`;
+    }
+    if (expect === 'not-found') {
+        return `clang-query: expected no matches, found ${match.count}${sample ? ` (e.g. ${sample})` : ''}.`;
+    }
+    return `clang-query: expected at least ${expect.minCount} match(es), found ${match.count}${sample ? ` (e.g. ${sample})` : ''}.`;
+}
+
+function describeDoctestFailure(
+    report: ReturnType<typeof parseDoctestConsole>,
+    result: { stderr: string; exitCode: number },
+): string {
+    if (report.status === 'crash') {
+        return `doctest: binary crashed before printing summary (exit ${result.exitCode}).${result.stderr ? `\n${result.stderr}` : ''}`;
+    }
+    const head = `doctest: ${report.cases.failed}/${report.cases.total} test cases failed, ` +
+        `${report.assertions.failed}/${report.assertions.total} assertions failed.`;
+    const detail = report.failures
+        .slice(0, 5)
+        .map((f) => {
+            const where = f.file ? `${f.file}:${f.line ?? '?'}` : '?';
+            const exp = f.expanded ? `\n    values: ${f.expanded}` : '';
+            return `  - [${f.testCase}] ${where}: ${f.expression}${exp}`;
+        })
+        .join('\n');
+    const more = report.failures.length > 5 ? `\n  (+${report.failures.length - 5} more failures)` : '';
+    return detail ? `${head}\n${detail}${more}` : head;
 }
