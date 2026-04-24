@@ -45,6 +45,11 @@ export {
     type ResolveBuildInput,
     type ResolvedBuild
 } from './workspace/build-resolver.js';
+export {
+    buildArgv,
+    type BuildArgvOptions,
+    type CompileInvocation
+} from './workspace/compile-argv.js';
 export type {
     FileMeta,
     MetaSidecar,

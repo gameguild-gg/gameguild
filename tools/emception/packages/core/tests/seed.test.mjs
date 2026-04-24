@@ -1,7 +1,7 @@
 // Phase 3.2 verification — seed hashing is deterministic and order-insensitive.
 
-import test from 'node:test';
 import assert from 'node:assert/strict';
+import test from 'node:test';
 
 import { hashSeed, normalizeSeedEntry } from '../dist/index.js';
 

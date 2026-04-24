@@ -1,8 +1,8 @@
 // Phase 7.4 verification — in-memory WorkspaceManager honors all SeedPolicy
 // branches and surfaces metadata correctly.
 
-import test from 'node:test';
 import assert from 'node:assert/strict';
+import test from 'node:test';
 
 import {
     BuildConfigError,
