@@ -18,7 +18,8 @@ function parseFlag(name: string): string | undefined {
 
 async function main(): Promise<number> {
     if (cmd === 'doctor') {
-        const report = await runDoctor();
+        const workspaceRoot = parseFlag('workspace-root');
+        const report = await runDoctor({ workspaceRoot });
         console.log(formatReport(report));
         return report.ok ? 0 : 1;
     }
@@ -44,7 +45,7 @@ async function main(): Promise<number> {
     if (cmd === 'help' || cmd === '--help' || cmd === '-h') {
         console.log('emception CLI');
         console.log('Commands:');
-        console.log('  doctor                       — check environment for emception prerequisites');
+        console.log('  doctor [--workspace-root D]  — check environment for emception prerequisites');
         console.log('  cdn-export <dir> [--from U]  — fetch sysroot manifest+bundles into <dir>');
         console.log('  run                          — Phase 9 (pending)');
         console.log('  test                         — Phase 9 (pending)');

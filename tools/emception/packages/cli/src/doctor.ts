@@ -8,7 +8,10 @@
  * Node-side prerequisites (Phase 7).
  */
 
+import { promises as fsp } from 'node:fs';
 import { createRequire } from 'node:module';
+import * as os from 'node:os';
+import * as path from 'node:path';
 
 export interface DoctorCheck {
     name: string;
@@ -21,6 +24,15 @@ export interface DoctorReport {
     nodeVersion?: string;
     checks: DoctorCheck[];
     ok: boolean;
+}
+
+export interface DoctorOptions {
+    /**
+     * Optional filesystem path the caller intends to use as the
+     * `FsWorkspaceManager` root. When provided, doctor verifies it's
+     * read+write+createDir-able. When omitted, a tmpdir probe is used.
+     */
+    workspaceRoot?: string;
 }
 
 function detectRuntime(): DoctorReport['runtime'] {
@@ -61,8 +73,8 @@ function checkWorkerThreads(): DoctorCheck {
 function checkSysrootResolvable(): DoctorCheck {
     try {
         const req = createRequire(import.meta.url);
-        const path = req.resolve('@emception/sysroot/manifest.json');
-        return { name: 'sysroot', ok: true, detail: path };
+        const resolved = req.resolve('@emception/sysroot/manifest.json');
+        return { name: 'sysroot', ok: true, detail: resolved };
     } catch {
         return {
             name: 'sysroot',
@@ -72,7 +84,34 @@ function checkSysrootResolvable(): DoctorCheck {
     }
 }
 
-export async function runDoctor(): Promise<DoctorReport> {
+/**
+ * Verify the chosen workspace root is read+write+createDir-able. We always
+ * write inside a uniquely-named subdirectory so existing data is untouched
+ * even when the probe targets a real workspace store.
+ */
+async function checkWorkspaceWritable(root: string): Promise<DoctorCheck> {
+    const probeDir = path.join(root, `.emception-doctor-${process.pid}-${Date.now()}`);
+    try {
+        await fsp.mkdir(probeDir, { recursive: true });
+        const probeFile = path.join(probeDir, 'probe.txt');
+        await fsp.writeFile(probeFile, 'ok', 'utf8');
+        const back = await fsp.readFile(probeFile, 'utf8');
+        if (back !== 'ok') {
+            return { name: 'workspace-writable', ok: false, detail: `roundtrip mismatch under ${root}` };
+        }
+        return { name: 'workspace-writable', ok: true, detail: `${root} (read+write+createDir)` };
+    } catch (err) {
+        return {
+            name: 'workspace-writable',
+            ok: false,
+            detail: `${root}: ${(err as Error).message}`,
+        };
+    } finally {
+        await fsp.rm(probeDir, { recursive: true, force: true }).catch(() => undefined);
+    }
+}
+
+export async function runDoctor(opts: DoctorOptions = {}): Promise<DoctorReport> {
     const runtime = detectRuntime();
 
     if (runtime !== 'node') {
@@ -83,7 +122,14 @@ export async function runDoctor(): Promise<DoctorReport> {
         };
     }
 
-    const checks: DoctorCheck[] = [checkNodeVersion(), checkFetch(), checkWorkerThreads(), checkSysrootResolvable()];
+    const workspaceRoot = opts.workspaceRoot ?? os.tmpdir();
+    const checks: DoctorCheck[] = [
+        checkNodeVersion(),
+        checkFetch(),
+        checkWorkerThreads(),
+        checkSysrootResolvable(),
+        await checkWorkspaceWritable(workspaceRoot),
+    ];
 
     return {
         runtime,
