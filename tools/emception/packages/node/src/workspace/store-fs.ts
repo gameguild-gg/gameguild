@@ -95,7 +95,7 @@ class FsWorkspaceHandle implements WorkspaceHandle {
         public readonly name: string,
         public readonly mountPath: string,
         private readonly root: string,
-    ) {}
+    ) { }
 
     private resolve(rel: string): string {
         // Reject path-traversal attempts; the workspace root is a security
@@ -245,7 +245,7 @@ async function applySeed(
     if (existing && existing.hash !== hash && policy === 'once') {
         throw new WorkspaceConflictError(
             `Workspace '${handle.name}' was seeded with a different content hash; ` +
-                `seedPolicy='once' refuses to overwrite (expected ${existing.hash}, got ${hash}).`,
+            `seedPolicy='once' refuses to overwrite (expected ${existing.hash}, got ${hash}).`,
         );
     }
 
@@ -293,7 +293,7 @@ export interface FsWorkspaceManagerOptions {
  */
 export class FsWorkspaceManager implements WorkspaceManager {
     private disposed = false;
-    constructor(private readonly opts: FsWorkspaceManagerOptions) {}
+    constructor(private readonly opts: FsWorkspaceManagerOptions) { }
 
     async list(): Promise<string[]> {
         this.assertLive();
