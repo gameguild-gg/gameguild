@@ -96,6 +96,11 @@ export async function runTests(
     let passed = 0;
     let failed = 0;
 
+    // Phase 5.7 — collect hidden/solution paths up-front so per-case
+    // diagnostics can be scrubbed before they leave the engine. We resolve
+    // this once per plan rather than once per case to keep the cost flat.
+    const redactor = plan.redactHidden ? await buildRedactor(em) : identity;
+
     for (const test of plan.cases) {
         if (opts.signal?.aborted) {
             const aborted: TestCaseResult = {
@@ -109,7 +114,7 @@ export async function runTests(
             continue;
         }
 
-        const result = await runOne(em, test, plan);
+        const result = redactCase(await runOne(em, test, plan), redactor);
         cases.push(result);
         if (result.passed) passed += 1;
         else failed += 1;
@@ -121,6 +126,52 @@ export async function runTests(
         totalDurationMs: nowMs() - totalStart,
         cases,
     };
+}
+
+type Redactor = (input: string) => string;
+
+const identity: Redactor = (s) => s;
+
+function redactCase(result: TestCaseResult, redact: Redactor): TestCaseResult {
+    if (redact === identity || result.diagnostic === undefined) return result;
+    return { ...result, diagnostic: redact(result.diagnostic) };
+}
+
+/**
+ * Build a redactor that masks any path marked `hidden` or `solution`. The
+ * returned function replaces every occurrence of such a path (and its
+ * basename) with `<hidden>` to keep grader hints out of student-visible
+ * reports. Falls back to identity if the workspace can't list files.
+ */
+async function buildRedactor(em: EmceptionAPI): Promise<Redactor> {
+    let entries: Array<{ path: string; visibility?: string }>;
+    try {
+        entries = await em.workspace.listFiles({
+            includeHidden: true,
+            includeSolution: true,
+        });
+    } catch {
+        return identity;
+    }
+
+    const sensitive = entries
+        .filter((e) => e.visibility === 'hidden' || e.visibility === 'solution')
+        .flatMap((e) => {
+            const base = e.path.split('/').pop();
+            return base && base !== e.path ? [e.path, base] : [e.path];
+        })
+        // Longest-first prevents a basename from being redacted before its
+        // full path, which would leave dangling directory fragments.
+        .sort((a, b) => b.length - a.length)
+        .map(escapeRegex);
+
+    if (sensitive.length === 0) return identity;
+    const re = new RegExp(sensitive.join('|'), 'g');
+    return (s) => s.replace(re, '<hidden>');
+}
+
+function escapeRegex(s: string): string {
+    return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
 async function runOne(
