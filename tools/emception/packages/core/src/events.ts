@@ -8,71 +8,71 @@
 
 /** Bundle / manifest loading progress. */
 export interface ProgressEvent {
-  /** Human-readable phase, e.g. 'manifest', 'bundle', 'sysroot'. */
-  phase: string;
-  /** Bytes / units loaded so far (when known). */
-  loaded?: number;
-  /** Total bytes / units expected (when known). */
-  total?: number;
-  /** Optional logical name of the asset being loaded. */
-  asset?: string;
+    /** Human-readable phase, e.g. 'manifest', 'bundle', 'sysroot'. */
+    phase: string;
+    /** Bytes / units loaded so far (when known). */
+    loaded?: number;
+    /** Total bytes / units expected (when known). */
+    total?: number;
+    /** Optional logical name of the asset being loaded. */
+    asset?: string;
 }
 
 /** Fired exactly once when the runtime is ready to accept commands. */
 export interface ReadyEvent {
-  /** Wall-clock ms from instantiation to ready. */
-  bootMs: number;
-  /** Active manifest version (if any). */
-  manifestVersion?: string;
+    /** Wall-clock ms from instantiation to ready. */
+    bootMs: number;
+    /** Active manifest version (if any). */
+    manifestVersion?: string;
 }
 
 /** Fired each time a sysroot bundle finishes loading. */
 export interface BundleLoadedEvent {
-  bundle: string;
-  /** Decompressed bytes copied into the in-worker FS. */
-  bytes: number;
-  /** Wall-clock ms spent fetching + extracting. */
-  durationMs: number;
+    bundle: string;
+    /** Decompressed bytes copied into the in-worker FS. */
+    bytes: number;
+    /** Wall-clock ms spent fetching + extracting. */
+    durationMs: number;
 }
 
 /** Stdout chunk from a running tool. */
 export interface StdoutEvent {
-  /** Owning tool / pipeline id, when available. */
-  source?: string;
-  chunk: Uint8Array;
+    /** Owning tool / pipeline id, when available. */
+    source?: string;
+    chunk: Uint8Array;
 }
 
 /** Stderr chunk from a running tool. */
 export interface StderrEvent {
-  source?: string;
-  chunk: Uint8Array;
+    source?: string;
+    chunk: Uint8Array;
 }
 
 /** A tool invocation finished. */
 export interface ExitEvent {
-  source?: string;
-  exitCode: number;
-  durationMs: number;
-  signal?: string;
+    source?: string;
+    exitCode: number;
+    durationMs: number;
+    signal?: string;
 }
 
 /** A single test case completed (during runTests). */
 export interface TestCaseEvent {
-  name: string;
-  passed: boolean;
-  durationMs: number;
-  diagnostic?: string;
+    name: string;
+    passed: boolean;
+    durationMs: number;
+    diagnostic?: string;
 }
 
 /** Map of event names to payload types. */
 export interface EmceptionEventMap {
-  progress: ProgressEvent;
-  ready: ReadyEvent;
-  'bundle-loaded': BundleLoadedEvent;
-  stdout: StdoutEvent;
-  stderr: StderrEvent;
-  exit: ExitEvent;
-  'test-case': TestCaseEvent;
+    progress: ProgressEvent;
+    ready: ReadyEvent;
+    'bundle-loaded': BundleLoadedEvent;
+    stdout: StdoutEvent;
+    stderr: StderrEvent;
+    exit: ExitEvent;
+    'test-case': TestCaseEvent;
 }
 
 export type EmceptionEventName = keyof EmceptionEventMap;
