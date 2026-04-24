@@ -63,10 +63,55 @@ const handlers: { [K in TestCase['kind']]: TestKindHandler<K> } = {
                 : describeStdioFailure(result, test, { stdoutOk, stderrOk, exitOk }),
         };
     },
-    'stdio-file': async () => {
-        throw new TestFailureError(
-            'stdio-file kind not yet implemented (Phase 5.3 pending workspace file reads).',
-        );
+    'stdio-file': async (em, test, plan, timeoutMs) => {
+        // Read both fixtures from the workspace. Hidden visibility is fine —
+        // the runtime ignores visibility metadata; redaction (Phase 5.7) keeps
+        // these paths out of student-visible diagnostics.
+        const start = nowMs();
+        const [inBytes, expectedBytes] = await Promise.all([
+            em.workspace.readFile(test.inFile),
+            em.workspace.readFile(test.expectedOutFile),
+        ]);
+        if (inBytes === null) {
+            return {
+                name: test.name ?? 'stdio-file',
+                passed: false,
+                durationMs: nowMs() - start,
+                diagnostic: `Input fixture not found: ${test.inFile}`,
+            };
+        }
+        if (expectedBytes === null) {
+            return {
+                name: test.name ?? 'stdio-file',
+                passed: false,
+                durationMs: nowMs() - start,
+                diagnostic: `Expected-output fixture not found: ${test.expectedOutFile}`,
+            };
+        }
+
+        const decoder = new TextDecoder();
+        const stdinText = decoder.decode(inBytes);
+        const expectedStdout = decoder.decode(expectedBytes);
+
+        const result = await em.compileAndRun(undefined, {
+            build: plan.build,
+            stdin: stdinText,
+            stdout: 'capture',
+            stderr: 'capture',
+            timeoutMs,
+        });
+
+        const passed = !result.timedOut && result.stdout === expectedStdout;
+        return {
+            name: test.name ?? 'stdio-file',
+            passed,
+            durationMs: nowMs() - start,
+            diagnostic: passed
+                ? undefined
+                : result.timedOut
+                  ? `Timed out reading ${test.inFile}.`
+                  : `stdout mismatch for ${test.inFile}:\n  expected: ${JSON.stringify(expectedStdout)}\n  actual:   ${JSON.stringify(result.stdout)}`,
+        };
     },
     'clang-query': async () => {
         throw new TestFailureError(

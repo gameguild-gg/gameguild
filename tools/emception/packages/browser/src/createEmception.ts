@@ -25,10 +25,10 @@
  * `boot()` / `bootInWorker()` exports remain available for advanced use.
  */
 
-import { bootInWorker } from './index';
 import { HeadlessIOProvider } from '@emception/core';
-import { WorkerClient } from './worker-client';
+import { bootInWorker } from './index';
 import type { RunOptions, ToolResult } from './tool-runner';
+import { WorkerClient } from './worker-client';
 
 /**
  * Default manifest URL used when `manifestUrl` is omitted. Points at the
