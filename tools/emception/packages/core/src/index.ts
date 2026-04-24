@@ -9,6 +9,7 @@ export * from './types';
 export * as tty from './tty';
 export * as vfs from './vfs';
 export * as workerProtocol from './worker-protocol';
+export * as runtime from './runtime/adapter';
 
 // Top-level re-exports for the most commonly imported helpers.
 export type { IOProvider } from './tty/io-provider';
@@ -17,4 +18,12 @@ export type { FSStats, IFileSystem } from './vfs/interface';
 export type { FSManifest, ManifestBundle, ManifestEntry } from './vfs/manifest';
 export { OverlayFS } from './vfs/overlay';
 export type { MainToWorkerMessage, WorkerToMainMessage } from './worker-protocol';
+export type {
+  ManifestSource,
+  RuntimeAdapter,
+  SpawnWorkerOptions,
+  WorkerHandle,
+  WorkspaceStoreHandle,
+  WorkspaceStoreOptions,
+} from './runtime/adapter';
 
