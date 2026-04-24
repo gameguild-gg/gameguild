@@ -20,7 +20,7 @@
 
 Most game developers work alone or in small teams, without access to the networks, mentoring, and infrastructure that studios take for granted. GameGuild exists to change that.
 
-We are an **open source platform** where game developers **find each other**, **learn together**, and **ship their games** — without gatekeepers, without paywalls on knowledge, and without giving up ownership of their work.
+We are an **open source platform** where game developers **find each other**, **learn together**, and **ship their games** — without gatekeepers and without giving up ownership of their work.
 
 [Website](https://gameguild.gg) · [Discord](https://discord.com/invite/9CdJeQ2XKB?ref=gameguild.gg) · [Issues](https://github.com/gameguild-gg/gameguild/issues) · [Contributing](CONTRIBUTING.md)
 
@@ -175,9 +175,18 @@ By contributing, you agree to the [CLA](CONTRIBUTOR_LICENSE_AGREEMENT.md.md). Pl
 ## FAQ
 
 <details>
-<summary><b>Is GameGuild really free?</b></summary>
+<summary><b>Is GameGuild open source?</b></summary>
 
-Yes. The platform is open source under the [MIT License](LICENSE-MIT.md) and the hosted version at [gameguild.gg](https://gameguild.gg) is free to use. A [Commercial License](LICENSE.md) exists only for organizations that need contractual support and guarantees.
+Yes. The source code is dual-licensed under the [MIT License](LICENSE-MIT.md) for free use, modification, and self-hosting, and a [Commercial License](LICENSE.md) for organizations that need contractual support and guarantees. The hosted platform at [gameguild.gg](https://gameguild.gg) may offer both free and paid content and services depending on the activity.
+
+</details>
+
+<details>
+<summary><b>What's the difference between this repository and gameguild.gg?</b></summary>
+
+This repository is the **open source platform** itself — the code that anyone can read, fork, self-host, or contribute to, under the [MIT License](LICENSE-MIT.md).
+
+[gameguild.gg](https://gameguild.gg) is a **commercial deployment** of this same platform, operated as a standalone project that shares the name. It has its own terms of service, its own content, and its own pricing decisions (free or paid) for the activities offered there. Using the code from this repository does not require any relationship with the hosted service.
 
 </details>
 
@@ -235,7 +244,13 @@ Join us where the conversation happens:
 
 How the project's popularity has grown over time.
 
-[![Star History Chart](https://api.star-history.com/svg?repos=gameguild-gg/gameguild&type=Date)](https://star-history.com/#gameguild-gg/gameguild&Date)
+<a href="https://www.star-history.com/#gameguild-gg/gameguild&Date">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=gameguild-gg/gameguild&type=Date&theme=dark" />
+    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=gameguild-gg/gameguild&type=Date" />
+    <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=gameguild-gg/gameguild&type=Date" />
+  </picture>
+</a>
 
 ### Repository evolution (Gource)
 
@@ -251,10 +266,12 @@ We follow the [GitFlow](https://nvie.com/posts/a-successful-git-branching-model/
 
 ## License
 
-Dual-licensed:
+The **source code** is dual-licensed:
 
 - **[MIT License](LICENSE-MIT.md)** — Free for any use. No support or warranty.
 - **[Commercial License](LICENSE.md)** — For organizations that need contractual support, maintenance, and guarantees.
+
+The hosted platform at [gameguild.gg](https://gameguild.gg) and the content published on it (courses, games, services) follow their own terms and may be free or paid depending on the activity.
 
 Questions? [gameguild.gg/contact](https://gameguild.gg/contact)
 
