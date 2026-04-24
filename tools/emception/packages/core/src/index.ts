@@ -39,6 +39,14 @@ export {
     type WithCancellationOptions
 } from './runtime/cancellation.js';
 export { runTests, type TestKindHandler } from './testing/engine.js';
+export {
+    compileMatcher,
+    queryClangAst,
+    runMatcher,
+    type ClangAstNode,
+    type CompiledMatcher,
+    type MatchResult,
+} from './testing/clang-query/matcher.js';
 export { HeadlessIOProvider, type HeadlessIOProviderOptions } from './tty/headless.js';
 export type { IOProvider } from './tty/io-provider.js';
 export { LineBuffer } from './tty/line-buffer.js';
