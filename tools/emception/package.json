@@ -84,7 +84,10 @@
     "e2e": "npx playwright test --config=playwright.config.ts",
     "e2e:react": "npx playwright test --config=playwright.config.react.ts"
   },
-  "dependencies": {},
+  "dependencies": {
+    "@emception/browser": "0.1.0-alpha.0",
+    "@emception/xterm": "0.1.0-alpha.0"
+  },
   "peerDependencies": {
     "@xterm/xterm": "^6.0.0"
   },
