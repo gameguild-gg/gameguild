@@ -36,6 +36,7 @@
     "scripts": {
         "build": "tsc -p tsconfig.json",
         "typecheck": "tsc --noEmit",
+        "test": "npm run build && node --test 'tests/*.test.mjs'",
         "clean": "rm -rf dist"
     },
     "devDependencies": {
