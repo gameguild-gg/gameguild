@@ -9,7 +9,7 @@ export * from './types.js';
 
 // Subsystem namespaces (full surface).
 export * as io from './io/index.js';
-export * as runtime from './runtime/adapter.js';
+export * as runtime from './runtime/index.js';
 export * as testing from './testing/index.js';
 export * as tty from './tty/index.js';
 export * as ui from './ui/index.js';
@@ -32,6 +32,12 @@ export type {
     WorkspaceStoreHandle,
     WorkspaceStoreOptions
 } from './runtime/adapter.js';
+export {
+    withCancellation,
+    withTimeoutOrThrow,
+    type CancellationOutcome,
+    type WithCancellationOptions
+} from './runtime/cancellation.js';
 export { runTests, type TestKindHandler } from './testing/engine.js';
 export { HeadlessIOProvider, type HeadlessIOProviderOptions } from './tty/headless.js';
 export type { IOProvider } from './tty/io-provider.js';
