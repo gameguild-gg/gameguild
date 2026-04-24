@@ -10,6 +10,7 @@ export * from './types';
 // Subsystem namespaces (full surface).
 export * as io from './io';
 export * as runtime from './runtime/adapter';
+export * as testing from './testing';
 export * as tty from './tty';
 export * as vfs from './vfs';
 export * as workerProtocol from './worker-protocol';
@@ -37,6 +38,7 @@ export type { FSStats, IFileSystem } from './vfs/interface';
 export type { FSManifest, ManifestBundle, ManifestEntry } from './vfs/manifest';
 export { OverlayFS } from './vfs/overlay';
 export type { MainToWorkerMessage, WorkerToMainMessage } from './worker-protocol';
+export { runTests, type TestKindHandler } from './testing/engine';
 export {
     resolveBuild,
     type ResolveBuildInput,
