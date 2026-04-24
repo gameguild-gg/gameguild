@@ -47,6 +47,12 @@ export {
     type CompiledMatcher,
     type MatchResult,
 } from './testing/clang-query/matcher.js';
+export {
+    parseDoctestConsole,
+    type DoctestCounts,
+    type DoctestFailure,
+    type DoctestReport,
+} from './testing/doctest/parse.js';
 export { HeadlessIOProvider, type HeadlessIOProviderOptions } from './tty/headless.js';
 export type { IOProvider } from './tty/io-provider.js';
 export { LineBuffer } from './tty/line-buffer.js';
