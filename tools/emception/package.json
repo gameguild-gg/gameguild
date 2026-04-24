@@ -54,7 +54,7 @@
     "build:all": "run-s typecheck build:emsdk build:binaryen build:cpython build:llvm build:libcurl-lite build:ninja build:cmake build:sdl3 build:imgui build:sysroot build:brotli patch:glue build:manifest build:bundles build:lib deploy:cdn",
     "build:cdn": "run-s build:manifest build:bundles deploy:cdn",
     "build:pipeline": "run-s build:sysroot build:brotli patch:glue build:cdn build:lib",
-    "build:packages": "run-s build:packages:core build:packages:browser build:packages:node build:packages:xterm build:packages:react build:packages:webcomponent build:packages:ide build:packages:cli",
+    "build:packages": "run-s build:packages:core build:packages:xterm build:packages:browser build:packages:node build:packages:react build:packages:webcomponent build:packages:ide build:packages:cli",
     "build:packages:core": "npm run build --workspace=@emception/core",
     "build:packages:browser": "npm run build --workspace=@emception/browser",
     "build:packages:node": "npm run build --workspace=@emception/node",

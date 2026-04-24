@@ -30,7 +30,8 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@emception/core": "0.1.0-alpha.0"
+    "@emception/core": "0.1.0-alpha.0",
+    "@emception/xterm": "0.1.0-alpha.0"
   },
   "peerDependencies": {
     "@emception/sysroot": ">=0.20.0-alpha.0"
