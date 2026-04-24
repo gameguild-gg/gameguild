@@ -5,22 +5,22 @@ export type { EmceptionAPI, RunOptions, ToolResult, WorkspaceOptions } from '@em
 export {
     createFsWorkspaceManager,
     FsWorkspaceManager,
-    type FsWorkspaceManagerOptions,
+    type FsWorkspaceManagerOptions
 } from './workspace/store-fs.js';
 
 export {
     processStdio,
     readableToWeb,
-    writableToWeb,
+    writableToWeb
 } from './io/node-streams.js';
 
 export {
     loadManifest,
-    type LoadManifestOptions,
+    type LoadManifestOptions
 } from './runtime/manifest.js';
 
 export async function createEmception(_opts?: unknown): Promise<never> {
-  throw new Error(
-    '@emception/node: createEmception() not yet implemented. Phase 7 will land the worker_threads runtime.'
-  );
+    throw new Error(
+        '@emception/node: createEmception() not yet implemented. Phase 7 will land the worker_threads runtime.'
+    );
 }
