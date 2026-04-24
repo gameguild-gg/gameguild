@@ -8,8 +8,8 @@
 import { promises as fsp } from 'node:fs';
 import { createRequire } from 'node:module';
 
-import { BuildConfigError } from '@emception/core';
 import type { FSManifest } from '@emception/core';
+import { BuildConfigError } from '@emception/core';
 
 export interface LoadManifestOptions {
     /** Absolute path to a manifest.json on disk. */
@@ -47,7 +47,7 @@ export async function loadManifest(opts: LoadManifestOptions = {}): Promise<FSMa
     } catch (err) {
         throw new BuildConfigError(
             '@emception/sysroot/manifest.json could not be resolved. ' +
-                'Install @emception/sysroot or pass {path} / {url} explicitly.',
+            'Install @emception/sysroot or pass {path} / {url} explicitly.',
             err instanceof Error ? err : undefined,
         );
     }
