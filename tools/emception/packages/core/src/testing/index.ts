@@ -8,3 +8,9 @@ export {
     type CompiledMatcher,
     type MatchResult,
 } from './clang-query/matcher.js';
+export {
+    parseDoctestConsole,
+    type DoctestCounts,
+    type DoctestFailure,
+    type DoctestReport,
+} from './doctest/parse.js';
