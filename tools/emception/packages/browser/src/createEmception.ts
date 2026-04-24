@@ -28,6 +28,18 @@
 import { bootInWorker } from './index';
 import type { RunOptions, ToolResult } from './tool-runner';
 
+/**
+ * Default manifest URL used when `manifestUrl` is omitted. Points at the
+ * latest published `@emception/sysroot` package on jsDelivr so a host can
+ * boot emception with zero configuration:
+ *
+ *     await createEmception({ container: el }); // uses DEFAULT_MANIFEST_URL
+ *
+ * Pin to a specific version in production by passing `manifestUrl`
+ * explicitly, e.g. `https://cdn.jsdelivr.net/npm/@emception/sysroot@1.2.3/manifest.json`.
+ */
+export const DEFAULT_MANIFEST_URL = 'https://cdn.jsdelivr.net/npm/@emception/sysroot/manifest.json';
+
 export interface CreateEmceptionOptions {
     /**
      * Either an HTMLElement to mount a new xterm.js Terminal into, or an
@@ -35,10 +47,14 @@ export interface CreateEmceptionOptions {
      */
     container: HTMLElement | import('@xterm/xterm').Terminal;
     /**
-     * URL of the manifest produced by `npm run build:manifest` — typically
-     * `/cdn/manifest.json` when the build output is served at `/cdn`.
+     * URL of the manifest produced by `npm run build:manifest`.
+     *
+     * If omitted, falls back to {@link DEFAULT_MANIFEST_URL} (the latest
+     * published `@emception/sysroot` on jsDelivr). For production deploys
+     * pin a specific version or self-host the manifest under your own
+     * origin to avoid CDN drift.
      */
-    manifestUrl: string;
+    manifestUrl?: string;
 }
 
 export interface EmceptionAPI {
@@ -57,7 +73,8 @@ export interface EmceptionAPI {
 }
 
 export async function createEmception(opts: CreateEmceptionOptions): Promise<EmceptionAPI> {
-    const { client } = await bootInWorker(opts.manifestUrl, opts.container);
+    const manifestUrl = opts.manifestUrl ?? DEFAULT_MANIFEST_URL;
+    const { client } = await bootInWorker(manifestUrl, opts.container);
 
     const encoder = new TextEncoder();
     const toBytes = (data: Uint8Array | string): Uint8Array =>
