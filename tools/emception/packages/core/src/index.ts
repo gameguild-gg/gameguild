@@ -2,6 +2,7 @@
 // Phase 0 skeleton + Phase 0.2 first slice (pure VFS / TTY / worker-protocol types).
 
 export * from './errors';
+export * from './events';
 export * from './presets';
 export * from './types';
 
