@@ -41,17 +41,17 @@ const api = await createEmception({ tty: 'none' });
 Every kebab-case attribute in `ATTRIBUTE_SCHEMA` (exported from
 `@emception/core`) is mirrored on the element. Common ones:
 
-| attribute | type | meaning |
-| --- | --- | --- |
-| `preset` | string | `'cpp' \| 'c' \| 'sdl' \| ...` |
-| `manifest-url` | URL | sysroot manifest override |
-| `source` | string | inline single-source convenience |
-| `seed-url` / `build-url` | URL | remote workspace seed / build config |
-| `autorun` | boolean (presence) | auto-execute on ready |
-| `canvas` | boolean (presence) | show the `<slot name="canvas">` region |
-| `cflags` / `cxxflags` / `ldflags` / `libs` | space-or-comma list | folded into `workspace.build` |
-| `include-paths` / `lib-paths` | list | folded into `workspace.build` |
-| `std` / `output` | string | C/C++ standard, output filename |
+| attribute                                  | type                | meaning                                |
+| ------------------------------------------ | ------------------- | -------------------------------------- |
+| `preset`                                   | string              | `'cpp' \| 'c' \| 'sdl' \| ...`         |
+| `manifest-url`                             | URL                 | sysroot manifest override              |
+| `source`                                   | string              | inline single-source convenience       |
+| `seed-url` / `build-url`                   | URL                 | remote workspace seed / build config   |
+| `autorun`                                  | boolean (presence)  | auto-execute on ready                  |
+| `canvas`                                   | boolean (presence)  | show the `<slot name="canvas">` region |
+| `cflags` / `cxxflags` / `ldflags` / `libs` | space-or-comma list | folded into `workspace.build`          |
+| `include-paths` / `lib-paths`              | list                | folded into `workspace.build`          |
+| `std` / `output`                           | string              | C/C++ standard, output filename        |
 
 Unknown attributes are ignored.
 
@@ -73,13 +73,13 @@ Re-broadcasts every typed `EmceptionEventName` as a bubbling +
 composed `CustomEvent` named `emception-<name>`. The `detail`
 payload matches the matching key of `EmceptionEventMap`:
 
-| event | payload |
-| --- | --- |
-| `emception-ready` | `{}` |
+| event                                   | payload                           |
+| --------------------------------------- | --------------------------------- |
+| `emception-ready`                       | `{}`                              |
 | `emception-stdout` / `emception-stderr` | `{ chunk: string \| Uint8Array }` |
-| `emception-exit` | `{ code, signal }` |
-| `emception-test-report` | `TestReport` |
-| `emception-test-case` | one item from a test report |
+| `emception-exit`                        | `{ code, signal }`                |
+| `emception-test-report`                 | `TestReport`                      |
+| `emception-test-case`                   | one item from a test report       |
 
 ```ts
 el.addEventListener('emception-stdout', (ev) => {
