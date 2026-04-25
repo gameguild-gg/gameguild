@@ -38,6 +38,7 @@ export {
     type CancellationOutcome,
     type WithCancellationOptions
 } from './runtime/cancellation.js';
+export { assertToolResult, isToolResult } from './runtime/tool-result.js';
 export { runTests, type TestKindHandler } from './testing/engine.js';
 export {
     compileMatcher,
