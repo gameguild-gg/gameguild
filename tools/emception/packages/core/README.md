@@ -4,20 +4,20 @@ Runtime-agnostic core for [emception](https://github.com/gameguild-gg/gameguild/
 
 ## What's in here
 
-| Subsystem | Module path | Surface |
-| --- | --- | --- |
-| Public types | `@emception/core` | `EmceptionAPI`, `EmceptionEventMap`, `ToolResult`, `RunOptions`, `CompileOptions`, `WorkspaceHandle`, … |
-| Errors | `@emception/core` | `EmceptionError`, `TimeoutError`, `WorkspaceConflictError`, `TestFailureError`, `BuildConfigError`, `RuntimeFeatureUnavailableError`, `CrossOriginIsolationError`, `CanvasUnavailableError` |
-| Runtime adapter contract | `runtime/adapter` | `RuntimeAdapter` interface (browser + node implement it) |
-| Runtime helpers | `runtime/cancellation`, `runtime/tool-result`, `runtime/feature-guards` | `withCancellation`, `withTimeoutOrThrow`, `assertToolResult`, `isToolResult`, `assertCanvasUnsupported`, `assertXtermStdinUnsupported`, `assertNoBrowserOnlyFeatures` |
-| Tools registry | tool registry | `TOOL_REGISTRY`, `ToolName`, `Tools`, `createTools(adapter)` |
-| Presets | presets | `PRESETS`, `PresetName`, …; canonical preset definitions |
-| VFS | `vfs/overlay`, `vfs/manifest` | `OverlayFS`, `IFileSystem`, `FSManifest`, `ManifestBundle` |
-| Workspace | `workspace/{manager,seed,build-resolver,compile-argv,zip,transfer}` | `WorkspaceManager`, `WorkspaceHandle`, `hashSeed`, `resolveBuild`, `buildArgv`, `createZip`/`readZip`, `exportWorkspace`/`importWorkspace` |
-| In-memory store | `workspace/store-memory` | `MemoryWorkspaceManager` (full `WorkspaceManager` impl) |
-| Test engine | `testing/engine`, `testing/clang-query`, `testing/doctest` | `runTests`, matcher engine, doctest console parser |
-| TTY | `tty/headless`, `tty/line-buffer`, `tty/io-provider` | `HeadlessIOProvider`, `LineBuffer`, `IOProvider` |
-| UI helpers (DOM-free) | `ui/adapters`, `ui/config` | `kebabToCamel`/`camelToKebab`, `parseAttributesToInput`, `EVENT_DOM_NAMES`, `ATTRIBUTE_SCHEMA`, `normalizeViewConfig`, `toAttributes`, `diffViewConfigs` |
+| Subsystem                | Module path                                                             | Surface                                                                                                                                                                                     |
+| ------------------------ | ----------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Public types             | `@emception/core`                                                       | `EmceptionAPI`, `EmceptionEventMap`, `ToolResult`, `RunOptions`, `CompileOptions`, `WorkspaceHandle`, …                                                                                     |
+| Errors                   | `@emception/core`                                                       | `EmceptionError`, `TimeoutError`, `WorkspaceConflictError`, `TestFailureError`, `BuildConfigError`, `RuntimeFeatureUnavailableError`, `CrossOriginIsolationError`, `CanvasUnavailableError` |
+| Runtime adapter contract | `runtime/adapter`                                                       | `RuntimeAdapter` interface (browser + node implement it)                                                                                                                                    |
+| Runtime helpers          | `runtime/cancellation`, `runtime/tool-result`, `runtime/feature-guards` | `withCancellation`, `withTimeoutOrThrow`, `assertToolResult`, `isToolResult`, `assertCanvasUnsupported`, `assertXtermStdinUnsupported`, `assertNoBrowserOnlyFeatures`                       |
+| Tools registry           | tool registry                                                           | `TOOL_REGISTRY`, `ToolName`, `Tools`, `createTools(adapter)`                                                                                                                                |
+| Presets                  | presets                                                                 | `PRESETS`, `PresetName`, …; canonical preset definitions                                                                                                                                    |
+| VFS                      | `vfs/overlay`, `vfs/manifest`                                           | `OverlayFS`, `IFileSystem`, `FSManifest`, `ManifestBundle`                                                                                                                                  |
+| Workspace                | `workspace/{manager,seed,build-resolver,compile-argv,zip,transfer}`     | `WorkspaceManager`, `WorkspaceHandle`, `hashSeed`, `resolveBuild`, `buildArgv`, `createZip`/`readZip`, `exportWorkspace`/`importWorkspace`                                                  |
+| In-memory store          | `workspace/store-memory`                                                | `MemoryWorkspaceManager` (full `WorkspaceManager` impl)                                                                                                                                     |
+| Test engine              | `testing/engine`, `testing/clang-query`, `testing/doctest`              | `runTests`, matcher engine, doctest console parser                                                                                                                                          |
+| TTY                      | `tty/headless`, `tty/line-buffer`, `tty/io-provider`                    | `HeadlessIOProvider`, `LineBuffer`, `IOProvider`                                                                                                                                            |
+| UI helpers (DOM-free)    | `ui/adapters`, `ui/config`                                              | `kebabToCamel`/`camelToKebab`, `parseAttributesToInput`, `EVENT_DOM_NAMES`, `ATTRIBUTE_SCHEMA`, `normalizeViewConfig`, `toAttributes`, `diffViewConfigs`                                    |
 
 ## Constraints
 
@@ -46,16 +46,16 @@ export interface RuntimeAdapter {
 
 `EmceptionAPI.on(name, fn)` returns an unsubscribe function. The full event map:
 
-| name | payload |
-| --- | --- |
-| `ready` | `{}` |
-| `bundle-loaded` | `{ name, sizeBytes }` |
-| `progress` | `{ phase, current?, total?, message? }` |
-| `stdout` / `stderr` | `{ chunk: string \| Uint8Array }` |
-| `exit` | `{ code: number, signal?: string }` |
-| `test-report` | `TestReport` |
-| `test-case` | one item from a `TestReport` |
-| `error` | `{ error: EmceptionError }` |
+| name                | payload                                 |
+| ------------------- | --------------------------------------- |
+| `ready`             | `{}`                                    |
+| `bundle-loaded`     | `{ name, sizeBytes }`                   |
+| `progress`          | `{ phase, current?, total?, message? }` |
+| `stdout` / `stderr` | `{ chunk: string \| Uint8Array }`       |
+| `exit`              | `{ code: number, signal?: string }`     |
+| `test-report`       | `TestReport`                            |
+| `test-case`         | one item from a `TestReport`            |
+| `error`             | `{ error: EmceptionError }`             |
 
 `EVENT_DOM_NAMES` maps each name → `'emception-<name>'` for the webcomponent / React adapters.
 
@@ -67,8 +67,12 @@ import { EmceptionError, TimeoutError } from '@emception/core';
 try {
   await api.run('clang', ['-c', 'main.c']);
 } catch (err) {
-  if (err instanceof TimeoutError) { /* … */ }
-  if (err instanceof EmceptionError) { /* base + .cause */ }
+  if (err instanceof TimeoutError) {
+    /* … */
+  }
+  if (err instanceof EmceptionError) {
+    /* base + .cause */
+  }
 }
 ```
 
