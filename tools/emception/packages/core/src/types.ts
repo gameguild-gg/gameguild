@@ -29,6 +29,14 @@ export interface WorkspaceBuildConfig {
         buildDir?: string;
         configureArgs?: string[];
         buildArgs?: string[];
+        /**
+         * Multi-binary CMake projects: list of target names to build. The resolver
+         * invokes `cmake --build <buildDir> --target <name>` per entry with shared
+         * flags. Per-target customization belongs in `CMakeLists.txt`, not here.
+         *
+         * Only valid when `cmake` is set; merged via array concat + dedup.
+         */
+        targets?: string[];
     };
 }
 
