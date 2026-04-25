@@ -11,7 +11,7 @@
 //
 // Run with: `node --experimental-vm-modules grade.mjs`
 
-import { createNodeRuntimeAdapter, createFsWorkspaceManager } from '@emception/node';
+import { createFsWorkspaceManager, createNodeRuntimeAdapter } from '@emception/node';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 

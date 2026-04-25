@@ -22,7 +22,7 @@ const xterm = new Terminal();
 xterm.open(document.getElementById('term')!);
 
 const em = await createEmception({
-  stdin: fromXterm(xterm),       // line-buffered + local echo by default
+  stdin: fromXterm(xterm), // line-buffered + local echo by default
   stdout: toXterm(xterm),
   stderr: toXterm(xterm),
 });

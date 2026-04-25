@@ -10,13 +10,13 @@ Reactive `<Ide>` React 19 component + `<emception-ide>` custom-element wrapper f
 
 The reactive `<Ide>` component will compose smaller building blocks already shipped in `@emception/webcomponent` / `@emception/react`:
 
-| Panel          | Source                                                                  |
-| -------------- | ----------------------------------------------------------------------- |
-| Editor         | Monaco wrapper (TBD — current code uses CodeMirror)                     |
-| Terminal       | `@emception/xterm` + `<emception-run>` slot                             |
-| Canvas         | OffscreenCanvas helper from `@emception/browser`                        |
-| File explorer  | New — driven by `@emception/core`'s `WorkspaceManager`                  |
-| Tabs / docking | Light DOM panels, all toggleable via props                              |
+| Panel          | Source                                                 |
+| -------------- | ------------------------------------------------------ |
+| Editor         | Monaco wrapper (TBD — current code uses CodeMirror)    |
+| Terminal       | `@emception/xterm` + `<emception-run>` slot            |
+| Canvas         | OffscreenCanvas helper from `@emception/browser`       |
+| File explorer  | New — driven by `@emception/core`'s `WorkspaceManager` |
+| Tabs / docking | Light DOM panels, all toggleable via props             |
 
 Until the rewrite lands, see:
 

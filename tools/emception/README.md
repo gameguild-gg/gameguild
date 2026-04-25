@@ -6,15 +6,15 @@ A complete C/C++ development environment that runs entirely in the browser. Writ
 
 Most consumers do not build emception from source. Pick a published package:
 
-| I want to…                                                       | Install                                                       | Entry point                              |
-| ---------------------------------------------------------------- | ------------------------------------------------------------- | ---------------------------------------- |
-| Drop a "compile + run" widget into static HTML                   | `@emception/webcomponent` + `@emception/browser`              | `<emception-run>` custom element         |
-| Embed in a React 19 app (Next.js, Vite, CRA)                     | `@emception/react` + `@emception/webcomponent` + `@emception/browser` | `<EmceptionRun>` + `useEmception()`      |
-| Add a real terminal UI                                           | `@emception/xterm` + `@xterm/xterm`                           | `fromXterm()` / `toXterm()` adapters     |
-| Run the toolchain headlessly in Node (CI graders, batch builds)  | `@emception/node`                                             | `createNodeRuntimeAdapter()` (Phase 7.2 brings full `createEmception`) |
-| Diagnose env or mirror sysroot to a CDN                          | `@emception/cli`                                              | `npx @emception/cli doctor` / `cdn-export <dir>` |
-| Build the IDE shell (editor + tabs + docking)                    | `@emception/ide` *(Phase 8)*                                  | `<Ide>` React component                  |
-| Add a new runtime adapter or preset                              | `@emception/core`                                             | `RuntimeAdapter` interface, presets/, ui/config |
+| I want to…                                                      | Install                                                               | Entry point                                                            |
+| --------------------------------------------------------------- | --------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| Drop a "compile + run" widget into static HTML                  | `@emception/webcomponent` + `@emception/browser`                      | `<emception-run>` custom element                                       |
+| Embed in a React 19 app (Next.js, Vite, CRA)                    | `@emception/react` + `@emception/webcomponent` + `@emception/browser` | `<EmceptionRun>` + `useEmception()`                                    |
+| Add a real terminal UI                                          | `@emception/xterm` + `@xterm/xterm`                                   | `fromXterm()` / `toXterm()` adapters                                   |
+| Run the toolchain headlessly in Node (CI graders, batch builds) | `@emception/node`                                                     | `createNodeRuntimeAdapter()` (Phase 7.2 brings full `createEmception`) |
+| Diagnose env or mirror sysroot to a CDN                         | `@emception/cli`                                                      | `npx @emception/cli doctor` / `cdn-export <dir>`                       |
+| Build the IDE shell (editor + tabs + docking)                   | `@emception/ide` _(Phase 8)_                                          | `<Ide>` React component                                                |
+| Add a new runtime adapter or preset                             | `@emception/core`                                                     | `RuntimeAdapter` interface, presets/, ui/config                        |
 
 Peer assets:
 

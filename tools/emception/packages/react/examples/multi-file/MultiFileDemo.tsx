@@ -6,10 +6,10 @@
 
 'use client';
 
-import { useCallback, useMemo, useState } from 'react';
-import { EmceptionRun, useEmception } from '@emception/react';
 import { createEmception } from '@emception/browser';
+import { EmceptionRun, useEmception } from '@emception/react';
 import '@emception/webcomponent';
+import { useCallback, useMemo, useState } from 'react';
 
 type FileMap = Record<string, string>;
 
