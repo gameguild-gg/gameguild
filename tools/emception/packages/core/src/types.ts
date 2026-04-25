@@ -73,6 +73,32 @@ export interface CompileOptions extends RunOptions {
     flags?: string[];
 }
 
+/**
+ * Result returned by every {@link EmceptionAPI.run} / {@link EmceptionAPI.compileAndRun}
+ * invocation. The shape is the **runtime contract** for tool execution and is
+ * relied on by the testing engine, doctor checks, and UI surfaces.
+ *
+ * Invariants enforced by adapters and asserted by {@link assertToolResult}:
+ *
+ * - `exitCode` is a finite integer. `0` means success; non-zero means the tool
+ *   reported an error. Implementations that have no concept of an exit code
+ *   (rare) MUST still synthesize one (`0` on success, `1` on error).
+ * - `stdout` and `stderr` are always strings (never `undefined`). Use the
+ *   empty string when the tool produced no output on a stream.
+ * - `durationMs` is wall-clock execution time measured by the adapter, not
+ *   by the caller. It MUST be `>= 0`.
+ * - `timedOut` is `true` iff the tool was aborted because it exceeded
+ *   `RunOptions.timeoutMs`. When `timedOut` is `true` the `signal` field
+ *   SHOULD be set (e.g. `'SIGTERM'` or the abort reason name) and `exitCode`
+ *   SHOULD reflect the abort (commonly non-zero).
+ * - `signal` is set when execution was terminated by a signal (timeout,
+ *   abort, or external kill). It is omitted on normal exit.
+ *
+ * Adapters MUST NOT throw to indicate a tool failure: a non-zero exit, a
+ * crash, or a timeout is still a successful adapter call that returns a
+ * `ToolResult` describing what happened. Adapters throw only for *adapter*
+ * failures (missing tool, invalid argv, transport error).
+ */
 export interface ToolResult {
     exitCode: number;
     stdout: string;
