@@ -53,6 +53,18 @@ export {
     type RequestCorrelatorOptions
 } from './runtime/request-correlator.js';
 export {
+    RpcChannel,
+    messagePortTransport,
+    workerTransport,
+    type RpcChannelOptions,
+    type RpcTransport
+} from './runtime/rpc-channel.js';
+export {
+    BootCancelledError,
+    BootError,
+    BootHandshake
+} from './runtime/boot-handshake.js';
+export {
     compileMatcher,
     queryClangAst,
     runMatcher,
