@@ -64,6 +64,15 @@ export interface TestCaseEvent {
     diagnostic?: string;
 }
 
+/** Aggregated test report emitted at the end of `runTests`. */
+export interface TestReportEvent {
+    passed: number;
+    failed: number;
+    totalDurationMs: number;
+    /** Number of cases reported. Equivalent to `passed + failed`. */
+    totalCases: number;
+}
+
 /** Map of event names to payload types. */
 export interface EmceptionEventMap {
     progress: ProgressEvent;
@@ -73,6 +82,7 @@ export interface EmceptionEventMap {
     stderr: StderrEvent;
     exit: ExitEvent;
     'test-case': TestCaseEvent;
+    'test-report': TestReportEvent;
 }
 
 export type EmceptionEventName = keyof EmceptionEventMap;

@@ -56,6 +56,18 @@ export {
 export { HeadlessIOProvider, type HeadlessIOProviderOptions } from './tty/headless.js';
 export type { IOProvider } from './tty/io-provider.js';
 export { LineBuffer } from './tty/line-buffer.js';
+export {
+    ATTRIBUTE_SCHEMA,
+    EVENT_DOM_NAMES,
+    camelToKebab,
+    domEventNameFor,
+    kebabToCamel,
+    parseAttributesToInput,
+    parseBooleanAttr,
+    parseListAttr,
+    type EventDomName,
+    type ParseAttributesOptions
+} from './ui/adapters.js';
 export type { FSStats, IFileSystem } from './vfs/interface.js';
 export type { FSManifest, ManifestBundle, ManifestEntry } from './vfs/manifest.js';
 export { OverlayFS } from './vfs/overlay.js';
