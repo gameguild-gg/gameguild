@@ -72,6 +72,7 @@ function mergePair(base: WorkspaceBuildConfig, layer: WorkspaceBuildConfig): Wor
                     buildDir: layer.cmake?.buildDir ?? base.cmake?.buildDir,
                     configureArgs: mergeArrays(base.cmake?.configureArgs, layer.cmake?.configureArgs),
                     buildArgs: mergeArrays(base.cmake?.buildArgs, layer.cmake?.buildArgs),
+                    targets: mergeArrays(base.cmake?.targets, layer.cmake?.targets),
                 }
                 : undefined,
     };
@@ -100,6 +101,14 @@ function validate(b: WorkspaceBuildConfig): void {
         throw new BuildConfigError(
             'resolveBuild: cannot combine `cmake` with `sources` — pick one (CMake workspace OR direct source list).',
         );
+    }
+    if (b.cmake?.targets && b.cmake.targets.length > 0) {
+        const empty = b.cmake.targets.find((t) => typeof t !== 'string' || t.trim() === '');
+        if (empty !== undefined) {
+            throw new BuildConfigError(
+                'resolveBuild: `cmake.targets` entries must be non-empty strings (CMake target names).',
+            );
+        }
     }
     if (b.compiler && !['clang', 'clang++', 'emcc', 'em++'].includes(b.compiler)) {
         throw new BuildConfigError(`resolveBuild: unknown compiler '${b.compiler}'.`);

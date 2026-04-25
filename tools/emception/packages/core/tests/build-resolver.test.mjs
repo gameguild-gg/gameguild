@@ -87,5 +87,59 @@ test('cmake fields merge by key + array concat', () => {
         buildDir: 'build',
         configureArgs: ['-DA=1', '-DB=2'],
         buildArgs: ['-j4'],
+        targets: undefined,
     });
+});
+
+test('cmake.targets concat + dedup across layers', () => {
+    const r = resolveBuild({
+        workspace: { cmake: { sourceDir: '.', targets: ['app', 'lib'] } },
+        callsite: { cmake: { targets: ['lib', 'tests'] } },
+    });
+    assert.deepEqual(r.cmake?.targets, ['app', 'lib', 'tests']);
+});
+
+test('cmake.targets passes through when only one layer sets it', () => {
+    const r = resolveBuild({
+        workspace: { cmake: { sourceDir: '.', targets: ['only'] } },
+    });
+    assert.deepEqual(r.cmake?.targets, ['only']);
+});
+
+test('cmake.targets with empty-string entry is a hard error', () => {
+    assert.throws(
+        () =>
+            resolveBuild({
+                workspace: { cmake: { sourceDir: '.', targets: ['ok', ''] } },
+            }),
+        BuildConfigError,
+    );
+});
+
+test('cmake.targets with whitespace-only entry is a hard error', () => {
+    assert.throws(
+        () =>
+            resolveBuild({
+                workspace: { cmake: { sourceDir: '.', targets: ['   '] } },
+            }),
+        BuildConfigError,
+    );
+});
+
+test('cmake.targets with non-string entry is a hard error', () => {
+    assert.throws(
+        () =>
+            resolveBuild({
+                // Force-cast: targets is typed string[] but resolver must guard at runtime.
+                workspace: { cmake: { sourceDir: '.', targets: [123] } },
+            }),
+        BuildConfigError,
+    );
+});
+
+test('cmake.targets empty array passes (no-op multi-target build)', () => {
+    const r = resolveBuild({
+        workspace: { cmake: { sourceDir: '.', targets: [] } },
+    });
+    assert.deepEqual(r.cmake?.targets, []);
 });
