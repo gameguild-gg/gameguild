@@ -48,6 +48,11 @@ export {
 } from './runtime/feature-guards.js';
 export { assertToolResult, isToolResult } from './runtime/tool-result.js';
 export {
+    CorrelatorDisposedError,
+    RequestCorrelator,
+    type RequestCorrelatorOptions
+} from './runtime/request-correlator.js';
+export {
     compileMatcher,
     queryClangAst,
     runMatcher,
