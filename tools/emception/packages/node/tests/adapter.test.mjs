@@ -1,10 +1,10 @@
 // Phase 7.1 / 7.2 — NodeRuntimeAdapter smoke tests.
 
-import test from 'node:test';
 import assert from 'node:assert/strict';
+import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
-import fs from 'node:fs/promises';
+import test from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { MessageChannel, MessagePort } from 'node:worker_threads';
 
