@@ -246,7 +246,16 @@ interface WorkspaceBuildConfig {
   sources?: string[];
   output?: string;
   env?: Record<string, string>;
-  cmake?: { sourceDir?: string; buildDir?: string; configureArgs?: string[]; buildArgs?: string[] };
+  cmake?: {
+    sourceDir?: string;
+    buildDir?: string;
+    configureArgs?: string[];
+    buildArgs?: string[];
+    /** Multi-binary CMake projects: list of target names to build. Resolver invokes
+     *  `cmake --build <buildDir> --target <name>` per entry with shared flags.
+     *  Per-target customization belongs in CMakeLists.txt, not here. */
+    targets?: string[];
+  };
 }
 
 interface WorkspaceOptions {
@@ -465,7 +474,9 @@ emception (meta)     ──► @emception/browser + @emception/xterm
 
   0.6. Sysroot decoupling. `@emception/sysroot` builds via existing 17-step pipeline; `package.json` version tracks toolchain. `@emception/browser` + `@emception/node` declare `"peerDependencies": { "@emception/sysroot": "^0.20.0" }`. Resolution: `require.resolve('@emception/sysroot/manifest.json')` (Node) or configurable URL (browser, default jsDelivr).
 
-  0.7. `scripts/sync-emception-cdn.mjs` → thin shim copying from `@emception/sysroot/`.
+  **Distribution rule:** brotli-compressed `*.tar.br` + `manifest.json` + `coi-serviceworker.js` are emitted by the build pipeline directly into `packages/sysroot/` and shipped via `npm publish`. **They are NEVER committed to git** — the package tarball IS the distribution channel. jsDelivr mirrors the npm package automatically; no separate CDN upload step. Publishing piggybacks on the existing `.github/workflows/main.yml` npm deployment flow (no separate tag-driven workflow).
+
+  0.7. `scripts/sync-emception-cdn.mjs` → thin shim copying from `@emception/sysroot/` for local dev only (never used in release).
 
   0.8. Build pipeline. Workspace script `build:all` runs topologically: sysroot → core → browser/node (parallel) → xterm → react/webcomponent/ide → cli → meta.
 
@@ -526,7 +537,7 @@ emception (meta)     ──► @emception/browser + @emception/xterm
 ### Phase 7 — Node runtime
 
 7.1. `RuntimeAdapter` already in `@emception/core` (Phase 1.8). `@emception/browser` = browser impl; `@emception/node` here = Node impl.
-7.2. **`@emception/node`** wires `createEmception` against Node adapter. Worker entry = CJS+ESM dual at `dist/worker-entry.{cjs,mjs}`.
+7.2. **Worker-client extraction (BIG REFACTOR).** Move `packages/browser/src/worker-client.ts` (651 lines: orchestrator + message dispatch + lifecycle + tool-invocation pipeline) into `@emception/core` under `src/runtime/worker-orchestrator.ts`. Browser becomes a thin shim that supplies the Web-Worker `RuntimeAdapter`. **`@emception/node`** then wires `createEmception` against the same orchestrator + a `node:worker_threads` adapter. Worker entry = CJS+ESM dual at `dist/worker-entry.{cjs,mjs}`. **Validation: real WASM, real VFS, real workers — NO MOCKS.** Build the sysroot if CI lacks it. Both Node `worker_threads` and browser Web-Worker paths must run the same `compileAndRun(helloWorld)` smoke against the resolved orchestrator before merge.
 7.3. **`store-fs`** (`packages/node/src/workspace/store-fs.ts`) mirrors IDB store API. Workspace at `<root>/<name>/` w/ `.emception/{meta,build}.json` on disk. Atomic writes via temp+rename. File-locking via `proper-lockfile` (optional dep).
 7.4. **`store-memory`** in `@emception/core` (runtime-agnostic — useful in browser tests too). `seedPolicy: 'overwrite'` implicit default.
 7.5. **Node stdio adapters** (`io/node-streams.ts`): `Readable.toWeb()`/`Writable.toWeb()` (Node 18+). `process.std*` accepted directly.
@@ -535,7 +546,9 @@ emception (meta)     ──► @emception/browser + @emception/xterm
 7.8. **CLI parity.** `@emception/cli doctor` detects Node mode → checks `worker_threads`, `fetch`, `@emception/sysroot` resolvable, write perm on workspace store.
 7.9. CI examples: `packages/node/examples/{grader,github-action}`.
 
-### Phase 8 — IDE reactivity (`@emception/ide`)
+### Phase 8 — IDE reactivity (`@emception/ide`) — BIG-BANG REWRITE
+
+**Rollout:** single PR. Full rewrite + all panels + all toggles + custom-element wrapper + legacy migration shim land together. No incremental ship. Plan task list is the merge checklist.
 
 **Goal:** rewrite existing `Ide.tsx` (currently in `packages/emception`) to a fully composable reactive component obeying all toggles in `IdeProps`.
 
@@ -709,13 +722,17 @@ emception (meta)     ──► @emception/browser + @emception/xterm
 - **I/O**: streams canonical; strings/functions/xterm = adapters → streams.
 - **Workspaces**: per-name IDB, mount `/workspace/<name>`, sidecar `.emception/meta.json`.
 - **Build config travels w/ workspace** in `.emception/build.json`; precedence preset → workspace → call-site; arrays concat, scalars overwrite, objects merge.
-- **Multi-binary builds:** delegated to CMake workspaces; no built-in `targets` map. Single binary per build config.
+- **Multi-binary builds:** flat clang stays single-output (override via `CompileOptions.sources/output`). CMake workspaces opt-in to multi-target via `cmake.targets?: string[]` — list of target names; build resolver invokes `cmake --build --target <name>` per entry with shared flags. No per-target override map; per-target customization lives in the user's `CMakeLists.txt`.
 - **Visibility = metadata tag**, not second filesystem.
 - **Tests**: discriminated-union plan, 4 built-in kinds (`stdio`, `stdio-file`, `clang-query`, `doctest`) + `custom`. No `function` kind — use `stdio` or `doctest` instead.
 - **UI parity**: HTML attrs = kebab mirror; React props = camelCase mirror. Shared validator in `@emception/core`.
 - **Node runtime** in scope via `@emception/node`: `worker_threads`, fs workspace store, disk manifest from `@emception/sysroot`. Canvas + xterm browser-only (throw `RuntimeFeatureUnavailableError` in Node).
 - **IDE in scope this iteration** as `@emception/ide` (promoted from existing `packages/emception`). Reactive panel composition (canvas/terminal/workspace/docking/tabs all toggleable), expand-to-webpage mode (not OS fullscreen), vertical resize handle, file-visibility filtering, theme prop, readOnly mode, built-in toolbar w/ subset opt-out, UI state persisted in workspace sidecar, mobile responsive (768px), `<emception-ide>` custom-element wrapper (light DOM, no shadow root) for raw HTML / Next, legacy `WorkspaceConfig` migration shim. React 19 peer. Phase 6 + Phase 8 ship in parallel.
 - **Out of scope this iteration**: per-language sub-packages, scaffolder, Vue/Svelte adapters, Deno/Bun (likely work via Node compat but not formally tested), serverless cold-start optimizations.
+
+## Testing discipline (project-wide)
+
+**No mocks. Ever.** All tests in `@emception/*` and downstream packages drive real WASM toolchains, real VFS instances, and real workers. If a runtime piece needs the sysroot built, build it. Mock objects, fake adapters, and stubbed worker channels are forbidden — they hide the cross-thread bugs this overhaul exists to surface. The `node:test` zero-dep harness is the standard runner; `tsd` for type-only assertions.
 
 ## Open questions
 
@@ -726,7 +743,7 @@ All resolved. Decisions folded above. Historical record:
 3. **xterm raw mode — resolved.** Default line-buffered + local echo; opt-in raw via `stdin: { xterm, raw: true }`.
 4. **Canvas lifecycle — resolved.** OffscreenCanvas only v1, transfer permanent (documented). Main-thread proxy deferred.
 5. **IDB namespace — resolved.** Fixed DB name `'emception'` default; optional `namespace` opt-in.
-6. **Multi-target builds — resolved.** No `targets` map. Single build per workspace; multi-binary projects use CMake workspaces.
+6. **Multi-target builds — resolved (revised 2026-04-25).** Flat clang stays single-output. CMake workspaces support `cmake.targets?: string[]` — shared flags, one `cmake --build --target <name>` invocation per entry. No per-target flag overrides (those belong in `CMakeLists.txt`).
 7. **Glob in `sources` — resolved.** No built-in glob expansion; CMake workspaces handle globbing via CMake itself.
 8. **Sysroot CDN — resolved.** `@emception/sysroot` regular npm package; jsDelivr default for browser, normal dep for Node.
 9. **Deno / Bun — resolved.** Deferred. WHATWG-first design lets users try at own risk.
