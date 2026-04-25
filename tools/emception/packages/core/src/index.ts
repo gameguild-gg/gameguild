@@ -39,6 +39,14 @@ export {
     type WithCancellationOptions
 } from './runtime/cancellation.js';
 export { assertToolResult, isToolResult } from './runtime/tool-result.js';
+export {
+    assertCanvasUnsupported,
+    assertNoBrowserOnlyFeatures,
+    assertXtermStdinUnsupported,
+    looksLikeCanvas,
+    looksLikeXtermTerminal,
+    type RuntimeLabel
+} from './runtime/feature-guards.js';
 export { runTests, type TestKindHandler } from './testing/engine.js';
 export {
     compileMatcher,
