@@ -1,7 +1,7 @@
 // Phase 5.5 verification — doctest console-output parser.
 
-import test from 'node:test';
 import assert from 'node:assert/strict';
+import test from 'node:test';
 
 import { parseDoctestConsole } from '../dist/index.js';
 

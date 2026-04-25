@@ -38,7 +38,6 @@ export {
     type CancellationOutcome,
     type WithCancellationOptions
 } from './runtime/cancellation.js';
-export { assertToolResult, isToolResult } from './runtime/tool-result.js';
 export {
     assertCanvasUnsupported,
     assertNoBrowserOnlyFeatures,
@@ -47,30 +46,28 @@ export {
     looksLikeXtermTerminal,
     type RuntimeLabel
 } from './runtime/feature-guards.js';
-export { runTests, type TestKindHandler } from './testing/engine.js';
+export { assertToolResult, isToolResult } from './runtime/tool-result.js';
 export {
     compileMatcher,
     queryClangAst,
     runMatcher,
     type ClangAstNode,
     type CompiledMatcher,
-    type MatchResult,
+    type MatchResult
 } from './testing/clang-query/matcher.js';
 export {
     parseDoctestConsole,
     type DoctestCounts,
     type DoctestFailure,
-    type DoctestReport,
+    type DoctestReport
 } from './testing/doctest/parse.js';
+export { runTests, type TestKindHandler } from './testing/engine.js';
 export { HeadlessIOProvider, type HeadlessIOProviderOptions } from './tty/headless.js';
 export type { IOProvider } from './tty/io-provider.js';
 export { LineBuffer } from './tty/line-buffer.js';
 export {
-    ATTRIBUTE_SCHEMA,
-    EVENT_DOM_NAMES,
-    camelToKebab,
-    domEventNameFor,
-    kebabToCamel,
+    ATTRIBUTE_SCHEMA, camelToKebab,
+    domEventNameFor, EVENT_DOM_NAMES, kebabToCamel,
     parseAttributesToInput,
     parseBooleanAttr,
     parseListAttr,

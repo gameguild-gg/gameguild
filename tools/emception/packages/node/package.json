@@ -1,36 +1,43 @@
 {
-  "name": "@emception/node",
-  "version": "0.1.0-alpha.0",
-  "description": "Node runtime adapter for emception: worker_threads spawn, fs workspace store, disk manifest.",
-  "license": "MIT",
-  "type": "module",
-  "main": "./dist/index.js",
-  "module": "./dist/index.js",
-  "types": "./dist/index.d.ts",
-  "sideEffects": false,
-  "engines": { "node": ">=20" },
-  "exports": {
-    ".": {
-      "import": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+    "name": "@emception/node",
+    "version": "0.1.0-alpha.0",
+    "description": "Node runtime adapter for emception: worker_threads spawn, fs workspace store, disk manifest.",
+    "license": "MIT",
+    "type": "module",
+    "main": "./dist/index.js",
+    "module": "./dist/index.js",
+    "types": "./dist/index.d.ts",
+    "sideEffects": false,
+    "engines": {
+        "node": ">=20"
+    },
+    "exports": {
+        ".": {
+            "import": "./dist/index.js",
+            "types": "./dist/index.d.ts"
+        }
+    },
+    "files": [
+        "dist",
+        "README.md"
+    ],
+    "publishConfig": {
+        "access": "public"
+    },
+    "scripts": {
+        "build": "tsc -p tsconfig.json",
+        "typecheck": "tsc --noEmit",
+        "test": "npm run build && node --test 'tests/*.test.mjs'",
+        "clean": "rm -rf dist"
+    },
+    "dependencies": {
+        "@emception/core": "0.1.0-alpha.0"
+    },
+    "peerDependencies": {
+        "@emception/sysroot": ">=0.20.0-alpha.0"
+    },
+    "devDependencies": {
+        "@types/node": "^20",
+        "typescript": "^5.3.0"
     }
-  },
-  "files": ["dist", "README.md"],
-  "publishConfig": { "access": "public" },
-  "scripts": {
-    "build": "tsc -p tsconfig.json",
-    "typecheck": "tsc --noEmit",
-    "test": "npm run build && node --test 'tests/*.test.mjs'",
-    "clean": "rm -rf dist"
-  },
-  "dependencies": {
-    "@emception/core": "0.1.0-alpha.0"
-  },
-  "peerDependencies": {
-    "@emception/sysroot": ">=0.20.0-alpha.0"
-  },
-  "devDependencies": {
-    "@types/node": "^20",
-    "typescript": "^5.3.0"
-  }
 }

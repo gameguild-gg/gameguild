@@ -3,8 +3,8 @@
 // matcher engine and console parser were unit-tested separately; this
 // file proves the engine routes inputs/outputs correctly.
 
-import test from 'node:test';
 import assert from 'node:assert/strict';
+import test from 'node:test';
 
 import { runTests } from '../dist/index.js';
 

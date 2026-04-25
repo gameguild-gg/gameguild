@@ -1,7 +1,7 @@
-import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { createZip, readZip, crc32 } from '../dist/workspace/zip.js';
+import { test } from 'node:test';
 import { EmceptionError } from '../dist/errors.js';
+import { crc32, createZip, readZip } from '../dist/workspace/zip.js';
 
 const enc = new TextEncoder();
 const dec = new TextDecoder();

@@ -1,7 +1,7 @@
-import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { assertToolResult, isToolResult } from '../dist/runtime/tool-result.js';
+import { test } from 'node:test';
 import { EmceptionError } from '../dist/errors.js';
+import { assertToolResult, isToolResult } from '../dist/runtime/tool-result.js';
 
 const ok = { exitCode: 0, stdout: '', stderr: '', durationMs: 0, timedOut: false };
 

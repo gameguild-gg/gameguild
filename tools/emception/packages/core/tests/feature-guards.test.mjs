@@ -1,5 +1,9 @@
-import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { test } from 'node:test';
+import {
+    CanvasUnavailableError,
+    RuntimeFeatureUnavailableError,
+} from '../dist/errors.js';
 import {
     assertCanvasUnsupported,
     assertNoBrowserOnlyFeatures,
@@ -7,10 +11,6 @@ import {
     looksLikeCanvas,
     looksLikeXtermTerminal,
 } from '../dist/runtime/feature-guards.js';
-import {
-    CanvasUnavailableError,
-    RuntimeFeatureUnavailableError,
-} from '../dist/errors.js';
 
 test('looksLikeCanvas accepts an OffscreenCanvas-shaped object', () => {
     assert.equal(looksLikeCanvas({ width: 800, height: 600, getContext: () => null }), true);
