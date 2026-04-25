@@ -1,0 +1,73 @@
+name: Grade C/C++ Submissions
+
+# Reference workflow showing how to drive @emception/node from CI.
+# Drop this in .github/workflows/grade.yml of an assignment repo.
+#
+# Status: Phase 7.2 (full createEmception) is still pending. This
+# workflow uses the currently-shippable adapter primitives — once
+# Phase 7.2 lands the `Run grader` step becomes a one-liner against
+# `em.runTests(plan)`.
+
+on:
+  pull_request:
+    paths:
+      - 'submissions/**'
+  workflow_dispatch:
+    inputs:
+      submission-id:
+        description: 'Submission folder under submissions/'
+        required: true
+
+jobs:
+  grade:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install grader deps
+        run: npm ci --prefix grader
+
+      - name: Doctor
+        run: npx --prefix grader @emception/cli doctor
+
+      - name: Run grader
+        id: grade
+        run: |
+          node grader/grade.mjs \
+            "${{ github.event.inputs.submission-id || github.event.pull_request.number }}" \
+            > grader-report.json
+
+      - name: Upload report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: grader-report
+          path: grader-report.json
+
+      - name: Comment summary on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('node:fs');
+            const report = JSON.parse(fs.readFileSync('grader-report.json', 'utf8'));
+            const body = [
+              `### Grader: ${report.passed}/${report.passed + report.failed} cases`,
+              '',
+              ...report.cases.map(c => `- ${c.passed ? '✅' : '❌'} ${c.name} (${c.durationMs} ms)`),
+            ].join('\n');
+            await github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body,
+            });
