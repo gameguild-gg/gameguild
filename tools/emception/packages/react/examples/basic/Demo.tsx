@@ -8,9 +8,9 @@
 
 'use client';
 
-import { useCallback } from 'react';
-import { EmceptionRun, useEmception } from '@emception/react';
 import { createEmception } from '@emception/browser';
+import { EmceptionRun, useEmception } from '@emception/react';
+import { useCallback } from 'react';
 
 // `@emception/webcomponent` self-registers <emception-run> on import,
 // so it must NOT be imported from server-rendered code paths.
