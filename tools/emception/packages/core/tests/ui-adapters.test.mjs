@@ -1,8 +1,8 @@
 // Phase 6.1/6.2 prep — tests for kebab↔camel + attribute schema parser
 // + DOM event-name registry. Pure module; no DOM/React needed.
 
-import test from 'node:test';
 import assert from 'node:assert/strict';
+import test from 'node:test';
 
 import {
     ATTRIBUTE_SCHEMA,

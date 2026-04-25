@@ -46,9 +46,9 @@ import {
     type WorkspaceStoreOptions,
 } from '@emception/core';
 
-import { loadManifest } from './manifest.js';
-import { createFsWorkspaceManager } from '../workspace/store-fs.js';
 import type { WorkspaceManager } from '@emception/core';
+import { createFsWorkspaceManager } from '../workspace/store-fs.js';
+import { loadManifest } from './manifest.js';
 
 /**
  * Local alias for the DOM `Transferable` type so this file compiles under

@@ -1,16 +1,17 @@
 // Phase 5 — testing subsystem barrel.
-export { runTests, type TestKindHandler } from './engine.js';
 export {
     compileMatcher,
     queryClangAst,
     runMatcher,
     type ClangAstNode,
     type CompiledMatcher,
-    type MatchResult,
+    type MatchResult
 } from './clang-query/matcher.js';
 export {
     parseDoctestConsole,
     type DoctestCounts,
     type DoctestFailure,
-    type DoctestReport,
+    type DoctestReport
 } from './doctest/parse.js';
+export { runTests, type TestKindHandler } from './engine.js';
+

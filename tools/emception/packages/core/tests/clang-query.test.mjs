@@ -1,7 +1,7 @@
 // Phase 5.4 verification — clang-query matcher engine over a synthetic AST.
 
-import test from 'node:test';
 import assert from 'node:assert/strict';
+import test from 'node:test';
 
 import {
     TestFailureError,

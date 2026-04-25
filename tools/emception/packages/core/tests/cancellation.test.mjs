@@ -1,7 +1,7 @@
 // Phase 2.2 verification — withCancellation race semantics.
 
-import test from 'node:test';
 import assert from 'node:assert/strict';
+import test from 'node:test';
 
 import {
     TimeoutError,
