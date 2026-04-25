@@ -1,37 +1,47 @@
 {
-  "name": "@emception/webcomponent",
-  "version": "0.1.0-alpha.0",
-  "description": "<emception-run> custom element. No framework deps.",
-  "license": "MIT",
-  "type": "module",
-  "main": "./dist/index.js",
-  "module": "./dist/index.js",
-  "types": "./dist/index.d.ts",
-  "sideEffects": ["./dist/index.js"],
-  "exports": {
-    ".": {
-      "import": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+    "name": "@emception/webcomponent",
+    "version": "0.1.0-alpha.0",
+    "description": "<emception-run> custom element. No framework deps.",
+    "license": "MIT",
+    "type": "module",
+    "main": "./dist/index.js",
+    "module": "./dist/index.js",
+    "types": "./dist/index.d.ts",
+    "sideEffects": [
+        "./dist/index.js"
+    ],
+    "exports": {
+        ".": {
+            "import": "./dist/index.js",
+            "types": "./dist/index.d.ts"
+        }
+    },
+    "files": [
+        "dist",
+        "README.md"
+    ],
+    "publishConfig": {
+        "access": "public"
+    },
+    "scripts": {
+        "build": "tsc -p tsconfig.json",
+        "typecheck": "tsc --noEmit",
+        "test": "node --test 'tests/*.test.mjs'",
+        "clean": "rm -rf dist"
+    },
+    "dependencies": {
+        "@emception/browser": "0.1.0-alpha.0",
+        "@emception/core": "0.1.0-alpha.0"
+    },
+    "peerDependencies": {
+        "@emception/xterm": "0.1.0-alpha.0"
+    },
+    "peerDependenciesMeta": {
+        "@emception/xterm": {
+            "optional": true
+        }
+    },
+    "devDependencies": {
+        "typescript": "^5.3.0"
     }
-  },
-  "files": ["dist", "README.md"],
-  "publishConfig": { "access": "public" },
-  "scripts": {
-    "build": "tsc -p tsconfig.json",
-    "typecheck": "tsc --noEmit",
-    "clean": "rm -rf dist"
-  },
-  "dependencies": {
-    "@emception/browser": "0.1.0-alpha.0",
-    "@emception/core": "0.1.0-alpha.0"
-  },
-  "peerDependencies": {
-    "@emception/xterm": "0.1.0-alpha.0"
-  },
-  "peerDependenciesMeta": {
-    "@emception/xterm": { "optional": true }
-  },
-  "devDependencies": {
-    "typescript": "^5.3.0"
-  }
 }
