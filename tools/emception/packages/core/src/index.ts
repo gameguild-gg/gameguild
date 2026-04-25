@@ -74,6 +74,13 @@ export {
     type EventDomName,
     type ParseAttributesOptions
 } from './ui/adapters.js';
+export {
+    diffViewConfigs,
+    normalizeViewConfig,
+    toAttributes,
+    type NormalizedViewConfig,
+    type ViewConfigInput
+} from './ui/config.js';
 export type { FSStats, IFileSystem } from './vfs/interface.js';
 export type { FSManifest, ManifestBundle, ManifestEntry } from './vfs/manifest.js';
 export { OverlayFS } from './vfs/overlay.js';
