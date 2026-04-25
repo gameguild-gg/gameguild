@@ -23,4 +23,19 @@ export {
     createMemoryWorkspaceManager,
     MemoryWorkspaceManager
 } from './store-memory.js';
+export {
+    createZip,
+    crc32,
+    readZip,
+    type CreateZipOptions,
+    type ZipEntry
+} from './zip.js';
+export {
+    exportWorkspace,
+    importWorkspace,
+    type ExportWorkspaceOptions,
+    type ImportPolicy,
+    type ImportWorkspaceOptions,
+    type ImportWorkspaceReport
+} from './transfer.js';
 
