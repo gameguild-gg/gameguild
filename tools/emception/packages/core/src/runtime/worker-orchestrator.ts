@@ -57,6 +57,13 @@ export interface WorkerRunOptions {
     onStderr?: (text: string) => void;
     /** If true, the worker will allocate a SAB stdin channel and send `stdinRequest`. */
     wantStdin?: boolean;
+    /**
+     * Called when the worker sends `stdinRequest` for this specific run.
+     * Takes priority over `WorkerOrchestratorOptions.onStdinRequest`.
+     * Used by platform adapters (e.g. browser `WorkerClient`) to pump SAB bytes
+     * for an interactive run without needing a global run-id → handler map.
+     */
+    onStdinRequest?: (controlBuffer: SharedArrayBuffer, dataBuffer: SharedArrayBuffer) => void;
 }
 
 /**
@@ -148,10 +155,11 @@ export class WorkerOrchestrator {
     private readonly bootHandshake = new BootHandshake();
     private readonly opts: WorkerOrchestratorOptions;
 
-    /** Per-run incremental output callbacks, keyed by run id. */
+    /** Per-run callbacks, keyed by run id. */
     private readonly runCallbacks = new Map<number, {
         onStdout?: (text: string) => void;
         onStderr?: (text: string) => void;
+        onStdinRequest?: (ctrl: SharedArrayBuffer, data: SharedArrayBuffer) => void;
     }>();
 
     constructor(transport: RpcTransport, opts: WorkerOrchestratorOptions = {}) {
@@ -211,10 +219,11 @@ export class WorkerOrchestrator {
 
         const responsePromise = this.rpc.request((id) => {
             capturedId = id;
-            if (options.onStdout !== undefined || options.onStderr !== undefined) {
+            if (options.onStdout !== undefined || options.onStderr !== undefined || options.onStdinRequest !== undefined) {
                 this.runCallbacks.set(id, {
                     onStdout: options.onStdout,
                     onStderr: options.onStderr,
+                    onStdinRequest: options.onStdinRequest,
                 });
             }
             return {
@@ -351,9 +360,15 @@ export class WorkerOrchestrator {
                 break;
             }
 
-            case 'stdinRequest':
-                this.opts.onStdinRequest?.(msg.id, msg.controlBuffer, msg.dataBuffer);
+            case 'stdinRequest': {
+                const stdinCb = this.runCallbacks.get(msg.id);
+                if (stdinCb?.onStdinRequest) {
+                    stdinCb.onStdinRequest(msg.controlBuffer, msg.dataBuffer);
+                } else {
+                    this.opts.onStdinRequest?.(msg.id, msg.controlBuffer, msg.dataBuffer);
+                }
                 break;
+            }
 
             case 'shellStdinRequest':
                 this.opts.onShellStdinRequest?.(msg.controlBuffer, msg.dataBuffer);
