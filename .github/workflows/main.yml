@@ -59,7 +59,7 @@ jobs:
 
       - name: Install dependencies
         working-directory: .
-        run: npm install -w tools/emception
+        run: cd tools/emception && npm install
 
       - name: Resolve EMSDK version
         id: emsdk-version
@@ -549,15 +549,14 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   publish-emception:
-    name: Publish emception package
+    name: Publish emception npm packages
     runs-on: ubuntu-latest
     needs:
       - build-emception-toolchain
       - release-root
-    # Run on every release. The emception package is versioned in lockstep with
-    # the root release tag, so any new release ships an emception version too.
-    # The npm-check step below short-circuits if that version was already
-    # published, making this safe to run unconditionally.
+    # Run on every root release. This job publishes all emception workspace
+    # packages plus the unscoped meta-package in dependency order.
+    # Each package is checked against npm first, so reruns are safe.
     if: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && needs.release-root.outputs.new_release_published == 'true' }}
     permissions:
       contents: read
@@ -594,7 +593,10 @@ jobs:
       - name: Install emception dependencies
         run: cd tools/emception && npm install
 
-      - name: Build emception library
+      - name: Build emception workspace packages
+        run: cd tools/emception && npm run build:packages
+
+      - name: Build emception meta-package
         run: cd tools/emception && npm run build:lib
 
       - name: Ensure publish-emception does not modify changelogs
@@ -606,22 +608,7 @@ jobs:
             exit 1
           fi
 
-      - name: Check whether npm version already exists
-        id: npm-check
-        run: |
-          set -euo pipefail
-          VERSION="${{ needs.release-root.outputs.new_release_version }}"
-
-          if npm view "emception@${VERSION}" version >/dev/null 2>&1; then
-            echo "emception@${VERSION} is already published. Skipping publish step."
-            echo "already_published=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "emception@${VERSION} is not published yet."
-            echo "already_published=false" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Publish emception to npm
-        if: ${{ steps.npm-check.outputs.already_published != 'true' }}
+      - name: Publish emception packages to npm
         run: |
           # Force npm to use OIDC Trusted Publishing instead of any token
           # leaked into the env (NODE_AUTH_TOKEN from setup-node + .npmrc, or
@@ -629,7 +616,38 @@ jobs:
           # detects ACTIONS_ID_TOKEN_REQUEST_URL and authenticates via OIDC.
           unset NODE_AUTH_TOKEN
           rm -f "$HOME/.npmrc" "$RUNNER_TEMP/.npmrc" || true
-          cd tools/emception && npm publish --provenance --access public
+
+          cd tools/emception
+
+          PACKAGES=(
+            "@emception/core|packages/core"
+            "@emception/xterm|packages/xterm"
+            "@emception/browser|packages/browser"
+            "@emception/node|packages/node"
+            "@emception/react|packages/react"
+            "@emception/webcomponent|packages/webcomponent"
+            "@emception/ide|packages/ide"
+            "@emception/cli|packages/cli"
+            "emception|."
+          )
+
+          for entry in "${PACKAGES[@]}"; do
+            NAME="${entry%%|*}"
+            DIR="${entry##*|}"
+            VERSION="$(node -p "require('./${DIR}/package.json').version")"
+
+            if npm view "${NAME}@${VERSION}" version >/dev/null 2>&1; then
+              echo "✅ ${NAME}@${VERSION} already published — skipping"
+              continue
+            fi
+
+            echo "📦 Publishing ${NAME}@${VERSION}"
+            if [[ "${DIR}" == "." ]]; then
+              npm publish --provenance --access public
+            else
+              npm publish --workspace="${NAME}" --provenance --access public
+            fi
+          done
         env:
           NODE_AUTH_TOKEN: ''
           NPM_CONFIG_USERCONFIG: ''
