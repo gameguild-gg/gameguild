@@ -59,7 +59,7 @@ jobs:
 
       - name: Install dependencies
         working-directory: .
-        run: cd tools/emception && npm install
+        run: npm install --workspaces --include-workspace-root --ignore-scripts
 
       - name: Resolve EMSDK version
         id: emsdk-version
