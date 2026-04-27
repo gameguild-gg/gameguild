@@ -20,6 +20,71 @@ Peer assets:
 
 - `@emception/sysroot` — the WASM toolchain payload. Required by both `@emception/browser` and `@emception/node`. Pin the version to the LLVM major you want to ship.
 
+## Cookbook
+
+### Grade an assignment (browser)
+
+```ts
+import { createEmception } from '@emception/browser';
+
+const em = await createEmception({ manifestUrl: '/cdn/manifest.json', tty: 'none' });
+const result = await em.run('clang', ['-O2', '-o', '/tmp/hw', '/user/hw.c']);
+if (result.exitCode !== 0) { /* compile error */ }
+const run = await em.run('/tmp/hw', []);
+console.log(run.stdout); // student output
+```
+
+### Grade an assignment (Node CI)
+
+```ts
+import { createNodeRuntimeAdapter } from '@emception/node';
+import { createEmception } from '@emception/core';
+
+const adapter = await createNodeRuntimeAdapter({ manifestPath: './cdn/manifest.json' });
+const em = await createEmception({ adapter, tty: 'none' });
+const run = await em.compileAndRun(sourceCode);
+console.log(run.stdout);
+```
+
+### SDL canvas demo
+
+```tsx
+import { Ide } from '@emception/ide';
+
+<Ide
+  manifestUrl="/cdn/manifest.json"
+  workspaceName="sdl-demo"
+  enableCanvas={true}
+  workspaceConfig={{ files: [{ path: '/user/main.c', content: sdlSource }] }}
+/>
+```
+
+### Reactive IDE in a tutorial site
+
+```tsx
+import { Ide } from '@emception/ide';
+
+<Ide
+  title="Lesson 3 — Pointers"
+  manifestUrl="/cdn/manifest.json"
+  workspaceName="lesson-3"
+  enableFileExplorer={false}
+  enableCanvas={false}
+  showSolutionFiles={false}
+  workspaceUrl="/lessons/3/workspace.json"
+/>
+```
+
+### Diagnose + mirror sysroot to CDN
+
+```bash
+# Check environment prerequisites:
+npx @emception/cli doctor
+
+# Mirror sysroot bundles to ./public/cdn/:
+npx @emception/cli cdn-export ./public/cdn
+```
+
 The rest of this document covers building the toolchain bundles **from source**, which is only needed if you are bumping LLVM/Emscripten versions or hacking on the CDN packaging.
 
 ## Project Goals
