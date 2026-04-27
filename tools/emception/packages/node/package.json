@@ -37,6 +37,11 @@
     "peerDependencies": {
         "@emception/sysroot": ">=0.20.0-alpha.0"
     },
+    "peerDependenciesMeta": {
+        "@emception/sysroot": {
+            "optional": true
+        }
+    },
     "devDependencies": {
         "@types/node": "^20",
         "typescript": "^5.3.0"
