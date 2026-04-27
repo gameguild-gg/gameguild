@@ -9,19 +9,19 @@ export class EmceptionError extends Error {
 }
 
 /** Thrown when a tool or compilation exceeds its configured `timeoutMs`. */
-export class TimeoutError extends EmceptionError {}
+export class TimeoutError extends EmceptionError { }
 
 /** Thrown when two concurrent requests attempt to create the same named workspace. */
-export class WorkspaceConflictError extends EmceptionError {}
+export class WorkspaceConflictError extends EmceptionError { }
 
 /** Thrown by the testing engine when one or more test cases fail. */
-export class TestFailureError extends EmceptionError {}
+export class TestFailureError extends EmceptionError { }
 
 /** Thrown when the workspace build configuration is invalid or inconsistent. */
-export class BuildConfigError extends EmceptionError {}
+export class BuildConfigError extends EmceptionError { }
 
 /** Base for errors that indicate a required runtime feature is unavailable in the current context. */
-export class RuntimeFeatureUnavailableError extends EmceptionError {}
+export class RuntimeFeatureUnavailableError extends EmceptionError { }
 
 /**
  * Thrown when SharedArrayBuffer / cross-origin isolation is required but the
@@ -31,7 +31,7 @@ export class RuntimeFeatureUnavailableError extends EmceptionError {}
  * Fix: register the COI service worker from `@emception/sysroot` or configure
  * your server to emit these headers.
  */
-export class CrossOriginIsolationError extends EmceptionError {}
+export class CrossOriginIsolationError extends EmceptionError { }
 
 /**
  * Thrown when an SDL / WebGL canvas output path is requested but
@@ -40,4 +40,4 @@ export class CrossOriginIsolationError extends EmceptionError {}
  * Fix: ensure the canvas worker is served from a cross-origin-isolated context
  * and that the browser supports `OffscreenCanvas` (all modern browsers do).
  */
-export class CanvasUnavailableError extends RuntimeFeatureUnavailableError {}
+export class CanvasUnavailableError extends RuntimeFeatureUnavailableError { }
