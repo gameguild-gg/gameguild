@@ -16,13 +16,7 @@ Peer dependencies: `react ^19`, `react-dom ^19`.
 import { Ide } from '@emception/ide';
 
 export default function Page() {
-  return (
-    <Ide
-      manifestUrl="/cdn/manifest.json"
-      workspaceName="my-project"
-      title="C++ Playground"
-    />
-  );
+  return <Ide manifestUrl="/cdn/manifest.json" workspaceName="my-project" title="C++ Playground" />;
 }
 ```
 
@@ -34,11 +28,7 @@ export default function Page() {
   registerEmceptionIde(); // registers <emception-ide>
 </script>
 
-<emception-ide
-  manifest-url="/cdn/manifest.json"
-  workspace-name="my-project"
-  title="C++ Playground"
-></emception-ide>
+<emception-ide manifest-url="/cdn/manifest.json" workspace-name="my-project" title="C++ Playground"></emception-ide>
 ```
 
 ## Injecting a pre-booted API
@@ -51,58 +41,58 @@ import { Ide } from '@emception/ide';
 
 const em = await createEmception({ manifestUrl: '/cdn/manifest.json', tty: 'none' });
 
-<Ide api={em} enableTerminal={false} onStdout={(t) => console.log(t)} />
+<Ide api={em} enableTerminal={false} onStdout={(t) => console.log(t)} />;
 ```
 
 ## Props reference (`IdeProps`)
 
-| Prop | Type | Default | Description |
-|---|---|---|---|
-| `title` | `string` | — | Header bar title |
-| `manifestUrl` | `string` | `/cdn/manifest.json` | Sysroot manifest URL |
-| `api` | `InjectedEmceptionAPI` | — | Skip boot; delegate to this API |
-| `workspaceConfig` | `WorkspaceConfig` | — | Static workspace descriptor |
-| `workspaceUrl` | `string` | — | URL to a `.workspace.json` bundle |
-| `workspaceName` | `string` | — | Logical name; derives IDB/localStorage key as `emception:ws:<name>` |
-| `enableFileExplorer` | `boolean` | `true` | Show file-explorer sidebar |
-| `enableTabs` | `boolean` | `true` | Show editor tab strip |
-| `enableTerminal` | `boolean` | `true` | Mount xterm.js terminal panel |
-| `enableCanvas` | `boolean` | `true` | Show SDL canvas panel |
-| `enableDocking` | `boolean` | `true` | Enable drag-and-drop docking |
-| `enableWorkspace` | `boolean` | `true` | Persist workspace to localStorage |
-| `fullscreen` | `boolean` | `false` | Portal IDE into `document.body` (fills viewport) |
-| `onFullscreenChange` | `(fs: boolean) => void` | — | Fullscreen state change callback |
-| `showHiddenFiles` | `boolean` | `false` | Show dot-files in explorer |
-| `showSolutionFiles` | `boolean` | `false` | Show `*.solution.*` files |
-| `canvasPath` | `string` | `/user/sdl-canvas` | VFS path of SDL canvas placeholder |
-| `onStdout` | `(text: string) => void` | — | Stdout callback when terminal disabled |
-| `onStderr` | `(text: string) => void` | — | Stderr callback when terminal disabled |
-| `stdin` | `() => Promise<number>` | — | Stdin supplier when terminal disabled |
-| `readOnly` | `boolean` | `false` | Disable all editor + VFS writes |
-| `theme` | `string` | `'vs-dark'` | Monaco editor theme |
+| Prop                 | Type                     | Default              | Description                                                         |
+| -------------------- | ------------------------ | -------------------- | ------------------------------------------------------------------- |
+| `title`              | `string`                 | —                    | Header bar title                                                    |
+| `manifestUrl`        | `string`                 | `/cdn/manifest.json` | Sysroot manifest URL                                                |
+| `api`                | `InjectedEmceptionAPI`   | —                    | Skip boot; delegate to this API                                     |
+| `workspaceConfig`    | `WorkspaceConfig`        | —                    | Static workspace descriptor                                         |
+| `workspaceUrl`       | `string`                 | —                    | URL to a `.workspace.json` bundle                                   |
+| `workspaceName`      | `string`                 | —                    | Logical name; derives IDB/localStorage key as `emception:ws:<name>` |
+| `enableFileExplorer` | `boolean`                | `true`               | Show file-explorer sidebar                                          |
+| `enableTabs`         | `boolean`                | `true`               | Show editor tab strip                                               |
+| `enableTerminal`     | `boolean`                | `true`               | Mount xterm.js terminal panel                                       |
+| `enableCanvas`       | `boolean`                | `true`               | Show SDL canvas panel                                               |
+| `enableDocking`      | `boolean`                | `true`               | Enable drag-and-drop docking                                        |
+| `enableWorkspace`    | `boolean`                | `true`               | Persist workspace to localStorage                                   |
+| `fullscreen`         | `boolean`                | `false`              | Portal IDE into `document.body` (fills viewport)                    |
+| `onFullscreenChange` | `(fs: boolean) => void`  | —                    | Fullscreen state change callback                                    |
+| `showHiddenFiles`    | `boolean`                | `false`              | Show dot-files in explorer                                          |
+| `showSolutionFiles`  | `boolean`                | `false`              | Show `*.solution.*` files                                           |
+| `canvasPath`         | `string`                 | `/user/sdl-canvas`   | VFS path of SDL canvas placeholder                                  |
+| `onStdout`           | `(text: string) => void` | —                    | Stdout callback when terminal disabled                              |
+| `onStderr`           | `(text: string) => void` | —                    | Stderr callback when terminal disabled                              |
+| `stdin`              | `() => Promise<number>`  | —                    | Stdin supplier when terminal disabled                               |
+| `readOnly`           | `boolean`                | `false`              | Disable all editor + VFS writes                                     |
+| `theme`              | `string`                 | `'vs-dark'`          | Monaco editor theme                                                 |
 
 ## Custom-element attribute reference
 
 The `<emception-ide>` element maps kebab-case attributes to the React props above. Boolean props are present/absent attributes; string props are attribute values.
 
-| Attribute | Prop | Type |
-|---|---|---|
-| `title` | `title` | string |
-| `manifest-url` | `manifestUrl` | string |
-| `workspace-name` | `workspaceName` | string |
-| `workspace-url` | `workspaceUrl` | string |
+| Attribute              | Prop                 | Type    |
+| ---------------------- | -------------------- | ------- |
+| `title`                | `title`              | string  |
+| `manifest-url`         | `manifestUrl`        | string  |
+| `workspace-name`       | `workspaceName`      | string  |
+| `workspace-url`        | `workspaceUrl`       | string  |
 | `enable-file-explorer` | `enableFileExplorer` | boolean |
-| `enable-tabs` | `enableTabs` | boolean |
-| `enable-terminal` | `enableTerminal` | boolean |
-| `enable-canvas` | `enableCanvas` | boolean |
-| `enable-docking` | `enableDocking` | boolean |
-| `enable-workspace` | `enableWorkspace` | boolean |
-| `fullscreen` | `fullscreen` | boolean |
-| `show-hidden-files` | `showHiddenFiles` | boolean |
-| `show-solution-files` | `showSolutionFiles` | boolean |
-| `canvas-path` | `canvasPath` | string |
-| `read-only` | `readOnly` | boolean |
-| `theme` | `theme` | string |
+| `enable-tabs`          | `enableTabs`         | boolean |
+| `enable-terminal`      | `enableTerminal`     | boolean |
+| `enable-canvas`        | `enableCanvas`       | boolean |
+| `enable-docking`       | `enableDocking`      | boolean |
+| `enable-workspace`     | `enableWorkspace`    | boolean |
+| `fullscreen`           | `fullscreen`         | boolean |
+| `show-hidden-files`    | `showHiddenFiles`    | boolean |
+| `show-solution-files`  | `showSolutionFiles`  | boolean |
+| `canvas-path`          | `canvasPath`         | string  |
+| `read-only`            | `readOnly`           | boolean |
+| `theme`                | `theme`              | string  |
 
 JS-only props (not settable as HTML attributes): `api`, `workspaceConfig`, `onStdout`, `onStderr`, `stdin`, `onFullscreenChange`. Set via the element's JS properties or call `element.update({ … })`.
 
@@ -118,10 +108,10 @@ el.update(); // apply new JS props
 ## Exports
 
 ```ts
-import { Ide } from '@emception/ide';                       // React component
+import { Ide } from '@emception/ide'; // React component
 import type { IdeProps, InjectedEmceptionAPI } from '@emception/ide'; // types
 import { registerEmceptionIde, EmceptionIdeElement, ELEMENT_NAME } from '@emception/ide'; // custom element
-import type { EmceptionAPI } from '@emception/ide';          // re-export from @emception/core
+import type { EmceptionAPI } from '@emception/ide'; // re-export from @emception/core
 ```
 
 ## Migration from `@gameguild/emception-ui`
