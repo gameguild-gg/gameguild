@@ -18,31 +18,10 @@ export * as workerProtocol from './worker-protocol.js';
 export * as workspace from './workspace/index.js';
 
 // Top-level re-exports for the most commonly imported helpers.
-export {
-    decodeCollected,
-    normalizeStdin,
-    normalizeStdout,
-    type NormalizedStdout
-} from './io/streams.js';
-export type {
-    ManifestSource,
-    RuntimeAdapter,
-    SpawnWorkerOptions,
-    WorkerHandle,
-    WorkspaceStoreHandle,
-    WorkspaceStoreOptions
-} from './runtime/adapter.js';
-export {
-    BootCancelledError,
-    BootError,
-    BootHandshake
-} from './runtime/boot-handshake.js';
-export {
-    withCancellation,
-    withTimeoutOrThrow,
-    type CancellationOutcome,
-    type WithCancellationOptions
-} from './runtime/cancellation.js';
+export { decodeCollected, normalizeStdin, normalizeStdout, type NormalizedStdout } from './io/streams.js';
+export type { ManifestSource, RuntimeAdapter, SpawnWorkerOptions, WorkerHandle, WorkspaceStoreHandle, WorkspaceStoreOptions } from './runtime/adapter.js';
+export { BootCancelledError, BootError, BootHandshake } from './runtime/boot-handshake.js';
+export { withCancellation, withTimeoutOrThrow, type CancellationOutcome, type WithCancellationOptions } from './runtime/cancellation.js';
 export {
     assertCanvasUnsupported,
     assertNoBrowserOnlyFeatures,
@@ -51,83 +30,36 @@ export {
     looksLikeXtermTerminal,
     type RuntimeLabel
 } from './runtime/feature-guards.js';
-export {
-    CorrelatorDisposedError,
-    RequestCorrelator,
-    type RequestCorrelatorOptions
-} from './runtime/request-correlator.js';
-export {
-    messagePortTransport, RpcChannel, workerTransport,
-    type RpcChannelOptions,
-    type RpcTransport
-} from './runtime/rpc-channel.js';
+export { CorrelatorDisposedError, RequestCorrelator, type RequestCorrelatorOptions } from './runtime/request-correlator.js';
+export { messagePortTransport, RpcChannel, workerTransport, type RpcChannelOptions, type RpcTransport } from './runtime/rpc-channel.js';
 export { assertToolResult, isToolResult } from './runtime/tool-result.js';
-export {
-    WorkerOrchestrator,
-    type WorkerOrchestratorOptions,
-    type WorkerRunOptions,
-    type WorkerToolResult
-} from './runtime/worker-orchestrator.js';
-export {
-    compileMatcher,
-    queryClangAst,
-    runMatcher,
-    type ClangAstNode,
-    type CompiledMatcher,
-    type MatchResult
-} from './testing/clang-query/matcher.js';
-export {
-    parseDoctestConsole,
-    type DoctestCounts,
-    type DoctestFailure,
-    type DoctestReport
-} from './testing/doctest/parse.js';
+export { WorkerOrchestrator, type WorkerOrchestratorOptions, type WorkerRunOptions, type WorkerToolResult } from './runtime/worker-orchestrator.js';
+export { compileMatcher, queryClangAst, runMatcher, type ClangAstNode, type CompiledMatcher, type MatchResult } from './testing/clang-query/matcher.js';
+export { parseDoctestConsole, type DoctestCounts, type DoctestFailure, type DoctestReport } from './testing/doctest/parse.js';
 export { runTests, type TestKindHandler } from './testing/engine.js';
 export { HeadlessIOProvider, type HeadlessIOProviderOptions } from './tty/headless.js';
 export type { IOProvider } from './tty/io-provider.js';
 export { LineBuffer } from './tty/line-buffer.js';
 export {
-    ATTRIBUTE_SCHEMA, camelToKebab,
-    domEventNameFor, EVENT_DOM_NAMES, kebabToCamel,
+    ATTRIBUTE_SCHEMA,
+    camelToKebab,
+    domEventNameFor,
+    EVENT_DOM_NAMES,
+    kebabToCamel,
     parseAttributesToInput,
     parseBooleanAttr,
     parseListAttr,
     type EventDomName,
     type ParseAttributesOptions
 } from './ui/adapters.js';
-export {
-    diffViewConfigs,
-    normalizeViewConfig,
-    toAttributes,
-    type NormalizedViewConfig,
-    type ViewConfigInput
-} from './ui/config.js';
+export { diffViewConfigs, normalizeViewConfig, toAttributes, type NormalizedViewConfig, type ViewConfigInput } from './ui/config.js';
 export type { FSStats, IFileSystem } from './vfs/interface.js';
 export type { FSManifest, ManifestBundle, ManifestEntry } from './vfs/manifest.js';
 export { OverlayFS } from './vfs/overlay.js';
 export type { MainToWorkerMessage, WorkerToMainMessage } from './worker-protocol.js';
-export {
-    resolveBuild,
-    type ResolveBuildInput,
-    type ResolvedBuild
-} from './workspace/build-resolver.js';
-export {
-    buildArgv,
-    type BuildArgvOptions,
-    type CompileInvocation
-} from './workspace/compile-argv.js';
-export type {
-    FileMeta,
-    MetaSidecar,
-    OpenWorkspaceOptions,
-    SeedMarker,
-    SeedPolicy,
-    WorkspaceHandle,
-    WorkspaceManager
-} from './workspace/manager.js';
+export { resolveBuild, type ResolveBuildInput, type ResolvedBuild } from './workspace/build-resolver.js';
+export { buildArgv, type BuildArgvOptions, type CompileInvocation } from './workspace/compile-argv.js';
+export type { FileMeta, MetaSidecar, OpenWorkspaceOptions, SeedMarker, SeedPolicy, WorkspaceHandle, WorkspaceManager } from './workspace/manager.js';
 export { hashSeed, normalizeSeedEntry } from './workspace/seed.js';
-export {
-    createMemoryWorkspaceManager,
-    MemoryWorkspaceManager
-} from './workspace/store-memory.js';
+export { createMemoryWorkspaceManager, MemoryWorkspaceManager } from './workspace/store-memory.js';
 
