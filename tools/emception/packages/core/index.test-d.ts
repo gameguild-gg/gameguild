@@ -4,31 +4,31 @@
  * Run: npm run test:types --workspace=@emception/core
  * Requires a build first (handled by the script).
  */
-import { expectType, expectAssignable, expectError } from 'tsd';
 import type {
+    EmceptionAPI,
     FileEntry,
-    WorkspaceSeed,
+    RunOptions,
+    TestCase,
+    TestCaseResult,
+    TestPlan,
+    TestReport,
+    ToolResult,
+    WorkspaceAPI,
     WorkspaceBuildConfig,
     WorkspaceOptions,
-    RunOptions,
-    ToolResult,
-    TestCase,
-    TestPlan,
-    TestCaseResult,
-    TestReport,
-    WorkspaceAPI,
-    EmceptionAPI,
+    WorkspaceSeed,
 } from '@emception/core';
 import {
+    BuildConfigError,
+    CanvasUnavailableError,
+    CrossOriginIsolationError,
     EmceptionError,
+    RuntimeFeatureUnavailableError,
+    TestFailureError,
     TimeoutError,
     WorkspaceConflictError,
-    TestFailureError,
-    BuildConfigError,
-    RuntimeFeatureUnavailableError,
-    CrossOriginIsolationError,
-    CanvasUnavailableError,
 } from '@emception/core/errors';
+import { expectAssignable, expectError, expectType } from 'tsd';
 
 // ── Error hierarchy ──────────────────────────────────────────────────────────
 

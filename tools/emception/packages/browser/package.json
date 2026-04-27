@@ -30,7 +30,7 @@
         "access": "public"
     },
     "scripts": {
-        "build": "tsc -p tsconfig.json",
+        "build": "tsc -p tsconfig.json && cp src/emscripten/subprocess_shim.py dist/emscripten/subprocess_shim.py",
         "typecheck": "tsc --noEmit",
         "clean": "rm -rf dist"
     },
