@@ -13,7 +13,7 @@ Most consumers do not build emception from source. Pick a published package:
 | Add a real terminal UI                                          | `@emception/xterm` + `@xterm/xterm`                                   | `fromXterm()` / `toXterm()` adapters                                   |
 | Run the toolchain headlessly in Node (CI graders, batch builds) | `@emception/node`                                                     | `createNodeRuntimeAdapter()` (Phase 7.2 brings full `createEmception`) |
 | Diagnose env or mirror sysroot to a CDN                         | `@emception/cli`                                                      | `npx @emception/cli doctor` / `cdn-export <dir>`                       |
-| Build the IDE shell (editor + tabs + docking)                   | `@emception/ide` _(Phase 8)_                                          | `<Ide>` React component                                                |
+| Build the IDE shell (editor + tabs + docking)                   | `@emception/ide`                                                      | `<Ide>` React component, `<emception-ide>` custom element              |
 | Add a new runtime adapter or preset                             | `@emception/core`                                                     | `RuntimeAdapter` interface, presets/, ui/config                        |
 
 Peer assets:
