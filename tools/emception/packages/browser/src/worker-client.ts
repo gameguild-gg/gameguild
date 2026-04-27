@@ -11,9 +11,9 @@
  * WorkerOrchestrator.
  */
 
-import type { RunOptions, ToolResult } from './tool-runner';
 import type { IOProvider } from '@emception/core';
 import { WorkerOrchestrator, workerTransport } from '@emception/core';
+import type { RunOptions, ToolResult } from './tool-runner';
 
 export interface WorkerBootOptions {
     manifestUrl: string;
@@ -86,9 +86,7 @@ export class WorkerClient {
             onStdout: options.onStdout,
             onStderr: options.onStderr,
             wantStdin: !!options.stdin,
-            onStdinRequest: options.stdin
-                ? (ctrl, data) => this.feedStdin(ctrl, data, options.stdin!)
-                : undefined,
+            onStdinRequest: options.stdin ? (ctrl, data) => this.feedStdin(ctrl, data, options.stdin!) : undefined,
         });
     }
 
@@ -137,11 +135,7 @@ export class WorkerClient {
      * Feed stdin bytes to the Worker for a specific run.
      * Called from the per-run onStdinRequest callback.
      */
-    private async feedStdin(
-        controlBuffer: SharedArrayBuffer,
-        dataBuffer: SharedArrayBuffer,
-        stdinFn: () => number | null | Promise<number>,
-    ): Promise<void> {
+    private async feedStdin(controlBuffer: SharedArrayBuffer, dataBuffer: SharedArrayBuffer, stdinFn: () => number | null | Promise<number>): Promise<void> {
         const channel = {
             control: new Int32Array(controlBuffer),
             data: new Uint8Array(dataBuffer),
@@ -309,4 +303,3 @@ export class WorkerClient {
         }
     }
 }
-

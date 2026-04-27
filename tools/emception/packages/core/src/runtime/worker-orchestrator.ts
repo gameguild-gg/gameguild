@@ -21,7 +21,6 @@
  */
 
 import type {
-    BootedMessage,
     BootErrorMessage,
     GetFileResultMessage,
     ListDirResultMessage,
@@ -29,12 +28,11 @@ import type {
     ResetVfsResultMessage,
     RunResultMessage,
     WorkerToMainMessage,
-    WriteFileResultMessage,
+    WriteFileResultMessage
 } from '../worker-protocol.js';
 import { BootHandshake } from './boot-handshake.js';
-import { CorrelatorDisposedError } from './request-correlator.js';
-import { RpcChannel } from './rpc-channel.js';
 import type { RpcTransport } from './rpc-channel.js';
+import { RpcChannel } from './rpc-channel.js';
 
 /* ------------------------------------------------------------------ */
 /*  Public types                                                        */
@@ -156,22 +154,22 @@ export class WorkerOrchestrator {
     private readonly opts: WorkerOrchestratorOptions;
 
     /** Per-run callbacks, keyed by run id. */
-    private readonly runCallbacks = new Map<number, {
-        onStdout?: (text: string) => void;
-        onStderr?: (text: string) => void;
-        onStdinRequest?: (ctrl: SharedArrayBuffer, data: SharedArrayBuffer) => void;
-    }>();
+    private readonly runCallbacks = new Map<
+        number,
+        {
+            onStdout?: (text: string) => void;
+            onStderr?: (text: string) => void;
+            onStdinRequest?: (ctrl: SharedArrayBuffer, data: SharedArrayBuffer) => void;
+        }
+    >();
 
     constructor(transport: RpcTransport, opts: WorkerOrchestratorOptions = {}) {
         this.opts = opts;
-        this.rpc = new RpcChannel<MainToWorkerMessage, WorkerToMainMessage>(
-            transport,
-            {
-                responseId: extractResponseId,
-                onNotification: (msg) => this.handleNotification(msg),
-                onTransportError: opts.onTransportError,
-            },
-        );
+        this.rpc = new RpcChannel<MainToWorkerMessage, WorkerToMainMessage>(transport, {
+            responseId: extractResponseId,
+            onNotification: (msg) => this.handleNotification(msg),
+            onTransportError: opts.onTransportError,
+        });
     }
 
     /** `true` after `dispose()` has been called. */
@@ -217,27 +215,31 @@ export class WorkerOrchestrator {
     async run(tool: string, argv: string[], options: WorkerRunOptions = {}): Promise<WorkerToolResult> {
         let capturedId = -1;
 
-        const responsePromise = this.rpc.request((id) => {
-            capturedId = id;
-            if (options.onStdout !== undefined || options.onStderr !== undefined || options.onStdinRequest !== undefined) {
-                this.runCallbacks.set(id, {
-                    onStdout: options.onStdout,
-                    onStderr: options.onStderr,
-                    onStdinRequest: options.onStdinRequest,
-                });
-            }
-            return {
-                type: 'run' as const,
-                id,
-                tool,
-                argv,
-                options: {
-                    env: options.env,
-                    cwd: options.cwd,
-                    wantStdin: options.wantStdin ?? false,
-                },
-            };
-        }, undefined, `run(${tool})`);
+        const responsePromise = this.rpc.request(
+            (id) => {
+                capturedId = id;
+                if (options.onStdout !== undefined || options.onStderr !== undefined || options.onStdinRequest !== undefined) {
+                    this.runCallbacks.set(id, {
+                        onStdout: options.onStdout,
+                        onStderr: options.onStderr,
+                        onStdinRequest: options.onStdinRequest,
+                    });
+                }
+                return {
+                    type: 'run' as const,
+                    id,
+                    tool,
+                    argv,
+                    options: {
+                        env: options.env,
+                        cwd: options.cwd,
+                        wantStdin: options.wantStdin ?? false,
+                    },
+                };
+            },
+            undefined,
+            `run(${tool})`,
+        );
 
         try {
             const msg = (await responsePromise) as RunResultMessage;
@@ -261,11 +263,7 @@ export class WorkerOrchestrator {
      * Returns `null` when the file does not exist.
      */
     async getFile(path: string): Promise<Uint8Array | null> {
-        const msg = (await this.rpc.request(
-            (id) => ({ type: 'getFile' as const, id, path }),
-            undefined,
-            `getFile(${path})`,
-        )) as GetFileResultMessage;
+        const msg = (await this.rpc.request((id) => ({ type: 'getFile' as const, id, path }), undefined, `getFile(${path})`)) as GetFileResultMessage;
         return msg.data ?? null;
     }
 
@@ -289,21 +287,13 @@ export class WorkerOrchestrator {
 
     /** List the entries in a VFS directory. */
     async listDir(path: string): Promise<string[]> {
-        const msg = (await this.rpc.request(
-            (id) => ({ type: 'listDir' as const, id, path }),
-            undefined,
-            `listDir(${path})`,
-        )) as ListDirResultMessage;
+        const msg = (await this.rpc.request((id) => ({ type: 'listDir' as const, id, path }), undefined, `listDir(${path})`)) as ListDirResultMessage;
         return msg.entries;
     }
 
     /** Reset the Worker VFS writable layers (clears /tmp, /home/user). */
     async resetVfs(): Promise<void> {
-        const msg = (await this.rpc.request(
-            (id) => ({ type: 'resetVfs' as const, id }),
-            undefined,
-            'resetVfs()',
-        )) as ResetVfsResultMessage;
+        const msg = (await this.rpc.request((id) => ({ type: 'resetVfs' as const, id }), undefined, 'resetVfs()')) as ResetVfsResultMessage;
         if (!msg.ok) {
             throw new Error(msg.error ?? 'resetVfs failed');
         }
