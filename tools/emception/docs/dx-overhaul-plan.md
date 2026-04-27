@@ -572,13 +572,13 @@ emception (meta)     ──► @emception/browser + @emception/xterm
   8.11. **Canvas slot.** `SDL_CANVAS_PATH` configurable via prop `canvasPath` (default `/user/sdl-canvas`). `enableCanvas=false` → no slot, no canvas tab.
   8.12. **Tests.** Component tests per panel toggle; snapshot of single-file mode + tabs-only mode + headless preview mode. Verify reactive flip mounts/unmounts w/o losing core state.
 
-### Phase 9 — Docs, diagnostics, distribution
+### Phase 9 — Docs, diagnostics, distribution ✅ DONE
 
-9.1. README rewrite per package; consumer-first. Decision matrix at top of `tools/emception/README.md`: "which package do I need?" Cookbook in meta-package: "grade assignment (browser)", "grade assignment (Node CI)", "SDL canvas demo", "multi-file project w/ build config", "automated test plan", "named build targets", **"reactive IDE in tutorial site"**, **"single-file Monaco editor"**.
-9.2. `npx @emception/cli doctor` (also `npx emception doctor` via meta-package `bin`) — auto-detects browser/Node; checks SAB, COOP/COEP, manifest reach, worker support, or worker_threads + fetch + fs perms.
-9.3. JSDoc on every exported symbol; `tsd` type tests per package.
-9.4. Per-package `examples/`: `@emception/webcomponent/examples/html`, `@emception/react/examples/{basic,sdl-canvas,grader,multi-file,tests,multi-target}`, `@emception/ide/examples/{react-basic,next-basic,raw-html,single-file,tabs-only,headless,expanded,mobile,sdl-canvas}`, `@emception/node/examples/{grader,github-action}`. All shipped in tarballs.
-9.5. Meta-package `emception` keeps unscoped name; README directs new users to either install meta or pick scoped packages.
+9.1. ✅ README rewrite per package; consumer-first. Decision matrix at top of `tools/emception/README.md`: "which package do I need?" Cookbook in meta-package: "grade assignment (browser)", "grade assignment (Node CI)", "SDL canvas demo", "multi-file project w/ build config", "automated test plan", "named build targets", **"reactive IDE in tutorial site"**, **"single-file Monaco editor"**.
+9.2. ✅ `npx @emception/cli doctor` (also `npx emception doctor` via meta-package `bin`) — auto-detects browser/Node; checks SAB, COOP/COEP, manifest reach, worker support, or worker_threads + fetch + fs perms.
+9.3. ✅ JSDoc on every exported symbol; `tsd` type tests per package (`packages/core/index.test-d.ts`; `tsd` with `moduleResolution: node16` in `packages/core/package.json`).
+9.4. ✅ Per-package `examples/`: `@emception/webcomponent/examples/html`, `@emception/react/examples/{basic,sdl-canvas,grader,multi-file,tests,multi-target}`, `@emception/ide/examples/{react-basic,next-basic,raw-html,single-file,tabs-only,headless,expanded,mobile,sdl-canvas}`, `@emception/node/examples/{grader,github-action}`. All shipped in tarballs.
+9.5. ✅ Meta-package `emception` keeps unscoped name; README directs new users to either install meta or pick scoped packages.
 
 ---
 
