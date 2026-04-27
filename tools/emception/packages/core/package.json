@@ -37,9 +37,18 @@
         "build": "tsc -p tsconfig.json",
         "typecheck": "tsc --noEmit",
         "test": "npm run build && node --test 'tests/*.test.mjs'",
+        "test:types": "npm run build && tsd",
         "clean": "rm -rf dist"
     },
+    "tsd": {
+        "directory": ".",
+        "compilerOptions": {
+            "moduleResolution": "node16",
+            "module": "node16"
+        }
+    },
     "devDependencies": {
+        "tsd": ">=0.31.0",
         "typescript": "^5.3.0"
     }
 }
