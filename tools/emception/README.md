@@ -29,7 +29,9 @@ import { createEmception } from '@emception/browser';
 
 const em = await createEmception({ manifestUrl: '/cdn/manifest.json', tty: 'none' });
 const result = await em.run('clang', ['-O2', '-o', '/tmp/hw', '/user/hw.c']);
-if (result.exitCode !== 0) { /* compile error */ }
+if (result.exitCode !== 0) {
+  /* compile error */
+}
 const run = await em.run('/tmp/hw', []);
 console.log(run.stdout); // student output
 ```
@@ -56,7 +58,7 @@ import { Ide } from '@emception/ide';
   workspaceName="sdl-demo"
   enableCanvas={true}
   workspaceConfig={{ files: [{ path: '/user/main.c', content: sdlSource }] }}
-/>
+/>;
 ```
 
 ### Reactive IDE in a tutorial site
@@ -72,7 +74,7 @@ import { Ide } from '@emception/ide';
   enableCanvas={false}
   showSolutionFiles={false}
   workspaceUrl="/lessons/3/workspace.json"
-/>
+/>;
 ```
 
 ### Diagnose + mirror sysroot to CDN
