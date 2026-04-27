@@ -1,6 +1,6 @@
+import { bootInWorker } from '@emception/browser';
 import type { OnMount } from '@monaco-editor/react';
 import { Terminal } from '@xterm/xterm';
-import { bootInWorker } from '@emception/browser';
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
@@ -1973,7 +1973,5 @@ export default function Ide({
       </div>
     </div>
   );
-  return fullscreen && typeof document !== 'undefined'
-    ? createPortal(ideContent, document.body)
-    : ideContent;
+  return fullscreen && typeof document !== 'undefined' ? createPortal(ideContent, document.body) : ideContent;
 }

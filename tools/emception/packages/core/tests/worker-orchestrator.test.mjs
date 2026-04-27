@@ -14,10 +14,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { MessageChannel } from 'node:worker_threads';
-import {
-    messagePortTransport,
-    WorkerOrchestrator,
-} from '../dist/index.js';
+import { messagePortTransport, WorkerOrchestrator } from '../dist/index.js';
 
 /* ------------------------------------------------------------------ */
 /*  Helpers                                                             */
@@ -167,7 +164,8 @@ test('run — non-zero exit code preserved', async () => {
 
     const msg = await nextMsg(ch.port2);
     ch.port2.postMessage({
-        type: 'runResult', id: msg.id,
+        type: 'runResult',
+        id: msg.id,
         exitCode: 1,
         stdout: '',
         stderr: 'error: file not found\n',
