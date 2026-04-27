@@ -6,4 +6,5 @@ export * from './feature-guards.js';
 export * from './request-correlator.js';
 export * from './rpc-channel.js';
 export * from './tool-result.js';
+export * from './worker-orchestrator.js';
 

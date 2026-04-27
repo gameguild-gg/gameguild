@@ -33,6 +33,11 @@ export type {
     WorkspaceStoreOptions
 } from './runtime/adapter.js';
 export {
+    BootCancelledError,
+    BootError,
+    BootHandshake
+} from './runtime/boot-handshake.js';
+export {
     withCancellation,
     withTimeoutOrThrow,
     type CancellationOutcome,
@@ -46,24 +51,23 @@ export {
     looksLikeXtermTerminal,
     type RuntimeLabel
 } from './runtime/feature-guards.js';
-export { assertToolResult, isToolResult } from './runtime/tool-result.js';
 export {
     CorrelatorDisposedError,
     RequestCorrelator,
     type RequestCorrelatorOptions
 } from './runtime/request-correlator.js';
 export {
-    RpcChannel,
-    messagePortTransport,
-    workerTransport,
+    messagePortTransport, RpcChannel, workerTransport,
     type RpcChannelOptions,
     type RpcTransport
 } from './runtime/rpc-channel.js';
+export { assertToolResult, isToolResult } from './runtime/tool-result.js';
 export {
-    BootCancelledError,
-    BootError,
-    BootHandshake
-} from './runtime/boot-handshake.js';
+    WorkerOrchestrator,
+    type WorkerOrchestratorOptions,
+    type WorkerRunOptions,
+    type WorkerToolResult
+} from './runtime/worker-orchestrator.js';
 export {
     compileMatcher,
     queryClangAst,
