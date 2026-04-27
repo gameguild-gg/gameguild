@@ -1,12 +1,13 @@
 import type { OnMount } from '@monaco-editor/react';
 import { Terminal } from '@xterm/xterm';
-import { bootInWorker } from 'emception';
+import { bootInWorker } from '@emception/browser';
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import DockGroupPanel from './DockGroup';
 import FileExplorer from './FileExplorer';
-import type { DockGroup, OpenTab, TabType, TerminalTab, WorkspaceConfig, WorkspaceFile } from './ide-types';
-import { DEFAULT_IMAGE, SDL_CANVAS_PATH, WORKSPACE_STORAGE_KEY, parseWorkspaceBundle, resolveArgs, workspaceConfigToState } from './ide-types';
+import type { DockGroup, IdeProps, OpenTab, TabType, TerminalTab, WorkspaceConfig, WorkspaceFile } from './ide-types';
+import { DEFAULT_IMAGE, SDL_CANVAS_PATH, deriveStorageKey, parseWorkspaceBundle, resolveArgs, workspaceConfigToState } from './ide-types';
 import { buildFileTree, inferLanguage, isSourceFile, isTextFile, makeWasiStubs, toWorkspaceFsPath } from './ide-utils';
 import TerminalPanel from './TerminalPanel';
 import { DEFAULT_PRESET, PRESETS, PRESET_IDS } from './workspace-presets';
@@ -59,16 +60,33 @@ function makeLineBufferedStdin(tty: { readByteExclusive: () => number | Promise<
   };
 }
 
-export interface IdeProps {
-  title?: string;
-  manifestUrl?: string;
-  workspaceConfig?: WorkspaceConfig;
-  workspaceUrl?: string;
-}
-
+export type { IdeProps };
 type WorkerBoot = Awaited<ReturnType<typeof bootInWorker>>;
 
-export default function Ide({ title = 'Emception', manifestUrl = '/cdn/manifest.json', workspaceConfig, workspaceUrl }: IdeProps) {
+export default function Ide({
+  title = 'Emception',
+  manifestUrl = '/cdn/manifest.json',
+  workspaceConfig,
+  workspaceUrl,
+  workspaceName,
+  enableFileExplorer = true,
+  enableTabs = true,
+  enableTerminal = true,
+  enableCanvas = true,
+  enableDocking = true,
+  enableWorkspace = true,
+  fullscreen = false,
+  onFullscreenChange,
+  showHiddenFiles = false,
+  showSolutionFiles = false,
+  canvasPath = SDL_CANVAS_PATH,
+  onStdout,
+  onStderr,
+  stdin: stdinProp,
+  readOnly = false,
+  theme = 'vs-dark',
+}: IdeProps) {
+  const storageKey = deriveStorageKey(workspaceName);
   const editorRef = useRef<Parameters<OnMount>[0] | null>(null);
   const monacoRef = useRef<Parameters<OnMount>[1] | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -115,12 +133,20 @@ export default function Ide({ title = 'Emception', manifestUrl = '/cdn/manifest.
   // Expose filesRef for e2e tests so Playwright can verify file content was updated
   (window as unknown as Record<string, unknown>).__emception_filesRef__ = filesRef;
 
-  const fileTree = buildFileTree(Object.keys(files).filter((path) => path !== SDL_CANVAS_PATH && files[path]?.type !== 'canvas'));
+  // Visibility filter (Phase 8.9): honour showHiddenFiles and showSolutionFiles props.
+  const visiblePaths = Object.keys(files).filter((path) => {
+    if (path === canvasPath || files[path]?.type === 'canvas') return false;
+    const name = path.split('/').pop() ?? '';
+    if (!showHiddenFiles && name.startsWith('.')) return false;
+    if (!showSolutionFiles && /\.solution\./.test(name)) return false;
+    return true;
+  });
+  const fileTree = buildFileTree(visiblePaths);
   const activeTab = openTabs.find((t) => t.id === activeTabId) ?? openTabs[0] ?? null;
   const activeFile = activeTab
     ? (files[activeTab.path] ??
-      (activeTab.type === 'canvas' || activeTab.path === SDL_CANVAS_PATH
-        ? { path: SDL_CANVAS_PATH, type: 'canvas' as const, content: canvasIsRunning ? 'sdl' : '' }
+      (activeTab.type === 'canvas' || activeTab.path === canvasPath
+        ? { path: canvasPath, type: 'canvas' as const, content: canvasIsRunning ? 'sdl' : '' }
         : null))
     : null;
   const activeFileName = activeFile ? (activeFile.path.split('/').filter(Boolean).pop() ?? '') : '';
@@ -130,7 +156,7 @@ export default function Ide({ title = 'Emception', manifestUrl = '/cdn/manifest.
 
   useEffect(() => {
     try {
-      const raw = window.localStorage.getItem(WORKSPACE_STORAGE_KEY);
+      const raw = enableWorkspace ? window.localStorage.getItem(storageKey) : null;
       if (!raw) return;
       const parsed = JSON.parse(raw) as {
         files?: Record<string, WorkspaceFile>;
@@ -140,7 +166,7 @@ export default function Ide({ title = 'Emception', manifestUrl = '/cdn/manifest.
         activeTabId?: string;
       };
       if (parsed.files && Object.keys(parsed.files).length > 0) {
-        const nextFiles = Object.fromEntries(Object.entries(parsed.files).filter(([path, file]) => path !== SDL_CANVAS_PATH && file?.type !== 'canvas'));
+        const nextFiles = Object.fromEntries(Object.entries(parsed.files).filter(([path, file]) => path !== canvasPath && file?.type !== 'canvas'));
         setFiles(nextFiles);
       }
       if (parsed.selectedPath) setSelectedPath(parsed.selectedPath);
@@ -155,9 +181,10 @@ export default function Ide({ title = 'Emception', manifestUrl = '/cdn/manifest.
   useEffect(() => {
     try {
       // Exclude runtime-only canvas entries from persisted workspace files
-      const filesToSave = Object.fromEntries(Object.entries(files).filter(([path, file]) => path !== SDL_CANVAS_PATH && file.type !== 'canvas'));
+      const filesToSave = Object.fromEntries(Object.entries(files).filter(([path, file]) => path !== canvasPath && file.type !== 'canvas'));
+      if (!enableWorkspace) return;
       window.localStorage.setItem(
-        WORKSPACE_STORAGE_KEY,
+        storageKey,
         JSON.stringify({
           files: filesToSave,
           selectedPath,
@@ -385,7 +412,7 @@ export default function Ide({ title = 'Emception', manifestUrl = '/cdn/manifest.
   const ensureOpenTab = useCallback(
     (path: string, group: DockGroup = 'main') => {
       const file = files[path];
-      const type: TabType | null = file?.type ?? (path === SDL_CANVAS_PATH ? 'canvas' : null);
+      const type: TabType | null = file?.type ?? (path === canvasPath ? 'canvas' : null);
       if (!type) return;
       const id = `tab:${path}`;
       setOpenTabs((prev) => {
@@ -995,7 +1022,7 @@ export default function Ide({ title = 'Emception', manifestUrl = '/cdn/manifest.
 
         // Mark canvas tab as SDL-active (keeps the canvas element visible)
         setCanvasIsRunning(true);
-        ensureOpenTab(SDL_CANVAS_PATH, 'right');
+        ensureOpenTab(canvasPath, 'right');
         setActiveTabId(`tab:${compileTarget}`);
 
         // Wait for React to flush + browser to paint so canvasRef.current is ready
@@ -1666,15 +1693,26 @@ export default function Ide({ title = 'Emception', manifestUrl = '/cdn/manifest.
   const canCompile = isReady && activeFile?.type === 'text' && (executionPhase === 'idle' || canRecompileWhileRunning);
   const showCompileButton = executionPhase !== 'running' || canRecompileWhileRunning;
 
-  return (
-    <div className="emception-ide" style={{ display: 'flex', flexDirection: 'column', height: '100%', width: '100%', fontFamily: 'system-ui, sans-serif' }}>
+  const ideContent = (
+    <div
+      className="emception-ide"
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        height: '100%',
+        width: '100%',
+        fontFamily: 'system-ui, sans-serif',
+        ...(fullscreen ? { position: 'fixed', inset: 0, zIndex: 9999, background: '#181825' } : {}),
+      }}
+    >
       {/* Hidden log for Playwright E2E assertions — not visible to users */}
       <pre data-testid="terminal" ref={terminalLogRef} hidden aria-hidden="true" style={{ display: 'none' }} />
-      {/* Hidden holder keeps the SDL <canvas> alive when no dock group hosts it.
-          Rendered early so canvasRef is set before any DockGroupPanel host ref fires. */}
-      <div ref={canvasHolderRef} style={{ position: 'absolute', width: 0, height: 0, overflow: 'hidden', pointerEvents: 'none' }}>
-        <canvas id="canvas" data-testid="sdl-canvas" tabIndex={0} ref={canvasRef} style={{ width: '100%', height: '100%', display: 'none' }} />
-      </div>
+      {/* Hidden holder keeps the SDL canvas alive across dock moves. Gated by enableCanvas. */}
+      {enableCanvas && (
+        <div ref={canvasHolderRef} style={{ position: 'absolute', width: 0, height: 0, overflow: 'hidden', pointerEvents: 'none' }}>
+          <canvas id="canvas" data-testid="sdl-canvas" tabIndex={0} ref={canvasRef} style={{ width: '100%', height: '100%', display: 'none' }} />
+        </div>
+      )}
       {/* ── Title bar ── */}
       <header
         style={{
@@ -1796,30 +1834,33 @@ export default function Ide({ title = 'Emception', manifestUrl = '/cdn/manifest.
 
       {/* ── Main body: sidebar | editor + terminal ── */}
       <PanelGroup direction="horizontal" style={{ flex: 1, overflow: 'hidden' }}>
-        {/* Sidebar */}
-        <Panel defaultSize={18} minSize={10} maxSize={40} style={{ overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-          <FileExplorer
-            files={files}
-            selectedPath={selectedPath}
-            expandedDirs={expandedDirs}
-            fileTree={fileTree}
-            onSelectPath={setSelectedPath}
-            onToggleDir={(path) =>
-              setExpandedDirs((prev) => {
-                const next = new Set(prev);
-                if (next.has(path)) next.delete(path);
-                else next.add(path);
-                return next;
-              })
-            }
-            onOpenTab={(path) => ensureOpenTab(path, 'main')}
-            onCreateFile={createFile}
-            onRename={renameSelectedFile}
-            onDelete={deleteSelectedFile}
-          />
-        </Panel>
-
-        <PanelResizeHandle style={resizerStyle} />
+        {enableFileExplorer && (
+          <>
+            {/* Sidebar */}
+            <Panel defaultSize={18} minSize={10} maxSize={40} style={{ overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+              <FileExplorer
+                files={files}
+                selectedPath={selectedPath}
+                expandedDirs={expandedDirs}
+                fileTree={fileTree}
+                onSelectPath={setSelectedPath}
+                onToggleDir={(path) =>
+                  setExpandedDirs((prev) => {
+                    const next = new Set(prev);
+                    if (next.has(path)) next.delete(path);
+                    else next.add(path);
+                    return next;
+                  })
+                }
+                onOpenTab={(path) => ensureOpenTab(path, 'main')}
+                onCreateFile={createFile}
+                onRename={renameSelectedFile}
+                onDelete={deleteSelectedFile}
+              />
+            </Panel>
+            <PanelResizeHandle style={resizerStyle} />
+          </>
+        )}
 
         {/* Editor + terminal column */}
         <Panel style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
@@ -1844,7 +1885,6 @@ export default function Ide({ title = 'Emception', manifestUrl = '/cdn/manifest.
                     canvasIsRunning={canvasIsRunning}
                   />
                 </Panel>
-
                 {hasRightGroup && (
                   <>
                     <PanelResizeHandle style={resizerStyle} />
@@ -1893,18 +1933,22 @@ export default function Ide({ title = 'Emception', manifestUrl = '/cdn/manifest.
               </>
             )}
 
-            {/* Terminal */}
-            <PanelResizeHandle style={resizerVStyle} />
-            <Panel defaultSize={28} minSize={8} style={{ overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-              <TerminalPanel
-                terminalTabs={terminalTabs}
-                activeTerminalId={activeTerminalId}
-                onSetActiveTerminal={setActiveTerminalId}
-                onNewTerminal={createTerminalTab}
-                onCloseTerminal={closeTerminalTab}
-                onBootTerminalReady={handleBootTerminalReady}
-              />
-            </Panel>
+            {enableTerminal && (
+              <>
+                {/* Terminal */}
+                <PanelResizeHandle style={resizerVStyle} />
+                <Panel defaultSize={28} minSize={8} style={{ overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+                  <TerminalPanel
+                    terminalTabs={terminalTabs}
+                    activeTerminalId={activeTerminalId}
+                    onSetActiveTerminal={setActiveTerminalId}
+                    onNewTerminal={createTerminalTab}
+                    onCloseTerminal={closeTerminalTab}
+                    onBootTerminalReady={handleBootTerminalReady}
+                  />
+                </Panel>
+              </>
+            )}
           </PanelGroup>
         </Panel>
       </PanelGroup>
@@ -1929,4 +1973,7 @@ export default function Ide({ title = 'Emception', manifestUrl = '/cdn/manifest.
       </div>
     </div>
   );
+  return fullscreen && typeof document !== 'undefined'
+    ? createPortal(ideContent, document.body)
+    : ideContent;
 }
