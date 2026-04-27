@@ -1,17 +1,19 @@
 /**
  * Main-thread proxy client for the Worker-based toolchain.
  *
- * Mirrors the ToolRunner + VFS API surface but forwards all calls to the
- * Worker via postMessage. The IDE and shell interact with this class as if
- * the toolchain were running on the main thread.
+ * Thin shim over `WorkerOrchestrator` (@emception/core).
+ * This file contains only the browser-specific concerns:
+ *   - SharedArrayBuffer stdin pump (feedStdin, feedShellStdin)
+ *   - IOProvider wiring (xterm.js / TTYBridge)
+ *   - Cleanup of SAB channels on terminate()
+ *
+ * All correlated request/response logic and notification routing live in
+ * WorkerOrchestrator.
  */
 
 import type { RunOptions, ToolResult } from './tool-runner';
 import type { IOProvider } from '@emception/core';
-import type {
-    MainToWorkerMessage,
-    WorkerToMainMessage,
-} from '@emception/core';
+import { WorkerOrchestrator, workerTransport } from '@emception/core';
 
 export interface WorkerBootOptions {
     manifestUrl: string;
@@ -24,48 +26,42 @@ export interface WorkerBootOptions {
     toolVersions?: { pythonMajorMinor?: string; pythonMajorMinorCompact?: string };
 }
 
-/**
- * Pending request tracker.
- * Each run/getFile/writeFile/listDir call gets a unique id;
- * the Worker responses are correlated by id.
- */
-interface PendingRequest<T> {
-    resolve: (value: T) => void;
-    reject: (reason: unknown) => void;
-}
-
 export class WorkerClient {
-    private worker: Worker;
-    private io: WorkerBootOptions['io'];
-    private nextId = 1;
-    private pending = new Map<number, PendingRequest<unknown>>();
-
-    /** Callbacks for incremental stdout/stderr during a run. */
-    private runCallbacks = new Map<number, { onStdout?: (t: string) => void; onStderr?: (t: string) => void }>();
-
-    /** Per-run stdin feed functions. */
-    private stdinFeeds = new Map<number, () => number | null | Promise<number>>();
-
-    /** Shared-memory stdin channels for interactive WASI runs. */
-    private stdinSharedChannels = new Map<number, { control: Int32Array; data: Uint8Array }>();
+    private readonly orch: WorkerOrchestrator;
+    private readonly io: WorkerBootOptions['io'];
 
     /** Shared-memory stdin channel used by shell-launched foreground WASI runs. */
     private shellStdinChannel: { control: Int32Array; data: Uint8Array } | null = null;
 
-    private bootResolve: ((value: void) => void) | null = null;
-    private bootReject: ((reason: unknown) => void) | null = null;
+    /**
+     * All currently-active SAB stdin channels (both per-run and shell),
+     * tracked so terminate() can close them all.
+     */
+    private readonly activeStdinChannels = new Set<{ control: Int32Array; data: Uint8Array }>();
 
     constructor(worker: Worker, io: WorkerBootOptions['io']) {
-        this.worker = worker;
         this.io = io;
-
-        this.worker.onmessage = (ev: MessageEvent<WorkerToMainMessage>) => {
-            this.handleMessage(ev.data);
-        };
-
-        this.worker.onerror = (ev) => {
-            console.error('[Emception:WorkerClient] Worker error:', ev);
-        };
+        this.orch = new WorkerOrchestrator(workerTransport(worker), {
+            onShellOutput: (t) => io.writeLine(t),
+            onShellWrite: (t) => io.write(t),
+            onShellClear: () => io.clear(),
+            onShellSetEcho: (en) => io.setStdinEcho?.(en),
+            onShellExclusiveStdin: (enter) => {
+                if (!enter) {
+                    if (this.shellStdinChannel) {
+                        this.closeSharedChannel(this.shellStdinChannel);
+                        this.activeStdinChannels.delete(this.shellStdinChannel);
+                        this.shellStdinChannel = null;
+                    }
+                    io.setStdinEcho?.(false);
+                    io.exitExclusiveStdin?.();
+                }
+            },
+            onShellReadByte: () => this.readAndSendByte(),
+            onShellStdinRequest: (ctrl, data) => this.feedShellStdin(ctrl, data),
+            onLog: (level, args) => console[level](...args),
+            onTransportError: (err) => console.error('[Emception:WorkerClient] Worker error:', err),
+        });
     }
 
     /* ---------------------------------------------------------------- */
@@ -73,10 +69,9 @@ export class WorkerClient {
     /* ---------------------------------------------------------------- */
 
     boot(manifestUrl: string, toolVersions?: WorkerBootOptions['toolVersions']): Promise<void> {
-        return new Promise<void>((resolve, reject) => {
-            this.bootResolve = resolve;
-            this.bootReject = reject;
-            this.send({ type: 'boot', manifestUrl, origin: self.location.origin, toolVersions });
+        return this.orch.boot(manifestUrl, {
+            origin: self.location.origin,
+            toolVersions,
         });
     }
 
@@ -85,79 +80,33 @@ export class WorkerClient {
     /* ---------------------------------------------------------------- */
 
     async run(tool: string, argv: string[], options: RunOptions = {}): Promise<ToolResult> {
-        const id = this.nextId++;
-
-        // Store callbacks for incremental output
-        if (options.onStdout || options.onStderr) {
-            this.runCallbacks.set(id, {
-                onStdout: options.onStdout,
-                onStderr: options.onStderr,
-            });
-        }
-
-        // Store stdin provider
-        if (options.stdin) {
-            this.stdinFeeds.set(id, options.stdin);
-        }
-
-        return new Promise<ToolResult>((resolve, reject) => {
-            this.pending.set(id, { resolve: resolve as (v: unknown) => void, reject });
-            this.send({
-                type: 'run',
-                id,
-                tool,
-                argv,
-                options: {
-                    env: options.env,
-                    cwd: options.cwd,
-                    wantStdin: !!options.stdin,
-                },
-            });
+        return await this.orch.run(tool, argv, {
+            env: options.env,
+            cwd: options.cwd,
+            onStdout: options.onStdout,
+            onStderr: options.onStderr,
+            wantStdin: !!options.stdin,
+            onStdinRequest: options.stdin
+                ? (ctrl, data) => this.feedStdin(ctrl, data, options.stdin!)
+                : undefined,
         });
     }
 
     async getFile(path: string): Promise<Uint8Array | null> {
-        const id = this.nextId++;
-        return new Promise<Uint8Array | null>((resolve, reject) => {
-            this.pending.set(id, { resolve: resolve as (v: unknown) => void, reject });
-            this.send({ type: 'getFile', id, path });
-        });
+        return this.orch.getFile(path);
     }
 
     async writeFile(path: string, data: Uint8Array): Promise<void> {
-        const id = this.nextId++;
-        // Transfer the buffer for zero-copy
-        const copy = new Uint8Array(data);
-        return new Promise<void>((resolve, reject) => {
-            this.pending.set(id, {
-                resolve: () => resolve(),
-                reject,
-            });
-            this.worker.postMessage(
-                { type: 'writeFile', id, path, data: copy } satisfies MainToWorkerMessage,
-                [copy.buffer],
-            );
-        });
+        return this.orch.writeFile(path, data);
     }
 
     async listDir(path: string): Promise<string[]> {
-        const id = this.nextId++;
-        return new Promise<string[]>((resolve, reject) => {
-            this.pending.set(id, { resolve: resolve as (v: unknown) => void, reject });
-            this.send({ type: 'listDir', id, path });
-        });
+        return this.orch.listDir(path);
     }
 
     /** Reset the Worker VFS writable layers (clear /tmp, /home/user). */
     async resetVfs(): Promise<void> {
-        const id = this.nextId++;
-        return new Promise<void>((resolve, reject) => {
-            this.pending.set(id, {
-                resolve: () => resolve(),
-                reject,
-            });
-            this.send({ type: 'resetVfs', id });
-        });
+        return this.orch.resetVfs();
     }
 
     /* ---------------------------------------------------------------- */
@@ -165,202 +114,46 @@ export class WorkerClient {
     /* ---------------------------------------------------------------- */
 
     terminate(): void {
-        this.worker.terminate();
-        for (const [, p] of this.pending) {
-            p.reject(new Error('Worker terminated'));
+        // Close all active SAB channels so pending feed loops exit immediately.
+        for (const ch of this.activeStdinChannels) {
+            this.closeSharedChannel(ch);
         }
-        this.pending.clear();
-        this.runCallbacks.clear();
-        // Release any pending exclusive-stdin readers so the feedStdin loop
-        // exits immediately and keyboard input returns to normal (Monaco editor).
-        this.stdinFeeds.clear();
-        for (const [, channel] of this.stdinSharedChannels) {
-            this.closeSharedChannel(channel);
-        }
-        this.stdinSharedChannels.clear();
-        if (this.shellStdinChannel) {
-            this.closeSharedChannel(this.shellStdinChannel);
-            this.shellStdinChannel = null;
-        }
+        this.activeStdinChannels.clear();
+        this.shellStdinChannel = null;
+
+        // Restore normal input mode.
         this.io.setStdinEcho?.(false);
         this.io.exitExclusiveStdin?.();
+
+        // Dispose the orchestrator (terminates the worker transport).
+        this.orch.dispose();
     }
 
     /* ---------------------------------------------------------------- */
-    /*  Internal                                                         */
+    /*  SAB stdin pumps (browser-specific)                              */
     /* ---------------------------------------------------------------- */
-
-    private send(msg: MainToWorkerMessage): void {
-        this.worker.postMessage(msg);
-    }
-
-    private handleMessage(msg: WorkerToMainMessage): void {
-        switch (msg.type) {
-            case 'booted':
-                this.bootResolve?.();
-                this.bootResolve = null;
-                this.bootReject = null;
-                break;
-
-            case 'bootError':
-                this.bootReject?.(new Error(msg.error));
-                this.bootResolve = null;
-                this.bootReject = null;
-                break;
-
-            case 'stdout': {
-                const cb = this.runCallbacks.get(msg.id);
-                cb?.onStdout?.(msg.text);
-                break;
-            }
-
-            case 'stderr': {
-                const cb = this.runCallbacks.get(msg.id);
-                cb?.onStderr?.(msg.text);
-                break;
-            }
-
-            case 'stdinRequest':
-                this.feedStdin(msg.id, msg.controlBuffer, msg.dataBuffer);
-                break;
-
-            case 'shellStdinRequest':
-                this.feedShellStdin(msg.controlBuffer, msg.dataBuffer);
-                break;
-
-            case 'runResult': {
-                const p = this.pending.get(msg.id);
-                if (p) {
-                    this.pending.delete(msg.id);
-                    this.runCallbacks.delete(msg.id);
-                    // Immediately restore normal input mode if this run used stdin,
-                    // so the feed loop's pending readByteExclusive() is cancelled
-                    // and doesn't swallow the user's next keystroke.
-                    if (this.stdinFeeds.has(msg.id)) {
-                        this.stdinFeeds.delete(msg.id);
-                        this.io.setStdinEcho?.(false);
-                        this.io.exitExclusiveStdin?.();
-                    }
-                    const channel = this.stdinSharedChannels.get(msg.id);
-                    if (channel) {
-                        this.closeSharedChannel(channel);
-                        this.stdinSharedChannels.delete(msg.id);
-                    }
-                    p.resolve({
-                        exitCode: msg.exitCode,
-                        stdout: msg.stdout,
-                        stderr: msg.stderr,
-                    } as ToolResult);
-                }
-                break;
-            }
-
-            case 'getFileResult': {
-                const p = this.pending.get(msg.id);
-                if (p) {
-                    this.pending.delete(msg.id);
-                    p.resolve(msg.data);
-                }
-                break;
-            }
-
-            case 'writeFileResult': {
-                const p = this.pending.get(msg.id);
-                if (p) {
-                    this.pending.delete(msg.id);
-                    if (msg.ok) {
-                        p.resolve(undefined);
-                    } else {
-                        p.reject(new Error(msg.error ?? 'writeFile failed'));
-                    }
-                }
-                break;
-            }
-
-            case 'listDirResult': {
-                const p = this.pending.get(msg.id);
-                if (p) {
-                    this.pending.delete(msg.id);
-                    p.resolve(msg.entries);
-                }
-                break;
-            }
-
-            case 'resetVfsResult': {
-                const p = this.pending.get(msg.id);
-                if (p) {
-                    this.pending.delete(msg.id);
-                    if (msg.ok) {
-                        p.resolve(undefined);
-                    } else {
-                        p.reject(new Error(msg.error ?? 'resetVfs failed'));
-                    }
-                }
-                break;
-            }
-
-            // Shell I/O — proxy to the main-thread IOProvider (xterm.js)
-            case 'shellOutput':
-                this.io.writeLine(msg.text);
-                break;
-
-            case 'shellWrite':
-                this.io.write(msg.text);
-                break;
-
-            case 'shellClear':
-                this.io.clear();
-                break;
-
-            case 'shellSetEcho':
-                this.io.setStdinEcho?.(msg.enabled);
-                break;
-
-            case 'shellExclusiveStdin':
-                if (!msg.enter) {
-                    if (this.shellStdinChannel) {
-                        this.closeSharedChannel(this.shellStdinChannel);
-                        this.shellStdinChannel = null;
-                    }
-                    this.io.setStdinEcho?.(false);
-                    this.io.exitExclusiveStdin?.();
-                }
-                break;
-
-            case 'shellReadByte':
-                // Shell wants a byte — read from IO and send it back
-                this.readAndSendByte();
-                break;
-
-            case 'log':
-                // Re-emit Worker console messages on the main thread
-                // so Playwright and DevTools capture them.
-                console[msg.level](...msg.args);
-                break;
-        }
-    }
 
     /**
      * Feed stdin bytes to the Worker for a specific run.
-     * Continuously reads from the stdin provider and sends bytes.
+     * Called from the per-run onStdinRequest callback.
      */
-    private async feedStdin(id: number, controlBuffer: SharedArrayBuffer, dataBuffer: SharedArrayBuffer): Promise<void> {
-        const stdinFn = this.stdinFeeds.get(id);
-        if (!stdinFn) return;
-
+    private async feedStdin(
+        controlBuffer: SharedArrayBuffer,
+        dataBuffer: SharedArrayBuffer,
+        stdinFn: () => number | null | Promise<number>,
+    ): Promise<void> {
         const channel = {
             control: new Int32Array(controlBuffer),
             data: new Uint8Array(dataBuffer),
         };
-        this.stdinSharedChannels.set(id, channel);
+        this.activeStdinChannels.add(channel);
 
-        // Enable exclusive stdin so the shell doesn't steal input
+        // Enable exclusive stdin so the shell doesn't steal input.
         this.io.enterExclusiveStdin?.();
         this.io.setStdinEcho?.(true);
 
-        // Start a loop that feeds bytes as they arrive
         const feed = async () => {
-            while (this.stdinFeeds.has(id)) {
+            while (this.activeStdinChannels.has(channel)) {
                 const byteOrPromise = stdinFn();
                 let byte: number | null;
                 if (byteOrPromise !== null && typeof byteOrPromise === 'object' && 'then' in byteOrPromise) {
@@ -369,16 +162,15 @@ export class WorkerClient {
                     byte = byteOrPromise as number | null;
                 }
 
-                if (byte === null || byte === -1 || !this.stdinFeeds.has(id)) break;
+                if (byte === null || byte === -1 || !this.activeStdinChannels.has(channel)) break;
                 const wrote = await this.writeByteToSharedChannel(channel, byte);
                 if (!wrote) break;
             }
 
-            // Restore normal input mode
             this.io.setStdinEcho?.(false);
             this.io.exitExclusiveStdin?.();
             this.closeSharedChannel(channel);
-            this.stdinSharedChannels.delete(id);
+            this.activeStdinChannels.delete(channel);
         };
 
         feed();
@@ -390,6 +182,7 @@ export class WorkerClient {
             data: new Uint8Array(dataBuffer),
         };
         this.shellStdinChannel = channel;
+        this.activeStdinChannels.add(channel);
 
         this.io.enterExclusiveStdin?.();
         this.io.setStdinEcho?.(true);
@@ -457,6 +250,7 @@ export class WorkerClient {
                 this.io.setStdinEcho?.(false);
                 this.io.exitExclusiveStdin?.();
                 this.closeSharedChannel(channel);
+                this.activeStdinChannels.delete(channel);
                 this.shellStdinChannel = null;
             }
         };
@@ -499,6 +293,7 @@ export class WorkerClient {
 
     /**
      * Read a byte from the IO provider and send it to the Worker for the shell.
+     * Called from the onShellReadByte notification.
      */
     private async readAndSendByte(): Promise<void> {
         const result = this.io.readByte();
@@ -509,8 +304,9 @@ export class WorkerClient {
             byte = result;
         }
         if (byte !== null) {
-            // Send as stdin with id 0 (shell)
-            this.send({ type: 'stdin', id: 0, byte });
+            // Shell stdin uses id 0.
+            this.orch.sendStdinByte(0, byte);
         }
     }
 }
+
