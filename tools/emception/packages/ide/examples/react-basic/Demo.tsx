@@ -9,23 +9,22 @@
  *
  * Serve your sysroot bundles under /cdn/ (see @emception/cli cdn-export).
  */
-import React from 'react';
-import { createRoot } from 'react-dom/client';
 import { Ide } from '@emception/ide';
+import { createRoot } from 'react-dom/client';
 
 function App() {
-  return (
-    <div style={{ width: '100vw', height: '100vh' }}>
-      <Ide
-        title="C++ Playground"
-        manifestUrl="/cdn/manifest.json"
-        workspaceName="react-basic-demo"
-        enableFileExplorer={true}
-        enableTerminal={true}
-        enableCanvas={true}
-      />
-    </div>
-  );
+    return (
+        <div style={{ width: '100vw', height: '100vh' }}>
+            <Ide
+                title="C++ Playground"
+                manifestUrl="/cdn/manifest.json"
+                workspaceName="react-basic-demo"
+                enableFileExplorer={true}
+                enableTerminal={true}
+                enableCanvas={true}
+            />
+        </div>
+    );
 }
 
 // Standalone mount — remove if embedding inside an existing app.
