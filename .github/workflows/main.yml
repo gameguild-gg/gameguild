@@ -292,6 +292,14 @@ jobs:
         with:
           node-version: '22'
 
+      - name: Install dotnet 8 SDK (for @game-guild/dotnet-wasm postinstall)
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Install wasm-tools workload
+        run: dotnet workload install wasm-tools
+
       - name: Install web dependencies
         run: npm install -w apps/web
 
