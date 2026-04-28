@@ -1,0 +1,5 @@
+# Vite build output
+dist/
+
+# Synced CDN assets
+public/cdn/

@@ -1,12 +1,13 @@
 'use client';
 
-import { PRESETS } from '@gameguild/emception-ui';
+import { PRESETS } from '@emception/ide';
 import dynamic from 'next/dynamic';
 import { useSearchParams } from 'next/navigation';
+import { Suspense } from 'react';
 
-const Ide = dynamic(() => import('@gameguild/emception-ui').then((m) => ({ default: m.Ide })), { ssr: false });
+const Ide = dynamic(() => import('@emception/ide').then((m) => ({ default: m.Ide })), { ssr: false });
 
-export default function Home() {
+function HomeInner() {
   const params = useSearchParams();
   const wsId = params.get('workspace');
   const workspaceConfig = wsId && PRESETS[wsId] ? PRESETS[wsId] : undefined;
@@ -14,5 +15,13 @@ export default function Home() {
     <main className="h-screen w-screen bg-[#1e1e2e] text-[#cdd6f4] flex flex-col overflow-hidden">
       <Ide title="Emception (Next.js)" workspaceConfig={workspaceConfig} />
     </main>
+  );
+}
+
+export default function Home() {
+  return (
+    <Suspense fallback={null}>
+      <HomeInner />
+    </Suspense>
   );
 }

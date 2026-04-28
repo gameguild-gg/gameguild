@@ -1,4 +1,4 @@
-@import '@gameguild/emception-ui/styles/theme.css';
+@import '@emception/ide/styles/theme.css';
 
 @tailwind base;
 @tailwind components;

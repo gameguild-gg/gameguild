@@ -36,7 +36,6 @@ jobs:
               - 'apps/api/**'
             emception:
               - 'tools/emception/**'
-              - 'packages/emception/**'
 
   build-emception-toolchain:
     name: Build tools/emception
@@ -383,9 +382,6 @@ jobs:
 
       - name: Build emception library
         run: cd tools/emception && npm run build:lib
-
-      - name: Install shared UI package dependencies
-        run: cd packages/emception && npm install
 
       - name: Install demo dependencies
         run: cd demos/emception-react && npm install

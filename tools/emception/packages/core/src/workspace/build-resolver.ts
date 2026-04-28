@@ -18,11 +18,11 @@
  */
 
 import { BuildConfigError } from '../errors.js';
-import { PRESETS, type PresetName } from '../presets.js';
+import { BUILD_PRESETS, type BuildPresetName } from '../build-presets.js';
 import type { WorkspaceBuildConfig } from '../types.js';
 
 export interface ResolveBuildInput {
-    preset?: PresetName;
+    preset?: BuildPresetName;
     workspace?: WorkspaceBuildConfig;
     callsite?: Partial<WorkspaceBuildConfig> & { flags?: string[] };
 }
@@ -80,7 +80,7 @@ function mergePair(base: WorkspaceBuildConfig, layer: WorkspaceBuildConfig): Wor
 
 /** Resolve the final build config given the three optional layers. */
 export function resolveBuild(input: ResolveBuildInput): ResolvedBuild {
-    const presetBuild = input.preset ? PRESETS[input.preset].build : {};
+    const presetBuild = input.preset ? BUILD_PRESETS[input.preset].build : {};
     let merged = mergePair(presetBuild, input.workspace ?? {});
 
     if (input.callsite) {
