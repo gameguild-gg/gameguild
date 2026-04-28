@@ -1,13 +1,15 @@
 {
   "name": "@emception/cli",
-  "version": "0.1.0-alpha.0",
+  "version": "3.2.0",
   "description": "CLI for emception: doctor, cdn-export, run, test.",
   "license": "MIT",
   "type": "module",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
-  "engines": { "node": ">=20" },
+  "engines": {
+    "node": ">=20"
+  },
   "bin": {
     "emception": "./dist/bin/emception.js"
   },
@@ -17,8 +19,13 @@
       "types": "./dist/index.d.ts"
     }
   },
-  "files": ["dist", "README.md"],
-  "publishConfig": { "access": "public" },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc --noEmit",
