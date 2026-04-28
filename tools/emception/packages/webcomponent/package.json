@@ -31,11 +31,11 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@emception/browser": "0.1.0-alpha.0",
-    "@emception/core": "0.1.0-alpha.0"
+    "@emception/browser": "*",
+    "@emception/core": "*"
   },
   "peerDependencies": {
-    "@emception/xterm": "0.1.0-alpha.0"
+    "@emception/xterm": "*"
   },
   "peerDependenciesMeta": {
     "@emception/xterm": {
