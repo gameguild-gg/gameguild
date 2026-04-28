@@ -1,0 +1,21 @@
+{
+  "name": "@gameguild/emception-demo-node-cli",
+  "version": "3.2.1",
+  "private": true,
+  "description": "Minimal Node CLI grader demo built on @emception/node + @emception/core (file-system workspace + sysroot manifest).",
+  "type": "module",
+  "bin": {
+    "emception-grade": "./bin/grade.mjs"
+  },
+  "scripts": {
+    "start": "node ./bin/grade.mjs fixtures/hello.c",
+    "test": "node ./bin/grade.mjs fixtures/hello.c"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@emception/core": "*",
+    "@emception/node": "*"
+  }
+}

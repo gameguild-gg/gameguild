@@ -10,7 +10,7 @@
 // are typed.
 
 import { BuildConfigError } from '../errors.js';
-import { PRESETS, type PresetName } from '../presets.js';
+import { BUILD_PRESETS, type BuildPresetName } from '../build-presets.js';
 import type {
     StdinInput,
     StdoutSink,
@@ -45,7 +45,7 @@ export interface ViewConfigInput {
 }
 
 export interface NormalizedViewConfig {
-    preset: PresetName | undefined;
+    preset: BuildPresetName | undefined;
     manifestUrl: string | undefined;
     workspace: WorkspaceOptions | undefined;
     seedUrl: string | undefined;
@@ -97,14 +97,14 @@ export function normalizeViewConfig(
     };
 }
 
-function normalizePreset(p: string | undefined): PresetName | undefined {
+function normalizePreset(p: string | undefined): BuildPresetName | undefined {
     if (p === undefined) return undefined;
-    if (!(p in PRESETS)) {
+    if (!(p in BUILD_PRESETS)) {
         throw new BuildConfigError(
-            `view-config: unknown preset '${p}'. Known: ${Object.keys(PRESETS).join(', ')}`,
+            `view-config: unknown preset '${p}'. Known: ${Object.keys(BUILD_PRESETS).join(', ')}`,
         );
     }
-    return p as PresetName;
+    return p as BuildPresetName;
 }
 
 function normalizeWorkspace(

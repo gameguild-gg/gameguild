@@ -1,36 +1,21 @@
-export type TabType = 'text' | 'image' | 'canvas';
+// Workspace configuration types (Phase 8).
+//
+// `WorkspaceConfig` is the runtime/UI-agnostic descriptor for an emception
+// workspace: which files seed the VFS, how to compile and run them, how to
+// test them, what layout the IDE should boot into, and which UI features
+// the workspace requires (canvas, terminal input, test button).
+//
+// The IDE (`@emception/ide`) consumes this directly to render. The bare-runner
+// surfaces (`@emception/react`, `@emception/webcomponent`) consume the
+// `compile` / `run` / `files` slices to drive headless execution.
+//
+// Moved here from `@emception/ide` so non-IDE consumers can use the same
+// shape without pulling in React/Monaco.
+
+/** UI hint for which dock group an open tab should appear in. */
 export type DockGroup = 'main' | 'right' | 'bottom';
 
-export const WORKSPACE_STORAGE_KEY = 'gameguild.emception.workspace.v1';
-export const SDL_CANVAS_PATH = '/user/sdl-canvas';
-
-export interface WorkspaceFile {
-  path: string;
-  type: TabType;
-  content: string;
-}
-
-export interface OpenTab {
-  id: string;
-  path: string;
-  type: TabType;
-  group: DockGroup;
-}
-
-export interface TerminalTab {
-  id: string;
-  title: string;
-}
-
-export interface TreeNode {
-  name: string;
-  path: string;
-  isDir: boolean;
-  children: TreeNode[];
-}
-
-// ── Workspace configuration types ───────────────────────────────
-
+/** How the IDE should execute the build artefact. */
 export type RunType = 'sdl3-canvas' | 'wasi-terminal' | 'cmake-build' | 'python-script';
 
 export interface CompileConfig {
@@ -92,12 +77,7 @@ export interface WorkspaceConfig {
   files: Record<string, BundleFile>;
 }
 
-export const TERMINAL_THEME = {
-  background: '#181825',
-  foreground: '#cdd6f4',
-  cursor: '#f5e0dc',
-  selectionBackground: '#585b70',
-} as const;
+// ── Default file contents (used by the built-in presets) ────────
 
 export const DEFAULT_CODE = `#include <iostream>
 #include <string>
@@ -193,56 +173,9 @@ void SDL_AppQuit(void *appstate, SDL_AppResult result) {
 }
 `;
 
-export const INITIAL_FILES: Record<string, WorkspaceFile> = {
-  '/user/sdl-main.cpp': { path: '/user/sdl-main.cpp', type: 'text', content: SDL_DEMO_CODE },
-  '/user/main.cpp': { path: '/user/main.cpp', type: 'text', content: DEFAULT_CODE },
-  '/user/greetings.h': { path: '/user/greetings.h', type: 'text', content: DEFAULT_HEADER },
-  '/user/workspace-preview.svg': { path: '/user/workspace-preview.svg', type: 'image', content: DEFAULT_IMAGE },
-};
-
 // ── Workspace bundle helpers ────────────────────────────────────
 
-/** Infer the TabType for a file path within a workspace bundle. */
-function inferTabType(path: string): TabType {
-  const name = path.split('/').pop() ?? '';
-  if (name.includes('canvas') && !name.includes('.')) return 'canvas';
-  const ext = path.split('.').pop()?.toLowerCase() ?? '';
-  if (['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg'].includes(ext)) return 'image';
-  return 'text';
-}
-
-/** Convert a WorkspaceConfig's files map + layout into IDE-ready WorkspaceFile records and OpenTab arrays. */
-export function workspaceConfigToState(config: WorkspaceConfig): {
-  files: Record<string, WorkspaceFile>;
-  openTabs: OpenTab[];
-  activeTabId: string;
-  expandedDirs: Set<string>;
-} {
-  const wsFiles: Record<string, WorkspaceFile> = {};
-  for (const [path, bundle] of Object.entries(config.files)) {
-    const type = inferTabType(path);
-    if (type === 'canvas') continue;
-    const content = bundle.encoding === 'base64' ? `data:application/octet-stream;base64,${bundle.content}` : bundle.content;
-    wsFiles[path] = { path, type, content };
-  }
-
-  const openTabs: OpenTab[] = config.layout.openTabs.map((t) => {
-    const file = wsFiles[t.path];
-    return {
-      id: `tab:${t.path}`,
-      path: t.path,
-      type: file?.type ?? inferTabType(t.path),
-      group: t.group,
-    };
-  });
-
-  const activeTabId = `tab:${config.layout.activeFile}`;
-  const expandedDirs = new Set(config.layout.expandedDirs ?? ['/user']);
-
-  return { files: wsFiles, openTabs, activeTabId, expandedDirs };
-}
-
-/** Parse a .workspace.json bundle string into a WorkspaceConfig. Throws on invalid input. */
+/** Parse a `.workspace.json` bundle string into a `WorkspaceConfig`. Throws on invalid input. */
 export function parseWorkspaceBundle(json: string): WorkspaceConfig {
   const raw = JSON.parse(json);
   if (!raw || typeof raw !== 'object') throw new Error('Invalid workspace bundle: not an object');
@@ -253,7 +186,7 @@ export function parseWorkspaceBundle(json: string): WorkspaceConfig {
   return raw as WorkspaceConfig;
 }
 
-/** Resolve {sourceFile} placeholder in args arrays with the actual source path. */
+/** Resolve `{sourceFile}` placeholder in `args` arrays with the actual source path. */
 export function resolveArgs(args: string[], sourceFile: string): string[] {
   return args.map((a) => a.replace(/\{sourceFile\}/g, sourceFile));
 }

@@ -3,9 +3,11 @@
 
 export * from './errors.js';
 export * from './events.js';
-export * from './presets.js';
+export * from './build-presets.js';
 export * from './tools.js';
 export * from './types.js';
+export * from './workspace-config.js';
+export * from './workspace-presets.js';
 
 // Subsystem namespaces (full surface).
 export * as io from './io/index.js';

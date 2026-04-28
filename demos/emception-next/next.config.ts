@@ -4,6 +4,18 @@ const isProduction = process.env.NODE_ENV === 'production';
 
 const nextConfig: NextConfig = {
     output: isProduction ? 'export' : undefined,
+    // The `@emception/browser` package contains `import x from './foo.py?raw'`
+    // statements (an Emscripten subprocess shim). Turbopack does not know how
+    // to handle `.py` files out of the box, so register a raw-text loader so
+    // the file is inlined as a string at build time.
+    turbopack: {
+        rules: {
+            '*.py': {
+                loaders: ['raw-loader'],
+                as: '*.js',
+            },
+        },
+    },
     headers: async () => {
         return [
             {

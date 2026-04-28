@@ -17,9 +17,17 @@
       "import": "./dist/errors.js",
       "types": "./dist/errors.d.ts"
     },
-    "./presets": {
-      "import": "./dist/presets.js",
-      "types": "./dist/presets.d.ts"
+    "./build-presets": {
+      "import": "./dist/build-presets.js",
+      "types": "./dist/build-presets.d.ts"
+    },
+    "./workspace-config": {
+      "import": "./dist/workspace-config.js",
+      "types": "./dist/workspace-config.d.ts"
+    },
+    "./workspace-presets": {
+      "import": "./dist/workspace-presets.js",
+      "types": "./dist/workspace-presets.d.ts"
     },
     "./testing": {
       "import": "./dist/testing/index.js",
