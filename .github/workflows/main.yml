@@ -591,13 +591,12 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          # Node 24 ships npm >= 11.5.1, required for npm OIDC Trusted Publishing.
+          node-version: '24'
 
-      - name: Ensure npm supports OIDC Trusted Publishing
+      - name: Verify npm supports OIDC Trusted Publishing
         run: |
           # Trusted Publishing requires npm >= 11.5.1.
-          # Node 22 ships an older npm; upgrade in place for this job.
-          npm install -g npm@latest
           npm --version
 
       - name: Install emception dependencies
