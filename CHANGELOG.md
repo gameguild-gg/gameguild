@@ -1,3 +1,9 @@
+# [3.2.1](https://github.com/gameguild-gg/gameguild/compare/v3.2.0...v3.2.1) (2026-04-28)
+
+### Bug Fixes
+
+* **emception:** use * for internal workspace deps ([288df31](https://github.com/gameguild-gg/gameguild/commit/288df31731761283df60f670a45428dc24502340))
+
 # [3.2.0](https://github.com/gameguild-gg/gameguild/compare/v3.1.1...v3.2.0) (2026-04-28)
 
 ### Features

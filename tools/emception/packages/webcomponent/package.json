@@ -1,6 +1,6 @@
 {
   "name": "@emception/webcomponent",
-  "version": "3.2.0",
+  "version": "3.2.1",
   "description": "<emception-run> custom element. No framework deps.",
   "license": "MIT",
   "type": "module",

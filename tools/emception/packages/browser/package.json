@@ -1,6 +1,6 @@
 {
   "name": "@emception/browser",
-  "version": "3.2.0",
+  "version": "3.2.1",
   "description": "Browser runtime adapter for emception: Web Worker spawn, IDB workspace store, OffscreenCanvas helpers, COI preflight.",
   "license": "MIT",
   "type": "module",
