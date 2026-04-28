@@ -1,5 +1,14 @@
-import type { WorkspaceConfig } from './ide-types';
-import { DEFAULT_CODE, DEFAULT_HEADER, DEFAULT_IMAGE, SDL_DEMO_CODE } from './ide-types';
+// Built-in workspace presets — each one a complete `WorkspaceConfig` ready
+// to seed the IDE / a bare runner. Layered on top of the lower-level
+// `BUILD_PRESETS` (compiler/linker defaults); these are the higher-level
+// "what does this workspace look like" descriptors.
+//
+// Moved here from `@emception/ide` so non-IDE consumers (bare runner,
+// node-cli grader, custom embedders) can reuse the canonical preset set
+// without pulling in React/Monaco.
+
+import type { WorkspaceConfig } from './workspace-config.js';
+import { DEFAULT_CODE, DEFAULT_HEADER, DEFAULT_IMAGE, SDL_DEMO_CODE } from './workspace-config.js';
 
 // ── C++ SDL3 Bouncing Ball ──────────────────────────────────────
 

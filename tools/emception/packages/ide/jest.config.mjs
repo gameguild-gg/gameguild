@@ -7,6 +7,11 @@ const config = {
     testMatch: ['**/*.test.ts', '**/*.test.tsx'],
     moduleNameMapper: {
         '\\.css$': '<rootDir>/src/__mocks__/style.cjs',
+        '^@emception/core$': '<rootDir>/../core/src/index.ts',
+        // Strip explicit .js extensions on relative imports so jest's CJS
+        // resolver can find the corresponding .ts source files (NodeNext
+        // ESM convention used by @emception/core).
+        '^(\\.{1,2}/.*)\\.js$': '$1',
     },
     extensionsToTreatAsEsm: [],
 };
