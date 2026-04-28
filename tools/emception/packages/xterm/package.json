@@ -1,6 +1,6 @@
 {
   "name": "@emception/xterm",
-  "version": "0.1.0-alpha.0",
+  "version": "3.2.0",
   "description": "xterm.js stdin/stdout/stderr bridge for emception. xterm peer dep lives here.",
   "license": "MIT",
   "type": "module",
@@ -14,8 +14,13 @@
       "types": "./dist/index.d.ts"
     }
   },
-  "files": ["dist", "README.md"],
-  "publishConfig": { "access": "public" },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc --noEmit",
