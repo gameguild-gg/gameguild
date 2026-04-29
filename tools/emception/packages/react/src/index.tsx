@@ -204,7 +204,7 @@ export const EmceptionRun = forwardRef<EmceptionRunHandle, EmceptionRunProps>(
 export interface UseEmceptionOptions {
     /**
      * Factory that builds an `EmceptionAPI`. Phase 7.2 will provide
-     * `createEmception` from `@emception/browser` (or `@emception/node`)
+     * `createEmception` from `@emception/browser`
      * that satisfies this signature. Kept generic so the hook itself
      * has no runtime dependency on either adapter.
      */

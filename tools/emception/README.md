@@ -6,19 +6,18 @@ A complete C/C++ development environment that runs entirely in the browser. Writ
 
 Most consumers do not build emception from source. Pick a published package:
 
-| I want to…                                                      | Install                                                               | Entry point                                                            |
-| --------------------------------------------------------------- | --------------------------------------------------------------------- | ---------------------------------------------------------------------- |
-| Drop a "compile + run" widget into static HTML                  | `@emception/webcomponent` + `@emception/browser`                      | `<emception-run>` custom element                                       |
-| Embed in a React 19 app (Next.js, Vite, CRA)                    | `@emception/react` + `@emception/webcomponent` + `@emception/browser` | `<EmceptionRun>` + `useEmception()`                                    |
-| Add a real terminal UI                                          | `@emception/xterm` + `@xterm/xterm`                                   | `fromXterm()` / `toXterm()` adapters                                   |
-| Run the toolchain headlessly in Node (CI graders, batch builds) | `@emception/node`                                                     | `createNodeRuntimeAdapter()` (Phase 7.2 brings full `createEmception`) |
-| Diagnose env or mirror sysroot to a CDN                         | `@emception/cli`                                                      | `npx @emception/cli doctor` / `cdn-export <dir>`                       |
-| Build the IDE shell (editor + tabs + docking)                   | `@emception/ide`                                                      | `<Ide>` React component, `<emception-ide>` custom element              |
-| Add a new runtime adapter or preset                             | `@emception/core`                                                     | `RuntimeAdapter` interface, presets/, ui/config                        |
+| I want to…                                     | Install                                                               | Entry point                                               |
+| ---------------------------------------------- | --------------------------------------------------------------------- | --------------------------------------------------------- |
+| Drop a "compile + run" widget into static HTML | `@emception/webcomponent` + `@emception/browser`                      | `<emception-run>` custom element                          |
+| Embed in a React 19 app (Next.js, Vite, CRA)   | `@emception/react` + `@emception/webcomponent` + `@emception/browser` | `<EmceptionRun>` + `useEmception()`                       |
+| Add a real terminal UI                         | `@emception/xterm` + `@xterm/xterm`                                   | `fromXterm()` / `toXterm()` adapters                      |
+| Diagnose env or mirror sysroot to a CDN        | `@emception/cli`                                                      | `npx @emception/cli doctor` / `cdn-export <dir>`          |
+| Build the IDE shell (editor + tabs + docking)  | `@emception/ide`                                                      | `<Ide>` React component, `<emception-ide>` custom element |
+| Add a new runtime adapter or preset            | `@emception/core`                                                     | `RuntimeAdapter` interface, presets/, ui/config           |
 
 Peer assets:
 
-- `@emception/sysroot` — the WASM toolchain payload. Required by both `@emception/browser` and `@emception/node`. Pin the version to the LLVM major you want to ship.
+- `@emception/sysroot` — the WASM toolchain payload. Required by `@emception/browser`. Pin the version to the LLVM major you want to ship.
 
 ## Cookbook
 
@@ -34,18 +33,6 @@ if (result.exitCode !== 0) {
 }
 const run = await em.run('/tmp/hw', []);
 console.log(run.stdout); // student output
-```
-
-### Grade an assignment (Node CI)
-
-```ts
-import { createNodeRuntimeAdapter } from '@emception/node';
-import { createEmception } from '@emception/core';
-
-const adapter = await createNodeRuntimeAdapter({ manifestPath: './cdn/manifest.json' });
-const em = await createEmception({ adapter, tty: 'none' });
-const run = await em.compileAndRun(sourceCode);
-console.log(run.stdout);
 ```
 
 ### SDL canvas demo

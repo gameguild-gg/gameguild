@@ -3,7 +3,7 @@
 // Implements the full WorkspaceManager / WorkspaceHandle contract entirely in
 // process memory. Useful as:
 //   - default backend when @emception/core is consumed in tests
-//   - opt-in `workspaceStore: { kind: 'memory' }` in @emception/node
+//   - opt-in `workspaceStore: { kind: 'memory' }` in tests
 //   - ephemeral backend for IDE single-file mode (`enableWorkspace=false`)
 //
 // No DOM, no Node, no IDB references — safe to import anywhere.
@@ -14,7 +14,6 @@ import type {
     WorkspaceBuildConfig,
     WorkspaceSeed,
 } from '../types.js';
-import { hashSeed, normalizeSeedEntry } from './seed.js';
 import type {
     FileMeta,
     OpenWorkspaceOptions,
@@ -23,6 +22,7 @@ import type {
     WorkspaceHandle,
     WorkspaceManager,
 } from './manager.js';
+import { hashSeed, normalizeSeedEntry } from './seed.js';
 
 interface MemFile {
     bytes: Uint8Array;
@@ -48,7 +48,7 @@ function defaultMountPath(name: string): string {
 }
 
 class MemoryWorkspaceHandle implements WorkspaceHandle {
-    constructor(private readonly ws: MemWorkspace) {}
+    constructor(private readonly ws: MemWorkspace) { }
 
     get name(): string {
         return this.ws.name;
@@ -144,7 +144,7 @@ function applySeed(
     if (existing && existing.hash !== hash && policy === 'once') {
         throw new WorkspaceConflictError(
             `Workspace '${ws.name}' was seeded with a different content hash; ` +
-                `seedPolicy='once' refuses to overwrite (expected ${existing.hash}, got ${hash}).`,
+            `seedPolicy='once' refuses to overwrite (expected ${existing.hash}, got ${hash}).`,
         );
     }
 

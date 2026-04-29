@@ -1,7 +1,7 @@
 // Phase 3.1–3.3 — WorkspaceManager interface (runtime-agnostic skeleton).
 //
 // The interface defined here is what every storage backend
-// (`@emception/browser` IDB store, `@emception/node` fs store, in-memory store
+// (`@emception/browser` IDB store, in-memory store
 // in core) must implement. Concrete implementations live in those packages;
 // keeping the contract here means the core test engine, build resolver, and
 // EmceptionAPI surface can talk about workspaces without importing platform
