@@ -1,3 +1,9 @@
+# [3.2.2](https://github.com/gameguild-gg/gameguild/compare/v3.2.1...v3.2.2) (2026-04-29)
+
+### Bug Fixes
+
+* **emception:** presets minor improvement ([90d999f](https://github.com/gameguild-gg/gameguild/commit/90d999f8b769bc026624b34240edad32c4f74eb9))
+
 # [3.2.1](https://github.com/gameguild-gg/gameguild/compare/v3.2.0...v3.2.1) (2026-04-28)
 
 ### Bug Fixes
