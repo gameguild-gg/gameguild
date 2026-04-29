@@ -73,7 +73,7 @@ export type ToolName = keyof typeof TOOL_REGISTRY;
 /**
  * Typed shorthand surface. `em.tools.clang(['-c', 'main.c'])` is exactly
  * equivalent to `em.run('clang', ['-c', 'main.c'])` but with autocomplete on
- * the tool name. Implementations live in @emception/browser / @emception/node.
+ * the tool name. Implementations live in @emception/browser.
  */
 export type Tools = {
     [K in ToolName]: (argv?: string[], opts?: RunOptions) => Promise<ToolResult>;

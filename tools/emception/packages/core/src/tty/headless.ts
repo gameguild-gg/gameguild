@@ -2,7 +2,7 @@
  * Headless IOProvider — no terminal, no DOM (Phase 1.1).
  *
  * Used by `createEmception({ tty: 'none' })` and by the Node runtime
- * (`@emception/node`) when no interactive console is wanted. Stdout / stderr
+ * (headless graders) when no interactive console is wanted. Stdout / stderr
  * fan out to optional sink callbacks; input always returns EOF.
  *
  * Lives in @emception/core because both browser and node need it and it has

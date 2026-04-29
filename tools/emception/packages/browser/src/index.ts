@@ -5,12 +5,17 @@
 
 export {
     boot,
-    bootInWorker, clearModuleCache, createBrowserBridge,
+    bootInWorker,
+    clearModuleCache,
+    createBrowserBridge,
     createEmception,
     createVFSManager,
     decompressBrotli,
     detectAsyncStrategy,
-    isBrotliSupported, LineBuffer, loadModuleFactory, MiniShell,
+    isBrotliSupported,
+    LineBuffer,
+    loadModuleFactory,
+    MiniShell,
     SUBPROCESS_SHIM,
     ToolRunner,
     TTYBridge,
@@ -27,16 +32,19 @@ export {
 
 // Lower-level VFS surface (LazyFS, IDBFS, mountVFSFS) for advanced consumers
 // that want to compose their own VFSManager.
-export {
-    IDBFS,
-    LazyFS,
-    mountVFSFS,
-    type FileEntry,
-    type FSManifest,
-    type IDBFSOptions,
-    type MountVFSFSOptions,
-    type VFSFSRuntime
-} from './vfs/index';
+export { IDBFS, LazyFS, mountVFSFS, type FileEntry, type FSManifest, type IDBFSOptions, type MountVFSFSOptions, type VFSFSRuntime } from './vfs/index';
 
-export const DEFAULT_MANIFEST_URL =
-    'https://cdn.jsdelivr.net/npm/@emception/sysroot@0.20.0/manifest.json';
+export const DEFAULT_MANIFEST_URL = 'https://cdn.jsdelivr.net/npm/@emception/sysroot@0.20.0/manifest.json';
+
+// Headless build presets + compileAndRun helper.
+export {
+    BROWSER_BUILD_PRESETS,
+    compileAndRun,
+    type BrowserBuildPreset,
+    type BrowserBuildPresetName,
+    type CompileAndRunOptions,
+    type CompileAndRunResult,
+    type CompilePaths,
+    type CompilePhase
+} from './presets';
+

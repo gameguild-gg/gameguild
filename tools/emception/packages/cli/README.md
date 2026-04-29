@@ -40,7 +40,7 @@ emception cdn-export ./public/cdn
 
 ### `emception run` / `emception test` (planned)
 
-Phase 9: drive `@emception/node`'s `createEmception()` from the CLI for one-shot compile + run and headless test plans. Currently placeholders; `createEmception()` itself is still pending Phase 7.2.
+Phase 9: drive a headless `EmceptionAPI` from the CLI for one-shot compile + run and headless test plans. Currently placeholders.
 
 ## Programmatic API
 
