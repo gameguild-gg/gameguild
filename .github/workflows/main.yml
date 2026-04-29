@@ -636,7 +636,6 @@ jobs:
             "@emception/core|packages/core"
             "@emception/xterm|packages/xterm"
             "@emception/browser|packages/browser"
-            "@emception/node|packages/node"
             "@emception/react|packages/react"
             "@emception/webcomponent|packages/webcomponent"
             "@emception/ide|packages/ide"

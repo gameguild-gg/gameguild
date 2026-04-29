@@ -47,4 +47,4 @@ This is intentionally a thin shim. The actual stream wiring lives in `@emception
 - `TTYBridge` — low-level helper used internally to plumb keypress events into `ReadableStream<Uint8Array>`.
 - Type unions `XtermStdinInput` / `XtermStdoutSink` that extend `StdinInput` / `StdoutSink` so TS callers get autocomplete.
 
-The xterm peer dep lives **here only** so non-terminal embeds (`@emception/node`, headless graders, the bare `<emception-run>` custom element) don't pay the bundle cost.
+The xterm peer dep lives **here only** so non-terminal embeds (headless graders, the bare `<emception-run>` custom element) don't pay the bundle cost.

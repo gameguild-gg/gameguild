@@ -64,4 +64,4 @@ Types: `BootResult`, `CreateEmceptionOptions`, `EmceptionAPI`, `RunOptions`, `To
 
 ## Roadmap
 
-The current `createEmception` lives here; Phase 7.2 will extract the worker-client orchestration into `@emception/core` so `@emception/node` can ship parity for headless graders. The browser surface above stays stable through that move.
+The current `createEmception` lives here.

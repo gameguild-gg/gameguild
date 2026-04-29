@@ -4,7 +4,7 @@
  * Plugs platform-specific primitives (worker spawn, manifest fetch, workspace
  * persistence, transferable detection) into the runtime-agnostic
  * `@emception/core` so the same orchestration code can run in browsers
- * (`@emception/browser`) and Node (`@emception/node`).
+ * (`@emception/browser`).
  *
  * The browser adapter wraps `Worker` + `fetch` + IndexedDB; the Node adapter
  * (Phase 7) wraps `worker_threads` + `node:fs` + a fs-backed workspace store.
@@ -50,7 +50,7 @@ export interface WorkspaceStoreOptions {
 
 /**
  * Opaque workspace store handle. Concrete shape lives in the runtime adapter
- * package (`@emception/browser` IDB implementation, `@emception/node` fs
+ * package (`@emception/browser` IDB implementation, fs
  * implementation). Core never touches this directly — it is passed through
  * to the worker entry which knows how to consume it.
  */

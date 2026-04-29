@@ -1,4 +1,4 @@
-import { bootInWorker } from '@emception/browser';
+import { BROWSER_BUILD_PRESETS, bootInWorker } from '@emception/browser';
 import type { OnMount } from '@monaco-editor/react';
 import { Terminal } from '@xterm/xterm';
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
@@ -871,73 +871,24 @@ export default function Ide({
         const sdlObjPath = '/tmp/emception-sdl-main.o';
         const wasmPath = resolvedConfig.compile.output || '/home/user/main.wasm';
 
-        // Compile with clang -cc1 directly (driver mode silently exits in
-        // browser because cc1 cannot be spawned as a subprocess; cc1_main is
-        // linked into clang.wasm so direct -cc1 invocation works in-process).
-        // Includes mirror what the driver would inject for SDL3 + Emscripten
-        // sysroot, plus the shipped fakesdl/compat/SDL3 headers.
-        const sdlCompile = await client.run(
-          'clang',
-          [
-            'clang',
-            '-cc1',
-            '-triple',
-            'wasm32-unknown-emscripten',
-            '-emit-obj',
-            '-O1',
-            '-disable-free',
-            '-clear-ast-before-backend',
-            '-disable-llvm-verifier',
-            '-discard-value-names',
-            '-main-file-name',
-            'main.cpp',
-            '-mrelocation-model',
-            'static',
-            '-mframe-pointer=none',
-            '-ffp-contract=on',
-            '-fno-rounding-math',
-            '-mconstructor-aliases',
-            '-target-cpu',
-            'generic',
-            '-fvisibility=hidden',
-            '-internal-isystem',
-            '/usr/include/c++/v1',
-            '-internal-isystem',
-            '/usr/include/compat',
-            '-internal-isystem',
-            '/usr/lib/clang/23/include',
-            '-internal-isystem',
-            '/usr/include/fakesdl',
-            '-internal-isystem',
-            '/usr/include/SDL3',
-            '-resource-dir',
-            '/usr/lib/clang/23',
-            '-internal-isystem',
-            '/usr/include',
-            '-fdeprecated-macro',
-            '-ferror-limit',
-            '19',
-            '-fgnuc-version=4.2.1',
-            '-fcxx-exceptions',
-            '-fexceptions',
-            '-o',
-            sdlObjPath,
-            '-x',
-            'c++',
-            sourceFsPath,
-          ],
-          {
-            cwd: resolvedConfig.compile.cwd ?? '/home/user',
-            onStdout: (t: string) => {
-              console.log(t);
-              tty.writeLine(t);
-            },
-            onStderr: (t: string) => {
-              console.error(t);
-              tty.writeError(t);
-            },
+        // Compile + link via the shared `BROWSER_BUILD_PRESETS.sdl` preset
+        // exposed by `@emception/browser`. This keeps the SDL3 cc1 flag set
+        // and the wasm-ld SDL_App* / GL / al / html5 link line in one place,
+        // shared with any headless `compileAndRun({ preset: 'sdl', ... })`
+        // consumer.
+        const sdlPreset = BROWSER_BUILD_PRESETS.sdl;
+        const sdlPaths = { sourcePath: sourceFsPath, objectPath: sdlObjPath, wasmPath };
+        const sdlCompile = await client.run(sdlPreset.compileTool, sdlPreset.compileArgv(sdlPaths), {
+          cwd: resolvedConfig.compile.cwd ?? '/home/user',
+          onStdout: (t: string) => {
+            console.log(t);
+            tty.writeLine(t);
           },
-        );
+          onStderr: (t: string) => {
+            console.error(t);
+            tty.writeError(t);
+          },
+        });
 
         const sdlDuration = ((performance.now() - t0) / 1000).toFixed(2);
         if (sdlCompile.exitCode !== 0) {
@@ -949,51 +900,17 @@ export default function Ide({
 
         tty.writeLine('\x1b[36mSDL3 linking (wasm-ld)...\x1b[0m');
 
-        const sdlLink = await client.run(
-          'wasm-ld',
-          [
-            'wasm-ld',
-            sdlObjPath,
-            '-o',
-            wasmPath,
-            '-L/usr/lib/emscripten/cache/sysroot/lib/wasm32-emscripten',
-            '-L/usr/lib/emscripten/src/lib',
-            '/usr/lib/emscripten/cache/sysroot/lib/wasm32-emscripten/crt1.o',
-            '/usr/lib/emscripten/cache/sysroot/lib/wasm32-emscripten/libSDL3.a',
-            '--no-entry',
-            '--import-undefined',
-            '--allow-undefined',
-            '--export-if-defined=SDL_AppInit',
-            '--export-if-defined=SDL_AppIterate',
-            '--export-if-defined=SDL_AppEvent',
-            '--export-if-defined=SDL_AppQuit',
-            '--export-table',
-            '--table-base=1',
-            '-z',
-            'stack-size=65536',
-            '-lGL-getprocaddr',
-            '-lal',
-            '-lhtml5',
-            '-lstubs',
-            '-lc',
-            '-ldlmalloc',
-            '-lcompiler_rt',
-            '-lc++-noexcept',
-            '-lc++abi-noexcept',
-            '-lsockets',
-          ],
-          {
-            cwd: resolvedConfig.compile.cwd ?? '/home/user',
-            onStdout: (t: string) => {
-              console.log(t);
-              tty.writeLine(t);
-            },
-            onStderr: (t: string) => {
-              console.error(t);
-              tty.writeError(t);
-            },
+        const sdlLink = await client.run(sdlPreset.linkTool, sdlPreset.linkArgv(sdlPaths), {
+          cwd: resolvedConfig.compile.cwd ?? '/home/user',
+          onStdout: (t: string) => {
+            console.log(t);
+            tty.writeLine(t);
           },
-        );
+          onStderr: (t: string) => {
+            console.error(t);
+            tty.writeError(t);
+          },
+        });
 
         if (sdlLink.exitCode !== 0) {
           setExecutionPhase('idle');
@@ -1283,67 +1200,22 @@ export default function Ide({
         // (no fork/posix_spawn in emscripten libc), causing clang to exit 0
         // in ~35ms with no output. cc1_main is linked into clang.wasm so the
         // frontend runs in-process when invoked with -cc1 directly.
-        // Args mirror the native `clang++ -###` driver dump for an equivalent
-        // command line, with the resource-dir set to our shipped /usr/lib/clang/23
-        // and compat shims enabled for libc++ headers such as xlocale.h.
-        const clangResult = await client.run(
-          'clang',
-          [
-            'clang',
-            '-cc1',
-            '-triple',
-            'wasm32-unknown-emscripten',
-            '-emit-obj',
-            '-O1',
-            '-disable-free',
-            '-clear-ast-before-backend',
-            '-disable-llvm-verifier',
-            '-discard-value-names',
-            '-main-file-name',
-            'main.cpp',
-            '-mrelocation-model',
-            'static',
-            '-mframe-pointer=none',
-            '-ffp-contract=on',
-            '-fno-rounding-math',
-            '-mconstructor-aliases',
-            '-target-cpu',
-            'generic',
-            '-fvisibility=hidden',
-            '-internal-isystem',
-            '/usr/include/c++/v1',
-            '-internal-isystem',
-            '/usr/include/compat',
-            '-internal-isystem',
-            '/usr/lib/clang/23/include',
-            '-resource-dir',
-            '/usr/lib/clang/23',
-            '-internal-isystem',
-            '/usr/include',
-            '-fdeprecated-macro',
-            '-ferror-limit',
-            '19',
-            '-fgnuc-version=4.2.1',
-            '-fcxx-exceptions',
-            '-fexceptions',
-            '-o',
-            objPath,
-            '-x',
-            'c++',
-            sourceFsPath,
-          ],
-          {
-            cwd: resolvedConfig.compile.cwd ?? '/home/user',
-            onStdout: (t: string) => {
-              console.log(t);
-              tty.writeLine(t);
-            },
-            onStderr: (t: string) => {
-              console.error(t);
-              tty.writeError(t);
-            },
+        // Argv comes from the shared `BROWSER_BUILD_PRESETS.cpp` preset
+        // exposed by `@emception/browser` so flag drift between the IDE
+        // and the headless `compileAndRun()` helper is impossible.
+        const cppPreset = BROWSER_BUILD_PRESETS.cpp;
+        const presetPaths = { sourcePath: sourceFsPath, objectPath: objPath, wasmPath };
+        const clangResult = await client.run(cppPreset.compileTool, cppPreset.compileArgv(presetPaths), {
+          cwd: resolvedConfig.compile.cwd ?? '/home/user',
+          onStdout: (t: string) => {
+            console.log(t);
+            tty.writeLine(t);
           },
-        );
+          onStderr: (t: string) => {
+            console.error(t);
+            tty.writeError(t);
+          },
+        });
 
         if (clangResult.exitCode !== 0) {
           const dur = ((performance.now() - t0) / 1000).toFixed(2);
@@ -1354,39 +1226,17 @@ export default function Ide({
         }
 
         tty.writeLine('\x1b[36mLinking (wasm-ld)...\x1b[0m');
-        const lldResult = await client.run(
-          'wasm-ld',
-          [
-            'wasm-ld',
-            objPath,
-            '-o',
-            wasmPath,
-            '-L/usr/lib/emscripten/cache-lib/wasm32-emscripten',
-            '--entry=main',
-            '--import-undefined',
-            '--allow-undefined',
-            '--export-table',
-            '--table-base=1',
-            '--export=__wasm_call_ctors',
-            '-lc',
-            '-ldlmalloc',
-            '-lcompiler_rt',
-            '-lc++-noexcept',
-            '-lc++abi-noexcept',
-            '-lsockets',
-          ],
-          {
-            cwd: resolvedConfig.compile.cwd ?? '/home/user',
-            onStdout: (t: string) => {
-              console.log(t);
-              tty.writeLine(t);
-            },
-            onStderr: (t: string) => {
-              console.error(t);
-              tty.writeError(t);
-            },
+        const lldResult = await client.run(cppPreset.linkTool, cppPreset.linkArgv(presetPaths), {
+          cwd: resolvedConfig.compile.cwd ?? '/home/user',
+          onStdout: (t: string) => {
+            console.log(t);
+            tty.writeLine(t);
           },
-        );
+          onStderr: (t: string) => {
+            console.error(t);
+            tty.writeError(t);
+          },
+        });
 
         if (lldResult.exitCode !== 0) {
           const dur = ((performance.now() - t0) / 1000).toFixed(2);

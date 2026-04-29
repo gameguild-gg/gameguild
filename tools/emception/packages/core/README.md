@@ -21,7 +21,7 @@ Runtime-agnostic core for [emception](https://github.com/gameguild-gg/gameguild/
 
 ## Constraints
 
-- **No DOM**. Compiles under `lib: ['esnext']` (see `@emception/node`'s tsconfig). Uses platform-neutral types (`unknown[]` instead of `Transferable[]`, duck-typed feature guards, etc.). Don't import `lib.dom` types in this package.
+- **No DOM**. Compiles under `lib: ['esnext']`. Uses platform-neutral types (`unknown[]` instead of `Transferable[]`, duck-typed feature guards, etc.). Don't import `lib.dom` types in this package.
 - **Pure ESM**. Relative imports use `.js` extensions so emitted output runs under raw Node.
 - **No side effects**. `sideEffects: false`. Importing a symbol only pulls in what tree-shaking can't elide.
 
@@ -40,7 +40,7 @@ export interface RuntimeAdapter {
 }
 ```
 
-`@emception/browser` and `@emception/node` provide implementations. `@emception/core` itself never instantiates one; it just defines the contract and ships pure helpers that adapters compose.
+`@emception/browser` provides the implementation. `@emception/core` itself never instantiates one; it just defines the contract and ships pure helpers that adapters compose.
 
 ## Events
 
