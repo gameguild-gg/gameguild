@@ -1,6 +1,6 @@
 {
   "name": "@emception/react",
-  "version": "3.2.1",
+  "version": "3.2.2",
   "description": "React 19 components for emception: <EmceptionRun>, <EmceptionTerminal>, <EmceptionCanvas>, useEmception().",
   "license": "MIT",
   "type": "module",
