@@ -33,8 +33,10 @@
   <body>
     <h1>&lt;emception-run&gt; web-component demo</h1>
     <p>
-      Vanilla HTML page that registers the custom element and feeds it a
-      pre-built <code>EmceptionAPI</code> from <code>@emception/browser</code>.
+      Vanilla HTML page that boots <code>@emception/browser</code> and feeds a
+      pre-built API to the <code>&lt;emception-run&gt;</code> custom element from
+      <code>@emception/webcomponent</code>. The element compiles and runs the source
+      automatically via its <code>autorun</code> attribute.
     </p>
 
     <emception-run id="run" preset="cpp" autorun source="">
