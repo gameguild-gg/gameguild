@@ -8,33 +8,29 @@
 //   - Slots:
 //       <textarea slot="stdin">   — initial stdin payload
 //       <canvas slot="canvas">    — rendering surface for SDL / GUI presets
-//   - Events: re-broadcasts every `EmceptionEventName` as a CustomEvent
-//     named `emception-<name>` (per `EVENT_DOM_NAMES`). The `detail`
-//     payload is whatever the underlying `EmceptionAPI` emits.
-//   - Properties: the element exposes `api: EmceptionAPI | null`. Setting
-//     this attaches the element to a pre-built API; clearing detaches and
-//     unsubscribes. The ability to *create* an API from attributes is
-//     intentionally deferred — it's the job of `@emception/browser`'s
-//     `createEmception()` (Phase 7.2 once orchestration lands) so the
-//     webcomponent stays free of the worker plumbing and can be unit-
-//     tested with a stub.
+//   - Events:
+//       `emception-ready`  — fired after first successful run
+//       `emception-exit`   — fired with `{ exitCode }` when a run finishes
+//   - Properties: the element exposes `api: BrowserEmceptionAPI | null`.
+//     Setting this attaches the element to a pre-built browser API.
+//     If the `autorun` attribute is present the element triggers an
+//     initial compile+run automatically.
+//   - Methods: `run()` — trigger a compile+run cycle imperatively.
 //
-// All non-DOM work (attribute parsing, event-name mapping) is done by
-// `@emception/core`; this file is the thinnest possible glue.
+// All non-DOM work (attribute parsing) is done by `@emception/core`;
+// the compile+run pipeline uses `compileAndRun` from `@emception/browser`.
 
 import {
-    EVENT_DOM_NAMES,
+    compileAndRun,
+    type BrowserBuildPresetName,
+    type EmceptionAPI as BrowserEmceptionAPI,
+} from '@emception/browser';
+import {
     parseAttributesToInput,
-    type EmceptionAPI,
-    type EmceptionEventName,
     type ViewConfigInput,
 } from '@emception/core';
 
 export const ELEMENT_NAME = 'emception-run';
-
-const ALL_EVENT_NAMES: readonly EmceptionEventName[] = Object.keys(
-    EVENT_DOM_NAMES,
-) as EmceptionEventName[];
 
 const TEMPLATE = `
 <style>
@@ -55,8 +51,6 @@ const TEMPLATE = `
 </div>
 `;
 
-type Unsubscribe = () => void;
-
 /**
  * The custom element class. Exported so consumers can subclass or
  * register under a different tag name.
@@ -74,8 +68,7 @@ export class EmceptionRunElement extends HTMLElement {
     private outputEl: HTMLDivElement | null = null;
     private canvasSlotEl: HTMLDivElement | null = null;
     private stdinSlotEl: HTMLDivElement | null = null;
-    private subscriptions: Unsubscribe[] = [];
-    private currentApi: EmceptionAPI | null = null;
+    private currentApi: BrowserEmceptionAPI | null = null;
 
     connectedCallback(): void {
         if (!this.shadowRoot) {
@@ -90,7 +83,7 @@ export class EmceptionRunElement extends HTMLElement {
     }
 
     disconnectedCallback(): void {
-        this.detachApi();
+        this.currentApi = null;
     }
 
     attributeChangedCallback(): void {
@@ -98,18 +91,20 @@ export class EmceptionRunElement extends HTMLElement {
     }
 
     /**
-     * Read the currently-attached `EmceptionAPI` (if any). Setting this
-     * to a non-null value attaches all event listeners; setting to null
-     * detaches them.
+     * Read the currently-attached browser `EmceptionAPI` (if any).
+     * Setting this to a non-null value stores it; if `autorun` is set
+     * a compile+run cycle starts immediately. Setting to null detaches.
      */
-    get api(): EmceptionAPI | null {
+    get api(): BrowserEmceptionAPI | null {
         return this.currentApi;
     }
 
-    set api(next: EmceptionAPI | null) {
+    set api(next: BrowserEmceptionAPI | null) {
         if (this.currentApi === next) return;
-        this.detachApi();
-        if (next) this.attachApi(next);
+        this.currentApi = next;
+        if (next && this.hasAttribute('autorun')) {
+            void this.run();
+        }
     }
 
     /**
@@ -124,39 +119,44 @@ export class EmceptionRunElement extends HTMLElement {
         return parseAttributesToInput(attrs);
     }
 
-    private attachApi(api: EmceptionAPI): void {
-        this.currentApi = api;
-        for (const name of ALL_EVENT_NAMES) {
-            // The cast is necessary because the listener-payload type
-            // varies per event; we relay the payload uniformly to a
-            // CustomEvent so consumers re-narrow on the receiving side.
-            const handler = ((payload: unknown) => this.relay(name, payload)) as never;
-            this.subscriptions.push(api.on(name, handler));
-        }
-    }
+    /**
+     * Trigger a compile + run cycle using the attached API.
+     * Reads `source` and `preset` from element attributes; reads initial
+     * stdin from a `<textarea slot="stdin">` child if present.
+     * Dispatches `emception-exit` when the run finishes.
+     */
+    async run(): Promise<void> {
+        const api = this.currentApi;
+        if (!api) return;
 
-    private detachApi(): void {
-        if (!this.currentApi) return;
-        for (const unsub of this.subscriptions) unsub();
-        this.subscriptions = [];
-        this.currentApi = null;
-    }
+        const source = this.getAttribute('source') ?? '';
+        const presetAttr = this.getAttribute('preset') ?? 'cpp';
+        const preset = presetAttr as BrowserBuildPresetName;
+        const stdinEl = this.querySelector<HTMLTextAreaElement>(':scope > [slot="stdin"]');
+        const stdin = stdinEl?.value ?? stdinEl?.textContent ?? '';
 
-    private relay(name: EmceptionEventName, payload: unknown): void {
-        const domName = EVENT_DOM_NAMES[name];
-        this.dispatchEvent(
-            new CustomEvent(domName, { detail: payload, bubbles: true, composed: true }),
-        );
-        // Mirror text streams into the default output pane so a bare
-        // `<emception-run>` (no consumer JS) still shows something useful.
-        if ((name === 'stdout' || name === 'stderr') && this.outputEl) {
-            const p = payload as { chunk?: string | Uint8Array };
-            const chunk = typeof p?.chunk === 'string'
-                ? p.chunk
-                : p?.chunk instanceof Uint8Array
-                    ? new TextDecoder().decode(p.chunk)
-                    : '';
-            if (chunk) this.outputEl.append(chunk);
+        if (this.outputEl) this.outputEl.textContent = '';
+
+        const result = await compileAndRun(api, {
+            preset,
+            source,
+            stdin: stdin || undefined,
+            onStdout: (t) => { if (this.outputEl) this.outputEl.append(t); },
+            onStderr: (t) => { if (this.outputEl) this.outputEl.append(t); },
+        });
+
+        this.dispatchEvent(new CustomEvent('emception-exit', {
+            detail: { exitCode: result.exitCode, finalPhase: result.finalPhase },
+            bubbles: true,
+            composed: true,
+        }));
+
+        if (result.exitCode === 0) {
+            this.dispatchEvent(new CustomEvent('emception-ready', {
+                detail: {},
+                bubbles: true,
+                composed: true,
+            }));
         }
     }
 
