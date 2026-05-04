@@ -202,20 +202,19 @@ fs.writeFileSync(
 #include <emscripten.h>
 #include <stdlib.h>
 
-static void loop_iter(void) {}
-
-/* Force malloc/free into exports. */
-__attribute__((used)) static void _force_alloc(void) {
-    void *p = malloc(64 * 1024);
-    if (p) free(p);
+static void loop_iter(void) {
+    BeginDrawing();
+    ClearBackground((Color){ 0, 0, 0, 255 });
+    DrawText("raylib-runtime", 10, 10, 20, (Color){ 255, 255, 255, 255 });
+    EndDrawing();
 }
 
-/* Force emscripten_set_main_loop into wasmImports. */
-__attribute__((used)) static void _force_loop(void) {
-    emscripten_set_main_loop(loop_iter, 0, 0);
+int main(void) {
+    InitWindow(640, 480, "raylib-runtime");
+    emscripten_set_main_loop(loop_iter, 0, 1);
+    CloseWindow();
+    return 0;
 }
-
-int main(void) { return 0; }
 `,
 );
 
@@ -228,6 +227,7 @@ const runtimeResult = shell.exec(
         `-I"${RAYLIB_INC}"`,
         '-sENVIRONMENT=web',
         '-sALLOW_MEMORY_GROWTH=1',
+        '-sUSE_GLFW=3',
         '-sMODULARIZE=1',
         '-sEXPORT_NAME=createRaylibModule',
         '-sEXPORT_ES6=1',
