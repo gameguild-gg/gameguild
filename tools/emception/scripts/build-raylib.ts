@@ -215,11 +215,6 @@ __attribute__((used)) static void _force_loop(void) {
     emscripten_set_main_loop(loop_iter, 0, 0);
 }
 
-/* Force emscripten_notify_memory_growth into wasmImports. */
-__attribute__((used)) static void _force_mem_growth(void) {
-    emscripten_notify_memory_growth(0);
-}
-
 int main(void) { return 0; }
 `,
 );
