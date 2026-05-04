@@ -31,8 +31,13 @@ const DEFAULT_PATHS: CompilePaths = {
     wasmPath: '/home/user/main.wasm',
 };
 
-/** Common clang -cc1 frontend flags shared by C and C++ presets. */
-const CC1_COMMON: readonly string[] = [
+/**
+ * Common clang -cc1 frontend flags (no isystem entries — those are
+ * appended per-language so the C++ stdlib search path can be inserted
+ * BEFORE /usr/include, which is required by libc++'s `<cctype>`,
+ * `<cwchar>`, `<cwctype>` etc.
+ */
+const CC1_FRONTEND: readonly string[] = [
     '-cc1',
     '-triple',
     'wasm32-unknown-emscripten',
@@ -51,26 +56,40 @@ const CC1_COMMON: readonly string[] = [
     '-target-cpu',
     'generic',
     '-fvisibility=hidden',
+];
+
+/** Trailing cc1 flags shared by all presets. */
+const CC1_TAIL: readonly string[] = ['-fdeprecated-macro', '-ferror-limit', '19', '-fgnuc-version=4.2.1'];
+
+/** C-language include search path. */
+const CC1_C_INCLUDES: readonly string[] = [
     '-resource-dir',
     '/usr/lib/clang/23',
     '-internal-isystem',
     '/usr/lib/clang/23/include',
     '-internal-isystem',
     '/usr/include',
-    '-fdeprecated-macro',
-    '-ferror-limit',
-    '19',
-    '-fgnuc-version=4.2.1',
 ];
 
-const CC1_CPP_EXTRA: readonly string[] = [
+/**
+ * C++ include search path — libc++ headers must come BEFORE /usr/include
+ * so that `<cctype>` resolves to libc++'s shim that re-exports `<ctype.h>`
+ * via `__cxx_libc++` rather than directly grabbing the C `<ctype.h>`.
+ */
+const CC1_CPP_INCLUDES: readonly string[] = [
     '-internal-isystem',
     '/usr/include/c++/v1',
     '-internal-isystem',
     '/usr/include/compat',
-    '-fcxx-exceptions',
-    '-fexceptions',
+    '-internal-isystem',
+    '/usr/lib/clang/23/include',
+    '-resource-dir',
+    '/usr/lib/clang/23',
+    '-internal-isystem',
+    '/usr/include',
 ];
+
+const CC1_CPP_EXC: readonly string[] = ['-fcxx-exceptions', '-fexceptions'];
 
 /** Standard wasm-ld link line for emscripten-style libc. */
 const WASM_LD_BASE: readonly string[] = [
@@ -144,7 +163,19 @@ export const BROWSER_BUILD_PRESETS: Record<BrowserBuildPresetName, BrowserBuildP
         name: 'c',
         compileTool: 'clang',
         linkTool: 'wasm-ld',
-        compileArgv: ({ sourcePath, objectPath }) => ['clang', ...CC1_COMMON, '-main-file-name', basename(sourcePath), '-o', objectPath, '-x', 'c', sourcePath],
+        compileArgv: ({ sourcePath, objectPath }) => [
+            'clang',
+            ...CC1_FRONTEND,
+            ...CC1_C_INCLUDES,
+            ...CC1_TAIL,
+            '-main-file-name',
+            basename(sourcePath),
+            '-o',
+            objectPath,
+            '-x',
+            'c',
+            sourcePath,
+        ],
         linkArgv: ({ objectPath, wasmPath }) => ['wasm-ld', objectPath, '-o', wasmPath, ...WASM_LD_BASE, ...WASM_LD_C_LIBS],
     },
     cpp: {
@@ -153,8 +184,10 @@ export const BROWSER_BUILD_PRESETS: Record<BrowserBuildPresetName, BrowserBuildP
         linkTool: 'wasm-ld',
         compileArgv: ({ sourcePath, objectPath }) => [
             'clang',
-            ...CC1_COMMON,
-            ...CC1_CPP_EXTRA,
+            ...CC1_FRONTEND,
+            ...CC1_CPP_INCLUDES,
+            ...CC1_TAIL,
+            ...CC1_CPP_EXC,
             '-main-file-name',
             basename(sourcePath),
             '-o',
@@ -171,9 +204,11 @@ export const BROWSER_BUILD_PRESETS: Record<BrowserBuildPresetName, BrowserBuildP
         linkTool: 'wasm-ld',
         compileArgv: ({ sourcePath, objectPath }) => [
             'clang',
-            ...CC1_COMMON,
-            ...CC1_CPP_EXTRA,
+            ...CC1_FRONTEND,
+            ...CC1_CPP_INCLUDES,
             ...CC1_SDL_EXTRA,
+            ...CC1_TAIL,
+            ...CC1_CPP_EXC,
             '-main-file-name',
             basename(sourcePath),
             '-o',
