@@ -35,9 +35,13 @@ defineBuildScript({
         await step('userland', () => {
             const userlandTrash: readonly string[] = [
                 'binaryen/build-wasm', 'binaryen/build-native', 'binaryen/binaryen-*', 'binaryen/version_*',
+                'brotli/brotli-*',
+                'cmake/cmake-*', 'cmake/CMake-*',
                 'cpython/build-wasm', 'cpython/build-native', 'cpython/cpython-*', 'cpython/sysroot-staging', 'cpython/v*',
+                'imgui/imgui-*',
                 'llvm/build-wasm', 'llvm/build-native', 'llvm/llvm-project-*', 'llvm/gh-actions-bin',
-                'raylib/build-wasm', 'raylib/raylib-*', 'raylib/raygui-*', 'raylib/physac-*', 'raylib/rlights-*',
+                'ninja/ninja-*',
+                'raylib/raylib-*', 'raylib/raygui-*', 'raylib/physac-*', 'raylib/rlights-*',
                 'runtime/build',
             ];
             for (const rel of userlandTrash) {
