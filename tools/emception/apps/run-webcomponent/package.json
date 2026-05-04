@@ -5,9 +5,9 @@
   "description": "Minimal Vite + vanilla HTML demo for the <emception-run> custom element from @emception/webcomponent.",
   "type": "module",
   "scripts": {
-    "predev": "node ../../scripts/sync-emception-cdn.mjs demos/emception-run-webcomponent",
+    "predev": "node ../../../../scripts/sync-emception-cdn.mjs tools/emception/apps/run-webcomponent",
     "dev": "vite",
-    "prebuild": "node ../../scripts/sync-emception-cdn.mjs demos/emception-run-webcomponent",
+    "prebuild": "node ../../../../scripts/sync-emception-cdn.mjs tools/emception/apps/run-webcomponent",
     "build": "tsc -b && vite build",
     "preview": "vite preview"
   },
