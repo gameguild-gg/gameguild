@@ -104,6 +104,8 @@ export default function Ide({
   /** Tracks the live SDL3 Emscripten module so its RAF loop can be stopped */
 
   const sdlModuleRef = useRef<{ pauseMainLoop?: () => void } | null>(null);
+  /** Active runtime error listener for canvas modules (removed on teardown) */
+  const runtimeErrorHandlerRef = useRef<((event: ErrorEvent) => void) | null>(null);
 
   // Resolve the active workspace config: prop > fetched bundle > default preset
   const [activePresetId, setActivePresetId] = useState<string>(workspaceConfig?.id ?? DEFAULT_PRESET.id);
@@ -697,6 +699,11 @@ export default function Ide({
     const sdlMod = sdlModuleRef.current;
     if (!sdlMod && !sdlScriptRef.current && sdlBlobUrlsRef.current.length === 0) return false;
 
+    if (runtimeErrorHandlerRef.current) {
+      window.removeEventListener('error', runtimeErrorHandlerRef.current);
+      runtimeErrorHandlerRef.current = null;
+    }
+
     try {
       sdlMod?.pauseMainLoop?.();
     } catch {
@@ -738,7 +745,7 @@ export default function Ide({
     // updates are always picked up even before React re-renders.
     const currentFiles = filesRef.current;
 
-    if (resolvedConfig.run.type === 'sdl3-canvas' && executionPhase === 'running') {
+    if (resolvedConfig.run.type === 'canvas' && executionPhase === 'running') {
       teardownSdlRuntime();
     }
 
@@ -855,8 +862,8 @@ export default function Ide({
         return;
       }
 
-      // ── SDL3 canvas path ────────────────────────────────────────
-      if (runType === 'sdl3-canvas') {
+      // ── Canvas path (SDL3 two-step OR generic emcc single-step) ─
+      if (runType === 'canvas') {
         if (!compileTarget) {
           setExecutionPhase('idle');
           setStatus('No compilable source file found');
@@ -865,20 +872,104 @@ export default function Ide({
         }
         setStatus('Compiling...');
         tty.writeLine(`Compiling ${compileTarget}...`);
-        tty.writeLine('\x1b[36mSDL3 detected \u2014 compiling object...\x1b[0m');
 
         const sourceFsPath = toWorkspaceFsPath(compileTarget);
-        const sdlObjPath = '/tmp/emception-sdl-main.o';
+
+        // Detect compilation path:
+        //   isSDL3   → SDL3 port: two-step clang+wasm-ld via BROWSER_BUILD_PRESETS.sdl
+        //   isRaylib → raylib: two-step clang+wasm-ld via BROWSER_BUILD_PRESETS.raylib
+        //              (raylib is not an emsdk port; compile.tool='clang' is the signal)
+        //   otherwise → generic emcc/em++ single-step (expects JS output)
+        const isSDL3 = resolvedConfig.compile.args.some((a) => a === '-sUSE_SDL=3');
+        const isRaylib = resolvedConfig.compile.tool === 'clang' && runType === 'canvas';
+
+        if (!isSDL3 && !isRaylib) {
+          // ── Generic emcc single-step path (raylib, etc.) ────────
+          tty.writeLine('\x1b[36mCanvas compile...\x1b[0m');
+          const compileArgv = resolveArgs(resolvedConfig.compile.args, sourceFsPath);
+          const canvasCompile = await client.run(compileArgv[0], compileArgv, {
+            cwd: resolvedConfig.compile.cwd ?? '/home/user',
+            onStdout: (t: string) => {
+              tty.writeLine(t);
+            },
+            onStderr: (t: string) => {
+              tty.writeError(t);
+            },
+          });
+          const canvasDuration = ((performance.now() - t0) / 1000).toFixed(2);
+          if (canvasCompile.exitCode !== 0) {
+            setExecutionPhase('idle');
+            setStatus(`Canvas compilation failed (${canvasDuration}s)`);
+            tty.writeLine(`\x1b[31mCanvas compile step failed (exit ${canvasCompile.exitCode})\x1b[0m`);
+            return;
+          }
+          tty.writeLine(`\x1b[32mCompiled in ${canvasDuration}s \u2014 loading...\x1b[0m`);
+
+          const jsOutPath = resolvedConfig.compile.output || '/home/user/main.js';
+          const jsBytes = await client.getFile(jsOutPath);
+          if (!jsBytes) {
+            setExecutionPhase('idle');
+            tty.writeError(`${jsOutPath} not found \u2014 emcc may have failed to produce output`);
+            return;
+          }
+
+          setCanvasIsRunning(true);
+          ensureOpenTab(canvasPath, 'right');
+          setActiveTabId(`tab:${compileTarget}`);
+          await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
+
+          const canvas = canvasRef.current;
+          if (!canvas) {
+            setExecutionPhase('idle');
+            tty.writeError('Canvas element not found \u2014 open the Canvas tab first');
+            return;
+          }
+          canvas.dataset.sdlRunning = 'true';
+          canvas.style.display = 'block';
+          canvas.width = 800;
+          canvas.height = 600;
+
+          // Provide window.Module so emcc SINGLE_FILE output targets our canvas.
+          (window as unknown as Record<string, unknown>)['Module'] = {
+            canvas,
+            print: (s: string) => tty.writeLine(s),
+            printErr: (s: string) => tty.writeError(s),
+          };
+
+          sdlScriptRef.current?.remove();
+          sdlBlobUrlsRef.current.forEach((url) => URL.revokeObjectURL(url));
+          sdlBlobUrlsRef.current = [];
+
+          const jsText = new TextDecoder().decode(jsBytes instanceof Uint8Array ? jsBytes : new Uint8Array(jsBytes as ArrayBuffer));
+          const jsBlob = new Blob([jsText], { type: 'application/javascript' });
+          const jsBlobUrl = URL.createObjectURL(jsBlob);
+          sdlBlobUrlsRef.current = [jsBlobUrl];
+
+          const script = document.createElement('script');
+          script.src = jsBlobUrl;
+          document.head.appendChild(script);
+          sdlScriptRef.current = script;
+          sdlModuleRef.current = null;
+
+          setExecutionPhase('running');
+          setStatus(`Canvas done (${((performance.now() - tTotal) / 1000).toFixed(1)}s) \u2014 running`);
+          tty.writeLine('\x1b[32mCanvas rendering in canvas tab \u2192\x1b[0m');
+          return;
+        }
+
+        // ── Two-step clang+wasm-ld path (SDL3 or raylib) ──────────
+        // Both use sdl3-runtime.mjs for WebGL/emscripten_set_main_loop support.
+        // SDL3 exports SDL_App* callbacks; raylib exports main() and registers
+        // its loop via emscripten_set_main_loop — callMain() handles both.
+        const canvasLabel = isSDL3 ? 'SDL3' : 'raylib';
+        const canvasPreset = isSDL3 ? BROWSER_BUILD_PRESETS.sdl : BROWSER_BUILD_PRESETS.raylib;
+        tty.writeLine(`\x1b[36m${canvasLabel} detected \u2014 compiling object...\x1b[0m`);
+
+        const sdlObjPath = '/tmp/emception-canvas-main.o';
         const wasmPath = resolvedConfig.compile.output || '/home/user/main.wasm';
 
-        // Compile + link via the shared `BROWSER_BUILD_PRESETS.sdl` preset
-        // exposed by `@emception/browser`. This keeps the SDL3 cc1 flag set
-        // and the wasm-ld SDL_App* / GL / al / html5 link line in one place,
-        // shared with any headless `compileAndRun({ preset: 'sdl', ... })`
-        // consumer.
-        const sdlPreset = BROWSER_BUILD_PRESETS.sdl;
         const sdlPaths = { sourcePath: sourceFsPath, objectPath: sdlObjPath, wasmPath };
-        const sdlCompile = await client.run(sdlPreset.compileTool, sdlPreset.compileArgv(sdlPaths), {
+        const sdlCompile = await client.run(canvasPreset.compileTool, canvasPreset.compileArgv(sdlPaths), {
           cwd: resolvedConfig.compile.cwd ?? '/home/user',
           onStdout: (t: string) => {
             console.log(t);
@@ -893,14 +984,14 @@ export default function Ide({
         const sdlDuration = ((performance.now() - t0) / 1000).toFixed(2);
         if (sdlCompile.exitCode !== 0) {
           setExecutionPhase('idle');
-          setStatus(`SDL3 compilation failed (${sdlDuration}s)`);
-          tty.writeLine(`\x1b[31mSDL3 compile step failed (exit ${sdlCompile.exitCode})\x1b[0m`);
+          setStatus(`${canvasLabel} compilation failed (${sdlDuration}s)`);
+          tty.writeLine(`\x1b[31m${canvasLabel} compile step failed (exit ${sdlCompile.exitCode})\x1b[0m`);
           return;
         }
 
-        tty.writeLine('\x1b[36mSDL3 linking (wasm-ld)...\x1b[0m');
+        tty.writeLine(`\x1b[36m${canvasLabel} linking (wasm-ld)...\x1b[0m`);
 
-        const sdlLink = await client.run(sdlPreset.linkTool, sdlPreset.linkArgv(sdlPaths), {
+        const sdlLink = await client.run(canvasPreset.linkTool, canvasPreset.linkArgv(sdlPaths), {
           cwd: resolvedConfig.compile.cwd ?? '/home/user',
           onStdout: (t: string) => {
             console.log(t);
@@ -914,12 +1005,12 @@ export default function Ide({
 
         if (sdlLink.exitCode !== 0) {
           setExecutionPhase('idle');
-          setStatus(`SDL3 compilation failed (${sdlDuration}s)`);
-          tty.writeLine(`\x1b[31mSDL3 link step failed (exit ${sdlLink.exitCode})\x1b[0m`);
+          setStatus(`${canvasLabel} compilation failed (${sdlDuration}s)`);
+          tty.writeLine(`\x1b[31m${canvasLabel} link step failed (exit ${sdlLink.exitCode})\x1b[0m`);
           return;
         }
 
-        tty.writeLine(`\x1b[32mSDL3 compiled in ${sdlDuration}s — loading...\x1b[0m`);
+        tty.writeLine(`\x1b[32m${canvasLabel} compiled in ${sdlDuration}s \u2014 loading...\x1b[0m`);
 
         // Read the compiled WASM binary from the VFS.
         const wasmBytes = await client.getFile(wasmPath);
@@ -929,12 +1020,30 @@ export default function Ide({
           return;
         }
 
-        // Read the pre-built SDL3 JS runtime shell from the VFS
-        const runtimeBytes = await client.getFile('/usr/lib/emscripten/sdl3-runtime.mjs');
-        if (!runtimeBytes) {
-          setExecutionPhase('idle');
-          tty.writeError('sdl3-runtime.mjs not found in VFS — rebuild the CDN bundle');
-          return;
+        // Read the pre-built JS runtime shell.
+        // SDL3: sdl3-runtime.mjs is in the VFS (emscripten-core bundle).
+        // raylib: raylib-runtime.mjs is fetched directly from the CDN since it's
+        // not yet in any VFS bundle — fetch() works because the file is served
+        // as a static asset from public/cdn/.
+        let runtimeBytes: Uint8Array | null = null;
+        if (isRaylib) {
+          const cdnBase = manifestUrl.replace('/manifest.json', '');
+          const runtimeUrl = `${cdnBase}/usr/lib/emscripten/raylib-runtime.mjs`;
+          const resp = await fetch(runtimeUrl);
+          if (!resp.ok) {
+            setExecutionPhase('idle');
+            tty.writeError(`raylib-runtime.mjs not found at ${runtimeUrl} (status ${resp.status}) — rebuild the CDN bundle`);
+            return;
+          }
+          runtimeBytes = new Uint8Array(await resp.arrayBuffer());
+        } else {
+          const raw = await client.getFile('/usr/lib/emscripten/sdl3-runtime.mjs');
+          if (!raw) {
+            setExecutionPhase('idle');
+            tty.writeError('sdl3-runtime.mjs not found in VFS — rebuild the CDN bundle');
+            return;
+          }
+          runtimeBytes = raw instanceof Uint8Array ? raw : new Uint8Array(raw as ArrayBuffer);
         }
 
         // Mark canvas tab as SDL-active (keeps the canvas element visible)
@@ -966,46 +1075,184 @@ export default function Ide({
         sdlBlobUrlsRef.current.forEach((url) => URL.revokeObjectURL(url));
         sdlBlobUrlsRef.current = [];
 
-        // Patch sdl3-runtime.mjs before creating the blob URL.
-        let runtimeText = new TextDecoder().decode(runtimeBytes instanceof Uint8Array ? runtimeBytes : new Uint8Array(runtimeBytes as ArrayBuffer));
-        const emAsmFallback = (varName: string) =>
-          `if(!ASM_CONSTS[${varName}]){var _s=UTF8ToString(${varName});` + `ASM_CONSTS[${varName}]=eval("(function($0,$1,$2,$3,$4,$5,$6,$7,$8,$9){"+_s+"})");}`;
-        runtimeText = runtimeText
-          .replace('var _main,_SDL_free,', 'var _free,_main,_SDL_free,')
-          .replace('_malloc=wasmExports["malloc"]', '_malloc=wasmExports["malloc"]||wasmExports["SDL_malloc"]')
-          .replace(
-            '_SDL_free=Module["_SDL_free"]=wasmExports["SDL_free"]',
-            '_SDL_free=Module["_SDL_free"]=wasmExports["SDL_free"];_free=wasmExports["free"]||_SDL_free',
-          )
-          .replace(
-            'var stringToNewUTF8=str=>{var size=lengthBytesUTF8(str)+1;var ret=_malloc(size)',
-            'var stringToNewUTF8=str=>{var size=lengthBytesUTF8(str)+1;var allocFn=_malloc||_SDL_malloc;var ret=allocFn(size)',
-          );
-        const ORIG_RUNEMASM = 'var runEmAsmFunction=(code,sigPtr,argbuf)=>{var args=readEmAsmArgs(sigPtr,argbuf);return ASM_CONSTS[code](...args)}';
-        const ORIG_RUNMTEMASM =
-          'var runMainThreadEmAsm=(emAsmAddr,sigPtr,argbuf,sync)=>{var args=readEmAsmArgs(sigPtr,argbuf);return ASM_CONSTS[emAsmAddr](...args)}';
-        if (runtimeText.includes(ORIG_RUNEMASM)) {
-          runtimeText = runtimeText.replace(
-            ORIG_RUNEMASM,
-            `var runEmAsmFunction=(code,sigPtr,argbuf)=>{var args=readEmAsmArgs(sigPtr,argbuf);${emAsmFallback('code')}return ASM_CONSTS[code](...args)}`,
-          );
-        } else {
-          tty.writeError('sdl3-runtime patch: runEmAsmFunction not found — EM_ASM may fail');
-        }
-        if (runtimeText.includes(ORIG_RUNMTEMASM)) {
-          runtimeText = runtimeText.replace(
-            ORIG_RUNMTEMASM,
-            `var runMainThreadEmAsm=(emAsmAddr,sigPtr,argbuf,sync)=>{var args=readEmAsmArgs(sigPtr,argbuf);${emAsmFallback('emAsmAddr')}return ASM_CONSTS[emAsmAddr](...args)}`,
-          );
-        }
+        // Patch the runtime JS before creating the blob URL.
+        // SDL3 and raylib runtimes have different formats (minified vs verbose),
+        // so patches are applied with format-specific patterns.
+        let runtimeText = new TextDecoder().decode(runtimeBytes);
 
-        // Patch: Scope SDL3's keyboard event handlers to the canvas element.
-        const ORIG_KEY_HANDLER = 'var keyEventHandlerFunc=e=>{var keyEventData=JSEvents.keyEvent';
-        const PATCHED_KEY_HANDLER = 'var keyEventHandlerFunc=e=>{if(Module["canvas"]&&e.target!==Module["canvas"])return;var keyEventData=JSEvents.keyEvent';
-        if (runtimeText.includes(ORIG_KEY_HANDLER)) {
-          runtimeText = runtimeText.replace(ORIG_KEY_HANDLER, PATCHED_KEY_HANDLER);
+        if (isSDL3) {
+          // ── SDL3 patches (sdl3-runtime.mjs, minified format) ───────
+          const emAsmFallback = (varName: string) =>
+            `if(!ASM_CONSTS[${varName}]){var _s=UTF8ToString(${varName});` +
+            `ASM_CONSTS[${varName}]=eval("(function($0,$1,$2,$3,$4,$5,$6,$7,$8,$9){"+_s+"})");}`;
+          runtimeText = runtimeText
+            .replace('var _main,_SDL_free,', 'var _free,_main,_SDL_free,')
+            .replace('_malloc=wasmExports["malloc"]', '_malloc=wasmExports["malloc"]||wasmExports["SDL_malloc"]')
+            .replace(
+              '_SDL_free=Module["_SDL_free"]=wasmExports["SDL_free"]',
+              '_SDL_free=Module["_SDL_free"]=wasmExports["SDL_free"];_free=wasmExports["free"]||_SDL_free',
+            )
+            .replace(
+              'var stringToNewUTF8=str=>{var size=lengthBytesUTF8(str)+1;var ret=_malloc(size)',
+              'var stringToNewUTF8=str=>{var size=lengthBytesUTF8(str)+1;var allocFn=_malloc||_SDL_malloc;var ret=allocFn(size)',
+            );
+          const ORIG_RUNEMASM = 'var runEmAsmFunction=(code,sigPtr,argbuf)=>{var args=readEmAsmArgs(sigPtr,argbuf);return ASM_CONSTS[code](...args)}';
+          const ORIG_RUNMTEMASM =
+            'var runMainThreadEmAsm=(emAsmAddr,sigPtr,argbuf,sync)=>{var args=readEmAsmArgs(sigPtr,argbuf);return ASM_CONSTS[emAsmAddr](...args)}';
+          if (runtimeText.includes(ORIG_RUNEMASM)) {
+            runtimeText = runtimeText.replace(
+              ORIG_RUNEMASM,
+              `var runEmAsmFunction=(code,sigPtr,argbuf)=>{var args=readEmAsmArgs(sigPtr,argbuf);${emAsmFallback('code')}return ASM_CONSTS[code](...args)}`,
+            );
+          } else {
+            tty.writeError('sdl3-runtime patch: runEmAsmFunction not found — EM_ASM may fail');
+          }
+          if (runtimeText.includes(ORIG_RUNMTEMASM)) {
+            runtimeText = runtimeText.replace(
+              ORIG_RUNMTEMASM,
+              `var runMainThreadEmAsm=(emAsmAddr,sigPtr,argbuf,sync)=>{var args=readEmAsmArgs(sigPtr,argbuf);${emAsmFallback('emAsmAddr')}return ASM_CONSTS[emAsmAddr](...args)}`,
+            );
+          }
+
+          // Patch: Scope SDL3's keyboard event handlers to the canvas element.
+          const ORIG_KEY_HANDLER = 'var keyEventHandlerFunc=e=>{var keyEventData=JSEvents.keyEvent';
+          const PATCHED_KEY_HANDLER = 'var keyEventHandlerFunc=e=>{if(Module["canvas"]&&e.target!==Module["canvas"])return;var keyEventData=JSEvents.keyEvent';
+          if (runtimeText.includes(ORIG_KEY_HANDLER)) {
+            runtimeText = runtimeText.replace(ORIG_KEY_HANDLER, PATCHED_KEY_HANDLER);
+          } else {
+            tty.writeError('sdl3-runtime patch: keyEventHandlerFunc not found — keyboard may be captured globally');
+          }
+
+          // Patch: Catch WebAssembly.RuntimeError inside callUserCallback.
+          const ORIG_CALL_USER_CB = 'var callUserCallback=func=>{if(ABORT){return}try{return func()}catch(e){handleException(e)}finally{maybeExit()}}';
+          const PATCHED_CALL_USER_CB =
+            'var callUserCallback=func=>{if(ABORT){return}try{return func()}catch(e){' +
+            'if(e instanceof WebAssembly.RuntimeError){ABORT=1;try{Module.pauseMainLoop?.();}catch(_){}return;}' +
+            'handleException(e)}finally{maybeExit()}}';
+          if (runtimeText.includes(ORIG_CALL_USER_CB)) {
+            runtimeText = runtimeText.replace(ORIG_CALL_USER_CB, PATCHED_CALL_USER_CB);
+          } else {
+            tty.writeError('sdl3-runtime patch: callUserCallback not found — WASM traps may crash the tab');
+          }
+
+          // Patch: Also intercept RuntimeError in handleException itself.
+          const ORIG_HANDLE_EX = 'var handleException=e=>{if(e instanceof ExitStatus||e=="unwind"){return EXITSTATUS}quit_(1,e)}';
+          const PATCHED_HANDLE_EX =
+            'var handleException=e=>{if(e instanceof ExitStatus||e=="unwind"){return EXITSTATUS}' +
+            'if(e instanceof WebAssembly.RuntimeError){ABORT=1;try{Module.pauseMainLoop?.();}catch(_){}return EXITSTATUS}' +
+            'quit_(1,e)}';
+          if (runtimeText.includes(ORIG_HANDLE_EX)) {
+            runtimeText = runtimeText.replace(ORIG_HANDLE_EX, PATCHED_HANDLE_EX);
+          } else {
+            tty.writeError('sdl3-runtime patch: handleException not found — WASM traps may crash the tab');
+          }
         } else {
-          tty.writeError('sdl3-runtime patch: keyEventHandlerFunc not found — keyboard may be captured globally');
+          // ── Raylib patches (raylib-runtime.mjs, verbose format) ────
+          // raylib-runtime.mjs is generated from emcc + libraylib.a so it has
+          // proper malloc/free and GL bindings — no SDL-specific fixups needed.
+          // We only patch callUserCallback and handleException to contain any
+          // WebAssembly.RuntimeError traps and prevent "Aw, Snap!" tab crashes.
+
+          // Patch callUserCallback: intercept RuntimeError in the catch block.
+          // raylib-runtime.mjs pattern is multi-line (non-minified):
+          //   } catch (e) {
+          //     handleException(e);
+          //   } finally {
+          const ORIG_RAYLIB_CATCH = '      } catch (e) {\n        handleException(e);\n      } finally {\n        maybeExit();\n      }\n    };\n';
+          const PATCHED_RAYLIB_CATCH =
+            '      } catch (e) {\n        ' +
+            'if(e instanceof WebAssembly.RuntimeError){ABORT=1;try{Module.pauseMainLoop?.();}catch(_){}return;}' +
+            '\n        handleException(e);\n      } finally {\n        maybeExit();\n      }\n    };\n';
+          if (runtimeText.includes(ORIG_RAYLIB_CATCH)) {
+            runtimeText = runtimeText.replace(ORIG_RAYLIB_CATCH, PATCHED_RAYLIB_CATCH);
+          } else {
+            tty.writeError('raylib-runtime patch: callUserCallback catch block not found — WASM traps may crash the tab');
+          }
+
+          // Patch handleException: intercept RuntimeError before quit_().
+          const ORIG_RAYLIB_HANDLE_EX = '      quit_(1, e);\n    };';
+          const PATCHED_RAYLIB_HANDLE_EX =
+            '      if(e instanceof WebAssembly.RuntimeError){ABORT=1;try{Module.pauseMainLoop?.();}catch(_){}return EXITSTATUS}\n' +
+            '      quit_(1, e);\n    };';
+          if (runtimeText.includes(ORIG_RAYLIB_HANDLE_EX)) {
+            runtimeText = runtimeText.replace(ORIG_RAYLIB_HANDLE_EX, PATCHED_RAYLIB_HANDLE_EX);
+          } else {
+            tty.writeError('raylib-runtime patch: handleException quit_ call not found — WASM traps may crash the tab');
+          }
+
+          // Patch wasmImports: add emscripten_webgl_* context management functions.
+          // raylib-runtime.mjs was built from a stub that doesn't call InitWindow,
+          // so emcc did not include these functions in wasmImports. The user WASM
+          // (libraylib.a with PLATFORM=Web) imports them via WASM env to create the
+          // WebGL context. Wire them to the GL object already in the runtime scope.
+          const RAYLIB_WIMPORTS_TAIL = '  glfwWindowHint: _glfwWindowHint\n};';
+          const RAYLIB_WIMPORTS_PATCHED =
+            '  glfwWindowHint: _glfwWindowHint,\n' +
+            '  emscripten_webgl_init_context_attributes: (_p) => 0,\n' +
+            '  emscripten_webgl_create_context: (_target, _attrs) => {\n' +
+            '    var canvas = Module["canvas"];\n' +
+            '    if (!canvas) return 0;\n' +
+            '    return GL.createContext(canvas, {alpha:false,antialias:false,majorVersion:1}) || 0;\n' +
+            '  },\n' +
+            '  emscripten_webgl_make_context_current: (h) => GL.makeContextCurrent(h) ? 0 : -5\n' +
+            '};';
+          if (runtimeText.includes(RAYLIB_WIMPORTS_TAIL)) {
+            runtimeText = runtimeText.replace(RAYLIB_WIMPORTS_TAIL, RAYLIB_WIMPORTS_PATCHED);
+          } else {
+            tty.writeError('raylib-runtime patch: wasmImports end not found — WebGL context will not be created');
+          }
+
+          // Patch GLFW stubs: replace abort-stubs with real GL context management.
+          // libraylib.a (non-PLATFORM_WEB build) uses GLFW for windowing. The runtime
+          // was built from a stub that never calls InitWindow, so all GLFW symbols are
+          // abort-stubs. We provide minimal working implementations so that
+          // InitWindow → glfwCreateWindow sets up GLctx and the draw loop runs.
+
+          // glfwInit: return GLFW_TRUE (1) so InitWindow proceeds.
+          const ORIG_GLFW_INIT =
+            '  function _glfwInit(...args\n  ) {\n  abort(\'missing function: glfwInit\');\n  }\n  _glfwInit.stub = true;';
+          const PATCHED_GLFW_INIT = '  function _glfwInit() { return 1; }';
+          if (runtimeText.includes(ORIG_GLFW_INIT)) {
+            runtimeText = runtimeText.replace(ORIG_GLFW_INIT, PATCHED_GLFW_INIT);
+          } else {
+            tty.writeError('raylib-runtime patch: _glfwInit stub not found — InitWindow may fail');
+          }
+
+          // glfwCreateWindow: create WebGL1 context on the canvas, return GL handle.
+          const ORIG_GLFW_CREATE =
+            '  function _glfwCreateWindow(...args\n  ) {\n  abort(\'missing function: glfwCreateWindow\');\n  }\n  _glfwCreateWindow.stub = true;';
+          const PATCHED_GLFW_CREATE =
+            '  function _glfwCreateWindow(width, height, title, monitor, share) {\n' +
+            '    var canvas = Module[\'canvas\'];\n' +
+            '    if (!canvas) return 0;\n' +
+            '    return GL.createContext(canvas, {antialias: false, alpha: false}) || 0;\n' +
+            '  }';
+          if (runtimeText.includes(ORIG_GLFW_CREATE)) {
+            runtimeText = runtimeText.replace(ORIG_GLFW_CREATE, PATCHED_GLFW_CREATE);
+          } else {
+            tty.writeError('raylib-runtime patch: _glfwCreateWindow stub not found — GL context will not be created');
+          }
+
+          // glfwMakeContextCurrent: delegate to GL.makeContextCurrent to set GLctx.
+          const ORIG_GLFW_MCC =
+            '  function _glfwMakeContextCurrent(...args\n  ) {\n  abort(\'missing function: glfwMakeContextCurrent\');\n  }\n  _glfwMakeContextCurrent.stub = true;';
+          const PATCHED_GLFW_MCC =
+            '  function _glfwMakeContextCurrent(handle) { GL.makeContextCurrent(handle); }';
+          if (runtimeText.includes(ORIG_GLFW_MCC)) {
+            runtimeText = runtimeText.replace(ORIG_GLFW_MCC, PATCHED_GLFW_MCC);
+          } else {
+            tty.writeError('raylib-runtime patch: _glfwMakeContextCurrent stub not found — GLctx will be undefined');
+          }
+
+          // glfwGetTime: return wall-clock seconds so raylib can compute delta time.
+          const ORIG_GLFW_TIME =
+            '  function _glfwGetTime(...args\n  ) {\n  abort(\'missing function: glfwGetTime\');\n  }\n  _glfwGetTime.stub = true;';
+          const PATCHED_GLFW_TIME = '  function _glfwGetTime() { return performance.now() / 1000.0; }';
+          if (runtimeText.includes(ORIG_GLFW_TIME)) {
+            runtimeText = runtimeText.replace(ORIG_GLFW_TIME, PATCHED_GLFW_TIME);
+          } else {
+            tty.writeError('raylib-runtime patch: _glfwGetTime stub not found — delta time will be 0');
+          }
         }
 
         // Create a blob URL for the ES6 runtime module so we can dynamically import it
@@ -1025,6 +1272,7 @@ export default function Ide({
 
         let sdlLoadOk = true;
         let sdlCallbackFns: { init?: (appstate: number, argc: number, argv: number) => number; iterate?: (appstate: number) => number } | null = null;
+        const missingRaylibImports = new Set<string>();
         const moduleTimeout = new Promise<never>((_, reject) => setTimeout(() => reject(new Error('SDL3 module load timeout (30s)')), 30_000));
         const sdlMod = await Promise.race([
           createSDL3Module({
@@ -1032,12 +1280,89 @@ export default function Ide({
             keyboardListeningElement: canvas,
             wasmBinary: wasmBytes,
             locateFile: (filename: string) => filename,
+            // For raylib: prevent the runtime from calling main() internally
+            // (via its own run() → callMain() path). Without this, main() fires
+            // twice — once from the runtime and once from our explicit entry
+            // invocation below — causing InitWindow + emscripten_set_main_loop
+            // to execute twice, registering duplicate RAF loops → crash.
+            // SDL3 is unaffected because its _main is a noop proxy.
+            noInitialRun: isRaylib,
+            // For raylib: prevent exitRuntime() from being called after callMain()
+            // returns. When emscripten_set_main_loop throws ExitStatus to unwind
+            // the C stack, callMain() catches it and returns 0. The runtime then
+            // calls exitRuntime() which sets runtimeInitialized=false, causing
+            // callUserCallback to skip update_draw_frame() on every RAF tick.
+            // noExitRuntime=true keeps runtimeInitialized=true so the RAF loop runs.
+            noExitRuntime: isRaylib,
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             instantiateWasm(info: any, receiveInstance: (inst: WebAssembly.Instance) => void) {
-              const env = {
-                ...info.env,
-                emscripten_notify_memory_growth: () => { },
+              // For raylib: replace Emscripten abort-stubs with no-ops.
+              // raylib-runtime.mjs marks unresolved symbols (GLFW etc.) with
+              // `.stub = true` — they call abort() when invoked. The user WASM
+              // (linked with --allow-undefined) may call these; we silence them
+              // so the raylib web backend can handle input/window internally.
+              const baseEnv: Record<string, unknown> = isRaylib
+                ? Object.fromEntries(
+                    Object.entries(info.env as Record<string, unknown>).map(([k, v]) => [
+                      k,
+                      typeof v === 'function' && (v as any).stub ? () => 0 : v,
+                    ]),
+                  )
+                : { ...info.env };
+              const envBase = {
+                ...baseEnv,
+                // Preserve runtime-provided memory growth handler when present.
+                // Overriding this with a no-op can leave stale HEAP views and
+                // lead to out-of-bounds traps after grow_memory.
+                emscripten_notify_memory_growth: info?.env?.emscripten_notify_memory_growth ?? (() => { }),
+                // Some builds import emscripten_asm_const_* helpers directly.
+                // Delegate to available runtime helpers when possible.
+                emscripten_asm_const_int: info?.env?.emscripten_asm_const_int ?? (() => 0),
+                emscripten_asm_const_double:
+                  info?.env?.emscripten_asm_const_double ??
+                  ((...args: unknown[]) => {
+                    const fallback = info?.env?.emscripten_asm_const_int;
+                    return typeof fallback === 'function' ? Number(fallback(...args)) : 0;
+                  }),
+                // Some raylib/emscripten link variants import env.exit/_exit.
+                // Keep these as benign stubs so instantiation succeeds and the
+                // app can drive its main loop normally in the browser runtime.
+                exit: info?.env?.exit ?? (() => { }),
+                _exit: info?.env?._exit ?? (() => { }),
               };
+              const env = new Proxy(envBase, {
+                get(target, prop, receiver) {
+                  const value = Reflect.get(target, prop, receiver);
+                  if (value !== undefined) return value;
+                  if (typeof prop === 'string') {
+                    // Allow benign no-op for selected optional symbols often
+                    // imported by browser GL/runtime variants.
+                    if (
+                      prop === 'exit' ||
+                      prop === '_exit' ||
+                      prop.startsWith('gl') ||
+                      prop.startsWith('emscripten_gl') ||
+                      prop.startsWith('emscripten_asm_const_')
+                    ) {
+                      return () => 0;
+                    }
+                    // Raylib + emscripten JS libs can import additional helper
+                    // symbols (e.g. SetCanvasIdJs). Keep raylib permissive here
+                    // to avoid hard load failures; strict mode remains for SDL3.
+                    if (canvasLabel === 'raylib') {
+                      if (!missingRaylibImports.has(prop)) {
+                        missingRaylibImports.add(prop);
+                        tty.writeLine(`\x1b[33mraylib missing env import shimmed: ${prop}\x1b[0m`);
+                      }
+                      return () => 0;
+                    }
+                    // Fail fast for unknown imports to avoid masking linker
+                    // mismatches and causing unstable runtime behavior.
+                    throw new Error(`Missing WASM env import: ${prop}`);
+                  }
+                  throw new Error(`Missing WASM env import: ${String(prop)}`);
+                },
+              });
               const imports = { ...info, env, wasi_snapshot_preview1: wasiStubs };
               tty.writeLine('\x1b[90mSDL3: instantiating WASM…\x1b[0m');
               WebAssembly.instantiate(new Uint8Array(wasmBytes as unknown as ArrayBuffer), imports)
@@ -1080,19 +1405,32 @@ export default function Ide({
                   receiveInstance(patchedInstance);
                 })
                 .catch((err: unknown) => {
-                  tty.writeError(`SDL3 WASM instantiation failed: ${err}`);
-                  setStatus('SDL3 load failed');
+                  tty.writeError(`${canvasLabel} WASM instantiation failed: ${err}`);
+                  setStatus(`${canvasLabel} load failed`);
                 });
               return {};
             },
             print: (line: string) => tty.writeLine(line),
             printErr: (line: string) => tty.writeError(line),
+            // Capture abort() calls (emscripten fatal errors) before they crash the tab.
+            onAbort: (msg: unknown) => {
+              tty.writeError(`\x1b[31m[${canvasLabel}] abort: ${msg}\x1b[0m`);
+            },
+            // Override quit_ so RuntimeErrors from the RAF loop are logged
+            // instead of propagating uncaught → "Aw, Snap!" browser crash.
+            quit: (_status: number, toThrow: unknown) => {
+              const msg = toThrow instanceof Error ? toThrow.message : String(toThrow);
+              tty.writeError(`\x1b[31m[${canvasLabel}] runtime error: ${msg}\x1b[0m`);
+              setStatus(`${canvasLabel} crashed`);
+              setCanvasIsRunning(false);
+              // Do not re-throw: prevents "Aw, Snap!" so the error is visible.
+            },
           }),
           moduleTimeout,
         ]).catch((e: unknown) => {
           sdlLoadOk = false;
-          tty.writeError(`SDL3 module error: ${e}`);
-          setStatus('SDL3 load failed');
+          tty.writeError(`${canvasLabel} module error: ${e}`);
+          setStatus(`${canvasLabel} load failed`);
           return null;
         });
 
@@ -1159,16 +1497,33 @@ export default function Ide({
           const msg = e instanceof Error ? e.message : String(e);
           // Emscripten may throw "unwind" to enter async main loop; ignore that.
           if (msg !== 'unwind') {
-            tty.writeError(`SDL3 entry invocation error: ${msg}`);
+            tty.writeError(`${canvasLabel} entry invocation error: ${msg}`);
           }
         }
 
         sdlModuleRef.current = sdlMod as { pauseMainLoop?: () => void } | null;
+        if (runtimeErrorHandlerRef.current) {
+          window.removeEventListener('error', runtimeErrorHandlerRef.current);
+          runtimeErrorHandlerRef.current = null;
+        }
+        const runtimeErrHandler = (event: ErrorEvent) => {
+          const msg = String(event.error?.message ?? event.message ?? '');
+          if (!msg.includes('memory access out of bounds')) return;
+          tty.writeError(`${canvasLabel} runtime trapped (memory out of bounds); stopping main loop.`);
+          try {
+            sdlModuleRef.current?.pauseMainLoop?.();
+          } catch {
+            /* ignore */
+          }
+          event.preventDefault?.();
+        };
+        runtimeErrorHandlerRef.current = runtimeErrHandler;
+        window.addEventListener('error', runtimeErrHandler);
         setExecutionPhase('running');
-        setStatus(`SDL3 done (${((performance.now() - tTotal) / 1000).toFixed(1)}s) — running`);
-        tty.writeLine('\x1b[32mSDL3 rendering in canvas tab →\x1b[0m');
+        setStatus(`${canvasLabel} done (${((performance.now() - tTotal) / 1000).toFixed(1)}s) — running`);
+        tty.writeLine(`\x1b[32m${canvasLabel} rendering in canvas tab →\x1b[0m`);
         return;
-      }
+      } // end canvas
 
       // ── Standard WASI terminal path ─────────────────────────────
       if (!compileTarget) {
@@ -1539,7 +1894,7 @@ export default function Ide({
     transition: 'background 0.15s',
   };
   const resizerVStyle: React.CSSProperties = { ...resizerStyle, width: '100%', height: 4, cursor: 'row-resize' };
-  const canRecompileWhileRunning = executionPhase === 'running' && resolvedConfig.run.type === 'sdl3-canvas';
+  const canRecompileWhileRunning = executionPhase === 'running' && resolvedConfig.run.type === 'canvas';
   const canCompile = isReady && activeFile?.type === 'text' && (executionPhase === 'idle' || canRecompileWhileRunning);
   const showCompileButton = executionPhase !== 'running' || canRecompileWhileRunning;
 

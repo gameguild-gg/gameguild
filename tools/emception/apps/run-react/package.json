@@ -5,9 +5,9 @@
   "description": "Minimal Vite + React 19 demo for the <EmceptionRun /> declarative wrapper from @emception/react.",
   "type": "module",
   "scripts": {
-    "predev": "node ../../scripts/sync-emception-cdn.mjs demos/emception-run-react",
+    "predev": "node ../../../../scripts/sync-emception-cdn.mjs tools/emception/apps/run-react",
     "dev": "vite",
-    "prebuild": "node ../../scripts/sync-emception-cdn.mjs demos/emception-run-react",
+    "prebuild": "node ../../../../scripts/sync-emception-cdn.mjs tools/emception/apps/run-react",
     "build": "tsc -b && vite build",
     "preview": "vite preview"
   },

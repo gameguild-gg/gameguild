@@ -8,11 +8,11 @@
   "private": true,
   "workspaces": [
     "apps/*",
-    "demos/*",
     "packages/*",
     "packages/config/*",
     "tools/*",
-    "tools/emception/packages/*"
+    "tools/emception/packages/*",
+    "tools/emception/apps/*"
   ],
   "scripts": {
     "dev": "npm-run-all --parallel dev:api dev:web",

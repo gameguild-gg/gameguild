@@ -13,7 +13,14 @@ const wasmerSdkCandidates = [
 ];
 
 const requestedDemoDirs = process.argv.slice(2);
-const demoDirs = requestedDemoDirs.length ? requestedDemoDirs : ['demos/emception-next', 'demos/emception-react'];
+const demoDirs = requestedDemoDirs.length
+    ? requestedDemoDirs
+    : [
+        'tools/emception/apps/ide-next',
+        'tools/emception/apps/ide-react',
+        'tools/emception/apps/run-react',
+        'tools/emception/apps/run-webcomponent',
+    ];
 
 async function sleep(ms) {
     await new Promise((resolve) => setTimeout(resolve, ms));

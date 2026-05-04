@@ -356,7 +356,7 @@ jobs:
           retention-days: 30
 
   build-emception-demo:
-    name: Build demos/emception-react
+    name: Build tools/emception/apps/ide-react
     runs-on: ubuntu-latest
     needs:
       - build-emception-toolchain
@@ -392,26 +392,26 @@ jobs:
         run: cd tools/emception && npm run build:lib
 
       - name: Install demo dependencies
-        run: cd demos/emception-react && npm install
+        run: cd tools/emception/apps/ide-react && npm install
 
       - name: Build demo
-        run: cd demos/emception-react && npm run build
+        run: cd tools/emception/apps/ide-react && npm run build
         env:
           VITE_BASE: /gameguild/
 
       - name: Prepare dist for artifact upload
         run: |
           # Remove .gitignore files so upload-artifact includes all CDN files
-          find demos/emception-react/dist -name '.gitignore' -delete
+          find tools/emception/apps/ide-react/dist -name '.gitignore' -delete
           echo "Demo dist contents:"
-          du -sh demos/emception-react/dist/
-          du -sh demos/emception-react/dist/cdn/ 2>/dev/null || echo "No cdn/ in dist"
+          du -sh tools/emception/apps/ide-react/dist/
+          du -sh tools/emception/apps/ide-react/dist/cdn/ 2>/dev/null || echo "No cdn/ in dist"
 
       - name: Upload demo dist artifact
         uses: actions/upload-artifact@v4
         with:
           name: emception-demo-dist
-          path: demos/emception-react/dist
+          path: tools/emception/apps/ide-react/dist
           include-hidden-files: true
           retention-days: 30
 
