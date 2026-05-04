@@ -12,6 +12,7 @@
  *   - sysroot/usr/lib/libphysac.a
  *   - sysroot/usr/lib/librlights.a
  *   - sysroot/usr/include/raylib/{raylib,raymath,rlgl,raygui,physac,rlights}.h
+ *   - sysroot/usr/lib/emscripten/raylib-runtime.mjs  (MODULARIZE=1 JS factory)
  *
  * Versions: latest GitHub release tags (override via *_VERSION env vars).
  */
@@ -20,7 +21,7 @@ import fs from 'fs';
 import os from 'os';
 import path from 'path';
 import shell from 'shelljs';
-import { setupEmsdk } from './lib/emsdk.ts';
+import { getEmsdkDir, setupEmsdk } from './lib/emsdk.ts';
 import { enableBuildKeepalive } from './lib/keepalive.ts';
 
 enableBuildKeepalive('build-raylib');
@@ -30,6 +31,9 @@ shell.config.fatal = true;
 
 const EMSDK_VERSION = process.env.EMSDK_VERSION || 'latest';
 setupEmsdk(EMSDK_VERSION);
+
+const EMSDK_DIR = getEmsdkDir();
+const EMCC = path.join(EMSDK_DIR, 'upstream', 'emscripten', 'emcc');
 
 const USERLAND_DIR = path.join(ROOT, 'userland', 'raylib');
 const BUILD_DIR = path.join(ROOT, 'build', 'raylib');
@@ -172,6 +176,86 @@ for (const h of ['raylib.h', 'raymath.h', 'rlgl.h', 'rcamera.h', 'rgestures.h'])
     if (fs.existsSync(hp)) shell.cp('-f', hp, path.join(RAYLIB_INC, '/'));
 }
 console.log('Deployed raylib headers to sysroot/usr/include/raylib/');
+
+// ── Step 1b: generate raylib-runtime.mjs ─────────────────────────────────────
+//
+// Compile a minimal stub with emcc -sMODULARIZE=1 linking libraylib.a.
+// Because libraylib.a references _emscripten_gl*, malloc/free, and
+// emscripten_set_main_loop, emcc emits a full MODULARIZE JS factory that
+// includes all GL infrastructure (GL.createContext, GL.makeContextCurrent,
+// GLctx, RAF MainLoop) that the IDE needs to run user WASM at runtime.
+//
+// The stub itself does nothing at runtime — the IDE patches it in-browser:
+//   - GLFW stubs → real GL.createContext / GL.makeContextCurrent calls
+//   - wasmImports extended with emscripten_webgl_* entries
+
+const EMSCRIPTEN_DIR = path.join(ROOT, 'sysroot', 'usr', 'lib', 'emscripten');
+shell.mkdir('-p', EMSCRIPTEN_DIR);
+
+const RAYLIB_STUB_C = path.join(os.tmpdir(), 'raylib_runtime_stub.c');
+const TMP_RAYLIB_JS = path.join(os.tmpdir(), 'raylib-runtime.js');
+const TMP_RAYLIB_WASM = path.join(os.tmpdir(), 'raylib-runtime.wasm');
+
+fs.writeFileSync(
+    RAYLIB_STUB_C,
+    `#include <raylib.h>
+#include <emscripten.h>
+#include <stdlib.h>
+
+static void loop_iter(void) {}
+
+/* Force malloc/free into exports. */
+__attribute__((used)) static void _force_alloc(void) {
+    void *p = malloc(64 * 1024);
+    if (p) free(p);
+}
+
+/* Force emscripten_set_main_loop into wasmImports. */
+__attribute__((used)) static void _force_loop(void) {
+    emscripten_set_main_loop(loop_iter, 0, 0);
+}
+
+/* Force emscripten_notify_memory_growth into wasmImports. */
+__attribute__((used)) static void _force_mem_growth(void) {
+    emscripten_notify_memory_growth(0);
+}
+
+int main(void) { return 0; }
+`,
+);
+
+console.log('Generating raylib-runtime.mjs (MODULARIZE JS factory)...');
+const runtimeResult = shell.exec(
+    [
+        `"${EMCC}"`,
+        `"${RAYLIB_STUB_C}"`,
+        `"${path.join(SYSROOT_LIB, 'libraylib.a')}"`,
+        `-I"${RAYLIB_INC}"`,
+        '-sENVIRONMENT=web',
+        '-sALLOW_MEMORY_GROWTH=1',
+        '-sMODULARIZE=1',
+        '-sEXPORT_NAME=createRaylibModule',
+        '-sEXPORT_ES6=1',
+        '-sNO_EXIT_RUNTIME=1',
+        '-sEXPORTED_FUNCTIONS=_main,_malloc,_free',
+        '-sEXPORTED_RUNTIME_METHODS=ccall,cwrap,getValue,setValue,UTF8ToString,stringToUTF8,lengthBytesUTF8',
+        '-O2',
+        `-o "${TMP_RAYLIB_JS}"`,
+    ].join(' '),
+    { silent: false },
+);
+
+if (runtimeResult.code !== 0) {
+    console.error('emcc raylib-runtime.mjs generation failed');
+    process.exit(1);
+}
+
+const OUTPUT_MJS = path.join(EMSCRIPTEN_DIR, 'raylib-runtime.mjs');
+fs.copyFileSync(TMP_RAYLIB_JS, OUTPUT_MJS);
+const mjsSize = (fs.statSync(OUTPUT_MJS).size / 1024).toFixed(1);
+console.log(`Saved raylib-runtime.mjs (${mjsSize} KB) → ${path.relative(ROOT, OUTPUT_MJS)}`);
+
+if (fs.existsSync(TMP_RAYLIB_WASM)) fs.rmSync(TMP_RAYLIB_WASM);
 
 // ─────────────── 2. companion libs ───────────────
 

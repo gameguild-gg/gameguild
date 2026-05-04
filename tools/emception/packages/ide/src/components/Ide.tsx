@@ -1020,31 +1020,22 @@ export default function Ide({
           return;
         }
 
-        // Read the pre-built JS runtime shell.
-        // SDL3: sdl3-runtime.mjs is in the VFS (emscripten-core bundle).
-        // raylib: raylib-runtime.mjs is fetched directly from the CDN since it's
-        // not yet in any VFS bundle — fetch() works because the file is served
-        // as a static asset from public/cdn/.
+        // Read the pre-built JS runtime shell from the VFS (emscripten-core bundle).
+        // Both sdl3-runtime.mjs and raylib-runtime.mjs live at
+        // /usr/lib/emscripten/ in the sysroot, packed into emscripten-core.tar.br
+        // by generate-bundles.ts. The VFS manifest maps them to that bundle.
         let runtimeBytes: Uint8Array | null = null;
-        if (isRaylib) {
-          const cdnBase = manifestUrl.replace('/manifest.json', '');
-          const runtimeUrl = `${cdnBase}/usr/lib/emscripten/raylib-runtime.mjs`;
-          const resp = await fetch(runtimeUrl);
-          if (!resp.ok) {
-            setExecutionPhase('idle');
-            tty.writeError(`raylib-runtime.mjs not found at ${runtimeUrl} (status ${resp.status}) — rebuild the CDN bundle`);
-            return;
-          }
-          runtimeBytes = new Uint8Array(await resp.arrayBuffer());
-        } else {
-          const raw = await client.getFile('/usr/lib/emscripten/sdl3-runtime.mjs');
-          if (!raw) {
-            setExecutionPhase('idle');
-            tty.writeError('sdl3-runtime.mjs not found in VFS — rebuild the CDN bundle');
-            return;
-          }
-          runtimeBytes = raw instanceof Uint8Array ? raw : new Uint8Array(raw as ArrayBuffer);
+        const runtimePath = isRaylib
+          ? '/usr/lib/emscripten/raylib-runtime.mjs'
+          : '/usr/lib/emscripten/sdl3-runtime.mjs';
+        const runtimeLabel = isRaylib ? 'raylib-runtime.mjs' : 'sdl3-runtime.mjs';
+        const raw = await client.getFile(runtimePath);
+        if (!raw) {
+          setExecutionPhase('idle');
+          tty.writeError(`${runtimeLabel} not found in VFS — rebuild the CDN bundle`);
+          return;
         }
+        runtimeBytes = raw instanceof Uint8Array ? raw : new Uint8Array(raw as ArrayBuffer);
 
         // Mark canvas tab as SDL-active (keeps the canvas element visible)
         setCanvasIsRunning(true);
