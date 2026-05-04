@@ -58,3 +58,5 @@ nohup.out
 *.swp
 *.swo
 .vercel/
+
+logs
