@@ -1139,111 +1139,34 @@ export default function Ide({
           }
         } else {
           // ── Raylib patches (raylib-runtime.mjs, verbose format) ────
-          // raylib-runtime.mjs is generated from emcc + libraylib.a so it has
-          // proper malloc/free and GL bindings — no SDL-specific fixups needed.
-          // We only patch callUserCallback and handleException to contain any
-          // WebAssembly.RuntimeError traps and prevent "Aw, Snap!" tab crashes.
+          // raylib-runtime.mjs is generated from emcc + libraylib.a with InitWindow()
+          // in the stub, so emcc includes library_glfw.js + GL infrastructure and
+          // all GLFW/GL wasmImports are real implementations. We only patch
+          // callUserCallback and handleException to contain WebAssembly.RuntimeError
+          // traps and prevent "Aw, Snap!" tab crashes.
 
-          // Patch callUserCallback: intercept RuntimeError in the catch block.
-          // raylib-runtime.mjs pattern is multi-line (non-minified):
-          //   } catch (e) {
-          //     handleException(e);
-          //   } finally {
-          const ORIG_RAYLIB_CATCH = '      } catch (e) {\n        handleException(e);\n      } finally {\n        maybeExit();\n      }\n    };\n';
+          // Patch callUserCallback: intercept RuntimeError in the catch block (minified format).
+          const ORIG_RAYLIB_CATCH = 'catch(e){handleException(e)}finally{maybeExit()}};';
           const PATCHED_RAYLIB_CATCH =
-            '      } catch (e) {\n        ' +
-            'if(e instanceof WebAssembly.RuntimeError){ABORT=1;try{Module.pauseMainLoop?.();}catch(_){}return;}' +
-            '\n        handleException(e);\n      } finally {\n        maybeExit();\n      }\n    };\n';
+            'catch(e){if(e instanceof WebAssembly.RuntimeError){ABORT=1;try{Module.pauseMainLoop?.();}catch(_){}return;}' +
+            'handleException(e)}finally{maybeExit()}};';
           if (runtimeText.includes(ORIG_RAYLIB_CATCH)) {
             runtimeText = runtimeText.replace(ORIG_RAYLIB_CATCH, PATCHED_RAYLIB_CATCH);
           } else {
             tty.writeError('raylib-runtime patch: callUserCallback catch block not found — WASM traps may crash the tab');
           }
 
-          // Patch handleException: intercept RuntimeError before quit_().
-          const ORIG_RAYLIB_HANDLE_EX = '      quit_(1, e);\n    };';
+          // Patch handleException: intercept RuntimeError before quit_() (minified format).
+          const ORIG_RAYLIB_HANDLE_EX = 'quit_(1,e)};';
           const PATCHED_RAYLIB_HANDLE_EX =
-            '      if(e instanceof WebAssembly.RuntimeError){ABORT=1;try{Module.pauseMainLoop?.();}catch(_){}return EXITSTATUS}\n' +
-            '      quit_(1, e);\n    };';
+            'if(e instanceof WebAssembly.RuntimeError){ABORT=1;try{Module.pauseMainLoop?.();}catch(_){}return EXITSTATUS}' +
+            'quit_(1,e)};';
           if (runtimeText.includes(ORIG_RAYLIB_HANDLE_EX)) {
             runtimeText = runtimeText.replace(ORIG_RAYLIB_HANDLE_EX, PATCHED_RAYLIB_HANDLE_EX);
           } else {
             tty.writeError('raylib-runtime patch: handleException quit_ call not found — WASM traps may crash the tab');
           }
 
-          // Patch wasmImports: add emscripten_webgl_* context management functions.
-          // raylib-runtime.mjs was built from a stub that doesn't call InitWindow,
-          // so emcc did not include these functions in wasmImports. The user WASM
-          // (libraylib.a with PLATFORM=Web) imports them via WASM env to create the
-          // WebGL context. Wire them to the GL object already in the runtime scope.
-          const RAYLIB_WIMPORTS_TAIL = '  glfwWindowHint: _glfwWindowHint\n};';
-          const RAYLIB_WIMPORTS_PATCHED =
-            '  glfwWindowHint: _glfwWindowHint,\n' +
-            '  emscripten_webgl_init_context_attributes: (_p) => 0,\n' +
-            '  emscripten_webgl_create_context: (_target, _attrs) => {\n' +
-            '    var canvas = Module["canvas"];\n' +
-            '    if (!canvas) return 0;\n' +
-            '    return GL.createContext(canvas, {alpha:false,antialias:false,majorVersion:1}) || 0;\n' +
-            '  },\n' +
-            '  emscripten_webgl_make_context_current: (h) => GL.makeContextCurrent(h) ? 0 : -5\n' +
-            '};';
-          if (runtimeText.includes(RAYLIB_WIMPORTS_TAIL)) {
-            runtimeText = runtimeText.replace(RAYLIB_WIMPORTS_TAIL, RAYLIB_WIMPORTS_PATCHED);
-          } else {
-            tty.writeError('raylib-runtime patch: wasmImports end not found — WebGL context will not be created');
-          }
-
-          // Patch GLFW stubs: replace abort-stubs with real GL context management.
-          // libraylib.a (non-PLATFORM_WEB build) uses GLFW for windowing. The runtime
-          // was built from a stub that never calls InitWindow, so all GLFW symbols are
-          // abort-stubs. We provide minimal working implementations so that
-          // InitWindow → glfwCreateWindow sets up GLctx and the draw loop runs.
-
-          // glfwInit: return GLFW_TRUE (1) so InitWindow proceeds.
-          const ORIG_GLFW_INIT =
-            '  function _glfwInit(...args\n  ) {\n  abort(\'missing function: glfwInit\');\n  }\n  _glfwInit.stub = true;';
-          const PATCHED_GLFW_INIT = '  function _glfwInit() { return 1; }';
-          if (runtimeText.includes(ORIG_GLFW_INIT)) {
-            runtimeText = runtimeText.replace(ORIG_GLFW_INIT, PATCHED_GLFW_INIT);
-          } else {
-            tty.writeError('raylib-runtime patch: _glfwInit stub not found — InitWindow may fail');
-          }
-
-          // glfwCreateWindow: create WebGL1 context on the canvas, return GL handle.
-          const ORIG_GLFW_CREATE =
-            '  function _glfwCreateWindow(...args\n  ) {\n  abort(\'missing function: glfwCreateWindow\');\n  }\n  _glfwCreateWindow.stub = true;';
-          const PATCHED_GLFW_CREATE =
-            '  function _glfwCreateWindow(width, height, title, monitor, share) {\n' +
-            '    var canvas = Module[\'canvas\'];\n' +
-            '    if (!canvas) return 0;\n' +
-            '    return GL.createContext(canvas, {antialias: false, alpha: false}) || 0;\n' +
-            '  }';
-          if (runtimeText.includes(ORIG_GLFW_CREATE)) {
-            runtimeText = runtimeText.replace(ORIG_GLFW_CREATE, PATCHED_GLFW_CREATE);
-          } else {
-            tty.writeError('raylib-runtime patch: _glfwCreateWindow stub not found — GL context will not be created');
-          }
-
-          // glfwMakeContextCurrent: delegate to GL.makeContextCurrent to set GLctx.
-          const ORIG_GLFW_MCC =
-            '  function _glfwMakeContextCurrent(...args\n  ) {\n  abort(\'missing function: glfwMakeContextCurrent\');\n  }\n  _glfwMakeContextCurrent.stub = true;';
-          const PATCHED_GLFW_MCC =
-            '  function _glfwMakeContextCurrent(handle) { GL.makeContextCurrent(handle); }';
-          if (runtimeText.includes(ORIG_GLFW_MCC)) {
-            runtimeText = runtimeText.replace(ORIG_GLFW_MCC, PATCHED_GLFW_MCC);
-          } else {
-            tty.writeError('raylib-runtime patch: _glfwMakeContextCurrent stub not found — GLctx will be undefined');
-          }
-
-          // glfwGetTime: return wall-clock seconds so raylib can compute delta time.
-          const ORIG_GLFW_TIME =
-            '  function _glfwGetTime(...args\n  ) {\n  abort(\'missing function: glfwGetTime\');\n  }\n  _glfwGetTime.stub = true;';
-          const PATCHED_GLFW_TIME = '  function _glfwGetTime() { return performance.now() / 1000.0; }';
-          if (runtimeText.includes(ORIG_GLFW_TIME)) {
-            runtimeText = runtimeText.replace(ORIG_GLFW_TIME, PATCHED_GLFW_TIME);
-          } else {
-            tty.writeError('raylib-runtime patch: _glfwGetTime stub not found — delta time will be 0');
-          }
         }
 
         // Create a blob URL for the ES6 runtime module so we can dynamically import it
