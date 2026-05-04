@@ -9,7 +9,7 @@
     "dev": "next dev",
     "prebuild": "cd ../../tools/emception && npm run build:lib && cd ../../demos/emception-next && node ../../scripts/sync-emception-cdn.mjs demos/emception-next",
     "build": "next build",
-    "start": "next start",
+    "start": "npx serve@latest out",
     "lint": "eslint"
   },
   "dependencies": {
