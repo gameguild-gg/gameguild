@@ -42,7 +42,9 @@ export function deriveStorageKey(workspaceName?: string): string {
   return workspaceName ? `emception:ws:${workspaceName}` : WORKSPACE_STORAGE_KEY;
 }
 
-export const SDL_CANVAS_PATH = '/user/sdl-canvas';
+export const CANVAS_PATH = '/user/canvas';
+/** @deprecated Use {@link CANVAS_PATH} */
+export const SDL_CANVAS_PATH = CANVAS_PATH;
 
 export interface WorkspaceFile {
   path: string;

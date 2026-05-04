@@ -10,7 +10,7 @@
 
 import type { WorkspaceBuildConfig } from './types.js';
 
-export type BuildPresetName = 'c' | 'cpp' | 'python' | 'sdl' | 'cmake' | 'full';
+export type BuildPresetName = 'c' | 'cpp' | 'python' | 'sdl' | 'raylib' | 'cmake' | 'full';
 
 export interface BuildPreset {
   name: BuildPresetName;
@@ -44,6 +44,12 @@ export const BUILD_PRESETS: Record<BuildPresetName, BuildPreset> = {
     defaultTools: ['emcc', 'em++'],
     build: { compiler: 'em++', std: 'c++20', libs: ['SDL3'] },
   },
+  raylib: {
+    name: 'raylib',
+    bundlesToPreload: ['llvm', 'raylib'],
+    defaultTools: ['emcc', 'em++'],
+    build: { compiler: 'emcc', libs: ['raylib', 'raygui', 'physac', 'rlights'] },
+  },
   cmake: {
     name: 'cmake',
     bundlesToPreload: ['llvm', 'cmake', 'ninja'],
@@ -52,7 +58,7 @@ export const BUILD_PRESETS: Record<BuildPresetName, BuildPreset> = {
   },
   full: {
     name: 'full',
-    bundlesToPreload: ['llvm', 'cpython', 'cmake', 'ninja', 'sdl3', 'imgui', 'libcurl-lite'],
+    bundlesToPreload: ['llvm', 'cpython', 'cmake', 'ninja', 'sdl3', 'imgui', 'raylib', 'libcurl-lite'],
     defaultTools: ['clang', 'clang++', 'cmake', 'ninja', 'python3', 'emcc', 'em++'],
     build: {},
   },

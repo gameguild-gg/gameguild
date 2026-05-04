@@ -1,8 +1,4 @@
-import {
-    deriveStorageKey,
-    SDL_CANVAS_PATH,
-    WORKSPACE_STORAGE_KEY,
-} from './ide-types';
+import { CANVAS_PATH, deriveStorageKey, SDL_CANVAS_PATH, WORKSPACE_STORAGE_KEY } from './ide-types';
 
 // ─── WORKSPACE_STORAGE_KEY ───────────────────────────────────────────────────
 
@@ -12,11 +8,17 @@ describe('WORKSPACE_STORAGE_KEY', () => {
     });
 });
 
-// ─── SDL_CANVAS_PATH ─────────────────────────────────────────────────────────
+// ─── CANVAS_PATH ──────────────────────────────────────────────────────────────────────────────
 
-describe('SDL_CANVAS_PATH', () => {
-    it('equals /user/sdl-canvas', () => {
-        expect(SDL_CANVAS_PATH).toBe('/user/sdl-canvas');
+describe('CANVAS_PATH', () => {
+    it('equals /user/canvas', () => {
+        expect(CANVAS_PATH).toBe('/user/canvas');
+    });
+});
+
+describe('SDL_CANVAS_PATH backward-compat alias', () => {
+    it('equals CANVAS_PATH', () => {
+        expect(SDL_CANVAS_PATH).toBe(CANVAS_PATH);
     });
 });
 

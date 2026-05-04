@@ -16,7 +16,7 @@
 export type DockGroup = 'main' | 'right' | 'bottom';
 
 /** How the IDE should execute the build artefact. */
-export type RunType = 'sdl3-canvas' | 'wasi-terminal' | 'cmake-build' | 'python-script';
+export type RunType = 'canvas' | 'wasi-terminal' | 'cmake-build' | 'python-script';
 
 export interface CompileConfig {
   tool: string;
@@ -170,6 +170,46 @@ void SDL_AppQuit(void *appstate, SDL_AppResult result) {
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     SDL_Quit();
+}
+`;
+
+// raylib bouncing ball (C++) — uses raylib's web-friendly main-loop callback.
+// Compile with:
+//   em++ raylib-main.cpp -I/usr/include -I/usr/include/raylib \
+//        -lraylib -sUSE_GLFW=3 -sFULL_ES2=1 -sALLOW_MEMORY_GROWTH=1 -O1 \
+//        -o /home/user/main.js
+export const RAYLIB_DEMO_CODE = `// raylib bouncing ball — compiled in the browser via Emscripten.
+// Click ▶ to build and render to the canvas tab.
+#include <raylib.h>
+#include <emscripten/emscripten.h>
+#include <cmath>
+
+static constexpr int W = 800;
+static constexpr int H = 600;
+static float t = 0.f;
+
+static void update_draw_frame() {
+    t += GetFrameTime();
+
+    BeginDrawing();
+    ClearBackground({ 17, 17, 27, 255 });
+
+    for (int x = 0; x < W; x += 40) DrawLine(x, 0, x, H, { 40, 40, 60, 255 });
+    for (int y = 0; y < H; y += 40) DrawLine(0, y, W, y, { 40, 40, 60, 255 });
+
+    float cx = W * 0.5f + 300.f * std::sin(t * 1.2f);
+    float cy = H * 0.5f + 200.f * std::cos(t * 1.4f);
+    DrawCircleV({ cx, cy }, 32.f, { 137, 180, 250, 255 });
+
+    DrawText("raylib + Emscripten", 20, 20, 22, { 205, 214, 244, 255 });
+    EndDrawing();
+}
+
+int main() {
+    InitWindow(W, H, "raylib demo");
+    emscripten_set_main_loop(update_draw_frame, 0, 1);
+    CloseWindow();
+    return 0;
 }
 `;
 

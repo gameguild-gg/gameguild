@@ -361,6 +361,17 @@ async function main() {
     // These prefixes act as forward-compat fallback only (first-match wins, assigned files are skipped).
     { name: 'sdl3', prefixes: ['/usr/include/SDL3/', '/usr/lib/emscripten_ports/sdl3/'], outputPath: '/usr/lib/sdl3.tar.br' },
     { name: 'imgui', prefixes: ['/usr/lib/libimgui', '/usr/include/imgui/'], outputPath: '/usr/lib/imgui.tar.br' },
+    {
+      name: 'raylib',
+      prefixes: [
+        '/usr/lib/libraylib',
+        '/usr/lib/libraygui',
+        '/usr/lib/libphysac',
+        '/usr/lib/librlights',
+        '/usr/include/raylib/',
+      ],
+      outputPath: '/usr/lib/raylib.tar.br',
+    },
     { name: 'usr-share', prefixes: ['/usr/share/'], outputPath: '/usr/share.tar.br' },
     { name: 'home', prefixes: ['/home/'], outputPath: '/home.tar.br' },
   ];
