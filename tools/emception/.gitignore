@@ -23,6 +23,9 @@ userland/**/SDL_image-*/
 userland/**/SDL_ttf-*/
 userland/**/SDL_mixer-*/
 userland/**/imgui-*/
+userland/**/raylib-*/
+userland/**/raygui-*/
+userland/**/physac-*/
 userland/**/*.tar.gz
 userland/**/*.tar.xz
 userland/**/version_*.tar.gz

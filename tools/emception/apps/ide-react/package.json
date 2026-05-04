@@ -4,9 +4,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "predev": "cd ../../tools/emception && npm run build:lib && cd ../../demos/emception-react && node ../../scripts/sync-emception-cdn.mjs demos/emception-react",
+    "predev": "npm run build:lib --prefix ../.. && node ../../../../scripts/sync-emception-cdn.mjs tools/emception/apps/ide-react",
     "dev": "vite",
-    "prebuild": "cd ../../tools/emception && npm run build:lib && cd ../../demos/emception-react && node ../../scripts/sync-emception-cdn.mjs demos/emception-react",
+    "prebuild": "npm run build:lib --prefix ../.. && node ../../../../scripts/sync-emception-cdn.mjs tools/emception/apps/ide-react",
     "build": "tsc -b && vite build",
     "preview": "vite preview"
   },

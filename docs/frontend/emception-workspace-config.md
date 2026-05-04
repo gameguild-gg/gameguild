@@ -129,7 +129,7 @@ A single JSON file (optionally gzipped as `.workspace.json.gz`) containing:
 - `packages/emception/src/components/Ide.tsx` — refactor compile dispatch, add config prop, picker, test button
 - `packages/emception/src/components/ide-utils.ts` — `buildSDL3ArgsPort` migrates to SDL3 preset
 - `tools/emception/src/worker-client.ts` — already has writeFile (no changes needed)
-- `demos/emception-react/src/App.tsx` + `demos/emception-next/src/app/page.tsx` — pass config
+- `tools/emception/apps/ide-react/src/App.tsx` + `tools/emception/apps/ide-next/src/app/page.tsx` — pass config
 
 ## Verification
 

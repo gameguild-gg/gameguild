@@ -14,7 +14,7 @@
 import type { EmceptionAPI } from './createEmception';
 import type { ToolResult } from './tool-runner';
 
-export type BrowserBuildPresetName = 'c' | 'cpp' | 'sdl';
+export type BrowserBuildPresetName = 'c' | 'cpp' | 'sdl' | 'raylib';
 
 export interface CompilePaths {
     /** Source file path inside the VFS (also appears in error messages). */
@@ -146,6 +146,48 @@ const WASM_LD_SDL_FLAGS: readonly string[] = [
 /** Extra cc1 -internal-isystem entries needed to find SDL3 headers. */
 const CC1_SDL_EXTRA: readonly string[] = ['-internal-isystem', '/usr/include/fakesdl', '-internal-isystem', '/usr/include/SDL3'];
 
+/** Extra cc1 -internal-isystem entries needed to find raylib headers. */
+const CC1_RAYLIB_EXTRA: readonly string[] = ['-internal-isystem', '/usr/include/raylib'];
+
+/**
+ * Raylib link line. Uses prebuilt libraylib.a with the sdl3-runtime.mjs JS runtime.
+ *
+ * Key: do NOT link -lhtml5. libhtml5.a provides a WASM emscripten_set_main_loop
+ * that bypasses sdl3-runtime.mjs's MainLoop.func setup, leaving MainLoop.func=null
+ * so the RAF callback crashes. By omitting -lhtml5, emscripten_set_main_loop and
+ * other HTML5 API functions become WASM imports resolved by sdl3-runtime.mjs which
+ * correctly calls setMainLoop() → MainLoop.func = iterFunc → RAF works.
+ *
+ * Exports `main` so the runtime calls it via callMain(). emscripten_set_main_loop
+ * (with simulate_infinite_loop=1) throws 'unwind' which callMain() catches, leaving
+ * the RAF-based draw loop active.
+ */
+const WASM_LD_RAYLIB_FLAGS: readonly string[] = [
+    '-L/usr/lib/emscripten/cache/sysroot/lib/wasm32-emscripten',
+    '-L/usr/lib/emscripten/src/lib',
+    '/usr/lib/emscripten/cache/sysroot/lib/wasm32-emscripten/crt1.o',
+    '/usr/lib/libraylib.a',
+    '--no-entry',
+    '--import-undefined',
+    '--allow-undefined',
+    '--export=main',
+    '--export=malloc',
+    '--export=free',
+    '--export=__wasm_call_ctors',
+    '--export-table',
+    '--table-base=1',
+    '-z',
+    'stack-size=2097152',
+    '-lal',
+    '-lstubs',
+    '-lc',
+    '-ldlmalloc',
+    '-lcompiler_rt',
+    '-lc++-noexcept',
+    '-lc++abi-noexcept',
+    '-lsockets',
+];
+
 export interface BrowserBuildPreset {
     readonly name: BrowserBuildPresetName;
     /** Tool name to spawn for the compile step (always `'clang'` today). */
@@ -218,6 +260,27 @@ export const BROWSER_BUILD_PRESETS: Record<BrowserBuildPresetName, BrowserBuildP
             sourcePath,
         ],
         linkArgv: ({ objectPath, wasmPath }) => ['wasm-ld', objectPath, '-o', wasmPath, ...WASM_LD_SDL_FLAGS],
+    },
+    raylib: {
+        name: 'raylib',
+        compileTool: 'clang',
+        linkTool: 'wasm-ld',
+        compileArgv: ({ sourcePath, objectPath }) => [
+            'clang',
+            ...CC1_FRONTEND,
+            ...CC1_CPP_INCLUDES,
+            ...CC1_RAYLIB_EXTRA,
+            ...CC1_TAIL,
+            ...CC1_CPP_EXC,
+            '-main-file-name',
+            basename(sourcePath),
+            '-o',
+            objectPath,
+            '-x',
+            'c++',
+            sourcePath,
+        ],
+        linkArgv: ({ objectPath, wasmPath }) => ['wasm-ld', objectPath, '-o', wasmPath, ...WASM_LD_RAYLIB_FLAGS],
     },
 };
 
