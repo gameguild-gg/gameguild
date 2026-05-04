@@ -116,8 +116,8 @@ npm install
 npm run build:all   # full toolchain build (~30 min first time)
 
 # Then run one of the demos:
-cd ../../demos/emception-react && npm install && npm run dev   # Vite/React demo (default http://localhost:5173)
-cd ../../demos/emception-next  && npm install && npm run dev   # Next.js demo  (default http://localhost:3000)
+cd ../../tools/emception/apps/ide-react && npm install && npm run dev   # Vite/React demo (default http://localhost:5173)
+cd ../../tools/emception/apps/ide-next  && npm install && npm run dev   # Next.js demo  (default http://localhost:3000)
 ```
 
 ---
@@ -126,25 +126,25 @@ cd ../../demos/emception-next  && npm install && npm run dev   # Next.js demo  (
 
 `npm run build:all` runs sequential steps via `run-s`:
 
-| #   | Script               | What it does                                                                                                |
-| --- | -------------------- | ----------------------------------------------------------------------------------------------------------- |
-| 1   | `typecheck`          | TypeScript type-check (`tsc --noEmit`)                                                                      |
-| 2   | `build:emsdk`        | Downloads & configures the Emscripten SDK                                                                   |
-| 3   | `build:binaryen`     | Builds each Binaryen tool as a standalone WASM process (wasm-opt, wasm-as, …)                               |
-| 4   | `build:cpython`      | Cross-compiles CPython as a standalone WASM process                                                         |
-| 5   | `build:llvm`         | Builds each LLVM tool as a standalone WASM process (clang, lld, llvm-nm, …)                                 |
-| 6   | `build:libcurl-lite` | Builds a minimal `libcurl.a` for tools that need HTTP fetch                                                 |
-| 7   | `build:ninja`        | Builds the Ninja build system as a standalone WASM process                                                  |
-| 8   | `build:cmake`        | Builds CMake as a standalone WASM process                                                                   |
-| 9   | `build:sdl3`         | Builds SDL3 as a static library staged into the sysroot                                                     |
-| 10  | `build:imgui`        | Builds Dear ImGui as a static library staged into the sysroot                                               |
-| 11  | `build:sysroot`      | Populates `/usr/include`, `/usr/lib` with headers, libs, and Emscripten runtime files                       |
-| 12  | `build:brotli`       | Builds the native Brotli CLI plus the in-browser Brotli WASM decoder                                        |
-| 13  | `patch:glue`         | Post-processes Emscripten `.mjs` glue files for VFS + async-bridge integration                              |
-| 14  | `build:manifest`     | Generates file manifest metadata and stages raw CDN files                                                   |
-| 15  | `build:bundles`      | Creates Brotli-compressed `.tar.br` bundles and updates manifest bundle metadata                            |
-| 16  | `build:lib`          | Builds the publishable runtime library (`tsup` + `tsc -p tsconfig.lib.json`)                                |
-| 17  | `deploy:cdn`         | Copies CDN assets to `demos/emception-react/public/cdn/` and `demos/emception-next/public/cdn/` for serving |
+| #   | Script               | What it does                                                                                                                  |
+| --- | -------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| 1   | `typecheck`          | TypeScript type-check (`tsc --noEmit`)                                                                                        |
+| 2   | `build:emsdk`        | Downloads & configures the Emscripten SDK                                                                                     |
+| 3   | `build:binaryen`     | Builds each Binaryen tool as a standalone WASM process (wasm-opt, wasm-as, …)                                                 |
+| 4   | `build:cpython`      | Cross-compiles CPython as a standalone WASM process                                                                           |
+| 5   | `build:llvm`         | Builds each LLVM tool as a standalone WASM process (clang, lld, llvm-nm, …)                                                   |
+| 6   | `build:libcurl-lite` | Builds a minimal `libcurl.a` for tools that need HTTP fetch                                                                   |
+| 7   | `build:ninja`        | Builds the Ninja build system as a standalone WASM process                                                                    |
+| 8   | `build:cmake`        | Builds CMake as a standalone WASM process                                                                                     |
+| 9   | `build:sdl3`         | Builds SDL3 as a static library staged into the sysroot                                                                       |
+| 10  | `build:imgui`        | Builds Dear ImGui as a static library staged into the sysroot                                                                 |
+| 11  | `build:sysroot`      | Populates `/usr/include`, `/usr/lib` with headers, libs, and Emscripten runtime files                                         |
+| 12  | `build:brotli`       | Builds the native Brotli CLI plus the in-browser Brotli WASM decoder                                                          |
+| 13  | `patch:glue`         | Post-processes Emscripten `.mjs` glue files for VFS + async-bridge integration                                                |
+| 14  | `build:manifest`     | Generates file manifest metadata and stages raw CDN files                                                                     |
+| 15  | `build:bundles`      | Creates Brotli-compressed `.tar.br` bundles and updates manifest bundle metadata                                              |
+| 16  | `build:lib`          | Builds the publishable runtime library (`tsup` + `tsc -p tsconfig.lib.json`)                                                  |
+| 17  | `deploy:cdn`         | Copies CDN assets to `tools/emception/apps/ide-react/public/cdn/` and `tools/emception/apps/ide-next/public/cdn/` for serving |
 
 Convenience aggregates: `build:cdn` (= manifest + bundles + deploy) and `build:pipeline` (= sysroot + brotli + patch + cdn + lib) re-run only the parts that depend on already-built tool WASMs.
 
@@ -223,7 +223,7 @@ ide.dispose(); // tear down the worker when done
 
 The full surface is documented inline in `src/createEmception.ts` (`run`, `readFile`, `writeFile`, `listDir`, `resetVfs`, `dispose`). Advanced consumers can still import `boot` / `bootInWorker` for direct access to `ToolRunner`, `MiniShell`, and the VFS internals.
 
-**Peer dependency:** consumers must install `@xterm/xterm` (declared as an optional peer). A real working example lives under `demos/emception-react/`.
+**Peer dependency:** consumers must install `@xterm/xterm` (declared as an optional peer). A real working example lives under `tools/emception/apps/ide-react/`.
 
 ---
 
@@ -526,10 +526,10 @@ This IPC mechanism allows the single-threaded browser environment to run multi-p
 
 Two demo applications live under `demos/` at the repo root:
 
-| Demo         | Path                     | Stack             | Command                                                  |
-| ------------ | ------------------------ | ----------------- | -------------------------------------------------------- |
-| React + Vite | `demos/emception-react/` | React, Vite       | `cd demos/emception-react && npm install && npm run dev` |
-| Next.js      | `demos/emception-next/`  | Next.js 15, React | `cd demos/emception-next && npm install && npm run dev`  |
+| Demo         | Path                              | Stack             | Command                                                           |
+| ------------ | --------------------------------- | ----------------- | ----------------------------------------------------------------- |
+| React + Vite | `tools/emception/apps/ide-react/` | React, Vite       | `cd tools/emception/apps/ide-react && npm install && npm run dev` |
+| Next.js      | `tools/emception/apps/ide-next/`  | Next.js 15, React | `cd tools/emception/apps/ide-next && npm install && npm run dev`  |
 
 Both demos automatically sync CDN assets from `tools/emception/public/cdn/` via a `predev`/`prebuild` script (`scripts/sync-emception-cdn.mjs`). Run `npm run build:all` in `tools/emception` first to populate the CDN assets.
 
