@@ -8,7 +8,7 @@
 // without pulling in React/Monaco.
 
 import type { WorkspaceConfig } from './workspace-config.js';
-import { DEFAULT_CODE, DEFAULT_HEADER, DEFAULT_IMAGE, SDL_DEMO_CODE } from './workspace-config.js';
+import { DEFAULT_CODE, DEFAULT_HEADER, DEFAULT_IMAGE, RAYLIB_DEMO_CODE, SDL_DEMO_CODE } from './workspace-config.js';
 
 // ── C++ SDL3 Bouncing Ball ──────────────────────────────────────
 
@@ -25,7 +25,7 @@ export const CPP_SDL3_PRESET: WorkspaceConfig = {
     sourceDetect: { extensions: ['.cpp', '.c'], entryPoint: '/user/sdl-main.cpp' },
   },
   run: {
-    type: 'sdl3-canvas',
+    type: 'canvas',
   },
   features: {
     canvas: true,
@@ -36,12 +36,51 @@ export const CPP_SDL3_PRESET: WorkspaceConfig = {
     activeFile: '/user/sdl-main.cpp',
     openTabs: [
       { path: '/user/sdl-main.cpp', group: 'main' },
-      { path: '/user/sdl-canvas', group: 'right' },
+      { path: '/user/canvas', group: 'right' },
     ],
     expandedDirs: ['/user'],
   },
   files: {
     '/user/sdl-main.cpp': { encoding: 'text', content: SDL_DEMO_CODE },
+    '/user/workspace-preview.svg': { encoding: 'text', content: DEFAULT_IMAGE },
+  },
+};
+
+// ── C raylib Bouncing Ball ──────────────────────────────────────
+
+export const CPP_RAYLIB_PRESET: WorkspaceConfig = {
+  id: 'cpp-raylib',
+  label: 'C++ raylib — Bouncing Ball',
+  description: 'raylib graphics demo compiled in the browser with Emscripten',
+  version: 2,
+  compile: {
+    // tool: 'clang' signals the IDE to use the direct clang + wasm-ld two-step
+    // path (BROWSER_BUILD_PRESETS.raylib) instead of Python/emcc. raylib is not
+    // an emsdk port, so em++ triggers ports/__init__.py which fails in WASM sandbox.
+    tool: 'clang',
+    args: [],
+    cwd: '/home/user',
+    output: '/home/user/main.wasm',
+    sourceDetect: { extensions: ['.cpp', '.c'], entryPoint: '/user/raylib-main.cpp' },
+  },
+  run: {
+    type: 'canvas',
+  },
+  features: {
+    canvas: true,
+    terminalInput: false,
+    showTestButton: false,
+  },
+  layout: {
+    activeFile: '/user/raylib-main.cpp',
+    openTabs: [
+      { path: '/user/raylib-main.cpp', group: 'main' },
+      { path: '/user/canvas', group: 'right' },
+    ],
+    expandedDirs: ['/user'],
+  },
+  files: {
+    '/user/raylib-main.cpp': { encoding: 'text', content: RAYLIB_DEMO_CODE },
     '/user/workspace-preview.svg': { encoding: 'text', content: DEFAULT_IMAGE },
   },
 };
@@ -186,6 +225,7 @@ export const PYTHON_PRESET: WorkspaceConfig = {
 
 export const PRESETS: Record<string, WorkspaceConfig> = {
   'cpp-sdl3': CPP_SDL3_PRESET,
+  'cpp-raylib': CPP_RAYLIB_PRESET,
   'cpp-terminal': CPP_TERMINAL_PRESET,
   cmake: CMAKE_PRESET,
   python: PYTHON_PRESET,

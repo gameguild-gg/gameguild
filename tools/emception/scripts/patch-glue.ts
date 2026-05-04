@@ -268,7 +268,7 @@ function patchCallMainArgs(content: string, filename: string): string {
  * Ordering: subprocess dispatch → VFS hook → sync FS.open() fallback.
  */
 function patchOpenat(content: string, filename: string): string {
-    const needle = 'path=SYSCALLS.getStr(path);path=SYSCALLS.calculateAt(dirfd,path);var mode=varargs?syscallGetVarargI():0;return FS.open(path,flags,mode).fd';
+    const needle = 'path=SYSCALLS.getStr(path);path=SYSCALLS.calculateAt(dirfd,path);var mode=varargs?syscallGetVarargI():0;';
 
     if (!content.includes(needle)) {
         if (content.includes('onPreOpen')) {
@@ -282,7 +282,7 @@ function patchOpenat(content: string, filename: string): string {
         'if(path==="/tmp/__dispatch_subprocess__"&&Module["subprocessDispatch"]){' +
         'return Asyncify.handleAsync(function(){' +
         'return Module["subprocessDispatch"]().then(function(){' +
-        'var mode=varargs?syscallGetVarargI():0;return FS.open(path,flags,mode).fd})})' +
+        'return FS.open(path,flags,mode).fd})})' +
         '}';
 
     // Hook A: VFS on-demand loading — bypass when isCachedSync returns true
@@ -290,14 +290,10 @@ function patchOpenat(content: string, filename: string): string {
         'if((!Module["isCachedSync"]||!Module["isCachedSync"](path))&&Module["onPreOpen"]){' +
         'return Asyncify.handleAsync(function(){' +
         'return Module["onPreOpen"](path).then(function(){' +
-        'var mode=varargs?syscallGetVarargI():0;return FS.open(path,flags,mode).fd})})' +
+        'return FS.open(path,flags,mode).fd})})' +
         '}';
 
-    const replacement =
-        'path=SYSCALLS.getStr(path);path=SYSCALLS.calculateAt(dirfd,path);' +
-        subprocessBlock +
-        vfsBlock +
-        'var mode=varargs?syscallGetVarargI():0;return FS.open(path,flags,mode).fd';
+    const replacement = needle + subprocessBlock + vfsBlock;
 
     patchCount++;
     console.log(`  [${filename}] Patched 8+9: openat VFS hook + subprocess dispatch via Asyncify`);

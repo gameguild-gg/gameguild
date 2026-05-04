@@ -44,10 +44,14 @@ export default defineConfig({
         // tools/emception/public/cdn/. Without this, SDL3 compilation fails
         // with FROZEN_CACHE because the cache-lib and port markers are missing.
         command: `npm run dev -- --port ${PORT}`,
-        cwd: '../../demos/emception-next',
+        cwd: './apps/ide-next',
         url: `http://localhost:${PORT}`,
-        reuseExistingServer: !process.env.CI,
-        timeout: 120_000,
+        // Keep deterministic test runs: stale dev servers can keep old bundled
+        // workspace presets in memory and mask source-level fixes.
+        reuseExistingServer: false,
+        // Predev performs multi-package rebuilds before Next starts; allow a
+        // longer startup window so Playwright doesn't kill the server early.
+        timeout: 300_000,
         stdout: 'pipe',
         stderr: 'pipe',
     },

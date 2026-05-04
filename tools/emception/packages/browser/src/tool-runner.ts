@@ -1635,9 +1635,7 @@ sys.excepthook = _hook
       }
 
       // Patch ports/__init__.py:
-      // 1. Make urlopen a lazy import (top-level "from urllib.request import urlopen"
-      //    chains into ssl → _ssl C extension missing in WASM Python, causing abort).
-      // 2. Skip fetch_port_artifact entirely when FROZEN_CACHE is set.
+      // Skip fetch_port_artifact entirely when ports are pre-bundled.
       //    The marker-check flow (get_dir → os.makedirs → lookup alias → CDN fetch)
       //    is fragile in the WASM sandbox: VFSFS alias resolution can be shadowed
       //    by MEMFS directory nodes created during os.makedirs. Since all ports are
@@ -1651,16 +1649,7 @@ sys.excepthook = _hook
         if (existingBytes) {
           let src = new TextDecoder().decode(existingBytes);
           let patched = false;
-          // Patch 1: lazy urlopen
-          if (src.includes('from urllib.request import urlopen')) {
-            src = src.replace('from urllib.request import urlopen\n', '');
-            src = src.replace(
-              '        f = urlopen(url)',
-              '        from urllib.request import urlopen\n        f = urlopen(url)',
-            );
-            patched = true;
-          }
-          // Patch 2: skip fetch_port_artifact unconditionally.
+          // Patch: skip fetch_port_artifact unconditionally.
           // All ports are pre-built in CDN bundles; the library existence
           // check in cache.get() handles the rest via path aliases.
           // We cannot rely on FROZEN_CACHE (must be False to avoid unreachable
@@ -1913,8 +1902,12 @@ sys.excepthook = _hook
     if (descriptor.modulePath === '/usr/lib/lld.wasm') {
       const tPreload = performance.now();
       try {
-        await this.vfs.preloadBundle('cache-core');
-        console.log(`${LOG_PREFIX}   Preloaded cache-core bundle for lld in ${elapsed(tPreload)}`);
+        await Promise.all([
+          this.vfs.preloadBundle('cache-core'),
+          this.vfs.preloadBundle('sdl3'),
+          this.vfs.preloadBundle('raylib'),
+        ]);
+        console.log(`${LOG_PREFIX}   Preloaded cache-core + sdl3 + raylib bundles for lld in ${elapsed(tPreload)}`);
       } catch (e) {
         console.warn(`${LOG_PREFIX}   ⚠️ Failed to preload lld bundles:`, e);
       }
@@ -1922,8 +1915,10 @@ sys.excepthook = _hook
       // Pre-warm library files into lld's Emscripten FS
       const tWarm = performance.now();
       const libPaths: string[] = [];
-      for (const fp of this.vfs.getBundleFilePaths('cache-core')) {
-        libPaths.push(fp);
+      for (const bundleName of ['cache-core', 'sdl3', 'raylib']) {
+        for (const fp of this.vfs.getBundleFilePaths(bundleName)) {
+          libPaths.push(fp);
+        }
       }
       let warmed = 0;
       const results = await Promise.all(libPaths.map(p => this.vfs.fetchFile(p).catch(() => null)));
@@ -1935,7 +1930,7 @@ sys.excepthook = _hook
           } catch { /* ignore */ }
         }
       }
-      console.log(`${LOG_PREFIX}   Pre-warmed ${warmed}/${libPaths.length} library files for lld in ${elapsed(tWarm)}`);
+      console.log(`${LOG_PREFIX}   Pre-warmed ${warmed}/${libPaths.length} library files (cache-core+sdl3+raylib) for lld in ${elapsed(tWarm)}`);
     }
 
     // python (emcc/em++): preload and pre-warm Python stdlib + emscripten scripts.
@@ -2096,7 +2091,13 @@ sys.excepthook = _hook
           }
         };
 
-        console.log(`${LOG_PREFIX}   Installed subprocess dispatch via subprocessDispatch hook`);
+        // CRITICAL: also set on the live instance Module — moduleConfig was
+        // copied during factory() init, so post-init mutations don't reach
+        // the Module object captured by the glue's closure.
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (instance as any)['subprocessDispatch'] = moduleConfig['subprocessDispatch'];
+
+        console.log(`${LOG_PREFIX}   Installed subprocess dispatch via subprocessDispatch hook (Module["subprocessDispatch"] = ${typeof (instance as unknown as Record<string, unknown>)['subprocessDispatch']})`);
       }
     }
 
@@ -2262,6 +2263,9 @@ sys.excepthook = _hook
         // Read Python exception capture file if it exists
         try {
           const errContent = new TextDecoder().decode(instance.FS.readFile('/tmp/python_error.txt'));
+          if (errContent.length > 0) {
+            console.log(`${LOG_PREFIX}   python_error.txt:\n${errContent}`);
+          }
           for (const line of errContent.split('\n')) {
             if (line.length > 0) {
               stderrChunks.push(line);
@@ -2274,6 +2278,7 @@ sys.excepthook = _hook
         try {
           const stderrLog = new TextDecoder().decode(instance.FS.readFile('/tmp/stderr.log'));
           if (stderrLog.length > 0) {
+            console.log(`${LOG_PREFIX}   stderr.log:\n${stderrLog}`);
             for (const line of stderrLog.split('\n')) {
               if (line.length > 0) {
                 stderrChunks.push(line);
@@ -3187,17 +3192,22 @@ sys.excepthook = _hook
             console.log(`${LOG_PREFIX}   patchGlueContent: python.mjs already patched`);
             return source;
           }
+          // Emscripten openat body (modern):
+          //   path=SYSCALLS.getStr(path);path=SYSCALLS.calculateAt(dirfd,path);
+          //   var mode=varargs?syscallGetVarargI():0;
+          //   if(flags&64){mode&=~SYSCALLS.currentUmask}
+          //   return FS.open(path,flags,mode).fd
+          // Inject subprocess dispatch right after path resolution.
           const needle =
             'path=SYSCALLS.getStr(path);path=SYSCALLS.calculateAt(dirfd,path);' +
-            'var mode=varargs?syscallGetVarargI():0;return FS.open(path,flags,mode).fd';
+            'var mode=varargs?syscallGetVarargI():0;';
           const replacement =
-            'path=SYSCALLS.getStr(path);path=SYSCALLS.calculateAt(dirfd,path);' +
+            needle +
             'if(path==="/tmp/__dispatch_subprocess__"&&Module["subprocessDispatch"]){' +
             'return Asyncify.handleAsync(function(){' +
             'return Module["subprocessDispatch"]().then(function(){' +
-            'var mode=varargs?syscallGetVarargI():0;return FS.open(path,flags,mode).fd})})' +
-            '}' +
-            'var mode=varargs?syscallGetVarargI():0;return FS.open(path,flags,mode).fd';
+            'return FS.open(path,flags,mode).fd})})' +
+            '}';
           if (!source.includes(needle)) {
             console.warn(`${LOG_PREFIX}   patchGlueContent: needle not found in python.mjs, skipping patch`);
             return source;

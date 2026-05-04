@@ -105,7 +105,7 @@ describe('detectsSDL', () => {
 
   it('ignores non-source files (e.g. .md)', () => expect(detectsSDL({ f: makeFile('/src/README.md', '#include <SDL3/SDL.h>') })).toBe(false));
 
-  it('ignores canvas/runtime entries', () => expect(detectsSDL({ r: { path: '/user/sdl-canvas', type: 'canvas' as const, content: 'sdl' } })).toBe(false));
+  it('ignores canvas/runtime entries', () => expect(detectsSDL({ r: { path: '/user/canvas', type: 'canvas' as const, content: 'sdl' } })).toBe(false));
 
   it('returns false for an empty workspace', () => expect(detectsSDL({})).toBe(false));
 
