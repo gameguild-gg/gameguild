@@ -148,7 +148,7 @@ const raylibCmakeCmd = [
     '-DBUILD_EXAMPLES=OFF',
     '-DBUILD_GAMES=OFF',
     '-DSUPPORT_GIF_RECORDING=OFF',
-    '-DGRAPHICS=GRAPHICS_API_OPENGL_ES2',
+    '-DGRAPHICS=GRAPHICS_API_OPENGL_ES3',
     '-DBUILD_SHARED_LIBS=OFF',
 ].join(' ');
 console.log(raylibCmakeCmd);
@@ -228,6 +228,8 @@ const runtimeResult = shell.exec(
         '-sENVIRONMENT=web',
         '-sALLOW_MEMORY_GROWTH=1',
         '-sUSE_GLFW=3',
+        '-sMAX_WEBGL_VERSION=2',
+        '-sMIN_WEBGL_VERSION=2',
         '-sMODULARIZE=1',
         '-sEXPORT_NAME=createRaylibModule',
         '-sEXPORT_ES6=1',
