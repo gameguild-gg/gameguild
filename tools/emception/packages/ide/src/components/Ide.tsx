@@ -1020,22 +1020,13 @@ export default function Ide({
           return;
         }
 
-        // Read the pre-built JS runtime shell from the VFS (emscripten-core bundle).
-        // Both sdl3-runtime.mjs and raylib-runtime.mjs live at
-        // /usr/lib/emscripten/ in the sysroot, packed into emscripten-core.tar.br
-        // by generate-bundles.ts. The VFS manifest maps them to that bundle.
-        let runtimeBytes: Uint8Array | null = null;
-        const runtimePath = isRaylib
-          ? '/usr/lib/emscripten/raylib-runtime.mjs'
-          : '/usr/lib/emscripten/sdl3-runtime.mjs';
-        const runtimeLabel = isRaylib ? 'raylib-runtime.mjs' : 'sdl3-runtime.mjs';
-        const raw = await client.getFile(runtimePath);
-        if (!raw) {
+        // Read the pre-built SDL3 JS runtime shell from the VFS
+        const runtimeBytes = await client.getFile('/usr/lib/emscripten/sdl3-runtime.mjs');
+        if (!runtimeBytes) {
           setExecutionPhase('idle');
-          tty.writeError(`${runtimeLabel} not found in VFS — rebuild the CDN bundle`);
+          tty.writeError('sdl3-runtime.mjs not found in VFS — rebuild the CDN bundle');
           return;
         }
-        runtimeBytes = raw instanceof Uint8Array ? raw : new Uint8Array(raw as ArrayBuffer);
 
         // Mark canvas tab as SDL-active (keeps the canvas element visible)
         setCanvasIsRunning(true);
@@ -1066,107 +1057,74 @@ export default function Ide({
         sdlBlobUrlsRef.current.forEach((url) => URL.revokeObjectURL(url));
         sdlBlobUrlsRef.current = [];
 
-        // Patch the runtime JS before creating the blob URL.
-        // SDL3 and raylib runtimes have different formats (minified vs verbose),
-        // so patches are applied with format-specific patterns.
-        let runtimeText = new TextDecoder().decode(runtimeBytes);
-
-        if (isSDL3) {
-          // ── SDL3 patches (sdl3-runtime.mjs, minified format) ───────
-          const emAsmFallback = (varName: string) =>
-            `if(!ASM_CONSTS[${varName}]){var _s=UTF8ToString(${varName});` +
-            `ASM_CONSTS[${varName}]=eval("(function($0,$1,$2,$3,$4,$5,$6,$7,$8,$9){"+_s+"})");}`;
-          runtimeText = runtimeText
-            .replace('var _main,_SDL_free,', 'var _free,_main,_SDL_free,')
-            .replace('_malloc=wasmExports["malloc"]', '_malloc=wasmExports["malloc"]||wasmExports["SDL_malloc"]')
-            .replace(
-              '_SDL_free=Module["_SDL_free"]=wasmExports["SDL_free"]',
-              '_SDL_free=Module["_SDL_free"]=wasmExports["SDL_free"];_free=wasmExports["free"]||_SDL_free',
-            )
-            .replace(
-              'var stringToNewUTF8=str=>{var size=lengthBytesUTF8(str)+1;var ret=_malloc(size)',
-              'var stringToNewUTF8=str=>{var size=lengthBytesUTF8(str)+1;var allocFn=_malloc||_SDL_malloc;var ret=allocFn(size)',
-            );
-          const ORIG_RUNEMASM = 'var runEmAsmFunction=(code,sigPtr,argbuf)=>{var args=readEmAsmArgs(sigPtr,argbuf);return ASM_CONSTS[code](...args)}';
-          const ORIG_RUNMTEMASM =
-            'var runMainThreadEmAsm=(emAsmAddr,sigPtr,argbuf,sync)=>{var args=readEmAsmArgs(sigPtr,argbuf);return ASM_CONSTS[emAsmAddr](...args)}';
-          if (runtimeText.includes(ORIG_RUNEMASM)) {
-            runtimeText = runtimeText.replace(
-              ORIG_RUNEMASM,
-              `var runEmAsmFunction=(code,sigPtr,argbuf)=>{var args=readEmAsmArgs(sigPtr,argbuf);${emAsmFallback('code')}return ASM_CONSTS[code](...args)}`,
-            );
-          } else {
-            tty.writeError('sdl3-runtime patch: runEmAsmFunction not found — EM_ASM may fail');
-          }
-          if (runtimeText.includes(ORIG_RUNMTEMASM)) {
-            runtimeText = runtimeText.replace(
-              ORIG_RUNMTEMASM,
-              `var runMainThreadEmAsm=(emAsmAddr,sigPtr,argbuf,sync)=>{var args=readEmAsmArgs(sigPtr,argbuf);${emAsmFallback('emAsmAddr')}return ASM_CONSTS[emAsmAddr](...args)}`,
-            );
-          }
-
-          // Patch: Scope SDL3's keyboard event handlers to the canvas element.
-          const ORIG_KEY_HANDLER = 'var keyEventHandlerFunc=e=>{var keyEventData=JSEvents.keyEvent';
-          const PATCHED_KEY_HANDLER = 'var keyEventHandlerFunc=e=>{if(Module["canvas"]&&e.target!==Module["canvas"])return;var keyEventData=JSEvents.keyEvent';
-          if (runtimeText.includes(ORIG_KEY_HANDLER)) {
-            runtimeText = runtimeText.replace(ORIG_KEY_HANDLER, PATCHED_KEY_HANDLER);
-          } else {
-            tty.writeError('sdl3-runtime patch: keyEventHandlerFunc not found — keyboard may be captured globally');
-          }
-
-          // Patch: Catch WebAssembly.RuntimeError inside callUserCallback.
-          const ORIG_CALL_USER_CB = 'var callUserCallback=func=>{if(ABORT){return}try{return func()}catch(e){handleException(e)}finally{maybeExit()}}';
-          const PATCHED_CALL_USER_CB =
-            'var callUserCallback=func=>{if(ABORT){return}try{return func()}catch(e){' +
-            'if(e instanceof WebAssembly.RuntimeError){ABORT=1;try{Module.pauseMainLoop?.();}catch(_){}return;}' +
-            'handleException(e)}finally{maybeExit()}}';
-          if (runtimeText.includes(ORIG_CALL_USER_CB)) {
-            runtimeText = runtimeText.replace(ORIG_CALL_USER_CB, PATCHED_CALL_USER_CB);
-          } else {
-            tty.writeError('sdl3-runtime patch: callUserCallback not found — WASM traps may crash the tab');
-          }
-
-          // Patch: Also intercept RuntimeError in handleException itself.
-          const ORIG_HANDLE_EX = 'var handleException=e=>{if(e instanceof ExitStatus||e=="unwind"){return EXITSTATUS}quit_(1,e)}';
-          const PATCHED_HANDLE_EX =
-            'var handleException=e=>{if(e instanceof ExitStatus||e=="unwind"){return EXITSTATUS}' +
-            'if(e instanceof WebAssembly.RuntimeError){ABORT=1;try{Module.pauseMainLoop?.();}catch(_){}return EXITSTATUS}' +
-            'quit_(1,e)}';
-          if (runtimeText.includes(ORIG_HANDLE_EX)) {
-            runtimeText = runtimeText.replace(ORIG_HANDLE_EX, PATCHED_HANDLE_EX);
-          } else {
-            tty.writeError('sdl3-runtime patch: handleException not found — WASM traps may crash the tab');
-          }
+        // Patch sdl3-runtime.mjs before creating the blob URL.
+        let runtimeText = new TextDecoder().decode(runtimeBytes instanceof Uint8Array ? runtimeBytes : new Uint8Array(runtimeBytes as ArrayBuffer));
+        const emAsmFallback = (varName: string) =>
+          `if(!ASM_CONSTS[${varName}]){var _s=UTF8ToString(${varName});` + `ASM_CONSTS[${varName}]=eval("(function($0,$1,$2,$3,$4,$5,$6,$7,$8,$9){"+_s+"})");}`;
+        runtimeText = runtimeText
+          .replace('var _main,_SDL_free,', 'var _free,_main,_SDL_free,')
+          .replace('_malloc=wasmExports["malloc"]', '_malloc=wasmExports["malloc"]||wasmExports["SDL_malloc"]')
+          .replace(
+            '_SDL_free=Module["_SDL_free"]=wasmExports["SDL_free"]',
+            '_SDL_free=Module["_SDL_free"]=wasmExports["SDL_free"];_free=wasmExports["free"]||_SDL_free',
+          )
+          .replace(
+            'var stringToNewUTF8=str=>{var size=lengthBytesUTF8(str)+1;var ret=_malloc(size)',
+            'var stringToNewUTF8=str=>{var size=lengthBytesUTF8(str)+1;var allocFn=_malloc||_SDL_malloc;var ret=allocFn(size)',
+          );
+        const ORIG_RUNEMASM = 'var runEmAsmFunction=(code,sigPtr,argbuf)=>{var args=readEmAsmArgs(sigPtr,argbuf);return ASM_CONSTS[code](...args)}';
+        const ORIG_RUNMTEMASM =
+          'var runMainThreadEmAsm=(emAsmAddr,sigPtr,argbuf,sync)=>{var args=readEmAsmArgs(sigPtr,argbuf);return ASM_CONSTS[emAsmAddr](...args)}';
+        if (runtimeText.includes(ORIG_RUNEMASM)) {
+          runtimeText = runtimeText.replace(
+            ORIG_RUNEMASM,
+            `var runEmAsmFunction=(code,sigPtr,argbuf)=>{var args=readEmAsmArgs(sigPtr,argbuf);${emAsmFallback('code')}return ASM_CONSTS[code](...args)}`,
+          );
         } else {
-          // ── Raylib patches (raylib-runtime.mjs, verbose format) ────
-          // raylib-runtime.mjs is generated from emcc + libraylib.a with InitWindow()
-          // in the stub, so emcc includes library_glfw.js + GL infrastructure and
-          // all GLFW/GL wasmImports are real implementations. We only patch
-          // callUserCallback and handleException to contain WebAssembly.RuntimeError
-          // traps and prevent "Aw, Snap!" tab crashes.
+          tty.writeError('sdl3-runtime patch: runEmAsmFunction not found — EM_ASM may fail');
+        }
+        if (runtimeText.includes(ORIG_RUNMTEMASM)) {
+          runtimeText = runtimeText.replace(
+            ORIG_RUNMTEMASM,
+            `var runMainThreadEmAsm=(emAsmAddr,sigPtr,argbuf,sync)=>{var args=readEmAsmArgs(sigPtr,argbuf);${emAsmFallback('emAsmAddr')}return ASM_CONSTS[emAsmAddr](...args)}`,
+          );
+        }
 
-          // Patch callUserCallback: intercept RuntimeError in the catch block (minified format).
-          const ORIG_RAYLIB_CATCH = 'catch(e){handleException(e)}finally{maybeExit()}};';
-          const PATCHED_RAYLIB_CATCH =
-            'catch(e){if(e instanceof WebAssembly.RuntimeError){ABORT=1;try{Module.pauseMainLoop?.();}catch(_){}return;}' +
-            'handleException(e)}finally{maybeExit()}};';
-          if (runtimeText.includes(ORIG_RAYLIB_CATCH)) {
-            runtimeText = runtimeText.replace(ORIG_RAYLIB_CATCH, PATCHED_RAYLIB_CATCH);
-          } else {
-            tty.writeError('raylib-runtime patch: callUserCallback catch block not found — WASM traps may crash the tab');
-          }
+        // Patch: Scope SDL3's keyboard event handlers to the canvas element.
+        const ORIG_KEY_HANDLER = 'var keyEventHandlerFunc=e=>{var keyEventData=JSEvents.keyEvent';
+        const PATCHED_KEY_HANDLER = 'var keyEventHandlerFunc=e=>{if(Module["canvas"]&&e.target!==Module["canvas"])return;var keyEventData=JSEvents.keyEvent';
+        if (runtimeText.includes(ORIG_KEY_HANDLER)) {
+          runtimeText = runtimeText.replace(ORIG_KEY_HANDLER, PATCHED_KEY_HANDLER);
+        } else {
+          tty.writeError('sdl3-runtime patch: keyEventHandlerFunc not found — keyboard may be captured globally');
+        }
 
-          // Patch handleException: intercept RuntimeError before quit_() (minified format).
-          const ORIG_RAYLIB_HANDLE_EX = 'quit_(1,e)};';
-          const PATCHED_RAYLIB_HANDLE_EX =
-            'if(e instanceof WebAssembly.RuntimeError){ABORT=1;try{Module.pauseMainLoop?.();}catch(_){}return EXITSTATUS}' +
-            'quit_(1,e)};';
-          if (runtimeText.includes(ORIG_RAYLIB_HANDLE_EX)) {
-            runtimeText = runtimeText.replace(ORIG_RAYLIB_HANDLE_EX, PATCHED_RAYLIB_HANDLE_EX);
-          } else {
-            tty.writeError('raylib-runtime patch: handleException quit_ call not found — WASM traps may crash the tab');
-          }
+        // Patch: Catch WebAssembly.RuntimeError (e.g. memory access out of bounds) inside
+        // callUserCallback so it never propagates to the browser's uncaught-error handler.
+        // Without this, any WASM trap in the RAF loop causes Chromium to crash the tab.
+        // We set ABORT=1 so subsequent loop iterations are skipped, then pause the main loop.
+        const ORIG_CALL_USER_CB = 'var callUserCallback=func=>{if(ABORT){return}try{return func()}catch(e){handleException(e)}finally{maybeExit()}}';
+        const PATCHED_CALL_USER_CB =
+          'var callUserCallback=func=>{if(ABORT){return}try{return func()}catch(e){' +
+          'if(e instanceof WebAssembly.RuntimeError){ABORT=1;try{Module.pauseMainLoop?.();}catch(_){}return;}' +
+          'handleException(e)}finally{maybeExit()}}';
+        if (runtimeText.includes(ORIG_CALL_USER_CB)) {
+          runtimeText = runtimeText.replace(ORIG_CALL_USER_CB, PATCHED_CALL_USER_CB);
+        } else {
+          tty.writeError('sdl3-runtime patch: callUserCallback not found — WASM traps may crash the tab');
+        }
 
+        // Patch: Also intercept RuntimeError in handleException itself, which is called by
+        // callMain and other paths, so any WASM trap outside the main loop is also contained.
+        const ORIG_HANDLE_EX = 'var handleException=e=>{if(e instanceof ExitStatus||e=="unwind"){return EXITSTATUS}quit_(1,e)}';
+        const PATCHED_HANDLE_EX =
+          'var handleException=e=>{if(e instanceof ExitStatus||e=="unwind"){return EXITSTATUS}' +
+          'if(e instanceof WebAssembly.RuntimeError){ABORT=1;try{Module.pauseMainLoop?.();}catch(_){}return EXITSTATUS}' +
+          'quit_(1,e)}';
+        if (runtimeText.includes(ORIG_HANDLE_EX)) {
+          runtimeText = runtimeText.replace(ORIG_HANDLE_EX, PATCHED_HANDLE_EX);
+        } else {
+          tty.writeError('sdl3-runtime patch: handleException not found — WASM traps may crash the tab');
         }
 
         // Create a blob URL for the ES6 runtime module so we can dynamically import it
@@ -1201,30 +1159,10 @@ export default function Ide({
             // to execute twice, registering duplicate RAF loops → crash.
             // SDL3 is unaffected because its _main is a noop proxy.
             noInitialRun: isRaylib,
-            // For raylib: prevent exitRuntime() from being called after callMain()
-            // returns. When emscripten_set_main_loop throws ExitStatus to unwind
-            // the C stack, callMain() catches it and returns 0. The runtime then
-            // calls exitRuntime() which sets runtimeInitialized=false, causing
-            // callUserCallback to skip update_draw_frame() on every RAF tick.
-            // noExitRuntime=true keeps runtimeInitialized=true so the RAF loop runs.
-            noExitRuntime: isRaylib,
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             instantiateWasm(info: any, receiveInstance: (inst: WebAssembly.Instance) => void) {
-              // For raylib: replace Emscripten abort-stubs with no-ops.
-              // raylib-runtime.mjs marks unresolved symbols (GLFW etc.) with
-              // `.stub = true` — they call abort() when invoked. The user WASM
-              // (linked with --allow-undefined) may call these; we silence them
-              // so the raylib web backend can handle input/window internally.
-              const baseEnv: Record<string, unknown> = isRaylib
-                ? Object.fromEntries(
-                    Object.entries(info.env as Record<string, unknown>).map(([k, v]) => [
-                      k,
-                      typeof v === 'function' && (v as any).stub ? () => 0 : v,
-                    ]),
-                  )
-                : { ...info.env };
               const envBase = {
-                ...baseEnv,
+                ...info.env,
                 // Preserve runtime-provided memory growth handler when present.
                 // Overriding this with a no-op can leave stale HEAP views and
                 // lead to out-of-bounds traps after grow_memory.
@@ -1326,19 +1264,6 @@ export default function Ide({
             },
             print: (line: string) => tty.writeLine(line),
             printErr: (line: string) => tty.writeError(line),
-            // Capture abort() calls (emscripten fatal errors) before they crash the tab.
-            onAbort: (msg: unknown) => {
-              tty.writeError(`\x1b[31m[${canvasLabel}] abort: ${msg}\x1b[0m`);
-            },
-            // Override quit_ so RuntimeErrors from the RAF loop are logged
-            // instead of propagating uncaught → "Aw, Snap!" browser crash.
-            quit: (_status: number, toThrow: unknown) => {
-              const msg = toThrow instanceof Error ? toThrow.message : String(toThrow);
-              tty.writeError(`\x1b[31m[${canvasLabel}] runtime error: ${msg}\x1b[0m`);
-              setStatus(`${canvasLabel} crashed`);
-              setCanvasIsRunning(false);
-              // Do not re-throw: prevents "Aw, Snap!" so the error is visible.
-            },
           }),
           moduleTimeout,
         ]).catch((e: unknown) => {
