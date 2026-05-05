@@ -35,7 +35,6 @@ defineBuildScript({
         await step('userland', () => {
             const userlandTrash: readonly string[] = [
                 'binaryen/build-wasm', 'binaryen/build-native', 'binaryen/binaryen-*', 'binaryen/version_*',
-                'brotli/brotli-*',
                 'cmake/cmake-*', 'cmake/CMake-*',
                 'cpython/build-wasm', 'cpython/build-native', 'cpython/cpython-*', 'cpython/sysroot-staging', 'cpython/v*',
                 'imgui/imgui-*',
@@ -46,6 +45,15 @@ defineBuildScript({
             ];
             for (const rel of userlandTrash) {
                 shell.rm('-rf', path.join(SCRIPT_ROOT, 'userland', rel));
+            }
+            // brotli: only remove extracted upstream source dirs, not hand-written brotli-wrapper.c
+            const brotliDir = path.join(SCRIPT_ROOT, 'userland', 'brotli');
+            if (fs.existsSync(brotliDir)) {
+                for (const entry of fs.readdirSync(brotliDir)) {
+                    if (entry.startsWith('brotli-') && fs.statSync(path.join(brotliDir, entry)).isDirectory()) {
+                        shell.rm('-rf', path.join(brotliDir, entry));
+                    }
+                }
             }
         });
 
