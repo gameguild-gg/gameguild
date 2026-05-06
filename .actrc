@@ -1,3 +1,5 @@
 --container-architecture linux/amd64
 --network bridge
 --container-options --dns=8.8.8.8 --dns=8.8.4.4
+--eventpath .github/act-push-event.json
+--artifact-server-path /tmp/act-artifacts
