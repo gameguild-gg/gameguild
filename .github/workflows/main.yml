@@ -56,11 +56,10 @@ jobs:
       - uses: actions/setup-node@v6
         with:
           node-version: '26'
-          package-manager-cache: 'false'
 
       - name: Install dependencies
         working-directory: .
-        run: npm install --ignore-scripts --network-timeout=300000
+        run: npm ci --ignore-scripts
 
       - name: Resolve EMSDK version
         id: emsdk-version
@@ -304,7 +303,6 @@ jobs:
       - uses: actions/setup-node@v6
         with:
           node-version: '26'
-          package-manager-cache: 'false'
 
       - name: Install dotnet 8 SDK (for @game-guild/dotnet-wasm postinstall)
         uses: actions/setup-dotnet@v4
@@ -315,7 +313,7 @@ jobs:
         run: dotnet workload install wasm-tools
 
       - name: Install web dependencies
-        run: npm install -w apps/web
+        run: npm ci
 
       - name: Build web
         run: npm run build -w apps/web
@@ -394,7 +392,6 @@ jobs:
       - uses: actions/setup-node@v6
         with:
           node-version: '26'
-          package-manager-cache: 'false'
 
       - name: Install emception library dependencies
         run: npm ci --ignore-scripts
@@ -549,7 +546,6 @@ jobs:
       - uses: actions/setup-node@v6
         with:
           node-version: '26'
-          package-manager-cache: 'false'
 
       - name: Semantic Release (root)
         id: semantic
@@ -615,7 +611,6 @@ jobs:
         with:
           # Node 24 ships npm >= 11.5.1, required for npm OIDC Trusted Publishing.
           node-version: '26'
-          package-manager-cache: 'false'
 
       - name: Verify npm supports OIDC Trusted Publishing
         run: |
@@ -623,7 +618,7 @@ jobs:
           npm --version
 
       - name: Install emception dependencies
-        run: npm install --ignore-scripts
+        run: npm ci --ignore-scripts
 
       - name: Build emception workspace packages
         run: cd tools/emception && npm run build:packages
