@@ -36,6 +36,7 @@ jobs:
       - uses: actions/setup-node@v6
         with:
           node-version: '26'
+          package-manager-cache: false
 
       - name: Install dotnet 8 SDK (for @game-guild/dotnet-wasm postinstall)
         uses: actions/setup-dotnet@v4
@@ -79,51 +80,16 @@ jobs:
       - name: Install monorepo dependencies
         run: npm install --include=optional --ignore-scripts
 
-      - name: Ensure platform native bindings are present
-        shell: bash
+      - name: Install required Linux native runtimes
         run: |
-          set -euo pipefail
-
-          mapfile -t PKGS < <(node - <<'NODE'
-          const os = process.platform;
-          const arch = process.arch;
-          const pkgs = [];
-
-          pkgs.push(`@esbuild/${os}-${arch}`);
-
-          if (os === 'linux') {
-            const report = process.report?.getReport?.();
-            const hasGlibc = !!report?.header?.glibcVersionRuntime;
-            pkgs.push(`@rolldown/binding-${os}-${arch}-${hasGlibc ? 'gnu' : 'musl'}`);
-            pkgs.push(`@parcel/watcher-${os}-${arch}-${hasGlibc ? 'glibc' : 'musl'}`);
-            pkgs.push(`@swc/core-${os}-${arch}-${hasGlibc ? 'gnu' : 'musl'}`);
-          } else if (os === 'darwin') {
-            pkgs.push(`@rolldown/binding-darwin-${arch}`);
-            pkgs.push(`@parcel/watcher-darwin-${arch}`);
-            pkgs.push(`@swc/core-darwin-${arch}`);
-          } else if (os === 'win32') {
-            pkgs.push(`@rolldown/binding-win32-${arch}-msvc`);
-            pkgs.push(`@parcel/watcher-win32-${arch}`);
-            pkgs.push(`@swc/core-win32-${arch}-msvc`);
-          }
-
-          console.log(pkgs.join('\n'));
-          NODE
-          )
-
-          MISSING=()
-          for pkg in "${PKGS[@]}"; do
-            if [[ ! -f "node_modules/${pkg}/package.json" ]]; then
-              MISSING+=("${pkg}")
-            fi
-          done
-
-          if [[ ${#MISSING[@]} -eq 0 ]]; then
-            echo "✅ Native bindings already present: ${PKGS[*]}"
-          else
-            echo "⚠️ Missing native bindings: ${MISSING[*]}"
-            npm install --no-save --ignore-scripts "${MISSING[@]}"
-          fi
+          npm install --no-save --ignore-scripts \
+            @esbuild/linux-x64 \
+            @rolldown/binding-linux-x64-gnu \
+            @parcel/watcher-linux-x64-glibc \
+            @swc/core-linux-x64-gnu \
+            lightningcss-linux-x64-gnu \
+            @img/sharp-linux-x64 \
+            @img/sharp-libvips-linux-x64
 
       - name: Build packages/dotnet-wasm
         run: npm run setup -w @game-guild/dotnet-wasm
