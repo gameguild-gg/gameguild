@@ -1,0 +1,79 @@
+# Coolify deployment - API only (staging).
+#
+# Routing: traffic enters via Cloudflare Tunnel -> Coolify's Traefik proxy ->
+# this container on the shared Coolify network. No host ports are published;
+# Coolify generates the router labels from the domain configured in the UI.
+#
+# Required env vars (set in Coolify -> Resource -> Environment Variables):
+#   POSTGRES_HOST, POSTGRES_PASSWORD,
+#   JWT_SECRET_KEY, ENCRYPTION_KEY
+#
+# Recommended env vars:
+#   POSTGRES_DB, POSTGRES_USER, JWT_ISSUER, JWT_AUDIENCE,
+#   SERVICE_FQDN_API
+#
+# In the Coolify UI, set the service "Port Exposed" to 8080 so Traefik
+# targets the port configured below.
+
+services:
+  api:
+    build:
+      context: ./apps/api
+      dockerfile: Dockerfile
+    image: game-guild-api
+    ports:
+      - '${PORT:-8080}'
+    environment:
+      - SERVICE_FQDN_API_8080=${SERVICE_FQDN_API:-}
+      - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT:-Staging}
+      - ASPNETCORE_URLS=http://+:${PORT:-8080}
+      - ASPNETCORE_FORWARDEDHEADERS_ENABLED=true
+      # Shared Coolify Postgres
+      - ConnectionStrings__DefaultConnection=Host=${POSTGRES_HOST};Port=${POSTGRES_PORT:-5432};Database=${POSTGRES_DB:-game_guild};Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD};Include Error Detail=false;Maximum Pool Size=100;Minimum Pool Size=5;Connection Idle Lifetime=300
+      - ConnectionStrings__AuthenticationDb=Host=${POSTGRES_HOST};Port=${POSTGRES_PORT:-5432};Database=${POSTGRES_DB:-game_guild};Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD};Include Error Detail=false;Maximum Pool Size=100;Minimum Pool Size=5;Connection Idle Lifetime=300
+      # JWT configuration consumed by the API and auth services
+      - Jwt__SecretKey=${JWT_SECRET_KEY}
+      - Jwt__Issuer=${JWT_ISSUER:-GameGuild}
+      - Jwt__Audience=${JWT_AUDIENCE:-GameGuild.Users}
+      - Authentication__JwtSecretKey=${JWT_SECRET_KEY}
+      - Authentication__JwtIssuer=${JWT_ISSUER:-GameGuild}
+      - Authentication__JwtAudience=${JWT_AUDIENCE:-GameGuild.Users}
+      - Authentication__JwtExpiration=${JWT_EXPIRATION:-24:00:00}
+      - Encryption__EncryptionKey=${ENCRYPTION_KEY}
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ['CMD-SHELL', 'curl -fsS http://localhost:${PORT:-8080}/health || exit 1']
+      start_interval: 5s
+      start_period: 180s
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    restart: unless-stopped
+    logging:
+      driver: 'json-file'
+      options:
+        max-size: '10m'
+        max-file: '3'
+    labels:
+      - 'com.game-guild.app=api'
+      - 'com.game-guild.tier=backend'
+      - 'com.game-guild.environment=staging'
+      - 'traefik.enable=true'
+      - 'traefik.docker.network=coolify'
+      - 'traefik.http.services.api.loadbalancer.server.port=8080'
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+    networks:
+      - default
+      - coolify
+
+networks:
+  coolify:
+    external: true
