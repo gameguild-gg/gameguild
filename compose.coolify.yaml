@@ -39,6 +39,7 @@ services:
       - Authentication__JwtIssuer=${JWT_ISSUER:-GameGuild}
       - Authentication__JwtAudience=${JWT_AUDIENCE:-GameGuild.Users}
       - Authentication__JwtExpiration=${JWT_EXPIRATION:-24:00:00}
+      - Encryption__Key=${ENCRYPTION_KEY}
       - Encryption__EncryptionKey=${ENCRYPTION_KEY}
     security_opt:
       - no-new-privileges:true
