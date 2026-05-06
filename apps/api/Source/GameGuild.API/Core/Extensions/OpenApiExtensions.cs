@@ -5,6 +5,8 @@ using GameGuild.Configuration.PresentationLayer.ApiVersioning;
 using GameGuild.Configuration.PresentationLayer.OpenAPI;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.OpenApi.Models;
+using System.Text;
+using Swashbuckle.AspNetCore.SwaggerGen;
 using ApiVersioningOptions = GameGuild.Configuration.PresentationLayer.ApiVersioning.ApiVersioningOptions;
 
 namespace GameGuild.API;
@@ -154,6 +156,9 @@ public static class OpenApiExtensions
                     return type.Name;
                 });
 
+                // Normalize controller tags into a consistent module/controller path.
+                c.OperationFilter<ModuleControllerTagOperationFilter>();
+
                 // Add security definition for JWT Bearer token
                 c.AddSecurityDefinition(
                     "Bearer",
@@ -270,5 +275,91 @@ internal sealed class OpenApiDocumentTransformer : Microsoft.AspNetCore.OpenApi.
         // Document is already transformed by the default pipeline
         // This transformer is just a placeholder to ensure we can customize if needed
         return Task.CompletedTask;
+    }
+}
+
+internal sealed class ModuleControllerTagOperationFilter : IOperationFilter
+{
+    public void Apply(OpenApiOperation operation, OperationFilterContext context)
+    {
+        if (context.ApiDescription.ActionDescriptor is not ControllerActionDescriptor controllerAction)
+            return;
+
+        var tag = BuildTag(controllerAction.ControllerTypeInfo.Namespace, controllerAction.ControllerName);
+        if (string.IsNullOrWhiteSpace(tag))
+            return;
+
+        operation.Tags = new List<OpenApiTag> { new() { Name = tag } };
+    }
+
+    private static string BuildTag(string? controllerNamespace, string controllerName)
+    {
+        var moduleParts = GetModuleParts(controllerNamespace);
+        var controllerSegment = ToKebabCase(controllerName);
+
+        if (moduleParts.Count == 0)
+            return controllerSegment;
+
+        if (string.Equals(moduleParts[^1], controllerSegment, StringComparison.Ordinal))
+            return string.Join("/", moduleParts);
+
+        return string.Join("/", moduleParts.Append(controllerSegment));
+    }
+
+    private static List<string> GetModuleParts(string? controllerNamespace)
+    {
+        if (string.IsNullOrWhiteSpace(controllerNamespace))
+            return new List<string>();
+
+        if (string.Equals(controllerNamespace, "GameGuild.API.Controllers", StringComparison.Ordinal))
+            return new List<string> { "platform" };
+
+        var segments = controllerNamespace.Split('.', StringSplitOptions.RemoveEmptyEntries);
+        if (segments.Length == 0 || !string.Equals(segments[0], "GameGuild", StringComparison.Ordinal))
+            return new List<string>();
+
+        return segments
+            .Skip(1)
+            .Where(segment => !string.Equals(segment, "Controllers", StringComparison.Ordinal))
+            .Select(ToKebabCase)
+            .ToList();
+    }
+
+    private static string ToKebabCase(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return string.Empty;
+
+        var builder = new StringBuilder(value.Length + 8);
+
+        for (var index = 0; index < value.Length; index++)
+        {
+            var character = value[index];
+
+            if (char.IsUpper(character))
+            {
+                if (index > 0 && builder[^1] != '-')
+                {
+                    var previous = value[index - 1];
+                    var nextIsLower = index + 1 < value.Length && char.IsLower(value[index + 1]);
+
+                    if (char.IsLower(previous) || char.IsDigit(previous) || (char.IsUpper(previous) && nextIsLower))
+                        builder.Append('-');
+                }
+
+                builder.Append(char.ToLowerInvariant(character));
+            }
+            else if (character == '_' || character == ' ')
+            {
+                if (builder.Length > 0 && builder[^1] != '-')
+                    builder.Append('-');
+            }
+            else
+            {
+                builder.Append(char.ToLowerInvariant(character));
+            }
+        }
+
+        return builder.ToString();
     }
 }
