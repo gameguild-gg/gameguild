@@ -28,6 +28,7 @@ jobs:
       - uses: dorny/paths-filter@v3
         id: filter
         with:
+          base: ${{ github.event.repository.default_branch || 'main' }}
           filters: |
             web:
               - 'apps/web/**'
@@ -58,7 +59,7 @@ jobs:
 
       - name: Install dependencies
         working-directory: .
-        run: npm install --ignore-scripts
+        run: npm install --ignore-scripts --network-timeout 300000
 
       - name: Resolve EMSDK version
         id: emsdk-version
@@ -398,6 +399,9 @@ jobs:
 
       - name: Sync CDN to demo app
         run: node scripts/sync-emception-cdn.mjs tools/emception/apps/ide-react
+
+      - name: Install ide-react app dependencies
+        run: cd tools/emception/apps/ide-react && npm install --ignore-scripts --install-strategy=nested
 
       - name: Build demo
         run: cd tools/emception/apps/ide-react && npm run build --ignore-scripts
