@@ -405,8 +405,8 @@ jobs:
       - name: Sync CDN to demo app
         run: node scripts/sync-emception-cdn.mjs tools/emception/apps/ide-react
 
-      - name: Install ide-react app dependencies
-        run: cd tools/emception/apps/ide-react && npm install --ignore-scripts --install-strategy=nested
+      - name: Anchor vite temp dir inside ide-react
+        run: mkdir -p tools/emception/apps/ide-react/node_modules
 
       - name: Build demo
         run: cd tools/emception/apps/ide-react && npm run build --ignore-scripts
