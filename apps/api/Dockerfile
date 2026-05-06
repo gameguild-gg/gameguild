@@ -24,6 +24,11 @@ RUN apk add --no-cache curl \
 
 WORKDIR /app
 
+# Prepare a writable location for persisted Data Protection keys before any
+# named volume is mounted at runtime.
+RUN mkdir -p /app/.aspnet/DataProtection-Keys \
+    && chown -R appuser:appuser /app
+
 # Copy published application with proper ownership
 COPY --from=build --chown=appuser:appuser /app/publish .
 
@@ -34,15 +39,16 @@ USER appuser
 EXPOSE 8080
 
 # Set environment variables
-ENV ASPNETCORE_URLS=http://+:8080 \
+ENV ASPNETCORE_HTTP_PORTS=8080 \
     ASPNETCORE_ENVIRONMENT=Production \
     DOTNET_RUNNING_IN_CONTAINER=true \
     DOTNET_USE_POLLING_FILE_WATCHER=true \
-    ASPNETCORE_FORWARDEDHEADERS_ENABLED=true
+    ASPNETCORE_FORWARDEDHEADERS_ENABLED=true \
+    DATAPROTECTION_KEYS_PATH=/app/.aspnet/DataProtection-Keys
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD curl -f http://localhost:8080/health || exit 1
+    CMD curl -f http://127.0.0.1:8080/live || exit 1
 
 # Entry point
 ENTRYPOINT ["dotnet", "GameGuild.API.dll"]

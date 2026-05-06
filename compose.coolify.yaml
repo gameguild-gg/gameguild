@@ -29,7 +29,7 @@ services:
       - ASPNETCORE_HTTP_PORTS=${PORT:-8080}
       - ASPNETCORE_FORWARDEDHEADERS_ENABLED=true
       - Database__RunMigrationsOnStartup=${RUN_DB_MIGRATIONS_ON_STARTUP:-false}
-      - DATAPROTECTION_KEYS_PATH=/home/appuser/.aspnet/DataProtection-Keys
+      - DATAPROTECTION_KEYS_PATH=/app/.aspnet/DataProtection-Keys
       # Shared Coolify Postgres
       - ConnectionStrings__DefaultConnection=Host=${POSTGRES_HOST};Port=${POSTGRES_PORT:-5432};Database=${POSTGRES_DB:-game_guild};Username=${POSTGRES_USER:-game_guild};Password=${POSTGRES_PASSWORD};Include Error Detail=false;Maximum Pool Size=100;Minimum Pool Size=5;Connection Idle Lifetime=300
       - ConnectionStrings__AuthenticationDb=Host=${POSTGRES_HOST};Port=${POSTGRES_PORT:-5432};Database=${POSTGRES_DB:-game_guild};Username=${POSTGRES_USER:-game_guild};Password=${POSTGRES_PASSWORD};Include Error Detail=false;Maximum Pool Size=100;Minimum Pool Size=5;Connection Idle Lifetime=300
@@ -44,7 +44,7 @@ services:
       - Encryption__Key=${ENCRYPTION_KEY}
       - Encryption__EncryptionKey=${ENCRYPTION_KEY}
     volumes:
-      - dataprotection-keys:/home/appuser/.aspnet/DataProtection-Keys
+      - dataprotection-keys-v2:/app/.aspnet/DataProtection-Keys
     security_opt:
       - no-new-privileges:true
     healthcheck:
@@ -84,5 +84,5 @@ networks:
     external: true
 
 volumes:
-  dataprotection-keys:
+  dataprotection-keys-v2:
     driver: local
