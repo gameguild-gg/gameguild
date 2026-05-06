@@ -394,7 +394,7 @@ jobs:
           node-version: '22'
 
       - name: Install emception library dependencies
-        run: npm install --ignore-scripts
+        run: npm ci --ignore-scripts
 
       - name: Build emception workspace packages
         run: cd tools/emception && npm run build:packages
