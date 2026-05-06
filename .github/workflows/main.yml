@@ -59,7 +59,58 @@ jobs:
 
       - name: Install dependencies
         working-directory: .
-        run: npm install --ignore-scripts --network-timeout=300000
+        run: |
+          npm install --ignore-scripts --include=optional --network-timeout=300000
+          # npm optional deps can be pruned by external env/config in CI.
+          # Repair all missing optional deps for the current platform/arch.
+          MISSING_OPTIONAL="$(node - <<'NODE'
+          const fs = require('fs');
+          const path = require('path');
+
+          const lockPath = path.join(process.cwd(), 'package-lock.json');
+          if (!fs.existsSync(lockPath)) {
+            process.stdout.write('');
+            process.exit(0);
+          }
+
+          const lock = JSON.parse(fs.readFileSync(lockPath, 'utf8'));
+          const platform = process.platform;
+          const arch = process.arch;
+
+          const matches = (constraint, value) => {
+            if (!Array.isArray(constraint) || constraint.length === 0) return true;
+            const positive = constraint.filter((x) => !String(x).startsWith('!'));
+            const negative = constraint.filter((x) => String(x).startsWith('!')).map((x) => String(x).slice(1));
+            if (negative.includes(value)) return false;
+            if (positive.length === 0) return true;
+            return positive.includes(value);
+          };
+
+          const missing = new Set();
+          for (const [pkgPath, meta] of Object.entries(lock.packages || {})) {
+            if (!meta || meta.optional !== true) continue;
+            if (!matches(meta.os, platform)) continue;
+            if (!matches(meta.cpu, arch)) continue;
+
+            const name = meta.name || (pkgPath.startsWith('node_modules/') ? pkgPath.slice('node_modules/'.length) : '');
+            if (!name) continue;
+
+            const packageJsonPath = path.join(process.cwd(), 'node_modules', ...name.split('/'), 'package.json');
+            if (!fs.existsSync(packageJsonPath)) {
+              missing.add(name);
+            }
+          }
+
+          process.stdout.write(Array.from(missing).join(' '));
+          NODE
+          )"
+
+          if [[ -n "${MISSING_OPTIONAL}" ]]; then
+            echo "Installing missing optional deps: ${MISSING_OPTIONAL}"
+            npm install --no-save --include=optional ${MISSING_OPTIONAL}
+          else
+            echo "✅ All platform-matched optional deps are present"
+          fi
 
       - name: Resolve EMSDK version
         id: emsdk-version
@@ -394,7 +445,56 @@ jobs:
           node-version: '26'
 
       - name: Install emception library dependencies
-        run: npm ci --ignore-scripts
+        run: |
+          npm ci --ignore-scripts --include=optional
+          MISSING_OPTIONAL="$(node - <<'NODE'
+          const fs = require('fs');
+          const path = require('path');
+
+          const lockPath = path.join(process.cwd(), 'package-lock.json');
+          if (!fs.existsSync(lockPath)) {
+            process.stdout.write('');
+            process.exit(0);
+          }
+
+          const lock = JSON.parse(fs.readFileSync(lockPath, 'utf8'));
+          const platform = process.platform;
+          const arch = process.arch;
+
+          const matches = (constraint, value) => {
+            if (!Array.isArray(constraint) || constraint.length === 0) return true;
+            const positive = constraint.filter((x) => !String(x).startsWith('!'));
+            const negative = constraint.filter((x) => String(x).startsWith('!')).map((x) => String(x).slice(1));
+            if (negative.includes(value)) return false;
+            if (positive.length === 0) return true;
+            return positive.includes(value);
+          };
+
+          const missing = new Set();
+          for (const [pkgPath, meta] of Object.entries(lock.packages || {})) {
+            if (!meta || meta.optional !== true) continue;
+            if (!matches(meta.os, platform)) continue;
+            if (!matches(meta.cpu, arch)) continue;
+
+            const name = meta.name || (pkgPath.startsWith('node_modules/') ? pkgPath.slice('node_modules/'.length) : '');
+            if (!name) continue;
+
+            const packageJsonPath = path.join(process.cwd(), 'node_modules', ...name.split('/'), 'package.json');
+            if (!fs.existsSync(packageJsonPath)) {
+              missing.add(name);
+            }
+          }
+
+          process.stdout.write(Array.from(missing).join(' '));
+          NODE
+          )"
+
+          if [[ -n "${MISSING_OPTIONAL}" ]]; then
+            echo "Installing missing optional deps: ${MISSING_OPTIONAL}"
+            npm install --no-save --include=optional ${MISSING_OPTIONAL}
+          else
+            echo "✅ All platform-matched optional deps are present"
+          fi
 
       - name: Build emception workspace packages
         run: cd tools/emception && npm run build:packages
@@ -618,7 +718,56 @@ jobs:
           npm --version
 
       - name: Install emception dependencies
-        run: npm ci --ignore-scripts
+        run: |
+          npm ci --ignore-scripts --include=optional
+          MISSING_OPTIONAL="$(node - <<'NODE'
+          const fs = require('fs');
+          const path = require('path');
+
+          const lockPath = path.join(process.cwd(), 'package-lock.json');
+          if (!fs.existsSync(lockPath)) {
+            process.stdout.write('');
+            process.exit(0);
+          }
+
+          const lock = JSON.parse(fs.readFileSync(lockPath, 'utf8'));
+          const platform = process.platform;
+          const arch = process.arch;
+
+          const matches = (constraint, value) => {
+            if (!Array.isArray(constraint) || constraint.length === 0) return true;
+            const positive = constraint.filter((x) => !String(x).startsWith('!'));
+            const negative = constraint.filter((x) => String(x).startsWith('!')).map((x) => String(x).slice(1));
+            if (negative.includes(value)) return false;
+            if (positive.length === 0) return true;
+            return positive.includes(value);
+          };
+
+          const missing = new Set();
+          for (const [pkgPath, meta] of Object.entries(lock.packages || {})) {
+            if (!meta || meta.optional !== true) continue;
+            if (!matches(meta.os, platform)) continue;
+            if (!matches(meta.cpu, arch)) continue;
+
+            const name = meta.name || (pkgPath.startsWith('node_modules/') ? pkgPath.slice('node_modules/'.length) : '');
+            if (!name) continue;
+
+            const packageJsonPath = path.join(process.cwd(), 'node_modules', ...name.split('/'), 'package.json');
+            if (!fs.existsSync(packageJsonPath)) {
+              missing.add(name);
+            }
+          }
+
+          process.stdout.write(Array.from(missing).join(' '));
+          NODE
+          )"
+
+          if [[ -n "${MISSING_OPTIONAL}" ]]; then
+            echo "Installing missing optional deps: ${MISSING_OPTIONAL}"
+            npm install --no-save --include=optional ${MISSING_OPTIONAL}
+          else
+            echo "✅ All platform-matched optional deps are present"
+          fi
 
       - name: Build emception workspace packages
         run: cd tools/emception && npm run build:packages
