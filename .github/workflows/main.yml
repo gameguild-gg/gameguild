@@ -55,7 +55,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: '25'
 
       - name: Install dependencies
         working-directory: .
@@ -302,7 +302,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: '25'
 
       - name: Install dotnet 8 SDK (for @game-guild/dotnet-wasm postinstall)
         uses: actions/setup-dotnet@v4
@@ -391,10 +391,10 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: '25'
 
       - name: Install emception library dependencies
-        run: npm ci --ignore-scripts
+        run: npm install --ignore-scripts --install-strategy=hoisted
 
       - name: Build emception workspace packages
         run: cd tools/emception && npm run build:packages
@@ -545,7 +545,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: '25'
 
       - name: Semantic Release (root)
         id: semantic
@@ -610,7 +610,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           # Node 24 ships npm >= 11.5.1, required for npm OIDC Trusted Publishing.
-          node-version: '24'
+          node-version: '25'
 
       - name: Verify npm supports OIDC Trusted Publishing
         run: |
