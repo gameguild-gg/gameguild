@@ -4,7 +4,7 @@ namespace GameGuild.Learning.Courses;
 
 /// <summary>
 ///     EF Core model configuration for the Learning.Courses module.
-///     Discovered by <see cref="GameGuild.API.Database.ApplicationDbContext"/> via assembly scanning.
+///     Discovered by the main API database context via assembly scanning.
 /// </summary>
 public sealed class CoursesModelConfiguration : IModelConfiguration
 {
