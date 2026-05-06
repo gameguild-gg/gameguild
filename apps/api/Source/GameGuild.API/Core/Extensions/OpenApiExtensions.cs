@@ -36,7 +36,7 @@ public static class OpenApiExtensions
             // Custom document transformer for any OpenAPI customizations
             openApiOptions.AddDocumentTransformer<OpenApiDocumentTransformer>();
         });
-        
+
         // Register custom document transformer
         services.AddSingleton<OpenApiDocumentTransformer>();
 
@@ -111,13 +111,13 @@ public static class OpenApiExtensions
                 {
                     var fullName = type.FullName ?? type.Name;
                     var parts = fullName.Split('.');
-                    
+
                     if (type.IsGenericType)
                     {
                         // For generic types, include module path + generic type + args
                         var genericTypeName = type.Name.Split('`')[0];
                         var genericArgs = string.Join("", type.GetGenericArguments().Select(t => t.Name));
-                        
+
                         // Find module path (everything between "GameGuild" and the type name)
                         var gameGuildIndex = Array.IndexOf(parts, "GameGuild");
                         if (gameGuildIndex >= 0 && parts.Length > gameGuildIndex + 2)
@@ -126,10 +126,10 @@ public static class OpenApiExtensions
                             var modulePath = string.Join("_", parts.Skip(gameGuildIndex + 1).Take(parts.Length - gameGuildIndex - 2));
                             return $"{modulePath}_{genericTypeName}{genericArgs}";
                         }
-                        
+
                         return $"{genericTypeName}{genericArgs}";
                     }
-                    
+
                     // For GameGuild types, use full Module_Submodule_TypeName pattern
                     // e.g., GameGuild.Identity.Users.UserDto -> Identity_Users_UserDto
                     // e.g., GameGuild.Commerce.Products.ProductDto -> Commerce_Products_ProductDto
@@ -140,19 +140,19 @@ public static class OpenApiExtensions
                         var typeName = parts[^1];  // Last part is the type name
                         return $"{modulePath}_{typeName}";
                     }
-                    
+
                     // For shorter GameGuild types (e.g., GameGuild.SomeType)
                     if (parts.Length >= 2 && parts[0] == "GameGuild")
                     {
                         return string.Join("_", parts.Skip(1));
                     }
-                    
+
                     // For non-GameGuild types (external libraries, etc.)
                     if (parts.Length >= 2)
                     {
                         return $"{parts[^2]}_{parts[^1]}";
                     }
-                    
+
                     return type.Name;
                 });
 
@@ -191,7 +191,7 @@ public static class OpenApiExtensions
 
         return services;
     }
-    
+
     /// <summary>
     ///     Helper function to normalize schema names.
     ///     Note: We intentionally keep the "Dto" suffix to avoid schema ID conflicts
@@ -201,11 +201,11 @@ public static class OpenApiExtensions
     {
         // DO NOT strip "Dto" suffix - keeping it prevents conflicts between
         // entities and DTOs with similar names (e.g., TenantSettings vs TenantSettingsDto)
-        
+
         // Convert "Result" suffix to "Response" for consistency
         if (name.EndsWith("Result", StringComparison.Ordinal))
             name = name[..^6] + "Response";
-        
+
         return name;
     }
 
@@ -280,49 +280,266 @@ internal sealed class OpenApiDocumentTransformer : Microsoft.AspNetCore.OpenApi.
 
 internal sealed class ModuleControllerTagOperationFilter : IOperationFilter
 {
+    private static readonly HashSet<string> CanonicalRoots =
+    [
+        "access-control",
+        "analytics",
+        "assets",
+        "auth",
+        "commerce",
+        "compliance",
+        "content",
+        "features",
+        "gamification",
+        "health",
+        "learning",
+        "monitoring",
+        "notifications",
+        "projects",
+        "resources",
+        "social",
+        "tenants",
+        "testing-lab",
+        "users"
+    ];
+
     public void Apply(OpenApiOperation operation, OperationFilterContext context)
     {
         if (context.ApiDescription.ActionDescriptor is not ControllerActionDescriptor controllerAction)
             return;
 
-        var tag = BuildTag(controllerAction.ControllerTypeInfo.Namespace, controllerAction.ControllerName);
+        var explicitTag = GetExplicitControllerTag(controllerAction);
+        var tag = BuildTag(controllerAction.ControllerTypeInfo.Namespace, controllerAction.ControllerName, explicitTag);
         if (string.IsNullOrWhiteSpace(tag))
             return;
 
         operation.Tags = new List<OpenApiTag> { new() { Name = tag } };
     }
 
-    private static string BuildTag(string? controllerNamespace, string controllerName)
+    private static string? GetExplicitControllerTag(ControllerActionDescriptor controllerAction)
     {
-        var moduleParts = GetModuleParts(controllerNamespace);
-        var controllerSegment = ToKebabCase(controllerName);
-
-        if (moduleParts.Count == 0)
-            return controllerSegment;
-
-        if (string.Equals(moduleParts[^1], controllerSegment, StringComparison.Ordinal))
-            return string.Join("/", moduleParts);
-
-        return string.Join("/", moduleParts.Append(controllerSegment));
+        return controllerAction.ControllerTypeInfo
+            .GetCustomAttributes(typeof(Microsoft.AspNetCore.Http.TagsAttribute), inherit: false)
+            .OfType<Microsoft.AspNetCore.Http.TagsAttribute>()
+            .SelectMany(attribute => attribute.Tags ?? Array.Empty<string>())
+            .FirstOrDefault(tag => !string.IsNullOrWhiteSpace(tag));
     }
 
-    private static List<string> GetModuleParts(string? controllerNamespace)
+    private static string BuildTag(string? controllerNamespace, string controllerName, string? explicitTag)
+    {
+        if (TryGetCanonicalControllerTag(controllerName, out var canonicalTag))
+            return canonicalTag;
+
+        var prefix = GetCanonicalPrefix(controllerNamespace, controllerName);
+
+        if (!string.IsNullOrWhiteSpace(explicitTag))
+            return NormalizeExplicitTag(prefix, explicitTag);
+
+        var leaf = NormalizeLeaf(prefix, controllerName);
+        if (string.IsNullOrWhiteSpace(prefix))
+            return leaf;
+
+        if (string.IsNullOrWhiteSpace(leaf))
+            return prefix;
+
+        return $"{prefix}/{leaf}";
+    }
+
+    private static bool TryGetCanonicalControllerTag(string controllerName, out string tag)
+    {
+        tag = ToKebabCase(controllerName) switch
+        {
+            "api-key" => "auth/api-keys",
+            "auth" => "auth",
+            "mfa" => "auth/multi-factor",
+            "session" => "auth/sessions",
+            "key-rotation" => "auth/signing-keys",
+            "trusted-devices" => "auth/trusted-devices",
+            "web-authn" => "auth/webauthn",
+            "roles" => "auth/roles",
+            "permission-admin" => "auth/permissions/admin",
+            "permission-evaluation" => "auth/permissions/evaluation",
+            "permission-grants" => "auth/permissions/grants",
+            "service-account-crud" => "auth/service-accounts",
+            "service-account-operations" => "auth/service-accounts",
+            "service-account-token" => "auth/service-accounts/tokens",
+            "access-review-analytics" => "access-control/access-reviews/analytics",
+            "access-review-campaign" => "access-control/access-reviews/campaigns",
+            "access-review-item" => "access-control/access-reviews/items",
+            "abac-policy" => "access-control/abac-policies",
+            "conditional-policy-crud" => "access-control/conditional-policies",
+            "conditional-policy-evaluation" => "access-control/conditional-policies/evaluations",
+            _ => string.Empty
+        };
+
+        return !string.IsNullOrWhiteSpace(tag);
+    }
+
+    private static string GetCanonicalPrefix(string? controllerNamespace, string controllerName)
     {
         if (string.IsNullOrWhiteSpace(controllerNamespace))
-            return new List<string>();
+            return string.Empty;
 
         if (string.Equals(controllerNamespace, "GameGuild.API.Controllers", StringComparison.Ordinal))
-            return new List<string> { "platform" };
+            return string.Empty;
 
-        var segments = controllerNamespace.Split('.', StringSplitOptions.RemoveEmptyEntries);
-        if (segments.Length == 0 || !string.Equals(segments[0], "GameGuild", StringComparison.Ordinal))
+        return controllerNamespace switch
+        {
+            var ns when ns.StartsWith("GameGuild.Identity.Authentication", StringComparison.Ordinal) => "auth",
+            var ns when ns.StartsWith("GameGuild.Identity.Authorization", StringComparison.Ordinal) => "access-control",
+            var ns when ns.StartsWith("GameGuild.Identity.Users", StringComparison.Ordinal) => "users",
+            var ns when ns.StartsWith("GameGuild.Identity.Tenants", StringComparison.Ordinal) =>
+                controllerName.StartsWith("User", StringComparison.Ordinal) ? "users" : "tenants",
+            var ns when ns.StartsWith("GameGuild.Resources.Contents", StringComparison.Ordinal) => "resources/contents",
+            var ns when ns.StartsWith("GameGuild.Resources", StringComparison.Ordinal) =>
+                controllerName.StartsWith("User", StringComparison.Ordinal)
+                    ? "users/resources"
+                    : controllerName.StartsWith("Tenant", StringComparison.Ordinal)
+                        ? "tenants/resources"
+                        : "resources",
+            var ns when ns.StartsWith("GameGuild.Commerce.", StringComparison.Ordinal) =>
+                $"commerce/{string.Join("/", GetRemainderSegments(ns, 2))}",
+            var ns when ns.StartsWith("GameGuild.Compliance.", StringComparison.Ordinal) =>
+                $"compliance/{string.Join("/", GetRemainderSegments(ns, 2))}",
+            var ns when ns.StartsWith("GameGuild.Content.", StringComparison.Ordinal) =>
+                $"content/{string.Join("/", GetRemainderSegments(ns, 2))}",
+            var ns when ns.StartsWith("GameGuild.Learning.", StringComparison.Ordinal) =>
+                $"learning/{string.Join("/", GetRemainderSegments(ns, 2))}",
+            var ns when ns.StartsWith("GameGuild.Social.", StringComparison.Ordinal) =>
+                $"social/{string.Join("/", GetRemainderSegments(ns, 2))}",
+            var ns when ns.StartsWith("GameGuild.Monitoring.", StringComparison.Ordinal) =>
+                $"monitoring/{string.Join("/", GetRemainderSegments(ns, 2))}",
+            var ns when ns.StartsWith("GameGuild.Gamification.", StringComparison.Ordinal) =>
+                $"gamification/{string.Join("/", GetRemainderSegments(ns, 2))}",
+            var ns when ns.StartsWith("GameGuild.Analytics", StringComparison.Ordinal) => "analytics",
+            var ns when ns.StartsWith("GameGuild.Assets", StringComparison.Ordinal) => "assets",
+            var ns when ns.StartsWith("GameGuild.Features", StringComparison.Ordinal) => "features",
+            var ns when ns.StartsWith("GameGuild.Notifications", StringComparison.Ordinal) => "notifications",
+            var ns when ns.StartsWith("GameGuild.Projects", StringComparison.Ordinal) => "projects",
+            var ns when ns.StartsWith("GameGuild.TestingLab", StringComparison.Ordinal) => "testing-lab",
+            _ => string.Join("/", GetRemainderSegments(controllerNamespace, 1))
+        };
+    }
+
+    private static string NormalizeExplicitTag(string prefix, string explicitTag)
+    {
+        var explicitSegments = NormalizePath(explicitTag);
+        if (explicitSegments.Count == 0)
+            return prefix;
+
+        if (IsFullyQualified(explicitSegments))
+            return string.Join("/", explicitSegments);
+
+        var prefixSegments = NormalizePath(prefix);
+        if (prefixSegments.Count == 0)
+            return string.Join("/", explicitSegments);
+
+        var lastPrefixSegment = prefixSegments[^1];
+
+        if (IsAliasOfPrefix(explicitSegments[0], lastPrefixSegment))
+        {
+            var tail = explicitSegments.Skip(1).ToList();
+            return tail.Count == 0 ? prefix : string.Join("/", prefixSegments.Concat(tail));
+        }
+
+        if (explicitSegments.Count == 1)
+        {
+            var collapsed = CollapseDuplicatePrefixToken(explicitSegments[0], lastPrefixSegment);
+            if (string.IsNullOrWhiteSpace(collapsed))
+                return prefix;
+
+            return collapsed == lastPrefixSegment
+                ? prefix
+                : string.Join("/", prefixSegments.Append(collapsed));
+        }
+
+        return string.Join("/", prefixSegments.Concat(explicitSegments));
+    }
+
+    private static string NormalizeLeaf(string prefix, string controllerName)
+    {
+        var leaf = ToKebabCase(controllerName);
+        foreach (var suffix in new[] { "-crud", "-operations", "-operation", "-controller" })
+        {
+            if (leaf.EndsWith(suffix, StringComparison.Ordinal))
+            {
+                leaf = leaf[..^suffix.Length];
+                break;
+            }
+        }
+
+        if (string.IsNullOrWhiteSpace(prefix))
+            return leaf;
+
+        var prefixSegments = NormalizePath(prefix);
+        var lastPrefixSegment = prefixSegments[^1];
+        var collapsed = CollapseDuplicatePrefixToken(leaf, lastPrefixSegment);
+
+        return collapsed == lastPrefixSegment ? string.Empty : collapsed;
+    }
+
+    private static bool IsFullyQualified(IReadOnlyList<string> segments)
+    {
+        return segments.Count > 0 && CanonicalRoots.Contains(segments[0]);
+    }
+
+    private static bool IsAliasOfPrefix(string segment, string lastPrefixSegment)
+    {
+        if (segment == lastPrefixSegment)
+            return true;
+
+        return lastPrefixSegment switch
+        {
+            "auth" => segment == "authentication",
+            _ => false
+        };
+    }
+
+    private static string CollapseDuplicatePrefixToken(string token, string lastPrefixSegment)
+    {
+        if (string.IsNullOrWhiteSpace(token))
+            return string.Empty;
+
+        if (token == lastPrefixSegment)
+            return token;
+
+        foreach (var candidate in new[] { lastPrefixSegment, Singularize(lastPrefixSegment) })
+        {
+            if (string.IsNullOrWhiteSpace(candidate))
+                continue;
+
+            var prefix = $"{candidate}-";
+            if (token.StartsWith(prefix, StringComparison.Ordinal))
+                return token[prefix.Length..];
+        }
+
+        return token;
+    }
+
+    private static string Singularize(string value)
+    {
+        return value.EndsWith("s", StringComparison.Ordinal) ? value[..^1] : value;
+    }
+
+    private static List<string> NormalizePath(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
             return new List<string>();
 
-        return segments
-            .Skip(1)
-            .Where(segment => !string.Equals(segment, "Controllers", StringComparison.Ordinal))
+        return value
+            .Split('/', StringSplitOptions.RemoveEmptyEntries)
             .Select(ToKebabCase)
             .ToList();
+    }
+
+    private static IEnumerable<string> GetRemainderSegments(string controllerNamespace, int skipCount)
+    {
+        return controllerNamespace
+            .Split('.', StringSplitOptions.RemoveEmptyEntries)
+            .Skip(skipCount)
+            .Where(segment => !string.Equals(segment, "Controllers", StringComparison.Ordinal))
+            .Select(ToKebabCase)
+            .Where(segment => !string.IsNullOrWhiteSpace(segment));
     }
 
     private static string ToKebabCase(string value)
