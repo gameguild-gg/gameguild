@@ -396,8 +396,11 @@ jobs:
       - name: Build emception library
         run: cd tools/emception && npm run build:lib
 
+      - name: Sync CDN to demo app
+        run: node scripts/sync-emception-cdn.mjs tools/emception/apps/ide-react
+
       - name: Build demo
-        run: cd tools/emception/apps/ide-react && npm run build
+        run: cd tools/emception/apps/ide-react && npm run build --ignore-scripts
         env:
           VITE_BASE: /gameguild/
 
