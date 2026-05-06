@@ -60,7 +60,10 @@ function escapeRegex(input: string): string {
 }
 
 function isCMakeSourceDir(dirPath: string): boolean {
-    return fs.existsSync(path.join(dirPath, 'CMakeLists.txt'));
+    if (!fs.existsSync(path.join(dirPath, 'CMakeLists.txt'))) return false;
+    // bundled libarchive version file must exist for cross-compilation configure
+    if (!fs.existsSync(path.join(dirPath, 'Utilities', 'cmlibarchive', 'build', 'version'))) return false;
+    return true;
 }
 
 function findExistingSourceDir(version: string): string | null {
@@ -91,6 +94,11 @@ function ensureCMakeSource(version: string): string {
     }
 
     const normalizedSourceDir = path.join(USERLAND_DIR, `cmake-${version}`);
+    // Remove any incomplete source directory (e.g. gitignore stripped build/ subdirs)
+    if (fs.existsSync(normalizedSourceDir)) {
+        console.log(`Removing incomplete cmake source dir: ${path.basename(normalizedSourceDir)}`);
+        shell.rm('-rf', normalizedSourceDir);
+    }
     const tarball = `v${version}.tar.gz`;
 
     console.log(`Downloading CMake ${version}...`);
