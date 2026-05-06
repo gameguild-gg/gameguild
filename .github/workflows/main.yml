@@ -59,7 +59,7 @@ jobs:
 
       - name: Install dependencies
         working-directory: .
-        run: npm install --ignore-scripts --network-timeout 300000
+        run: npm install --ignore-scripts --network-timeout=300000
 
       - name: Resolve EMSDK version
         id: emsdk-version
