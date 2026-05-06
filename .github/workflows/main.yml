@@ -109,15 +109,20 @@ jobs:
           # The em++ link of clang+LLVM with -sASYNCIFY needs >7 GB RAM.
           # GitHub-hosted ubuntu runners have 7 GB RAM; without swap the link
           # hangs/OOMs silently. Add 24 GB swap on the SSD.
-          sudo swapoff -a || true
-          sudo rm -f /mnt/swapfile /swapfile || true
-          sudo fallocate -l 24G /mnt/swapfile
-          sudo chmod 600 /mnt/swapfile
-          sudo mkswap /mnt/swapfile
-          sudo swapon /mnt/swapfile
-          # Prefer swapping rather than OOM-killing
-          echo 80 | sudo tee /proc/sys/vm/swappiness
-          echo 1  | sudo tee /proc/sys/vm/overcommit_memory
+          # Skip in local/act environments: swapon requires CAP_SYS_ADMIN.
+          if [[ -z "${ACT:-}" ]]; then
+            sudo swapoff -a || true
+            sudo rm -f /mnt/swapfile /swapfile || true
+            sudo fallocate -l 24G /mnt/swapfile
+            sudo chmod 600 /mnt/swapfile
+            sudo mkswap /mnt/swapfile
+            sudo swapon /mnt/swapfile
+            # Prefer swapping rather than OOM-killing
+            echo 80 | sudo tee /proc/sys/vm/swappiness
+            echo 1  | sudo tee /proc/sys/vm/overcommit_memory
+          else
+            echo "ℹ️ Skipping swap configuration (act/container environment lacks CAP_SYS_ADMIN)"
+          fi
           free -h
 
       - name: Build packages required for typecheck
