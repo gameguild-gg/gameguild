@@ -1,6 +1,8 @@
 using GameGuild.API;
 using GameGuild.API.Setup;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 
 // ===========================================================================================
 // GameGuild API - Entry Point
@@ -29,6 +31,27 @@ builder.Services.Configure<Microsoft.AspNetCore.Http.Json.JsonOptions>(options =
     options.SerializerOptions.WriteIndented = true;
     options.SerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
 });
+
+// Persist Data Protection keys to a stable location so encrypted settings and cookies
+// survive container restarts when a volume is mounted at the configured path.
+{
+    var dpKeysPath = builder.Configuration["DataProtection:KeysPath"]
+        ?? Environment.GetEnvironmentVariable("DATAPROTECTION_KEYS_PATH")
+        ?? "/home/appuser/.aspnet/DataProtection-Keys";
+
+    try
+    {
+        Directory.CreateDirectory(dpKeysPath);
+        builder.Services.AddDataProtection()
+            .PersistKeysToFileSystem(new DirectoryInfo(dpKeysPath))
+            .SetApplicationName("GameGuild");
+    }
+    catch (Exception ex)
+    {
+        Console.Error.WriteLine($"[DataProtection] Failed to configure persistent keys at '{dpKeysPath}': {ex.Message}. Falling back to defaults.");
+        builder.Services.AddDataProtection().SetApplicationName("GameGuild");
+    }
+}
 
 // Configure MVC JSON options with the same settings
 builder.Services.AddControllers().AddJsonOptions(options =>
@@ -64,15 +87,29 @@ builder.AddPresentationLayer();
 var app = builder.Build();
 
 // Apply pending EF Core migrations automatically before starting the service
-try
+var runMigrationsOnStartup = app.Configuration.GetValue("Database:RunMigrationsOnStartup", true);
+
+if (runMigrationsOnStartup)
 {
-    using var scope = app.Services.CreateScope();
-    var db = scope.ServiceProvider.GetRequiredService<GameGuild.API.Database.ApplicationDbContext>();
-    await db.Database.MigrateAsync().ConfigureAwait(false);
+    try
+    {
+        using var scope = app.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<GameGuild.API.Database.ApplicationDbContext>();
+        await db.Database.MigrateAsync().ConfigureAwait(false);
+    }
+    catch (PostgresException ex) when (ex.SqlState == PostgresErrorCodes.InvalidPassword || ex.SqlState == PostgresErrorCodes.InvalidAuthorizationSpecification)
+    {
+        app.Logger.LogWarning(
+            "Database migration skipped because database authentication failed for the configured connection. Verify the database username and password. Swagger/OpenAPI will still be available.");
+    }
+    catch (Exception ex)
+    {
+        app.Logger.LogWarning(ex, "Database migration failed — API will start without a database. Swagger/OpenAPI will still be available.");
+    }
 }
-catch (Exception ex)
+else
 {
-    app.Logger.LogWarning(ex, "Database migration failed — API will start without a database. Swagger/OpenAPI will still be available.");
+    app.Logger.LogInformation("Skipping automatic database migrations because Database:RunMigrationsOnStartup is disabled.");
 }
 
 // Configure the HTTP request pipeline (middleware, routing, endpoints)

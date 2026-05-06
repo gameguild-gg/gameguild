@@ -11,7 +11,10 @@ public class UserMetadataConfiguration : IEntityTypeConfiguration<UserMetadata>
     public void Configure(EntityTypeBuilder<UserMetadata> builder)
     {
         // Configure relationships
-        builder.HasOne(um => um.User).WithOne().HasForeignKey<UserMetadata>(um => um.UserId).OnDelete(DeleteBehavior.Cascade);
+        builder.HasOne(um => um.User)
+            .WithOne(u => u.Metadata)
+            .HasForeignKey<UserMetadata>(um => um.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
 
         // Configure indexes
         builder.HasIndex(um => um.UserId).IsUnique();

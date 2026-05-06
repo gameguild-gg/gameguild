@@ -1,3 +1,4 @@
+using System.Net;
 using Asp.Versioning.ApiExplorer;
 using GameGuild.Identity.Authorization;
 using GameGuild.Identity.Tenants;
@@ -30,8 +31,13 @@ public static class PipelineExtensions
         // 03. HSTS (HTTP Strict Transport Security, production only)
         if (app.Environment.IsProduction()) app.UseHsts();
 
-        // 04. HTTPS Redirection (force secure connections)
-        app.UseHttpsRedirection();
+        // 04. HTTPS Redirection (force secure connections for external traffic only)
+        if (!app.Environment.IsDevelopment())
+        {
+            app.UseWhen(
+                context => !IsLoopbackRequest(context),
+                branch => branch.UseHttpsRedirection());
+        }
 
         // 05. Exception Handler (global error handling for non-development)
         if (!app.Environment.IsDevelopment()) app.UseExceptionHandler();
@@ -132,5 +138,11 @@ public static class PipelineExtensions
         }
 
         return app;
+    }
+
+    private static bool IsLoopbackRequest(HttpContext context)
+    {
+        var remoteIpAddress = context.Connection.RemoteIpAddress;
+        return remoteIpAddress is not null && IPAddress.IsLoopback(remoteIpAddress);
     }
 }

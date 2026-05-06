@@ -1,6 +1,7 @@
 using System.Text.Json;
 using GameGuild.CQRS.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace GameGuild.Identity.Authorization.Configuration;
@@ -280,6 +281,9 @@ public class TenantPermissionConfiguration : IEntityTypeConfiguration<TenantPerm
                 v => v == null ? null : JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
                 v => v == null ? null : JsonSerializer.Deserialize<Dictionary<string, object>>(v, (JsonSerializerOptions?)null)
             );
+
+        builder.Property(e => e.Metadata)
+            .Metadata.SetValueComparer(JsonDictionaryValueComparers.ObjectDictionaryComparer);
     }
 }
 
@@ -300,5 +304,21 @@ public class PermissionTemplateConfiguration : IEntityTypeConfiguration<Permissi
                 v => v == null ? null : JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
                 v => v == null ? null : JsonSerializer.Deserialize<Dictionary<string, object>>(v, (JsonSerializerOptions?)null)
             );
+
+        builder.Property(e => e.Metadata)
+            .Metadata.SetValueComparer(JsonDictionaryValueComparers.ObjectDictionaryComparer);
     }
+}
+
+internal static class JsonDictionaryValueComparers
+{
+    public static ValueComparer<Dictionary<string, object>?> ObjectDictionaryComparer { get; } =
+        new(
+            (left, right) => JsonSerializer.Serialize(left, (JsonSerializerOptions?)null) == JsonSerializer.Serialize(right, (JsonSerializerOptions?)null),
+            value => value == null ? 0 : JsonSerializer.Serialize(value, (JsonSerializerOptions?)null).GetHashCode(StringComparison.Ordinal),
+            value => value == null
+                ? null
+                : JsonSerializer.Deserialize<Dictionary<string, object>>(
+                    JsonSerializer.Serialize(value, (JsonSerializerOptions?)null),
+                    (JsonSerializerOptions?)null));
 }

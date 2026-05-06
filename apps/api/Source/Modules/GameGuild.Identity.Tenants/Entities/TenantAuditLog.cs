@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace GameGuild.Identity.Tenants;
@@ -81,8 +82,7 @@ public class TenantAuditLogConfiguration : IEntityTypeConfiguration<TenantAuditL
 
         builder.HasKey(x => x.Id);
 
-        builder.Property(x => x.TenantId)
-            .IsRequired();
+        builder.Property(x => x.TenantId);
 
         builder.Property(x => x.Timestamp)
             .IsRequired();
@@ -115,12 +115,18 @@ public class TenantAuditLogConfiguration : IEntityTypeConfiguration<TenantAuditL
                 v => v == null ? null : JsonSerializer.Deserialize<Dictionary<string, object?>>(v, (JsonSerializerOptions?)null)
             );
 
+        builder.Property(x => x.BeforeValues)
+            .Metadata.SetValueComparer(TenantAuditLogJsonValueComparers.ObjectDictionaryComparer);
+
         builder.Property(x => x.AfterValues)
             .HasColumnType("jsonb")
             .HasConversion(
                 v => v == null ? null : JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
                 v => v == null ? null : JsonSerializer.Deserialize<Dictionary<string, object?>>(v, (JsonSerializerOptions?)null)
             );
+
+        builder.Property(x => x.AfterValues)
+            .Metadata.SetValueComparer(TenantAuditLogJsonValueComparers.ObjectDictionaryComparer);
 
         builder.Property(x => x.Metadata)
             .HasColumnType("jsonb")
@@ -129,11 +135,15 @@ public class TenantAuditLogConfiguration : IEntityTypeConfiguration<TenantAuditL
                 v => v == null ? null : JsonSerializer.Deserialize<Dictionary<string, string>>(v, (JsonSerializerOptions?)null)
             );
 
+        builder.Property(x => x.Metadata)
+            .Metadata.SetValueComparer(TenantAuditLogJsonValueComparers.StringDictionaryComparer);
+
         // Relationships
         builder.HasOne(x => x.Tenant)
             .WithMany()
             .HasForeignKey(x => x.TenantId)
-            .OnDelete(DeleteBehavior.Cascade);
+            .OnDelete(DeleteBehavior.SetNull)
+            .IsRequired(false);
 
         // Indexes for common queries
         builder.HasIndex(x => x.TenantId);
@@ -142,4 +152,27 @@ public class TenantAuditLogConfiguration : IEntityTypeConfiguration<TenantAuditL
         builder.HasIndex(x => x.ActorId);
         builder.HasIndex(x => new { x.TenantId, x.Timestamp });
     }
+}
+
+internal static class TenantAuditLogJsonValueComparers
+{
+    public static ValueComparer<Dictionary<string, object?>?> ObjectDictionaryComparer { get; } =
+        new(
+            (left, right) => JsonSerializer.Serialize(left, (JsonSerializerOptions?)null) == JsonSerializer.Serialize(right, (JsonSerializerOptions?)null),
+            value => value == null ? 0 : JsonSerializer.Serialize(value, (JsonSerializerOptions?)null).GetHashCode(StringComparison.Ordinal),
+            value => value == null
+                ? null
+                : JsonSerializer.Deserialize<Dictionary<string, object?>>(
+                    JsonSerializer.Serialize(value, (JsonSerializerOptions?)null),
+                    (JsonSerializerOptions?)null));
+
+    public static ValueComparer<Dictionary<string, string>?> StringDictionaryComparer { get; } =
+        new(
+            (left, right) => JsonSerializer.Serialize(left, (JsonSerializerOptions?)null) == JsonSerializer.Serialize(right, (JsonSerializerOptions?)null),
+            value => value == null ? 0 : JsonSerializer.Serialize(value, (JsonSerializerOptions?)null).GetHashCode(StringComparison.Ordinal),
+            value => value == null
+                ? null
+                : JsonSerializer.Deserialize<Dictionary<string, string>>(
+                    JsonSerializer.Serialize(value, (JsonSerializerOptions?)null),
+                    (JsonSerializerOptions?)null));
 }

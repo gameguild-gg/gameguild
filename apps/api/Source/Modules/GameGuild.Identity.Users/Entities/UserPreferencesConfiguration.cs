@@ -11,7 +11,10 @@ public class UserPreferencesConfiguration : IEntityTypeConfiguration<UserPrefere
     public void Configure(EntityTypeBuilder<UserPreferences> builder)
     {
         // Configure relationships
-        builder.HasOne(up => up.User).WithOne().HasForeignKey<UserPreferences>(up => up.UserId).OnDelete(DeleteBehavior.Cascade);
+        builder.HasOne(up => up.User)
+            .WithOne(u => u.Preferences)
+            .HasForeignKey<UserPreferences>(up => up.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
 
         // Configure indexes
         builder.HasIndex(up => up.UserId).IsUnique();

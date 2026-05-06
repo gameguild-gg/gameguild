@@ -5,11 +5,11 @@
 # Coolify generates the router labels from the domain configured in the UI.
 #
 # Required env vars (set in Coolify -> Resource -> Environment Variables):
-#   POSTGRES_HOST, POSTGRES_PASSWORD,
+#   POSTGRES_HOST, POSTGRES_USER, POSTGRES_PASSWORD,
 #   JWT_SECRET_KEY, ENCRYPTION_KEY
 #
 # Recommended env vars:
-#   POSTGRES_DB, POSTGRES_USER, JWT_ISSUER, JWT_AUDIENCE,
+#   POSTGRES_DB, JWT_ISSUER, JWT_AUDIENCE,
 #   SERVICE_FQDN_API
 #
 # In the Coolify UI, set the service "Port Exposed" to 8080 so Traefik
@@ -26,11 +26,13 @@ services:
     environment:
       - SERVICE_FQDN_API_8080=${SERVICE_FQDN_API:-}
       - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT:-Staging}
-      - ASPNETCORE_URLS=http://+:${PORT:-8080}
+      - ASPNETCORE_HTTP_PORTS=${PORT:-8080}
       - ASPNETCORE_FORWARDEDHEADERS_ENABLED=true
+      - Database__RunMigrationsOnStartup=${RUN_DB_MIGRATIONS_ON_STARTUP:-false}
+      - DATAPROTECTION_KEYS_PATH=/home/appuser/.aspnet/DataProtection-Keys
       # Shared Coolify Postgres
-      - ConnectionStrings__DefaultConnection=Host=${POSTGRES_HOST};Port=${POSTGRES_PORT:-5432};Database=${POSTGRES_DB:-game_guild};Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD};Include Error Detail=false;Maximum Pool Size=100;Minimum Pool Size=5;Connection Idle Lifetime=300
-      - ConnectionStrings__AuthenticationDb=Host=${POSTGRES_HOST};Port=${POSTGRES_PORT:-5432};Database=${POSTGRES_DB:-game_guild};Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD};Include Error Detail=false;Maximum Pool Size=100;Minimum Pool Size=5;Connection Idle Lifetime=300
+      - ConnectionStrings__DefaultConnection=Host=${POSTGRES_HOST};Port=${POSTGRES_PORT:-5432};Database=${POSTGRES_DB:-game_guild};Username=${POSTGRES_USER:-game_guild};Password=${POSTGRES_PASSWORD};Include Error Detail=false;Maximum Pool Size=100;Minimum Pool Size=5;Connection Idle Lifetime=300
+      - ConnectionStrings__AuthenticationDb=Host=${POSTGRES_HOST};Port=${POSTGRES_PORT:-5432};Database=${POSTGRES_DB:-game_guild};Username=${POSTGRES_USER:-game_guild};Password=${POSTGRES_PASSWORD};Include Error Detail=false;Maximum Pool Size=100;Minimum Pool Size=5;Connection Idle Lifetime=300
       # JWT configuration consumed by the API and auth services
       - Jwt__SecretKey=${JWT_SECRET_KEY}
       - Jwt__Issuer=${JWT_ISSUER:-GameGuild}
@@ -41,10 +43,12 @@ services:
       - Authentication__JwtExpiration=${JWT_EXPIRATION:-24:00:00}
       - Encryption__Key=${ENCRYPTION_KEY}
       - Encryption__EncryptionKey=${ENCRYPTION_KEY}
+    volumes:
+      - dataprotection-keys:/home/appuser/.aspnet/DataProtection-Keys
     security_opt:
       - no-new-privileges:true
     healthcheck:
-      test: ['CMD-SHELL', 'curl -fsS http://localhost:${PORT:-8080}/health || exit 1']
+      test: ['CMD-SHELL', 'curl -fsS http://127.0.0.1:${PORT:-8080}/live || exit 1']
       start_interval: 5s
       start_period: 180s
       interval: 30s
@@ -78,3 +82,7 @@ services:
 networks:
   coolify:
     external: true
+
+volumes:
+  dataprotection-keys:
+    driver: local

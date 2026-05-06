@@ -11,7 +11,10 @@ public class UserNotificationConfiguration : IEntityTypeConfiguration<UserNotifi
     public void Configure(EntityTypeBuilder<UserNotification> builder)
     {
         // Configure relationships
-        builder.HasOne(un => un.User).WithMany().HasForeignKey(un => un.UserId).OnDelete(DeleteBehavior.Cascade);
+        builder.HasOne(un => un.User)
+            .WithMany(u => u.Notifications)
+            .HasForeignKey(un => un.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
 
         // Configure indexes
         builder.HasIndex(un => un.UserId);
