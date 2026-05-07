@@ -48,13 +48,18 @@ function detectCMakeVersion(): string {
     // CMake 4.x changed CMakeBuildUtilities.cmake: when CMAKE_USE_SYSTEM_CURL=ON it
     // forces CMAKE_USE_SYSTEM_ZLIB=ON via a regular set() that overrides our -D flag,
     // and Emscripten's cross-compile sysroot has no system zlib. Cap at 3.x.
+    const FALLBACK_CMAKE_VERSION = '3.31.12';
     console.log('Detecting latest CMake 3.x release...');
+    const prevFatal = shell.config.fatal;
+    shell.config.fatal = false;
     const result = shell.exec(
         `curl -fsSL ${GITHUB_AUTH} "https://api.github.com/repos/Kitware/CMake/releases?per_page=100"`,
         { silent: true },
     );
+    shell.config.fatal = prevFatal;
     if (result.code !== 0) {
-        throw new Error('Failed to query GitHub for CMake releases');
+        console.warn(`  GitHub API unavailable (exit ${result.code}), using fallback ${FALLBACK_CMAKE_VERSION}`);
+        return FALLBACK_CMAKE_VERSION;
     }
     const releases = JSON.parse(result.stdout) as Array<{
         tag_name: string;
@@ -317,6 +322,19 @@ patchSource(
     'cmlibuv-unix-h-emscripten',
 );
 
+// Decouple ZLIB from CURL: cmake's CMAKE_DEPENDENT_OPTION forces ZLIB=ON whenever
+// CURL=ON (for ABI compat on native builds), but Emscripten's sysroot has no
+// pre-built system zlib. Replace the dependent option with a plain option so our
+// -DCMAKE_USE_SYSTEM_ZLIB=OFF is honoured even when CMAKE_USE_SYSTEM_CURL=ON.
+patchSource(
+    'CMakeLists.txt',
+    `  CMAKE_DEPENDENT_OPTION(CMAKE_USE_SYSTEM_ZLIB "Use system-installed zlib"
+    "\${CMAKE_USE_SYSTEM_LIBRARY_ZLIB}" "NOT CMAKE_USE_SYSTEM_LIBARCHIVE;NOT CMAKE_USE_SYSTEM_CURL" ON)`,
+    `  option(CMAKE_USE_SYSTEM_ZLIB "Use system-installed zlib"
+    "\${CMAKE_USE_SYSTEM_LIBRARY_ZLIB}")`,
+    'cmake-decouple-zlib-from-curl',
+);
+
 // 3. Build with emcmake
 console.log('Cross-compiling CMake for WASM...');
 if (fs.existsSync(BUILD_WASM_DIR)) shell.rm('-rf', BUILD_WASM_DIR);
@@ -375,7 +393,9 @@ const linkCmd = [
     // Static libraries
     ...cmakeLibs.map(o => `"${o}"`),
     fs.existsSync(LIBCURL_A) ? `"${LIBCURL_A}"` : '',
-    fs.existsSync(EMSDK_ZLIB) ? `"${EMSDK_ZLIB}"` : '-lz',
+    // When CMAKE_USE_SYSTEM_ZLIB=OFF, cmake builds its own libcmzlib.a (already
+    // included in cmakeLibs above). Only link sysroot libz.a if it exists.
+    fs.existsSync(EMSDK_ZLIB) ? `"${EMSDK_ZLIB}"` : '',
     STANDALONE_FLAGS,
     '-Os',
     `-o "${toolMjs}"`,
