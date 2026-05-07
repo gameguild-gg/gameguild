@@ -10,17 +10,17 @@ import {
   GridView,
   ListView,
   type FilterConfig,
-} from "@/components/editor/extras/manager-page"
-import { MediaUploadDialog } from "@/components/editor/extras/media-upload-dialog"
-import { DeleteConfirmDialog } from "@/components/editor/extras/dialogs/delete-confirm-dialog"
-import { InfoDialog } from "@/components/editor/extras/editor/info-dialog"
-import { CreateProjectDialog } from "@/components/editor/extras/editor/create-project-dialog"
-import { ProjectPagination } from "@/components/editor/extras/project-dialog/project-pagination"
+} from "@/components/block-content-editor/extras/manager-page"
+import { MediaUploadDialog } from "@/components/block-content-editor/extras/media-upload-dialog"
+import { DeleteConfirmDialog } from "@/components/block-content-editor/extras/dialogs/delete-confirm-dialog"
+import { InfoDialog } from "@/components/block-content-editor/extras/editor/info-dialog"
+import { CreateProjectDialog } from "@/components/block-content-editor/extras/editor/create-project-dialog"
+import { ProjectPagination } from "@/components/block-content-editor/extras/project-dialog/project-pagination"
 
-import { useHomeStorage } from "@/components/editor/hooks/useHomeStorage"
-import { useProjectManager } from "@/components/editor/hooks/useProjectManager"
-import { useAssetManager } from "@/components/editor/hooks/useAssetManager"
-import { useCollectionManager } from "@/components/editor/hooks/useCollectionManager"
+import { useHomeStorage } from "@/components/block-content-editor/hooks/useHomeStorage"
+import { useProjectManager } from "@/components/block-content-editor/hooks/useProjectManager"
+import { useAssetManager } from "@/components/block-content-editor/hooks/useAssetManager"
+import { useCollectionManager } from "@/components/block-content-editor/hooks/useCollectionManager"
 
 export default function HomePage() {
   // Active context/view

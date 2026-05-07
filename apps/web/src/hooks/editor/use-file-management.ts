@@ -2,8 +2,8 @@
 
 import type React from "react"
 
-import type { CodeFile, LanguageType } from "@/components/editor/extras/source-code/types"
-import { getExtension, getExtensionForLanguage, getLanguageFromExtension } from "@/components/editor/extras/source-code/utils"
+import type { CodeFile, LanguageType } from "@/components/block-content-editor/extras/source-code/types"
+import { getExtension, getExtensionForLanguage, getLanguageFromExtension } from "@/components/block-content-editor/extras/source-code/utils"
 import { useRef, useState } from "react"
 
 interface UseFileManagementProps {

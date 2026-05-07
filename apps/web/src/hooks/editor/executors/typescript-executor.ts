@@ -1,5 +1,5 @@
-import type { ProgrammingLanguage } from "@/components/editor/extras/source-code/types"
-import { getFileContent } from "@/components/editor/extras/source-code/utils"
+import type { ProgrammingLanguage } from "@/components/block-content-editor/extras/source-code/types"
+import { getFileContent } from "@/components/block-content-editor/extras/source-code/utils"
 import type { ExecutionContext, ExecutionResult, LanguageExecutor } from "./types"
 
 class TypeScriptExecutor implements LanguageExecutor {

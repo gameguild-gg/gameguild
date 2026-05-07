@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import { TopMenu } from "@/components/editor/top-menu";
+import { TopMenu } from "@/components/block-content-editor/top-menu";
 import React from 'react';
 
 export const metadata: Metadata = {
