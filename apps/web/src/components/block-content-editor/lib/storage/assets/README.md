@@ -277,7 +277,7 @@ When exporting a project, assets are included in the ZIP file:
 ```
 projeto-abc123/
 ├── index.json           # Project metadata (includes assetsCount)
-├── data.gglexical       # Lexical editor state
+├── data.block-content-editor       # Lexical editor state
 ├── asset_index.json     # Asset usage tracking for this project
 └── assets/              # Asset files
     ├── hash1.json       # Asset metadata + data

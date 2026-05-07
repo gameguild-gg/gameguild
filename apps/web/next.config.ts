@@ -64,11 +64,11 @@ const nextConfig = {
   async headers() {
     return [
       // Enable SharedArrayBuffer for @runno/runtime (required for WASM threads)
-      // Only on gglexical routes where code-studio actually needs it
+      // Only on block-content-editor routes where code-studio actually needs it
       // Applying globally breaks cross-origin iframes (YouTube, Spotify, etc.) in Firefox
-      // Matches both /gglexical/... (default locale hidden) and /pt-BR/gglexical/...
+      // Matches both /block-content-editor/... (default locale hidden) and /pt-BR/block-content-editor/...
       {
-        source: '/gglexical/:path*',
+        source: '/block-content-editor/:path*',
         headers: [
           {
             key: 'Cross-Origin-Opener-Policy',
@@ -81,7 +81,7 @@ const nextConfig = {
         ],
       },
       {
-        source: '/:locale/gglexical/:path*',
+        source: '/:locale/block-content-editor/:path*',
         headers: [
           {
             key: 'Cross-Origin-Opener-Policy',

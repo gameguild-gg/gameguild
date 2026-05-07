@@ -1,6 +1,6 @@
 # Project Navigation Guide
 
-Este documento explica as diferentes formas de abrir e navegar entre projetos no sistema GGLexical.
+Este documento explica as diferentes formas de abrir e navegar entre projetos no sistema Block Content Editor.
 
 ## Visão Geral
 
@@ -18,15 +18,15 @@ O sistema oferece **duas formas principais** de abrir projetos no Studio (editor
 Você pode acessar diretamente um projeto específico adicionando seu ID após o símbolo `#` na URL:
 
 ```
-/gglexical/studio#PROJECT_ID
-/gglexical/viewer#PROJECT_ID
+/block-content-editor/studio#PROJECT_ID
+/block-content-editor/viewer#PROJECT_ID
 ```
 
 ### Exemplos
 
 ```
-https://example.com/gglexical/studio#67445
-https://example.com/gglexical/viewer#abc-123-def-456
+https://example.com/block-content-editor/studio#67445
+https://example.com/block-content-editor/viewer#abc-123-def-456
 ```
 
 ### Quando o Hash é Lido
@@ -80,7 +80,7 @@ window.history.pushState(null, '', window.location.pathname)
 
 ## 2. Navegação por Interface
 
-### Página Manager (`/gglexical`)
+### Página Manager (`/block-content-editor`)
 
 A página principal que lista todos os projetos disponíveis.
 
@@ -109,7 +109,7 @@ A página principal que lista todos os projetos disponíveis.
 const handleProjectOpen = async (projectId: string) => {
   const projectData = await loadProject(projectId)
   localStorage.setItem('selectedProject', JSON.stringify(projectData))
-  window.location.href = `/gglexical/studio`
+  window.location.href = `/block-content-editor/studio`
 }
 
 // Studio/Viewer
@@ -253,7 +253,7 @@ if (selectedProjectData) {
 ### Exemplo 2: Exploração
 
 ```
-1. Usuário acessa /gglexical (Manager)
+1. Usuário acessa /block-content-editor (Manager)
 2. Usa filtros para encontrar "Tutorial" tag
 3. Vê lista de projetos filtrados
 4. Clica "Open in Studio" em um projeto
@@ -314,9 +314,9 @@ const handleProjectOpen = async (projectId: string, event?: React.MouseEvent) =>
   
   // Redireciona (ou abre nova tab se Ctrl/Cmd pressionado)
   if (event?.ctrlKey || event?.metaKey) {
-    window.open(`/gglexical/studio`, '_blank')
+    window.open(`/block-content-editor/studio`, '_blank')
   } else {
-    window.location.href = `/gglexical/studio`
+    window.location.href = `/block-content-editor/studio`
   }
 }
 ```

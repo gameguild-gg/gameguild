@@ -22,7 +22,7 @@ export interface SnapshotInfo {
  * - Snapshots are tags on specific commits (user-created versions)
  */
 export class GitHistoryManager {
-  private readonly author = { name: 'GGLexical User', email: 'user@gglexical.local' }
+  private readonly author = { name: 'Block Content Editor User', email: 'user@block-content-editor.local' }
 
   /**
    * Initialize a project's git repository if it doesn't exist

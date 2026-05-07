@@ -292,7 +292,7 @@ export function ImportProjectDialog({
                 Drag and drop your project file here, or click to browse
               </p>
               <p className="text-xs text-gray-500 dark:text-gray-500 mb-4">
-                Supports: .zip (projeto-* folders), .gglexical files
+                Supports: .zip (projeto-* folders), .block-content-editor files
               </p>
               <Button variant="outline" onClick={() => fileInputRef.current?.click()} className="mx-auto">
                 <FileText className="w-4 h-4 mr-2" />
@@ -301,7 +301,7 @@ export function ImportProjectDialog({
               <input
                 ref={fileInputRef}
                 type="file"
-                accept=".zip,.gglexical"
+                accept=".zip,.block-content-editor"
                 onChange={handleFileSelect}
                 className="hidden"
               />

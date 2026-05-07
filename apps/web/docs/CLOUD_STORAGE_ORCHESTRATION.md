@@ -1,4 +1,4 @@
-# Orquestração do Armazenamento na Nuvem - GGLexical Editor
+# Orquestração do Armazenamento na Nuvem - Block Content Editor
 
 ## Análise da Arquitetura Existente
 

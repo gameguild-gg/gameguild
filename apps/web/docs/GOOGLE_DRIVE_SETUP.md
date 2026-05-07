@@ -1,4 +1,4 @@
-# Configuração do Google Drive para GGLexical
+# Configuração do Google Drive para Block Content Editor
 
 Este documento explica como configurar a integração segura com Google Drive para sincronização de projetos.
 
@@ -26,7 +26,7 @@ Este documento explica como configurar a integração segura com Google Drive pa
 1. Clique em "Create Credentials" > "OAuth client ID"
 2. Selecione "Web application"
 3. Configure os campos:
-   - **Name**: `GGLexical Google Drive Integration`
+   - **Name**: `Block Content Editor Google Drive Integration`
    - **Authorized JavaScript origins**: 
      - `http://localhost:3000` (desenvolvimento)
      - `https://your-domain.com` (produção)
@@ -79,9 +79,9 @@ const SCOPES = [
 
 ```
 Google Drive/
-└── GGLexical Projects/          # Pasta criada pelo usuário
-    ├── Projeto 1.gglexical.json # Arquivo de projeto
-    ├── Projeto 2.gglexical.json
+└── Block Content Editor Projects/          # Pasta criada pelo usuário
+    ├── Projeto 1.block-content-editor.json # Arquivo de projeto
+    ├── Projeto 2.block-content-editor.json
     └── ...
 ```
 
@@ -177,5 +177,5 @@ graph TD
 
 - **Quota da API**: 1.000 requests por 100 segundos por usuário
 - **Tamanho de arquivo**: Máximo 10MB por projeto
-- **Tipos de arquivo**: Apenas JSON com projetos GGLexical
+- **Tipos de arquivo**: Apenas JSON com projetos Block Content Editor
 - **Conectividade**: Requer conexão com internet para sincronização

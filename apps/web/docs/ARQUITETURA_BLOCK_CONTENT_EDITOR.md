@@ -1,19 +1,19 @@
-# Arquitetura do Sistema GGLexical Editor
+# Arquitetura do Sistema Block Content Editor
 
 ## Visão Geral
 
-O GGLexical Editor é um sistema de edição de conteúdo rico baseado em Lexical (Facebook) com capacidades avançadas de armazenamento local e sincronização em nuvem. A arquitetura é dividida em múltiplas camadas que trabalham em conjunto para fornecer uma experiência fluida de criação, edição e visualização de conteúdo.
+O Block Content Editor é um sistema de edição de conteúdo rico baseado em Lexical (Facebook) com capacidades avançadas de armazenamento local e sincronização em nuvem. A arquitetura é dividida em múltiplas camadas que trabalham em conjunto para fornecer uma experiência fluida de criação, edição e visualização de conteúdo.
 
 ## Estrutura de Páginas
 
-### 1. Landing Page (`/gglexical`)
+### 1. Landing Page (`/block-content-editor`)
 - **Função**: Página inicial que apresenta o sistema ao usuário
 - **Componentes principais**:
   - Cards de navegação para Studio e Viewer
   - Apresentação de features do editor e visualizador
   - Links diretos para ambas as funcionalidades
 
-### 2. Studio Page (`/gglexical/studio`)
+### 2. Studio Page (`/block-content-editor/studio`)
 - **Função**: Ambiente completo de edição de conteúdo
 - **Características**:
   - Editor Lexical com rich text
@@ -22,7 +22,7 @@ O GGLexical Editor é um sistema de edição de conteúdo rico baseado em Lexica
   - Ferramentas de import/export
   - Controle de tamanho e limites de armazenamento
 
-### 3. Viewer Page (`/gglexical/viewer`)
+### 3. Viewer Page (`/block-content-editor/viewer`)
 - **Função**: Visualização otimizada do conteúdo
 - **Características**:
   - Renderização limpa e responsiva
@@ -230,7 +230,7 @@ IndexedDB (tag_data store) → Interface (autocomplete/filtros)
 - **OpenProjectDialog**: Navegação e abertura de projetos
 - **CreateProjectDialog**: Criação de novos projetos
 - **SaveAsDialog**: Salvar projeto com novo nome
-- **ImportProjectDialog**: Importação de arquivos .zip/.gglexical
+- **ImportProjectDialog**: Importação de arquivos .zip/.block-content-editor
 
 ### Preview Components:
 - **PreviewRenderer**: Renderização otimizada para leitura
@@ -267,7 +267,7 @@ IndexedDB (tag_data store) → Interface (autocomplete/filtros)
   - **Sistema local-first**: todos os projetos editados localmente independente do tipo
 
 ### 4. Sistema de Import/Export:
-- Formato nativo `.gglexical`
+- Formato nativo `.block-content-editor`
 - Suporte a arquivos ZIP com múltiplos projetos
 - Preservação de metadados e tags
 - **Preservação do tipo de armazenamento** na importação/exportação
@@ -301,7 +301,7 @@ IndexedDB (tag_data store) → Interface (autocomplete/filtros)
 - **Uso**: Projetos pessoais, uso independente, controle total dos dados
 - **Características**:
   - Sincronização com Google Drive pessoal
-  - Pasta dedicada "GGLexical Projects"
+  - Pasta dedicada "Block Content Editor Projects"
   - Funcionamento offline após sync inicial
   - Controle total sobre os dados
   - 15GB+ de storage gratuito

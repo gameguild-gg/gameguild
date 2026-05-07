@@ -44,12 +44,12 @@ export default function StaticViewerPage() {
                 Back
               </Button>
             )}
-            <Link href="/gglexical/studio">
+            <Link href="/block-content-editor/studio">
               <Button variant="ghost" size="sm">
                 <Pencil className="h-4 w-4 mr-1" /> Studio
               </Button>
             </Link>
-            <Link href="/gglexical">
+            <Link href="/block-content-editor">
               <Button variant="ghost" size="sm">
                 <Home className="h-4 w-4 mr-1" /> Home
               </Button>
@@ -96,7 +96,7 @@ export default function StaticViewerPage() {
               <div className="text-center py-20">
                 <Eye className="mx-auto h-12 w-12 text-gray-300 dark:text-gray-600 mb-4" />
                 <p className="text-gray-500 dark:text-gray-400 mb-4">No projects yet</p>
-                <Link href="/gglexical/studio">
+                <Link href="/block-content-editor/studio">
                   <Button>Create your first project</Button>
                 </Link>
               </div>

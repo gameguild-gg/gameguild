@@ -2,7 +2,7 @@ import LightningFS from '@isomorphic-git/lightning-fs'
 
 /**
  * LightningFS singleton for Git storage
- * Single database named 'gglexical' with isolated repos per project
+ * Single database named 'block-content-editor' with isolated repos per project
  * Structure: /projects/{projectId}/.git/
  */
 
@@ -10,7 +10,7 @@ let fsInstance: LightningFS | null = null
 
 export function getGitFS(): LightningFS {
   if (!fsInstance) {
-    fsInstance = new LightningFS('gglexical')
+    fsInstance = new LightningFS('block-content-editor')
   }
   return fsInstance
 }
