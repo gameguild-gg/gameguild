@@ -1,7 +1,7 @@
 "use client"
 
 import type { ReactNode } from "react"
-import { useViewer } from "@/components/editor/engines/viewer-provider"
+import { useViewer } from "@/components/block-content-editor/engines/viewer-provider"
 
 export function ViewerLayout({ children }: { children: ReactNode }) {
   const { viewer } = useViewer()

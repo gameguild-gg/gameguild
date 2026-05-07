@@ -1,4 +1,4 @@
-import type { ProgrammingLanguage } from "@/components/editor/extras/source-code/types"
+import type { ProgrammingLanguage } from "@/components/block-content-editor/extras/source-code/types"
 import type { Executor } from "./types"
 import { javascriptExecutor } from "./javascript-executor"
 import { typescriptExecutor } from "./typescript-executor"

@@ -1,4 +1,4 @@
-import type { ShikiTheme } from "@/components/editor/extras/code-studio/types"
+import type { ShikiTheme } from "@/components/block-content-editor/extras/code-studio/types"
 import type { ProjectMode, NodeRestrictions } from "./project-modes"
 
 // Project-level preferences structure

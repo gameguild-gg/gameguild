@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef } from "react"
 import { GitBranch, ZoomIn, ZoomOut, RotateCcw, Maximize2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import type { MermaidData } from "@/components/editor/nodes/mermaid-node"
+import type { MermaidData } from "@/components/block-content-editor/nodes/mermaid-node"
 import { getMermaidThemePair, getCurrentMermaidTheme, type MermaidTheme } from "@/lib/mermaid-theme-helper"
 import { getMermaidConfigWithDarkTheme } from "@/lib/mermaid-dark-themes"
 import { useTheme } from "next-themes"

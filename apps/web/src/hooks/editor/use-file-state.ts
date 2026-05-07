@@ -1,4 +1,4 @@
-import type { CodeFile } from "@/components/editor/extras/source-code/types"
+import type { CodeFile } from "@/components/block-content-editor/extras/source-code/types"
 import type React from "react"
 
 interface UseFileStateProps {

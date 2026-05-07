@@ -715,7 +715,7 @@ export class UnifiedStorageManager {
 ### 1. Storage Type Selector Component
 
 ```typescript
-// src/components/editor/storage/storage-type-selector.tsx
+// src/components/block-content-editor/storage/storage-type-selector.tsx
 export function StorageTypeSelector({
   currentStorageType,
   onStorageTypeChange,
@@ -823,7 +823,7 @@ export function StorageTypeSelector({
 ### 2. Authentication Flow Component
 
 ```typescript
-// src/components/editor/storage/cloud-auth-dialog.tsx
+// src/components/block-content-editor/storage/cloud-auth-dialog.tsx
 export function CloudAuthDialog({
   storageType,
   onAuthSuccess,

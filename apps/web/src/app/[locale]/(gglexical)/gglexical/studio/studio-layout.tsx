@@ -1,7 +1,7 @@
 "use client"
 
 import type { ReactNode } from "react"
-import { useEditor } from "@/components/editor/engines/editor-provider"
+import { useEditor } from "@/components/block-content-editor/engines/editor-provider"
 
 export function StudioLayout({ children }: { children: ReactNode }) {
   const { project } = useEditor()

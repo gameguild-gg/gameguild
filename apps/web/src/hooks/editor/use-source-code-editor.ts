@@ -1,7 +1,7 @@
 "use client"
 
-import type { EditMenuOption } from "@/components/editor/extras/content-edit-menu"
-import type { CodeFile, ProgrammingLanguage, SourceCodeData } from "@/components/editor/extras/source-code/types"
+import type { EditMenuOption } from "@/components/block-content-editor/extras/content-edit-menu"
+import type { CodeFile, ProgrammingLanguage, SourceCodeData } from "@/components/block-content-editor/extras/source-code/types"
 import { Pencil, Play, Settings } from "lucide-react"
 import React, { useState } from "react"
 import { useCodeExecution } from "./use-code-execution"
