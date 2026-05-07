@@ -42,7 +42,7 @@ export function useGoogleDriveAuth() {
   const updateLocalStorage = useCallback((key: string, value: string) => {
     localStorage.setItem(key, value)
     // Dispatch custom event for same-tab updates
-    window.dispatchEvent(new CustomEvent('gglexical-storage-change', { 
+    window.dispatchEvent(new CustomEvent('block-content-editor-storage-change', { 
       detail: { key, value } 
     }))
   }, [])
@@ -119,8 +119,8 @@ export function useGoogleDriveAuth() {
   // Check authentication status
   const checkAuthStatus = useCallback(async () => {
     // Check if we have a stored access token
-    const storedToken = localStorage.getItem('gglexical_google_drive_token')
-    const storedExpiry = localStorage.getItem('gglexical_google_drive_token_expiry')
+    const storedToken = localStorage.getItem('block-content-editor_google_drive_token')
+    const storedExpiry = localStorage.getItem('block-content-editor_google_drive_token_expiry')
     
     if (storedToken && storedExpiry) {
       const expiryTime = parseInt(storedExpiry)
@@ -128,8 +128,8 @@ export function useGoogleDriveAuth() {
       
       if (now < expiryTime) {
         // Token is still valid
-        const savedFolder = localStorage.getItem('gglexical_google_drive_folder')
-        const savedFolderName = localStorage.getItem('gglexical_google_drive_folder_name')
+        const savedFolder = localStorage.getItem('block-content-editor_google_drive_folder')
+        const savedFolderName = localStorage.getItem('block-content-editor_google_drive_folder_name')
         
         setAuthState(prev => ({
           ...prev,
@@ -142,8 +142,8 @@ export function useGoogleDriveAuth() {
         return
       } else {
         // Token expired, clean up
-        localStorage.removeItem('gglexical_google_drive_token')
-        localStorage.removeItem('gglexical_google_drive_token_expiry')
+        localStorage.removeItem('block-content-editor_google_drive_token')
+        localStorage.removeItem('block-content-editor_google_drive_token_expiry')
       }
     }
   }, [])
@@ -217,9 +217,9 @@ export function useGoogleDriveAuth() {
             const expiryTime = Date.now() + expiresIn
 
             // Store token with expiry
-            updateLocalStorage('gglexical_google_drive_token', accessToken)
-            updateLocalStorage('gglexical_google_drive_token_expiry', expiryTime.toString())
-            updateLocalStorage('gglexical_google_drive_auth_time', Date.now().toString())
+            updateLocalStorage('block-content-editor_google_drive_token', accessToken)
+            updateLocalStorage('block-content-editor_google_drive_token_expiry', expiryTime.toString())
+            updateLocalStorage('block-content-editor_google_drive_auth_time', Date.now().toString())
 
             setAuthState(prev => ({
               ...prev,
@@ -252,13 +252,13 @@ export function useGoogleDriveAuth() {
     }
   }, [CLIENT_ID, SCOPES])
 
-  // Create or find GGLexical folder
+  // Create or find Block Content Editor folder
   const createOrFindFolder = useCallback(async (folderName: string): Promise<string | null> => {
     if (!authState.accessToken) return null
 
     // Sanitize folder name
-    const sanitizedName = GoogleDriveSecurity.sanitizeFileName(folderName.replace('.gglexical.json', ''))
-    const finalFolderName = sanitizedName.replace('.gglexical.json', '') // Remove extension for folder name
+    const sanitizedName = GoogleDriveSecurity.sanitizeFileName(folderName.replace('.block-content-editor.json', ''))
+    const finalFolderName = sanitizedName.replace('.block-content-editor.json', '') // Remove extension for folder name
 
     try {
       return await GoogleDriveSecurity.throttleApiCall(async () => {
@@ -275,8 +275,8 @@ export function useGoogleDriveAuth() {
           const folder = searchResponse.result.files[0]
           
           // Save folder info
-          updateLocalStorage('gglexical_google_drive_folder', folder.id!)
-          updateLocalStorage('gglexical_google_drive_folder_name', folder.name!)
+          updateLocalStorage('block-content-editor_google_drive_folder', folder.id!)
+          updateLocalStorage('block-content-editor_google_drive_folder_name', folder.name!)
           
           setAuthState(prev => ({
             ...prev,
@@ -299,8 +299,8 @@ export function useGoogleDriveAuth() {
         const folderId = createResponse.result.id!
         
         // Save folder info
-        updateLocalStorage('gglexical_google_drive_folder', folderId)
-        updateLocalStorage('gglexical_google_drive_folder_name', finalFolderName)
+        updateLocalStorage('block-content-editor_google_drive_folder', folderId)
+        updateLocalStorage('block-content-editor_google_drive_folder_name', finalFolderName)
         
         setAuthState(prev => ({
           ...prev,
@@ -332,11 +332,11 @@ export function useGoogleDriveAuth() {
       }
       
       // Clear stored data
-      localStorage.removeItem('gglexical_google_drive_token')
-      localStorage.removeItem('gglexical_google_drive_token_expiry')
-      localStorage.removeItem('gglexical_google_drive_folder')
-      localStorage.removeItem('gglexical_google_drive_folder_name')
-      localStorage.removeItem('gglexical_google_drive_auth_time')
+      localStorage.removeItem('block-content-editor_google_drive_token')
+      localStorage.removeItem('block-content-editor_google_drive_token_expiry')
+      localStorage.removeItem('block-content-editor_google_drive_folder')
+      localStorage.removeItem('block-content-editor_google_drive_folder_name')
+      localStorage.removeItem('block-content-editor_google_drive_auth_time')
       
       setAuthState({
         isAuthenticated: false,
@@ -377,8 +377,8 @@ export function useGoogleDriveAuth() {
 
   // Add a refresh function to force state update
   const refreshAuthState = useCallback(() => {
-    const storedToken = localStorage.getItem('gglexical_google_drive_token')
-    const storedExpiry = localStorage.getItem('gglexical_google_drive_token_expiry')
+    const storedToken = localStorage.getItem('block-content-editor_google_drive_token')
+    const storedExpiry = localStorage.getItem('block-content-editor_google_drive_token_expiry')
     
     if (storedToken && storedExpiry) {
       const expiryTime = parseInt(storedExpiry)
@@ -386,8 +386,8 @@ export function useGoogleDriveAuth() {
       
       if (now < expiryTime) {
         // Token is still valid
-        const savedFolder = localStorage.getItem('gglexical_google_drive_folder')
-        const savedFolderName = localStorage.getItem('gglexical_google_drive_folder_name')
+        const savedFolder = localStorage.getItem('block-content-editor_google_drive_folder')
+        const savedFolderName = localStorage.getItem('block-content-editor_google_drive_folder_name')
         
         setAuthState(prev => ({
           ...prev,
@@ -399,8 +399,8 @@ export function useGoogleDriveAuth() {
         }))
       } else {
         // Token expired, clean up
-        localStorage.removeItem('gglexical_google_drive_token')
-        localStorage.removeItem('gglexical_google_drive_token_expiry')
+        localStorage.removeItem('block-content-editor_google_drive_token')
+        localStorage.removeItem('block-content-editor_google_drive_token_expiry')
         setAuthState(prev => ({
           ...prev,
           isAuthenticated: false,
@@ -423,9 +423,9 @@ export function useGoogleDriveAuth() {
   // Listen for localStorage changes to automatically refresh auth state
   useEffect(() => {
     const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'gglexical_google_drive_token' || 
-          e.key === 'gglexical_google_drive_token_expiry' ||
-          e.key === 'gglexical_google_drive_folder') {
+      if (e.key === 'block-content-editor_google_drive_token' || 
+          e.key === 'block-content-editor_google_drive_token_expiry' ||
+          e.key === 'block-content-editor_google_drive_folder') {
         // Token or folder changed, refresh auth state
         refreshAuthState()
       }
@@ -433,20 +433,20 @@ export function useGoogleDriveAuth() {
 
     const handleCustomStorageChange = (e: CustomEvent) => {
       const { key } = e.detail
-      if (key === 'gglexical_google_drive_token' || 
-          key === 'gglexical_google_drive_token_expiry' ||
-          key === 'gglexical_google_drive_folder') {
+      if (key === 'block-content-editor_google_drive_token' || 
+          key === 'block-content-editor_google_drive_token_expiry' ||
+          key === 'block-content-editor_google_drive_folder') {
         // Token or folder changed, refresh auth state
         refreshAuthState()
       }
     }
 
     window.addEventListener('storage', handleStorageChange)
-    window.addEventListener('gglexical-storage-change', handleCustomStorageChange as EventListener)
+    window.addEventListener('block-content-editor-storage-change', handleCustomStorageChange as EventListener)
     
     return () => {
       window.removeEventListener('storage', handleStorageChange)
-      window.removeEventListener('gglexical-storage-change', handleCustomStorageChange as EventListener)
+      window.removeEventListener('block-content-editor-storage-change', handleCustomStorageChange as EventListener)
     }
   }, [refreshAuthState])
 

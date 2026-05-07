@@ -597,18 +597,18 @@ Located in `extras/`. Key areas:
 
 ## Pages
 
-All pages live under `app/[locale]/(gglexical)/gglexical/`.
+All pages live under `app/[locale]/(block-content-editor)/block-content-editor/`.
 
 | Route | Page | Description |
 |-------|------|-------------|
-| `/gglexical` | Home | Project manager with grid/list views, asset manager, collections |
-| `/gglexical/studio` | Studio | Full editor — all engines, layouts, modes |
-| `/gglexical/viewer` | Viewer | Read-only content viewer |
-| `/gglexical/quiz-editor` | Quiz Editor | Blocks-only, quiz mode, restricted picker |
-| `/gglexical/doc-editor` | Doc Editor | Lexical-only, type1 layout, free mode |
-| `/gglexical/full-editor` | Full Editor | All defaults enabled |
-| `/gglexical/static-viewer` | Static Viewer | Static/read-only render path |
-| `/gglexical/publish` | Publish | Placeholder (renders null) |
+| `/block-content-editor` | Home | Project manager with grid/list views, asset manager, collections |
+| `/block-content-editor/studio` | Studio | Full editor — all engines, layouts, modes |
+| `/block-content-editor/viewer` | Viewer | Read-only content viewer |
+| `/block-content-editor/quiz-editor` | Quiz Editor | Blocks-only, quiz mode, restricted picker |
+| `/block-content-editor/doc-editor` | Doc Editor | Lexical-only, type1 layout, free mode |
+| `/block-content-editor/full-editor` | Full Editor | All defaults enabled |
+| `/block-content-editor/static-viewer` | Static Viewer | Static/read-only render path |
+| `/block-content-editor/publish` | Publish | Placeholder (renders null) |
 
 ---
 
@@ -698,7 +698,7 @@ services/editor/
 
 lib/interopAdapter/
 ├── project-exporter.ts            # ZIP/folder export with assets
-├── project-importer.ts            # ZIP/.gglexical import with assets
+├── project-importer.ts            # ZIP/.block-content-editor import with assets
 └── README.md
 
 lib/editor/

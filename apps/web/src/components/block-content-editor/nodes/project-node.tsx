@@ -387,7 +387,7 @@ function ProjectComponent({ nodeKey, data, editor }: { nodeKey: NodeKey; data: P
   const handleOpenInNewTab = () => {
     // Always use original ID if available
     const targetId = projectData.originalProjectId || projectData.projectId
-    const url = `/gglexical/studio#${targetId}`
+    const url = `/block-content-editor/studio#${targetId}`
     window.open(url, '_blank')
   }
 

@@ -40,7 +40,7 @@ export function GoogleDriveAuthDialog({
     hasValidSetup,
   } = useGoogleDriveAuth()
 
-  const [customFolderName, setCustomFolderName] = useState("GGLexical Projects")
+  const [customFolderName, setCustomFolderName] = useState("Block Content Editor Projects")
   const [isCreatingFolder, setIsCreatingFolder] = useState(false)
 
   const handleAuthenticate = async () => {
@@ -179,7 +179,7 @@ export function GoogleDriveAuthDialog({
                       id="folder-name"
                       value={customFolderName}
                       onChange={(e) => setCustomFolderName(e.target.value)}
-                      placeholder="GGLexical Projects"
+                      placeholder="Block Content Editor Projects"
                       className="text-sm"
                     />
                   </div>

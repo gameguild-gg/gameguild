@@ -1,4 +1,4 @@
-# GGLexical
+# Block Content Editor
 
 ## Plugins
 

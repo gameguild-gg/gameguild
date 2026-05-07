@@ -48,7 +48,7 @@ export interface ExportedProjectStructure {
 export class ProjectExporter {
   private static readonly EXPORT_VERSION = "2.0" // Updated to include assets
   private static readonly METADATA_FILENAME = "index.json"
-  private static readonly DATA_FILENAME = "data.gglexical"
+  private static readonly DATA_FILENAME = "data.block-content-editor"
   private static readonly ASSETS_FOLDER = "assets"
   private static readonly ASSET_INDEX_FILENAME = "asset_index.json"
 
@@ -196,8 +196,8 @@ export class ProjectExporter {
   static async createLegacyZipFile(projectData: ProjectData): Promise<Blob> {
     const zip = new JSZip()
 
-    // Add the lexical file with .gglexical extension
-    zip.file(`${projectData.name}.gglexical`, projectData.data)
+    // Add the lexical file with .block-content-editor extension
+    zip.file(`${projectData.name}.block-content-editor`, projectData.data)
 
     // Create legacy index.json with project metadata
     const legacyMetadata = {

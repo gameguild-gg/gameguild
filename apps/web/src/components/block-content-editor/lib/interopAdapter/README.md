@@ -2,7 +2,7 @@
 
 ## Visão Geral
 
-Esta documentação descreve as utilidades `ProjectExporter` e `ProjectImporter` que foram criadas para componentizar e padronizar as funções de exportação e importação de projetos no GGLexical. Estas utilidades são de uso comum entre diferentes modos de armazenamento (Google Drive e máquina local).
+Esta documentação descreve as utilidades `ProjectExporter` e `ProjectImporter` que foram criadas para componentizar e padronizar as funções de exportação e importação de projetos no Block Content Editor. Estas utilidades são de uso comum entre diferentes modos de armazenamento (Google Drive e máquina local).
 
 ## Estrutura dos Arquivos
 
@@ -20,7 +20,7 @@ src/lib/project/
 ```
 projeto-{id}/
 ├── index.json              # Metadados do projeto
-└── data.gglexical         # Dados do editor Lexical
+└── data.block-content-editor         # Dados do editor Lexical
 ```
 
 ## ProjectExporter
@@ -61,7 +61,7 @@ const metadata = ProjectExporter.createMetadata(projectData, hash)
 
 ### Funcionalidades
 - ✅ Importação de arquivos ZIP
-- ✅ Importação de arquivos .gglexical individuais
+- ✅ Importação de arquivos .block-content-editor individuais
 - ✅ Suporte ao formato de pastas (projeto-*)
 - ✅ Validação de dados importados
 - ✅ Conversão para formato padrão do sistema
@@ -69,7 +69,7 @@ const metadata = ProjectExporter.createMetadata(projectData, hash)
 ### Métodos Principais
 
 #### `importFromFile(file)`
-Importa projeto de arquivo (ZIP, .gglexical, .lexical).
+Importa projeto de arquivo (ZIP, .block-content-editor, .lexical).
 
 ```typescript
 const importedData = await ProjectImporter.importFromFile(file)
@@ -163,7 +163,7 @@ const folderData = ProjectExporter.prepareForExport(projectData, hash)
 // Usar GoogleDriveService para salvar
 await googleDriveService.createFolder(folderData.folderName)
 await googleDriveService.saveFile('index.json', folderData.metadata)
-await googleDriveService.saveFile(`${projectData.id}.gglexical`, folderData.data)
+await googleDriveService.saveFile(`${projectData.id}.block-content-editor`, folderData.data)
 ```
 
 ### Exportação para Download Local
@@ -209,7 +209,7 @@ import { ProjectImporter } from './project-importer'
 
 // Baixar dados do Google Drive
 const indexContent = await googleDriveService.downloadFile('index.json')
-const dataContent = await googleDriveService.downloadFile(`${id}.gglexical`)
+const dataContent = await googleDriveService.downloadFile(`${id}.block-content-editor`)
 
 // Importar da estrutura de pastas
 const importedData = await ProjectImporter.importFromFolderStructure({
@@ -231,13 +231,13 @@ class GoogleDriveService {
     // Criar pasta e salvar arquivos
     const folderId = await this.createFolder(folderData.folderName)
     await this.saveFileToFolder(folderId, 'index.json', folderData.metadata)
-    await this.saveFileToFolder(folderId, `${projectData.id}.gglexical`, folderData.data)
+    await this.saveFileToFolder(folderId, `${projectData.id}.block-content-editor`, folderData.data)
   }
   
   async loadProject(folderId: string) {
     // Baixar arquivos
     const indexContent = await this.downloadFile(folderId, 'index.json')
-    const dataContent = await this.downloadFile(folderId, `${id}.gglexical`)
+    const dataContent = await this.downloadFile(folderId, `${id}.block-content-editor`)
     
     // ✅ Use ProjectImporter em vez de lógica inline
     return await ProjectImporter.importFromFolderStructure({
@@ -270,7 +270,7 @@ class LocalFileService {
 ## Extensões Suportadas
 
 - `.zip` - Arquivo compactado com projeto (estrutura projeto-*)
-- `.gglexical` - Arquivo de projeto GGLexical
+- `.block-content-editor` - Arquivo de projeto Block Content Editor
 
 ## Vantagens da Componentização
 

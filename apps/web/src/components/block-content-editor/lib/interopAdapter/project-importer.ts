@@ -54,14 +54,14 @@ export interface FolderStructureData {
 }
 
 export class ProjectImporter {
-  private static readonly SUPPORTED_EXTENSIONS = ['.zip', '.gglexical']
+  private static readonly SUPPORTED_EXTENSIONS = ['.zip', '.block-content-editor']
   private static readonly METADATA_FILENAME = 'index.json'
-  private static readonly DATA_FILENAME = 'data.gglexical'
+  private static readonly DATA_FILENAME = 'data.block-content-editor'
   private static readonly ASSETS_FOLDER = 'assets'
   private static readonly ASSET_INDEX_FILENAME = 'asset_index.json'
 
   /**
-   * Import from file (ZIP or .gglexical)
+   * Import from file (ZIP or .block-content-editor)
    */
   static async importFromFile(file: File): Promise<ImportedProjectData> {
     const fileName = file.name.toLowerCase()
@@ -73,8 +73,8 @@ export class ProjectImporter {
 
     if (fileExtension === '.zip') {
       return await ProjectImporter.importFromZip(file)
-    } else if (fileExtension === '.gglexical') {
-      return await ProjectImporter.importFromGGLexicalFile(file)
+    } else if (fileExtension === '.block-content-editor') {
+      return await ProjectImporter.importFromBlockContentEditorFile(file)
     }
 
     throw new Error('Unexpected file type')
@@ -110,7 +110,7 @@ export class ProjectImporter {
     const dataFile = zipContent.files[dataPath]
 
     if (!indexFile || !dataFile) {
-      throw new Error('Missing index.json or data.gglexical file in projeto folder')
+      throw new Error('Missing index.json or data.block-content-editor file in projeto folder')
     }
 
     try {
@@ -174,17 +174,17 @@ export class ProjectImporter {
   }
 
   /**
-   * Import from single .gglexical file
+   * Import from single .block-content-editor file
    */
-  private static async importFromGGLexicalFile(file: File): Promise<ImportedProjectData> {
+  private static async importFromBlockContentEditorFile(file: File): Promise<ImportedProjectData> {
     const content = await file.text()
-    const baseName = file.name.replace(/\.gglexical$/, '')
+    const baseName = file.name.replace(/\.block-content-editor$/, '')
 
     // Validate lexical data
     try {
       JSON.parse(content)
     } catch {
-      throw new Error('Invalid GGLexical data format')
+      throw new Error('Invalid Block Content Editor data format')
     }
 
     return {

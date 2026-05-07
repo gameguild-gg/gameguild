@@ -78,7 +78,7 @@ export function DownloadConfirmDialog({
           <div className="space-y-2 text-sm">
             <div className="flex items-center gap-2 text-muted-foreground">
               <FileText className="h-3 w-3" />
-              <span>data.gglexical</span>
+              <span>data.block-content-editor</span>
               <span className="text-xs text-muted-foreground/70">(Lexical editor data)</span>
             </div>
             <div className="flex items-center gap-2 text-muted-foreground">

@@ -1,4 +1,4 @@
-# Arquitetura Dual Cloud Storage - GGLexical Editor
+# Arquitetura Dual Cloud Storage - Block Content Editor
 
 ## Visão Geral da Arquitetura
 
@@ -9,8 +9,8 @@ A arquitetura proposta oferece **duas opções de armazenamento na nuvem**:
 
 ```mermaid
 graph TB
-    subgraph "Frontend - GGLexical"
-        A[GGLexical App]
+    subgraph "Frontend - Block Content Editor"
+        A[Block Content Editor App]
         B[Storage Selector]
         C[Local IndexedDB]
     end
@@ -203,7 +203,7 @@ export class DriveStorageProvider implements CloudStorageProvider {
   private isInitialized = false;
   private folderId: string | null = null;
   
-  private readonly FOLDER_NAME = 'GGLexical Projects';
+  private readonly FOLDER_NAME = 'Block Content Editor Projects';
   private readonly SCOPES = [
     'https://www.googleapis.com/auth/drive.file',
     'https://www.googleapis.com/auth/drive.metadata.readonly'
@@ -267,7 +267,7 @@ export class DriveStorageProvider implements CloudStorageProvider {
       }
     }
     
-    // Ensure GGLexical folder exists
+    // Ensure Block Content Editor folder exists
     await this.ensureProjectFolder();
     
     return true;
@@ -331,9 +331,9 @@ export class DriveStorageProvider implements CloudStorageProvider {
     const blob = new Blob([fileContent], { type: 'application/json' });
 
     const metadata = {
-      name: `${projectData.name}.gglexical`,
+      name: `${projectData.name}.block-content-editor`,
       parents: [folderId],
-      description: `GGLexical project: ${projectData.name}`
+      description: `Block Content Editor project: ${projectData.name}`
     };
 
     const form = new FormData();
@@ -426,7 +426,7 @@ export class DriveStorageProvider implements CloudStorageProvider {
     const folderId = await this.ensureProjectFolder();
     
     const response = await gapi.client.drive.files.list({
-      q: `'${folderId}' in parents and name contains '.gglexical' and trashed=false`,
+      q: `'${folderId}' in parents and name contains '.block-content-editor' and trashed=false`,
       fields: 'files(id,name,modifiedTime,createdTime,size)',
       orderBy: 'modifiedTime desc'
     });
@@ -887,7 +887,7 @@ export function CloudAuthDialog({
                 Connect your Google Drive to save projects in your personal cloud storage.
               </p>
               <ul className="mt-2 text-xs text-gray-500 space-y-1">
-                <li>• Projects saved in "GGLexical Projects" folder</li>
+                <li>• Projects saved in "Block Content Editor Projects" folder</li>
                 <li>• Full control over your data</li>
                 <li>• Works without internet after sync</li>
               </ul>
@@ -1016,4 +1016,4 @@ export const googleDriveConfig = {
 - Sync queue para reconnection
 - Conflict resolution strategies
 
-Esta arquitetura oferece **máxima flexibilidade** permitindo que o GGLexical sirva tanto para **uso pessoal** (Drive) quanto **corporativo** (Server), mantendo sempre a opção **local** para privacidade máxima.
+Esta arquitetura oferece **máxima flexibilidade** permitindo que o Block Content Editor sirva tanto para **uso pessoal** (Drive) quanto **corporativo** (Server), mantendo sempre a opção **local** para privacidade máxima.

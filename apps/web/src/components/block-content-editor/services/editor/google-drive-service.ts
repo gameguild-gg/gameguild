@@ -37,7 +37,7 @@ export class GoogleDriveService {
   private constructor() {
     // Load saved folder ID
     if (typeof window !== 'undefined') {
-      this.folderId = localStorage.getItem('gglexical_google_drive_folder')
+      this.folderId = localStorage.getItem('block-content-editor_google_drive_folder')
     }
   }
 
@@ -267,7 +267,7 @@ export class GoogleDriveService {
       // 4. Save data file using ProjectExporter format
       await this.saveFileToFolder(
         projectFolderId,
-        'data.gglexical',
+        'data.block-content-editor',
         exportedProject.data,
         'application/json'
       )
@@ -480,25 +480,25 @@ export class GoogleDriveService {
 
       console.log("Downloaded index.json:", indexData)
 
-      // Get data from data.gglexical file (updated to use new filename)
+      // Get data from data.block-content-editor file (updated to use new filename)
       const dataFileResponse = await window.gapi.client.drive.files.list({
-        q: `'${projectFolderId}' in parents and name='data.gglexical' and trashed=false`,
+        q: `'${projectFolderId}' in parents and name='data.block-content-editor' and trashed=false`,
         fields: 'files(id)',
       })
 
       const dataFile = dataFileResponse.result.files?.[0]
       if (!dataFile) {
-        console.error("data.gglexical file not found in project folder")
+        console.error("data.block-content-editor file not found in project folder")
         return null
       }
 
-      console.log(`Found data.gglexical with ID: ${dataFile.id}`)
+      console.log(`Found data.block-content-editor with ID: ${dataFile.id}`)
       const dataResponse = await window.gapi.client.drive.files.get({
         fileId: dataFile.id!,
         alt: 'media',
       })
 
-      console.log("Downloaded data.gglexical content length:", dataResponse.body?.length)
+      console.log("Downloaded data.block-content-editor content length:", dataResponse.body?.length)
 
       // Use ProjectImporter to process the folder structure
       const folderData: FolderStructureData = {
