@@ -45,18 +45,31 @@ function detectCMakeVersion(): string {
     const envVer = process.env.CMAKE_VERSION;
     if (envVer) return envVer;
 
-    console.log('Detecting latest CMake release...');
+    // CMake 4.x changed CMakeBuildUtilities.cmake: when CMAKE_USE_SYSTEM_CURL=ON it
+    // forces CMAKE_USE_SYSTEM_ZLIB=ON via a regular set() that overrides our -D flag,
+    // and Emscripten's cross-compile sysroot has no system zlib. Cap at 3.x.
+    console.log('Detecting latest CMake 3.x release...');
     const result = shell.exec(
-        `curl -fsSL ${GITHUB_AUTH} https://api.github.com/repos/Kitware/CMake/releases/latest`,
+        `curl -fsSL ${GITHUB_AUTH} "https://api.github.com/repos/Kitware/CMake/releases?per_page=100"`,
         { silent: true },
     );
     if (result.code !== 0) {
-        throw new Error('Failed to query GitHub for latest CMake release');
+        throw new Error('Failed to query GitHub for CMake releases');
     }
-    const data = JSON.parse(result.stdout);
-    const tag = (data.tag_name as string).replace(/^v/, '');
-    console.log(`  Latest CMake release: ${tag}`);
-    return tag;
+    const releases = JSON.parse(result.stdout) as Array<{
+        tag_name: string;
+        prerelease: boolean;
+        draft: boolean;
+    }>;
+    for (const rel of releases) {
+        if (rel.prerelease || rel.draft) continue;
+        const m = rel.tag_name.match(/^v(3\.\d+\.\d+)$/);
+        if (m) {
+            console.log(`  Latest CMake 3.x release: ${m[1]}`);
+            return m[1];
+        }
+    }
+    throw new Error('No CMake 3.x release found in recent 100 releases');
 }
 
 function escapeRegex(input: string): string {
