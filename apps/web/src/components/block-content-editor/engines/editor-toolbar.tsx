@@ -59,9 +59,9 @@ export function EditorToolbar() {
         </div>
         <div className="flex items-center gap-2">
           {tc.showNavHome !== false && (
-            <Link href="/gglexical" passHref>
+            <Link href="/block-content-editor" passHref>
               <Button
-                onClick={(e: any) => ui.handleLinkNavigation(e, "/gglexical")}
+                onClick={(e: any) => ui.handleLinkNavigation(e, "/block-content-editor")}
                 variant="ghost"
                 size="sm"
                 className="gap-2 hover:bg-gray-100 dark:hover:bg-gray-800"
@@ -72,9 +72,9 @@ export function EditorToolbar() {
             </Link>
           )}
           {tc.showNavViewer !== false && (
-            <Link href="/gglexical/viewer" passHref>
+            <Link href="/block-content-editor/viewer" passHref>
               <Button
-                onClick={(e: any) => ui.handleLinkNavigation(e, "/gglexical/viewer")}
+                onClick={(e: any) => ui.handleLinkNavigation(e, "/block-content-editor/viewer")}
                 variant="ghost"
                 size="sm"
                 className="gap-2 hover:bg-gray-100 dark:hover:bg-gray-800"

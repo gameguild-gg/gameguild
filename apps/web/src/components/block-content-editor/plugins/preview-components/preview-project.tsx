@@ -91,7 +91,7 @@ export function PreviewProject({ node, storageAdapter }: PreviewProjectProps) {
 
   const handleOpenInNewTab = () => {
     const targetId = node.data.originalProjectId || node.data.projectId
-    const url = `/gglexical/studio#${targetId}`
+    const url = `/block-content-editor/studio#${targetId}`
     window.open(url, '_blank')
   }
 

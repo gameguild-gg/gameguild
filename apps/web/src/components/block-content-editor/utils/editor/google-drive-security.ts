@@ -61,10 +61,10 @@ export class GoogleDriveSecurity {
       .replace(/^\./, '_') // Prevent hidden files
       .trim()
 
-    // Ensure file has .gglexical.json extension
-    if (!sanitized.endsWith('.gglexical.json')) {
-      const baseName = sanitized.replace(/\.json$/, '').replace(/\.gglexical$/, '')
-      return `${baseName}.gglexical.json`
+    // Ensure file has .block-content-editor.json extension
+    if (!sanitized.endsWith('.block-content-editor.json')) {
+      const baseName = sanitized.replace(/\.json$/, '').replace(/\.block-content-editor$/, '')
+      return `${baseName}.block-content-editor.json`
     }
 
     return sanitized
@@ -208,15 +208,15 @@ export class GoogleDriveSecurity {
 
     try {
       // Remove expired authentication data
-      const stored = localStorage.getItem('gglexical_google_drive_auth_time')
+      const stored = localStorage.getItem('block-content-editor_google_drive_auth_time')
       if (stored) {
         const authTime = parseInt(stored)
         const now = Date.now()
         
         if (now - authTime > this.MAX_TOKEN_AGE) {
-          localStorage.removeItem('gglexical_google_drive_folder')
-          localStorage.removeItem('gglexical_google_drive_folder_name')
-          localStorage.removeItem('gglexical_google_drive_auth_time')
+          localStorage.removeItem('block-content-editor_google_drive_folder')
+          localStorage.removeItem('block-content-editor_google_drive_folder_name')
+          localStorage.removeItem('block-content-editor_google_drive_auth_time')
         }
       }
     } catch (error) {

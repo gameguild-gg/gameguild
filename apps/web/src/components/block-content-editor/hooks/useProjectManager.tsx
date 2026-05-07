@@ -129,7 +129,7 @@ export function useProjectManager({
       if (projectData) {
         toast.success("Redirecting to Studio...", { id: `loading-${projectId}`, duration: 1000 })
         setTimeout(() => {
-          const url = `/gglexical/studio#${projectId}`
+          const url = `/block-content-editor/studio#${projectId}`
           if (event?.ctrlKey || event?.metaKey) {
             window.open(url, '_blank')
           } else {
@@ -149,7 +149,7 @@ export function useProjectManager({
       if (projectData) {
         toast.success("Redirecting to Viewer...", { id: `loading-view-${projectId}`, duration: 1000 })
         setTimeout(() => {
-          const url = `/gglexical/viewer#${projectId}`
+          const url = `/block-content-editor/viewer#${projectId}`
           if (event?.ctrlKey || event?.metaKey) {
             window.open(url, '_blank')
           } else {
@@ -240,7 +240,7 @@ export function useProjectManager({
 
   const handleProjectCreate = useCallback((projectData: { id: string; name: string; tags: string[]; storageType: "local" | "gameguild-cloud" | "google-drive"; mode: ProjectMode; engine: EngineType }) => {
     // Navigate to studio with the newly created project's ID
-    window.location.href = `/gglexical/studio#${projectData.id}`
+    window.location.href = `/block-content-editor/studio#${projectData.id}`
   }, [])
 
   return {
