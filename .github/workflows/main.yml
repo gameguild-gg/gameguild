@@ -84,7 +84,10 @@ jobs:
         run: cd apps/api && dotnet build "GameGuild.Production.sln" -c Release
 
       - name: Build tools/emception (full)
-        run: cd tools/emception && npm run build:all
+        run: |
+          cd tools/emception
+          npm run build:all
+          npm run build:packages:ide
 
       - name: Make gource script executable
         run: chmod +x ./contributors/gource.sh
