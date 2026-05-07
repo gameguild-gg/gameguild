@@ -106,29 +106,40 @@ if (runMigrationsOnStartup)
     {
         using var scope = app.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<GameGuild.API.Database.ApplicationDbContext>();
+        var migrator = db.Database.GetService<IMigrator>();
 
         if (resetDatabaseOnStartup)
         {
             app.Logger.LogWarning(
                 "Database reset requested on startup. The target database will be deleted and rebuilt from the first migration.");
 
-            try
+            if (!app.Environment.IsDevelopment())
             {
-                NpgsqlConnection.ClearAllPools();
-                await db.Database.EnsureDeletedAsync().ConfigureAwait(false);
-            }
-            catch (PostgresException ex) when (
-                ex.SqlState == PostgresErrorCodes.InsufficientPrivilege ||
-                ex.SqlState == PostgresErrorCodes.ObjectInUse)
-            {
-                app.Logger.LogWarning(
-                    ex,
-                    "Database deletion was blocked by PostgreSQL permissions or active connections. Falling back to migration rollback within the existing database.");
+                app.Logger.LogInformation(
+                    "ResetOnStartup is running in {EnvironmentName}. Using migration rollback instead of DROP DATABASE because staging/shared PostgreSQL deployments commonly disallow forced database deletion.",
+                    app.Environment.EnvironmentName);
 
-                // Shared PostgreSQL roles often cannot force-terminate other sessions for DROP DATABASE.
-                // Roll back to migration 0 instead so reset-on-startup still works without requiring superuser privileges.
-                var migrator = db.Database.GetService<IMigrator>();
                 await migrator.MigrateAsync("0").ConfigureAwait(false);
+            }
+            else
+            {
+                try
+                {
+                    NpgsqlConnection.ClearAllPools();
+                    await db.Database.EnsureDeletedAsync().ConfigureAwait(false);
+                }
+                catch (PostgresException ex) when (
+                    ex.SqlState == PostgresErrorCodes.InsufficientPrivilege ||
+                    ex.SqlState == PostgresErrorCodes.ObjectInUse)
+                {
+                    app.Logger.LogWarning(
+                        ex,
+                        "Database deletion was blocked by PostgreSQL permissions or active connections. Falling back to migration rollback within the existing database.");
+
+                    // Local development can still prefer full database deletion, but keep the rollback fallback
+                    // for restricted PostgreSQL roles or when active connections block DROP DATABASE.
+                    await migrator.MigrateAsync("0").ConfigureAwait(false);
+                }
             }
         }
 
