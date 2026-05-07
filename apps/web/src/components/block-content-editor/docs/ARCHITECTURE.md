@@ -1,7 +1,7 @@
 # GameGuild Editor — Architecture Reference
 
 > Comprehensive documentation for the composable content editor.
-> Last updated: April 2026 (post-refactor).
+> Last updated: May 2026 (post-centralization).
 
 ---
 
@@ -37,6 +37,7 @@ The GameGuild Editor is a composable, multi-engine content editor built with Nex
 - **Engine agnostic** — The same Provider/Toolbar/Dialogs work with both Lexical and Blocks engines.
 - **Mode-based restrictions** — Node types are allowed/blocked declaratively per mode, enforced at insert-time.
 - **Storage abstraction** — IndexedDB + Google Drive + Cloud behind a single adapter interface.
+- **Module boundary** — Editor-only hooks, storage, sync, services, viewers, and utilities live under `components/block-content-editor`.
 
 ---
 
@@ -199,7 +200,6 @@ interface ToolbarConfig {
   showProjectTitle?: boolean
   showModeIndicator?: boolean
   showStorageInfo?: boolean
-  showPreviewModeSelector?: boolean  // REMOVED — always single layout
   showNavHome?: boolean
   showNavViewer?: boolean
   showNavStudio?: boolean
@@ -299,9 +299,9 @@ Three content modes control which node types are allowed:
 
 | Mode | Description | Default Restrictions |
 |------|-------------|---------------------|
-| `free-page` | No restrictions. All nodes allowed everywhere. | None |
-| `code-page` | Code-focused. Block b1 blocks code-studio; b2 allows only code-studio. | `b1: ['code-studio', null], b2: ['*', 'code-studio']` |
-| `quiz-page` | Quiz-focused. Block b1 blocks quiz; b2 allows only quiz. | `b1: ['quiz', null], b2: ['*', 'quiz']` |
+| `free-page` | No restrictions. All nodes allowed in the single block. | `b1: [null, null]` |
+| `code-page` | Code-focused. The single block blocks `code-studio`. | `b1: ['code-studio', null]` |
+| `quiz-page` | Quiz-focused. The single block blocks `quiz`. | `b1: ['quiz', null]` |
 
 ### Restriction Format
 
@@ -314,7 +314,7 @@ interface NodeRestrictions {
 
 **Resolution rules (priority order):**
 1. Block-specific restriction
-2. Fallback to `b2` then `b1` defaults
+2. Fallback to `b1` defaults
 3. Tuple interpretation:
    - `allowed === "*"` → permit all
    - `allowed` is list → ONLY those types permitted
@@ -386,8 +386,9 @@ interface ProjectData {
 ### Git History
 
 Auto-commits on every save. Supports:
-- `getCommits(projectId)` — Full history
+- `listHistory(projectId)` — Full history
 - `loadCommit(projectId, sha)` — View old version (read-only)
+- `listSnapshots(projectId)` — Named snapshot list
 - `createSnapshot(projectId, name)` — Named tag
 - `loadSnapshot(projectId, tag)` — Restore tagged version
 
@@ -606,6 +607,7 @@ All pages live under `app/[locale]/(gglexical)/gglexical/`.
 | `/gglexical/quiz-editor` | Quiz Editor | Blocks-only, quiz mode, restricted picker |
 | `/gglexical/doc-editor` | Doc Editor | Lexical-only, type1 layout, free mode |
 | `/gglexical/full-editor` | Full Editor | All defaults enabled |
+| `/gglexical/static-viewer` | Static Viewer | Static/read-only render path |
 | `/gglexical/publish` | Publish | Placeholder (renders null) |
 
 ---
@@ -646,25 +648,65 @@ hooks/
 └── useViewerStorage.ts        # Read-only viewer storage
 ```
 
-### Storage (lib/storage/editor/)
+### Storage And Persistence (lib/storage/)
 
 ```
-lib/storage/editor/
-├── enhanced-storage-adapter.ts  # IndexedDB + sync + Drive adapter
-├── project-types.ts             # EngineType constants
-├── project-modes.ts             # ProjectMode, NodeRestrictions, isNodeAllowed()
-├── project-preferences.ts       # ProjectPreferences, per-panel config
-├── block-structure.ts           # Block, BlockArray, BlockStorage types
-├── cell-structure.ts            # Cell, CellularDocument, CellularContent
-├── layout-detector.ts           # detectProjectLayout(), extractEditorStates()
-├── storage-types.ts             # StorageType, SyncStatus constants
-├── editor-preferences.ts        # Editor preferences DB
-└── cell-converters/
-    ├── index.ts                 # Router for cell conversion
-    ├── lexical.ts               # Lexical ↔ Cells conversion
-    ├── blocks.ts                # Blocks ↔ BlockStorage conversion
-    ├── cell-data.ts             # Cell data type definitions
-    └── cell-metadata.ts         # Cell metadata types
+lib/storage/
+├── assets/                       # Asset DB, collections, URL resolution
+│   ├── asset-manager.ts
+│   ├── collection-types.ts
+│   ├── index.ts
+│   ├── types.ts
+│   └── use-resolved-media.ts
+├── editor/                       # Project/content persistence model
+│   ├── enhanced-storage-adapter.ts # IndexedDB + sync + Drive adapter
+│   ├── project-types.ts            # EngineType constants
+│   ├── project-modes.ts            # ProjectMode, NodeRestrictions, isNodeAllowed()
+│   ├── project-preferences.ts      # ProjectPreferences, per-panel config
+│   ├── block-structure.ts          # Block, BlockArray, BlockStorage types
+│   ├── cell-structure.ts           # Cell, CellularDocument, CellularContent
+│   ├── layout-detector.ts          # extractEditorStates(), createProjectData()
+│   ├── storage-types.ts            # StorageType, SyncStatus constants
+│   ├── editor-preferences.ts       # Editor preferences DB
+│   └── cell-converters/
+│       ├── index.ts                # Router for cell conversion
+│       ├── lexical.ts              # Lexical ↔ Cells conversion
+│       ├── blocks.ts               # Blocks ↔ BlockStorage conversion
+│       ├── cell-data.ts            # Cell data type definitions
+│       └── cell-metadata.ts        # Cell metadata types
+└── git/                          # Isomorphic-git history/snapshots
+    ├── git-fs.ts
+    ├── git-history-manager.ts
+    └── index.ts
+```
+
+### Sync, API, Services, And Utilities
+
+```
+lib/api/editor/
+└── api-client.ts                  # GameGuild Cloud API client
+
+lib/sync/editor/
+├── google-drive-sync.ts           # Google Drive sync bridge
+├── hash-manager.ts                # Project/hash helpers
+├── sync-config.ts                 # Sync configuration manager
+├── sync-manager.ts                # Queue orchestration + remote checks
+└── sync-queue.ts                  # IndexedDB-backed sync queue
+
+services/editor/
+└── google-drive-service.ts        # Google Drive API integration
+
+lib/interopAdapter/
+├── project-exporter.ts            # ZIP/folder export with assets
+├── project-importer.ts            # ZIP/.gglexical import with assets
+└── README.md
+
+lib/editor/
+└── webp-converter.ts              # Browser-side image conversion
+
+utils/editor/
+├── google-drive-security.ts       # Google Drive validation/throttling helpers
+└── google-drive-test.ts           # Manual browser-console test script
 ```
 
 ### Nodes (23 types)
