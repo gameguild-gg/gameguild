@@ -1,0 +1,6 @@
+{
+  "main": "../dist/cjs/Micro.js",
+  "module": "../dist/esm/Micro.js",
+  "types": "../dist/dts/Micro.d.ts",
+  "sideEffects": []
+}

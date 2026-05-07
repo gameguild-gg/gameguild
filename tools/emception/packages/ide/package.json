@@ -1,6 +1,6 @@
 {
   "name": "@emception/ide",
-  "version": "3.2.1",
+  "version": "3.3.0",
   "description": "Reactive <Ide> React 19 component + <emception-ide> custom-element wrapper for raw HTML / Next.",
   "license": "MIT",
   "type": "module",

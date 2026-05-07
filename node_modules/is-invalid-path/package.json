@@ -1,0 +1,72 @@
+{
+  "name": "is-invalid-path",
+  "description": "Returns true if a windows file path has invalid characters.",
+  "version": "1.0.2",
+  "homepage": "https://github.com/jonschlinkert/is-invalid-path",
+  "author": "Jon Schlinkert (https://github.com/jonschlinkert)",
+  "repository": "jonschlinkert/is-invalid-path",
+  "bugs": {
+    "url": "https://github.com/jonschlinkert/is-invalid-path/issues"
+  },
+  "license": "MIT",
+  "files": [
+    "index.js"
+  ],
+  "main": "index.js",
+  "engines": {
+    "node": ">=6.0"
+  },
+  "scripts": {
+    "test": "mocha"
+  },
+  "devDependencies": {
+    "gulp-format-md": "^1.0.0",
+    "mocha": "^3.5.3"
+  },
+  "keywords": [
+    "bash",
+    "braces",
+    "character",
+    "check",
+    "exec",
+    "expression",
+    "extglob",
+    "file",
+    "filepath",
+    "glob",
+    "globbing",
+    "globstar",
+    "invalid",
+    "is",
+    "match",
+    "matches",
+    "path",
+    "pattern",
+    "regex",
+    "regexp",
+    "regular",
+    "string",
+    "test",
+    "valid",
+    "validate"
+  ],
+  "verb": {
+    "toc": false,
+    "layout": "default",
+    "tasks": [
+      "readme"
+    ],
+    "plugins": [
+      "gulp-format-md"
+    ],
+    "related": {
+      "list": [
+        "is-glob",
+        "is-windows"
+      ]
+    },
+    "lint": {
+      "reflinks": true
+    }
+  }
+}

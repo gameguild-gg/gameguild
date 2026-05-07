@@ -1,0 +1,15 @@
+{
+  "private": true,
+  "dependencies": {
+    "acorn": "^8.7.1",
+    "google-closure-compiler": "20220502.0.0",
+    "html-minifier-terser": "6.1.0",
+    "wasm2c": "1.0.0"
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "fmt": "prettier --write tools/acorn-optimizer.js",
+    "check": "prettier --check tools/acorn-optimizer.js"
+  },
+  "version": "3.3.0"
+}

@@ -1,0 +1,26 @@
+{
+  "name": "semifies",
+  "version": "1.0.0",
+  "description": "Slimmed down satisfies from semver",
+  "main": "index.js",
+  "files": [
+    "index.js"
+  ],
+  "scripts": {
+    "test": "standard && brittle test/index.js"
+  },
+  "devDependencies": {
+    "brittle": "^3.7.0",
+    "standard": "^17.1.2"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/holepunchto/semifies.git"
+  },
+  "author": "Holepunch Inc",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/holepunchto/semifies/issues"
+  },
+  "homepage": "https://github.com/holepunchto/semifies"
+}

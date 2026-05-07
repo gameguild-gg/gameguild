@@ -1,0 +1,46 @@
+{
+  "name": "po-parser",
+  "version": "2.1.1",
+  "homepage": "https://github.com/amannn/po-parser",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:amannn/po-parser.git"
+  },
+  "description": "Parses and serializes `.po` file content.",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "type": "module",
+  "scripts": {
+    "build": "bunchee",
+    "lint": "tsc --noEmit",
+    "test": "vitest",
+    "prepublishOnly": "pnpm lint && pnpm test && pnpm build"
+  },
+  "keywords": [
+    "po",
+    "parse",
+    "serialize"
+  ],
+  "files": [
+    "dist"
+  ],
+  "author": "Jan Amann <jan@amann.work>",
+  "license": "MIT",
+  "packageManager": "pnpm@10.17.1",
+  "publishConfig": {
+    "provenance": true
+  },
+  "devDependencies": {
+    "@semantic-release/changelog": "^6.0.3",
+    "@semantic-release/commit-analyzer": "^13.0.1",
+    "@semantic-release/git": "^10.0.1",
+    "@semantic-release/github": "^12.0.2",
+    "@semantic-release/npm": "^12.0.0",
+    "@semantic-release/release-notes-generator": "^14.1.0",
+    "bunchee": "^6.6.2",
+    "conventional-changelog-conventionalcommits": "^9.1.0",
+    "semantic-release": "^25.0.2",
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.9"
+  }
+}

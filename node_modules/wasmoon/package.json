@@ -1,0 +1,65 @@
+{
+    "name": "wasmoon",
+    "version": "1.16.0",
+    "description": "A real lua VM with JS bindings made with webassembly",
+    "main": "dist/index.js",
+    "scripts": {
+        "build:wasm:dev": "./build.sh dev",
+        "build:wasm": "./build.sh",
+        "build:wasm:docker:dev": "docker run --rm -v $(pwd):/wasmoon emscripten/emsdk /wasmoon/build.sh dev",
+        "build:wasm:docker": "docker run --rm -v $(pwd):/wasmoon emscripten/emsdk /wasmoon/build.sh",
+        "start": "rollup -c -w",
+        "test": "mocha --parallel --require ./test/boot.js test/*.test.js",
+        "luatests": "node --experimental-import-meta-resolve test/luatests.mjs",
+        "build": "rollup -c && tsc -d --emitDeclarationOnly --rootDir src --declarationDir dist",
+        "clean": "rm -rf dist build",
+        "lint": "prettier --write . && eslint . --fix --cache",
+        "lint:nofix": "eslint ."
+    },
+    "files": [
+        "bin/*",
+        "dist/*"
+    ],
+    "bin": {
+        "wasmoon": "bin/wasmoon"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/ceifa/wasmoon.git"
+    },
+    "author": "ceifa",
+    "license": "MIT",
+    "bugs": {
+        "url": "https://github.com/ceifa/wasmoon/issues"
+    },
+    "homepage": "https://github.com/ceifa/wasmoon#readme",
+    "keywords": [
+        "lua",
+        "moon",
+        "wasm",
+        "webassembly"
+    ],
+    "devDependencies": {
+        "@rollup/plugin-typescript": "11.1.5",
+        "@types/node": "20.10.4",
+        "@typescript-eslint/eslint-plugin": "6.13.2",
+        "@typescript-eslint/parser": "6.13.2",
+        "chai": "4.3.10",
+        "chai-as-promised": "7.1.1",
+        "eslint": "8.55.0",
+        "eslint-config-prettier": "9.1.0",
+        "eslint-plugin-prettier": "5.0.1",
+        "eslint-plugin-sort-imports-es6-autofix": "0.6.0",
+        "fengari": "0.1.4",
+        "jest-mock": "29.7.0",
+        "mocha": "10.2.0",
+        "prettier": "3.1.0",
+        "rollup": "4.7.0",
+        "rollup-plugin-copy": "3.5.0",
+        "tslib": "2.6.2",
+        "typescript": "5.3.3"
+    },
+    "dependencies": {
+        "@types/emscripten": "1.39.10"
+    }
+}

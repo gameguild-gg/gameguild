@@ -1,3 +1,42 @@
+# [3.3.0](https://github.com/gameguild-gg/gameguild/compare/v3.2.1...v3.3.0) (2026-05-07)
+
+### Features
+
+* **emception:** Build Raylib with WebGL2 support ([fcd18e8](https://github.com/gameguild-gg/gameguild/commit/fcd18e85fb26e6ee39fe81abfe00b3a265dca24f))
+* **emception:** add raylib canvas support with GLFW/WebGL patching ([56ad56c](https://github.com/gameguild-gg/gameguild/commit/56ad56c328847871767a9f52337a42e8c910586d))
+
+### Bug Fixes
+
+* **emception:** hoist @vitejs/plugin-react for ide-react build ([d1f664e](https://github.com/gameguild-gg/gameguild/commit/d1f664e7b73b918d1e1172aeda8e9ef66fcedc13))
+* **ci:** build @emception/ide before ide-react ([522778f](https://github.com/gameguild-gg/gameguild/commit/522778f2d60a8a46474f42bb83a7ce4cbb027d71))
+* **emception:** prebuild package deps before typecheck ([e96573e](https://github.com/gameguild-gg/gameguild/commit/e96573e929615159c1b5cb040d807da94a15d2fd))
+* **emception:** resolve workspace package types in CI ([88746da](https://github.com/gameguild-gg/gameguild/commit/88746dab6ef6bc0cffadc94862e46e3834fb25b4))
+* **dotnet-wasm:** auto-fallback to local sdk for wasm-tools ([967fe9c](https://github.com/gameguild-gg/gameguild/commit/967fe9cbd2932ae5f047e2ff934e511353b830ad))
+* keep dotnet available after cleanup ([fe68287](https://github.com/gameguild-gg/gameguild/commit/fe68287726024bbfcfbd45c942cd4753f02844c9))
+* add GITHUB_TOKEN job env and dotnet PATH for CI ([54d70d5](https://github.com/gameguild-gg/gameguild/commit/54d70d5a666aa3cb00bf7215c900eb9ae6045b3b))
+* ci ([de8f814](https://github.com/gameguild-gg/gameguild/commit/de8f8146759d89153c11df6eeb6069997f2b2654))
+* ci ([d34a1d4](https://github.com/gameguild-gg/gameguild/commit/d34a1d429f7c2dee106b4af0a40fbd0341a77805))
+* ci ([1277894](https://github.com/gameguild-gg/gameguild/commit/1277894185579d2a38a2b7f9595bc0296c490cab))
+* ci ([af09193](https://github.com/gameguild-gg/gameguild/commit/af0919317e0e09e7baeaa80e1f05d045eb46f74c))
+* ci ([a58f99d](https://github.com/gameguild-gg/gameguild/commit/a58f99d62499d210cfa230323dbb529c2e181cdd))
+* ci ([bc458cd](https://github.com/gameguild-gg/gameguild/commit/bc458cde2ae7f3e936ff46903c0bd8ad09a66391))
+* ci ([2b3396c](https://github.com/gameguild-gg/gameguild/commit/2b3396cfcac82a53d93d4c2116fe442d5c2dbb84))
+* ci ([c994694](https://github.com/gameguild-gg/gameguild/commit/c9946940a0b47f56131c55ebfce089e4a4e3bd0d))
+* ci ([8d5bae3](https://github.com/gameguild-gg/gameguild/commit/8d5bae38c11eb0a7096ef5fc092d5f0228872291))
+* ci update the node version ([bd22554](https://github.com/gameguild-gg/gameguild/commit/bd225544be4ce5b8856f83957cf29fa9177ce496))
+* ci ([3388acc](https://github.com/gameguild-gg/gameguild/commit/3388accb5dd8251fe891acff9361784cef7a32f4))
+* ci on act ([babc160](https://github.com/gameguild-gg/gameguild/commit/babc1609e089c40afa9f6217f02da4f83b4fae35))
+* ci again ([fe90271](https://github.com/gameguild-gg/gameguild/commit/fe902712b148065fe5b37f8233acb51c17479f10))
+* **emception:** trying to fix ci/cd ([d6edd53](https://github.com/gameguild-gg/gameguild/commit/d6edd53f93e2e72af47de03dc8381ca6da79d8c1))
+* **emception:** add raylib to the ci/cd ([5b93f58](https://github.com/gameguild-gg/gameguild/commit/5b93f58630d2cf4ed803b520c444436a334a2a2f))
+* **emception:** clean ([410af09](https://github.com/gameguild-gg/gameguild/commit/410af09571108c942fd478e4496531d0312983fb))
+* **emception:** raylib workspace almost done ([212d11c](https://github.com/gameguild-gg/gameguild/commit/212d11c09aa9c3887517963e695205288e77f597))
+* **emception/raylib:** remove undeclared emscripten_notify_memory_growth from stub ([2e40855](https://github.com/gameguild-gg/gameguild/commit/2e40855a72d15eab6610cce1c655f4c07dbc702b))
+* **emception:** clean ninja/cmake/imgui/brotli userland dirs on npm run clean ([284485b](https://github.com/gameguild-gg/gameguild/commit/284485b83da0777b59f6467c3aa01f25f8d2d089))
+* **emception/raylib:** generate raylib-runtime.mjs in build script + use VFS ([dcf6086](https://github.com/gameguild-gg/gameguild/commit/dcf608657d5ada2b6bb9629b68f392aed3dd7a48))
+* **emception:** remove cli ([beea559](https://github.com/gameguild-gg/gameguild/commit/beea5592c562093d6b02f857ee9b64e6968d9ea3))
+* **emception:** presets minor improvement ([737a424](https://github.com/gameguild-gg/gameguild/commit/737a4246e6fa0f0de7292ac679f9d2a4c6e9a32b))
+
 # [3.2.1](https://github.com/gameguild-gg/gameguild/compare/v3.2.0...v3.2.1) (2026-04-28)
 
 ### Bug Fixes

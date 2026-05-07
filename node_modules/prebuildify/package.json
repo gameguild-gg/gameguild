@@ -1,0 +1,41 @@
+{
+  "name": "prebuildify",
+  "version": "6.0.1",
+  "description": "Create and package prebuilds for native modules",
+  "main": "index.js",
+  "dependencies": {
+    "minimist": "^1.2.5",
+    "mkdirp-classic": "^0.5.3",
+    "node-abi": "^3.3.0",
+    "npm-run-path": "^3.1.0",
+    "pump": "^3.0.0",
+    "tar-fs": "^2.1.0"
+  },
+  "devDependencies": {
+    "nan": "^2.14.2",
+    "standard": "^13.0.1",
+    "tape": "^4.6.3"
+  },
+  "bin": {
+    "prebuildify": "./bin.js"
+  },
+  "files": [
+    "bin.js",
+    "index.js"
+  ],
+  "scripts": {
+    "lint": "standard",
+    "test": "npm run lint && npm run unit",
+    "unit": "tape test/*.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/prebuild/prebuildify.git"
+  },
+  "author": "Mathias Buus (@mafintosh)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/prebuild/prebuildify/issues"
+  },
+  "homepage": "https://github.com/prebuild/prebuildify"
+}

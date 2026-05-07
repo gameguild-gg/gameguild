@@ -1,0 +1,32 @@
+{
+  "name": "ringbufferjs",
+  "version": "2.0.0",
+  "description": "a simple ring buffer data structure",
+  "keywords": [
+    "ring",
+    "buffer",
+    "circular",
+    "queue",
+    "ring buffer",
+    "circular buffer",
+    "data structure"
+  ],
+  "homepage": "https://github.com/janogonzalez/ringbufferjs",
+  "bugs": {
+    "url": "https://github.com/janogonzalez/ringbufferjs/issues"
+  },
+  "license": "MIT",
+  "author": "Jano González <info@janogonzalez.com> (http://janogonzalez.com)",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/janogonzalez/ringbufferjs.git"
+  },
+  "scripts": {
+    "test": "mocha"
+  },
+  "devDependencies": {
+    "mocha": "*",
+    "expect.js": "*"
+  }
+}

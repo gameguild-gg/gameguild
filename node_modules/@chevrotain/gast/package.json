@@ -1,0 +1,48 @@
+{
+  "name": "@chevrotain/gast",
+  "version": "12.0.0",
+  "description": "Grammar AST structure for Chevrotain Parsers",
+  "keywords": [],
+  "bugs": {
+    "url": "https://github.com/Chevrotain/chevrotain/issues"
+  },
+  "license": "Apache-2.0",
+  "type": "module",
+  "types": "./lib/src/api.d.ts",
+  "exports": {
+    ".": {
+      "import": "./lib/src/api.js",
+      "types": "./lib/src/api.d.ts"
+    }
+  },
+  "files": [
+    "lib/src/**/*.js",
+    "lib/src/**/*.map",
+    "lib/src/**/*.d.ts",
+    "src/**/*.ts"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/Chevrotain/chevrotain.git"
+  },
+  "scripts": {
+    "---------- CI FLOWS --------": "",
+    "ci": "pnpm run build test",
+    "build": "npm-run-all clean compile",
+    "test": "npm-run-all coverage",
+    "---------- DEV FLOWS --------": "",
+    "update-snapshots": "node ./scripts/update-snapshots.js",
+    "---------- BUILD STEPS --------": "",
+    "clean": "shx rm -rf lib coverage",
+    "compile:watch": "tsc -w",
+    "compile": "tsc",
+    "coverage": "c8 mocha --enable-source-maps"
+  },
+  "dependencies": {
+    "@chevrotain/types": "12.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "gitHead": "d3b4d05d5dd53d53d27175119bc7c9ed8056e3d5"
+}

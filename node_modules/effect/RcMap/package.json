@@ -1,0 +1,6 @@
+{
+  "main": "../dist/cjs/RcMap.js",
+  "module": "../dist/esm/RcMap.js",
+  "types": "../dist/dts/RcMap.d.ts",
+  "sideEffects": []
+}

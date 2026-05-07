@@ -1,0 +1,30 @@
+{
+  "name": "isomorphic-textencoder",
+  "description": "encode/decode Uint8Arrays to strings",
+  "main": "main.js",
+  "browser": "browser.js",
+  "version": "1.0.1",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/wmhilton/isomorphic-textencoder.git"
+  },
+  "keywords": [
+    "textencoder",
+    "isomorphic",
+    "utf8",
+    "uint8array",
+    "string"
+  ],
+  "author": "William Hilton <wmhilton@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/wmhilton/isomorphic-textencoder/issues"
+  },
+  "homepage": "https://github.com/wmhilton/isomorphic-textencoder#readme",
+  "dependencies": {
+    "fast-text-encoding": "^1.0.0"
+  }
+}

@@ -1,0 +1,25 @@
+{
+    "name": "@types/speakingurl",
+    "version": "13.0.6",
+    "description": "TypeScript definitions for speakingurl",
+    "homepage": "https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/speakingurl",
+    "license": "MIT",
+    "contributors": [
+        {
+            "name": "Zlatko Andonovski",
+            "githubUsername": "Goldsmith42",
+            "url": "https://github.com/Goldsmith42"
+        }
+    ],
+    "main": "",
+    "types": "index.d.ts",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/DefinitelyTyped/DefinitelyTyped.git",
+        "directory": "types/speakingurl"
+    },
+    "scripts": {},
+    "dependencies": {},
+    "typesPublisherContentHash": "8658eeca6cd06a4a4621a571518761064635b93be26758c25937d28adb16751d",
+    "typeScriptVersion": "4.5"
+}
