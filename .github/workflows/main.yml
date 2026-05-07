@@ -51,7 +51,7 @@ jobs:
 
       - uses: actions/setup-node@v6
         with:
-          node-version: '26'
+          node-version: '22'
           package-manager-cache: false
 
       - name: Setup .NET 9
@@ -118,7 +118,7 @@ jobs:
 
       - uses: actions/setup-node@v6
         with:
-          node-version: '26'
+          node-version: '22'
           package-manager-cache: false
 
       - name: Install Linux native dependencies
@@ -238,7 +238,7 @@ jobs:
 
       - uses: actions/setup-node@v6
         with:
-          node-version: '26'
+          node-version: '22'
           package-manager-cache: false
 
       - name: Install monorepo dependencies
