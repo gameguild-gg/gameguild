@@ -1,7 +1,7 @@
 "use client"
 
 import { FileText, LayoutGrid } from "lucide-react"
-import { ENGINE_TYPES, type EngineType } from "@/lib/storage/editor/project-types"
+import { ENGINE_TYPES, type EngineType } from "@/components/block-content-editor/lib/storage/editor/project-types"
 
 interface EngineOption {
   engine: EngineType

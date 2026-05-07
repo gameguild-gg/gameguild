@@ -2,8 +2,8 @@
 
 import { useState, useCallback } from "react"
 import { toast } from "sonner"
-import { extractEditorStates, createProjectData } from "@/lib/storage/editor/layout-detector"
-import { cellsToLexical } from "@/lib/storage/editor/cell-converters/lexical"
+import { extractEditorStates, createProjectData } from "@/components/block-content-editor/lib/storage/editor/layout-detector"
+import { cellsToLexical } from "@/components/block-content-editor/lib/storage/editor/cell-converters/lexical"
 import type { UseProjectStorageReturn } from "./useProjectStorage"
 
 export interface UseProjectHistoryReturn {

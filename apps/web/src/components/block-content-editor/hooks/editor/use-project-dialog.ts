@@ -1,7 +1,7 @@
 "use client"
 
-import { ProjectExporter, type ProjectData as ExportProjectData } from "@/lib/interopAdapter/project-exporter"
-import { HashManager } from "@/lib/sync/editor/hash-manager"
+import { ProjectExporter, type ProjectData as ExportProjectData } from "@/components/block-content-editor/lib/interopAdapter/project-exporter"
+import { HashManager } from "@/components/block-content-editor/lib/sync/editor/hash-manager"
 import { useCallback, useEffect, useState } from "react"
 import { toast } from "sonner"
 

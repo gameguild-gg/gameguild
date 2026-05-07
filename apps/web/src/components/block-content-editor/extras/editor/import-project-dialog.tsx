@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label"
 import { useState, useEffect, useRef } from "react"
 import { toast } from "sonner"
 import { Upload, FileText, Archive, X } from "lucide-react"
-import { ProjectImporter, type ImportedProjectData } from "@/lib/interopAdapter/project-importer"
+import { ProjectImporter, type ImportedProjectData } from "@/components/block-content-editor/lib/interopAdapter/project-importer"
 
 interface ProjectData {
   id: string
@@ -210,7 +210,7 @@ export function ImportProjectDialog({
 
       // Import assets if present
       if (importedProject.assets && importedProject.assetIndex) {
-        const { ProjectImporter } = await import("@/lib/interopAdapter/project-importer")
+        const { ProjectImporter } = await import("@/components/block-content-editor/lib/interopAdapter/project-importer")
         const importResult = await ProjectImporter.importProjectAssets(
           importedProject,
           newProjectId

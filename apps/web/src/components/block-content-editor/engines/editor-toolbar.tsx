@@ -12,7 +12,7 @@ import { SyncStatusIndicator } from "@/components/block-content-editor/extras/ed
 import { EditableProjectTitle } from "@/components/block-content-editor/extras/editor/editable-project-title"
 import { ProjectStorageInfo } from "@/components/block-content-editor/extras/editor/project-storage-info"
 import { ProjectModeIndicator } from "@/components/block-content-editor/extras/editor/project-mode-indicator"
-import { syncConfig } from "@/lib/sync/editor/sync-config"
+import { syncConfig } from "@/components/block-content-editor/lib/sync/editor/sync-config"
 import { useEditor } from "./editor-provider"
 
 export function EditorToolbar() {

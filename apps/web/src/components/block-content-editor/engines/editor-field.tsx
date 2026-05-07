@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useCallback, useRef } from "react"
-import { ENGINE_TYPES } from "@/lib/storage/editor/project-types"
+import { ENGINE_TYPES } from "@/components/block-content-editor/lib/storage/editor/project-types"
 import { BlockArrayEditor } from "@/components/block-content-editor/engines/blocks/block-array-editor"
 import { EditorLayoutType1 } from "@/components/block-content-editor/engines/lexical/editor-layout-type1"
 import { EngineChooser } from "./engine-chooser"

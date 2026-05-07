@@ -26,7 +26,7 @@ import {
   removeBlockRestriction,
   getRestrictions,
   describeRestrictions,
-} from "@/lib/storage/editor/project-modes"
+} from "@/components/block-content-editor/lib/storage/editor/project-modes"
 import { toast } from "sonner"
 
 interface RestrictionsConfigDialogProps {

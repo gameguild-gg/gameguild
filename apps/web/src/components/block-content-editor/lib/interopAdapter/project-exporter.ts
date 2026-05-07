@@ -5,8 +5,8 @@
  */
 
 import JSZip from "jszip"
-import { assetManager } from "@/lib/storage/assets/asset-manager"
-import type { AssetData, AssetUsage } from "@/lib/storage/assets/types"
+import { assetManager } from "@/components/block-content-editor/lib/storage/assets/asset-manager"
+import type { AssetData, AssetUsage } from "@/components/block-content-editor/lib/storage/assets/types"
 
 export interface ProjectData {
   id: string
@@ -19,7 +19,7 @@ export interface ProjectData {
   hash?: string
   storageType?: "local" | "gameguild-cloud" | "google-drive"
   isLocallyAvailable?: boolean
-  preferences?: any // ProjectPreferences from @/lib/storage/editor/project-preferences
+  preferences?: any // ProjectPreferences from @/components/block-content-editor/lib/storage/editor/project-preferences
 }
 
 export interface ProjectMetadata {

@@ -8,7 +8,7 @@ import { ExitConfirmDialog } from "@/components/block-content-editor/extras/dial
 import { ProjectHistoryDialog } from "@/components/block-content-editor/extras/dialogs/project-history-dialog"
 import { PreviewRenderer } from "@/components/block-content-editor/extras/preview/preview-renderer"
 import { BlockArrayViewer } from "@/components/block-content-editor/engines/blocks/block-array-viewer"
-import { ENGINE_TYPES } from "@/lib/storage/editor/project-types"
+import { ENGINE_TYPES } from "@/components/block-content-editor/lib/storage/editor/project-types"
 import { useEditor } from "./editor-provider"
 
 const RECOMMENDED_SIZE_KB = 5120

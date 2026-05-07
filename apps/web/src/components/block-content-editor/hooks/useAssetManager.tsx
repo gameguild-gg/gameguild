@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import { Download, Edit, Trash } from "lucide-react"
-import { assetManager } from "@/lib/storage/assets/asset-manager"
+import { assetManager } from "@/components/block-content-editor/lib/storage/assets/asset-manager"
 import {
   applySorting,
   type ManagerCard,
@@ -10,7 +10,7 @@ import {
   type FilterConfig,
 } from "@/components/block-content-editor/extras/manager-page"
 import { toast } from "sonner"
-import { MIME_TYPES } from "@/lib/storage/assets/types"
+import { MIME_TYPES } from "@/components/block-content-editor/lib/storage/assets/types"
 
 interface AssetItem {
   id: string

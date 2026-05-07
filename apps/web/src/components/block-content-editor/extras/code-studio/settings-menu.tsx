@@ -1,7 +1,7 @@
 "use client"
 
 import type { CodeStudioData, ShikiTheme } from "./types"
-import { ModalSize } from "@/lib/storage/editor/editor-preferences"
+import { ModalSize } from "@/components/block-content-editor/lib/storage/editor/editor-preferences"
 import { BaseSettingsMenu, SystemSettings, CodeStudioStyleSettings, type SettingsTab } from "../settings-menu"
 
 interface SettingsMenuProps {

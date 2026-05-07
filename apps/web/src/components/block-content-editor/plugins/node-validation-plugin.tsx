@@ -16,7 +16,7 @@ import {
   createCommand
 } from "lexical"
 import { toast } from "sonner"
-import { isNodeAllowed, type ProjectMode, type NodeRestrictions } from "@/lib/storage/editor/project-modes"
+import { isNodeAllowed, type ProjectMode, type NodeRestrictions } from "@/components/block-content-editor/lib/storage/editor/project-modes"
 
 export const INSERT_NODE_COMMAND: LexicalCommand<{ nodeType: string }> = createCommand()
 

@@ -8,7 +8,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Cloud, Database, HardDrive, Settings, CheckCircle } from "lucide-react"
 import { GoogleDriveAuthDialog } from "./google-drive-auth-dialog"
-import { useGoogleDriveAuth } from "@/hooks/editor/use-google-drive-auth"
+import { useGoogleDriveAuth } from "@/components/block-content-editor/hooks/editor/use-google-drive-auth"
 
 export type StorageOption = "local" | "gameguild-cloud" | "google-drive"
 

@@ -15,7 +15,7 @@ import {
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { Loader2, Shield, FolderPlus, ExternalLink, CheckCircle } from "lucide-react"
-import { useGoogleDriveAuth } from "@/hooks/editor/use-google-drive-auth"
+import { useGoogleDriveAuth } from "@/components/block-content-editor/hooks/editor/use-google-drive-auth"
 
 interface GoogleDriveAuthDialogProps {
   open: boolean

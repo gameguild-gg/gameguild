@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip"
 import { BLOCK_REGISTRY, BLOCK_CELL_TYPES, type BlockCellType } from "./block-component-registry"
-import type { Block } from "@/lib/storage/editor/block-structure"
+import type { Block } from "@/components/block-content-editor/lib/storage/editor/block-structure"
 import { Search, LayoutGrid, FileText } from "lucide-react"
 import { QUIZ_TEMPLATES, type QuizTypeTemplate } from "@/components/block-content-editor/extras/quiz/quiz-type-selector"
 

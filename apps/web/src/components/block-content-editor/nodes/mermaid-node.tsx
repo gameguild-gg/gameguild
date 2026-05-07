@@ -20,7 +20,7 @@ import { Button } from "@/components/ui/button"
 import { Edit, Trash2 } from "lucide-react"
 import { MermaidEditor } from "@/components/block-content-editor/lazy-client-components"
 import { ContentEditMenu } from "@/components/block-content-editor/extras/content-edit-menu"
-import { MermaidViewer } from "@/components/ui/mermaid-viewer"
+import { MermaidViewer } from "@/components/block-content-editor/extras/mermaid/mermaid-viewer"
 import type { JSX } from "react/jsx-runtime"
 
 export interface MermaidData {

@@ -97,9 +97,9 @@ import { useState } from "react"
 import { OnChangePlugin } from "@lexical/react/LexicalOnChangePlugin"
 import type { LexicalEditor } from "lexical"
 import type React from "react"
-import type { ProjectMode } from "@/lib/storage/editor/project-modes"
-import { lexicalToCells, cellsToLexical } from "@/lib/storage/editor/cell-converters/lexical"
-import type { CellularContent } from "@/lib/storage/editor/cell-structure"
+import type { ProjectMode } from "@/components/block-content-editor/lib/storage/editor/project-modes"
+import { lexicalToCells, cellsToLexical } from "@/components/block-content-editor/lib/storage/editor/cell-converters/lexical"
+import type { CellularContent } from "@/components/block-content-editor/lib/storage/editor/cell-structure"
 
 // Create and export the EditorLoadingContext
 export const EditorLoadingContext = createContext<boolean>(false)

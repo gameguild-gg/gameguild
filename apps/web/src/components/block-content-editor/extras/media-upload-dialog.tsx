@@ -14,10 +14,10 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { WebPConverter } from "@/lib/editor/webp-converter"
-import { assetManager } from "@/lib/storage/assets/asset-manager"
+import { WebPConverter } from "@/components/block-content-editor/lib/editor/webp-converter"
+import { assetManager } from "@/components/block-content-editor/lib/storage/assets/asset-manager"
 import { ProjectIdContext } from "@/components/block-content-editor/engines/lexical/lexical-editor"
-import type { CollectionMetadata } from "@/lib/storage/assets/collection-types"
+import type { CollectionMetadata } from "@/components/block-content-editor/lib/storage/assets/collection-types"
 
 export interface MediaUploadResult {
   type: "file" | "url"

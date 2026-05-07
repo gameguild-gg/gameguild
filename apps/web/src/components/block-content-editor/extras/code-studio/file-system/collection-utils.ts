@@ -1,6 +1,6 @@
 import type { CodeFile, FileTreeFolder } from "../types"
-import type { CollectionStructure, CollectionFolder, CollectionFile, SaveCollectionParams } from "@/lib/storage/assets/collection-types"
-import { assetManager } from "@/lib/storage/assets/asset-manager"
+import type { CollectionStructure, CollectionFolder, CollectionFile, SaveCollectionParams } from "@/components/block-content-editor/lib/storage/assets/collection-types"
+import { assetManager } from "@/components/block-content-editor/lib/storage/assets/asset-manager"
 
 /**
  * Extract asset ID from asset:// URL

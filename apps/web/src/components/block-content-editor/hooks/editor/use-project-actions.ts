@@ -136,8 +136,8 @@ export function useProjectActions({
     try {
       // Dynamic imports to avoid issues if these aren't available
       const [{ HashManager }, { ProjectExporter }] = await Promise.all([
-        import("@/lib/sync/editor/hash-manager"),
-        import("@/lib/interopAdapter/project-exporter")
+        import("@/components/block-content-editor/lib/sync/editor/hash-manager"),
+        import("@/components/block-content-editor/lib/interopAdapter/project-exporter")
       ])
 
       toast.loading("Preparando download...", { id: `download-${projectId}` })

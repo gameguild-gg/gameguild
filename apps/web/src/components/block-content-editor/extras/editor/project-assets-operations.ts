@@ -1,5 +1,5 @@
-import { assetManager } from "@/lib/storage/assets/asset-manager"
-import type { CollectionStructure } from "@/lib/storage/assets/collection-types"
+import { assetManager } from "@/components/block-content-editor/lib/storage/assets/asset-manager"
+import type { CollectionStructure } from "@/components/block-content-editor/lib/storage/assets/collection-types"
 
 // Parameter interface
 export interface CalculateAssetsParams {
