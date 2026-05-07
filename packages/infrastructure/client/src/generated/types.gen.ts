@@ -1,0 +1,6459 @@
+/**
+ * @game-guild/client - Generated Types and Zod Schemas
+ *
+ * ⚠️  AUTO-GENERATED FILE - DO NOT EDIT MANUALLY
+ *
+ * Generated from: GameGuild API
+ * API Version: 1.0
+ */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { z } from 'zod';
+
+export interface CommercePaymentsTaxJurisdictionDto {
+  id?: string;
+  code?: string | null;
+  name?: string | null;
+  country?: string | null;
+  state?: string | null;
+  taxType?: string | null;
+  defaultRate?: number;
+  isActive?: boolean;
+}
+
+export interface CommercePaymentsTaxRuleDto {
+  id?: string;
+  jurisdictionCode?: string | null;
+  productCategory?: string | null;
+  customerType?: string | null;
+  rate?: number;
+  effectiveFrom?: string;
+  effectiveTo?: string | null;
+  description?: string | null;
+  isActive?: boolean;
+}
+
+export interface CommerceProductsPagedResult1GameGuildCommerceProductsPromoCodeDtoGameGuildCommerceProductsVersion100PagedResultPromoCodeDto {
+  items?: Array<CommerceProductsPromoCode> | null;
+  totalCount?: number;
+  skip?: number;
+  take?: number;
+  hasMore?: boolean;
+  currentPage?: number;
+  totalPages?: number;
+}
+
+export interface IdentityTenantsTenantSettingsDto {
+  id?: string;
+  systemConfiguration?: IdentityTenantsTenantSystemConfiguration;
+  featureFlags?: Record<string, boolean> | null;
+  businessRules?: IdentityTenantsTenantBusinessRules;
+  userInterfaceSettings?: IdentityTenantsTenantUiSettings;
+  securitySettings?: IdentityTenantsTenantSecuritySettings;
+  integrationSettings?: IdentityTenantsTenantIntegrationSettings;
+  systemLimits?: IdentityTenantsTenantSystemLimits;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface KeyValuePairStringAuthenticationExtensionsPRFValues {
+  key?: string | null;
+  value?: ObjectsAuthenticationExtensionsPRFValues;
+}
+
+export interface ModelsPagedResult1GameGuildIdentityUsersUserDtoGameGuildIdentityUsersVersion100PagedResultUserDto {
+  items?: Array<IdentityUsersUser> | null;
+  totalCount?: number;
+  skip?: number;
+  take?: number;
+  pageNumber?: number;
+  totalPages?: number;
+  hasNextPage?: boolean;
+  hasPreviousPage?: boolean;
+}
+
+export interface ModelsPagedResult1GameGuildIdentityUsersUserNotificationDtoGameGuildIdentityUsersVersion100PagedResultUserNotificationDto {
+  items?: Array<IdentityUsersUserNotification> | null;
+  totalCount?: number;
+  skip?: number;
+  take?: number;
+  pageNumber?: number;
+  totalPages?: number;
+  hasNextPage?: boolean;
+  hasPreviousPage?: boolean;
+}
+
+export interface ModelsPagedResult1GameGuildIdentityUsersUserProfileDtoGameGuildIdentityUsersVersion100PagedResultUserProfileDto {
+  items?: Array<IdentityUsersUserProfile> | null;
+  totalCount?: number;
+  skip?: number;
+  take?: number;
+  pageNumber?: number;
+  totalPages?: number;
+  hasNextPage?: boolean;
+  hasPreviousPage?: boolean;
+}
+
+export interface APIControllersApplicationDetails {
+  name?: string | null;
+  version?: string | null;
+  informationalVersion?: string | null;
+  description?: string | null;
+}
+
+export interface APIControllersApplicationInfoOutput {
+  application?: APIControllersApplicationDetails;
+  build?: APIControllersBuildDetails;
+  runtime?: APIControllersRuntimeDetails;
+  process?: APIControllersProcessDetails;
+  timestamp?: string;
+}
+
+export interface APIControllersBuildDetails {
+  timestamp?: string | null;
+  configuration?: string | null;
+  framework?: string | null;
+}
+
+export interface APIControllersDependencyHealthItem {
+  name?: string | null;
+  status?: string | null;
+  duration?: string;
+  description?: string | null;
+  isHealthy?: boolean;
+  tags?: Array<string> | null;
+  data?: Record<string, string> | null;
+  exception?: string | null;
+}
+
+export interface APIControllersDependencyHealthOutput {
+  status?: string | null;
+  totalDuration?: string;
+  timestamp?: string;
+  healthyCount?: number;
+  unhealthyCount?: number;
+  dependencies?: Array<APIControllersDependencyHealthItem> | null;
+  error?: string | null;
+}
+
+export interface APIControllersHealthinessOutput {
+  status?: string | null;
+  duration?: string;
+  timestamp?: string;
+  checks?: Record<string, APIControllersHealthinessResponseItem> | null;
+  error?: string | null;
+}
+
+export interface APIControllersHealthinessResponseItem {
+  status?: string | null;
+  duration?: string;
+  description?: string | null;
+  data?: Record<string, Record<string, unknown>> | null;
+}
+
+export interface APIControllersLivenessOutput {
+  status?: string | null;
+  alive?: boolean;
+  timestamp?: string;
+  uptime?: string;
+  version?: string | null;
+}
+
+export interface APIControllersProcessDetails {
+  id?: number;
+  startTime?: string;
+  uptime?: string;
+  workingSet?: number;
+  threadCount?: number;
+}
+
+export interface APIControllersReadinessOutput {
+  status?: string | null;
+  ready?: boolean;
+  timestamp?: string;
+  services?: Record<string, boolean> | null;
+  error?: string | null;
+}
+
+export interface APIControllersRuntimeDetails {
+  dotNetVersion?: string | null;
+  osDescription?: string | null;
+  osArchitecture?: string | null;
+  processArchitecture?: string | null;
+  machineName?: string | null;
+  processorCount?: number;
+}
+
+export interface CQRSIDomainEvent {
+  eventId?: string;
+  occurredAt?: string;
+  version?: number;
+}
+
+export interface CQRSPagedResult {
+  items?: Array<IdentityTenantsTenant> | null;
+  totalCount?: number;
+  pageNumber?: number;
+  pageSize?: number;
+  totalPages?: number;
+  hasPreviousPage?: boolean;
+  hasNextPage?: boolean;
+}
+
+export interface CommercePaymentsAddFundsInput {
+  userId: string;
+  amount: number;
+  description: string | null;
+  referenceId?: string | null;
+}
+
+export interface CommercePaymentsCalculateTaxInput {
+  jurisdictionCode: string | null;
+  amount: number;
+  currency: string | null;
+  customerType: string | null;
+  productCategory?: string | null;
+  customerVatNumber?: string | null;
+  isTaxInclusive?: boolean;
+  transactionDate?: string | null;
+  applicableExemptions?: Array<string> | null;
+}
+
+export interface CommercePaymentsCreateTaxJurisdictionInput {
+  code?: string | null;
+  name?: string | null;
+  country?: string | null;
+  state?: string | null;
+  taxType?: string | null;
+  defaultRate?: number;
+}
+
+export interface CommercePaymentsCreateTaxRuleInput {
+  jurisdictionCode?: string | null;
+  productCategory?: string | null;
+  customerType?: string | null;
+  rate?: number;
+  effectiveFrom?: string;
+  effectiveTo?: string | null;
+  description?: string | null;
+}
+
+export interface CommercePaymentsCreateWalletInput {
+  userId: string;
+  currency?: string | null;
+}
+
+export type CommercePaymentsCustomerType = 0 | 1;
+
+export interface CommercePaymentsDeductFundsInput {
+  userId: string;
+  amount: number;
+  description: string | null;
+  referenceId?: string | null;
+}
+
+export interface CommercePaymentsLockWalletInput {
+  reason: string | null;
+}
+
+export interface CommercePaymentsModelsFreezeWalletInput {
+  reason?: string | null;
+}
+
+export interface CommercePaymentsModelsPatchWalletInput {
+  currency?: string | null;
+  dailyLimit?: number | null;
+  monthlyLimit?: number | null;
+}
+
+export interface CommercePaymentsPatchTaxJurisdictionInput {
+  name?: string | null;
+  taxType?: string | null;
+  defaultRate?: number | null;
+  isActive?: boolean | null;
+}
+
+export interface CommercePaymentsPatchTaxRuleInput {
+  rate?: number | null;
+  effectiveFrom?: string | null;
+  effectiveTo?: string | null;
+  description?: string | null;
+  isActive?: boolean | null;
+}
+
+export interface CommercePaymentsPaymentCancellationResult {
+  paymentId: string;
+  cancellationReason: string | null;
+  canceledAt: string;
+  canceledBy?: string | null;
+  success: boolean;
+  errorMessage?: string | null;
+  refundProcessed?: boolean;
+  refundAmount?: number | null;
+}
+
+export interface CommercePaymentsPaymentResult {
+  success?: boolean;
+  transactionId?: string | null;
+  paymentId?: string | null;
+  amount?: ValueObjectsMoney;
+  processedAt?: string | null;
+  failureReason?: string | null;
+  paymentMethodId?: string | null;
+  status?: CommercePaymentsPaymentStatus;
+  invoiceId?: string | null;
+}
+
+export interface CommercePaymentsPaymentRetryResult {
+  success?: boolean;
+  retryAttempt?: number;
+  nextRetryAt?: string | null;
+  paymentResult?: CommercePaymentsPaymentResult;
+  maxRetriesReached?: boolean;
+  failureReason?: string | null;
+}
+
+export type CommercePaymentsPaymentStatus = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
+
+export interface CommercePaymentsPaymentsControllerCancelPaymentInput {
+  cancellationReason?: string | null;
+  canceledBy?: string | null;
+  notes?: string | null;
+}
+
+export interface CommercePaymentsPaymentsControllerProcessPaymentInput {
+  tenantId?: string;
+  subscriptionId?: string;
+  amount?: number;
+  paymentMethodId?: string | null;
+}
+
+export interface CommercePaymentsPaymentsControllerRefundInput {
+  amount?: number | null;
+  reason?: string | null;
+}
+
+export interface CommercePaymentsProcessRefundResult {
+  refundId: string;
+  paymentId: string;
+  refundedAmount: number;
+  currency: string | null;
+  status: CommercePaymentsTransactionStatus;
+  reason: string | null;
+  processedAt: string;
+  referenceNumber?: string | null;
+  estimatedCompletionDate?: string | null;
+  processingFee?: number;
+  isSuccess?: boolean;
+  errorMessage?: string | null;
+  isSuccessful?: boolean;
+}
+
+export interface CommercePaymentsTaxBreakdown {
+  taxType?: CommercePaymentsTaxType;
+  description?: string | null;
+  rate?: number;
+  taxableAmount?: number;
+  taxAmount?: number;
+  jurisdictionCode?: string | null;
+}
+
+export interface CommercePaymentsTaxCalculationResult {
+  subtotalAmount?: number;
+  taxAmount?: number;
+  totalAmount?: number;
+  effectiveTaxRate?: number;
+  jurisdictionCode?: string | null;
+  jurisdictionName?: string | null;
+  taxType?: CommercePaymentsTaxType;
+  taxDescription?: string | null;
+  isTaxExempt?: boolean;
+  isReverseCharge?: boolean;
+  taxBreakdowns?: Array<CommercePaymentsTaxBreakdown> | null;
+  exemptionReason?: string | null;
+}
+
+export interface CommercePaymentsTaxExemptionValidationResult {
+  isValid?: boolean;
+  exemptionType?: string | null;
+  exemptionRate?: number;
+  validFrom?: string | null;
+  validTo?: string | null;
+  validationMessage?: string | null;
+  warnings?: Array<string> | null;
+}
+
+export interface CommercePaymentsTaxJurisdiction {
+  isGlobal?: boolean;
+  isNew?: boolean;
+  isDeleted?: boolean;
+  domainEvents?: Array<CQRSIDomainEvent> | null;
+  id?: string;
+  version?: number;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt?: string | null;
+  tenantId?: string | null;
+  code: string;
+  name: string;
+  type?: CommercePaymentsTaxJurisdictionType;
+  parentJurisdictionId?: string | null;
+  parentJurisdiction?: CommercePaymentsTaxJurisdiction;
+  childJurisdictions?: Array<CommercePaymentsTaxJurisdiction> | null;
+  isActive?: boolean;
+  taxRegistrationNumber?: string | null;
+  isReverseChargeApplicable?: boolean;
+  taxRules?: Array<CommercePaymentsTaxRule> | null;
+}
+
+export type CommercePaymentsTaxJurisdictionType = 0 | 1 | 2 | 3 | 4 | 5 | 6;
+
+export interface CommercePaymentsTaxRate {
+  isGlobal?: boolean;
+  isNew?: boolean;
+  isDeleted?: boolean;
+  domainEvents?: Array<CQRSIDomainEvent> | null;
+  id?: string;
+  version?: number;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt?: string | null;
+  tenantId?: string | null;
+  taxJurisdictionId: string;
+  taxJurisdiction?: CommercePaymentsTaxJurisdiction;
+  taxType?: CommercePaymentsTaxType;
+  rate?: number;
+  productCategory?: string | null;
+  effectiveFrom?: string;
+  effectiveTo?: string | null;
+  isActive?: boolean;
+  minimumTaxableAmount?: number | null;
+  maximumTaxableAmount?: number | null;
+  description?: string | null;
+}
+
+export interface CommercePaymentsTaxRule {
+  isGlobal?: boolean;
+  isNew?: boolean;
+  isDeleted?: boolean;
+  domainEvents?: Array<CQRSIDomainEvent> | null;
+  id?: string;
+  version?: number;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt?: string | null;
+  tenantId?: string | null;
+  name: string;
+  description?: string | null;
+  taxJurisdictionId: string;
+  taxJurisdiction?: CommercePaymentsTaxJurisdiction;
+  ruleType?: CommercePaymentsTaxRuleType;
+  priority?: number;
+  isActive?: boolean;
+  effectiveFrom?: string | null;
+  effectiveTo?: string | null;
+  customerTypeFilter?: CommercePaymentsCustomerType;
+  productCategories?: string | null;
+  minimumAmount?: number | null;
+  maximumAmount?: number | null;
+  isTaxInclusive?: boolean;
+  isReverseCharge?: boolean;
+  exemptionConditions?: string | null;
+  defaultTaxRateId?: string | null;
+  defaultTaxRate?: CommercePaymentsTaxRate;
+}
+
+export type CommercePaymentsTaxRuleType = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
+
+export type CommercePaymentsTaxType = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
+
+export type CommercePaymentsTransactionStatus = 0 | 1 | 2 | 3 | 4 | 5;
+
+export interface CommercePaymentsTransferFundsInput {
+  fromUserId: string;
+  toUserId: string;
+  amount: number;
+  description: string | null;
+  referenceId?: string | null;
+}
+
+export interface CommercePaymentsTransferResult {
+  debitTransaction?: CommercePaymentsWalletTransaction;
+  creditTransaction?: CommercePaymentsWalletTransaction;
+}
+
+export interface CommercePaymentsUserWallet {
+  isGlobal?: boolean;
+  isNew?: boolean;
+  isDeleted?: boolean;
+  domainEvents?: Array<CQRSIDomainEvent> | null;
+  id?: string;
+  version?: number;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt?: string | null;
+  tenantId?: string | null;
+  userId: string;
+  balance?: number;
+  currency: string;
+  isActive?: boolean;
+  isLocked?: boolean;
+  lockReason?: string | null;
+  lastTransactionAt?: string | null;
+  dailyLimit?: number | null;
+  monthlyLimit?: number | null;
+  transactions?: Array<CommercePaymentsWalletTransaction> | null;
+}
+
+export interface CommercePaymentsValidateTaxExemptionInput {
+  jurisdictionCode?: string | null;
+  exemptionType?: string | null;
+  exemptionCertificateNumber?: string | null;
+  customerVatNumber?: string | null;
+  customerId?: string | null;
+  transactionDate?: string | null;
+}
+
+export interface CommercePaymentsWalletTransaction {
+  isGlobal?: boolean;
+  isNew?: boolean;
+  isDeleted?: boolean;
+  domainEvents?: Array<CQRSIDomainEvent> | null;
+  id?: string;
+  version?: number;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt?: string | null;
+  tenantId?: string | null;
+  walletId: string;
+  wallet?: CommercePaymentsUserWallet;
+  type?: CommercePaymentsWalletTransactionType;
+  amount?: number;
+  balanceAfter?: number;
+  description: string;
+  referenceId?: string | null;
+  status?: CommercePaymentsTransactionStatus;
+  metadata?: string | null;
+  notes?: string | null;
+  processedAt?: string | null;
+}
+
+export type CommercePaymentsWalletTransactionType = 0 | 1 | 2 | 3 | 4 | 5 | 6;
+
+export interface CommerceProductsAppliedPromoCode {
+  code?: string | null;
+  discountAmount?: number;
+  discountPercentage?: number | null;
+}
+
+export interface CommerceProductsApplyPromoCodesInput {
+  orderAmount?: number;
+  promoCodes?: Array<string> | null;
+  productId?: string | null;
+}
+
+export interface CommerceProductsBatchCreateProductsInput {
+  products?: Array<CommerceProductsBatchProductCreateItem> | null;
+  tenantId?: string | null;
+}
+
+export interface CommerceProductsBatchProductCreateItem {
+  name?: string | null;
+  description?: string | null;
+  shortDescription?: string | null;
+  imageUrl?: string | null;
+  type?: CommerceProductsProductType;
+  isBundle?: boolean;
+  creatorId?: string | null;
+  bundleItems?: Array<string> | null;
+  referralCommissionPercentage?: number;
+  maxAffiliateDiscount?: number;
+  affiliateCommissionPercentage?: number;
+}
+
+export interface CommerceProductsCheckMultipleAccessInput {
+  productIds?: Array<string> | null;
+}
+
+export interface CommerceProductsCreateProductInput {
+  name?: string | null;
+  description?: string | null;
+  shortDescription?: string | null;
+  imageUrl?: string | null;
+  type?: CommerceProductsProductType;
+  isBundle?: boolean;
+  creatorId?: string | null;
+  bundleItems?: Array<string> | null;
+  referralCommissionPercentage?: number;
+  maxAffiliateDiscount?: number;
+  affiliateCommissionPercentage?: number;
+  tenantId?: string | null;
+}
+
+export interface CommerceProductsCreatePromoCodeInput {
+  code?: string | null;
+  name?: string | null;
+  description?: string | null;
+  type?: CommerceProductsPromoCodeType;
+  discountPercentage?: number | null;
+  discountAmount?: number | null;
+  currency?: string | null;
+  minimumOrderAmount?: number | null;
+  maxUses?: number | null;
+  maxUsesPerUser?: number | null;
+  validFrom?: string | null;
+  validUntil?: string | null;
+  isActive?: boolean;
+  isExclusive?: boolean;
+  stackingPriority?: number;
+  productId?: string | null;
+}
+
+export interface CommerceProductsEntitlementCheckResult {
+  productId?: string;
+  hasAccess?: boolean;
+}
+
+export interface CommerceProductsEntitlementInfo {
+  productId?: string;
+  productName?: string | null;
+  status?: string | null;
+  acquisitionType?: string | null;
+  accessStartDate?: string | null;
+  accessEndDate?: string | null;
+  isSubscription?: boolean;
+  subscriptionStatus?: string | null;
+  pricePaid?: number;
+  currency?: string | null;
+}
+
+export interface CommerceProductsGrantEntitlementInput {
+  userId?: string;
+  productId?: string;
+  acquisitionType?: CommerceProductsProductAcquisitionType;
+  pricePaid?: number;
+  currency?: string | null;
+  expiresAt?: string | null;
+}
+
+export interface CommerceProductsPagedResult {
+  items?: Array<CommerceProductsProduct> | null;
+  totalCount?: number;
+  skip?: number;
+  take?: number;
+  hasMore?: boolean;
+  currentPage?: number;
+  totalPages?: number;
+}
+
+export interface CommerceProductsPatchProductInput {
+  name?: string | null;
+  description?: string | null;
+  shortDescription?: string | null;
+  imageUrl?: string | null;
+  type?: CommerceProductsProductType;
+  isBundle?: boolean | null;
+  bundleItems?: Array<string> | null;
+  referralCommissionPercentage?: number | null;
+  maxAffiliateDiscount?: number | null;
+  affiliateCommissionPercentage?: number | null;
+  expectedVersion?: number | null;
+}
+
+export interface CommerceProductsPatchPromoCodeInput {
+  name?: string | null;
+  description?: string | null;
+  type?: CommerceProductsPromoCodeType;
+  discountPercentage?: number | null;
+  discountAmount?: number | null;
+  currency?: string | null;
+  minimumOrderAmount?: number | null;
+  maxUses?: number | null;
+  maxUsesPerUser?: number | null;
+  validFrom?: string | null;
+  validUntil?: string | null;
+  isActive?: boolean | null;
+  isExclusive?: boolean | null;
+  stackingPriority?: number | null;
+  productId?: string | null;
+}
+
+export type CommerceProductsProductAcquisitionType = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
+
+export interface CommerceProductsProduct {
+  id?: string;
+  name?: string | null;
+  description?: string | null;
+  shortDescription?: string | null;
+  imageUrl?: string | null;
+  type?: CommerceProductsProductType;
+  isBundle?: boolean;
+  creatorId?: string | null;
+  bundleItems?: Array<string> | null;
+  referralCommissionPercentage?: number;
+  maxAffiliateDiscount?: number;
+  affiliateCommissionPercentage?: number;
+  createdAt?: string;
+  updatedAt?: string;
+  pricing?: Array<CommerceProductsProductPricing> | null;
+}
+
+export interface CommerceProductsProductPricing {
+  id?: string;
+  productId?: string;
+  name?: string | null;
+  basePrice?: number;
+  salePrice?: number | null;
+  currency?: string | null;
+  saleStartDate?: string | null;
+  saleEndDate?: string | null;
+  isDefault?: boolean;
+  currentPrice?: number;
+  isSaleActive?: boolean;
+}
+
+export type CommerceProductsProductType = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 99;
+
+export interface CommerceProductsPromoCodeApplicationResult {
+  originalAmount?: number;
+  finalAmount?: number;
+  totalDiscount?: number;
+  appliedCodes?: Array<CommerceProductsAppliedPromoCode> | null;
+  rejectedCodes?: Array<CommerceProductsRejectedPromoCode> | null;
+}
+
+export interface CommerceProductsPromoCode {
+  id?: string;
+  code?: string | null;
+  name?: string | null;
+  description?: string | null;
+  type?: CommerceProductsPromoCodeType;
+  discountPercentage?: number | null;
+  discountAmount?: number | null;
+  currency?: string | null;
+  minimumOrderAmount?: number | null;
+  maxUses?: number | null;
+  maxUsesPerUser?: number | null;
+  validFrom?: string | null;
+  validUntil?: string | null;
+  isActive?: boolean;
+  isExclusive?: boolean;
+  stackingPriority?: number;
+  productId?: string | null;
+  usageCount?: number;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export type CommerceProductsPromoCodeType = 0 | 1 | 2 | 3 | 4;
+
+export interface CommerceProductsPromoCodeUsage {
+  promoCodeId?: string;
+  code?: string | null;
+  totalUses?: number;
+  uniqueUsers?: number;
+  totalDiscountGiven?: number;
+  averageDiscountPerUse?: number;
+  maxUses?: number | null;
+  remainingUses?: number | null;
+  firstUsedAt?: string | null;
+  lastUsedAt?: string | null;
+}
+
+export interface CommerceProductsPromoCodeValidationResult {
+  isValid?: boolean;
+  code?: string | null;
+  errorMessage?: string | null;
+  discountAmount?: number;
+  discountPercentage?: number | null;
+}
+
+export interface CommerceProductsRejectedPromoCode {
+  code?: string | null;
+  reason?: string | null;
+}
+
+export interface CommerceProductsRevokeEntitlementInput {
+  userId?: string;
+  productId?: string;
+  reason?: string | null;
+}
+
+export interface CommerceProductsUpdateProductInput {
+  name?: string | null;
+  description?: string | null;
+  shortDescription?: string | null;
+  imageUrl?: string | null;
+  type?: CommerceProductsProductType;
+  isBundle?: boolean | null;
+  bundleItems?: Array<string> | null;
+  referralCommissionPercentage?: number | null;
+  maxAffiliateDiscount?: number | null;
+  affiliateCommissionPercentage?: number | null;
+  expectedVersion?: number | null;
+}
+
+export interface CommerceProductsUpdatePromoCodeInput {
+  name?: string | null;
+  description?: string | null;
+  type?: CommerceProductsPromoCodeType;
+  discountPercentage?: number | null;
+  discountAmount?: number | null;
+  currency?: string | null;
+  minimumOrderAmount?: number | null;
+  maxUses?: number | null;
+  maxUsesPerUser?: number | null;
+  validFrom?: string | null;
+  validUntil?: string | null;
+  isActive?: boolean | null;
+  isExclusive?: boolean | null;
+  stackingPriority?: number | null;
+  productId?: string | null;
+}
+
+export interface CommerceProductsValidatePromoCodeInput {
+  code?: string | null;
+  orderAmount?: number;
+  productId?: string | null;
+}
+
+export interface CommerceSubscriptionsBillingHistory {
+  id?: string;
+  subscriptionId?: string;
+  billingDate?: string;
+  amount?: number;
+  currency?: string | null;
+  status?: string | null;
+  externalPaymentId?: string | null;
+  description?: string | null;
+  createdAt?: string;
+}
+
+export type CommerceSubscriptionsCancellationReason = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
+
+export interface CommerceSubscriptionsSubscription {
+  isGlobal?: boolean;
+  isNew?: boolean;
+  isDeleted?: boolean;
+  domainEvents?: Array<CQRSIDomainEvent> | null;
+  id?: string;
+  version?: number;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt?: string | null;
+  tenantId?: string | null;
+  createdByUserId: string;
+  fulfilledOrderId?: string | null;
+  lastModifyingOrderId?: string | null;
+  lastRenewalIdempotencyKey?: string | null;
+  lastPaymentIdempotencyKey?: string | null;
+  lockedPriceVersionId?: string | null;
+  lastProcessedBillingCycle?: number;
+  trialEndDate?: string | null;
+  cancellationReason?: CommerceSubscriptionsCancellationReason;
+  cancellationNote?: string | null;
+  cancelledAt?: string | null;
+  externalId?: string | null;
+  externalCustomerId?: string | null;
+  autoRenew?: boolean;
+  currentPeriodStart?: string;
+  currentPeriodEnd?: string;
+  billingCycleCount?: number;
+  lastPaymentAt?: string | null;
+  metadata?: string | null;
+  rowVersion?: string | null;
+  plan?: CommerceSubscriptionsSubscriptionPlan;
+  status?: CommerceSubscriptionsSubscriptionStatus;
+  planId: string;
+  billingCycle?: ValueObjectsBillingCycle;
+  amount?: ValueObjectsMoney;
+  startDate?: string;
+  endDate?: string | null;
+  nextBillingDate?: string;
+  isActive?: boolean;
+  isTrialing?: boolean;
+  isCancelled?: boolean;
+}
+
+export interface CommerceSubscriptionsSubscriptionDowngradeResult {
+  success?: boolean;
+  updatedSubscription?: CommerceSubscriptionsSubscription;
+  effectiveDate?: string | null;
+  creditIssued?: ValueObjectsMoney;
+  failureReason?: string | null;
+}
+
+export interface CommerceSubscriptionsSubscriptionPlan {
+  isGlobal?: boolean;
+  isNew?: boolean;
+  isDeleted?: boolean;
+  domainEvents?: Array<CQRSIDomainEvent> | null;
+  id?: string;
+  version?: number;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt?: string | null;
+  tenantId?: string | null;
+  externalId?: string | null;
+  isFeatured?: boolean;
+  sortOrder?: number;
+  hasPrioritySupport?: boolean;
+  hasAdvancedAnalytics?: boolean;
+  hasCustomBranding?: boolean;
+  features?: string | null;
+  metadata?: string | null;
+  trialPeriodDays?: number;
+  subscriptions?: Array<CommerceSubscriptionsSubscription> | null;
+  name: string;
+  slug: string;
+  description?: string | null;
+  monthlyPriceInCents?: number;
+  annualPriceInCents?: number | null;
+  currency: string;
+  isActive?: boolean;
+  maxUsers?: number | null;
+  maxStorageMb?: number | null;
+  maxApiCallsPerMonth?: number | null;
+}
+
+export interface CommerceSubscriptionsSubscriptionPlansControllerCloneSubscriptionPlanInput {
+  newName?: string | null;
+  newSlug?: string | null;
+}
+
+export interface CommerceSubscriptionsSubscriptionPlansControllerComparePlansInput {
+  basePlanId?: string;
+  comparePlanIds?: Array<string> | null;
+}
+
+export interface CommerceSubscriptionsSubscriptionPlansControllerCreatePlanInput {
+  name?: string | null;
+  slug?: string | null;
+  monthlyPriceInCents?: number;
+  currency?: string | null;
+  description?: string | null;
+}
+
+export interface CommerceSubscriptionsSubscriptionPlansControllerPutSubscriptionPlanInput {
+  name?: string | null;
+  slug?: string | null;
+  description?: string | null;
+  monthlyPriceInCents?: number;
+  annualPriceInCents?: number | null;
+  maxUsers?: number | null;
+  maxStorageMb?: number | null;
+  maxApiCallsPerMonth?: number | null;
+  hasPrioritySupport?: boolean | null;
+  hasAdvancedAnalytics?: boolean | null;
+  hasCustomBranding?: boolean | null;
+  features?: string | null;
+  sortOrder?: number | null;
+}
+
+export interface CommerceSubscriptionsSubscriptionPlansControllerSetExternalIdInput {
+  externalId?: string | null;
+}
+
+export interface CommerceSubscriptionsSubscriptionPlansControllerSetFeaturedInput {
+  featured?: boolean;
+}
+
+export interface CommerceSubscriptionsSubscriptionPlansControllerUpdateDetailsInput {
+  planId?: string;
+  name?: string | null;
+  description?: string | null;
+  sortOrder?: number | null;
+}
+
+export interface CommerceSubscriptionsSubscriptionPlansControllerUpdateFeaturesInput {
+  hasPrioritySupport?: boolean | null;
+  hasAdvancedAnalytics?: boolean | null;
+  hasCustomBranding?: boolean | null;
+  features?: string | null;
+}
+
+export interface CommerceSubscriptionsSubscriptionPlansControllerUpdateLimitsInput {
+  maxUsers?: number | null;
+  maxStorageMb?: number | null;
+  maxApiCallsPerMonth?: number | null;
+}
+
+export interface CommerceSubscriptionsSubscriptionPlansControllerUpdatePricingInput {
+  monthlyPriceInCents?: number;
+  annualPriceInCents?: number | null;
+}
+
+export interface CommerceSubscriptionsSubscriptionPlansControllerValidateLimitsInput {
+  users?: number;
+  storageMb?: number;
+  apiCalls?: number;
+}
+
+export type CommerceSubscriptionsSubscriptionStatus = 0 | 1 | 2 | 3 | 4 | 5 | 6;
+
+export interface CommerceSubscriptionsSubscriptionUpgradeResult {
+  success?: boolean;
+  updatedSubscription?: CommerceSubscriptionsSubscription;
+  proratedAmount?: ValueObjectsMoney;
+  creditApplied?: ValueObjectsMoney;
+  failureReason?: string | null;
+}
+
+export interface CommerceSubscriptionsSubscriptionUsage {
+  subscriptionId?: string;
+  usersCount?: number;
+  maxUsers?: number | null;
+  storageUsedMb?: number;
+  maxStorageMb?: number | null;
+  apiCallsThisMonth?: number;
+  maxApiCallsPerMonth?: number | null;
+  isOverLimit?: boolean;
+  limitWarnings?: Array<string> | null;
+}
+
+export interface CommerceSubscriptionsSubscriptionsControllerAutoRenewInput {
+  autoRenew?: boolean;
+}
+
+export interface CommerceSubscriptionsSubscriptionsControllerCancelInput {
+  reason?: string | null;
+  note?: string | null;
+  effectiveDate?: string | null;
+}
+
+export interface CommerceSubscriptionsSubscriptionsControllerCreateSubscriptionInput {
+  tenantId?: string;
+  planId?: string;
+  createdByUserId?: string;
+  billingCycle?: ValueObjectsBillingCycle;
+  amount?: number;
+  currency?: string | null;
+  fulfilledOrderId?: string | null;
+  startDate?: string | null;
+  trialDays?: number | null;
+}
+
+export interface CommerceSubscriptionsSubscriptionsControllerDowngradeInput {
+  newPlanId?: string;
+  effectiveDate?: string | null;
+}
+
+export interface CommerceSubscriptionsSubscriptionsControllerEndTrialInput {
+  convertToPaid?: boolean;
+}
+
+export interface CommerceSubscriptionsSubscriptionsControllerExternalIdsInput {
+  externalSubscriptionId?: string | null;
+  externalCustomerId?: string | null;
+}
+
+export interface CommerceSubscriptionsSubscriptionsControllerPatchSubscriptionInput {
+  billingCycle?: ValueObjectsBillingCycle;
+  autoRenew?: boolean | null;
+  externalSubscriptionId?: string | null;
+  externalCustomerId?: string | null;
+  metadata?: string | null;
+}
+
+export interface CommerceSubscriptionsSubscriptionsControllerPauseSubscriptionInput {
+  pauseUntil?: string | null;
+  reason?: string | null;
+}
+
+export interface CommerceSubscriptionsSubscriptionsControllerPutSubscriptionInput {
+  planId?: string;
+  billingCycle?: ValueObjectsBillingCycle;
+  amount?: number;
+  autoRenew?: boolean;
+  externalSubscriptionId?: string | null;
+  externalCustomerId?: string | null;
+}
+
+export interface CommerceSubscriptionsSubscriptionsControllerStartTrialInput {
+  trialDays?: number;
+}
+
+export interface CommerceSubscriptionsSubscriptionsControllerSuspendInput {
+  reason?: string | null;
+}
+
+export interface CommerceSubscriptionsSubscriptionsControllerUpgradeInput {
+  newPlanId?: string;
+  effectiveDate?: string | null;
+}
+
+export interface Fido2NetLibAssertionOptions {
+  challenge?: string | null;
+  timeout?: number;
+  rpId?: string | null;
+  allowCredentials?: Array<ObjectsPublicKeyCredentialDescriptor> | null;
+  userVerification?: ObjectsUserVerificationRequirement;
+  hints?: Array<ObjectsPublicKeyCredentialHint> | null;
+  extensions?: ObjectsAuthenticationExtensionsClientInputs;
+}
+
+export interface Fido2NetLibAuthenticatorSelection {
+  authenticatorAttachment?: ObjectsAuthenticatorAttachment;
+  residentKey?: ObjectsResidentKeyRequirement;
+  requireResidentKey?: boolean;
+  userVerification?: ObjectsUserVerificationRequirement;
+}
+
+export interface Fido2NetLibCredentialCreateOptions {
+  rp: Fido2NetLibPublicKeyCredentialRpEntity;
+  user: Fido2NetLibFido2User;
+  challenge: string | null;
+  pubKeyCredParams: Array<Fido2NetLibPubKeyCredParam> | null;
+  timeout?: number;
+  attestation?: ObjectsAttestationConveyancePreference;
+  attestationFormats?: Array<ObjectsAttestationStatementFormatIdentifier> | null;
+  authenticatorSelection?: Fido2NetLibAuthenticatorSelection;
+  hints?: Array<ObjectsPublicKeyCredentialHint> | null;
+  excludeCredentials?: Array<ObjectsPublicKeyCredentialDescriptor> | null;
+  extensions?: ObjectsAuthenticationExtensionsClientInputs;
+}
+
+export interface Fido2NetLibFido2User {
+  name?: string | null;
+  id?: string | null;
+  displayName?: string | null;
+}
+
+export interface Fido2NetLibPubKeyCredParam {
+  type?: ObjectsPublicKeyCredentialType;
+  alg?: ObjectsCOSEAlgorithm;
+}
+
+export interface Fido2NetLibPublicKeyCredentialRpEntity {
+  id?: string | null;
+  name?: string | null;
+  icon?: string | null;
+}
+
+export interface IdentityAuthenticationApiKey {
+  id?: string;
+  name?: string | null;
+  keyPrefix?: string | null;
+  scopes?: Array<string> | null;
+  isActive?: boolean;
+  expiresAt?: string | null;
+  lastUsedAt?: string | null;
+  usageCount?: number;
+  createdAt?: string;
+}
+
+export interface IdentityAuthenticationBackupCodesOutput {
+  codes?: Array<string> | null;
+  generatedAt?: string;
+}
+
+export interface IdentityAuthenticationBackupCodesStatusOutput {
+  totalCount: number;
+  remainingCount: number;
+  usedCount: number;
+  hasBackupCodes: boolean;
+}
+
+export interface IdentityAuthenticationBeginWebAuthnAuthenticationInput {
+  email?: string | null;
+}
+
+export interface IdentityAuthenticationBeginWebAuthnRegistrationInput {
+  email?: string | null;
+  displayName?: string | null;
+  preferredAuthenticatorType?: IdentityAuthenticationWebAuthnAuthenticatorType;
+}
+
+export interface IdentityAuthenticationCleanupKeysInput {
+  retentionDays?: number | null;
+}
+
+export interface IdentityAuthenticationCleanupResult {
+  deletedCount?: number;
+}
+
+export interface IdentityAuthenticationClientCredentialsTokenOutput {
+  accessToken?: string | null;
+  tokenType?: string | null;
+  expiresIn?: number;
+  scope?: string | null;
+}
+
+export interface IdentityAuthenticationCompleteMfaSetupInput {
+  code: string;
+  secretKey: string;
+}
+
+export interface IdentityAuthenticationCompletePasswordResetInput {
+  token: string;
+  newPassword: string;
+  confirmPassword: string;
+  tenantId?: string | null;
+}
+
+export interface IdentityAuthenticationCompleteWebAuthnAuthenticationInput {
+  assertionResponse?: string | null;
+}
+
+export interface IdentityAuthenticationCompleteWebAuthnRegistrationInput {
+  attestationResponse?: string | null;
+  friendlyName?: string | null;
+  isPasswordless?: boolean;
+}
+
+export interface IdentityAuthenticationCreateApiKeyCommand {
+  name: string | null;
+  scopes: Array<string> | null;
+  expiresAt?: string | null;
+  ipWhitelist?: string | null;
+}
+
+export interface IdentityAuthenticationCreateApiKeyOutput {
+  id?: string;
+  name?: string | null;
+  apiKey?: string | null;
+  keyPrefix?: string | null;
+  scopes?: Array<string> | null;
+  expiresAt?: string | null;
+  createdAt?: string;
+}
+
+export interface IdentityAuthenticationCreateServiceAccountInput {
+  name?: string | null;
+  description?: string | null;
+  tenantId?: string | null;
+  scopes?: string | null;
+  allowedIpAddresses?: string | null;
+  expiresAt?: string | null;
+}
+
+export interface IdentityAuthenticationDeviceInfo {
+  fingerprint?: string | null;
+  deviceId?: string | null;
+  ipAddress?: string | null;
+  deviceName?: string | null;
+  deviceType?: string | null;
+  operatingSystem?: string | null;
+  osVersion?: string | null;
+  browser?: string | null;
+  browserVersion?: string | null;
+  screenResolution?: string | null;
+  timezone?: string | null;
+  language?: string | null;
+  userAgent?: string | null;
+  isMobile?: boolean;
+  isBot?: boolean;
+}
+
+export interface IdentityAuthenticationDisableMfaInput {
+  password: string;
+}
+
+export interface IdentityAuthenticationEmailVerificationOutput {
+  message: string | null;
+}
+
+export interface IdentityAuthenticationEmailVerificationResult {
+  success?: boolean;
+  message?: string | null;
+  email?: string | null;
+  userId?: string | null;
+  verifiedAt?: string | null;
+}
+
+export interface IdentityAuthenticationGitHubSignInOutput {
+  authUrl: string | null;
+}
+
+export interface IdentityAuthenticationGoogleIdTokenInput {
+  idToken: string;
+  tenantId?: string | null;
+}
+
+export interface IdentityAuthenticationJwtKeyInfo {
+  keyId?: string | null;
+  algorithm?: string | null;
+  isActive?: boolean;
+  validFrom?: string;
+  expiresAt?: string;
+  rotatedAt?: string | null;
+  rotationReason?: string | null;
+  keyVersion?: number;
+}
+
+export interface IdentityAuthenticationLocalSignInInput {
+  username?: string | null;
+  email: string;
+  password: string;
+  tenantId?: string | null;
+  deviceFingerprint?: string | null;
+  emailOrUsername?: string | null;
+}
+
+export interface IdentityAuthenticationLocalSignUpInput {
+  username: string;
+  email: string;
+  password: string;
+  tenantId?: string | null;
+  firstName?: string | null;
+  lastName?: string | null;
+  phoneNumber?: string | null;
+}
+
+export interface IdentityAuthenticationLocationInfo {
+  ipAddress?: string | null;
+  country?: string | null;
+  countryCode?: string | null;
+  region?: string | null;
+  city?: string | null;
+  postalCode?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
+  timezone?: string | null;
+  isp?: string | null;
+  organization?: string | null;
+  isProxy?: boolean | null;
+  isHosting?: boolean | null;
+  displayLocation?: string | null;
+}
+
+export interface IdentityAuthenticationLockServiceAccountInput {
+  reason?: string | null;
+}
+
+export interface IdentityAuthenticationMfaConfigurationOutput {
+  isEnabled?: boolean;
+  enabledMethods?: Array<string> | null;
+  enabledAt?: string | null;
+  backupCodesRemaining?: number;
+}
+
+export type IdentityAuthenticationMfaMethod = 1 | 2 | 3 | 4 | 5;
+
+export interface IdentityAuthenticationMfaMethodInfo {
+  method: IdentityAuthenticationMfaMethod;
+  name: string | null;
+  description: string | null;
+  isEnabled: boolean;
+  isAvailable: boolean;
+  priority: number;
+}
+
+export interface IdentityAuthenticationMfaMethodsOutput {
+  methods: Array<IdentityAuthenticationMfaMethodInfo> | null;
+  defaultMethod?: IdentityAuthenticationMfaMethod;
+}
+
+export interface IdentityAuthenticationMfaSetupOutput {
+  isSuccess?: boolean;
+  errorMessage?: string | null;
+  secretKey?: string | null;
+  qrCodeData?: string | null;
+  qrCodeUri?: string | null;
+  backupCodes?: Array<string> | null;
+}
+
+export interface IdentityAuthenticationMfaSuccessOutput {
+  message: string | null;
+}
+
+export interface IdentityAuthenticationMfaVerificationOutput {
+  isValid?: boolean;
+  accessToken?: string | null;
+  refreshToken?: string | null;
+}
+
+export interface IdentityAuthenticationOAuth2ErrorOutput {
+  error?: string | null;
+  errorDescription?: string | null;
+}
+
+export interface IdentityAuthenticationPasswordChangeInput {
+  currentPassword: string;
+  newPassword: string;
+  confirmPassword: string;
+  revokeOtherSessions?: boolean;
+}
+
+export interface IdentityAuthenticationPasswordChangeResult {
+  success?: boolean;
+  message?: string | null;
+  sessionsRevoked?: number;
+}
+
+export interface IdentityAuthenticationPasswordResetRequestResult {
+  success?: boolean;
+  message?: string | null;
+  expiresInMinutes?: number;
+}
+
+export interface IdentityAuthenticationPasswordResetResult {
+  success?: boolean;
+  message?: string | null;
+  userId?: string | null;
+}
+
+export interface IdentityAuthenticationPatchServiceAccountInput {
+  name?: string | null;
+  description?: string | null;
+  scopes?: string | null;
+  expiresAt?: string | null;
+}
+
+export interface IdentityAuthenticationRefreshTokenInput {
+  refreshToken: string;
+  tenantId?: string | null;
+}
+
+export interface IdentityAuthenticationRequestPasswordResetInput {
+  email: string;
+  tenantId?: string | null;
+}
+
+export interface IdentityAuthenticationRevokeApiKeyInput {
+  reason?: string | null;
+}
+
+export interface IdentityAuthenticationRevokeRefreshTokenInput {
+  token: string;
+  ipAddress?: string | null;
+  reason?: string | null;
+}
+
+export type IdentityAuthenticationRiskLevel = 0 | 1 | 2 | 3;
+
+export interface IdentityAuthenticationRotateKeyInput {
+  reason?: string | null;
+  validityDays?: number | null;
+}
+
+export interface IdentityAuthenticationSecretRotationOutput {
+  clientSecret?: string | null;
+  warning?: string | null;
+}
+
+export interface IdentityAuthenticationSendEmailVerificationInput {
+  email: string;
+}
+
+export interface IdentityAuthenticationServiceAccountAuditEntry {
+  id?: string;
+  timestamp?: string;
+  action?: string | null;
+  performedBy?: string | null;
+  ipAddress?: string | null;
+  details?: string | null;
+}
+
+export interface IdentityAuthenticationServiceAccountAuditLogOutput {
+  serviceAccountId?: string;
+  entries?: Array<IdentityAuthenticationServiceAccountAuditEntry> | null;
+  totalCount?: number;
+  page?: number;
+  pageSize?: number;
+}
+
+export interface IdentityAuthenticationServiceAccountCreatedOutput {
+  id?: string;
+  clientId?: string | null;
+  clientSecret?: string | null;
+  name?: string | null;
+  description?: string | null;
+  tenantId?: string | null;
+  scopes?: string | null;
+  createdAt?: string;
+  expiresAt?: string | null;
+  warning?: string | null;
+}
+
+export interface IdentityAuthenticationServiceAccountOutput {
+  id?: string;
+  clientId?: string | null;
+  name?: string | null;
+  description?: string | null;
+  tenantId?: string | null;
+  scopes?: string | null;
+  isActive?: boolean;
+  isLocked?: boolean;
+  expiresAt?: string | null;
+  createdAt?: string;
+  createdBy?: string | null;
+  lastAuthenticatedAt?: string | null;
+  authenticationCount?: number;
+  secretRotationCount?: number;
+}
+
+export interface IdentityAuthenticationSessionOutput {
+  id?: string;
+  deviceInfo?: IdentityAuthenticationDeviceInfo;
+  location?: IdentityAuthenticationLocationInfo;
+  ipAddress?: string | null;
+  createdAt?: string;
+  lastUsedAt?: string;
+  expiresAt?: string;
+  isTrustedDevice?: boolean;
+  isCurrent?: boolean;
+}
+
+export interface IdentityAuthenticationSessionSecurityAnalysis {
+  sessionId?: string;
+  userId?: string;
+  isSuspicious?: boolean;
+  unusualActivityDetected?: boolean;
+  riskScore?: number;
+  activeSessionCount?: number;
+  totalDeviceCount?: number;
+  riskLevel?: IdentityAuthenticationRiskLevel;
+  securityFlags?: Array<string> | null;
+  riskFactors?: Array<string> | null;
+  metadata?: Record<string, string> | null;
+  analyzedAt?: string;
+}
+
+export interface IdentityAuthenticationSessionSuccessOutput {
+  message: string | null;
+}
+
+export interface IdentityAuthenticationSessionTerminationOutput {
+  message: string | null;
+  terminatedCount: number;
+}
+
+export interface IdentityAuthenticationSignInOutput {
+  success?: boolean;
+  message?: string | null;
+  accessToken?: string | null;
+  refreshToken?: string | null;
+  expiresAt?: string;
+  accessTokenExpiresAt?: string;
+  refreshTokenExpiresAt?: string;
+  expiresIn?: number;
+  userId?: string;
+  email?: string | null;
+  sessionId?: string;
+  tempToken?: string | null;
+  mfaToken?: string | null;
+  user?: IdentityAuthenticationUser;
+  tenantId?: string | null;
+  availableTenants?: Array<IdentityAuthenticationTenantInfo> | null;
+  requiresMfa?: boolean;
+  mfaSessionId?: string | null;
+  requiresStepUp?: boolean;
+  stepUpToken?: string | null;
+  stepUpExpiresAt?: string | null;
+  riskLevel?: IdentityAuthenticationRiskLevel;
+  riskFactors?: Array<string> | null;
+  availableMethods?: Array<string> | null;
+}
+
+export interface IdentityAuthenticationSmsMfaSetupInput {
+  phoneNumber: string | null;
+}
+
+export interface IdentityAuthenticationSmsMfaSetupOutput {
+  message: string | null;
+  phoneNumberMasked: string | null;
+  expiresInSeconds: number;
+}
+
+export interface IdentityAuthenticationTenantInfo {
+  tenantId?: string;
+  name?: string | null;
+  slug?: string | null;
+  isActive?: boolean;
+  subscriptionTier?: string | null;
+  metadata?: Record<string, Record<string, unknown>> | null;
+}
+
+export interface IdentityAuthenticationTrustDeviceInput {
+  deviceName?: string | null;
+}
+
+export interface IdentityAuthenticationTrustedDeviceOutput {
+  id?: string;
+  deviceName?: string | null;
+  deviceInfo?: IdentityAuthenticationDeviceInfo;
+  trustedAt?: string;
+  lastUsedAt?: string;
+  expiresAt?: string | null;
+}
+
+export interface IdentityAuthenticationUpdateCredentialNameInput {
+  friendlyName?: string | null;
+}
+
+export interface IdentityAuthenticationUpdateScopesInput {
+  scopes?: string | null;
+}
+
+export interface IdentityAuthenticationUser {
+  id?: string;
+  email?: string | null;
+  username?: string | null;
+  firstName?: string | null;
+  lastName?: string | null;
+  phoneNumber?: string | null;
+  emailVerified?: boolean;
+  phoneNumberVerified?: boolean;
+  createdAt?: string;
+  lastLoginAt?: string | null;
+}
+
+export interface IdentityAuthenticationVerifyEmailInput {
+  token: string;
+  tenantId?: string | null;
+}
+
+export interface IdentityAuthenticationVerifyMfaInput {
+  userId?: string;
+  code: string;
+  method?: IdentityAuthenticationMfaMethod;
+}
+
+export interface IdentityAuthenticationWeb3ChallengeInput {
+  walletAddress: string;
+  chainId?: string | null;
+}
+
+export interface IdentityAuthenticationWeb3ChallengeOutput {
+  challenge?: string | null;
+  nonce?: string | null;
+  expiresAt?: string;
+}
+
+export interface IdentityAuthenticationWeb3VerifyInput {
+  walletAddress: string;
+  signature: string;
+  nonce: string;
+  chainId: string;
+  tenantId?: string | null;
+  deviceFingerprint?: string | null;
+}
+
+export interface IdentityAuthenticationWebAuthnAuthenticationOptionsResult {
+  success?: boolean;
+  error?: string | null;
+  sessionId?: string | null;
+  optionsJson?: string | null;
+  options?: Fido2NetLibAssertionOptions;
+}
+
+export interface IdentityAuthenticationWebAuthnAuthenticationResult {
+  success?: boolean;
+  error?: string | null;
+  userId?: string | null;
+  credentialId?: string | null;
+  isPasswordless?: boolean;
+}
+
+export type IdentityAuthenticationWebAuthnAuthenticatorType = 1 | 2;
+
+export interface IdentityAuthenticationWebAuthnCredentialInfo {
+  id?: string;
+  friendlyName?: string | null;
+  authenticatorType?: IdentityAuthenticationWebAuthnAuthenticatorType;
+  createdAt?: string;
+  lastUsedAt?: string | null;
+  isPasswordless?: boolean;
+  isDefault?: boolean;
+  backedUp?: boolean;
+}
+
+export interface IdentityAuthenticationWebAuthnCredentialVerifyResult {
+  success?: boolean;
+  error?: string | null;
+  isValid?: boolean;
+  isExpired?: boolean;
+  isRevoked?: boolean;
+  lastUsedAt?: string | null;
+  signatureCount?: number;
+}
+
+export interface IdentityAuthenticationWebAuthnRegistrationOptionsResult {
+  success?: boolean;
+  error?: string | null;
+  sessionId?: string | null;
+  optionsJson?: string | null;
+  options?: Fido2NetLibCredentialCreateOptions;
+}
+
+export interface IdentityAuthenticationWebAuthnRegistrationResult {
+  success?: boolean;
+  error?: string | null;
+  credentialId?: string | null;
+  friendlyName?: string | null;
+}
+
+export interface IdentityAuthenticationWebAuthnStatusOutput {
+  isEnabled?: boolean;
+  credentialCount?: number;
+  hasPasswordlessCredential?: boolean;
+  hasPlatformAuthenticator?: boolean;
+  hasSecurityKey?: boolean;
+}
+
+export interface IdentityTenantsArchiveInput {
+  reason?: string | null;
+}
+
+export interface IdentityTenantsCreateTenantInput {
+  name?: string | null;
+  slug?: string | null;
+  adminEmail?: string | null;
+  description?: string | null;
+}
+
+export interface IdentityTenantsGetUserMembershipsOutput {
+  memberships?: Array<IdentityTenantsUserMembership> | null;
+  totalCount?: number;
+}
+
+export interface IdentityTenantsMembershipCountOutput {
+  count?: number;
+}
+
+export interface IdentityTenantsRecoverInput {
+  reason?: string | null;
+}
+
+export interface IdentityTenantsReplaceTenantMetadataInput {
+  customFields?: Record<string, Record<string, unknown> | null> | null;
+  tags?: Array<string> | null;
+  externalReferences?: Record<string, string> | null;
+  businessInfo?: IdentityTenantsUpdateTenantBusinessInfoInput;
+  contactInfo?: IdentityTenantsUpdateTenantContactInfoInput;
+  adminNotes?: string | null;
+}
+
+export interface IdentityTenantsReplaceTenantSettingsInput {
+  systemConfiguration?: IdentityTenantsUpdateTenantSystemConfigurationInput;
+  featureFlags?: Record<string, boolean> | null;
+  businessRules?: IdentityTenantsUpdateTenantBusinessRulesInput;
+  userInterfaceSettings?: IdentityTenantsUpdateTenantUiSettingsInput;
+  securitySettings?: IdentityTenantsUpdateTenantSecuritySettingsInput;
+  integrationSettings?: IdentityTenantsUpdateTenantIntegrationSettingsInput;
+  systemLimits?: IdentityTenantsUpdateTenantSystemLimitsInput;
+}
+
+export interface IdentityTenantsSlugValidation {
+  isAvailable?: boolean;
+  isValid?: boolean;
+  suggestedAlternatives?: Array<string> | null;
+}
+
+export interface IdentityTenantsTenant {
+  isGlobal?: boolean;
+  isNew?: boolean;
+  isDeleted?: boolean;
+  domainEvents?: Array<CQRSIDomainEvent> | null;
+  id?: string;
+  version?: number;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt?: string | null;
+  tenantId?: string | null;
+  isDefault?: boolean;
+  isArchived?: boolean;
+  archivedAt?: string | null;
+  tenantMembers?: Array<IdentityTenantsTenantMember> | null;
+  tenantDomains?: Array<IdentityTenantsTenantDomain> | null;
+  tenantSettings?: IdentityTenantsTenantSettings;
+  tenantStatistics?: IdentityTenantsTenantStatistics;
+  usageTrackingRecords?: Array<IdentityTenantsUsageTracking> | null;
+  name: string;
+  description?: string | null;
+  isActive?: boolean;
+  slug: string;
+  adminEmail?: string | null;
+  canAcceptMembers?: boolean;
+  activeMemberCount?: number;
+  hasActiveMembers?: boolean;
+}
+
+export interface IdentityTenantsTenantAddress {
+  street?: string | null;
+  city?: string | null;
+  state?: string | null;
+  postalCode?: string | null;
+  country?: string | null;
+}
+
+export interface IdentityTenantsTenantAuditLogEntry {
+  id?: string;
+  tenantId?: string;
+  timestamp?: string;
+  action?: string | null;
+  actorId?: string | null;
+  actorName?: string | null;
+  actorEmail?: string | null;
+  beforeValues?: Record<string, Record<string, unknown> | null> | null;
+  afterValues?: Record<string, Record<string, unknown> | null> | null;
+  ipAddress?: string | null;
+  userAgent?: string | null;
+  correlationId?: string | null;
+  metadata?: Record<string, string> | null;
+}
+
+export interface IdentityTenantsTenantBranding {
+  logoUrl?: string | null;
+  faviconUrl?: string | null;
+  primaryColor?: string | null;
+  secondaryColor?: string | null;
+  companyName?: string | null;
+}
+
+export interface IdentityTenantsTenantBusinessInfo {
+  industry?: string | null;
+  organizationSize?: string | null;
+  tenantType?: string | null;
+  geographicRegion?: string | null;
+  complianceRequirements?: Array<string> | null;
+}
+
+export interface IdentityTenantsTenantBusinessRules {
+  workflowRules?: Record<string, Record<string, unknown> | null> | null;
+  validationRules?: Record<string, Record<string, unknown> | null> | null;
+  approvalRules?: Record<string, Record<string, unknown> | null> | null;
+  notificationRules?: Record<string, Record<string, unknown> | null> | null;
+}
+
+export interface IdentityTenantsTenantContactInfo {
+  primaryContactName?: string | null;
+  primaryContactEmail?: string | null;
+  primaryContactPhone?: string | null;
+  organizationName?: string | null;
+  address?: IdentityTenantsTenantAddress;
+  website?: string | null;
+}
+
+export interface IdentityTenantsTenantCurrencySettings {
+  defaultCurrency?: string | null;
+  displayFormat?: string | null;
+  decimalPlaces?: number;
+}
+
+export interface IdentityTenantsTenantDomain {
+  isGlobal?: boolean;
+  isNew?: boolean;
+  isDeleted?: boolean;
+  domainEvents?: Array<CQRSIDomainEvent> | null;
+  id?: string;
+  version?: number;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt?: string | null;
+  tenantId: string;
+  topLevelDomain: string;
+  subdomain?: string | null;
+  isMainDomain?: boolean;
+  isSecondaryDomain?: boolean;
+  userGroupId?: string | null;
+  fullDomain?: string | null;
+  tenant?: IdentityTenantsTenant;
+}
+
+export interface IdentityTenantsTenantIntegrationSettings {
+  externalServices?: Record<string, Record<string, unknown> | null> | null;
+  webhookSettings?: Record<string, Record<string, unknown> | null> | null;
+  apiKeys?: Record<string, string> | null;
+  ssoConfiguration?: Record<string, Record<string, unknown> | null> | null;
+}
+
+export interface IdentityTenantsTenantMember {
+  isGlobal?: boolean;
+  isNew?: boolean;
+  isDeleted?: boolean;
+  domainEvents?: Array<CQRSIDomainEvent> | null;
+  id?: string;
+  version?: number;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt?: string | null;
+  tenantId: string;
+  userId: string;
+  parentMemberId?: string | null;
+  parentMember?: IdentityTenantsTenantMember;
+  childMembers?: Array<IdentityTenantsTenantMember> | null;
+  role: string;
+  isActive?: boolean;
+  joinedAt?: string;
+  leftAt?: string | null;
+  leaveReason?: string | null;
+  metadata?: string | null;
+  tenant?: IdentityTenantsTenant;
+}
+
+export interface IdentityTenantsTenantMetadata {
+  id?: string;
+  customFields?: Record<string, Record<string, unknown> | null> | null;
+  tags?: Array<string> | null;
+  externalReferences?: Record<string, string> | null;
+  businessInfo?: IdentityTenantsTenantBusinessInfo;
+  contactInfo?: IdentityTenantsTenantContactInfo;
+  adminNotes?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface IdentityTenantsTenantSecuritySettings {
+  passwordPolicy?: Record<string, Record<string, unknown> | null> | null;
+  sessionTimeout?: number;
+  twoFactorRequired?: boolean;
+  ipWhitelist?: Array<string> | null;
+  apiRateLimits?: Record<string, number> | null;
+}
+
+export interface IdentityTenantsTenantSettings {
+  isGlobal?: boolean;
+  isNew?: boolean;
+  isDeleted?: boolean;
+  domainEvents?: Array<CQRSIDomainEvent> | null;
+  id?: string;
+  version?: number;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt?: string | null;
+  tenantId: string;
+  defaultLanguage?: string | null;
+  defaultTimezone?: string | null;
+  defaultCurrency?: string | null;
+  allowUserRegistration?: boolean;
+  requireRegistrationApproval?: boolean;
+  requireTwoFactorAuth?: boolean;
+  maxUsers?: number | null;
+  storageQuota?: number | null;
+  enableAuditLogging?: boolean;
+  enableApiAccess?: boolean;
+  brandingSettings?: string | null;
+  notificationSettings?: string | null;
+  securitySettings?: string | null;
+  tenant?: IdentityTenantsTenant;
+}
+
+export interface IdentityTenantsTenantStatistics {
+  isGlobal?: boolean;
+  isNew?: boolean;
+  isDeleted?: boolean;
+  domainEvents?: Array<CQRSIDomainEvent> | null;
+  id?: string;
+  version?: number;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt?: string | null;
+  tenantId: string;
+  statisticDate?: string;
+  totalMembers?: number;
+  activeMembers?: number;
+  inactiveMembers?: number;
+  storageUsed?: number;
+  apiCalls?: number;
+  newMembers?: number;
+  membersLeft?: number;
+  customMetrics?: string | null;
+  tenant?: IdentityTenantsTenant;
+}
+
+export interface IdentityTenantsTenantSystemConfiguration {
+  timeZone?: string | null;
+  locale?: string | null;
+  dateFormat?: string | null;
+  numberFormat?: string | null;
+  currencySettings?: IdentityTenantsTenantCurrencySettings;
+  customConfiguration?: Record<string, Record<string, unknown> | null> | null;
+}
+
+export interface IdentityTenantsTenantSystemLimits {
+  maxUsers?: number;
+  maxStorage?: number;
+  maxApiCalls?: number;
+  maxProjects?: number;
+  customLimits?: Record<string, number> | null;
+}
+
+export interface IdentityTenantsTenantUiSettings {
+  theme?: string | null;
+  layout?: Record<string, Record<string, unknown> | null> | null;
+  branding?: IdentityTenantsTenantBranding;
+  customCss?: string | null;
+  componentSettings?: Record<string, Record<string, unknown> | null> | null;
+}
+
+export interface IdentityTenantsTenantValidationError {
+  field?: string | null;
+  code?: string | null;
+  message?: string | null;
+}
+
+export interface IdentityTenantsTenantValidationOutput {
+  isValid?: boolean;
+  errors?: Array<IdentityTenantsTenantValidationError> | null;
+  warnings?: Array<IdentityTenantsTenantValidationWarning> | null;
+  suggestions?: Array<string> | null;
+  slugValidation?: IdentityTenantsSlugValidation;
+}
+
+export interface IdentityTenantsTenantValidationWarning {
+  field?: string | null;
+  code?: string | null;
+  message?: string | null;
+}
+
+export interface IdentityTenantsUpdateTenantAddressInput {
+  street?: string | null;
+  city?: string | null;
+  state?: string | null;
+  postalCode?: string | null;
+  country?: string | null;
+}
+
+export interface IdentityTenantsUpdateTenantBrandingInput {
+  logoUrl?: string | null;
+  faviconUrl?: string | null;
+  primaryColor?: string | null;
+  secondaryColor?: string | null;
+  companyName?: string | null;
+}
+
+export interface IdentityTenantsUpdateTenantBusinessInfoInput {
+  industry?: string | null;
+  organizationSize?: string | null;
+  tenantType?: string | null;
+  geographicRegion?: string | null;
+  complianceRequirements?: Array<string> | null;
+}
+
+export interface IdentityTenantsUpdateTenantBusinessRulesInput {
+  workflowRules?: Record<string, Record<string, unknown> | null> | null;
+  validationRules?: Record<string, Record<string, unknown> | null> | null;
+  approvalRules?: Record<string, Record<string, unknown> | null> | null;
+  notificationRules?: Record<string, Record<string, unknown> | null> | null;
+}
+
+export interface IdentityTenantsUpdateTenantContactInfoInput {
+  primaryContactName?: string | null;
+  primaryContactEmail?: string | null;
+  primaryContactPhone?: string | null;
+  organizationName?: string | null;
+  address?: IdentityTenantsUpdateTenantAddressInput;
+  website?: string | null;
+}
+
+export interface IdentityTenantsUpdateTenantCurrencySettingsInput {
+  defaultCurrency?: string | null;
+  displayFormat?: string | null;
+  decimalPlaces?: number | null;
+}
+
+export interface IdentityTenantsUpdateTenantIntegrationSettingsInput {
+  externalServices?: Record<string, Record<string, unknown> | null> | null;
+  webhookSettings?: Record<string, Record<string, unknown> | null> | null;
+  apiKeys?: Record<string, string> | null;
+  ssoConfiguration?: Record<string, Record<string, unknown> | null> | null;
+}
+
+export interface IdentityTenantsUpdateTenantMetadataInput {
+  customFields?: Record<string, Record<string, unknown> | null> | null;
+  tags?: Array<string> | null;
+  externalReferences?: Record<string, string> | null;
+  businessInfo?: IdentityTenantsUpdateTenantBusinessInfoInput;
+  contactInfo?: IdentityTenantsUpdateTenantContactInfoInput;
+  adminNotes?: string | null;
+}
+
+export interface IdentityTenantsUpdateTenantInput {
+  name?: string | null;
+  description?: string | null;
+}
+
+export interface IdentityTenantsUpdateTenantSecuritySettingsInput {
+  passwordPolicy?: Record<string, Record<string, unknown> | null> | null;
+  sessionTimeout?: number | null;
+  twoFactorRequired?: boolean | null;
+  ipWhitelist?: Array<string> | null;
+  apiRateLimits?: Record<string, number> | null;
+}
+
+export interface IdentityTenantsUpdateTenantSettingsInput {
+  systemConfiguration?: IdentityTenantsUpdateTenantSystemConfigurationInput;
+  featureFlags?: Record<string, boolean> | null;
+  businessRules?: IdentityTenantsUpdateTenantBusinessRulesInput;
+  userInterfaceSettings?: IdentityTenantsUpdateTenantUiSettingsInput;
+  securitySettings?: IdentityTenantsUpdateTenantSecuritySettingsInput;
+  integrationSettings?: IdentityTenantsUpdateTenantIntegrationSettingsInput;
+  systemLimits?: IdentityTenantsUpdateTenantSystemLimitsInput;
+}
+
+export interface IdentityTenantsUpdateTenantSystemConfigurationInput {
+  timeZone?: string | null;
+  locale?: string | null;
+  dateFormat?: string | null;
+  numberFormat?: string | null;
+  currencySettings?: IdentityTenantsUpdateTenantCurrencySettingsInput;
+  customConfiguration?: Record<string, Record<string, unknown> | null> | null;
+}
+
+export interface IdentityTenantsUpdateTenantSystemLimitsInput {
+  maxUsers?: number | null;
+  maxStorage?: number | null;
+  maxApiCalls?: number | null;
+  maxProjects?: number | null;
+  customLimits?: Record<string, number> | null;
+}
+
+export interface IdentityTenantsUpdateTenantTagsInput {
+  tags?: Array<string> | null;
+}
+
+export interface IdentityTenantsUpdateTenantUiSettingsInput {
+  theme?: string | null;
+  layout?: Record<string, Record<string, unknown> | null> | null;
+  branding?: IdentityTenantsUpdateTenantBrandingInput;
+  customCss?: string | null;
+  componentSettings?: Record<string, Record<string, unknown> | null> | null;
+}
+
+export interface IdentityTenantsUsageTracking {
+  isGlobal?: boolean;
+  isNew?: boolean;
+  isDeleted?: boolean;
+  domainEvents?: Array<CQRSIDomainEvent> | null;
+  id?: string;
+  version?: number;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt?: string | null;
+  tenantId: string;
+  date?: string;
+  resourceType: string;
+  usageAmount?: number;
+  unit?: string | null;
+  cost?: number;
+  metadata?: string | null;
+  tenant?: IdentityTenantsTenant;
+}
+
+export interface IdentityTenantsUserMembership {
+  membershipId?: string;
+  tenantId?: string;
+  tenantName?: string | null;
+  tenantSlug?: string | null;
+  tenantDescription?: string | null;
+  role?: string | null;
+  isActive?: boolean;
+  joinedAt?: string;
+  leftAt?: string | null;
+}
+
+export interface IdentityTenantsValidateTenantInput {
+  name?: string | null;
+  slug?: string | null;
+  adminEmail?: string | null;
+}
+
+export interface IdentityUsersBulkActivateUsersInput {
+  userIds?: Array<string> | null;
+}
+
+export interface IdentityUsersBulkActivateUsersOutput {
+  activatedUsers?: Array<IdentityUsersUser> | null;
+  failedUserIds?: Array<string> | null;
+}
+
+export interface IdentityUsersBulkCreateUsersInput {
+  users?: Array<IdentityUsersCreateUserRequestItem> | null;
+}
+
+export interface IdentityUsersBulkCreateUsersOutput {
+  createdUserIds?: Array<string> | null;
+  failedEmails?: Array<string> | null;
+}
+
+export interface IdentityUsersBulkDeactivateUsersInput {
+  userIds?: Array<string> | null;
+}
+
+export interface IdentityUsersBulkDeactivateUsersOutput {
+  deactivatedUsers?: Array<IdentityUsersUser> | null;
+  failedUserIds?: Array<string> | null;
+}
+
+export interface IdentityUsersBulkDeleteUsersInput {
+  userIds?: Array<string> | null;
+}
+
+export interface IdentityUsersBulkNotificationInput {
+  notificationIds?: Array<string> | null;
+  operation?: string | null;
+  filterCriteria?: IdentityUsersNotificationFilterCriteria;
+}
+
+export interface IdentityUsersBulkPurgeUsersInput {
+  userIds?: Array<string> | null;
+  strategy?: IdentityUsersPurgeStrategy;
+}
+
+export interface IdentityUsersBulkRestoreUsersInput {
+  userIds?: Array<string> | null;
+}
+
+export interface IdentityUsersBulkRestoreUsersOutput {
+  restoredUsers?: Array<IdentityUsersUser> | null;
+  failedUserIds?: Array<string> | null;
+}
+
+export interface IdentityUsersBulkSuspendUsersInput {
+  userIds?: Array<string> | null;
+}
+
+export interface IdentityUsersBulkSuspendUsersOutput {
+  suspendedUsers?: Array<IdentityUsersUser> | null;
+  failedUserIds?: Array<string> | null;
+}
+
+export interface IdentityUsersBulkUnsuspendUsersInput {
+  userIds?: Array<string> | null;
+}
+
+export interface IdentityUsersBulkUnsuspendUsersOutput {
+  unsuspendedUsers?: Array<IdentityUsersUser> | null;
+  failedUserIds?: Array<string> | null;
+}
+
+export interface IdentityUsersBulkUpdateUsersInput {
+  updates?: Array<IdentityUsersUpdateUserRequestItem> | null;
+}
+
+export interface IdentityUsersCreateUserInput {
+  email?: string | null;
+  name?: string | null;
+  phoneNumber?: string | null;
+}
+
+export interface IdentityUsersCreateUserRequestItem {
+  email?: string | null;
+  name?: string | null;
+  phoneNumber?: string | null;
+}
+
+export interface IdentityUsersNotificationAction {
+  id?: string | null;
+  text?: string | null;
+  url?: string | null;
+  type?: string | null;
+  isPrimary?: boolean;
+}
+
+export interface IdentityUsersNotificationFilterCriteria {
+  categories?: Array<string> | null;
+  priorities?: Array<string> | null;
+  types?: Array<string> | null;
+  isRead?: boolean | null;
+  isArchived?: boolean | null;
+  dateFrom?: string | null;
+  dateTo?: string | null;
+}
+
+export type IdentityUsersPurgeStrategy = 0 | 1 | 2;
+
+export interface IdentityUsersReplaceUserAccessibilityPreferencesInput {
+  accessibilityPreferences?: Record<string, Record<string, unknown> | null> | null;
+}
+
+export interface IdentityUsersReplaceUserLocalizationPreferencesInput {
+  localizationPreferences?: Record<string, Record<string, unknown> | null> | null;
+}
+
+export interface IdentityUsersReplaceUserMetadataInput {
+  customFields?: Record<string, Record<string, unknown> | null> | null;
+  tags?: Array<string> | null;
+  externalReferences?: Record<string, string> | null;
+}
+
+export interface IdentityUsersReplaceUserNotificationPreferencesInput {
+  notificationPreferences?: Record<string, Record<string, unknown> | null> | null;
+}
+
+export interface IdentityUsersReplaceUserPreferencesInput {
+  generalPreferences?: Record<string, Record<string, unknown> | null> | null;
+  notificationPreferences?: Record<string, Record<string, unknown> | null> | null;
+  accessibilityPreferences?: Record<string, Record<string, unknown> | null> | null;
+  privacyPreferences?: Record<string, Record<string, unknown> | null> | null;
+}
+
+export interface IdentityUsersReplaceUserPrivacyPreferencesInput {
+  privacyPreferences?: Record<string, Record<string, unknown> | null> | null;
+}
+
+export interface IdentityUsersReplaceUserProfileInput {
+  displayName?: string | null;
+  bio?: string | null;
+  location?: string | null;
+  website?: string | null;
+  timeZone?: string | null;
+  language?: string | null;
+  profileVisibility?: string | null;
+  showEmail?: boolean;
+  showLocation?: boolean;
+}
+
+export interface IdentityUsersUpdateUserAccessibilityPreferencesInput {
+  accessibilityPreferences?: Record<string, Record<string, unknown> | null> | null;
+}
+
+export interface IdentityUsersUpdateUserLocalizationPreferencesInput {
+  localizationPreferences?: Record<string, Record<string, unknown> | null> | null;
+}
+
+export interface IdentityUsersUpdateUserMetadataInput {
+  customFields?: Record<string, Record<string, unknown> | null> | null;
+  tagsToAdd?: Array<string> | null;
+  tagsToRemove?: Array<string> | null;
+  externalReferences?: Record<string, string> | null;
+}
+
+export interface IdentityUsersUpdateUserNotificationPreferencesInput {
+  notificationPreferences?: Record<string, Record<string, unknown> | null> | null;
+}
+
+export interface IdentityUsersUpdateUserPreferencesInput {
+  generalPreferences?: Record<string, Record<string, unknown> | null> | null;
+  notificationPreferences?: Record<string, Record<string, unknown> | null> | null;
+  accessibilityPreferences?: Record<string, Record<string, unknown> | null> | null;
+  privacyPreferences?: Record<string, Record<string, unknown> | null> | null;
+}
+
+export interface IdentityUsersUpdateUserPrivacyPreferencesInput {
+  privacyPreferences?: Record<string, Record<string, unknown> | null> | null;
+}
+
+export interface IdentityUsersUpdateUserProfileInput {
+  displayName?: string | null;
+  bio?: string | null;
+  location?: string | null;
+  website?: string | null;
+  timeZone?: string | null;
+  language?: string | null;
+  profileVisibility?: string | null;
+  showEmail?: boolean | null;
+  showLocation?: boolean | null;
+}
+
+export interface IdentityUsersUpdateUserInput {
+  name?: string | null;
+  phoneNumber?: string | null;
+}
+
+export interface IdentityUsersUpdateUserRequestItem {
+  userId?: string;
+  name?: string | null;
+  phoneNumber?: string | null;
+}
+
+export interface IdentityUsersUserAccessibilityPreferences {
+  highContrast?: boolean;
+  largeText?: boolean;
+  screenReader?: boolean;
+  reducedMotion?: boolean;
+  keyboardNavigation?: boolean;
+  fontSize?: number;
+  colorScheme?: string | null;
+  customSettings?: Record<string, Record<string, unknown> | null> | null;
+}
+
+export interface IdentityUsersUser {
+  id?: string;
+  email?: string | null;
+  name?: string | null;
+  createdAt?: string;
+  updatedAt?: string | null;
+  isActive?: boolean;
+  phoneNumber?: string | null;
+  lastSeenAt?: string | null;
+}
+
+export interface IdentityUsersUserLocalizationPreferences {
+  language?: string | null;
+  timezone?: string | null;
+  dateFormat?: string | null;
+  timeFormat?: string | null;
+  currency?: string | null;
+  numberFormat?: Record<string, Record<string, unknown> | null> | null;
+  customSettings?: Record<string, Record<string, unknown> | null> | null;
+}
+
+export interface IdentityUsersUserMetadata {
+  id?: string;
+  userId?: string;
+  customFields?: Record<string, Record<string, unknown> | null> | null;
+  tags?: Array<string> | null;
+  externalReferences?: Record<string, string> | null;
+  createdAt?: string;
+  updatedAt?: string | null;
+  version?: string | null;
+}
+
+export interface IdentityUsersUserNotificationDetail {
+  notification?: IdentityUsersUserNotification;
+  relatedNotifications?: Array<IdentityUsersUserNotification> | null;
+  actions?: Array<IdentityUsersNotificationAction> | null;
+}
+
+export interface IdentityUsersUserNotification {
+  id?: string;
+  userId?: string;
+  type?: string | null;
+  title?: string | null;
+  message?: string | null;
+  priority?: string | null;
+  category?: string | null;
+  isRead?: boolean;
+  isArchived?: boolean;
+  readAt?: string | null;
+  archivedAt?: string | null;
+  expiresAt?: string | null;
+  actionUrl?: string | null;
+  actionText?: string | null;
+  imageUrl?: string | null;
+  metadata?: Record<string, Record<string, unknown> | null> | null;
+  createdAt?: string;
+  updatedAt?: string | null;
+  version?: string | null;
+}
+
+export interface IdentityUsersUserNotificationPreferences {
+  emailEnabled?: boolean;
+  pushEnabled?: boolean;
+  smsEnabled?: boolean;
+  inAppEnabled?: boolean;
+  frequency?: string | null;
+  quietHours?: Record<string, Record<string, unknown> | null> | null;
+  categoryPreferences?: Record<string, Record<string, unknown> | null> | null;
+}
+
+export interface IdentityUsersUserPreferences {
+  id?: string;
+  userId?: string;
+  generalPreferences?: Record<string, Record<string, unknown> | null> | null;
+  notificationPreferences?: Record<string, Record<string, unknown> | null> | null;
+  accessibilityPreferences?: Record<string, Record<string, unknown> | null> | null;
+  privacyPreferences?: Record<string, Record<string, unknown> | null> | null;
+  localizationPreferences?: Record<string, Record<string, unknown> | null> | null;
+  createdAt?: string;
+  updatedAt?: string | null;
+  version?: string | null;
+}
+
+export interface IdentityUsersUserPrivacyPreferences {
+  profileVisibility?: string | null;
+  activityTracking?: boolean;
+  dataCollection?: Record<string, Record<string, unknown> | null> | null;
+  thirdPartySharing?: Record<string, Record<string, unknown> | null> | null;
+  marketingEmails?: boolean;
+  analyticsCookies?: boolean;
+  personalizedContent?: boolean;
+  customSettings?: Record<string, Record<string, unknown> | null> | null;
+}
+
+export interface IdentityUsersUserProfile {
+  id?: string;
+  userId?: string;
+  displayName?: string | null;
+  bio?: string | null;
+  location?: string | null;
+  website?: string | null;
+  avatarUrl?: string | null;
+  bannerUrl?: string | null;
+  timeZone?: string | null;
+  language?: string | null;
+  profileVisibility?: string | null;
+  showEmail?: boolean;
+  showLocation?: boolean;
+  createdAt?: string;
+  updatedAt?: string | null;
+  version?: string | null;
+}
+
+export interface ModelsPagedResult {
+  items?: Array<IdentityTenantsTenantAuditLogEntry> | null;
+  totalCount?: number;
+  skip?: number;
+  take?: number;
+  pageNumber?: number;
+  totalPages?: number;
+  hasNextPage?: boolean;
+  hasPreviousPage?: boolean;
+}
+
+export interface MvcProblemDetails {
+  type?: string | null;
+  title?: string | null;
+  status?: number | null;
+  detail?: string | null;
+  instance?: string | null;
+  [key: string]: any;
+}
+
+export type ObjectsAttestationConveyancePreference = 'none' | 'indirect' | 'direct' | 'enterprise';
+
+export type ObjectsAttestationStatementFormatIdentifier = 'packed' | 'tpm' | 'android-key' | 'android-safetynet' | 'fido-u2f' | 'apple' | 'none';
+
+export interface ObjectsAuthenticationExtensionsClientInputs {
+  'example.extension.bool'?: boolean | null;
+  exts?: boolean | null;
+  uvm?: boolean | null;
+  credProps?: boolean | null;
+  prf?: ObjectsAuthenticationExtensionsPRFInputs;
+  largeBlob?: ObjectsAuthenticationExtensionsLargeBlobInputs;
+  credentialProtectionPolicy?: ObjectsCredentialProtectionPolicy;
+  enforceCredentialProtectionPolicy?: boolean | null;
+}
+
+export interface ObjectsAuthenticationExtensionsLargeBlobInputs {
+  support?: ObjectsLargeBlobSupport;
+  read?: boolean;
+  write?: string | null;
+}
+
+export interface ObjectsAuthenticationExtensionsPRFInputs {
+  eval?: ObjectsAuthenticationExtensionsPRFValues;
+  evalByCredential?: KeyValuePairStringAuthenticationExtensionsPRFValues;
+}
+
+export interface ObjectsAuthenticationExtensionsPRFValues {
+  first: string | null;
+  second?: string | null;
+}
+
+export type ObjectsAuthenticatorAttachment = 'platform' | 'cross-platform';
+
+export type ObjectsAuthenticatorTransport = 'usb' | 'nfc' | 'ble' | 'smart-card' | 'hybrid' | 'internal';
+
+export type ObjectsCOSEAlgorithm = -65535 | -259 | -258 | -257 | -47 | -39 | -38 | -37 | -36 | -35 | -8 | -7;
+
+export type ObjectsCredentialProtectionPolicy = 'userVerificationOptional' | 'userVerificationOptionalWithCredentialIDList' | 'userVerificationRequired';
+
+export type ObjectsLargeBlobSupport = 'required' | 'preferred';
+
+export interface ObjectsPublicKeyCredentialDescriptor {
+  type?: ObjectsPublicKeyCredentialType;
+  id?: string | null;
+  transports?: Array<ObjectsAuthenticatorTransport> | null;
+}
+
+export type ObjectsPublicKeyCredentialHint = 'security-key' | 'client-device' | 'hybrid';
+
+export type ObjectsPublicKeyCredentialType = 'public-key' | 'invalid';
+
+export type ObjectsResidentKeyRequirement = 'required' | 'preferred' | 'discouraged';
+
+export type ObjectsUserVerificationRequirement = 'required' | 'preferred' | 'discouraged';
+
+export interface ResourcesArchiveResourceUsageRecordsInput {
+  olderThan?: string;
+}
+
+export interface ResourcesCheckResourceQuotaInput {
+  amount?: number;
+}
+
+export interface ResourcesCleanupOrphanedResourcesInput {
+  dryRun?: boolean;
+  resourceTypes?: Array<ResourcesResourceUsageType> | null;
+}
+
+export interface ResourcesEffectiveSettingOutput {
+  key?: string | null;
+  value?: string | null;
+  isUserOverride?: boolean;
+}
+
+export interface ResourcesRecordTenantResourceUsageInput {
+  resourceUsageType?: ResourcesResourceUsageType;
+  count?: number;
+  periodStart?: string;
+  periodEnd?: string;
+  metadata?: Record<string, string> | null;
+}
+
+export interface ResourcesRecordUserResourceUsageInput {
+  resourceUsageType?: ResourcesResourceUsageType;
+  count?: number;
+  periodStart?: string;
+  periodEnd?: string;
+  metadata?: Record<string, string> | null;
+}
+
+export interface ResourcesResourceMetadata {
+  isGlobal?: boolean;
+  isNew?: boolean;
+  isDeleted?: boolean;
+  domainEvents?: Array<CQRSIDomainEvent> | null;
+  id?: string;
+  version?: number;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt?: string | null;
+  tenantId?: string | null;
+  key: string;
+  value?: string | null;
+  dataType?: string | null;
+  description?: string | null;
+  category?: string | null;
+  isSystemManaged?: boolean;
+  isActive?: boolean;
+  displayOrder?: number;
+  userId?: string | null;
+  resourceId?: string | null;
+  rowVersion?: string | null;
+}
+
+export interface ResourcesResourceQuotaEnforcementResult {
+  isAllowed?: boolean;
+  isSoftLimitExceeded?: boolean;
+  isHardLimitExceeded?: boolean;
+  currentUsage?: number;
+  softLimit?: number | null;
+  hardLimit?: number | null;
+  usagePercentage?: number;
+  excessAmount?: number;
+  message?: string | null;
+  type?: ResourcesResourceUsageType;
+  nextReset?: string | null;
+  remainingQuota?: number | null;
+}
+
+export type ResourcesResourceQuotaPeriod = 1 | 2 | 3 | 4 | 5 | 6;
+
+export interface ResourcesResourceQuotaOutput {
+  id?: string;
+  tenantId?: string;
+  type?: ResourcesResourceUsageType;
+  limit?: number;
+  currentUsage?: number;
+  remainingQuota?: number;
+  usagePercentage?: number;
+  softLimitPercentage?: number;
+  isActive?: boolean;
+  period?: ResourcesResourceQuotaPeriod;
+  lastResetDate?: string;
+  nextResetDate?: string;
+  description?: string | null;
+  isSoftLimitExceeded?: boolean;
+  isHardLimitExceeded?: boolean;
+  shouldReset?: boolean;
+  softLimit?: number | null;
+  hardLimit?: number | null;
+}
+
+export interface ResourcesResourceSettings {
+  isGlobal?: boolean;
+  isNew?: boolean;
+  isDeleted?: boolean;
+  domainEvents?: Array<CQRSIDomainEvent> | null;
+  id?: string;
+  version?: number;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt?: string | null;
+  tenantId?: string | null;
+  key: string;
+  value?: string | null;
+  defaultValue?: string | null;
+  dataType?: string | null;
+  description?: string | null;
+  category?: string | null;
+  isSystemManaged?: boolean;
+  isActive?: boolean;
+  allowUserOverride?: boolean;
+  displayOrder?: number;
+  userId?: string | null;
+  validationRules?: string | null;
+  rowVersion?: string | null;
+}
+
+export type ResourcesResourceUsageType =
+  | 1
+  | 2
+  | 3
+  | 4
+  | 5
+  | 6
+  | 7
+  | 8
+  | 9
+  | 10
+  | 11
+  | 12
+  | 13
+  | 14
+  | 15
+  | 16
+  | 17
+  | 18
+  | 19
+  | 20
+  | 21
+  | 22
+  | 23
+  | 24
+  | 25
+  | 26
+  | 27;
+
+export interface ResourcesSetQuotaInput {
+  softLimit?: number | null;
+  hardLimit?: number | null;
+  period?: ResourcesResourceQuotaPeriod;
+  isActive?: boolean;
+  resetTime?: string | null;
+}
+
+export interface ResourcesSetResourceMetadataInput {
+  value?: string | null;
+  dataType?: string | null;
+  description?: string | null;
+  category?: string | null;
+  displayOrder?: number | null;
+}
+
+export interface ResourcesSetResourceSettingsInput {
+  value?: string | null;
+  defaultValue?: string | null;
+  dataType?: string | null;
+  description?: string | null;
+  category?: string | null;
+  allowUserOverride?: boolean | null;
+  displayOrder?: number | null;
+  validationRules?: string | null;
+}
+
+export interface ResourcesSetUserResourceSettingsInput {
+  value?: string | null;
+}
+
+export interface ResourcesToggleResourceQuotaInput {
+  isActive?: boolean;
+}
+
+export type ResourcesTrendGranularity = 0 | 1 | 2;
+
+export interface ResourcesUsageRecord {
+  isGlobal?: boolean;
+  isNew?: boolean;
+  isDeleted?: boolean;
+  domainEvents?: Array<CQRSIDomainEvent> | null;
+  id?: string;
+  version?: number;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt?: string | null;
+  tenantId?: string | null;
+  type?: ResourcesResourceUsageType;
+  count?: number;
+  usageAmount?: number;
+  periodStart?: string;
+  periodEnd?: string;
+  averagePerDay?: number | null;
+  peakUsage?: number | null;
+  peakUsageDate?: string | null;
+  metadata?: string | null;
+  source?: string | null;
+  userId?: string | null;
+  resourceId?: string | null;
+  resourceQuotaId?: string | null;
+}
+
+export interface ResourcesUsageTrendDataPoint {
+  period?: string;
+  totalUsage?: number;
+  tenantCount?: number;
+}
+
+export interface ResourcesUsageTrendsResult {
+  type?: ResourcesResourceUsageType;
+  startDate?: string;
+  endDate?: string;
+  granularity?: ResourcesTrendGranularity;
+  dataPoints?: Array<ResourcesUsageTrendDataPoint> | null;
+}
+
+export type ValueObjectsBillingCycle = 0 | 1 | 3 | 6 | 12 | 24;
+
+export interface ValueObjectsMoney {
+  amount?: number;
+  currency?: string | null;
+}
+
+// Zod Schema Declarations (to handle circular references)
+export let CommercePaymentsTaxJurisdictionDtoSchema: z.ZodType<CommercePaymentsTaxJurisdictionDto>;
+export let CommercePaymentsTaxRuleDtoSchema: z.ZodType<CommercePaymentsTaxRuleDto>;
+export let CommerceProductsPagedResult1GameGuildCommerceProductsPromoCodeDtoGameGuildCommerceProductsVersion100PagedResultPromoCodeDtoSchema: z.ZodType<CommerceProductsPagedResult1GameGuildCommerceProductsPromoCodeDtoGameGuildCommerceProductsVersion100PagedResultPromoCodeDto>;
+export let IdentityTenantsTenantSettingsDtoSchema: z.ZodType<IdentityTenantsTenantSettingsDto>;
+export let KeyValuePairStringAuthenticationExtensionsPRFValuesSchema: z.ZodType<KeyValuePairStringAuthenticationExtensionsPRFValues>;
+export let ModelsPagedResult1GameGuildIdentityUsersUserDtoGameGuildIdentityUsersVersion100PagedResultUserDtoSchema: z.ZodType<ModelsPagedResult1GameGuildIdentityUsersUserDtoGameGuildIdentityUsersVersion100PagedResultUserDto>;
+export let ModelsPagedResult1GameGuildIdentityUsersUserNotificationDtoGameGuildIdentityUsersVersion100PagedResultUserNotificationDtoSchema: z.ZodType<ModelsPagedResult1GameGuildIdentityUsersUserNotificationDtoGameGuildIdentityUsersVersion100PagedResultUserNotificationDto>;
+export let ModelsPagedResult1GameGuildIdentityUsersUserProfileDtoGameGuildIdentityUsersVersion100PagedResultUserProfileDtoSchema: z.ZodType<ModelsPagedResult1GameGuildIdentityUsersUserProfileDtoGameGuildIdentityUsersVersion100PagedResultUserProfileDto>;
+export let APIControllersApplicationDetailsSchema: z.ZodType<APIControllersApplicationDetails>;
+export let APIControllersApplicationInfoOutputSchema: z.ZodType<APIControllersApplicationInfoOutput>;
+export let APIControllersBuildDetailsSchema: z.ZodType<APIControllersBuildDetails>;
+export let APIControllersDependencyHealthItemSchema: z.ZodType<APIControllersDependencyHealthItem>;
+export let APIControllersDependencyHealthOutputSchema: z.ZodType<APIControllersDependencyHealthOutput>;
+export let APIControllersHealthinessOutputSchema: z.ZodType<APIControllersHealthinessOutput>;
+export let APIControllersHealthinessResponseItemSchema: z.ZodType<APIControllersHealthinessResponseItem>;
+export let APIControllersLivenessOutputSchema: z.ZodType<APIControllersLivenessOutput>;
+export let APIControllersProcessDetailsSchema: z.ZodType<APIControllersProcessDetails>;
+export let APIControllersReadinessOutputSchema: z.ZodType<APIControllersReadinessOutput>;
+export let APIControllersRuntimeDetailsSchema: z.ZodType<APIControllersRuntimeDetails>;
+export let CQRSIDomainEventSchema: z.ZodType<CQRSIDomainEvent>;
+export let CQRSPagedResultSchema: z.ZodType<CQRSPagedResult>;
+export let CommercePaymentsAddFundsInputSchema: z.ZodType<CommercePaymentsAddFundsInput>;
+export let CommercePaymentsCalculateTaxInputSchema: z.ZodType<CommercePaymentsCalculateTaxInput>;
+export let CommercePaymentsCreateTaxJurisdictionInputSchema: z.ZodType<CommercePaymentsCreateTaxJurisdictionInput>;
+export let CommercePaymentsCreateTaxRuleInputSchema: z.ZodType<CommercePaymentsCreateTaxRuleInput>;
+export let CommercePaymentsCreateWalletInputSchema: z.ZodType<CommercePaymentsCreateWalletInput>;
+export let CommercePaymentsCustomerTypeSchema: z.ZodType<CommercePaymentsCustomerType>;
+export let CommercePaymentsDeductFundsInputSchema: z.ZodType<CommercePaymentsDeductFundsInput>;
+export let CommercePaymentsLockWalletInputSchema: z.ZodType<CommercePaymentsLockWalletInput>;
+export let CommercePaymentsModelsFreezeWalletInputSchema: z.ZodType<CommercePaymentsModelsFreezeWalletInput>;
+export let CommercePaymentsModelsPatchWalletInputSchema: z.ZodType<CommercePaymentsModelsPatchWalletInput>;
+export let CommercePaymentsPatchTaxJurisdictionInputSchema: z.ZodType<CommercePaymentsPatchTaxJurisdictionInput>;
+export let CommercePaymentsPatchTaxRuleInputSchema: z.ZodType<CommercePaymentsPatchTaxRuleInput>;
+export let CommercePaymentsPaymentCancellationResultSchema: z.ZodType<CommercePaymentsPaymentCancellationResult>;
+export let CommercePaymentsPaymentResultSchema: z.ZodType<CommercePaymentsPaymentResult>;
+export let CommercePaymentsPaymentRetryResultSchema: z.ZodType<CommercePaymentsPaymentRetryResult>;
+export let CommercePaymentsPaymentStatusSchema: z.ZodType<CommercePaymentsPaymentStatus>;
+export let CommercePaymentsPaymentsControllerCancelPaymentInputSchema: z.ZodType<CommercePaymentsPaymentsControllerCancelPaymentInput>;
+export let CommercePaymentsPaymentsControllerProcessPaymentInputSchema: z.ZodType<CommercePaymentsPaymentsControllerProcessPaymentInput>;
+export let CommercePaymentsPaymentsControllerRefundInputSchema: z.ZodType<CommercePaymentsPaymentsControllerRefundInput>;
+export let CommercePaymentsProcessRefundResultSchema: z.ZodType<CommercePaymentsProcessRefundResult>;
+export let CommercePaymentsTaxBreakdownSchema: z.ZodType<CommercePaymentsTaxBreakdown>;
+export let CommercePaymentsTaxCalculationResultSchema: z.ZodType<CommercePaymentsTaxCalculationResult>;
+export let CommercePaymentsTaxExemptionValidationResultSchema: z.ZodType<CommercePaymentsTaxExemptionValidationResult>;
+export let CommercePaymentsTaxJurisdictionSchema: z.ZodType<CommercePaymentsTaxJurisdiction>;
+export let CommercePaymentsTaxJurisdictionTypeSchema: z.ZodType<CommercePaymentsTaxJurisdictionType>;
+export let CommercePaymentsTaxRateSchema: z.ZodType<CommercePaymentsTaxRate>;
+export let CommercePaymentsTaxRuleSchema: z.ZodType<CommercePaymentsTaxRule>;
+export let CommercePaymentsTaxRuleTypeSchema: z.ZodType<CommercePaymentsTaxRuleType>;
+export let CommercePaymentsTaxTypeSchema: z.ZodType<CommercePaymentsTaxType>;
+export let CommercePaymentsTransactionStatusSchema: z.ZodType<CommercePaymentsTransactionStatus>;
+export let CommercePaymentsTransferFundsInputSchema: z.ZodType<CommercePaymentsTransferFundsInput>;
+export let CommercePaymentsTransferResultSchema: z.ZodType<CommercePaymentsTransferResult>;
+export let CommercePaymentsUserWalletSchema: z.ZodType<CommercePaymentsUserWallet>;
+export let CommercePaymentsValidateTaxExemptionInputSchema: z.ZodType<CommercePaymentsValidateTaxExemptionInput>;
+export let CommercePaymentsWalletTransactionSchema: z.ZodType<CommercePaymentsWalletTransaction>;
+export let CommercePaymentsWalletTransactionTypeSchema: z.ZodType<CommercePaymentsWalletTransactionType>;
+export let CommerceProductsAppliedPromoCodeSchema: z.ZodType<CommerceProductsAppliedPromoCode>;
+export let CommerceProductsApplyPromoCodesInputSchema: z.ZodType<CommerceProductsApplyPromoCodesInput>;
+export let CommerceProductsBatchCreateProductsInputSchema: z.ZodType<CommerceProductsBatchCreateProductsInput>;
+export let CommerceProductsBatchProductCreateItemSchema: z.ZodType<CommerceProductsBatchProductCreateItem>;
+export let CommerceProductsCheckMultipleAccessInputSchema: z.ZodType<CommerceProductsCheckMultipleAccessInput>;
+export let CommerceProductsCreateProductInputSchema: z.ZodType<CommerceProductsCreateProductInput>;
+export let CommerceProductsCreatePromoCodeInputSchema: z.ZodType<CommerceProductsCreatePromoCodeInput>;
+export let CommerceProductsEntitlementCheckResultSchema: z.ZodType<CommerceProductsEntitlementCheckResult>;
+export let CommerceProductsEntitlementInfoSchema: z.ZodType<CommerceProductsEntitlementInfo>;
+export let CommerceProductsGrantEntitlementInputSchema: z.ZodType<CommerceProductsGrantEntitlementInput>;
+export let CommerceProductsPagedResultSchema: z.ZodType<CommerceProductsPagedResult>;
+export let CommerceProductsPatchProductInputSchema: z.ZodType<CommerceProductsPatchProductInput>;
+export let CommerceProductsPatchPromoCodeInputSchema: z.ZodType<CommerceProductsPatchPromoCodeInput>;
+export let CommerceProductsProductAcquisitionTypeSchema: z.ZodType<CommerceProductsProductAcquisitionType>;
+export let CommerceProductsProductSchema: z.ZodType<CommerceProductsProduct>;
+export let CommerceProductsProductPricingSchema: z.ZodType<CommerceProductsProductPricing>;
+export let CommerceProductsProductTypeSchema: z.ZodType<CommerceProductsProductType>;
+export let CommerceProductsPromoCodeApplicationResultSchema: z.ZodType<CommerceProductsPromoCodeApplicationResult>;
+export let CommerceProductsPromoCodeSchema: z.ZodType<CommerceProductsPromoCode>;
+export let CommerceProductsPromoCodeTypeSchema: z.ZodType<CommerceProductsPromoCodeType>;
+export let CommerceProductsPromoCodeUsageSchema: z.ZodType<CommerceProductsPromoCodeUsage>;
+export let CommerceProductsPromoCodeValidationResultSchema: z.ZodType<CommerceProductsPromoCodeValidationResult>;
+export let CommerceProductsRejectedPromoCodeSchema: z.ZodType<CommerceProductsRejectedPromoCode>;
+export let CommerceProductsRevokeEntitlementInputSchema: z.ZodType<CommerceProductsRevokeEntitlementInput>;
+export let CommerceProductsUpdateProductInputSchema: z.ZodType<CommerceProductsUpdateProductInput>;
+export let CommerceProductsUpdatePromoCodeInputSchema: z.ZodType<CommerceProductsUpdatePromoCodeInput>;
+export let CommerceProductsValidatePromoCodeInputSchema: z.ZodType<CommerceProductsValidatePromoCodeInput>;
+export let CommerceSubscriptionsBillingHistorySchema: z.ZodType<CommerceSubscriptionsBillingHistory>;
+export let CommerceSubscriptionsCancellationReasonSchema: z.ZodType<CommerceSubscriptionsCancellationReason>;
+export let CommerceSubscriptionsSubscriptionSchema: z.ZodType<CommerceSubscriptionsSubscription>;
+export let CommerceSubscriptionsSubscriptionDowngradeResultSchema: z.ZodType<CommerceSubscriptionsSubscriptionDowngradeResult>;
+export let CommerceSubscriptionsSubscriptionPlanSchema: z.ZodType<CommerceSubscriptionsSubscriptionPlan>;
+export let CommerceSubscriptionsSubscriptionPlansControllerCloneSubscriptionPlanInputSchema: z.ZodType<CommerceSubscriptionsSubscriptionPlansControllerCloneSubscriptionPlanInput>;
+export let CommerceSubscriptionsSubscriptionPlansControllerComparePlansInputSchema: z.ZodType<CommerceSubscriptionsSubscriptionPlansControllerComparePlansInput>;
+export let CommerceSubscriptionsSubscriptionPlansControllerCreatePlanInputSchema: z.ZodType<CommerceSubscriptionsSubscriptionPlansControllerCreatePlanInput>;
+export let CommerceSubscriptionsSubscriptionPlansControllerPutSubscriptionPlanInputSchema: z.ZodType<CommerceSubscriptionsSubscriptionPlansControllerPutSubscriptionPlanInput>;
+export let CommerceSubscriptionsSubscriptionPlansControllerSetExternalIdInputSchema: z.ZodType<CommerceSubscriptionsSubscriptionPlansControllerSetExternalIdInput>;
+export let CommerceSubscriptionsSubscriptionPlansControllerSetFeaturedInputSchema: z.ZodType<CommerceSubscriptionsSubscriptionPlansControllerSetFeaturedInput>;
+export let CommerceSubscriptionsSubscriptionPlansControllerUpdateDetailsInputSchema: z.ZodType<CommerceSubscriptionsSubscriptionPlansControllerUpdateDetailsInput>;
+export let CommerceSubscriptionsSubscriptionPlansControllerUpdateFeaturesInputSchema: z.ZodType<CommerceSubscriptionsSubscriptionPlansControllerUpdateFeaturesInput>;
+export let CommerceSubscriptionsSubscriptionPlansControllerUpdateLimitsInputSchema: z.ZodType<CommerceSubscriptionsSubscriptionPlansControllerUpdateLimitsInput>;
+export let CommerceSubscriptionsSubscriptionPlansControllerUpdatePricingInputSchema: z.ZodType<CommerceSubscriptionsSubscriptionPlansControllerUpdatePricingInput>;
+export let CommerceSubscriptionsSubscriptionPlansControllerValidateLimitsInputSchema: z.ZodType<CommerceSubscriptionsSubscriptionPlansControllerValidateLimitsInput>;
+export let CommerceSubscriptionsSubscriptionStatusSchema: z.ZodType<CommerceSubscriptionsSubscriptionStatus>;
+export let CommerceSubscriptionsSubscriptionUpgradeResultSchema: z.ZodType<CommerceSubscriptionsSubscriptionUpgradeResult>;
+export let CommerceSubscriptionsSubscriptionUsageSchema: z.ZodType<CommerceSubscriptionsSubscriptionUsage>;
+export let CommerceSubscriptionsSubscriptionsControllerAutoRenewInputSchema: z.ZodType<CommerceSubscriptionsSubscriptionsControllerAutoRenewInput>;
+export let CommerceSubscriptionsSubscriptionsControllerCancelInputSchema: z.ZodType<CommerceSubscriptionsSubscriptionsControllerCancelInput>;
+export let CommerceSubscriptionsSubscriptionsControllerCreateSubscriptionInputSchema: z.ZodType<CommerceSubscriptionsSubscriptionsControllerCreateSubscriptionInput>;
+export let CommerceSubscriptionsSubscriptionsControllerDowngradeInputSchema: z.ZodType<CommerceSubscriptionsSubscriptionsControllerDowngradeInput>;
+export let CommerceSubscriptionsSubscriptionsControllerEndTrialInputSchema: z.ZodType<CommerceSubscriptionsSubscriptionsControllerEndTrialInput>;
+export let CommerceSubscriptionsSubscriptionsControllerExternalIdsInputSchema: z.ZodType<CommerceSubscriptionsSubscriptionsControllerExternalIdsInput>;
+export let CommerceSubscriptionsSubscriptionsControllerPatchSubscriptionInputSchema: z.ZodType<CommerceSubscriptionsSubscriptionsControllerPatchSubscriptionInput>;
+export let CommerceSubscriptionsSubscriptionsControllerPauseSubscriptionInputSchema: z.ZodType<CommerceSubscriptionsSubscriptionsControllerPauseSubscriptionInput>;
+export let CommerceSubscriptionsSubscriptionsControllerPutSubscriptionInputSchema: z.ZodType<CommerceSubscriptionsSubscriptionsControllerPutSubscriptionInput>;
+export let CommerceSubscriptionsSubscriptionsControllerStartTrialInputSchema: z.ZodType<CommerceSubscriptionsSubscriptionsControllerStartTrialInput>;
+export let CommerceSubscriptionsSubscriptionsControllerSuspendInputSchema: z.ZodType<CommerceSubscriptionsSubscriptionsControllerSuspendInput>;
+export let CommerceSubscriptionsSubscriptionsControllerUpgradeInputSchema: z.ZodType<CommerceSubscriptionsSubscriptionsControllerUpgradeInput>;
+export let Fido2NetLibAssertionOptionsSchema: z.ZodType<Fido2NetLibAssertionOptions>;
+export let Fido2NetLibAuthenticatorSelectionSchema: z.ZodType<Fido2NetLibAuthenticatorSelection>;
+export let Fido2NetLibCredentialCreateOptionsSchema: z.ZodType<Fido2NetLibCredentialCreateOptions>;
+export let Fido2NetLibFido2UserSchema: z.ZodType<Fido2NetLibFido2User>;
+export let Fido2NetLibPubKeyCredParamSchema: z.ZodType<Fido2NetLibPubKeyCredParam>;
+export let Fido2NetLibPublicKeyCredentialRpEntitySchema: z.ZodType<Fido2NetLibPublicKeyCredentialRpEntity>;
+export let IdentityAuthenticationApiKeySchema: z.ZodType<IdentityAuthenticationApiKey>;
+export let IdentityAuthenticationBackupCodesOutputSchema: z.ZodType<IdentityAuthenticationBackupCodesOutput>;
+export let IdentityAuthenticationBackupCodesStatusOutputSchema: z.ZodType<IdentityAuthenticationBackupCodesStatusOutput>;
+export let IdentityAuthenticationBeginWebAuthnAuthenticationInputSchema: z.ZodType<IdentityAuthenticationBeginWebAuthnAuthenticationInput>;
+export let IdentityAuthenticationBeginWebAuthnRegistrationInputSchema: z.ZodType<IdentityAuthenticationBeginWebAuthnRegistrationInput>;
+export let IdentityAuthenticationCleanupKeysInputSchema: z.ZodType<IdentityAuthenticationCleanupKeysInput>;
+export let IdentityAuthenticationCleanupResultSchema: z.ZodType<IdentityAuthenticationCleanupResult>;
+export let IdentityAuthenticationClientCredentialsTokenOutputSchema: z.ZodType<IdentityAuthenticationClientCredentialsTokenOutput>;
+export let IdentityAuthenticationCompleteMfaSetupInputSchema: z.ZodType<IdentityAuthenticationCompleteMfaSetupInput>;
+export let IdentityAuthenticationCompletePasswordResetInputSchema: z.ZodType<IdentityAuthenticationCompletePasswordResetInput>;
+export let IdentityAuthenticationCompleteWebAuthnAuthenticationInputSchema: z.ZodType<IdentityAuthenticationCompleteWebAuthnAuthenticationInput>;
+export let IdentityAuthenticationCompleteWebAuthnRegistrationInputSchema: z.ZodType<IdentityAuthenticationCompleteWebAuthnRegistrationInput>;
+export let IdentityAuthenticationCreateApiKeyCommandSchema: z.ZodType<IdentityAuthenticationCreateApiKeyCommand>;
+export let IdentityAuthenticationCreateApiKeyOutputSchema: z.ZodType<IdentityAuthenticationCreateApiKeyOutput>;
+export let IdentityAuthenticationCreateServiceAccountInputSchema: z.ZodType<IdentityAuthenticationCreateServiceAccountInput>;
+export let IdentityAuthenticationDeviceInfoSchema: z.ZodType<IdentityAuthenticationDeviceInfo>;
+export let IdentityAuthenticationDisableMfaInputSchema: z.ZodType<IdentityAuthenticationDisableMfaInput>;
+export let IdentityAuthenticationEmailVerificationOutputSchema: z.ZodType<IdentityAuthenticationEmailVerificationOutput>;
+export let IdentityAuthenticationEmailVerificationResultSchema: z.ZodType<IdentityAuthenticationEmailVerificationResult>;
+export let IdentityAuthenticationGitHubSignInOutputSchema: z.ZodType<IdentityAuthenticationGitHubSignInOutput>;
+export let IdentityAuthenticationGoogleIdTokenInputSchema: z.ZodType<IdentityAuthenticationGoogleIdTokenInput>;
+export let IdentityAuthenticationJwtKeyInfoSchema: z.ZodType<IdentityAuthenticationJwtKeyInfo>;
+export let IdentityAuthenticationLocalSignInInputSchema: z.ZodType<IdentityAuthenticationLocalSignInInput>;
+export let IdentityAuthenticationLocalSignUpInputSchema: z.ZodType<IdentityAuthenticationLocalSignUpInput>;
+export let IdentityAuthenticationLocationInfoSchema: z.ZodType<IdentityAuthenticationLocationInfo>;
+export let IdentityAuthenticationLockServiceAccountInputSchema: z.ZodType<IdentityAuthenticationLockServiceAccountInput>;
+export let IdentityAuthenticationMfaConfigurationOutputSchema: z.ZodType<IdentityAuthenticationMfaConfigurationOutput>;
+export let IdentityAuthenticationMfaMethodSchema: z.ZodType<IdentityAuthenticationMfaMethod>;
+export let IdentityAuthenticationMfaMethodInfoSchema: z.ZodType<IdentityAuthenticationMfaMethodInfo>;
+export let IdentityAuthenticationMfaMethodsOutputSchema: z.ZodType<IdentityAuthenticationMfaMethodsOutput>;
+export let IdentityAuthenticationMfaSetupOutputSchema: z.ZodType<IdentityAuthenticationMfaSetupOutput>;
+export let IdentityAuthenticationMfaSuccessOutputSchema: z.ZodType<IdentityAuthenticationMfaSuccessOutput>;
+export let IdentityAuthenticationMfaVerificationOutputSchema: z.ZodType<IdentityAuthenticationMfaVerificationOutput>;
+export let IdentityAuthenticationOAuth2ErrorOutputSchema: z.ZodType<IdentityAuthenticationOAuth2ErrorOutput>;
+export let IdentityAuthenticationPasswordChangeInputSchema: z.ZodType<IdentityAuthenticationPasswordChangeInput>;
+export let IdentityAuthenticationPasswordChangeResultSchema: z.ZodType<IdentityAuthenticationPasswordChangeResult>;
+export let IdentityAuthenticationPasswordResetRequestResultSchema: z.ZodType<IdentityAuthenticationPasswordResetRequestResult>;
+export let IdentityAuthenticationPasswordResetResultSchema: z.ZodType<IdentityAuthenticationPasswordResetResult>;
+export let IdentityAuthenticationPatchServiceAccountInputSchema: z.ZodType<IdentityAuthenticationPatchServiceAccountInput>;
+export let IdentityAuthenticationRefreshTokenInputSchema: z.ZodType<IdentityAuthenticationRefreshTokenInput>;
+export let IdentityAuthenticationRequestPasswordResetInputSchema: z.ZodType<IdentityAuthenticationRequestPasswordResetInput>;
+export let IdentityAuthenticationRevokeApiKeyInputSchema: z.ZodType<IdentityAuthenticationRevokeApiKeyInput>;
+export let IdentityAuthenticationRevokeRefreshTokenInputSchema: z.ZodType<IdentityAuthenticationRevokeRefreshTokenInput>;
+export let IdentityAuthenticationRiskLevelSchema: z.ZodType<IdentityAuthenticationRiskLevel>;
+export let IdentityAuthenticationRotateKeyInputSchema: z.ZodType<IdentityAuthenticationRotateKeyInput>;
+export let IdentityAuthenticationSecretRotationOutputSchema: z.ZodType<IdentityAuthenticationSecretRotationOutput>;
+export let IdentityAuthenticationSendEmailVerificationInputSchema: z.ZodType<IdentityAuthenticationSendEmailVerificationInput>;
+export let IdentityAuthenticationServiceAccountAuditEntrySchema: z.ZodType<IdentityAuthenticationServiceAccountAuditEntry>;
+export let IdentityAuthenticationServiceAccountAuditLogOutputSchema: z.ZodType<IdentityAuthenticationServiceAccountAuditLogOutput>;
+export let IdentityAuthenticationServiceAccountCreatedOutputSchema: z.ZodType<IdentityAuthenticationServiceAccountCreatedOutput>;
+export let IdentityAuthenticationServiceAccountOutputSchema: z.ZodType<IdentityAuthenticationServiceAccountOutput>;
+export let IdentityAuthenticationSessionOutputSchema: z.ZodType<IdentityAuthenticationSessionOutput>;
+export let IdentityAuthenticationSessionSecurityAnalysisSchema: z.ZodType<IdentityAuthenticationSessionSecurityAnalysis>;
+export let IdentityAuthenticationSessionSuccessOutputSchema: z.ZodType<IdentityAuthenticationSessionSuccessOutput>;
+export let IdentityAuthenticationSessionTerminationOutputSchema: z.ZodType<IdentityAuthenticationSessionTerminationOutput>;
+export let IdentityAuthenticationSignInOutputSchema: z.ZodType<IdentityAuthenticationSignInOutput>;
+export let IdentityAuthenticationSmsMfaSetupInputSchema: z.ZodType<IdentityAuthenticationSmsMfaSetupInput>;
+export let IdentityAuthenticationSmsMfaSetupOutputSchema: z.ZodType<IdentityAuthenticationSmsMfaSetupOutput>;
+export let IdentityAuthenticationTenantInfoSchema: z.ZodType<IdentityAuthenticationTenantInfo>;
+export let IdentityAuthenticationTrustDeviceInputSchema: z.ZodType<IdentityAuthenticationTrustDeviceInput>;
+export let IdentityAuthenticationTrustedDeviceOutputSchema: z.ZodType<IdentityAuthenticationTrustedDeviceOutput>;
+export let IdentityAuthenticationUpdateCredentialNameInputSchema: z.ZodType<IdentityAuthenticationUpdateCredentialNameInput>;
+export let IdentityAuthenticationUpdateScopesInputSchema: z.ZodType<IdentityAuthenticationUpdateScopesInput>;
+export let IdentityAuthenticationUserSchema: z.ZodType<IdentityAuthenticationUser>;
+export let IdentityAuthenticationVerifyEmailInputSchema: z.ZodType<IdentityAuthenticationVerifyEmailInput>;
+export let IdentityAuthenticationVerifyMfaInputSchema: z.ZodType<IdentityAuthenticationVerifyMfaInput>;
+export let IdentityAuthenticationWeb3ChallengeInputSchema: z.ZodType<IdentityAuthenticationWeb3ChallengeInput>;
+export let IdentityAuthenticationWeb3ChallengeOutputSchema: z.ZodType<IdentityAuthenticationWeb3ChallengeOutput>;
+export let IdentityAuthenticationWeb3VerifyInputSchema: z.ZodType<IdentityAuthenticationWeb3VerifyInput>;
+export let IdentityAuthenticationWebAuthnAuthenticationOptionsResultSchema: z.ZodType<IdentityAuthenticationWebAuthnAuthenticationOptionsResult>;
+export let IdentityAuthenticationWebAuthnAuthenticationResultSchema: z.ZodType<IdentityAuthenticationWebAuthnAuthenticationResult>;
+export let IdentityAuthenticationWebAuthnAuthenticatorTypeSchema: z.ZodType<IdentityAuthenticationWebAuthnAuthenticatorType>;
+export let IdentityAuthenticationWebAuthnCredentialInfoSchema: z.ZodType<IdentityAuthenticationWebAuthnCredentialInfo>;
+export let IdentityAuthenticationWebAuthnCredentialVerifyResultSchema: z.ZodType<IdentityAuthenticationWebAuthnCredentialVerifyResult>;
+export let IdentityAuthenticationWebAuthnRegistrationOptionsResultSchema: z.ZodType<IdentityAuthenticationWebAuthnRegistrationOptionsResult>;
+export let IdentityAuthenticationWebAuthnRegistrationResultSchema: z.ZodType<IdentityAuthenticationWebAuthnRegistrationResult>;
+export let IdentityAuthenticationWebAuthnStatusOutputSchema: z.ZodType<IdentityAuthenticationWebAuthnStatusOutput>;
+export let IdentityTenantsArchiveInputSchema: z.ZodType<IdentityTenantsArchiveInput>;
+export let IdentityTenantsCreateTenantInputSchema: z.ZodType<IdentityTenantsCreateTenantInput>;
+export let IdentityTenantsGetUserMembershipsOutputSchema: z.ZodType<IdentityTenantsGetUserMembershipsOutput>;
+export let IdentityTenantsMembershipCountOutputSchema: z.ZodType<IdentityTenantsMembershipCountOutput>;
+export let IdentityTenantsRecoverInputSchema: z.ZodType<IdentityTenantsRecoverInput>;
+export let IdentityTenantsReplaceTenantMetadataInputSchema: z.ZodType<IdentityTenantsReplaceTenantMetadataInput>;
+export let IdentityTenantsReplaceTenantSettingsInputSchema: z.ZodType<IdentityTenantsReplaceTenantSettingsInput>;
+export let IdentityTenantsSlugValidationSchema: z.ZodType<IdentityTenantsSlugValidation>;
+export let IdentityTenantsTenantSchema: z.ZodType<IdentityTenantsTenant>;
+export let IdentityTenantsTenantAddressSchema: z.ZodType<IdentityTenantsTenantAddress>;
+export let IdentityTenantsTenantAuditLogEntrySchema: z.ZodType<IdentityTenantsTenantAuditLogEntry>;
+export let IdentityTenantsTenantBrandingSchema: z.ZodType<IdentityTenantsTenantBranding>;
+export let IdentityTenantsTenantBusinessInfoSchema: z.ZodType<IdentityTenantsTenantBusinessInfo>;
+export let IdentityTenantsTenantBusinessRulesSchema: z.ZodType<IdentityTenantsTenantBusinessRules>;
+export let IdentityTenantsTenantContactInfoSchema: z.ZodType<IdentityTenantsTenantContactInfo>;
+export let IdentityTenantsTenantCurrencySettingsSchema: z.ZodType<IdentityTenantsTenantCurrencySettings>;
+export let IdentityTenantsTenantDomainSchema: z.ZodType<IdentityTenantsTenantDomain>;
+export let IdentityTenantsTenantIntegrationSettingsSchema: z.ZodType<IdentityTenantsTenantIntegrationSettings>;
+export let IdentityTenantsTenantMemberSchema: z.ZodType<IdentityTenantsTenantMember>;
+export let IdentityTenantsTenantMetadataSchema: z.ZodType<IdentityTenantsTenantMetadata>;
+export let IdentityTenantsTenantSecuritySettingsSchema: z.ZodType<IdentityTenantsTenantSecuritySettings>;
+export let IdentityTenantsTenantSettingsSchema: z.ZodType<IdentityTenantsTenantSettings>;
+export let IdentityTenantsTenantStatisticsSchema: z.ZodType<IdentityTenantsTenantStatistics>;
+export let IdentityTenantsTenantSystemConfigurationSchema: z.ZodType<IdentityTenantsTenantSystemConfiguration>;
+export let IdentityTenantsTenantSystemLimitsSchema: z.ZodType<IdentityTenantsTenantSystemLimits>;
+export let IdentityTenantsTenantUiSettingsSchema: z.ZodType<IdentityTenantsTenantUiSettings>;
+export let IdentityTenantsTenantValidationErrorSchema: z.ZodType<IdentityTenantsTenantValidationError>;
+export let IdentityTenantsTenantValidationOutputSchema: z.ZodType<IdentityTenantsTenantValidationOutput>;
+export let IdentityTenantsTenantValidationWarningSchema: z.ZodType<IdentityTenantsTenantValidationWarning>;
+export let IdentityTenantsUpdateTenantAddressInputSchema: z.ZodType<IdentityTenantsUpdateTenantAddressInput>;
+export let IdentityTenantsUpdateTenantBrandingInputSchema: z.ZodType<IdentityTenantsUpdateTenantBrandingInput>;
+export let IdentityTenantsUpdateTenantBusinessInfoInputSchema: z.ZodType<IdentityTenantsUpdateTenantBusinessInfoInput>;
+export let IdentityTenantsUpdateTenantBusinessRulesInputSchema: z.ZodType<IdentityTenantsUpdateTenantBusinessRulesInput>;
+export let IdentityTenantsUpdateTenantContactInfoInputSchema: z.ZodType<IdentityTenantsUpdateTenantContactInfoInput>;
+export let IdentityTenantsUpdateTenantCurrencySettingsInputSchema: z.ZodType<IdentityTenantsUpdateTenantCurrencySettingsInput>;
+export let IdentityTenantsUpdateTenantIntegrationSettingsInputSchema: z.ZodType<IdentityTenantsUpdateTenantIntegrationSettingsInput>;
+export let IdentityTenantsUpdateTenantMetadataInputSchema: z.ZodType<IdentityTenantsUpdateTenantMetadataInput>;
+export let IdentityTenantsUpdateTenantInputSchema: z.ZodType<IdentityTenantsUpdateTenantInput>;
+export let IdentityTenantsUpdateTenantSecuritySettingsInputSchema: z.ZodType<IdentityTenantsUpdateTenantSecuritySettingsInput>;
+export let IdentityTenantsUpdateTenantSettingsInputSchema: z.ZodType<IdentityTenantsUpdateTenantSettingsInput>;
+export let IdentityTenantsUpdateTenantSystemConfigurationInputSchema: z.ZodType<IdentityTenantsUpdateTenantSystemConfigurationInput>;
+export let IdentityTenantsUpdateTenantSystemLimitsInputSchema: z.ZodType<IdentityTenantsUpdateTenantSystemLimitsInput>;
+export let IdentityTenantsUpdateTenantTagsInputSchema: z.ZodType<IdentityTenantsUpdateTenantTagsInput>;
+export let IdentityTenantsUpdateTenantUiSettingsInputSchema: z.ZodType<IdentityTenantsUpdateTenantUiSettingsInput>;
+export let IdentityTenantsUsageTrackingSchema: z.ZodType<IdentityTenantsUsageTracking>;
+export let IdentityTenantsUserMembershipSchema: z.ZodType<IdentityTenantsUserMembership>;
+export let IdentityTenantsValidateTenantInputSchema: z.ZodType<IdentityTenantsValidateTenantInput>;
+export let IdentityUsersBulkActivateUsersInputSchema: z.ZodType<IdentityUsersBulkActivateUsersInput>;
+export let IdentityUsersBulkActivateUsersOutputSchema: z.ZodType<IdentityUsersBulkActivateUsersOutput>;
+export let IdentityUsersBulkCreateUsersInputSchema: z.ZodType<IdentityUsersBulkCreateUsersInput>;
+export let IdentityUsersBulkCreateUsersOutputSchema: z.ZodType<IdentityUsersBulkCreateUsersOutput>;
+export let IdentityUsersBulkDeactivateUsersInputSchema: z.ZodType<IdentityUsersBulkDeactivateUsersInput>;
+export let IdentityUsersBulkDeactivateUsersOutputSchema: z.ZodType<IdentityUsersBulkDeactivateUsersOutput>;
+export let IdentityUsersBulkDeleteUsersInputSchema: z.ZodType<IdentityUsersBulkDeleteUsersInput>;
+export let IdentityUsersBulkNotificationInputSchema: z.ZodType<IdentityUsersBulkNotificationInput>;
+export let IdentityUsersBulkPurgeUsersInputSchema: z.ZodType<IdentityUsersBulkPurgeUsersInput>;
+export let IdentityUsersBulkRestoreUsersInputSchema: z.ZodType<IdentityUsersBulkRestoreUsersInput>;
+export let IdentityUsersBulkRestoreUsersOutputSchema: z.ZodType<IdentityUsersBulkRestoreUsersOutput>;
+export let IdentityUsersBulkSuspendUsersInputSchema: z.ZodType<IdentityUsersBulkSuspendUsersInput>;
+export let IdentityUsersBulkSuspendUsersOutputSchema: z.ZodType<IdentityUsersBulkSuspendUsersOutput>;
+export let IdentityUsersBulkUnsuspendUsersInputSchema: z.ZodType<IdentityUsersBulkUnsuspendUsersInput>;
+export let IdentityUsersBulkUnsuspendUsersOutputSchema: z.ZodType<IdentityUsersBulkUnsuspendUsersOutput>;
+export let IdentityUsersBulkUpdateUsersInputSchema: z.ZodType<IdentityUsersBulkUpdateUsersInput>;
+export let IdentityUsersCreateUserInputSchema: z.ZodType<IdentityUsersCreateUserInput>;
+export let IdentityUsersCreateUserRequestItemSchema: z.ZodType<IdentityUsersCreateUserRequestItem>;
+export let IdentityUsersNotificationActionSchema: z.ZodType<IdentityUsersNotificationAction>;
+export let IdentityUsersNotificationFilterCriteriaSchema: z.ZodType<IdentityUsersNotificationFilterCriteria>;
+export let IdentityUsersPurgeStrategySchema: z.ZodType<IdentityUsersPurgeStrategy>;
+export let IdentityUsersReplaceUserAccessibilityPreferencesInputSchema: z.ZodType<IdentityUsersReplaceUserAccessibilityPreferencesInput>;
+export let IdentityUsersReplaceUserLocalizationPreferencesInputSchema: z.ZodType<IdentityUsersReplaceUserLocalizationPreferencesInput>;
+export let IdentityUsersReplaceUserMetadataInputSchema: z.ZodType<IdentityUsersReplaceUserMetadataInput>;
+export let IdentityUsersReplaceUserNotificationPreferencesInputSchema: z.ZodType<IdentityUsersReplaceUserNotificationPreferencesInput>;
+export let IdentityUsersReplaceUserPreferencesInputSchema: z.ZodType<IdentityUsersReplaceUserPreferencesInput>;
+export let IdentityUsersReplaceUserPrivacyPreferencesInputSchema: z.ZodType<IdentityUsersReplaceUserPrivacyPreferencesInput>;
+export let IdentityUsersReplaceUserProfileInputSchema: z.ZodType<IdentityUsersReplaceUserProfileInput>;
+export let IdentityUsersUpdateUserAccessibilityPreferencesInputSchema: z.ZodType<IdentityUsersUpdateUserAccessibilityPreferencesInput>;
+export let IdentityUsersUpdateUserLocalizationPreferencesInputSchema: z.ZodType<IdentityUsersUpdateUserLocalizationPreferencesInput>;
+export let IdentityUsersUpdateUserMetadataInputSchema: z.ZodType<IdentityUsersUpdateUserMetadataInput>;
+export let IdentityUsersUpdateUserNotificationPreferencesInputSchema: z.ZodType<IdentityUsersUpdateUserNotificationPreferencesInput>;
+export let IdentityUsersUpdateUserPreferencesInputSchema: z.ZodType<IdentityUsersUpdateUserPreferencesInput>;
+export let IdentityUsersUpdateUserPrivacyPreferencesInputSchema: z.ZodType<IdentityUsersUpdateUserPrivacyPreferencesInput>;
+export let IdentityUsersUpdateUserProfileInputSchema: z.ZodType<IdentityUsersUpdateUserProfileInput>;
+export let IdentityUsersUpdateUserInputSchema: z.ZodType<IdentityUsersUpdateUserInput>;
+export let IdentityUsersUpdateUserRequestItemSchema: z.ZodType<IdentityUsersUpdateUserRequestItem>;
+export let IdentityUsersUserAccessibilityPreferencesSchema: z.ZodType<IdentityUsersUserAccessibilityPreferences>;
+export let IdentityUsersUserSchema: z.ZodType<IdentityUsersUser>;
+export let IdentityUsersUserLocalizationPreferencesSchema: z.ZodType<IdentityUsersUserLocalizationPreferences>;
+export let IdentityUsersUserMetadataSchema: z.ZodType<IdentityUsersUserMetadata>;
+export let IdentityUsersUserNotificationDetailSchema: z.ZodType<IdentityUsersUserNotificationDetail>;
+export let IdentityUsersUserNotificationSchema: z.ZodType<IdentityUsersUserNotification>;
+export let IdentityUsersUserNotificationPreferencesSchema: z.ZodType<IdentityUsersUserNotificationPreferences>;
+export let IdentityUsersUserPreferencesSchema: z.ZodType<IdentityUsersUserPreferences>;
+export let IdentityUsersUserPrivacyPreferencesSchema: z.ZodType<IdentityUsersUserPrivacyPreferences>;
+export let IdentityUsersUserProfileSchema: z.ZodType<IdentityUsersUserProfile>;
+export let ModelsPagedResultSchema: z.ZodType<ModelsPagedResult>;
+export let MvcProblemDetailsSchema: z.ZodType<MvcProblemDetails>;
+export let ObjectsAttestationConveyancePreferenceSchema: z.ZodType<ObjectsAttestationConveyancePreference>;
+export let ObjectsAttestationStatementFormatIdentifierSchema: z.ZodType<ObjectsAttestationStatementFormatIdentifier>;
+export let ObjectsAuthenticationExtensionsClientInputsSchema: z.ZodType<ObjectsAuthenticationExtensionsClientInputs>;
+export let ObjectsAuthenticationExtensionsLargeBlobInputsSchema: z.ZodType<ObjectsAuthenticationExtensionsLargeBlobInputs>;
+export let ObjectsAuthenticationExtensionsPRFInputsSchema: z.ZodType<ObjectsAuthenticationExtensionsPRFInputs>;
+export let ObjectsAuthenticationExtensionsPRFValuesSchema: z.ZodType<ObjectsAuthenticationExtensionsPRFValues>;
+export let ObjectsAuthenticatorAttachmentSchema: z.ZodType<ObjectsAuthenticatorAttachment>;
+export let ObjectsAuthenticatorTransportSchema: z.ZodType<ObjectsAuthenticatorTransport>;
+export let ObjectsCOSEAlgorithmSchema: z.ZodType<ObjectsCOSEAlgorithm>;
+export let ObjectsCredentialProtectionPolicySchema: z.ZodType<ObjectsCredentialProtectionPolicy>;
+export let ObjectsLargeBlobSupportSchema: z.ZodType<ObjectsLargeBlobSupport>;
+export let ObjectsPublicKeyCredentialDescriptorSchema: z.ZodType<ObjectsPublicKeyCredentialDescriptor>;
+export let ObjectsPublicKeyCredentialHintSchema: z.ZodType<ObjectsPublicKeyCredentialHint>;
+export let ObjectsPublicKeyCredentialTypeSchema: z.ZodType<ObjectsPublicKeyCredentialType>;
+export let ObjectsResidentKeyRequirementSchema: z.ZodType<ObjectsResidentKeyRequirement>;
+export let ObjectsUserVerificationRequirementSchema: z.ZodType<ObjectsUserVerificationRequirement>;
+export let ResourcesArchiveResourceUsageRecordsInputSchema: z.ZodType<ResourcesArchiveResourceUsageRecordsInput>;
+export let ResourcesCheckResourceQuotaInputSchema: z.ZodType<ResourcesCheckResourceQuotaInput>;
+export let ResourcesCleanupOrphanedResourcesInputSchema: z.ZodType<ResourcesCleanupOrphanedResourcesInput>;
+export let ResourcesEffectiveSettingOutputSchema: z.ZodType<ResourcesEffectiveSettingOutput>;
+export let ResourcesRecordTenantResourceUsageInputSchema: z.ZodType<ResourcesRecordTenantResourceUsageInput>;
+export let ResourcesRecordUserResourceUsageInputSchema: z.ZodType<ResourcesRecordUserResourceUsageInput>;
+export let ResourcesResourceMetadataSchema: z.ZodType<ResourcesResourceMetadata>;
+export let ResourcesResourceQuotaEnforcementResultSchema: z.ZodType<ResourcesResourceQuotaEnforcementResult>;
+export let ResourcesResourceQuotaPeriodSchema: z.ZodType<ResourcesResourceQuotaPeriod>;
+export let ResourcesResourceQuotaOutputSchema: z.ZodType<ResourcesResourceQuotaOutput>;
+export let ResourcesResourceSettingsSchema: z.ZodType<ResourcesResourceSettings>;
+export let ResourcesResourceUsageTypeSchema: z.ZodType<ResourcesResourceUsageType>;
+export let ResourcesSetQuotaInputSchema: z.ZodType<ResourcesSetQuotaInput>;
+export let ResourcesSetResourceMetadataInputSchema: z.ZodType<ResourcesSetResourceMetadataInput>;
+export let ResourcesSetResourceSettingsInputSchema: z.ZodType<ResourcesSetResourceSettingsInput>;
+export let ResourcesSetUserResourceSettingsInputSchema: z.ZodType<ResourcesSetUserResourceSettingsInput>;
+export let ResourcesToggleResourceQuotaInputSchema: z.ZodType<ResourcesToggleResourceQuotaInput>;
+export let ResourcesTrendGranularitySchema: z.ZodType<ResourcesTrendGranularity>;
+export let ResourcesUsageRecordSchema: z.ZodType<ResourcesUsageRecord>;
+export let ResourcesUsageTrendDataPointSchema: z.ZodType<ResourcesUsageTrendDataPoint>;
+export let ResourcesUsageTrendsResultSchema: z.ZodType<ResourcesUsageTrendsResult>;
+export let ValueObjectsBillingCycleSchema: z.ZodType<ValueObjectsBillingCycle>;
+export let ValueObjectsMoneySchema: z.ZodType<ValueObjectsMoney>;
+
+// Zod Schema Definitions
+/** Zod schema for CommercePaymentsTaxJurisdictionDto */
+CommercePaymentsTaxJurisdictionDtoSchema = z.object({
+  id: z.string().uuid().optional(),
+  code: z.string().nullable().optional(),
+  name: z.string().nullable().optional(),
+  country: z.string().nullable().optional(),
+  state: z.string().nullable().optional(),
+  taxType: z.string().nullable().optional(),
+  defaultRate: z.number().optional(),
+  isActive: z.boolean().optional(),
+});
+
+/** Zod schema for CommercePaymentsTaxRuleDto */
+CommercePaymentsTaxRuleDtoSchema = z.object({
+  id: z.string().uuid().optional(),
+  jurisdictionCode: z.string().nullable().optional(),
+  productCategory: z.string().nullable().optional(),
+  customerType: z.string().nullable().optional(),
+  rate: z.number().optional(),
+  effectiveFrom: z.string().datetime().optional(),
+  effectiveTo: z.string().datetime().nullable().optional(),
+  description: z.string().nullable().optional(),
+  isActive: z.boolean().optional(),
+});
+
+/** Zod schema for CommerceProductsPagedResult1GameGuildCommerceProductsPromoCodeDtoGameGuildCommerceProductsVersion100PagedResultPromoCodeDto */
+CommerceProductsPagedResult1GameGuildCommerceProductsPromoCodeDtoGameGuildCommerceProductsVersion100PagedResultPromoCodeDtoSchema = z.object({
+  items: z
+    .array(z.lazy(() => CommerceProductsPromoCodeSchema))
+    .nullable()
+    .optional(),
+  totalCount: z.number().int().optional(),
+  skip: z.number().int().optional(),
+  take: z.number().int().optional(),
+  hasMore: z.boolean().optional(),
+  currentPage: z.number().int().optional(),
+  totalPages: z.number().int().optional(),
+});
+
+/** Zod schema for IdentityTenantsTenantSettingsDto */
+IdentityTenantsTenantSettingsDtoSchema = z.object({
+  id: z.string().uuid().optional(),
+  systemConfiguration: z.lazy(() => IdentityTenantsTenantSystemConfigurationSchema).optional(),
+  featureFlags: z.record(z.string(), z.boolean()).nullable().optional(),
+  businessRules: z.lazy(() => IdentityTenantsTenantBusinessRulesSchema).optional(),
+  userInterfaceSettings: z.lazy(() => IdentityTenantsTenantUiSettingsSchema).optional(),
+  securitySettings: z.lazy(() => IdentityTenantsTenantSecuritySettingsSchema).optional(),
+  integrationSettings: z.lazy(() => IdentityTenantsTenantIntegrationSettingsSchema).optional(),
+  systemLimits: z.lazy(() => IdentityTenantsTenantSystemLimitsSchema).optional(),
+  createdAt: z.string().datetime().optional(),
+  updatedAt: z.string().datetime().optional(),
+});
+
+/** Zod schema for KeyValuePairStringAuthenticationExtensionsPRFValues */
+KeyValuePairStringAuthenticationExtensionsPRFValuesSchema = z.object({
+  key: z.string().nullable().optional(),
+  value: z.lazy(() => ObjectsAuthenticationExtensionsPRFValuesSchema).optional(),
+});
+
+/** Zod schema for ModelsPagedResult1GameGuildIdentityUsersUserDtoGameGuildIdentityUsersVersion100PagedResultUserDto */
+ModelsPagedResult1GameGuildIdentityUsersUserDtoGameGuildIdentityUsersVersion100PagedResultUserDtoSchema = z.object({
+  items: z
+    .array(z.lazy(() => IdentityUsersUserSchema))
+    .nullable()
+    .optional(),
+  totalCount: z.number().int().optional(),
+  skip: z.number().int().optional(),
+  take: z.number().int().optional(),
+  pageNumber: z.number().int().optional(),
+  totalPages: z.number().int().optional(),
+  hasNextPage: z.boolean().optional(),
+  hasPreviousPage: z.boolean().optional(),
+});
+
+/** Zod schema for ModelsPagedResult1GameGuildIdentityUsersUserNotificationDtoGameGuildIdentityUsersVersion100PagedResultUserNotificationDto */
+ModelsPagedResult1GameGuildIdentityUsersUserNotificationDtoGameGuildIdentityUsersVersion100PagedResultUserNotificationDtoSchema = z.object({
+  items: z
+    .array(z.lazy(() => IdentityUsersUserNotificationSchema))
+    .nullable()
+    .optional(),
+  totalCount: z.number().int().optional(),
+  skip: z.number().int().optional(),
+  take: z.number().int().optional(),
+  pageNumber: z.number().int().optional(),
+  totalPages: z.number().int().optional(),
+  hasNextPage: z.boolean().optional(),
+  hasPreviousPage: z.boolean().optional(),
+});
+
+/** Zod schema for ModelsPagedResult1GameGuildIdentityUsersUserProfileDtoGameGuildIdentityUsersVersion100PagedResultUserProfileDto */
+ModelsPagedResult1GameGuildIdentityUsersUserProfileDtoGameGuildIdentityUsersVersion100PagedResultUserProfileDtoSchema = z.object({
+  items: z
+    .array(z.lazy(() => IdentityUsersUserProfileSchema))
+    .nullable()
+    .optional(),
+  totalCount: z.number().int().optional(),
+  skip: z.number().int().optional(),
+  take: z.number().int().optional(),
+  pageNumber: z.number().int().optional(),
+  totalPages: z.number().int().optional(),
+  hasNextPage: z.boolean().optional(),
+  hasPreviousPage: z.boolean().optional(),
+});
+
+/** Zod schema for APIControllersApplicationDetails */
+APIControllersApplicationDetailsSchema = z.object({
+  name: z.string().nullable().optional(),
+  version: z.string().nullable().optional(),
+  informationalVersion: z.string().nullable().optional(),
+  description: z.string().nullable().optional(),
+});
+
+/** Zod schema for APIControllersApplicationInfoOutput */
+APIControllersApplicationInfoOutputSchema = z.object({
+  application: z.lazy(() => APIControllersApplicationDetailsSchema).optional(),
+  build: z.lazy(() => APIControllersBuildDetailsSchema).optional(),
+  runtime: z.lazy(() => APIControllersRuntimeDetailsSchema).optional(),
+  process: z.lazy(() => APIControllersProcessDetailsSchema).optional(),
+  timestamp: z.string().datetime().optional(),
+});
+
+/** Zod schema for APIControllersBuildDetails */
+APIControllersBuildDetailsSchema = z.object({
+  timestamp: z.string().datetime().nullable().optional(),
+  configuration: z.string().nullable().optional(),
+  framework: z.string().nullable().optional(),
+});
+
+/** Zod schema for APIControllersDependencyHealthItem */
+APIControllersDependencyHealthItemSchema = z.object({
+  name: z.string().nullable().optional(),
+  status: z.string().nullable().optional(),
+  duration: z.string().optional(),
+  description: z.string().nullable().optional(),
+  isHealthy: z.boolean().optional(),
+  tags: z.array(z.string()).nullable().optional(),
+  data: z.record(z.string(), z.string()).nullable().optional(),
+  exception: z.string().nullable().optional(),
+});
+
+/** Zod schema for APIControllersDependencyHealthOutput */
+APIControllersDependencyHealthOutputSchema = z.object({
+  status: z.string().nullable().optional(),
+  totalDuration: z.string().optional(),
+  timestamp: z.string().datetime().optional(),
+  healthyCount: z.number().int().optional(),
+  unhealthyCount: z.number().int().optional(),
+  dependencies: z
+    .array(z.lazy(() => APIControllersDependencyHealthItemSchema))
+    .nullable()
+    .optional(),
+  error: z.string().nullable().optional(),
+});
+
+/** Zod schema for APIControllersHealthinessOutput */
+APIControllersHealthinessOutputSchema = z.object({
+  status: z.string().nullable().optional(),
+  duration: z.string().optional(),
+  timestamp: z.string().datetime().optional(),
+  checks: z
+    .record(
+      z.string(),
+      z.lazy(() => APIControllersHealthinessResponseItemSchema),
+    )
+    .nullable()
+    .optional(),
+  error: z.string().nullable().optional(),
+});
+
+/** Zod schema for APIControllersHealthinessResponseItem */
+APIControllersHealthinessResponseItemSchema = z.object({
+  status: z.string().nullable().optional(),
+  duration: z.string().optional(),
+  description: z.string().nullable().optional(),
+  data: z.record(z.string(), z.record(z.string(), z.unknown())).nullable().optional(),
+});
+
+/** Zod schema for APIControllersLivenessOutput */
+APIControllersLivenessOutputSchema = z.object({
+  status: z.string().nullable().optional(),
+  alive: z.boolean().optional(),
+  timestamp: z.string().datetime().optional(),
+  uptime: z.string().optional(),
+  version: z.string().nullable().optional(),
+});
+
+/** Zod schema for APIControllersProcessDetails */
+APIControllersProcessDetailsSchema = z.object({
+  id: z.number().int().optional(),
+  startTime: z.string().datetime().optional(),
+  uptime: z.string().optional(),
+  workingSet: z.number().int().optional(),
+  threadCount: z.number().int().optional(),
+});
+
+/** Zod schema for APIControllersReadinessOutput */
+APIControllersReadinessOutputSchema = z.object({
+  status: z.string().nullable().optional(),
+  ready: z.boolean().optional(),
+  timestamp: z.string().datetime().optional(),
+  services: z.record(z.string(), z.boolean()).nullable().optional(),
+  error: z.string().nullable().optional(),
+});
+
+/** Zod schema for APIControllersRuntimeDetails */
+APIControllersRuntimeDetailsSchema = z.object({
+  dotNetVersion: z.string().nullable().optional(),
+  osDescription: z.string().nullable().optional(),
+  osArchitecture: z.string().nullable().optional(),
+  processArchitecture: z.string().nullable().optional(),
+  machineName: z.string().nullable().optional(),
+  processorCount: z.number().int().optional(),
+});
+
+/** Zod schema for CQRSIDomainEvent */
+CQRSIDomainEventSchema = z.object({
+  eventId: z.string().uuid().optional(),
+  occurredAt: z.string().datetime().optional(),
+  version: z.number().int().optional(),
+});
+
+/** Zod schema for CQRSPagedResult */
+CQRSPagedResultSchema = z.object({
+  items: z
+    .array(z.lazy(() => IdentityTenantsTenantSchema))
+    .nullable()
+    .optional(),
+  totalCount: z.number().int().optional(),
+  pageNumber: z.number().int().optional(),
+  pageSize: z.number().int().optional(),
+  totalPages: z.number().int().optional(),
+  hasPreviousPage: z.boolean().optional(),
+  hasNextPage: z.boolean().optional(),
+});
+
+/** Zod schema for CommercePaymentsAddFundsInput */
+CommercePaymentsAddFundsInputSchema = z.object({
+  userId: z.string().uuid(),
+  amount: z.number(),
+  description: z.string().nullable(),
+  referenceId: z.string().nullable().optional(),
+});
+
+/** Zod schema for CommercePaymentsCalculateTaxInput */
+CommercePaymentsCalculateTaxInputSchema = z.object({
+  jurisdictionCode: z.string().nullable(),
+  amount: z.number(),
+  currency: z.string().nullable(),
+  customerType: z.string().nullable(),
+  productCategory: z.string().nullable().optional(),
+  customerVatNumber: z.string().nullable().optional(),
+  isTaxInclusive: z.boolean().optional(),
+  transactionDate: z.string().datetime().nullable().optional(),
+  applicableExemptions: z.array(z.string()).nullable().optional(),
+});
+
+/** Zod schema for CommercePaymentsCreateTaxJurisdictionInput */
+CommercePaymentsCreateTaxJurisdictionInputSchema = z.object({
+  code: z.string().nullable().optional(),
+  name: z.string().nullable().optional(),
+  country: z.string().nullable().optional(),
+  state: z.string().nullable().optional(),
+  taxType: z.string().nullable().optional(),
+  defaultRate: z.number().optional(),
+});
+
+/** Zod schema for CommercePaymentsCreateTaxRuleInput */
+CommercePaymentsCreateTaxRuleInputSchema = z.object({
+  jurisdictionCode: z.string().nullable().optional(),
+  productCategory: z.string().nullable().optional(),
+  customerType: z.string().nullable().optional(),
+  rate: z.number().optional(),
+  effectiveFrom: z.string().datetime().optional(),
+  effectiveTo: z.string().datetime().nullable().optional(),
+  description: z.string().nullable().optional(),
+});
+
+/** Zod schema for CommercePaymentsCreateWalletInput */
+CommercePaymentsCreateWalletInputSchema = z.object({
+  userId: z.string().uuid(),
+  currency: z.string().nullable().optional(),
+});
+
+/** Zod schema for CommercePaymentsCustomerType */
+CommercePaymentsCustomerTypeSchema = z.union([z.literal(0), z.literal(1)]);
+
+/** Zod schema for CommercePaymentsDeductFundsInput */
+CommercePaymentsDeductFundsInputSchema = z.object({
+  userId: z.string().uuid(),
+  amount: z.number(),
+  description: z.string().nullable(),
+  referenceId: z.string().nullable().optional(),
+});
+
+/** Zod schema for CommercePaymentsLockWalletInput */
+CommercePaymentsLockWalletInputSchema = z.object({
+  reason: z.string().nullable(),
+});
+
+/** Zod schema for CommercePaymentsModelsFreezeWalletInput */
+CommercePaymentsModelsFreezeWalletInputSchema = z.object({
+  reason: z.string().nullable().optional(),
+});
+
+/** Zod schema for CommercePaymentsModelsPatchWalletInput */
+CommercePaymentsModelsPatchWalletInputSchema = z.object({
+  currency: z.string().nullable().optional(),
+  dailyLimit: z.number().nullable().optional(),
+  monthlyLimit: z.number().nullable().optional(),
+});
+
+/** Zod schema for CommercePaymentsPatchTaxJurisdictionInput */
+CommercePaymentsPatchTaxJurisdictionInputSchema = z.object({
+  name: z.string().nullable().optional(),
+  taxType: z.string().nullable().optional(),
+  defaultRate: z.number().nullable().optional(),
+  isActive: z.boolean().nullable().optional(),
+});
+
+/** Zod schema for CommercePaymentsPatchTaxRuleInput */
+CommercePaymentsPatchTaxRuleInputSchema = z.object({
+  rate: z.number().nullable().optional(),
+  effectiveFrom: z.string().datetime().nullable().optional(),
+  effectiveTo: z.string().datetime().nullable().optional(),
+  description: z.string().nullable().optional(),
+  isActive: z.boolean().nullable().optional(),
+});
+
+/** Zod schema for CommercePaymentsPaymentCancellationResult */
+CommercePaymentsPaymentCancellationResultSchema = z.object({
+  paymentId: z.string().uuid(),
+  cancellationReason: z.string().nullable(),
+  canceledAt: z.string().datetime(),
+  canceledBy: z.string().uuid().nullable().optional(),
+  success: z.boolean(),
+  errorMessage: z.string().nullable().optional(),
+  refundProcessed: z.boolean().optional(),
+  refundAmount: z.number().nullable().optional(),
+});
+
+/** Zod schema for CommercePaymentsPaymentResult */
+CommercePaymentsPaymentResultSchema = z.object({
+  success: z.boolean().optional(),
+  transactionId: z.string().nullable().optional(),
+  paymentId: z.string().nullable().optional(),
+  amount: z.lazy(() => ValueObjectsMoneySchema).optional(),
+  processedAt: z.string().datetime().nullable().optional(),
+  failureReason: z.string().nullable().optional(),
+  paymentMethodId: z.string().nullable().optional(),
+  status: z.lazy(() => CommercePaymentsPaymentStatusSchema).optional(),
+  invoiceId: z.string().uuid().nullable().optional(),
+});
+
+/** Zod schema for CommercePaymentsPaymentRetryResult */
+CommercePaymentsPaymentRetryResultSchema = z.object({
+  success: z.boolean().optional(),
+  retryAttempt: z.number().int().optional(),
+  nextRetryAt: z.string().datetime().nullable().optional(),
+  paymentResult: z.lazy(() => CommercePaymentsPaymentResultSchema).optional(),
+  maxRetriesReached: z.boolean().optional(),
+  failureReason: z.string().nullable().optional(),
+});
+
+/** Zod schema for CommercePaymentsPaymentStatus */
+CommercePaymentsPaymentStatusSchema = z.union([z.literal(0), z.literal(1), z.literal(2), z.literal(3), z.literal(4), z.literal(5), z.literal(6), z.literal(7)]);
+
+/** Zod schema for CommercePaymentsPaymentsControllerCancelPaymentInput */
+CommercePaymentsPaymentsControllerCancelPaymentInputSchema = z.object({
+  cancellationReason: z.string().nullable().optional(),
+  canceledBy: z.string().uuid().nullable().optional(),
+  notes: z.string().nullable().optional(),
+});
+
+/** Zod schema for CommercePaymentsPaymentsControllerProcessPaymentInput */
+CommercePaymentsPaymentsControllerProcessPaymentInputSchema = z.object({
+  tenantId: z.string().uuid().optional(),
+  subscriptionId: z.string().uuid().optional(),
+  amount: z.number().optional(),
+  paymentMethodId: z.string().nullable().optional(),
+});
+
+/** Zod schema for CommercePaymentsPaymentsControllerRefundInput */
+CommercePaymentsPaymentsControllerRefundInputSchema = z.object({
+  amount: z.number().nullable().optional(),
+  reason: z.string().nullable().optional(),
+});
+
+/** Zod schema for CommercePaymentsProcessRefundResult */
+CommercePaymentsProcessRefundResultSchema = z.object({
+  refundId: z.string().uuid(),
+  paymentId: z.string().uuid(),
+  refundedAmount: z.number(),
+  currency: z.string().nullable(),
+  status: z.lazy(() => CommercePaymentsTransactionStatusSchema),
+  reason: z.string().nullable(),
+  processedAt: z.string().datetime(),
+  referenceNumber: z.string().nullable().optional(),
+  estimatedCompletionDate: z.string().datetime().nullable().optional(),
+  processingFee: z.number().optional(),
+  isSuccess: z.boolean().optional(),
+  errorMessage: z.string().nullable().optional(),
+  isSuccessful: z.boolean().optional(),
+});
+
+/** Zod schema for CommercePaymentsTaxBreakdown */
+CommercePaymentsTaxBreakdownSchema = z.object({
+  taxType: z.lazy(() => CommercePaymentsTaxTypeSchema).optional(),
+  description: z.string().nullable().optional(),
+  rate: z.number().optional(),
+  taxableAmount: z.number().optional(),
+  taxAmount: z.number().optional(),
+  jurisdictionCode: z.string().nullable().optional(),
+});
+
+/** Zod schema for CommercePaymentsTaxCalculationResult */
+CommercePaymentsTaxCalculationResultSchema = z.object({
+  subtotalAmount: z.number().optional(),
+  taxAmount: z.number().optional(),
+  totalAmount: z.number().optional(),
+  effectiveTaxRate: z.number().optional(),
+  jurisdictionCode: z.string().nullable().optional(),
+  jurisdictionName: z.string().nullable().optional(),
+  taxType: z.lazy(() => CommercePaymentsTaxTypeSchema).optional(),
+  taxDescription: z.string().nullable().optional(),
+  isTaxExempt: z.boolean().optional(),
+  isReverseCharge: z.boolean().optional(),
+  taxBreakdowns: z
+    .array(z.lazy(() => CommercePaymentsTaxBreakdownSchema))
+    .nullable()
+    .optional(),
+  exemptionReason: z.string().nullable().optional(),
+});
+
+/** Zod schema for CommercePaymentsTaxExemptionValidationResult */
+CommercePaymentsTaxExemptionValidationResultSchema = z.object({
+  isValid: z.boolean().optional(),
+  exemptionType: z.string().nullable().optional(),
+  exemptionRate: z.number().optional(),
+  validFrom: z.string().datetime().nullable().optional(),
+  validTo: z.string().datetime().nullable().optional(),
+  validationMessage: z.string().nullable().optional(),
+  warnings: z.array(z.string()).nullable().optional(),
+});
+
+/** Zod schema for CommercePaymentsTaxJurisdiction */
+CommercePaymentsTaxJurisdictionSchema = z.object({
+  isGlobal: z.boolean().optional(),
+  isNew: z.boolean().optional(),
+  isDeleted: z.boolean().optional(),
+  domainEvents: z
+    .array(z.lazy(() => CQRSIDomainEventSchema))
+    .nullable()
+    .optional(),
+  id: z.string().uuid().optional(),
+  version: z.number().int().optional(),
+  createdAt: z.string().datetime(),
+  updatedAt: z.string().datetime(),
+  deletedAt: z.string().datetime().nullable().optional(),
+  tenantId: z.string().uuid().nullable().optional(),
+  code: z.string().min(1).max(20),
+  name: z.string().min(1).max(200),
+  type: z.lazy(() => CommercePaymentsTaxJurisdictionTypeSchema).optional(),
+  parentJurisdictionId: z.string().uuid().nullable().optional(),
+  parentJurisdiction: z.lazy(() => CommercePaymentsTaxJurisdictionSchema).optional(),
+  childJurisdictions: z
+    .array(z.lazy(() => CommercePaymentsTaxJurisdictionSchema))
+    .nullable()
+    .optional(),
+  isActive: z.boolean().optional(),
+  taxRegistrationNumber: z.string().max(100).nullable().optional(),
+  isReverseChargeApplicable: z.boolean().optional(),
+  taxRules: z
+    .array(z.lazy(() => CommercePaymentsTaxRuleSchema))
+    .nullable()
+    .optional(),
+});
+
+/** Zod schema for CommercePaymentsTaxJurisdictionType */
+CommercePaymentsTaxJurisdictionTypeSchema = z.union([z.literal(0), z.literal(1), z.literal(2), z.literal(3), z.literal(4), z.literal(5), z.literal(6)]);
+
+/** Zod schema for CommercePaymentsTaxRate */
+CommercePaymentsTaxRateSchema = z.object({
+  isGlobal: z.boolean().optional(),
+  isNew: z.boolean().optional(),
+  isDeleted: z.boolean().optional(),
+  domainEvents: z
+    .array(z.lazy(() => CQRSIDomainEventSchema))
+    .nullable()
+    .optional(),
+  id: z.string().uuid().optional(),
+  version: z.number().int().optional(),
+  createdAt: z.string().datetime(),
+  updatedAt: z.string().datetime(),
+  deletedAt: z.string().datetime().nullable().optional(),
+  tenantId: z.string().uuid().nullable().optional(),
+  taxJurisdictionId: z.string().uuid(),
+  taxJurisdiction: z.lazy(() => CommercePaymentsTaxJurisdictionSchema).optional(),
+  taxType: z.lazy(() => CommercePaymentsTaxTypeSchema).optional(),
+  rate: z.number().optional(),
+  productCategory: z.string().max(100).nullable().optional(),
+  effectiveFrom: z.string().datetime().optional(),
+  effectiveTo: z.string().datetime().nullable().optional(),
+  isActive: z.boolean().optional(),
+  minimumTaxableAmount: z.number().nullable().optional(),
+  maximumTaxableAmount: z.number().nullable().optional(),
+  description: z.string().max(500).nullable().optional(),
+});
+
+/** Zod schema for CommercePaymentsTaxRule */
+CommercePaymentsTaxRuleSchema = z.object({
+  isGlobal: z.boolean().optional(),
+  isNew: z.boolean().optional(),
+  isDeleted: z.boolean().optional(),
+  domainEvents: z
+    .array(z.lazy(() => CQRSIDomainEventSchema))
+    .nullable()
+    .optional(),
+  id: z.string().uuid().optional(),
+  version: z.number().int().optional(),
+  createdAt: z.string().datetime(),
+  updatedAt: z.string().datetime(),
+  deletedAt: z.string().datetime().nullable().optional(),
+  tenantId: z.string().uuid().nullable().optional(),
+  name: z.string().min(1).max(200),
+  description: z.string().max(1000).nullable().optional(),
+  taxJurisdictionId: z.string().uuid(),
+  taxJurisdiction: z.lazy(() => CommercePaymentsTaxJurisdictionSchema).optional(),
+  ruleType: z.lazy(() => CommercePaymentsTaxRuleTypeSchema).optional(),
+  priority: z.number().int().optional(),
+  isActive: z.boolean().optional(),
+  effectiveFrom: z.string().datetime().nullable().optional(),
+  effectiveTo: z.string().datetime().nullable().optional(),
+  customerTypeFilter: z.lazy(() => CommercePaymentsCustomerTypeSchema).optional(),
+  productCategories: z.string().max(2000).nullable().optional(),
+  minimumAmount: z.number().nullable().optional(),
+  maximumAmount: z.number().nullable().optional(),
+  isTaxInclusive: z.boolean().optional(),
+  isReverseCharge: z.boolean().optional(),
+  exemptionConditions: z.string().max(2000).nullable().optional(),
+  defaultTaxRateId: z.string().uuid().nullable().optional(),
+  defaultTaxRate: z.lazy(() => CommercePaymentsTaxRateSchema).optional(),
+});
+
+/** Zod schema for CommercePaymentsTaxRuleType */
+CommercePaymentsTaxRuleTypeSchema = z.union([z.literal(0), z.literal(1), z.literal(2), z.literal(3), z.literal(4), z.literal(5), z.literal(6), z.literal(7)]);
+
+/** Zod schema for CommercePaymentsTaxType */
+CommercePaymentsTaxTypeSchema = z.union([z.literal(0), z.literal(1), z.literal(2), z.literal(3), z.literal(4), z.literal(5), z.literal(6), z.literal(7)]);
+
+/** Zod schema for CommercePaymentsTransactionStatus */
+CommercePaymentsTransactionStatusSchema = z.union([z.literal(0), z.literal(1), z.literal(2), z.literal(3), z.literal(4), z.literal(5)]);
+
+/** Zod schema for CommercePaymentsTransferFundsInput */
+CommercePaymentsTransferFundsInputSchema = z.object({
+  fromUserId: z.string().uuid(),
+  toUserId: z.string().uuid(),
+  amount: z.number(),
+  description: z.string().nullable(),
+  referenceId: z.string().nullable().optional(),
+});
+
+/** Zod schema for CommercePaymentsTransferResult */
+CommercePaymentsTransferResultSchema = z.object({
+  debitTransaction: z.lazy(() => CommercePaymentsWalletTransactionSchema).optional(),
+  creditTransaction: z.lazy(() => CommercePaymentsWalletTransactionSchema).optional(),
+});
+
+/** Zod schema for CommercePaymentsUserWallet */
+CommercePaymentsUserWalletSchema = z.object({
+  isGlobal: z.boolean().optional(),
+  isNew: z.boolean().optional(),
+  isDeleted: z.boolean().optional(),
+  domainEvents: z
+    .array(z.lazy(() => CQRSIDomainEventSchema))
+    .nullable()
+    .optional(),
+  id: z.string().uuid().optional(),
+  version: z.number().int().optional(),
+  createdAt: z.string().datetime(),
+  updatedAt: z.string().datetime(),
+  deletedAt: z.string().datetime().nullable().optional(),
+  tenantId: z.string().uuid().nullable().optional(),
+  userId: z.string().uuid(),
+  balance: z.number().optional(),
+  currency: z.string().min(1).max(3),
+  isActive: z.boolean().optional(),
+  isLocked: z.boolean().optional(),
+  lockReason: z.string().max(500).nullable().optional(),
+  lastTransactionAt: z.string().datetime().nullable().optional(),
+  dailyLimit: z.number().nullable().optional(),
+  monthlyLimit: z.number().nullable().optional(),
+  transactions: z
+    .array(z.lazy(() => CommercePaymentsWalletTransactionSchema))
+    .nullable()
+    .optional(),
+});
+
+/** Zod schema for CommercePaymentsValidateTaxExemptionInput */
+CommercePaymentsValidateTaxExemptionInputSchema = z.object({
+  jurisdictionCode: z.string().nullable().optional(),
+  exemptionType: z.string().nullable().optional(),
+  exemptionCertificateNumber: z.string().nullable().optional(),
+  customerVatNumber: z.string().nullable().optional(),
+  customerId: z.string().uuid().nullable().optional(),
+  transactionDate: z.string().datetime().nullable().optional(),
+});
+
+/** Zod schema for CommercePaymentsWalletTransaction */
+CommercePaymentsWalletTransactionSchema = z.object({
+  isGlobal: z.boolean().optional(),
+  isNew: z.boolean().optional(),
+  isDeleted: z.boolean().optional(),
+  domainEvents: z
+    .array(z.lazy(() => CQRSIDomainEventSchema))
+    .nullable()
+    .optional(),
+  id: z.string().uuid().optional(),
+  version: z.number().int().optional(),
+  createdAt: z.string().datetime(),
+  updatedAt: z.string().datetime(),
+  deletedAt: z.string().datetime().nullable().optional(),
+  tenantId: z.string().uuid().nullable().optional(),
+  walletId: z.string().uuid(),
+  wallet: z.lazy(() => CommercePaymentsUserWalletSchema).optional(),
+  type: z.lazy(() => CommercePaymentsWalletTransactionTypeSchema).optional(),
+  amount: z.number().optional(),
+  balanceAfter: z.number().optional(),
+  description: z.string().min(1).max(500),
+  referenceId: z.string().max(200).nullable().optional(),
+  status: z.lazy(() => CommercePaymentsTransactionStatusSchema).optional(),
+  metadata: z.string().max(2000).nullable().optional(),
+  notes: z.string().max(1000).nullable().optional(),
+  processedAt: z.string().datetime().nullable().optional(),
+});
+
+/** Zod schema for CommercePaymentsWalletTransactionType */
+CommercePaymentsWalletTransactionTypeSchema = z.union([z.literal(0), z.literal(1), z.literal(2), z.literal(3), z.literal(4), z.literal(5), z.literal(6)]);
+
+/** Zod schema for CommerceProductsAppliedPromoCode */
+CommerceProductsAppliedPromoCodeSchema = z.object({
+  code: z.string().nullable().optional(),
+  discountAmount: z.number().optional(),
+  discountPercentage: z.number().nullable().optional(),
+});
+
+/** Zod schema for CommerceProductsApplyPromoCodesInput */
+CommerceProductsApplyPromoCodesInputSchema = z.object({
+  orderAmount: z.number().optional(),
+  promoCodes: z.array(z.string()).nullable().optional(),
+  productId: z.string().uuid().nullable().optional(),
+});
+
+/** Zod schema for CommerceProductsBatchCreateProductsInput */
+CommerceProductsBatchCreateProductsInputSchema = z.object({
+  products: z
+    .array(z.lazy(() => CommerceProductsBatchProductCreateItemSchema))
+    .nullable()
+    .optional(),
+  tenantId: z.string().uuid().nullable().optional(),
+});
+
+/** Zod schema for CommerceProductsBatchProductCreateItem */
+CommerceProductsBatchProductCreateItemSchema = z.object({
+  name: z.string().nullable().optional(),
+  description: z.string().nullable().optional(),
+  shortDescription: z.string().nullable().optional(),
+  imageUrl: z.string().nullable().optional(),
+  type: z.lazy(() => CommerceProductsProductTypeSchema).optional(),
+  isBundle: z.boolean().optional(),
+  creatorId: z.string().uuid().nullable().optional(),
+  bundleItems: z.array(z.string().uuid()).nullable().optional(),
+  referralCommissionPercentage: z.number().optional(),
+  maxAffiliateDiscount: z.number().optional(),
+  affiliateCommissionPercentage: z.number().optional(),
+});
+
+/** Zod schema for CommerceProductsCheckMultipleAccessInput */
+CommerceProductsCheckMultipleAccessInputSchema = z.object({
+  productIds: z.array(z.string().uuid()).nullable().optional(),
+});
+
+/** Zod schema for CommerceProductsCreateProductInput */
+CommerceProductsCreateProductInputSchema = z.object({
+  name: z.string().nullable().optional(),
+  description: z.string().nullable().optional(),
+  shortDescription: z.string().nullable().optional(),
+  imageUrl: z.string().nullable().optional(),
+  type: z.lazy(() => CommerceProductsProductTypeSchema).optional(),
+  isBundle: z.boolean().optional(),
+  creatorId: z.string().uuid().nullable().optional(),
+  bundleItems: z.array(z.string().uuid()).nullable().optional(),
+  referralCommissionPercentage: z.number().optional(),
+  maxAffiliateDiscount: z.number().optional(),
+  affiliateCommissionPercentage: z.number().optional(),
+  tenantId: z.string().uuid().nullable().optional(),
+});
+
+/** Zod schema for CommerceProductsCreatePromoCodeInput */
+CommerceProductsCreatePromoCodeInputSchema = z.object({
+  code: z.string().nullable().optional(),
+  name: z.string().nullable().optional(),
+  description: z.string().nullable().optional(),
+  type: z.lazy(() => CommerceProductsPromoCodeTypeSchema).optional(),
+  discountPercentage: z.number().nullable().optional(),
+  discountAmount: z.number().nullable().optional(),
+  currency: z.string().nullable().optional(),
+  minimumOrderAmount: z.number().nullable().optional(),
+  maxUses: z.number().int().nullable().optional(),
+  maxUsesPerUser: z.number().int().nullable().optional(),
+  validFrom: z.string().datetime().nullable().optional(),
+  validUntil: z.string().datetime().nullable().optional(),
+  isActive: z.boolean().optional(),
+  isExclusive: z.boolean().optional(),
+  stackingPriority: z.number().int().optional(),
+  productId: z.string().uuid().nullable().optional(),
+});
+
+/** Zod schema for CommerceProductsEntitlementCheckResult */
+CommerceProductsEntitlementCheckResultSchema = z.object({
+  productId: z.string().uuid().optional(),
+  hasAccess: z.boolean().optional(),
+});
+
+/** Zod schema for CommerceProductsEntitlementInfo */
+CommerceProductsEntitlementInfoSchema = z.object({
+  productId: z.string().uuid().optional(),
+  productName: z.string().nullable().optional(),
+  status: z.string().nullable().optional(),
+  acquisitionType: z.string().nullable().optional(),
+  accessStartDate: z.string().datetime().nullable().optional(),
+  accessEndDate: z.string().datetime().nullable().optional(),
+  isSubscription: z.boolean().optional(),
+  subscriptionStatus: z.string().nullable().optional(),
+  pricePaid: z.number().optional(),
+  currency: z.string().nullable().optional(),
+});
+
+/** Zod schema for CommerceProductsGrantEntitlementInput */
+CommerceProductsGrantEntitlementInputSchema = z.object({
+  userId: z.string().uuid().optional(),
+  productId: z.string().uuid().optional(),
+  acquisitionType: z.lazy(() => CommerceProductsProductAcquisitionTypeSchema).optional(),
+  pricePaid: z.number().optional(),
+  currency: z.string().nullable().optional(),
+  expiresAt: z.string().datetime().nullable().optional(),
+});
+
+/** Zod schema for CommerceProductsPagedResult */
+CommerceProductsPagedResultSchema = z.object({
+  items: z
+    .array(z.lazy(() => CommerceProductsProductSchema))
+    .nullable()
+    .optional(),
+  totalCount: z.number().int().optional(),
+  skip: z.number().int().optional(),
+  take: z.number().int().optional(),
+  hasMore: z.boolean().optional(),
+  currentPage: z.number().int().optional(),
+  totalPages: z.number().int().optional(),
+});
+
+/** Zod schema for CommerceProductsPatchProductInput */
+CommerceProductsPatchProductInputSchema = z.object({
+  name: z.string().nullable().optional(),
+  description: z.string().nullable().optional(),
+  shortDescription: z.string().nullable().optional(),
+  imageUrl: z.string().nullable().optional(),
+  type: z.lazy(() => CommerceProductsProductTypeSchema).optional(),
+  isBundle: z.boolean().nullable().optional(),
+  bundleItems: z.array(z.string().uuid()).nullable().optional(),
+  referralCommissionPercentage: z.number().nullable().optional(),
+  maxAffiliateDiscount: z.number().nullable().optional(),
+  affiliateCommissionPercentage: z.number().nullable().optional(),
+  expectedVersion: z.number().int().nullable().optional(),
+});
+
+/** Zod schema for CommerceProductsPatchPromoCodeInput */
+CommerceProductsPatchPromoCodeInputSchema = z.object({
+  name: z.string().nullable().optional(),
+  description: z.string().nullable().optional(),
+  type: z.lazy(() => CommerceProductsPromoCodeTypeSchema).optional(),
+  discountPercentage: z.number().nullable().optional(),
+  discountAmount: z.number().nullable().optional(),
+  currency: z.string().nullable().optional(),
+  minimumOrderAmount: z.number().nullable().optional(),
+  maxUses: z.number().int().nullable().optional(),
+  maxUsesPerUser: z.number().int().nullable().optional(),
+  validFrom: z.string().datetime().nullable().optional(),
+  validUntil: z.string().datetime().nullable().optional(),
+  isActive: z.boolean().nullable().optional(),
+  isExclusive: z.boolean().nullable().optional(),
+  stackingPriority: z.number().int().nullable().optional(),
+  productId: z.string().uuid().nullable().optional(),
+});
+
+/** Zod schema for CommerceProductsProductAcquisitionType */
+CommerceProductsProductAcquisitionTypeSchema = z.union([
+  z.literal(0),
+  z.literal(1),
+  z.literal(2),
+  z.literal(3),
+  z.literal(4),
+  z.literal(5),
+  z.literal(6),
+  z.literal(7),
+  z.literal(8),
+]);
+
+/** Zod schema for CommerceProductsProduct */
+CommerceProductsProductSchema = z.object({
+  id: z.string().uuid().optional(),
+  name: z.string().nullable().optional(),
+  description: z.string().nullable().optional(),
+  shortDescription: z.string().nullable().optional(),
+  imageUrl: z.string().nullable().optional(),
+  type: z.lazy(() => CommerceProductsProductTypeSchema).optional(),
+  isBundle: z.boolean().optional(),
+  creatorId: z.string().uuid().nullable().optional(),
+  bundleItems: z.array(z.string().uuid()).nullable().optional(),
+  referralCommissionPercentage: z.number().optional(),
+  maxAffiliateDiscount: z.number().optional(),
+  affiliateCommissionPercentage: z.number().optional(),
+  createdAt: z.string().datetime().optional(),
+  updatedAt: z.string().datetime().optional(),
+  pricing: z
+    .array(z.lazy(() => CommerceProductsProductPricingSchema))
+    .nullable()
+    .optional(),
+});
+
+/** Zod schema for CommerceProductsProductPricing */
+CommerceProductsProductPricingSchema = z.object({
+  id: z.string().uuid().optional(),
+  productId: z.string().uuid().optional(),
+  name: z.string().nullable().optional(),
+  basePrice: z.number().optional(),
+  salePrice: z.number().nullable().optional(),
+  currency: z.string().nullable().optional(),
+  saleStartDate: z.string().datetime().nullable().optional(),
+  saleEndDate: z.string().datetime().nullable().optional(),
+  isDefault: z.boolean().optional(),
+  currentPrice: z.number().optional(),
+  isSaleActive: z.boolean().optional(),
+});
+
+/** Zod schema for CommerceProductsProductType */
+CommerceProductsProductTypeSchema = z.union([
+  z.literal(0),
+  z.literal(1),
+  z.literal(2),
+  z.literal(3),
+  z.literal(4),
+  z.literal(5),
+  z.literal(6),
+  z.literal(7),
+  z.literal(8),
+  z.literal(9),
+  z.literal(10),
+  z.literal(11),
+  z.literal(12),
+  z.literal(99),
+]);
+
+/** Zod schema for CommerceProductsPromoCodeApplicationResult */
+CommerceProductsPromoCodeApplicationResultSchema = z.object({
+  originalAmount: z.number().optional(),
+  finalAmount: z.number().optional(),
+  totalDiscount: z.number().optional(),
+  appliedCodes: z
+    .array(z.lazy(() => CommerceProductsAppliedPromoCodeSchema))
+    .nullable()
+    .optional(),
+  rejectedCodes: z
+    .array(z.lazy(() => CommerceProductsRejectedPromoCodeSchema))
+    .nullable()
+    .optional(),
+});
+
+/** Zod schema for CommerceProductsPromoCode */
+CommerceProductsPromoCodeSchema = z.object({
+  id: z.string().uuid().optional(),
+  code: z.string().nullable().optional(),
+  name: z.string().nullable().optional(),
+  description: z.string().nullable().optional(),
+  type: z.lazy(() => CommerceProductsPromoCodeTypeSchema).optional(),
+  discountPercentage: z.number().nullable().optional(),
+  discountAmount: z.number().nullable().optional(),
+  currency: z.string().nullable().optional(),
+  minimumOrderAmount: z.number().nullable().optional(),
+  maxUses: z.number().int().nullable().optional(),
+  maxUsesPerUser: z.number().int().nullable().optional(),
+  validFrom: z.string().datetime().nullable().optional(),
+  validUntil: z.string().datetime().nullable().optional(),
+  isActive: z.boolean().optional(),
+  isExclusive: z.boolean().optional(),
+  stackingPriority: z.number().int().optional(),
+  productId: z.string().uuid().nullable().optional(),
+  usageCount: z.number().int().optional(),
+  createdAt: z.string().datetime().optional(),
+  updatedAt: z.string().datetime().optional(),
+});
+
+/** Zod schema for CommerceProductsPromoCodeType */
+CommerceProductsPromoCodeTypeSchema = z.union([z.literal(0), z.literal(1), z.literal(2), z.literal(3), z.literal(4)]);
+
+/** Zod schema for CommerceProductsPromoCodeUsage */
+CommerceProductsPromoCodeUsageSchema = z.object({
+  promoCodeId: z.string().uuid().optional(),
+  code: z.string().nullable().optional(),
+  totalUses: z.number().int().optional(),
+  uniqueUsers: z.number().int().optional(),
+  totalDiscountGiven: z.number().optional(),
+  averageDiscountPerUse: z.number().optional(),
+  maxUses: z.number().int().nullable().optional(),
+  remainingUses: z.number().int().nullable().optional(),
+  firstUsedAt: z.string().datetime().nullable().optional(),
+  lastUsedAt: z.string().datetime().nullable().optional(),
+});
+
+/** Zod schema for CommerceProductsPromoCodeValidationResult */
+CommerceProductsPromoCodeValidationResultSchema = z.object({
+  isValid: z.boolean().optional(),
+  code: z.string().nullable().optional(),
+  errorMessage: z.string().nullable().optional(),
+  discountAmount: z.number().optional(),
+  discountPercentage: z.number().nullable().optional(),
+});
+
+/** Zod schema for CommerceProductsRejectedPromoCode */
+CommerceProductsRejectedPromoCodeSchema = z.object({
+  code: z.string().nullable().optional(),
+  reason: z.string().nullable().optional(),
+});
+
+/** Zod schema for CommerceProductsRevokeEntitlementInput */
+CommerceProductsRevokeEntitlementInputSchema = z.object({
+  userId: z.string().uuid().optional(),
+  productId: z.string().uuid().optional(),
+  reason: z.string().nullable().optional(),
+});
+
+/** Zod schema for CommerceProductsUpdateProductInput */
+CommerceProductsUpdateProductInputSchema = z.object({
+  name: z.string().nullable().optional(),
+  description: z.string().nullable().optional(),
+  shortDescription: z.string().nullable().optional(),
+  imageUrl: z.string().nullable().optional(),
+  type: z.lazy(() => CommerceProductsProductTypeSchema).optional(),
+  isBundle: z.boolean().nullable().optional(),
+  bundleItems: z.array(z.string().uuid()).nullable().optional(),
+  referralCommissionPercentage: z.number().nullable().optional(),
+  maxAffiliateDiscount: z.number().nullable().optional(),
+  affiliateCommissionPercentage: z.number().nullable().optional(),
+  expectedVersion: z.number().int().nullable().optional(),
+});
+
+/** Zod schema for CommerceProductsUpdatePromoCodeInput */
+CommerceProductsUpdatePromoCodeInputSchema = z.object({
+  name: z.string().nullable().optional(),
+  description: z.string().nullable().optional(),
+  type: z.lazy(() => CommerceProductsPromoCodeTypeSchema).optional(),
+  discountPercentage: z.number().nullable().optional(),
+  discountAmount: z.number().nullable().optional(),
+  currency: z.string().nullable().optional(),
+  minimumOrderAmount: z.number().nullable().optional(),
+  maxUses: z.number().int().nullable().optional(),
+  maxUsesPerUser: z.number().int().nullable().optional(),
+  validFrom: z.string().datetime().nullable().optional(),
+  validUntil: z.string().datetime().nullable().optional(),
+  isActive: z.boolean().nullable().optional(),
+  isExclusive: z.boolean().nullable().optional(),
+  stackingPriority: z.number().int().nullable().optional(),
+  productId: z.string().uuid().nullable().optional(),
+});
+
+/** Zod schema for CommerceProductsValidatePromoCodeInput */
+CommerceProductsValidatePromoCodeInputSchema = z.object({
+  code: z.string().nullable().optional(),
+  orderAmount: z.number().optional(),
+  productId: z.string().uuid().nullable().optional(),
+});
+
+/** Zod schema for CommerceSubscriptionsBillingHistory */
+CommerceSubscriptionsBillingHistorySchema = z.object({
+  id: z.string().uuid().optional(),
+  subscriptionId: z.string().uuid().optional(),
+  billingDate: z.string().datetime().optional(),
+  amount: z.number().optional(),
+  currency: z.string().nullable().optional(),
+  status: z.string().nullable().optional(),
+  externalPaymentId: z.string().nullable().optional(),
+  description: z.string().nullable().optional(),
+  createdAt: z.string().datetime().optional(),
+});
+
+/** Zod schema for CommerceSubscriptionsCancellationReason */
+CommerceSubscriptionsCancellationReasonSchema = z.union([
+  z.literal(0),
+  z.literal(1),
+  z.literal(2),
+  z.literal(3),
+  z.literal(4),
+  z.literal(5),
+  z.literal(6),
+  z.literal(7),
+]);
+
+/** Zod schema for CommerceSubscriptionsSubscription */
+CommerceSubscriptionsSubscriptionSchema = z.object({
+  isGlobal: z.boolean().optional(),
+  isNew: z.boolean().optional(),
+  isDeleted: z.boolean().optional(),
+  domainEvents: z
+    .array(z.lazy(() => CQRSIDomainEventSchema))
+    .nullable()
+    .optional(),
+  id: z.string().uuid().optional(),
+  version: z.number().int().optional(),
+  createdAt: z.string().datetime(),
+  updatedAt: z.string().datetime(),
+  deletedAt: z.string().datetime().nullable().optional(),
+  tenantId: z.string().uuid().nullable().optional(),
+  createdByUserId: z.string().uuid(),
+  fulfilledOrderId: z.string().uuid().nullable().optional(),
+  lastModifyingOrderId: z.string().uuid().nullable().optional(),
+  lastRenewalIdempotencyKey: z.string().max(100).nullable().optional(),
+  lastPaymentIdempotencyKey: z.string().max(100).nullable().optional(),
+  lockedPriceVersionId: z.string().uuid().nullable().optional(),
+  lastProcessedBillingCycle: z.number().int().optional(),
+  trialEndDate: z.string().datetime().nullable().optional(),
+  cancellationReason: z.lazy(() => CommerceSubscriptionsCancellationReasonSchema).optional(),
+  cancellationNote: z.string().max(1000).nullable().optional(),
+  cancelledAt: z.string().datetime().nullable().optional(),
+  externalId: z.string().max(100).nullable().optional(),
+  externalCustomerId: z.string().max(100).nullable().optional(),
+  autoRenew: z.boolean().optional(),
+  currentPeriodStart: z.string().datetime().optional(),
+  currentPeriodEnd: z.string().datetime().optional(),
+  billingCycleCount: z.number().int().optional(),
+  lastPaymentAt: z.string().datetime().nullable().optional(),
+  metadata: z.string().max(2000).nullable().optional(),
+  rowVersion: z.string().nullable().optional(),
+  plan: z.lazy(() => CommerceSubscriptionsSubscriptionPlanSchema).optional(),
+  status: z.lazy(() => CommerceSubscriptionsSubscriptionStatusSchema).optional(),
+  planId: z.string().uuid(),
+  billingCycle: z.lazy(() => ValueObjectsBillingCycleSchema).optional(),
+  amount: z.lazy(() => ValueObjectsMoneySchema).optional(),
+  startDate: z.string().datetime().optional(),
+  endDate: z.string().datetime().nullable().optional(),
+  nextBillingDate: z.string().datetime().optional(),
+  isActive: z.boolean().optional(),
+  isTrialing: z.boolean().optional(),
+  isCancelled: z.boolean().optional(),
+});
+
+/** Zod schema for CommerceSubscriptionsSubscriptionDowngradeResult */
+CommerceSubscriptionsSubscriptionDowngradeResultSchema = z.object({
+  success: z.boolean().optional(),
+  updatedSubscription: z.lazy(() => CommerceSubscriptionsSubscriptionSchema).optional(),
+  effectiveDate: z.string().datetime().nullable().optional(),
+  creditIssued: z.lazy(() => ValueObjectsMoneySchema).optional(),
+  failureReason: z.string().nullable().optional(),
+});
+
+/** Zod schema for CommerceSubscriptionsSubscriptionPlan */
+CommerceSubscriptionsSubscriptionPlanSchema = z.object({
+  isGlobal: z.boolean().optional(),
+  isNew: z.boolean().optional(),
+  isDeleted: z.boolean().optional(),
+  domainEvents: z
+    .array(z.lazy(() => CQRSIDomainEventSchema))
+    .nullable()
+    .optional(),
+  id: z.string().uuid().optional(),
+  version: z.number().int().optional(),
+  createdAt: z.string().datetime(),
+  updatedAt: z.string().datetime(),
+  deletedAt: z.string().datetime().nullable().optional(),
+  tenantId: z.string().uuid().nullable().optional(),
+  externalId: z.string().max(100).nullable().optional(),
+  isFeatured: z.boolean().optional(),
+  sortOrder: z.number().int().optional(),
+  hasPrioritySupport: z.boolean().optional(),
+  hasAdvancedAnalytics: z.boolean().optional(),
+  hasCustomBranding: z.boolean().optional(),
+  features: z.string().max(2000).nullable().optional(),
+  metadata: z.string().max(4000).nullable().optional(),
+  trialPeriodDays: z.number().int().optional(),
+  subscriptions: z
+    .array(z.lazy(() => CommerceSubscriptionsSubscriptionSchema))
+    .nullable()
+    .optional(),
+  name: z.string().min(1).max(100),
+  slug: z.string().min(1).max(50),
+  description: z.string().max(1000).nullable().optional(),
+  monthlyPriceInCents: z.number().int().optional(),
+  annualPriceInCents: z.number().int().nullable().optional(),
+  currency: z.string().min(1).max(3),
+  isActive: z.boolean().optional(),
+  maxUsers: z.number().int().nullable().optional(),
+  maxStorageMb: z.number().int().nullable().optional(),
+  maxApiCallsPerMonth: z.number().int().nullable().optional(),
+});
+
+/** Zod schema for CommerceSubscriptionsSubscriptionPlansControllerCloneSubscriptionPlanInput */
+CommerceSubscriptionsSubscriptionPlansControllerCloneSubscriptionPlanInputSchema = z.object({
+  newName: z.string().nullable().optional(),
+  newSlug: z.string().nullable().optional(),
+});
+
+/** Zod schema for CommerceSubscriptionsSubscriptionPlansControllerComparePlansInput */
+CommerceSubscriptionsSubscriptionPlansControllerComparePlansInputSchema = z.object({
+  basePlanId: z.string().uuid().optional(),
+  comparePlanIds: z.array(z.string().uuid()).nullable().optional(),
+});
+
+/** Zod schema for CommerceSubscriptionsSubscriptionPlansControllerCreatePlanInput */
+CommerceSubscriptionsSubscriptionPlansControllerCreatePlanInputSchema = z.object({
+  name: z.string().nullable().optional(),
+  slug: z.string().nullable().optional(),
+  monthlyPriceInCents: z.number().int().optional(),
+  currency: z.string().nullable().optional(),
+  description: z.string().nullable().optional(),
+});
+
+/** Zod schema for CommerceSubscriptionsSubscriptionPlansControllerPutSubscriptionPlanInput */
+CommerceSubscriptionsSubscriptionPlansControllerPutSubscriptionPlanInputSchema = z.object({
+  name: z.string().nullable().optional(),
+  slug: z.string().nullable().optional(),
+  description: z.string().nullable().optional(),
+  monthlyPriceInCents: z.number().int().optional(),
+  annualPriceInCents: z.number().int().nullable().optional(),
+  maxUsers: z.number().int().nullable().optional(),
+  maxStorageMb: z.number().int().nullable().optional(),
+  maxApiCallsPerMonth: z.number().int().nullable().optional(),
+  hasPrioritySupport: z.boolean().nullable().optional(),
+  hasAdvancedAnalytics: z.boolean().nullable().optional(),
+  hasCustomBranding: z.boolean().nullable().optional(),
+  features: z.string().nullable().optional(),
+  sortOrder: z.number().int().nullable().optional(),
+});
+
+/** Zod schema for CommerceSubscriptionsSubscriptionPlansControllerSetExternalIdInput */
+CommerceSubscriptionsSubscriptionPlansControllerSetExternalIdInputSchema = z.object({
+  externalId: z.string().nullable().optional(),
+});
+
+/** Zod schema for CommerceSubscriptionsSubscriptionPlansControllerSetFeaturedInput */
+CommerceSubscriptionsSubscriptionPlansControllerSetFeaturedInputSchema = z.object({
+  featured: z.boolean().optional(),
+});
+
+/** Zod schema for CommerceSubscriptionsSubscriptionPlansControllerUpdateDetailsInput */
+CommerceSubscriptionsSubscriptionPlansControllerUpdateDetailsInputSchema = z.object({
+  planId: z.string().uuid().optional(),
+  name: z.string().nullable().optional(),
+  description: z.string().nullable().optional(),
+  sortOrder: z.number().int().nullable().optional(),
+});
+
+/** Zod schema for CommerceSubscriptionsSubscriptionPlansControllerUpdateFeaturesInput */
+CommerceSubscriptionsSubscriptionPlansControllerUpdateFeaturesInputSchema = z.object({
+  hasPrioritySupport: z.boolean().nullable().optional(),
+  hasAdvancedAnalytics: z.boolean().nullable().optional(),
+  hasCustomBranding: z.boolean().nullable().optional(),
+  features: z.string().nullable().optional(),
+});
+
+/** Zod schema for CommerceSubscriptionsSubscriptionPlansControllerUpdateLimitsInput */
+CommerceSubscriptionsSubscriptionPlansControllerUpdateLimitsInputSchema = z.object({
+  maxUsers: z.number().int().nullable().optional(),
+  maxStorageMb: z.number().int().nullable().optional(),
+  maxApiCallsPerMonth: z.number().int().nullable().optional(),
+});
+
+/** Zod schema for CommerceSubscriptionsSubscriptionPlansControllerUpdatePricingInput */
+CommerceSubscriptionsSubscriptionPlansControllerUpdatePricingInputSchema = z.object({
+  monthlyPriceInCents: z.number().int().optional(),
+  annualPriceInCents: z.number().int().nullable().optional(),
+});
+
+/** Zod schema for CommerceSubscriptionsSubscriptionPlansControllerValidateLimitsInput */
+CommerceSubscriptionsSubscriptionPlansControllerValidateLimitsInputSchema = z.object({
+  users: z.number().int().optional(),
+  storageMb: z.number().int().optional(),
+  apiCalls: z.number().int().optional(),
+});
+
+/** Zod schema for CommerceSubscriptionsSubscriptionStatus */
+CommerceSubscriptionsSubscriptionStatusSchema = z.union([z.literal(0), z.literal(1), z.literal(2), z.literal(3), z.literal(4), z.literal(5), z.literal(6)]);
+
+/** Zod schema for CommerceSubscriptionsSubscriptionUpgradeResult */
+CommerceSubscriptionsSubscriptionUpgradeResultSchema = z.object({
+  success: z.boolean().optional(),
+  updatedSubscription: z.lazy(() => CommerceSubscriptionsSubscriptionSchema).optional(),
+  proratedAmount: z.lazy(() => ValueObjectsMoneySchema).optional(),
+  creditApplied: z.lazy(() => ValueObjectsMoneySchema).optional(),
+  failureReason: z.string().nullable().optional(),
+});
+
+/** Zod schema for CommerceSubscriptionsSubscriptionUsage */
+CommerceSubscriptionsSubscriptionUsageSchema = z.object({
+  subscriptionId: z.string().uuid().optional(),
+  usersCount: z.number().int().optional(),
+  maxUsers: z.number().int().nullable().optional(),
+  storageUsedMb: z.number().int().optional(),
+  maxStorageMb: z.number().int().nullable().optional(),
+  apiCallsThisMonth: z.number().int().optional(),
+  maxApiCallsPerMonth: z.number().int().nullable().optional(),
+  isOverLimit: z.boolean().optional(),
+  limitWarnings: z.array(z.string()).nullable().optional(),
+});
+
+/** Zod schema for CommerceSubscriptionsSubscriptionsControllerAutoRenewInput */
+CommerceSubscriptionsSubscriptionsControllerAutoRenewInputSchema = z.object({
+  autoRenew: z.boolean().optional(),
+});
+
+/** Zod schema for CommerceSubscriptionsSubscriptionsControllerCancelInput */
+CommerceSubscriptionsSubscriptionsControllerCancelInputSchema = z.object({
+  reason: z.string().nullable().optional(),
+  note: z.string().nullable().optional(),
+  effectiveDate: z.string().datetime().nullable().optional(),
+});
+
+/** Zod schema for CommerceSubscriptionsSubscriptionsControllerCreateSubscriptionInput */
+CommerceSubscriptionsSubscriptionsControllerCreateSubscriptionInputSchema = z.object({
+  tenantId: z.string().uuid().optional(),
+  planId: z.string().uuid().optional(),
+  createdByUserId: z.string().uuid().optional(),
+  billingCycle: z.lazy(() => ValueObjectsBillingCycleSchema).optional(),
+  amount: z.number().optional(),
+  currency: z.string().nullable().optional(),
+  fulfilledOrderId: z.string().uuid().nullable().optional(),
+  startDate: z.string().datetime().nullable().optional(),
+  trialDays: z.number().int().nullable().optional(),
+});
+
+/** Zod schema for CommerceSubscriptionsSubscriptionsControllerDowngradeInput */
+CommerceSubscriptionsSubscriptionsControllerDowngradeInputSchema = z.object({
+  newPlanId: z.string().uuid().optional(),
+  effectiveDate: z.string().datetime().nullable().optional(),
+});
+
+/** Zod schema for CommerceSubscriptionsSubscriptionsControllerEndTrialInput */
+CommerceSubscriptionsSubscriptionsControllerEndTrialInputSchema = z.object({
+  convertToPaid: z.boolean().optional(),
+});
+
+/** Zod schema for CommerceSubscriptionsSubscriptionsControllerExternalIdsInput */
+CommerceSubscriptionsSubscriptionsControllerExternalIdsInputSchema = z.object({
+  externalSubscriptionId: z.string().nullable().optional(),
+  externalCustomerId: z.string().nullable().optional(),
+});
+
+/** Zod schema for CommerceSubscriptionsSubscriptionsControllerPatchSubscriptionInput */
+CommerceSubscriptionsSubscriptionsControllerPatchSubscriptionInputSchema = z.object({
+  billingCycle: z.lazy(() => ValueObjectsBillingCycleSchema).optional(),
+  autoRenew: z.boolean().nullable().optional(),
+  externalSubscriptionId: z.string().nullable().optional(),
+  externalCustomerId: z.string().nullable().optional(),
+  metadata: z.string().nullable().optional(),
+});
+
+/** Zod schema for CommerceSubscriptionsSubscriptionsControllerPauseSubscriptionInput */
+CommerceSubscriptionsSubscriptionsControllerPauseSubscriptionInputSchema = z.object({
+  pauseUntil: z.string().datetime().nullable().optional(),
+  reason: z.string().nullable().optional(),
+});
+
+/** Zod schema for CommerceSubscriptionsSubscriptionsControllerPutSubscriptionInput */
+CommerceSubscriptionsSubscriptionsControllerPutSubscriptionInputSchema = z.object({
+  planId: z.string().uuid().optional(),
+  billingCycle: z.lazy(() => ValueObjectsBillingCycleSchema).optional(),
+  amount: z.number().optional(),
+  autoRenew: z.boolean().optional(),
+  externalSubscriptionId: z.string().nullable().optional(),
+  externalCustomerId: z.string().nullable().optional(),
+});
+
+/** Zod schema for CommerceSubscriptionsSubscriptionsControllerStartTrialInput */
+CommerceSubscriptionsSubscriptionsControllerStartTrialInputSchema = z.object({
+  trialDays: z.number().int().optional(),
+});
+
+/** Zod schema for CommerceSubscriptionsSubscriptionsControllerSuspendInput */
+CommerceSubscriptionsSubscriptionsControllerSuspendInputSchema = z.object({
+  reason: z.string().nullable().optional(),
+});
+
+/** Zod schema for CommerceSubscriptionsSubscriptionsControllerUpgradeInput */
+CommerceSubscriptionsSubscriptionsControllerUpgradeInputSchema = z.object({
+  newPlanId: z.string().uuid().optional(),
+  effectiveDate: z.string().datetime().nullable().optional(),
+});
+
+/** Zod schema for Fido2NetLibAssertionOptions */
+Fido2NetLibAssertionOptionsSchema = z.object({
+  challenge: z.string().nullable().optional(),
+  timeout: z.number().int().optional(),
+  rpId: z.string().nullable().optional(),
+  allowCredentials: z
+    .array(z.lazy(() => ObjectsPublicKeyCredentialDescriptorSchema))
+    .nullable()
+    .optional(),
+  userVerification: z.lazy(() => ObjectsUserVerificationRequirementSchema).optional(),
+  hints: z
+    .array(z.lazy(() => ObjectsPublicKeyCredentialHintSchema))
+    .nullable()
+    .optional(),
+  extensions: z.lazy(() => ObjectsAuthenticationExtensionsClientInputsSchema).optional(),
+});
+
+/** Zod schema for Fido2NetLibAuthenticatorSelection */
+Fido2NetLibAuthenticatorSelectionSchema = z.object({
+  authenticatorAttachment: z.lazy(() => ObjectsAuthenticatorAttachmentSchema).optional(),
+  residentKey: z.lazy(() => ObjectsResidentKeyRequirementSchema).optional(),
+  requireResidentKey: z.boolean().optional(),
+  userVerification: z.lazy(() => ObjectsUserVerificationRequirementSchema).optional(),
+});
+
+/** Zod schema for Fido2NetLibCredentialCreateOptions */
+Fido2NetLibCredentialCreateOptionsSchema = z.object({
+  rp: z.lazy(() => Fido2NetLibPublicKeyCredentialRpEntitySchema),
+  user: z.lazy(() => Fido2NetLibFido2UserSchema),
+  challenge: z.string().nullable(),
+  pubKeyCredParams: z.array(z.lazy(() => Fido2NetLibPubKeyCredParamSchema)).nullable(),
+  timeout: z.number().int().optional(),
+  attestation: z.lazy(() => ObjectsAttestationConveyancePreferenceSchema).optional(),
+  attestationFormats: z
+    .array(z.lazy(() => ObjectsAttestationStatementFormatIdentifierSchema))
+    .nullable()
+    .optional(),
+  authenticatorSelection: z.lazy(() => Fido2NetLibAuthenticatorSelectionSchema).optional(),
+  hints: z
+    .array(z.lazy(() => ObjectsPublicKeyCredentialHintSchema))
+    .nullable()
+    .optional(),
+  excludeCredentials: z
+    .array(z.lazy(() => ObjectsPublicKeyCredentialDescriptorSchema))
+    .nullable()
+    .optional(),
+  extensions: z.lazy(() => ObjectsAuthenticationExtensionsClientInputsSchema).optional(),
+});
+
+/** Zod schema for Fido2NetLibFido2User */
+Fido2NetLibFido2UserSchema = z.object({
+  name: z.string().nullable().optional(),
+  id: z.string().nullable().optional(),
+  displayName: z.string().nullable().optional(),
+});
+
+/** Zod schema for Fido2NetLibPubKeyCredParam */
+Fido2NetLibPubKeyCredParamSchema = z.object({
+  type: z.lazy(() => ObjectsPublicKeyCredentialTypeSchema).optional(),
+  alg: z.lazy(() => ObjectsCOSEAlgorithmSchema).optional(),
+});
+
+/** Zod schema for Fido2NetLibPublicKeyCredentialRpEntity */
+Fido2NetLibPublicKeyCredentialRpEntitySchema = z.object({
+  id: z.string().nullable().optional(),
+  name: z.string().nullable().optional(),
+  icon: z.string().nullable().optional(),
+});
+
+/** Zod schema for IdentityAuthenticationApiKey */
+IdentityAuthenticationApiKeySchema = z.object({
+  id: z.string().uuid().optional(),
+  name: z.string().nullable().optional(),
+  keyPrefix: z.string().nullable().optional(),
+  scopes: z.array(z.string()).nullable().optional(),
+  isActive: z.boolean().optional(),
+  expiresAt: z.string().datetime().nullable().optional(),
+  lastUsedAt: z.string().datetime().nullable().optional(),
+  usageCount: z.number().int().optional(),
+  createdAt: z.string().datetime().optional(),
+});
+
+/** Zod schema for IdentityAuthenticationBackupCodesOutput */
+IdentityAuthenticationBackupCodesOutputSchema = z.object({
+  codes: z.array(z.string()).nullable().optional(),
+  generatedAt: z.string().datetime().optional(),
+});
+
+/** Zod schema for IdentityAuthenticationBackupCodesStatusOutput */
+IdentityAuthenticationBackupCodesStatusOutputSchema = z.object({
+  totalCount: z.number().int(),
+  remainingCount: z.number().int(),
+  usedCount: z.number().int(),
+  hasBackupCodes: z.boolean(),
+});
+
+/** Zod schema for IdentityAuthenticationBeginWebAuthnAuthenticationInput */
+IdentityAuthenticationBeginWebAuthnAuthenticationInputSchema = z.object({
+  email: z.string().nullable().optional(),
+});
+
+/** Zod schema for IdentityAuthenticationBeginWebAuthnRegistrationInput */
+IdentityAuthenticationBeginWebAuthnRegistrationInputSchema = z.object({
+  email: z.string().nullable().optional(),
+  displayName: z.string().nullable().optional(),
+  preferredAuthenticatorType: z.lazy(() => IdentityAuthenticationWebAuthnAuthenticatorTypeSchema).optional(),
+});
+
+/** Zod schema for IdentityAuthenticationCleanupKeysInput */
+IdentityAuthenticationCleanupKeysInputSchema = z.object({
+  retentionDays: z.number().int().nullable().optional(),
+});
+
+/** Zod schema for IdentityAuthenticationCleanupResult */
+IdentityAuthenticationCleanupResultSchema = z.object({
+  deletedCount: z.number().int().optional(),
+});
+
+/** Zod schema for IdentityAuthenticationClientCredentialsTokenOutput */
+IdentityAuthenticationClientCredentialsTokenOutputSchema = z.object({
+  accessToken: z.string().nullable().optional(),
+  tokenType: z.string().nullable().optional(),
+  expiresIn: z.number().int().optional(),
+  scope: z.string().nullable().optional(),
+});
+
+/** Zod schema for IdentityAuthenticationCompleteMfaSetupInput */
+IdentityAuthenticationCompleteMfaSetupInputSchema = z.object({
+  code: z.string().min(1),
+  secretKey: z.string().min(1),
+});
+
+/** Zod schema for IdentityAuthenticationCompletePasswordResetInput */
+IdentityAuthenticationCompletePasswordResetInputSchema = z.object({
+  token: z.string().min(1),
+  newPassword: z.string().min(8),
+  confirmPassword: z.string().min(1),
+  tenantId: z.string().uuid().nullable().optional(),
+});
+
+/** Zod schema for IdentityAuthenticationCompleteWebAuthnAuthenticationInput */
+IdentityAuthenticationCompleteWebAuthnAuthenticationInputSchema = z.object({
+  assertionResponse: z.string().nullable().optional(),
+});
+
+/** Zod schema for IdentityAuthenticationCompleteWebAuthnRegistrationInput */
+IdentityAuthenticationCompleteWebAuthnRegistrationInputSchema = z.object({
+  attestationResponse: z.string().nullable().optional(),
+  friendlyName: z.string().nullable().optional(),
+  isPasswordless: z.boolean().optional(),
+});
+
+/** Zod schema for IdentityAuthenticationCreateApiKeyCommand */
+IdentityAuthenticationCreateApiKeyCommandSchema = z.object({
+  name: z.string().nullable(),
+  scopes: z.array(z.string()).nullable(),
+  expiresAt: z.string().datetime().nullable().optional(),
+  ipWhitelist: z.string().nullable().optional(),
+});
+
+/** Zod schema for IdentityAuthenticationCreateApiKeyOutput */
+IdentityAuthenticationCreateApiKeyOutputSchema = z.object({
+  id: z.string().uuid().optional(),
+  name: z.string().nullable().optional(),
+  apiKey: z.string().nullable().optional(),
+  keyPrefix: z.string().nullable().optional(),
+  scopes: z.array(z.string()).nullable().optional(),
+  expiresAt: z.string().datetime().nullable().optional(),
+  createdAt: z.string().datetime().optional(),
+});
+
+/** Zod schema for IdentityAuthenticationCreateServiceAccountInput */
+IdentityAuthenticationCreateServiceAccountInputSchema = z.object({
+  name: z.string().nullable().optional(),
+  description: z.string().nullable().optional(),
+  tenantId: z.string().uuid().nullable().optional(),
+  scopes: z.string().nullable().optional(),
+  allowedIpAddresses: z.string().nullable().optional(),
+  expiresAt: z.string().datetime().nullable().optional(),
+});
+
+/** Zod schema for IdentityAuthenticationDeviceInfo */
+IdentityAuthenticationDeviceInfoSchema = z.object({
+  fingerprint: z.string().nullable().optional(),
+  deviceId: z.string().nullable().optional(),
+  ipAddress: z.string().nullable().optional(),
+  deviceName: z.string().nullable().optional(),
+  deviceType: z.string().nullable().optional(),
+  operatingSystem: z.string().nullable().optional(),
+  osVersion: z.string().nullable().optional(),
+  browser: z.string().nullable().optional(),
+  browserVersion: z.string().nullable().optional(),
+  screenResolution: z.string().nullable().optional(),
+  timezone: z.string().nullable().optional(),
+  language: z.string().nullable().optional(),
+  userAgent: z.string().nullable().optional(),
+  isMobile: z.boolean().optional(),
+  isBot: z.boolean().optional(),
+});
+
+/** Zod schema for IdentityAuthenticationDisableMfaInput */
+IdentityAuthenticationDisableMfaInputSchema = z.object({
+  password: z.string().min(1),
+});
+
+/** Zod schema for IdentityAuthenticationEmailVerificationOutput */
+IdentityAuthenticationEmailVerificationOutputSchema = z.object({
+  message: z.string().nullable(),
+});
+
+/** Zod schema for IdentityAuthenticationEmailVerificationResult */
+IdentityAuthenticationEmailVerificationResultSchema = z.object({
+  success: z.boolean().optional(),
+  message: z.string().nullable().optional(),
+  email: z.string().nullable().optional(),
+  userId: z.string().uuid().nullable().optional(),
+  verifiedAt: z.string().datetime().nullable().optional(),
+});
+
+/** Zod schema for IdentityAuthenticationGitHubSignInOutput */
+IdentityAuthenticationGitHubSignInOutputSchema = z.object({
+  authUrl: z.string().nullable(),
+});
+
+/** Zod schema for IdentityAuthenticationGoogleIdTokenInput */
+IdentityAuthenticationGoogleIdTokenInputSchema = z.object({
+  idToken: z.string().min(1),
+  tenantId: z.string().uuid().nullable().optional(),
+});
+
+/** Zod schema for IdentityAuthenticationJwtKeyInfo */
+IdentityAuthenticationJwtKeyInfoSchema = z.object({
+  keyId: z.string().nullable().optional(),
+  algorithm: z.string().nullable().optional(),
+  isActive: z.boolean().optional(),
+  validFrom: z.string().datetime().optional(),
+  expiresAt: z.string().datetime().optional(),
+  rotatedAt: z.string().datetime().nullable().optional(),
+  rotationReason: z.string().nullable().optional(),
+  keyVersion: z.number().int().optional(),
+});
+
+/** Zod schema for IdentityAuthenticationLocalSignInInput */
+IdentityAuthenticationLocalSignInInputSchema = z.object({
+  username: z.string().nullable().optional(),
+  email: z.string().email().min(1),
+  password: z.string().min(1),
+  tenantId: z.string().uuid().nullable().optional(),
+  deviceFingerprint: z.string().nullable().optional(),
+  emailOrUsername: z.string().nullable().optional(),
+});
+
+/** Zod schema for IdentityAuthenticationLocalSignUpInput */
+IdentityAuthenticationLocalSignUpInputSchema = z.object({
+  username: z.string().min(1),
+  email: z.string().email().min(1),
+  password: z.string().min(8),
+  tenantId: z.string().uuid().nullable().optional(),
+  firstName: z.string().nullable().optional(),
+  lastName: z.string().nullable().optional(),
+  phoneNumber: z.string().nullable().optional(),
+});
+
+/** Zod schema for IdentityAuthenticationLocationInfo */
+IdentityAuthenticationLocationInfoSchema = z.object({
+  ipAddress: z.string().nullable().optional(),
+  country: z.string().nullable().optional(),
+  countryCode: z.string().nullable().optional(),
+  region: z.string().nullable().optional(),
+  city: z.string().nullable().optional(),
+  postalCode: z.string().nullable().optional(),
+  latitude: z.number().nullable().optional(),
+  longitude: z.number().nullable().optional(),
+  timezone: z.string().nullable().optional(),
+  isp: z.string().nullable().optional(),
+  organization: z.string().nullable().optional(),
+  isProxy: z.boolean().nullable().optional(),
+  isHosting: z.boolean().nullable().optional(),
+  displayLocation: z.string().nullable().optional(),
+});
+
+/** Zod schema for IdentityAuthenticationLockServiceAccountInput */
+IdentityAuthenticationLockServiceAccountInputSchema = z.object({
+  reason: z.string().nullable().optional(),
+});
+
+/** Zod schema for IdentityAuthenticationMfaConfigurationOutput */
+IdentityAuthenticationMfaConfigurationOutputSchema = z.object({
+  isEnabled: z.boolean().optional(),
+  enabledMethods: z.array(z.string()).nullable().optional(),
+  enabledAt: z.string().datetime().nullable().optional(),
+  backupCodesRemaining: z.number().int().optional(),
+});
+
+/** Zod schema for IdentityAuthenticationMfaMethod */
+IdentityAuthenticationMfaMethodSchema = z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4), z.literal(5)]);
+
+/** Zod schema for IdentityAuthenticationMfaMethodInfo */
+IdentityAuthenticationMfaMethodInfoSchema = z.object({
+  method: z.lazy(() => IdentityAuthenticationMfaMethodSchema),
+  name: z.string().nullable(),
+  description: z.string().nullable(),
+  isEnabled: z.boolean(),
+  isAvailable: z.boolean(),
+  priority: z.number().int(),
+});
+
+/** Zod schema for IdentityAuthenticationMfaMethodsOutput */
+IdentityAuthenticationMfaMethodsOutputSchema = z.object({
+  methods: z.array(z.lazy(() => IdentityAuthenticationMfaMethodInfoSchema)).nullable(),
+  defaultMethod: z.lazy(() => IdentityAuthenticationMfaMethodSchema).optional(),
+});
+
+/** Zod schema for IdentityAuthenticationMfaSetupOutput */
+IdentityAuthenticationMfaSetupOutputSchema = z.object({
+  isSuccess: z.boolean().optional(),
+  errorMessage: z.string().nullable().optional(),
+  secretKey: z.string().nullable().optional(),
+  qrCodeData: z.string().nullable().optional(),
+  qrCodeUri: z.string().nullable().optional(),
+  backupCodes: z.array(z.string()).nullable().optional(),
+});
+
+/** Zod schema for IdentityAuthenticationMfaSuccessOutput */
+IdentityAuthenticationMfaSuccessOutputSchema = z.object({
+  message: z.string().nullable(),
+});
+
+/** Zod schema for IdentityAuthenticationMfaVerificationOutput */
+IdentityAuthenticationMfaVerificationOutputSchema = z.object({
+  isValid: z.boolean().optional(),
+  accessToken: z.string().nullable().optional(),
+  refreshToken: z.string().nullable().optional(),
+});
+
+/** Zod schema for IdentityAuthenticationOAuth2ErrorOutput */
+IdentityAuthenticationOAuth2ErrorOutputSchema = z.object({
+  error: z.string().nullable().optional(),
+  errorDescription: z.string().nullable().optional(),
+});
+
+/** Zod schema for IdentityAuthenticationPasswordChangeInput */
+IdentityAuthenticationPasswordChangeInputSchema = z.object({
+  currentPassword: z.string().min(1),
+  newPassword: z.string().min(8),
+  confirmPassword: z.string().min(1),
+  revokeOtherSessions: z.boolean().optional(),
+});
+
+/** Zod schema for IdentityAuthenticationPasswordChangeResult */
+IdentityAuthenticationPasswordChangeResultSchema = z.object({
+  success: z.boolean().optional(),
+  message: z.string().nullable().optional(),
+  sessionsRevoked: z.number().int().optional(),
+});
+
+/** Zod schema for IdentityAuthenticationPasswordResetRequestResult */
+IdentityAuthenticationPasswordResetRequestResultSchema = z.object({
+  success: z.boolean().optional(),
+  message: z.string().nullable().optional(),
+  expiresInMinutes: z.number().int().optional(),
+});
+
+/** Zod schema for IdentityAuthenticationPasswordResetResult */
+IdentityAuthenticationPasswordResetResultSchema = z.object({
+  success: z.boolean().optional(),
+  message: z.string().nullable().optional(),
+  userId: z.string().uuid().nullable().optional(),
+});
+
+/** Zod schema for IdentityAuthenticationPatchServiceAccountInput */
+IdentityAuthenticationPatchServiceAccountInputSchema = z.object({
+  name: z.string().nullable().optional(),
+  description: z.string().nullable().optional(),
+  scopes: z.string().nullable().optional(),
+  expiresAt: z.string().datetime().nullable().optional(),
+});
+
+/** Zod schema for IdentityAuthenticationRefreshTokenInput */
+IdentityAuthenticationRefreshTokenInputSchema = z.object({
+  refreshToken: z.string().min(1),
+  tenantId: z.string().uuid().nullable().optional(),
+});
+
+/** Zod schema for IdentityAuthenticationRequestPasswordResetInput */
+IdentityAuthenticationRequestPasswordResetInputSchema = z.object({
+  email: z.string().email().min(1),
+  tenantId: z.string().uuid().nullable().optional(),
+});
+
+/** Zod schema for IdentityAuthenticationRevokeApiKeyInput */
+IdentityAuthenticationRevokeApiKeyInputSchema = z.object({
+  reason: z.string().nullable().optional(),
+});
+
+/** Zod schema for IdentityAuthenticationRevokeRefreshTokenInput */
+IdentityAuthenticationRevokeRefreshTokenInputSchema = z.object({
+  token: z.string().min(1),
+  ipAddress: z.string().nullable().optional(),
+  reason: z.string().nullable().optional(),
+});
+
+/** Zod schema for IdentityAuthenticationRiskLevel */
+IdentityAuthenticationRiskLevelSchema = z.union([z.literal(0), z.literal(1), z.literal(2), z.literal(3)]);
+
+/** Zod schema for IdentityAuthenticationRotateKeyInput */
+IdentityAuthenticationRotateKeyInputSchema = z.object({
+  reason: z.string().nullable().optional(),
+  validityDays: z.number().int().nullable().optional(),
+});
+
+/** Zod schema for IdentityAuthenticationSecretRotationOutput */
+IdentityAuthenticationSecretRotationOutputSchema = z.object({
+  clientSecret: z.string().nullable().optional(),
+  warning: z.string().nullable().optional(),
+});
+
+/** Zod schema for IdentityAuthenticationSendEmailVerificationInput */
+IdentityAuthenticationSendEmailVerificationInputSchema = z.object({
+  email: z.string().email().min(1),
+});
+
+/** Zod schema for IdentityAuthenticationServiceAccountAuditEntry */
+IdentityAuthenticationServiceAccountAuditEntrySchema = z.object({
+  id: z.string().uuid().optional(),
+  timestamp: z.string().datetime().optional(),
+  action: z.string().nullable().optional(),
+  performedBy: z.string().nullable().optional(),
+  ipAddress: z.string().nullable().optional(),
+  details: z.string().nullable().optional(),
+});
+
+/** Zod schema for IdentityAuthenticationServiceAccountAuditLogOutput */
+IdentityAuthenticationServiceAccountAuditLogOutputSchema = z.object({
+  serviceAccountId: z.string().uuid().optional(),
+  entries: z
+    .array(z.lazy(() => IdentityAuthenticationServiceAccountAuditEntrySchema))
+    .nullable()
+    .optional(),
+  totalCount: z.number().int().optional(),
+  page: z.number().int().optional(),
+  pageSize: z.number().int().optional(),
+});
+
+/** Zod schema for IdentityAuthenticationServiceAccountCreatedOutput */
+IdentityAuthenticationServiceAccountCreatedOutputSchema = z.object({
+  id: z.string().uuid().optional(),
+  clientId: z.string().nullable().optional(),
+  clientSecret: z.string().nullable().optional(),
+  name: z.string().nullable().optional(),
+  description: z.string().nullable().optional(),
+  tenantId: z.string().uuid().nullable().optional(),
+  scopes: z.string().nullable().optional(),
+  createdAt: z.string().datetime().optional(),
+  expiresAt: z.string().datetime().nullable().optional(),
+  warning: z.string().nullable().optional(),
+});
+
+/** Zod schema for IdentityAuthenticationServiceAccountOutput */
+IdentityAuthenticationServiceAccountOutputSchema = z.object({
+  id: z.string().uuid().optional(),
+  clientId: z.string().nullable().optional(),
+  name: z.string().nullable().optional(),
+  description: z.string().nullable().optional(),
+  tenantId: z.string().uuid().nullable().optional(),
+  scopes: z.string().nullable().optional(),
+  isActive: z.boolean().optional(),
+  isLocked: z.boolean().optional(),
+  expiresAt: z.string().datetime().nullable().optional(),
+  createdAt: z.string().datetime().optional(),
+  createdBy: z.string().nullable().optional(),
+  lastAuthenticatedAt: z.string().datetime().nullable().optional(),
+  authenticationCount: z.number().int().optional(),
+  secretRotationCount: z.number().int().optional(),
+});
+
+/** Zod schema for IdentityAuthenticationSessionOutput */
+IdentityAuthenticationSessionOutputSchema = z.object({
+  id: z.string().uuid().optional(),
+  deviceInfo: z.lazy(() => IdentityAuthenticationDeviceInfoSchema).optional(),
+  location: z.lazy(() => IdentityAuthenticationLocationInfoSchema).optional(),
+  ipAddress: z.string().nullable().optional(),
+  createdAt: z.string().datetime().optional(),
+  lastUsedAt: z.string().datetime().optional(),
+  expiresAt: z.string().datetime().optional(),
+  isTrustedDevice: z.boolean().optional(),
+  isCurrent: z.boolean().optional(),
+});
+
+/** Zod schema for IdentityAuthenticationSessionSecurityAnalysis */
+IdentityAuthenticationSessionSecurityAnalysisSchema = z.object({
+  sessionId: z.string().uuid().optional(),
+  userId: z.string().uuid().optional(),
+  isSuspicious: z.boolean().optional(),
+  unusualActivityDetected: z.boolean().optional(),
+  riskScore: z.number().int().optional(),
+  activeSessionCount: z.number().int().optional(),
+  totalDeviceCount: z.number().int().optional(),
+  riskLevel: z.lazy(() => IdentityAuthenticationRiskLevelSchema).optional(),
+  securityFlags: z.array(z.string()).nullable().optional(),
+  riskFactors: z.array(z.string()).nullable().optional(),
+  metadata: z.record(z.string(), z.string()).nullable().optional(),
+  analyzedAt: z.string().datetime().optional(),
+});
+
+/** Zod schema for IdentityAuthenticationSessionSuccessOutput */
+IdentityAuthenticationSessionSuccessOutputSchema = z.object({
+  message: z.string().nullable(),
+});
+
+/** Zod schema for IdentityAuthenticationSessionTerminationOutput */
+IdentityAuthenticationSessionTerminationOutputSchema = z.object({
+  message: z.string().nullable(),
+  terminatedCount: z.number().int(),
+});
+
+/** Zod schema for IdentityAuthenticationSignInOutput */
+IdentityAuthenticationSignInOutputSchema = z.object({
+  success: z.boolean().optional(),
+  message: z.string().nullable().optional(),
+  accessToken: z.string().nullable().optional(),
+  refreshToken: z.string().nullable().optional(),
+  expiresAt: z.string().datetime().optional(),
+  accessTokenExpiresAt: z.string().datetime().optional(),
+  refreshTokenExpiresAt: z.string().datetime().optional(),
+  expiresIn: z.number().int().optional(),
+  userId: z.string().uuid().optional(),
+  email: z.string().nullable().optional(),
+  sessionId: z.string().uuid().optional(),
+  tempToken: z.string().nullable().optional(),
+  mfaToken: z.string().nullable().optional(),
+  user: z.lazy(() => IdentityAuthenticationUserSchema).optional(),
+  tenantId: z.string().uuid().nullable().optional(),
+  availableTenants: z
+    .array(z.lazy(() => IdentityAuthenticationTenantInfoSchema))
+    .nullable()
+    .optional(),
+  requiresMfa: z.boolean().optional(),
+  mfaSessionId: z.string().nullable().optional(),
+  requiresStepUp: z.boolean().optional(),
+  stepUpToken: z.string().nullable().optional(),
+  stepUpExpiresAt: z.string().datetime().nullable().optional(),
+  riskLevel: z.lazy(() => IdentityAuthenticationRiskLevelSchema).optional(),
+  riskFactors: z.array(z.string()).nullable().optional(),
+  availableMethods: z.array(z.string()).nullable().optional(),
+});
+
+/** Zod schema for IdentityAuthenticationSmsMfaSetupInput */
+IdentityAuthenticationSmsMfaSetupInputSchema = z.object({
+  phoneNumber: z.string().nullable(),
+});
+
+/** Zod schema for IdentityAuthenticationSmsMfaSetupOutput */
+IdentityAuthenticationSmsMfaSetupOutputSchema = z.object({
+  message: z.string().nullable(),
+  phoneNumberMasked: z.string().nullable(),
+  expiresInSeconds: z.number().int(),
+});
+
+/** Zod schema for IdentityAuthenticationTenantInfo */
+IdentityAuthenticationTenantInfoSchema = z.object({
+  tenantId: z.string().uuid().optional(),
+  name: z.string().nullable().optional(),
+  slug: z.string().nullable().optional(),
+  isActive: z.boolean().optional(),
+  subscriptionTier: z.string().nullable().optional(),
+  metadata: z.record(z.string(), z.record(z.string(), z.unknown())).nullable().optional(),
+});
+
+/** Zod schema for IdentityAuthenticationTrustDeviceInput */
+IdentityAuthenticationTrustDeviceInputSchema = z.object({
+  deviceName: z.string().nullable().optional(),
+});
+
+/** Zod schema for IdentityAuthenticationTrustedDeviceOutput */
+IdentityAuthenticationTrustedDeviceOutputSchema = z.object({
+  id: z.string().uuid().optional(),
+  deviceName: z.string().nullable().optional(),
+  deviceInfo: z.lazy(() => IdentityAuthenticationDeviceInfoSchema).optional(),
+  trustedAt: z.string().datetime().optional(),
+  lastUsedAt: z.string().datetime().optional(),
+  expiresAt: z.string().datetime().nullable().optional(),
+});
+
+/** Zod schema for IdentityAuthenticationUpdateCredentialNameInput */
+IdentityAuthenticationUpdateCredentialNameInputSchema = z.object({
+  friendlyName: z.string().nullable().optional(),
+});
+
+/** Zod schema for IdentityAuthenticationUpdateScopesInput */
+IdentityAuthenticationUpdateScopesInputSchema = z.object({
+  scopes: z.string().nullable().optional(),
+});
+
+/** Zod schema for IdentityAuthenticationUser */
+IdentityAuthenticationUserSchema = z.object({
+  id: z.string().uuid().optional(),
+  email: z.string().nullable().optional(),
+  username: z.string().nullable().optional(),
+  firstName: z.string().nullable().optional(),
+  lastName: z.string().nullable().optional(),
+  phoneNumber: z.string().nullable().optional(),
+  emailVerified: z.boolean().optional(),
+  phoneNumberVerified: z.boolean().optional(),
+  createdAt: z.string().datetime().optional(),
+  lastLoginAt: z.string().datetime().nullable().optional(),
+});
+
+/** Zod schema for IdentityAuthenticationVerifyEmailInput */
+IdentityAuthenticationVerifyEmailInputSchema = z.object({
+  token: z.string().min(1),
+  tenantId: z.string().uuid().nullable().optional(),
+});
+
+/** Zod schema for IdentityAuthenticationVerifyMfaInput */
+IdentityAuthenticationVerifyMfaInputSchema = z.object({
+  userId: z.string().uuid().optional(),
+  code: z.string().min(1),
+  method: z.lazy(() => IdentityAuthenticationMfaMethodSchema).optional(),
+});
+
+/** Zod schema for IdentityAuthenticationWeb3ChallengeInput */
+IdentityAuthenticationWeb3ChallengeInputSchema = z.object({
+  walletAddress: z.string().min(1),
+  chainId: z.string().nullable().optional(),
+});
+
+/** Zod schema for IdentityAuthenticationWeb3ChallengeOutput */
+IdentityAuthenticationWeb3ChallengeOutputSchema = z.object({
+  challenge: z.string().nullable().optional(),
+  nonce: z.string().nullable().optional(),
+  expiresAt: z.string().datetime().optional(),
+});
+
+/** Zod schema for IdentityAuthenticationWeb3VerifyInput */
+IdentityAuthenticationWeb3VerifyInputSchema = z.object({
+  walletAddress: z.string().min(1),
+  signature: z.string().min(1),
+  nonce: z.string().min(1),
+  chainId: z.string().min(1),
+  tenantId: z.string().uuid().nullable().optional(),
+  deviceFingerprint: z.string().nullable().optional(),
+});
+
+/** Zod schema for IdentityAuthenticationWebAuthnAuthenticationOptionsResult */
+IdentityAuthenticationWebAuthnAuthenticationOptionsResultSchema = z.object({
+  success: z.boolean().optional(),
+  error: z.string().nullable().optional(),
+  sessionId: z.string().nullable().optional(),
+  optionsJson: z.string().nullable().optional(),
+  options: z.lazy(() => Fido2NetLibAssertionOptionsSchema).optional(),
+});
+
+/** Zod schema for IdentityAuthenticationWebAuthnAuthenticationResult */
+IdentityAuthenticationWebAuthnAuthenticationResultSchema = z.object({
+  success: z.boolean().optional(),
+  error: z.string().nullable().optional(),
+  userId: z.string().uuid().nullable().optional(),
+  credentialId: z.string().uuid().nullable().optional(),
+  isPasswordless: z.boolean().optional(),
+});
+
+/** Zod schema for IdentityAuthenticationWebAuthnAuthenticatorType */
+IdentityAuthenticationWebAuthnAuthenticatorTypeSchema = z.union([z.literal(1), z.literal(2)]);
+
+/** Zod schema for IdentityAuthenticationWebAuthnCredentialInfo */
+IdentityAuthenticationWebAuthnCredentialInfoSchema = z.object({
+  id: z.string().uuid().optional(),
+  friendlyName: z.string().nullable().optional(),
+  authenticatorType: z.lazy(() => IdentityAuthenticationWebAuthnAuthenticatorTypeSchema).optional(),
+  createdAt: z.string().datetime().optional(),
+  lastUsedAt: z.string().datetime().nullable().optional(),
+  isPasswordless: z.boolean().optional(),
+  isDefault: z.boolean().optional(),
+  backedUp: z.boolean().optional(),
+});
+
+/** Zod schema for IdentityAuthenticationWebAuthnCredentialVerifyResult */
+IdentityAuthenticationWebAuthnCredentialVerifyResultSchema = z.object({
+  success: z.boolean().optional(),
+  error: z.string().nullable().optional(),
+  isValid: z.boolean().optional(),
+  isExpired: z.boolean().optional(),
+  isRevoked: z.boolean().optional(),
+  lastUsedAt: z.string().datetime().nullable().optional(),
+  signatureCount: z.number().int().optional(),
+});
+
+/** Zod schema for IdentityAuthenticationWebAuthnRegistrationOptionsResult */
+IdentityAuthenticationWebAuthnRegistrationOptionsResultSchema = z.object({
+  success: z.boolean().optional(),
+  error: z.string().nullable().optional(),
+  sessionId: z.string().nullable().optional(),
+  optionsJson: z.string().nullable().optional(),
+  options: z.lazy(() => Fido2NetLibCredentialCreateOptionsSchema).optional(),
+});
+
+/** Zod schema for IdentityAuthenticationWebAuthnRegistrationResult */
+IdentityAuthenticationWebAuthnRegistrationResultSchema = z.object({
+  success: z.boolean().optional(),
+  error: z.string().nullable().optional(),
+  credentialId: z.string().uuid().nullable().optional(),
+  friendlyName: z.string().nullable().optional(),
+});
+
+/** Zod schema for IdentityAuthenticationWebAuthnStatusOutput */
+IdentityAuthenticationWebAuthnStatusOutputSchema = z.object({
+  isEnabled: z.boolean().optional(),
+  credentialCount: z.number().int().optional(),
+  hasPasswordlessCredential: z.boolean().optional(),
+  hasPlatformAuthenticator: z.boolean().optional(),
+  hasSecurityKey: z.boolean().optional(),
+});
+
+/** Zod schema for IdentityTenantsArchiveInput */
+IdentityTenantsArchiveInputSchema = z.object({
+  reason: z.string().nullable().optional(),
+});
+
+/** Zod schema for IdentityTenantsCreateTenantInput */
+IdentityTenantsCreateTenantInputSchema = z.object({
+  name: z.string().nullable().optional(),
+  slug: z.string().nullable().optional(),
+  adminEmail: z.string().nullable().optional(),
+  description: z.string().nullable().optional(),
+});
+
+/** Zod schema for IdentityTenantsGetUserMembershipsOutput */
+IdentityTenantsGetUserMembershipsOutputSchema = z.object({
+  memberships: z
+    .array(z.lazy(() => IdentityTenantsUserMembershipSchema))
+    .nullable()
+    .optional(),
+  totalCount: z.number().int().optional(),
+});
+
+/** Zod schema for IdentityTenantsMembershipCountOutput */
+IdentityTenantsMembershipCountOutputSchema = z.object({
+  count: z.number().int().optional(),
+});
+
+/** Zod schema for IdentityTenantsRecoverInput */
+IdentityTenantsRecoverInputSchema = z.object({
+  reason: z.string().nullable().optional(),
+});
+
+/** Zod schema for IdentityTenantsReplaceTenantMetadataInput */
+IdentityTenantsReplaceTenantMetadataInputSchema = z.object({
+  customFields: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
+  tags: z.array(z.string()).nullable().optional(),
+  externalReferences: z.record(z.string(), z.string()).nullable().optional(),
+  businessInfo: z.lazy(() => IdentityTenantsUpdateTenantBusinessInfoInputSchema).optional(),
+  contactInfo: z.lazy(() => IdentityTenantsUpdateTenantContactInfoInputSchema).optional(),
+  adminNotes: z.string().nullable().optional(),
+});
+
+/** Zod schema for IdentityTenantsReplaceTenantSettingsInput */
+IdentityTenantsReplaceTenantSettingsInputSchema = z.object({
+  systemConfiguration: z.lazy(() => IdentityTenantsUpdateTenantSystemConfigurationInputSchema).optional(),
+  featureFlags: z.record(z.string(), z.boolean()).nullable().optional(),
+  businessRules: z.lazy(() => IdentityTenantsUpdateTenantBusinessRulesInputSchema).optional(),
+  userInterfaceSettings: z.lazy(() => IdentityTenantsUpdateTenantUiSettingsInputSchema).optional(),
+  securitySettings: z.lazy(() => IdentityTenantsUpdateTenantSecuritySettingsInputSchema).optional(),
+  integrationSettings: z.lazy(() => IdentityTenantsUpdateTenantIntegrationSettingsInputSchema).optional(),
+  systemLimits: z.lazy(() => IdentityTenantsUpdateTenantSystemLimitsInputSchema).optional(),
+});
+
+/** Zod schema for IdentityTenantsSlugValidation */
+IdentityTenantsSlugValidationSchema = z.object({
+  isAvailable: z.boolean().optional(),
+  isValid: z.boolean().optional(),
+  suggestedAlternatives: z.array(z.string()).nullable().optional(),
+});
+
+/** Zod schema for IdentityTenantsTenant */
+IdentityTenantsTenantSchema = z.object({
+  isGlobal: z.boolean().optional(),
+  isNew: z.boolean().optional(),
+  isDeleted: z.boolean().optional(),
+  domainEvents: z
+    .array(z.lazy(() => CQRSIDomainEventSchema))
+    .nullable()
+    .optional(),
+  id: z.string().uuid().optional(),
+  version: z.number().int().optional(),
+  createdAt: z.string().datetime(),
+  updatedAt: z.string().datetime(),
+  deletedAt: z.string().datetime().nullable().optional(),
+  tenantId: z.string().uuid().nullable().optional(),
+  isDefault: z.boolean().optional(),
+  isArchived: z.boolean().optional(),
+  archivedAt: z.string().datetime().nullable().optional(),
+  tenantMembers: z
+    .array(z.lazy(() => IdentityTenantsTenantMemberSchema))
+    .nullable()
+    .optional(),
+  tenantDomains: z
+    .array(z.lazy(() => IdentityTenantsTenantDomainSchema))
+    .nullable()
+    .optional(),
+  tenantSettings: z.lazy(() => IdentityTenantsTenantSettingsSchema).optional(),
+  tenantStatistics: z.lazy(() => IdentityTenantsTenantStatisticsSchema).optional(),
+  usageTrackingRecords: z
+    .array(z.lazy(() => IdentityTenantsUsageTrackingSchema))
+    .nullable()
+    .optional(),
+  name: z.string().min(1).max(100),
+  description: z.string().max(500).nullable().optional(),
+  isActive: z.boolean().optional(),
+  slug: z.string().min(1).max(255),
+  adminEmail: z.string().max(255).nullable().optional(),
+  canAcceptMembers: z.boolean().optional(),
+  activeMemberCount: z.number().int().optional(),
+  hasActiveMembers: z.boolean().optional(),
+});
+
+/** Zod schema for IdentityTenantsTenantAddress */
+IdentityTenantsTenantAddressSchema = z.object({
+  street: z.string().nullable().optional(),
+  city: z.string().nullable().optional(),
+  state: z.string().nullable().optional(),
+  postalCode: z.string().nullable().optional(),
+  country: z.string().nullable().optional(),
+});
+
+/** Zod schema for IdentityTenantsTenantAuditLogEntry */
+IdentityTenantsTenantAuditLogEntrySchema = z.object({
+  id: z.string().uuid().optional(),
+  tenantId: z.string().uuid().optional(),
+  timestamp: z.string().datetime().optional(),
+  action: z.string().nullable().optional(),
+  actorId: z.string().uuid().nullable().optional(),
+  actorName: z.string().nullable().optional(),
+  actorEmail: z.string().nullable().optional(),
+  beforeValues: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
+  afterValues: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
+  ipAddress: z.string().nullable().optional(),
+  userAgent: z.string().nullable().optional(),
+  correlationId: z.string().nullable().optional(),
+  metadata: z.record(z.string(), z.string()).nullable().optional(),
+});
+
+/** Zod schema for IdentityTenantsTenantBranding */
+IdentityTenantsTenantBrandingSchema = z.object({
+  logoUrl: z.string().nullable().optional(),
+  faviconUrl: z.string().nullable().optional(),
+  primaryColor: z.string().nullable().optional(),
+  secondaryColor: z.string().nullable().optional(),
+  companyName: z.string().nullable().optional(),
+});
+
+/** Zod schema for IdentityTenantsTenantBusinessInfo */
+IdentityTenantsTenantBusinessInfoSchema = z.object({
+  industry: z.string().nullable().optional(),
+  organizationSize: z.string().nullable().optional(),
+  tenantType: z.string().nullable().optional(),
+  geographicRegion: z.string().nullable().optional(),
+  complianceRequirements: z.array(z.string()).nullable().optional(),
+});
+
+/** Zod schema for IdentityTenantsTenantBusinessRules */
+IdentityTenantsTenantBusinessRulesSchema = z.object({
+  workflowRules: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
+  validationRules: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
+  approvalRules: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
+  notificationRules: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
+});
+
+/** Zod schema for IdentityTenantsTenantContactInfo */
+IdentityTenantsTenantContactInfoSchema = z.object({
+  primaryContactName: z.string().nullable().optional(),
+  primaryContactEmail: z.string().nullable().optional(),
+  primaryContactPhone: z.string().nullable().optional(),
+  organizationName: z.string().nullable().optional(),
+  address: z.lazy(() => IdentityTenantsTenantAddressSchema).optional(),
+  website: z.string().nullable().optional(),
+});
+
+/** Zod schema for IdentityTenantsTenantCurrencySettings */
+IdentityTenantsTenantCurrencySettingsSchema = z.object({
+  defaultCurrency: z.string().nullable().optional(),
+  displayFormat: z.string().nullable().optional(),
+  decimalPlaces: z.number().int().optional(),
+});
+
+/** Zod schema for IdentityTenantsTenantDomain */
+IdentityTenantsTenantDomainSchema = z.object({
+  isGlobal: z.boolean().optional(),
+  isNew: z.boolean().optional(),
+  isDeleted: z.boolean().optional(),
+  domainEvents: z
+    .array(z.lazy(() => CQRSIDomainEventSchema))
+    .nullable()
+    .optional(),
+  id: z.string().uuid().optional(),
+  version: z.number().int().optional(),
+  createdAt: z.string().datetime(),
+  updatedAt: z.string().datetime(),
+  deletedAt: z.string().datetime().nullable().optional(),
+  tenantId: z.string().uuid(),
+  topLevelDomain: z.string().min(1).max(255),
+  subdomain: z.string().max(100).nullable().optional(),
+  isMainDomain: z.boolean().optional(),
+  isSecondaryDomain: z.boolean().optional(),
+  userGroupId: z.string().uuid().nullable().optional(),
+  fullDomain: z.string().nullable().optional(),
+  tenant: z.lazy(() => IdentityTenantsTenantSchema).optional(),
+});
+
+/** Zod schema for IdentityTenantsTenantIntegrationSettings */
+IdentityTenantsTenantIntegrationSettingsSchema = z.object({
+  externalServices: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
+  webhookSettings: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
+  apiKeys: z.record(z.string(), z.string()).nullable().optional(),
+  ssoConfiguration: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
+});
+
+/** Zod schema for IdentityTenantsTenantMember */
+IdentityTenantsTenantMemberSchema = z.object({
+  isGlobal: z.boolean().optional(),
+  isNew: z.boolean().optional(),
+  isDeleted: z.boolean().optional(),
+  domainEvents: z
+    .array(z.lazy(() => CQRSIDomainEventSchema))
+    .nullable()
+    .optional(),
+  id: z.string().uuid().optional(),
+  version: z.number().int().optional(),
+  createdAt: z.string().datetime(),
+  updatedAt: z.string().datetime(),
+  deletedAt: z.string().datetime().nullable().optional(),
+  tenantId: z.string().uuid(),
+  userId: z.string().uuid(),
+  parentMemberId: z.string().uuid().nullable().optional(),
+  parentMember: z.lazy(() => IdentityTenantsTenantMemberSchema).optional(),
+  childMembers: z
+    .array(z.lazy(() => IdentityTenantsTenantMemberSchema))
+    .nullable()
+    .optional(),
+  role: z.string().min(1).max(100),
+  isActive: z.boolean().optional(),
+  joinedAt: z.string().datetime().optional(),
+  leftAt: z.string().datetime().nullable().optional(),
+  leaveReason: z.string().max(500).nullable().optional(),
+  metadata: z.string().max(4000).nullable().optional(),
+  tenant: z.lazy(() => IdentityTenantsTenantSchema).optional(),
+});
+
+/** Zod schema for IdentityTenantsTenantMetadata */
+IdentityTenantsTenantMetadataSchema = z.object({
+  id: z.string().uuid().optional(),
+  customFields: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
+  tags: z.array(z.string()).nullable().optional(),
+  externalReferences: z.record(z.string(), z.string()).nullable().optional(),
+  businessInfo: z.lazy(() => IdentityTenantsTenantBusinessInfoSchema).optional(),
+  contactInfo: z.lazy(() => IdentityTenantsTenantContactInfoSchema).optional(),
+  adminNotes: z.string().nullable().optional(),
+  createdAt: z.string().datetime().optional(),
+  updatedAt: z.string().datetime().optional(),
+});
+
+/** Zod schema for IdentityTenantsTenantSecuritySettings */
+IdentityTenantsTenantSecuritySettingsSchema = z.object({
+  passwordPolicy: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
+  sessionTimeout: z.number().int().optional(),
+  twoFactorRequired: z.boolean().optional(),
+  ipWhitelist: z.array(z.string()).nullable().optional(),
+  apiRateLimits: z.record(z.string(), z.number().int()).nullable().optional(),
+});
+
+/** Zod schema for IdentityTenantsTenantSettings */
+IdentityTenantsTenantSettingsSchema = z.object({
+  isGlobal: z.boolean().optional(),
+  isNew: z.boolean().optional(),
+  isDeleted: z.boolean().optional(),
+  domainEvents: z
+    .array(z.lazy(() => CQRSIDomainEventSchema))
+    .nullable()
+    .optional(),
+  id: z.string().uuid().optional(),
+  version: z.number().int().optional(),
+  createdAt: z.string().datetime(),
+  updatedAt: z.string().datetime(),
+  deletedAt: z.string().datetime().nullable().optional(),
+  tenantId: z.string().uuid(),
+  defaultLanguage: z.string().max(10).nullable().optional(),
+  defaultTimezone: z.string().max(50).nullable().optional(),
+  defaultCurrency: z.string().max(3).nullable().optional(),
+  allowUserRegistration: z.boolean().optional(),
+  requireRegistrationApproval: z.boolean().optional(),
+  requireTwoFactorAuth: z.boolean().optional(),
+  maxUsers: z.number().int().nullable().optional(),
+  storageQuota: z.number().int().nullable().optional(),
+  enableAuditLogging: z.boolean().optional(),
+  enableApiAccess: z.boolean().optional(),
+  brandingSettings: z.string().max(5000).nullable().optional(),
+  notificationSettings: z.string().max(5000).nullable().optional(),
+  securitySettings: z.string().max(5000).nullable().optional(),
+  tenant: z.lazy(() => IdentityTenantsTenantSchema).optional(),
+});
+
+/** Zod schema for IdentityTenantsTenantStatistics */
+IdentityTenantsTenantStatisticsSchema = z.object({
+  isGlobal: z.boolean().optional(),
+  isNew: z.boolean().optional(),
+  isDeleted: z.boolean().optional(),
+  domainEvents: z
+    .array(z.lazy(() => CQRSIDomainEventSchema))
+    .nullable()
+    .optional(),
+  id: z.string().uuid().optional(),
+  version: z.number().int().optional(),
+  createdAt: z.string().datetime(),
+  updatedAt: z.string().datetime(),
+  deletedAt: z.string().datetime().nullable().optional(),
+  tenantId: z.string().uuid(),
+  statisticDate: z.string().datetime().optional(),
+  totalMembers: z.number().int().optional(),
+  activeMembers: z.number().int().optional(),
+  inactiveMembers: z.number().int().optional(),
+  storageUsed: z.number().int().optional(),
+  apiCalls: z.number().int().optional(),
+  newMembers: z.number().int().optional(),
+  membersLeft: z.number().int().optional(),
+  customMetrics: z.string().max(10000).nullable().optional(),
+  tenant: z.lazy(() => IdentityTenantsTenantSchema).optional(),
+});
+
+/** Zod schema for IdentityTenantsTenantSystemConfiguration */
+IdentityTenantsTenantSystemConfigurationSchema = z.object({
+  timeZone: z.string().nullable().optional(),
+  locale: z.string().nullable().optional(),
+  dateFormat: z.string().nullable().optional(),
+  numberFormat: z.string().nullable().optional(),
+  currencySettings: z.lazy(() => IdentityTenantsTenantCurrencySettingsSchema).optional(),
+  customConfiguration: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
+});
+
+/** Zod schema for IdentityTenantsTenantSystemLimits */
+IdentityTenantsTenantSystemLimitsSchema = z.object({
+  maxUsers: z.number().int().optional(),
+  maxStorage: z.number().int().optional(),
+  maxApiCalls: z.number().int().optional(),
+  maxProjects: z.number().int().optional(),
+  customLimits: z.record(z.string(), z.number().int()).nullable().optional(),
+});
+
+/** Zod schema for IdentityTenantsTenantUiSettings */
+IdentityTenantsTenantUiSettingsSchema = z.object({
+  theme: z.string().nullable().optional(),
+  layout: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
+  branding: z.lazy(() => IdentityTenantsTenantBrandingSchema).optional(),
+  customCss: z.string().nullable().optional(),
+  componentSettings: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
+});
+
+/** Zod schema for IdentityTenantsTenantValidationError */
+IdentityTenantsTenantValidationErrorSchema = z.object({
+  field: z.string().nullable().optional(),
+  code: z.string().nullable().optional(),
+  message: z.string().nullable().optional(),
+});
+
+/** Zod schema for IdentityTenantsTenantValidationOutput */
+IdentityTenantsTenantValidationOutputSchema = z.object({
+  isValid: z.boolean().optional(),
+  errors: z
+    .array(z.lazy(() => IdentityTenantsTenantValidationErrorSchema))
+    .nullable()
+    .optional(),
+  warnings: z
+    .array(z.lazy(() => IdentityTenantsTenantValidationWarningSchema))
+    .nullable()
+    .optional(),
+  suggestions: z.array(z.string()).nullable().optional(),
+  slugValidation: z.lazy(() => IdentityTenantsSlugValidationSchema).optional(),
+});
+
+/** Zod schema for IdentityTenantsTenantValidationWarning */
+IdentityTenantsTenantValidationWarningSchema = z.object({
+  field: z.string().nullable().optional(),
+  code: z.string().nullable().optional(),
+  message: z.string().nullable().optional(),
+});
+
+/** Zod schema for IdentityTenantsUpdateTenantAddressInput */
+IdentityTenantsUpdateTenantAddressInputSchema = z.object({
+  street: z.string().nullable().optional(),
+  city: z.string().nullable().optional(),
+  state: z.string().nullable().optional(),
+  postalCode: z.string().nullable().optional(),
+  country: z.string().nullable().optional(),
+});
+
+/** Zod schema for IdentityTenantsUpdateTenantBrandingInput */
+IdentityTenantsUpdateTenantBrandingInputSchema = z.object({
+  logoUrl: z.string().nullable().optional(),
+  faviconUrl: z.string().nullable().optional(),
+  primaryColor: z.string().nullable().optional(),
+  secondaryColor: z.string().nullable().optional(),
+  companyName: z.string().nullable().optional(),
+});
+
+/** Zod schema for IdentityTenantsUpdateTenantBusinessInfoInput */
+IdentityTenantsUpdateTenantBusinessInfoInputSchema = z.object({
+  industry: z.string().nullable().optional(),
+  organizationSize: z.string().nullable().optional(),
+  tenantType: z.string().nullable().optional(),
+  geographicRegion: z.string().nullable().optional(),
+  complianceRequirements: z.array(z.string()).nullable().optional(),
+});
+
+/** Zod schema for IdentityTenantsUpdateTenantBusinessRulesInput */
+IdentityTenantsUpdateTenantBusinessRulesInputSchema = z.object({
+  workflowRules: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
+  validationRules: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
+  approvalRules: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
+  notificationRules: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
+});
+
+/** Zod schema for IdentityTenantsUpdateTenantContactInfoInput */
+IdentityTenantsUpdateTenantContactInfoInputSchema = z.object({
+  primaryContactName: z.string().nullable().optional(),
+  primaryContactEmail: z.string().nullable().optional(),
+  primaryContactPhone: z.string().nullable().optional(),
+  organizationName: z.string().nullable().optional(),
+  address: z.lazy(() => IdentityTenantsUpdateTenantAddressInputSchema).optional(),
+  website: z.string().nullable().optional(),
+});
+
+/** Zod schema for IdentityTenantsUpdateTenantCurrencySettingsInput */
+IdentityTenantsUpdateTenantCurrencySettingsInputSchema = z.object({
+  defaultCurrency: z.string().nullable().optional(),
+  displayFormat: z.string().nullable().optional(),
+  decimalPlaces: z.number().int().nullable().optional(),
+});
+
+/** Zod schema for IdentityTenantsUpdateTenantIntegrationSettingsInput */
+IdentityTenantsUpdateTenantIntegrationSettingsInputSchema = z.object({
+  externalServices: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
+  webhookSettings: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
+  apiKeys: z.record(z.string(), z.string()).nullable().optional(),
+  ssoConfiguration: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
+});
+
+/** Zod schema for IdentityTenantsUpdateTenantMetadataInput */
+IdentityTenantsUpdateTenantMetadataInputSchema = z.object({
+  customFields: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
+  tags: z.array(z.string()).nullable().optional(),
+  externalReferences: z.record(z.string(), z.string()).nullable().optional(),
+  businessInfo: z.lazy(() => IdentityTenantsUpdateTenantBusinessInfoInputSchema).optional(),
+  contactInfo: z.lazy(() => IdentityTenantsUpdateTenantContactInfoInputSchema).optional(),
+  adminNotes: z.string().nullable().optional(),
+});
+
+/** Zod schema for IdentityTenantsUpdateTenantInput */
+IdentityTenantsUpdateTenantInputSchema = z.object({
+  name: z.string().nullable().optional(),
+  description: z.string().nullable().optional(),
+});
+
+/** Zod schema for IdentityTenantsUpdateTenantSecuritySettingsInput */
+IdentityTenantsUpdateTenantSecuritySettingsInputSchema = z.object({
+  passwordPolicy: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
+  sessionTimeout: z.number().int().nullable().optional(),
+  twoFactorRequired: z.boolean().nullable().optional(),
+  ipWhitelist: z.array(z.string()).nullable().optional(),
+  apiRateLimits: z.record(z.string(), z.number().int()).nullable().optional(),
+});
+
+/** Zod schema for IdentityTenantsUpdateTenantSettingsInput */
+IdentityTenantsUpdateTenantSettingsInputSchema = z.object({
+  systemConfiguration: z.lazy(() => IdentityTenantsUpdateTenantSystemConfigurationInputSchema).optional(),
+  featureFlags: z.record(z.string(), z.boolean()).nullable().optional(),
+  businessRules: z.lazy(() => IdentityTenantsUpdateTenantBusinessRulesInputSchema).optional(),
+  userInterfaceSettings: z.lazy(() => IdentityTenantsUpdateTenantUiSettingsInputSchema).optional(),
+  securitySettings: z.lazy(() => IdentityTenantsUpdateTenantSecuritySettingsInputSchema).optional(),
+  integrationSettings: z.lazy(() => IdentityTenantsUpdateTenantIntegrationSettingsInputSchema).optional(),
+  systemLimits: z.lazy(() => IdentityTenantsUpdateTenantSystemLimitsInputSchema).optional(),
+});
+
+/** Zod schema for IdentityTenantsUpdateTenantSystemConfigurationInput */
+IdentityTenantsUpdateTenantSystemConfigurationInputSchema = z.object({
+  timeZone: z.string().nullable().optional(),
+  locale: z.string().nullable().optional(),
+  dateFormat: z.string().nullable().optional(),
+  numberFormat: z.string().nullable().optional(),
+  currencySettings: z.lazy(() => IdentityTenantsUpdateTenantCurrencySettingsInputSchema).optional(),
+  customConfiguration: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
+});
+
+/** Zod schema for IdentityTenantsUpdateTenantSystemLimitsInput */
+IdentityTenantsUpdateTenantSystemLimitsInputSchema = z.object({
+  maxUsers: z.number().int().nullable().optional(),
+  maxStorage: z.number().int().nullable().optional(),
+  maxApiCalls: z.number().int().nullable().optional(),
+  maxProjects: z.number().int().nullable().optional(),
+  customLimits: z.record(z.string(), z.number().int()).nullable().optional(),
+});
+
+/** Zod schema for IdentityTenantsUpdateTenantTagsInput */
+IdentityTenantsUpdateTenantTagsInputSchema = z.object({
+  tags: z.array(z.string()).nullable().optional(),
+});
+
+/** Zod schema for IdentityTenantsUpdateTenantUiSettingsInput */
+IdentityTenantsUpdateTenantUiSettingsInputSchema = z.object({
+  theme: z.string().nullable().optional(),
+  layout: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
+  branding: z.lazy(() => IdentityTenantsUpdateTenantBrandingInputSchema).optional(),
+  customCss: z.string().nullable().optional(),
+  componentSettings: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
+});
+
+/** Zod schema for IdentityTenantsUsageTracking */
+IdentityTenantsUsageTrackingSchema = z.object({
+  isGlobal: z.boolean().optional(),
+  isNew: z.boolean().optional(),
+  isDeleted: z.boolean().optional(),
+  domainEvents: z
+    .array(z.lazy(() => CQRSIDomainEventSchema))
+    .nullable()
+    .optional(),
+  id: z.string().uuid().optional(),
+  version: z.number().int().optional(),
+  createdAt: z.string().datetime(),
+  updatedAt: z.string().datetime(),
+  deletedAt: z.string().datetime().nullable().optional(),
+  tenantId: z.string().uuid(),
+  date: z.string().datetime().optional(),
+  resourceType: z.string().min(1).max(100),
+  usageAmount: z.number().int().optional(),
+  unit: z.string().max(50).nullable().optional(),
+  cost: z.number().optional(),
+  metadata: z.string().max(4000).nullable().optional(),
+  tenant: z.lazy(() => IdentityTenantsTenantSchema).optional(),
+});
+
+/** Zod schema for IdentityTenantsUserMembership */
+IdentityTenantsUserMembershipSchema = z.object({
+  membershipId: z.string().uuid().optional(),
+  tenantId: z.string().uuid().optional(),
+  tenantName: z.string().nullable().optional(),
+  tenantSlug: z.string().nullable().optional(),
+  tenantDescription: z.string().nullable().optional(),
+  role: z.string().nullable().optional(),
+  isActive: z.boolean().optional(),
+  joinedAt: z.string().datetime().optional(),
+  leftAt: z.string().datetime().nullable().optional(),
+});
+
+/** Zod schema for IdentityTenantsValidateTenantInput */
+IdentityTenantsValidateTenantInputSchema = z.object({
+  name: z.string().nullable().optional(),
+  slug: z.string().nullable().optional(),
+  adminEmail: z.string().nullable().optional(),
+});
+
+/** Zod schema for IdentityUsersBulkActivateUsersInput */
+IdentityUsersBulkActivateUsersInputSchema = z.object({
+  userIds: z.array(z.string().uuid()).nullable().optional(),
+});
+
+/** Zod schema for IdentityUsersBulkActivateUsersOutput */
+IdentityUsersBulkActivateUsersOutputSchema = z.object({
+  activatedUsers: z
+    .array(z.lazy(() => IdentityUsersUserSchema))
+    .nullable()
+    .optional(),
+  failedUserIds: z.array(z.string().uuid()).nullable().optional(),
+});
+
+/** Zod schema for IdentityUsersBulkCreateUsersInput */
+IdentityUsersBulkCreateUsersInputSchema = z.object({
+  users: z
+    .array(z.lazy(() => IdentityUsersCreateUserRequestItemSchema))
+    .nullable()
+    .optional(),
+});
+
+/** Zod schema for IdentityUsersBulkCreateUsersOutput */
+IdentityUsersBulkCreateUsersOutputSchema = z.object({
+  createdUserIds: z.array(z.string().uuid()).nullable().optional(),
+  failedEmails: z.array(z.string()).nullable().optional(),
+});
+
+/** Zod schema for IdentityUsersBulkDeactivateUsersInput */
+IdentityUsersBulkDeactivateUsersInputSchema = z.object({
+  userIds: z.array(z.string().uuid()).nullable().optional(),
+});
+
+/** Zod schema for IdentityUsersBulkDeactivateUsersOutput */
+IdentityUsersBulkDeactivateUsersOutputSchema = z.object({
+  deactivatedUsers: z
+    .array(z.lazy(() => IdentityUsersUserSchema))
+    .nullable()
+    .optional(),
+  failedUserIds: z.array(z.string().uuid()).nullable().optional(),
+});
+
+/** Zod schema for IdentityUsersBulkDeleteUsersInput */
+IdentityUsersBulkDeleteUsersInputSchema = z.object({
+  userIds: z.array(z.string().uuid()).nullable().optional(),
+});
+
+/** Zod schema for IdentityUsersBulkNotificationInput */
+IdentityUsersBulkNotificationInputSchema = z.object({
+  notificationIds: z.array(z.string().uuid()).nullable().optional(),
+  operation: z.string().nullable().optional(),
+  filterCriteria: z.lazy(() => IdentityUsersNotificationFilterCriteriaSchema).optional(),
+});
+
+/** Zod schema for IdentityUsersBulkPurgeUsersInput */
+IdentityUsersBulkPurgeUsersInputSchema = z.object({
+  userIds: z.array(z.string().uuid()).nullable().optional(),
+  strategy: z.lazy(() => IdentityUsersPurgeStrategySchema).optional(),
+});
+
+/** Zod schema for IdentityUsersBulkRestoreUsersInput */
+IdentityUsersBulkRestoreUsersInputSchema = z.object({
+  userIds: z.array(z.string().uuid()).nullable().optional(),
+});
+
+/** Zod schema for IdentityUsersBulkRestoreUsersOutput */
+IdentityUsersBulkRestoreUsersOutputSchema = z.object({
+  restoredUsers: z
+    .array(z.lazy(() => IdentityUsersUserSchema))
+    .nullable()
+    .optional(),
+  failedUserIds: z.array(z.string().uuid()).nullable().optional(),
+});
+
+/** Zod schema for IdentityUsersBulkSuspendUsersInput */
+IdentityUsersBulkSuspendUsersInputSchema = z.object({
+  userIds: z.array(z.string().uuid()).nullable().optional(),
+});
+
+/** Zod schema for IdentityUsersBulkSuspendUsersOutput */
+IdentityUsersBulkSuspendUsersOutputSchema = z.object({
+  suspendedUsers: z
+    .array(z.lazy(() => IdentityUsersUserSchema))
+    .nullable()
+    .optional(),
+  failedUserIds: z.array(z.string().uuid()).nullable().optional(),
+});
+
+/** Zod schema for IdentityUsersBulkUnsuspendUsersInput */
+IdentityUsersBulkUnsuspendUsersInputSchema = z.object({
+  userIds: z.array(z.string().uuid()).nullable().optional(),
+});
+
+/** Zod schema for IdentityUsersBulkUnsuspendUsersOutput */
+IdentityUsersBulkUnsuspendUsersOutputSchema = z.object({
+  unsuspendedUsers: z
+    .array(z.lazy(() => IdentityUsersUserSchema))
+    .nullable()
+    .optional(),
+  failedUserIds: z.array(z.string().uuid()).nullable().optional(),
+});
+
+/** Zod schema for IdentityUsersBulkUpdateUsersInput */
+IdentityUsersBulkUpdateUsersInputSchema = z.object({
+  updates: z
+    .array(z.lazy(() => IdentityUsersUpdateUserRequestItemSchema))
+    .nullable()
+    .optional(),
+});
+
+/** Zod schema for IdentityUsersCreateUserInput */
+IdentityUsersCreateUserInputSchema = z.object({
+  email: z.string().nullable().optional(),
+  name: z.string().nullable().optional(),
+  phoneNumber: z.string().nullable().optional(),
+});
+
+/** Zod schema for IdentityUsersCreateUserRequestItem */
+IdentityUsersCreateUserRequestItemSchema = z.object({
+  email: z.string().nullable().optional(),
+  name: z.string().nullable().optional(),
+  phoneNumber: z.string().nullable().optional(),
+});
+
+/** Zod schema for IdentityUsersNotificationAction */
+IdentityUsersNotificationActionSchema = z.object({
+  id: z.string().nullable().optional(),
+  text: z.string().nullable().optional(),
+  url: z.string().nullable().optional(),
+  type: z.string().nullable().optional(),
+  isPrimary: z.boolean().optional(),
+});
+
+/** Zod schema for IdentityUsersNotificationFilterCriteria */
+IdentityUsersNotificationFilterCriteriaSchema = z.object({
+  categories: z.array(z.string()).nullable().optional(),
+  priorities: z.array(z.string()).nullable().optional(),
+  types: z.array(z.string()).nullable().optional(),
+  isRead: z.boolean().nullable().optional(),
+  isArchived: z.boolean().nullable().optional(),
+  dateFrom: z.string().datetime().nullable().optional(),
+  dateTo: z.string().datetime().nullable().optional(),
+});
+
+/** Zod schema for IdentityUsersPurgeStrategy */
+IdentityUsersPurgeStrategySchema = z.union([z.literal(0), z.literal(1), z.literal(2)]);
+
+/** Zod schema for IdentityUsersReplaceUserAccessibilityPreferencesInput */
+IdentityUsersReplaceUserAccessibilityPreferencesInputSchema = z.object({
+  accessibilityPreferences: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
+});
+
+/** Zod schema for IdentityUsersReplaceUserLocalizationPreferencesInput */
+IdentityUsersReplaceUserLocalizationPreferencesInputSchema = z.object({
+  localizationPreferences: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
+});
+
+/** Zod schema for IdentityUsersReplaceUserMetadataInput */
+IdentityUsersReplaceUserMetadataInputSchema = z.object({
+  customFields: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
+  tags: z.array(z.string()).nullable().optional(),
+  externalReferences: z.record(z.string(), z.string()).nullable().optional(),
+});
+
+/** Zod schema for IdentityUsersReplaceUserNotificationPreferencesInput */
+IdentityUsersReplaceUserNotificationPreferencesInputSchema = z.object({
+  notificationPreferences: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
+});
+
+/** Zod schema for IdentityUsersReplaceUserPreferencesInput */
+IdentityUsersReplaceUserPreferencesInputSchema = z.object({
+  generalPreferences: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
+  notificationPreferences: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
+  accessibilityPreferences: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
+  privacyPreferences: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
+});
+
+/** Zod schema for IdentityUsersReplaceUserPrivacyPreferencesInput */
+IdentityUsersReplaceUserPrivacyPreferencesInputSchema = z.object({
+  privacyPreferences: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
+});
+
+/** Zod schema for IdentityUsersReplaceUserProfileInput */
+IdentityUsersReplaceUserProfileInputSchema = z.object({
+  displayName: z.string().nullable().optional(),
+  bio: z.string().nullable().optional(),
+  location: z.string().nullable().optional(),
+  website: z.string().nullable().optional(),
+  timeZone: z.string().nullable().optional(),
+  language: z.string().nullable().optional(),
+  profileVisibility: z.string().nullable().optional(),
+  showEmail: z.boolean().optional(),
+  showLocation: z.boolean().optional(),
+});
+
+/** Zod schema for IdentityUsersUpdateUserAccessibilityPreferencesInput */
+IdentityUsersUpdateUserAccessibilityPreferencesInputSchema = z.object({
+  accessibilityPreferences: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
+});
+
+/** Zod schema for IdentityUsersUpdateUserLocalizationPreferencesInput */
+IdentityUsersUpdateUserLocalizationPreferencesInputSchema = z.object({
+  localizationPreferences: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
+});
+
+/** Zod schema for IdentityUsersUpdateUserMetadataInput */
+IdentityUsersUpdateUserMetadataInputSchema = z.object({
+  customFields: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
+  tagsToAdd: z.array(z.string()).nullable().optional(),
+  tagsToRemove: z.array(z.string()).nullable().optional(),
+  externalReferences: z.record(z.string(), z.string()).nullable().optional(),
+});
+
+/** Zod schema for IdentityUsersUpdateUserNotificationPreferencesInput */
+IdentityUsersUpdateUserNotificationPreferencesInputSchema = z.object({
+  notificationPreferences: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
+});
+
+/** Zod schema for IdentityUsersUpdateUserPreferencesInput */
+IdentityUsersUpdateUserPreferencesInputSchema = z.object({
+  generalPreferences: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
+  notificationPreferences: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
+  accessibilityPreferences: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
+  privacyPreferences: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
+});
+
+/** Zod schema for IdentityUsersUpdateUserPrivacyPreferencesInput */
+IdentityUsersUpdateUserPrivacyPreferencesInputSchema = z.object({
+  privacyPreferences: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
+});
+
+/** Zod schema for IdentityUsersUpdateUserProfileInput */
+IdentityUsersUpdateUserProfileInputSchema = z.object({
+  displayName: z.string().nullable().optional(),
+  bio: z.string().nullable().optional(),
+  location: z.string().nullable().optional(),
+  website: z.string().nullable().optional(),
+  timeZone: z.string().nullable().optional(),
+  language: z.string().nullable().optional(),
+  profileVisibility: z.string().nullable().optional(),
+  showEmail: z.boolean().nullable().optional(),
+  showLocation: z.boolean().nullable().optional(),
+});
+
+/** Zod schema for IdentityUsersUpdateUserInput */
+IdentityUsersUpdateUserInputSchema = z.object({
+  name: z.string().nullable().optional(),
+  phoneNumber: z.string().nullable().optional(),
+});
+
+/** Zod schema for IdentityUsersUpdateUserRequestItem */
+IdentityUsersUpdateUserRequestItemSchema = z.object({
+  userId: z.string().uuid().optional(),
+  name: z.string().nullable().optional(),
+  phoneNumber: z.string().nullable().optional(),
+});
+
+/** Zod schema for IdentityUsersUserAccessibilityPreferences */
+IdentityUsersUserAccessibilityPreferencesSchema = z.object({
+  highContrast: z.boolean().optional(),
+  largeText: z.boolean().optional(),
+  screenReader: z.boolean().optional(),
+  reducedMotion: z.boolean().optional(),
+  keyboardNavigation: z.boolean().optional(),
+  fontSize: z.number().int().optional(),
+  colorScheme: z.string().nullable().optional(),
+  customSettings: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
+});
+
+/** Zod schema for IdentityUsersUser */
+IdentityUsersUserSchema = z.object({
+  id: z.string().uuid().optional(),
+  email: z.string().nullable().optional(),
+  name: z.string().nullable().optional(),
+  createdAt: z.string().datetime().optional(),
+  updatedAt: z.string().datetime().nullable().optional(),
+  isActive: z.boolean().optional(),
+  phoneNumber: z.string().nullable().optional(),
+  lastSeenAt: z.string().datetime().nullable().optional(),
+});
+
+/** Zod schema for IdentityUsersUserLocalizationPreferences */
+IdentityUsersUserLocalizationPreferencesSchema = z.object({
+  language: z.string().nullable().optional(),
+  timezone: z.string().nullable().optional(),
+  dateFormat: z.string().nullable().optional(),
+  timeFormat: z.string().nullable().optional(),
+  currency: z.string().nullable().optional(),
+  numberFormat: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
+  customSettings: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
+});
+
+/** Zod schema for IdentityUsersUserMetadata */
+IdentityUsersUserMetadataSchema = z.object({
+  id: z.string().uuid().optional(),
+  userId: z.string().uuid().optional(),
+  customFields: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
+  tags: z.array(z.string()).nullable().optional(),
+  externalReferences: z.record(z.string(), z.string()).nullable().optional(),
+  createdAt: z.string().datetime().optional(),
+  updatedAt: z.string().datetime().nullable().optional(),
+  version: z.string().nullable().optional(),
+});
+
+/** Zod schema for IdentityUsersUserNotificationDetail */
+IdentityUsersUserNotificationDetailSchema = z.object({
+  notification: z.lazy(() => IdentityUsersUserNotificationSchema).optional(),
+  relatedNotifications: z
+    .array(z.lazy(() => IdentityUsersUserNotificationSchema))
+    .nullable()
+    .optional(),
+  actions: z
+    .array(z.lazy(() => IdentityUsersNotificationActionSchema))
+    .nullable()
+    .optional(),
+});
+
+/** Zod schema for IdentityUsersUserNotification */
+IdentityUsersUserNotificationSchema = z.object({
+  id: z.string().uuid().optional(),
+  userId: z.string().uuid().optional(),
+  type: z.string().nullable().optional(),
+  title: z.string().nullable().optional(),
+  message: z.string().nullable().optional(),
+  priority: z.string().nullable().optional(),
+  category: z.string().nullable().optional(),
+  isRead: z.boolean().optional(),
+  isArchived: z.boolean().optional(),
+  readAt: z.string().datetime().nullable().optional(),
+  archivedAt: z.string().datetime().nullable().optional(),
+  expiresAt: z.string().datetime().nullable().optional(),
+  actionUrl: z.string().nullable().optional(),
+  actionText: z.string().nullable().optional(),
+  imageUrl: z.string().nullable().optional(),
+  metadata: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
+  createdAt: z.string().datetime().optional(),
+  updatedAt: z.string().datetime().nullable().optional(),
+  version: z.string().nullable().optional(),
+});
+
+/** Zod schema for IdentityUsersUserNotificationPreferences */
+IdentityUsersUserNotificationPreferencesSchema = z.object({
+  emailEnabled: z.boolean().optional(),
+  pushEnabled: z.boolean().optional(),
+  smsEnabled: z.boolean().optional(),
+  inAppEnabled: z.boolean().optional(),
+  frequency: z.string().nullable().optional(),
+  quietHours: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
+  categoryPreferences: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
+});
+
+/** Zod schema for IdentityUsersUserPreferences */
+IdentityUsersUserPreferencesSchema = z.object({
+  id: z.string().uuid().optional(),
+  userId: z.string().uuid().optional(),
+  generalPreferences: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
+  notificationPreferences: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
+  accessibilityPreferences: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
+  privacyPreferences: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
+  localizationPreferences: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
+  createdAt: z.string().datetime().optional(),
+  updatedAt: z.string().datetime().nullable().optional(),
+  version: z.string().nullable().optional(),
+});
+
+/** Zod schema for IdentityUsersUserPrivacyPreferences */
+IdentityUsersUserPrivacyPreferencesSchema = z.object({
+  profileVisibility: z.string().nullable().optional(),
+  activityTracking: z.boolean().optional(),
+  dataCollection: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
+  thirdPartySharing: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
+  marketingEmails: z.boolean().optional(),
+  analyticsCookies: z.boolean().optional(),
+  personalizedContent: z.boolean().optional(),
+  customSettings: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
+});
+
+/** Zod schema for IdentityUsersUserProfile */
+IdentityUsersUserProfileSchema = z.object({
+  id: z.string().uuid().optional(),
+  userId: z.string().uuid().optional(),
+  displayName: z.string().nullable().optional(),
+  bio: z.string().nullable().optional(),
+  location: z.string().nullable().optional(),
+  website: z.string().nullable().optional(),
+  avatarUrl: z.string().nullable().optional(),
+  bannerUrl: z.string().nullable().optional(),
+  timeZone: z.string().nullable().optional(),
+  language: z.string().nullable().optional(),
+  profileVisibility: z.string().nullable().optional(),
+  showEmail: z.boolean().optional(),
+  showLocation: z.boolean().optional(),
+  createdAt: z.string().datetime().optional(),
+  updatedAt: z.string().datetime().nullable().optional(),
+  version: z.string().nullable().optional(),
+});
+
+/** Zod schema for ModelsPagedResult */
+ModelsPagedResultSchema = z.object({
+  items: z
+    .array(z.lazy(() => IdentityTenantsTenantAuditLogEntrySchema))
+    .nullable()
+    .optional(),
+  totalCount: z.number().int().optional(),
+  skip: z.number().int().optional(),
+  take: z.number().int().optional(),
+  pageNumber: z.number().int().optional(),
+  totalPages: z.number().int().optional(),
+  hasNextPage: z.boolean().optional(),
+  hasPreviousPage: z.boolean().optional(),
+});
+
+/** Zod schema for MvcProblemDetails */
+MvcProblemDetailsSchema = z
+  .object({
+    type: z.string().nullable().optional(),
+    title: z.string().nullable().optional(),
+    status: z.number().int().nullable().optional(),
+    detail: z.string().nullable().optional(),
+    instance: z.string().nullable().optional(),
+  })
+  .catchall(z.record(z.string(), z.unknown()));
+
+/** Zod schema for ObjectsAttestationConveyancePreference */
+ObjectsAttestationConveyancePreferenceSchema = z.enum(['none', 'indirect', 'direct', 'enterprise']);
+
+/** Zod schema for ObjectsAttestationStatementFormatIdentifier */
+ObjectsAttestationStatementFormatIdentifierSchema = z.enum(['packed', 'tpm', 'android-key', 'android-safetynet', 'fido-u2f', 'apple', 'none']);
+
+/** Zod schema for ObjectsAuthenticationExtensionsClientInputs */
+ObjectsAuthenticationExtensionsClientInputsSchema = z.object({
+  'example.extension.bool': z.boolean().nullable().optional(),
+  exts: z.boolean().nullable().optional(),
+  uvm: z.boolean().nullable().optional(),
+  credProps: z.boolean().nullable().optional(),
+  prf: z.lazy(() => ObjectsAuthenticationExtensionsPRFInputsSchema).optional(),
+  largeBlob: z.lazy(() => ObjectsAuthenticationExtensionsLargeBlobInputsSchema).optional(),
+  credentialProtectionPolicy: z.lazy(() => ObjectsCredentialProtectionPolicySchema).optional(),
+  enforceCredentialProtectionPolicy: z.boolean().nullable().optional(),
+});
+
+/** Zod schema for ObjectsAuthenticationExtensionsLargeBlobInputs */
+ObjectsAuthenticationExtensionsLargeBlobInputsSchema = z.object({
+  support: z.lazy(() => ObjectsLargeBlobSupportSchema).optional(),
+  read: z.boolean().optional(),
+  write: z.string().nullable().optional(),
+});
+
+/** Zod schema for ObjectsAuthenticationExtensionsPRFInputs */
+ObjectsAuthenticationExtensionsPRFInputsSchema = z.object({
+  eval: z.lazy(() => ObjectsAuthenticationExtensionsPRFValuesSchema).optional(),
+  evalByCredential: z.lazy(() => KeyValuePairStringAuthenticationExtensionsPRFValuesSchema).optional(),
+});
+
+/** Zod schema for ObjectsAuthenticationExtensionsPRFValues */
+ObjectsAuthenticationExtensionsPRFValuesSchema = z.object({
+  first: z.string().nullable(),
+  second: z.string().nullable().optional(),
+});
+
+/** Zod schema for ObjectsAuthenticatorAttachment */
+ObjectsAuthenticatorAttachmentSchema = z.enum(['platform', 'cross-platform']);
+
+/** Zod schema for ObjectsAuthenticatorTransport */
+ObjectsAuthenticatorTransportSchema = z.enum(['usb', 'nfc', 'ble', 'smart-card', 'hybrid', 'internal']);
+
+/** Zod schema for ObjectsCOSEAlgorithm */
+ObjectsCOSEAlgorithmSchema = z.union([
+  z.literal(-65535),
+  z.literal(-259),
+  z.literal(-258),
+  z.literal(-257),
+  z.literal(-47),
+  z.literal(-39),
+  z.literal(-38),
+  z.literal(-37),
+  z.literal(-36),
+  z.literal(-35),
+  z.literal(-8),
+  z.literal(-7),
+]);
+
+/** Zod schema for ObjectsCredentialProtectionPolicy */
+ObjectsCredentialProtectionPolicySchema = z.enum(['userVerificationOptional', 'userVerificationOptionalWithCredentialIDList', 'userVerificationRequired']);
+
+/** Zod schema for ObjectsLargeBlobSupport */
+ObjectsLargeBlobSupportSchema = z.enum(['required', 'preferred']);
+
+/** Zod schema for ObjectsPublicKeyCredentialDescriptor */
+ObjectsPublicKeyCredentialDescriptorSchema = z.object({
+  type: z.lazy(() => ObjectsPublicKeyCredentialTypeSchema).optional(),
+  id: z.string().nullable().optional(),
+  transports: z
+    .array(z.lazy(() => ObjectsAuthenticatorTransportSchema))
+    .nullable()
+    .optional(),
+});
+
+/** Zod schema for ObjectsPublicKeyCredentialHint */
+ObjectsPublicKeyCredentialHintSchema = z.enum(['security-key', 'client-device', 'hybrid']);
+
+/** Zod schema for ObjectsPublicKeyCredentialType */
+ObjectsPublicKeyCredentialTypeSchema = z.enum(['public-key', 'invalid']);
+
+/** Zod schema for ObjectsResidentKeyRequirement */
+ObjectsResidentKeyRequirementSchema = z.enum(['required', 'preferred', 'discouraged']);
+
+/** Zod schema for ObjectsUserVerificationRequirement */
+ObjectsUserVerificationRequirementSchema = z.enum(['required', 'preferred', 'discouraged']);
+
+/** Zod schema for ResourcesArchiveResourceUsageRecordsInput */
+ResourcesArchiveResourceUsageRecordsInputSchema = z.object({
+  olderThan: z.string().datetime().optional(),
+});
+
+/** Zod schema for ResourcesCheckResourceQuotaInput */
+ResourcesCheckResourceQuotaInputSchema = z.object({
+  amount: z.number().int().optional(),
+});
+
+/** Zod schema for ResourcesCleanupOrphanedResourcesInput */
+ResourcesCleanupOrphanedResourcesInputSchema = z.object({
+  dryRun: z.boolean().optional(),
+  resourceTypes: z
+    .array(z.lazy(() => ResourcesResourceUsageTypeSchema))
+    .nullable()
+    .optional(),
+});
+
+/** Zod schema for ResourcesEffectiveSettingOutput */
+ResourcesEffectiveSettingOutputSchema = z.object({
+  key: z.string().nullable().optional(),
+  value: z.string().nullable().optional(),
+  isUserOverride: z.boolean().optional(),
+});
+
+/** Zod schema for ResourcesRecordTenantResourceUsageInput */
+ResourcesRecordTenantResourceUsageInputSchema = z.object({
+  resourceUsageType: z.lazy(() => ResourcesResourceUsageTypeSchema).optional(),
+  count: z.number().int().optional(),
+  periodStart: z.string().datetime().optional(),
+  periodEnd: z.string().datetime().optional(),
+  metadata: z.record(z.string(), z.string()).nullable().optional(),
+});
+
+/** Zod schema for ResourcesRecordUserResourceUsageInput */
+ResourcesRecordUserResourceUsageInputSchema = z.object({
+  resourceUsageType: z.lazy(() => ResourcesResourceUsageTypeSchema).optional(),
+  count: z.number().int().optional(),
+  periodStart: z.string().datetime().optional(),
+  periodEnd: z.string().datetime().optional(),
+  metadata: z.record(z.string(), z.string()).nullable().optional(),
+});
+
+/** Zod schema for ResourcesResourceMetadata */
+ResourcesResourceMetadataSchema = z.object({
+  isGlobal: z.boolean().optional(),
+  isNew: z.boolean().optional(),
+  isDeleted: z.boolean().optional(),
+  domainEvents: z
+    .array(z.lazy(() => CQRSIDomainEventSchema))
+    .nullable()
+    .optional(),
+  id: z.string().uuid().optional(),
+  version: z.number().int().optional(),
+  createdAt: z.string().datetime(),
+  updatedAt: z.string().datetime(),
+  deletedAt: z.string().datetime().nullable().optional(),
+  tenantId: z.string().uuid().nullable().optional(),
+  key: z.string().min(1).max(100),
+  value: z.string().max(4000).nullable().optional(),
+  dataType: z.string().max(50).nullable().optional(),
+  description: z.string().max(500).nullable().optional(),
+  category: z.string().max(100).nullable().optional(),
+  isSystemManaged: z.boolean().optional(),
+  isActive: z.boolean().optional(),
+  displayOrder: z.number().int().optional(),
+  userId: z.string().uuid().nullable().optional(),
+  resourceId: z.string().uuid().nullable().optional(),
+  rowVersion: z.string().nullable().optional(),
+});
+
+/** Zod schema for ResourcesResourceQuotaEnforcementResult */
+ResourcesResourceQuotaEnforcementResultSchema = z.object({
+  isAllowed: z.boolean().optional(),
+  isSoftLimitExceeded: z.boolean().optional(),
+  isHardLimitExceeded: z.boolean().optional(),
+  currentUsage: z.number().int().optional(),
+  softLimit: z.number().int().nullable().optional(),
+  hardLimit: z.number().int().nullable().optional(),
+  usagePercentage: z.number().optional(),
+  excessAmount: z.number().int().optional(),
+  message: z.string().nullable().optional(),
+  type: z.lazy(() => ResourcesResourceUsageTypeSchema).optional(),
+  nextReset: z.string().datetime().nullable().optional(),
+  remainingQuota: z.number().int().nullable().optional(),
+});
+
+/** Zod schema for ResourcesResourceQuotaPeriod */
+ResourcesResourceQuotaPeriodSchema = z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4), z.literal(5), z.literal(6)]);
+
+/** Zod schema for ResourcesResourceQuotaOutput */
+ResourcesResourceQuotaOutputSchema = z.object({
+  id: z.string().uuid().optional(),
+  tenantId: z.string().uuid().optional(),
+  type: z.lazy(() => ResourcesResourceUsageTypeSchema).optional(),
+  limit: z.number().int().optional(),
+  currentUsage: z.number().int().optional(),
+  remainingQuota: z.number().int().optional(),
+  usagePercentage: z.number().optional(),
+  softLimitPercentage: z.number().optional(),
+  isActive: z.boolean().optional(),
+  period: z.lazy(() => ResourcesResourceQuotaPeriodSchema).optional(),
+  lastResetDate: z.string().datetime().optional(),
+  nextResetDate: z.string().datetime().optional(),
+  description: z.string().nullable().optional(),
+  isSoftLimitExceeded: z.boolean().optional(),
+  isHardLimitExceeded: z.boolean().optional(),
+  shouldReset: z.boolean().optional(),
+  softLimit: z.number().int().nullable().optional(),
+  hardLimit: z.number().int().nullable().optional(),
+});
+
+/** Zod schema for ResourcesResourceSettings */
+ResourcesResourceSettingsSchema = z.object({
+  isGlobal: z.boolean().optional(),
+  isNew: z.boolean().optional(),
+  isDeleted: z.boolean().optional(),
+  domainEvents: z
+    .array(z.lazy(() => CQRSIDomainEventSchema))
+    .nullable()
+    .optional(),
+  id: z.string().uuid().optional(),
+  version: z.number().int().optional(),
+  createdAt: z.string().datetime(),
+  updatedAt: z.string().datetime(),
+  deletedAt: z.string().datetime().nullable().optional(),
+  tenantId: z.string().uuid().nullable().optional(),
+  key: z.string().min(1).max(100),
+  value: z.string().max(4000).nullable().optional(),
+  defaultValue: z.string().max(4000).nullable().optional(),
+  dataType: z.string().max(50).nullable().optional(),
+  description: z.string().max(500).nullable().optional(),
+  category: z.string().max(100).nullable().optional(),
+  isSystemManaged: z.boolean().optional(),
+  isActive: z.boolean().optional(),
+  allowUserOverride: z.boolean().optional(),
+  displayOrder: z.number().int().optional(),
+  userId: z.string().uuid().nullable().optional(),
+  validationRules: z.string().max(1000).nullable().optional(),
+  rowVersion: z.string().nullable().optional(),
+});
+
+/** Zod schema for ResourcesResourceUsageType */
+ResourcesResourceUsageTypeSchema = z.union([
+  z.literal(1),
+  z.literal(2),
+  z.literal(3),
+  z.literal(4),
+  z.literal(5),
+  z.literal(6),
+  z.literal(7),
+  z.literal(8),
+  z.literal(9),
+  z.literal(10),
+  z.literal(11),
+  z.literal(12),
+  z.literal(13),
+  z.literal(14),
+  z.literal(15),
+  z.literal(16),
+  z.literal(17),
+  z.literal(18),
+  z.literal(19),
+  z.literal(20),
+  z.literal(21),
+  z.literal(22),
+  z.literal(23),
+  z.literal(24),
+  z.literal(25),
+  z.literal(26),
+  z.literal(27),
+]);
+
+/** Zod schema for ResourcesSetQuotaInput */
+ResourcesSetQuotaInputSchema = z.object({
+  softLimit: z.number().int().nullable().optional(),
+  hardLimit: z.number().int().nullable().optional(),
+  period: z.lazy(() => ResourcesResourceQuotaPeriodSchema).optional(),
+  isActive: z.boolean().optional(),
+  resetTime: z.string().nullable().optional(),
+});
+
+/** Zod schema for ResourcesSetResourceMetadataInput */
+ResourcesSetResourceMetadataInputSchema = z.object({
+  value: z.string().nullable().optional(),
+  dataType: z.string().nullable().optional(),
+  description: z.string().nullable().optional(),
+  category: z.string().nullable().optional(),
+  displayOrder: z.number().int().nullable().optional(),
+});
+
+/** Zod schema for ResourcesSetResourceSettingsInput */
+ResourcesSetResourceSettingsInputSchema = z.object({
+  value: z.string().nullable().optional(),
+  defaultValue: z.string().nullable().optional(),
+  dataType: z.string().nullable().optional(),
+  description: z.string().nullable().optional(),
+  category: z.string().nullable().optional(),
+  allowUserOverride: z.boolean().nullable().optional(),
+  displayOrder: z.number().int().nullable().optional(),
+  validationRules: z.string().nullable().optional(),
+});
+
+/** Zod schema for ResourcesSetUserResourceSettingsInput */
+ResourcesSetUserResourceSettingsInputSchema = z.object({
+  value: z.string().nullable().optional(),
+});
+
+/** Zod schema for ResourcesToggleResourceQuotaInput */
+ResourcesToggleResourceQuotaInputSchema = z.object({
+  isActive: z.boolean().optional(),
+});
+
+/** Zod schema for ResourcesTrendGranularity */
+ResourcesTrendGranularitySchema = z.union([z.literal(0), z.literal(1), z.literal(2)]);
+
+/** Zod schema for ResourcesUsageRecord */
+ResourcesUsageRecordSchema = z.object({
+  isGlobal: z.boolean().optional(),
+  isNew: z.boolean().optional(),
+  isDeleted: z.boolean().optional(),
+  domainEvents: z
+    .array(z.lazy(() => CQRSIDomainEventSchema))
+    .nullable()
+    .optional(),
+  id: z.string().uuid().optional(),
+  version: z.number().int().optional(),
+  createdAt: z.string().datetime(),
+  updatedAt: z.string().datetime(),
+  deletedAt: z.string().datetime().nullable().optional(),
+  tenantId: z.string().uuid().nullable().optional(),
+  type: z.lazy(() => ResourcesResourceUsageTypeSchema).optional(),
+  count: z.number().int().optional(),
+  usageAmount: z.number().int().optional(),
+  periodStart: z.string().datetime().optional(),
+  periodEnd: z.string().datetime().optional(),
+  averagePerDay: z.number().nullable().optional(),
+  peakUsage: z.number().int().nullable().optional(),
+  peakUsageDate: z.string().datetime().nullable().optional(),
+  metadata: z.string().max(1000).nullable().optional(),
+  source: z.string().max(50).nullable().optional(),
+  userId: z.string().uuid().nullable().optional(),
+  resourceId: z.string().uuid().nullable().optional(),
+  resourceQuotaId: z.string().uuid().nullable().optional(),
+});
+
+/** Zod schema for ResourcesUsageTrendDataPoint */
+ResourcesUsageTrendDataPointSchema = z.object({
+  period: z.string().datetime().optional(),
+  totalUsage: z.number().int().optional(),
+  tenantCount: z.number().int().optional(),
+});
+
+/** Zod schema for ResourcesUsageTrendsResult */
+ResourcesUsageTrendsResultSchema = z.object({
+  type: z.lazy(() => ResourcesResourceUsageTypeSchema).optional(),
+  startDate: z.string().datetime().optional(),
+  endDate: z.string().datetime().optional(),
+  granularity: z.lazy(() => ResourcesTrendGranularitySchema).optional(),
+  dataPoints: z
+    .array(z.lazy(() => ResourcesUsageTrendDataPointSchema))
+    .nullable()
+    .optional(),
+});
+
+/** Zod schema for ValueObjectsBillingCycle */
+ValueObjectsBillingCycleSchema = z.union([z.literal(0), z.literal(1), z.literal(3), z.literal(6), z.literal(12), z.literal(24)]);
+
+/** Zod schema for ValueObjectsMoney */
+ValueObjectsMoneySchema = z.object({
+  amount: z.number().optional(),
+  currency: z.string().nullable().optional(),
+});

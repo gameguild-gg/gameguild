@@ -88,8 +88,15 @@ var app = builder.Build();
 
 // Apply pending EF Core migrations automatically before starting the service
 var runMigrationsOnStartup = app.Configuration.GetValue("Database:RunMigrationsOnStartup", true);
+var resetDatabaseOnStartup = app.Configuration.GetValue("Database:ResetOnStartup", false);
 var allowStartupWithoutDatabase = app.Configuration.GetValue<bool?>("Database:AllowStartupWithoutDatabase")
     ?? app.Environment.IsDevelopment();
+
+if (resetDatabaseOnStartup && app.Environment.IsProduction())
+{
+    throw new InvalidOperationException(
+        "Database:ResetOnStartup is blocked in Production. Use it only in local or staging environments.");
+}
 
 if (runMigrationsOnStartup)
 {
@@ -97,6 +104,14 @@ if (runMigrationsOnStartup)
     {
         using var scope = app.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<GameGuild.API.Database.ApplicationDbContext>();
+
+        if (resetDatabaseOnStartup)
+        {
+            app.Logger.LogWarning(
+                "Database reset requested on startup. The target database will be deleted and rebuilt from the first migration.");
+            await db.Database.EnsureDeletedAsync().ConfigureAwait(false);
+        }
+
         await db.Database.MigrateAsync().ConfigureAwait(false);
     }
     catch (PostgresException ex) when (

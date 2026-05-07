@@ -12,7 +12,8 @@
 # Recommended env vars:
 #   JWT_ISSUER, JWT_AUDIENCE,
 #   SERVICE_FQDN_API, SERVICE_FQDN_WEB,
-#   API_PUBLIC_URL, WEB_PUBLIC_URL
+#   API_PUBLIC_URL, WEB_PUBLIC_URL,
+#   RUN_DB_RESET_ON_STARTUP=true (one-shot staging rebuild only; turn it off after the reset)
 #
 # In the Coolify UI, set the service "Port Exposed" to 8080 so Traefik
 # targets the API port configured below. Set the web service port exposed
@@ -32,6 +33,7 @@ services:
       - ASPNETCORE_HTTP_PORTS=${PORT:-8080}
       - ASPNETCORE_FORWARDEDHEADERS_ENABLED=true
       - Database__RunMigrationsOnStartup=${RUN_DB_MIGRATIONS_ON_STARTUP:-true}
+      - Database__ResetOnStartup=${RUN_DB_RESET_ON_STARTUP:-false}
       - DATAPROTECTION_KEYS_PATH=/app/.aspnet/DataProtection-Keys
       # Shared Coolify Postgres
       - ConnectionStrings__DefaultConnection=Host=${POSTGRES_HOST:?set POSTGRES_HOST};Port=${POSTGRES_PORT:-5432};Database=${POSTGRES_DB:?set POSTGRES_DB};Username=${POSTGRES_USER:?set POSTGRES_USER};Password=${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD};Include Error Detail=false;Maximum Pool Size=100;Minimum Pool Size=5;Connection Idle Lifetime=300

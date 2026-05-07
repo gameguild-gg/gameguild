@@ -5,8 +5,8 @@ node_modules/
 dist/
 *.tsbuildinfo
 
-# Generated code (regenerated from OpenAPI spec)
-src/generated/
+# Generated code is committed because package builds in clean clones
+# depend on these artifacts being present before codegen can be rerun.
 
 # Test coverage
 coverage/
