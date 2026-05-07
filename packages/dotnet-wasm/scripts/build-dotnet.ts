@@ -1,8 +1,7 @@
 import { execSync } from 'node:child_process';
-import { existsSync, mkdirSync, rmSync, cpSync, writeFileSync } from 'node:fs';
-import { resolve, dirname } from 'node:path';
-import { readdirSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { homedir, platform } from 'node:os';
+import { dirname, resolve } from 'node:path';
 import { createInterface } from 'node:readline';
 import { fileURLToPath } from 'node:url';
 
@@ -23,11 +22,11 @@ const envAutoInstall =
   !!process.env.npm_config_yes;
 const nonInteractive = !process.stdin.isTTY;
 const flags = {
-  help:            args.includes('--help'),
-  fakeNoDotnet:    args.includes('--fake-no-dotnet'),
-  fakeNoWorkload:  args.includes('--fake-no-workload'),
-  dryRun:          args.includes('--dry-run'),
-  autoInstall:     args.includes('--auto-install') || args.includes('--yes') || args.includes('-y') || envAutoInstall || nonInteractive,
+  help: args.includes('--help'),
+  fakeNoDotnet: args.includes('--fake-no-dotnet'),
+  fakeNoWorkload: args.includes('--fake-no-workload'),
+  dryRun: args.includes('--dry-run'),
+  autoInstall: args.includes('--auto-install') || args.includes('--yes') || args.includes('-y') || envAutoInstall || nonInteractive,
 };
 
 if (flags.help) {
@@ -231,45 +230,45 @@ if (!activeDotnetPath) {
         installDotnet(projectDotnet);
         // Skip the prompt branches below
       } else {
-      console.log('Options:');
-      console.log('  1) Show commands to install .NET 8 manually');
-      console.log('  2) Install .NET 8 to ~/.dotnet          (alongside current version)');
-      console.log(`  3) Install .NET 8 to ${projectDotnet}   (only this project)`);
-      console.log('  4) Abort');
-      console.log('');
-      const answer = await ask('Choose [1/2/3/4]: ');
+        console.log('Options:');
+        console.log('  1) Show commands to install .NET 8 manually');
+        console.log('  2) Install .NET 8 to ~/.dotnet          (alongside current version)');
+        console.log(`  3) Install .NET 8 to ${projectDotnet}   (only this project)`);
+        console.log('  4) Abort');
+        console.log('');
+        const answer = await ask('Choose [1/2/3/4]: ');
 
-      if (answer === '1') {
-        console.log('');
-        console.log('Install .NET 8 SDK alongside your current version:');
-        console.log('');
-        if (isWindows) {
-          console.log('  Option A - User-local (~/.dotnet):');
-          console.log(`    powershell -NoProfile -ExecutionPolicy unrestricted -Command "&([scriptblock]::Create((Invoke-WebRequest -UseBasicParsing https://dot.net/v1/dotnet-install.ps1))) -Channel 8.0"`);
+        if (answer === '1') {
           console.log('');
-          console.log('  Option B - Project-local:');
-          console.log(`    powershell -NoProfile -ExecutionPolicy unrestricted -Command "&([scriptblock]::Create((Invoke-WebRequest -UseBasicParsing https://dot.net/v1/dotnet-install.ps1))) -Channel 8.0 -InstallDir '${projectDotnet}'"`);
+          console.log('Install .NET 8 SDK alongside your current version:');
+          console.log('');
+          if (isWindows) {
+            console.log('  Option A - User-local (~/.dotnet):');
+            console.log(`    powershell -NoProfile -ExecutionPolicy unrestricted -Command "&([scriptblock]::Create((Invoke-WebRequest -UseBasicParsing https://dot.net/v1/dotnet-install.ps1))) -Channel 8.0"`);
+            console.log('');
+            console.log('  Option B - Project-local:');
+            console.log(`    powershell -NoProfile -ExecutionPolicy unrestricted -Command "&([scriptblock]::Create((Invoke-WebRequest -UseBasicParsing https://dot.net/v1/dotnet-install.ps1))) -Channel 8.0 -InstallDir '${projectDotnet}'"`);
+          } else {
+            console.log('  Option A - User-local (~/.dotnet):');
+            console.log('    curl -sSL https://dot.net/v1/dotnet-install.sh | bash /dev/stdin --channel 8.0');
+            console.log('');
+            console.log('  Option B - Project-local:');
+            console.log(`    curl -sSL https://dot.net/v1/dotnet-install.sh | bash /dev/stdin --channel 8.0 --install-dir "${projectDotnet}"`);
+          }
+          console.log('');
+          console.log('Then re-run this script:');
+          console.log('');
+          console.log('  npm run build-runtime');
+          console.log('');
+          process.exit(1);
+        } else if (answer === '2') {
+          installDotnet(userDotnet);
+        } else if (answer === '3') {
+          installDotnet(projectDotnet);
         } else {
-          console.log('  Option A - User-local (~/.dotnet):');
-          console.log('    curl -sSL https://dot.net/v1/dotnet-install.sh | bash /dev/stdin --channel 8.0');
-          console.log('');
-          console.log('  Option B - Project-local:');
-          console.log(`    curl -sSL https://dot.net/v1/dotnet-install.sh | bash /dev/stdin --channel 8.0 --install-dir "${projectDotnet}"`);
+          console.error('Aborted.');
+          process.exit(1);
         }
-        console.log('');
-        console.log('Then re-run this script:');
-        console.log('');
-        console.log('  npm run build-runtime');
-        console.log('');
-        process.exit(1);
-      } else if (answer === '2') {
-        installDotnet(userDotnet);
-      } else if (answer === '3') {
-        installDotnet(projectDotnet);
-      } else {
-        console.error('Aborted.');
-        process.exit(1);
-      }
       }
     } else if (flags.autoInstall) {
       // System-wide dotnet but auto-install requested: install project-locally to avoid sudo
@@ -373,7 +372,15 @@ if (!hasWorkload) {
   const bin = dotnetCmd();
   const isLocal = isUserLocalDotnet(bin);
 
-  if (isLocal) {
+  if (!isLocal && flags.autoInstall) {
+    console.log('');
+    console.log('The wasm-tools workload is required but not installed on the system SDK.');
+    console.log(`Auto-installing project-local .NET 8 SDK to ${projectDotnet} to avoid elevated privileges...`);
+    installDotnet(projectDotnet);
+    console.log('Auto-installing wasm-tools workload...');
+    dotnet('workload install wasm-tools', dotnetRuntime);
+    console.log('✓ wasm-tools workload installed');
+  } else if (isLocal) {
     // User-local dotnet: offer to install or show command
     console.log('');
     console.log('The wasm-tools workload is required but not installed.');
@@ -383,28 +390,28 @@ if (!hasWorkload) {
       dotnet('workload install wasm-tools', dotnetRuntime);
       console.log('✓ wasm-tools workload installed');
     } else {
-    console.log('Options:');
-    console.log('  1) Install wasm-tools now');
-    console.log('  2) Show command to install manually');
-    console.log('');
-    const answer = await ask('Choose [1/2]: ');
+      console.log('Options:');
+      console.log('  1) Install wasm-tools now');
+      console.log('  2) Show command to install manually');
+      console.log('');
+      const answer = await ask('Choose [1/2]: ');
 
-    if (answer === '1') {
-      console.log('Installing wasm-tools workload...');
-      dotnet('workload install wasm-tools', dotnetRuntime);
-      console.log('✓ wasm-tools workload installed');
-    } else {
-      console.log('');
-      console.log('Run the following command to install wasm-tools:');
-      console.log('');
-      console.log(`  "${bin}" workload install wasm-tools`);
-      console.log('');
-      console.log('Then re-run this script:');
-      console.log('');
-      console.log('  npm run build-runtime');
-      console.log('');
-      process.exit(1);
-    }
+      if (answer === '1') {
+        console.log('Installing wasm-tools workload...');
+        dotnet('workload install wasm-tools', dotnetRuntime);
+        console.log('✓ wasm-tools workload installed');
+      } else {
+        console.log('');
+        console.log('Run the following command to install wasm-tools:');
+        console.log('');
+        console.log(`  "${bin}" workload install wasm-tools`);
+        console.log('');
+        console.log('Then re-run this script:');
+        console.log('');
+        console.log('  npm run build-runtime');
+        console.log('');
+        process.exit(1);
+      }
     }
   } else {
     // System dotnet: requires elevated privileges, user must install manually
