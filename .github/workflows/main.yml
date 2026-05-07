@@ -25,6 +25,9 @@ jobs:
       id-token: write
       issues: write
       pull-requests: write
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      DOTNET_ROOT: /usr/share/dotnet
     steps:
       - uses: actions/checkout@v4
         with:
@@ -42,6 +45,9 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '9.0.x'
+
+      - name: Add dotnet to PATH
+        run: echo "$DOTNET_ROOT" >> $GITHUB_PATH
 
       - name: Install Linux native dependencies
         run: |
