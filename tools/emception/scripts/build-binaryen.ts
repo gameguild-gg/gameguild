@@ -46,12 +46,23 @@ shell.mkdir('-p', USERLAND_DIR);
 shell.mkdir('-p', OUTPUT_DIR);
 shell.mkdir('-p', SYSROOT_LIB);
 
+const GITHUB_AUTH = process.env.GITHUB_TOKEN
+    ? `-H "Authorization: token ${process.env.GITHUB_TOKEN}"`
+    : '';
+
 // 1. Download Binaryen source
-if (!fs.existsSync(SOURCE_DIR)) {
+// Validate the source dir by checking for CMakeLists.txt — a missing file
+// indicates an incomplete or corrupt cache entry that must be re-downloaded.
+const isBinaryenSourceValid = fs.existsSync(path.join(SOURCE_DIR, 'CMakeLists.txt'));
+if (!isBinaryenSourceValid) {
+    if (fs.existsSync(SOURCE_DIR)) {
+        console.log(`Removing incomplete Binaryen source dir: ${path.basename(SOURCE_DIR)}`);
+        shell.rm('-rf', SOURCE_DIR);
+    }
     console.log(`Downloading Binaryen ${BINARYEN_VERSION}...`);
     shell.cd(USERLAND_DIR);
     const tarball = `version_${BINARYEN_VERSION}.tar.gz`;
-    shell.exec(`curl -fSL -o "${tarball}" "https://github.com/WebAssembly/binaryen/archive/refs/tags/${tarball}"`);
+    shell.exec(`curl -fSL ${GITHUB_AUTH} -o "${tarball}" "https://github.com/WebAssembly/binaryen/archive/refs/tags/${tarball}"`);
     shell.exec(`tar xzf "${tarball}"`);
     shell.rm(tarball);
 }

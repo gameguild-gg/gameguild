@@ -37,14 +37,21 @@ shell.mkdir('-p', USERLAND_DIR);
 shell.mkdir('-p', OUTPUT_DIR);
 shell.mkdir('-p', SYSROOT_LIB);
 
+const GITHUB_AUTH = process.env.GITHUB_TOKEN
+  ? `-H "Authorization: token ${process.env.GITHUB_TOKEN}"`
+  : '';
+
 // Detect latest Ninja release from GitHub
 function detectNinjaVersion(): string {
   const envVer = process.env.NINJA_VERSION;
   if (envVer) return envVer;
 
   console.log('Detecting latest Ninja release...');
+  const authHeader = process.env.GITHUB_TOKEN
+    ? `-H "Authorization: token ${process.env.GITHUB_TOKEN}"`
+    : '';
   const result = shell.exec(
-    'curl -fsSL https://api.github.com/repos/ninja-build/ninja/releases/latest',
+    `curl -fsSL ${authHeader} https://api.github.com/repos/ninja-build/ninja/releases/latest`,
     { silent: true },
   );
   if (result.code !== 0) {
@@ -61,11 +68,17 @@ const SOURCE_DIR = path.join(USERLAND_DIR, `ninja-${NINJA_VERSION}`);
 const BUILD_WASM_DIR = path.join(SOURCE_DIR, 'build-wasm');
 
 // 1. Download source
-if (!fs.existsSync(SOURCE_DIR)) {
+// Validate by checking CMakeLists.txt — missing means incomplete cache entry.
+const isNinjaSourceValid = fs.existsSync(path.join(SOURCE_DIR, 'CMakeLists.txt'));
+if (!isNinjaSourceValid) {
+  if (fs.existsSync(SOURCE_DIR)) {
+    console.log(`Removing incomplete Ninja source dir: ${path.basename(SOURCE_DIR)}`);
+    shell.rm('-rf', SOURCE_DIR);
+  }
   console.log(`Downloading Ninja ${NINJA_VERSION}...`);
   shell.cd(USERLAND_DIR);
   const tarball = `v${NINJA_VERSION}.tar.gz`;
-  shell.exec(`curl -fSL -o "${tarball}" "https://github.com/ninja-build/ninja/archive/refs/tags/${tarball}"`);
+  shell.exec(`curl -fSL ${GITHUB_AUTH} -o "${tarball}" "https://github.com/ninja-build/ninja/archive/refs/tags/${tarball}"`);
   shell.exec(`tar xzf "${tarball}"`);
   shell.rm(tarball);
 }

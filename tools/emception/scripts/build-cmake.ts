@@ -37,13 +37,17 @@ shell.mkdir('-p', OUTPUT_DIR);
 shell.mkdir('-p', SYSROOT_LIB);
 
 // Detect latest CMake release
+const GITHUB_AUTH = process.env.GITHUB_TOKEN
+    ? `-H "Authorization: token ${process.env.GITHUB_TOKEN}"`
+    : '';
+
 function detectCMakeVersion(): string {
     const envVer = process.env.CMAKE_VERSION;
     if (envVer) return envVer;
 
     console.log('Detecting latest CMake release...');
     const result = shell.exec(
-        'curl -fsSL https://api.github.com/repos/Kitware/CMake/releases/latest',
+        `curl -fsSL ${GITHUB_AUTH} https://api.github.com/repos/Kitware/CMake/releases/latest`,
         { silent: true },
     );
     if (result.code !== 0) {
@@ -103,7 +107,7 @@ function ensureCMakeSource(version: string): string {
 
     console.log(`Downloading CMake ${version}...`);
     shell.cd(USERLAND_DIR);
-    shell.exec(`curl -fSL -o "${tarball}" "https://github.com/Kitware/CMake/archive/refs/tags/${tarball}"`);
+    shell.exec(`curl -fSL ${GITHUB_AUTH} -o "${tarball}" "https://github.com/Kitware/CMake/archive/refs/tags/${tarball}"`);
 
     shell.rm('-rf', normalizedSourceDir);
     shell.mkdir('-p', normalizedSourceDir);
