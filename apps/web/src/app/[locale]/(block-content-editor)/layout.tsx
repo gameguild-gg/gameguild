@@ -4,21 +4,15 @@ import { TopMenu } from "@/components/block-content-editor/top-menu";
 import React from 'react';
 
 export const metadata: Metadata = {
-  title: "GameGuild Editor",
-  description: "Rich text editor for game development community",
-    generator: 'v0.dev',
+  title: "GameGuild Block Content Editor",
+  description: "Block editor for game development community",
+    generator: 'Next.js',
   applicationName: "GameGuild Editor",
   keywords: [
     "game development",
     "editor",
-    "rich text editor",
     "community",
     "game guild",
-    "lexical",
-    "react",
-    "next.js",
-    "javascript",
-    "typescript",
     "open source",
     "collaboration",
     "game programming",
@@ -27,7 +21,7 @@ export const metadata: Metadata = {
   authors: [
     {
       name: "Miguel Eduardo Senna Moroni",
-      url: "migmoroni.com",
+      url: "https://gameguild.gg",
     },
   ]
 }
