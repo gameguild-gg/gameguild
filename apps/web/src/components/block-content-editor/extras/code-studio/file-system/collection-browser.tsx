@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react"
 import { Folder, File, ChevronRight, ChevronDown, Package, Trash2, Download, Plus } from "lucide-react"
-import type { CollectionMetadata, CollectionManifest, CollectionFolder, CollectionFile } from "@/lib/storage/assets/collection-types"
-import { assetManager } from "@/lib/storage/assets/asset-manager"
+import type { CollectionMetadata, CollectionManifest, CollectionFolder, CollectionFile } from "@/components/block-content-editor/lib/storage/assets/collection-types"
+import { assetManager } from "@/components/block-content-editor/lib/storage/assets/asset-manager"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"

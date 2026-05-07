@@ -14,7 +14,7 @@ import { MonacoVegaLiteEditor } from "./monaco-vega-lite-editor"
 import { type VegaLiteValidationResult } from "./vega-lite-validator"
 import { VegaLiteExport } from "./vega-lite-export"
 import { ControlledVegaLiteViewer } from "./controlled-vega-lite-viewer"
-import { getThemePair, AVAILABLE_THEMES, THEME_DESCRIPTIONS, THEME_MODE_DESCRIPTIONS } from "@/lib/vega-theme-helper"
+import { getThemePair, AVAILABLE_THEMES, THEME_DESCRIPTIONS, THEME_MODE_DESCRIPTIONS } from "@/components/block-content-editor/extras/vega-lite/vega-theme-helper"
 import { VegaLiteManager } from "./vega-lite-manager"
 import { useTheme } from "next-themes"
 

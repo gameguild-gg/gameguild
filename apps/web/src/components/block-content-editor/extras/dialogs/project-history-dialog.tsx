@@ -26,7 +26,7 @@ import {
   Loader2
 } from "lucide-react"
 import { toast } from "sonner"
-import type { CommitInfo, SnapshotInfo } from "@/lib/storage/git"
+import type { CommitInfo, SnapshotInfo } from "@/components/block-content-editor/lib/storage/git"
 
 interface ProjectHistoryDialogProps {
   open: boolean

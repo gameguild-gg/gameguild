@@ -93,7 +93,7 @@ interface MediaUploadResult {
 To display the asset, resolve the URL:
 
 ```typescript
-import { resolveAssetUrl } from "@/lib/storage/assets"
+import { resolveAssetUrl } from "@/components/block-content-editor/lib/storage/assets"
 
 const dataUrl = await resolveAssetUrl("asset://abc123...")
 // Use dataUrl in img src, etc.
@@ -360,7 +360,7 @@ For nodes that currently use data URLs:
 ## Example: Image Node Integration
 
 ```typescript
-import { resolveAssetUrl, isAssetUrl } from "@/lib/storage/assets"
+import { resolveAssetUrl, isAssetUrl } from "@/components/block-content-editor/lib/storage/assets"
 
 function ImageNode({ src }: { src: string }) {
   const [dataUrl, setDataUrl] = useState<string>()

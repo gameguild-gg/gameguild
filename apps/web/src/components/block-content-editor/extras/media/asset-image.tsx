@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { isAssetUrl, resolveAssetUrl } from "@/lib/storage/assets"
+import { isAssetUrl, resolveAssetUrl } from "@/components/block-content-editor/lib/storage/assets"
 
 interface AssetImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
   src?: string

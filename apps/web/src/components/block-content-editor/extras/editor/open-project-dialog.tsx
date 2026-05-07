@@ -7,8 +7,8 @@ import { DeleteConfirmDialog } from "@/components/block-content-editor/extras/di
 import { ProjectSearchFilters } from "@/components/block-content-editor/extras/project-dialog/project-search-filters"
 import { ProjectList } from "@/components/block-content-editor/extras/project-dialog/project-list"
 import { ProjectPagination } from "@/components/block-content-editor/extras/project-dialog/project-pagination"
-import { useProjectDialog } from "@/hooks/editor/use-project-dialog"
-import { useProjectActions } from "@/hooks/editor/use-project-actions"
+import { useProjectDialog } from "@/components/block-content-editor/hooks/editor/use-project-dialog"
+import { useProjectActions } from "@/components/block-content-editor/hooks/editor/use-project-actions"
 import { FolderOpen, Upload, Cloud } from "lucide-react"
 import { useState } from "react"
 import { toast } from "sonner"
@@ -17,8 +17,8 @@ import { ImportProjectDialog } from "./import-project-dialog"
 import { InfoDialog } from "./info-dialog"
 import type { StorageOption } from "./storage-option-selector"
 import { GoogleDriveAuthDialog } from "./google-drive-auth-dialog"
-import { useGoogleDriveAuth } from "@/hooks/editor/use-google-drive-auth"
-import type { ProjectPreferences } from "@/lib/storage/editor/enhanced-storage-adapter"
+import { useGoogleDriveAuth } from "@/components/block-content-editor/hooks/editor/use-google-drive-auth"
+import type { ProjectPreferences } from "@/components/block-content-editor/lib/storage/editor/enhanced-storage-adapter"
 
 interface ProjectData {
   id: string

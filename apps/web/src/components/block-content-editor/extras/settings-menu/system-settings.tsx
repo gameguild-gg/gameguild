@@ -7,7 +7,7 @@ import {
   getEditorPreferences, 
   setNodeTypePreference,
   MODAL_SIZE_LABELS 
-} from "@/lib/storage/editor/editor-preferences"
+} from "@/components/block-content-editor/lib/storage/editor/editor-preferences"
 import { useState, useEffect, useRef } from "react"
 
 interface SystemSettingsProps {

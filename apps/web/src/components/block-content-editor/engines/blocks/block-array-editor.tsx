@@ -6,7 +6,7 @@ import { BlockTypePicker } from "./block-type-picker"
 import { BlockEditorModal } from "./block-editor-modal"
 import { BLOCK_REGISTRY, type BlockCellType } from "./block-component-registry"
 import { DeleteConfirmDialog } from "@/components/block-content-editor/extras/dialogs/delete-confirm-dialog"
-import type { Block, BlockArray } from "@/lib/storage/editor/block-structure"
+import type { Block, BlockArray } from "@/components/block-content-editor/lib/storage/editor/block-structure"
 import { BlockContentRenderer } from "./block-array-viewer"
 import { DragPreview, useBlockDragDrop } from "./block-drag-drop"
 
@@ -174,7 +174,7 @@ interface BlockArrayEditorProps {
   blocks: BlockArray
   onChange: (blocks: BlockArray) => void
   readOnly?: boolean
-  allowedBlockTypes?: import("@/lib/storage/editor/block-structure").BlockCellType[]
+  allowedBlockTypes?: import("@/components/block-content-editor/lib/storage/editor/block-structure").BlockCellType[]
   /** Which tab to show by default in the picker */
   defaultPickerTab?: "blocks" | "templates"
   /** Hide the Block Types tab in the picker */

@@ -29,12 +29,12 @@ import {
   Table2,
   FolderOpen,
 } from "lucide-react"
-import type { Block, BlockCellType } from "@/lib/storage/editor/block-structure"
-import { BLOCK_CELL_TYPES } from "@/lib/storage/editor/block-structure"
+import type { Block, BlockCellType } from "@/components/block-content-editor/lib/storage/editor/block-structure"
+import { BLOCK_CELL_TYPES } from "@/components/block-content-editor/lib/storage/editor/block-structure"
 
 // Re-export for consumers that import from here
-export type { BlockCellType } from "@/lib/storage/editor/block-structure"
-export { BLOCK_CELL_TYPES } from "@/lib/storage/editor/block-structure"
+export type { BlockCellType } from "@/components/block-content-editor/lib/storage/editor/block-structure"
+export { BLOCK_CELL_TYPES } from "@/components/block-content-editor/lib/storage/editor/block-structure"
 
 // ============================================================================
 // Block Type Configuration

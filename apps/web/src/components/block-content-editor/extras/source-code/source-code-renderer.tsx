@@ -16,8 +16,8 @@ import { SourceCodeEditorView } from "./components/source-code-editor-view"
 import { getBaseName, getFileIcon, getLanguageLabel, getStateIcon } from "./utils"
 
 // Import hooks
-import { useCustomTestFiles } from "@/hooks/editor/use-custom-test-files"
-import { useSourceCodeEditor } from "@/hooks/editor/use-source-code-editor"
+import { useCustomTestFiles } from "@/components/block-content-editor/hooks/editor/use-custom-test-files"
+import { useSourceCodeEditor } from "@/components/block-content-editor/hooks/editor/use-source-code-editor"
 
 export interface SourceCodeRendererProps {
   data: SourceCodeData & { hasConfiguredSettings?: boolean; initialFileLanguage?: string }

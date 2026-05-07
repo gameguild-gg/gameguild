@@ -19,7 +19,7 @@ import {
 import { Pencil } from "lucide-react"
 import { MediaNodeBase, type BaseMediaData } from "./base/media-node-base"
 import { UnifiedMediaEditor } from "@/components/block-content-editor/lazy-client-components"
-import { resolveAssetUrl, isAssetUrl } from "@/lib/storage/assets"
+import { resolveAssetUrl, isAssetUrl } from "@/components/block-content-editor/lib/storage/assets"
 import { AssetImage } from "../extras/media/asset-image"
 
 interface MediaComponentProps {

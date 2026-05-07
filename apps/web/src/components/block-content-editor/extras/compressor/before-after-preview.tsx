@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Slider } from "@/components/ui/slider"
-import { WebPConverter } from "@/lib/editor/webp-converter"
+import { WebPConverter } from "@/components/block-content-editor/lib/editor/webp-converter"
 import {
   Eye,
   EyeOff,

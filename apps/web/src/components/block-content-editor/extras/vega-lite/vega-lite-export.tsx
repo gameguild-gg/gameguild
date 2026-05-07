@@ -2,9 +2,9 @@
 
 import { Button } from "@/components/ui/button"
 import { Download } from "lucide-react"
-import { useDarkMode } from "@/hooks/useDarkMode"
-import { applyThemeOverrides, DARK_THEME_OVERRIDES, LIGHT_THEME_OVERRIDES } from "@/lib/vega-theme-overrides"
-import { loadCsvDataIntoSpec } from "@/lib/vega-csv-loader"
+import { useDarkMode } from "@/components/block-content-editor/hooks/useDarkMode"
+import { applyThemeOverrides, DARK_THEME_OVERRIDES, LIGHT_THEME_OVERRIDES } from "@/components/block-content-editor/extras/vega-lite/vega-theme-overrides"
+import { loadCsvDataIntoSpec } from "@/components/block-content-editor/extras/vega-lite/vega-csv-loader"
 
 // Function to create dark version of any theme
 function createDarkTheme(baseTheme: any) {

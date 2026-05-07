@@ -1,7 +1,7 @@
 "use client"
 
 import { Code, CheckSquare, FileText } from "lucide-react"
-import type { ProjectMode } from "@/lib/storage/editor/project-modes"
+import type { ProjectMode } from "@/components/block-content-editor/lib/storage/editor/project-modes"
 
 interface ProjectModeIndicatorProps {
   mode: ProjectMode

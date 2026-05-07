@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useCallback } from "react"
 import { toast } from "sonner"
-import { GoogleDriveSecurity } from "@/utils/editor/google-drive-security"
-import { GoogleDriveService } from "@/services/editor/google-drive-service"
+import { GoogleDriveSecurity } from "@/components/block-content-editor/utils/editor/google-drive-security"
+import { GoogleDriveService } from "@/components/block-content-editor/services/editor/google-drive-service"
 
 interface GoogleDriveAuthState {
   isAuthenticated: boolean

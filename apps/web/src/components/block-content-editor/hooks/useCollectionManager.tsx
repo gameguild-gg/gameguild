@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import { Edit, Trash } from "lucide-react"
-import { assetManager } from "@/lib/storage/assets/asset-manager"
+import { assetManager } from "@/components/block-content-editor/lib/storage/assets/asset-manager"
 import {
   applySorting,
   type ManagerCard,
