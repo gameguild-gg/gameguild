@@ -74,12 +74,22 @@ const OUTPUT_DIR = path.join(ROOT, 'build', 'cdn');
 // Create userland dir if not exists
 shell.mkdir('-p', USERLAND_DIR);
 
+const GITHUB_AUTH = process.env.GITHUB_TOKEN
+    ? `-H "Authorization: token ${process.env.GITHUB_TOKEN}"`
+    : '';
+
 // 1. Download CPython source
-if (!fs.existsSync(SOURCE_DIR)) {
+// Validate by checking configure script — absence means incomplete cache entry.
+const isCPythonSourceValid = fs.existsSync(path.join(SOURCE_DIR, 'configure'));
+if (!isCPythonSourceValid) {
+    if (fs.existsSync(SOURCE_DIR)) {
+        console.log(`Removing incomplete CPython source dir: ${path.basename(SOURCE_DIR)}`);
+        shell.rm('-rf', SOURCE_DIR);
+    }
     console.log(`Downloading CPython ${PYTHON_VERSION}...`);
     shell.cd(USERLAND_DIR);
     const tarball = `v${PYTHON_VERSION}.tar.gz`;
-    shell.exec(`curl -fSL -o "${tarball}" "https://github.com/python/cpython/archive/refs/tags/${tarball}"`);
+    shell.exec(`curl -fSL ${GITHUB_AUTH} -o "${tarball}" "https://github.com/python/cpython/archive/refs/tags/${tarball}"`);
     shell.exec(`tar xzf "${tarball}"`);
     shell.rm(tarball);
 }
