@@ -16,7 +16,7 @@ import {
   FeaturedSection,
   ByTagSection,
   AllProjectsSection,
-} from "@/components/editor/engines/static-viewer-sections"
+} from "@/components/block-content-editor/engines/static-viewer-sections"
 
 // ============================================================================
 // Page component

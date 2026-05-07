@@ -104,7 +104,7 @@ const config = [
   {
     files: [
       'src/components/content/editor/plugins/**/*.{ts,tsx}',
-      'src/components/editor/plugins/**/*.{ts,tsx}',
+      'src/components/block-content-editor/plugins/**/*.{ts,tsx}',
     ],
     rules: {
       '@next/next/no-img-element': 'off',

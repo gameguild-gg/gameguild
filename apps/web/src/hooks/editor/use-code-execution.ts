@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import type { CodeFile, ProgrammingLanguage } from "@/components/editor/extras/source-code/types"
+import type { CodeFile, ProgrammingLanguage } from "@/components/block-content-editor/extras/source-code/types"
 import { useCallback, useState } from "react"
 import { getExecutor } from "./executors/executor-factory"
 import type { ExecutionContext } from "./executors/types"

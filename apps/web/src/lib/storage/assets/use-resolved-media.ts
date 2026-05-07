@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
 import { resolveAssetUrl, isAssetUrl } from "@/lib/storage/assets"
-import type { BaseMediaData } from "@/components/editor/nodes/base/media-node-base"
+import type { BaseMediaData } from "@/components/block-content-editor/nodes/base/media-node-base"
 
 /**
  * Hook to resolve asset URLs for a list of media items

@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import type { LanguageType, ProgrammingLanguage } from "@/components/editor/extras/source-code/types"
+import type { LanguageType, ProgrammingLanguage } from "@/components/block-content-editor/extras/source-code/types"
 import { useState } from "react"
 
 interface UseLanguageSettingsProps {
