@@ -13,9 +13,7 @@
     "isolatedModules": true,
     "jsx": "react-jsx",
     "paths": {
-      "@/*": ["./src/*"],
-      "@emception/browser": ["./packages/browser/src/index.ts"],
-      "@emception/xterm": ["./packages/xterm/src/index.ts"]
+      "@/*": ["./src/*"]
     }
   },
   "include": [
