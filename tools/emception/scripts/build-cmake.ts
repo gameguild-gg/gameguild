@@ -325,6 +325,8 @@ const cmakeCmd = [
     '-DCMAKE_BUILD_TYPE=MinSizeRel',
     '-DBUILD_TESTING=OFF',
     '-DCMAKE_USE_OPENSSL=OFF',
+    // Use bundled zlib — the Emscripten cross-compile env has no system zlib
+    '-DCMAKE_USE_SYSTEM_ZLIB=OFF',
     ...curlFlags,
 ].join(' ');
 console.log(cmakeCmd);
