@@ -167,14 +167,14 @@ patchSource(
     `bool cmSystemTools::RunSingleCommand(std::vector<std::string> const& command,
                                      std::string* captureStdOut,
                                      std::string* captureStdErr, int* retVal,
-                                     char const* dir, OutputOption outputflag,
+                                     const char* dir, OutputOption outputflag,
                                      cmDuration timeout, Encoding encoding)
 {
   cmUVProcessChainBuilder builder;`,
     `bool cmSystemTools::RunSingleCommand(std::vector<std::string> const& command,
                                      std::string* captureStdOut,
                                      std::string* captureStdErr, int* retVal,
-                                     char const* dir, OutputOption outputflag,
+                                     const char* dir, OutputOption outputflag,
                                      cmDuration timeout, Encoding encoding)
 {
 #ifdef __EMSCRIPTEN__
