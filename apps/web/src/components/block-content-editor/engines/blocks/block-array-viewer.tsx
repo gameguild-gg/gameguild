@@ -1,7 +1,7 @@
 "use client"
 
-import type { Block, BlockArray, BlockCellType } from "@/lib/storage/editor/block-structure"
-import { blockToSerializedNode } from "@/lib/storage/editor/cell-converters/blocks"
+import type { Block, BlockArray, BlockCellType } from "@/components/block-content-editor/lib/storage/editor/block-structure"
+import { blockToSerializedNode } from "@/components/block-content-editor/lib/storage/editor/cell-converters/blocks"
 
 // Import all preview components
 import { PreviewQuiz } from "@/components/block-content-editor/plugins/preview-components/preview-quiz"

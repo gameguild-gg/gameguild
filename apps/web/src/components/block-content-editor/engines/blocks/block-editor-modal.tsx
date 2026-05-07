@@ -6,8 +6,8 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import type { Block } from "@/lib/storage/editor/block-structure"
-import type { BlockCellType } from "@/lib/storage/editor/block-structure"
+import type { Block } from "@/components/block-content-editor/lib/storage/editor/block-structure"
+import type { BlockCellType } from "@/components/block-content-editor/lib/storage/editor/block-structure"
 import { BLOCK_REGISTRY } from "./block-component-registry"
 import {
   AdmonitionEditor,

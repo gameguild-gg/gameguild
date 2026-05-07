@@ -8,14 +8,14 @@ import type { CodeFile, LanguageType, ProgrammingLanguage } from "../extras/sour
 import { EditorLoadingContext } from "@/components/block-content-editor/engines/lexical/lexical-editor"
 
 // Import hooks
-import { useCodeExecution } from "@/hooks/editor/use-code-execution"
-import { useEditorStyles } from "@/hooks/editor/use-editor-styles"
-import { useFileContent } from "@/hooks/editor/use-file-content"
-import { useFileManagement } from "@/hooks/editor/use-file-management"
-import { useFileState } from "@/hooks/editor/use-file-state"
-import { useLanguageSettings } from "@/hooks/editor/use-language-settings"
-import { useResize } from "@/hooks/editor/use-resize"
-import { useTerminal } from "@/hooks/editor/use-terminal"
+import { useCodeExecution } from "@/components/block-content-editor/hooks/editor/use-code-execution"
+import { useEditorStyles } from "@/components/block-content-editor/hooks/editor/use-editor-styles"
+import { useFileContent } from "@/components/block-content-editor/hooks/editor/use-file-content"
+import { useFileManagement } from "@/components/block-content-editor/hooks/editor/use-file-management"
+import { useFileState } from "@/components/block-content-editor/hooks/editor/use-file-state"
+import { useLanguageSettings } from "@/components/block-content-editor/hooks/editor/use-language-settings"
+import { useResize } from "@/components/block-content-editor/hooks/editor/use-resize"
+import { useTerminal } from "@/components/block-content-editor/hooks/editor/use-terminal"
 
 // Update the SourceCodeNodeData interface to include the predicate test type
 export interface SourceCodeNodeData {

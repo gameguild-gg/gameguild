@@ -5,8 +5,8 @@
  */
 
 import JSZip from "jszip"
-import { assetManager } from "@/lib/storage/assets/asset-manager"
-import type { AssetData, AssetUsage } from "@/lib/storage/assets/types"
+import { assetManager } from "@/components/block-content-editor/lib/storage/assets/asset-manager"
+import type { AssetData, AssetUsage } from "@/components/block-content-editor/lib/storage/assets/types"
 
 export interface ProjectData {
   id: string

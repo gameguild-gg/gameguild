@@ -1,5 +1,5 @@
 import { toast } from "sonner"
-import type { ProjectPreferences } from "@/lib/storage/editor/project-preferences"
+import type { ProjectPreferences } from "@/components/block-content-editor/lib/storage/editor/project-preferences"
 
 export interface ProjectData {
   id: string

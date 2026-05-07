@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { type ModalSize, getEditorPreferences, getModalSizeClasses } from "@/lib/storage/editor/editor-preferences"
+import { type ModalSize, getEditorPreferences, getModalSizeClasses } from "@/components/block-content-editor/lib/storage/editor/editor-preferences"
 
 export interface EditorSettings {
   nodeType: string

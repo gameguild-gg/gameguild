@@ -19,8 +19,8 @@ import { useCallback, useEffect, useState } from "react"
 import { Edit } from "lucide-react"
 import { VegaLiteEditor } from "@/components/block-content-editor/lazy-client-components"
 import { ContentEditMenu } from "@/components/block-content-editor/extras/content-edit-menu"
-import { VegaLiteViewer } from "@/components/ui/vega-lite-viewer"
-import { getThemePair } from "@/lib/vega-theme-helper"
+import { VegaLiteViewer } from "@/components/block-content-editor/extras/vega-lite/vega-lite-viewer"
+import { getThemePair } from "@/components/block-content-editor/extras/vega-lite/vega-theme-helper"
 import type { JSX } from "react/jsx-runtime"
 
 export interface VegaLiteData {

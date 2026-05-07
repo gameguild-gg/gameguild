@@ -1,7 +1,7 @@
 import { toast } from "sonner"
 import type { LexicalEditor } from "lexical"
 
-import type { EngineType } from "@/lib/storage/editor/project-types"
+import type { EngineType } from "@/components/block-content-editor/lib/storage/editor/project-types"
 
 interface ProjectData {
   id: string

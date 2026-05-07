@@ -3,8 +3,8 @@
 import { useState, useCallback } from "react"
 import { toast } from "sonner"
 import type { SerializedEditorState } from "lexical"
-import { ENGINE_TYPES } from "@/lib/storage/editor/project-types"
-import { cellsToLexical } from "@/lib/storage/editor/cell-converters/lexical"
+import { ENGINE_TYPES } from "@/components/block-content-editor/lib/storage/editor/project-types"
+import { cellsToLexical } from "@/components/block-content-editor/lib/storage/editor/cell-converters/lexical"
 import type { UseProjectStorageReturn } from "./useProjectStorage"
 
 export interface UseProjectPreviewReturn {

@@ -4,7 +4,7 @@ import type { SerializedEditorState } from "lexical"
 import { PreviewRendererType1 } from "@/components/block-content-editor/extras/preview/preview-renderer-type1"
 import { BlockArrayViewer } from "@/components/block-content-editor/engines/blocks/block-array-viewer"
 import type { ProjectData } from "@/components/block-content-editor/extras/preview/preview-load-operations"
-import type { BlockArray } from "@/lib/storage/editor/block-structure"
+import type { BlockArray } from "@/components/block-content-editor/lib/storage/editor/block-structure"
 
 // ============================================================================
 // ProjectContentRenderer — shared content renderer for both Viewer and

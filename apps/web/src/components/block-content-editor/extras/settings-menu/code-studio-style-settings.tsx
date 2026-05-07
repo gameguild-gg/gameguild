@@ -10,8 +10,8 @@ import {
   getProjectPreference, 
   setNodeProjectPreference,
   type ProjectPreferences 
-} from "@/lib/storage/editor/project-preferences"
-import { EnhancedStorageAdapter } from "@/lib/storage/editor/enhanced-storage-adapter"
+} from "@/components/block-content-editor/lib/storage/editor/project-preferences"
+import { EnhancedStorageAdapter } from "@/components/block-content-editor/lib/storage/editor/enhanced-storage-adapter"
 
 interface CodeStudioStyleSettingsProps {
   data: CodeStudioData

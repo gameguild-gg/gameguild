@@ -341,7 +341,7 @@ export async function resolveFileContent(file: CodeFile): Promise<string> {
   if (!assetId) return file.content
   
   try {
-    const { assetManager } = await import("@/lib/storage/assets/asset-manager")
+    const { assetManager } = await import("@/components/block-content-editor/lib/storage/assets/asset-manager")
     const assetData = await assetManager.getAsset(assetId)
     
     if (assetData?.data) {

@@ -1,7 +1,7 @@
 "use client"
 
-import { VegaLiteViewer } from "@/components/ui/vega-lite-viewer"
-import { getThemePair } from "@/lib/vega-theme-helper"
+import { VegaLiteViewer } from "@/components/block-content-editor/extras/vega-lite/vega-lite-viewer"
+import { getThemePair } from "@/components/block-content-editor/extras/vega-lite/vega-theme-helper"
 
 interface PreviewVegaLiteProps {
   node: {

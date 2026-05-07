@@ -1,11 +1,11 @@
 "use client"
 
 import { useState, useEffect, useRef, useMemo, useCallback, type ReactNode } from "react"
-import { EnhancedStorageAdapter } from "@/lib/storage/editor/enhanced-storage-adapter"
-import { extractEditorStates } from "@/lib/storage/editor/layout-detector"
-import { ENGINE_TYPES } from "@/lib/storage/editor/project-types"
-import { cellsToLexical } from "@/lib/storage/editor/cell-converters/lexical"
-import { storageToBlocks } from "@/lib/storage/editor/cell-converters/blocks"
+import { EnhancedStorageAdapter } from "@/components/block-content-editor/lib/storage/editor/enhanced-storage-adapter"
+import { extractEditorStates } from "@/components/block-content-editor/lib/storage/editor/layout-detector"
+import { ENGINE_TYPES } from "@/components/block-content-editor/lib/storage/editor/project-types"
+import { cellsToLexical } from "@/components/block-content-editor/lib/storage/editor/cell-converters/lexical"
+import { storageToBlocks } from "@/components/block-content-editor/lib/storage/editor/cell-converters/blocks"
 import { PreviewRenderer } from "@/components/block-content-editor/extras/preview/preview-renderer"
 import { PreviewTableOfContents } from "@/components/block-content-editor/extras/preview/preview-table-of-contents"
 import { ProjectSidebarList } from "@/components/block-content-editor/extras/preview/project-sidebar-list-improved"
@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/button"
 import { Loader2, FileWarning } from "lucide-react"
 import type { ProjectData } from "@/components/block-content-editor/extras/preview/preview-load-operations"
 import type { SerializedEditorState } from "lexical"
-import type { BlockArray } from "@/lib/storage/editor/block-structure"
+import type { BlockArray } from "@/components/block-content-editor/lib/storage/editor/block-structure"
 
 // ============================================================================
 // Types

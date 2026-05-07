@@ -3,9 +3,9 @@
 import { useEffect, useState, useRef } from "react"
 import { BarChart3, ZoomIn, ZoomOut, RotateCcw, Maximize2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { useVegaLiteChart, renderVegaChart } from "@/components/ui/vega-lite-chart"
-import { useDarkMode } from "@/hooks/useDarkMode"
-import { loadCsvDataIntoSpec } from "@/lib/vega-csv-loader"
+import { useVegaLiteChart, renderVegaChart } from "@/components/block-content-editor/extras/vega-lite/vega-lite-chart"
+import { useDarkMode } from "@/components/block-content-editor/hooks/useDarkMode"
+import { loadCsvDataIntoSpec } from "@/components/block-content-editor/extras/vega-lite/vega-csv-loader"
 
 interface VegaLiteViewerProps {
   spec: string

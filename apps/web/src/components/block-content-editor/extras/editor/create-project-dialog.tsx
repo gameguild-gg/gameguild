@@ -11,9 +11,9 @@ import {
   type ProjectMode, 
   PROJECT_MODES, 
   NODE_RESTRICTIONS,
-} from "@/lib/storage/editor/project-modes"
-import { createProjectData } from "@/lib/storage/editor/layout-detector"
-import { type EngineType, ENGINE_TYPES } from "@/lib/storage/editor/project-types"
+} from "@/components/block-content-editor/lib/storage/editor/project-modes"
+import { createProjectData } from "@/components/block-content-editor/lib/storage/editor/layout-detector"
+import { type EngineType, ENGINE_TYPES } from "@/components/block-content-editor/lib/storage/editor/project-types"
 
 interface ProjectData {
   id: string

@@ -32,7 +32,7 @@ import { FileSourceMenu } from "../file-source-menu"
 import { SaveCollectionDialog } from "./save-collection-dialog"
 import type { CodeFile, FileTreeFolder, FileTreeItem, FileType } from "../types"
 import { cn } from "@/lib/utils"
-import { assetManager } from "@/lib/storage/assets/asset-manager"
+import { assetManager } from "@/components/block-content-editor/lib/storage/assets/asset-manager"
 
 interface FileExplorerProps {
   files: CodeFile[]
@@ -178,7 +178,7 @@ export function FileExplorer({
     for (const asset of assets) {
       if (asset.type === "file" && asset.assetId && asset.name) {
         // Carregar conteúdo do asset
-        const { assetManager } = await import("@/lib/storage/assets/asset-manager")
+        const { assetManager } = await import("@/components/block-content-editor/lib/storage/assets/asset-manager")
         const assetData = await assetManager.getAsset(asset.assetId)
         
         if (assetData?.data) {

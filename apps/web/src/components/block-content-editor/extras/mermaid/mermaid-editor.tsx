@@ -12,13 +12,13 @@ import { useEditorSettings, EditorSettingsButton } from "../settings-menu"
 import { MermaidTemplateSelector } from "./mermaid-template-selector"
 import { MonacoMermaidEditor } from "./monaco-mermaid-editor"
 import { MermaidValidator, type MermaidValidationResult } from "./mermaid-validator"
-import { MermaidViewer } from "@/components/ui/mermaid-viewer"
+import { MermaidViewer } from "@/components/block-content-editor/extras/mermaid/mermaid-viewer"
 import {
   getMermaidThemePair,
   AVAILABLE_MERMAID_THEMES,
   MERMAID_THEME_DESCRIPTIONS,
   MERMAID_THEME_MODE_DESCRIPTIONS,
-} from "@/lib/mermaid-theme-helper"
+} from "@/components/block-content-editor/extras/mermaid/mermaid-theme-helper"
 import { useTheme } from "next-themes"
 
 interface MermaidEditorProps {

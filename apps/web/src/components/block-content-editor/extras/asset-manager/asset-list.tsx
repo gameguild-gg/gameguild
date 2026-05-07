@@ -8,7 +8,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { useEffect, useState } from "react"
-import { assetManager } from "@/lib/storage/assets/asset-manager"
+import { assetManager } from "@/components/block-content-editor/lib/storage/assets/asset-manager"
 
 interface Asset {
   id: string

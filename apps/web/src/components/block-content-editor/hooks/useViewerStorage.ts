@@ -2,14 +2,14 @@
 
 import { useState, useEffect, useRef } from "react"
 import { toast } from "sonner"
-import { EnhancedStorageAdapter } from "@/lib/storage/editor/enhanced-storage-adapter"
-import { extractEditorStates } from "@/lib/storage/editor/layout-detector"
-import { ENGINE_TYPES } from "@/lib/storage/editor/project-types"
+import { EnhancedStorageAdapter } from "@/components/block-content-editor/lib/storage/editor/enhanced-storage-adapter"
+import { extractEditorStates } from "@/components/block-content-editor/lib/storage/editor/layout-detector"
+import { ENGINE_TYPES } from "@/components/block-content-editor/lib/storage/editor/project-types"
 import { checkSelectedProject as checkProjectPreview } from "@/components/block-content-editor/extras/preview/preview-load-operations"
 import type { ProjectData } from "@/components/block-content-editor/extras/preview/preview-load-operations"
-import { cellsToLexical } from "@/lib/storage/editor/cell-converters/lexical"
-import { storageToBlocks } from "@/lib/storage/editor/cell-converters/blocks"
-import type { BlockArray } from "@/lib/storage/editor/block-structure"
+import { cellsToLexical } from "@/components/block-content-editor/lib/storage/editor/cell-converters/lexical"
+import { storageToBlocks } from "@/components/block-content-editor/lib/storage/editor/cell-converters/blocks"
+import type { BlockArray } from "@/components/block-content-editor/lib/storage/editor/block-structure"
 
 export interface ViewerLayoutInfo {
   states: { blocks: Record<string, any> }

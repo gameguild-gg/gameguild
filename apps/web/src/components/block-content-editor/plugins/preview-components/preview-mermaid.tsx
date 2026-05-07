@@ -1,7 +1,7 @@
 "use client"
 
 import type { MermaidData } from "@/components/block-content-editor/nodes/mermaid-node"
-import { MermaidViewer } from "@/components/ui/mermaid-viewer"
+import { MermaidViewer } from "@/components/block-content-editor/extras/mermaid/mermaid-viewer"
 
 interface PreviewMermaidProps {
   data: MermaidData

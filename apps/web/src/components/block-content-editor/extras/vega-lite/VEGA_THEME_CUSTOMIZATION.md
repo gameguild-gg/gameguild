@@ -4,7 +4,7 @@ Este guia explica como personalizar manualmente as cores e estilos dos temas Veg
 
 ## Arquivo de Configuração
 
-O arquivo `/src/lib/vega-theme-overrides.ts` contém todas as personalizações de temas.
+O arquivo `vega-theme-overrides.ts` contém todas as personalizações de temas.
 
 ## Como Funciona
 

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { resolveAssetUrl, isAssetUrl } from "@/lib/storage/assets"
+import { resolveAssetUrl, isAssetUrl } from "@/components/block-content-editor/lib/storage/assets"
 import type { BaseMediaData } from "@/components/block-content-editor/nodes/base/media-node-base"
 
 /**

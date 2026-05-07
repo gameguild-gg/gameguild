@@ -1,7 +1,7 @@
 import { LexicalEditor } from "lexical"
 import { toast } from "sonner"
-import { assetManager } from "@/lib/storage/assets/asset-manager"
-import type { EngineType } from "@/lib/storage/editor/project-types"
+import { assetManager } from "@/components/block-content-editor/lib/storage/assets/asset-manager"
+import type { EngineType } from "@/components/block-content-editor/lib/storage/editor/project-types"
 
 // Parameter interfaces
 export interface SaveParams {

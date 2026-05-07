@@ -1,8 +1,8 @@
 "use client"
 
 import { useEffect, useState, useRef } from "react"
-import { VegaLiteViewer } from "@/components/ui/vega-lite-viewer"
-import { loadCsvDataIntoSpec } from "@/lib/vega-csv-loader"
+import { VegaLiteViewer } from "@/components/block-content-editor/extras/vega-lite/vega-lite-viewer"
+import { loadCsvDataIntoSpec } from "@/components/block-content-editor/extras/vega-lite/vega-csv-loader"
 
 interface ControlledVegaLiteViewerProps {
   spec: string

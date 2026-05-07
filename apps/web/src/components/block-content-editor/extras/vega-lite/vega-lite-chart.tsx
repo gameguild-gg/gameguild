@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-import { applyThemeOverrides, LIGHT_THEME_OVERRIDES, DARK_THEME_OVERRIDES } from "@/lib/vega-theme-overrides"
+import { applyThemeOverrides, LIGHT_THEME_OVERRIDES, DARK_THEME_OVERRIDES } from "@/components/block-content-editor/extras/vega-lite/vega-theme-overrides"
 
 // Theme mapping for vega-themes
 const THEME_MAP: Record<string, string> = {

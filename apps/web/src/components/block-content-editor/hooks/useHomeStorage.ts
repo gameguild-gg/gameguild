@@ -1,8 +1,8 @@
 "use client"
 
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
-import { EnhancedStorageAdapter } from "@/lib/storage/editor/enhanced-storage-adapter"
-import { assetManager } from "@/lib/storage/assets/asset-manager"
+import { EnhancedStorageAdapter } from "@/components/block-content-editor/lib/storage/editor/enhanced-storage-adapter"
+import { assetManager } from "@/components/block-content-editor/lib/storage/assets/asset-manager"
 import { toast } from "sonner"
 
 interface ProjectData {

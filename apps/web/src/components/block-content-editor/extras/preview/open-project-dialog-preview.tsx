@@ -5,11 +5,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { ProjectSearchFilters } from "@/components/block-content-editor/extras/project-dialog/project-search-filters"
 import { ProjectList } from "@/components/block-content-editor/extras/project-dialog/project-list"
 import { ProjectPagination } from "@/components/block-content-editor/extras/project-dialog/project-pagination"
-import { useProjectDialog } from "@/hooks/editor/use-project-dialog"
+import { useProjectDialog } from "@/components/block-content-editor/hooks/editor/use-project-dialog"
 import { FolderOpen, Eye, Cloud } from "lucide-react"
 import { toast } from "sonner"
 import { GoogleDriveAuthDialog } from "../editor/google-drive-auth-dialog"
-import { useGoogleDriveAuth } from "@/hooks/editor/use-google-drive-auth"
+import { useGoogleDriveAuth } from "@/components/block-content-editor/hooks/editor/use-google-drive-auth"
 import { useState } from "react"
 import type { ProjectData } from "./preview-load-operations"
 

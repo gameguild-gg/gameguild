@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { assetManager } from '@/lib/storage/assets/asset-manager'
+import { assetManager } from '@/components/block-content-editor/lib/storage/assets/asset-manager'
 
 export function useAssetPreview(assetId: string, mimeType: string) {
   const [assetDataUrl, setAssetDataUrl] = useState<string | null>(null)

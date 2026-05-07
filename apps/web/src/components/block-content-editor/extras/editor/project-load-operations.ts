@@ -1,9 +1,9 @@
 import { LexicalEditor } from "lexical"
 import { toast } from "sonner"
-import { extractEditorStates } from "@/lib/storage/editor/layout-detector"
-import { ENGINE_TYPES, type EngineType } from "@/lib/storage/editor/project-types"
-import type { ProjectData } from "@/lib/storage/editor/enhanced-storage-adapter"
-import type { CellularContent } from "@/lib/storage/editor/cell-structure"
+import { extractEditorStates } from "@/components/block-content-editor/lib/storage/editor/layout-detector"
+import { ENGINE_TYPES, type EngineType } from "@/components/block-content-editor/lib/storage/editor/project-types"
+import type { ProjectData } from "@/components/block-content-editor/lib/storage/editor/enhanced-storage-adapter"
+import type { CellularContent } from "@/components/block-content-editor/lib/storage/editor/cell-structure"
 
 // Parameter interface
 export interface CheckSelectedProjectParams {
@@ -126,7 +126,7 @@ export async function checkSelectedProject(params: CheckSelectedProjectParams): 
                 setEditorState(JSON.stringify(states.blocks.b1))
                 
                 // Convert cells to Lexical for UI
-                const { cellsToLexical } = require("@/lib/storage/editor/cell-converters/lexical")
+                const { cellsToLexical } = require("@/components/block-content-editor/lib/storage/editor/cell-converters/lexical")
                 const lexicalState = cellsToLexical(states.blocks.b1)
                 const editorState = editorRef.current.parseEditorState(JSON.stringify(lexicalState))
                 editorRef.current.setEditorState(editorState)

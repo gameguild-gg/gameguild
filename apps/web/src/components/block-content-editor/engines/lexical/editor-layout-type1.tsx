@@ -3,7 +3,7 @@
 import { Editor } from "./lexical-editor"
 import type { LexicalEditor } from "lexical"
 import type React from "react"
-import type { ProjectMode } from "@/lib/storage/editor/project-modes"
+import type { ProjectMode } from "@/components/block-content-editor/lib/storage/editor/project-modes"
 
 interface EditorLayoutType1Props {
   editorRef: React.MutableRefObject<LexicalEditor | null>

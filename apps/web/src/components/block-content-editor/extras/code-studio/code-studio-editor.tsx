@@ -31,14 +31,14 @@ import { getGridDimensions, getContainerDimensions } from "./grid-utils"
 import { UnifiedCodeRunner, setDownloadNotificationCallback } from "./runners"
 import { initializeMonacoFileSystem, syncFilesToMonacoFS, updateMonacoFile, disposeMonacoFileSystem } from "./monaco-file-system"
 import { saveProjectAsCollection, countAssetReferences } from "./file-system/collection-utils"
-import { assetManager } from "@/lib/storage/assets/asset-manager"
+import { assetManager } from "@/components/block-content-editor/lib/storage/assets/asset-manager"
 import { 
   ModalSize, 
   getEditorPreferences, 
   getModalSizeClasses 
-} from "@/lib/storage/editor/editor-preferences"
-import { getProjectPreference, type ProjectPreferences } from "@/lib/storage/editor/project-preferences"
-import { EnhancedStorageAdapter } from "@/lib/storage/editor/enhanced-storage-adapter"
+} from "@/components/block-content-editor/lib/storage/editor/editor-preferences"
+import { getProjectPreference, type ProjectPreferences } from "@/components/block-content-editor/lib/storage/editor/project-preferences"
+import { EnhancedStorageAdapter } from "@/components/block-content-editor/lib/storage/editor/enhanced-storage-adapter"
 
 interface CodeStudioEditorProps {
   data: CodeStudioData

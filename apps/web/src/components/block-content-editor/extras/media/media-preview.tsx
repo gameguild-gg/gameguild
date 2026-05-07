@@ -5,7 +5,7 @@ import { Play, Pause, Volume2, VolumeX, Maximize, AlertCircle } from "lucide-rea
 import { Button } from "@/components/ui/button"
 import { Slider } from "@/components/ui/slider"
 import type { BaseMediaData } from "@/components/block-content-editor/nodes/base/media-node-base"
-import { resolveAssetUrl, isAssetUrl } from "@/lib/storage/assets"
+import { resolveAssetUrl, isAssetUrl } from "@/components/block-content-editor/lib/storage/assets"
 import { AssetImage } from "./asset-image"
 
 interface MediaPreviewProps {

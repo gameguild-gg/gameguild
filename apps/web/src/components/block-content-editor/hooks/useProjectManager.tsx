@@ -2,8 +2,8 @@
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react'
 import { Eye, Blocks, Download, Trash, Info } from "lucide-react"
-import { useProjectDialog } from "@/hooks/editor/use-project-dialog"
-import { useProjectActions } from "@/hooks/editor/use-project-actions"
+import { useProjectDialog } from "@/components/block-content-editor/hooks/editor/use-project-dialog"
+import { useProjectActions } from "@/components/block-content-editor/hooks/editor/use-project-actions"
 import {
   applySorting,
   type ManagerCard,
@@ -12,8 +12,8 @@ import {
 } from "@/components/block-content-editor/extras/manager-page"
 import { toast } from "sonner"
 import type { HomeStorageAdapter } from "./useHomeStorage"
-import type { ProjectMode } from "@/lib/storage/editor/project-modes"
-import type { EngineType } from "@/lib/storage/editor/project-types"
+import type { ProjectMode } from "@/components/block-content-editor/lib/storage/editor/project-modes"
+import type { EngineType } from "@/components/block-content-editor/lib/storage/editor/project-types"
 
 interface ProjectData {
   id: string

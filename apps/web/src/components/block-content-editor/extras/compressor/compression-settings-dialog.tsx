@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Separator } from "@/components/ui/separator"
 import { Slider } from "@/components/ui/slider"
 import { Switch } from "@/components/ui/switch"
-import { WEBP_PRESETS, WebPConverter, type WebPConversionOptions } from "@/lib/editor/webp-converter"
+import { WEBP_PRESETS, WebPConverter, type WebPConversionOptions } from "@/components/block-content-editor/lib/editor/webp-converter"
 import { ImageIcon, Palette, Settings, Zap } from "lucide-react"
 import { useCallback, useEffect, useState } from "react"
 

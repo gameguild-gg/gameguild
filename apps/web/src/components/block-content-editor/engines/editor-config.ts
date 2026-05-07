@@ -8,9 +8,9 @@
  * Pages compose freely by passing different configs to EditorField/EditorToolbar.
  */
 
-import type { EngineType } from "@/lib/storage/editor/project-types"
-import type { ProjectMode, NodeRestrictions } from "@/lib/storage/editor/project-modes"
-import type { BlockCellType } from "@/lib/storage/editor/block-structure"
+import type { EngineType } from "@/components/block-content-editor/lib/storage/editor/project-types"
+import type { ProjectMode, NodeRestrictions } from "@/components/block-content-editor/lib/storage/editor/project-modes"
+import type { BlockCellType } from "@/components/block-content-editor/lib/storage/editor/block-structure"
 
 // ============================================================================
 // Field Config — what the editor/viewer field supports
