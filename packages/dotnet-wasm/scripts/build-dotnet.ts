@@ -35,8 +35,8 @@ if (flags.help) {
 Flags:
   --help               Show this help message
   --dry-run            Run detection and prompts but skip actual build steps
-  --auto-install, -y   Non-interactively install .NET 8 SDK and wasm-tools workload to the project-local .dotnet/ directory
-  --fake-no-dotnet     Pretend .NET 8 SDK is not installed (test install prompt)
+  --auto-install, -y   Non-interactively install .NET 9 SDK and wasm-tools workload to the project-local .dotnet/ directory
+  --fake-no-dotnet     Pretend .NET 9 SDK is not installed (test install prompt)
   --fake-no-workload   Pretend wasm-tools workload is missing (test workload install)
 
 Environment variables:
@@ -47,16 +47,16 @@ Environment variables:
 }
 
 if (flags.dryRun) console.log('[DRY-RUN mode: no build steps will execute]');
-if (flags.fakeNoDotnet) console.log('[TEST: pretending .NET 8 is not installed]');
+if (flags.fakeNoDotnet) console.log('[TEST: pretending .NET 9 is not installed]');
 if (flags.fakeNoWorkload) console.log('[TEST: pretending wasm-tools is not installed]');
 if (flags.autoInstall) console.log('[AUTO-INSTALL mode: missing prerequisites will be installed to project-local .dotnet/ without prompting]');
 
 let activeDotnetPath: string | null = null;
 
-function getDotnet8Version(bin: string): string | null {
+function getDotnet9Version(bin: string): string | null {
   try {
     const version = execSync(`"${bin}" --version`, { encoding: 'utf-8', stdio: ['pipe', 'pipe', 'pipe'] }).trim();
-    return version.startsWith('8.') ? version : null;
+    return version.startsWith('9.') ? version : null;
   } catch {
     return null;
   }
@@ -104,18 +104,18 @@ function findAnyDotnet(): DotnetInfo | null {
   return null;
 }
 
-function findDotnet8(): string | null {
+function findDotnet9(): string | null {
   // 1. Project-local .dotnet/
   const projectBin = resolve(projectDotnet, dotnetExeName);
-  if (existsSync(projectBin) && getDotnet8Version(projectBin)) return projectBin;
+  if (existsSync(projectBin) && getDotnet9Version(projectBin)) return projectBin;
 
   // 2. User-local ~/.dotnet/
   const userBin = resolve(userDotnet, dotnetExeName);
-  if (existsSync(userBin) && getDotnet8Version(userBin)) return userBin;
+  if (existsSync(userBin) && getDotnet9Version(userBin)) return userBin;
 
   // 3. System PATH
   const systemBin = whichDotnet();
-  if (systemBin && getDotnet8Version(systemBin)) return systemBin;
+  if (systemBin && getDotnet9Version(systemBin)) return systemBin;
 
   return null;
 }
@@ -126,17 +126,17 @@ function ensureGlobalJson() {
 
   const content = {
     sdk: {
-      version: '8.0.0',
+      version: '9.0.0',
       rollForward: 'latestFeature',
       allowPrerelease: false,
     },
   };
   writeFileSync(globalJsonPath, JSON.stringify(content, null, 2) + '\n');
-  console.log('✓ Created global.json (pins .NET SDK 8.0.x for this project)');
+  console.log('✓ Created global.json (pins .NET SDK 9.0.x for this project)');
 }
 
 function dotnetCmd(): string {
-  if (!activeDotnetPath) throw new Error('.NET 8 SDK not configured');
+  if (!activeDotnetPath) throw new Error('.NET 9 SDK not configured');
   return activeDotnetPath;
 }
 
@@ -175,21 +175,21 @@ function ask(question: string): Promise<string> {
 }
 
 function installDotnet(installDir: string) {
-  console.log(`Installing .NET 8 SDK to ${installDir} ...`);
+  console.log(`Installing .NET 9 SDK to ${installDir} ...`);
   mkdirSync(installDir, { recursive: true });
   if (isWindows) {
-    run(`powershell -NoProfile -ExecutionPolicy unrestricted -Command "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; &([scriptblock]::Create((Invoke-WebRequest -UseBasicParsing https://dot.net/v1/dotnet-install.ps1))) -Channel 8.0 -InstallDir '${installDir}'"`);
+    run(`powershell -NoProfile -ExecutionPolicy unrestricted -Command "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; &([scriptblock]::Create((Invoke-WebRequest -UseBasicParsing https://dot.net/v1/dotnet-install.ps1))) -Channel 9.0 -InstallDir '${installDir}'"`);
   } else {
-    run(`curl -sSL https://dot.net/v1/dotnet-install.sh | bash /dev/stdin --channel 8.0 --install-dir "${installDir}"`);
+    run(`curl -sSL https://dot.net/v1/dotnet-install.sh | bash /dev/stdin --channel 9.0 --install-dir "${installDir}"`);
   }
 
   const bin = resolve(installDir, dotnetExeName);
-  if (!getDotnet8Version(bin)) {
-    console.error('Error: .NET 8 SDK installation failed.');
+  if (!getDotnet9Version(bin)) {
+    console.error('Error: .NET 9 SDK installation failed.');
     process.exit(1);
   }
   activeDotnetPath = bin;
-  console.log(`✓ .NET 8 SDK installed to ${installDir}`);
+  console.log(`✓ .NET 9 SDK installed to ${installDir}`);
 }
 
 function isUserLocalDotnet(bin: string): boolean {
@@ -209,51 +209,51 @@ function removePackageJsonFiles(dir: string) {
 
 console.log('=== Building RoslynWrapper for Browser WASM ===');
 
-// Find .NET 8 SDK: project-local > user-local > system
-activeDotnetPath = flags.fakeNoDotnet ? null : findDotnet8();
+// Find .NET 9 SDK: project-local > user-local > system
+activeDotnetPath = flags.fakeNoDotnet ? null : findDotnet9();
 
 if (!activeDotnetPath) {
   // Check if there's a dotnet of another version
   const existing = flags.fakeNoDotnet ? null : findAnyDotnet();
 
   if (existing) {
-    // dotnet exists but is not version 8
+    // dotnet exists but is not version 9
     console.log(`.NET SDK found: v${existing.version} at "${existing.bin}"`);
-    console.log('This project requires .NET 8. You can install it alongside your current version.');
-    console.log('A global.json file will pin this project to .NET 8 without affecting other projects.');
+    console.log('This project requires .NET 9. You can install it alongside your current version.');
+    console.log('A global.json file will pin this project to .NET 9 without affecting other projects.');
     console.log('');
 
     if (existing.isLocal) {
       // User-local dotnet: offer auto-install or show commands
       if (flags.autoInstall) {
-        console.log(`Auto-installing .NET 8 SDK to ${projectDotnet} ...`);
+        console.log(`Auto-installing .NET 9 SDK to ${projectDotnet} ...`);
         installDotnet(projectDotnet);
         // Skip the prompt branches below
       } else {
         console.log('Options:');
-        console.log('  1) Show commands to install .NET 8 manually');
-        console.log('  2) Install .NET 8 to ~/.dotnet          (alongside current version)');
-        console.log(`  3) Install .NET 8 to ${projectDotnet}   (only this project)`);
+        console.log('  1) Show commands to install .NET 9 manually');
+        console.log('  2) Install .NET 9 to ~/.dotnet          (alongside current version)');
+        console.log(`  3) Install .NET 9 to ${projectDotnet}   (only this project)`);
         console.log('  4) Abort');
         console.log('');
         const answer = await ask('Choose [1/2/3/4]: ');
 
         if (answer === '1') {
           console.log('');
-          console.log('Install .NET 8 SDK alongside your current version:');
+          console.log('Install .NET 9 SDK alongside your current version:');
           console.log('');
           if (isWindows) {
             console.log('  Option A - User-local (~/.dotnet):');
-            console.log(`    powershell -NoProfile -ExecutionPolicy unrestricted -Command "&([scriptblock]::Create((Invoke-WebRequest -UseBasicParsing https://dot.net/v1/dotnet-install.ps1))) -Channel 8.0"`);
+            console.log(`    powershell -NoProfile -ExecutionPolicy unrestricted -Command "&([scriptblock]::Create((Invoke-WebRequest -UseBasicParsing https://dot.net/v1/dotnet-install.ps1))) -Channel 9.0"`);
             console.log('');
             console.log('  Option B - Project-local:');
-            console.log(`    powershell -NoProfile -ExecutionPolicy unrestricted -Command "&([scriptblock]::Create((Invoke-WebRequest -UseBasicParsing https://dot.net/v1/dotnet-install.ps1))) -Channel 8.0 -InstallDir '${projectDotnet}'"`);
+            console.log(`    powershell -NoProfile -ExecutionPolicy unrestricted -Command "&([scriptblock]::Create((Invoke-WebRequest -UseBasicParsing https://dot.net/v1/dotnet-install.ps1))) -Channel 9.0 -InstallDir '${projectDotnet}'"`);
           } else {
             console.log('  Option A - User-local (~/.dotnet):');
-            console.log('    curl -sSL https://dot.net/v1/dotnet-install.sh | bash /dev/stdin --channel 8.0');
+            console.log('    curl -sSL https://dot.net/v1/dotnet-install.sh | bash /dev/stdin --channel 9.0');
             console.log('');
             console.log('  Option B - Project-local:');
-            console.log(`    curl -sSL https://dot.net/v1/dotnet-install.sh | bash /dev/stdin --channel 8.0 --install-dir "${projectDotnet}"`);
+            console.log(`    curl -sSL https://dot.net/v1/dotnet-install.sh | bash /dev/stdin --channel 9.0 --install-dir "${projectDotnet}"`);
           }
           console.log('');
           console.log('Then re-run this script:');
@@ -272,26 +272,26 @@ if (!activeDotnetPath) {
       }
     } else if (flags.autoInstall) {
       // System-wide dotnet but auto-install requested: install project-locally to avoid sudo
-      console.log(`Auto-installing .NET 8 SDK to ${projectDotnet} (avoiding system-wide install) ...`);
+      console.log(`Auto-installing .NET 9 SDK to ${projectDotnet} (avoiding system-wide install) ...`);
       installDotnet(projectDotnet);
     } else {
       // System-wide dotnet (admin): user must install manually
       console.log(`The .NET SDK at "${existing.bin}" is installed system-wide (requires elevated privileges).`);
       console.log('');
-      console.log('To install .NET 8 alongside your current version, run the following:');
+      console.log('To install .NET 9 alongside your current version, run the following:');
       console.log('');
       if (isWindows) {
         console.log('  Option A - As Administrator (system-wide, side-by-side):');
-        console.log(`    powershell -NoProfile -ExecutionPolicy unrestricted -Command "&([scriptblock]::Create((Invoke-WebRequest -UseBasicParsing https://dot.net/v1/dotnet-install.ps1))) -Channel 8.0"`);
+        console.log(`    powershell -NoProfile -ExecutionPolicy unrestricted -Command "&([scriptblock]::Create((Invoke-WebRequest -UseBasicParsing https://dot.net/v1/dotnet-install.ps1))) -Channel 9.0"`);
         console.log('');
         console.log('  Option B - User-local (no admin needed):');
-        console.log(`    powershell -NoProfile -ExecutionPolicy unrestricted -Command "&([scriptblock]::Create((Invoke-WebRequest -UseBasicParsing https://dot.net/v1/dotnet-install.ps1))) -Channel 8.0 -InstallDir '%USERPROFILE%\\.dotnet'"`);
+        console.log(`    powershell -NoProfile -ExecutionPolicy unrestricted -Command "&([scriptblock]::Create((Invoke-WebRequest -UseBasicParsing https://dot.net/v1/dotnet-install.ps1))) -Channel 9.0 -InstallDir '%USERPROFILE%\\.dotnet'"`);
       } else {
         console.log('  Option A - System-wide (side-by-side):');
-        console.log('    sudo bash -c "curl -sSL https://dot.net/v1/dotnet-install.sh | bash /dev/stdin --channel 8.0 --install-dir /usr/share/dotnet"');
+        console.log('    sudo bash -c "curl -sSL https://dot.net/v1/dotnet-install.sh | bash /dev/stdin --channel 9.0 --install-dir /usr/share/dotnet"');
         console.log('');
         console.log('  Option B - User-local (no admin needed):');
-        console.log('    curl -sSL https://dot.net/v1/dotnet-install.sh | bash /dev/stdin --channel 8.0');
+        console.log('    curl -sSL https://dot.net/v1/dotnet-install.sh | bash /dev/stdin --channel 9.0');
       }
       console.log('');
       console.log('Then re-run this script:');
@@ -303,7 +303,7 @@ if (!activeDotnetPath) {
   } else if (flags.autoInstall) {
     // No dotnet at all + auto-install: install project-locally
     console.log('.NET SDK not found.');
-    console.log(`Auto-installing .NET 8 SDK to ${projectDotnet} ...`);
+    console.log(`Auto-installing .NET 9 SDK to ${projectDotnet} ...`);
     installDotnet(projectDotnet);
   } else {
     // No dotnet at all
@@ -319,20 +319,20 @@ if (!activeDotnetPath) {
 
     if (answer === '1') {
       console.log('');
-      console.log('Install .NET 8 SDK manually using one of the following:');
+      console.log('Install .NET 9 SDK manually using one of the following:');
       console.log('');
       if (isWindows) {
         console.log('  Option A - User-local (~/.dotnet):');
-        console.log(`    powershell -NoProfile -ExecutionPolicy unrestricted -Command "&([scriptblock]::Create((Invoke-WebRequest -UseBasicParsing https://dot.net/v1/dotnet-install.ps1))) -Channel 8.0"`);
+        console.log(`    powershell -NoProfile -ExecutionPolicy unrestricted -Command "&([scriptblock]::Create((Invoke-WebRequest -UseBasicParsing https://dot.net/v1/dotnet-install.ps1))) -Channel 9.0"`);
         console.log('');
         console.log('  Option B - Project-local:');
-        console.log(`    powershell -NoProfile -ExecutionPolicy unrestricted -Command "&([scriptblock]::Create((Invoke-WebRequest -UseBasicParsing https://dot.net/v1/dotnet-install.ps1))) -Channel 8.0 -InstallDir '${projectDotnet}'"`);
+        console.log(`    powershell -NoProfile -ExecutionPolicy unrestricted -Command "&([scriptblock]::Create((Invoke-WebRequest -UseBasicParsing https://dot.net/v1/dotnet-install.ps1))) -Channel 9.0 -InstallDir '${projectDotnet}'"`);
       } else {
         console.log('  Option A - User-local (~/.dotnet):');
-        console.log('    curl -sSL https://dot.net/v1/dotnet-install.sh | bash /dev/stdin --channel 8.0');
+        console.log('    curl -sSL https://dot.net/v1/dotnet-install.sh | bash /dev/stdin --channel 9.0');
         console.log('');
         console.log('  Option B - Project-local:');
-        console.log(`    curl -sSL https://dot.net/v1/dotnet-install.sh | bash /dev/stdin --channel 8.0 --install-dir "${projectDotnet}"`);
+        console.log(`    curl -sSL https://dot.net/v1/dotnet-install.sh | bash /dev/stdin --channel 9.0 --install-dir "${projectDotnet}"`);
       }
       console.log('');
       console.log('Then re-run this script:');
@@ -345,20 +345,20 @@ if (!activeDotnetPath) {
     } else if (answer === '3') {
       installDotnet(projectDotnet);
     } else {
-      console.error('Aborted. Please install .NET 8 SDK manually.');
+      console.error('Aborted. Please install .NET 9 SDK manually.');
       process.exit(1);
     }
   }
 } else {
-  console.log(`Using .NET 8 SDK: ${activeDotnetPath}`);
+  console.log(`Using .NET 9 SDK: ${activeDotnetPath}`);
 }
 
-// Ensure global.json pins this project to .NET 8
+// Ensure global.json pins this project to .NET 9
 ensureGlobalJson();
 
 if (flags.dryRun) {
   console.log('');
-  console.log(`[DRY-RUN] .NET 8 SDK resolved to: ${activeDotnetPath}`);
+  console.log(`[DRY-RUN] .NET 9 SDK resolved to: ${activeDotnetPath}`);
   console.log('[DRY-RUN] Would now: check workload, restore, publish, copy files.');
   console.log('[DRY-RUN] Done.');
   process.exit(0);
@@ -375,7 +375,7 @@ if (!hasWorkload) {
   if (!isLocal && flags.autoInstall) {
     console.log('');
     console.log('The wasm-tools workload is required but not installed on the system SDK.');
-    console.log(`Auto-installing project-local .NET 8 SDK to ${projectDotnet} to avoid elevated privileges...`);
+    console.log(`Auto-installing project-local .NET 9 SDK to ${projectDotnet} to avoid elevated privileges...`);
     installDotnet(projectDotnet);
     console.log('Auto-installing wasm-tools workload...');
     dotnet('workload install wasm-tools', dotnetRuntime);
@@ -455,7 +455,7 @@ mkdirSync(publicManaged, { recursive: true });
 rmSync(publicManaged, { recursive: true, force: true });
 mkdirSync(publicManaged, { recursive: true });
 
-const frameworkDir = resolve(dotnetRuntime, 'bin/Release/net8.0/browser-wasm/AppBundle/_framework');
+const frameworkDir = resolve(dotnetRuntime, 'bin/Release/net9.0/browser-wasm/AppBundle/_framework');
 cpSync(frameworkDir, publicManaged, { recursive: true, verbatimSymlinks: true });
 
 // Copy main.js from source
