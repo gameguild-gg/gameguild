@@ -101,7 +101,7 @@ if (runMigrationsOnStartup)
     }
     catch (Npgsql.PostgresException ex) when (
         allowStartupWithoutDatabase &&
-        (ex.SqlState == PostgresErrorCodes.InvalidPassword || ex.SqlState == PostgresErrorCodes.InvalidAuthorizationSpecification))
+        (ex.SqlState == Npgsql.PostgresErrorCodes.InvalidPassword || ex.SqlState == Npgsql.PostgresErrorCodes.InvalidAuthorizationSpecification))
     {
         app.Logger.LogWarning(
             "Database migration skipped because database authentication failed for the configured connection. Verify the database username and password. Swagger/OpenAPI will still be available.");
