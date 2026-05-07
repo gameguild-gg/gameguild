@@ -3,7 +3,8 @@ namespace GameGuild.Learning.Courses;
 /// <summary>
 /// Service interface for Program CRUD operations, search, filtering, analytics, monetization, and product integration.
 /// </summary>
-public interface IProgramCrudService {
+public interface IProgramCrudService
+{
   // Basic CRUD
   Task<Program?> GetProgramByIdAsync(Guid id);
   Task<Program?> GetProgramBySlugAsync(string slug);
@@ -60,6 +61,7 @@ public interface IProgramCrudService {
   Task<IEnumerable<Program>> GetProgramsByCategoryAsync(ProgramCategory category, int skip = 0, int take = 50);
   Task<IEnumerable<Program>> GetProgramsByDifficultyAsync(ProgramDifficulty difficulty, int skip = 0, int take = 50);
   Task<IEnumerable<Program>> GetPublishedProgramsAsync(int skip = 0, int take = 50);
+  Task<IEnumerable<Program>> GetPublicPublishedProgramsAsync(int skip = 0, int take = 50);
 
   // Analytics & Statistics
   Task<int> GetProgramCountAsync(ContentStatus? status = null, ContentVisibility? visibility = null);

@@ -4,7 +4,8 @@ namespace GameGuild.Learning.Courses;
 /// Thin facade that delegates to <see cref="IProgramWriteService"/> and <see cref="IProgramReadService"/>.
 /// Kept for backward compatibility — new code should depend on the focused interfaces directly.
 /// </summary>
-public class ProgramCrudService(IProgramReadService read, IProgramWriteService write) : IProgramCrudService {
+public class ProgramCrudService(IProgramReadService read, IProgramWriteService write) : IProgramCrudService
+{
   // ── Read-side delegation (IProgramReadService) ──────────────────────
 
   public Task<Program?> GetProgramByIdAsync(Guid id) => read.GetProgramByIdAsync(id);
@@ -15,6 +16,7 @@ public class ProgramCrudService(IProgramReadService read, IProgramWriteService w
   public Task<IEnumerable<Program>> GetProgramsAsync(int skip = 0, int take = 50) => read.GetProgramsAsync(skip, take);
   public Task<IEnumerable<ProgramContent>> GetProgramContentAsync(Guid programId) => read.GetProgramContentAsync(programId);
   public Task<IEnumerable<Program>> GetPublishedProgramsAsync(int skip = 0, int take = 50) => read.GetPublishedProgramsAsync(skip, take);
+  public Task<IEnumerable<Program>> GetPublicPublishedProgramsAsync(int skip = 0, int take = 50) => read.GetPublicPublishedProgramsAsync(skip, take);
   public Task<IEnumerable<Program>> SearchProgramsAsync(string searchTerm, int skip = 0, int take = 50) => read.SearchProgramsAsync(searchTerm, skip, take);
   public Task<IEnumerable<Program>> GetProgramsByCreatorAsync(Guid creatorId, int skip = 0, int take = 50) => read.GetProgramsByCreatorAsync(creatorId, skip, take);
   public Task<IEnumerable<Program>> GetFeaturedProgramsAsync(int count = 10) => read.GetFeaturedProgramsAsync(count);

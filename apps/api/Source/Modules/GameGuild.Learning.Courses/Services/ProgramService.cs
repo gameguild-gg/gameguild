@@ -7,7 +7,8 @@ namespace GameGuild.Learning.Courses;
 /// Kept for backward compatibility — new code should depend on
 /// <see cref="IProgramCrudService"/> or <see cref="IProgramLifecycleService"/> directly.
 /// </summary>
-public class ProgramService(IProgramCrudService crud, IProgramLifecycleService lifecycle) : IProgramService {
+public class ProgramService(IProgramCrudService crud, IProgramLifecycleService lifecycle) : IProgramService
+{
   // ── IProgramCrudService delegation ──────────────────────────────────
 
   public Task<Program?> GetProgramByIdAsync(Guid id) => crud.GetProgramByIdAsync(id);
@@ -53,6 +54,7 @@ public class ProgramService(IProgramCrudService crud, IProgramLifecycleService l
   public Task<IEnumerable<Program>> GetProgramsByCategoryAsync(ProgramCategory category, int skip = 0, int take = 50) => crud.GetProgramsByCategoryAsync(category, skip, take);
   public Task<IEnumerable<Program>> GetProgramsByDifficultyAsync(ProgramDifficulty difficulty, int skip = 0, int take = 50) => crud.GetProgramsByDifficultyAsync(difficulty, skip, take);
   public Task<IEnumerable<Program>> GetPublishedProgramsAsync(int skip = 0, int take = 50) => crud.GetPublishedProgramsAsync(skip, take);
+  public Task<IEnumerable<Program>> GetPublicPublishedProgramsAsync(int skip = 0, int take = 50) => crud.GetPublicPublishedProgramsAsync(skip, take);
   public Task<int> GetProgramCountAsync(ContentStatus? status = null, ContentVisibility? visibility = null) => crud.GetProgramCountAsync(status, visibility);
   public Task<int> GetUserCountForProgramAsync(Guid programId) => crud.GetUserCountForProgramAsync(programId);
   public Task<decimal> GetAverageCompletionRateAsync(Guid programId) => crud.GetAverageCompletionRateAsync(programId);

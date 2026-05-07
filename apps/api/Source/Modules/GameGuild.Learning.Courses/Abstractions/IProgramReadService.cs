@@ -4,7 +4,8 @@ namespace GameGuild.Learning.Courses;
 /// Read-side operations for Programs: lookups, listings, search, filtering,
 /// analytics, statistics, and read-only user/progress queries.
 /// </summary>
-public interface IProgramReadService {
+public interface IProgramReadService
+{
   // ── Single-entity Lookups ───────────────────────────────────────────
   Task<Program?> GetProgramByIdAsync(Guid id);
   Task<Program?> GetProgramBySlugAsync(string slug);
@@ -16,6 +17,7 @@ public interface IProgramReadService {
   Task<IEnumerable<Program>> GetProgramsAsync(int skip = 0, int take = 50);
   Task<IEnumerable<ProgramContent>> GetProgramContentAsync(Guid programId);
   Task<IEnumerable<Program>> GetPublishedProgramsAsync(int skip = 0, int take = 50);
+  Task<IEnumerable<Program>> GetPublicPublishedProgramsAsync(int skip = 0, int take = 50);
 
   // ── Search & Discovery ──────────────────────────────────────────────
   Task<IEnumerable<Program>> SearchProgramsAsync(string searchTerm, int skip = 0, int take = 50);

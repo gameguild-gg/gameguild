@@ -2,6 +2,8 @@ using GameGuild.API;
 using GameGuild.API.Setup;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Npgsql;
 
 // ===========================================================================================
@@ -109,7 +111,25 @@ if (runMigrationsOnStartup)
         {
             app.Logger.LogWarning(
                 "Database reset requested on startup. The target database will be deleted and rebuilt from the first migration.");
-            await db.Database.EnsureDeletedAsync().ConfigureAwait(false);
+
+            try
+            {
+                NpgsqlConnection.ClearAllPools();
+                await db.Database.EnsureDeletedAsync().ConfigureAwait(false);
+            }
+            catch (PostgresException ex) when (
+                ex.SqlState == PostgresErrorCodes.InsufficientPrivilege ||
+                ex.SqlState == PostgresErrorCodes.ObjectInUse)
+            {
+                app.Logger.LogWarning(
+                    ex,
+                    "Database deletion was blocked by PostgreSQL permissions or active connections. Falling back to migration rollback within the existing database.");
+
+                // Shared PostgreSQL roles often cannot force-terminate other sessions for DROP DATABASE.
+                // Roll back to migration 0 instead so reset-on-startup still works without requiring superuser privileges.
+                var migrator = db.Database.GetService<IMigrator>();
+                await migrator.MigrateAsync("0").ConfigureAwait(false);
+            }
         }
 
         await db.Database.MigrateAsync().ConfigureAwait(false);
