@@ -28,7 +28,6 @@ services:
       - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT:-Staging}
       - ASPNETCORE_HTTP_PORTS=${PORT:-8080}
       - ASPNETCORE_FORWARDEDHEADERS_ENABLED=true
-      - Database__RunMigrationsOnStartup=${RUN_DB_MIGRATIONS_ON_STARTUP:-true}
       - DATAPROTECTION_KEYS_PATH=/app/.aspnet/DataProtection-Keys
       # Shared Coolify Postgres
       - ConnectionStrings__DefaultConnection=Host=${POSTGRES_HOST:?set POSTGRES_HOST};Port=${POSTGRES_PORT:-5432};Database=${POSTGRES_DB:?set POSTGRES_DB};Username=${POSTGRES_USER:?set POSTGRES_USER};Password=${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD};Include Error Detail=false;Maximum Pool Size=100;Minimum Pool Size=5;Connection Idle Lifetime=300

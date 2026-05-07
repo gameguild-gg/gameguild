@@ -86,39 +86,15 @@ builder.AddPresentationLayer();
 var app = builder.Build();
 
 // Apply pending EF Core migrations automatically before starting the service
-var runMigrationsOnStartup = app.Configuration.GetValue("Database:RunMigrationsOnStartup", true);
-var allowStartupWithoutDatabase = app.Configuration.GetValue<bool?>("Database:AllowStartupWithoutDatabase")
-    ?? app.Environment.IsDevelopment();
-
-if (runMigrationsOnStartup)
+try
 {
-    try
-    {
-        using var scope = app.Services.CreateScope();
-        var db = scope.ServiceProvider.GetRequiredService<GameGuild.API.Database.ApplicationDbContext>();
-
-        await db.Database.MigrateAsync().ConfigureAwait(false);
-    }
-    catch (Npgsql.PostgresException ex) when (
-        allowStartupWithoutDatabase &&
-        (ex.SqlState == Npgsql.PostgresErrorCodes.InvalidPassword || ex.SqlState == Npgsql.PostgresErrorCodes.InvalidAuthorizationSpecification))
-    {
-        app.Logger.LogWarning(
-            "Database migration skipped because database authentication failed for the configured connection. Verify the database username and password. Swagger/OpenAPI will still be available.");
-    }
-    catch (Exception ex) when (allowStartupWithoutDatabase)
-    {
-        app.Logger.LogWarning(ex, "Database migration failed — API will start without a database. Swagger/OpenAPI will still be available.");
-    }
-    catch (Exception ex)
-    {
-        app.Logger.LogCritical(ex, "Database migration failed during startup. Refusing to start with a broken schema. Set Database:AllowStartupWithoutDatabase=true only for local troubleshooting.");
-        throw;
-    }
+    using var scope = app.Services.CreateScope();
+    var db = scope.ServiceProvider.GetRequiredService<GameGuild.API.Database.ApplicationDbContext>();
+    await db.Database.MigrateAsync().ConfigureAwait(false);
 }
-else
+catch (Exception ex)
 {
-    app.Logger.LogInformation("Skipping automatic database migrations because Database:RunMigrationsOnStartup is disabled.");
+    app.Logger.LogWarning(ex, "Database migration failed — API will start without a database. Swagger/OpenAPI will still be available.");
 }
 
 // Configure the HTTP request pipeline (middleware, routing, endpoints)
