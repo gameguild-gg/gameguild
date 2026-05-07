@@ -1,35 +1,35 @@
 using System;
-using System.Runtime.InteropServices.JavaScript;
-using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.CodeAnalysis.Emit;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Collections.Generic;
 using System.Runtime.InteropServices;
-using Basic.Reference.Assemblies;
+using System.Runtime.InteropServices.JavaScript;
 using System.Text.Json;
+using Basic.Reference.Assemblies;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.Emit;
 
 namespace RoslynWrapper;
 
 public partial class Program
 {
     private static List<MetadataReference>? _references;
-    
+
     public static void Main()
     {
         Console.WriteLine("C# Compiler Ready");
         InitializeReferences();
     }
-    
+
     private static void InitializeReferences()
     {
         if (_references != null) return;
-        
+
         // Use Basic.Reference.Assemblies - this provides in-memory reference assemblies
-        _references = new List<MetadataReference>(Net80.References.All);
-        
+        _references = new List<MetadataReference>(Net90.References.All);
+
         Console.WriteLine($"Initialized with {_references.Count} references");
     }
 
@@ -46,7 +46,7 @@ public partial class Program
         {
             if (_references == null)
                 InitializeReferences();
-            
+
             var references = _references ?? new List<MetadataReference>();
             var syntaxTrees = new List<SyntaxTree>();
 
@@ -98,28 +98,28 @@ public partial class Program
 
             ms.Seek(0, SeekOrigin.Begin);
             var assembly = Assembly.Load(ms.ToArray());
-            
+
             // Find the entry point - try different combinations
             var type = assembly.GetType("Program");
             if (type == null)
             {
                 // Try to find any type with a Main method
-                type = assembly.GetTypes().FirstOrDefault(t => 
+                type = assembly.GetTypes().FirstOrDefault(t =>
                     t.GetMethod("Main", BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic) != null);
             }
-            
+
             if (type == null)
                 return "ERROR: No Program class or Main method found";
-            
+
             var method = type.GetMethod("Main", BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
-            
+
             if (method == null)
                 return "ERROR: No static Main method found in Program class";
 
             var oldOut = Console.Out;
             using var sw = new StringWriter();
             Console.SetOut(sw);
-            
+
             try
             {
                 // Invoke Main with appropriate parameters
@@ -141,7 +141,7 @@ public partial class Program
             {
                 Console.SetOut(oldOut);
             }
-            
+
             return sw.ToString();
         }
         catch (Exception ex)

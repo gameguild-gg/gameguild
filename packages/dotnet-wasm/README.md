@@ -3,7 +3,7 @@
 C# Compiler and Runtime for Browser - 100% Client-Side Execution
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![.NET 8](https://img.shields.io/badge/.NET-8.0-purple.svg)](https://dotnet.microsoft.com/)
+[![.NET 9](https://img.shields.io/badge/.NET-9.0-purple.svg)](https://dotnet.microsoft.com/)
 
 ## Overview
 
@@ -30,11 +30,11 @@ npm install @game-guild/dotnet-wasm
 ### Basic Usage
 
 ```typescript
-import { CSharpCompiler } from '@game-guild/dotnet-wasm'
+import { CSharpCompiler } from '@game-guild/dotnet-wasm';
 
 // Initialize compiler (one-time setup)
-const compiler = new CSharpCompiler()
-await compiler.initialize()
+const compiler = new CSharpCompiler();
+await compiler.initialize();
 
 // Compile and run C# code
 const result = await compiler.execute(`
@@ -48,9 +48,9 @@ class Program
         Console.WriteLine($"Current time: {DateTime.Now}");
     }
 }
-`)
+`);
 
-console.log(result.output)
+console.log(result.output);
 // Output:
 // Hello from C# in WASM!
 // Current time: 12/3/2025 10:30:45 AM
@@ -73,9 +73,9 @@ namespace MyApp
         public void Greet() => Console.WriteLine($"Hello, I'm {Name}!");
     }
 }
-`
-  }
-]
+`,
+  },
+];
 
 const mainCode = `
 using System;
@@ -89,10 +89,10 @@ class Program
         person.Greet();
     }
 }
-`
+`;
 
-const result = await compiler.executeMultiple(mainCode, files)
-console.log(result.output) // "Hello, I'm Alice!"
+const result = await compiler.executeMultiple(mainCode, files);
+console.log(result.output); // "Hello, I'm Alice!"
 ```
 
 ## API Reference
@@ -112,6 +112,7 @@ Initialize the .NET runtime. Must be called before executing code.
 Compile and execute a single C# file.
 
 **Parameters:**
+
 - `code` - C# source code containing a `Main` method
 
 **Returns:** `CSharpResult`
@@ -121,6 +122,7 @@ Compile and execute a single C# file.
 Compile and execute multiple C# files.
 
 **Parameters:**
+
 - `mainCode` - Main program code containing the `Main` method
 - `files` - Array of additional C# files
 
@@ -130,14 +132,14 @@ Compile and execute multiple C# files.
 
 ```typescript
 interface CSharpResult {
-  output?: string        // Program output (Console.WriteLine)
-  error?: string         // Compilation or runtime error
-  executionTime: number  // Execution time in milliseconds
+  output?: string; // Program output (Console.WriteLine)
+  error?: string; // Compilation or runtime error
+  executionTime: number; // Execution time in milliseconds
 }
 
 interface CSharpFile {
-  name: string    // File name (e.g., "Models/Person.cs")
-  content: string // C# source code
+  name: string; // File name (e.g., "Models/Person.cs")
+  content: string; // C# source code
 }
 ```
 
