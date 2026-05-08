@@ -8,7 +8,7 @@
             "@semantic-release/exec",
             {
                 "generateNotesCmd": "LAST_GIT_TAG='${lastRelease.gitTag}' NEXT_GIT_TAG='${nextRelease.gitTag}' NEXT_VERSION='${nextRelease.version}' REPO_URL='${options.repositoryUrl}' RELEASE_DATE=\"$(date -u +%Y-%m-%d)\" node scripts/devops/sr-generate-notes.mjs",
-                "prepareCmd": "find . -name 'package.json' -not -path '*/node_modules/*' -not -path '*/.git/*' -exec node -e \"const fs=require('fs');const f=process.argv[1];const p=JSON.parse(fs.readFileSync(f,'utf8'));p.version='${nextRelease.version}';fs.writeFileSync(f,JSON.stringify(p,null,2)+'\\n')\" {} \\;"
+                "prepareCmd": "find . -name 'package.json' -not -path '*/node_modules/*' -not -path '*/.git/*' -not -path '*/.next/*' -exec node -e \"const fs=require('fs');const f=process.argv[1];const p=JSON.parse(fs.readFileSync(f,'utf8'));p.version='${nextRelease.version}';fs.writeFileSync(f,JSON.stringify(p,null,2)+'\\n')\" {} \\;"
             }
         ],
         [
@@ -23,7 +23,8 @@
                 "assets": [
                     "CHANGELOG.md",
                     "**/package.json",
-                    "!**/node_modules/**"
+                    "!**/node_modules/**",
+                    "!**/.next/**"
                 ],
                 "message": "chore(release): ${nextRelease.version} [skip ci]"
             }
