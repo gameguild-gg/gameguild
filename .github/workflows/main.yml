@@ -251,7 +251,14 @@ jobs:
           path: _artifacts/emception
 
       - name: Restore emception build outputs to workspace
-        run: rsync -a _artifacts/emception/tools/emception/ tools/emception/
+        run: |
+          if [[ -d "_artifacts/emception/tools/emception" ]]; then
+            echo "Using nested artifact layout"
+            rsync -a _artifacts/emception/tools/emception/ tools/emception/
+          else
+            echo "Using flattened artifact layout"
+            rsync -a _artifacts/emception/ tools/emception/
+          fi
 
       - name: Download gource artifacts
         uses: actions/download-artifact@v4
