@@ -13,9 +13,10 @@ import os from 'os';
 import path from 'path';
 import shell from 'shelljs';
 import { fileURLToPath } from 'url';
-import { detectPythonVersion, pythonMajorMinor } from './lib/detect-versions.ts';
+import { pythonMajorMinor } from './lib/detect-versions.ts';
 import { setupEmsdk } from './lib/emsdk.ts';
 import { enableBuildKeepalive } from './lib/keepalive.ts';
+import { PINNED } from './lib/pinned-versions.ts';
 
 enableBuildKeepalive('build-cpython');
 
@@ -26,12 +27,12 @@ const ROOT = process.cwd();
 // Ensure shell commands fail on error
 shell.config.fatal = true;
 
-const EMSDK_VERSION = process.env.EMSDK_VERSION || 'latest';
+const EMSDK_VERSION = process.env.EMSDK_VERSION || PINNED.EMSDK_VERSION;
 
-// Setup EMSDK first so we can detect the bundled Python version
+// Setup EMSDK first
 setupEmsdk(EMSDK_VERSION);
 
-const PYTHON_VERSION = process.env.PYTHON_VERSION || detectPythonVersion();
+const PYTHON_VERSION = process.env.PYTHON_VERSION || PINNED.PYTHON_VERSION;
 const PYTHON_MM = pythonMajorMinor(PYTHON_VERSION);   // e.g. "3.13"
 const CONCURRENCY = os.cpus().length;
 

@@ -12,13 +12,14 @@ import shell from 'shelljs';
 import { standaloneFlags } from './lib/emcc-flags.ts';
 import { setupEmsdk } from './lib/emsdk.ts';
 import { enableBuildKeepalive } from './lib/keepalive.ts';
+import { PINNED } from './lib/pinned-versions.ts';
 
 enableBuildKeepalive('build-cmake');
 
 const ROOT = process.cwd();
 shell.config.fatal = true;
 
-const EMSDK_VERSION = process.env.EMSDK_VERSION || 'latest';
+const EMSDK_VERSION = process.env.EMSDK_VERSION || PINNED.EMSDK_VERSION;
 setupEmsdk(EMSDK_VERSION);
 
 const CONCURRENCY = os.cpus().length;
@@ -48,7 +49,7 @@ function detectCMakeVersion(): string {
     // CMake 4.x changed CMakeBuildUtilities.cmake: when CMAKE_USE_SYSTEM_CURL=ON it
     // forces CMAKE_USE_SYSTEM_ZLIB=ON via a regular set() that overrides our -D flag,
     // and Emscripten's cross-compile sysroot has no system zlib. Cap at 3.x.
-    const FALLBACK_CMAKE_VERSION = '3.31.12';
+    const FALLBACK_CMAKE_VERSION = PINNED.CMAKE_VERSION;
     console.log('Detecting latest CMake 3.x release...');
     const prevFatal = shell.config.fatal;
     shell.config.fatal = false;
