@@ -15,13 +15,14 @@ import path from 'path';
 import shell from 'shelljs';
 import { setupEmsdk } from './lib/emsdk.ts';
 import { enableBuildKeepalive } from './lib/keepalive.ts';
+import { PINNED } from './lib/pinned-versions.ts';
 
 enableBuildKeepalive('build-imgui');
 
 const ROOT = process.cwd();
 shell.config.fatal = true;
 
-const EMSDK_VERSION = process.env.EMSDK_VERSION || 'latest';
+const EMSDK_VERSION = process.env.EMSDK_VERSION || PINNED.EMSDK_VERSION;
 setupEmsdk(EMSDK_VERSION);
 
 const USERLAND_DIR = path.join(ROOT, 'userland', 'imgui');
@@ -59,7 +60,8 @@ function detectVersion(): string {
     }
 
     if (result.code !== 0) {
-        throw new Error('Failed to query GitHub for latest ImGui release');
+        console.warn(`  GitHub API unavailable (exit ${result.code}), using pinned ${PINNED.IMGUI_VERSION}`);
+        return PINNED.IMGUI_VERSION;
     }
     const tag: string = JSON.parse(result.stdout).tag_name;
     console.log(`  Latest ImGui release: ${tag}`);
