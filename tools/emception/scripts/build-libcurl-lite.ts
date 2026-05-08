@@ -9,10 +9,12 @@
  * Consumers (cmake, ninja, curl CLI) link against -lcurl at build time.
  */
 
+import fs from 'fs';
 import path from 'path';
 import shell from 'shelljs';
 import { setupEmsdk } from './lib/emsdk.ts';
 import { enableBuildKeepalive } from './lib/keepalive.ts';
+import { PINNED } from './lib/pinned-versions.ts';
 
 enableBuildKeepalive('build-libcurl-lite');
 
@@ -20,7 +22,8 @@ const ROOT = process.cwd();
 
 shell.config.fatal = true;
 
-const EMSDK_VERSION = process.env.EMSDK_VERSION || 'latest';
+const EMSDK_VERSION = process.env.EMSDK_VERSION || PINNED.EMSDK_VERSION;
+const CURL_LITE_VERSION = process.env.CURL_LITE_VERSION || PINNED.CURL_LITE_VERSION;
 setupEmsdk(EMSDK_VERSION);
 
 const LIBCURL_DIR = path.join(ROOT, 'userland', 'libcurl-lite');
@@ -33,6 +36,21 @@ const SYSROOT_INC = path.join(ROOT, 'sysroot', 'usr', 'include');
 shell.mkdir('-p', OUTPUT_DIR);
 shell.mkdir('-p', SYSROOT_LIB);
 shell.mkdir('-p', path.join(SYSROOT_INC, 'curl'));
+
+// Patch version constants in curl.h to match the pinned curl version.
+{
+    const [major, minor, patch] = CURL_LITE_VERSION.split('.').map(Number);
+    const versionNum = `0x${major.toString(16).padStart(2, '0')}${minor.toString(16).padStart(2, '0')}${patch.toString(16).padStart(2, '0')}`;
+    let header = fs.readFileSync(HEADER_FILE, 'utf8');
+    header = header
+        .replace(/#define LIBCURL_VERSION "[^"]*"/, `#define LIBCURL_VERSION "${CURL_LITE_VERSION}-lite"`)
+        .replace(/#define LIBCURL_VERSION_NUM 0x[0-9a-fA-F]+/, `#define LIBCURL_VERSION_NUM ${versionNum}`)
+        .replace(/#define LIBCURL_VERSION_MAJOR \d+/, `#define LIBCURL_VERSION_MAJOR ${major}`)
+        .replace(/#define LIBCURL_VERSION_MINOR \d+/, `#define LIBCURL_VERSION_MINOR ${minor}`)
+        .replace(/#define LIBCURL_VERSION_PATCH \d+/, `#define LIBCURL_VERSION_PATCH ${patch}`);
+    fs.writeFileSync(HEADER_FILE, header);
+    console.log(`Patched curl.h to version ${CURL_LITE_VERSION}-lite`);
+}
 
 // Compile to object file
 console.log('Compiling libcurl-lite...');

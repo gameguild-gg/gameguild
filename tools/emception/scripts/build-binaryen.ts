@@ -10,10 +10,10 @@ import os from 'os';
 import path from 'path';
 import shell from 'shelljs';
 import { fileURLToPath } from 'url';
-import { detectBinaryenVersion } from './lib/detect-versions.ts';
 import { standaloneFlags } from './lib/emcc-flags.ts';
 import { setupEmsdk } from './lib/emsdk.ts';
 import { enableBuildKeepalive } from './lib/keepalive.ts';
+import { PINNED } from './lib/pinned-versions.ts';
 
 enableBuildKeepalive('build-binaryen');
 
@@ -24,12 +24,12 @@ const ROOT = process.cwd();
 // Ensure shell commands fail on error
 shell.config.fatal = true;
 
-const EMSDK_VERSION = process.env.EMSDK_VERSION || 'latest';
+const EMSDK_VERSION = process.env.EMSDK_VERSION || PINNED.EMSDK_VERSION;
 
-// Setup EMSDK first so we can detect the bundled Binaryen version
+// Setup EMSDK first
 setupEmsdk(EMSDK_VERSION);
 
-const BINARYEN_VERSION = process.env.BINARYEN_VERSION || detectBinaryenVersion();
+const BINARYEN_VERSION = process.env.BINARYEN_VERSION || PINNED.BINARYEN_VERSION;
 
 const USERLAND_DIR = path.join(ROOT, 'userland', 'binaryen');
 const SOURCE_DIR = path.join(USERLAND_DIR, `binaryen-version_${BINARYEN_VERSION}`);

@@ -23,13 +23,14 @@ import path from 'path';
 import shell from 'shelljs';
 import { getEmsdkDir, setupEmsdk } from './lib/emsdk.ts';
 import { enableBuildKeepalive } from './lib/keepalive.ts';
+import { PINNED } from './lib/pinned-versions.ts';
 
 enableBuildKeepalive('build-raylib');
 
 const ROOT = process.cwd();
 shell.config.fatal = true;
 
-const EMSDK_VERSION = process.env.EMSDK_VERSION || 'latest';
+const EMSDK_VERSION = process.env.EMSDK_VERSION || PINNED.EMSDK_VERSION;
 setupEmsdk(EMSDK_VERSION);
 
 const EMSDK_DIR = getEmsdkDir();
@@ -63,16 +64,25 @@ function curlJson(url: string): any {
     return JSON.parse(res.stdout);
 }
 
-function detectLatestTag(repo: string, envVar: string): string {
+function detectLatestTag(repo: string, envVar: string, fallback: string): string {
     const env = process.env[envVar];
     if (env) return env;
     console.log(`Detecting latest release for ${repo}...`);
-    const tag: string = curlJson(`https://api.github.com/repos/${repo}/releases/latest`).tag_name;
-    console.log(`  ${repo} latest: ${tag}`);
-    return tag;
+    let tag: string | undefined;
+    try {
+        tag = curlJson(`https://api.github.com/repos/${repo}/releases/latest`).tag_name;
+    } catch {
+        // GitHub API unavailable
+    }
+    if (tag) {
+        console.log(`  ${repo} latest: ${tag}`);
+        return tag;
+    }
+    console.warn(`  GitHub API unavailable for ${repo}, using pinned ${fallback}`);
+    return fallback;
 }
 
-function detectLatestDefaultBranchSha(repo: string, envVar: string): string {
+function detectLatestDefaultBranchSha(repo: string, envVar: string, fallback: string): string {
     // Fallback for repos without releases (raygui/physac/rlights publish via tags or only default branch).
     const env = process.env[envVar];
     if (env) return env;
@@ -93,10 +103,9 @@ function detectLatestDefaultBranchSha(repo: string, envVar: string): string {
             // fall through
         }
     }
-    // Fallback: use master branch HEAD via git ls-remote
-    const branch = curlJson(`https://api.github.com/repos/${repo}`).default_branch || 'master';
-    console.log(`  ${repo} no release, using default branch: ${branch}`);
-    return branch;
+    // GitHub API unavailable — use pinned fallback
+    console.warn(`  GitHub API unavailable for ${repo}, using pinned ${fallback}`);
+    return fallback;
 }
 
 // ─────────────── source download ───────────────
@@ -131,7 +140,7 @@ function downloadTarball(repo: string, tag: string, destName: string): string {
 
 // ─────────────── 1. raylib via CMake ───────────────
 
-const RAYLIB_TAG = detectLatestTag('raysan5/raylib', 'RAYLIB_VERSION');
+const RAYLIB_TAG = detectLatestTag('raysan5/raylib', 'RAYLIB_VERSION', PINNED.RAYLIB_VERSION);
 const RAYLIB_SRC = downloadTarball('raysan5/raylib', RAYLIB_TAG, `raylib-${RAYLIB_TAG}`);
 
 const RAYLIB_BUILD = path.join(BUILD_DIR, 'raylib-build');
@@ -265,6 +274,7 @@ interface HeaderOnlyLib {
     // Source = remote tarball OR local path inside an existing source tree.
     repo?: string;
     envVar?: string;
+    fallback?: string;      // pinned version used when GitHub API is unavailable
     headerSubpath?: string;
     localHeader?: string;   // absolute path to header on disk (skips download)
 }
@@ -273,6 +283,7 @@ const COMPANIONS: HeaderOnlyLib[] = [
     {
         repo: 'raysan5/raygui',
         envVar: 'RAYGUI_VERSION',
+        fallback: PINNED.RAYGUI_VERSION,
         libName: 'raygui',
         headerName: 'raygui.h',
         implMacro: 'RAYGUI_IMPLEMENTATION',
@@ -281,6 +292,7 @@ const COMPANIONS: HeaderOnlyLib[] = [
     {
         repo: 'victorfisac/Physac',
         envVar: 'PHYSAC_VERSION',
+        fallback: PINNED.PHYSAC_VERSION,
         libName: 'physac',
         headerName: 'physac.h',
         implMacro: 'PHYSAC_IMPLEMENTATION',
@@ -320,7 +332,7 @@ for (const lib of COMPANIONS) {
             console.warn(`  ${lib.libName}: missing repo/envVar, skipping`);
             continue;
         }
-        const tag = detectLatestDefaultBranchSha(lib.repo, lib.envVar);
+        const tag = detectLatestDefaultBranchSha(lib.repo, lib.envVar, lib.fallback ?? 'master');
         let srcDir: string;
         try {
             srcDir = downloadTarball(lib.repo, tag, `${lib.libName}-${tag}`);
