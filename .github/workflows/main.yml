@@ -144,7 +144,7 @@ jobs:
 
   # ── Emception build (critical path, ~30 min on cold cache) ─────────────────
   build-emception:
-    name: Build Emceptioncah
+    name: Build Emception
     needs: detect-changes
     runs-on: ubuntu-latest
     timeout-minutes: 360
@@ -397,11 +397,17 @@ jobs:
         if: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/main' }}
         run: npm --version
 
+      - name: Configure npm registry for Trusted Publishing
+        if: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/main' }}
+        uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          registry-url: 'https://registry.npmjs.org'
+
       - name: Publish emception packages to npm
         if: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && steps.semantic.outputs.new_release_published == 'true' }}
         run: |
           unset NODE_AUTH_TOKEN
-          rm -f "$HOME/.npmrc" "$RUNNER_TEMP/.npmrc" || true
 
           cd tools/emception
 
@@ -434,4 +440,4 @@ jobs:
           done
         env:
           NODE_AUTH_TOKEN: ''
-          NPM_CONFIG_USERCONFIG: ''
+          NPM_CONFIG_PROVENANCE: 'true'
