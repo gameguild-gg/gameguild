@@ -15,9 +15,34 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
+  detect-changes:
+    name: Detect changed folders
+    runs-on: ubuntu-latest
+    outputs:
+      api: ${{ steps.filter.outputs.api }}
+      web: ${{ steps.filter.outputs.web }}
+      emception: ${{ steps.filter.outputs.emception }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Detect path changes
+        id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            api:
+              - 'apps/api/**'
+            web:
+              - 'apps/web/**'
+            emception:
+              - 'tools/emception/**'
+
   # ── Validation: API build (independent, no npm deps) ───────────────────────
   build-api:
     name: Build API
+    needs: detect-changes
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -29,16 +54,23 @@ jobs:
           submodules: true
 
       - name: Setup .NET 9
+        if: needs.detect-changes.outputs.api == 'true'
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '9.0.x'
 
       - name: Build apps/api
+        if: needs.detect-changes.outputs.api == 'true'
         run: cd apps/api && dotnet build "GameGuild.Production.sln" -c Release
+
+      - name: Skip apps/api build (no changes)
+        if: needs.detect-changes.outputs.api != 'true'
+        run: echo "No changes in apps/api/**; skipping API build."
 
   # ── Validation: Web build (dotnet-wasm + Next.js) ──────────────────────────
   build-web:
     name: Build Web
+    needs: detect-changes
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -50,23 +82,32 @@ jobs:
           submodules: true
 
       - uses: actions/setup-node@v6
+        if: needs.detect-changes.outputs.web == 'true'
         with:
           node-version: '22'
           package-manager-cache: false
 
       - name: Setup .NET 9
+        if: needs.detect-changes.outputs.web == 'true'
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '9.0.x'
 
       - name: Install monorepo dependencies
+        if: needs.detect-changes.outputs.web == 'true'
         run: npm install --no-package-lock --include=optional --ignore-scripts
 
       - name: Build packages/dotnet-wasm
+        if: needs.detect-changes.outputs.web == 'true'
         run: npm run setup -w @game-guild/dotnet-wasm
 
       - name: Build apps/web
+        if: needs.detect-changes.outputs.web == 'true'
         run: npm run build -w apps/web
+
+      - name: Skip apps/web build (no changes)
+        if: needs.detect-changes.outputs.web != 'true'
+        run: echo "No changes in apps/web/**; skipping Web build."
 
   # ── Gource visualization (independent, uploads artifact) ───────────────────
   gource:
@@ -104,6 +145,7 @@ jobs:
   # ── Emception build (critical path, ~30 min on cold cache) ─────────────────
   build-emception:
     name: Build Emception
+    needs: detect-changes
     runs-on: ubuntu-latest
     timeout-minutes: 360
     env:
@@ -180,21 +222,42 @@ jobs:
           restore-keys: |
             cdn-${{ runner.os }}-
 
+      - name: Cache emception deploy artifacts
+        uses: actions/cache@v4
+        id: cache-emception-artifacts
+        with:
+          path: |
+            tools/emception/apps/ide-react/dist
+            tools/emception/public/cdn
+            tools/emception/dist
+            tools/emception/packages/core/dist
+            tools/emception/packages/browser/dist
+            tools/emception/packages/xterm/dist
+            tools/emception/packages/react/dist
+            tools/emception/packages/webcomponent/dist
+            tools/emception/packages/ide/dist
+          key: emception-artifacts-${{ runner.os }}-${{ hashFiles('tools/emception/**') }}
+          restore-keys: |
+            emception-artifacts-${{ runner.os }}-
+
       # Build (skipped entirely on full CDN cache hit) ─────────────────────────
 
       - name: Build tools/emception (full)
-        if: steps.cache-cdn.outputs.cache-hit != 'true'
+        if: (needs.detect-changes.outputs.emception == 'true' || steps.cache-emception-artifacts.outputs.cache-hit != 'true') && steps.cache-cdn.outputs.cache-hit != 'true'
         run: cd tools/emception && npm run build:all
 
       # Always rebuild IDE package (fast TypeScript-only, no emsdk needed) ────
 
       - name: Build @emception/ide package
+        if: needs.detect-changes.outputs.emception == 'true' || steps.cache-emception-artifacts.outputs.cache-hit != 'true'
         run: cd tools/emception && npm run build:packages:ide
 
       - name: Sync CDN to demo app
+        if: needs.detect-changes.outputs.emception == 'true' || steps.cache-emception-artifacts.outputs.cache-hit != 'true'
         run: node scripts/sync-emception-cdn.mjs tools/emception/apps/ide-react
 
       - name: Build tools/emception/apps/ide-react
+        if: needs.detect-changes.outputs.emception == 'true' || steps.cache-emception-artifacts.outputs.cache-hit != 'true'
         run: cd tools/emception/apps/ide-react && npm run build --ignore-scripts
         env:
           VITE_BASE: /gameguild/
