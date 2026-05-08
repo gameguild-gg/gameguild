@@ -248,6 +248,14 @@ jobs:
 
       # Always rebuild IDE package (fast TypeScript-only, no emsdk needed) ────
 
+      - name: Build IDE package dependencies (core/xterm/browser)
+        if: (needs.detect-changes.outputs.emception == 'true' || steps.cache-emception-artifacts.outputs.cache-hit != 'true') && steps.cache-cdn.outputs.cache-hit == 'true'
+        run: |
+          cd tools/emception
+          npm run build:packages:core
+          npm run build:packages:xterm
+          npm run build:packages:browser
+
       - name: Build @emception/ide package
         if: needs.detect-changes.outputs.emception == 'true' || steps.cache-emception-artifacts.outputs.cache-hit != 'true'
         run: cd tools/emception && npm run build:packages:ide
