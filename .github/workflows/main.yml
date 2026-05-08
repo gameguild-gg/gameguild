@@ -144,7 +144,7 @@ jobs:
 
   # ── Emception build (critical path, ~30 min on cold cache) ─────────────────
   build-emception:
-    name: Build Emception
+    name: Build Emceptioncah
     needs: detect-changes
     runs-on: ubuntu-latest
     timeout-minutes: 360
@@ -236,7 +236,7 @@ jobs:
             tools/emception/packages/react/dist
             tools/emception/packages/webcomponent/dist
             tools/emception/packages/ide/dist
-          key: emception-artifacts-${{ runner.os }}-${{ hashFiles('tools/emception/**') }}
+          key: emception-artifacts-${{ runner.os }}-${{ hashFiles('tools/emception/package.json', 'tools/emception/tsconfig*.json', 'tools/emception/scripts/**/*.ts', 'tools/emception/packages/**/package.json', 'tools/emception/packages/**/tsconfig*.json', 'tools/emception/apps/ide-react/package.json', 'tools/emception/apps/ide-react/src/**', 'tools/emception/apps/ide-react/vite.config.*') }}
           restore-keys: |
             emception-artifacts-${{ runner.os }}-
 
