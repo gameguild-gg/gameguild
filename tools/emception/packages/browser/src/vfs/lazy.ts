@@ -5,7 +5,7 @@
 import type { FSManifest, FSStats, IFileSystem, ManifestEntry } from 'emception';
 
 // Re-export the core manifest types under their legacy names so consumers of
-// this module (LazyFS callers within @emception/browser) keep working.
+// this module (LazyFS callers within @gameguild/emception-browser) keep working.
 export type { FSManifest } from 'emception';
 export type FileEntry = ManifestEntry;
 

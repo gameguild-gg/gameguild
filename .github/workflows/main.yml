@@ -422,7 +422,6 @@ jobs:
             "@gameguild/emception-react|packages/react"
             "@gameguild/emception-webcomponent|packages/webcomponent"
             "@gameguild/emception-ide|packages/ide"
-            "emception-workspace|."
           )
 
           for entry in "${PACKAGES[@]}"; do
