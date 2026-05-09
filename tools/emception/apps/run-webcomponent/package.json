@@ -1,6 +1,6 @@
 {
   "name": "@gameguild/emception-demo-run-webcomponent",
-  "version": "3.3.1",
+  "version": "3.3.2",
   "private": true,
   "description": "Minimal Vite + vanilla HTML demo for the <emception-run> custom element from @gameguild/emception-webcomponent.",
   "type": "module",
