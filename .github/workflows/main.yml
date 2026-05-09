@@ -412,21 +412,21 @@ jobs:
         if: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && steps.semantic.outputs.new_release_published == 'true' }}
         run: |
           unset NODE_AUTH_TOKEN
+          npm config delete //registry.npmjs.org/:_authToken
 
           cd tools/emception
 
-          PACKAGES=(
-            "emception|packages/core"
-            "@gameguild/emception-xterm|packages/xterm"
-            "@gameguild/emception-browser|packages/browser"
-            "@gameguild/emception-react|packages/react"
-            "@gameguild/emception-webcomponent|packages/webcomponent"
-            "@gameguild/emception-ide|packages/ide"
+          PACKAGE_DIRS=(
+            "packages/core"
+            "packages/xterm"
+            "packages/browser"
+            "packages/react"
+            "packages/webcomponent"
+            "packages/ide"
           )
 
-          for entry in "${PACKAGES[@]}"; do
-            NAME="${entry%%|*}"
-            DIR="${entry##*|}"
+          for DIR in "${PACKAGE_DIRS[@]}"; do
+            NAME="$(node -p "require('./${DIR}/package.json').name")"
             VERSION="$(node -p "require('./${DIR}/package.json').version")"
 
             if npm view "${NAME}@${VERSION}" version >/dev/null 2>&1; then
@@ -435,11 +435,7 @@ jobs:
             fi
 
             echo "📦 Publishing ${NAME}@${VERSION}"
-            if [[ "${DIR}" == "." ]]; then
-              npm publish --provenance --access public
-            else
-              npm publish --workspace="${NAME}" --provenance --access public
-            fi
+            npm publish --workspace="${NAME}" --provenance --access public
           done
         env:
           NODE_AUTH_TOKEN: ''
