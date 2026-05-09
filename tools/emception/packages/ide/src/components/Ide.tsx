@@ -1,4 +1,4 @@
-import { BROWSER_BUILD_PRESETS, bootInWorker } from '@emception/browser';
+import { BROWSER_BUILD_PRESETS, bootInWorker } from '@gameguild/emception-browser';
 import type { OnMount } from '@monaco-editor/react';
 import { Terminal } from '@xterm/xterm';
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
