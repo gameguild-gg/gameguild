@@ -1,3 +1,9 @@
+# [3.3.4](https://github.com/gameguild-gg/gameguild/compare/v3.3.3...v3.3.4) (2026-05-09)
+
+### Bug Fixes
+
+* ci ([bf8ee7c](https://github.com/gameguild-gg/gameguild/commit/bf8ee7c150524ca53056aed73c394eefda8e25d5))
+
 # [3.3.3](https://github.com/gameguild-gg/gameguild/compare/v3.3.2...v3.3.3) (2026-05-09)
 
 ### Bug Fixes
