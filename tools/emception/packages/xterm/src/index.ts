@@ -1,4 +1,4 @@
-// @emception/xterm — adapter between xterm.js Terminal and emception streams.
+// @gameguild/emception-xterm — adapter between xterm.js Terminal and emception streams.
 
 import type { Terminal } from '@xterm/xterm';
 import type { StdinInput, StdoutSink } from 'emception';
