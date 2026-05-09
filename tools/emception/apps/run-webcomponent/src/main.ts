@@ -1,5 +1,5 @@
-import { createEmception } from '@emception/browser';
-import '@emception/webcomponent';
+import { createEmception } from '@gameguild/emception-browser';
+import '@gameguild/emception-webcomponent';
 
 const STARTER_SOURCE = `#include <stdio.h>
 int main() {

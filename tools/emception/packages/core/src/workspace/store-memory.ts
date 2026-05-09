@@ -1,4 +1,4 @@
-// Phase 7.4 — in-memory WorkspaceManager (runtime-agnostic).
+// In-memory WorkspaceManager (runtime-agnostic).
 //
 // Implements the full WorkspaceManager / WorkspaceHandle contract entirely in
 // process memory. Useful as:

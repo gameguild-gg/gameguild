@@ -1,4 +1,4 @@
-// Phase 4.3 verification — buildArgv produces stable, predictable argv.
+// buildArgv verification — produces stable, predictable argv.
 
 import assert from 'node:assert/strict';
 import test from 'node:test';

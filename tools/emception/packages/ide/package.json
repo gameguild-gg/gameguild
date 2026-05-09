@@ -1,6 +1,6 @@
 {
-  "name": "@emception/ide",
   "version": "3.2.1",
+  "name": "@gameguild/emception-ide",
   "description": "Reactive <Ide> React 19 component + <emception-ide> custom-element wrapper for raw HTML / Next.",
   "license": "MIT",
   "type": "module",
@@ -42,11 +42,11 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@emception/browser": "*",
-    "@emception/core": "*"
+    "@gameguild/emception-browser": "*",
+    "emception": "*"
   },
   "peerDependencies": {
-    "@emception/xterm": "*",
+    "@gameguild/emception-xterm": "*",
     "@monaco-editor/react": "^4.7.0",
     "@xterm/addon-fit": "^0.11.0",
     "@xterm/xterm": "^6.0.0",
@@ -55,7 +55,7 @@
     "react-resizable-panels": "^3.0.6"
   },
   "peerDependenciesMeta": {
-    "@emception/xterm": {
+    "@gameguild/emception-xterm": {
       "optional": true
     },
     "@xterm/addon-fit": {

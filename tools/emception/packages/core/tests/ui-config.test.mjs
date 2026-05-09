@@ -1,4 +1,4 @@
-// Tests for `@emception/core`'s view-config helpers (Phase 6.3).
+// Tests for `@emception/core`'s view-config helpers.
 //
 // `normalizeViewConfig` is the single source of truth that both the
 // webcomponent and React component funnel attributes through; these

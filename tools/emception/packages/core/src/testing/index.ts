@@ -1,4 +1,4 @@
-// Phase 5 — testing subsystem barrel.
+// Testing subsystem barrel.
 export {
     compileMatcher,
     queryClangAst,

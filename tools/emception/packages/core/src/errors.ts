@@ -1,4 +1,4 @@
-// Typed error hierarchy. Phase 1 will expand with stack-preserving converters.
+// Typed error hierarchy.
 
 /** Base class for all emception runtime errors. Catch this to handle any emception fault. */
 export class EmceptionError extends Error {

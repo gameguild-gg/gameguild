@@ -1,4 +1,4 @@
-// Phase 3.7 — minimal stored-only ZIP encoder/decoder.
+// Minimal stored-only ZIP encoder/decoder.
 //
 // Implements just enough of the ZIP file format (PKZIP APPNOTE 4.5+) to
 // round-trip workspace contents. We use compression method 0 (STORED) only:

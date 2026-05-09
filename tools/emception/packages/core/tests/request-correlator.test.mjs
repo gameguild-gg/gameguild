@@ -1,4 +1,4 @@
-// Phase 7.2 prep — RequestCorrelator validated end-to-end against real
+// RequestCorrelator validated end-to-end against real
 // node:worker_threads MessageChannels. NO MOCKS: every test wires two real
 // MessagePorts so the correlator drives an actual cross-port hop, exactly the
 // shape the eventual worker-orchestrator extraction will use.

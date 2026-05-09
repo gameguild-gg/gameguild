@@ -1,4 +1,4 @@
-// TTY surface re-exports. Pure interface + line buffer.
+// TTY surface exports. Pure interface + line buffer.
 
 export { HeadlessIOProvider, type HeadlessIOProviderOptions } from './headless.js';
 export type { IOProvider } from './io-provider.js';

@@ -1,5 +1,6 @@
-// VFS surface re-exports. Pure runtime-agnostic pieces.
+// VFS surface exports. Pure runtime-agnostic pieces.
 
-export type { FSStats, IFileSystem } from './interface.js';
-export { OverlayFS } from './overlay.js';
-export type { FSManifest, ManifestBundle, ManifestEntry } from './manifest.js';
+export type { FSStats, IFileSystem } from './interface';
+export type { FSManifest, ManifestBundle, ManifestEntry } from './manifest';
+export { OverlayFS } from './overlay';
+

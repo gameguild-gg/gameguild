@@ -2,7 +2,7 @@
  * Overlay filesystem: routes reads/writes to mounted backends with write-through.
  */
 
-import { FSStats, IFileSystem } from './interface.js';
+import { FSStats, IFileSystem } from './interface';
 
 export class OverlayFS implements IFileSystem {
   private mounts = new Map<string, IFileSystem>();
@@ -32,10 +32,7 @@ export class OverlayFS implements IFileSystem {
     let bestMatch = '';
     let bestFs = this.defaultFs;
     for (const [mountPoint, fs] of this.mounts) {
-      if (
-        (normalized === mountPoint || normalized.startsWith(mountPoint + '/')) &&
-        mountPoint.length > bestMatch.length
-      ) {
+      if ((normalized === mountPoint || normalized.startsWith(mountPoint + '/')) && mountPoint.length > bestMatch.length) {
         bestMatch = mountPoint;
         bestFs = fs;
       }
@@ -113,7 +110,7 @@ export class OverlayFS implements IFileSystem {
   // Used by the Emscripten VFSFS for fast-path bypass when data is available.
 
   /** Sync helper: check if FS supports a sync method */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   private hasSyncMethod(fs: IFileSystem, method: string): boolean {
     return typeof (fs as any)[method] === 'function';
   }

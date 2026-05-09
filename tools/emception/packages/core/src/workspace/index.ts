@@ -1,4 +1,4 @@
-// Workspace subsystem barrel (Phase 3 in progress).
+// Workspace subsystem barrel.
 export {
     resolveBuild,
     type ResolveBuildInput,

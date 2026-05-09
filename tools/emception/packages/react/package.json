@@ -1,6 +1,6 @@
 {
-  "name": "@emception/react",
   "version": "3.2.1",
+  "name": "@gameguild/emception-react",
   "description": "React 19 components for emception: <EmceptionRun>, <EmceptionTerminal>, <EmceptionCanvas>, useEmception().",
   "license": "MIT",
   "type": "module",
@@ -28,16 +28,16 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@emception/browser": "*",
-    "@emception/core": "*"
+    "@gameguild/emception-browser": "*",
+    "emception": "*"
   },
   "peerDependencies": {
-    "@emception/xterm": "*",
+    "@gameguild/emception-xterm": "*",
     "react": "^19",
     "react-dom": "^19"
   },
   "peerDependenciesMeta": {
-    "@emception/xterm": {
+    "@gameguild/emception-xterm": {
       "optional": true
     }
   },

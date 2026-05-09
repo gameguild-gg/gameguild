@@ -1,8 +1,8 @@
-// Phase 6.1 / 6.2 prep — shared kebab↔camel + DOM-event-name conventions.
+// Shared kebab↔camel + DOM-event-name conventions.
 //
 // The webcomponent (`<emception-run kebab-attr>`) and the React component
 // (`<EmceptionRun camelProp>`) both ultimately funnel into the same
-// `normalizeViewConfig()` validator (Phase 6.3), but the *attribute* layer
+// `normalizeViewConfig()` validator, but the *attribute* layer
 // each consumes diverges:
 //
 //   - HTML attrs are kebab-case strings; booleans are presence-only or
@@ -19,19 +19,19 @@
 // Pure core: no DOM, no React, no Node. Inputs are plain string maps;
 // outputs are plain JS objects.
 
-import type { EmceptionEventName } from '../events.js';
-import type { ViewConfigInput } from './config.js';
+import type { EmceptionEventName } from '../events';
+import type { ViewConfigInput } from './config';
 
 // ─────────────── kebab ⇄ camel ───────────────
 
 /** `'foo-bar-baz'` → `'fooBarBaz'`. Idempotent on already-camel input. */
 export function kebabToCamel(s: string): string {
-    return s.replace(/-([a-z0-9])/g, (_, c: string) => c.toUpperCase());
+  return s.replace(/-([a-z0-9])/g, (_, c: string) => c.toUpperCase());
 }
 
 /** `'fooBarBaz'` → `'foo-bar-baz'`. Idempotent on already-kebab input. */
 export function camelToKebab(s: string): string {
-    return s.replace(/[A-Z]/g, (c) => '-' + c.toLowerCase());
+  return s.replace(/[A-Z]/g, (c) => '-' + c.toLowerCase());
 }
 
 /**
@@ -44,17 +44,17 @@ export function camelToKebab(s: string): string {
  * - anything else             → `true`
  */
 export function parseBooleanAttr(value: string | null | undefined): boolean {
-    if (value == null) return false;
-    if (value === '') return true;
-    const v = value.trim().toLowerCase();
-    return v !== 'false' && v !== '0' && v !== 'no';
+  if (value == null) return false;
+  if (value === '') return true;
+  const v = value.trim().toLowerCase();
+  return v !== 'false' && v !== '0' && v !== 'no';
 }
 
 /** Parse a comma- or whitespace-separated list (e.g. `cflags="-O2 -Wall"`). */
 export function parseListAttr(value: string | null | undefined): string[] | undefined {
-    if (value == null) return undefined;
-    const parts = value.split(/[\s,]+/).filter(Boolean);
-    return parts.length > 0 ? parts : undefined;
+  if (value == null) return undefined;
+  const parts = value.split(/[\s,]+/).filter(Boolean);
+  return parts.length > 0 ? parts : undefined;
 }
 
 // ─────────────── DOM event names ───────────────
@@ -68,21 +68,21 @@ export function parseListAttr(value: string | null | undefined): string[] | unde
  * the webcomponent to wire one DOM listener per event.
  */
 export const EVENT_DOM_NAMES = {
-    progress: 'emception-progress',
-    ready: 'emception-ready',
-    'bundle-loaded': 'emception-bundle-loaded',
-    stdout: 'emception-stdout',
-    stderr: 'emception-stderr',
-    exit: 'emception-exit',
-    'test-case': 'emception-test-case',
-    'test-report': 'emception-test-report',
+  progress: 'emception-progress',
+  ready: 'emception-ready',
+  'bundle-loaded': 'emception-bundle-loaded',
+  stdout: 'emception-stdout',
+  stderr: 'emception-stderr',
+  exit: 'emception-exit',
+  'test-case': 'emception-test-case',
+  'test-report': 'emception-test-report',
 } as const satisfies Record<EmceptionEventName, string>;
 
 export type EventDomName = (typeof EVENT_DOM_NAMES)[EmceptionEventName];
 
 /** `domEventNameFor('test-case') === 'emception-test-case'`. */
 export function domEventNameFor<E extends EmceptionEventName>(name: E): (typeof EVENT_DOM_NAMES)[E] {
-    return EVENT_DOM_NAMES[name];
+  return EVENT_DOM_NAMES[name];
 }
 
 // ─────────────── flat attrs → ViewConfigInput ───────────────
@@ -97,11 +97,11 @@ export function domEventNameFor<E extends EmceptionEventName>(name: E): (typeof 
 type AttrKind = 'string' | 'boolean' | 'list' | 'enum';
 
 interface AttrSpec {
-    /** Where the parsed value lands. Dot-paths into ViewConfigInput. */
-    target: string;
-    kind: AttrKind;
-    /** For `kind === 'enum'`, the allowed values (lowercased). */
-    values?: readonly string[];
+  /** Where the parsed value lands. Dot-paths into ViewConfigInput. */
+  target: string;
+  kind: AttrKind;
+  /** For `kind === 'enum'`, the allowed values (lowercased). */
+  values?: readonly string[];
 }
 
 /**
@@ -110,41 +110,41 @@ interface AttrSpec {
  * directly; React converts camel props via `camelToKebab` first.
  */
 export const ATTRIBUTE_SCHEMA: Record<string, AttrSpec> = {
-    // Top-level config.
-    'preset': { target: 'preset', kind: 'string' },
-    'manifest-url': { target: 'manifestUrl', kind: 'string' },
-    'workspace': { target: 'workspace', kind: 'string' },
-    'source': { target: 'source', kind: 'string' },
-    'seed-url': { target: 'seedUrl', kind: 'string' },
-    'build-url': { target: 'buildUrl', kind: 'string' },
-    'seed-policy': {
-        target: 'seedPolicy',
-        kind: 'enum',
-        values: ['once', 'merge', 'overwrite'],
-    },
-    'autorun': { target: 'autorun', kind: 'boolean' },
-    'canvas': { target: 'canvas', kind: 'boolean' },
-    'show-hidden': { target: 'showHidden', kind: 'boolean' },
-    'show-solution': { target: 'showSolution', kind: 'boolean' },
+  // Top-level config.
+  preset: { target: 'preset', kind: 'string' },
+  'manifest-url': { target: 'manifestUrl', kind: 'string' },
+  workspace: { target: 'workspace', kind: 'string' },
+  source: { target: 'source', kind: 'string' },
+  'seed-url': { target: 'seedUrl', kind: 'string' },
+  'build-url': { target: 'buildUrl', kind: 'string' },
+  'seed-policy': {
+    target: 'seedPolicy',
+    kind: 'enum',
+    values: ['once', 'merge', 'overwrite'],
+  },
+  autorun: { target: 'autorun', kind: 'boolean' },
+  canvas: { target: 'canvas', kind: 'boolean' },
+  'show-hidden': { target: 'showHidden', kind: 'boolean' },
+  'show-solution': { target: 'showSolution', kind: 'boolean' },
 
-    // Build-config flatteners (Phase 6.1 spec).
-    'std': { target: 'workspace.build.std', kind: 'string' },
-    'output': { target: 'workspace.build.output', kind: 'string' },
-    'cflags': { target: 'workspace.build.cflags', kind: 'list' },
-    'cxxflags': { target: 'workspace.build.cxxflags', kind: 'list' },
-    'ldflags': { target: 'workspace.build.ldflags', kind: 'list' },
-    'libs': { target: 'workspace.build.libs', kind: 'list' },
-    'include-paths': { target: 'workspace.build.includePaths', kind: 'list' },
-    'lib-paths': { target: 'workspace.build.libPaths', kind: 'list' },
+  // Build-config flatteners.
+  std: { target: 'workspace.build.std', kind: 'string' },
+  output: { target: 'workspace.build.output', kind: 'string' },
+  cflags: { target: 'workspace.build.cflags', kind: 'list' },
+  cxxflags: { target: 'workspace.build.cxxflags', kind: 'list' },
+  ldflags: { target: 'workspace.build.ldflags', kind: 'list' },
+  libs: { target: 'workspace.build.libs', kind: 'list' },
+  'include-paths': { target: 'workspace.build.includePaths', kind: 'list' },
+  'lib-paths': { target: 'workspace.build.libPaths', kind: 'list' },
 };
 
 export interface ParseAttributesOptions {
-    /**
-     * Called for any attribute name not in `ATTRIBUTE_SCHEMA`. Default is to
-     * silently ignore (forward-compat with newer attrs); pass a thrower if
-     * you want strict mode.
-     */
-    onUnknown?: (name: string, value: string) => void;
+  /**
+   * Called for any attribute name not in `ATTRIBUTE_SCHEMA`. Default is to
+   * silently ignore (forward-compat with newer attrs); pass a thrower if
+   * you want strict mode.
+   */
+  onUnknown?: (name: string, value: string) => void;
 }
 
 /**
@@ -159,58 +159,47 @@ export interface ParseAttributesOptions {
  * Returns the partial `ViewConfigInput`; callers should hand it straight
  * to `normalizeViewConfig`.
  */
-export function parseAttributesToInput(
-    attrs: Record<string, string | null | undefined>,
-    opts: ParseAttributesOptions = {},
-): ViewConfigInput {
-    const out: Record<string, unknown> = {};
+export function parseAttributesToInput(attrs: Record<string, string | null | undefined>, opts: ParseAttributesOptions = {}): ViewConfigInput {
+  const out: Record<string, unknown> = {};
 
-    for (const [rawName, value] of Object.entries(attrs)) {
-        if (value === undefined) continue;
-        // `Object.hasOwn` blocks lookups for keys like 'constructor' or
-        // 'toString' that would otherwise resolve to Object.prototype
-        // members and look like valid schema entries.
-        const spec = Object.hasOwn(ATTRIBUTE_SCHEMA, rawName)
-            ? ATTRIBUTE_SCHEMA[rawName]
-            : undefined;
-        if (!spec) {
-            opts.onUnknown?.(rawName, value ?? '');
-            continue;
-        }
-
-        const parsed = parseValue(rawName, value, spec);
-        if (parsed === undefined) continue;
-        setPath(out, spec.target, parsed);
+  for (const [rawName, value] of Object.entries(attrs)) {
+    if (value === undefined) continue;
+    // `Object.hasOwn` blocks lookups for keys like 'constructor' or
+    // 'toString' that would otherwise resolve to Object.prototype
+    // members and look like valid schema entries.
+    const spec = Object.hasOwn(ATTRIBUTE_SCHEMA, rawName) ? ATTRIBUTE_SCHEMA[rawName] : undefined;
+    if (!spec) {
+      opts.onUnknown?.(rawName, value ?? '');
+      continue;
     }
 
-    return out as ViewConfigInput;
+    const parsed = parseValue(rawName, value, spec);
+    if (parsed === undefined) continue;
+    setPath(out, spec.target, parsed);
+  }
+
+  return out as ViewConfigInput;
 }
 
 // ─────────────── helpers ───────────────
 
-function parseValue(
-    name: string,
-    value: string | null,
-    spec: AttrSpec,
-): unknown | undefined {
-    switch (spec.kind) {
-        case 'boolean':
-            return parseBooleanAttr(value);
-        case 'list':
-            return parseListAttr(value);
-        case 'string':
-            return value === null || value === '' ? undefined : value;
-        case 'enum': {
-            if (value === null || value === '') return undefined;
-            const lower = value.toLowerCase();
-            if (!spec.values || !spec.values.includes(lower)) {
-                throw new RangeError(
-                    `Attribute '${name}': expected one of ${spec.values?.join(', ') ?? '(none)'}, got '${value}'.`,
-                );
-            }
-            return lower;
-        }
+function parseValue(name: string, value: string | null, spec: AttrSpec): unknown | undefined {
+  switch (spec.kind) {
+    case 'boolean':
+      return parseBooleanAttr(value);
+    case 'list':
+      return parseListAttr(value);
+    case 'string':
+      return value === null || value === '' ? undefined : value;
+    case 'enum': {
+      if (value === null || value === '') return undefined;
+      const lower = value.toLowerCase();
+      if (!spec.values || !spec.values.includes(lower)) {
+        throw new RangeError(`Attribute '${name}': expected one of ${spec.values?.join(', ') ?? '(none)'}, got '${value}'.`);
+      }
+      return lower;
     }
+  }
 }
 
 /**
@@ -220,18 +209,18 @@ function parseValue(
  * names can't even reach this function).
  */
 function setPath(obj: Record<string, unknown>, dotted: string, value: unknown): void {
-    const parts = dotted.split('.');
-    let cur: Record<string, unknown> = obj;
-    for (let i = 0; i < parts.length - 1; i++) {
-        const key = parts[i]!;
-        const next = cur[key];
-        if (next == null || typeof next !== 'object') {
-            const fresh: Record<string, unknown> = {};
-            cur[key] = fresh;
-            cur = fresh;
-        } else {
-            cur = next as Record<string, unknown>;
-        }
+  const parts = dotted.split('.');
+  let cur: Record<string, unknown> = obj;
+  for (let i = 0; i < parts.length - 1; i++) {
+    const key = parts[i]!;
+    const next = cur[key];
+    if (next == null || typeof next !== 'object') {
+      const fresh: Record<string, unknown> = {};
+      cur[key] = fresh;
+      cur = fresh;
+    } else {
+      cur = next as Record<string, unknown>;
     }
-    cur[parts[parts.length - 1]!] = value;
+  }
+  cur[parts[parts.length - 1]!] = value;
 }

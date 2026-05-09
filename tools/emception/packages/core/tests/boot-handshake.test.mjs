@@ -1,4 +1,4 @@
-// Phase 7.2 prep — BootHandshake state machine. Pure logic, no transport.
+// BootHandshake state machine. Pure logic, no transport.
 //
 // Run via:
 //   node --test tools/emception/packages/core/tests/boot-handshake.test.mjs

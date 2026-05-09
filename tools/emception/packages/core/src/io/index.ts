@@ -1,4 +1,4 @@
-// I/O normalization helpers (Phase 2.1).
+// I/O normalization helpers.
 
 export {
     decodeCollected, normalizeStdin,

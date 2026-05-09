@@ -1,7 +1,7 @@
 /**
  * <emception-ide> — light-DOM custom element wrapping the React <Ide> component.
  *
- * Phase 8.12: no shadow root; attributes are mapped to IdeProps.
+ * No shadow root; attributes are mapped to IdeProps.
  *
  * Attribute → prop mapping (all optional):
  *   title              → title

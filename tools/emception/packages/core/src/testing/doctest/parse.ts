@@ -1,5 +1,5 @@
 /**
- * Phase 5.5 — doctest console-reporter output parser.
+ * Doctest console-reporter output parser.
  *
  * doctest (https://github.com/doctest/doctest) is the C++ unit-test
  * framework Emception ships in the sysroot for the `doctest` test kind.

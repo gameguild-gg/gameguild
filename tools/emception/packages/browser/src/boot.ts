@@ -2,16 +2,16 @@
  * Boot sequence: load manifest, init VFS, start tool runner and shell.
  */
 
+import { TTYBridge } from '@gameguild/emception-xterm';
+import { OverlayFS } from 'emception';
 import { detectAsyncStrategy } from './async-bridge';
 import { FetchBridge } from './net/fetch-bridge';
 import { MiniShell } from './shell';
 import { ToolRunner } from './tool-runner';
-import { TTYBridge } from '@emception/xterm';
 import { IDBFS } from './vfs/idb';
 import { createVFSManager } from './vfs/index';
 import type { FSManifest } from './vfs/lazy';
 import { LazyFS } from './vfs/lazy';
-import { OverlayFS } from '@emception/core';
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -149,7 +149,7 @@ export async function boot(manifestUrl: string, terminalContainerOrTerminal: HTM
 }
 
 /* ------------------------------------------------------------------ */
-/*  Worker-based boot (Phase 1)                                        */
+/*  Worker-based boot                                                  */
 /* ------------------------------------------------------------------ */
 
 export interface WorkerBootResult {
@@ -216,13 +216,13 @@ export async function bootInWorker(
   return { client, tty };
 }
 
+export { LineBuffer } from 'emception';
+export type { IOProvider } from 'emception';
 export { createEmception, type CreateEmceptionOptions, type EmceptionAPI } from './createEmception';
 export { createBrowserBridge, SUBPROCESS_SHIM, type BrowserBridge } from './emscripten/index';
 export { decompressBrotli, isBrotliSupported } from './loader/brotli';
 export { clearModuleCache, loadModuleFactory } from './loader/wasm-module';
 export type { RunOptions, ToolResult } from './tool-runner';
-export type { IOProvider } from '@emception/core';
-export { LineBuffer } from '@emception/core';
 export type { VFSManager } from './vfs/index';
 export { createVFSManager, detectAsyncStrategy, MiniShell, ToolRunner, TTYBridge };
 

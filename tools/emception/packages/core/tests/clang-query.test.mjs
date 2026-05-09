@@ -1,4 +1,4 @@
-// Phase 5.4 verification — clang-query matcher engine over a synthetic AST.
+// Clang-query matcher engine verification over a synthetic AST.
 
 import assert from 'node:assert/strict';
 import test from 'node:test';

@@ -1,7 +1,7 @@
 /**
  * `emception` — meta package.
  *
- * Phase 0.3: this package is now a thin batteries-included alias around
+ * This package is now a thin batteries-included alias around
  * `@emception/browser` (the browser runtime adapter) plus `@emception/xterm`
  * (the xterm.js I/O bridge), so existing consumers can keep using
  * `npm i emception` without reaching for the scoped packages directly.
@@ -16,6 +16,6 @@
  *     // (still re-exported via `emception` for back-compat)
  */
 
-export * from '@emception/browser';
-export * as xterm from '@emception/xterm';
+export * from '@gameguild/emception-browser';
+export * as xterm from '@gameguild/emception-xterm';
 

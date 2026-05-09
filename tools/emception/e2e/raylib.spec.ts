@@ -29,7 +29,13 @@ interface CapturedLog {
     text: string;
 }
 
-function captureEmceptionLogs(page: Page): CapturedLog[] {
+interface LogCapture {
+    logs: CapturedLog[];
+    /** Rejects with an Error if the page crashes (OOM / renderer kill). */
+    crash: Promise<never>;
+}
+
+function captureEmceptionLogs(page: Page): LogCapture {
     const logs: CapturedLog[] = [];
     const t0 = Date.now();
 
@@ -51,7 +57,20 @@ function captureEmceptionLogs(page: Page): CapturedLog[] {
         console.log(`  [pageerror] ${err.message}`);
     });
 
-    return logs;
+    const crash = new Promise<never>((_, reject) => {
+        page.on('crash', () => {
+            const err = new Error(
+                'Page crashed (renderer killed — likely OOM). ' +
+                'The WASM main loop probably allocated too much memory. ' +
+                'Check WebAssembly.Memory limits in Ide.tsx.',
+            );
+            logs.push({ timestamp: Date.now() - t0, type: 'crash', text: err.message });
+            console.log(`  [PAGE CRASHED] ${err.message}`);
+            reject(err);
+        });
+    });
+
+    return { logs, crash };
 }
 
 function dumpLogs(logs: CapturedLog[], label: string) {
@@ -72,7 +91,7 @@ test.describe('raylib C++ canvas', () => {
     test('raylib demo compiles and renders to canvas', async ({ page }) => {
         // Raylib uses clang+wasm-ld (not emcc) but links libraylib.a — allow 15 min.
         test.setTimeout(15 * 60_000);
-        const logs = captureEmceptionLogs(page);
+        const { logs, crash } = captureEmceptionLogs(page);
 
         // Start fresh — no persisted SDL/cmake workspace.
         await page.goto('/', { waitUntil: 'domcontentloaded' });
@@ -113,9 +132,14 @@ test.describe('raylib C++ canvas', () => {
         await expect(status(page)).toHaveText('Compiling...', { timeout: 10_000 });
         console.log('Compilation started. Waiting for em++ link + load (up to 10 min)…');
 
-        await expect(status(page)).not.toHaveText('Compiling...', { timeout: 10 * 60_000 });
+        // Race compilation against page crash — if the renderer is killed (OOM)
+        // the crash promise rejects immediately with a clear error message.
+        await Promise.race([
+            expect(status(page)).not.toHaveText('Compiling...', { timeout: 10 * 60_000 }),
+            crash,
+        ]);
 
-        const finalStatus = await status(page).textContent();
+        const finalStatus = await Promise.race([status(page).textContent(), crash]);
         console.log(`Final status: "${finalStatus}"`);
 
         if (finalStatus && /compilation failed/.test(finalStatus)) {
@@ -134,13 +158,13 @@ test.describe('raylib C++ canvas', () => {
         console.log('raylib compilation succeeded!');
 
         // ── Terminal messages ─────────────────────────────────────────────────
-        await expect(terminal(page)).toContainText('raylib detected', { timeout: 5_000 });
-        await expect(terminal(page)).toContainText('rendering in canvas tab', { timeout: 5_000 });
+        await Promise.race([expect(terminal(page)).toContainText('raylib detected', { timeout: 5_000 }), crash]);
+        await Promise.race([expect(terminal(page)).toContainText('rendering in canvas tab', { timeout: 5_000 }), crash]);
 
         // ── Canvas element visible ────────────────────────────────────────────
-        await expect(canvasEl(page)).toBeVisible({ timeout: 15_000 });
+        await Promise.race([expect(canvasEl(page)).toBeVisible({ timeout: 15_000 }), crash]);
 
-        const canvasSize = await canvasEl(page).boundingBox();
+        const canvasSize = await Promise.race([canvasEl(page).boundingBox(), crash]);
         console.log(`Canvas bounding box: ${JSON.stringify(canvasSize)}`);
         expect(canvasSize).not.toBeNull();
         expect(canvasSize!.width).toBeGreaterThan(100);
@@ -148,16 +172,27 @@ test.describe('raylib C++ canvas', () => {
 
         console.log('raylib canvas is visible and has non-zero dimensions!');
 
+        // ── Stability: wait 8s for WASM main loop — crash happens here if OOM ──
+        console.log('Waiting 8s to verify page stability while WASM main loop runs…');
+        await Promise.race([
+            new Promise<void>((resolve) => setTimeout(resolve, 8_000)),
+            crash,
+        ]);
+        console.log('Page stable after 8s.');
+
         // ── WebGL context acquired ────────────────────────────────────────────
-        const hasWebGL = await page.evaluate(() => {
-            const c = document.querySelector<HTMLCanvasElement>('[data-testid="sdl-canvas"]');
-            if (!c) return false;
-            return !!(
-                c.getContext('webgl2') ??
-                c.getContext('webgl') ??
-                c.getContext('experimental-webgl')
-            );
-        });
+        const hasWebGL = await Promise.race([
+            page.evaluate(() => {
+                const c = document.querySelector<HTMLCanvasElement>('[data-testid="sdl-canvas"]');
+                if (!c) return false;
+                return !!(
+                    c.getContext('webgl2') ??
+                    c.getContext('webgl') ??
+                    c.getContext('experimental-webgl')
+                );
+            }),
+            crash,
+        ]);
         expect(hasWebGL).toBe(true);
         console.log('raylib acquired a WebGL context.');
 

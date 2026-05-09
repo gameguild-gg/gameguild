@@ -1,4 +1,4 @@
-@import '@emception/ide/styles/theme.css';
+@import '@gameguild/emception-ide/styles/theme.css';
 
 *, *::before, *::after {
   box-sizing: border-box;

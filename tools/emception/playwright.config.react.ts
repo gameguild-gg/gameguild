@@ -38,7 +38,7 @@ export default defineConfig({
         // one-time setup that must have been run beforehand (npm run dev once,
         // or `node ../../scripts/sync-emception-cdn.mjs tools/emception/apps/ide-react`).
         command: `npx vite --strictPort --port ${PORT}`,
-        cwd: '../apps/ide-react',
+        cwd: './apps/ide-react',
         url: `http://localhost:${PORT}`,
         reuseExistingServer: !process.env.CI,
         timeout: 120_000,

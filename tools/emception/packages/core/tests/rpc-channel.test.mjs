@@ -1,4 +1,4 @@
-// Phase 7.2 prep — RpcChannel validated end-to-end against real
+// RpcChannel validated end-to-end against real
 // node:worker_threads MessageChannels. NO MOCKS.
 
 import assert from 'node:assert/strict';

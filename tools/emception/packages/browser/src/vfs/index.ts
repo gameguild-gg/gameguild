@@ -1,11 +1,9 @@
 /**
  * VFS manager: exposes fetchFile and getUrl for the tool runner.
- * Composes OverlayFS (unified view, from `@emception/core`) with LazyFS (CDN URLs).
- *
- * Migrated from `tools/emception/src/vfs/index.ts` in Phase 0.2.
+ * Composes OverlayFS (unified view, from `emception`) with LazyFS (CDN URLs).
  */
 
-import type { FSStats, OverlayFS } from '@emception/core';
+import type { FSStats, OverlayFS } from 'emception';
 import { LazyFS } from './lazy';
 
 export { mountVFSFS, type MountVFSFSOptions, type VFSFSRuntime } from './emscripten-vfsfs';

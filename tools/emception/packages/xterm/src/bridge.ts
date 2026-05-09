@@ -6,7 +6,7 @@
  */
 
 import { Terminal } from '@xterm/xterm';
-import type { IOProvider } from '@emception/core';
+import type { IOProvider } from 'emception';
 
 export class TTYBridge implements IOProvider {
   private terminal: Terminal;

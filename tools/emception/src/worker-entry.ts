@@ -5,8 +5,8 @@
  * its side effects (registers `self.onmessage` handler and waits for the
  * boot message from the main thread).
  *
- * Phase 0.3: previously this file held the full worker bootstrap logic;
+ * Previously this file held the full worker bootstrap logic;
  * it now lives in `@emception/browser/src/worker-entry.ts`.
  */
 
-import '@emception/browser/worker';
+import '@gameguild/emception-browser/worker';

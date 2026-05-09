@@ -1,7 +1,7 @@
 import { defineConfig } from 'tsup';
 
-// Phase 0.3: meta `emception` is now a thin wrapper over `@emception/browser`
-// + `@emception/xterm`. The full toolchain implementation (worker-entry, vfs,
+// Phase 0.3: meta `emception` is now a thin wrapper over `@gameguild/emception-browser`
+// + `@gameguild/emception-xterm`. The full toolchain implementation (worker-entry, vfs,
 // emscripten bridge, etc.) lives in the scoped packages, so this build is a
 // simple ESM re-export bundle. The .py raw loader and other heavy plumbing
 // from earlier versions are no longer needed here — the scoped packages
@@ -22,9 +22,9 @@ export default defineConfig({
     platform: 'browser',
     external: [
         '@xterm/xterm',
-        '@emception/browser',
-        '@emception/browser/worker',
-        '@emception/xterm',
-        '@emception/core',
+        '@gameguild/emception-browser',
+        '@gameguild/emception-browser/worker',
+        '@gameguild/emception-xterm',
+        'emception',
     ],
 });

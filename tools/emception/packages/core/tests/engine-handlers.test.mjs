@@ -1,4 +1,4 @@
-// Phases 5.4 + 5.5 verification — engine handlers for clang-query and
+// Engine handler verification — clang-query and
 // doctest, exercised against a fake EmceptionAPI. The runtime-agnostic
 // matcher engine and console parser were unit-tested separately; this
 // file proves the engine routes inputs/outputs correctly.

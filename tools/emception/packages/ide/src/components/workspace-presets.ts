@@ -6,8 +6,6 @@ export {
   CMAKE_PRESET,
   CPP_SDL3_PRESET,
   CPP_TERMINAL_PRESET,
-  DEFAULT_PRESET,
-  PRESETS,
-  PRESET_IDS,
-  PYTHON_PRESET,
-} from '@emception/core';
+  DEFAULT_PRESET, PRESET_IDS, PRESETS, PYTHON_PRESET
+} from 'emception';
+
