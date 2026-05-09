@@ -2,11 +2,11 @@
  * Lazy-loading filesystem from CDN with IndexedDB cache and hash invalidation.
  */
 
-import type { FSManifest, FSStats, IFileSystem, ManifestEntry } from '@emception/core';
+import type { FSManifest, FSStats, IFileSystem, ManifestEntry } from 'emception';
 
 // Re-export the core manifest types under their legacy names so consumers of
 // this module (LazyFS callers within @emception/browser) keep working.
-export type { FSManifest } from '@emception/core';
+export type { FSManifest } from 'emception';
 export type FileEntry = ManifestEntry;
 
 export class LazyFS implements IFileSystem {

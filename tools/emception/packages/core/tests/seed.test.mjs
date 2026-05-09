@@ -1,4 +1,4 @@
-// Phase 3.2 verification — seed hashing is deterministic and order-insensitive.
+// Seed hashing verification — deterministic and order-insensitive.
 
 import assert from 'node:assert/strict';
 import test from 'node:test';

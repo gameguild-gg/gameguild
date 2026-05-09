@@ -1,7 +1,7 @@
 /**
  * Main-thread proxy client for the Worker-based toolchain.
  *
- * Thin shim over `WorkerOrchestrator` (@emception/core).
+ * Thin shim over `WorkerOrchestrator` (emception).
  * This file contains only the browser-specific concerns:
  *   - SharedArrayBuffer stdin pump (feedStdin, feedShellStdin)
  *   - IOProvider wiring (xterm.js / TTYBridge)
@@ -11,8 +11,8 @@
  * WorkerOrchestrator.
  */
 
-import type { IOProvider } from '@emception/core';
-import { WorkerOrchestrator, workerTransport } from '@emception/core';
+import type { IOProvider } from 'emception';
+import { WorkerOrchestrator, workerTransport } from 'emception';
 import type { RunOptions, ToolResult } from './tool-runner';
 
 export interface WorkerBootOptions {

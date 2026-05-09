@@ -1,5 +1,5 @@
 /**
- * Re-exports the subprocess shim Python source as a string.
+ * Exports the subprocess shim Python source as a string.
  *
  * The actual implementation lives in subprocess_shim.py (proper Python file
  * with syntax highlighting & linting). It gets imported as a raw string via

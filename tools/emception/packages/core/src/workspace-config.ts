@@ -1,4 +1,4 @@
-// Workspace configuration types (Phase 8).
+// Workspace configuration types.
 //
 // `WorkspaceConfig` is the runtime/UI-agnostic descriptor for an emception
 // workspace: which files seed the VFS, how to compile and run them, how to

@@ -62,7 +62,10 @@ if (!isBinaryenSourceValid) {
     console.log(`Downloading Binaryen ${BINARYEN_VERSION}...`);
     shell.cd(USERLAND_DIR);
     const tarball = `version_${BINARYEN_VERSION}.tar.gz`;
-    shell.exec(`curl -fSL ${GITHUB_AUTH} -o "${tarball}" "https://github.com/WebAssembly/binaryen/archive/refs/tags/${tarball}"`);
+    shell.exec(
+        `curl -fSL --http1.1 --retry 8 --retry-all-errors --retry-delay 2 ${GITHUB_AUTH} -o "${tarball}" "https://github.com/WebAssembly/binaryen/archive/refs/tags/${tarball}" || ` +
+        `curl -fSL --http1.1 --retry 8 --retry-all-errors --retry-delay 2 ${GITHUB_AUTH} -o "${tarball}" "https://codeload.github.com/WebAssembly/binaryen/tar.gz/refs/tags/version_${BINARYEN_VERSION}"`
+    );
     shell.exec(`tar xzf "${tarball}"`);
     shell.rm(tarball);
 }

@@ -2,7 +2,7 @@
 
 Browser runtime adapter for [emception](https://github.com/gameguild-gg/gameguild/tree/main/tools/emception). Spawns Web Workers, persists workspaces in IndexedDB, ships OffscreenCanvas + SDL/ImGui helpers, and bundles the cross-origin-isolation preflight.
 
-This is the package most browser apps want. The bare-metal `npm i emception` meta-package re-exports it.
+This is the package most browser apps want. The bare-metal `npm i emception` meta-package forwards to it.
 
 ## Install
 

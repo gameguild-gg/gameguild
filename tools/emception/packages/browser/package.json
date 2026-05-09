@@ -1,6 +1,6 @@
 {
-  "name": "@emception/browser",
   "version": "3.2.1",
+  "name": "@gameguild/emception-browser",
   "description": "Browser runtime adapter for emception: Web Worker spawn, IDB workspace store, OffscreenCanvas helpers, COI preflight.",
   "license": "MIT",
   "type": "module",
@@ -35,14 +35,14 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@emception/core": "*",
-    "@emception/xterm": "*"
+    "emception": "*",
+    "@gameguild/emception-xterm": "*"
   },
   "peerDependencies": {
-    "@emception/sysroot": ">=0.20.0-alpha.0"
+    "@gameguild/emception-sysroot": "*"
   },
   "peerDependenciesMeta": {
-    "@emception/sysroot": {
+    "@gameguild/emception-sysroot": {
       "optional": true
     }
   },

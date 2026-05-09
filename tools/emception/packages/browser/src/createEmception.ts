@@ -25,7 +25,7 @@
  * `boot()` / `bootInWorker()` exports remain available for advanced use.
  */
 
-import { HeadlessIOProvider } from '@emception/core';
+import { HeadlessIOProvider } from 'emception';
 import { bootInWorker } from './index';
 import type { RunOptions, ToolResult } from './tool-runner';
 import { WorkerClient } from './worker-client';
@@ -52,7 +52,7 @@ export interface CreateEmceptionOptions {
      */
     container?: HTMLElement | import('@xterm/xterm').Terminal;
     /**
-     * Terminal binding (Phase 1.1). Defaults to `'xterm'` when `container`
+    * Terminal binding. Defaults to `'xterm'` when `container`
      * is provided, `'none'` otherwise.
      *
      * - `'xterm'` — mount or reuse an xterm.js Terminal in `container`.

@@ -1,4 +1,4 @@
-// Phase 6.1/6.2 prep — tests for kebab↔camel + attribute schema parser
+// Tests for kebab↔camel + attribute schema parser
 // + DOM event-name registry. Pure module; no DOM/React needed.
 
 import assert from 'node:assert/strict';
@@ -193,7 +193,7 @@ test('parseAttributesToInput schema gate blocks arbitrary attribute names from r
     assert.equal({}.evil, undefined);
 });
 
-test('ATTRIBUTE_SCHEMA includes all spec-required Phase 6.1 attrs', () => {
+test('ATTRIBUTE_SCHEMA includes all spec-required attrs', () => {
     for (const required of ['cflags', 'ldflags', 'std', 'output', 'build-url']) {
         assert.ok(required in ATTRIBUTE_SCHEMA, `missing attr '${required}'`);
     }

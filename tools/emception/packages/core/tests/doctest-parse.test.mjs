@@ -1,4 +1,4 @@
-// Phase 5.5 verification — doctest console-output parser.
+// Doctest console-output parser verification.
 
 import assert from 'node:assert/strict';
 import test from 'node:test';

@@ -1,4 +1,4 @@
-// Build preset definitions. Phase 4 wires bundlesToPreload + tools.
+// Build preset definitions. Includes bundlesToPreload + tools.
 //
 // These are runtime/build-level presets used by the build resolver to map a
 // short label (e.g. 'cpp', 'sdl') to compiler/linker defaults and the bundles
@@ -8,7 +8,7 @@
 // "workspace presets" (`@emception/core` `workspace-presets.ts`) which describe
 // full IDE workspace configurations layered on top of these build presets.
 
-import type { WorkspaceBuildConfig } from './types.js';
+import type { WorkspaceBuildConfig } from './types';
 
 export type BuildPresetName = 'c' | 'cpp' | 'python' | 'sdl' | 'raylib' | 'cmake' | 'full';
 
