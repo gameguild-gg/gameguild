@@ -26,6 +26,11 @@
     "dist",
     "README.md"
   ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/gameguild-gg/gameguild.git",
+    "directory": "tools/emception/packages/browser"
+  },
   "publishConfig": {
     "access": "public"
   },
