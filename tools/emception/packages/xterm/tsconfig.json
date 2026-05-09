@@ -3,6 +3,7 @@
   "compilerOptions": {
     "outDir": "dist",
     "rootDir": "src",
+    "paths": {},
     "skipLibCheck": true
   },
   "include": ["src/**/*.ts"],
