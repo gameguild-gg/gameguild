@@ -410,12 +410,8 @@ jobs:
 
       - name: Publish emception packages to npm
         if: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && steps.semantic.outputs.new_release_published == 'true' }}
+        working-directory: tools/emception
         run: |
-          unset NODE_AUTH_TOKEN
-          npm config delete //registry.npmjs.org/:_authToken
-
-          cd tools/emception
-
           PACKAGE_DIRS=(
             "packages/core"
             "packages/xterm"
@@ -435,8 +431,7 @@ jobs:
             fi
 
             echo "📦 Publishing ${NAME}@${VERSION}"
-            npm publish --workspace="${NAME}" --provenance --access public
+            npm publish --workspace="${NAME}" --access public --provenance
           done
         env:
-          NODE_AUTH_TOKEN: ''
           NPM_CONFIG_PROVENANCE: 'true'
