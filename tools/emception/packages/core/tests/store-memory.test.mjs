@@ -1,4 +1,4 @@
-// Phase 7.4 verification — in-memory WorkspaceManager honors all SeedPolicy
+// In-memory WorkspaceManager verification — honors all SeedPolicy
 // branches and surfaces metadata correctly.
 
 import assert from 'node:assert/strict';

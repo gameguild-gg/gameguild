@@ -12,7 +12,7 @@
  *    no IndexedDB is opened at all.  Used for /tmp and other ephemeral paths.
  */
 
-import type { FSStats, IFileSystem } from '@emception/core';
+import type { FSStats, IFileSystem } from 'emception';
 
 export interface IDBFSOptions {
   /** When true, skip all IndexedDB I/O — data lives only in writeCache. */

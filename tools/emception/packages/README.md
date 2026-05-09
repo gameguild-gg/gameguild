@@ -13,7 +13,7 @@
 | [`@emception/ide`](ide/)                   | UI      | Reactive `<Ide>` React 19 + `<emception-ide>` custom-element wrapper (light DOM).               |
 | [`@emception/cli`](cli/)                   | Tool    | `doctor`, `cdn-export`, `run`, `test`.                                                          |
 
-The unscoped meta-package [`emception`](../package.json) at `tools/emception/` re-exports `@emception/browser` + `@emception/xterm` for back-compat.
+The unscoped meta-package [`emception`](../package.json) at `tools/emception/` forwards exports from `@emception/browser` + `@emception/xterm` for back-compat.
 
 ## Build order (topological)
 
@@ -29,19 +29,19 @@ sysroot
 
 ## Status
 
-- **Phase 0.1 — workspace bootstrap**: ✅ all 9 package skeletons, typecheck cleanly.
-- **Phase 0.2 — source migration**: ✅ complete.
+- **Workspace bootstrap**: ✅ all 9 package skeletons, typecheck cleanly.
+- **Source migration**: ✅ complete.
   - `@emception/core` owns: `vfs/{interface,overlay,manifest}`, `tty/{io-provider,line-buffer}`, `worker-protocol`, presets, errors, full type surface.
   - `@emception/xterm` owns: `TTYBridge`.
   - `@emception/browser` owns: `LazyFS`, `IDBFS`, `mountVFSFS`, `createVFSManager`, `ToolRunner`, `MiniShell`, `worker-client`, `worker-entry` (+ side-effect subpath `@emception/browser/worker`), `boot()`, `bootInWorker()`, `createEmception()`, plus the `emscripten/`, `loader/`, `net/` adapters.
-- **Phase 0.3 — meta wrapper**: ✅ `tools/emception/src/index.ts` is now `export * from '@emception/browser'; export * as xterm from '@emception/xterm';`. Worker entry shim is `import '@emception/browser/worker';`. Bundle ~250 bytes; full toolchain pulled in by downstream bundlers via the scoped packages.
-- **Phase 0.5 — changesets**: ✅ [`tools/emception/.changeset/config.json`](../.changeset/config.json) — lock-step versioning for all `@emception/*` + `emception` (sysroot independent).
-- **Phase 0.8 — topological build pipeline**: ✅ `npm run build:packages --workspace=tools/emception` builds all 8 in dependency order (core → xterm → browser → node → react → webcomponent → ide → cli). Companion: `typecheck:packages`, `clean:packages`.
-- **Phase 1.6 — typed errors**: ✅ `EmceptionError` hierarchy in `@emception/core/src/errors.ts`.
-- **Phase 1.7 — SSR safety**: ✅ all packages mark `"sideEffects": false`; `@emception/core` has zero DOM/browser imports.
-- **Phase 7.2 — WorkerOrchestrator refactor**: ✅ `@emception/core` ships `WorkerOrchestrator`, `RpcChannel`, `BootHandshake`, `RequestCorrelator`. `@emception/browser` `WorkerClient` is a thin shim.
-- **Phase 8 — IDE reactive rewrite (`@emception/ide`)**: ✅ `<Ide>` React 19 component + `<emception-ide>` custom element. Full `IdeProps` surface with panel toggles, fullscreen portal, workspace storage key, canvas path, headless I/O. 66 Jest tests green.
-- **Phase 0.6 — sysroot asset migration**: ⏳ deferred.
+- **Meta wrapper**: ✅ `tools/emception/src/index.ts` is now `export * from '@emception/browser'; export * as xterm from '@emception/xterm';`. Worker entry shim is `import '@emception/browser/worker';`. Bundle ~250 bytes; full toolchain pulled in by downstream bundlers via the scoped packages.
+- **Changesets**: ✅ [`tools/emception/.changeset/config.json`](../../.changeset/config.json) — lock-step versioning for all `@emception/*` + `emception` (sysroot independent).
+- **Topological build pipeline**: ✅ `npm run build:packages --workspace=tools/emception` builds all 8 in dependency order (core → xterm → browser → node → react → webcomponent → ide → cli). Companion: `typecheck:packages`, `clean:packages`.
+- **Typed errors**: ✅ `EmceptionError` hierarchy in `@emception/core/src/errors.ts`.
+- **SSR safety**: ✅ all packages mark `"sideEffects": false`; `@emception/core` has zero DOM/browser imports.
+- **WorkerOrchestrator refactor**: ✅ `@emception/core` ships `WorkerOrchestrator`, `RpcChannel`, `BootHandshake`, `RequestCorrelator`. `@emception/browser` `WorkerClient` is a thin shim.
+- **IDE reactive rewrite (`@emception/ide`)**: ✅ `<Ide>` React 19 component + `<emception-ide>` custom element. Full `IdeProps` surface with panel toggles, fullscreen portal, workspace storage key, canvas path, headless I/O. 66 Jest tests green.
+- **Sysroot asset migration**: ⏳ deferred.
 
 ## Scripts
 

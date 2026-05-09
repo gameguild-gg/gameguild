@@ -3,8 +3,8 @@
  * Supports history, tab completion, and filesystem builtins.
  */
 
+import type { IOProvider } from 'emception';
 import type { ToolRunner } from './tool-runner';
-import type { IOProvider } from '@emception/core';
 import type { VFSManager } from './vfs/index';
 
 export class MiniShell {

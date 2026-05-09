@@ -1,5 +1,5 @@
 /**
- * Compile argv builder (Phase 4.3).
+ * Compile argv builder.
  *
  * Pure helper: turns a `ResolvedBuild` into the (compiler, argv) pair that a
  * `RuntimeAdapter` would hand to its tool runner. Lives in `@emception/core`
@@ -12,24 +12,24 @@
  * compiler.
  */
 
-import { BuildConfigError } from '../errors.js';
-import type { WorkspaceBuildConfig } from '../types.js';
+import { BuildConfigError } from '../errors';
+import type { WorkspaceBuildConfig } from '../types';
 
 export interface CompileInvocation {
-    /** The compiler binary name (`clang`, `clang++`, `emcc`, `em++`). */
-    compiler: 'clang' | 'clang++' | 'emcc' | 'em++';
-    /** Full argv to pass to the compiler, excluding the binary itself. */
-    argv: string[];
-    /** The output path (echoes `build.output`, defaulting to `a.out`). */
-    output: string;
+  /** The compiler binary name (`clang`, `clang++`, `emcc`, `em++`). */
+  compiler: 'clang' | 'clang++' | 'emcc' | 'em++';
+  /** Full argv to pass to the compiler, excluding the binary itself. */
+  argv: string[];
+  /** The output path (echoes `build.output`, defaulting to `a.out`). */
+  output: string;
 }
 
 export interface BuildArgvOptions {
-    /** Override the source list (e.g. when the caller already materialized
-     * a single inline source to a temp path). Falls back to `build.sources`. */
-    sources?: string[];
-    /** Override the compiler choice (last word — beats `build.compiler`). */
-    compiler?: CompileInvocation['compiler'];
+  /** Override the source list (e.g. when the caller already materialized
+   * a single inline source to a temp path). Falls back to `build.sources`. */
+  sources?: string[];
+  /** Override the compiler choice (last word — beats `build.compiler`). */
+  compiler?: CompileInvocation['compiler'];
 }
 
 /**
@@ -45,45 +45,40 @@ export interface BuildArgvOptions {
  *   7. `ldflags`
  *   8. `-o <output>`
  */
-export function buildArgv(
-    build: WorkspaceBuildConfig,
-    opts: BuildArgvOptions = {},
-): CompileInvocation {
-    const compiler = opts.compiler ?? build.compiler;
-    if (!compiler) {
-        throw new BuildConfigError(
-            'buildArgv: no compiler resolved — set `build.compiler` or pass a preset.',
-        );
+export function buildArgv(build: WorkspaceBuildConfig, opts: BuildArgvOptions = {}): CompileInvocation {
+  const compiler = opts.compiler ?? build.compiler;
+  if (!compiler) {
+    throw new BuildConfigError('buildArgv: no compiler resolved — set `build.compiler` or pass a preset.');
+  }
+
+  const sources = opts.sources ?? build.sources ?? [];
+  const output = build.output ?? 'a.out';
+  const isCxx = compiler === 'clang++' || compiler === 'em++';
+
+  const argv: string[] = [];
+
+  if (build.std) argv.push(`-std=${build.std}`);
+
+  if (build.defines) {
+    for (const key of Object.keys(build.defines).sort()) {
+      const v = build.defines[key];
+      argv.push(v === true ? `-D${key}` : `-D${key}=${v}`);
     }
+  }
 
-    const sources = opts.sources ?? build.sources ?? [];
-    const output = build.output ?? 'a.out';
-    const isCxx = compiler === 'clang++' || compiler === 'em++';
+  for (const inc of build.includePaths ?? []) argv.push(`-I${inc}`);
 
-    const argv: string[] = [];
+  if (build.cflags) argv.push(...build.cflags);
+  if (isCxx && build.cxxflags) argv.push(...build.cxxflags);
 
-    if (build.std) argv.push(`-std=${build.std}`);
+  argv.push(...sources);
 
-    if (build.defines) {
-        for (const key of Object.keys(build.defines).sort()) {
-            const v = build.defines[key];
-            argv.push(v === true ? `-D${key}` : `-D${key}=${v}`);
-        }
-    }
+  for (const lp of build.libPaths ?? []) argv.push(`-L${lp}`);
+  for (const lib of build.libs ?? []) argv.push(`-l${lib}`);
 
-    for (const inc of build.includePaths ?? []) argv.push(`-I${inc}`);
+  if (build.ldflags) argv.push(...build.ldflags);
 
-    if (build.cflags) argv.push(...build.cflags);
-    if (isCxx && build.cxxflags) argv.push(...build.cxxflags);
+  argv.push('-o', output);
 
-    argv.push(...sources);
-
-    for (const lp of build.libPaths ?? []) argv.push(`-L${lp}`);
-    for (const lib of build.libs ?? []) argv.push(`-l${lib}`);
-
-    if (build.ldflags) argv.push(...build.ldflags);
-
-    argv.push('-o', output);
-
-    return { compiler, argv, output };
+  return { compiler, argv, output };
 }

@@ -13,8 +13,8 @@
 'use client';
 
 import { createEmception } from '@emception/browser';
-import type { EmceptionAPI } from '@emception/core';
 import { Ide } from '@emception/ide';
+import type { EmceptionAPI } from 'emception';
 import { useEffect, useRef } from 'react';
 
 const SDL_SOURCE = `#include <SDL2/SDL.h>

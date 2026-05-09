@@ -8,7 +8,7 @@
 //
 // This is the *low-level* preset surface: it returns argv ready to feed
 // to `EmceptionAPI.run`. The richer `compileAndRun` orchestration in
-// `@emception/core` (events, workspace seeding, cancellation) is a
+// `emception` (events, workspace seeding, cancellation) is a
 // separate, higher-level layer that lands later in the roadmap.
 
 import type { EmceptionAPI } from './createEmception';

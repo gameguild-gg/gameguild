@@ -1,5 +1,5 @@
 /**
- * Request/response correlator — Phase 7.2 prep.
+ * Request/response correlator.
  *
  * Pure id-based correlation layer extracted from
  * `@emception/browser/worker-client.ts`. Generic over the request and response
@@ -20,29 +20,29 @@
  * Validated with real `node:worker_threads` `MessageChannel`s — no mocks.
  */
 
-import { EmceptionError } from '../errors.js';
+import { EmceptionError } from '../errors';
 
 /**
  * Default error raised when `dispose()` is called with outstanding requests
  * and the caller did not supply a custom one.
  */
 export class CorrelatorDisposedError extends EmceptionError {
-    constructor(message = 'RequestCorrelator disposed before response arrived') {
-        super(message);
-        this.name = 'CorrelatorDisposedError';
-    }
+  constructor(message = 'RequestCorrelator disposed before response arrived') {
+    super(message);
+    this.name = 'CorrelatorDisposedError';
+  }
 }
 
 interface PendingRequest<TResponse> {
-    resolve: (value: TResponse) => void;
-    reject: (reason: unknown) => void;
-    /** Optional human-readable label for diagnostics (e.g. `'run'`, `'getFile'`). */
-    label?: string;
+  resolve: (value: TResponse) => void;
+  reject: (reason: unknown) => void;
+  /** Optional human-readable label for diagnostics (e.g. `'run'`, `'getFile'`). */
+  label?: string;
 }
 
 export interface RequestCorrelatorOptions {
-    /** Starting id. Defaults to `1`. */
-    startId?: number;
+  /** Starting id. Defaults to `1`. */
+  startId?: number;
 }
 
 /**
@@ -59,79 +59,77 @@ export interface RequestCorrelatorOptions {
  * ```
  */
 export class RequestCorrelator<TResponse = unknown> {
-    private nextId: number;
-    private readonly pending = new Map<number, PendingRequest<TResponse>>();
-    private disposed = false;
+  private nextId: number;
+  private readonly pending = new Map<number, PendingRequest<TResponse>>();
+  private disposed = false;
 
-    constructor(opts: RequestCorrelatorOptions = {}) {
-        this.nextId = opts.startId ?? 1;
-    }
+  constructor(opts: RequestCorrelatorOptions = {}) {
+    this.nextId = opts.startId ?? 1;
+  }
 
-    /** Number of outstanding (unresolved) requests. */
-    get pendingCount(): number {
-        return this.pending.size;
-    }
+  /** Number of outstanding (unresolved) requests. */
+  get pendingCount(): number {
+    return this.pending.size;
+  }
 
-    /**
-     * Allocate a new request slot. Returns the assigned id and a Promise that
-     * resolves when `complete(id, value)` is called with that id.
-     *
-     * Throws if the correlator has been disposed.
-     */
-    allocate(label?: string): { id: number; promise: Promise<TResponse> } {
-        if (this.disposed) {
-            throw new CorrelatorDisposedError(
-                'Cannot allocate request: RequestCorrelator already disposed.',
-            );
-        }
-        const id = this.nextId++;
-        const promise = new Promise<TResponse>((resolve, reject) => {
-            this.pending.set(id, { resolve, reject, label });
-        });
-        return { id, promise };
+  /**
+   * Allocate a new request slot. Returns the assigned id and a Promise that
+   * resolves when `complete(id, value)` is called with that id.
+   *
+   * Throws if the correlator has been disposed.
+   */
+  allocate(label?: string): { id: number; promise: Promise<TResponse> } {
+    if (this.disposed) {
+      throw new CorrelatorDisposedError('Cannot allocate request: RequestCorrelator already disposed.');
     }
+    const id = this.nextId++;
+    const promise = new Promise<TResponse>((resolve, reject) => {
+      this.pending.set(id, { resolve, reject, label });
+    });
+    return { id, promise };
+  }
 
-    /**
-     * Resolve the pending request with the given id. Returns true if a
-     * matching pending request was found, false otherwise (stale response).
-     */
-    complete(id: number, value: TResponse): boolean {
-        const entry = this.pending.get(id);
-        if (!entry) return false;
-        this.pending.delete(id);
-        entry.resolve(value);
-        return true;
-    }
+  /**
+   * Resolve the pending request with the given id. Returns true if a
+   * matching pending request was found, false otherwise (stale response).
+   */
+  complete(id: number, value: TResponse): boolean {
+    const entry = this.pending.get(id);
+    if (!entry) return false;
+    this.pending.delete(id);
+    entry.resolve(value);
+    return true;
+  }
 
-    /**
-     * Reject the pending request with the given id. Returns true if a
-     * matching pending request was found, false otherwise.
-     */
-    fail(id: number, reason: unknown): boolean {
-        const entry = this.pending.get(id);
-        if (!entry) return false;
-        this.pending.delete(id);
-        entry.reject(reason);
-        return true;
-    }
+  /**
+   * Reject the pending request with the given id. Returns true if a
+   * matching pending request was found, false otherwise.
+   */
+  fail(id: number, reason: unknown): boolean {
+    const entry = this.pending.get(id);
+    if (!entry) return false;
+    this.pending.delete(id);
+    entry.reject(reason);
+    return true;
+  }
 
-    /**
-     * Reject every outstanding request and mark the correlator as disposed.
-     * Subsequent `allocate()` calls throw; subsequent `complete()` /
-     * `fail()` calls return false.
-     */
-    dispose(reason?: unknown): void {
-        if (this.disposed) return;
-        this.disposed = true;
-        const err = reason ?? new CorrelatorDisposedError();
-        for (const [, entry] of this.pending) {
-            entry.reject(err);
-        }
-        this.pending.clear();
+  /**
+   * Reject every outstanding request and mark the correlator as disposed.
+   * Subsequent `allocate()` calls throw; subsequent `complete()` /
+   * `fail()` calls return false.
+   */
+  dispose(reason?: unknown): void {
+    if (this.disposed) return;
+    this.disposed = true;
+    const err = reason ?? new CorrelatorDisposedError();
+    for (const [, entry] of this.pending) {
+      entry.reject(err);
     }
+    this.pending.clear();
+  }
 
-    /** True iff `dispose()` has been called. */
-    get isDisposed(): boolean {
-        return this.disposed;
-    }
+  /** True iff `dispose()` has been called. */
+  get isDisposed(): boolean {
+    return this.disposed;
+  }
 }

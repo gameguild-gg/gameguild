@@ -1,11 +1,11 @@
 'use client';
 
-import { PRESETS } from '@emception/ide';
+import { PRESETS } from '@gameguild/emception-ide';
 import dynamic from 'next/dynamic';
 import { useSearchParams } from 'next/navigation';
 import { Suspense } from 'react';
 
-const Ide = dynamic(() => import('@emception/ide').then((m) => ({ default: m.Ide })), { ssr: false });
+const Ide = dynamic(() => import('@gameguild/emception-ide').then((m) => ({ default: m.Ide })), { ssr: false });
 
 function HomeInner() {
   const params = useSearchParams();

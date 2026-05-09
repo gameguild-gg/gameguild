@@ -1,4 +1,4 @@
-// Phase 3.5 verification — build-resolver precedence + merge rules.
+// Build-resolver verification — precedence + merge rules.
 //
 // Uses node:test (zero-dep) against the compiled ESM. Run via:
 //   node --test tools/emception/packages/core/tests/build-resolver.test.mjs

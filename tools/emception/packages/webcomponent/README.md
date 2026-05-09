@@ -8,7 +8,7 @@
 npm install @emception/webcomponent @emception/browser
 ```
 
-`@emception/browser` is a peer of the orchestration story (Phase 7.2). The
+`@emception/browser` is a peer of the orchestration story. The
 custom element itself only depends on `@emception/core` for the typed
 attribute schema and event registry.
 

@@ -1,4 +1,4 @@
-// Phase 3.1–3.3 — WorkspaceManager interface (runtime-agnostic skeleton).
+// WorkspaceManager interface (runtime-agnostic skeleton).
 //
 // The interface defined here is what every storage backend
 // (`@emception/browser` IDB store, in-memory store
@@ -9,8 +9,8 @@
 //
 // Sidecar layout under each workspace mount root:
 //   .emception/meta.json   — file metadata (visibility/readonly/executable)
-//   .emception/build.json  — WorkspaceBuildConfig (Phase 3.4)
-//   .emception/seed.lock   — seed-hash marker (Phase 3.2 'once' policy)
+//   .emception/build.json  — WorkspaceBuildConfig
+//   .emception/seed.lock   — seed-hash marker ('once' policy)
 
 import type { FileEntry, WorkspaceBuildConfig, WorkspaceSeed } from '../types.js';
 
@@ -92,7 +92,7 @@ export interface WorkspaceHandle {
 
 /**
  * Top-level workspace manager — what `RuntimeAdapter.openWorkspaceStore()`
- * eventually returns once Phase 7 wires the platform-specific backends.
+ * eventually returns once platform-specific backends are wired.
  */
 export interface WorkspaceManager {
     /** List every known workspace name. */
