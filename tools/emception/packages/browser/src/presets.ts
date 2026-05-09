@@ -178,6 +178,7 @@ const WASM_LD_RAYLIB_FLAGS: readonly string[] = [
     '--table-base=1',
     '-z',
     'stack-size=2097152',
+    '-lGL-getprocaddr',
     '-lal',
     '-lstubs',
     '-lc',
