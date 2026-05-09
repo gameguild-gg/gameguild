@@ -5,14 +5,6 @@
 // — this file forwards them for back-compat with internal IDE imports.
 
 // ── Exports from @emception/core (Phase B relocation) ─────────────
-export {
-  DEFAULT_CODE,
-  DEFAULT_HEADER,
-  DEFAULT_IMAGE,
-  parseWorkspaceBundle,
-  resolveArgs,
-  SDL_DEMO_CODE
-} from 'emception';
 export type {
   BundleFile,
   CompileConfig,
@@ -24,6 +16,14 @@ export type {
   TestConfig,
   WorkspaceConfig,
   WorkspaceFeatures
+} from 'emception';
+export {
+  DEFAULT_CODE,
+  DEFAULT_HEADER,
+  DEFAULT_IMAGE,
+  parseWorkspaceBundle,
+  resolveArgs,
+  SDL_DEMO_CODE
 } from 'emception';
 
 import type { DockGroup, WorkspaceConfig } from 'emception';

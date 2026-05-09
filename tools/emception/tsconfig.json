@@ -14,8 +14,8 @@
     "jsx": "react-jsx",
     "paths": {
       "@/*": ["./src/*"],
-      "@gameguild/emception-core": ["./packages/core/src/index.ts"],
-      "@gameguild/emception-core/*": ["./packages/core/src/*"],
+      "emception": ["./packages/core/src/index.ts"],
+      "emception/*": ["./packages/core/src/*"],
       "@gameguild/emception-browser": ["./packages/browser/src/index.ts"],
       "@gameguild/emception-browser/*": ["./packages/browser/src/*"],
       "@gameguild/emception-xterm": ["./packages/xterm/src/index.ts"],
