@@ -1,9 +1,9 @@
-// `<emception-run>` custom element — Phase 6.1.
+// `<emception-run>` custom element.
 //
 // Surface:
 //   - Attributes: kebab-case mirror of `ViewConfigInput`. Recognized names
 //     come from the canonical `ATTRIBUTE_SCHEMA` exported by
-//     `@emception/core` so the schema lives in exactly one place. Unknown
+//     `emception` so the schema lives in exactly one place. Unknown
 //     attributes are ignored (matching HTML's permissive parsing model).
 //   - Slots:
 //       <textarea slot="stdin">   — initial stdin payload
@@ -17,18 +17,18 @@
 //     initial compile+run automatically.
 //   - Methods: `run()` — trigger a compile+run cycle imperatively.
 //
-// All non-DOM work (attribute parsing) is done by `@emception/core`;
+// All non-DOM work (attribute parsing) is done by `emception`;
 // the compile+run pipeline uses `compileAndRun` from `@emception/browser`.
 
 import {
     compileAndRun,
     type BrowserBuildPresetName,
     type EmceptionAPI as BrowserEmceptionAPI,
-} from '@emception/browser';
+} from '@gameguild/emception-browser';
 import {
     parseAttributesToInput,
     type ViewConfigInput,
-} from '@emception/core';
+} from 'emception';
 
 export const ELEMENT_NAME = 'emception-run';
 

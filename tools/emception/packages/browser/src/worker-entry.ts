@@ -10,17 +10,16 @@
  * is available, so the entire existing architecture works unchanged.
  */
 
+import type { IOProvider, MainToWorkerMessage, WorkerToMainMessage } from 'emception';
+import { OverlayFS } from 'emception';
 import { detectAsyncStrategy } from './async-bridge';
 import { FetchBridge } from './net/fetch-bridge';
 import { MiniShell } from './shell';
 import { ToolRunner } from './tool-runner';
-import type { IOProvider } from '@emception/core';
 import { IDBFS } from './vfs/idb';
 import { createVFSManager } from './vfs/index';
 import type { FSManifest } from './vfs/lazy';
 import { LazyFS } from './vfs/lazy';
-import { OverlayFS } from '@emception/core';
-import type { MainToWorkerMessage, WorkerToMainMessage } from '@emception/core';
 
 const P = '[Emception:Worker]';
 

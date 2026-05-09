@@ -1,4 +1,4 @@
-// Phase 3.2 — seed hashing.
+// Seed hashing.
 //
 // Canonical-encode a WorkspaceSeed so 'once' policy can detect tampering and
 // 'merge' can avoid clobbering edits. We use a stable JSON encoding (sorted

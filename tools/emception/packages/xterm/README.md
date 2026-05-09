@@ -40,7 +40,7 @@ Raw disables line buffering + local echo — every keypress is forwarded verbati
 
 ## What this package is
 
-This is intentionally a thin shim. The actual stream wiring lives in `@emception/core` (Phase 2). Importing `@emception/xterm` adds:
+This is intentionally a thin shim. The actual stream wiring lives in `@emception/core`. Importing `@emception/xterm` adds:
 
 - `fromXterm(terminal, opts?)` → `XtermStdin` adapter shape.
 - `toXterm(terminal)` → `XtermStdout` adapter shape.

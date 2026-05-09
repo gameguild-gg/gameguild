@@ -322,6 +322,14 @@ function buildLLD() {
     console.log('>>> Building lld.wasm (standalone)...');
     const wasmBuildDir = path.join(LLVM_DIR, 'build-wasm');
 
+    // Some environments can lose the wasm build dir between clang and lld
+    // phases (e.g. interrupted runs or external cleanup). Recreate/reconfigure
+    // on demand so `build:llvm` remains resumable.
+    if (!fs.existsSync(wasmBuildDir) || !fs.existsSync(path.join(wasmBuildDir, 'Makefile'))) {
+        console.warn('LLD step detected missing build-wasm directory; reconfiguring LLVM wasm build...');
+        buildStaticLLVM();
+    }
+
     // Build lld static libraries
     console.log('Building lld static libraries...');
     shell.exec(`emmake make -C "${wasmBuildDir}" -j${CONCURRENCY} lld-libraries`);

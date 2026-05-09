@@ -1,7 +1,7 @@
 // @emception/xterm — adapter between xterm.js Terminal and emception streams.
 
-import type { StdinInput, StdoutSink } from '@emception/core';
 import type { Terminal } from '@xterm/xterm';
+import type { StdinInput, StdoutSink } from 'emception';
 
 export { TTYBridge } from './bridge';
 
@@ -15,7 +15,7 @@ export interface XtermStdout {
     xterm: Terminal;
 }
 
-/** Adapter shorthand normalized to a real WHATWG ReadableStream by @emception/core (Phase 2). */
+/** Adapter shorthand normalized to a real WHATWG ReadableStream by emception. */
 export function fromXterm(xterm: Terminal, opts?: { raw?: boolean }): XtermStdin {
     return { xterm, raw: opts?.raw ?? false };
 }

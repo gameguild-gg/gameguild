@@ -1,5 +1,5 @@
 {
-  "name": "@emception/webcomponent",
+  "name": "@gameguild/emception-webcomponent",
   "version": "3.3.0",
   "description": "<emception-run> custom element. No framework deps.",
   "license": "MIT",
@@ -31,14 +31,14 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@emception/browser": "*",
-    "@emception/core": "*"
+    "@gameguild/emception-browser": "*",
+    "emception": "*"
   },
   "peerDependencies": {
-    "@emception/xterm": "*"
+    "@gameguild/emception-xterm": "*"
   },
   "peerDependenciesMeta": {
-    "@emception/xterm": {
+    "@gameguild/emception-xterm": {
       "optional": true
     }
   },

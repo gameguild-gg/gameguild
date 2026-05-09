@@ -1,7 +1,7 @@
-# BusyBox — Phase 2 (Optional)
+# BusyBox (Optional)
 
 BusyBox provides a POSIX shell (`ash`) and coreutils for the browser terminal.
-This is **Phase 2** and is not required for the MVP.
+This is optional and is not required for the MVP.
 
 ## Strategy
 

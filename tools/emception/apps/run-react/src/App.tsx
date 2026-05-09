@@ -1,12 +1,6 @@
 'use client';
 
-import {
-    compileAndRun,
-    createEmception,
-    type BrowserBuildPresetName,
-    type CompilePhase,
-    type EmceptionAPI,
-} from '@emception/browser';
+import { compileAndRun, createEmception, type BrowserBuildPresetName, type CompilePhase, type EmceptionAPI } from '@gameguild/emception-browser';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 const STARTER_SOURCE = `#include <stdio.h>
@@ -95,10 +89,9 @@ export default function App() {
             <header>
                 <h1>emception-run-react demo</h1>
                 <p>
-                    Headless C++ compile + run via <code>@emception/browser</code> using the{' '}
-                    <code>compileAndRun</code> preset helper. The <code>&lt;emception-run&gt;</code>{' '}
-                    declarative wrapper depends on event-bus orchestration that is not yet
-                    implemented in the browser API, so this demo drives the preset directly.
+                    Headless C++ compile + run via <code>@gameguild/emception-browser</code> using the <code>compileAndRun</code> preset helper. The{' '}
+                    <code>&lt;emception-run&gt;</code> declarative wrapper depends on event-bus orchestration that is not yet implemented in the browser API, so this demo
+                    drives the preset directly.
                 </p>
             </header>
 
@@ -109,22 +102,12 @@ export default function App() {
                 <section className="run">
                     <label>
                         <span>main.cpp</span>
-                        <textarea
-                            value={source}
-                            onChange={(e) => setSource(e.target.value)}
-                            spellCheck={false}
-                            rows={12}
-                        />
+                        <textarea value={source} onChange={(e) => setSource(e.target.value)} spellCheck={false} rows={12} />
                     </label>
 
                     <label>
                         <span>stdin</span>
-                        <textarea
-                            value={stdin}
-                            onChange={(e) => setStdin(e.target.value)}
-                            spellCheck={false}
-                            rows={2}
-                        />
+                        <textarea value={stdin} onChange={(e) => setStdin(e.target.value)} spellCheck={false} rows={2} />
                     </label>
 
                     <div className="actions">

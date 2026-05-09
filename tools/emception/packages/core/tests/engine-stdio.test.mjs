@@ -1,4 +1,4 @@
-// Phase 5 test-engine coverage — stdio handler, stdio-file handler,
+// Test-engine coverage — stdio handler, stdio-file handler,
 // custom handler, and the plan-level `runTests` orchestrator (abort
 // signal, redactHidden, sequencing, exception wrapping). The clang-query
 // and doctest handlers are covered separately in engine-handlers.test.mjs.

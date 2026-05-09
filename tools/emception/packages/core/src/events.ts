@@ -1,5 +1,5 @@
 /**
- * Typed event surface for `EmceptionAPI.on()` (Phase 1.5).
+ * Typed event surface for `EmceptionAPI.on()`.
  *
  * Each event has a precise payload shape. Hosts get IntelliSense for the
  * event name AND the listener parameter. Implementations should emit a

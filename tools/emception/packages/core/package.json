@@ -1,5 +1,5 @@
 {
-  "name": "@emception/core",
+  "name": "emception",
   "version": "3.3.0",
   "description": "Runtime-agnostic core: types, EmceptionCore, VFS, tool registry, build resolver, test engine, presets, RuntimeAdapter.",
   "license": "MIT",

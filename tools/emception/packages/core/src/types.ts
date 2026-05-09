@@ -1,6 +1,6 @@
-// Public type surface for emception. Phase 0 placeholder shapes; refined in later phases.
+// Public type surface for emception.
 
-import type { EmceptionEventListener, EmceptionEventName, Unsubscribe } from './events.js';
+import type { EmceptionEventListener, EmceptionEventName, Unsubscribe } from './events';
 
 /**
  * A single file in a workspace seed or VFS listing.
@@ -16,10 +16,10 @@ import type { EmceptionEventListener, EmceptionEventName, Unsubscribe } from './
  * - `executable` — sets the executable bit in the virtual FS (rarely needed).
  */
 export interface FileEntry {
-    content: string | Uint8Array;
-    visibility?: 'public' | 'hidden' | 'solution';
-    readonly?: boolean;
-    executable?: boolean;
+  content: string | Uint8Array;
+  visibility?: 'public' | 'hidden' | 'solution';
+  readonly?: boolean;
+  executable?: boolean;
 }
 
 /** Map of virtual-path → file descriptor used to seed a workspace. String values are shorthand for `{ content: value }`. */
@@ -35,32 +35,32 @@ export type WorkspaceSeed = Record<string, FileEntry | string>;
  * Set `std` to a C/C++ standard string: `'c17'`, `'c++20'`, etc.
  */
 export interface WorkspaceBuildConfig {
-    compiler?: 'clang' | 'clang++' | 'emcc' | 'em++';
-    std?: string;
-    cflags?: string[];
-    cxxflags?: string[];
-    ldflags?: string[];
-    defines?: Record<string, string | true>;
-    includePaths?: string[];
-    libPaths?: string[];
-    libs?: string[];
-    sources?: string[];
-    output?: string;
-    env?: Record<string, string>;
-    cmake?: {
-        sourceDir?: string;
-        buildDir?: string;
-        configureArgs?: string[];
-        buildArgs?: string[];
-        /**
-         * Multi-binary CMake projects: list of target names to build. The resolver
-         * invokes `cmake --build <buildDir> --target <name>` per entry with shared
-         * flags. Per-target customization belongs in `CMakeLists.txt`, not here.
-         *
-         * Only valid when `cmake` is set; merged via array concat + dedup.
-         */
-        targets?: string[];
-    };
+  compiler?: 'clang' | 'clang++' | 'emcc' | 'em++';
+  std?: string;
+  cflags?: string[];
+  cxxflags?: string[];
+  ldflags?: string[];
+  defines?: Record<string, string | true>;
+  includePaths?: string[];
+  libPaths?: string[];
+  libs?: string[];
+  sources?: string[];
+  output?: string;
+  env?: Record<string, string>;
+  cmake?: {
+    sourceDir?: string;
+    buildDir?: string;
+    configureArgs?: string[];
+    buildArgs?: string[];
+    /**
+     * Multi-binary CMake projects: list of target names to build. The resolver
+     * invokes `cmake --build <buildDir> --target <name>` per entry with shared
+     * flags. Per-target customization belongs in `CMakeLists.txt`, not here.
+     *
+     * Only valid when `cmake` is set; merged via array concat + dedup.
+     */
+    targets?: string[];
+  };
 }
 
 /**
@@ -79,27 +79,23 @@ export interface WorkspaceBuildConfig {
  * - `build` — default build config. The student can override it at runtime.
  */
 export interface WorkspaceOptions {
-    name: string;
-    seed?: WorkspaceSeed;
-    seedPolicy?: 'once' | 'overwrite' | 'merge';
-    mountPath?: string;
-    build?: WorkspaceBuildConfig;
+  name: string;
+  seed?: WorkspaceSeed;
+  seedPolicy?: 'once' | 'overwrite' | 'merge';
+  mountPath?: string;
+  build?: WorkspaceBuildConfig;
 }
 
 // I/O sinks/sources are runtime-agnostic; xterm shape lives in @emception/xterm.
 export type StdinInput =
-    | string
-    | Uint8Array
-    | AsyncIterable<string | Uint8Array>
-    | ReadableStream<Uint8Array>
-    | (() => string | Uint8Array | null | Promise<string | Uint8Array | null>)
-    | 'none';
+  | string
+  | Uint8Array
+  | AsyncIterable<string | Uint8Array>
+  | ReadableStream<Uint8Array>
+  | (() => string | Uint8Array | null | Promise<string | Uint8Array | null>)
+  | 'none';
 
-export type StdoutSink =
-    | 'capture'
-    | WritableStream<Uint8Array>
-    | ((chunk: Uint8Array) => void | Promise<void>)
-    | 'none';
+export type StdoutSink = 'capture' | WritableStream<Uint8Array> | ((chunk: Uint8Array) => void | Promise<void>) | 'none';
 
 /**
  * Per-invocation options for {@link EmceptionAPI.run} and
@@ -116,21 +112,21 @@ export type StdoutSink =
  * - `workspace` — override the workspace for this single invocation.
  */
 export interface RunOptions {
-    cwd?: string;
-    env?: Record<string, string>;
-    stdin?: StdinInput;
-    stdout?: StdoutSink;
-    stderr?: StdoutSink;
-    timeoutMs?: number;
-    signal?: AbortSignal;
-    workspace?: string;
+  cwd?: string;
+  env?: Record<string, string>;
+  stdin?: StdinInput;
+  stdout?: StdoutSink;
+  stderr?: StdoutSink;
+  timeoutMs?: number;
+  signal?: AbortSignal;
+  workspace?: string;
 }
 
 export interface CompileOptions extends RunOptions {
-    sources?: string[];
-    build?: Partial<WorkspaceBuildConfig>;
-    /** Legacy: appended to cflags. */
-    flags?: string[];
+  sources?: string[];
+  build?: Partial<WorkspaceBuildConfig>;
+  /** Legacy: appended to cflags. */
+  flags?: string[];
 }
 
 /**
@@ -160,12 +156,12 @@ export interface CompileOptions extends RunOptions {
  * failures (missing tool, invalid argv, transport error).
  */
 export interface ToolResult {
-    exitCode: number;
-    stdout: string;
-    stderr: string;
-    durationMs: number;
-    timedOut: boolean;
-    signal?: string;
+  exitCode: number;
+  stdout: string;
+  stderr: string;
+  durationMs: number;
+  timedOut: boolean;
+  signal?: string;
 }
 
 /**
@@ -178,11 +174,11 @@ export interface ToolResult {
  * - `'custom'` — arbitrary async function; return a {@link TestCaseResult}.
  */
 export type TestCase =
-    | { kind: 'stdio'; stdin?: string; expectedStdout: string | RegExp; expectedStderr?: string | RegExp; expectedExit?: number; name?: string }
-    | { kind: 'stdio-file'; inFile: string; expectedOutFile: string; name?: string }
-    | { kind: 'clang-query'; matcher: string; expect: 'found' | 'not-found' | { minCount: number }; name?: string }
-    | { kind: 'doctest'; sourceFiles: string[]; name?: string }
-    | { kind: 'custom'; run: (em: EmceptionAPI) => Promise<TestCaseResult>; name?: string };
+  | { kind: 'stdio'; stdin?: string; expectedStdout: string | RegExp; expectedStderr?: string | RegExp; expectedExit?: number; name?: string }
+  | { kind: 'stdio-file'; inFile: string; expectedOutFile: string; name?: string }
+  | { kind: 'clang-query'; matcher: string; expect: 'found' | 'not-found' | { minCount: number }; name?: string }
+  | { kind: 'doctest'; sourceFiles: string[]; name?: string }
+  | { kind: 'custom'; run: (em: EmceptionAPI) => Promise<TestCaseResult>; name?: string };
 
 /**
  * Full test plan executed by {@link EmceptionAPI.runTests}.
@@ -195,10 +191,10 @@ export type TestCase =
  * student when `true` (default: `false`).
  */
 export interface TestPlan {
-    build?: Partial<WorkspaceBuildConfig> & { sources?: string[]; output?: string };
-    cases: TestCase[];
-    timeoutMsPerCase?: number;
-    redactHidden?: boolean;
+  build?: Partial<WorkspaceBuildConfig> & { sources?: string[]; output?: string };
+  cases: TestCase[];
+  timeoutMsPerCase?: number;
+  redactHidden?: boolean;
 }
 
 /**
@@ -209,10 +205,10 @@ export interface TestPlan {
  * (redacted when the case involves hidden files and `redactHidden` is set).
  */
 export interface TestCaseResult {
-    name: string;
-    passed: boolean;
-    durationMs: number;
-    diagnostic?: string;
+  name: string;
+  passed: boolean;
+  durationMs: number;
+  diagnostic?: string;
 }
 
 /**
@@ -221,10 +217,10 @@ export interface TestCaseResult {
  * `totalDurationMs` is the sum of all case durations.
  */
 export interface TestReport {
-    passed: number;
-    failed: number;
-    totalDurationMs: number;
-    cases: TestCaseResult[];
+  passed: number;
+  failed: number;
+  totalDurationMs: number;
+  cases: TestCaseResult[];
 }
 
 /**
@@ -235,17 +231,17 @@ export interface TestReport {
  * FS mounted at the workspace's `mountPath`.
  */
 export interface WorkspaceAPI {
-    list(): Promise<string[]>;
-    switch(name: string): Promise<void>;
-    reset(name?: string): Promise<void>;
-    readFile(path: string): Promise<Uint8Array | null>;
-    writeFile(path: string, data: Uint8Array | string, meta?: Partial<FileEntry>): Promise<void>;
-    listFiles(opts?: { includeHidden?: boolean; includeSolution?: boolean }): Promise<Array<{ path: string } & FileEntry>>;
-    setVisibility(path: string, v: FileEntry['visibility']): Promise<void>;
-    getBuild(): Promise<WorkspaceBuildConfig>;
-    setBuild(build: WorkspaceBuildConfig): Promise<void>;
-    exportZip(): Promise<Blob>;
-    importZip(blob: Blob): Promise<void>;
+  list(): Promise<string[]>;
+  switch(name: string): Promise<void>;
+  reset(name?: string): Promise<void>;
+  readFile(path: string): Promise<Uint8Array | null>;
+  writeFile(path: string, data: Uint8Array | string, meta?: Partial<FileEntry>): Promise<void>;
+  listFiles(opts?: { includeHidden?: boolean; includeSolution?: boolean }): Promise<Array<{ path: string } & FileEntry>>;
+  setVisibility(path: string, v: FileEntry['visibility']): Promise<void>;
+  getBuild(): Promise<WorkspaceBuildConfig>;
+  setBuild(build: WorkspaceBuildConfig): Promise<void>;
+  exportZip(): Promise<Blob>;
+  importZip(blob: Blob): Promise<void>;
 }
 
 /**
@@ -270,11 +266,11 @@ export interface WorkspaceAPI {
  * ```
  */
 export interface EmceptionAPI {
-    workspace: WorkspaceAPI;
-    run(cmd: string, argv?: string[], opts?: RunOptions): Promise<ToolResult>;
-    compileAndRun(sourceOrFiles?: string | string[], opts?: CompileOptions): Promise<ToolResult>;
-    runTests(plan: TestPlan, opts?: { signal?: AbortSignal }): Promise<TestReport>;
-    /** Subscribe to a typed runtime event. Returns an unsubscribe function. */
-    on<E extends EmceptionEventName>(event: E, listener: EmceptionEventListener<E>): Unsubscribe;
-    dispose(): void;
+  workspace: WorkspaceAPI;
+  run(cmd: string, argv?: string[], opts?: RunOptions): Promise<ToolResult>;
+  compileAndRun(sourceOrFiles?: string | string[], opts?: CompileOptions): Promise<ToolResult>;
+  runTests(plan: TestPlan, opts?: { signal?: AbortSignal }): Promise<TestReport>;
+  /** Subscribe to a typed runtime event. Returns an unsubscribe function. */
+  on<E extends EmceptionEventName>(event: E, listener: EmceptionEventListener<E>): Unsubscribe;
+  dispose(): void;
 }

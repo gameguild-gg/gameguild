@@ -2,9 +2,17 @@
 //
 // Workspace configuration types (`WorkspaceConfig`, `CompileConfig`,
 // `RunConfig`, etc.) and the built-in presets now live in `@emception/core`
-// — this file re-exports them for back-compat with internal IDE imports.
+// — this file forwards them for back-compat with internal IDE imports.
 
-// ── Re-exports from @emception/core (Phase B relocation) ─────────
+// ── Exports from @emception/core (Phase B relocation) ─────────────
+export {
+  DEFAULT_CODE,
+  DEFAULT_HEADER,
+  DEFAULT_IMAGE,
+  parseWorkspaceBundle,
+  resolveArgs,
+  SDL_DEMO_CODE
+} from 'emception';
 export type {
   BundleFile,
   CompileConfig,
@@ -15,18 +23,10 @@ export type {
   RunType,
   TestConfig,
   WorkspaceConfig,
-  WorkspaceFeatures,
-} from '@emception/core';
-export {
-  DEFAULT_CODE,
-  DEFAULT_HEADER,
-  DEFAULT_IMAGE,
-  parseWorkspaceBundle,
-  resolveArgs,
-  SDL_DEMO_CODE,
-} from '@emception/core';
+  WorkspaceFeatures
+} from 'emception';
 
-import type { DockGroup, WorkspaceConfig } from '@emception/core';
+import type { DockGroup, WorkspaceConfig } from 'emception';
 
 // ── IDE-only types ──────────────────────────────────────────────
 
@@ -36,7 +36,7 @@ export type TabType = 'text' | 'image' | 'canvas';
  *  data under this key and haven't migrated to a named workspace. */
 export const WORKSPACE_STORAGE_KEY = 'gameguild.emception.workspace.v1';
 
-/** Derive the localStorage key from a workspace name (Phase 8.10).
+/** Derive the localStorage key from a workspace name.
  *  Falls back to the legacy key so existing stored data is not lost. */
 export function deriveStorageKey(workspaceName?: string): string {
   return workspaceName ? `emception:ws:${workspaceName}` : WORKSPACE_STORAGE_KEY;
@@ -78,7 +78,7 @@ export const TERMINAL_THEME = {
   selectionBackground: '#585b70',
 } as const;
 
-import { DEFAULT_CODE, DEFAULT_HEADER, DEFAULT_IMAGE, SDL_DEMO_CODE } from '@emception/core';
+import { DEFAULT_CODE, DEFAULT_HEADER, DEFAULT_IMAGE, SDL_DEMO_CODE } from 'emception';
 
 export const INITIAL_FILES: Record<string, WorkspaceFile> = {
   '/user/sdl-main.cpp': { path: '/user/sdl-main.cpp', type: 'text', content: SDL_DEMO_CODE },
@@ -131,7 +131,7 @@ export function workspaceConfigToState(config: WorkspaceConfig): {
   return { files: wsFiles, openTabs, activeTabId, expandedDirs };
 }
 
-// ── Phase 8 IdeProps ────────────────────────────────────────────────────────
+// ── IdeProps ───────────────────────────────────────────────────────────────
 
 /**
  * Minimal API surface accepted by the Ide component for an injected emception
@@ -157,7 +157,7 @@ export interface InjectedEmceptionAPI {
 }
 
 /**
- * Full reactive props for `<Ide>` (Phase 8).
+ * Full reactive props for `<Ide>`.
  *
  * All `enable*` flags default to `true` so the component is backward-compatible:
  * existing code that passes only `title`, `manifestUrl`, or `workspaceConfig`
@@ -170,7 +170,7 @@ export interface IdeProps {
   /** URL of the sysroot manifest. Defaults to `/cdn/manifest.json`. */
   manifestUrl?: string;
   /**
-   * Pre-built emception instance (Phase 8.2).
+  * Pre-built emception instance.
    * When provided the component skips booting and delegates all VFS/run calls
    * to this API. The caller is responsible for disposal.
    */
@@ -183,39 +183,39 @@ export interface IdeProps {
   workspaceUrl?: string;
   /**
    * Logical workspace name — used to derive the IDB/localStorage key as
-   * `emception:ws:<name>` (Phase 8.10). Omit to keep the legacy key so
+  * `emception:ws:<name>`. Omit to keep the legacy key so
    * previously saved state is not lost.
    */
   workspaceName?: string;
 
   // ── Panel toggles — all default to `true` ─────────────────────────────────
-  /** Show the file-explorer sidebar (Phase 8.3). Default `true`. */
+  /** Show the file-explorer sidebar. Default `true`. */
   enableFileExplorer?: boolean;
   /**
-   * Show the tab strip on editor panels (Phase 8.7).
+  * Show the tab strip on editor panels.
    * When `false`, only the active file is shown without a tab bar.
    * Default `true`.
    */
   enableTabs?: boolean;
   /**
-   * Mount the xterm.js terminal panel (Phase 8.3).
+  * Mount the xterm.js terminal panel.
    * When `false`, stdout/stderr are forwarded to `onStdout`/`onStderr` props.
    * Default `true`.
    */
   enableTerminal?: boolean;
   /**
    * Show the SDL canvas panel and allocate the off-screen `<canvas>` element
-   * (Phase 8.11). Default `true`.
+  * Default `true`.
    */
   enableCanvas?: boolean;
   /**
-   * Enable drag-and-drop tab docking between groups (Phase 8.8).
+  * Enable drag-and-drop tab docking between groups.
    * When `false`, the IDE renders a fixed two-panel layout without any
    * `DockDropOverlay` chrome. Default `true`.
    */
   enableDocking?: boolean;
   /**
-   * Persist and restore the workspace via localStorage (Phase 8.6).
+  * Persist and restore the workspace via localStorage.
    * When `false`, file state is ephemeral (memory only) and `workspaceName`
    * is ignored. Default `true`.
    */
@@ -225,26 +225,26 @@ export interface IdeProps {
   /**
    * When `true`, the IDE root is re-parented into `document.body` via a React
    * portal so it fills the viewport (`position: fixed; inset: 0`) regardless
-   * of where the component is placed in the tree (Phase 8.5).
+  * of where the component is placed in the tree.
    */
   fullscreen?: boolean;
   /** Called when the fullscreen state changes (e.g. user presses Escape). */
   onFullscreenChange?: (fullscreen: boolean) => void;
 
-  // ── File visibility filter (Phase 8.9) ────────────────────────────────────
+  // ── File visibility filter ────────────────────────────────────────────────
   /** Show files whose names start with `.`. Default `false`. */
   showHiddenFiles?: boolean;
   /** Show solution / answer files (e.g. `*.solution.*`). Default `false`. */
   showSolutionFiles?: boolean;
 
-  // ── Canvas (Phase 8.11) ───────────────────────────────────────────────────
+  // ── Canvas ────────────────────────────────────────────────────────────────
   /**
    * VFS path of the SDL canvas placeholder file.
    * Defaults to {@link SDL_CANVAS_PATH} (`/user/sdl-canvas`).
    */
   canvasPath?: string;
 
-  // ── Headless I/O — used when `enableTerminal = false` (Phase 8.3) ─────────
+  // ── Headless I/O — used when `enableTerminal = false` ────────────────────
   /** Receive stdout lines when the terminal panel is disabled. */
   onStdout?: (text: string) => void;
   /** Receive stderr lines when the terminal panel is disabled. */

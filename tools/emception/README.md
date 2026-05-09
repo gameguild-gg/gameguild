@@ -97,7 +97,7 @@ Each tool runs as an **isolated WASM process** with its own 2 GB linear memory. 
 - [Architecture](./docs/architecture.md) — micro-kernel design, kernel components, tool registry, subprocess dispatch, graphics runtimes
 - [Virtual filesystem](./docs/vfs.md) — LazyFS bundle loading, IDBFS layers, Asyncify async I/O, stream callbacks
 - [Building from source](./docs/build.md) — full pipeline, build flags, bundle classification, version detection
-- [Pipeline diagram](./sequence.mermaid) — visual overview of build phases and runtime path
+- [Pipeline diagram](./sequence.mermaid) — visual overview of the build pipeline and runtime path
 
 ## Repository layout
 
@@ -136,13 +136,13 @@ MIT — see [LICENSE](LICENSE).
 ```mermaid
 flowchart TD
 
-  subgraph Phase1["Phase 1 - build:toolchain"]
+  subgraph Build1["Step 1 - build:toolchain"]
     direction LR
     EMSDK[emsdk] --> EmCC[emcc / em++]
     EmCC --> P1Out["clang.wasm  lld.wasm  python.wasm<br/>wasm-opt.wasm  ninja.wasm  cmake.wasm"]
   end
 
-  subgraph Phase2["Phase 2 - build:sdl3 + build:raylib + build:imgui"]
+  subgraph Build2["Step 2 - build:sdl3 + build:raylib + build:imgui"]
     direction LR
     SDL3Src[SDL3] -->|emcmake| SDL3Lib[libSDL3.a] -->|emcc MODULARIZE| SDL3Mjs[sdl3-runtime.mjs]
     RaylibSrc[raylib] -->|emcmake GLES3| RaylibLib[libraylib.a] -->|emcc GLFW3 WebGL2| RaylibMjs[raylib-runtime.mjs]
@@ -150,7 +150,7 @@ flowchart TD
     ImguiSrc[imgui] -->|emcc| ImguiLib[libimgui.a]
   end
 
-  subgraph Phase3["Phase 3 - build:sysroot"]
+  subgraph Build3["Step 3 - build:sysroot"]
     direction LR
     BrotliSrc[brotli-wrapper.c] -->|emcc| BrotliWasm[brotli_wasm.wasm]
     PatchGlue[patch:glue]
@@ -161,10 +161,10 @@ flowchart TD
     PatchGlue --> P3Lib
   end
 
-  Phase1 -->|6 tool WASMs| Phase3
-  Phase2 -->|libs + headers| Phase3
+  Build1 -->|6 tool WASMs| Build3
+  Build2 -->|libs + headers| Build3
 
-  subgraph Phase4["Phase 4 - build:cdn"]
+  subgraph Build4["Step 4 - build:cdn"]
     direction LR
     Manifest["manifest.json<br/>13 282 files"]
     TBundles["Tool Pairs x6<br/>clang  lld  python<br/>wasm-opt  ninja  cmake"]
@@ -181,16 +181,16 @@ flowchart TD
     TBundles & CBundles & SDL3Bun & PBundles & MiscBun -->|brotli Q11 parallel| CDN
   end
 
-  Phase3 -->|scan + sha256| Phase4
+  Build3 -->|scan + sha256| Build4
 
-  subgraph Phase5["Phase 5 - build:lib"]
+  subgraph Build5["Step 5 - build:lib"]
     direction LR
     CoreTs[emception/core] -->|tsup+tsc| CoreDist[dist/core ESM]
     IdeTs[emception/ide] -->|tsup+tsc| IdeDist[dist/ide ESM]
     ReactTs[emception/react] -->|tsup+tsc| ReactDist[dist/react ESM]
   end
 
-  Phase4 --> Phase5
+  Build4 --> Build5
 
   subgraph Browser["Browser Runtime"]
     direction TB
@@ -220,6 +220,6 @@ flowchart TD
     WasmInst -->|library_glfw.js WebGL2| Canvas[Canvas  RAF loop 60 fps]
   end
 
-  Phase4 -->|CDN bundles| Browser
-  Phase5 -->|SDK| Browser
+  Build4 -->|CDN bundles| Browser
+  Build5 -->|SDK| Browser
 ```

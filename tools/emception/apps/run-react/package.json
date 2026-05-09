@@ -2,7 +2,7 @@
   "name": "@gameguild/emception-demo-run-react",
   "version": "3.3.0",
   "private": true,
-  "description": "Minimal Vite + React 19 demo for the <EmceptionRun /> declarative wrapper from @emception/react.",
+  "description": "Minimal Vite + React 19 demo for the <EmceptionRun /> declarative wrapper from @gameguild/emception-react.",
   "type": "module",
   "scripts": {
     "predev": "node ../../../../scripts/sync-emception-cdn.mjs tools/emception/apps/run-react",
@@ -12,9 +12,9 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@emception/browser": "*",
-    "@emception/react": "*",
-    "@emception/webcomponent": "*",
+    "@gameguild/emception-browser": "*",
+    "@gameguild/emception-react": "*",
+    "@gameguild/emception-webcomponent": "*",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },

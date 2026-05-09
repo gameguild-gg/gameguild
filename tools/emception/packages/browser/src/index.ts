@@ -1,6 +1,5 @@
 // @emception/browser — Web Worker + IDB + OffscreenCanvas adapter.
-// Phase 0.2: full source migrated from `tools/emception/src/`. Re-exports
-// the boot surface (createEmception, boot, bootInWorker) plus VFS, shell,
+// Exports the boot surface (createEmception, boot, bootInWorker) plus VFS, shell,
 // tool-runner, loader, emscripten bridge, and async-strategy helpers.
 
 export {

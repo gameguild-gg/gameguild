@@ -135,7 +135,7 @@ export default function Ide({
   // Expose filesRef for e2e tests so Playwright can verify file content was updated
   (window as unknown as Record<string, unknown>).__emception_filesRef__ = filesRef;
 
-  // Visibility filter (Phase 8.9): honour showHiddenFiles and showSolutionFiles props.
+  // Visibility filter: honour showHiddenFiles and showSolutionFiles props.
   const visiblePaths = Object.keys(files).filter((path) => {
     if (path === canvasPath || files[path]?.type === 'canvas') return false;
     const name = path.split('/').pop() ?? '';
