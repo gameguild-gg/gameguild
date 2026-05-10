@@ -35,6 +35,12 @@ interface LogCapture {
     crash: Promise<never>;
 }
 
+type EmceptionWindow = Window & {
+    __emception_filesRef__?: {
+        current?: Record<string, { content?: string }>;
+    };
+};
+
 function captureEmceptionLogs(page: Page): LogCapture {
     const logs: CapturedLog[] = [];
     const t0 = Date.now();
@@ -110,20 +116,18 @@ test.describe('raylib C++ canvas', () => {
         // Wait for the preset switch to settle (editor remounts).
         await page.waitForTimeout(1_000);
 
-        // Verify raylib source in editor
-        await page.waitForFunction(
-            () => !!(window as any).monaco?.editor?.getModels?.()?.length,
-            { timeout: 30_000 },
-        );
+        // Verify raylib source in workspace state (more reliable than Monaco CDN loading).
+        await page.waitForFunction(() => {
+            const w = window as EmceptionWindow;
+            const filesRef = w.__emception_filesRef__;
+            return !!filesRef?.current?.['/user/raylib-main.cpp']?.content;
+        }, { timeout: 30_000 });
         const editorContent: string = await page.evaluate(() => {
-            const w = window as any;
-            const model = w.monaco?.editor?.getModels?.()?.find(
-                (m: any) => m.uri?.path?.includes('raylib-main'),
-            );
-            return (model?.getValue?.() as string) ?? '';
+            const w = window as EmceptionWindow;
+            return (w.__emception_filesRef__?.current?.['/user/raylib-main.cpp']?.content as string) ?? '';
         });
         expect(editorContent).toContain('#include <raylib.h>');
-        console.log('raylib demo code confirmed in editor.');
+        console.log('raylib demo code confirmed in workspace files.');
 
         // ── Compile ───────────────────────────────────────────────────────────
         console.log('Clicking Compile & Run…');

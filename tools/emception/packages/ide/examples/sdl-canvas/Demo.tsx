@@ -1,18 +1,18 @@
-// SDL canvas demo via @emception/ide.
+// SDL canvas demo via @gameguild/emception-ide.
 //
 // Shows the full IDE — editor, terminal, and the SDL2 canvas — with a
 // starter C program that draws an animated gradient.
 //
 // The canvas is rendered to a virtual path (/user/sdl-canvas by default).
 // Requires COOP/COEP headers — use the COI service worker from
-// @emception/sysroot in production.
+// the bundled `emception/cdn/*` payload in production.
 //
-// Drop into any React 19 app that has @emception/ide installed.
+// Drop into any React 19 app that has @gameguild/emception-ide installed.
 // See packages/ide/README.md for full IdeProps reference.
 
 'use client';
 
-import { Ide } from '@emception/ide';
+import { Ide } from '@gameguild/emception-ide';
 
 const SDL_SOURCE = `#include <SDL2/SDL.h>
 #include <math.h>
@@ -48,25 +48,25 @@ done:
 `;
 
 export function Demo() {
-    return (
-        <Ide
-            workspaceName="sdl-canvas-demo"
-            defaultFiles={{
-                'main.cpp': { content: SDL_SOURCE, visibility: 'public' },
-            }}
-            enableCanvas
-            canvasPath="/user/sdl-canvas"
-            // Build flags required for SDL2 in Emscripten.
-            workspaceConfig={{
-                build: {
-                    std: 'c++17',
-                    cflags: ['-sUSE_SDL=2', '-sMIN_WEBGL_VERSION=2'],
-                    sources: ['main.cpp'],
-                    output: 'a.out',
-                },
-            }}
-        />
-    );
+  return (
+    <Ide
+      workspaceName="sdl-canvas-demo"
+      defaultFiles={{
+        'main.cpp': { content: SDL_SOURCE, visibility: 'public' },
+      }}
+      enableCanvas
+      canvasPath="/user/sdl-canvas"
+      // Build flags required for SDL2 in Emscripten.
+      workspaceConfig={{
+        build: {
+          std: 'c++17',
+          cflags: ['-sUSE_SDL=2', '-sMIN_WEBGL_VERSION=2'],
+          sources: ['main.cpp'],
+          output: 'a.out',
+        },
+      }}
+    />
+  );
 }
 
 // --- standalone mount (optional) ----------------------------------------
@@ -74,5 +74,5 @@ import { createRoot } from 'react-dom/client';
 
 const root = document.getElementById('root');
 if (root) {
-    createRoot(root).render(<Demo />);
+  createRoot(root).render(<Demo />);
 }

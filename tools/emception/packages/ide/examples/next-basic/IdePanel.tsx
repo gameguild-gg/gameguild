@@ -14,7 +14,7 @@ import dynamic from 'next/dynamic';
 
 // The `Ide` component renders only in the browser: it uses canvas, Web
 // Workers, and SharedArrayBuffer. `ssr: false` prevents a hydration mismatch.
-const Ide = dynamic(() => import('@emception/ide').then((m) => m.Ide), {
+const Ide = dynamic(() => import('@gameguild/emception-ide').then((m) => m.Ide), {
     ssr: false,
     loading: () => <p className="p-4 text-sm text-gray-500">Loading IDE…</p>,
 });
@@ -34,8 +34,8 @@ export function IdePanel() {
                 defaultFiles={{
                     'main.cpp': { content: STARTER_SOURCE, visibility: 'public' },
                 }}
-            // The COI service-worker from @emception/sysroot must be registered
-            // in next.config.ts / a layout script for SharedArrayBuffer to work.
+            // A root-level /coi-serviceworker.js must be registered in next.config.ts
+            // / a layout script for SharedArrayBuffer to work.
             />
         </div>
     );

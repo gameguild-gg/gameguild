@@ -17,6 +17,7 @@
       "import": "./dist/coi/index.js",
       "types": "./dist/coi/index.d.ts"
     },
+    "./coi-serviceworker.js": "./dist/coi-serviceworker.js",
     "./worker": {
       "import": "./dist/worker-entry.js",
       "types": "./dist/worker-entry.d.ts"
@@ -35,21 +36,14 @@
     "access": "public"
   },
   "scripts": {
-    "build": "tsc -p tsconfig.json && cp src/emscripten/subprocess_shim.py dist/emscripten/subprocess_shim.py",
+    "build": "tsc -p tsconfig.json && cp src/emscripten/subprocess_shim.py dist/emscripten/subprocess_shim.py && cp ../../public/coi-serviceworker.js dist/coi-serviceworker.js",
+    "prepack": "npm run build",
     "typecheck": "tsc --noEmit",
     "clean": "rm -rf dist"
   },
   "dependencies": {
     "emception": "*",
     "@gameguild/emception-xterm": "*"
-  },
-  "peerDependencies": {
-    "@gameguild/emception-sysroot": "*"
-  },
-  "peerDependenciesMeta": {
-    "@gameguild/emception-sysroot": {
-      "optional": true
-    }
   },
   "devDependencies": {
     "typescript": "^5.3.0"

@@ -27,6 +27,7 @@ defineBuildScript({
                     if (f !== 'scripts') shell.rm('-rf', path.join(dist, f));
                 }
             }
+            shell.rm('-rf', path.join(SCRIPT_ROOT, 'packages', 'core', 'cdn'));
             for (const dir of ['sysroot', 'sysroot-staging', 'tools', 'playwright-report', 'test-results']) {
                 shell.rm('-rf', path.join(SCRIPT_ROOT, dir));
             }
@@ -61,11 +62,17 @@ defineBuildScript({
             for (const dir of ['.next', 'playwright-report', 'test-results']) {
                 shell.rm('-rf', path.join(SCRIPT_ROOT, dir));
             }
-            const cdnDir = path.join(SCRIPT_ROOT, 'public/cdn');
-            if (fs.existsSync(cdnDir)) {
-                shell.rm('-rf', path.join(cdnDir, 'etc'));
-                shell.rm('-rf', path.join(cdnDir, 'usr'));
-                shell.rm('-f', path.join(cdnDir, 'manifest.json'));
+            // Clean CDN from root workspace
+            shell.rm('-rf', path.join(SCRIPT_ROOT, 'public/cdn'));
+            // Clean CDN from all demo apps
+            const appDirs = [
+                'apps/ide-react',
+                'apps/ide-next',
+                'apps/run-react',
+                'apps/run-webcomponent',
+            ];
+            for (const appDir of appDirs) {
+                shell.rm('-rf', path.join(SCRIPT_ROOT, appDir, 'public/cdn'));
             }
         });
 

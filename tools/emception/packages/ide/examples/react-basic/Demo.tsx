@@ -5,11 +5,11 @@
  * Run this file via a Vite or Next.js dev server; it does NOT compile standalone.
  *
  * Prerequisites:
- *   npm install @emception/ide @emception/browser @emception/sysroot react react-dom
+ *   npm install @gameguild/emception-ide @gameguild/emception-browser react react-dom
  *
  * Serve your sysroot bundles under /cdn/ (see @emception/cli cdn-export).
  */
-import { Ide } from '@emception/ide';
+import { Ide } from '@gameguild/emception-ide';
 import { createRoot } from 'react-dom/client';
 
 function App() {

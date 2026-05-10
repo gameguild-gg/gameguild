@@ -33,7 +33,7 @@ export {
 // that want to compose their own VFSManager.
 export { IDBFS, LazyFS, mountVFSFS, type FileEntry, type FSManifest, type IDBFSOptions, type MountVFSFSOptions, type VFSFSRuntime } from './vfs/index';
 
-export const DEFAULT_MANIFEST_URL = 'https://cdn.jsdelivr.net/npm/@emception/sysroot@0.20.0/manifest.json';
+export const DEFAULT_MANIFEST_URL = 'https://cdn.jsdelivr.net/npm/emception/cdn/manifest.json';
 
 // Headless build presets + compileAndRun helper.
 export {

@@ -5,15 +5,16 @@
   "description": "Minimal Vite + vanilla HTML demo for the <emception-run> custom element from @gameguild/emception-webcomponent.",
   "type": "module",
   "scripts": {
-    "predev": "node ../../../../scripts/sync-emception-cdn.mjs tools/emception/apps/run-webcomponent",
+    "predev": "node ../../scripts/install-app-cdn-from-package.mjs apps/run-webcomponent",
     "dev": "vite",
-    "prebuild": "node ../../../../scripts/sync-emception-cdn.mjs tools/emception/apps/run-webcomponent",
+    "prebuild": "node ../../scripts/install-app-cdn-from-package.mjs apps/run-webcomponent",
     "build": "tsc -b && vite build",
     "preview": "vite preview"
   },
   "dependencies": {
     "@gameguild/emception-browser": "*",
-    "@gameguild/emception-webcomponent": "*"
+    "@gameguild/emception-webcomponent": "*",
+    "emception": "*"
   },
   "devDependencies": {
     "typescript": "^5.3.0",
