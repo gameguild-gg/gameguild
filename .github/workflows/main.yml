@@ -397,11 +397,11 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Verify npm supports OIDC Trusted Publishing
+      - name: Verify npm is available
         if: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/main' }}
         run: npm --version
 
-      - name: Configure npm registry for Trusted Publishing
+      - name: Configure npm registry for npm token publishing
         if: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/main' }}
         uses: actions/setup-node@v6
         with:
@@ -431,7 +431,7 @@ jobs:
             fi
 
             echo "📦 Publishing ${NAME}@${VERSION}"
-            npm publish --workspace="${NAME}" --access public --provenance
+            npm publish --workspace="${NAME}" --access public
           done
         env:
-          NPM_CONFIG_PROVENANCE: 'true'
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
