@@ -1,6 +1,6 @@
 # Building from source
 
-> **You probably don't need this.** Most consumers install `@emception/browser` + `@emception/sysroot` from npm. Build from source only when bumping LLVM/Emscripten/Python or hacking on CDN packaging.
+> **You probably don't need this.** Most consumers install `@gameguild/emception-browser` from npm and use the CDN payload bundled in `emception/cdn/*`. Build from source only when bumping LLVM/Emscripten/Python or hacking on CDN packaging.
 
 ## Prerequisites
 
@@ -25,7 +25,7 @@ cd apps/ide-react && npm install && npm run dev   # Vite/React (http://localhost
 cd apps/ide-next  && npm install && npm run dev   # Next.js   (http://localhost:3000)
 ```
 
-The demos sync CDN assets from `tools/emception/public/cdn/` via a `predev`/`prebuild` hook.
+The demos sync CDN assets from the built CDN payload via a `predev`/`prebuild` hook.
 
 ## Pipeline (`build:all`)
 

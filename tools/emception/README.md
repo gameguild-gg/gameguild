@@ -10,15 +10,15 @@ Most consumers do **not** build from source. Pick a published package:
 
 | I want to…                                      | Install                                                               | Entry point                                               |
 | ----------------------------------------------- | --------------------------------------------------------------------- | --------------------------------------------------------- |
-| Drop a "compile + run" widget into static HTML  | `@emception/webcomponent` + `@emception/browser`                      | `<emception-run>` custom element                          |
-| Embed in a React 19 app (Next.js, Vite, CRA)    | `@emception/react` + `@emception/webcomponent` + `@emception/browser` | `<EmceptionRun>` + `useEmception()`                       |
-| Add a real terminal UI                          | `@emception/xterm` + `@xterm/xterm`                                   | `fromXterm()` / `toXterm()` adapters                      |
-| Build a full IDE shell (editor + tabs + canvas) | `@emception/ide`                                                      | `<Ide>` React component, `<emception-ide>` custom element |
-| Add a new runtime adapter or preset             | `@emception/core`                                                     | `RuntimeAdapter` interface, presets, UI config            |
+| Drop a "compile + run" widget into static HTML  | `@gameguild/emception-webcomponent` + `@gameguild/emception-browser`  | `<emception-run>` custom element                          |
+| Embed in a React 19 app (Next.js, Vite, CRA)    | `@gameguild/emception-react` + `@gameguild/emception-webcomponent` + `@gameguild/emception-browser` | `<EmceptionRun>` + `useEmception()`                       |
+| Add a real terminal UI                          | `@gameguild/emception-xterm` + `@xterm/xterm`                         | `fromXterm()` / `toXterm()` adapters                      |
+| Build a full IDE shell (editor + tabs + canvas) | `@gameguild/emception-ide`                                            | `<Ide>` React component, `<emception-ide>` custom element |
+| Add a new runtime adapter or preset             | `emception`                                                           | `RuntimeAdapter` interface, presets, UI config            |
 
-Required peer asset:
+Bundled CDN payload:
 
-- **`@emception/sysroot`** — the WASM toolchain payload. Pin the version to the LLVM major you ship.
+- **`emception/cdn/*`** — manifest, Brotli bundles, and the browser decompressor.
 
 Optional peer:
 
@@ -29,7 +29,7 @@ Optional peer:
 ### Headless API
 
 ```ts
-import { createEmception } from '@emception/browser';
+import { createEmception } from '@gameguild/emception-browser';
 
 const em = await createEmception({ manifestUrl: '/cdn/manifest.json', tty: 'none' });
 
@@ -55,7 +55,7 @@ Surface: `run`, `readFile`, `writeFile`, `listDir`, `resetVfs`, `dispose` (typed
 ### Drop-in IDE
 
 ```tsx
-import { Ide } from '@emception/ide';
+import { Ide } from '@gameguild/emception-ide';
 
 <Ide
   manifestUrl="/cdn/manifest.json"
@@ -104,13 +104,12 @@ Each tool runs as an **isolated WASM process** with its own 2 GB linear memory. 
 ```
 tools/emception/
 ├── packages/
-│   ├── browser/       # @emception/browser   – createEmception() factory, worker boot
-│   ├── core/          # @emception/core      – kernel, VFS, tool runner, shell
-│   ├── ide/           # @emception/ide       – React IDE shell (editor + tabs + canvas)
-│   ├── react/         # @emception/react     – React bindings, hooks
-│   ├── sysroot/       # @emception/sysroot   – CDN payload (LLVM + Emscripten + libs)
-│   ├── webcomponent/  # @emception/webcomponent – <emception-run> / <emception-ide>
-│   └── xterm/         # @emception/xterm     – xterm.js adapters
+│   ├── browser/       # @gameguild/emception-browser – createEmception() factory, worker boot
+│   ├── core/          # emception            – kernel, VFS, tool runner, shell, published cdn/
+│   ├── ide/           # @gameguild/emception-ide – React IDE shell (editor + tabs + canvas)
+│   ├── react/         # @gameguild/emception-react – React bindings, hooks
+│   ├── webcomponent/  # @gameguild/emception-webcomponent – <emception-run> / <emception-ide>
+│   └── xterm/         # @gameguild/emception-xterm – xterm.js adapters
 ├── apps/
 │   ├── ide-react/     # Vite + React demo
 │   └── ide-next/      # Next.js demo
@@ -125,7 +124,7 @@ tools/emception/
 | React + Vite | `apps/ide-react/` | React, Vite | `npm install && npm run dev` |
 | Next.js      | `apps/ide-next/`  | Next.js 15  | `npm install && npm run dev` |
 
-Both demos sync CDN assets from `tools/emception/public/cdn/` automatically.
+Both demos sync CDN assets from the built CDN payload automatically.
 
 ## License
 

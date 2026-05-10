@@ -4,7 +4,8 @@
     "outDir": "dist",
     "rootDir": "src",
     "paths": {},
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "composite": true
   },
   "include": ["src/**/*.ts"],
   "exclude": ["node_modules", "dist"]

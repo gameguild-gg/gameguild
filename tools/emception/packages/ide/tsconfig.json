@@ -4,8 +4,9 @@
     "outDir": "dist",
     "rootDir": "src",
     "paths": {},
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "composite": true
   },
-  "include": ["src/index.ts"],
-  "exclude": ["node_modules", "dist", "src/components", "src/styles", "src/css.d.ts"]
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist"]
 }

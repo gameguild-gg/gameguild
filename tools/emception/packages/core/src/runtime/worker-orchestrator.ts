@@ -21,14 +21,14 @@
  */
 
 import type {
-    BootErrorMessage,
-    GetFileResultMessage,
-    ListDirResultMessage,
-    MainToWorkerMessage,
-    ResetVfsResultMessage,
-    RunResultMessage,
-    WorkerToMainMessage,
-    WriteFileResultMessage,
+  BootErrorMessage,
+  GetFileResultMessage,
+  ListDirResultMessage,
+  MainToWorkerMessage,
+  ResetVfsResultMessage,
+  RunResultMessage,
+  WorkerToMainMessage,
+  WriteFileResultMessage,
 } from '../worker-protocol.js';
 import { BootHandshake } from './boot-handshake';
 import type { RpcTransport } from './rpc-channel';
@@ -145,7 +145,7 @@ export interface WorkerOrchestratorOptions {
  * import { Worker, MessageChannel } from 'node:worker_threads';
  * const worker = new Worker('./dist/worker-entry.mjs');
  * const orch = new WorkerOrchestrator(workerTransport(worker));
- * await orch.boot(require.resolve('@emception/sysroot/manifest.json'));
+ * await orch.boot(require.resolve('emception/cdn/manifest.json'));
  * ```
  */
 export class WorkerOrchestrator {

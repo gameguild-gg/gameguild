@@ -28,7 +28,7 @@ export class RuntimeFeatureUnavailableError extends EmceptionError { }
  * page is not served with the `Cross-Origin-Opener-Policy: same-origin` and
  * `Cross-Origin-Embedder-Policy: require-corp` headers.
  *
- * Fix: register the COI service worker from `@emception/sysroot` or configure
+ * Fix: in browser apps, self-host a root-level `/coi-serviceworker.js` or configure
  * your server to emit these headers.
  */
 export class CrossOriginIsolationError extends EmceptionError { }

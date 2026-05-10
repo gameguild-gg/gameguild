@@ -1,15 +1,19 @@
-# @emception/webcomponent
+# @gameguild/emception-webcomponent
 
 `<emception-run>` custom element for [emception](https://github.com/gameguild-gg/gameguild/tree/main/tools/emception). Framework-free, no React/Vue/Svelte runtime required.
+
+## Live Demo
+
+Try it at [gameguild-gg.github.io/gameguild/](https://gameguild-gg.github.io/gameguild/) — features a live IDE with working templates for C++, SDL3, Raylib, CMake, and Python.
 
 ## Install
 
 ```bash
-npm install @emception/webcomponent @emception/browser
+npm install @gameguild/emception-webcomponent @gameguild/emception-browser
 ```
 
-`@emception/browser` is a peer of the orchestration story. The
-custom element itself only depends on `@emception/core` for the typed
+`@gameguild/emception-browser` is a peer of the orchestration story. The
+custom element itself only depends on `emception` (core) for the typed
 attribute schema and event registry.
 
 ## Use
@@ -19,7 +23,7 @@ Importing the package once auto-registers the element under
 
 ```html
 <script type="module">
-  import '@emception/webcomponent';
+  import '@gameguild/emception-webcomponent';
 </script>
 
 <emception-run preset="cpp" autorun source="int main(){return 0;}"></emception-run>
@@ -28,8 +32,8 @@ Importing the package once auto-registers the element under
 Pair the element with a pre-built `EmceptionAPI`:
 
 ```ts
-import '@emception/webcomponent';
-import { createEmception } from '@emception/browser';
+import '@gameguild/emception-webcomponent';
+import { createEmception } from '@gameguild/emception-browser';
 
 const el = document.querySelector('emception-run')!;
 const api = await createEmception({ tty: 'none' });
@@ -39,7 +43,7 @@ const api = await createEmception({ tty: 'none' });
 ## Attributes
 
 Every kebab-case attribute in `ATTRIBUTE_SCHEMA` (exported from
-`@emception/core`) is mirrored on the element. Common ones:
+`emception`) is mirrored on the element. Common ones:
 
 | attribute                                  | type                | meaning                                |
 | ------------------------------------------ | ------------------- | -------------------------------------- |
@@ -97,7 +101,7 @@ el.addEventListener('emception-stdout', (ev) => {
 ## Custom tag name
 
 ```ts
-import { EmceptionRunElement, registerEmceptionRun } from '@emception/webcomponent';
+import { EmceptionRunElement, registerEmceptionRun } from '@gameguild/emception-webcomponent';
 registerEmceptionRun('my-emception');
 ```
 
@@ -108,5 +112,5 @@ ended up registered.
 
 The module's auto-register block is gated on `typeof customElements`,
 so importing it under Node is a no-op (no errors). For React 19 use
-`@emception/react` which renders the element declaratively without
+`@gameguild/emception-react` which renders the element declaratively without
 forcing the side-effect import on the server bundle.

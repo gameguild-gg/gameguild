@@ -1,11 +1,15 @@
-# @emception/xterm
+# @gameguild/emception-xterm
 
-[xterm.js](https://xtermjs.org/) bridge for [emception](https://github.com/gameguild-gg/gameguild/tree/main/tools/emception). Wraps a `Terminal` as a `StdinInput` / `StdoutSink` consumable by `@emception/browser`'s `EmceptionAPI`.
+[xterm.js](https://xtermjs.org/) bridge for [emception](https://github.com/gameguild-gg/gameguild/tree/main/tools/emception). Wraps a `Terminal` as a `StdinInput` / `StdoutSink` consumable by `@gameguild/emception-browser`'s `EmceptionAPI`.
+
+## Live Demo
+
+Try it at [gameguild-gg.github.io/gameguild/](https://gameguild-gg.github.io/gameguild/) — features a live IDE with working templates for C++, SDL3, Raylib, CMake, and Python.
 
 ## Install
 
 ```bash
-npm install @emception/xterm @xterm/xterm
+npm install @gameguild/emception-xterm @xterm/xterm
 ```
 
 `@xterm/xterm` is a peer dependency.
@@ -15,8 +19,8 @@ npm install @emception/xterm @xterm/xterm
 ```ts
 import { Terminal } from '@xterm/xterm';
 import '@xterm/xterm/css/xterm.css';
-import { fromXterm, toXterm } from '@emception/xterm';
-import { createEmception } from '@emception/browser';
+import { fromXterm, toXterm } from '@gameguild/emception-xterm';
+import { createEmception } from '@gameguild/emception-browser';
 
 const xterm = new Terminal();
 xterm.open(document.getElementById('term')!);
@@ -40,11 +44,11 @@ Raw disables line buffering + local echo — every keypress is forwarded verbati
 
 ## What this package is
 
-This is intentionally a thin shim. The actual stream wiring lives in `@emception/core`. Importing `@emception/xterm` adds:
+This is intentionally a thin shim. The actual stream wiring lives in `emception`. Importing `@gameguild/emception-xterm` adds:
 
 - `fromXterm(terminal, opts?)` → `XtermStdin` adapter shape.
 - `toXterm(terminal)` → `XtermStdout` adapter shape.
 - `TTYBridge` — low-level helper used internally to plumb keypress events into `ReadableStream<Uint8Array>`.
-- Type unions `XtermStdinInput` / `XtermStdoutSink` that extend `StdinInput` / `StdoutSink` so TS callers get autocomplete.
+- Type unions `XtermStdinInput` / `XtermStdoutSink` that extend `StdinInput` / `StdoutSink` (from `emception`) so TS callers get autocomplete.
 
 The xterm peer dep lives **here only** so non-terminal embeds (headless graders, the bare `<emception-run>` custom element) don't pay the bundle cost.

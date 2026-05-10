@@ -8,6 +8,18 @@ package-lock.json
 build/
 .next/
 out/
+packages/core/cdn/
+
+# IDE/Next.js output
+out/
+public/cdn/
+public/managed/
+tsc.log
+tsconfig.tsbuildinfo
+next-env.d.ts
+
+# CMake, sysroot, and extracted toolchains
+public/cdn/usr/
 
 # Local toolchains and extracted upstream sources
 tools/
@@ -51,6 +63,8 @@ playwright-report-react/
 npm-debug.log*
 yarn-debug.log*
 nohup.out
+logs
+logs/
 
 # Miscellaneous local files
 .DS_Store
@@ -58,5 +72,3 @@ nohup.out
 *.swp
 *.swo
 .vercel/
-
-logs

@@ -231,6 +231,7 @@ jobs:
             tools/emception/public/cdn
             tools/emception/dist
             tools/emception/packages/core/dist
+            tools/emception/packages/core/cdn
             tools/emception/packages/browser/dist
             tools/emception/packages/xterm/dist
             tools/emception/packages/react/dist
@@ -264,6 +265,10 @@ jobs:
         if: needs.detect-changes.outputs.emception == 'true' || steps.cache-emception-artifacts.outputs.cache-hit != 'true'
         run: node scripts/sync-emception-cdn.mjs tools/emception/apps/ide-react
 
+      - name: Stage CDN into emception package
+        if: needs.detect-changes.outputs.emception == 'true' || steps.cache-cdn.outputs.cache-hit == 'true' || steps.cache-emception-artifacts.outputs.cache-hit != 'true'
+        run: cd tools/emception && npm run stage:core:cdn
+
       - name: Build tools/emception/apps/ide-react
         if: needs.detect-changes.outputs.emception == 'true' || steps.cache-emception-artifacts.outputs.cache-hit != 'true'
         run: cd tools/emception/apps/ide-react && npm run build --ignore-scripts
@@ -279,6 +284,7 @@ jobs:
             tools/emception/public/cdn
             tools/emception/dist
             tools/emception/packages/core/dist
+            tools/emception/packages/core/cdn
             tools/emception/packages/browser/dist
             tools/emception/packages/xterm/dist
             tools/emception/packages/react/dist

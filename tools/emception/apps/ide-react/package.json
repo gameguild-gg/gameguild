@@ -4,9 +4,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "predev": "npm run build:lib --prefix ../.. && node ../../../../scripts/sync-emception-cdn.mjs tools/emception/apps/ide-react",
+    "predev": "npm run build:lib --prefix ../.. && node ../../scripts/install-app-cdn-from-package.mjs apps/ide-react",
     "dev": "vite",
-    "prebuild": "npm run build:lib --prefix ../.. && node ../../../../scripts/sync-emception-cdn.mjs tools/emception/apps/ide-react",
+    "prebuild": "npm run build:lib --prefix ../.. && node ../../scripts/install-app-cdn-from-package.mjs apps/ide-react",
     "build": "tsc -b && vite build",
     "preview": "vite preview"
   },

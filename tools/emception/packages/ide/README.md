@@ -1,11 +1,15 @@
-# @emception/ide
+# @gameguild/emception-ide
 
 Reactive `<Ide>` React 19 component + `<emception-ide>` custom-element wrapper for [emception](https://github.com/gameguild-gg/gameguild/tree/main/tools/emception).
+
+## Live Demo
+
+Try it at [gameguild-gg.github.io/gameguild/](https://gameguild-gg.github.io/gameguild/) — features a live IDE with working templates for C++, SDL3, Raylib, CMake, and Python.
 
 ## Install
 
 ```bash
-npm install @emception/ide @emception/browser @emception/sysroot
+npm install @gameguild/emception-ide @gameguild/emception-browser
 ```
 
 Peer dependencies: `react ^19`, `react-dom ^19`.
@@ -13,7 +17,7 @@ Peer dependencies: `react ^19`, `react-dom ^19`.
 ## Quick start — React
 
 ```tsx
-import { Ide } from '@emception/ide';
+import { Ide } from '@gameguild/emception-ide';
 
 export default function Page() {
   return <Ide manifestUrl="/cdn/manifest.json" workspaceName="my-project" title="C++ Playground" />;
@@ -24,7 +28,7 @@ export default function Page() {
 
 ```html
 <script type="module">
-  import { registerEmceptionIde } from '@emception/ide';
+  import { registerEmceptionIde } from '@gameguild/emception-ide';
   registerEmceptionIde(); // registers <emception-ide>
 </script>
 
@@ -36,8 +40,8 @@ export default function Page() {
 Skip auto-boot by passing an `api` prop. The component renders immediately and all VFS/run calls are delegated to the injected API — useful when you share one `EmceptionAPI` instance across multiple components.
 
 ```tsx
-import { createEmception } from '@emception/browser';
-import { Ide } from '@emception/ide';
+import { createEmception } from '@gameguild/emception-browser';
+import { Ide } from '@gameguild/emception-ide';
 
 const em = await createEmception({ manifestUrl: '/cdn/manifest.json', tty: 'none' });
 
@@ -108,10 +112,10 @@ el.update(); // apply new JS props
 ## Exports
 
 ```ts
-import { Ide } from '@emception/ide'; // React component
-import type { IdeProps, InjectedEmceptionAPI } from '@emception/ide'; // types
-import { registerEmceptionIde, EmceptionIdeElement, ELEMENT_NAME } from '@emception/ide'; // custom element
-import type { EmceptionAPI } from '@emception/ide'; // re-export from @emception/core
+import { Ide } from '@gameguild/emception-ide'; // React component
+import type { IdeProps, InjectedEmceptionAPI } from '@gameguild/emception-ide'; // types
+import { registerEmceptionIde, EmceptionIdeElement, ELEMENT_NAME } from '@gameguild/emception-ide'; // custom element
+import type { EmceptionAPI } from '@gameguild/emception-ide'; // re-export from emception
 ```
 
 ## Migration from `@gameguild/emception-ui`
@@ -122,14 +126,13 @@ Replace the old default import with named imports:
 // Before
 import EmceptionUI from '@gameguild/emception-ui';
 // After
-import { Ide } from '@emception/ide';
+import { Ide } from '@gameguild/emception-ide';
 ```
 
 The `workspaceName` prop now generates an isolated storage key (`emception:ws:<name>`) instead of sharing the single legacy key — existing state in `localStorage` under the legacy key is preserved on the first mount if you omit `workspaceName`.
 
 ## See also
 
-- [`@emception/browser`](../browser/README.md) — `createEmception()`, boot options
-- [`@emception/webcomponent`](../webcomponent/README.md) — lighter `<emception-run>` without the IDE chrome
-- [`@emception/react`](../react/README.md) — `<EmceptionRun>`, `useEmception()` hooks
-- [DX overhaul plan](../../docs/dx-overhaul-plan.md)
+- [`@gameguild/emception-browser`](../browser/README.md) — `createEmception()`, boot options
+- [`@gameguild/emception-webcomponent`](../webcomponent/README.md) — lighter `<emception-run>` without the IDE chrome
+- [`@gameguild/emception-react`](../react/README.md) — `<EmceptionRun>`, `useEmception()` hooks

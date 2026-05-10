@@ -5,9 +5,9 @@
   "description": "Demo IDE for the emception browser C/C++ toolchain",
   "type": "module",
   "scripts": {
-    "predev": "npm run build:packages:core --prefix ../.. && npm run build:packages:browser --prefix ../.. && npm run build:packages:ide --prefix ../.. && npm run build:lib --prefix ../.. && node ../../../../scripts/sync-emception-cdn.mjs tools/emception/apps/ide-next",
+    "predev": "npm run build:packages:core --prefix ../.. && npm run build:packages:browser --prefix ../.. && npm run build:packages:ide --prefix ../.. && npm run build:lib --prefix ../.. && node ../../scripts/install-app-cdn-from-package.mjs apps/ide-next",
     "dev": "next dev",
-    "prebuild": "npm run build:packages:core --prefix ../.. && npm run build:packages:browser --prefix ../.. && npm run build:packages:ide --prefix ../.. && npm run build:lib --prefix ../.. && node ../../../../scripts/sync-emception-cdn.mjs tools/emception/apps/ide-next",
+    "prebuild": "npm run build:packages:core --prefix ../.. && npm run build:packages:browser --prefix ../.. && npm run build:packages:ide --prefix ../.. && npm run build:lib --prefix ../.. && node ../../scripts/install-app-cdn-from-package.mjs apps/ide-next",
     "build": "next build",
     "start": "npx serve@latest out",
     "lint": "eslint"

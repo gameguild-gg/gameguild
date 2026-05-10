@@ -4,8 +4,9 @@
 
   Open this file via a server that sets cross-origin-isolation headers
   (COOP: same-origin + COEP: require-corp). The simplest way is to ship
-  the COI service worker that comes with @emception/sysroot. See the
-  @emception/browser README for details.
+  a root-level /coi-serviceworker.js (the browser package publishes one in
+  dist/coi-serviceworker.js).
+  See the @gameguild/emception-browser README for details.
 -->
 <html lang="en">
   <head>
@@ -22,7 +23,7 @@
 
     <p>
       This page registers the custom element and attaches a pre-built
-      <code>EmceptionAPI</code> from <code>@emception/browser</code>.
+      <code>EmceptionAPI</code> from <code>@gameguild/emception-browser</code>.
     </p>
 
     <emception-run
@@ -41,8 +42,8 @@ int main(){ printf(&quot;hello from emception\n&quot;); return 0; }"
     <script type="module">
       // In a real app you'd resolve these via your bundler / import map.
       // Adjust the paths to match how you serve the packages.
-      import '@emception/webcomponent';
-      import { createEmception } from '@emception/browser';
+      import '@gameguild/emception-webcomponent';
+      import { createEmception } from '@gameguild/emception-browser';
 
       const log = document.getElementById('log');
       const print = (msg) => {
