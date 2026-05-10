@@ -1,3 +1,9 @@
+# [3.3.6](https://github.com/gameguild-gg/gameguild/compare/v3.3.5...v3.3.6) (2026-05-10)
+
+### Bug Fixes
+
+* **emception:** publish runtime assets from packages ([d2e8446](https://github.com/gameguild-gg/gameguild/commit/d2e8446be25e8d4fa2d80ab6bc8ffd6a87099d54))
+
 # [3.3.5](https://github.com/gameguild-gg/gameguild/compare/v3.3.4...v3.3.5) (2026-05-10)
 
 ### Bug Fixes
