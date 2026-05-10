@@ -1,11 +1,15 @@
-# @emception/react
+# @gameguild/emception-react
 
 React 19 components for [emception](https://github.com/gameguild-gg/gameguild/tree/main/tools/emception).
+
+## Live Demo
+
+Try it at [gameguild-gg.github.io/gameguild/](https://gameguild-gg.github.io/gameguild/) — features a live IDE with working templates for C++, SDL3, Raylib, CMake, and Python.
 
 ## Install
 
 ```bash
-npm install @emception/react @emception/webcomponent @emception/browser
+npm install @gameguild/emception-react @gameguild/emception-webcomponent @gameguild/emception-browser
 ```
 
 ## `<EmceptionRun>`
@@ -16,11 +20,11 @@ Declarative wrapper around the `<emception-run>` custom element.
 'use client';
 
 import { useCallback } from 'react';
-import { EmceptionRun, useEmception } from '@emception/react';
-import { createEmception } from '@emception/browser';
+import { EmceptionRun, useEmception } from '@gameguild/emception-react';
+import { createEmception } from '@gameguild/emception-browser';
 
 // Register the custom element on the client (NOT in the server bundle).
-import '@emception/webcomponent';
+import '@gameguild/emception-webcomponent';
 
 export function Demo() {
   const create = useCallback((signal: AbortSignal) => {
@@ -83,8 +87,8 @@ const { api, status, error } = useEmception({
 
 ## SSR
 
-`@emception/react` itself does **not** import
-`@emception/webcomponent` — that package self-registers the custom
+`@gameguild/emception-react` itself does **not** import
+`@gameguild/emception-webcomponent` — that package self-registers the custom
 element on import, which would fail on the server. Register the
 element from a client-only entry (e.g. inside a `'use client'`
 component or `useEffect`).

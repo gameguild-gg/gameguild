@@ -1,18 +1,18 @@
-// SDL canvas demo via @emception/react.
+// SDL canvas demo via @gameguild/emception-react.
 //
 // Uses <EmceptionRun> to compile and run an SDL2 gradient animation.
 // The canvas output appears inside the <emception-run> shadow DOM.
 // Requires COOP/COEP headers — use the COI service worker from
-// @emception/sysroot in production.
+// the bundled `emception/cdn/*` payload in production.
 //
-// Drop into any React 19 app that has @emception/react,
-// @emception/browser, and @emception/webcomponent installed.
+// Drop into any React 19 app that has @gameguild/emception-react,
+// @gameguild/emception-browser, and @gameguild/emception-webcomponent installed.
 
 'use client';
 
-import { createEmception } from '@emception/browser';
-import { EmceptionRun, useEmception } from '@emception/react';
-import '@emception/webcomponent';
+import { createEmception } from '@gameguild/emception-browser';
+import { EmceptionRun, useEmception } from '@gameguild/emception-react';
+import '@gameguild/emception-webcomponent';
 import { useCallback } from 'react';
 
 const SDL_SOURCE = `#include <SDL2/SDL.h>

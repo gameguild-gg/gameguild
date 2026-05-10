@@ -6,10 +6,10 @@
  * across multiple components or when you want to intercept stdout/stderr.
  *
  * Prerequisites:
- *   npm install @emception/ide @emception/browser @emception/sysroot react react-dom
+ *   npm install @gameguild/emception-ide @gameguild/emception-browser react react-dom
  */
-import { createEmception } from '@emception/browser';
-import { Ide, type InjectedEmceptionAPI } from '@emception/ide';
+import { createEmception } from '@gameguild/emception-browser';
+import { Ide, type InjectedEmceptionAPI } from '@gameguild/emception-ide';
 import { useEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 

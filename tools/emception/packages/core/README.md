@@ -1,13 +1,112 @@
-# @emception/core
+# emception
 
-Runtime-agnostic core for [emception](https://github.com/gameguild-gg/gameguild/tree/main/tools/emception). Pure TypeScript, **DOM-free**, no Web Worker / `worker_threads` / fetch / fs assumptions. Consumed by every other `@emception/*` package.
+A complete C/C++ toolchain — clang, lld, wasm-opt, emcc — running entirely in the browser as WebAssembly. Compile, link, and execute C/C++ from a web page. No local toolchain, no server.
 
-## What's in here
+**Runtime-agnostic core**: Pure TypeScript, **DOM-free**, no Web Worker / `worker_threads` / fetch / fs assumptions. This package is consumed by the `@gameguild/emception-*` adapters and also publishes the bundled `cdn/*` runtime payload.
+
+## Live Demo
+
+Try it in action at [gameguild-gg.github.io/gameguild/](https://gameguild-gg.github.io/gameguild/) — features a live IDE with working templates for C++, SDL3, Raylib, CMake, and Python.
+
+## Which package do I need?
+
+Most consumers do **not** build from source. Pick a published package:
+
+| I want to…                                      | Install                                                                  | Entry point                               |
+| ----------------------------------------------- | ------------------------------------------------------------------------ | ----------------------------------------- |
+| Drop a "compile + run" widget into static HTML  | `@gameguild/emception-webcomponent` + `@gameguild/emception-browser`     | `<emception-run>` custom element          |
+| Embed in a React 19 app (Next.js, Vite, CRA)    | `@gameguild/emception-react` + `@gameguild/emception-webcomponent` + `@gameguild/emception-browser` | `<EmceptionRun>` + `useEmception()`       |
+| Add a real terminal UI                          | `@gameguild/emception-xterm` + `@xterm/xterm`                            | `fromXterm()` / `toXterm()` adapters      |
+| Build a full IDE shell (editor + tabs + canvas) | `@gameguild/emception-ide`                                               | `<Ide>` React component, `<emception-ide>` custom element |
+| Implement a custom runtime adapter              | `emception` + any adapter (browser, Node, Electron)                      | `RuntimeAdapter` interface, presets, UI config |
+
+Bundled CDN payload:
+
+- **`emception/cdn/*`** — manifest, Brotli bundles, and the browser decompressor. Self-host by copying this directory to your app's `/cdn/` path, or rely on the default jsDelivr URL used by `@gameguild/emception-browser`.
+
+Optional peer:
+
+- **`@xterm/xterm`** — needed if you mount a terminal UI.
+
+## Quick start
+
+### Headless API (no UI)
+
+```ts
+import { createEmception } from '@gameguild/emception-browser';
+
+const em = await createEmception({
+  manifestUrl: '/cdn/manifest.json',
+  tty: 'none'
+});
+
+await em.writeFile('/home/user/main.c', `
+  #include <stdio.h>
+  int main(){ puts("hi"); return 0; }
+`);
+
+const compile = await em.run('clang', ['/home/user/main.c', '-o', '/home/user/a.out']);
+if (compile.exitCode !== 0) console.error(compile.stderr);
+
+const run = await em.run('/home/user/a.out', []);
+console.log(run.stdout);
+
+em.dispose();
+```
+
+### Self-host the bundled CDN payload
+
+If you want to serve the runtime assets from your own origin, copy the published `cdn/` directory from the `emception` package into your app's public `/cdn/` directory and point the runtime at `/cdn/manifest.json`.
+
+### Drop-in IDE (React)
+
+```tsx
+import { Ide } from '@gameguild/emception-ide';
+
+<Ide
+  manifestUrl="/cdn/manifest.json"
+  workspaceName="lesson-3"
+  workspaceConfig={{ files: [{ path: '/home/user/main.c', content: source }] }}
+  enableCanvas // SDL3 / raylib graphics
+/>;
+```
+
+### Read-only tutorial widget
+
+```tsx
+<Ide
+  title="Lesson 3 — Pointers"
+  manifestUrl="/cdn/manifest.json"
+  workspaceUrl="/lessons/3/workspace.json"
+  enableFileExplorer={false}
+  enableCanvas={false}
+  showSolutionFiles={false}
+  readOnly
+/>
+```
+
+## Technology stack
+
+| Layer             | Tech                                              |
+| ----------------- | ------------------------------------------------- |
+| Compiler backend  | LLVM + Clang (compiled to WASM)                   |
+| Optimiser         | Binaryen (compiled to WASM)                       |
+| Emscripten driver | CPython (compiled to WASM) running `emcc.py`      |
+| Build systems     | CMake + Ninja (compiled to WASM)                  |
+| Graphics          | SDL3, raylib, Dear ImGui (WebGL2 + GLFW3)         |
+| Kernel            | TypeScript (process manager, VFS, IPC, scheduler) |
+| Terminal          | xterm.js                                          |
+
+Each tool runs as an **isolated WASM process** with its own 2 GB linear memory. The TypeScript kernel mediates filesystem and IPC. Cross-browser async I/O works via Asyncify (no JSPI required).
+
+## Core API Reference
+
+### What's in here
 
 | Subsystem                | Module path                                                             | Surface                                                                                                                                                                                     |
 | ------------------------ | ----------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Public types             | `@emception/core`                                                       | `EmceptionAPI`, `EmceptionEventMap`, `ToolResult`, `RunOptions`, `CompileOptions`, `WorkspaceHandle`, …                                                                                     |
-| Errors                   | `@emception/core`                                                       | `EmceptionError`, `TimeoutError`, `WorkspaceConflictError`, `TestFailureError`, `BuildConfigError`, `RuntimeFeatureUnavailableError`, `CrossOriginIsolationError`, `CanvasUnavailableError` |
+| Public types             | `emception`                                                             | `EmceptionAPI`, `EmceptionEventMap`, `ToolResult`, `RunOptions`, `CompileOptions`, `WorkspaceHandle`, …                                                                                     |
+| Errors                   | `emception`                                                             | `EmceptionError`, `TimeoutError`, `WorkspaceConflictError`, `TestFailureError`, `BuildConfigError`, `RuntimeFeatureUnavailableError`, `CrossOriginIsolationError`, `CanvasUnavailableError` |
 | Runtime adapter contract | `runtime/adapter`                                                       | `RuntimeAdapter` interface (browser + node implement it)                                                                                                                                    |
 | Runtime helpers          | `runtime/cancellation`, `runtime/tool-result`, `runtime/feature-guards` | `withCancellation`, `withTimeoutOrThrow`, `assertToolResult`, `isToolResult`, `assertCanvasUnsupported`, `assertXtermStdinUnsupported`, `assertNoBrowserOnlyFeatures`                       |
 | Tools registry           | tool registry                                                           | `TOOL_REGISTRY`, `ToolName`, `Tools`, `createTools(adapter)`                                                                                                                                |
@@ -40,7 +139,7 @@ export interface RuntimeAdapter {
 }
 ```
 
-`@emception/browser` provides the implementation. `@emception/core` itself never instantiates one; it just defines the contract and ships pure helpers that adapters compose.
+`@gameguild/emception-browser` provides the implementation. `emception` (core) itself never instantiates one; it just defines the contract and ships pure helpers that adapters compose.
 
 ## Events
 
@@ -62,7 +161,7 @@ export interface RuntimeAdapter {
 ## Errors
 
 ```ts
-import { EmceptionError, TimeoutError } from '@emception/core';
+import { EmceptionError, TimeoutError } from 'emception';
 
 try {
   await api.run('clang', ['-c', 'main.c']);
@@ -81,7 +180,7 @@ Adapters **do not** throw for tool failures — non-zero exit, crash, and timeou
 ## Tests
 
 ```bash
-npm test --workspace=@emception/core
+npm test --workspace=emception
 ```
 
 159 zero-dep `node:test` cases covering the build resolver, seed hashing, in-memory workspace, compile-argv, cancellation, clang-query matcher, doctest parser, test-engine handlers, ToolResult contract, attribute parsing, view-config validator, ZIP writer/parser, workspace transfer, runtime feature guards, and event-map shape.
