@@ -1,5 +1,5 @@
 {
-  "version": "3.3.5",
+  "version": "3.3.6",
   "name": "@gameguild/emception-react",
   "description": "React 19 components for emception: <EmceptionRun>, <EmceptionTerminal>, <EmceptionCanvas>, useEmception().",
   "license": "MIT",
