@@ -1,5 +1,5 @@
 {
-  "version": "3.3.4",
+  "version": "3.3.5",
   "name": "emception-workspace",
   "description": "Emscripten C/C++ toolchain running in the browser via WebAssembly",
   "license": "MIT",
