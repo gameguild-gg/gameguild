@@ -78,9 +78,7 @@ public sealed class AuthController(ISender sender) : BaseApiController
             TenantId = body.TenantId
         };
 
-        SignInResponse result = await sender.Send(command, ct).ConfigureAwait(false);
-
-        return Ok(result);
+        return await ExecuteAuthCommandAsync(command, ct).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -105,9 +103,7 @@ public sealed class AuthController(ISender sender) : BaseApiController
             TenantId = body.TenantId
         };
 
-        SignInResponse result = await sender.Send(command, ct).ConfigureAwait(false);
-
-        return Ok(result);
+        return await ExecuteAuthCommandAsync(command, ct).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -156,9 +152,7 @@ public sealed class AuthController(ISender sender) : BaseApiController
             TenantId = body.TenantId
         };
 
-        SignInResponse result = await sender.Send(command, ct).ConfigureAwait(false);
-
-        return Ok(result);
+        return await ExecuteAuthCommandAsync(command, ct).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -186,6 +180,25 @@ public sealed class AuthController(ISender sender) : BaseApiController
         await sender.Send(command, ct).ConfigureAwait(false);
 
         return NoContent();
+    }
+
+    private async Task<IActionResult> ExecuteAuthCommandAsync<TCommand>(TCommand command, CancellationToken ct)
+        where TCommand : IRequest<SignInResponse>
+    {
+        try
+        {
+            SignInResponse result = await sender.Send(command, ct).ConfigureAwait(false);
+            return Ok(result);
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return Unauthorized(new ProblemDetails
+            {
+                Status = StatusCodes.Status401Unauthorized,
+                Title = "Unauthorized",
+                Detail = ex.Message
+            });
+        }
     }
 
     #endregion
