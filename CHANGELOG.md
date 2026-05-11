@@ -1,3 +1,9 @@
+# [3.3.7](https://github.com/gameguild-gg/gameguild/compare/v3.3.6...v3.3.7) (2026-05-11)
+
+### Bug Fixes
+
+* **emception:** fall back core CDN staging ([295fd36](https://github.com/gameguild-gg/gameguild/commit/295fd363738fba384a6fd1da14da5dd1e95dacea))
+
 # [3.3.6](https://github.com/gameguild-gg/gameguild/compare/v3.3.5...v3.3.6) (2026-05-10)
 
 ### Bug Fixes
