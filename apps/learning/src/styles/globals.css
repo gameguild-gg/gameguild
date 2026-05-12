@@ -1,0 +1,18 @@
+@import "@game-guild/ui/globals.css";
+
+@utility scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+html,
+body {
+  min-height: 100%;
+}
+
+body {
+  background: linear-gradient(180deg, #020617 0%, #0f172a 100%);
+}
