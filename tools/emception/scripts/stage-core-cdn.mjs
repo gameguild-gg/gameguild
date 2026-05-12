@@ -1,5 +1,5 @@
 import fs from 'node:fs';
-import { cp, mkdir, rm, stat } from 'node:fs/promises';
+import { cp, mkdir, readdir, rm, stat } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -15,13 +15,15 @@ const sourcePublicManifestFile = path.join(sourcePublicCdnDir, 'manifest.json');
 const targetCdnDir = path.join(emceptionRoot, 'packages', 'core', 'cdn');
 const targetManifestFile = path.join(targetCdnDir, 'manifest.json');
 
-const TOOL_NAMES = [
-    'clang', 'lld', 'python',
-    'wasm-opt', 'wasm-as', 'wasm-ctor-eval', 'wasm-emscripten-finalize', 'wasm-metadce',
-    'ninja', 'cmake',
-];
-
 const CDN_METADATA_FILES = ['.gitignore', '.npmignore'];
+const CDN_METADATA_FILE_SET = new Set(CDN_METADATA_FILES);
+const REQUIRED_EXACT_FILES = new Set(['manifest.json', 'brotli_wasm.js', 'brotli_wasm.wasm']);
+
+function isAllowedCdnFile(fileName) {
+    return REQUIRED_EXACT_FILES.has(fileName)
+        || CDN_METADATA_FILE_SET.has(fileName)
+        || fileName.endsWith('.tar.br');
+}
 
 async function exists(filePath) {
     try {
@@ -73,25 +75,32 @@ async function resolveStagingSource() {
     );
 }
 
-async function copyStandaloneToolModules() {
-    const toolDest = path.join(targetCdnDir, 'usr', 'lib');
-    await mkdir(toolDest, { recursive: true });
-
-    for (const tool of TOOL_NAMES) {
-        for (const ext of ['.wasm', '.mjs']) {
-            const src = path.join(sourceBuildDir, `${tool}${ext}`);
-            if (fs.existsSync(src)) {
-                await cp(src, path.join(toolDest, `${tool}${ext}`), { force: true });
-            }
-        }
-    }
-}
-
 async function copyCdnMetadataFiles() {
     for (const fileName of CDN_METADATA_FILES) {
         const src = path.join(sourcePublicCdnDir, fileName);
         if (fs.existsSync(src)) {
             await cp(src, path.join(targetCdnDir, fileName), { force: true });
+        }
+    }
+}
+
+async function pruneCdnToPublishPayload(rootDir) {
+    const entries = await readdir(rootDir, { withFileTypes: true });
+
+    for (const entry of entries) {
+        const fullPath = path.join(rootDir, entry.name);
+
+        if (entry.isDirectory()) {
+            await pruneCdnToPublishPayload(fullPath);
+            const remaining = await readdir(fullPath);
+            if (remaining.length === 0) {
+                await rm(fullPath, { recursive: true, force: true });
+            }
+            continue;
+        }
+
+        if (!isAllowedCdnFile(entry.name)) {
+            await rm(fullPath, { force: true });
         }
     }
 }
@@ -110,9 +119,13 @@ async function main() {
     }
 
     await copyCdnMetadataFiles();
-    await copyStandaloneToolModules();
     if (source.manifestFile !== targetManifestFile) {
         await cp(source.manifestFile, targetManifestFile, { force: true });
+    }
+    await pruneCdnToPublishPayload(targetCdnDir);
+
+    if (!(await exists(targetManifestFile))) {
+        throw new Error(`manifest.json missing after prune: ${path.relative(emceptionRoot, targetManifestFile)}`);
     }
 
     console.log(
