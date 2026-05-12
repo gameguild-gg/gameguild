@@ -4,7 +4,8 @@ namespace GameGuild.API.Database;
 
 // Type aliases for ASP.NET Core Identity
 using Role = IdentityRole;
-using User = IdentityUser;
+using LegacyIdentityUser = IdentityUser;
+using AppUser = GameGuild.Identity.Users.User;
 
 /// <summary>
 ///     Database seeder for default roles and admin user
@@ -18,10 +19,10 @@ public static class DatabaseSeeder
     public static async Task SeedAsync(IServiceProvider serviceProvider)
     {
         // Ensure ApplicationDbContext is registered (validates DI configuration)
-        _ = serviceProvider.GetRequiredService<ApplicationDbContext>();
-        
+        var dbContext = serviceProvider.GetRequiredService<ApplicationDbContext>();
+
         // Try to get Identity managers - they may not be registered in all configurations
-        var userManager = serviceProvider.GetService<UserManager<User>>();
+        var userManager = serviceProvider.GetService<UserManager<LegacyIdentityUser>>();
         var roleManager = serviceProvider.GetService<RoleManager<Role>>();
         var logger = serviceProvider.GetService<ILogger<ApplicationDbContext>>();
         var configuration = serviceProvider.GetService<IConfiguration>();
@@ -36,10 +37,14 @@ public static class DatabaseSeeder
             logger?.LogWarning("RoleManager not registered - skipping role seeding");
         }
 
-        // Seed admin user if UserManager is available
+        // Seed the application user that the live /auth/sign-in endpoint authenticates against.
+        await SeedApplicationAdminUserAsync(dbContext, logger, configuration).ConfigureAwait(false);
+
+        // Seed legacy ASP.NET Identity admin user if UserManager is available.
+        // This is kept for compatibility with older identity surfaces.
         if (userManager != null)
         {
-            await SeedAdminUserAsync(userManager, logger, configuration).ConfigureAwait(false);
+            await SeedLegacyIdentityAdminUserAsync(userManager, logger, configuration).ConfigureAwait(false);
         }
         else
         {
@@ -49,7 +54,7 @@ public static class DatabaseSeeder
 
     private static async Task SeedRolesAsync(RoleManager<Role> roleManager, ILogger? logger)
     {
-        var roles = new[ ] { "Admin", "User", "Manager" };
+        var roles = new[] { "Admin", "User", "Manager" };
 
         foreach (var roleName in roles)
         {
@@ -57,7 +62,9 @@ public static class DatabaseSeeder
             {
                 var role = new IdentityRole
                 {
-                    Id = Guid.NewGuid().ToString(), Name = roleName, NormalizedName = roleName.ToUpper()
+                    Id = Guid.NewGuid().ToString(),
+                    Name = roleName,
+                    NormalizedName = roleName.ToUpper()
                 };
 
                 var result = await roleManager.CreateAsync(role).ConfigureAwait(false);
@@ -69,7 +76,80 @@ public static class DatabaseSeeder
         }
     }
 
-    private static async Task SeedAdminUserAsync(UserManager<IdentityUser> userManager, ILogger? logger, IConfiguration? configuration = null)
+    private static async Task SeedApplicationAdminUserAsync(ApplicationDbContext dbContext, ILogger? logger, IConfiguration? configuration = null)
+    {
+        const string adminEmail = "admin@game-guild.com";
+        const string adminName = "Game Guild Admin";
+        const string adminUsername = "admin";
+        var adminPassword = configuration?["Seed:AdminPassword"] ?? "Admin123!";
+
+        var adminUser = await dbContext.Set<AppUser>()
+            .IgnoreQueryFilters()
+            .FirstOrDefaultAsync(user => user.Email == adminEmail)
+            .ConfigureAwait(false);
+
+        if (adminUser is null)
+        {
+            adminUser = AppUser.CreateWithPassword(
+                adminEmail,
+                adminName,
+                BCrypt.Net.BCrypt.HashPassword(adminPassword),
+                adminUsername);
+            adminUser.VerifyEmail();
+
+            dbContext.Set<AppUser>().Add(adminUser);
+            await dbContext.SaveChangesAsync().ConfigureAwait(false);
+
+            logger?.LogInformation("  Created application admin user: {Email}", adminEmail);
+            return;
+        }
+
+        var updated = false;
+
+        if (adminUser.IsDeleted)
+        {
+            adminUser.Restore();
+            updated = true;
+        }
+
+        if (!adminUser.HasPassword || adminUser.PasswordHash is null || !BCrypt.Net.BCrypt.Verify(adminPassword, adminUser.PasswordHash))
+        {
+            adminUser.SetPasswordHash(BCrypt.Net.BCrypt.HashPassword(adminPassword));
+            updated = true;
+        }
+
+        if (!adminUser.IsEmailVerified)
+        {
+            adminUser.VerifyEmail();
+            updated = true;
+        }
+
+        if (!adminUser.IsActive)
+        {
+            adminUser.Activate();
+            updated = true;
+        }
+
+        if (string.IsNullOrWhiteSpace(adminUser.Username))
+        {
+            adminUser.Username = adminUsername;
+            updated = true;
+        }
+
+        if (string.IsNullOrWhiteSpace(adminUser.Name))
+        {
+            adminUser.Name = adminName;
+            updated = true;
+        }
+
+        if (updated)
+        {
+            await dbContext.SaveChangesAsync().ConfigureAwait(false);
+            logger?.LogInformation("  Updated application admin user: {Email}", adminEmail);
+        }
+    }
+
+    private static async Task SeedLegacyIdentityAdminUserAsync(UserManager<LegacyIdentityUser> userManager, ILogger? logger, IConfiguration? configuration = null)
     {
         const string adminEmail = "admin@game-guild.com";
         var adminPassword = configuration?["Seed:AdminPassword"] ?? "Admin123!";
@@ -80,11 +160,11 @@ public static class DatabaseSeeder
 
         if (await userManager.FindByEmailAsync(adminEmail) == null)
         {
-            var adminUser = new IdentityUser
+            var adminUser = new LegacyIdentityUser
             {
-                Id = Guid.NewGuid().ToString(), 
-                UserName = adminEmail, 
-                Email = adminEmail, 
+                Id = Guid.NewGuid().ToString(),
+                UserName = adminEmail,
+                Email = adminEmail,
                 EmailConfirmed = true
             };
 
@@ -97,7 +177,7 @@ public static class DatabaseSeeder
             }
             else
             {
-                logger?.LogWarning("  Failed to create admin user: {Errors}", 
+                logger?.LogWarning("  Failed to create admin user: {Errors}",
                     string.Join(", ", result.Errors.Select(e => e.Description)));
             }
         }

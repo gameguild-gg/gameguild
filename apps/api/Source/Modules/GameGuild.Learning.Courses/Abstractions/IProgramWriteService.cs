@@ -4,7 +4,8 @@ namespace GameGuild.Learning.Courses;
 /// Write-side operations for Programs: create, update, delete, clone,
 /// content management, user management, progress mutations, monetization, and product integration.
 /// </summary>
-public interface IProgramWriteService {
+public interface IProgramWriteService
+{
   // ── Program CRUD ────────────────────────────────────────────────────
   Task<Program> CreateProgramAsync(Program program);
   Task<Program> UpdateProgramAsync(Program program);
@@ -33,6 +34,7 @@ public interface IProgramWriteService {
   // ── Progress Mutations ──────────────────────────────────────────────
   Task<Program> UpdateUserProgressAsync(Guid programId, Guid userId, Guid contentId, ProgressStatus status);
   Task<UserProgressDto?> UpdateUserProgressAsync(Guid programId, Guid userId, UpdateProgressDto progressDto);
+  Task<ContentInteraction?> SubmitUserContentAsync(Guid programId, Guid userId, Guid contentId, string submissionData);
   Task<bool> MarkContentCompletedAsync(Guid programId, Guid userId, Guid contentId);
   Task<bool> ResetUserProgressAsync(Guid programId, Guid userId);
 

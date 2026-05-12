@@ -3,7 +3,9 @@ using Asp.Versioning.ApiExplorer;
 using GameGuild.Configuration;
 using GameGuild.Configuration.PresentationLayer.ApiVersioning;
 using GameGuild.Configuration.PresentationLayer.OpenAPI;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc.Controllers;
+using Microsoft.OpenApi.Any;
 using Microsoft.OpenApi.Models;
 using System.Text;
 using Swashbuckle.AspNetCore.SwaggerGen;
@@ -16,6 +18,8 @@ namespace GameGuild.API;
 /// </summary>
 public static class OpenApiExtensions
 {
+    internal const string AllowAnonymousExtensionName = "x-gameguild-allow-anonymous";
+
     /// <summary>
     ///     Sets up OpenAPI/Swagger with configurable options.
     /// </summary>
@@ -60,7 +64,8 @@ public static class OpenApiExtensions
                                 Description = options.Description,
                                 Contact = new OpenApiContact
                                 {
-                                    Name = options.ContactName, Email = options.ContactEmail,
+                                    Name = options.ContactName,
+                                    Email = options.ContactEmail,
                                     Url = !string.IsNullOrEmpty(options.ContactUrl) ? new Uri(options.ContactUrl) : null
                                 }
                             }
@@ -96,7 +101,8 @@ public static class OpenApiExtensions
                             Description = options.Description,
                             Contact = new OpenApiContact
                             {
-                                Name = options.ContactName, Email = options.ContactEmail,
+                                Name = options.ContactName,
+                                Email = options.ContactEmail,
                                 Url = !string.IsNullOrEmpty(options.ContactUrl) ? new Uri(options.ContactUrl) : null
                             }
                         }
@@ -158,6 +164,7 @@ public static class OpenApiExtensions
 
                 // Normalize controller tags into a consistent module/controller path.
                 c.OperationFilter<ModuleControllerTagOperationFilter>();
+                c.OperationFilter<AllowAnonymousOperationFilter>();
 
                 // Add security definition for JWT Bearer token
                 c.AddSecurityDefinition(
@@ -578,5 +585,27 @@ internal sealed class ModuleControllerTagOperationFilter : IOperationFilter
         }
 
         return builder.ToString();
+    }
+}
+
+internal sealed class AllowAnonymousOperationFilter : IOperationFilter
+{
+    public void Apply(OpenApiOperation operation, OperationFilterContext context)
+    {
+        if (context.ApiDescription.ActionDescriptor is not ControllerActionDescriptor controllerAction)
+            return;
+
+        var actionAllowsAnonymous = controllerAction.MethodInfo.IsDefined(typeof(AllowAnonymousAttribute), inherit: true);
+        var controllerAllowsAnonymous = controllerAction.ControllerTypeInfo.IsDefined(typeof(AllowAnonymousAttribute), inherit: true);
+        var actionRequiresAuthorization = controllerAction.MethodInfo
+            .GetCustomAttributes(inherit: true)
+            .OfType<IAuthorizeData>()
+            .Any();
+
+        if (!actionAllowsAnonymous && !(controllerAllowsAnonymous && !actionRequiresAuthorization))
+            return;
+
+        operation.Extensions[OpenApiExtensions.AllowAnonymousExtensionName] = new OpenApiBoolean(true);
+        operation.Security = new List<OpenApiSecurityRequirement>();
     }
 }

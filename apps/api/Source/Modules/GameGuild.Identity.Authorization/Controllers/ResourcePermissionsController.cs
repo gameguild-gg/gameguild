@@ -13,12 +13,84 @@ namespace GameGuild.Identity.Authorization;
 ///     Controller for managing resource-level permissions.
 ///     Provides REST endpoints for sharing resources, checking permissions, and managing user access.
 /// </summary>
+[Microsoft.AspNetCore.Http.Tags("access-control/resource-permissions")]
 [ApiVersion("1.0")]
 [Route("api/v{version:apiVersion}/authorization/resources")]
 [Authorize]
 [Produces("application/json")]
 public sealed class ResourcePermissionsController(ISender sender, ILogger<ResourcePermissionsController> logger) : BaseApiController
 {
+    /// <summary>
+    ///     Gets a specific invitation if it is visible to the current user.
+    /// </summary>
+    [HttpGet("invitations/{invitationId:guid}")]
+    [ProducesResponseType(typeof(GetResourceInvitationResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetInvitation([FromRoute] Guid invitationId, CancellationToken cancellationToken)
+    {
+        var result = await sender.Send(new GetResourceInvitationQuery(invitationId), cancellationToken).ConfigureAwait(false);
+        return Ok(result);
+    }
+
+    /// <summary>
+    ///     Gets all pending invitations addressed to the current user.
+    /// </summary>
+    [HttpGet("invitations/pending")]
+    [ProducesResponseType(typeof(GetPendingResourceInvitationsResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> GetPendingInvitations(CancellationToken cancellationToken)
+    {
+        var result = await sender.Send(new GetPendingResourceInvitationsQuery(), cancellationToken).ConfigureAwait(false);
+        return Ok(result);
+    }
+
+    /// <summary>
+    ///     Accepts an invitation addressed to the current user.
+    /// </summary>
+    [HttpPost("invitations/{invitationId:guid}/accept")]
+    [ProducesResponseType(typeof(InvitationActionResult), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> AcceptInvitation([FromRoute] Guid invitationId, CancellationToken cancellationToken)
+    {
+        var result = await sender.Send(new AcceptResourceInvitationCommand(invitationId), cancellationToken).ConfigureAwait(false);
+        return Ok(result);
+    }
+
+    /// <summary>
+    ///     Declines an invitation addressed to the current user.
+    /// </summary>
+    [HttpPost("invitations/{invitationId:guid}/decline")]
+    [ProducesResponseType(typeof(InvitationActionResult), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> DeclineInvitation(
+        [FromRoute] Guid invitationId,
+        [FromBody] DeclineInvitationRequest? request,
+        CancellationToken cancellationToken)
+    {
+        var result = await sender.Send(
+            new DeclineResourceInvitationCommand(invitationId, request?.Reason),
+            cancellationToken).ConfigureAwait(false);
+
+        return Ok(result);
+    }
+
+    /// <summary>
+    ///     Revokes a pending invitation.
+    /// </summary>
+    [HttpDelete("invitations/{invitationId:guid}")]
+    [ProducesResponseType(typeof(InvitationActionResult), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> RevokeInvitation([FromRoute] Guid invitationId, CancellationToken cancellationToken)
+    {
+        var result = await sender.Send(new RevokeResourceInvitationCommand(invitationId), cancellationToken).ConfigureAwait(false);
+        return Ok(result);
+    }
+
     /// <summary>
     ///     Shares a resource with one or more users by granting them permissions.
     /// </summary>

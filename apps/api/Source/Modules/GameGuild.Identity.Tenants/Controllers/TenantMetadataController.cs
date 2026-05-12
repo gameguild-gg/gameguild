@@ -10,7 +10,7 @@ namespace GameGuild.Identity.Tenants;
 /// </summary>
 [ApiVersion("1.0")]
 [Route("v{version:apiVersion}/tenants/{tenantId:guid}/metadata")]
-[Tags("tenants/metadata")]
+[Microsoft.AspNetCore.Http.Tags("tenants/metadata")]
 [Authorize]
 public sealed class TenantMetadataController : BaseApiController
 {

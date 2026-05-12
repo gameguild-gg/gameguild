@@ -11,14 +11,6 @@ export default async function Page({ params }: PageProps<'/[locale]/dashboard/le
 
   const { courses, error } = await getCourses();
 
-  const enriched = courses.map((course) => ({
-    ...course,
-    enrolledCount: course.enrollments.length,
-    completionPercent:
-      course.enrollments.length > 0 ? Math.round((course.enrollments.filter((e) => e.completedAt).length / course.enrollments.length) * 100) : 0,
-    avgRating: course.ratings.length > 0 ? (course.ratings.reduce((acc, r) => acc + r.score, 0) / course.ratings.length).toFixed(1) : null,
-  }));
-
   return (
     <div className="flex flex-col gap-6 p-6">
       {/* Header */}
@@ -52,7 +44,7 @@ export default async function Page({ params }: PageProps<'/[locale]/dashboard/le
         </div>
       )}
 
-      {enriched.length === 0 ? (
+      {courses.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12 text-center">
             <BookOpen className="mb-4 size-12 text-muted-foreground" />
@@ -61,7 +53,7 @@ export default async function Page({ params }: PageProps<'/[locale]/dashboard/le
           </CardContent>
         </Card>
       ) : (
-        <CourseList courses={enriched} locale={locale} />
+        <CourseList courses={courses} locale={locale} />
       )}
     </div>
   );

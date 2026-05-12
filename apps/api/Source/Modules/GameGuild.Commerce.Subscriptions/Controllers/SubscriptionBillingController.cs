@@ -16,7 +16,7 @@ namespace GameGuild.Commerce.Subscriptions;
 /// </summary>
 [ApiVersion("1.0")]
 [Route("api")]
-[Tags("subscriptions")]
+[Microsoft.AspNetCore.Http.Tags("commerce/subscriptions")]
 [Authorize]
 [EnableRateLimiting(RateLimitPolicies.Api)]
 public sealed class SubscriptionBillingController(ISender sender) : BaseApiController

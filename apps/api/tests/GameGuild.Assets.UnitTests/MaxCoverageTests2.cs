@@ -21,6 +21,7 @@ using GameGuild.Features;
 using GameGuild.Identity.Authorization;
 using GameGuild.Identity.Authorization.Models;
 using GameGuild.Identity.Context.Actors;
+using GameGuild.Identity.Tenants;
 using Xunit;
 
 namespace GameGuild.Assets.UnitTests;
@@ -273,6 +274,7 @@ public class AssetAccessServiceCoverageTests
     private readonly Mock<IAssetReferenceRepository> _refRepo = new();
     private readonly Mock<IAssetStorageService> _storageService = new();
     private readonly Mock<IAssetTokenService> _tokenService = new();
+    private readonly Mock<ITenantMemberRepository> _tenantMemberRepository = new();
     private readonly Mock<IFeatureFlagEvaluationService> _featureService = new();
     private readonly AssetAccessOptions _options = new() { BaseUrl = "https://cdn.test.com", DefaultExpiryMinutes = 60 };
 
@@ -282,6 +284,7 @@ public class AssetAccessServiceCoverageTests
             _refRepo.Object,
             _storageService.Object,
             _tokenService.Object,
+            _tenantMemberRepository.Object,
             _featureService.Object,
             Options.Create(_options),
             NullLogger<AssetAccessService>.Instance);

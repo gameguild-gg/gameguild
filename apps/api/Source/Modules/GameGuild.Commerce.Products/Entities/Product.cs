@@ -19,6 +19,7 @@ namespace GameGuild.Commerce.Products;
 [Table("Products")]
 [Index(nameof(Name))]
 [Index(nameof(Type))]
+[Index(nameof(IsPublished))]
 [Index(nameof(CreatorId))]
 public class Product : EntityBase
 {
@@ -67,6 +68,11 @@ public class Product : EntityBase
     ///     Whether this product is a bundle of other products
     /// </summary>
     public bool IsBundle { get; set; }
+
+    /// <summary>
+    ///     Whether this product is visible to anonymous catalog reads.
+    /// </summary>
+    public bool IsPublished { get; set; } = true;
 
     /// <summary>
     ///     Creator user ID

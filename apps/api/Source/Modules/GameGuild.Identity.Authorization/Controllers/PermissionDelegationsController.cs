@@ -11,6 +11,7 @@ namespace GameGuild.Identity.Authorization.Controllers;
 /// <summary>
 ///     API controller for permission delegation operations
 /// </summary>
+[Microsoft.AspNetCore.Http.Tags("access-control/permission-delegations")]
 [ApiVersion("1.0")]
 [Route("v{version:apiVersion}/permission-delegations")]
 [Authorize]

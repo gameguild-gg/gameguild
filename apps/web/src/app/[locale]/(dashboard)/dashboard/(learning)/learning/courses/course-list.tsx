@@ -16,10 +16,8 @@ interface EnrichedCourse {
   title: string;
   status: string;
   visibility: string;
-  enrollments: unknown[];
-  ratings: { score: number }[];
   enrolledCount: number;
-  completionPercent: number;
+  completionPercent: number | null;
   avgRating: string | null;
   createdAt?: string;
   updatedAt?: string;
@@ -115,7 +113,7 @@ export function CourseList({ courses, locale }: { courses: EnrichedCourse[]; loc
           cmp = a.enrolledCount - b.enrolledCount;
           break;
         case 'completion':
-          cmp = a.completionPercent - b.completionPercent;
+          cmp = (a.completionPercent ?? -1) - (b.completionPercent ?? -1);
           break;
         case 'rating':
           cmp = parseFloat(a.avgRating ?? '0') - parseFloat(b.avgRating ?? '0');
@@ -151,7 +149,7 @@ export function CourseList({ courses, locale }: { courses: EnrichedCourse[]; loc
           />
         </div>
         <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-full sm:w-[160px]">
+          <SelectTrigger className="w-full sm:w-40">
             <SelectValue placeholder="Status" />
           </SelectTrigger>
           <SelectContent>
@@ -231,7 +229,7 @@ export function CourseList({ courses, locale }: { courses: EnrichedCourse[]; loc
                     <SortableHeader label="Enrolled" field="enrolled" currentSort={sortField} currentDirection={sortDirection} onSort={handleSort} />
                     <SortableHeader label="Completion" field="completion" currentSort={sortField} currentDirection={sortDirection} onSort={handleSort} />
                     <SortableHeader label="Rating" field="rating" currentSort={sortField} currentDirection={sortDirection} onSort={handleSort} />
-                    <TableHead className="w-[50px]" />
+                    <TableHead className="w-12.5" />
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -247,7 +245,7 @@ export function CourseList({ courses, locale }: { courses: EnrichedCourse[]; loc
                       </TableCell>
                       <TableCell>{getStatusBadge(course.status)}</TableCell>
                       <TableCell className="text-center">{course.enrolledCount}</TableCell>
-                      <TableCell className="text-center">{course.completionPercent > 0 ? `${course.completionPercent}%` : '—'}</TableCell>
+                      <TableCell className="text-center">{course.completionPercent !== null ? `${course.completionPercent}%` : '—'}</TableCell>
                       <TableCell className="text-center">{course.avgRating ?? '—'}</TableCell>
                       <TableCell>
                         <CourseTableActions courseId={course.id} locale={locale} />

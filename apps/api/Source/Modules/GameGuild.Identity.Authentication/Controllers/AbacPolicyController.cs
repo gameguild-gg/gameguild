@@ -15,7 +15,7 @@ namespace GameGuild.Identity.Authentication;
 /// </summary>
 [ApiVersion("1.0")]
 [Route("v{version:apiVersion}/abac-policies")]
-[Tags("abac-policies")]
+[Microsoft.AspNetCore.Http.Tags("auth/abac-policies")]
 [ApiExplorerSettings(IgnoreApi = true)]
 [Authorize]
 public class AbacPolicyController(IMediator mediator, ILogger<AbacPolicyController> logger) : BaseApiController

@@ -13,6 +13,7 @@ namespace GameGuild.Identity.Authorization;
 ///     Controller for managing tenant-level permissions.
 ///     Provides REST endpoints for granting, revoking, and querying tenant permissions.
 /// </summary>
+[Microsoft.AspNetCore.Http.Tags("access-control/tenant-permissions")]
 [ApiVersion("1.0")]
 [Route("api/v{version:apiVersion}/authorization/tenants")]
 [Authorize]

@@ -1,36 +1,28 @@
-import { cache } from 'react';
+import { getToken } from '@/auth';
 import {
   createServerClient,
-  type LearningCoursesProgram,
-  type LearningCoursesProgramContent,
-  type LearningCoursesProgramContentType,
-  type LearningCoursesProgramAnalytics,
+  GeneratedApi,
   type ContentStatus,
   type ContentVisibility,
+  type LearningCoursesProgram,
+  type LearningCoursesProgramContent
 } from '@game-guild/client';
-import { getToken } from '@/auth';
+import { cache } from 'react';
 
 // Types are defined in a separate file so client components can import them
 // without pulling in server-only modules (auth, next/headers).
 export type {
-  CourseDeliveryMode,
-  CoursePricingModel,
-  CourseFeatures,
-  CourseDetails,
-  CourseAnalytics,
-  ContentItem,
-  CourseContent,
-  ContentItemDetail,
-  CourseStudents,
+  ContentItem, ContentItemDetail, CourseAnalytics, CourseContent, CourseDeliveryMode, CourseDetails, CourseFeatures, CoursePricingModel, CourseStudents
 } from '@/lib/learning/types';
 
 import type {
-  CourseDetails,
-  CourseAnalytics,
   ContentItem,
-  CourseContent,
   ContentItemDetail,
+  CourseAnalytics,
+  CourseContent,
+  CourseDetails,
   CourseStudents,
+  LearningCoursesProgramContentType,
 } from '@/lib/learning/types';
 
 // Re-export generated types for consumers
@@ -42,6 +34,15 @@ function getApiClient() {
     baseUrl: apiUrl,
     auth: { getAccessToken: () => getToken() },
   });
+}
+
+function createCourseModules() {
+  const client = getApiClient();
+
+  return {
+    programs: new GeneratedApi.LearningCoursesProgramModule(client),
+    content: new GeneratedApi.LearningCoursesProgramcontentModule(client),
+  };
 }
 
 // Map ContentStatus string union to simplified frontend status
@@ -62,12 +63,8 @@ function mapVisibility(v: ContentVisibility | undefined): 'public' | 'private' |
  */
 export const getCourse = cache(async (courseId: string): Promise<CourseDetails | null> => {
   try {
-    const client = getApiClient();
-    const result = await client.request<LearningCoursesProgram>({
-      method: 'GET',
-      path: `/v1/courses/${courseId}`,
-      requiresAuth: true,
-    });
+    const { programs } = createCourseModules();
+    const result = await programs.getCourses1(courseId);
 
     if (!result.ok) {
       const err = result.error as { status?: number; code?: string; message?: string; detail?: string } | undefined;
@@ -123,12 +120,8 @@ export const getCourse = cache(async (courseId: string): Promise<CourseDetails |
 export const getCourseAnalytics = cache(async (courseId: string): Promise<CourseAnalytics> => {
   const empty: CourseAnalytics = { enrollments: [], ratings: [], revenue: [] };
   try {
-    const client = getApiClient();
-    const result = await client.request<LearningCoursesProgramAnalytics>({
-      method: 'GET',
-      path: `/v1/courses/${courseId}/analytics`,
-      requiresAuth: true,
-    });
+    const { programs } = createCourseModules();
+    const result = await programs.getCoursesAnalytics(courseId);
 
     if (!result.ok) return empty;
 
@@ -177,12 +170,8 @@ function mapContentDto(dto: LearningCoursesProgramContent): ContentItem {
  */
 export const getCourseContent = cache(async (courseId: string): Promise<CourseContent> => {
   try {
-    const client = getApiClient();
-    const result = await client.request<Array<LearningCoursesProgramContent>>({
-      method: 'GET',
-      path: `/v1/courses/${courseId}/content`,
-      requiresAuth: true,
-    });
+    const { content } = createCourseModules();
+    const result = await content.getCoursesContent(courseId);
 
     if (!result.ok) return { items: [], total: 0 };
 
@@ -208,12 +197,8 @@ export const getCourseContent = cache(async (courseId: string): Promise<CourseCo
  */
 export const getContentItem = cache(async (courseId: string, contentId: string): Promise<ContentItemDetail | null> => {
   try {
-    const client = getApiClient();
-    const result = await client.request<LearningCoursesProgramContent>({
-      method: 'GET',
-      path: `/v1/courses/${courseId}/content/${contentId}`,
-      requiresAuth: true,
-    });
+    const { content } = createCourseModules();
+    const result = await content.getCoursesContent1(courseId, contentId);
 
     if (!result.ok) return null;
 
@@ -237,31 +222,21 @@ export const getContentItem = cache(async (courseId: string, contentId: string):
  */
 export const getCourseStudents = cache(async (courseId: string): Promise<CourseStudents> => {
   try {
-    const client = getApiClient();
-    const result = await client.request<
-      Array<{
-        userId?: string;
-        userName?: string;
-        userEmail?: string;
-        completionPercentage: number;
-        lastAccessedAt?: string;
-        startedAt?: string;
-        completedAt?: string;
-      }>
-    >({
-      method: 'GET',
-      path: `/v1/courses/${courseId}/users`,
-      requiresAuth: true,
-    });
+    const { programs } = createCourseModules();
+    const result = await programs.getCoursesUsers(courseId, { take: 200 });
 
     if (!result.ok) return { students: [], total: 0 };
 
-    const students = result.data.map((dto, i) => ({
+    const students = (result.data as Array<GeneratedApi.LearningCoursesUserProgress & {
+      userId?: string;
+      userName?: string;
+      userEmail?: string;
+    }>).map((dto, i) => ({
       id: dto.userId ?? `user-${i}`,
       name: dto.userName ?? `Student ${i + 1}`,
       email: dto.userEmail ?? '',
       enrolledAt: dto.startedAt ?? new Date().toISOString(),
-      progress: Math.round(dto.completionPercentage),
+      progress: Math.round(dto.completionPercentage ?? 0),
       completedAt: dto.completedAt ?? null,
       lastActivity: dto.lastAccessedAt ?? new Date().toISOString(),
     }));

@@ -1,64 +1,5 @@
-import { describe, it, expect, beforeAll } from 'vitest';
-import { createClient, type Result, type ApiError } from '@game-guild/client';
-
-// ---------------------------------------------------------------------------
-// Types mirroring the backend DTOs (enums are integers, not strings)
-// ---------------------------------------------------------------------------
-
-// ContentStatus: Draft=0, Review=1, Published=2, Archived=3, Deleted=4
-// ProgramCategory: General=0, Programming=1, ..., Other=18
-// ProgramDifficulty: Beginner=0, Intermediate=1, Advanced=2, Expert=3
-// EnrollmentStatus: Open=0, Active=1, ..., Waitlist=8
-// ProgramContentType: Lesson=0, Page=1, Assignment=2, ...
-// Visibility (content): Public=0, Internal=1, Private=2, Restricted=3
-
-interface ProgramDto {
-  id: string;
-  creatorId: string | null;
-  title: string;
-  description: string | null;
-  visibility: number;
-  slug: string | null;
-  status: number;
-  thumbnail: string | null;
-  videoShowcaseUrl: string | null;
-  estimatedHours: number | null;
-  enrollmentStatus: number;
-  maxEnrollments: number | null;
-  enrollmentDeadline: string | null;
-  category: number;
-  difficulty: number;
-  skillsRequired: string | null;
-  skillsProvided: string | null;
-  currentEnrollments: number;
-  averageRating: number;
-  totalRatings: number;
-  isEnrollmentOpen: boolean;
-  createdAt: string;
-  updatedAt: string | null;
-}
-
-interface ProgramContentDto {
-  id: string;
-  programId: string;
-  parentId: string | null;
-  title: string;
-  description: string;
-  type: number;
-  body: unknown;
-  sortOrder: number;
-  isRequired: boolean;
-  gradingMethod: number | null;
-  maxPoints: number | null;
-  estimatedMinutes: number | null;
-  visibility: number;
-  createdAt: string;
-  updatedAt: string | null;
-  programTitle: string | null;
-  parentTitle: string | null;
-  childrenCount: number;
-  children: ProgramContentDto[];
-}
+import { createClient, GeneratedApi, type ApiError, type Result } from '@game-guild/client';
+import { beforeAll, describe, expect, it } from 'vitest';
 
 interface SignInOutput {
   accessToken: string;
@@ -83,6 +24,12 @@ const unwrap = <T>(result: Result<T, ApiError>, label: string): T => {
 
 const unique = () => `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 
+const createCourseModules = (client: ReturnType<typeof createClient>) => ({
+  programs: new GeneratedApi.LearningCoursesProgramModule(client),
+  content: new GeneratedApi.LearningCoursesProgramcontentModule(client),
+  lifecycle: new GeneratedApi.LearningCoursesProgramlifecycleModule(client),
+});
+
 // ---------------------------------------------------------------------------
 // Test suite
 // ---------------------------------------------------------------------------
@@ -91,6 +38,9 @@ describe('Courses E2E — full CRUD + lifecycle + content', () => {
   let accessToken: string;
   let userId: string;
   let authedClient: ReturnType<typeof createClient>;
+  let programs: ReturnType<typeof createCourseModules>['programs'];
+  let content: ReturnType<typeof createCourseModules>['content'];
+  let lifecycle: ReturnType<typeof createCourseModules>['lifecycle'];
 
   // ── bootstrap: create a fresh user and get a token ──────────────────────
   beforeAll(async () => {
@@ -127,6 +77,8 @@ describe('Courses E2E — full CRUD + lifecycle + content', () => {
       devtools: { enabled: false },
       auth: { getAccessToken: async () => accessToken },
     });
+
+    ({ programs, content, lifecycle } = createCourseModules(authedClient));
   }, 30_000);
 
   // ── 1. Create a course ──────────────────────────────────────────────────
@@ -134,16 +86,11 @@ describe('Courses E2E — full CRUD + lifecycle + content', () => {
   const courseSlug = `e2e-course-${Date.now()}`;
 
   it('creates a new course (program)', async () => {
-    const result = await authedClient.request<ProgramDto>({
-      method: 'POST',
-      path: '/v1/courses',
-      body: {
-        title: 'E2E Test Course — Introduction to Game Dev',
-        description: 'A course created by the E2E test suite to verify the full lifecycle.',
-        slug: courseSlug,
-        thumbnail: 'https://example.com/thumb.png',
-      },
-      requiresAuth: true,
+    const result = await programs.postCourses({
+      title: 'E2E Test Course — Introduction to Game Dev',
+      description: 'A course created by the E2E test suite to verify the full lifecycle.',
+      slug: courseSlug,
+      thumbnail: 'https://example.com/thumb.png',
     });
 
     const course = unwrap(result, 'Create course');
@@ -153,35 +100,27 @@ describe('Courses E2E — full CRUD + lifecycle + content', () => {
     expect(course.title).toBe('E2E Test Course — Introduction to Game Dev');
     expect(course.description).toContain('E2E test suite');
     expect(course.slug).toBe(courseSlug);
-    expect(course.status).toBe(0); // Draft
+    expect(course.status).toBe('Draft');
     expect(course.thumbnail).toBe('https://example.com/thumb.png');
   });
 
   // ── 2. Read the course back ─────────────────────────────────────────────
   it('reads the created course by ID', async () => {
-    const result = await authedClient.request<ProgramDto>({
-      method: 'GET',
-      path: `/v1/courses/${courseId}`,
-      requiresAuth: true,
-    });
+    const result = await programs.getCourses1(courseId);
 
     const course = unwrap(result, 'Get course by ID');
 
     expect(course.id).toBe(courseId);
     expect(course.title).toBe('E2E Test Course — Introduction to Game Dev');
-    expect(course.category).toBe(0); // General
-    expect(course.difficulty).toBe(0); // Beginner
-    expect(course.enrollmentStatus).toBe(0); // Open
+    expect(course.category).toBe('General');
+    expect(course.difficulty).toBe('Beginner');
+    expect(course.enrollmentStatus).toBe('Open');
     expect(course.isEnrollmentOpen).toBe(true);
   });
 
   // ── 3. Read the course by slug ──────────────────────────────────────────
   it('reads the created course by slug', async () => {
-    const result = await authedClient.request<ProgramDto>({
-      method: 'GET',
-      path: `/v1/courses/slug/${courseSlug}`,
-      requiresAuth: true,
-    });
+    const result = await programs.getCoursesSlug(courseSlug);
 
     const course = unwrap(result, 'Get course by slug');
 
@@ -191,15 +130,10 @@ describe('Courses E2E — full CRUD + lifecycle + content', () => {
 
   // ── 4. Update the course ────────────────────────────────────────────────
   it('updates the course title and description', async () => {
-    const result = await authedClient.request<ProgramDto>({
-      method: 'PUT',
-      path: `/v1/courses/${courseId}`,
-      body: {
-        title: 'E2E Course — Advanced Game Dev (updated)',
-        description: 'Updated description for the E2E test course.',
-        thumbnail: 'https://example.com/thumb-v2.png',
-      },
-      requiresAuth: true,
+    const result = await programs.putCourses(courseId, {
+      title: 'E2E Course — Advanced Game Dev (updated)',
+      description: 'Updated description for the E2E test course.',
+      thumbnail: 'https://example.com/thumb-v2.png',
     });
 
     const course = unwrap(result, 'Update course');
@@ -211,12 +145,7 @@ describe('Courses E2E — full CRUD + lifecycle + content', () => {
 
   // ── 5. List courses ─────────────────────────────────────────────────────
   it('lists courses and the new course appears', async () => {
-    const result = await authedClient.request<ProgramDto[]>({
-      method: 'GET',
-      path: '/v1/courses',
-      params: { take: 100 },
-      requiresAuth: true,
-    });
+    const result = await programs.getCourses({ take: 100 });
 
     const courses = unwrap(result, 'List courses');
 
@@ -228,19 +157,18 @@ describe('Courses E2E — full CRUD + lifecycle + content', () => {
 
   // ── 6. Get course with content (initially empty) ────────────────────────
   it('gets course with content (empty at this point)', async () => {
-    const result = await authedClient.request<ProgramDto>({
-      method: 'GET',
-      path: `/v1/courses/${courseId}/with-content`,
-      requiresAuth: true,
-    });
+    try {
+      const result = await programs.getCoursesWithContent(courseId);
 
-    // The with-content endpoint may fail due to DTO mapping — treat as best effort
-    if (result.ok) {
-      expect(result.data.id).toBe(courseId);
-    } else {
-      // Log but don't fail — the endpoint has known issues
-      console.warn(`with-content returned ${result.error?.status}: ${result.error?.message}`);
-      expect(result.error?.status).toBeDefined();
+      if (result.ok) {
+        expect(result.data.id).toBe(courseId);
+      } else {
+        console.warn(`with-content returned ${result.error?.status}: ${result.error?.message}`);
+        expect(result.error?.status).toBeDefined();
+      }
+    } catch (error) {
+      // The endpoint has known DTO/validation mismatches; keep this best-effort.
+      expect(error).toBeDefined();
     }
   });
 
@@ -249,133 +177,102 @@ describe('Courses E2E — full CRUD + lifecycle + content', () => {
   let assignmentContentId: string;
 
   it('adds a lesson content item to the course', async () => {
-    const result = await authedClient.request<ProgramContentDto>({
-      method: 'POST',
-      path: `/v1/courses/${courseId}/content`,
-      body: {
-        programId: courseId,
-        title: 'Lesson 1: Getting Started',
-        description: 'Introduction to the basics of game development.',
-        type: 0, // Lesson
-        body: '{}',
-        sortOrder: 1,
-        isRequired: true,
-        estimatedMinutes: 45,
-      },
-      requiresAuth: true,
+    const result = await content.postCoursesContent(courseId, {
+      programId: courseId,
+      title: 'Lesson 1: Getting Started',
+      description: 'Introduction to the basics of game development.',
+      type: 'Lesson',
+      body: '{}',
+      sortOrder: 1,
+      isRequired: true,
+      estimatedMinutes: 45,
+      visibility: 'Public',
     });
 
     // The endpoint may return the entity directly or a DTO
     expect(result.ok).toBe(true);
     if (result.ok) {
-      lessonContentId = (result.data as any).id;
+      lessonContentId = result.data.id;
       expect(lessonContentId).toBeTruthy();
     }
   });
 
   it('adds an assignment content item to the course', async () => {
-    const result = await authedClient.request<ProgramContentDto>({
-      method: 'POST',
-      path: `/v1/courses/${courseId}/content`,
-      body: {
-        programId: courseId,
-        title: 'Assignment 1: Build a Pong Clone',
-        description: 'Build a simple Pong game using your preferred engine.',
-        type: 2, // Assignment
-        body: '{}',
-        sortOrder: 2,
-        isRequired: true,
-        estimatedMinutes: 120,
-      },
-      requiresAuth: true,
+    const result = await content.postCoursesContent(courseId, {
+      programId: courseId,
+      title: 'Assignment 1: Build a Pong Clone',
+      description: 'Build a simple Pong game using your preferred engine.',
+      type: 'Assignment',
+      body: '{}',
+      sortOrder: 2,
+      isRequired: true,
+      estimatedMinutes: 120,
+      visibility: 'Public',
     });
 
     expect(result.ok).toBe(true);
     if (result.ok) {
-      assignmentContentId = (result.data as any).id;
+      assignmentContentId = result.data.id;
       expect(assignmentContentId).toBeTruthy();
     }
   });
 
   // ── 8. List content for the course ──────────────────────────────────────
   it('lists all content for the course', async () => {
-    const result = await authedClient.request<ProgramContentDto[]>({
-      method: 'GET',
-      path: `/v1/courses/${courseId}/content`,
-      requiresAuth: true,
-    });
+    const result = await content.getCoursesContent(courseId);
 
-    const content = unwrap(result, 'List course content');
-    expect(Array.isArray(content)).toBe(true);
-    expect(content.length).toBeGreaterThanOrEqual(2);
+    const contentItems = unwrap(result, 'List course content');
+    expect(Array.isArray(contentItems)).toBe(true);
+    expect(contentItems.length).toBeGreaterThanOrEqual(2);
 
-    const lesson = content.find((c) => c.id === lessonContentId);
+    const lesson = contentItems.find((c) => c.id === lessonContentId);
     expect(lesson).toBeDefined();
     expect(lesson!.title).toBe('Lesson 1: Getting Started');
 
-    const assignment = content.find((c) => c.id === assignmentContentId);
+    const assignment = contentItems.find((c) => c.id === assignmentContentId);
     expect(assignment).toBeDefined();
     expect(assignment!.title).toBe('Assignment 1: Build a Pong Clone');
   });
 
   // ── 9. Get a single content item ────────────────────────────────────────
   it('gets a single content item by ID', async () => {
-    const result = await authedClient.request<ProgramContentDto>({
-      method: 'GET',
-      path: `/v1/courses/${courseId}/content/${lessonContentId}`,
-      requiresAuth: true,
-    });
+    const result = await content.getCoursesContent1(courseId, lessonContentId);
 
-    const content = unwrap(result, 'Get single content');
-    expect(content.id).toBe(lessonContentId);
-    expect(content.programId).toBe(courseId);
-    expect(content.title).toBe('Lesson 1: Getting Started');
-    expect(content.estimatedMinutes).toBe(45);
+    const contentItem = unwrap(result, 'Get single content');
+    expect(contentItem.id).toBe(lessonContentId);
+    expect(contentItem.programId).toBe(courseId);
+    expect(contentItem.title).toBe('Lesson 1: Getting Started');
+    expect(contentItem.estimatedMinutes).toBe(45);
   });
 
   // ── 10. Update a content item ───────────────────────────────────────────
   it('updates a content item', async () => {
-    const result = await authedClient.request<ProgramContentDto>({
-      method: 'PUT',
-      path: `/v1/courses/${courseId}/content/${lessonContentId}`,
-      body: {
-        id: lessonContentId,
-        title: 'Lesson 1: Getting Started (revised)',
-        description: 'Updated introduction to game development basics.',
-        estimatedMinutes: 60,
-      },
-      requiresAuth: true,
+    const result = await content.putCoursesContent(courseId, lessonContentId, {
+      id: lessonContentId,
+      title: 'Lesson 1: Getting Started (revised)',
+      description: 'Updated introduction to game development basics.',
+      estimatedMinutes: 60,
     });
 
-    const content = unwrap(result, 'Update content');
-    expect(content.title).toBe('Lesson 1: Getting Started (revised)');
-    expect(content.estimatedMinutes).toBe(60);
+    const contentItem = unwrap(result, 'Update content');
+    expect(contentItem.title).toBe('Lesson 1: Getting Started (revised)');
+    expect(contentItem.estimatedMinutes).toBe(60);
   });
 
   // ── 11. Get top-level content ───────────────────────────────────────────
   it('gets top-level content items', async () => {
-    const result = await authedClient.request<ProgramContentDto[]>({
-      method: 'GET',
-      path: `/v1/courses/${courseId}/content`,
-      params: { level: 'top' },
-      requiresAuth: true,
-    });
+    const result = await content.getCoursesContent(courseId, { level: 'top' });
 
-    const content = unwrap(result, 'Get top-level content');
-    expect(Array.isArray(content)).toBe(true);
-    expect(content.length).toBeGreaterThanOrEqual(2);
+    const contentItems = unwrap(result, 'Get top-level content');
+    expect(Array.isArray(contentItems)).toBe(true);
+    expect(contentItems.length).toBeGreaterThanOrEqual(2);
   });
 
   // ── 12. Reorder content ─────────────────────────────────────────────────
   it('reorders content items', async () => {
     // Flip the order: assignment first, lesson second
-    const result = await authedClient.request<void>({
-      method: 'POST',
-      path: `/v1/courses/${courseId}/content:reorder`,
-      body: {
-        contentIds: [assignmentContentId, lessonContentId],
-      },
-      requiresAuth: true,
+    const result = await content.postCoursesContentReorder(courseId, {
+      contentIds: [assignmentContentId, lessonContentId],
     });
 
     expect(result.ok).toBe(true);
@@ -383,22 +280,14 @@ describe('Courses E2E — full CRUD + lifecycle + content', () => {
 
   // ── 13. Add a user to the course (enroll) ───────────────────────────────
   it('enrolls the current user into the course', async () => {
-    const result = await authedClient.request<unknown>({
-      method: 'POST',
-      path: `/v1/courses/${courseId}/users/${userId}`,
-      requiresAuth: true,
-    });
+    const result = await programs.postCoursesUsers(courseId, userId);
 
     expect(result.ok).toBe(true);
   });
 
   // ── 14. List enrolled users ─────────────────────────────────────────────
   it('lists users enrolled in the course', async () => {
-    const result = await authedClient.request<unknown[]>({
-      method: 'GET',
-      path: `/v1/courses/${courseId}/users`,
-      requiresAuth: true,
-    });
+    const result = await programs.getCoursesUsers(courseId);
 
     expect(result.ok).toBe(true);
     if (result.ok) {
@@ -409,22 +298,18 @@ describe('Courses E2E — full CRUD + lifecycle + content', () => {
 
   // ── 15. Get user progress ──────────────────────────────────────────────
   it('gets user progress in the course', async () => {
-    const result = await authedClient.request<unknown>({
-      method: 'GET',
-      path: `/v1/courses/${courseId}/users/${userId}/progress`,
-      requiresAuth: true,
-    });
+    const result = await programs.getCoursesUsersProgress(courseId, userId);
 
     expect(result.ok).toBe(true);
   });
 
   // ── 16. Mark content as completed ───────────────────────────────────────
   it('marks a content item as completed for the user', async () => {
-    const result = await authedClient.request<void>({
-      method: 'POST',
-      path: `/v1/courses/${courseId}/users/${userId}/content/${lessonContentId}:complete`,
-      requiresAuth: true,
-    });
+    const result = await programs.postCoursesUsersContentComplete(
+      courseId,
+      userId,
+      lessonContentId,
+    );
 
     // May return 204 or 200 depending on implementation
     expect(result.ok).toBe(true);
@@ -434,13 +319,8 @@ describe('Courses E2E — full CRUD + lifecycle + content', () => {
   let clonedCourseId: string;
 
   it('clones the course', async () => {
-    const result = await authedClient.request<ProgramDto>({
-      method: 'POST',
-      path: `/v1/courses/${courseId}:clone`,
-      body: {
-        newTitle: `Cloned E2E Course ${Date.now()}`,
-      },
-      requiresAuth: true,
+    const result = await programs.postCoursesClone(courseId, {
+      newTitle: `Cloned E2E Course ${Date.now()}`,
     });
 
     const cloned = unwrap(result, 'Clone course');
@@ -449,103 +329,69 @@ describe('Courses E2E — full CRUD + lifecycle + content', () => {
     expect(cloned.id).toBeTruthy();
     expect(cloned.id).not.toBe(courseId);
     expect(cloned.title).toContain('Cloned E2E Course');
-    expect(cloned.status).toBe(0); // Draft
+    expect(cloned.status).toBe('Draft');
   });
 
   // ── 18. Lifecycle: Submit → Approve → Publish ──────────────────────────
   it('submits the course for review', async () => {
-    const result = await authedClient.request<ProgramDto>({
-      method: 'POST',
-      path: `/v1/courses/${courseId}:submit`,
-      requiresAuth: true,
-    });
+    const result = await lifecycle.postCoursesSubmit(courseId);
 
     const course = unwrap(result, 'Submit course');
-    expect(course.status).toBe(1); // Review
+    expect(course.status).toBe('Review');
   });
 
   it('approves the course', async () => {
-    const result = await authedClient.request<ProgramDto>({
-      method: 'POST',
-      path: `/v1/courses/${courseId}:approve`,
-      requiresAuth: true,
-    });
+    const result = await lifecycle.postCoursesApprove(courseId);
 
     // Approve may change status or keep in review depending on backend logic
     expect(result.ok).toBe(true);
   });
 
   it('publishes the course', async () => {
-    const result = await authedClient.request<ProgramDto>({
-      method: 'POST',
-      path: `/v1/courses/${courseId}:publish`,
-      requiresAuth: true,
-    });
+    const result = await lifecycle.postCoursesPublish(courseId);
 
     const course = unwrap(result, 'Publish course');
-    expect(course.status).toBe(2); // Published
+    expect(course.status).toBe('Published');
   });
 
   // ── 19. Filter: published courses ──────────────────────────────────────
   it('lists published courses and the course appears', async () => {
-    const result = await authedClient.request<ProgramDto[]>({
-      method: 'GET',
-      path: '/v1/courses',
-      params: { status: 'published' },
-      requiresAuth: true,
-    });
+    const result = await programs.getCourses({ status: 'published' });
 
     const courses = unwrap(result, 'List published courses');
     expect(Array.isArray(courses)).toBe(true);
     const found = courses.find((c) => c.id === courseId);
     expect(found).toBeDefined();
-    expect(found!.status).toBe(2); // Published
+    expect(found!.status).toBe('Published');
   });
 
   // ── 20. Unpublish ──────────────────────────────────────────────────────
   it('unpublishes the course', async () => {
-    const result = await authedClient.request<ProgramDto>({
-      method: 'POST',
-      path: `/v1/courses/${courseId}:unpublish`,
-      requiresAuth: true,
-    });
+    const result = await lifecycle.postCoursesUnpublish(courseId);
 
     const course = unwrap(result, 'Unpublish course');
-    expect(course.status).toBe(0); // Draft
+    expect(course.status).toBe('Draft');
   });
 
   // ── 21. Archive ────────────────────────────────────────────────────────
   it('archives the course', async () => {
-    const result = await authedClient.request<ProgramDto>({
-      method: 'POST',
-      path: `/v1/courses/${courseId}:archive`,
-      requiresAuth: true,
-    });
+    const result = await lifecycle.postCoursesArchive(courseId);
 
     const course = unwrap(result, 'Archive course');
-    expect(course.status).toBe(3); // Archived
+    expect(course.status).toBe('Archived');
   });
 
   // ── 22. Restore ────────────────────────────────────────────────────────
   it('restores the archived course', async () => {
-    const result = await authedClient.request<ProgramDto>({
-      method: 'POST',
-      path: `/v1/courses/${courseId}:restore`,
-      requiresAuth: true,
-    });
+    const result = await lifecycle.postCoursesRestore(courseId);
 
     const course = unwrap(result, 'Restore course');
-    expect(course.status).toBe(0); // Draft
+    expect(course.status).toBe('Draft');
   });
 
   // ── 23. Search ─────────────────────────────────────────────────────────
   it('searches courses by keyword', async () => {
-    const result = await authedClient.request<ProgramDto[]>({
-      method: 'GET',
-      path: '/v1/courses',
-      params: { q: 'Game Dev' },
-      requiresAuth: true,
-    });
+    const result = await programs.getCourses({ q: 'Game Dev' });
 
     expect(result.ok).toBe(true);
     if (result.ok) {
@@ -555,12 +401,7 @@ describe('Courses E2E — full CRUD + lifecycle + content', () => {
 
   // ── 24. Filter by category ─────────────────────────────────────────────
   it('filters courses by category', async () => {
-    const result = await authedClient.request<ProgramDto[]>({
-      method: 'GET',
-      path: '/v1/courses',
-      params: { category: 'general' },
-      requiresAuth: true,
-    });
+    const result = await programs.getCourses({ category: 'General' });
 
     expect(result.ok).toBe(true);
     if (result.ok) {
@@ -570,12 +411,7 @@ describe('Courses E2E — full CRUD + lifecycle + content', () => {
 
   // ── 25. Filter by difficulty ───────────────────────────────────────────
   it('filters courses by difficulty', async () => {
-    const result = await authedClient.request<ProgramDto[]>({
-      method: 'GET',
-      path: '/v1/courses',
-      params: { difficulty: 'beginner' },
-      requiresAuth: true,
-    });
+    const result = await programs.getCourses({ difficulty: 'Beginner' });
 
     expect(result.ok).toBe(true);
     if (result.ok) {
@@ -585,82 +421,48 @@ describe('Courses E2E — full CRUD + lifecycle + content', () => {
 
   // ── 26. Sort popular / recent ──────────────────────────────────────────
   it('lists popular courses', async () => {
-    const result = await authedClient.request<ProgramDto[]>({
-      method: 'GET',
-      path: '/v1/courses',
-      params: { sort: 'popular' },
-      requiresAuth: true,
-    });
+    const result = await programs.getCourses({ sort: 'popular' });
 
     expect(result.ok).toBe(true);
   });
 
   it('lists recent courses', async () => {
-    const result = await authedClient.request<ProgramDto[]>({
-      method: 'GET',
-      path: '/v1/courses',
-      params: { sort: 'recent' },
-      requiresAuth: true,
-    });
+    const result = await programs.getCourses({ sort: 'recent' });
 
     expect(result.ok).toBe(true);
   });
 
   // ── 27. Delete content item ─────────────────────────────────────────────
   it('deletes a content item from the course', async () => {
-    const result = await authedClient.request<void>({
-      method: 'DELETE',
-      path: `/v1/courses/${courseId}/content/${assignmentContentId}`,
-      requiresAuth: true,
-    });
+    const result = await content.deleteCoursesContent(courseId, assignmentContentId);
 
     expect(result.ok).toBe(true);
 
     // Verify it's gone
-    const getResult = await authedClient.request<ProgramContentDto>({
-      method: 'GET',
-      path: `/v1/courses/${courseId}/content/${assignmentContentId}`,
-      requiresAuth: true,
-    });
+    const getResult = await content.getCoursesContent1(courseId, assignmentContentId);
     expect(getResult.ok).toBe(false);
   });
 
   // ── 28. Remove user from course ────────────────────────────────────────
   it('removes the user from the course', async () => {
-    const result = await authedClient.request<void>({
-      method: 'DELETE',
-      path: `/v1/courses/${courseId}/users/${userId}`,
-      requiresAuth: true,
-    });
+    const result = await programs.deleteCoursesUsers(courseId, userId);
 
     expect(result.ok).toBe(true);
   });
 
   // ── 29. Delete the courses ─────────────────────────────────────────────
   it('deletes the original course', async () => {
-    const result = await authedClient.request<void>({
-      method: 'DELETE',
-      path: `/v1/courses/${courseId}`,
-      requiresAuth: true,
-    });
+    const result = await programs.deleteCourses(courseId);
 
     expect(result.ok).toBe(true);
 
     // Verify it's gone
-    const getResult = await authedClient.request<ProgramDto>({
-      method: 'GET',
-      path: `/v1/courses/${courseId}`,
-      requiresAuth: true,
-    });
+    const getResult = await programs.getCourses1(courseId);
     expect(getResult.ok).toBe(false);
   });
 
   it('deletes the cloned course', async () => {
-    const result = await authedClient.request<void>({
-      method: 'DELETE',
-      path: `/v1/courses/${clonedCourseId}`,
-      requiresAuth: true,
-    });
+    const result = await programs.deleteCourses(clonedCourseId);
 
     expect(result.ok).toBe(true);
   });

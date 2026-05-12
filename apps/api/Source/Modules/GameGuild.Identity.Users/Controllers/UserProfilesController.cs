@@ -11,7 +11,7 @@ namespace GameGuild.Identity.Users;
 ///     Controller for managing user profiles and social links
 /// </summary>
 [ApiVersion("1.0")]
-[Tags("users/profiles")]
+[Microsoft.AspNetCore.Http.Tags("users/profiles")]
 [Authorize]
 public sealed class UserProfilesController(ISender sender) : BaseApiController
 {

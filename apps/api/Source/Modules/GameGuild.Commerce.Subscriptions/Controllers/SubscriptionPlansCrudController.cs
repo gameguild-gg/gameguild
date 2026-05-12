@@ -12,8 +12,7 @@ namespace GameGuild.Commerce.Subscriptions;
 ///     full updates, and collection-level queries (search, filter, compare).
 /// </summary>
 [ApiVersion("1.0")]
-[Route("api")]
-[Tags("subscriptions-plans")]
+[Microsoft.AspNetCore.Http.Tags("commerce/subscriptions/plans")]
 [Authorize]
 public sealed class SubscriptionPlansCrudController(ISender sender) : BaseApiController
 {
@@ -53,6 +52,7 @@ public sealed class SubscriptionPlansCrudController(ISender sender) : BaseApiCon
     /// <param name="ct">Cancellation token</param>
     /// <returns>Paginated list of subscription plans</returns>
     [HttpGet("v{version:apiVersion}/subscription-plans")]
+    [AllowAnonymous]
     [EndpointSummary("Get subscription plans with pagination and filtering")]
     [EndpointDescription("Retrieves a paginated list of subscription plans with optional filtering. Use query parameters: featured=true for featured plans, q=searchTerm for search, slug=value for slug lookup, minPrice/maxPrice for price range.")]
     [ProducesResponseType(StatusCodes.Status200OK)]
@@ -69,6 +69,12 @@ public sealed class SubscriptionPlansCrudController(ISender sender) : BaseApiCon
         CancellationToken ct = default
     )
     {
+        var restrictToActive = User.Identity?.IsAuthenticated != true;
+        if (restrictToActive)
+        {
+            activeOnly = true;
+        }
+
         if (page < 1) page = 1;
         if (pageSize < 1) pageSize = 20;
         if (pageSize > 100) pageSize = 100;
@@ -77,6 +83,11 @@ public sealed class SubscriptionPlansCrudController(ISender sender) : BaseApiCon
         if (!string.IsNullOrEmpty(slug))
         {
             var plan = await sender.Send(new GetSubscriptionPlanBySlugQuery(slug), ct).ConfigureAwait(false);
+            if (restrictToActive && plan is not null && !plan.IsActive)
+            {
+                return NotFound();
+            }
+
             return plan is null ? NotFound() : Ok(plan);
         }
 
@@ -84,6 +95,11 @@ public sealed class SubscriptionPlansCrudController(ISender sender) : BaseApiCon
         if (minPrice.HasValue || maxPrice.HasValue)
         {
             var priceResult = await sender.Send(new GetSubscriptionPlansByPriceRangeQuery(minPrice ?? 0, maxPrice ?? long.MaxValue), ct).ConfigureAwait(false);
+            if (restrictToActive)
+            {
+                priceResult = priceResult.Where(plan => plan.IsActive);
+            }
+
             return Ok(priceResult);
         }
 
@@ -98,6 +114,11 @@ public sealed class SubscriptionPlansCrudController(ISender sender) : BaseApiCon
         if (isFeatured == true && page == 1 && pageSize == 20 && !isActive.HasValue && string.IsNullOrEmpty(q))
         {
             var featuredResult = await sender.Send(new GetFeaturedSubscriptionPlansQuery(), ct).ConfigureAwait(false);
+            if (restrictToActive)
+            {
+                featuredResult = featuredResult.Where(plan => plan.IsActive);
+            }
+
             return Ok(featuredResult);
         }
 
@@ -105,10 +126,16 @@ public sealed class SubscriptionPlansCrudController(ISender sender) : BaseApiCon
         if (!string.IsNullOrEmpty(q) && page == 1 && pageSize == 20 && !isActive.HasValue && !isFeatured.HasValue)
         {
             var searchResult = await sender.Send(new SearchSubscriptionPlansQuery(q), ct).ConfigureAwait(false);
+            if (restrictToActive)
+            {
+                searchResult = searchResult.Where(plan => plan.IsActive);
+            }
+
             return Ok(searchResult);
         }
 
-        var pagedResult = await sender.Send(new GetPagedSubscriptionPlansQuery(page, pageSize, isActive, isFeatured, q), ct).ConfigureAwait(false);
+        var effectiveIsActive = restrictToActive ? true : isActive;
+        var pagedResult = await sender.Send(new GetPagedSubscriptionPlansQuery(page, pageSize, effectiveIsActive, isFeatured, q), ct).ConfigureAwait(false);
         return Ok(pagedResult);
     }
 

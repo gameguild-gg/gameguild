@@ -9,6 +9,7 @@ namespace GameGuild.Identity.Authentication;
 ///     Controller for service account lifecycle operations: secret rotation, lock/unlock,
 ///     activate/deactivate, scope management, and audit logging.
 /// </summary>
+[Microsoft.AspNetCore.Http.Tags("auth/service-accounts")]
 [ApiController]
 [ApiVersion("1.0")]
 [Route("v{version:apiVersion}/auth/service-accounts")]

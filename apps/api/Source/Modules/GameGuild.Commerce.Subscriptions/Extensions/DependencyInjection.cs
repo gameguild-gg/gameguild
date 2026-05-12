@@ -43,8 +43,23 @@ public static class DependencyInjection
         services.AddScoped<ICommandHandler<ActivateSubscriptionCommand>, ActivateSubscriptionCommandHandler>();
         services.AddScoped<IRequestHandler<ActivateSubscriptionCommand, Unit>>(sp => sp.GetRequiredService<ICommandHandler<ActivateSubscriptionCommand>>());
 
+        services.AddScoped<ICommandHandler<StartSubscriptionTrialCommand>, StartSubscriptionTrialCommandHandler>();
+        services.AddScoped<IRequestHandler<StartSubscriptionTrialCommand, Unit>>(sp => sp.GetRequiredService<ICommandHandler<StartSubscriptionTrialCommand>>());
+
+        services.AddScoped<ICommandHandler<EndSubscriptionTrialCommand>, EndSubscriptionTrialCommandHandler>();
+        services.AddScoped<IRequestHandler<EndSubscriptionTrialCommand, Unit>>(sp => sp.GetRequiredService<ICommandHandler<EndSubscriptionTrialCommand>>());
+
         services.AddScoped<ICommandHandler<CancelSubscriptionCommand>, CancelSubscriptionCommandHandler>();
         services.AddScoped<IRequestHandler<CancelSubscriptionCommand, Unit>>(sp => sp.GetRequiredService<ICommandHandler<CancelSubscriptionCommand>>());
+
+        services.AddScoped<ICommandHandler<PauseSubscriptionCommand>, PauseSubscriptionHandler>();
+        services.AddScoped<IRequestHandler<PauseSubscriptionCommand, Unit>>(sp => sp.GetRequiredService<ICommandHandler<PauseSubscriptionCommand>>());
+
+        services.AddScoped<ICommandHandler<ResumeSubscriptionCommand>, ResumeSubscriptionHandler>();
+        services.AddScoped<IRequestHandler<ResumeSubscriptionCommand, Unit>>(sp => sp.GetRequiredService<ICommandHandler<ResumeSubscriptionCommand>>());
+
+        services.AddScoped<ICommandHandler<ReactivateSubscriptionCommand>, ReactivateSubscriptionCommandHandler>();
+        services.AddScoped<IRequestHandler<ReactivateSubscriptionCommand, Unit>>(sp => sp.GetRequiredService<ICommandHandler<ReactivateSubscriptionCommand>>());
 
         services.AddScoped<ICommandHandler<CreateSubscriptionCommand, Guid>, CreateSubscriptionCommandHandler>();
         services.AddScoped<IRequestHandler<CreateSubscriptionCommand, Guid>>(sp => sp.GetRequiredService<ICommandHandler<CreateSubscriptionCommand, Guid>>());
@@ -64,6 +79,9 @@ public static class DependencyInjection
         services.AddScoped<ICommandHandler<UpdateSubscriptionMetadataCommand>, UpdateSubscriptionMetadataCommandHandler>();
         services.AddScoped<IRequestHandler<UpdateSubscriptionMetadataCommand>>(sp => sp.GetRequiredService<ICommandHandler<UpdateSubscriptionMetadataCommand>>());
 
+        services.AddScoped<ICommandHandler<SetSubscriptionExternalIdsCommand>, SetSubscriptionExternalIdsCommandHandler>();
+        services.AddScoped<IRequestHandler<SetSubscriptionExternalIdsCommand, Unit>>(sp => sp.GetRequiredService<ICommandHandler<SetSubscriptionExternalIdsCommand>>());
+
         services.AddScoped<ICommandHandler<ProcessSubscriptionRenewalCommand>, ProcessSubscriptionRenewalCommandHandler>();
         services.AddScoped<IRequestHandler<ProcessSubscriptionRenewalCommand, Unit>>(sp => sp.GetRequiredService<ICommandHandler<ProcessSubscriptionRenewalCommand>>());
 
@@ -74,6 +92,8 @@ public static class DependencyInjection
         services.AddScoped<IRequestHandler<DowngradeSubscriptionPlanCommand, SubscriptionDowngradeResult>>(sp => sp.GetRequiredService<ICommandHandler<DowngradeSubscriptionPlanCommand, SubscriptionDowngradeResult>>());
 
         // Register Query Handlers (only existing ones)
+        services.AddScoped<IRequestHandler<GetActiveSubscriptionPlansQuery, IEnumerable<SubscriptionPlan>>, GetActiveSubscriptionPlansQueryHandler>();
+
         services.AddScoped<IQueryHandler<GetActiveTenantSubscriptionQuery, Subscription?>, GetActiveTenantSubscriptionQueryHandler>();
         services.AddScoped<IRequestHandler<GetActiveTenantSubscriptionQuery, Subscription?>>(sp => sp.GetRequiredService<IQueryHandler<GetActiveTenantSubscriptionQuery, Subscription?>>());
 
@@ -88,11 +108,15 @@ public static class DependencyInjection
 
         // Register FluentValidation Validators (only existing ones)
         services.AddScoped<FluentValidation.IValidator<ActivateSubscriptionCommand>, ActivateSubscriptionCommandValidator>();
+        services.AddScoped<FluentValidation.IValidator<StartSubscriptionTrialCommand>, StartSubscriptionTrialCommandValidator>();
+        services.AddScoped<FluentValidation.IValidator<EndSubscriptionTrialCommand>, EndSubscriptionTrialCommandValidator>();
         services.AddScoped<FluentValidation.IValidator<CancelSubscriptionCommand>, CancelSubscriptionCommandValidator>();
         services.AddScoped<FluentValidation.IValidator<CreateSubscriptionCommand>, CreateSubscriptionCommandValidator>();
+        services.AddScoped<FluentValidation.IValidator<ReactivateSubscriptionCommand>, ReactivateSubscriptionCommandValidator>();
         services.AddScoped<FluentValidation.IValidator<RecordSubscriptionPaymentCommand>, RecordSubscriptionPaymentCommandValidator>();
         services.AddScoped<FluentValidation.IValidator<RecordSubscriptionPaymentFailureCommand>, RecordSubscriptionPaymentFailureCommandValidator>();
         services.AddScoped<FluentValidation.IValidator<SetSubscriptionAutoRenewCommand>, SetSubscriptionAutoRenewCommandValidator>();
+        services.AddScoped<FluentValidation.IValidator<SetSubscriptionExternalIdsCommand>, SetSubscriptionExternalIdsCommandValidator>();
         services.AddScoped<FluentValidation.IValidator<SuspendSubscriptionCommand>, SuspendSubscriptionCommandValidator>();
         services.AddScoped<FluentValidation.IValidator<UpdateSubscriptionMetadataCommand>, UpdateSubscriptionMetadataCommandValidator>();
         services.AddScoped<FluentValidation.IValidator<ProcessSubscriptionRenewalCommand>, ProcessSubscriptionRenewalCommandValidator>();

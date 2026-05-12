@@ -15,7 +15,7 @@ namespace GameGuild.Identity.Authentication;
 /// </remarks>
 [ApiVersion("1.0")]
 [Route("v{version:apiVersion}/auth/webauthn")]
-[Tags("auth/webauthn")]
+[Microsoft.AspNetCore.Http.Tags("auth/webauthn")]
 [EnableRateLimiting(RateLimitPolicies.Authentication)]
 public class WebAuthnController(
     IWebAuthnService webAuthnService) : BaseApiController

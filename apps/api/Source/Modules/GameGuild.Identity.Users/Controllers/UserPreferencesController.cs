@@ -11,7 +11,7 @@ namespace GameGuild.Identity.Users;
 ///     Controller for managing user preferences and settings
 /// </summary>
 [ApiVersion("1.0")]
-[Tags("users/preferences")]
+[Microsoft.AspNetCore.Http.Tags("users/preferences")]
 [Authorize]
 public sealed class UserPreferencesController(ISender sender) : BaseApiController
 {
@@ -393,7 +393,7 @@ public sealed class UserPreferencesController(ISender sender) : BaseApiControlle
 
         // Extract localization preferences from the preferences
         var localizationPrefs = result.LocalizationPreferences;
-        
+
         // Build DTO from preferences dictionary
         var dto = new UserLocalizationPreferencesDto(
             localizationPrefs.GetValueOrDefault("Language")?.ToString() ?? "en-US",
@@ -401,7 +401,7 @@ public sealed class UserPreferencesController(ISender sender) : BaseApiControlle
             localizationPrefs.GetValueOrDefault("DateFormat")?.ToString() ?? "MM/dd/yyyy",
             localizationPrefs.GetValueOrDefault("TimeFormat")?.ToString() ?? "12h",
             localizationPrefs.GetValueOrDefault("Currency")?.ToString() ?? "USD",
-            localizationPrefs.GetValueOrDefault("NumberFormat") as Dictionary<string, object?> ?? new(),  
+            localizationPrefs.GetValueOrDefault("NumberFormat") as Dictionary<string, object?> ?? new(),
             localizationPrefs.GetValueOrDefault("CustomSettings") as Dictionary<string, object?> ?? new Dictionary<string, object?>()
         );
 

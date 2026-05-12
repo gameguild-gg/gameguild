@@ -10,6 +10,7 @@ namespace GameGuild.Identity.Authentication;
 /// <summary>
 ///     Controller for OAuth2 client_credentials token issuance for service accounts.
 /// </summary>
+[Microsoft.AspNetCore.Http.Tags("auth/service-accounts/tokens")]
 [ApiController]
 [ApiVersion("1.0")]
 [Route("v{version:apiVersion}/auth/service-accounts")]

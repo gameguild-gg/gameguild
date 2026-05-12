@@ -15,7 +15,7 @@ namespace GameGuild.Identity.Authentication;
 ///     Rate limited to 10 requests per minute per client to prevent brute-force attacks.
 /// </remarks>
 [ApiVersion("1.0")]
-[Tags("authentication")]
+[Microsoft.AspNetCore.Http.Tags("auth")]
 [EnableRateLimiting(RateLimitPolicies.Authentication)]
 [Authorize]
 public sealed class AuthController(ISender sender) : BaseApiController

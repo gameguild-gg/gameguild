@@ -1,5 +1,6 @@
 using Asp.Versioning;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 using AuthorizeAttribute = Microsoft.AspNetCore.Authorization.AuthorizeAttribute;
 
 namespace GameGuild.Learning.Courses;
@@ -8,7 +9,7 @@ namespace GameGuild.Learning.Courses;
 [ApiVersion("1.0")]
 [Route("v{version:apiVersion}/courses/{programId}/content")]
 [Authorize]
-public class ProgramContentController(IProgramContentService contentService) : BaseApiController
+public class ProgramContentController(IProgramContentService contentService, IProgramCrudService programService) : BaseApiController
 {
   /// <summary> Get all content for a course with optional filtering (resource-level Read permission required on parent Program) </summary>
   /// <remarks>
@@ -60,6 +61,22 @@ public class ProgramContentController(IProgramContentService contentService) : B
     }
 
     return Ok(contentDto);
+  }
+
+  /// <summary>Submit work for the current learner on a course content item.</summary>
+  [HttpPost("{id}/submit")]
+  public async Task<ActionResult<ContentInteractionDto>> SubmitContent(Guid programId, Guid id, [FromBody] SubmitUserContentDto submitDto)
+  {
+    if (!ModelState.IsValid) return BadRequest(ModelState);
+
+    var currentUserId = GetCurrentUserId();
+    if (currentUserId == null) return Unauthorized();
+
+    var interaction = await programService.SubmitUserContentAsync(programId, currentUserId.Value, id, submitDto.SubmissionData).ConfigureAwait(false);
+
+    if (interaction == null) return NotFound();
+
+    return Ok(interaction.ToDto());
   }
 
   /// <summary> Create new program content (resource-level Create permission required on parent Program) </summary>
@@ -230,5 +247,14 @@ public class ProgramContentController(IProgramContentService contentService) : B
         return item;
       })
       .ToList();
+  }
+
+  private Guid? GetCurrentUserId()
+  {
+    var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier)
+        ?? User.FindFirst("sub")?.Value
+        ?? User.FindFirst("userId")?.Value;
+
+    return Guid.TryParse(userIdClaim, out var userId) ? userId : null;
   }
 }

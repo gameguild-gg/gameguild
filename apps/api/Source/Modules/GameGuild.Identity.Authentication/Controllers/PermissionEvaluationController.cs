@@ -20,7 +20,7 @@ namespace GameGuild.Identity.Authentication;
 /// </remarks>
 [ApiVersion("1.0")]
 [Route("v{version:apiVersion}/permissions")]
-[Tags("permissions")]
+[Microsoft.AspNetCore.Http.Tags("auth/permissions")]
 [ApiExplorerSettings(IgnoreApi = true)]
 [EnableRateLimiting(RateLimitPolicies.Authorization)]
 [Authorize]

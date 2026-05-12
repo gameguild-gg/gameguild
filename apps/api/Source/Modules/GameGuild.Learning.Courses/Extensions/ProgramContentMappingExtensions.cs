@@ -6,17 +6,20 @@ using System.Text.Json;
 namespace GameGuild.Learning.Courses;
 
 /// <summary> Extension methods for mapping between ProgramContent entities and DTOs </summary>
-public static class ProgramContentMappingExtensions {
+public static class ProgramContentMappingExtensions
+{
   /// <summary> Maps ProgramContent entity to DTO </summary>
-  public static ProgramContentDto ToDto(this ProgramContent content) {
-    return new ProgramContentDto {
+  public static ProgramContentDto ToDto(this ProgramContent content)
+  {
+    return new ProgramContentDto
+    {
       Id = content.Id,
       ProgramId = content.ProgramId,
       ParentId = content.ParentId,
       Title = content.Title,
       Description = content.Description ?? string.Empty,
       Type = content.Type,
-      Body = !string.IsNullOrEmpty(content.Body) ? JsonDocument.Parse(content.Body) : null,
+      Body = ParseBody(content.Body),
       SortOrder = content.SortOrder,
       IsRequired = content.IsRequired,
       GradingMethod = content.GradingMethod,
@@ -35,9 +38,51 @@ public static class ProgramContentMappingExtensions {
   /// <summary> Maps collection of ProgramContent entities to DTOs </summary>
   public static IEnumerable<ProgramContentDto> ToDtos(this IEnumerable<ProgramContent> contents) { return contents.Select(c => c.ToDto()); }
 
+  private static JsonDocument? ParseBody(string? body)
+  {
+    if (string.IsNullOrWhiteSpace(body)) return null;
+
+    var normalizedBody = StripImportMarker(body);
+
+    try
+    {
+      return JsonDocument.Parse(normalizedBody);
+    }
+    catch (JsonException)
+    {
+      return JsonDocument.Parse(JsonSerializer.Serialize(new { markdown = normalizedBody }));
+    }
+  }
+
+  private static string StripImportMarker(string body)
+  {
+    const string importMarkerPrefix = "<!-- gameguild-source:";
+
+    if (!body.StartsWith(importMarkerPrefix, StringComparison.OrdinalIgnoreCase))
+    {
+      return body;
+    }
+
+    var markerEnd = body.IndexOf("-->", StringComparison.Ordinal);
+    if (markerEnd < 0)
+    {
+      return body;
+    }
+
+    var contentStart = markerEnd + 3;
+    while (contentStart < body.Length && (body[contentStart] == '\r' || body[contentStart] == '\n'))
+    {
+      contentStart++;
+    }
+
+    return body[contentStart..];
+  }
+
   /// <summary> Maps CreateProgramContentDto to ProgramContent entity </summary>
-  public static ProgramContent ToEntity(this CreateProgramContentDto dto) {
-    return new ProgramContent {
+  public static ProgramContent ToEntity(this CreateProgramContentDto dto)
+  {
+    return new ProgramContent
+    {
       Id = Guid.NewGuid(),
       ProgramId = dto.ProgramId,
       ParentId = dto.ParentId,
@@ -55,7 +100,8 @@ public static class ProgramContentMappingExtensions {
   }
 
   /// <summary> Applies updates from UpdateProgramContentDto to ProgramContent entity </summary>
-  public static void ApplyUpdates(this ProgramContent content, UpdateProgramContentDto dto) {
+  public static void ApplyUpdates(this ProgramContent content, UpdateProgramContentDto dto)
+  {
     if (dto.Title != null) content.Title = dto.Title;
     if (dto.Description != null) content.Description = dto.Description;
     if (dto.Type != null) content.Type = dto.Type.Value;

@@ -10,7 +10,7 @@ namespace GameGuild.Identity.Tenants;
 ///     Tenant Lifecycle API Controller - handles individual tenant state transitions and audit
 /// </summary>
 [ApiVersion("1.0")]
-[Tags("tenants")]
+[Microsoft.AspNetCore.Http.Tags("tenants")]
 [Authorize]
 public sealed class TenantLifecycleController(ISender sender) : BaseApiController
 {

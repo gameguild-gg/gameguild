@@ -1,10 +1,12 @@
-import { CourseFeatures } from '@/components/courses/course/course-features';
 import { CourseHeader } from '@/components/courses/course/course-header';
 import { CourseOverview } from '@/components/courses/course/course-overview';
 import { CourseSidebar } from '@/components/courses/course/course-sidebar';
 import { CourseTools } from '@/components/courses/course/course-tools';
+import { Button } from '@/components/ui/button';
+import { Link } from '@/i18n/navigation';
+import { getCourseViewerAccess } from '@/lib/courses/services/course-viewer-access';
 import { getCourseBySlug } from '@/lib/courses/services/course.service';
-import { Loader2 } from 'lucide-react';
+import { AlertTriangle, Loader2 } from 'lucide-react';
 import { notFound } from 'next/navigation';
 import { Suspense } from 'react';
 
@@ -14,6 +16,13 @@ export async function generateMetadata({ params }: { params: Promise<{ course: s
   const result = await getCourseBySlug(slug);
 
   if (!result.success) {
+    if (result.reason === 'unavailable') {
+      return {
+        title: 'Course Catalog Temporarily Unavailable | Game Guild',
+        description: 'The learning catalog is temporarily unavailable. Please try again shortly.',
+      };
+    }
+
     return {
       title: 'Course Not Found',
       description: 'The requested course could not be found.',
@@ -41,12 +50,46 @@ interface CourseDetailPageProps {
   readonly params: Promise<{ course: string }>;
 }
 
+function CourseUnavailableState({ error }: { readonly error?: string }) {
+  return (
+    <div className="min-h-screen bg-gray-950 px-4 py-16 text-white">
+      <div className="mx-auto max-w-2xl rounded-2xl border border-amber-500/40 bg-slate-900/80 p-8 shadow-lg shadow-slate-950/40">
+        <div className="flex items-start gap-4">
+          <div className="rounded-full bg-amber-500/10 p-3 text-amber-300">
+            <AlertTriangle className="h-6 w-6" />
+          </div>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <h1 className="text-2xl font-semibold">This course is temporarily unavailable</h1>
+              <p className="text-gray-300">
+                The storefront could not reach the learning API, so this page is not pretending the course was deleted or missing.
+              </p>
+            </div>
+            {error ? <p className="text-sm text-amber-300">Latest error: {error}</p> : null}
+            <div className="flex flex-wrap gap-3">
+              <Button asChild className="bg-blue-600 text-white hover:bg-blue-500">
+                <Link href="/courses">Back to catalog</Link>
+              </Button>
+              <Button asChild variant="outline" className="border-slate-600 bg-slate-800/50 text-slate-100 hover:bg-slate-700/50 hover:text-white">
+                <Link href="/courses">Try again</Link>
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 async function CourseContent({ slug }: { slug: string }): Promise<React.JSX.Element> {
   const result = await getCourseBySlug(slug);
 
   if (!result.success) {
-    console.error('Error fetching course:', result.error);
-    notFound();
+    if (result.reason === 'not-found') {
+      notFound();
+    }
+
+    return <CourseUnavailableState error={result.error} />;
   }
 
   const course = result.data;
@@ -54,6 +97,8 @@ async function CourseContent({ slug }: { slug: string }): Promise<React.JSX.Elem
   if (!course) {
     notFound();
   }
+
+  const viewerAccess = course.id ? await getCourseViewerAccess(String(course.id)) : { state: 'signed-out' as const };
 
   return (
     <div className="min-h-screen bg-gray-950 text-white">
@@ -65,12 +110,11 @@ async function CourseContent({ slug }: { slug: string }): Promise<React.JSX.Elem
           <div className="lg:col-span-2 space-y-8">
             <CourseOverview course={course} />
             <CourseTools course={course} />
-            <CourseFeatures />
           </div>
 
           {/* Right Sidebar */}
           <div className="lg:col-span-1">
-            <CourseSidebar course={course} />
+            <CourseSidebar course={course} viewerAccess={viewerAccess} />
           </div>
         </div>
       </div>

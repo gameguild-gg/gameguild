@@ -10,7 +10,7 @@ namespace GameGuild.Identity.Authentication;
 ///     Controller for JWT signing key rotation management
 /// </summary>
 [ApiVersion("1.0")]
-[Tags("signing-keys")]
+[Microsoft.AspNetCore.Http.Tags("auth/signing-keys")]
 [Authorize(Roles = "SystemAdministrator")]
 public class KeyRotationController : BaseApiController
 {

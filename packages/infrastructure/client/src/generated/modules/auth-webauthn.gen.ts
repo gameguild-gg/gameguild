@@ -81,7 +81,7 @@ export class AuthWebauthnModule {
       method: 'POST',
       path: url,
       body: validatedBody,
-      requiresAuth: true,
+      requiresAuth: false,
     });
 
     // Validate response
@@ -107,7 +107,7 @@ export class AuthWebauthnModule {
       method: 'POST',
       path: url,
       body: validatedBody,
-      requiresAuth: true,
+      requiresAuth: false,
     });
 
     // Validate response

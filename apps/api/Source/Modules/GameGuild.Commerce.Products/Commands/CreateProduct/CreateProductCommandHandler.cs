@@ -42,24 +42,6 @@ public sealed class CreateProductCommandHandler(IProductRepository productReposi
         await productRepository.AddAsync(product, cancellationToken).ConfigureAwait(false);
         await productRepository.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
-        // Map to DTO - use commission config values if available
-        return new ProductDto(
-            product.Id,
-            product.Name,
-            product.Description,
-            product.ShortDescription,
-            product.ImageUrl,
-            product.Type,
-            product.IsBundle,
-            product.CreatorId,
-#pragma warning disable CS0618 // Suppress obsolete warning for backwards compatibility
-            product.GetBundleItemIds(),
-#pragma warning restore CS0618
-            commissionConfig.ReferralCommissionPercentage,
-            commissionConfig.MaxAffiliateDiscount,
-            commissionConfig.AffiliateCommissionPercentage,
-            product.CreatedAt,
-            product.UpdatedAt
-        );
+        return product.ToDto();
     }
 }

@@ -10,6 +10,7 @@ namespace GameGuild.Identity.Authorization.Controllers;
 /// <summary>
 ///     API controller for Permission Analytics
 /// </summary>
+[Microsoft.AspNetCore.Http.Tags("access-control/permission-analytics")]
 [ApiVersion("1.0")]
 [Route("v{version:apiVersion}/permission-analytics")]
 [Authorize]

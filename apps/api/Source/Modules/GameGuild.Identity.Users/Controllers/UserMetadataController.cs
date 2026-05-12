@@ -11,7 +11,7 @@ namespace GameGuild.Identity.Users;
 ///     Controller for managing user metadata
 /// </summary>
 [ApiVersion("1.0")]
-[Tags("users/metadata")]
+[Microsoft.AspNetCore.Http.Tags("users/metadata")]
 [Authorize]
 public sealed class UserMetadataController(ISender sender) : BaseApiController
 {

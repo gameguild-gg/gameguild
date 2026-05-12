@@ -11,7 +11,7 @@ namespace GameGuild.Identity.Tenants;
 ///     Tenants API Controller - RESTful API for tenant CRUD and collection operations
 /// </summary>
 [ApiVersion("1.0")]
-[Tags("tenants")]
+[Microsoft.AspNetCore.Http.Tags("tenants")]
 [Authorize]
 public sealed class TenantsController(ISender sender) : BaseApiController
 {

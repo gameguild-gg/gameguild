@@ -2,6 +2,7 @@ using GameGuild.CQRS;
 using GameGuild.CQRS.Models;
 using GameGuild.Identity.Context.Actors;
 
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 namespace GameGuild.Identity.Authorization;
@@ -238,6 +239,185 @@ public sealed class ShareResourceCommandHandler(
 
         // If no emails, return failure
         return ShareResult.Failure("No user emails provided for sharing");
+    }
+}
+
+/// <summary>
+///     Command to accept a resource invitation addressed to the current user.
+/// </summary>
+/// <param name="InvitationId">The invitation ID.</param>
+public sealed record AcceptResourceInvitationCommand(Guid InvitationId) : ICommand<InvitationActionResult>;
+
+/// <summary>
+///     Handler for AcceptResourceInvitationCommand.
+/// </summary>
+public sealed class AcceptResourceInvitationCommandHandler(
+    IApplicationDbContext dbContext,
+    IResourcePermissionService resourcePermissionService,
+    IActorContextAccessor actorContextAccessor,
+    ILogger<AcceptResourceInvitationCommandHandler> logger)
+    : ICommandHandler<AcceptResourceInvitationCommand, InvitationActionResult>
+{
+    private ActorContext Actor => actorContextAccessor.ActorContext;
+
+    public async Task<InvitationActionResult> Handle(AcceptResourceInvitationCommand request, CancellationToken cancellationToken)
+    {
+        var userId = Actor.SubjectIdAsGuid ?? throw new UnauthorizedAccessException("User not authenticated");
+        var email = Actor.TypedAttributes.Email;
+
+        if (string.IsNullOrWhiteSpace(email))
+        {
+            throw new UnauthorizedAccessException("Authenticated user must have an email address to accept an invitation");
+        }
+
+        var invitation = await dbContext.Set<ResourceInvitation>()
+            .FirstOrDefaultAsync(i => i.Id == request.InvitationId, cancellationToken)
+            .ConfigureAwait(false);
+
+        if (invitation == null)
+        {
+            return InvitationActionResult.Failure(request.InvitationId, "Invitation not found");
+        }
+
+        if (!EmailsMatch(invitation.Email, email))
+        {
+            logger.LogWarning(
+                "User {UserId} attempted to accept invitation {InvitationId} for another email address",
+                userId,
+                request.InvitationId);
+
+            throw new UnauthorizedAccessException("This invitation is not addressed to the current user");
+        }
+
+        var accepted = await resourcePermissionService
+            .AcceptInvitationAsync(request.InvitationId, userId, cancellationToken)
+            .ConfigureAwait(false);
+
+        return accepted
+            ? InvitationActionResult.SuccessResult(invitation, InvitationStatus.Accepted)
+            : InvitationActionResult.Failure(request.InvitationId, "Invitation could not be accepted");
+    }
+
+    private static bool EmailsMatch(string left, string right)
+    {
+        return string.Equals(left.Trim(), right.Trim(), StringComparison.OrdinalIgnoreCase);
+    }
+}
+
+/// <summary>
+///     Command to decline a resource invitation addressed to the current user.
+/// </summary>
+/// <param name="InvitationId">The invitation ID.</param>
+/// <param name="Reason">Optional reason for declining.</param>
+public sealed record DeclineResourceInvitationCommand(Guid InvitationId, string? Reason = null) : ICommand<InvitationActionResult>;
+
+/// <summary>
+///     Handler for DeclineResourceInvitationCommand.
+/// </summary>
+public sealed class DeclineResourceInvitationCommandHandler(
+    IApplicationDbContext dbContext,
+    IResourcePermissionService resourcePermissionService,
+    IActorContextAccessor actorContextAccessor,
+    ILogger<DeclineResourceInvitationCommandHandler> logger)
+    : ICommandHandler<DeclineResourceInvitationCommand, InvitationActionResult>
+{
+    private ActorContext Actor => actorContextAccessor.ActorContext;
+
+    public async Task<InvitationActionResult> Handle(DeclineResourceInvitationCommand request, CancellationToken cancellationToken)
+    {
+        var email = Actor.TypedAttributes.Email;
+
+        if (string.IsNullOrWhiteSpace(email))
+        {
+            throw new UnauthorizedAccessException("Authenticated user must have an email address to decline an invitation");
+        }
+
+        var invitation = await dbContext.Set<ResourceInvitation>()
+            .FirstOrDefaultAsync(i => i.Id == request.InvitationId, cancellationToken)
+            .ConfigureAwait(false);
+
+        if (invitation == null)
+        {
+            return InvitationActionResult.Failure(request.InvitationId, "Invitation not found");
+        }
+
+        if (!EmailsMatch(invitation.Email, email))
+        {
+            logger.LogWarning(
+                "User with email {Email} attempted to decline invitation {InvitationId} for another recipient",
+                email,
+                request.InvitationId);
+
+            throw new UnauthorizedAccessException("This invitation is not addressed to the current user");
+        }
+
+        var declined = await resourcePermissionService
+            .DeclineInvitationAsync(request.InvitationId, request.Reason, cancellationToken)
+            .ConfigureAwait(false);
+
+        return declined
+            ? InvitationActionResult.SuccessResult(invitation, InvitationStatus.Declined)
+            : InvitationActionResult.Failure(request.InvitationId, "Invitation could not be declined");
+    }
+
+    private static bool EmailsMatch(string left, string right)
+    {
+        return string.Equals(left.Trim(), right.Trim(), StringComparison.OrdinalIgnoreCase);
+    }
+}
+
+/// <summary>
+///     Command to revoke a pending invitation.
+/// </summary>
+/// <param name="InvitationId">The invitation ID.</param>
+public sealed record RevokeResourceInvitationCommand(Guid InvitationId) : ICommand<InvitationActionResult>;
+
+/// <summary>
+///     Handler for RevokeResourceInvitationCommand.
+/// </summary>
+public sealed class RevokeResourceInvitationCommandHandler(
+    IApplicationDbContext dbContext,
+    IResourcePermissionService resourcePermissionService,
+    IActorContextAccessor actorContextAccessor,
+    ILogger<RevokeResourceInvitationCommandHandler> logger)
+    : ICommandHandler<RevokeResourceInvitationCommand, InvitationActionResult>
+{
+    private ActorContext Actor => actorContextAccessor.ActorContext;
+
+    public async Task<InvitationActionResult> Handle(RevokeResourceInvitationCommand request, CancellationToken cancellationToken)
+    {
+        var userId = Actor.SubjectIdAsGuid ?? throw new UnauthorizedAccessException("User not authenticated");
+
+        var invitation = await dbContext.Set<ResourceInvitation>()
+            .FirstOrDefaultAsync(i => i.Id == request.InvitationId, cancellationToken)
+            .ConfigureAwait(false);
+
+        if (invitation == null)
+        {
+            return InvitationActionResult.Failure(request.InvitationId, "Invitation not found");
+        }
+
+        var canRevoke = Actor.IsSystemAdmin ||
+                        invitation.InvitedByUserId == userId ||
+                        (Actor.IsTenantAdmin && Actor.TenantId.HasValue && Actor.TenantId.Value == invitation.TenantId.Value);
+
+        if (!canRevoke)
+        {
+            logger.LogWarning(
+                "User {UserId} attempted to revoke invitation {InvitationId} without authorization",
+                userId,
+                request.InvitationId);
+
+            throw new UnauthorizedAccessException("You do not have permission to revoke this invitation");
+        }
+
+        var revoked = await resourcePermissionService
+            .RevokeInvitationAsync(request.InvitationId, userId, cancellationToken)
+            .ConfigureAwait(false);
+
+        return revoked
+            ? InvitationActionResult.SuccessResult(invitation, InvitationStatus.Revoked)
+            : InvitationActionResult.Failure(request.InvitationId, "Invitation could not be revoked");
     }
 }
 

@@ -4,10 +4,10 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
+import { Link as LocalizedLink } from '@/i18n/navigation';
 import { getCourseData } from '@/lib/courses/actions';
 import { ArrowLeft, Award, BookOpen, CheckCircle, Clock, Code, ExternalLink, Gamepad2, Lightbulb, Palette, Play, Star, Target, Trophy, Users } from 'lucide-react';
 import Image from 'next/image';
-import Link from 'next/link';
 
 // Temporary fallback function
 async function getTrackBySlug(slug: string): Promise<Track | null> {
@@ -17,13 +17,13 @@ async function getTrackBySlug(slug: string): Promise<Track | null> {
 
 // Type definitions for real course data
 interface RealCourse {
-  id: string;
-  title: string;
+  id: string | number;
+  title: string | null | undefined;
   description: string;
   slug: string;
-  thumbnail: string;
+  thumbnail: unknown;
   estimatedHours: number;
-  difficulty: number;
+  difficulty: string | number;
   category: number;
 }
 
@@ -140,13 +140,16 @@ function transformRealCoursesToCurriculum(realCourses: RealCourse[]): TrackBlock
   };
 
   const transformCourse = (course: RealCourse): Course => ({
-    id: parseInt(course.id.slice(-8), 16), // Convert part of UUID to number for compatibility
+    id: parseInt(String(course.id).slice(-8), 16), // Convert part of the course ID to a stable numeric value for compatibility
     name: course.slug,
-    title: course.title,
-    description: course.description,
+    title: course.title ?? 'Untitled Course',
+    description: course.description || 'Course description coming soon.',
     duration: `${course.estimatedHours} hours`,
-    level: getDifficultyName(course.difficulty),
-    image: course.thumbnail.startsWith('/images/') ? course.thumbnail : 'https://placehold.co/400x225/1f2937/ffffff?text=Course+Image',
+    level: getDifficultyName(Number(course.difficulty ?? 0)),
+    image:
+      typeof course.thumbnail === 'string' && course.thumbnail.startsWith('/images/')
+        ? course.thumbnail
+        : 'https://placehold.co/400x225/1f2937/ffffff?text=Course+Image',
     projects: [], // Projects would need to come from course content
     features: [], // Features would need to come from course content
     slug: course.slug,
@@ -329,10 +332,10 @@ export default async function TrackDetailPage({ params }: { params: Promise<{ tr
             <h1 className="text-3xl font-bold text-red-400 mb-4">Track Not Found</h1>
             <p className="text-gray-300 mb-8">The learning track you&apos;re looking for doesn&apos;t exist.</p>
             <Button asChild className="bg-blue-600 hover:bg-blue-700">
-              <Link href="/tracks">
+              <LocalizedLink href="/tracks">
                 <ArrowLeft className="mr-2 h-4 w-4" />
                 Back to Learning Tracks
-              </Link>
+              </LocalizedLink>
             </Button>
           </div>
         </div>
@@ -352,10 +355,10 @@ export default async function TrackDetailPage({ params }: { params: Promise<{ tr
       {/* Navigation */}
       <div className="container mx-auto px-4 pt-8">
         <Button asChild variant="ghost" className="text-white hover:bg-white/10 mb-6">
-          <Link href="/tracks">
+          <LocalizedLink href="/tracks">
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back to Learning Tracks
-          </Link>
+          </LocalizedLink>
         </Button>
       </div>
 
@@ -520,7 +523,7 @@ export default async function TrackDetailPage({ params }: { params: Promise<{ tr
                           <Card key={course.id} className={`bg-gray-800/50 border-gray-700 hover:bg-gray-800 transition-all duration-200 group ${course.isReal ? 'cursor-pointer' : 'cursor-default'}`}>
                             <CardContent className="p-6">
                               {course.isReal && course.slug ? (
-                                <Link href={`/p/${course.slug}`} className="block">
+                                <LocalizedLink href={`/courses/${course.slug}`} className="block">
                                   <div className="flex items-start gap-4">
                                     <div className="relative w-24 h-24 rounded-lg overflow-hidden bg-gray-700 flex-shrink-0">
                                       <Image src={course.image} alt={course.title} fill className="object-cover" />
@@ -550,7 +553,7 @@ export default async function TrackDetailPage({ params }: { params: Promise<{ tr
                                       )}
                                     </div>
                                   </div>
-                                </Link>
+                                </LocalizedLink>
                               ) : (
                                 <div className="flex items-start gap-4">
                                   <div className="relative w-24 h-24 rounded-lg overflow-hidden bg-gray-700 flex-shrink-0">
@@ -885,22 +888,22 @@ export default async function TrackDetailPage({ params }: { params: Promise<{ tr
                   </CardHeader>
                   <CardContent className="space-y-3">
                     <Button asChild variant="ghost" className="w-full justify-start hover:bg-gray-700">
-                      <Link href="/tracks">
+                      <LocalizedLink href="/tracks">
                         <Code className="mr-3 h-4 w-4" />
                         Advanced Programming
-                      </Link>
+                      </LocalizedLink>
                     </Button>
                     <Button asChild variant="ghost" className="w-full justify-start hover:bg-gray-700">
-                      <Link href="/tracks">
+                      <LocalizedLink href="/tracks">
                         <Palette className="mr-3 h-4 w-4" />
                         Creative Arts & Design
-                      </Link>
+                      </LocalizedLink>
                     </Button>
                     <Button asChild variant="ghost" className="w-full justify-start hover:bg-gray-700">
-                      <Link href="/tracks">
+                      <LocalizedLink href="/tracks">
                         <Gamepad2 className="mr-3 h-4 w-4" />
                         Game Design Mastery
-                      </Link>
+                      </LocalizedLink>
                     </Button>
                   </CardContent>
                 </Card>

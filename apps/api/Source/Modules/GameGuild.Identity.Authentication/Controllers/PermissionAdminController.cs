@@ -19,7 +19,7 @@ namespace GameGuild.Identity.Authentication;
 /// </remarks>
 [ApiVersion("1.0")]
 [Route("v{version:apiVersion}/permissions")]
-[Tags("permissions")]
+[Microsoft.AspNetCore.Http.Tags("auth/permissions")]
 [ApiExplorerSettings(IgnoreApi = true)]
 [EnableRateLimiting(RateLimitPolicies.Authorization)]
 [Authorize]
@@ -38,8 +38,8 @@ public class PermissionAdminController(IMediator mediator, ILogger<PermissionAdm
     [ProducesResponseType(typeof(PermissionAnalyticsDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<PermissionAnalyticsDto>> GetPermissionAnalytics(
-        Guid tenantId, 
-        [FromQuery] DateTime? fromDate = null, 
+        Guid tenantId,
+        [FromQuery] DateTime? fromDate = null,
         [FromQuery] DateTime? toDate = null)
     {
         var query = new GetPermissionAnalyticsQuery { TenantId = tenantId, FromDate = fromDate ?? SystemClock.UtcNow.AddDays(-30), ToDate = toDate ?? SystemClock.UtcNow };
@@ -62,9 +62,9 @@ public class PermissionAdminController(IMediator mediator, ILogger<PermissionAdm
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 50)
     {
-        var query = new GetPermissionAuditTrailQuery 
-        { 
-            UserId = userId, 
+        var query = new GetPermissionAuditTrailQuery
+        {
+            UserId = userId,
             TenantId = tenantId,
             FromDate = fromDate,
             ToDate = toDate,
@@ -136,9 +136,9 @@ public class PermissionAdminController(IMediator mediator, ILogger<PermissionAdm
         Guid templateId,
         [FromBody] ApplyPermissionTemplateRequest request)
     {
-        var command = new ApplyPermissionTemplateCommand 
-        { 
-            TemplateId = templateId, 
+        var command = new ApplyPermissionTemplateCommand
+        {
+            TemplateId = templateId,
             UserId = request.UserId,
             TenantId = request.TenantId
         };

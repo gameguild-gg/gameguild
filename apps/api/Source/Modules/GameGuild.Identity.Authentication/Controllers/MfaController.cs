@@ -10,7 +10,7 @@ namespace GameGuild.Identity.Authentication;
 /// </summary>
 [ApiController]
 [ApiVersion("1.0")]
-[Tags("authentication/multi-factor")]
+[Microsoft.AspNetCore.Http.Tags("auth/multi-factor")]
 [Authorize]
 public sealed class MfaController(IMfaService mfaService) : AuthControllerBase
 {

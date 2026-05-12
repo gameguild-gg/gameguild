@@ -11,7 +11,7 @@ namespace GameGuild.Identity.Users;
 ///     Users API Controller - CRUD operations for individual users and user listing
 /// </summary>
 [ApiVersion("1.0")]
-[Tags("users")]
+[Microsoft.AspNetCore.Http.Tags("users")]
 [Authorize]
 public sealed class UsersController(ISender sender) : BaseApiController
 {

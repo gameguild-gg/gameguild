@@ -10,7 +10,7 @@ namespace GameGuild.Identity.Authentication;
 ///     Controller for API key management
 /// </summary>
 [ApiVersion("1.0")]
-[Tags("api-keys")]
+[Microsoft.AspNetCore.Http.Tags("auth/api-keys")]
 [Authorize]
 public class ApiKeyController : BaseApiController
 {

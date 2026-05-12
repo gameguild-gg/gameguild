@@ -49,6 +49,7 @@ public interface IProgramCrudService
   Task<IEnumerable<ContentInteraction>> GetUserInteractionsAsync(Guid programId, Guid userId);
   Task<Program> UpdateUserProgressAsync(Guid programId, Guid userId, Guid contentId, ProgressStatus status);
   Task<UserProgressDto?> UpdateUserProgressAsync(Guid programId, Guid userId, UpdateProgressDto progressDto);
+  Task<ContentInteraction?> SubmitUserContentAsync(Guid programId, Guid userId, Guid contentId, string submissionData);
   Task<bool> MarkContentCompletedAsync(Guid programId, Guid userId, Guid contentId);
   Task<bool> ResetUserProgressAsync(Guid programId, Guid userId);
 

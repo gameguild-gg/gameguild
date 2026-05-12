@@ -1,10 +1,11 @@
-import { cache } from 'react';
+import { getToken } from '@/auth';
 import {
   createServerClient,
+  GeneratedApi,
   type LearningAssessmentsAssessment,
   type LearningAssessmentsAssessmentType,
 } from '@game-guild/client';
-import { getToken } from '@/auth';
+import { cache } from 'react';
 
 // =============================================================================
 // API CLIENT
@@ -16,6 +17,10 @@ function getApiClient() {
     baseUrl: apiUrl,
     auth: { getAccessToken: () => getToken() },
   });
+}
+
+function createAssessmentsModule() {
+  return new GeneratedApi.LearningAssessmentsModule(getApiClient());
 }
 
 // =============================================================================
@@ -80,12 +85,8 @@ function mapAssessment(dto: LearningAssessmentsAssessment): Assessment {
  */
 export const getCourseAssessments = cache(async (courseId: string): Promise<CourseAssessments> => {
   try {
-    const client = getApiClient();
-    const result = await client.request<LearningAssessmentsAssessment[]>({
-      method: 'GET',
-      path: `/v1/assessments/course/${courseId}`,
-      requiresAuth: true,
-    });
+    const assessmentsModule = createAssessmentsModule();
+    const result = await assessmentsModule.getAssessmentsCourse(courseId);
     if (!result.ok) {
       console.error('Failed to fetch assessments:', result.error);
       return { assessments: [], total: 0 };
@@ -103,12 +104,8 @@ export const getCourseAssessments = cache(async (courseId: string): Promise<Cour
  */
 export const getAssessment = cache(async (assessmentId: string): Promise<Assessment | null> => {
   try {
-    const client = getApiClient();
-    const result = await client.request<LearningAssessmentsAssessment>({
-      method: 'GET',
-      path: `/v1/assessments/${assessmentId}`,
-      requiresAuth: true,
-    });
+    const assessmentsModule = createAssessmentsModule();
+    const result = await assessmentsModule.getAssessments(assessmentId);
     if (!result.ok) {
       return null;
     }

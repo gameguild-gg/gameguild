@@ -1,31 +1,31 @@
 'use client';
 
-import React, { useState, useTransition } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
-import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
+import { addContent, deleteContent, reorderContent, updateAssessment, updateContent } from '@/lib/learning/actions';
+import type { Assessment } from '@/lib/learning/queries/assessments';
+import type { ContentItem, LearningCoursesProgramContentType } from '@/lib/learning/types';
 import type { DragEndEvent } from '@dnd-kit/core';
-import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } from '@dnd-kit/sortable';
+import { closestCenter, DndContext, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
+import { arrayMove, SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@game-guild/ui/components/card';
 import { Badge } from '@game-guild/ui/components/badge';
 import { Button } from '@game-guild/ui/components/button';
-import { Input } from '@game-guild/ui/components/input';
-import { Label } from '@game-guild/ui/components/label';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@game-guild/ui/components/card';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@game-guild/ui/components/collapsible';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@game-guild/ui/components/dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@game-guild/ui/components/dropdown-menu';
+import { Input } from '@game-guild/ui/components/input';
+import { Label } from '@game-guild/ui/components/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@game-guild/ui/components/select';
-import { ArrowDown, ArrowUp, BookOpen, ChevronDown, ChevronRight, ClipboardList, Clock, Copy, Edit, FileText, Film, GripVertical, HelpCircle, LinkIcon, Loader2, MessageSquare, MoreHorizontal, Plus, Trash2, Unlink } from 'lucide-react';
-import type { LearningCoursesProgramContentType } from '@game-guild/client';
-import type { ContentItem } from '@/lib/learning/types';
-import type { Assessment } from '@/lib/learning/queries/assessments';
-import { addContent, deleteContent, reorderContent, updateContent, updateAssessment, type UpdateContentInput } from '@/lib/learning/actions';
+import { ArrowDown, ArrowUp, BookOpen, ChevronDown, ChevronRight, ClipboardList, Clock, Copy, Edit, FileText, GripVertical, HelpCircle, LinkIcon, Loader2, MessageSquare, MoreHorizontal, Plus, Trash2, Unlink } from 'lucide-react';
+import { usePathname, useRouter } from 'next/navigation';
+import React, { useState, useTransition } from 'react';
 
 interface ContentTreeProps {
   courseId: string;
   modules: ContentItem[];
   allItems: ContentItem[];
   assessments: Assessment[];
+  virtualModuleIds?: string[];
 }
 
 const typeConfig: Record<LearningCoursesProgramContentType, { icon: React.ElementType; label: string }> = {
@@ -74,14 +74,28 @@ function SortableItem({ id, children }: {
   return <>{children({ ref: setNodeRef, style, listeners, isDragging })}</>;
 }
 
-export function ContentTree({ courseId, modules, allItems, assessments }: ContentTreeProps) {
+export function ContentTree({ courseId, modules, allItems, assessments, virtualModuleIds = [] }: ContentTreeProps) {
   const router = useRouter();
   const pathname = usePathname();
   const [isPending, startTransition] = useTransition();
   const [openModules, setOpenModules] = useState<Set<string>>(() => new Set(modules.map((m) => m.id)));
+  const virtualModuleIdSet = React.useMemo(() => new Set(virtualModuleIds), [virtualModuleIds]);
 
   // Derive the base path for navigation (e.g. /en-US/learning/courses/{id}/content)
   const contentBasePath = pathname.endsWith('/content') ? pathname : pathname.replace(/\/content\/.*$/, '/content');
+
+  const navigateToContentItem = (contentId: string) => {
+    router.push(`${contentBasePath}/${contentId}` as Parameters<typeof router.push>[0]);
+  };
+
+  const isVirtualModule = (moduleId: string) => virtualModuleIdSet.has(moduleId);
+  const normalizeParentId = (parentId: string | null | undefined): string | undefined => {
+    if (!parentId || virtualModuleIdSet.has(parentId)) {
+      return undefined;
+    }
+
+    return parentId;
+  };
 
   // Add Module dialog state
   const [showAddModule, setShowAddModule] = useState(false);
@@ -263,7 +277,7 @@ export function ContentTree({ courseId, modules, allItems, assessments }: Conten
     startTransition(async () => {
       const result = await addContent({
         courseId,
-        parentId: lessonParentId,
+        parentId: normalizeParentId(lessonParentId),
         title: lessonTitle.trim(),
         type: lessonType,
         sortOrder: parentChildren.length,
@@ -332,7 +346,7 @@ export function ContentTree({ courseId, modules, allItems, assessments }: Conten
     startTransition(async () => {
       const result = await addContent({
         courseId,
-        parentId: item.parentId ?? undefined,
+        parentId: normalizeParentId(item.parentId),
         title: `${item.title} (copy)`,
         description: item.description ?? undefined,
         type: item.type,
@@ -392,6 +406,7 @@ export function ContentTree({ courseId, modules, allItems, assessments }: Conten
             {modules.map((module, index) => {
               const children = allItems.filter((i) => i.parentId === module.id).sort((a, b) => a.order - b.order);
               const isOpen = openModules.has(module.id);
+              const moduleIsVirtual = isVirtualModule(module.id);
 
               return (
                 <SortableItem key={module.id} id={module.id}>
@@ -416,42 +431,44 @@ export function ContentTree({ courseId, modules, allItems, assessments }: Conten
                             <div className="flex items-center gap-2">
                               <Badge variant={statusVariant[module.status] ?? 'outline'}>{module.status}</Badge>
                               <span className="text-xs text-muted-foreground">{children.length} items</span>
-                              <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                  <Button variant="ghost" size="icon" className="size-8">
-                                    <MoreHorizontal className="size-4" />
-                                  </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
-                                  <DropdownMenuItem onClick={() => openEditModuleDialog(module)}>
-                                    <Edit className="mr-2 size-4" />
-                                    Edit Module
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem onClick={() => handleDuplicate(module)} disabled={isPending}>
-                                    <Copy className="mr-2 size-4" />
-                                    Duplicate Module
-                                  </DropdownMenuItem>
-                                  <DropdownMenuSeparator />
-                                  <DropdownMenuItem onClick={() => openAddSubmoduleDialog(module.id)}>
-                                    <Plus className="mr-2 size-4" />
-                                    Add Submodule
-                                  </DropdownMenuItem>
-                                  <DropdownMenuSeparator />
-                                  <DropdownMenuItem onClick={() => handleMoveModule(module.id, 'up')} disabled={isPending || index === 0}>
-                                    <ArrowUp className="mr-2 size-4" />
-                                    Move Up
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem onClick={() => handleMoveModule(module.id, 'down')} disabled={isPending || index === modules.length - 1}>
-                                    <ArrowDown className="mr-2 size-4" />
-                                    Move Down
-                                  </DropdownMenuItem>
-                                  <DropdownMenuSeparator />
-                                  <DropdownMenuItem className="text-destructive" onClick={() => setDeleteTarget({ id: module.id, title: module.title, isModule: true })}>
-                                    <Trash2 className="mr-2 size-4" />
-                                    Delete Module
-                                  </DropdownMenuItem>
-                                </DropdownMenuContent>
-                              </DropdownMenu>
+                              {!moduleIsVirtual && (
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button variant="ghost" size="icon" className="size-8">
+                                      <MoreHorizontal className="size-4" />
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end">
+                                    <DropdownMenuItem onClick={() => openEditModuleDialog(module)}>
+                                      <Edit className="mr-2 size-4" />
+                                      Edit Module
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => handleDuplicate(module)} disabled={isPending}>
+                                      <Copy className="mr-2 size-4" />
+                                      Duplicate Module
+                                    </DropdownMenuItem>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem onClick={() => openAddSubmoduleDialog(module.id)}>
+                                      <Plus className="mr-2 size-4" />
+                                      Add Submodule
+                                    </DropdownMenuItem>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem onClick={() => handleMoveModule(module.id, 'up')} disabled={isPending || index === 0}>
+                                      <ArrowUp className="mr-2 size-4" />
+                                      Move Up
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => handleMoveModule(module.id, 'down')} disabled={isPending || index === modules.length - 1}>
+                                      <ArrowDown className="mr-2 size-4" />
+                                      Move Down
+                                    </DropdownMenuItem>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem className="text-destructive" onClick={() => setDeleteTarget({ id: module.id, title: module.title, isModule: true })}>
+                                      <Trash2 className="mr-2 size-4" />
+                                      Delete Module
+                                    </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              )}
                             </div>
                           </CardHeader>
                           <CollapsibleContent>
@@ -513,7 +530,7 @@ export function ContentTree({ courseId, modules, allItems, assessments }: Conten
                                                       </Button>
                                                     </DropdownMenuTrigger>
                                                     <DropdownMenuContent align="end">
-                                                      <DropdownMenuItem onClick={() => router.push(`${contentBasePath}/${item.id}`)}>
+                                                      <DropdownMenuItem onClick={() => navigateToContentItem(item.id)}>
                                                         <Edit className="mr-2 size-4" />
                                                         Edit {config.label}
                                                       </DropdownMenuItem>
@@ -572,7 +589,7 @@ export function ContentTree({ courseId, modules, allItems, assessments }: Conten
                                                               </Button>
                                                             </DropdownMenuTrigger>
                                                             <DropdownMenuContent align="end">
-                                                              <DropdownMenuItem onClick={() => router.push(`${contentBasePath}/${sub.id}`)}>
+                                                              <DropdownMenuItem onClick={() => navigateToContentItem(sub.id)}>
                                                                 <Edit className="mr-2 size-4" />
                                                                 Edit
                                                               </DropdownMenuItem>
@@ -602,7 +619,7 @@ export function ContentTree({ courseId, modules, allItems, assessments }: Conten
                               )}
                               <Button variant="ghost" size="sm" className="mt-2 w-full text-muted-foreground" onClick={() => openAddLessonDialog(module.id)}>
                                 <Plus className="mr-2 size-4" />
-                                Add Lesson
+                                {moduleIsVirtual ? 'Add Content Item' : 'Add Lesson'}
                               </Button>
                             </CardContent>
                           </CollapsibleContent>

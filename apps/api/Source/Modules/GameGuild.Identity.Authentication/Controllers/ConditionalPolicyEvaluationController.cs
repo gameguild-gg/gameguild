@@ -14,7 +14,7 @@ namespace GameGuild.Identity.Authentication;
 /// </summary>
 [ApiVersion("1.0")]
 [Route("v{version:apiVersion}/conditional-policies")]
-[Tags("conditional-policies")]
+[Microsoft.AspNetCore.Http.Tags("auth/conditional-policies")]
 [ApiExplorerSettings(IgnoreApi = true)]
 [Authorize]
 public class ConditionalPolicyEvaluationController(IMediator mediator, ILogger<ConditionalPolicyEvaluationController> logger) : BaseApiController

@@ -212,7 +212,7 @@ public class SubscriptionPlanService : ISubscriptionPlanService
         var cacheOptions = new MemoryCacheEntryOptions()
             .SetAbsoluteExpiration(ActivePlansCacheDuration)
             .SetSlidingExpiration(TimeSpan.FromMinutes(1))
-            .SetSize(1);
+            .SetSize(plansList.Count == 0 ? 1 : plansList.Count);
 
         _cache.Set(ActivePlansCacheKey, plansList, cacheOptions);
 

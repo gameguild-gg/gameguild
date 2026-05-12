@@ -16,7 +16,8 @@ public sealed class GetProductByIdQueryHandler(IProductRepository productReposit
             request.ProductId,
             cancellationToken,
             includePricing: request.IncludePricing,
-            includeCreator: request.IncludeCreator
+            includeCreator: request.IncludeCreator,
+            isPublished: request.IncludeUnpublished ? null : true
         ).ConfigureAwait(false);
 
         if (product == null)
@@ -30,6 +31,7 @@ public sealed class GetProductByIdQueryHandler(IProductRepository productReposit
             product.ImageUrl,
             product.Type,
             product.IsBundle,
+            product.IsPublished,
             product.CreatorId,
             product.GetBundleProductIds().ToList(),
             product.CommissionConfig?.ReferralCommissionPercentage ?? 0m,

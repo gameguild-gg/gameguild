@@ -131,7 +131,7 @@ public class ExceptionHandlingMiddlewareTests
         _httpContext.Response.Body.Seek(0, SeekOrigin.Begin);
         using var reader = new StreamReader(_httpContext.Response.Body);
         var responseBody = await reader.ReadToEndAsync();
-        
+
         responseBody.Should().NotBeNullOrEmpty();
         // ProblemDetails format: detail contains generic message (security: no exception details)
         responseBody.Should().Contain("An unexpected error occurred");
@@ -155,7 +155,7 @@ public class ExceptionHandlingMiddlewareTests
         _httpContext.Response.Body.Seek(0, SeekOrigin.Begin);
         using var reader = new StreamReader(_httpContext.Response.Body);
         var responseBody = await reader.ReadToEndAsync();
-        
+
         // SECURITY: Exception message should NOT be exposed to clients
         responseBody.Should().NotContain(exceptionMessage);
         // ProblemDetails uses generic safe message
@@ -177,10 +177,10 @@ public class ExceptionHandlingMiddlewareTests
         _httpContext.Response.Body.Seek(0, SeekOrigin.Begin);
         using var reader = new StreamReader(_httpContext.Response.Body);
         var responseBody = await reader.ReadToEndAsync();
-        
+
         // ProblemDetails includes traceId instead of timestamp
         responseBody.Should().Contain("traceId");
-        
+
         // Parse and verify ProblemDetails structure
         var jsonDoc = JsonDocument.Parse(responseBody);
         jsonDoc.RootElement.TryGetProperty("traceId", out _).Should().BeTrue();
@@ -201,10 +201,56 @@ public class ExceptionHandlingMiddlewareTests
         _httpContext.Response.Body.Seek(0, SeekOrigin.Begin);
         using var reader = new StreamReader(_httpContext.Response.Body);
         var responseBody = await reader.ReadToEndAsync();
-        
+
         var jsonDoc = JsonDocument.Parse(responseBody);
         var statusCode = jsonDoc.RootElement.GetProperty("status").GetInt32();
         statusCode.Should().Be(500);
+    }
+
+    [Fact]
+    public async Task InvokeAsync_Should_Return404_For_EntityNotFoundException()
+    {
+        // Arrange
+        var entityId = Guid.NewGuid();
+        var exception = new EntityNotFoundException("Subscription", entityId);
+        _mockNext.Setup(x => x(It.IsAny<HttpContext>()))
+            .ThrowsAsync(exception);
+
+        // Act
+        await _middleware.InvokeAsync(_httpContext);
+
+        // Assert
+        _httpContext.Response.StatusCode.Should().Be((int)HttpStatusCode.NotFound);
+        _httpContext.Response.Body.Seek(0, SeekOrigin.Begin);
+        using var reader = new StreamReader(_httpContext.Response.Body);
+        var responseBody = await reader.ReadToEndAsync();
+
+        var jsonDoc = JsonDocument.Parse(responseBody);
+        jsonDoc.RootElement.GetProperty("title").GetString().Should().Be("Resource Not Found");
+        jsonDoc.RootElement.GetProperty("status").GetInt32().Should().Be((int)HttpStatusCode.NotFound);
+        jsonDoc.RootElement.GetProperty("detail").GetString().Should().Be($"Subscription with ID {entityId} was not found");
+    }
+
+    [Fact]
+    public async Task InvokeAsync_Should_Return422_For_NonNotFoundDomainException()
+    {
+        // Arrange
+        var exception = new InvalidStateTransitionException("Subscription", "Trial", "Cancelled");
+        _mockNext.Setup(x => x(It.IsAny<HttpContext>()))
+            .ThrowsAsync(exception);
+
+        // Act
+        await _middleware.InvokeAsync(_httpContext);
+
+        // Assert
+        _httpContext.Response.StatusCode.Should().Be(StatusCodes.Status422UnprocessableEntity);
+        _httpContext.Response.Body.Seek(0, SeekOrigin.Begin);
+        using var reader = new StreamReader(_httpContext.Response.Body);
+        var responseBody = await reader.ReadToEndAsync();
+
+        var jsonDoc = JsonDocument.Parse(responseBody);
+        jsonDoc.RootElement.GetProperty("title").GetString().Should().Be("Domain Rule Violation");
+        jsonDoc.RootElement.GetProperty("status").GetInt32().Should().Be(StatusCodes.Status422UnprocessableEntity);
     }
 
     [Fact]
@@ -288,7 +334,7 @@ public class ExceptionHandlingMiddlewareTests
         _httpContext.Response.Body.Seek(0, SeekOrigin.Begin);
         using var reader = new StreamReader(_httpContext.Response.Body);
         var responseBody = await reader.ReadToEndAsync();
-        
+
         var act = () => JsonDocument.Parse(responseBody);
         act.Should().NotThrow();
     }

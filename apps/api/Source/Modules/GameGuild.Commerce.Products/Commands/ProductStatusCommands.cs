@@ -24,7 +24,7 @@ public sealed class ActivateProductHandler(IProductRepository repository) : ICom
         // Product activation logic - if the entity had an IsActive flag, we'd set it here
         // For now, this is a placeholder for future status management
         product.Touch();
-        
+
         await repository.UpdateAsync(product, cancellationToken).ConfigureAwait(false);
         return product.ToDto();
     }
@@ -52,7 +52,7 @@ public sealed class DeactivateProductHandler(IProductRepository repository) : IC
         // Product deactivation logic - if the entity had an IsActive flag, we'd set it here
         // For now, this is a placeholder for future status management
         product.Touch();
-        
+
         await repository.UpdateAsync(product, cancellationToken).ConfigureAwait(false);
         return product.ToDto();
     }
@@ -79,7 +79,7 @@ public sealed class ArchiveProductHandler(IProductRepository repository) : IComm
 
         // Archive the product using soft delete
         product.SoftDelete();
-        
+
         await repository.UpdateAsync(product, cancellationToken).ConfigureAwait(false);
         return product.ToDto();
     }
@@ -141,9 +141,9 @@ public sealed class PatchProductHandler(IProductRepository repository) : IComman
         if (request.ImageUrl != null) product.ImageUrl = request.ImageUrl;
         if (request.Type.HasValue) product.Type = request.Type.Value;
         if (request.IsBundle.HasValue) product.IsBundle = request.IsBundle.Value;
-        
+
         product.Touch();
-        
+
         await repository.UpdateAsync(product, cancellationToken).ConfigureAwait(false);
         return product.ToDto();
     }
@@ -210,7 +210,8 @@ public sealed class BatchCreateProductsHandler(IProductRepository repository) : 
 /// Query to check if a product exists
 /// </summary>
 /// <param name="ProductId">Product ID</param>
-public sealed record ProductExistsQuery(Guid ProductId) : IQuery<bool>;
+/// <param name="IncludeUnpublished">Whether drafts should be considered</param>
+public sealed record ProductExistsQuery(Guid ProductId, bool IncludeUnpublished = false) : IQuery<bool>;
 
 /// <summary>
 /// Handler for ProductExistsQuery
@@ -219,7 +220,9 @@ public sealed class ProductExistsHandler(IProductRepository repository) : IQuery
 {
     public async Task<bool> Handle(ProductExistsQuery request, CancellationToken cancellationToken)
     {
-        var product = await repository.GetByIdAsync(request.ProductId, cancellationToken).ConfigureAwait(false);
-        return product != null;
+        return await repository.ExistsAsync(
+            request.ProductId,
+            cancellationToken,
+            isPublished: request.IncludeUnpublished ? null : true).ConfigureAwait(false);
     }
 }

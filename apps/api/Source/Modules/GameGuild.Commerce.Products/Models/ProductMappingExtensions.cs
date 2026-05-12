@@ -18,6 +18,7 @@ public static class ProductMappingExtensions
             product.ImageUrl,
             product.Type,
             product.IsBundle,
+            product.IsPublished,
             product.CreatorId,
 #pragma warning disable CS0618 // Suppress obsolete warning for backwards compatibility
             product.GetBundleItemIds(),
@@ -66,7 +67,7 @@ public static class ProductMappingExtensions
     public static ProductPricingDto ToDto(this ProductPricing pricing)
     {
         var now = SystemClock.UtcNow;
-        var isSaleActive = pricing.SalePrice.HasValue 
+        var isSaleActive = pricing.SalePrice.HasValue
             && (!pricing.SaleStartDate.HasValue || pricing.SaleStartDate <= now)
             && (!pricing.SaleEndDate.HasValue || pricing.SaleEndDate > now);
 

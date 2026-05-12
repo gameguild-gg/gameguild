@@ -29,7 +29,7 @@ public class GetProductByIdQueryHandlerTests
         var product = CreateProduct(productId);
 
         _mockRepository
-            .Setup(r => r.GetByIdAsync(productId, It.IsAny<CancellationToken>(), true, false))
+            .Setup(r => r.GetByIdAsync(productId, It.IsAny<CancellationToken>(), true, false, true))
             .ReturnsAsync(product);
 
         // Act
@@ -48,7 +48,7 @@ public class GetProductByIdQueryHandlerTests
         var query = new GetProductByIdQuery(productId);
 
         _mockRepository
-            .Setup(r => r.GetByIdAsync(productId, It.IsAny<CancellationToken>(), true, false))
+            .Setup(r => r.GetByIdAsync(productId, It.IsAny<CancellationToken>(), true, false, true))
             .ReturnsAsync((Product?)null);
 
         // Act
@@ -82,7 +82,7 @@ public class GetProductByIdQueryHandlerTests
         typeof(EntityBase).GetProperty(nameof(EntityBase.UpdatedAt))!.SetValue(product, new DateTime(2024, 6, 1));
 
         _mockRepository
-            .Setup(r => r.GetByIdAsync(productId, It.IsAny<CancellationToken>(), true, false))
+            .Setup(r => r.GetByIdAsync(productId, It.IsAny<CancellationToken>(), true, false, true))
             .ReturnsAsync(product);
 
         // Act
@@ -96,6 +96,7 @@ public class GetProductByIdQueryHandlerTests
         result.ImageUrl.Should().Be("https://example.com/image.png");
         result.Type.Should().Be(ProductType.Course);
         result.IsBundle.Should().BeFalse();
+        result.IsPublished.Should().BeTrue();
         result.CreatorId.Should().Be(creatorId);
     }
 
@@ -108,7 +109,7 @@ public class GetProductByIdQueryHandlerTests
         var product = CreateProductWithPricing(productId);
 
         _mockRepository
-            .Setup(r => r.GetByIdAsync(productId, It.IsAny<CancellationToken>(), true, false))
+            .Setup(r => r.GetByIdAsync(productId, It.IsAny<CancellationToken>(), true, false, true))
             .ReturnsAsync(product);
 
         // Act
@@ -129,7 +130,7 @@ public class GetProductByIdQueryHandlerTests
         var product = CreateProductWithPricing(productId);
 
         _mockRepository
-            .Setup(r => r.GetByIdAsync(productId, It.IsAny<CancellationToken>(), false, false))
+            .Setup(r => r.GetByIdAsync(productId, It.IsAny<CancellationToken>(), false, false, true))
             .ReturnsAsync(product);
 
         // Act
@@ -149,14 +150,36 @@ public class GetProductByIdQueryHandlerTests
         var product = CreateProduct(productId);
 
         _mockRepository
-            .Setup(r => r.GetByIdAsync(productId, It.IsAny<CancellationToken>(), true, true))
+            .Setup(r => r.GetByIdAsync(productId, It.IsAny<CancellationToken>(), true, true, true))
             .ReturnsAsync(product);
 
         // Act
         await _handler.Handle(query, CancellationToken.None);
 
         // Assert
-        _mockRepository.Verify(r => r.GetByIdAsync(productId, It.IsAny<CancellationToken>(), true, true), Times.Once);
+        _mockRepository.Verify(r => r.GetByIdAsync(productId, It.IsAny<CancellationToken>(), true, true, true), Times.Once);
+    }
+
+    [Fact]
+    public async Task Handle_WithIncludeUnpublishedTrue_DoesNotApplyPublishedFilter()
+    {
+        // Arrange
+        var productId = Guid.NewGuid();
+        var query = new GetProductByIdQuery(productId, IncludeUnpublished: true);
+        var product = CreateProduct(productId);
+        product.IsPublished = false;
+
+        _mockRepository
+            .Setup(r => r.GetByIdAsync(productId, It.IsAny<CancellationToken>(), true, false, null))
+            .ReturnsAsync(product);
+
+        // Act
+        var result = await _handler.Handle(query, CancellationToken.None);
+
+        // Assert
+        result.Should().NotBeNull();
+        result!.IsPublished.Should().BeFalse();
+        _mockRepository.Verify(r => r.GetByIdAsync(productId, It.IsAny<CancellationToken>(), true, false, null), Times.Once);
     }
 
     [Fact]
@@ -178,14 +201,14 @@ public class GetProductByIdQueryHandlerTests
         using var cts = new CancellationTokenSource();
 
         _mockRepository
-            .Setup(r => r.GetByIdAsync(productId, cts.Token, true, false))
+            .Setup(r => r.GetByIdAsync(productId, cts.Token, true, false, true))
             .ReturnsAsync(CreateProduct(productId));
 
         // Act
         await _handler.Handle(query, cts.Token);
 
         // Assert
-        _mockRepository.Verify(r => r.GetByIdAsync(productId, cts.Token, true, false), Times.Once);
+        _mockRepository.Verify(r => r.GetByIdAsync(productId, cts.Token, true, false, true), Times.Once);
     }
 
     private static Product CreateProduct(Guid productId)

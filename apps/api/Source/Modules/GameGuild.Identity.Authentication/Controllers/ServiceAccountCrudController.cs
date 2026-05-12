@@ -10,6 +10,7 @@ namespace GameGuild.Identity.Authentication;
 /// <summary>
 ///     Controller for service account CRUD operations (create, read, update, delete).
 /// </summary>
+[Microsoft.AspNetCore.Http.Tags("auth/service-accounts")]
 [ApiController]
 [ApiVersion("1.0")]
 [Route("v{version:apiVersion}/auth/service-accounts")]

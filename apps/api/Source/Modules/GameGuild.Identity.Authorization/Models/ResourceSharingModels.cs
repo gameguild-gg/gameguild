@@ -151,6 +151,82 @@ public sealed record PendingInvitationDto(
     string Status);
 
 /// <summary>
+///     DTO for invitation-centric endpoints.
+/// </summary>
+/// <param name="InvitationId">The invitation ID.</param>
+/// <param name="TenantId">The tenant the invitation belongs to.</param>
+/// <param name="Email">The invited email address.</param>
+/// <param name="ResourceType">The shared resource type.</param>
+/// <param name="ResourceId">The shared resource identifier.</param>
+/// <param name="Permissions">The permissions to be granted when accepted.</param>
+/// <param name="Message">Optional invitation message.</param>
+/// <param name="InvitedByUserName">The display name of the inviter.</param>
+/// <param name="InvitedAt">When the invitation was sent.</param>
+/// <param name="ExpiresAt">When the invitation expires.</param>
+/// <param name="Status">The current invitation status.</param>
+public sealed record ResourceInvitationDto(
+    Guid InvitationId,
+    Guid TenantId,
+    string Email,
+    string ResourceType,
+    string ResourceId,
+    string[] Permissions,
+    string? Message,
+    string? InvitedByUserName,
+    DateTime InvitedAt,
+    DateTime? ExpiresAt,
+    string Status);
+
+/// <summary>
+///     Request payload for declining an invitation.
+/// </summary>
+/// <param name="Reason">Optional reason for declining.</param>
+public sealed record DeclineInvitationRequest(string? Reason = null);
+
+/// <summary>
+///     Result of performing an invitation lifecycle action.
+/// </summary>
+public sealed class InvitationActionResult
+{
+    public bool Success { get; init; }
+
+    public Guid InvitationId { get; init; }
+
+    public string? Status { get; init; }
+
+    public Guid? TenantId { get; init; }
+
+    public string? ResourceType { get; init; }
+
+    public string? ResourceId { get; init; }
+
+    public string? ErrorMessage { get; init; }
+
+    public static InvitationActionResult SuccessResult(ResourceInvitation invitation, InvitationStatus status)
+    {
+        return new InvitationActionResult
+        {
+            Success = true,
+            InvitationId = invitation.Id,
+            Status = status.ToString(),
+            TenantId = invitation.TenantId.Value,
+            ResourceType = invitation.ResourceType,
+            ResourceId = invitation.ResourceId
+        };
+    }
+
+    public static InvitationActionResult Failure(Guid invitationId, string errorMessage)
+    {
+        return new InvitationActionResult
+        {
+            Success = false,
+            InvitationId = invitationId,
+            ErrorMessage = errorMessage
+        };
+    }
+}
+
+/// <summary>
 ///     Request to apply a permission template.
 /// </summary>
 public sealed record ApplyTemplateRequest(

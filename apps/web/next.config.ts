@@ -5,9 +5,36 @@ const nextConfig: NextConfig = {
   reactCompiler: true,
   output: "standalone",
   transpilePackages: ["@game-guild/ui", "@game-guild/community-members", "@game-guild/courses"],
-  typedRoutes: true,
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "placehold.co",
+      },
+      {
+        protocol: "https",
+        hostname: "i.imgur.com",
+      },
+      {
+        protocol: "https",
+        hostname: "images.unsplash.com",
+      },
+      {
+        protocol: "https",
+        hostname: "www.python.org",
+      },
+    ],
+  },
   experimental: {
     authInterrupts: true,
+  },
+  webpack: (config) => {
+    config.module.rules.push({
+      test: /\.md$/,
+      type: "asset/source",
+    });
+
+    return config;
   },
 };
 

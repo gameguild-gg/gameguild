@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using GameGuild.Features;
+using GameGuild.Identity.Tenants;
 
 namespace GameGuild.Assets;
 
@@ -24,6 +25,7 @@ public class AssetAccessService : IAssetAccessService
     private readonly IAssetReferenceRepository _referenceRepository;
     private readonly IAssetStorageService _storageService;
     private readonly IAssetTokenService _tokenService;
+    private readonly ITenantMemberRepository _tenantMemberRepository;
     private readonly IFeatureFlagEvaluationService _featureService;
     private readonly AssetAccessOptions _options;
     private readonly ILogger<AssetAccessService> _logger;
@@ -32,6 +34,7 @@ public class AssetAccessService : IAssetAccessService
         IAssetReferenceRepository referenceRepository,
         IAssetStorageService storageService,
         IAssetTokenService tokenService,
+        ITenantMemberRepository tenantMemberRepository,
         IFeatureFlagEvaluationService featureService,
         IOptions<AssetAccessOptions> options,
         ILogger<AssetAccessService> logger)
@@ -39,6 +42,7 @@ public class AssetAccessService : IAssetAccessService
         _referenceRepository = referenceRepository;
         _storageService = storageService;
         _tokenService = tokenService;
+        _tenantMemberRepository = tenantMemberRepository;
         _featureService = featureService;
         _options = options.Value;
         _logger = logger;
@@ -217,6 +221,35 @@ public class AssetAccessService : IAssetAccessService
         // Check access policy
         switch (reference.AccessPolicy)
         {
+            case AssetAccessPolicy.Private:
+                if (userId == null)
+                {
+                    return new AssetAccessValidation(false, AssetAccessDeniedReason.AuthenticationRequired);
+                }
+
+                if (reference.CreatedByUserId == userId)
+                {
+                    return new AssetAccessValidation(true, null);
+                }
+
+                if (tenantId == null)
+                {
+                    return new AssetAccessValidation(false, AssetAccessDeniedReason.OwnershipRequired);
+                }
+
+                var membership = await _tenantMemberRepository
+                    .GetByUserAndTenantAsync(userId.Value, tenantId.Value, ct)
+                    .ConfigureAwait(false);
+
+                if (membership is { IsActive: true } &&
+                    (string.Equals(membership.Role, TenantRole.Owner.Value, StringComparison.OrdinalIgnoreCase) ||
+                     string.Equals(membership.Role, TenantRole.Admin.Value, StringComparison.OrdinalIgnoreCase)))
+                {
+                    return new AssetAccessValidation(true, null);
+                }
+
+                return new AssetAccessValidation(false, AssetAccessDeniedReason.OwnershipRequired);
+
             case AssetAccessPolicy.Public:
                 return new AssetAccessValidation(true, null);
 

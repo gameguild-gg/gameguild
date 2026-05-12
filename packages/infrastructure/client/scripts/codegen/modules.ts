@@ -4,12 +4,12 @@
  * Generates module-grouped endpoint files based on OpenAPI tags.
  */
 
-import type { OpenApiSpec } from '../fetch-spec.js';
 import type { OpenAPIV3 } from 'openapi-types';
-import { toPascalCase, toCamelCase } from '../utils/naming.js';
+import type { OpenApiSpec } from '../fetch-spec.js';
+import { toCamelCase, toPascalCase } from '../utils/naming.js';
 import { qualifyType } from '../utils/type-qualify.js';
-import { TypeMapperChain } from './strategies/SchemaTypeMapper.js';
 import { HTTP_METHODS } from './constants.js';
+import { TypeMapperChain } from './strategies/SchemaTypeMapper.js';
 
 interface ModuleEndpoint {
   operationId: string;
@@ -29,6 +29,10 @@ interface ModuleEndpoint {
   responseSchema?: string;
   requiresAuth: boolean;
 }
+
+type OperationWithExtensions = OpenAPIV3.OperationObject & {
+  'x-gameguild-allow-anonymous'?: boolean;
+};
 
 /**
  * Generate module files grouped by OpenAPI tags
@@ -130,7 +134,8 @@ function extractModuleEndpoint(
   }
 
   // Check if auth is required
-  const security = operation.security || spec.security || [];
+  const allowAnonymous = (operation as OperationWithExtensions)['x-gameguild-allow-anonymous'] === true;
+  const security = allowAnonymous ? [] : operation.security || spec.security || [];
   const requiresAuth = security.length > 0;
 
   return {
@@ -286,6 +291,11 @@ function buildMethodParams(endpoint: ModuleEndpoint): string {
     params.push(`${param.name}: ${qualifyType(param.type)}`);
   }
 
+  // Request body
+  if (endpoint.requestBodyType) {
+    params.push(`body: ${qualifyType(endpoint.requestBodyType)}`);
+  }
+
   // Query parameters
   const queryParams = endpoint.parameters.filter((p) => p.in === 'query');
   if (queryParams.length > 0) {
@@ -295,12 +305,8 @@ function buildMethodParams(endpoint: ModuleEndpoint): string {
         return `${p.name}${optional}: ${qualifyType(p.type)}`;
       })
       .join('; ');
-    params.push(`query?: { ${queryType} }`);
-  }
-
-  // Request body
-  if (endpoint.requestBodyType) {
-    params.push(`body: ${qualifyType(endpoint.requestBodyType)}`);
+    const queryOptional = queryParams.some((p) => p.required) ? '' : '?';
+    params.push(`query${queryOptional}: { ${queryType} }`);
   }
 
   return params.join(', ');

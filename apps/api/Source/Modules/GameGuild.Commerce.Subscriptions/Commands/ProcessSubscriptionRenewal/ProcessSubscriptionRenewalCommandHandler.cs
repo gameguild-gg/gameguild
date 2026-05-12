@@ -12,7 +12,19 @@ public sealed class ProcessSubscriptionRenewalCommandHandler(ISubscriptionBillin
     /// <inheritdoc />
     public async Task<Unit> Handle(ProcessSubscriptionRenewalCommand request, CancellationToken cancellationToken)
     {
-        await billingService.ProcessRenewalAsync(request.SubscriptionId, cancellationToken).ConfigureAwait(false);
+        var result = await billingService.ProcessRenewalAsync(request.SubscriptionId, cancellationToken)
+            .ConfigureAwait(false);
+
+        if (!result.Success)
+        {
+            throw new RequestValidationException([
+                new ValidationError(
+                    nameof(ProcessSubscriptionRenewalCommand.SubscriptionId),
+                    result.FailureReason ?? $"Failed to renew subscription {request.SubscriptionId}",
+                    request.SubscriptionId)
+            ]);
+        }
+
         return Unit.Value;
     }
 }

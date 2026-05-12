@@ -11,6 +11,7 @@ namespace GameGuild.Identity.Authorization.Controllers;
 /// <summary>
 ///     API controller for JIT (Just-in-Time) elevation operations
 /// </summary>
+[Microsoft.AspNetCore.Http.Tags("access-control/jit-elevations")]
 [ApiVersion("1.0")]
 [Route("v{version:apiVersion}/jit-elevations")]
 [Authorize]

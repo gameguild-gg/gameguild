@@ -11,7 +11,7 @@ namespace GameGuild.Identity.Users;
 ///     Controller for managing user notifications
 /// </summary>
 [ApiVersion("1.0")]
-[Tags("users/notifications")]
+[Microsoft.AspNetCore.Http.Tags("users/notifications")]
 [Authorize]
 public sealed class UserNotificationsController(ISender sender) : BaseApiController
 {

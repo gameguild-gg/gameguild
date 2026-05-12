@@ -16,6 +16,29 @@ export class HealthModule {
   constructor(private readonly client: ApiClient) {}
 
   /**
+   * Application information endpoint
+   *
+   * Provides application version, build details, and runtime information for debugging and deployment monitoring.
+   */
+  async getInfo(): Promise<Result<Types.APIControllersApplicationInfoOutput, ApiError>> {
+    const url = '/info';
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.APIControllersApplicationInfoOutputSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
    * Comprehensive application health check
    *
    * Performs a comprehensive health check of all registered services and dependencies. Returns detailed status information for monitoring systems, load balancers, and orchestration platforms.
@@ -26,7 +49,7 @@ export class HealthModule {
     const result = await this.client.request({
       method: 'GET',
       path: url,
-      requiresAuth: true,
+      requiresAuth: false,
     });
 
     // Validate response
@@ -49,7 +72,7 @@ export class HealthModule {
     const result = await this.client.request({
       method: 'GET',
       path: url,
-      requiresAuth: true,
+      requiresAuth: false,
     });
 
     // Validate response
@@ -72,7 +95,7 @@ export class HealthModule {
     const result = await this.client.request({
       method: 'GET',
       path: url,
-      requiresAuth: true,
+      requiresAuth: false,
     });
 
     // Validate response
@@ -95,7 +118,7 @@ export class HealthModule {
     const result = await this.client.request({
       method: 'GET',
       path: url,
-      requiresAuth: true,
+      requiresAuth: false,
     });
 
     // Validate response
@@ -118,33 +141,10 @@ export class HealthModule {
     const result = await this.client.request({
       method: 'GET',
       path: url,
-      requiresAuth: true,
+      requiresAuth: false,
     });
 
     return result as Result<void, ApiError>;
-  }
-
-  /**
-   * Application information endpoint
-   *
-   * Provides application version, build details, and runtime information for debugging and deployment monitoring.
-   */
-  async getInfo(): Promise<Result<Types.APIControllersApplicationInfoOutput, ApiError>> {
-    const url = '/info';
-
-    const result = await this.client.request({
-      method: 'GET',
-      path: url,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(Types.APIControllersApplicationInfoOutputSchema, result.data, 'response');
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
   }
 }
 

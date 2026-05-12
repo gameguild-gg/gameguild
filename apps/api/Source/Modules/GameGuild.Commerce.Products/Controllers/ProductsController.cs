@@ -21,12 +21,16 @@ public class ProductsController(IMediator mediator) : BaseApiController
     /// </summary>
     /// <param name="productId">Product ID</param>
     /// <param name="includePricing">Include pricing information</param>
+    /// <param name="includeUnpublished">Include drafts when authenticated</param>
     /// <returns>Product details</returns>
     [HttpGet("{productId:guid}")]
     [AllowAnonymous]
-    public async Task<ActionResult<ProductDto>> GetProduct(Guid productId, [FromQuery] bool includePricing = true)
+    public async Task<ActionResult<ProductDto>> GetProduct(
+        Guid productId,
+        [FromQuery] bool includePricing = true,
+        [FromQuery] bool includeUnpublished = false)
     {
-        var query = new GetProductByIdQuery(productId, includePricing);
+        var query = new GetProductByIdQuery(productId, includePricing, IncludeUnpublished: CanIncludeUnpublished(includeUnpublished));
         var product = await mediator.Send(query).ConfigureAwait(false);
 
         if (product == null)
@@ -39,12 +43,13 @@ public class ProductsController(IMediator mediator) : BaseApiController
     /// Check if a product exists
     /// </summary>
     /// <param name="productId">Product ID</param>
+    /// <param name="includeUnpublished">Include drafts when authenticated</param>
     /// <returns>200 if exists, 404 if not</returns>
     [HttpHead("{productId:guid}")]
     [AllowAnonymous]
-    public async Task<IActionResult> ProductExists(Guid productId)
+    public async Task<IActionResult> ProductExists(Guid productId, [FromQuery] bool includeUnpublished = false)
     {
-        var query = new ProductExistsQuery(productId);
+        var query = new ProductExistsQuery(productId, CanIncludeUnpublished(includeUnpublished));
         var exists = await mediator.Send(query).ConfigureAwait(false);
         return exists ? Ok() : NotFound();
     }
@@ -53,12 +58,15 @@ public class ProductsController(IMediator mediator) : BaseApiController
     /// Get pricing options for a product
     /// </summary>
     /// <param name="productId">Product ID</param>
+    /// <param name="includeUnpublished">Include drafts when authenticated</param>
     /// <returns>List of pricing options</returns>
     [HttpGet("{productId:guid}/pricing")]
     [AllowAnonymous]
-    public async Task<ActionResult<IReadOnlyList<ProductPricingDto>>> GetProductPricing(Guid productId)
+    public async Task<ActionResult<IReadOnlyList<ProductPricingDto>>> GetProductPricing(
+        Guid productId,
+        [FromQuery] bool includeUnpublished = false)
     {
-        var query = new GetProductPricingQuery(productId);
+        var query = new GetProductPricingQuery(productId, CanIncludeUnpublished(includeUnpublished));
         var pricing = await mediator.Send(query).ConfigureAwait(false);
         return Ok(pricing);
     }
@@ -70,6 +78,7 @@ public class ProductsController(IMediator mediator) : BaseApiController
     /// <param name="creatorId">Filter by creator ID</param>
     /// <param name="searchTerm">Search term</param>
     /// <param name="isBundle">Filter by bundle status</param>
+    /// <param name="includeUnpublished">Include drafts when authenticated</param>
     /// <param name="skip">Items to skip</param>
     /// <param name="take">Items to take</param>
     /// <param name="sortBy">Sort field</param>
@@ -82,12 +91,22 @@ public class ProductsController(IMediator mediator) : BaseApiController
         [FromQuery] Guid? creatorId = null,
         [FromQuery] string? searchTerm = null,
         [FromQuery] bool? isBundle = null,
+        [FromQuery] bool includeUnpublished = false,
         [FromQuery] int skip = 0,
         [FromQuery] int take = 50,
         [FromQuery] string sortBy = "CreatedAt",
         [FromQuery] string sortDirection = "DESC")
     {
-        var query = new GetProductsPagedQuery(type, creatorId, searchTerm, isBundle, skip, take, sortBy, sortDirection);
+        var query = new GetProductsPagedQuery(
+            type,
+            creatorId,
+            searchTerm,
+            isBundle,
+            CanIncludeUnpublished(includeUnpublished),
+            skip,
+            take,
+            sortBy,
+            sortDirection);
         var result = await mediator.Send(query).ConfigureAwait(false);
         return Ok(result);
     }
@@ -251,6 +270,11 @@ public class ProductsController(IMediator mediator) : BaseApiController
         var command = new DeleteProductCommand(productId, softDelete, reason);
         await mediator.Send(command).ConfigureAwait(false);
         return NoContent();
+    }
+
+    private bool CanIncludeUnpublished(bool includeUnpublished)
+    {
+        return includeUnpublished && User?.Identity?.IsAuthenticated == true;
     }
 }
 

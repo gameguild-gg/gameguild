@@ -5,15 +5,17 @@ import type { ComponentType, ReactNode } from 'react';
  * richer course type that satisfies this interface.
  */
 export interface CourseSummary {
-  id?: string;
-  slug?: string;
-  title?: string;
-  description?: string;
-  thumbnail?: string;
+  id?: string | number;
+  slug?: string | null;
+  title?: string | null;
+  description?: string | null;
+  thumbnail?: string | null;
   [key: string]: unknown;
 }
 
 export interface CourseCatalogProps<TCourse extends CourseSummary = CourseSummary> {
+  /** Optional initial data for server-rendered catalog shells. */
+  initialCourses?: TCourse[];
   /** Async loader for the catalog list. Defaults to an empty list. */
   loadCourses?: () => Promise<TCourse[]>;
   /** Provider that supplies catalog state to descendants. Defaults to a pass-through. */

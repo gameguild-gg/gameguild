@@ -1,0 +1,228 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 560" font-family="'Segoe UI', 'Helvetica Neue', sans-serif">
+  <defs>
+    <style>
+      .title { font-size: 15px; font-weight: 700; fill: #1a1a2e; letter-spacing: 1.5px; }
+      .label { font-size: 13px; fill: #555; font-weight: 500; }
+      .circle-outline { fill: none; stroke: #334155; stroke-width: 2.5; }
+      .dim { fill: #e2e8f0; opacity: 0.6; }
+      .highlight { opacity: 0.85; }
+      .left-color { fill: #3b82f6; }
+      .right-color { fill: #f59e0b; }
+      .intersection-color { fill: #10b981; }
+      .subtitle { font-size: 11px; fill: #64748b; font-style: italic; }
+      .sql { font-size: 10.5px; fill: #475569; font-family: 'Courier New', monospace; }
+    </style>
+    <marker id="arrow" markerWidth="6" markerHeight="5" refX="6" refY="2.5" orient="auto">
+      <path d="M0,0 L6,2.5 L0,5 Z" fill="#334155"/>
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="560" rx="16" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+
+  <!-- Main Title -->
+  <text x="600" y="42" text-anchor="middle" font-size="22" font-weight="800" fill="#0f172a" letter-spacing="1px">SQL JOIN Types — Venn Diagram Reference</text>
+  <line x1="420" y1="52" x2="780" y2="52" stroke="#3b82f6" stroke-width="2" opacity="0.5"/>
+
+  <!-- ==================== INNER JOIN ==================== -->
+  <!-- Top row: r=70, centers at (85,165) and (135,165), d=50 -->
+  <!-- Intersection points: x=110, y=99.6 and y=230.4 -->
+  <g transform="translate(20, 70)">
+    <rect width="210" height="290" rx="12" fill="white" stroke="#e2e8f0" stroke-width="1.5"/>
+    <text x="105" y="30" text-anchor="middle" class="title">INNER JOIN</text>
+    <text x="105" y="48" text-anchor="middle" class="subtitle">Only matching rows</text>
+
+    <circle cx="85" cy="165" r="70" class="dim"/>
+    <circle cx="135" cy="165" r="70" class="dim"/>
+    <!-- Intersection lens -->
+    <path d="M110,99.6 A70,70 0 0,1 110,230.4 A70,70 0 0,1 110,99.6 Z" class="highlight intersection-color"/>
+    <circle cx="85" cy="165" r="70" class="circle-outline"/>
+    <circle cx="135" cy="165" r="70" class="circle-outline"/>
+
+    <text x="48" y="170" text-anchor="middle" class="label" fill="#94a3b8">A</text>
+    <text x="110" y="170" text-anchor="middle" class="label" fill="white" font-weight="700">A∩B</text>
+    <text x="172" y="170" text-anchor="middle" class="label" fill="#94a3b8">B</text>
+
+    <text x="105" y="262" text-anchor="middle" class="sql">SELECT ... FROM A</text>
+    <text x="105" y="278" text-anchor="middle" class="sql">INNER JOIN B ON ...</text>
+  </g>
+
+  <!-- ==================== LEFT JOIN ==================== -->
+  <g transform="translate(250, 70)">
+    <rect width="210" height="290" rx="12" fill="white" stroke="#e2e8f0" stroke-width="1.5"/>
+    <text x="105" y="30" text-anchor="middle" class="title">LEFT JOIN</text>
+    <text x="105" y="48" text-anchor="middle" class="subtitle">All left + matching right</text>
+
+    <circle cx="135" cy="165" r="70" class="dim"/>
+    <circle cx="85" cy="165" r="70" class="highlight left-color"/>
+    <path d="M110,99.6 A70,70 0 0,1 110,230.4 A70,70 0 0,1 110,99.6 Z" class="highlight intersection-color"/>
+    <circle cx="85" cy="165" r="70" class="circle-outline"/>
+    <circle cx="135" cy="165" r="70" class="circle-outline"/>
+
+    <text x="48" y="170" text-anchor="middle" class="label" fill="white" font-weight="700">A</text>
+    <text x="110" y="170" text-anchor="middle" class="label" fill="white" font-weight="700">A∩B</text>
+    <text x="172" y="170" text-anchor="middle" class="label" fill="#94a3b8">B</text>
+
+    <text x="105" y="262" text-anchor="middle" class="sql">SELECT ... FROM A</text>
+    <text x="105" y="278" text-anchor="middle" class="sql">LEFT JOIN B ON ...</text>
+  </g>
+
+  <!-- ==================== RIGHT JOIN ==================== -->
+  <g transform="translate(480, 70)">
+    <rect width="210" height="290" rx="12" fill="white" stroke="#e2e8f0" stroke-width="1.5"/>
+    <text x="105" y="30" text-anchor="middle" class="title">RIGHT JOIN</text>
+    <text x="105" y="48" text-anchor="middle" class="subtitle">All right + matching left</text>
+
+    <circle cx="85" cy="165" r="70" class="dim"/>
+    <circle cx="135" cy="165" r="70" class="highlight right-color"/>
+    <path d="M110,99.6 A70,70 0 0,1 110,230.4 A70,70 0 0,1 110,99.6 Z" class="highlight intersection-color"/>
+    <circle cx="85" cy="165" r="70" class="circle-outline"/>
+    <circle cx="135" cy="165" r="70" class="circle-outline"/>
+
+    <text x="48" y="170" text-anchor="middle" class="label" fill="#94a3b8">A</text>
+    <text x="110" y="170" text-anchor="middle" class="label" fill="white" font-weight="700">A∩B</text>
+    <text x="172" y="170" text-anchor="middle" class="label" fill="white" font-weight="700">B</text>
+
+    <text x="105" y="262" text-anchor="middle" class="sql">SELECT ... FROM A</text>
+    <text x="105" y="278" text-anchor="middle" class="sql">RIGHT JOIN B ON ...</text>
+  </g>
+
+  <!-- ==================== FULL OUTER JOIN ==================== -->
+  <g transform="translate(710, 70)">
+    <rect width="210" height="290" rx="12" fill="white" stroke="#e2e8f0" stroke-width="1.5"/>
+    <text x="105" y="30" text-anchor="middle" class="title">FULL OUTER JOIN</text>
+    <text x="105" y="48" text-anchor="middle" class="subtitle">All rows from both tables</text>
+
+    <circle cx="85" cy="165" r="70" class="highlight left-color"/>
+    <circle cx="135" cy="165" r="70" class="highlight right-color"/>
+    <path d="M110,99.6 A70,70 0 0,1 110,230.4 A70,70 0 0,1 110,99.6 Z" class="highlight intersection-color"/>
+    <circle cx="85" cy="165" r="70" class="circle-outline"/>
+    <circle cx="135" cy="165" r="70" class="circle-outline"/>
+
+    <text x="48" y="170" text-anchor="middle" class="label" fill="white" font-weight="700">A</text>
+    <text x="110" y="170" text-anchor="middle" class="label" fill="white" font-weight="700">A∩B</text>
+    <text x="172" y="170" text-anchor="middle" class="label" fill="white" font-weight="700">B</text>
+
+    <text x="105" y="262" text-anchor="middle" class="sql">SELECT ... FROM A</text>
+    <text x="105" y="278" text-anchor="middle" class="sql">FULL OUTER JOIN B ON ...</text>
+  </g>
+
+  <!-- ==================== BOTTOM ROW ==================== -->
+  <!-- Exclusive joins: r=48, d=45 -->
+  <!-- Left excl: centers (85,88) and (130,88). Intersection: x=107.5, y_offset=sqrt(48²-22.5²)=42.4 → y=45.6 and 130.4 -->
+  <!-- Right excl: centers (80,88) and (125,88). Intersection: x=102.5, y=45.6 and 130.4 -->
+  <!-- Full excl: centers (82,85) and (128,85), d=46. x=105, y_offset=sqrt(48²-23²)=42.13 → y=42.87 and 127.13 -->
+
+  <!-- ==================== LEFT EXCLUSIVE ==================== -->
+  <g transform="translate(20, 380)">
+    <rect width="210" height="170" rx="12" fill="white" stroke="#e2e8f0" stroke-width="1.5"/>
+    <text x="105" y="26" text-anchor="middle" class="title" font-size="12">LEFT EXCLUSIVE</text>
+
+    <!-- Dim both circles as base -->
+    <circle cx="85" cy="88" r="48" class="dim"/>
+    <circle cx="130" cy="88" r="48" class="dim"/>
+    <!-- Left crescent only (left circle minus intersection) -->
+    <path d="M107.5,45.6 A48,48 0 1,0 107.5,130.4 A48,48 0 0,1 107.5,45.6 Z" class="highlight left-color"/>
+    <circle cx="85" cy="88" r="48" class="circle-outline" stroke-width="2"/>
+    <circle cx="130" cy="88" r="48" class="circle-outline" stroke-width="2"/>
+
+    <text x="105" y="155" text-anchor="middle" class="sql" font-size="9.5">WHERE B.key IS NULL</text>
+  </g>
+
+  <!-- ==================== RIGHT EXCLUSIVE ==================== -->
+  <g transform="translate(250, 380)">
+    <rect width="210" height="170" rx="12" fill="white" stroke="#e2e8f0" stroke-width="1.5"/>
+    <text x="105" y="26" text-anchor="middle" class="title" font-size="12">RIGHT EXCLUSIVE</text>
+
+    <circle cx="80" cy="88" r="48" class="dim"/>
+    <circle cx="125" cy="88" r="48" class="dim"/>
+    <!-- Right crescent only -->
+    <path d="M102.5,45.6 A48,48 0 1,1 102.5,130.4 A48,48 0 0,0 102.5,45.6 Z" class="highlight right-color"/>
+    <circle cx="80" cy="88" r="48" class="circle-outline" stroke-width="2"/>
+    <circle cx="125" cy="88" r="48" class="circle-outline" stroke-width="2"/>
+
+    <text x="105" y="155" text-anchor="middle" class="sql" font-size="9.5">WHERE A.key IS NULL</text>
+  </g>
+
+  <!-- ==================== FULL EXCLUSIVE ==================== -->
+  <g transform="translate(480, 380)">
+    <rect width="210" height="170" rx="12" fill="white" stroke="#e2e8f0" stroke-width="1.5"/>
+    <text x="105" y="26" text-anchor="middle" class="title" font-size="12">FULL EXCLUSIVE</text>
+
+    <!-- Dim intersection area -->
+    <circle cx="82" cy="85" r="48" class="dim"/>
+    <circle cx="128" cy="85" r="48" class="dim"/>
+    <!-- Left crescent -->
+    <path d="M105,42.87 A48,48 0 1,0 105,127.13 A48,48 0 0,1 105,42.87 Z" class="highlight left-color"/>
+    <!-- Right crescent -->
+    <path d="M105,42.87 A48,48 0 1,1 105,127.13 A48,48 0 0,0 105,42.87 Z" class="highlight right-color"/>
+    <circle cx="82" cy="85" r="48" class="circle-outline" stroke-width="2"/>
+    <circle cx="128" cy="85" r="48" class="circle-outline" stroke-width="2"/>
+
+    <text x="105" y="148" text-anchor="middle" class="sql" font-size="9.5">WHERE A.key IS NULL</text>
+    <text x="105" y="163" text-anchor="middle" class="sql" font-size="9.5">OR B.key IS NULL</text>
+  </g>
+
+  <!-- ==================== CROSS JOIN (mapping diagram style) ==================== -->
+  <g transform="translate(710, 380)">
+    <rect width="210" height="170" rx="12" fill="white" stroke="#e2e8f0" stroke-width="1.5"/>
+    <text x="105" y="26" text-anchor="middle" class="title" font-size="12">CROSS JOIN</text>
+
+    <!-- Left ellipse -->
+    <ellipse cx="55" cy="88" rx="38" ry="55" fill="none" stroke="#3b82f6" stroke-width="2.5"/>
+    <text x="55" y="52" text-anchor="middle" font-size="12" font-weight="700" fill="#3b82f6">A</text>
+    <!-- Left elements -->
+    <text x="55" y="78" text-anchor="middle" font-size="14" font-weight="600" fill="#1e40af">1</text>
+    <text x="55" y="105" text-anchor="middle" font-size="14" font-weight="600" fill="#1e40af">2</text>
+
+    <!-- Right ellipse -->
+    <ellipse cx="155" cy="88" rx="38" ry="55" fill="none" stroke="#f59e0b" stroke-width="2.5"/>
+    <text x="155" y="52" text-anchor="middle" font-size="12" font-weight="700" fill="#f59e0b">B</text>
+    <!-- Right elements -->
+    <text x="155" y="72" text-anchor="middle" font-size="14" font-weight="600" fill="#b45309">a</text>
+    <text x="155" y="95" text-anchor="middle" font-size="14" font-weight="600" fill="#b45309">b</text>
+    <text x="155" y="118" text-anchor="middle" font-size="14" font-weight="600" fill="#b45309">c</text>
+
+    <!-- Arrows: 1→a, 1→b, 1→c -->
+    <line x1="66" y1="73" x2="140" y2="67" stroke="#334155" stroke-width="1" marker-end="url(#arrow)"/>
+    <line x1="66" y1="75" x2="140" y2="90" stroke="#334155" stroke-width="1" marker-end="url(#arrow)"/>
+    <line x1="66" y1="77" x2="140" y2="113" stroke="#334155" stroke-width="1" marker-end="url(#arrow)"/>
+    <!-- Arrows: 2→a, 2→b, 2→c -->
+    <line x1="66" y1="100" x2="140" y2="67" stroke="#334155" stroke-width="1" marker-end="url(#arrow)"/>
+    <line x1="66" y1="102" x2="140" y2="90" stroke="#334155" stroke-width="1" marker-end="url(#arrow)"/>
+    <line x1="66" y1="104" x2="140" y2="113" stroke="#334155" stroke-width="1" marker-end="url(#arrow)"/>
+
+    <text x="105" y="155" text-anchor="middle" class="sql" font-size="9.5">A × B (every combination)</text>
+  </g>
+
+  <!-- ==================== LEGEND ==================== -->
+  <g transform="translate(945, 80)">
+    <rect width="230" height="185" rx="12" fill="white" stroke="#e2e8f0" stroke-width="1.5"/>
+    <text x="115" y="28" text-anchor="middle" class="title" font-size="13">LEGEND</text>
+    <line x1="20" y1="38" x2="210" y2="38" stroke="#e2e8f0" stroke-width="1"/>
+
+    <rect x="20" y="52" width="24" height="16" rx="4" class="left-color highlight"/>
+    <text x="54" y="64" class="label" font-size="12">Left Table (A)</text>
+
+    <rect x="20" y="80" width="24" height="16" rx="4" class="right-color highlight"/>
+    <text x="54" y="92" class="label" font-size="12">Right Table (B)</text>
+
+    <rect x="20" y="108" width="24" height="16" rx="4" class="intersection-color highlight"/>
+    <text x="54" y="120" class="label" font-size="12">Matched Rows (A∩B)</text>
+
+    <rect x="20" y="136" width="24" height="16" rx="4" fill="#e2e8f0" opacity="0.6"/>
+    <text x="54" y="148" class="label" font-size="12">Not Included</text>
+
+    <text x="115" y="175" text-anchor="middle" font-size="9.5" fill="#94a3b8">NULLs fill non-matching side</text>
+  </g>
+
+  <!-- Note about CROSS JOIN -->
+  <g transform="translate(945, 285)">
+    <rect width="230" height="80" rx="12" fill="#fffbeb" stroke="#fcd34d" stroke-width="1.5"/>
+    <text x="115" y="24" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">⚠ CROSS JOIN NOTE</text>
+    <text x="115" y="42" text-anchor="middle" font-size="10" fill="#78350f">No ON clause needed.</text>
+    <text x="115" y="56" text-anchor="middle" font-size="10" fill="#78350f">Result rows = |A| × |B|</text>
+    <text x="115" y="70" text-anchor="middle" font-size="10" fill="#78350f">Cartesian product of both tables.</text>
+  </g>
+
+</svg>

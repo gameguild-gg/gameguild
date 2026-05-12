@@ -1,4 +1,5 @@
 using GameGuild.API;
+using GameGuild.API.Database;
 using GameGuild.API.Setup;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
@@ -18,6 +19,7 @@ using Microsoft.EntityFrameworkCore;
 
 // Create the web application builder with default configuration
 var builder = WebApplication.CreateBuilder(args);
+var importSnapshotCourses = args.Any(argument => string.Equals(argument, "--import-snapshot-courses", StringComparison.OrdinalIgnoreCase));
 
 // Configure JSON serializer options for all layers
 // Note: JsonSerializerOptions.Default is read-only; configure via DI options instead.
@@ -70,6 +72,8 @@ builder.AddEnvironmentVariables();
 // Configure structured logging with Serilog for comprehensive application logging
 builder.AddStructuredLogging();
 
+builder.Services.AddSingleton<DatabaseConnectivityProbe>();
+
 // Add services to the container
 // Order matters: Infrastructure -> Application -> Presentation
 
@@ -85,16 +89,60 @@ builder.AddPresentationLayer();
 // Build the configured web application
 var app = builder.Build();
 
+var databaseConnectivityProbe = app.Services.GetRequiredService<DatabaseConnectivityProbe>();
+var databaseReachable = await databaseConnectivityProbe.IsReachableAsync().ConfigureAwait(false);
+
 // Apply pending EF Core migrations automatically before starting the service
-try
+if (!databaseReachable)
+{
+    app.Logger.LogInformation(
+        "Database host is unreachable. Starting API without migrations or seeding; database-backed jobs and endpoints will wait until connectivity is restored.");
+}
+else
+{
+    try
+    {
+        using var scope = app.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<GameGuild.API.Database.ApplicationDbContext>();
+        if (db.Database.IsRelational())
+        {
+            await db.Database.MigrateAsync().ConfigureAwait(false);
+        }
+    }
+    catch (Exception ex)
+    {
+        databaseReachable = false;
+        app.Logger.LogWarning(ex, "Database migration failed — API will start without a database. Swagger/OpenAPI will still be available.");
+    }
+
+    if (databaseReachable)
+    {
+        try
+        {
+            using var scope = app.Services.CreateScope();
+            await DatabaseSeeder.SeedAsync(scope.ServiceProvider).ConfigureAwait(false);
+        }
+        catch (Exception ex)
+        {
+            app.Logger.LogWarning(ex, "Database seeding failed — default roles and admin user may not exist.");
+        }
+    }
+}
+
+if (importSnapshotCourses)
 {
     using var scope = app.Services.CreateScope();
-    var db = scope.ServiceProvider.GetRequiredService<GameGuild.API.Database.ApplicationDbContext>();
-    await db.Database.MigrateAsync().ConfigureAwait(false);
-}
-catch (Exception ex)
-{
-    app.Logger.LogWarning(ex, "Database migration failed — API will start without a database. Swagger/OpenAPI will still be available.");
+    var result = await SnapshotCourseSeeder.SeedAsync(scope.ServiceProvider).ConfigureAwait(false);
+    app.Logger.LogInformation(
+        "Snapshot course import complete. Parsed {ParsedPrograms} programs and {ParsedContents} contents from {CoursesRoot}. Created {CreatedPrograms} new programs and {CreatedContents} new contents. DbContext sees {PublicProgramCount} published/public programs in database {DatabaseName}.",
+        result.ParsedPrograms,
+        result.ParsedContents,
+        result.CoursesRoot,
+        result.CreatedPrograms,
+        result.CreatedContents,
+        result.PublicProgramCount,
+        result.DatabaseName);
+    return;
 }
 
 // Configure the HTTP request pipeline (middleware, routing, endpoints)
