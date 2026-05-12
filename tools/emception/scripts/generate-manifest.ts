@@ -116,9 +116,64 @@ bar.start(allEntries.length, 0);
 const concurrency = os.cpus().length;
 console.log(`Using ${concurrency} threads for processing.`);
 
+// ── P1: Python stdlib exclusion list ──────────────────────────────────────────
+// Paths matching any of these patterns are dropped before they enter the CDN
+// tree or manifest.  This removes dead weight that is never used in the WASM
+// browser runtime: GUI toolkits, pip wheels, HTML docs, duplicate bytecode
+// optimization tiers, unused codecs, and test suites.
+
+// Python base prefix (e.g. "/usr/lib/python3.13")
+const PYTHON_RE = /^\/usr\/lib\/python\d+\.\d+/;
+
+// Encodings that are required in the browser runtime (keep).
+// Everything else under .../encodings/ is dropped.
+const ENCODING_ALLOWLIST = new Set([
+    '__init__', 'aliases',
+    'ascii', 'latin_1', 'mbcs', 'idna', 'unicode_escape',
+    // utf_* handled separately by prefix match below
+]);
+
+/**
+ * Return true if this sysroot-relative path should be excluded from the CDN.
+ * Called before any file I/O — pure string comparison, zero file reads.
+ */
+function shouldExclude(relPath: string): boolean {
+    // ── Python-specific exclusions ──
+    if (PYTHON_RE.test(relPath)) {
+        // Bytecode optimization tiers 1 and 2 — keep only plain .pyc
+        if (relPath.endsWith('.opt-1.pyc') || relPath.endsWith('.opt-2.pyc')) return true;
+
+        // GUI and rarely-needed top-level packages
+        if (/\/python\d+\.\d+\/(idlelib|tkinter|turtledemo|ensurepip|pydoc_data)\//.test(relPath)) return true;
+
+        // Stdlib test suites
+        if (/\/python\d+\.\d+\/(test|tests)\//.test(relPath)) return true;
+
+        // unittest framework
+        if (/\/python\d+\.\d+\/unittest\//.test(relPath)) return true;
+
+        // Encodings: drop anything not in the allowlist and not a utf_* codec
+        const encMatch = relPath.match(/\/python\d+\.\d+\/encodings\/([^/]+)$/);
+        if (encMatch) {
+            const basename = encMatch[1].replace(/\.(py|pyc)$/, '');
+            if (!ENCODING_ALLOWLIST.has(basename) && !basename.startsWith('utf_')) {
+                return true;
+            }
+        }
+    }
+
+    // ── Emscripten vendored test fixtures ──
+    if (relPath.startsWith('/usr/lib/emscripten/third_party/ply/test/')) return true;
+
+    return false;
+}
+
 async function processFile(fullPath: string) {
     const stat = fs.lstatSync(fullPath);
     const relPath = '/' + path.relative(SYSPATH, fullPath).replace(/\\/g, '/');
+
+    // P1: skip excluded paths before any file I/O
+    if (shouldExclude(relPath)) return;
 
     if (stat.isSymbolicLink()) {
         // Handle symlinks
