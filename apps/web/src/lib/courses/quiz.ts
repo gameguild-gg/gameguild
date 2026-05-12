@@ -1,9 +1,9 @@
 // // BASE QUIZ ASSESSMENT ENTRY
 
 // class StudentFeedbackForQuizEntry {
-//     CorrectAnswerFeedback: string | null; // markdown / gglexical content for correct answer feedback
-//     IncorrectAnswerFeedback: string | null; // markdown / gglexical content for incorrect answer feedback
-//     GeneralFeedback: string | null; // markdown / gglexical content for general feedback
+//     CorrectAnswerFeedback: string | null; // markdown / block-content-editor content for correct answer feedback
+//     IncorrectAnswerFeedback: string | null; // markdown / block-content-editor content for incorrect answer feedback
+//     GeneralFeedback: string | null; // markdown / block-content-editor content for general feedback
 // }
 
 // enum QuizAssessmentEntryType {
@@ -23,7 +23,7 @@
 
 // class QuizAssessmentEntry {
 //     title: string;
-//     stem: string; // markdown / gglexical content for the question stem
+//     stem: string; // markdown / block-content-editor content for the question stem
 //     points: number;
 //     feedback: StudentFeedbackForQuizEntry | null;
 //     type: QuizAssessmentEntryType;
@@ -104,8 +104,8 @@
 // // MATCHING
 
 // class QuizMatchingEntryPair {
-//     left: string; // markdown / gglexical content for left side
-//     right: string; // markdown / gglexical content for right side
+//     left: string; // markdown / block-content-editor content for left side
+//     right: string; // markdown / block-content-editor content for right side
 // }
 
 // class QuizMatchingEntry extends QuizAssessmentEntry {
@@ -221,7 +221,7 @@
 // // ORDERING
 
 // class QuizOrderingEntry extends QuizAssessmentEntry {
-//     items: string[]; // ordered list of items (markdown / gglexical content)
+//     items: string[]; // ordered list of items (markdown / block-content-editor content)
 //     allowPartialCredit: boolean; // whether to give partial credit for partially correct ordering
 //     type: QuizAssessmentEntryType.Ordering;
 // }
@@ -243,7 +243,7 @@
 //     availableDate: string | null; // after which its available - ISO date string
 //     untilDate: string | null; // after which its not available - ISO date string
 
-//     instructions: string | null; // markdown / gglexical instructions for the quiz
+//     instructions: string | null; // markdown / block-content-editor instructions for the quiz
 
 //     entries: QuizAssessmentEntry[];
 // }

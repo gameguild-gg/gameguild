@@ -1,0 +1,24 @@
+"use client"
+
+import type { ReactNode } from "react"
+import { useViewer } from "@/components/block-content-editor/engines/viewer-provider"
+
+export function ViewerLayout({ children }: { children: ReactNode }) {
+  const { viewer } = useViewer()
+
+  const { states } = viewer.layoutInfo
+
+  return (
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
+      <div className="container mx-auto py-10">
+        <div
+          className={`mx-auto space-y-4 px-4 sm:px-6 lg:px-8 ${
+            viewer.currentProject && Object.keys(states.blocks).length > 0 ? "max-w-full" : "max-w-4xl"
+          }`}
+        >
+          {children}
+        </div>
+      </div>
+    </div>
+  )
+}
