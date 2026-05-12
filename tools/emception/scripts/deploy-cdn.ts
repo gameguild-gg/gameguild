@@ -9,11 +9,41 @@ import shell from 'shelljs';
 import { defineBuildScript } from './lib/build-script.ts';
 import { paths } from './lib/paths.ts';
 
-const TOOL_NAMES = [
-    'clang', 'lld', 'python',
-    'wasm-opt', 'wasm-as', 'wasm-ctor-eval', 'wasm-emscripten-finalize', 'wasm-metadce',
-    'ninja', 'cmake',
-] as const;
+const CDN_METADATA_FILES = new Set(['.gitignore', '.npmignore']);
+const REQUIRED_EXACT_FILES = new Set(['manifest.json', 'brotli_wasm.js', 'brotli_wasm.wasm']);
+
+function isAllowedCdnFile(fileName: string): boolean {
+    return REQUIRED_EXACT_FILES.has(fileName)
+        || CDN_METADATA_FILES.has(fileName)
+        || fileName.endsWith('.tar.br');
+}
+
+function pruneCdnToPublishPayload(rootDir: string, log: (message: string) => void): void {
+    if (!fs.existsSync(rootDir)) return;
+
+    const walk = (dir: string): void => {
+        const entries = fs.readdirSync(dir, { withFileTypes: true });
+        for (const entry of entries) {
+            const fullPath = path.join(dir, entry.name);
+            if (entry.isDirectory()) {
+                walk(fullPath);
+                const remaining = fs.readdirSync(fullPath);
+                if (remaining.length === 0) {
+                    fs.rmdirSync(fullPath);
+                    log(`pruned empty directory: ${path.relative(rootDir, fullPath)}`);
+                }
+                continue;
+            }
+
+            if (!isAllowedCdnFile(entry.name)) {
+                fs.unlinkSync(fullPath);
+                log(`pruned raw file: ${path.relative(rootDir, fullPath)}`);
+            }
+        }
+    };
+
+    walk(rootDir);
+}
 
 defineBuildScript({
     label: 'deploy-cdn',
@@ -25,23 +55,9 @@ defineBuildScript({
             : P.publicCdn;
 
         await step(`copy build/cdn → ${dest}`, () => {
+            shell.rm('-rf', dest);
             shell.mkdir('-p', dest);
             shell.cp('-r', path.join(P.buildCdn, '*'), dest);
-        });
-
-        await step('copy standalone tool modules', () => {
-            const toolDest = path.join(dest, 'usr', 'lib');
-            shell.mkdir('-p', toolDest);
-            for (const tool of TOOL_NAMES) {
-                for (const ext of ['.wasm', '.mjs']) {
-                    const src = path.join(P.build, `${tool}${ext}`);
-                    if (fs.existsSync(src)) {
-                        shell.cp(src, toolDest);
-                    } else {
-                        log(`WARN: ${tool}${ext} not found at ${src}`);
-                    }
-                }
-            }
         });
 
         await step('copy manifest.json', () => {
@@ -71,6 +87,13 @@ defineBuildScript({
             const deployed = path.join(dest, 'brotli_wasm.wasm');
             if (!fs.existsSync(deployed)) {
                 throw new Error(`Brotli wasm missing after deploy: expected ${deployed}`);
+            }
+        });
+
+        await step('prune CDN payload for publish', () => {
+            pruneCdnToPublishPayload(dest, log);
+            if (!fs.existsSync(path.join(dest, 'manifest.json'))) {
+                throw new Error(`manifest.json missing after prune in ${dest}`);
             }
         });
 

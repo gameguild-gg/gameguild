@@ -29,9 +29,14 @@ Desktop.ini
 !.yarn/plugins
 !.yarn/releases
 !.yarn/versions
-package-lock.json
-yarn.lock
-pnpm-lock.yaml
+
+# Ignore nested workspace lock files (only root package-lock.json is tracked)
+**/package-lock.json
+!/package-lock.json
+**/yarn.lock
+!/yarn.lock
+**/pnpm-lock.yaml
+!/pnpm-lock.yaml
 
 # Environment files
 .env

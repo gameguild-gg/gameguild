@@ -1,0 +1,34 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "noUncheckedIndexedAccess": false,
+    "forceConsistentCasingInFileNames": true,
+    "jsx": "react-jsx",
+    "baseUrl": ".",
+    "paths": {
+      "emception": ["packages/core/src/index.ts"],
+      "emception/*": ["packages/core/src/*"],
+      "@gameguild/emception-browser": ["packages/browser/src/index.ts"],
+      "@gameguild/emception-browser/*": ["packages/browser/src/*"],
+      "@gameguild/emception-xterm": ["packages/xterm/src/index.ts"],
+      "@gameguild/emception-xterm/*": ["packages/xterm/src/*"],
+      "@gameguild/emception-react": ["packages/react/src/index.tsx"],
+      "@gameguild/emception-react/*": ["packages/react/src/*"],
+      "@gameguild/emception-webcomponent": ["packages/webcomponent/src/index.ts"],
+      "@gameguild/emception-webcomponent/*": ["packages/webcomponent/src/*"],
+      "@gameguild/emception-ide": ["packages/ide/src/index.ts"],
+      "@gameguild/emception-ide/*": ["packages/ide/src/*"]
+    }
+  }
+}

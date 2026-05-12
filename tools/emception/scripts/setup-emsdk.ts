@@ -8,8 +8,9 @@
 
 import { defineBuildScript } from './lib/build-script.ts';
 import { setupEmsdk } from './lib/emsdk.ts';
+import { PINNED } from './lib/pinned-versions.ts';
 
-const version = process.argv[2] || process.env.EMSDK_VERSION || 'latest';
+const version = process.argv[2] || process.env.EMSDK_VERSION || PINNED.EMSDK_VERSION;
 
 defineBuildScript({
     label: 'setup-emsdk',

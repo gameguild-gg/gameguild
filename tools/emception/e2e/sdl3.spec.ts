@@ -42,7 +42,13 @@ interface CapturedLog {
     text: string;
 }
 
-function captureEmceptionLogs(page: Page): CapturedLog[] {
+interface LogCapture {
+    logs: CapturedLog[];
+    /** Rejects with an Error if the page crashes (OOM / renderer kill). */
+    crash: Promise<never>;
+}
+
+function captureEmceptionLogs(page: Page): LogCapture {
     const logs: CapturedLog[] = [];
     const t0 = Date.now();
 
@@ -66,7 +72,20 @@ function captureEmceptionLogs(page: Page): CapturedLog[] {
         console.log(`  [browser pageerror] ${err.message}`);
     });
 
-    return logs;
+    const crash = new Promise<never>((_, reject) => {
+        page.on('crash', () => {
+            const err = new Error(
+                'Page crashed (renderer killed — likely OOM). ' +
+                'The WASM main loop probably allocated too much memory. ' +
+                'Check WebAssembly.Memory limits in Ide.tsx.',
+            );
+            logs.push({ timestamp: Date.now() - t0, type: 'crash', text: err.message });
+            console.log(`  [PAGE CRASHED] ${err.message}`);
+            reject(err);
+        });
+    });
+
+    return { logs, crash };
 }
 
 function dumpLogs(logs: CapturedLog[], label: string) {
@@ -93,7 +112,7 @@ test.describe('SDL3 compile & canvas render', () => {
      * state regardless of any previous session.
      */
     test('SDL3 demo compiles and renders to canvas', async ({ page }) => {
-        const logs = captureEmceptionLogs(page);
+        const { logs, crash } = captureEmceptionLogs(page);
 
         // Navigate and immediately clear any persisted IDE state so we always
         // start with the SDL3 demo as the active file.
@@ -134,9 +153,14 @@ test.describe('SDL3 compile & canvas render', () => {
 
         // SDL3 link takes much longer than plain emcc due to libSDL3.a size.
         // Allow up to 10 minutes for the full compile → inject cycle.
-        await expect(status(page)).not.toHaveText('Compiling...', { timeout: 10 * 60_000 });
+        // Race against page crash — if the renderer is killed (OOM) the crash
+        // promise rejects immediately with a clear diagnostic message.
+        await Promise.race([
+            expect(status(page)).not.toHaveText('Compiling...', { timeout: 10 * 60_000 }),
+            crash,
+        ]);
 
-        const finalStatus = await status(page).textContent();
+        const finalStatus = await Promise.race([status(page).textContent(), crash]);
         console.log(`Final status: "${finalStatus}"`);
 
         // If SDL3 link failed, dump logs and produce a clear failure message.
@@ -155,16 +179,13 @@ test.describe('SDL3 compile & canvas render', () => {
         console.log('SDL3 compilation succeeded!');
 
         // ── Terminal messages ─────────────────────────────────────────────────
-        await expect(terminal(page)).toContainText('SDL3 detected', { timeout: 5_000 });
-        await expect(terminal(page)).toContainText('SDL3 rendering in canvas tab', { timeout: 5_000 });
+        await Promise.race([expect(terminal(page)).toContainText('SDL3 detected', { timeout: 5_000 }), crash]);
+        await Promise.race([expect(terminal(page)).toContainText('SDL3 rendering in canvas tab', { timeout: 5_000 }), crash]);
 
         // ── Canvas visible ────────────────────────────────────────────────────
-        // The sdl-canvas tab is opened automatically in the right dock group.
-        // The <canvas data-testid="sdl-canvas"> is always present in the DOM;
-        // it becomes the SDL render target once the emscripten script is injected.
-        await expect(sdlCanvas(page)).toBeVisible({ timeout: 10_000 });
+        await Promise.race([expect(sdlCanvas(page)).toBeVisible({ timeout: 10_000 }), crash]);
 
-        const canvasSize = await sdlCanvas(page).boundingBox();
+        const canvasSize = await Promise.race([sdlCanvas(page).boundingBox(), crash]);
         console.log(`Canvas bounding box: ${JSON.stringify(canvasSize)}`);
         expect(canvasSize).not.toBeNull();
         expect(canvasSize!.width).toBeGreaterThan(100);
@@ -172,33 +193,32 @@ test.describe('SDL3 compile & canvas render', () => {
 
         console.log('SDL canvas is visible and has non-zero dimensions!');
 
+        // ── Stability: wait 8s for WASM main loop — crash happens here if OOM ──
+        console.log('Waiting 8s to verify page stability while WASM main loop runs…');
+        await Promise.race([
+            new Promise<void>((resolve) => setTimeout(resolve, 8_000)),
+            crash,
+        ]);
+        console.log('Page stable after 8s.');
+
         // ── Canvas WebGL check ────────────────────────────────────────────────
-        // Wait a couple of animation frames so SDL has had time to acquire the
-        // WebGL context.  With preserveDrawingBuffer=false (SDL3 default) pixels
-        // are cleared after each present, so we cannot read pixels via readPixels.
-        // Instead, verify that SDL3 acquired a WebGL context (not a 2D context)
-        // on the canvas — this confirms SDL3 found the canvas via #canvas selector
-        // and initialised its renderer.
         await page.waitForTimeout(1000);
         const canvasState: { has2d: boolean; hasWebGL: boolean; hasWebGL2: boolean; width: number; height: number } =
-            await page.evaluate(() => {
-                const canvas = document.getElementById('canvas') as HTMLCanvasElement | null;
-                if (!canvas) return { has2d: false, hasWebGL: false, hasWebGL2: false, width: 0, height: 0 };
-                return {
-                    has2d: canvas.getContext('2d') !== null,
-                    hasWebGL: canvas.getContext('webgl') !== null,
-                    hasWebGL2: canvas.getContext('webgl2') !== null,
-                    width: canvas.width,
-                    height: canvas.height,
-                };
-            });
+            await Promise.race([
+                page.evaluate(() => {
+                    const canvas = document.getElementById('canvas') as HTMLCanvasElement | null;
+                    if (!canvas) return { has2d: false, hasWebGL: false, hasWebGL2: false, width: 0, height: 0 };
+                    return {
+                        has2d: canvas.getContext('2d') !== null,
+                        hasWebGL: canvas.getContext('webgl') !== null,
+                        hasWebGL2: canvas.getContext('webgl2') !== null,
+                        width: canvas.width,
+                        height: canvas.height,
+                    };
+                }),
+                crash,
+            ]);
         console.log(`Canvas context state: ${JSON.stringify(canvasState)}`);
-        // SDL3 may use WebGL (hardware renderer) or 2D canvas (software renderer).
-        // In the IDE the canvas is hosted inside a resizable dock panel, so the
-        // runtime may size the backing store to the live panel dimensions rather
-        // than preserving the demo's original 800×600 request exactly. What we
-        // really care about here is that SDL found the canvas, initialised a
-        // real render target, and sized it to something meaningful.
         expect(canvasState.width, 'SDL3 should have initialised a non-trivial canvas width').toBeGreaterThan(100);
         expect(canvasState.height, 'SDL3 should have initialised a non-trivial canvas height').toBeGreaterThan(100);
         expect(
@@ -215,7 +235,7 @@ test.describe('SDL3 compile & canvas render', () => {
      * leaving the canvas still visible and functional.
      */
     test('SDL3 re-compile cleans up previous script and re-renders', async ({ page }) => {
-        const logs = captureEmceptionLogs(page);
+        const { logs, crash } = captureEmceptionLogs(page);
 
         await page.goto('/', { waitUntil: 'domcontentloaded' });
         await page.evaluate(() => localStorage.clear());
@@ -227,19 +247,24 @@ test.describe('SDL3 compile & canvas render', () => {
         // ── First compile ─────────────────────────────────────────────────────
         console.log('First compile…');
         await compileBtn(page).click();
-        await expect(status(page)).not.toHaveText('Compiling...', { timeout: 10 * 60_000 });
-        expect(await status(page).textContent()).toMatch(/SDL3 done/);
-        await expect(sdlCanvas(page)).toBeVisible({ timeout: 10_000 });
+        await Promise.race([expect(status(page)).not.toHaveText('Compiling...', { timeout: 10 * 60_000 }), crash]);
+        expect(await Promise.race([status(page).textContent(), crash])).toMatch(/SDL3 done/);
+        await Promise.race([expect(sdlCanvas(page)).toBeVisible({ timeout: 10_000 }), crash]);
 
         // ── Second compile ────────────────────────────────────────────────────
         console.log('Second compile (re-compile test)…');
         await compileBtn(page).click();
         await expect(status(page)).toHaveText('Compiling...', { timeout: 10_000 });
-        await expect(status(page)).not.toHaveText('Compiling...', { timeout: 10 * 60_000 });
-        expect(await status(page).textContent()).toMatch(/SDL3 done/);
+        await Promise.race([expect(status(page)).not.toHaveText('Compiling...', { timeout: 10 * 60_000 }), crash]);
+        expect(await Promise.race([status(page).textContent(), crash])).toMatch(/SDL3 done/);
 
         // Canvas should still be visible after re-compile
-        await expect(sdlCanvas(page)).toBeVisible({ timeout: 10_000 });
+        await Promise.race([expect(sdlCanvas(page)).toBeVisible({ timeout: 10_000 }), crash]);
+
+        // Stability: 8s after second compile
+        console.log('Waiting 8s to verify no crash after re-compile…');
+        await Promise.race([new Promise<void>((resolve) => setTimeout(resolve, 8_000)), crash]);
+        console.log('Page stable after re-compile.');
 
         dumpLogs(logs, 'SDL3 RE-COMPILE');
     });

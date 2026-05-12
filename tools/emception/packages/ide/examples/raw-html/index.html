@@ -1,0 +1,46 @@
+<!doctype html>
+<!--
+  @example Raw HTML — no framework
+  Drop this file next to a build of @emception/ide that has been bundled
+  as an ES module (e.g. via Vite/Rollup/esbuild).
+
+  Serve your sysroot bundles under /cdn/ first:
+    npx @emception/cli cdn-export ./cdn
+
+  Then start a local server (http-server, serve, etc.) and open this page.
+-->
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>emception IDE — raw HTML</title>
+    <style>
+      html,
+      body,
+      emception-ide {
+        margin: 0;
+        width: 100%;
+        height: 100%;
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <!--
+      All IdeProps are reflected as kebab-case attributes.
+      Boolean props are toggled by presence/absence of the attribute.
+    -->
+    <emception-ide
+      title="C++ Playground"
+      manifest-url="/cdn/manifest.json"
+      workspace-name="raw-html-demo"
+      enable-file-explorer
+      enable-terminal
+      enable-canvas
+    ></emception-ide>
+
+    <script type="module">
+      import { registerEmceptionIde } from '../../dist/index.js';
+      registerEmceptionIde();
+    </script>
+  </body>
+</html>

@@ -1,8 +1,0 @@
-# Generated CDN payloads
-etc/
-usr/
-*.json
-*.tar.br
-*.zip
-brotli_wasm.js
-brotli_wasm.wasm
