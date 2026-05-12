@@ -1,3 +1,9 @@
+# [3.5.0](https://github.com/gameguild-gg/gameguild/compare/v3.4.0...v3.5.0) (2026-05-12)
+
+### Features
+
+* **emception:** shrink npm tarball below 200 MB ([0d1f6cd](https://github.com/gameguild-gg/gameguild/commit/0d1f6cd1222052f013442bd5781928ba1062a37c))
+
 # [3.4.0](https://github.com/gameguild-gg/gameguild/compare/v3.3.8...v3.4.0) (2026-05-12)
 
 ### Features
