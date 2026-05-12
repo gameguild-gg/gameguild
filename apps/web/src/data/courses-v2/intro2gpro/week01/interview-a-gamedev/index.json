@@ -1,0 +1,29 @@
+{
+  "id": "42175051-4ab0-4095-bb60-71455277e84c",
+  "name": "week02-Interview-a-GameDev",
+  "tags": [
+    "intro2gpro"
+  ],
+  "size": 2641,
+  "hash": "672791d073405bb425e8262d89be4f3f35331291",
+  "createdAt": "2026-05-12T14:14:09.573Z",
+  "updatedAt": "2026-05-12T14:20:04.948Z",
+  "storageType": "local",
+  "version": "2.0",
+  "exportedAt": "2026-05-12T14:20:27.785Z",
+  "assetsCount": 0,
+  "preferences": {
+    "global": {
+      "mode": "free-page",
+      "restrictions": {
+        "blocks": {
+          "b1": [
+            null,
+            null
+          ]
+        }
+      }
+    },
+    "nodes": {}
+  }
+}

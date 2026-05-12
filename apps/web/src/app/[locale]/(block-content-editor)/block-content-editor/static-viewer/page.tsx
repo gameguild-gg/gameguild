@@ -107,7 +107,7 @@ export default function StaticViewerPage() {
                 {/* Link buttons */}
                 <LinkSection
                   links={[
-                    { id: "4317f83d-8fd4-4832-901d-a2c3f0d11fa2", label: "Open Divider Lex" },
+                    { id: "405d66a5-45d7-472e-81d5-876ec4e3f682", label: "Open Divider Lex" },
                   ]}
                   onSelect={selectProject}
                 >
@@ -116,7 +116,7 @@ export default function StaticViewerPage() {
 
                 {/* Direct inline render */}
                 <DirectSection
-                  projectId="4317f83d-8fd4-4832-901d-a2c3f0d11fa2"
+                  projectId="405d66a5-45d7-472e-81d5-876ec4e3f682"
                   showTitle
                   showMeta
                 >
