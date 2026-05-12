@@ -27,13 +27,14 @@ import path from 'path';
 import shell from 'shelljs';
 import { getEmsdkDir, setupEmsdk } from './lib/emsdk.ts';
 import { enableBuildKeepalive } from './lib/keepalive.ts';
+import { PINNED } from './lib/pinned-versions.ts';
 
 enableBuildKeepalive('build-sdl3');
 
 const ROOT = process.cwd();
 shell.config.fatal = true;
 
-const EMSDK_VERSION = process.env.EMSDK_VERSION || 'latest';
+const EMSDK_VERSION = process.env.EMSDK_VERSION || PINNED.EMSDK_VERSION;
 setupEmsdk(EMSDK_VERSION);
 
 const EMSDK_DIR = getEmsdkDir();

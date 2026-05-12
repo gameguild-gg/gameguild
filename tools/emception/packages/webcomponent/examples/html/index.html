@@ -1,0 +1,73 @@
+<!doctype html>
+<!--
+  Minimal `<emception-run>` example.
+
+  Open this file via a server that sets cross-origin-isolation headers
+  (COOP: same-origin + COEP: require-corp). The simplest way is to ship
+  a root-level /coi-serviceworker.js (the browser package publishes one in
+  dist/coi-serviceworker.js).
+  See the @gameguild/emception-browser README for details.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>emception &lt;emception-run&gt; demo</title>
+    <style>
+      body { font-family: system-ui, sans-serif; margin: 1.5rem; max-width: 60rem; }
+      h1 { font-size: 1.25rem; }
+      emception-run::part(output) { max-height: 14rem; }
+    </style>
+  </head>
+  <body>
+    <h1>&lt;emception-run&gt; smoke demo</h1>
+
+    <p>
+      This page registers the custom element and attaches a pre-built
+      <code>EmceptionAPI</code> from <code>@gameguild/emception-browser</code>.
+    </p>
+
+    <emception-run
+      id="run"
+      preset="cpp"
+      autorun
+      source="#include <stdio.h>
+int main(){ printf(&quot;hello from emception\n&quot;); return 0; }"
+    >
+      <textarea slot="stdin">42
+</textarea>
+    </emception-run>
+
+    <pre id="log"></pre>
+
+    <script type="module">
+      // In a real app you'd resolve these via your bundler / import map.
+      // Adjust the paths to match how you serve the packages.
+      import '@gameguild/emception-webcomponent';
+      import { createEmception } from '@gameguild/emception-browser';
+
+      const log = document.getElementById('log');
+      const print = (msg) => {
+        log.textContent += msg + '\n';
+      };
+
+      const el = document.getElementById('run');
+
+      // Forward the high-level events.
+      for (const name of ['ready', 'exit']) {
+        el.addEventListener('emception-' + name, (ev) => {
+          print(`[${name}] ${JSON.stringify(ev.detail ?? {})}`);
+        });
+      }
+
+      try {
+        const api = await createEmception({
+          manifestUrl: '/cdn/manifest.json',
+          tty: 'none',
+        });
+        el.api = api;
+      } catch (err) {
+        print('createEmception failed: ' + (err && err.message ? err.message : String(err)));
+      }
+    </script>
+  </body>
+</html>

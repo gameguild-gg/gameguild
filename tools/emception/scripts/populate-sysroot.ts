@@ -4,6 +4,7 @@ import shell from 'shelljs';
 import { fileURLToPath } from 'url';
 import { getEmsdkDir, setupEmsdk } from './lib/emsdk.ts';
 import { enableBuildKeepalive } from './lib/keepalive.ts';
+import { PINNED } from './lib/pinned-versions.ts';
 
 enableBuildKeepalive('populate-sysroot');
 
@@ -13,7 +14,7 @@ const __dirname = path.dirname(__filename);
 const ROOT = path.resolve(__dirname, '..');
 const EMSDK_DIR = getEmsdkDir();
 const SYSROOT = path.join(ROOT, 'sysroot');
-const EMSDK_VERSION = process.argv[2] || 'latest';
+const EMSDK_VERSION = process.argv[2] || process.env.EMSDK_VERSION || PINNED.EMSDK_VERSION;
 
 // Ensure we fail on error
 shell.config.fatal = true;

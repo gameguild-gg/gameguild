@@ -1,6 +1,6 @@
 {
   "name": "game-guild",
-  "version": "3.0.2",
+  "version": "3.4.0",
   "description": "",
   "author": "GameGuild <contact@gameguild.gg>",
   "homepage": "https://gameguild.gg",
@@ -8,10 +8,11 @@
   "private": true,
   "workspaces": [
     "apps/*",
-    "demos/*",
     "packages/*",
     "packages/config/*",
-    "tools/*"
+    "tools/*",
+    "tools/emception/packages/*",
+    "tools/emception/apps/*"
   ],
   "scripts": {
     "dev": "npm-run-all --parallel dev:api dev:web",

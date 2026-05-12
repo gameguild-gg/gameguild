@@ -1,15 +1,18 @@
-import { readFileSync } from 'fs';
-import { resolve } from 'path';
 import { defineConfig } from 'tsup';
 
+// Phase 0.3: meta `emception` is now a thin wrapper over `@gameguild/emception-browser`
+// + `@gameguild/emception-xterm`. The full toolchain implementation (worker-entry, vfs,
+// emscripten bridge, etc.) lives in the scoped packages, so this build is a
+// simple ESM re-export bundle. The .py raw loader and other heavy plumbing
+// from earlier versions are no longer needed here — the scoped packages
+// pre-compile that source themselves.
 export default defineConfig({
     entry: {
         index: 'src/index.ts',
         'worker-entry': 'src/worker-entry.ts',
     },
     format: ['esm'],
-    // DTS generated via separate tsc step (see build:lib script)
-    // because rollup-plugin-dts can't resolve .py imports
+    // DTS via separate tsc step (see build:lib script).
     dts: false,
     splitting: true,
     sourcemap: true,
@@ -17,23 +20,11 @@ export default defineConfig({
     outDir: 'dist',
     target: 'es2020',
     platform: 'browser',
-    esbuildPlugins: [
-        {
-            name: 'raw-py-loader',
-            setup(build) {
-                build.onResolve({ filter: /\.py$/ }, (args) => ({
-                    path: resolve(args.resolveDir, args.path),
-                    namespace: 'raw-py',
-                }));
-                build.onLoad({ filter: /.*/, namespace: 'raw-py' }, (args) => {
-                    const content = readFileSync(args.path, 'utf-8');
-                    return {
-                        contents: `export default ${JSON.stringify(content)};`,
-                        loader: 'js',
-                    };
-                });
-            },
-        },
+    external: [
+        '@xterm/xterm',
+        '@gameguild/emception-browser',
+        '@gameguild/emception-browser/worker',
+        '@gameguild/emception-xterm',
+        'emception',
     ],
-    external: ['@xterm/xterm'],
 });
