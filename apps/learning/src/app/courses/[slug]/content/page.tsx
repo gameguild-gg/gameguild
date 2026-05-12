@@ -1,8 +1,7 @@
-import { CourseAttendanceShell } from '@/components/course-attendance-shell';
 import { auth } from '@/auth';
+import { CourseAttendanceShell } from '@/components/course-attendance-shell';
 import { getCourseAttendanceData } from '@/lib/courses';
-import { redirect } from 'next/navigation';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 
 export default async function CourseContentPage({ params }: { params: Promise<{ slug: string }> }) {
     const { slug } = await params;

@@ -1,11 +1,13 @@
 'use client';
 
+import { beginCourseContent, completeCourseContent } from '@/lib/course-progress-actions';
 import type { CourseAttendanceData, CourseAttendanceItem } from '@/lib/courses';
 import { Badge } from '@game-guild/ui/components/badge';
 import { Button } from '@game-guild/ui/components/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@game-guild/ui/components/card';
 import { CheckCircle2, Clock3, Lock, PlayCircle } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import MarkdownRenderer from './markdown-renderer';
 
@@ -60,11 +62,54 @@ function contentToMarkdown(content: unknown): string | null {
 }
 
 export function CourseAttendanceShell({ course }: { course: CourseAttendanceData }) {
+    const router = useRouter();
     const [selectedItemId, setSelectedItemId] = useState<string | null>(course.currentItem?.id ?? course.modules[0]?.items[0]?.id ?? null);
+    const [isMutating, setIsMutating] = useState(false);
+    const [actionError, setActionError] = useState<string | null>(null);
 
     const selectedItem = course.modules.flatMap((module) => module.items).find((item) => item.id === selectedItemId) ?? null;
     const contentMarkdown = selectedItem ? contentToMarkdown(selectedItem.content) : null;
     const hoursRemaining = course.remainingMinutes > 0 ? (course.remainingMinutes / 60).toFixed(1) : '0.0';
+
+    async function handleBeginSelectedItem() {
+        if (!selectedItem || selectedItem.status !== 'available') {
+            return;
+        }
+
+        setIsMutating(true);
+        setActionError(null);
+
+        const result = await beginCourseContent(course.id, selectedItem.id);
+
+        setIsMutating(false);
+
+        if (!result.success) {
+            setActionError(result.error);
+            return;
+        }
+
+        router.refresh();
+    }
+
+    async function handleCompleteSelectedItem() {
+        if (!selectedItem || selectedItem.status === 'locked' || selectedItem.status === 'completed') {
+            return;
+        }
+
+        setIsMutating(true);
+        setActionError(null);
+
+        const result = await completeCourseContent(course.id, selectedItem.id);
+
+        setIsMutating(false);
+
+        if (!result.success) {
+            setActionError(result.error);
+            return;
+        }
+
+        router.refresh();
+    }
 
     return (
         <div className="mx-auto flex min-h-screen max-w-7xl flex-col gap-6 px-4 py-8 lg:px-6">
@@ -148,6 +193,30 @@ export function CourseAttendanceShell({ course }: { course: CourseAttendanceData
                                     <CardTitle className="text-2xl">{selectedItem.title}</CardTitle>
                                     {selectedItem.description ? <p className="mt-2 text-sm text-slate-300">{selectedItem.description}</p> : null}
                                 </div>
+                                <div className="flex flex-wrap items-center gap-3">
+                                    {selectedItem.status === 'available' ? (
+                                        <Button
+                                            type="button"
+                                            onClick={handleBeginSelectedItem}
+                                            disabled={isMutating}
+                                            className="bg-sky-600 text-white hover:bg-sky-500"
+                                        >
+                                            {isMutating ? 'Updating progress...' : 'Start this item'}
+                                        </Button>
+                                    ) : null}
+                                    {selectedItem.status !== 'locked' && selectedItem.status !== 'completed' ? (
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            onClick={handleCompleteSelectedItem}
+                                            disabled={isMutating}
+                                            className="border-emerald-500/40 bg-emerald-500/10 text-emerald-100 hover:bg-emerald-500/20"
+                                        >
+                                            {isMutating ? 'Updating progress...' : 'Mark completed'}
+                                        </Button>
+                                    ) : null}
+                                </div>
+                                {actionError ? <p className="text-sm text-rose-300">{actionError}</p> : null}
                             </>
                         ) : (
                             <CardTitle className="text-2xl">No lesson selected</CardTitle>

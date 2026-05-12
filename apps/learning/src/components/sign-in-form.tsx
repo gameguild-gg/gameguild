@@ -1,12 +1,12 @@
 'use client';
 
-import { useState, type FormEvent } from 'react';
-import Link from 'next/link';
 import { useAuth } from '@game-guild/client/react';
 import { Button } from '@game-guild/ui/components/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@game-guild/ui/components/card';
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@game-guild/ui/components/field';
 import { Input } from '@game-guild/ui/components/input';
+import Link from 'next/link';
+import { useState, type FormEvent } from 'react';
 
 export function SignInForm({ redirectTo }: { redirectTo: string }) {
     const { signIn, isLoading, error, clearError } = useAuth();
