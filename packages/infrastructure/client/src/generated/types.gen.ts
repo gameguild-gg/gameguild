@@ -9,6 +9,15 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { z } from 'zod';
 
+export type BillingCycle = 'Weekly' | 'Monthly' | 'Quarterly' | 'SemiAnnually' | 'Annually' | 'Biannually';
+
+export interface BulkOperationError {
+  tenantId?: string;
+  tenantName?: string | null;
+  errorMessage?: string | null;
+  errorCode?: string | null;
+}
+
 export interface CommercePaymentsTaxJurisdictionDto {
   id?: string;
   code?: string | null;
@@ -32,15 +41,9 @@ export interface CommercePaymentsTaxRuleDto {
   isActive?: boolean;
 }
 
-export interface CommerceProductsPagedResult1GameGuildCommerceProductsPromoCodeDtoGameGuildCommerceProductsVersion100PagedResultPromoCodeDto {
-  items?: Array<CommerceProductsPromoCode> | null;
-  totalCount?: number;
-  skip?: number;
-  take?: number;
-  hasMore?: boolean;
-  currentPage?: number;
-  totalPages?: number;
-}
+export type ContentStatus = 'Draft' | 'Review' | 'Published' | 'Archived' | 'Deleted';
+
+export type ContentVisibility = 'Private' | 'Internal' | 'Friends' | 'Protected' | 'Public';
 
 export interface IdentityTenantsTenantSettingsDto {
   id?: string;
@@ -60,38 +63,103 @@ export interface KeyValuePairStringAuthenticationExtensionsPRFValues {
   value?: ObjectsAuthenticationExtensionsPRFValues;
 }
 
-export interface ModelsPagedResult1GameGuildIdentityUsersUserDtoGameGuildIdentityUsersVersion100PagedResultUserDto {
+export interface Money {
+  amount?: number;
+  currency?: string | null;
+}
+
+export interface PagedResult1GameGuildCommerceProductsPromoCodeDtoGameGuildCommerceProductsVersion100PagedResultPromoCodeDto {
+  items?: Array<CommerceProductsPromoCode> | null;
+  totalCount?: number;
+  skip?: number;
+  take?: number;
+  pageNumber?: number;
+  pageSize?: number;
+  totalPages?: number;
+  hasNextPage?: boolean;
+  hasPreviousPage?: boolean;
+}
+
+export interface PagedResult1GameGuildIdentityTenantsTenantGameGuildIdentityTenantsVersion100PagedResultTenant {
+  items?: Array<IdentityTenantsTenant> | null;
+  totalCount?: number;
+  skip?: number;
+  take?: number;
+  pageNumber?: number;
+  pageSize?: number;
+  totalPages?: number;
+  hasNextPage?: boolean;
+  hasPreviousPage?: boolean;
+}
+
+export interface PagedResult1GameGuildIdentityTenantsTenantAuditLogEntryGameGuildIdentityTenantsVersion100PagedResultTenantAuditLogEntry {
+  items?: Array<IdentityTenantsTenantAuditLogEntry> | null;
+  totalCount?: number;
+  skip?: number;
+  take?: number;
+  pageNumber?: number;
+  pageSize?: number;
+  totalPages?: number;
+  hasNextPage?: boolean;
+  hasPreviousPage?: boolean;
+}
+
+export interface PagedResult1GameGuildIdentityUsersUserDtoGameGuildIdentityUsersVersion100PagedResultUserDto {
   items?: Array<IdentityUsersUser> | null;
   totalCount?: number;
   skip?: number;
   take?: number;
   pageNumber?: number;
+  pageSize?: number;
   totalPages?: number;
   hasNextPage?: boolean;
   hasPreviousPage?: boolean;
 }
 
-export interface ModelsPagedResult1GameGuildIdentityUsersUserNotificationDtoGameGuildIdentityUsersVersion100PagedResultUserNotificationDto {
+export interface PagedResult1GameGuildIdentityUsersUserNotificationDtoGameGuildIdentityUsersVersion100PagedResultUserNotificationDto {
   items?: Array<IdentityUsersUserNotification> | null;
   totalCount?: number;
   skip?: number;
   take?: number;
   pageNumber?: number;
+  pageSize?: number;
   totalPages?: number;
   hasNextPage?: boolean;
   hasPreviousPage?: boolean;
 }
 
-export interface ModelsPagedResult1GameGuildIdentityUsersUserProfileDtoGameGuildIdentityUsersVersion100PagedResultUserProfileDto {
+export interface PagedResult1GameGuildIdentityUsersUserProfileDtoGameGuildIdentityUsersVersion100PagedResultUserProfileDto {
   items?: Array<IdentityUsersUserProfile> | null;
   totalCount?: number;
   skip?: number;
   take?: number;
   pageNumber?: number;
+  pageSize?: number;
   totalPages?: number;
   hasNextPage?: boolean;
   hasPreviousPage?: boolean;
 }
+
+export type ProgramCategory =
+  | 'General'
+  | 'Programming'
+  | 'DataScience'
+  | 'WebDevelopment'
+  | 'MobileDevelopment'
+  | 'GameDevelopment'
+  | 'AI'
+  | 'Cybersecurity'
+  | 'DevOps'
+  | 'Database'
+  | 'Business'
+  | 'Design'
+  | 'Marketing'
+  | 'ProjectManagement'
+  | 'PersonalDevelopment'
+  | 'CreativeArts'
+  | 'Science'
+  | 'Language'
+  | 'Other';
 
 export interface APIControllersApplicationDetails {
   name?: string | null;
@@ -159,11 +227,8 @@ export interface APIControllersLivenessOutput {
 }
 
 export interface APIControllersProcessDetails {
-  id?: number;
   startTime?: string;
   uptime?: string;
-  workingSet?: number;
-  threadCount?: number;
 }
 
 export interface APIControllersReadinessOutput {
@@ -179,24 +244,21 @@ export interface APIControllersRuntimeDetails {
   osDescription?: string | null;
   osArchitecture?: string | null;
   processArchitecture?: string | null;
-  machineName?: string | null;
-  processorCount?: number;
+}
+
+export interface BulkOperationOutput {
+  totalRequested?: number;
+  successfulOperations?: number;
+  failedOperations?: number;
+  errors?: Array<BulkOperationError> | null;
+  isComplete?: boolean;
+  successRate?: number;
 }
 
 export interface CQRSIDomainEvent {
   eventId?: string;
   occurredAt?: string;
   version?: number;
-}
-
-export interface CQRSPagedResult {
-  items?: Array<IdentityTenantsTenant> | null;
-  totalCount?: number;
-  pageNumber?: number;
-  pageSize?: number;
-  totalPages?: number;
-  hasPreviousPage?: boolean;
-  hasNextPage?: boolean;
 }
 
 export interface CommercePaymentsAddFundsInput {
@@ -242,7 +304,7 @@ export interface CommercePaymentsCreateWalletInput {
   currency?: string | null;
 }
 
-export type CommercePaymentsCustomerType = 0 | 1;
+export type CommercePaymentsCustomerType = 'B2C' | 'B2B';
 
 export interface CommercePaymentsDeductFundsInput {
   userId: string;
@@ -295,7 +357,7 @@ export interface CommercePaymentsPaymentResult {
   success?: boolean;
   transactionId?: string | null;
   paymentId?: string | null;
-  amount?: ValueObjectsMoney;
+  amount?: Money;
   processedAt?: string | null;
   failureReason?: string | null;
   paymentMethodId?: string | null;
@@ -312,7 +374,7 @@ export interface CommercePaymentsPaymentRetryResult {
   failureReason?: string | null;
 }
 
-export type CommercePaymentsPaymentStatus = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
+export type CommercePaymentsPaymentStatus = 'Pending' | 'Processing' | 'Succeeded' | 'Failed' | 'Cancelled' | 'RequiresAction' | 'Refunded' | 'Disputed';
 
 export interface CommercePaymentsPaymentsControllerCancelPaymentInput {
   cancellationReason?: string | null;
@@ -405,7 +467,7 @@ export interface CommercePaymentsTaxJurisdiction {
   taxRules?: Array<CommercePaymentsTaxRule> | null;
 }
 
-export type CommercePaymentsTaxJurisdictionType = 0 | 1 | 2 | 3 | 4 | 5 | 6;
+export type CommercePaymentsTaxJurisdictionType = 'Country' | 'State' | 'Province' | 'Region' | 'City' | 'County' | 'District';
 
 export interface CommercePaymentsTaxRate {
   isGlobal?: boolean;
@@ -462,11 +524,11 @@ export interface CommercePaymentsTaxRule {
   defaultTaxRate?: CommercePaymentsTaxRate;
 }
 
-export type CommercePaymentsTaxRuleType = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
+export type CommercePaymentsTaxRuleType = 'Standard' | 'Reduced' | 'ZeroRated' | 'Exempt' | 'ReverseCharge' | 'WithholdingTax' | 'Compound' | 'Custom';
 
-export type CommercePaymentsTaxType = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
+export type CommercePaymentsTaxType = 'VAT' | 'GST' | 'SalesTax' | 'ServiceTax' | 'WithholdingTax' | 'ExciseTax' | 'CustomsDuty' | 'Other';
 
-export type CommercePaymentsTransactionStatus = 0 | 1 | 2 | 3 | 4 | 5;
+export type CommercePaymentsTransactionStatus = 'Pending' | 'Processing' | 'Completed' | 'Failed' | 'Cancelled' | 'Reversed';
 
 export interface CommercePaymentsTransferFundsInput {
   fromUserId: string;
@@ -537,7 +599,7 @@ export interface CommercePaymentsWalletTransaction {
   processedAt?: string | null;
 }
 
-export type CommercePaymentsWalletTransactionType = 0 | 1 | 2 | 3 | 4 | 5 | 6;
+export type CommercePaymentsWalletTransactionType = 'Credit' | 'Debit' | 'TransferIn' | 'TransferOut' | 'Refund' | 'Fee' | 'Adjustment';
 
 export interface CommerceProductsAppliedPromoCode {
   code?: string | null;
@@ -635,16 +697,6 @@ export interface CommerceProductsGrantEntitlementInput {
   expiresAt?: string | null;
 }
 
-export interface CommerceProductsPagedResult {
-  items?: Array<CommerceProductsProduct> | null;
-  totalCount?: number;
-  skip?: number;
-  take?: number;
-  hasMore?: boolean;
-  currentPage?: number;
-  totalPages?: number;
-}
-
 export interface CommerceProductsPatchProductInput {
   name?: string | null;
   description?: string | null;
@@ -677,7 +729,7 @@ export interface CommerceProductsPatchPromoCodeInput {
   productId?: string | null;
 }
 
-export type CommerceProductsProductAcquisitionType = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
+export type CommerceProductsProductAcquisitionType = 'Purchase' | 'Subscription' | 'Grant' | 'PromoCode' | 'Bundle' | 'Trial' | 'Referral' | 'Free' | 'Gift';
 
 export interface CommerceProductsProduct {
   id?: string;
@@ -711,7 +763,21 @@ export interface CommerceProductsProductPricing {
   isSaleActive?: boolean;
 }
 
-export type CommerceProductsProductType = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 99;
+export type CommerceProductsProductType =
+  | 'Program'
+  | 'Course'
+  | 'Bundle'
+  | 'Subscription'
+  | 'Workshop'
+  | 'Mentorship'
+  | 'Ebook'
+  | 'ResourcePack'
+  | 'Community'
+  | 'Certification'
+  | 'Physical'
+  | 'Service'
+  | 'LearningPathway'
+  | 'Other';
 
 export interface CommerceProductsPromoCodeApplicationResult {
   originalAmount?: number;
@@ -744,7 +810,7 @@ export interface CommerceProductsPromoCode {
   updatedAt?: string;
 }
 
-export type CommerceProductsPromoCodeType = 0 | 1 | 2 | 3 | 4;
+export type CommerceProductsPromoCodeType = 'PercentageOff' | 'FixedAmountOff' | 'FreeTrial' | 'BuyOneGetOne' | 'FreeShipping';
 
 export interface CommerceProductsPromoCodeUsage {
   promoCodeId?: string;
@@ -828,7 +894,15 @@ export interface CommerceSubscriptionsBillingHistory {
   createdAt?: string;
 }
 
-export type CommerceSubscriptionsCancellationReason = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
+export type CommerceSubscriptionsCancellationReason =
+  | 'UserRequested'
+  | 'PaymentFailed'
+  | 'PlanDiscontinued'
+  | 'PolicyViolation'
+  | 'Downgrade'
+  | 'TrialEnded'
+  | 'Custom'
+  | 'ExternalRequest';
 
 export interface CommerceSubscriptionsSubscription {
   isGlobal?: boolean;
@@ -864,8 +938,8 @@ export interface CommerceSubscriptionsSubscription {
   plan?: CommerceSubscriptionsSubscriptionPlan;
   status?: CommerceSubscriptionsSubscriptionStatus;
   planId: string;
-  billingCycle?: ValueObjectsBillingCycle;
-  amount?: ValueObjectsMoney;
+  billingCycle?: BillingCycle;
+  amount?: Money;
   startDate?: string;
   endDate?: string | null;
   nextBillingDate?: string;
@@ -878,8 +952,50 @@ export interface CommerceSubscriptionsSubscriptionDowngradeResult {
   success?: boolean;
   updatedSubscription?: CommerceSubscriptionsSubscription;
   effectiveDate?: string | null;
-  creditIssued?: ValueObjectsMoney;
+  creditIssued?: Money;
   failureReason?: string | null;
+}
+
+export interface CommerceSubscriptionsSubscriptionLifecycleControllerAutoRenewInput {
+  autoRenew?: boolean;
+}
+
+export interface CommerceSubscriptionsSubscriptionLifecycleControllerCancelInput {
+  reason?: string | null;
+  note?: string | null;
+  effectiveDate?: string | null;
+}
+
+export interface CommerceSubscriptionsSubscriptionLifecycleControllerDowngradeInput {
+  newPlanId?: string;
+  effectiveDate?: string | null;
+}
+
+export interface CommerceSubscriptionsSubscriptionLifecycleControllerEndTrialInput {
+  convertToPaid?: boolean;
+}
+
+export interface CommerceSubscriptionsSubscriptionLifecycleControllerExternalIdsInput {
+  externalSubscriptionId?: string | null;
+  externalCustomerId?: string | null;
+}
+
+export interface CommerceSubscriptionsSubscriptionLifecycleControllerPauseSubscriptionInput {
+  pauseUntil?: string | null;
+  reason?: string | null;
+}
+
+export interface CommerceSubscriptionsSubscriptionLifecycleControllerStartTrialInput {
+  trialDays?: number;
+}
+
+export interface CommerceSubscriptionsSubscriptionLifecycleControllerSuspendInput {
+  reason?: string | null;
+}
+
+export interface CommerceSubscriptionsSubscriptionLifecycleControllerUpgradeInput {
+  newPlanId?: string;
+  effectiveDate?: string | null;
 }
 
 export interface CommerceSubscriptionsSubscriptionPlan {
@@ -915,17 +1031,56 @@ export interface CommerceSubscriptionsSubscriptionPlan {
   maxApiCallsPerMonth?: number | null;
 }
 
-export interface CommerceSubscriptionsSubscriptionPlansControllerCloneSubscriptionPlanInput {
+export interface CommerceSubscriptionsSubscriptionPlanOperationsControllerCloneSubscriptionPlanInput {
   newName?: string | null;
   newSlug?: string | null;
 }
 
-export interface CommerceSubscriptionsSubscriptionPlansControllerComparePlansInput {
+export interface CommerceSubscriptionsSubscriptionPlanOperationsControllerSetExternalIdInput {
+  externalId?: string | null;
+}
+
+export interface CommerceSubscriptionsSubscriptionPlanOperationsControllerSetFeaturedInput {
+  featured?: boolean;
+}
+
+export interface CommerceSubscriptionsSubscriptionPlanOperationsControllerUpdateDetailsInput {
+  planId?: string;
+  name?: string | null;
+  description?: string | null;
+  sortOrder?: number | null;
+}
+
+export interface CommerceSubscriptionsSubscriptionPlanOperationsControllerUpdateFeaturesInput {
+  hasPrioritySupport?: boolean | null;
+  hasAdvancedAnalytics?: boolean | null;
+  hasCustomBranding?: boolean | null;
+  features?: string | null;
+}
+
+export interface CommerceSubscriptionsSubscriptionPlanOperationsControllerUpdateLimitsInput {
+  maxUsers?: number | null;
+  maxStorageMb?: number | null;
+  maxApiCallsPerMonth?: number | null;
+}
+
+export interface CommerceSubscriptionsSubscriptionPlanOperationsControllerUpdatePricingInput {
+  monthlyPriceInCents?: number;
+  annualPriceInCents?: number | null;
+}
+
+export interface CommerceSubscriptionsSubscriptionPlanOperationsControllerValidateLimitsInput {
+  users?: number;
+  storageMb?: number;
+  apiCalls?: number;
+}
+
+export interface CommerceSubscriptionsSubscriptionPlansCrudControllerComparePlansInput {
   basePlanId?: string;
   comparePlanIds?: Array<string> | null;
 }
 
-export interface CommerceSubscriptionsSubscriptionPlansControllerCreatePlanInput {
+export interface CommerceSubscriptionsSubscriptionPlansCrudControllerCreatePlanInput {
   name?: string | null;
   slug?: string | null;
   monthlyPriceInCents?: number;
@@ -933,7 +1088,7 @@ export interface CommerceSubscriptionsSubscriptionPlansControllerCreatePlanInput
   description?: string | null;
 }
 
-export interface CommerceSubscriptionsSubscriptionPlansControllerPutSubscriptionPlanInput {
+export interface CommerceSubscriptionsSubscriptionPlansCrudControllerPutSubscriptionPlanInput {
   name?: string | null;
   slug?: string | null;
   description?: string | null;
@@ -949,52 +1104,13 @@ export interface CommerceSubscriptionsSubscriptionPlansControllerPutSubscription
   sortOrder?: number | null;
 }
 
-export interface CommerceSubscriptionsSubscriptionPlansControllerSetExternalIdInput {
-  externalId?: string | null;
-}
-
-export interface CommerceSubscriptionsSubscriptionPlansControllerSetFeaturedInput {
-  featured?: boolean;
-}
-
-export interface CommerceSubscriptionsSubscriptionPlansControllerUpdateDetailsInput {
-  planId?: string;
-  name?: string | null;
-  description?: string | null;
-  sortOrder?: number | null;
-}
-
-export interface CommerceSubscriptionsSubscriptionPlansControllerUpdateFeaturesInput {
-  hasPrioritySupport?: boolean | null;
-  hasAdvancedAnalytics?: boolean | null;
-  hasCustomBranding?: boolean | null;
-  features?: string | null;
-}
-
-export interface CommerceSubscriptionsSubscriptionPlansControllerUpdateLimitsInput {
-  maxUsers?: number | null;
-  maxStorageMb?: number | null;
-  maxApiCallsPerMonth?: number | null;
-}
-
-export interface CommerceSubscriptionsSubscriptionPlansControllerUpdatePricingInput {
-  monthlyPriceInCents?: number;
-  annualPriceInCents?: number | null;
-}
-
-export interface CommerceSubscriptionsSubscriptionPlansControllerValidateLimitsInput {
-  users?: number;
-  storageMb?: number;
-  apiCalls?: number;
-}
-
-export type CommerceSubscriptionsSubscriptionStatus = 0 | 1 | 2 | 3 | 4 | 5 | 6;
+export type CommerceSubscriptionsSubscriptionStatus = 'PendingActivation' | 'Active' | 'Trialing' | 'PastDue' | 'Suspended' | 'Cancelled' | 'Expired';
 
 export interface CommerceSubscriptionsSubscriptionUpgradeResult {
   success?: boolean;
   updatedSubscription?: CommerceSubscriptionsSubscription;
-  proratedAmount?: ValueObjectsMoney;
-  creditApplied?: ValueObjectsMoney;
+  proratedAmount?: Money;
+  creditApplied?: Money;
   failureReason?: string | null;
 }
 
@@ -1010,21 +1126,11 @@ export interface CommerceSubscriptionsSubscriptionUsage {
   limitWarnings?: Array<string> | null;
 }
 
-export interface CommerceSubscriptionsSubscriptionsControllerAutoRenewInput {
-  autoRenew?: boolean;
-}
-
-export interface CommerceSubscriptionsSubscriptionsControllerCancelInput {
-  reason?: string | null;
-  note?: string | null;
-  effectiveDate?: string | null;
-}
-
 export interface CommerceSubscriptionsSubscriptionsControllerCreateSubscriptionInput {
   tenantId?: string;
   planId?: string;
   createdByUserId?: string;
-  billingCycle?: ValueObjectsBillingCycle;
+  billingCycle?: BillingCycle;
   amount?: number;
   currency?: string | null;
   fulfilledOrderId?: string | null;
@@ -1032,53 +1138,371 @@ export interface CommerceSubscriptionsSubscriptionsControllerCreateSubscriptionI
   trialDays?: number | null;
 }
 
-export interface CommerceSubscriptionsSubscriptionsControllerDowngradeInput {
-  newPlanId?: string;
-  effectiveDate?: string | null;
-}
-
-export interface CommerceSubscriptionsSubscriptionsControllerEndTrialInput {
-  convertToPaid?: boolean;
-}
-
-export interface CommerceSubscriptionsSubscriptionsControllerExternalIdsInput {
-  externalSubscriptionId?: string | null;
-  externalCustomerId?: string | null;
-}
-
 export interface CommerceSubscriptionsSubscriptionsControllerPatchSubscriptionInput {
-  billingCycle?: ValueObjectsBillingCycle;
+  billingCycle?: BillingCycle;
   autoRenew?: boolean | null;
   externalSubscriptionId?: string | null;
   externalCustomerId?: string | null;
   metadata?: string | null;
 }
 
-export interface CommerceSubscriptionsSubscriptionsControllerPauseSubscriptionInput {
-  pauseUntil?: string | null;
-  reason?: string | null;
-}
-
 export interface CommerceSubscriptionsSubscriptionsControllerPutSubscriptionInput {
   planId?: string;
-  billingCycle?: ValueObjectsBillingCycle;
+  billingCycle?: BillingCycle;
   amount?: number;
   autoRenew?: boolean;
   externalSubscriptionId?: string | null;
   externalCustomerId?: string | null;
 }
 
-export interface CommerceSubscriptionsSubscriptionsControllerStartTrialInput {
-  trialDays?: number;
+export interface ContentPagesContentResource {
+  id?: string;
+  slug?: string | null;
+  title?: string | null;
+  summary?: string | null;
+  body?: string | null;
+  resourceType?: string | null;
+  status?: string | null;
+  locale?: string | null;
+  categorySlug?: string | null;
+  tags?: string | null;
+  authorId?: string | null;
+  authorName?: string | null;
+  coverImageUrl?: string | null;
+  videoUrl?: string | null;
+  downloadUrl?: string | null;
+  externalUrl?: string | null;
+  linkedEntityId?: string | null;
+  linkedEntityType?: string | null;
+  metaTitle?: string | null;
+  metaDescription?: string | null;
+  ogImageUrl?: string | null;
+  structuredData?: string | null;
+  readingTimeMinutes?: number | null;
+  viewCount?: number;
+  isFeatured?: boolean;
+  sortOrder?: number;
+  publishedAt?: string | null;
+  scheduledPublishAt?: string | null;
+  customData?: string | null;
+  createdAt?: string;
+  updatedAt?: string | null;
 }
 
-export interface CommerceSubscriptionsSubscriptionsControllerSuspendInput {
+export type ContentPagesContentResourceStatus = 'Draft' | 'InReview' | 'Published' | 'Archived';
+
+export type ContentPagesContentResourceType = 'Article' | 'Tutorial' | 'Documentation' | 'Video' | 'Download' | 'ExternalLink' | 'Course' | 'Custom';
+
+export interface ContentPagesCreateContentResource {
+  slug?: string | null;
+  title?: string | null;
+  summary?: string | null;
+  body?: string | null;
+  resourceType?: ContentPagesContentResourceType;
+  locale?: string | null;
+  categorySlug?: string | null;
+  tags?: string | null;
+  coverImageUrl?: string | null;
+  videoUrl?: string | null;
+  downloadUrl?: string | null;
+  externalUrl?: string | null;
+  linkedEntityId?: string | null;
+  linkedEntityType?: string | null;
+  metaTitle?: string | null;
+  metaDescription?: string | null;
+  ogImageUrl?: string | null;
+  structuredData?: string | null;
+  readingTimeMinutes?: number | null;
+  isFeatured?: boolean;
+  sortOrder?: number;
+  customData?: string | null;
+}
+
+export interface ContentPagesCreatePage {
+  slug?: string | null;
+  title?: string | null;
+  description?: string | null;
+  pageType?: ContentPagesPageType;
+  locale?: string | null;
+  metaTitle?: string | null;
+  metaDescription?: string | null;
+  metaKeywords?: string | null;
+  canonicalUrl?: string | null;
+  robotsDirective?: string | null;
+  ogTitle?: string | null;
+  ogDescription?: string | null;
+  ogImageUrl?: string | null;
+  ogType?: string | null;
+  twitterCard?: string | null;
+  twitterSite?: string | null;
+  structuredData?: string | null;
+  body?: string | null;
+  customData?: string | null;
+  parentPageId?: string | null;
+  sortOrder?: number;
+}
+
+export interface ContentPagesCreatePageSection {
+  sectionType?: ContentPagesSectionType;
+  heading?: string | null;
+  subheading?: string | null;
+  data?: string | null;
+  sortOrder?: number;
+  isVisible?: boolean;
+  cssClasses?: string | null;
+}
+
+export interface ContentPagesOpenGraphMetadata {
+  slug?: string | null;
+  title?: string | null;
+  description?: string | null;
+  ogTitle?: string | null;
+  ogDescription?: string | null;
+  ogImageUrl?: string | null;
+  ogType?: string | null;
+  twitterCard?: string | null;
+  twitterSite?: string | null;
+  canonicalUrl?: string | null;
+  robotsDirective?: string | null;
+  structuredData?: string | null;
+}
+
+export interface ContentPagesPage {
+  id?: string;
+  slug?: string | null;
+  title?: string | null;
+  description?: string | null;
+  pageType?: string | null;
+  status?: string | null;
+  locale?: string | null;
+  metaTitle?: string | null;
+  metaDescription?: string | null;
+  metaKeywords?: string | null;
+  canonicalUrl?: string | null;
+  robotsDirective?: string | null;
+  ogTitle?: string | null;
+  ogDescription?: string | null;
+  ogImageUrl?: string | null;
+  ogType?: string | null;
+  twitterCard?: string | null;
+  twitterSite?: string | null;
+  structuredData?: string | null;
+  body?: string | null;
+  customData?: string | null;
+  parentPageId?: string | null;
+  sortOrder?: number;
+  sections?: Array<ContentPagesPageSection> | null;
+  publishedAt?: string | null;
+  scheduledPublishAt?: string | null;
+  createdAt?: string;
+  updatedAt?: string | null;
+}
+
+export interface ContentPagesPageSection {
+  id?: string;
+  pageId?: string;
+  sectionType?: string | null;
+  heading?: string | null;
+  subheading?: string | null;
+  data?: string | null;
+  sortOrder?: number;
+  isVisible?: boolean;
+  cssClasses?: string | null;
+  createdAt?: string;
+  updatedAt?: string | null;
+}
+
+export type ContentPagesPageStatus = 'Draft' | 'Published' | 'Archived';
+
+export type ContentPagesPageType = 'Landing' | 'Legal' | 'ResourceIndex' | 'Resource' | 'Custom';
+
+export type ContentPagesSectionType =
+  | 'Hero'
+  | 'Features'
+  | 'Testimonials'
+  | 'Pricing'
+  | 'CallToAction'
+  | 'Faq'
+  | 'RichText'
+  | 'Gallery'
+  | 'Stats'
+  | 'Team'
+  | 'LogoCloud'
+  | 'Newsletter'
+  | 'Contact'
+  | 'ResourceCards'
+  | 'Custom';
+
+export interface ContentPagesUpdateContentResource {
+  slug?: string | null;
+  title?: string | null;
+  summary?: string | null;
+  body?: string | null;
+  resourceType?: ContentPagesContentResourceType;
+  status?: ContentPagesContentResourceStatus;
+  locale?: string | null;
+  categorySlug?: string | null;
+  tags?: string | null;
+  coverImageUrl?: string | null;
+  videoUrl?: string | null;
+  downloadUrl?: string | null;
+  externalUrl?: string | null;
+  linkedEntityId?: string | null;
+  linkedEntityType?: string | null;
+  metaTitle?: string | null;
+  metaDescription?: string | null;
+  ogImageUrl?: string | null;
+  structuredData?: string | null;
+  readingTimeMinutes?: number | null;
+  isFeatured?: boolean | null;
+  sortOrder?: number | null;
+  scheduledPublishAt?: string | null;
+  customData?: string | null;
+}
+
+export interface ContentPagesUpdatePage {
+  slug?: string | null;
+  title?: string | null;
+  description?: string | null;
+  pageType?: ContentPagesPageType;
+  status?: ContentPagesPageStatus;
+  locale?: string | null;
+  metaTitle?: string | null;
+  metaDescription?: string | null;
+  metaKeywords?: string | null;
+  canonicalUrl?: string | null;
+  robotsDirective?: string | null;
+  ogTitle?: string | null;
+  ogDescription?: string | null;
+  ogImageUrl?: string | null;
+  ogType?: string | null;
+  twitterCard?: string | null;
+  twitterSite?: string | null;
+  structuredData?: string | null;
+  body?: string | null;
+  customData?: string | null;
+  parentPageId?: string | null;
+  sortOrder?: number | null;
+  scheduledPublishAt?: string | null;
+}
+
+export interface ContentPagesUpdatePageSection {
+  sectionType?: ContentPagesSectionType;
+  heading?: string | null;
+  subheading?: string | null;
+  data?: string | null;
+  sortOrder?: number | null;
+  isVisible?: boolean | null;
+  cssClasses?: string | null;
+}
+
+export interface FeaturesBulkEvaluationInput {
+  featureKeys?: Array<string> | null;
+  context?: FeaturesFeatureContext;
+}
+
+export interface FeaturesCapabilityAuditLog {
+  id?: string;
+  tenantId?: string;
+  capabilityKey?: string | null;
+  oldValue?: boolean | null;
+  newValue?: boolean;
+  oldSource?: string | null;
+  newSource?: string | null;
+  changedByUserId?: string | null;
+  changeReason?: string | null;
+  changeType?: string | null;
+  changedAt?: string;
+}
+
+export interface FeaturesCapabilityCheckOutput {
+  capability?: string | null;
+  isEnabled?: boolean;
+}
+
+export interface FeaturesCreateFeatureInput {
+  key?: string | null;
+  name?: string | null;
+  description?: string | null;
+  isEnabled?: boolean;
+  tenantId?: string | null;
+}
+
+export interface FeaturesFeatureContext {
+  tenantId?: string | null;
+  userId?: string | null;
+  subscriptionPlanId?: string | null;
+  environment?: string | null;
+  permissions?: Array<string> | null;
+  customAttributes?: Record<string, Record<string, unknown>> | null;
+  userAgent?: string | null;
+  ipAddress?: string | null;
+  country?: string | null;
+  requestTime?: string;
+}
+
+export interface FeaturesFeatureEvaluationInput {
+  featureKey?: string | null;
+  defaultValue?: Record<string, unknown> | null;
+  context?: FeaturesFeatureContext;
+}
+
+export interface FeaturesFeatureFlag {
+  id: string;
+  key: string | null;
+  name: string | null;
+  description?: string | null;
+  isEnabled: boolean;
+  type: FeaturesFeatureFlagType;
+  environment?: string | null;
+  tenantId?: string | null;
+  defaultValue?: Record<string, unknown> | null;
+  createdAt: string;
+  updatedAt?: string | null;
+  deletedAt?: string | null;
+  targets?: Array<FeaturesFeatureFlagTarget> | null;
+}
+
+export interface FeaturesFeatureFlagTarget {
+  id: string;
+  featureFlagId: string;
+  targetType: string | null;
+  targetIdentifier: string | null;
+  isEnabled: boolean;
+  rolloutPercentage?: number;
+  customValue?: string | null;
+  metadata?: string | null;
+  priority?: number;
+  createdAt: string;
+  updatedAt?: string | null;
+  deletedAt?: string | null;
+}
+
+export type FeaturesFeatureFlagType = 'Toggle' | 'Numeric' | 'String' | 'Percentage' | 'UserSegment';
+
+export interface FeaturesSetCapabilityOverrideInput {
+  capability?: string | null;
+  isEnabled?: boolean;
+  source?: string | null;
   reason?: string | null;
+  expiresAt?: string | null;
 }
 
-export interface CommerceSubscriptionsSubscriptionsControllerUpgradeInput {
-  newPlanId?: string;
-  effectiveDate?: string | null;
+export interface FeaturesToggleFeatureInput {
+  featureKey?: string | null;
+  isEnabled?: boolean;
+  reason?: string | null;
+  tenantId?: string | null;
+  environment?: string | null;
+}
+
+export interface FeaturesUpdateFeatureInput {
+  name?: string | null;
+  description?: string | null;
+  isEnabled?: boolean | null;
+  rolloutPercentage?: number | null;
+  enabledValue?: string | null;
+  defaultValue?: string | null;
 }
 
 export interface Fido2NetLibAssertionOptions {
@@ -1327,7 +1751,7 @@ export interface IdentityAuthenticationMfaConfigurationOutput {
   backupCodesRemaining?: number;
 }
 
-export type IdentityAuthenticationMfaMethod = 1 | 2 | 3 | 4 | 5;
+export type IdentityAuthenticationMfaMethod = 'Totp' | 'BackupCode' | 'Sms' | 'Email' | 'WebAuthn';
 
 export interface IdentityAuthenticationMfaMethodInfo {
   method: IdentityAuthenticationMfaMethod;
@@ -1419,7 +1843,7 @@ export interface IdentityAuthenticationRevokeRefreshTokenInput {
   reason?: string | null;
 }
 
-export type IdentityAuthenticationRiskLevel = 0 | 1 | 2 | 3;
+export type IdentityAuthenticationRiskLevel = 'Low' | 'Medium' | 'High' | 'Critical';
 
 export interface IdentityAuthenticationRotateKeyInput {
   reason?: string | null;
@@ -1645,7 +2069,7 @@ export interface IdentityAuthenticationWebAuthnAuthenticationResult {
   isPasswordless?: boolean;
 }
 
-export type IdentityAuthenticationWebAuthnAuthenticatorType = 1 | 2;
+export type IdentityAuthenticationWebAuthnAuthenticatorType = 'Platform' | 'CrossPlatform';
 
 export interface IdentityAuthenticationWebAuthnCredentialInfo {
   id?: string;
@@ -1693,6 +2117,52 @@ export interface IdentityAuthenticationWebAuthnStatusOutput {
 
 export interface IdentityTenantsArchiveInput {
   reason?: string | null;
+}
+
+export interface IdentityTenantsBulkActivateTenantsCommand {
+  tenantIds?: Array<string> | null;
+}
+
+export interface IdentityTenantsBulkArchiveTenantsCommand {
+  tenantIds?: Array<string> | null;
+}
+
+export interface IdentityTenantsBulkCreateTenantItem {
+  name?: string | null;
+  slug?: string | null;
+  adminEmail?: string | null;
+  description?: string | null;
+}
+
+export interface IdentityTenantsBulkCreateTenantsCommand {
+  tenants?: Array<IdentityTenantsBulkCreateTenantItem> | null;
+}
+
+export interface IdentityTenantsBulkDeactivateTenantsCommand {
+  tenantIds?: Array<string> | null;
+}
+
+export interface IdentityTenantsBulkDeleteTenantsCommand {
+  tenantIds?: Array<string> | null;
+  hardDelete?: boolean;
+}
+
+export interface IdentityTenantsBulkPurgeTenantsCommand {
+  tenantIds?: Array<string> | null;
+}
+
+export interface IdentityTenantsBulkUndeleteTenantsCommand {
+  tenantIds?: Array<string> | null;
+}
+
+export interface IdentityTenantsBulkUpdateTenantItem {
+  tenantId?: string;
+  name?: string | null;
+  description?: string | null;
+}
+
+export interface IdentityTenantsBulkUpdateTenantsCommand {
+  updates?: Array<IdentityTenantsBulkUpdateTenantItem> | null;
 }
 
 export interface IdentityTenantsCreateTenantInput {
@@ -2252,7 +2722,7 @@ export interface IdentityUsersNotificationFilterCriteria {
   dateTo?: string | null;
 }
 
-export type IdentityUsersPurgeStrategy = 0 | 1 | 2;
+export type IdentityUsersPurgeStrategy = 'Immediate' | 'Scheduled' | 'GracePeriod';
 
 export interface IdentityUsersReplaceUserAccessibilityPreferencesInput {
   accessibilityPreferences?: Record<string, Record<string, unknown> | null> | null;
@@ -2472,16 +2942,560 @@ export interface IdentityUsersUserProfile {
   version?: string | null;
 }
 
-export interface ModelsPagedResult {
-  items?: Array<IdentityTenantsTenantAuditLogEntry> | null;
-  totalCount?: number;
-  skip?: number;
-  take?: number;
-  pageNumber?: number;
-  totalPages?: number;
-  hasNextPage?: boolean;
-  hasPreviousPage?: boolean;
+export interface LearningAssessmentsAssessment {
+  id?: string;
+  courseId?: string;
+  contentId?: string | null;
+  title?: string | null;
+  description?: string | null;
+  type?: LearningAssessmentsAssessmentType;
+  maxScore?: number;
+  passingScore?: number;
+  timeLimitMinutes?: number | null;
+  maxAttempts?: number | null;
+  isRequired?: boolean;
+  order?: number;
+  availableFrom?: string | null;
+  availableUntil?: string | null;
+  isAvailable?: boolean;
 }
+
+export interface LearningAssessmentsAssessmentSubmission {
+  id?: string;
+  assessmentId?: string;
+  enrollmentId?: string;
+  userId?: string;
+  attemptNumber?: number;
+  score?: number | null;
+  passed?: boolean | null;
+  startedAt?: string;
+  submittedAt?: string | null;
+  gradedAt?: string | null;
+  gradedBy?: string | null;
+  feedback?: string | null;
+  status?: LearningAssessmentsSubmissionStatus;
+}
+
+export type LearningAssessmentsAssessmentType = 'Quiz' | 'Exam' | 'Assignment' | 'Project' | 'PeerReview' | 'SelfAssessment';
+
+export interface LearningAssessmentsCanAttemptOutput {
+  canAttempt?: boolean;
+  currentAttemptCount?: number;
+}
+
+export interface LearningAssessmentsCreateAssessmentInput {
+  courseId?: string;
+  title?: string | null;
+  description?: string | null;
+  type?: LearningAssessmentsAssessmentType;
+  maxScore?: number;
+  passingScore?: number;
+  timeLimitMinutes?: number | null;
+  maxAttempts?: number | null;
+  isRequired?: boolean;
+  availableFrom?: string | null;
+  availableUntil?: string | null;
+}
+
+export interface LearningAssessmentsGradeSubmissionInput {
+  score?: number;
+  gradedBy?: string | null;
+  feedback?: string | null;
+}
+
+export interface LearningAssessmentsStartSubmissionInput {
+  enrollmentId?: string;
+}
+
+export type LearningAssessmentsSubmissionStatus = 'InProgress' | 'Submitted' | 'Graded' | 'Returned' | 'Late';
+
+export interface LearningAssessmentsUpdateAssessmentInput {
+  title?: string | null;
+  description?: string | null;
+  maxScore?: number | null;
+  passingScore?: number | null;
+  timeLimitMinutes?: number | null;
+  maxAttempts?: number | null;
+  isRequired?: boolean | null;
+  availableFrom?: string | null;
+  availableUntil?: string | null;
+  contentId?: string | null;
+  clearContentId?: boolean;
+}
+
+export interface LearningCoursesActivityGrade {
+  id?: string;
+  contentInteractionId?: string;
+  graderProgramUserId?: string | null;
+  grade?: number;
+  feedback?: string | null;
+  gradingDetails?: string | null;
+  gradedAt?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  contentInteraction?: LearningCoursesContentInteractionSummary;
+  grader?: LearningCoursesGraderSummary;
+  isPassingGrade?: boolean;
+  gradePercentage?: string | null;
+  hasFeedback?: boolean;
+  hasGradingDetails?: boolean;
+}
+
+export interface LearningCoursesCircularDependencyCheckResult {
+  wouldCreateCycle?: boolean;
+}
+
+export interface LearningCoursesCloneProgram {
+  newTitle?: string | null;
+  newDescription?: string | null;
+}
+
+export interface LearningCoursesCompleteContentInput {
+  programUserId?: string;
+  contentId?: string;
+}
+
+export interface LearningCoursesCompletionRates {
+  programId?: string;
+  overallCompletionRate?: number;
+  contentCompletionRates?: Record<string, number> | null;
+  completionTrends?: Array<LearningCoursesCompletionTrend> | null;
+}
+
+export interface LearningCoursesCompletionTrend {
+  date?: string;
+  completedCount?: number;
+  totalCount?: number;
+  rate?: number;
+}
+
+export interface LearningCoursesContentInteraction {
+  id?: string;
+  programUserId?: string;
+  contentId?: string;
+  status?: LearningCoursesProgressStatus;
+  submissionData?: string | null;
+  completionPercentage?: number;
+  timeSpentMinutes?: number | null;
+  firstAccessedAt?: string | null;
+  lastAccessedAt?: string | null;
+  completedAt?: string | null;
+  submittedAt?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
+  content?: LearningCoursesContentSummary;
+  programUser?: LearningCoursesProgramUserSummary;
+  isSubmitted?: boolean;
+  isCompleted?: boolean;
+  canModify?: boolean;
+  durationInMinutes?: number;
+}
+
+export interface LearningCoursesContentInteractionSummary {
+  id?: string;
+  programUserId?: string;
+  contentId?: string;
+  status?: string | null;
+  submittedAt?: string | null;
+  content?: LearningCoursesContentSummary;
+  student?: LearningCoursesStudentSummary;
+}
+
+export interface LearningCoursesContentProgress {
+  contentId?: string;
+  title?: string | null;
+  status?: LearningCoursesProgressStatus;
+  completionPercentage?: number;
+  firstAccessedAt?: string | null;
+  lastAccessedAt?: string | null;
+  completedAt?: string | null;
+}
+
+export interface LearningCoursesContentStats {
+  programId?: string;
+  totalContent?: number;
+  requiredContent?: number;
+  optionalContent?: number;
+  contentByType?: {
+    Lesson?: number;
+    Page?: number;
+    Assignment?: number;
+    Questionnaire?: number;
+    Discussion?: number;
+    Code?: number;
+    Challenge?: number;
+    Reflection?: number;
+    Survey?: number;
+  } | null;
+  contentByVisibility?: { Public?: number; Internal?: number; Private?: number; Restricted?: number } | null;
+  topLevelContent?: number;
+  nestedContent?: number;
+}
+
+export interface LearningCoursesContentSummary {
+  id?: string;
+  title?: string | null;
+  contentType?: string | null;
+  estimatedMinutes?: number | null;
+}
+
+export interface LearningCoursesCreateActivityGrade {
+  contentInteractionId?: string;
+  graderProgramUserId?: string;
+  grade?: number;
+  feedback?: string | null;
+  gradingDetails?: string | null;
+}
+
+export interface LearningCoursesCreatePrerequisiteApiInput {
+  courseId?: string;
+  prerequisiteCourseId?: string;
+  type?: LearningCoursesPrerequisiteType;
+  minimumGrade?: number | null;
+  description?: string | null;
+  displayOrder?: number;
+  prerequisiteGroup?: string | null;
+}
+
+export interface LearningCoursesCreateProductFromProgram {
+  name?: string | null;
+  description?: string | null;
+  basePrice?: number;
+  currency?: string | null;
+}
+
+export interface LearningCoursesCreateProgramContent {
+  programId: string;
+  parentId?: string | null;
+  title: string;
+  description?: string | null;
+  type: LearningCoursesProgramContentType;
+  body?: string | null;
+  sortOrder?: number;
+  isRequired?: boolean;
+  gradingMethod?: LearningCoursesGradingMethod;
+  maxPoints?: number | null;
+  estimatedMinutes?: number | null;
+  visibility?: LearningCoursesVisibility;
+}
+
+export interface LearningCoursesCreateProgram {
+  title?: string | null;
+  description?: string | null;
+  slug?: string | null;
+  thumbnail?: string | null;
+}
+
+export interface LearningCoursesEngagementMetrics {
+  programId?: string;
+  dailyActiveUsers?: number;
+  weeklyActiveUsers?: number;
+  monthlyActiveUsers?: number;
+  averageSessionDuration?: string;
+  totalSessions?: number;
+  retentionRate?: number;
+  contentEngagement?: Record<string, number> | null;
+}
+
+export type LearningCoursesEnrollmentStatus = 'Open' | 'Active' | 'Paused' | 'Cancelled' | 'Expired' | 'Completed' | 'Closed' | 'InviteOnly' | 'Waitlist';
+
+export interface LearningCoursesGradeStatistics {
+  totalGrades?: number;
+  averageGrade?: number;
+  minGrade?: number;
+  maxGrade?: number;
+  passingRate?: number;
+  averageGradeFormatted?: string | null;
+  passingRateFormatted?: string | null;
+  hasGrades?: boolean;
+}
+
+export interface LearningCoursesGraderSummary {
+  id?: string;
+  userDisplayName?: string | null;
+  userEmail?: string | null;
+  role?: string | null;
+}
+
+export type LearningCoursesGradingMethod = 'None' | 'Instructor' | 'Peer' | 'Ai' | 'AutomatedTests';
+
+export interface LearningCoursesMonetization {
+  price?: number;
+  currency?: string | null;
+  isSubscription?: boolean;
+  subscriptionDurationDays?: number | null;
+}
+
+export interface LearningCoursesMoveContent {
+  contentId: string;
+  newParentId?: string | null;
+  newSortOrder: number;
+}
+
+export interface LearningCoursesPrerequisiteCheckResult {
+  isSatisfied?: boolean;
+  prerequisites?: Array<LearningCoursesPrerequisiteStatus> | null;
+}
+
+export interface LearningCoursesPrerequisite {
+  id?: string;
+  courseId?: string;
+  prerequisiteCourseId?: string;
+  prerequisiteCourseName?: string | null;
+  tenantId?: string | null;
+  type?: LearningCoursesPrerequisiteType;
+  minimumGrade?: number | null;
+  description?: string | null;
+  displayOrder?: number;
+  prerequisiteGroup?: string | null;
+  createdAt?: string;
+}
+
+export interface LearningCoursesPrerequisiteStatus {
+  prerequisiteId?: string;
+  prerequisiteCourseId?: string;
+  courseName?: string | null;
+  type?: LearningCoursesPrerequisiteType;
+  isSatisfied?: boolean;
+  requiredGrade?: number | null;
+  achievedGrade?: number | null;
+  reason?: string | null;
+}
+
+export type LearningCoursesPrerequisiteType = 'Required' | 'Recommended' | 'Corequisite';
+
+export interface LearningCoursesPricing {
+  price?: number;
+  currency?: string | null;
+  isSubscription?: boolean;
+  subscriptionDurationDays?: number | null;
+  isMonetizationEnabled?: boolean;
+}
+
+export interface LearningCoursesProgramAnalytics {
+  programId?: string;
+  title?: string | null;
+  totalUsers?: number;
+  activeUsers?: number;
+  completedUsers?: number;
+  completionRate?: number;
+  averageCompletionTime?: string;
+  totalViews?: number;
+  lastActivity?: string | null;
+  additionalMetrics?: Record<string, Record<string, unknown>> | null;
+}
+
+export interface LearningCoursesProgramContent {
+  id?: string;
+  programId?: string;
+  parentId?: string | null;
+  title?: string | null;
+  description?: string | null;
+  type?: LearningCoursesProgramContentType;
+  body?: Record<string, unknown> | null;
+  sortOrder?: number;
+  isRequired?: boolean;
+  gradingMethod?: LearningCoursesGradingMethod;
+  maxPoints?: number | null;
+  estimatedMinutes?: number | null;
+  visibility?: LearningCoursesVisibility;
+  createdAt?: string;
+  updatedAt?: string | null;
+  programTitle?: string | null;
+  parentTitle?: string | null;
+  childrenCount?: number;
+  children?: Array<LearningCoursesProgramContent> | null;
+}
+
+export type LearningCoursesProgramContentType =
+  | 'Lesson'
+  | 'Page'
+  | 'Assignment'
+  | 'Questionnaire'
+  | 'Discussion'
+  | 'Code'
+  | 'Challenge'
+  | 'Reflection'
+  | 'Survey';
+
+export type LearningCoursesProgramDifficulty = 'Beginner' | 'Intermediate' | 'Advanced' | 'Expert';
+
+export interface LearningCoursesProgram {
+  id?: string;
+  creatorId?: string | null;
+  title?: string | null;
+  description?: string | null;
+  visibility?: ContentVisibility;
+  slug?: string | null;
+  status?: ContentStatus;
+  thumbnail?: string | null;
+  videoShowcaseUrl?: string | null;
+  estimatedHours?: number | null;
+  enrollmentStatus?: LearningCoursesEnrollmentStatus;
+  maxEnrollments?: number | null;
+  enrollmentDeadline?: string | null;
+  category?: ProgramCategory;
+  difficulty?: LearningCoursesProgramDifficulty;
+  skillsRequired?: string | null;
+  skillsProvided?: string | null;
+  currentEnrollments?: number;
+  averageRating?: number;
+  totalRatings?: number;
+  isEnrollmentOpen?: boolean;
+  createdAt?: string;
+  updatedAt?: string | null;
+}
+
+export interface LearningCoursesProgramUserSummary {
+  id?: string;
+  userDisplayName?: string | null;
+  userEmail?: string | null;
+}
+
+export type LearningCoursesProgressStatus = 'NotStarted' | 'InProgress' | 'Completed' | 'Submitted';
+
+export interface LearningCoursesRejectProgram {
+  reason?: string | null;
+}
+
+export interface LearningCoursesReorderContent {
+  contentIds?: Array<string> | null;
+}
+
+export interface LearningCoursesReorderPrerequisitesInput {
+  prerequisiteIds?: Array<string> | null;
+}
+
+export interface LearningCoursesRevenueAnalytics {
+  programId?: string;
+  totalRevenue?: number;
+  monthlyRevenue?: number;
+  totalPurchases?: number;
+  monthlyPurchases?: number;
+  averageRevenuePerUser?: number;
+  conversionRate?: number;
+  revenueChart?: Array<LearningCoursesRevenueChart> | null;
+}
+
+export interface LearningCoursesRevenueChart {
+  date?: string;
+  revenue?: number;
+  purchases?: number;
+}
+
+export interface LearningCoursesScheduleProgram {
+  publishAt?: string;
+}
+
+export interface LearningCoursesSearchContent {
+  programId: string;
+  searchTerm: string;
+  type?: LearningCoursesProgramContentType;
+  visibility?: LearningCoursesVisibility;
+  isRequired?: boolean | null;
+  parentId?: string | null;
+}
+
+export interface LearningCoursesStartContentInput {
+  programUserId?: string;
+  contentId?: string;
+}
+
+export interface LearningCoursesStudentSummary {
+  id?: string;
+  userDisplayName?: string | null;
+  userEmail?: string | null;
+}
+
+export interface LearningCoursesSubmitContentInput {
+  programUserId?: string;
+  contentId?: string;
+  submissionData?: string | null;
+}
+
+export interface LearningCoursesSubmitUserContent {
+  submissionData: string;
+}
+
+export interface LearningCoursesUpdateActivityGrade {
+  grade?: number | null;
+  feedback?: string | null;
+  gradingDetails?: string | null;
+}
+
+export interface LearningCoursesUpdatePrerequisiteApiInput {
+  type?: LearningCoursesPrerequisiteType;
+  minimumGrade?: number | null;
+  description?: string | null;
+  displayOrder?: number | null;
+  prerequisiteGroup?: string | null;
+}
+
+export interface LearningCoursesUpdatePricing {
+  price?: number | null;
+  currency?: string | null;
+  isSubscription?: boolean | null;
+  subscriptionDurationDays?: number | null;
+}
+
+export interface LearningCoursesUpdateProgramContent {
+  id: string;
+  title?: string | null;
+  description?: string | null;
+  type?: LearningCoursesProgramContentType;
+  body?: string | null;
+  sortOrder?: number | null;
+  isRequired?: boolean | null;
+  gradingMethod?: LearningCoursesGradingMethod;
+  maxPoints?: number | null;
+  estimatedMinutes?: number | null;
+  visibility?: LearningCoursesVisibility;
+}
+
+export interface LearningCoursesUpdateProgram {
+  title?: string | null;
+  description?: string | null;
+  slug?: string | null;
+  thumbnail?: string | null;
+  videoShowcaseUrl?: string | null;
+  estimatedHours?: number | null;
+  visibility?: ContentVisibility;
+  category?: ProgramCategory;
+  difficulty?: LearningCoursesProgramDifficulty;
+  skillsRequired?: string | null;
+  skillsProvided?: string | null;
+  enrollmentStatus?: LearningCoursesEnrollmentStatus;
+  maxEnrollments?: number | null;
+  enrollmentDeadline?: string | null;
+}
+
+export interface LearningCoursesUpdateProgress {
+  status?: LearningCoursesProgressStatus;
+  lastAccessedAt?: string | null;
+  additionalData?: Record<string, Record<string, unknown>> | null;
+}
+
+export interface LearningCoursesUpdateProgressInput {
+  programUserId?: string;
+  contentId?: string;
+  completionPercentage?: number;
+}
+
+export interface LearningCoursesUpdateTimeSpentInput {
+  programUserId?: string;
+  contentId?: string;
+  additionalMinutes?: number;
+}
+
+export interface LearningCoursesUserProgress {
+  completionPercentage?: number;
+  lastAccessedAt?: string | null;
+  startedAt?: string | null;
+  completedAt?: string | null;
+  contentProgress?: Array<LearningCoursesContentProgress> | null;
+}
+
+export type LearningCoursesVisibility = 'Public' | 'Internal' | 'Private' | 'Restricted';
 
 export interface MvcProblemDetails {
   type?: string | null;
@@ -2492,9 +3506,9 @@ export interface MvcProblemDetails {
   [key: string]: any;
 }
 
-export type ObjectsAttestationConveyancePreference = 'none' | 'indirect' | 'direct' | 'enterprise';
+export type ObjectsAttestationConveyancePreference = 'None' | 'Indirect' | 'Direct' | 'Enterprise';
 
-export type ObjectsAttestationStatementFormatIdentifier = 'packed' | 'tpm' | 'android-key' | 'android-safetynet' | 'fido-u2f' | 'apple' | 'none';
+export type ObjectsAttestationStatementFormatIdentifier = 'Packed' | 'Tpm' | 'AndroidKey' | 'AndroidSafetyNet' | 'FidoU2f' | 'Apple' | 'None';
 
 export interface ObjectsAuthenticationExtensionsClientInputs {
   'example.extension.bool'?: boolean | null;
@@ -2523,15 +3537,15 @@ export interface ObjectsAuthenticationExtensionsPRFValues {
   second?: string | null;
 }
 
-export type ObjectsAuthenticatorAttachment = 'platform' | 'cross-platform';
+export type ObjectsAuthenticatorAttachment = 'Platform' | 'CrossPlatform';
 
-export type ObjectsAuthenticatorTransport = 'usb' | 'nfc' | 'ble' | 'smart-card' | 'hybrid' | 'internal';
+export type ObjectsAuthenticatorTransport = 'Usb' | 'Nfc' | 'Ble' | 'SmartCard' | 'Hybrid' | 'Internal';
 
-export type ObjectsCOSEAlgorithm = -65535 | -259 | -258 | -257 | -47 | -39 | -38 | -37 | -36 | -35 | -8 | -7;
+export type ObjectsCOSEAlgorithm = 'RS1' | 'RS512' | 'RS384' | 'RS256' | 'ES256K' | 'PS512' | 'PS384' | 'PS256' | 'ES512' | 'ES384' | 'EdDSA' | 'ES256';
 
-export type ObjectsCredentialProtectionPolicy = 'userVerificationOptional' | 'userVerificationOptionalWithCredentialIDList' | 'userVerificationRequired';
+export type ObjectsCredentialProtectionPolicy = 'UserVerificationOptional' | 'UserVerificationOptionalWithCredentialIdList' | 'UserVerificationRequired';
 
-export type ObjectsLargeBlobSupport = 'required' | 'preferred';
+export type ObjectsLargeBlobSupport = 'Required' | 'Preferred';
 
 export interface ObjectsPublicKeyCredentialDescriptor {
   type?: ObjectsPublicKeyCredentialType;
@@ -2539,13 +3553,25 @@ export interface ObjectsPublicKeyCredentialDescriptor {
   transports?: Array<ObjectsAuthenticatorTransport> | null;
 }
 
-export type ObjectsPublicKeyCredentialHint = 'security-key' | 'client-device' | 'hybrid';
+export type ObjectsPublicKeyCredentialHint = 'SecurityKey' | 'ClientDevice' | 'Hybrid';
 
-export type ObjectsPublicKeyCredentialType = 'public-key' | 'invalid';
+export type ObjectsPublicKeyCredentialType = 'PublicKey' | 'Invalid';
 
-export type ObjectsResidentKeyRequirement = 'required' | 'preferred' | 'discouraged';
+export type ObjectsResidentKeyRequirement = 'Required' | 'Preferred' | 'Discouraged';
 
-export type ObjectsUserVerificationRequirement = 'required' | 'preferred' | 'discouraged';
+export type ObjectsUserVerificationRequirement = 'Required' | 'Preferred' | 'Discouraged';
+
+export interface PagedResult {
+  items?: Array<CommerceProductsProduct> | null;
+  totalCount?: number;
+  skip?: number;
+  take?: number;
+  pageNumber?: number;
+  pageSize?: number;
+  totalPages?: number;
+  hasNextPage?: boolean;
+  hasPreviousPage?: boolean;
+}
 
 export interface ResourcesArchiveResourceUsageRecordsInput {
   olderThan?: string;
@@ -2621,7 +3647,7 @@ export interface ResourcesResourceQuotaEnforcementResult {
   remainingQuota?: number | null;
 }
 
-export type ResourcesResourceQuotaPeriod = 1 | 2 | 3 | 4 | 5 | 6;
+export type ResourcesResourceQuotaPeriod = 'Daily' | 'Weekly' | 'Monthly' | 'Quarterly' | 'Yearly' | 'Unlimited';
 
 export interface ResourcesResourceQuotaOutput {
   id?: string;
@@ -2671,33 +3697,33 @@ export interface ResourcesResourceSettings {
 }
 
 export type ResourcesResourceUsageType =
-  | 1
-  | 2
-  | 3
-  | 4
-  | 5
-  | 6
-  | 7
-  | 8
-  | 9
-  | 10
-  | 11
-  | 12
-  | 13
-  | 14
-  | 15
-  | 16
-  | 17
-  | 18
-  | 19
-  | 20
-  | 21
-  | 22
-  | 23
-  | 24
-  | 25
-  | 26
-  | 27;
+  | 'Users'
+  | 'Projects'
+  | 'Storage'
+  | 'ApiCalls'
+  | 'Programs'
+  | 'Courses'
+  | 'FeatureFlags'
+  | 'SubscriptionPlans'
+  | 'Products'
+  | 'TestingSessions'
+  | 'Roles'
+  | 'Tenants'
+  | 'Subscriptions'
+  | 'SLOs'
+  | 'AccessReviewCampaigns'
+  | 'SoDRules'
+  | 'AbacPolicies'
+  | 'ConditionalPolicies'
+  | 'Wallets'
+  | 'Disputes'
+  | 'PromoCodes'
+  | 'Orders'
+  | 'AuditEntries'
+  | 'Assets'
+  | 'AssetStorage'
+  | 'AssetDownloads'
+  | 'AssetTransformations';
 
 export interface ResourcesSetQuotaInput {
   softLimit?: number | null;
@@ -2734,7 +3760,7 @@ export interface ResourcesToggleResourceQuotaInput {
   isActive?: boolean;
 }
 
-export type ResourcesTrendGranularity = 0 | 1 | 2;
+export type ResourcesTrendGranularity = 'Daily' | 'Weekly' | 'Monthly';
 
 export interface ResourcesUsageRecord {
   isGlobal?: boolean;
@@ -2776,22 +3802,23 @@ export interface ResourcesUsageTrendsResult {
   dataPoints?: Array<ResourcesUsageTrendDataPoint> | null;
 }
 
-export type ValueObjectsBillingCycle = 0 | 1 | 3 | 6 | 12 | 24;
-
-export interface ValueObjectsMoney {
-  amount?: number;
-  currency?: string | null;
-}
-
 // Zod Schema Declarations (to handle circular references)
+export let BillingCycleSchema: z.ZodType<BillingCycle>;
+export let BulkOperationErrorSchema: z.ZodType<BulkOperationError>;
 export let CommercePaymentsTaxJurisdictionDtoSchema: z.ZodType<CommercePaymentsTaxJurisdictionDto>;
 export let CommercePaymentsTaxRuleDtoSchema: z.ZodType<CommercePaymentsTaxRuleDto>;
-export let CommerceProductsPagedResult1GameGuildCommerceProductsPromoCodeDtoGameGuildCommerceProductsVersion100PagedResultPromoCodeDtoSchema: z.ZodType<CommerceProductsPagedResult1GameGuildCommerceProductsPromoCodeDtoGameGuildCommerceProductsVersion100PagedResultPromoCodeDto>;
+export let ContentStatusSchema: z.ZodType<ContentStatus>;
+export let ContentVisibilitySchema: z.ZodType<ContentVisibility>;
 export let IdentityTenantsTenantSettingsDtoSchema: z.ZodType<IdentityTenantsTenantSettingsDto>;
 export let KeyValuePairStringAuthenticationExtensionsPRFValuesSchema: z.ZodType<KeyValuePairStringAuthenticationExtensionsPRFValues>;
-export let ModelsPagedResult1GameGuildIdentityUsersUserDtoGameGuildIdentityUsersVersion100PagedResultUserDtoSchema: z.ZodType<ModelsPagedResult1GameGuildIdentityUsersUserDtoGameGuildIdentityUsersVersion100PagedResultUserDto>;
-export let ModelsPagedResult1GameGuildIdentityUsersUserNotificationDtoGameGuildIdentityUsersVersion100PagedResultUserNotificationDtoSchema: z.ZodType<ModelsPagedResult1GameGuildIdentityUsersUserNotificationDtoGameGuildIdentityUsersVersion100PagedResultUserNotificationDto>;
-export let ModelsPagedResult1GameGuildIdentityUsersUserProfileDtoGameGuildIdentityUsersVersion100PagedResultUserProfileDtoSchema: z.ZodType<ModelsPagedResult1GameGuildIdentityUsersUserProfileDtoGameGuildIdentityUsersVersion100PagedResultUserProfileDto>;
+export let MoneySchema: z.ZodType<Money>;
+export let PagedResult1GameGuildCommerceProductsPromoCodeDtoGameGuildCommerceProductsVersion100PagedResultPromoCodeDtoSchema: z.ZodType<PagedResult1GameGuildCommerceProductsPromoCodeDtoGameGuildCommerceProductsVersion100PagedResultPromoCodeDto>;
+export let PagedResult1GameGuildIdentityTenantsTenantGameGuildIdentityTenantsVersion100PagedResultTenantSchema: z.ZodType<PagedResult1GameGuildIdentityTenantsTenantGameGuildIdentityTenantsVersion100PagedResultTenant>;
+export let PagedResult1GameGuildIdentityTenantsTenantAuditLogEntryGameGuildIdentityTenantsVersion100PagedResultTenantAuditLogEntrySchema: z.ZodType<PagedResult1GameGuildIdentityTenantsTenantAuditLogEntryGameGuildIdentityTenantsVersion100PagedResultTenantAuditLogEntry>;
+export let PagedResult1GameGuildIdentityUsersUserDtoGameGuildIdentityUsersVersion100PagedResultUserDtoSchema: z.ZodType<PagedResult1GameGuildIdentityUsersUserDtoGameGuildIdentityUsersVersion100PagedResultUserDto>;
+export let PagedResult1GameGuildIdentityUsersUserNotificationDtoGameGuildIdentityUsersVersion100PagedResultUserNotificationDtoSchema: z.ZodType<PagedResult1GameGuildIdentityUsersUserNotificationDtoGameGuildIdentityUsersVersion100PagedResultUserNotificationDto>;
+export let PagedResult1GameGuildIdentityUsersUserProfileDtoGameGuildIdentityUsersVersion100PagedResultUserProfileDtoSchema: z.ZodType<PagedResult1GameGuildIdentityUsersUserProfileDtoGameGuildIdentityUsersVersion100PagedResultUserProfileDto>;
+export let ProgramCategorySchema: z.ZodType<ProgramCategory>;
 export let APIControllersApplicationDetailsSchema: z.ZodType<APIControllersApplicationDetails>;
 export let APIControllersApplicationInfoOutputSchema: z.ZodType<APIControllersApplicationInfoOutput>;
 export let APIControllersBuildDetailsSchema: z.ZodType<APIControllersBuildDetails>;
@@ -2803,8 +3830,8 @@ export let APIControllersLivenessOutputSchema: z.ZodType<APIControllersLivenessO
 export let APIControllersProcessDetailsSchema: z.ZodType<APIControllersProcessDetails>;
 export let APIControllersReadinessOutputSchema: z.ZodType<APIControllersReadinessOutput>;
 export let APIControllersRuntimeDetailsSchema: z.ZodType<APIControllersRuntimeDetails>;
+export let BulkOperationOutputSchema: z.ZodType<BulkOperationOutput>;
 export let CQRSIDomainEventSchema: z.ZodType<CQRSIDomainEvent>;
-export let CQRSPagedResultSchema: z.ZodType<CQRSPagedResult>;
 export let CommercePaymentsAddFundsInputSchema: z.ZodType<CommercePaymentsAddFundsInput>;
 export let CommercePaymentsCalculateTaxInputSchema: z.ZodType<CommercePaymentsCalculateTaxInput>;
 export let CommercePaymentsCreateTaxJurisdictionInputSchema: z.ZodType<CommercePaymentsCreateTaxJurisdictionInput>;
@@ -2851,7 +3878,6 @@ export let CommerceProductsCreatePromoCodeInputSchema: z.ZodType<CommerceProduct
 export let CommerceProductsEntitlementCheckResultSchema: z.ZodType<CommerceProductsEntitlementCheckResult>;
 export let CommerceProductsEntitlementInfoSchema: z.ZodType<CommerceProductsEntitlementInfo>;
 export let CommerceProductsGrantEntitlementInputSchema: z.ZodType<CommerceProductsGrantEntitlementInput>;
-export let CommerceProductsPagedResultSchema: z.ZodType<CommerceProductsPagedResult>;
 export let CommerceProductsPatchProductInputSchema: z.ZodType<CommerceProductsPatchProductInput>;
 export let CommerceProductsPatchPromoCodeInputSchema: z.ZodType<CommerceProductsPatchPromoCodeInput>;
 export let CommerceProductsProductAcquisitionTypeSchema: z.ZodType<CommerceProductsProductAcquisitionType>;
@@ -2872,33 +3898,60 @@ export let CommerceSubscriptionsBillingHistorySchema: z.ZodType<CommerceSubscrip
 export let CommerceSubscriptionsCancellationReasonSchema: z.ZodType<CommerceSubscriptionsCancellationReason>;
 export let CommerceSubscriptionsSubscriptionSchema: z.ZodType<CommerceSubscriptionsSubscription>;
 export let CommerceSubscriptionsSubscriptionDowngradeResultSchema: z.ZodType<CommerceSubscriptionsSubscriptionDowngradeResult>;
+export let CommerceSubscriptionsSubscriptionLifecycleControllerAutoRenewInputSchema: z.ZodType<CommerceSubscriptionsSubscriptionLifecycleControllerAutoRenewInput>;
+export let CommerceSubscriptionsSubscriptionLifecycleControllerCancelInputSchema: z.ZodType<CommerceSubscriptionsSubscriptionLifecycleControllerCancelInput>;
+export let CommerceSubscriptionsSubscriptionLifecycleControllerDowngradeInputSchema: z.ZodType<CommerceSubscriptionsSubscriptionLifecycleControllerDowngradeInput>;
+export let CommerceSubscriptionsSubscriptionLifecycleControllerEndTrialInputSchema: z.ZodType<CommerceSubscriptionsSubscriptionLifecycleControllerEndTrialInput>;
+export let CommerceSubscriptionsSubscriptionLifecycleControllerExternalIdsInputSchema: z.ZodType<CommerceSubscriptionsSubscriptionLifecycleControllerExternalIdsInput>;
+export let CommerceSubscriptionsSubscriptionLifecycleControllerPauseSubscriptionInputSchema: z.ZodType<CommerceSubscriptionsSubscriptionLifecycleControllerPauseSubscriptionInput>;
+export let CommerceSubscriptionsSubscriptionLifecycleControllerStartTrialInputSchema: z.ZodType<CommerceSubscriptionsSubscriptionLifecycleControllerStartTrialInput>;
+export let CommerceSubscriptionsSubscriptionLifecycleControllerSuspendInputSchema: z.ZodType<CommerceSubscriptionsSubscriptionLifecycleControllerSuspendInput>;
+export let CommerceSubscriptionsSubscriptionLifecycleControllerUpgradeInputSchema: z.ZodType<CommerceSubscriptionsSubscriptionLifecycleControllerUpgradeInput>;
 export let CommerceSubscriptionsSubscriptionPlanSchema: z.ZodType<CommerceSubscriptionsSubscriptionPlan>;
-export let CommerceSubscriptionsSubscriptionPlansControllerCloneSubscriptionPlanInputSchema: z.ZodType<CommerceSubscriptionsSubscriptionPlansControllerCloneSubscriptionPlanInput>;
-export let CommerceSubscriptionsSubscriptionPlansControllerComparePlansInputSchema: z.ZodType<CommerceSubscriptionsSubscriptionPlansControllerComparePlansInput>;
-export let CommerceSubscriptionsSubscriptionPlansControllerCreatePlanInputSchema: z.ZodType<CommerceSubscriptionsSubscriptionPlansControllerCreatePlanInput>;
-export let CommerceSubscriptionsSubscriptionPlansControllerPutSubscriptionPlanInputSchema: z.ZodType<CommerceSubscriptionsSubscriptionPlansControllerPutSubscriptionPlanInput>;
-export let CommerceSubscriptionsSubscriptionPlansControllerSetExternalIdInputSchema: z.ZodType<CommerceSubscriptionsSubscriptionPlansControllerSetExternalIdInput>;
-export let CommerceSubscriptionsSubscriptionPlansControllerSetFeaturedInputSchema: z.ZodType<CommerceSubscriptionsSubscriptionPlansControllerSetFeaturedInput>;
-export let CommerceSubscriptionsSubscriptionPlansControllerUpdateDetailsInputSchema: z.ZodType<CommerceSubscriptionsSubscriptionPlansControllerUpdateDetailsInput>;
-export let CommerceSubscriptionsSubscriptionPlansControllerUpdateFeaturesInputSchema: z.ZodType<CommerceSubscriptionsSubscriptionPlansControllerUpdateFeaturesInput>;
-export let CommerceSubscriptionsSubscriptionPlansControllerUpdateLimitsInputSchema: z.ZodType<CommerceSubscriptionsSubscriptionPlansControllerUpdateLimitsInput>;
-export let CommerceSubscriptionsSubscriptionPlansControllerUpdatePricingInputSchema: z.ZodType<CommerceSubscriptionsSubscriptionPlansControllerUpdatePricingInput>;
-export let CommerceSubscriptionsSubscriptionPlansControllerValidateLimitsInputSchema: z.ZodType<CommerceSubscriptionsSubscriptionPlansControllerValidateLimitsInput>;
+export let CommerceSubscriptionsSubscriptionPlanOperationsControllerCloneSubscriptionPlanInputSchema: z.ZodType<CommerceSubscriptionsSubscriptionPlanOperationsControllerCloneSubscriptionPlanInput>;
+export let CommerceSubscriptionsSubscriptionPlanOperationsControllerSetExternalIdInputSchema: z.ZodType<CommerceSubscriptionsSubscriptionPlanOperationsControllerSetExternalIdInput>;
+export let CommerceSubscriptionsSubscriptionPlanOperationsControllerSetFeaturedInputSchema: z.ZodType<CommerceSubscriptionsSubscriptionPlanOperationsControllerSetFeaturedInput>;
+export let CommerceSubscriptionsSubscriptionPlanOperationsControllerUpdateDetailsInputSchema: z.ZodType<CommerceSubscriptionsSubscriptionPlanOperationsControllerUpdateDetailsInput>;
+export let CommerceSubscriptionsSubscriptionPlanOperationsControllerUpdateFeaturesInputSchema: z.ZodType<CommerceSubscriptionsSubscriptionPlanOperationsControllerUpdateFeaturesInput>;
+export let CommerceSubscriptionsSubscriptionPlanOperationsControllerUpdateLimitsInputSchema: z.ZodType<CommerceSubscriptionsSubscriptionPlanOperationsControllerUpdateLimitsInput>;
+export let CommerceSubscriptionsSubscriptionPlanOperationsControllerUpdatePricingInputSchema: z.ZodType<CommerceSubscriptionsSubscriptionPlanOperationsControllerUpdatePricingInput>;
+export let CommerceSubscriptionsSubscriptionPlanOperationsControllerValidateLimitsInputSchema: z.ZodType<CommerceSubscriptionsSubscriptionPlanOperationsControllerValidateLimitsInput>;
+export let CommerceSubscriptionsSubscriptionPlansCrudControllerComparePlansInputSchema: z.ZodType<CommerceSubscriptionsSubscriptionPlansCrudControllerComparePlansInput>;
+export let CommerceSubscriptionsSubscriptionPlansCrudControllerCreatePlanInputSchema: z.ZodType<CommerceSubscriptionsSubscriptionPlansCrudControllerCreatePlanInput>;
+export let CommerceSubscriptionsSubscriptionPlansCrudControllerPutSubscriptionPlanInputSchema: z.ZodType<CommerceSubscriptionsSubscriptionPlansCrudControllerPutSubscriptionPlanInput>;
 export let CommerceSubscriptionsSubscriptionStatusSchema: z.ZodType<CommerceSubscriptionsSubscriptionStatus>;
 export let CommerceSubscriptionsSubscriptionUpgradeResultSchema: z.ZodType<CommerceSubscriptionsSubscriptionUpgradeResult>;
 export let CommerceSubscriptionsSubscriptionUsageSchema: z.ZodType<CommerceSubscriptionsSubscriptionUsage>;
-export let CommerceSubscriptionsSubscriptionsControllerAutoRenewInputSchema: z.ZodType<CommerceSubscriptionsSubscriptionsControllerAutoRenewInput>;
-export let CommerceSubscriptionsSubscriptionsControllerCancelInputSchema: z.ZodType<CommerceSubscriptionsSubscriptionsControllerCancelInput>;
 export let CommerceSubscriptionsSubscriptionsControllerCreateSubscriptionInputSchema: z.ZodType<CommerceSubscriptionsSubscriptionsControllerCreateSubscriptionInput>;
-export let CommerceSubscriptionsSubscriptionsControllerDowngradeInputSchema: z.ZodType<CommerceSubscriptionsSubscriptionsControllerDowngradeInput>;
-export let CommerceSubscriptionsSubscriptionsControllerEndTrialInputSchema: z.ZodType<CommerceSubscriptionsSubscriptionsControllerEndTrialInput>;
-export let CommerceSubscriptionsSubscriptionsControllerExternalIdsInputSchema: z.ZodType<CommerceSubscriptionsSubscriptionsControllerExternalIdsInput>;
 export let CommerceSubscriptionsSubscriptionsControllerPatchSubscriptionInputSchema: z.ZodType<CommerceSubscriptionsSubscriptionsControllerPatchSubscriptionInput>;
-export let CommerceSubscriptionsSubscriptionsControllerPauseSubscriptionInputSchema: z.ZodType<CommerceSubscriptionsSubscriptionsControllerPauseSubscriptionInput>;
 export let CommerceSubscriptionsSubscriptionsControllerPutSubscriptionInputSchema: z.ZodType<CommerceSubscriptionsSubscriptionsControllerPutSubscriptionInput>;
-export let CommerceSubscriptionsSubscriptionsControllerStartTrialInputSchema: z.ZodType<CommerceSubscriptionsSubscriptionsControllerStartTrialInput>;
-export let CommerceSubscriptionsSubscriptionsControllerSuspendInputSchema: z.ZodType<CommerceSubscriptionsSubscriptionsControllerSuspendInput>;
-export let CommerceSubscriptionsSubscriptionsControllerUpgradeInputSchema: z.ZodType<CommerceSubscriptionsSubscriptionsControllerUpgradeInput>;
+export let ContentPagesContentResourceSchema: z.ZodType<ContentPagesContentResource>;
+export let ContentPagesContentResourceStatusSchema: z.ZodType<ContentPagesContentResourceStatus>;
+export let ContentPagesContentResourceTypeSchema: z.ZodType<ContentPagesContentResourceType>;
+export let ContentPagesCreateContentResourceSchema: z.ZodType<ContentPagesCreateContentResource>;
+export let ContentPagesCreatePageSchema: z.ZodType<ContentPagesCreatePage>;
+export let ContentPagesCreatePageSectionSchema: z.ZodType<ContentPagesCreatePageSection>;
+export let ContentPagesOpenGraphMetadataSchema: z.ZodType<ContentPagesOpenGraphMetadata>;
+export let ContentPagesPageSchema: z.ZodType<ContentPagesPage>;
+export let ContentPagesPageSectionSchema: z.ZodType<ContentPagesPageSection>;
+export let ContentPagesPageStatusSchema: z.ZodType<ContentPagesPageStatus>;
+export let ContentPagesPageTypeSchema: z.ZodType<ContentPagesPageType>;
+export let ContentPagesSectionTypeSchema: z.ZodType<ContentPagesSectionType>;
+export let ContentPagesUpdateContentResourceSchema: z.ZodType<ContentPagesUpdateContentResource>;
+export let ContentPagesUpdatePageSchema: z.ZodType<ContentPagesUpdatePage>;
+export let ContentPagesUpdatePageSectionSchema: z.ZodType<ContentPagesUpdatePageSection>;
+export let FeaturesBulkEvaluationInputSchema: z.ZodType<FeaturesBulkEvaluationInput>;
+export let FeaturesCapabilityAuditLogSchema: z.ZodType<FeaturesCapabilityAuditLog>;
+export let FeaturesCapabilityCheckOutputSchema: z.ZodType<FeaturesCapabilityCheckOutput>;
+export let FeaturesCreateFeatureInputSchema: z.ZodType<FeaturesCreateFeatureInput>;
+export let FeaturesFeatureContextSchema: z.ZodType<FeaturesFeatureContext>;
+export let FeaturesFeatureEvaluationInputSchema: z.ZodType<FeaturesFeatureEvaluationInput>;
+export let FeaturesFeatureFlagSchema: z.ZodType<FeaturesFeatureFlag>;
+export let FeaturesFeatureFlagTargetSchema: z.ZodType<FeaturesFeatureFlagTarget>;
+export let FeaturesFeatureFlagTypeSchema: z.ZodType<FeaturesFeatureFlagType>;
+export let FeaturesSetCapabilityOverrideInputSchema: z.ZodType<FeaturesSetCapabilityOverrideInput>;
+export let FeaturesToggleFeatureInputSchema: z.ZodType<FeaturesToggleFeatureInput>;
+export let FeaturesUpdateFeatureInputSchema: z.ZodType<FeaturesUpdateFeatureInput>;
 export let Fido2NetLibAssertionOptionsSchema: z.ZodType<Fido2NetLibAssertionOptions>;
 export let Fido2NetLibAuthenticatorSelectionSchema: z.ZodType<Fido2NetLibAuthenticatorSelection>;
 export let Fido2NetLibCredentialCreateOptionsSchema: z.ZodType<Fido2NetLibCredentialCreateOptions>;
@@ -2983,6 +4036,16 @@ export let IdentityAuthenticationWebAuthnRegistrationOptionsResultSchema: z.ZodT
 export let IdentityAuthenticationWebAuthnRegistrationResultSchema: z.ZodType<IdentityAuthenticationWebAuthnRegistrationResult>;
 export let IdentityAuthenticationWebAuthnStatusOutputSchema: z.ZodType<IdentityAuthenticationWebAuthnStatusOutput>;
 export let IdentityTenantsArchiveInputSchema: z.ZodType<IdentityTenantsArchiveInput>;
+export let IdentityTenantsBulkActivateTenantsCommandSchema: z.ZodType<IdentityTenantsBulkActivateTenantsCommand>;
+export let IdentityTenantsBulkArchiveTenantsCommandSchema: z.ZodType<IdentityTenantsBulkArchiveTenantsCommand>;
+export let IdentityTenantsBulkCreateTenantItemSchema: z.ZodType<IdentityTenantsBulkCreateTenantItem>;
+export let IdentityTenantsBulkCreateTenantsCommandSchema: z.ZodType<IdentityTenantsBulkCreateTenantsCommand>;
+export let IdentityTenantsBulkDeactivateTenantsCommandSchema: z.ZodType<IdentityTenantsBulkDeactivateTenantsCommand>;
+export let IdentityTenantsBulkDeleteTenantsCommandSchema: z.ZodType<IdentityTenantsBulkDeleteTenantsCommand>;
+export let IdentityTenantsBulkPurgeTenantsCommandSchema: z.ZodType<IdentityTenantsBulkPurgeTenantsCommand>;
+export let IdentityTenantsBulkUndeleteTenantsCommandSchema: z.ZodType<IdentityTenantsBulkUndeleteTenantsCommand>;
+export let IdentityTenantsBulkUpdateTenantItemSchema: z.ZodType<IdentityTenantsBulkUpdateTenantItem>;
+export let IdentityTenantsBulkUpdateTenantsCommandSchema: z.ZodType<IdentityTenantsBulkUpdateTenantsCommand>;
 export let IdentityTenantsCreateTenantInputSchema: z.ZodType<IdentityTenantsCreateTenantInput>;
 export let IdentityTenantsGetUserMembershipsOutputSchema: z.ZodType<IdentityTenantsGetUserMembershipsOutput>;
 export let IdentityTenantsMembershipCountOutputSchema: z.ZodType<IdentityTenantsMembershipCountOutput>;
@@ -3076,7 +4139,71 @@ export let IdentityUsersUserNotificationPreferencesSchema: z.ZodType<IdentityUse
 export let IdentityUsersUserPreferencesSchema: z.ZodType<IdentityUsersUserPreferences>;
 export let IdentityUsersUserPrivacyPreferencesSchema: z.ZodType<IdentityUsersUserPrivacyPreferences>;
 export let IdentityUsersUserProfileSchema: z.ZodType<IdentityUsersUserProfile>;
-export let ModelsPagedResultSchema: z.ZodType<ModelsPagedResult>;
+export let LearningAssessmentsAssessmentSchema: z.ZodType<LearningAssessmentsAssessment>;
+export let LearningAssessmentsAssessmentSubmissionSchema: z.ZodType<LearningAssessmentsAssessmentSubmission>;
+export let LearningAssessmentsAssessmentTypeSchema: z.ZodType<LearningAssessmentsAssessmentType>;
+export let LearningAssessmentsCanAttemptOutputSchema: z.ZodType<LearningAssessmentsCanAttemptOutput>;
+export let LearningAssessmentsCreateAssessmentInputSchema: z.ZodType<LearningAssessmentsCreateAssessmentInput>;
+export let LearningAssessmentsGradeSubmissionInputSchema: z.ZodType<LearningAssessmentsGradeSubmissionInput>;
+export let LearningAssessmentsStartSubmissionInputSchema: z.ZodType<LearningAssessmentsStartSubmissionInput>;
+export let LearningAssessmentsSubmissionStatusSchema: z.ZodType<LearningAssessmentsSubmissionStatus>;
+export let LearningAssessmentsUpdateAssessmentInputSchema: z.ZodType<LearningAssessmentsUpdateAssessmentInput>;
+export let LearningCoursesActivityGradeSchema: z.ZodType<LearningCoursesActivityGrade>;
+export let LearningCoursesCircularDependencyCheckResultSchema: z.ZodType<LearningCoursesCircularDependencyCheckResult>;
+export let LearningCoursesCloneProgramSchema: z.ZodType<LearningCoursesCloneProgram>;
+export let LearningCoursesCompleteContentInputSchema: z.ZodType<LearningCoursesCompleteContentInput>;
+export let LearningCoursesCompletionRatesSchema: z.ZodType<LearningCoursesCompletionRates>;
+export let LearningCoursesCompletionTrendSchema: z.ZodType<LearningCoursesCompletionTrend>;
+export let LearningCoursesContentInteractionSchema: z.ZodType<LearningCoursesContentInteraction>;
+export let LearningCoursesContentInteractionSummarySchema: z.ZodType<LearningCoursesContentInteractionSummary>;
+export let LearningCoursesContentProgressSchema: z.ZodType<LearningCoursesContentProgress>;
+export let LearningCoursesContentStatsSchema: z.ZodType<LearningCoursesContentStats>;
+export let LearningCoursesContentSummarySchema: z.ZodType<LearningCoursesContentSummary>;
+export let LearningCoursesCreateActivityGradeSchema: z.ZodType<LearningCoursesCreateActivityGrade>;
+export let LearningCoursesCreatePrerequisiteApiInputSchema: z.ZodType<LearningCoursesCreatePrerequisiteApiInput>;
+export let LearningCoursesCreateProductFromProgramSchema: z.ZodType<LearningCoursesCreateProductFromProgram>;
+export let LearningCoursesCreateProgramContentSchema: z.ZodType<LearningCoursesCreateProgramContent>;
+export let LearningCoursesCreateProgramSchema: z.ZodType<LearningCoursesCreateProgram>;
+export let LearningCoursesEngagementMetricsSchema: z.ZodType<LearningCoursesEngagementMetrics>;
+export let LearningCoursesEnrollmentStatusSchema: z.ZodType<LearningCoursesEnrollmentStatus>;
+export let LearningCoursesGradeStatisticsSchema: z.ZodType<LearningCoursesGradeStatistics>;
+export let LearningCoursesGraderSummarySchema: z.ZodType<LearningCoursesGraderSummary>;
+export let LearningCoursesGradingMethodSchema: z.ZodType<LearningCoursesGradingMethod>;
+export let LearningCoursesMonetizationSchema: z.ZodType<LearningCoursesMonetization>;
+export let LearningCoursesMoveContentSchema: z.ZodType<LearningCoursesMoveContent>;
+export let LearningCoursesPrerequisiteCheckResultSchema: z.ZodType<LearningCoursesPrerequisiteCheckResult>;
+export let LearningCoursesPrerequisiteSchema: z.ZodType<LearningCoursesPrerequisite>;
+export let LearningCoursesPrerequisiteStatusSchema: z.ZodType<LearningCoursesPrerequisiteStatus>;
+export let LearningCoursesPrerequisiteTypeSchema: z.ZodType<LearningCoursesPrerequisiteType>;
+export let LearningCoursesPricingSchema: z.ZodType<LearningCoursesPricing>;
+export let LearningCoursesProgramAnalyticsSchema: z.ZodType<LearningCoursesProgramAnalytics>;
+export let LearningCoursesProgramContentSchema: z.ZodType<LearningCoursesProgramContent>;
+export let LearningCoursesProgramContentTypeSchema: z.ZodType<LearningCoursesProgramContentType>;
+export let LearningCoursesProgramDifficultySchema: z.ZodType<LearningCoursesProgramDifficulty>;
+export let LearningCoursesProgramSchema: z.ZodType<LearningCoursesProgram>;
+export let LearningCoursesProgramUserSummarySchema: z.ZodType<LearningCoursesProgramUserSummary>;
+export let LearningCoursesProgressStatusSchema: z.ZodType<LearningCoursesProgressStatus>;
+export let LearningCoursesRejectProgramSchema: z.ZodType<LearningCoursesRejectProgram>;
+export let LearningCoursesReorderContentSchema: z.ZodType<LearningCoursesReorderContent>;
+export let LearningCoursesReorderPrerequisitesInputSchema: z.ZodType<LearningCoursesReorderPrerequisitesInput>;
+export let LearningCoursesRevenueAnalyticsSchema: z.ZodType<LearningCoursesRevenueAnalytics>;
+export let LearningCoursesRevenueChartSchema: z.ZodType<LearningCoursesRevenueChart>;
+export let LearningCoursesScheduleProgramSchema: z.ZodType<LearningCoursesScheduleProgram>;
+export let LearningCoursesSearchContentSchema: z.ZodType<LearningCoursesSearchContent>;
+export let LearningCoursesStartContentInputSchema: z.ZodType<LearningCoursesStartContentInput>;
+export let LearningCoursesStudentSummarySchema: z.ZodType<LearningCoursesStudentSummary>;
+export let LearningCoursesSubmitContentInputSchema: z.ZodType<LearningCoursesSubmitContentInput>;
+export let LearningCoursesSubmitUserContentSchema: z.ZodType<LearningCoursesSubmitUserContent>;
+export let LearningCoursesUpdateActivityGradeSchema: z.ZodType<LearningCoursesUpdateActivityGrade>;
+export let LearningCoursesUpdatePrerequisiteApiInputSchema: z.ZodType<LearningCoursesUpdatePrerequisiteApiInput>;
+export let LearningCoursesUpdatePricingSchema: z.ZodType<LearningCoursesUpdatePricing>;
+export let LearningCoursesUpdateProgramContentSchema: z.ZodType<LearningCoursesUpdateProgramContent>;
+export let LearningCoursesUpdateProgramSchema: z.ZodType<LearningCoursesUpdateProgram>;
+export let LearningCoursesUpdateProgressSchema: z.ZodType<LearningCoursesUpdateProgress>;
+export let LearningCoursesUpdateProgressInputSchema: z.ZodType<LearningCoursesUpdateProgressInput>;
+export let LearningCoursesUpdateTimeSpentInputSchema: z.ZodType<LearningCoursesUpdateTimeSpentInput>;
+export let LearningCoursesUserProgressSchema: z.ZodType<LearningCoursesUserProgress>;
+export let LearningCoursesVisibilitySchema: z.ZodType<LearningCoursesVisibility>;
 export let MvcProblemDetailsSchema: z.ZodType<MvcProblemDetails>;
 export let ObjectsAttestationConveyancePreferenceSchema: z.ZodType<ObjectsAttestationConveyancePreference>;
 export let ObjectsAttestationStatementFormatIdentifierSchema: z.ZodType<ObjectsAttestationStatementFormatIdentifier>;
@@ -3094,6 +4221,7 @@ export let ObjectsPublicKeyCredentialHintSchema: z.ZodType<ObjectsPublicKeyCrede
 export let ObjectsPublicKeyCredentialTypeSchema: z.ZodType<ObjectsPublicKeyCredentialType>;
 export let ObjectsResidentKeyRequirementSchema: z.ZodType<ObjectsResidentKeyRequirement>;
 export let ObjectsUserVerificationRequirementSchema: z.ZodType<ObjectsUserVerificationRequirement>;
+export let PagedResultSchema: z.ZodType<PagedResult>;
 export let ResourcesArchiveResourceUsageRecordsInputSchema: z.ZodType<ResourcesArchiveResourceUsageRecordsInput>;
 export let ResourcesCheckResourceQuotaInputSchema: z.ZodType<ResourcesCheckResourceQuotaInput>;
 export let ResourcesCleanupOrphanedResourcesInputSchema: z.ZodType<ResourcesCleanupOrphanedResourcesInput>;
@@ -3115,10 +4243,19 @@ export let ResourcesTrendGranularitySchema: z.ZodType<ResourcesTrendGranularity>
 export let ResourcesUsageRecordSchema: z.ZodType<ResourcesUsageRecord>;
 export let ResourcesUsageTrendDataPointSchema: z.ZodType<ResourcesUsageTrendDataPoint>;
 export let ResourcesUsageTrendsResultSchema: z.ZodType<ResourcesUsageTrendsResult>;
-export let ValueObjectsBillingCycleSchema: z.ZodType<ValueObjectsBillingCycle>;
-export let ValueObjectsMoneySchema: z.ZodType<ValueObjectsMoney>;
 
 // Zod Schema Definitions
+/** Zod schema for BillingCycle */
+BillingCycleSchema = z.enum(['Weekly', 'Monthly', 'Quarterly', 'SemiAnnually', 'Annually', 'Biannually']);
+
+/** Zod schema for BulkOperationError */
+BulkOperationErrorSchema = z.object({
+  tenantId: z.string().uuid().optional(),
+  tenantName: z.string().nullable().optional(),
+  errorMessage: z.string().nullable().optional(),
+  errorCode: z.string().nullable().optional(),
+});
+
 /** Zod schema for CommercePaymentsTaxJurisdictionDto */
 CommercePaymentsTaxJurisdictionDtoSchema = z.object({
   id: z.string().uuid().optional(),
@@ -3144,19 +4281,11 @@ CommercePaymentsTaxRuleDtoSchema = z.object({
   isActive: z.boolean().optional(),
 });
 
-/** Zod schema for CommerceProductsPagedResult1GameGuildCommerceProductsPromoCodeDtoGameGuildCommerceProductsVersion100PagedResultPromoCodeDto */
-CommerceProductsPagedResult1GameGuildCommerceProductsPromoCodeDtoGameGuildCommerceProductsVersion100PagedResultPromoCodeDtoSchema = z.object({
-  items: z
-    .array(z.lazy(() => CommerceProductsPromoCodeSchema))
-    .nullable()
-    .optional(),
-  totalCount: z.number().int().optional(),
-  skip: z.number().int().optional(),
-  take: z.number().int().optional(),
-  hasMore: z.boolean().optional(),
-  currentPage: z.number().int().optional(),
-  totalPages: z.number().int().optional(),
-});
+/** Zod schema for ContentStatus */
+ContentStatusSchema = z.enum(['Draft', 'Review', 'Published', 'Archived', 'Deleted']);
+
+/** Zod schema for ContentVisibility */
+ContentVisibilitySchema = z.enum(['Private', 'Internal', 'Friends', 'Protected', 'Public']);
 
 /** Zod schema for IdentityTenantsTenantSettingsDto */
 IdentityTenantsTenantSettingsDtoSchema = z.object({
@@ -3178,8 +4307,62 @@ KeyValuePairStringAuthenticationExtensionsPRFValuesSchema = z.object({
   value: z.lazy(() => ObjectsAuthenticationExtensionsPRFValuesSchema).optional(),
 });
 
-/** Zod schema for ModelsPagedResult1GameGuildIdentityUsersUserDtoGameGuildIdentityUsersVersion100PagedResultUserDto */
-ModelsPagedResult1GameGuildIdentityUsersUserDtoGameGuildIdentityUsersVersion100PagedResultUserDtoSchema = z.object({
+/** Zod schema for Money */
+MoneySchema = z.object({
+  amount: z.number().optional(),
+  currency: z.string().nullable().optional(),
+});
+
+/** Zod schema for PagedResult1GameGuildCommerceProductsPromoCodeDtoGameGuildCommerceProductsVersion100PagedResultPromoCodeDto */
+PagedResult1GameGuildCommerceProductsPromoCodeDtoGameGuildCommerceProductsVersion100PagedResultPromoCodeDtoSchema = z.object({
+  items: z
+    .array(z.lazy(() => CommerceProductsPromoCodeSchema))
+    .nullable()
+    .optional(),
+  totalCount: z.number().int().optional(),
+  skip: z.number().int().optional(),
+  take: z.number().int().optional(),
+  pageNumber: z.number().int().optional(),
+  pageSize: z.number().int().optional(),
+  totalPages: z.number().int().optional(),
+  hasNextPage: z.boolean().optional(),
+  hasPreviousPage: z.boolean().optional(),
+});
+
+/** Zod schema for PagedResult1GameGuildIdentityTenantsTenantGameGuildIdentityTenantsVersion100PagedResultTenant */
+PagedResult1GameGuildIdentityTenantsTenantGameGuildIdentityTenantsVersion100PagedResultTenantSchema = z.object({
+  items: z
+    .array(z.lazy(() => IdentityTenantsTenantSchema))
+    .nullable()
+    .optional(),
+  totalCount: z.number().int().optional(),
+  skip: z.number().int().optional(),
+  take: z.number().int().optional(),
+  pageNumber: z.number().int().optional(),
+  pageSize: z.number().int().optional(),
+  totalPages: z.number().int().optional(),
+  hasNextPage: z.boolean().optional(),
+  hasPreviousPage: z.boolean().optional(),
+});
+
+/** Zod schema for PagedResult1GameGuildIdentityTenantsTenantAuditLogEntryGameGuildIdentityTenantsVersion100PagedResultTenantAuditLogEntry */
+PagedResult1GameGuildIdentityTenantsTenantAuditLogEntryGameGuildIdentityTenantsVersion100PagedResultTenantAuditLogEntrySchema = z.object({
+  items: z
+    .array(z.lazy(() => IdentityTenantsTenantAuditLogEntrySchema))
+    .nullable()
+    .optional(),
+  totalCount: z.number().int().optional(),
+  skip: z.number().int().optional(),
+  take: z.number().int().optional(),
+  pageNumber: z.number().int().optional(),
+  pageSize: z.number().int().optional(),
+  totalPages: z.number().int().optional(),
+  hasNextPage: z.boolean().optional(),
+  hasPreviousPage: z.boolean().optional(),
+});
+
+/** Zod schema for PagedResult1GameGuildIdentityUsersUserDtoGameGuildIdentityUsersVersion100PagedResultUserDto */
+PagedResult1GameGuildIdentityUsersUserDtoGameGuildIdentityUsersVersion100PagedResultUserDtoSchema = z.object({
   items: z
     .array(z.lazy(() => IdentityUsersUserSchema))
     .nullable()
@@ -3188,13 +4371,14 @@ ModelsPagedResult1GameGuildIdentityUsersUserDtoGameGuildIdentityUsersVersion100P
   skip: z.number().int().optional(),
   take: z.number().int().optional(),
   pageNumber: z.number().int().optional(),
+  pageSize: z.number().int().optional(),
   totalPages: z.number().int().optional(),
   hasNextPage: z.boolean().optional(),
   hasPreviousPage: z.boolean().optional(),
 });
 
-/** Zod schema for ModelsPagedResult1GameGuildIdentityUsersUserNotificationDtoGameGuildIdentityUsersVersion100PagedResultUserNotificationDto */
-ModelsPagedResult1GameGuildIdentityUsersUserNotificationDtoGameGuildIdentityUsersVersion100PagedResultUserNotificationDtoSchema = z.object({
+/** Zod schema for PagedResult1GameGuildIdentityUsersUserNotificationDtoGameGuildIdentityUsersVersion100PagedResultUserNotificationDto */
+PagedResult1GameGuildIdentityUsersUserNotificationDtoGameGuildIdentityUsersVersion100PagedResultUserNotificationDtoSchema = z.object({
   items: z
     .array(z.lazy(() => IdentityUsersUserNotificationSchema))
     .nullable()
@@ -3203,13 +4387,14 @@ ModelsPagedResult1GameGuildIdentityUsersUserNotificationDtoGameGuildIdentityUser
   skip: z.number().int().optional(),
   take: z.number().int().optional(),
   pageNumber: z.number().int().optional(),
+  pageSize: z.number().int().optional(),
   totalPages: z.number().int().optional(),
   hasNextPage: z.boolean().optional(),
   hasPreviousPage: z.boolean().optional(),
 });
 
-/** Zod schema for ModelsPagedResult1GameGuildIdentityUsersUserProfileDtoGameGuildIdentityUsersVersion100PagedResultUserProfileDto */
-ModelsPagedResult1GameGuildIdentityUsersUserProfileDtoGameGuildIdentityUsersVersion100PagedResultUserProfileDtoSchema = z.object({
+/** Zod schema for PagedResult1GameGuildIdentityUsersUserProfileDtoGameGuildIdentityUsersVersion100PagedResultUserProfileDto */
+PagedResult1GameGuildIdentityUsersUserProfileDtoGameGuildIdentityUsersVersion100PagedResultUserProfileDtoSchema = z.object({
   items: z
     .array(z.lazy(() => IdentityUsersUserProfileSchema))
     .nullable()
@@ -3218,10 +4403,34 @@ ModelsPagedResult1GameGuildIdentityUsersUserProfileDtoGameGuildIdentityUsersVers
   skip: z.number().int().optional(),
   take: z.number().int().optional(),
   pageNumber: z.number().int().optional(),
+  pageSize: z.number().int().optional(),
   totalPages: z.number().int().optional(),
   hasNextPage: z.boolean().optional(),
   hasPreviousPage: z.boolean().optional(),
 });
+
+/** Zod schema for ProgramCategory */
+ProgramCategorySchema = z.enum([
+  'General',
+  'Programming',
+  'DataScience',
+  'WebDevelopment',
+  'MobileDevelopment',
+  'GameDevelopment',
+  'AI',
+  'Cybersecurity',
+  'DevOps',
+  'Database',
+  'Business',
+  'Design',
+  'Marketing',
+  'ProjectManagement',
+  'PersonalDevelopment',
+  'CreativeArts',
+  'Science',
+  'Language',
+  'Other',
+]);
 
 /** Zod schema for APIControllersApplicationDetails */
 APIControllersApplicationDetailsSchema = z.object({
@@ -3307,11 +4516,8 @@ APIControllersLivenessOutputSchema = z.object({
 
 /** Zod schema for APIControllersProcessDetails */
 APIControllersProcessDetailsSchema = z.object({
-  id: z.number().int().optional(),
   startTime: z.string().datetime().optional(),
   uptime: z.string().optional(),
-  workingSet: z.number().int().optional(),
-  threadCount: z.number().int().optional(),
 });
 
 /** Zod schema for APIControllersReadinessOutput */
@@ -3329,8 +4535,19 @@ APIControllersRuntimeDetailsSchema = z.object({
   osDescription: z.string().nullable().optional(),
   osArchitecture: z.string().nullable().optional(),
   processArchitecture: z.string().nullable().optional(),
-  machineName: z.string().nullable().optional(),
-  processorCount: z.number().int().optional(),
+});
+
+/** Zod schema for BulkOperationOutput */
+BulkOperationOutputSchema = z.object({
+  totalRequested: z.number().int().optional(),
+  successfulOperations: z.number().int().optional(),
+  failedOperations: z.number().int().optional(),
+  errors: z
+    .array(z.lazy(() => BulkOperationErrorSchema))
+    .nullable()
+    .optional(),
+  isComplete: z.boolean().optional(),
+  successRate: z.number().optional(),
 });
 
 /** Zod schema for CQRSIDomainEvent */
@@ -3338,20 +4555,6 @@ CQRSIDomainEventSchema = z.object({
   eventId: z.string().uuid().optional(),
   occurredAt: z.string().datetime().optional(),
   version: z.number().int().optional(),
-});
-
-/** Zod schema for CQRSPagedResult */
-CQRSPagedResultSchema = z.object({
-  items: z
-    .array(z.lazy(() => IdentityTenantsTenantSchema))
-    .nullable()
-    .optional(),
-  totalCount: z.number().int().optional(),
-  pageNumber: z.number().int().optional(),
-  pageSize: z.number().int().optional(),
-  totalPages: z.number().int().optional(),
-  hasPreviousPage: z.boolean().optional(),
-  hasNextPage: z.boolean().optional(),
 });
 
 /** Zod schema for CommercePaymentsAddFundsInput */
@@ -3403,7 +4606,7 @@ CommercePaymentsCreateWalletInputSchema = z.object({
 });
 
 /** Zod schema for CommercePaymentsCustomerType */
-CommercePaymentsCustomerTypeSchema = z.union([z.literal(0), z.literal(1)]);
+CommercePaymentsCustomerTypeSchema = z.enum(['B2C', 'B2B']);
 
 /** Zod schema for CommercePaymentsDeductFundsInput */
 CommercePaymentsDeductFundsInputSchema = z.object({
@@ -3464,7 +4667,7 @@ CommercePaymentsPaymentResultSchema = z.object({
   success: z.boolean().optional(),
   transactionId: z.string().nullable().optional(),
   paymentId: z.string().nullable().optional(),
-  amount: z.lazy(() => ValueObjectsMoneySchema).optional(),
+  amount: z.lazy(() => MoneySchema).optional(),
   processedAt: z.string().datetime().nullable().optional(),
   failureReason: z.string().nullable().optional(),
   paymentMethodId: z.string().nullable().optional(),
@@ -3483,7 +4686,7 @@ CommercePaymentsPaymentRetryResultSchema = z.object({
 });
 
 /** Zod schema for CommercePaymentsPaymentStatus */
-CommercePaymentsPaymentStatusSchema = z.union([z.literal(0), z.literal(1), z.literal(2), z.literal(3), z.literal(4), z.literal(5), z.literal(6), z.literal(7)]);
+CommercePaymentsPaymentStatusSchema = z.enum(['Pending', 'Processing', 'Succeeded', 'Failed', 'Cancelled', 'RequiresAction', 'Refunded', 'Disputed']);
 
 /** Zod schema for CommercePaymentsPaymentsControllerCancelPaymentInput */
 CommercePaymentsPaymentsControllerCancelPaymentInputSchema = z.object({
@@ -3597,7 +4800,7 @@ CommercePaymentsTaxJurisdictionSchema = z.object({
 });
 
 /** Zod schema for CommercePaymentsTaxJurisdictionType */
-CommercePaymentsTaxJurisdictionTypeSchema = z.union([z.literal(0), z.literal(1), z.literal(2), z.literal(3), z.literal(4), z.literal(5), z.literal(6)]);
+CommercePaymentsTaxJurisdictionTypeSchema = z.enum(['Country', 'State', 'Province', 'Region', 'City', 'County', 'District']);
 
 /** Zod schema for CommercePaymentsTaxRate */
 CommercePaymentsTaxRateSchema = z.object({
@@ -3663,13 +4866,13 @@ CommercePaymentsTaxRuleSchema = z.object({
 });
 
 /** Zod schema for CommercePaymentsTaxRuleType */
-CommercePaymentsTaxRuleTypeSchema = z.union([z.literal(0), z.literal(1), z.literal(2), z.literal(3), z.literal(4), z.literal(5), z.literal(6), z.literal(7)]);
+CommercePaymentsTaxRuleTypeSchema = z.enum(['Standard', 'Reduced', 'ZeroRated', 'Exempt', 'ReverseCharge', 'WithholdingTax', 'Compound', 'Custom']);
 
 /** Zod schema for CommercePaymentsTaxType */
-CommercePaymentsTaxTypeSchema = z.union([z.literal(0), z.literal(1), z.literal(2), z.literal(3), z.literal(4), z.literal(5), z.literal(6), z.literal(7)]);
+CommercePaymentsTaxTypeSchema = z.enum(['VAT', 'GST', 'SalesTax', 'ServiceTax', 'WithholdingTax', 'ExciseTax', 'CustomsDuty', 'Other']);
 
 /** Zod schema for CommercePaymentsTransactionStatus */
-CommercePaymentsTransactionStatusSchema = z.union([z.literal(0), z.literal(1), z.literal(2), z.literal(3), z.literal(4), z.literal(5)]);
+CommercePaymentsTransactionStatusSchema = z.enum(['Pending', 'Processing', 'Completed', 'Failed', 'Cancelled', 'Reversed']);
 
 /** Zod schema for CommercePaymentsTransferFundsInput */
 CommercePaymentsTransferFundsInputSchema = z.object({
@@ -3755,7 +4958,7 @@ CommercePaymentsWalletTransactionSchema = z.object({
 });
 
 /** Zod schema for CommercePaymentsWalletTransactionType */
-CommercePaymentsWalletTransactionTypeSchema = z.union([z.literal(0), z.literal(1), z.literal(2), z.literal(3), z.literal(4), z.literal(5), z.literal(6)]);
+CommercePaymentsWalletTransactionTypeSchema = z.enum(['Credit', 'Debit', 'TransferIn', 'TransferOut', 'Refund', 'Fee', 'Adjustment']);
 
 /** Zod schema for CommerceProductsAppliedPromoCode */
 CommerceProductsAppliedPromoCodeSchema = z.object({
@@ -3866,20 +5069,6 @@ CommerceProductsGrantEntitlementInputSchema = z.object({
   expiresAt: z.string().datetime().nullable().optional(),
 });
 
-/** Zod schema for CommerceProductsPagedResult */
-CommerceProductsPagedResultSchema = z.object({
-  items: z
-    .array(z.lazy(() => CommerceProductsProductSchema))
-    .nullable()
-    .optional(),
-  totalCount: z.number().int().optional(),
-  skip: z.number().int().optional(),
-  take: z.number().int().optional(),
-  hasMore: z.boolean().optional(),
-  currentPage: z.number().int().optional(),
-  totalPages: z.number().int().optional(),
-});
-
 /** Zod schema for CommerceProductsPatchProductInput */
 CommerceProductsPatchProductInputSchema = z.object({
   name: z.string().nullable().optional(),
@@ -3915,17 +5104,7 @@ CommerceProductsPatchPromoCodeInputSchema = z.object({
 });
 
 /** Zod schema for CommerceProductsProductAcquisitionType */
-CommerceProductsProductAcquisitionTypeSchema = z.union([
-  z.literal(0),
-  z.literal(1),
-  z.literal(2),
-  z.literal(3),
-  z.literal(4),
-  z.literal(5),
-  z.literal(6),
-  z.literal(7),
-  z.literal(8),
-]);
+CommerceProductsProductAcquisitionTypeSchema = z.enum(['Purchase', 'Subscription', 'Grant', 'PromoCode', 'Bundle', 'Trial', 'Referral', 'Free', 'Gift']);
 
 /** Zod schema for CommerceProductsProduct */
 CommerceProductsProductSchema = z.object({
@@ -3965,21 +5144,21 @@ CommerceProductsProductPricingSchema = z.object({
 });
 
 /** Zod schema for CommerceProductsProductType */
-CommerceProductsProductTypeSchema = z.union([
-  z.literal(0),
-  z.literal(1),
-  z.literal(2),
-  z.literal(3),
-  z.literal(4),
-  z.literal(5),
-  z.literal(6),
-  z.literal(7),
-  z.literal(8),
-  z.literal(9),
-  z.literal(10),
-  z.literal(11),
-  z.literal(12),
-  z.literal(99),
+CommerceProductsProductTypeSchema = z.enum([
+  'Program',
+  'Course',
+  'Bundle',
+  'Subscription',
+  'Workshop',
+  'Mentorship',
+  'Ebook',
+  'ResourcePack',
+  'Community',
+  'Certification',
+  'Physical',
+  'Service',
+  'LearningPathway',
+  'Other',
 ]);
 
 /** Zod schema for CommerceProductsPromoCodeApplicationResult */
@@ -4022,7 +5201,7 @@ CommerceProductsPromoCodeSchema = z.object({
 });
 
 /** Zod schema for CommerceProductsPromoCodeType */
-CommerceProductsPromoCodeTypeSchema = z.union([z.literal(0), z.literal(1), z.literal(2), z.literal(3), z.literal(4)]);
+CommerceProductsPromoCodeTypeSchema = z.enum(['PercentageOff', 'FixedAmountOff', 'FreeTrial', 'BuyOneGetOne', 'FreeShipping']);
 
 /** Zod schema for CommerceProductsPromoCodeUsage */
 CommerceProductsPromoCodeUsageSchema = z.object({
@@ -4115,15 +5294,15 @@ CommerceSubscriptionsBillingHistorySchema = z.object({
 });
 
 /** Zod schema for CommerceSubscriptionsCancellationReason */
-CommerceSubscriptionsCancellationReasonSchema = z.union([
-  z.literal(0),
-  z.literal(1),
-  z.literal(2),
-  z.literal(3),
-  z.literal(4),
-  z.literal(5),
-  z.literal(6),
-  z.literal(7),
+CommerceSubscriptionsCancellationReasonSchema = z.enum([
+  'UserRequested',
+  'PaymentFailed',
+  'PlanDiscontinued',
+  'PolicyViolation',
+  'Downgrade',
+  'TrialEnded',
+  'Custom',
+  'ExternalRequest',
 ]);
 
 /** Zod schema for CommerceSubscriptionsSubscription */
@@ -4164,8 +5343,8 @@ CommerceSubscriptionsSubscriptionSchema = z.object({
   plan: z.lazy(() => CommerceSubscriptionsSubscriptionPlanSchema).optional(),
   status: z.lazy(() => CommerceSubscriptionsSubscriptionStatusSchema).optional(),
   planId: z.string().uuid(),
-  billingCycle: z.lazy(() => ValueObjectsBillingCycleSchema).optional(),
-  amount: z.lazy(() => ValueObjectsMoneySchema).optional(),
+  billingCycle: z.lazy(() => BillingCycleSchema).optional(),
+  amount: z.lazy(() => MoneySchema).optional(),
   startDate: z.string().datetime().optional(),
   endDate: z.string().datetime().nullable().optional(),
   nextBillingDate: z.string().datetime().optional(),
@@ -4179,8 +5358,59 @@ CommerceSubscriptionsSubscriptionDowngradeResultSchema = z.object({
   success: z.boolean().optional(),
   updatedSubscription: z.lazy(() => CommerceSubscriptionsSubscriptionSchema).optional(),
   effectiveDate: z.string().datetime().nullable().optional(),
-  creditIssued: z.lazy(() => ValueObjectsMoneySchema).optional(),
+  creditIssued: z.lazy(() => MoneySchema).optional(),
   failureReason: z.string().nullable().optional(),
+});
+
+/** Zod schema for CommerceSubscriptionsSubscriptionLifecycleControllerAutoRenewInput */
+CommerceSubscriptionsSubscriptionLifecycleControllerAutoRenewInputSchema = z.object({
+  autoRenew: z.boolean().optional(),
+});
+
+/** Zod schema for CommerceSubscriptionsSubscriptionLifecycleControllerCancelInput */
+CommerceSubscriptionsSubscriptionLifecycleControllerCancelInputSchema = z.object({
+  reason: z.string().nullable().optional(),
+  note: z.string().nullable().optional(),
+  effectiveDate: z.string().datetime().nullable().optional(),
+});
+
+/** Zod schema for CommerceSubscriptionsSubscriptionLifecycleControllerDowngradeInput */
+CommerceSubscriptionsSubscriptionLifecycleControllerDowngradeInputSchema = z.object({
+  newPlanId: z.string().uuid().optional(),
+  effectiveDate: z.string().datetime().nullable().optional(),
+});
+
+/** Zod schema for CommerceSubscriptionsSubscriptionLifecycleControllerEndTrialInput */
+CommerceSubscriptionsSubscriptionLifecycleControllerEndTrialInputSchema = z.object({
+  convertToPaid: z.boolean().optional(),
+});
+
+/** Zod schema for CommerceSubscriptionsSubscriptionLifecycleControllerExternalIdsInput */
+CommerceSubscriptionsSubscriptionLifecycleControllerExternalIdsInputSchema = z.object({
+  externalSubscriptionId: z.string().nullable().optional(),
+  externalCustomerId: z.string().nullable().optional(),
+});
+
+/** Zod schema for CommerceSubscriptionsSubscriptionLifecycleControllerPauseSubscriptionInput */
+CommerceSubscriptionsSubscriptionLifecycleControllerPauseSubscriptionInputSchema = z.object({
+  pauseUntil: z.string().datetime().nullable().optional(),
+  reason: z.string().nullable().optional(),
+});
+
+/** Zod schema for CommerceSubscriptionsSubscriptionLifecycleControllerStartTrialInput */
+CommerceSubscriptionsSubscriptionLifecycleControllerStartTrialInputSchema = z.object({
+  trialDays: z.number().int().optional(),
+});
+
+/** Zod schema for CommerceSubscriptionsSubscriptionLifecycleControllerSuspendInput */
+CommerceSubscriptionsSubscriptionLifecycleControllerSuspendInputSchema = z.object({
+  reason: z.string().nullable().optional(),
+});
+
+/** Zod schema for CommerceSubscriptionsSubscriptionLifecycleControllerUpgradeInput */
+CommerceSubscriptionsSubscriptionLifecycleControllerUpgradeInputSchema = z.object({
+  newPlanId: z.string().uuid().optional(),
+  effectiveDate: z.string().datetime().nullable().optional(),
 });
 
 /** Zod schema for CommerceSubscriptionsSubscriptionPlan */
@@ -4223,20 +5453,66 @@ CommerceSubscriptionsSubscriptionPlanSchema = z.object({
   maxApiCallsPerMonth: z.number().int().nullable().optional(),
 });
 
-/** Zod schema for CommerceSubscriptionsSubscriptionPlansControllerCloneSubscriptionPlanInput */
-CommerceSubscriptionsSubscriptionPlansControllerCloneSubscriptionPlanInputSchema = z.object({
+/** Zod schema for CommerceSubscriptionsSubscriptionPlanOperationsControllerCloneSubscriptionPlanInput */
+CommerceSubscriptionsSubscriptionPlanOperationsControllerCloneSubscriptionPlanInputSchema = z.object({
   newName: z.string().nullable().optional(),
   newSlug: z.string().nullable().optional(),
 });
 
-/** Zod schema for CommerceSubscriptionsSubscriptionPlansControllerComparePlansInput */
-CommerceSubscriptionsSubscriptionPlansControllerComparePlansInputSchema = z.object({
+/** Zod schema for CommerceSubscriptionsSubscriptionPlanOperationsControllerSetExternalIdInput */
+CommerceSubscriptionsSubscriptionPlanOperationsControllerSetExternalIdInputSchema = z.object({
+  externalId: z.string().nullable().optional(),
+});
+
+/** Zod schema for CommerceSubscriptionsSubscriptionPlanOperationsControllerSetFeaturedInput */
+CommerceSubscriptionsSubscriptionPlanOperationsControllerSetFeaturedInputSchema = z.object({
+  featured: z.boolean().optional(),
+});
+
+/** Zod schema for CommerceSubscriptionsSubscriptionPlanOperationsControllerUpdateDetailsInput */
+CommerceSubscriptionsSubscriptionPlanOperationsControllerUpdateDetailsInputSchema = z.object({
+  planId: z.string().uuid().optional(),
+  name: z.string().nullable().optional(),
+  description: z.string().nullable().optional(),
+  sortOrder: z.number().int().nullable().optional(),
+});
+
+/** Zod schema for CommerceSubscriptionsSubscriptionPlanOperationsControllerUpdateFeaturesInput */
+CommerceSubscriptionsSubscriptionPlanOperationsControllerUpdateFeaturesInputSchema = z.object({
+  hasPrioritySupport: z.boolean().nullable().optional(),
+  hasAdvancedAnalytics: z.boolean().nullable().optional(),
+  hasCustomBranding: z.boolean().nullable().optional(),
+  features: z.string().nullable().optional(),
+});
+
+/** Zod schema for CommerceSubscriptionsSubscriptionPlanOperationsControllerUpdateLimitsInput */
+CommerceSubscriptionsSubscriptionPlanOperationsControllerUpdateLimitsInputSchema = z.object({
+  maxUsers: z.number().int().nullable().optional(),
+  maxStorageMb: z.number().int().nullable().optional(),
+  maxApiCallsPerMonth: z.number().int().nullable().optional(),
+});
+
+/** Zod schema for CommerceSubscriptionsSubscriptionPlanOperationsControllerUpdatePricingInput */
+CommerceSubscriptionsSubscriptionPlanOperationsControllerUpdatePricingInputSchema = z.object({
+  monthlyPriceInCents: z.number().int().optional(),
+  annualPriceInCents: z.number().int().nullable().optional(),
+});
+
+/** Zod schema for CommerceSubscriptionsSubscriptionPlanOperationsControllerValidateLimitsInput */
+CommerceSubscriptionsSubscriptionPlanOperationsControllerValidateLimitsInputSchema = z.object({
+  users: z.number().int().optional(),
+  storageMb: z.number().int().optional(),
+  apiCalls: z.number().int().optional(),
+});
+
+/** Zod schema for CommerceSubscriptionsSubscriptionPlansCrudControllerComparePlansInput */
+CommerceSubscriptionsSubscriptionPlansCrudControllerComparePlansInputSchema = z.object({
   basePlanId: z.string().uuid().optional(),
   comparePlanIds: z.array(z.string().uuid()).nullable().optional(),
 });
 
-/** Zod schema for CommerceSubscriptionsSubscriptionPlansControllerCreatePlanInput */
-CommerceSubscriptionsSubscriptionPlansControllerCreatePlanInputSchema = z.object({
+/** Zod schema for CommerceSubscriptionsSubscriptionPlansCrudControllerCreatePlanInput */
+CommerceSubscriptionsSubscriptionPlansCrudControllerCreatePlanInputSchema = z.object({
   name: z.string().nullable().optional(),
   slug: z.string().nullable().optional(),
   monthlyPriceInCents: z.number().int().optional(),
@@ -4244,8 +5520,8 @@ CommerceSubscriptionsSubscriptionPlansControllerCreatePlanInputSchema = z.object
   description: z.string().nullable().optional(),
 });
 
-/** Zod schema for CommerceSubscriptionsSubscriptionPlansControllerPutSubscriptionPlanInput */
-CommerceSubscriptionsSubscriptionPlansControllerPutSubscriptionPlanInputSchema = z.object({
+/** Zod schema for CommerceSubscriptionsSubscriptionPlansCrudControllerPutSubscriptionPlanInput */
+CommerceSubscriptionsSubscriptionPlansCrudControllerPutSubscriptionPlanInputSchema = z.object({
   name: z.string().nullable().optional(),
   slug: z.string().nullable().optional(),
   description: z.string().nullable().optional(),
@@ -4261,61 +5537,15 @@ CommerceSubscriptionsSubscriptionPlansControllerPutSubscriptionPlanInputSchema =
   sortOrder: z.number().int().nullable().optional(),
 });
 
-/** Zod schema for CommerceSubscriptionsSubscriptionPlansControllerSetExternalIdInput */
-CommerceSubscriptionsSubscriptionPlansControllerSetExternalIdInputSchema = z.object({
-  externalId: z.string().nullable().optional(),
-});
-
-/** Zod schema for CommerceSubscriptionsSubscriptionPlansControllerSetFeaturedInput */
-CommerceSubscriptionsSubscriptionPlansControllerSetFeaturedInputSchema = z.object({
-  featured: z.boolean().optional(),
-});
-
-/** Zod schema for CommerceSubscriptionsSubscriptionPlansControllerUpdateDetailsInput */
-CommerceSubscriptionsSubscriptionPlansControllerUpdateDetailsInputSchema = z.object({
-  planId: z.string().uuid().optional(),
-  name: z.string().nullable().optional(),
-  description: z.string().nullable().optional(),
-  sortOrder: z.number().int().nullable().optional(),
-});
-
-/** Zod schema for CommerceSubscriptionsSubscriptionPlansControllerUpdateFeaturesInput */
-CommerceSubscriptionsSubscriptionPlansControllerUpdateFeaturesInputSchema = z.object({
-  hasPrioritySupport: z.boolean().nullable().optional(),
-  hasAdvancedAnalytics: z.boolean().nullable().optional(),
-  hasCustomBranding: z.boolean().nullable().optional(),
-  features: z.string().nullable().optional(),
-});
-
-/** Zod schema for CommerceSubscriptionsSubscriptionPlansControllerUpdateLimitsInput */
-CommerceSubscriptionsSubscriptionPlansControllerUpdateLimitsInputSchema = z.object({
-  maxUsers: z.number().int().nullable().optional(),
-  maxStorageMb: z.number().int().nullable().optional(),
-  maxApiCallsPerMonth: z.number().int().nullable().optional(),
-});
-
-/** Zod schema for CommerceSubscriptionsSubscriptionPlansControllerUpdatePricingInput */
-CommerceSubscriptionsSubscriptionPlansControllerUpdatePricingInputSchema = z.object({
-  monthlyPriceInCents: z.number().int().optional(),
-  annualPriceInCents: z.number().int().nullable().optional(),
-});
-
-/** Zod schema for CommerceSubscriptionsSubscriptionPlansControllerValidateLimitsInput */
-CommerceSubscriptionsSubscriptionPlansControllerValidateLimitsInputSchema = z.object({
-  users: z.number().int().optional(),
-  storageMb: z.number().int().optional(),
-  apiCalls: z.number().int().optional(),
-});
-
 /** Zod schema for CommerceSubscriptionsSubscriptionStatus */
-CommerceSubscriptionsSubscriptionStatusSchema = z.union([z.literal(0), z.literal(1), z.literal(2), z.literal(3), z.literal(4), z.literal(5), z.literal(6)]);
+CommerceSubscriptionsSubscriptionStatusSchema = z.enum(['PendingActivation', 'Active', 'Trialing', 'PastDue', 'Suspended', 'Cancelled', 'Expired']);
 
 /** Zod schema for CommerceSubscriptionsSubscriptionUpgradeResult */
 CommerceSubscriptionsSubscriptionUpgradeResultSchema = z.object({
   success: z.boolean().optional(),
   updatedSubscription: z.lazy(() => CommerceSubscriptionsSubscriptionSchema).optional(),
-  proratedAmount: z.lazy(() => ValueObjectsMoneySchema).optional(),
-  creditApplied: z.lazy(() => ValueObjectsMoneySchema).optional(),
+  proratedAmount: z.lazy(() => MoneySchema).optional(),
+  creditApplied: z.lazy(() => MoneySchema).optional(),
   failureReason: z.string().nullable().optional(),
 });
 
@@ -4332,24 +5562,12 @@ CommerceSubscriptionsSubscriptionUsageSchema = z.object({
   limitWarnings: z.array(z.string()).nullable().optional(),
 });
 
-/** Zod schema for CommerceSubscriptionsSubscriptionsControllerAutoRenewInput */
-CommerceSubscriptionsSubscriptionsControllerAutoRenewInputSchema = z.object({
-  autoRenew: z.boolean().optional(),
-});
-
-/** Zod schema for CommerceSubscriptionsSubscriptionsControllerCancelInput */
-CommerceSubscriptionsSubscriptionsControllerCancelInputSchema = z.object({
-  reason: z.string().nullable().optional(),
-  note: z.string().nullable().optional(),
-  effectiveDate: z.string().datetime().nullable().optional(),
-});
-
 /** Zod schema for CommerceSubscriptionsSubscriptionsControllerCreateSubscriptionInput */
 CommerceSubscriptionsSubscriptionsControllerCreateSubscriptionInputSchema = z.object({
   tenantId: z.string().uuid().optional(),
   planId: z.string().uuid().optional(),
   createdByUserId: z.string().uuid().optional(),
-  billingCycle: z.lazy(() => ValueObjectsBillingCycleSchema).optional(),
+  billingCycle: z.lazy(() => BillingCycleSchema).optional(),
   amount: z.number().optional(),
   currency: z.string().nullable().optional(),
   fulfilledOrderId: z.string().uuid().nullable().optional(),
@@ -4357,62 +5575,407 @@ CommerceSubscriptionsSubscriptionsControllerCreateSubscriptionInputSchema = z.ob
   trialDays: z.number().int().nullable().optional(),
 });
 
-/** Zod schema for CommerceSubscriptionsSubscriptionsControllerDowngradeInput */
-CommerceSubscriptionsSubscriptionsControllerDowngradeInputSchema = z.object({
-  newPlanId: z.string().uuid().optional(),
-  effectiveDate: z.string().datetime().nullable().optional(),
-});
-
-/** Zod schema for CommerceSubscriptionsSubscriptionsControllerEndTrialInput */
-CommerceSubscriptionsSubscriptionsControllerEndTrialInputSchema = z.object({
-  convertToPaid: z.boolean().optional(),
-});
-
-/** Zod schema for CommerceSubscriptionsSubscriptionsControllerExternalIdsInput */
-CommerceSubscriptionsSubscriptionsControllerExternalIdsInputSchema = z.object({
-  externalSubscriptionId: z.string().nullable().optional(),
-  externalCustomerId: z.string().nullable().optional(),
-});
-
 /** Zod schema for CommerceSubscriptionsSubscriptionsControllerPatchSubscriptionInput */
 CommerceSubscriptionsSubscriptionsControllerPatchSubscriptionInputSchema = z.object({
-  billingCycle: z.lazy(() => ValueObjectsBillingCycleSchema).optional(),
+  billingCycle: z.lazy(() => BillingCycleSchema).optional(),
   autoRenew: z.boolean().nullable().optional(),
   externalSubscriptionId: z.string().nullable().optional(),
   externalCustomerId: z.string().nullable().optional(),
   metadata: z.string().nullable().optional(),
 });
 
-/** Zod schema for CommerceSubscriptionsSubscriptionsControllerPauseSubscriptionInput */
-CommerceSubscriptionsSubscriptionsControllerPauseSubscriptionInputSchema = z.object({
-  pauseUntil: z.string().datetime().nullable().optional(),
-  reason: z.string().nullable().optional(),
-});
-
 /** Zod schema for CommerceSubscriptionsSubscriptionsControllerPutSubscriptionInput */
 CommerceSubscriptionsSubscriptionsControllerPutSubscriptionInputSchema = z.object({
   planId: z.string().uuid().optional(),
-  billingCycle: z.lazy(() => ValueObjectsBillingCycleSchema).optional(),
+  billingCycle: z.lazy(() => BillingCycleSchema).optional(),
   amount: z.number().optional(),
   autoRenew: z.boolean().optional(),
   externalSubscriptionId: z.string().nullable().optional(),
   externalCustomerId: z.string().nullable().optional(),
 });
 
-/** Zod schema for CommerceSubscriptionsSubscriptionsControllerStartTrialInput */
-CommerceSubscriptionsSubscriptionsControllerStartTrialInputSchema = z.object({
-  trialDays: z.number().int().optional(),
+/** Zod schema for ContentPagesContentResource */
+ContentPagesContentResourceSchema = z.object({
+  id: z.string().uuid().optional(),
+  slug: z.string().nullable().optional(),
+  title: z.string().nullable().optional(),
+  summary: z.string().nullable().optional(),
+  body: z.string().nullable().optional(),
+  resourceType: z.string().nullable().optional(),
+  status: z.string().nullable().optional(),
+  locale: z.string().nullable().optional(),
+  categorySlug: z.string().nullable().optional(),
+  tags: z.string().nullable().optional(),
+  authorId: z.string().uuid().nullable().optional(),
+  authorName: z.string().nullable().optional(),
+  coverImageUrl: z.string().nullable().optional(),
+  videoUrl: z.string().nullable().optional(),
+  downloadUrl: z.string().nullable().optional(),
+  externalUrl: z.string().nullable().optional(),
+  linkedEntityId: z.string().uuid().nullable().optional(),
+  linkedEntityType: z.string().nullable().optional(),
+  metaTitle: z.string().nullable().optional(),
+  metaDescription: z.string().nullable().optional(),
+  ogImageUrl: z.string().nullable().optional(),
+  structuredData: z.string().nullable().optional(),
+  readingTimeMinutes: z.number().int().nullable().optional(),
+  viewCount: z.number().int().optional(),
+  isFeatured: z.boolean().optional(),
+  sortOrder: z.number().int().optional(),
+  publishedAt: z.string().datetime().nullable().optional(),
+  scheduledPublishAt: z.string().datetime().nullable().optional(),
+  customData: z.string().nullable().optional(),
+  createdAt: z.string().datetime().optional(),
+  updatedAt: z.string().datetime().nullable().optional(),
 });
 
-/** Zod schema for CommerceSubscriptionsSubscriptionsControllerSuspendInput */
-CommerceSubscriptionsSubscriptionsControllerSuspendInputSchema = z.object({
+/** Zod schema for ContentPagesContentResourceStatus */
+ContentPagesContentResourceStatusSchema = z.enum(['Draft', 'InReview', 'Published', 'Archived']);
+
+/** Zod schema for ContentPagesContentResourceType */
+ContentPagesContentResourceTypeSchema = z.enum(['Article', 'Tutorial', 'Documentation', 'Video', 'Download', 'ExternalLink', 'Course', 'Custom']);
+
+/** Zod schema for ContentPagesCreateContentResource */
+ContentPagesCreateContentResourceSchema = z.object({
+  slug: z.string().nullable().optional(),
+  title: z.string().nullable().optional(),
+  summary: z.string().nullable().optional(),
+  body: z.string().nullable().optional(),
+  resourceType: z.lazy(() => ContentPagesContentResourceTypeSchema).optional(),
+  locale: z.string().nullable().optional(),
+  categorySlug: z.string().nullable().optional(),
+  tags: z.string().nullable().optional(),
+  coverImageUrl: z.string().nullable().optional(),
+  videoUrl: z.string().nullable().optional(),
+  downloadUrl: z.string().nullable().optional(),
+  externalUrl: z.string().nullable().optional(),
+  linkedEntityId: z.string().uuid().nullable().optional(),
+  linkedEntityType: z.string().nullable().optional(),
+  metaTitle: z.string().nullable().optional(),
+  metaDescription: z.string().nullable().optional(),
+  ogImageUrl: z.string().nullable().optional(),
+  structuredData: z.string().nullable().optional(),
+  readingTimeMinutes: z.number().int().nullable().optional(),
+  isFeatured: z.boolean().optional(),
+  sortOrder: z.number().int().optional(),
+  customData: z.string().nullable().optional(),
+});
+
+/** Zod schema for ContentPagesCreatePage */
+ContentPagesCreatePageSchema = z.object({
+  slug: z.string().nullable().optional(),
+  title: z.string().nullable().optional(),
+  description: z.string().nullable().optional(),
+  pageType: z.lazy(() => ContentPagesPageTypeSchema).optional(),
+  locale: z.string().nullable().optional(),
+  metaTitle: z.string().nullable().optional(),
+  metaDescription: z.string().nullable().optional(),
+  metaKeywords: z.string().nullable().optional(),
+  canonicalUrl: z.string().nullable().optional(),
+  robotsDirective: z.string().nullable().optional(),
+  ogTitle: z.string().nullable().optional(),
+  ogDescription: z.string().nullable().optional(),
+  ogImageUrl: z.string().nullable().optional(),
+  ogType: z.string().nullable().optional(),
+  twitterCard: z.string().nullable().optional(),
+  twitterSite: z.string().nullable().optional(),
+  structuredData: z.string().nullable().optional(),
+  body: z.string().nullable().optional(),
+  customData: z.string().nullable().optional(),
+  parentPageId: z.string().uuid().nullable().optional(),
+  sortOrder: z.number().int().optional(),
+});
+
+/** Zod schema for ContentPagesCreatePageSection */
+ContentPagesCreatePageSectionSchema = z.object({
+  sectionType: z.lazy(() => ContentPagesSectionTypeSchema).optional(),
+  heading: z.string().nullable().optional(),
+  subheading: z.string().nullable().optional(),
+  data: z.string().nullable().optional(),
+  sortOrder: z.number().int().optional(),
+  isVisible: z.boolean().optional(),
+  cssClasses: z.string().nullable().optional(),
+});
+
+/** Zod schema for ContentPagesOpenGraphMetadata */
+ContentPagesOpenGraphMetadataSchema = z.object({
+  slug: z.string().nullable().optional(),
+  title: z.string().nullable().optional(),
+  description: z.string().nullable().optional(),
+  ogTitle: z.string().nullable().optional(),
+  ogDescription: z.string().nullable().optional(),
+  ogImageUrl: z.string().nullable().optional(),
+  ogType: z.string().nullable().optional(),
+  twitterCard: z.string().nullable().optional(),
+  twitterSite: z.string().nullable().optional(),
+  canonicalUrl: z.string().nullable().optional(),
+  robotsDirective: z.string().nullable().optional(),
+  structuredData: z.string().nullable().optional(),
+});
+
+/** Zod schema for ContentPagesPage */
+ContentPagesPageSchema = z.object({
+  id: z.string().uuid().optional(),
+  slug: z.string().nullable().optional(),
+  title: z.string().nullable().optional(),
+  description: z.string().nullable().optional(),
+  pageType: z.string().nullable().optional(),
+  status: z.string().nullable().optional(),
+  locale: z.string().nullable().optional(),
+  metaTitle: z.string().nullable().optional(),
+  metaDescription: z.string().nullable().optional(),
+  metaKeywords: z.string().nullable().optional(),
+  canonicalUrl: z.string().nullable().optional(),
+  robotsDirective: z.string().nullable().optional(),
+  ogTitle: z.string().nullable().optional(),
+  ogDescription: z.string().nullable().optional(),
+  ogImageUrl: z.string().nullable().optional(),
+  ogType: z.string().nullable().optional(),
+  twitterCard: z.string().nullable().optional(),
+  twitterSite: z.string().nullable().optional(),
+  structuredData: z.string().nullable().optional(),
+  body: z.string().nullable().optional(),
+  customData: z.string().nullable().optional(),
+  parentPageId: z.string().uuid().nullable().optional(),
+  sortOrder: z.number().int().optional(),
+  sections: z
+    .array(z.lazy(() => ContentPagesPageSectionSchema))
+    .nullable()
+    .optional(),
+  publishedAt: z.string().datetime().nullable().optional(),
+  scheduledPublishAt: z.string().datetime().nullable().optional(),
+  createdAt: z.string().datetime().optional(),
+  updatedAt: z.string().datetime().nullable().optional(),
+});
+
+/** Zod schema for ContentPagesPageSection */
+ContentPagesPageSectionSchema = z.object({
+  id: z.string().uuid().optional(),
+  pageId: z.string().uuid().optional(),
+  sectionType: z.string().nullable().optional(),
+  heading: z.string().nullable().optional(),
+  subheading: z.string().nullable().optional(),
+  data: z.string().nullable().optional(),
+  sortOrder: z.number().int().optional(),
+  isVisible: z.boolean().optional(),
+  cssClasses: z.string().nullable().optional(),
+  createdAt: z.string().datetime().optional(),
+  updatedAt: z.string().datetime().nullable().optional(),
+});
+
+/** Zod schema for ContentPagesPageStatus */
+ContentPagesPageStatusSchema = z.enum(['Draft', 'Published', 'Archived']);
+
+/** Zod schema for ContentPagesPageType */
+ContentPagesPageTypeSchema = z.enum(['Landing', 'Legal', 'ResourceIndex', 'Resource', 'Custom']);
+
+/** Zod schema for ContentPagesSectionType */
+ContentPagesSectionTypeSchema = z.enum([
+  'Hero',
+  'Features',
+  'Testimonials',
+  'Pricing',
+  'CallToAction',
+  'Faq',
+  'RichText',
+  'Gallery',
+  'Stats',
+  'Team',
+  'LogoCloud',
+  'Newsletter',
+  'Contact',
+  'ResourceCards',
+  'Custom',
+]);
+
+/** Zod schema for ContentPagesUpdateContentResource */
+ContentPagesUpdateContentResourceSchema = z.object({
+  slug: z.string().nullable().optional(),
+  title: z.string().nullable().optional(),
+  summary: z.string().nullable().optional(),
+  body: z.string().nullable().optional(),
+  resourceType: z.lazy(() => ContentPagesContentResourceTypeSchema).optional(),
+  status: z.lazy(() => ContentPagesContentResourceStatusSchema).optional(),
+  locale: z.string().nullable().optional(),
+  categorySlug: z.string().nullable().optional(),
+  tags: z.string().nullable().optional(),
+  coverImageUrl: z.string().nullable().optional(),
+  videoUrl: z.string().nullable().optional(),
+  downloadUrl: z.string().nullable().optional(),
+  externalUrl: z.string().nullable().optional(),
+  linkedEntityId: z.string().uuid().nullable().optional(),
+  linkedEntityType: z.string().nullable().optional(),
+  metaTitle: z.string().nullable().optional(),
+  metaDescription: z.string().nullable().optional(),
+  ogImageUrl: z.string().nullable().optional(),
+  structuredData: z.string().nullable().optional(),
+  readingTimeMinutes: z.number().int().nullable().optional(),
+  isFeatured: z.boolean().nullable().optional(),
+  sortOrder: z.number().int().nullable().optional(),
+  scheduledPublishAt: z.string().datetime().nullable().optional(),
+  customData: z.string().nullable().optional(),
+});
+
+/** Zod schema for ContentPagesUpdatePage */
+ContentPagesUpdatePageSchema = z.object({
+  slug: z.string().nullable().optional(),
+  title: z.string().nullable().optional(),
+  description: z.string().nullable().optional(),
+  pageType: z.lazy(() => ContentPagesPageTypeSchema).optional(),
+  status: z.lazy(() => ContentPagesPageStatusSchema).optional(),
+  locale: z.string().nullable().optional(),
+  metaTitle: z.string().nullable().optional(),
+  metaDescription: z.string().nullable().optional(),
+  metaKeywords: z.string().nullable().optional(),
+  canonicalUrl: z.string().nullable().optional(),
+  robotsDirective: z.string().nullable().optional(),
+  ogTitle: z.string().nullable().optional(),
+  ogDescription: z.string().nullable().optional(),
+  ogImageUrl: z.string().nullable().optional(),
+  ogType: z.string().nullable().optional(),
+  twitterCard: z.string().nullable().optional(),
+  twitterSite: z.string().nullable().optional(),
+  structuredData: z.string().nullable().optional(),
+  body: z.string().nullable().optional(),
+  customData: z.string().nullable().optional(),
+  parentPageId: z.string().uuid().nullable().optional(),
+  sortOrder: z.number().int().nullable().optional(),
+  scheduledPublishAt: z.string().datetime().nullable().optional(),
+});
+
+/** Zod schema for ContentPagesUpdatePageSection */
+ContentPagesUpdatePageSectionSchema = z.object({
+  sectionType: z.lazy(() => ContentPagesSectionTypeSchema).optional(),
+  heading: z.string().nullable().optional(),
+  subheading: z.string().nullable().optional(),
+  data: z.string().nullable().optional(),
+  sortOrder: z.number().int().nullable().optional(),
+  isVisible: z.boolean().nullable().optional(),
+  cssClasses: z.string().nullable().optional(),
+});
+
+/** Zod schema for FeaturesBulkEvaluationInput */
+FeaturesBulkEvaluationInputSchema = z.object({
+  featureKeys: z.array(z.string()).nullable().optional(),
+  context: z.lazy(() => FeaturesFeatureContextSchema).optional(),
+});
+
+/** Zod schema for FeaturesCapabilityAuditLog */
+FeaturesCapabilityAuditLogSchema = z.object({
+  id: z.string().uuid().optional(),
+  tenantId: z.string().uuid().optional(),
+  capabilityKey: z.string().nullable().optional(),
+  oldValue: z.boolean().nullable().optional(),
+  newValue: z.boolean().optional(),
+  oldSource: z.string().nullable().optional(),
+  newSource: z.string().nullable().optional(),
+  changedByUserId: z.string().uuid().nullable().optional(),
+  changeReason: z.string().nullable().optional(),
+  changeType: z.string().nullable().optional(),
+  changedAt: z.string().datetime().optional(),
+});
+
+/** Zod schema for FeaturesCapabilityCheckOutput */
+FeaturesCapabilityCheckOutputSchema = z.object({
+  capability: z.string().nullable().optional(),
+  isEnabled: z.boolean().optional(),
+});
+
+/** Zod schema for FeaturesCreateFeatureInput */
+FeaturesCreateFeatureInputSchema = z.object({
+  key: z.string().nullable().optional(),
+  name: z.string().nullable().optional(),
+  description: z.string().nullable().optional(),
+  isEnabled: z.boolean().optional(),
+  tenantId: z.string().uuid().nullable().optional(),
+});
+
+/** Zod schema for FeaturesFeatureContext */
+FeaturesFeatureContextSchema = z.object({
+  tenantId: z.string().uuid().nullable().optional(),
+  userId: z.string().uuid().nullable().optional(),
+  subscriptionPlanId: z.string().nullable().optional(),
+  environment: z.string().nullable().optional(),
+  permissions: z.array(z.string()).nullable().optional(),
+  customAttributes: z.record(z.string(), z.record(z.string(), z.unknown())).nullable().optional(),
+  userAgent: z.string().nullable().optional(),
+  ipAddress: z.string().nullable().optional(),
+  country: z.string().nullable().optional(),
+  requestTime: z.string().datetime().optional(),
+});
+
+/** Zod schema for FeaturesFeatureEvaluationInput */
+FeaturesFeatureEvaluationInputSchema = z.object({
+  featureKey: z.string().nullable().optional(),
+  defaultValue: z.record(z.string(), z.unknown()).nullable().optional(),
+  context: z.lazy(() => FeaturesFeatureContextSchema).optional(),
+});
+
+/** Zod schema for FeaturesFeatureFlag */
+FeaturesFeatureFlagSchema = z.object({
+  id: z.string().uuid(),
+  key: z.string().nullable(),
+  name: z.string().nullable(),
+  description: z.string().nullable().optional(),
+  isEnabled: z.boolean(),
+  type: z.lazy(() => FeaturesFeatureFlagTypeSchema),
+  environment: z.string().nullable().optional(),
+  tenantId: z.string().uuid().nullable().optional(),
+  defaultValue: z.record(z.string(), z.unknown()).nullable().optional(),
+  createdAt: z.string().datetime(),
+  updatedAt: z.string().datetime().nullable().optional(),
+  deletedAt: z.string().datetime().nullable().optional(),
+  targets: z
+    .array(z.lazy(() => FeaturesFeatureFlagTargetSchema))
+    .nullable()
+    .optional(),
+});
+
+/** Zod schema for FeaturesFeatureFlagTarget */
+FeaturesFeatureFlagTargetSchema = z.object({
+  id: z.string().uuid(),
+  featureFlagId: z.string().uuid(),
+  targetType: z.string().nullable(),
+  targetIdentifier: z.string().nullable(),
+  isEnabled: z.boolean(),
+  rolloutPercentage: z.number().int().optional(),
+  customValue: z.string().nullable().optional(),
+  metadata: z.string().nullable().optional(),
+  priority: z.number().int().optional(),
+  createdAt: z.string().datetime(),
+  updatedAt: z.string().datetime().nullable().optional(),
+  deletedAt: z.string().datetime().nullable().optional(),
+});
+
+/** Zod schema for FeaturesFeatureFlagType */
+FeaturesFeatureFlagTypeSchema = z.enum(['Toggle', 'Numeric', 'String', 'Percentage', 'UserSegment']);
+
+/** Zod schema for FeaturesSetCapabilityOverrideInput */
+FeaturesSetCapabilityOverrideInputSchema = z.object({
+  capability: z.string().nullable().optional(),
+  isEnabled: z.boolean().optional(),
+  source: z.string().nullable().optional(),
   reason: z.string().nullable().optional(),
+  expiresAt: z.string().datetime().nullable().optional(),
 });
 
-/** Zod schema for CommerceSubscriptionsSubscriptionsControllerUpgradeInput */
-CommerceSubscriptionsSubscriptionsControllerUpgradeInputSchema = z.object({
-  newPlanId: z.string().uuid().optional(),
-  effectiveDate: z.string().datetime().nullable().optional(),
+/** Zod schema for FeaturesToggleFeatureInput */
+FeaturesToggleFeatureInputSchema = z.object({
+  featureKey: z.string().nullable().optional(),
+  isEnabled: z.boolean().optional(),
+  reason: z.string().nullable().optional(),
+  tenantId: z.string().uuid().nullable().optional(),
+  environment: z.string().nullable().optional(),
+});
+
+/** Zod schema for FeaturesUpdateFeatureInput */
+FeaturesUpdateFeatureInputSchema = z.object({
+  name: z.string().nullable().optional(),
+  description: z.string().nullable().optional(),
+  isEnabled: z.boolean().nullable().optional(),
+  rolloutPercentage: z.number().int().nullable().optional(),
+  enabledValue: z.string().nullable().optional(),
+  defaultValue: z.string().nullable().optional(),
 });
 
 /** Zod schema for Fido2NetLibAssertionOptions */
@@ -4710,7 +6273,7 @@ IdentityAuthenticationMfaConfigurationOutputSchema = z.object({
 });
 
 /** Zod schema for IdentityAuthenticationMfaMethod */
-IdentityAuthenticationMfaMethodSchema = z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4), z.literal(5)]);
+IdentityAuthenticationMfaMethodSchema = z.enum(['Totp', 'BackupCode', 'Sms', 'Email', 'WebAuthn']);
 
 /** Zod schema for IdentityAuthenticationMfaMethodInfo */
 IdentityAuthenticationMfaMethodInfoSchema = z.object({
@@ -4818,7 +6381,7 @@ IdentityAuthenticationRevokeRefreshTokenInputSchema = z.object({
 });
 
 /** Zod schema for IdentityAuthenticationRiskLevel */
-IdentityAuthenticationRiskLevelSchema = z.union([z.literal(0), z.literal(1), z.literal(2), z.literal(3)]);
+IdentityAuthenticationRiskLevelSchema = z.enum(['Low', 'Medium', 'High', 'Critical']);
 
 /** Zod schema for IdentityAuthenticationRotateKeyInput */
 IdentityAuthenticationRotateKeyInputSchema = z.object({
@@ -5078,7 +6641,7 @@ IdentityAuthenticationWebAuthnAuthenticationResultSchema = z.object({
 });
 
 /** Zod schema for IdentityAuthenticationWebAuthnAuthenticatorType */
-IdentityAuthenticationWebAuthnAuthenticatorTypeSchema = z.union([z.literal(1), z.literal(2)]);
+IdentityAuthenticationWebAuthnAuthenticatorTypeSchema = z.enum(['Platform', 'CrossPlatform']);
 
 /** Zod schema for IdentityAuthenticationWebAuthnCredentialInfo */
 IdentityAuthenticationWebAuthnCredentialInfoSchema = z.object({
@@ -5132,6 +6695,68 @@ IdentityAuthenticationWebAuthnStatusOutputSchema = z.object({
 /** Zod schema for IdentityTenantsArchiveInput */
 IdentityTenantsArchiveInputSchema = z.object({
   reason: z.string().nullable().optional(),
+});
+
+/** Zod schema for IdentityTenantsBulkActivateTenantsCommand */
+IdentityTenantsBulkActivateTenantsCommandSchema = z.object({
+  tenantIds: z.array(z.string().uuid()).nullable().optional(),
+});
+
+/** Zod schema for IdentityTenantsBulkArchiveTenantsCommand */
+IdentityTenantsBulkArchiveTenantsCommandSchema = z.object({
+  tenantIds: z.array(z.string().uuid()).nullable().optional(),
+});
+
+/** Zod schema for IdentityTenantsBulkCreateTenantItem */
+IdentityTenantsBulkCreateTenantItemSchema = z.object({
+  name: z.string().nullable().optional(),
+  slug: z.string().nullable().optional(),
+  adminEmail: z.string().nullable().optional(),
+  description: z.string().nullable().optional(),
+});
+
+/** Zod schema for IdentityTenantsBulkCreateTenantsCommand */
+IdentityTenantsBulkCreateTenantsCommandSchema = z.object({
+  tenants: z
+    .array(z.lazy(() => IdentityTenantsBulkCreateTenantItemSchema))
+    .nullable()
+    .optional(),
+});
+
+/** Zod schema for IdentityTenantsBulkDeactivateTenantsCommand */
+IdentityTenantsBulkDeactivateTenantsCommandSchema = z.object({
+  tenantIds: z.array(z.string().uuid()).nullable().optional(),
+});
+
+/** Zod schema for IdentityTenantsBulkDeleteTenantsCommand */
+IdentityTenantsBulkDeleteTenantsCommandSchema = z.object({
+  tenantIds: z.array(z.string().uuid()).nullable().optional(),
+  hardDelete: z.boolean().optional(),
+});
+
+/** Zod schema for IdentityTenantsBulkPurgeTenantsCommand */
+IdentityTenantsBulkPurgeTenantsCommandSchema = z.object({
+  tenantIds: z.array(z.string().uuid()).nullable().optional(),
+});
+
+/** Zod schema for IdentityTenantsBulkUndeleteTenantsCommand */
+IdentityTenantsBulkUndeleteTenantsCommandSchema = z.object({
+  tenantIds: z.array(z.string().uuid()).nullable().optional(),
+});
+
+/** Zod schema for IdentityTenantsBulkUpdateTenantItem */
+IdentityTenantsBulkUpdateTenantItemSchema = z.object({
+  tenantId: z.string().uuid().optional(),
+  name: z.string().nullable().optional(),
+  description: z.string().nullable().optional(),
+});
+
+/** Zod schema for IdentityTenantsBulkUpdateTenantsCommand */
+IdentityTenantsBulkUpdateTenantsCommandSchema = z.object({
+  updates: z
+    .array(z.lazy(() => IdentityTenantsBulkUpdateTenantItemSchema))
+    .nullable()
+    .optional(),
 });
 
 /** Zod schema for IdentityTenantsCreateTenantInput */
@@ -5818,7 +7443,7 @@ IdentityUsersNotificationFilterCriteriaSchema = z.object({
 });
 
 /** Zod schema for IdentityUsersPurgeStrategy */
-IdentityUsersPurgeStrategySchema = z.union([z.literal(0), z.literal(1), z.literal(2)]);
+IdentityUsersPurgeStrategySchema = z.enum(['Immediate', 'Scheduled', 'GracePeriod']);
 
 /** Zod schema for IdentityUsersReplaceUserAccessibilityPreferencesInput */
 IdentityUsersReplaceUserAccessibilityPreferencesInputSchema = z.object({
@@ -6070,20 +7695,642 @@ IdentityUsersUserProfileSchema = z.object({
   version: z.string().nullable().optional(),
 });
 
-/** Zod schema for ModelsPagedResult */
-ModelsPagedResultSchema = z.object({
-  items: z
-    .array(z.lazy(() => IdentityTenantsTenantAuditLogEntrySchema))
+/** Zod schema for LearningAssessmentsAssessment */
+LearningAssessmentsAssessmentSchema = z.object({
+  id: z.string().uuid().optional(),
+  courseId: z.string().uuid().optional(),
+  contentId: z.string().uuid().nullable().optional(),
+  title: z.string().nullable().optional(),
+  description: z.string().nullable().optional(),
+  type: z.lazy(() => LearningAssessmentsAssessmentTypeSchema).optional(),
+  maxScore: z.number().int().optional(),
+  passingScore: z.number().int().optional(),
+  timeLimitMinutes: z.number().int().nullable().optional(),
+  maxAttempts: z.number().int().nullable().optional(),
+  isRequired: z.boolean().optional(),
+  order: z.number().int().optional(),
+  availableFrom: z.string().datetime().nullable().optional(),
+  availableUntil: z.string().datetime().nullable().optional(),
+  isAvailable: z.boolean().optional(),
+});
+
+/** Zod schema for LearningAssessmentsAssessmentSubmission */
+LearningAssessmentsAssessmentSubmissionSchema = z.object({
+  id: z.string().uuid().optional(),
+  assessmentId: z.string().uuid().optional(),
+  enrollmentId: z.string().uuid().optional(),
+  userId: z.string().uuid().optional(),
+  attemptNumber: z.number().int().optional(),
+  score: z.number().int().nullable().optional(),
+  passed: z.boolean().nullable().optional(),
+  startedAt: z.string().datetime().optional(),
+  submittedAt: z.string().datetime().nullable().optional(),
+  gradedAt: z.string().datetime().nullable().optional(),
+  gradedBy: z.string().uuid().nullable().optional(),
+  feedback: z.string().nullable().optional(),
+  status: z.lazy(() => LearningAssessmentsSubmissionStatusSchema).optional(),
+});
+
+/** Zod schema for LearningAssessmentsAssessmentType */
+LearningAssessmentsAssessmentTypeSchema = z.enum(['Quiz', 'Exam', 'Assignment', 'Project', 'PeerReview', 'SelfAssessment']);
+
+/** Zod schema for LearningAssessmentsCanAttemptOutput */
+LearningAssessmentsCanAttemptOutputSchema = z.object({
+  canAttempt: z.boolean().optional(),
+  currentAttemptCount: z.number().int().optional(),
+});
+
+/** Zod schema for LearningAssessmentsCreateAssessmentInput */
+LearningAssessmentsCreateAssessmentInputSchema = z.object({
+  courseId: z.string().uuid().optional(),
+  title: z.string().nullable().optional(),
+  description: z.string().nullable().optional(),
+  type: z.lazy(() => LearningAssessmentsAssessmentTypeSchema).optional(),
+  maxScore: z.number().int().optional(),
+  passingScore: z.number().int().optional(),
+  timeLimitMinutes: z.number().int().nullable().optional(),
+  maxAttempts: z.number().int().nullable().optional(),
+  isRequired: z.boolean().optional(),
+  availableFrom: z.string().datetime().nullable().optional(),
+  availableUntil: z.string().datetime().nullable().optional(),
+});
+
+/** Zod schema for LearningAssessmentsGradeSubmissionInput */
+LearningAssessmentsGradeSubmissionInputSchema = z.object({
+  score: z.number().int().optional(),
+  gradedBy: z.string().uuid().nullable().optional(),
+  feedback: z.string().nullable().optional(),
+});
+
+/** Zod schema for LearningAssessmentsStartSubmissionInput */
+LearningAssessmentsStartSubmissionInputSchema = z.object({
+  enrollmentId: z.string().uuid().optional(),
+});
+
+/** Zod schema for LearningAssessmentsSubmissionStatus */
+LearningAssessmentsSubmissionStatusSchema = z.enum(['InProgress', 'Submitted', 'Graded', 'Returned', 'Late']);
+
+/** Zod schema for LearningAssessmentsUpdateAssessmentInput */
+LearningAssessmentsUpdateAssessmentInputSchema = z.object({
+  title: z.string().nullable().optional(),
+  description: z.string().nullable().optional(),
+  maxScore: z.number().int().nullable().optional(),
+  passingScore: z.number().int().nullable().optional(),
+  timeLimitMinutes: z.number().int().nullable().optional(),
+  maxAttempts: z.number().int().nullable().optional(),
+  isRequired: z.boolean().nullable().optional(),
+  availableFrom: z.string().datetime().nullable().optional(),
+  availableUntil: z.string().datetime().nullable().optional(),
+  contentId: z.string().uuid().nullable().optional(),
+  clearContentId: z.boolean().optional(),
+});
+
+/** Zod schema for LearningCoursesActivityGrade */
+LearningCoursesActivityGradeSchema = z.object({
+  id: z.string().uuid().optional(),
+  contentInteractionId: z.string().uuid().optional(),
+  graderProgramUserId: z.string().uuid().nullable().optional(),
+  grade: z.number().optional(),
+  feedback: z.string().nullable().optional(),
+  gradingDetails: z.string().nullable().optional(),
+  gradedAt: z.string().datetime().optional(),
+  createdAt: z.string().datetime().optional(),
+  updatedAt: z.string().datetime().optional(),
+  contentInteraction: z.lazy(() => LearningCoursesContentInteractionSummarySchema).optional(),
+  grader: z.lazy(() => LearningCoursesGraderSummarySchema).optional(),
+  isPassingGrade: z.boolean().optional(),
+  gradePercentage: z.string().nullable().optional(),
+  hasFeedback: z.boolean().optional(),
+  hasGradingDetails: z.boolean().optional(),
+});
+
+/** Zod schema for LearningCoursesCircularDependencyCheckResult */
+LearningCoursesCircularDependencyCheckResultSchema = z.object({
+  wouldCreateCycle: z.boolean().optional(),
+});
+
+/** Zod schema for LearningCoursesCloneProgram */
+LearningCoursesCloneProgramSchema = z.object({
+  newTitle: z.string().nullable().optional(),
+  newDescription: z.string().nullable().optional(),
+});
+
+/** Zod schema for LearningCoursesCompleteContentInput */
+LearningCoursesCompleteContentInputSchema = z.object({
+  programUserId: z.string().uuid().optional(),
+  contentId: z.string().uuid().optional(),
+});
+
+/** Zod schema for LearningCoursesCompletionRates */
+LearningCoursesCompletionRatesSchema = z.object({
+  programId: z.string().uuid().optional(),
+  overallCompletionRate: z.number().optional(),
+  contentCompletionRates: z.record(z.string(), z.number()).nullable().optional(),
+  completionTrends: z
+    .array(z.lazy(() => LearningCoursesCompletionTrendSchema))
     .nullable()
     .optional(),
-  totalCount: z.number().int().optional(),
-  skip: z.number().int().optional(),
-  take: z.number().int().optional(),
-  pageNumber: z.number().int().optional(),
-  totalPages: z.number().int().optional(),
-  hasNextPage: z.boolean().optional(),
-  hasPreviousPage: z.boolean().optional(),
 });
+
+/** Zod schema for LearningCoursesCompletionTrend */
+LearningCoursesCompletionTrendSchema = z.object({
+  date: z.string().datetime().optional(),
+  completedCount: z.number().int().optional(),
+  totalCount: z.number().int().optional(),
+  rate: z.number().optional(),
+});
+
+/** Zod schema for LearningCoursesContentInteraction */
+LearningCoursesContentInteractionSchema = z.object({
+  id: z.string().uuid().optional(),
+  programUserId: z.string().uuid().optional(),
+  contentId: z.string().uuid().optional(),
+  status: z.lazy(() => LearningCoursesProgressStatusSchema).optional(),
+  submissionData: z.string().nullable().optional(),
+  completionPercentage: z.number().optional(),
+  timeSpentMinutes: z.number().int().nullable().optional(),
+  firstAccessedAt: z.string().datetime().nullable().optional(),
+  lastAccessedAt: z.string().datetime().nullable().optional(),
+  completedAt: z.string().datetime().nullable().optional(),
+  submittedAt: z.string().datetime().nullable().optional(),
+  createdAt: z.string().datetime().optional(),
+  updatedAt: z.string().datetime().optional(),
+  content: z.lazy(() => LearningCoursesContentSummarySchema).optional(),
+  programUser: z.lazy(() => LearningCoursesProgramUserSummarySchema).optional(),
+  isSubmitted: z.boolean().optional(),
+  isCompleted: z.boolean().optional(),
+  canModify: z.boolean().optional(),
+  durationInMinutes: z.number().int().optional(),
+});
+
+/** Zod schema for LearningCoursesContentInteractionSummary */
+LearningCoursesContentInteractionSummarySchema = z.object({
+  id: z.string().uuid().optional(),
+  programUserId: z.string().uuid().optional(),
+  contentId: z.string().uuid().optional(),
+  status: z.string().nullable().optional(),
+  submittedAt: z.string().datetime().nullable().optional(),
+  content: z.lazy(() => LearningCoursesContentSummarySchema).optional(),
+  student: z.lazy(() => LearningCoursesStudentSummarySchema).optional(),
+});
+
+/** Zod schema for LearningCoursesContentProgress */
+LearningCoursesContentProgressSchema = z.object({
+  contentId: z.string().uuid().optional(),
+  title: z.string().nullable().optional(),
+  status: z.lazy(() => LearningCoursesProgressStatusSchema).optional(),
+  completionPercentage: z.number().optional(),
+  firstAccessedAt: z.string().datetime().nullable().optional(),
+  lastAccessedAt: z.string().datetime().nullable().optional(),
+  completedAt: z.string().datetime().nullable().optional(),
+});
+
+/** Zod schema for LearningCoursesContentStats */
+LearningCoursesContentStatsSchema = z.object({
+  programId: z.string().uuid().optional(),
+  totalContent: z.number().int().optional(),
+  requiredContent: z.number().int().optional(),
+  optionalContent: z.number().int().optional(),
+  contentByType: z
+    .object({
+      Lesson: z.number().int(),
+      Page: z.number().int(),
+      Assignment: z.number().int(),
+      Questionnaire: z.number().int(),
+      Discussion: z.number().int(),
+      Code: z.number().int(),
+      Challenge: z.number().int(),
+      Reflection: z.number().int(),
+      Survey: z.number().int(),
+    })
+    .nullable()
+    .optional(),
+  contentByVisibility: z
+    .object({
+      Public: z.number().int(),
+      Internal: z.number().int(),
+      Private: z.number().int(),
+      Restricted: z.number().int(),
+    })
+    .nullable()
+    .optional(),
+  topLevelContent: z.number().int().optional(),
+  nestedContent: z.number().int().optional(),
+});
+
+/** Zod schema for LearningCoursesContentSummary */
+LearningCoursesContentSummarySchema = z.object({
+  id: z.string().uuid().optional(),
+  title: z.string().nullable().optional(),
+  contentType: z.string().nullable().optional(),
+  estimatedMinutes: z.number().int().nullable().optional(),
+});
+
+/** Zod schema for LearningCoursesCreateActivityGrade */
+LearningCoursesCreateActivityGradeSchema = z.object({
+  contentInteractionId: z.string().uuid().optional(),
+  graderProgramUserId: z.string().uuid().optional(),
+  grade: z.number().optional(),
+  feedback: z.string().nullable().optional(),
+  gradingDetails: z.string().nullable().optional(),
+});
+
+/** Zod schema for LearningCoursesCreatePrerequisiteApiInput */
+LearningCoursesCreatePrerequisiteApiInputSchema = z.object({
+  courseId: z.string().uuid().optional(),
+  prerequisiteCourseId: z.string().uuid().optional(),
+  type: z.lazy(() => LearningCoursesPrerequisiteTypeSchema).optional(),
+  minimumGrade: z.number().int().nullable().optional(),
+  description: z.string().nullable().optional(),
+  displayOrder: z.number().int().optional(),
+  prerequisiteGroup: z.string().nullable().optional(),
+});
+
+/** Zod schema for LearningCoursesCreateProductFromProgram */
+LearningCoursesCreateProductFromProgramSchema = z.object({
+  name: z.string().nullable().optional(),
+  description: z.string().nullable().optional(),
+  basePrice: z.number().optional(),
+  currency: z.string().nullable().optional(),
+});
+
+/** Zod schema for LearningCoursesCreateProgramContent */
+LearningCoursesCreateProgramContentSchema = z.object({
+  programId: z.string().uuid(),
+  parentId: z.string().uuid().nullable().optional(),
+  title: z.string().min(0).max(255),
+  description: z.string().nullable().optional(),
+  type: z.lazy(() => LearningCoursesProgramContentTypeSchema),
+  body: z.string().nullable().optional(),
+  sortOrder: z.number().int().optional(),
+  isRequired: z.boolean().optional(),
+  gradingMethod: z.lazy(() => LearningCoursesGradingMethodSchema).optional(),
+  maxPoints: z.number().nullable().optional(),
+  estimatedMinutes: z.number().int().nullable().optional(),
+  visibility: z.lazy(() => LearningCoursesVisibilitySchema).optional(),
+});
+
+/** Zod schema for LearningCoursesCreateProgram */
+LearningCoursesCreateProgramSchema = z.object({
+  title: z.string().nullable().optional(),
+  description: z.string().nullable().optional(),
+  slug: z.string().nullable().optional(),
+  thumbnail: z.string().nullable().optional(),
+});
+
+/** Zod schema for LearningCoursesEngagementMetrics */
+LearningCoursesEngagementMetricsSchema = z.object({
+  programId: z.string().uuid().optional(),
+  dailyActiveUsers: z.number().int().optional(),
+  weeklyActiveUsers: z.number().int().optional(),
+  monthlyActiveUsers: z.number().int().optional(),
+  averageSessionDuration: z.string().optional(),
+  totalSessions: z.number().int().optional(),
+  retentionRate: z.number().optional(),
+  contentEngagement: z.record(z.string(), z.number().int()).nullable().optional(),
+});
+
+/** Zod schema for LearningCoursesEnrollmentStatus */
+LearningCoursesEnrollmentStatusSchema = z.enum(['Open', 'Active', 'Paused', 'Cancelled', 'Expired', 'Completed', 'Closed', 'InviteOnly', 'Waitlist']);
+
+/** Zod schema for LearningCoursesGradeStatistics */
+LearningCoursesGradeStatisticsSchema = z.object({
+  totalGrades: z.number().int().optional(),
+  averageGrade: z.number().optional(),
+  minGrade: z.number().optional(),
+  maxGrade: z.number().optional(),
+  passingRate: z.number().optional(),
+  averageGradeFormatted: z.string().nullable().optional(),
+  passingRateFormatted: z.string().nullable().optional(),
+  hasGrades: z.boolean().optional(),
+});
+
+/** Zod schema for LearningCoursesGraderSummary */
+LearningCoursesGraderSummarySchema = z.object({
+  id: z.string().uuid().optional(),
+  userDisplayName: z.string().nullable().optional(),
+  userEmail: z.string().nullable().optional(),
+  role: z.string().nullable().optional(),
+});
+
+/** Zod schema for LearningCoursesGradingMethod */
+LearningCoursesGradingMethodSchema = z.enum(['None', 'Instructor', 'Peer', 'Ai', 'AutomatedTests']);
+
+/** Zod schema for LearningCoursesMonetization */
+LearningCoursesMonetizationSchema = z.object({
+  price: z.number().optional(),
+  currency: z.string().nullable().optional(),
+  isSubscription: z.boolean().optional(),
+  subscriptionDurationDays: z.number().int().nullable().optional(),
+});
+
+/** Zod schema for LearningCoursesMoveContent */
+LearningCoursesMoveContentSchema = z.object({
+  contentId: z.string().uuid(),
+  newParentId: z.string().uuid().nullable().optional(),
+  newSortOrder: z.number().int(),
+});
+
+/** Zod schema for LearningCoursesPrerequisiteCheckResult */
+LearningCoursesPrerequisiteCheckResultSchema = z.object({
+  isSatisfied: z.boolean().optional(),
+  prerequisites: z
+    .array(z.lazy(() => LearningCoursesPrerequisiteStatusSchema))
+    .nullable()
+    .optional(),
+});
+
+/** Zod schema for LearningCoursesPrerequisite */
+LearningCoursesPrerequisiteSchema = z.object({
+  id: z.string().uuid().optional(),
+  courseId: z.string().uuid().optional(),
+  prerequisiteCourseId: z.string().uuid().optional(),
+  prerequisiteCourseName: z.string().nullable().optional(),
+  tenantId: z.string().uuid().nullable().optional(),
+  type: z.lazy(() => LearningCoursesPrerequisiteTypeSchema).optional(),
+  minimumGrade: z.number().int().nullable().optional(),
+  description: z.string().nullable().optional(),
+  displayOrder: z.number().int().optional(),
+  prerequisiteGroup: z.string().nullable().optional(),
+  createdAt: z.string().datetime().optional(),
+});
+
+/** Zod schema for LearningCoursesPrerequisiteStatus */
+LearningCoursesPrerequisiteStatusSchema = z.object({
+  prerequisiteId: z.string().uuid().optional(),
+  prerequisiteCourseId: z.string().uuid().optional(),
+  courseName: z.string().nullable().optional(),
+  type: z.lazy(() => LearningCoursesPrerequisiteTypeSchema).optional(),
+  isSatisfied: z.boolean().optional(),
+  requiredGrade: z.number().int().nullable().optional(),
+  achievedGrade: z.number().int().nullable().optional(),
+  reason: z.string().nullable().optional(),
+});
+
+/** Zod schema for LearningCoursesPrerequisiteType */
+LearningCoursesPrerequisiteTypeSchema = z.enum(['Required', 'Recommended', 'Corequisite']);
+
+/** Zod schema for LearningCoursesPricing */
+LearningCoursesPricingSchema = z.object({
+  price: z.number().optional(),
+  currency: z.string().nullable().optional(),
+  isSubscription: z.boolean().optional(),
+  subscriptionDurationDays: z.number().int().nullable().optional(),
+  isMonetizationEnabled: z.boolean().optional(),
+});
+
+/** Zod schema for LearningCoursesProgramAnalytics */
+LearningCoursesProgramAnalyticsSchema = z.object({
+  programId: z.string().uuid().optional(),
+  title: z.string().nullable().optional(),
+  totalUsers: z.number().int().optional(),
+  activeUsers: z.number().int().optional(),
+  completedUsers: z.number().int().optional(),
+  completionRate: z.number().optional(),
+  averageCompletionTime: z.string().optional(),
+  totalViews: z.number().int().optional(),
+  lastActivity: z.string().datetime().nullable().optional(),
+  additionalMetrics: z.record(z.string(), z.record(z.string(), z.unknown())).nullable().optional(),
+});
+
+/** Zod schema for LearningCoursesProgramContent */
+LearningCoursesProgramContentSchema = z.object({
+  id: z.string().uuid().optional(),
+  programId: z.string().uuid().optional(),
+  parentId: z.string().uuid().nullable().optional(),
+  title: z.string().nullable().optional(),
+  description: z.string().nullable().optional(),
+  type: z.lazy(() => LearningCoursesProgramContentTypeSchema).optional(),
+  body: z.record(z.string(), z.unknown()).nullable().optional(),
+  sortOrder: z.number().int().optional(),
+  isRequired: z.boolean().optional(),
+  gradingMethod: z.lazy(() => LearningCoursesGradingMethodSchema).optional(),
+  maxPoints: z.number().nullable().optional(),
+  estimatedMinutes: z.number().int().nullable().optional(),
+  visibility: z.lazy(() => LearningCoursesVisibilitySchema).optional(),
+  createdAt: z.string().datetime().optional(),
+  updatedAt: z.string().datetime().nullable().optional(),
+  programTitle: z.string().nullable().optional(),
+  parentTitle: z.string().nullable().optional(),
+  childrenCount: z.number().int().optional(),
+  children: z
+    .array(z.lazy(() => LearningCoursesProgramContentSchema))
+    .nullable()
+    .optional(),
+});
+
+/** Zod schema for LearningCoursesProgramContentType */
+LearningCoursesProgramContentTypeSchema = z.enum(['Lesson', 'Page', 'Assignment', 'Questionnaire', 'Discussion', 'Code', 'Challenge', 'Reflection', 'Survey']);
+
+/** Zod schema for LearningCoursesProgramDifficulty */
+LearningCoursesProgramDifficultySchema = z.enum(['Beginner', 'Intermediate', 'Advanced', 'Expert']);
+
+/** Zod schema for LearningCoursesProgram */
+LearningCoursesProgramSchema = z.object({
+  id: z.string().uuid().optional(),
+  creatorId: z.string().uuid().nullable().optional(),
+  title: z.string().nullable().optional(),
+  description: z.string().nullable().optional(),
+  visibility: z.lazy(() => ContentVisibilitySchema).optional(),
+  slug: z.string().nullable().optional(),
+  status: z.lazy(() => ContentStatusSchema).optional(),
+  thumbnail: z.string().nullable().optional(),
+  videoShowcaseUrl: z.string().nullable().optional(),
+  estimatedHours: z.number().int().nullable().optional(),
+  enrollmentStatus: z.lazy(() => LearningCoursesEnrollmentStatusSchema).optional(),
+  maxEnrollments: z.number().int().nullable().optional(),
+  enrollmentDeadline: z.string().datetime().nullable().optional(),
+  category: z.lazy(() => ProgramCategorySchema).optional(),
+  difficulty: z.lazy(() => LearningCoursesProgramDifficultySchema).optional(),
+  skillsRequired: z.string().nullable().optional(),
+  skillsProvided: z.string().nullable().optional(),
+  currentEnrollments: z.number().int().optional(),
+  averageRating: z.number().optional(),
+  totalRatings: z.number().int().optional(),
+  isEnrollmentOpen: z.boolean().optional(),
+  createdAt: z.string().datetime().optional(),
+  updatedAt: z.string().datetime().nullable().optional(),
+});
+
+/** Zod schema for LearningCoursesProgramUserSummary */
+LearningCoursesProgramUserSummarySchema = z.object({
+  id: z.string().uuid().optional(),
+  userDisplayName: z.string().nullable().optional(),
+  userEmail: z.string().nullable().optional(),
+});
+
+/** Zod schema for LearningCoursesProgressStatus */
+LearningCoursesProgressStatusSchema = z.enum(['NotStarted', 'InProgress', 'Completed', 'Submitted']);
+
+/** Zod schema for LearningCoursesRejectProgram */
+LearningCoursesRejectProgramSchema = z.object({
+  reason: z.string().nullable().optional(),
+});
+
+/** Zod schema for LearningCoursesReorderContent */
+LearningCoursesReorderContentSchema = z.object({
+  contentIds: z.array(z.string().uuid()).nullable().optional(),
+});
+
+/** Zod schema for LearningCoursesReorderPrerequisitesInput */
+LearningCoursesReorderPrerequisitesInputSchema = z.object({
+  prerequisiteIds: z.array(z.string().uuid()).nullable().optional(),
+});
+
+/** Zod schema for LearningCoursesRevenueAnalytics */
+LearningCoursesRevenueAnalyticsSchema = z.object({
+  programId: z.string().uuid().optional(),
+  totalRevenue: z.number().optional(),
+  monthlyRevenue: z.number().optional(),
+  totalPurchases: z.number().int().optional(),
+  monthlyPurchases: z.number().int().optional(),
+  averageRevenuePerUser: z.number().optional(),
+  conversionRate: z.number().optional(),
+  revenueChart: z
+    .array(z.lazy(() => LearningCoursesRevenueChartSchema))
+    .nullable()
+    .optional(),
+});
+
+/** Zod schema for LearningCoursesRevenueChart */
+LearningCoursesRevenueChartSchema = z.object({
+  date: z.string().datetime().optional(),
+  revenue: z.number().optional(),
+  purchases: z.number().int().optional(),
+});
+
+/** Zod schema for LearningCoursesScheduleProgram */
+LearningCoursesScheduleProgramSchema = z.object({
+  publishAt: z.string().datetime().optional(),
+});
+
+/** Zod schema for LearningCoursesSearchContent */
+LearningCoursesSearchContentSchema = z.object({
+  programId: z.string().uuid(),
+  searchTerm: z.string().min(0).max(255),
+  type: z.lazy(() => LearningCoursesProgramContentTypeSchema).optional(),
+  visibility: z.lazy(() => LearningCoursesVisibilitySchema).optional(),
+  isRequired: z.boolean().nullable().optional(),
+  parentId: z.string().uuid().nullable().optional(),
+});
+
+/** Zod schema for LearningCoursesStartContentInput */
+LearningCoursesStartContentInputSchema = z.object({
+  programUserId: z.string().uuid().optional(),
+  contentId: z.string().uuid().optional(),
+});
+
+/** Zod schema for LearningCoursesStudentSummary */
+LearningCoursesStudentSummarySchema = z.object({
+  id: z.string().uuid().optional(),
+  userDisplayName: z.string().nullable().optional(),
+  userEmail: z.string().nullable().optional(),
+});
+
+/** Zod schema for LearningCoursesSubmitContentInput */
+LearningCoursesSubmitContentInputSchema = z.object({
+  programUserId: z.string().uuid().optional(),
+  contentId: z.string().uuid().optional(),
+  submissionData: z.string().nullable().optional(),
+});
+
+/** Zod schema for LearningCoursesSubmitUserContent */
+LearningCoursesSubmitUserContentSchema = z.object({
+  submissionData: z.string().min(1),
+});
+
+/** Zod schema for LearningCoursesUpdateActivityGrade */
+LearningCoursesUpdateActivityGradeSchema = z.object({
+  grade: z.number().nullable().optional(),
+  feedback: z.string().nullable().optional(),
+  gradingDetails: z.string().nullable().optional(),
+});
+
+/** Zod schema for LearningCoursesUpdatePrerequisiteApiInput */
+LearningCoursesUpdatePrerequisiteApiInputSchema = z.object({
+  type: z.lazy(() => LearningCoursesPrerequisiteTypeSchema).optional(),
+  minimumGrade: z.number().int().nullable().optional(),
+  description: z.string().nullable().optional(),
+  displayOrder: z.number().int().nullable().optional(),
+  prerequisiteGroup: z.string().nullable().optional(),
+});
+
+/** Zod schema for LearningCoursesUpdatePricing */
+LearningCoursesUpdatePricingSchema = z.object({
+  price: z.number().nullable().optional(),
+  currency: z.string().nullable().optional(),
+  isSubscription: z.boolean().nullable().optional(),
+  subscriptionDurationDays: z.number().int().nullable().optional(),
+});
+
+/** Zod schema for LearningCoursesUpdateProgramContent */
+LearningCoursesUpdateProgramContentSchema = z.object({
+  id: z.string().uuid(),
+  title: z.string().min(0).max(255).nullable().optional(),
+  description: z.string().nullable().optional(),
+  type: z.lazy(() => LearningCoursesProgramContentTypeSchema).optional(),
+  body: z.string().nullable().optional(),
+  sortOrder: z.number().int().nullable().optional(),
+  isRequired: z.boolean().nullable().optional(),
+  gradingMethod: z.lazy(() => LearningCoursesGradingMethodSchema).optional(),
+  maxPoints: z.number().nullable().optional(),
+  estimatedMinutes: z.number().int().nullable().optional(),
+  visibility: z.lazy(() => LearningCoursesVisibilitySchema).optional(),
+});
+
+/** Zod schema for LearningCoursesUpdateProgram */
+LearningCoursesUpdateProgramSchema = z.object({
+  title: z.string().nullable().optional(),
+  description: z.string().nullable().optional(),
+  slug: z.string().nullable().optional(),
+  thumbnail: z.string().nullable().optional(),
+  videoShowcaseUrl: z.string().nullable().optional(),
+  estimatedHours: z.number().int().nullable().optional(),
+  visibility: z.lazy(() => ContentVisibilitySchema).optional(),
+  category: z.lazy(() => ProgramCategorySchema).optional(),
+  difficulty: z.lazy(() => LearningCoursesProgramDifficultySchema).optional(),
+  skillsRequired: z.string().nullable().optional(),
+  skillsProvided: z.string().nullable().optional(),
+  enrollmentStatus: z.lazy(() => LearningCoursesEnrollmentStatusSchema).optional(),
+  maxEnrollments: z.number().int().nullable().optional(),
+  enrollmentDeadline: z.string().datetime().nullable().optional(),
+});
+
+/** Zod schema for LearningCoursesUpdateProgress */
+LearningCoursesUpdateProgressSchema = z.object({
+  status: z.lazy(() => LearningCoursesProgressStatusSchema).optional(),
+  lastAccessedAt: z.string().datetime().nullable().optional(),
+  additionalData: z.record(z.string(), z.record(z.string(), z.unknown())).nullable().optional(),
+});
+
+/** Zod schema for LearningCoursesUpdateProgressInput */
+LearningCoursesUpdateProgressInputSchema = z.object({
+  programUserId: z.string().uuid().optional(),
+  contentId: z.string().uuid().optional(),
+  completionPercentage: z.number().optional(),
+});
+
+/** Zod schema for LearningCoursesUpdateTimeSpentInput */
+LearningCoursesUpdateTimeSpentInputSchema = z.object({
+  programUserId: z.string().uuid().optional(),
+  contentId: z.string().uuid().optional(),
+  additionalMinutes: z.number().int().optional(),
+});
+
+/** Zod schema for LearningCoursesUserProgress */
+LearningCoursesUserProgressSchema = z.object({
+  completionPercentage: z.number().optional(),
+  lastAccessedAt: z.string().datetime().nullable().optional(),
+  startedAt: z.string().datetime().nullable().optional(),
+  completedAt: z.string().datetime().nullable().optional(),
+  contentProgress: z
+    .array(z.lazy(() => LearningCoursesContentProgressSchema))
+    .nullable()
+    .optional(),
+});
+
+/** Zod schema for LearningCoursesVisibility */
+LearningCoursesVisibilitySchema = z.enum(['Public', 'Internal', 'Private', 'Restricted']);
 
 /** Zod schema for MvcProblemDetails */
 MvcProblemDetailsSchema = z
@@ -6097,10 +8344,10 @@ MvcProblemDetailsSchema = z
   .catchall(z.record(z.string(), z.unknown()));
 
 /** Zod schema for ObjectsAttestationConveyancePreference */
-ObjectsAttestationConveyancePreferenceSchema = z.enum(['none', 'indirect', 'direct', 'enterprise']);
+ObjectsAttestationConveyancePreferenceSchema = z.enum(['None', 'Indirect', 'Direct', 'Enterprise']);
 
 /** Zod schema for ObjectsAttestationStatementFormatIdentifier */
-ObjectsAttestationStatementFormatIdentifierSchema = z.enum(['packed', 'tpm', 'android-key', 'android-safetynet', 'fido-u2f', 'apple', 'none']);
+ObjectsAttestationStatementFormatIdentifierSchema = z.enum(['Packed', 'Tpm', 'AndroidKey', 'AndroidSafetyNet', 'FidoU2f', 'Apple', 'None']);
 
 /** Zod schema for ObjectsAuthenticationExtensionsClientInputs */
 ObjectsAuthenticationExtensionsClientInputsSchema = z.object({
@@ -6134,32 +8381,19 @@ ObjectsAuthenticationExtensionsPRFValuesSchema = z.object({
 });
 
 /** Zod schema for ObjectsAuthenticatorAttachment */
-ObjectsAuthenticatorAttachmentSchema = z.enum(['platform', 'cross-platform']);
+ObjectsAuthenticatorAttachmentSchema = z.enum(['Platform', 'CrossPlatform']);
 
 /** Zod schema for ObjectsAuthenticatorTransport */
-ObjectsAuthenticatorTransportSchema = z.enum(['usb', 'nfc', 'ble', 'smart-card', 'hybrid', 'internal']);
+ObjectsAuthenticatorTransportSchema = z.enum(['Usb', 'Nfc', 'Ble', 'SmartCard', 'Hybrid', 'Internal']);
 
 /** Zod schema for ObjectsCOSEAlgorithm */
-ObjectsCOSEAlgorithmSchema = z.union([
-  z.literal(-65535),
-  z.literal(-259),
-  z.literal(-258),
-  z.literal(-257),
-  z.literal(-47),
-  z.literal(-39),
-  z.literal(-38),
-  z.literal(-37),
-  z.literal(-36),
-  z.literal(-35),
-  z.literal(-8),
-  z.literal(-7),
-]);
+ObjectsCOSEAlgorithmSchema = z.enum(['RS1', 'RS512', 'RS384', 'RS256', 'ES256K', 'PS512', 'PS384', 'PS256', 'ES512', 'ES384', 'EdDSA', 'ES256']);
 
 /** Zod schema for ObjectsCredentialProtectionPolicy */
-ObjectsCredentialProtectionPolicySchema = z.enum(['userVerificationOptional', 'userVerificationOptionalWithCredentialIDList', 'userVerificationRequired']);
+ObjectsCredentialProtectionPolicySchema = z.enum(['UserVerificationOptional', 'UserVerificationOptionalWithCredentialIdList', 'UserVerificationRequired']);
 
 /** Zod schema for ObjectsLargeBlobSupport */
-ObjectsLargeBlobSupportSchema = z.enum(['required', 'preferred']);
+ObjectsLargeBlobSupportSchema = z.enum(['Required', 'Preferred']);
 
 /** Zod schema for ObjectsPublicKeyCredentialDescriptor */
 ObjectsPublicKeyCredentialDescriptorSchema = z.object({
@@ -6172,16 +8406,32 @@ ObjectsPublicKeyCredentialDescriptorSchema = z.object({
 });
 
 /** Zod schema for ObjectsPublicKeyCredentialHint */
-ObjectsPublicKeyCredentialHintSchema = z.enum(['security-key', 'client-device', 'hybrid']);
+ObjectsPublicKeyCredentialHintSchema = z.enum(['SecurityKey', 'ClientDevice', 'Hybrid']);
 
 /** Zod schema for ObjectsPublicKeyCredentialType */
-ObjectsPublicKeyCredentialTypeSchema = z.enum(['public-key', 'invalid']);
+ObjectsPublicKeyCredentialTypeSchema = z.enum(['PublicKey', 'Invalid']);
 
 /** Zod schema for ObjectsResidentKeyRequirement */
-ObjectsResidentKeyRequirementSchema = z.enum(['required', 'preferred', 'discouraged']);
+ObjectsResidentKeyRequirementSchema = z.enum(['Required', 'Preferred', 'Discouraged']);
 
 /** Zod schema for ObjectsUserVerificationRequirement */
-ObjectsUserVerificationRequirementSchema = z.enum(['required', 'preferred', 'discouraged']);
+ObjectsUserVerificationRequirementSchema = z.enum(['Required', 'Preferred', 'Discouraged']);
+
+/** Zod schema for PagedResult */
+PagedResultSchema = z.object({
+  items: z
+    .array(z.lazy(() => CommerceProductsProductSchema))
+    .nullable()
+    .optional(),
+  totalCount: z.number().int().optional(),
+  skip: z.number().int().optional(),
+  take: z.number().int().optional(),
+  pageNumber: z.number().int().optional(),
+  pageSize: z.number().int().optional(),
+  totalPages: z.number().int().optional(),
+  hasNextPage: z.boolean().optional(),
+  hasPreviousPage: z.boolean().optional(),
+});
 
 /** Zod schema for ResourcesArchiveResourceUsageRecordsInput */
 ResourcesArchiveResourceUsageRecordsInputSchema = z.object({
@@ -6272,7 +8522,7 @@ ResourcesResourceQuotaEnforcementResultSchema = z.object({
 });
 
 /** Zod schema for ResourcesResourceQuotaPeriod */
-ResourcesResourceQuotaPeriodSchema = z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4), z.literal(5), z.literal(6)]);
+ResourcesResourceQuotaPeriodSchema = z.enum(['Daily', 'Weekly', 'Monthly', 'Quarterly', 'Yearly', 'Unlimited']);
 
 /** Zod schema for ResourcesResourceQuotaOutput */
 ResourcesResourceQuotaOutputSchema = z.object({
@@ -6327,34 +8577,34 @@ ResourcesResourceSettingsSchema = z.object({
 });
 
 /** Zod schema for ResourcesResourceUsageType */
-ResourcesResourceUsageTypeSchema = z.union([
-  z.literal(1),
-  z.literal(2),
-  z.literal(3),
-  z.literal(4),
-  z.literal(5),
-  z.literal(6),
-  z.literal(7),
-  z.literal(8),
-  z.literal(9),
-  z.literal(10),
-  z.literal(11),
-  z.literal(12),
-  z.literal(13),
-  z.literal(14),
-  z.literal(15),
-  z.literal(16),
-  z.literal(17),
-  z.literal(18),
-  z.literal(19),
-  z.literal(20),
-  z.literal(21),
-  z.literal(22),
-  z.literal(23),
-  z.literal(24),
-  z.literal(25),
-  z.literal(26),
-  z.literal(27),
+ResourcesResourceUsageTypeSchema = z.enum([
+  'Users',
+  'Projects',
+  'Storage',
+  'ApiCalls',
+  'Programs',
+  'Courses',
+  'FeatureFlags',
+  'SubscriptionPlans',
+  'Products',
+  'TestingSessions',
+  'Roles',
+  'Tenants',
+  'Subscriptions',
+  'SLOs',
+  'AccessReviewCampaigns',
+  'SoDRules',
+  'AbacPolicies',
+  'ConditionalPolicies',
+  'Wallets',
+  'Disputes',
+  'PromoCodes',
+  'Orders',
+  'AuditEntries',
+  'Assets',
+  'AssetStorage',
+  'AssetDownloads',
+  'AssetTransformations',
 ]);
 
 /** Zod schema for ResourcesSetQuotaInput */
@@ -6398,7 +8648,7 @@ ResourcesToggleResourceQuotaInputSchema = z.object({
 });
 
 /** Zod schema for ResourcesTrendGranularity */
-ResourcesTrendGranularitySchema = z.union([z.literal(0), z.literal(1), z.literal(2)]);
+ResourcesTrendGranularitySchema = z.enum(['Daily', 'Weekly', 'Monthly']);
 
 /** Zod schema for ResourcesUsageRecord */
 ResourcesUsageRecordSchema = z.object({
@@ -6447,13 +8697,4 @@ ResourcesUsageTrendsResultSchema = z.object({
     .array(z.lazy(() => ResourcesUsageTrendDataPointSchema))
     .nullable()
     .optional(),
-});
-
-/** Zod schema for ValueObjectsBillingCycle */
-ValueObjectsBillingCycleSchema = z.union([z.literal(0), z.literal(1), z.literal(3), z.literal(6), z.literal(12), z.literal(24)]);
-
-/** Zod schema for ValueObjectsMoney */
-ValueObjectsMoneySchema = z.object({
-  amount: z.number().optional(),
-  currency: z.string().nullable().optional(),
 });

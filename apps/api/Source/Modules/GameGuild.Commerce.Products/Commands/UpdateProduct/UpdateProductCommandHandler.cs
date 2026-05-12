@@ -60,23 +60,7 @@ public sealed class UpdateProductCommandHandler(IProductRepository productReposi
         // Save changes
         await productRepository.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
-        // Map to DTO
-        return new ProductDto(
-            product.Id,
-            product.Name,
-            product.Description,
-            product.ShortDescription,
-            product.ImageUrl,
-            product.Type,
-            product.IsBundle,
-            product.CreatorId,
-            product.GetBundleItemIds(),
-            product.ReferralCommissionPercentage,
-            product.MaxAffiliateDiscount,
-            product.AffiliateCommissionPercentage,
-            product.CreatedAt,
-            product.UpdatedAt
-        );
+        return product.ToDto();
     }
 }
 #pragma warning restore CS0618

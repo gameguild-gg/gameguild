@@ -12,12 +12,14 @@ public interface IProductRepository
     /// <param name="cancellationToken">Cancellation token</param>
     /// <param name="includePricing">Include pricing information</param>
     /// <param name="includeCreator">Include creator information</param>
+    /// <param name="isPublished">Optional published-state filter</param>
     /// <returns>Product or null if not found</returns>
     Task<Product?> GetByIdAsync(
         Guid id,
         CancellationToken cancellationToken = default,
         bool includePricing = false,
-        bool includeCreator = false);
+        bool includeCreator = false,
+        bool? isPublished = null);
 
     /// <summary>
     /// Get a paginated list of products
@@ -27,6 +29,7 @@ public interface IProductRepository
         Guid? creatorId = null,
         string? searchTerm = null,
         bool? isBundle = null,
+        bool? isPublished = null,
         int skip = 0,
         int take = 50,
         string sortBy = "CreatedAt",
@@ -51,7 +54,7 @@ public interface IProductRepository
     /// <summary>
     /// Check if a product exists
     /// </summary>
-    Task<bool> ExistsAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<bool> ExistsAsync(Guid id, CancellationToken cancellationToken = default, bool? isPublished = null);
 
     /// <summary>
     /// Save changes to the database

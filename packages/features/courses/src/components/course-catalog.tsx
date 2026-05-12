@@ -42,6 +42,7 @@ const DEFAULT_LOADING = <p className="text-slate-300">Loading courses…</p>;
  * component bare to use the built-in defaults.
  */
 export function CourseCatalog<TCourse extends CourseSummary = CourseSummary>({
+  initialCourses,
   loadCourses,
   Provider = PassThrough,
   Grid,
@@ -51,9 +52,21 @@ export function CourseCatalog<TCourse extends CourseSummary = CourseSummary>({
   title = 'Courses',
   className = 'container mx-auto px-4 py-8',
 }: CourseCatalogProps<TCourse> = {}) {
-  const [courses, setCourses] = React.useState<TCourse[]>([]);
-  const [loading, setLoading] = React.useState(Boolean(loadCourses));
+  const [courses, setCourses] = React.useState<TCourse[]>(() => initialCourses ?? []);
+  const [loading, setLoading] = React.useState(Boolean(loadCourses) && !(initialCourses?.length));
   const [error, setError] = React.useState<string | null>(null);
+
+  React.useEffect(() => {
+    if (!initialCourses) {
+      return;
+    }
+
+    setCourses(initialCourses);
+
+    if (!loadCourses) {
+      setLoading(false);
+    }
+  }, [initialCourses, loadCourses]);
 
   React.useEffect(() => {
     if (!loadCourses) {

@@ -13,7 +13,7 @@ namespace GameGuild.Identity.Authentication;
 /// </summary>
 [ApiVersion("1.0")]
 [Route("v{version:apiVersion}/roles")]
-[Tags("roles")]
+[Microsoft.AspNetCore.Http.Tags("auth/roles")]
 [Produces("application/json")]
 [ApiExplorerSettings(IgnoreApi = true)]
 public class RolesController(ILogger<RolesController> logger, ISender sender) : BaseApiController

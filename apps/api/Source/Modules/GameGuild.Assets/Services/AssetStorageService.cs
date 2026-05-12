@@ -10,13 +10,20 @@ public class AssetStorageOptions
     public const string SectionName = "Assets:Storage";
 
     public string BucketName { get; set; } = "assets";
-    public string TransformedBucketName { get; set; } = "assets-transformed";
+    public string TransformedBucketName { get; set; } = string.Empty;
+    public string QuarantineBucketName { get; set; } = string.Empty;
     public string ServiceUrl { get; set; } = string.Empty;
     public string AccessKey { get; set; } = string.Empty;
     public string SecretKey { get; set; } = string.Empty;
     public string Region { get; set; } = "us-east-1";
     public bool ForcePathStyle { get; set; } = true; // For MinIO compatibility
     public int PresignedUrlExpiryMinutes { get; set; } = 60;
+
+    public string GetTransformedBucketName() =>
+        string.IsNullOrWhiteSpace(TransformedBucketName) ? BucketName : TransformedBucketName;
+
+    public string GetQuarantineBucketName() =>
+        string.IsNullOrWhiteSpace(QuarantineBucketName) ? BucketName : QuarantineBucketName;
 }
 
 /// <summary>
@@ -42,7 +49,7 @@ public class AssetStorageService : IAssetStorageService
         bool isTransformed = false,
         CancellationToken ct = default)
     {
-        var bucketName = isTransformed ? _options.TransformedBucketName : _options.BucketName;
+        var bucketName = isTransformed ? _options.GetTransformedBucketName() : _options.BucketName;
         var objectKey = GenerateObjectKey(contentHash, mimeType, isTransformed);
 
         var request = new Amazon.S3.Model.PutObjectRequest
@@ -240,8 +247,7 @@ public class AssetStorageService : IAssetStorageService
         IDictionary<string, string> metadata,
         CancellationToken ct = default)
     {
-        // Quarantine bucket name follows convention: {bucket}-quarantine
-        var quarantineBucket = $"{_options.BucketName}-quarantine";
+        var quarantineBucket = _options.GetQuarantineBucketName();
 
         var request = new Amazon.S3.Model.PutObjectRequest
         {

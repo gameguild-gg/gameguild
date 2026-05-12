@@ -14,7 +14,7 @@ namespace GameGuild.Identity.Authentication;
 [ApiController]
 [ApiVersion("1.0")]
 [Route("v{version:apiVersion}/auth/trusted-devices")]
-[Tags("authentication/trusted-devices")]
+[Microsoft.AspNetCore.Http.Tags("auth/trusted-devices")]
 [Authorize]
 public sealed class TrustedDevicesController(ISessionManagementService sessionService) : AuthControllerBase
 {
@@ -34,14 +34,14 @@ public sealed class TrustedDevicesController(ISessionManagementService sessionSe
         var devices = await sessionService.GetTrustedDevicesAsync(userId).ConfigureAwait(false);
 
         var response = devices.Select(d => new TrustedDeviceResponse
-            {
-                Id = d.Id,
-                DeviceName = d.DeviceName,
-                DeviceInfo = ParseDeviceInfo(d.DeviceInfo),
-                TrustedAt = d.TrustedAt,
-                LastUsedAt = d.LastUsedAt,
-                ExpiresAt = d.ExpiresAt
-            })
+        {
+            Id = d.Id,
+            DeviceName = d.DeviceName,
+            DeviceInfo = ParseDeviceInfo(d.DeviceInfo),
+            TrustedAt = d.TrustedAt,
+            LastUsedAt = d.LastUsedAt,
+            ExpiresAt = d.ExpiresAt
+        })
             .ToList();
 
         return Ok(response);

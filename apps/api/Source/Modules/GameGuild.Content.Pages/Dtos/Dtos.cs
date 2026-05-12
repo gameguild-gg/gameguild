@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace GameGuild.Content.Pages;
 
 // ──────────────────────────── Page DTOs ────────────────────────────
@@ -229,6 +231,66 @@ public record UpdateContentResourceDto
     public int? SortOrder { get; init; }
     public DateTime? ScheduledPublishAt { get; init; }
     public string? CustomData { get; init; }
+}
+
+// ──────────────────────────── MarketingLead DTOs ────────────────────────────
+
+public record MarketingLeadDto
+{
+    public Guid Id { get; init; }
+    public string Source { get; init; } = MarketingLeadSources.Contact;
+    public string Status { get; init; } = MarketingLeadStatuses.New;
+    public string? Name { get; init; }
+    public string Email { get; init; } = string.Empty;
+    public string? Company { get; init; }
+    public string? Topic { get; init; }
+    public string? Plan { get; init; }
+    public string? Message { get; init; }
+    public string? Locale { get; init; }
+    public string? PagePath { get; init; }
+    public string? Referrer { get; init; }
+    public string? UserAgent { get; init; }
+    public DateTime CreatedAt { get; init; }
+    public DateTime? UpdatedAt { get; init; }
+}
+
+public record CreateMarketingLeadDto
+{
+    [Required]
+    [MaxLength(40)]
+    public string Source { get; init; } = MarketingLeadSources.Contact;
+
+    [MaxLength(120)]
+    public string? Name { get; init; }
+
+    [Required]
+    [EmailAddress]
+    [MaxLength(200)]
+    public string Email { get; init; } = string.Empty;
+
+    [MaxLength(200)]
+    public string? Company { get; init; }
+
+    [MaxLength(40)]
+    public string? Topic { get; init; }
+
+    [MaxLength(60)]
+    public string? Plan { get; init; }
+
+    [MaxLength(4000)]
+    public string? Message { get; init; }
+
+    [MaxLength(10)]
+    public string? Locale { get; init; }
+
+    [MaxLength(300)]
+    public string? PagePath { get; init; }
+
+    [MaxLength(2000)]
+    public string? Referrer { get; init; }
+
+    [MaxLength(500)]
+    public string? UserAgent { get; init; }
 }
 
 // ──────────────────────────── OpenGraph DTO ────────────────────────────

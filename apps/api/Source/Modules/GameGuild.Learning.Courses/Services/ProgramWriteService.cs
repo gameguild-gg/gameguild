@@ -6,10 +6,12 @@ namespace GameGuild.Learning.Courses;
 /// Write-side service for Programs: create, update, delete, clone,
 /// content management, user management, progress mutations, monetization, and product integration.
 /// </summary>
-public class ProgramWriteService(IApplicationDbContext context) : IProgramWriteService {
+public class ProgramWriteService(IApplicationDbContext context) : IProgramWriteService
+{
   // ── Program CRUD ────────────────────────────────────────────────────
 
-  public async Task<Program> CreateProgramAsync(Program program) {
+  public async Task<Program> CreateProgramAsync(Program program)
+  {
     program.Status = ContentStatus.Draft;
     program.Visibility = ContentVisibility.Private;
 
@@ -19,7 +21,8 @@ public class ProgramWriteService(IApplicationDbContext context) : IProgramWriteS
     return program;
   }
 
-  public async Task<Program> UpdateProgramAsync(Program program) {
+  public async Task<Program> UpdateProgramAsync(Program program)
+  {
     program.Touch();
     context.Set<Program>().Update(program);
     await context.SaveChangesAsync().ConfigureAwait(false);
@@ -27,16 +30,19 @@ public class ProgramWriteService(IApplicationDbContext context) : IProgramWriteS
     return program;
   }
 
-  public async Task DeleteProgramAsync(Guid id) {
+  public async Task DeleteProgramAsync(Guid id)
+  {
     var program = await context.Set<Program>().FindAsync(id).ConfigureAwait(false);
 
-    if (program != null) {
+    if (program != null)
+    {
       program.SoftDelete();
       await context.SaveChangesAsync().ConfigureAwait(false);
     }
   }
 
-  public async Task<Program> CloneProgramAsync(Guid id, string newTitle) {
+  public async Task<Program> CloneProgramAsync(Guid id, string newTitle)
+  {
     var originalProgram = await context.Set<Program>()
       .Include(p => p.ProgramContents.Where(pc => pc.DeletedAt == null))
       .Include(p => p.ProgramUsers.Where(pu => pu.DeletedAt == null))
@@ -45,7 +51,8 @@ public class ProgramWriteService(IApplicationDbContext context) : IProgramWriteS
 
     if (originalProgram == null) throw new ArgumentException("Program not found", nameof(id));
 
-    var clonedProgram = new Program {
+    var clonedProgram = new Program
+    {
       Title = newTitle,
       Description = originalProgram.Description,
       Slug = GenerateSlug(newTitle),
@@ -58,8 +65,10 @@ public class ProgramWriteService(IApplicationDbContext context) : IProgramWriteS
     await context.SaveChangesAsync().ConfigureAwait(false);
 
     // Clone content
-    foreach (var content in originalProgram.ProgramContents.OrderBy(pc => pc.SortOrder)) {
-      var clonedContent = new ProgramContent {
+    foreach (var content in originalProgram.ProgramContents.OrderBy(pc => pc.SortOrder))
+    {
+      var clonedContent = new ProgramContent
+      {
         ProgramId = clonedProgram.Id,
         Title = content.Title,
         Description = content.Description,
@@ -83,8 +92,10 @@ public class ProgramWriteService(IApplicationDbContext context) : IProgramWriteS
 
   // ── CRUD with DTOs ──────────────────────────────────────────────────
 
-  public async Task<Program> CreateProgramAsync(CreateProgramDto createDto) {
-    var program = new Program {
+  public async Task<Program> CreateProgramAsync(CreateProgramDto createDto)
+  {
+    var program = new Program
+    {
       Id = Guid.NewGuid(),
       Title = createDto.Title,
       Description = createDto.Description,
@@ -100,7 +111,8 @@ public class ProgramWriteService(IApplicationDbContext context) : IProgramWriteS
     return program;
   }
 
-  public async Task<Program?> UpdateProgramAsync(Guid id, UpdateProgramDto updateDto) {
+  public async Task<Program?> UpdateProgramAsync(Guid id, UpdateProgramDto updateDto)
+  {
     var program = await context.Set<Program>().Where(p => p.DeletedAt == null).FirstOrDefaultAsync(p => p.Id == id).ConfigureAwait(false);
 
     if (program == null) return null;
@@ -128,14 +140,16 @@ public class ProgramWriteService(IApplicationDbContext context) : IProgramWriteS
 
   // ── Content Management ──────────────────────────────────────────────
 
-  public async Task<ProgramContent> AddContentAsync(Guid programId, ProgramContent content) {
+  public async Task<ProgramContent> AddContentAsync(Guid programId, ProgramContent content)
+  {
     var program = await context.Set<Program>().Where(p => p.DeletedAt == null).AnyAsync(p => p.Id == programId).ConfigureAwait(false);
 
     if (!program) throw new ArgumentException("Program not found", nameof(programId));
 
     content.ProgramId = programId;
 
-    if (content.SortOrder == 0) {
+    if (content.SortOrder == 0)
+    {
       var maxOrder = await context.Set<ProgramContent>().Where(pc => pc.DeletedAt == null && pc.ProgramId == programId).MaxAsync(pc => (int?)pc.SortOrder) ?? 0;
       content.SortOrder = maxOrder + 1;
     }
@@ -146,7 +160,8 @@ public class ProgramWriteService(IApplicationDbContext context) : IProgramWriteS
     return content;
   }
 
-  public async Task<ProgramContent> UpdateContentAsync(ProgramContent content) {
+  public async Task<ProgramContent> UpdateContentAsync(ProgramContent content)
+  {
     content.Touch();
     context.Set<ProgramContent>().Update(content);
     await context.SaveChangesAsync().ConfigureAwait(false);
@@ -154,26 +169,31 @@ public class ProgramWriteService(IApplicationDbContext context) : IProgramWriteS
     return content;
   }
 
-  public async Task DeleteContentAsync(Guid contentId) {
+  public async Task DeleteContentAsync(Guid contentId)
+  {
     var content = await context.Set<ProgramContent>().FindAsync(contentId).ConfigureAwait(false);
 
-    if (content != null) {
+    if (content != null)
+    {
       content.SoftDelete();
       await context.SaveChangesAsync().ConfigureAwait(false);
     }
   }
 
-  public async Task<Program> ReorderContentAsync(Guid programId, List<Guid> contentIds) {
+  public async Task<Program> ReorderContentAsync(Guid programId, List<Guid> contentIds)
+  {
     var program = await context.Set<Program>().Where(p => p.DeletedAt == null).FirstOrDefaultAsync(p => p.Id == programId).ConfigureAwait(false);
 
     if (program == null) throw new ArgumentException("Program not found", nameof(programId));
 
     var contents = await context.Set<ProgramContent>().Where(pc => pc.DeletedAt == null && pc.ProgramId == programId && contentIds.Contains(pc.Id)).ToListAsync();
 
-    for (var i = 0; i < contentIds.Count; i++) {
+    for (var i = 0; i < contentIds.Count; i++)
+    {
       var content = contents.FirstOrDefault(c => c.Id == contentIds[i]);
 
-      if (content != null) {
+      if (content != null)
+      {
         content.SortOrder = i + 1;
         content.Touch();
       }
@@ -184,12 +204,14 @@ public class ProgramWriteService(IApplicationDbContext context) : IProgramWriteS
     return program;
   }
 
-  public async Task<ProgramContent?> AddContentAsync(Guid programId, CreateContentDto contentDto) {
+  public async Task<ProgramContent?> AddContentAsync(Guid programId, CreateContentDto contentDto)
+  {
     var program = await context.Set<Program>().Where(p => p.DeletedAt == null).FirstOrDefaultAsync(p => p.Id == programId).ConfigureAwait(false);
 
     if (program == null) return null;
 
-    var content = new ProgramContent {
+    var content = new ProgramContent
+    {
       Id = Guid.NewGuid(),
       ProgramId = programId,
       Title = contentDto.Title,
@@ -207,7 +229,8 @@ public class ProgramWriteService(IApplicationDbContext context) : IProgramWriteS
     return content;
   }
 
-  public async Task<ProgramContent?> UpdateContentAsync(Guid programId, Guid contentId, UpdateContentDto contentDto) {
+  public async Task<ProgramContent?> UpdateContentAsync(Guid programId, Guid contentId, UpdateContentDto contentDto)
+  {
     var content = await context.Set<ProgramContent>().FirstOrDefaultAsync(c => c.Id == contentId && c.ProgramId == programId && c.DeletedAt == null);
 
     if (content == null) return null;
@@ -225,7 +248,8 @@ public class ProgramWriteService(IApplicationDbContext context) : IProgramWriteS
     return content;
   }
 
-  public async Task<bool> RemoveContentAsync(Guid programId, Guid contentId) {
+  public async Task<bool> RemoveContentAsync(Guid programId, Guid contentId)
+  {
     var content = await context.Set<ProgramContent>().FirstOrDefaultAsync(c => c.Id == contentId && c.ProgramId == programId && c.DeletedAt == null);
 
     if (content == null) return false;
@@ -238,11 +262,14 @@ public class ProgramWriteService(IApplicationDbContext context) : IProgramWriteS
 
   // ── User Management ─────────────────────────────────────────────────
 
-  public async Task<ProgramUser> AddUserAsync(Guid programId, Guid userId) {
+  public async Task<ProgramUser> AddUserAsync(Guid programId, Guid userId)
+  {
     var existingUser = await context.Set<ProgramUser>().Where(pu => pu.DeletedAt == null && pu.ProgramId == programId && pu.UserId == userId).FirstOrDefaultAsync();
 
-    if (existingUser != null) {
-      if (!existingUser.IsActive) {
+    if (existingUser != null)
+    {
+      if (!existingUser.IsActive)
+      {
         existingUser.IsActive = true;
         existingUser.JoinedAt = SystemClock.UtcNow;
         existingUser.Touch();
@@ -260,10 +287,12 @@ public class ProgramWriteService(IApplicationDbContext context) : IProgramWriteS
     return programUser;
   }
 
-  public async Task<ProgramUser> RemoveUserAsync(Guid programId, Guid userId) {
+  public async Task<ProgramUser> RemoveUserAsync(Guid programId, Guid userId)
+  {
     var programUser = await context.Set<ProgramUser>().Where(pu => pu.DeletedAt == null && pu.ProgramId == programId && pu.UserId == userId).FirstOrDefaultAsync();
 
-    if (programUser != null) {
+    if (programUser != null)
+    {
       programUser.IsActive = false;
       programUser.Touch();
       await context.SaveChangesAsync().ConfigureAwait(false);
@@ -272,7 +301,8 @@ public class ProgramWriteService(IApplicationDbContext context) : IProgramWriteS
     return programUser!;
   }
 
-  public async Task<UserProgressDto?> AddUserToProgramAsync(Guid programId, Guid userId) {
+  public async Task<UserProgressDto?> AddUserToProgramAsync(Guid programId, Guid userId)
+  {
     var program = await context.Set<Program>().Where(p => p.DeletedAt == null).FirstOrDefaultAsync(p => p.Id == programId).ConfigureAwait(false);
 
     if (program == null) return null;
@@ -282,7 +312,8 @@ public class ProgramWriteService(IApplicationDbContext context) : IProgramWriteS
     if (existingUser != null)
       return await GetUserProgressDtoInternalAsync(programId, userId).ConfigureAwait(false);
 
-    var programUser = new ProgramUser {
+    var programUser = new ProgramUser
+    {
       Id = Guid.NewGuid(),
       ProgramId = programId,
       UserId = userId,
@@ -297,7 +328,8 @@ public class ProgramWriteService(IApplicationDbContext context) : IProgramWriteS
     return await GetUserProgressDtoInternalAsync(programId, userId).ConfigureAwait(false);
   }
 
-  public async Task<bool> RemoveUserFromProgramAsync(Guid programId, Guid userId) {
+  public async Task<bool> RemoveUserFromProgramAsync(Guid programId, Guid userId)
+  {
     var programUser = await context.Set<ProgramUser>().FirstOrDefaultAsync(pu => pu.ProgramId == programId && pu.UserId == userId && pu.DeletedAt == null);
 
     if (programUser == null) return false;
@@ -310,7 +342,8 @@ public class ProgramWriteService(IApplicationDbContext context) : IProgramWriteS
 
   // ── Progress Mutations ──────────────────────────────────────────────
 
-  public async Task<Program> UpdateUserProgressAsync(Guid programId, Guid userId, Guid contentId, ProgressStatus status) {
+  public async Task<Program> UpdateUserProgressAsync(Guid programId, Guid userId, Guid contentId, ProgressStatus status)
+  {
     var program = await context.Set<Program>().Where(p => p.DeletedAt == null).FirstOrDefaultAsync(p => p.Id == programId).ConfigureAwait(false);
 
     if (program == null) throw new ArgumentException("Program not found", nameof(programId));
@@ -321,16 +354,19 @@ public class ProgramWriteService(IApplicationDbContext context) : IProgramWriteS
 
     var interaction = await context.Set<ContentInteraction>().Where(ci => ci.DeletedAt == null && ci.ProgramUserId == programUser.Id && ci.ContentId == contentId).FirstOrDefaultAsync();
 
-    if (interaction == null) {
+    if (interaction == null)
+    {
       interaction = new ContentInteraction { ProgramUserId = programUser.Id, ContentId = contentId, Status = status, FirstAccessedAt = SystemClock.UtcNow, LastAccessedAt = SystemClock.UtcNow, };
 
       context.Set<ContentInteraction>().Add(interaction);
     }
-    else {
+    else
+    {
       interaction.Status = status;
       interaction.LastAccessedAt = SystemClock.UtcNow;
 
-      if (status == ProgressStatus.Completed && interaction.CompletedAt == null) {
+      if (status == ProgressStatus.Completed && interaction.CompletedAt == null)
+      {
         interaction.CompletedAt = SystemClock.UtcNow;
         interaction.CompletionPercentage = 100;
       }
@@ -345,7 +381,8 @@ public class ProgramWriteService(IApplicationDbContext context) : IProgramWriteS
     return program;
   }
 
-  public async Task<UserProgressDto?> UpdateUserProgressAsync(Guid programId, Guid userId, UpdateProgressDto progressDto) {
+  public async Task<UserProgressDto?> UpdateUserProgressAsync(Guid programId, Guid userId, UpdateProgressDto progressDto)
+  {
     var programUser = await context.Set<ProgramUser>().FirstOrDefaultAsync(pu => pu.ProgramId == programId && pu.UserId == userId && pu.DeletedAt == null);
 
     if (programUser == null) return null;
@@ -358,7 +395,69 @@ public class ProgramWriteService(IApplicationDbContext context) : IProgramWriteS
     return await GetUserProgressDtoInternalAsync(programId, userId).ConfigureAwait(false);
   }
 
-  public async Task<bool> MarkContentCompletedAsync(Guid programId, Guid userId, Guid contentId) {
+  public async Task<ContentInteraction?> SubmitUserContentAsync(Guid programId, Guid userId, Guid contentId, string submissionData)
+  {
+    var programUser = await context.Set<ProgramUser>()
+      .FirstOrDefaultAsync(pu => pu.ProgramId == programId && pu.UserId == userId && pu.DeletedAt == null && pu.IsActive)
+      .ConfigureAwait(false);
+
+    if (programUser == null) return null;
+
+    var content = await context.Set<ProgramContent>()
+      .FirstOrDefaultAsync(pc => pc.Id == contentId && pc.ProgramId == programId && pc.DeletedAt == null)
+      .ConfigureAwait(false);
+
+    if (content == null) return null;
+
+    var now = SystemClock.UtcNow;
+    var interaction = await context.Set<ContentInteraction>()
+      .FirstOrDefaultAsync(ci => ci.ProgramUserId == programUser.Id && ci.ContentId == contentId && ci.DeletedAt == null)
+      .ConfigureAwait(false);
+
+    if (interaction?.SubmittedAt != null)
+    {
+      return interaction;
+    }
+
+    if (interaction == null)
+    {
+      interaction = new ContentInteraction
+      {
+        ProgramUserId = programUser.Id,
+        UserId = userId,
+        ContentId = contentId,
+        Status = ProgressStatus.InProgress,
+        FirstAccessedAt = now,
+        LastAccessedAt = now,
+        StartedAt = now,
+        CompletionPercentage = 0,
+      };
+
+      context.Set<ContentInteraction>().Add(interaction);
+    }
+
+    interaction.SubmissionData = submissionData;
+    interaction.SubmittedAt = now;
+    interaction.LastAccessedAt = now;
+    interaction.StartedAt ??= now;
+    interaction.Status = ProgressStatus.Completed;
+    interaction.CompletedAt = now;
+    interaction.CompletionPercentage = 100;
+    interaction.IsCompleted = true;
+    interaction.AttemptCount = Math.Max(1, interaction.AttemptCount + 1);
+    interaction.Touch();
+
+    programUser.LastAccessedAt = now;
+    programUser.Touch();
+
+    await RecalculateUserProgressAsync(programUser.Id).ConfigureAwait(false);
+    await context.SaveChangesAsync().ConfigureAwait(false);
+
+    return interaction;
+  }
+
+  public async Task<bool> MarkContentCompletedAsync(Guid programId, Guid userId, Guid contentId)
+  {
     var programUser = await context.Set<ProgramUser>().FirstOrDefaultAsync(pu => pu.ProgramId == programId && pu.UserId == userId && pu.DeletedAt == null);
 
     if (programUser == null) return false;
@@ -368,7 +467,8 @@ public class ProgramWriteService(IApplicationDbContext context) : IProgramWriteS
     return true;
   }
 
-  public async Task<bool> ResetUserProgressAsync(Guid programId, Guid userId) {
+  public async Task<bool> ResetUserProgressAsync(Guid programId, Guid userId)
+  {
     var programUser = await context.Set<ProgramUser>().FirstOrDefaultAsync(pu => pu.ProgramId == programId && pu.UserId == userId && pu.DeletedAt == null);
 
     if (programUser == null) return false;
@@ -385,7 +485,8 @@ public class ProgramWriteService(IApplicationDbContext context) : IProgramWriteS
 
   // ── Monetization ────────────────────────────────────────────────────
 
-  public async Task<Program?> EnableMonetizationAsync(Guid id, MonetizationDto monetizationDto) {
+  public async Task<Program?> EnableMonetizationAsync(Guid id, MonetizationDto monetizationDto)
+  {
     var program = await context.Set<Program>().Where(p => p.DeletedAt == null).FirstOrDefaultAsync(p => p.Id == id).ConfigureAwait(false);
 
     if (program == null) return null;
@@ -396,7 +497,8 @@ public class ProgramWriteService(IApplicationDbContext context) : IProgramWriteS
     return program;
   }
 
-  public async Task<Program?> DisableMonetizationAsync(Guid id) {
+  public async Task<Program?> DisableMonetizationAsync(Guid id)
+  {
     var program = await context.Set<Program>().Where(p => p.DeletedAt == null).FirstOrDefaultAsync(p => p.Id == id).ConfigureAwait(false);
 
     if (program == null) return null;
@@ -407,7 +509,8 @@ public class ProgramWriteService(IApplicationDbContext context) : IProgramWriteS
     return program;
   }
 
-  public async Task<PricingDto?> UpdateProgramPricingAsync(Guid id, UpdatePricingDto pricingDto) {
+  public async Task<PricingDto?> UpdateProgramPricingAsync(Guid id, UpdatePricingDto pricingDto)
+  {
     var program = await context.Set<Program>().Where(p => p.DeletedAt == null).FirstOrDefaultAsync(p => p.Id == id).ConfigureAwait(false);
 
     if (program == null) return null;
@@ -417,7 +520,8 @@ public class ProgramWriteService(IApplicationDbContext context) : IProgramWriteS
 
   // ── Product Integration ─────────────────────────────────────────────
 
-  public async Task<Guid?> CreateProductFromProgramAsync(Guid programId, CreateProductFromProgramDto productDto) {
+  public async Task<Guid?> CreateProductFromProgramAsync(Guid programId, CreateProductFromProgramDto productDto)
+  {
     var program = await context.Set<Program>().Where(p => p.DeletedAt == null).FirstOrDefaultAsync(p => p.Id == programId).ConfigureAwait(false);
 
     if (program == null) return null;
@@ -425,7 +529,8 @@ public class ProgramWriteService(IApplicationDbContext context) : IProgramWriteS
     return Guid.NewGuid();
   }
 
-  public async Task<bool> LinkProgramToProductAsync(Guid programId, Guid productId) {
+  public async Task<bool> LinkProgramToProductAsync(Guid programId, Guid productId)
+  {
     var program = await context.Set<Program>().Where(p => p.DeletedAt == null).FirstOrDefaultAsync(p => p.Id == programId).ConfigureAwait(false);
 
     if (program == null) return false;
@@ -433,7 +538,8 @@ public class ProgramWriteService(IApplicationDbContext context) : IProgramWriteS
     return true;
   }
 
-  public async Task<bool> UnlinkProgramFromProductAsync(Guid programId, Guid productId) {
+  public async Task<bool> UnlinkProgramFromProductAsync(Guid programId, Guid productId)
+  {
     var program = await context.Set<Program>().Where(p => p.DeletedAt == null).FirstOrDefaultAsync(p => p.Id == programId).ConfigureAwait(false);
 
     if (program == null) return false;
@@ -445,14 +551,16 @@ public class ProgramWriteService(IApplicationDbContext context) : IProgramWriteS
 
   private static string GenerateSlug(string title) { return title.ToLowerInvariant().Replace(" ", "-").Replace("'", "").Replace("\"", ""); }
 
-  private async Task RecalculateUserProgressAsync(Guid programUserId) {
+  private async Task RecalculateUserProgressAsync(Guid programUserId)
+  {
     var programUser = await context.Set<ProgramUser>().Where(pu => pu.Id == programUserId).FirstOrDefaultAsync();
 
     if (programUser == null) return;
 
     var totalContent = await context.Set<ProgramContent>().Where(pc => pc.DeletedAt == null && pc.ProgramId == programUser.ProgramId && pc.IsRequired).CountAsync();
 
-    if (totalContent == 0) {
+    if (totalContent == 0)
+    {
       programUser.CompletionPercentage = 0;
 
       return;
@@ -468,7 +576,8 @@ public class ProgramWriteService(IApplicationDbContext context) : IProgramWriteS
   }
 
   /// <summary>Internal helper to build a <see cref="UserProgressDto"/> without depending on the read service.</summary>
-  private async Task<UserProgressDto?> GetUserProgressDtoInternalAsync(Guid programId, Guid userId) {
+  private async Task<UserProgressDto?> GetUserProgressDtoInternalAsync(Guid programId, Guid userId)
+  {
     var programUser = await context.Set<ProgramUser>().FirstOrDefaultAsync(pu => pu.ProgramId == programId && pu.UserId == userId && pu.DeletedAt == null);
 
     if (programUser == null) return null;

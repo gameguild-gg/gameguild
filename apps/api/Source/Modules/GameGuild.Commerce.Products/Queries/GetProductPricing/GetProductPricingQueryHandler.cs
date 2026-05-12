@@ -19,7 +19,8 @@ public sealed class GetProductPricingQueryHandler(
         var product = await productRepository.GetByIdAsync(
             request.ProductId,
             cancellationToken,
-            includePricing: true).ConfigureAwait(false);
+            includePricing: true,
+            isPublished: request.IncludeUnpublished ? null : true).ConfigureAwait(false);
 
         if (product == null)
         {

@@ -148,10 +148,10 @@ export default function CreateCoursePage({ params }: PageProps<'/[locale]/dashbo
               onClick={() => i < step && setStep(i)}
               disabled={i > step}
               className={`flex size-8 items-center justify-center rounded-full text-sm font-medium transition-colors ${i < step
-                  ? 'bg-primary text-primary-foreground cursor-pointer'
-                  : i === step
-                    ? 'bg-primary text-primary-foreground'
-                    : 'bg-muted text-muted-foreground'
+                ? 'bg-primary text-primary-foreground cursor-pointer'
+                : i === step
+                  ? 'bg-primary text-primary-foreground'
+                  : 'bg-muted text-muted-foreground'
                 }`}
             >
               {i < step ? <Check className="size-4" /> : i + 1}
@@ -396,7 +396,7 @@ export default function CreateCoursePage({ params }: PageProps<'/[locale]/dashbo
           )}
 
           <Button type="button" variant="ghost" asChild>
-            <Link href={`/${locale}/dashboard/learning/courses`}>Cancel</Link>
+            <Link href="/dashboard/learning/courses">Cancel</Link>
           </Button>
         </div>
       </form>

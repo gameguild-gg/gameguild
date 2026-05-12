@@ -27,7 +27,7 @@ interface CourseCardProps {
     status: string;
     visibility: string;
     enrolledCount: number;
-    completionPercent: number;
+    completionPercent: number | null;
     avgRating: string | null;
   };
   locale: string;
@@ -99,7 +99,7 @@ export function CourseCard({ course, locale }: CourseCardProps) {
             </div>
           )}
         </div>
-        {course.completionPercent > 0 && <div className="w-full text-xs text-muted-foreground">{course.completionPercent}% completion rate</div>}
+        {course.completionPercent !== null && <div className="w-full text-xs text-muted-foreground">{course.completionPercent}% completion rate</div>}
       </CardFooter>
     </Card>
   );

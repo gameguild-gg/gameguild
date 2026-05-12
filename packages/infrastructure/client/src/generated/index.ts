@@ -3,8 +3,8 @@
  *
  * ⚠️  AUTO-GENERATED FILE - DO NOT EDIT MANUALLY
  *
- * Generated from: ./temp_spec.json
- * Generated at: 2026-04-10T23:41:01.004Z
+ * Generated from: http://localhost:5295/swagger/v1/swagger.json
+ * Generated at: 2026-05-11T15:43:06.299Z
  *
  * To regenerate, run: pnpm generate
  */
@@ -19,26 +19,40 @@ export * from './errors.gen.js';
 export * from './endpoints.gen.js';
 
 // Re-export module-grouped endpoints
-export * from './modules/apikeys.gen.js';
+export * from './modules/learning-courses-activitygrade.gen.js';
+export * from './modules/auth-apikeys.gen.js';
+export * from './modules/learning-assessments.gen.js';
 export * from './modules/auth-webauthn.gen.js';
-export * from './modules/authentication.gen.js';
-export * from './modules/authentication-multifactor.gen.js';
-export * from './modules/authentication-sessions.gen.js';
-export * from './modules/authentication-trusteddevices.gen.js';
-export * from './modules/billing-webhooks.gen.js';
-export * from './modules/entitlements.gen.js';
+export * from './modules/auth.gen.js';
+export * from './modules/auth-multifactor.gen.js';
+export * from './modules/auth-sessions.gen.js';
+export * from './modules/auth-trusteddevices.gen.js';
+export * from './modules/commerce-billing-webhooks.gen.js';
+export * from './modules/features-capabilities.gen.js';
+export * from './modules/learning-courses-contentinteraction.gen.js';
+export * from './modules/content-pages-contentresource.gen.js';
+export * from './modules/commerce-products-entitlements.gen.js';
+export * from './modules/features-flags.gen.js';
+export * from './modules/features.gen.js';
 export * from './modules/health.gen.js';
-export * from './modules/payments.gen.js';
-export * from './modules/products.gen.js';
-export * from './modules/promocodes.gen.js';
+export * from './modules/content-pages-opengraph.gen.js';
+export * from './modules/content-pages-page.gen.js';
+export * from './modules/commerce-payments.gen.js';
+export * from './modules/learning-courses-prerequisites.gen.js';
+export * from './modules/commerce-products.gen.js';
+export * from './modules/learning-courses-programcontent.gen.js';
+export * from './modules/learning-courses-program.gen.js';
+export * from './modules/learning-courses-programlifecycle.gen.js';
+export * from './modules/commerce-products-promocodes.gen.js';
 export * from './modules/resources.gen.js';
-export * from './modules/serviceaccounts.gen.js';
-export * from './modules/signingkeys.gen.js';
-export * from './modules/subscriptions.gen.js';
-export * from './modules/subscriptionsplans.gen.js';
-export * from './modules/taxjurisdictions.gen.js';
-export * from './modules/taxrules.gen.js';
-export * from './modules/taxes.gen.js';
+export * from './modules/auth-serviceaccounts.gen.js';
+export * from './modules/auth-serviceaccounts-tokens.gen.js';
+export * from './modules/auth-signingkeys.gen.js';
+export * from './modules/commerce-subscriptions.gen.js';
+export * from './modules/commerce-subscriptions-plans.gen.js';
+export * from './modules/commerce-payments-taxjurisdictions.gen.js';
+export * from './modules/commerce-payments-taxrules.gen.js';
+export * from './modules/commerce-payments-taxes.gen.js';
 export * from './modules/tenants.gen.js';
 export * from './modules/tenants-metadata.gen.js';
 export * from './modules/tenants-quotas.gen.js';
@@ -57,4 +71,4 @@ export * from './modules/users-quotas.gen.js';
 export * from './modules/users-resources.gen.js';
 export * from './modules/users-resources-metadata.gen.js';
 export * from './modules/users-resources-settings.gen.js';
-export * from './modules/wallets.gen.js';
+export * from './modules/commerce-payments-wallets.gen.js';

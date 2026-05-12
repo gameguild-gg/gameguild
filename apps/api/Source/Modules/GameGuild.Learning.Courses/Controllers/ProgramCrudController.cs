@@ -2,6 +2,7 @@ using Asp.Versioning;
 using GameGuild.Identity.Authorization;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace GameGuild.Learning.Courses;
 
@@ -188,6 +189,36 @@ public class ProgramCrudController(IProgramCrudService programService) : BaseApi
     return Ok(program.ToDto());
   }
 
+  /// <summary> Self-enroll the current authenticated user in a published public course. </summary>
+  [HttpPost("{id}:self-enroll")]
+  public async Task<ActionResult<UserProgressDto>> SelfEnroll(Guid id)
+  {
+    var userId = GetCurrentUserId();
+    if (!userId.HasValue) return Unauthorized();
+
+    var program = await programService.GetProgramByIdAsync(id).ConfigureAwait(false);
+
+    if (program == null || program.Status != ContentStatus.Published || program.Visibility != ContentVisibility.Public)
+    {
+      return NotFound();
+    }
+
+    if (!program.IsEnrollmentOpen)
+    {
+      return Conflict(new ProblemDetails
+      {
+        Title = "Enrollment closed",
+        Detail = "This course is not currently open for self-enrollment."
+      });
+    }
+
+    var progress = await programService.AddUserToProgramAsync(id, userId.Value).ConfigureAwait(false);
+
+    if (progress == null) return NotFound();
+
+    return Ok(progress);
+  }
+
   // ===== CONTENT MANAGEMENT ENDPOINTS =====
   // NOTE: POST/PUT/DELETE for content are in ProgramContentController to avoid route conflicts.
   // Only reorder endpoint is kept here since it uses a unique action-style route.
@@ -254,6 +285,20 @@ public class ProgramCrudController(IProgramCrudService programService) : BaseApi
     return Ok(progress);
   }
 
+  /// <summary> Get the current learner's progress in a program. </summary>
+  [HttpGet("{id}/me/progress")]
+  public async Task<ActionResult<UserProgressDto>> GetMyProgress(Guid id)
+  {
+    var currentUserId = GetCurrentUserId();
+    if (currentUserId == null) return Unauthorized();
+
+    var progress = await programService.GetUserProgressDtoAsync(id, currentUserId.Value).ConfigureAwait(false);
+
+    if (progress == null) return NotFound();
+
+    return Ok(progress);
+  }
+
   /// <summary> Update a user's progress in a program (resource-level edit permission) </summary>
   [HttpPut("{id}/users/{userId}/progress")]
   [RequireResourcePermission<PermissionType, Program>(PermissionType.Edit)]
@@ -262,6 +307,22 @@ public class ProgramCrudController(IProgramCrudService programService) : BaseApi
     if (!ModelState.IsValid) return BadRequest(ModelState);
 
     var progress = await programService.UpdateUserProgressAsync(id, userId, progressDto).ConfigureAwait(false);
+
+    if (progress == null) return NotFound();
+
+    return Ok(progress);
+  }
+
+  /// <summary> Update the current learner's progress in a program. </summary>
+  [HttpPut("{id}/me/progress")]
+  public async Task<ActionResult<UserProgressDto>> UpdateMyProgress(Guid id, [FromBody] UpdateProgressDto progressDto)
+  {
+    if (!ModelState.IsValid) return BadRequest(ModelState);
+
+    var currentUserId = GetCurrentUserId();
+    if (currentUserId == null) return Unauthorized();
+
+    var progress = await programService.UpdateUserProgressAsync(id, currentUserId.Value, progressDto).ConfigureAwait(false);
 
     if (progress == null) return NotFound();
 
@@ -280,6 +341,20 @@ public class ProgramCrudController(IProgramCrudService programService) : BaseApi
     return NoContent();
   }
 
+  /// <summary> Mark content as completed for the current learner. </summary>
+  [HttpPost("{id}/me/content/{contentId}:complete")]
+  public async Task<ActionResult> MarkMyContentCompleted(Guid id, Guid contentId)
+  {
+    var currentUserId = GetCurrentUserId();
+    if (currentUserId == null) return Unauthorized();
+
+    var success = await programService.MarkContentCompletedAsync(id, currentUserId.Value, contentId).ConfigureAwait(false);
+
+    if (!success) return NotFound();
+
+    return NoContent();
+  }
+
   /// <summary> Reset user progress in a program (resource-level edit permission) </summary>
   [HttpPost("{id}/users/{userId}:reset")]
   [RequireResourcePermission<PermissionType, Program>(PermissionType.Edit)]
@@ -290,6 +365,15 @@ public class ProgramCrudController(IProgramCrudService programService) : BaseApi
     if (!success) return NotFound();
 
     return NoContent();
+  }
+
+  private Guid? GetCurrentUserId()
+  {
+    var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier)
+        ?? User.FindFirst("sub")?.Value
+        ?? User.FindFirst("userId")?.Value;
+
+    return Guid.TryParse(userIdClaim, out var userId) ? userId : null;
   }
 
   // ===== MONETIZATION ENDPOINTS =====

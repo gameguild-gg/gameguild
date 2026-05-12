@@ -1,9 +1,9 @@
 'use client';
 
-import React from 'react';
-import Link from 'next/link';
+import { Link } from '@/i18n/navigation';
 import { Button } from '@game-guild/ui/components/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@game-guild/ui/components/card';
+import React from 'react';
 
 export default function Error({ error, reset }: { error: Error & { digest?: string }; reset: () => void }): React.JSX.Element {
   return (

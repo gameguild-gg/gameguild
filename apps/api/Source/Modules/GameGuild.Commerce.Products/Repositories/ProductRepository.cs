@@ -5,16 +5,20 @@ namespace GameGuild.Commerce.Products;
 /// <summary>
 /// Repository implementation for Product entities
 /// </summary>
-public class ProductRepository(IApplicationDbContext context) 
+public class ProductRepository(IApplicationDbContext context)
     : CommerceRepositoryBase<Product>(context), IProductRepository
 {
     public async Task<Product?> GetByIdAsync(
         Guid id,
         CancellationToken cancellationToken = default,
         bool includePricing = false,
-        bool includeCreator = false)
+        bool includeCreator = false,
+        bool? isPublished = null)
     {
         var query = Query.Where(p => p.Id == id);
+
+        if (isPublished.HasValue)
+            query = query.Where(p => p.IsPublished == isPublished.Value);
 
         if (includePricing)
             query = query.Include(p => p.Pricing);
@@ -27,6 +31,7 @@ public class ProductRepository(IApplicationDbContext context)
         Guid? creatorId = null,
         string? searchTerm = null,
         bool? isBundle = null,
+        bool? isPublished = null,
         int skip = 0,
         int take = 50,
         string sortBy = "CreatedAt",
@@ -53,6 +58,9 @@ public class ProductRepository(IApplicationDbContext context)
 
         if (isBundle.HasValue)
             query = query.Where(p => p.IsBundle == isBundle.Value);
+
+        if (isPublished.HasValue)
+            query = query.Where(p => p.IsPublished == isPublished.Value);
 
         // Get total count before pagination
         var totalCount = await query.CountAsync(cancellationToken).ConfigureAwait(false);
@@ -98,9 +106,14 @@ public class ProductRepository(IApplicationDbContext context)
         return Task.CompletedTask;
     }
 
-    public async Task<bool> ExistsAsync(Guid id, CancellationToken cancellationToken = default)
+    public async Task<bool> ExistsAsync(Guid id, CancellationToken cancellationToken = default, bool? isPublished = null)
     {
-        return await Query.AnyAsync(p => p.Id == id, cancellationToken).ConfigureAwait(false);
+        var query = Query.Where(p => p.Id == id);
+
+        if (isPublished.HasValue)
+            query = query.Where(p => p.IsPublished == isPublished.Value);
+
+        return await query.AnyAsync(cancellationToken).ConfigureAwait(false);
     }
 
     public async Task SaveChangesAsync(CancellationToken cancellationToken = default)

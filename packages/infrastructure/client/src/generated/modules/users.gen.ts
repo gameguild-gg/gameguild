@@ -16,65 +16,6 @@ export class UsersModule {
   constructor(private readonly client: ApiClient) {}
 
   /**
-   * Get users with pagination, search, and sorting
-   *
-   * Retrieves a paginated list of users with optional filtering by email, status, and text search.
-   */
-  async getUsers(query?: {
-    email?: string;
-    status?: string;
-    includeDeleted?: boolean;
-    q?: string;
-    cursor?: string;
-    limit?: number;
-    sort?: string;
-  }): Promise<Result<Types.ModelsPagedResult, ApiError>> {
-    const url = '/v1/users';
-
-    const result = await this.client.request({
-      method: 'GET',
-      path: url,
-      params: query,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(Types.ModelsPagedResultSchema, result.data, 'response');
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   * Create a new user
-   *
-   * Creates a new user account with the provided information.
-   */
-  async postUsers(body: Types.IdentityUsersCreateUserInput): Promise<Result<Types.IdentityUsersUser, ApiError>> {
-    const url = '/v1/users';
-
-    // Validate request body
-    const validatedBody = safeParse(Types.IdentityUsersCreateUserInputSchema, body, 'request');
-
-    const result = await this.client.request({
-      method: 'POST',
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(Types.IdentityUsersUserSchema, result.data, 'response');
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
    * Bulk create users
    *
    * Creates multiple user accounts at once.
@@ -321,117 +262,6 @@ export class UsersModule {
   }
 
   /**
-   * Get user by ID
-   *
-   * Retrieves detailed information for a specific user by their unique identifier.
-   */
-  async getUsers1(userId: string): Promise<Result<Types.IdentityUsersUser, ApiError>> {
-    const url = `/v1/users/${userId}`;
-
-    const result = await this.client.request({
-      method: 'GET',
-      path: url,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(Types.IdentityUsersUserSchema, result.data, 'response');
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   * Update user by ID
-   *
-   * Fully updates a user by ID with complete user data.
-   */
-  async putUsers(userId: string, body: Types.IdentityUsersCreateUserInput): Promise<Result<Types.IdentityUsersUser, ApiError>> {
-    const url = `/v1/users/${userId}`;
-
-    // Validate request body
-    const validatedBody = safeParse(Types.IdentityUsersCreateUserInputSchema, body, 'request');
-
-    const result = await this.client.request({
-      method: 'PUT',
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(Types.IdentityUsersUserSchema, result.data, 'response');
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   * Soft delete user by ID
-   *
-   * Soft deletes a user by ID (can be restored). Users can delete their own account.
-   */
-  async deleteUsers(userId: string): Promise<Result<void, ApiError>> {
-    const url = `/v1/users/${userId}`;
-
-    const result = await this.client.request({
-      method: 'DELETE',
-      path: url,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   * Partially update user by ID
-   *
-   * Updates specific fields of a user by ID.
-   */
-  async patchUsers(userId: string, body: Types.IdentityUsersUpdateUserInput): Promise<Result<Types.IdentityUsersUser, ApiError>> {
-    const url = `/v1/users/${userId}`;
-
-    // Validate request body
-    const validatedBody = safeParse(Types.IdentityUsersUpdateUserInputSchema, body, 'request');
-
-    const result = await this.client.request({
-      method: 'PATCH',
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(Types.IdentityUsersUserSchema, result.data, 'response');
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   * Check if user exists by ID
-   *
-   * Checks if a user exists by ID without returning the body.
-   */
-  async headUsers(userId: string): Promise<Result<void, ApiError>> {
-    const url = `/v1/users/${userId}`;
-
-    const result = await this.client.request({
-      method: 'HEAD',
-      path: url,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
    * Activate user account
    *
    * Activates a user account by ID.
@@ -556,6 +386,176 @@ export class UsersModule {
 
     const result = await this.client.request({
       method: 'POST',
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   * Get users with pagination, search, and sorting
+   *
+   * Retrieves a paginated list of users with optional filtering by email, status, and text search.
+   */
+  async getUsers(query?: {
+    email?: string;
+    status?: string;
+    includeDeleted?: boolean;
+    q?: string;
+    cursor?: string;
+    limit?: number;
+    sort?: string;
+  }): Promise<Result<Types.PagedResult, ApiError>> {
+    const url = '/v1/users';
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.PagedResultSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   * Create a new user
+   *
+   * Creates a new user account with the provided information.
+   */
+  async postUsers(body: Types.IdentityUsersCreateUserInput): Promise<Result<Types.IdentityUsersUser, ApiError>> {
+    const url = '/v1/users';
+
+    // Validate request body
+    const validatedBody = safeParse(Types.IdentityUsersCreateUserInputSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.IdentityUsersUserSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   * Get user by ID
+   *
+   * Retrieves detailed information for a specific user by their unique identifier.
+   */
+  async getUsers1(userId: string): Promise<Result<Types.IdentityUsersUser, ApiError>> {
+    const url = `/v1/users/${userId}`;
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.IdentityUsersUserSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   * Update user by ID
+   *
+   * Fully updates a user by ID with complete user data.
+   */
+  async putUsers(userId: string, body: Types.IdentityUsersCreateUserInput): Promise<Result<Types.IdentityUsersUser, ApiError>> {
+    const url = `/v1/users/${userId}`;
+
+    // Validate request body
+    const validatedBody = safeParse(Types.IdentityUsersCreateUserInputSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'PUT',
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.IdentityUsersUserSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   * Soft delete user by ID
+   *
+   * Soft deletes a user by ID (can be restored). Users can delete their own account.
+   */
+  async deleteUsers(userId: string): Promise<Result<void, ApiError>> {
+    const url = `/v1/users/${userId}`;
+
+    const result = await this.client.request({
+      method: 'DELETE',
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   * Partially update user by ID
+   *
+   * Updates specific fields of a user by ID.
+   */
+  async patchUsers(userId: string, body: Types.IdentityUsersUpdateUserInput): Promise<Result<Types.IdentityUsersUser, ApiError>> {
+    const url = `/v1/users/${userId}`;
+
+    // Validate request body
+    const validatedBody = safeParse(Types.IdentityUsersUpdateUserInputSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'PATCH',
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.IdentityUsersUserSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   * Check if user exists by ID
+   *
+   * Checks if a user exists by ID without returning the body.
+   */
+  async headUsers(userId: string): Promise<Result<void, ApiError>> {
+    const url = `/v1/users/${userId}`;
+
+    const result = await this.client.request({
+      method: 'HEAD',
       path: url,
       requiresAuth: true,
     });

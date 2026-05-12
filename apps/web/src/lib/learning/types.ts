@@ -5,10 +5,16 @@
 // components without pulling in server-only modules (auth, next/headers).
 // =============================================================================
 
-import type { LearningCoursesProgramContentType } from '@game-guild/client';
-
-// Re-export the generated type for convenience
-export type { LearningCoursesProgramContentType };
+export type LearningCoursesProgramContentType =
+  | 'Lesson'
+  | 'Page'
+  | 'Assignment'
+  | 'Questionnaire'
+  | 'Discussion'
+  | 'Code'
+  | 'Challenge'
+  | 'Reflection'
+  | 'Survey';
 
 /**
  * Course delivery mode - determines available features and routes

@@ -57,7 +57,7 @@ function getStatusBadge(status: string) {
 function buildNavItems(features: CourseFeatures): NavItem[] {
   return [
     { title: 'Overview', icon: LayoutDashboard, segment: 'overview', enabled: true },
-    { title: 'Course Info', icon: Info, segment: 'listing', enabled: true },
+    { title: 'Listing', icon: Info, segment: 'listing', enabled: true },
     { title: 'Content', icon: BookOpen, segment: 'content', enabled: true },
     { title: 'Classes', icon: CalendarDays, segment: 'classes', enabled: features.hasClasses },
     { title: 'Assessments', icon: GraduationCap, segment: 'assessments', enabled: features.hasAssessments },
@@ -123,9 +123,9 @@ export function CourseNav({ courseTitle, courseDescription, courseStatus, featur
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem asChild>
-                <Link href={`${basePath}/listing/info`}>
+                <Link href={`${basePath}/listing`}>
                   <Edit className="mr-2 size-4" />
-                  Edit Course
+                  Edit Listing
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>

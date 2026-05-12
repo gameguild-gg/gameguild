@@ -11,6 +11,7 @@ namespace GameGuild.Identity.Authorization.Controllers;
 /// <summary>
 ///     API controller for Separation of Duties (SoD) operations
 /// </summary>
+[Microsoft.AspNetCore.Http.Tags("access-control/separation-of-duties")]
 [ApiVersion("1.0")]
 [Route("v{version:apiVersion}/sod")]
 [Authorize]

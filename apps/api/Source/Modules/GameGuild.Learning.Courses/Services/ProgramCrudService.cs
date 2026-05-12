@@ -63,6 +63,7 @@ public class ProgramCrudService(IProgramReadService read, IProgramWriteService w
   public Task<bool> RemoveUserFromProgramAsync(Guid programId, Guid userId) => write.RemoveUserFromProgramAsync(programId, userId);
   public Task<Program> UpdateUserProgressAsync(Guid programId, Guid userId, Guid contentId, ProgressStatus status) => write.UpdateUserProgressAsync(programId, userId, contentId, status);
   public Task<UserProgressDto?> UpdateUserProgressAsync(Guid programId, Guid userId, UpdateProgressDto progressDto) => write.UpdateUserProgressAsync(programId, userId, progressDto);
+  public Task<ContentInteraction?> SubmitUserContentAsync(Guid programId, Guid userId, Guid contentId, string submissionData) => write.SubmitUserContentAsync(programId, userId, contentId, submissionData);
   public Task<bool> MarkContentCompletedAsync(Guid programId, Guid userId, Guid contentId) => write.MarkContentCompletedAsync(programId, userId, contentId);
   public Task<bool> ResetUserProgressAsync(Guid programId, Guid userId) => write.ResetUserProgressAsync(programId, userId);
   public Task<Program?> EnableMonetizationAsync(Guid id, MonetizationDto monetizationDto) => write.EnableMonetizationAsync(id, monetizationDto);

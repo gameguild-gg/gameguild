@@ -2,8 +2,8 @@
 // COURSES LIST DATA QUERIES
 // =============================================================================
 
-import { createServerClient } from '@game-guild/client';
 import { getToken } from '@/auth';
+import { createServerClient, GeneratedApi } from '@game-guild/client';
 
 /**
  * Course list item with data for KPI computation
@@ -14,21 +14,12 @@ export interface CourseListItem {
   thumbnail: string | null;
   status: 'draft' | 'published' | 'archived';
   visibility: 'public' | 'private' | 'unlisted';
-  enrollments: Array<{ id: string; completedAt: string | null }>;
-  ratings: Array<{ score: number }>;
+  enrolledCount: number;
+  completionPercent: number | null;
+  avgRating: string | null;
 }
 
-// Shape returned by GET /v1/courses (ProgramDto)
-interface ProgramDto {
-  id: string;
-  title: string;
-  thumbnail: string | null;
-  status: string; // ContentStatus enum
-  visibility: string; // ContentVisibility enum
-  currentEnrollments: number;
-  averageRating: number;
-  totalRatings: number;
-}
+type ProgramDto = GeneratedApi.LearningCoursesProgram;
 
 function getApiClient() {
   const apiUrl = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5295';
@@ -36,6 +27,73 @@ function getApiClient() {
     baseUrl: apiUrl,
     auth: { getAccessToken: () => getToken() },
   });
+}
+
+function createCourseProgramsModule() {
+  return new GeneratedApi.LearningCoursesProgramModule(getApiClient());
+}
+
+function mapAverageRating(program: ProgramDto): string | null {
+  const totalRatings = Math.max(0, program.totalRatings ?? 0);
+  if (totalRatings === 0) {
+    return null;
+  }
+
+  return (program.averageRating ?? 0).toFixed(1);
+}
+
+async function getCourseMetrics(
+  programs: GeneratedApi.LearningCoursesProgramModule,
+  program: ProgramDto,
+): Promise<Pick<CourseListItem, 'enrolledCount' | 'completionPercent' | 'avgRating'>> {
+  const enrolledCount = Math.max(0, program.currentEnrollments ?? 0);
+  const avgRating = mapAverageRating(program);
+
+  if (!program.id) {
+    return {
+      enrolledCount,
+      completionPercent: null,
+      avgRating,
+    };
+  }
+
+  try {
+    const analyticsResult = await programs.getCoursesAnalytics(String(program.id));
+    if (!analyticsResult.ok) {
+      return {
+        enrolledCount,
+        completionPercent: null,
+        avgRating,
+      };
+    }
+
+    const totalUsers = Math.max(0, analyticsResult.data.totalUsers ?? enrolledCount);
+    const completionPercent =
+      totalUsers > 0
+        ? Math.min(
+          100,
+          Math.max(
+            0,
+            Math.round(
+              analyticsResult.data.completionRate ??
+              (((analyticsResult.data.completedUsers ?? 0) / totalUsers) * 100),
+            ),
+          ),
+        )
+        : null;
+
+    return {
+      enrolledCount: totalUsers,
+      completionPercent,
+      avgRating,
+    };
+  } catch {
+    return {
+      enrolledCount,
+      completionPercent: null,
+      avgRating,
+    };
+  }
 }
 
 // ContentStatus enum: Draft=0, Review=1, Published=2, Archived=3, Deleted=4
@@ -67,27 +125,29 @@ export async function getCourses(): Promise<{
   error: string | null;
 }> {
   try {
-    const client = getApiClient();
-    const result = await client.request<ProgramDto[]>({
-      method: 'GET',
-      path: '/v1/courses',
-      params: { take: 50 },
-      requiresAuth: true,
-    });
+    const programs = createCourseProgramsModule();
+    const result = await programs.getCourses({ take: 50 });
 
     if (result.ok && Array.isArray(result.data)) {
+      const courses = await Promise.all(
+        result.data.map(async (program) => {
+          const metrics = await getCourseMetrics(programs, program);
+
+          return {
+            id: String(program.id ?? ''),
+            title: program.title ?? 'Untitled course',
+            thumbnail: typeof program.thumbnail === 'string' ? program.thumbnail : null,
+            status: mapStatus(program.status),
+            visibility: mapVisibility(program.visibility),
+            enrolledCount: metrics.enrolledCount,
+            completionPercent: metrics.completionPercent,
+            avgRating: metrics.avgRating,
+          } satisfies CourseListItem;
+        }),
+      );
+
       return {
-        courses: result.data.map((p) => ({
-          id: p.id,
-          title: p.title,
-          thumbnail: p.thumbnail,
-          status: mapStatus(p.status),
-          visibility: mapVisibility(p.visibility),
-          enrollments: Array.from({ length: p.currentEnrollments }, (_, i) => ({ id: `e${i}`, completedAt: null })),
-          ratings: Array.from({ length: p.totalRatings }, () => ({
-            score: p.averageRating || 0,
-          })),
-        })),
+        courses,
         error: null,
       };
     }

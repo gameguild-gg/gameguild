@@ -268,6 +268,46 @@ public class AuthenticationAndTenantIsolationTests : IClassFixture<WebApplicatio
         // The response should not contain tenant1's subscription data
     }
 
+    [Fact]
+    public async Task CheckSubscriptionExistsById_DifferentTenant_Returns404()
+    {
+        // Arrange - Create subscription in tenant1
+        var tenant1Id = Guid.NewGuid();
+        var subscriptionId = await SeedSubscriptionForTenantAsync(tenant1Id);
+
+        // Create client with tenant2 context (different from subscription's tenant)
+        var tenant2Id = Guid.NewGuid();
+        var clientWithTenant2 = CreateAuthenticatedClientWithTenant(tenant2Id);
+
+        // Act
+        using var request = new HttpRequestMessage(HttpMethod.Head, $"/api/v1/subscriptions/{subscriptionId}");
+        var response = await clientWithTenant2.SendAsync(request);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
+    public async Task GetSubscriptions_WithoutTenantFilter_UsesAuthenticatedTenantContext()
+    {
+        // Arrange
+        var tenant1Id = Guid.NewGuid();
+        var tenant1SubscriptionId = await SeedSubscriptionForTenantAsync(tenant1Id);
+
+        var tenant2Id = Guid.NewGuid();
+        var tenant2SubscriptionId = await SeedSubscriptionForTenantAsync(tenant2Id);
+        var clientWithTenant2 = CreateAuthenticatedClientWithTenant(tenant2Id);
+
+        // Act
+        var response = await clientWithTenant2.GetAsync("/api/v1/subscriptions?pageSize=100");
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var content = await response.Content.ReadAsStringAsync();
+        content.Should().Contain(tenant2SubscriptionId.ToString());
+        content.Should().NotContain(tenant1SubscriptionId.ToString());
+    }
+
     #endregion
 
     #region E.2 Tests: Webhook Signature Validation

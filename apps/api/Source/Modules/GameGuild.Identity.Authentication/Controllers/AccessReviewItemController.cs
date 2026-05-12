@@ -15,7 +15,7 @@ namespace GameGuild.Identity.Authentication;
 /// </summary>
 [ApiVersion("1.0")]
 [Route("v{version:apiVersion}/access-reviews")]
-[Tags("access-reviews")]
+[Microsoft.AspNetCore.Http.Tags("auth/access-reviews")]
 [ApiExplorerSettings(IgnoreApi = true)]
 [Authorize]
 public class AccessReviewItemController(IMediator mediator, ILogger<AccessReviewItemController> logger)
@@ -42,7 +42,11 @@ public class AccessReviewItemController(IMediator mediator, ILogger<AccessReview
     {
         var query = new GetAccessReviewItemsQuery
         {
-            CampaignId = campaignId, Status = status, ReviewerId = reviewerId, Page = page, PageSize = pageSize
+            CampaignId = campaignId,
+            Status = status,
+            ReviewerId = reviewerId,
+            Page = page,
+            PageSize = pageSize
         };
         var result = await _mediator.Send(query).ConfigureAwait(false);
 
@@ -126,7 +130,10 @@ public class AccessReviewItemController(IMediator mediator, ILogger<AccessReview
     {
         var query = new GetPeriodicAccessReviewsQuery
         {
-            TenantId = tenantId, IsActive = isActive, Page = page, PageSize = pageSize
+            TenantId = tenantId,
+            IsActive = isActive,
+            Page = page,
+            PageSize = pageSize
         };
         var result = await _mediator.Send(query).ConfigureAwait(false);
 

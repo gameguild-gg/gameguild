@@ -13,7 +13,7 @@ namespace GameGuild.Commerce.Subscriptions;
 /// </summary>
 [ApiVersion("1.0")]
 [Route("api")]
-[Tags("subscriptions-plans")]
+[Microsoft.AspNetCore.Http.Tags("commerce/subscriptions/plans")]
 [Authorize]
 public sealed class SubscriptionPlanOperationsController(ISender sender) : BaseApiController
 {

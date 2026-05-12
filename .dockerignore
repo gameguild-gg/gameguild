@@ -21,6 +21,11 @@ apps/console/.next/
 apps/web/node_modules/
 apps/web/.next/
 
+# Allow learning app and its contents
+!apps/learning/**
+apps/learning/node_modules/
+apps/learning/.next/
+
 # Allow website app and its contents
 !apps/website/**
 apps/website/node_modules/

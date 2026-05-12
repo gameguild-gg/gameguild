@@ -1,4 +1,5 @@
 using FluentAssertions;
+using GameGuild.Configuration.PresentationLayer;
 using GameGuild.Configuration.PresentationLayer.ApiVersioning;
 using GameGuild.Configuration.PresentationLayer.CORS;
 using GameGuild.Configuration.PresentationLayer.HealthChecks;
@@ -15,6 +16,7 @@ using GameGuild.Configuration.PresentationLayer.SignalR;
 using GameGuild.Configuration.PresentationLayer.GraphQL;
 using GameGuild.Configuration.PresentationLayer.OpenAPI;
 using GameGuild.Configuration.PresentationLayer.ApiExplorer;
+using Microsoft.Extensions.Configuration;
 
 namespace GameGuild.SharedKernel.UnitTests.Configuration;
 
@@ -64,6 +66,22 @@ public class ApiExplorerOptionsBuilderTests
     {
         var options = ApiExplorerOptionsBuilder.Build();
         options.Should().NotBeNull();
+    }
+}
+
+public class PresentationLayerOptionsBuilderNestedDefaultsTests
+{
+    [Fact]
+    public void Create_WithEmptyConfiguration_ShouldPreserveNestedDefaults()
+    {
+        var configuration = new ConfigurationBuilder().Build();
+
+        var options = PresentationLayerOptionsBuilder.Create(configuration);
+
+        options.OpenApi.Should().NotBeNull();
+        options.OpenApi!.Title.Should().Be("GameGuild API");
+        options.ApiVersioning.Should().NotBeNull();
+        options.ApiExplorer.Should().NotBeNull();
     }
 }
 

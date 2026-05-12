@@ -1,5 +1,6 @@
 using FluentAssertions;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Primitives;
 using Moq;
 using Xunit;
 
@@ -378,6 +379,47 @@ public class SubscriptionPlanServiceTests
     }
 
     [Fact]
+    public async Task GetActiveAsync_ShouldCacheUsingPlanCountAsEntrySize()
+    {
+        // Arrange
+        var plans = new List<SubscriptionPlan>
+        {
+            new("Basic", "basic", 999),
+            new("Pro", "pro", 1999)
+        };
+        var cacheEntry = new TestCacheEntry();
+
+        _mockRepository.Setup(r => r.GetActiveAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(plans);
+        _mockCache.Setup(c => c.CreateEntry(It.IsAny<object>())).Returns(cacheEntry);
+
+        // Act
+        var result = await _service.GetActiveAsync();
+
+        // Assert
+        result.Should().HaveCount(2);
+        cacheEntry.Size.Should().Be(2);
+    }
+
+    [Fact]
+    public async Task GetActiveAsync_ShouldCacheEmptyResultsWithMinimumSizeOne()
+    {
+        // Arrange
+        var cacheEntry = new TestCacheEntry();
+
+        _mockRepository.Setup(r => r.GetActiveAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<SubscriptionPlan>());
+        _mockCache.Setup(c => c.CreateEntry(It.IsAny<object>())).Returns(cacheEntry);
+
+        // Act
+        var result = await _service.GetActiveAsync();
+
+        // Assert
+        result.Should().BeEmpty();
+        cacheEntry.Size.Should().Be(1);
+    }
+
+    [Fact]
     public async Task GetFeaturedAsync_ShouldReturnFeaturedPlans()
     {
         // Arrange
@@ -396,6 +438,23 @@ public class SubscriptionPlanServiceTests
     }
 
     #endregion
+
+    private sealed class TestCacheEntry : ICacheEntry
+    {
+        public object Key { get; set; } = Guid.NewGuid();
+        public object? Value { get; set; }
+        public DateTimeOffset? AbsoluteExpiration { get; set; }
+        public TimeSpan? AbsoluteExpirationRelativeToNow { get; set; }
+        public TimeSpan? SlidingExpiration { get; set; }
+        public IList<IChangeToken> ExpirationTokens { get; } = new List<IChangeToken>();
+        public IList<PostEvictionCallbackRegistration> PostEvictionCallbacks { get; } = new List<PostEvictionCallbackRegistration>();
+        public CacheItemPriority Priority { get; set; }
+        public long? Size { get; set; }
+
+        public void Dispose()
+        {
+        }
+    }
 
     #region DeleteAsync Tests
 
@@ -754,7 +813,7 @@ public class SubscriptionPlanServiceTests
         // Arrange
         var planId = Guid.NewGuid();
         var plan = new SubscriptionPlan("Test Plan", "test-plan", 999);
-        
+
         _mockRepository.Setup(r => r.GetByIdAsync(planId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(plan);
 
@@ -774,7 +833,7 @@ public class SubscriptionPlanServiceTests
         {
             new("Basic", "basic", 999)
         };
-        
+
         _mockRepository.Setup(r => r.GetActiveAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(plans);
 
@@ -810,7 +869,7 @@ public class SubscriptionPlanServiceTests
         // Arrange
         var planId = Guid.NewGuid();
         var plan = new SubscriptionPlan("Old Name", "old-slug", 1999);
-        
+
         _mockRepository.Setup(r => r.GetByIdAsync(planId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(plan);
         _mockRepository.Setup(r => r.IsNameUniqueAsync(It.IsAny<string>(), planId, It.IsAny<CancellationToken>()))
@@ -831,7 +890,7 @@ public class SubscriptionPlanServiceTests
     {
         // Arrange
         var planId = Guid.NewGuid();
-        
+
         _mockRepository.Setup(r => r.GetActiveSubscriptionCountAsync(planId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(0);
 

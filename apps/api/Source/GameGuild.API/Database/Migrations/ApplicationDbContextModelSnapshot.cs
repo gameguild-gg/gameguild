@@ -515,6 +515,9 @@ namespace GameGuild.API.Database.Migrations
                     b.Property<bool>("IsBundle")
                         .HasColumnType("boolean");
 
+                    b.Property<bool>("IsPublished")
+                        .HasColumnType("boolean");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(200)
@@ -540,6 +543,8 @@ namespace GameGuild.API.Database.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("CreatorId");
+
+                    b.HasIndex("IsPublished");
 
                     b.HasIndex("Name");
 

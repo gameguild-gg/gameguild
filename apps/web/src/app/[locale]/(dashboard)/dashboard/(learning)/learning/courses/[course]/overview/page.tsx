@@ -1,22 +1,32 @@
 import { Link } from '@/i18n/navigation';
 import { getCourse, getCourseAnalytics, getCourseContent } from '@/lib/learning';
+import {
+  deriveCourseLaunchSummary,
+  formatDurationLabel,
+  type AcademyState,
+  type CourseReadinessState,
+  type StorefrontState,
+} from '@/lib/learning/course-launch';
 import { Badge } from '@game-guild/ui/components/badge';
 import { Button } from '@game-guild/ui/components/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@game-guild/ui/components/card';
 import { Progress } from '@game-guild/ui/components/progress';
 import {
-    AlertCircle,
-    BookOpen,
-    CheckCircle2,
-    ClipboardList,
-    Clock,
-    Edit,
-    FileText,
-    Image,
-    Settings,
-    Star,
-    TrendingUp,
-    Users,
+  AlertCircle,
+  BookOpen,
+  CheckCircle2,
+  ClipboardList,
+  Clock,
+  Edit,
+  FileText,
+  Globe,
+  Image,
+  Layers3,
+  Rocket,
+  Settings,
+  Star,
+  TrendingUp,
+  Users,
 } from 'lucide-react';
 import { notFound } from 'next/navigation';
 import React from 'react';
@@ -29,6 +39,70 @@ function formatDate(dateString: string) {
     year: 'numeric',
   });
 }
+
+const storefrontStateMeta: Record<StorefrontState, { label: string; description: string; className: string }> = {
+  hidden: {
+    label: 'Hidden',
+    description: 'Not visible in the public catalog yet.',
+    className: 'border-slate-600 bg-slate-100 text-slate-700 dark:bg-slate-900 dark:text-slate-200',
+  },
+  teaser: {
+    label: 'Teaser',
+    description: 'Previewable without open enrollment.',
+    className: 'border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-900 dark:bg-blue-950 dark:text-blue-300',
+  },
+  'enrollment-open': {
+    label: 'Enrollment Open',
+    description: 'Students can discover and enroll now.',
+    className: 'border-green-200 bg-green-50 text-green-700 dark:border-green-900 dark:bg-green-950 dark:text-green-300',
+  },
+  'enrollment-closed': {
+    label: 'Enrollment Closed',
+    description: 'Course is public but no longer accepting enrollments.',
+    className: 'border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-300',
+  },
+};
+
+const academyStateMeta: Record<AcademyState, { label: string; description: string; className: string }> = {
+  hidden: {
+    label: 'Hidden',
+    description: 'Learner delivery is not available yet.',
+    className: 'border-slate-600 bg-slate-100 text-slate-700 dark:bg-slate-900 dark:text-slate-200',
+  },
+  scheduled: {
+    label: 'Scheduled',
+    description: 'Published, but still blocked by missing delivery setup.',
+    className: 'border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-900 dark:bg-blue-950 dark:text-blue-300',
+  },
+  live: {
+    label: 'Live',
+    description: 'Learners can consume the course content now.',
+    className: 'border-green-200 bg-green-50 text-green-700 dark:border-green-900 dark:bg-green-950 dark:text-green-300',
+  },
+};
+
+const readinessStateMeta: Record<CourseReadinessState, { label: string; description: string; className: string }> = {
+  incomplete: {
+    label: 'Incomplete',
+    description: 'Core catalog and delivery requirements are still missing.',
+    className: 'border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-300',
+  },
+  'storefront-ready': {
+    label: 'Storefront Ready',
+    description: 'Catalog essentials are set, but delivery is not ready yet.',
+    className: 'border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-900 dark:bg-blue-950 dark:text-blue-300',
+  },
+  'academy-ready': {
+    label: 'Academy Ready',
+    description: 'Catalog and delivery requirements are configured.',
+    className: 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950 dark:text-emerald-300',
+  },
+  live: {
+    label: 'Live',
+    description: 'Published and ready across both catalog and learner delivery.',
+    className: 'border-green-200 bg-green-50 text-green-700 dark:border-green-900 dark:bg-green-950 dark:text-green-300',
+  },
+};
 
 export default async function Page({ params }: PageProps<'/[locale]/dashboard/learning/courses/[course]/overview'>): Promise<React.JSX.Element> {
   const { locale, course: courseId } = await params;
@@ -44,38 +118,29 @@ export default async function Page({ params }: PageProps<'/[locale]/dashboard/le
   const completionRate = totalEnrollments > 0 ? Math.round((completedCount / totalEnrollments) * 100) : 0;
   const avgRating = analytics.ratings.length > 0 ? (analytics.ratings.reduce((acc, r) => acc + r.score, 0) / analytics.ratings.length).toFixed(1) : null;
 
-  const modules = content.items.filter((i) => !i.parentId);
-  const lessons = content.items.filter((i) => i.parentId);
-  const totalDuration = content.items.reduce((acc, item) => acc + (item.duration ?? 0), 0);
-  const durationStr = totalDuration >= 60 ? `${Math.floor(totalDuration / 60)}h ${totalDuration % 60}m` : `${totalDuration}m`;
+  const launchSummary = deriveCourseLaunchSummary(course, content);
+  const modulesCount = launchSummary.structure.modules;
+  const lessonsCount = launchSummary.structure.lessons;
+  const durationStr = formatDurationLabel(launchSummary.structure.totalDurationMinutes);
 
   // Readiness checklist items
-  const readinessChecks = [
-    {
-      label: 'Add a description',
-      done: !!course.description?.trim(),
-      href: `/dashboard/learning/courses/${courseId}/listing/info` as const,
-      icon: FileText,
-    },
-    {
-      label: 'Upload a cover image',
-      done: !!course.thumbnail,
-      href: `/dashboard/learning/courses/${courseId}/listing/media` as const,
-      icon: Image,
-    },
-    {
-      label: 'Create at least one module',
-      done: modules.length > 0,
-      href: `/dashboard/learning/courses/${courseId}/content` as const,
-      icon: BookOpen,
-    },
-    {
-      label: 'Add a lesson to a module',
-      done: lessons.length > 0,
-      href: `/dashboard/learning/courses/${courseId}/content` as const,
-      icon: ClipboardList,
-    },
-  ];
+  const readinessChecks = launchSummary.checks.map((check) => ({
+    ...check,
+    href:
+      check.key === 'thumbnail'
+        ? (`/dashboard/learning/courses/${courseId}/listing/media` as const)
+        : check.key === 'module' || check.key === 'lesson'
+          ? (`/dashboard/learning/courses/${courseId}/content` as const)
+          : (`/dashboard/learning/courses/${courseId}/listing/info` as const),
+    icon:
+      check.key === 'thumbnail'
+        ? Image
+        : check.key === 'module'
+          ? BookOpen
+          : check.key === 'lesson'
+            ? ClipboardList
+            : FileText,
+  }));
   const readinessDone = readinessChecks.filter((c) => c.done).length;
   const readinessTotal = readinessChecks.length;
   const readinessPercent = Math.round((readinessDone / readinessTotal) * 100);
@@ -115,7 +180,7 @@ export default async function Page({ params }: PageProps<'/[locale]/dashboard/le
               <BookOpen className="size-5 text-purple-600 dark:text-purple-400" />
             </div>
             <div>
-              <p className="text-2xl font-bold">{modules.length}</p>
+              <p className="text-2xl font-bold">{modulesCount}</p>
               <p className="text-sm text-muted-foreground">Modules</p>
             </div>
           </CardContent>
@@ -136,6 +201,64 @@ export default async function Page({ params }: PageProps<'/[locale]/dashboard/le
       {/* Main Content */}
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="space-y-6 lg:col-span-2">
+          <Card>
+            <CardHeader>
+              <CardTitle>Launch Control</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid gap-4 md:grid-cols-3">
+                <div className="rounded-lg border p-4">
+                  <div className="mb-3 flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                    <Globe className="size-4" />
+                    Storefront
+                  </div>
+                  <Badge variant="outline" className={storefrontStateMeta[launchSummary.storefrontState].className}>
+                    {storefrontStateMeta[launchSummary.storefrontState].label}
+                  </Badge>
+                  <p className="mt-3 text-sm text-muted-foreground">{storefrontStateMeta[launchSummary.storefrontState].description}</p>
+                </div>
+                <div className="rounded-lg border p-4">
+                  <div className="mb-3 flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                    <Rocket className="size-4" />
+                    Academy
+                  </div>
+                  <Badge variant="outline" className={academyStateMeta[launchSummary.academyState].className}>
+                    {academyStateMeta[launchSummary.academyState].label}
+                  </Badge>
+                  <p className="mt-3 text-sm text-muted-foreground">{academyStateMeta[launchSummary.academyState].description}</p>
+                </div>
+                <div className="rounded-lg border p-4">
+                  <div className="mb-3 flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                    <Layers3 className="size-4" />
+                    Readiness
+                  </div>
+                  <Badge variant="outline" className={readinessStateMeta[launchSummary.readinessState].className}>
+                    {readinessStateMeta[launchSummary.readinessState].label}
+                  </Badge>
+                  <p className="mt-3 text-sm text-muted-foreground">{readinessStateMeta[launchSummary.readinessState].description}</p>
+                </div>
+              </div>
+
+              {launchSummary.blockers.length > 0 ? (
+                <div className="rounded-lg border border-dashed p-4">
+                  <p className="mb-3 text-sm font-medium">Current launch blockers</p>
+                  <ul className="space-y-2 text-sm text-muted-foreground">
+                    {launchSummary.blockers.map((blocker) => (
+                      <li key={blocker} className="flex items-start gap-2">
+                        <AlertCircle className="mt-0.5 size-4 shrink-0 text-amber-500" />
+                        <span>{blocker}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : (
+                <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950 dark:text-emerald-300">
+                  No launch blockers remain on the current dashboard contract.
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
           {/* Course Readiness */}
           <Card>
             <CardHeader>
@@ -206,7 +329,7 @@ export default async function Page({ params }: PageProps<'/[locale]/dashboard/le
                 <div className="flex items-center gap-3 rounded-lg border p-3">
                   <BookOpen className="size-5 text-purple-500" />
                   <div>
-                    <p className="text-lg font-bold">{lessons.length}</p>
+                    <p className="text-lg font-bold">{lessonsCount}</p>
                     <p className="text-xs text-muted-foreground">Lessons</p>
                   </div>
                 </div>
@@ -231,9 +354,9 @@ export default async function Page({ params }: PageProps<'/[locale]/dashboard/le
             </CardHeader>
             <CardContent className="space-y-2">
               <Button variant="outline" className="w-full justify-start" asChild>
-                <Link href={`/dashboard/learning/courses/${courseId}/listing/info`}>
+                <Link href={`/dashboard/learning/courses/${courseId}/listing`}>
                   <Edit className="mr-2 size-4" />
-                  Edit Course Info
+                  Open Listing Controls
                 </Link>
               </Button>
               <Button variant="outline" className="w-full justify-start" asChild>
@@ -279,10 +402,28 @@ export default async function Page({ params }: PageProps<'/[locale]/dashboard/le
                 <span className="text-muted-foreground">Enrollment</span>
                 <Badge variant="outline">{course.enrollmentStatus}</Badge>
               </div>
+              <div className="flex justify-between gap-3">
+                <span className="text-muted-foreground">Storefront</span>
+                <Badge variant="outline" className={storefrontStateMeta[launchSummary.storefrontState].className}>
+                  {storefrontStateMeta[launchSummary.storefrontState].label}
+                </Badge>
+              </div>
+              <div className="flex justify-between gap-3">
+                <span className="text-muted-foreground">Academy</span>
+                <Badge variant="outline" className={academyStateMeta[launchSummary.academyState].className}>
+                  {academyStateMeta[launchSummary.academyState].label}
+                </Badge>
+              </div>
               {course.estimatedHours && (
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Est. Hours</span>
                   <span>{course.estimatedHours}h</span>
+                </div>
+              )}
+              {course.enrollmentDeadline && (
+                <div className="flex justify-between gap-3">
+                  <span className="text-muted-foreground">Enrollment Deadline</span>
+                  <span>{formatDate(course.enrollmentDeadline)}</span>
                 </div>
               )}
               <div className="border-t pt-3">

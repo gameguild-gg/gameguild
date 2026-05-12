@@ -44,6 +44,7 @@ public class ProgramService(IProgramCrudService crud, IProgramLifecycleService l
   public Task<IEnumerable<ContentInteraction>> GetUserInteractionsAsync(Guid programId, Guid userId) => crud.GetUserInteractionsAsync(programId, userId);
   public Task<Program> UpdateUserProgressAsync(Guid programId, Guid userId, Guid contentId, ProgressStatus status) => crud.UpdateUserProgressAsync(programId, userId, contentId, status);
   public Task<UserProgressDto?> UpdateUserProgressAsync(Guid programId, Guid userId, UpdateProgressDto progressDto) => crud.UpdateUserProgressAsync(programId, userId, progressDto);
+  public Task<ContentInteraction?> SubmitUserContentAsync(Guid programId, Guid userId, Guid contentId, string submissionData) => crud.SubmitUserContentAsync(programId, userId, contentId, submissionData);
   public Task<bool> MarkContentCompletedAsync(Guid programId, Guid userId, Guid contentId) => crud.MarkContentCompletedAsync(programId, userId, contentId);
   public Task<bool> ResetUserProgressAsync(Guid programId, Guid userId) => crud.ResetUserProgressAsync(programId, userId);
   public Task<IEnumerable<Program>> SearchProgramsAsync(string searchTerm, int skip = 0, int take = 50) => crud.SearchProgramsAsync(searchTerm, skip, take);

@@ -1,5 +1,5 @@
-import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import { Link } from '@/i18n/navigation';
 import { ArrowLeft, Search } from 'lucide-react';
 
 export default function TrackNotFound() {
@@ -36,7 +36,7 @@ export default function TrackNotFound() {
             </Button>
 
             <Button asChild className="bg-blue-600 hover:bg-blue-700">
-              <Link href="/programs">Browse All Courses</Link>
+              <Link href="/courses">Browse All Courses</Link>
             </Button>
           </div>
         </div>

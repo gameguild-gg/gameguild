@@ -27,21 +27,27 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="coverlet.collector"/>
-        <PackageReference Include="coverlet.msbuild"/>
-        <PackageReference Include="FluentAssertions"/>
-        <PackageReference Include="Microsoft.NET.Test.Sdk"/>
-        <PackageReference Include="Moq"/>
-        <PackageReference Include="xunit"/>
-        <PackageReference Include="xunit.runner.visualstudio"/>
+        <PackageReference Include="coverlet.collector" />
+        <PackageReference Include="coverlet.msbuild" />
+        <PackageReference Include="FluentAssertions" />
+        <PackageReference Include="Microsoft.NET.Test.Sdk" />
+        <PackageReference Include="MockQueryable.Moq" />
+        <PackageReference Include="Moq" />
+        <PackageReference Include="xunit" />
+        <PackageReference Include="xunit.runner.visualstudio" />
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\..\Source\Modules\GameGuild.Commerce.Subscriptions\GameGuild.Commerce.Subscriptions.csproj"/>
-        <ProjectReference Include="..\..\Source\Modules\GameGuild.Commerce.Orders\GameGuild.Commerce.Orders.csproj"/>
-        <ProjectReference Include="..\..\Source\Modules\GameGuild.Commerce.Billing\GameGuild.Commerce.Billing.csproj"/>
-        <ProjectReference Include="..\..\Source\Modules\GameGuild.Commerce.Payments\GameGuild.Commerce.Payments.csproj"/>
-        <ProjectReference Include="..\..\Source\Modules\GameGuild.SharedKernel\GameGuild.SharedKernel.csproj"/>
+        <ProjectReference
+            Include="..\..\Source\Modules\GameGuild.Commerce.Subscriptions\GameGuild.Commerce.Subscriptions.csproj" />
+        <ProjectReference
+            Include="..\..\Source\Modules\GameGuild.Commerce.Orders\GameGuild.Commerce.Orders.csproj" />
+        <ProjectReference
+            Include="..\..\Source\Modules\GameGuild.Commerce.Billing\GameGuild.Commerce.Billing.csproj" />
+        <ProjectReference
+            Include="..\..\Source\Modules\GameGuild.Commerce.Payments\GameGuild.Commerce.Payments.csproj" />
+        <ProjectReference
+            Include="..\..\Source\Modules\GameGuild.SharedKernel\GameGuild.SharedKernel.csproj" />
     </ItemGroup>
 
 </Project>

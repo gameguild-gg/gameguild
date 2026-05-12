@@ -371,6 +371,7 @@ public class PresentationLayerOptionsBuilderTests
     public void CreateWithValidation_FromConfig_DoesNotThrow()
     {
         var config = new ConfigurationBuilder().Build();
+
         var act = () => PresentationLayerOptionsBuilder.CreateWithValidation(config);
         act.Should().NotThrow();
     }
@@ -827,7 +828,7 @@ public class IdempotencyMiddlewareTests
         await middleware.InvokeAsync(context);
 
         nextCalled.Should().BeTrue();
-        // Verify BuildCacheKey was invoked by checking the store was called with properly scoped key 
+        // Verify BuildCacheKey was invoked by checking the store was called with properly scoped key
         store.Verify(s => s.TryGetResponseAsync(It.Is<string>(k =>
             k.Contains("idempotency:") && k.Contains("test-key-123"))), Times.Once);
     }

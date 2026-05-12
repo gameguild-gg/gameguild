@@ -1,7 +1,22 @@
-import React from 'react';
 import { getInstructorStats, getRecentActivity } from '@/lib/learning';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@game-guild/ui/components/card';
-import { BookOpen, Users, TrendingUp, Star, Activity } from 'lucide-react';
+import { Activity, BookOpen, Star, TrendingUp, Users } from 'lucide-react';
+import React from 'react';
+
+function formatActivityType(type: 'enrollment' | 'completion' | 'review' | 'comment' | 'activity'): string {
+  switch (type) {
+    case 'enrollment':
+      return 'enrolled in';
+    case 'completion':
+      return 'completed';
+    case 'review':
+      return 'reviewed';
+    case 'comment':
+      return 'commented on';
+    case 'activity':
+      return 'was active in';
+  }
+}
 
 export default async function Page({ params }: PageProps<'/[locale]/dashboard/learning/overview'>): Promise<React.JSX.Element> {
   const { locale } = await params;
@@ -10,23 +25,25 @@ export default async function Page({ params }: PageProps<'/[locale]/dashboard/le
   const [stats, activity] = await Promise.all([getInstructorStats(), getRecentActivity()]);
 
   const totalCourses = stats.courses.length;
-  const allEnrollments = stats.courses.flatMap((c) => c.enrollments);
-  const totalStudents = new Set(allEnrollments.map((e) => e.id)).size;
+  const totalEnrollments = stats.courses.reduce((acc, course) => acc + course.enrolledCount, 0);
+  const completionSamples = stats.courses
+    .map((course) => course.completionPercent)
+    .filter((completionPercent): completionPercent is number => completionPercent !== null);
   const avgCompletionRate =
-    totalCourses > 0
-      ? stats.courses.reduce((acc, c) => {
-          const rate = c.enrollments.length > 0 ? c.completions.length / c.enrollments.length : 0;
-          return acc + rate;
-        }, 0) / totalCourses
-      : 0;
-  const allRatings = stats.courses.flatMap((c) => c.ratings);
-  const avgRating = allRatings.length > 0 ? allRatings.reduce((acc, r) => acc + r.score, 0) / allRatings.length : 0;
+    completionSamples.length > 0
+      ? completionSamples.reduce((acc, completionPercent) => acc + completionPercent, 0) / completionSamples.length
+      : null;
+  const totalRatings = stats.courses.reduce((acc, course) => acc + course.totalRatings, 0);
+  const avgRating =
+    totalRatings > 0
+      ? stats.courses.reduce((acc, course) => acc + ((course.averageRating ?? 0) * course.totalRatings), 0) / totalRatings
+      : null;
 
   const kpis = [
     { label: 'Total Courses', value: totalCourses, icon: BookOpen, description: 'Courses you manage' },
-    { label: 'Total Students', value: totalStudents, icon: Users, description: 'Unique enrolled students' },
-    { label: 'Avg. Completion', value: `${(avgCompletionRate * 100).toFixed(0)}%`, icon: TrendingUp, description: 'Average completion rate' },
-    { label: 'Avg. Rating', value: avgRating > 0 ? avgRating.toFixed(1) : '—', icon: Star, description: 'Average course rating' },
+    { label: 'Active Enrollments', value: totalEnrollments, icon: Users, description: 'Current learners across managed courses' },
+    { label: 'Avg. Completion', value: avgCompletionRate !== null ? `${Math.round(avgCompletionRate)}%` : '—', icon: TrendingUp, description: 'Average course completion rate' },
+    { label: 'Avg. Rating', value: avgRating !== null ? avgRating.toFixed(1) : '—', icon: Star, description: 'Weighted average course rating' },
   ];
 
   return (
@@ -70,7 +87,7 @@ export default async function Page({ params }: PageProps<'/[locale]/dashboard/le
                 <div key={i} className="flex items-center justify-between rounded-md border p-3">
                   <div>
                     <span className="font-medium">{item.studentName}</span>
-                    <span className="text-muted-foreground"> — {item.type} on </span>
+                    <span className="text-muted-foreground"> — {formatActivityType(item.type)} </span>
                     <span className="font-medium">{item.courseName}</span>
                   </div>
                   <span className="text-xs text-muted-foreground">{new Date(item.timestamp).toLocaleDateString()}</span>

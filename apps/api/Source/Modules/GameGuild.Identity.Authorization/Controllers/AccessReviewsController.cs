@@ -11,6 +11,7 @@ namespace GameGuild.Identity.Authorization.Controllers;
 /// <summary>
 ///     API controller for Access Review operations
 /// </summary>
+[Microsoft.AspNetCore.Http.Tags("access-control/access-reviews")]
 [ApiVersion("1.0")]
 [Route("v{version:apiVersion}/access-reviews")]
 [Authorize]

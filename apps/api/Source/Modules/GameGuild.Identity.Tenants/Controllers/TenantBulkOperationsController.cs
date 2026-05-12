@@ -10,7 +10,7 @@ namespace GameGuild.Identity.Tenants;
 ///     Tenant Bulk Operations API Controller - handles batch operations on multiple tenants
 /// </summary>
 [ApiVersion("1.0")]
-[Tags("tenants")]
+[Microsoft.AspNetCore.Http.Tags("tenants")]
 [Authorize]
 public sealed class TenantBulkOperationsController(ISender sender) : BaseApiController
 {

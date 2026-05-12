@@ -13,7 +13,7 @@ namespace GameGuild.Identity.Authentication;
 /// </summary>
 [ApiController]
 [ApiVersion("1.0")]
-[Tags("authentication/sessions")]
+[Microsoft.AspNetCore.Http.Tags("auth/sessions")]
 [Authorize]
 public sealed class SessionController(ISessionManagementService sessionService) : AuthControllerBase
 {
@@ -35,17 +35,17 @@ public sealed class SessionController(ISessionManagementService sessionService) 
         var sessions = await sessionService.GetUserSessionsAsync(userId).ConfigureAwait(false);
 
         var response = sessions.Select(s => new SessionResponse
-            {
-                Id = s.Id,
-                DeviceInfo = ParseDeviceInfo(s.DeviceInfo),
-                Location = ParseLocation(s.Location),
-                IpAddress = s.IpAddress,
-                CreatedAt = s.CreatedAt,
-                LastUsedAt = s.LastUsedAt,
-                ExpiresAt = s.ExpiresAt,
-                IsTrustedDevice = s.IsTrustedDevice,
-                IsCurrent = IsCurrentSession(s.Id)
-            })
+        {
+            Id = s.Id,
+            DeviceInfo = ParseDeviceInfo(s.DeviceInfo),
+            Location = ParseLocation(s.Location),
+            IpAddress = s.IpAddress,
+            CreatedAt = s.CreatedAt,
+            LastUsedAt = s.LastUsedAt,
+            ExpiresAt = s.ExpiresAt,
+            IsTrustedDevice = s.IsTrustedDevice,
+            IsCurrent = IsCurrentSession(s.Id)
+        })
             .ToList();
 
         return Ok(response);

@@ -10,6 +10,7 @@ namespace GameGuild.Commerce.Products;
 /// <param name="ImageUrl">Image URL</param>
 /// <param name="Type">Product type</param>
 /// <param name="IsBundle">Whether product is a bundle</param>
+/// <param name="IsPublished">Whether product is publicly visible</param>
 /// <param name="CreatorId">Creator user ID</param>
 /// <param name="BundleItems">Bundle item IDs</param>
 /// <param name="ReferralCommissionPercentage">Referral commission percentage</param>
@@ -26,6 +27,7 @@ public sealed record ProductDto(
     string? ImageUrl,
     ProductType Type,
     bool IsBundle,
+    bool IsPublished,
     Guid? CreatorId,
     List<Guid>? BundleItems,
     decimal ReferralCommissionPercentage,
@@ -34,7 +36,44 @@ public sealed record ProductDto(
     DateTime CreatedAt,
     DateTime UpdatedAt,
     List<ProductPricingDto>? Pricing = null
-);
+)
+{
+    public ProductDto(
+        Guid Id,
+        string Name,
+        string? Description,
+        string? ShortDescription,
+        string? ImageUrl,
+        ProductType Type,
+        bool IsBundle,
+        Guid? CreatorId,
+        List<Guid>? BundleItems,
+        decimal ReferralCommissionPercentage,
+        decimal MaxAffiliateDiscount,
+        decimal AffiliateCommissionPercentage,
+        DateTime CreatedAt,
+        DateTime UpdatedAt,
+        List<ProductPricingDto>? Pricing = null)
+        : this(
+            Id,
+            Name,
+            Description,
+            ShortDescription,
+            ImageUrl,
+            Type,
+            IsBundle,
+            true,
+            CreatorId,
+            BundleItems,
+            ReferralCommissionPercentage,
+            MaxAffiliateDiscount,
+            AffiliateCommissionPercentage,
+            CreatedAt,
+            UpdatedAt,
+            Pricing)
+    {
+    }
+}
 
 /// <summary>
 /// Product Pricing Data Transfer Object

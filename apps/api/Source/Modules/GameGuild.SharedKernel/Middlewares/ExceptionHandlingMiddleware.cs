@@ -122,11 +122,13 @@ public sealed class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<Ex
 
     private static async Task HandleDomainExceptionAsync(HttpContext context, DomainException exception)
     {
-        const int statusCode = StatusCodes.Status422UnprocessableEntity;
+        var statusCode = exception is EntityNotFoundException
+            ? StatusCodes.Status404NotFound
+            : StatusCodes.Status422UnprocessableEntity;
         var problemDetails = new ProblemDetails
         {
-            Type = RfcUrls.UnprocessableEntity,
-            Title = "Domain Rule Violation",
+            Type = statusCode == StatusCodes.Status404NotFound ? RfcUrls.NotFound : RfcUrls.UnprocessableEntity,
+            Title = statusCode == StatusCodes.Status404NotFound ? "Resource Not Found" : "Domain Rule Violation",
             Status = statusCode,
             Detail = exception.Message
         };

@@ -1,20 +1,19 @@
 'use server';
 
+import { getToken } from '@/auth';
+import type { LearningCoursesProgramContentType } from '@/lib/learning/types';
 import {
   createServerClient,
-  type LearningCoursesCreateProgram,
-  type LearningCoursesCreateProgramContent,
-  type LearningCoursesProgram,
-  type LearningCoursesProgramContent,
-  type LearningCoursesProgramContentType,
-  type LearningCoursesVisibility,
-  type LearningCoursesUpdateProgramContent,
-  type LearningAssessmentsAssessment,
+  GeneratedApi,
+  type LearningAssessmentsAssessmentType,
   type LearningAssessmentsCreateAssessmentInput,
   type LearningAssessmentsUpdateAssessmentInput,
-  type LearningAssessmentsAssessmentType,
+  type LearningCoursesCloneProgram,
+  type LearningCoursesCreateProgram,
+  type LearningCoursesCreateProgramContent,
+  type LearningCoursesUpdateProgram,
+  type LearningCoursesUpdateProgramContent
 } from '@game-guild/client';
-import { getToken } from '@/auth';
 import { revalidatePath } from 'next/cache';
 
 type ActionResult<T> = { success: true; data: T } | { success: false; error: string };
@@ -25,6 +24,17 @@ function getApiClient() {
     baseUrl: apiUrl,
     auth: { getAccessToken: () => getToken() },
   });
+}
+
+function createCourseModules() {
+  const client = getApiClient();
+
+  return {
+    programs: new GeneratedApi.LearningCoursesProgramModule(client),
+    content: new GeneratedApi.LearningCoursesProgramcontentModule(client),
+    lifecycle: new GeneratedApi.LearningCoursesProgramlifecycleModule(client),
+    assessments: new GeneratedApi.LearningAssessmentsModule(client),
+  };
 }
 
 function extractError(err: unknown): string {
@@ -51,7 +61,6 @@ export async function addContent(input: AddContentInput): Promise<ActionResult<{
   }
 
   try {
-    const client = getApiClient();
     const contentBody: LearningCoursesCreateProgramContent = {
       programId: courseId,
       title: title.trim(),
@@ -63,12 +72,8 @@ export async function addContent(input: AddContentInput): Promise<ActionResult<{
       ...(parentId ? { parentId } : {}),
     };
 
-    const result = await client.request<LearningCoursesProgramContent>({
-      method: 'POST',
-      path: `/v1/courses/${courseId}/content`,
-      body: contentBody,
-      requiresAuth: true,
-    });
+    const { content } = createCourseModules();
+    const result = await content.postCoursesContent(courseId, contentBody);
 
     if (result.ok) {
       revalidatePath(`/dashboard/learning/courses/${courseId}`);
@@ -83,12 +88,8 @@ export async function addContent(input: AddContentInput): Promise<ActionResult<{
 
 export async function deleteContent(courseId: string, contentId: string): Promise<ActionResult<null>> {
   try {
-    const client = getApiClient();
-    const result = await client.request<void>({
-      method: 'DELETE',
-      path: `/v1/courses/${courseId}/content/${contentId}`,
-      requiresAuth: true,
-    });
+    const { content } = createCourseModules();
+    const result = await content.deleteCoursesContent(courseId, contentId);
 
     if (result.ok) {
       revalidatePath(`/dashboard/learning/courses/${courseId}`);
@@ -118,13 +119,9 @@ export async function updateContent(input: UpdateContentInput): Promise<ActionRe
   const { courseId, contentId, ...fields } = input;
 
   try {
-    const client = getApiClient();
-    const result = await client.request<LearningCoursesProgramContent>({
-      method: 'PUT',
-      path: `/v1/courses/${courseId}/content/${contentId}`,
-      body: { id: contentId, ...fields },
-      requiresAuth: true,
-    });
+    const { content } = createCourseModules();
+    const body = { id: contentId, ...fields } as LearningCoursesUpdateProgramContent;
+    const result = await content.putCoursesContent(courseId, contentId, body);
 
     if (result.ok) {
       revalidatePath(`/dashboard/learning/courses/${courseId}`);
@@ -139,13 +136,8 @@ export async function updateContent(input: UpdateContentInput): Promise<ActionRe
 
 export async function reorderContent(courseId: string, contentIds: string[]): Promise<ActionResult<null>> {
   try {
-    const client = getApiClient();
-    const result = await client.request<void>({
-      method: 'POST',
-      path: `/v1/courses/${courseId}/content:reorder`,
-      body: { contentIds },
-      requiresAuth: true,
-    });
+    const { programs } = createCourseModules();
+    const result = await programs.postCoursesContentReorder1(courseId, { contentIds });
 
     if (result.ok) {
       revalidatePath(`/dashboard/learning/courses/${courseId}`);
@@ -180,17 +172,12 @@ export async function createCourse(input: CreateCourseInput): Promise<ActionResu
   }
 
   try {
-    const client = getApiClient();
-    const result = await client.request<LearningCoursesProgram>({
-      method: 'POST',
-      path: '/v1/courses',
-      body: {
-        title: title.trim(),
-        description: description.trim(),
-        slug: slug.trim(),
-      } satisfies LearningCoursesCreateProgram,
-      requiresAuth: true,
-    });
+    const { programs } = createCourseModules();
+    const result = await programs.postCourses({
+      title: title.trim(),
+      description: description.trim(),
+      slug: slug.trim(),
+    } satisfies LearningCoursesCreateProgram);
 
     if (result.ok) {
       revalidatePath('/dashboard/learning/courses');
@@ -217,21 +204,16 @@ export interface UpdateCourseInput {
   skillsRequired?: string;
   skillsProvided?: string;
   enrollmentStatus?: string;
-  maxEnrollments?: number;
-  enrollmentDeadline?: string;
+  maxEnrollments?: number | null;
+  enrollmentDeadline?: string | null;
 }
 
 export async function updateCourse(input: UpdateCourseInput): Promise<ActionResult<null>> {
   const { courseId, ...fields } = input;
 
   try {
-    const client = getApiClient();
-    const result = await client.request<LearningCoursesProgram>({
-      method: 'PUT',
-      path: `/v1/courses/${courseId}`,
-      body: fields,
-      requiresAuth: true,
-    });
+    const { programs } = createCourseModules();
+    const result = await programs.putCourses(courseId, fields as LearningCoursesUpdateProgram);
 
     if (result.ok) {
       revalidatePath(`/dashboard/learning/courses/${courseId}`);
@@ -247,12 +229,8 @@ export async function updateCourse(input: UpdateCourseInput): Promise<ActionResu
 
 export async function publishCourse(courseId: string): Promise<ActionResult<null>> {
   try {
-    const client = getApiClient();
-    const result = await client.request<LearningCoursesProgram>({
-      method: 'POST',
-      path: `/v1/courses/${courseId}:publish`,
-      requiresAuth: true,
-    });
+    const { lifecycle } = createCourseModules();
+    const result = await lifecycle.postCoursesPublish(courseId);
 
     if (result.ok) {
       revalidatePath(`/dashboard/learning/courses/${courseId}`);
@@ -268,12 +246,8 @@ export async function publishCourse(courseId: string): Promise<ActionResult<null
 
 export async function unpublishCourse(courseId: string): Promise<ActionResult<null>> {
   try {
-    const client = getApiClient();
-    const result = await client.request<LearningCoursesProgram>({
-      method: 'POST',
-      path: `/v1/courses/${courseId}:unpublish`,
-      requiresAuth: true,
-    });
+    const { lifecycle } = createCourseModules();
+    const result = await lifecycle.postCoursesUnpublish(courseId);
 
     if (result.ok) {
       revalidatePath(`/dashboard/learning/courses/${courseId}`);
@@ -289,12 +263,8 @@ export async function unpublishCourse(courseId: string): Promise<ActionResult<nu
 
 export async function archiveCourse(courseId: string): Promise<ActionResult<null>> {
   try {
-    const client = getApiClient();
-    const result = await client.request<LearningCoursesProgram>({
-      method: 'POST',
-      path: `/v1/courses/${courseId}:archive`,
-      requiresAuth: true,
-    });
+    const { lifecycle } = createCourseModules();
+    const result = await lifecycle.postCoursesArchive(courseId);
 
     if (result.ok) {
       revalidatePath(`/dashboard/learning/courses/${courseId}`);
@@ -310,12 +280,8 @@ export async function archiveCourse(courseId: string): Promise<ActionResult<null
 
 export async function deleteCourse(courseId: string): Promise<ActionResult<null>> {
   try {
-    const client = getApiClient();
-    const result = await client.request<void>({
-      method: 'DELETE',
-      path: `/v1/courses/${courseId}`,
-      requiresAuth: true,
-    });
+    const { programs } = createCourseModules();
+    const result = await programs.deleteCourses(courseId);
 
     if (result.ok) {
       revalidatePath('/dashboard/learning/courses');
@@ -330,13 +296,8 @@ export async function deleteCourse(courseId: string): Promise<ActionResult<null>
 
 export async function cloneCourse(courseId: string, newTitle: string): Promise<ActionResult<{ id: string }>> {
   try {
-    const client = getApiClient();
-    const result = await client.request<LearningCoursesProgram>({
-      method: 'POST',
-      path: `/v1/courses/${courseId}:clone`,
-      body: { newTitle },
-      requiresAuth: true,
-    });
+    const { programs } = createCourseModules();
+    const result = await programs.postCoursesClone(courseId, { newTitle } satisfies LearningCoursesCloneProgram);
 
     if (result.ok) {
       revalidatePath('/dashboard/learning/courses');
@@ -373,7 +334,6 @@ export async function createAssessment(input: CreateAssessmentInput): Promise<Ac
   }
 
   try {
-    const client = getApiClient();
     const body: LearningAssessmentsCreateAssessmentInput = {
       courseId,
       title: title.trim(),
@@ -388,12 +348,8 @@ export async function createAssessment(input: CreateAssessmentInput): Promise<Ac
       availableUntil: rest.availableUntil ?? null,
     };
 
-    const result = await client.request<LearningAssessmentsAssessment>({
-      method: 'POST',
-      path: '/v1/assessments',
-      body,
-      requiresAuth: true,
-    });
+    const { assessments } = createCourseModules();
+    const result = await assessments.postAssessments(body);
 
     if (result.ok) {
       revalidatePath(`/dashboard/learning/courses/${courseId}`);
@@ -426,7 +382,6 @@ export async function updateAssessment(input: UpdateAssessmentInput): Promise<Ac
   const { courseId, assessmentId, ...fields } = input;
 
   try {
-    const client = getApiClient();
     const body: LearningAssessmentsUpdateAssessmentInput = {
       title: fields.title?.trim() ?? null,
       description: fields.description?.trim() ?? null,
@@ -441,12 +396,8 @@ export async function updateAssessment(input: UpdateAssessmentInput): Promise<Ac
       clearContentId: fields.clearContentId ?? false,
     } as any;
 
-    const result = await client.request<void>({
-      method: 'PUT',
-      path: `/v1/assessments/${assessmentId}`,
-      body,
-      requiresAuth: true,
-    });
+    const { assessments } = createCourseModules();
+    const result = await assessments.putAssessments(assessmentId, body);
 
     if (result.ok) {
       revalidatePath(`/dashboard/learning/courses/${courseId}`);
@@ -461,12 +412,8 @@ export async function updateAssessment(input: UpdateAssessmentInput): Promise<Ac
 
 export async function deleteAssessment(courseId: string, assessmentId: string): Promise<ActionResult<null>> {
   try {
-    const client = getApiClient();
-    const result = await client.request<void>({
-      method: 'DELETE',
-      path: `/v1/assessments/${assessmentId}`,
-      requiresAuth: true,
-    });
+    const { assessments } = createCourseModules();
+    const result = await assessments.deleteAssessments(assessmentId);
 
     if (result.ok) {
       revalidatePath(`/dashboard/learning/courses/${courseId}`);

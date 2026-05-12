@@ -11,7 +11,7 @@ namespace GameGuild.Identity.Users;
 ///     Users Bulk &amp; Admin Actions Controller - bulk operations and individual admin status changes
 /// </summary>
 [ApiVersion("1.0")]
-[Tags("users")]
+[Microsoft.AspNetCore.Http.Tags("users")]
 [Authorize]
 public sealed class UsersBulkController(ISender sender) : BaseApiController
 {

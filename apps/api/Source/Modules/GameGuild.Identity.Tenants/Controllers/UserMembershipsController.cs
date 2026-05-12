@@ -16,7 +16,7 @@ namespace GameGuild.Identity.Tenants;
 ///     to maintain proper module boundaries while providing intuitive API paths.
 /// </remarks>
 [ApiVersion("1.0")]
-[Tags("users/memberships")]
+[Microsoft.AspNetCore.Http.Tags("users/memberships")]
 [Authorize]
 public sealed class UserMembershipsController(ISender sender) : BaseApiController
 {

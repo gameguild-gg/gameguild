@@ -19,7 +19,7 @@ namespace GameGuild.Commerce.Subscriptions;
 /// </summary>
 [ApiVersion("1.0")]
 [Route("api")]
-[Tags("subscriptions")]
+[Microsoft.AspNetCore.Http.Tags("commerce/subscriptions")]
 [Authorize]
 [EnableRateLimiting(RateLimitPolicies.ExpensiveOperations)]
 public sealed class SubscriptionsController(ISender sender, IActorContextAccessor actorContextAccessor) : BaseApiController
@@ -91,6 +91,22 @@ public sealed class SubscriptionsController(ISender sender, IActorContextAccesso
         if (pageSize < 1) pageSize = 20;
         if (pageSize > 100) pageSize = 100;
 
+        var actorContext = actorContextAccessor.ActorContext;
+        if (actorContext.IsAuthenticated)
+        {
+            if (!actorContext.TenantId.HasValue)
+            {
+                return BadRequest(new { error = "Tenant context is required" });
+            }
+
+            if (tenantId.HasValue && tenantId.Value != actorContext.TenantId.Value)
+            {
+                return Forbid();
+            }
+
+            tenantId ??= actorContext.TenantId.Value;
+        }
+
         // If expiring filter is set, delegate to expiring subscriptions query
         if (expiring == true)
         {
@@ -120,7 +136,23 @@ public sealed class SubscriptionsController(ISender sender, IActorContextAccesso
     public async Task<IActionResult> CheckSubscriptionExistsById(Guid subscriptionId, CancellationToken ct)
     {
         var subscription = await sender.Send(new GetSubscriptionByIdQuery(subscriptionId), ct).ConfigureAwait(false);
-        return subscription is null ? NotFound() : Ok();
+        if (subscription is null) return NotFound();
+
+        var actorContext = actorContextAccessor.ActorContext;
+        if (actorContext.IsAuthenticated)
+        {
+            if (!actorContext.TenantId.HasValue)
+            {
+                return BadRequest(new { error = "Tenant context is required" });
+            }
+
+            if (subscription.TenantId != actorContext.TenantId.Value)
+            {
+                return NotFound();
+            }
+        }
+
+        return Ok();
     }
 
     /// <summary>
@@ -140,9 +172,19 @@ public sealed class SubscriptionsController(ISender sender, IActorContextAccesso
         var subscription = await sender.Send(new GetSubscriptionByIdQuery(subscriptionId), ct).ConfigureAwait(false);
         if (subscription is null) return NotFound();
 
-        var tenantIdClaim = User.FindFirst("tenant_id")?.Value;
-        if (tenantIdClaim is not null && Guid.TryParse(tenantIdClaim, out var claimTenantId) && claimTenantId != subscription.TenantId)
-            return Forbid();
+        var actorContext = actorContextAccessor.ActorContext;
+        if (actorContext.IsAuthenticated)
+        {
+            if (!actorContext.TenantId.HasValue)
+            {
+                return BadRequest(new { error = "Tenant context is required" });
+            }
+
+            if (subscription.TenantId != actorContext.TenantId.Value)
+            {
+                return NotFound();
+            }
+        }
 
         return Ok(subscription);
     }
