@@ -1,3 +1,15 @@
+# [3.4.0](https://github.com/gameguild-gg/gameguild/compare/v3.3.8...v3.4.0) (2026-05-12)
+
+### Features
+
+* gglexical to block-content-editor ([ca9878c](https://github.com/gameguild-gg/gameguild/commit/ca9878c09c82d248d7e180a0635a393ac07b436d))
+* **block-editor:** block-editor page ([a0793dc](https://github.com/gameguild-gg/gameguild/commit/a0793dc76129bab70c2e35a7d0a0201583915c4d))
+
+### Bug Fixes
+
+* metadata ([d6e18c8](https://github.com/gameguild-gg/gameguild/commit/d6e18c89b48f62d8feacb03e99c2433a13c6fdc0))
+* editor to block-content-editor ([95a0ead](https://github.com/gameguild-gg/gameguild/commit/95a0ead72360d8a52f1a2fe5c08de25ddb6c36de))
+
 # [3.3.8](https://github.com/gameguild-gg/gameguild/compare/v3.3.7...v3.3.8) (2026-05-12)
 
 ### Bug Fixes
