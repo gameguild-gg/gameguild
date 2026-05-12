@@ -1,4 +1,4 @@
-# Orquestração do Armazenamento na Nuvem - GGLexical Editor
+# Orquestração do Armazenamento na Nuvem - Block Content Editor
 
 ## Análise da Arquitetura Existente
 
@@ -515,7 +515,7 @@ public class CreateLexicalProjectHandler : IRequestHandler<CreateLexicalProjectC
 
 #### 4.1 Configuração da API
 ```typescript
-// src/lib/api/editor/lexical-api-client.ts
+// src/components/block-content-editor/lib/api/editor/lexical-api-client.ts
 export class LexicalApiClient extends ApiClient {
   private readonly baseEndpoint = '/api/lexical-projects';
 
@@ -669,7 +669,7 @@ interface SearchProjectsParams {
 
 #### 4.2 Atualização do SyncManager
 ```typescript
-// src/lib/sync/editor/enhanced-sync-manager.ts
+// src/components/block-content-editor/lib/sync/editor/enhanced-sync-manager.ts
 export class EnhancedSyncManager extends SyncManager {
   private lexicalApiClient: LexicalApiClient;
 
