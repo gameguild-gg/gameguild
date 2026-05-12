@@ -248,3 +248,23 @@ The workspace includes pre-configured tasks:
 - `ef-migration-add` / `ef-database-update` - EF Core commands
 
 Use VS Code tasks instead of manual terminal commands when available.
+
+## Coding Behavior Guidelines
+
+Derived from [Andrej Karpathy's observations](https://x.com/karpathy/status/2015883857489522876) on LLM coding pitfalls. These bias toward caution over speed — use judgment for trivial tasks.
+
+### 1. Think Before Coding
+
+Before implementing, state assumptions explicitly. If uncertain, ask. If multiple interpretations exist, present them — don't pick silently. If a simpler approach exists, say so. If something is unclear, stop and ask.
+
+### 2. Simplicity First
+
+Minimum code that solves the problem. No features beyond what was asked. No abstractions for single-use code. No unrequested "flexibility" or "configurability". No error handling for impossible scenarios. If you write 200 lines and it could be 50, rewrite it.
+
+### 3. Surgical Changes
+
+Touch only what you must. Don't improve adjacent code, comments, or formatting. Don't refactor things that aren't broken. Match existing style. If you notice unrelated dead code, mention it — don't delete it. Every changed line should trace directly to the user's request.
+
+### 4. Goal-Driven Execution
+
+Transform tasks into verifiable goals. For multi-step tasks, state a brief plan with explicit success criteria before starting.

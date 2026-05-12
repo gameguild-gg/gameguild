@@ -12,13 +12,14 @@ import shell from 'shelljs';
 import { standaloneFlags } from './lib/emcc-flags.ts';
 import { setupEmsdk } from './lib/emsdk.ts';
 import { enableBuildKeepalive } from './lib/keepalive.ts';
+import { PINNED } from './lib/pinned-versions.ts';
 
 enableBuildKeepalive('build-cmake');
 
 const ROOT = process.cwd();
 shell.config.fatal = true;
 
-const EMSDK_VERSION = process.env.EMSDK_VERSION || 'latest';
+const EMSDK_VERSION = process.env.EMSDK_VERSION || PINNED.EMSDK_VERSION;
 setupEmsdk(EMSDK_VERSION);
 
 const CONCURRENCY = os.cpus().length;
@@ -37,22 +38,44 @@ shell.mkdir('-p', OUTPUT_DIR);
 shell.mkdir('-p', SYSROOT_LIB);
 
 // Detect latest CMake release
+const GITHUB_AUTH = process.env.GITHUB_TOKEN
+    ? `-H "Authorization: token ${process.env.GITHUB_TOKEN}"`
+    : '';
+
 function detectCMakeVersion(): string {
     const envVer = process.env.CMAKE_VERSION;
     if (envVer) return envVer;
 
-    console.log('Detecting latest CMake release...');
+    // CMake 4.x changed CMakeBuildUtilities.cmake: when CMAKE_USE_SYSTEM_CURL=ON it
+    // forces CMAKE_USE_SYSTEM_ZLIB=ON via a regular set() that overrides our -D flag,
+    // and Emscripten's cross-compile sysroot has no system zlib. Cap at 3.x.
+    const FALLBACK_CMAKE_VERSION = PINNED.CMAKE_VERSION;
+    console.log('Detecting latest CMake 3.x release...');
+    const prevFatal = shell.config.fatal;
+    shell.config.fatal = false;
     const result = shell.exec(
-        'curl -fsSL https://api.github.com/repos/Kitware/CMake/releases/latest',
+        `curl -fsSL ${GITHUB_AUTH} "https://api.github.com/repos/Kitware/CMake/releases?per_page=100"`,
         { silent: true },
     );
+    shell.config.fatal = prevFatal;
     if (result.code !== 0) {
-        throw new Error('Failed to query GitHub for latest CMake release');
+        console.warn(`  GitHub API unavailable (exit ${result.code}), using fallback ${FALLBACK_CMAKE_VERSION}`);
+        return FALLBACK_CMAKE_VERSION;
     }
-    const data = JSON.parse(result.stdout);
-    const tag = (data.tag_name as string).replace(/^v/, '');
-    console.log(`  Latest CMake release: ${tag}`);
-    return tag;
+    const releases = JSON.parse(result.stdout) as Array<{
+        tag_name: string;
+        prerelease: boolean;
+        draft: boolean;
+    }>;
+    for (const rel of releases) {
+        if (rel.prerelease || rel.draft) continue;
+        const m = rel.tag_name.match(/^v(3\.\d+\.\d+)$/);
+        if (m) {
+            console.log(`  Latest CMake 3.x release: ${m[1]}`);
+            return m[1];
+        }
+    }
+    throw new Error('No CMake 3.x release found in recent 100 releases');
 }
 
 function escapeRegex(input: string): string {
@@ -60,7 +83,10 @@ function escapeRegex(input: string): string {
 }
 
 function isCMakeSourceDir(dirPath: string): boolean {
-    return fs.existsSync(path.join(dirPath, 'CMakeLists.txt'));
+    if (!fs.existsSync(path.join(dirPath, 'CMakeLists.txt'))) return false;
+    // bundled libarchive version file must exist for cross-compilation configure
+    if (!fs.existsSync(path.join(dirPath, 'Utilities', 'cmlibarchive', 'build', 'version'))) return false;
+    return true;
 }
 
 function findExistingSourceDir(version: string): string | null {
@@ -91,11 +117,16 @@ function ensureCMakeSource(version: string): string {
     }
 
     const normalizedSourceDir = path.join(USERLAND_DIR, `cmake-${version}`);
+    // Remove any incomplete source directory (e.g. gitignore stripped build/ subdirs)
+    if (fs.existsSync(normalizedSourceDir)) {
+        console.log(`Removing incomplete cmake source dir: ${path.basename(normalizedSourceDir)}`);
+        shell.rm('-rf', normalizedSourceDir);
+    }
     const tarball = `v${version}.tar.gz`;
 
     console.log(`Downloading CMake ${version}...`);
     shell.cd(USERLAND_DIR);
-    shell.exec(`curl -fSL -o "${tarball}" "https://github.com/Kitware/CMake/archive/refs/tags/${tarball}"`);
+    shell.exec(`curl -fSL ${GITHUB_AUTH} -o "${tarball}" "https://github.com/Kitware/CMake/archive/refs/tags/${tarball}"`);
 
     shell.rm('-rf', normalizedSourceDir);
     shell.mkdir('-p', normalizedSourceDir);
@@ -142,14 +173,14 @@ patchSource(
     `bool cmSystemTools::RunSingleCommand(std::vector<std::string> const& command,
                                      std::string* captureStdOut,
                                      std::string* captureStdErr, int* retVal,
-                                     char const* dir, OutputOption outputflag,
+                                     const char* dir, OutputOption outputflag,
                                      cmDuration timeout, Encoding encoding)
 {
   cmUVProcessChainBuilder builder;`,
     `bool cmSystemTools::RunSingleCommand(std::vector<std::string> const& command,
                                      std::string* captureStdOut,
                                      std::string* captureStdErr, int* retVal,
-                                     char const* dir, OutputOption outputflag,
+                                     const char* dir, OutputOption outputflag,
                                      cmDuration timeout, Encoding encoding)
 {
 #ifdef __EMSCRIPTEN__
@@ -292,6 +323,19 @@ patchSource(
     'cmlibuv-unix-h-emscripten',
 );
 
+// Decouple ZLIB from CURL: cmake's CMAKE_DEPENDENT_OPTION forces ZLIB=ON whenever
+// CURL=ON (for ABI compat on native builds), but Emscripten's sysroot has no
+// pre-built system zlib. Replace the dependent option with a plain option so our
+// -DCMAKE_USE_SYSTEM_ZLIB=OFF is honoured even when CMAKE_USE_SYSTEM_CURL=ON.
+patchSource(
+    'CMakeLists.txt',
+    `  CMAKE_DEPENDENT_OPTION(CMAKE_USE_SYSTEM_ZLIB "Use system-installed zlib"
+    "\${CMAKE_USE_SYSTEM_LIBRARY_ZLIB}" "NOT CMAKE_USE_SYSTEM_LIBARCHIVE;NOT CMAKE_USE_SYSTEM_CURL" ON)`,
+    `  option(CMAKE_USE_SYSTEM_ZLIB "Use system-installed zlib"
+    "\${CMAKE_USE_SYSTEM_LIBRARY_ZLIB}")`,
+    'cmake-decouple-zlib-from-curl',
+);
+
 // 3. Build with emcmake
 console.log('Cross-compiling CMake for WASM...');
 if (fs.existsSync(BUILD_WASM_DIR)) shell.rm('-rf', BUILD_WASM_DIR);
@@ -313,6 +357,8 @@ const cmakeCmd = [
     '-DCMAKE_BUILD_TYPE=MinSizeRel',
     '-DBUILD_TESTING=OFF',
     '-DCMAKE_USE_OPENSSL=OFF',
+    // Use bundled zlib — the Emscripten cross-compile env has no system zlib
+    '-DCMAKE_USE_SYSTEM_ZLIB=OFF',
     ...curlFlags,
 ].join(' ');
 console.log(cmakeCmd);
@@ -348,7 +394,9 @@ const linkCmd = [
     // Static libraries
     ...cmakeLibs.map(o => `"${o}"`),
     fs.existsSync(LIBCURL_A) ? `"${LIBCURL_A}"` : '',
-    fs.existsSync(EMSDK_ZLIB) ? `"${EMSDK_ZLIB}"` : '-lz',
+    // When CMAKE_USE_SYSTEM_ZLIB=OFF, cmake builds its own libcmzlib.a (already
+    // included in cmakeLibs above). Only link sysroot libz.a if it exists.
+    fs.existsSync(EMSDK_ZLIB) ? `"${EMSDK_ZLIB}"` : '',
     STANDALONE_FLAGS,
     '-Os',
     `-o "${toolMjs}"`,

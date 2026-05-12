@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Emception &lt;emception-run&gt; Web Component Demo</title>
+    <script src="coi-serviceworker.js"></script>
+    <style>
+      body {
+        font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+        margin: 1.5rem auto;
+        max-width: 60rem;
+        padding: 0 1rem;
+        color: #cdd6f4;
+        background: #1e1e2e;
+      }
+      h1 { font-size: 1.25rem; margin-bottom: 0.5rem; }
+      code { background: #313244; padding: 0.1rem 0.3rem; border-radius: 0.25rem; }
+      emception-run { display: block; min-height: 22rem; margin-top: 1rem; }
+      emception-run::part(output) { max-height: 14rem; }
+      pre#log {
+        background: #313244;
+        color: #a6e3a1;
+        padding: 0.75rem;
+        border-radius: 0.5rem;
+        max-height: 12rem;
+        overflow: auto;
+        margin-top: 1rem;
+      }
+      .err { color: #f38ba8; }
+    </style>
+  </head>
+  <body>
+    <h1>&lt;emception-run&gt; web-component demo</h1>
+    <p>
+      Vanilla HTML page that boots <code>@emception/browser</code> and feeds a
+      pre-built API to the <code>&lt;emception-run&gt;</code> custom element from
+      <code>@emception/webcomponent</code>. The element compiles and runs the source
+      automatically via its <code>autorun</code> attribute.
+    </p>
+
+    <emception-run id="run" preset="cpp" autorun source="">
+      <textarea slot="stdin">21
+</textarea>
+    </emception-run>
+
+    <pre id="log"></pre>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

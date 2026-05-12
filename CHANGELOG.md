@@ -1,3 +1,200 @@
+# [3.4.0](https://github.com/gameguild-gg/gameguild/compare/v3.3.8...v3.4.0) (2026-05-12)
+
+### Features
+
+* gglexical to block-content-editor ([ca9878c](https://github.com/gameguild-gg/gameguild/commit/ca9878c09c82d248d7e180a0635a393ac07b436d))
+* **block-editor:** block-editor page ([a0793dc](https://github.com/gameguild-gg/gameguild/commit/a0793dc76129bab70c2e35a7d0a0201583915c4d))
+
+### Bug Fixes
+
+* metadata ([d6e18c8](https://github.com/gameguild-gg/gameguild/commit/d6e18c89b48f62d8feacb03e99c2433a13c6fdc0))
+* editor to block-content-editor ([95a0ead](https://github.com/gameguild-gg/gameguild/commit/95a0ead72360d8a52f1a2fe5c08de25ddb6c36de))
+
+# [3.3.8](https://github.com/gameguild-gg/gameguild/compare/v3.3.7...v3.3.8) (2026-05-12)
+
+### Bug Fixes
+
+* ci ([950cac4](https://github.com/gameguild-gg/gameguild/commit/950cac46c3db00a988ebe1ef742330b0c2ee6295))
+
+# [3.3.7](https://github.com/gameguild-gg/gameguild/compare/v3.3.6...v3.3.7) (2026-05-11)
+
+### Bug Fixes
+
+* **emception:** fall back core CDN staging ([295fd36](https://github.com/gameguild-gg/gameguild/commit/295fd363738fba384a6fd1da14da5dd1e95dacea))
+
+# [3.3.6](https://github.com/gameguild-gg/gameguild/compare/v3.3.5...v3.3.6) (2026-05-10)
+
+### Bug Fixes
+
+* **emception:** publish runtime assets from packages ([d2e8446](https://github.com/gameguild-gg/gameguild/commit/d2e8446be25e8d4fa2d80ab6bc8ffd6a87099d54))
+
+# [3.3.5](https://github.com/gameguild-gg/gameguild/compare/v3.3.4...v3.3.5) (2026-05-10)
+
+### Bug Fixes
+
+* ci ([d96f331](https://github.com/gameguild-gg/gameguild/commit/d96f331c02ab5779787907724708918486c2410e))
+
+# [3.3.4](https://github.com/gameguild-gg/gameguild/compare/v3.3.3...v3.3.4) (2026-05-09)
+
+### Bug Fixes
+
+* ci ([bf8ee7c](https://github.com/gameguild-gg/gameguild/commit/bf8ee7c150524ca53056aed73c394eefda8e25d5))
+
+# [3.3.3](https://github.com/gameguild-gg/gameguild/compare/v3.3.2...v3.3.3) (2026-05-09)
+
+### Bug Fixes
+
+* ci ([e9cf1fd](https://github.com/gameguild-gg/gameguild/commit/e9cf1fd2d240dccfdbcb09d786eb71f446a66ed6))
+
+# [3.3.2](https://github.com/gameguild-gg/gameguild/compare/v3.3.1...v3.3.2) (2026-05-09)
+
+### Bug Fixes
+
+* ci ([a53916f](https://github.com/gameguild-gg/gameguild/commit/a53916f7e8d61c7b5edc0b934fc8e0c42ffa5fb1))
+
+# [3.3.1](https://github.com/gameguild-gg/gameguild/compare/v3.3.0...v3.3.1) (2026-05-09)
+
+### Bug Fixes
+
+* ci ([d44aa0c](https://github.com/gameguild-gg/gameguild/commit/d44aa0c1adf849e11e6ab4377a82369fba6183ab))
+
+# [3.3.0](https://github.com/gameguild-gg/gameguild/compare/v3.2.1...v3.3.0) (2026-05-09)
+
+### Features
+
+* **ci:** skip unchanged api/web/emception builds ([1179df5](https://github.com/gameguild-gg/gameguild/commit/1179df5fa8176bccc439059fd2cb3b3f8b5f91b5))
+* **emception:** pin all tool versions + fix emsdk parallel race ([3468fde](https://github.com/gameguild-gg/gameguild/commit/3468fde08b8020f1626697d0c5475d03fbb99d44))
+* **emception:** Build Raylib with WebGL2 support ([fcd18e8](https://github.com/gameguild-gg/gameguild/commit/fcd18e85fb26e6ee39fe81abfe00b3a265dca24f))
+* **emception:** add raylib canvas support with GLFW/WebGL patching ([56ad56c](https://github.com/gameguild-gg/gameguild/commit/56ad56c328847871767a9f52337a42e8c910586d))
+
+### Bug Fixes
+
+* ci ([aaaf683](https://github.com/gameguild-gg/gameguild/commit/aaaf68331cf3ff11fb37cf08d7a5972fc7242ea1))
+* ci ([17b57b3](https://github.com/gameguild-gg/gameguild/commit/17b57b3c837f860d1c74a8fc2c910c95aa4abd0b))
+* **emception:** raylib ([9d631c6](https://github.com/gameguild-gg/gameguild/commit/9d631c628fecfb0ff5bc427066c79fe4ac1361ba))
+* reame packages ([f103d39](https://github.com/gameguild-gg/gameguild/commit/f103d394738529ca7a8a385cc2daab80f6fec1a0))
+* ci ([2b6194a](https://github.com/gameguild-gg/gameguild/commit/2b6194af38c73706433c7bcd988ca68178cbf0c1))
+* **release:** exclude .next build artifacts from release assets ([7f17e50](https://github.com/gameguild-gg/gameguild/commit/7f17e50663d1d0cd53c5451b88c7d957f0c03b9b))
+* **ci:** enable npm trusted publishing without token ([e8bb888](https://github.com/gameguild-gg/gameguild/commit/e8bb888bea021fd6c1ee2fee4311a51298844474))
+* **ci:** narrow emception artifact cache hash inputs ([15dbb28](https://github.com/gameguild-gg/gameguild/commit/15dbb28000dd9fb06d55f3dddcdf1b8911998b94))
+* **ci:** build ide deps when full emception build is skipped ([71ed226](https://github.com/gameguild-gg/gameguild/commit/71ed22623a5161206330b7031a1f1c64a7b33aa0))
+* **ci:** restore emception artifact from flattened layout ([2539ac4](https://github.com/gameguild-gg/gameguild/commit/2539ac432c4bde47160f72b5d68131088694adee))
+* **emception:** fix cmake 3.31.x WASM build ([6aed533](https://github.com/gameguild-gg/gameguild/commit/6aed533179106977df4104967258217cf37fd3fb))
+* ci ([5ca969d](https://github.com/gameguild-gg/gameguild/commit/5ca969dfc4fc024fda1d793fecf23ab92e9b3564))
+* ci ([7772998](https://github.com/gameguild-gg/gameguild/commit/7772998045cdce2fdd9bc112d62fc4fdd8d81b18))
+* ci ([1b74a04](https://github.com/gameguild-gg/gameguild/commit/1b74a049982d6c3fbbc4f83c25b6dd9e64f80157))
+* ci ([e1ab55c](https://github.com/gameguild-gg/gameguild/commit/e1ab55ceaee7b728e4388a78eea0192044908a5c))
+* **dotnet-wasm:** upgrade from .NET 8 to .NET 9 ([3d1a109](https://github.com/gameguild-gg/gameguild/commit/3d1a1098b20d55dec9106292e99b0581d3de35e2))
+* **emception:** hoist @vitejs/plugin-react for ide-react build ([d1f664e](https://github.com/gameguild-gg/gameguild/commit/d1f664e7b73b918d1e1172aeda8e9ef66fcedc13))
+* **ci:** build @emception/ide before ide-react ([522778f](https://github.com/gameguild-gg/gameguild/commit/522778f2d60a8a46474f42bb83a7ce4cbb027d71))
+* **emception:** prebuild package deps before typecheck ([e96573e](https://github.com/gameguild-gg/gameguild/commit/e96573e929615159c1b5cb040d807da94a15d2fd))
+* **emception:** resolve workspace package types in CI ([88746da](https://github.com/gameguild-gg/gameguild/commit/88746dab6ef6bc0cffadc94862e46e3834fb25b4))
+* **dotnet-wasm:** auto-fallback to local sdk for wasm-tools ([967fe9c](https://github.com/gameguild-gg/gameguild/commit/967fe9cbd2932ae5f047e2ff934e511353b830ad))
+* keep dotnet available after cleanup ([fe68287](https://github.com/gameguild-gg/gameguild/commit/fe68287726024bbfcfbd45c942cd4753f02844c9))
+* add GITHUB_TOKEN job env and dotnet PATH for CI ([54d70d5](https://github.com/gameguild-gg/gameguild/commit/54d70d5a666aa3cb00bf7215c900eb9ae6045b3b))
+* ci ([de8f814](https://github.com/gameguild-gg/gameguild/commit/de8f8146759d89153c11df6eeb6069997f2b2654))
+* ci ([d34a1d4](https://github.com/gameguild-gg/gameguild/commit/d34a1d429f7c2dee106b4af0a40fbd0341a77805))
+* ci ([1277894](https://github.com/gameguild-gg/gameguild/commit/1277894185579d2a38a2b7f9595bc0296c490cab))
+* ci ([af09193](https://github.com/gameguild-gg/gameguild/commit/af0919317e0e09e7baeaa80e1f05d045eb46f74c))
+* ci ([a58f99d](https://github.com/gameguild-gg/gameguild/commit/a58f99d62499d210cfa230323dbb529c2e181cdd))
+* ci ([bc458cd](https://github.com/gameguild-gg/gameguild/commit/bc458cde2ae7f3e936ff46903c0bd8ad09a66391))
+* ci ([2b3396c](https://github.com/gameguild-gg/gameguild/commit/2b3396cfcac82a53d93d4c2116fe442d5c2dbb84))
+* ci ([c994694](https://github.com/gameguild-gg/gameguild/commit/c9946940a0b47f56131c55ebfce089e4a4e3bd0d))
+* ci ([8d5bae3](https://github.com/gameguild-gg/gameguild/commit/8d5bae38c11eb0a7096ef5fc092d5f0228872291))
+* ci update the node version ([bd22554](https://github.com/gameguild-gg/gameguild/commit/bd225544be4ce5b8856f83957cf29fa9177ce496))
+* ci ([3388acc](https://github.com/gameguild-gg/gameguild/commit/3388accb5dd8251fe891acff9361784cef7a32f4))
+* ci on act ([babc160](https://github.com/gameguild-gg/gameguild/commit/babc1609e089c40afa9f6217f02da4f83b4fae35))
+* ci again ([fe90271](https://github.com/gameguild-gg/gameguild/commit/fe902712b148065fe5b37f8233acb51c17479f10))
+* **emception:** trying to fix ci/cd ([d6edd53](https://github.com/gameguild-gg/gameguild/commit/d6edd53f93e2e72af47de03dc8381ca6da79d8c1))
+* **emception:** add raylib to the ci/cd ([5b93f58](https://github.com/gameguild-gg/gameguild/commit/5b93f58630d2cf4ed803b520c444436a334a2a2f))
+* **emception:** clean ([410af09](https://github.com/gameguild-gg/gameguild/commit/410af09571108c942fd478e4496531d0312983fb))
+* **emception:** raylib workspace almost done ([212d11c](https://github.com/gameguild-gg/gameguild/commit/212d11c09aa9c3887517963e695205288e77f597))
+* **emception/raylib:** remove undeclared emscripten_notify_memory_growth from stub ([2e40855](https://github.com/gameguild-gg/gameguild/commit/2e40855a72d15eab6610cce1c655f4c07dbc702b))
+* **emception:** clean ninja/cmake/imgui/brotli userland dirs on npm run clean ([284485b](https://github.com/gameguild-gg/gameguild/commit/284485b83da0777b59f6467c3aa01f25f8d2d089))
+* **emception/raylib:** generate raylib-runtime.mjs in build script + use VFS ([dcf6086](https://github.com/gameguild-gg/gameguild/commit/dcf608657d5ada2b6bb9629b68f392aed3dd7a48))
+* **emception:** remove cli ([beea559](https://github.com/gameguild-gg/gameguild/commit/beea5592c562093d6b02f857ee9b64e6968d9ea3))
+* **emception:** presets minor improvement ([737a424](https://github.com/gameguild-gg/gameguild/commit/737a4246e6fa0f0de7292ac679f9d2a4c6e9a32b))
+
+# [3.2.1](https://github.com/gameguild-gg/gameguild/compare/v3.2.0...v3.2.1) (2026-04-28)
+
+### Bug Fixes
+
+* **emception:** use * for internal workspace deps ([288df31](https://github.com/gameguild-gg/gameguild/commit/288df31731761283df60f670a45428dc24502340))
+
+# [3.2.0](https://github.com/gameguild-gg/gameguild/compare/v3.1.1...v3.2.0) (2026-04-28)
+
+### Features
+
+* **meta:** Phase 9.2 + 9.5 — bin shim + cookbook README  Phase 9.2 — npx emception doctor via meta-package bin: - Add bin/emception.mjs: pass-through shim that resolves and imports   @emception/cli/dist/bin/emception.js. Graceful error when @emception/cli   is not installed (optional peer dep). - Add 'bin': { 'emception': './bin/emception.mjs' } to package.json. - Add 'bin/' to the files array. - Add '@emception/cli' as an optional peerDependency so consumers can   opt into CLI tools without pulling the dep unconditionally.  Phase 9.5 — meta-package README cookbook section: - New 'Cookbook' section between 'Which package' and 'Project Goals'. - Recipes: grade assignment (browser), grade assignment (Node CI),   SDL canvas demo, reactive IDE in tutorial site,   diagnose + mirror sysroot to CDN. ([b35e7d9](https://github.com/gameguild-gg/gameguild/commit/b35e7d96f2c7c3041cb85eabaf0bbca4eca2bffe))
+* **ide:** Phase 8 — reactive IdeProps, fullscreen portal, custom element, Jest infra  ## What's new  ### ide-types.ts - Add `InjectedEmceptionAPI` interface (run / readFile / writeFile / listDir / resetVfs / dispose) - Add full `IdeProps` interface with panel toggles, fullscreen, visibility,   canvas path, headless I/O and style props - Add `deriveStorageKey(workspaceName?)` — falls back to legacy key so   existing localStorage data is not lost - Export `SDL_CANVAS_PATH` constant - Keep `WORKSPACE_STORAGE_KEY` as a deprecated legacy export  ### Ide.tsx - Destructure all IdeProps with sensible defaults - Derive localStorage key from `workspaceName` prop via `deriveStorageKey` - Gate file-explorer sidebar on `enableFileExplorer` prop - Gate terminal row on `enableTerminal` prop - Gate canvas panel on `enableCanvas` prop - Filter hidden / solution files via `showHiddenFiles` / `showSolutionFiles` - Use `canvasPath` prop instead of the hard-coded constant - Guard workspace storage effects on `enableWorkspace` prop - Import `bootInWorker` from `@emception/browser` - Wrap render output in a `createPortal(…, document.body)` when   `fullscreen` is true (SSR-safe: guard on `typeof document !== 'undefined'`)  ### emception-ide.ts (new) - `<emception-ide>` light-DOM custom element wrapping the React `<Ide>` - Maps HTML attributes → IdeProps (boolean defaults, string attrs) - JS-only props: workspaceConfig, api, onStdout, onStderr, stdin, onFullscreenChange - `update()` public method for programmatic prop changes without attributes - `registerEmceptionIde()` — safe multi-call registration helper  ### index.ts - Re-export `IdeProps`, `InjectedEmceptionAPI` types - Re-export `ELEMENT_NAME`, `EmceptionIdeElement`, `registerEmceptionIde` - Re-export `EmceptionAPI` from `@emception/core`  ### Jest infrastructure (new) - `packages/ide/jest.config.mjs` — Babel transform for .ts/.tsx, node env - `packages/ide/babel.config.cjs` — preset-typescript + preset-env - `packages/ide/src/__mocks__/style.cjs` — CSS import stub - `test:packages:ide` added to root `test:packages` run-s chain  ### Tests (new) - `ide-types.test.ts` — 9 tests covering WORKSPACE_STORAGE_KEY,   SDL_CANVAS_PATH and all deriveStorageKey branches - Existing `ide-utils.test.ts` (57 tests) now runs cleanly with the new   Babel config (previously failed with TS parse errors)  Total: 66 green tests in @emception/ide ([2767f47](https://github.com/gameguild-gg/gameguild/commit/2767f471e636efd5f09c4c5ffbf7e3be0d806b1f))
+* **core/runtime:** WorkerOrchestrator + 20 tests (Phase 7.2 prep #3) ([ad77258](https://github.com/gameguild-gg/gameguild/commit/ad77258c3c3d35dabd349ba4a459e6c77585fe25))
+* **emception/core:** extract RpcChannel + BootHandshake (Phase 7.2 prep) ([13dd6b4](https://github.com/gameguild-gg/gameguild/commit/13dd6b46fcb96538f892e1bcf7386eda41526289))
+* **emception/core:** extract RequestCorrelator (Phase 7.2 prep) ([1167082](https://github.com/gameguild-gg/gameguild/commit/1167082847c2d00280582a568de991542d64d99e))
+* **emception/core:** add cmake.targets multi-binary CMake support ([ffebaa6](https://github.com/gameguild-gg/gameguild/commit/ffebaa61f036a678cf0fdcc1ad7ea9e69181e707))
+* **emception/react:** <EmceptionRun> + useEmception (Phase 6.2) ([f3a606b](https://github.com/gameguild-gg/gameguild/commit/f3a606bb4f3b9a5a882c9f0947d72d5d8f238b2d))
+* **emception/webcomponent:** real <emception-run> element (Phase 6.1) ([ab3190e](https://github.com/gameguild-gg/gameguild/commit/ab3190e90bed5eae722a64935c5b82569817f05b))
+* **emception/core:** Phase 7.7 — runtime feature guards (canvas / xterm) ([67627d3](https://github.com/gameguild-gg/gameguild/commit/67627d30391eff8dee5dd94d33b692a3ca269c22))
+* **emception/core:** Phase 3.7 — workspace zip export/import ([191ff67](https://github.com/gameguild-gg/gameguild/commit/191ff6784b10863c716ee36b61ffa490e2292ab6))
+* **emception/core:** Phase 6.1/6.2 prep — shared adapter helpers ([6bd3ad3](https://github.com/gameguild-gg/gameguild/commit/6bd3ad3c7a6b054b01bf760fb15348d6d9924424))
+* **emception/node:** add NodeRuntimeAdapter (Phase 7.1/7.2 skeleton) ([edefd12](https://github.com/gameguild-gg/gameguild/commit/edefd12880dcafdd63dda3dbd4322a592c319281))
+* **emception/core:** wire clang-query and doctest engine handlers ([006c2d3](https://github.com/gameguild-gg/gameguild/commit/006c2d3c5baa3cc88f7ded2dff052a0f406dd070))
+* **emception/core:** doctest console-output parser (Phase 5.5 — pure half) ([f1b549a](https://github.com/gameguild-gg/gameguild/commit/f1b549acaf70e02da0f7e879535ec274e7c83051))
+* **emception/core:** clang-query matcher engine (Phase 5.4 — pure half) ([c0b74ac](https://github.com/gameguild-gg/gameguild/commit/c0b74aceadf3f8c59f32f976232b12bd0d9842c4))
+* **emception/core:** cancellation primitives — timeout + AbortSignal (Phase 2.2) ([13637bd](https://github.com/gameguild-gg/gameguild/commit/13637bdc66833c9851cf7b4015e7bef1be9a2a25))
+* **emception/core:** preset-aware compile argv builder (Phase 4.3) ([b4f0f9a](https://github.com/gameguild-gg/gameguild/commit/b4f0f9aeaa9b1549a8f56362a0a9a0a8a1e0f19d))
+* **emception/cli:** doctor verifies workspace-store writability (Phase 7.8) ([a44db9e](https://github.com/gameguild-gg/gameguild/commit/a44db9e0b8e3c5095d6e68e1c593784fdfa87cee))
+* **emception:** stdio-file test kind + Node stream/manifest helpers ([61cd021](https://github.com/gameguild-gg/gameguild/commit/61cd021e17bdfe3c33ea24c62e34f3725b357ebc))
+* **emception/core:** visibility-aware test report redaction (Phase 5.7) ([4777566](https://github.com/gameguild-gg/gameguild/commit/4777566fae9b9a815717722c4b3918e5cc6ea8d0))
+* **emception:** view-config validator + fs WorkspaceManager + ESM hygiene ([e9775d3](https://github.com/gameguild-gg/gameguild/commit/e9775d395750be61512fe1cc072193d69cb32128))
+* **emception/core:** seed hashing + in-memory workspace store ([50c4a94](https://github.com/gameguild-gg/gameguild/commit/50c4a94f98c6171e9e439c8f17b6d815c8aa501c))
+* **emception/core:** test engine skeleton (Phase 5.1/5.2/5.6) ([9e5508b](https://github.com/gameguild-gg/gameguild/commit/9e5508bbaba155a45132ed99560c66335400b274))
+* **emception/core:** typed tools surface + workspace manager interface ([4091f5d](https://github.com/gameguild-gg/gameguild/commit/4091f5d68fac1b047fed58d919af3329a0a7a475))
+* **emception/core:** build config resolver (Phase 3.5 / Phase 4 prep) ([3c440a8](https://github.com/gameguild-gg/gameguild/commit/3c440a8c6a269731d4b6838ac7d3c0428fa03269))
+* **emception/core:** stdin/stdout stream normalizers (Phase 2.1) ([313247c](https://github.com/gameguild-gg/gameguild/commit/313247c809cdc8573e2940122ec30c1a29c9fc47))
+* **emception/cli:** implement `emception cdn-export <dir>` (Phase 1.3) ([38c305e](https://github.com/gameguild-gg/gameguild/commit/38c305eef0fb162fdf8fc092746e4ce0a557ef33))
+* **emception/browser:** add `tty: 'none'` headless mode (Phase 1.1) ([5bb4fc5](https://github.com/gameguild-gg/gameguild/commit/5bb4fc50c75608ada24d4e159cab47fb604fc3da))
+* **emception/core:** add HeadlessIOProvider (Phase 1.1 foundation) ([30661b7](https://github.com/gameguild-gg/gameguild/commit/30661b74421e14692de677385f1845f58b5e5ad0))
+* **emception/browser:** zero-config manifest URL default (Phase 1.2) ([33224b0](https://github.com/gameguild-gg/gameguild/commit/33224b0fa5e35592bdfff59023b6acf1ca00ce64))
+* **emception/core:** typed event API on EmceptionAPI (Phase 1.5) ([117892c](https://github.com/gameguild-gg/gameguild/commit/117892c37429b865f364bbbf8ba545a09f1c2aee))
+* **emception/browser:** add COI preflight at @emception/browser/coi (Phase 1.4) ([07b7e00](https://github.com/gameguild-gg/gameguild/commit/07b7e00f23c37c3e29a212fa0508af1f477e3fe6))
+* **emception/cli:** implement `emception doctor` (Phase 1 sketch / Phase 9.2 prep) ([79baa53](https://github.com/gameguild-gg/gameguild/commit/79baa53baea6914e9a7f69f5a9384159844861cc))
+* **emception/core:** add RuntimeAdapter interface (Phase 1.8) ([347256b](https://github.com/gameguild-gg/gameguild/commit/347256b52f357e1d3a005d9a9dda41d581cc7371))
+* **emception:** meta package becomes thin wrapper over scoped pkgs (Phase 0.3) ([e0e4ada](https://github.com/gameguild-gg/gameguild/commit/e0e4ada86d5d32785fb2490b28e30839d171034e))
+* **emception/browser:** migrate full browser runtime — Phase 0.2 complete ([472b118](https://github.com/gameguild-gg/gameguild/commit/472b1180e996a0918198e578cb3d7e79524e17e2))
+* **emception/browser:** migrate VFS layer (LazyFS, IDBFS, EmscriptenFS) — Phase 0.2 ([c129ce6](https://github.com/gameguild-gg/gameguild/commit/c129ce6675b66e0c655f0d9523051a0bfe0e5bb7))
+* **emception:** bootstrap @emception/* monorepo (Phase 0.1, 0.5, 0.8) ([2bb0890](https://github.com/gameguild-gg/gameguild/commit/2bb08900254eb168a4131ffeb07b55c704a228d7))
+
+### Bug Fixes
+
+* **emception:** fix react issue ([3598b05](https://github.com/gameguild-gg/gameguild/commit/3598b0505b8a426c5cbced59be27c06329ead3e9))
+
+# [3.1.1](https://github.com/gameguild-gg/gameguild/compare/v3.1.0...v3.1.1) (2026-04-24)
+
+### Bug Fixes
+
+* **ci:** force OIDC trusted publishing for emception npm publish ([a3261af](https://github.com/gameguild-gg/gameguild/commit/a3261af760d836082dde820a04944e2240c6a356))
+
+# [3.1.0](https://github.com/gameguild-gg/gameguild/compare/v3.0.2...v3.1.0) (2026-04-24)
+
+### Features
+
+* design a better develeper experience for emception ([91e7774](https://github.com/gameguild-gg/gameguild/commit/91e7774846c933d86a8c4b5f98faad830cc3a6bd))
+* GameGuild Readme ([a65e260](https://github.com/gameguild-gg/gameguild/commit/a65e2600c40c1a53ac4879bd5d7430b64e0f48e3))
+* Security Policy ([fd7c03b](https://github.com/gameguild-gg/gameguild/commit/fd7c03be3cc1ac49f7de6bd7121e9d0c66c5933e))
+* Development Setup ([c5d04ed](https://github.com/gameguild-gg/gameguild/commit/c5d04ed12408355333e76d6eea2292ae5a50f958))
+* Legal and Dispute Process terms ([98221ec](https://github.com/gameguild-gg/gameguild/commit/98221ecd7cb47660c1dcead2df146891b4c1cadd))
+* Contributor License Agreement (CLA) ([23b2ff9](https://github.com/gameguild-gg/gameguild/commit/23b2ff9d8f6f4b325870fd1e2a55ff87807ed6d1))
+
+### Bug Fixes
+
+* **docs:** fix readme ([cf69e02](https://github.com/gameguild-gg/gameguild/commit/cf69e02fff56ffc57e7ae0ab89e886ce507dfc34))
+* **docs:** link for CLA ([7b155f6](https://github.com/gameguild-gg/gameguild/commit/7b155f6f1d549afe9189fd923f825831f4ad06cc))
+* name ([5a2e0d6](https://github.com/gameguild-gg/gameguild/commit/5a2e0d64679890944c3e4d3d9f7c18ae305933c4))
+* Code of Conduct ([5fb160e](https://github.com/gameguild-gg/gameguild/commit/5fb160ef48209e9d9c83b38a119eaf5242c4f535))
+* Contributing to GameGuild ([c95a7a4](https://github.com/gameguild-gg/gameguild/commit/c95a7a4c67f3e4b11aaaffaf32b05f7cb15b281b))
+* dual license MIT and commercial ([b9b5bf3](https://github.com/gameguild-gg/gameguild/commit/b9b5bf3977989175da2dbd032519389a672d9fb1))
+* update license AGPL to MIT ([38d265a](https://github.com/gameguild-gg/gameguild/commit/38d265adbdef3c727cb33b311406214f5937e98a))
+
 # [3.0.2](https://github.com/gameguild-gg/gameguild/compare/v3.0.1...v3.0.2) (2026-04-23)
 
 ### Bug Fixes
