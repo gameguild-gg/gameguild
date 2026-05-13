@@ -1,3 +1,9 @@
+# [3.5.1](https://github.com/gameguild-gg/gameguild/compare/v3.5.0...v3.5.1) (2026-05-13)
+
+### Bug Fixes
+
+* **emception:** P0'+P4+P5 — kill stale CDN fallback, LGWIN=24, sort tar entries ([87b5230](https://github.com/gameguild-gg/gameguild/commit/87b5230ee3fec513fe66c04ce502fb01e7da92be))
+
 # [3.5.0](https://github.com/gameguild-gg/gameguild/compare/v3.4.0...v3.5.0) (2026-05-12)
 
 ### Features
