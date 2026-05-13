@@ -22,7 +22,7 @@ public sealed class GetSlosQueryHandler(IServiceLevelObjectiveRepository reposit
             .Select(slo => new SloDto
             {
                 Id = slo.Id,
-                TenantId = slo.TenantId ?? Guid.Empty,
+                TenantId = slo.TenantId.GetValueOrDefault(),
                 Name = slo.Name,
                 Description = slo.Description,
                 ServiceName = slo.ServiceName,

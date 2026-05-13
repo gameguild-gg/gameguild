@@ -106,4 +106,70 @@ public class BulkDeleteUsersCommandHandlerTests
             x => x.DeleteAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()),
             Times.Never);
     }
+
+    [Fact]
+    public async Task Handle_WithTenantActorAndDeletedUsers_ShouldDecrementQuotaUsingActorUserId()
+    {
+        var tenantId = Guid.NewGuid();
+        var actorUserId = Guid.NewGuid();
+        _actorContextAccessorMock.Setup(x => x.ActorContext).Returns(CreateTenantActorContext(tenantId, actorUserId.ToString()));
+
+        var user = User.Create("user1@test.com", "User One", null);
+        var command = new BulkDeleteUsersCommand([user.Id]);
+
+        _userRepositoryMock
+            .Setup(x => x.GetByIdsAsync(It.IsAny<IEnumerable<Guid>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<User> { user });
+        _userRepositoryMock
+            .Setup(x => x.DeleteAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+        _quotaServiceMock
+            .Setup(x => x.DecrementUsageAsync(tenantId, ResourceUsageType.Users, 1, actorUserId, "BulkDeleteUsers", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+
+        await _handler.Handle(command, CancellationToken.None);
+
+        _quotaServiceMock.Verify(
+            x => x.DecrementUsageAsync(tenantId, ResourceUsageType.Users, 1, actorUserId, "BulkDeleteUsers", It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task Handle_WithTenantActorAndNonGuidSubjectId_ShouldDecrementQuotaWithNullActorUserId()
+    {
+        var tenantId = Guid.NewGuid();
+        _actorContextAccessorMock.Setup(x => x.ActorContext).Returns(CreateTenantActorContext(tenantId, "service-account"));
+
+        var user = User.Create("user1@test.com", "User One", null);
+        var command = new BulkDeleteUsersCommand([user.Id]);
+
+        _userRepositoryMock
+            .Setup(x => x.GetByIdsAsync(It.IsAny<IEnumerable<Guid>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<User> { user });
+        _userRepositoryMock
+            .Setup(x => x.DeleteAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+        _quotaServiceMock
+            .Setup(x => x.DecrementUsageAsync(tenantId, ResourceUsageType.Users, 1, null, "BulkDeleteUsers", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+
+        await _handler.Handle(command, CancellationToken.None);
+
+        _quotaServiceMock.Verify(
+            x => x.DecrementUsageAsync(tenantId, ResourceUsageType.Users, 1, null, "BulkDeleteUsers", It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    private static ActorContext CreateTenantActorContext(Guid tenantId, string subjectId)
+    {
+        return new ActorContext
+        {
+            ActorKind = ActorKind.User,
+            SubjectId = subjectId,
+            TenantId = tenantId,
+            Roles = new HashSet<string>(),
+            Permissions = new HashSet<string>(),
+            IsAuthenticated = true
+        };
+    }
 }

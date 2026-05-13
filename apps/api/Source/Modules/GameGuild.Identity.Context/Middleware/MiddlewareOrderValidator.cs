@@ -33,19 +33,19 @@ public static class MiddlewareOrderValidator
     public static void ValidateSecurityMiddlewareOrder(this IApplicationBuilder app)
     {
         var pipeline = GetMiddlewarePipeline(app);
-        
+
         // Find indices of security middleware
         var authenticationIndex = FindMiddlewareIndex(pipeline, "AuthenticationMiddleware");
         var tenantIndex = FindMiddlewareIndex(pipeline, "TenantMiddleware");
         var actorContextIndex = FindMiddlewareIndex(pipeline, "ActorContextMiddleware");
         var authorizationIndex = FindMiddlewareIndex(pipeline, "AuthorizationMiddleware");
-        
+
         // Check for missing middleware (optional - only validate if registered)
         var hasAuthentication = authenticationIndex >= 0;
         var hasTenant = tenantIndex >= 0;
         var hasActorContext = actorContextIndex >= 0;
         var hasAuthorization = authorizationIndex >= 0;
-        
+
         // If ActorContext is registered, validate the full chain
         if (hasActorContext)
         {
@@ -55,14 +55,14 @@ public static class MiddlewareOrderValidator
                     "ActorContextMiddleware requires Authentication middleware. " +
                     "Call app.UseAuthentication() before app.UseActorContext().");
             }
-            
+
             if (!hasTenant)
             {
                 throw new InvalidOperationException(
                     "ActorContextMiddleware requires TenantMiddleware. " +
                     "Call app.UseTenantMiddleware() before app.UseActorContext().");
             }
-            
+
             // Validate order: Authentication → Tenant → ActorContext → Authorization
             if (tenantIndex < authenticationIndex)
             {
@@ -72,7 +72,7 @@ public static class MiddlewareOrderValidator
                     $"AuthenticationMiddleware (position {authenticationIndex}). " +
                     "Fix: Move app.UseTenantMiddleware() to after app.UseAuthentication().");
             }
-            
+
             if (actorContextIndex < tenantIndex)
             {
                 throw new InvalidOperationException(
@@ -81,7 +81,7 @@ public static class MiddlewareOrderValidator
                     $"TenantMiddleware (position {tenantIndex}). " +
                     "Fix: Move app.UseActorContext() to after app.UseTenantMiddleware().");
             }
-            
+
             if (hasAuthorization && authorizationIndex < actorContextIndex)
             {
                 throw new InvalidOperationException(
@@ -91,7 +91,7 @@ public static class MiddlewareOrderValidator
                     "Fix: Move app.UseAuthorization() to after app.UseActorContext().");
             }
         }
-        
+
         // If only using legacy contexts, validate basic order
         if (hasAuthentication && hasTenant && !hasActorContext)
         {
@@ -104,7 +104,7 @@ public static class MiddlewareOrderValidator
             }
         }
     }
-    
+
     private static List<string> GetMiddlewarePipeline(IApplicationBuilder app)
     {
         // Use reflection to get the middleware pipeline
@@ -114,22 +114,13 @@ public static class MiddlewareOrderValidator
             throw new InvalidOperationException(
                 "Unable to validate middleware order: IApplicationBuilder is not ApplicationBuilder");
         }
-        
+
         var middlewareField = typeof(ApplicationBuilder)
-            .GetField("_components", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-        
-        if (middlewareField == null)
-        {
-            throw new InvalidOperationException(
-                "Unable to validate middleware order: Cannot access middleware components via reflection");
-        }
-        
-        var components = middlewareField.GetValue(applicationBuilder) as IList<Func<RequestDelegate, RequestDelegate>>;
-        if (components == null)
-        {
-            return new List<string>();
-        }
-        
+            .GetField("_components", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!;
+
+        var components = middlewareField.GetValue(applicationBuilder) as IList<Func<RequestDelegate, RequestDelegate>>
+            ?? new List<Func<RequestDelegate, RequestDelegate>>();
+
         // Extract middleware type names from components
         var middlewareTypes = new List<string>();
         foreach (var component in components)
@@ -137,10 +128,10 @@ public static class MiddlewareOrderValidator
             var componentTypeName = component.Target?.GetType().Name ?? "Unknown";
             middlewareTypes.Add(componentTypeName);
         }
-        
+
         return middlewareTypes;
     }
-    
+
     private static int FindMiddlewareIndex(List<string> pipeline, string middlewareName)
     {
         for (int i = 0; i < pipeline.Count; i++)

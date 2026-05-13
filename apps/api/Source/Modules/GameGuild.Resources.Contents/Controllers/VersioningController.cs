@@ -6,6 +6,7 @@ namespace GameGuild.Resources.Contents;
 /// <summary>
 /// REST API controller for content versioning
 /// </summary>
+[Microsoft.AspNetCore.Http.Tags("resources/contents/versioning")]
 [Route("api/contents/[controller]")]
 [Authorize]
 public class VersioningController : BaseApiController

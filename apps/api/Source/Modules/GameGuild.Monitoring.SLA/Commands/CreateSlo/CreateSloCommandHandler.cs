@@ -28,15 +28,14 @@ public sealed class CreateSloCommandHandler(IServiceLevelObjectiveRepository rep
             Status = SloStatus.Active
         };
 
-        // Set TenantId using SetProperties method
-        slo.SetProperties(new Dictionary<string, object?> { { "TenantId", new TenantId(request.TenantId) } });
+        slo.SetTenantId(request.TenantId);
 
         await repository.AddAsync(slo, cancellationToken).ConfigureAwait(false);
 
         return new SloDto
         {
             Id = slo.Id,
-            TenantId = slo.TenantId ?? Guid.Empty,
+            TenantId = slo.TenantId.GetValueOrDefault(),
             Name = slo.Name,
             Description = slo.Description,
             ServiceName = slo.ServiceName,

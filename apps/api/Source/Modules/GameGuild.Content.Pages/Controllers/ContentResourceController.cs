@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace GameGuild.Content.Pages;
 
 /// <summary>REST API controller for ContentResource CRUD.</summary>
+[Microsoft.AspNetCore.Http.Tags("content/pages/resources")]
 [ApiVersion("1.0")]
 [Route("v{version:apiVersion}/content-resources")]
 [Authorize]

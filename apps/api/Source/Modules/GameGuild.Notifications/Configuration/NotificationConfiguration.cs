@@ -62,7 +62,7 @@ public class NotificationConfiguration : IEntityTypeConfiguration<Notification>
             .OnDelete(DeleteBehavior.SetNull);
 
         // Global query filter for soft delete
-        builder.HasQueryFilter(n => !n.IsDeleted);
+        builder.HasQueryFilter(n => n.DeletedAt == null);
     }
 }
 
@@ -128,7 +128,7 @@ public class NotificationTemplateConfiguration : IEntityTypeConfiguration<Notifi
             .HasColumnName("TenantId");
 
         // Global query filter for soft delete
-        builder.HasQueryFilter(t => !t.IsDeleted);
+        builder.HasQueryFilter(t => t.DeletedAt == null);
     }
 }
 
@@ -156,6 +156,6 @@ public class NotificationPreferenceConfiguration : IEntityTypeConfiguration<Noti
             .HasMaxLength(20);
 
         // Global query filter for soft delete
-        builder.HasQueryFilter(p => !p.IsDeleted);
+        builder.HasQueryFilter(p => p.DeletedAt == null);
     }
 }

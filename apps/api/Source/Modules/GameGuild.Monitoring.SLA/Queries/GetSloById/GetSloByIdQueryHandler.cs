@@ -15,7 +15,7 @@ public sealed class GetSloByIdQueryHandler(IServiceLevelObjectiveRepository repo
         return new SloDto
         {
             Id = slo.Id,
-            TenantId = slo.TenantId ?? Guid.Empty,
+            TenantId = slo.TenantId.GetValueOrDefault(),
             Name = slo.Name,
             Description = slo.Description,
             ServiceName = slo.ServiceName,

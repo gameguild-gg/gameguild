@@ -108,6 +108,22 @@ public static class Policies
     public const string UsersPurge = "Users.Purge";
 
     // ========================
+    // EMPLOYEE POLICIES
+    // ========================
+
+    /// <summary>Read access to employee records</summary>
+    public const string EmployeesRead = "Employees.Read";
+
+    /// <summary>Permission to create employee records</summary>
+    public const string EmployeesCreate = "Employees.Create";
+
+    /// <summary>Permission to update employee records</summary>
+    public const string EmployeesUpdate = "Employees.Update";
+
+    /// <summary>Permission to delete employee records</summary>
+    public const string EmployeesDelete = "Employees.Delete";
+
+    // ========================
     // USER POLICIES - Self/Single-User Operations
     // ========================
 
@@ -146,6 +162,8 @@ public static class Policies
         Admin, SecureAdmin,
         // Users - Collection
         UsersRead, UsersCreate, UsersUpdate, UsersDelete, UsersAdmin, UsersPurge,
+        // Employees
+        EmployeesRead, EmployeesCreate, EmployeesUpdate, EmployeesDelete,
         // Users - Self
         UsersReadSelf, UsersEditSelf, UsersDeleteSelf
     };

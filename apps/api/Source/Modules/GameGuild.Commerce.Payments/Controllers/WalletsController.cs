@@ -22,7 +22,7 @@ namespace GameGuild.Commerce.Payments;
 /// </summary>
 [ApiVersion("1.0")]
 [Route("api/v{version:apiVersion}")]
-[Tags("wallets")]
+[Microsoft.AspNetCore.Http.Tags("wallets")]
 [Authorize]
 public sealed class WalletsController(ISender sender) : BaseApiController
 {

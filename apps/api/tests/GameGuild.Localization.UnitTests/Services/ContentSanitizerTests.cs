@@ -123,6 +123,22 @@ public class ContentSanitizerTests
     }
 
     [Fact]
+    public void SanitizeWithAllowedTags_ReturnsEmptyForNullInput()
+    {
+        var result = _sanitizer.SanitizeWithAllowedTags(null, new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "b" });
+
+        result.Should().BeEmpty();
+    }
+
+    [Fact]
+    public void SanitizeWithAllowedTags_UsesDefaultAllowedTags_WhenAllowedTagsIsNull()
+    {
+        var result = _sanitizer.SanitizeWithAllowedTags("Hello <strong>bold</strong>", null!);
+
+        result.Should().Be("Hello <strong>bold</strong>");
+    }
+
+    [Fact]
     public void SanitizeWithAllowedTags_PreservesAllowedTags()
     {
         // Arrange
@@ -138,6 +154,39 @@ public class ContentSanitizerTests
         // The method converts </b> and </i> to <b /> and <i /> format
         result.Should().Contain("bold");
         result.Should().Contain("italic");
+    }
+
+    [Fact]
+    public void SanitizeWithAllowedTags_PreservesClosingTags()
+    {
+        var content = "Hello <b>bold</b> text";
+        var allowedTags = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "b" };
+
+        var result = _sanitizer.SanitizeWithAllowedTags(content, allowedTags);
+
+        result.Should().Be("Hello <b>bold</b> text");
+    }
+
+    [Fact]
+    public void SanitizeWithAllowedTags_PreservesSelfClosingTags_AndStripsAttributes()
+    {
+        var content = "Line<br class='test' />Break";
+        var allowedTags = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "br" };
+
+        var result = _sanitizer.SanitizeWithAllowedTags(content, allowedTags);
+
+        result.Should().Be("Line<br />Break");
+    }
+
+    [Fact]
+    public void SanitizeWithAllowedTags_StripsAttributesFromOpeningTags_WithSlashInAttributeValue()
+    {
+        var content = "<a href='/docs/page'>Docs</a>";
+        var allowedTags = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "a" };
+
+        var result = _sanitizer.SanitizeWithAllowedTags(content, allowedTags);
+
+        result.Should().Be("<a>Docs</a>");
     }
 
     [Fact]

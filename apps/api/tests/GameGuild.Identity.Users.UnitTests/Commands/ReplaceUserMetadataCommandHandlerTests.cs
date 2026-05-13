@@ -25,9 +25,9 @@ public class ReplaceUserMetadataCommandHandlerTests
         var userId = Guid.NewGuid();
         var user = User.Create("test@example.com", "Test User", null);
         var existingMetadata = UserMetadata.Create(userId);
-        
+
         var request = new ReplaceUserMetadataRequest(
-            new Dictionary<string, object?> { ["key1"] = "value1" },
+            JsonMap(new Dictionary<string, object?> { ["key1"] = "value1" }),
             new List<string> { "tag1", "tag2" },
             new Dictionary<string, string> { ["system1"] = "ref1" }
         );
@@ -68,9 +68,9 @@ public class ReplaceUserMetadataCommandHandlerTests
         // Arrange
         var userId = Guid.NewGuid();
         var user = User.Create("test@example.com", "Test User", null);
-        
+
         var request = new ReplaceUserMetadataRequest(
-            new Dictionary<string, object?> { ["key1"] = "value1" },
+            JsonMap(new Dictionary<string, object?> { ["key1"] = "value1" }),
             new List<string> { "tag1" },
             new Dictionary<string, string> { ["system1"] = "ref1" }
         );
@@ -112,7 +112,7 @@ public class ReplaceUserMetadataCommandHandlerTests
         // Arrange
         var userId = Guid.NewGuid();
         var request = new ReplaceUserMetadataRequest(
-            new Dictionary<string, object?>(),
+            JsonMap(new Dictionary<string, object?>()),
             new List<string>(),
             new Dictionary<string, string>()
         );
@@ -123,7 +123,7 @@ public class ReplaceUserMetadataCommandHandlerTests
             .ReturnsAsync((User?)null);
 
         // Act & Assert
-        await Assert.ThrowsAsync<UserNotFoundException>(() => 
+        await Assert.ThrowsAsync<UserNotFoundException>(() =>
             _handler.Handle(command, CancellationToken.None));
     }
 }

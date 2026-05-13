@@ -21,13 +21,13 @@ public class UpdateUserNotificationPreferencesCommandHandlerTests
     [Fact]
     public async Task Handle_WithExistingPreferences_ShouldUpdateNotificationPreferences()
     {
-        // Arrange
         var userId = Guid.NewGuid();
         var user = User.Create("test@example.com", "Test User", null);
         var existingPreferences = UserPreferences.Create(userId);
-        
+        existingPreferences.SetNotificationPreferences(new Dictionary<string, object?> { ["legacy"] = true, ["email"] = true });
+
         var request = new UpdateUserNotificationPreferencesRequest(
-            new Dictionary<string, object?> { ["email"] = true, ["push"] = false }
+            JsonMap(new Dictionary<string, object?> { ["email"] = true, ["push"] = false })
         );
         var command = new UpdateUserNotificationPreferencesCommand(userId, request);
 
@@ -43,14 +43,15 @@ public class UpdateUserNotificationPreferencesCommandHandlerTests
             .Setup(x => x.UpdateAsync(It.IsAny<UserPreferences>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
-        // Act
         var result = await _handler.Handle(command, CancellationToken.None);
 
-        // Assert
         result.Should().Be(Unit.Value);
         _preferencesRepositoryMock.Verify(
             x => x.UpdateAsync(It.IsAny<UserPreferences>(), It.IsAny<CancellationToken>()),
             Times.Once);
+        ((System.Text.Json.JsonElement)existingPreferences.GetNotificationPreferences()["legacy"]!).GetBoolean().Should().BeTrue();
+        ((System.Text.Json.JsonElement)existingPreferences.GetNotificationPreferences()["email"]!).GetBoolean().Should().BeTrue();
+        ((System.Text.Json.JsonElement)existingPreferences.GetNotificationPreferences()["push"]!).GetBoolean().Should().BeFalse();
     }
 
     [Fact]
@@ -59,7 +60,7 @@ public class UpdateUserNotificationPreferencesCommandHandlerTests
         // Arrange
         var userId = Guid.NewGuid();
         var request = new UpdateUserNotificationPreferencesRequest(
-            new Dictionary<string, object?>()
+            JsonMap(new Dictionary<string, object?>())
         );
         var command = new UpdateUserNotificationPreferencesCommand(userId, request);
 
@@ -68,7 +69,32 @@ public class UpdateUserNotificationPreferencesCommandHandlerTests
             .ReturnsAsync((User?)null);
 
         // Act & Assert
-        await Assert.ThrowsAsync<UserNotFoundException>(() => 
+        await Assert.ThrowsAsync<UserNotFoundException>(() =>
             _handler.Handle(command, CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task Handle_WithMissingPreferences_ShouldCreatePreferences()
+    {
+        var userId = Guid.NewGuid();
+        var user = User.Create("test@example.com", "Test User", null);
+        var request = new UpdateUserNotificationPreferencesRequest(
+            JsonMap(new Dictionary<string, object?> { ["email"] = false })
+        );
+        var command = new UpdateUserNotificationPreferencesCommand(userId, request);
+
+        _userRepositoryMock.Setup(x => x.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(user);
+        _preferencesRepositoryMock.Setup(x => x.GetByUserIdAsync(userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((UserPreferences?)null);
+        _preferencesRepositoryMock.Setup(x => x.AddAsync(It.IsAny<UserPreferences>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+        _preferencesRepositoryMock.Setup(x => x.UpdateAsync(It.IsAny<UserPreferences>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+
+        await _handler.Handle(command, CancellationToken.None);
+
+        _preferencesRepositoryMock.Verify(x => x.AddAsync(It.IsAny<UserPreferences>(), It.IsAny<CancellationToken>()), Times.Once);
+        _preferencesRepositoryMock.Verify(x => x.UpdateAsync(It.IsAny<UserPreferences>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 }

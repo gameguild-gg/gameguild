@@ -1,3 +1,5 @@
+using System.Text.Json;
+
 namespace GameGuild.Identity.Users;
 
 /// <summary>
@@ -16,11 +18,11 @@ namespace GameGuild.Identity.Users;
 public sealed record UserPreferencesDto(
     Guid Id,
     Guid UserId,
-    Dictionary<string, object?> GeneralPreferences,
-    Dictionary<string, object?> NotificationPreferences,
-    Dictionary<string, object?> AccessibilityPreferences,
-    Dictionary<string, object?> PrivacyPreferences,
-    Dictionary<string, object?> LocalizationPreferences,
+    Dictionary<string, JsonElement> GeneralPreferences,
+    Dictionary<string, JsonElement> NotificationPreferences,
+    Dictionary<string, JsonElement> AccessibilityPreferences,
+    Dictionary<string, JsonElement> PrivacyPreferences,
+    Dictionary<string, JsonElement> LocalizationPreferences,
     DateTimeOffset CreatedAt,
     DateTimeOffset? UpdatedAt,
     byte[ ] Version
@@ -34,10 +36,10 @@ public sealed record UserPreferencesDto(
 /// <param name="AccessibilityPreferences">Accessibility preferences to update</param>
 /// <param name="PrivacyPreferences">Privacy preferences to update</param>
 public sealed record UpdateUserPreferencesRequest(
-    Dictionary<string, object?>? GeneralPreferences = null,
-    Dictionary<string, object?>? NotificationPreferences = null,
-    Dictionary<string, object?>? AccessibilityPreferences = null,
-    Dictionary<string, object?>? PrivacyPreferences = null
+    Dictionary<string, JsonElement>? GeneralPreferences = null,
+    Dictionary<string, JsonElement>? NotificationPreferences = null,
+    Dictionary<string, JsonElement>? AccessibilityPreferences = null,
+    Dictionary<string, JsonElement>? PrivacyPreferences = null
 );
 
 /// <summary>
@@ -48,10 +50,10 @@ public sealed record UpdateUserPreferencesRequest(
 /// <param name="AccessibilityPreferences">Complete set of accessibility preferences</param>
 /// <param name="PrivacyPreferences">Complete set of privacy preferences</param>
 public sealed record ReplaceUserPreferencesRequest(
-    Dictionary<string, object?> GeneralPreferences,
-    Dictionary<string, object?> NotificationPreferences,
-    Dictionary<string, object?> AccessibilityPreferences,
-    Dictionary<string, object?> PrivacyPreferences
+    Dictionary<string, JsonElement> GeneralPreferences,
+    Dictionary<string, JsonElement> NotificationPreferences,
+    Dictionary<string, JsonElement> AccessibilityPreferences,
+    Dictionary<string, JsonElement> PrivacyPreferences
 );
 
 /// <summary>
@@ -70,21 +72,21 @@ public sealed record UserNotificationPreferencesDto(
     bool SmsEnabled,
     bool InAppEnabled,
     string Frequency,
-    Dictionary<string, object?> QuietHours,
-    Dictionary<string, object?> CategoryPreferences
+    Dictionary<string, JsonElement> QuietHours,
+    Dictionary<string, JsonElement> CategoryPreferences
 );
 
 /// <summary>
 ///     Request model for updating user notification preferences
 /// </summary>
 /// <param name="NotificationPreferences">Notification preferences to update</param>
-public sealed record UpdateUserNotificationPreferencesRequest(Dictionary<string, object?> NotificationPreferences);
+public sealed record UpdateUserNotificationPreferencesRequest(Dictionary<string, JsonElement> NotificationPreferences);
 
 /// <summary>
 ///     Request model for replacing user notification preferences
 /// </summary>
 /// <param name="NotificationPreferences">Complete set of notification preferences</param>
-public sealed record ReplaceUserNotificationPreferencesRequest(Dictionary<string, object?> NotificationPreferences);
+public sealed record ReplaceUserNotificationPreferencesRequest(Dictionary<string, JsonElement> NotificationPreferences);
 
 /// <summary>
 ///     Data transfer object for user accessibility preferences
@@ -105,20 +107,20 @@ public sealed record UserAccessibilityPreferencesDto(
     bool KeyboardNavigation,
     int FontSize,
     string ColorScheme,
-    Dictionary<string, object?> CustomSettings
+    Dictionary<string, JsonElement> CustomSettings
 );
 
 /// <summary>
 ///     Request model for updating user accessibility preferences
 /// </summary>
 /// <param name="AccessibilityPreferences">Accessibility preferences to update</param>
-public sealed record UpdateUserAccessibilityPreferencesRequest(Dictionary<string, object?> AccessibilityPreferences);
+public sealed record UpdateUserAccessibilityPreferencesRequest(Dictionary<string, JsonElement> AccessibilityPreferences);
 
 /// <summary>
 ///     Request model for replacing user accessibility preferences
 /// </summary>
 /// <param name="AccessibilityPreferences">Complete set of accessibility preferences</param>
-public sealed record ReplaceUserAccessibilityPreferencesRequest(Dictionary<string, object?> AccessibilityPreferences);
+public sealed record ReplaceUserAccessibilityPreferencesRequest(Dictionary<string, JsonElement> AccessibilityPreferences);
 
 /// <summary>
 ///     Data transfer object for user privacy preferences
@@ -134,25 +136,25 @@ public sealed record ReplaceUserAccessibilityPreferencesRequest(Dictionary<strin
 public sealed record UserPrivacyPreferencesDto(
     string ProfileVisibility,
     bool ActivityTracking,
-    Dictionary<string, object?> DataCollection,
-    Dictionary<string, object?> ThirdPartySharing,
+    Dictionary<string, JsonElement> DataCollection,
+    Dictionary<string, JsonElement> ThirdPartySharing,
     bool MarketingEmails,
     bool AnalyticsCookies,
     bool PersonalizedContent,
-    Dictionary<string, object?> CustomSettings
+    Dictionary<string, JsonElement> CustomSettings
 );
 
 /// <summary>
 ///     Request model for updating user privacy preferences
 /// </summary>
 /// <param name="PrivacyPreferences">Privacy preferences to update</param>
-public sealed record UpdateUserPrivacyPreferencesRequest(Dictionary<string, object?> PrivacyPreferences);
+public sealed record UpdateUserPrivacyPreferencesRequest(Dictionary<string, JsonElement> PrivacyPreferences);
 
 /// <summary>
 ///     Request model for replacing user privacy preferences
 /// </summary>
 /// <param name="PrivacyPreferences">Complete set of privacy preferences</param>
-public sealed record ReplaceUserPrivacyPreferencesRequest(Dictionary<string, object?> PrivacyPreferences);
+public sealed record ReplaceUserPrivacyPreferencesRequest(Dictionary<string, JsonElement> PrivacyPreferences);
 
 /// <summary>
 ///     Data transfer object for user localization preferences
@@ -164,16 +166,16 @@ public sealed record ReplaceUserPrivacyPreferencesRequest(Dictionary<string, obj
 /// <param name="Currency">Preferred currency code (e.g., USD, EUR)</param>
 /// <param name="NumberFormat">Number formatting preferences</param>
 /// <param name="CustomSettings">Custom localization settings</param>
-public sealed record UserLocalizationPreferencesDto(string Language, string Timezone, string DateFormat, string TimeFormat, string Currency, Dictionary<string, object?> NumberFormat, Dictionary<string, object?> CustomSettings);
+public sealed record UserLocalizationPreferencesDto(string Language, string Timezone, string DateFormat, string TimeFormat, string Currency, Dictionary<string, JsonElement> NumberFormat, Dictionary<string, JsonElement> CustomSettings);
 
 /// <summary>
 ///     Request model for updating user localization preferences
 /// </summary>
 /// <param name="LocalizationPreferences">Localization preferences to update</param>
-public sealed record UpdateUserLocalizationPreferencesRequest(Dictionary<string, object?> LocalizationPreferences);
+public sealed record UpdateUserLocalizationPreferencesRequest(Dictionary<string, JsonElement> LocalizationPreferences);
 
 /// <summary>
 ///     Request model for replacing user localization preferences
 /// </summary>
 /// <param name="LocalizationPreferences">Complete set of localization preferences</param>
-public sealed record ReplaceUserLocalizationPreferencesRequest(Dictionary<string, object?> LocalizationPreferences);
+public sealed record ReplaceUserLocalizationPreferencesRequest(Dictionary<string, JsonElement> LocalizationPreferences);

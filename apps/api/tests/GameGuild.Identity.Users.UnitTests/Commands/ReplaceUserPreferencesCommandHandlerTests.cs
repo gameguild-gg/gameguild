@@ -25,12 +25,12 @@ public class ReplaceUserPreferencesCommandHandlerTests
         var userId = Guid.NewGuid();
         var user = User.Create("test@example.com", "Test User", null);
         var existingPreferences = UserPreferences.Create(userId);
-        
+
         var request = new ReplaceUserPreferencesRequest(
-            new Dictionary<string, object?> { ["theme"] = "dark" },
-            new Dictionary<string, object?> { ["email"] = true },
-            new Dictionary<string, object?> { ["fontSize"] = "large" },
-            new Dictionary<string, object?> { ["profileVisible"] = false }
+            JsonMap(new Dictionary<string, object?> { ["theme"] = "dark" }),
+            JsonMap(new Dictionary<string, object?> { ["email"] = true }),
+            JsonMap(new Dictionary<string, object?> { ["fontSize"] = "large" }),
+            JsonMap(new Dictionary<string, object?> { ["profileVisible"] = false })
         );
         var command = new ReplaceUserPreferencesCommand(userId, request);
 
@@ -62,12 +62,12 @@ public class ReplaceUserPreferencesCommandHandlerTests
         // Arrange
         var userId = Guid.NewGuid();
         var user = User.Create("test@example.com", "Test User", null);
-        
+
         var request = new ReplaceUserPreferencesRequest(
-            new Dictionary<string, object?> { ["theme"] = "dark" },
-            new Dictionary<string, object?> { ["email"] = true },
-            new Dictionary<string, object?> { ["fontSize"] = "large" },
-            new Dictionary<string, object?> { ["profileVisible"] = false }
+            JsonMap(new Dictionary<string, object?> { ["theme"] = "dark" }),
+            JsonMap(new Dictionary<string, object?> { ["email"] = true }),
+            JsonMap(new Dictionary<string, object?> { ["fontSize"] = "large" }),
+            JsonMap(new Dictionary<string, object?> { ["profileVisible"] = false })
         );
         var command = new ReplaceUserPreferencesCommand(userId, request);
 
@@ -106,10 +106,10 @@ public class ReplaceUserPreferencesCommandHandlerTests
         // Arrange
         var userId = Guid.NewGuid();
         var request = new ReplaceUserPreferencesRequest(
-            new Dictionary<string, object?>(),
-            new Dictionary<string, object?>(),
-            new Dictionary<string, object?>(),
-            new Dictionary<string, object?>()
+            JsonMap(new Dictionary<string, object?>()),
+            JsonMap(new Dictionary<string, object?>()),
+            JsonMap(new Dictionary<string, object?>()),
+            JsonMap(new Dictionary<string, object?>())
         );
         var command = new ReplaceUserPreferencesCommand(userId, request);
 
@@ -118,7 +118,7 @@ public class ReplaceUserPreferencesCommandHandlerTests
             .ReturnsAsync((User?)null);
 
         // Act & Assert
-        await Assert.ThrowsAsync<UserNotFoundException>(() => 
+        await Assert.ThrowsAsync<UserNotFoundException>(() =>
             _handler.Handle(command, CancellationToken.None));
     }
 }

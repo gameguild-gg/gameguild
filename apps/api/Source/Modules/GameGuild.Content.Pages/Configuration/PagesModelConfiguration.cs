@@ -4,7 +4,7 @@ namespace GameGuild.Content.Pages;
 
 /// <summary>
 ///     EF Core model configuration for the Content.Pages module.
-///     Discovered by the main API database context via assembly scanning.
+///     Discovered by the application DbContext via assembly scanning.
 /// </summary>
 public sealed class PagesModelConfiguration : IModelConfiguration
 {

@@ -63,4 +63,25 @@ public class MarkNotificationAsReadCommandHandlerTests
         await Assert.ThrowsAsync<UserNotFoundException>(
             () => _handler.Handle(command, CancellationToken.None));
     }
+
+    [Fact]
+    public async Task Handle_WhenNotificationDoesNotBelongToUser_ShouldThrowInvalidOperationException()
+    {
+        var userId = Guid.NewGuid();
+        var notificationId = Guid.NewGuid();
+        var otherUserId = Guid.NewGuid();
+        var user = new User { Id = userId, Email = "test@example.com", Name = "Test User" };
+        var notification = UserNotification.Create(otherUserId, "test", "Test", "Test content");
+        notification.Id = notificationId;
+        var command = new MarkNotificationAsReadCommand(userId, notificationId);
+
+        _userRepositoryMock.Setup(x => x.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(user);
+        _notificationRepositoryMock.Setup(x => x.GetByIdAsync(notificationId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(notification);
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() => _handler.Handle(command, CancellationToken.None));
+
+        _notificationRepositoryMock.Verify(x => x.UpdateAsync(It.IsAny<UserNotification>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
 }

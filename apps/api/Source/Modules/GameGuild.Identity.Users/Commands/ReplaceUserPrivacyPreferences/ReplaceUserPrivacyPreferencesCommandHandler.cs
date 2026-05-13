@@ -18,7 +18,7 @@ public sealed class ReplaceUserPrivacyPreferencesCommandHandler(IUserRepository 
             await preferencesRepository.AddAsync(preferences, cancellationToken).ConfigureAwait(false);
         }
 
-        preferences.SetPrivacyPreferences(request.Request.PrivacyPreferences);
+        preferences.SetPrivacyPreferences(JsonValueDictionary.ToObjects(request.Request.PrivacyPreferences));
         await preferencesRepository.UpdateAsync(preferences, cancellationToken).ConfigureAwait(false);
         return Unit.Value;
     }

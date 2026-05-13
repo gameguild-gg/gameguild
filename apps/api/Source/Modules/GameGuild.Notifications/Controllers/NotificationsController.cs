@@ -9,6 +9,7 @@ namespace GameGuild.Notifications.Controllers;
 /// <summary>
 /// API controller for managing user notifications
 /// </summary>
+[Microsoft.AspNetCore.Http.Tags("notifications")]
 [Route("api/[controller]")]
 [Authorize]
 public class NotificationsController : BaseApiController

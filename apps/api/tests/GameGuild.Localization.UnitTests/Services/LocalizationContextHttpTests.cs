@@ -28,6 +28,18 @@ public class LocalizationContextHttpTests
     }
 
     [Fact]
+    public void Constructor_HandlesNullHttpContextAccessor_Gracefully()
+    {
+        IHttpContextAccessor httpContextAccessor = null!;
+
+        var context = new LocalizationContext(httpContextAccessor, userPreferenceProvider: null);
+
+        context.CurrentCulture.Name.Should().Be("en-US");
+        context.CurrentUiCulture.Name.Should().Be("en-US");
+        context.CurrentTimeZone.Id.Should().Be("UTC");
+    }
+
+    [Fact]
     public void Constructor_ParsesPrimaryLanguageFromAcceptLanguageHeader()
     {
         // Arrange
@@ -52,7 +64,7 @@ public class LocalizationContextHttpTests
         var context = new LocalizationContext(httpContextAccessor);
 
         // Assert - America/New_York may map to "America/New_York" on Linux or "Eastern Standard Time" on Windows
-        (context.CurrentTimeZone.Id.Contains("America/New_York") || 
+        (context.CurrentTimeZone.Id.Contains("America/New_York") ||
          context.CurrentTimeZone.Id.Contains("Eastern")).Should().BeTrue();
     }
 
@@ -91,7 +103,7 @@ public class LocalizationContextHttpTests
         // Arrange
         var httpContext = CreateHttpContextWithHeaders(acceptLanguage: "fr-FR");
         var httpContextAccessor = CreateHttpContextAccessor(httpContext);
-        
+
         var userPreferences = new Mock<IUserLocalizationPreferenceProvider>();
         userPreferences.Setup(x => x.GetPreferredCulture()).Returns(CultureInfo.GetCultureInfo("ja-JP"));
         userPreferences.Setup(x => x.GetPreferredTimeZone()).Returns(TimeZoneInfo.FindSystemTimeZoneById("Tokyo Standard Time"));
@@ -109,7 +121,7 @@ public class LocalizationContextHttpTests
         // Arrange
         var httpContext = CreateHttpContextWithHeaders(acceptLanguage: "es-ES");
         var httpContextAccessor = CreateHttpContextAccessor(httpContext);
-        
+
         var userPreferences = new Mock<IUserLocalizationPreferenceProvider>();
         userPreferences.Setup(x => x.GetPreferredCulture()).Returns((CultureInfo?)null);
         userPreferences.Setup(x => x.GetPreferredTimeZone()).Returns((TimeZoneInfo?)null);
@@ -176,6 +188,19 @@ public class LocalizationContextHttpTests
     }
 
     [Fact]
+    public void TestingConstructor_UsesDefaults_WhenCultureAndTimeZoneAreNull()
+    {
+        CultureInfo culture = null!;
+        TimeZoneInfo timeZone = null!;
+
+        var context = new LocalizationContext(culture, timeZone);
+
+        context.CurrentCulture.Name.Should().Be("en-US");
+        context.CurrentUiCulture.Name.Should().Be("en-US");
+        context.CurrentTimeZone.Id.Should().Be("UTC");
+    }
+
+    [Fact]
     public void ConvertToLocalTime_ConvertsCorrectly()
     {
         // Arrange
@@ -228,12 +253,12 @@ public class LocalizationContextHttpTests
         string? timezone = null)
     {
         var httpContext = new DefaultHttpContext();
-        
+
         if (!string.IsNullOrEmpty(acceptLanguage))
         {
             httpContext.Request.Headers.AcceptLanguage = acceptLanguage;
         }
-        
+
         if (!string.IsNullOrEmpty(timezone))
         {
             httpContext.Request.Headers["X-Timezone"] = timezone;

@@ -25,12 +25,14 @@ public class ReplaceUserProfileCommandHandlerTests
         var userId = Guid.NewGuid();
         var user = User.Create("test@example.com", "Test User", null);
         var existingProfile = UserProfile.Create(userId);
-        
+
         var request = new ReplaceUserProfileRequest(
             DisplayName: "New Name",
             Bio: "New bio",
             Location: "New York",
             Website: "https://example.com",
+            JobTitle: "Engineer",
+            Company: "GameGuild",
             TimeZone: "UTC",
             Language: "en",
             ProfileVisibility: "public",
@@ -67,12 +69,14 @@ public class ReplaceUserProfileCommandHandlerTests
         // Arrange
         var userId = Guid.NewGuid();
         var user = User.Create("test@example.com", "Test User", null);
-        
+
         var request = new ReplaceUserProfileRequest(
             DisplayName: "New Name",
             Bio: "New bio",
             Location: null,
             Website: null,
+            JobTitle: null,
+            Company: null,
             TimeZone: null,
             Language: null,
             ProfileVisibility: "public",
@@ -117,6 +121,8 @@ public class ReplaceUserProfileCommandHandlerTests
             Bio: null,
             Location: null,
             Website: null,
+            JobTitle: null,
+            Company: null,
             TimeZone: null,
             Language: null,
             ProfileVisibility: "public",
@@ -130,7 +136,7 @@ public class ReplaceUserProfileCommandHandlerTests
             .ReturnsAsync((User?)null);
 
         // Act & Assert
-        await Assert.ThrowsAsync<UserNotFoundException>(() => 
+        await Assert.ThrowsAsync<UserNotFoundException>(() =>
             _handler.Handle(command, CancellationToken.None));
     }
 }

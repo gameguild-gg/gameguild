@@ -18,6 +18,15 @@ public class ActorTypesTests
     }
 
     [Fact]
+    public void ServiceActor_Should_Default_Scopes_When_Not_Provided()
+    {
+        var actor = new ServiceActor("svc", "Service");
+
+        actor.Scopes.Should().NotBeNull();
+        actor.Scopes.Should().BeEmpty();
+    }
+
+    [Fact]
     public void ServiceActor_Should_Throw_When_ServiceId_Null()
     {
         var act = () => new ServiceActor(null!, "Service");
@@ -62,11 +71,35 @@ public class ActorTypesTests
     }
 
     [Fact]
+    public void UserActor_Should_Expose_Kind_SubjectId_And_Id_Fallback_DisplayName()
+    {
+        var id = Guid.NewGuid();
+        var actor = new UserActor(id);
+
+        actor.Kind.Should().Be(ActorKind.User);
+        actor.SubjectId.Should().Be(id.ToString());
+        actor.DisplayName.Should().Be(id.ToString());
+    }
+
+    [Fact]
     public void SystemActor_Factories_Should_Prefix_OperationNames()
     {
         SystemActor.ForBackgroundJob("Sync").DisplayName.Should().Be("BackgroundJob:Sync");
         SystemActor.ForScheduler("Hourly").DisplayName.Should().Be("Scheduler:Hourly");
         SystemActor.ForMigration("Init").DisplayName.Should().Be("Migration:Init");
         SystemActor.ForSeeding().DisplayName.Should().Be("Seeding");
+    }
+
+    [Fact]
+    public void SystemActor_Should_Expose_System_Identity_Metadata()
+    {
+        var actor = new SystemActor("NightlyJob", "corr-1");
+
+        SystemActor.SystemSubjectIdConstant.Should().Be("system");
+        SystemActor.SystemSubjectId.Should().Be(SystemActor.SystemSubjectIdConstant);
+        actor.Kind.Should().Be(ActorKind.System);
+        actor.SubjectId.Should().Be("system");
+        actor.DisplayName.Should().Be("NightlyJob");
+        actor.CorrelationId.Should().Be("corr-1");
     }
 }

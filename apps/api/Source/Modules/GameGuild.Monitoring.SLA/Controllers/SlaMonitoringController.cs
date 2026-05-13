@@ -11,6 +11,7 @@ namespace GameGuild.Monitoring.SLA;
 /// <summary>
 ///     API controller for SLA/SLO monitoring operations.
 /// </summary>
+[Microsoft.AspNetCore.Http.Tags("monitoring/sla")]
 [ApiVersion("1.0")]
 [Route("api/v{version:apiVersion}/sla")]
 [Authorize]

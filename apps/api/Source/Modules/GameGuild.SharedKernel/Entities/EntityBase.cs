@@ -55,27 +55,27 @@ public abstract class EntityBase<TKey> : IEntity<TKey>, ITenantScoped where TKey
     ///     Protected setter prevents direct manipulation outside the entity hierarchy; EF Core uses backing field.
     /// </summary>
     [ConcurrencyCheck]
-    public int Version { get; protected set; } = 0;
+    public int Version { get; set; } = 0;
 
     /// <summary>
     ///     Timestamp when the entity was created.
     ///     Protected setter prevents modification after initial creation; EF Core uses backing field.
     /// </summary>
     [Required]
-    public DateTime CreatedAt { get; protected set; } = SystemClock.UtcNow;
+    public DateTime CreatedAt { get; set; } = SystemClock.UtcNow;
 
     /// <summary>
     ///     Timestamp when the entity was last updated.
     ///     Protected setter — use <see cref="Touch"/> to update. EF Core uses backing field.
     /// </summary>
     [Required]
-    public DateTime UpdatedAt { get; protected set; } = SystemClock.UtcNow;
+    public DateTime UpdatedAt { get; set; } = SystemClock.UtcNow;
 
     /// <summary>
     ///     Timestamp when the entity was soft-deleted (null if not deleted).
     ///     Protected setter — use <see cref="SoftDelete"/>/<see cref="Restore"/>. EF Core uses backing field.
     /// </summary>
-    public DateTime? DeletedAt { get; protected set; }
+    public DateTime? DeletedAt { get; set; }
 
     /// <summary>
     ///     Updates the UpdatedAt timestamp to the current UTC time.
@@ -106,7 +106,7 @@ public abstract class EntityBase<TKey> : IEntity<TKey>, ITenantScoped where TKey
         Touch();
     }
 
-    public virtual Guid? TenantId { get; protected set; }
+    public virtual Guid? TenantId { get; set; }
 
     /// <summary>
     ///     Sets the TenantId property on this entity.

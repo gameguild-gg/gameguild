@@ -22,7 +22,7 @@ public sealed class ReplaceUserLocalizationPreferencesCommandHandler(IUserReposi
             await preferencesRepository.AddAsync(preferences, cancellationToken).ConfigureAwait(false);
         }
 
-        preferences.SetLocalizationPreferences(request.Request.LocalizationPreferences);
+        preferences.SetLocalizationPreferences(JsonValueDictionary.ToObjects(request.Request.LocalizationPreferences));
 
         await preferencesRepository.UpdateAsync(preferences, cancellationToken).ConfigureAwait(false);
         await preferencesRepository.SaveChangesAsync(cancellationToken).ConfigureAwait(false);

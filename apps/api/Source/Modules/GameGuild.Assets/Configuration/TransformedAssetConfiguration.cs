@@ -41,9 +41,11 @@ public class TransformedAssetConfiguration : IEntityTypeConfiguration<Transforme
         builder.Property(e => e.LastAccessedAt)
             .IsRequired();
 
+        builder.HasQueryFilter(e => e.DeletedAt == null);
+
         // Relationships
-        builder.HasOne<AssetContent>()
-            .WithMany()
+        builder.HasOne(e => e.SourceContent)
+            .WithMany(content => content.TransformedVersions)
             .HasForeignKey(e => e.SourceContentId)
             .OnDelete(DeleteBehavior.Cascade);
 

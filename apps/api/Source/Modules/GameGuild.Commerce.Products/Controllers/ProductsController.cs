@@ -12,7 +12,7 @@ namespace GameGuild.Commerce.Products;
 /// </summary>
 [ApiVersion("1.0")]
 [Route("v{version:apiVersion}/products")]
-[Tags("products")]
+[Microsoft.AspNetCore.Http.Tags("products")]
 [Authorize]
 public class ProductsController(IMediator mediator) : BaseApiController
 {

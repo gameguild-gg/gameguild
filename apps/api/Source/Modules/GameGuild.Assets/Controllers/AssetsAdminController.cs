@@ -10,6 +10,7 @@ namespace GameGuild.Assets.Controllers;
 /// <summary>
 /// Admin controller for asset moderation.
 /// </summary>
+[Microsoft.AspNetCore.Http.Tags("assets/admin")]
 [ApiVersion("1.0")]
 [Route("v{version:apiVersion}/admin/assets")]
 [Authorize(Policy = "RequireAdminRole")]

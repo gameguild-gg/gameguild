@@ -6,6 +6,33 @@ namespace GameGuild.Commerce.UnitTests.Entities;
 public class PricingRuleTests
 {
     [Fact]
+    public void Constructor_Should_Map_Partial_Values_For_Uncovered_Properties()
+    {
+        var productId = Guid.NewGuid();
+        var rule = new PricingRule(new
+        {
+            ProductId = productId,
+            Name = "Rule",
+            Description = "Seasonal offer",
+            RuleType = PricingRuleType.RegionBased,
+            TimeStart = "09:00",
+            TimeEnd = "17:00",
+            DaysOfWeek = "1,2,3",
+            Region = "US-FL",
+            CustomerSegment = "VIP"
+        });
+
+        rule.ProductId.Should().Be(productId);
+        rule.Name.Should().Be("Rule");
+        rule.Description.Should().Be("Seasonal offer");
+        rule.TimeStart.Should().Be("09:00");
+        rule.TimeEnd.Should().Be("17:00");
+        rule.DaysOfWeek.Should().Be("1,2,3");
+        rule.Region.Should().Be("US-FL");
+        rule.CustomerSegment.Should().Be("VIP");
+    }
+
+    [Fact]
     public void IsApplicable_ShouldReturnFalse_WhenInactive()
     {
         var rule = new PricingRule { IsActive = false };
@@ -30,6 +57,72 @@ public class PricingRuleTests
     }
 
     [Fact]
+    public void IsApplicable_ShouldReturnTrue_When_Active_And_NoDateBoundsExist()
+    {
+        var now = DateTime.UtcNow;
+        var rule = new PricingRule { IsActive = true };
+
+        rule.IsApplicable(now).Should().BeTrue();
+    }
+
+    [Fact]
+    public void IsApplicable_ShouldHandle_PartiallyBounded_DateWindows()
+    {
+        var now = DateTime.UtcNow;
+        var startOnlyRule = new PricingRule
+        {
+            IsActive = true,
+            StartDate = now.AddHours(-1)
+        };
+        var endOnlyRule = new PricingRule
+        {
+            IsActive = true,
+            EndDate = now.AddHours(1)
+        };
+        var expiredRule = new PricingRule
+        {
+            IsActive = true,
+            EndDate = now.AddHours(-1)
+        };
+
+        startOnlyRule.IsApplicable(now).Should().BeTrue();
+        endOnlyRule.IsApplicable(now).Should().BeTrue();
+        expiredRule.IsApplicable(now).Should().BeFalse();
+    }
+
+    [Fact]
+    public void IsApplicable_ShouldReturnFalse_When_Only_StartDate_Is_InTheFuture()
+    {
+        var now = DateTime.UtcNow;
+        var rule = new PricingRule
+        {
+            IsActive = true,
+            StartDate = now.AddHours(1)
+        };
+
+        rule.IsApplicable(now).Should().BeFalse();
+    }
+
+    [Fact]
+    public void IsApplicable_ShouldRespect_Inclusive_Start_And_Exclusive_End_Boundaries()
+    {
+        var now = DateTime.UtcNow;
+        var startsNowRule = new PricingRule
+        {
+            IsActive = true,
+            StartDate = now
+        };
+        var endsNowRule = new PricingRule
+        {
+            IsActive = true,
+            EndDate = now
+        };
+
+        startsNowRule.IsApplicable(now).Should().BeTrue();
+        endsNowRule.IsApplicable(now).Should().BeFalse();
+    }
+
+    [Fact]
     public void IsApplicable_WithQuantity_ShouldRespect_Min_And_Max()
     {
         var now = DateTime.UtcNow;
@@ -49,6 +142,49 @@ public class PricingRuleTests
     }
 
     [Fact]
+    public void IsApplicable_WithQuantity_ShouldReturnTrue_When_Only_Active_State_Is_Required()
+    {
+        var now = DateTime.UtcNow;
+        var rule = new PricingRule { IsActive = true };
+
+        rule.IsApplicable(3, now).Should().BeTrue();
+    }
+
+    [Fact]
+    public void IsApplicable_WithQuantity_ShouldReturnFalse_WhenInactive()
+    {
+        var now = DateTime.UtcNow;
+        var rule = new PricingRule { IsActive = false };
+
+        rule.IsApplicable(3, now).Should().BeFalse();
+    }
+
+    [Fact]
+    public void IsApplicable_WithQuantity_ShouldReturnFalse_For_Individual_Guard_Clauses()
+    {
+        var now = DateTime.UtcNow;
+        var startDateRule = new PricingRule
+        {
+            IsActive = true,
+            StartDate = now.AddHours(1)
+        };
+        var endDateRule = new PricingRule
+        {
+            IsActive = true,
+            EndDate = now.AddHours(-1)
+        };
+        var minQuantityRule = new PricingRule
+        {
+            IsActive = true,
+            MinQuantity = 5
+        };
+
+        startDateRule.IsApplicable(3, now).Should().BeFalse();
+        endDateRule.IsApplicable(3, now).Should().BeFalse();
+        minQuantityRule.IsApplicable(4, now).Should().BeFalse();
+    }
+
+    [Fact]
     public void AppliesToQuantity_ShouldReturnFalse_WhenNotApplicable()
     {
         var rule = new PricingRule
@@ -59,6 +195,26 @@ public class PricingRuleTests
         };
 
         rule.AppliesToQuantity(5).Should().BeFalse();
+    }
+
+    [Fact]
+    public void AppliesToQuantity_ShouldSupport_OpenEnded_QuantityRanges()
+    {
+        var minOnlyRule = new PricingRule
+        {
+            IsActive = true,
+            MinQuantity = 3
+        };
+        var maxOnlyRule = new PricingRule
+        {
+            IsActive = true,
+            MaxQuantity = 3
+        };
+
+        minOnlyRule.AppliesToQuantity(3).Should().BeTrue();
+        minOnlyRule.AppliesToQuantity(2).Should().BeFalse();
+        maxOnlyRule.AppliesToQuantity(3).Should().BeTrue();
+        maxOnlyRule.AppliesToQuantity(4).Should().BeFalse();
     }
 
     [Fact]
@@ -75,6 +231,20 @@ public class PricingRuleTests
         var result = rule.CalculatePrice(100m, 2);
 
         result.Should().Be(90m);
+    }
+
+    [Fact]
+    public void CalculatePrice_ShouldReturn_BasePrice_When_Quantity_Does_Not_Apply()
+    {
+        var rule = new PricingRule
+        {
+            IsActive = true,
+            RuleType = PricingRuleType.VolumeDiscount,
+            DiscountPercentage = 10,
+            MinQuantity = 5
+        };
+
+        rule.CalculatePrice(100m, 1).Should().Be(100m);
     }
 
     [Fact]
@@ -179,6 +349,18 @@ public class PricingRuleTests
     }
 
     [Fact]
+    public void CalculateDiscount_ShouldApply_Bundle_Discount()
+    {
+        var rule = new PricingRule
+        {
+            RuleType = PricingRuleType.Bundle,
+            DiscountAmount = 7m
+        };
+
+        rule.CalculateDiscount(50m, 2).Should().Be(7m);
+    }
+
+    [Fact]
     public void CalculateDiscount_ShouldApply_BuyXGetY_Discount()
     {
         var rule = new PricingRule
@@ -233,6 +415,21 @@ public class PricingRuleTests
     }
 
     [Fact]
+    public void CalculateDiscount_ShouldApply_VolumeDiscount_For_MaxOnly_Tier()
+    {
+        var rule = new PricingRule
+        {
+            RuleType = PricingRuleType.VolumeDiscount,
+            PricingTiers =
+            {
+                new PricingRuleTier { MaxQuantity = 3, DiscountPercentage = 10 }
+            }
+        };
+
+        rule.CalculateDiscount(10m, 2).Should().Be(2m);
+    }
+
+    [Fact]
     public void CalculateDiscount_ShouldReturnZero_When_TierHasNoPriceOrDiscount()
     {
         var rule = new PricingRule
@@ -264,6 +461,47 @@ public class PricingRuleTests
         var rule = new PricingRule
         {
             RuleType = PricingRuleType.TieredPricing
+        };
+
+        rule.CalculateDiscount(10m, 2).Should().Be(0m);
+    }
+
+    [Fact]
+    public void CalculateDiscount_ShouldReturnZero_When_Existing_Tier_Does_Not_Match_Quantity()
+    {
+        var rule = new PricingRule
+        {
+            RuleType = PricingRuleType.TieredPricing,
+            PricingTiers =
+            {
+                new PricingRuleTier { MaxQuantity = 2, DiscountPercentage = 10m }
+            }
+        };
+
+        rule.CalculateDiscount(10m, 3).Should().Be(0m);
+    }
+
+    [Fact]
+    public void CalculateDiscount_ShouldReturnZero_When_Quantity_Is_Below_Minimum_Tier()
+    {
+        var rule = new PricingRule
+        {
+            RuleType = PricingRuleType.TieredPricing,
+            PricingTiers =
+            {
+                new PricingRuleTier { MinQuantity = 5, DiscountPercentage = 10m }
+            }
+        };
+
+        rule.CalculateDiscount(10m, 3).Should().Be(0m);
+    }
+
+    [Fact]
+    public void CalculateDiscount_ShouldReturnZero_For_Unsupported_RuleType()
+    {
+        var rule = new PricingRule
+        {
+            RuleType = PricingRuleType.MarketBased
         };
 
         rule.CalculateDiscount(10m, 2).Should().Be(0m);

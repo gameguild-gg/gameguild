@@ -9,6 +9,8 @@ namespace GameGuild.Identity.Users;
 /// <param name="Bio">User's biography</param>
 /// <param name="Location">User's location</param>
 /// <param name="Website">User's website URL</param>
+/// <param name="JobTitle">User's job title</param>
+/// <param name="Company">User's company or organization</param>
 /// <param name="AvatarUrl">URL to user's avatar image</param>
 /// <param name="BannerUrl">URL to user's banner image</param>
 /// <param name="TimeZone">User's preferred timezone</param>
@@ -26,6 +28,8 @@ public sealed record UserProfileDto(
     string? Bio,
     string? Location,
     string? Website,
+    string? JobTitle,
+    string? Company,
     string? AvatarUrl,
     string? BannerUrl,
     string? TimeZone,
@@ -45,6 +49,8 @@ public sealed record UserProfileDto(
 /// <param name="Bio">Biography to update</param>
 /// <param name="Location">Location to update</param>
 /// <param name="Website">Website to update</param>
+/// <param name="JobTitle">Job title to update</param>
+/// <param name="Company">Company or organization to update</param>
 /// <param name="TimeZone">Timezone to update</param>
 /// <param name="Language">Language to update</param>
 /// <param name="ProfileVisibility">Profile visibility to update</param>
@@ -55,6 +61,8 @@ public sealed record UpdateUserProfileRequest(
     string? Bio = null,
     string? Location = null,
     string? Website = null,
+    string? JobTitle = null,
+    string? Company = null,
     string? TimeZone = null,
     string? Language = null,
     string? ProfileVisibility = null,
@@ -69,12 +77,14 @@ public sealed record UpdateUserProfileRequest(
 /// <param name="Bio">Biography</param>
 /// <param name="Location">Location</param>
 /// <param name="Website">Website URL</param>
+/// <param name="JobTitle">Job title</param>
+/// <param name="Company">Company or organization</param>
 /// <param name="TimeZone">Preferred timezone</param>
 /// <param name="Language">Preferred language</param>
 /// <param name="ProfileVisibility">Profile visibility setting</param>
 /// <param name="ShowEmail">Whether to show email in profile</param>
 /// <param name="ShowLocation">Whether to show location in profile</param>
-public sealed record ReplaceUserProfileRequest(string? DisplayName, string? Bio, string? Location, string? Website, string? TimeZone, string? Language, string ProfileVisibility, bool ShowEmail, bool ShowLocation);
+public sealed record ReplaceUserProfileRequest(string? DisplayName, string? Bio, string? Location, string? Website, string? JobTitle, string? Company, string? TimeZone, string? Language, string ProfileVisibility, bool ShowEmail, bool ShowLocation);
 
 /// <summary>
 ///     Data transfer object for user avatar

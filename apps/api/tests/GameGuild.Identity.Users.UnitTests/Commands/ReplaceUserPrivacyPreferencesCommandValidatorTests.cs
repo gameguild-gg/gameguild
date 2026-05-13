@@ -11,7 +11,7 @@ public class ReplaceUserPrivacyPreferencesCommandValidatorTests
     public void Validate_WithValidCommand_ShouldNotHaveAnyValidationErrors()
     {
         // Arrange
-        var prefs = new Dictionary<string, object?> { { "ProfileVisible", true } };
+        var prefs = JsonMap(new Dictionary<string, object?> { { "ProfileVisible", true } });
         var request = new ReplaceUserPrivacyPreferencesRequest(prefs);
         var command = new ReplaceUserPrivacyPreferencesCommand(Guid.NewGuid(), request);
 
@@ -26,7 +26,7 @@ public class ReplaceUserPrivacyPreferencesCommandValidatorTests
     public void Validate_WithEmptyUserId_ShouldHaveError()
     {
         // Arrange
-        var prefs = new Dictionary<string, object?> { { "ProfileVisible", true } };
+        var prefs = JsonMap(new Dictionary<string, object?> { { "ProfileVisible", true } });
         var request = new ReplaceUserPrivacyPreferencesRequest(prefs);
         var command = new ReplaceUserPrivacyPreferencesCommand(Guid.Empty, request);
 

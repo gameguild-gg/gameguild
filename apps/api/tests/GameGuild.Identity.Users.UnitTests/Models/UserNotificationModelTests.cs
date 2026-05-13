@@ -1,5 +1,6 @@
 using FluentAssertions;
 
+using static GameGuild.Identity.Users.UnitTests.JsonTestData;
 using Xunit;
 
 namespace GameGuild.Identity.Users.Tests;
@@ -28,7 +29,7 @@ public class UserNotificationModelTests
             ActionUrl: "https://example.com",
             ActionText: "View",
             ImageUrl: "https://img.example.com/1.png",
-            Metadata: new Dictionary<string, object?> { ["key"] = "value" },
+            Metadata: JsonMap(new Dictionary<string, object?> { ["key"] = "value" }),
             CreatedAt: DateTimeOffset.UtcNow,
             UpdatedAt: null,
             Version: new byte[] { 1, 2, 3 }
@@ -57,7 +58,7 @@ public class UserNotificationModelTests
     {
         var notif = new UserNotificationDto(Guid.NewGuid(), Guid.NewGuid(), "System", "T", "M",
             "Normal", null, false, false, null, null, null, null, null, null,
-            new Dictionary<string, object?>(), DateTimeOffset.UtcNow, null, Array.Empty<byte>());
+            JsonMap(new Dictionary<string, object?>()), DateTimeOffset.UtcNow, null, Array.Empty<byte>());
 
         var action = new NotificationActionDto("a1", "Click", "https://x.com", "link", true);
 
@@ -79,7 +80,7 @@ public class UserNotificationModelTests
     [Fact]
     public void ExecuteNotificationActionRequest_ShouldInstantiate()
     {
-        var req = new ExecuteNotificationActionRequest("action1", new Dictionary<string, object?> { ["param"] = 42 });
+        var req = new ExecuteNotificationActionRequest("action1", JsonMap(new Dictionary<string, object?> { ["param"] = 42 }));
 
         req.ActionId.Should().Be("action1");
         req.Parameters.Should().ContainKey("param");

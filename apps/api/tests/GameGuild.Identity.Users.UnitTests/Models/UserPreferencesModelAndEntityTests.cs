@@ -1,5 +1,6 @@
 using FluentAssertions;
 
+using static GameGuild.Identity.Users.UnitTests.JsonTestData;
 using Xunit;
 
 namespace GameGuild.Identity.Users.Tests;
@@ -98,7 +99,7 @@ public class UserPreferencesModelAndEntityTests
     [Fact]
     public void UserPreferencesDto_ShouldInstantiate()
     {
-        var empty = new Dictionary<string, object?>();
+        var empty = JsonMap(new Dictionary<string, object?>());
         var dto = new UserPreferencesDto(
             Guid.NewGuid(), Guid.NewGuid(),
             empty, empty, empty, empty, empty,
@@ -111,7 +112,7 @@ public class UserPreferencesModelAndEntityTests
     public void UpdateUserPreferencesRequest_ShouldInstantiate()
     {
         var req = new UpdateUserPreferencesRequest(
-            GeneralPreferences: new Dictionary<string, object?> { ["x"] = 1 },
+            GeneralPreferences: JsonMap(new Dictionary<string, object?> { ["x"] = 1 }),
             NotificationPreferences: null,
             AccessibilityPreferences: null,
             PrivacyPreferences: null);
@@ -122,7 +123,7 @@ public class UserPreferencesModelAndEntityTests
     [Fact]
     public void ReplaceUserPreferencesRequest_ShouldInstantiate()
     {
-        var d = new Dictionary<string, object?>();
+        var d = JsonMap(new Dictionary<string, object?>());
         var req = new ReplaceUserPreferencesRequest(d, d, d, d);
 
         req.GeneralPreferences.Should().NotBeNull();
@@ -133,8 +134,8 @@ public class UserPreferencesModelAndEntityTests
     {
         var dto = new UserNotificationPreferencesDto(
             true, false, false, true, "Daily",
-            new Dictionary<string, object?>(),
-            new Dictionary<string, object?>());
+            JsonMap(new Dictionary<string, object?>()),
+            JsonMap(new Dictionary<string, object?>()));
 
         dto.EmailEnabled.Should().BeTrue();
         dto.Frequency.Should().Be("Daily");
@@ -143,7 +144,7 @@ public class UserPreferencesModelAndEntityTests
     [Fact]
     public void UpdateAndReplaceNotificationPreferencesRequest_ShouldInstantiate()
     {
-        var d = new Dictionary<string, object?> { ["k"] = "v" };
+        var d = JsonMap(new Dictionary<string, object?> { ["k"] = "v" });
         var update = new UpdateUserNotificationPreferencesRequest(d);
         var replace = new ReplaceUserNotificationPreferencesRequest(d);
 
@@ -156,7 +157,7 @@ public class UserPreferencesModelAndEntityTests
     {
         var dto = new UserAccessibilityPreferencesDto(
             true, false, true, false, true, 16, "dark",
-            new Dictionary<string, object?>());
+            JsonMap(new Dictionary<string, object?>()));
 
         dto.HighContrast.Should().BeTrue();
         dto.FontSize.Should().Be(16);
@@ -165,7 +166,7 @@ public class UserPreferencesModelAndEntityTests
     [Fact]
     public void UpdateAndReplaceAccessibilityPreferencesRequest_ShouldInstantiate()
     {
-        var d = new Dictionary<string, object?>();
+        var d = JsonMap(new Dictionary<string, object?>());
         var update = new UpdateUserAccessibilityPreferencesRequest(d);
         var replace = new ReplaceUserAccessibilityPreferencesRequest(d);
 
@@ -178,10 +179,10 @@ public class UserPreferencesModelAndEntityTests
     {
         var dto = new UserPrivacyPreferencesDto(
             "Public", true,
-            new Dictionary<string, object?>(),
-            new Dictionary<string, object?>(),
+            JsonMap(new Dictionary<string, object?>()),
+            JsonMap(new Dictionary<string, object?>()),
             false, true, false,
-            new Dictionary<string, object?>());
+            JsonMap(new Dictionary<string, object?>()));
 
         dto.ProfileVisibility.Should().Be("Public");
         dto.ActivityTracking.Should().BeTrue();
@@ -190,7 +191,7 @@ public class UserPreferencesModelAndEntityTests
     [Fact]
     public void UpdateAndReplacePrivacyPreferencesRequest_ShouldInstantiate()
     {
-        var d = new Dictionary<string, object?>();
+        var d = JsonMap(new Dictionary<string, object?>());
         var update = new UpdateUserPrivacyPreferencesRequest(d);
         var replace = new ReplaceUserPrivacyPreferencesRequest(d);
 
@@ -203,8 +204,8 @@ public class UserPreferencesModelAndEntityTests
     {
         var dto = new UserLocalizationPreferencesDto(
             "en", "UTC", "MM/dd/yyyy", "HH:mm", "USD",
-            new Dictionary<string, object?>(),
-            new Dictionary<string, object?>());
+            JsonMap(new Dictionary<string, object?>()),
+            JsonMap(new Dictionary<string, object?>()));
 
         dto.Language.Should().Be("en");
         dto.Currency.Should().Be("USD");
@@ -213,7 +214,7 @@ public class UserPreferencesModelAndEntityTests
     [Fact]
     public void UpdateAndReplaceLocalizationPreferencesRequest_ShouldInstantiate()
     {
-        var d = new Dictionary<string, object?>();
+        var d = JsonMap(new Dictionary<string, object?>());
         var update = new UpdateUserLocalizationPreferencesRequest(d);
         var replace = new ReplaceUserLocalizationPreferencesRequest(d);
 

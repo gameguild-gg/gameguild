@@ -12,15 +12,17 @@ public class ReplaceUserProfileCommandValidatorTests
     {
         // Arrange
         var request = new ReplaceUserProfileRequest(
-            "DisplayName",
-            "Bio",
-            "Location",
-            "https://website.com",
-            "UTC",
-            "en-US",
-            "Public",
-            true,
-            true
+            DisplayName: "DisplayName",
+            Bio: "Bio",
+            Location: "Location",
+            Website: "https://website.com",
+            JobTitle: "Engineer",
+            Company: "GameGuild",
+            TimeZone: "UTC",
+            Language: "en-US",
+            ProfileVisibility: "Public",
+            ShowEmail: true,
+            ShowLocation: true
         );
         var command = new ReplaceUserProfileCommand(Guid.NewGuid(), request);
 
@@ -36,15 +38,17 @@ public class ReplaceUserProfileCommandValidatorTests
     {
         // Arrange
         var request = new ReplaceUserProfileRequest(
-            "DisplayName",
-            "Bio",
-            "Location",
-            "https://website.com",
-            "UTC",
-            "en-US",
-            "Public",
-            true,
-            true
+            DisplayName: "DisplayName",
+            Bio: "Bio",
+            Location: "Location",
+            Website: "https://website.com",
+            JobTitle: "Engineer",
+            Company: "GameGuild",
+            TimeZone: "UTC",
+            Language: "en-US",
+            ProfileVisibility: "Public",
+            ShowEmail: true,
+            ShowLocation: true
         );
         var command = new ReplaceUserProfileCommand(Guid.Empty, request);
 
@@ -60,15 +64,17 @@ public class ReplaceUserProfileCommandValidatorTests
     {
         // Arrange
         var request = new ReplaceUserProfileRequest(
-            "DisplayName",
-            "Bio",
-            "Location",
-            "https://website.com",
-            "UTC",
-            "en-US",
-            "",  // Empty ProfileVisibility
-            true,
-            true
+            DisplayName: "DisplayName",
+            Bio: "Bio",
+            Location: "Location",
+            Website: "https://website.com",
+            JobTitle: "Engineer",
+            Company: "GameGuild",
+            TimeZone: "UTC",
+            Language: "en-US",
+            ProfileVisibility: "",
+            ShowEmail: true,
+            ShowLocation: true
         );
         var command = new ReplaceUserProfileCommand(Guid.NewGuid(), request);
 

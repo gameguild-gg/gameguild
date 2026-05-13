@@ -14,7 +14,7 @@ namespace GameGuild.Commerce.Billing;
 /// </summary>
 [ApiVersion("1.0")]
 [Route("api/v{version:apiVersion}/billing/webhooks")]
-[Tags("billing/webhooks")]
+[Microsoft.AspNetCore.Http.Tags("billing/webhooks")]
 [AllowAnonymous]
 public sealed class BillingWebhooksController(ISender sender, ILogger<BillingWebhooksController> logger) : BaseApiController
 {

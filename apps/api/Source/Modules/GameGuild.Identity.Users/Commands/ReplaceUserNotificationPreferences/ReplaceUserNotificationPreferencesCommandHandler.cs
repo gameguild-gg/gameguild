@@ -18,7 +18,7 @@ public sealed class ReplaceUserNotificationPreferencesCommandHandler(IUserReposi
             await preferencesRepository.AddAsync(preferences, cancellationToken).ConfigureAwait(false);
         }
 
-        preferences.SetNotificationPreferences(request.Request.NotificationPreferences);
+        preferences.SetNotificationPreferences(JsonValueDictionary.ToObjects(request.Request.NotificationPreferences));
         await preferencesRepository.UpdateAsync(preferences, cancellationToken).ConfigureAwait(false);
         return Unit.Value;
     }

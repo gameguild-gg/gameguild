@@ -3,6 +3,7 @@ using FluentValidation.TestHelper;
 using GameGuild.CQRS;
 using Microsoft.EntityFrameworkCore;
 using Moq;
+using static GameGuild.Identity.Users.UnitTests.JsonTestData;
 using Xunit;
 
 namespace GameGuild.Identity.Users.UnitTests;
@@ -526,7 +527,7 @@ public class ReplaceUserLocalizationPreferencesCommandHandlerAdditionalTests
         var handler = new ReplaceUserLocalizationPreferencesCommandHandler(userRepo.Object, Mock.Of<IUserPreferencesRepository>());
         await Assert.ThrowsAsync<UserNotFoundException>(() =>
             handler.Handle(new ReplaceUserLocalizationPreferencesCommand(
-                Guid.NewGuid(), new ReplaceUserLocalizationPreferencesRequest(new Dictionary<string, object?> { ["lang"] = "en" })), CancellationToken.None));
+                Guid.NewGuid(), new ReplaceUserLocalizationPreferencesRequest(JsonMap(new Dictionary<string, object?> { ["lang"] = "en" }))), CancellationToken.None));
     }
 
     [Fact]
@@ -544,7 +545,7 @@ public class ReplaceUserLocalizationPreferencesCommandHandlerAdditionalTests
         var handler = new ReplaceUserLocalizationPreferencesCommandHandler(userRepo.Object, prefsRepo.Object);
         var result = await handler.Handle(
             new ReplaceUserLocalizationPreferencesCommand(user.Id,
-                new ReplaceUserLocalizationPreferencesRequest(new Dictionary<string, object?> { ["lang"] = "fr" })),
+                new ReplaceUserLocalizationPreferencesRequest(JsonMap(new Dictionary<string, object?> { ["lang"] = "fr" }))),
             CancellationToken.None);
         result.Should().Be(Unit.Value);
     }
@@ -564,7 +565,7 @@ public class ReplaceUserLocalizationPreferencesCommandHandlerAdditionalTests
         var handler = new ReplaceUserLocalizationPreferencesCommandHandler(userRepo.Object, prefsRepo.Object);
         var result = await handler.Handle(
             new ReplaceUserLocalizationPreferencesCommand(user.Id,
-                new ReplaceUserLocalizationPreferencesRequest(new Dictionary<string, object?> { ["lang"] = "es" })),
+                new ReplaceUserLocalizationPreferencesRequest(JsonMap(new Dictionary<string, object?> { ["lang"] = "es" }))),
             CancellationToken.None);
         result.Should().Be(Unit.Value);
         prefsRepo.Verify(r => r.AddAsync(It.IsAny<UserPreferences>(), It.IsAny<CancellationToken>()), Times.Once);
@@ -582,7 +583,7 @@ public class UpdateUserLocalizationPreferencesCommandHandlerAdditionalTests
         var handler = new UpdateUserLocalizationPreferencesCommandHandler(userRepo.Object, Mock.Of<IUserPreferencesRepository>());
         await Assert.ThrowsAsync<UserNotFoundException>(() =>
             handler.Handle(new UpdateUserLocalizationPreferencesCommand(
-                Guid.NewGuid(), new UpdateUserLocalizationPreferencesRequest(new Dictionary<string, object?> { ["tz"] = "UTC" })), CancellationToken.None));
+                Guid.NewGuid(), new UpdateUserLocalizationPreferencesRequest(JsonMap(new Dictionary<string, object?> { ["tz"] = "UTC" }))), CancellationToken.None));
     }
 
     [Fact]
@@ -601,7 +602,7 @@ public class UpdateUserLocalizationPreferencesCommandHandlerAdditionalTests
         var handler = new UpdateUserLocalizationPreferencesCommandHandler(userRepo.Object, prefsRepo.Object);
         var result = await handler.Handle(
             new UpdateUserLocalizationPreferencesCommand(user.Id,
-                new UpdateUserLocalizationPreferencesRequest(new Dictionary<string, object?> { ["tz"] = "UTC" })),
+                new UpdateUserLocalizationPreferencesRequest(JsonMap(new Dictionary<string, object?> { ["tz"] = "UTC" }))),
             CancellationToken.None);
         result.Should().Be(Unit.Value);
     }
@@ -621,7 +622,7 @@ public class UpdateUserLocalizationPreferencesCommandHandlerAdditionalTests
         var handler = new UpdateUserLocalizationPreferencesCommandHandler(userRepo.Object, prefsRepo.Object);
         await handler.Handle(
             new UpdateUserLocalizationPreferencesCommand(user.Id,
-                new UpdateUserLocalizationPreferencesRequest(new Dictionary<string, object?> { ["lang"] = "de" })),
+                new UpdateUserLocalizationPreferencesRequest(JsonMap(new Dictionary<string, object?> { ["lang"] = "de" }))),
             CancellationToken.None);
         prefsRepo.Verify(r => r.AddAsync(It.IsAny<UserPreferences>(), It.IsAny<CancellationToken>()), Times.Once);
     }

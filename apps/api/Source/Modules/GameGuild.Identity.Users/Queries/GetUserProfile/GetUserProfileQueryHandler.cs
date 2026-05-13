@@ -12,7 +12,7 @@ public sealed class GetUserProfileQueryHandler(IUserProfileRepository profileRep
         ArgumentNullException.ThrowIfNull(request);
 
         var profile = await profileRepository.GetByUserIdAsync(request.UserId, cancellationToken).ConfigureAwait(false);
-        
+
         if (profile == null)
             return null;
 
@@ -23,6 +23,8 @@ public sealed class GetUserProfileQueryHandler(IUserProfileRepository profileRep
             Bio: profile.Bio,
             Location: profile.Location,
             Website: profile.Website,
+            JobTitle: profile.JobTitle,
+            Company: profile.Company,
             AvatarUrl: profile.AvatarUrl,
             BannerUrl: profile.BannerUrl,
             TimeZone: null,

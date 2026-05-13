@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace GameGuild.Compliance.Consent;
 
+[Microsoft.AspNetCore.Http.Tags("compliance/consent")]
 [ApiController]
 [Route("api/compliance/consent")]
 [Authorize]

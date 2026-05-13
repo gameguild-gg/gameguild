@@ -14,6 +14,7 @@ namespace GameGuild.Compliance.Audit;
 ///     - Permission audit logs (grants, revokes, changes)
 ///     - General audit logs (admin actions, security violations)
 /// </summary>
+[Microsoft.AspNetCore.Http.Tags("compliance/audit/security")]
 [ApiVersion("1.0")]
 [Route("v{version:apiVersion}/admin/security-audit")]
 [Authorize(Roles = "Admin,SystemAdmin")]

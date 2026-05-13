@@ -1,3 +1,5 @@
+using System.Text.Json;
+
 namespace GameGuild.Identity.Users;
 
 /// <summary>
@@ -38,7 +40,7 @@ public sealed record UserNotificationDto(
     string? ActionUrl,
     string? ActionText,
     string? ImageUrl,
-    Dictionary<string, object?> Metadata,
+    Dictionary<string, JsonElement> Metadata,
     DateTimeOffset CreatedAt,
     DateTimeOffset? UpdatedAt,
     byte[ ] Version
@@ -77,7 +79,7 @@ public sealed record NotificationActionDto(string Id, string Text, string? Url, 
 /// </summary>
 /// <param name="ActionId">The identifier of the action to execute</param>
 /// <param name="Parameters">Additional parameters for the action</param>
-public sealed record ExecuteNotificationActionRequest(string ActionId, Dictionary<string, object?>? Parameters = null);
+public sealed record ExecuteNotificationActionRequest(string ActionId, Dictionary<string, JsonElement>? Parameters = null);
 
 /// <summary>
 ///     Data transfer object for notification action result

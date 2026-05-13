@@ -16,7 +16,7 @@ namespace GameGuild.Resources;
 ///     All endpoints require authentication. User ownership or admin role is enforced.
 /// </remarks>
 [ApiVersion("1.0")]
-[Tags("users/quotas")]
+[Microsoft.AspNetCore.Http.Tags("users/quotas")]
 [Authorize]
 [EnableRateLimiting(RateLimitPolicies.PerUser)]
 public sealed class UserQuotasController(

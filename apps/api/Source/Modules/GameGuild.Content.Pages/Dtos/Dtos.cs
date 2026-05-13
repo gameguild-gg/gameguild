@@ -4,6 +4,9 @@ namespace GameGuild.Content.Pages;
 
 // ──────────────────────────── Page DTOs ────────────────────────────
 
+/// <summary>Lightweight entry for the public sitemap feed.</summary>
+public sealed record SitemapEntryDto(string Slug, DateTime? UpdatedAt, string? Locale);
+
 public record PageDto
 {
     public Guid Id { get; init; }

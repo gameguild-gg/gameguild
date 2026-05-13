@@ -52,6 +52,23 @@ public class TranslationWorkflowEntityTests
     }
 
     [Fact]
+    public void TranslationWorkflowEntity_TargetLanguages_ReturnsEmptyArray_WhenJsonDeserializesToNull()
+    {
+        var entity = new GameGuild.Localization.TranslationWorkflowEntity
+        {
+            Id = Guid.NewGuid(),
+            ResourceKey = "Course.123.Title",
+            SourceLanguage = "en-US",
+            SourceText = "Test Course",
+            TargetLanguagesJson = "null"
+        };
+
+        var languages = entity.TargetLanguages;
+
+        languages.Should().BeEmpty();
+    }
+
+    [Fact]
     public void TranslationWorkflowEntity_DefaultStatus_IsPendingAssignment()
     {
         // Arrange & Act

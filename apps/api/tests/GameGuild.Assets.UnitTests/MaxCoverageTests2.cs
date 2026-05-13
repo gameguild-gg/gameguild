@@ -241,9 +241,8 @@ public class AssetTokenServiceCoverageTests
     {
         var svc = CreateService();
         var token = svc.GenerateEphemeralToken(Guid.NewGuid(), TimeSpan.FromHours(1));
-        // Flip a char
         var chars = token.ToCharArray();
-        chars[^1] = chars[^1] == 'A' ? 'B' : 'A';
+        chars[0] = chars[0] == 'A' ? 'B' : 'A';
         var tampered = new string(chars);
 
         svc.ValidateEphemeralToken(tampered).Should().BeNull();

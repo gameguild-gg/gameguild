@@ -242,9 +242,7 @@ public class UserTests
     {
         // Arrange
         var user = User.Create("test@example.com", "Test User");
-        // Simulate persisted entity (Version must be > 0 for SoftDelete)
-        typeof(EntityBase<Guid>).GetProperty(nameof(EntityBase.Version))!
-            .SetValue(user, 1);
+        user.Version = 1; // Simulate persisted entity
 
         // Act
         user.SoftDelete();
@@ -260,9 +258,7 @@ public class UserTests
     {
         // Arrange
         var user = User.Create("test@example.com", "Test User");
-        // Simulate persisted entity (Version must be > 0 for SoftDelete)
-        typeof(EntityBase<Guid>).GetProperty(nameof(EntityBase.Version))!
-            .SetValue(user, 1);
+        user.Version = 1; // Simulate persisted entity
         user.SoftDelete();
 
         // Act

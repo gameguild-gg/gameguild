@@ -112,16 +112,16 @@ public partial class ContentSanitizer : IContentSanitizer
 
     private static string SanitizeTag(string fullTag, string tagName)
     {
-        // For self-closing tags like <br />
-        if (fullTag.Contains('/'))
-        {
-            return $"<{tagName} />";
-        }
-
-        // For closing tags like </b>
-        if (fullTag.StartsWith("</"))
+        // Closing tags must be handled before self-closing detection.
+        if (fullTag.StartsWith("</", StringComparison.Ordinal))
         {
             return $"</{tagName}>";
+        }
+
+        // For self-closing tags like <br />
+        if (fullTag.EndsWith("/>", StringComparison.Ordinal))
+        {
+            return $"<{tagName} />";
         }
 
         // For opening tags, remove all attributes (potential XSS vectors)

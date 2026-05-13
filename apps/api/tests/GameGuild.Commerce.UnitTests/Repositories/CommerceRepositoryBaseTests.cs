@@ -1,6 +1,4 @@
 using FluentAssertions;
-using GameGuild;
-
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using Moq;
@@ -28,13 +26,10 @@ public class CommerceRepositoryBaseTests
     {
         await using var context = CreateContext();
         var repository = new PricingRuleRepository(context);
-        var entity = new PricingRule { Name = "Rule", RuleType = PricingRuleType.FixedAmount, DiscountAmount = 5 };
+        var entity = new PricingRule { Name = "Rule", RuleType = PricingRuleType.FixedAmount, DiscountAmount = 5, Version = 1 };
 
         context.PricingRules.Add(entity);
         await context.SaveChangesAsync();
-
-        // InMemory provider doesn't auto-increment Version; simulate persistence
-        typeof(EntityBase<Guid>).GetProperty("Version")!.SetValue(entity, 1);
 
         entity.SoftDelete();
         await context.SaveChangesAsync();
@@ -70,8 +65,8 @@ public class CommerceRepositoryBaseTests
         var first = new PricingRule { Name = "Old", RuleType = PricingRuleType.Percentage, DiscountPercentage = 5 };
         var second = new PricingRule { Name = "New", RuleType = PricingRuleType.FixedAmount, DiscountAmount = 10 };
 
-        typeof(EntityBase).GetProperty(nameof(EntityBase.CreatedAt))!.SetValue(first, DateTime.UtcNow.AddMinutes(-10));
-        typeof(EntityBase).GetProperty(nameof(EntityBase.CreatedAt))!.SetValue(second, DateTime.UtcNow.AddMinutes(-1));
+        first.CreatedAt = DateTime.UtcNow.AddMinutes(-10);
+        second.CreatedAt = DateTime.UtcNow.AddMinutes(-1);
 
         context.PricingRules.AddRange(first, second);
         await context.SaveChangesAsync();
@@ -151,12 +146,9 @@ public class CommerceRepositoryBaseTests
     {
         await using var context = CreateContext();
         var repository = new PricingRuleRepository(context);
-        var entity = new PricingRule { Name = "Rule", RuleType = PricingRuleType.Percentage, DiscountPercentage = 5 };
+        var entity = new PricingRule { Name = "Rule", RuleType = PricingRuleType.Percentage, DiscountPercentage = 5, Version = 1 };
         context.PricingRules.Add(entity);
         await context.SaveChangesAsync();
-
-        // InMemory provider doesn't auto-increment Version; simulate persistence
-        typeof(EntityBase<Guid>).GetProperty("Version")!.SetValue(entity, 1);
 
         var deleted = await repository.DeleteAsync(entity.Id);
 

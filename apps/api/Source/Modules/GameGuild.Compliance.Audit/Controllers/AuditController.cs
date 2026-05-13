@@ -9,6 +9,7 @@ namespace GameGuild.Compliance.Audit;
 /// <summary>
 /// Controller for audit log management (admin only)
 /// </summary>
+[Microsoft.AspNetCore.Http.Tags("compliance/audit")]
 [ApiVersion("1.0")]
 [Route("v{version:apiVersion}/admin/audit-logs")]
 [Authorize(Roles = "Admin")] // Restrict to admin users only

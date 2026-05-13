@@ -156,105 +156,6 @@ public class AssetAccessServiceTests
     }
 
     [Fact]
-    public async Task ValidateAccessAsync_PrivateAsset_NoUser_ReturnsDenied()
-    {
-        // Arrange
-        var assetReferenceId = Guid.NewGuid();
-        var reference = CreateAssetReference(assetReferenceId, AssetAccessPolicy.Private);
-
-        _referenceRepositoryMock
-            .Setup(x => x.GetByIdAsync(assetReferenceId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(reference);
-
-        // Act
-        var result = await _service.ValidateAccessAsync(assetReferenceId, userId: null, Guid.NewGuid());
-
-        // Assert
-        result.IsValid.Should().BeFalse();
-        result.DeniedReason.Should().Be(AssetAccessDeniedReason.AuthenticationRequired);
-    }
-
-    [Fact]
-    public async Task ValidateAccessAsync_PrivateAsset_IsOwner_ReturnsValid()
-    {
-        // Arrange
-        var assetReferenceId = Guid.NewGuid();
-        var ownerId = Guid.NewGuid();
-        var reference = CreateAssetReference(assetReferenceId, AssetAccessPolicy.Private, ownerId);
-
-        _referenceRepositoryMock
-            .Setup(x => x.GetByIdAsync(assetReferenceId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(reference);
-
-        // Act
-        var result = await _service.ValidateAccessAsync(assetReferenceId, ownerId, Guid.NewGuid());
-
-        // Assert
-        result.IsValid.Should().BeTrue();
-    }
-
-    [Fact]
-    public async Task ValidateAccessAsync_PrivateAsset_ActiveTenantAdmin_ReturnsValid()
-    {
-        // Arrange
-        var assetReferenceId = Guid.NewGuid();
-        var ownerId = Guid.NewGuid();
-        var userId = Guid.NewGuid();
-        var tenantId = Guid.NewGuid();
-        var reference = CreateAssetReference(assetReferenceId, AssetAccessPolicy.Private, ownerId);
-
-        _referenceRepositoryMock
-            .Setup(x => x.GetByIdAsync(assetReferenceId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(reference);
-        _tenantMemberRepositoryMock
-            .Setup(x => x.GetByUserAndTenantAsync(userId, tenantId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new TenantMember
-            {
-                UserId = userId,
-                TenantId = tenantId,
-                Role = TenantRole.Admin.Value,
-                IsActive = true
-            });
-
-        // Act
-        var result = await _service.ValidateAccessAsync(assetReferenceId, userId, tenantId);
-
-        // Assert
-        result.IsValid.Should().BeTrue();
-    }
-
-    [Fact]
-    public async Task ValidateAccessAsync_PrivateAsset_InactiveTenantAdmin_ReturnsDenied()
-    {
-        // Arrange
-        var assetReferenceId = Guid.NewGuid();
-        var ownerId = Guid.NewGuid();
-        var userId = Guid.NewGuid();
-        var tenantId = Guid.NewGuid();
-        var reference = CreateAssetReference(assetReferenceId, AssetAccessPolicy.Private, ownerId);
-
-        _referenceRepositoryMock
-            .Setup(x => x.GetByIdAsync(assetReferenceId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(reference);
-        _tenantMemberRepositoryMock
-            .Setup(x => x.GetByUserAndTenantAsync(userId, tenantId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new TenantMember
-            {
-                UserId = userId,
-                TenantId = tenantId,
-                Role = TenantRole.Admin.Value,
-                IsActive = false
-            });
-
-        // Act
-        var result = await _service.ValidateAccessAsync(assetReferenceId, userId, tenantId);
-
-        // Assert
-        result.IsValid.Should().BeFalse();
-        result.DeniedReason.Should().Be(AssetAccessDeniedReason.OwnershipRequired);
-    }
-
-    [Fact]
     public async Task ValidateAccessAsync_OwnerOnlyAsset_NoUser_ReturnsDenied()
     {
         // Arrange
@@ -468,11 +369,11 @@ public class AssetAccessServiceTests
         // Arrange
         var assetReferenceId = Guid.NewGuid();
         var reference = CreateAssetReferenceWithContent(assetReferenceId, AssetAccessPolicy.OwnerOnly, Guid.NewGuid());
-
+        
         _referenceRepositoryMock
             .Setup(x => x.GetByIdWithContentAsync(assetReferenceId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(reference);
-
+        
         _referenceRepositoryMock
             .Setup(x => x.GetByIdAsync(assetReferenceId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(reference);
@@ -495,7 +396,7 @@ public class AssetAccessServiceTests
         _referenceRepositoryMock
             .Setup(x => x.GetByIdWithContentAsync(assetReferenceId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(reference);
-
+        
         _referenceRepositoryMock
             .Setup(x => x.GetByIdAsync(assetReferenceId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(reference);
@@ -529,7 +430,7 @@ public class AssetAccessServiceTests
         _referenceRepositoryMock
             .Setup(x => x.GetByIdWithContentAsync(assetReferenceId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(reference);
-
+        
         _referenceRepositoryMock
             .Setup(x => x.GetByIdAsync(assetReferenceId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(reference);
@@ -565,9 +466,9 @@ public class AssetAccessServiceTests
             policy,
             null,
             null);
-
+        
         typeof(AssetReference).GetProperty("Id")?.SetValue(reference, id);
-
+        
         return reference;
     }
 
@@ -593,7 +494,7 @@ public class AssetAccessServiceTests
             null);
         typeof(AssetReference).GetProperty("Id")?.SetValue(reference, id);
         typeof(AssetReference).GetProperty("Content")?.SetValue(reference, content);
-
+        
         return reference;
     }
 

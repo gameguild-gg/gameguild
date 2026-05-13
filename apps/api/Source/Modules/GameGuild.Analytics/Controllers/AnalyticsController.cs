@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using GameGuild.CQRS;
 
@@ -8,7 +7,7 @@ namespace GameGuild.Analytics;
 [Authorize]
 [ApiController]
 [Route("api/analytics")]
-[Tags("Analytics")]
+[Microsoft.AspNetCore.Http.Tags("analytics")]
 public class AnalyticsController(ISender sender) : ControllerBase
 {
     [HttpPost("events")]

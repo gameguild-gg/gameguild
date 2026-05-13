@@ -16,7 +16,8 @@ public class AssetStorageOptionsTests
 
         // Assert
         options.BucketName.Should().Be("assets");
-        options.TransformedBucketName.Should().Be("assets-transformed");
+        options.TransformedBucketName.Should().BeEmpty();
+        options.GetTransformedBucketName().Should().Be("assets");
         options.ServiceUrl.Should().BeEmpty();
         options.AccessKey.Should().BeEmpty();
         options.SecretKey.Should().BeEmpty();

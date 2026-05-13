@@ -11,13 +11,13 @@
     <!-- ═══════════════════════════════════════════════════════════════════════════════ -->
     <!-- COVERAGE THRESHOLDS - Build will FAIL if coverage drops below these values      -->
     <!-- Run with: dotnet test /p:CollectCoverage=true                                   -->
-    <!-- Target: 80% coverage - Standard minimum for production code                     -->
+    <!-- Target: 100% coverage - enforced for this module                                -->
     <!-- ═══════════════════════════════════════════════════════════════════════════════ -->
     <PropertyGroup>
         <CollectCoverage>false</CollectCoverage>
         <CoverletOutputFormat>cobertura</CoverletOutputFormat>
         <CoverletOutput>./TestResults/coverage.xml</CoverletOutput>
-        <Threshold>80</Threshold>
+        <Threshold>100</Threshold>
         <ThresholdType>line,branch,method</ThresholdType>
         <ThresholdStat>total</ThresholdStat>
         <ExcludeByFile>**/*Tests.cs,**/obj/**,**/Migrations/**</ExcludeByFile>

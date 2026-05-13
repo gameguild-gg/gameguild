@@ -14,6 +14,7 @@ namespace GameGuild.Assets.Controllers;
 /// - /e/{token} - Ephemeral URL with embedded asset reference
 /// - /t/{transformation}/{referenceId}/{token} - Transformed asset access
 /// </remarks>
+[Microsoft.AspNetCore.Http.Tags("assets/cdn")]
 [Route("assets")]
 [AllowAnonymous] // Token-based authorization, not session-based
 public class AssetsCdnController : BaseApiController

@@ -29,6 +29,8 @@ public sealed class GetUserProfilesPagedQueryHandler(IUserProfileRepository prof
             profile.Bio,
             profile.Location,
             profile.Website,
+            profile.JobTitle,
+            profile.Company,
             profile.AvatarUrl,
             profile.BannerUrl,
             TimeZone: null, // Not in entity yet
@@ -41,6 +43,6 @@ public sealed class GetUserProfilesPagedQueryHandler(IUserProfileRepository prof
             BitConverter.GetBytes(profile.Version) // Convert int version to byte array
         )).ToList();
 
-        return new PagedResult<UserProfileDto>(profileDtos, totalCount, request.PageNumber, request.PageSize);
+        return PagedResult<UserProfileDto>.FromPage(profileDtos, totalCount, request.PageNumber, request.PageSize);
     }
 }

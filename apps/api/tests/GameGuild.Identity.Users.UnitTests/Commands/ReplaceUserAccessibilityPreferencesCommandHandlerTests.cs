@@ -21,13 +21,13 @@ public class ReplaceUserAccessibilityPreferencesCommandHandlerTests
     [Fact]
     public async Task Handle_WithExistingPreferences_ShouldReplaceAccessibilityPreferences()
     {
-        // Arrange
         var userId = Guid.NewGuid();
         var user = User.Create("test@example.com", "Test User", null);
         var existingPreferences = UserPreferences.Create(userId);
-        
+        existingPreferences.SetAccessibilityPreferences(new Dictionary<string, object?> { ["legacy"] = true, ["fontSize"] = 16 });
+
         var request = new ReplaceUserAccessibilityPreferencesRequest(
-            new Dictionary<string, object?> { ["fontSize"] = "large", ["highContrast"] = true }
+            JsonMap(new Dictionary<string, object?> { ["fontSize"] = 18, ["highContrast"] = true })
         );
         var command = new ReplaceUserAccessibilityPreferencesCommand(userId, request);
 
@@ -43,14 +43,16 @@ public class ReplaceUserAccessibilityPreferencesCommandHandlerTests
             .Setup(x => x.UpdateAsync(It.IsAny<UserPreferences>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
-        // Act
         var result = await _handler.Handle(command, CancellationToken.None);
 
-        // Assert
         result.Should().Be(Unit.Value);
         _preferencesRepositoryMock.Verify(
             x => x.UpdateAsync(It.IsAny<UserPreferences>(), It.IsAny<CancellationToken>()),
             Times.Once);
+        var updated = existingPreferences.GetAccessibilityPreferences();
+        updated.Should().HaveCount(2);
+        ((System.Text.Json.JsonElement)updated["fontSize"]!).GetInt32().Should().Be(18);
+        ((System.Text.Json.JsonElement)updated["highContrast"]!).GetBoolean().Should().BeTrue();
     }
 
     [Fact]
@@ -59,7 +61,7 @@ public class ReplaceUserAccessibilityPreferencesCommandHandlerTests
         // Arrange
         var userId = Guid.NewGuid();
         var request = new ReplaceUserAccessibilityPreferencesRequest(
-            new Dictionary<string, object?>()
+            JsonMap(new Dictionary<string, object?>())
         );
         var command = new ReplaceUserAccessibilityPreferencesCommand(userId, request);
 
@@ -68,7 +70,32 @@ public class ReplaceUserAccessibilityPreferencesCommandHandlerTests
             .ReturnsAsync((User?)null);
 
         // Act & Assert
-        await Assert.ThrowsAsync<UserNotFoundException>(() => 
+        await Assert.ThrowsAsync<UserNotFoundException>(() =>
             _handler.Handle(command, CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task Handle_WithMissingPreferences_ShouldCreatePreferences()
+    {
+        var userId = Guid.NewGuid();
+        var user = User.Create("test@example.com", "Test User", null);
+        var request = new ReplaceUserAccessibilityPreferencesRequest(
+            JsonMap(new Dictionary<string, object?> { ["highContrast"] = true })
+        );
+        var command = new ReplaceUserAccessibilityPreferencesCommand(userId, request);
+
+        _userRepositoryMock.Setup(x => x.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(user);
+        _preferencesRepositoryMock.Setup(x => x.GetByUserIdAsync(userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((UserPreferences?)null);
+        _preferencesRepositoryMock.Setup(x => x.AddAsync(It.IsAny<UserPreferences>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+        _preferencesRepositoryMock.Setup(x => x.UpdateAsync(It.IsAny<UserPreferences>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+
+        await _handler.Handle(command, CancellationToken.None);
+
+        _preferencesRepositoryMock.Verify(x => x.AddAsync(It.IsAny<UserPreferences>(), It.IsAny<CancellationToken>()), Times.Once);
+        _preferencesRepositoryMock.Verify(x => x.UpdateAsync(It.IsAny<UserPreferences>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 }

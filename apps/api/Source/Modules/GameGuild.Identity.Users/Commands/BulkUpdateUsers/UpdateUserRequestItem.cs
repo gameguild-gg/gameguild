@@ -1,4 +1,4 @@
-﻿namespace GameGuild.Identity.Users;
+namespace GameGuild.Identity.Users;
 
 /// <summary>
 ///     API request item for updating a user in bulk operations

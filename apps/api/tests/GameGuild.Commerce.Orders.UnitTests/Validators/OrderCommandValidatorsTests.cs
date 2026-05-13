@@ -9,43 +9,11 @@ public class CancelOrderCommandValidatorTests
     private readonly CancelOrderCommandValidator _sut = new();
 
     [Fact]
-    public void ShouldHaveError_WhenOrderIdIsEmpty()
+    public void ShouldValidateOrderIdAndReason()
     {
-        var command = new CancelOrderCommand(Guid.Empty);
-        var result = _sut.TestValidate(command);
-        result.ShouldHaveValidationErrorFor(x => x.OrderId);
-    }
-
-    [Fact]
-    public void ShouldNotHaveError_WhenOrderIdIsValid()
-    {
-        var command = new CancelOrderCommand(Guid.NewGuid());
-        var result = _sut.TestValidate(command);
-        result.ShouldNotHaveValidationErrorFor(x => x.OrderId);
-    }
-
-    [Fact]
-    public void ShouldHaveError_WhenReasonExceedsMaxLength()
-    {
-        var command = new CancelOrderCommand(Guid.NewGuid(), new string('a', 501));
-        var result = _sut.TestValidate(command);
-        result.ShouldHaveValidationErrorFor(x => x.Reason);
-    }
-
-    [Fact]
-    public void ShouldNotHaveError_WhenReasonIsNull()
-    {
-        var command = new CancelOrderCommand(Guid.NewGuid(), null);
-        var result = _sut.TestValidate(command);
-        result.ShouldNotHaveValidationErrorFor(x => x.Reason);
-    }
-
-    [Fact]
-    public void ShouldNotHaveError_WhenReasonIsAtMaxLength()
-    {
-        var command = new CancelOrderCommand(Guid.NewGuid(), new string('a', 500));
-        var result = _sut.TestValidate(command);
-        result.ShouldNotHaveValidationErrorFor(x => x.Reason);
+        _sut.TestValidate(new CancelOrderCommand(Guid.Empty)).ShouldHaveValidationErrorFor(command => command.OrderId);
+        _sut.TestValidate(new CancelOrderCommand(Guid.NewGuid(), new string('a', 501))).ShouldHaveValidationErrorFor(command => command.Reason);
+        _sut.TestValidate(new CancelOrderCommand(Guid.NewGuid(), new string('a', 500))).ShouldNotHaveValidationErrorFor(command => command.Reason);
     }
 }
 
@@ -54,19 +22,10 @@ public class DeleteOrderCommandValidatorTests
     private readonly DeleteOrderCommandValidator _sut = new();
 
     [Fact]
-    public void ShouldHaveError_WhenOrderIdIsEmpty()
+    public void ShouldRequireValidOrderId()
     {
-        var command = new DeleteOrderCommand(Guid.Empty);
-        var result = _sut.TestValidate(command);
-        result.ShouldHaveValidationErrorFor(x => x.OrderId);
-    }
-
-    [Fact]
-    public void ShouldNotHaveError_WhenOrderIdIsValid()
-    {
-        var command = new DeleteOrderCommand(Guid.NewGuid());
-        var result = _sut.TestValidate(command);
-        result.ShouldNotHaveValidationErrorFor(x => x.OrderId);
+        _sut.TestValidate(new DeleteOrderCommand(Guid.Empty)).ShouldHaveValidationErrorFor(command => command.OrderId);
+        _sut.TestValidate(new DeleteOrderCommand(Guid.NewGuid())).ShouldNotHaveValidationErrorFor(command => command.OrderId);
     }
 }
 
@@ -75,19 +34,10 @@ public class CompleteOrderCommandValidatorTests
     private readonly CompleteOrderCommandValidator _sut = new();
 
     [Fact]
-    public void ShouldHaveError_WhenOrderIdIsEmpty()
+    public void ShouldRequireValidOrderId()
     {
-        var command = new CompleteOrderCommand(Guid.Empty);
-        var result = _sut.TestValidate(command);
-        result.ShouldHaveValidationErrorFor(x => x.OrderId);
-    }
-
-    [Fact]
-    public void ShouldNotHaveError_WhenOrderIdIsValid()
-    {
-        var command = new CompleteOrderCommand(Guid.NewGuid());
-        var result = _sut.TestValidate(command);
-        result.ShouldNotHaveValidationErrorFor(x => x.OrderId);
+        _sut.TestValidate(new CompleteOrderCommand(Guid.Empty)).ShouldHaveValidationErrorFor(command => command.OrderId);
+        _sut.TestValidate(new CompleteOrderCommand(Guid.NewGuid())).ShouldNotHaveValidationErrorFor(command => command.OrderId);
     }
 }
 
@@ -96,35 +46,12 @@ public class UpdateOrderCommandValidatorTests
     private readonly UpdateOrderCommandValidator _sut = new();
 
     [Fact]
-    public void ShouldHaveError_WhenOrderIdIsEmpty()
+    public void ShouldValidateOrderIdAndCurrency()
     {
-        var command = new UpdateOrderCommand(Guid.Empty);
-        var result = _sut.TestValidate(command);
-        result.ShouldHaveValidationErrorFor(x => x.OrderId);
-    }
-
-    [Fact]
-    public void ShouldNotHaveError_WhenCurrencyIsNull()
-    {
-        var command = new UpdateOrderCommand(Guid.NewGuid(), Currency: null);
-        var result = _sut.TestValidate(command);
-        result.ShouldNotHaveValidationErrorFor(x => x.Currency);
-    }
-
-    [Fact]
-    public void ShouldHaveError_WhenCurrencyIsNot3Chars()
-    {
-        var command = new UpdateOrderCommand(Guid.NewGuid(), Currency: "US");
-        var result = _sut.TestValidate(command);
-        result.ShouldHaveValidationErrorFor(x => x.Currency);
-    }
-
-    [Fact]
-    public void ShouldNotHaveError_WhenCurrencyIs3Chars()
-    {
-        var command = new UpdateOrderCommand(Guid.NewGuid(), Currency: "USD");
-        var result = _sut.TestValidate(command);
-        result.ShouldNotHaveValidationErrorFor(x => x.Currency);
+        _sut.TestValidate(new UpdateOrderCommand(Guid.Empty)).ShouldHaveValidationErrorFor(command => command.OrderId);
+        _sut.TestValidate(new UpdateOrderCommand(Guid.NewGuid(), Currency: null)).ShouldNotHaveValidationErrorFor(command => command.Currency);
+        _sut.TestValidate(new UpdateOrderCommand(Guid.NewGuid(), Currency: "US")).ShouldHaveValidationErrorFor(command => command.Currency);
+        _sut.TestValidate(new UpdateOrderCommand(Guid.NewGuid(), Currency: "USD")).ShouldNotHaveValidationErrorFor(command => command.Currency);
     }
 }
 
@@ -133,43 +60,13 @@ public class RefundOrderCommandValidatorTests
     private readonly RefundOrderCommandValidator _sut = new();
 
     [Fact]
-    public void ShouldHaveError_WhenOrderIdIsEmpty()
+    public void ShouldValidateOrderIdAndAmount()
     {
-        var command = new RefundOrderCommand(Guid.Empty);
-        var result = _sut.TestValidate(command);
-        result.ShouldHaveValidationErrorFor(x => x.OrderId);
-    }
-
-    [Fact]
-    public void ShouldHaveError_WhenAmountIsZero()
-    {
-        var command = new RefundOrderCommand(Guid.NewGuid(), Amount: 0);
-        var result = _sut.TestValidate(command);
-        result.ShouldHaveValidationErrorFor(x => x.Amount);
-    }
-
-    [Fact]
-    public void ShouldHaveError_WhenAmountIsNegative()
-    {
-        var command = new RefundOrderCommand(Guid.NewGuid(), Amount: -10);
-        var result = _sut.TestValidate(command);
-        result.ShouldHaveValidationErrorFor(x => x.Amount);
-    }
-
-    [Fact]
-    public void ShouldNotHaveError_WhenAmountIsNull()
-    {
-        var command = new RefundOrderCommand(Guid.NewGuid(), Amount: null);
-        var result = _sut.TestValidate(command);
-        result.ShouldNotHaveValidationErrorFor(x => x.Amount);
-    }
-
-    [Fact]
-    public void ShouldNotHaveError_WhenAmountIsPositive()
-    {
-        var command = new RefundOrderCommand(Guid.NewGuid(), Amount: 50m);
-        var result = _sut.TestValidate(command);
-        result.ShouldNotHaveValidationErrorFor(x => x.Amount);
+        _sut.TestValidate(new RefundOrderCommand(Guid.Empty)).ShouldHaveValidationErrorFor(command => command.OrderId);
+        _sut.TestValidate(new RefundOrderCommand(Guid.NewGuid(), Amount: 0)).ShouldHaveValidationErrorFor(command => command.Amount);
+        _sut.TestValidate(new RefundOrderCommand(Guid.NewGuid(), Amount: -10)).ShouldHaveValidationErrorFor(command => command.Amount);
+        _sut.TestValidate(new RefundOrderCommand(Guid.NewGuid(), Amount: null)).ShouldNotHaveValidationErrorFor(command => command.Amount);
+        _sut.TestValidate(new RefundOrderCommand(Guid.NewGuid(), Amount: 50m)).ShouldNotHaveValidationErrorFor(command => command.Amount);
     }
 }
 
@@ -178,35 +75,12 @@ public class AddProductToOrderCommandValidatorTests
     private readonly AddProductToOrderCommandValidator _sut = new();
 
     [Fact]
-    public void ShouldHaveError_WhenOrderIdIsEmpty()
+    public void ShouldValidateOrderProductAndQuantity()
     {
-        var command = new AddProductToOrderCommand(Guid.Empty, Guid.NewGuid(), 1);
-        var result = _sut.TestValidate(command);
-        result.ShouldHaveValidationErrorFor(x => x.OrderId);
-    }
-
-    [Fact]
-    public void ShouldHaveError_WhenProductIdIsEmpty()
-    {
-        var command = new AddProductToOrderCommand(Guid.NewGuid(), Guid.Empty, 1);
-        var result = _sut.TestValidate(command);
-        result.ShouldHaveValidationErrorFor(x => x.ProductId);
-    }
-
-    [Fact]
-    public void ShouldHaveError_WhenQuantityIsZero()
-    {
-        var command = new AddProductToOrderCommand(Guid.NewGuid(), Guid.NewGuid(), 0);
-        var result = _sut.TestValidate(command);
-        result.ShouldHaveValidationErrorFor(x => x.Quantity);
-    }
-
-    [Fact]
-    public void ShouldNotHaveError_WhenAllValid()
-    {
-        var command = new AddProductToOrderCommand(Guid.NewGuid(), Guid.NewGuid(), 5);
-        var result = _sut.TestValidate(command);
-        result.ShouldNotHaveAnyValidationErrors();
+        _sut.TestValidate(new AddProductToOrderCommand(Guid.Empty, Guid.NewGuid(), 1)).ShouldHaveValidationErrorFor(command => command.OrderId);
+        _sut.TestValidate(new AddProductToOrderCommand(Guid.NewGuid(), Guid.Empty, 1)).ShouldHaveValidationErrorFor(command => command.ProductId);
+        _sut.TestValidate(new AddProductToOrderCommand(Guid.NewGuid(), Guid.NewGuid(), 0)).ShouldHaveValidationErrorFor(command => command.Quantity);
+        _sut.TestValidate(new AddProductToOrderCommand(Guid.NewGuid(), Guid.NewGuid(), 5)).ShouldNotHaveAnyValidationErrors();
     }
 }
 
@@ -215,82 +89,17 @@ public class CreateOrderCommandValidatorTests
     private readonly CreateOrderCommandValidator _sut = new();
 
     [Fact]
-    public void ShouldHaveError_WhenUserIdIsEmpty()
+    public void ShouldValidateUserIdempotencyAndCurrency()
     {
-        var command = new CreateOrderCommand(Guid.Empty, "valid-key-12", "USD");
-        var result = _sut.TestValidate(command);
-        result.ShouldHaveValidationErrorFor(x => x.UserId);
-    }
-
-    [Fact]
-    public void ShouldHaveError_WhenIdempotencyKeyIsEmpty()
-    {
-        var command = new CreateOrderCommand(Guid.NewGuid(), "", "USD");
-        var result = _sut.TestValidate(command);
-        result.ShouldHaveValidationErrorFor(x => x.IdempotencyKey);
-    }
-
-    [Fact]
-    public void ShouldHaveError_WhenIdempotencyKeyTooShort()
-    {
-        var command = new CreateOrderCommand(Guid.NewGuid(), "short", "USD");
-        var result = _sut.TestValidate(command);
-        result.ShouldHaveValidationErrorFor(x => x.IdempotencyKey);
-    }
-
-    [Fact]
-    public void ShouldHaveError_WhenIdempotencyKeyTooLong()
-    {
-        var command = new CreateOrderCommand(Guid.NewGuid(), new string('a', 101), "USD");
-        var result = _sut.TestValidate(command);
-        result.ShouldHaveValidationErrorFor(x => x.IdempotencyKey);
-    }
-
-    [Fact]
-    public void ShouldHaveError_WhenIdempotencyKeyHasInvalidChars()
-    {
-        var command = new CreateOrderCommand(Guid.NewGuid(), "invalid key!", "USD");
-        var result = _sut.TestValidate(command);
-        result.ShouldHaveValidationErrorFor(x => x.IdempotencyKey);
-    }
-
-    [Fact]
-    public void ShouldNotHaveError_WhenIdempotencyKeyIsValid()
-    {
-        var command = new CreateOrderCommand(Guid.NewGuid(), "valid-key_123", "USD");
-        var result = _sut.TestValidate(command);
-        result.ShouldNotHaveValidationErrorFor(x => x.IdempotencyKey);
-    }
-
-    [Fact]
-    public void ShouldHaveError_WhenCurrencyIsEmpty()
-    {
-        var command = new CreateOrderCommand(Guid.NewGuid(), "valid-key-12", "");
-        var result = _sut.TestValidate(command);
-        result.ShouldHaveValidationErrorFor(x => x.Currency);
-    }
-
-    [Fact]
-    public void ShouldHaveError_WhenCurrencyIsLowercase()
-    {
-        var command = new CreateOrderCommand(Guid.NewGuid(), "valid-key-12", "usd");
-        var result = _sut.TestValidate(command);
-        result.ShouldHaveValidationErrorFor(x => x.Currency);
-    }
-
-    [Fact]
-    public void ShouldHaveError_WhenCurrencyIsNot3Chars()
-    {
-        var command = new CreateOrderCommand(Guid.NewGuid(), "valid-key-12", "US");
-        var result = _sut.TestValidate(command);
-        result.ShouldHaveValidationErrorFor(x => x.Currency);
-    }
-
-    [Fact]
-    public void ShouldNotHaveError_WhenAllValid()
-    {
-        var command = new CreateOrderCommand(Guid.NewGuid(), "valid-key-12", "USD");
-        var result = _sut.TestValidate(command);
-        result.ShouldNotHaveAnyValidationErrors();
+        _sut.TestValidate(new CreateOrderCommand(Guid.Empty, "valid-key-12", "USD")).ShouldHaveValidationErrorFor(command => command.UserId);
+        _sut.TestValidate(new CreateOrderCommand(Guid.NewGuid(), string.Empty, "USD")).ShouldHaveValidationErrorFor(command => command.IdempotencyKey);
+        _sut.TestValidate(new CreateOrderCommand(Guid.NewGuid(), "short", "USD")).ShouldHaveValidationErrorFor(command => command.IdempotencyKey);
+        _sut.TestValidate(new CreateOrderCommand(Guid.NewGuid(), new string('a', 101), "USD")).ShouldHaveValidationErrorFor(command => command.IdempotencyKey);
+        _sut.TestValidate(new CreateOrderCommand(Guid.NewGuid(), "invalid key!", "USD")).ShouldHaveValidationErrorFor(command => command.IdempotencyKey);
+        _sut.TestValidate(new CreateOrderCommand(Guid.NewGuid(), "valid-key_123", "USD")).ShouldNotHaveValidationErrorFor(command => command.IdempotencyKey);
+        _sut.TestValidate(new CreateOrderCommand(Guid.NewGuid(), "valid-key-12", string.Empty)).ShouldHaveValidationErrorFor(command => command.Currency);
+        _sut.TestValidate(new CreateOrderCommand(Guid.NewGuid(), "valid-key-12", "usd")).ShouldHaveValidationErrorFor(command => command.Currency);
+        _sut.TestValidate(new CreateOrderCommand(Guid.NewGuid(), "valid-key-12", "US")).ShouldHaveValidationErrorFor(command => command.Currency);
+        _sut.TestValidate(new CreateOrderCommand(Guid.NewGuid(), "valid-key-12", "USD")).ShouldNotHaveAnyValidationErrors();
     }
 }

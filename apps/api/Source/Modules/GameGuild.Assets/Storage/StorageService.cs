@@ -171,8 +171,7 @@ public class S3StorageService : IStorageService
             Key = objectKey,
             InputStream = content,
             ContentType = mimeType,
-            AutoCloseStream = false,
-            DisablePayloadSigning = true
+            AutoCloseStream = false
         };
 
         request.Metadata.Add("content-hash", contentHash);
@@ -284,7 +283,7 @@ public class S3StorageService : IStorageService
         CancellationToken ct = default)
     {
         var objectKey = $"multipart/{Guid.NewGuid()}";
-        
+
         var request = new Amazon.S3.Model.InitiateMultipartUploadRequest
         {
             BucketName = _options.BucketName,
@@ -366,8 +365,7 @@ public class S3StorageService : IStorageService
             Key = objectKey,
             InputStream = content,
             ContentType = "application/octet-stream", // Don't trust original MIME type
-            AutoCloseStream = false,
-            DisablePayloadSigning = true
+            AutoCloseStream = false
         };
 
         foreach (var (key, value) in metadata)
@@ -384,7 +382,7 @@ public class S3StorageService : IStorageService
     {
         var prefix = isTransformed ? "transformed" : "content";
         var extension = GetExtensionFromMimeType(mimeType);
-        
+
         return $"{prefix}/{contentHash[..2]}/{contentHash[2..4]}/{contentHash}.{extension}";
     }
 

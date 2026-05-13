@@ -21,13 +21,13 @@ public class ReplaceUserPrivacyPreferencesCommandHandlerTests
     [Fact]
     public async Task Handle_WithExistingPreferences_ShouldReplacePrivacyPreferences()
     {
-        // Arrange
         var userId = Guid.NewGuid();
         var user = User.Create("test@example.com", "Test User", null);
         var existingPreferences = UserPreferences.Create(userId);
-        
+        existingPreferences.SetPrivacyPreferences(new Dictionary<string, object?> { ["legacy"] = true, ["profileVisible"] = true });
+
         var request = new ReplaceUserPrivacyPreferencesRequest(
-            new Dictionary<string, object?> { ["profileVisible"] = false, ["shareData"] = true }
+            JsonMap(new Dictionary<string, object?> { ["profileVisible"] = false, ["shareData"] = true })
         );
         var command = new ReplaceUserPrivacyPreferencesCommand(userId, request);
 
@@ -43,14 +43,16 @@ public class ReplaceUserPrivacyPreferencesCommandHandlerTests
             .Setup(x => x.UpdateAsync(It.IsAny<UserPreferences>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
-        // Act
         var result = await _handler.Handle(command, CancellationToken.None);
 
-        // Assert
         result.Should().Be(Unit.Value);
         _preferencesRepositoryMock.Verify(
             x => x.UpdateAsync(It.IsAny<UserPreferences>(), It.IsAny<CancellationToken>()),
             Times.Once);
+        var updated = existingPreferences.GetPrivacyPreferences();
+        updated.Should().HaveCount(2);
+        ((System.Text.Json.JsonElement)updated["profileVisible"]!).GetBoolean().Should().BeFalse();
+        ((System.Text.Json.JsonElement)updated["shareData"]!).GetBoolean().Should().BeTrue();
     }
 
     [Fact]
@@ -59,7 +61,7 @@ public class ReplaceUserPrivacyPreferencesCommandHandlerTests
         // Arrange
         var userId = Guid.NewGuid();
         var request = new ReplaceUserPrivacyPreferencesRequest(
-            new Dictionary<string, object?>()
+            JsonMap(new Dictionary<string, object?>())
         );
         var command = new ReplaceUserPrivacyPreferencesCommand(userId, request);
 
@@ -68,7 +70,32 @@ public class ReplaceUserPrivacyPreferencesCommandHandlerTests
             .ReturnsAsync((User?)null);
 
         // Act & Assert
-        await Assert.ThrowsAsync<UserNotFoundException>(() => 
+        await Assert.ThrowsAsync<UserNotFoundException>(() =>
             _handler.Handle(command, CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task Handle_WithMissingPreferences_ShouldCreatePreferences()
+    {
+        var userId = Guid.NewGuid();
+        var user = User.Create("test@example.com", "Test User", null);
+        var request = new ReplaceUserPrivacyPreferencesRequest(
+            JsonMap(new Dictionary<string, object?> { ["shareData"] = true })
+        );
+        var command = new ReplaceUserPrivacyPreferencesCommand(userId, request);
+
+        _userRepositoryMock.Setup(x => x.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(user);
+        _preferencesRepositoryMock.Setup(x => x.GetByUserIdAsync(userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((UserPreferences?)null);
+        _preferencesRepositoryMock.Setup(x => x.AddAsync(It.IsAny<UserPreferences>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+        _preferencesRepositoryMock.Setup(x => x.UpdateAsync(It.IsAny<UserPreferences>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+
+        await _handler.Handle(command, CancellationToken.None);
+
+        _preferencesRepositoryMock.Verify(x => x.AddAsync(It.IsAny<UserPreferences>(), It.IsAny<CancellationToken>()), Times.Once);
+        _preferencesRepositoryMock.Verify(x => x.UpdateAsync(It.IsAny<UserPreferences>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 }

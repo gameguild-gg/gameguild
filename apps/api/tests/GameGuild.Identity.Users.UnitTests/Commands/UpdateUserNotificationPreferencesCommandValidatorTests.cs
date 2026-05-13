@@ -11,11 +11,11 @@ public class UpdateUserNotificationPreferencesCommandValidatorTests
     public void Validate_WithValidCommand_ShouldNotHaveAnyValidationErrors()
     {
         // Arrange
-        var notificationPrefs = new Dictionary<string, object?>
+        var notificationPrefs = JsonMap(new Dictionary<string, object?>
         {
             { "EmailEnabled", true },
             { "PushEnabled", false }
-        };
+        });
         var request = new UpdateUserNotificationPreferencesRequest(notificationPrefs);
         var command = new UpdateUserNotificationPreferencesCommand(Guid.NewGuid(), request);
 
@@ -30,10 +30,10 @@ public class UpdateUserNotificationPreferencesCommandValidatorTests
     public void Validate_WithEmptyUserId_ShouldHaveError()
     {
         // Arrange
-        var notificationPrefs = new Dictionary<string, object?>
+        var notificationPrefs = JsonMap(new Dictionary<string, object?>
         {
             { "EmailEnabled", true }
-        };
+        });
         var request = new UpdateUserNotificationPreferencesRequest(notificationPrefs);
         var command = new UpdateUserNotificationPreferencesCommand(Guid.Empty, request);
 
@@ -48,7 +48,7 @@ public class UpdateUserNotificationPreferencesCommandValidatorTests
     public void Validate_WithEmptyNotificationPreferences_ShouldHaveError()
     {
         // Arrange
-        var emptyPrefs = new Dictionary<string, object?>();
+        var emptyPrefs = JsonMap(new Dictionary<string, object?>());
         var request = new UpdateUserNotificationPreferencesRequest(emptyPrefs);
         var command = new UpdateUserNotificationPreferencesCommand(Guid.NewGuid(), request);
 
