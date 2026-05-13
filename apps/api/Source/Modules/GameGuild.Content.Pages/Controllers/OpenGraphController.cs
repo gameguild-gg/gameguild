@@ -9,6 +9,7 @@ namespace GameGuild.Content.Pages;
 ///     Used by crawlers, social-media previews, and the Next.js frontend for
 ///     generating &lt;head&gt; meta tags.
 /// </summary>
+[Microsoft.AspNetCore.Http.Tags("content/pages/open-graph")]
 [ApiVersion("1.0")]
 [Route("v{version:apiVersion}/og")]
 [AllowAnonymous]

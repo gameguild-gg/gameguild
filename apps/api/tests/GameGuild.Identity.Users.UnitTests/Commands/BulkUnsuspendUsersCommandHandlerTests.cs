@@ -43,4 +43,27 @@ public class BulkUnsuspendUsersCommandHandlerTests
         result.FailedUserIds.Should().BeEmpty();
         _userRepositoryMock.Verify(x => x.UpdateAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()), Times.Exactly(2));
     }
+
+    [Fact]
+    public async Task Handle_WithMissingAndFailingUsers_ShouldTrackFailedUserIds()
+    {
+        var successUser = User.Create("success@example.com", "Success User", null);
+        successUser.IsActive = false;
+        var failingUser = User.Create("failing@example.com", "Failing User", null);
+        failingUser.IsActive = false;
+        var missingUserId = Guid.NewGuid();
+        var command = new BulkUnsuspendUsersCommand([successUser.Id, missingUserId, failingUser.Id]);
+
+        _userRepositoryMock.Setup(x => x.GetByIdsAsync(It.IsAny<IEnumerable<Guid>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<User> { successUser, failingUser });
+        _userRepositoryMock.Setup(x => x.UpdateAsync(It.Is<User>(u => u.Id == successUser.Id), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+        _userRepositoryMock.Setup(x => x.UpdateAsync(It.Is<User>(u => u.Id == failingUser.Id), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new InvalidOperationException("boom"));
+
+        var result = await _handler.Handle(command, CancellationToken.None);
+
+        result.UnsuspendedUsers.Should().HaveCount(1);
+        result.FailedUserIds.Should().BeEquivalentTo([missingUserId, failingUser.Id]);
+    }
 }

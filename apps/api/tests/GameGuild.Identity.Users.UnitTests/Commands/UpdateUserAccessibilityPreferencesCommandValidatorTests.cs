@@ -11,11 +11,11 @@ public class UpdateUserAccessibilityPreferencesCommandValidatorTests
     public void Validate_WithValidCommand_ShouldNotHaveAnyValidationErrors()
     {
         // Arrange
-        var accessibilityPrefs = new Dictionary<string, object?>
+        var accessibilityPrefs = JsonMap(new Dictionary<string, object?>
         {
             { "HighContrast", true },
             { "ScreenReaderEnabled", false }
-        };
+        });
         var request = new UpdateUserAccessibilityPreferencesRequest(accessibilityPrefs);
         var command = new UpdateUserAccessibilityPreferencesCommand(Guid.NewGuid(), request);
 
@@ -30,10 +30,10 @@ public class UpdateUserAccessibilityPreferencesCommandValidatorTests
     public void Validate_WithEmptyUserId_ShouldHaveError()
     {
         // Arrange
-        var accessibilityPrefs = new Dictionary<string, object?>
+        var accessibilityPrefs = JsonMap(new Dictionary<string, object?>
         {
             { "HighContrast", true }
-        };
+        });
         var request = new UpdateUserAccessibilityPreferencesRequest(accessibilityPrefs);
         var command = new UpdateUserAccessibilityPreferencesCommand(Guid.Empty, request);
 
@@ -48,7 +48,7 @@ public class UpdateUserAccessibilityPreferencesCommandValidatorTests
     public void Validate_WithEmptyAccessibilityPreferences_ShouldHaveError()
     {
         // Arrange
-        var emptyPrefs = new Dictionary<string, object?>();
+        var emptyPrefs = JsonMap(new Dictionary<string, object?>());
         var request = new UpdateUserAccessibilityPreferencesRequest(emptyPrefs);
         var command = new UpdateUserAccessibilityPreferencesCommand(Guid.NewGuid(), request);
 

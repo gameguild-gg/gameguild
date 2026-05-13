@@ -1,3 +1,5 @@
+using System.Text.Json;
+
 namespace GameGuild.Identity.Users;
 
 /// <summary>
@@ -14,7 +16,7 @@ namespace GameGuild.Identity.Users;
 public sealed record UserMetadataDto(
     Guid Id,
     Guid UserId,
-    Dictionary<string, object?> CustomFields,
+    Dictionary<string, JsonElement> CustomFields,
     List<string> Tags,
     Dictionary<string, string> ExternalReferences,
     DateTimeOffset CreatedAt,
@@ -29,7 +31,7 @@ public sealed record UserMetadataDto(
 /// <param name="TagsToAdd">Tags to add to the user</param>
 /// <param name="TagsToRemove">Tags to remove from the user</param>
 /// <param name="ExternalReferences">External references to update</param>
-public sealed record UpdateUserMetadataRequest(Dictionary<string, object?>? CustomFields = null, List<string>? TagsToAdd = null, List<string>? TagsToRemove = null, Dictionary<string, string>? ExternalReferences = null);
+public sealed record UpdateUserMetadataRequest(Dictionary<string, JsonElement>? CustomFields = null, List<string>? TagsToAdd = null, List<string>? TagsToRemove = null, Dictionary<string, string>? ExternalReferences = null);
 
 /// <summary>
 ///     Request model for completely replacing user metadata
@@ -37,13 +39,13 @@ public sealed record UpdateUserMetadataRequest(Dictionary<string, object?>? Cust
 /// <param name="CustomFields">Complete set of custom fields</param>
 /// <param name="Tags">Complete set of tags</param>
 /// <param name="ExternalReferences">Complete set of external references</param>
-public sealed record ReplaceUserMetadataRequest(Dictionary<string, object?> CustomFields, List<string> Tags, Dictionary<string, string> ExternalReferences);
+public sealed record ReplaceUserMetadataRequest(Dictionary<string, JsonElement> CustomFields, List<string> Tags, Dictionary<string, string> ExternalReferences);
 
 /// <summary>
 ///     Request model for updating user custom fields
 /// </summary>
 /// <param name="CustomFields">Custom fields to update</param>
-public sealed record UpdateUserCustomFieldsRequest(Dictionary<string, object?> CustomFields);
+public sealed record UpdateUserCustomFieldsRequest(Dictionary<string, JsonElement> CustomFields);
 
 /// <summary>
 ///     Request model for updating user tags

@@ -12,7 +12,7 @@ namespace GameGuild.Commerce.Payments;
 /// </summary>
 [ApiVersion("1.0")]
 [Route("api/v{version:apiVersion}/tax-rules")]
-[Tags("tax-rules")]
+[Microsoft.AspNetCore.Http.Tags("tax-rules")]
 [Authorize]
 public sealed class TaxRulesController(ISender sender) : BaseApiController
 {

@@ -106,9 +106,7 @@ public class AssetReferenceTests
     {
         // Arrange
         var reference = CreateTestReference();
-        // Simulate persisted entity (Version must be > 0 for SoftDelete)
-        typeof(EntityBase<Guid>).GetProperty(nameof(EntityBase.Version))!
-            .SetValue(reference, 1);
+        reference.Version = 1; // Simulate persisted entity
 
         // Act
         reference.SoftDelete();

@@ -1,108 +1,106 @@
 using FluentAssertions;
 
-using GameGuild.Notifications;
-using GameGuild.Notifications.Services;
+using Microsoft.Extensions.DependencyInjection;
 
 using Moq;
 
+using GameGuild.CQRS;
+using GameGuild.Notifications;
+using GameGuild.Notifications.Services;
+
 using Xunit;
 
-namespace GameGuild.Monitoring.SLA.Tests;
+namespace GameGuild.Monitoring.SLA.UnitTests.Services;
 
-/// <summary>
-///     Tests for SlaMonitoringService to boost coverage on all service methods.
-/// </summary>
 public class SlaMonitoringServiceTests
 {
-    private readonly Mock<IServiceLevelObjectiveRepository> _sloRepo = new();
-    private readonly Mock<IServiceLevelIndicatorRepository> _sliRepo = new();
-    private readonly Mock<ISloViolationRepository> _violationRepo = new();
-    private readonly Mock<IErrorBudgetCalculator> _budgetCalculator = new();
+    private readonly Mock<IServiceLevelObjectiveRepository> _sloRepository = new();
+    private readonly Mock<IServiceLevelIndicatorRepository> _sliRepository = new();
+    private readonly Mock<ISloViolationRepository> _violationRepository = new();
+    private readonly Mock<IErrorBudgetCalculator> _errorBudgetCalculator = new();
     private readonly Mock<IAlertManager> _alertManager = new();
     private readonly SlaMonitoringService _sut;
 
     public SlaMonitoringServiceTests()
     {
         _sut = new SlaMonitoringService(
-            _sloRepo.Object,
-            _sliRepo.Object,
-            _violationRepo.Object,
-            _budgetCalculator.Object,
+            _sloRepository.Object,
+            _sliRepository.Object,
+            _violationRepository.Object,
+            _errorBudgetCalculator.Object,
             _alertManager.Object);
     }
 
     [Fact]
-    public async Task RecordMetricAsync_ShouldThrowNotImplemented()
+    public async Task RecordMetricAsync_ShouldThrowNotImplementedException()
     {
-        var metric = new SliMetricDto();
-
-        var act = () => _sut.RecordMetricAsync(metric);
+        var act = () => _sut.RecordMetricAsync(new SliMetricDto(), CancellationToken.None);
 
         await act.Should().ThrowAsync<NotImplementedException>();
     }
 
     [Fact]
-    public async Task EvaluateAllSlosAsync_ShouldEvaluateEnabledSlosOnly()
+    public async Task EvaluateAllSlosAsync_ShouldEvaluateOnlyEnabledSlos()
     {
         var tenantId = Guid.NewGuid();
         var enabledSlo = CreateSlo(tenantId, isEnabled: true);
         var disabledSlo = CreateSlo(tenantId, isEnabled: false);
 
-        _sloRepo.Setup(r => r.GetByTenantIdAsync(tenantId, It.IsAny<CancellationToken>()))
+        _sloRepository.Setup(repository => repository.GetByTenantIdAsync(tenantId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<ServiceLevelObjective> { enabledSlo, disabledSlo });
 
         SetupSuccessfulEvaluation(enabledSlo);
 
-        await _sut.EvaluateAllSlosAsync(tenantId);
+        await _sut.EvaluateAllSlosAsync(tenantId, CancellationToken.None);
 
-        _budgetCalculator.Verify(c => c.CalculateAsync(enabledSlo.Id, It.IsAny<CancellationToken>()), Times.Once);
-        _budgetCalculator.Verify(c => c.CalculateAsync(disabledSlo.Id, It.IsAny<CancellationToken>()), Times.Never);
+        _errorBudgetCalculator.Verify(calculator => calculator.CalculateAsync(enabledSlo.Id, It.IsAny<CancellationToken>()), Times.Once);
+        _errorBudgetCalculator.Verify(calculator => calculator.CalculateAsync(disabledSlo.Id, It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
     public async Task EvaluateSloAsync_DisabledSlo_ShouldReturn()
     {
         var slo = CreateSlo(Guid.NewGuid(), isEnabled: false);
-        _sloRepo.Setup(r => r.GetByIdAsync(slo.Id, It.IsAny<CancellationToken>()))
+
+        _sloRepository.Setup(repository => repository.GetByIdAsync(slo.Id, It.IsAny<CancellationToken>()))
             .ReturnsAsync(slo);
 
-        await _sut.EvaluateSloAsync(slo.Id);
+        await _sut.EvaluateSloAsync(slo.Id, CancellationToken.None);
 
-        _budgetCalculator.Verify(c => c.CalculateAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
+        _errorBudgetCalculator.Verify(calculator => calculator.CalculateAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
-    public async Task EvaluateSloAsync_NullSlo_ShouldReturn()
+    public async Task EvaluateSloAsync_MissingSlo_ShouldReturn()
     {
-        _sloRepo.Setup(r => r.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+        _sloRepository.Setup(repository => repository.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((ServiceLevelObjective?)null);
 
-        await _sut.EvaluateSloAsync(Guid.NewGuid());
+        await _sut.EvaluateSloAsync(Guid.NewGuid(), CancellationToken.None);
 
-        _budgetCalculator.Verify(c => c.CalculateAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
+        _errorBudgetCalculator.Verify(calculator => calculator.CalculateAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
-    public async Task EvaluateSloAsync_EnabledSlo_ShouldUpdateStatusAndAlert()
+    public async Task EvaluateSloAsync_EnabledSlo_ShouldUpdateAndAlert()
     {
         var slo = CreateSlo(Guid.NewGuid(), isEnabled: true);
-        _sloRepo.Setup(r => r.GetByIdAsync(slo.Id, It.IsAny<CancellationToken>()))
+
+        _sloRepository.Setup(repository => repository.GetByIdAsync(slo.Id, It.IsAny<CancellationToken>()))
             .ReturnsAsync(slo);
+        _errorBudgetCalculator.Setup(calculator => calculator.CalculateAsync(slo.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ErrorBudgetDto { ActualPercentage = 99.5, RemainingBudgetPercentage = 50 });
 
-        var budget = new ErrorBudgetDto { ActualPercentage = 99.5, RemainingBudgetPercentage = 50 };
-        _budgetCalculator.Setup(c => c.CalculateAsync(slo.Id, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(budget);
+        await _sut.EvaluateSloAsync(slo.Id, CancellationToken.None);
 
-        await _sut.EvaluateSloAsync(slo.Id);
-
-        _sloRepo.Verify(r => r.UpdateAsync(slo, It.IsAny<CancellationToken>()), Times.Once);
-        _alertManager.Verify(a => a.CheckAndTriggerAlertAsync(slo, It.IsAny<CancellationToken>()), Times.Once);
+        _sloRepository.Verify(repository => repository.UpdateAsync(slo, It.IsAny<CancellationToken>()), Times.Once);
+        _alertManager.Verify(manager => manager.CheckAndTriggerAlertAsync(slo, It.IsAny<CancellationToken>()), Times.Once);
         slo.CurrentActualPercentage.Should().Be(99.5);
         slo.RemainingErrorBudget.Should().Be(50);
     }
 
     [Fact]
-    public async Task GetComplianceAsync_ShouldReturnComplianceDto()
+    public async Task GetComplianceAsync_ShouldReturnDto()
     {
         var slo = CreateSlo(Guid.NewGuid(), isEnabled: true);
         slo.Violations.Add(new SloViolation
@@ -116,19 +114,12 @@ public class SlaMonitoringServiceTests
             Severity = ViolationSeverity.High
         });
 
-        _sloRepo.Setup(r => r.GetByIdWithViolationsAsync(slo.Id, It.IsAny<CancellationToken>()))
+        _sloRepository.Setup(repository => repository.GetByIdWithViolationsAsync(slo.Id, It.IsAny<CancellationToken>()))
             .ReturnsAsync(slo);
+        _errorBudgetCalculator.Setup(calculator => calculator.CalculateAsync(slo.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ErrorBudgetDto { ActualPercentage = 99.5, TotalRequests = 1000, SuccessfulRequests = 995 });
 
-        var budget = new ErrorBudgetDto
-        {
-            ActualPercentage = 99.5,
-            TotalRequests = 1000,
-            SuccessfulRequests = 995
-        };
-        _budgetCalculator.Setup(c => c.CalculateAsync(slo.Id, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(budget);
-
-        var result = await _sut.GetComplianceAsync(slo.Id);
+        var result = await _sut.GetComplianceAsync(slo.Id, cancellationToken: CancellationToken.None);
 
         result.ServiceLevelObjectiveId.Should().Be(slo.Id);
         result.ActualPercentage.Should().Be(99.5);
@@ -136,12 +127,12 @@ public class SlaMonitoringServiceTests
     }
 
     [Fact]
-    public async Task GetComplianceAsync_NullSlo_ShouldThrow()
+    public async Task GetComplianceAsync_MissingSlo_ShouldThrow()
     {
-        _sloRepo.Setup(r => r.GetByIdWithViolationsAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+        _sloRepository.Setup(repository => repository.GetByIdWithViolationsAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((ServiceLevelObjective?)null);
 
-        var act = () => _sut.GetComplianceAsync(Guid.NewGuid());
+        var act = () => _sut.GetComplianceAsync(Guid.NewGuid(), cancellationToken: CancellationToken.None);
 
         await act.Should().ThrowAsync<InvalidOperationException>();
     }
@@ -151,10 +142,11 @@ public class SlaMonitoringServiceTests
     {
         var sloId = Guid.NewGuid();
         var budget = new ErrorBudgetDto { ActualPercentage = 99.9 };
-        _budgetCalculator.Setup(c => c.CalculateAsync(sloId, It.IsAny<CancellationToken>()))
+
+        _errorBudgetCalculator.Setup(calculator => calculator.CalculateAsync(sloId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(budget);
 
-        var result = await _sut.GetErrorBudgetAsync(sloId);
+        var result = await _sut.GetErrorBudgetAsync(sloId, CancellationToken.None);
 
         result.Should().Be(budget);
     }
@@ -163,45 +155,44 @@ public class SlaMonitoringServiceTests
     public async Task CheckErrorBudgetAlertsAsync_DisabledSlo_ShouldReturn()
     {
         var slo = CreateSlo(Guid.NewGuid(), isEnabled: false);
-        _sloRepo.Setup(r => r.GetByIdAsync(slo.Id, It.IsAny<CancellationToken>()))
+
+        _sloRepository.Setup(repository => repository.GetByIdAsync(slo.Id, It.IsAny<CancellationToken>()))
             .ReturnsAsync(slo);
 
-        await _sut.CheckErrorBudgetAlertsAsync(slo.Id);
+        await _sut.CheckErrorBudgetAlertsAsync(slo.Id, CancellationToken.None);
 
-        _budgetCalculator.Verify(c => c.CalculateAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
+        _errorBudgetCalculator.Verify(calculator => calculator.CalculateAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
-    public async Task CheckErrorBudgetAlertsAsync_BudgetExhausted_ShouldCreateViolation()
+    public async Task CheckErrorBudgetAlertsAsync_ExhaustedBudget_ShouldCreateViolation()
     {
         var slo = CreateSlo(Guid.NewGuid(), isEnabled: true);
-        _sloRepo.Setup(r => r.GetByIdAsync(slo.Id, It.IsAny<CancellationToken>()))
+
+        _sloRepository.Setup(repository => repository.GetByIdAsync(slo.Id, It.IsAny<CancellationToken>()))
             .ReturnsAsync(slo);
-
-        var budget = new ErrorBudgetDto
-        {
-            ActualPercentage = 98,
-            TargetPercentage = 99.9,
-            RemainingBudgetPercentage = -5
-        };
-        _budgetCalculator.Setup(c => c.CalculateAsync(slo.Id, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(budget);
-
-        _violationRepo.Setup(r => r.GetOngoingViolationsAsync(slo.Id, It.IsAny<CancellationToken>()))
+        _errorBudgetCalculator.Setup(calculator => calculator.CalculateAsync(slo.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ErrorBudgetDto
+            {
+                ActualPercentage = 98,
+                TargetPercentage = 99.9,
+                RemainingBudgetPercentage = -5
+            });
+        _violationRepository.Setup(repository => repository.GetOngoingViolationsAsync(slo.Id, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<SloViolation>());
 
-        await _sut.CheckErrorBudgetAlertsAsync(slo.Id);
+        await _sut.CheckErrorBudgetAlertsAsync(slo.Id, CancellationToken.None);
 
-        _violationRepo.Verify(r => r.AddAsync(It.IsAny<SloViolation>(), It.IsAny<CancellationToken>()), Times.Once);
+        _violationRepository.Verify(repository => repository.AddAsync(It.IsAny<SloViolation>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
-    public async Task GetErrorBudgetBurnRateAsync_NullSlo_ShouldReturnZero()
+    public async Task GetErrorBudgetBurnRateAsync_MissingSlo_ShouldReturnZero()
     {
-        _sloRepo.Setup(r => r.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+        _sloRepository.Setup(repository => repository.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((ServiceLevelObjective?)null);
 
-        var result = await _sut.GetErrorBudgetBurnRateAsync(Guid.NewGuid(), TimeSpan.FromDays(1));
+        var result = await _sut.GetErrorBudgetBurnRateAsync(Guid.NewGuid(), TimeSpan.FromDays(1), CancellationToken.None);
 
         result.Should().Be(0);
     }
@@ -210,13 +201,13 @@ public class SlaMonitoringServiceTests
     public async Task GetErrorBudgetBurnRateAsync_NoRequests_ShouldReturnZero()
     {
         var slo = CreateSlo(Guid.NewGuid(), isEnabled: true);
-        _sloRepo.Setup(r => r.GetByIdAsync(slo.Id, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(slo);
 
-        _sliRepo.Setup(r => r.GetTotalCountAsync(slo.Id, It.IsAny<DateTimeOffset>(), It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()))
+        _sloRepository.Setup(repository => repository.GetByIdAsync(slo.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(slo);
+        _sliRepository.Setup(repository => repository.GetTotalCountAsync(slo.Id, It.IsAny<DateTimeOffset>(), It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(0);
 
-        var result = await _sut.GetErrorBudgetBurnRateAsync(slo.Id, TimeSpan.FromDays(1));
+        var result = await _sut.GetErrorBudgetBurnRateAsync(slo.Id, TimeSpan.FromDays(1), CancellationToken.None);
 
         result.Should().Be(0);
     }
@@ -225,21 +216,21 @@ public class SlaMonitoringServiceTests
     public async Task GetErrorBudgetBurnRateAsync_WithRequests_ShouldCalculateRate()
     {
         var slo = CreateSlo(Guid.NewGuid(), isEnabled: true);
-        _sloRepo.Setup(r => r.GetByIdAsync(slo.Id, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(slo);
 
-        _sliRepo.Setup(r => r.GetTotalCountAsync(slo.Id, It.IsAny<DateTimeOffset>(), It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()))
+        _sloRepository.Setup(repository => repository.GetByIdAsync(slo.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(slo);
+        _sliRepository.Setup(repository => repository.GetTotalCountAsync(slo.Id, It.IsAny<DateTimeOffset>(), It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(1000);
-        _sliRepo.Setup(r => r.GetSuccessfulCountAsync(slo.Id, It.IsAny<DateTimeOffset>(), It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()))
+        _sliRepository.Setup(repository => repository.GetSuccessfulCountAsync(slo.Id, It.IsAny<DateTimeOffset>(), It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(990);
 
-        var result = await _sut.GetErrorBudgetBurnRateAsync(slo.Id, TimeSpan.FromDays(7));
+        var result = await _sut.GetErrorBudgetBurnRateAsync(slo.Id, TimeSpan.FromDays(7), CancellationToken.None);
 
         result.Should().BeGreaterThan(0);
     }
 
     [Fact]
-    public async Task GetActiveSloViolationsAsync_ShouldReturnViolationDtos()
+    public async Task GetActiveSloViolationsAsync_ShouldReturnDtos()
     {
         var slo = CreateSlo(Guid.NewGuid(), isEnabled: true);
         var violation = new SloViolation
@@ -253,12 +244,12 @@ public class SlaMonitoringServiceTests
             Description = "Test violation"
         };
 
-        _violationRepo.Setup(r => r.GetAllOngoingViolationsAsync(null, It.IsAny<CancellationToken>()))
+        _violationRepository.Setup(repository => repository.GetAllOngoingViolationsAsync(null, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<SloViolation> { violation });
-        _sloRepo.Setup(r => r.GetByIdAsync(slo.Id, It.IsAny<CancellationToken>()))
+        _sloRepository.Setup(repository => repository.GetByIdAsync(slo.Id, It.IsAny<CancellationToken>()))
             .ReturnsAsync(slo);
 
-        var result = await _sut.GetActiveSloViolationsAsync();
+        var result = await _sut.GetActiveSloViolationsAsync(cancellationToken: CancellationToken.None);
 
         result.Should().HaveCount(1);
         result.First().Id.Should().Be(violation.Id);
@@ -270,25 +261,14 @@ public class SlaMonitoringServiceTests
         var tenantId = Guid.NewGuid();
         var slo = CreateSlo(tenantId, isEnabled: true);
 
-        _sloRepo.Setup(r => r.GetByTenantIdAsync(tenantId, It.IsAny<CancellationToken>()))
+        _sloRepository.Setup(repository => repository.GetByTenantIdAsync(tenantId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<ServiceLevelObjective> { slo });
-
-        var budget = new ErrorBudgetDto
-        {
-            ActualPercentage = 99.9,
-            RemainingBudgetPercentage = 80
-        };
-        _budgetCalculator.Setup(c => c.CalculateAsync(slo.Id, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(budget);
-
-        _violationRepo.Setup(r => r.GetBySloIdAndTimeRangeAsync(
-                slo.Id, It.IsAny<DateTimeOffset>(), It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()))
+        _errorBudgetCalculator.Setup(calculator => calculator.CalculateAsync(slo.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ErrorBudgetDto { ActualPercentage = 99.9, RemainingBudgetPercentage = 80 });
+        _violationRepository.Setup(repository => repository.GetBySloIdAndTimeRangeAsync(slo.Id, It.IsAny<DateTimeOffset>(), It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<SloViolation>());
 
-        var start = DateTimeOffset.UtcNow.AddDays(-30);
-        var end = DateTimeOffset.UtcNow;
-
-        var result = await _sut.GenerateComplianceReportAsync(tenantId, start, end);
+        var result = await _sut.GenerateComplianceReportAsync(tenantId, DateTimeOffset.UtcNow.AddDays(-30), DateTimeOffset.UtcNow, CancellationToken.None);
 
         result.TotalSlos.Should().Be(1);
         result.CompliantSlos.Should().Be(1);
@@ -315,30 +295,25 @@ public class SlaMonitoringServiceTests
 
     private void SetupSuccessfulEvaluation(ServiceLevelObjective slo)
     {
-        _sloRepo.Setup(r => r.GetByIdAsync(slo.Id, It.IsAny<CancellationToken>()))
+        _sloRepository.Setup(repository => repository.GetByIdAsync(slo.Id, It.IsAny<CancellationToken>()))
             .ReturnsAsync(slo);
-
-        var budget = new ErrorBudgetDto { ActualPercentage = 99.9, RemainingBudgetPercentage = 80 };
-        _budgetCalculator.Setup(c => c.CalculateAsync(slo.Id, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(budget);
+        _errorBudgetCalculator.Setup(calculator => calculator.CalculateAsync(slo.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ErrorBudgetDto { ActualPercentage = 99.9, RemainingBudgetPercentage = 80 });
     }
 }
 
-/// <summary>
-///     Tests for AlertManager to boost coverage.
-/// </summary>
 public class AlertManagerTests
 {
-    private readonly Mock<ISloViolationRepository> _violationRepo = new();
-    private readonly Mock<IErrorBudgetCalculator> _budgetCalculator = new();
+    private readonly Mock<ISloViolationRepository> _violationRepository = new();
+    private readonly Mock<IErrorBudgetCalculator> _errorBudgetCalculator = new();
     private readonly Mock<INotificationService> _notificationService = new();
     private readonly AlertManager _sut;
 
     public AlertManagerTests()
     {
         _sut = new AlertManager(
-            _violationRepo.Object,
-            _budgetCalculator.Object,
+            _violationRepository.Object,
+            _errorBudgetCalculator.Object,
             _notificationService.Object);
     }
 
@@ -346,17 +321,11 @@ public class AlertManagerTests
     public async Task CheckAndTriggerAlertAsync_NoBreaches_ShouldReturnFalse()
     {
         var slo = CreateSlo();
-        var budget = new ErrorBudgetDto
-        {
-            ActualPercentage = 99.99,
-            RemainingBudgetPercentage = 90,
-            BurnRate = 0
-        };
 
-        _budgetCalculator.Setup(c => c.CalculateAsync(slo.Id, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(budget);
+        _errorBudgetCalculator.Setup(calculator => calculator.CalculateAsync(slo.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ErrorBudgetDto { ActualPercentage = 99.99, RemainingBudgetPercentage = 90, BurnRate = 0 });
 
-        var result = await _sut.CheckAndTriggerAlertAsync(slo);
+        var result = await _sut.CheckAndTriggerAlertAsync(slo, CancellationToken.None);
 
         result.Should().BeFalse();
     }
@@ -365,29 +334,14 @@ public class AlertManagerTests
     public async Task CheckAndTriggerAlertAsync_BreachedTarget_ShouldTriggerAlert()
     {
         var slo = CreateSlo();
-        var budget = new ErrorBudgetDto
-        {
-            ActualPercentage = 98,
-            RemainingBudgetPercentage = -5,
-            BurnRate = 0
-        };
 
-        _budgetCalculator.Setup(c => c.CalculateAsync(slo.Id, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(budget);
-
-        _violationRepo.Setup(r => r.GetOngoingViolationsAsync(slo.Id, It.IsAny<CancellationToken>()))
+        _errorBudgetCalculator.Setup(calculator => calculator.CalculateAsync(slo.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ErrorBudgetDto { ActualPercentage = 98, RemainingBudgetPercentage = -5, BurnRate = 0 });
+        _violationRepository.Setup(repository => repository.GetOngoingViolationsAsync(slo.Id, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<SloViolation>());
+        SetupSuccessfulNotification();
 
-        _notificationService.Setup(n => n.SendAsync(
-                It.IsAny<Guid>(), It.IsAny<NotificationType>(),
-                It.IsAny<string>(), It.IsAny<string>(),
-                It.IsAny<NotificationChannel>(), It.IsAny<Guid?>(),
-                It.IsAny<string?>(), It.IsAny<NotificationPriority>(),
-                It.IsAny<Guid?>(), It.IsAny<string?>(),
-                It.IsAny<string?>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Result.Success<Notification>(Notification.Create(Guid.Empty, NotificationType.System, NotificationChannel.InApp, "Test", "Test")));
-
-        var result = await _sut.CheckAndTriggerAlertAsync(slo);
+        var result = await _sut.CheckAndTriggerAlertAsync(slo, CancellationToken.None);
 
         result.Should().BeTrue();
     }
@@ -405,16 +359,9 @@ public class AlertManagerTests
             StartedAt = DateTimeOffset.UtcNow
         };
 
-        _notificationService.Setup(n => n.SendAsync(
-                It.IsAny<Guid>(), It.IsAny<NotificationType>(),
-                It.IsAny<string>(), It.IsAny<string>(),
-                It.IsAny<NotificationChannel>(), It.IsAny<Guid?>(),
-                It.IsAny<string?>(), It.IsAny<NotificationPriority>(),
-                It.IsAny<Guid?>(), It.IsAny<string?>(),
-                It.IsAny<string?>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Result.Success<Notification>(Notification.Create(Guid.Empty, NotificationType.System, NotificationChannel.InApp, "Test", "Test")));
+        SetupSuccessfulNotification();
 
-        var result = await _sut.SendViolationAlertAsync(violation);
+        var result = await _sut.SendViolationAlertAsync(violation, CancellationToken.None);
 
         result.Should().BeTrue();
     }
@@ -424,18 +371,29 @@ public class AlertManagerTests
     {
         var slo = CreateSlo();
 
-        _notificationService.Setup(n => n.SendAsync(
-                It.IsAny<Guid>(), It.IsAny<NotificationType>(),
-                It.IsAny<string>(), It.IsAny<string>(),
-                It.IsAny<NotificationChannel>(), It.IsAny<Guid?>(),
-                It.IsAny<string?>(), It.IsAny<NotificationPriority>(),
-                It.IsAny<Guid?>(), It.IsAny<string?>(),
-                It.IsAny<string?>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Result.Success<Notification>(Notification.Create(Guid.Empty, NotificationType.System, NotificationChannel.InApp, "Test", "Test")));
+        SetupSuccessfulNotification();
 
-        var result = await _sut.SendErrorBudgetAlertAsync(slo, 5.0);
+        var result = await _sut.SendErrorBudgetAlertAsync(slo, 5.0, CancellationToken.None);
 
         result.Should().BeTrue();
+    }
+
+    private void SetupSuccessfulNotification()
+    {
+        _notificationService.Setup(service => service.SendAsync(
+                It.IsAny<Guid>(),
+                It.IsAny<NotificationType>(),
+                It.IsAny<string>(),
+                It.IsAny<string>(),
+                It.IsAny<NotificationChannel>(),
+                It.IsAny<Guid?>(),
+                It.IsAny<string?>(),
+                It.IsAny<NotificationPriority>(),
+                It.IsAny<Guid?>(),
+                It.IsAny<string?>(),
+                It.IsAny<string?>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Success(Notification.Create(Guid.Empty, NotificationType.System, NotificationChannel.InApp, "Test", "Test")));
     }
 
     private static ServiceLevelObjective CreateSlo()
@@ -452,6 +410,25 @@ public class AlertManagerTests
             Status = SloStatus.Active
         };
         slo.SetTenantId(Guid.NewGuid());
+
         return slo;
+    }
+}
+
+public class ServiceCollectionExtensionsTests
+{
+    [Fact]
+    public void AddSlaMonitoringApplication_ShouldRegisterCoreServices()
+    {
+        var services = new ServiceCollection();
+
+        services.AddSlaMonitoringApplication();
+
+        services.Should().Contain(descriptor => descriptor.ServiceType == typeof(ISlaMonitoringService));
+        services.Should().Contain(descriptor => descriptor.ServiceType == typeof(IAlertManager));
+        services.Should().Contain(descriptor => descriptor.ServiceType == typeof(IErrorBudgetCalculator));
+        services.Should().Contain(descriptor => descriptor.ServiceType == typeof(ICommandHandler<CreateSloCommand, SloDto>));
+        services.Should().Contain(descriptor => descriptor.ServiceType == typeof(IQueryHandler<GetSlosQuery, List<SloDto>>));
+        services.Should().Contain(descriptor => descriptor.ServiceType == typeof(FluentValidation.IValidator<CreateSloCommand>));
     }
 }

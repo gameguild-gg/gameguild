@@ -396,13 +396,13 @@ public sealed class UserPreferencesController(ISender sender) : BaseApiControlle
 
         // Build DTO from preferences dictionary
         var dto = new UserLocalizationPreferencesDto(
-            localizationPrefs.GetValueOrDefault("Language")?.ToString() ?? "en-US",
-            localizationPrefs.GetValueOrDefault("Timezone")?.ToString() ?? "UTC",
-            localizationPrefs.GetValueOrDefault("DateFormat")?.ToString() ?? "MM/dd/yyyy",
-            localizationPrefs.GetValueOrDefault("TimeFormat")?.ToString() ?? "12h",
-            localizationPrefs.GetValueOrDefault("Currency")?.ToString() ?? "USD",
-            localizationPrefs.GetValueOrDefault("NumberFormat") as Dictionary<string, object?> ?? new(),
-            localizationPrefs.GetValueOrDefault("CustomSettings") as Dictionary<string, object?> ?? new Dictionary<string, object?>()
+            JsonValueDictionary.GetString(localizationPrefs, "Language", "en-US") ?? "en-US",
+            JsonValueDictionary.GetString(localizationPrefs, "Timezone", "UTC") ?? "UTC",
+            JsonValueDictionary.GetString(localizationPrefs, "DateFormat", "MM/dd/yyyy") ?? "MM/dd/yyyy",
+            JsonValueDictionary.GetString(localizationPrefs, "TimeFormat", "12h") ?? "12h",
+            JsonValueDictionary.GetString(localizationPrefs, "Currency", "USD") ?? "USD",
+            JsonValueDictionary.GetObjectMap(localizationPrefs, "NumberFormat"),
+            JsonValueDictionary.GetObjectMap(localizationPrefs, "CustomSettings")
         );
 
         return Ok(dto);

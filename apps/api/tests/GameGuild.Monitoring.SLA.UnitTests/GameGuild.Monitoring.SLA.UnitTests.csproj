@@ -6,9 +6,9 @@
         <Nullable>enable</Nullable>
         <IsPackable>false</IsPackable>
         <IsTestProject>true</IsTestProject>
+        <RootNamespace>GameGuild.Monitoring.SLA.UnitTests</RootNamespace>
     </PropertyGroup>
 
-    <!-- Coverage Thresholds -->
     <PropertyGroup>
         <CollectCoverage>false</CollectCoverage>
         <CoverletOutputFormat>cobertura</CoverletOutputFormat>
@@ -22,28 +22,19 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <PackageReference Include="coverlet.collector"/>
+        <PackageReference Include="coverlet.msbuild"/>
+        <PackageReference Include="FluentAssertions"/>
+        <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory"/>
+        <PackageReference Include="Microsoft.NET.Test.Sdk"/>
+        <PackageReference Include="Moq"/>
+        <PackageReference Include="xunit"/>
+        <PackageReference Include="xunit.runner.visualstudio"/>
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="Microsoft.NET.Test.Sdk" />
-        <PackageReference Include="xunit" />
-        <PackageReference Include="xunit.runner.visualstudio">
-            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-            <PrivateAssets>all</PrivateAssets>
-        </PackageReference>
-        <PackageReference Include="coverlet.collector">
-            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-            <PrivateAssets>all</PrivateAssets>
-        </PackageReference>
-        <PackageReference Include="coverlet.msbuild" />
-        <PackageReference Include="Moq" />
-        <PackageReference Include="FluentAssertions" />
-        <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
-    </ItemGroup>
-
-    <ItemGroup>
-        <ProjectReference Include="..\..\Source\Modules\GameGuild.Monitoring.SLA\GameGuild.Monitoring.SLA.csproj" />
-        <ProjectReference Include="..\..\Source\Modules\GameGuild.SharedKernel\GameGuild.SharedKernel.csproj" />
+        <ProjectReference Include="..\..\Source\Modules\GameGuild.Monitoring.SLA\GameGuild.Monitoring.SLA.csproj"/>
+        <ProjectReference Include="..\..\Source\Modules\GameGuild.SharedKernel\GameGuild.SharedKernel.csproj"/>
     </ItemGroup>
 
 </Project>

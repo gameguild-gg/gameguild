@@ -1,16 +1,10 @@
 using FluentAssertions;
-
 using Xunit;
 
-namespace GameGuild.Identity.Users.Tests;
+namespace GameGuild.Identity.Users.UnitTests.ValueObjects;
 
-/// <summary>
-///     Tests for the UserStatus value object — factories, state queries, and state transitions.
-/// </summary>
 public class UserStatusValueObjectTests
 {
-    // ── Factory Methods ──
-
     [Fact]
     public void Active_ShouldReturnActiveNotSuspended()
     {
@@ -38,8 +32,6 @@ public class UserStatusValueObjectTests
         status.IsSuspended.Should().BeTrue();
     }
 
-    // ── State Queries ──
-
     [Fact]
     public void CanPerformActions_Active_ShouldBeTrue()
     {
@@ -61,8 +53,7 @@ public class UserStatusValueObjectTests
     [Fact]
     public void CanPerformActions_InactiveSuspended_ShouldBeFalse()
     {
-        var status = new UserStatus(isActive: false, isSuspended: true);
-        status.CanPerformActions.Should().BeFalse();
+        new UserStatus(false, true).CanPerformActions.Should().BeFalse();
     }
 
     [Fact]
@@ -83,8 +74,6 @@ public class UserStatusValueObjectTests
         UserStatus.Inactive().CanSignIn.Should().BeFalse();
     }
 
-    // ── StatusName ──
-
     [Theory]
     [InlineData(true, false, "Active")]
     [InlineData(true, true, "Suspended")]
@@ -93,10 +82,9 @@ public class UserStatusValueObjectTests
     public void StatusName_ShouldReturnCorrectName(bool isActive, bool isSuspended, string expected)
     {
         var status = new UserStatus(isActive, isSuspended);
+
         status.StatusName.Should().Be(expected);
     }
-
-    // ── State Transitions ──
 
     [Fact]
     public void Activate_FromInactive_ShouldMakeActive()
@@ -144,8 +132,6 @@ public class UserStatusValueObjectTests
         result.StatusName.Should().Be("Inactive (Suspended)");
     }
 
-    // ── ToString ──
-
     [Fact]
     public void ToString_ShouldReturnStatusName()
     {
@@ -154,8 +140,6 @@ public class UserStatusValueObjectTests
         UserStatus.Inactive().ToString().Should().Be("Inactive");
         new UserStatus(false, true).ToString().Should().Be("Inactive (Suspended)");
     }
-
-    // ── Equality ──
 
     [Fact]
     public void EqualStatus_ShouldBeEqual()
@@ -173,8 +157,6 @@ public class UserStatusValueObjectTests
         UserStatus.Active().Should().NotBe(UserStatus.Inactive());
         UserStatus.Active().Should().NotBe(UserStatus.Suspended());
     }
-
-    // ── Constructor ──
 
     [Fact]
     public void Constructor_ShouldSetProperties()

@@ -26,6 +26,29 @@ public class ActorContextAccessorTests
     }
 
     [Fact]
+    public void SetActorContext_Should_Replace_Previous_Context()
+    {
+        var accessor = new ActorContextAccessor();
+        var first = ActorContextBuilder.ForSystem("Job1").Build();
+        var second = ActorContextBuilder.ForSystem("Job2").Build();
+
+        accessor.SetActorContext(first);
+        accessor.SetActorContext(second);
+
+        accessor.ActorContext.Should().Be(second);
+    }
+
+    [Fact]
+    public void SetActorContext_Should_Throw_When_Context_Null()
+    {
+        var accessor = new ActorContextAccessor();
+
+        var act = () => accessor.SetActorContext(null!);
+
+        act.Should().Throw<ArgumentNullException>().WithParameterName("context");
+    }
+
+    [Fact]
     public void ClearActorContext_Should_Reset_To_Anonymous()
     {
         var accessor = new ActorContextAccessor();

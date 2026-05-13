@@ -15,7 +15,7 @@ namespace GameGuild.Resources;
 ///     All endpoints require authentication. User ownership or admin role is enforced.
 /// </remarks>
 [ApiVersion("1.0")]
-[Tags("users/resources/settings")]
+[Microsoft.AspNetCore.Http.Tags("users/resources/settings")]
 [Authorize]
 [EnableRateLimiting(RateLimitPolicies.PerUser)]
 public sealed class UserResourceSettingsController(

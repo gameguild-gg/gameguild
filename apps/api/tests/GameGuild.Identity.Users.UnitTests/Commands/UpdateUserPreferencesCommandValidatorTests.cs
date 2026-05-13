@@ -12,7 +12,7 @@ public class UpdateUserPreferencesCommandValidatorTests
     {
         // Arrange
         var request = new UpdateUserPreferencesRequest(
-            GeneralPreferences: new Dictionary<string, object?> { ["theme"] = "dark" }
+            GeneralPreferences: JsonMap(new Dictionary<string, object?> { ["theme"] = "dark" })
         );
         var command = new UpdateUserPreferencesCommand(Guid.NewGuid(), request);
 
@@ -28,7 +28,7 @@ public class UpdateUserPreferencesCommandValidatorTests
     {
         // Arrange
         var request = new UpdateUserPreferencesRequest(
-            GeneralPreferences: new Dictionary<string, object?> { ["theme"] = "dark" }
+            GeneralPreferences: JsonMap(new Dictionary<string, object?> { ["theme"] = "dark" })
         );
         var command = new UpdateUserPreferencesCommand(Guid.Empty, request);
 
@@ -37,5 +37,31 @@ public class UpdateUserPreferencesCommandValidatorTests
 
         // Assert
         result.ShouldHaveValidationErrorFor(x => x.UserId);
+    }
+
+    [Fact]
+    public void Validate_WithNullRequest_ShouldHaveError()
+    {
+        // Arrange
+        var command = new UpdateUserPreferencesCommand(Guid.NewGuid(), null!);
+
+        // Act
+        var result = _validator.TestValidate(command);
+
+        // Assert
+        result.ShouldHaveValidationErrorFor(x => x.Request);
+    }
+
+    [Fact]
+    public void Validate_WithEmptyRequest_ShouldHaveError()
+    {
+        // Arrange
+        var command = new UpdateUserPreferencesCommand(Guid.NewGuid(), new UpdateUserPreferencesRequest());
+
+        // Act
+        var result = _validator.TestValidate(command);
+
+        // Assert
+        result.ShouldHaveValidationErrorFor(x => x.Request);
     }
 }

@@ -3,8 +3,8 @@ using GameGuild.API.Database;
 using GameGuild.Compliance.Audit;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
-using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
@@ -54,12 +54,10 @@ public class AuditIntegrationTests : IClassFixture<WebApplicationFactory<GameGui
     }
 
     [Fact]
-    public async Task AuditService_ShouldPersistAuditLog_WhenLoggingAction()
-    {
+    public async Task AuditService_ShouldPersistAuditLog_WhenLoggingAction() {
         // Arrange
         var userId = Guid.NewGuid();
-        var request = new CreateAuditLogRequest
-        {
+        var request = new CreateAuditLogRequest {
             ActionType = "Integration.Test",
             ResourceType = "TestResource",
             ResourceId = Guid.NewGuid().ToString(),
@@ -89,16 +87,14 @@ public class AuditIntegrationTests : IClassFixture<WebApplicationFactory<GameGui
     }
 
     [Fact]
-    public async Task AuditService_ShouldQueryAuditLogs_WithFiltering()
-    {
+    public async Task AuditService_ShouldQueryAuditLogs_WithFiltering() {
         // Arrange
         var userId1 = Guid.NewGuid();
         var userId2 = Guid.NewGuid();
         var tenantId = Guid.NewGuid();
 
         // Create multiple audit logs
-        await _auditService.LogAsync(new CreateAuditLogRequest
-        {
+        await _auditService.LogAsync(new CreateAuditLogRequest {
             ActionType = "Login",
             ResourceType = "User",
             UserId = userId1,
@@ -107,8 +103,7 @@ public class AuditIntegrationTests : IClassFixture<WebApplicationFactory<GameGui
             Category = AuditCategory.Authentication
         });
 
-        await _auditService.LogAsync(new CreateAuditLogRequest
-        {
+        await _auditService.LogAsync(new CreateAuditLogRequest {
             ActionType = "Logout",
             ResourceType = "User",
             UserId = userId1,
@@ -117,8 +112,7 @@ public class AuditIntegrationTests : IClassFixture<WebApplicationFactory<GameGui
             Category = AuditCategory.Authentication
         });
 
-        await _auditService.LogAsync(new CreateAuditLogRequest
-        {
+        await _auditService.LogAsync(new CreateAuditLogRequest {
             ActionType = "Login",
             ResourceType = "User",
             UserId = userId2,
@@ -127,8 +121,7 @@ public class AuditIntegrationTests : IClassFixture<WebApplicationFactory<GameGui
         });
 
         // Act - Query for specific user
-        var query = new AuditLogQuery
-        {
+        var query = new AuditLogQuery {
             UserId = userId1,
             TenantId = tenantId
         };
@@ -144,8 +137,7 @@ public class AuditIntegrationTests : IClassFixture<WebApplicationFactory<GameGui
     }
 
     [Fact]
-    public async Task AuditService_ShouldLogPermissionEvents_Correctly()
-    {
+    public async Task AuditService_ShouldLogPermissionEvents_Correctly() {
         // Arrange
         var userId = Guid.NewGuid();
         var tenantId = Guid.NewGuid();
@@ -177,8 +169,7 @@ public class AuditIntegrationTests : IClassFixture<WebApplicationFactory<GameGui
     }
 
     [Fact]
-    public async Task AuditService_ShouldLogAuthenticationEvents_Correctly()
-    {
+    public async Task AuditService_ShouldLogAuthenticationEvents_Correctly() {
         // Arrange
         var userId = Guid.NewGuid();
 
@@ -206,8 +197,7 @@ public class AuditIntegrationTests : IClassFixture<WebApplicationFactory<GameGui
     }
 
     [Fact]
-    public async Task AuditService_ShouldLogSecurityViolations_WithCriticalRiskLevel()
-    {
+    public async Task AuditService_ShouldLogSecurityViolations_WithCriticalRiskLevel() {
         // Arrange
         var userId = Guid.NewGuid();
         var violationType = "BruteForce";
@@ -232,8 +222,7 @@ public class AuditIntegrationTests : IClassFixture<WebApplicationFactory<GameGui
     }
 
     [Fact]
-    public async Task AuditService_ShouldLogTenantOperations_WithProperContext()
-    {
+    public async Task AuditService_ShouldLogTenantOperations_WithProperContext() {
         // Arrange
         var tenantId = Guid.NewGuid();
         var userId = Guid.NewGuid();
@@ -259,18 +248,15 @@ public class AuditIntegrationTests : IClassFixture<WebApplicationFactory<GameGui
     }
 
     [Fact]
-    public async Task AuditService_ShouldHandleConcurrentAuditLogging()
-    {
+    public async Task AuditService_ShouldHandleConcurrentAuditLogging() {
         // Arrange
         var userId = Guid.NewGuid();
         var tasks = new List<Task>();
 
         // Act - Create multiple concurrent audit log tasks
-        for (int i = 0; i < 10; i++)
-        {
+        for (int i = 0; i < 10; i++) {
             var index = i;
-            tasks.Add(_auditService.LogAsync(new CreateAuditLogRequest
-            {
+            tasks.Add(_auditService.LogAsync(new CreateAuditLogRequest {
                 ActionType = $"ConcurrentTest_{index}",
                 ResourceType = "TestResource",
                 ResourceId = index.ToString(),
@@ -291,8 +277,7 @@ public class AuditIntegrationTests : IClassFixture<WebApplicationFactory<GameGui
         auditLogs.Should().OnlyContain(log => log.ActionType.StartsWith("ConcurrentTest_"));
     }
 
-    public void Dispose()
-    {
+    public void Dispose() {
         _scope.Dispose();
     }
 }

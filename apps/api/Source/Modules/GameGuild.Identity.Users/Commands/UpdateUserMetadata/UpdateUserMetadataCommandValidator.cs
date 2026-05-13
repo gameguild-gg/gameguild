@@ -14,10 +14,9 @@ public sealed class UpdateUserMetadataCommandValidator : AbstractValidator<Updat
             .WithMessage("User ID is required");
 
         RuleFor(x => x.Request)
+            .Cascade(CascadeMode.Stop)
             .NotNull()
-            .WithMessage("Request body is required");
-
-        RuleFor(x => x.Request)
+            .WithMessage("Request body is required")
             .Must(r => r.CustomFields != null || r.TagsToAdd != null || r.TagsToRemove != null || r.ExternalReferences != null)
             .WithMessage("At least one field must be provided for update");
     }

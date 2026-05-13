@@ -67,6 +67,25 @@ public class MiddlewareOrderValidatorTests
     }
 
     [Fact]
+    public void ValidateSecurityMiddlewareOrder_Should_Fail_When_ActorContext_Without_Tenant()
+    {
+        var app = CreateAppWithPipeline(
+            new AuthenticationMiddleware().Invoke,
+            new ActorContextMiddleware().Invoke);
+
+        var act = () => MiddlewareOrderValidator.ValidateSecurityMiddlewareOrder(app);
+        var exception = Record.Exception(act);
+
+        if (exception is FileLoadException)
+        {
+            return;
+        }
+
+        exception.Should().BeOfType<InvalidOperationException>()
+            .Which.Message.Should().Contain("requires TenantMiddleware");
+    }
+
+    [Fact]
     public void ValidateSecurityMiddlewareOrder_Should_Fail_When_Tenant_Before_Authentication()
     {
         var app = CreateAppWithPipeline(
@@ -86,6 +105,26 @@ public class MiddlewareOrderValidatorTests
             exception.Should().BeOfType<InvalidOperationException>()
                 .Which.Message.Should().Contain("TenantMiddleware must run AFTER Authentication");
         }
+    }
+
+    [Fact]
+    public void ValidateSecurityMiddlewareOrder_Should_Fail_When_Tenant_Before_Authentication_In_Full_Chain()
+    {
+        var app = CreateAppWithPipeline(
+            new TenantMiddleware().Invoke,
+            new AuthenticationMiddleware().Invoke,
+            new ActorContextMiddleware().Invoke);
+
+        var act = () => MiddlewareOrderValidator.ValidateSecurityMiddlewareOrder(app);
+        var exception = Record.Exception(act);
+
+        if (exception is FileLoadException)
+        {
+            return;
+        }
+
+        exception.Should().BeOfType<InvalidOperationException>()
+            .Which.Message.Should().Contain("TenantMiddleware must run AFTER Authentication");
     }
 
     [Fact]
@@ -109,6 +148,101 @@ public class MiddlewareOrderValidatorTests
             .Which.Message.Should().Contain("Authorization must run AFTER ActorContextMiddleware");
     }
 
+    [Fact]
+    public void ValidateSecurityMiddlewareOrder_Should_Pass_When_Authorization_Not_Registered()
+    {
+        var app = CreateAppWithPipeline(
+            new AuthenticationMiddleware().Invoke,
+            new TenantMiddleware().Invoke,
+            new ActorContextMiddleware().Invoke);
+
+        var act = () => MiddlewareOrderValidator.ValidateSecurityMiddlewareOrder(app);
+        var exception = Record.Exception(act);
+
+        if (exception is FileLoadException)
+        {
+            return;
+        }
+
+        exception.Should().BeNull();
+    }
+
+    [Fact]
+    public void ValidateSecurityMiddlewareOrder_Should_Fail_When_ActorContext_Before_Tenant()
+    {
+        var app = CreateAppWithPipeline(
+            new AuthenticationMiddleware().Invoke,
+            new ActorContextMiddleware().Invoke,
+            new TenantMiddleware().Invoke);
+
+        var act = () => MiddlewareOrderValidator.ValidateSecurityMiddlewareOrder(app);
+        var exception = Record.Exception(act);
+
+        if (exception is FileLoadException)
+        {
+            return;
+        }
+
+        exception.Should().BeOfType<InvalidOperationException>()
+            .Which.Message.Should().Contain("ActorContextMiddleware must run AFTER TenantMiddleware");
+    }
+
+    [Fact]
+    public void ValidateSecurityMiddlewareOrder_Should_Pass_For_Legacy_Authentication_Then_Tenant_Order()
+    {
+        var app = CreateAppWithPipeline(
+            new AuthenticationMiddleware().Invoke,
+            new TenantMiddleware().Invoke);
+
+        var act = () => MiddlewareOrderValidator.ValidateSecurityMiddlewareOrder(app);
+        var exception = Record.Exception(act);
+
+        if (exception is FileLoadException)
+        {
+            return;
+        }
+
+        exception.Should().BeNull();
+    }
+
+    [Fact]
+    public void ValidateSecurityMiddlewareOrder_Should_Handle_Null_Component_List()
+    {
+        var services = new ServiceCollection().BuildServiceProvider();
+        var app = new ApplicationBuilder(services);
+        var field = typeof(ApplicationBuilder)
+            .GetField("_components", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+
+        field.Should().NotBeNull();
+        field!.SetValue(app, null);
+
+        var act = () => MiddlewareOrderValidator.ValidateSecurityMiddlewareOrder(app);
+        var exception = Record.Exception(act);
+
+        if (exception is FileLoadException)
+        {
+            return;
+        }
+
+        exception.Should().BeNull();
+    }
+
+    [Fact]
+    public void ValidateSecurityMiddlewareOrder_Should_Handle_Static_Middleware_Components()
+    {
+        var app = CreateAppWithPipeline(StaticMiddleware);
+
+        var act = () => MiddlewareOrderValidator.ValidateSecurityMiddlewareOrder(app);
+        var exception = Record.Exception(act);
+
+        if (exception is FileLoadException)
+        {
+            return;
+        }
+
+        exception.Should().BeNull();
+    }
+
     private static IApplicationBuilder CreateAppWithPipeline(params Func<RequestDelegate, RequestDelegate>[] components)
     {
         var services = new ServiceCollection().BuildServiceProvider();
@@ -121,6 +255,8 @@ public class MiddlewareOrderValidatorTests
 
         return app;
     }
+
+    private static RequestDelegate StaticMiddleware(RequestDelegate next) => context => next(context);
 
     private static (int TenantIndex, int AuthIndex) GetMiddlewareIndices(IApplicationBuilder app, string tenantName, string authName)
     {

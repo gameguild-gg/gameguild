@@ -12,7 +12,7 @@ public class UpdateUserMetadataCommandValidatorTests
     {
         // Arrange
         var request = new UpdateUserMetadataRequest(
-            CustomFields: new Dictionary<string, object?> { ["test"] = "value" }
+            CustomFields: JsonMap(new Dictionary<string, object?> { ["test"] = "value" })
         );
         var command = new UpdateUserMetadataCommand(Guid.NewGuid(), request);
 
@@ -28,7 +28,7 @@ public class UpdateUserMetadataCommandValidatorTests
     {
         // Arrange
         var request = new UpdateUserMetadataRequest(
-            CustomFields: new Dictionary<string, object?> { ["test"] = "value" }
+            CustomFields: JsonMap(new Dictionary<string, object?> { ["test"] = "value" })
         );
         var command = new UpdateUserMetadataCommand(Guid.Empty, request);
 
@@ -37,5 +37,31 @@ public class UpdateUserMetadataCommandValidatorTests
 
         // Assert
         result.ShouldHaveValidationErrorFor(x => x.UserId);
+    }
+
+    [Fact]
+    public void Validate_WithNullRequest_ShouldHaveError()
+    {
+        // Arrange
+        var command = new UpdateUserMetadataCommand(Guid.NewGuid(), null!);
+
+        // Act
+        var result = _validator.TestValidate(command);
+
+        // Assert
+        result.ShouldHaveValidationErrorFor(x => x.Request);
+    }
+
+    [Fact]
+    public void Validate_WithEmptyRequest_ShouldHaveError()
+    {
+        // Arrange
+        var command = new UpdateUserMetadataCommand(Guid.NewGuid(), new UpdateUserMetadataRequest());
+
+        // Act
+        var result = _validator.TestValidate(command);
+
+        // Assert
+        result.ShouldHaveValidationErrorFor(x => x.Request);
     }
 }

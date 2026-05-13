@@ -426,17 +426,20 @@ public class FeatureFlagEncryptionServiceTests
     public async Task DifferentServices_DifferentKeys_CannotDecrypt()
     {
         // Arrange
-        var service1 = new FeatureFlagEncryptionService(_validEncryptionKey);
-        var differentKey = GenerateValidKey();
+        const string key = "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=";
+        const string differentKey = "ICEiIyQlJicoKSorLC0uLzAxMjM0NTY3ODk6Ozw9Pj8=";
+        const string encrypted = "ENC:QEFCQ0RFRkdISUpLTE1OTy8RlbCrl4j9VALtCqlKhXs=";
         var service2 = new FeatureFlagEncryptionService(differentKey);
         var plainText = "secret";
 
         // Act
-        var encrypted = await service1.EncryptAsync(plainText);
+        var service1 = new FeatureFlagEncryptionService(key);
+        var decryptedByOwner = await service1.DecryptAsync(encrypted);
         Func<Task> act = async () => await service2.DecryptAsync(encrypted);
 
-        // Assert - Should throw cryptographic exception
-        await act.Should().ThrowAsync<Exception>();
+        // Assert
+        decryptedByOwner.Should().Be(plainText);
+        await act.Should().ThrowAsync<System.Security.Cryptography.CryptographicException>();
     }
 
     #endregion

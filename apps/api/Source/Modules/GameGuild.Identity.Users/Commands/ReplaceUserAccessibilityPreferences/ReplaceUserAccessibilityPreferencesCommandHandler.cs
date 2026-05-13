@@ -18,7 +18,7 @@ public sealed class ReplaceUserAccessibilityPreferencesCommandHandler(IUserRepos
             await preferencesRepository.AddAsync(preferences, cancellationToken).ConfigureAwait(false);
         }
 
-        preferences.SetAccessibilityPreferences(request.Request.AccessibilityPreferences);
+        preferences.SetAccessibilityPreferences(JsonValueDictionary.ToObjects(request.Request.AccessibilityPreferences));
         await preferencesRepository.UpdateAsync(preferences, cancellationToken).ConfigureAwait(false);
         return Unit.Value;
     }

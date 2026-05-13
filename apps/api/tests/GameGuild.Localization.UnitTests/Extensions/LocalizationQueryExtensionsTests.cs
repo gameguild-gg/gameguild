@@ -12,12 +12,12 @@ public class LocalizationQueryExtensionsTests
     // Test implementation of ILocalizable
     private class TestLocalizableEntity : ILocalizable
     {
-        public ICollection<ResourceLocalization> Localizations { get; set; } 
+        public ICollection<ResourceLocalization> Localizations { get; set; }
             = new List<ResourceLocalization>();
 
         public ResourceLocalization AddLocalization(
-            string fieldName, 
-            string content, 
+            string fieldName,
+            string content,
             Language language,
             LocalizationStatus status = LocalizationStatus.Draft)
         {
@@ -43,6 +43,26 @@ public class LocalizationQueryExtensionsTests
             Name = code == "en-US" ? "English" : "Spanish",
             IsActive = true
         };
+    }
+
+    [Fact]
+    public void IncludeLocalizations_ReturnsQueryable()
+    {
+        var query = new List<TestLocalizableEntity> { new() }.AsQueryable();
+
+        var result = query.IncludeLocalizations();
+
+        result.ToList().Should().HaveCount(1);
+    }
+
+    [Fact]
+    public void IncludeLocalizationsWithLanguage_ReturnsQueryable()
+    {
+        var query = new List<TestLocalizableEntity> { new() }.AsQueryable();
+
+        var result = query.IncludeLocalizationsWithLanguage();
+
+        result.ToList().Should().HaveCount(1);
     }
 
     [Fact]
@@ -157,7 +177,7 @@ public class LocalizationQueryExtensionsTests
         var entity = new TestLocalizableEntity();
         var english = CreateLanguage("en-US");
         var spanish = CreateLanguage("es-ES");
-        
+
         entity.AddLocalization("Title", "Hello", english);
         entity.AddLocalization("Description", "World", english);
         entity.AddLocalization("Title", "Hola", spanish);
@@ -177,7 +197,7 @@ public class LocalizationQueryExtensionsTests
         // Arrange
         var entity = new TestLocalizableEntity();
         var english = CreateLanguage("en-US");
-        
+
         entity.AddLocalization("Title", "Hello", english);
         entity.AddLocalization("Description", "World", english);
 

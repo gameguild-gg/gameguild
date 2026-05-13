@@ -18,7 +18,7 @@ namespace GameGuild.Commerce.Payments;
 /// </summary>
 [ApiVersion("1.0")]
 [Route("api/v{version:apiVersion}/[controller]")]
-[Tags("payments")]
+[Microsoft.AspNetCore.Http.Tags("payments")]
 [Authorize]
 [EnableRateLimiting(RateLimitPolicies.ExpensiveOperations)]
 public sealed class PaymentsController(ISender sender, IActorContextAccessor actorContextAccessor) : BaseApiController

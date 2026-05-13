@@ -11,7 +11,7 @@ public class ReplaceUserNotificationPreferencesCommandValidatorTests
     public void Validate_WithValidCommand_ShouldNotHaveAnyValidationErrors()
     {
         // Arrange
-        var prefs = new Dictionary<string, object?> { { "EmailEnabled", true } };
+        var prefs = JsonMap(new Dictionary<string, object?> { { "EmailEnabled", true } });
         var request = new ReplaceUserNotificationPreferencesRequest(prefs);
         var command = new ReplaceUserNotificationPreferencesCommand(Guid.NewGuid(), request);
 
@@ -26,7 +26,7 @@ public class ReplaceUserNotificationPreferencesCommandValidatorTests
     public void Validate_WithEmptyUserId_ShouldHaveError()
     {
         // Arrange
-        var prefs = new Dictionary<string, object?> { { "EmailEnabled", true } };
+        var prefs = JsonMap(new Dictionary<string, object?> { { "EmailEnabled", true } });
         var request = new ReplaceUserNotificationPreferencesRequest(prefs);
         var command = new ReplaceUserNotificationPreferencesCommand(Guid.Empty, request);
 

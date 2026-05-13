@@ -44,7 +44,7 @@ public static class MarketingLeadTopics
 }
 
 /// <summary>
-///     Captures inbound marketing and contact requests from the public website.
+///     Captures inbound marketing/contact requests from the public website.
 /// </summary>
 [Table("marketing_leads")]
 [Index(nameof(Email))]

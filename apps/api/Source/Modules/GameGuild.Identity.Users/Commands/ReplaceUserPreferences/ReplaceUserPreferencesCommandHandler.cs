@@ -27,10 +27,10 @@ public sealed class ReplaceUserPreferencesCommandHandler(IUserRepository userRep
         }
 
         // Replace all preferences
-        preferences.SetGeneralPreferences(request.Request.GeneralPreferences);
-        preferences.SetNotificationPreferences(request.Request.NotificationPreferences);
-        preferences.SetAccessibilityPreferences(request.Request.AccessibilityPreferences);
-        preferences.SetPrivacyPreferences(request.Request.PrivacyPreferences);
+        preferences.SetGeneralPreferences(JsonValueDictionary.ToObjects(request.Request.GeneralPreferences));
+        preferences.SetNotificationPreferences(JsonValueDictionary.ToObjects(request.Request.NotificationPreferences));
+        preferences.SetAccessibilityPreferences(JsonValueDictionary.ToObjects(request.Request.AccessibilityPreferences));
+        preferences.SetPrivacyPreferences(JsonValueDictionary.ToObjects(request.Request.PrivacyPreferences));
 
         await preferencesRepository.UpdateAsync(preferences, cancellationToken).ConfigureAwait(false);
 

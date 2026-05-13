@@ -199,6 +199,13 @@ public class ResourceUsageItemTests
 [Collection("ResourceUsageTypeRegistry")]
 public class ResourceUsageTypeRegistryTests
 {
+    private static void ResetResourceUsageTypeRegistry()
+    {
+        typeof(ResourceUsageTypeRegistry)
+            .GetMethod("Reset", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)!
+            .Invoke(null, null);
+    }
+
     [Fact]
     public void Get_BuiltInType_ReturnsInfo()
     {
@@ -292,6 +299,8 @@ public class ResourceUsageTypeRegistryTests
     [Fact]
     public void GetCustom_WhenNoCustom_ReturnsEmpty()
     {
+        ResetResourceUsageTypeRegistry();
+
         ResourceUsageTypeRegistry.GetCustom().Should().BeEmpty();
     }
 

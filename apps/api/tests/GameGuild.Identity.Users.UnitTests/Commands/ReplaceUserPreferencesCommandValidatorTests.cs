@@ -11,10 +11,10 @@ public class ReplaceUserPreferencesCommandValidatorTests
     public void Validate_WithValidCommand_ShouldNotHaveAnyValidationErrors()
     {
         // Arrange
-        var generalPrefs = new Dictionary<string, object?> { { "theme", "dark" } };
-        var notificationPrefs = new Dictionary<string, object?> { { "email", true } };
-        var accessibilityPrefs = new Dictionary<string, object?> { { "highContrast", false } };
-        var privacyPrefs = new Dictionary<string, object?> { { "profileVisible", true } };
+        var generalPrefs = JsonMap(new Dictionary<string, object?> { { "theme", "dark" } });
+        var notificationPrefs = JsonMap(new Dictionary<string, object?> { { "email", true } });
+        var accessibilityPrefs = JsonMap(new Dictionary<string, object?> { { "highContrast", false } });
+        var privacyPrefs = JsonMap(new Dictionary<string, object?> { { "profileVisible", true } });
         var request = new ReplaceUserPreferencesRequest(
             generalPrefs,
             notificationPrefs,
@@ -34,10 +34,10 @@ public class ReplaceUserPreferencesCommandValidatorTests
     public void Validate_WithEmptyUserId_ShouldHaveError()
     {
         // Arrange
-        var generalPrefs = new Dictionary<string, object?> { { "theme", "dark" } };
-        var notificationPrefs = new Dictionary<string, object?> { { "email", true } };
-        var accessibilityPrefs = new Dictionary<string, object?> { { "highContrast", false } };
-        var privacyPrefs = new Dictionary<string, object?> { { "profileVisible", true } };
+        var generalPrefs = JsonMap(new Dictionary<string, object?> { { "theme", "dark" } });
+        var notificationPrefs = JsonMap(new Dictionary<string, object?> { { "email", true } });
+        var accessibilityPrefs = JsonMap(new Dictionary<string, object?> { { "highContrast", false } });
+        var privacyPrefs = JsonMap(new Dictionary<string, object?> { { "profileVisible", true } });
         var request = new ReplaceUserPreferencesRequest(
             generalPrefs,
             notificationPrefs,

@@ -41,11 +41,11 @@ public class AssetReferenceConfiguration : IEntityTypeConfiguration<AssetReferen
         builder.Property(e => e.DownloadWindowExpiresAt);
 
         // Soft delete filter
-        builder.HasQueryFilter(e => !e.IsDeleted);
+        builder.HasQueryFilter(e => e.DeletedAt == null);
 
         // Relationships
         builder.HasOne(e => e.Content)
-            .WithMany()
+            .WithMany(content => content.References)
             .HasForeignKey(e => e.AssetContentId)
             .OnDelete(DeleteBehavior.Restrict);
 

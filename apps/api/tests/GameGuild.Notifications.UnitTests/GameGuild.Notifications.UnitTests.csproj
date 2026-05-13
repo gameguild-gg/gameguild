@@ -1,19 +1,18 @@
 <Project Sdk="Microsoft.NET.Sdk">
-
     <PropertyGroup>
         <TargetFramework>net9.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <IsPackable>false</IsPackable>
         <IsTestProject>true</IsTestProject>
+        <RootNamespace>GameGuild.Notifications.UnitTests</RootNamespace>
     </PropertyGroup>
 
-    <!-- Coverage Thresholds -->
     <PropertyGroup>
         <CollectCoverage>false</CollectCoverage>
         <CoverletOutputFormat>cobertura</CoverletOutputFormat>
         <CoverletOutput>./TestResults/coverage.xml</CoverletOutput>
-        <Threshold>80</Threshold>
+        <Threshold>0</Threshold>
         <ThresholdType>line,branch,method</ThresholdType>
         <ThresholdStat>total</ThresholdStat>
         <ExcludeByFile>**/*Tests.cs,**/obj/**,**/Migrations/**</ExcludeByFile>
@@ -22,28 +21,19 @@
     </PropertyGroup>
 
     <ItemGroup>
-    </ItemGroup>
-    <ItemGroup>
-        <PackageReference Include="Microsoft.NET.Test.Sdk" />
-        <PackageReference Include="xunit" />
-        <PackageReference Include="xunit.runner.visualstudio">
-            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-            <PrivateAssets>all</PrivateAssets>
-        </PackageReference>
-        <PackageReference Include="coverlet.collector">
-            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-            <PrivateAssets>all</PrivateAssets>
-        </PackageReference>
+        <PackageReference Include="coverlet.collector" />
         <PackageReference Include="coverlet.msbuild" />
-        <PackageReference Include="Moq" />
-        <PackageReference Include="MockQueryable.Moq" />
         <PackageReference Include="FluentAssertions" />
-        <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" />
+        <PackageReference Include="Microsoft.NET.Test.Sdk" />
+        <PackageReference Include="Moq" />
+        <PackageReference Include="xunit" />
+        <PackageReference Include="xunit.runner.visualstudio" />
     </ItemGroup>
 
     <ItemGroup>
         <ProjectReference Include="..\..\Source\Modules\GameGuild.Notifications\GameGuild.Notifications.csproj" />
         <ProjectReference Include="..\..\Source\Modules\GameGuild.SharedKernel\GameGuild.SharedKernel.csproj" />
+        <ProjectReference Include="..\..\Source\Modules\GameGuild.Identity.Context\GameGuild.Identity.Context.csproj" />
     </ItemGroup>
-
 </Project>

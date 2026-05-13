@@ -108,8 +108,10 @@ public class PricingRule : EntityBase
         if (!IsActive) return false;
 
         var now = checkDate ?? SystemClock.UtcNow;
+        if (StartDate.HasValue && StartDate.Value > now) return false;
+        if (EndDate.HasValue && EndDate.Value <= now) return false;
 
-        return (StartDate == null || StartDate <= now) && (EndDate == null || EndDate > now);
+        return true;
     }
 
     /// <summary>Check if rule is applicable for quantity and date</summary>

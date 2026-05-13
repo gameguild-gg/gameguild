@@ -11,11 +11,11 @@ public class UserMetadataDtoTests
         // Arrange
         var id = Guid.NewGuid();
         var userId = Guid.NewGuid();
-        var customFields = new Dictionary<string, object?>
+        var customFields = JsonMap(new Dictionary<string, object?>
         {
             { "field1", "value1" },
             { "field2", 123 }
-        };
+        });
         var tags = new List<string> { "tag1", "tag2" };
         var externalRefs = new Dictionary<string, string>
         {

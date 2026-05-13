@@ -44,9 +44,11 @@ public class AssetReportConfiguration : IEntityTypeConfiguration<AssetReport>
 
         builder.Property(e => e.ReviewedAt);
 
+        builder.HasQueryFilter(e => e.DeletedAt == null);
+
         // Relationships
         builder.HasOne(e => e.Reference)
-            .WithMany()
+            .WithMany(reference => reference.Reports)
             .HasForeignKey(e => e.AssetReferenceId)
             .OnDelete(DeleteBehavior.Cascade);
 

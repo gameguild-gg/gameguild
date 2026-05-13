@@ -1,10 +1,9 @@
 using FluentAssertions;
 using FluentValidation.TestHelper;
+
 using Xunit;
 
-namespace GameGuild.Monitoring.SLA.Tests;
-
-#region Entity Tests
+namespace GameGuild.Monitoring.SLA.UnitTests;
 
 public class ServiceLevelIndicatorTests
 {
@@ -12,6 +11,7 @@ public class ServiceLevelIndicatorTests
     public void CreateSuccess_ShouldSetAllProperties()
     {
         var sloId = Guid.NewGuid();
+
         var sli = ServiceLevelIndicator.CreateSuccess(sloId, 99.5, 42L, 200, "/api/health");
 
         sli.ServiceLevelObjectiveId.Should().Be(sloId);
@@ -39,6 +39,7 @@ public class ServiceLevelIndicatorTests
     public void CreateFailure_ShouldSetAllProperties()
     {
         var sloId = Guid.NewGuid();
+
         var sli = ServiceLevelIndicator.CreateFailure(sloId, 0.0, "timeout", 5000L, 504, "/api/data");
 
         sli.ServiceLevelObjectiveId.Should().Be(sloId);
@@ -81,6 +82,7 @@ public class SloViolationExtendedTests
     public void Acknowledge_WithoutNotes_ShouldSetNullNotes()
     {
         var violation = new SloViolation { StartedAt = DateTimeOffset.UtcNow };
+
         violation.Acknowledge(Guid.NewGuid());
 
         violation.IsAcknowledged.Should().BeTrue();
@@ -111,7 +113,7 @@ public class SloViolationExtendedTests
 
         violation.Resolve();
 
-        violation.EndedAt.Should().Be(originalEnd); // Not changed
+        violation.EndedAt.Should().Be(originalEnd);
     }
 
     [Fact]
@@ -125,10 +127,10 @@ public class SloViolationExtendedTests
     [Fact]
     public void DetermineSeverity_BoundaryValues()
     {
-        SloViolation.DetermineSeverity(94.0, 99.9).Should().Be(ViolationSeverity.Critical); // diff=5.9
-        SloViolation.DetermineSeverity(97.5, 99.9).Should().Be(ViolationSeverity.High);     // diff=2.4
-        SloViolation.DetermineSeverity(99.0, 99.9).Should().Be(ViolationSeverity.Medium);  // diff=0.9
-        SloViolation.DetermineSeverity(99.6, 99.9).Should().Be(ViolationSeverity.Low);     // diff=0.3
+        SloViolation.DetermineSeverity(94.0, 99.9).Should().Be(ViolationSeverity.Critical);
+        SloViolation.DetermineSeverity(97.5, 99.9).Should().Be(ViolationSeverity.High);
+        SloViolation.DetermineSeverity(99.0, 99.9).Should().Be(ViolationSeverity.Medium);
+        SloViolation.DetermineSeverity(99.6, 99.9).Should().Be(ViolationSeverity.Low);
     }
 }
 
@@ -139,7 +141,6 @@ public class ServiceLevelObjectiveExtendedTests
     {
         var slo = new ServiceLevelObjective();
         slo.Disable();
-        slo.Status.Should().Be(SloStatus.Disabled);
 
         slo.Enable();
 
@@ -155,13 +156,14 @@ public class ServiceLevelObjectiveExtendedTests
         slo.Enable();
 
         slo.IsEnabled.Should().BeTrue();
-        slo.Status.Should().Be(SloStatus.Breached); // Not Active, stays Breached
+        slo.Status.Should().Be(SloStatus.Breached);
     }
 
     [Fact]
     public void Disable_ShouldSetDisabledStatus()
     {
         var slo = new ServiceLevelObjective();
+
         slo.Disable();
 
         slo.IsEnabled.Should().BeFalse();
@@ -172,6 +174,7 @@ public class ServiceLevelObjectiveExtendedTests
     public void UpdateStatus_WhenDisabled_ShouldSetDisabledStatus()
     {
         var slo = new ServiceLevelObjective { IsEnabled = false, TargetPercentage = 99.9 };
+
         slo.UpdateStatus(99.0);
 
         slo.Status.Should().Be(SloStatus.Disabled);
@@ -187,8 +190,8 @@ public class ServiceLevelObjectiveExtendedTests
             AlertThresholdPercentage = 50.0
         };
 
-        slo.UpdateStatus(99.5); // 4.5% used of 5% budget → 10% remaining → 10/5 * 100 = ?
-        // errorBudget = 5.0, usedBudget = 0.5, remaining = 4.5, remainingPct = 90%
+        slo.UpdateStatus(99.5);
+
         slo.Status.Should().Be(SloStatus.Active);
         slo.RemainingErrorBudget.Should().BeApproximately(90.0, 1.0);
     }
@@ -203,7 +206,8 @@ public class ServiceLevelObjectiveExtendedTests
             AlertThresholdPercentage = 50.0
         };
 
-        slo.UpdateStatus(99.5); // errorBudget=1.0, used=0.5, remaining=0.5, pct=50%
+        slo.UpdateStatus(99.5);
+
         slo.Status.Should().Be(SloStatus.AtRisk);
     }
 
@@ -211,6 +215,7 @@ public class ServiceLevelObjectiveExtendedTests
     public void UpdateStatus_BelowTarget_ShouldBeBreached()
     {
         var slo = new ServiceLevelObjective { IsEnabled = true, TargetPercentage = 99.9 };
+
         slo.UpdateStatus(99.0);
 
         slo.Status.Should().Be(SloStatus.Breached);
@@ -220,6 +225,7 @@ public class ServiceLevelObjectiveExtendedTests
     public void ShouldTriggerAlert_WhenBreached_ReturnsTrue()
     {
         var slo = new ServiceLevelObjective { IsEnabled = true, Status = SloStatus.Breached };
+
         slo.ShouldTriggerAlert().Should().BeTrue();
     }
 
@@ -227,6 +233,7 @@ public class ServiceLevelObjectiveExtendedTests
     public void ShouldTriggerAlert_WhenDisabled_ReturnsFalse()
     {
         var slo = new ServiceLevelObjective { IsEnabled = false, Status = SloStatus.Breached };
+
         slo.ShouldTriggerAlert().Should().BeFalse();
     }
 
@@ -238,8 +245,9 @@ public class ServiceLevelObjectiveExtendedTests
             IsEnabled = true,
             Status = SloStatus.AtRisk,
             AlertThresholdPercentage = 50.0,
-            RemainingErrorBudget = 30.0  // below 50% threshold
+            RemainingErrorBudget = 30.0
         };
+
         slo.ShouldTriggerAlert().Should().BeTrue();
     }
 
@@ -247,14 +255,12 @@ public class ServiceLevelObjectiveExtendedTests
     public void CalculateErrorBudget_ShouldSetPercentage()
     {
         var slo = new ServiceLevelObjective { TargetPercentage = 99.9 };
+
         slo.CalculateErrorBudget();
+
         slo.ErrorBudgetPercentage.Should().BeApproximately(0.1, 0.001);
     }
 }
-
-#endregion
-
-#region Enum Tests
 
 public class SlaEnumTests
 {
@@ -268,7 +274,7 @@ public class SlaEnumTests
     [InlineData(SloStatus.Inactive, 6)]
     public void SloStatus_ShouldHaveCorrectValues(SloStatus status, int expected)
     {
-        ((int)status).Should().Be(expected);
+        ((int) status).Should().Be(expected);
     }
 
     [Theory]
@@ -278,13 +284,9 @@ public class SlaEnumTests
     [InlineData(ViolationSeverity.Critical, 3)]
     public void ViolationSeverity_ShouldHaveCorrectValues(ViolationSeverity severity, int expected)
     {
-        ((int)severity).Should().Be(expected);
+        ((int) severity).Should().Be(expected);
     }
 }
-
-#endregion
-
-#region Validator Tests
 
 public class CreateSloCommandValidatorTests
 {
@@ -293,64 +295,105 @@ public class CreateSloCommandValidatorTests
     [Fact]
     public void ValidCommand_ShouldPass()
     {
-        var cmd = new CreateSloCommand(Guid.NewGuid(), "API Uptime", "Desc", "api-service", 99.9, 30, 0.1, 50.0);
-        _validator.TestValidate(cmd).ShouldNotHaveAnyValidationErrors();
+        var command = new CreateSloCommand(Guid.NewGuid(), "API Uptime", "Desc", "api-service", 99.9, 30, 0.1, 50.0);
+
+        _validator.TestValidate(command).ShouldNotHaveAnyValidationErrors();
     }
 
     [Fact]
     public void EmptyTenantId_ShouldFail()
     {
-        var cmd = new CreateSloCommand(Guid.Empty, "Test", null, "svc", 99.0, 30, 1.0, 50.0);
-        _validator.TestValidate(cmd).ShouldHaveValidationErrorFor(x => x.TenantId);
+        var command = new CreateSloCommand(Guid.Empty, "Test", null, "svc", 99.0, 30, 1.0, 50.0);
+
+        _validator.TestValidate(command).ShouldHaveValidationErrorFor(x => x.TenantId);
     }
 
     [Fact]
     public void EmptyName_ShouldFail()
     {
-        var cmd = new CreateSloCommand(Guid.NewGuid(), "", null, "svc", 99.0, 30, 1.0, 50.0);
-        _validator.TestValidate(cmd).ShouldHaveValidationErrorFor(x => x.Name);
+        var command = new CreateSloCommand(Guid.NewGuid(), string.Empty, null, "svc", 99.0, 30, 1.0, 50.0);
+
+        _validator.TestValidate(command).ShouldHaveValidationErrorFor(x => x.Name);
     }
 
     [Fact]
     public void NameTooLong_ShouldFail()
     {
-        var cmd = new CreateSloCommand(Guid.NewGuid(), new string('A', 201), null, "svc", 99.0, 30, 1.0, 50.0);
-        _validator.TestValidate(cmd).ShouldHaveValidationErrorFor(x => x.Name);
+        var command = new CreateSloCommand(Guid.NewGuid(), new string('A', 201), null, "svc", 99.0, 30, 1.0, 50.0);
+
+        _validator.TestValidate(command).ShouldHaveValidationErrorFor(x => x.Name);
+    }
+
+    [Fact]
+    public void ServiceNameTooLong_ShouldFail()
+    {
+        var command = new CreateSloCommand(Guid.NewGuid(), "Test", null, new string('A', 201), 99.0, 30, 1.0, 50.0);
+
+        _validator.TestValidate(command).ShouldHaveValidationErrorFor(x => x.ServiceName);
     }
 
     [Fact]
     public void TargetZero_ShouldFail()
     {
-        var cmd = new CreateSloCommand(Guid.NewGuid(), "Test", null, "svc", 0, 30, 1.0, 50.0);
-        _validator.TestValidate(cmd).ShouldHaveValidationErrorFor(x => x.TargetPercentage);
+        var command = new CreateSloCommand(Guid.NewGuid(), "Test", null, "svc", 0, 30, 1.0, 50.0);
+
+        _validator.TestValidate(command).ShouldHaveValidationErrorFor(x => x.TargetPercentage);
     }
 
     [Fact]
     public void TargetOver100_ShouldFail()
     {
-        var cmd = new CreateSloCommand(Guid.NewGuid(), "Test", null, "svc", 101, 30, 1.0, 50.0);
-        _validator.TestValidate(cmd).ShouldHaveValidationErrorFor(x => x.TargetPercentage);
+        var command = new CreateSloCommand(Guid.NewGuid(), "Test", null, "svc", 101, 30, 1.0, 50.0);
+
+        _validator.TestValidate(command).ShouldHaveValidationErrorFor(x => x.TargetPercentage);
     }
 
     [Fact]
     public void TimeWindowZero_ShouldFail()
     {
-        var cmd = new CreateSloCommand(Guid.NewGuid(), "Test", null, "svc", 99.0, 0, 1.0, 50.0);
-        _validator.TestValidate(cmd).ShouldHaveValidationErrorFor(x => x.TimeWindowDays);
+        var command = new CreateSloCommand(Guid.NewGuid(), "Test", null, "svc", 99.0, 0, 1.0, 50.0);
+
+        _validator.TestValidate(command).ShouldHaveValidationErrorFor(x => x.TimeWindowDays);
     }
 
     [Fact]
     public void TimeWindowOver365_ShouldFail()
     {
-        var cmd = new CreateSloCommand(Guid.NewGuid(), "Test", null, "svc", 99.0, 366, 1.0, 50.0);
-        _validator.TestValidate(cmd).ShouldHaveValidationErrorFor(x => x.TimeWindowDays);
+        var command = new CreateSloCommand(Guid.NewGuid(), "Test", null, "svc", 99.0, 366, 1.0, 50.0);
+
+        _validator.TestValidate(command).ShouldHaveValidationErrorFor(x => x.TimeWindowDays);
     }
 
     [Fact]
     public void ErrorBudgetNegative_ShouldFail()
     {
-        var cmd = new CreateSloCommand(Guid.NewGuid(), "Test", null, "svc", 99.0, 30, -1.0, 50.0);
-        _validator.TestValidate(cmd).ShouldHaveValidationErrorFor(x => x.ErrorBudgetPercentage);
+        var command = new CreateSloCommand(Guid.NewGuid(), "Test", null, "svc", 99.0, 30, -1.0, 50.0);
+
+        _validator.TestValidate(command).ShouldHaveValidationErrorFor(x => x.ErrorBudgetPercentage);
+    }
+
+    [Fact]
+    public void ErrorBudgetOver100_ShouldFail()
+    {
+        var command = new CreateSloCommand(Guid.NewGuid(), "Test", null, "svc", 99.0, 30, 101.0, 50.0);
+
+        _validator.TestValidate(command).ShouldHaveValidationErrorFor(x => x.ErrorBudgetPercentage);
+    }
+
+    [Fact]
+    public void AlertThresholdZero_ShouldFail()
+    {
+        var command = new CreateSloCommand(Guid.NewGuid(), "Test", null, "svc", 99.0, 30, 1.0, 0);
+
+        _validator.TestValidate(command).ShouldHaveValidationErrorFor(x => x.AlertThresholdPercentage);
+    }
+
+    [Fact]
+    public void AlertThresholdOver100_ShouldFail()
+    {
+        var command = new CreateSloCommand(Guid.NewGuid(), "Test", null, "svc", 99.0, 30, 1.0, 101.0);
+
+        _validator.TestValidate(command).ShouldHaveValidationErrorFor(x => x.AlertThresholdPercentage);
     }
 }
 
@@ -361,29 +404,81 @@ public class UpdateSloCommandValidatorTests
     [Fact]
     public void ValidCommand_ShouldPass()
     {
-        var cmd = new UpdateSloCommand(Guid.NewGuid(), Guid.NewGuid(), "Updated", "Desc", "svc", 99.9, 30, 0.1, 50.0, true);
-        _validator.TestValidate(cmd).ShouldNotHaveAnyValidationErrors();
+        var command = new UpdateSloCommand(Guid.NewGuid(), Guid.NewGuid(), "Updated", "Desc", "svc", 99.9, 30, 0.1, 50.0, true);
+
+        _validator.TestValidate(command).ShouldNotHaveAnyValidationErrors();
     }
 
     [Fact]
     public void EmptyId_ShouldFail()
     {
-        var cmd = new UpdateSloCommand(Guid.Empty, Guid.NewGuid(), "Test", null, "svc", 99.0, 30, 1.0, 50.0, true);
-        _validator.TestValidate(cmd).ShouldHaveValidationErrorFor(x => x.Id);
+        var command = new UpdateSloCommand(Guid.Empty, Guid.NewGuid(), "Test", null, "svc", 99.0, 30, 1.0, 50.0, true);
+
+        _validator.TestValidate(command).ShouldHaveValidationErrorFor(x => x.Id);
+    }
+
+    [Fact]
+    public void EmptyTenantId_ShouldFail()
+    {
+        var command = new UpdateSloCommand(Guid.NewGuid(), Guid.Empty, "Test", null, "svc", 99.0, 30, 1.0, 50.0, true);
+
+        _validator.TestValidate(command).ShouldHaveValidationErrorFor(x => x.TenantId);
     }
 
     [Fact]
     public void EmptyServiceName_ShouldFail()
     {
-        var cmd = new UpdateSloCommand(Guid.NewGuid(), Guid.NewGuid(), "Test", null, "", 99.0, 30, 1.0, 50.0, true);
-        _validator.TestValidate(cmd).ShouldHaveValidationErrorFor(x => x.ServiceName);
+        var command = new UpdateSloCommand(Guid.NewGuid(), Guid.NewGuid(), "Test", null, string.Empty, 99.0, 30, 1.0, 50.0, true);
+
+        _validator.TestValidate(command).ShouldHaveValidationErrorFor(x => x.ServiceName);
+    }
+
+    [Fact]
+    public void ServiceNameTooLong_ShouldFail()
+    {
+        var command = new UpdateSloCommand(Guid.NewGuid(), Guid.NewGuid(), "Test", null, new string('A', 201), 99.0, 30, 1.0, 50.0, true);
+
+        _validator.TestValidate(command).ShouldHaveValidationErrorFor(x => x.ServiceName);
+    }
+
+    [Fact]
+    public void TargetOver100_ShouldFail()
+    {
+        var command = new UpdateSloCommand(Guid.NewGuid(), Guid.NewGuid(), "Test", null, "svc", 101, 30, 1.0, 50.0, true);
+
+        _validator.TestValidate(command).ShouldHaveValidationErrorFor(x => x.TargetPercentage);
+    }
+
+    [Fact]
+    public void TimeWindowOver365_ShouldFail()
+    {
+        var command = new UpdateSloCommand(Guid.NewGuid(), Guid.NewGuid(), "Test", null, "svc", 99.0, 366, 1.0, 50.0, true);
+
+        _validator.TestValidate(command).ShouldHaveValidationErrorFor(x => x.TimeWindowDays);
+    }
+
+    [Fact]
+    public void ErrorBudgetOver100_ShouldFail()
+    {
+        var command = new UpdateSloCommand(Guid.NewGuid(), Guid.NewGuid(), "Test", null, "svc", 99.0, 30, 101.0, 50.0, true);
+
+        _validator.TestValidate(command).ShouldHaveValidationErrorFor(x => x.ErrorBudgetPercentage);
     }
 
     [Fact]
     public void AlertThresholdZero_ShouldFail()
     {
-        var cmd = new UpdateSloCommand(Guid.NewGuid(), Guid.NewGuid(), "Test", null, "svc", 99.0, 30, 1.0, 0, true);
-        _validator.TestValidate(cmd).ShouldHaveValidationErrorFor(x => x.AlertThresholdPercentage);
+        var command = new UpdateSloCommand(Guid.NewGuid(), Guid.NewGuid(), "Test", null, "svc", 99.0, 30, 1.0, 0, true);
+
+        _validator.TestValidate(command).ShouldHaveValidationErrorFor(x => x.AlertThresholdPercentage);
+    }
+
+    [Fact]
+    public void AlertThresholdOver100_ShouldFail()
+    {
+        var command = new UpdateSloCommand(Guid.NewGuid(), Guid.NewGuid(), "Test", null, "svc", 99.0, 30, 1.0, 101.0, true);
+
+        _validator.TestValidate(command).ShouldHaveValidationErrorFor(x => x.AlertThresholdPercentage);
     }
 }
 
@@ -394,50 +489,65 @@ public class RecordSliMetricCommandValidatorTests
     [Fact]
     public void ValidSuccessCommand_ShouldPass()
     {
-        var cmd = new RecordSliMetricCommand(Guid.NewGuid(), Guid.NewGuid(), true, 99.5, 42);
-        _validator.TestValidate(cmd).ShouldNotHaveAnyValidationErrors();
+        var command = new RecordSliMetricCommand(Guid.NewGuid(), Guid.NewGuid(), true, 99.5, 42);
+
+        _validator.TestValidate(command).ShouldNotHaveAnyValidationErrors();
+    }
+
+    [Fact]
+    public void EmptyTenantId_ShouldFail()
+    {
+        var command = new RecordSliMetricCommand(Guid.Empty, Guid.NewGuid(), true, 99.5, 42);
+
+        _validator.TestValidate(command).ShouldHaveValidationErrorFor(x => x.TenantId);
     }
 
     [Fact]
     public void FailureWithoutErrorMessage_ShouldFail()
     {
-        var cmd = new RecordSliMetricCommand(Guid.NewGuid(), Guid.NewGuid(), false, 0.0);
-        _validator.TestValidate(cmd).ShouldHaveValidationErrorFor(x => x.ErrorMessage);
+        var command = new RecordSliMetricCommand(Guid.NewGuid(), Guid.NewGuid(), false, 0.0);
+
+        _validator.TestValidate(command).ShouldHaveValidationErrorFor(x => x.ErrorMessage);
     }
 
     [Fact]
     public void FailureWithErrorMessage_ShouldPass()
     {
-        var cmd = new RecordSliMetricCommand(Guid.NewGuid(), Guid.NewGuid(), false, 0.0, ErrorMessage: "timeout");
-        _validator.TestValidate(cmd).ShouldNotHaveAnyValidationErrors();
+        var command = new RecordSliMetricCommand(Guid.NewGuid(), Guid.NewGuid(), false, 0.0, ErrorMessage: "timeout");
+
+        _validator.TestValidate(command).ShouldNotHaveAnyValidationErrors();
     }
 
     [Fact]
     public void NegativeValue_ShouldFail()
     {
-        var cmd = new RecordSliMetricCommand(Guid.NewGuid(), Guid.NewGuid(), true, -1.0);
-        _validator.TestValidate(cmd).ShouldHaveValidationErrorFor(x => x.Value);
+        var command = new RecordSliMetricCommand(Guid.NewGuid(), Guid.NewGuid(), true, -1.0);
+
+        _validator.TestValidate(command).ShouldHaveValidationErrorFor(x => x.Value);
     }
 
     [Fact]
     public void ValueOver100_ShouldFail()
     {
-        var cmd = new RecordSliMetricCommand(Guid.NewGuid(), Guid.NewGuid(), true, 101.0);
-        _validator.TestValidate(cmd).ShouldHaveValidationErrorFor(x => x.Value);
+        var command = new RecordSliMetricCommand(Guid.NewGuid(), Guid.NewGuid(), true, 101.0);
+
+        _validator.TestValidate(command).ShouldHaveValidationErrorFor(x => x.Value);
     }
 
     [Fact]
     public void NegativeResponseTime_ShouldFail()
     {
-        var cmd = new RecordSliMetricCommand(Guid.NewGuid(), Guid.NewGuid(), true, 99.0, ResponseTimeMs: -1);
-        _validator.TestValidate(cmd).ShouldHaveValidationErrorFor(x => x.ResponseTimeMs!.Value);
+        var command = new RecordSliMetricCommand(Guid.NewGuid(), Guid.NewGuid(), true, 99.0, ResponseTimeMs: -1);
+
+        _validator.TestValidate(command).ShouldHaveValidationErrorFor(x => x.ResponseTimeMs!.Value);
     }
 
     [Fact]
     public void EmptySloId_ShouldFail()
     {
-        var cmd = new RecordSliMetricCommand(Guid.NewGuid(), Guid.Empty, true, 99.0);
-        _validator.TestValidate(cmd).ShouldHaveValidationErrorFor(x => x.ServiceLevelObjectiveId);
+        var command = new RecordSliMetricCommand(Guid.NewGuid(), Guid.Empty, true, 99.0);
+
+        _validator.TestValidate(command).ShouldHaveValidationErrorFor(x => x.ServiceLevelObjectiveId);
     }
 }
 
@@ -451,22 +561,33 @@ public class ResolveSloViolationCommandValidatorTests
     [Fact]
     public void ValidCommand_ShouldPass()
     {
-        var cmd = new ConcreteResolveSloViolationCommand(Guid.NewGuid(), Guid.NewGuid(), "Fixed");
-        _validator.TestValidate(cmd).ShouldNotHaveAnyValidationErrors();
+        var command = new ConcreteResolveSloViolationCommand(Guid.NewGuid(), Guid.NewGuid(), "Fixed");
+
+        _validator.TestValidate(command).ShouldNotHaveAnyValidationErrors();
     }
 
     [Fact]
     public void EmptyViolationId_ShouldFail()
     {
-        var cmd = new ConcreteResolveSloViolationCommand(Guid.Empty, Guid.NewGuid());
-        _validator.TestValidate(cmd).ShouldHaveValidationErrorFor(x => x.ViolationId);
+        var command = new ConcreteResolveSloViolationCommand(Guid.Empty, Guid.NewGuid());
+
+        _validator.TestValidate(command).ShouldHaveValidationErrorFor(x => x.ViolationId);
+    }
+
+    [Fact]
+    public void EmptyTenantId_ShouldFail()
+    {
+        var command = new ConcreteResolveSloViolationCommand(Guid.NewGuid(), Guid.Empty);
+
+        _validator.TestValidate(command).ShouldHaveValidationErrorFor(x => x.TenantId);
     }
 
     [Fact]
     public void NotesTooLong_ShouldFail()
     {
-        var cmd = new ConcreteResolveSloViolationCommand(Guid.NewGuid(), Guid.NewGuid(), new string('X', 2001));
-        _validator.TestValidate(cmd).ShouldHaveValidationErrorFor(x => x.ResolutionNotes);
+        var command = new ConcreteResolveSloViolationCommand(Guid.NewGuid(), Guid.NewGuid(), new string('X', 2001));
+
+        _validator.TestValidate(command).ShouldHaveValidationErrorFor(x => x.ResolutionNotes);
     }
 }
 
@@ -478,6 +599,7 @@ public class GetErrorBudgetQueryValidatorTests
     public void ValidQuery_ShouldPass()
     {
         var query = new GetErrorBudgetQuery(Guid.NewGuid(), Guid.NewGuid());
+
         _validator.TestValidate(query).ShouldNotHaveAnyValidationErrors();
     }
 
@@ -485,6 +607,7 @@ public class GetErrorBudgetQueryValidatorTests
     public void EmptySloId_ShouldFail()
     {
         var query = new GetErrorBudgetQuery(Guid.Empty, Guid.NewGuid());
+
         _validator.TestValidate(query).ShouldHaveValidationErrorFor(x => x.SloId);
     }
 
@@ -492,6 +615,7 @@ public class GetErrorBudgetQueryValidatorTests
     public void EmptyTenantId_ShouldFail()
     {
         var query = new GetErrorBudgetQuery(Guid.NewGuid(), Guid.Empty);
+
         _validator.TestValidate(query).ShouldHaveValidationErrorFor(x => x.TenantId);
     }
 }
@@ -512,6 +636,13 @@ public class GetSloByIdQueryValidatorTests
     {
         _validator.TestValidate(new GetSloByIdQuery(Guid.Empty, Guid.NewGuid()))
             .ShouldHaveValidationErrorFor(x => x.Id);
+    }
+
+    [Fact]
+    public void EmptyTenantId_ShouldFail()
+    {
+        _validator.TestValidate(new GetSloByIdQuery(Guid.NewGuid(), Guid.Empty))
+            .ShouldHaveValidationErrorFor(x => x.TenantId);
     }
 }
 
@@ -581,6 +712,13 @@ public class GetSloComplianceQueryValidatorTests
     }
 
     [Fact]
+    public void EmptyTenantId_ShouldFail()
+    {
+        _validator.TestValidate(new GetSloComplianceQuery(Guid.NewGuid(), Guid.Empty))
+            .ShouldHaveValidationErrorFor(x => x.TenantId);
+    }
+
+    [Fact]
     public void StartDateInFuture_ShouldFail()
     {
         _validator.TestValidate(new GetSloComplianceQuery(Guid.NewGuid(), Guid.NewGuid(), DateTimeOffset.UtcNow.AddDays(1)))
@@ -588,12 +726,20 @@ public class GetSloComplianceQueryValidatorTests
     }
 
     [Fact]
+    public void EndDateInFuture_ShouldFail()
+    {
+        _validator.TestValidate(new GetSloComplianceQuery(Guid.NewGuid(), Guid.NewGuid(), DateTimeOffset.UtcNow.AddDays(-1), DateTimeOffset.UtcNow.AddDays(1)))
+            .ShouldHaveValidationErrorFor(x => x.EndDate);
+    }
+
+    [Fact]
     public void DateRangeOver365Days_ShouldFail()
     {
         var start = DateTimeOffset.UtcNow.AddDays(-400);
         var end = DateTimeOffset.UtcNow.AddDays(-1);
-        var result = _validator.TestValidate(new GetSloComplianceQuery(Guid.NewGuid(), Guid.NewGuid(), start, end));
-        result.IsValid.Should().BeFalse();
+
+        _validator.TestValidate(new GetSloComplianceQuery(Guid.NewGuid(), Guid.NewGuid(), start, end))
+            .IsValid.Should().BeFalse();
     }
 
     [Fact]
@@ -601,8 +747,9 @@ public class GetSloComplianceQueryValidatorTests
     {
         var start = DateTimeOffset.UtcNow.AddDays(-5);
         var end = DateTimeOffset.UtcNow.AddDays(-10);
-        var result = _validator.TestValidate(new GetSloComplianceQuery(Guid.NewGuid(), Guid.NewGuid(), start, end));
-        result.IsValid.Should().BeFalse();
+
+        _validator.TestValidate(new GetSloComplianceQuery(Guid.NewGuid(), Guid.NewGuid(), start, end))
+            .IsValid.Should().BeFalse();
     }
 }
 
@@ -644,56 +791,84 @@ public class GetSloViolationsQueryValidatorTests
         _validator.TestValidate(new GetSloViolationsQuery(StartDate: DateTimeOffset.UtcNow.AddDays(1)))
             .ShouldHaveValidationErrorFor(x => x.StartDate);
     }
+
+    [Fact]
+    public void EndDateInFuture_ShouldFail()
+    {
+        _validator.TestValidate(new GetSloViolationsQuery(EndDate: DateTimeOffset.UtcNow.AddDays(1)))
+            .ShouldHaveValidationErrorFor(x => x.EndDate);
+    }
+
+    [Fact]
+    public void EndBeforeStart_ShouldFail()
+    {
+        var start = DateTimeOffset.UtcNow.AddDays(-5);
+        var end = DateTimeOffset.UtcNow.AddDays(-10);
+
+        _validator.TestValidate(new GetSloViolationsQuery(StartDate: start, EndDate: end))
+            .IsValid.Should().BeFalse();
+    }
+
+    [Fact]
+    public void DateRangeOver365Days_ShouldFail()
+    {
+        var start = DateTimeOffset.UtcNow.AddDays(-400);
+        var end = DateTimeOffset.UtcNow.AddDays(-1);
+
+        _validator.TestValidate(new GetSloViolationsQuery(StartDate: start, EndDate: end))
+            .IsValid.Should().BeFalse();
+    }
 }
-
-#endregion
-
-#region Command/Query Record Tests
 
 public class SlaCommandRecordTests
 {
     [Fact]
     public void CreateSloCommand_ShouldStoreAllProperties()
     {
-        var cmd = new CreateSloCommand(Guid.NewGuid(), "SLO", "desc", "svc", 99.9, 30, 0.1, 50.0);
-        cmd.Name.Should().Be("SLO");
-        cmd.Description.Should().Be("desc");
-        cmd.ServiceName.Should().Be("svc");
-        cmd.TargetPercentage.Should().Be(99.9);
-        cmd.TimeWindowDays.Should().Be(30);
+        var command = new CreateSloCommand(Guid.NewGuid(), "SLO", "desc", "svc", 99.9, 30, 0.1, 50.0);
+
+        command.Name.Should().Be("SLO");
+        command.Description.Should().Be("desc");
+        command.ServiceName.Should().Be("svc");
+        command.TargetPercentage.Should().Be(99.9);
+        command.TimeWindowDays.Should().Be(30);
     }
 
     [Fact]
     public void UpdateSloCommand_ShouldStoreAllProperties()
     {
-        var cmd = new UpdateSloCommand(Guid.NewGuid(), Guid.NewGuid(), "Updated", null, "svc", 99.0, 7, 1.0, 60.0, false);
-        cmd.Name.Should().Be("Updated");
-        cmd.IsEnabled.Should().BeFalse();
+        var command = new UpdateSloCommand(Guid.NewGuid(), Guid.NewGuid(), "Updated", null, "svc", 99.0, 7, 1.0, 60.0, false);
+
+        command.Name.Should().Be("Updated");
+        command.IsEnabled.Should().BeFalse();
     }
 
     [Fact]
     public void DeleteSloCommand_ShouldStore()
     {
-        var cmd = new DeleteSloCommand(Guid.NewGuid(), Guid.NewGuid());
-        cmd.Id.Should().NotBeEmpty();
-        cmd.TenantId.Should().NotBeEmpty();
+        var command = new DeleteSloCommand(Guid.NewGuid(), Guid.NewGuid());
+
+        command.Id.Should().NotBeEmpty();
+        command.TenantId.Should().NotBeEmpty();
     }
 
     [Fact]
     public void RecordSliMetricCommand_ShouldStoreDefaults()
     {
-        var cmd = new RecordSliMetricCommand(Guid.NewGuid(), Guid.NewGuid(), true, 99.5);
-        cmd.ResponseTimeMs.Should().BeNull();
-        cmd.StatusCode.Should().BeNull();
-        cmd.Endpoint.Should().BeNull();
-        cmd.Metadata.Should().BeNull();
-        cmd.ErrorMessage.Should().BeNull();
+        var command = new RecordSliMetricCommand(Guid.NewGuid(), Guid.NewGuid(), true, 99.5);
+
+        command.ResponseTimeMs.Should().BeNull();
+        command.StatusCode.Should().BeNull();
+        command.Endpoint.Should().BeNull();
+        command.Metadata.Should().BeNull();
+        command.ErrorMessage.Should().BeNull();
     }
 
     [Fact]
     public void GetSlosQuery_DefaultValues()
     {
         var query = new GetSlosQuery(Guid.NewGuid());
+
         query.ServiceName.Should().BeNull();
         query.IsEnabled.Should().BeNull();
         query.Skip.Should().Be(0);
@@ -704,6 +879,7 @@ public class SlaCommandRecordTests
     public void GetSloViolationsQuery_DefaultValues()
     {
         var query = new GetSloViolationsQuery();
+
         query.SloId.Should().BeNull();
         query.TenantId.Should().BeNull();
         query.OnlyUnresolved.Should().BeFalse();
@@ -711,10 +887,6 @@ public class SlaCommandRecordTests
         query.Take.Should().Be(50);
     }
 }
-
-#endregion
-
-#region DTO Tests
 
 public class SlaDtoTests
 {
@@ -732,6 +904,7 @@ public class SlaDtoTests
             IsEnabled = true,
             Status = SloStatus.Active
         };
+
         dto.Name.Should().Be("Uptime");
         dto.Status.Should().Be(SloStatus.Active);
     }
@@ -749,6 +922,7 @@ public class SlaDtoTests
             BurnRate = 0.1,
             IsHealthy = true
         };
+
         dto.TotalRequests.Should().Be(10000);
         dto.RemainingBudget.Should().Be(90);
     }
@@ -757,6 +931,7 @@ public class SlaDtoTests
     public void SloViolationDto_IsOngoing_WhenNoEndDate_ShouldBeTrue()
     {
         var dto = new SloViolationDto { EndedAt = null };
+
         dto.IsOngoing.Should().BeTrue();
     }
 
@@ -764,6 +939,7 @@ public class SlaDtoTests
     public void SloViolationDto_IsOngoing_WhenEndDate_ShouldBeFalse()
     {
         var dto = new SloViolationDto { EndedAt = DateTimeOffset.UtcNow };
+
         dto.IsOngoing.Should().BeFalse();
     }
 
@@ -771,6 +947,7 @@ public class SlaDtoTests
     public void SloComplianceDto_ShouldSetDefaults()
     {
         var dto = new SloComplianceDto();
+
         dto.Name.Should().BeEmpty();
         dto.ServiceName.Should().BeEmpty();
     }
@@ -790,6 +967,7 @@ public class SlaDtoTests
                 new() { SloName = "uptime", IsCompliant = true }
             }
         };
+
         report.TotalSlos.Should().Be(5);
         report.SloSummaries.Should().HaveCount(1);
     }
@@ -798,6 +976,7 @@ public class SlaDtoTests
     public void SloComplianceSummaryDto_ShouldSetDefaults()
     {
         var summary = new SloComplianceSummaryDto();
+
         summary.SloName.Should().BeEmpty();
         summary.ServiceName.Should().BeEmpty();
         summary.Status.Should().BeEmpty();
@@ -818,9 +997,8 @@ public class SlaDtoTests
             ErrorMessage = null,
             Timestamp = DateTimeOffset.UtcNow
         };
+
         dto.Value.Should().Be(99.5);
         dto.ResponseTimeMs.Should().Be(42);
     }
 }
-
-#endregion

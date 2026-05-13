@@ -1,3 +1,5 @@
+using System.Text.Json;
+
 using GameGuild.CQRS;
 
 namespace GameGuild.Identity.Users;
@@ -12,7 +14,7 @@ public sealed class GetUserMetadataQueryHandler(IUserRepository userRepository) 
         ArgumentNullException.ThrowIfNull(request);
 
         var user = await userRepository.GetByIdAsync(request.UserId, cancellationToken).ConfigureAwait(false);
-        
+
         if (user == null)
             return null;
 
@@ -20,7 +22,7 @@ public sealed class GetUserMetadataQueryHandler(IUserRepository userRepository) 
         return new UserMetadataDto(
             Id: Guid.NewGuid(),
             UserId: user.Id,
-            CustomFields: new Dictionary<string, object?>(),
+            CustomFields: new Dictionary<string, JsonElement>(),
             Tags: new List<string>(),
             ExternalReferences: new Dictionary<string, string>(),
             CreatedAt: user.CreatedAt,

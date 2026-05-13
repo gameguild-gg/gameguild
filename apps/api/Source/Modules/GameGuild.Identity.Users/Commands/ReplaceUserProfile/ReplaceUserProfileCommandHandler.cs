@@ -23,6 +23,8 @@ public sealed class ReplaceUserProfileCommandHandler(IUserRepository userReposit
         profile.Bio = request.Request.Bio;
         profile.Location = request.Request.Location;
         profile.Website = request.Request.Website;
+        profile.JobTitle = request.Request.JobTitle;
+        profile.Company = request.Request.Company;
         // Note: TimeZone, Language, ProfileVisibility, ShowEmail, ShowLocation are not properties of UserProfile
         // These appear to belong to UserPreferences instead
 

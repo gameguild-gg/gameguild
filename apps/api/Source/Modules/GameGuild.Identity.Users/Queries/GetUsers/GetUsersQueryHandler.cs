@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text;
 using GameGuild.CQRS;
 using Microsoft.EntityFrameworkCore;
@@ -106,7 +107,7 @@ public sealed class GetUsersQueryHandler(IUserRepository userRepository) : IQuer
 
         // Note: For cursor-based pagination, we use PageNumber=1 and PageSize=Limit
         // The cursor itself handles the "page" concept
-        return new PagedResult<UserDto>(userDtos, totalCount, 1, request.Limit);
+        return PagedResult<UserDto>.FromPage(userDtos, totalCount, 1, request.Limit);
     }
 
     /// <summary>
@@ -122,7 +123,7 @@ public sealed class GetUsersQueryHandler(IUserRepository userRepository) : IQuer
             throw new ArgumentException("Invalid cursor format");
         }
 
-        var timestamp = DateTime.Parse(parts[0]);
+        var timestamp = DateTime.Parse(parts[0], CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind);
         var id = Guid.Parse(parts[1]);
 
         return (timestamp, id);

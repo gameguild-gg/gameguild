@@ -1,638 +1,311 @@
-using FluentAssertions;
-using GameGuild.Notifications;
-using GameGuild.Notifications.Services;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
-using MockQueryable.Moq;
-using Moq;
-using Xunit;
+using GameGuild.Notifications.UnitTests.Infrastructure;
 
 namespace GameGuild.Notifications.UnitTests.Services;
 
 public class NotificationDeliveryServiceTests
 {
-    private readonly Mock<IApplicationDbContext> _contextMock = new();
-    private readonly Mock<INotificationPreferenceService> _preferenceServiceMock = new();
-    private readonly Mock<INotificationTemplateService> _templateServiceMock = new();
-    private readonly NotificationDeliveryService _sut;
-
-    public NotificationDeliveryServiceTests()
+    [Fact]
+    public async Task GetByIdAsync_Should_Return_NotFound_When_Notification_Does_Not_Exist()
     {
-        _sut = new NotificationDeliveryService(
-            _contextMock.Object,
-            _preferenceServiceMock.Object,
-            _templateServiceMock.Object,
-            NullLogger<NotificationDeliveryService>.Instance);
-    }
+        using var context = CreateContext();
+        var subject = CreateSubject(context, shouldSend: true);
 
-    private void SetupNotificationDbSet(List<Notification> data)
-    {
-        var mock = data.AsQueryable().BuildMockDbSet();
-        _contextMock.Setup(c => c.Set<Notification>()).Returns(mock.Object);
-        _contextMock.Setup(c => c.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
-    }
+        var result = await subject.GetByIdAsync(Guid.NewGuid());
 
-    private void SetupTemplateDbSet(List<NotificationTemplate> data)
-    {
-        var mock = data.AsQueryable().BuildMockDbSet();
-        _contextMock.Setup(c => c.Set<NotificationTemplate>()).Returns(mock.Object);
+        result.IsSuccess.Should().BeFalse();
+        result.Error.Code.Should().Be("Notification.NotFound");
     }
-
-    #region GetByIdAsync
 
     [Fact]
-    public async Task GetByIdAsync_WhenNotificationExists_ReturnsSuccess()
+    public async Task GetByIdAsync_Should_Return_Notification_When_It_Exists()
     {
-        // Arrange
-        var notification = Notification.Create(
-            Guid.NewGuid(), NotificationType.System, NotificationChannel.InApp, "Title", "Message");
-        SetupNotificationDbSet([notification]);
+        using var context = CreateContext();
+        var notification = Notification.Create(Guid.NewGuid(), NotificationType.System, NotificationChannel.InApp, "Title", "Message");
+        context.Notifications.Add(notification);
+        await context.SaveChangesAsync();
+        var subject = CreateSubject(context, shouldSend: true);
 
-        // Act
-        var result = await _sut.GetByIdAsync(notification.Id);
+        var result = await subject.GetByIdAsync(notification.Id);
 
-        // Assert
         result.IsSuccess.Should().BeTrue();
         result.Value.Id.Should().Be(notification.Id);
     }
 
     [Fact]
-    public async Task GetByIdAsync_WhenNotificationNotFound_ReturnsFailure()
+    public async Task GetUserNotificationsAsync_Should_Filter_And_Page_Notifications()
     {
-        // Arrange
-        SetupNotificationDbSet([]);
-
-        // Act
-        var result = await _sut.GetByIdAsync(Guid.NewGuid());
-
-        // Assert
-        result.IsSuccess.Should().BeFalse();
-        result.Error.Code.Should().Be("Notification.NotFound");
-    }
-
-    #endregion
-
-    #region GetUserNotificationsAsync
-
-    [Fact]
-    public async Task GetUserNotificationsAsync_ReturnsUserNotifications()
-    {
-        // Arrange
+        using var context = CreateContext();
         var userId = Guid.NewGuid();
-        var notifications = new List<Notification>
-        {
-            Notification.Create(userId, NotificationType.System, NotificationChannel.InApp, "Title 1", "Msg"),
-            Notification.Create(userId, NotificationType.Security, NotificationChannel.InApp, "Title 2", "Msg"),
-            Notification.Create(Guid.NewGuid(), NotificationType.System, NotificationChannel.InApp, "Other User", "Msg")
-        };
-        SetupNotificationDbSet(notifications);
+        var first = Notification.Create(userId, NotificationType.System, NotificationChannel.InApp, "1", "1");
+        first.MarkAsRead();
+        first.CreatedAt = SystemClock.UtcNow.AddMinutes(-10);
+        var second = Notification.Create(userId, NotificationType.System, NotificationChannel.InApp, "2", "2");
+        second.CreatedAt = SystemClock.UtcNow;
+        var other = Notification.Create(Guid.NewGuid(), NotificationType.System, NotificationChannel.InApp, "3", "3");
+        context.Notifications.AddRange(first, second, other);
+        await context.SaveChangesAsync();
+        var subject = CreateSubject(context, shouldSend: true);
 
-        // Act
-        var result = await _sut.GetUserNotificationsAsync(userId);
+        var unread = await subject.GetUserNotificationsAsync(userId, 0, 10, false);
+        var paged = await subject.GetUserNotificationsAsync(userId, 0, 1, null);
 
-        // Assert
-        result.IsSuccess.Should().BeTrue();
-        result.Value.Should().HaveCount(2);
-        result.Value.Should().OnlyContain(n => n.RecipientId == userId);
+        unread.Value.Should().ContainSingle(notification => notification.Id == second.Id);
+        paged.Value.Should().ContainSingle(notification => notification.Id == second.Id);
     }
 
     [Fact]
-    public async Task GetUserNotificationsAsync_WithIsReadFilter_ReturnsFilteredNotifications()
+    public async Task GetUnreadCountAsync_Should_Count_Only_Unread_Notifications()
     {
-        // Arrange
+        using var context = CreateContext();
         var userId = Guid.NewGuid();
-        var readNotification = Notification.Create(userId, NotificationType.System, NotificationChannel.InApp, "Read", "Msg");
-        readNotification.MarkAsRead();
-        var unreadNotification = Notification.Create(userId, NotificationType.System, NotificationChannel.InApp, "Unread", "Msg");
-        SetupNotificationDbSet([readNotification, unreadNotification]);
+        var read = Notification.Create(userId, NotificationType.System, NotificationChannel.InApp, "1", "1");
+        read.MarkAsRead();
+        var unread = Notification.Create(userId, NotificationType.System, NotificationChannel.InApp, "2", "2");
+        context.Notifications.AddRange(read, unread);
+        await context.SaveChangesAsync();
+        var subject = CreateSubject(context, shouldSend: true);
 
-        // Act
-        var result = await _sut.GetUserNotificationsAsync(userId, isRead: true);
+        var result = await subject.GetUnreadCountAsync(userId);
 
-        // Assert
-        result.IsSuccess.Should().BeTrue();
-        result.Value.Should().HaveCount(1);
-        result.Value.First().Title.Should().Be("Read");
+        result.Value.Should().Be(1);
     }
 
     [Fact]
-    public async Task GetUserNotificationsAsync_WithPagination_ReturnsCorrectPage()
+    public async Task SendAsync_Should_Return_Failure_When_User_Preferences_Block_Delivery()
     {
-        // Arrange
-        var userId = Guid.NewGuid();
-        var notifications = Enumerable.Range(1, 30)
-            .Select(i => Notification.Create(userId, NotificationType.System, NotificationChannel.InApp, $"Title {i}", "Msg"))
-            .ToList();
-        SetupNotificationDbSet(notifications);
+        using var context = CreateContext();
+        var subject = CreateSubject(context, shouldSend: false);
 
-        // Act
-        var result = await _sut.GetUserNotificationsAsync(userId, skip: 10, take: 5);
+        var result = await subject.SendAsync(Guid.NewGuid(), NotificationType.System, "Title", "Message");
 
-        // Assert
-        result.IsSuccess.Should().BeTrue();
-        result.Value.Should().HaveCount(5);
-    }
-
-    #endregion
-
-    #region GetUnreadCountAsync
-
-    [Fact]
-    public async Task GetUnreadCountAsync_ReturnsCorrectCount()
-    {
-        // Arrange
-        var userId = Guid.NewGuid();
-        var readNotification = Notification.Create(userId, NotificationType.System, NotificationChannel.InApp, "Read", "Msg");
-        readNotification.MarkAsRead();
-        var unreadNotifications = Enumerable.Range(1, 5)
-            .Select(_ => Notification.Create(userId, NotificationType.System, NotificationChannel.InApp, "Unread", "Msg"))
-            .ToList();
-        var allNotifications = new List<Notification> { readNotification };
-        allNotifications.AddRange(unreadNotifications);
-        SetupNotificationDbSet(allNotifications);
-
-        // Act
-        var result = await _sut.GetUnreadCountAsync(userId);
-
-        // Assert
-        result.IsSuccess.Should().BeTrue();
-        result.Value.Should().Be(5);
-    }
-
-    #endregion
-
-    #region SendAsync
-
-    [Fact]
-    public async Task SendAsync_WhenPreferencesAllowSending_CreatesNotification()
-    {
-        // Arrange
-        var recipientId = Guid.NewGuid();
-        SetupNotificationDbSet([]);
-        _preferenceServiceMock.Setup(s => s.ShouldSendNotificationAsync(
-            recipientId, NotificationType.System, NotificationChannel.InApp, 
-            NotificationPriority.Normal, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(true);
-
-        // Act
-        var result = await _sut.SendAsync(recipientId, NotificationType.System, "Title", "Message");
-
-        // Assert
-        result.IsSuccess.Should().BeTrue();
-        result.Value.RecipientId.Should().Be(recipientId);
-        result.Value.Title.Should().Be("Title");
-        result.Value.IsSent.Should().BeTrue(); // InApp notifications are marked as sent immediately
-        _contextMock.Verify(c => c.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Exactly(2));
-    }
-
-    [Fact]
-    public async Task SendAsync_WhenPreferencesBlockSending_ReturnsSkipped()
-    {
-        // Arrange
-        var recipientId = Guid.NewGuid();
-        SetupNotificationDbSet([]);
-        _preferenceServiceMock.Setup(s => s.ShouldSendNotificationAsync(
-            recipientId, NotificationType.Marketing, NotificationChannel.Email, 
-            NotificationPriority.Normal, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(false);
-
-        // Act
-        var result = await _sut.SendAsync(recipientId, NotificationType.Marketing, "Title", "Message", NotificationChannel.Email);
-
-        // Assert
         result.IsSuccess.Should().BeFalse();
         result.Error.Code.Should().Be("Notification.Skipped");
+        context.Notifications.Should().BeEmpty();
     }
 
     [Fact]
-    public async Task SendAsync_WithOptionalParams_SetsAllProperties()
+    public async Task SendAsync_Should_Persist_And_Mark_InApp_Notifications_As_Sent()
     {
-        // Arrange
-        var recipientId = Guid.NewGuid();
-        var tenantId = Guid.NewGuid();
-        var refEntityId = Guid.NewGuid();
-        SetupNotificationDbSet([]);
-        _preferenceServiceMock.Setup(s => s.ShouldSendNotificationAsync(
-            It.IsAny<Guid>(), It.IsAny<NotificationType>(), It.IsAny<NotificationChannel>(), 
-            It.IsAny<NotificationPriority>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(true);
+        using var context = CreateContext();
+        var subject = CreateSubject(context, shouldSend: true);
 
-        // Act
-        var result = await _sut.SendAsync(
-            recipientId, NotificationType.Security, "Security Alert", "Your account was accessed",
-            NotificationChannel.Email, tenantId, "/security", NotificationPriority.High,
-            refEntityId, "User", "{\"ip\":\"1.2.3.4\"}");
+        var result = await subject.SendAsync(Guid.NewGuid(), NotificationType.System, "Title", "Message", NotificationChannel.InApp);
 
-        // Assert
         result.IsSuccess.Should().BeTrue();
-        result.Value.Type.Should().Be(NotificationType.Security);
-        result.Value.Channel.Should().Be(NotificationChannel.Email);
-        result.Value.ActionUrl.Should().Be("/security");
-        result.Value.Priority.Should().Be(NotificationPriority.High);
-        result.Value.ReferenceEntityId.Should().Be(refEntityId);
-        result.Value.ReferenceEntityType.Should().Be("User");
-        result.Value.Metadata.Should().Contain("ip");
+        result.Value.IsSent.Should().BeTrue();
+        result.Value.SentAt.Should().NotBeNull();
+        context.Notifications.Should().ContainSingle();
     }
 
     [Fact]
-    public async Task SendAsync_EmailChannel_DoesNotMarkAsSentImmediately()
+    public async Task SendAsync_Should_Persist_Non_InApp_Notifications_Without_Marking_Sent()
     {
-        // Arrange
-        var recipientId = Guid.NewGuid();
-        SetupNotificationDbSet([]);
-        _preferenceServiceMock.Setup(s => s.ShouldSendNotificationAsync(
-            It.IsAny<Guid>(), It.IsAny<NotificationType>(), It.IsAny<NotificationChannel>(), 
-            It.IsAny<NotificationPriority>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(true);
+        using var context = CreateContext();
+        var subject = CreateSubject(context, shouldSend: true);
 
-        // Act
-        var result = await _sut.SendAsync(recipientId, NotificationType.System, "Title", "Message", NotificationChannel.Email);
+        var result = await subject.SendAsync(Guid.NewGuid(), NotificationType.System, "Title", "Message", NotificationChannel.Email);
 
-        // Assert
         result.IsSuccess.Should().BeTrue();
-        result.Value.IsSent.Should().BeFalse(); // Email notifications need external delivery
-        _contextMock.Verify(c => c.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
-    }
-
-    #endregion
-
-    #region SendFromTemplateAsync
-
-    [Fact]
-    public async Task SendFromTemplateAsync_WhenTemplateExists_SendsFromTemplate()
-    {
-        // Arrange
-        var recipientId = Guid.NewGuid();
-        var template = NotificationTemplate.Create(
-            "welcome", "Welcome", NotificationType.Onboarding, NotificationChannel.InApp,
-            "Welcome {{name}}!", "Hello {{name}}, welcome to the platform!");
-        SetupNotificationDbSet([]);
-        SetupTemplateDbSet([template]);
-        _preferenceServiceMock.Setup(s => s.ShouldSendNotificationAsync(
-            It.IsAny<Guid>(), It.IsAny<NotificationType>(), It.IsAny<NotificationChannel>(), 
-            It.IsAny<NotificationPriority>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(true);
-        _templateServiceMock.Setup(s => s.ReplacePlaceholders(It.IsAny<string>(), It.IsAny<Dictionary<string, string>>()))
-            .Returns<string, Dictionary<string, string>>((t, p) => t.Replace("{{name}}", p["name"]));
-
-        // Act
-        var result = await _sut.SendFromTemplateAsync(
-            recipientId, "welcome", new Dictionary<string, string> { { "name", "Alice" } });
-
-        // Assert
-        result.IsSuccess.Should().BeTrue();
-        result.Value.Title.Should().Be("Welcome Alice!");
-        result.Value.Message.Should().Be("Hello Alice, welcome to the platform!");
-    }
-
-    [Fact]
-    public async Task SendFromTemplateAsync_WhenTemplateNotFound_ReturnsFailure()
-    {
-        // Arrange
-        SetupNotificationDbSet([]);
-        SetupTemplateDbSet([]);
-
-        // Act
-        var result = await _sut.SendFromTemplateAsync(
-            Guid.NewGuid(), "nonexistent", new Dictionary<string, string>());
-
-        // Assert
-        result.IsSuccess.Should().BeFalse();
-        result.Error.Code.Should().Be("Template.NotFound");
-    }
-
-    [Fact]
-    public async Task SendFromTemplateAsync_WhenTemplateInactive_ReturnsFailure()
-    {
-        // Arrange
-        var template = NotificationTemplate.Create(
-            "inactive_template", "Inactive", NotificationType.System, NotificationChannel.InApp, "T", "M");
-        template.Deactivate();
-        SetupNotificationDbSet([]);
-        SetupTemplateDbSet([template]);
-
-        // Act
-        var result = await _sut.SendFromTemplateAsync(
-            Guid.NewGuid(), "inactive_template", new Dictionary<string, string>());
-
-        // Assert
-        result.IsSuccess.Should().BeFalse();
-        result.Error.Code.Should().Be("Template.NotFound");
-    }
-
-    #endregion
-
-    #region SendBulkAsync
-
-    [Fact]
-    public async Task SendBulkAsync_SendsToAllAllowedRecipients()
-    {
-        // Arrange
-        var recipients = new List<Guid> { Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid() };
-        SetupNotificationDbSet([]);
-        _preferenceServiceMock.Setup(s => s.ShouldSendNotificationAsync(
-            It.IsAny<Guid>(), It.IsAny<NotificationType>(), It.IsAny<NotificationChannel>(), 
-            It.IsAny<NotificationPriority>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(true);
-
-        // Act
-        var result = await _sut.SendBulkAsync(
-            recipients, NotificationType.System, "Bulk Title", "Bulk Message");
-
-        // Assert
-        result.IsSuccess.Should().BeTrue();
-        result.Value.Should().HaveCount(3);
-    }
-
-    [Fact]
-    public async Task SendBulkAsync_SkipsRecipientsWithBlockingPreferences()
-    {
-        // Arrange
-        var allowedRecipient = Guid.NewGuid();
-        var blockedRecipient = Guid.NewGuid();
-        SetupNotificationDbSet([]);
-        _preferenceServiceMock.Setup(s => s.ShouldSendNotificationAsync(
-            allowedRecipient, It.IsAny<NotificationType>(), It.IsAny<NotificationChannel>(), 
-            It.IsAny<NotificationPriority>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(true);
-        _preferenceServiceMock.Setup(s => s.ShouldSendNotificationAsync(
-            blockedRecipient, It.IsAny<NotificationType>(), It.IsAny<NotificationChannel>(), 
-            It.IsAny<NotificationPriority>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(false);
-
-        // Act
-        var result = await _sut.SendBulkAsync(
-            [allowedRecipient, blockedRecipient], NotificationType.Marketing, "Title", "Message");
-
-        // Assert
-        result.IsSuccess.Should().BeTrue();
-        result.Value.Should().HaveCount(1);
-        result.Value.First().RecipientId.Should().Be(allowedRecipient);
-    }
-
-    [Fact]
-    public async Task SendBulkAsync_WhenAllBlocked_ReturnsEmptyList()
-    {
-        // Arrange
-        SetupNotificationDbSet([]);
-        _preferenceServiceMock.Setup(s => s.ShouldSendNotificationAsync(
-            It.IsAny<Guid>(), It.IsAny<NotificationType>(), It.IsAny<NotificationChannel>(), 
-            It.IsAny<NotificationPriority>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(false);
-
-        // Act
-        var result = await _sut.SendBulkAsync(
-            [Guid.NewGuid()], NotificationType.Marketing, "Title", "Message");
-
-        // Assert
-        result.IsSuccess.Should().BeTrue();
-        result.Value.Should().BeEmpty();
-    }
-
-    #endregion
-
-    #region ScheduleAsync
-
-    [Fact]
-    public async Task ScheduleAsync_WithFutureTime_CreatesScheduledNotification()
-    {
-        // Arrange
-        var recipientId = Guid.NewGuid();
-        var scheduledAt = DateTime.UtcNow.AddHours(1);
-        SetupNotificationDbSet([]);
-
-        // Act
-        var result = await _sut.ScheduleAsync(
-            recipientId, NotificationType.System, "Scheduled", "Message", scheduledAt);
-
-        // Assert
-        result.IsSuccess.Should().BeTrue();
-        result.Value.ScheduledAt.Should().Be(scheduledAt);
         result.Value.IsSent.Should().BeFalse();
+        result.Value.SentAt.Should().BeNull();
     }
 
     [Fact]
-    public async Task ScheduleAsync_WithPastTime_ReturnsValidationError()
+    public async Task SendFromTemplateAsync_Should_Return_NotFound_When_Template_Does_Not_Exist()
     {
-        // Arrange
-        var recipientId = Guid.NewGuid();
-        var scheduledAt = DateTime.UtcNow.AddHours(-1);
-        SetupNotificationDbSet([]);
+        using var context = CreateContext();
+        var subject = CreateSubject(context, shouldSend: true);
 
-        // Act
-        var result = await _sut.ScheduleAsync(
-            recipientId, NotificationType.System, "Scheduled", "Message", scheduledAt);
+        var result = await subject.SendFromTemplateAsync(Guid.NewGuid(), "missing", new Dictionary<string, string>());
 
-        // Assert
         result.IsSuccess.Should().BeFalse();
-        result.Error.Code.Should().Be("Notification.InvalidSchedule");
+        result.Error.Code.Should().Be("Template.NotFound");
     }
 
-    #endregion
-
-    #region MarkAsReadAsync
-
     [Fact]
-    public async Task MarkAsReadAsync_WhenNotificationExists_MarksAsRead()
+    public async Task SendFromTemplateAsync_Should_Render_And_Send_Notification()
     {
-        // Arrange
-        var notification = Notification.Create(
-            Guid.NewGuid(), NotificationType.System, NotificationChannel.InApp, "Title", "Message");
-        SetupNotificationDbSet([notification]);
+        using var context = CreateContext();
+        var template = NotificationTemplate.Create(
+            "welcome",
+            "Welcome",
+            NotificationType.Onboarding,
+            NotificationChannel.InApp,
+            "Welcome {{name}}",
+            "Hello {{name}}",
+            actionUrlTemplate: "https://example.test/{{slug}}");
+        context.NotificationTemplates.Add(template);
+        await context.SaveChangesAsync();
+        var subject = CreateSubject(context, shouldSend: true);
 
-        // Act
-        var result = await _sut.MarkAsReadAsync(notification.Id);
+        var result = await subject.SendFromTemplateAsync(
+            Guid.NewGuid(),
+            "welcome",
+            new Dictionary<string, string>
+            {
+                ["name"] = "Ada",
+                ["slug"] = "welcome"
+            });
 
-        // Assert
         result.IsSuccess.Should().BeTrue();
-        notification.IsRead.Should().BeTrue();
-        notification.ReadAt.Should().NotBeNull();
+        result.Value.Title.Should().Be("Welcome Ada");
+        result.Value.Message.Should().Be("Hello Ada");
+        result.Value.ActionUrl.Should().Be("https://example.test/welcome");
     }
 
     [Fact]
-    public async Task MarkAsReadAsync_WhenNotificationNotFound_ReturnsFailure()
+    public async Task SendBulkAsync_Should_Only_Send_To_Allowed_Recipients()
     {
-        // Arrange
-        SetupNotificationDbSet([]);
+        using var context = CreateContext();
+        var allowed = Guid.NewGuid();
+        var blocked = Guid.NewGuid();
+        var preferenceService = new Mock<INotificationPreferenceService>();
+        preferenceService
+            .Setup(service => service.ShouldSendNotificationAsync(allowed, NotificationType.System, NotificationChannel.InApp, NotificationPriority.Normal, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+        preferenceService
+            .Setup(service => service.ShouldSendNotificationAsync(blocked, NotificationType.System, NotificationChannel.InApp, NotificationPriority.Normal, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
+        var templateService = CreateTemplateServiceMock();
+        var subject = new NotificationDeliveryService(
+            new ApplicationDbContextAdapter(context),
+            preferenceService.Object,
+            templateService.Object,
+            NullLogger<NotificationDeliveryService>.Instance);
 
-        // Act
-        var result = await _sut.MarkAsReadAsync(Guid.NewGuid());
+        var result = await subject.SendBulkAsync([allowed, blocked], NotificationType.System, "Bulk", "Message");
 
-        // Assert
-        result.IsSuccess.Should().BeFalse();
-        result.Error.Code.Should().Be("Notification.NotFound");
-    }
-
-    #endregion
-
-    #region MarkAllAsReadAsync
-
-    [Fact]
-    public async Task MarkAllAsReadAsync_MarksAllUnreadNotifications()
-    {
-        // Arrange
-        var userId = Guid.NewGuid();
-        var notifications = new List<Notification>
-        {
-            Notification.Create(userId, NotificationType.System, NotificationChannel.InApp, "Title 1", "Msg"),
-            Notification.Create(userId, NotificationType.System, NotificationChannel.InApp, "Title 2", "Msg"),
-            Notification.Create(userId, NotificationType.System, NotificationChannel.InApp, "Title 3", "Msg")
-        };
-        SetupNotificationDbSet(notifications);
-
-        // Act
-        var result = await _sut.MarkAllAsReadAsync(userId);
-
-        // Assert
         result.IsSuccess.Should().BeTrue();
-        notifications.Should().OnlyContain(n => n.IsRead);
+        result.Value.Should().ContainSingle(notification => notification.RecipientId == allowed && notification.IsSent);
     }
 
     [Fact]
-    public async Task MarkAllAsReadAsync_WhenNoUnreadNotifications_ReturnsSuccess()
+    public async Task ScheduleAsync_Should_Validate_Past_And_Create_Future_Schedules()
     {
-        // Arrange
-        var userId = Guid.NewGuid();
-        SetupNotificationDbSet([]);
+        using var context = CreateContext();
+        var subject = CreateSubject(context, shouldSend: true);
 
-        // Act
-        var result = await _sut.MarkAllAsReadAsync(userId);
+        var invalid = await subject.ScheduleAsync(Guid.NewGuid(), NotificationType.System, "Past", "Message", SystemClock.UtcNow.AddMinutes(-1));
+        var valid = await subject.ScheduleAsync(Guid.NewGuid(), NotificationType.System, "Future", "Message", SystemClock.UtcNow.AddMinutes(10));
 
-        // Assert
-        result.IsSuccess.Should().BeTrue();
+        invalid.IsSuccess.Should().BeFalse();
+        invalid.Error.Code.Should().Be("Notification.InvalidSchedule");
+        valid.IsSuccess.Should().BeTrue();
+        valid.Value.ScheduledAt.Should().NotBeNull();
     }
 
-    #endregion
-
-    #region MarkAsUnreadAsync
-
     [Fact]
-    public async Task MarkAsUnreadAsync_WhenNotificationExists_MarksAsUnread()
+    public async Task MarkAsReadAsync_And_MarkAsUnreadAsync_Should_Handle_Missing_And_Existing_Notifications()
     {
-        // Arrange
-        var notification = Notification.Create(
-            Guid.NewGuid(), NotificationType.System, NotificationChannel.InApp, "Title", "Message");
-        notification.MarkAsRead();
-        SetupNotificationDbSet([notification]);
+        using var context = CreateContext();
+        var notification = Notification.Create(Guid.NewGuid(), NotificationType.System, NotificationChannel.InApp, "Title", "Message");
+        context.Notifications.Add(notification);
+        await context.SaveChangesAsync();
+        var subject = CreateSubject(context, shouldSend: true);
 
-        // Act
-        var result = await _sut.MarkAsUnreadAsync(notification.Id);
+        var missingRead = await subject.MarkAsReadAsync(Guid.NewGuid());
+        var read = await subject.MarkAsReadAsync(notification.Id);
+        var missingUnread = await subject.MarkAsUnreadAsync(Guid.NewGuid());
+        var unread = await subject.MarkAsUnreadAsync(notification.Id);
 
-        // Assert
-        result.IsSuccess.Should().BeTrue();
+        missingRead.IsSuccess.Should().BeFalse();
+        read.IsSuccess.Should().BeTrue();
+        missingUnread.IsSuccess.Should().BeFalse();
+        unread.IsSuccess.Should().BeTrue();
         notification.IsRead.Should().BeFalse();
-        notification.ReadAt.Should().BeNull();
     }
 
     [Fact]
-    public async Task MarkAsUnreadAsync_WhenNotificationNotFound_ReturnsFailure()
+    public async Task MarkAllAsReadAsync_Should_Mark_All_Unread_Notifications()
     {
-        // Arrange
-        SetupNotificationDbSet([]);
-
-        // Act
-        var result = await _sut.MarkAsUnreadAsync(Guid.NewGuid());
-
-        // Assert
-        result.IsSuccess.Should().BeFalse();
-        result.Error.Code.Should().Be("Notification.NotFound");
-    }
-
-    #endregion
-
-    #region DeleteAsync
-
-    [Fact]
-    public async Task DeleteAsync_WhenNotificationExists_SoftDeletes()
-    {
-        // Arrange
-        var notification = Notification.Create(
-            Guid.NewGuid(), NotificationType.System, NotificationChannel.InApp, "Title", "Message");
-        SimulatePersisted(notification);
-        SetupNotificationDbSet([notification]);
-
-        // Act
-        var result = await _sut.DeleteAsync(notification.Id);
-
-        // Assert
-        result.IsSuccess.Should().BeTrue();
-        notification.IsDeleted.Should().BeTrue();
-    }
-
-    [Fact]
-    public async Task DeleteAsync_WhenNotificationNotFound_ReturnsFailure()
-    {
-        // Arrange
-        SetupNotificationDbSet([]);
-
-        // Act
-        var result = await _sut.DeleteAsync(Guid.NewGuid());
-
-        // Assert
-        result.IsSuccess.Should().BeFalse();
-        result.Error.Code.Should().Be("Notification.NotFound");
-    }
-
-    #endregion
-
-    #region DeleteReadNotificationsAsync
-
-    [Fact]
-    public async Task DeleteReadNotificationsAsync_DeletesOnlyReadNotifications()
-    {
-        // Arrange
+        using var context = CreateContext();
         var userId = Guid.NewGuid();
-        var readNotifications = new List<Notification>
-        {
-            Notification.Create(userId, NotificationType.System, NotificationChannel.InApp, "Read 1", "Msg"),
-            Notification.Create(userId, NotificationType.System, NotificationChannel.InApp, "Read 2", "Msg")
-        };
-        foreach (var n in readNotifications)
-        {
-            n.MarkAsRead();
-            SimulatePersisted(n);
-        }
-        var unreadNotification = Notification.Create(userId, NotificationType.System, NotificationChannel.InApp, "Unread", "Msg");
-        SimulatePersisted(unreadNotification);
-        
-        var allNotifications = new List<Notification>(readNotifications) { unreadNotification };
-        SetupNotificationDbSet(allNotifications);
+        context.Notifications.AddRange(
+            Notification.Create(userId, NotificationType.System, NotificationChannel.InApp, "1", "1"),
+            Notification.Create(userId, NotificationType.System, NotificationChannel.InApp, "2", "2"));
+        await context.SaveChangesAsync();
+        var subject = CreateSubject(context, shouldSend: true);
 
-        // Act
-        var result = await _sut.DeleteReadNotificationsAsync(userId);
+        var result = await subject.MarkAllAsReadAsync(userId);
 
-        // Assert
         result.IsSuccess.Should().BeTrue();
-        result.Value.Should().Be(2);
-        readNotifications.Should().OnlyContain(n => n.IsDeleted);
-        unreadNotification.IsDeleted.Should().BeFalse();
+        context.Notifications.Should().OnlyContain(notification => notification.IsRead);
     }
 
     [Fact]
-    public async Task DeleteReadNotificationsAsync_WhenNoReadNotifications_ReturnsZero()
+    public async Task DeleteAsync_And_DeleteReadNotificationsAsync_Should_Soft_Delete_Persisted_Notifications()
     {
-        // Arrange
+        using var context = CreateContext();
         var userId = Guid.NewGuid();
-        SetupNotificationDbSet([]);
+        var one = Notification.Create(userId, NotificationType.System, NotificationChannel.InApp, "1", "1");
+        one.Version = 1;
+        one.MarkAsRead();
+        var two = Notification.Create(userId, NotificationType.System, NotificationChannel.InApp, "2", "2");
+        two.Version = 1;
+        two.MarkAsRead();
+        context.Notifications.AddRange(one, two);
+        await context.SaveChangesAsync();
+        var subject = CreateSubject(context, shouldSend: true);
 
-        // Act
-        var result = await _sut.DeleteReadNotificationsAsync(userId);
+        var missingDelete = await subject.DeleteAsync(Guid.NewGuid());
+        var deleteOne = await subject.DeleteAsync(one.Id);
+        var deleteRead = await subject.DeleteReadNotificationsAsync(userId);
 
-        // Assert
-        result.IsSuccess.Should().BeTrue();
-        result.Value.Should().Be(0);
+        missingDelete.IsSuccess.Should().BeFalse();
+        deleteOne.IsSuccess.Should().BeTrue();
+        deleteRead.Value.Should().Be(1);
+        context.Notifications.IgnoreQueryFilters().Count(notification => notification.DeletedAt != null).Should().Be(2);
     }
 
-    #endregion
-
-    #region Helpers
-
-    private static void SimulatePersisted<T>(T entity) where T : EntityBase
+    private static NotificationsTestDbContext CreateContext()
     {
-        var versionProperty = typeof(EntityBase).GetProperty("Version", 
-            System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public);
-        versionProperty?.SetValue(entity, 1);
+        var options = new DbContextOptionsBuilder<NotificationsTestDbContext>()
+            .UseInMemoryDatabase(Guid.NewGuid().ToString())
+            .Options;
+
+        return new NotificationsTestDbContext(options);
     }
 
-    #endregion
+    private static NotificationDeliveryService CreateSubject(NotificationsTestDbContext context, bool shouldSend)
+    {
+        var preferenceService = new Mock<INotificationPreferenceService>();
+        preferenceService
+            .Setup(service => service.ShouldSendNotificationAsync(It.IsAny<Guid>(), It.IsAny<NotificationType>(), It.IsAny<NotificationChannel>(), It.IsAny<NotificationPriority>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(shouldSend);
+
+        return new NotificationDeliveryService(
+            new ApplicationDbContextAdapter(context),
+            preferenceService.Object,
+            CreateTemplateServiceMock().Object,
+            NullLogger<NotificationDeliveryService>.Instance);
+    }
+
+    private static Mock<INotificationTemplateService> CreateTemplateServiceMock()
+    {
+        var templateService = new Mock<INotificationTemplateService>();
+        templateService
+            .Setup(service => service.ReplacePlaceholders(It.IsAny<string>(), It.IsAny<Dictionary<string, string>>()))
+            .Returns((string template, Dictionary<string, string> placeholders) =>
+            {
+                var result = template;
+                foreach (var placeholder in placeholders)
+                {
+                    result = result.Replace($"{{{{{placeholder.Key}}}}}", placeholder.Value);
+                }
+
+                return result;
+            });
+
+        return templateService;
+    }
+
+    private sealed class ApplicationDbContextAdapter(NotificationsTestDbContext inner) : IApplicationDbContext
+    {
+        public DbSet<T> Set<T>() where T : class => inner.Set<T>();
+
+        public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default) => inner.SaveChangesAsync(cancellationToken);
+
+        public Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default)
+            => Task.FromResult(Mock.Of<IDbContextTransaction>());
+    }
 }

@@ -58,8 +58,7 @@ public class AssetStorageService : IAssetStorageService
             Key = objectKey,
             InputStream = content,
             ContentType = mimeType,
-            AutoCloseStream = false,
-            DisablePayloadSigning = true
+            AutoCloseStream = false
         };
 
         request.Metadata.Add("content-hash", contentHash);
@@ -171,7 +170,7 @@ public class AssetStorageService : IAssetStorageService
         CancellationToken ct = default)
     {
         var objectKey = $"multipart/{Guid.NewGuid()}";
-        
+
         var request = new Amazon.S3.Model.InitiateMultipartUploadRequest
         {
             BucketName = _options.BucketName,
@@ -255,8 +254,7 @@ public class AssetStorageService : IAssetStorageService
             Key = objectKey,
             InputStream = content,
             ContentType = "application/octet-stream", // Don't trust original MIME type for quarantined files
-            AutoCloseStream = false,
-            DisablePayloadSigning = true
+            AutoCloseStream = false
         };
 
         // Add all provided metadata
@@ -275,7 +273,7 @@ public class AssetStorageService : IAssetStorageService
         // Structure: {prefix}/{hash[0:2]}/{hash[2:4]}/{hash}.{ext}
         var prefix = isTransformed ? "transformed" : "content";
         var extension = GetExtensionFromMimeType(mimeType);
-        
+
         return $"{prefix}/{contentHash[..2]}/{contentHash[2..4]}/{contentHash}.{extension}";
     }
 

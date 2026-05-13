@@ -52,12 +52,25 @@ public static class AssetsModuleExtensions
             var options = configuration.GetSection(AssetStorageOptions.SectionName)
                 .Get<AssetStorageOptions>() ?? new AssetStorageOptions();
 
+            var hasServiceUrl = !string.IsNullOrWhiteSpace(options.ServiceUrl);
+            var useHttp = Uri.TryCreate(options.ServiceUrl, UriKind.Absolute, out var serviceUri)
+                && string.Equals(serviceUri.Scheme, Uri.UriSchemeHttp, StringComparison.OrdinalIgnoreCase);
+
             var config = new AmazonS3Config
             {
-                ServiceURL = options.ServiceUrl,
                 ForcePathStyle = options.ForcePathStyle,
-                RegionEndpoint = Amazon.RegionEndpoint.GetBySystemName(options.Region)
+                UseHttp = useHttp
             };
+
+            if (hasServiceUrl)
+            {
+                config.ServiceURL = options.ServiceUrl;
+                config.AuthenticationRegion = options.Region;
+            }
+            else
+            {
+                config.RegionEndpoint = Amazon.RegionEndpoint.GetBySystemName(options.Region);
+            }
 
             if (!string.IsNullOrEmpty(options.AccessKey) && !string.IsNullOrEmpty(options.SecretKey))
             {
@@ -100,7 +113,7 @@ public static class AssetsModuleExtensions
         services.AddScoped<IRequestHandler<DeleteAssetCommand, DeleteAssetResponse>, DeleteAssetHandler>();
         services.AddScoped<IRequestHandler<ReportAssetCommand, ReportAssetResponse?>, ReportAssetHandler>();
         services.AddScoped<IRequestHandler<ReviewReportCommand, ReviewReportResponse?>, ReviewReportHandler>();
-        
+
         services.AddScoped<IRequestHandler<GetAssetQuery, AssetDto?>, GetAssetHandler>();
         services.AddScoped<IRequestHandler<GetAssetsByParentQuery, IReadOnlyList<AssetDto>>, GetAssetsByParentHandler>();
         services.AddScoped<IRequestHandler<GetUserAssetsQuery, IReadOnlyList<AssetDto>>, GetUserAssetsHandler>();

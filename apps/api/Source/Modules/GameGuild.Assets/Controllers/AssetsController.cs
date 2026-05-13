@@ -10,6 +10,7 @@ namespace GameGuild.Assets.Controllers;
 /// <summary>
 /// Controller for asset operations.
 /// </summary>
+[Microsoft.AspNetCore.Http.Tags("assets")]
 [ApiVersion("1.0")]
 [Route("v{version:apiVersion}/assets")]
 [Authorize]

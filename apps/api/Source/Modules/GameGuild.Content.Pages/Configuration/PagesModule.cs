@@ -14,8 +14,8 @@ public static class PagesModule
     {
         services.AddScoped<IPageService, PageService>();
         services.AddScoped<IContentResourceService, ContentResourceService>();
-        services.AddScoped<IOpenGraphService, OpenGraphService>();
         services.AddScoped<IMarketingLeadService, MarketingLeadService>();
+        services.AddScoped<IOpenGraphService, OpenGraphService>();
 
         return services;
     }

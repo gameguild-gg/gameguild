@@ -23,9 +23,9 @@ public sealed class RecordSliMetricCommandHandler(IServiceLevelObjectiveReposito
         if (request.IsSuccessful) { sli = ServiceLevelIndicator.CreateSuccess(request.ServiceLevelObjectiveId, request.Value, request.ResponseTimeMs, request.StatusCode, request.Endpoint); }
         else { sli = ServiceLevelIndicator.CreateFailure(request.ServiceLevelObjectiveId, request.Value, request.ErrorMessage ?? "Unknown error", request.ResponseTimeMs, request.StatusCode, request.Endpoint); }
 
-        // Set Metadata and TenantId
+        // Set Metadata and tenant scope directly on the entity.
         sli.Metadata = request.Metadata;
-        sli.SetProperties(new Dictionary<string, object?> { { "TenantId", new TenantId(request.TenantId) } });
+        sli.SetTenantId(request.TenantId);
 
         await sliRepository.AddAsync(sli, cancellationToken).ConfigureAwait(false);
 

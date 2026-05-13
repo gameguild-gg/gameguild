@@ -86,7 +86,7 @@ public class TranslationMemoryServiceTests
         // Arrange
         const string sourceText = "Hello, world!";
         const string sourceLanguage = "en";
-        
+
         await _service.AddEntryAsync(sourceText, "¡Hola, mundo!", sourceLanguage, "es");
 
         // Act - look for French instead of Spanish
@@ -102,7 +102,7 @@ public class TranslationMemoryServiceTests
         // Arrange
         const string sourceLanguage = "en";
         const string targetLanguage = "es";
-        
+
         // The index key is based on normalized source text
         await _service.AddEntryAsync("hello world", "Hola mundo", sourceLanguage, targetLanguage);
 
@@ -119,7 +119,7 @@ public class TranslationMemoryServiceTests
         // Arrange
         const string sourceLanguage = "en";
         const string targetLanguage = "es";
-        
+
         await _service.AddEntryAsync("Hello world", "Hola mundo", sourceLanguage, targetLanguage);
 
         // Act - search with very different text
@@ -135,7 +135,7 @@ public class TranslationMemoryServiceTests
         // Arrange
         const string sourceLanguage = "en";
         const string targetLanguage = "es";
-        
+
         // Add multiple similar translations
         await _service.AddEntryAsync("Hello", "Hola", sourceLanguage, targetLanguage);
         var betterEntry = await _service.AddEntryAsync("Hello world", "Hola mundo", sourceLanguage, targetLanguage);
@@ -154,7 +154,7 @@ public class TranslationMemoryServiceTests
         // Arrange
         const string sourceLanguage = "en";
         const string targetLanguage = "es";
-        
+
         // Add entry with uppercase
         await _service.AddEntryAsync("HELLO WORLD", "HOLA MUNDO", sourceLanguage, targetLanguage);
 
@@ -390,7 +390,7 @@ public class TranslationMemoryServiceTests
     {
         // Arrange
         var entry = await _service.AddEntryAsync("Hello", "Hola", "en", "es");
-        
+
         // Small delay to ensure time difference
         await Task.Delay(10);
 
@@ -510,6 +510,16 @@ public class TranslationMemoryServiceTests
 
         // Assert - should not match
         result.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task SearchAsync_WithEntryHavingEmptySourceText_HandlesEmptyCandidateText()
+    {
+        await _service.AddEntryAsync(string.Empty, "Hola", "en", "es");
+
+        var results = await _service.SearchAsync("Hello", sourceLanguage: "en", targetLanguage: "es");
+
+        results.Should().BeEmpty();
     }
 
     #endregion

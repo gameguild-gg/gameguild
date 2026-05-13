@@ -12,7 +12,7 @@ namespace GameGuild.Commerce.Products;
 /// </summary>
 [ApiVersion("1.0")]
 [Route("v{version:apiVersion}/promo-codes")]
-[Tags("promo-codes")]
+[Microsoft.AspNetCore.Http.Tags("promo-codes")]
 [Authorize]
 [RequirePermission(PromoCodesPermission.Keys.Read)]
 public class PromoCodesController(IMediator mediator) : BaseApiController

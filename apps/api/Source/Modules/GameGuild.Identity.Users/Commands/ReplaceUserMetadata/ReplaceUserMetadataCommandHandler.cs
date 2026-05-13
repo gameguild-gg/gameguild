@@ -26,7 +26,7 @@ public sealed class ReplaceUserMetadataCommandHandler(IUserRepository userReposi
         }
 
         // Replace all fields completely
-        metadata.SetCustomFields(request.Request.CustomFields);
+        metadata.SetCustomFields(JsonValueDictionary.ToObjects(request.Request.CustomFields));
         metadata.SetTags(request.Request.Tags);
         metadata.SetExternalReferences(request.Request.ExternalReferences);
 

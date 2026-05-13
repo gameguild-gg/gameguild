@@ -16,7 +16,7 @@ namespace GameGuild.Resources;
 ///     All endpoints require authentication. Tenant membership validation is enforced.
 /// </remarks>
 [ApiVersion("1.0")]
-[Tags("tenants/resources/settings")]
+[Microsoft.AspNetCore.Http.Tags("tenants/resources/settings")]
 [Authorize]
 [EnableRateLimiting(RateLimitPolicies.PerTenant)]
 public sealed class TenantResourceSettingsController(

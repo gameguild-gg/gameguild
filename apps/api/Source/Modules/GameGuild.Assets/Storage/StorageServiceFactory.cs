@@ -187,7 +187,7 @@ public class StorageServiceFactory : IStorageServiceFactory
         }
 
         var tenantConfig = await _tenantConfigRepo.GetByTenantIdAsync(tenantId, ct).ConfigureAwait(false);
-        
+
         if (tenantConfig == null || !tenantConfig.IsEnabled)
         {
             return _globalStorageService;
@@ -200,8 +200,8 @@ public class StorageServiceFactory : IStorageServiceFactory
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, 
-                "Failed to create tenant storage service for {TenantId}, falling back to global", 
+            _logger.LogError(ex,
+                "Failed to create tenant storage service for {TenantId}, falling back to global",
                 tenantId);
             return _globalStorageService;
         }
@@ -227,11 +227,11 @@ public class StorageServiceFactory : IStorageServiceFactory
         CancellationToken ct = default)
     {
         var startTime = SystemClock.UtcNow;
-        
+
         try
         {
             var service = CreateFromConfiguration(configuration, bucketName);
-            
+
             // Test bucket exists
             var testKey = $".test-{Guid.NewGuid():N}";
             var testContent = "test"u8.ToArray();
@@ -299,32 +299,37 @@ public class StorageServiceFactory : IStorageServiceFactory
 
     private IStorageService CreateS3Service(S3CompatibleConfiguration config, string bucketName)
     {
+        var hasServiceUrl = !string.IsNullOrWhiteSpace(config.ServiceUrl);
         var s3Config = new Amazon.S3.AmazonS3Config
         {
-            RegionEndpoint = Amazon.RegionEndpoint.GetBySystemName(config.Region),
             ForcePathStyle = config.ForcePathStyle,
             UseHttp = config.UseHttp
         };
 
-        if (!string.IsNullOrEmpty(config.ServiceUrl))
+        if (hasServiceUrl)
         {
             s3Config.ServiceURL = config.ServiceUrl;
+            s3Config.AuthenticationRegion = config.Region;
+        }
+        else
+        {
+            s3Config.RegionEndpoint = Amazon.RegionEndpoint.GetBySystemName(config.Region);
         }
 
         Amazon.S3.IAmazonS3 s3Client;
         if (!string.IsNullOrEmpty(config.SessionToken))
         {
             s3Client = new Amazon.S3.AmazonS3Client(
-                config.AccessKeyId, 
-                config.SecretAccessKey, 
-                config.SessionToken, 
+                config.AccessKeyId,
+                config.SecretAccessKey,
+                config.SessionToken,
                 s3Config);
         }
         else
         {
             s3Client = new Amazon.S3.AmazonS3Client(
-                config.AccessKeyId, 
-                config.SecretAccessKey, 
+                config.AccessKeyId,
+                config.SecretAccessKey,
                 s3Config);
         }
 
@@ -423,20 +428,20 @@ public class StorageConfigurationEncryption : IStorageConfigurationEncryption
     {
         // IDataProtector.Unprotect(string) returns string directly
         var json = _protector.Unprotect(encryptedJson);
-        
+
         return providerType switch
         {
-            StorageProviderType.S3Compatible => 
+            StorageProviderType.S3Compatible =>
                 JsonSerializer.Deserialize<S3CompatibleConfiguration>(json)!,
-            StorageProviderType.GoogleCloudStorage => 
+            StorageProviderType.GoogleCloudStorage =>
                 JsonSerializer.Deserialize<GoogleCloudStorageConfiguration>(json)!,
-            StorageProviderType.AzureBlobStorage => 
+            StorageProviderType.AzureBlobStorage =>
                 JsonSerializer.Deserialize<AzureBlobStorageConfiguration>(json)!,
-            StorageProviderType.CloudflareR2 => 
+            StorageProviderType.CloudflareR2 =>
                 JsonSerializer.Deserialize<CloudflareR2Configuration>(json)!,
-            StorageProviderType.BackblazeB2 => 
+            StorageProviderType.BackblazeB2 =>
                 JsonSerializer.Deserialize<BackblazeB2Configuration>(json)!,
-            StorageProviderType.LocalFileSystem => 
+            StorageProviderType.LocalFileSystem =>
                 JsonSerializer.Deserialize<LocalFileSystemConfiguration>(json)!,
             _ => throw new NotSupportedException($"Provider type {providerType} is not supported")
         };

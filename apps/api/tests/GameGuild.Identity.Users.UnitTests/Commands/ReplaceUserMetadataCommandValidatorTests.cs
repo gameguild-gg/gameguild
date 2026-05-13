@@ -11,7 +11,7 @@ public class ReplaceUserMetadataCommandValidatorTests
     public void Validate_WithValidCommand_ShouldNotHaveAnyValidationErrors()
     {
         // Arrange
-        var customFields = new Dictionary<string, object?> { { "field1", "value1" } };
+        var customFields = JsonMap(new Dictionary<string, object?> { { "field1", "value1" } });
         var tags = new List<string> { "tag1" };
         var externalRefs = new Dictionary<string, string> { { "system1", "ref1" } };
         var request = new ReplaceUserMetadataRequest(customFields, tags, externalRefs);
@@ -28,7 +28,7 @@ public class ReplaceUserMetadataCommandValidatorTests
     public void Validate_WithEmptyUserId_ShouldHaveError()
     {
         // Arrange
-        var customFields = new Dictionary<string, object?> { { "field1", "value1" } };
+        var customFields = JsonMap(new Dictionary<string, object?> { { "field1", "value1" } });
         var tags = new List<string> { "tag1" };
         var externalRefs = new Dictionary<string, string> { { "system1", "ref1" } };
         var request = new ReplaceUserMetadataRequest(customFields, tags, externalRefs);

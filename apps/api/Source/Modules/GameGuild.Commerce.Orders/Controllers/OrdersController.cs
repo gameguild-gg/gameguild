@@ -11,6 +11,7 @@ namespace GameGuild.Commerce.Orders;
 /// Controller for managing orders and purchases.
 /// Dispatches all operations through CQRS commands/queries via <see cref="ISender"/>.
 /// </summary>
+[Microsoft.AspNetCore.Http.Tags("commerce/orders")]
 [ApiVersion("1.0")]
 [Route("v{version:apiVersion}/orders")]
 [Authorize]

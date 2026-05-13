@@ -7,6 +7,7 @@ namespace GameGuild.Assets.Security;
 /// <summary>
 /// Secure content delivery endpoint with all threat mitigations.
 /// </summary>
+[Microsoft.AspNetCore.Http.Tags("assets/secure-delivery")]
 [Route("api/assets")]
 public class SecureAssetDeliveryController : BaseApiController
 {

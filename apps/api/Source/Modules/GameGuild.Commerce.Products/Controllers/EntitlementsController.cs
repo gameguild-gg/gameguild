@@ -12,7 +12,7 @@ namespace GameGuild.Commerce.Products;
 /// </summary>
 [ApiVersion("1.0")]
 [Route("v{version:apiVersion}/entitlements")]
-[Tags("entitlements")]
+[Microsoft.AspNetCore.Http.Tags("entitlements")]
 [Authorize]
 public class EntitlementsController(IEntitlementService entitlementService, IActorContextAccessor actorContextAccessor) : BaseApiController
 {

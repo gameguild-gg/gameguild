@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace GameGuild.Content.Pages;
 
 /// <summary>REST API controller for Page CRUD.</summary>
+[Microsoft.AspNetCore.Http.Tags("content/pages")]
 [ApiVersion("1.0")]
 [Route("v{version:apiVersion}/pages")]
 [Authorize]
@@ -41,6 +42,28 @@ public class PageController(IPageService pageService) : BaseApiController
         var page = await pageService.GetBySlugAsync(slug).ConfigureAwait(false);
         if (page is null) return NotFound();
         return Ok(page.ToDto());
+    }
+
+    /// <summary>
+    ///     Public sitemap feed of published pages — slug + last-modified — for
+    ///     SEO crawlers and the marketing site's <c>sitemap.xml</c>.
+    /// </summary>
+    [HttpGet("sitemap")]
+    [AllowAnonymous]
+    public async Task<ActionResult<IEnumerable<SitemapEntryDto>>> GetSitemap(
+        [FromQuery] string? locale = null,
+        CancellationToken ct = default)
+    {
+        var pages = await pageService
+            .GetPagesAsync(type: null, status: PageStatus.Published, locale: locale, parentId: null, skip: 0, take: 5000, ct)
+            .ConfigureAwait(false);
+
+        var entries = pages.Select(p => new SitemapEntryDto(
+            Slug: p.Slug,
+            UpdatedAt: p.UpdatedAt,
+            Locale: p.Locale));
+
+        return Ok(entries);
     }
 
     /// <summary>Create a new page.</summary>

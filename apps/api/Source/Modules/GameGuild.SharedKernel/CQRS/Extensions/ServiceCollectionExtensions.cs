@@ -34,7 +34,7 @@ public static class ServiceCollectionExtensions
     /// <param name="services">Service collection</param>
     /// <param name="assemblies">Assemblies to scan for handlers</param>
     /// <returns>Service collection</returns>
-    public static IServiceCollection AddCqrs(this IServiceCollection services, params Assembly[ ] assemblies) { return services.AddCqrs(_ => { }, assemblies); }
+    public static IServiceCollection AddCqrs(this IServiceCollection services, params Assembly[] assemblies) { return services.AddCqrs(_ => { }, assemblies); }
 
     /// <summary>
     ///     Adds CQRS services to the service collection
@@ -43,7 +43,7 @@ public static class ServiceCollectionExtensions
     /// <param name="configuration">Configuration action</param>
     /// <param name="assemblies">Assemblies to scan for handlers</param>
     /// <returns>Service collection</returns>
-    public static IServiceCollection AddCqrs(this IServiceCollection services, Action<CqrsConfiguration>? configuration, params Assembly[ ] assemblies)
+    public static IServiceCollection AddCqrs(this IServiceCollection services, Action<CqrsConfiguration>? configuration, params Assembly[] assemblies)
     {
         ArgumentNullException.ThrowIfNull(services);
         ArgumentNullException.ThrowIfNull(assemblies);
@@ -89,7 +89,16 @@ public static class ServiceCollectionExtensions
         ServiceLifetime lifetime = ServiceLifetime.Transient,
         bool useTryAdd = false)
     {
-        var types = assembly.GetTypes();
+        Type[] types;
+        try
+        {
+            types = assembly.GetTypes();
+        }
+        catch (ReflectionTypeLoadException ex)
+        {
+            types = ex.Types.Where(t => t is not null).ToArray()!;
+        }
+
         var registrations = new List<(Type serviceType, Type implementationType)>();
 
         foreach (var type in types)
@@ -130,7 +139,17 @@ public static class ServiceCollectionExtensions
         HashSet<Type> openGenericInterfaceTypes,
         ServiceLifetime lifetime = ServiceLifetime.Transient)
     {
-        var types = assembly.GetTypes();
+        Type[] types;
+        try
+        {
+            types = assembly.GetTypes();
+        }
+        catch (ReflectionTypeLoadException ex)
+        {
+            // Some types may fail to load due to missing dependencies - continue with loadable types
+            types = ex.Types.Where(t => t is not null).ToArray()!;
+        }
+
         var registrations = new List<(Type serviceType, Type implementationType)>();
 
         foreach (var type in types)

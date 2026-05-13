@@ -36,6 +36,178 @@ public class LocalizedErrorServiceTests
     }
 
     [Fact]
+    public void Constructor_ThrowsOnNullLocalizationContext()
+    {
+        var act = () => new LocalizedErrorService(
+            null!,
+            _languageRepositoryMock.Object,
+            _cache,
+            _loggerMock.Object);
+
+        act.Should().Throw<ArgumentNullException>().WithParameterName("localizationContext");
+    }
+
+    [Fact]
+    public void Constructor_ThrowsOnNullLanguageRepository()
+    {
+        var act = () => new LocalizedErrorService(
+            _localizationContextMock.Object,
+            null!,
+            _cache,
+            _loggerMock.Object);
+
+        act.Should().Throw<ArgumentNullException>().WithParameterName("languageRepository");
+    }
+
+    [Fact]
+    public void Constructor_ThrowsOnNullCache()
+    {
+        var act = () => new LocalizedErrorService(
+            _localizationContextMock.Object,
+            _languageRepositoryMock.Object,
+            null!,
+            _loggerMock.Object);
+
+        act.Should().Throw<ArgumentNullException>().WithParameterName("cache");
+    }
+
+    [Fact]
+    public void Constructor_ThrowsOnNullLogger()
+    {
+        var act = () => new LocalizedErrorService(
+            _localizationContextMock.Object,
+            _languageRepositoryMock.Object,
+            _cache,
+            null!);
+
+        act.Should().Throw<ArgumentNullException>().WithParameterName("logger");
+    }
+
+    [Fact]
+    public void GetErrorMessage_UsesDatabaseTranslation_WhenAvailable()
+    {
+        var errorKey = "tenant.custom.error";
+        var culture = new CultureInfo("pt-BR");
+        var languageId = Guid.NewGuid();
+        var localizationServiceMock = new Mock<ILocalizationService>();
+
+        _languageRepositoryMock
+            .Setup(x => x.GetByCodeAsync(culture.Name, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Language { Id = languageId, Code = culture.Name, Name = "Portuguese", IsActive = true });
+        localizationServiceMock
+            .Setup(x => x.GetLocalizationsForFieldAsync(It.IsAny<Guid>(), errorKey, It.IsAny<CancellationToken>()))
+            .ReturnsAsync([
+                CreateDatabaseLocalization(languageId, "Mensagem personalizada")
+            ]);
+
+        var service = CreateService(localizationServiceMock.Object);
+
+        var result = service.GetErrorMessage(errorKey, culture);
+
+        result.Should().Be("Mensagem personalizada");
+    }
+
+    [Fact]
+    public void GetErrorMessage_FallsBackToKey_WhenDatabaseLanguageIsMissing()
+    {
+        var errorKey = "tenant.custom.missing-language";
+        var culture = new CultureInfo("fr-FR");
+        var localizationServiceMock = new Mock<ILocalizationService>();
+
+        _languageRepositoryMock
+            .Setup(x => x.GetByCodeAsync(culture.Name, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Language?)null);
+
+        var service = CreateService(localizationServiceMock.Object);
+
+        var result = service.GetErrorMessage(errorKey, culture);
+
+        result.Should().Be(errorKey);
+    }
+
+    [Fact]
+    public void GetErrorMessage_FallsBackToKey_WhenDatabaseTranslationDoesNotMatchLanguage()
+    {
+        var errorKey = "tenant.custom.no-match";
+        var culture = new CultureInfo("es-ES");
+        var expectedLanguageId = Guid.NewGuid();
+        var localizationServiceMock = new Mock<ILocalizationService>();
+
+        _languageRepositoryMock
+            .Setup(x => x.GetByCodeAsync(culture.Name, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Language { Id = expectedLanguageId, Code = culture.Name, Name = "Spanish", IsActive = true });
+        localizationServiceMock
+            .Setup(x => x.GetLocalizationsForFieldAsync(It.IsAny<Guid>(), errorKey, It.IsAny<CancellationToken>()))
+            .ReturnsAsync([
+                CreateDatabaseLocalization(Guid.NewGuid(), "Mensagem de outro idioma")
+            ]);
+
+        var service = CreateService(localizationServiceMock.Object);
+
+        var result = service.GetErrorMessage(errorKey, culture);
+
+        result.Should().Be(errorKey);
+    }
+
+    [Fact]
+    public void GetErrorMessage_FallsBackToKey_WhenDatabaseLookupThrows()
+    {
+        var errorKey = "tenant.custom.lookup-exception";
+        var culture = new CultureInfo("de-DE");
+        var languageId = Guid.NewGuid();
+        var localizationServiceMock = new Mock<ILocalizationService>();
+
+        _languageRepositoryMock
+            .Setup(x => x.GetByCodeAsync(culture.Name, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Language { Id = languageId, Code = culture.Name, Name = "German", IsActive = true });
+        localizationServiceMock
+            .Setup(x => x.GetLocalizationsForFieldAsync(It.IsAny<Guid>(), errorKey, It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new InvalidOperationException("lookup failed"));
+
+        var service = CreateService(localizationServiceMock.Object);
+
+        var result = service.GetErrorMessage(errorKey, culture);
+
+        result.Should().Be(errorKey);
+    }
+
+    [Fact]
+    public void HasTranslation_UsesDatabaseTranslation_WhenServiceProvided()
+    {
+        var errorKey = "tenant.custom.database-only";
+        var localizationServiceMock = new Mock<ILocalizationService>();
+
+        localizationServiceMock
+            .Setup(x => x.GetLocalizationsForFieldAsync(It.IsAny<Guid>(), errorKey, It.IsAny<CancellationToken>()))
+            .ReturnsAsync([
+                CreateDatabaseLocalization(Guid.NewGuid(), "Stored override")
+            ]);
+
+        var service = CreateService(localizationServiceMock.Object);
+
+        var result = service.HasTranslation(errorKey);
+
+        result.Should().BeTrue();
+    }
+
+    [Fact]
+    public void HasTranslation_ReturnsFalse_WhenDatabaseLookupThrows()
+    {
+        var errorKey = "tenant.custom.lookup-failure";
+        var localizationServiceMock = new Mock<ILocalizationService>();
+
+        localizationServiceMock
+            .Setup(x => x.GetLocalizationsForFieldAsync(It.IsAny<Guid>(), errorKey, It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new InvalidOperationException("boom"));
+
+        var service = CreateService(localizationServiceMock.Object);
+
+        var result = service.HasTranslation(errorKey);
+
+        result.Should().BeFalse();
+    }
+
+    [Fact]
     public void GetErrorMessage_ReturnsFormattedMessage_WithArgs()
     {
         // Arrange
@@ -236,5 +408,28 @@ public class LocalizedErrorServiceTests
         _service.GetErrorMessage(ErrorMessageKeys.Asset.TokenExpired).Should().Contain("expired");
         _service.GetErrorMessage(ErrorMessageKeys.Asset.TokenInvalid).Should().Contain("invalid");
         _service.GetErrorMessage(ErrorMessageKeys.Asset.DownloadLimitExceeded).Should().Contain("exceeded");
+    }
+
+    private LocalizedErrorService CreateService(ILocalizationService localizationService)
+    {
+        return new LocalizedErrorService(
+            _localizationContextMock.Object,
+            _languageRepositoryMock.Object,
+            _cache,
+            _loggerMock.Object,
+            localizationService);
+    }
+
+    private static ResourceLocalization CreateDatabaseLocalization(Guid languageId, string content)
+    {
+        return new ResourceLocalization
+        {
+            ResourceId = Guid.NewGuid(),
+            LanguageId = languageId,
+            FieldName = "ErrorKey",
+            Content = content,
+            ResourceType = "ErrorMessage",
+            Status = LocalizationStatus.Published
+        };
     }
 }

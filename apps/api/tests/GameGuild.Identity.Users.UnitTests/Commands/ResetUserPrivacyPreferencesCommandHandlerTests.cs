@@ -21,10 +21,10 @@ public class ResetUserPrivacyPreferencesCommandHandlerTests
     [Fact]
     public async Task Handle_WithExistingPreferences_ShouldResetPrivacyPreferences()
     {
-        // Arrange
         var userId = Guid.NewGuid();
         var user = User.Create("test@example.com", "Test User", null);
         var existingPreferences = UserPreferences.Create(userId);
+        existingPreferences.SetPrivacyPreferences(new Dictionary<string, object?> { ["profileVisible"] = true, ["shareData"] = false });
         var command = new ResetUserPrivacyPreferencesCommand(userId);
 
         _userRepositoryMock
@@ -39,14 +39,13 @@ public class ResetUserPrivacyPreferencesCommandHandlerTests
             .Setup(x => x.UpdateAsync(It.IsAny<UserPreferences>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
-        // Act
         var result = await _handler.Handle(command, CancellationToken.None);
 
-        // Assert
         result.Should().Be(Unit.Value);
         _preferencesRepositoryMock.Verify(
             x => x.UpdateAsync(It.IsAny<UserPreferences>(), It.IsAny<CancellationToken>()),
             Times.Once);
+        existingPreferences.GetPrivacyPreferences().Should().BeEmpty();
     }
 
     [Fact]
@@ -63,5 +62,25 @@ public class ResetUserPrivacyPreferencesCommandHandlerTests
         // Act & Assert
         await Assert.ThrowsAsync<UserNotFoundException>(() => 
             _handler.Handle(command, CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task Handle_WithMissingPreferences_ShouldCreatePreferencesWithoutUpdating()
+    {
+        var userId = Guid.NewGuid();
+        var user = User.Create("test@example.com", "Test User", null);
+        var command = new ResetUserPrivacyPreferencesCommand(userId);
+
+        _userRepositoryMock.Setup(x => x.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(user);
+        _preferencesRepositoryMock.Setup(x => x.GetByUserIdAsync(userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((UserPreferences?)null);
+        _preferencesRepositoryMock.Setup(x => x.AddAsync(It.IsAny<UserPreferences>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+
+        await _handler.Handle(command, CancellationToken.None);
+
+        _preferencesRepositoryMock.Verify(x => x.AddAsync(It.IsAny<UserPreferences>(), It.IsAny<CancellationToken>()), Times.Once);
+        _preferencesRepositoryMock.Verify(x => x.UpdateAsync(It.IsAny<UserPreferences>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 }

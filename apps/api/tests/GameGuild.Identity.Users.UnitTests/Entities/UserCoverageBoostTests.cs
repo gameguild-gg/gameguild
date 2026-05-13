@@ -1,23 +1,11 @@
 using FluentAssertions;
-
 using GameGuild.Identity.Tenants;
-
 using Xunit;
 
-namespace GameGuild.Identity.Users.Tests;
+namespace GameGuild.Identity.Users.UnitTests.Entities;
 
-/// <summary>
-///     Coverage-boost tests for User entity methods not yet covered by existing tests.
-///     Targets: SetPasswordHash, IncrementTokenVersion, HasPassword, RecordLogin,
-///     VerifyEmail, Suspend, Unsuspend, MarkDeleted, RestoreUser, ValidatePurge,
-///     CanPerformActions, CanSignIn, ValidateForAuthentication, ValidateForRegistration,
-///     ValidateForTenantJoin, RequiresEmailVerification, GetRoleInTenant, IsMemberOfTenant,
-///     GetActiveTenantIds, CreateWithPassword, CreateOAuthUser.
-/// </summary>
 public class UserCoverageBoostTests
 {
-    // ── Authentication Methods ───────────────────────────────────────────
-
     [Fact]
     public void SetPasswordHash_ValidHash_ShouldSetAndIncrementTokenVersion()
     {
@@ -37,8 +25,10 @@ public class UserCoverageBoostTests
     public void SetPasswordHash_NullOrEmpty_ShouldThrow(string? hash)
     {
         var user = User.Create("test@example.com", "Test");
-        var act = () => user.SetPasswordHash(hash!);
-        act.Should().Throw<ArgumentException>();
+
+        var action = () => user.SetPasswordHash(hash!);
+
+        action.Should().Throw<ArgumentException>();
     }
 
     [Fact]
@@ -57,6 +47,7 @@ public class UserCoverageBoostTests
     public void HasPassword_WithHash_ShouldBeTrue()
     {
         var user = User.CreateWithPassword("test@example.com", "Test", "$2a$hash");
+
         user.HasPassword.Should().BeTrue();
     }
 
@@ -64,6 +55,7 @@ public class UserCoverageBoostTests
     public void HasPassword_WithoutHash_ShouldBeFalse()
     {
         var user = User.CreateOAuthUser("test@example.com", "Test");
+
         user.HasPassword.Should().BeFalse();
     }
 
@@ -82,14 +74,11 @@ public class UserCoverageBoostTests
     public void VerifyEmail_ShouldSetVerified()
     {
         var user = User.Create("test@example.com", "Test");
-        user.IsEmailVerified.Should().BeFalse();
 
         user.VerifyEmail();
 
         user.IsEmailVerified.Should().BeTrue();
     }
-
-    // ── Status Methods ───────────────────────────────────────────────────
 
     [Fact]
     public void Suspend_ShouldSetSuspended()
@@ -117,6 +106,7 @@ public class UserCoverageBoostTests
     public void CanPerformActions_ActiveNotSuspended_ShouldBeTrue()
     {
         var user = User.Create("test@example.com", "Test");
+
         user.CanPerformActions.Should().BeTrue();
     }
 
@@ -125,6 +115,7 @@ public class UserCoverageBoostTests
     {
         var user = User.Create("test@example.com", "Test");
         user.Suspend();
+
         user.CanPerformActions.Should().BeFalse();
     }
 
@@ -132,6 +123,7 @@ public class UserCoverageBoostTests
     public void CanSignIn_Active_ShouldBeTrue()
     {
         var user = User.Create("test@example.com", "Test");
+
         user.CanSignIn.Should().BeTrue();
     }
 
@@ -140,6 +132,7 @@ public class UserCoverageBoostTests
     {
         var user = User.Create("test@example.com", "Test");
         user.Deactivate();
+
         user.CanSignIn.Should().BeFalse();
     }
 
@@ -157,13 +150,11 @@ public class UserCoverageBoostTests
         user.Status.StatusName.Should().Be("Inactive (Suspended)");
     }
 
-    // ── Lifecycle Methods ────────────────────────────────────────────────
-
     [Fact]
     public void MarkDeleted_ShouldSoftDeleteAndDeactivate()
     {
         var user = User.Create("test@example.com", "Test");
-        typeof(EntityBase<Guid>).GetProperty(nameof(EntityBase.Version))!.SetValue(user, 1);
+        user.Version = 1;
 
         user.MarkDeleted();
 
@@ -175,7 +166,7 @@ public class UserCoverageBoostTests
     public void RestoreUser_ShouldRestoreAndActivate()
     {
         var user = User.Create("test@example.com", "Test");
-        typeof(EntityBase<Guid>).GetProperty(nameof(EntityBase.Version))!.SetValue(user, 1);
+        user.Version = 1;
         user.MarkDeleted();
 
         user.RestoreUser();
@@ -189,25 +180,40 @@ public class UserCoverageBoostTests
     {
         var user = User.Create("test@example.com", "Test");
 
-        var act = () => user.ValidatePurge();
+        var action = () => user.ValidatePurge();
 
-        act.Should().Throw<InvalidOperationException>()
+        action.Should().Throw<InvalidOperationException>()
             .WithMessage("*soft-deleted*");
     }
 
     [Fact]
-    public void ValidatePurge_DeletedNoMemberships_ShouldNotThrow()
+    public void ValidatePurge_DeletedWithActiveMembership_ShouldThrow()
     {
+        var tenantId = Guid.NewGuid();
         var user = User.Create("test@example.com", "Test");
-        typeof(EntityBase<Guid>).GetProperty(nameof(EntityBase.Version))!.SetValue(user, 1);
+        user.Version = 1;
         user.MarkDeleted();
+        user.TenantMemberships.Add(new TenantMember { TenantId = tenantId, IsActive = true, Role = "Admin" });
 
-        var act = () => user.ValidatePurge();
+        var action = () => user.ValidatePurge();
 
-        act.Should().NotThrow();
+        action.Should().Throw<InvalidOperationException>()
+            .WithMessage("*active tenant memberships*");
     }
 
-    // ── ValidateForAuthentication ────────────────────────────────────────
+    [Fact]
+    public void ValidatePurge_DeletedNoActiveMemberships_ShouldNotThrow()
+    {
+        var tenantId = Guid.NewGuid();
+        var user = User.Create("test@example.com", "Test");
+        user.Version = 1;
+        user.MarkDeleted();
+        user.TenantMemberships.Add(new TenantMember { TenantId = tenantId, IsActive = false, Role = "Member" });
+
+        var action = () => user.ValidatePurge();
+
+        action.Should().NotThrow();
+    }
 
     [Fact]
     public void ValidateForAuthentication_ValidUser_ShouldSucceed()
@@ -254,8 +260,6 @@ public class UserCoverageBoostTests
         result.FailureReason.Should().Be(UserAuthenticationFailure.TokenRevoked);
     }
 
-    // ── ValidateForRegistration ──────────────────────────────────────────
-
     [Fact]
     public void ValidateForRegistration_ValidUser_ShouldSucceed()
     {
@@ -264,16 +268,18 @@ public class UserCoverageBoostTests
         var result = user.ValidateForRegistration();
 
         result.IsSuccess.Should().BeTrue();
+        result.Errors.Should().BeEmpty();
     }
 
     [Fact]
     public void ValidateForRegistration_EmptyEmail_ShouldFail()
     {
-        var user = new User { Email = "", Name = "Test User" };
+        var user = new User { Email = string.Empty, Name = "Test User" };
 
         var result = user.ValidateForRegistration();
 
         result.IsSuccess.Should().BeFalse();
+        result.Errors.Should().Contain(e => e.Contains("Email is required."));
     }
 
     [Fact]
@@ -284,6 +290,7 @@ public class UserCoverageBoostTests
         var result = user.ValidateForRegistration();
 
         result.IsSuccess.Should().BeFalse();
+        result.Errors.Should().Contain(e => e.Contains("Email format is invalid."));
     }
 
     [Fact]
@@ -294,19 +301,18 @@ public class UserCoverageBoostTests
         var result = user.ValidateForRegistration();
 
         result.IsSuccess.Should().BeFalse();
+        result.Errors.Should().Contain(e => e.Contains("Name must be at least 2 characters."));
     }
-
-    // ── ValidateForTenantJoin ────────────────────────────────────────────
 
     [Fact]
     public void ValidateForTenantJoin_ActiveUser_ShouldSucceed()
     {
         var user = User.Create("test@example.com", "Test");
-        var tenantId = Guid.NewGuid();
 
-        var result = user.ValidateForTenantJoin(tenantId);
+        var result = user.ValidateForTenantJoin(Guid.NewGuid());
 
         result.IsSuccess.Should().BeTrue();
+        result.Error.Should().BeNull();
     }
 
     [Fact]
@@ -318,6 +324,7 @@ public class UserCoverageBoostTests
         var result = user.ValidateForTenantJoin(Guid.NewGuid());
 
         result.IsSuccess.Should().BeFalse();
+        result.Error.Should().Be("User account is inactive.");
     }
 
     [Fact]
@@ -329,9 +336,21 @@ public class UserCoverageBoostTests
         var result = user.ValidateForTenantJoin(Guid.NewGuid());
 
         result.IsSuccess.Should().BeFalse();
+        result.Error.Should().Be("User account is suspended.");
     }
 
-    // ── RequiresEmailVerification ────────────────────────────────────────
+    [Fact]
+    public void ValidateForTenantJoin_WhenAlreadyMember_ShouldFail()
+    {
+        var tenantId = Guid.NewGuid();
+        var user = User.Create("test@example.com", "Test");
+        user.TenantMemberships.Add(new TenantMember { TenantId = tenantId, IsActive = true, Role = "Member" });
+
+        var result = user.ValidateForTenantJoin(tenantId);
+
+        result.IsSuccess.Should().BeFalse();
+        result.Error.Should().Be("User is already a member of this tenant.");
+    }
 
     [Fact]
     public void RequiresEmailVerification_Unverified_ShouldReturnTrue()
@@ -358,14 +377,32 @@ public class UserCoverageBoostTests
         user.RequiresEmailVerification(false).Should().BeFalse();
     }
 
-    // ── Tenant Membership Methods ────────────────────────────────────────
-
     [Fact]
     public void GetRoleInTenant_NoMemberships_ShouldReturnNull()
     {
         var user = User.Create("test@example.com", "Test");
 
         user.GetRoleInTenant(Guid.NewGuid()).Should().BeNull();
+    }
+
+    [Fact]
+    public void GetRoleInTenant_ActiveMembership_ShouldReturnRole()
+    {
+        var tenantId = Guid.NewGuid();
+        var user = User.Create("test@example.com", "Test");
+        user.TenantMemberships.Add(new TenantMember { TenantId = tenantId, IsActive = true, Role = "Admin" });
+
+        user.GetRoleInTenant(tenantId).Should().Be("Admin");
+    }
+
+    [Fact]
+    public void GetRoleInTenant_InactiveMembership_ShouldReturnNull()
+    {
+        var tenantId = Guid.NewGuid();
+        var user = User.Create("test@example.com", "Test");
+        user.TenantMemberships.Add(new TenantMember { TenantId = tenantId, IsActive = false, Role = "Admin" });
+
+        user.GetRoleInTenant(tenantId).Should().BeNull();
     }
 
     [Fact]
@@ -377,6 +414,26 @@ public class UserCoverageBoostTests
     }
 
     [Fact]
+    public void IsMemberOfTenant_ActiveMembership_ShouldReturnTrue()
+    {
+        var tenantId = Guid.NewGuid();
+        var user = User.Create("test@example.com", "Test");
+        user.TenantMemberships.Add(new TenantMember { TenantId = tenantId, IsActive = true, Role = "Member" });
+
+        user.IsMemberOfTenant(tenantId).Should().BeTrue();
+    }
+
+    [Fact]
+    public void IsMemberOfTenant_InactiveMembership_ShouldReturnFalse()
+    {
+        var tenantId = Guid.NewGuid();
+        var user = User.Create("test@example.com", "Test");
+        user.TenantMemberships.Add(new TenantMember { TenantId = tenantId, IsActive = false, Role = "Member" });
+
+        user.IsMemberOfTenant(tenantId).Should().BeFalse();
+    }
+
+    [Fact]
     public void GetActiveTenantIds_NoMemberships_ShouldReturnEmpty()
     {
         var user = User.Create("test@example.com", "Test");
@@ -384,7 +441,17 @@ public class UserCoverageBoostTests
         user.GetActiveTenantIds().Should().BeEmpty();
     }
 
-    // ── Factory Methods ──────────────────────────────────────────────────
+    [Fact]
+    public void GetActiveTenantIds_ShouldReturnOnlyActiveMemberships()
+    {
+        var activeTenantId = Guid.NewGuid();
+        var inactiveTenantId = Guid.NewGuid();
+        var user = User.Create("test@example.com", "Test");
+        user.TenantMemberships.Add(new TenantMember { TenantId = activeTenantId, IsActive = true, Role = "Admin" });
+        user.TenantMemberships.Add(new TenantMember { TenantId = inactiveTenantId, IsActive = false, Role = "Member" });
+
+        user.GetActiveTenantIds().Should().BeEquivalentTo([activeTenantId]);
+    }
 
     [Fact]
     public void CreateWithPassword_ValidArgs_ShouldCreateUser()
@@ -413,8 +480,9 @@ public class UserCoverageBoostTests
     [InlineData("email@test.com", "Name", null)]
     public void CreateWithPassword_NullArgs_ShouldThrow(string? email, string? name, string? hash)
     {
-        var act = () => User.CreateWithPassword(email!, name!, hash!);
-        act.Should().Throw<ArgumentException>();
+        var action = () => User.CreateWithPassword(email!, name!, hash!);
+
+        action.Should().Throw<ArgumentException>();
     }
 
     [Fact]
@@ -427,7 +495,7 @@ public class UserCoverageBoostTests
         user.PasswordHash.Should().BeNull();
         user.HasPassword.Should().BeFalse();
         user.IsActive.Should().BeTrue();
-        user.IsEmailVerified.Should().BeTrue(); // OAuth emails pre-verified
+        user.IsEmailVerified.Should().BeTrue();
     }
 
     [Theory]
@@ -435,7 +503,8 @@ public class UserCoverageBoostTests
     [InlineData("email@test.com", null)]
     public void CreateOAuthUser_NullArgs_ShouldThrow(string? email, string? name)
     {
-        var act = () => User.CreateOAuthUser(email!, name!);
-        act.Should().Throw<ArgumentException>();
+        var action = () => User.CreateOAuthUser(email!, name!);
+
+        action.Should().Throw<ArgumentException>();
     }
 }

@@ -26,6 +26,30 @@ public class CachedLocalizationServiceTests
     }
 
     [Fact]
+    public void Constructor_ThrowsOnNullInnerService()
+    {
+        var act = () => new CachedLocalizationService(null!, _cache, _loggerMock.Object);
+
+        act.Should().Throw<ArgumentNullException>().WithParameterName("inner");
+    }
+
+    [Fact]
+    public void Constructor_ThrowsOnNullCache()
+    {
+        var act = () => new CachedLocalizationService(_innerServiceMock.Object, null!, _loggerMock.Object);
+
+        act.Should().Throw<ArgumentNullException>().WithParameterName("cache");
+    }
+
+    [Fact]
+    public void Constructor_ThrowsOnNullLogger()
+    {
+        var act = () => new CachedLocalizationService(_innerServiceMock.Object, _cache, null!);
+
+        act.Should().Throw<ArgumentNullException>().WithParameterName("logger");
+    }
+
+    [Fact]
     public async Task GetLocalizationAsync_CachesResult_OnFirstCall()
     {
         // Arrange

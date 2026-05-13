@@ -62,4 +62,42 @@ public class UpdateUserProfileCommandHandlerTests
         await Assert.ThrowsAsync<UserNotFoundException>(
             () => _handler.Handle(command, CancellationToken.None));
     }
+
+    [Fact]
+    public async Task Handle_WhenProfileDoesNotExist_ShouldCreateAndPopulateProfile()
+    {
+        var userId = Guid.NewGuid();
+        var user = new User { Id = userId, Email = "test@example.com", Name = "Test User" };
+        var request = new UpdateUserProfileRequest(
+            DisplayName: "Display Name",
+            Bio: "Bio",
+            Location: "Tokyo",
+            Website: "https://example.com",
+            JobTitle: "Engineer",
+            Company: "GameGuild");
+        var command = new UpdateUserProfileCommand(userId, request);
+
+        _userRepositoryMock.Setup(x => x.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(user);
+        _profileRepositoryMock.Setup(x => x.GetByUserIdAsync(userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((UserProfile?)null);
+        _profileRepositoryMock.Setup(x => x.AddAsync(It.IsAny<UserProfile>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+        _profileRepositoryMock.Setup(x => x.UpdateAsync(It.IsAny<UserProfile>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+
+        await _handler.Handle(command, CancellationToken.None);
+
+        _profileRepositoryMock.Verify(x => x.AddAsync(
+            It.Is<UserProfile>(profile =>
+                profile.UserId == userId &&
+                profile.DisplayName == "Display Name" &&
+                profile.Bio == "Bio" &&
+                profile.Location == "Tokyo" &&
+                profile.Website == "https://example.com" &&
+                profile.JobTitle == "Engineer" &&
+                profile.Company == "GameGuild"),
+            It.IsAny<CancellationToken>()), Times.Once);
+        _profileRepositoryMock.Verify(x => x.UpdateAsync(It.IsAny<UserProfile>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
 }

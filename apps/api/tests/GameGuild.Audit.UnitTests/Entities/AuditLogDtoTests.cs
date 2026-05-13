@@ -302,7 +302,8 @@ public class AuditLogDtoTests
             ErrorMessage = null,
             RiskLevel = AuditRiskLevel.High,
             Category = AuditCategory.Authorization,
-            CorrelationId = "corr-security-123"
+            CorrelationId = "corr-security-123",
+            CreatedAt = DateTime.UtcNow
         };
 
         // Assert

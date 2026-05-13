@@ -321,7 +321,7 @@ public class Order : StatefulEntity<OrderStatus>
     /// <exception cref="InvalidOperationException">Thrown when order already has a different payment</exception>
     public void AssociatePayment(Guid paymentId)
     {
-        if (PaymentId.HasValue && PaymentId != paymentId)
+        if (PaymentId is Guid existingPaymentId && existingPaymentId != paymentId)
             throw new InvalidOperationException($"Order {Id} already has payment {PaymentId}. Single payment per order enforced.");
         
         PaymentId = paymentId;

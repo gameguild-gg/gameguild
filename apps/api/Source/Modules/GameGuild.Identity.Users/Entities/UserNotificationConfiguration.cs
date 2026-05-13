@@ -10,11 +10,9 @@ public class UserNotificationConfiguration : IEntityTypeConfiguration<UserNotifi
 {
     public void Configure(EntityTypeBuilder<UserNotification> builder)
     {
-        // Configure relationships
-        builder.HasOne(un => un.User)
-            .WithMany(u => u.Notifications)
-            .HasForeignKey(un => un.UserId)
-            .OnDelete(DeleteBehavior.Cascade);
+        // Configure relationships — specify inverse navigation (u.Notifications)
+        // to avoid EF creating a shadow UserId1 FK.
+        builder.HasOne(un => un.User).WithMany(u => u.Notifications).HasForeignKey(un => un.UserId).OnDelete(DeleteBehavior.Cascade);
 
         // Configure indexes
         builder.HasIndex(un => un.UserId);

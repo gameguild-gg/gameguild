@@ -38,7 +38,13 @@ public sealed class ModuleRegistry
 
         foreach (var assembly in assemblies)
         {
-            var moduleTypes = assembly.GetTypes()
+            Type[] allTypes;
+            try { allTypes = assembly.GetTypes(); }
+            catch (ReflectionTypeLoadException ex)
+            {
+                allTypes = ex.Types.Where(t => t is not null).ToArray()!;
+            }
+            var moduleTypes = allTypes
                 .Where(t => t.IsClass && !t.IsAbstract && typeof(IModule).IsAssignableFrom(t));
 
             foreach (var moduleType in moduleTypes)

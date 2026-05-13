@@ -47,13 +47,13 @@ public sealed class GetUserNotificationsPagedQueryHandler(IUserNotificationRepos
             null, // ActionText not in entity yet
             null, // ImageUrl not in entity yet
             string.IsNullOrEmpty(notification.Metadata)
-                ? new Dictionary<string, object?>()
-                : JsonSerializer.Deserialize<Dictionary<string, object?>>(notification.Metadata) ?? new Dictionary<string, object?>(),
+                ? new Dictionary<string, JsonElement>()
+                : JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(notification.Metadata) ?? new Dictionary<string, JsonElement>(),
             notification.CreatedAt,
             new DateTimeOffset(notification.UpdatedAt, TimeSpan.Zero),
             BitConverter.GetBytes(notification.Version)
         )).ToList();
 
-        return new PagedResult<UserNotificationDto>(notificationDtos, totalCount, request.PageNumber, request.PageSize);
+        return PagedResult<UserNotificationDto>.FromPage(notificationDtos, totalCount, request.PageNumber, request.PageSize);
     }
 }

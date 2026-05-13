@@ -71,7 +71,7 @@ public class TransformedAssetCleanupService : BackgroundService
             {
                 // Delete from storage
                 await storageService.DeleteAsync(
-                    storageOptions.TransformedBucketName,
+                    storageOptions.GetTransformedBucketName(),
                     asset.ObjectKey,
                     ct).ConfigureAwait(false);
 

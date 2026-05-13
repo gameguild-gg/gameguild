@@ -1,0 +1,15 @@
+global using FluentAssertions;
+global using Microsoft.AspNetCore.Http;
+global using Microsoft.AspNetCore.Mvc;
+global using Microsoft.EntityFrameworkCore;
+global using Microsoft.EntityFrameworkCore.Storage;
+global using Microsoft.Extensions.DependencyInjection;
+global using Microsoft.Extensions.Logging.Abstractions;
+global using Moq;
+global using GameGuild;
+global using GameGuild.Identity.Context.Actors;
+global using GameGuild.Notifications;
+global using GameGuild.Notifications.Configuration;
+global using GameGuild.Notifications.Controllers;
+global using GameGuild.Notifications.Services;
+global using Xunit;

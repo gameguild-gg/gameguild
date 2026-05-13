@@ -38,6 +38,61 @@ public class BatchLocalizationLoaderTests
     }
 
     [Fact]
+    public async Task LoadLocalizationsAsync_UsesCachedEntries_ForAllResources_WhenLanguageIsNotSpecified()
+    {
+        var resourceId = Guid.NewGuid();
+        var cachedLocalizations = new List<GameGuild.Localization.ResourceLocalization>
+        {
+            new()
+            {
+                ResourceId = resourceId,
+                LanguageId = Guid.NewGuid(),
+                FieldName = "Title",
+                Content = "Cached Title",
+                ResourceType = "Test",
+                Status = GameGuild.Localization.LocalizationStatus.Published
+            }
+        };
+
+        _cache.Set($"loc:batch:{resourceId}:all", cachedLocalizations, new MemoryCacheEntryOptions { Size = 2 });
+        var loader = new GameGuild.Localization.BatchLocalizationLoader(_mockContext.Object, _cache, _logger);
+
+        var result = await loader.LoadLocalizationsAsync([resourceId]);
+
+        result.Should().ContainKey(resourceId);
+        result[resourceId].Should().BeEquivalentTo(cachedLocalizations);
+        _mockContext.Verify(c => c.Set<GameGuild.Localization.ResourceLocalization>(), Times.Never);
+    }
+
+    [Fact]
+    public async Task LoadLocalizationsAsync_UsesCachedEntries_ForSpecificLanguage()
+    {
+        var resourceId = Guid.NewGuid();
+        var languageId = Guid.NewGuid();
+        var cachedLocalizations = new List<GameGuild.Localization.ResourceLocalization>
+        {
+            new()
+            {
+                ResourceId = resourceId,
+                LanguageId = languageId,
+                FieldName = "Title",
+                Content = "Localized Title",
+                ResourceType = "Test",
+                Status = GameGuild.Localization.LocalizationStatus.Published
+            }
+        };
+
+        _cache.Set($"loc:batch:{resourceId}:{languageId}", cachedLocalizations, new MemoryCacheEntryOptions { Size = 2 });
+        var loader = new GameGuild.Localization.BatchLocalizationLoader(_mockContext.Object, _cache, _logger);
+
+        var result = await loader.LoadLocalizationsAsync([resourceId], languageId);
+
+        result.Should().ContainKey(resourceId);
+        result[resourceId].Should().BeEquivalentTo(cachedLocalizations);
+        _mockContext.Verify(c => c.Set<GameGuild.Localization.ResourceLocalization>(), Times.Never);
+    }
+
+    [Fact]
     public async Task GetLocalizedFieldAsync_CachesResult()
     {
         // Arrange

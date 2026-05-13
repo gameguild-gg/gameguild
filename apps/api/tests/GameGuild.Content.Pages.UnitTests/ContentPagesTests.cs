@@ -1,4 +1,7 @@
 using FluentAssertions;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
+using GameGuild;
 using GameGuild.Content.Pages;
 using Xunit;
 
@@ -489,6 +492,65 @@ public class MappingExtensionsTests
         og.Title.Should().Be("Meta Title");
         og.Description.Should().Be("Meta Description");
         og.OgImageUrl.Should().Be("https://img.com/og.png"); // prefers OgImageUrl
+    }
+}
+
+#endregion
+
+#region Marketing Lead Service Tests
+
+public class MarketingLeadServiceTests
+{
+    [Fact]
+    public async Task ListAsync_MixedCaseFilters_ReturnsMatchingLead()
+    {
+        await using var db = CreateDbContext();
+        db.Set<MarketingLead>().AddRange(
+            new MarketingLead
+            {
+                Source = MarketingLeadSources.Contact,
+                Status = MarketingLeadStatuses.Reviewed,
+                Topic = MarketingLeadTopics.Sales,
+                Email = "sales@example.com"
+            },
+            new MarketingLead
+            {
+                Source = MarketingLeadSources.Newsletter,
+                Status = MarketingLeadStatuses.New,
+                Topic = MarketingLeadTopics.Support,
+                Email = "newsletter@example.com"
+            });
+        await db.SaveChangesAsync();
+
+        var service = new MarketingLeadService(db);
+
+        var results = await service.ListAsync(" CONTACT ", " REVIEWED ", " SALES ", null, 0, 10);
+
+        results.Should().ContainSingle();
+        results[0].Email.Should().Be("sales@example.com");
+    }
+
+    private static TestContentPagesDbContext CreateDbContext()
+    {
+        var options = new DbContextOptionsBuilder<TestContentPagesDbContext>()
+            .UseInMemoryDatabase(Guid.NewGuid().ToString())
+            .Options;
+
+        return new TestContentPagesDbContext(options);
+    }
+
+    private sealed class TestContentPagesDbContext(DbContextOptions<TestContentPagesDbContext> options)
+        : DbContext(options), IApplicationDbContext
+    {
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<MarketingLead>();
+        }
+
+        public Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default)
+        {
+            throw new NotSupportedException();
+        }
     }
 }
 
