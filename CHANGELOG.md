@@ -1,3 +1,9 @@
+# [3.5.2](https://github.com/gameguild-gg/gameguild/compare/v3.5.1...v3.5.2) (2026-05-13)
+
+### Bug Fixes
+
+* **ci:** skip prepack on npm publish — dist+cdn already staged by build job ([b17da38](https://github.com/gameguild-gg/gameguild/commit/b17da384c6d650abfba1f8d84054d1347fa116e5))
+
 # [3.5.1](https://github.com/gameguild-gg/gameguild/compare/v3.5.0...v3.5.1) (2026-05-13)
 
 ### Bug Fixes
