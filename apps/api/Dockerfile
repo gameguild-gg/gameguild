@@ -8,11 +8,8 @@ COPY . .
 # Restore dependencies for the actual API project
 RUN dotnet restore "Source/GameGuild.API/GameGuild.API.csproj"
 
-# Build the application
-RUN dotnet build "Source/GameGuild.API/GameGuild.API.csproj" -c Release -o /app/build
-
-# Publish the application
-RUN dotnet publish "Source/GameGuild.API/GameGuild.API.csproj" -c Release -o /app/publish /p:UseAppHost=false
+# Publish the application from restored assets without a redundant intermediate build
+RUN dotnet publish "Source/GameGuild.API/GameGuild.API.csproj" -c Release -o /app/publish /p:UseAppHost=false --no-restore
 
 # Stage 2: Runtime stage
 FROM mcr.microsoft.com/dotnet/aspnet:9.0-alpine AS runtime

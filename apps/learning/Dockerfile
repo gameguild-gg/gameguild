@@ -13,7 +13,7 @@ COPY packages ./packages
 
 RUN pnpm install --frozen-lockfile --prefer-offline
 
-FROM node:${NODE_VERSION} AS builder
+FROM deps AS builder
 ARG GIT_HASH
 ARG NEXTAUTH_SECRET
 ARG AUTH_SECRET
@@ -31,13 +31,8 @@ ENV API_URL=${API_INTERNAL_URL:-http://api:8080}
 ENV NEXT_PUBLIC_API_URL=${API_PUBLIC_URL}
 ENV NEXT_PUBLIC_WEB_URL=${WEB_PUBLIC_URL}
 
-RUN corepack enable && corepack prepare pnpm@10.0.0 --activate
-WORKDIR /repo
-
-COPY --from=deps /repo /repo
 COPY . .
 
-RUN rm -rf node_modules && pnpm install --frozen-lockfile --prefer-offline
 RUN export AUTH_SECRET="${AUTH_SECRET:-$NEXTAUTH_SECRET}" \
     NEXTAUTH_SECRET="${NEXTAUTH_SECRET:-$AUTH_SECRET}" \
     && if [ -z "$AUTH_SECRET" ]; then echo "AUTH_SECRET or NEXTAUTH_SECRET build arg is required" >&2; exit 1; fi \
