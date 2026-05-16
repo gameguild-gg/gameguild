@@ -1911,21 +1911,25 @@ sys.excepthook = _hook
       // asyncify deadlock that happens when SDL3 headers are loaded lazily via
       // the open() syscall hook. Hint-based scoping proved too fragile across
       // the worker RPC chain and Vite's worker bundle caching.
+      const needsImgui = (options.hints?.bundlesNeeded ?? []).includes('sdl3');
       try {
         await Promise.all([
           this.vfs.preloadBundle('clang-headers'),
           this.vfs.preloadBundle('usr-include'),
           this.vfs.preloadBundle('sdl3'),
           this.vfs.preloadBundle('cache-core'),
+          ...(needsImgui ? [this.vfs.preloadBundle('imgui').catch(() => {})] : []),
         ]);
-        console.log(`${LOG_PREFIX}   Preloaded clang-headers + usr-include + sdl3 + cache-core bundles for clang in ${elapsed(tPreload)}`);
+        console.log(
+          `${LOG_PREFIX}   Preloaded clang-headers + usr-include + sdl3 + cache-core${needsImgui ? ' + imgui' : ''} bundles for clang in ${elapsed(tPreload)}`,
+        );
       } catch (e) {
         console.warn(`${LOG_PREFIX}   ⚠️ Failed to preload clang bundles:`, e);
       }
 
       // Pre-warm header files into clang's Emscripten FS
       const tWarm = performance.now();
-      const bundlesToWarm = ['clang-headers', 'usr-include', 'sdl3'];
+      const bundlesToWarm = needsImgui ? ['clang-headers', 'usr-include', 'sdl3', 'imgui'] : ['clang-headers', 'usr-include', 'sdl3'];
       const headerPaths: string[] = [];
       for (const bundleName of bundlesToWarm) {
         for (const fp of this.vfs.getBundleFilePaths(bundleName)) {
