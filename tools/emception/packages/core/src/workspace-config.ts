@@ -18,11 +18,21 @@ export type DockGroup = 'main' | 'right' | 'bottom';
 /** How the IDE should execute the build artefact. */
 export type RunType = 'canvas' | 'wasi-terminal' | 'cmake-build' | 'python-script';
 
+/**
+ * Which canvas runtime preset to use for this workspace.
+ * When set, the IDE uses this instead of heuristics (tool name, workspace id,
+ * or compile args) to select the correct runtime module and build preset.
+ * Mirrors the key names in BrowserBuildPresets (@emception/browser).
+ */
+export type CanvasPresetName = 'sdl' | 'raylib' | 'allegro';
+
 export interface CompileConfig {
   tool: string;
   args: string[];
   cwd?: string;
   output: string;
+  /** Canvas runtime preset — set for SDL3/raylib/Allegro workspaces. */
+  canvasPreset?: CanvasPresetName;
   sourceDetect?: {
     extensions: string[];
     entryPoint?: string;

@@ -60,6 +60,16 @@ export interface RunOptions {
    * filesystem access.
    */
   isInfoQuery?: boolean;
+  /**
+   * Performance hints for bundle preloading.
+   * - `bundlesNeeded`: names of CDN bundles (e.g. 'sdl3', 'raylib', 'allegro')
+   *   that the tool invocation requires. When provided, only those graphics
+   *   bundles are preloaded — others are skipped to avoid wasted network/IDB
+   *   traffic on unrelated builds (e.g. a terminal C++ build doesn't need sdl3).
+   */
+  hints?: {
+    bundlesNeeded?: string[];
+  };
 }
 
 /* ------------------------------------------------------------------ */
@@ -1896,6 +1906,11 @@ sys.excepthook = _hook
     // fail if the usr-include bundle hasn't been loaded yet.
     if (descriptor.modulePath === '/usr/lib/clang.wasm') {
       const tPreload = performance.now();
+      // Always preload sdl3 for clang. The bundle is only ~2.4MB and pre-warming
+      // it into the FS before callMain is the only reliable way to avoid the
+      // asyncify deadlock that happens when SDL3 headers are loaded lazily via
+      // the open() syscall hook. Hint-based scoping proved too fragile across
+      // the worker RPC chain and Vite's worker bundle caching.
       try {
         await Promise.all([
           this.vfs.preloadBundle('clang-headers'),
@@ -1940,14 +1955,16 @@ sys.excepthook = _hook
     // Without pre-warming .a files, wasm-ld sees "unknown file type" errors.
     if (descriptor.modulePath === '/usr/lib/lld.wasm') {
       const tPreload = performance.now();
+      // Only load graphics bundles the caller explicitly requested.
+      const bundlesNeeded = options.hints?.bundlesNeeded ?? [];
+      const graphicsBundles = (['sdl3', 'raylib', 'allegro'] as const).filter((b) => bundlesNeeded.includes(b));
       try {
         await Promise.all([
           this.vfs.preloadBundle('cache-core'),
-          this.vfs.preloadBundle('sdl3'),
-          this.vfs.preloadBundle('raylib'),
-          this.vfs.preloadBundle('allegro'),
+          ...graphicsBundles.map((b) => this.vfs.preloadBundle(b)),
         ]);
-        console.log(`${LOG_PREFIX}   Preloaded cache-core + sdl3 + raylib + allegro bundles for lld in ${elapsed(tPreload)}`);
+        const bundleList = ['cache-core', ...graphicsBundles].join(' + ');
+        console.log(`${LOG_PREFIX}   Preloaded ${bundleList} bundles for lld in ${elapsed(tPreload)}`);
       } catch (e) {
         console.warn(`${LOG_PREFIX}   ⚠️ Failed to preload lld bundles:`, e);
       }
@@ -1955,7 +1972,7 @@ sys.excepthook = _hook
       // Pre-warm library files into lld's Emscripten FS
       const tWarm = performance.now();
       const libPaths: string[] = [];
-      for (const bundleName of ['cache-core', 'sdl3', 'raylib', 'allegro']) {
+      for (const bundleName of ['cache-core', ...graphicsBundles]) {
         for (const fp of this.vfs.getBundleFilePaths(bundleName)) {
           libPaths.push(fp);
         }
@@ -1972,7 +1989,8 @@ sys.excepthook = _hook
           }
         }
       }
-      console.log(`${LOG_PREFIX}   Pre-warmed ${warmed}/${libPaths.length} library files (cache-core+sdl3+raylib+allegro) for lld in ${elapsed(tWarm)}`);
+      const warmBundles = ['cache-core', ...graphicsBundles].join('+');
+      console.log(`${LOG_PREFIX}   Pre-warmed ${warmed}/${libPaths.length} library files (${warmBundles}) for lld in ${elapsed(tWarm)}`);
     }
 
     // python (emcc/em++): preload and pre-warm Python stdlib + emscripten scripts.
@@ -1983,9 +2001,14 @@ sys.excepthook = _hook
     //    of the filesystem encoding"
     if (isPythonTool) {
       const tPreload = performance.now();
+      const needsSdl3ForPython = options.hints?.bundlesNeeded?.includes('sdl3') ?? false;
       try {
-        await Promise.all([this.vfs.preloadBundle('python-runtime'), this.vfs.preloadBundle('emscripten-core'), this.vfs.preloadBundle('sdl3')]);
-        console.log(`${LOG_PREFIX}   Preloaded python-runtime + emscripten-core + sdl3 bundles in ${elapsed(tPreload)}`);
+        await Promise.all([
+          this.vfs.preloadBundle('python-runtime'),
+          this.vfs.preloadBundle('emscripten-core'),
+          ...(needsSdl3ForPython ? [this.vfs.preloadBundle('sdl3')] : []),
+        ]);
+        console.log(`${LOG_PREFIX}   Preloaded python-runtime + emscripten-core${needsSdl3ForPython ? ' + sdl3' : ''} bundles in ${elapsed(tPreload)}`);
       } catch (e) {
         console.warn(`${LOG_PREFIX}   ⚠️ Failed to preload python bundles:`, e);
       }

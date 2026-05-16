@@ -875,16 +875,21 @@ export default function Ide({
 
         const sourceFsPath = toWorkspaceFsPath(compileTarget);
 
-        // Detect compilation path:
-        //   isSDL3    → SDL3 port: two-step clang+wasm-ld via BROWSER_BUILD_PRESETS.sdl
-        //   isAllegro → Allegro 5: two-step clang+wasm-ld via BROWSER_BUILD_PRESETS.allegro
-        //               (signalled by workspace id 'cpp-allegro')
-        //   isRaylib  → raylib: two-step clang+wasm-ld via BROWSER_BUILD_PRESETS.raylib
-        //               (raylib is not an emsdk port; compile.tool='clang' is the signal)
-        //   otherwise → generic emcc/em++ single-step (expects JS output)
-        const isSDL3 = resolvedConfig.compile.args.some((a) => a === '-sUSE_SDL=3');
-        const isAllegro = resolvedConfig.id === 'cpp-allegro';
-        const isRaylib = resolvedConfig.compile.tool === 'clang' && runType === 'canvas' && !isAllegro;
+        // Detect compilation path from the declarative canvasPreset field.
+        // Falls back to legacy heuristics for workspaces that lack the field
+        // (e.g. hand-crafted configs that pre-date the canvasPreset field).
+        const canvasPresetName =
+          (resolvedConfig.compile.canvasPreset as 'sdl' | 'raylib' | 'allegro' | undefined) ??
+          (resolvedConfig.compile.args.some((a) => a === '-sUSE_SDL=3')
+            ? 'sdl'
+            : resolvedConfig.id === 'cpp-allegro'
+              ? 'allegro'
+              : resolvedConfig.compile.tool === 'clang' && runType === 'canvas'
+                ? 'raylib'
+                : null);
+        const isSDL3 = canvasPresetName === 'sdl';
+        const isAllegro = canvasPresetName === 'allegro';
+        const isRaylib = canvasPresetName === 'raylib';
 
         if (!isSDL3 && !isRaylib && !isAllegro) {
           // ── Generic emcc single-step path (raylib, etc.) ────────
@@ -981,6 +986,9 @@ export default function Ide({
         const wasmPath = resolvedConfig.compile.output || '/home/user/main.wasm';
 
         const sdlPaths = { sourcePath: sourceFsPath, objectPath: sdlObjPath, wasmPath };
+        // Map canvas preset name to the CDN bundle name used by the hints system.
+        const canvasBundleName = isSDL3 ? 'sdl3' : isAllegro ? 'allegro' : 'raylib';
+        const canvasRunHints = { bundlesNeeded: [canvasBundleName] };
         const sdlCompile = await client.run(canvasPreset.compileTool, canvasPreset.compileArgv(sdlPaths), {
           cwd: resolvedConfig.compile.cwd ?? '/home/user',
           onStdout: (t: string) => {
@@ -991,6 +999,7 @@ export default function Ide({
             console.error(t);
             tty.writeError(t);
           },
+          hints: canvasRunHints,
         });
 
         const sdlDuration = ((performance.now() - t0) / 1000).toFixed(2);
@@ -1013,6 +1022,7 @@ export default function Ide({
             console.error(t);
             tty.writeError(t);
           },
+          hints: canvasRunHints,
         });
 
         if (sdlLink.exitCode !== 0) {
