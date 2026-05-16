@@ -8,7 +8,7 @@
 // without pulling in React/Monaco.
 
 import type { WorkspaceConfig } from './workspace-config.js';
-import { DEFAULT_CODE, DEFAULT_HEADER, DEFAULT_IMAGE, RAYLIB_DEMO_CODE, SDL_DEMO_CODE } from './workspace-config.js';
+import { ALLEGRO_DEMO_CODE, DEFAULT_CODE, DEFAULT_HEADER, DEFAULT_IMAGE, RAYLIB_DEMO_CODE, SDL_DEMO_CODE } from './workspace-config.js';
 
 // ── C++ SDL3 Bouncing Ball ──────────────────────────────────────
 
@@ -81,6 +81,45 @@ export const CPP_RAYLIB_PRESET: WorkspaceConfig = {
   },
   files: {
     '/user/raylib-main.cpp': { encoding: 'text', content: RAYLIB_DEMO_CODE },
+    '/user/workspace-preview.svg': { encoding: 'text', content: DEFAULT_IMAGE },
+  },
+};
+
+// ── C++ Allegro 5 Bouncing Ball ─────────────────────────
+
+export const CPP_ALLEGRO_PRESET: WorkspaceConfig = {
+  id: 'cpp-allegro',
+  label: 'C++ Allegro 5 — Bouncing Ball',
+  description: 'Allegro 5 graphics demo compiled in the browser with Emscripten',
+  version: 1,
+  compile: {
+    // tool: 'clang' + workspace id 'cpp-allegro' signals the IDE to use the
+    // direct clang + wasm-ld two-step path (BROWSER_BUILD_PRESETS.allegro)
+    // and to load /usr/lib/emscripten/allegro-runtime.mjs as the canvas runtime.
+    tool: 'clang',
+    args: [],
+    cwd: '/home/user',
+    output: '/home/user/main.wasm',
+    sourceDetect: { extensions: ['.cpp', '.c'], entryPoint: '/user/allegro-main.cpp' },
+  },
+  run: {
+    type: 'canvas',
+  },
+  features: {
+    canvas: true,
+    terminalInput: false,
+    showTestButton: false,
+  },
+  layout: {
+    activeFile: '/user/allegro-main.cpp',
+    openTabs: [
+      { path: '/user/allegro-main.cpp', group: 'main' },
+      { path: '/user/canvas', group: 'right' },
+    ],
+    expandedDirs: ['/user'],
+  },
+  files: {
+    '/user/allegro-main.cpp': { encoding: 'text', content: ALLEGRO_DEMO_CODE },
     '/user/workspace-preview.svg': { encoding: 'text', content: DEFAULT_IMAGE },
   },
 };
@@ -226,6 +265,7 @@ export const PYTHON_PRESET: WorkspaceConfig = {
 export const PRESETS: Record<string, WorkspaceConfig> = {
   'cpp-sdl3': CPP_SDL3_PRESET,
   'cpp-raylib': CPP_RAYLIB_PRESET,
+  'cpp-allegro': CPP_ALLEGRO_PRESET,
   'cpp-terminal': CPP_TERMINAL_PRESET,
   cmake: CMAKE_PRESET,
   python: PYTHON_PRESET,

@@ -14,7 +14,7 @@
 import type { EmceptionAPI } from './createEmception';
 import type { ToolResult } from './tool-runner';
 
-export type BrowserBuildPresetName = 'c' | 'cpp' | 'sdl' | 'raylib';
+export type BrowserBuildPresetName = 'c' | 'cpp' | 'sdl' | 'raylib' | 'allegro';
 
 export interface CompilePaths {
     /** Source file path inside the VFS (also appears in error messages). */
@@ -149,6 +149,9 @@ const CC1_SDL_EXTRA: readonly string[] = ['-internal-isystem', '/usr/include/fak
 /** Extra cc1 -internal-isystem entries needed to find raylib headers. */
 const CC1_RAYLIB_EXTRA: readonly string[] = ['-internal-isystem', '/usr/include/raylib'];
 
+/** Extra cc1 -internal-isystem entries needed to find Allegro 5 headers. */
+const CC1_ALLEGRO_EXTRA: readonly string[] = ['-internal-isystem', '/usr/include/allegro5'];
+
 /**
  * Raylib link line. Uses prebuilt libraylib.a with the sdl3-runtime.mjs JS runtime.
  *
@@ -187,6 +190,60 @@ const WASM_LD_RAYLIB_FLAGS: readonly string[] = [
     '-lc++-noexcept',
     '-lc++abi-noexcept',
     '-lsockets',
+];
+
+/**
+ * Allegro 5 link line. Mirrors the raylib pattern (clang+wasm-ld two-step,
+ * runtime mjs supplies emscripten_set_main_loop + WebGL). Unlike raylib, we
+ * DO link `-lhtml5` here because Allegro's SDL2 backend pulls in helper C
+ * functions like `emscripten_compute_dom_pk_code` that live in `libhtml5.a`
+ * (not in the JS glue). `emscripten_set_main_loop` is a JS-library function
+ * and is NOT defined in `libhtml5.a`, so RAF is still routed through the
+ * allegro-runtime.mjs interception path.
+ *
+ * Backend: Allegro 5 upstream removed the native HTML5 backend; current
+ * releases require `-DALLEGRO_SDL=on`. We link the emsdk SDL2 port
+ * (libSDL2.a, copied into the sysroot by build-allegro.ts) so Allegro's
+ * SDL platform layer can resolve SDL_* symbols.
+ *
+ * Link order: liballegro_main first (so user int main() works portably),
+ * then addons (which depend on core), then the core library, then libSDL2,
+ * then the emscripten libc/libgl runtime libs.
+ */
+const WASM_LD_ALLEGRO_FLAGS: readonly string[] = [
+    '-L/usr/lib/emscripten/cache/sysroot/lib/wasm32-emscripten',
+    '-L/usr/lib/emscripten/src/lib',
+    '/usr/lib/emscripten/cache/sysroot/lib/wasm32-emscripten/crt1.o',
+    '/usr/lib/liballegro_main.a',
+    '/usr/lib/liballegro_image.a',
+    '/usr/lib/liballegro_primitives.a',
+    '/usr/lib/liballegro_font.a',
+    '/usr/lib/liballegro_audio.a',
+    '/usr/lib/liballegro_acodec.a',
+    '/usr/lib/liballegro_color.a',
+    '/usr/lib/liballegro.a',
+    '/usr/lib/libSDL2.a',
+    '--no-entry',
+    '--import-undefined',
+    '--allow-undefined',
+    '--export=main',
+    '--export=malloc',
+    '--export=free',
+    '--export=__wasm_call_ctors',
+    '--export-table',
+    '--table-base=1',
+    '-z',
+    'stack-size=2097152',
+    '-lGL-getprocaddr',
+    '-lal',
+    '-lstubs',
+    '-lc',
+    '-ldlmalloc',
+    '-lcompiler_rt',
+    '-lc++-noexcept',
+    '-lc++abi-noexcept',
+    '-lsockets',
+    '-lhtml5',
 ];
 
 export interface BrowserBuildPreset {
@@ -282,6 +339,27 @@ export const BROWSER_BUILD_PRESETS: Record<BrowserBuildPresetName, BrowserBuildP
             sourcePath,
         ],
         linkArgv: ({ objectPath, wasmPath }) => ['wasm-ld', objectPath, '-o', wasmPath, ...WASM_LD_RAYLIB_FLAGS],
+    },
+    allegro: {
+        name: 'allegro',
+        compileTool: 'clang',
+        linkTool: 'wasm-ld',
+        compileArgv: ({ sourcePath, objectPath }) => [
+            'clang',
+            ...CC1_FRONTEND,
+            ...CC1_CPP_INCLUDES,
+            ...CC1_ALLEGRO_EXTRA,
+            ...CC1_TAIL,
+            ...CC1_CPP_EXC,
+            '-main-file-name',
+            basename(sourcePath),
+            '-o',
+            objectPath,
+            '-x',
+            'c++',
+            sourcePath,
+        ],
+        linkArgv: ({ objectPath, wasmPath }) => ['wasm-ld', objectPath, '-o', wasmPath, ...WASM_LD_ALLEGRO_FLAGS],
     },
 };
 

@@ -1941,8 +1941,13 @@ sys.excepthook = _hook
     if (descriptor.modulePath === '/usr/lib/lld.wasm') {
       const tPreload = performance.now();
       try {
-        await Promise.all([this.vfs.preloadBundle('cache-core'), this.vfs.preloadBundle('sdl3'), this.vfs.preloadBundle('raylib')]);
-        console.log(`${LOG_PREFIX}   Preloaded cache-core + sdl3 + raylib bundles for lld in ${elapsed(tPreload)}`);
+        await Promise.all([
+          this.vfs.preloadBundle('cache-core'),
+          this.vfs.preloadBundle('sdl3'),
+          this.vfs.preloadBundle('raylib'),
+          this.vfs.preloadBundle('allegro'),
+        ]);
+        console.log(`${LOG_PREFIX}   Preloaded cache-core + sdl3 + raylib + allegro bundles for lld in ${elapsed(tPreload)}`);
       } catch (e) {
         console.warn(`${LOG_PREFIX}   ⚠️ Failed to preload lld bundles:`, e);
       }
@@ -1950,7 +1955,7 @@ sys.excepthook = _hook
       // Pre-warm library files into lld's Emscripten FS
       const tWarm = performance.now();
       const libPaths: string[] = [];
-      for (const bundleName of ['cache-core', 'sdl3', 'raylib']) {
+      for (const bundleName of ['cache-core', 'sdl3', 'raylib', 'allegro']) {
         for (const fp of this.vfs.getBundleFilePaths(bundleName)) {
           libPaths.push(fp);
         }
@@ -1967,7 +1972,7 @@ sys.excepthook = _hook
           }
         }
       }
-      console.log(`${LOG_PREFIX}   Pre-warmed ${warmed}/${libPaths.length} library files (cache-core+sdl3+raylib) for lld in ${elapsed(tWarm)}`);
+      console.log(`${LOG_PREFIX}   Pre-warmed ${warmed}/${libPaths.length} library files (cache-core+sdl3+raylib+allegro) for lld in ${elapsed(tWarm)}`);
     }
 
     // python (emcc/em++): preload and pre-warm Python stdlib + emscripten scripts.
