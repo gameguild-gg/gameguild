@@ -1247,6 +1247,14 @@ export default function Ide({
                       ) {
                         return () => 0;
                       }
+                      // C assert() / IM_ASSERT — compiled into any library built
+                      // without -DNDEBUG (e.g. Dear ImGui). Throw so the error
+                      // surfaces in the terminal rather than silently crashing.
+                      if (prop === '__assert_fail') {
+                        return (_cond: number, _file: number, line: number) => {
+                          throw new Error(`Assertion failed (line ${line})`);
+                        };
+                      }
                       // Raylib + emscripten JS libs can import additional helper
                       // symbols (e.g. SetCanvasIdJs). Keep raylib/allegro permissive
                       // here to avoid hard load failures; strict mode remains for SDL3.
