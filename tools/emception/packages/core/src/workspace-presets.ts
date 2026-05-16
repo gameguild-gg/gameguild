@@ -8,7 +8,7 @@
 // without pulling in React/Monaco.
 
 import type { WorkspaceConfig } from './workspace-config.js';
-import { ALLEGRO_DEMO_CODE, DEFAULT_CODE, DEFAULT_HEADER, DEFAULT_IMAGE, RAYLIB_DEMO_CODE, SDL_DEMO_CODE } from './workspace-config.js';
+import { ALLEGRO_DEMO_CODE, DEFAULT_CODE, DEFAULT_HEADER, DEFAULT_IMAGE, RAYLIB_DEMO_CODE, SDL_DEMO_CODE, SDL_OPENGL_DEMO_CODE } from './workspace-config.js';
 
 // ── C++ SDL3 Bouncing Ball ──────────────────────────────────────
 
@@ -127,6 +127,37 @@ export const CPP_ALLEGRO_PRESET: WorkspaceConfig = {
   },
   files: {
     '/user/allegro-main.cpp': { encoding: 'text', content: ALLEGRO_DEMO_CODE },
+    '/user/workspace-preview.svg': { encoding: 'text', content: DEFAULT_IMAGE },
+  },
+};
+
+// ── C++ SDL3 + OpenGL ES 3.0 ───────────────────────────────────
+
+export const CPP_SDL3_OPENGL_PRESET: WorkspaceConfig = {
+  id: 'cpp-sdl3-opengl',
+  label: 'C++ SDL3 — OpenGL ES 3.0',
+  description: 'SDL3 + raw OpenGL ES 3 (WebGL2) with Dear ImGui — learn the graphics pipeline',
+  version: 1,
+  compile: {
+    tool: 'clang',
+    args: [],
+    cwd: '/home/user',
+    output: '/home/user/main.wasm',
+    canvasPreset: 'sdl',
+    sourceDetect: { extensions: ['.cpp', '.c'], entryPoint: '/user/sdl-opengl.cpp' },
+  },
+  run: { type: 'canvas' },
+  features: { canvas: true, terminalInput: false, showTestButton: false },
+  layout: {
+    activeFile: '/user/sdl-opengl.cpp',
+    openTabs: [
+      { path: '/user/sdl-opengl.cpp', group: 'main' },
+      { path: '/user/canvas', group: 'right' },
+    ],
+    expandedDirs: ['/user'],
+  },
+  files: {
+    '/user/sdl-opengl.cpp': { encoding: 'text', content: SDL_OPENGL_DEMO_CODE },
     '/user/workspace-preview.svg': { encoding: 'text', content: DEFAULT_IMAGE },
   },
 };
@@ -271,6 +302,7 @@ export const PYTHON_PRESET: WorkspaceConfig = {
 
 export const PRESETS: Record<string, WorkspaceConfig> = {
   'cpp-sdl3': CPP_SDL3_PRESET,
+  'cpp-sdl3-opengl': CPP_SDL3_OPENGL_PRESET,
   'cpp-raylib': CPP_RAYLIB_PRESET,
   'cpp-allegro': CPP_ALLEGRO_PRESET,
   'cpp-terminal': CPP_TERMINAL_PRESET,

@@ -1169,6 +1169,7 @@ export default function Ide({
 
         let sdlLoadOk = true;
         let sdlCallbackFns: { init?: (appstate: number, argc: number, argv: number) => number; iterate?: (appstate: number) => number } | null = null;
+        let wasmMemoryRef: WebAssembly.Memory | null = null;
         const missingRaylibImports = new Set<string>();
         const moduleTimeout = new Promise<never>((_, reject) => setTimeout(() => reject(new Error('SDL3 module load timeout (30s)')), 30_000));
         const sdlMod = await Promise.race([
@@ -1252,7 +1253,19 @@ export default function Ide({
                       // surfaces in the terminal rather than silently crashing.
                       if (prop === '__assert_fail') {
                         return (_cond: number, _file: number, line: number) => {
-                          throw new Error(`Assertion failed (line ${line})`);
+                          let fileStr = '(unknown)';
+                          if (wasmMemoryRef) {
+                            try {
+                              const heap = new Uint8Array(wasmMemoryRef.buffer);
+                              const readStr = (ptr: number) => {
+                                let end = ptr;
+                                while (heap[end]) end++;
+                                return new TextDecoder().decode(heap.subarray(ptr, end));
+                              };
+                              fileStr = readStr(_file);
+                            } catch { /* ignore decode errors */ }
+                          }
+                          throw new Error(`Assertion failed (${fileStr}:${line})`);
                         };
                       }
                       // Raylib + emscripten JS libs can import additional helper
@@ -1278,6 +1291,9 @@ export default function Ide({
                   .then((result) => {
                     tty.writeLine('\x1b[90mSDL3: WASM ok, patching exports…\x1b[0m');
                     const origExports = result.instance.exports;
+                    if (origExports.memory instanceof WebAssembly.Memory) {
+                      wasmMemoryRef = origExports.memory as WebAssembly.Memory;
+                    }
                     // Capture callback exports directly from raw WASM exports so
                     // we can drive callback-only SDL apps even when glue doesn't
                     // surface these as Module methods.
