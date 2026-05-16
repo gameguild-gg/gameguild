@@ -35,6 +35,8 @@ defineBuildScript({
 
         await step('userland', () => {
             const userlandTrash: readonly string[] = [
+                'allegro',
+                'allegro/allegro-*',
                 'binaryen/build-wasm', 'binaryen/build-native', 'binaryen/binaryen-*', 'binaryen/version_*',
                 'cmake/cmake-*', 'cmake/CMake-*',
                 'cpython/build-wasm', 'cpython/build-native', 'cpython/cpython-*', 'cpython/sysroot-staging', 'cpython/v*',
