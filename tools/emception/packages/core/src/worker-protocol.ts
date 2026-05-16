@@ -29,6 +29,8 @@ export interface RunMessage {
         env?: Record<string, string>;
         cwd?: string;
         wantStdin?: boolean;
+        /** Opaque hints forwarded to ToolRunner (e.g. which CDN bundles are needed). */
+        hints?: { bundlesNeeded?: string[] };
     };
 }
 

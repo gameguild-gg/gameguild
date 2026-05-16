@@ -110,30 +110,21 @@ const WASM_LD_CPP_LIBS: readonly string[] = ['-lc++-noexcept', '-lc++abi-noexcep
 const WASM_LD_C_LIBS: readonly string[] = ['-lsockets'];
 
 /**
- * SDL3 link line. Differs significantly from the WASI runtime path: uses
- * the emscripten sysroot (not cache-lib), pulls in `crt1.o` + `libSDL3.a`,
- * uses `--no-entry` and SDL_App* exports for the SDL3 callback model, and
- * links the GL/al/html5/stubs emscripten libs needed for browser-side SDL.
+ * Shared wasm-ld base flags for all canvas presets (SDL3, raylib, Allegro).
+ * Uses the emscripten sysroot (not the WASI cache-lib) and includes the CRT
+ * startup object. Each canvas preset appends its own lib-specific flags.
  */
-const WASM_LD_SDL_FLAGS: readonly string[] = [
+const WASM_LD_CANVAS_BASE: readonly string[] = [
     '-L/usr/lib/emscripten/cache/sysroot/lib/wasm32-emscripten',
     '-L/usr/lib/emscripten/src/lib',
     '/usr/lib/emscripten/cache/sysroot/lib/wasm32-emscripten/crt1.o',
-    '/usr/lib/emscripten/cache/sysroot/lib/wasm32-emscripten/libSDL3.a',
     '--no-entry',
     '--import-undefined',
     '--allow-undefined',
-    '--export-if-defined=SDL_AppInit',
-    '--export-if-defined=SDL_AppIterate',
-    '--export-if-defined=SDL_AppEvent',
-    '--export-if-defined=SDL_AppQuit',
     '--export-table',
     '--table-base=1',
-    '-z',
-    'stack-size=65536',
     '-lGL-getprocaddr',
     '-lal',
-    '-lhtml5',
     '-lstubs',
     '-lc',
     '-ldlmalloc',
@@ -141,6 +132,23 @@ const WASM_LD_SDL_FLAGS: readonly string[] = [
     '-lc++-noexcept',
     '-lc++abi-noexcept',
     '-lsockets',
+];
+
+/**
+ * SDL3 link line. Adds libSDL3.a, SDL_App* callback exports, html5 (needed
+ * for emscripten_set_main_loop JS glue), and a small stack (SDL3 manages its
+ * own memory growth via ALLOW_MEMORY_GROWTH).
+ */
+const WASM_LD_SDL_FLAGS: readonly string[] = [
+    ...WASM_LD_CANVAS_BASE,
+    '/usr/lib/emscripten/cache/sysroot/lib/wasm32-emscripten/libSDL3.a',
+    '--export-if-defined=SDL_AppInit',
+    '--export-if-defined=SDL_AppIterate',
+    '--export-if-defined=SDL_AppEvent',
+    '--export-if-defined=SDL_AppQuit',
+    '-z',
+    'stack-size=65536',
+    '-lhtml5',
 ];
 
 /** Extra cc1 -internal-isystem entries needed to find SDL3 headers. */
@@ -153,12 +161,12 @@ const CC1_RAYLIB_EXTRA: readonly string[] = ['-internal-isystem', '/usr/include/
 const CC1_ALLEGRO_EXTRA: readonly string[] = ['-internal-isystem', '/usr/include/allegro5'];
 
 /**
- * Raylib link line. Uses prebuilt libraylib.a with the sdl3-runtime.mjs JS runtime.
+ * Raylib link line. Uses prebuilt libraylib.a with raylib-runtime.mjs.
  *
  * Key: do NOT link -lhtml5. libhtml5.a provides a WASM emscripten_set_main_loop
- * that bypasses sdl3-runtime.mjs's MainLoop.func setup, leaving MainLoop.func=null
+ * that bypasses raylib-runtime.mjs's MainLoop.func setup, leaving MainLoop.func=null
  * so the RAF callback crashes. By omitting -lhtml5, emscripten_set_main_loop and
- * other HTML5 API functions become WASM imports resolved by sdl3-runtime.mjs which
+ * other HTML5 API functions become WASM imports resolved by raylib-runtime.mjs which
  * correctly calls setMainLoop() → MainLoop.func = iterFunc → RAF works.
  *
  * Exports `main` so the runtime calls it via callMain(). emscripten_set_main_loop
@@ -166,30 +174,15 @@ const CC1_ALLEGRO_EXTRA: readonly string[] = ['-internal-isystem', '/usr/include
  * the RAF-based draw loop active.
  */
 const WASM_LD_RAYLIB_FLAGS: readonly string[] = [
-    '-L/usr/lib/emscripten/cache/sysroot/lib/wasm32-emscripten',
-    '-L/usr/lib/emscripten/src/lib',
-    '/usr/lib/emscripten/cache/sysroot/lib/wasm32-emscripten/crt1.o',
+    ...WASM_LD_CANVAS_BASE,
     '/usr/lib/libraylib.a',
-    '--no-entry',
-    '--import-undefined',
-    '--allow-undefined',
     '--export=main',
     '--export=malloc',
     '--export=free',
     '--export=__wasm_call_ctors',
-    '--export-table',
-    '--table-base=1',
     '-z',
     'stack-size=2097152',
-    '-lGL-getprocaddr',
-    '-lal',
-    '-lstubs',
-    '-lc',
-    '-ldlmalloc',
-    '-lcompiler_rt',
-    '-lc++-noexcept',
-    '-lc++abi-noexcept',
-    '-lsockets',
+    // -lhtml5 intentionally omitted — see comment above.
 ];
 
 /**
@@ -211,9 +204,7 @@ const WASM_LD_RAYLIB_FLAGS: readonly string[] = [
  * then the emscripten libc/libgl runtime libs.
  */
 const WASM_LD_ALLEGRO_FLAGS: readonly string[] = [
-    '-L/usr/lib/emscripten/cache/sysroot/lib/wasm32-emscripten',
-    '-L/usr/lib/emscripten/src/lib',
-    '/usr/lib/emscripten/cache/sysroot/lib/wasm32-emscripten/crt1.o',
+    ...WASM_LD_CANVAS_BASE,
     '/usr/lib/liballegro_main.a',
     '/usr/lib/liballegro_image.a',
     '/usr/lib/liballegro_primitives.a',
@@ -223,26 +214,12 @@ const WASM_LD_ALLEGRO_FLAGS: readonly string[] = [
     '/usr/lib/liballegro_color.a',
     '/usr/lib/liballegro.a',
     '/usr/lib/libSDL2.a',
-    '--no-entry',
-    '--import-undefined',
-    '--allow-undefined',
     '--export=main',
     '--export=malloc',
     '--export=free',
     '--export=__wasm_call_ctors',
-    '--export-table',
-    '--table-base=1',
     '-z',
     'stack-size=2097152',
-    '-lGL-getprocaddr',
-    '-lal',
-    '-lstubs',
-    '-lc',
-    '-ldlmalloc',
-    '-lcompiler_rt',
-    '-lc++-noexcept',
-    '-lc++abi-noexcept',
-    '-lsockets',
     '-lhtml5',
 ];
 

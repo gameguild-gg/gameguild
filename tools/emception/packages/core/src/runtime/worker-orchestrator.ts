@@ -62,6 +62,8 @@ export interface WorkerRunOptions {
    * for an interactive run without needing a global run-id → handler map.
    */
   onStdinRequest?: (controlBuffer: SharedArrayBuffer, dataBuffer: SharedArrayBuffer) => void;
+  /** Opaque hints forwarded to ToolRunner (e.g. which CDN bundles are needed). */
+  hints?: { bundlesNeeded?: string[] };
 }
 
 /**
@@ -234,6 +236,7 @@ export class WorkerOrchestrator {
             env: options.env,
             cwd: options.cwd,
             wantStdin: options.wantStdin ?? false,
+            hints: options.hints,
           },
         };
       },

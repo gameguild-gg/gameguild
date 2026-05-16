@@ -18,10 +18,15 @@ export const CPP_SDL3_PRESET: WorkspaceConfig = {
   description: 'SDL3 graphics demo compiled in the browser with Emscripten',
   version: 1,
   compile: {
-    tool: 'emcc',
-    args: ['emcc', '{sourceFile}', '-sUSE_SDL=3', '-I/usr/include', '-sALLOW_MEMORY_GROWTH=1', '-sENVIRONMENT=web', '-O1', '-o', '/home/user/main.wasm'],
+    // Direct clang + wasm-ld two-step path via BROWSER_BUILD_PRESETS.sdl.
+    // SDL3 is not an emsdk port — using emcc would trigger ports/__init__.py
+    // which fails in the WASM sandbox. canvasPreset replaces the former
+    // '-sUSE_SDL=3' heuristic the IDE used to detect this path.
+    tool: 'clang',
+    args: [],
     cwd: '/home/user',
     output: '/home/user/main.wasm',
+    canvasPreset: 'sdl',
     sourceDetect: { extensions: ['.cpp', '.c'], entryPoint: '/user/sdl-main.cpp' },
   },
   run: {
@@ -61,6 +66,7 @@ export const CPP_RAYLIB_PRESET: WorkspaceConfig = {
     args: [],
     cwd: '/home/user',
     output: '/home/user/main.wasm',
+    canvasPreset: 'raylib',
     sourceDetect: { extensions: ['.cpp', '.c'], entryPoint: '/user/raylib-main.cpp' },
   },
   run: {
@@ -93,13 +99,14 @@ export const CPP_ALLEGRO_PRESET: WorkspaceConfig = {
   description: 'Allegro 5 graphics demo compiled in the browser with Emscripten',
   version: 1,
   compile: {
-    // tool: 'clang' + workspace id 'cpp-allegro' signals the IDE to use the
+    // tool: 'clang' + canvasPreset 'allegro' signals the IDE to use the
     // direct clang + wasm-ld two-step path (BROWSER_BUILD_PRESETS.allegro)
-    // and to load /usr/lib/emscripten/allegro-runtime.mjs as the canvas runtime.
+    // and to load allegro-runtime.mjs as the canvas runtime.
     tool: 'clang',
     args: [],
     cwd: '/home/user',
     output: '/home/user/main.wasm',
+    canvasPreset: 'allegro',
     sourceDetect: { extensions: ['.cpp', '.c'], entryPoint: '/user/allegro-main.cpp' },
   },
   run: {

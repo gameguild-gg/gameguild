@@ -41,22 +41,25 @@ export const BUILD_PRESETS: Record<BuildPresetName, BuildPreset> = {
   sdl: {
     name: 'sdl',
     bundlesToPreload: ['llvm', 'sdl3', 'imgui'],
-    defaultTools: ['emcc', 'em++'],
-    build: { compiler: 'em++', std: 'c++20', libs: ['SDL3'] },
+    defaultTools: ['clang', 'wasm-ld'],
+    build: { compiler: 'clang', std: 'c++20', libs: ['SDL3'] },
   },
   raylib: {
     name: 'raylib',
     bundlesToPreload: ['llvm', 'raylib'],
-    defaultTools: ['emcc', 'em++'],
-    build: { compiler: 'emcc', libs: ['raylib', 'raygui', 'physac', 'rlights'] },
+    defaultTools: ['clang', 'wasm-ld'],
+    build: { compiler: 'clang', libs: ['raylib', 'raygui', 'physac', 'rlights'] },
   },
   allegro: {
     name: 'allegro',
     bundlesToPreload: ['llvm', 'allegro'],
-    defaultTools: ['emcc', 'em++'],
+    defaultTools: ['clang', 'wasm-ld'],
     build: {
-      compiler: 'emcc',
-      libs: ['allegro', 'allegro_image', 'allegro_primitives', 'allegro_font', 'allegro_ttf', 'allegro_audio', 'allegro_acodec', 'allegro_color', 'allegro_main', 'SDL2'],
+      // Compiled via direct clang + wasm-ld two-step (not emcc/Python).
+      // SDL2 is an implementation detail hidden inside liballegro.a — it is
+      // not a user-facing link target and is intentionally omitted here.
+      compiler: 'clang',
+      libs: ['allegro', 'allegro_image', 'allegro_primitives', 'allegro_font', 'allegro_ttf', 'allegro_audio', 'allegro_acodec', 'allegro_color', 'allegro_main'],
     },
   },
   cmake: {
