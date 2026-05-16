@@ -1991,6 +1991,24 @@ sys.excepthook = _hook
       }
       const warmBundles = ['cache-core', ...graphicsBundles].join('+');
       console.log(`${LOG_PREFIX}   Pre-warmed ${warmed}/${libPaths.length} library files (${warmBundles}) for lld in ${elapsed(tWarm)}`);
+
+      // Pre-warm manifest-symlink .a paths referenced in the link argv but not
+      // covered by any bundle (e.g. /usr/lib/libSDL2.a is deduped by the
+      // generate-bundles P0 pass to a symlink → cache-core's copy; it therefore
+      // belongs to no bundle but fetchFile() resolves symlinks automatically).
+      const bundleWarmedSet = new Set(libPaths);
+      const symlinkArgPaths = argv.filter((a) => a.endsWith('.a') && !bundleWarmedSet.has(a));
+      if (symlinkArgPaths.length > 0) {
+        const tSym = performance.now();
+        let symWarmed = 0;
+        const symResults = await Promise.all(symlinkArgPaths.map((p) => this.vfs.fetchFile(p).catch(() => null)));
+        for (let j = 0; j < symlinkArgPaths.length; j++) {
+          if (symResults[j]) {
+            try { instance.FS.writeFile(symlinkArgPaths[j], symResults[j]!); symWarmed++; } catch { /* ignore */ }
+          }
+        }
+        console.log(`${LOG_PREFIX}   Pre-warmed ${symWarmed}/${symlinkArgPaths.length} symlink .a paths for lld in ${elapsed(tSym)}`);
+      }
     }
 
     // python (emcc/em++): preload and pre-warm Python stdlib + emscripten scripts.
