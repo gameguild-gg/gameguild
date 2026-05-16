@@ -302,19 +302,10 @@ if (!fs.existsSync(SDL2_CACHED_LIB)) {
 }
 shell.cp('-f', SDL2_CACHED_LIB, path.join(SYSROOT_LIB, 'libSDL2.a'));
 console.log('Deployed libSDL2.a to sysroot/usr/lib/');
-
-// SDL2 headers (emsdk installs them at cache/sysroot/include/SDL/) — copy so
-// any downstream user code that does `#include <SDL.h>` can resolve. Optional
-// for the canonical demo (which only uses Allegro), but cheap to ship.
-const SDL2_CACHED_INC = path.join(
-    EMSDK_DIR, 'upstream', 'emscripten', 'cache', 'sysroot', 'include', 'SDL2',
-);
-if (fs.existsSync(SDL2_CACHED_INC)) {
-    const SDL_DEST = path.join(SYSROOT_INC, 'SDL2');
-    shell.mkdir('-p', SDL_DEST);
-    shell.cp('-Rf', path.join(SDL2_CACHED_INC, '.'), SDL_DEST);
-    console.log('Deployed SDL2 headers to sysroot/usr/include/SDL2/');
-}
+// NOTE: SDL2 headers are NOT deployed to sysroot. Allegro's public API does not
+// expose any SDL2 types — SDL2 is an implementation detail hidden inside the
+// compiled static libs. User Allegro code never needs #include <SDL.h>.
+// The CC1_ALLEGRO_EXTRA only adds /usr/include/allegro5 to the search path.
 
 // ── 2. Generate allegro-runtime.mjs (MODULARIZE JS factory) ──────
 //

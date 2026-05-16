@@ -385,7 +385,9 @@ async function main() {
     },
     {
       name: 'allegro',
-      prefixes: ['/usr/lib/liballegro', '/usr/lib/libSDL2.a', '/usr/include/allegro5/', '/usr/include/SDL2/'],
+      prefixes: ['/usr/lib/liballegro', '/usr/lib/libSDL2.a', '/usr/include/allegro5/'],
+      // NOTE: SDL2 headers are intentionally excluded — they are not needed by
+      // user Allegro code (SDL2 is an impl detail hidden inside the static libs).
       outputPath: '/usr/lib/allegro.tar.br',
     },
     { name: 'usr-share', prefixes: ['/usr/share/'], outputPath: '/usr/share.tar.br' },
