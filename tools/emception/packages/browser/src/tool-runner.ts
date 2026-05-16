@@ -1959,10 +1959,7 @@ sys.excepthook = _hook
       const bundlesNeeded = options.hints?.bundlesNeeded ?? [];
       const graphicsBundles = (['sdl3', 'raylib', 'allegro'] as const).filter((b) => bundlesNeeded.includes(b));
       try {
-        await Promise.all([
-          this.vfs.preloadBundle('cache-core'),
-          ...graphicsBundles.map((b) => this.vfs.preloadBundle(b)),
-        ]);
+        await Promise.all([this.vfs.preloadBundle('cache-core'), ...graphicsBundles.map((b) => this.vfs.preloadBundle(b))]);
         const bundleList = ['cache-core', ...graphicsBundles].join(' + ');
         console.log(`${LOG_PREFIX}   Preloaded ${bundleList} bundles for lld in ${elapsed(tPreload)}`);
       } catch (e) {
@@ -2004,7 +2001,12 @@ sys.excepthook = _hook
         const symResults = await Promise.all(symlinkArgPaths.map((p) => this.vfs.fetchFile(p).catch(() => null)));
         for (let j = 0; j < symlinkArgPaths.length; j++) {
           if (symResults[j]) {
-            try { instance.FS.writeFile(symlinkArgPaths[j], symResults[j]!); symWarmed++; } catch { /* ignore */ }
+            try {
+              instance.FS.writeFile(symlinkArgPaths[j], symResults[j]!);
+              symWarmed++;
+            } catch {
+              /* ignore */
+            }
           }
         }
         console.log(`${LOG_PREFIX}   Pre-warmed ${symWarmed}/${symlinkArgPaths.length} symlink .a paths for lld in ${elapsed(tSym)}`);
