@@ -125,34 +125,64 @@ export const DEFAULT_IMAGE = `data:image/svg+xml;utf8,${encodeURIComponent(
 
 // SDL3 bouncing ball — compiled against precompiled libSDL3.a (emcmake build).
 // Compile with: emcc sdl-main.cpp /usr/lib/libSDL3.a -I/usr/include -s SINGLE_FILE=1 -s ALLOW_MEMORY_GROWTH=1 -O1 -o main.html
-export const SDL_DEMO_CODE = `// SDL3 bouncing ball — compiled in the browser via Emscripten
+export const SDL_DEMO_CODE = `// SDL3 + Dear ImGui demo — compiled in the browser via Emscripten
 // Click ▶ to build and render to the SDL Canvas tab.
 // Uses SDL3 app-lifecycle callbacks — no emscripten main-loop call needed.
 #define SDL_MAIN_USE_CALLBACKS
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
+#include <imgui/imgui.h>
+#include <imgui/imgui_impl_sdl3.h>
+#include <imgui/imgui_impl_sdlrenderer3.h>
 #include <math.h>
 
-static SDL_Window   *window   = NULL;
-static SDL_Renderer *renderer = NULL;
-static float t = 0.f;
+static SDL_Window   *window   = nullptr;
+static SDL_Renderer *renderer = nullptr;
+static float t      = 0.f;
+static float speed  = 1.0f;
+static float radius = 32.f;
 
-static void draw_filled_circle(SDL_Renderer *r, float cx, float cy, float radius) {
-    for (float dy = -radius; dy <= radius; dy += 1.f) {
-        float dx = sqrtf(radius * radius - dy * dy);
+static void draw_filled_circle(SDL_Renderer *r, float cx, float cy, float rad) {
+    for (float dy = -rad; dy <= rad; dy += 1.f) {
+        float dx = sqrtf(rad * rad - dy * dy);
         SDL_RenderLine(r, cx - dx, cy + dy, cx + dx, cy + dy);
     }
 }
 
 SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
     SDL_Init(SDL_INIT_VIDEO);
-    SDL_CreateWindowAndRenderer("SDL3 Demo", 800, 600, 0, &window, &renderer);
+    SDL_CreateWindowAndRenderer("SDL3 + ImGui Demo", 800, 600, 0, &window, &renderer);
+
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGui::StyleColorsDark();
+    ImGui_ImplSDL3_InitForSDLRenderer(window, renderer);
+    ImGui_ImplSDLRenderer3_Init(renderer);
     return SDL_APP_CONTINUE;
 }
 
 SDL_AppResult SDL_AppIterate(void *appstate) {
-    t += 0.016f;
+    t += 0.016f * speed;
 
+    // ImGui new frame
+    ImGui_ImplSDLRenderer3_NewFrame();
+    ImGui_ImplSDL3_NewFrame();
+    ImGui::NewFrame();
+
+    float cx = 400.f + 300.f * sinf(t * 1.2f);
+    float cy = 300.f + 200.f * cosf(t * 1.4f);
+
+    // Controls window
+    ImGui::SetNextWindowPos({10, 10}, ImGuiCond_Once);
+    ImGui::SetNextWindowSize({220, 120}, ImGuiCond_Once);
+    ImGui::Begin("Controls");
+    ImGui::SliderFloat("Speed",  &speed,  0.1f, 3.0f);
+    ImGui::SliderFloat("Radius", &radius, 8.f,  80.f);
+    ImGui::Text("Ball  x=%.0f  y=%.0f", cx, cy);
+    ImGui::Text("FPS   %.1f", ImGui::GetIO().Framerate);
+    ImGui::End();
+
+    // Scene
     SDL_SetRenderDrawColor(renderer, 17, 17, 27, 255);
     SDL_RenderClear(renderer);
 
@@ -162,21 +192,27 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
     for (float y = 0; y < 600; y += 40)
         SDL_RenderLine(renderer, 0, y, 800, y);
 
-    float cx = 400.f + 300.f * sinf(t * 1.2f);
-    float cy = 300.f + 200.f * cosf(t * 1.4f);
     SDL_SetRenderDrawColor(renderer, 137, 180, 250, 255);
-    draw_filled_circle(renderer, cx, cy, 32.f);
+    draw_filled_circle(renderer, cx, cy, radius);
+
+    // ImGui render
+    ImGui::Render();
+    ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), renderer);
 
     SDL_RenderPresent(renderer);
     return SDL_APP_CONTINUE;
 }
 
 SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event) {
+    ImGui_ImplSDL3_ProcessEvent(event);
     if (event->type == SDL_EVENT_QUIT) return SDL_APP_SUCCESS;
     return SDL_APP_CONTINUE;
 }
 
 void SDL_AppQuit(void *appstate, SDL_AppResult result) {
+    ImGui_ImplSDLRenderer3_Shutdown();
+    ImGui_ImplSDL3_Shutdown();
+    ImGui::DestroyContext();
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     SDL_Quit();

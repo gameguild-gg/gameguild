@@ -141,6 +141,7 @@ const WASM_LD_CANVAS_BASE: readonly string[] = [
  */
 const WASM_LD_SDL_FLAGS: readonly string[] = [
     ...WASM_LD_CANVAS_BASE,
+    '/usr/lib/libimgui.a',
     '/usr/lib/emscripten/cache/sysroot/lib/wasm32-emscripten/libSDL3.a',
     '--export-if-defined=SDL_AppInit',
     '--export-if-defined=SDL_AppIterate',
@@ -151,8 +152,8 @@ const WASM_LD_SDL_FLAGS: readonly string[] = [
     '-lhtml5',
 ];
 
-/** Extra cc1 -internal-isystem entries needed to find SDL3 headers. */
-const CC1_SDL_EXTRA: readonly string[] = ['-internal-isystem', '/usr/include/fakesdl', '-internal-isystem', '/usr/include/SDL3'];
+/** Extra cc1 -internal-isystem entries needed to find SDL3 and Dear ImGui headers. */
+const CC1_SDL_EXTRA: readonly string[] = ['-internal-isystem', '/usr/include/fakesdl', '-internal-isystem', '/usr/include/SDL3', '-internal-isystem', '/usr/include/imgui'];
 
 /** Extra cc1 -internal-isystem entries needed to find raylib headers. */
 const CC1_RAYLIB_EXTRA: readonly string[] = ['-internal-isystem', '/usr/include/raylib'];
