@@ -10,7 +10,7 @@
 
 import type { WorkspaceBuildConfig } from './types';
 
-export type BuildPresetName = 'c' | 'cpp' | 'python' | 'sdl' | 'raylib' | 'cmake' | 'full';
+export type BuildPresetName = 'c' | 'cpp' | 'python' | 'sdl' | 'raylib' | 'allegro' | 'cmake' | 'full';
 
 export interface BuildPreset {
   name: BuildPresetName;
@@ -50,6 +50,15 @@ export const BUILD_PRESETS: Record<BuildPresetName, BuildPreset> = {
     defaultTools: ['emcc', 'em++'],
     build: { compiler: 'emcc', libs: ['raylib', 'raygui', 'physac', 'rlights'] },
   },
+  allegro: {
+    name: 'allegro',
+    bundlesToPreload: ['llvm', 'allegro'],
+    defaultTools: ['emcc', 'em++'],
+    build: {
+      compiler: 'emcc',
+      libs: ['allegro', 'allegro_image', 'allegro_primitives', 'allegro_font', 'allegro_ttf', 'allegro_audio', 'allegro_acodec', 'allegro_color', 'allegro_main', 'SDL2'],
+    },
+  },
   cmake: {
     name: 'cmake',
     bundlesToPreload: ['llvm', 'cmake', 'ninja'],
@@ -58,7 +67,7 @@ export const BUILD_PRESETS: Record<BuildPresetName, BuildPreset> = {
   },
   full: {
     name: 'full',
-    bundlesToPreload: ['llvm', 'cpython', 'cmake', 'ninja', 'sdl3', 'imgui', 'raylib', 'libcurl-lite'],
+    bundlesToPreload: ['llvm', 'cpython', 'cmake', 'ninja', 'sdl3', 'imgui', 'raylib', 'allegro', 'libcurl-lite'],
     defaultTools: ['clang', 'clang++', 'cmake', 'ninja', 'python3', 'emcc', 'em++'],
     build: {},
   },

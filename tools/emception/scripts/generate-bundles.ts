@@ -383,6 +383,11 @@ async function main() {
       ],
       outputPath: '/usr/lib/raylib.tar.br',
     },
+    {
+      name: 'allegro',
+      prefixes: ['/usr/lib/liballegro', '/usr/lib/libSDL2.a', '/usr/include/allegro5/', '/usr/include/SDL2/'],
+      outputPath: '/usr/lib/allegro.tar.br',
+    },
     { name: 'usr-share', prefixes: ['/usr/share/'], outputPath: '/usr/share.tar.br' },
     { name: 'home', prefixes: ['/home/'], outputPath: '/home.tar.br' },
   ];
