@@ -162,6 +162,19 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
 }
 
 SDL_AppResult SDL_AppIterate(void *appstate) {
+    // The browser IDE callback driver calls SDL_AppIterate directly without
+    // calling SDL_AppEvent, so we must poll events here for ImGui to receive
+    // mouse/keyboard input.  In SDL3's native callback loop SDL_AppEvent has
+    // already consumed all queued events, so SDL_PollEvent returns immediately
+    // and there is no double-processing.
+    {
+        SDL_Event ev;
+        while (SDL_PollEvent(&ev)) {
+            ImGui_ImplSDL3_ProcessEvent(&ev);
+            if (ev.type == SDL_EVENT_QUIT) return SDL_APP_SUCCESS;
+        }
+    }
+
     t += 0.016f * speed;
 
     // ImGui new frame
