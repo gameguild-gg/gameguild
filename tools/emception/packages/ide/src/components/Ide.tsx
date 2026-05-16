@@ -876,14 +876,17 @@ export default function Ide({
         const sourceFsPath = toWorkspaceFsPath(compileTarget);
 
         // Detect compilation path:
-        //   isSDL3   → SDL3 port: two-step clang+wasm-ld via BROWSER_BUILD_PRESETS.sdl
-        //   isRaylib → raylib: two-step clang+wasm-ld via BROWSER_BUILD_PRESETS.raylib
-        //              (raylib is not an emsdk port; compile.tool='clang' is the signal)
+        //   isSDL3    → SDL3 port: two-step clang+wasm-ld via BROWSER_BUILD_PRESETS.sdl
+        //   isAllegro → Allegro 5: two-step clang+wasm-ld via BROWSER_BUILD_PRESETS.allegro
+        //               (signalled by workspace id 'cpp-allegro')
+        //   isRaylib  → raylib: two-step clang+wasm-ld via BROWSER_BUILD_PRESETS.raylib
+        //               (raylib is not an emsdk port; compile.tool='clang' is the signal)
         //   otherwise → generic emcc/em++ single-step (expects JS output)
         const isSDL3 = resolvedConfig.compile.args.some((a) => a === '-sUSE_SDL=3');
-        const isRaylib = resolvedConfig.compile.tool === 'clang' && runType === 'canvas';
+        const isAllegro = resolvedConfig.id === 'cpp-allegro';
+        const isRaylib = resolvedConfig.compile.tool === 'clang' && runType === 'canvas' && !isAllegro;
 
-        if (!isSDL3 && !isRaylib) {
+        if (!isSDL3 && !isRaylib && !isAllegro) {
           // ── Generic emcc single-step path (raylib, etc.) ────────
           tty.writeLine('\x1b[36mCanvas compile...\x1b[0m');
           const compileArgv = resolveArgs(resolvedConfig.compile.args, sourceFsPath);
@@ -957,13 +960,21 @@ export default function Ide({
           return;
         }
 
-        // ── Two-step clang+wasm-ld path (SDL3 or raylib) ──────────
-        // Both use sdl3-runtime.mjs for WebGL/emscripten_set_main_loop support.
-        // SDL3 exports SDL_App* callbacks; raylib exports main() and registers
-        // its loop via emscripten_set_main_loop — callMain() handles both.
-        const canvasLabel = isSDL3 ? 'SDL3' : 'raylib';
-        const canvasPreset = isSDL3 ? BROWSER_BUILD_PRESETS.sdl : BROWSER_BUILD_PRESETS.raylib;
-        const runtimePath = isRaylib ? '/usr/lib/emscripten/raylib-runtime.mjs' : '/usr/lib/emscripten/sdl3-runtime.mjs';
+        // ── Two-step clang+wasm-ld path (SDL3, raylib, or Allegro) ──
+        // All three use a MODULARIZE runtime mjs for WebGL/emscripten_set_main_loop.
+        // SDL3 exports SDL_App* callbacks; raylib and Allegro export main() and
+        // register their loop via emscripten_set_main_loop — callMain() handles all.
+        const canvasLabel = isSDL3 ? 'SDL3' : isAllegro ? 'allegro' : 'raylib';
+        const canvasPreset = isSDL3
+          ? BROWSER_BUILD_PRESETS.sdl
+          : isAllegro
+            ? BROWSER_BUILD_PRESETS.allegro
+            : BROWSER_BUILD_PRESETS.raylib;
+        const runtimePath = isAllegro
+          ? '/usr/lib/emscripten/allegro-runtime.mjs'
+          : isRaylib
+            ? '/usr/lib/emscripten/raylib-runtime.mjs'
+            : '/usr/lib/emscripten/sdl3-runtime.mjs';
         tty.writeLine(`\x1b[36m${canvasLabel} detected \u2014 compiling object...\x1b[0m`);
 
         const sdlObjPath = '/tmp/emception-canvas-main.o';
@@ -1162,11 +1173,13 @@ export default function Ide({
             // invocation below — causing InitWindow + emscripten_set_main_loop
             // to execute twice, registering duplicate RAF loops → crash.
             // SDL3 is unaffected because its _main is a noop proxy.
-            noInitialRun: isRaylib,
+            // Allegro also exports user main() — same double-call hazard.
+            noInitialRun: isRaylib || isAllegro,
             // SDL3 only: override instantiateWasm so we can patch callback
-            // lifecycle exports for callback-only apps. Raylib has its own
-            // runtime glue and should use the runtime's native instantiate path.
-            ...(!isRaylib && {
+            // lifecycle exports for callback-only apps. Raylib and Allegro have
+            // their own runtime glue and should use the runtime's native
+            // instantiate path.
+            ...(!isRaylib && !isAllegro && {
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
               instantiateWasm(info: any, receiveInstance: (inst: WebAssembly.Instance) => void) {
                 const envBase = {
@@ -1225,12 +1238,12 @@ export default function Ide({
                         return () => 0;
                       }
                       // Raylib + emscripten JS libs can import additional helper
-                      // symbols (e.g. SetCanvasIdJs). Keep raylib permissive here
-                      // to avoid hard load failures; strict mode remains for SDL3.
-                      if (canvasLabel === 'raylib') {
+                      // symbols (e.g. SetCanvasIdJs). Keep raylib/allegro permissive
+                      // here to avoid hard load failures; strict mode remains for SDL3.
+                      if (canvasLabel === 'raylib' || canvasLabel === 'allegro') {
                         if (!missingRaylibImports.has(prop)) {
                           missingRaylibImports.add(prop);
-                          tty.writeLine(`\x1b[33mraylib missing env import shimmed: ${prop}\x1b[0m`);
+                          tty.writeLine(`\x1b[33m${canvasLabel} missing env import shimmed: ${prop}\x1b[0m`);
                         }
                         return () => 0;
                       }
@@ -1296,6 +1309,9 @@ export default function Ide({
         ]).catch((e: unknown) => {
           sdlLoadOk = false;
           tty.writeError(`${canvasLabel} module error: ${e}`);
+          // Surface error to console so e2e tests / devtools can see the full message + stack.
+          // eslint-disable-next-line no-console
+          console.error(`[Emception:IDE] ${canvasLabel} module load error:`, e);
           setStatus(`${canvasLabel} load failed`);
           return null;
         });

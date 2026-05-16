@@ -213,6 +213,63 @@ int main() {
 }
 `;
 
+// Allegro 5 bouncing ball (C++) — native Emscripten platform.
+// Compile via clang+wasm-ld (BROWSER_BUILD_PRESETS.allegro); the runtime mjs
+// supplies emscripten_set_main_loop + WebGL2 (GLFW3) just like raylib.
+export const ALLEGRO_DEMO_CODE = `// Allegro 5 bouncing ball — compiled in the browser via Emscripten.
+// Click ▶ to build and render to the canvas tab.
+#include <allegro5/allegro.h>
+#include <allegro5/allegro_primitives.h>
+#include <allegro5/allegro_font.h>
+#include <emscripten/emscripten.h>
+#include <cmath>
+
+static constexpr int W = 800;
+static constexpr int H = 600;
+static ALLEGRO_DISPLAY*   display = nullptr;
+static ALLEGRO_FONT*      font    = nullptr;
+static float              t       = 0.f;
+
+static void update_draw_frame() {
+    t += 1.f / 60.f;
+
+    al_clear_to_color(al_map_rgb(17, 17, 27));
+
+    for (int x = 0; x < W; x += 40) {
+        al_draw_line(x, 0, x, H, al_map_rgb(40, 40, 60), 1.f);
+    }
+    for (int y = 0; y < H; y += 40) {
+        al_draw_line(0, y, W, y, al_map_rgb(40, 40, 60), 1.f);
+    }
+
+    float cx = W * 0.5f + 300.f * std::sin(t * 1.2f);
+    float cy = H * 0.5f + 200.f * std::cos(t * 1.4f);
+    al_draw_filled_circle(cx, cy, 32.f, al_map_rgb(137, 180, 250));
+
+    if (font) {
+        al_draw_text(font, al_map_rgb(205, 214, 244), 20, 20,
+                     ALLEGRO_ALIGN_LEFT, "Allegro 5 + Emscripten");
+    }
+
+    al_flip_display();
+}
+
+int main() {
+    if (!al_init()) return 1;
+    al_init_primitives_addon();
+    al_init_font_addon();
+
+    display = al_create_display(W, H);
+    if (!display) return 1;
+    al_set_window_title(display, "Allegro 5 demo");
+
+    font = al_create_builtin_font();
+
+    emscripten_set_main_loop(update_draw_frame, 0, 1);
+    return 0;
+}
+`;
+
 // ── Workspace bundle helpers ────────────────────────────────────
 
 /** Parse a `.workspace.json` bundle string into a `WorkspaceConfig`. Throws on invalid input. */
