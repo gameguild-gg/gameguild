@@ -1,3 +1,9 @@
+# [3.7.0](https://github.com/gameguild-gg/gameguild/compare/v3.6.0...v3.7.0) (2026-05-17)
+
+### Features
+
+* **emception:** add SDL3+OpenGL ES 3 preset, demo, and E2E test ([8e978ac](https://github.com/gameguild-gg/gameguild/commit/8e978acde504b36e8acd52d4b841f22a36824faa))
+
 # [3.6.0](https://github.com/gameguild-gg/gameguild/compare/v3.5.2...v3.6.0) (2026-05-16)
 
 ### Features
