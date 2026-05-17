@@ -459,10 +459,10 @@ static GLuint compileShader(GLenum type, const char* src) {
 }
 
 SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[]) {
+    SDL_Init(SDL_INIT_VIDEO);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
-    SDL_Init(SDL_INIT_VIDEO);
     window = SDL_CreateWindow("SDL3 + OpenGL ES 3", 800, 600, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
     glctx  = SDL_GL_CreateContext(window);
     SDL_GL_MakeCurrent(window, glctx);
