@@ -1213,6 +1213,10 @@ export default function Ide({
                   // app can drive its main loop normally in the browser runtime.
                   exit: info?.env?.exit ?? (() => { }),
                   _exit: info?.env?._exit ?? (() => { }),
+                  // _abort_js is the WASM import for C abort(). Newer Emscripten
+                  // runtimes include it; if the stub WASM didn't use abort() the
+                  // runtime omits it, but the user's WASM may still need it.
+                  _abort_js: info?.env?._abort_js ?? (() => { throw new Error('abort()'); }),
                 };
                 const env = new Proxy(envBase, {
                   get(target, prop, receiver) {
