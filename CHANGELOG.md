@@ -1,3 +1,9 @@
+# [3.7.2](https://github.com/gameguild-gg/gameguild/compare/v3.7.1...v3.7.2) (2026-05-17)
+
+### Bug Fixes
+
+* abort ([5c1541a](https://github.com/gameguild-gg/gameguild/commit/5c1541a5b4b3f9eb2ba631ab20b103efe72673d0))
+
 # [3.7.1](https://github.com/gameguild-gg/gameguild/compare/v3.7.0...v3.7.1) (2026-05-17)
 
 ### Bug Fixes
