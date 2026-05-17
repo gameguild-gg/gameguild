@@ -1,3 +1,9 @@
+# [3.7.1](https://github.com/gameguild-gg/gameguild/compare/v3.7.0...v3.7.1) (2026-05-17)
+
+### Bug Fixes
+
+* **emception:** now opengl demo works with sdl ([36d520b](https://github.com/gameguild-gg/gameguild/commit/36d520b4a44f68303c1c167205d11e029e153e44))
+
 # [3.7.0](https://github.com/gameguild-gg/gameguild/compare/v3.6.0...v3.7.0) (2026-05-17)
 
 ### Features
