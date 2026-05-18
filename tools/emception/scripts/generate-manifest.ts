@@ -5,7 +5,9 @@ import * as os from 'os';
 import * as path from 'path';
 import shell from 'shelljs';
 import { fileURLToPath } from 'url';
+import { pythonMajorMinor } from './lib/detect-versions.ts';
 import { enableBuildKeepalive } from './lib/keepalive.ts';
+import { PINNED } from './lib/pinned-versions.ts';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -48,25 +50,33 @@ interface Manifest {
     bundles: Record<string, any>;
 }
 
-// Detect Python version from sysroot directory structure
-function detectPythonVersionFromSysroot(syspath: string): { majorMinor: string; compact: string } {
+// Resolve the Python major.minor that should be stamped into the manifest.
+// Uses PYTHON_VERSION env var (set by build-cpython.ts) or falls back to the
+// pinned constant — never infers from a filesystem scan, which could silently
+// pick up a stale version left by a previous build.
+function resolveExpectedPythonVersion(syspath: string): { majorMinor: string; compact: string } {
+    const fullVersion = process.env.PYTHON_VERSION || PINNED.PYTHON_VERSION;
+    const majorMinor = pythonMajorMinor(fullVersion);
+    const compact = majorMinor.replace('.', '');
+    const source = process.env.PYTHON_VERSION ? 'PYTHON_VERSION env' : 'PINNED';
+    console.log(`Python version: ${majorMinor} (from ${source})`);
+
+    // Warn about stale Python version directories so the developer knows to
+    // run build:cpython to clean them up.
     const libDir = path.join(syspath, 'usr', 'lib');
     if (fs.existsSync(libDir)) {
         for (const entry of fs.readdirSync(libDir)) {
-            const match = entry.match(/^python(\d+)\.(\d+)$/);
-            if (match) {
-                const majorMinor = `${match[1]}.${match[2]}`;
-                const compact = `${match[1]}${match[2]}`;
-                console.log(`Detected Python version from sysroot: ${majorMinor}`);
-                return { majorMinor, compact };
+            const match = entry.match(/^python(\d+\.\d+)$/);
+            if (match && match[1] !== majorMinor) {
+                console.warn(`WARNING: stale sysroot dir usr/lib/${entry} (expected python${majorMinor}) — run build:cpython to clean up`);
             }
         }
     }
-    console.warn('Could not detect Python version from sysroot, defaulting to 3.13');
-    return { majorMinor: '3.13', compact: '313' };
+
+    return { majorMinor, compact };
 }
 
-const pyVer = detectPythonVersionFromSysroot(SYSPATH);
+const pyVer = resolveExpectedPythonVersion(SYSPATH);
 
 const manifest: Manifest = {
     version: 1,
