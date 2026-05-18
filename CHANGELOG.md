@@ -1,3 +1,10 @@
+# [3.7.3](https://github.com/gameguild-gg/gameguild/compare/v3.7.2...v3.7.3) (2026-05-18)
+
+### Bug Fixes
+
+* **emception:** enforce pinned python version in manifest ([6b0121d](https://github.com/gameguild-gg/gameguild/commit/6b0121db426d352b1e9023b82713820d30c6e162))
+* **emception:** presets file organization ([1fa26a0](https://github.com/gameguild-gg/gameguild/commit/1fa26a095122fffe3a8f3a71249c996abaecda66))
+
 # [3.7.2](https://github.com/gameguild-gg/gameguild/compare/v3.7.1...v3.7.2) (2026-05-17)
 
 ### Bug Fixes
