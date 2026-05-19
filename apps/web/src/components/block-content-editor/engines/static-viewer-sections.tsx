@@ -1,5 +1,29 @@
 "use client"
 
+/**
+ * Static-viewer sections
+ *
+ * Composable read-only surfaces for rendering one or more projects without
+ * the editor chrome. Provides three project-source modes through three
+ * hooks, plus the corresponding section components:
+ *
+ *   useStaticProject(id)               → DirectSection
+ *     ↳ Reads IndexedDB via `EnhancedStorageAdapter.load(id)`.
+ *
+ *   useStaticProjectFromFolder(folder) → DirectFolderSection
+ *     ↳ Fetches `GET /api/static-viewer/folder/[folderName]`, which reads
+ *       `src/data/test-blocks/<folder>/{index.json,data.block-content-editor}`.
+ *
+ *   useStaticBlocksFromFile(filePath)  → DirectFileSection
+ *     ↳ Fetches `GET /api/static-viewer/file/[...path]` — single file, no
+ *       index.json, no metadata.
+ *
+ * All three pipe the serialized payload through `deserializeProject(...)`
+ * to produce a `BlockArray` and render it with `<BlockArrayViewer>`.
+ *
+ * See `docs/DATA-FLOW.md` ("Static-Viewer Flow").
+ */
+
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react"
 import { FileWarning, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
