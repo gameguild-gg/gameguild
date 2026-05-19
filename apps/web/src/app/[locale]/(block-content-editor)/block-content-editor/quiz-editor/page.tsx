@@ -8,10 +8,9 @@ import { StudioLayout } from "../studio/studio-layout"
 import type { FieldConfig, ToolbarConfig } from "@/components/block-content-editor/engines/editor-config"
 
 const fieldConfig: Partial<FieldConfig> = {
-  engines: ["blocks"],
   allowedBlockTypes: [],
   allowedModes: ["quiz-page"],
-  defaultEngine: "blocks",
+  defaultMode: "quiz-page",
 }
 
 const toolbarConfig: Partial<ToolbarConfig> = {
