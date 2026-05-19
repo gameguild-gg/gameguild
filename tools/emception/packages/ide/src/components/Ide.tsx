@@ -1475,12 +1475,12 @@ export default function Ide({
         // (no fork/posix_spawn in emscripten libc), causing clang to exit 0
         // in ~35ms with no output. cc1_main is linked into clang.wasm so the
         // frontend runs in-process when invoked with -cc1 directly.
-        // Argv comes from the shared `BROWSER_BUILD_PRESETS.cpp` preset
-        // exposed by `@emception/browser` so flag drift between the IDE
-        // and the headless `compileAndRun()` helper is impossible.
-        const cppPreset = BROWSER_BUILD_PRESETS.cpp;
+        // Detect language from source file extension to pick the right preset.
+        // C source files (.c) use the C preset; everything else uses C++.
+        const isC = compileTarget.endsWith('.c');
+        const directPreset = isC ? BROWSER_BUILD_PRESETS.c : BROWSER_BUILD_PRESETS.cpp;
         const presetPaths = { sourcePath: sourceFsPath, objectPath: objPath, wasmPath };
-        const clangResult = await client.run(cppPreset.compileTool, cppPreset.compileArgv(presetPaths), {
+        const clangResult = await client.run(directPreset.compileTool, directPreset.compileArgv(presetPaths), {
           cwd: resolvedConfig.compile.cwd ?? '/home/user',
           onStdout: (t: string) => {
             console.log(t);
@@ -1501,7 +1501,7 @@ export default function Ide({
         }
 
         tty.writeLine('\x1b[36mLinking (wasm-ld)...\x1b[0m');
-        const lldResult = await client.run(cppPreset.linkTool, cppPreset.linkArgv(presetPaths), {
+        const lldResult = await client.run(directPreset.linkTool, directPreset.linkArgv(presetPaths), {
           cwd: resolvedConfig.compile.cwd ?? '/home/user',
           onStdout: (t: string) => {
             console.log(t);
