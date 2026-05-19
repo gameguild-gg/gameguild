@@ -2,16 +2,7 @@
 
 import { BaseConfirmDialog } from "./base-confirm-dialog"
 import { Download, FileText, Calendar, HardDrive, Archive, FileJson } from "lucide-react"
-
-interface ProjectData {
-  id: string
-  name: string
-  data: string
-  tags: string[]
-  size: number
-  createdAt: string
-  updatedAt: string
-}
+import type { ProjectData } from "@/components/block-content-editor/lib/storage/editor/project-data"
 
 interface DownloadConfirmDialogProps {
   open: boolean

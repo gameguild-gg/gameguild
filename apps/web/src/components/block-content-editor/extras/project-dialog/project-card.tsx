@@ -4,19 +4,7 @@ import type React from "react"
 import { Button } from "@/components/ui/button"
 import { FolderOpen, Trash2, Download, Info, HardDrive, Cloud, Database, Wifi, WifiOff, Eye, Blocks } from "lucide-react"
 import { useGoogleDriveAuth } from "@/components/block-content-editor/hooks/editor/use-google-drive-auth"
-
-interface ProjectData {
-  id: string
-  name: string
-  data: string
-  tags: string[]
-  size: number
-  createdAt: string
-  updatedAt: string
-  storageType?: "local" | "gameguild-cloud" | "google-drive"
-  isLocallyAvailable?: boolean
-  preferences?: any
-}
+import type { ProjectData } from "@/components/block-content-editor/lib/storage/editor/project-data"
 
 interface ProjectCardProps {
   project: ProjectData
@@ -156,10 +144,10 @@ export function ProjectCard({
           )}
           
           <div className="mt-auto text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 truncate">
-            <span>{formatSize(project.size)}</span>
+            <span>{formatSize(project.metadata.size)}</span>
             <span className="mx-1">•</span>
-            <span className="hidden sm:inline">{new Date(project.updatedAt).toLocaleDateString()}</span>
-            <span className="sm:hidden">{new Date(project.updatedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+            <span className="hidden sm:inline">{new Date(project.metadata.updatedAt).toLocaleDateString()}</span>
+            <span className="sm:hidden">{new Date(project.metadata.updatedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
           </div>
         </div>
 
@@ -344,9 +332,9 @@ export function ProjectCard({
           )}
           
           <div className="text-xs text-gray-500 dark:text-gray-400">
-            <span>{formatSize(project.size)}</span>
+            <span>{formatSize(project.metadata.size)}</span>
             <span className="mx-1.5">•</span>
-            <span>Updated {new Date(project.updatedAt).toLocaleDateString()}</span>
+            <span>Updated {new Date(project.metadata.updatedAt).toLocaleDateString()}</span>
             <span className="mx-1.5">•</span>
             <span className="font-mono">#{project.id.slice(0, 8)}</span>
           </div>
