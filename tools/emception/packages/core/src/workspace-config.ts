@@ -83,19 +83,43 @@ export interface WorkspaceConfig {
   run: RunConfig;
   test?: TestConfig;
   features: WorkspaceFeatures;
-  layout: LayoutConfig;
+  /**
+   * IDE layout hints. Optional — headless / bare-runner consumers do not need
+   * to supply layout data. When absent the IDE falls back to sensible defaults
+   * (first file active, all files in the main group).
+   */
+  layout?: LayoutConfig;
   files: Record<string, BundleFile>;
 }
 
 // ── Workspace bundle helpers ────────────────────────────────────
+
+const VALID_RUN_TYPES: readonly RunType[] = ['canvas', 'wasi-terminal', 'cmake-build', 'python-script'];
 
 /** Parse a `.workspace.json` bundle string into a `WorkspaceConfig`. Throws on invalid input. */
 export function parseWorkspaceBundle(json: string): WorkspaceConfig {
   const raw = JSON.parse(json);
   if (!raw || typeof raw !== 'object') throw new Error('Invalid workspace bundle: not an object');
   if (!raw.id || typeof raw.id !== 'string') throw new Error('Invalid workspace bundle: missing id');
-  if (!raw.compile || !raw.run || !raw.features || !raw.layout || !raw.files) {
-    throw new Error('Invalid workspace bundle: missing required fields (compile, run, features, layout, files)');
+  if (!raw.compile || !raw.run || !raw.features || !raw.files) {
+    throw new Error('Invalid workspace bundle: missing required fields (compile, run, features, files)');
+  }
+  if (typeof raw.compile.tool !== 'string' || raw.compile.tool.trim() === '') {
+    throw new Error('Invalid workspace bundle: compile.tool must be a non-empty string');
+  }
+  if (!VALID_RUN_TYPES.includes(raw.run.type)) {
+    throw new Error(`Invalid workspace bundle: run.type must be one of: ${VALID_RUN_TYPES.join(', ')}`);
+  }
+  if (typeof raw.files !== 'object') throw new Error('Invalid workspace bundle: files must be an object');
+  for (const [path, f] of Object.entries(raw.files as Record<string, unknown>)) {
+    if (!f || typeof f !== 'object') throw new Error(`Invalid workspace bundle: files[${JSON.stringify(path)}] must be an object`);
+    const file = f as Record<string, unknown>;
+    if (file.encoding !== 'text' && file.encoding !== 'base64') {
+      throw new Error(`Invalid workspace bundle: files[${JSON.stringify(path)}].encoding must be 'text' or 'base64'`);
+    }
+    if (typeof file.content !== 'string') {
+      throw new Error(`Invalid workspace bundle: files[${JSON.stringify(path)}].content must be a string`);
+    }
   }
   return raw as WorkspaceConfig;
 }

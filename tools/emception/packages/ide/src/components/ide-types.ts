@@ -115,7 +115,13 @@ export function workspaceConfigToState(config: WorkspaceConfig): {
     wsFiles[path] = { path, type, content };
   }
 
-  const openTabs: OpenTab[] = config.layout.openTabs.map((t) => {
+  // When layout is absent (headless / programmatic workspace bundles) derive
+  // sensible defaults: all visible files go into the 'main' group and the
+  // first file becomes the active tab.
+  const layoutOpenTabs = config.layout?.openTabs ?? Object.keys(wsFiles).map((p) => ({ path: p, group: 'main' as DockGroup }));
+  const layoutActiveFile = config.layout?.activeFile ?? Object.keys(wsFiles)[0] ?? '';
+
+  const openTabs: OpenTab[] = layoutOpenTabs.map((t) => {
     const file = wsFiles[t.path];
     return {
       id: `tab:${t.path}`,
@@ -125,8 +131,8 @@ export function workspaceConfigToState(config: WorkspaceConfig): {
     };
   });
 
-  const activeTabId = `tab:${config.layout.activeFile}`;
-  const expandedDirs = new Set(config.layout.expandedDirs ?? ['/user']);
+  const activeTabId = `tab:${layoutActiveFile}`;
+  const expandedDirs = new Set(config.layout?.expandedDirs ?? ['/user']);
 
   return { files: wsFiles, openTabs, activeTabId, expandedDirs };
 }

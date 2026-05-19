@@ -114,7 +114,7 @@ export default function Ide({
   const initialState = workspaceConfigToState(resolvedConfig);
 
   const [files, setFiles] = useState<Record<string, WorkspaceFile>>(initialState.files);
-  const [selectedPath, setSelectedPath] = useState(resolvedConfig.layout.activeFile);
+  const [selectedPath, setSelectedPath] = useState(resolvedConfig.layout?.activeFile ?? '');
   const [expandedDirs, setExpandedDirs] = useState<Set<string>>(initialState.expandedDirs);
   const [openTabs, setOpenTabs] = useState<OpenTab[]>(initialState.openTabs);
   const [activeTabId, setActiveTabId] = useState(initialState.activeTabId);
@@ -217,7 +217,7 @@ export default function Ide({
         setOpenTabs(state.openTabs);
         setActiveTabId(state.activeTabId);
         setExpandedDirs(state.expandedDirs);
-        setSelectedPath(config.layout.activeFile);
+        setSelectedPath(config.layout?.activeFile ?? '');
       } catch (e) {
         console.error('[Emception:IDE] Failed to fetch workspace bundle:', e);
       }
@@ -595,7 +595,7 @@ export default function Ide({
     stoppedRef.current = false;
     const state = workspaceConfigToState(resolvedConfig);
     setFiles(state.files);
-    setSelectedPath(resolvedConfig.layout.activeFile);
+    setSelectedPath(resolvedConfig.layout?.activeFile ?? '');
     setExpandedDirs(state.expandedDirs);
     setOpenTabs(state.openTabs);
     setActiveTabId(state.activeTabId);
