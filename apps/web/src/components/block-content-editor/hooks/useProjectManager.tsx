@@ -13,7 +13,7 @@ import {
 import { toast } from "sonner"
 import type { HomeStorageAdapter } from "./useHomeStorage"
 import type { ProjectMode } from "@/components/block-content-editor/lib/storage/editor/project-modes"
-import type { EngineType } from "@/components/block-content-editor/lib/storage/editor/project-types"
+// Engine removed: all projects use the unified Blocks engine.
 
 interface ProjectData {
   id: string
@@ -47,7 +47,7 @@ export interface UseProjectManagerReturn {
   createDialogOpen: boolean
   setCreateDialogOpen: (open: boolean) => void
   handleCreateNewProject: () => void
-  handleProjectCreate: (projectData: { id: string; name: string; tags: string[]; storageType: "local" | "gameguild-cloud" | "google-drive"; mode: ProjectMode; engine: EngineType }) => void
+  handleProjectCreate: (projectData: { id: string; name: string; tags: string[]; storageType: "local" | "gameguild-cloud" | "google-drive"; mode: ProjectMode }) => void
   refreshProjects: () => Promise<void>
 }
 
@@ -238,7 +238,7 @@ export function useProjectManager({
     setCreateDialogOpen(true)
   }, [])
 
-  const handleProjectCreate = useCallback((projectData: { id: string; name: string; tags: string[]; storageType: "local" | "gameguild-cloud" | "google-drive"; mode: ProjectMode; engine: EngineType }) => {
+  const handleProjectCreate = useCallback((projectData: { id: string; name: string; tags: string[]; storageType: "local" | "gameguild-cloud" | "google-drive"; mode: ProjectMode }) => {
     // Navigate to studio with the newly created project's ID
     window.location.href = `/block-content-editor/studio#${projectData.id}`
   }, [])
