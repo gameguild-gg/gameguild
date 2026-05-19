@@ -88,7 +88,6 @@ export function EditorProvider({ fieldConfig: fieldPartial, toolbarConfig: toolb
   const effectiveMode = fieldConfig.allowedModes?.[0] ?? fieldConfig.defaultMode
 
   const project = useProjectStorage({
-    engine: fieldConfig.defaultEngine,
     mode: effectiveMode,
   })
   const history = useProjectHistory(project)
@@ -151,7 +150,7 @@ export function EditorProvider({ fieldConfig: fieldPartial, toolbarConfig: toolb
   const handleLinkNavigation = (event: React.MouseEvent<HTMLAnchorElement>, url: string) => {
     if (event.ctrlKey || event.metaKey || event.button === 1) return
     event.preventDefault()
-    if (project.projectId && project.editorState) {
+    if (project.projectId && project.blocks.length > 0) {
       setNextUrl(url)
       setExitDialogOpen(true)
     } else {
@@ -160,7 +159,7 @@ export function EditorProvider({ fieldConfig: fieldPartial, toolbarConfig: toolb
   }
 
   const handleNavigation = (url: string) => {
-    if (project.projectId && project.editorState) {
+    if (project.projectId && project.blocks.length > 0) {
       setNextUrl(url)
       setExitDialogOpen(true)
     } else {

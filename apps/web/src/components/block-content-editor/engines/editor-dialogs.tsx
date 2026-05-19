@@ -6,9 +6,7 @@ import { SizeDetailsDialog } from "@/components/block-content-editor/extras/edit
 import { SyncStatusDialog } from "@/components/block-content-editor/extras/editor/sync-status-dialog"
 import { ExitConfirmDialog } from "@/components/block-content-editor/extras/dialogs/exit-confirm-dialog"
 import { ProjectHistoryDialog } from "@/components/block-content-editor/extras/dialogs/project-history-dialog"
-import { PreviewRenderer } from "@/components/block-content-editor/extras/preview/preview-renderer"
 import { BlockArrayViewer } from "@/components/block-content-editor/engines/blocks/block-array-viewer"
-import { ENGINE_TYPES } from "@/components/block-content-editor/lib/storage/editor/project-types"
 import { useEditor } from "./editor-provider"
 
 const RECOMMENDED_SIZE_KB = 5120
@@ -31,8 +29,6 @@ export function EditorDialogs() {
         onProjectsListUpdate={project.refreshProjects}
         onAvailableTagsUpdate={project.refreshTags}
         generateProjectId={project.generateProjectId}
-        allowedEngines={fieldConfig.engines}
-
         allowedModes={fieldConfig.allowedModes}
         defaultMode={fieldConfig.allowedModes?.[0] ?? fieldConfig.defaultMode}
       />
@@ -71,14 +67,9 @@ export function EditorDialogs() {
           <DialogHeader>
             <DialogTitle>Preview</DialogTitle>
           </DialogHeader>
-          {project.engine === ENGINE_TYPES.BLOCKS && (
-            <div className="w-full max-h-[80vh] overflow-y-auto">
-              <BlockArrayViewer blocks={project.blockArrayBlocks} />
-            </div>
-          )}
-          {project.engine !== ENGINE_TYPES.BLOCKS && preview.previewState && (
-            <PreviewRenderer serializedState={preview.previewState} />
-          )}
+          <div className="w-full max-h-[80vh] overflow-y-auto">
+            <BlockArrayViewer blocks={project.blocks} />
+          </div>
         </DialogContent>
       </Dialog>
 
@@ -97,7 +88,6 @@ export function EditorDialogs() {
         listHistory={(id) => project.db.listHistory(id)}
         listSnapshots={(id) => project.db.listSnapshots(id)}
       />
-
     </>
   )
 }

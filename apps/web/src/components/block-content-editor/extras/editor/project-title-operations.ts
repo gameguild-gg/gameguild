@@ -1,17 +1,16 @@
 import { toast } from "sonner"
-import type { LexicalEditor } from "lexical"
 
-import type { EngineType } from "@/components/block-content-editor/lib/storage/editor/project-types"
+type StorageType = "local" | "gameguild-cloud" | "google-drive"
 
-interface ProjectData {
+interface ProjectListItem {
   id: string
   name: string
   tags?: string[]
 }
 
 interface StorageAdapter {
-  save: (id: string, name: string, data: string, tags?: string[], storageType?: "local" | "gameguild-cloud" | "google-drive", preferences?: any, engine?: EngineType) => Promise<void>
-  list: () => Promise<ProjectData[]>
+  save: (id: string, name: string, data: string, tags?: string[], storageType?: StorageType, preferences?: any) => Promise<void>
+  list: () => Promise<ProjectListItem[]>
 }
 
 export interface TitleEditParams {
@@ -25,8 +24,7 @@ export interface TitleSaveParams {
   editingProjectName: string
   currentProjectName: string
   currentProjectId: string
-  editorState: string // Already formatted via createProjectData
-  editorRef: React.RefObject<LexicalEditor | null>
+  data: string
   projectTags: string[]
   storageAdapter: StorageAdapter
   setCurrentProjectName: (name: string) => void
@@ -55,8 +53,7 @@ export async function handleTitleSave(params: TitleSaveParams) {
     editingProjectName,
     currentProjectName,
     currentProjectId,
-    editorState,
-    editorRef,
+    data,
     projectTags,
     storageAdapter,
     setCurrentProjectName,
@@ -81,7 +78,6 @@ export async function handleTitleSave(params: TitleSaveParams) {
     return
   }
 
-  // Check if project with same name already exists
   const existingProjects = await storageAdapter.list()
   if (existingProjects.some((p) => p.name === editingProjectName.trim() && p.id !== currentProjectId)) {
     toast.error("Nome já existe", {
@@ -95,15 +91,8 @@ export async function handleTitleSave(params: TitleSaveParams) {
   }
 
   try {
-    // Get current editor state
-    let stateToSave = editorState
-    if (!stateToSave && editorRef.current) {
-      const currentState = editorRef.current.getEditorState()
-      stateToSave = JSON.stringify(currentState.toJSON())
-    }
-
-    if (stateToSave) {
-      await storageAdapter.save(currentProjectId, editingProjectName.trim(), stateToSave, projectTags)
+    if (data) {
+      await storageAdapter.save(currentProjectId, editingProjectName.trim(), data, projectTags)
       setCurrentProjectName(editingProjectName.trim())
       await loadSavedProjectsList()
 

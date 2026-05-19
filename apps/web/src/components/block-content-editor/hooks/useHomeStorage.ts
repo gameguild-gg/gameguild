@@ -107,10 +107,10 @@ export function useHomeStorage(): UseHomeStorageReturn {
       }
     },
 
-    save: async (id: string, name: string, data: string, tags: string[], storageType?: "local" | "gameguild-cloud" | "google-drive", preferences?: any, engine?: string) => {
+    save: async (id: string, name: string, data: string, tags: string[], storageType?: "local" | "gameguild-cloud" | "google-drive", preferences?: any) => {
       if (!isDbInitialized) throw new Error("Database not initialized")
       try {
-        await dbStorage.current.save(id, name, data, tags, storageType, preferences, engine as any)
+        await dbStorage.current.save(id, name, data, tags, storageType, preferences)
       } catch (error) {
         console.error("Failed to save project:", error)
         throw error

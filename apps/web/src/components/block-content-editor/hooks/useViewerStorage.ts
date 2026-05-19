@@ -1,21 +1,12 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { toast } from "sonner"
 import { EnhancedStorageAdapter } from "@/components/block-content-editor/lib/storage/editor/enhanced-storage-adapter"
-import { extractEditorStates } from "@/components/block-content-editor/lib/storage/editor/layout-detector"
-import { ENGINE_TYPES } from "@/components/block-content-editor/lib/storage/editor/project-types"
+import { deserializeProject } from "@/components/block-content-editor/lib/storage/editor/block-storage"
 import { checkSelectedProject as checkProjectPreview } from "@/components/block-content-editor/extras/preview/preview-load-operations"
 import type { ProjectData } from "@/components/block-content-editor/extras/preview/preview-load-operations"
-import { cellsToLexical } from "@/components/block-content-editor/lib/storage/editor/cell-converters/lexical"
-import { storageToBlocks } from "@/components/block-content-editor/lib/storage/editor/cell-converters/blocks"
 import type { BlockArray } from "@/components/block-content-editor/lib/storage/editor/block-structure"
-
-export interface ViewerLayoutInfo {
-  states: { blocks: Record<string, any> }
-  isBlocksEngine?: boolean
-  blocksArray?: BlockArray
-}
 
 export interface UseViewerStorageReturn {
   currentProject: ProjectData | null
@@ -33,7 +24,7 @@ export interface UseViewerStorageReturn {
     ) => Promise<ProjectData[]>
   }
   loadProject: (projectData: ProjectData) => void
-  layoutInfo: ViewerLayoutInfo
+  blocks: BlockArray
 }
 
 export function useViewerStorage(): UseViewerStorageReturn {
@@ -43,7 +34,6 @@ export function useViewerStorage(): UseViewerStorageReturn {
 
   const dbStorage = useRef<EnhancedStorageAdapter>(new EnhancedStorageAdapter())
 
-  // ── Storage adapter (read-only subset) ──
   const storageAdapter = {
     load: async (id: string): Promise<ProjectData | null> => {
       if (!isDbInitialized) throw new Error("Database not initialized")
@@ -54,17 +44,11 @@ export function useViewerStorage(): UseViewerStorageReturn {
         return null
       }
     },
-
     list: async (): Promise<ProjectData[]> => {
       if (!isDbInitialized) return []
-      try {
-        return await dbStorage.current.list()
-      } catch (error) {
-        console.error("Failed to list projects:", error)
-        return []
-      }
+      try { return await dbStorage.current.list() }
+      catch (error) { console.error("Failed to list projects:", error); return [] }
     },
-
     searchProjects: async (
       searchTerm: string,
       tags: string[],
@@ -72,23 +56,17 @@ export function useViewerStorage(): UseViewerStorageReturn {
       storageTypeFilter?: "local" | "gameguild-cloud" | "google-drive",
     ): Promise<ProjectData[]> => {
       if (!isDbInitialized) return []
-      try {
-        return await dbStorage.current.searchProjects(searchTerm, tags, filterMode || "any", storageTypeFilter)
-      } catch (error) {
-        console.error("Failed to search projects:", error)
-        return []
-      }
+      try { return await dbStorage.current.searchProjects(searchTerm, tags, filterMode || "any", storageTypeFilter) }
+      catch (error) { console.error("Failed to search projects:", error); return [] }
     },
   }
 
-  // ── Initialize DB, load tags, check URL hash ──
   useEffect(() => {
     const initDB = async () => {
       try {
         await dbStorage.current.init()
         setIsDbInitialized(true)
 
-        // Load tags
         try {
           const tags = await dbStorage.current.getAllTags()
           setAvailableTags(tags)
@@ -96,72 +74,30 @@ export function useViewerStorage(): UseViewerStorageReturn {
           console.error("Failed to load tags:", error)
         }
 
-        // Check for selected project from URL hash
         await checkProjectPreview({
-          storageAdapter: {
-            load: (id: string) => dbStorage.current.load(id),
-          },
+          storageAdapter: { load: (id: string) => dbStorage.current.load(id) },
           setCurrentProject,
         })
       } catch (error) {
         console.error("Failed to initialize IndexedDB:", error)
         toast.error("Storage error", {
           description: "Could not initialize database. Some features may not work.",
-          duration: 5000,
-          icon: "⚠️",
+          duration: 5000, icon: "⚠️",
         })
       }
     }
-
     initDB()
   }, [])
 
-  // ── Load project (from dialog or list) ──
   const loadProject = (projectData: ProjectData) => {
     setCurrentProject(projectData)
     window.history.pushState(null, "", `#${projectData.id}`)
   }
 
-  // ── Compute layout + states from current project ──
-  const computeLayoutInfo = (): ViewerLayoutInfo => {
-    if (!currentProject) {
-      return { states: { blocks: {} } }
-    }
-
-    // Check if project uses blocks engine
-    const projectEngine = (currentProject as any).engine
-    if (projectEngine === ENGINE_TYPES.BLOCKS) {
-      const cellStates = extractEditorStates(currentProject.data)
-      const storageData = cellStates.blocks.b1 || { order: [], blocks: {} }
-      const safeData = storageData && typeof storageData === "object" && !Array.isArray(storageData)
-        ? storageData
-        : { order: [], blocks: {} }
-      return {
-        states: { blocks: {} },
-        isBlocksEngine: true,
-        blocksArray: storageToBlocks(safeData),
-      }
-    }
-
-    const cellStates = extractEditorStates(currentProject.data)
-
-    // Convert cells to Lexical for preview renderers
-    const states = {
-      blocks: Object.entries(cellStates.blocks).reduce(
-        (acc, [blockId, cellsData]) => {
-          acc[blockId] = cellsToLexical(cellsData)
-          return acc
-        },
-        {} as Record<string, any>,
-      ),
-    }
-
-    return {
-      states,
-    }
-  }
-
-  const layoutInfo = computeLayoutInfo()
+  const blocks = useMemo<BlockArray>(() => {
+    if (!currentProject) return []
+    return deserializeProject(currentProject.data)
+  }, [currentProject])
 
   return {
     currentProject,
@@ -170,6 +106,6 @@ export function useViewerStorage(): UseViewerStorageReturn {
     availableTags,
     storageAdapter,
     loadProject,
-    layoutInfo,
+    blocks,
   }
 }
