@@ -7,7 +7,7 @@ import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import DockGroupPanel from './DockGroup';
 import FileExplorer from './FileExplorer';
 import type { DockGroup, IdeProps, OpenTab, TabType, TerminalTab, WorkspaceConfig, WorkspaceFile } from './ide-types';
-import { DEFAULT_IMAGE, SDL_CANVAS_PATH, deriveStorageKey, parseWorkspaceBundle, resolveArgs, workspaceConfigToState } from './ide-types';
+import { DEFAULT_IMAGE, PRESET_LAYOUTS, SDL_CANVAS_PATH, deriveStorageKey, parseWorkspaceBundle, resolveArgs, workspaceConfigToState } from './ide-types';
 import { buildFileTree, inferLanguage, isSourceFile, isTextFile, makeWasiStubs, toWorkspaceFsPath } from './ide-utils';
 import TerminalPanel from './TerminalPanel';
 import { DEFAULT_PRESET, PRESETS, PRESET_IDS } from './workspace-presets';
@@ -111,10 +111,10 @@ export default function Ide({
   const [activePresetId, setActivePresetId] = useState<string>(workspaceConfig?.id ?? DEFAULT_PRESET.id);
   const [fetchedConfig, setFetchedConfig] = useState<WorkspaceConfig | null>(null);
   const resolvedConfig = workspaceConfig ?? fetchedConfig ?? PRESETS[activePresetId] ?? DEFAULT_PRESET;
-  const initialState = workspaceConfigToState(resolvedConfig);
+  const initialState = workspaceConfigToState(resolvedConfig, PRESET_LAYOUTS[resolvedConfig.id]);
 
   const [files, setFiles] = useState<Record<string, WorkspaceFile>>(initialState.files);
-  const [selectedPath, setSelectedPath] = useState(resolvedConfig.layout?.activeFile ?? '');
+  const [selectedPath, setSelectedPath] = useState(PRESET_LAYOUTS[resolvedConfig.id]?.activeFile ?? '');
   const [expandedDirs, setExpandedDirs] = useState<Set<string>>(initialState.expandedDirs);
   const [openTabs, setOpenTabs] = useState<OpenTab[]>(initialState.openTabs);
   const [activeTabId, setActiveTabId] = useState(initialState.activeTabId);
@@ -212,12 +212,12 @@ export default function Ide({
         const config = parseWorkspaceBundle(text);
         if (cancelled) return;
         setFetchedConfig(config);
-        const state = workspaceConfigToState(config);
+        const state = workspaceConfigToState(config, PRESET_LAYOUTS[config.id]);
         setFiles(state.files);
         setOpenTabs(state.openTabs);
         setActiveTabId(state.activeTabId);
         setExpandedDirs(state.expandedDirs);
-        setSelectedPath(config.layout?.activeFile ?? '');
+        setSelectedPath(PRESET_LAYOUTS[config.id]?.activeFile ?? '');
       } catch (e) {
         console.error('[Emception:IDE] Failed to fetch workspace bundle:', e);
       }
@@ -291,12 +291,12 @@ export default function Ide({
 
       stoppedRef.current = false;
       setActivePresetId(presetId);
-      const state = workspaceConfigToState(preset);
+      const state = workspaceConfigToState(preset, PRESET_LAYOUTS[preset.id]);
       setFiles(state.files);
       setOpenTabs(state.openTabs);
       setActiveTabId(state.activeTabId);
       setExpandedDirs(state.expandedDirs);
-      setSelectedPath(preset.layout?.activeFile ?? '');
+      setSelectedPath(PRESET_LAYOUTS[preset.id]?.activeFile ?? '');
 
       // Dispose stale Monaco models from the OLD workspace after React re-renders.
       // We defer disposal so @monaco-editor/react can cleanly unmount its model
@@ -593,9 +593,9 @@ export default function Ide({
     }
 
     stoppedRef.current = false;
-    const state = workspaceConfigToState(resolvedConfig);
+    const state = workspaceConfigToState(resolvedConfig, PRESET_LAYOUTS[resolvedConfig.id]);
     setFiles(state.files);
-    setSelectedPath(resolvedConfig.layout?.activeFile ?? '');
+    setSelectedPath(PRESET_LAYOUTS[resolvedConfig.id]?.activeFile ?? '');
     setExpandedDirs(state.expandedDirs);
     setOpenTabs(state.openTabs);
     setActiveTabId(state.activeTabId);

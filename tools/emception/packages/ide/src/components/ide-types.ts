@@ -8,10 +8,7 @@
 export type {
   BundleFile,
   CompileConfig,
-  DockGroup,
   EmceptionAPI,
-  LayoutConfig,
-  LayoutTabConfig,
   RunConfig,
   RunType,
   TestConfig,
@@ -27,7 +24,84 @@ export {
   SDL_DEMO_CODE
 } from 'emception';
 
-import type { DockGroup, EmceptionAPI, WorkspaceConfig } from 'emception';
+import type { EmceptionAPI, WorkspaceConfig } from 'emception';
+
+// ── IDE-only layout types (not in @emception/core) ──────────────────
+
+/** UI hint for which dock group an open tab should appear in. */
+export type DockGroup = 'main' | 'right' | 'bottom';
+
+export interface LayoutTabConfig {
+  path: string;
+  group: DockGroup;
+}
+
+export interface LayoutConfig {
+  activeFile: string;
+  openTabs: LayoutTabConfig[];
+  expandedDirs?: string[];
+}
+
+/**
+ * Default IDE layouts for the built-in workspace presets.
+ * Keyed by `WorkspaceConfig.id`. Consumed by the IDE to restore
+ * tab positions, active file, and expanded dirs for each preset.
+ */
+export const PRESET_LAYOUTS: Record<string, LayoutConfig> = {
+  'cpp-terminal': {
+    activeFile: '/user/main.cpp',
+    openTabs: [
+      { path: '/user/main.cpp', group: 'main' },
+      { path: '/user/greetings.h', group: 'main' },
+    ],
+    expandedDirs: ['/user'],
+  },
+  cmake: {
+    activeFile: '/user/main.cpp',
+    openTabs: [
+      { path: '/user/main.cpp', group: 'main' },
+      { path: '/user/CMakeLists.txt', group: 'main' },
+    ],
+    expandedDirs: ['/user'],
+  },
+  python: {
+    activeFile: '/user/main.py',
+    openTabs: [{ path: '/user/main.py', group: 'main' }],
+    expandedDirs: ['/user'],
+  },
+  'cpp-raylib': {
+    activeFile: '/user/raylib-main.cpp',
+    openTabs: [
+      { path: '/user/raylib-main.cpp', group: 'main' },
+      { path: '/user/canvas', group: 'right' },
+    ],
+    expandedDirs: ['/user'],
+  },
+  'cpp-allegro': {
+    activeFile: '/user/allegro-main.cpp',
+    openTabs: [
+      { path: '/user/allegro-main.cpp', group: 'main' },
+      { path: '/user/canvas', group: 'right' },
+    ],
+    expandedDirs: ['/user'],
+  },
+  'cpp-sdl3': {
+    activeFile: '/user/sdl-main.cpp',
+    openTabs: [
+      { path: '/user/sdl-main.cpp', group: 'main' },
+      { path: '/user/canvas', group: 'right' },
+    ],
+    expandedDirs: ['/user'],
+  },
+  'cpp-sdl3-opengl': {
+    activeFile: '/user/sdl-opengl.cpp',
+    openTabs: [
+      { path: '/user/sdl-opengl.cpp', group: 'main' },
+      { path: '/user/canvas', group: 'right' },
+    ],
+    expandedDirs: ['/user'],
+  },
+};
 
 // ── IDE-only types ──────────────────────────────────────────────
 
@@ -102,7 +176,7 @@ function inferTabType(path: string): TabType {
 /** Convert a `WorkspaceConfig`'s files map + layout into IDE-ready
  *  `WorkspaceFile` records and `OpenTab` arrays. IDE-only (consumes
  *  IDE-flavoured `TabType`/`OpenTab`/`WorkspaceFile`). */
-export function workspaceConfigToState(config: WorkspaceConfig): {
+export function workspaceConfigToState(config: WorkspaceConfig, layout?: LayoutConfig): {
   files: Record<string, WorkspaceFile>;
   openTabs: OpenTab[];
   activeTabId: string;
@@ -119,8 +193,8 @@ export function workspaceConfigToState(config: WorkspaceConfig): {
   // When layout is absent (headless / programmatic workspace bundles) derive
   // sensible defaults: all visible files go into the 'main' group and the
   // first file becomes the active tab.
-  const layoutOpenTabs = config.layout?.openTabs ?? Object.keys(wsFiles).map((p) => ({ path: p, group: 'main' as DockGroup }));
-  const layoutActiveFile = config.layout?.activeFile ?? Object.keys(wsFiles)[0] ?? '';
+  const layoutOpenTabs = layout?.openTabs ?? Object.keys(wsFiles).map((p) => ({ path: p, group: 'main' as DockGroup }));
+  const layoutActiveFile = layout?.activeFile ?? Object.keys(wsFiles)[0] ?? '';
 
   const openTabs: OpenTab[] = layoutOpenTabs.map((t) => {
     const file = wsFiles[t.path];
@@ -133,7 +207,7 @@ export function workspaceConfigToState(config: WorkspaceConfig): {
   });
 
   const activeTabId = `tab:${layoutActiveFile}`;
-  const expandedDirs = new Set(config.layout?.expandedDirs ?? ['/user']);
+  const expandedDirs = new Set(layout?.expandedDirs ?? ['/user']);
 
   return { files: wsFiles, openTabs, activeTabId, expandedDirs };
 }

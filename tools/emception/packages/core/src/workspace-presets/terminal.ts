@@ -27,14 +27,6 @@ export const CPP_TERMINAL_PRESET: WorkspaceConfig = {
         terminalInput: true,
         showTestButton: false,
     },
-    layout: {
-        activeFile: '/user/main.cpp',
-        openTabs: [
-            { path: '/user/main.cpp', group: 'main' },
-            { path: '/user/greetings.h', group: 'main' },
-        ],
-        expandedDirs: ['/user'],
-    },
     files: {
         '/user/main.cpp': { encoding: 'text', content: DEFAULT_CODE },
         '/user/greetings.h': { encoding: 'text', content: DEFAULT_HEADER },
