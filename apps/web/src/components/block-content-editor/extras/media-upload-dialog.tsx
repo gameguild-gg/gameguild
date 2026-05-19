@@ -1,6 +1,6 @@
 "use client"
 
-import { useRef, useState, useContext, useEffect } from "react"
+import { useRef, useState, useEffect } from "react"
 import { AlertCircle, X, Plus, Zap, HardDrive, Upload, Package } from "lucide-react"
 
 import { CompressionSettingsDialog, type CompressionSettings } from "@/components/block-content-editor/extras/compressor/compression-settings-dialog"
@@ -16,7 +16,6 @@ import { Switch } from "@/components/ui/switch"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { WebPConverter } from "@/components/block-content-editor/lib/editor/webp-converter"
 import { assetManager } from "@/components/block-content-editor/lib/storage/assets/asset-manager"
-import { ProjectIdContext } from "@/components/block-content-editor/engines/lexical/lexical-editor"
 import type { CollectionMetadata } from "@/components/block-content-editor/lib/storage/assets/collection-types"
 
 export interface MediaUploadResult {
@@ -52,6 +51,7 @@ interface MediaUploadDialogProps {
   allowCompressionToggle?: boolean // Allow users to toggle compression
   hideLocalAssets?: boolean // Hide local asset selection, show only upload button
   forceTextStorage?: boolean // Force storage as plain text instead of base64 (for code files)
+  projectId?: string // Current project id for scoping asset saves
 }
 
 interface PendingUpload extends MediaUploadResult {
@@ -77,9 +77,8 @@ export function MediaUploadDialog({
   allowCompressionToggle = false,
   hideLocalAssets = false,
   forceTextStorage = false,
+  projectId,
 }: MediaUploadDialogProps) {
-  const projectIdFromContext = useContext(ProjectIdContext)
-  const projectId = projectIdFromContext && typeof projectIdFromContext === 'string' ? projectIdFromContext : undefined
   
   const enabledSources = {
     files: sources.files === true,
