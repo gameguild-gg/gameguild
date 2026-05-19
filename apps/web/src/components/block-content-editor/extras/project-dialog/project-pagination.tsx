@@ -13,22 +13,22 @@ export function ProjectPagination({ currentPage, totalProjects, itemsPerPage, on
   const totalPages = Math.ceil(totalProjects / itemsPerPage)
 
   return (
-    <div className="flex items-center justify-between mt-4 pt-4 border-t dark:border-gray-700">
-      <div className="text-sm text-gray-500 dark:text-gray-400">
-        Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, totalProjects)} of{" "}
-        {totalProjects} projects
+    <div className="flex w-full items-center justify-between gap-3">
+      <div className="text-xs text-muted-foreground">
+        Showing {(currentPage - 1) * itemsPerPage + 1}–{Math.min(currentPage * itemsPerPage, totalProjects)} of{" "}
+        {totalProjects}
       </div>
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1.5">
         <Button
-          variant="outline"
+          variant="ghost"
           size="sm"
           onClick={() => onPageChange(Math.max(1, currentPage - 1))}
           disabled={currentPage === 1}
-          className="bg-transparent"
+          className="h-8 px-2.5 text-xs"
         >
           Previous
         </Button>
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-0.5">
           {Array.from({ length: totalPages }, (_, i) => i + 1)
             .filter((page) => {
               if (totalPages <= 7) return true
@@ -38,12 +38,14 @@ export function ProjectPagination({ currentPage, totalProjects, itemsPerPage, on
             })
             .map((page, index, array) => (
               <div key={page} className="flex items-center">
-                {index > 0 && array[index - 1] !== page - 1 && <span className="px-2 text-gray-400">...</span>}
+                {index > 0 && array[index - 1] !== page - 1 && (
+                  <span className="px-1.5 text-xs text-muted-foreground">…</span>
+                )}
                 <Button
                   variant={currentPage === page ? "default" : "ghost"}
                   size="sm"
                   onClick={() => onPageChange(page)}
-                  className={currentPage === page ? "" : "bg-transparent"}
+                  className="h-8 min-w-8 px-2 text-xs"
                 >
                   {page}
                 </Button>
@@ -51,11 +53,11 @@ export function ProjectPagination({ currentPage, totalProjects, itemsPerPage, on
             ))}
         </div>
         <Button
-          variant="outline"
+          variant="ghost"
           size="sm"
           onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
           disabled={currentPage === totalPages}
-          className="bg-transparent"
+          className="h-8 px-2.5 text-xs"
         >
           Next
         </Button>
