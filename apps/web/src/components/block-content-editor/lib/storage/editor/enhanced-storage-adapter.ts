@@ -50,7 +50,7 @@ export class EnhancedStorageAdapter {
   private isInitialized = false
 
   private readonly DB_NAME = "GGEditorDB"
-  private readonly DB_VERSION = 4 // Bumped: purged Lexical engine data
+  private readonly DB_VERSION = 5 // Bumped: BlockCellType renamed from abbreviations to full names
   private readonly STORE_NAME = "projects"
   private readonly TAGS_STORE_NAME = "tags" // Kept for migration/compatibility, can be removed later
   private readonly METADATA_STORE_NAME = "project_metadata"
@@ -85,7 +85,7 @@ export class EnhancedStorageAdapter {
         const oldVersion = event.oldVersion
 
         // v4: purge legacy Lexical-engine data. Delete and recreate all stores.
-        if (oldVersion > 0 && oldVersion < 4) {
+        if (oldVersion > 0 && oldVersion < 5) {
           const existingStores = Array.from(db.objectStoreNames)
           for (const storeName of existingStores) {
             db.deleteObjectStore(storeName)
