@@ -3,7 +3,6 @@ import { GoogleDriveSync } from "../../sync/editor/google-drive-sync"
 import { HashManager } from "../../sync/editor/hash-manager"
 import { getHistoryManager, type CommitInfo, type SnapshotInfo } from "../git"
 import type { ProjectPreferences } from "./project-preferences"
-import { type EngineType, ENGINE_TYPES } from "./project-types"
 import { type StorageType, STORAGE_TYPES, type SyncStatus, SYNC_STATUS } from "./storage-types"
 
 export type { ProjectPreferences } from "./project-preferences"
@@ -13,7 +12,6 @@ export type { CommitInfo, SnapshotInfo } from "../git"
 export interface ProjectData {
   id: string
   name: string
-  engine?: EngineType // Engine type: "lexical" or "blocks"
   data: string // Serialized project data
   tags: string[]
   size: number
@@ -35,7 +33,6 @@ interface TagData {
 interface ProjectMetadata {
   id: string
   name: string
-  engine?: EngineType
   tags: string[]
   size: number
   hash: string
@@ -53,7 +50,7 @@ export class EnhancedStorageAdapter {
   private isInitialized = false
 
   private readonly DB_NAME = "GGEditorDB"
-  private readonly DB_VERSION = 3 // Incremented for preferences support
+  private readonly DB_VERSION = 4 // Bumped: purged Lexical engine data
   private readonly STORE_NAME = "projects"
   private readonly TAGS_STORE_NAME = "tags" // Kept for migration/compatibility, can be removed later
   private readonly METADATA_STORE_NAME = "project_metadata"
@@ -87,12 +84,20 @@ export class EnhancedStorageAdapter {
         const db = (event.target as IDBOpenDBRequest).result
         const oldVersion = event.oldVersion
 
+        // v4: purge legacy Lexical-engine data. Delete and recreate all stores.
+        if (oldVersion > 0 && oldVersion < 4) {
+          const existingStores = Array.from(db.objectStoreNames)
+          for (const storeName of existingStores) {
+            db.deleteObjectStore(storeName)
+          }
+        }
+
         // Create projects store
         if (!db.objectStoreNames.contains(this.STORE_NAME)) {
           db.createObjectStore(this.STORE_NAME, { keyPath: "id" })
         }
 
-        // Create tags store (legacy, can be migrated and removed)
+        // Create tags store (legacy)
         if (!db.objectStoreNames.contains(this.TAGS_STORE_NAME)) {
           db.createObjectStore(this.TAGS_STORE_NAME, { keyPath: "name" })
         }
@@ -103,75 +108,16 @@ export class EnhancedStorageAdapter {
           metadataStore.createIndex("hash", "hash", { unique: false })
         }
 
-        // Create new tag_data store
+        // Create tag_data store
         if (!db.objectStoreNames.contains(this.TAG_DATA_STORE_NAME)) {
           const tagDataStore = db.createObjectStore(this.TAG_DATA_STORE_NAME, { keyPath: "id" })
           tagDataStore.createIndex("name", "name", { unique: true })
-        }
-
-        // Migration for storageType field (version 2 -> 3)
-        if (oldVersion < 3) {
-          // This migration will run after the stores are created
-          event.target!.addEventListener('success', () => {
-            this.migrateToStorageType()
-          })
         }
       }
     })
   }
 
-  private async migrateToStorageType(): Promise<void> {
-    if (!this.db) return
-
-    try {
-      const transaction = this.db.transaction([this.STORE_NAME, this.METADATA_STORE_NAME], "readwrite")
-      const projectStore = transaction.objectStore(this.STORE_NAME)
-      const metadataStore = transaction.objectStore(this.METADATA_STORE_NAME)
-
-      // Get all projects
-      const projectsRequest = projectStore.getAll()
-      projectsRequest.onsuccess = () => {
-        const projects = projectsRequest.result as (ProjectData & { storageType?: string })[]
-        
-        projects.forEach(project => {
-          // Add storageType if it doesn't exist
-          if (!project.storageType) {
-            const updatedProject: ProjectData = {
-              ...project,
-              storageType: STORAGE_TYPES.LOCAL, // Default to local for existing projects
-            }
-            projectStore.put(updatedProject)
-
-            // Update metadata as well
-            const metadata: ProjectMetadata = {
-              id: project.id,
-              name: project.name,
-              tags: project.tags,
-              size: project.size,
-              hash: project.hash || "",
-              createdAt: project.createdAt,
-              updatedAt: project.updatedAt,
-              syncStatus: project.syncStatus,
-              storageType: STORAGE_TYPES.LOCAL,
-            }
-            metadataStore.put(metadata)
-          }
-        })
-      }
-
-      transaction.oncomplete = () => {
-        console.log("Migration to storageType completed successfully")
-      }
-
-      transaction.onerror = () => {
-        console.error("Migration to storageType failed:", transaction.error)
-      }
-    } catch (error) {
-      console.error("Failed to migrate to storageType:", error)
-    }
-  }
-
-  async save(id: string, name: string, data: string, tags: string[] = [], storageType: StorageType = STORAGE_TYPES.LOCAL, preferences?: ProjectPreferences, engine?: EngineType): Promise<void> {
+  async save(id: string, name: string, data: string, tags: string[] = [], storageType: StorageType = STORAGE_TYPES.LOCAL, preferences?: ProjectPreferences): Promise<void> {
     if (!this.isInitialized) throw new Error("Storage adapter not initialized")
 
     const hash = await HashManager.generateHash(data)
@@ -184,7 +130,6 @@ export class EnhancedStorageAdapter {
     const projectData: ProjectData = {
       id,
       name,
-      engine: engine ?? existing?.engine ?? ENGINE_TYPES.LEXICAL, // Preserve existing engine or use provided
       data,
       tags,
       size: this.estimateSize(data),
@@ -193,7 +138,7 @@ export class EnhancedStorageAdapter {
       updatedAt: now,
       syncStatus: SYNC_STATUS.PENDING,
       storageType,
-      preferences: preferences || existing?.preferences, // Preserve existing preferences if not provided
+      preferences: preferences || existing?.preferences,
     }
 
     // Save to IndexedDB
@@ -258,7 +203,6 @@ export class EnhancedStorageAdapter {
       const metadata: ProjectMetadata = {
         id: projectData.id,
         name: projectData.name,
-        engine: projectData.engine,
         tags: projectData.tags,
         size: projectData.size,
         hash: projectData.hash!,
