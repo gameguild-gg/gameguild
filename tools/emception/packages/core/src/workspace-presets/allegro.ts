@@ -116,14 +116,6 @@ export const CPP_ALLEGRO_PRESET: WorkspaceConfig = {
         terminalInput: false,
         showTestButton: false,
     },
-    layout: {
-        activeFile: '/user/allegro-main.cpp',
-        openTabs: [
-            { path: '/user/allegro-main.cpp', group: 'main' },
-            { path: '/user/canvas', group: 'right' },
-        ],
-        expandedDirs: ['/user'],
-    },
     files: {
         '/user/allegro-main.cpp': { encoding: 'text', content: ALLEGRO_DEMO_CODE },
         '/user/workspace-preview.svg': { encoding: 'text', content: DEFAULT_IMAGE },

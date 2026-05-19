@@ -91,14 +91,6 @@ export const CPP_RAYLIB_PRESET: WorkspaceConfig = {
         terminalInput: false,
         showTestButton: false,
     },
-    layout: {
-        activeFile: '/user/raylib-main.cpp',
-        openTabs: [
-            { path: '/user/raylib-main.cpp', group: 'main' },
-            { path: '/user/canvas', group: 'right' },
-        ],
-        expandedDirs: ['/user'],
-    },
     files: {
         '/user/raylib-main.cpp': { encoding: 'text', content: RAYLIB_DEMO_CODE },
         '/user/workspace-preview.svg': { encoding: 'text', content: DEFAULT_IMAGE },

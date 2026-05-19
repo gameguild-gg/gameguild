@@ -195,14 +195,6 @@ export const CPP_SDL3_OPENGL_PRESET: WorkspaceConfig = {
     },
     run: { type: 'canvas' },
     features: { canvas: true, terminalInput: false, showTestButton: false },
-    layout: {
-        activeFile: '/user/sdl-opengl.cpp',
-        openTabs: [
-            { path: '/user/sdl-opengl.cpp', group: 'main' },
-            { path: '/user/canvas', group: 'right' },
-        ],
-        expandedDirs: ['/user'],
-    },
     files: {
         '/user/sdl-opengl.cpp': { encoding: 'text', content: SDL_OPENGL_DEMO_CODE },
         '/user/workspace-preview.svg': { encoding: 'text', content: DEFAULT_IMAGE },

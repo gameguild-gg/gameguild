@@ -2,18 +2,12 @@
 //
 // `WorkspaceConfig` is the runtime/UI-agnostic descriptor for an emception
 // workspace: which files seed the VFS, how to compile and run them, how to
-// test them, what layout the IDE should boot into, and which UI features
-// the workspace requires (canvas, terminal input, test button).
+// test them, and which UI features the workspace requires (canvas, terminal
+// input, test button).
 //
 // The IDE (`@emception/ide`) consumes this directly to render. The bare-runner
-// surfaces (`@emception/react`, `@emception/webcomponent`) consume the
-// `compile` / `run` / `files` slices to drive headless execution.
-//
-// Moved here from `@emception/ide` so non-IDE consumers can use the same
-// shape without pulling in React/Monaco.
-
-/** UI hint for which dock group an open tab should appear in. */
-export type DockGroup = 'main' | 'right' | 'bottom';
+// surfaces consume the `compile` / `run` / `files` slices to drive headless
+// execution. IDE-specific layout information lives in `@emception/ide`.
 
 /** How the IDE should execute the build artefact. */
 export type RunType = 'canvas' | 'wasi-terminal' | 'cmake-build' | 'python-script';
@@ -58,17 +52,6 @@ export interface WorkspaceFeatures {
   showTestButton?: boolean;
 }
 
-export interface LayoutTabConfig {
-  path: string;
-  group: DockGroup;
-}
-
-export interface LayoutConfig {
-  activeFile: string;
-  openTabs: LayoutTabConfig[];
-  expandedDirs?: string[];
-}
-
 export interface BundleFile {
   encoding: 'text' | 'base64';
   content: string;
@@ -83,12 +66,6 @@ export interface WorkspaceConfig {
   run: RunConfig;
   test?: TestConfig;
   features: WorkspaceFeatures;
-  /**
-   * IDE layout hints. Optional — headless / bare-runner consumers do not need
-   * to supply layout data. When absent the IDE falls back to sensible defaults
-   * (first file active, all files in the main group).
-   */
-  layout?: LayoutConfig;
   files: Record<string, BundleFile>;
 }
 

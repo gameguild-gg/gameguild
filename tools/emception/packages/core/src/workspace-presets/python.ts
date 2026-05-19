@@ -30,11 +30,6 @@ export const PYTHON_PRESET: WorkspaceConfig = {
         terminalInput: true,
         showTestButton: false,
     },
-    layout: {
-        activeFile: '/user/main.py',
-        openTabs: [{ path: '/user/main.py', group: 'main' }],
-        expandedDirs: ['/user'],
-    },
     files: {
         '/user/main.py': { encoding: 'text', content: PYTHON_HELLO },
     },

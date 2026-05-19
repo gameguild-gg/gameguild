@@ -36,14 +36,6 @@ export const CMAKE_PRESET: WorkspaceConfig = {
         terminalInput: true,
         showTestButton: false,
     },
-    layout: {
-        activeFile: '/user/main.cpp',
-        openTabs: [
-            { path: '/user/main.cpp', group: 'main' },
-            { path: '/user/CMakeLists.txt', group: 'main' },
-        ],
-        expandedDirs: ['/user'],
-    },
     files: {
         '/user/main.cpp': { encoding: 'text', content: CMAKE_MAIN },
         '/user/CMakeLists.txt': { encoding: 'text', content: CMAKE_LISTS },
