@@ -78,10 +78,10 @@ export const CPP_RAYLIB_PRESET: WorkspaceConfig = {
         // an emsdk port, so em++ triggers ports/__init__.py which fails in WASM sandbox.
         tool: 'clang',
         args: [],
-        cwd: '/home/user',
-        output: '/home/user/main.wasm',
+        cwd: '/home/user/cpp-raylib',
+        output: '/home/user/cpp-raylib/main.wasm',
         canvasPreset: 'raylib',
-        sourceDetect: { extensions: ['.cpp', '.c'], entryPoint: '/user/raylib-main.cpp' },
+        sourceDetect: { extensions: ['.cpp', '.c'], entryPoint: '/user/cpp-raylib/raylib-main.cpp' },
     },
     run: {
         type: 'canvas',
@@ -92,7 +92,7 @@ export const CPP_RAYLIB_PRESET: WorkspaceConfig = {
         showTestButton: false,
     },
     files: {
-        '/user/raylib-main.cpp': { encoding: 'text', content: RAYLIB_DEMO_CODE },
-        '/user/workspace-preview.svg': { encoding: 'text', content: DEFAULT_IMAGE },
+        '/user/cpp-raylib/raylib-main.cpp': { encoding: 'text', content: RAYLIB_DEMO_CODE },
+        '/user/cpp-raylib/workspace-preview.svg': { encoding: 'text', content: DEFAULT_IMAGE },
     },
 };

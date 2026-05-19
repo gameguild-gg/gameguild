@@ -13,14 +13,14 @@ export const CPP_TERMINAL_PRESET: WorkspaceConfig = {
         // SharedArrayBuffer + Atomics.wait, so -sASYNCIFY is not needed.
         tool: 'clang',
         args: [],
-        cwd: '/home/user',
-        output: '/home/user/main.wasm',
-        sourceDetect: { extensions: ['.cpp', '.c'], entryPoint: '/user/main.cpp' },
+        cwd: '/home/user/cpp-terminal',
+        output: '/home/user/cpp-terminal/main.wasm',
+        sourceDetect: { extensions: ['.cpp', '.c'], entryPoint: '/user/cpp-terminal/main.cpp' },
     },
     run: {
         type: 'wasi-terminal',
         tool: 'wasi-run',
-        args: ['wasi-run', '/home/user/main.wasm'],
+        args: ['wasi-run', '/home/user/cpp-terminal/main.wasm'],
     },
     features: {
         canvas: false,
@@ -28,7 +28,7 @@ export const CPP_TERMINAL_PRESET: WorkspaceConfig = {
         showTestButton: false,
     },
     files: {
-        '/user/main.cpp': { encoding: 'text', content: DEFAULT_CODE },
-        '/user/greetings.h': { encoding: 'text', content: DEFAULT_HEADER },
+        '/user/cpp-terminal/main.cpp': { encoding: 'text', content: DEFAULT_CODE },
+        '/user/cpp-terminal/greetings.h': { encoding: 'text', content: DEFAULT_HEADER },
     },
 };

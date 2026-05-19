@@ -49,62 +49,62 @@ export interface LayoutConfig {
  */
 export const PRESET_LAYOUTS: Record<string, LayoutConfig> = {
   'c-terminal': {
-    activeFile: '/user/main.c',
-    openTabs: [{ path: '/user/main.c', group: 'main' }],
-    expandedDirs: ['/user'],
+    activeFile: '/user/c-terminal/main.c',
+    openTabs: [{ path: '/user/c-terminal/main.c', group: 'main' }],
+    expandedDirs: ['/user/c-terminal'],
   },
   'cpp-terminal': {
-    activeFile: '/user/main.cpp',
+    activeFile: '/user/cpp-terminal/main.cpp',
     openTabs: [
-      { path: '/user/main.cpp', group: 'main' },
-      { path: '/user/greetings.h', group: 'main' },
+      { path: '/user/cpp-terminal/main.cpp', group: 'main' },
+      { path: '/user/cpp-terminal/greetings.h', group: 'main' },
     ],
-    expandedDirs: ['/user'],
+    expandedDirs: ['/user/cpp-terminal'],
   },
   cmake: {
-    activeFile: '/user/main.cpp',
+    activeFile: '/user/cmake/main.cpp',
     openTabs: [
-      { path: '/user/main.cpp', group: 'main' },
-      { path: '/user/CMakeLists.txt', group: 'main' },
+      { path: '/user/cmake/main.cpp', group: 'main' },
+      { path: '/user/cmake/CMakeLists.txt', group: 'main' },
     ],
-    expandedDirs: ['/user'],
+    expandedDirs: ['/user/cmake'],
   },
   python: {
-    activeFile: '/user/main.py',
-    openTabs: [{ path: '/user/main.py', group: 'main' }],
-    expandedDirs: ['/user'],
+    activeFile: '/user/python/main.py',
+    openTabs: [{ path: '/user/python/main.py', group: 'main' }],
+    expandedDirs: ['/user/python'],
   },
   'cpp-raylib': {
-    activeFile: '/user/raylib-main.cpp',
+    activeFile: '/user/cpp-raylib/raylib-main.cpp',
     openTabs: [
-      { path: '/user/raylib-main.cpp', group: 'main' },
+      { path: '/user/cpp-raylib/raylib-main.cpp', group: 'main' },
       { path: '/user/canvas', group: 'right' },
     ],
-    expandedDirs: ['/user'],
+    expandedDirs: ['/user/cpp-raylib'],
   },
   'cpp-allegro': {
-    activeFile: '/user/allegro-main.cpp',
+    activeFile: '/user/cpp-allegro/allegro-main.cpp',
     openTabs: [
-      { path: '/user/allegro-main.cpp', group: 'main' },
+      { path: '/user/cpp-allegro/allegro-main.cpp', group: 'main' },
       { path: '/user/canvas', group: 'right' },
     ],
-    expandedDirs: ['/user'],
+    expandedDirs: ['/user/cpp-allegro'],
   },
   'cpp-sdl3': {
-    activeFile: '/user/sdl-main.cpp',
+    activeFile: '/user/cpp-sdl3/sdl-main.cpp',
     openTabs: [
-      { path: '/user/sdl-main.cpp', group: 'main' },
+      { path: '/user/cpp-sdl3/sdl-main.cpp', group: 'main' },
       { path: '/user/canvas', group: 'right' },
     ],
-    expandedDirs: ['/user'],
+    expandedDirs: ['/user/cpp-sdl3'],
   },
   'cpp-sdl3-opengl': {
-    activeFile: '/user/sdl-opengl.cpp',
+    activeFile: '/user/cpp-sdl3-opengl/sdl-opengl.cpp',
     openTabs: [
-      { path: '/user/sdl-opengl.cpp', group: 'main' },
+      { path: '/user/cpp-sdl3-opengl/sdl-opengl.cpp', group: 'main' },
       { path: '/user/canvas', group: 'right' },
     ],
-    expandedDirs: ['/user'],
+    expandedDirs: ['/user/cpp-sdl3-opengl'],
   },
 };
 
@@ -161,10 +161,10 @@ export const TERMINAL_THEME = {
 import { DEFAULT_CODE, DEFAULT_HEADER, DEFAULT_IMAGE, SDL_DEMO_CODE } from 'emception';
 
 export const INITIAL_FILES: Record<string, WorkspaceFile> = {
-  '/user/sdl-main.cpp': { path: '/user/sdl-main.cpp', type: 'text', content: SDL_DEMO_CODE },
-  '/user/main.cpp': { path: '/user/main.cpp', type: 'text', content: DEFAULT_CODE },
-  '/user/greetings.h': { path: '/user/greetings.h', type: 'text', content: DEFAULT_HEADER },
-  '/user/workspace-preview.svg': { path: '/user/workspace-preview.svg', type: 'image', content: DEFAULT_IMAGE },
+  '/user/cpp-sdl3/sdl-main.cpp': { path: '/user/cpp-sdl3/sdl-main.cpp', type: 'text', content: SDL_DEMO_CODE },
+  '/user/cpp-terminal/main.cpp': { path: '/user/cpp-terminal/main.cpp', type: 'text', content: DEFAULT_CODE },
+  '/user/cpp-terminal/greetings.h': { path: '/user/cpp-terminal/greetings.h', type: 'text', content: DEFAULT_HEADER },
+  '/user/cpp-sdl3/workspace-preview.svg': { path: '/user/cpp-sdl3/workspace-preview.svg', type: 'image', content: DEFAULT_IMAGE },
 };
 
 // ── Workspace bundle helpers (IDE-flavoured: produce IDE-typed state) ──

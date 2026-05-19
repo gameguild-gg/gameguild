@@ -103,10 +103,10 @@ export const CPP_ALLEGRO_PRESET: WorkspaceConfig = {
         // and to load allegro-runtime.mjs as the canvas runtime.
         tool: 'clang',
         args: [],
-        cwd: '/home/user',
-        output: '/home/user/main.wasm',
+        cwd: '/home/user/cpp-allegro',
+        output: '/home/user/cpp-allegro/main.wasm',
         canvasPreset: 'allegro',
-        sourceDetect: { extensions: ['.cpp', '.c'], entryPoint: '/user/allegro-main.cpp' },
+        sourceDetect: { extensions: ['.cpp', '.c'], entryPoint: '/user/cpp-allegro/allegro-main.cpp' },
     },
     run: {
         type: 'canvas',
@@ -117,7 +117,7 @@ export const CPP_ALLEGRO_PRESET: WorkspaceConfig = {
         showTestButton: false,
     },
     files: {
-        '/user/allegro-main.cpp': { encoding: 'text', content: ALLEGRO_DEMO_CODE },
-        '/user/workspace-preview.svg': { encoding: 'text', content: DEFAULT_IMAGE },
+        '/user/cpp-allegro/allegro-main.cpp': { encoding: 'text', content: ALLEGRO_DEMO_CODE },
+        '/user/cpp-allegro/workspace-preview.svg': { encoding: 'text', content: DEFAULT_IMAGE },
     },
 };

@@ -16,9 +16,9 @@ export const PYTHON_PRESET: WorkspaceConfig = {
     compile: {
         tool: 'python3',
         args: ['python3', '{sourceFile}'],
-        cwd: '/home/user',
+        cwd: '/home/user/python',
         output: '',
-        sourceDetect: { extensions: ['.py'], entryPoint: '/user/main.py' },
+        sourceDetect: { extensions: ['.py'], entryPoint: '/user/python/main.py' },
     },
     run: {
         type: 'python-script',
@@ -31,6 +31,6 @@ export const PYTHON_PRESET: WorkspaceConfig = {
         showTestButton: false,
     },
     files: {
-        '/user/main.py': { encoding: 'text', content: PYTHON_HELLO },
+        '/user/python/main.py': { encoding: 'text', content: PYTHON_HELLO },
     },
 };
