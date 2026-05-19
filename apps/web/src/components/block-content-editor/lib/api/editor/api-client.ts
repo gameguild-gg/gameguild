@@ -1,20 +1,5 @@
 import { syncConfig } from "../../sync/editor/sync-config"
-
-interface ProjectMetadata {
-  id: string
-  name: string
-  type?: "type1" | "type2"
-  tags: string[]
-  size: number
-  hash: string
-  createdAt: string
-  updatedAt: string
-  version: number
-}
-
-interface ProjectData extends ProjectMetadata {
-  data: string
-}
+import type { ProjectData, ProjectMetadataRecord } from "../../storage/editor/project-data"
 
 interface SyncResponse {
   success: boolean
@@ -149,7 +134,7 @@ export class ApiClient {
     }
   }
 
-  async getProjectsMetadata(): Promise<ProjectMetadata[]> {
+  async getProjectsMetadata(): Promise<ProjectMetadataRecord[]> {
     if (!syncConfig.isEnabled()) {
       return []
     }
@@ -220,7 +205,7 @@ export class ApiClient {
     }
   }
 
-  async createProject(project: Omit<ProjectData, "version">): Promise<SyncResponse> {
+  async createProject(project: ProjectData): Promise<SyncResponse> {
     if (!syncConfig.isEnabled()) {
       return { success: false, message: "Sync is disabled" }
     }
