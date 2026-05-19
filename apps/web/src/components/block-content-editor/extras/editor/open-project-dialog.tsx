@@ -18,19 +18,7 @@ import type { StorageOption } from "./storage-option-selector"
 import { GoogleDriveAuthDialog } from "./google-drive-auth-dialog"
 import { useGoogleDriveAuth } from "@/components/block-content-editor/hooks/editor/use-google-drive-auth"
 import type { ProjectPreferences } from "@/components/block-content-editor/lib/storage/editor/enhanced-storage-adapter"
-
-interface ProjectData {
-  id: string
-  name: string
-  data: string
-  tags: string[]
-  size: number
-  createdAt: string
-  updatedAt: string
-  storageType?: "local" | "gameguild-cloud" | "google-drive"
-  isLocallyAvailable?: boolean
-  preferences?: ProjectPreferences
-}
+import type { ProjectData } from "@/components/block-content-editor/lib/storage/editor/project-data"
 
 interface StorageAdapter {
   save: (id: string, name: string, data: string, tags: string[], storageType?: StorageOption, preferences?: any) => Promise<void>
@@ -324,9 +312,8 @@ export function OpenProjectDialog({
           onProjectLoad({
             id, name, tags,
             data: "",
-            size: 0,
-            createdAt: "",
-            updatedAt: ""
+            metadata: { size: 0, hash: "", createdAt: "", updatedAt: "" },
+            storageType: "local",
           })
         } }
         onProjectsListUpdate={onProjectsListUpdate}

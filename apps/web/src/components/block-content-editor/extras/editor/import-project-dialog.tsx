@@ -10,17 +10,7 @@ import { useState, useEffect, useRef } from "react"
 import { toast } from "sonner"
 import { Upload, FileText, Archive, X } from "lucide-react"
 import { ProjectImporter, type ImportedProjectData } from "@/components/block-content-editor/lib/interopAdapter/project-importer"
-
-interface ProjectData {
-  id: string
-  name: string
-  data: string
-  tags: string[]
-  size: number
-  createdAt: string
-  updatedAt: string
-  preferences?: any
-}
+import type { ProjectData } from "@/components/block-content-editor/lib/storage/editor/project-data"
 
 interface StorageAdapter {
   list: () => Promise<ProjectData[]>
