@@ -8,7 +8,7 @@
 // "workspace presets" (`@emception/core` `workspace-presets.ts`) which describe
 // full IDE workspace configurations layered on top of these build presets.
 
-import type { WorkspaceBuildConfig } from './types';
+import type { NativeBuildConfig, CMakeBuildConfig, PythonBuildConfig, WorkspaceBuildConfig } from './types';
 
 export type BuildPresetName = 'c' | 'cpp' | 'python' | 'sdl' | 'raylib' | 'allegro' | 'cmake';
 
@@ -24,31 +24,31 @@ export const BUILD_PRESETS: Record<BuildPresetName, BuildPreset> = {
     name: 'c',
     bundlesToPreload: ['llvm', 'libcurl-lite'],
     defaultTools: ['clang', 'wasm-ld'],
-    build: { compiler: 'clang', cflags: ['-O1'] },
+    build: { kind: 'native', compiler: 'clang', cflags: ['-O1'] } satisfies NativeBuildConfig,
   },
   cpp: {
     name: 'cpp',
     bundlesToPreload: ['llvm', 'libcurl-lite'],
     defaultTools: ['clang++', 'wasm-ld'],
-    build: { compiler: 'clang++', std: 'c++20', cflags: ['-O1'] },
+    build: { kind: 'native', compiler: 'clang++', std: 'c++20', cflags: ['-O1'] } satisfies NativeBuildConfig,
   },
   python: {
     name: 'python',
     bundlesToPreload: ['cpython'],
     defaultTools: ['python3'],
-    build: {},
+    build: { kind: 'python' } satisfies PythonBuildConfig,
   },
   sdl: {
     name: 'sdl',
     bundlesToPreload: ['llvm', 'sdl3', 'imgui'],
     defaultTools: ['clang', 'wasm-ld'],
-    build: { compiler: 'clang', std: 'c++20', libs: ['SDL3'] },
+    build: { kind: 'native', compiler: 'clang', std: 'c++20', libs: ['SDL3'] } satisfies NativeBuildConfig,
   },
   raylib: {
     name: 'raylib',
     bundlesToPreload: ['llvm', 'raylib'],
     defaultTools: ['clang', 'wasm-ld'],
-    build: { compiler: 'clang', libs: ['raylib', 'raygui', 'physac', 'rlights'] },
+    build: { kind: 'native', compiler: 'clang', libs: ['raylib', 'raygui', 'physac', 'rlights'] } satisfies NativeBuildConfig,
   },
   allegro: {
     name: 'allegro',
@@ -58,14 +58,25 @@ export const BUILD_PRESETS: Record<BuildPresetName, BuildPreset> = {
       // Compiled via direct clang + wasm-ld two-step (not emcc/Python).
       // SDL2 is an implementation detail hidden inside liballegro.a — it is
       // not a user-facing link target and is intentionally omitted here.
+      kind: 'native',
       compiler: 'clang',
-      libs: ['allegro', 'allegro_image', 'allegro_primitives', 'allegro_font', 'allegro_ttf', 'allegro_audio', 'allegro_acodec', 'allegro_color', 'allegro_main'],
-    },
+      libs: [
+        'allegro',
+        'allegro_image',
+        'allegro_primitives',
+        'allegro_font',
+        'allegro_ttf',
+        'allegro_audio',
+        'allegro_acodec',
+        'allegro_color',
+        'allegro_main',
+      ],
+    } satisfies NativeBuildConfig,
   },
   cmake: {
     name: 'cmake',
     bundlesToPreload: ['llvm', 'cmake', 'ninja'],
     defaultTools: ['cmake', 'ninja'],
-    build: {},
+    build: { kind: 'cmake' } satisfies CMakeBuildConfig,
   },
 };

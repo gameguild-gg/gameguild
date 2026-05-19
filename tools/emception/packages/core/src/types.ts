@@ -26,7 +26,7 @@ export interface FileEntry {
 export type WorkspaceSeed = Record<string, FileEntry | string>;
 
 /**
- * Compiler flags and linker settings for a workspace build.
+ * Compiler flags and linker settings for a native (clang / em++) workspace build.
  *
  * The resolver merges these with preset defaults and then forwards the
  * result to `buildArgv()` which produces the final `clang` / `em++` argv.
@@ -34,7 +34,8 @@ export type WorkspaceSeed = Record<string, FileEntry | string>;
  * Omit `compiler` to let the preset choose (e.g. `'emcc'` for web targets).
  * Set `std` to a C/C++ standard string: `'c17'`, `'c++20'`, etc.
  */
-export interface WorkspaceBuildConfig {
+export interface NativeBuildConfig {
+  kind: 'native';
   compiler?: 'clang' | 'clang++' | 'emcc' | 'em++';
   std?: string;
   cflags?: string[];
@@ -47,6 +48,17 @@ export interface WorkspaceBuildConfig {
   sources?: string[];
   output?: string;
   env?: Record<string, string>;
+}
+
+/**
+ * CMake build configuration — drives cmake + ninja (or make) instead of
+ * invoking the compiler directly.
+ *
+ * Only `env` and `cmake.*` fields are meaningful; compiler/linker flags live
+ * in `CMakeLists.txt`.
+ */
+export interface CMakeBuildConfig {
+  kind: 'cmake';
   cmake?: {
     sourceDir?: string;
     buildDir?: string;
@@ -57,11 +69,37 @@ export interface WorkspaceBuildConfig {
      * invokes `cmake --build <buildDir> --target <name>` per entry with shared
      * flags. Per-target customization belongs in `CMakeLists.txt`, not here.
      *
-     * Only valid when `cmake` is set; merged via array concat + dedup.
+     * Merged via array concat + dedup.
      */
     targets?: string[];
   };
+  env?: Record<string, string>;
 }
+
+/**
+ * Python build configuration — the workspace runs a Python script directly
+ * (no compilation step).
+ *
+ * Only `env` is meaningful; all other build fields are inapplicable.
+ */
+export interface PythonBuildConfig {
+  kind: 'python';
+  env?: Record<string, string>;
+}
+
+/**
+ * Discriminated union of all supported build configurations.
+ *
+ * Use the `kind` field to narrow to the appropriate shape:
+ *
+ * ```ts
+ * if (build.kind === 'native') { // NativeBuildConfig — cflags, libs, compiler …
+ * } else if (build.kind === 'cmake') { // CMakeBuildConfig — cmake.configureArgs …
+ * } else { // PythonBuildConfig — env only
+ * }
+ * ```
+ */
+export type WorkspaceBuildConfig = NativeBuildConfig | CMakeBuildConfig | PythonBuildConfig;
 
 /**
  * Options passed to `workspace.switch()` or the `workspace` prop of
@@ -125,7 +163,7 @@ export interface RunOptions {
 export interface CompileOptions extends RunOptions {
   sources?: string[];
   build?: Partial<WorkspaceBuildConfig>;
-  /** Legacy: appended to cflags. */
+  /** Legacy: appended to cflags. Only valid for native builds. */
   flags?: string[];
 }
 
@@ -183,15 +221,18 @@ export type TestCase =
 /**
  * Full test plan executed by {@link EmceptionAPI.runTests}.
  *
- * `build` overrides the workspace's default build config for this plan (e.g.
- * to add GTest link flags, set a specific output binary name, etc.).
+ * `build` overrides the workspace's default native build config for this
+ * plan (e.g. to add GTest link flags, set a specific output binary name,
+ * or provide additional source files). Only `NativeBuildConfig` fields are
+ * applicable — CMake and Python workspaces are not directly testable via
+ * this plan format.
  * `cases` is the ordered list of test cases to run.
  * `timeoutMsPerCase` caps individual case runtime (default: 10 000 ms).
  * `redactHidden` strips hidden-file content from diagnostics returned to the
  * student when `true` (default: `false`).
  */
 export interface TestPlan {
-  build?: Partial<WorkspaceBuildConfig> & { sources?: string[]; output?: string };
+  build?: Partial<NativeBuildConfig>;
   cases: TestCase[];
   timeoutMsPerCase?: number;
   redactHidden?: boolean;
