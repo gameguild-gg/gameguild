@@ -12,30 +12,19 @@
 
 import type { WorkspaceConfig } from './workspace-config.js';
 
-import { DEFAULT_CODE, DEFAULT_HEADER, DEFAULT_IMAGE } from './workspace-presets/defaults.js';
-import { SDL_DEMO_CODE, CPP_SDL3_PRESET } from './workspace-presets/sdl.js';
-import { RAYLIB_DEMO_CODE, CPP_RAYLIB_PRESET } from './workspace-presets/raylib.js';
 import { ALLEGRO_DEMO_CODE, CPP_ALLEGRO_PRESET } from './workspace-presets/allegro.js';
-import { SDL_OPENGL_DEMO_CODE, CPP_SDL3_OPENGL_PRESET } from './workspace-presets/sdl-opengl.js';
-import { CPP_TERMINAL_PRESET } from './workspace-presets/terminal.js';
 import { CMAKE_PRESET } from './workspace-presets/cmake.js';
+import { DEFAULT_CODE, DEFAULT_HEADER, DEFAULT_IMAGE } from './workspace-presets/defaults.js';
 import { PYTHON_PRESET } from './workspace-presets/python.js';
+import { CPP_RAYLIB_PRESET, RAYLIB_DEMO_CODE } from './workspace-presets/raylib.js';
+import { CPP_SDL3_OPENGL_PRESET, SDL_OPENGL_DEMO_CODE } from './workspace-presets/sdl-opengl.js';
+import { CPP_SDL3_PRESET, SDL_DEMO_CODE } from './workspace-presets/sdl.js';
+import { CPP_TERMINAL_PRESET } from './workspace-presets/terminal.js';
 
 export {
-  DEFAULT_CODE,
+  ALLEGRO_DEMO_CODE, CMAKE_PRESET, CPP_ALLEGRO_PRESET, CPP_RAYLIB_PRESET, CPP_SDL3_OPENGL_PRESET, CPP_SDL3_PRESET, CPP_TERMINAL_PRESET, DEFAULT_CODE,
   DEFAULT_HEADER,
-  DEFAULT_IMAGE,
-  SDL_DEMO_CODE,
-  CPP_SDL3_PRESET,
-  RAYLIB_DEMO_CODE,
-  CPP_RAYLIB_PRESET,
-  ALLEGRO_DEMO_CODE,
-  CPP_ALLEGRO_PRESET,
-  SDL_OPENGL_DEMO_CODE,
-  CPP_SDL3_OPENGL_PRESET,
-  CPP_TERMINAL_PRESET,
-  CMAKE_PRESET,
-  PYTHON_PRESET,
+  DEFAULT_IMAGE, PYTHON_PRESET, RAYLIB_DEMO_CODE, SDL_DEMO_CODE, SDL_OPENGL_DEMO_CODE
 };
 
 // ── Preset registry ─────────────────────────────────────────────

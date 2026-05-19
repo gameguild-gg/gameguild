@@ -93,39 +93,39 @@ int main() {
 `;
 
 export const CPP_ALLEGRO_PRESET: WorkspaceConfig = {
-  id: 'cpp-allegro',
-  label: 'C++ Allegro 5 — Bouncing Ball',
-  description: 'Allegro 5 graphics demo compiled in the browser with Emscripten',
-  version: 1,
-  compile: {
-    // tool: 'clang' + canvasPreset 'allegro' signals the IDE to use the
-    // direct clang + wasm-ld two-step path (BROWSER_BUILD_PRESETS.allegro)
-    // and to load allegro-runtime.mjs as the canvas runtime.
-    tool: 'clang',
-    args: [],
-    cwd: '/home/user',
-    output: '/home/user/main.wasm',
-    canvasPreset: 'allegro',
-    sourceDetect: { extensions: ['.cpp', '.c'], entryPoint: '/user/allegro-main.cpp' },
-  },
-  run: {
-    type: 'canvas',
-  },
-  features: {
-    canvas: true,
-    terminalInput: false,
-    showTestButton: false,
-  },
-  layout: {
-    activeFile: '/user/allegro-main.cpp',
-    openTabs: [
-      { path: '/user/allegro-main.cpp', group: 'main' },
-      { path: '/user/canvas', group: 'right' },
-    ],
-    expandedDirs: ['/user'],
-  },
-  files: {
-    '/user/allegro-main.cpp': { encoding: 'text', content: ALLEGRO_DEMO_CODE },
-    '/user/workspace-preview.svg': { encoding: 'text', content: DEFAULT_IMAGE },
-  },
+    id: 'cpp-allegro',
+    label: 'C++ Allegro 5 — Bouncing Ball',
+    description: 'Allegro 5 graphics demo compiled in the browser with Emscripten',
+    version: 1,
+    compile: {
+        // tool: 'clang' + canvasPreset 'allegro' signals the IDE to use the
+        // direct clang + wasm-ld two-step path (BROWSER_BUILD_PRESETS.allegro)
+        // and to load allegro-runtime.mjs as the canvas runtime.
+        tool: 'clang',
+        args: [],
+        cwd: '/home/user',
+        output: '/home/user/main.wasm',
+        canvasPreset: 'allegro',
+        sourceDetect: { extensions: ['.cpp', '.c'], entryPoint: '/user/allegro-main.cpp' },
+    },
+    run: {
+        type: 'canvas',
+    },
+    features: {
+        canvas: true,
+        terminalInput: false,
+        showTestButton: false,
+    },
+    layout: {
+        activeFile: '/user/allegro-main.cpp',
+        openTabs: [
+            { path: '/user/allegro-main.cpp', group: 'main' },
+            { path: '/user/canvas', group: 'right' },
+        ],
+        expandedDirs: ['/user'],
+    },
+    files: {
+        '/user/allegro-main.cpp': { encoding: 'text', content: ALLEGRO_DEMO_CODE },
+        '/user/workspace-preview.svg': { encoding: 'text', content: DEFAULT_IMAGE },
+    },
 };

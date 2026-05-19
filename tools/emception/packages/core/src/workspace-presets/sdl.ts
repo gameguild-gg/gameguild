@@ -109,40 +109,40 @@ void SDL_AppQuit(void *appstate, SDL_AppResult result) {
 `;
 
 export const CPP_SDL3_PRESET: WorkspaceConfig = {
-  id: 'cpp-sdl3',
-  label: 'C++ SDL3 — Bouncing Ball',
-  description: 'SDL3 graphics demo compiled in the browser with Emscripten',
-  version: 1,
-  compile: {
-    // Direct clang + wasm-ld two-step path via BROWSER_BUILD_PRESETS.sdl.
-    // SDL3 is not an emsdk port — using emcc would trigger ports/__init__.py
-    // which fails in the WASM sandbox. canvasPreset replaces the former
-    // '-sUSE_SDL=3' heuristic the IDE used to detect this path.
-    tool: 'clang',
-    args: [],
-    cwd: '/home/user',
-    output: '/home/user/main.wasm',
-    canvasPreset: 'sdl',
-    sourceDetect: { extensions: ['.cpp', '.c'], entryPoint: '/user/sdl-main.cpp' },
-  },
-  run: {
-    type: 'canvas',
-  },
-  features: {
-    canvas: true,
-    terminalInput: false,
-    showTestButton: false,
-  },
-  layout: {
-    activeFile: '/user/sdl-main.cpp',
-    openTabs: [
-      { path: '/user/sdl-main.cpp', group: 'main' },
-      { path: '/user/canvas', group: 'right' },
-    ],
-    expandedDirs: ['/user'],
-  },
-  files: {
-    '/user/sdl-main.cpp': { encoding: 'text', content: SDL_DEMO_CODE },
-    '/user/workspace-preview.svg': { encoding: 'text', content: DEFAULT_IMAGE },
-  },
+    id: 'cpp-sdl3',
+    label: 'C++ SDL3 — Bouncing Ball',
+    description: 'SDL3 graphics demo compiled in the browser with Emscripten',
+    version: 1,
+    compile: {
+        // Direct clang + wasm-ld two-step path via BROWSER_BUILD_PRESETS.sdl.
+        // SDL3 is not an emsdk port — using emcc would trigger ports/__init__.py
+        // which fails in the WASM sandbox. canvasPreset replaces the former
+        // '-sUSE_SDL=3' heuristic the IDE used to detect this path.
+        tool: 'clang',
+        args: [],
+        cwd: '/home/user',
+        output: '/home/user/main.wasm',
+        canvasPreset: 'sdl',
+        sourceDetect: { extensions: ['.cpp', '.c'], entryPoint: '/user/sdl-main.cpp' },
+    },
+    run: {
+        type: 'canvas',
+    },
+    features: {
+        canvas: true,
+        terminalInput: false,
+        showTestButton: false,
+    },
+    layout: {
+        activeFile: '/user/sdl-main.cpp',
+        openTabs: [
+            { path: '/user/sdl-main.cpp', group: 'main' },
+            { path: '/user/canvas', group: 'right' },
+        ],
+        expandedDirs: ['/user'],
+    },
+    files: {
+        '/user/sdl-main.cpp': { encoding: 'text', content: SDL_DEMO_CODE },
+        '/user/workspace-preview.svg': { encoding: 'text', content: DEFAULT_IMAGE },
+    },
 };

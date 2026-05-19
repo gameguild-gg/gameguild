@@ -271,39 +271,6 @@ export interface TestReport {
  * zip import/export. All operations are async and operate on the virtual
  * FS mounted at the workspace's `mountPath`.
  */
-/**
- * Minimal flat API surface for embedders who want to drive the toolchain
- * without full workspace management. This is the interface returned by
- * `createEmception()` from `@gameguild/emception-browser`.
- *
- * For full workspace management, event subscriptions, and higher-level
- * orchestration use {@link EmceptionAPI}.
- */
-export interface EmbedderEmceptionAPI {
-  /** Run a tool by name (e.g. `'clang'`, `'ninja'`, `'python'`). */
-  run(
-    tool: string,
-    argv?: readonly string[],
-    opts?: {
-      cwd?: string;
-      env?: Record<string, string>;
-      onStdout?: (t: string) => void;
-      onStderr?: (t: string) => void;
-      stdin?: () => Promise<number>;
-    },
-  ): Promise<{ exitCode: number; stdout: string; stderr: string }>;
-  /** Read a file from the in-browser VFS (returns `null` if missing). */
-  readFile(path: string): Promise<Uint8Array | null>;
-  /** Write a file into the in-browser VFS (creates parent dirs as needed). */
-  writeFile(path: string, data: Uint8Array | string): Promise<void>;
-  /** List directory entries (returns `[]` if the path doesn't exist). */
-  listDir(path: string): Promise<string[]>;
-  /** Erase the persistent writable VFS layers (`/tmp`, `/home/user`). */
-  resetVfs(): Promise<void>;
-  /** Terminate the worker and tear down internal resources. */
-  dispose(): void;
-}
-
 export interface WorkspaceAPI {
   list(): Promise<string[]>;
   switch(name: string): Promise<void>;

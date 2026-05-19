@@ -11,8 +11,8 @@
 // `emception` (events, workspace seeding, cancellation) is a
 // separate, higher-level layer that lands later in the roadmap.
 
-import type { EmceptionAPI } from './createEmception';
 import type { ToolResult } from './tool-runner';
+import type { WorkerClient } from './worker-client';
 
 export type BrowserBuildPresetName = 'c' | 'cpp' | 'sdl' | 'raylib' | 'allegro';
 
@@ -378,9 +378,9 @@ export interface CompileAndRunResult {
 
 /**
  * End-to-end "edit → compile → link → run" cycle on top of the headless
- * `EmceptionAPI`. Stops early on compile or link failure.
+ * `WorkerClient`. Stops early on compile or link failure.
  */
-export async function compileAndRun(api: EmceptionAPI, opts: CompileAndRunOptions): Promise<CompileAndRunResult> {
+export async function compileAndRun(client: WorkerClient, opts: CompileAndRunOptions): Promise<CompileAndRunResult> {
     const preset = BROWSER_BUILD_PRESETS[opts.preset];
     if (!preset) {
         throw new Error(`compileAndRun: unknown preset '${opts.preset}'`);
@@ -395,23 +395,23 @@ export async function compileAndRun(api: EmceptionAPI, opts: CompileAndRunOption
     };
 
     opts.onPhase?.('write');
-    await api.writeFile(paths.sourcePath, opts.source);
+    await client.writeFile(paths.sourcePath, new TextEncoder().encode(opts.source));
 
     opts.onPhase?.('compile');
-    const compile = await api.run(preset.compileTool, preset.compileArgv(paths), runOpts);
+    const compile = await client.run(preset.compileTool, preset.compileArgv(paths), runOpts);
     if (compile.exitCode !== 0) {
         return { finalPhase: 'compile', exitCode: compile.exitCode, compile };
     }
 
     opts.onPhase?.('link');
-    const link = await api.run(preset.linkTool, preset.linkArgv(paths), runOpts);
+    const link = await client.run(preset.linkTool, preset.linkArgv(paths), runOpts);
     if (link.exitCode !== 0) {
         return { finalPhase: 'link', exitCode: link.exitCode, compile, link };
     }
 
     opts.onPhase?.('run');
     const stdinFn = makeStdinFeeder(opts.stdin);
-    const run = await api.run('wasi-run', ['wasi-run', paths.wasmPath], {
+    const run = await client.run('wasi-run', ['wasi-run', paths.wasmPath], {
         ...runOpts,
         stdin: stdinFn,
     });

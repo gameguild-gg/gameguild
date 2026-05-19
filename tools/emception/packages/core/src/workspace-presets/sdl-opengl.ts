@@ -181,30 +181,30 @@ void SDL_AppQuit(void* appstate, SDL_AppResult result) {
 `;
 
 export const CPP_SDL3_OPENGL_PRESET: WorkspaceConfig = {
-  id: 'cpp-sdl3-opengl',
-  label: 'C++ SDL3 — OpenGL ES 3.0',
-  description: 'SDL3 + raw OpenGL ES 3 (WebGL2) with Dear ImGui — learn the graphics pipeline',
-  version: 1,
-  compile: {
-    tool: 'clang',
-    args: [],
-    cwd: '/home/user',
-    output: '/home/user/main.wasm',
-    canvasPreset: 'sdl',
-    sourceDetect: { extensions: ['.cpp', '.c'], entryPoint: '/user/sdl-opengl.cpp' },
-  },
-  run: { type: 'canvas' },
-  features: { canvas: true, terminalInput: false, showTestButton: false },
-  layout: {
-    activeFile: '/user/sdl-opengl.cpp',
-    openTabs: [
-      { path: '/user/sdl-opengl.cpp', group: 'main' },
-      { path: '/user/canvas', group: 'right' },
-    ],
-    expandedDirs: ['/user'],
-  },
-  files: {
-    '/user/sdl-opengl.cpp': { encoding: 'text', content: SDL_OPENGL_DEMO_CODE },
-    '/user/workspace-preview.svg': { encoding: 'text', content: DEFAULT_IMAGE },
-  },
+    id: 'cpp-sdl3-opengl',
+    label: 'C++ SDL3 — OpenGL ES 3.0',
+    description: 'SDL3 + raw OpenGL ES 3 (WebGL2) with Dear ImGui — learn the graphics pipeline',
+    version: 1,
+    compile: {
+        tool: 'clang',
+        args: [],
+        cwd: '/home/user',
+        output: '/home/user/main.wasm',
+        canvasPreset: 'sdl',
+        sourceDetect: { extensions: ['.cpp', '.c'], entryPoint: '/user/sdl-opengl.cpp' },
+    },
+    run: { type: 'canvas' },
+    features: { canvas: true, terminalInput: false, showTestButton: false },
+    layout: {
+        activeFile: '/user/sdl-opengl.cpp',
+        openTabs: [
+            { path: '/user/sdl-opengl.cpp', group: 'main' },
+            { path: '/user/canvas', group: 'right' },
+        ],
+        expandedDirs: ['/user'],
+    },
+    files: {
+        '/user/sdl-opengl.cpp': { encoding: 'text', content: SDL_OPENGL_DEMO_CODE },
+        '/user/workspace-preview.svg': { encoding: 'text', content: DEFAULT_IMAGE },
+    },
 };

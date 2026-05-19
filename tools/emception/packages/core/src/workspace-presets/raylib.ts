@@ -68,39 +68,39 @@ int main() {
 `;
 
 export const CPP_RAYLIB_PRESET: WorkspaceConfig = {
-  id: 'cpp-raylib',
-  label: 'C++ raylib — Bouncing Ball',
-  description: 'raylib graphics demo compiled in the browser with Emscripten',
-  version: 2,
-  compile: {
-    // tool: 'clang' signals the IDE to use the direct clang + wasm-ld two-step
-    // path (BROWSER_BUILD_PRESETS.raylib) instead of Python/emcc. raylib is not
-    // an emsdk port, so em++ triggers ports/__init__.py which fails in WASM sandbox.
-    tool: 'clang',
-    args: [],
-    cwd: '/home/user',
-    output: '/home/user/main.wasm',
-    canvasPreset: 'raylib',
-    sourceDetect: { extensions: ['.cpp', '.c'], entryPoint: '/user/raylib-main.cpp' },
-  },
-  run: {
-    type: 'canvas',
-  },
-  features: {
-    canvas: true,
-    terminalInput: false,
-    showTestButton: false,
-  },
-  layout: {
-    activeFile: '/user/raylib-main.cpp',
-    openTabs: [
-      { path: '/user/raylib-main.cpp', group: 'main' },
-      { path: '/user/canvas', group: 'right' },
-    ],
-    expandedDirs: ['/user'],
-  },
-  files: {
-    '/user/raylib-main.cpp': { encoding: 'text', content: RAYLIB_DEMO_CODE },
-    '/user/workspace-preview.svg': { encoding: 'text', content: DEFAULT_IMAGE },
-  },
+    id: 'cpp-raylib',
+    label: 'C++ raylib — Bouncing Ball',
+    description: 'raylib graphics demo compiled in the browser with Emscripten',
+    version: 2,
+    compile: {
+        // tool: 'clang' signals the IDE to use the direct clang + wasm-ld two-step
+        // path (BROWSER_BUILD_PRESETS.raylib) instead of Python/emcc. raylib is not
+        // an emsdk port, so em++ triggers ports/__init__.py which fails in WASM sandbox.
+        tool: 'clang',
+        args: [],
+        cwd: '/home/user',
+        output: '/home/user/main.wasm',
+        canvasPreset: 'raylib',
+        sourceDetect: { extensions: ['.cpp', '.c'], entryPoint: '/user/raylib-main.cpp' },
+    },
+    run: {
+        type: 'canvas',
+    },
+    features: {
+        canvas: true,
+        terminalInput: false,
+        showTestButton: false,
+    },
+    layout: {
+        activeFile: '/user/raylib-main.cpp',
+        openTabs: [
+            { path: '/user/raylib-main.cpp', group: 'main' },
+            { path: '/user/canvas', group: 'right' },
+        ],
+        expandedDirs: ['/user'],
+    },
+    files: {
+        '/user/raylib-main.cpp': { encoding: 'text', content: RAYLIB_DEMO_CODE },
+        '/user/workspace-preview.svg': { encoding: 'text', content: DEFAULT_IMAGE },
+    },
 };

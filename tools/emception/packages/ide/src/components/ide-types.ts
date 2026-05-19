@@ -9,7 +9,7 @@ export type {
   BundleFile,
   CompileConfig,
   DockGroup,
-  EmbedderEmceptionAPI,
+  EmceptionAPI,
   LayoutConfig,
   LayoutTabConfig,
   RunConfig,
@@ -27,7 +27,7 @@ export {
   SDL_DEMO_CODE
 } from 'emception';
 
-import type { DockGroup, EmbedderEmceptionAPI, WorkspaceConfig } from 'emception';
+import type { DockGroup, EmceptionAPI, WorkspaceConfig } from 'emception';
 
 // ── IDE-only types ──────────────────────────────────────────────
 
@@ -141,12 +141,10 @@ export function workspaceConfigToState(config: WorkspaceConfig): {
 // ── IdeProps ───────────────────────────────────────────────────────────────
 
 /**
- * Minimal API surface accepted by the Ide component for an injected emception
+ * The API surface accepted by the Ide component for an injected emception
  * instance. Compatible with `createEmception()` from `@gameguild/emception-browser`.
- *
- * @deprecated Use {@link EmbedderEmceptionAPI} from `emception` directly.
  */
-export type InjectedEmceptionAPI = EmbedderEmceptionAPI;
+export type InjectedEmceptionAPI = EmceptionAPI;
 
 /**
  * Full reactive props for `<Ide>`.
