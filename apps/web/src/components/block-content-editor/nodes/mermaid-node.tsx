@@ -216,7 +216,7 @@ function MermaidComponent({ nodeKey, data }: MermaidComponentProps) {
 
         {/* Controls - Edit and Delete (only when selected) */}
         {isSelected && (
-          <div className="absolute top-2 right-14 flex gap-1 bg-white dark:bg-gray-900 rounded-md shadow-lg border dark:border-gray-700 p-1 z-[60]">
+          <div className="absolute top-2 right-14 flex gap-1 bg-white dark:bg-gray-900 rounded-md shadow-lg border dark:border-gray-700 p-1 z-60">
             <Button variant="ghost" size="sm" onClick={onEdit} className="h-8 w-8 p-0">
               <Edit className="h-4 w-4" />
             </Button>
