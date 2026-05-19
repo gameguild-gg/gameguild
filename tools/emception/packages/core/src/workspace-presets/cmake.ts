@@ -21,15 +21,15 @@ export const CMAKE_PRESET: WorkspaceConfig = {
     version: 1,
     compile: {
         tool: 'cmake',
-        args: ['cmake', '-B', '/home/user/build', '-G', 'Ninja', '-S', '/home/user'],
-        cwd: '/home/user',
-        output: '/home/user/build/hello',
-        sourceDetect: { extensions: ['.cpp', '.c'], entryPoint: '/user/main.cpp' },
+        args: ['cmake', '-B', '/home/user/cmake/build', '-G', 'Ninja', '-S', '/home/user/cmake'],
+        cwd: '/home/user/cmake',
+        output: '/home/user/cmake/build/hello',
+        sourceDetect: { extensions: ['.cpp', '.c'], entryPoint: '/user/cmake/main.cpp' },
     },
     run: {
         type: 'cmake-build',
         tool: 'wasi-run',
-        args: ['wasi-run', '/home/user/build/hello'],
+        args: ['wasi-run', '/home/user/cmake/build/hello'],
     },
     features: {
         canvas: false,
@@ -37,7 +37,7 @@ export const CMAKE_PRESET: WorkspaceConfig = {
         showTestButton: false,
     },
     files: {
-        '/user/main.cpp': { encoding: 'text', content: CMAKE_MAIN },
-        '/user/CMakeLists.txt': { encoding: 'text', content: CMAKE_LISTS },
+        '/user/cmake/main.cpp': { encoding: 'text', content: CMAKE_MAIN },
+        '/user/cmake/CMakeLists.txt': { encoding: 'text', content: CMAKE_LISTS },
     },
 };

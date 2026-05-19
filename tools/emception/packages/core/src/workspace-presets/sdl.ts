@@ -120,10 +120,10 @@ export const CPP_SDL3_PRESET: WorkspaceConfig = {
         // '-sUSE_SDL=3' heuristic the IDE used to detect this path.
         tool: 'clang',
         args: [],
-        cwd: '/home/user',
-        output: '/home/user/main.wasm',
+        cwd: '/home/user/cpp-sdl3',
+        output: '/home/user/cpp-sdl3/main.wasm',
         canvasPreset: 'sdl',
-        sourceDetect: { extensions: ['.cpp', '.c'], entryPoint: '/user/sdl-main.cpp' },
+        sourceDetect: { extensions: ['.cpp', '.c'], entryPoint: '/user/cpp-sdl3/sdl-main.cpp' },
     },
     run: {
         type: 'canvas',
@@ -134,7 +134,7 @@ export const CPP_SDL3_PRESET: WorkspaceConfig = {
         showTestButton: false,
     },
     files: {
-        '/user/sdl-main.cpp': { encoding: 'text', content: SDL_DEMO_CODE },
-        '/user/workspace-preview.svg': { encoding: 'text', content: DEFAULT_IMAGE },
+        '/user/cpp-sdl3/sdl-main.cpp': { encoding: 'text', content: SDL_DEMO_CODE },
+        '/user/cpp-sdl3/workspace-preview.svg': { encoding: 'text', content: DEFAULT_IMAGE },
     },
 };

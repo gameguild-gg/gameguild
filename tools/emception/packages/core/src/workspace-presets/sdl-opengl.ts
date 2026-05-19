@@ -188,15 +188,15 @@ export const CPP_SDL3_OPENGL_PRESET: WorkspaceConfig = {
     compile: {
         tool: 'clang',
         args: [],
-        cwd: '/home/user',
-        output: '/home/user/main.wasm',
+        cwd: '/home/user/cpp-sdl3-opengl',
+        output: '/home/user/cpp-sdl3-opengl/main.wasm',
         canvasPreset: 'sdl',
-        sourceDetect: { extensions: ['.cpp', '.c'], entryPoint: '/user/sdl-opengl.cpp' },
+        sourceDetect: { extensions: ['.cpp', '.c'], entryPoint: '/user/cpp-sdl3-opengl/sdl-opengl.cpp' },
     },
     run: { type: 'canvas' },
     features: { canvas: true, terminalInput: false, showTestButton: false },
     files: {
-        '/user/sdl-opengl.cpp': { encoding: 'text', content: SDL_OPENGL_DEMO_CODE },
-        '/user/workspace-preview.svg': { encoding: 'text', content: DEFAULT_IMAGE },
+        '/user/cpp-sdl3-opengl/sdl-opengl.cpp': { encoding: 'text', content: SDL_OPENGL_DEMO_CODE },
+        '/user/cpp-sdl3-opengl/workspace-preview.svg': { encoding: 'text', content: DEFAULT_IMAGE },
     },
 };

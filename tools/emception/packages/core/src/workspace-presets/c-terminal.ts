@@ -39,14 +39,14 @@ export const C_TERMINAL_PRESET: WorkspaceConfig = {
     compile: {
         tool: 'clang',
         args: [],
-        cwd: '/home/user',
-        output: '/home/user/main.wasm',
-        sourceDetect: { extensions: ['.c'], entryPoint: '/user/main.c' },
+        cwd: '/home/user/c-terminal',
+        output: '/home/user/c-terminal/main.wasm',
+        sourceDetect: { extensions: ['.c'], entryPoint: '/user/c-terminal/main.c' },
     },
     run: {
         type: 'wasi-terminal',
         tool: 'wasi-run',
-        args: ['wasi-run', '/home/user/main.wasm'],
+        args: ['wasi-run', '/home/user/c-terminal/main.wasm'],
     },
     features: {
         canvas: false,
@@ -54,6 +54,6 @@ export const C_TERMINAL_PRESET: WorkspaceConfig = {
         showTestButton: false,
     },
     files: {
-        '/user/main.c': { encoding: 'text', content: C_GENERIC_CODE },
+        '/user/c-terminal/main.c': { encoding: 'text', content: C_GENERIC_CODE },
     },
 };
