@@ -1,86 +1,56 @@
-import { LexicalEditor } from "lexical"
 import { toast } from "sonner"
 import { assetManager } from "@/components/block-content-editor/lib/storage/assets/asset-manager"
-import type { EngineType } from "@/components/block-content-editor/lib/storage/editor/project-types"
 
-// Parameter interfaces
+type StorageType = "local" | "gameguild-cloud" | "google-drive"
+
 export interface SaveParams {
   currentProjectId: string
   currentProjectName: string
-  currentProjectStorageType: "local" | "gameguild-cloud" | "google-drive"
-  editorState: string // Already formatted via createProjectData
-  editorRef: React.RefObject<LexicalEditor | null>
+  currentProjectStorageType: StorageType
+  data: string
   projectTags: string[]
   storageAdapter: {
-    save: (id: string, name: string, data: string, tags: string[], storageType: "local" | "gameguild-cloud" | "google-drive", preferences?: any, engine?: EngineType) => Promise<void>
+    save: (id: string, name: string, data: string, tags: string[], storageType: StorageType, preferences?: any) => Promise<void>
   }
   calculateProjectAssetsSize: (projectId: string) => Promise<void>
   setSaveAsDialogOpen: (open: boolean) => void
   preferences?: any
-  engine?: EngineType // Engine type (lexical, blocks)
 }
 
 export interface SaveAsParams {
   newProjectName: string
-  editorState: string // Already formatted via createProjectData
-  editorRef: React.RefObject<LexicalEditor | null>
+  data: string
   projectTags: string[]
-  storageOption: "local" | "gameguild-cloud" | "google-drive"
+  storageOption: StorageType
   storageAdapter: {
-    save: (id: string, name: string, data: string, tags: string[], storageType: "local" | "gameguild-cloud" | "google-drive", preferences?: any, engine?: EngineType) => Promise<void>
+    save: (id: string, name: string, data: string, tags: string[], storageType: StorageType, preferences?: any) => Promise<void>
     list: () => Promise<Array<{ name: string }>>
   }
-  engine?: EngineType
   generateProjectId: () => string
   setCurrentProjectId: (id: string) => void
   setCurrentProjectName: (name: string) => void
-  setCurrentProjectStorageType: (type: "local" | "gameguild-cloud" | "google-drive") => void
+  setCurrentProjectStorageType: (type: StorageType) => void
   setNewProjectName: (name: string) => void
   setSaveAsDialogOpen: (open: boolean) => void
   loadSavedProjectsList: () => Promise<void>
   calculateProjectAssetsSize: (projectId: string) => Promise<void>
 }
 
-/**
- * Handle project save operation
- */
 export async function handleSave(params: SaveParams): Promise<void> {
   const {
     currentProjectId,
     currentProjectName,
     currentProjectStorageType,
-    editorState,
-    editorRef,
+    data,
     projectTags,
     storageAdapter,
     calculateProjectAssetsSize,
-    setSaveAsDialogOpen,
     preferences,
-    engine,
   } = params
 
-  if (!currentProjectId) {
-    return
-  }
+  if (!currentProjectId) return
 
-  // Get current editor state if editorState is empty
-  let stateToSave = editorState
-  if (!stateToSave && editorRef.current) {
-    try {
-      const currentState = editorRef.current.getEditorState()
-      stateToSave = JSON.stringify(currentState.toJSON())
-    } catch (error) {
-      console.error("Failed to get editor state:", error)
-      toast.error("Error in editor", {
-        description: "Could not get publisher content",
-        duration: 4000,
-        icon: "⚠️",
-      })
-      return
-    }
-  }
-
-  if (!stateToSave || stateToSave.trim() === "") {
+  if (!data || data.trim() === "") {
     toast.error("Nothing to save", {
       description: "The editor is empty. Add content before saving.",
       duration: 3000,
@@ -90,12 +60,8 @@ export async function handleSave(params: SaveParams): Promise<void> {
   }
 
   try {
-    await storageAdapter.save(currentProjectId, currentProjectName, stateToSave, projectTags, currentProjectStorageType, preferences, engine)
-
-    // Sync asset index with the saved project data
-    await assetManager.syncProjectAssets(currentProjectId, stateToSave)
-
-    // Recalculate assets size to reflect any changes
+    await storageAdapter.save(currentProjectId, currentProjectName, data, projectTags, currentProjectStorageType, preferences)
+    await assetManager.syncProjectAssets(currentProjectId, data)
     await calculateProjectAssetsSize(currentProjectId)
 
     toast.success("Project saved successfully", {
@@ -103,7 +69,7 @@ export async function handleSave(params: SaveParams): Promise<void> {
       duration: 3000,
       icon: "💾",
     })
-  } catch (error: any) {
+  } catch (error) {
     console.error("Save error:", error)
     toast.error("Error saving", {
       description: "Could not save project. Please try again.",
@@ -113,14 +79,10 @@ export async function handleSave(params: SaveParams): Promise<void> {
   }
 }
 
-/**
- * Handle save as operation (create new project)
- */
 export async function handleSaveAs(params: SaveAsParams): Promise<void> {
   const {
     newProjectName,
-    editorState,
-    editorRef,
+    data,
     projectTags,
     storageOption,
     storageAdapter,
@@ -132,7 +94,6 @@ export async function handleSaveAs(params: SaveAsParams): Promise<void> {
     setSaveAsDialogOpen,
     loadSavedProjectsList,
     calculateProjectAssetsSize,
-    engine,
   } = params
 
   if (!newProjectName.trim()) {
@@ -144,19 +105,14 @@ export async function handleSaveAs(params: SaveAsParams): Promise<void> {
     return
   }
 
-  // Check if project with same name already exists
   const existingProjects = await storageAdapter.list()
   if (existingProjects.some((p) => p.name === newProjectName.trim())) {
-    // Generate suggested name with version number
     let suggestedName = `${newProjectName.trim()}-v2`
     let counter = 2
-
-    // Keep incrementing until we find an available name
     while (existingProjects.some((p) => p.name === suggestedName)) {
       counter++
       suggestedName = `${newProjectName.trim()}-v${counter}`
     }
-
     toast.error("Name already exists", {
       description: `There is already a project named "${newProjectName.trim()}". Suggestion: ${suggestedName}`,
       duration: 5000,
@@ -165,24 +121,7 @@ export async function handleSaveAs(params: SaveAsParams): Promise<void> {
     return
   }
 
-  // Get current editor state if editorState is empty
-  let stateToSave = editorState
-  if (!stateToSave && editorRef.current) {
-    try {
-      const currentState = editorRef.current.getEditorState()
-      stateToSave = JSON.stringify(currentState.toJSON())
-    } catch (error) {
-      console.error("Failed to get editor state:", error)
-      toast.error("Error in editor", {
-        description: "Could not get publisher content.",
-        duration: 4000,
-        icon: "⚠️",
-      })
-      return
-    }
-  }
-
-  if (!stateToSave || stateToSave.trim() === "") {
+  if (!data || data.trim() === "") {
     toast.error("Nothing to save", {
       description: "The editor is empty. Add content before saving.",
       duration: 3000,
@@ -193,19 +132,15 @@ export async function handleSaveAs(params: SaveAsParams): Promise<void> {
 
   try {
     const newProjectId = generateProjectId()
-    await storageAdapter.save(newProjectId, newProjectName, stateToSave, projectTags, storageOption, undefined, engine)
-    
-    // Sync asset index with the saved project data
-    await assetManager.syncProjectAssets(newProjectId, stateToSave)
-    
+    await storageAdapter.save(newProjectId, newProjectName, data, projectTags, storageOption, undefined)
+    await assetManager.syncProjectAssets(newProjectId, data)
+
     setCurrentProjectId(newProjectId)
     setCurrentProjectName(newProjectName)
     setCurrentProjectStorageType(storageOption)
     setNewProjectName("")
     setSaveAsDialogOpen(false)
     await loadSavedProjectsList()
-
-    // Recalculate assets size for new project
     await calculateProjectAssetsSize(newProjectId)
 
     toast.success("New project created", {
@@ -213,7 +148,7 @@ export async function handleSaveAs(params: SaveAsParams): Promise<void> {
       duration: 3000,
       icon: "🎉",
     })
-  } catch (error: any) {
+  } catch (error) {
     console.error("Save as error:", error)
     toast.error("Error creating project", {
       description: "Could not create project. Please try again.",
