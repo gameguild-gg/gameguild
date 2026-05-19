@@ -1,5 +1,13 @@
 "use client"
 
+/**
+ * ViewerProvider
+ *
+ * Read-only counterpart to `EditorProvider`. Wraps `useViewerStorage()` and
+ * exposes the loaded project + blocks through `useViewer()`. Has no write
+ * path — the only state changes are dialog open/close.
+ */
+
 import { createContext, useContext, useState, type ReactNode } from "react"
 import { useRouter } from "next/navigation"
 import { useViewerStorage, type UseViewerStorageReturn } from "@/components/block-content-editor/hooks/useViewerStorage"
