@@ -128,8 +128,6 @@ export function EditorToolbar() {
               isDbInitialized={project.isDbInitialized}
               storageAdapter={project.storageAdapter}
               availableTags={project.availableTags}
-              editorRef={project.editorRef}
-              setLoadingRef={project.setLoadingRef}
               onProjectLoad={project.loadProject}
               onProjectsListUpdate={project.refreshProjects}
               onCreateNew={() => {
