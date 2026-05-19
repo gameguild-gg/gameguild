@@ -48,6 +48,11 @@ export interface LayoutConfig {
  * tab positions, active file, and expanded dirs for each preset.
  */
 export const PRESET_LAYOUTS: Record<string, LayoutConfig> = {
+  'c-terminal': {
+    activeFile: '/user/main.c',
+    openTabs: [{ path: '/user/main.c', group: 'main' }],
+    expandedDirs: ['/user'],
+  },
   'cpp-terminal': {
     activeFile: '/user/main.cpp',
     openTabs: [

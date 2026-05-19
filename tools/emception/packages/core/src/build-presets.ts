@@ -10,7 +10,7 @@
 
 import type { NativeBuildConfig, CMakeBuildConfig, PythonBuildConfig, WorkspaceBuildConfig } from './types';
 
-export type BuildPresetName = 'c' | 'cpp' | 'python' | 'sdl' | 'raylib' | 'allegro' | 'cmake';
+export type BuildPresetName = 'c' | 'cpp' | 'python' | 'sdl' | 'sdl-cpp' | 'sdl-c' | 'raylib' | 'raylib-cpp' | 'raylib-c' | 'allegro' | 'allegro-cpp' | 'allegro-c' | 'cmake';
 
 export interface BuildPreset {
   name: BuildPresetName;
@@ -24,13 +24,13 @@ export const BUILD_PRESETS: Record<BuildPresetName, BuildPreset> = {
     name: 'c',
     bundlesToPreload: ['llvm', 'libcurl-lite'],
     defaultTools: ['clang', 'wasm-ld'],
-    build: { kind: 'native', compiler: 'clang', cflags: ['-O1'] } satisfies NativeBuildConfig,
+    build: { kind: 'native', compiler: 'clang', std: 'c2y', cflags: ['-O1'] } satisfies NativeBuildConfig,
   },
   cpp: {
     name: 'cpp',
     bundlesToPreload: ['llvm', 'libcurl-lite'],
     defaultTools: ['clang++', 'wasm-ld'],
-    build: { kind: 'native', compiler: 'clang++', std: 'c++20', cflags: ['-O1'] } satisfies NativeBuildConfig,
+    build: { kind: 'native', compiler: 'clang++', std: 'c++2c', cflags: ['-O1'] } satisfies NativeBuildConfig,
   },
   python: {
     name: 'python',
@@ -42,24 +42,88 @@ export const BUILD_PRESETS: Record<BuildPresetName, BuildPreset> = {
     name: 'sdl',
     bundlesToPreload: ['llvm', 'sdl3', 'imgui'],
     defaultTools: ['clang', 'wasm-ld'],
-    build: { kind: 'native', compiler: 'clang', std: 'c++20', libs: ['SDL3'] } satisfies NativeBuildConfig,
+    build: { kind: 'native', compiler: 'clang', std: 'c++2c', libs: ['SDL3'] } satisfies NativeBuildConfig,
+  },
+  'sdl-cpp': {
+    name: 'sdl-cpp',
+    bundlesToPreload: ['llvm', 'sdl3', 'imgui'],
+    defaultTools: ['clang', 'wasm-ld'],
+    build: { kind: 'native', compiler: 'clang', std: 'c++2c', libs: ['SDL3'] } satisfies NativeBuildConfig,
+  },
+  'sdl-c': {
+    name: 'sdl-c',
+    bundlesToPreload: ['llvm', 'sdl3', 'imgui'],
+    defaultTools: ['clang', 'wasm-ld'],
+    build: { kind: 'native', compiler: 'clang', std: 'c2y', libs: ['SDL3'] } satisfies NativeBuildConfig,
   },
   raylib: {
     name: 'raylib',
     bundlesToPreload: ['llvm', 'raylib'],
     defaultTools: ['clang', 'wasm-ld'],
-    build: { kind: 'native', compiler: 'clang', libs: ['raylib', 'raygui', 'physac', 'rlights'] } satisfies NativeBuildConfig,
+    build: { kind: 'native', compiler: 'clang', std: 'c++2c', libs: ['raylib', 'raygui', 'physac', 'rlights'] } satisfies NativeBuildConfig,
+  },
+  'raylib-cpp': {
+    name: 'raylib-cpp',
+    bundlesToPreload: ['llvm', 'raylib'],
+    defaultTools: ['clang', 'wasm-ld'],
+    build: { kind: 'native', compiler: 'clang', std: 'c++2c', libs: ['raylib', 'raygui', 'physac', 'rlights'] } satisfies NativeBuildConfig,
+  },
+  'raylib-c': {
+    name: 'raylib-c',
+    bundlesToPreload: ['llvm', 'raylib'],
+    defaultTools: ['clang', 'wasm-ld'],
+    build: { kind: 'native', compiler: 'clang', std: 'c2y', libs: ['raylib', 'raygui', 'physac', 'rlights'] } satisfies NativeBuildConfig,
   },
   allegro: {
     name: 'allegro',
     bundlesToPreload: ['llvm', 'allegro'],
     defaultTools: ['clang', 'wasm-ld'],
     build: {
-      // Compiled via direct clang + wasm-ld two-step (not emcc/Python).
-      // SDL2 is an implementation detail hidden inside liballegro.a — it is
-      // not a user-facing link target and is intentionally omitted here.
       kind: 'native',
       compiler: 'clang',
+      std: 'c++2c',
+      libs: [
+        'allegro',
+        'allegro_image',
+        'allegro_primitives',
+        'allegro_font',
+        'allegro_ttf',
+        'allegro_audio',
+        'allegro_acodec',
+        'allegro_color',
+        'allegro_main',
+      ],
+    } satisfies NativeBuildConfig,
+  },
+  'allegro-cpp': {
+    name: 'allegro-cpp',
+    bundlesToPreload: ['llvm', 'allegro'],
+    defaultTools: ['clang', 'wasm-ld'],
+    build: {
+      kind: 'native',
+      compiler: 'clang',
+      std: 'c++2c',
+      libs: [
+        'allegro',
+        'allegro_image',
+        'allegro_primitives',
+        'allegro_font',
+        'allegro_ttf',
+        'allegro_audio',
+        'allegro_acodec',
+        'allegro_color',
+        'allegro_main',
+      ],
+    } satisfies NativeBuildConfig,
+  },
+  'allegro-c': {
+    name: 'allegro-c',
+    bundlesToPreload: ['llvm', 'allegro'],
+    defaultTools: ['clang', 'wasm-ld'],
+    build: {
+      kind: 'native',
+      compiler: 'clang',
+      std: 'c2y',
       libs: [
         'allegro',
         'allegro_image',
