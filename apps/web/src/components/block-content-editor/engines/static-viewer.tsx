@@ -1,67 +1,43 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { toast } from "sonner"
+import { FileWarning, Loader2 } from "lucide-react"
 import { EnhancedStorageAdapter } from "@/components/block-content-editor/lib/storage/editor/enhanced-storage-adapter"
-import { extractEditorStates } from "@/components/block-content-editor/lib/storage/editor/layout-detector"
-import { ENGINE_TYPES } from "@/components/block-content-editor/lib/storage/editor/project-types"
-import { cellsToLexical } from "@/components/block-content-editor/lib/storage/editor/cell-converters/lexical"
-import { storageToBlocks } from "@/components/block-content-editor/lib/storage/editor/cell-converters/blocks"
-import { ProjectContentRenderer } from "@/components/block-content-editor/engines/project-content-renderer"
-import { Loader2, FileWarning } from "lucide-react"
+import { deserializeProject } from "@/components/block-content-editor/lib/storage/editor/block-storage"
+import { BlockArrayViewer } from "@/components/block-content-editor/engines/blocks/block-array-viewer"
 import type { ProjectData } from "@/components/block-content-editor/extras/preview/preview-load-operations"
 
-// ============================================================================
-// StaticViewer — renders a project in a read-only layout
-// ============================================================================
-
 interface StaticViewerProps {
-  /** The project ID to load and display */
   projectId: string
-  /** Optional CSS class for the outer wrapper */
   className?: string
-  /** Whether to show the project title as a heading */
   showTitle?: boolean
-  /** Whether to show project metadata (tags, date) */
   showMeta?: boolean
-  /** Whether to show the documents sidebar (lexical only) */
-  showSidebar?: boolean
-  /** Whether to show the table of contents (lexical only) */
-  showToc?: boolean
 }
 
-export function StaticViewer({ projectId, className, showTitle = true, showMeta = true, showSidebar = false, showToc = false }: StaticViewerProps) {
+export function StaticViewer({
+  projectId,
+  className,
+  showTitle = true,
+  showMeta = true,
+}: StaticViewerProps) {
   const [project, setProject] = useState<ProjectData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const dbStorage = useRef<EnhancedStorageAdapter>(new EnhancedStorageAdapter())
-  const [isDbInitialized, setIsDbInitialized] = useState(false)
-  const [availableTags, setAvailableTags] = useState<Array<{ name: string; usageCount: number }>>([])
 
   useEffect(() => {
     let cancelled = false
-
     const load = async () => {
       setLoading(true)
       setError(null)
-
       try {
         await dbStorage.current.init()
         if (cancelled) return
-        setIsDbInitialized(true)
-
-        const tags = await dbStorage.current.getAllTags().catch(() => [])
-        if (cancelled) return
-        setAvailableTags(tags)
-
         const data = await dbStorage.current.load(projectId)
         if (cancelled) return
-
-        if (!data) {
-          setError(`Project "${projectId}" not found`)
-        } else {
-          setProject(data)
-        }
+        if (!data) setError(`Project "${projectId}" not found`)
+        else setProject(data)
       } catch (err) {
         if (cancelled) return
         const msg = err instanceof Error ? err.message : "Unknown error"
@@ -71,12 +47,12 @@ export function StaticViewer({ projectId, className, showTitle = true, showMeta 
         if (!cancelled) setLoading(false)
       }
     }
-
     load()
     return () => { cancelled = true }
   }, [projectId])
 
-  // ── Loading state ──
+  const blocks = useMemo(() => (project ? deserializeProject(project.data) : []), [project])
+
   if (loading) {
     return (
       <div className={`flex items-center justify-center py-20 ${className ?? ""}`}>
@@ -85,7 +61,6 @@ export function StaticViewer({ projectId, className, showTitle = true, showMeta 
     )
   }
 
-  // ── Error state ──
   if (error || !project) {
     return (
       <div className={`flex flex-col items-center justify-center py-20 text-center ${className ?? ""}`}>
@@ -96,52 +71,12 @@ export function StaticViewer({ projectId, className, showTitle = true, showMeta 
     )
   }
 
-  // ── Compute layout from project ──
-  const projectEngine = (project as any).engine
-  const isBlocksEngine = projectEngine === ENGINE_TYPES.BLOCKS
-  const projectMeta = project as any
-
-  // Prepare data for the content renderer
-  let serializedState: any = undefined
-  let blocksArray: any[] | undefined = undefined
-
-  if (isBlocksEngine) {
-    const cellStates = extractEditorStates(project.data)
-    const storageData = cellStates.blocks.b1 || { order: [], blocks: {} }
-    const safeData =
-      storageData && typeof storageData === "object" && !Array.isArray(storageData)
-        ? storageData
-        : { order: [], blocks: {} }
-    blocksArray = storageToBlocks(safeData)
-  } else {
-    const cellStates = extractEditorStates(project.data)
-    const blocks = Object.entries(cellStates.blocks).reduce(
-      (acc, [blockId, cellsData]) => {
-        acc[blockId] = cellsToLexical(cellsData)
-        return acc
-      },
-      {} as Record<string, any>,
-    )
-    serializedState = Object.values(blocks)[0]
-  }
-
-  const storageAdapter = {
-    load: async (id: string) => dbStorage.current.load(id),
-    list: async () => dbStorage.current.list(),
-    searchProjects: async (
-      searchTerm: string,
-      tags: string[],
-      filterMode?: "all" | "any",
-      storageTypeFilter?: "local" | "gameguild-cloud" | "google-drive",
-    ) => dbStorage.current.searchProjects(searchTerm, tags, filterMode || "any", storageTypeFilter),
-  }
-
-  const updatedAt = projectMeta.updatedAt ? new Date(projectMeta.updatedAt) : null
-  const tags: string[] = projectMeta.tags ?? []
+  const meta = project as any
+  const updatedAt = meta.updatedAt ? new Date(meta.updatedAt) : null
+  const tags: string[] = meta.tags ?? []
 
   return (
     <article className={className}>
-      {/* Title + metadata */}
       {(showTitle || showMeta) && (
         <header className="mb-6">
           {showTitle && (
@@ -173,21 +108,9 @@ export function StaticViewer({ projectId, className, showTitle = true, showMeta 
         </header>
       )}
 
-      {/* Content */}
-      <ProjectContentRenderer
-        project={project}
-        isBlocksEngine={isBlocksEngine}
-        blocksArray={blocksArray}
-        serializedState={serializedState}
-        storageAdapter={storageAdapter}
-        availableTags={availableTags}
-        isDbInitialized={isDbInitialized}
-        onProjectSelect={() => {}}
-        sidebarOpen={false}
-        setSidebarOpen={() => {}}
-        showSidebar={showSidebar}
-        showTableOfContents={showToc}
-      />
+      <div className="border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900 p-6">
+        <BlockArrayViewer blocks={blocks} />
+      </div>
     </article>
   )
 }
