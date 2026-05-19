@@ -87,6 +87,7 @@ export class WorkerClient {
             onStderr: options.onStderr,
             wantStdin: !!options.stdin,
             onStdinRequest: options.stdin ? (ctrl, data) => this.feedStdin(ctrl, data, options.stdin!) : undefined,
+            hints: options.hints,
         });
     }
 

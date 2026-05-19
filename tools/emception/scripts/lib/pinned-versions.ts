@@ -25,6 +25,8 @@ export const PINNED = {
     RAYLIB_VERSION: '6.0',
     RAYGUI_VERSION: '4.0',
     PHYSAC_VERSION: '1.1',
+    // Allegro 5: native Emscripten platform support (-DPLATFORM=Emscripten).
+    ALLEGRO_VERSION: '5.2.10.1',
     // curl-lite: local custom implementation; version string tracks real curl releases
     CURL_LITE_VERSION: '8.20.0',
 } as const;

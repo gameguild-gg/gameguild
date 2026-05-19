@@ -35,42 +35,23 @@ async function exists(filePath) {
 }
 
 async function resolveStagingSource() {
-    const candidates = [
-        {
+    // Only build/cdn is a valid source.  public/cdn and packages/core/cdn may
+    // contain stale bundles from a previous build and must NEVER be used as a
+    // silent fallback — that was the root cause of the v3.5.0 regression where
+    // the published tarball was 164 MB instead of ~150 MB.
+    if (await exists(sourceBuildCdnDir) && await exists(sourceBuildManifestFile)) {
+        return {
             label: 'build/cdn',
             cdnDir: sourceBuildCdnDir,
             manifestFile: sourceBuildManifestFile,
-        },
-        {
-            label: 'public/cdn',
-            cdnDir: sourcePublicCdnDir,
-            manifestFile: sourcePublicManifestFile,
-        },
-        {
-            label: 'packages/core/cdn',
-            cdnDir: targetCdnDir,
-            manifestFile: targetManifestFile,
-        },
-    ];
-
-    for (const candidate of candidates) {
-        if (await exists(candidate.cdnDir) && await exists(candidate.manifestFile)) {
-            if (candidate.cdnDir !== sourceBuildCdnDir) {
-                console.log(
-                    `[stage-core-cdn] ${path.relative(emceptionRoot, sourceBuildCdnDir)} unavailable; reusing ${path.relative(emceptionRoot, candidate.cdnDir)}.`,
-                );
-            }
-            return candidate;
-        }
+        };
     }
 
     throw new Error(
         [
             'Unable to stage the emception core CDN.',
-            'Expected one of these artifact sets to exist:',
-            `- ${path.relative(emceptionRoot, sourceBuildCdnDir)} + ${path.relative(emceptionRoot, sourceBuildManifestFile)}`,
-            `- ${path.relative(emceptionRoot, sourcePublicCdnDir)} + ${path.relative(emceptionRoot, sourcePublicManifestFile)}`,
-            `- ${path.relative(emceptionRoot, targetCdnDir)} + ${path.relative(emceptionRoot, targetManifestFile)}`,
+            `build/cdn artifacts not found at: ${sourceBuildCdnDir}`,
+            'Run `npm run build:cdn:serial` (or `npm run build:all`) first.',
         ].join('\n'),
     );
 }
