@@ -1,7 +1,7 @@
 "use client"
 
 import type { Block, BlockArray, BlockCellType } from "@/components/block-content-editor/lib/storage/editor/block-structure"
-import { blockToSerializedNode } from "@/components/block-content-editor/lib/storage/editor/cell-converters/blocks"
+import { blockToPreviewNode } from "@/components/block-content-editor/lib/storage/editor/block-storage"
 
 // Import all preview components
 import { PreviewQuiz } from "@/components/block-content-editor/plugins/preview-components/preview-quiz"
@@ -34,7 +34,7 @@ interface BlockContentRendererProps {
 }
 
 export function BlockContentRenderer({ block }: BlockContentRendererProps) {
-  const node = blockToSerializedNode(block)
+  const node = blockToPreviewNode(block)
 
   switch (block.type as BlockCellType) {
     case "quiz":
