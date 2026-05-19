@@ -437,7 +437,7 @@ jobs:
             fi
 
             echo "📦 Publishing ${NAME}@${VERSION}"
-            npm publish --workspace="${NAME}" --access public
+            npm publish --workspace="${NAME}" --access public --ignore-scripts
           done
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

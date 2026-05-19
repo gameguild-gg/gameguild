@@ -20,7 +20,9 @@ import { mountVFSFS, type VFSFSRuntime } from './vfs/emscripten-vfsfs';
 import type { VFSManager } from './vfs/index';
 
 const LOG_PREFIX = '[Emception:Kernel]';
-function elapsed(t0: number): string { return `${(performance.now() - t0).toFixed(1)}ms`; }
+function elapsed(t0: number): string {
+  return `${(performance.now() - t0).toFixed(1)}ms`;
+}
 function fmtSize(n: number): string {
   if (n < 1024) return `${n}B`;
   if (n < 1024 * 1024) return `${(n / 1024).toFixed(1)}KB`;
@@ -58,6 +60,16 @@ export interface RunOptions {
    * filesystem access.
    */
   isInfoQuery?: boolean;
+  /**
+   * Performance hints for bundle preloading.
+   * - `bundlesNeeded`: names of CDN bundles (e.g. 'sdl3', 'raylib', 'allegro')
+   *   that the tool invocation requires. When provided, only those graphics
+   *   bundles are preloaded — others are skipped to avoid wasted network/IDB
+   *   traffic on unrelated builds (e.g. a terminal C++ build doesn't need sdl3).
+   */
+  hints?: {
+    bundlesNeeded?: string[];
+  };
 }
 
 /* ------------------------------------------------------------------ */
@@ -78,13 +90,13 @@ interface ToolDescriptor {
  * No shared libraries, no entry symbols needed (each module has standard main()).
  */
 const TOOL_REGISTRY: Record<string, ToolDescriptor> = {
-  'clang': {
+  clang: {
     modulePath: '/usr/lib/clang.wasm',
   },
   'clang++': {
     modulePath: '/usr/lib/clang.wasm',
   },
-  'lld': {
+  lld: {
     modulePath: '/usr/lib/lld.wasm',
   },
   'wasm-ld': {
@@ -99,7 +111,7 @@ const TOOL_REGISTRY: Record<string, ToolDescriptor> = {
   'llvm-objcopy': {
     modulePath: '/usr/lib/llvm-objcopy.wasm',
   },
-  'llc': {
+  llc: {
     modulePath: '/usr/lib/llc.wasm',
   },
   'wasm-opt': {
@@ -117,10 +129,10 @@ const TOOL_REGISTRY: Record<string, ToolDescriptor> = {
   'wasm-metadce': {
     modulePath: '/usr/lib/wasm-metadce.wasm',
   },
-  'ninja': {
+  ninja: {
     modulePath: '/usr/lib/ninja.wasm',
   },
-  'cmake': {
+  cmake: {
     modulePath: '/usr/lib/cmake.wasm',
     env: {
       CMAKE_ROOT: '/usr/share/cmake-4.3',
@@ -128,7 +140,7 @@ const TOOL_REGISTRY: Record<string, ToolDescriptor> = {
       CXX: '/usr/bin/clang++',
     },
   },
-  'curl': {
+  curl: {
     modulePath: '/usr/lib/curl.wasm',
   },
 };
@@ -138,10 +150,7 @@ const TOOL_REGISTRY: Record<string, ToolDescriptor> = {
  * If their WASM modules don't exist or they crash at runtime, they can be
  * safely skipped since the output from wasm-ld is already a valid WASM binary.
  */
-const OPTIONAL_TOOLS = new Set([
-  'llvm-objcopy', 'llvm-strip',
-  'wasm-opt', 'wasm-metadce', 'wasm-ctor-eval', 'wasm-emscripten-finalize',
-]);
+const OPTIONAL_TOOLS = new Set(['llvm-objcopy', 'llvm-strip', 'wasm-opt', 'wasm-metadce', 'wasm-ctor-eval', 'wasm-emscripten-finalize']);
 
 /* ------------------------------------------------------------------ */
 /*  Pre-generated cmake config files                                   */
@@ -346,7 +355,7 @@ interface EmscriptenInstance {
 /* ------------------------------------------------------------------ */
 
 export interface ToolVersionConfig {
-  pythonMajorMinor: string;       // e.g. "3.13"
+  pythonMajorMinor: string; // e.g. "3.13"
   pythonMajorMinorCompact: string; // e.g. "313"
 }
 
@@ -374,11 +383,7 @@ export class ToolRunner {
     return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   }
 
-  private tryReadProcessFile(
-    fs: EmscriptenInstance['FS'],
-    path: string,
-    fileData?: Map<string, Uint8Array>,
-  ): Uint8Array | null {
+  private tryReadProcessFile(fs: EmscriptenInstance['FS'], path: string, fileData?: Map<string, Uint8Array>): Uint8Array | null {
     const tryFsRead = (candidate: string): Uint8Array | null => {
       try {
         const data = fs.readFile(candidate);
@@ -405,10 +410,7 @@ export class ToolRunner {
     const stem = extIdx > 0 ? base.slice(0, extIdx) : base;
     const ext = extIdx > 0 ? base.slice(extIdx) : '';
     const dirPrefix = dir === '/' ? '/' : `${dir}/`;
-    const tmpNameRe = new RegExp(
-      `^(?:${this.escapeRegExp(base)}\\.tmp|${this.escapeRegExp(stem)}-[0-9a-f]+${this.escapeRegExp(ext)}\\.tmp)$`,
-      'i',
-    );
+    const tmpNameRe = new RegExp(`^(?:${this.escapeRegExp(base)}\\.tmp|${this.escapeRegExp(stem)}-[0-9a-f]+${this.escapeRegExp(ext)}\\.tmp)$`, 'i');
 
     const candidatePaths = new Set<string>();
     candidatePaths.add(`${path}.tmp`);
@@ -451,7 +453,6 @@ export class ToolRunner {
     return bestCandidate;
   }
 
-
   /* ---------------------------------------------------------------- */
   /*  Public API                                                       */
   /* ---------------------------------------------------------------- */
@@ -463,10 +464,10 @@ export class ToolRunner {
   async run(tool: string, argv: string[], options: RunOptions = {}): Promise<ToolResult> {
     const tTotal = performance.now();
     console.log(`${LOG_PREFIX} ===== RUN: ${tool} =====`);
-    console.log(`${LOG_PREFIX}   argv: [${argv.map(a => `"${a}"`).join(', ')}]`);
+    console.log(`${LOG_PREFIX}   argv: [${argv.map((a) => `"${a}"`).join(', ')}]`);
 
     // Extract basename from tool path (handle both 'node' and '/usr/bin/node')
-    const toolBasename = tool.includes('/') ? (tool.split('/').pop() || tool) : tool;
+    const toolBasename = tool.includes('/') ? tool.split('/').pop() || tool : tool;
 
     // Special case: 'node' runs compiled JavaScript output in the browser.
     if (toolBasename === 'node') {
@@ -487,8 +488,8 @@ export class ToolRunner {
     // dispatching subprocesses via system(). Instead of running ninja.wasm,
     // we parse build.ninja in JS and execute each build command directly.
     if (toolBasename === 'ninja') {
-      const isInfoQuery = options.isInfoQuery || argv.some(a => a === '--version' || a === '-v');
-      const isToolQuery = argv.some(a => a === '-t');
+      const isInfoQuery = options.isInfoQuery || argv.some((a) => a === '--version' || a === '-v');
+      const isToolQuery = argv.some((a) => a === '-t');
       if (!isInfoQuery && !isToolQuery) {
         console.log(`${LOG_PREFIX}   Dispatching to ninjaBuildBypass (JS-side build.ninja executor)`);
         return this.ninjaBuildBypass(argv, options);
@@ -561,7 +562,7 @@ export class ToolRunner {
       const extraFlags: string[] = [];
       for (const [key, value] of cmakeDefaults) {
         const varName = key.replace(/:.*$/, '');
-        const alreadySet = argv.some(a => {
+        const alreadySet = argv.some((a) => {
           const m = a.match(/^-D([^:=]+)/);
           return m?.[1] === varName;
         });
@@ -603,6 +604,22 @@ export class ToolRunner {
         console.warn(`${LOG_PREFIX}   ${msg}`);
         options.onStderr?.(msg);
         return { exitCode: 127, stdout: '', stderr: msg };
+      }
+    }
+
+    // P3: For emcc/em++ invocations, proactively preload optional bundles when
+    // the user requests debug or sanitizer builds.  Preloads run in parallel
+    // with the early compiler setup work so bundle fetch latency is hidden.
+    if (toolBasename === 'emcc' || toolBasename === 'em++') {
+      const needsDebug = argv.some((a) => /^-g[1-9]?$/.test(a) || a === '-O0');
+      const needsSanitizers = argv.some((a) => /^-fsanitize=/.test(a));
+      const optionalPreloads: Promise<unknown>[] = [];
+      if (needsDebug) optionalPreloads.push(this.vfs.preloadBundle('cache-debug').catch(() => { }));
+      if (needsSanitizers) optionalPreloads.push(this.vfs.preloadBundle('cache-sanitizers').catch(() => { }));
+      if (optionalPreloads.length > 0) {
+        console.log(`${LOG_PREFIX}   P3 lazy-preload: debug=${needsDebug} sanitizers=${needsSanitizers}`);
+        // Fire-and-forget: continue spawning while bundles download
+        void Promise.all(optionalPreloads);
       }
     }
 
@@ -660,6 +677,12 @@ export class ToolRunner {
 
     // Preload bundles that compilation tools will need
     const tPreload = performance.now();
+
+    // P3: detect debug/sanitizer flags across all commands for lazy preloads
+    const allCommandsText = commands.join(' ');
+    const ninjaHasDebug = /\s-g[1-9]?\s|\s-O0\s/.test(allCommandsText);
+    const ninjaHasSanitizers = /-fsanitize=/.test(allCommandsText);
+
     try {
       await Promise.all([
         this.vfs.preloadBundle('clang'),
@@ -669,8 +692,13 @@ export class ToolRunner {
         this.vfs.preloadBundle('cache-core'),
         this.vfs.preloadBundle('python-runtime'),
         this.vfs.preloadBundle('emscripten-core'),
+        // P3: optional bundles — preloaded only when commands require them
+        ...(ninjaHasDebug ? [this.vfs.preloadBundle('cache-debug')] : []),
+        ...(ninjaHasSanitizers ? [this.vfs.preloadBundle('cache-sanitizers')] : []),
       ]);
-      console.log(`${LOG_PREFIX}   [ninja-bypass] Preloaded compilation bundles in ${elapsed(tPreload)}`);
+      console.log(
+        `${LOG_PREFIX}   [ninja-bypass] Preloaded compilation bundles in ${elapsed(tPreload)} (debug=${ninjaHasDebug} sanitizers=${ninjaHasSanitizers})`,
+      );
     } catch (e) {
       console.warn(`${LOG_PREFIX}   [ninja-bypass] ⚠️ Bundle preload warning:`, e);
     }
@@ -683,7 +711,10 @@ export class ToolRunner {
       const progress = `[${i + 1}/${commands.length}]`;
 
       // Skip no-op commands (cmake uses `: && cmd && :` pattern)
-      const effectiveCmd = cmd.replace(/^:\s*&&\s*/, '').replace(/\s*&&\s*:$/, '').trim();
+      const effectiveCmd = cmd
+        .replace(/^:\s*&&\s*/, '')
+        .replace(/\s*&&\s*:$/, '')
+        .trim();
       if (!effectiveCmd || effectiveCmd === ':') continue;
 
       const shortCmd = effectiveCmd.length > 120 ? effectiveCmd.slice(0, 117) + '...' : effectiveCmd;
@@ -705,8 +736,14 @@ export class ToolRunner {
 
       const result = await this.run(parts[0], parts, {
         cwd: buildDir,
-        onStdout: (t) => { stdoutChunks.push(t); options.onStdout?.(t); },
-        onStderr: (t) => { stderrChunks.push(t); options.onStderr?.(t); },
+        onStdout: (t) => {
+          stdoutChunks.push(t);
+          options.onStdout?.(t);
+        },
+        onStderr: (t) => {
+          stderrChunks.push(t);
+          options.onStderr?.(t);
+        },
       });
 
       if (result.exitCode !== 0) {
@@ -761,9 +798,11 @@ export class ToolRunner {
     return [
       '/usr/bin/wasm-ld',
       ...objFiles,
-      '-o', outputFile,
+      '-o',
+      outputFile,
       '-L/usr/lib/emscripten/cache-lib/wasm32-emscripten',
-      '-lc++-noexcept', '-lc++abi-noexcept',
+      '-lc++-noexcept',
+      '-lc++abi-noexcept',
       '-lc',
       '-ldlmalloc',
       '-lcompiler_rt',
@@ -810,7 +849,7 @@ export class ToolRunner {
    * build edges with variable substitution ($in, $out, edge variables).
    */
   private parseBuildNinja(content: string): string[] {
-    const rules = new Map<string, string>();  // ruleName → command template
+    const rules = new Map<string, string>(); // ruleName → command template
     const globalVars = new Map<string, string>();
 
     interface BuildEdge {
@@ -887,7 +926,10 @@ export class ToolRunner {
         // build output1 output2: ruleName input1 input2 | orderOnly1
         const afterBuild = line.slice(6);
         const colonIdx = afterBuild.indexOf(': ');
-        if (colonIdx < 0) { i++; continue; }
+        if (colonIdx < 0) {
+          i++;
+          continue;
+        }
 
         const outputsPart = afterBuild.slice(0, colonIdx).trim();
         const rest = afterBuild.slice(colonIdx + 2).trim();
@@ -907,9 +949,10 @@ export class ToolRunner {
         }
 
         // Skip phony rules and cmake internal rules
-        if (ruleName === 'phony' || ruleName === 'RERUN_CMAKE' ||
-          ruleName === 'CLEAN' || ruleName === 'HELP' ||
-          ruleName === 'CUSTOM_COMMAND') { i++; continue; }
+        if (ruleName === 'phony' || ruleName === 'RERUN_CMAKE' || ruleName === 'CLEAN' || ruleName === 'HELP' || ruleName === 'CUSTOM_COMMAND') {
+          i++;
+          continue;
+        }
 
         currentEdge = {
           outputs: outputsPart.split(/\s+/).filter(Boolean),
@@ -924,8 +967,7 @@ export class ToolRunner {
         const key = line.slice(0, eqIdx).trim();
         const value = line.slice(eqIdx + 3);
         globalVars.set(key, value);
-      } else if (line.startsWith('default ') || line.startsWith('pool ') ||
-        line.startsWith('include ') || line.startsWith('subninja ')) {
+      } else if (line.startsWith('default ') || line.startsWith('pool ') || line.startsWith('include ') || line.startsWith('subninja ')) {
         // Skip directives we don't need
       }
 
@@ -1037,12 +1079,7 @@ export class ToolRunner {
    *   6. Harvest output files back to the kernel VFS
    *   7. Discard the process (GC reclaims the linear memory)
    */
-  private async spawnProcess(
-    descriptor: ToolDescriptor,
-    argv: string[],
-    options: RunOptions,
-    toolBasename: string,
-  ): Promise<ToolResult> {
+  private async spawnProcess(descriptor: ToolDescriptor, argv: string[], options: RunOptions, toolBasename: string): Promise<ToolResult> {
     const tSpawn = performance.now();
     const stdoutChunks: string[] = [];
     const stderrChunks: string[] = [];
@@ -1157,7 +1194,7 @@ export class ToolRunner {
             return byte;
           };
         })()
-        : (() => null),
+        : () => null,
       // Resolve .wasm URL from the CDN manifest
       locateFile: (path: string) => {
         if (path.endsWith('.wasm')) {
@@ -1324,7 +1361,7 @@ export class ToolRunner {
         if (cmdStr === '__dispatch_curl' && instanceRef) {
           try {
             const reqText = String(instanceRef.FS.readFile('/tmp/.curl_request', { encoding: 'utf8' }));
-            const lines = reqText.split('\n').filter(l => l.length > 0);
+            const lines = reqText.split('\n').filter((l) => l.length > 0);
             if (lines.length === 0) return (1 << 8) | 0;
 
             // Line 0: "METHOD URL"
@@ -1341,8 +1378,14 @@ export class ToolRunner {
               if (colonIdx <= 0) continue;
               const name = lines[i].slice(0, colonIdx).trim();
               const value = lines[i].slice(colonIdx + 1).trim();
-              if (name === 'X-Curl-Follow') { followRedirects = value === '1'; continue; }
-              if (name === 'X-Curl-Timeout') { timeoutMs = parseInt(value, 10) * 1000; continue; }
+              if (name === 'X-Curl-Follow') {
+                followRedirects = value === '1';
+                continue;
+              }
+              if (name === 'X-Curl-Timeout') {
+                timeoutMs = parseInt(value, 10) * 1000;
+                continue;
+              }
               headers.set(name, value);
             }
 
@@ -1351,7 +1394,9 @@ export class ToolRunner {
             try {
               body = instanceRef.FS.readFile('/tmp/.curl_request_body');
               if (body.length === 0) body = undefined;
-            } catch { body = undefined; }
+            } catch {
+              body = undefined;
+            }
 
             console.log(`${LOG_PREFIX}   [curl] ${method} ${url.slice(0, 120)}...`);
 
@@ -1380,7 +1425,9 @@ export class ToolRunner {
 
             // Write response metadata: line1 = status, then headers
             const respLines: string[] = [String(response.status)];
-            response.headers.forEach((v, k) => { respLines.push(`${k}: ${v}`); });
+            response.headers.forEach((v, k) => {
+              respLines.push(`${k}: ${v}`);
+            });
             instanceRef.FS.writeFile('/tmp/.curl_response', respLines.join('\n') + '\n');
 
             // Write response body
@@ -1501,9 +1548,7 @@ export class ToolRunner {
     if (isPythonTool) {
       // Inject shim into the VFSFS fileData map (not MEMFS writeFile)
       try {
-        const shimBytes = typeof SUBPROCESS_SHIM === 'string'
-          ? new TextEncoder().encode(SUBPROCESS_SHIM)
-          : SUBPROCESS_SHIM;
+        const shimBytes = typeof SUBPROCESS_SHIM === 'string' ? new TextEncoder().encode(SUBPROCESS_SHIM) : SUBPROCESS_SHIM;
         const pyLibDir = `/usr/lib/python${this.versions.pythonMajorMinor}`;
         fileData.set(`${pyLibDir}/subprocess.py`, shimBytes as Uint8Array);
         console.log(`${LOG_PREFIX}   Injected subprocess shim`);
@@ -1655,7 +1700,8 @@ sys.excepthook = _hook
           // We cannot rely on FROZEN_CACHE (must be False to avoid unreachable
           // traps) nor on up_to_date() (VFSFS async alias resolution is
           // fragile during os.makedirs + marker read).
-          const fetchSig = '    """This function only fetches the port and returns True when the port is up to date, False otherwise"""\n    # To compute the sha512 hash';
+          const fetchSig =
+            '    """This function only fetches the port and returns True when the port is up to date, False otherwise"""\n    # To compute the sha512 hash';
           if (src.includes(fetchSig)) {
             src = src.replace(
               fetchSig,
@@ -1713,7 +1759,7 @@ sys.excepthook = _hook
         }
       }
       diag.push(`[cmake-diag] protectedPaths (${protectedPaths.size}): ${[...protectedPaths].join(', ')}`);
-      const dFlags = argv.filter(a => a.startsWith('-D'));
+      const dFlags = argv.filter((a) => a.startsWith('-D'));
       diag.push(`[cmake-diag] -D flags (${dFlags.length}): ${dFlags.join(' ')}`);
       diag.push(`[cmake-diag] argv: ${argv.join(' ')}`);
       const diagMsg = diag.join('\n');
@@ -1729,10 +1775,7 @@ sys.excepthook = _hook
     if (descriptor.modulePath === '/usr/lib/cmake.wasm') {
       const tPreload = performance.now();
       try {
-        await Promise.all([
-          this.vfs.preloadBundle('usr-share'),
-          this.vfs.preloadBundle('usr-bin'),
-        ]);
+        await Promise.all([this.vfs.preloadBundle('usr-share'), this.vfs.preloadBundle('usr-bin')]);
         console.log(`${LOG_PREFIX}   Preloaded usr-share + usr-bin bundles for cmake in ${elapsed(tPreload)}`);
       } catch (e) {
         console.warn(`${LOG_PREFIX}   ⚠️ Failed to preload bundles:`, e);
@@ -1786,7 +1829,11 @@ sys.excepthook = _hook
             const msg = e instanceof Error ? e.message : String(e);
             fsVerify.push(`  FS.stat(${path}): FAIL — ${msg}`);
             // Self-heal: retry creating the file now
-            try { instance.FS.mkdirTree(infoDir); } catch { /* exists */ }
+            try {
+              instance.FS.mkdirTree(infoDir);
+            } catch {
+              /* exists */
+            }
             try {
               instance.FS.writeFile(path, enc.encode(content));
               fsVerify.push(`    → retry writeFile: OK`);
@@ -1837,7 +1884,7 @@ sys.excepthook = _hook
         let warmed = 0;
         for (let i = 0; i < filePaths.length; i += BATCH) {
           const batch = filePaths.slice(i, i + BATCH);
-          const results = await Promise.all(batch.map(p => this.vfs.fetchFile(p).catch(() => null)));
+          const results = await Promise.all(batch.map((p) => this.vfs.fetchFile(p).catch(() => null)));
           for (let j = 0; j < batch.length; j++) {
             if (results[j]) {
               try {
@@ -1859,21 +1906,30 @@ sys.excepthook = _hook
     // fail if the usr-include bundle hasn't been loaded yet.
     if (descriptor.modulePath === '/usr/lib/clang.wasm') {
       const tPreload = performance.now();
+      // Always preload sdl3 for clang. The bundle is only ~2.4MB and pre-warming
+      // it into the FS before callMain is the only reliable way to avoid the
+      // asyncify deadlock that happens when SDL3 headers are loaded lazily via
+      // the open() syscall hook. Hint-based scoping proved too fragile across
+      // the worker RPC chain and Vite's worker bundle caching.
+      const needsImgui = (options.hints?.bundlesNeeded ?? []).includes('sdl3');
       try {
         await Promise.all([
           this.vfs.preloadBundle('clang-headers'),
           this.vfs.preloadBundle('usr-include'),
           this.vfs.preloadBundle('sdl3'),
           this.vfs.preloadBundle('cache-core'),
+          ...(needsImgui ? [this.vfs.preloadBundle('imgui').catch(() => {})] : []),
         ]);
-        console.log(`${LOG_PREFIX}   Preloaded clang-headers + usr-include + sdl3 + cache-core bundles for clang in ${elapsed(tPreload)}`);
+        console.log(
+          `${LOG_PREFIX}   Preloaded clang-headers + usr-include + sdl3 + cache-core${needsImgui ? ' + imgui' : ''} bundles for clang in ${elapsed(tPreload)}`,
+        );
       } catch (e) {
         console.warn(`${LOG_PREFIX}   ⚠️ Failed to preload clang bundles:`, e);
       }
 
       // Pre-warm header files into clang's Emscripten FS
       const tWarm = performance.now();
-      const bundlesToWarm = ['clang-headers', 'usr-include', 'sdl3'];
+      const bundlesToWarm = needsImgui ? ['clang-headers', 'usr-include', 'sdl3', 'imgui'] : ['clang-headers', 'usr-include', 'sdl3'];
       const headerPaths: string[] = [];
       for (const bundleName of bundlesToWarm) {
         for (const fp of this.vfs.getBundleFilePaths(bundleName)) {
@@ -1884,13 +1940,15 @@ sys.excepthook = _hook
       let warmed = 0;
       for (let hi = 0; hi < headerPaths.length; hi += BATCH) {
         const batch = headerPaths.slice(hi, hi + BATCH);
-        const results = await Promise.all(batch.map(p => this.vfs.fetchFile(p).catch(() => null)));
+        const results = await Promise.all(batch.map((p) => this.vfs.fetchFile(p).catch(() => null)));
         for (let j = 0; j < batch.length; j++) {
           if (results[j]) {
             try {
               instance.FS.writeFile(batch[j], results[j]!);
               warmed++;
-            } catch { /* ignore */ }
+            } catch {
+              /* ignore */
+            }
           }
         }
       }
@@ -1901,13 +1959,13 @@ sys.excepthook = _hook
     // Without pre-warming .a files, wasm-ld sees "unknown file type" errors.
     if (descriptor.modulePath === '/usr/lib/lld.wasm') {
       const tPreload = performance.now();
+      // Only load graphics bundles the caller explicitly requested.
+      const bundlesNeeded = options.hints?.bundlesNeeded ?? [];
+      const graphicsBundles = (['sdl3', 'raylib', 'allegro'] as const).filter((b) => bundlesNeeded.includes(b));
       try {
-        await Promise.all([
-          this.vfs.preloadBundle('cache-core'),
-          this.vfs.preloadBundle('sdl3'),
-          this.vfs.preloadBundle('raylib'),
-        ]);
-        console.log(`${LOG_PREFIX}   Preloaded cache-core + sdl3 + raylib bundles for lld in ${elapsed(tPreload)}`);
+        await Promise.all([this.vfs.preloadBundle('cache-core'), ...graphicsBundles.map((b) => this.vfs.preloadBundle(b))]);
+        const bundleList = ['cache-core', ...graphicsBundles].join(' + ');
+        console.log(`${LOG_PREFIX}   Preloaded ${bundleList} bundles for lld in ${elapsed(tPreload)}`);
       } catch (e) {
         console.warn(`${LOG_PREFIX}   ⚠️ Failed to preload lld bundles:`, e);
       }
@@ -1915,22 +1973,48 @@ sys.excepthook = _hook
       // Pre-warm library files into lld's Emscripten FS
       const tWarm = performance.now();
       const libPaths: string[] = [];
-      for (const bundleName of ['cache-core', 'sdl3', 'raylib']) {
+      for (const bundleName of ['cache-core', ...graphicsBundles]) {
         for (const fp of this.vfs.getBundleFilePaths(bundleName)) {
           libPaths.push(fp);
         }
       }
       let warmed = 0;
-      const results = await Promise.all(libPaths.map(p => this.vfs.fetchFile(p).catch(() => null)));
+      const results = await Promise.all(libPaths.map((p) => this.vfs.fetchFile(p).catch(() => null)));
       for (let j = 0; j < libPaths.length; j++) {
         if (results[j]) {
           try {
             instance.FS.writeFile(libPaths[j], results[j]!);
             warmed++;
-          } catch { /* ignore */ }
+          } catch {
+            /* ignore */
+          }
         }
       }
-      console.log(`${LOG_PREFIX}   Pre-warmed ${warmed}/${libPaths.length} library files (cache-core+sdl3+raylib) for lld in ${elapsed(tWarm)}`);
+      const warmBundles = ['cache-core', ...graphicsBundles].join('+');
+      console.log(`${LOG_PREFIX}   Pre-warmed ${warmed}/${libPaths.length} library files (${warmBundles}) for lld in ${elapsed(tWarm)}`);
+
+      // Pre-warm manifest-symlink .a paths referenced in the link argv but not
+      // covered by any bundle (e.g. /usr/lib/libSDL2.a is deduped by the
+      // generate-bundles P0 pass to a symlink → cache-core's copy; it therefore
+      // belongs to no bundle but fetchFile() resolves symlinks automatically).
+      const bundleWarmedSet = new Set(libPaths);
+      const symlinkArgPaths = argv.filter((a) => a.endsWith('.a') && !bundleWarmedSet.has(a));
+      if (symlinkArgPaths.length > 0) {
+        const tSym = performance.now();
+        let symWarmed = 0;
+        const symResults = await Promise.all(symlinkArgPaths.map((p) => this.vfs.fetchFile(p).catch(() => null)));
+        for (let j = 0; j < symlinkArgPaths.length; j++) {
+          if (symResults[j]) {
+            try {
+              instance.FS.writeFile(symlinkArgPaths[j], symResults[j]!);
+              symWarmed++;
+            } catch {
+              /* ignore */
+            }
+          }
+        }
+        console.log(`${LOG_PREFIX}   Pre-warmed ${symWarmed}/${symlinkArgPaths.length} symlink .a paths for lld in ${elapsed(tSym)}`);
+      }
     }
 
     // python (emcc/em++): preload and pre-warm Python stdlib + emscripten scripts.
@@ -1941,13 +2025,14 @@ sys.excepthook = _hook
     //    of the filesystem encoding"
     if (isPythonTool) {
       const tPreload = performance.now();
+      const needsSdl3ForPython = options.hints?.bundlesNeeded?.includes('sdl3') ?? false;
       try {
         await Promise.all([
           this.vfs.preloadBundle('python-runtime'),
           this.vfs.preloadBundle('emscripten-core'),
-          this.vfs.preloadBundle('sdl3'),
+          ...(needsSdl3ForPython ? [this.vfs.preloadBundle('sdl3')] : []),
         ]);
-        console.log(`${LOG_PREFIX}   Preloaded python-runtime + emscripten-core + sdl3 bundles in ${elapsed(tPreload)}`);
+        console.log(`${LOG_PREFIX}   Preloaded python-runtime + emscripten-core${needsSdl3ForPython ? ' + sdl3' : ''} bundles in ${elapsed(tPreload)}`);
       } catch (e) {
         console.warn(`${LOG_PREFIX}   ⚠️ Failed to preload python bundles:`, e);
       }
@@ -1979,13 +2064,15 @@ sys.excepthook = _hook
       let warmed = 0;
       for (let i = 0; i < pyPaths.length; i += BATCH) {
         const batch = pyPaths.slice(i, i + BATCH);
-        const results = await Promise.all(batch.map(p => this.vfs.fetchFile(p).catch(() => null)));
+        const results = await Promise.all(batch.map((p) => this.vfs.fetchFile(p).catch(() => null)));
         for (let j = 0; j < batch.length; j++) {
           if (results[j]) {
             try {
               instance.FS.writeFile(batch[j], results[j]!);
               warmed++;
-            } catch { /* ignore — dir creation or write failed */ }
+            } catch {
+              /* ignore — dir creation or write failed */
+            }
           }
         }
       }
@@ -2097,7 +2184,9 @@ sys.excepthook = _hook
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (instance as any)['subprocessDispatch'] = moduleConfig['subprocessDispatch'];
 
-        console.log(`${LOG_PREFIX}   Installed subprocess dispatch via subprocessDispatch hook (Module["subprocessDispatch"] = ${typeof (instance as unknown as Record<string, unknown>)['subprocessDispatch']})`);
+        console.log(
+          `${LOG_PREFIX}   Installed subprocess dispatch via subprocessDispatch hook (Module["subprocessDispatch"] = ${typeof (instance as unknown as Record<string, unknown>)['subprocessDispatch']})`,
+        );
       }
     }
 
@@ -2118,7 +2207,7 @@ sys.excepthook = _hook
     // Step 4: Call main(argc, argv) — the tool runs to completion
     const tRun = performance.now();
     const mainArgv = argv.slice(1); // Emscripten's callMain expects argv without argv[0]
-    console.log(`${LOG_PREFIX}   Step 4/4: callMain([${mainArgv.map(a => `"${a}"`).join(', ')}])...`);
+    console.log(`${LOG_PREFIX}   Step 4/4: callMain([${mainArgv.map((a) => `"${a}"`).join(', ')}])...`);
 
     let exitCode: number;
     try {
@@ -2136,7 +2225,7 @@ sys.excepthook = _hook
             }
           }, 10_000);
           try {
-            exitCode = await (result as Promise<number>) ?? 0;
+            exitCode = (await (result as Promise<number>)) ?? 0;
           } finally {
             resolved = true;
             clearInterval(watchdog);
@@ -2174,7 +2263,9 @@ sys.excepthook = _hook
             if (mem) {
               console.error(`${LOG_PREFIX}   WASM memory: ${(mem.buffer.byteLength / 1024 / 1024).toFixed(1)}MB`);
             }
-          } catch { /* ignore */ }
+          } catch {
+            /* ignore */
+          }
           // Log any stderr that was captured before the abort
           if (stderrChunks.length > 0) {
             console.error(`${LOG_PREFIX}   stderr before abort: ${stderrChunks.join('; ').slice(0, 500)}`);
@@ -2245,7 +2336,9 @@ sys.excepthook = _hook
             try {
               const entries = instance.FS.readdir(probe).filter((n: string) => n !== '.' && n !== '..');
               console.warn(`${LOG_PREFIX}     readdir(${probe}) = [${entries.join(', ')}]`);
-            } catch { /* ignore */ }
+            } catch {
+              /* ignore */
+            }
           }
         }
       }
@@ -2258,7 +2351,9 @@ sys.excepthook = _hook
         try {
           const siteInit = new TextDecoder().decode(instance.FS.readFile('/tmp/site_init.ok'));
           console.log(`${LOG_PREFIX}   site_init.ok:\n${siteInit}`);
-        } catch { /* not found */ }
+        } catch {
+          /* not found */
+        }
 
         // Read Python exception capture file if it exists
         try {
@@ -2272,7 +2367,9 @@ sys.excepthook = _hook
               options.onStderr?.(line);
             }
           }
-        } catch { /* file doesn't exist — no unhandled exception */ }
+        } catch {
+          /* file doesn't exist — no unhandled exception */
+        }
 
         // Read Python stderr log (redirected from broken fd 2)
         try {
@@ -2286,7 +2383,9 @@ sys.excepthook = _hook
               }
             }
           }
-        } catch { /* file doesn't exist — no stderr output */ }
+        } catch {
+          /* file doesn't exist — no stderr output */
+        }
 
         // Read Python stdout log (when _SafeStdout was active, non-interactive mode)
         try {
@@ -2299,8 +2398,9 @@ sys.excepthook = _hook
               }
             }
           }
-        } catch { /* file doesn't exist — no redirected stdout */ }
-
+        } catch {
+          /* file doesn't exist — no redirected stdout */
+        }
       } catch {
         // FS dump failed — non-critical
       }
@@ -2344,16 +2444,25 @@ sys.excepthook = _hook
   private installToolStubs(fileData: Map<string, Uint8Array>): void {
     const STUB = new TextEncoder().encode('stub\n');
     const TOOL_STUBS = [
-      '/usr/bin/clang', '/usr/bin/clang++',
-      '/usr/bin/wasm-ld', '/usr/bin/lld',
-      '/usr/bin/llvm-ar', '/usr/bin/llvm-nm', '/usr/bin/llvm-objcopy',
+      '/usr/bin/clang',
+      '/usr/bin/clang++',
+      '/usr/bin/wasm-ld',
+      '/usr/bin/lld',
+      '/usr/bin/llvm-ar',
+      '/usr/bin/llvm-nm',
+      '/usr/bin/llvm-objcopy',
       '/usr/bin/llc',
-      '/usr/bin/wasm-opt', '/usr/bin/wasm-as',
-      '/usr/bin/wasm-ctor-eval', '/usr/bin/wasm-emscripten-finalize',
+      '/usr/bin/wasm-opt',
+      '/usr/bin/wasm-as',
+      '/usr/bin/wasm-ctor-eval',
+      '/usr/bin/wasm-emscripten-finalize',
       '/usr/bin/wasm-metadce',
-      '/usr/bin/node', '/usr/bin/python3',
-      '/usr/bin/em++', '/usr/bin/emcc',
-      '/usr/bin/ninja', '/usr/bin/cmake',
+      '/usr/bin/node',
+      '/usr/bin/python3',
+      '/usr/bin/em++',
+      '/usr/bin/emcc',
+      '/usr/bin/ninja',
+      '/usr/bin/cmake',
     ];
     for (const stubPath of TOOL_STUBS) {
       fileData.set(stubPath, STUB);
@@ -2459,14 +2568,22 @@ sys.excepthook = _hook
   ): { fileData: Map<string, Uint8Array>; protectedPaths: Set<string> } {
     const FS = instance.FS;
     const isInfoQuery = options.isInfoQuery === true;
-    const isPythonDescriptor = (moduleConfig['__modulePath'] as string || '').includes('python');
+    const isPythonDescriptor = ((moduleConfig['__modulePath'] as string) || '').includes('python');
 
     // For info queries (--version), just set CWD
     if (isInfoQuery) {
       console.log(`${LOG_PREFIX}     [FAST] Info query — skipping FS setup`);
       const cwd = options.cwd || '/home/user';
-      try { FS.mkdirTree(cwd); } catch { /* exists */ }
-      try { FS.chdir(cwd); } catch { /* ignore */ }
+      try {
+        FS.mkdirTree(cwd);
+      } catch {
+        /* exists */
+      }
+      try {
+        FS.chdir(cwd);
+      } catch {
+        /* ignore */
+      }
       return { fileData: new Map(), protectedPaths: new Set() };
     }
 
@@ -2483,32 +2600,14 @@ sys.excepthook = _hook
     const pathAliases = new Map<string, string>();
 
     // Primary: CACHE = /usr/lib/emscripten/cache (matches injected config)
-    pathAliases.set(
-      '/usr/lib/emscripten/cache/sysroot/lib',
-      '/usr/lib/emscripten/cache-lib',
-    );
-    pathAliases.set(
-      '/usr/lib/emscripten/cache/sysroot/include',
-      '/usr/include',
-    );
-    pathAliases.set(
-      '/usr/lib/emscripten/cache/ports',
-      '/usr/lib/emscripten_ports',
-    );
+    pathAliases.set('/usr/lib/emscripten/cache/sysroot/lib', '/usr/lib/emscripten/cache-lib');
+    pathAliases.set('/usr/lib/emscripten/cache/sysroot/include', '/usr/include');
+    pathAliases.set('/usr/lib/emscripten/cache/ports', '/usr/lib/emscripten_ports');
 
     // Legacy: CACHE = /home/user/.emscripten_cache
-    pathAliases.set(
-      '/home/user/.emscripten_cache/sysroot/lib',
-      '/usr/lib/emscripten/cache-lib',
-    );
-    pathAliases.set(
-      '/home/user/.emscripten_cache/sysroot/include',
-      '/usr/include',
-    );
-    pathAliases.set(
-      '/home/user/.emscripten_cache/ports',
-      '/usr/lib/emscripten_ports',
-    );
+    pathAliases.set('/home/user/.emscripten_cache/sysroot/lib', '/usr/lib/emscripten/cache-lib');
+    pathAliases.set('/home/user/.emscripten_cache/sysroot/include', '/usr/include');
+    pathAliases.set('/home/user/.emscripten_cache/ports', '/usr/lib/emscripten_ports');
 
     // Mount VFSFS at system paths — all file access goes through VFS + Asyncify
     // /home is included so user files (e.g. main.cpp) written by the IDE are
@@ -2523,8 +2622,16 @@ sys.excepthook = _hook
     if (isPythonDescriptor) {
       // Create dirs at both CACHE prefixes for compatibility.
       for (const prefix of ['/usr/lib/emscripten/cache', '/home/user/.emscripten_cache']) {
-        try { FS.mkdirTree(`${prefix}/sysroot/lib`); } catch { /* exists */ }
-        try { FS.mkdirTree(`${prefix}/sysroot/include`); } catch { /* exists */ }
+        try {
+          FS.mkdirTree(`${prefix}/sysroot/lib`);
+        } catch {
+          /* exists */
+        }
+        try {
+          FS.mkdirTree(`${prefix}/sysroot/include`);
+        } catch {
+          /* exists */
+        }
         // Write sysroot_install.stamp to fileData so VFSFS can find it
         // (FS.writeFile writes to MEMFS which VFSFS doesn't see).
         fileData.set(`${prefix}/sysroot_install.stamp`, new TextEncoder().encode('prebuilt'));
@@ -2544,8 +2651,16 @@ sys.excepthook = _hook
 
     // Set CWD
     const cwd = options.cwd || '/home/user';
-    try { FS.mkdirTree(cwd); } catch { /* exists */ }
-    try { FS.chdir(cwd); } catch { /* ignore */ }
+    try {
+      FS.mkdirTree(cwd);
+    } catch {
+      /* exists */
+    }
+    try {
+      FS.chdir(cwd);
+    } catch {
+      /* ignore */
+    }
 
     return { fileData, protectedPaths };
   }
@@ -2588,12 +2703,7 @@ sys.excepthook = _hook
 
     // WASI fd_write: write iovs to a file descriptor and return bytes written.
     // fd 1 = stdout, fd 2 = stderr
-    const fd_write = (
-      fd: number,
-      iovsPtr: number,
-      iovsLen: number,
-      nwrittenPtr: number,
-    ): number => {
+    const fd_write = (fd: number, iovsPtr: number, iovsLen: number, nwrittenPtr: number): number => {
       if (!memory) {
         console.error(`${LOG_PREFIX}   [WASI] fd_write called but memory is not set!`);
         return 8; // EBADF
@@ -2669,9 +2779,7 @@ sys.excepthook = _hook
     // The worker provides stdin through a SharedArrayBuffer-backed callback,
     // so a call here can block until a byte is available without falling
     // through to EOF or leaking the keystrokes back to the shell.
-    const fd_read = (
-      fd: number, iovsPtr: number, iovsLen: number, nreadPtr: number,
-    ): number => {
+    const fd_read = (fd: number, iovsPtr: number, iovsLen: number, nreadPtr: number): number => {
       const mem = new DataView(memory.buffer);
       console.log(`${LOG_PREFIX}   [WASI-STDIN] fd_read called: fd=${fd}, iovsLen=${iovsLen}`);
 
@@ -2719,7 +2827,8 @@ sys.excepthook = _hook
       mem.setUint16(statPtr + 2, 0, true); // fs_flags
       // rights_base: FD_READ=0x2 for stdin, FD_WRITE=0x40 for stdout/stderr
       let rights = BigInt(0);
-      if (fd === 0) rights = BigInt(0x2); // FD_READ
+      if (fd === 0)
+        rights = BigInt(0x2); // FD_READ
       else if (fd === 1 || fd === 2) rights = BigInt(0x40); // FD_WRITE
       mem.setBigUint64(statPtr + 8, rights, true);
       mem.setBigUint64(statPtr + 16, BigInt(0), true); // rights_inheriting
@@ -2727,9 +2836,7 @@ sys.excepthook = _hook
     };
     const fd_prestat_get = (): number => 8; // EBADF — no preopened dirs
     const fd_prestat_dir_name = (): number => 8;
-    const clock_time_get = (
-      _id: number, _precision: bigint, timePtr: number,
-    ): number => {
+    const clock_time_get = (_id: number, _precision: bigint, timePtr: number): number => {
       const mem = new DataView(memory.buffer);
       const now = BigInt(Math.round(performance.now() * 1_000_000)); // nanoseconds
       mem.setBigUint64(timePtr, now, true);
@@ -2825,7 +2932,7 @@ sys.excepthook = _hook
 
       // Inspect required imports to build the import object dynamically
       const importDescs = WebAssembly.Module.imports(wasmModule);
-      console.log(`${LOG_PREFIX}   WASM imports: [${importDescs.map(i => `${i.module}.${i.name}(${i.kind})`).join(', ')}]`);
+      console.log(`${LOG_PREFIX}   WASM imports: [${importDescs.map((i) => `${i.module}.${i.name}(${i.kind})`).join(', ')}]`);
       const importObject: Record<string, Record<string, WebAssembly.ImportValue>> = {};
 
       for (const imp of importDescs) {
@@ -2880,7 +2987,11 @@ sys.excepthook = _hook
 
       // Call global constructors if present
       if (initFn) {
-        try { initFn(); } catch { /* ok */ }
+        try {
+          initFn();
+        } catch {
+          /* ok */
+        }
       }
 
       // The entry point may return a Promise when Asyncify is used
@@ -3026,10 +3137,7 @@ sys.excepthook = _hook
       };
 
       if (wasmBytes) {
-        moduleConfig['wasmBinary'] = wasmBytes.buffer.slice(
-          wasmBytes.byteOffset,
-          wasmBytes.byteOffset + wasmBytes.byteLength,
-        );
+        moduleConfig['wasmBinary'] = wasmBytes.buffer.slice(wasmBytes.byteOffset, wasmBytes.byteOffset + wasmBytes.byteLength);
       }
 
       // Create a simple loader for node: modules
@@ -3059,24 +3167,18 @@ sys.excepthook = _hook
       let processedCode = jsCode;
 
       // This regex matches import statements - handle single and multiline
-      processedCode = processedCode.replace(
-        /import\s+(?:(?:\{[^}]*\})|(?:[a-zA-Z_$][a-zA-Z0-9_$]*))\s+from\s+['"]node:([^'"]+)['"]/g,
-        (match) => {
-          // Just comment out the import - we'll provide globals
-          return '/* ' + match + ' */';
-        }
-      );
+      processedCode = processedCode.replace(/import\s+(?:(?:\{[^}]*\})|(?:[a-zA-Z_$][a-zA-Z0-9_$]*))\s+from\s+['"]node:([^'"]+)['"]/g, (match) => {
+        // Just comment out the import - we'll provide globals
+        return '/* ' + match + ' */';
+      });
 
       // Handle multiline imports by converting them to no-ops
-      processedCode = processedCode.replace(
-        /import\s+\{[\s\S]*?\}\s+from\s+['"]node:([^'"]+)['"]/g,
-        '/* multiline import removed */'
-      );
+      processedCode = processedCode.replace(/import\s+\{[\s\S]*?\}\s+from\s+['"]node:([^'"]+)['"]/g, '/* multiline import removed */');
 
       const nodeModules = createNodeModuleLoader();
-      const globalStubs = Object.entries(nodeModules).map(
-        ([name, obj]) => `const ${name} = ${JSON.stringify(obj, (_, v) => typeof v === 'function' ? '[Function]' : v)};`
-      ).join('\n');
+      const globalStubs = Object.entries(nodeModules)
+        .map(([name, obj]) => `const ${name} = ${JSON.stringify(obj, (_, v) => (typeof v === 'function' ? '[Function]' : v))};`)
+        .join('\n');
 
       const wrappedCode = `
         return (async function(Module) {
@@ -3091,10 +3193,7 @@ sys.excepthook = _hook
       await fn(moduleConfig);
       console.log(`${LOG_PREFIX}   JS module evaluation completed in ${elapsed(tEval)}`);
 
-      const exitCode =
-        typeof moduleConfig['EXITSTATUS'] === 'number'
-          ? (moduleConfig['EXITSTATUS'] as number)
-          : 0;
+      const exitCode = typeof moduleConfig['EXITSTATUS'] === 'number' ? (moduleConfig['EXITSTATUS'] as number) : 0;
 
       console.log(`${LOG_PREFIX} ===== NODE COMPLETE: exitCode=${exitCode}, total=${elapsed(tTotal)} =====`);
 
@@ -3150,7 +3249,7 @@ sys.excepthook = _hook
     }
 
     // Normalize: use basename for emcc/em++ matching (handle /usr/lib/emscripten/emcc paths)
-    const toolBasename = name.includes('/') ? (name.split('/').pop() || name) : name;
+    const toolBasename = name.includes('/') ? name.split('/').pop() || name : name;
     if (toolBasename === 'emcc' || toolBasename === 'em++') {
       return { modulePath: '/usr/lib/python.wasm' };
     }
@@ -3186,37 +3285,37 @@ sys.excepthook = _hook
       },
       // For python.mjs: patch ___syscall_openat at runtime to intercept
       // the /tmp/__dispatch_subprocess__ magic path for subprocess dispatch.
-      ...(isPython ? {
-        patchGlueContent: (source: string): string => {
-          if (source.includes('__dispatch_subprocess__')) {
-            console.log(`${LOG_PREFIX}   patchGlueContent: python.mjs already patched`);
-            return source;
-          }
-          // Emscripten openat body (modern):
-          //   path=SYSCALLS.getStr(path);path=SYSCALLS.calculateAt(dirfd,path);
-          //   var mode=varargs?syscallGetVarargI():0;
-          //   if(flags&64){mode&=~SYSCALLS.currentUmask}
-          //   return FS.open(path,flags,mode).fd
-          // Inject subprocess dispatch right after path resolution.
-          const needle =
-            'path=SYSCALLS.getStr(path);path=SYSCALLS.calculateAt(dirfd,path);' +
-            'var mode=varargs?syscallGetVarargI():0;';
-          const replacement =
-            needle +
-            'if(path==="/tmp/__dispatch_subprocess__"&&Module["subprocessDispatch"]){' +
-            'return Asyncify.handleAsync(function(){' +
-            'return Module["subprocessDispatch"]().then(function(){' +
-            'return FS.open(path,flags,mode).fd})})' +
-            '}';
-          if (!source.includes(needle)) {
-            console.warn(`${LOG_PREFIX}   patchGlueContent: needle not found in python.mjs, skipping patch`);
-            return source;
-          }
-          const patched = source.replace(needle, replacement);
-          console.log(`${LOG_PREFIX}   patchGlueContent: patched ___syscall_openat for subprocess dispatch`);
-          return patched;
-        },
-      } : {}),
+      ...(isPython
+        ? {
+          patchGlueContent: (source: string): string => {
+            if (source.includes('__dispatch_subprocess__')) {
+              console.log(`${LOG_PREFIX}   patchGlueContent: python.mjs already patched`);
+              return source;
+            }
+            // Emscripten openat body (modern):
+            //   path=SYSCALLS.getStr(path);path=SYSCALLS.calculateAt(dirfd,path);
+            //   var mode=varargs?syscallGetVarargI():0;
+            //   if(flags&64){mode&=~SYSCALLS.currentUmask}
+            //   return FS.open(path,flags,mode).fd
+            // Inject subprocess dispatch right after path resolution.
+            const needle = 'path=SYSCALLS.getStr(path);path=SYSCALLS.calculateAt(dirfd,path);' + 'var mode=varargs?syscallGetVarargI():0;';
+            const replacement =
+              needle +
+              'if(path==="/tmp/__dispatch_subprocess__"&&Module["subprocessDispatch"]){' +
+              'return Asyncify.handleAsync(function(){' +
+              'return Module["subprocessDispatch"]().then(function(){' +
+              'return FS.open(path,flags,mode).fd})})' +
+              '}';
+            if (!source.includes(needle)) {
+              console.warn(`${LOG_PREFIX}   patchGlueContent: needle not found in python.mjs, skipping patch`);
+              return source;
+            }
+            const patched = source.replace(needle, replacement);
+            console.log(`${LOG_PREFIX}   patchGlueContent: patched ___syscall_openat for subprocess dispatch`);
+            return patched;
+          },
+        }
+        : {}),
     }) as Promise<ModuleFactory>;
   }
 

@@ -178,11 +178,7 @@ function DockGroupPanelInner({
             }}
         >
             {/* VS Code–style drop zone overlay */}
-            <DockDropOverlay
-                visible={isDragOver}
-                currentGroup={group}
-                onDrop={handleOverlayDrop}
-            />
+            <DockDropOverlay visible={isDragOver} currentGroup={group} onDrop={handleOverlayDrop} />
             {/* Tab strip */}
             <div
                 style={{
@@ -289,11 +285,11 @@ function DockGroupPanelInner({
                 </div>
                 {/* Split/dock buttons — VS Code style */}
                 <div style={{ display: 'flex', gap: '0.15rem', padding: '0.25rem 0.4rem', flexShrink: 0, alignItems: 'center' }}>
-                    {([
+                    {[
                         { target: 'main' as DockGroup, icon: '⬅', title: 'Move to main editor' },
                         { target: 'right' as DockGroup, icon: '⬌', title: 'Split right' },
                         { target: 'bottom' as DockGroup, icon: '⬍', title: 'Split down' },
-                    ]).map(({ target, icon, title }) => (
+                    ].map(({ target, icon, title }) => (
                         <button
                             key={target}
                             onClick={() => onMoveTab(localActive.id, target)}
@@ -382,8 +378,10 @@ function DockGroupPanelInner({
                                 }}
                             >
                                 <span style={{ fontSize: '2.5rem' }}>🎮</span>
-                                <span style={{ fontSize: '1rem', color: '#a6adc8' }}>SDL Canvas</span>
-                                <span style={{ fontSize: '0.8rem' }}>Click <strong style={{ color: '#a6e3a1' }}>&#9654;</strong> to build and render the SDL3 demo</span>
+                                <span style={{ fontSize: '1rem', color: '#a6adc8' }}>Render Canvas</span>
+                                <span style={{ fontSize: '0.8rem' }}>
+                                    Click <strong style={{ color: '#a6e3a1' }}>&#9654;</strong> to build and render the demo
+                                </span>
                             </div>
                         )}
                     </div>

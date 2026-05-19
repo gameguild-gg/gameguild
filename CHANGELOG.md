@@ -1,3 +1,61 @@
+# [3.7.3](https://github.com/gameguild-gg/gameguild/compare/v3.7.2...v3.7.3) (2026-05-18)
+
+### Bug Fixes
+
+* **emception:** enforce pinned python version in manifest ([6b0121d](https://github.com/gameguild-gg/gameguild/commit/6b0121db426d352b1e9023b82713820d30c6e162))
+* **emception:** presets file organization ([1fa26a0](https://github.com/gameguild-gg/gameguild/commit/1fa26a095122fffe3a8f3a71249c996abaecda66))
+
+# [3.7.2](https://github.com/gameguild-gg/gameguild/compare/v3.7.1...v3.7.2) (2026-05-17)
+
+### Bug Fixes
+
+* abort ([5c1541a](https://github.com/gameguild-gg/gameguild/commit/5c1541a5b4b3f9eb2ba631ab20b103efe72673d0))
+
+# [3.7.1](https://github.com/gameguild-gg/gameguild/compare/v3.7.0...v3.7.1) (2026-05-17)
+
+### Bug Fixes
+
+* **emception:** now opengl demo works with sdl ([36d520b](https://github.com/gameguild-gg/gameguild/commit/36d520b4a44f68303c1c167205d11e029e153e44))
+
+# [3.7.0](https://github.com/gameguild-gg/gameguild/compare/v3.6.0...v3.7.0) (2026-05-17)
+
+### Features
+
+* **emception:** add SDL3+OpenGL ES 3 preset, demo, and E2E test ([8e978ac](https://github.com/gameguild-gg/gameguild/commit/8e978acde504b36e8acd52d4b841f22a36824faa))
+
+# [3.6.0](https://github.com/gameguild-gg/gameguild/compare/v3.5.2...v3.6.0) (2026-05-16)
+
+### Features
+
+* **emception:** Add Dear ImGui support with SDL3 demo ([fe437f7](https://github.com/gameguild-gg/gameguild/commit/fe437f7f9f4149d9eb7cc99b975331039b6c55c3))
+* **emception:** add Allegro 5 build, preset, and e2e test ([b41f43f](https://github.com/gameguild-gg/gameguild/commit/b41f43fc395a66fdf958b1b310d4eb9b7d50c67a))
+
+### Bug Fixes
+
+* **emception:** make all graphis libs interactible ([deb3c7f](https://github.com/gameguild-gg/gameguild/commit/deb3c7fa92a578effd7a1afe9c878938ece7fe84))
+* make sdl canvas interactible ([513f08a](https://github.com/gameguild-gg/gameguild/commit/513f08a953ec304a7f02df8baa638a82b9425cca))
+* **emception:** pre-warm manifest-symlink .a paths for lld ([2fc5621](https://github.com/gameguild-gg/gameguild/commit/2fc5621efee60839ff8b9864f8f1ba96061dd756))
+* **emception:** stabilize canvas presets and app dev sync ([a497175](https://github.com/gameguild-gg/gameguild/commit/a497175f47c5ec5f0fe85cbe04629f891283dbc6))
+* **emception:** remove redundant SDL2 headers from allegro bundle and sysroot ([9771ff3](https://github.com/gameguild-gg/gameguild/commit/9771ff349af71c1bb1d6f2e94d965b55bad1d3c9))
+
+# [3.5.2](https://github.com/gameguild-gg/gameguild/compare/v3.5.1...v3.5.2) (2026-05-13)
+
+### Bug Fixes
+
+* **ci:** skip prepack on npm publish — dist+cdn already staged by build job ([b17da38](https://github.com/gameguild-gg/gameguild/commit/b17da384c6d650abfba1f8d84054d1347fa116e5))
+
+# [3.5.1](https://github.com/gameguild-gg/gameguild/compare/v3.5.0...v3.5.1) (2026-05-13)
+
+### Bug Fixes
+
+* **emception:** P0'+P4+P5 — kill stale CDN fallback, LGWIN=24, sort tar entries ([87b5230](https://github.com/gameguild-gg/gameguild/commit/87b5230ee3fec513fe66c04ce502fb01e7da92be))
+
+# [3.5.0](https://github.com/gameguild-gg/gameguild/compare/v3.4.0...v3.5.0) (2026-05-12)
+
+### Features
+
+* **emception:** shrink npm tarball below 200 MB ([0d1f6cd](https://github.com/gameguild-gg/gameguild/commit/0d1f6cd1222052f013442bd5781928ba1062a37c))
+
 # [3.4.0](https://github.com/gameguild-gg/gameguild/compare/v3.3.8...v3.4.0) (2026-05-12)
 
 ### Features
