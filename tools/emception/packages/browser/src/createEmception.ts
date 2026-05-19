@@ -26,6 +26,7 @@
  */
 
 import { HeadlessIOProvider } from 'emception';
+import type { EmbedderEmceptionAPI } from 'emception';
 import { bootInWorker } from './index';
 import type { RunOptions, ToolResult } from './tool-runner';
 import { WorkerClient } from './worker-client';
@@ -76,22 +77,18 @@ export interface CreateEmceptionOptions {
     manifestUrl?: string;
 }
 
-export interface EmceptionAPI {
-    /** Run a tool by name (e.g. `'clang'`, `'ninja'`, `'python'`). */
-    run(tool: string, argv: readonly string[], options?: RunOptions): Promise<ToolResult>;
-    /** Read a file from the in-browser VFS (returns `null` if missing). */
-    readFile(path: string): Promise<Uint8Array | null>;
-    /** Write a file into the in-browser VFS (creates parent dirs as needed). */
-    writeFile(path: string, data: Uint8Array | string): Promise<void>;
-    /** List directory entries (returns `[]` if the path doesn't exist). */
-    listDir(path: string): Promise<string[]>;
-    /** Erase the persistent writable VFS layers (`/tmp`, `/home/user`). */
-    resetVfs(): Promise<void>;
-    /** Terminate the worker and tear down internal resources. */
-    dispose(): void;
-}
+/**
+ * Flat embedder API returned by {@link createEmception}.
+ *
+ * This is a re-export of {@link EmbedderEmceptionAPI} from `emception` (core)
+ * under the legacy name for backward compatibility. New code should import
+ * `EmbedderEmceptionAPI` from `emception` directly.
+ *
+ * @deprecated Import `EmbedderEmceptionAPI` from `emception` instead.
+ */
+export type { EmbedderEmceptionAPI as EmceptionAPI } from 'emception';
 
-export async function createEmception(opts: CreateEmceptionOptions = {}): Promise<EmceptionAPI> {
+export async function createEmception(opts: CreateEmceptionOptions = {}): Promise<EmbedderEmceptionAPI> {
     const manifestUrl = opts.manifestUrl ?? DEFAULT_MANIFEST_URL;
     const tty = opts.tty ?? (opts.container ? 'xterm' : 'none');
 
@@ -119,13 +116,13 @@ export async function createEmception(opts: CreateEmceptionOptions = {}): Promis
     return wrap(client);
 }
 
-function wrap(client: WorkerClient): EmceptionAPI {
+function wrap(client: WorkerClient): EmbedderEmceptionAPI {
     const encoder = new TextEncoder();
     const toBytes = (data: Uint8Array | string): Uint8Array =>
         typeof data === 'string' ? encoder.encode(data) : data;
 
     return {
-        run: (tool, argv, options) => client.run(tool, [...argv], options ?? {}),
+        run: (tool, argv?, options?) => client.run(tool, [...(argv ?? [])], options ?? {}),
         readFile: (path) => client.getFile(path),
         writeFile: (path, data) => client.writeFile(path, toBytes(data)),
         listDir: (path) => client.listDir(path),
