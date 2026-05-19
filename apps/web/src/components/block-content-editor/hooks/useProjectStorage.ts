@@ -20,17 +20,8 @@ import { checkSelectedProject as checkProject } from "@/components/block-content
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
-export interface ProjectData {
-  id: string
-  name: string
-  data: string
-  tags: string[]
-  size: number
-  createdAt: string
-  updatedAt: string
-  storageType?: "local" | "gameguild-cloud" | "google-drive"
-  preferences?: ProjectPreferences
-}
+export type { ProjectData } from "@/components/block-content-editor/lib/storage/editor/project-data"
+import type { ProjectData } from "@/components/block-content-editor/lib/storage/editor/project-data"
 
 type StorageType = "local" | "gameguild-cloud" | "google-drive"
 
