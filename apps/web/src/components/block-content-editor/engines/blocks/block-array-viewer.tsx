@@ -39,43 +39,43 @@ export function BlockContentRenderer({ block }: BlockContentRendererProps) {
   switch (block.type as BlockCellType) {
     case "quiz":
       return <PreviewQuiz node={node} />
-    case "code":
+    case "code-studio":
       return <PreviewCodeStudio data={node.data} />
-    case "img":
+    case "image":
       return <PreviewImage node={node} />
-    case "vid":
+    case "video":
       return <PreviewVideo node={node} />
-    case "aud":
+    case "audio":
       return <PreviewAudio node={node} />
-    case "gal":
+    case "gallery":
       return <PreviewGallery node={node} />
-    case "yt":
+    case "youtube":
       return <PreviewYouTube node={node} />
-    case "spot":
+    case "spotify":
       return <PreviewSpotify node={node} />
-    case "mmd":
+    case "mermaid":
       return <PreviewMermaid data={node.data} />
-    case "vega":
+    case "vega-lite":
       return <PreviewVegaLite node={node} />
-    case "src":
+    case "source":
       return <PreviewSource node={node} />
-    case "md":
+    case "markdown":
       return <PreviewMarkdown node={node} />
     case "html":
       return <PreviewHTML node={node} />
-    case "rt":
+    case "rich-text":
       return <PreviewRichText node={node} />
-    case "hdr":
+    case "header":
       return <PreviewHeader node={node} />
-    case "div":
+    case "divider":
       return <PreviewDivider node={node} />
-    case "btn":
+    case "button":
       return <PreviewButton node={node} />
-    case "adm":
+    case "admonition":
       return <PreviewAdmonition node={node} />
-    case "tbl":
+    case "table":
       return <PreviewTable node={node} />
-    case "proj":
+    case "project":
       return <PreviewProject node={node} />
     default:
       return (
