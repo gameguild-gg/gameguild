@@ -12,7 +12,6 @@ import { useProjectActions } from "@/components/block-content-editor/hooks/edito
 import { FolderOpen, Upload, Cloud } from "lucide-react"
 import { useState } from "react"
 import { toast } from "sonner"
-import type { LexicalEditor } from "lexical"
 import { ImportProjectDialog } from "./import-project-dialog"
 import { InfoDialog } from "./info-dialog"
 import type { StorageOption } from "./storage-option-selector"
@@ -48,8 +47,6 @@ interface OpenProjectDialogProps {
   isDbInitialized: boolean
   storageAdapter: StorageAdapter
   availableTags: Array<{ name: string }>
-  editorRef: React.RefObject<LexicalEditor | null>
-  setLoadingRef: React.RefObject<((loading: boolean) => void) | null>
   onProjectLoad: (projectData: ProjectData) => void
   onProjectsListUpdate: () => void
   onCreateNew: () => void
@@ -63,8 +60,6 @@ export function OpenProjectDialog({
   isDbInitialized,
   storageAdapter,
   availableTags,
-  editorRef,
-  setLoadingRef,
   onProjectLoad,
   onProjectsListUpdate,
   onCreateNew,
@@ -110,10 +105,6 @@ export function OpenProjectDialog({
     }
 
     try {
-      if (setLoadingRef.current) {
-        setLoadingRef.current(true)
-      }
-
       // Validate project data structure
       if (!projectData.data) {
         throw new Error("Project data is missing")
@@ -126,10 +117,6 @@ export function OpenProjectDialog({
       // Give React time to re-render with new layout type
       await new Promise((resolve) => setTimeout(resolve, 100))
 
-      if (setLoadingRef.current) {
-        setLoadingRef.current(false)
-      }
-
       toast.success("Projeto carregado", {
         description: `"${projectData.name}" foi aberto com sucesso`,
         duration: 2500,
@@ -137,9 +124,6 @@ export function OpenProjectDialog({
       })
     } catch (error) {
       console.error("Failed to load project:", error, "Project data:", projectData)
-      if (setLoadingRef.current) {
-        setLoadingRef.current(false)
-      }
       const errorMessage = error instanceof Error ? error.message : "Unknown error"
       toast.error("Erro ao carregar projeto", {
         description: `O arquivo do projeto está corrompido ou em formato inválido: ${errorMessage}`,

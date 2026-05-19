@@ -1,7 +1,7 @@
 # GameGuild Editor — Architecture Reference
 
-> Comprehensive documentation for the composable content editor.
-> Last updated: May 2026 (post-centralization).
+> Comprehensive documentation for the composable Block Content Editor.
+> Last updated: May 2026 (post Lexical engine removal).
 
 ---
 
@@ -12,32 +12,35 @@
 3. [Page Composition](#page-composition)
 4. [Provider Layer](#provider-layer)
 5. [Configuration System](#configuration-system)
-6. [Engines](#engines)
-7. [Layout](#layout)
-8. [Content Modes & Node Restrictions](#content-modes--node-restrictions)
+6. [The Block Engine](#the-block-engine)
+7. [Block Types](#block-types)
+8. [Content Modes & Block Restrictions](#content-modes--block-restrictions)
 9. [Storage Layer](#storage-layer)
-10. [Data Flow & Conversion Pipeline](#data-flow--conversion-pipeline)
-11. [Nodes](#nodes)
-12. [Plugins](#plugins)
-13. [Hooks](#hooks)
-14. [UI Components (Extras)](#ui-components-extras)
-15. [Pages](#pages)
-16. [File Map](#file-map)
+10. [Block Storage Format](#block-storage-format)
+11. [Nodes (Type-Only Modules)](#nodes-type-only-modules)
+12. [Plugins (Rich-Text-Only)](#plugins-rich-text-only)
+13. [Preview Components](#preview-components)
+14. [Hooks](#hooks)
+15. [UI Components (Extras)](#ui-components-extras)
+16. [Pages](#pages)
+17. [File Map](#file-map)
 
 ---
 
 ## Overview
 
-The GameGuild Editor is a composable, multi-engine content editor built with Next.js and React. It supports two editing engines (Lexical rich-text and Block Array), a single layout, three content modes, and three storage backends. Pages are assembled by combining **Provider → Layout → Toolbar + Field + Dialogs** components, with behavior controlled through two configuration objects: `FieldConfig` and `ToolbarConfig`.
+The GameGuild Block Content Editor is a composable, **single-engine** content editor built with Next.js and React. Content is modeled as an ordered list of standalone **blocks** — there is no global rich-text tree. Each block is one of 21 typed units (quiz, code studio, image, mermaid, rich-text, …) rendered top-to-bottom.
+
+Lexical is still used **internally** by two blocks (`rt` for rich-text inline formatting and `quiz` for essay-question answers) but the editor itself no longer has a Lexical engine. Project pages are assembled by combining **Provider → Layout → Toolbar + Field + Dialogs** components, driven by two configuration objects: `FieldConfig` and `ToolbarConfig`.
 
 ### Design Principles
 
 - **Composability** — Every page is a composition of Provider + Field + Toolbar + Dialogs.
 - **Configuration over code** — `FieldConfig` controls *what* is available; `ToolbarConfig` controls *what is visible*.
-- **Engine agnostic** — The same Provider/Toolbar/Dialogs work with both Lexical and Blocks engines.
-- **Mode-based restrictions** — Node types are allowed/blocked declaratively per mode, enforced at insert-time.
+- **One engine, one schema** — Single Block Array model, single persistence format.
+- **Mode-based restrictions** — Block types are allowed/blocked declaratively per mode, enforced at insert-time and in the picker.
 - **Storage abstraction** — IndexedDB + Google Drive + Cloud behind a single adapter interface.
-- **Module boundary** — Editor-only hooks, storage, sync, services, viewers, and utilities live under `components/block-content-editor`.
+- **Module boundary** — Editor-only hooks, storage, sync, services, viewers, and utilities live under [components/block-content-editor](../).
 
 ---
 
@@ -55,7 +58,7 @@ The GameGuild Editor is a composable, multi-engine content editor built with Nex
 │  │  │  ├───────────────────────────────────┤  │  │  │
 │  │  │  │         Field                     │  │  │  │
 │  │  │  │  ┌─────────────────────────────┐  │  │  │  │
-│  │  │  │  │   Engine (Lexical / Blocks) │  │  │  │  │
+│  │  │  │  │      Block Array Engine     │  │  │  │  │
 │  │  │  │  └─────────────────────────────┘  │  │  │  │
 │  │  │  └───────────────────────────────────┘  │  │  │
 │  │  └─────────────────────────────────────────┘  │  │
@@ -67,7 +70,9 @@ The GameGuild Editor is a composable, multi-engine content editor built with Nex
 **Data flow (simplified):**
 
 ```
-User Edit → Engine → Hook setters → Auto-save → EnhancedStorageAdapter → IndexedDB + Sync
+User Edit → BlockArrayEditor → Hook setters → Auto-save
+         → serializeProject() → EnhancedStorageAdapter
+         → IndexedDB + (optional) Drive / Cloud sync
 ```
 
 ---
@@ -79,10 +84,9 @@ Every editor page follows the same pattern:
 ```tsx
 // Minimal page — quiz-only editor
 const fieldConfig: Partial<FieldConfig> = {
-  engines: ["blocks"],
   allowedBlockTypes: [],
   allowedModes: ["quiz-page"],
-  defaultEngine: "blocks",
+  defaultMode: "quiz-page",
 }
 
 export default function QuizEditorPage() {
@@ -100,13 +104,13 @@ export default function QuizEditorPage() {
 
 **Component roles:**
 
-| Component         | Role                                                      |
-|-------------------|-----------------------------------------------------------|
-| `EditorProvider`  | Wraps hooks (storage, history, preview), manages UI state |
-| `StudioLayout`    | Responsive container with max-width based on layout       |
-| `EditorToolbar`   | Header + action bar (save, open, create, preview, etc.)   |
-| `EditorField`     | Dispatches to correct engine/layout based on project state|
-| `EditorDialogs`   | All modal dialogs (create, save-as, history, preview, etc.)|
+| Component         | Role                                                              |
+|-------------------|-------------------------------------------------------------------|
+| `EditorProvider`  | Wraps hooks (storage, history, preview), manages UI state         |
+| `StudioLayout`    | Responsive container, top header, content area                    |
+| `EditorToolbar`   | Header + action bar (save, open, create, preview, etc.)           |
+| `EditorField`     | Renders `BlockArrayEditor` (the only field implementation)        |
+| `EditorDialogs`   | All modal dialogs (create, save-as, history, preview, etc.)       |
 
 For the **viewer** (read-only):
 
@@ -126,7 +130,7 @@ For the **viewer** (read-only):
 
 ### EditorProvider
 
-**File:** `engines/editor-provider.tsx`
+**File:** [engines/editor-provider.tsx](../engines/editor-provider.tsx)
 
 Initializes three hooks and merges configs:
 
@@ -141,8 +145,8 @@ Exposes via React Context (`useEditor()`):
 - `project` — all storage state and operations
 - `history` — commit navigation, `isViewingHistory`
 - `preview` — preview dialog control
-- `fieldConfig` — merged FieldConfig
-- `toolbarConfig` — merged ToolbarConfig
+- `fieldConfig` — merged `FieldConfig`
+- `toolbarConfig` — merged `ToolbarConfig`
 - `ui` — all UI state (dialog open/close, save handlers, navigation guards)
 
 Also handles:
@@ -152,7 +156,7 @@ Also handles:
 
 ### ViewerProvider
 
-**File:** `engines/viewer-provider.tsx`
+**File:** [engines/viewer-provider.tsx](../engines/viewer-provider.tsx)
 
 Wraps `useViewerStorage()` for read-only content display. Exposes via `useViewer()`.
 
@@ -166,20 +170,18 @@ Controls **what** the editor supports.
 
 ```typescript
 interface FieldConfig {
-  engines: EngineType[]              // ["lexical", "blocks"]
-  allowedBlockTypes?: BlockCellType[] // For blocks engine picker
-  allowedNodeTypes?: string[]         // For lexical node restrictions
-  allowedModes?: ProjectMode[]        // Restricts content mode selector
-  defaultEngine?: EngineType
+  /** Which block types to show in the picker (undefined = all 21) */
+  allowedBlockTypes?: BlockCellType[]
+  /** Which content modes are available in create dialog (undefined = all) */
+  allowedModes?: ProjectMode[]
+  /** Default project mode */
   defaultMode?: ProjectMode
 }
 ```
 
 **Behavior:**
-- `engines` — filter options in Create Project dialog.
 - `allowedBlockTypes` — filters Block Types tab in block picker. Empty array or single entry hides the tab.
 - `allowedModes` — filters Content Mode dropdown in Create Project dialog. Single entry hides it. First entry becomes the effective initial mode.
-- `defaultEngine` — initial state when no project is loaded.
 - `defaultMode` — UI hint for dialog default; overridden by `allowedModes[0]` when set.
 
 ### ToolbarConfig
@@ -211,64 +213,28 @@ interface ToolbarConfig {
 Both configs have merge helpers. Partial configs are merged with defaults:
 
 ```typescript
-const fieldConfig = mergeFieldConfig(fieldPartial)    // fills missing with DEFAULT_FIELD_CONFIG
+const fieldConfig = mergeFieldConfig(fieldPartial)       // fills missing with DEFAULT_FIELD_CONFIG
 const toolbarConfig = mergeToolbarConfig(toolbarPartial) // fills missing with DEFAULT_TOOLBAR_CONFIG
 ```
 
+See [engines/editor-config.ts](../engines/editor-config.ts).
+
 ---
 
-## Engines
+## The Block Engine
 
-The editor supports two engines, selected per-project.
+The editor has a **single engine**: the Block Array Engine. Every project is an ordered list of standalone blocks; there is no inline rich text between blocks.
 
-### Lexical Engine (`"lexical"`)
+**Files:** [engines/blocks/](../engines/blocks/)
 
-A rich-text editor powered by Meta's Lexical framework. Content is a tree of Lexical nodes with 23 custom decorator node types embedded inline.
-
-**File:** `engines/lexical/lexical-editor.tsx`
-
-- Registers ~28 node types (base + custom decorators)
-- Loads ~16 plugins (formatting, insertion, validation, etc.)
-- Provides context for project ID, storage adapter, and loading state
-- Uses a single layout (one editor pane)
-
-### Blocks Engine (`"blocks"`)
-
-An array-based editor where each block is a standalone content unit (quiz, diagram, markdown, etc.).
-
-**Files:** `engines/blocks/`
-
-- `block-array-editor.tsx` — Main editor: ordered list with insert lines, drag-to-reorder, inline editing
-- `block-array-viewer.tsx` — Read-only renderer + `blockToSerializedNode()` for preview
-- `block-type-picker.tsx` — Modal picker with two tabs: Block Types (categorized) + Templates (quiz presets)
-- `block-editor-modal.tsx` — Edit dialog dispatching to type-specific editors
-- `block-component-registry.ts` — Registry mapping 21 block types to icons, labels, `createEmpty()`, editors, renderers
-
-**Block Types (21):**
-
-| Type | Label | Category |
-|------|-------|----------|
-| `quiz` | Quiz | Interactive |
-| `code` | Code Studio | Interactive |
-| `btn` | Button | Interactive |
-| `img` | Image | Media |
-| `vid` | Video | Media |
-| `aud` | Audio | Media |
-| `gal` | Gallery | Media |
-| `yt` | YouTube | Media |
-| `spot` | Spotify | Media |
-| `mmd` | Mermaid | Data & Diagrams |
-| `vega` | Vega-Lite | Data & Diagrams |
-| `tbl` | Table | Data & Diagrams |
-| `pres` | Presentation | Data & Diagrams |
-| `rt` | Rich Text | Content |
-| `md` | Markdown | Content |
-| `html` | HTML | Content |
-| `hdr` | Header | Content |
-| `div` | Divider | Structure |
-| `adm` | Admonition | Structure |
-| `src` | Source | Structure |
-| `proj` | Project | Structure |
+| File | Role |
+|------|------|
+| [block-array-editor.tsx](../engines/blocks/block-array-editor.tsx) | Main editor: ordered list with insert lines and drag-to-reorder |
+| [block-array-viewer.tsx](../engines/blocks/block-array-viewer.tsx) | Read-only renderer used by viewer pages and preview dialog |
+| [block-component-registry.ts](../engines/blocks/block-component-registry.ts) | Registry mapping the 21 block types to icon, label, description, and `createEmpty()` |
+| [block-type-picker.tsx](../engines/blocks/block-type-picker.tsx) | Modal picker with two tabs: Block Types + Templates (quiz presets) |
+| [block-editor-modal.tsx](../engines/blocks/block-editor-modal.tsx) | Per-block edit dialog dispatching to type-specific editors |
+| [block-drag-drop.tsx](../engines/blocks/block-drag-drop.tsx) | Drag-and-drop reordering helpers |
 
 ### Block picker behavior
 
@@ -281,56 +247,70 @@ The picker has two tabs: **Block Types** and **Templates** (quiz presets).
 
 ---
 
-## Layout
+## Block Types
 
-The editor uses a single layout for the Lexical engine: one editor pane for simple document editing. The Blocks engine always uses a flat list.
+21 block types are registered in [BLOCK_REGISTRY](../engines/blocks/block-component-registry.ts):
 
-**Layout component:**
+| Type   | Label        | Notes                                                     |
+|--------|--------------|-----------------------------------------------------------|
+| `quiz` | Quiz         | Interactive question (uses Lexical internally for essays) |
+| `code` | Code Studio  | Full file-tree code IDE with runners                      |
+| `btn`  | Button       | Action button (URL, copy, email, download)                |
+| `img`  | Image        | Image media                                               |
+| `vid`  | Video        | Video media (direct/youtube/vimeo/dailymotion)            |
+| `aud`  | Audio        | Audio media (direct/youtube/spotify/soundcloud)           |
+| `gal`  | Gallery      | Image gallery (1–4 columns, span layouts)                 |
+| `yt`   | YouTube      | YouTube embed                                             |
+| `spot` | Spotify      | Spotify track/album/playlist/artist embed                 |
+| `mmd`  | Mermaid      | Mermaid diagram                                           |
+| `vega` | Vega-Lite    | Vega-Lite visualization                                   |
+| `tbl`  | Table        | Spreadsheet-style table                                   |
+| `pres` | Presentation | Presentation player (ODP/PPTX)                            |
+| `rt`   | Rich Text    | Inline rich-text block (uses Lexical internally)          |
+| `md`   | Markdown     | Markdown content                                          |
+| `html` | HTML         | Raw HTML (sanitized via DOMPurify)                        |
+| `hdr`  | Header       | Heading with styling                                      |
+| `div`  | Divider      | Section divider                                           |
+| `adm`  | Admonition   | Note/warning/tip box                                      |
+| `src`  | Source       | Citation/source reference list                            |
+| `proj` | Project      | Embedded sub-project (placeholder; not currently loaded)  |
 
-- `EditorLayoutType1` — Single editor pane
+The `BlockCellType` union and `BlockDataMap` (type-level map from `BlockCellType` to its data shape) are the single source of truth for block typing. See [lib/storage/editor/block-structure.ts](../lib/storage/editor/block-structure.ts).
 
 ---
 
-## Content Modes & Node Restrictions
+## Content Modes & Block Restrictions
 
 ### Modes
 
-Three content modes control which node types are allowed:
+Three content modes constrain which block types are allowed:
 
-| Mode | Description | Default Restrictions |
-|------|-------------|---------------------|
-| `free-page` | No restrictions. All nodes allowed in the single block. | `b1: [null, null]` |
-| `code-page` | Code-focused. The single block blocks `code-studio`. | `b1: ['code-studio', null]` |
-| `quiz-page` | Quiz-focused. The single block blocks `quiz`. | `b1: ['quiz', null]` |
+| Mode         | Description                                       |
+|--------------|---------------------------------------------------|
+| `free-page`  | No restrictions. All block types allowed.         |
+| `code-page`  | Blocks `code-studio` from being inserted.         |
+| `quiz-page`  | Blocks `quiz` from being inserted as a free pick. |
 
-### Restriction Format
+Restrictions live in [lib/storage/editor/project-modes.ts](../lib/storage/editor/project-modes.ts) as `NODE_RESTRICTIONS`:
 
 ```typescript
-interface NodeRestrictions {
-  blocks?: Record<string, [blocked, allowed]>
+{
+  "free-page": { blocks: { b1: [null, null] } },
+  "code-page": { blocks: { b1: ["code-studio", null] } },
+  "quiz-page": { blocks: { b1: ["quiz", null] } },
 }
-// blocked/allowed can be: null | "*" | "nodeType" | string[]
 ```
 
-**Resolution rules (priority order):**
-1. Block-specific restriction
-2. Fallback to `b1` defaults
-3. Tuple interpretation:
-   - `allowed === "*"` → permit all
-   - `allowed` is list → ONLY those types permitted
-   - `allowed === null` → check blocked list
+Each tuple is `[blocked, allowed]`. `'*'` means all; `null` means none; a string or string array names specific types.
 
 ### Enforcement
 
-- **Insert-time:** `NodeValidationPlugin` intercepts `INSERT_NODE_COMMAND` and calls `isNodeAllowed()`.
-- **Picker-time:** `FloatingContentInsertPlugin` checks `isNodeAllowed()` to show/hide insert options.
-- **Block picker:** `allowedBlockTypes` in FieldConfig filters the Block Type Picker directly.
+- **Picker filter** — `BlockTypePicker` honors `allowedBlockTypes` from `FieldConfig`.
+- **Mode helper** — `isNodeAllowed()` in `project-modes.ts` is consulted by code paths that need to validate inserts programmatically.
 
-### allowedModes in FieldConfig
-
-`allowedModes` serves double duty:
-1. **Restricts the Content Mode dropdown** in the Create Project dialog (single entry hides it entirely).
-2. **Sets the effective initial mode** — `allowedModes[0]` is used as the initial project mode, overriding `defaultMode`.
+`allowedModes` in `FieldConfig` serves double duty:
+1. Restricts the Content Mode dropdown in the Create Project dialog (single entry hides it).
+2. Sets the effective initial mode — `allowedModes[0]` overrides `defaultMode`.
 
 ---
 
@@ -350,19 +330,21 @@ interface NodeRestrictions {
 
 ### EnhancedStorageAdapter
 
-**File:** `lib/storage/editor/enhanced-storage-adapter.ts`
+**File:** [lib/storage/editor/enhanced-storage-adapter.ts](../lib/storage/editor/enhanced-storage-adapter.ts)
 
-IndexedDB schema (v3):
+IndexedDB schema (DB_VERSION = 4):
 - `projects` — Full `ProjectData` objects (keyPath: `id`)
 - `project_metadata` — Sync-optimized metadata with hash index
-- `tag_data` — Tag→ProjectIds relationships
+- `tag_data` — Tag → ProjectIds relationships
 
 Key operations:
-- `save(id, name, data, tags, storageType, preferences, engine)` — Persist + auto-commit + sync queue
+- `save(id, name, data, tags, storageType, preferences)` — Persist + auto-commit + sync queue
 - `load(id)` — IndexedDB first, then remote fallback
 - `list()` — Merges local + remote metadata
 - `delete(id)` — Removes from all stores
 - `searchProjects(term, tags, filterMode, storageTypeFilter)` — Full-text + tag search
+
+A purge migration runs when `oldVersion < 4` to drop any legacy stores from the dual-engine era.
 
 ### ProjectData
 
@@ -370,20 +352,20 @@ Key operations:
 interface ProjectData {
   id: string
   name: string
-  data: string              // Serialized content (Cellular or raw)
+  data: string              // Serialized BlockStorage (JSON string)
   tags: string[]
   size: number
   createdAt: string
   updatedAt: string
-  hash?: string
-  storageType?: StorageType // "local" | "gameguild-cloud" | "google-drive"
-  engine?: EngineType       // "lexical" | "blocks"
-  preferences?: ProjectPreferences
+  hash: string
   syncStatus?: SyncStatus
+  storageType: StorageType  // "local" | "gameguild-cloud" | "google-drive"
+  isLocallyAvailable?: boolean
+  preferences?: ProjectPreferences
 }
 ```
 
-### Git History
+### Git history
 
 Auto-commits on every save. Supports:
 - `listHistory(projectId)` — Full history
@@ -392,125 +374,103 @@ Auto-commits on every save. Supports:
 - `createSnapshot(projectId, name)` — Named tag
 - `loadSnapshot(projectId, tag)` — Restore tagged version
 
+See [lib/storage/git/](../lib/storage/git/).
+
 ---
 
-## Data Flow & Conversion Pipeline
+## Block Storage Format
 
-### The Cell Layer
+There is no longer a Cellular intermediate format. The Block Array is serialized directly to a flat schema.
 
-All content passes through a unified **Cellular** format for storage, regardless of engine:
-
-```
-Lexical EditorState ←→ CellularDocument ←→ Storage (string)
-Block Array         ←→ BlockStorage      ←→ Storage (string)
-```
-
-### CellularDocument
+**File:** [lib/storage/editor/block-storage.ts](../lib/storage/editor/block-storage.ts)
 
 ```typescript
-interface CellularDocument {
-  v: 0                    // Version
-  u: "lexical" | "blocks" // UI origin
-  c: Cell[]               // Content cells
+interface BlockStorage {
+  order: string[]                                // Block IDs in display order
+  blocks: Record<string, BlockStorageEntry>      // Block ID → { type, data }
 }
 
-type Cell = [data: object, metadata: CellMetadata]
-// metadata.t = cell type ("p", "h", "q", "l", "image", "quiz", etc.)
+interface BlockStorageEntry<T extends BlockCellType = BlockCellType> {
+  type: T
+  data: BlockDataMap[T]
+}
 ```
 
-### Converters
+Round-trip helpers:
+- `serializeProject(blocks: BlockArray): string` — runtime → JSON string for storage.
+- `deserializeProject(data: string): BlockArray` — JSON string → runtime.
+- `EMPTY_PROJECT_DATA` — canonical empty payload (`{"order":[],"blocks":{}}`).
 
-**Lexical ↔ Cells** (`cell-converters/lexical.ts`):
-- `lexicalToCells(editorState)` — Walks Lexical tree, produces Cell array
-- `cellsToLexical(doc)` — Reconstructs SerializedEditorState from cells
-
-**Blocks ↔ Storage** (`cell-converters/blocks.ts`):
-- `blocksToStorage(blocks)` → `{ order: string[], blocks: Record<string, Cell> }`
-- `storageToBlocks(storage)` → `Block[]`
-- `blockToSerializedNode(block)` → fake Lexical node for preview reuse
-
-### Layout Detection
-
-`layout-detector.ts` handles project data parsing:
-- `extractEditorStates(data)` → extracts editor state from stored data
-- `createProjectData(states)` → serialize states for storage
+`BlockArray` is just `Block[]` at runtime where `Block` is a discriminated union over the 21 `BlockCellType`s and their corresponding data shapes via `BlockDataMap`.
 
 ---
 
-## Nodes
+## Nodes (Type-Only Modules)
 
-23 custom decorator nodes, each with:
-- **Node class** (extends `DecoratorNode` or `MediaNodeBase`)
-- **Plugin** (registers `INSERT_*_COMMAND`)
-- **Preview renderer** (in `plugins/preview-components/`)
-- **Editor UI** (in `extras/` or inline)
+The `nodes/` folder is **no longer** a catalog of Lexical `DecoratorNode` classes. After the Lexical engine was removed, each per-block file in `nodes/` exposes only:
 
-| Node | Class | Base |
-|------|-------|------|
-| Admonition | `AdmonitionNode` | DecoratorNode |
-| Audio | `AudioNode` | MediaNodeBase |
-| Button | `ButtonNode` | DecoratorNode |
-| Code Studio | `CodeStudioNode` | DecoratorNode |
-| Custom List | `CustomListNode` | ListNode |
-| Divider | `DividerNode` | DecoratorNode |
-| Gallery | `GalleryNode` | DecoratorNode |
-| Header | `HeaderNode` | DecoratorNode |
-| HTML | `HTMLNode` | DecoratorNode |
-| Image | `ImageNode` | MediaNodeBase |
-| Markdown | `MarkdownNode` | DecoratorNode |
-| Mermaid | `MermaidNode` | DecoratorNode |
-| Presentation | `PresentationNode` | DecoratorNode |
-| Project | `ProjectNode` | DecoratorNode |
-| Quiz | `QuizNode` | DecoratorNode |
-| Rich Text | `RichTextNode` | DecoratorNode |
-| Source Code | `SourceCodeNode` | DecoratorNode |
-| Source | `SourceNode` | DecoratorNode |
-| Spotify | `SpotifyNode` | DecoratorNode |
-| Table | `TableNode` | DecoratorNode |
-| Vega-Lite | `VegaLiteNode` | DecoratorNode |
-| Video | `VideoNode` | MediaNodeBase |
-| YouTube | `YouTubeNode` | DecoratorNode |
+- `XxxData` — the runtime data shape for the block.
+- `SerializedXxxNode` — the storage-side type, defined as `SerializedBlockNode<"type", XxxData>`.
 
-`MediaNodeBase` (`nodes/base/media-node-base.tsx`) — shared base for Image, Video, Audio nodes with common media handling.
+These modules have **no Lexical imports**. They are consumed by:
+- [lib/storage/editor/block-structure.ts](../lib/storage/editor/block-structure.ts) (assembles `BlockDataMap`)
+- The preview components in `plugins/preview-components/` (type-only reads)
+- Block editor UIs in `extras/*`
+
+### Exceptions
+
+| File | Purpose |
+|------|---------|
+| [nodes/base/serialized-block-node.ts](../nodes/base/serialized-block-node.ts) | `SerializedBlockNode<TType, TData>` base type (no Lexical) |
+| [nodes/base/media-node-base.tsx](../nodes/base/media-node-base.tsx) | `BaseMediaData` shared by `img`, `vid`, `aud`, `gal` (no Lexical) |
+| [nodes/custom-list-node.tsx](../nodes/custom-list-node.tsx) | **Live Lexical node.** Used inside the rich-text block's floating toolbar for ordered/unordered/colored lists. |
+| [nodes/spotify-node.tsx](../nodes/spotify-node.tsx) | Also exports the pure helper `extractSpotifyInfo(url)` |
+
+### Files in nodes/
+
+`admonition-node.tsx`, `audio-node.tsx`, `button-node.tsx`, `code-studio-node.tsx`, `custom-list-node.tsx`, `divider-node.tsx`, `gallery-node.tsx`, `header-node.tsx`, `html-node.tsx`, `image-node.tsx`, `markdown-node.tsx`, `mermaid-node.tsx`, `project-node.tsx`, `quiz-node.tsx`, `rich-text-node.tsx`, `source-node.tsx`, `spotify-node.tsx`, `table-node.tsx`, `vega-lite-node.tsx`, `video-node.tsx`, `youtube-node.tsx`, plus `base/`.
+
+> The `pres` block does not have a dedicated `nodes/` file; its data type lives under [extras/presentation/](../extras/presentation/) and is referenced as `unknown` in `BlockDataMap`.
 
 ---
 
-## Plugins
+## Plugins (Rich-Text-Only)
 
-### Node Insertion Plugins
-
-Each decorator node has a dedicated plugin that registers an `INSERT_*_COMMAND`:
+After the Lexical engine removal, only the plugins that run **inside the rich-text block** remain. They live under [plugins/](../plugins/) and are loaded by the rich-text editor in [extras/rich-text/](../extras/rich-text/).
 
 ```
-image-plugin.tsx     → INSERT_IMAGE_COMMAND
-video-plugin.tsx     → INSERT_VIDEO_COMMAND
-audio-plugin.tsx     → INSERT_AUDIO_COMMAND
-quiz-plugin.tsx      → INSERT_QUIZ_COMMAND
-code-studio-plugin.tsx → INSERT_CODE_STUDIO_COMMAND
-... (one per node type)
+plugins/
+├── floating-text-format-toolbar-plugin.tsx   # Bold, italic, link, color, lists, …
+├── floating-text-components/                 # 10 sub-components used by the toolbar
+└── preview-components/                       # Read-only renderers (see below)
 ```
 
-### Core Plugins
+- The floating text toolbar registers list operations through `custom-list-node.tsx`'s `$createCustomListNode` / `$isCustomListNode`.
+- There are no per-block insertion plugins anymore — block insertion goes through the Block Type Picker, not Lexical commands.
 
-| Plugin | Purpose |
-|--------|---------|
-| `floating-content-insert-plugin.tsx` | Floating `+` toolbar for inserting all node types. Checks `isNodeAllowed()`. |
-| `floating-text-format-toolbar-plugin.tsx` | Floating toolbar for text formatting (bold, italic, link, color, etc.) |
-| `node-validation-plugin.tsx` | Enforces mode-based node restrictions at insert-time |
-| `code-plugin.tsx` | Basic code block handling |
-| `preview-plugin.tsx` | Opens preview dialog with serialized state |
+---
 
-### Floating Text Format Components
+## Preview Components
 
-Located in `plugins/floating-text-components/`:
+Read-only renderers used by the viewer field, static viewer, and the preview dialog. Each takes a serialized node payload (the `SerializedXxxNode` produced by the block storage) and renders DOM.
 
-- Background color picker
-- Font family selector
-- Font size selector
-- Text formatting (bold, italic, underline, strikethrough, subscript, superscript, code)
-- Link editor
-- List management (ordered, unordered)
-- Text/list color pickers
+**File:** [plugins/preview-components/](../plugins/preview-components/)
+
+```
+preview-admonition.tsx   preview-list-item.tsx    preview-source.tsx
+preview-audio.tsx        preview-list.tsx         preview-spotify.tsx
+preview-button.tsx       preview-markdown.tsx     preview-table.tsx
+preview-code-studio.tsx  preview-mermaid.tsx      preview-text.tsx
+preview-divider.tsx      preview-paragraph.tsx    preview-vega-lite.tsx
+preview-gallery.tsx      preview-project.tsx      preview-video.tsx
+preview-header.tsx       preview-quiz.tsx         preview-youtube.tsx
+preview-heading.tsx      preview-quote.tsx
+preview-html.tsx         preview-rich-text.tsx
+preview-image.tsx
+preview-link.tsx
+```
+
+The `paragraph`, `text`, `heading`, `quote`, `link`, `list`, `list-item` components are used **inside** `preview-rich-text.tsx` to render the Lexical EditorState JSON embedded in a `rt` block. They are not standalone block types.
 
 ---
 
@@ -518,20 +478,20 @@ Located in `plugins/floating-text-components/`:
 
 ### useProjectStorage
 
-**File:** `hooks/useProjectStorage.ts`
+**File:** [hooks/useProjectStorage.ts](../hooks/useProjectStorage.ts)
 
 The main hook. Manages all project state and persistence.
 
-**Accepts:** `ProjectStorageDefaults?` — optional initial `engine`, `mode`.
+**Accepts:** `ProjectStorageDefaults?` — optional initial `mode`.
 
 **Returns:**
-- Project metadata: `projectId`, `projectName`, `engine`, `projectMode`, `storageType`, `tags`, `preferences`
-- Editor states: `editorState`, `blockArrayBlocks`
+- Project metadata: `projectId`, `projectName`, `projectMode`, `storageType`, `tags`, `preferences`
+- Content: `blocks: BlockArray`, `setBlocks`
 - Operations: `save()`, `saveAs()`, `loadProject()`, `createProject()`
 - Lists: `savedProjects`, `availableTags`, `refreshProjects()`, `refreshTags()`
 - Size: `projectSize`, `assetsSize`, `assets`
 - Sync: `syncStats`, `autoSaveEnabled`
-- Direct access: `db` (EnhancedStorageAdapter), `storageAdapter`
+- Direct access: `db` (EnhancedStorageAdapter)
 
 **Auto-save:** Debounced save triggered by state changes. Suppressed when `readOnlyRef.current` is true (history viewing).
 
@@ -539,59 +499,51 @@ The main hook. Manages all project state and persistence.
 
 ### useProjectHistory
 
-**File:** `hooks/useProjectHistory.ts`
+**File:** [hooks/useProjectHistory.ts](../hooks/useProjectHistory.ts)
 
-Git-based version history.
-
-- `commits` — list of past commits
-- `isViewingHistory` — true when viewing an old version
-- `loadCommit(sha)` — switch to read-only old version
-- `loadSnapshot(tag)` — switch to named snapshot
-- `returnToHead()` — back to latest
-- `createSnapshot(name)` — tag current state
+Git-based version history (commits, snapshots, return-to-head).
 
 ### useProjectPreview
 
-**File:** `hooks/useProjectPreview.ts`
+**File:** [hooks/useProjectPreview.ts](../hooks/useProjectPreview.ts)
 
-Preview dialog management.
-
-- `isPreviewOpen` / `setIsPreviewOpen`
-- `openPreview()` — serializes current state and opens dialog
+Preview dialog open/close + serialization of the current `blocks` for read-only render.
 
 ### useViewerStorage
 
-**File:** `hooks/useViewerStorage.ts`
+**File:** [hooks/useViewerStorage.ts](../hooks/useViewerStorage.ts)
 
-Read-only storage for the viewer page.
+Read-only storage for the viewer page — loads from URL hash, exposes `currentProject` and `blocks`.
 
-- Loads project from URL hash
-- Returns `layoutInfo` with editor state for rendering
+### useHomeStorage / useAssetManager / useCollectionManager / useProjectManager / useDarkMode
+
+Additional hooks used by the home/manager pages and shared UI surfaces.
 
 ---
 
 ## UI Components (Extras)
 
-Located in `extras/`. Key areas:
+Located in [extras/](../extras/). Key areas:
 
-| Directory | Purpose |
-|-----------|---------|
-| `editor/` | Create project dialog, info dialog, storage option selector |
-| `dialogs/` | Confirmation dialogs (delete, refresh) |
-| `media/` | Unified media editor, asset image handling |
-| `media-upload-dialog.tsx` | Universal media upload (file + URL) |
-| `manager-page/` | Project/asset manager UI (grid/list views, filters, pagination) |
-| `preview/` | Preview renderers for all node types |
-| `quiz/` | Quiz display, entry types, settings, examples |
-| `code-studio/` | Code editor/IDE with runners (JS, Python, C++, Rust, etc.) |
-| `presentation/` | Presentation player, ODP/PPTX parsers |
-| `mermaid/` | Mermaid diagram editor |
-| `vega-lite/` | Vega-Lite visualization editor |
-| `markdown/` | Markdown editor and component renderer |
-| `html/` | HTML editor and viewer |
-| `rich-text/` | Rich text embedded editor |
-| `content-edit-menu.tsx` | Edit/delete menu for decorator nodes |
-| `settings-menu.tsx` | Settings menu for editor preferences |
+| Directory               | Purpose                                                       |
+|-------------------------|---------------------------------------------------------------|
+| `editor/`               | Create project dialog, info dialog, storage option selector   |
+| `dialogs/`              | Confirmation dialogs (delete, refresh)                        |
+| `media/`                | Unified media editor, asset image handling                    |
+| `media-upload-dialog.tsx` | Universal media upload (file + URL + collections)           |
+| `manager-page/`         | Project/asset manager UI (grid/list, filters, pagination)     |
+| `preview/`              | Preview infrastructure used by the editor preview dialog      |
+| `quiz/`                 | Quiz display, entry types, settings, examples                 |
+| `code-studio/`          | Code editor/IDE with runners (JS, Python, C++, Rust, …)       |
+| `presentation/`         | Presentation player, ODP/PPTX parsers                         |
+| `mermaid/`              | Mermaid diagram editor                                        |
+| `vega-lite/`            | Vega-Lite visualization editor                                |
+| `markdown/`             | Markdown editor and renderer                                  |
+| `html/`                 | HTML editor and viewer                                        |
+| `rich-text/`            | Embedded Lexical-based rich-text block                        |
+| `source-code/`          | Source file viewer for the `src` block                        |
+| `content-edit-menu.tsx` | Edit/delete menu for inline block actions                     |
+| `settings-menu/`        | Editor preferences UI                                         |
 
 ---
 
@@ -599,16 +551,17 @@ Located in `extras/`. Key areas:
 
 All pages live under `app/[locale]/(block-content-editor)/block-content-editor/`.
 
-| Route | Page | Description |
-|-------|------|-------------|
-| `/block-content-editor` | Home | Project manager with grid/list views, asset manager, collections |
-| `/block-content-editor/studio` | Studio | Full editor — all engines, layouts, modes |
-| `/block-content-editor/viewer` | Viewer | Read-only content viewer |
-| `/block-content-editor/quiz-editor` | Quiz Editor | Blocks-only, quiz mode, restricted picker |
-| `/block-content-editor/doc-editor` | Doc Editor | Lexical-only, type1 layout, free mode |
-| `/block-content-editor/full-editor` | Full Editor | All defaults enabled |
-| `/block-content-editor/static-viewer` | Static Viewer | Static/read-only render path |
-| `/block-content-editor/publish` | Publish | Placeholder (renders null) |
+| Route                                  | Page          | Description                                       |
+|----------------------------------------|---------------|---------------------------------------------------|
+| `/block-content-editor`                | Home          | Project manager (grid/list), asset manager, collections |
+| `/block-content-editor/studio`         | Studio        | Full editor — all block types, all modes          |
+| `/block-content-editor/viewer`         | Viewer        | Read-only content viewer                          |
+| `/block-content-editor/quiz-editor`    | Quiz Editor   | Quiz-mode only, picker restricted to templates    |
+| `/block-content-editor/doc-editor`     | Doc Editor    | Rich-text-only block (`["rt"]`), free mode        |
+| `/block-content-editor/block-editor`   | Block Editor  | Free mode, all block types                        |
+| `/block-content-editor/full-editor`    | Full Editor   | All defaults enabled                              |
+| `/block-content-editor/static-viewer`  | Static Viewer | Header + content only (no sidebar/TOC)            |
+| `/block-content-editor/publish`        | Publish       | Placeholder                                       |
 
 ---
 
@@ -618,107 +571,108 @@ All pages live under `app/[locale]/(block-content-editor)/block-content-editor/`
 
 ```
 engines/
-├── editor-config.ts          # FieldConfig, ToolbarConfig, defaults, merge helpers
-├── editor-provider.tsx        # EditorProvider, EditorContextValue, useEditor()
-├── viewer-provider.tsx        # ViewerProvider, ViewerContextValue, useViewer()
-├── editor-field.tsx           # Dispatches to Lexical layout or BlockArrayEditor
-├── viewer-field.tsx           # Dispatches to viewer content or empty state
-├── editor-toolbar.tsx         # Header + action bar with ToolbarConfig conditionals
-├── viewer-toolbar.tsx         # Viewer header + action bar
-├── editor-dialogs.tsx         # All editor dialogs (create, save-as, history, etc.)
-├── viewer-dialogs.tsx         # Viewer dialogs (exit confirm)
-├── blocks/                    # Block Array engine
-│   ├── block-array-editor.tsx
-│   ├── block-array-viewer.tsx
-│   ├── block-component-registry.ts
-│   ├── block-editor-modal.tsx
-│   └── block-type-picker.tsx
-└── lexical/                   # Lexical engine
-    ├── lexical-editor.tsx
-    └── editor-layout-type1.tsx
+├── editor-config.ts                # FieldConfig, ToolbarConfig, defaults, merge helpers
+├── editor-provider.tsx             # EditorProvider, EditorContextValue, useEditor()
+├── viewer-provider.tsx             # ViewerProvider, ViewerContextValue, useViewer()
+├── editor-field.tsx                # Renders BlockArrayEditor
+├── viewer-field.tsx                # Renders viewer content or empty state
+├── editor-toolbar.tsx              # Header + action bar with ToolbarConfig conditionals
+├── viewer-toolbar.tsx              # Viewer header + action bar
+├── editor-dialogs.tsx              # All editor dialogs (create, save-as, history, …)
+├── viewer-dialogs.tsx              # Viewer dialogs (exit confirm)
+├── project-content-renderer.tsx    # Shared block-list renderer
+├── static-viewer.tsx               # Static (read-only) viewer entry point
+├── static-viewer-sections.tsx      # Static viewer header / content / TOC fragments
+└── blocks/                         # The Block Array engine
+    ├── block-array-editor.tsx
+    ├── block-array-viewer.tsx
+    ├── block-component-registry.ts
+    ├── block-drag-drop.tsx
+    ├── block-editor-modal.tsx
+    └── block-type-picker.tsx
 ```
 
 ### Hooks
 
 ```
 hooks/
-├── useProjectStorage.ts       # Main storage hook (CRUD, auto-save, sync)
-├── useProjectHistory.ts       # Git-based version history
-├── useProjectPreview.ts       # Preview dialog management
-└── useViewerStorage.ts        # Read-only viewer storage
+├── editor/                         # Editor-specific sub-hooks
+├── useProjectStorage.ts            # Main storage hook (CRUD, auto-save, sync)
+├── useProjectHistory.ts            # Git-based version history
+├── useProjectPreview.ts            # Preview dialog management
+├── useViewerStorage.ts             # Read-only viewer storage
+├── useHomeStorage.ts               # Home/manager-page storage
+├── useAssetManager.tsx             # Asset DB facade
+├── useCollectionManager.tsx        # Collection facade
+├── useProjectManager.tsx           # Project manager facade
+└── useDarkMode.ts                  # Theme toggle
 ```
 
-### Storage And Persistence (lib/storage/)
+### Storage and persistence (lib/storage/)
 
 ```
 lib/storage/
-├── assets/                       # Asset DB, collections, URL resolution
+├── assets/                         # Asset DB, collections, URL resolution
 │   ├── asset-manager.ts
 │   ├── collection-types.ts
 │   ├── index.ts
 │   ├── types.ts
 │   └── use-resolved-media.ts
-├── editor/                       # Project/content persistence model
+├── editor/                         # Project/content persistence
 │   ├── enhanced-storage-adapter.ts # IndexedDB + sync + Drive adapter
-│   ├── project-types.ts            # EngineType constants
+│   ├── block-storage.ts            # serialize/deserialize + EMPTY_PROJECT_DATA
+│   ├── block-structure.ts          # Block, BlockArray, BlockStorage, BlockDataMap
 │   ├── project-modes.ts            # ProjectMode, NodeRestrictions, isNodeAllowed()
-│   ├── project-preferences.ts      # ProjectPreferences, per-panel config
-│   ├── block-structure.ts          # Block, BlockArray, BlockStorage types
-│   ├── cell-structure.ts           # Cell, CellularDocument, CellularContent
-│   ├── layout-detector.ts          # extractEditorStates(), createProjectData()
+│   ├── project-preferences.ts      # ProjectPreferences
 │   ├── storage-types.ts            # StorageType, SyncStatus constants
-│   ├── editor-preferences.ts       # Editor preferences DB
-│   └── cell-converters/
-│       ├── index.ts                # Router for cell conversion
-│       ├── lexical.ts              # Lexical ↔ Cells conversion
-│       ├── blocks.ts               # Blocks ↔ BlockStorage conversion
-│       ├── cell-data.ts            # Cell data type definitions
-│       └── cell-metadata.ts        # Cell metadata types
-└── git/                          # Isomorphic-git history/snapshots
+│   └── editor-preferences.ts       # Editor preferences DB
+└── git/                            # Isomorphic-git history/snapshots
     ├── git-fs.ts
     ├── git-history-manager.ts
     └── index.ts
 ```
 
-### Sync, API, Services, And Utilities
+### Sync, API, services, utilities
 
 ```
 lib/api/editor/
-└── api-client.ts                  # GameGuild Cloud API client
+└── api-client.ts                   # GameGuild Cloud API client
 
 lib/sync/editor/
-├── google-drive-sync.ts           # Google Drive sync bridge
-├── hash-manager.ts                # Project/hash helpers
-├── sync-config.ts                 # Sync configuration manager
-├── sync-manager.ts                # Queue orchestration + remote checks
-└── sync-queue.ts                  # IndexedDB-backed sync queue
+├── google-drive-sync.ts            # Google Drive sync bridge
+├── hash-manager.ts                 # Project/hash helpers
+├── sync-config.ts                  # Sync configuration manager
+├── sync-manager.ts                 # Queue orchestration + remote checks
+└── sync-queue.ts                   # IndexedDB-backed sync queue
 
 services/editor/
-└── google-drive-service.ts        # Google Drive API integration
+└── google-drive-service.ts         # Google Drive API integration
 
 lib/interopAdapter/
-├── project-exporter.ts            # ZIP/folder export with assets
-├── project-importer.ts            # ZIP/.block-content-editor import with assets
+├── project-exporter.ts             # ZIP/folder export with assets
+├── project-importer.ts             # ZIP import with assets
 └── README.md
 
 lib/editor/
-└── webp-converter.ts              # Browser-side image conversion
+└── webp-converter.ts               # Browser-side image conversion
 
 utils/editor/
-├── google-drive-security.ts       # Google Drive validation/throttling helpers
-└── google-drive-test.ts           # Manual browser-console test script
+├── google-drive-security.ts
+└── google-drive-test.ts            # Manual browser-console test script
 ```
 
-### Nodes (23 types)
+### Nodes (type modules)
 
 ```
 nodes/
-├── base/media-node-base.tsx     # Shared base for Image, Video, Audio
+├── base/
+│   ├── media-node-base.tsx         # BaseMediaData (type-only)
+│   └── serialized-block-node.ts    # SerializedBlockNode<TType, TData>
+├── custom-list-node.tsx            # Live Lexical node (rich-text toolbar)
 ├── admonition-node.tsx
 ├── audio-node.tsx
 ├── button-node.tsx
 ├── code-studio-node.tsx
-├── custom-list-node.tsx
 ├── divider-node.tsx
 ├── gallery-node.tsx
 ├── header-node.tsx
@@ -726,31 +680,22 @@ nodes/
 ├── image-node.tsx
 ├── markdown-node.tsx
 ├── mermaid-node.tsx
-├── presentation-node.tsx
 ├── project-node.tsx
 ├── quiz-node.tsx
 ├── rich-text-node.tsx
-├── source-code-node.tsx
 ├── source-node.tsx
-├── spotify-node.tsx
+├── spotify-node.tsx                # also exports extractSpotifyInfo()
 ├── table-node.tsx
 ├── vega-lite-node.tsx
 ├── video-node.tsx
-├── youtube-node.tsx
-├── presentation/               # Presentation sub-components
-└── quiz/                       # Quiz sub-components
+└── youtube-node.tsx
 ```
 
-### Plugins
+### Plugins (rich-text scope)
 
 ```
 plugins/
-├── floating-content-insert-plugin.tsx   # Main insert toolbar
-├── floating-text-format-toolbar-plugin.tsx # Text formatting toolbar
-├── node-validation-plugin.tsx           # Mode-based restriction enforcement
-├── code-plugin.tsx                      # Code block handling
-├── preview-plugin.tsx                   # Preview dialog
-├── [node]-plugin.tsx                    # One per node type (22 files)
-├── floating-text-components/            # 10 formatting UI components
-└── preview-components/                  # 30+ preview renderers
+├── floating-text-format-toolbar-plugin.tsx
+├── floating-text-components/       # Bold, italic, link, color, lists, fonts, …
+└── preview-components/             # Read-only renderers (used by viewer + preview)
 ```

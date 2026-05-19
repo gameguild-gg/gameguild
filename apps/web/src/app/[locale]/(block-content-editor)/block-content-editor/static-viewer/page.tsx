@@ -9,8 +9,6 @@ import {
   useStaticProject,
   StaticProjectHeader,
   StaticProjectContent,
-  StaticProjectSidebar,
-  StaticProjectToc,
   DirectSection,
   LinkSection,
   FeaturedSection,
@@ -59,27 +57,11 @@ export default function StaticViewerPage() {
       </nav>
 
       <main className={`mx-auto px-4 sm:px-6 lg:px-8 py-8 ${activeProject ? 'max-w-full' : 'max-w-4xl'}`}>
-        {/* ── Active project view — fully composable layout ── */}
+        {/* ── Active project view ── */}
         {activeProject && (
-          <div className="flex flex-col lg:flex-row lg:gap-8">
-            {/* Sidebar — left */}
-            <aside className="hidden lg:block lg:w-1/4">
-              <StaticProjectSidebar
-                data={projectData}
-                onProjectSelect={(p) => selectProject(p.id)}
-              />
-            </aside>
-
-            {/* Main content — center */}
-            <div className="flex-1 min-w-0">
-              <StaticProjectHeader data={projectData} />
-              <StaticProjectContent data={projectData} />
-            </div>
-
-            {/* Table of contents — right */}
-            <aside className="hidden xl:block xl:w-1/5">
-              <StaticProjectToc data={projectData} />
-            </aside>
+          <div className="max-w-4xl mx-auto">
+            <StaticProjectHeader data={projectData} />
+            <StaticProjectContent data={projectData} />
           </div>
         )}
 
@@ -107,7 +89,7 @@ export default function StaticViewerPage() {
                 {/* Link buttons */}
                 <LinkSection
                   links={[
-                    { id: "4317f83d-8fd4-4832-901d-a2c3f0d11fa2", label: "Open Divider Lex" },
+                    { id: "405d66a5-45d7-472e-81d5-876ec4e3f682", label: "Open Divider Lex" },
                   ]}
                   onSelect={selectProject}
                 >
@@ -116,7 +98,7 @@ export default function StaticViewerPage() {
 
                 {/* Direct inline render */}
                 <DirectSection
-                  projectId="4317f83d-8fd4-4832-901d-a2c3f0d11fa2"
+                  projectId="405d66a5-45d7-472e-81d5-876ec4e3f682"
                   showTitle
                   showMeta
                 >

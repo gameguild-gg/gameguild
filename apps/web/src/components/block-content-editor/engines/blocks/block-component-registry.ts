@@ -31,6 +31,7 @@ import {
 } from "lucide-react"
 import type { Block, BlockCellType } from "@/components/block-content-editor/lib/storage/editor/block-structure"
 import { BLOCK_CELL_TYPES } from "@/components/block-content-editor/lib/storage/editor/block-structure"
+import { QuizEntryType, createDefaultSettings } from "@/components/block-content-editor/extras/quiz"
 
 // Re-export for consumers that import from here
 export type { BlockCellType } from "@/components/block-content-editor/lib/storage/editor/block-structure"
@@ -59,7 +60,7 @@ export const BLOCK_REGISTRY: Record<BlockCellType, BlockTypeConfig> = {
     createEmpty: () => ({
       id: crypto.randomUUID(),
       type: "quiz",
-      data: { type: "SINGLE_CHOICE", stem: "", options: [{ id: "o1", text: "" }], correctOptionId: "o1", settings: {} },
+      data: { type: QuizEntryType.SingleChoice, stem: "", options: [{ id: "o1", text: "" }], correctOptionId: "o1", settings: createDefaultSettings() },
     }),
   },
   code: {
@@ -69,7 +70,7 @@ export const BLOCK_REGISTRY: Record<BlockCellType, BlockTypeConfig> = {
     createEmpty: () => ({
       id: crypto.randomUUID(),
       type: "code",
-      data: { id: crypto.randomUUID(), files: [], folders: [], openTabs: [], activeFileId: null, mode: "execution", language: "javascript", readonly: false, showLineNumbers: true, fontSize: 14, theme: "system", shikiTheme: "github", testCases: {} },
+      data: { id: crypto.randomUUID(), files: [], folders: [], openTabs: [], mode: "execution", language: "javascript", readonly: false, showLineNumbers: true, fontSize: 14, theme: "system", shikiTheme: "github", testCases: {} },
     }),
   },
   img: {
@@ -249,7 +250,7 @@ export const BLOCK_REGISTRY: Record<BlockCellType, BlockTypeConfig> = {
     createEmpty: () => ({
       id: crypto.randomUUID(),
       type: "tbl",
-      data: { rows: 3, columns: 3, style: "default", showHeader: true, showBorders: true, cells: {}, caption: "", isNew: false },
+      data: { rows: 3, columns: 3, style: "default", showHeader: true, showBorders: true, cells: [], caption: "", isNew: false },
     }),
   },
   proj: {

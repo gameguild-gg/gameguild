@@ -1,0 +1,29 @@
+{
+  "id": "b34cff74-8d29-40b7-9a22-58bcc57b4e93",
+  "name": "week01-Expectations",
+  "tags": [
+    "intro2gpro"
+  ],
+  "size": 10781,
+  "hash": "5a4920a7aca0912ab9da29c5ec08e404eae1aa59",
+  "createdAt": "2026-05-12T14:06:40.627Z",
+  "updatedAt": "2026-05-12T14:09:27.367Z",
+  "storageType": "local",
+  "version": "2.0",
+  "exportedAt": "2026-05-12T14:09:44.113Z",
+  "assetsCount": 0,
+  "preferences": {
+    "global": {
+      "mode": "free-page",
+      "restrictions": {
+        "blocks": {
+          "b1": [
+            null,
+            null
+          ]
+        }
+      }
+    },
+    "nodes": {}
+  }
+}

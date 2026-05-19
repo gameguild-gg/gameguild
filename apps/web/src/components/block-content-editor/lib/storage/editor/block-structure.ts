@@ -1,40 +1,103 @@
 /**
  * Block Structure
  *
- * Defines the Block runtime model and BlockStorage persistence format
- * for the Block Array Engine. Analogous to cell-structure.ts for Lexical.
+ * Single source of truth for the block content editor's runtime + persistence
+ * model. There is only one engine: the Block Array Engine. Blocks are
+ * decorator units rendered top-to-bottom; there is no text in between.
  *
- * Block = runtime unit: { id, type, data }
- * BlockStorage = persistence format: { order: [ids], blocks: { id: Cell } }
+ *   Block         = runtime unit:        { id, type, data }
+ *   BlockArray    = ordered list:        Block[]
+ *   BlockStorage  = persistence format:  { order: string[], blocks: Record<id, {type, data}> }
  */
 
-import type { Cell } from "./cell-structure"
+import type { AdmonitionData } from "../../../nodes/admonition-node"
+import type { AudioData } from "../../../nodes/audio-node"
+import type { ButtonData } from "../../../nodes/button-node"
+import type { DividerData } from "../../../nodes/divider-node"
+import type { GalleryData } from "../../../nodes/gallery-node"
+import type { HeaderData } from "../../../nodes/header-node"
+import type { HTMLData } from "../../../nodes/html-node"
+import type { ImageData } from "../../../nodes/image-node"
+import type { MarkdownData } from "../../../nodes/markdown-node"
+import type { MermaidData } from "../../../nodes/mermaid-node"
+import type { ProjectData as ProjectNodeData } from "../../../nodes/project-node"
+import type { RichTextData } from "../../../nodes/rich-text-node"
+import type { SourceData } from "../../../nodes/source-node"
+import type { SpotifyData } from "../../../nodes/spotify-node"
+import type { TableData } from "../../../nodes/table-node"
+import type { VegaLiteData } from "../../../nodes/vega-lite-node"
+import type { VideoData } from "../../../nodes/video-node"
+import type { YouTubeData } from "../../../nodes/youtube-node"
+import type { CodeStudioData } from "../../../extras/code-studio/types"
+import type { QuizEntry } from "../../../extras/quiz"
 
 // ============================================================================
-// Block Cell Types — decorator types supported by the Block Array Engine
+// Block types — the 21 decorator kinds supported by the engine
 // ============================================================================
 
-// todo: probably an enum should be better here, so we can have both integere and alias interchangeables
 export const BLOCK_CELL_TYPES = [
-  // todo: every block type should have a better namming convention, e.g. "code" => "code-editor", "img" => "image", "vid" => "video", etc.
-  "quiz", "code", "img", "vid", "aud", "gal", "yt", "spot",
-  "mmd", "vega", "pres", "src", "md", "html", "rt", "hdr", "div",
-  "btn", "adm", "tbl", "proj",
+  "quiz",
+  "code",
+  "img",
+  "vid",
+  "aud",
+  "gal",
+  "yt",
+  "spot",
+  "mmd",
+  "vega",
+  "pres",
+  "src",
+  "md",
+  "html",
+  "rt",
+  "hdr",
+  "div",
+  "btn",
+  "adm",
+  "tbl",
+  "proj",
 ] as const
 
-export type BlockCellType = typeof BLOCK_CELL_TYPES[number]
+export type BlockCellType = (typeof BLOCK_CELL_TYPES)[number]
 
 // ============================================================================
-// Block — runtime model
+// BlockDataMap — type-level mapping from BlockCellType to its data shape
 // ============================================================================
 
-// todo: D cannot be of type any
-// todo: if the type D is specified, the data should be validated against the expected structure for that type, e.g. if type is "code", data should have ex.: { language: string, code: string.. ??? }
-export interface Block<D = any> {
-  id: string
-  type: BlockCellType
-  data: D
+export interface BlockDataMap {
+  quiz: QuizEntry
+  code: CodeStudioData
+  img: ImageData
+  vid: VideoData
+  aud: AudioData
+  gal: GalleryData
+  yt: YouTubeData
+  spot: SpotifyData
+  mmd: MermaidData
+  vega: VegaLiteData
+  pres: unknown
+  src: SourceData
+  md: MarkdownData
+  html: HTMLData
+  rt: RichTextData
+  hdr: HeaderData
+  div: DividerData
+  btn: ButtonData
+  adm: AdmonitionData
+  tbl: TableData
+  proj: ProjectNodeData
 }
+
+// ============================================================================
+// Block — runtime unit. Generic in T allows narrowing via discriminant `type`.
+// ============================================================================
+
+type BlockMap = {
+  [K in BlockCellType]: { id: string; type: K; data: BlockDataMap[K] }
+}
+
+export type Block<T extends BlockCellType = BlockCellType> = BlockMap[T]
 
 export type BlockArray = Block[]
 
@@ -42,9 +105,12 @@ export type BlockArray = Block[]
 // BlockStorage — persistence format
 // ============================================================================
 
-/** Persistence format: order array + blocks map keyed by id */
-export interface BlockStorage<T extends string | number = string> {
-  // the id could be integers instead of strings, but it doenst matter much, as long they are unique and consistent
-  order: T[]
-  blocks: Record<T, Cell>
+export interface BlockStorageEntry<T extends BlockCellType = BlockCellType> {
+  type: T
+  data: BlockDataMap[T]
+}
+
+export interface BlockStorage {
+  order: string[]
+  blocks: Record<string, BlockStorageEntry>
 }

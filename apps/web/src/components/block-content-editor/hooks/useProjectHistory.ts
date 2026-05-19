@@ -1,9 +1,8 @@
 "use client"
 
-import { useState, useCallback } from "react"
+import { useCallback, useState } from "react"
 import { toast } from "sonner"
-import { extractEditorStates, createProjectData } from "@/components/block-content-editor/lib/storage/editor/layout-detector"
-import { cellsToLexical } from "@/components/block-content-editor/lib/storage/editor/cell-converters/lexical"
+import { deserializeProject, serializeProject } from "@/components/block-content-editor/lib/storage/editor/block-storage"
 import type { UseProjectStorageReturn } from "./useProjectStorage"
 
 export interface UseProjectHistoryReturn {
@@ -19,27 +18,6 @@ export function useProjectHistory(project: UseProjectStorageReturn): UseProjectH
   const [currentViewingSha, setCurrentViewingSha] = useState<string | null>(null)
   const [headProjectData, setHeadProjectData] = useState<string | null>(null)
 
-  // ── Helper: restore states from serialized data ──
-
-  const restoreStates = useCallback((data: string) => {
-    const states = extractEditorStates(data)
-
-    if (states.blocks.b1) {
-      project.setEditorState(JSON.stringify(states.blocks.b1))
-      if (project.editorRef.current) {
-        const lexicalState = cellsToLexical(states.blocks.b1)
-        const parsed = project.editorRef.current.parseEditorState(JSON.stringify(lexicalState))
-        project.editorRef.current.setEditorState(parsed)
-      }
-    }
-  }, [project.editorRef, project.setEditorState])
-
-  // ── Helper: serialize current state for HEAD preservation ──
-
-  const serializeCurrentState = useCallback((): string => {
-    return createProjectData({ blocks: { b1: project.editorState ? JSON.parse(project.editorState) : null } })
-  }, [project.editorState])
-
   // ── Load commit ──
 
   const loadCommit = useCallback(async (sha: string) => {
@@ -52,27 +30,30 @@ export function useProjectHistory(project: UseProjectStorageReturn): UseProjectH
       // If loading HEAD, return to normal editing mode
       if (isHead) {
         if (isViewingHistory && headProjectData) {
-          restoreStates(headProjectData)
+          project.setBlocks(deserializeProject(headProjectData))
         }
         setIsViewingHistory(false)
         setCurrentViewingSha(null)
         setHeadProjectData(null)
         toast.success("Viewing latest version", {
-          description: "You can edit the project", duration: 2000, icon: "✏️",
+          description: "You can edit the project",
+          duration: 2000,
+          icon: "✏️",
         })
         return
       }
 
       // Preserve HEAD data before switching to history
       if (!isViewingHistory) {
-        setHeadProjectData(serializeCurrentState())
+        setHeadProjectData(serializeProject(project.blocks))
       }
 
       // Load the commit
       const commitData = await project.db.loadFromHistory(project.projectId, sha)
       if (!commitData) {
         toast.error("Failed to load commit", {
-          description: "The historical version could not be found", duration: 3000,
+          description: "The historical version could not be found",
+          duration: 3000,
         })
         return
       }
@@ -85,14 +66,15 @@ export function useProjectHistory(project: UseProjectStorageReturn): UseProjectH
         return
       }
 
-      restoreStates(commitData.data)
+      project.setBlocks(deserializeProject(commitData.data))
 
       setIsViewingHistory(true)
       setCurrentViewingSha(sha)
 
       toast.info("Viewing historical version", {
         description: "This is read-only. Return to latest to edit.",
-        duration: 3000, icon: "📜",
+        duration: 3000,
+        icon: "📜",
       })
     } catch (error) {
       console.error("Failed to load commit:", error)
@@ -101,7 +83,7 @@ export function useProjectHistory(project: UseProjectStorageReturn): UseProjectH
         duration: 4000,
       })
     }
-  }, [project.projectId, project.db, isViewingHistory, headProjectData, restoreStates, serializeCurrentState])
+  }, [project, isViewingHistory, headProjectData])
 
   // ── Load snapshot ──
 
@@ -109,31 +91,30 @@ export function useProjectHistory(project: UseProjectStorageReturn): UseProjectH
     if (!project.projectId) return
 
     if (!isViewingHistory) {
-      setHeadProjectData(serializeCurrentState())
+      setHeadProjectData(serializeProject(project.blocks))
     }
 
     const snapshots = await project.db.listSnapshots(project.projectId)
     const snapshot = snapshots.find((s: any) => s.tag === tag)
-    if (snapshot) {
-      await loadCommit(snapshot.sha)
-    }
-  }, [project.projectId, project.db, isViewingHistory, serializeCurrentState, loadCommit])
+    if (snapshot) await loadCommit(snapshot.sha)
+  }, [project, isViewingHistory, loadCommit])
 
   // ── Return to HEAD ──
 
   const returnToHead = useCallback(async () => {
     if (!project.projectId || !headProjectData) return
 
-    restoreStates(headProjectData)
-
+    project.setBlocks(deserializeProject(headProjectData))
     setIsViewingHistory(false)
     setCurrentViewingSha(null)
     setHeadProjectData(null)
 
     toast.success("Returned to latest version", {
-      description: "You can now edit the project", duration: 2000, icon: "✏️",
+      description: "You can now edit the project",
+      duration: 2000,
+      icon: "✏️",
     })
-  }, [project.projectId, headProjectData, restoreStates])
+  }, [project, headProjectData])
 
   return {
     isViewingHistory,

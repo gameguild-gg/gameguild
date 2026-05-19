@@ -1,33 +1,18 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
-import { Eye, Menu } from "lucide-react"
-import { ProjectContentRenderer } from "@/components/block-content-editor/engines/project-content-renderer"
+import { Eye } from "lucide-react"
+import { BlockArrayViewer } from "@/components/block-content-editor/engines/blocks/block-array-viewer"
 import { useViewer } from "./viewer-provider"
 
 export function ViewerField() {
   const { viewer, ui } = useViewer()
 
-  const { states, isBlocksEngine, blocksArray } = viewer.layoutInfo
-
   if (viewer.currentProject) {
-    const serializedState = !isBlocksEngine && Object.keys(states.blocks).length > 0
-      ? Object.values(states.blocks)[0] as any
-      : undefined
-
     return (
-      <ProjectContentRenderer
-        project={viewer.currentProject}
-        isBlocksEngine={!!isBlocksEngine}
-        blocksArray={blocksArray}
-        serializedState={serializedState}
-        storageAdapter={viewer.storageAdapter}
-        availableTags={viewer.availableTags}
-        isDbInitialized={viewer.isDbInitialized}
-        onProjectSelect={viewer.loadProject}
-        sidebarOpen={ui.sidebarOpen}
-        setSidebarOpen={ui.setSidebarOpen}
-      />
+      <div className="border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900 p-6">
+        <BlockArrayViewer blocks={viewer.blocks} />
+      </div>
     )
   }
 
