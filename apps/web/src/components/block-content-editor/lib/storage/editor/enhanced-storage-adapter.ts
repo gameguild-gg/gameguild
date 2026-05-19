@@ -1,3 +1,26 @@
+/**
+ * EnhancedStorageAdapter
+ *
+ * Single integration point between the editor and persistence. Owns the
+ * IndexedDB database (`GGEditorDB`, current `DB_VERSION = 6`) and bridges to:
+ *
+ *   - Git history (auto-commit on every save, snapshots) via `getHistoryManager()`.
+ *   - SyncManager queue (IndexedDB-backed) for remote replication.
+ *   - GoogleDriveSync for Google Drive uploads/downloads.
+ *
+ * IndexedDB schema:
+ *   - `projects`         : full `ProjectData` (keyPath: id).
+ *   - `project_metadata` : `ProjectMetadataRecord` (sync hot path, no `data` blob).
+ *   - `tag_data`         : tag \u2192 projectIds index.
+ *   - `tags`             : legacy store, kept for backward migration only.
+ *
+ * Upgrades from any pre-v6 schema drop all stores: the v6 shape uses a
+ * nested `metadata` object that is incompatible with the previous flat layout.
+ *
+ * See `docs/ARCHITECTURE.md` (\"Storage Layer\") and `docs/DATA-FLOW.md`
+ * (\"Storage Adapter Internals\") for the full data plane.
+ */
+
 import { SyncManager } from "../../sync/editor/sync-manager"
 import { GoogleDriveSync } from "../../sync/editor/google-drive-sync"
 import { HashManager } from "../../sync/editor/hash-manager"

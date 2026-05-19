@@ -1,5 +1,26 @@
 "use client"
 
+/**
+ * BlockArrayEditor
+ *
+ * The only field implementation. Renders an ordered list of `Block`s with
+ * insert seams (`InsertLine`) between them, drag-and-drop reordering, and
+ * per-block toolbars (edit / delete / move up / move down).
+ *
+ * Insertion flow:
+ *   1. User clicks a "+" insert line.
+ *   2. `BlockTypePicker` opens, filtered by `FieldConfig.allowedBlockTypes`.
+ *   3. On select, `BLOCK_REGISTRY[type].createEmpty()` produces a new `Block`.
+ *   4. `onChange(nextBlocks)` is called \u2014 the parent (typically
+ *      `useProjectStorage.setBlocks`) updates state and the debounced auto-save
+ *      kicks in.
+ *
+ * Editing a block opens `BlockEditorModal`, which dispatches to the
+ * type-specific editor in `extras/<area>/`.
+ *
+ * See `docs/ARCHITECTURE.md` (\"The Block Engine\").
+ */
+
 import { useState, useCallback, useRef, useEffect } from "react"
 import { Plus, GripVertical, Trash2, ChevronUp, ChevronDown, Pencil } from "lucide-react"
 import { BlockTypePicker } from "./block-type-picker"

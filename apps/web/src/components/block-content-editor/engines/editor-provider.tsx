@@ -1,5 +1,22 @@
 "use client"
 
+/**
+ * EditorProvider
+ *
+ * Top-level provider for every editor page. Composes the three core hooks
+ * (`useProjectStorage`, `useProjectHistory`, `useProjectPreview`), merges the
+ * page-supplied `FieldConfig` and `ToolbarConfig` with their defaults, and
+ * exposes everything via React Context (`useEditor()`).
+ *
+ * Also owns:
+ *   - Ctrl+S keyboard shortcut → `ui.handleSave()`.
+ *   - Navigation guards / exit-confirmation dialog.
+ *   - Shared UI state (dialog open/close, title editing, size indicators, …).
+ *
+ * See `docs/ARCHITECTURE.md` ("Provider Layer") for the high-level role
+ * and `docs/DATA-FLOW.md` ("Editor Flow") for the data path.
+ */
+
 import { createContext, useContext, useEffect, useState, useRef, type ReactNode } from "react"
 import { useRouter } from "next/navigation"
 import { useProjectStorage, type UseProjectStorageReturn } from "@/components/block-content-editor/hooks/useProjectStorage"

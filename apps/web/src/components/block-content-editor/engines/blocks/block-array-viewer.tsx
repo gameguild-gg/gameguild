@@ -1,5 +1,20 @@
 "use client"
 
+/**
+ * BlockArrayViewer
+ *
+ * Read-only counterpart to `BlockArrayEditor`. Maps each `Block` to its
+ * preview component in `plugins/preview-components/` using a switch on
+ * `block.type`. Used by:
+ *   - The viewer page (`ViewerField`).
+ *   - The static viewer and its section components.
+ *   - The editor preview dialog.
+ *
+ * Each block is wrapped with `blockToPreviewNode(block)` first, which
+ * shapes the payload to the `{ type, data | entry, version }` form expected
+ * by the preview components.
+ */
+
 import type { Block, BlockArray, BlockCellType } from "@/components/block-content-editor/lib/storage/editor/block-structure"
 import { blockToPreviewNode } from "@/components/block-content-editor/lib/storage/editor/block-storage"
 
