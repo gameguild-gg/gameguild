@@ -135,7 +135,7 @@ export function StaticProjectHeader({
   if (!data.project || (!showTitle && !showMeta)) return null
 
   const meta = data.project as any
-  const updatedAt = meta.updatedAt ? new Date(meta.updatedAt) : null
+  const updatedAt = meta.metadata?.updatedAt ? new Date(meta.metadata.updatedAt) : null
   const tags: string[] = meta.tags ?? []
 
   return (
@@ -364,7 +364,7 @@ export function ProjectCard({
   onSelect: () => void
 }) {
   const meta = project as any
-  const updatedAt = meta.updatedAt ? new Date(meta.updatedAt) : null
+  const updatedAt = meta.metadata?.updatedAt ? new Date(meta.metadata.updatedAt) : null
   const tags: string[] = meta.tags ?? []
 
   return (
