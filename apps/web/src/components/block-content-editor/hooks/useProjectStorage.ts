@@ -1,18 +1,18 @@
 "use client"
 
-import { useState, useEffect, useRef, useCallback, type Dispatch, type SetStateAction } from "react"
+import { useCallback, useEffect, useRef, useState, type Dispatch, type SetStateAction } from "react"
 import { toast } from "sonner"
-import type { LexicalEditor } from "lexical"
-import { EnhancedStorageAdapter, type ProjectPreferences } from "@/components/block-content-editor/lib/storage/editor/enhanced-storage-adapter"
-import type { ProjectData as StorageProjectData } from "@/components/block-content-editor/lib/storage/editor/enhanced-storage-adapter"
-import { syncConfig } from "@/components/block-content-editor/lib/sync/editor/sync-config"
-import { type ProjectMode } from "@/components/block-content-editor/lib/storage/editor/project-modes"
-import { extractEditorStates, createProjectData } from "@/components/block-content-editor/lib/storage/editor/layout-detector"
-import { type EngineType, ENGINE_TYPES } from "@/components/block-content-editor/lib/storage/editor/project-types"
-import type { CellularContent } from "@/components/block-content-editor/lib/storage/editor/cell-structure"
+import {
+  EnhancedStorageAdapter,
+  type ProjectPreferences,
+} from "@/components/block-content-editor/lib/storage/editor/enhanced-storage-adapter"
+import {
+  EMPTY_PROJECT_DATA,
+  deserializeProject,
+  serializeProject,
+} from "@/components/block-content-editor/lib/storage/editor/block-storage"
 import type { BlockArray } from "@/components/block-content-editor/lib/storage/editor/block-structure"
-import { blocksToStorage, storageToBlocks } from "@/components/block-content-editor/lib/storage/editor/cell-converters/blocks"
-import { cellsToLexical } from "@/components/block-content-editor/lib/storage/editor/cell-converters/lexical"
+import { type ProjectMode } from "@/components/block-content-editor/lib/storage/editor/project-modes"
 import { handleSave as saveProject, handleSaveAs as saveAsProject } from "@/components/block-content-editor/extras/editor/project-save-operations"
 import { handleTitleEdit as titleEdit, handleTitleSave as titleSave } from "@/components/block-content-editor/extras/editor/project-title-operations"
 import { calculateProjectAssetsSize as calculateAssets } from "@/components/block-content-editor/extras/editor/project-assets-operations"
@@ -35,7 +35,7 @@ export interface ProjectData {
 type StorageType = "local" | "gameguild-cloud" | "google-drive"
 
 export interface StorageAdapterInterface {
-  save: (id: string, name: string, data: string, tags?: string[], storageType?: StorageType, preferences?: ProjectPreferences, engine?: EngineType) => Promise<void>
+  save: (id: string, name: string, data: string, tags?: string[], storageType?: StorageType, preferences?: ProjectPreferences) => Promise<void>
   load: (id: string) => Promise<ProjectData | null>
   delete: (id: string) => Promise<void>
   list: () => Promise<ProjectData[]>
@@ -52,8 +52,6 @@ export interface UseProjectStorageReturn {
   projectId: string
   projectName: string
   setProjectName: Dispatch<SetStateAction<string>>
-  engine: EngineType
-  setEngine: Dispatch<SetStateAction<EngineType>>
   projectMode: ProjectMode
   storageType: StorageType
   tags: string[]
@@ -61,14 +59,9 @@ export interface UseProjectStorageReturn {
   preferences: ProjectPreferences | undefined
   setPreferences: (p: ProjectPreferences) => void
 
-  // Editor content (Lexical single)
-  editorState: string
-  editorRef: React.RefObject<LexicalEditor | null>
-  setEditorState: Dispatch<SetStateAction<string>>
-
-  // Editor content (Block Array)
-  blockArrayBlocks: BlockArray
-  setBlockArrayBlocks: Dispatch<SetStateAction<BlockArray>>
+  // Editor content
+  blocks: BlockArray
+  setBlocks: Dispatch<SetStateAction<BlockArray>>
 
   // Operations
   save(): Promise<{ needsSaveAs: boolean }>
@@ -111,9 +104,6 @@ export interface UseProjectStorageReturn {
   // Storage adapter (for components that need it)
   storageAdapter: StorageAdapterInterface
 
-  // Loading ref (for editor layouts)
-  setLoadingRef: React.MutableRefObject<((loading: boolean) => void) | null>
-
   // Read-only gate (set by page when viewing history — suppresses auto-save)
   readOnlyRef: React.MutableRefObject<boolean>
 }
@@ -134,7 +124,6 @@ function estimateSize(data: string): number {
 // ─── Hook ────────────────────────────────────────────────────────────────────
 
 export interface ProjectStorageDefaults {
-  engine?: EngineType
   mode?: ProjectMode
 }
 
@@ -148,17 +137,12 @@ export function useProjectStorage(initialDefaults?: ProjectStorageDefaults): Use
   const [currentProjectName, setCurrentProjectName] = useState<string>("")
   const [currentProjectStorageType, setCurrentProjectStorageType] = useState<StorageType>("local")
   const [projectTags, setProjectTags] = useState<string[]>([])
-  const [currentEngine, setCurrentEngine] = useState<EngineType>(initialDefaults?.engine || ENGINE_TYPES.LEXICAL)
   const [currentProjectMode, setCurrentProjectMode] = useState<ProjectMode>(initialDefaults?.mode || "free-page")
   const [currentProjectPreferences, setCurrentProjectPreferences] = useState<ProjectPreferences | undefined>(undefined)
   const [isFirstTime, setIsFirstTime] = useState(true)
 
-  // ── Editor content (Lexical single) ──
-  const [editorState, setEditorState] = useState<string>("")
-  const editorRef = useRef<LexicalEditor | null>(null)
-
-  // ── Editor content (Block Array) ──
-  const [blockArrayBlocks, setBlockArrayBlocks] = useState<BlockArray>([])
+  // ── Editor content ──
+  const [blocks, setBlocks] = useState<BlockArray>([])
 
   // ── Lists ──
   const [savedProjects, setSavedProjects] = useState<ProjectData[]>([])
@@ -176,9 +160,6 @@ export function useProjectStorage(initialDefaults?: ProjectStorageDefaults): Use
   const [autoSaveEnabled, setAutoSaveEnabled] = useState(false)
   const [lastProjectLoadTime, setLastProjectLoadTime] = useState<number>(0)
 
-  // ── Loading ref ──
-  const setLoadingRef = useRef<((loading: boolean) => void) | null>(null)
-
   // ── Read-only gate ──
   const readOnlyRef = useRef(false)
 
@@ -187,11 +168,11 @@ export function useProjectStorage(initialDefaults?: ProjectStorageDefaults): Use
   // ═══════════════════════════════════════════════════════════════════════════
 
   const storageAdapter: StorageAdapterInterface = {
-    save: async (id, name, data, tags = [], storageType = "local", preferences?, engine?) => {
+    save: async (id, name, data, tags = [], storageType = "local", preferences?) => {
       if (!id || !name || !data) { console.warn("Invalid id, name or data"); return }
       if (!isDbInitialized) throw new Error("Database not initialized")
       try {
-        await dbStorage.current.save(id, name, data, tags, storageType, preferences, engine)
+        await dbStorage.current.save(id, name, data, tags, storageType, preferences)
       } catch (error) { console.error("Failed to save project:", error); throw error }
     },
     load: async (id) => {
@@ -279,20 +260,15 @@ export function useProjectStorage(initialDefaults?: ProjectStorageDefaults): Use
     checkProject({
       storageAdapter,
       directDbLoad: (id: string) => dbStorage.current.load(id),
-      editorRef,
       setCurrentProjectId,
       setCurrentProjectName,
       setCurrentProjectStorageType,
       setProjectTags,
       setIsFirstTime,
-      setEditorState,
       setCurrentProjectMode,
       setLastProjectLoadTime,
       setCurrentProjectPreferences,
-      setCurrentEngine,
-      setBlockArrayCells: (cells) => setBlockArrayBlocks(
-        storageToBlocks(cells && typeof cells === "object" && !Array.isArray(cells) ? cells : { order: [], blocks: {} })
-      ),
+      setBlocks,
     })
   }, [isDbInitialized])
 
@@ -301,14 +277,8 @@ export function useProjectStorage(initialDefaults?: ProjectStorageDefaults): Use
   // ═══════════════════════════════════════════════════════════════════════════
 
   useEffect(() => {
-    let dataToCalculate: string
-    if (currentEngine === ENGINE_TYPES.BLOCKS) {
-      dataToCalculate = createProjectData({ blocks: { b1: blocksToStorage(blockArrayBlocks) } })
-    } else {
-      dataToCalculate = createProjectData({ blocks: { b1: editorState ? JSON.parse(editorState) : null } })
-    }
-    setCurrentProjectSize(estimateSize(dataToCalculate))
-  }, [editorState, blockArrayBlocks, currentEngine])
+    setCurrentProjectSize(estimateSize(serializeProject(blocks)))
+  }, [blocks])
 
   // Assets size
   useEffect(() => {
@@ -317,7 +287,7 @@ export function useProjectStorage(initialDefaults?: ProjectStorageDefaults): Use
     } else {
       setCurrentProjectAssetsSize(0)
     }
-  }, [currentProjectId, isDbInitialized, editorState])
+  }, [currentProjectId, isDbInitialized, blocks])
 
   // ═══════════════════════════════════════════════════════════════════════════
   // Sync monitoring
@@ -361,28 +331,17 @@ export function useProjectStorage(initialDefaults?: ProjectStorageDefaults): Use
 
   useEffect(() => {
     if (!autoSaveEnabled || !currentProjectId || !isDbInitialized || readOnlyRef.current) return
-
-    const hasContent = currentEngine === ENGINE_TYPES.BLOCKS
-      ? blockArrayBlocks.length > 0
-      : !!editorState
-
-    if (!hasContent) return
+    if (blocks.length === 0) return
 
     const timeSinceLoad = Date.now() - lastProjectLoadTime
     if (timeSinceLoad < 1000) return
 
     const autoSaveTimer = setTimeout(async () => {
       try {
-        let dataToSave: string
-        if (currentEngine === ENGINE_TYPES.BLOCKS) {
-          dataToSave = createProjectData({ blocks: { b1: blocksToStorage(blockArrayBlocks) } })
-        } else {
-          dataToSave = createProjectData({ blocks: { b1: editorState ? JSON.parse(editorState) : null } })
-        }
-
+        const dataToSave = serializeProject(blocks)
         await storageAdapter.save(
           currentProjectId, currentProjectName, dataToSave, projectTags,
-          currentProjectStorageType, currentProjectPreferences, currentEngine
+          currentProjectStorageType, currentProjectPreferences
         )
         toast.success("Auto-saved", {
           description: "Changes saved automatically", duration: 1500, icon: "💾",
@@ -395,7 +354,7 @@ export function useProjectStorage(initialDefaults?: ProjectStorageDefaults): Use
     }, 2000)
 
     return () => clearTimeout(autoSaveTimer)
-  }, [editorState, blockArrayBlocks, currentEngine, autoSaveEnabled, currentProjectId, currentProjectName, projectTags, isDbInitialized, currentProjectStorageType, lastProjectLoadTime])
+  }, [blocks, autoSaveEnabled, currentProjectId, currentProjectName, projectTags, isDbInitialized, currentProjectStorageType, lastProjectLoadTime])
 
   // ═══════════════════════════════════════════════════════════════════════════
   // Save
@@ -404,65 +363,33 @@ export function useProjectStorage(initialDefaults?: ProjectStorageDefaults): Use
   const save = useCallback(async (): Promise<{ needsSaveAs: boolean }> => {
     if (!currentProjectId) return { needsSaveAs: true }
 
-    let dataToSave: string
-
-    if (currentEngine === ENGINE_TYPES.BLOCKS) {
-      dataToSave = createProjectData({
-        blocks: { b1: blocksToStorage(blockArrayBlocks) },
-      })
-      const preferences: ProjectPreferences = {
-        global: { ...currentProjectPreferences?.global, mode: currentProjectMode },
-        nodes: currentProjectPreferences?.nodes || {},
-      }
-      await saveProject({
-        currentProjectId, currentProjectName, currentProjectStorageType,
-        editorState: dataToSave,
-        editorRef: { current: null } as React.RefObject<LexicalEditor | null>,
-        projectTags, storageAdapter, calculateProjectAssetsSize: calcAssets,
-        setSaveAsDialogOpen: () => {},
-        preferences, engine: currentEngine,
-      })
-      return { needsSaveAs: false }
-    }
-
-    dataToSave = createProjectData({ blocks: { b1: editorState ? JSON.parse(editorState) : null } })
-
+    const dataToSave = serializeProject(blocks)
     const preferences: ProjectPreferences = {
-      global: {
-        ...currentProjectPreferences?.global,
-        mode: currentProjectMode,
-      },
+      global: { ...currentProjectPreferences?.global, mode: currentProjectMode },
       nodes: currentProjectPreferences?.nodes || {},
     }
 
     await saveProject({
       currentProjectId, currentProjectName, currentProjectStorageType,
-      editorState: dataToSave, editorRef, projectTags,
-      storageAdapter, calculateProjectAssetsSize: calcAssets,
+      data: dataToSave,
+      projectTags, storageAdapter, calculateProjectAssetsSize: calcAssets,
       setSaveAsDialogOpen: () => {},
-      preferences, engine: currentEngine,
+      preferences,
     })
     return { needsSaveAs: false }
-  }, [currentProjectId, currentEngine, currentProjectName, currentProjectStorageType, editorState, blockArrayBlocks, projectTags, currentProjectPreferences, currentProjectMode, isDbInitialized])
+  }, [currentProjectId, currentProjectName, currentProjectStorageType, blocks, projectTags, currentProjectPreferences, currentProjectMode, isDbInitialized])
 
   // ═══════════════════════════════════════════════════════════════════════════
   // Save As
   // ═══════════════════════════════════════════════════════════════════════════
 
   const saveAs = useCallback(async (name: string, storageOption: StorageType, tags?: string[]) => {
-    let dataToSave: string
-    if (currentEngine === ENGINE_TYPES.BLOCKS) {
-      dataToSave = createProjectData({ blocks: { b1: blocksToStorage(blockArrayBlocks) } })
-    } else {
-      dataToSave = createProjectData({ blocks: { b1: editorState ? JSON.parse(editorState) : null } })
-    }
-
+    const dataToSave = serializeProject(blocks)
     const tagsToSave = tags ?? projectTags
 
     await saveAsProject({
       newProjectName: name,
-      editorState: dataToSave,
-      editorRef,
+      data: dataToSave,
       projectTags: tagsToSave,
       storageOption,
       storageAdapter,
@@ -474,72 +401,25 @@ export function useProjectStorage(initialDefaults?: ProjectStorageDefaults): Use
       setSaveAsDialogOpen: () => {},
       loadSavedProjectsList: refreshProjects,
       calculateProjectAssetsSize: calcAssets,
-      engine: currentEngine,
     })
 
-    if (tags) {
-      setProjectTags(tagsToSave)
-    }
-  }, [editorState, blockArrayBlocks, projectTags, currentEngine, isDbInitialized])
+    if (tags) setProjectTags(tagsToSave)
+  }, [blocks, projectTags, isDbInitialized])
 
   // ═══════════════════════════════════════════════════════════════════════════
   // Load project (called from OpenProjectDialog onProjectLoad)
   // ═══════════════════════════════════════════════════════════════════════════
 
   const loadProject = useCallback((projectData: any) => {
-    const projectEngine: EngineType = projectData.engine || ENGINE_TYPES.LEXICAL
-    setCurrentEngine(projectEngine)
-
-    if (projectEngine === ENGINE_TYPES.BLOCKS) {
-      const states = extractEditorStates(projectData.data)
-      const storageData = states.blocks.b1 || { order: [], blocks: {} }
-      setBlockArrayBlocks(storageToBlocks(
-        storageData && typeof storageData === "object" && !Array.isArray(storageData) ? storageData : { order: [], blocks: {} }
-      ))
-      setCurrentProjectId(projectData.id)
-      setCurrentProjectName(projectData.name)
-      setCurrentProjectStorageType(projectData.storageType || "local")
-      setProjectTags(projectData.tags || [])
-      setCurrentProjectMode(projectData.preferences?.global?.mode || "free-page")
-      setCurrentProjectPreferences(projectData.preferences)
-      setIsFirstTime(false)
-      setLastProjectLoadTime(Date.now())
-      window.history.pushState(null, "", `#${projectData.id}`)
-      return
-    }
-
-    // Lexical engine
-    const projectMode = projectData.preferences?.global?.mode || "free-page"
-
+    setBlocks(deserializeProject(projectData.data))
     setCurrentProjectId(projectData.id)
     setCurrentProjectName(projectData.name)
     setCurrentProjectStorageType(projectData.storageType || "local")
     setProjectTags(projectData.tags || [])
-    setCurrentProjectMode(projectMode)
+    setCurrentProjectMode(projectData.preferences?.global?.mode || "free-page")
     setCurrentProjectPreferences(projectData.preferences)
     setIsFirstTime(false)
     setLastProjectLoadTime(Date.now())
-
-    // Extract editor states (single block)
-    const states = extractEditorStates(projectData.data)
-
-    setTimeout(() => {
-      try {
-        if (editorRef.current && states.blocks.b1) {
-          setEditorState(JSON.stringify(states.blocks.b1))
-          const lexicalState = cellsToLexical(states.blocks.b1)
-          const parsed = editorRef.current.parseEditorState(JSON.stringify(lexicalState))
-          editorRef.current.setEditorState(parsed)
-        }
-      } catch (error) {
-        console.error("Failed to load editor data:", error)
-        toast.error("Erro ao carregar dados do editor", {
-          description: error instanceof Error ? error.message : "Unknown error",
-          duration: 4000, icon: "❌",
-        })
-      }
-    }, 100)
-
     window.history.pushState(null, "", `#${projectData.id}`)
   }, [])
 
@@ -548,45 +428,16 @@ export function useProjectStorage(initialDefaults?: ProjectStorageDefaults): Use
   // ═══════════════════════════════════════════════════════════════════════════
 
   const createProject = useCallback((projectData: any) => {
-    setCurrentEngine(projectData.engine || ENGINE_TYPES.LEXICAL)
-
-    if (projectData.engine === ENGINE_TYPES.BLOCKS) {
-      setBlockArrayBlocks([])
-      setCurrentProjectMode(projectData.mode || "free-page")
-      setLastProjectLoadTime(Date.now())
-      setCurrentProjectId(projectData.id)
-      setCurrentProjectName(projectData.name)
-      setCurrentProjectStorageType(projectData.storageType)
-      setProjectTags(projectData.tags)
-      setIsFirstTime(false)
-      window.history.pushState(null, "", `#${projectData.id}`)
-      return
-    }
-
-    // Lexical engine
-    const emptyCells: CellularContent = []
-    const dataString = createProjectData({ blocks: { b1: emptyCells } })
-
+    setBlocks([])
     setCurrentProjectMode(projectData.mode || "free-page")
     setLastProjectLoadTime(Date.now())
-
-    // Initialize editor after layout renders
-    setTimeout(() => {
-      const lexicalState = cellsToLexical(emptyCells)
-      const lexicalStateString = JSON.stringify(lexicalState)
-      setEditorState(JSON.stringify(emptyCells))
-      if (editorRef.current) {
-        editorRef.current.setEditorState(editorRef.current.parseEditorState(lexicalStateString))
-      }
-    }, 100)
-
     setCurrentProjectId(projectData.id)
     setCurrentProjectName(projectData.name)
     setCurrentProjectStorageType(projectData.storageType)
     setProjectTags(projectData.tags)
     setIsFirstTime(false)
     window.history.pushState(null, "", `#${projectData.id}`)
-  }, [isDbInitialized])
+  }, [])
 
   // ═══════════════════════════════════════════════════════════════════════════
   // Title operations
@@ -604,14 +455,12 @@ export function useProjectStorage(initialDefaults?: ProjectStorageDefaults): Use
     setEditingProjectName: (n: string) => void,
     setIsEditingTitle: (b: boolean) => void,
   ) => {
-    const stateToUse = createProjectData({ blocks: { b1: editorState ? JSON.parse(editorState) : null } })
-
+    const dataToSave = serializeProject(blocks)
     await titleSave({
       editingProjectName: editingName,
       currentProjectName,
       currentProjectId,
-      editorState: stateToUse,
-      editorRef,
+      data: dataToSave,
       projectTags,
       storageAdapter,
       setCurrentProjectName,
@@ -619,7 +468,7 @@ export function useProjectStorage(initialDefaults?: ProjectStorageDefaults): Use
       setIsEditingTitle,
       loadSavedProjectsList: refreshProjects,
     })
-  }, [currentProjectId, currentProjectName, editorState, projectTags, isDbInitialized])
+  }, [currentProjectId, currentProjectName, blocks, projectTags, isDbInitialized])
 
   // ═══════════════════════════════════════════════════════════════════════════
   // Snapshot
@@ -644,8 +493,6 @@ export function useProjectStorage(initialDefaults?: ProjectStorageDefaults): Use
     projectId: currentProjectId,
     projectName: currentProjectName,
     setProjectName: setCurrentProjectName,
-    engine: currentEngine,
-    setEngine: setCurrentEngine,
     projectMode: currentProjectMode,
     storageType: currentProjectStorageType,
     tags: projectTags,
@@ -653,14 +500,9 @@ export function useProjectStorage(initialDefaults?: ProjectStorageDefaults): Use
     preferences: currentProjectPreferences,
     setPreferences: setCurrentProjectPreferences,
 
-    // Editor content (Lexical single)
-    editorState,
-    editorRef,
-    setEditorState,
-
-    // Editor content (Block Array)
-    blockArrayBlocks,
-    setBlockArrayBlocks,
+    // Editor content
+    blocks,
+    setBlocks,
 
     // Operations
     save,
@@ -703,10 +545,10 @@ export function useProjectStorage(initialDefaults?: ProjectStorageDefaults): Use
     // Storage adapter
     storageAdapter,
 
-    // Loading ref
-    setLoadingRef,
-
     // Read-only gate
     readOnlyRef,
   }
 }
+
+// Suppress unused EMPTY constant warning (referenced by tests/other modules indirectly via re-export)
+void EMPTY_PROJECT_DATA
