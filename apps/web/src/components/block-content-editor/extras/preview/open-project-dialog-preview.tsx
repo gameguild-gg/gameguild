@@ -90,7 +90,7 @@ export function OpenProjectDialogPreview({
         className="max-w-2xl lg:max-w-4xl w-full h-[95vh] flex flex-col overflow-hidden"
         onInteractOutside={(e) => e.preventDefault()}
       >
-        <DialogHeader className="flex-shrink-0">
+        <DialogHeader className="shrink-0">
           <div className="flex items-center justify-between">
             <div>
               <DialogTitle>Open Project for Preview</DialogTitle>
@@ -133,7 +133,7 @@ export function OpenProjectDialogPreview({
         </DialogHeader>
 
         <div className="flex-1 min-h-0 flex flex-col space-y-4">
-          <div className="flex-shrink-0">
+          <div className="shrink-0">
             <ProjectSearchFilters
               searchTerm={searchTerm}
               onSearchChange={setSearchTerm}
@@ -166,7 +166,7 @@ export function OpenProjectDialogPreview({
             />
           </div>
 
-          <div className="flex-shrink-0 h-12 flex items-center justify-center">
+          <div className="shrink-0 h-12 flex items-center justify-center">
             <ProjectPagination
               currentPage={currentPage}
               totalProjects={totalProjects}
@@ -175,7 +175,7 @@ export function OpenProjectDialogPreview({
             />
           </div>
 
-          <div className="flex justify-end items-center pt-4 border-t dark:border-gray-700 flex-shrink-0 h-16">
+          <div className="flex justify-end items-center pt-4 border-t dark:border-gray-700 shrink-0 h-16">
             <Button variant="outline" onClick={() => onOpenChange(false)} className="bg-transparent">
               Close
             </Button>
