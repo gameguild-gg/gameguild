@@ -116,7 +116,7 @@ class MemoryWorkspaceHandle implements WorkspaceHandle {
 
     async reset(): Promise<void> {
         this.ws.files.clear();
-        this.ws.build = {};
+        this.ws.build = { kind: 'native' };
         this.ws.seedMarker = null;
     }
 
@@ -186,7 +186,7 @@ export class MemoryWorkspaceManager implements WorkspaceManager {
                 name: opts.name,
                 mountPath: opts.mountPath ?? defaultMountPath(opts.name),
                 files: new Map(),
-                build: opts.build ? { ...opts.build } : {},
+                build: opts.build ?? { kind: 'native' },
                 seedMarker: null,
             };
             this.workspaces.set(opts.name, ws);
@@ -195,10 +195,10 @@ export class MemoryWorkspaceManager implements WorkspaceManager {
         }
 
         if (opts.seed) {
-            ws.seedMarker = applySeed(ws, opts.seed, policy);
+            ws!.seedMarker = applySeed(ws!, opts.seed, policy);
         }
 
-        return new MemoryWorkspaceHandle(ws);
+        return new MemoryWorkspaceHandle(ws!);
     }
 
     async remove(name: string): Promise<void> {
