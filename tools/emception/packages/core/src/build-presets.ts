@@ -10,7 +10,7 @@
 
 import type { WorkspaceBuildConfig } from './types';
 
-export type BuildPresetName = 'c' | 'cpp' | 'python' | 'sdl' | 'raylib' | 'allegro' | 'cmake' | 'full';
+export type BuildPresetName = 'c' | 'cpp' | 'python' | 'sdl' | 'raylib' | 'allegro' | 'cmake';
 
 export interface BuildPreset {
   name: BuildPresetName;
@@ -66,12 +66,6 @@ export const BUILD_PRESETS: Record<BuildPresetName, BuildPreset> = {
     name: 'cmake',
     bundlesToPreload: ['llvm', 'cmake', 'ninja'],
     defaultTools: ['cmake', 'ninja'],
-    build: {},
-  },
-  full: {
-    name: 'full',
-    bundlesToPreload: ['llvm', 'cpython', 'cmake', 'ninja', 'sdl3', 'imgui', 'raylib', 'allegro', 'libcurl-lite'],
-    defaultTools: ['clang', 'clang++', 'cmake', 'ninja', 'python3', 'emcc', 'em++'],
     build: {},
   },
 };
