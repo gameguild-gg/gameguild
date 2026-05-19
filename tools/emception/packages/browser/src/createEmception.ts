@@ -8,27 +8,38 @@
  *
  * `createEmception()` is the small, stable surface for those embedders:
  *
- *     import { createEmception } from 'emception';
+ *     import { createEmception } from '@gameguild/emception-browser';
  *
- *     const ide = await createEmception({
+ *     const em = await createEmception({
  *         container: document.getElementById('terminal')!,
  *         manifestUrl: '/cdn/manifest.json',
  *     });
  *
- *     await ide.writeFile('/home/user/main.c', 'int main(){return 0;}');
- *     const result = await ide.run('clang', ['/home/user/main.c', '-o', '/home/user/a.out']);
+ *     await em.workspace.writeFile('/home/user/main.c', 'int main(){return 0;}');
+ *     const result = await em.run('clang', ['/home/user/main.c', '-o', '/home/user/a.wasm']);
  *     console.log(result.exitCode, result.stdout, result.stderr);
  *
- *     ide.dispose();
+ *     em.dispose();
  *
  * The implementation is a thin façade over `bootInWorker()`. The richer
  * `boot()` / `bootInWorker()` exports remain available for advanced use.
  */
 
 import { HeadlessIOProvider } from 'emception';
-import type { EmbedderEmceptionAPI } from 'emception';
+import type {
+    EmceptionAPI,
+    EmceptionEventListener,
+    EmceptionEventMap,
+    EmceptionEventName,
+    FileEntry,
+    RunOptions,
+    ToolResult,
+    Unsubscribe,
+    WorkspaceBuildConfig,
+    WorkspaceAPI,
+} from 'emception';
 import { bootInWorker } from './index';
-import type { RunOptions, ToolResult } from './tool-runner';
+import type { RunOptions as BrowserRunOptions } from './tool-runner';
 import { WorkerClient } from './worker-client';
 
 /**
@@ -77,18 +88,7 @@ export interface CreateEmceptionOptions {
     manifestUrl?: string;
 }
 
-/**
- * Flat embedder API returned by {@link createEmception}.
- *
- * This is a re-export of {@link EmbedderEmceptionAPI} from `emception` (core)
- * under the legacy name for backward compatibility. New code should import
- * `EmbedderEmceptionAPI` from `emception` directly.
- *
- * @deprecated Import `EmbedderEmceptionAPI` from `emception` instead.
- */
-export type { EmbedderEmceptionAPI as EmceptionAPI } from 'emception';
-
-export async function createEmception(opts: CreateEmceptionOptions = {}): Promise<EmbedderEmceptionAPI> {
+export async function createEmception(opts: CreateEmceptionOptions = {}): Promise<EmceptionAPI> {
     const manifestUrl = opts.manifestUrl ?? DEFAULT_MANIFEST_URL;
     const tty = opts.tty ?? (opts.container ? 'xterm' : 'none');
 
@@ -116,17 +116,106 @@ export async function createEmception(opts: CreateEmceptionOptions = {}): Promis
     return wrap(client);
 }
 
-function wrap(client: WorkerClient): EmbedderEmceptionAPI {
+function wrap(client: WorkerClient): EmceptionAPI {
     const encoder = new TextEncoder();
+    const decoder = new TextDecoder();
     const toBytes = (data: Uint8Array | string): Uint8Array =>
         typeof data === 'string' ? encoder.encode(data) : data;
 
+    // Minimal in-closure event emitter.
+    const listeners = new Map<EmceptionEventName, Set<EmceptionEventListener<EmceptionEventName>>>();
+    function on<E extends EmceptionEventName>(event: E, listener: EmceptionEventListener<E>): Unsubscribe {
+        if (!listeners.has(event)) listeners.set(event, new Set());
+        listeners.get(event)!.add(listener as EmceptionEventListener<EmceptionEventName>);
+        return () => listeners.get(event)?.delete(listener as EmceptionEventListener<EmceptionEventName>);
+    }
+    function emit<E extends EmceptionEventName>(event: E, payload: EmceptionEventMap[E]): void {
+        listeners.get(event)?.forEach((fn) => (fn as EmceptionEventListener<E>)(payload));
+    }
+
+    // Local workspace state.
+    let currentBuild: WorkspaceBuildConfig = { kind: 'native' };
+
+    /** Translate a core RunOptions into the browser WorkerClient RunOptions. */
+    function toBrowserOpts(opts: RunOptions): BrowserRunOptions {
+        const browser: BrowserRunOptions = { cwd: opts.cwd, env: opts.env };
+        if (typeof opts.stdout === 'function') {
+            const fn = opts.stdout;
+            browser.onStdout = (text: string) => { (fn as (c: Uint8Array) => void)(encoder.encode(text)); };
+        }
+        if (typeof opts.stderr === 'function') {
+            const fn = opts.stderr;
+            browser.onStderr = (text: string) => { (fn as (c: Uint8Array) => void)(encoder.encode(text)); };
+        }
+        if (typeof opts.stdin === 'string') {
+            const bytes = encoder.encode(opts.stdin.endsWith('\n') ? opts.stdin : opts.stdin + '\n');
+            let i = 0;
+            browser.stdin = () => (i < bytes.length ? bytes[i++] : null);
+        } else if (opts.stdin instanceof Uint8Array) {
+            const bytes = opts.stdin;
+            let i = 0;
+            browser.stdin = () => (i < bytes.length ? bytes[i++] : null);
+        } else if (typeof opts.stdin === 'function') {
+            browser.stdin = opts.stdin as () => number | null | Promise<number>;
+        }
+        return browser;
+    }
+
+    async function run(cmd: string, argv?: string[], opts?: RunOptions): Promise<ToolResult> {
+        const start = Date.now();
+        const result = await client.run(cmd, [...(argv ?? [])], toBrowserOpts(opts ?? {}));
+        const toolResult: ToolResult = { ...result, durationMs: Date.now() - start, timedOut: false };
+        emit('exit', { exitCode: toolResult.exitCode, durationMs: toolResult.durationMs });
+        return toolResult;
+    }
+
+    // Recursive VFS listing helper.
+    async function walkDir(dir: string): Promise<Array<{ path: string } & FileEntry>> {
+        const names = await client.listDir(dir);
+        const entries: Array<{ path: string } & FileEntry> = [];
+        for (const name of names) {
+            const p = dir === '/' ? `/${name}` : `${dir}/${name}`;
+            const children = await client.listDir(p);
+            if (children.length > 0) {
+                entries.push(...(await walkDir(p)));
+            } else {
+                entries.push({ path: p, content: '', visibility: 'public' });
+            }
+        }
+        return entries;
+    }
+
+    const workspace: WorkspaceAPI = {
+        list: async () => ['default'],
+        switch: async (_name: string) => { /* single-workspace browser model: no-op */ },
+        reset: async () => client.resetVfs(),
+        readFile: (path: string) => client.getFile(path),
+        writeFile: async (path: string, data: Uint8Array | string, _meta?: Partial<FileEntry>) =>
+            client.writeFile(path, toBytes(data)),
+        listFiles: async (_opts?) => walkDir('/home/user'),
+        setVisibility: async (_path: string, _v: FileEntry['visibility']) => { /* metadata-only, no-op */ },
+        getBuild: async () => currentBuild,
+        setBuild: async (build: WorkspaceBuildConfig) => { currentBuild = build; },
+        exportZip: async () => { throw new Error('exportZip is not supported in the browser embedder'); },
+        importZip: async (_blob: Blob) => { throw new Error('importZip is not supported in the browser embedder'); },
+    };
+
     return {
-        run: (tool, argv?, options?) => client.run(tool, [...(argv ?? [])], options ?? {}),
-        readFile: (path) => client.getFile(path),
-        writeFile: (path, data) => client.writeFile(path, toBytes(data)),
-        listDir: (path) => client.listDir(path),
-        resetVfs: () => client.resetVfs(),
-        dispose: () => client.terminate(),
+        workspace,
+        run,
+        compileAndRun: async (_sourceOrFiles?, _opts?) => {
+            throw new Error(
+                'compileAndRun: use workspace.writeFile() + run() directly in the browser embedder, ' +
+                'or use compileAndRun() from @gameguild/emception-browser/presets for the argv-based pipeline.',
+            );
+        },
+        runTests: async (_plan, _opts?) => {
+            throw new Error('runTests is not yet supported in the browser embedder');
+        },
+        on,
+        dispose: () => {
+            emit('exit', { exitCode: -1, durationMs: 0 });
+            client.terminate();
+        },
     };
 }

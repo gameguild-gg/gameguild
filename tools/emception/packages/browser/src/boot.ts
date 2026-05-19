@@ -218,7 +218,8 @@ export async function bootInWorker(
 
 export { LineBuffer } from 'emception';
 export type { IOProvider } from 'emception';
-export { createEmception, type CreateEmceptionOptions, type EmceptionAPI } from './createEmception';
+export { createEmception, type CreateEmceptionOptions } from './createEmception';
+export type { EmceptionAPI } from 'emception';
 export { createBrowserBridge, SUBPROCESS_SHIM, type BrowserBridge } from './emscripten/index';
 export { decompressBrotli, isBrotliSupported } from './loader/brotli';
 export { clearModuleCache, loadModuleFactory } from './loader/wasm-module';

@@ -296,7 +296,7 @@ export default function Ide({
       setOpenTabs(state.openTabs);
       setActiveTabId(state.activeTabId);
       setExpandedDirs(state.expandedDirs);
-      setSelectedPath(preset.layout.activeFile);
+      setSelectedPath(preset.layout?.activeFile ?? '');
 
       // Dispose stale Monaco models from the OLD workspace after React re-renders.
       // We defer disposal so @monaco-editor/react can cleanly unmount its model
