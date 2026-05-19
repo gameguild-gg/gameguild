@@ -13,7 +13,7 @@
  */
 
 import { BuildConfigError } from '../errors';
-import type { WorkspaceBuildConfig } from '../types';
+import type { NativeBuildConfig } from '../types';
 
 export interface CompileInvocation {
   /** The compiler binary name (`clang`, `clang++`, `emcc`, `em++`). */
@@ -33,7 +33,7 @@ export interface BuildArgvOptions {
 }
 
 /**
- * Build a `(compiler, argv, output)` triple from a resolved build config.
+ * Build a `(compiler, argv, output)` triple from a resolved native build config.
  *
  * Order of flags (stable so snapshots stay diffable):
  *   1. `-std=...`
@@ -45,7 +45,7 @@ export interface BuildArgvOptions {
  *   7. `ldflags`
  *   8. `-o <output>`
  */
-export function buildArgv(build: WorkspaceBuildConfig, opts: BuildArgvOptions = {}): CompileInvocation {
+export function buildArgv(build: NativeBuildConfig, opts: BuildArgvOptions = {}): CompileInvocation {
   const compiler = opts.compiler ?? build.compiler;
   if (!compiler) {
     throw new BuildConfigError('buildArgv: no compiler resolved — set `build.compiler` or pass a preset.');

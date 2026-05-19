@@ -19,7 +19,7 @@
 
 import { BUILD_PRESETS, type BuildPresetName } from '../build-presets';
 import { BuildConfigError } from '../errors';
-import type { WorkspaceBuildConfig } from '../types';
+import type { CMakeBuildConfig, NativeBuildConfig, PythonBuildConfig, WorkspaceBuildConfig } from '../types';
 
 export interface ResolveBuildInput {
   preset?: BuildPresetName;
@@ -51,43 +51,67 @@ function mergeRecord<V>(a?: Record<string, V>, b?: Record<string, V>): Record<st
   return { ...(a ?? {}), ...(b ?? {}) };
 }
 
-function mergePair(base: WorkspaceBuildConfig, layer: WorkspaceBuildConfig): WorkspaceBuildConfig {
-  return {
-    compiler: layer.compiler ?? base.compiler,
-    std: layer.std ?? base.std,
-    cflags: mergeArrays(base.cflags, layer.cflags),
-    cxxflags: mergeArrays(base.cxxflags, layer.cxxflags),
-    ldflags: mergeArrays(base.ldflags, layer.ldflags),
-    defines: mergeRecord(base.defines, layer.defines),
-    includePaths: mergeArrays(base.includePaths, layer.includePaths),
-    libPaths: mergeArrays(base.libPaths, layer.libPaths),
-    libs: mergeArrays(base.libs, layer.libs),
-    sources: mergeArrays(base.sources, layer.sources),
-    output: layer.output ?? base.output,
-    env: mergeRecord(base.env, layer.env),
-    cmake:
-      base.cmake || layer.cmake
-        ? {
-            sourceDir: layer.cmake?.sourceDir ?? base.cmake?.sourceDir,
-            buildDir: layer.cmake?.buildDir ?? base.cmake?.buildDir,
-            configureArgs: mergeArrays(base.cmake?.configureArgs, layer.cmake?.configureArgs),
-            buildArgs: mergeArrays(base.cmake?.buildArgs, layer.cmake?.buildArgs),
-            targets: mergeArrays(base.cmake?.targets, layer.cmake?.targets),
-          }
-        : undefined,
-  };
+function mergePair(base: WorkspaceBuildConfig, layer: Partial<WorkspaceBuildConfig>): WorkspaceBuildConfig {
+  if (layer.kind !== undefined && layer.kind !== base.kind) {
+    throw new BuildConfigError(
+      `resolveBuild: cannot merge build configs of different kinds ('${base.kind}' and '${layer.kind}'). Use the same kind for workspace and callsite overrides.`,
+    );
+  }
+  switch (base.kind) {
+    case 'native': {
+      const l = layer as Partial<NativeBuildConfig>;
+      return {
+        kind: 'native',
+        compiler: l.compiler ?? base.compiler,
+        std: l.std ?? base.std,
+        cflags: mergeArrays(base.cflags, l.cflags),
+        cxxflags: mergeArrays(base.cxxflags, l.cxxflags),
+        ldflags: mergeArrays(base.ldflags, l.ldflags),
+        defines: mergeRecord(base.defines, l.defines),
+        includePaths: mergeArrays(base.includePaths, l.includePaths),
+        libPaths: mergeArrays(base.libPaths, l.libPaths),
+        libs: mergeArrays(base.libs, l.libs),
+        sources: mergeArrays(base.sources, l.sources),
+        output: l.output ?? base.output,
+        env: mergeRecord(base.env, l.env),
+      };
+    }
+    case 'cmake': {
+      const l = layer as Partial<CMakeBuildConfig>;
+      return {
+        kind: 'cmake',
+        cmake:
+          base.cmake || l.cmake
+            ? {
+                sourceDir: l.cmake?.sourceDir ?? base.cmake?.sourceDir,
+                buildDir: l.cmake?.buildDir ?? base.cmake?.buildDir,
+                configureArgs: mergeArrays(base.cmake?.configureArgs, l.cmake?.configureArgs),
+                buildArgs: mergeArrays(base.cmake?.buildArgs, l.cmake?.buildArgs),
+                targets: mergeArrays(base.cmake?.targets, l.cmake?.targets),
+              }
+            : undefined,
+        env: mergeRecord(base.env, l.env),
+      };
+    }
+    case 'python': {
+      const l = layer as Partial<PythonBuildConfig>;
+      return { kind: 'python', env: mergeRecord(base.env, l.env) };
+    }
+  }
 }
 
 /** Resolve the final build config given the three optional layers. */
 export function resolveBuild(input: ResolveBuildInput): ResolvedBuild {
-  const presetBuild = input.preset ? BUILD_PRESETS[input.preset].build : {};
+  const presetBuild: WorkspaceBuildConfig = input.preset ? BUILD_PRESETS[input.preset].build : { kind: 'native' };
   let merged = mergePair(presetBuild, input.workspace ?? {});
 
   if (input.callsite) {
     const { flags, ...callsite } = input.callsite;
-    merged = mergePair(merged, callsite as WorkspaceBuildConfig);
+    merged = mergePair(merged, callsite as Partial<WorkspaceBuildConfig>);
     if (flags && flags.length > 0) {
-      // Legacy `flags` is appended to cflags (per WorkspaceBuildConfig docs).
+      if (merged.kind !== 'native') {
+        throw new BuildConfigError(`resolveBuild: legacy \`flags\` are only valid for native builds (current kind: '${merged.kind}').`);
+      }
       merged.cflags = dedup([...(merged.cflags ?? []), ...flags]);
     }
   }
@@ -97,16 +121,13 @@ export function resolveBuild(input: ResolveBuildInput): ResolvedBuild {
 }
 
 function validate(b: WorkspaceBuildConfig): void {
-  if (b.cmake && b.sources && b.sources.length > 0) {
-    throw new BuildConfigError('resolveBuild: cannot combine `cmake` with `sources` — pick one (CMake workspace OR direct source list).');
-  }
-  if (b.cmake?.targets && b.cmake.targets.length > 0) {
+  if (b.kind === 'cmake' && b.cmake?.targets && b.cmake.targets.length > 0) {
     const empty = b.cmake.targets.find((t) => typeof t !== 'string' || t.trim() === '');
     if (empty !== undefined) {
       throw new BuildConfigError('resolveBuild: `cmake.targets` entries must be non-empty strings (CMake target names).');
     }
   }
-  if (b.compiler && !['clang', 'clang++', 'emcc', 'em++'].includes(b.compiler)) {
+  if (b.kind === 'native' && b.compiler && !['clang', 'clang++', 'emcc', 'em++'].includes(b.compiler)) {
     throw new BuildConfigError(`resolveBuild: unknown compiler '${b.compiler}'.`);
   }
 }
