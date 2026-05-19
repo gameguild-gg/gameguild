@@ -51,7 +51,7 @@ function mergeRecord<V>(a?: Record<string, V>, b?: Record<string, V>): Record<st
   return { ...(a ?? {}), ...(b ?? {}) };
 }
 
-function mergePair(base: WorkspaceBuildConfig, layer: Partial<WorkspaceBuildConfig>): WorkspaceBuildConfig {
+function mergeLayer(base: WorkspaceBuildConfig, layer: Partial<WorkspaceBuildConfig>): WorkspaceBuildConfig {
   if (layer.kind !== undefined && layer.kind !== base.kind) {
     throw new BuildConfigError(
       `resolveBuild: cannot merge build configs of different kinds ('${base.kind}' and '${layer.kind}'). Use the same kind for workspace and callsite overrides.`,
@@ -103,17 +103,17 @@ function mergePair(base: WorkspaceBuildConfig, layer: Partial<WorkspaceBuildConf
 /** Resolve the final build config given the three optional layers. */
 export function resolveBuild(input: ResolveBuildInput): ResolvedBuild {
   const presetBuild: WorkspaceBuildConfig = input.preset ? BUILD_PRESETS[input.preset].build : { kind: 'native' };
-  let merged = mergePair(presetBuild, input.workspace ?? {});
+  const { flags, ...callsite } = input.callsite ?? {};
+  const merged = [input.workspace ?? {}, callsite as Partial<WorkspaceBuildConfig>].reduce<WorkspaceBuildConfig>(
+    mergeLayer,
+    presetBuild,
+  );
 
-  if (input.callsite) {
-    const { flags, ...callsite } = input.callsite;
-    merged = mergePair(merged, callsite as Partial<WorkspaceBuildConfig>);
-    if (flags && flags.length > 0) {
-      if (merged.kind !== 'native') {
-        throw new BuildConfigError(`resolveBuild: legacy \`flags\` are only valid for native builds (current kind: '${merged.kind}').`);
-      }
-      merged.cflags = dedup([...(merged.cflags ?? []), ...flags]);
+  if (flags && flags.length > 0) {
+    if (merged.kind !== 'native') {
+      throw new BuildConfigError(`resolveBuild: legacy \`flags\` are only valid for native builds (current kind: '${merged.kind}').`);
     }
+    merged.cflags = dedup([...(merged.cflags ?? []), ...flags]);
   }
 
   validate(merged);
