@@ -38,6 +38,7 @@ userland/**/imgui-*/
 userland/**/raylib-*/
 userland/**/raygui-*/
 userland/**/physac-*/
+userland/**/allegro-*/
 userland/**/*.tar.gz
 userland/**/*.tar.xz
 userland/**/version_*.tar.gz

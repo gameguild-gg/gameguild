@@ -18,11 +18,21 @@ export type DockGroup = 'main' | 'right' | 'bottom';
 /** How the IDE should execute the build artefact. */
 export type RunType = 'canvas' | 'wasi-terminal' | 'cmake-build' | 'python-script';
 
+/**
+ * Which canvas runtime preset to use for this workspace.
+ * When set, the IDE uses this instead of heuristics (tool name, workspace id,
+ * or compile args) to select the correct runtime module and build preset.
+ * Mirrors the key names in BrowserBuildPresets (@emception/browser).
+ */
+export type CanvasPresetName = 'sdl' | 'raylib' | 'allegro';
+
 export interface CompileConfig {
   tool: string;
   args: string[];
   cwd?: string;
   output: string;
+  /** Canvas runtime preset — set for SDL3/raylib/Allegro workspaces. */
+  canvasPreset?: CanvasPresetName;
   sourceDetect?: {
     extensions: string[];
     entryPoint?: string;
@@ -76,142 +86,6 @@ export interface WorkspaceConfig {
   layout: LayoutConfig;
   files: Record<string, BundleFile>;
 }
-
-// ── Default file contents (used by the built-in presets) ────────
-
-export const DEFAULT_CODE = `#include <iostream>
-#include <string>
-int main() {
-  std::string name;
-  std::cout << "Enter your name: ";
-  std::getline(std::cin, name);
-  std::cout << "Hello, " << name << "! Welcome to WebAssembly!" << std::endl;
-  return 0;
-}
-`;
-
-export const DEFAULT_HEADER = `#pragma once
-
-inline const char* greeting() {
-  return "Welcome to multi-file mode!";
-}
-`;
-
-export const DEFAULT_IMAGE = `data:image/svg+xml;utf8,${encodeURIComponent(
-  `<svg xmlns="http://www.w3.org/2000/svg" width="800" height="520" viewBox="0 0 800 520">
-      <defs>
-        <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stop-color="#313244" />
-          <stop offset="100%" stop-color="#181825" />
-        </linearGradient>
-      </defs>
-      <rect width="800" height="520" fill="url(#g)"/>
-      <circle cx="190" cy="150" r="72" fill="#89b4fa" opacity="0.75"/>
-      <circle cx="610" cy="370" r="90" fill="#f38ba8" opacity="0.55"/>
-      <text x="50%" y="45%" font-size="42" text-anchor="middle" fill="#cdd6f4" font-family="Inter, Segoe UI, Arial">GameGuild Workspace</text>
-      <text x="50%" y="55%" font-size="22" text-anchor="middle" fill="#a6adc8" font-family="Inter, Segoe UI, Arial">Image tab preview</text>
-    </svg>`,
-)}`;
-
-// SDL3 bouncing ball — compiled against precompiled libSDL3.a (emcmake build).
-// Compile with: emcc sdl-main.cpp /usr/lib/libSDL3.a -I/usr/include -s SINGLE_FILE=1 -s ALLOW_MEMORY_GROWTH=1 -O1 -o main.html
-export const SDL_DEMO_CODE = `// SDL3 bouncing ball — compiled in the browser via Emscripten
-// Click ▶ to build and render to the SDL Canvas tab.
-// Uses SDL3 app-lifecycle callbacks — no emscripten main-loop call needed.
-#define SDL_MAIN_USE_CALLBACKS
-#include <SDL3/SDL.h>
-#include <SDL3/SDL_main.h>
-#include <math.h>
-
-static SDL_Window   *window   = NULL;
-static SDL_Renderer *renderer = NULL;
-static float t = 0.f;
-
-static void draw_filled_circle(SDL_Renderer *r, float cx, float cy, float radius) {
-    for (float dy = -radius; dy <= radius; dy += 1.f) {
-        float dx = sqrtf(radius * radius - dy * dy);
-        SDL_RenderLine(r, cx - dx, cy + dy, cx + dx, cy + dy);
-    }
-}
-
-SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
-    SDL_Init(SDL_INIT_VIDEO);
-    SDL_CreateWindowAndRenderer("SDL3 Demo", 800, 600, 0, &window, &renderer);
-    return SDL_APP_CONTINUE;
-}
-
-SDL_AppResult SDL_AppIterate(void *appstate) {
-    t += 0.016f;
-
-    SDL_SetRenderDrawColor(renderer, 17, 17, 27, 255);
-    SDL_RenderClear(renderer);
-
-    SDL_SetRenderDrawColor(renderer, 40, 40, 60, 255);
-    for (float x = 0; x < 800; x += 40)
-        SDL_RenderLine(renderer, x, 0, x, 600);
-    for (float y = 0; y < 600; y += 40)
-        SDL_RenderLine(renderer, 0, y, 800, y);
-
-    float cx = 400.f + 300.f * sinf(t * 1.2f);
-    float cy = 300.f + 200.f * cosf(t * 1.4f);
-    SDL_SetRenderDrawColor(renderer, 137, 180, 250, 255);
-    draw_filled_circle(renderer, cx, cy, 32.f);
-
-    SDL_RenderPresent(renderer);
-    return SDL_APP_CONTINUE;
-}
-
-SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event) {
-    if (event->type == SDL_EVENT_QUIT) return SDL_APP_SUCCESS;
-    return SDL_APP_CONTINUE;
-}
-
-void SDL_AppQuit(void *appstate, SDL_AppResult result) {
-    SDL_DestroyRenderer(renderer);
-    SDL_DestroyWindow(window);
-    SDL_Quit();
-}
-`;
-
-// raylib bouncing ball (C++) — uses raylib's web-friendly main-loop callback.
-// Compile with:
-//   em++ raylib-main.cpp -I/usr/include -I/usr/include/raylib \
-//        -lraylib -sUSE_GLFW=3 -sFULL_ES2=1 -sALLOW_MEMORY_GROWTH=1 -O1 \
-//        -o /home/user/main.js
-export const RAYLIB_DEMO_CODE = `// raylib bouncing ball — compiled in the browser via Emscripten.
-// Click ▶ to build and render to the canvas tab.
-#include <raylib.h>
-#include <emscripten/emscripten.h>
-#include <cmath>
-
-static constexpr int W = 800;
-static constexpr int H = 600;
-static float t = 0.f;
-
-static void update_draw_frame() {
-    t += GetFrameTime();
-
-    BeginDrawing();
-    ClearBackground({ 17, 17, 27, 255 });
-
-    for (int x = 0; x < W; x += 40) DrawLine(x, 0, x, H, { 40, 40, 60, 255 });
-    for (int y = 0; y < H; y += 40) DrawLine(0, y, W, y, { 40, 40, 60, 255 });
-
-    float cx = W * 0.5f + 300.f * std::sin(t * 1.2f);
-    float cy = H * 0.5f + 200.f * std::cos(t * 1.4f);
-    DrawCircleV({ cx, cy }, 32.f, { 137, 180, 250, 255 });
-
-    DrawText("raylib + Emscripten", 20, 20, 22, { 205, 214, 244, 255 });
-    EndDrawing();
-}
-
-int main() {
-    InitWindow(W, H, "raylib demo");
-    emscripten_set_main_loop(update_draw_frame, 0, 1);
-    CloseWindow();
-    return 0;
-}
-`;
 
 // ── Workspace bundle helpers ────────────────────────────────────
 

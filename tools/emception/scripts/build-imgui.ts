@@ -118,6 +118,7 @@ const backendFiles = [
 // Compile flags
 const CXXFLAGS = [
     '-Os',
+    '-DNDEBUG',               // Disable IM_ASSERT → no __assert_fail import in libimgui.a
     // No -fwasm-exceptions: incompatible with -mno-reference-types (Asyncify).
     `-I"${SOURCE_DIR}"`,
     `-I"${SOURCE_DIR}/backends"`,

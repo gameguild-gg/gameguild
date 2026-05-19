@@ -180,6 +180,30 @@ shell.config.fatal = true;
 const stagingUsr = path.join(SYSROOT_STAGING, 'usr');
 const SYSROOT_USR = path.join(ROOT, 'sysroot', 'usr');
 if (fs.existsSync(stagingUsr)) {
+    // Remove stale Python-versioned entries left by a previous build with a
+    // different Python version (e.g. CI cache restored from before the emsdk
+    // version pin changed). Without this, old pydoc3.X / idle3.X / python3.X/
+    // / libpython3.X.a / include/python3.X/ survive alongside the new version
+    // and end up in the generated manifest.
+    if (fs.existsSync(SYSROOT_USR)) {
+        const staleDirs = ['bin', 'lib', 'include'] as const;
+        const removed: string[] = [];
+        for (const subdir of staleDirs) {
+            const dir = path.join(SYSROOT_USR, subdir);
+            if (!fs.existsSync(dir)) continue;
+            for (const entry of fs.readdirSync(dir)) {
+                const m = entry.match(/^(?:pydoc|idle|python|libpython)(3\.\d+)/);
+                if (m && m[1] !== PYTHON_MM) {
+                    shell.rm('-rf', path.join(dir, entry));
+                    removed.push(`usr/${subdir}/${entry}`);
+                }
+            }
+        }
+        if (removed.length > 0) {
+            console.log(`Removed ${removed.length} stale Python artifacts (expected python${PYTHON_MM}):`);
+            for (const p of removed) console.log(`  - ${p}`);
+        }
+    }
     shell.mkdir('-p', SYSROOT_USR);
     shell.cp('-r', path.join(stagingUsr, '*'), SYSROOT_USR);
 }
