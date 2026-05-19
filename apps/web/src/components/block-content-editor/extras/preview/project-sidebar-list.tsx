@@ -7,17 +7,7 @@ import { Label } from "@/components/ui/label"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Calendar, ChevronDown, FileText, Filter, Search } from "lucide-react"
 import { useEffect, useState } from "react"
-
-interface ProjectData {
-  id: string
-  name: string
-  data: string
-  tags: string[]
-  size: number
-  createdAt: string
-  updatedAt: string
-  storageType?: "local" | "gameguild-cloud" | "google-drive"
-}
+import type { ProjectData } from "@/components/block-content-editor/lib/storage/editor/project-data"
 
 interface ProjectSidebarListProps {
   storageAdapter: {
@@ -305,10 +295,10 @@ export function ProjectSidebarList({
                     <div className="flex items-center gap-2 mt-2 text-xs text-gray-500 dark:text-gray-400">
                       <div className="flex items-center gap-1">
                         <Calendar className="w-3 h-3" />
-                        {new Date(project.updatedAt).toLocaleDateString()}
+                        {new Date(project.metadata.updatedAt).toLocaleDateString()}
                       </div>
                       <span>•</span>
-                      <span>{formatFileSize(project.size)}</span>
+                      <span>{formatFileSize(project.metadata.size)}</span>
                     </div>
                   </div>
                 </div>
