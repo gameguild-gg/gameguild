@@ -1,3 +1,9 @@
+# [3.8.0](https://github.com/gameguild-gg/gameguild/compare/v3.7.3...v3.8.0) (2026-05-19)
+
+### Features
+
+* courses-v2 ([52fd948](https://github.com/gameguild-gg/gameguild/commit/52fd948e9a0073ce23ca4f78e76ef9b1de9f9d79))
+
 # [3.7.3](https://github.com/gameguild-gg/gameguild/compare/v3.7.2...v3.7.3) (2026-05-18)
 
 ### Bug Fixes
