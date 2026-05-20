@@ -3,7 +3,7 @@ import { promises as fs } from "fs"
 import path from "path"
 
 // Base directory containing static block-content-editor data files.
-const FILES_BASE_DIR = path.join(process.cwd(), "src", "data", "test-blocks")
+const FILES_BASE_DIR = path.join(process.cwd(), "src", "data")
 
 // Allow common safe characters in path segments. No `..`, no absolute paths.
 const SEGMENT_PATTERN = /^[a-zA-Z0-9._-]+$/

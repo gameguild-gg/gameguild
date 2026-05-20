@@ -118,7 +118,7 @@ export default function StaticViewerPage() {
 
                 {/* Direct inline render (loaded from a single block-content-editor file, no index.json) */}
                 <DirectFileSection
-                  filePath="projeto-17792247804366bs8q7l9t/data.block-content-editor"
+                  filePath="test-blocks/projeto-17792247804366bs8q7l9t/data.block-content-editor"
                 >
                   <h2 className="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-3">Direct View (from file)</h2>
                 </DirectFileSection>

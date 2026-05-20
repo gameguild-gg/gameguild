@@ -55,29 +55,50 @@ interface RichTextPreviewRendererProps {
 }
 
 export function RichTextPreviewRenderer({ content, className }: RichTextPreviewRendererProps) {
+  // Strip any persisted `selection` from the serialized state. Lexical, even
+  // with `editable: false`, will restore that selection on mount, which makes
+  // the browser auto-scroll the page so the selection becomes visible — this
+  // causes the scrollbar to jump every time a rich-text block hydrates (e.g.
+  // when opening a project in the studio or when a static direct section
+  // finishes loading).
+  const sanitizedContent = useMemo(() => {
+    if (!content) return undefined
+    try {
+      const parsed = JSON.parse(content)
+      if (parsed && typeof parsed === "object") {
+        delete (parsed as { selection?: unknown }).selection
+        return JSON.stringify(parsed)
+      }
+      return content
+    } catch {
+      return content
+    }
+  }, [content])
+
   const initialConfig = useMemo(
     () => ({
       namespace: "RichTextPreview",
       nodes: PREVIEW_NODES,
       theme: PREVIEW_THEME,
       editable: false,
-      editorState: content || undefined,
+      editorState: sanitizedContent,
       onError: (error: Error) => {
         console.error("[RichTextPreview]", error)
       },
     }),
-    [content],
+    [sanitizedContent],
   )
 
   if (!content) return null
 
   return (
-    <LexicalComposer key={content} initialConfig={initialConfig}>
+    <LexicalComposer key={sanitizedContent} initialConfig={initialConfig}>
       <RichTextPlugin
         contentEditable={
           <ContentEditable
             className={className || "text-sm text-foreground"}
             readOnly
+            tabIndex={-1}
           />
         }
         placeholder={null}
