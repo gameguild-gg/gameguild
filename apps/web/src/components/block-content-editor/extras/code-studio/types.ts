@@ -122,30 +122,38 @@ export type PanelType = "explorer" | "full-editor" | "focus-editor" | "output"
 
 export type EditorInstance = "multiple" | "unique"
 
-export type AspectRatio = "2:1" | "1:1" | "1:2"
-
-// Grid dimensions based on aspect ratio:
-// "2:1" (landscape) = 24x12 (24 cols x 12 rows)
-// "1:1" (square) = 12x12 (12 cols x 12 rows)
-// "1:2" (portrait) = 12x24 (12 cols x 24 rows)
-
-export interface PanelConfig {
+/**
+ * Splitter-pane tree node. A display's layout is a recursive tree of either
+ * leaf panels (rendered content) or splits (PanelGroup with N children and
+ * percent-based sizes that sum to 100).
+ *
+ * direction "horizontal" lays children side-by-side (left → right).
+ * direction "vertical"  stacks children top → bottom.
+ */
+export interface LeafPanel {
+  kind: "leaf"
   id: string
   type: PanelType
-  row: number // 0 to (rows-1), depends on display aspect ratio
-  col: number // 0 to (cols-1), depends on display aspect ratio
-  rowSpan: number // 1 to rows, depends on display aspect ratio
-  colSpan: number // 1 to cols, depends on display aspect ratio
-  editorInstance?: EditorInstance // Para painéis tipo "full-editor" ou "focus-editor"
+  editorInstance?: EditorInstance // for "full-editor" / "focus-editor"
 }
 
+export interface SplitNode {
+  kind: "split"
+  id: string
+  direction: "horizontal" | "vertical"
+  sizes: number[] // percentages, length === children.length, must sum to ~100
+  children: LayoutNode[]
+}
+
+export type LayoutNode = LeafPanel | SplitNode
+
 export interface DisplayConfig {
-  id: string // "display-1", "display-2", etc
-  name: string // Título customizável pelo usuário
-  aspectRatio: AspectRatio // Proporção da área útil do display
-  panels: PanelConfig[]
-  uniqueOpenTabs?: string[] // Abas abertas específicas deste display (quando editor é unique)
-  uniqueActiveFileId?: string // Arquivo ativo específico deste display (quando editor é unique)
+  id: string // "display-1", "display-2", ...
+  name: string // user-editable label
+  templateId?: string // id of the template that originally seeded this display
+  root: LayoutNode // splitter tree
+  uniqueOpenTabs?: string[] // open tabs scoped to this display (unique editor instance)
+  uniqueActiveFileId?: string // active file scoped to this display (unique editor instance)
 }
 
 export interface LayoutConfig {
