@@ -13,7 +13,17 @@ export interface EditorSettings {
   setEditorFontSize: (size: number) => void
   editorLineNumbers: boolean
   setEditorLineNumbers: (show: boolean) => void
+  /**
+   * Inner panel sizing classes (width/height) for the selected modal size.
+   * Fed straight to the modal's container `<div>`.
+   */
   modalClassName: string
+  /**
+   * Outer overlay sizing classes (padding/margin) for the selected modal
+   * size. Without applying this, "fullscreen" mode still shows a frame
+   * around the modal because the overlay keeps its compact padding.
+   */
+  containerClassName: string
 }
 
 export function useEditorSettings(nodeType: string): EditorSettings {
@@ -41,9 +51,9 @@ export function useEditorSettings(nodeType: string): EditorSettings {
     return () => document.removeEventListener('mousedown', handler)
   }, [showSettingsMenu])
 
-  const modalClassName = modalSize
-    ? getModalSizeClasses(modalSize).modal
-    : 'w-full max-w-7xl h-[90vh]'
+  const modalClasses = modalSize ? getModalSizeClasses(modalSize) : null
+  const modalClassName = modalClasses?.modal ?? 'w-full max-w-7xl h-[90vh]'
+  const containerClassName = modalClasses?.container ?? 'p-4'
 
   return {
     nodeType,
@@ -56,5 +66,6 @@ export function useEditorSettings(nodeType: string): EditorSettings {
     editorLineNumbers,
     setEditorLineNumbers,
     modalClassName,
+    containerClassName,
   }
 }
