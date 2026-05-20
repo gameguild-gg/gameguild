@@ -32,8 +32,13 @@ interface SplitterCanvasProps {
   onMovePanel?: (sourcePanelId: string, targetPanelId: string, position: DockPosition) => void
   /** Called when a leaf is dropped onto the trash zone. */
   onRemovePanel?: (panelId: string) => void
-  /** When false, resize handles are hidden and panels are not draggable. */
+  /** When false, the layout-edit chrome (leaf headers, drop quadrants, trash)
+   *  is hidden and panels are not draggable. Independent from `resizable`. */
   editable?: boolean
+  /** When false, divider handles are inert. When true (default), users can
+   *  drag dividers regardless of edit mode. `onSplitResize` may still be
+   *  omitted to keep the changes ephemeral (e.g. preview). */
+  resizable?: boolean
   className?: string
 }
 
@@ -43,6 +48,7 @@ interface DragCtxShape {
   onMovePanel?: SplitterCanvasProps["onMovePanel"]
   onRemovePanel?: SplitterCanvasProps["onRemovePanel"]
   editable: boolean
+  resizable: boolean
 }
 
 const DragCtx = createContext<DragCtxShape | null>(null)
@@ -69,6 +75,7 @@ export function SplitterCanvas({
   onMovePanel,
   onRemovePanel,
   editable = true,
+  resizable = true,
   className,
 }: SplitterCanvasProps) {
   const [dragSourceId, setDragSourceId] = useState<string | null>(null)
@@ -83,6 +90,7 @@ export function SplitterCanvas({
     onMovePanel,
     onRemovePanel,
     editable,
+    resizable,
   }
 
   return (
@@ -280,7 +288,7 @@ interface SplitGroupProps {
 }
 
 function SplitGroup({ node, renderLeaf, onSplitResize }: SplitGroupProps) {
-  const { editable } = useDragCtx()
+  const { resizable } = useDragCtx()
   const handleLayout = useCallback(
     (sizes: number[]) => {
       onSplitResize?.(node.id, sizes)
@@ -291,7 +299,7 @@ function SplitGroup({ node, renderLeaf, onSplitResize }: SplitGroupProps) {
   return (
     <PanelGroup
       direction={node.direction}
-      onLayout={editable ? handleLayout : undefined}
+      onLayout={resizable && onSplitResize ? handleLayout : undefined}
       autoSaveId={undefined}
       id={node.id}
       className="h-full w-full"
@@ -311,11 +319,11 @@ function SplitGroup({ node, renderLeaf, onSplitResize }: SplitGroupProps) {
             </Panel>
             {idx < node.children.length - 1 && (
               <PanelResizeHandle
-                disabled={!editable}
+                disabled={!resizable}
                 className={cn(
                   "relative shrink-0 transition-colors",
                   node.direction === "horizontal" ? "w-1.5 cursor-col-resize" : "h-1.5 cursor-row-resize",
-                  editable
+                  resizable
                     ? "bg-transparent hover:bg-blue-500/40 data-[resize-handle-active]:bg-blue-500/60"
                     : "bg-transparent pointer-events-none",
                 )}
