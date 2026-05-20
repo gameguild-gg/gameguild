@@ -38,13 +38,13 @@ export class HashManager {
     name: string
     data: string
     tags: string[]
-    updatedAt: string
+    metadata: { updatedAt: string }
   }): Promise<string> {
     const hashInput = JSON.stringify({
       name: projectData.name,
       data: projectData.data,
       tags: projectData.tags.sort(), // Sort tags for consistent hashing
-      updatedAt: projectData.updatedAt,
+      updatedAt: projectData.metadata.updatedAt,
     })
 
     return this.generateHash(hashInput)

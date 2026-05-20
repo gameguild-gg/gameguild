@@ -2,19 +2,7 @@
 
 import type React from "react"
 import { ProjectCard } from "./project-card"
-
-interface ProjectData {
-  id: string
-  name: string
-  data: string
-  tags: string[]
-  size: number
-  createdAt: string
-  updatedAt: string
-  storageType?: "local" | "gameguild-cloud" | "google-drive"
-  isLocallyAvailable?: boolean
-  preferences?: any
-}
+import type { ProjectData } from "@/components/block-content-editor/lib/storage/editor/project-data"
 
 interface ProjectGridViewProps {
   projects: ProjectData[]
