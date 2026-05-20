@@ -1,5 +1,6 @@
 import type { CodeStudioData, DisplayConfig } from "./types"
 import { openFile, closeFile, setActiveFile, getEditorState } from "./editor-state-utils"
+import { displayHasUniqueEditor } from "./tree-operations"
 
 export function selectFile(
   draft: CodeStudioData,
@@ -53,9 +54,7 @@ export function reorderTabs(
   const uniqueNewOrder = Array.from(new Set(newOrder))
   
   // Atualizar a ordem das abas
-  const hasUniqueEditor = display?.panels.some(
-    p => (p.type === "full-editor" || p.type === "focus-editor") && p.editorInstance === "unique"
-  )
+  const hasUniqueEditor = display ? displayHasUniqueEditor(display) : false
 
   if (hasUniqueEditor && display) {
     // Editor unique: atualizar estado do display
