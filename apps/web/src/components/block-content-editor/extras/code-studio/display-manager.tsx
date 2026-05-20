@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input"
 import { Plus, Trash2, Edit2 } from "lucide-react"
 import type { DisplayConfig, PanelType } from "./types"
 import { getTemplatesByScope, type LayoutTemplate as Template, type TemplateSilhouette } from "./templates/templates"
+import { DeleteConfirmDialog } from "../dialogs/delete-confirm-dialog"
 import { cn } from "@/lib/utils"
 
 interface DisplayManagerProps {
@@ -45,6 +46,18 @@ export function DisplayManager({
 }: DisplayManagerProps) {
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editingName, setEditingName] = useState("")
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null)
+
+  const pendingDeleteDisplay = pendingDeleteId
+    ? displays.find(d => d.id === pendingDeleteId)
+    : undefined
+
+  const confirmDelete = () => {
+    if (pendingDeleteId) {
+      onDeleteDisplay(pendingDeleteId)
+      setPendingDeleteId(null)
+    }
+  }
 
   const handleStartRename = (display: DisplayConfig) => {
     setEditingId(display.id)
@@ -113,7 +126,7 @@ export function DisplayManager({
                 </button>
                 {displays.length > 1 && (
                   <button
-                    onClick={() => onDeleteDisplay(display.id)}
+                    onClick={() => setPendingDeleteId(display.id)}
                     className="p-1 hover:bg-red-100 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400 rounded"
                     title="Delete display"
                   >
@@ -179,6 +192,17 @@ export function DisplayManager({
         <PanelAddButton label="Focus Editor" tone="cyan" onClick={() => onAddPanel("focus-editor")} />
         <PanelAddButton label="Output" tone="purple" onClick={() => onAddPanel("output")} />
       </div>
+
+      <DeleteConfirmDialog
+        open={pendingDeleteId !== null}
+        onOpenChange={(open) => {
+          if (!open) setPendingDeleteId(null)
+        }}
+        title="Delete display"
+        itemName={pendingDeleteDisplay?.name}
+        itemType="display"
+        onConfirm={confirmDelete}
+      />
     </div>
   )
 }
