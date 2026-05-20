@@ -58,7 +58,10 @@ export function deleteDisplay(draft: CodeStudioData, displayId: string): void {
   draft.layout.displays = draft.layout.displays.filter(d => d.id !== displayId)
 
   if (draft.layout.activeDisplayId === displayId) {
-    draft.layout.activeDisplayId = draft.layout.displays[0]?.id || ""
+    // Select the most recently created remaining display (displays array is
+    // append-only, so the last entry is the newest).
+    const newest = draft.layout.displays[draft.layout.displays.length - 1]
+    draft.layout.activeDisplayId = newest?.id || ""
   }
 }
 
