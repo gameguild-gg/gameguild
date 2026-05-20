@@ -48,6 +48,20 @@ export function MermaidViewer({
   const fullscreenContainerRef = useRef<HTMLDivElement>(null)
   const svgRef = useRef<HTMLDivElement>(null)
 
+  // Refs espelhando estado para uso dentro de listeners nativos (zoom-to-cursor).
+  const zoomRef = useRef(zoom)
+  const positionRef = useRef(position)
+  const baseScaleRef = useRef(baseScale)
+  const fullscreenZoomRef = useRef(fullscreenZoom)
+  const fullscreenPositionRef = useRef(fullscreenPosition)
+  const fullscreenBaseScaleRef = useRef(fullscreenBaseScale)
+  useEffect(() => { zoomRef.current = zoom }, [zoom])
+  useEffect(() => { positionRef.current = position }, [position])
+  useEffect(() => { baseScaleRef.current = baseScale }, [baseScale])
+  useEffect(() => { fullscreenZoomRef.current = fullscreenZoom }, [fullscreenZoom])
+  useEffect(() => { fullscreenPositionRef.current = fullscreenPosition }, [fullscreenPosition])
+  useEffect(() => { fullscreenBaseScaleRef.current = fullscreenBaseScale }, [fullscreenBaseScale])
+
   // Get current theme
   const { theme: systemTheme, resolvedTheme } = useTheme()
   const isDarkMode = resolvedTheme === "dark"
@@ -123,11 +137,11 @@ export function MermaidViewer({
     const scaleY = availableHeight / svgHeight
     
     let scale = Math.min(scaleX, scaleY)
-    
-    // Limites para fullscreen (mais generosos)
-    // - Mínimo: 0.5 (50%)
-    // - Máximo: 1.2 (120%)
-    scale = Math.max(0.5, Math.min(scale, 2.0))
+
+    // Limites para fullscreen: clamp alto o suficiente para diagramas pequenos
+    // ocuparem boa parte do modal (auto-fit real). Pequenos flowcharts (ex.
+    // viewBox 200x300) precisam de fator >>2x para preencher um modal full-page.
+    scale = Math.max(0.5, Math.min(scale, 10))
 
     setFullscreenBaseScale(scale)
   }
@@ -234,13 +248,49 @@ export function MermaidViewer({
 
     if (isFullscreen) {
       document.addEventListener("keydown", handleEscape)
-      // Calcular baseScale para fullscreen após abrir
-      setTimeout(() => {
-        calculateFullscreenBaseScale()
-      }, 100)
       return () => document.removeEventListener("keydown", handleEscape)
     }
   }, [isFullscreen])
+
+  // Recalcular baseScale do fullscreen via ResizeObserver + retry agressivo.
+  // O único setTimeout(100ms) anterior não era confiável: se o modal ou o
+  // SVG ainda não tivessem sido layouted, a função saa cedo e o baseScale
+  // ficava travado em 1 (resultando no diagrama abrindo minsculo a 100%).
+  useEffect(() => {
+    if (!isFullscreen) return
+    const container = fullscreenContainerRef.current
+    if (!container) return
+
+    // Tenta calcular j em vrios frames at obter dimenses vlidas.
+    let attempts = 0
+    const maxAttempts = 30
+    let rafId = 0
+    const tryCalc = () => {
+      attempts++
+      const svg = container.querySelector("svg")
+      const ok =
+        container.offsetWidth > 0 &&
+        container.offsetHeight > 0 &&
+        svg &&
+        (svg.viewBox.baseVal.width > 0 || svg.clientWidth > 0)
+      if (ok) {
+        calculateFullscreenBaseScale()
+        return
+      }
+      if (attempts < maxAttempts) {
+        rafId = requestAnimationFrame(tryCalc)
+      }
+    }
+    rafId = requestAnimationFrame(tryCalc)
+
+    const ro = new ResizeObserver(() => calculateFullscreenBaseScale())
+    ro.observe(container)
+
+    return () => {
+      cancelAnimationFrame(rafId)
+      ro.disconnect()
+    }
+  }, [isFullscreen, svgContent])
 
   // Recalcular baseScale quando o container redimensiona
   useEffect(() => {
@@ -297,7 +347,7 @@ export function MermaidViewer({
 
   // Fullscreen zoom control functions
   const handleFullscreenZoomIn = () => {
-    setFullscreenZoom((prev) => Math.min(prev + 50, 500))
+    setFullscreenZoom((prev) => Math.min(prev + 50, 1000))
   }
 
   const handleFullscreenZoomOut = () => {
@@ -344,17 +394,44 @@ export function MermaidViewer({
     }
   }
 
-  // Wheel zoom
-  const handleWheel = (e: React.WheelEvent) => {
-    if (e.ctrlKey || e.metaKey) {
+  // Wheel zoom (handler React mantido apenas como fallback visual; o listener
+  // nativo abaixo é quem realmente intercepta o zoom da página).
+  const handleWheel = (_e: React.WheelEvent) => {
+    // no-op: lógica real fica no listener nativo non-passive.
+  }
+
+  // Listener wheel nativo non-passive — necessário para que Ctrl+scroll
+  // não dispare o zoom do navegador (preventDefault não funciona em
+  // listeners passive, que é o default em alguns paths do React).
+  // Implementa zoom-to-cursor: ancora o ponto sob o cursor durante o zoom.
+  useEffect(() => {
+    const container = containerRef.current
+    if (!container) return
+    const onWheelNative = (e: WheelEvent) => {
+      if (!(e.ctrlKey || e.metaKey)) return
       e.preventDefault()
-      const delta = e.deltaY > 0 ? -5 : 5
-      setZoom((prev) => {
-        const newZoom = Math.max(100, Math.min(300, prev + delta))
-        return newZoom
+      const oldZoom = zoomRef.current
+      // Multiplicativo: cada tick = 25% do zoom atual.
+      const factor = e.deltaY > 0 ? 1 / 1.25 : 1.25
+      const newZoom = Math.round(Math.max(100, Math.min(300, oldZoom * factor)))
+      if (newZoom === oldZoom) return
+      const rect = container.getBoundingClientRect()
+      const ox = e.clientX - (rect.left + rect.width / 2)
+      const oy = e.clientY - (rect.top + rect.height / 2)
+      const base = baseScaleRef.current || 1
+      const oldEff = (oldZoom / 100) * base
+      const newEff = (newZoom / 100) * base
+      const ratio = oldEff === 0 ? 1 : newEff / oldEff
+      const pos = positionRef.current
+      setZoom(newZoom)
+      setPosition({
+        x: ox - (ox - pos.x) * ratio,
+        y: oy - (oy - pos.y) * ratio,
       })
     }
-  }
+    container.addEventListener("wheel", onWheelNative, { passive: false })
+    return () => container.removeEventListener("wheel", onWheelNative)
+  }, [])
 
   // Fullscreen Pan/Drag control functions
   const handleFullscreenMouseDown = (e: React.MouseEvent) => {
@@ -391,17 +468,76 @@ export function MermaidViewer({
     }
   }
 
-  // Fullscreen wheel zoom
-  const handleFullscreenWheel = (e: React.WheelEvent) => {
-    if (e.ctrlKey || e.metaKey) {
+  // Fullscreen wheel zoom (no-op no React; lógica real no listener nativo).
+  const handleFullscreenWheel = (_e: React.WheelEvent) => {
+    // no-op
+  }
+
+  // Listener wheel nativo non-passive para o modal fullscreen.
+  // Implementa zoom-to-cursor: ancora o ponto sob o cursor durante o zoom.
+  useEffect(() => {
+    if (!isFullscreen) return
+    const container = fullscreenContainerRef.current
+    if (!container) return
+    const onWheelNative = (e: WheelEvent) => {
+      if (!(e.ctrlKey || e.metaKey)) return
       e.preventDefault()
-      const delta = e.deltaY > 0 ? -25 : 25
-      setFullscreenZoom((prev) => {
-        const newZoom = Math.max(100, Math.min(500, prev + delta))
-        return newZoom
+      const oldZoom = fullscreenZoomRef.current
+      // Multiplicativo: cada tick = 10% do zoom atual.
+      const factor = e.deltaY > 0 ? 1 / 1.1 : 1.1
+      const newZoom = Math.round(Math.max(100, Math.min(1000, oldZoom * factor)))
+      if (newZoom === oldZoom) return
+      const rect = container.getBoundingClientRect()
+      const ox = e.clientX - (rect.left + rect.width / 2)
+      const oy = e.clientY - (rect.top + rect.height / 2)
+      const base = fullscreenBaseScaleRef.current || 1
+      const oldEff = (oldZoom / 100) * base
+      const newEff = (newZoom / 100) * base
+      const ratio = oldEff === 0 ? 1 : newEff / oldEff
+      const pos = fullscreenPositionRef.current
+      setFullscreenZoom(newZoom)
+      setFullscreenPosition({
+        x: ox - (ox - pos.x) * ratio,
+        y: oy - (oy - pos.y) * ratio,
       })
     }
-  }
+    container.addEventListener("wheel", onWheelNative, { passive: false })
+    return () => container.removeEventListener("wheel", onWheelNative)
+  }, [isFullscreen])
+
+  // Atalhos de teclado para zoom no modo fullscreen (+ / - / 0).
+  useEffect(() => {
+    if (!isFullscreen) return
+    const onKey = (e: KeyboardEvent) => {
+      const tag = (e.target as HTMLElement | null)?.tagName
+      if (tag === "INPUT" || tag === "TEXTAREA") return
+      if (e.key === "+" || e.key === "=") {
+        e.preventDefault()
+        setFullscreenZoom((prev) => Math.min(1000, prev + 25))
+      } else if (e.key === "-" || e.key === "_") {
+        e.preventDefault()
+        setFullscreenZoom((prev) => Math.max(100, prev - 25))
+      } else if (e.key === "0") {
+        e.preventDefault()
+        setFullscreenZoom(100)
+        setFullscreenPosition({ x: 0, y: 0 })
+      }
+    }
+    window.addEventListener("keydown", onKey)
+    return () => window.removeEventListener("keydown", onKey)
+  }, [isFullscreen])
+
+  // Trava o scroll da página enquanto o modal fullscreen está aberto.
+  // Sem isso, scroll do mouse (sem Ctrl) dentro do modal propaga e rola a
+  // página por trás.
+  useEffect(() => {
+    if (!isFullscreen) return
+    const prevOverflow = document.body.style.overflow
+    document.body.style.overflow = "hidden"
+    return () => {
+      document.body.style.overflow = prevOverflow
+    }
+  }, [isFullscreen])
 
   if (!data.code) {
     return (
@@ -532,10 +668,10 @@ export function MermaidViewer({
         )}
       </div>
 
-      {/* Fullscreen Modal */}
+      {/* Fullscreen Modal — ocupa página inteira */}
       {isFullscreen && allowFullscreen && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-900 border dark:border-gray-700 rounded-lg shadow-2xl w-full max-w-7xl h-[90vh] flex flex-col">
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-900 shadow-2xl w-screen h-screen flex flex-col">
             {/* Fullscreen Header */}
             <div className="flex items-center justify-between gap-4 p-4 border-b border-gray-200 dark:border-gray-700">
               <div className="flex items-center gap-2 min-w-0 flex-shrink-0">
@@ -551,15 +687,15 @@ export function MermaidViewer({
                 <input
                   type="range"
                   min="100"
-                  max="500"
+                  max="1000"
                   step="25"
                   value={fullscreenZoom}
                   onChange={(e) => setFullscreenZoom(Number(e.target.value))}
                   className="flex-1 h-2 rounded-lg appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-blue-600 dark:[&::-webkit-slider-thumb]:bg-blue-400 [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:shadow-md [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-blue-600 dark:[&::-moz-range-thumb]:bg-blue-400 [&::-moz-range-thumb]:cursor-pointer [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:shadow-md"
                   style={{
                     background: isDarkMode
-                      ? `linear-gradient(to right, rgb(96, 165, 250) 0%, rgb(96, 165, 250) ${((fullscreenZoom - 100) / 400) * 100}%, rgb(55, 65, 81) ${((fullscreenZoom - 100) / 400) * 100}%, rgb(55, 65, 81) 100%)`
-                      : `linear-gradient(to right, rgb(37, 99, 235) 0%, rgb(37, 99, 235) ${((fullscreenZoom - 100) / 400) * 100}%, rgb(229, 231, 235) ${((fullscreenZoom - 100) / 400) * 100}%, rgb(229, 231, 235) 100%)`,
+                      ? `linear-gradient(to right, rgb(96, 165, 250) 0%, rgb(96, 165, 250) ${((fullscreenZoom - 100) / 900) * 100}%, rgb(55, 65, 81) ${((fullscreenZoom - 100) / 900) * 100}%, rgb(55, 65, 81) 100%)`
+                      : `linear-gradient(to right, rgb(37, 99, 235) 0%, rgb(37, 99, 235) ${((fullscreenZoom - 100) / 900) * 100}%, rgb(229, 231, 235) ${((fullscreenZoom - 100) / 900) * 100}%, rgb(229, 231, 235) 100%)`,
                   }}
                 />
                 <ZoomIn className="h-4 w-4 text-gray-500 dark:text-gray-400 flex-shrink-0" />
@@ -585,7 +721,7 @@ export function MermaidViewer({
                     variant="ghost"
                     size="sm"
                     onClick={handleFullscreenZoomIn}
-                    disabled={fullscreenZoom >= 500}
+                    disabled={fullscreenZoom >= 1000}
                     className="h-8 w-8 p-0"
                     title="Zoom In"
                   >
@@ -628,7 +764,7 @@ export function MermaidViewer({
               >
                 {svgContent && (
                   <div
-                    className="flex justify-center items-center max-w-full max-h-full transition-transform duration-200 ease-in-out"
+                    className="flex justify-center items-center max-w-full max-h-full"
                     style={{
                       transform: `scale(${(fullscreenZoom / 100) * fullscreenBaseScale}) translate(${fullscreenPosition.x / ((fullscreenZoom / 100) * fullscreenBaseScale)}px, ${fullscreenPosition.y / ((fullscreenZoom / 100) * fullscreenBaseScale)}px)`,
                       transformOrigin: "center",
@@ -637,6 +773,11 @@ export function MermaidViewer({
                       transition: isFullscreenDragging
                         ? "none"
                         : "transform 0.15s cubic-bezier(0.4, 0, 0.2, 1)",
+                      // Promove para camada GPU: acelera o scale de SVGs
+                      // complexos (mermaid) que senão reprocessam layout/paint
+                      // a cada quadro de zoom.
+                      willChange: "transform",
+                      backfaceVisibility: "hidden",
                     }}
                     dangerouslySetInnerHTML={{ __html: svgContent }}
                   />
