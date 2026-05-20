@@ -1,11 +1,11 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { X, Save, FileText, Eye, AlertCircle, Check } from "lucide-react"
+import { Save, FileText, Eye, AlertCircle, Check } from "lucide-react"
 import {
   Notebook,
   Info,
@@ -32,6 +32,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { BlockEditorShell } from "@/components/block-content-editor/extras/block-editor-shell"
+import { useEditorSettings } from "@/components/block-content-editor/extras/settings-menu/use-editor-settings"
 
 interface AdmonitionEditorProps {
   initialData?: AdmonitionData
@@ -142,82 +144,36 @@ export function AdmonitionEditor({ initialData, onSave, onCancel }: AdmonitionEd
     }
   )
   const [typeDropdownOpen, setTypeDropdownOpen] = useState(false)
-
-  // Block body scroll and pointer events when modal is open
-  useEffect(() => {
-    document.body.style.overflow = "hidden"
-    document.body.style.pointerEvents = "none"
-
-    return () => {
-      document.body.style.overflow = ""
-      document.body.style.pointerEvents = ""
-    }
-  }, [])
+  const settings = useEditorSettings("admonition")
 
   const handleSave = () => {
     onSave(data)
   }
 
-  const handleCancel = () => {
-    onCancel()
-  }
-
   return (
-    <div
-      className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
-      style={{ pointerEvents: "auto" }}
-      onClick={handleCancel}
-      onMouseDown={(e) => e.stopPropagation()}
-      onKeyDown={(e) => {
-        if (e.key === "Escape") {
-          handleCancel()
-        }
-        e.stopPropagation()
-      }}
-    >
-      <div
-        className="bg-white dark:bg-gray-900 border dark:border-gray-700 shadow-2xl w-full max-w-7xl h-[90vh] flex flex-col"
-        style={{ pointerEvents: "auto" }}
-        onClick={(e) => e.stopPropagation()}
-        onKeyDown={(e) => e.stopPropagation()}
-        onKeyUp={(e) => e.stopPropagation()}
-        onKeyPress={(e) => e.stopPropagation()}
-      >
-        {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900">
-          <div className="flex items-center gap-2">
-            <AlertCircle className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Admonition Editor</h2>
-
-            {/* Current type and style display */}
-            <div className="ml-4 flex items-center gap-3 pl-4 border-l border-gray-300 dark:border-gray-600">
-              <div className="flex items-center gap-2 text-sm">
-                <span className="text-gray-600 dark:text-gray-400">Type:</span>
-                <div className="flex items-center gap-1 font-medium text-gray-800 dark:text-gray-200 capitalize bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">
-                  {typeToIcon[data.type]}
-                  <span>{data.type}</span>
-                </div>
-              </div>
-              <div className="flex items-center gap-2 text-sm">
-                <span className="text-gray-600 dark:text-gray-400">Design:</span>
-                <span className="font-medium text-gray-800 dark:text-gray-200 capitalize bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">
-                  {designStyles.find(s => s.value === (data.design || "default"))?.label}
-                </span>
-              </div>
+    <BlockEditorShell
+      settings={settings}
+      icon={<AlertCircle className="h-5 w-5 text-blue-600 dark:text-blue-400" />}
+      title="Admonition Editor"
+      headerMeta={
+        <>
+          <div className="flex items-center gap-2 text-sm">
+            <span className="text-gray-600 dark:text-gray-400">Type:</span>
+            <div className="flex items-center gap-1 font-medium text-gray-800 dark:text-gray-200 capitalize bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">
+              {typeToIcon[data.type]}
+              <span>{data.type}</span>
             </div>
           </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleCancel}
-            className="hover:bg-gray-100 dark:hover:bg-gray-800"
-          >
-            <X className="h-4 w-4" />
-          </Button>
-        </div>
-
-        {/* Settings Bar */}
-        <div className="flex items-center gap-4 p-4 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900">
+          <div className="flex items-center gap-2 text-sm">
+            <span className="text-gray-600 dark:text-gray-400">Design:</span>
+            <span className="font-medium text-gray-800 dark:text-gray-200 capitalize bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">
+              {designStyles.find(s => s.value === (data.design || "default"))?.label}
+            </span>
+          </div>
+        </>
+      }
+      secondaryHeader={
+        <div className="flex items-center gap-4 p-4">
           <div className="flex items-center gap-2">
             <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
               Admonition Type:
@@ -352,9 +308,29 @@ export function AdmonitionEditor({ initialData, onSave, onCancel }: AdmonitionEd
             </DropdownMenu>
           </div>
         </div>
-
-        {/* Editor Content */}
-        <div className="flex-1 flex min-h-0">
+      }
+      footer={
+        <div className="flex items-center justify-end gap-2">
+          <Button
+            variant="outline"
+            onClick={onCancel}
+            className="border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800 bg-transparent"
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleSave}
+            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600"
+          >
+            <Save className="h-4 w-4" />
+            Save Admonition
+          </Button>
+        </div>
+      }
+      onClose={onCancel}
+    >
+      {/* Editor Content */}
+      <div className="flex-1 flex min-h-0">
           {/* Left Panel - Editor */}
           <div className="w-1/2 border-r border-gray-200 dark:border-gray-800 flex flex-col bg-white dark:bg-gray-900">
             <div className="p-4 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900">
@@ -494,27 +470,6 @@ export function AdmonitionEditor({ initialData, onSave, onCancel }: AdmonitionEd
             </div>
           </div>
         </div>
-
-        {/* Footer */}
-        <div className="p-4 border-t border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900">
-          <div className="flex items-center justify-end gap-2">
-            <Button
-              variant="outline"
-              onClick={handleCancel}
-              className="border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800 bg-transparent"
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleSave}
-              className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600"
-            >
-              <Save className="h-4 w-4" />
-              Save Admonition
-            </Button>
-          </div>
-        </div>
-      </div>
-    </div>
+    </BlockEditorShell>
   )
 }
