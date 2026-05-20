@@ -10,6 +10,8 @@ import {
   StaticProjectHeader,
   StaticProjectContent,
   DirectSection,
+  DirectFolderSection,
+  DirectFileSection,
   LinkSection,
   FeaturedSection,
   ByTagSection,
@@ -96,14 +98,30 @@ export default function StaticViewerPage() {
                   <h2 className="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-3">Quick Access</h2>
                 </LinkSection>
 
-                {/* Direct inline render */}
+                {/* Direct inline render (loaded from IndexedDB by id) */}
                 <DirectSection
                   projectId="405d66a5-45d7-472e-81d5-876ec4e3f682"
                   showTitle
                   showMeta
                 >
-                  <h2 className="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-3">Direct View</h2>
+                  <h2 className="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-3">Direct View (by id)</h2>
                 </DirectSection>
+
+                {/* Direct inline render (loaded from a filesystem folder under src/data/test-blocks/) */}
+                <DirectFolderSection
+                  folderName="projeto-17792247804366bs8q7l9t"
+                  showTitle
+                  showMeta
+                >
+                  <h2 className="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-3">Direct View (from folder)</h2>
+                </DirectFolderSection>
+
+                {/* Direct inline render (loaded from a single block-content-editor file, no index.json) */}
+                <DirectFileSection
+                  filePath="test-blocks/projeto-17792247804366bs8q7l9t/data.block-content-editor"
+                >
+                  <h2 className="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-3">Direct View (from file)</h2>
+                </DirectFileSection>
 
                 {/* Featured cards */}
                 <FeaturedSection

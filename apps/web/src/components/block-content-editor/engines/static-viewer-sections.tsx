@@ -1,5 +1,29 @@
 "use client"
 
+/**
+ * Static-viewer sections
+ *
+ * Composable read-only surfaces for rendering one or more projects without
+ * the editor chrome. Provides three project-source modes through three
+ * hooks, plus the corresponding section components:
+ *
+ *   useStaticProject(id)               → DirectSection
+ *     ↳ Reads IndexedDB via `EnhancedStorageAdapter.load(id)`.
+ *
+ *   useStaticProjectFromFolder(folder) → DirectFolderSection
+ *     ↳ Fetches `GET /api/static-viewer/folder/[folderName]`, which reads
+ *       `src/data/test-blocks/<folder>/{index.json,data.block-content-editor}`.
+ *
+ *   useStaticBlocksFromFile(filePath)  → DirectFileSection
+ *     ↳ Fetches `GET /api/static-viewer/file/[...path]` — single file, no
+ *       index.json, no metadata.
+ *
+ * All three pipe the serialized payload through `deserializeProject(...)`
+ * to produce a `BlockArray` and render it with `<BlockArrayViewer>`.
+ *
+ * See `docs/DATA-FLOW.md` ("Static-Viewer Flow").
+ */
+
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react"
 import { FileWarning, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -24,6 +48,12 @@ export interface StaticProjectData {
   loading: boolean
   error: string | null
   project: ProjectData | null
+  blocks: BlockArray
+}
+
+export interface StaticBlocksData {
+  loading: boolean
+  error: string | null
   blocks: BlockArray
 }
 
@@ -117,6 +147,108 @@ export function useStaticProject(projectId: string | null): StaticProjectData {
   return { loading, error, project, blocks }
 }
 
+/**
+ * Load a static project from a filesystem folder on the server (e.g. `src/data/test-blocks/<folderName>/`).
+ * The folder must contain `index.json` and `data.block-content-editor`.
+ * Fetches via the `/api/static-viewer/folder/[folderName]` route.
+ */
+export function useStaticProjectFromFolder(folderName: string | null): StaticProjectData {
+  const [project, setProject] = useState<ProjectData | null>(null)
+  const [loading, setLoading] = useState(!!folderName)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!folderName) {
+      setProject(null)
+      setLoading(false)
+      setError(null)
+      return
+    }
+
+    let cancelled = false
+    setLoading(true)
+    setError(null)
+
+    fetch(`/api/static-viewer/folder/${encodeURIComponent(folderName)}`)
+      .then(async (res) => {
+        const body = await res.json().catch(() => ({}))
+        if (!res.ok) throw new Error(body?.error ?? `Failed to load folder (${res.status})`)
+        return body as { project: ProjectData }
+      })
+      .then(({ project: p }) => {
+        if (!cancelled) setProject(p)
+      })
+      .catch((err: unknown) => {
+        if (!cancelled) setError(err instanceof Error ? err.message : "Unknown error")
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false)
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [folderName])
+
+  const blocks = useMemo<BlockArray>(() => (project ? deserializeProject(project.data) : []), [project])
+
+  return { loading, error, project, blocks }
+}
+
+/**
+ * Load only a `data.block-content-editor` file (no index.json / no project metadata).
+ * `filePath` is relative to `src/data/test-blocks/` (forward-slash separated, e.g.
+ * `"projeto-17792247804366bs8q7l9t/data.block-content-editor"`).
+ */
+export function useStaticBlocksFromFile(filePath: string | null): StaticBlocksData {
+  const [raw, setRaw] = useState<string | null>(null)
+  const [loading, setLoading] = useState(!!filePath)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!filePath) {
+      setRaw(null)
+      setLoading(false)
+      setError(null)
+      return
+    }
+
+    let cancelled = false
+    setLoading(true)
+    setError(null)
+
+    const encoded = filePath
+      .split("/")
+      .filter(Boolean)
+      .map(encodeURIComponent)
+      .join("/")
+
+    fetch(`/api/static-viewer/file/${encoded}`)
+      .then(async (res) => {
+        const body = await res.json().catch(() => ({}))
+        if (!res.ok) throw new Error(body?.error ?? `Failed to load file (${res.status})`)
+        return body as { data: string }
+      })
+      .then(({ data }) => {
+        if (!cancelled) setRaw(data)
+      })
+      .catch((err: unknown) => {
+        if (!cancelled) setError(err instanceof Error ? err.message : "Unknown error")
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false)
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [filePath])
+
+  const blocks = useMemo<BlockArray>(() => (raw ? deserializeProject(raw) : []), [raw])
+
+  return { loading, error, blocks }
+}
+
 // ============================================================================
 // Part components
 // ============================================================================
@@ -135,7 +267,7 @@ export function StaticProjectHeader({
   if (!data.project || (!showTitle && !showMeta)) return null
 
   const meta = data.project as any
-  const updatedAt = meta.updatedAt ? new Date(meta.updatedAt) : null
+  const updatedAt = meta.metadata?.updatedAt ? new Date(meta.metadata.updatedAt) : null
   const tags: string[] = meta.tags ?? []
 
   return (
@@ -225,6 +357,70 @@ export function DirectSection({
       {children}
       {(showTitle || showMeta) && <StaticProjectHeader data={data} showTitle={showTitle} showMeta={showMeta} />}
       <StaticProjectContent data={data} />
+    </section>
+  )
+}
+
+/**
+ * Same shape as DirectSection, but loads the project from a server filesystem folder
+ * (under `src/data/test-blocks/<folderName>/`) instead of the IndexedDB store.
+ */
+export function DirectFolderSection({
+  folderName,
+  showTitle,
+  showMeta,
+  children,
+  className,
+}: {
+  folderName: string
+  showTitle?: boolean
+  showMeta?: boolean
+  children?: ReactNode
+  className?: string
+}) {
+  const data = useStaticProjectFromFolder(folderName)
+  return (
+    <section className={className}>
+      {children}
+      {(showTitle || showMeta) && <StaticProjectHeader data={data} showTitle={showTitle} showMeta={showMeta} />}
+      <StaticProjectContent data={data} />
+    </section>
+  )
+}
+
+/**
+ * Render blocks directly from a single `data.block-content-editor` file (no index.json).
+ * Since there's no project metadata, no title/meta/tags are shown — just the blocks.
+ */
+export function DirectFileSection({
+  filePath,
+  children,
+  className,
+}: {
+  filePath: string
+  children?: ReactNode
+  className?: string
+}) {
+  const data = useStaticBlocksFromFile(filePath)
+
+  return (
+    <section className={className}>
+      {children}
+      {data.loading ? (
+        <div className="flex items-center justify-center py-20">
+          <Loader2 className="h-8 w-8 animate-spin text-gray-400 dark:text-gray-500" />
+        </div>
+      ) : data.error ? (
+        <div className="flex flex-col items-center justify-center py-20 text-center">
+          <FileWarning className="h-12 w-12 text-gray-300 dark:text-gray-600 mb-4" />
+          <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-1">File Not Loaded</h3>
+          <p className="text-sm text-gray-500 dark:text-gray-400">{data.error}</p>
+        </div>
+      ) : (
+        <div className="border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900 p-6">
+          <BlockArrayViewer blocks={data.blocks} />
+        </div>
+      )}
     </section>
   )
 }
@@ -364,7 +560,7 @@ export function ProjectCard({
   onSelect: () => void
 }) {
   const meta = project as any
-  const updatedAt = meta.updatedAt ? new Date(meta.updatedAt) : null
+  const updatedAt = meta.metadata?.updatedAt ? new Date(meta.metadata.updatedAt) : null
   const tags: string[] = meta.tags ?? []
 
   return (
