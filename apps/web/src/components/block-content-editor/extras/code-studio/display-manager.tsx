@@ -17,6 +17,12 @@ interface DisplayManagerProps {
    * - "expanded": secondary displays (Mirror, Test, custom).
    */
   activeDisplayScope: "compact" | "expanded"
+  /**
+   * Panel types already present in the active display — used to disable the
+   * add-panel button for types capped at one per layout (full-editor and
+   * focus-editor).
+   */
+  existingPanelTypes?: Set<PanelType>
   onSelectDisplay: (displayId: string) => void
   onCreateDisplay: (name: string, templateId: string) => void
   onDeleteDisplay: (displayId: string) => void
@@ -37,6 +43,7 @@ export function DisplayManager({
   displays,
   activeDisplayId,
   activeDisplayScope,
+  existingPanelTypes,
   onSelectDisplay,
   onCreateDisplay,
   onDeleteDisplay,
@@ -188,8 +195,20 @@ export function DisplayManager({
           Add panel
         </span>
         <PanelAddButton label="Explorer" tone="green" onClick={() => onAddPanel("explorer")} />
-        <PanelAddButton label="Full Editor" tone="blue" onClick={() => onAddPanel("full-editor")} />
-        <PanelAddButton label="Focus Editor" tone="cyan" onClick={() => onAddPanel("focus-editor")} />
+        <PanelAddButton
+          label="Full Editor"
+          tone="blue"
+          onClick={() => onAddPanel("full-editor")}
+          disabled={existingPanelTypes?.has("full-editor")}
+          disabledTitle="Only one Full Editor allowed per display"
+        />
+        <PanelAddButton
+          label="Focus Editor"
+          tone="cyan"
+          onClick={() => onAddPanel("focus-editor")}
+          disabled={existingPanelTypes?.has("focus-editor")}
+          disabledTitle="Only one Focus Editor allowed per display"
+        />
         <PanelAddButton label="Output" tone="purple" onClick={() => onAddPanel("output")} />
       </div>
 
@@ -214,10 +233,14 @@ function PanelAddButton({
   label,
   tone,
   onClick,
+  disabled = false,
+  disabledTitle,
 }: {
   label: string
   tone: "green" | "blue" | "cyan" | "purple"
   onClick: () => void
+  disabled?: boolean
+  disabledTitle?: string
 }) {
   const toneClass = {
     green: "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 hover:bg-green-200 dark:hover:bg-green-900/50",
@@ -228,8 +251,13 @@ function PanelAddButton({
   return (
     <button
       onClick={onClick}
-      className={cn("px-2 py-1 text-[11px] rounded transition-colors", toneClass)}
-      title={`Add ${label} panel`}
+      disabled={disabled}
+      className={cn(
+        "px-2 py-1 text-[11px] rounded transition-colors",
+        toneClass,
+        disabled && "opacity-40 cursor-not-allowed hover:bg-transparent",
+      )}
+      title={disabled ? (disabledTitle ?? `${label} already present`) : `Add ${label} panel`}
     >
       + {label}
     </button>
