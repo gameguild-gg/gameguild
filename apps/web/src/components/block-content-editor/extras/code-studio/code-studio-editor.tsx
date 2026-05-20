@@ -444,27 +444,29 @@ export function CodeStudioEditor({
     const activeDisplay = getActiveDisplay()
     if (!activeDisplay) return
 
-    // When the layout has BOTH a focus-editor and another editor (full-editor
-    // or focus-editor variant), non-focus files should still open in the
-    // fallback editor — only block the click if the focus-editor is the only
-    // editor available, since otherwise the file would have nowhere to render.
     const hasFocusEditor = displayHasPanelType(activeDisplay, "focus-editor")
     const hasFullEditor = displayHasPanelType(activeDisplay, "full-editor")
+    const focusFolder = localData.folders?.find(f => f.isFocusFolder)
+    const file = localData.files.find(f => f.id === fileId)
+    const fileFolderPath = file ? file.path.substring(0, file.path.lastIndexOf('/')) : ''
+    const isFocusFile = !!(focusFolder && file && fileFolderPath === focusFolder.path)
 
-    if (hasFocusEditor && !hasFullEditor) {
-      const focusFolder = localData.folders?.find(f => f.isFocusFolder)
-      if (focusFolder) {
-        const file = localData.files.find(f => f.id === fileId)
-        if (file) {
-          const fileFolderPath = file.path.substring(0, file.path.lastIndexOf('/'))
-          if (fileFolderPath !== focusFolder.path) {
-            return
-          }
-        }
-      }
+    // Focus editor is the only editor and the clicked file is outside the
+    // focus folder — it would have nowhere to render, so ignore the click.
+    if (hasFocusEditor && !hasFullEditor && focusFolder && file && !isFocusFile) {
+      return
     }
 
     setLocalData(draft => {
+      // When a focus-editor is present, files that live in the focus folder
+      // should be routed ONLY to the focus-editor — they must not appear as
+      // tabs in the sibling full-editor. We achieve that by just updating the
+      // global active file (which the focus-editor reads) without adding the
+      // file to the shared openTabs list that drives full-editor tabs.
+      if (hasFocusEditor && isFocusFile) {
+        draft.activeFileId = fileId
+        return
+      }
       TabOps.selectFile(draft, fileId, panelId, activeDisplay)
     })
   }
@@ -490,8 +492,22 @@ export function CodeStudioEditor({
     const activeDisplay = getActiveDisplay()
     if (!activeDisplay) return
 
+    const hasFocusEditor = displayHasPanelType(activeDisplay, "focus-editor")
+    const focusFolder = localData.folders?.find(f => f.isFocusFolder)
+    const routeToFocusOnly = !!(hasFocusEditor && focusFolder && path === focusFolder.path)
+
     setLocalData(draft => {
       FileOps.createFile(draft, path, name, activeDisplay.id)
+      if (routeToFocusOnly) {
+        // The shared createFile helper adds the new file to the global
+        // openTabs list (which feeds the full-editor). For focus-folder files
+        // we strip it back out so it only surfaces inside the focus-editor.
+        const fullPath = path ? `${path}/${name}` : name
+        const newFile = draft.files.find(f => f.path === fullPath)
+        if (newFile && draft.openTabs) {
+          draft.openTabs = draft.openTabs.filter(id => id !== newFile.id)
+        }
+      }
     })
   }
 
@@ -509,8 +525,19 @@ export function CodeStudioEditor({
       })
     }
 
+    const hasFocusEditor = displayHasPanelType(activeDisplay, "focus-editor")
+    const focusFolder = localData.folders?.find(f => f.isFocusFolder)
+    const routeToFocusOnly = !!(hasFocusEditor && focusFolder && path === focusFolder.path)
+
     setLocalData(draft => {
       FileOps.addFileFromAsset(draft, path, assetId, fileName, content, activeDisplay.id)
+      if (routeToFocusOnly) {
+        const fullPath = path ? `${path}/${fileName}` : fileName
+        const newFile = draft.files.find(f => f.path === fullPath)
+        if (newFile && draft.openTabs) {
+          draft.openTabs = draft.openTabs.filter(id => id !== newFile.id)
+        }
+      }
     })
   }
 
@@ -1181,12 +1208,38 @@ export function CodeStudioEditor({
         // No preview, usar displayConfig passado; no editor, usar activeDisplay
         const displayToUse = isPreview && displayConfig ? displayConfig : getActiveDisplay()
         const isUniqueInstance = panel.editorInstance === "unique"
-        const currentOpenTabs = isUniqueInstance 
+        const rawCurrentOpenTabs = isUniqueInstance 
           ? (displayToUse?.uniqueOpenTabs || [])
           : (localData.openTabs || [])
-        const currentActiveFileId = isUniqueInstance
+
+        // When the same display also has a focus-editor, files that live in
+        // the focus folder are owned exclusively by it — strip them out of the
+        // full-editor's tab strip so they don't show up in both places. This
+        // is defensive: handleFileSelect / handleCreateFile already avoid
+        // adding them, but legacy data may carry stale entries.
+        const fullDisplayHasFocus = displayToUse ? displayHasPanelType(displayToUse, "focus-editor") : false
+        const fullFocusFolder = fullDisplayHasFocus
+          ? localData.folders?.find(f => f.isFocusFolder)
+          : undefined
+        const currentOpenTabs = fullFocusFolder
+          ? rawCurrentOpenTabs.filter(tabId => {
+              const f = localData.files.find(file => file.id === tabId)
+              if (!f) return true
+              const folderPath = f.path.substring(0, f.path.lastIndexOf('/'))
+              return folderPath !== fullFocusFolder.path
+            })
+          : rawCurrentOpenTabs
+
+        const rawCurrentActiveFileId = isUniqueInstance
           ? displayToUse?.uniqueActiveFileId
           : localData.activeFileId
+        // If the global active file points at a focus-folder file (now owned
+        // by the focus-editor), the full-editor should fall back to the first
+        // tab it actually has so its editor surface keeps showing something
+        // meaningful instead of going blank.
+        const currentActiveFileId = rawCurrentActiveFileId && currentOpenTabs.includes(rawCurrentActiveFileId)
+          ? rawCurrentActiveFileId
+          : currentOpenTabs[0]
         
         // No preview, verificar se há explorer no Display Base para permitir fechar tabs
         const hasExplorer = displayConfig ? displayHasPanelType(displayConfig, 'explorer') : true
@@ -1269,16 +1322,34 @@ export function CodeStudioEditor({
         // Focus editor: Language selector instead of file tabs.
         // Always rendered in "multiple" mode — it intentionally shares the
         // global active file with sibling editors so the toggle is hidden.
+        const focusFolderForRender = localData.folders?.find(f => f.isFocusFolder)
+
+        // No focus folder configured — the focus-editor has no scope to render.
+        // Show a guidance message instead of an empty editor; the author can
+        // mark any folder as the focus folder from the file explorer.
+        if (!focusFolderForRender) {
+          return (
+            <div className="flex flex-col h-full items-center justify-center text-center px-6 py-8 gap-2 text-gray-600 dark:text-gray-300">
+              <div className="text-sm font-medium">
+                Nenhuma pasta marcada como foco
+              </div>
+              <div className="text-xs text-gray-500 dark:text-gray-400 max-w-xs">
+                Marque uma pasta como “foco” no explorador de arquivos para
+                que ela apareça aqui.
+              </div>
+            </div>
+          )
+        }
+
         const rawFocusActiveFileId = localData.activeFileId
 
         // Constrain the rendered file to the focus folder. When the global
         // active file lives outside (e.g. user opened it in a sibling Full
         // Editor), fall back to the first file inside the focus folder so the
         // focus-editor keeps showing the focus context instead of spilling.
-        const focusFolderForRender = localData.folders?.find(f => f.isFocusFolder)
-        const focusFolderFiles = focusFolderForRender
-          ? localData.files.filter(f => f.path.substring(0, f.path.lastIndexOf('/')) === focusFolderForRender.path)
-          : localData.files
+        const focusFolderFiles = localData.files.filter(
+          f => f.path.substring(0, f.path.lastIndexOf('/')) === focusFolderForRender.path,
+        )
         const focusActiveFileId = rawFocusActiveFileId && focusFolderFiles.some(f => f.id === rawFocusActiveFileId)
           ? rawFocusActiveFileId
           : focusFolderFiles[0]?.id
