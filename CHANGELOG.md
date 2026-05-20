@@ -1,3 +1,14 @@
+# [3.9.0](https://github.com/gameguild-gg/gameguild/compare/v3.8.0...v3.9.0) (2026-05-20)
+
+### Features
+
+* **block-content-editor:** static-viewer Direct Folder and file Section ([f98aa1e](https://github.com/gameguild-gg/gameguild/commit/f98aa1e4c8dc7e0dda955c5563c96f63ebbd5d63))
+
+### Bug Fixes
+
+* **block-content-editor:** scroll bar involuntary ([b2bfba8](https://github.com/gameguild-gg/gameguild/commit/b2bfba834282bd74c4dbefb35fcd22a67a2c5c10))
+* **block-content-editor:** import project from folder ([9b8932e](https://github.com/gameguild-gg/gameguild/commit/9b8932ef326705fa64e10f0e8eab4364ff80ffc4))
+
 # [3.8.0](https://github.com/gameguild-gg/gameguild/compare/v3.7.3...v3.8.0) (2026-05-19)
 
 ### Features
