@@ -1088,6 +1088,15 @@ export function CodeStudioEditor({
     const activeDisplay = getActiveDisplay()
     if (!activeDisplay) return
 
+    // Hard cap: at most one Full Editor and at most one Focus Editor per
+    // display. Other panel types (explorer, output) may repeat.
+    if (
+      (type === "full-editor" || type === "focus-editor") &&
+      displayHasPanelType(activeDisplay, type)
+    ) {
+      return
+    }
+
     setLocalData(draft => {
       PanelOps.addPanel(draft, activeDisplay, type)
     })
@@ -1257,14 +1266,10 @@ export function CodeStudioEditor({
         )
       
       case "focus-editor":
-        // Focus editor: Language selector instead of file tabs
-        const focusDisplayToUse = isPreview && displayConfig ? displayConfig : getActiveDisplay()
-        const isFocusUniqueInstance = panel.editorInstance === "unique"
-        
-        // For focus-editor, we maintain a single active file based on language selection
-        const rawFocusActiveFileId = isFocusUniqueInstance
-          ? focusDisplayToUse?.uniqueActiveFileId
-          : localData.activeFileId
+        // Focus editor: Language selector instead of file tabs.
+        // Always rendered in "multiple" mode — it intentionally shares the
+        // global active file with sibling editors so the toggle is hidden.
+        const rawFocusActiveFileId = localData.activeFileId
 
         // Constrain the rendered file to the focus folder. When the global
         // active file lives outside (e.g. user opened it in a sibling Full
@@ -1280,14 +1285,6 @@ export function CodeStudioEditor({
         
         return (
           <div className="flex flex-col h-full relative">
-            {/* Editor Instance Switch */}
-            {panel.editorInstance && localData.layout?.editMode && (
-              <EditorInstanceSwitch
-                editorInstance={panel.editorInstance}
-                onToggle={() => handleToggleEditorInstance(panel.id)}
-              />
-            )}
-            
             <LanguageSelector
               files={localData.files}
               folders={localData.folders || []}
@@ -1649,21 +1646,30 @@ export function CodeStudioEditor({
           )}
 
           {/* Inline layout-edit toolbar (display tabs + templates + add-panel) */}
-          {localData.layout?.editMode && localData.layout && (
-            <DisplayManager
-              displays={localData.layout.displays}
-              activeDisplayId={localData.layout.activeDisplayId}
-              activeDisplayScope={
-                localData.layout.displays[0]?.id === localData.layout.activeDisplayId ? "compact" : "expanded"
-              }
-              onSelectDisplay={handleSelectDisplay}
-              onCreateDisplay={handleCreateDisplay}
-              onDeleteDisplay={handleDeleteDisplay}
-              onRenameDisplay={handleRenameDisplay}
-              onApplyTemplate={handleApplyTemplate}
-              onAddPanel={handleAddPanel}
-            />
-          )}
+          {localData.layout?.editMode && localData.layout && (() => {
+            const editToolbarActive = localData.layout.displays.find(
+              d => d.id === localData.layout?.activeDisplayId,
+            )
+            const existingPanelTypes = editToolbarActive
+              ? new Set<PanelType>(getAllLeaves(editToolbarActive.root).map(l => l.type))
+              : undefined
+            return (
+              <DisplayManager
+                displays={localData.layout.displays}
+                activeDisplayId={localData.layout.activeDisplayId}
+                activeDisplayScope={
+                  localData.layout.displays[0]?.id === localData.layout.activeDisplayId ? "compact" : "expanded"
+                }
+                existingPanelTypes={existingPanelTypes}
+                onSelectDisplay={handleSelectDisplay}
+                onCreateDisplay={handleCreateDisplay}
+                onDeleteDisplay={handleDeleteDisplay}
+                onRenameDisplay={handleRenameDisplay}
+                onApplyTemplate={handleApplyTemplate}
+                onAddPanel={handleAddPanel}
+              />
+            )
+          })()}
 
           {/* Layout Edit Button */}
           <div className="ml-auto flex items-center gap-2 shrink-0">

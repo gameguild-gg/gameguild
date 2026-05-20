@@ -210,28 +210,6 @@ export const LAYOUT_TEMPLATES: LayoutTemplate[] = [
         leaf("full-editor"),
       ]),
   },
-  {
-    id: "two-editors",
-    name: "Two Editors",
-    description: "Two focus editors side-by-side. Independent file pickers.",
-    scope: "expanded",
-    preview: {
-      schema: {
-        kind: "split",
-        direction: "horizontal",
-        sizes: [50, 50],
-        children: [
-          { kind: "leaf", type: "focus-editor" },
-          { kind: "leaf", type: "focus-editor" },
-        ],
-      },
-    },
-    build: () =>
-      split("horizontal", [50, 50], [
-        leaf("focus-editor"),
-        leaf("focus-editor"),
-      ]),
-  },
 ]
 
 export function getTemplate(id: string): LayoutTemplate | undefined {
