@@ -444,20 +444,19 @@ export function CodeStudioEditor({
     const activeDisplay = getActiveDisplay()
     if (!activeDisplay) return
 
-    // Check if there's a focus-editor in the active display
+    // When the layout has BOTH a focus-editor and another editor (full-editor
+    // or focus-editor variant), non-focus files should still open in the
+    // fallback editor — only block the click if the focus-editor is the only
+    // editor available, since otherwise the file would have nowhere to render.
     const hasFocusEditor = displayHasPanelType(activeDisplay, "focus-editor")
-    
-    if (hasFocusEditor) {
-      // Find the focus folder
+    const hasFullEditor = displayHasPanelType(activeDisplay, "full-editor")
+
+    if (hasFocusEditor && !hasFullEditor) {
       const focusFolder = localData.folders?.find(f => f.isFocusFolder)
-      
       if (focusFolder) {
-        // Check if the file is in the focus folder
         const file = localData.files.find(f => f.id === fileId)
         if (file) {
           const fileFolderPath = file.path.substring(0, file.path.lastIndexOf('/'))
-          
-          // If file is not in focus folder, don't select it
           if (fileFolderPath !== focusFolder.path) {
             return
           }
@@ -1263,9 +1262,21 @@ export function CodeStudioEditor({
         const isFocusUniqueInstance = panel.editorInstance === "unique"
         
         // For focus-editor, we maintain a single active file based on language selection
-        const focusActiveFileId = isFocusUniqueInstance
+        const rawFocusActiveFileId = isFocusUniqueInstance
           ? focusDisplayToUse?.uniqueActiveFileId
           : localData.activeFileId
+
+        // Constrain the rendered file to the focus folder. When the global
+        // active file lives outside (e.g. user opened it in a sibling Full
+        // Editor), fall back to the first file inside the focus folder so the
+        // focus-editor keeps showing the focus context instead of spilling.
+        const focusFolderForRender = localData.folders?.find(f => f.isFocusFolder)
+        const focusFolderFiles = focusFolderForRender
+          ? localData.files.filter(f => f.path.substring(0, f.path.lastIndexOf('/')) === focusFolderForRender.path)
+          : localData.files
+        const focusActiveFileId = rawFocusActiveFileId && focusFolderFiles.some(f => f.id === rawFocusActiveFileId)
+          ? rawFocusActiveFileId
+          : focusFolderFiles[0]?.id
         
         return (
           <div className="flex flex-col h-full relative">
@@ -1535,6 +1546,7 @@ export function CodeStudioEditor({
           root={baseDisplay.root}
           renderLeaf={(leaf) => renderPanelContent(leaf, baseDisplay)}
           editable={false}
+          resizable
         />
       </div>
     )
@@ -1705,6 +1717,7 @@ export function CodeStudioEditor({
                   root={activeDisplay.root}
                   renderLeaf={(leaf) => renderPanelContent(leaf)}
                   editable={isEditing}
+                  resizable
                   onSplitResize={handleSplitResize}
                   onMovePanel={handleMovePanel}
                   onRemovePanel={handleRemovePanel}
