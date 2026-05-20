@@ -1,4 +1,5 @@
 import type { CodeStudioData, DisplayConfig } from "./types"
+import { displayHasUniqueEditor } from "./tree-operations"
 
 /**
  * Utilitários centralizados para gerenciar estado de abas entre editores unique e multiple
@@ -29,9 +30,7 @@ export function getEditorState(data: CodeStudioData, displayId: string): EditorS
     }
   }
 
-  const hasUniqueEditor = display.panels.some(
-    p => (p.type === "full-editor" || p.type === "focus-editor") && p.editorInstance === "unique"
-  )
+  const hasUniqueEditor = displayHasUniqueEditor(display)
 
   if (hasUniqueEditor) {
     // Editor unique: estado específico do display
@@ -69,9 +68,7 @@ export function setEditorState(
     return
   }
 
-  const hasUniqueEditor = display.panels.some(
-    p => (p.type === "full-editor" || p.type === "focus-editor") && p.editorInstance === "unique"
-  )
+  const hasUniqueEditor = displayHasUniqueEditor(display)
 
   if (hasUniqueEditor) {
     // Editor unique: atualizar estado do display

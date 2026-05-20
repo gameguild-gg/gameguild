@@ -1,137 +1,90 @@
-import type { CodeStudioData, DisplayConfig, PanelType, PanelConfig, EditorInstance } from "./types"
-import { getGridDimensions } from "./grid-utils"
+import type { CodeStudioData, DisplayConfig, PanelType } from "./types"
+import {
+  addPanelAtRoot,
+  moveLeafRelativeTo,
+  removeLeaf,
+  setSplitSizes,
+  splitLeafWithPanel,
+  toggleLeafEditorInstance,
+} from "./tree-operations"
 
+/**
+ * Add a panel by splitting either the targeted leaf or, if none is given, by
+ * splitting at the root.
+ */
 export function addPanel(
   draft: CodeStudioData,
   activeDisplay: DisplayConfig,
   type: PanelType,
-  row?: number,
-  col?: number
+  targetLeafId?: string,
+  direction: "horizontal" | "vertical" = "horizontal",
+  position: "before" | "after" = "after",
 ): void {
   if (!draft.layout) return
-  
-  const { cols, rows } = getGridDimensions(activeDisplay.aspectRatio)
-  
-  // Se tiver coordenadas de drag-drop, usar elas
-  // Senão, encontrar primeira célula vazia no grid
-  let targetRow = row ?? 0
-  let targetCol = col ?? 0
-  let found = row !== undefined && col !== undefined
-
-  if (!found) {
-    // Buscar primeira célula vazia
-    for (let r = 0; r < rows && !found; r++) {
-      for (let c = 0; c < cols && !found; c++) {
-        const occupied = activeDisplay.panels.some(p =>
-          r >= p.row && r < p.row + p.rowSpan &&
-          c >= p.col && c < p.col + p.colSpan
-        )
-        if (!occupied) {
-          targetRow = r
-          targetCol = c
-          found = true
-        }
-      }
-    }
-  }
-
-  // Garantir que o painel não saia do grid (tamanho padrão 4 linhas x metade das colunas)
-  const defaultColSpan = Math.min(8, Math.floor(cols / 2))
-  const rowSpan = Math.min(4, rows - targetRow)
-  const colSpan = Math.min(defaultColSpan, cols - targetCol)
-
-  const newPanel: PanelConfig = {
-    id: `${type}-${Date.now()}`,
-    type,
-    row: targetRow,
-    col: targetCol,
-    rowSpan,
-    colSpan,
-    ...((type === "full-editor" || type === "focus-editor") && { editorInstance: "multiple" as EditorInstance }),
-  }
-
   const display = draft.layout.displays.find(d => d.id === activeDisplay.id)
-  if (display) {
-    display.panels.push(newPanel)
+  if (!display) return
+
+  if (targetLeafId) {
+    display.root = splitLeafWithPanel(display.root, targetLeafId, type, direction, position)
+  } else {
+    display.root = addPanelAtRoot(display.root, type, direction)
   }
 }
 
-export function resizePanel(
+/**
+ * Apply new percent sizes to a split node after the user drags a divider.
+ */
+export function resizeSplit(
   draft: CodeStudioData,
   activeDisplay: DisplayConfig,
-  panelId: string,
-  row: number,
-  col: number,
-  rowSpan: number,
-  colSpan: number
+  splitId: string,
+  sizes: number[],
 ): void {
   if (!draft.layout) return
-  
   const display = draft.layout.displays.find(d => d.id === activeDisplay.id)
   if (!display) return
-  
-  const panel = display.panels.find(p => p.id === panelId)
-  if (panel) {
-    panel.row = row
-    panel.col = col
-    panel.rowSpan = rowSpan
-    panel.colSpan = colSpan
-  }
-}
-
-export function movePanel(
-  draft: CodeStudioData,
-  activeDisplay: DisplayConfig,
-  panelId: string,
-  row: number,
-  col: number
-): void {
-  if (!draft.layout) return
-  
-  const display = draft.layout.displays.find(d => d.id === activeDisplay.id)
-  if (!display) return
-  
-  const panel = display.panels.find(p => p.id === panelId)
-  if (panel) {
-    panel.row = row
-    panel.col = col
-  }
+  setSplitSizes(display.root, splitId, sizes)
 }
 
 export function removePanel(
   draft: CodeStudioData,
   activeDisplay: DisplayConfig,
-  panelId: string
+  panelId: string,
 ): void {
   if (!draft.layout) return
-  
   const display = draft.layout.displays.find(d => d.id === activeDisplay.id)
-  if (display) {
-    display.panels = display.panels.filter(p => p.id !== panelId)
+  if (!display) return
+  const next = removeLeaf(display.root, panelId)
+  if (next == null) {
+    // Refuse to remove the last leaf — keep something renderable.
+    return
   }
+  display.root = next
 }
 
 export function toggleEditorInstance(
   draft: CodeStudioData,
   activeDisplay: DisplayConfig,
-  panelId: string
+  panelId: string,
 ): void {
   if (!draft.layout) return
-
   const display = draft.layout.displays.find(d => d.id === activeDisplay.id)
   if (!display) return
-  
-  const panel = display.panels.find(p => p.id === panelId)
-  if (panel && (panel.type === "full-editor" || panel.type === "focus-editor")) {
-    panel.editorInstance = (panel.editorInstance === "multiple" ? "unique" : "multiple") as EditorInstance
-  }
+  toggleLeafEditorInstance(display.root, panelId)
 }
 
-// Funções para drag start/end - apenas para logging/feedback visual
-export function onPanelDragStart(panelId: string): void {
-  console.log('Dragging panel:', panelId)
-}
-
-export function onPanelDragEnd(): void {
-  console.log('Drag ended')
+/**
+ * Move an existing leaf next to another leaf via drag-and-drop quadrant docking.
+ */
+export function movePanel(
+  draft: CodeStudioData,
+  activeDisplay: DisplayConfig,
+  sourcePanelId: string,
+  targetPanelId: string,
+  position: "top" | "right" | "bottom" | "left",
+): void {
+  if (!draft.layout) return
+  const display = draft.layout.displays.find(d => d.id === activeDisplay.id)
+  if (!display) return
+  display.root = moveLeafRelativeTo(display.root, sourcePanelId, targetPanelId, position)
 }
