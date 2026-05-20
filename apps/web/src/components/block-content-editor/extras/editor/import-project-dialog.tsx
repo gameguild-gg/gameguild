@@ -8,19 +8,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Label } from "@/components/ui/label"
 import { useState, useEffect, useRef } from "react"
 import { toast } from "sonner"
-import { Upload, FileText, Archive, X } from "lucide-react"
+import { Upload, FileText, FolderOpen, Archive, X } from "lucide-react"
 import { ProjectImporter, type ImportedProjectData } from "@/components/block-content-editor/lib/interopAdapter/project-importer"
-
-interface ProjectData {
-  id: string
-  name: string
-  data: string
-  tags: string[]
-  size: number
-  createdAt: string
-  updatedAt: string
-  preferences?: any
-}
+import type { ProjectData } from "@/components/block-content-editor/lib/storage/editor/project-data"
 
 interface StorageAdapter {
   list: () => Promise<ProjectData[]>
@@ -59,6 +49,7 @@ export function ImportProjectDialog({
   const [importedProject, setImportedProject] = useState<ImportedProjectData | null>(null)
   const [isDragOver, setIsDragOver] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const folderInputRef = useRef<HTMLInputElement>(null)
 
   // Close tag dropdown when clicking outside
   useEffect(() => {
@@ -84,31 +75,28 @@ export function ImportProjectDialog({
     setIsDragOver(false)
   }
 
+  const applyImportedData = (importedData: ImportedProjectData, sourceLabel: string) => {
+    if (!ProjectImporter.validateImportedData(importedData)) {
+      throw new Error('Invalid project data format')
+    }
+    setImportedProject(importedData)
+    setProjectName(importedData.name)
+    setProjectTags(importedData.tags)
+    toast.success("Imported successfully", {
+      description: `Loaded project: ${importedData.name} (from ${sourceLabel})`,
+      duration: 3000,
+      icon: "📁",
+    })
+  }
+
   const handleFileUpload = async (file: File) => {
     try {
-      // Validate file type first
       if (!ProjectImporter.isSupportedFile(file.name)) {
         const supportedExtensions = ProjectImporter.getSupportedExtensions()
         throw new Error(`Unsupported file format. Supported formats: ${supportedExtensions.join(', ')}`)
       }
-
-      // Use ProjectImporter to handle the file
       const importedData = await ProjectImporter.importFromFile(file)
-
-      // Validate imported data
-      if (!ProjectImporter.validateImportedData(importedData)) {
-        throw new Error('Invalid project data format')
-      }
-
-      setImportedProject(importedData)
-      setProjectName(importedData.name)
-      setProjectTags(importedData.tags)
-
-      toast.success("File imported successfully", {
-        description: `Loaded project: ${importedData.name}`,
-        duration: 3000,
-        icon: "📁",
-      })
+      applyImportedData(importedData, file.name)
     } catch (error: any) {
       console.error("Import error:", error)
       toast.error("Import failed", {
@@ -119,9 +107,79 @@ export function ImportProjectDialog({
     }
   }
 
-  const handleDrop = (e: React.DragEvent) => {
+  const handleFolderUpload = async (files: File[]) => {
+    try {
+      const importedData = await ProjectImporter.importFromFolder(files)
+      const folderLabel = (files[0] as any)?.webkitRelativePath?.split('/')[0] || 'folder'
+      applyImportedData(importedData, folderLabel)
+    } catch (error: any) {
+      console.error("Folder import error:", error)
+      toast.error("Import failed", {
+        description: error.message || "Failed to import project folder",
+        duration: 4000,
+        icon: "❌",
+      })
+    }
+  }
+
+  // Recursively read files from a dropped directory entry
+  const readEntriesAsFiles = async (entry: any, pathPrefix = ""): Promise<File[]> => {
+    if (entry.isFile) {
+      return new Promise<File[]>((resolve, reject) => {
+        entry.file((file: File) => {
+          // Patch webkitRelativePath so importFromFolder can locate inner paths
+          try {
+            Object.defineProperty(file, 'webkitRelativePath', {
+              value: `${pathPrefix}${file.name}`,
+              configurable: true,
+            })
+          } catch {
+            /* non-fatal */
+          }
+          resolve([file])
+        }, reject)
+      })
+    }
+    if (entry.isDirectory) {
+      const reader = entry.createReader()
+      const allEntries: any[] = []
+      // readEntries returns batches; loop until empty
+      // eslint-disable-next-line no-constant-condition
+      while (true) {
+        const batch: any[] = await new Promise((resolve, reject) => reader.readEntries(resolve, reject))
+        if (!batch.length) break
+        allEntries.push(...batch)
+      }
+      const nested = await Promise.all(
+        allEntries.map((e) => readEntriesAsFiles(e, `${pathPrefix}${entry.name}/`)),
+      )
+      return nested.flat()
+    }
+    return []
+  }
+
+  const handleDrop = async (e: React.DragEvent) => {
     e.preventDefault()
     setIsDragOver(false)
+
+    const items = e.dataTransfer.items
+    if (items && items.length > 0) {
+      // Detect directory drops
+      const entries: any[] = []
+      for (let i = 0; i < items.length; i++) {
+        const item = items[i]
+        const entry = item && (item as any).webkitGetAsEntry ? (item as any).webkitGetAsEntry() : null
+        if (entry) entries.push(entry)
+      }
+      const dirEntry = entries.find((entry) => entry?.isDirectory)
+      if (dirEntry) {
+        const collected = await readEntriesAsFiles(dirEntry)
+        if (collected.length > 0) {
+          await handleFolderUpload(collected)
+          return
+        }
+      }
+    }
 
     const files = Array.from(e.dataTransfer.files)
     if (files.length > 0) {
@@ -144,6 +202,16 @@ export function ImportProjectDialog({
     if (files && files.length > 0) {
       handleFileUpload(files[0] as File)
     }
+    // Reset so the same file can be re-selected later
+    e.target.value = ""
+  }
+
+  const handleFolderSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files
+    if (files && files.length > 0) {
+      handleFolderUpload(Array.from(files))
+    }
+    e.target.value = ""
   }
 
   const handleSave = async (openAfterSave = false) => {
@@ -289,21 +357,37 @@ export function ImportProjectDialog({
             >
               <Upload className="w-8 h-8 mx-auto mb-2 text-gray-400" />
               <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                Drag and drop your project file here, or click to browse
+                Drag and drop your project file or folder here, or click to browse
               </p>
               <p className="text-xs text-gray-500 dark:text-gray-500 mb-4">
-                Supports: .zip (projeto-* folders), .block-content-editor files
+                Supports: .zip, .block-content-editor file, or an uncompressed projeto-* folder
               </p>
-              <Button variant="outline" onClick={() => fileInputRef.current?.click()} className="mx-auto">
-                <FileText className="w-4 h-4 mr-2" />
-                Choose File
-              </Button>
+              <div className="flex justify-center gap-2">
+                <Button variant="outline" onClick={() => fileInputRef.current?.click()}>
+                  <FileText className="w-4 h-4 mr-2" />
+                  Choose File
+                </Button>
+                <Button variant="outline" onClick={() => folderInputRef.current?.click()}>
+                  <FolderOpen className="w-4 h-4 mr-2" />
+                  Choose Folder
+                </Button>
+              </div>
               <input
                 ref={fileInputRef}
                 type="file"
                 accept=".zip,.block-content-editor"
                 onChange={handleFileSelect}
                 className="hidden"
+              />
+              <input
+                ref={folderInputRef}
+                type="file"
+                onChange={handleFolderSelect}
+                className="hidden"
+                // @ts-expect-error non-standard attributes for directory picker
+                webkitdirectory=""
+                directory=""
+                multiple
               />
             </div>
           )}

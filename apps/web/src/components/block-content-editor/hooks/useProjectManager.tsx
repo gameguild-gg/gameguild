@@ -13,19 +13,8 @@ import {
 import { toast } from "sonner"
 import type { HomeStorageAdapter } from "./useHomeStorage"
 import type { ProjectMode } from "@/components/block-content-editor/lib/storage/editor/project-modes"
+import type { ProjectData } from "@/components/block-content-editor/lib/storage/editor/project-data"
 // Engine removed: all projects use the unified Blocks engine.
-
-interface ProjectData {
-  id: string
-  name: string
-  data: string
-  tags: string[]
-  size: number
-  createdAt: string
-  updatedAt: string
-  storageType?: "local" | "gameguild-cloud" | "google-drive"
-  isLocallyAvailable?: boolean
-}
 
 interface UseProjectManagerProps {
   isDbInitialized: boolean
@@ -183,11 +172,11 @@ export function useProjectManager({
       id: project.id,
       name: project.name,
       tags: project.tags,
-      size: project.size,
+      size: project.metadata.size,
       data: project.data,
       storageType: project.storageType,
-      createdAt: project.createdAt,
-      updatedAt: project.updatedAt,
+      createdAt: project.metadata.createdAt,
+      updatedAt: project.metadata.updatedAt,
     }))
   }, [additionalFilteredProjects, currentPage, itemsPerPage])
 

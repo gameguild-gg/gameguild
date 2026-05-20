@@ -1,5 +1,30 @@
 "use client"
 
+/**
+ * useProjectStorage
+ *
+ * The main editor hook. Owns all project state (id/name/tags/blocks/preferences)
+ * and is the only application-level caller of `EnhancedStorageAdapter`.
+ *
+ * Responsibilities:
+ *   - Lifecycle: init the DB on mount; if `window.location.hash` is a project id,
+ *     load it through `db.load(id)` and seed state.
+ *   - State: `blocks: BlockArray` is the runtime working copy. Auto-save is
+ *     debounced and gated by `readOnlyRef.current` (set true while viewing a
+ *     past commit through `useProjectHistory`).
+ *   - Operations: `save`, `saveAs`, `loadProject`, `createProject`,
+ *     `titleEdit`, `titleSave`, `createSnapshot`. The dialog wrappers in
+ *     `extras/editor/project-*-operations.ts` are invoked from here.
+ *
+ * On every save:
+ *   1. `serializeProject(blocks)` → JSON string.
+ *   2. `db.save(…)` persists to IndexedDB (3 stores) and auto-commits to Git.
+ *   3. The SyncManager queue picks the entry up and pushes to Google Drive
+ *      / GameGuild Cloud depending on `storageType`.
+ *
+ * See `docs/DATA-FLOW.md` ("Editor Flow — Write Path").
+ */
+
 import { useCallback, useEffect, useRef, useState, type Dispatch, type SetStateAction } from "react"
 import { toast } from "sonner"
 import {
@@ -20,17 +45,8 @@ import { checkSelectedProject as checkProject } from "@/components/block-content
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
-export interface ProjectData {
-  id: string
-  name: string
-  data: string
-  tags: string[]
-  size: number
-  createdAt: string
-  updatedAt: string
-  storageType?: "local" | "gameguild-cloud" | "google-drive"
-  preferences?: ProjectPreferences
-}
+export type { ProjectData } from "@/components/block-content-editor/lib/storage/editor/project-data"
+import type { ProjectData } from "@/components/block-content-editor/lib/storage/editor/project-data"
 
 type StorageType = "local" | "gameguild-cloud" | "google-drive"
 

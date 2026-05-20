@@ -1,46 +1,43 @@
+/**
+ * EnhancedStorageAdapter
+ *
+ * Single integration point between the editor and persistence. Owns the
+ * IndexedDB database (`GGEditorDB`, current `DB_VERSION = 6`) and bridges to:
+ *
+ *   - Git history (auto-commit on every save, snapshots) via `getHistoryManager()`.
+ *   - SyncManager queue (IndexedDB-backed) for remote replication.
+ *   - GoogleDriveSync for Google Drive uploads/downloads.
+ *
+ * IndexedDB schema:
+ *   - `projects`         : full `ProjectData` (keyPath: id).
+ *   - `project_metadata` : `ProjectMetadataRecord` (sync hot path, no `data` blob).
+ *   - `tag_data`         : tag \u2192 projectIds index.
+ *   - `tags`             : legacy store, kept for backward migration only.
+ *
+ * Upgrades from any pre-v6 schema drop all stores: the v6 shape uses a
+ * nested `metadata` object that is incompatible with the previous flat layout.
+ *
+ * See `docs/ARCHITECTURE.md` (\"Storage Layer\") and `docs/DATA-FLOW.md`
+ * (\"Storage Adapter Internals\") for the full data plane.
+ */
+
 import { SyncManager } from "../../sync/editor/sync-manager"
 import { GoogleDriveSync } from "../../sync/editor/google-drive-sync"
 import { HashManager } from "../../sync/editor/hash-manager"
 import { getHistoryManager, type CommitInfo, type SnapshotInfo } from "../git"
 import type { ProjectPreferences } from "./project-preferences"
-import { type StorageType, STORAGE_TYPES, type SyncStatus, SYNC_STATUS } from "./storage-types"
+import { type StorageType, STORAGE_TYPES, SYNC_STATUS } from "./storage-types"
+import type { ProjectData, ProjectMetadata, ProjectMetadataRecord } from "./project-data"
 
 export type { ProjectPreferences } from "./project-preferences"
 export type { StorageType, SyncStatus } from "./storage-types"
 export type { CommitInfo, SnapshotInfo } from "../git"
-
-export interface ProjectData {
-  id: string
-  name: string
-  data: string // Serialized project data
-  tags: string[]
-  size: number
-  createdAt: string
-  updatedAt: string
-  hash: string
-  syncStatus?: SyncStatus
-  storageType: StorageType
-  isLocallyAvailable?: boolean // Computed dynamically based on local storage check
-  preferences?: ProjectPreferences // Project-level preferences
-}
+export type { ProjectData, ProjectMetadata, ProjectMetadataRecord } from "./project-data"
 
 interface TagData {
   id: string
   name: string
   projectIds: string[]
-}
-
-interface ProjectMetadata {
-  id: string
-  name: string
-  tags: string[]
-  size: number
-  hash: string
-  createdAt: string
-  updatedAt: string
-  syncStatus?: SyncStatus
-  storageType: StorageType
-  preferences?: ProjectPreferences
 }
 
 export class EnhancedStorageAdapter {
@@ -50,7 +47,7 @@ export class EnhancedStorageAdapter {
   private isInitialized = false
 
   private readonly DB_NAME = "GGEditorDB"
-  private readonly DB_VERSION = 4 // Bumped: purged Lexical engine data
+  private readonly DB_VERSION = 6 // Bumped: size/hash/createdAt/updatedAt moved into nested `metadata` field
   private readonly STORE_NAME = "projects"
   private readonly TAGS_STORE_NAME = "tags" // Kept for migration/compatibility, can be removed later
   private readonly METADATA_STORE_NAME = "project_metadata"
@@ -84,8 +81,9 @@ export class EnhancedStorageAdapter {
         const db = (event.target as IDBOpenDBRequest).result
         const oldVersion = event.oldVersion
 
-        // v4: purge legacy Lexical-engine data. Delete and recreate all stores.
-        if (oldVersion > 0 && oldVersion < 4) {
+        // Purge older schemas (Lexical-engine data, flat metadata fields, etc.)
+        // Any pre-v6 data uses incompatible shapes and is dropped.
+        if (oldVersion > 0 && oldVersion < 6) {
           const existingStores = Array.from(db.objectStoreNames)
           for (const storeName of existingStores) {
             db.deleteObjectStore(storeName)
@@ -105,7 +103,7 @@ export class EnhancedStorageAdapter {
         // Create metadata store for sync optimization
         if (!db.objectStoreNames.contains(this.METADATA_STORE_NAME)) {
           const metadataStore = db.createObjectStore(this.METADATA_STORE_NAME, { keyPath: "id" })
-          metadataStore.createIndex("hash", "hash", { unique: false })
+          metadataStore.createIndex("hash", "metadata.hash", { unique: false })
         }
 
         // Create tag_data store
@@ -132,10 +130,12 @@ export class EnhancedStorageAdapter {
       name,
       data,
       tags,
-      size: this.estimateSize(data),
-      hash,
-      createdAt: existing ? existing.createdAt : now,
-      updatedAt: now,
+      metadata: {
+        size: this.estimateSize(data),
+        hash,
+        createdAt: existing ? existing.metadata.createdAt : now,
+        updatedAt: now,
+      },
       syncStatus: SYNC_STATUS.PENDING,
       storageType,
       preferences: preferences || existing?.preferences,
@@ -185,7 +185,7 @@ export class EnhancedStorageAdapter {
       // Git commit failure should not block the save operation
     }
 
-    console.log(`Saved project "${name}" (${id}) to ${storageType} - Size: ${this.formatSize(projectData.size)}`)
+    console.log(`Saved project "${name}" (${id}) to ${storageType} - Size: ${this.formatSize(projectData.metadata.size)}`)
   }
 
   private async saveToIndexedDB(projectData: ProjectData): Promise<void> {
@@ -200,19 +200,16 @@ export class EnhancedStorageAdapter {
 
       // Save metadata for sync optimization
       const metadataStore = transaction.objectStore(this.METADATA_STORE_NAME)
-      const metadata: ProjectMetadata = {
+      const metadataRecord: ProjectMetadataRecord = {
         id: projectData.id,
         name: projectData.name,
         tags: projectData.tags,
-        size: projectData.size,
-        hash: projectData.hash!,
-        createdAt: projectData.createdAt,
-        updatedAt: projectData.updatedAt,
+        metadata: projectData.metadata,
         syncStatus: projectData.syncStatus,
         storageType: projectData.storageType,
         preferences: projectData.preferences,
       }
-      metadataStore.put(metadata)
+      metadataStore.put(metadataRecord)
 
       transaction.oncomplete = () => resolve()
       transaction.onerror = () => reject(transaction.error)
@@ -233,42 +230,28 @@ export class EnhancedStorageAdapter {
       if (await this.googleDriveSync.isGoogleDriveAvailable()) {
         const googleDriveProject = await this.googleDriveSync.loadFromGoogleDrive(id)
         if (googleDriveProject) {
-          // Ensure hash exists for the project
-          const hash = googleDriveProject.hash || await HashManager.generateHash(googleDriveProject.data)
-          
-          // Save downloaded project locally
-          await this.saveToIndexedDB({
-            ...googleDriveProject,
-            hash,
+          const hydrated = await this.ensureHash(googleDriveProject)
+          const next: ProjectData = {
+            ...hydrated,
             syncStatus: SYNC_STATUS.SYNCED,
             storageType: STORAGE_TYPES.GOOGLE_DRIVE,
-          })
-          return {
-            ...googleDriveProject,
-            hash,
-            storageType: STORAGE_TYPES.GOOGLE_DRIVE,
           }
+          await this.saveToIndexedDB(next)
+          return next
         }
       }
       
       // Try GameGuild cloud server
       const serverProject = await this.syncManager.downloadProject(id)
       if (serverProject) {
-        // Ensure hash exists for the project
-        const hash = serverProject.hash || await HashManager.generateHash(serverProject.data)
-        
-        // Save downloaded project locally
-        await this.saveToIndexedDB({
-          ...serverProject,
-          hash,
+        const hydrated = await this.ensureHash(serverProject)
+        const next: ProjectData = {
+          ...hydrated,
           syncStatus: SYNC_STATUS.SYNCED,
-          storageType: STORAGE_TYPES.GAMEGUILD_CLOUD, // Server projects are cloud-based
-        })
-        return {
-          ...serverProject,
-          hash,
           storageType: STORAGE_TYPES.GAMEGUILD_CLOUD,
         }
+        await this.saveToIndexedDB(next)
+        return next
       }
 
       return null
@@ -280,22 +263,15 @@ export class EnhancedStorageAdapter {
       if (await this.googleDriveSync.isGoogleDriveAvailable()) {
         try {
           const googleDriveProject = await this.googleDriveSync.loadFromGoogleDrive(id)
-          if (googleDriveProject && googleDriveProject.updatedAt > localProject.updatedAt) {
-            // Ensure hash exists for the project
-            const hash = googleDriveProject.hash || await HashManager.generateHash(googleDriveProject.data)
-            
-            // Update local copy with newer version from Google Drive
-            await this.saveToIndexedDB({
-              ...googleDriveProject,
-              hash,
+          if (googleDriveProject && googleDriveProject.metadata.updatedAt > localProject.metadata.updatedAt) {
+            const hydrated = await this.ensureHash(googleDriveProject)
+            const next: ProjectData = {
+              ...hydrated,
               syncStatus: SYNC_STATUS.SYNCED,
               storageType: STORAGE_TYPES.GOOGLE_DRIVE,
-            })
-            return {
-              ...googleDriveProject,
-              hash,
-              storageType: STORAGE_TYPES.GOOGLE_DRIVE,
             }
+            await this.saveToIndexedDB(next)
+            return next
           }
         } catch (error) {
           console.error("Failed to sync from Google Drive:", error)
@@ -306,25 +282,25 @@ export class EnhancedStorageAdapter {
       // Check if local project needs sync with server
       const syncedProject = await this.syncManager.syncProjectIfNeeded(localProject)
       if (syncedProject) {
-        // Ensure hash exists for the project
-        const hash = syncedProject.hash || await HashManager.generateHash(syncedProject.data)
-        
-        // Update local project with server version, preserving storage type
-        await this.saveToIndexedDB({
-          ...syncedProject,
-          hash,
+        const hydrated = await this.ensureHash(syncedProject)
+        const next: ProjectData = {
+          ...hydrated,
           syncStatus: SYNC_STATUS.SYNCED,
           storageType: localProject.storageType,
-        })
-        return {
-          ...syncedProject,
-          hash,
-          storageType: localProject.storageType,
         }
+        await this.saveToIndexedDB(next)
+        return next
       }
     }
 
     return localProject
+  }
+
+  /** Ensure `metadata.hash` is populated; computes one from `data` if missing. */
+  private async ensureHash(project: ProjectData): Promise<ProjectData> {
+    if (project.metadata.hash) return project
+    const hash = await HashManager.generateHash(project.data)
+    return { ...project, metadata: { ...project.metadata, hash } }
   }
 
   private async loadFromIndexedDB(id: string): Promise<ProjectData | null> {
@@ -430,7 +406,7 @@ export class EnhancedStorageAdapter {
     const allProjects = [...localProjectsMarked, ...uniqueGoogleDriveProjects]
     
     // Sort by last updated
-    allProjects.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+    allProjects.sort((a, b) => new Date(b.metadata.updatedAt).getTime() - new Date(a.metadata.updatedAt).getTime())
 
     // Fetch server metadata in parallel (non-blocking)
     this.syncServerMetadata().catch((error) => {
@@ -450,7 +426,7 @@ export class EnhancedStorageAdapter {
 
       request.onsuccess = () => {
         const projects = request.result as ProjectData[]
-        projects.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+        projects.sort((a, b) => new Date(b.metadata.updatedAt).getTime() - new Date(a.metadata.updatedAt).getTime())
         resolve(projects)
       }
       request.onerror = () => reject(request.error)
@@ -464,7 +440,7 @@ export class EnhancedStorageAdapter {
       // Compare with local metadata and identify projects that need sync
       for (const serverMeta of serverMetadata) {
         const localMeta = await this.getLocalMetadata(serverMeta.id)
-        if (!localMeta || localMeta.hash !== serverMeta.hash) {
+        if (!localMeta || localMeta.metadata.hash !== serverMeta.metadata.hash) {
           // Mark for sync or update status
           // This logic can be expanded based on sync strategy
         }
@@ -474,7 +450,7 @@ export class EnhancedStorageAdapter {
     }
   }
 
-  private async getLocalMetadata(id: string): Promise<ProjectMetadata | null> {
+  private async getLocalMetadata(id: string): Promise<ProjectMetadataRecord | null> {
     if (!this.db) return null
 
     return new Promise((resolve, reject) => {
@@ -594,7 +570,7 @@ export class EnhancedStorageAdapter {
           cursor.continue()
         } else {
           // Sort to maintain consistency with list()
-          projects.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+          projects.sort((a, b) => new Date(b.metadata.updatedAt).getTime() - new Date(a.metadata.updatedAt).getTime())
           resolve(projects)
         }
       }
@@ -696,7 +672,7 @@ export class EnhancedStorageAdapter {
     let totalSize = 0
 
     projects.forEach((project) => {
-      totalSize += project.size || this.estimateSize(project.data)
+      totalSize += project.metadata.size || this.estimateSize(project.data)
     })
 
     return { totalSize, projectCount: projects.length }
@@ -707,9 +683,9 @@ export class EnhancedStorageAdapter {
 
     if (project) {
       return {
-        size: project.size || this.estimateSize(project.data),
-        createdAt: project.createdAt,
-        updatedAt: project.updatedAt,
+        size: project.metadata.size || this.estimateSize(project.data),
+        createdAt: project.metadata.createdAt,
+        updatedAt: project.metadata.updatedAt,
       }
     }
 
@@ -728,7 +704,7 @@ export class EnhancedStorageAdapter {
     const updatedProject: ProjectData = {
       ...project,
       storageType,
-      updatedAt: new Date().toISOString(),
+      metadata: { ...project.metadata, updatedAt: new Date().toISOString() },
       syncStatus: SYNC_STATUS.PENDING,
     }
 
@@ -755,7 +731,7 @@ export class EnhancedStorageAdapter {
     const updatedProject: ProjectData = {
       ...project,
       preferences,
-      updatedAt: new Date().toISOString(),
+      metadata: { ...project.metadata, updatedAt: new Date().toISOString() },
       syncStatus: SYNC_STATUS.PENDING,
     }
 
@@ -913,8 +889,11 @@ export class EnhancedStorageAdapter {
     const updatedProject: ProjectData = {
       ...projectData,
       id,
-      updatedAt: now,
-      hash: await HashManager.generateHash(projectData.data),
+      metadata: {
+        ...projectData.metadata,
+        updatedAt: now,
+        hash: await HashManager.generateHash(projectData.data),
+      },
       syncStatus: SYNC_STATUS.PENDING,
     }
 

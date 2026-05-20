@@ -16,13 +16,7 @@ import { useState, useEffect } from "react"
 import { toast } from "sonner"
 import { X } from "lucide-react"
 import { StorageOptionSelector, type StorageOption } from "./storage-option-selector"
-
-interface ProjectData {
-  id: string
-  name: string
-  tags: string[]
-  storageType?: StorageOption
-}
+import type { ProjectData } from "@/components/block-content-editor/lib/storage/editor/project-data"
 
 interface StorageAdapter {
   list: () => Promise<Array<{ id: string; name: string }>>

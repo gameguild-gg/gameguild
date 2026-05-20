@@ -231,10 +231,10 @@ export function ProjectSidebarList({
                       <div className="flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400">
                         <div className="flex items-center gap-1">
                           <Calendar className="w-3 h-3" />
-                          {new Date(project.updatedAt).toLocaleDateString()}
+                          {new Date(project.metadata.updatedAt).toLocaleDateString()}
                         </div>
                         <span>•</span>
-                        <span>{formatFileSize(project.size)}</span>
+                        <span>{formatFileSize(project.metadata.size)}</span>
                         <span>•</span>
                         <Badge 
                           variant={project.storageType === "local" ? "default" : "outline"} 

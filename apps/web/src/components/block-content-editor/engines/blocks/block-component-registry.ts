@@ -53,7 +53,7 @@ export interface BlockTypeConfig {
 // ============================================================================
 
 export const BLOCK_REGISTRY: Record<BlockCellType, BlockTypeConfig> = {
-  quiz: {
+  "quiz": {
     icon: HelpCircle,
     label: "Quiz",
     description: "Interactive quiz question",
@@ -63,127 +63,127 @@ export const BLOCK_REGISTRY: Record<BlockCellType, BlockTypeConfig> = {
       data: { type: QuizEntryType.SingleChoice, stem: "", options: [{ id: "o1", text: "" }], correctOptionId: "o1", settings: createDefaultSettings() },
     }),
   },
-  code: {
+  "code-studio": {
     icon: Code,
     label: "Code Studio",
     description: "Code editor with multiple files",
     createEmpty: () => ({
       id: crypto.randomUUID(),
-      type: "code",
+      type: "code-studio",
       data: { id: crypto.randomUUID(), files: [], folders: [], openTabs: [], mode: "execution", language: "javascript", readonly: false, showLineNumbers: true, fontSize: 14, theme: "system", shikiTheme: "github", testCases: {} },
     }),
   },
-  img: {
+  "image": {
     icon: Image,
     label: "Image",
     description: "Image with caption",
     createEmpty: () => ({
       id: crypto.randomUUID(),
-      type: "img",
+      type: "image",
       data: { src: "", alt: "", caption: "", size: 100, isNew: true },
     }),
   },
-  vid: {
+  "video": {
     icon: Video,
     label: "Video",
     description: "Video player",
     createEmpty: () => ({
       id: crypto.randomUUID(),
-      type: "vid",
+      type: "video",
       data: { src: "", alt: "", caption: "", size: 100, isNew: true },
     }),
   },
-  aud: {
+  "audio": {
     icon: Music,
     label: "Audio",
     description: "Audio player",
     createEmpty: () => ({
       id: crypto.randomUUID(),
-      type: "aud",
+      type: "audio",
       data: { src: "", caption: "", size: 100, isNew: true },
     }),
   },
-  gal: {
+  "gallery": {
     icon: GalleryHorizontalEnd,
     label: "Gallery",
     description: "Image gallery",
     createEmpty: () => ({
       id: crypto.randomUUID(),
-      type: "gal",
+      type: "gallery",
       data: { images: [], layout: "2", caption: "", defaultDisplayMode: "crop", isNew: true },
     }),
   },
-  yt: {
+  "youtube": {
     icon: Youtube,
     label: "YouTube",
     description: "YouTube video embed",
     createEmpty: () => ({
       id: crypto.randomUUID(),
-      type: "yt",
+      type: "youtube",
       data: { videoId: "", title: "", caption: "", size: 100, isNew: true, startAt: 0, showControls: true, showInfo: true, showRelated: false },
     }),
   },
-  spot: {
+  "spotify": {
     icon: Music2,
     label: "Spotify",
     description: "Spotify embed",
     createEmpty: () => ({
       id: crypto.randomUUID(),
-      type: "spot",
+      type: "spotify",
       data: { spotifyId: "", type: "track", title: "", caption: "", size: 100, isNew: true },
     }),
   },
-  mmd: {
+  "mermaid": {
     icon: GitGraph,
     label: "Mermaid",
     description: "Mermaid diagram",
     createEmpty: () => ({
       id: crypto.randomUUID(),
-      type: "mmd",
+      type: "mermaid",
       data: { code: "", type: "flowchart", direction: "TD", theme: "default", themeMode: "system" },
     }),
   },
-  vega: {
+  "vega-lite": {
     icon: BarChart3,
     label: "Vega-Lite",
     description: "Data visualization chart",
     createEmpty: () => ({
       id: crypto.randomUUID(),
-      type: "vega",
+      type: "vega-lite",
       data: { spec: "", title: "", caption: "", theme: "default", themeMode: "system" },
     }),
   },
-  pres: {
+  "presentation": {
     icon: Presentation,
     label: "Presentation",
     description: "Slide presentation",
     createEmpty: () => ({
       id: crypto.randomUUID(),
-      type: "pres",
+      type: "presentation",
       data: { slides: [], title: "Untitled Presentation", theme: "light", transitionEffect: "fade", autoAdvance: false, autoAdvanceDelay: 5, autoAdvanceLoop: false, showControls: true, isNew: true },
     }),
   },
-  src: {
+  "source": {
     icon: BookOpen,
     label: "Sources",
     description: "Reference sources",
     createEmpty: () => ({
       id: crypto.randomUUID(),
-      type: "src",
+      type: "source",
       data: { sources: [], title: "References", style: "apa", isNew: true },
     }),
   },
-  md: {
+  "markdown": {
     icon: FileText,
     label: "Markdown",
     description: "Markdown content",
     createEmpty: () => ({
       id: crypto.randomUUID(),
-      type: "md",
+      type: "markdown",
       data: { content: "", title: "", caption: "" },
     }),
   },
-  html: {
+  "html": {
     icon: FileCode,
     label: "HTML",
     description: "Raw HTML content",
@@ -193,73 +193,73 @@ export const BLOCK_REGISTRY: Record<BlockCellType, BlockTypeConfig> = {
       data: { content: "" },
     }),
   },
-  rt: {
+  "rich-text": {
     icon: FileText,
     label: "Rich Text",
     description: "Rich text content with formatting",
     createEmpty: () => ({
       id: crypto.randomUUID(),
-      type: "rt",
+      type: "rich-text",
       data: { content: "" },
     }),
   },
-  hdr: {
+  "header": {
     icon: Heading,
     label: "Header",
     description: "Section header",
     createEmpty: () => ({
       id: crypto.randomUUID(),
-      type: "hdr",
+      type: "header",
       data: { text: "", level: 1, style: "default" },
     }),
   },
-  div: {
+  "divider": {
     icon: Minus,
     label: "Divider",
     description: "Visual divider",
     createEmpty: () => ({
       id: crypto.randomUUID(),
-      type: "div",
+      type: "divider",
       data: { style: "simple", thickness: "thin", spacing: "md", colorPalette: "blue", isNew: true },
     }),
   },
-  btn: {
+  "button": {
     icon: MousePointerClick,
     label: "Button",
     description: "Clickable button",
     createEmpty: () => ({
       id: crypto.randomUUID(),
-      type: "btn",
+      type: "button",
       data: { text: "Button", url: "", actionType: "url", variant: "solid", size: "md", showIcon: false, iconVariant: 0, iconPosition: "left", iconSize: "md", colorPalette: "blue", fontFamily: "sans", fontSize: "md", isNew: true },
     }),
   },
-  adm: {
+  "admonition": {
     icon: AlertTriangle,
     label: "Admonition",
     description: "Info/warning callout",
     createEmpty: () => ({
       id: crypto.randomUUID(),
-      type: "adm",
+      type: "admonition",
       data: { title: "", content: "", type: "note", design: "default", isNew: true },
     }),
   },
-  tbl: {
+  "table": {
     icon: Table2,
     label: "Table",
     description: "Data table",
     createEmpty: () => ({
       id: crypto.randomUUID(),
-      type: "tbl",
+      type: "table",
       data: { rows: 3, columns: 3, style: "default", showHeader: true, showBorders: true, cells: [], caption: "", isNew: false },
     }),
   },
-  proj: {
+  "project": {
     icon: FolderOpen,
     label: "Project",
     description: "Embedded project",
     createEmpty: () => ({
       id: crypto.randomUUID(),
-      type: "proj",
+      type: "project",
       data: { projectId: "", projectName: "", editorState: null, isLocalCopy: false },
     }),
   },
