@@ -36,14 +36,34 @@ export function FileTabs({
     .map(id => files.find(f => f.id === id))
     .filter((f): f is CodeFile => f !== undefined)
 
-  // Auto-scroll para a aba ativa quando mudar
+  // Auto-scroll para a aba ativa quando mudar.
+  // IMPORTANTE: scrollar apenas o container horizontal de tabs, sem usar
+  // `Element.scrollIntoView` (que propaga o scroll para todos os ancestrais,
+  // inclusive o window — isso fazia a página inteira pular para o meio do
+  // documento sempre que um bloco code-studio era hidratado fora da viewport,
+  // tanto no studio quanto em cada DirectSection do static-viewer).
   useEffect(() => {
-    if (activeTabRef.current && scrollContainerRef.current) {
-      activeTabRef.current.scrollIntoView({
-        behavior: 'smooth',
-        block: 'nearest',
-        inline: 'center'
-      })
+    const container = scrollContainerRef.current
+    const tab = activeTabRef.current
+    if (!container || !tab) return
+
+    const containerRect = container.getBoundingClientRect()
+    const tabRect = tab.getBoundingClientRect()
+
+    // Posição da aba relativa ao conteúdo rolável do container.
+    const tabLeftInContainer = tab.offsetLeft
+    const tabCenter = tabLeftInContainer + tab.offsetWidth / 2
+    const targetScrollLeft = tabCenter - containerRect.width / 2
+
+    const maxScrollLeft = Math.max(0, container.scrollWidth - container.clientWidth)
+    const nextScrollLeft = Math.max(0, Math.min(targetScrollLeft, maxScrollLeft))
+
+    // Só rolar se a aba está parcialmente fora horizontalmente.
+    const tabFullyVisible =
+      tabRect.left >= containerRect.left && tabRect.right <= containerRect.right
+
+    if (!tabFullyVisible && Math.abs(container.scrollLeft - nextScrollLeft) > 1) {
+      container.scrollTo({ left: nextScrollLeft, behavior: 'smooth' })
     }
   }, [activeFileId])
 
