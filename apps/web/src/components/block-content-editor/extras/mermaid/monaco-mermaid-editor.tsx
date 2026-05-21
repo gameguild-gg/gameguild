@@ -306,6 +306,8 @@ export function MonacoMermaidEditor({
         lineNumbers: lineNumbers ? "on" : "off",
         wordWrap: wordWrap ? "on" : "off",
         automaticLayout: true,
+        // Float hovers/suggest widgets above the modal (see monaco-code-editor).
+        fixedOverflowWidgets: true,
         tabSize,
         renderWhitespace,
         insertSpaces: true,

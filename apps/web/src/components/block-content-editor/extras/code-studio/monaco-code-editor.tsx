@@ -378,6 +378,11 @@ export function MonacoCodeEditor({
             renderLineHighlight: toMonacoRenderLineHighlight(renderLineHighlight),
             automaticLayout: true,
             padding: { top: 8, bottom: 8 },
+            // Render hover/suggest/context widgets at <body> level so they
+            // escape the modal's overflow:hidden clipping and the page's
+            // stacking contexts (otherwise method/MDN tooltips appear
+            // behind the modal chrome).
+            fixedOverflowWidgets: true,
             suggest: {
               showKeywords: true,
               showSnippets: true,
