@@ -8,7 +8,8 @@ import { Label } from "@/components/ui/label"
 import Editor from "@monaco-editor/react"
 import { useTheme } from "next-themes"
 import { MonacoErrorBoundary } from "@/components/block-content-editor/extras/code-studio/monaco-error-boundary"
-import { isShikiActive } from "@/components/block-content-editor/extras/code-studio/monaco-code-editor"
+import { ensureShikiLoaded, isShikiActive, useShikiReady } from "@/components/block-content-editor/lib/shiki/highlighter"
+import { getShikiThemeName } from "@/components/block-content-editor/lib/shiki/themes"
 import DOMPurify from "dompurify"
 import type { HTMLData } from "@/components/block-content-editor/nodes/html-node"
 import { useEditorSettings } from "../settings-menu"
@@ -31,6 +32,7 @@ export function HTMLEditor({ initialData, onSave, onCancel }: HTMLEditorProps) {
   const [showTemplates, setShowTemplates] = useState(!initialData?.content)
   const [selectedTemplate, setSelectedTemplate] = useState<HTMLTemplate | null>(null)
   const settings = useEditorSettings("html")
+  const shikiReady = useShikiReady()
   const iframeRef = useRef<HTMLIFrameElement>(null)
   const editorRef = useRef<any>(null)
 
@@ -187,8 +189,15 @@ export function HTMLEditor({ initialData, onSave, onCancel }: HTMLEditorProps) {
                   defaultLanguage="html"
                   value={content}
                   onChange={(value) => setContent(value || "")}
+                  beforeMount={(monaco) => { void ensureShikiLoaded(monaco) }}
                   onMount={handleEditorMount}
-                  theme={isDarkMode ? (isShikiActive() ? "dark-plus" : "vs-dark") : (isShikiActive() ? "light-plus" : "light")}
+                  theme={
+                    shikiReady && isShikiActive()
+                      ? getShikiThemeName(settings.shikiTheme ?? "github", isDarkMode)
+                      : isDarkMode
+                        ? "vs-dark"
+                        : "light"
+                  }
                   options={{
                     minimap: { enabled: false },
                     fontSize: settings.editorFontSize,
