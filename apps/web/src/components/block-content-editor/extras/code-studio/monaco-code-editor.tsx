@@ -5,59 +5,17 @@ import Editor from "@monaco-editor/react"
 import type { editor } from "monaco-editor"
 import type { Monaco } from "@monaco-editor/react"
 import type { SupportedLanguage, ShikiTheme } from "./types"
-import { getShikiThemeName, SHIKI_LANGS } from "./types"
-import { shikiToMonaco } from "@shikijs/monaco"
+import { getShikiThemeName } from "./types"
 import { useTheme } from "next-themes"
-import { createHighlighter, type Highlighter } from "shiki"
+import { ensureShikiLoaded, isShikiActive } from "@/components/block-content-editor/lib/shiki/highlighter"
 import { registerPathCompletionProvider } from "./monaco-file-system"
 import { LinkConfirmDialog } from "../dialogs/link-confirm-dialog"
 import { MonacoErrorBoundary } from "./monaco-error-boundary"
 
-// Singleton para o highlighter do Shiki
-let shikiHighlighter: Highlighter | null = null
-let shikiPromise: Promise<Highlighter> | null = null
-let shikiAppliedToMonaco = false
 let pathCompletionRegistered = false
 
-/** Whether Shiki has replaced Monaco's built-in theme system globally. */
-export function isShikiActive(): boolean {
-  return shikiAppliedToMonaco
-}
-
-async function getShikiHighlighter(): Promise<Highlighter> {
-  if (shikiHighlighter) {
-    return shikiHighlighter
-  }
-  
-  if (!shikiPromise) {
-    shikiPromise = createHighlighter({
-      themes: [
-        'github-dark',
-        'github-light',
-        'github-dark-default',
-        'github-light-default',
-        'github-dark-dimmed',
-        'dark-plus',
-        'light-plus',
-        'catppuccin-mocha',
-        'catppuccin-latte',
-        'vitesse-dark',
-        'vitesse-light',
-        'monokai',
-        'solarized-dark',
-        'solarized-light',
-        'dracula',
-        'nord',
-      ],
-      langs: SHIKI_LANGS,
-    }).then((highlighter) => {
-      shikiHighlighter = highlighter
-      return highlighter
-    })
-  }
-  
-  return shikiPromise
-}
+// Re-export so existing imports under `monaco-code-editor` keep working.
+export { isShikiActive }
 
 interface MonacoCodeEditorProps {
   value: string
@@ -156,22 +114,10 @@ export function MonacoCodeEditor({
       pathCompletionRegistered = true
     }
     
-    // Carregar Shiki ANTES de montar o editor (apenas uma vez globalmente)
-    if (!shikiAppliedToMonaco) {
-      try {
-        const highlighter = await getShikiHighlighter()
-        
-        // Apply Shiki to Monaco (apenas uma vez globalmente)
-        shikiToMonaco(highlighter, monaco)
-        shikiAppliedToMonaco = true
-        setIsShikiReady(true)
-      } catch (error) {
-        console.error('Failed to load Shiki:', error)
-      }
-    } else {
-      // Shiki já foi aplicado em outro editor
-      setIsShikiReady(true)
-    }
+    // Carregar Shiki ANTES de montar o editor (idempotente, compartilhado
+    // entre todos os editores Monaco).
+    await ensureShikiLoaded(monaco)
+    setIsShikiReady(true)
   }
 
   const handleEditorDidMount = (editor: editor.IStandaloneCodeEditor) => {

@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Save, Code2, Menu, Lock, Layout } from "lucide-react"
-import type { CodeStudioData, CodeFile, FileTreeFolder, LeafPanel, DisplayConfig, PanelType, ShikiTheme } from "./types"
+import type { CodeStudioData, CodeFile, FileTreeFolder, LeafPanel, DisplayConfig, PanelType } from "./types"
 import { MonacoCodeEditor } from "./monaco-code-editor"
 import { ResultPanel } from "./result-panel"
 import type { XTermTerminalHandle } from "./xterm-terminal"
@@ -15,7 +15,6 @@ import { useTheme } from "next-themes"
 import { FileExplorer } from "./file-system/file-explorer"
 import { FileTabs } from "./file-tabs"
 import { LanguageSelector } from "./language-selector"
-import { SettingsMenu } from "./settings-menu"
 import { SplitterCanvas } from "./splitter-canvas"
 import { getAllLeaves, displayHasPanelType, findUniqueEditorLeaf } from "./tree-operations"
 import { DisplayManager } from "./display-manager"
@@ -37,8 +36,6 @@ import {
   getEditorPreferences, 
   getModalSizeClasses 
 } from "@/components/block-content-editor/lib/storage/editor/editor-preferences"
-import { getProjectPreference, type ProjectPreferences } from "@/components/block-content-editor/lib/storage/editor/project-preferences"
-import { EnhancedStorageAdapter } from "@/components/block-content-editor/lib/storage/editor/enhanced-storage-adapter"
 import { useEditorSettings } from "@/components/block-content-editor/extras/settings-menu"
 import { BlockEditorShell } from "@/components/block-content-editor/extras/block-editor-shell"
 
@@ -77,81 +74,33 @@ export function CodeStudioEditor({
   })
   const [isExecuting, setIsExecuting] = useImmer(false)
   const [output, setOutput] = useImmer<string>("")
-  const [showSettingsMenu, setShowSettingsMenu] = useImmer(false)
   const [resolvedContents, setResolvedContents] = useImmer<Record<string, string>>({})
   const settings = useEditorSettings("code-studio")
   const modalSize = settings.modalSize
   const setModalSize = settings.setModalSize
+  // Two global themes drive every Monaco surface in the code-studio:
+  //   - `editorShikiTheme` is for the IDE-style secondary displays (Mirror,
+  //     Test, custom) where authors actively edit.
+  //   - `previewShikiTheme` is for the "base" display (display-1) — the
+  //     embed-sized frame that mirrors exactly what students will see —
+  //     and for the published `isPreview` render mounted by
+  //     `PreviewCodeStudio`. This keeps the WYSIWYG promise: the base
+  //     display in the editor matches the document preview byte-for-byte.
+  //   While preferences are still hydrating (`null`) we fall back to
+  //   `'github'` so Monaco can mount with a sensible default; the hook
+  //   re-renders once IndexedDB resolves.
+  const editorShikiTheme = settings.shikiTheme ?? "github"
+  const previewShikiTheme = settings.previewShikiTheme ?? editorShikiTheme
+  const baseDisplayId = localData.layout?.displays[0]?.id
   // Canvas size in the editor follows the active display's scope:
   //   - Base (first display) renders inside a fixed embed-sized frame so authors
   //     see exactly what students will see in the document.
   //   - Secondary displays (Mirror, Test, custom) render full-bleed (IDE-style).
-  const [projectPreferences, setProjectPreferences] = useState<ProjectPreferences | undefined>()
-  const [effectiveShikiTheme, setEffectiveShikiTheme] = useState<ShikiTheme>(data.shikiTheme || "github")
   const codeRunnerRef = useRef<UnifiedCodeRunner | null>(null)
   const terminalRef = useRef<XTermTerminalHandle | null>(null)
   const initializedRef = useRef(false)
   const originalDataRef = useRef<CodeStudioData>(JSON.parse(JSON.stringify(data)))
   const lastProcessedContentsRef = useRef<Record<string, string>>({})
-
-  // Load project preferences on mount
-  useEffect(() => {
-    // Load project preferences if projectId is available
-    if (projectId) {
-      const loadProjectPrefs = async () => {
-        try {
-          const adapter = new EnhancedStorageAdapter()
-          await adapter.init()
-          const prefs = await adapter.getProjectPreferences(projectId)
-          setProjectPreferences(prefs)
-          
-          // Get shikiTheme from project preferences
-          if (prefs) {
-            const theme = getProjectPreference(prefs, 'code-studio', 'shikiTheme')
-            if (theme) {
-              setEffectiveShikiTheme(theme)
-            }
-          }
-        } catch (error) {
-          console.error("Failed to load project preferences:", error)
-        }
-      }
-      loadProjectPrefs()
-    }
-  }, [projectId])
-
-  // Update effectiveShikiTheme when projectPreferences changes
-  useEffect(() => {
-    if (projectId && projectPreferences) {
-      const theme = getProjectPreference(projectPreferences, 'code-studio', 'shikiTheme')
-      if (theme) {
-        setEffectiveShikiTheme(theme)
-      }
-    }
-  }, [projectPreferences, projectId])
-
-  // Reload project preferences when settings menu closes (to get latest changes)
-  useEffect(() => {
-    if (!showSettingsMenu && projectId) {
-      const reloadPrefs = async () => {
-        try {
-          const adapter = new EnhancedStorageAdapter()
-          await adapter.init()
-          const prefs = await adapter.getProjectPreferences(projectId)
-          if (prefs) {
-            setProjectPreferences(prefs)
-            const theme = getProjectPreference(prefs, 'code-studio', 'shikiTheme')
-            if (theme) {
-              setEffectiveShikiTheme(theme)
-            }
-          }
-        } catch (error) {
-          console.error("Failed to reload project preferences:", error)
-        }
-      }
-      reloadPrefs()
-    }
-  }, [showSettingsMenu, projectId])
 
   // Block body scroll and browser navigation when editor is open (not in preview mode)
   useEffect(() => {
@@ -284,19 +233,6 @@ export function CodeStudioEditor({
       }
     })
   }, [data, setLocalData])
-
-  // Fechar menu de settings quando clicar fora
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as HTMLElement
-      if (showSettingsMenu && !target.closest('.settings-menu-container')) {
-        setShowSettingsMenu(false)
-      }
-    }
-
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [showSettingsMenu])
 
   // Resolver conteúdos de assets quando necessário
   useEffect(() => {
@@ -1170,6 +1106,13 @@ export function CodeStudioEditor({
 
   // Renderizar conteúdo de cada painel
   const renderPanelContent = (panel: LeafPanel, displayConfig?: DisplayConfig) => {
+    // Pick the Shiki theme based on which display this leaf belongs to.
+    // The base display (display-1) — and the `isPreview` re-mount, which
+    // also targets the base display — uses `previewShikiTheme` because
+    // that's what students see. Every other display is the IDE-style
+    // authoring surface and uses `editorShikiTheme`.
+    const isBaseLeaf = isPreview || (displayConfig?.id !== undefined && displayConfig.id === baseDisplayId)
+    const themeForLeaf = isBaseLeaf ? previewShikiTheme : editorShikiTheme
     switch (panel.type) {
       case "explorer":
         return (
@@ -1306,7 +1249,7 @@ export function CodeStudioEditor({
                           readonly={localData.readonly || isFileReadonly}
                           showLineNumbers={localData.showLineNumbers}
                           fontSize={localData.fontSize}
-                          shikiTheme={effectiveShikiTheme}
+                          shikiTheme={themeForLeaf}
                         />
                       </div>
                     )
@@ -1395,7 +1338,7 @@ export function CodeStudioEditor({
                       readonly={localData.readonly || isFileReadonly}
                       showLineNumbers={localData.showLineNumbers}
                       fontSize={localData.fontSize}
-                      shikiTheme={effectiveShikiTheme}
+                      shikiTheme={themeForLeaf}
                     />
                   )
                 })()
@@ -1626,33 +1569,6 @@ export function CodeStudioEditor({
       onClose={handleCancelClick}
       icon={<Code2 className="h-5 w-5 text-blue-600 dark:text-blue-400" />}
       title="Code Studio"
-      hideSettingsButton
-      headerActions={
-        <div className="relative settings-menu-container">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setShowSettingsMenu(!showSettingsMenu)}
-            className="h-8 w-8 p-0"
-            title="Settings"
-          >
-            <Menu className="h-4 w-4" />
-          </Button>
-
-          {/* Settings Dropdown Menu */}
-          {showSettingsMenu && (
-            <SettingsMenu
-              data={localData}
-              onDataChange={handleDataChange}
-              onClose={() => setShowSettingsMenu(false)}
-              nodeType="code-studio"
-              onModalSizeChange={(size) => setModalSize(size)}
-              projectId={projectId}
-              onShikiThemePreview={(theme) => setEffectiveShikiTheme(theme)}
-            />
-          )}
-        </div>
-      }
     >
         {/* Settings Bar */}
         <div className="flex items-center gap-3 p-4 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 flex-wrap">
@@ -1766,7 +1682,7 @@ export function CodeStudioEditor({
               >
                 <SplitterCanvas
                   root={activeDisplay.root}
-                  renderLeaf={(leaf) => renderPanelContent(leaf)}
+                  renderLeaf={(leaf) => renderPanelContent(leaf, activeDisplay)}
                   editable={isEditing}
                   resizable
                   onSplitResize={handleSplitResize}
