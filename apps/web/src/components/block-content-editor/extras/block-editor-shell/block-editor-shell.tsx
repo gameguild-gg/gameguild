@@ -51,6 +51,12 @@ interface BlockEditorShellProps {
    * may have unsaved-changes guards or open inline dialogs.
    */
   disableBackdropClose?: boolean
+  /**
+   * Hide the built-in `EditorSettingsButton` in the header. Use when an
+   * editor already renders its own bespoke settings/menu trigger (e.g.
+   * code-studio's SettingsMenu with project preferences & shiki theme).
+   */
+  hideSettingsButton?: boolean
 }
 
 /**
@@ -82,6 +88,7 @@ export function BlockEditorShell({
   onClose,
   bodyClassName,
   disableBackdropClose = false,
+  hideSettingsButton = false,
 }: BlockEditorShellProps) {
   // Block page scrolling and click-through while the modal is open. We also
   // clear `pointer-events` on the body so background widgets (lexical
@@ -143,7 +150,7 @@ export function BlockEditorShell({
           </div>
           <div className="flex items-center gap-2 shrink-0">
             {headerActions}
-            <EditorSettingsButton settings={settings} />
+            {!hideSettingsButton && <EditorSettingsButton settings={settings} />}
             <Button
               variant="ghost"
               size="sm"
