@@ -6,21 +6,69 @@
 import type { ShikiTheme } from "@/components/block-content-editor/lib/shiki/themes"
 
 export type ModalSize = 'compact' | 'widescreen' | 'ultrawide' | 'fullscreen'
+export type WordWrap = 'on' | 'off'
+export type RenderWhitespace = 'none' | 'boundary' | 'all'
+/**
+ * `'none' | 'gutter' | 'line' | 'all'` map 1:1 to Monaco's native values.
+ * `'rectangle'` is a custom mode: it reuses Monaco's `'line'` highlight
+ * and overlays a 1px outline (border) on the active line via a CSS hook
+ * applied through `applyLineHighlightDecoration`.
+ */
+export type RenderLineHighlight = 'none' | 'gutter' | 'line' | 'all' | 'rectangle'
+
+/**
+ * The full bag of Monaco-surface options the user can customize. Stored
+ * twice on `EditorPreferences` — once under `editor` (applied to every
+ * editable Monaco surface) and once under `preview` (applied to the
+ * read-only render of any Monaco-using block, including the code-studio
+ * "base" display that mirrors the student view).
+ *
+ * Keeping the two scopes structurally identical lets the settings UI
+ * render the same form twice and keeps consumer code mechanical: each
+ * editor wrapper just picks `settings.editor` or `settings.preview` and
+ * spreads it into Monaco's options.
+ */
+export interface MonacoOptionsPreferences {
+  /** Shiki syntax theme. Resolved to a light/dark variant at render time. */
+  shikiTheme: ShikiTheme
+  /** Font size in pixels. Clamped 10–24 by the UI slider. */
+  fontSize: number
+  /** When `false`, the gutter line-number column is hidden. */
+  lineNumbers: boolean
+  /** When `true`, long lines wrap at the viewport edge. */
+  wordWrap: boolean
+  /** When `true`, the minimap overview ruler is shown on the right. */
+  minimap: boolean
+  /** Width of a tab in spaces. UI slider exposes 2 / 4 / 8. */
+  tabSize: number
+  /**
+   * Whitespace visualization: `'none'` hides it; `'boundary'` shows it
+   * only between non-whitespace tokens; `'all'` shows every space and
+   * tab as a dot/arrow.
+   */
+  renderWhitespace: RenderWhitespace
+  /**
+   * How the active line is highlighted: `'none'` disables it; `'gutter'`
+   * highlights only the line number column; `'line'` highlights only
+   * the text area; `'all'` highlights both.
+   */
+  renderLineHighlight: RenderLineHighlight
+}
 
 export interface EditorPreferences {
-  // Modal size configuration
+  /** Modal sizing for any block-editor shell. */
   modalSize: ModalSize
   /**
-   * Syntax theme used inside the editor modal for any Monaco-backed block
-   * (code-studio, mermaid, html, markdown, vega-lite, …). Always global.
+   * Options applied to every editable Monaco surface (code-studio
+   * secondary displays, html, markdown, mermaid, vega-lite, …).
    */
-  shikiTheme: ShikiTheme
+  editor: MonacoOptionsPreferences
   /**
-   * Syntax theme used to render Monaco-using blocks in document preview /
-   * read-only view (including the code-studio "base" display, which mirrors
-   * what students will see). Always global.
+   * Options applied to the read-only render of Monaco-using blocks in
+   * document preview, and to the code-studio "base" display — i.e.
+   * everywhere students see Monaco rather than editing it.
    */
-  previewShikiTheme: ShikiTheme
+  preview: MonacoOptionsPreferences
 }
 
 export interface NodeTypePreferences {
@@ -37,11 +85,37 @@ const DB_VERSION = 1
 const STORE_NAME = 'preferences'
 const PREFERENCES_KEY = 'editor-prefs'
 
+// Default Monaco-surface options. Editor and preview share the same
+// shape; in practice the preview defaults to slightly more reader-
+// friendly values (smaller font, minimap off) but the user can match
+// them perfectly through the settings UI.
+const DEFAULT_EDITOR_OPTIONS: MonacoOptionsPreferences = {
+  shikiTheme: 'github',
+  fontSize: 14,
+  lineNumbers: true,
+  wordWrap: true,
+  minimap: false,
+  tabSize: 2,
+  renderWhitespace: 'none',
+  renderLineHighlight: 'line',
+}
+
+const DEFAULT_PREVIEW_OPTIONS: MonacoOptionsPreferences = {
+  shikiTheme: 'github',
+  fontSize: 13,
+  lineNumbers: true,
+  wordWrap: true,
+  minimap: false,
+  tabSize: 2,
+  renderWhitespace: 'none',
+  renderLineHighlight: 'none',
+}
+
 // Default preferences
 const DEFAULT_PREFERENCES: EditorPreferences = {
   modalSize: 'widescreen',
-  shikiTheme: 'github',
-  previewShikiTheme: 'github',
+  editor: DEFAULT_EDITOR_OPTIONS,
+  preview: DEFAULT_PREVIEW_OPTIONS,
 }
 
 // IndexedDB helper
@@ -79,11 +153,27 @@ class PreferencesDB {
         request.onsuccess = () => {
           const data = request.result
           if (data) {
-            // Merge persisted globals with defaults so newly-added preference
-            // keys (e.g. `shikiTheme`) get sane values for users whose DB
-            // entry predates them.
+            // Merge persisted globals with defaults so newly-added
+            // preference keys backfill cleanly when the user's DB entry
+            // predates them. The two MonacoOptions groups are merged
+            // independently so adding a new option (e.g. `tabSize`) on
+            // top of an older persisted value doesn't drop the user's
+            // existing customizations.
+            const persistedGlobal = (data.global ?? {}) as Partial<EditorPreferences>
+            const merged: EditorPreferences = {
+              ...DEFAULT_PREFERENCES,
+              ...persistedGlobal,
+              editor: {
+                ...DEFAULT_EDITOR_OPTIONS,
+                ...(persistedGlobal.editor ?? {}),
+              },
+              preview: {
+                ...DEFAULT_PREVIEW_OPTIONS,
+                ...(persistedGlobal.preview ?? {}),
+              },
+            }
             resolve({
-              global: { ...DEFAULT_PREFERENCES, ...data.global },
+              global: merged,
               nodeTypes: data.nodeTypes ?? {},
             })
           } else {
@@ -236,6 +326,27 @@ export async function clearNodeTypePreference(
 export async function clearAllNodeTypePreferences(nodeType: string): Promise<void> {
   const allPrefs = await db.get()
   delete allPrefs.nodeTypes[nodeType]
+  await db.set(allPrefs)
+  notifyPreferencesChanged()
+}
+
+/**
+ * Updates a single key inside one of the two Monaco-options groups
+ * (`editor` or `preview`) without disturbing the others. This is the
+ * preferred way for the settings UI to update font size, line numbers,
+ * theme, etc. because it keeps the write atomic and avoids races where
+ * two controls would otherwise overwrite each other's group object.
+ */
+export async function setMonacoOption<K extends keyof MonacoOptionsPreferences>(
+  scope: 'editor' | 'preview',
+  key: K,
+  value: MonacoOptionsPreferences[K],
+): Promise<void> {
+  const allPrefs = await db.get()
+  allPrefs.global[scope] = {
+    ...allPrefs.global[scope],
+    [key]: value,
+  }
   await db.set(allPrefs)
   notifyPreferencesChanged()
 }
