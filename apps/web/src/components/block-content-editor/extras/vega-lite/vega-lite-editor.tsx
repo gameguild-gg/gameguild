@@ -323,9 +323,7 @@ export function VegaLiteEditor({ initialData, onSave, onCancel }: VegaLiteEditor
                         onValidationChange={handleValidationChange}
                         height="100%"
                         theme={isDarkMode ? "dark" : "light"}
-                        shikiTheme={settings.shikiTheme ?? "github"}
-                        fontSize={settings.editorFontSize}
-                        lineNumbers={settings.editorLineNumbers}
+                        options={settings.editor}
                       />
                     </div>
                   </div>
