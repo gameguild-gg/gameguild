@@ -106,18 +106,17 @@ export function CodeStudioEditor({
   const originalDataRef = useRef<CodeStudioData>(JSON.parse(JSON.stringify(data)))
   const lastProcessedContentsRef = useRef<Record<string, string>>({})
 
-  // Block body scroll and browser navigation when editor is open (not in preview mode)
-  useEffect(() => {
-    if (!isPreview) {
-      document.body.style.overflow = 'hidden'
-      document.body.style.pointerEvents = 'none'
-      
-      return () => {
-        document.body.style.overflow = ''
-        document.body.style.pointerEvents = ''
-      }
-    }
-  }, [isPreview])
+  // Body-scroll lock is centralised in `BlockEditorShell` (html-level
+  // refcounted CSS class). This editor used to set
+  // `document.body.style.overflow = 'hidden'` + `pointerEvents = 'none'`
+  // here as well, but that duplicated lock conflicted with the shell's
+  // lock and with Radix UI's own body-lock (used by inline Select /
+  // Popover / Dialog children), producing two visible bugs:
+  //   1. Permanent `pointer-events: none` on body after closing.
+  //   2. Scroll position snapping to top after closing (the body briefly
+  //      loses then regains its overflow, which can reset scroll under
+  //      some browser/layout conditions).
+  // The shell already handles both scroll and click isolation correctly.
 
   // Initialize runner and Monaco file system
   useEffect(() => {
