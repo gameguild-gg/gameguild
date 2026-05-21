@@ -64,6 +64,13 @@ interface BlockEditorShellProps {
    * theme picker is meaningless.
    */
   includeMonacoTheme?: boolean
+  /**
+   * Which Monaco settings tab to open first (`'editor'` or `'preview'`).
+   * Editors that surface multiple display modes (e.g. code-studio's
+   * Base vs Mirror) can pass `'preview'` while the user is viewing a
+   * read-only / base display so the right scope is preselected.
+   */
+  defaultMonacoTab?: 'editor' | 'preview'
 }
 
 /**
@@ -97,6 +104,7 @@ export function BlockEditorShell({
   disableBackdropClose = false,
   hideSettingsButton = false,
   includeMonacoTheme = true,
+  defaultMonacoTab = 'editor',
 }: BlockEditorShellProps) {
   // Block page scrolling and click-through while the modal is open. We also
   // clear `pointer-events` on the body so background widgets (lexical
@@ -158,7 +166,7 @@ export function BlockEditorShell({
           </div>
           <div className="flex items-center gap-2 shrink-0">
             {headerActions}
-            {!hideSettingsButton && <EditorSettingsButton settings={settings} includeMonacoTheme={includeMonacoTheme} />}
+            {!hideSettingsButton && <EditorSettingsButton settings={settings} includeMonacoTheme={includeMonacoTheme} defaultMonacoTab={defaultMonacoTab} />}
             <Button
               variant="ghost"
               size="sm"
