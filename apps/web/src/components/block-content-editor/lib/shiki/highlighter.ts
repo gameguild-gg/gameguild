@@ -49,6 +49,7 @@ export async function getShikiHighlighter(): Promise<Highlighter> {
   if (!highlighterPromise) {
     highlighterPromise = createHighlighter({
       themes: [
+        // Original set
         'github-dark',
         'github-light',
         'github-dark-default',
@@ -65,6 +66,25 @@ export async function getShikiHighlighter(): Promise<Highlighter> {
         'solarized-light',
         'dracula',
         'nord',
+        // New themes
+        'tokyo-night',
+        'one-dark-pro',
+        'one-light',
+        'material-theme-ocean',
+        'material-theme-lighter',
+        'rose-pine',
+        'rose-pine-dawn',
+        'gruvbox-dark-medium',
+        'gruvbox-light-medium',
+        'night-owl',
+        // High-contrast themes
+        'github-dark-high-contrast',
+        'github-light-high-contrast',
+        'min-dark',
+        'min-light',
+        'slack-dark',
+        'slack-ochin',
+        'red',
       ],
       langs: SHIKI_LANGS,
     }).then((hl) => {

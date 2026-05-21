@@ -4,19 +4,21 @@ import { useState, useEffect, useCallback } from "react"
 import {
   type ModalSize,
   type AllPreferences,
+  type MonacoOptionsPreferences,
   getModalSizeClasses,
   getAllPreferences,
   setGlobalPreference,
   setNodeTypePreference,
   clearNodeTypePreference,
+  setMonacoOption,
   subscribeToPreferences,
 } from "@/components/block-content-editor/lib/storage/editor/editor-preferences"
-import type { ShikiTheme } from "@/components/block-content-editor/lib/shiki/themes"
 
 /**
- * Scope of a preference write. Currently only `modalSize` exposes a
- * nodeType-specific override (the existing System tab behaviour). Theme
- * preferences are always global to keep the mental model simple.
+ * Scope of a preference write. Only `modalSize` exposes a nodeType-
+ * specific override (existing System tab behaviour). All Monaco-surface
+ * options (`editor`, `preview`) are always global so the user gets a
+ * single, formalized experience across the document.
  */
 export type PreferenceScope = "global" | "nodeType"
 
@@ -31,36 +33,37 @@ export interface EditorSettings {
   setModalSize: (size: ModalSize, scope?: PreferenceScope) => Promise<void>
   clearModalSizeOverride: () => Promise<void>
 
-  // Editor in-modal font/line numbers (UI-only, not persisted)
-  editorFontSize: number
-  setEditorFontSize: (size: number) => void
-  editorLineNumbers: boolean
-  setEditorLineNumbers: (show: boolean) => void
-
   /** Inner panel sizing classes for the selected modal size. */
   modalClassName: string
   /** Outer overlay sizing classes for the selected modal size. */
   containerClassName: string
 
   /**
-   * Global syntax theme for all Monaco editor surfaces. `null` while
-   * preferences are still loading from IndexedDB.
+   * Global Monaco options applied to every editable surface (code-studio
+   * secondary displays, html, markdown, mermaid, vega-lite, …). `null`
+   * while preferences are still hydrating from IndexedDB.
    */
-  shikiTheme: ShikiTheme | null
-  setShikiTheme: (theme: ShikiTheme) => Promise<void>
-
+  editor: MonacoOptionsPreferences | null
   /**
-   * Global syntax theme used for preview / read-only rendering of any
-   * Monaco-using block, including the code-studio "base" display.
+   * Global Monaco options applied to read-only previews and to the
+   * code-studio "base" display (what students see).
    */
-  previewShikiTheme: ShikiTheme | null
-  setPreviewShikiTheme: (theme: ShikiTheme) => Promise<void>
+  preview: MonacoOptionsPreferences | null
+
+  /** Update a single key inside the global `editor` options group. */
+  setEditorOption: <K extends keyof MonacoOptionsPreferences>(
+    key: K,
+    value: MonacoOptionsPreferences[K],
+  ) => Promise<void>
+  /** Update a single key inside the global `preview` options group. */
+  setPreviewOption: <K extends keyof MonacoOptionsPreferences>(
+    key: K,
+    value: MonacoOptionsPreferences[K],
+  ) => Promise<void>
 }
 
 export function useEditorSettings(nodeType: string): EditorSettings {
   const [showSettingsMenu, setShowSettingsMenu] = useState(false)
-  const [editorFontSize, setEditorFontSize] = useState(14)
-  const [editorLineNumbers, setEditorLineNumbers] = useState(true)
   const [prefs, setPrefs] = useState<AllPreferences | null>(null)
 
   // Hydrate preferences and re-hydrate whenever any editor in the app
@@ -92,15 +95,15 @@ export function useEditorSettings(nodeType: string): EditorSettings {
     return () => document.removeEventListener('mousedown', handler)
   }, [showSettingsMenu])
 
-  // Modal size resolves with nodeType override; themes are global-only.
+  // Modal size resolves with nodeType override; Monaco options are global-only.
   const modalSizeOverride = prefs?.nodeTypes[nodeType]?.modalSize
   const modalSize: ModalSize | null = prefs
     ? (modalSizeOverride ?? prefs.global.modalSize)
     : null
   const modalSizeIsOverride = modalSizeOverride !== undefined
 
-  const shikiTheme: ShikiTheme | null = prefs ? prefs.global.shikiTheme : null
-  const previewShikiTheme: ShikiTheme | null = prefs ? prefs.global.previewShikiTheme : null
+  const editor: MonacoOptionsPreferences | null = prefs ? prefs.global.editor : null
+  const preview: MonacoOptionsPreferences | null = prefs ? prefs.global.preview : null
 
   const modalClasses = modalSize ? getModalSizeClasses(modalSize) : null
   const modalClassName = modalClasses?.modal ?? 'w-full max-w-7xl h-[90vh]'
@@ -124,13 +127,19 @@ export function useEditorSettings(nodeType: string): EditorSettings {
     [nodeType],
   )
 
-  const setShikiTheme = useCallback(async (theme: ShikiTheme) => {
-    await setGlobalPreference("shikiTheme", theme)
-  }, [])
+  const setEditorOption = useCallback(
+    async <K extends keyof MonacoOptionsPreferences>(key: K, value: MonacoOptionsPreferences[K]) => {
+      await setMonacoOption('editor', key, value)
+    },
+    [],
+  )
 
-  const setPreviewShikiTheme = useCallback(async (theme: ShikiTheme) => {
-    await setGlobalPreference("previewShikiTheme", theme)
-  }, [])
+  const setPreviewOption = useCallback(
+    async <K extends keyof MonacoOptionsPreferences>(key: K, value: MonacoOptionsPreferences[K]) => {
+      await setMonacoOption('preview', key, value)
+    },
+    [],
+  )
 
   return {
     nodeType,
@@ -140,15 +149,11 @@ export function useEditorSettings(nodeType: string): EditorSettings {
     modalSizeIsOverride,
     setModalSize,
     clearModalSizeOverride,
-    editorFontSize,
-    setEditorFontSize,
-    editorLineNumbers,
-    setEditorLineNumbers,
     modalClassName,
     containerClassName,
-    shikiTheme,
-    setShikiTheme,
-    previewShikiTheme,
-    setPreviewShikiTheme,
+    editor,
+    preview,
+    setEditorOption,
+    setPreviewOption,
   }
 }
