@@ -5,16 +5,8 @@ import { Button } from "@/components/ui/button"
 import { Save, Code2, Plus } from "lucide-react"
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
-import Editor from "@monaco-editor/react"
 import { useTheme } from "next-themes"
-import { MonacoErrorBoundary } from "@/components/block-content-editor/extras/code-studio/monaco-error-boundary"
-import { ensureShikiLoaded, isShikiActive, useShikiReady } from "@/components/block-content-editor/lib/shiki/highlighter"
-import { registerMonacoSurface, type MonacoThemeHandle } from "@/components/block-content-editor/lib/shiki/theme-coordinator"
-import {
-  applyLineHighlightDecoration,
-  toMonacoRenderLineHighlight,
-} from "@/components/block-content-editor/lib/monaco/line-highlight"
-import { getShikiThemeName } from "@/components/block-content-editor/lib/shiki/themes"
+import { BaseMonacoEditor } from "@/components/block-content-editor/lib/monaco"
 import DOMPurify from "dompurify"
 import type { HTMLData } from "@/components/block-content-editor/nodes/html-node"
 import { useEditorSettings } from "../settings-menu"
@@ -37,12 +29,8 @@ export function HTMLEditor({ initialData, onSave, onCancel }: HTMLEditorProps) {
   const [showTemplates, setShowTemplates] = useState(!initialData?.content)
   const [selectedTemplate, setSelectedTemplate] = useState<HTMLTemplate | null>(null)
   const settings = useEditorSettings("html")
-  const shikiReady = useShikiReady()
   const iframeRef = useRef<HTMLIFrameElement>(null)
   const editorRef = useRef<any>(null)
-  const monacoRef = useRef<any>(null)
-  const themeHandleRef = useRef<MonacoThemeHandle | null>(null)
-  const [monacoReady, setMonacoReady] = useState(false)
 
   // Auto-resize iframe to content height
   useEffect(() => {
@@ -66,43 +54,9 @@ export function HTMLEditor({ initialData, onSave, onCancel }: HTMLEditorProps) {
     onSave({ content })
   }
 
-  const handleEditorMount = (editor: any, monaco: any) => {
+  const handleEditorMount = (editor: any) => {
     editorRef.current = editor
-    monacoRef.current = monaco
-    setMonacoReady(true)
   }
-
-  // Register with the global Monaco theme coordinator so closing this
-  // modal restores the theme of any underlying Monaco surface (e.g. the
-  // code-studio preview rendered behind it in the document view).
-  const editorShikiTheme = settings.editor?.shikiTheme ?? "github"
-  const themeStateRef = useRef({ editorShikiTheme, isDarkMode, shikiReady })
-  themeStateRef.current = { editorShikiTheme, isDarkMode, shikiReady }
-  useEffect(() => {
-    if (!monacoRef.current) return
-    const handle = registerMonacoSurface(monacoRef.current, () => {
-      const { editorShikiTheme: t, isDarkMode: dark, shikiReady: ready } = themeStateRef.current
-      if (ready && isShikiActive()) {
-        return getShikiThemeName(t, dark)
-      }
-      return dark ? "vs-dark" : "light"
-    })
-    themeHandleRef.current = handle
-    return () => {
-      handle.unregister()
-      themeHandleRef.current = null
-    }
-  }, [monacoReady])
-
-  useEffect(() => {
-    themeHandleRef.current?.refresh()
-  }, [editorShikiTheme, isDarkMode, shikiReady])
-
-  // Keep the rectangle-mode CSS hook in sync with the resolved value.
-  const editorRenderLineHighlight = settings.editor?.renderLineHighlight ?? "line"
-  useEffect(() => {
-    applyLineHighlightDecoration(editorRef.current, editorRenderLineHighlight)
-  }, [editorRenderLineHighlight, monacoReady])
 
   const insertAtCursor = (code: string) => {
     const editor = editorRef.current
@@ -225,42 +179,21 @@ export function HTMLEditor({ initialData, onSave, onCancel }: HTMLEditorProps) {
               <h3 className="text-sm font-medium text-gray-800 dark:text-gray-200 uppercase tracking-wide">Editor</h3>
             </div>
             <div className="flex-1 overflow-hidden">
-              <MonacoErrorBoundary>
-                <Editor
-                  height="100%"
-                  defaultLanguage="html"
-                  value={content}
-                  onChange={(value) => setContent(value || "")}
-                  beforeMount={(monaco) => { void ensureShikiLoaded(monaco) }}
-                  onMount={handleEditorMount}
-                  theme={
-                    shikiReady && isShikiActive()
-                      ? getShikiThemeName(settings.editor?.shikiTheme ?? "github", isDarkMode)
-                      : isDarkMode
-                        ? "vs-dark"
-                        : "light"
-                  }
-                  options={{
-                    minimap: { enabled: settings.editor?.minimap ?? false },
-                    fontSize: settings.editor?.fontSize ?? 14,
-                    lineNumbers: (settings.editor?.lineNumbers ?? true) ? "on" : "off",
-                    roundedSelection: true,
-                    scrollBeyondLastLine: false,
-                    wordWrap: (settings.editor?.wordWrap ?? true) ? "on" : "off",
-                    automaticLayout: true,
-                    // Float hovers/suggest widgets above the modal chrome.
-                    fixedOverflowWidgets: true,
-                    tabSize: settings.editor?.tabSize ?? 2,
-                    renderWhitespace: settings.editor?.renderWhitespace ?? "none",
-                    renderLineHighlight: toMonacoRenderLineHighlight(settings.editor?.renderLineHighlight ?? "line"),
-                    insertSpaces: true,
-                    autoClosingBrackets: "always",
-                    autoClosingQuotes: "always",
-                    formatOnPaste: true,
-                    suggest: { showWords: true },
-                  }}
-                />
-              </MonacoErrorBoundary>
+              <BaseMonacoEditor
+                language="html"
+                value={content}
+                onChange={(value) => setContent(value || "")}
+                onMount={handleEditorMount}
+                isDark={isDarkMode}
+                options={settings.editor}
+                extraOptions={{
+                  roundedSelection: true,
+                  autoClosingBrackets: "always",
+                  autoClosingQuotes: "always",
+                  formatOnPaste: true,
+                  suggest: { showWords: true },
+                }}
+              />
             </div>
           </div>
 
