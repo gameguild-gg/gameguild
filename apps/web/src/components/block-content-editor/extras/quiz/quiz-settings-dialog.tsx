@@ -155,6 +155,7 @@ export function QuizSettingsDialog({ isOpen, onClose, entry, onSave }: QuizSetti
   return (
     <BlockEditorShell
       settings={settings}
+      includeMonacoTheme={false}
       onClose={handleClose}
       icon={<BookOpen className="h-5 w-5 text-blue-600 dark:text-blue-400" />}
       title="Quiz Builder"

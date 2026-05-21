@@ -233,6 +233,7 @@ export function UnifiedMediaEditor({
   return (
     <BlockEditorShell
       settings={settings}
+      includeMonacoTheme={false}
       onClose={handleClose}
       icon={getHeaderIcon()}
       title={getMediaTitle()}
