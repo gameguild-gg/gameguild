@@ -4,18 +4,38 @@ import { useEffect, useRef, useState } from "react"
 import Editor from "@monaco-editor/react"
 import type { editor } from "monaco-editor"
 import type { Monaco } from "@monaco-editor/react"
-import type { SupportedLanguage, ShikiTheme } from "./types"
+import type { SupportedLanguage } from "./types"
 import { getShikiThemeName } from "./types"
 import { useTheme } from "next-themes"
 import { ensureShikiLoaded, isShikiActive } from "@/components/block-content-editor/lib/shiki/highlighter"
+import { registerMonacoSurface, type MonacoThemeHandle } from "@/components/block-content-editor/lib/shiki/theme-coordinator"
+import {
+  applyLineHighlightDecoration,
+  toMonacoRenderLineHighlight,
+} from "@/components/block-content-editor/lib/monaco/line-highlight"
 import { registerPathCompletionProvider } from "./monaco-file-system"
 import { LinkConfirmDialog } from "../dialogs/link-confirm-dialog"
 import { MonacoErrorBoundary } from "./monaco-error-boundary"
+import type { MonacoOptionsPreferences } from "@/components/block-content-editor/lib/storage/editor/editor-preferences"
 
 let pathCompletionRegistered = false
 
 // Re-export so existing imports under `monaco-code-editor` keep working.
 export { isShikiActive }
+
+// Fallback when the consumer hasn't wired a preferences snapshot yet
+// (e.g. SSR boundary, or a brief hydration window). Matches the defaults
+// declared in the storage module to avoid visual jumps.
+const FALLBACK_OPTIONS: MonacoOptionsPreferences = {
+  shikiTheme: "github",
+  fontSize: 14,
+  lineNumbers: true,
+  wordWrap: true,
+  minimap: false,
+  tabSize: 2,
+  renderWhitespace: "none",
+  renderLineHighlight: "line",
+}
 
 interface MonacoCodeEditorProps {
   value: string
@@ -23,9 +43,14 @@ interface MonacoCodeEditorProps {
   onChange?: (value: string) => void
   readonly?: boolean
   theme?: "vs-light" | "vs-dark"
-  shikiTheme?: ShikiTheme
-  fontSize?: number
-  showLineNumbers?: boolean
+  /**
+   * Resolved Monaco-surface options. Either the global `editor` group
+   * (editable surfaces) or the global `preview` group (read-only / base
+   * display) — the caller decides which to pass based on the surface
+   * role. `null` is tolerated during hydration and falls back to sane
+   * defaults.
+   */
+  options?: MonacoOptionsPreferences | null
   height?: string
   fileId?: string // ID único do arquivo para garantir instâncias separadas
   filePath?: string // Caminho do arquivo para o sistema de arquivos virtual
@@ -38,14 +63,14 @@ export function MonacoCodeEditor({
   onChange,
   readonly = false,
   theme = "vs-light",
-  shikiTheme = "github",
-  fontSize = 14,
-  showLineNumbers = true,
+  options,
   height = "100%",
   fileId,
   filePath,
   instanceId,
 }: MonacoCodeEditorProps) {
+  const resolved = options ?? FALLBACK_OPTIONS
+  const { shikiTheme, fontSize, lineNumbers, wordWrap, minimap, tabSize, renderWhitespace, renderLineHighlight } = resolved
   const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null)
   const monacoRef = useRef<Monaco | null>(null)
   const [isShikiReady, setIsShikiReady] = useState(false)
@@ -195,12 +220,16 @@ export function MonacoCodeEditor({
     editor.updateOptions({
       readOnly: readonly,
       fontSize,
-      lineNumbers: showLineNumbers ? "on" : "off",
-      minimap: { enabled: false },
+      lineNumbers: lineNumbers ? "on" : "off",
+      minimap: { enabled: minimap },
       scrollBeyondLastLine: false,
-      wordWrap: "on",
+      wordWrap: wordWrap ? "on" : "off",
+      tabSize,
+      renderWhitespace,
+      renderLineHighlight: toMonacoRenderLineHighlight(renderLineHighlight),
       automaticLayout: true,
     })
+    applyLineHighlightDecoration(editor, renderLineHighlight)
 
     // Centralizar a command palette no container do Monaco
     const container = editor.getDomNode()
@@ -277,17 +306,39 @@ export function MonacoCodeEditor({
       editorRef.current.updateOptions({
         readOnly: readonly,
         fontSize,
-        lineNumbers: showLineNumbers ? "on" : "off",
+        lineNumbers: lineNumbers ? "on" : "off",
+        minimap: { enabled: minimap },
+        wordWrap: wordWrap ? "on" : "off",
+        tabSize,
+        renderWhitespace,
+        renderLineHighlight: toMonacoRenderLineHighlight(renderLineHighlight),
       })
+      applyLineHighlightDecoration(editorRef.current, renderLineHighlight)
     }
-  }, [readonly, fontSize, showLineNumbers])
+  }, [readonly, fontSize, lineNumbers, wordWrap, minimap, tabSize, renderWhitespace, renderLineHighlight])
 
-  // Atualizar tema do Monaco quando mudar
+  // Atualizar tema do Monaco quando mudar. Usa o coordenador global
+  // para que outras superfícies Monaco (mermaid, html, vega…) não
+  // consigam "roubar" o tema deste editor ao montar/desmontar.
+  const themeHandleRef = useRef<MonacoThemeHandle | null>(null)
+  const currentThemeRef = useRef(currentTheme)
   useEffect(() => {
-    if (monacoRef.current && isShikiReady) {
-      monacoRef.current.editor.setTheme(currentTheme)
+    currentThemeRef.current = currentTheme
+  }, [currentTheme])
+
+  useEffect(() => {
+    if (!monacoRef.current || !isShikiReady) return
+    const handle = registerMonacoSurface(monacoRef.current, () => currentThemeRef.current)
+    themeHandleRef.current = handle
+    return () => {
+      handle.unregister()
+      themeHandleRef.current = null
     }
-  }, [currentTheme, isShikiReady])
+  }, [isShikiReady])
+
+  useEffect(() => {
+    themeHandleRef.current?.refresh()
+  }, [currentTheme])
 
   return (
     <>
@@ -318,10 +369,13 @@ export function MonacoCodeEditor({
           options={{
             readOnly: readonly,
             fontSize,
-            lineNumbers: showLineNumbers ? "on" : "off",
-            minimap: { enabled: false },
+            lineNumbers: lineNumbers ? "on" : "off",
+            minimap: { enabled: minimap },
             scrollBeyondLastLine: false,
-            wordWrap: "on",
+            wordWrap: wordWrap ? "on" : "off",
+            tabSize,
+            renderWhitespace,
+            renderLineHighlight: toMonacoRenderLineHighlight(renderLineHighlight),
             automaticLayout: true,
             padding: { top: 8, bottom: 8 },
             suggest: {
