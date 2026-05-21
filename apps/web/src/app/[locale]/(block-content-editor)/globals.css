@@ -118,3 +118,17 @@ body {
 .monaco-editor.hc-black[data-line-highlight-rectangle="true"] .margin-view-overlays .current-line-margin {
     border-color: rgba(255, 255, 255, 0.85) !important;
 }
+
+/*
+ * Monaco hover/suggest/context-widget z-index. Wrappers use
+ * `fixedOverflowWidgets: true` so Monaco appends these widgets directly
+ * under <body>. Without an explicit z-index, MDN/IntelliSense balloons
+ * render behind the block-editor modal (which sits at z-50).
+ */
+body > .monaco-editor,
+.monaco-editor .overflowingContentWidgets,
+.monaco-hover,
+.monaco-editor-hover,
+.monaco-editor-overlaymessage {
+    z-index: 10000 !important;
+}

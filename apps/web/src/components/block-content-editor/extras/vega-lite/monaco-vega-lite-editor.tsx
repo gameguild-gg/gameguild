@@ -127,6 +127,8 @@ export function MonacoVegaLiteEditor({
       language: "json",
       theme: resolveMonacoThemeName(theme === "dark", shikiTheme),
       automaticLayout: true,
+      // Float hovers/suggest widgets above any host modal chrome.
+      fixedOverflowWidgets: true,
       readOnly: readOnly,
       minimap: { enabled: minimap },
       scrollBeyondLastLine: false,

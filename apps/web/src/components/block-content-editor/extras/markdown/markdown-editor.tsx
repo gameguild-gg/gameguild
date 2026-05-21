@@ -345,6 +345,8 @@ export function MarkdownEditor({ initialData, onSave, onCancel }: MarkdownEditor
                     scrollBeyondLastLine: false,
                     wordWrap: (settings.editor?.wordWrap ?? true) ? "on" : "off",
                     automaticLayout: true,
+                    // Float hovers/suggest widgets above the modal chrome.
+                    fixedOverflowWidgets: true,
                     tabSize: settings.editor?.tabSize ?? 2,
                     renderWhitespace: settings.editor?.renderWhitespace ?? "none",
                     renderLineHighlight: toMonacoRenderLineHighlight(settings.editor?.renderLineHighlight ?? "line"),
