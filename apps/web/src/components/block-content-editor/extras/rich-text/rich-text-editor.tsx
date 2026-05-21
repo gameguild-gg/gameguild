@@ -106,6 +106,7 @@ export function RichTextEditor({ initialData, onSave, onCancel }: RichTextEditor
   return (
     <BlockEditorShell
       settings={settings}
+      includeMonacoTheme={false}
       onClose={onCancel}
       icon={<FileText className="h-5 w-5 text-blue-600 dark:text-blue-400" />}
       title="Rich Text Editor"
