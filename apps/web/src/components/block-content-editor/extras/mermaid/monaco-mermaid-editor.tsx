@@ -1,6 +1,6 @@
 "use client"
 
-import { useRef, useCallback, useEffect } from "react"
+import { useRef, useCallback, useEffect, useState } from "react"
 import dynamic from "next/dynamic"
 import type { editor, IDisposable } from "monaco-editor"
 import type { OnMount } from "@monaco-editor/react"
@@ -9,7 +9,13 @@ import { MermaidValidator, type MermaidValidationResult } from "./mermaid-valida
 import { createMermaidCompletionProvider } from "./mermaid-completion-provider"
 import { MonacoErrorBoundary } from "@/components/block-content-editor/extras/code-studio/monaco-error-boundary"
 import { ensureShikiLoaded, isShikiActive, useShikiReady } from "@/components/block-content-editor/lib/shiki/highlighter"
+import { registerMonacoSurface, type MonacoThemeHandle } from "@/components/block-content-editor/lib/shiki/theme-coordinator"
+import {
+  applyLineHighlightDecoration,
+  toMonacoRenderLineHighlight,
+} from "@/components/block-content-editor/lib/monaco/line-highlight"
 import { getShikiThemeName, type ShikiTheme } from "@/components/block-content-editor/lib/shiki/themes"
+import type { MonacoOptionsPreferences, RenderWhitespace, RenderLineHighlight } from "@/components/block-content-editor/lib/storage/editor/editor-preferences"
 
 const MonacoEditor = dynamic(() => import("@monaco-editor/react"), {
   ssr: false,
@@ -22,10 +28,21 @@ interface MonacoMermaidEditorProps {
   onValidationChange?: (result: MermaidValidationResult) => void
   height?: string | number
   theme?: "light" | "dark"
+  /**
+   * Resolved global Monaco options. When supplied, overrides the
+   * individual fallback props below. Pass `settings.editor` from
+   * `useEditorSettings`.
+   */
+  options?: MonacoOptionsPreferences | null
   shikiTheme?: ShikiTheme
   readOnly?: boolean
   fontSize?: number
   lineNumbers?: boolean
+  wordWrap?: boolean
+  minimap?: boolean
+  tabSize?: number
+  renderWhitespace?: RenderWhitespace
+  renderLineHighlight?: RenderLineHighlight
 }
 
 export function MonacoMermaidEditor({
@@ -34,14 +51,36 @@ export function MonacoMermaidEditor({
   onValidationChange,
   height = "100%",
   theme = "light",
-  shikiTheme = "github",
-  readOnly = false,  fontSize = 14,
-  lineNumbers = true,}: MonacoMermaidEditorProps) {
+  options,
+  shikiTheme: shikiThemeProp,
+  readOnly = false,
+  fontSize: fontSizeProp,
+  lineNumbers: lineNumbersProp,
+  wordWrap: wordWrapProp,
+  minimap: minimapProp,
+  tabSize: tabSizeProp,
+  renderWhitespace: renderWhitespaceProp,
+  renderLineHighlight: renderLineHighlightProp,
+}: MonacoMermaidEditorProps) {
+  // The `options` bag wins when provided; the individual props remain as
+  // a defensive fallback (e.g. for tests or call sites that haven't yet
+  // been migrated to the preferences hook).
+  const shikiTheme: ShikiTheme = options?.shikiTheme ?? shikiThemeProp ?? "github"
+  const fontSize = options?.fontSize ?? fontSizeProp ?? 14
+  const lineNumbers = options?.lineNumbers ?? lineNumbersProp ?? true
+  const wordWrap = options?.wordWrap ?? wordWrapProp ?? true
+  const minimap = options?.minimap ?? minimapProp ?? false
+  const tabSize = options?.tabSize ?? tabSizeProp ?? 2
+  const renderWhitespace: RenderWhitespace = options?.renderWhitespace ?? renderWhitespaceProp ?? "none"
+  const renderLineHighlight: RenderLineHighlight = options?.renderLineHighlight ?? renderLineHighlightProp ?? "line"
   const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null)
+  const monacoRef = useRef<typeof import("monaco-editor") | null>(null)
+  const themeHandleRef = useRef<MonacoThemeHandle | null>(null)
   const isLanguageRegistered = useRef(false)
   const completionProviderDisposable = useRef<IDisposable | null>(null)
   const validationTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined)
   const shikiReady = useShikiReady()
+  const [monacoReady, setMonacoReady] = useState(false)
 
   const validateCode = useCallback(
     async (code: string) => {
@@ -120,8 +159,42 @@ export function MonacoMermaidEditor({
       validateCode(value)
     }
   }, [value, validateCode, onValidationChange])
+
+  // Register with the global Monaco theme coordinator so this editor
+  // owns the theme while mounted and gracefully yields it back when the
+  // modal closes. Runs once Monaco is mounted; the `getTheme` closure
+  // always reads the latest resolved theme name through refs.
+  const themeStateRef = useRef({ shikiTheme, theme, shikiReady })
+  themeStateRef.current = { shikiTheme, theme, shikiReady }
+  useEffect(() => {
+    if (!monacoRef.current) return
+    const handle = registerMonacoSurface(monacoRef.current, () => {
+      const { shikiTheme: t, theme: themeMode, shikiReady: ready } = themeStateRef.current
+      if (ready && isShikiActive()) {
+        return getShikiThemeName(t, themeMode === "dark")
+      }
+      return themeMode === "dark" ? "mermaid-dark" : "mermaid-light"
+    })
+    themeHandleRef.current = handle
+    return () => {
+      handle.unregister()
+      themeHandleRef.current = null
+    }
+  }, [monacoReady])
+
+  useEffect(() => {
+    themeHandleRef.current?.refresh()
+  }, [shikiTheme, theme, shikiReady])
+
+  // Keep the rectangle-mode CSS hook in sync with the resolved value.
+  useEffect(() => {
+    applyLineHighlightDecoration(editorRef.current, renderLineHighlight)
+  }, [renderLineHighlight])
+
   const handleEditorDidMount: OnMount = async (editor, monaco) => {
     editorRef.current = editor as unknown as editor.IStandaloneCodeEditor
+    monacoRef.current = monaco as unknown as typeof import("monaco-editor")
+    setMonacoReady(true)
 
     // Ensure Shiki is loaded so the user's selected theme actually takes
     // effect even on pages that have no code-studio block.
@@ -186,12 +259,9 @@ export function MonacoMermaidEditor({
       isLanguageRegistered.current = true
     }
 
-    // Set the theme (use Shiki theme when active, otherwise mermaid custom themes)
-    if (isShikiActive()) {
-      monaco.editor.setTheme(getShikiThemeName(shikiTheme, theme === "dark"))
-    } else {
-      monaco.editor.setTheme(theme === "dark" ? "mermaid-dark" : "mermaid-light")
-    }
+    // Theme application is delegated to the global Monaco theme
+    // coordinator (see below) so that closing this editor restores the
+    // theme of any underlying surface (e.g. code-studio preview).
 
     editor.onDidChangeModelContent(() => {
       const currentValue = editor.getValue()
@@ -199,6 +269,8 @@ export function MonacoMermaidEditor({
         validateCode(currentValue)
       }
     })
+
+    applyLineHighlightDecoration(editor as unknown as import("monaco-editor").editor.IStandaloneCodeEditor, renderLineHighlight)
   }
 
   const handleChange = useCallback(
@@ -228,18 +300,19 @@ export function MonacoMermaidEditor({
             : "mermaid-light"
       }
       options={{
-        minimap: { enabled: false },
+        minimap: { enabled: minimap },
         scrollBeyondLastLine: false,
         fontSize: fontSize,
         lineNumbers: lineNumbers ? "on" : "off",
-        wordWrap: "on",
+        wordWrap: wordWrap ? "on" : "off",
         automaticLayout: true,
-        tabSize: 2,
+        tabSize,
+        renderWhitespace,
         insertSpaces: true,
         folding: true,
         lineDecorationsWidth: 10,
         lineNumbersMinChars: 3,
-        renderLineHighlight: "line",
+        renderLineHighlight: toMonacoRenderLineHighlight(renderLineHighlight),
         selectOnLineNumbers: true,
         roundedSelection: false,
         readOnly,
