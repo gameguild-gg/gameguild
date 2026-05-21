@@ -77,17 +77,8 @@ export type EditorMode =
   | "execution"  // Executa código com console na direita
   | "test"       // Modo de testes
 
-export type ShikiTheme = 
-  | "github"           // GitHub theme
-  | "github-default"   // GitHub Default theme
-  | "github-dimmed"    // GitHub Dimmed theme
-  | "plus"             // Plus theme
-  | "catppuccin"       // Catppuccin theme
-  | "vitesse"          // Vitesse theme
-  | "monokai"          // Monokai theme
-  | "solarized"        // Solarized theme
-  | "dracula"          // Dracula theme
-  | "nord"             // Nord theme
+export type { ShikiTheme } from "@/components/block-content-editor/lib/shiki/themes"
+export { SHIKI_THEME_CONFIGS, getShikiThemeName } from "@/components/block-content-editor/lib/shiki/themes"
 
 export type FileType = 'f' | 'm' | 't' // f = arquivo padrão, m = main (entry point), t = test main
 
@@ -200,8 +191,7 @@ export interface CodeStudioData {
   showLineNumbers?: boolean
   fontSize?: number
   theme?: "light" | "dark" | "system"
-  shikiTheme?: ShikiTheme // Tema do Shiki (syntax highlighting)
-  
+
   // Layout customizável
   layout?: LayoutConfig
   
@@ -1036,63 +1026,3 @@ export const SHIKI_LANGS = [
   'wasm',
   'ocaml',
 ]
-
-// Shiki theme configurations
-export const SHIKI_THEME_CONFIGS: Record<ShikiTheme, { label: string; dark: string; light: string }> = {
-  "github": {
-    label: "GitHub",
-    dark: "github-dark",
-    light: "github-light",
-  },
-  "github-default": {
-    label: "GitHub Default",
-    dark: "github-dark-default",
-    light: "github-light-default",
-  },
-  "github-dimmed": {
-    label: "GitHub Dimmed",
-    dark: "github-dark-dimmed",
-    light: "github-light-default",
-  },
-  "plus": {
-    label: "Plus",
-    dark: "dark-plus",
-    light: "light-plus",
-  },
-  "catppuccin": {
-    label: "Catppuccin",
-    dark: "catppuccin-mocha",
-    light: "catppuccin-latte",
-  },
-  "vitesse": {
-    label: "Vitesse",
-    dark: "vitesse-dark",
-    light: "vitesse-light",
-  },
-  "monokai": {
-    label: "Monokai",
-    dark: "monokai",
-    light: "monokai",
-  },
-  "solarized": {
-    label: "Solarized",
-    dark: "solarized-dark",
-    light: "solarized-light",
-  },
-  "dracula": {
-    label: "Dracula",
-    dark: "dracula",
-    light: "dracula",
-  },
-  "nord": {
-    label: "Nord",
-    dark: "nord",
-    light: "nord",
-  },
-}
-
-// Helper to get Shiki theme name based on color mode
-export function getShikiThemeName(shikiTheme: ShikiTheme, isDark: boolean): string {
-  const config = SHIKI_THEME_CONFIGS[shikiTheme]
-  return isDark ? config.dark : config.light
-}
