@@ -7,6 +7,44 @@ import { cn } from "@/lib/utils"
 import { EditorSettingsButton } from "../settings-menu/editor-settings-button"
 import { type EditorSettings } from "../settings-menu/use-editor-settings"
 
+/**
+ * Refcounted lock that disables scrolling on the document's root element
+ * (`<html>`) while at least one BlockEditorShell is mounted. We use a CSS
+ * class on `<html>` instead of inline styles on `<body>` to avoid
+ * conflicting with Radix UI's scroll lock (which writes inline styles to
+ * `<body>`). See the long comment inside `BlockEditorShell` for the race
+ * this avoids.
+ */
+const HTML_SCROLL_LOCK_CLASS = "block-editor-shell-scroll-lock"
+let htmlScrollLockCount = 0
+
+function ensureScrollLockStyle() {
+  if (typeof document === "undefined") return
+  const id = "block-editor-shell-scroll-lock-style"
+  if (document.getElementById(id)) return
+  const style = document.createElement("style")
+  style.id = id
+  style.textContent = `html.${HTML_SCROLL_LOCK_CLASS}{overflow:hidden!important;}`
+  document.head.appendChild(style)
+}
+
+function acquireHtmlScrollLock() {
+  if (typeof document === "undefined") return
+  ensureScrollLockStyle()
+  htmlScrollLockCount += 1
+  if (htmlScrollLockCount === 1) {
+    document.documentElement.classList.add(HTML_SCROLL_LOCK_CLASS)
+  }
+}
+
+function releaseHtmlScrollLock() {
+  if (typeof document === "undefined") return
+  htmlScrollLockCount = Math.max(0, htmlScrollLockCount - 1)
+  if (htmlScrollLockCount === 0) {
+    document.documentElement.classList.remove(HTML_SCROLL_LOCK_CLASS)
+  }
+}
+
 interface BlockEditorShellProps {
   /**
    * Settings descriptor produced by `useEditorSettings(nodeType)`. Drives
@@ -106,20 +144,31 @@ export function BlockEditorShell({
   includeMonacoTheme = true,
   defaultMonacoTab = 'editor',
 }: BlockEditorShellProps) {
-  // Block page scrolling and click-through while the modal is open. We also
-  // clear `pointer-events` on the body so background widgets (lexical
-  // toolbars, drag layers, etc.) can't intercept clicks while the modal is
-  // visible \u2014 the modal itself re-enables pointer events on its containers.
+  // We deliberately do NOT manipulate `document.body.style` (neither
+  // `pointerEvents` nor `overflow`). Writing inline body styles here
+  // races with Radix UI's own body-lock (used by the BlockTypePicker
+  // dialog and by shadcn Select/Popover rendered inside the editor):
+  //   1. Picker (Radix Dialog) opens \u2014 Radix saves `prev = ""`, sets body
+  //      to `"none"` / `"hidden"`.
+  //   2. User picks a block \u2014 editor opens, picker starts close animation.
+  //   3. Our effect fires while Radix is still closing \u2014 we capture
+  //      `prev = "none"` / `"hidden"` (currently set by Radix).
+  //   4. Radix finishes \u2014 restores `""`.
+  //   5. User closes editor \u2014 our cleanup restores Radix's value. Page
+  //      frozen (pointer-events) or scroll locked (overflow) forever.
+  // Instead we lock scrolling on `<html>` via a refcounted CSS class.
+  // Radix writes to `body.style.overflow` (inline) while we write to
+  // `html.classList` \u2014 different elements, different mechanisms, no
+  // possible interference. The refcount handles overlapping shells
+  // (rare but safe), and a class is idempotent so duplicate add/remove
+  // operations are harmless.
   useEffect(() => {
-    const prevOverflow = document.body.style.overflow
-    const prevPointer = document.body.style.pointerEvents
-    document.body.style.overflow = "hidden"
-    document.body.style.pointerEvents = "none"
+    if (!settings.modalSize) return
+    acquireHtmlScrollLock()
     return () => {
-      document.body.style.overflow = prevOverflow
-      document.body.style.pointerEvents = prevPointer
+      releaseHtmlScrollLock()
     }
-  }, [])
+  }, [settings.modalSize])
 
   // While we wait for the persisted modal size to load, render nothing to
   // avoid flashing the wrong dimensions. `useEditorSettings` returns null
