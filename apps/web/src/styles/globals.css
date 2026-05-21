@@ -289,3 +289,33 @@
         opacity: 1;
     }
 }
+
+/*
+ * Monaco active-line rectangle outline.
+ *
+ * When the user selects `renderLineHighlight: 'rectangle'` for any Monaco
+ * surface, `applyLineHighlightDecoration` toggles this attribute on the
+ * editor's root DOM node. Monaco itself still renders its standard 'line'
+ * highlight (background tint); we layer a 2px outline on top to produce
+ * the rectangle effect. The color is theme-aware so the rectangle stays
+ * legible against both backgrounds: a dark stroke on light themes and a
+ * bright stroke on dark / high-contrast themes.
+ */
+.monaco-editor[data-line-highlight-rectangle="true"] .view-overlays .current-line,
+.monaco-editor[data-line-highlight-rectangle="true"] .view-overlays .current-line-exact,
+.monaco-editor[data-line-highlight-rectangle="true"] .margin-view-overlays .current-line,
+.monaco-editor[data-line-highlight-rectangle="true"] .margin-view-overlays .current-line-margin {
+    border: 2px solid rgba(0, 0, 0, 0.7) !important;
+    box-sizing: border-box !important;
+}
+
+.monaco-editor.vs-dark[data-line-highlight-rectangle="true"] .view-overlays .current-line,
+.monaco-editor.vs-dark[data-line-highlight-rectangle="true"] .view-overlays .current-line-exact,
+.monaco-editor.vs-dark[data-line-highlight-rectangle="true"] .margin-view-overlays .current-line,
+.monaco-editor.vs-dark[data-line-highlight-rectangle="true"] .margin-view-overlays .current-line-margin,
+.monaco-editor.hc-black[data-line-highlight-rectangle="true"] .view-overlays .current-line,
+.monaco-editor.hc-black[data-line-highlight-rectangle="true"] .view-overlays .current-line-exact,
+.monaco-editor.hc-black[data-line-highlight-rectangle="true"] .margin-view-overlays .current-line,
+.monaco-editor.hc-black[data-line-highlight-rectangle="true"] .margin-view-overlays .current-line-margin {
+    border-color: rgba(255, 255, 255, 0.85) !important;
+}
