@@ -153,8 +153,15 @@ export function MonacoCodeEditor({
       }
     })
 
-    // Inline link decorations (kept in sync with model edits).
-    let decorationIds: string[] = []
+    // Inline link decorations (kept in sync with model edits). We use
+    // `createDecorationsCollection` instead of the deprecated
+    // `deltaDecorations` so the decorations are tied to *this* editor's
+    // lifetime: when the editor is disposed (e.g. file switch with
+    // `keepCurrentModel=true`) the collection is automatically cleared
+    // from the surviving model — otherwise stale decoration IDs leak
+    // into the model and crash Monaco's renderer with
+    // "this.domNode is undefined".
+    const linkDecorations = ed.createDecorationsCollection()
     const updateLinkDecorations = () => {
       const model = ed.getModel()
       if (!model) return
@@ -178,7 +185,7 @@ export function MonacoCodeEditor({
           })
         }
       }
-      decorationIds = ed.deltaDecorations(decorationIds, decorations)
+      linkDecorations.set(decorations)
     }
     updateLinkDecorations()
     ed.onDidChangeModelContent(() => updateLinkDecorations())
