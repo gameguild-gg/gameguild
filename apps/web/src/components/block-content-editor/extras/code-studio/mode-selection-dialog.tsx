@@ -44,7 +44,7 @@ export function ModeSelectionDialog({ onSelect, onCancel }: ModeSelectionDialogP
                 onClick={() => onSelect(mode.id)}
                 className="flex items-start gap-4 p-4 border-2 border-gray-200 dark:border-gray-700 rounded-lg hover:border-blue-500 dark:hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/30 transition-all group"
               >
-                <div className="flex-shrink-0 p-3 bg-blue-100 dark:bg-blue-900/30 rounded-lg group-hover:bg-blue-500 dark:group-hover:bg-blue-500 transition-colors">
+                <div className="shrink-0 p-3 bg-blue-100 dark:bg-blue-900/30 rounded-lg group-hover:bg-blue-500 dark:group-hover:bg-blue-500 transition-colors">
                   <Icon className="h-6 w-6 text-blue-600 dark:text-blue-400 group-hover:text-white transition-colors" />
                 </div>
                 
@@ -73,7 +73,7 @@ export function ModeSelectionDialog({ onSelect, onCancel }: ModeSelectionDialogP
                   </div>
                 </div>
 
-                <div className="flex-shrink-0 self-center">
+                <div className="shrink-0 self-center">
                   <div className="w-6 h-6 border-2 border-gray-300 dark:border-gray-600 rounded-full group-hover:border-blue-500 dark:group-hover:border-blue-400 flex items-center justify-center">
                     <div className="w-3 h-3 bg-blue-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
                   </div>
