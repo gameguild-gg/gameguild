@@ -3,16 +3,24 @@
  * Gerencia configurações globais e específicas por tipo de node
  */
 
+import type { ShikiTheme } from "@/components/block-content-editor/lib/shiki/themes"
+
 export type ModalSize = 'compact' | 'widescreen' | 'ultrawide' | 'fullscreen'
 
 export interface EditorPreferences {
   // Modal size configuration
   modalSize: ModalSize
-  
-  // Future preferences can be added here
-  // theme?: string
-  // fontSize?: number
-  // etc.
+  /**
+   * Syntax theme used inside the editor modal for any Monaco-backed block
+   * (code-studio, mermaid, html, markdown, vega-lite, …). Always global.
+   */
+  shikiTheme: ShikiTheme
+  /**
+   * Syntax theme used to render Monaco-using blocks in document preview /
+   * read-only view (including the code-studio "base" display, which mirrors
+   * what students will see). Always global.
+   */
+  previewShikiTheme: ShikiTheme
 }
 
 export interface NodeTypePreferences {
@@ -32,6 +40,8 @@ const PREFERENCES_KEY = 'editor-prefs'
 // Default preferences
 const DEFAULT_PREFERENCES: EditorPreferences = {
   modalSize: 'widescreen',
+  shikiTheme: 'github',
+  previewShikiTheme: 'github',
 }
 
 // IndexedDB helper
@@ -69,7 +79,13 @@ class PreferencesDB {
         request.onsuccess = () => {
           const data = request.result
           if (data) {
-            resolve(data)
+            // Merge persisted globals with defaults so newly-added preference
+            // keys (e.g. `shikiTheme`) get sane values for users whose DB
+            // entry predates them.
+            resolve({
+              global: { ...DEFAULT_PREFERENCES, ...data.global },
+              nodeTypes: data.nodeTypes ?? {},
+            })
           } else {
             // Return default preferences
             resolve({
@@ -110,6 +126,30 @@ class PreferencesDB {
 
 const db = new PreferencesDB()
 
+// Lightweight pub/sub so every open editor refreshes its resolved
+// preferences when one of them writes a new value (e.g. the user picks a
+// new global theme inside an html-editor while a mermaid-editor is also
+// mounted somewhere on the page).
+type PreferencesListener = () => void
+const listeners = new Set<PreferencesListener>()
+
+function notifyPreferencesChanged(): void {
+  listeners.forEach((fn) => {
+    try {
+      fn()
+    } catch (error) {
+      console.error('Preferences listener threw:', error)
+    }
+  })
+}
+
+export function subscribeToPreferences(listener: PreferencesListener): () => void {
+  listeners.add(listener)
+  return () => {
+    listeners.delete(listener)
+  }
+}
+
 // Public API
 export async function getEditorPreferences(nodeType?: string): Promise<EditorPreferences> {
   const allPrefs = await db.get()
@@ -123,6 +163,16 @@ export async function getEditorPreferences(nodeType?: string): Promise<EditorPre
   }
   
   return allPrefs.global
+}
+
+/**
+ * Returns the raw `AllPreferences` snapshot (global + per-nodeType
+ * overrides). Use this when the caller needs to distinguish a nodeType
+ * override from a global value — e.g. to drive a "this node type only"
+ * toggle in the settings UI.
+ */
+export async function getAllPreferences(): Promise<AllPreferences> {
+  return db.get()
 }
 
 export async function setGlobalPreference<K extends keyof EditorPreferences>(
@@ -145,6 +195,7 @@ export async function setGlobalPreference<K extends keyof EditorPreferences>(
   }
   
   await db.set(allPrefs)
+  notifyPreferencesChanged()
 }
 
 export async function setNodeTypePreference<K extends keyof EditorPreferences>(
@@ -160,6 +211,7 @@ export async function setNodeTypePreference<K extends keyof EditorPreferences>(
   
   allPrefs.nodeTypes[nodeType][key] = value
   await db.set(allPrefs)
+  notifyPreferencesChanged()
 }
 
 export async function clearNodeTypePreference(
@@ -178,12 +230,14 @@ export async function clearNodeTypePreference(
   }
   
   await db.set(allPrefs)
+  notifyPreferencesChanged()
 }
 
 export async function clearAllNodeTypePreferences(nodeType: string): Promise<void> {
   const allPrefs = await db.get()
   delete allPrefs.nodeTypes[nodeType]
   await db.set(allPrefs)
+  notifyPreferencesChanged()
 }
 
 export async function hasNodeTypePreference(nodeType: string, key: keyof EditorPreferences): Promise<boolean> {
