@@ -5,7 +5,7 @@ import { useImmer } from "use-immer"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { X, Save, Code2, Menu, Lock, Layout } from "lucide-react"
+import { Save, Code2, Menu, Lock, Layout } from "lucide-react"
 import type { CodeStudioData, CodeFile, FileTreeFolder, LeafPanel, DisplayConfig, PanelType, ShikiTheme } from "./types"
 import { MonacoCodeEditor } from "./monaco-code-editor"
 import { ResultPanel } from "./result-panel"
@@ -39,6 +39,8 @@ import {
 } from "@/components/block-content-editor/lib/storage/editor/editor-preferences"
 import { getProjectPreference, type ProjectPreferences } from "@/components/block-content-editor/lib/storage/editor/project-preferences"
 import { EnhancedStorageAdapter } from "@/components/block-content-editor/lib/storage/editor/enhanced-storage-adapter"
+import { useEditorSettings } from "@/components/block-content-editor/extras/settings-menu"
+import { BlockEditorShell } from "@/components/block-content-editor/extras/block-editor-shell"
 
 interface CodeStudioEditorProps {
   data: CodeStudioData
@@ -77,26 +79,23 @@ export function CodeStudioEditor({
   const [output, setOutput] = useImmer<string>("")
   const [showSettingsMenu, setShowSettingsMenu] = useImmer(false)
   const [resolvedContents, setResolvedContents] = useImmer<Record<string, string>>({})
-  const [modalSize, setModalSize] = useState<ModalSize | null>(null)
+  const settings = useEditorSettings("code-studio")
+  const modalSize = settings.modalSize
+  const setModalSize = settings.setModalSize
   // Canvas size in the editor follows the active display's scope:
   //   - Base (first display) renders inside a fixed embed-sized frame so authors
   //     see exactly what students will see in the document.
   //   - Secondary displays (Mirror, Test, custom) render full-bleed (IDE-style).
   const [projectPreferences, setProjectPreferences] = useState<ProjectPreferences | undefined>()
   const [effectiveShikiTheme, setEffectiveShikiTheme] = useState<ShikiTheme>(data.shikiTheme || "github")
-  const modalContainerRef = useRef<HTMLDivElement | null>(null)
   const codeRunnerRef = useRef<UnifiedCodeRunner | null>(null)
   const terminalRef = useRef<XTermTerminalHandle | null>(null)
   const initializedRef = useRef(false)
   const originalDataRef = useRef<CodeStudioData>(JSON.parse(JSON.stringify(data)))
   const lastProcessedContentsRef = useRef<Record<string, string>>({})
 
-  // Load modal size and project preferences on mount
+  // Load project preferences on mount
   useEffect(() => {
-    getEditorPreferences('code-studio').then((prefs: { modalSize: ModalSize }) => {
-      setModalSize(prefs.modalSize)
-    })
-    
     // Load project preferences if projectId is available
     if (projectId) {
       const loadProjectPrefs = async () => {
@@ -1621,65 +1620,40 @@ export function CodeStudioEditor({
   }
 
   // Modal de edição (fullscreen)
-  // Wait for preferences to load
-  if (!modalSize) {
-    return null
-  }
-  
-  const { container, modal } = getModalSizeClasses(modalSize)
-  
   return (
-    <div 
-      ref={modalContainerRef}
-      className={cn("fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50", container)}
-      style={{ pointerEvents: 'auto' }}
-      onClick={handleCancelClick}
-    >
-      <div 
-        className={cn("bg-white dark:bg-gray-900 border dark:border-gray-700 shadow-2xl flex flex-col", modal)}
-        style={{ pointerEvents: 'auto' }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900">
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
-              <Code2 className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Code Studio</h2>
-            </div>
-          </div>
-          
-          <div className="flex items-center gap-2">
-            <div className="relative settings-menu-container">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowSettingsMenu(!showSettingsMenu)}
-                className="h-8 w-8 p-0"
-                title="Settings"
-              >
-                <Menu className="h-4 w-4" />
-              </Button>
-              
-              {/* Settings Dropdown Menu */}
-              {showSettingsMenu && (
-                <SettingsMenu
-                  data={localData}
-                  onDataChange={handleDataChange}
-                  onClose={() => setShowSettingsMenu(false)}
-                  nodeType="code-studio"
-                  onModalSizeChange={(size) => setModalSize(size)}
-                  projectId={projectId}
-                  onShikiThemePreview={(theme) => setEffectiveShikiTheme(theme)}
-                />
-              )}
-            </div>
-            <Button variant="ghost" size="sm" onClick={handleCancelClick}>
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
+    <BlockEditorShell
+      settings={settings}
+      onClose={handleCancelClick}
+      icon={<Code2 className="h-5 w-5 text-blue-600 dark:text-blue-400" />}
+      title="Code Studio"
+      hideSettingsButton
+      headerActions={
+        <div className="relative settings-menu-container">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowSettingsMenu(!showSettingsMenu)}
+            className="h-8 w-8 p-0"
+            title="Settings"
+          >
+            <Menu className="h-4 w-4" />
+          </Button>
 
+          {/* Settings Dropdown Menu */}
+          {showSettingsMenu && (
+            <SettingsMenu
+              data={localData}
+              onDataChange={handleDataChange}
+              onClose={() => setShowSettingsMenu(false)}
+              nodeType="code-studio"
+              onModalSizeChange={(size) => setModalSize(size)}
+              projectId={projectId}
+              onShikiThemePreview={(theme) => setEffectiveShikiTheme(theme)}
+            />
+          )}
+        </div>
+      }
+    >
         {/* Settings Bar */}
         <div className="flex items-center gap-3 p-4 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 flex-wrap">
           <div className="flex items-center gap-2 shrink-0">
@@ -1878,7 +1852,6 @@ export function CodeStudioEditor({
             </div>
           </div>
         </div>
-      </div>
-    </div>
+    </BlockEditorShell>
   )
 }
