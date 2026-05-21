@@ -5,7 +5,13 @@ import { useEffect, useRef } from "react"
 import type { VegaLiteValidationResult } from "./vega-lite-validator"
 import { VegaLiteValidator } from "./vega-lite-validator"
 import { ensureShikiLoaded, isShikiActive, useShikiReady } from "@/components/block-content-editor/lib/shiki/highlighter"
+import { registerMonacoSurface, type MonacoThemeHandle } from "@/components/block-content-editor/lib/shiki/theme-coordinator"
+import {
+  applyLineHighlightDecoration,
+  toMonacoRenderLineHighlight,
+} from "@/components/block-content-editor/lib/monaco/line-highlight"
 import { getShikiThemeName, type ShikiTheme } from "@/components/block-content-editor/lib/shiki/themes"
+import type { MonacoOptionsPreferences, RenderWhitespace, RenderLineHighlight } from "@/components/block-content-editor/lib/storage/editor/editor-preferences"
 
 function resolveMonacoThemeName(isDark: boolean, shikiTheme: ShikiTheme): string {
   if (isShikiActive()) {
@@ -20,10 +26,21 @@ interface MonacoVegaLiteEditorProps {
   onValidationChange?: (result: VegaLiteValidationResult) => void
   height?: string | number
   theme?: "light" | "dark"
+  /**
+   * Resolved global Monaco options. When supplied, overrides the
+   * individual fallback props below. Pass `settings.editor` from
+   * `useEditorSettings`.
+   */
+  options?: MonacoOptionsPreferences | null
   shikiTheme?: ShikiTheme
   readOnly?: boolean
   fontSize?: number
   lineNumbers?: boolean
+  wordWrap?: boolean
+  minimap?: boolean
+  tabSize?: number
+  renderWhitespace?: RenderWhitespace
+  renderLineHighlight?: RenderLineHighlight
 }
 
 export function MonacoVegaLiteEditor({
@@ -32,13 +49,28 @@ export function MonacoVegaLiteEditor({
   onValidationChange,
   height = "400px",
   theme = "light",
-  shikiTheme = "github",
+  options,
+  shikiTheme: shikiThemeProp,
   readOnly = false,
-  fontSize = 14,
-  lineNumbers = true,
+  fontSize: fontSizeProp,
+  lineNumbers: lineNumbersProp,
+  wordWrap: wordWrapProp,
+  minimap: minimapProp,
+  tabSize: tabSizeProp,
+  renderWhitespace: renderWhitespaceProp,
+  renderLineHighlight: renderLineHighlightProp,
 }: MonacoVegaLiteEditorProps) {
+  const shikiTheme: ShikiTheme = options?.shikiTheme ?? shikiThemeProp ?? "github"
+  const fontSize = options?.fontSize ?? fontSizeProp ?? 14
+  const lineNumbers = options?.lineNumbers ?? lineNumbersProp ?? true
+  const wordWrap = options?.wordWrap ?? wordWrapProp ?? true
+  const minimap = options?.minimap ?? minimapProp ?? false
+  const tabSize = options?.tabSize ?? tabSizeProp ?? 2
+  const renderWhitespace: RenderWhitespace = options?.renderWhitespace ?? renderWhitespaceProp ?? "none"
+  const renderLineHighlight: RenderLineHighlight = options?.renderLineHighlight ?? renderLineHighlightProp ?? "line"
   const containerRef = useRef<HTMLDivElement>(null)
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null)
+  const themeHandleRef = useRef<MonacoThemeHandle | null>(null)
   const validationTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const shikiReady = useShikiReady()
 
@@ -96,11 +128,14 @@ export function MonacoVegaLiteEditor({
       theme: resolveMonacoThemeName(theme === "dark", shikiTheme),
       automaticLayout: true,
       readOnly: readOnly,
-      minimap: { enabled: false },
+      minimap: { enabled: minimap },
       scrollBeyondLastLine: false,
-      wordWrap: "on",
+      wordWrap: wordWrap ? "on" : "off",
       fontSize: fontSize,
       lineNumbers: lineNumbers ? "on" : "off",
+      tabSize,
+      renderWhitespace,
+      renderLineHighlight: toMonacoRenderLineHighlight(renderLineHighlight),
       folding: true,
       bracketPairColorization: { enabled: true },
       formatOnPaste: true,
@@ -253,11 +288,9 @@ export function MonacoVegaLiteEditor({
       }
     })
 
-    // Theme change handler
-    const updateTheme = () => {
-      monaco.editor.setTheme(resolveMonacoThemeName(theme === "dark", shikiTheme))
-    }
-    updateTheme()
+    // Theme change handler — delegated to the global Monaco theme
+    // coordinator. The dedicated effect below registers this surface and
+    // refreshes on theme changes / Shiki readiness.
 
     // Cleanup
     return () => {
@@ -277,20 +310,42 @@ export function MonacoVegaLiteEditor({
     }
   }, [value])
 
-  // Update theme when prop changes (also re-runs once Shiki finishes
-  // loading, so the fallback `vs-dark`/`vs` swaps to the user's chosen
-  // Shiki theme without remounting the editor).
+  // Register with the global Monaco theme coordinator so closing this
+  // editor restores the theme of any underlying surface (e.g. the
+  // code-studio preview rendered behind it in the document).
+  const themeStateRef = useRef({ shikiTheme, theme, shikiReady })
+  themeStateRef.current = { shikiTheme, theme, shikiReady }
   useEffect(() => {
-    monaco.editor.setTheme(resolveMonacoThemeName(theme === "dark", shikiTheme))
+    const handle = registerMonacoSurface(monaco, () => {
+      const { shikiTheme: t, theme: themeMode } = themeStateRef.current
+      return resolveMonacoThemeName(themeMode === "dark", t)
+    })
+    themeHandleRef.current = handle
+    return () => {
+      handle.unregister()
+      themeHandleRef.current = null
+    }
+  }, [])
+
+  // Refresh the coordinator when theme inputs change (only takes effect
+  // if this surface is currently dominant).
+  useEffect(() => {
+    themeHandleRef.current?.refresh()
   }, [theme, shikiTheme, shikiReady])
 
-  // Update editor options when fontSize/lineNumbers change
+  // Update editor options when any Monaco preference changes
   useEffect(() => {
     editorRef.current?.updateOptions({
       fontSize,
       lineNumbers: lineNumbers ? "on" : "off",
+      wordWrap: wordWrap ? "on" : "off",
+      minimap: { enabled: minimap },
+      tabSize,
+      renderWhitespace,
+      renderLineHighlight: toMonacoRenderLineHighlight(renderLineHighlight),
     })
-  }, [fontSize, lineNumbers])
+    applyLineHighlightDecoration(editorRef.current, renderLineHighlight)
+  }, [fontSize, lineNumbers, wordWrap, minimap, tabSize, renderWhitespace, renderLineHighlight])
 
   return (
     <div
