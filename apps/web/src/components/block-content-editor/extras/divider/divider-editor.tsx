@@ -133,6 +133,7 @@ export function DividerEditor({ initialData, onSave, onCancel }: DividerEditorPr
   return (
     <BlockEditorShell
       settings={settings}
+      includeMonacoTheme={false}
       onClose={handleCancel}
       icon={<Minus className="h-5 w-5 text-blue-600 dark:text-blue-400" />}
       title="Divider Editor"

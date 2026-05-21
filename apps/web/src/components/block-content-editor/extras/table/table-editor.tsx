@@ -144,6 +144,7 @@ export function TableEditor({ initialData, onSave, onCancel }: TableEditorProps)
   return (
     <BlockEditorShell
       settings={settings}
+      includeMonacoTheme={false}
       onClose={onCancel}
       icon={<Grid3X3 className="h-5 w-5 text-blue-600 dark:text-blue-400" />}
       title="Table Editor"
