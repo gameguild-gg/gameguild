@@ -303,6 +303,7 @@ export function MermaidEditor({ initialData, onSave, onCancel }: MermaidEditorPr
                         onValidationChange={handleValidationChange}
                         height="100%"
                         theme={isDarkMode ? "dark" : "light"}
+                        shikiTheme={settings.shikiTheme ?? "github"}
                         fontSize={settings.editorFontSize}
                         lineNumbers={settings.editorLineNumbers}
                       />

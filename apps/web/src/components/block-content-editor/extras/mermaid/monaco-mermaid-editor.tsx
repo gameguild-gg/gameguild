@@ -8,7 +8,8 @@ import { mermaidLanguageConfig, mermaidTokensProvider, mermaidTheme } from "./me
 import { MermaidValidator, type MermaidValidationResult } from "./mermaid-validator"
 import { createMermaidCompletionProvider } from "./mermaid-completion-provider"
 import { MonacoErrorBoundary } from "@/components/block-content-editor/extras/code-studio/monaco-error-boundary"
-import { isShikiActive } from "@/components/block-content-editor/extras/code-studio/monaco-code-editor"
+import { ensureShikiLoaded, isShikiActive, useShikiReady } from "@/components/block-content-editor/lib/shiki/highlighter"
+import { getShikiThemeName, type ShikiTheme } from "@/components/block-content-editor/lib/shiki/themes"
 
 const MonacoEditor = dynamic(() => import("@monaco-editor/react"), {
   ssr: false,
@@ -21,6 +22,7 @@ interface MonacoMermaidEditorProps {
   onValidationChange?: (result: MermaidValidationResult) => void
   height?: string | number
   theme?: "light" | "dark"
+  shikiTheme?: ShikiTheme
   readOnly?: boolean
   fontSize?: number
   lineNumbers?: boolean
@@ -32,12 +34,14 @@ export function MonacoMermaidEditor({
   onValidationChange,
   height = "100%",
   theme = "light",
+  shikiTheme = "github",
   readOnly = false,  fontSize = 14,
   lineNumbers = true,}: MonacoMermaidEditorProps) {
   const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null)
   const isLanguageRegistered = useRef(false)
   const completionProviderDisposable = useRef<IDisposable | null>(null)
   const validationTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined)
+  const shikiReady = useShikiReady()
 
   const validateCode = useCallback(
     async (code: string) => {
@@ -116,9 +120,12 @@ export function MonacoMermaidEditor({
       validateCode(value)
     }
   }, [value, validateCode, onValidationChange])
-  const handleEditorDidMount: OnMount = (editor, monaco) => {
+  const handleEditorDidMount: OnMount = async (editor, monaco) => {
     editorRef.current = editor as unknown as editor.IStandaloneCodeEditor
-    //editorRef.current = editor
+
+    // Ensure Shiki is loaded so the user's selected theme actually takes
+    // effect even on pages that have no code-studio block.
+    await ensureShikiLoaded(monaco)
 
     // Register Mermaid language only once
     if (!isLanguageRegistered.current) {
@@ -179,8 +186,10 @@ export function MonacoMermaidEditor({
       isLanguageRegistered.current = true
     }
 
-    // Set the theme (skip custom themes when Shiki is active)
-    if (!isShikiActive()) {
+    // Set the theme (use Shiki theme when active, otherwise mermaid custom themes)
+    if (isShikiActive()) {
+      monaco.editor.setTheme(getShikiThemeName(shikiTheme, theme === "dark"))
+    } else {
       monaco.editor.setTheme(theme === "dark" ? "mermaid-dark" : "mermaid-light")
     }
 
@@ -209,8 +218,15 @@ export function MonacoMermaidEditor({
       language="mermaid"
       value={value}
       onChange={handleChange}
+      beforeMount={(monaco) => { void ensureShikiLoaded(monaco) }}
       onMount={handleEditorDidMount}
-      theme={theme === "dark" ? (isShikiActive() ? "dark-plus" : "mermaid-dark") : (isShikiActive() ? "light-plus" : "mermaid-light")}
+      theme={
+        shikiReady && isShikiActive()
+          ? getShikiThemeName(shikiTheme, theme === "dark")
+          : theme === "dark"
+            ? "mermaid-dark"
+            : "mermaid-light"
+      }
       options={{
         minimap: { enabled: false },
         scrollBeyondLastLine: false,
