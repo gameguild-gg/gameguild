@@ -4,6 +4,15 @@ import * as monaco from "monaco-editor"
 import { useEffect, useRef } from "react"
 import type { VegaLiteValidationResult } from "./vega-lite-validator"
 import { VegaLiteValidator } from "./vega-lite-validator"
+import { ensureShikiLoaded, isShikiActive, useShikiReady } from "@/components/block-content-editor/lib/shiki/highlighter"
+import { getShikiThemeName, type ShikiTheme } from "@/components/block-content-editor/lib/shiki/themes"
+
+function resolveMonacoThemeName(isDark: boolean, shikiTheme: ShikiTheme): string {
+  if (isShikiActive()) {
+    return getShikiThemeName(shikiTheme, isDark)
+  }
+  return isDark ? "vs-dark" : "vs"
+}
 
 interface MonacoVegaLiteEditorProps {
   value: string
@@ -11,6 +20,7 @@ interface MonacoVegaLiteEditorProps {
   onValidationChange?: (result: VegaLiteValidationResult) => void
   height?: string | number
   theme?: "light" | "dark"
+  shikiTheme?: ShikiTheme
   readOnly?: boolean
   fontSize?: number
   lineNumbers?: boolean
@@ -22,6 +32,7 @@ export function MonacoVegaLiteEditor({
   onValidationChange,
   height = "400px",
   theme = "light",
+  shikiTheme = "github",
   readOnly = false,
   fontSize = 14,
   lineNumbers = true,
@@ -29,9 +40,15 @@ export function MonacoVegaLiteEditor({
   const containerRef = useRef<HTMLDivElement>(null)
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null)
   const validationTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const shikiReady = useShikiReady()
 
   useEffect(() => {
     if (!containerRef.current) return
+
+    // Kick off Shiki initialization for this Monaco namespace; the
+    // dedicated theme-update effect below will swap to the Shiki theme
+    // as soon as it resolves.
+    void ensureShikiLoaded(monaco);
 
     // Configure Monaco editor for JSON; fetch Vega/Vega-Lite schemas at runtime to avoid bundler export issues
     (async () => {
@@ -76,7 +93,7 @@ export function MonacoVegaLiteEditor({
     const editor = monaco.editor.create(containerRef.current, {
       value: value,
       language: "json",
-      theme: theme === "dark" ? "vs-dark" : "vs",
+      theme: resolveMonacoThemeName(theme === "dark", shikiTheme),
       automaticLayout: true,
       readOnly: readOnly,
       minimap: { enabled: false },
@@ -238,7 +255,7 @@ export function MonacoVegaLiteEditor({
 
     // Theme change handler
     const updateTheme = () => {
-      monaco.editor.setTheme(theme === "dark" ? "vs-dark" : "vs")
+      monaco.editor.setTheme(resolveMonacoThemeName(theme === "dark", shikiTheme))
     }
     updateTheme()
 
@@ -260,10 +277,12 @@ export function MonacoVegaLiteEditor({
     }
   }, [value])
 
-  // Update theme when prop changes
+  // Update theme when prop changes (also re-runs once Shiki finishes
+  // loading, so the fallback `vs-dark`/`vs` swaps to the user's chosen
+  // Shiki theme without remounting the editor).
   useEffect(() => {
-    monaco.editor.setTheme(theme === "dark" ? "vs-dark" : "vs")
-  }, [theme])
+    monaco.editor.setTheme(resolveMonacoThemeName(theme === "dark", shikiTheme))
+  }, [theme, shikiTheme, shikiReady])
 
   // Update editor options when fontSize/lineNumbers change
   useEffect(() => {
