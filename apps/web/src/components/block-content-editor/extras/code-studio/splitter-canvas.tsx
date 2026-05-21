@@ -324,7 +324,7 @@ function SplitGroup({ node, renderLeaf, onSplitResize }: SplitGroupProps) {
                   "relative shrink-0 transition-colors",
                   node.direction === "horizontal" ? "w-1.5 cursor-col-resize" : "h-1.5 cursor-row-resize",
                   resizable
-                    ? "bg-transparent hover:bg-blue-500/40 data-[resize-handle-active]:bg-blue-500/60"
+                    ? "bg-transparent hover:bg-blue-500/40 data-resize-handle-active:bg-blue-500/60"
                     : "bg-transparent pointer-events-none",
                 )}
               />
