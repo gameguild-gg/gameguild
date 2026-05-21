@@ -78,19 +78,23 @@ export function CodeStudioEditor({
   const settings = useEditorSettings("code-studio")
   const modalSize = settings.modalSize
   const setModalSize = settings.setModalSize
-  // Two global themes drive every Monaco surface in the code-studio:
-  //   - `editorShikiTheme` is for the IDE-style secondary displays (Mirror,
-  //     Test, custom) where authors actively edit.
-  //   - `previewShikiTheme` is for the "base" display (display-1) — the
-  //     embed-sized frame that mirrors exactly what students will see —
-  //     and for the published `isPreview` render mounted by
-  //     `PreviewCodeStudio`. This keeps the WYSIWYG promise: the base
-  //     display in the editor matches the document preview byte-for-byte.
-  //   While preferences are still hydrating (`null`) we fall back to
-  //   `'github'` so Monaco can mount with a sensible default; the hook
-  //   re-renders once IndexedDB resolves.
-  const editorShikiTheme = settings.shikiTheme ?? "github"
-  const previewShikiTheme = settings.previewShikiTheme ?? editorShikiTheme
+  // Two global Monaco-option groups drive every Monaco surface in the
+  // code-studio:
+  //   - `editorOptions` (settings.editor) is for the IDE-style
+  //     secondary displays (Mirror, Test, custom) where authors actively
+  //     edit. Theme, font size, line numbers, word wrap, minimap, tab
+  //     size and whitespace rendering all flow from this group.
+  //   - `previewOptions` (settings.preview) is for the "base" display
+  //     (display-1) — the embed-sized frame that mirrors exactly what
+  //     students will see — and for the published `isPreview` render
+  //     mounted by `PreviewCodeStudio`. This keeps the WYSIWYG promise:
+  //     the base display in the editor matches the document preview
+  //     byte-for-byte.
+  //   While preferences are still hydrating (`null`) we leave the bag
+  //   unset; `MonacoCodeEditor` substitutes its own sane defaults so the
+  //   editor can mount before IndexedDB resolves.
+  const editorOptions = settings.editor
+  const previewOptions = settings.preview ?? settings.editor
   const baseDisplayId = localData.layout?.displays[0]?.id
   // Canvas size in the editor follows the active display's scope:
   //   - Base (first display) renders inside a fixed embed-sized frame so authors
@@ -1106,13 +1110,14 @@ export function CodeStudioEditor({
 
   // Renderizar conteúdo de cada painel
   const renderPanelContent = (panel: LeafPanel, displayConfig?: DisplayConfig) => {
-    // Pick the Shiki theme based on which display this leaf belongs to.
-    // The base display (display-1) — and the `isPreview` re-mount, which
-    // also targets the base display — uses `previewShikiTheme` because
-    // that's what students see. Every other display is the IDE-style
-    // authoring surface and uses `editorShikiTheme`.
+    // Pick the Monaco-options group based on which display this leaf
+    // belongs to. The base display (display-1) — and the `isPreview`
+    // re-mount, which also targets the base display — uses the global
+    // `preview` group because that's what students see. Every other
+    // display is the IDE-style authoring surface and uses the global
+    // `editor` group.
     const isBaseLeaf = isPreview || (displayConfig?.id !== undefined && displayConfig.id === baseDisplayId)
-    const themeForLeaf = isBaseLeaf ? previewShikiTheme : editorShikiTheme
+    const optionsForLeaf = isBaseLeaf ? previewOptions : editorOptions
     switch (panel.type) {
       case "explorer":
         return (
@@ -1247,9 +1252,7 @@ export function CodeStudioEditor({
                           onChange={(content) => handleCodeChange(content, file.id)}
                           language={file.language}
                           readonly={localData.readonly || isFileReadonly}
-                          showLineNumbers={localData.showLineNumbers}
-                          fontSize={localData.fontSize}
-                          shikiTheme={themeForLeaf}
+                          options={optionsForLeaf}
                         />
                       </div>
                     )
@@ -1336,9 +1339,7 @@ export function CodeStudioEditor({
                       onChange={(content) => handleCodeChange(content, file.id)}
                       language={file.language}
                       readonly={localData.readonly || isFileReadonly}
-                      showLineNumbers={localData.showLineNumbers}
-                      fontSize={localData.fontSize}
-                      shikiTheme={themeForLeaf}
+                      options={optionsForLeaf}
                     />
                   )
                 })()
@@ -1563,12 +1564,17 @@ export function CodeStudioEditor({
   }
 
   // Modal de edição (fullscreen)
+  const baseDisplayIdForSettings = localData.layout?.displays[0]?.id
+  const activeDisplayIdForSettings = localData.layout?.activeDisplayId
+  const isViewingBase = baseDisplayIdForSettings !== undefined && baseDisplayIdForSettings === activeDisplayIdForSettings
+
   return (
     <BlockEditorShell
       settings={settings}
       onClose={handleCancelClick}
       icon={<Code2 className="h-5 w-5 text-blue-600 dark:text-blue-400" />}
       title="Code Studio"
+      defaultMonacoTab={isViewingBase ? 'preview' : 'editor'}
     >
         {/* Settings Bar */}
         <div className="flex items-center gap-3 p-4 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 flex-wrap">
