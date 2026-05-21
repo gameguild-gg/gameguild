@@ -57,6 +57,13 @@ interface BlockEditorShellProps {
    * code-studio's SettingsMenu with project preferences & shiki theme).
    */
   hideSettingsButton?: boolean
+  /**
+   * Whether the built-in settings button should include the Monaco/Shiki
+   * theme controls in its Style tab. Default `true`; pass `false` for
+   * non-Monaco editors (table, divider, button, quiz) where a syntax
+   * theme picker is meaningless.
+   */
+  includeMonacoTheme?: boolean
 }
 
 /**
@@ -89,6 +96,7 @@ export function BlockEditorShell({
   bodyClassName,
   disableBackdropClose = false,
   hideSettingsButton = false,
+  includeMonacoTheme = true,
 }: BlockEditorShellProps) {
   // Block page scrolling and click-through while the modal is open. We also
   // clear `pointer-events` on the body so background widgets (lexical
@@ -150,7 +158,7 @@ export function BlockEditorShell({
           </div>
           <div className="flex items-center gap-2 shrink-0">
             {headerActions}
-            {!hideSettingsButton && <EditorSettingsButton settings={settings} />}
+            {!hideSettingsButton && <EditorSettingsButton settings={settings} includeMonacoTheme={includeMonacoTheme} />}
             <Button
               variant="ghost"
               size="sm"
