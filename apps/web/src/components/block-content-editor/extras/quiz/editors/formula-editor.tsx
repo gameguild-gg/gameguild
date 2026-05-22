@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/select"
 import type { FormulaEntry } from "../types"
 import { validateFormula, evaluateFormula, generateVariableValue } from "../utils/formula-evaluator"
+import { MathInput } from "../components/math-input"
 
 export function FormulaEditor() {
   const { register, control, watch, setValue } = useFormContext<FormulaEntry>()
@@ -157,25 +158,25 @@ export function FormulaEditor() {
           Correct Formula (hidden from student)
         </Label>
         <div className="text-xs text-gray-500 dark:text-gray-400 bg-blue-50 dark:bg-blue-950/30 p-2 rounded border border-blue-200 dark:border-blue-800">
-          Write the formula using the variable names above. Supported: +, -, *, /, ^ (power),
-          parentheses, and functions: sqrt, abs, sin, cos, tan, log, ln, exp, ceil, floor, round, min, max, pow.
-          Constants: pi, e.
+          Use o editor visual de fórmula (LaTeX) para escrever a expressão correta. Suporta frações, raízes,
+          potências, funções (sqrt, sin, cos, tan, log, ln, exp, ceil, floor, round, min, max, pow), parênteses
+          e constantes (pi, e). Use os nomes das variáveis definidas acima.
         </div>
         <div className="relative">
-          <Input
-            {...register("formula")}
-            autoComplete="off"
-            placeholder="e.g., x^2 + 2*y"
-            className={`bg-white dark:bg-gray-800 font-mono ${
+          <MathInput
+            value={formula}
+            onChange={(latex) => setValue("formula", latex, { shouldDirty: true })}
+            placeholder="e.g.,\\ x^2 + 2y"
+            className={
               formulaError
                 ? "border-red-400 dark:border-red-600"
                 : formula.trim() && !formulaError
                   ? "border-green-400 dark:border-green-600"
-                  : "border-gray-300 dark:border-gray-600"
-            }`}
+                  : ""
+            }
           />
           {formula.trim() && (
-            <span className="absolute right-3 top-1/2 -translate-y-1/2">
+            <span className="absolute right-3 top-1/2 -translate-y-1/2 z-10">
               {formulaError ? (
                 <AlertCircle className="h-4 w-4 text-red-500" />
               ) : (
