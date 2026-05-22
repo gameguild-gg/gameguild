@@ -9,10 +9,6 @@ import { OnChangePlugin } from "@lexical/react/LexicalOnChangePlugin"
 import { ListPlugin } from "@lexical/react/LexicalListPlugin"
 import { LinkPlugin } from "@lexical/react/LexicalLinkPlugin"
 import { LexicalErrorBoundary } from "@lexical/react/LexicalErrorBoundary"
-import { HeadingNode, QuoteNode } from "@lexical/rich-text"
-import { ListNode, ListItemNode } from "@lexical/list"
-import { LinkNode, AutoLinkNode } from "@lexical/link"
-import { CodeNode } from "@lexical/code"
 import { type EditorState } from "lexical"
 import { Save, FileText, Eye } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -22,46 +18,12 @@ import { FloatingTextFormatToolbarPlugin } from "../../plugins/floating-text-for
 import { RichTextPreviewRenderer } from "./rich-text-preview-renderer"
 import { useEditorSettings } from "@/components/block-content-editor/extras/settings-menu"
 import { BlockEditorShell } from "@/components/block-content-editor/extras/block-editor-shell"
+import { SHARED_LEXICAL_NODES, SHARED_LEXICAL_THEME } from "../../lib/lexical"
 import type { RichTextData } from "../../nodes/rich-text-node"
 
-const RT_THEME = {
-  text: {
-    bold: "font-bold",
-    italic: "italic",
-    underline: "underline",
-    strikethrough: "line-through",
-    code: "bg-gray-100 dark:bg-gray-800 px-1 py-0.5 rounded font-mono text-sm",
-  },
-  paragraph: "my-2",
-  heading: {
-    h1: "text-3xl font-bold my-3",
-    h2: "text-2xl font-bold my-2",
-    h3: "text-xl font-bold my-2",
-    h4: "text-lg font-bold my-1",
-    h5: "text-base font-bold my-1",
-  },
-  list: {
-    ul: "list-disc list-inside ml-4 my-2",
-    ol: "list-decimal list-inside ml-4 my-2",
-    listitem: "my-0.5",
-    nested: {
-      listitem: "ml-4",
-    },
-  },
-  quote: "border-l-4 border-gray-300 dark:border-gray-600 pl-4 italic text-gray-600 dark:text-gray-400 my-2",
-  code: "bg-gray-100 dark:bg-gray-800 p-3 rounded font-mono text-sm my-2",
-  link: "text-blue-600 dark:text-blue-400 underline hover:text-blue-800 dark:hover:text-blue-300 cursor-pointer",
-}
+const RT_THEME = SHARED_LEXICAL_THEME
 
-const RT_NODES = [
-  HeadingNode,
-  QuoteNode,
-  ListNode,
-  ListItemNode,
-  CodeNode,
-  LinkNode,
-  AutoLinkNode,
-]
+const RT_NODES = SHARED_LEXICAL_NODES
 
 interface RichTextEditorProps {
   initialData?: RichTextData
