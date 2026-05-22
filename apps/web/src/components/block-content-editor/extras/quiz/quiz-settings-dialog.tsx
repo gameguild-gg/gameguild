@@ -301,12 +301,12 @@ export function QuizSettingsDialog({ isOpen, onClose, entry, onSave }: QuizSetti
                             showFeedback={showFeedback}
                           />
 
-                          {/* Submit button */}
+                          {/* Submit button - h-12 matches Feedback/Submitted height */}
                           {!showFeedback && (
                             <button
                               type="button"
                               onClick={checkAnswers}
-                              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors"
+                              className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 rounded-lg transition-colors"
                             >
                               Submit Answer
                             </button>
@@ -324,9 +324,9 @@ export function QuizSettingsDialog({ isOpen, onClose, entry, onSave }: QuizSetti
                             />
                           )}
 
-                          {/* Submitted without feedback */}
+                          {/* Submitted without feedback - h-12 matches Submit button height */}
                           {showFeedback && !(currentEntry.settings.showFeedback ?? true) && (
-                            <div className="flex items-center justify-between gap-3 rounded-lg mt-3 px-4 py-3 text-sm border-l-4 bg-blue-50 dark:bg-blue-950/20 text-blue-700 dark:text-blue-400 border-blue-500">
+                            <div className="flex items-center justify-between gap-3 rounded-lg px-4 h-12 py-0 text-sm border-l-4 bg-blue-50 dark:bg-blue-950/20 text-blue-700 dark:text-blue-400 border-blue-500">
                               <span className="font-medium">Answer submitted.</span>
                               {currentEntry.settings.allowRetry ? (
                                 <button
