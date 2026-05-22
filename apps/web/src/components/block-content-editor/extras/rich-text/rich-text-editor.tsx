@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { FloatingTextFormatToolbarPlugin } from "../../plugins/floating-text-format-toolbar-plugin"
+import { InlineTextFormatToolbarPlugin } from "../../plugins/inline-text-format-toolbar-plugin"
 import { RichTextPreviewRenderer } from "./rich-text-preview-renderer"
 import { useEditorSettings } from "@/components/block-content-editor/extras/settings-menu"
 import { BlockEditorShell } from "@/components/block-content-editor/extras/block-editor-shell"
@@ -115,6 +116,7 @@ export function RichTextEditor({ initialData, onSave, onCancel }: RichTextEditor
             </div>
             <div className="flex-1 overflow-auto">
               <LexicalComposer initialConfig={initialConfig}>
+                <InlineTextFormatToolbarPlugin />
                 <div className="relative h-full">
                   <LexicalRichTextPlugin
                     contentEditable={
