@@ -1,6 +1,7 @@
 "use client"
 
 import dynamic from "next/dynamic"
+import { Loader2 } from "lucide-react"
 import { Skeleton } from "@/components/ui/skeleton"
 import type { CodeStudioData } from "@/components/block-content-editor/extras/code-studio/types"
 
@@ -18,13 +19,20 @@ interface CodeStudioEditorProps {
 }
 
 function EditorOverlaySkeleton({ title, compact = false }: { title: string; compact?: boolean }) {
+  // z-[100] sits above Radix Dialog overlays (which default to z-50),
+  // ensuring this loader is visible even if the block-type picker
+  // dialog is mid-close while the lazy chunk downloads.
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 p-4 backdrop-blur-sm">
+    <div className="fixed inset-0 z-100 flex items-center justify-center bg-background/80 p-4 backdrop-blur-sm">
       <div className={compact ? "w-full max-w-xl rounded-2xl border bg-background/95 shadow-2xl" : "w-full max-w-6xl rounded-2xl border bg-background/95 shadow-2xl"}>
-        <div className="border-b p-5 sm:p-6">
-          <Skeleton className="h-6 w-40" />
-          <Skeleton className="mt-3 h-4 w-64 max-w-full" />
-          <span className="mt-4 block text-sm text-muted-foreground">{title}</span>
+        <div className="flex items-center gap-3 border-b p-5 sm:p-6">
+          <Loader2 className="h-5 w-5 shrink-0 animate-spin text-primary" />
+          <div className="flex-1 min-w-0">
+            <p className="text-base font-medium text-foreground">{title}</p>
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              Carregando módulo do editor… (pode levar alguns segundos na primeira vez)
+            </p>
+          </div>
         </div>
 
         {compact ? (
