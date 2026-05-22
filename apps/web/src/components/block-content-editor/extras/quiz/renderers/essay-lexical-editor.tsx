@@ -22,6 +22,7 @@ import { LinkPlugin } from "@lexical/react/LexicalLinkPlugin"
 import { LexicalErrorBoundary } from "@lexical/react/LexicalErrorBoundary"
 import { $getRoot, type EditorState } from "lexical"
 import { FloatingTextFormatToolbarPlugin } from "../../../plugins/floating-text-format-toolbar-plugin"
+import { InlineTextFormatToolbarPlugin } from "../../../plugins/inline-text-format-toolbar-plugin"
 import {
   SHARED_LEXICAL_NODES,
   SHARED_LEXICAL_THEME,
@@ -70,7 +71,8 @@ export function EssayLexicalEditor({
   return (
     <div className="essay-lexical-editor">
       <LexicalComposer initialConfig={initialConfig}>
-        <div className="relative rounded-lg border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 focus-within:border-blue-500 transition-colors">
+        <div className="relative rounded-lg border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 focus-within:border-blue-500 transition-colors overflow-hidden">
+          {!disabled && <InlineTextFormatToolbarPlugin />}
           <RichTextPlugin
             contentEditable={
               <ContentEditable
