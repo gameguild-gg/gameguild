@@ -12,16 +12,28 @@ import { HeadingNode, QuoteNode } from "@lexical/rich-text"
 import { ListNode, ListItemNode } from "@lexical/list"
 import { LinkNode, AutoLinkNode } from "@lexical/link"
 import { CodeNode } from "@lexical/code"
+import { CustomListNode } from "../../nodes/custom-list-node"
 
 /**
  * Full node set supported by our Lexical instances. Adding a node here
  * makes it available across every editor that imports this list.
+ *
+ * `CustomListNode` is a subclass of `ListNode` with its own type
+ * (`"custom-list"`), so both can be registered side-by-side without
+ * triggering Lexical's `errorOnTypeKlassMismatch`. The floating-toolbar
+ * list menus instantiate `CustomListNode` directly to carry custom
+ * list-style-type and marker-color metadata; `ListNode` stays available
+ * for the stock `ListPlugin` (INSERT_*_LIST commands, etc.).
  */
 export const SHARED_LEXICAL_NODES = [
   HeadingNode,
   QuoteNode,
+  // ListNode mantido para o ListPlugin padrão (comandos INSERT_*_LIST).
+  // CustomListNode tem `getType() === "custom-list"` (tipo próprio), então
+  // os dois coexistem no registry sem conflito de klass.
   ListNode,
   ListItemNode,
+  CustomListNode,
   CodeNode,
   LinkNode,
   AutoLinkNode,

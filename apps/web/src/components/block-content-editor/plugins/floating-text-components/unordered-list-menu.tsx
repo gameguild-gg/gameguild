@@ -69,11 +69,10 @@ export function UnorderedListMenu({ editor, currentListType }: UnorderedListMenu
           
           // Inserir a lista customizada na posição atual
           selection.insertNodes([customListNode])
-          
-          // Focar no item da lista para permitir edição
-          setTimeout(() => {
-            listItemNode.selectEnd()
-          }, 0)
+
+          // Focar no item da lista para permitir edição (ainda dentro
+          // do editor.update — métodos de nó exigem active editor state).
+          listItemNode.selectEnd()
         }
       })
     },

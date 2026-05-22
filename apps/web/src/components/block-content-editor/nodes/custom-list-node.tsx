@@ -13,7 +13,9 @@ export class CustomListNode extends ListNode {
   __markerColor: string
 
   static getType(): string {
-    return "list"  // Usar o tipo padrão para compatibilidade
+    // Tipo próprio (distinto de "list") para evitar conflito de
+    // type/klass com o ListNode padrão no registry do Lexical.
+    return "custom-list"
   }
 
   constructor(listType: ListType, start: number, listStyleType?: string, markerColor?: string, key?: NodeKey) {
@@ -462,8 +464,8 @@ export class CustomListNode extends ListNode {
     return {
       ...super.exportJSON(),
       listStyleType: this.__listStyleType,
-      markerColor: this.__markerColor || "#3b82f6", // Sempre salvar cor, incluindo padrão
-      type: "list",  // Manter compatibilidade com o tipo padrão
+      markerColor: this.__markerColor || "#3b82f6",
+      type: "custom-list",
     }
   }
 }
