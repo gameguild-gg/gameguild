@@ -1,6 +1,9 @@
 using System.Globalization;
 using System.Text;
+using GameGuild;
 using GameGuild.CQRS;
+using GameGuild.Identity.Context.Actors;
+using GameGuild.Identity.Tenants;
 using Microsoft.EntityFrameworkCore;
 
 namespace GameGuild.Identity.Users;
@@ -8,8 +11,13 @@ namespace GameGuild.Identity.Users;
 /// <summary>
 ///     Query handler for getting users with cursor-based pagination, filtering, and search
 /// </summary>
-public sealed class GetUsersQueryHandler(IUserRepository userRepository) : IQueryHandler<GetUsersQuery, PagedResult<UserDto>>
+public sealed class GetUsersQueryHandler(
+    IUserRepository userRepository,
+    IActorContextAccessor actorContextAccessor,
+    ITenantMemberRepository tenantMemberRepository) : IQueryHandler<GetUsersQuery, PagedResult<UserDto>>
 {
+    private ActorContext Actor => actorContextAccessor.ActorContext;
+
     public async Task<PagedResult<UserDto>> Handle(GetUsersQuery request, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
@@ -34,6 +42,35 @@ public sealed class GetUsersQueryHandler(IUserRepository userRepository) : IQuer
 
         // Start with queryable for database-level filtering
         IQueryable<User> query = userRepository.GetQueryable();
+
+        var actorTenantId = Actor.TenantId;
+
+        if (actorTenantId.HasValue)
+        {
+            if (!Actor.IsSystemAdmin)
+            {
+                var actorUserId = Actor.SubjectIdAsGuid
+                    ?? throw new AuthenticationRequiredException("Authenticated user ID is required to list users.");
+
+                var actorMembership = await tenantMemberRepository
+                    .GetByUserAndTenantAsync(actorUserId, actorTenantId.Value, cancellationToken)
+                    .ConfigureAwait(false);
+
+                if (actorMembership is null || !actorMembership.IsActive)
+                {
+                    throw AccessDeniedException.ForTenantMembership(actorUserId, actorTenantId.Value);
+                }
+            }
+
+            query = query.Where(u => u.TenantMemberships.Any(m => m.TenantId == actorTenantId.Value && m.IsActive));
+        }
+        else if (!Actor.IsSystemAdmin)
+        {
+            var actorUserId = Actor.SubjectIdAsGuid
+                ?? throw new AuthenticationRequiredException("Authenticated user ID is required to list users.");
+
+            throw new AccessDeniedException($"User {actorUserId} attempted to list users without tenant context.");
+        }
 
         // Apply includeDeleted filter first
         if (!request.IncludeDeleted)
