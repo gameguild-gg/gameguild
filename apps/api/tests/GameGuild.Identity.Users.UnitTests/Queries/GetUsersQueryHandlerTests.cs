@@ -1,4 +1,6 @@
 using FluentAssertions;
+using GameGuild.Identity.Context.Actors;
+using GameGuild.Identity.Tenants;
 using GameGuild.Identity.Users.UnitTests.Commands;
 using Moq;
 using Xunit;
@@ -8,12 +10,20 @@ namespace GameGuild.Identity.Users.UnitTests.Queries;
 public class GetUsersQueryHandlerTests
 {
     private readonly Mock<IUserRepository> _userRepositoryMock;
+    private readonly Mock<IActorContextAccessor> _actorContextAccessorMock;
+    private readonly Mock<ITenantMemberRepository> _tenantMemberRepositoryMock;
     private readonly GetUsersQueryHandler _handler;
 
     public GetUsersQueryHandlerTests()
     {
         _userRepositoryMock = new Mock<IUserRepository>();
-        _handler = new GetUsersQueryHandler(_userRepositoryMock.Object);
+        _actorContextAccessorMock = new Mock<IActorContextAccessor>();
+        _tenantMemberRepositoryMock = new Mock<ITenantMemberRepository>();
+        _actorContextAccessorMock.Setup(x => x.ActorContext).Returns(CreateActorContext());
+        _handler = new GetUsersQueryHandler(
+            _userRepositoryMock.Object,
+            _actorContextAccessorMock.Object,
+            _tenantMemberRepositoryMock.Object);
     }
 
     [Fact]
@@ -167,6 +177,35 @@ public class GetUsersQueryHandlerTests
         result.Items[0].Id.Should().Be(oldest.Id);
     }
 
+    [Fact]
+    public async Task Handle_WithSystemAdminTenantContext_ShouldScopeResultsToActiveTenant()
+    {
+        var activeTenantId = Guid.Parse("f1d53fe7-e6fb-4712-8b55-b37d2d0ed701");
+        var otherTenantId = Guid.Parse("9f54d387-4080-49f4-8b0f-60c09b90d6a1");
+
+        var activeTenantUser = CreateUser(Guid.Parse("61616161-6161-6161-6161-616161616161"), "active-tenant@example.com", "Active Tenant User", isActive: true, createdAt: new DateTime(2024, 7, 1, 0, 0, 0, DateTimeKind.Utc));
+        activeTenantUser.TenantMemberships.Add(CreateTenantMembership(activeTenantUser.Id, activeTenantId));
+
+        var otherTenantUser = CreateUser(Guid.Parse("71717171-7171-7171-7171-717171717171"), "other-tenant@example.com", "Other Tenant User", isActive: true, createdAt: new DateTime(2024, 7, 2, 0, 0, 0, DateTimeKind.Utc));
+        otherTenantUser.TenantMemberships.Add(CreateTenantMembership(otherTenantUser.Id, otherTenantId));
+
+        _actorContextAccessorMock
+            .Setup(x => x.ActorContext)
+            .Returns(CreateActorContext(activeTenantId));
+        _userRepositoryMock
+            .Setup(x => x.GetQueryable())
+            .Returns(new TestAsyncEnumerable<User>(new[] { activeTenantUser, otherTenantUser }));
+
+        var result = await _handler.Handle(new GetUsersQuery(Limit: 10, Sort: "email"), CancellationToken.None);
+
+        result.TotalCount.Should().Be(1);
+        result.Items.Should().ContainSingle();
+        result.Items[0].Id.Should().Be(activeTenantUser.Id);
+        _tenantMemberRepositoryMock.Verify(
+            x => x.GetByUserAndTenantAsync(It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
     private static User CreateUser(Guid id, string email, string name, bool isActive, DateTime createdAt)
     {
         var user = User.Create(email, name);
@@ -192,4 +231,25 @@ public class GetUsersQueryHandlerTests
         user.DeletedAt = createdAt.AddHours(2);
         return user;
     }
+
+    private static TenantMember CreateTenantMembership(Guid userId, Guid tenantId)
+        => new()
+        {
+            UserId = userId,
+            TenantId = tenantId,
+            Role = "Member",
+            IsActive = true
+        };
+
+    private static ActorContext CreateActorContext(Guid? tenantId = null)
+        => new()
+        {
+            ActorKind = ActorKind.User,
+            SubjectId = Guid.Parse("81818181-8181-8181-8181-818181818181").ToString(),
+            TenantId = tenantId,
+            Roles = new HashSet<string> { "Admin" },
+            Permissions = new HashSet<string>(),
+            TypedAttributes = ActorAttributes.Empty,
+            IsAuthenticated = true
+        };
 }
