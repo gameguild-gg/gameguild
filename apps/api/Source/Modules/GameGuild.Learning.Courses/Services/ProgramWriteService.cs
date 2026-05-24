@@ -53,6 +53,7 @@ public class ProgramWriteService(IApplicationDbContext context) : IProgramWriteS
 
     var clonedProgram = new Program
     {
+      CreatorId = originalProgram.CreatorId,
       Title = newTitle,
       Description = originalProgram.Description,
       Slug = GenerateSlug(newTitle),
@@ -97,6 +98,7 @@ public class ProgramWriteService(IApplicationDbContext context) : IProgramWriteS
     var program = new Program
     {
       Id = Guid.NewGuid(),
+      CreatorId = createDto.CreatorId,
       Title = createDto.Title,
       Description = createDto.Description,
       Slug = createDto.Slug,

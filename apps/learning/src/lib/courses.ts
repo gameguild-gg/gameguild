@@ -216,7 +216,17 @@ export async function getCourseAttendanceData(
     options?: { includeProgress?: boolean },
 ): Promise<CourseAttendanceData | null> {
     try {
-        const { programs, content } = createCourseModules();
+        const includeProgress = options?.includeProgress ?? false;
+        const token = includeProgress ? await getOptionalToken() : null;
+
+        if (includeProgress && !token) {
+            return null;
+        }
+
+        const publicModules = createCourseModules();
+        const authenticatedModules = token ? createCourseModules(async () => token) : null;
+        const programs = authenticatedModules?.programs ?? publicModules.programs;
+        const content = authenticatedModules?.content ?? publicModules.content;
         const courseResult = await programs.getCoursesSlug(encodeURIComponent(courseSlug));
 
         if (!courseResult.ok || !courseResult.data.id) {
@@ -225,17 +235,22 @@ export async function getCourseAttendanceData(
 
         const course = mapCourse(courseResult.data);
         const courseId = course.id;
-        const includeProgress = options?.includeProgress ?? false;
-        const token = includeProgress ? await getOptionalToken() : null;
-        const authenticatedPrograms = token
-            ? createCourseModules(async () => token).programs
-            : null;
         const [contentResult, progressResult] = await Promise.all([
             content.getCoursesContent(courseId),
-            authenticatedPrograms ? authenticatedPrograms.getCoursesMeProgress(courseId) : Promise.resolve(undefined),
+            authenticatedModules?.programs
+                ? authenticatedModules.programs.getCoursesMeProgress(courseId)
+                : Promise.resolve(undefined),
         ]);
 
+        if (includeProgress && (!progressResult || !progressResult.ok)) {
+            return null;
+        }
+
         if (!contentResult.ok) {
+            if (includeProgress) {
+                return null;
+            }
+
             return {
                 ...course,
                 modules: [],

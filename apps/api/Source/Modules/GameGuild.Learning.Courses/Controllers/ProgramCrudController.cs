@@ -93,7 +93,10 @@ public class ProgramCrudController(IProgramCrudService programService) : BaseApi
   {
     if (!ModelState.IsValid) return BadRequest(ModelState);
 
-    var program = await programService.CreateProgramAsync(createDto).ConfigureAwait(false);
+    var currentUserId = GetCurrentUserId();
+    if (!currentUserId.HasValue) return Unauthorized();
+
+    var program = await programService.CreateProgramAsync(createDto with { CreatorId = currentUserId.Value }).ConfigureAwait(false);
 
     return CreatedAtAction(nameof(GetProgram), new { id = program.Id }, program.ToDto());
   }

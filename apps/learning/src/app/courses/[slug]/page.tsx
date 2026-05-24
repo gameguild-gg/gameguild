@@ -1,3 +1,4 @@
+import { auth } from '@/auth';
 import { getCourseAttendanceData } from '@/lib/courses';
 import { Badge } from '@game-guild/ui/components/badge';
 import { Button } from '@game-guild/ui/components/button';
@@ -5,11 +6,17 @@ import { Card, CardContent, CardHeader, CardTitle } from '@game-guild/ui/compone
 import { ArrowRight, Clock3, Layers3 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 
 export default async function CourseOverviewPage({ params }: { params: Promise<{ slug: string }> }) {
     const { slug } = await params;
-    const course = await getCourseAttendanceData(slug, { includeProgress: false });
+    const session = await auth();
+
+    if (!session) {
+        redirect(`/sign-in?redirectTo=${encodeURIComponent(`/courses/${slug}`)}`);
+    }
+
+    const course = await getCourseAttendanceData(slug, { includeProgress: true });
 
     if (!course) {
         notFound();
