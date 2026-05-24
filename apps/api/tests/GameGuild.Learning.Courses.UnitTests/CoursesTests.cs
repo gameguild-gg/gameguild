@@ -1,5 +1,8 @@
+using System.Reflection;
 using FluentAssertions;
+using GameGuild.Identity.Authorization;
 using GameGuild.Learning.Courses;
+using Microsoft.AspNetCore.Authorization;
 using Xunit;
 
 namespace GameGuild.Learning.Courses.UnitTests;
@@ -716,6 +719,48 @@ public class ContentInteractionTests
         interaction.Start();
 
         interaction.IsInProgress.Should().BeTrue();
+    }
+}
+
+#endregion
+
+#region ProgramContentController Authorization Tests
+
+public class ProgramContentControllerAuthorizationTests
+{
+    [Fact]
+    public void GetProgramContent_ShouldRemainPublic()
+    {
+        var method = GetAction(nameof(ProgramContentController.GetProgramContent));
+
+        method.GetCustomAttribute<AllowAnonymousAttribute>().Should().NotBeNull();
+    }
+
+    [Theory]
+    [InlineData(nameof(ProgramContentController.CreateContent), PermissionType.Create)]
+    [InlineData(nameof(ProgramContentController.UpdateContent), PermissionType.Edit)]
+    [InlineData(nameof(ProgramContentController.DeleteContent), PermissionType.Delete)]
+    [InlineData(nameof(ProgramContentController.ReorderContent), PermissionType.Edit)]
+    [InlineData(nameof(ProgramContentController.MoveContent), PermissionType.Edit)]
+    public void MutationEndpoints_ShouldRequireProgramResourcePermission(string actionName, PermissionType requiredPermission)
+    {
+        var method = GetAction(actionName);
+
+        var attribute = method
+            .GetCustomAttributes(inherit: true)
+            .OfType<IResourcePermissionMarker>()
+            .SingleOrDefault();
+
+        attribute.Should().NotBeNull();
+        attribute!.ResourceType.Should().Be(typeof(Program));
+        attribute.ResourceIdParameterName.Should().Be("programId");
+        attribute.RequiredPermission.Should().Be(requiredPermission);
+    }
+
+    private static MethodInfo GetAction(string actionName)
+    {
+        return typeof(ProgramContentController)
+            .GetMethod(actionName, BindingFlags.Instance | BindingFlags.Public)!;
     }
 }
 

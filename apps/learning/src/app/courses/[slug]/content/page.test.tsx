@@ -66,4 +66,17 @@ describe('CourseContentPage', () => {
             'Intro to RPG Systems'
         );
     });
+
+    it('blocks authenticated learners without course access', async () => {
+        mockAuth.mockResolvedValue({ user: { id: 'user-1' } });
+        mockGetCourseAttendanceData.mockResolvedValue(null);
+
+        await expect(
+            CourseContentPage({ params: Promise.resolve({ slug: 'intro-to-rpg' }) })
+        ).rejects.toThrow('NOT_FOUND');
+
+        expect(mockGetCourseAttendanceData).toHaveBeenCalledWith('intro-to-rpg', {
+            includeProgress: true,
+        });
+    });
 });

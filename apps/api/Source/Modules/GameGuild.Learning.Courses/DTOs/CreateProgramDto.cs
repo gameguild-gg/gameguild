@@ -1,7 +1,13 @@
 namespace GameGuild.Learning.Courses;
 
 // Program Management DTOs
-public sealed record CreateProgramDto(string Title, string? Description, string Slug, string? Thumbnail = null) {
+public sealed record CreateProgramDto(
+  string Title,
+  string? Description,
+  string Slug,
+  string? Thumbnail = null,
+  Guid? CreatorId = null)
+{
   public string Title { get; init; } = Title;
 
   public string? Description { get; init; } = Description;
@@ -9,6 +15,8 @@ public sealed record CreateProgramDto(string Title, string? Description, string 
   public string Slug { get; init; } = Slug;
 
   public string? Thumbnail { get; init; } = Thumbnail;
+
+  public Guid? CreatorId { get; init; } = CreatorId;
 }
 
 // Content Management DTOs
