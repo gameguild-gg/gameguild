@@ -92,3 +92,43 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+/*
+ * Monaco active-line rectangle outline — see styles/globals.css for the
+ * full rationale. Duplicated here because this route group ships its own
+ * independent CSS bundle (the shared `styles/globals.css` is only
+ * @reference'd for Tailwind utility resolution, not loaded at runtime).
+ */
+.monaco-editor[data-line-highlight-rectangle="true"] .view-overlays .current-line,
+.monaco-editor[data-line-highlight-rectangle="true"] .view-overlays .current-line-exact,
+.monaco-editor[data-line-highlight-rectangle="true"] .margin-view-overlays .current-line,
+.monaco-editor[data-line-highlight-rectangle="true"] .margin-view-overlays .current-line-margin {
+    background: transparent !important;
+    border: 2px solid rgba(0, 0, 0, 0.7) !important;
+    box-sizing: border-box !important;
+}
+
+.monaco-editor.vs-dark[data-line-highlight-rectangle="true"] .view-overlays .current-line,
+.monaco-editor.vs-dark[data-line-highlight-rectangle="true"] .view-overlays .current-line-exact,
+.monaco-editor.vs-dark[data-line-highlight-rectangle="true"] .margin-view-overlays .current-line,
+.monaco-editor.vs-dark[data-line-highlight-rectangle="true"] .margin-view-overlays .current-line-margin,
+.monaco-editor.hc-black[data-line-highlight-rectangle="true"] .view-overlays .current-line,
+.monaco-editor.hc-black[data-line-highlight-rectangle="true"] .view-overlays .current-line-exact,
+.monaco-editor.hc-black[data-line-highlight-rectangle="true"] .margin-view-overlays .current-line,
+.monaco-editor.hc-black[data-line-highlight-rectangle="true"] .margin-view-overlays .current-line-margin {
+    border-color: rgba(255, 255, 255, 0.85) !important;
+}
+
+/*
+ * Monaco hover/suggest/context-widget z-index. Wrappers use
+ * `fixedOverflowWidgets: true` so Monaco appends these widgets directly
+ * under <body>. Without an explicit z-index, MDN/IntelliSense balloons
+ * render behind the block-editor modal (which sits at z-50).
+ */
+body > .monaco-editor,
+.monaco-editor .overflowingContentWidgets,
+.monaco-hover,
+.monaco-editor-hover,
+.monaco-editor-overlaymessage {
+    z-index: 10000 !important;
+}

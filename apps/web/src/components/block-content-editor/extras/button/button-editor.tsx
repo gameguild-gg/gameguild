@@ -1,12 +1,12 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { 
-  X, Save, MousePointerClick, Eye, ExternalLink, Download, Copy, Mail,
+  Save, MousePointerClick, Eye, ExternalLink, Download, Copy, Mail,
   Link, Link2,
   ArrowDownToLine, FileDown, ClipboardCopy, CopyCheck,
   AtSign, Send,
@@ -30,6 +30,8 @@ import {
   getFontFamilyClass,
   getFontSizeClass,
 } from "@/components/block-content-editor/extras/button/button-styles"
+import { useEditorSettings } from "@/components/block-content-editor/extras/settings-menu"
+import { BlockEditorShell } from "@/components/block-content-editor/extras/block-editor-shell"
 
 interface ButtonEditorProps {
   initialData?: ButtonData
@@ -156,17 +158,7 @@ export function ButtonEditor({ initialData, onSave, onCancel }: ButtonEditorProp
       fontSize: "md",
     }
   )
-
-  // Block body scroll and pointer events when modal is open
-  useEffect(() => {
-    document.body.style.overflow = "hidden"
-    document.body.style.pointerEvents = "none"
-
-    return () => {
-      document.body.style.overflow = ""
-      document.body.style.pointerEvents = ""
-    }
-  }, [])
+  const settings = useEditorSettings("button")
 
   const handleSave = () => {
     onSave(data)
@@ -278,59 +270,48 @@ export function ButtonEditor({ initialData, onSave, onCancel }: ButtonEditorProp
   }
 
   return (
-    <div
-      className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
-      style={{ pointerEvents: "auto" }}
-      onClick={handleCancel}
-      onMouseDown={(e) => e.stopPropagation()}
-      onKeyDown={(e) => {
-        if (e.key === "Escape") {
-          handleCancel()
-        }
-        e.stopPropagation()
-      }}
-    >
-      <div
-        className="bg-white dark:bg-gray-900 border dark:border-gray-700 shadow-2xl w-full max-w-6xl h-[85vh] flex flex-col"
-        style={{ pointerEvents: "auto" }}
-        onClick={(e) => e.stopPropagation()}
-        onKeyDown={(e) => e.stopPropagation()}
-        onKeyUp={(e) => e.stopPropagation()}
-        onKeyPress={(e) => e.stopPropagation()}
-      >
-        {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900">
-          <div className="flex items-center gap-2">
-            <MousePointerClick className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Button Editor</h2>
-
-            {/* Current settings display */}
-            <div className="ml-4 flex items-center gap-3 pl-4 border-l border-gray-300 dark:border-gray-600">
-              <div className="flex items-center gap-2 text-sm">
-                <span className="text-gray-600 dark:text-gray-400">Action:</span>
-                <div className="flex items-center gap-1 font-medium text-gray-800 dark:text-gray-200 capitalize bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">
-                  {actionTypes.find((a) => a.value === data.actionType)?.icon}
-                  <span>{actionTypes.find((a) => a.value === data.actionType)?.label}</span>
-                </div>
-              </div>
-              <div className="flex items-center gap-2 text-sm">
-                <span className="text-gray-600 dark:text-gray-400">Style:</span>
-                <span className="font-medium text-gray-800 dark:text-gray-200 capitalize bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">
-                  {variants.find((v) => v.value === data.variant)?.label}
-                </span>
-              </div>
+    <BlockEditorShell
+      settings={settings}
+      includeMonacoTheme={false}
+      onClose={handleCancel}
+      icon={<MousePointerClick className="h-5 w-5 text-blue-600 dark:text-blue-400" />}
+      title="Button Editor"
+      headerMeta={
+        <>
+          <div className="flex items-center gap-2 text-sm">
+            <span className="text-gray-600 dark:text-gray-400">Action:</span>
+            <div className="flex items-center gap-1 font-medium text-gray-800 dark:text-gray-200 capitalize bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">
+              {actionTypes.find((a) => a.value === data.actionType)?.icon}
+              <span>{actionTypes.find((a) => a.value === data.actionType)?.label}</span>
             </div>
           </div>
+          <div className="flex items-center gap-2 text-sm">
+            <span className="text-gray-600 dark:text-gray-400">Style:</span>
+            <span className="font-medium text-gray-800 dark:text-gray-200 capitalize bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">
+              {variants.find((v) => v.value === data.variant)?.label}
+            </span>
+          </div>
+        </>
+      }
+      footer={
+        <div className="flex items-center justify-end gap-2">
           <Button
-            variant="ghost"
-            size="sm"
+            variant="outline"
             onClick={handleCancel}
-            className="hover:bg-gray-100 dark:hover:bg-gray-800"
+            className="border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800 bg-transparent"
           >
-            <X className="h-4 w-4" />
+            Cancel
+          </Button>
+          <Button
+            onClick={handleSave}
+            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600"
+          >
+            <Save className="h-4 w-4" />
+            Save Button
           </Button>
         </div>
-
+      }
+    >
         {/* Settings Bar */}
         <div className="flex items-center gap-4 p-4 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900">
           <div className="flex items-center gap-2">
@@ -914,27 +895,6 @@ export function ButtonEditor({ initialData, onSave, onCancel }: ButtonEditorProp
             </div>
           </div>
         </div>
-
-        {/* Footer */}
-        <div className="p-4 border-t border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900">
-          <div className="flex items-center justify-end gap-2">
-            <Button
-              variant="outline"
-              onClick={handleCancel}
-              className="border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800 bg-transparent"
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleSave}
-              className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600"
-            >
-              <Save className="h-4 w-4" />
-              Save Button
-            </Button>
-          </div>
-        </div>
-      </div>
-    </div>
+    </BlockEditorShell>
   )
 }

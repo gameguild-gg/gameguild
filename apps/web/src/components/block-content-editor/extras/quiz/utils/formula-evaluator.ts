@@ -1,8 +1,17 @@
 /**
  * Safe Math Expression Evaluator
  * Evaluates math formulas with variable substitution without using eval/Function.
- * Supports: +, -, *, /, ^, parentheses, and common math functions.
+ * Accepts LaTeX input (converted to AsciiMath via MathLive) and supports:
+ * +, -, *, /, ^, parentheses, and common math functions.
  */
+
+// Use the SSR-only entry of MathLive: it ships *only* the LaTeX↔AsciiMath
+// converters, with no <math-field> custom element, no fonts, no sounds.
+// This avoids pulling the ~1MB browser bundle into the quiz-settings chunk,
+// which used to block the dev compiler from serving other lazy chunks
+// (mermaid, vega, code-studio) for several seconds after a quiz formula
+// or numeric block was inserted.
+import { convertLatexToAsciiMath } from "mathlive/ssr"
 
 type TokenType =
   | "number"
@@ -167,7 +176,34 @@ function applyOp(op: string, a: number, b: number): number {
 }
 
 /**
+ * Convert a LaTeX expression to the ASCII subset understood by the
+ * tokenizer. If the input is already plain ASCII (no LaTeX markup), it
+ * is returned unchanged. Normalizes Unicode operators that MathLive
+ * may emit (·, ×, ÷, −) back to their ASCII counterparts.
+ */
+function toEvaluableExpression(input: string): string {
+  if (!input) return ""
+  const looksLikeLatex = input.includes("\\") || input.includes("{") || input.includes("}")
+  let ascii = input
+  if (looksLikeLatex) {
+    try {
+      ascii = convertLatexToAsciiMath(input)
+    } catch {
+      ascii = input
+    }
+  }
+  return ascii
+    .replace(/·/g, "*")
+    .replace(/×/g, "*")
+    .replace(/÷/g, "/")
+    .replace(/−/g, "-")
+    .replace(/\u2212/g, "-")
+    .replace(/\u00A0/g, " ")
+}
+
+/**
  * Evaluates a math expression with given variable values.
+ * Accepts LaTeX or plain ASCII expressions.
  * Supports: +, -, *, /, ^ (power), parentheses, and functions
  * (sqrt, abs, sin, cos, tan, log, ln, exp, ceil, floor, round, min, max, pow).
  * Constants: pi, e.
@@ -178,7 +214,7 @@ export function evaluateFormula(
   expression: string,
   variables: Record<string, number>,
 ): number {
-  const tokens = tokenize(expression, variables)
+  const tokens = tokenize(toEvaluableExpression(expression), variables)
 
   const output: number[] = []
   const opStack: Array<{ type: "op" | "func" | "lparen"; value: string }>[] = []

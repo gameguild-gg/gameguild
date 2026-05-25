@@ -2,6 +2,7 @@
 public/langs/*
 public/pyodide/
 public/wasm/
+public/mathlive/
 
 # Next.js local output
 .next/

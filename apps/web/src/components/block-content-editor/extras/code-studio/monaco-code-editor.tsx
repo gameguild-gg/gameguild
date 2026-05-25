@@ -1,113 +1,81 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
-import Editor from "@monaco-editor/react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import type { editor } from "monaco-editor"
-import type { Monaco } from "@monaco-editor/react"
-import type { SupportedLanguage, ShikiTheme } from "./types"
-import { getShikiThemeName, SHIKI_LANGS } from "./types"
-import { shikiToMonaco } from "@shikijs/monaco"
+import type { Monaco, OnMount } from "@monaco-editor/react"
 import { useTheme } from "next-themes"
-import { createHighlighter, type Highlighter } from "shiki"
+import type { SupportedLanguage } from "./types"
+import { isShikiActive } from "@/components/block-content-editor/lib/shiki/highlighter"
+import { BaseMonacoEditor } from "@/components/block-content-editor/lib/monaco"
 import { registerPathCompletionProvider } from "./monaco-file-system"
 import { LinkConfirmDialog } from "../dialogs/link-confirm-dialog"
-import { MonacoErrorBoundary } from "./monaco-error-boundary"
+import type { MonacoOptionsPreferences } from "@/components/block-content-editor/lib/storage/editor/editor-preferences"
 
-// Singleton para o highlighter do Shiki
-let shikiHighlighter: Highlighter | null = null
-let shikiPromise: Promise<Highlighter> | null = null
-let shikiAppliedToMonaco = false
 let pathCompletionRegistered = false
+let styleInjected = false
 
-/** Whether Shiki has replaced Monaco's built-in theme system globally. */
-export function isShikiActive(): boolean {
-  return shikiAppliedToMonaco
-}
-
-async function getShikiHighlighter(): Promise<Highlighter> {
-  if (shikiHighlighter) {
-    return shikiHighlighter
-  }
-  
-  if (!shikiPromise) {
-    shikiPromise = createHighlighter({
-      themes: [
-        'github-dark',
-        'github-light',
-        'github-dark-default',
-        'github-light-default',
-        'github-dark-dimmed',
-        'dark-plus',
-        'light-plus',
-        'catppuccin-mocha',
-        'catppuccin-latte',
-        'vitesse-dark',
-        'vitesse-light',
-        'monokai',
-        'solarized-dark',
-        'solarized-light',
-        'dracula',
-        'nord',
-      ],
-      langs: SHIKI_LANGS,
-    }).then((highlighter) => {
-      shikiHighlighter = highlighter
-      return highlighter
-    })
-  }
-  
-  return shikiPromise
-}
+// Re-export so existing imports under `monaco-code-editor` keep working.
+export { isShikiActive }
 
 interface MonacoCodeEditorProps {
   value: string
   language: SupportedLanguage
   onChange?: (value: string) => void
   readonly?: boolean
+  /** Deprecated — kept for back-compat; theme is resolved via next-themes. */
   theme?: "vs-light" | "vs-dark"
-  shikiTheme?: ShikiTheme
-  fontSize?: number
-  showLineNumbers?: boolean
+  /**
+   * Resolved Monaco-surface options. Either the global `editor` group
+   * (editable surfaces) or the global `preview` group (read-only / base
+   * display) — the caller decides which to pass based on the surface
+   * role. `null` is tolerated during hydration.
+   */
+  options?: MonacoOptionsPreferences | null
   height?: string
-  fileId?: string // ID único do arquivo para garantir instâncias separadas
-  filePath?: string // Caminho do arquivo para o sistema de arquivos virtual
-  instanceId?: string // ID da instância do Code Studio para isolamento completo
+  /** ID único do arquivo para garantir instâncias separadas. */
+  fileId?: string
+  /** Caminho do arquivo para o sistema de arquivos virtual. */
+  filePath?: string
+  /** ID da instância do Code Studio para isolamento completo. */
+  instanceId?: string
 }
 
+/**
+ * Code Studio's Monaco surface — thin wrapper on top of
+ * {@link BaseMonacoEditor} that adds the things specific to this surface:
+ *
+ *  - TypeScript/JavaScript compiler options + diagnostics tweaks.
+ *  - One-time registration of the in-memory path completion provider.
+ *  - Ctrl/Cmd-click handling on URLs with a confirmation dialog.
+ *  - Inline link decorations + the quick-input centering style.
+ *  - External-value reconciliation (the editor runs in uncontrolled mode
+ *    via `defaultValue` + `keepCurrentModel` to preserve per-file model
+ *    state across remounts).
+ */
 export function MonacoCodeEditor({
   value,
   language,
   onChange,
   readonly = false,
-  theme = "vs-light",
-  shikiTheme = "github",
-  fontSize = 14,
-  showLineNumbers = true,
+  options,
   height = "100%",
   fileId,
   filePath,
   instanceId,
 }: MonacoCodeEditorProps) {
   const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null)
-  const monacoRef = useRef<Monaco | null>(null)
-  const [isShikiReady, setIsShikiReady] = useState(false)
+  const isUserTypingRef = useRef(false)
+  const lastValueRef = useRef(value)
   const [linkConfirmDialog, setLinkConfirmDialog] = useState<{ open: boolean; url: string }>({
     open: false,
     url: "",
   })
-  const { resolvedTheme, theme: themeState } = useTheme()
-  const isUserTypingRef = useRef(false)
-  const lastValueRef = useRef(value)
-  
-  // Determinar o tema atual (dark ou light) - usa theme como fallback
-  const effectiveTheme = resolvedTheme || themeState
-  const isDarkMode = effectiveTheme === "dark"
-  const currentTheme = getShikiThemeName(shikiTheme, isDarkMode)
 
-  const handleEditorWillMount = async (monaco: Monaco) => {
-    monacoRef.current = monaco
-    
-    // Configurar TypeScript/JavaScript compiler options
+  const { resolvedTheme, theme: themeState } = useTheme()
+  const isDarkMode = (resolvedTheme || themeState) === "dark"
+
+  const handleBeforeMount = useCallback(async (monaco: Monaco) => {
+    // Configure TypeScript/JavaScript compiler options.
     monaco.languages.typescript.typescriptDefaults.setCompilerOptions({
       target: monaco.languages.typescript.ScriptTarget.ES2020,
       allowNonTsExtensions: true,
@@ -137,63 +105,42 @@ export function MonacoCodeEditor({
       skipDefaultLibCheck: true,
     })
 
-    // Configurar diagnósticos - desabilitar validação semântica que causa erros
+    // Disable semantic validation so missing-module errors don't bubble
+    // up in the in-memory file system.
     monaco.languages.typescript.typescriptDefaults.setDiagnosticsOptions({
-      noSemanticValidation: true, // Desabilita erros de módulos não encontrados
+      noSemanticValidation: true,
       noSyntaxValidation: false,
       diagnosticCodesToIgnore: [],
     })
-
     monaco.languages.typescript.javascriptDefaults.setDiagnosticsOptions({
-      noSemanticValidation: true, // Desabilita erros de módulos não encontrados
+      noSemanticValidation: true,
       noSyntaxValidation: false,
       diagnosticCodesToIgnore: [],
     })
 
-    // Registrar path completion provider (apenas uma vez)
     if (!pathCompletionRegistered) {
       registerPathCompletionProvider(monaco)
       pathCompletionRegistered = true
     }
-    
-    // Carregar Shiki ANTES de montar o editor (apenas uma vez globalmente)
-    if (!shikiAppliedToMonaco) {
-      try {
-        const highlighter = await getShikiHighlighter()
-        
-        // Apply Shiki to Monaco (apenas uma vez globalmente)
-        shikiToMonaco(highlighter, monaco)
-        shikiAppliedToMonaco = true
-        setIsShikiReady(true)
-      } catch (error) {
-        console.error('Failed to load Shiki:', error)
-      }
-    } else {
-      // Shiki já foi aplicado em outro editor
-      setIsShikiReady(true)
-    }
-  }
+  }, [])
 
-  const handleEditorDidMount = (editor: editor.IStandaloneCodeEditor) => {
-    editorRef.current = editor
+  const handleMount: OnMount = (ed) => {
+    editorRef.current = ed
 
-    // Interceptar cliques em links para mostrar dialog de confirmação (apenas com Ctrl pressionado)
-    editor.onMouseDown((e) => {
-      // Só processa se Ctrl/Cmd estiver pressionado
+    // Ctrl/Cmd-click on URLs → confirmation dialog.
+    ed.onMouseDown((e) => {
       if (!e.event.ctrlKey && !e.event.metaKey) return
       if (!e.target.position) return
 
-      const model = editor.getModel()
+      const model = ed.getModel()
       if (!model) return
 
       const lineContent = model.getLineContent(e.target.position.lineNumber)
       const urlRegex = /(https?:\/\/[^\s"')\]]+)/g
       let match
-
       while ((match = urlRegex.exec(lineContent)) !== null) {
         const startColumn = match.index + 1
         const endColumn = startColumn + match[0].length
-
         if (
           e.target.position.column >= startColumn &&
           e.target.position.column <= endColumn
@@ -201,25 +148,28 @@ export function MonacoCodeEditor({
           e.event.preventDefault()
           e.event.stopPropagation()
           setLinkConfirmDialog({ open: true, url: match[0] })
-          return false
+          return
         }
       }
     })
 
-    // Adicionar decorações para destacar links
-    let decorationIds: string[] = []
-    
+    // Inline link decorations (kept in sync with model edits). We use
+    // `createDecorationsCollection` instead of the deprecated
+    // `deltaDecorations` so the decorations are tied to *this* editor's
+    // lifetime: when the editor is disposed (e.g. file switch with
+    // `keepCurrentModel=true`) the collection is automatically cleared
+    // from the surviving model — otherwise stale decoration IDs leak
+    // into the model and crash Monaco's renderer with
+    // "this.domNode is undefined".
+    const linkDecorations = ed.createDecorationsCollection()
     const updateLinkDecorations = () => {
-      const model = editor.getModel()
+      const model = ed.getModel()
       if (!model) return
-
       const decorations: editor.IModelDeltaDecoration[] = []
       const urlRegex = /(https?:\/\/[^\s"')\]]+)/g
-
       for (let lineNumber = 1; lineNumber <= model.getLineCount(); lineNumber++) {
         const lineContent = model.getLineContent(lineNumber)
         let match
-
         while ((match = urlRegex.exec(lineContent)) !== null) {
           decorations.push({
             range: {
@@ -229,38 +179,21 @@ export function MonacoCodeEditor({
               endColumn: match.index + match[0].length + 1,
             },
             options: {
-              inlineClassName: 'monaco-link-decoration',
+              inlineClassName: "monaco-link-decoration",
               hoverMessage: { value: `Ctrl+Clique para abrir: ${match[0]}` },
             },
           })
         }
       }
-
-      decorationIds = editor.deltaDecorations(decorationIds, decorations)
+      linkDecorations.set(decorations)
     }
-
-    // Atualizar decorações quando o conteúdo mudar
     updateLinkDecorations()
-    editor.onDidChangeModelContent(() => {
-      updateLinkDecorations()
-    })
+    ed.onDidChangeModelContent(() => updateLinkDecorations())
 
-    // Configurações adicionais do editor
-    editor.updateOptions({
-      readOnly: readonly,
-      fontSize,
-      lineNumbers: showLineNumbers ? "on" : "off",
-      minimap: { enabled: false },
-      scrollBeyondLastLine: false,
-      wordWrap: "on",
-      automaticLayout: true,
-    })
-
-    // Centralizar a command palette no container do Monaco
-    const container = editor.getDomNode()
-    if (container) {
-      // Adicionar estilo para centralizar widgets do Monaco e decoração de links
-      const style = document.createElement('style')
+    // Inject the quick-input centering + link-decoration style once per
+    // document — these styles apply globally to any Monaco container.
+    if (!styleInjected && typeof document !== "undefined") {
+      const style = document.createElement("style")
       style.textContent = `
         .monaco-editor .quick-input-widget {
           position: fixed !important;
@@ -282,41 +215,36 @@ export function MonacoCodeEditor({
           color: #3794ff !important;
         }
       `
-      container.appendChild(style)
+      document.head.appendChild(style)
+      styleInjected = true
     }
   }
 
-  const handleChange = (value: string | undefined) => {
+  const handleChange = (next: string | undefined) => {
     isUserTypingRef.current = true
     if (onChange && !readonly) {
-      onChange(value || "")
+      onChange(next || "")
     }
   }
 
-  // Atualizar conteúdo do editor quando value mudar externamente (reset)
+  // External value reconciliation: the editor is uncontrolled
+  // (`defaultValue` + `keepCurrentModel`) so we manually push remote
+  // value changes (e.g. file switches, undo on the parent) while
+  // preserving cursor position.
   useEffect(() => {
     if (editorRef.current && !isUserTypingRef.current && value !== lastValueRef.current) {
-      const editor = editorRef.current
-      const model = editor.getModel()
+      const ed = editorRef.current
+      const model = ed.getModel()
       if (model) {
         const currentValue = model.getValue()
         if (currentValue !== value) {
-          // Salvar posição do cursor
-          const position = editor.getPosition()
-          
-          // Atualizar conteúdo
+          const position = ed.getPosition()
           model.setValue(value)
-          
-          // Restaurar posição do cursor se ainda válida
-          if (position) {
-            editor.setPosition(position)
-          }
+          if (position) ed.setPosition(position)
         }
       }
       lastValueRef.current = value
     }
-    
-    // Resetar flag após um breve delay
     if (isUserTypingRef.current) {
       const timeout = setTimeout(() => {
         isUserTypingRef.current = false
@@ -325,72 +253,46 @@ export function MonacoCodeEditor({
     }
   }, [value])
 
-  // Atualizar opções quando props mudarem
-  useEffect(() => {
-    if (editorRef.current) {
-      editorRef.current.updateOptions({
-        readOnly: readonly,
-        fontSize,
-        lineNumbers: showLineNumbers ? "on" : "off",
-      })
-    }
-  }, [readonly, fontSize, showLineNumbers])
-
-  // Atualizar tema do Monaco quando mudar
-  useEffect(() => {
-    if (monacoRef.current && isShikiReady) {
-      monacoRef.current.editor.setTheme(currentTheme)
-    }
-  }, [currentTheme, isShikiReady])
+  const path = filePath && instanceId
+    ? `file:///${instanceId}/${filePath}`
+    : filePath
+      ? `file:///${filePath}`
+      : undefined
 
   return (
     <>
-      {/* Link Confirmation Dialog */}
       <LinkConfirmDialog
         open={linkConfirmDialog.open}
         onOpenChange={(open) => setLinkConfirmDialog({ open, url: "" })}
         url={linkConfirmDialog.url}
         onConfirm={() => {
-          window.open(linkConfirmDialog.url, '_blank', 'noopener,noreferrer')
+          window.open(linkConfirmDialog.url, "_blank", "noopener,noreferrer")
           setLinkConfirmDialog({ open: false, url: "" })
         }}
       />
-      
-      <MonacoErrorBoundary>
-        <Editor
-          key={fileId} // Força nova instância do Monaco para cada arquivo
-          height={height}
-          language={language}
-          defaultValue={value} // Usar defaultValue ao invés de value para modo não-controlado
-          path={filePath && instanceId ? `file:///${instanceId}/${filePath}` : filePath ? `file:///${filePath}` : undefined} // URI único com instanceId
-          keepCurrentModel={true} // Não destruir o modelo ao desmontar (evita quebrar preview quando modal fecha)
-          onChange={handleChange}
-          beforeMount={handleEditorWillMount}
-          onMount={handleEditorDidMount}
-          theme={currentTheme}
-          loading="" // Remove mensagem "Loading..."
-          options={{
-            readOnly: readonly,
-            fontSize,
-            lineNumbers: showLineNumbers ? "on" : "off",
-            minimap: { enabled: false },
-            scrollBeyondLastLine: false,
-            wordWrap: "on",
-            automaticLayout: true,
-            padding: { top: 8, bottom: 8 },
-            suggest: {
-              showKeywords: true,
-              showSnippets: true,
-            },
-            quickSuggestions: {
-              other: true,
-              comments: false,
-              strings: false,
-            },
-            links: false, 
-          }}
-        />
-      </MonacoErrorBoundary>
+
+      <BaseMonacoEditor
+        editorKey={fileId}
+        height={height}
+        language={language}
+        defaultValue={value}
+        path={path}
+        keepCurrentModel
+        readOnly={readonly}
+        isDark={isDarkMode}
+        options={options}
+        onChange={handleChange}
+        beforeMount={handleBeforeMount}
+        onMount={handleMount}
+        extraOptions={{
+          padding: { top: 8, bottom: 8 },
+          suggest: { showKeywords: true, showSnippets: true },
+          quickSuggestions: { other: true, comments: false, strings: false },
+          // We render our own link decorations + Ctrl/Cmd-click handler
+          // above, so disable Monaco's built-in URL link rendering.
+          links: false,
+        }}
+      />
     </>
   )
 }

@@ -21,8 +21,9 @@
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "prepare:wasm": "node scripts/postinstall.cjs",
+    "prepare:mathlive": "node scripts/copy-mathlive-assets.cjs",
     "update-wasm": "node scripts/update-wasm.mjs",
-    "postinstall": "npm run prepare:wasm"
+    "postinstall": "npm run prepare:wasm && npm run prepare:mathlive"
   },
   "dependencies": {
     "@apollo/client": "^3.13.9",

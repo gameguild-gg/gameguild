@@ -2,16 +2,15 @@
 
 import { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
-import { X, Save, Code2, Plus } from "lucide-react"
+import { Save, Code2, Plus } from "lucide-react"
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
-import Editor from "@monaco-editor/react"
 import { useTheme } from "next-themes"
-import { MonacoErrorBoundary } from "@/components/block-content-editor/extras/code-studio/monaco-error-boundary"
-import { isShikiActive } from "@/components/block-content-editor/extras/code-studio/monaco-code-editor"
+import { BaseMonacoEditor } from "@/components/block-content-editor/lib/monaco"
 import DOMPurify from "dompurify"
 import type { HTMLData } from "@/components/block-content-editor/nodes/html-node"
-import { useEditorSettings, EditorSettingsButton } from "../settings-menu"
+import { useEditorSettings } from "../settings-menu"
+import { BlockEditorShell } from "@/components/block-content-editor/extras/block-editor-shell"
 import { TemplateBar } from "./components/template-bar"
 import type { HTMLTemplate } from "./templates"
 
@@ -32,15 +31,6 @@ export function HTMLEditor({ initialData, onSave, onCancel }: HTMLEditorProps) {
   const settings = useEditorSettings("html")
   const iframeRef = useRef<HTMLIFrameElement>(null)
   const editorRef = useRef<any>(null)
-
-  useEffect(() => {
-    document.body.style.overflow = "hidden"
-    document.body.style.pointerEvents = "none"
-    return () => {
-      document.body.style.overflow = ""
-      document.body.style.pointerEvents = ""
-    }
-  }, [])
 
   // Auto-resize iframe to content height
   useEffect(() => {
@@ -122,96 +112,88 @@ export function HTMLEditor({ initialData, onSave, onCancel }: HTMLEditorProps) {
 </div>`
 
   return (
-    <div
-      className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
-      style={{ pointerEvents: "auto" }}
-      onClick={onCancel}
-      onKeyDown={(e) => {
-        e.stopPropagation()
-        if (e.key === "Escape") onCancel()
-      }}
-      onKeyUp={(e) => e.stopPropagation()}
-    >
-      <div
-        className={`bg-white dark:bg-gray-900 border dark:border-gray-700 shadow-2xl flex flex-col ${settings.modalClassName}`}
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900">
-          <div className="flex items-center gap-3">
-            <Code2 className="h-5 w-5 text-orange-600 dark:text-orange-400" />
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">HTML Editor</h2>
+    <BlockEditorShell
+      settings={settings}
+      onClose={onCancel}
+      icon={<Code2 className="h-5 w-5 text-orange-600 dark:text-orange-400" />}
+      title="HTML Editor"
+      headerActions={
+        <>
+          <div className="flex items-center gap-2">
+            <Switch
+              id="sandbox-scripts"
+              checked={sandboxScripts}
+              onCheckedChange={setSandboxScripts}
+            />
+            <Label htmlFor="sandbox-scripts" className="text-sm text-gray-600 dark:text-gray-400 cursor-pointer">
+              Allow scripts
+            </Label>
           </div>
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
-              <Switch
-                id="sandbox-scripts"
-                checked={sandboxScripts}
-                onCheckedChange={setSandboxScripts}
-              />
-              <Label htmlFor="sandbox-scripts" className="text-sm text-gray-600 dark:text-gray-400 cursor-pointer">
-                Allow scripts
-              </Label>
-            </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowTemplates(!showTemplates)}
-              className="border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800"
-            >
-              <Plus className="h-4 w-4 mr-1" />
-              Templates
-            </Button>
-            <EditorSettingsButton settings={settings} />
-            <Button variant="ghost" size="sm" onClick={onCancel} className="hover:bg-gray-100 dark:hover:bg-gray-800">
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
-
-        {/* Templates Bar */}
-        {showTemplates && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowTemplates(!showTemplates)}
+            className="border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800"
+          >
+            <Plus className="h-4 w-4 mr-1" />
+            Templates
+          </Button>
+        </>
+      }
+      secondaryHeader={
+        showTemplates ? (
           <TemplateBar
             onInsert={insertAtCursor}
             onClose={() => setShowTemplates(false)}
             selectedTemplate={selectedTemplate}
             onSelectTemplate={setSelectedTemplate}
           />
-        )}
-
-        {/* Main Content */}
-        <div className="flex-1 overflow-hidden flex">
+        ) : undefined
+      }
+      footer={
+        <div className="flex gap-2 justify-end">
+          <Button
+            variant="outline"
+            onClick={onCancel}
+            disabled={showTemplates && selectedTemplate !== null}
+            className="border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800 bg-transparent disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleSave}
+            disabled={showTemplates && selectedTemplate !== null}
+            className="flex items-center gap-2 bg-orange-600 hover:bg-orange-700 dark:bg-orange-500 dark:hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <Save className="h-4 w-4" />
+            Save HTML
+          </Button>
+        </div>
+      }
+    >
+      {/* Main Content */}
+      <div className="flex-1 overflow-hidden flex">
           {/* Left Panel - Monaco Editor */}
           <div className="w-1/2 border-r border-gray-200 dark:border-gray-800 flex flex-col">
             <div className="p-4 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900">
               <h3 className="text-sm font-medium text-gray-800 dark:text-gray-200 uppercase tracking-wide">Editor</h3>
             </div>
             <div className="flex-1 overflow-hidden">
-              <MonacoErrorBoundary>
-                <Editor
-                  height="100%"
-                  defaultLanguage="html"
-                  value={content}
-                  onChange={(value) => setContent(value || "")}
-                  onMount={handleEditorMount}
-                  theme={isDarkMode ? (isShikiActive() ? "dark-plus" : "vs-dark") : (isShikiActive() ? "light-plus" : "light")}
-                  options={{
-                    minimap: { enabled: false },
-                    fontSize: settings.editorFontSize,
-                    lineNumbers: settings.editorLineNumbers ? "on" : "off",
-                    roundedSelection: true,
-                    scrollBeyondLastLine: false,
-                    wordWrap: "on",
-                    automaticLayout: true,
-                    tabSize: 2,
-                    insertSpaces: true,
-                    autoClosingBrackets: "always",
-                    autoClosingQuotes: "always",
-                    formatOnPaste: true,
-                    suggest: { showWords: true },
-                  }}
-                />
-              </MonacoErrorBoundary>
+              <BaseMonacoEditor
+                language="html"
+                value={content}
+                onChange={(value) => setContent(value || "")}
+                onMount={handleEditorMount}
+                isDark={isDarkMode}
+                options={settings.editor}
+                extraOptions={{
+                  roundedSelection: true,
+                  autoClosingBrackets: "always",
+                  autoClosingQuotes: "always",
+                  formatOnPaste: true,
+                  suggest: { showWords: true },
+                }}
+              />
             </div>
           </div>
 
@@ -272,29 +254,6 @@ export function HTMLEditor({ initialData, onSave, onCancel }: HTMLEditorProps) {
             </div>
           </div>
         </div>
-
-        {/* Footer */}
-        <div className="p-4 border-t border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900">
-          <div className="flex gap-2 justify-end">
-            <Button
-              variant="outline"
-              onClick={onCancel}
-              disabled={showTemplates && selectedTemplate !== null}
-              className="border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800 bg-transparent disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleSave}
-              disabled={showTemplates && selectedTemplate !== null}
-              className="flex items-center gap-2 bg-orange-600 hover:bg-orange-700 dark:bg-orange-500 dark:hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <Save className="h-4 w-4" />
-              Save HTML
-            </Button>
-          </div>
-        </div>
-      </div>
-    </div>
+      </BlockEditorShell>
   )
 }
