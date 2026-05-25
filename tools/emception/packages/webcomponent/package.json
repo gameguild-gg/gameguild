@@ -1,5 +1,5 @@
 {
-  "version": "3.8.0",
+  "version": "3.9.0",
   "name": "@gameguild/emception-webcomponent",
   "description": "<emception-run> custom element. No framework deps.",
   "license": "MIT",
