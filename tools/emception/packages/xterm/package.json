@@ -1,6 +1,6 @@
 {
   "name": "@gameguild/emception-xterm",
-  "version": "3.9.0",
+  "version": "3.10.0",
   "description": "xterm.js stdin/stdout/stderr bridge for emception. xterm peer dep lives here.",
   "license": "MIT",
   "type": "module",

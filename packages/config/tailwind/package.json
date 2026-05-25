@@ -1,6 +1,6 @@
 {
   "name": "@game-guild/tailwind-config",
-  "version": "3.9.0",
+  "version": "3.10.0",
   "description": "Tailwind CSS configuration for matheusmartins.com website and related projects",
   "license": "UNLICENSED",
   "author": "Matheus Martins <contact@matheusmartins.com>",
