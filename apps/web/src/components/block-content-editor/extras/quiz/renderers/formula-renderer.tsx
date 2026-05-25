@@ -8,10 +8,10 @@
 
 import { useMemo, useState, useEffect, useCallback } from "react"
 import { Search, PenLine, CheckCircle, XCircle, FlaskConical } from "lucide-react"
-import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import type { FormulaEntry, QuizAnswerState } from "../types"
 import { generateVariableValue, evaluateFormula, validateFormula } from "../utils/formula-evaluator"
+import { MathInput } from "../components/math-input"
 
 interface FormulaRendererProps {
   entry: FormulaEntry
@@ -271,21 +271,15 @@ export function FormulaRenderer({
           </h4>
         </div>
         <div className="flex gap-2">
-          <Input
-            type="text"
-            value={userAnswer}
-            onChange={(e) => handleChange(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                e.preventDefault()
-                runTests()
-              }
-            }}
-            disabled={disabled || showFeedback}
-            autoComplete="off"
-            placeholder="e.g., x^2 + y"
-            className="bg-white dark:bg-gray-900 border-green-300 dark:border-green-700 font-mono text-lg h-12 flex-1"
-          />
+          <div className="flex-1">
+            <MathInput
+              value={userAnswer}
+              onChange={(latex) => handleChange(latex)}
+              readOnly={disabled || showFeedback}
+              placeholder="e.g.,\\ x^2 + y"
+              className="border-green-300 dark:border-green-700 text-lg min-h-[3rem]"
+            />
+          </div>
           <Button
             type="button"
             variant="outline"

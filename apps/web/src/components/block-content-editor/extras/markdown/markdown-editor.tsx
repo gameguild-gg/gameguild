@@ -2,16 +2,15 @@
 
 import { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
-import { X, Save, FileText, Plus } from "lucide-react"
+import { Save, FileText, Plus, X } from "lucide-react"
 import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
 import rehypeRaw from "rehype-raw"
-import Editor from "@monaco-editor/react"
 import { useTheme } from "next-themes"
-import { MonacoErrorBoundary } from "@/components/block-content-editor/extras/code-studio/monaco-error-boundary"
-import { isShikiActive } from "@/components/block-content-editor/extras/code-studio/monaco-code-editor"
+import { BaseMonacoEditor } from "@/components/block-content-editor/lib/monaco"
 import type { MarkdownData } from "@/components/block-content-editor/nodes/markdown-node"
-import { useEditorSettings, EditorSettingsButton } from "../settings-menu"
+import { useEditorSettings } from "../settings-menu"
+import { BlockEditorShell } from "@/components/block-content-editor/extras/block-editor-shell"
 import { getAllTemplates, searchTemplates, type MarkdownTemplate } from "./markdown-templates"
 import { Input } from "@/components/ui/input"
 import { useMarkdownComponents } from "./markdown-components"
@@ -38,17 +37,6 @@ export function MarkdownEditor({ initialData, onSave, onCancel }: MarkdownEditor
 
   // Get unique categories
   const categories = Array.from(new Set(getAllTemplates().map(t => t.category)))
-
-  // Block body scroll and pointer events when modal is open
-  useEffect(() => {
-    document.body.style.overflow = 'hidden'
-    document.body.style.pointerEvents = 'none'
-    
-    return () => {
-      document.body.style.overflow = ''
-      document.body.style.pointerEvents = ''
-    }
-  }, [])
 
   // Load templates
   useEffect(() => {
@@ -121,49 +109,25 @@ export function MarkdownEditor({ initialData, onSave, onCancel }: MarkdownEditor
   }
 
   return (
-    <div 
-      className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
-      style={{ pointerEvents: 'auto' }}
-      onClick={handleCancel}
-      onKeyDown={(e) => {
-        e.stopPropagation()
-        if (e.key === 'Escape') {
-          handleCancel()
-        }
-      }}
-      onKeyUp={(e) => e.stopPropagation()}
-      onKeyPress={(e) => e.stopPropagation()}
-    >
-      <div 
-        className={`bg-white dark:bg-gray-900 border dark:border-gray-700 shadow-2xl flex flex-col ${settings.modalClassName}`}
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900">
-          <div className="flex items-center gap-3">
-            <FileText className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Markdown Editor</h2>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowTemplates(!showTemplates)}
-              className="border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800"
-            >
-              <Plus className="h-4 w-4 mr-1" />
-              Templates
-            </Button>
-            <EditorSettingsButton settings={settings} />
-            <Button variant="ghost" size="sm" onClick={handleCancel} className="hover:bg-gray-100 dark:hover:bg-gray-800">
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
-
-        {/* Templates Bar */}
-        {showTemplates && (
-          <div className="border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900">
+    <BlockEditorShell
+      settings={settings}
+      onClose={handleCancel}
+      icon={<FileText className="h-5 w-5 text-blue-600 dark:text-blue-400" />}
+      title="Markdown Editor"
+      headerActions={
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setShowTemplates(!showTemplates)}
+          className="border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800"
+        >
+          <Plus className="h-4 w-4 mr-1" />
+          Templates
+        </Button>
+      }
+      secondaryHeader={
+        showTemplates ? (
+          <div className="">
             {/* Top Bar - Search and Actions */}
             <div className="flex items-center gap-3 px-4 py-2 border-b border-gray-200 dark:border-gray-700">
               <FileText className="h-4 w-4 text-gray-500 shrink-0" />
@@ -280,10 +244,31 @@ export function MarkdownEditor({ initialData, onSave, onCancel }: MarkdownEditor
               </div>
             </div>
           </div>
-        )}
-
-        {/* Main Content */}
-        <div className="flex-1 overflow-hidden flex">
+        ) : undefined
+      }
+      footer={
+        <div className="flex gap-2 justify-end">
+          <Button
+            variant="outline"
+            onClick={handleCancel}
+            disabled={showTemplates && selectedTemplate !== null}
+            className="border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800 bg-transparent disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleSave}
+            disabled={showTemplates && selectedTemplate !== null}
+            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <Save className="h-4 w-4" />
+            Save Markdown
+          </Button>
+        </div>
+      }
+    >
+      {/* Main Content */}
+      <div className="flex-1 overflow-hidden flex">
           {/* Left Panel - Monaco Editor */}
           <div className="w-1/2 border-r border-gray-200 dark:border-gray-800 flex flex-col">
             <div className="p-4 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900">
@@ -291,27 +276,15 @@ export function MarkdownEditor({ initialData, onSave, onCancel }: MarkdownEditor
             </div>
             
             <div className="flex-1 overflow-hidden">
-              <MonacoErrorBoundary>
-                <Editor
-                  height="100%"
-                  defaultLanguage="markdown"
-                  value={content}
-                  onChange={(value) => setContent(value || "")}
-                  onMount={handleEditorMount}
-                  theme={isDarkMode ? (isShikiActive() ? "dark-plus" : "vs-dark") : (isShikiActive() ? "light-plus" : "light")}
-                  options={{
-                    minimap: { enabled: false },
-                    fontSize: settings.editorFontSize,
-                    lineNumbers: settings.editorLineNumbers ? "on" : "off",
-                    roundedSelection: true,
-                    scrollBeyondLastLine: false,
-                    wordWrap: "on",
-                    automaticLayout: true,
-                    tabSize: 2,
-                    insertSpaces: true,
-                  }}
-                />
-              </MonacoErrorBoundary>
+              <BaseMonacoEditor
+                language="markdown"
+                value={content}
+                onChange={(value) => setContent(value || "")}
+                onMount={handleEditorMount}
+                isDark={isDarkMode}
+                options={settings.editor}
+                extraOptions={{ roundedSelection: true }}
+              />
             </div>
           </div>
 
@@ -363,29 +336,6 @@ export function MarkdownEditor({ initialData, onSave, onCancel }: MarkdownEditor
             </div>
           </div>
         </div>
-
-        {/* Footer */}
-        <div className="p-4 border-t border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900">
-          <div className="flex gap-2 justify-end">
-            <Button
-              variant="outline"
-              onClick={handleCancel}
-              disabled={showTemplates && selectedTemplate !== null}
-              className="border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800 bg-transparent disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleSave}
-              disabled={showTemplates && selectedTemplate !== null}
-              className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <Save className="h-4 w-4" />
-              Save Markdown
-            </Button>
-          </div>
-        </div>
-      </div>
-    </div>
+    </BlockEditorShell>
   )
 }

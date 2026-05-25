@@ -511,7 +511,7 @@ export function VegaLiteViewer({
           <div className="bg-white dark:bg-gray-900 shadow-2xl w-screen h-screen flex flex-col">
             {/* Fullscreen Header */}
             <div className="flex items-center justify-between gap-4 p-4 border-b border-gray-200 dark:border-gray-700">
-              <div className="flex items-center gap-2 min-w-0 flex-shrink-0">
+              <div className="flex items-center gap-2 min-w-0 shrink-0">
                 <BarChart3 className="h-5 w-5 text-blue-600 dark:text-blue-400" />
                 <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 truncate">
                   {title || "Vega-Lite Chart"}
@@ -520,7 +520,7 @@ export function VegaLiteViewer({
               
               {/* Zoom Slider Bar - Centered */}
               <div className="flex items-center gap-3 flex-1 max-w-md mx-auto">
-                <ZoomOut className="h-4 w-4 text-gray-500 dark:text-gray-400 flex-shrink-0" />
+                <ZoomOut className="h-4 w-4 text-gray-500 dark:text-gray-400 shrink-0" />
                 <input
                   type="range"
                   min="100"
@@ -535,11 +535,11 @@ export function VegaLiteViewer({
                       : `linear-gradient(to right, rgb(37, 99, 235) 0%, rgb(37, 99, 235) ${((fullscreenZoom - 100) / 900) * 100}%, rgb(229, 231, 235) ${((fullscreenZoom - 100) / 900) * 100}%, rgb(229, 231, 235) 100%)`,
                   }}
                 />
-                <ZoomIn className="h-4 w-4 text-gray-500 dark:text-gray-400 flex-shrink-0" />
+                <ZoomIn className="h-4 w-4 text-gray-500 dark:text-gray-400 shrink-0" />
               </div>
 
               {/* Fullscreen Zoom Controls */}
-              <div className="flex items-center gap-4 flex-shrink-0">
+              <div className="flex items-center gap-4 shrink-0">
                 <div className="flex items-center gap-1 bg-gray-100 dark:bg-gray-800 rounded-md p-1">
                   <Button
                     variant="ghost"

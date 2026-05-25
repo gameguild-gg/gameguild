@@ -5,10 +5,7 @@ import { LexicalComposer } from "@lexical/react/LexicalComposer"
 import { RichTextPlugin } from "@lexical/react/LexicalRichTextPlugin"
 import { ContentEditable } from "@lexical/react/LexicalContentEditable"
 import { LexicalErrorBoundary } from "@lexical/react/LexicalErrorBoundary"
-import { HeadingNode, QuoteNode } from "@lexical/rich-text"
-import { ListNode, ListItemNode } from "@lexical/list"
-import { LinkNode, AutoLinkNode } from "@lexical/link"
-import { CodeNode } from "@lexical/code"
+import { SHARED_LEXICAL_NODES } from "../../lib/lexical"
 
 const PREVIEW_THEME = {
   text: {
@@ -39,15 +36,7 @@ const PREVIEW_THEME = {
   link: "text-blue-600 dark:text-blue-400 underline",
 }
 
-const PREVIEW_NODES = [
-  HeadingNode,
-  QuoteNode,
-  ListNode,
-  ListItemNode,
-  CodeNode,
-  LinkNode,
-  AutoLinkNode,
-]
+const PREVIEW_NODES = SHARED_LEXICAL_NODES
 
 interface RichTextPreviewRendererProps {
   content: string

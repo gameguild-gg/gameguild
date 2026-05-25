@@ -242,6 +242,23 @@ const nextConfig = {
           },
         ],
       },
+      // MathLive KaTeX fonts and sound effects (copied from
+      // node_modules/mathlive via scripts/copy-mathlive-assets.cjs).
+      // Needs an explicit CORP header so fonts aren't blocked under
+      // Cross-Origin-Embedder-Policy: credentialless.
+      {
+        source: '/mathlive/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+          {
+            key: 'Cross-Origin-Resource-Policy',
+            value: 'cross-origin',
+          },
+        ],
+      },
     ];
   },
   webpack: (config: any, { isServer }: { isServer: boolean }) => {
