@@ -9,6 +9,7 @@ namespace GameGuild.Commerce.Payments;
 public sealed class RetryPaymentCommandHandler(
     IPaymentRepository paymentRepository,
     IPaymentGateway paymentGateway,
+    IPaymentSubscriptionSyncService paymentSubscriptionSyncService,
     ILogger<RetryPaymentCommandHandler> logger) : ICommandHandler<RetryPaymentCommand, PaymentRetryResult>
 {
     public async Task<PaymentRetryResult> Handle(RetryPaymentCommand request, CancellationToken cancellationToken)
@@ -111,6 +112,17 @@ public sealed class RetryPaymentCommandHandler(
         }
 
         await paymentRepository.UpdateAsync(payment, cancellationToken).ConfigureAwait(false);
+
+        if (gatewayResult.Success && payment.ProcessedAt.HasValue)
+        {
+            await paymentSubscriptionSyncService.SyncSuccessfulPaymentAsync(
+                payment.Id.ToString(),
+                payment.SubscriptionId,
+                payment.Amount,
+                payment.Currency,
+                payment.ProcessedAt.Value,
+                cancellationToken).ConfigureAwait(false);
+        }
 
         // 7. Return retry result
         return new PaymentRetryResult

@@ -42,7 +42,7 @@ public abstract class BillingWebhookService : IBillingWebhookService
     {
         try
         {
-            _logger.LogInformation("Handling subscription created webhook for tenant {TenantId}, subscription {SubscriptionId}", 
+            _logger.LogInformation("Handling subscription created webhook for tenant {TenantId}, subscription {SubscriptionId}",
                 payload.TenantId, payload.ExternalSubscriptionId);
 
             // Create subscription via the lifecycle service
@@ -79,7 +79,7 @@ public abstract class BillingWebhookService : IBillingWebhookService
     {
         try
         {
-            _logger.LogInformation("Handling subscription updated webhook for tenant {TenantId}, subscription {SubscriptionId}", 
+            _logger.LogInformation("Handling subscription updated webhook for tenant {TenantId}, subscription {SubscriptionId}",
                 payload.TenantId, payload.ExternalSubscriptionId);
 
             // Find subscription by external ID
@@ -88,7 +88,7 @@ public abstract class BillingWebhookService : IBillingWebhookService
 
             if (subscription == null)
             {
-                _logger.LogWarning("Subscription not found for external ID {ExternalSubscriptionId}", 
+                _logger.LogWarning("Subscription not found for external ID {ExternalSubscriptionId}",
                     payload.ExternalSubscriptionId);
                 return;
             }
@@ -116,7 +116,7 @@ public abstract class BillingWebhookService : IBillingWebhookService
     {
         try
         {
-            _logger.LogInformation("Handling subscription canceled webhook for tenant {TenantId}, subscription {SubscriptionId}", 
+            _logger.LogInformation("Handling subscription canceled webhook for tenant {TenantId}, subscription {SubscriptionId}",
                 payload.TenantId, payload.ExternalSubscriptionId);
 
             // Find subscription by external ID
@@ -125,7 +125,7 @@ public abstract class BillingWebhookService : IBillingWebhookService
 
             if (subscription == null)
             {
-                _logger.LogWarning("Subscription not found for external ID {ExternalSubscriptionId}", 
+                _logger.LogWarning("Subscription not found for external ID {ExternalSubscriptionId}",
                     payload.ExternalSubscriptionId);
                 return;
             }
@@ -154,7 +154,7 @@ public abstract class BillingWebhookService : IBillingWebhookService
     {
         try
         {
-            _logger.LogInformation("Handling payment succeeded webhook for tenant {TenantId}, payment {PaymentId}", 
+            _logger.LogInformation("Handling payment succeeded webhook for tenant {TenantId}, payment {PaymentId}",
                 payload.TenantId, payload.PaymentId);
 
             // Find subscription by external ID
@@ -163,18 +163,30 @@ public abstract class BillingWebhookService : IBillingWebhookService
 
             if (subscription == null)
             {
-                _logger.LogWarning("Subscription not found for external ID {ExternalSubscriptionId}", 
+                _logger.LogWarning("Subscription not found for external ID {ExternalSubscriptionId}",
                     payload.ExternalSubscriptionId);
                 return;
             }
 
-            // Record the payment
-            await _billingService.RecordPaymentAsync(
+            // Record the payment and apply any lifecycle transition needed after success.
+            subscription = await _billingService.RecordPaymentAsync(
                 subscription.Id,
                 payload.Amount,
                 payload.Currency,
                 payload.PaidAt ?? SystemClock.UtcNow
             ).ConfigureAwait(false);
+
+            switch (subscription.Status)
+            {
+                case SubscriptionStatus.PendingActivation:
+                    await _lifecycleService.ActivateAsync(subscription.Id).ConfigureAwait(false);
+                    break;
+
+                case SubscriptionStatus.PastDue:
+                case SubscriptionStatus.Suspended:
+                    await _lifecycleService.ReactivateAsync(subscription.Id).ConfigureAwait(false);
+                    break;
+            }
 
             _logger.LogInformation("Successfully recorded payment {PaymentId} for subscription {SubscriptionId}",
                 payload.PaymentId, subscription.Id);
@@ -192,7 +204,7 @@ public abstract class BillingWebhookService : IBillingWebhookService
     {
         try
         {
-            _logger.LogInformation("Handling payment failed webhook for tenant {TenantId}, payment {PaymentId}", 
+            _logger.LogInformation("Handling payment failed webhook for tenant {TenantId}, payment {PaymentId}",
                 payload.TenantId, payload.PaymentId);
 
             // Find subscription by external ID
@@ -201,7 +213,7 @@ public abstract class BillingWebhookService : IBillingWebhookService
 
             if (subscription == null)
             {
-                _logger.LogWarning("Subscription not found for external ID {ExternalSubscriptionId}", 
+                _logger.LogWarning("Subscription not found for external ID {ExternalSubscriptionId}",
                     payload.ExternalSubscriptionId);
                 return;
             }

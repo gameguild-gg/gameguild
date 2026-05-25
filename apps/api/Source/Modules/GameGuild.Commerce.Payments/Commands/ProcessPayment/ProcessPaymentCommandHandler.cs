@@ -9,6 +9,7 @@ namespace GameGuild.Commerce.Payments;
 public sealed class ProcessPaymentCommandHandler(
     IPaymentRepository paymentRepository,
     IPaymentGateway paymentGateway,
+    IPaymentSubscriptionSyncService paymentSubscriptionSyncService,
     ILogger<ProcessPaymentCommandHandler> logger) : ICommandHandler<ProcessPaymentCommand, PaymentResult>
 {
     public async Task<PaymentResult> Handle(ProcessPaymentCommand request, CancellationToken cancellationToken)
@@ -100,6 +101,17 @@ public sealed class ProcessPaymentCommandHandler(
         }
 
         await paymentRepository.UpdateAsync(payment, cancellationToken).ConfigureAwait(false);
+
+        if (gatewayResult.Success && payment.ProcessedAt.HasValue)
+        {
+            await paymentSubscriptionSyncService.SyncSuccessfulPaymentAsync(
+                payment.Id.ToString(),
+                payment.SubscriptionId,
+                payment.Amount,
+                payment.Currency,
+                payment.ProcessedAt.Value,
+                cancellationToken).ConfigureAwait(false);
+        }
 
         // 6. Return result
         return new PaymentResult
