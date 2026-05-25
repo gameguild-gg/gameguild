@@ -8,6 +8,7 @@ namespace GameGuild.Commerce.Payments;
 /// </summary>
 public sealed class UpdatePaymentStatusCommandHandler(
     IPaymentRepository paymentRepository,
+    IPaymentSubscriptionSyncService paymentSubscriptionSyncService,
     ILogger<UpdatePaymentStatusCommandHandler> logger) : ICommandHandler<UpdatePaymentStatusCommand, bool>
 {
     public async Task<bool> Handle(UpdatePaymentStatusCommand request, CancellationToken cancellationToken)
@@ -69,6 +70,17 @@ public sealed class UpdatePaymentStatusCommandHandler(
 
         // 4. Save changes
         await paymentRepository.UpdateAsync(payment, cancellationToken).ConfigureAwait(false);
+
+        if (request.Status == PaymentStatus.Succeeded && payment.ProcessedAt.HasValue)
+        {
+            await paymentSubscriptionSyncService.SyncSuccessfulPaymentAsync(
+                payment.Id.ToString(),
+                payment.SubscriptionId,
+                payment.Amount,
+                payment.Currency,
+                payment.ProcessedAt.Value,
+                cancellationToken).ConfigureAwait(false);
+        }
 
         logger.LogInformation("Payment {PaymentId} status updated to {Status}",
             request.PaymentId, request.Status);

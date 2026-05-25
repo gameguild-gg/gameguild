@@ -29,6 +29,8 @@ public static class DependencyInjection
         services.AddScoped<SubscriptionBillingService>();
         services.AddScoped<ISubscriptionBillingService>(sp => sp.GetRequiredService<SubscriptionBillingService>());
 
+        services.AddScoped<IPaymentSubscriptionSyncService, PaymentSubscriptionSyncService>();
+
         services.AddScoped<SubscriptionQueryAndExternalIdService>();
         services.AddScoped<ISubscriptionQueryService>(sp => sp.GetRequiredService<SubscriptionQueryAndExternalIdService>());
         services.AddScoped<ISubscriptionExternalIdService>(sp => sp.GetRequiredService<SubscriptionQueryAndExternalIdService>());
