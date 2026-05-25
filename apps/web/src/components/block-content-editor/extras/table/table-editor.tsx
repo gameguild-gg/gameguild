@@ -1,13 +1,15 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { Check, Plus, Minus, Grid3X3, X, Save } from "lucide-react"
+import { useState } from "react"
+import { Check, Plus, Minus, Grid3X3, Save } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from "@/components/ui/table"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { cn } from "@/lib/utils"
+import { useEditorSettings } from "@/components/block-content-editor/extras/settings-menu"
+import { BlockEditorShell } from "@/components/block-content-editor/extras/block-editor-shell"
 import type { TableData, TableStyle, TableCellData } from "@/components/block-content-editor/nodes/table-node"
 
 interface TableEditorProps {
@@ -84,15 +86,7 @@ export function TableEditor({ initialData, onSave, onCancel }: TableEditorProps)
     }
     return { ...base, cells: ensureCells(base) }
   })
-
-  useEffect(() => {
-    document.body.style.overflow = "hidden"
-    document.body.style.pointerEvents = "none"
-    return () => {
-      document.body.style.overflow = ""
-      document.body.style.pointerEvents = ""
-    }
-  }, [])
+  const settings = useEditorSettings("table")
 
   const handleSave = () => {
     const newCells: TableCellData[][] = []
@@ -148,30 +142,26 @@ export function TableEditor({ initialData, onSave, onCancel }: TableEditorProps)
   const safeCells = ensureCells(tempData)
 
   return (
-    <div
-      className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
-      style={{ pointerEvents: "auto" }}
-      onClick={onCancel}
-      onKeyDown={(e) => { e.stopPropagation(); if (e.key === "Escape") onCancel() }}
-      onKeyUp={(e) => e.stopPropagation()}
-    >
-      <div
-        className="bg-white dark:bg-gray-900 border dark:border-gray-700 shadow-2xl w-full max-w-7xl h-[90vh] flex flex-col"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900">
-          <div className="flex items-center gap-3">
-            <Grid3X3 className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Table Editor</h2>
-          </div>
-          <Button variant="ghost" size="sm" onClick={onCancel} className="hover:bg-gray-100 dark:hover:bg-gray-800">
-            <X className="h-4 w-4" />
+    <BlockEditorShell
+      settings={settings}
+      includeMonacoTheme={false}
+      onClose={onCancel}
+      icon={<Grid3X3 className="h-5 w-5 text-blue-600 dark:text-blue-400" />}
+      title="Table Editor"
+      footer={
+        <div className="flex gap-2 justify-end">
+          <Button variant="outline" onClick={onCancel} className="border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800 bg-transparent">
+            Cancel
+          </Button>
+          <Button onClick={handleSave} className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600">
+            <Save className="h-4 w-4" />
+            Save Table
           </Button>
         </div>
-
-        {/* Main Content */}
-        <div className="flex-1 overflow-hidden flex">
+      }
+    >
+      {/* Main Content */}
+      <div className="flex-1 overflow-hidden flex">
           {/* Left Panel - Configuration */}
           <div className="w-80 shrink-0 border-r border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
             <div className="h-full overflow-y-auto p-6 space-y-6 bg-white dark:bg-gray-950">
@@ -346,20 +336,6 @@ export function TableEditor({ initialData, onSave, onCancel }: TableEditorProps)
             </div>
           </div>
         </div>
-
-        {/* Footer */}
-        <div className="p-4 border-t border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900">
-          <div className="flex gap-2 justify-end">
-            <Button variant="outline" onClick={onCancel} className="border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800 bg-transparent">
-              Cancel
-            </Button>
-            <Button onClick={handleSave} className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600">
-              <Save className="h-4 w-4" />
-              Save Table
-            </Button>
-          </div>
-        </div>
-      </div>
-    </div>
+    </BlockEditorShell>
   )
 }

@@ -289,3 +289,56 @@
         opacity: 1;
     }
 }
+
+/*
+ * Monaco active-line rectangle outline.
+ *
+ * When the user selects `renderLineHighlight: 'rectangle'` for any Monaco
+ * surface, `applyLineHighlightDecoration` toggles this attribute on the
+ * editor's root DOM node. Monaco itself still renders its standard 'line'
+ * highlight (background tint); we layer a 2px outline on top to produce
+ * the rectangle effect. The color is theme-aware so the rectangle stays
+ * legible against both backgrounds: a dark stroke on light themes and a
+ * bright stroke on dark / high-contrast themes.
+ */
+.monaco-editor[data-line-highlight-rectangle="true"] .view-overlays .current-line,
+.monaco-editor[data-line-highlight-rectangle="true"] .view-overlays .current-line-exact,
+.monaco-editor[data-line-highlight-rectangle="true"] .margin-view-overlays .current-line,
+.monaco-editor[data-line-highlight-rectangle="true"] .margin-view-overlays .current-line-margin {
+    border: 2px solid rgba(0, 0, 0, 0.7) !important;
+    box-sizing: border-box !important;
+}
+
+.monaco-editor.vs-dark[data-line-highlight-rectangle="true"] .view-overlays .current-line,
+.monaco-editor.vs-dark[data-line-highlight-rectangle="true"] .view-overlays .current-line-exact,
+.monaco-editor.vs-dark[data-line-highlight-rectangle="true"] .margin-view-overlays .current-line,
+.monaco-editor.vs-dark[data-line-highlight-rectangle="true"] .margin-view-overlays .current-line-margin,
+.monaco-editor.hc-black[data-line-highlight-rectangle="true"] .view-overlays .current-line,
+.monaco-editor.hc-black[data-line-highlight-rectangle="true"] .view-overlays .current-line-exact,
+.monaco-editor.hc-black[data-line-highlight-rectangle="true"] .margin-view-overlays .current-line,
+.monaco-editor.hc-black[data-line-highlight-rectangle="true"] .margin-view-overlays .current-line-margin {
+    border-color: rgba(255, 255, 255, 0.85) !important;
+}
+
+/*
+ * Monaco overflow widgets (hover tooltips, suggestion popups, parameter
+ * hints, context menus, find widget, etc.) z-index.
+ *
+ * Every Monaco wrapper now sets `fixedOverflowWidgets: true`, which makes
+ * Monaco append these widgets directly to <body> in a fixed-position
+ * container so they escape any `overflow: hidden` ancestor. The block-
+ * content-editor modal renders at `z-50`, and other page chrome can
+ * create higher stacking contexts; without an explicit z-index, hover
+ * balloons (e.g. "(method) Console.log(...)") appear behind the modal.
+ *
+ * Push everything Monaco puts directly under <body> well above any
+ * realistic app z-index. This is safe because these containers only
+ * exist while Monaco is mounted and only render transient widgets.
+ */
+body > .monaco-editor,
+.monaco-editor .overflowingContentWidgets,
+.monaco-hover,
+.monaco-editor-hover,
+.monaco-editor-overlaymessage {
+    z-index: 10000 !important;
+}

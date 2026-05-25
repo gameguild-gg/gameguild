@@ -236,7 +236,8 @@ export function FloatingTextFormatToolbarPlugin() {
     }
 
     const parentElementList = anchorNode.getParent()
-    if (parentElementList && parentElementList.getType() === "list") {
+    const parentType = parentElementList?.getType()
+    if (parentElementList && (parentType === "list" || parentType === "custom-list")) {
       setCurrentListType((parentElementList as unknown as { getListType: () => string }).getListType())
     } else {
       setCurrentListType("")
