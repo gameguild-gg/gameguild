@@ -10,7 +10,7 @@ import { ListPlugin } from "@lexical/react/LexicalListPlugin"
 import { LinkPlugin } from "@lexical/react/LexicalLinkPlugin"
 import { LexicalErrorBoundary } from "@lexical/react/LexicalErrorBoundary"
 import { type EditorState } from "lexical"
-import { Save, FileText, Eye } from "lucide-react"
+import { Save, FileText } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -19,7 +19,6 @@ import { InlineTextFormatToolbarPlugin } from "../../plugins/inline-text-format-
 import { BlockEmbedPlugin } from "../../plugins/block-embed-plugin"
 import { BlockInsertMenuPlugin } from "../../plugins/block-insert-menu-plugin"
 import { BlockInsertButtonPlugin } from "../../plugins/block-insert-button-plugin"
-import { RichTextPreviewRenderer } from "./rich-text-preview-renderer"
 import { useEditorSettings } from "@/components/block-content-editor/extras/settings-menu"
 import { BlockEditorShell } from "@/components/block-content-editor/extras/block-editor-shell"
 import { SHARED_LEXICAL_NODES, SHARED_LEXICAL_THEME } from "../../lib/lexical"
@@ -37,14 +36,12 @@ interface RichTextEditorProps {
 
 export function RichTextEditor({ initialData, onSave, onCancel }: RichTextEditorProps) {
   const [title, setTitle] = useState(initialData?.title || "")
-  const [previewContent, setPreviewContent] = useState(initialData?.content || "")
   const editorStateRef = useRef<string>(initialData?.content || "")
   const settings = useEditorSettings("rich-text")
 
   const handleChange = useCallback((editorState: EditorState) => {
     const serialized = JSON.stringify(editorState.toJSON())
     editorStateRef.current = serialized
-    setPreviewContent(serialized)
   }, [])
 
   const handleSave = useCallback(() => {
@@ -109,71 +106,51 @@ export function RichTextEditor({ initialData, onSave, onCancel }: RichTextEditor
         </div>
       }
     >
-      {/* Main Content - Split Panels */}
-      <div className="flex-1 overflow-hidden flex">
-          {/* Left Panel — Lexical Editor */}
-          <div className="w-1/2 border-r border-gray-200 dark:border-gray-800 flex flex-col min-h-0">
-            <div className="p-4 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900">
-              <h3 className="text-sm font-medium text-gray-800 dark:text-gray-200 uppercase tracking-wide">Editor</h3>
-              <p className="text-xs text-gray-500 dark:text-gray-500 mt-0.5">Select text to format (bold, italic, headings, lists...)</p>
-            </div>
-            <LexicalComposer initialConfig={initialConfig}>
+      {/* Main Content — single focused editor, centered.
+          The OUTER container scrolls so the wheel works anywhere inside the
+          modal body (including the side gutters), not only over the column.
+          Block layout (not flex) lets the inner column grow with content so
+          the scroll content height matches the column, and the column's
+          background covers the full scrolled area. */}
+      <div className="flex-1 overflow-auto bg-gray-50 dark:bg-gray-950">
+        <div className="w-full max-w-3xl mx-auto flex flex-col bg-white dark:bg-gray-900 border-x border-gray-200 dark:border-gray-800 shadow-sm min-h-full">
+          <LexicalComposer initialConfig={initialConfig}>
+            {/* Sticky toolbars so they stay pinned while the outer area scrolls */}
+            <div className="sticky top-0 z-10 bg-white dark:bg-gray-900">
               <InlineTextFormatToolbarPlugin />
               {/* Top insert toolbar — pinned above the scrollable content */}
-              <div className="px-4 py-2 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 flex items-center justify-between shrink-0">
+              <div className="px-4 py-2 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 flex items-center justify-between">
                 <p className="text-xs text-gray-500 dark:text-gray-500">
                   Tip: type <kbd className="px-1.5 py-0.5 rounded border bg-white dark:bg-gray-800 font-mono">/</kbd> to insert a block
                 </p>
                 <BlockInsertButtonPlugin />
               </div>
-              <div className="flex-1 overflow-auto min-h-0">
-                <div className="relative h-full">
-                  <LexicalRichTextPlugin
-                    contentEditable={
-                      <ContentEditable
-                        className="px-6 py-4 outline-none text-base text-gray-900 dark:text-gray-100 min-h-full"
-                      />
-                    }
-                    placeholder={
-                      <div className="pointer-events-none absolute left-6 top-4 select-none text-gray-400 dark:text-gray-600">
-                        Start writing your rich text content...
-                      </div>
-                    }
-                    ErrorBoundary={LexicalErrorBoundary}
+            </div>
+            <div className="relative flex-1 flex flex-col">
+              <LexicalRichTextPlugin
+                contentEditable={
+                  <ContentEditable
+                    className="flex-1 px-8 py-6 outline-none text-base text-gray-900 dark:text-gray-100 max-w-none"
                   />
-                  <FloatingTextFormatToolbarPlugin />
-                  <HistoryPlugin />
-                  <ListPlugin />
-                  <LinkPlugin />
-                  <BlockEmbedPlugin />
-                  <BlockInsertMenuPlugin />
-                  <OnChangePlugin onChange={handleChange} ignoreSelectionChange />
-                </div>
-              </div>
-            </LexicalComposer>
-          </div>
-
-          {/* Right Panel — Live Preview */}
-          <div className="w-1/2 flex flex-col">
-            <div className="p-4 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 flex items-center gap-2">
-              <Eye className="h-4 w-4 text-gray-500 dark:text-gray-400" />
-              <h3 className="text-sm font-medium text-gray-800 dark:text-gray-200 uppercase tracking-wide">Live Preview</h3>
+                }
+                placeholder={
+                  <div className="pointer-events-none absolute left-8 top-6 select-none text-gray-400 dark:text-gray-600">
+                    Start writing your rich text content...
+                  </div>
+                }
+                ErrorBoundary={LexicalErrorBoundary}
+              />
+              <FloatingTextFormatToolbarPlugin />
+              <HistoryPlugin />
+              <ListPlugin />
+              <LinkPlugin />
+              <BlockEmbedPlugin />
+              <BlockInsertMenuPlugin />
+              <OnChangePlugin onChange={handleChange} ignoreSelectionChange />
             </div>
-            <div className="flex-1 overflow-auto bg-white dark:bg-gray-950 p-6">
-              {previewContent ? (
-                <div className="prose prose-stone dark:prose-invert max-w-none">
-                  <RichTextPreviewRenderer content={previewContent} />
-                </div>
-              ) : (
-                <div className="flex items-center justify-center h-full">
-                  <p className="text-gray-400 dark:text-gray-600 italic">
-                    Your preview will appear here as you type...
-                  </p>
-                </div>
-              )}
-            </div>
-          </div>
+          </LexicalComposer>
         </div>
+      </div>
     </BlockEditorShell>
   )
 }
