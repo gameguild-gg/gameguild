@@ -13,6 +13,7 @@ import { ListNode, ListItemNode } from "@lexical/list"
 import { LinkNode, AutoLinkNode } from "@lexical/link"
 import { CodeNode } from "@lexical/code"
 import { CustomListNode } from "../../nodes/custom-list-node"
+import { BlockEmbedNode } from "../../nodes/block-embed-node"
 
 /**
  * Full node set supported by our Lexical instances. Adding a node here
@@ -37,6 +38,7 @@ export const SHARED_LEXICAL_NODES = [
   CodeNode,
   LinkNode,
   AutoLinkNode,
+  BlockEmbedNode,
 ]
 
 /**
