@@ -9,12 +9,26 @@
  * `editor.update(...)` calls. Everything else stays in `embed/`.
  */
 
-import { DecoratorNode, type LexicalNode, type NodeKey, type SerializedLexicalNode, type Spread } from "lexical"
+import {
+  DecoratorNode,
+  $getNodeByKey,
+  $getSelection,
+  $isNodeSelection,
+  COMMAND_PRIORITY_HIGH,
+  KEY_BACKSPACE_COMMAND,
+  KEY_DELETE_COMMAND,
+  type LexicalNode,
+  type NodeKey,
+  type SerializedLexicalNode,
+  type Spread,
+} from "lexical"
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext"
-import { $getNodeByKey } from "lexical"
-import type { JSX } from "react"
+import { mergeRegister } from "@lexical/utils"
+import { useEffect, useState, type JSX } from "react"
 
 import { BlockEmbedView } from "../embed/block-embed-view"
+import { BLOCK_REGISTRY } from "../engines/blocks/block-component-registry"
+import { DeleteConfirmDialog } from "../extras/dialogs/delete-confirm-dialog"
 import type { EmbeddableBlock, EmbeddableBlockData } from "../embed/types"
 
 // ---------------------------------------------------------------------------
@@ -121,6 +135,7 @@ export class BlockEmbedNode extends DecoratorNode<JSX.Element> {
 
 function BlockEmbedLexicalShell({ nodeKey }: { nodeKey: NodeKey }) {
   const [editor] = useLexicalComposerContext()
+  const [confirmOpen, setConfirmOpen] = useState(false)
 
   // Read the live block from the editor state on every render. `decorate()`
   // is called inside Lexical's reconciliation, so this stays in sync.
@@ -130,9 +145,28 @@ function BlockEmbedLexicalShell({ nodeKey }: { nodeKey: NodeKey }) {
     if ($isBlockEmbedNode(node)) block = node.getBlock()
   })
 
-  if (!block) return null
-
   const editable = editor.isEditable()
+
+  // Intercept Backspace / Delete when this embed is the active selection so
+  // the user is asked to confirm instead of losing the block silently.
+  useEffect(() => {
+    if (!editable) return
+    const requestRemove = (event: KeyboardEvent | null) => {
+      const selection = $getSelection()
+      if (!$isNodeSelection(selection)) return false
+      const isTarget = selection.getNodes().some((n) => n.getKey() === nodeKey)
+      if (!isTarget) return false
+      event?.preventDefault()
+      setConfirmOpen(true)
+      return true
+    }
+    return mergeRegister(
+      editor.registerCommand(KEY_BACKSPACE_COMMAND, requestRemove, COMMAND_PRIORITY_HIGH),
+      editor.registerCommand(KEY_DELETE_COMMAND, requestRemove, COMMAND_PRIORITY_HIGH),
+    )
+  }, [editor, editable, nodeKey])
+
+  if (!block) return null
 
   const onChange = (data: EmbeddableBlockData) => {
     editor.update(() => {
@@ -141,20 +175,39 @@ function BlockEmbedLexicalShell({ nodeKey }: { nodeKey: NodeKey }) {
     })
   }
 
-  const onRemove = () => {
+  // Trash button → open confirm dialog (don't remove immediately).
+  const requestRemove = () => setConfirmOpen(true)
+
+  const performRemove = () => {
     editor.update(() => {
       const node = $getNodeByKey(nodeKey)
       if ($isBlockEmbedNode(node)) node.remove()
     })
+    setConfirmOpen(false)
   }
 
+  const typeLabel = BLOCK_REGISTRY[(block as EmbeddableBlock).type]?.label ?? (block as EmbeddableBlock).type
+
   return (
-    <BlockEmbedView
-      block={block}
-      editable={editable}
-      onChange={onChange}
-      onRemove={onRemove}
-    />
+    <>
+      <BlockEmbedView
+        block={block}
+        editable={editable}
+        onChange={onChange}
+        onRemove={requestRemove}
+      />
+      {editable && (
+        <DeleteConfirmDialog
+          open={confirmOpen}
+          onOpenChange={setConfirmOpen}
+          title={`Remove ${typeLabel}?`}
+          itemName={typeLabel}
+          itemType="block"
+          onConfirm={performRemove}
+          confirmText="Remove"
+        />
+      )}
+    </>
   )
 }
 
