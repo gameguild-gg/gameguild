@@ -29,6 +29,8 @@ import { BLOCK_REGISTRY, type BlockCellType } from "./block-component-registry"
 import { DeleteConfirmDialog } from "@/components/block-content-editor/extras/dialogs/delete-confirm-dialog"
 import type { Block, BlockArray } from "@/components/block-content-editor/lib/storage/editor/block-structure"
 import { BlockContentRenderer } from "./block-array-viewer"
+import { InlineRichTextEditor } from "../../extras/rich-text/inline-rich-text-editor"
+import type { RichTextData } from "../../nodes/rich-text-node"
 import { DragPreview, useBlockDragDrop } from "./block-drag-drop"
 
 // ============================================================================
@@ -66,6 +68,8 @@ interface BlockCardProps {
   onMoveDown: () => void
   onRemove: () => void
   onEdit: () => void
+  /** Called with new block data when the inline editor (rich-text) updates. */
+  onUpdate?: (data: unknown) => void
   readOnly: boolean
   onDragStart?: () => void
   onDragEnd?: () => void
@@ -75,7 +79,7 @@ interface BlockCardProps {
   onDropHere?: () => void
 }
 
-function BlockCard({ block, index, total, onMoveUp, onMoveDown, onRemove, onEdit, readOnly, onDragStart, onDragEnd, isDragSource, onDragHover, onDropHere }: BlockCardProps) {
+function BlockCard({ block, index, total, onMoveUp, onMoveDown, onRemove, onEdit, onUpdate, readOnly, onDragStart, onDragEnd, isDragSource, onDragHover, onDropHere }: BlockCardProps) {
   const config = BLOCK_REGISTRY[block.type]
 
   if (!config) return null
@@ -135,12 +139,12 @@ function BlockCard({ block, index, total, onMoveUp, onMoveDown, onRemove, onEdit
         {/* Action buttons */}
         {!readOnly && (
           <div className="flex items-center gap-0.5">
-            {/* Edit button — always visible */}
+            {/* Edit button — opens the focused modal editor */}
             <button
               type="button"
               onClick={onEdit}
               className="p-1 rounded text-blue-500 hover:text-blue-700 hover:bg-blue-50 dark:text-blue-400 dark:hover:text-blue-300 dark:hover:bg-blue-950/40 transition-colors"
-              title="Edit block"
+              title="Open focused editor"
             >
               <Pencil className="h-3.5 w-3.5" />
             </button>
@@ -178,11 +182,19 @@ function BlockCard({ block, index, total, onMoveUp, onMoveDown, onRemove, onEdit
       </div>
 
       {/* Content area */}
-      <div className="p-4">
-        <div className="prose prose-sm dark:prose-invert max-w-none">
-          <BlockContentRenderer block={block} />
+      {block.type === "rich-text" ? (
+        <InlineRichTextEditor
+          data={block.data as RichTextData}
+          readOnly={readOnly}
+          onChange={(data) => onUpdate?.(data)}
+        />
+      ) : (
+        <div className="p-4">
+          <div className="prose prose-sm dark:prose-invert max-w-none">
+            <BlockContentRenderer block={block} />
+          </div>
         </div>
-      </div>
+      )}
     </div>
   )
 }
@@ -250,6 +262,14 @@ export function BlockArrayEditor({ blocks, onChange, readOnly = false, allowedBl
     setEditingBlockType(block.type)
     setEditorOpen(true)
   }, [blocks])
+
+  const handleInlineBlockUpdate = useCallback((index: number, data: unknown) => {
+    const current = blocks[index]
+    if (!current) return
+    const next = [...blocks]
+    next[index] = { id: current.id, type: current.type, data } as Block
+    onChange(next)
+  }, [blocks, onChange])
 
   const handleEditorSave = useCallback((data: any) => {
     if (editingIndex === null || !editingBlock) return
@@ -353,6 +373,7 @@ export function BlockArrayEditor({ blocks, onChange, readOnly = false, allowedBl
                 onMoveDown={() => handleMoveDown(index)}
                 onRemove={() => handleRemoveBlock(index)}
                 onEdit={() => handleEditBlock(index)}
+                onUpdate={(data) => handleInlineBlockUpdate(index, data)}
                 readOnly={readOnly}
                 onDragStart={() => drag.handleDragStart(index)}
                 onDragEnd={drag.handleDragEnd}
