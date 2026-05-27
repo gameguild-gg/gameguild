@@ -36,6 +36,7 @@ import type { SerializedDividerNode } from "../nodes/divider-node"
 import type { SerializedButtonNode } from "../nodes/button-node"
 import type { SerializedVegaLiteNode } from "../nodes/vega-lite-node"
 import type { SerializedHTMLNode } from "../nodes/html-node"
+import type { SerializedMarkdownNode } from "../nodes/markdown-node"
 
 import type {
   EmbedPreviewProps,
@@ -68,6 +69,13 @@ const LazyPreviewMermaid = dynamic<{ data: MermaidData }>(
 const LazyPreviewVegaLite = dynamic<{ node: SerializedVegaLiteNode }>(
   () => import("../plugins/preview-components/preview-vega-lite").then((m) => ({ default: m.PreviewVegaLite })),
   { ssr: false, loading: () => <PreviewSkeleton label="gráfico" /> },
+)
+
+// Markdown is loaded lazily to avoid a static import cycle:
+// preview-markdown → markdown-renderer → this registry.
+const LazyPreviewMarkdown = dynamic<{ node: SerializedMarkdownNode }>(
+  () => import("../plugins/preview-components/preview-markdown").then((m) => ({ default: m.PreviewMarkdown })),
+  { ssr: false, loading: () => <PreviewSkeleton label="markdown" /> },
 )
 
 // ---------------------------------------------------------------------------
@@ -122,6 +130,10 @@ function PreviewHTMLAdapter({ block }: EmbedPreviewProps<"html">) {
   return <PreviewHTML node={toSerialized(block) as SerializedHTMLNode} />
 }
 
+function PreviewMarkdownAdapter({ block }: EmbedPreviewProps<"markdown">) {
+  return <LazyPreviewMarkdown node={toSerialized(block) as SerializedMarkdownNode} />
+}
+
 // ---------------------------------------------------------------------------
 // Public registry
 // ---------------------------------------------------------------------------
@@ -138,4 +150,5 @@ export const EMBEDDABLE_BLOCK_CONFIG: EmbeddableBlockConfig = {
   "divider": { Preview: PreviewDividerAdapter },
   "button": { Preview: PreviewButtonAdapter },
   "html": { Preview: PreviewHTMLAdapter },
+  "markdown": { Preview: PreviewMarkdownAdapter },
 }
