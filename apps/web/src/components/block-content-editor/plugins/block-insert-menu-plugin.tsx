@@ -96,15 +96,7 @@ export function BlockInsertMenuPlugin() {
             role="listbox"
           >
             {/* Sticky header showing currently highlighted/typed term */}
-            <div
-              className="sticky top-0 z-10 flex items-center gap-1.5 border-b bg-blue-500/10 px-3 py-2 font-mono text-sm backdrop-blur"
-              aria-live="polite"
-            >
-              <span className="text-blue-500 dark:text-blue-400 font-bold">/</span>
-              <span className="truncate text-foreground font-semibold">
-                {headerTerm || <span className="text-muted-foreground italic font-normal">choose a block…</span>}
-              </span>
-            </div>
+            
             <div className="p-1">
               {options.map((option, i) => {
                 const Icon = option.Icon
