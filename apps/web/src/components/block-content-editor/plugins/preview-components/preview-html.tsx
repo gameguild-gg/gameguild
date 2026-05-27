@@ -1,51 +1,50 @@
 "use client"
 
-import { useRef, useState, useEffect } from "react"
-import type { SerializedHTMLNode } from "../../nodes/html-node"
-import DOMPurify from "dompurify"
+import { useEffect, useMemo, useRef, useState } from "react"
 
+import type { SerializedHTMLNode } from "../../nodes/html-node"
+import { buildHTMLPreviewSrcDoc } from "../../extras/html/html-utils"
+
+/**
+ * Read-only preview of an "html" custom-node. Mirrors the editor's
+ * sandbox model: no scripts, no same-origin, cross-file references
+ * resolved against the block's `files` array via data URLs.
+ *
+ * The iframe self-reports its scroll height on load so the surrounding
+ * page can flow naturally.
+ */
 export function PreviewHTML({ node }: { node: SerializedHTMLNode }) {
   const iframeRef = useRef<HTMLIFrameElement>(null)
-  const [iframeHeight, setIframeHeight] = useState(0)
+  const [height, setHeight] = useState(0)
 
-  const getPreviewContent = () => {
-    const sanitizedHtml = DOMPurify.sanitize(node.data.content)
-    return `
-    <!DOCTYPE html>
-    <html>
-      <head>
-        <base target="_blank">
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-      </head>
-      <body>
-        ${sanitizedHtml}
-      </body>
-    </html>
-  `
-  }
+  const files = node.data.files ?? []
+  const srcDoc = useMemo(() => buildHTMLPreviewSrcDoc(files), [files])
 
   useEffect(() => {
     const iframe = iframeRef.current
     if (!iframe) return
-
-    const handleLoad = () => {
-      const height = iframe.contentWindow?.document.documentElement.scrollHeight || 0
-      setIframeHeight(height)
+    const onLoad = () => {
+      try {
+        const doc = iframe.contentDocument
+        if (doc?.documentElement) {
+          setHeight(doc.documentElement.scrollHeight)
+        }
+      } catch {
+        // Ignore — sandbox=" " keeps us same-origin-less.
+      }
     }
-
-    iframe.addEventListener("load", handleLoad)
-    return () => iframe.removeEventListener("load", handleLoad)
-  }, [])
+    iframe.addEventListener("load", onLoad)
+    return () => iframe.removeEventListener("load", onLoad)
+  }, [srcDoc])
 
   return (
     <div className="my-0">
       <iframe
         ref={iframeRef}
-        srcDoc={getPreviewContent()}
+        srcDoc={srcDoc}
         className="w-full rounded-md border"
-        style={{ height: iframeHeight ? `${iframeHeight + 2}px` : "0" }}
-        sandbox="allow-scripts allow-popups allow-same-origin"
+        style={{ height: height ? `${height + 2}px` : "120px" }}
+        sandbox=""
         title="HTML Preview"
       />
     </div>
