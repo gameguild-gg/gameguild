@@ -22,6 +22,7 @@ import { PreviewGallery } from "../plugins/preview-components/preview-gallery"
 import { PreviewAdmonition } from "../plugins/preview-components/preview-admonition"
 import { PreviewDivider } from "../plugins/preview-components/preview-divider"
 import { PreviewButton } from "../plugins/preview-components/preview-button"
+import { PreviewHTML } from "../plugins/preview-components/preview-html"
 
 import type { Block } from "../lib/storage/editor/block-structure"
 import type { CodeStudioData } from "../extras/code-studio/types"
@@ -34,6 +35,7 @@ import type { SerializedAdmonitionNode } from "../nodes/admonition-node"
 import type { SerializedDividerNode } from "../nodes/divider-node"
 import type { SerializedButtonNode } from "../nodes/button-node"
 import type { SerializedVegaLiteNode } from "../nodes/vega-lite-node"
+import type { SerializedHTMLNode } from "../nodes/html-node"
 
 import type {
   EmbedPreviewProps,
@@ -116,6 +118,10 @@ function PreviewVegaLiteAdapter({ block }: EmbedPreviewProps<"vega-lite">) {
   return <LazyPreviewVegaLite node={toSerialized(block) as SerializedVegaLiteNode} />
 }
 
+function PreviewHTMLAdapter({ block }: EmbedPreviewProps<"html">) {
+  return <PreviewHTML node={toSerialized(block) as SerializedHTMLNode} />
+}
+
 // ---------------------------------------------------------------------------
 // Public registry
 // ---------------------------------------------------------------------------
@@ -131,4 +137,5 @@ export const EMBEDDABLE_BLOCK_CONFIG: EmbeddableBlockConfig = {
   "admonition": { Preview: PreviewAdmonitionAdapter },
   "divider": { Preview: PreviewDividerAdapter },
   "button": { Preview: PreviewButtonAdapter },
+  "html": { Preview: PreviewHTMLAdapter },
 }

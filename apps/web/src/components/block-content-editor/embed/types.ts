@@ -29,6 +29,7 @@ export const EMBEDDABLE_BLOCK_TYPES = [
   "admonition",
   "divider",
   "button",
+  "html",
 ] as const
 
 export type EmbeddableBlockType = (typeof EMBEDDABLE_BLOCK_TYPES)[number]

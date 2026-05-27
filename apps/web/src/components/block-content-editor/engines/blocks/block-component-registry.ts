@@ -32,6 +32,7 @@ import {
 import type { Block, BlockCellType } from "@/components/block-content-editor/lib/storage/editor/block-structure"
 import { BLOCK_CELL_TYPES } from "@/components/block-content-editor/lib/storage/editor/block-structure"
 import { QuizEntryType, createDefaultSettings } from "@/components/block-content-editor/extras/quiz"
+import { createDefaultHTMLData } from "@/components/block-content-editor/extras/html/html-utils"
 
 // Re-export for consumers that import from here
 export type { BlockCellType } from "@/components/block-content-editor/lib/storage/editor/block-structure"
@@ -186,11 +187,11 @@ export const BLOCK_REGISTRY: Record<BlockCellType, BlockTypeConfig> = {
   "html": {
     icon: FileCode,
     label: "HTML",
-    description: "Raw HTML content",
+    description: "Custom HTML/CSS/XML block",
     createEmpty: () => ({
       id: crypto.randomUUID(),
       type: "html",
-      data: { content: "" },
+      data: createDefaultHTMLData(),
     }),
   },
   "rich-text": {
