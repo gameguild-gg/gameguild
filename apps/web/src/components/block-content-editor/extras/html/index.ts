@@ -1,2 +1,8 @@
 export { HTMLEditor } from "./html-editor"
-export * from "./templates"
+export {
+  ALLOWED_HTML_EXTENSIONS,
+  BLOCKED_HTML_EXTENSIONS,
+  buildHTMLPreviewSrcDoc,
+  createDefaultHTMLData,
+  validateHTMLFileName,
+} from "./html-utils"
