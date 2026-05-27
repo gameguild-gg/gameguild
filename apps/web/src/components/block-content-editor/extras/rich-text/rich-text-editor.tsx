@@ -16,6 +16,9 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { FloatingTextFormatToolbarPlugin } from "../../plugins/floating-text-format-toolbar-plugin"
 import { InlineTextFormatToolbarPlugin } from "../../plugins/inline-text-format-toolbar-plugin"
+import { BlockEmbedPlugin } from "../../plugins/block-embed-plugin"
+import { BlockInsertMenuPlugin } from "../../plugins/block-insert-menu-plugin"
+import { BlockInsertButtonPlugin } from "../../plugins/block-insert-button-plugin"
 import { RichTextPreviewRenderer } from "./rich-text-preview-renderer"
 import { useEditorSettings } from "@/components/block-content-editor/extras/settings-menu"
 import { BlockEditorShell } from "@/components/block-content-editor/extras/block-editor-shell"
@@ -109,14 +112,21 @@ export function RichTextEditor({ initialData, onSave, onCancel }: RichTextEditor
       {/* Main Content - Split Panels */}
       <div className="flex-1 overflow-hidden flex">
           {/* Left Panel — Lexical Editor */}
-          <div className="w-1/2 border-r border-gray-200 dark:border-gray-800 flex flex-col">
+          <div className="w-1/2 border-r border-gray-200 dark:border-gray-800 flex flex-col min-h-0">
             <div className="p-4 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900">
               <h3 className="text-sm font-medium text-gray-800 dark:text-gray-200 uppercase tracking-wide">Editor</h3>
               <p className="text-xs text-gray-500 dark:text-gray-500 mt-0.5">Select text to format (bold, italic, headings, lists...)</p>
             </div>
-            <div className="flex-1 overflow-auto">
-              <LexicalComposer initialConfig={initialConfig}>
-                <InlineTextFormatToolbarPlugin />
+            <LexicalComposer initialConfig={initialConfig}>
+              <InlineTextFormatToolbarPlugin />
+              {/* Top insert toolbar — pinned above the scrollable content */}
+              <div className="px-4 py-2 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 flex items-center justify-between shrink-0">
+                <p className="text-xs text-gray-500 dark:text-gray-500">
+                  Tip: type <kbd className="px-1.5 py-0.5 rounded border bg-white dark:bg-gray-800 font-mono">/</kbd> to insert a block
+                </p>
+                <BlockInsertButtonPlugin />
+              </div>
+              <div className="flex-1 overflow-auto min-h-0">
                 <div className="relative h-full">
                   <LexicalRichTextPlugin
                     contentEditable={
@@ -135,10 +145,12 @@ export function RichTextEditor({ initialData, onSave, onCancel }: RichTextEditor
                   <HistoryPlugin />
                   <ListPlugin />
                   <LinkPlugin />
+                  <BlockEmbedPlugin />
+                  <BlockInsertMenuPlugin />
                   <OnChangePlugin onChange={handleChange} ignoreSelectionChange />
                 </div>
-              </LexicalComposer>
-            </div>
+              </div>
+            </LexicalComposer>
           </div>
 
           {/* Right Panel — Live Preview */}

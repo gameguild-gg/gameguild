@@ -23,6 +23,8 @@ import { LexicalErrorBoundary } from "@lexical/react/LexicalErrorBoundary"
 import { $getRoot, type EditorState } from "lexical"
 import { FloatingTextFormatToolbarPlugin } from "../../../plugins/floating-text-format-toolbar-plugin"
 import { InlineTextFormatToolbarPlugin } from "../../../plugins/inline-text-format-toolbar-plugin"
+import { BlockEmbedPlugin } from "../../../plugins/block-embed-plugin"
+import { BlockInsertMenuPlugin } from "../../../plugins/block-insert-menu-plugin"
 import {
   SHARED_LEXICAL_NODES,
   SHARED_LEXICAL_THEME,
@@ -91,6 +93,8 @@ export function EssayLexicalEditor({
           <HistoryPlugin />
           <ListPlugin />
           <LinkPlugin />
+          <BlockEmbedPlugin />
+          {!disabled && <BlockInsertMenuPlugin />}
           <OnChangePlugin onChange={handleChange} ignoreSelectionChange />
           {disabled && <ReadOnlyPlugin />}
         </div>
