@@ -22,14 +22,15 @@ interface UseQuizAnswersProps {
 }
 
 /**
- * Extracts a normalized formatting structure from Lexical serialized JSON.
- * Returns an array of { type, format, children } per node, stripping text content
- * so only structure + formatting flags are compared.
+ * Extracts a normalized formatting structure from a Lexical editor state.
+ * Accepts either the serialized JSON string or a parsed `SerializedEditorState`
+ * object. Returns an array of `{ type, format, children }` per node, stripping
+ * text content so only structure + formatting flags are compared.
  */
-function extractFormattingStructure(serialized: string): unknown[] | null {
+function extractFormattingStructure(input: string | object): unknown[] | null {
   try {
-    const state = JSON.parse(serialized)
-    const root = state?.root
+    const state = typeof input === "string" ? JSON.parse(input) : input
+    const root = (state as { root?: { children?: unknown[] } })?.root
     if (!root?.children) return null
 
     function normalizeNode(node: Record<string, unknown>): Record<string, unknown> {
@@ -53,11 +54,11 @@ function extractFormattingStructure(serialized: string): unknown[] | null {
   }
 }
 
-function compareFormattingStructure(expectedSerialized: string, userSerialized: string): boolean {
-  const expected = extractFormattingStructure(expectedSerialized)
+function compareFormattingStructure(expected: string | object, userSerialized: string): boolean {
+  const expectedStructure = extractFormattingStructure(expected)
   const user = extractFormattingStructure(userSerialized)
-  if (!expected || !user) return false
-  return JSON.stringify(expected) === JSON.stringify(user)
+  if (!expectedStructure || !user) return false
+  return JSON.stringify(expectedStructure) === JSON.stringify(user)
 }
 
 interface UseQuizAnswersReturn {

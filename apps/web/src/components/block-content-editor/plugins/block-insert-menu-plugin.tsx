@@ -1,9 +1,13 @@
 "use client"
 
 /**
- * Slash-trigger ( "/" ) typeahead menu allowing the user to insert any
- * embeddable block type into a Lexical surface. Dispatches the
- * `INSERT_BLOCK_COMMAND` registered by `BlockEmbedPlugin`.
+ * Double-slash trigger ( "//" ) typeahead menu allowing the user to
+ * insert any embeddable block type into a Lexical surface. Dispatches
+ * the `INSERT_BLOCK_COMMAND` registered by `BlockEmbedPlugin`.
+ *
+ * The single `/` trigger is owned by the playground-faithful
+ * `ComponentPickerPlugin` (paragraph, headings, lists, quote, code, hr)
+ * so the two pickers no longer collide.
  */
 
 import { useCallback, useMemo, useState } from "react"
@@ -43,7 +47,7 @@ export function BlockInsertMenuPlugin() {
   const [editor] = useLexicalComposerContext()
   const [query, setQuery] = useState<string | null>(null)
 
-  const triggerFn = useBasicTypeaheadTriggerMatch("/", { minLength: 0 })
+  const triggerFn = useBasicTypeaheadTriggerMatch("//", { minLength: 0 })
 
   const options = useMemo<BlockMenuOption[]>(() => {
     const all = EMBEDDABLE_BLOCK_TYPES.map((t) => new BlockMenuOption(t))

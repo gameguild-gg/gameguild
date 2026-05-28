@@ -7,6 +7,7 @@
 
 import { useCallback } from "react"
 import { useFormContext } from "react-hook-form"
+import type { SerializedEditorState } from "lexical"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Switch } from "@/components/ui/switch"
@@ -20,8 +21,8 @@ export function EssayEditor() {
   const requireFormatting = watch("requireFormatting")
 
   const handleCorrectAnswerChange = useCallback(
-    (serialized: string, plainText: string) => {
-      setValue("correctAnswer", serialized)
+    (state: SerializedEditorState, plainText: string) => {
+      setValue("correctAnswer", state)
       setValue("correctAnswerPlain", plainText)
     },
     [setValue],
