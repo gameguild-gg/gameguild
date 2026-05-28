@@ -12,6 +12,7 @@ Cannot find module '@rolldown/binding-linux-x64-gnu'
 Cannot find module '@parcel/watcher-linux-x64-glibc'
 Cannot find module '@swc/core-linux-x64-gnu'
 Cannot find module '../lightningcss.linux-x64-gnu.node'
+The package "@esbuild/linux-x64" could not be found, and is needed by esbuild.
 ```
 
 ## Cause
@@ -25,6 +26,7 @@ Known packages affected by this pattern include:
 - `@rolldown/binding-*`, used by Vite 8/Rolldown.
 - `@parcel/watcher-*`, used by Next.js file watching.
 - `@swc/core-*`, used by `next-intl` and SWC transforms.
+- `@esbuild/*`, used by `tsx`, Vite, and other build-time transforms.
 - `lightningcss-*`, used by CSS/font processing.
 - `@tailwindcss/oxide-*`, used by Tailwind CSS 4.
 
@@ -35,6 +37,7 @@ When validating on Windows, expect equivalent package names such as:
 - `@rolldown/binding-win32-x64-msvc`
 - `@parcel/watcher-win32-x64`
 - `@swc/core-win32-x64-msvc`
+- `@esbuild/win32-x64`
 - `lightningcss-win32-x64-msvc`
 - `@tailwindcss/oxide-win32-x64-msvc`
 
