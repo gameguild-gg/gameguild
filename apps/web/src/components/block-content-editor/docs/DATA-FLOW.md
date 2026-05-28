@@ -290,11 +290,11 @@ The `version: 1` field is kept on every preview node so future migrations can fo
 
 ## Rich-Text Block — Nested Pipeline
 
-The `rich-text` block embeds a Lexical editor whose state is serialized **as a string inside `RichTextData.content`** — i.e. the outer `BlockStorage` JSON contains a Lexical `SerializedEditorState` JSON as one of its values.
+The `rich-text` block embeds a Lexical editor whose state is stored **as a `SerializedEditorState` object inside `RichTextData.content`** (the outer `BlockStorage` JSON contains the Lexical state directly, not a JSON-encoded string).
 
 ```
 RichTextData.content
-   │  (JSON string)
+   │  (SerializedEditorState object)
    ▼
 Lexical SerializedEditorState
    │

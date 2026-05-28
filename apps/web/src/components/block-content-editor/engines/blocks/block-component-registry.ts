@@ -201,7 +201,7 @@ export const BLOCK_REGISTRY: Record<BlockCellType, BlockTypeConfig> = {
     createEmpty: () => ({
       id: crypto.randomUUID(),
       type: "rich-text",
-      data: { content: "" },
+      data: { content: null },
     }),
   },
   "header": {

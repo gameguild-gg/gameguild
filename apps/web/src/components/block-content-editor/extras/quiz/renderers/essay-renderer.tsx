@@ -6,6 +6,7 @@
 "use client"
 
 import { useMemo, useCallback, useRef, useState, useEffect } from "react"
+import type { SerializedEditorState } from "lexical"
 import type { EssayEntry, QuizAnswerState } from "../types"
 import { EssayLexicalEditor } from "./essay-lexical-editor"
 
@@ -26,6 +27,18 @@ export function EssayRenderer({
 }: EssayRendererProps) {
   const serialized = answerState.textAnswers["main"] || ""
   const plainText = answerState.textAnswers["main_plain"] || ""
+
+  // Parse the persisted string answer back into a Lexical SerializedEditorState
+  // object for the editor (we keep `textAnswers` as Record<string,string> since
+  // it's shared by other quiz types that genuinely store plain strings).
+  const initialState = useMemo<SerializedEditorState | null>(() => {
+    if (!serialized) return null
+    try {
+      return JSON.parse(serialized) as SerializedEditorState
+    } catch {
+      return null
+    }
+  }, [serialized])
 
   // Force full Lexical remount when the quiz resets (disabled → enabled transition)
   const [resetKey, setResetKey] = useState(0)
@@ -48,11 +61,11 @@ export function EssayRenderer({
   answerStateRef.current = answerState
 
   const handleChange = useCallback(
-    (newSerialized: string, newPlainText: string) => {
+    (newState: SerializedEditorState, newPlainText: string) => {
       onAnswerChange({
         textAnswers: {
           ...answerStateRef.current.textAnswers,
-          main: newSerialized,
+          main: JSON.stringify(newState),
           main_plain: newPlainText,
         },
       })
@@ -68,7 +81,7 @@ export function EssayRenderer({
     <div className="space-y-3">
       <EssayLexicalEditor
         key={resetKey}
-        initialState={serialized || undefined}
+        initialState={initialState}
         onChange={handleChange}
         disabled={disabled || showFeedback}
         placeholder="Write your answer..."
