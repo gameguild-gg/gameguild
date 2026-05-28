@@ -13,6 +13,7 @@ Cannot find module '@parcel/watcher-linux-x64-glibc'
 Cannot find module '@swc/core-linux-x64-gnu'
 Cannot find module '../lightningcss.linux-x64-gnu.node'
 The package "@esbuild/linux-x64" could not be found, and is needed by esbuild.
+Could not load the "sharp" module using the linux-x64 runtime
 ```
 
 ## Cause
@@ -29,6 +30,7 @@ Known packages affected by this pattern include:
 - `@esbuild/*`, used by `tsx`, Vite, and other build-time transforms.
 - `lightningcss-*`, used by CSS/font processing.
 - `@tailwindcss/oxide-*`, used by Tailwind CSS 4.
+- `@img/sharp-*` and `@img/sharp-libvips-*`, used by Next.js image processing.
 
 ## Windows Risk
 
@@ -40,6 +42,7 @@ When validating on Windows, expect equivalent package names such as:
 - `@esbuild/win32-x64`
 - `lightningcss-win32-x64-msvc`
 - `@tailwindcss/oxide-win32-x64-msvc`
+- `@img/sharp-win32-x64`
 
 Use the `arm64` variants on ARM Windows.
 
