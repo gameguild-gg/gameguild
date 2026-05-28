@@ -26,6 +26,7 @@ This directory contains the cleaned and consolidated project documentation migra
 
 - `testing/test-architecture.md` – Test layers & organization
 - `setup/environment.md` – Environment variables, running services
+- `setup/native-optional-dependencies.md` – Cross-platform npm native optional dependency troubleshooting
 
 ## Permissions System
 
