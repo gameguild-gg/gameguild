@@ -104,11 +104,11 @@ export function MathInput({
 }: MathInputProps) {
   const ref = useRef<MathfieldElement | null>(null)
   const [ready, setReady] = useState(false)
-  // Vira `true` quando o `<math-field>` foi montado E o seu mathfield
-  // interno (`this.mathfield`) já existe — só então é seguro setar
-  // `value`, chamar `focus()`, etc. Sem essa guarda o MathLive lança
+  // Turns `true` when the `<math-field>` has been mounted AND its internal mathfield
+  // (`this.mathfield`) already exists — only then is it safe to set
+  // `value`, call `focus()`, etc. Without this guard, MathLive throws
   // `TypeError: can't access property "options", this.mathfield is
-  // undefined` durante o blur subsequente.
+  // undefined` during subsequent blur.
   const [elementReady, setElementReady] = useState(false)
 
   useEffect(() => {
@@ -121,7 +121,7 @@ export function MathInput({
     }
   }, [])
 
-  // Aguarda o custom element terminar de inicializar.
+  // Waits for the custom element to finish initializing.
   useEffect(() => {
     if (!ready) return
     const mf = ref.current
@@ -130,8 +130,8 @@ export function MathInput({
     let raf = 0
     const check = (attempt = 0) => {
       if (cancelled) return
-      // MathfieldElement guarda a instância interna em `_mathfield`
-      // (criada de forma assíncrona dentro do connectedCallback).
+      // MathfieldElement stores the internal instance in `_mathfield`
+      // (created asynchronously inside the connectedCallback).
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const m = mf as any
       if (m._mathfield != null || m.mathfield != null) {
@@ -139,8 +139,8 @@ export function MathInput({
         return
       }
       if (attempt > 120) {
-        // Fallback: assume pronto após ~2s para não travar a UI caso
-        // o nome interno mude em versões futuras.
+        // Fallback: assume ready after ~2s to avoid blocking the UI if
+        // the internal name changes in future versions.
         setElementReady(true)
         return
       }
@@ -200,7 +200,7 @@ export function MathInput({
     try {
       mf.focus?.()
     } catch {
-      /* ignore — usuário pode focar manualmente */
+      /* ignore — user can focus manually */
     }
   }, [autoFocus, elementReady])
 

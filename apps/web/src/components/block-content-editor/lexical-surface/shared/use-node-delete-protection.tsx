@@ -1,18 +1,17 @@
 /**
- * useNodeDeleteProtection — hook reutilizável para proteger qualquer
- * decorator node Lexical contra exclusão acidental por Backspace/Delete.
+ * useNodeDeleteProtection — reusable hook to protect any
+ * decorator node Lexical against accidental deletion via Backspace/Delete.
  *
- * Detecta os 4 cenários em que o usuário poderia perder o nó:
- *  1. `NodeSelection` contendo o nó.
- *  2. `RangeSelection` não-colapsada que inclui o nó (ou seu pai).
- *  3. `RangeSelection` colapsada + Backspace no início do top-level
- *     imediatamente após o nó.
- *  4. `RangeSelection` colapsada + Delete no fim do top-level
- *     imediatamente antes do nó.
+ * Detects the 4 scenarios in which the user could lose the node:
+ *  1. `NodeSelection` containing the node.
+ *  2. `RangeSelection` not collapsed that includes the node (or its parent).
+ *  3. `RangeSelection` collapsed + Backspace at the start of the top-level
+ *     immediately after the node.
+ *  4. `RangeSelection` collapsed + Delete at the end of the top-level
+ *     immediately before the node.
  *
- * Quando qualquer um desses ocorre, intercepta a tecla, evita a deleção
- * e chama `onRequestDelete` (use isso para abrir um diálogo de
- * confirmação).
+ * When any of these occur, it intercepts the key, prevents deletion,
+ * and calls `onRequestDelete` (use this to open a confirmation dialog).
  */
 "use client"
 
@@ -40,14 +39,14 @@ function $getTopLevel(node: LexicalNode): LexicalNode | null {
 }
 
 /**
- * Predicado reutilizável: dado um `nodeKey` e o tipo da tecla pressionada
- * (`isBackspace`), retorna `true` se essa deleção iria atingir o nó.
+ * Reusable predicate: given a `nodeKey` and the type of key pressed
+ * (`isBackspace`), returns `true` if this deletion would affect the node.
  *
- * Deve ser chamado dentro de `editor.read()` / `editor.update()`.
+ * Should be called within `editor.read()` / `editor.update()`.
  */
 export function $wouldDeletionAffectNodeKey(nodeKey: NodeKey, isBackspace: boolean): boolean {
   const selection = $getSelection()
-  // 1) NodeSelection contendo este nó.
+  // 1) NodeSelection containing this node.
   if ($isNodeSelection(selection)) {
     return selection.getNodes().some((n) => n.getKey() === nodeKey)
   }
@@ -120,10 +119,9 @@ export function useNodeDeleteProtection({
 }
 
 /**
- * Variante para proteger um conjunto dinâmico de nós (ex.: todos os
- * `CodeNode` rastreados via mutation listener). `getNodeKeys` é chamado
- * a cada keypress para obter a lista atual; `onRequestDelete` recebe a
- * chave do nó que seria afetado.
+ * Variant to protect a dynamic set of nodes (e.g., all `CodeNode` tracked via mutation listener). `getNodeKeys` is called
+ * on each keypress to get the current list; `onRequestDelete` receives the
+ * key of the node that would be affected.
  */
 export function useNodesDeleteProtection({
   getNodeKeys,
