@@ -47,6 +47,9 @@ import {
   Heading1Icon,
   Heading2Icon,
   Heading3Icon,
+  Heading4Icon,
+  Heading5Icon,
+  Heading6Icon,
   HorizontalRuleIcon,
   NumberedListIcon,
   ParagraphIcon,
@@ -120,6 +123,39 @@ function getBaseOptions(editor: LexicalEditor): ComponentPickerOption[] {
           const selection = $getSelection()
           if ($isRangeSelection(selection)) {
             $setBlocksType(selection, () => $createHeadingNode("h3"))
+          }
+        }),
+    }),
+    new ComponentPickerOption("Heading 4", {
+      Icon: Heading4Icon,
+      keywords: ["heading", "header", "h4"],
+      onSelect: () =>
+        editor.update(() => {
+          const selection = $getSelection()
+          if ($isRangeSelection(selection)) {
+            $setBlocksType(selection, () => $createHeadingNode("h4"))
+          }
+        }),
+    }),
+    new ComponentPickerOption("Heading 5", {
+      Icon: Heading5Icon,
+      keywords: ["heading", "header", "h5"],
+      onSelect: () =>
+        editor.update(() => {
+          const selection = $getSelection()
+          if ($isRangeSelection(selection)) {
+            $setBlocksType(selection, () => $createHeadingNode("h5"))
+          }
+        }),
+    }),
+    new ComponentPickerOption("Heading 6", {
+      Icon: Heading6Icon,
+      keywords: ["heading", "header", "h6"],
+      onSelect: () =>
+        editor.update(() => {
+          const selection = $getSelection()
+          if ($isRangeSelection(selection)) {
+            $setBlocksType(selection, () => $createHeadingNode("h6"))
           }
         }),
     }),

@@ -75,9 +75,19 @@ import {
   ClearFormatIcon,
   CodeBlockIcon,
   CodeInlineIcon,
+  CaseIcon,
+  CapitalizeIcon,
+  HighlightIcon,
+  LowercaseIcon,
+  UppercaseIcon,
+  SubscriptIcon,
+  SuperscriptIcon,
   Heading1Icon,
   Heading2Icon,
   Heading3Icon,
+  Heading4Icon,
+  Heading5Icon,
+  Heading6Icon,
   HorizontalRuleIcon,
   IndentIcon,
   InsertIcon,
@@ -126,23 +136,24 @@ const FONT_FAMILY_OPTIONS: ReadonlyArray<readonly [string, string]> = [
 ]
 
 const FONT_SIZE_OPTIONS: ReadonlyArray<readonly [string, string]> = [
+  ["8px", "8"],
+  ["9px", "9"],
   ["10px", "10"],
   ["11px", "11"],
   ["12px", "12"],
-  ["13px", "13"],
   ["14px", "14"],
-  ["15px", "15"],
-  ["16px", "16"],
-  ["17px", "17"],
   ["18px", "18"],
-  ["19px", "19"],
-  ["20px", "20"],
   ["24px", "24"],
-  ["28px", "28"],
-  ["32px", "32"],
+  ["30px", "30"],
+  ["36px", "36"],
   ["48px", "48"],
+  ["60px", "60"],
   ["72px", "72"],
+  ["96px", "96"],
 ]
+
+const MIN_FONT_SIZE = 8
+const MAX_FONT_SIZE = 400
 
 const ELEMENT_FORMAT_OPTIONS: Record<
   Exclude<ElementFormatType, "">,
@@ -223,6 +234,15 @@ function BlockFormatDropDown({
       <DropDownItem active={blockType === "h3"} onClick={() => formatHeading(editor, blockType, "h3")}>
         <Heading3Icon className="w-4 h-4" /> Heading 3
       </DropDownItem>
+      <DropDownItem active={blockType === "h4"} onClick={() => formatHeading(editor, blockType, "h4")}>
+        <Heading4Icon className="w-4 h-4" /> Heading 4
+      </DropDownItem>
+      <DropDownItem active={blockType === "h5"} onClick={() => formatHeading(editor, blockType, "h5")}>
+        <Heading5Icon className="w-4 h-4" /> Heading 5
+      </DropDownItem>
+      <DropDownItem active={blockType === "h6"} onClick={() => formatHeading(editor, blockType, "h6")}>
+        <Heading6Icon className="w-4 h-4" /> Heading 6
+      </DropDownItem>
       <DropDownItem active={blockType === "bullet"} onClick={() => formatBulletList(editor, blockType)}>
         <BulletedListIcon className="w-4 h-4" /> Bullet List
       </DropDownItem>
@@ -291,6 +311,108 @@ function FontDropDown({
   )
 }
 
+function FontSizeStepper({
+  editor,
+  value,
+  disabled,
+}: {
+  editor: LexicalEditor
+  value: string
+  disabled?: boolean
+}) {
+  const currentNumber = React.useMemo(() => {
+    const parsed = parseInt(String(value).replace(/px$/, ""), 10)
+    return Number.isFinite(parsed) ? parsed : 15
+  }, [value])
+  const [inputValue, setInputValue] = React.useState<string>(String(currentNumber))
+
+  React.useEffect(() => {
+    setInputValue(String(currentNumber))
+  }, [currentNumber])
+
+  const applySize = useCallback(
+    (px: number) => {
+      const clamped = Math.max(MIN_FONT_SIZE, Math.min(MAX_FONT_SIZE, Math.round(px)))
+      editor.update(() => {
+        $addUpdateTag(SKIP_SELECTION_FOCUS_TAG)
+        const selection = $getSelection()
+        if (selection !== null) {
+          $patchStyleText(selection, { "font-size": `${clamped}px` })
+        }
+      })
+    },
+    [editor],
+  )
+
+  const commitInput = useCallback(() => {
+    const parsed = parseInt(inputValue, 10)
+    if (Number.isFinite(parsed)) {
+      applySize(parsed)
+    } else {
+      setInputValue(String(currentNumber))
+    }
+  }, [applySize, currentNumber, inputValue])
+
+  return (
+    <div className="inline-flex items-center gap-0.5">
+      <button
+        type="button"
+        disabled={disabled || currentNumber <= MIN_FONT_SIZE}
+        onClick={() => applySize(currentNumber - 1)}
+        title="Decrease font size"
+        aria-label="Decrease font size"
+        className="inline-flex items-center justify-center w-7 h-8 rounded text-sm hover:bg-gray-100 dark:hover:bg-gray-800 disabled:opacity-40 disabled:pointer-events-none"
+      >
+        −
+      </button>
+      <div className="inline-flex items-center h-8 rounded border border-gray-200 dark:border-gray-700">
+        <input
+          type="text"
+          inputMode="numeric"
+          disabled={disabled}
+          value={inputValue}
+          onChange={(e) => setInputValue(e.target.value.replace(/[^0-9]/g, ""))}
+          onBlur={commitInput}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault()
+              commitInput()
+              ;(e.target as HTMLInputElement).blur()
+            }
+          }}
+          aria-label="Font size"
+          className="w-9 h-full bg-transparent text-sm text-center outline-none tabular-nums"
+        />
+        <DropDown
+          buttonAriaLabel="Choose font size"
+          buttonClassName="!h-7 !px-1 !rounded-none"
+          showChevron={true}
+        >
+          {FONT_SIZE_OPTIONS.map(([option, label]) => (
+            <DropDownItem
+              key={option}
+              active={value === option}
+              onClick={() => applySize(parseInt(label, 10))}
+            >
+              {label}
+            </DropDownItem>
+          ))}
+        </DropDown>
+      </div>
+      <button
+        type="button"
+        disabled={disabled || currentNumber >= MAX_FONT_SIZE}
+        onClick={() => applySize(currentNumber + 1)}
+        title="Increase font size"
+        aria-label="Increase font size"
+        className="inline-flex items-center justify-center w-7 h-8 rounded text-sm hover:bg-gray-100 dark:hover:bg-gray-800 disabled:opacity-40 disabled:pointer-events-none"
+      >
+        +
+      </button>
+    </div>
+  )
+}
+
 function ElementFormatDropdown({
   editor,
   value,
@@ -331,6 +453,71 @@ function ElementFormatDropdown({
       </DropDownItem>
       <DropDownItem onClick={() => editor.dispatchCommand(INDENT_CONTENT_COMMAND, undefined)}>
         <IndentIcon className="w-4 h-4" /> Indent
+      </DropDownItem>
+    </DropDown>
+  )
+}
+
+function CaseFormatDropDown({
+  editor,
+  disabled,
+  isLowercase,
+  isUppercase,
+  isCapitalize,
+  isStrikethrough,
+  isSubscript,
+  isSuperscript,
+  isHighlight,
+}: {
+  editor: LexicalEditor
+  disabled?: boolean
+  isLowercase: boolean
+  isUppercase: boolean
+  isCapitalize: boolean
+  isStrikethrough: boolean
+  isSubscript: boolean
+  isSuperscript: boolean
+  isHighlight: boolean
+}) {
+  const dispatch = (payload: TextFormatType) =>
+    editor.dispatchCommand(FORMAT_TEXT_COMMAND, payload)
+  const clear = () => {
+    editor.update(() => {
+      const selection = $getSelection()
+      if (selection !== null) {
+        clearFormatting(editor)
+      }
+    })
+  }
+  return (
+    <DropDown
+      disabled={disabled}
+      buttonIcon={<CaseIcon className="w-4 h-4" />}
+      buttonAriaLabel="Formatting options for additional text styles"
+    >
+      <DropDownItem active={isLowercase} onClick={() => dispatch("lowercase")}>
+        <LowercaseIcon className="w-4 h-4" /> Lowercase
+      </DropDownItem>
+      <DropDownItem active={isUppercase} onClick={() => dispatch("uppercase")}>
+        <UppercaseIcon className="w-4 h-4" /> Uppercase
+      </DropDownItem>
+      <DropDownItem active={isCapitalize} onClick={() => dispatch("capitalize")}>
+        <CapitalizeIcon className="w-4 h-4" /> Capitalize
+      </DropDownItem>
+      <DropDownItem active={isStrikethrough} onClick={() => dispatch("strikethrough")}>
+        <StrikethroughIcon className="w-4 h-4" /> Strikethrough
+      </DropDownItem>
+      <DropDownItem active={isSubscript} onClick={() => dispatch("subscript")}>
+        <SubscriptIcon className="w-4 h-4" /> Subscript
+      </DropDownItem>
+      <DropDownItem active={isSuperscript} onClick={() => dispatch("superscript")}>
+        <SuperscriptIcon className="w-4 h-4" /> Superscript
+      </DropDownItem>
+      <DropDownItem active={isHighlight} onClick={() => dispatch("highlight")}>
+        <HighlightIcon className="w-4 h-4" /> Highlight
+      </DropDownItem>
+      <DropDownItem onClick={clear}>
+        <ClearFormatIcon className="w-4 h-4" /> Clear Formatting
       </DropDownItem>
     </DropDown>
   )
@@ -643,11 +830,24 @@ export default function ToolbarPlugin({
         value={toolbarState.fontFamily}
         editor={activeEditor}
       />
-      <FontDropDown
+      <FontSizeStepper
         disabled={!isEditable}
-        style="font-size"
         value={toolbarState.fontSize}
         editor={activeEditor}
+      />
+
+      <Divider />
+
+      <CaseFormatDropDown
+        editor={activeEditor}
+        disabled={!isEditable}
+        isLowercase={toolbarState.isLowercase}
+        isUppercase={toolbarState.isUppercase}
+        isCapitalize={toolbarState.isCapitalize}
+        isStrikethrough={toolbarState.isStrikethrough}
+        isSubscript={toolbarState.isSubscript}
+        isSuperscript={toolbarState.isSuperscript}
+        isHighlight={toolbarState.isHighlight}
       />
 
       <Divider />

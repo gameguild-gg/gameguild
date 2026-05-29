@@ -50,6 +50,10 @@ export const LEXICAL_SURFACE_THEME: EditorThemeClasses = {
     superscript: "align-super text-xs",
     underline: "underline",
     underlineStrikethrough: "[text-decoration:underline_line-through]",
+    lowercase: "lowercase",
+    uppercase: "uppercase",
+    capitalize: "capitalize",
+    highlight: "bg-yellow-200 dark:bg-yellow-700/50 px-0.5 rounded",
   },
   code: "block bg-gray-100 dark:bg-gray-800 p-3 rounded font-mono text-sm my-2 overflow-x-auto leading-relaxed",
   codeHighlight: {
