@@ -130,6 +130,7 @@ import {
   isKeyboardInput,
 } from "./utils"
 import { SHORTCUTS } from "../shortcuts/shortcuts"
+import { BlockInsertButtonPlugin } from "../../plugins/block-insert-button-plugin"
 
 // ─── constants ──────────────────────────────────────────────────────────────
 
@@ -999,6 +1000,8 @@ export default function ToolbarPlugin({
       <Divider />
 
       <PageSettingsDropDown disabled={!isEditable} />
+
+      <BlockInsertButtonPlugin disabled={!isEditable} />
 
       <DropDown
         disabled={!isEditable}
