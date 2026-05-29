@@ -1,26 +1,23 @@
 /**
  * EquationComponent — decorator rendered by `EquationNode`. Shows the
- * KaTeX-rendered equation; double-click switches to the inline editor.
- * Ported from `packages/lexical-playground/src/nodes/EquationComponent.tsx`.
+ * KaTeX-rendered equation; double-click opens the full equation dialog
+ * (same MathLive-based editor used to insert new equations).
  */
 "use client"
 
-import { useCallback, useEffect, useRef, useState } from "react"
+import { useCallback, useState } from "react"
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext"
 import { useLexicalEditable } from "@lexical/react/useLexicalEditable"
-import { mergeRegister } from "@lexical/utils"
+import { $getNodeByKey, type NodeKey } from "lexical"
 import {
-  $getNodeByKey,
-  $getSelection,
-  $isNodeSelection,
-  COMMAND_PRIORITY_HIGH,
-  KEY_ESCAPE_COMMAND,
-  type NodeKey,
-  SELECTION_CHANGE_COMMAND,
-} from "lexical"
-import { EquationEditor } from "./equation-editor"
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import { KatexRenderer } from "./katex-renderer"
-import { $isEquationNode } from "./equation-node"
+import { $createEquationNode, $isEquationNode } from "./equation-node"
+import { EquationDialogBody } from "./equations-plugin"
 
 type Props = {
   equation: string
@@ -31,89 +28,67 @@ type Props = {
 export default function EquationComponent({ equation, inline, nodeKey }: Props) {
   const [editor] = useLexicalComposerContext()
   const isEditable = useLexicalEditable()
-  const [equationValue, setEquationValue] = useState(equation)
-  const [showEditor, setShowEditor] = useState(false)
-  const inputRef = useRef<HTMLTextAreaElement | HTMLInputElement>(null)
+  const [open, setOpen] = useState(false)
 
-  const onHide = useCallback(
-    (restoreSelection?: boolean) => {
-      setShowEditor(false)
+  const onSubmit = useCallback(
+    ({ equation: nextEquation, inline: nextInline }: { equation: string; inline: boolean }) => {
       editor.update(() => {
         const node = $getNodeByKey(nodeKey)
-        if ($isEquationNode(node)) {
-          node.setEquation(equationValue)
-          if (restoreSelection) {
-            node.selectNext(0, 0)
-          }
+        if (!$isEquationNode(node)) return
+        if (node.__inline === nextInline) {
+          node.setEquation(nextEquation)
+        } else {
+          // Trocar inline/block exige recriar o nó (createDOM usa o flag).
+          node.replace($createEquationNode(nextEquation, nextInline))
         }
       })
     },
-    [editor, equationValue, nodeKey],
+    [editor, nodeKey],
   )
 
-  useEffect(() => {
-    if (!showEditor && equationValue !== equation) {
-      setEquationValue(equation)
-    }
-  }, [showEditor, equation, equationValue])
-
-  useEffect(() => {
-    if (!isEditable) return
-    if (showEditor) {
-      return mergeRegister(
-        editor.registerCommand(
-          SELECTION_CHANGE_COMMAND,
-          () => {
-            if (inputRef.current !== document.activeElement) {
-              onHide()
-            }
-            return false
-          },
-          COMMAND_PRIORITY_HIGH,
-        ),
-        editor.registerCommand(
-          KEY_ESCAPE_COMMAND,
-          () => {
-            if (inputRef.current === document.activeElement) {
-              onHide(true)
-              return true
-            }
-            return false
-          },
-          COMMAND_PRIORITY_HIGH,
-        ),
-      )
-    }
-    return editor.registerUpdateListener(({ editorState }) => {
-      const isSelected = editorState.read(() => {
-        const sel = $getSelection()
-        return (
-          $isNodeSelection(sel) &&
-          sel.has(nodeKey) &&
-          sel.getNodes().length === 1
-        )
-      })
-      if (isSelected) setShowEditor(true)
-    })
-  }, [editor, nodeKey, onHide, showEditor, isEditable])
-
-  if (showEditor && isEditable) {
-    return (
-      <EquationEditor
-        equation={equationValue}
-        setEquation={setEquationValue}
-        inline={inline}
-        ref={inputRef}
-      />
-    )
-  }
   return (
-    <KatexRenderer
-      equation={equationValue}
-      inline={inline}
-      onDoubleClick={() => {
-        if (isEditable) setShowEditor(true)
-      }}
-    />
+    <>
+      <KatexRenderer
+        equation={equation}
+        inline={inline}
+        onDoubleClick={() => {
+          if (isEditable) setOpen(true)
+        }}
+      />
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent
+          onPointerDownOutside={(e) => {
+            const target = e.target as HTMLElement | null
+            if (document.body.hasAttribute("data-math-keyboard-open")) e.preventDefault()
+            else if (target?.closest(".ML__keyboard, .ML__virtual-keyboard, math-field")) e.preventDefault()
+          }}
+          onInteractOutside={(e) => {
+            const target = e.target as HTMLElement | null
+            if (document.body.hasAttribute("data-math-keyboard-open")) e.preventDefault()
+            else if (target?.closest(".ML__keyboard, .ML__virtual-keyboard, math-field")) e.preventDefault()
+          }}
+          onFocusOutside={(e) => {
+            const target = e.target as HTMLElement | null
+            if (document.body.hasAttribute("data-math-keyboard-open")) e.preventDefault()
+            else if (target?.closest(".ML__keyboard, .ML__virtual-keyboard, math-field")) e.preventDefault()
+          }}
+          onEscapeKeyDown={(e) => {
+            if (document.body.hasAttribute("data-math-keyboard-open")) e.preventDefault()
+          }}
+        >
+          <DialogHeader>
+            <DialogTitle>Edit Equation</DialogTitle>
+          </DialogHeader>
+          <EquationDialogBody
+            initialEquation={equation}
+            initialInline={inline}
+            submitLabel="Save"
+            onClose={() => setOpen(false)}
+            onSubmit={onSubmit}
+          />
+        </DialogContent>
+      </Dialog>
+    </>
   )
 }
+

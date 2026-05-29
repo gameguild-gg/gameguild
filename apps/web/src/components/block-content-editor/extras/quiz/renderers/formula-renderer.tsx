@@ -11,7 +11,7 @@ import { Search, PenLine, CheckCircle, XCircle, FlaskConical } from "lucide-reac
 import { Button } from "@/components/ui/button"
 import type { FormulaEntry, QuizAnswerState } from "../types"
 import { generateVariableValue, evaluateFormula, validateFormula } from "../utils/formula-evaluator"
-import { MathInput } from "../components/math-input"
+import { MathInput } from "@/components/block-content-editor/extras/math/math-input"
 
 interface FormulaRendererProps {
   entry: FormulaEntry

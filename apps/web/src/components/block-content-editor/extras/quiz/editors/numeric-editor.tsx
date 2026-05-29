@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/select"
 import type { NumericEntry } from "../types"
 import { validateFormula, evaluateFormula, generateVariableValue } from "../utils/formula-evaluator"
-import { MathInput } from "../components/math-input"
+import { MathInput } from "@/components/block-content-editor/extras/math/math-input"
 
 export function NumericEditor() {
   const { register, control, watch, setValue } = useFormContext<NumericEntry>()

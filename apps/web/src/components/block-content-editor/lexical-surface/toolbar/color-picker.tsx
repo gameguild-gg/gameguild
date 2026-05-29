@@ -172,7 +172,7 @@ export default function ColorPicker({ color, onChange }: Readonly<ColorPickerPro
         onChange={onMoveHue}
       >
         <div
-          className="absolute w-3 h-3 -ml-1.5 -mt-0 rounded-full border-2 border-white shadow pointer-events-none"
+          className="absolute w-3 h-3 -ml-1.5 mt-0 rounded-full border-2 border-white shadow pointer-events-none"
           style={{
             backgroundColor: `hsl(${selfColor.hsv.h}, 100%, 50%)`,
             left: huePosition.x,

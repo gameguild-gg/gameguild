@@ -349,7 +349,33 @@ export default function ComponentPickerPlugin() {
       }}
     />
     <Dialog open={pendingDialog !== null} onOpenChange={(open) => { if (!open) setPendingDialog(null) }}>
-      <DialogContent>
+      <DialogContent
+        // O teclado virtual do MathLive (`.ML__keyboard`) é montado em
+        // `document.body`, fora da árvore do Dialog. Enquanto ele estiver
+        // aberto (`<body data-math-keyboard-open>`), TODO clique fora é
+        // ignorado — assim o usuário não fecha acidentalmente o diálogo
+        // ao tocar numa tecla. Também tratamos cliques no próprio overlay
+        // do teclado como "dentro".
+        onPointerDownOutside={(e) => {
+          const target = e.target as HTMLElement | null
+          if (document.body.hasAttribute("data-math-keyboard-open")) e.preventDefault()
+          else if (target?.closest(".ML__keyboard, .ML__virtual-keyboard, math-field")) e.preventDefault()
+        }}
+        onInteractOutside={(e) => {
+          const target = e.target as HTMLElement | null
+          if (document.body.hasAttribute("data-math-keyboard-open")) e.preventDefault()
+          else if (target?.closest(".ML__keyboard, .ML__virtual-keyboard, math-field")) e.preventDefault()
+        }}
+        onFocusOutside={(e) => {
+          const target = e.target as HTMLElement | null
+          if (document.body.hasAttribute("data-math-keyboard-open")) e.preventDefault()
+          else if (target?.closest(".ML__keyboard, .ML__virtual-keyboard, math-field")) e.preventDefault()
+        }}
+        onEscapeKeyDown={(e) => {
+          // Esc deve primeiro fechar o teclado, não o diálogo.
+          if (document.body.hasAttribute("data-math-keyboard-open")) e.preventDefault()
+        }}
+      >
         <DialogHeader>
           <DialogTitle>{pendingDialog?.title}</DialogTitle>
         </DialogHeader>
