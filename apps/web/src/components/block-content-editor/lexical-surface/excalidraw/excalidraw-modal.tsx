@@ -12,6 +12,7 @@ import "@excalidraw/excalidraw/index.css"
 import * as React from "react"
 import { useState } from "react"
 import dynamic from "next/dynamic"
+import { useTheme } from "next-themes"
 import type {
   AppState,
   BinaryFiles,
@@ -26,6 +27,20 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { cn } from "@/lib/utils"
+
+/**
+ * Selector que cobre overlays/popovers internos do Excalidraw
+ * (help, library, mermaid-to-excalidraw, color picker, etc.).
+ * Usado nos guards do Radix Dialog para que cliques dentro desses
+ * sub-modais não fechem o nosso Dialog hospedeiro.
+ */
+const EXCALIDRAW_INTERNAL_SELECTOR =
+  ".excalidraw, .excalidraw-modal-container, .excalidraw-overlay, [class*=\"excalidraw\"], .ttd-dialog, .Dialog, .Modal, .Island, .popover, .HelpDialog, .library-menu, .picker, [data-prevent-outside-click]"
+
+function isInsideExcalidrawInternal(target: EventTarget | null): boolean {
+  if (!(target instanceof Element)) return false
+  return target.closest(EXCALIDRAW_INTERNAL_SELECTOR) !== null
+}
 
 const Excalidraw = dynamic(
   async () => (await import("@excalidraw/excalidraw")).Excalidraw,
@@ -60,6 +75,8 @@ export default function ExcalidrawModal({
   const [excalidrawAPI, setExcalidrawAPI] = useState<ExcalidrawImperativeAPI | null>(null)
   const [elements, setElements] = useState<ExcalidrawInitialElements>(initialElements)
   const [files, setFiles] = useState<BinaryFiles>(initialFiles)
+  const { resolvedTheme } = useTheme()
+  const excalidrawTheme: "light" | "dark" = resolvedTheme === "dark" ? "dark" : "light"
 
   if (!isShown) return null
 
@@ -87,15 +104,30 @@ export default function ExcalidrawModal({
 
   return (
     <Dialog open={isShown} onOpenChange={(open) => { if (!open) onClose() }}>
-      <DialogContent className="max-w-[95vw] w-[95vw] h-[90vh] p-0 flex flex-col">
+      <DialogContent
+        className="max-w-[95vw] sm:max-w-[95vw] w-[95vw] h-[90vh] p-0 flex flex-col"
+        onPointerDownOutside={(e) => {
+          if (isInsideExcalidrawInternal(e.target)) e.preventDefault()
+        }}
+        onInteractOutside={(e) => {
+          if (isInsideExcalidrawInternal(e.target)) e.preventDefault()
+        }}
+        onFocusOutside={(e) => {
+          if (isInsideExcalidrawInternal(e.target)) e.preventDefault()
+        }}
+      >
         <DialogHeader className="px-4 pt-4 pb-2">
           <DialogTitle>Excalidraw</DialogTitle>
         </DialogHeader>
         <div className={cn("flex-1 min-h-0 px-4")}>
           <Excalidraw
             excalidrawAPI={setExcalidrawAPI}
+            theme={excalidrawTheme}
             initialData={{
-              appState: initialAppState || { isLoading: false },
+              appState: {
+                ...(initialAppState || { isLoading: false }),
+                theme: (initialAppState?.theme ?? excalidrawTheme) as AppState["theme"],
+              },
               elements: initialElements,
               files: initialFiles,
             }}
