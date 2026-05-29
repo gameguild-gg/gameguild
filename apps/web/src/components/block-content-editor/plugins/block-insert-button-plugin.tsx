@@ -1,32 +1,29 @@
 "use client"
 
 /**
- * Renders a small "+" button (typically displayed by the host below or
- * beside the editor area) that opens the `BlockTypePicker` filtered to
- * embeddable block types. The chosen block is dispatched as
- * `INSERT_BLOCK_COMMAND`.
+ * Renders the "+ Block" toolbar entry. Instead of opening a modal
+ * picker, lists the embeddable block types directly inside the
+ * toolbar's `DropDown` (same pattern as the Insert / Format menus).
  */
 
-import { useCallback, useState } from "react"
+import { useCallback } from "react"
 import { Plus } from "lucide-react"
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext"
 
-import { Button } from "@/components/ui/button"
-import { BlockTypePicker } from "../engines/blocks/block-type-picker"
+import { DropDown, DropDownItem } from "../lexical-surface/toolbar/dropdown"
+import { BLOCK_REGISTRY } from "../engines/blocks/block-component-registry"
 import type { Block } from "../lib/storage/editor/block-structure"
 import { EMBEDDABLE_BLOCK_TYPES, isEmbeddableBlockType, type EmbeddableBlock } from "../embed/types"
 import { INSERT_BLOCK_COMMAND } from "./block-embed-plugin"
-import { cn } from "@/lib/utils"
 
 interface BlockInsertButtonPluginProps {
-  className?: string
+  disabled?: boolean
 }
 
-export function BlockInsertButtonPlugin({ className }: BlockInsertButtonPluginProps) {
+export function BlockInsertButtonPlugin({ disabled }: BlockInsertButtonPluginProps = {}) {
   const [editor] = useLexicalComposerContext()
-  const [open, setOpen] = useState(false)
 
-  const handleSelect = useCallback(
+  const insert = useCallback(
     (block: Block) => {
       if (!isEmbeddableBlockType(block.type)) return
       const embeddable = {
@@ -34,30 +31,34 @@ export function BlockInsertButtonPlugin({ className }: BlockInsertButtonPluginPr
         data: { ...(block.data as Record<string, unknown>), isNew: true },
       } as EmbeddableBlock
       editor.dispatchCommand(INSERT_BLOCK_COMMAND, embeddable)
-      setOpen(false)
     },
     [editor],
   )
 
   return (
-    <>
-      <Button
-        type="button"
-        variant="ghost"
-        size="sm"
-        className={cn("gap-1.5 text-muted-foreground hover:text-foreground", className)}
-        onClick={() => setOpen(true)}
-        aria-label="Insert block"
-      >
-        <Plus className="size-4" aria-hidden />
-        <span className="text-xs">Block</span>
-      </Button>
-      <BlockTypePicker
-        open={open}
-        onOpenChange={setOpen}
-        onSelect={handleSelect}
-        allowedBlockTypes={[...EMBEDDABLE_BLOCK_TYPES]}
-      />
-    </>
+    <DropDown
+      disabled={disabled}
+      buttonLabel="Block"
+      buttonIcon={<Plus className="w-4 h-4" />}
+      buttonAriaLabel="Insert block"
+      title="Insert block"
+    >
+      {EMBEDDABLE_BLOCK_TYPES.map((type) => {
+        const config = BLOCK_REGISTRY[type]
+        if (!config) return null
+        const Icon = config.icon
+        return (
+          <DropDownItem
+            key={type}
+            onClick={() => insert(config.createEmpty())}
+            title={config.description}
+          >
+            <Icon className="w-4 h-4 opacity-80" />
+            <span>{config.label}</span>
+          </DropDownItem>
+        )
+      })}
+    </DropDown>
   )
 }
+

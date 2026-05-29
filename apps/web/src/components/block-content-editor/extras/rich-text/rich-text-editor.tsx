@@ -12,7 +12,6 @@ import { FileText, Save } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { BlockInsertButtonPlugin } from "../../plugins/block-insert-button-plugin"
 import { LexicalSurface } from "../../lexical-surface"
 import { useEditorSettings } from "@/components/block-content-editor/extras/settings-menu"
 import { BlockEditorShell } from "@/components/block-content-editor/extras/block-editor-shell"
@@ -91,18 +90,6 @@ export function RichTextEditor({ initialData, onSave, onCancel }: RichTextEditor
             placeholder="Start writing your rich text content..."
             contentClassName="min-h-[400px] max-w-none"
             className="flex-1 flex flex-col"
-            headerSlot={
-              <div className="sticky top-0 z-10 bg-white dark:bg-gray-900">
-                <div className="px-4 py-2 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 flex items-center justify-between">
-                  <p className="text-xs text-gray-500 dark:text-gray-500">
-                    Tip: type{" "}
-                    <kbd className="px-1.5 py-0.5 rounded border bg-white dark:bg-gray-800 font-mono">/</kbd>{" "}
-                    to insert a block
-                  </p>
-                  <BlockInsertButtonPlugin />
-                </div>
-              </div>
-            }
           />
         </div>
       </div>
