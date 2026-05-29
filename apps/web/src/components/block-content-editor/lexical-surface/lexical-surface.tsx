@@ -38,6 +38,14 @@ import { BlockEmbedPlugin } from "../plugins/block-embed-plugin"
 import { BlockInsertMenuPlugin } from "../plugins/block-insert-menu-plugin"
 import { LEXICAL_SURFACE_THEME } from "./theme"
 import { ToolbarPlugin, ToolbarContextProvider, useToolbarState } from "./toolbar"
+import { ShortcutsPlugin } from "./shortcuts"
+import { EquationsPlugin } from "./equation"
+import { ExcalidrawPlugin } from "./excalidraw"
+import { EmojiPickerPlugin } from "./emoji"
+import { AutoEmbedPlugin } from "./embeds"
+import { ContextMenuPlugin } from "./context-menu"
+import { CodeActionMenuPlugin } from "./code-action"
+import { TablePlugin, TableActionMenuPlugin, TableCellResizerPlugin, TableInsertHandlesPlugin } from "./table"
 import {
   FloatingLinkEditorPlugin,
   FloatingTextFormatToolbarPlugin,
@@ -63,6 +71,22 @@ export type LexicalSurfaceFeatures = {
   blockInsertMenu?: boolean
   /** Apply page-size/margin/orientation from the toolbar to the editable area. Default: true */
   pageLayout?: boolean
+  /** Keyboard shortcuts (Ctrl+\\, Ctrl+Shift+1/2/3, Alt+Shift+1..3, etc.). Default: true */
+  shortcuts?: boolean
+  /** KaTeX equations via `INSERT_EQUATION_COMMAND` + `/Equation` picker item. Default: true */
+  equation?: boolean
+  /** Excalidraw drawings via `INSERT_EXCALIDRAW_COMMAND` + `/Excalidraw` picker item. Default: true */
+  excalidraw?: boolean
+  /** Emoji picker via `:` typeahead trigger. Default: true */
+  emoji?: boolean
+  /** Auto-embed YouTube/X/Figma URLs. Default: true */
+  autoEmbed?: boolean
+  /** Right-click context menu (cut/copy/paste/delete). Default: true */
+  contextMenu?: boolean
+  /** Floating menu on hovered code blocks (lang + copy). Default: true */
+  codeAction?: boolean
+  /** Tables (`@lexical/table`) + `/Table` picker item. Default: true */
+  table?: boolean
   /** Lexical built-ins. Defaults: true */
   history?: boolean
   list?: boolean
@@ -100,6 +124,14 @@ const DEFAULT_FEATURES: Required<LexicalSurfaceFeatures> = {
   blockEmbed: true,
   blockInsertMenu: true,
   pageLayout: true,
+  shortcuts: true,
+  equation: true,
+  excalidraw: true,
+  emoji: true,
+  autoEmbed: true,
+  contextMenu: true,
+  codeAction: true,
+  table: true,
   history: true,
   list: true,
   link: true,
@@ -245,6 +277,17 @@ function EditorBody({
         {features.horizontalRule && <HorizontalRulePlugin />}
         {features.tabIndentation && <TabIndentationPlugin />}
         {features.picker && <ComponentPickerPlugin />}
+        {features.shortcuts && <ShortcutsPlugin setIsLinkEditMode={setIsLinkEditMode} />}
+        {features.equation && <EquationsPlugin />}
+        {features.excalidraw && <ExcalidrawPlugin />}
+        {features.emoji && <EmojiPickerPlugin />}
+        {features.autoEmbed && <AutoEmbedPlugin />}
+        {features.contextMenu && <ContextMenuPlugin />}
+        {features.codeAction && <CodeActionMenuPlugin />}
+        {features.table && <TablePlugin />}
+        {anchorElem && features.table && <TableActionMenuPlugin anchorElem={anchorElem} />}
+        {anchorElem && features.table && <TableCellResizerPlugin anchorElem={anchorElem} />}
+        {anchorElem && features.table && <TableInsertHandlesPlugin anchorElem={anchorElem} />}
         {features.blockEmbed && <BlockEmbedPlugin />}
         {features.blockInsertMenu && <BlockInsertMenuPlugin />}
         {anchorElem && features.floatingTextFormat && (

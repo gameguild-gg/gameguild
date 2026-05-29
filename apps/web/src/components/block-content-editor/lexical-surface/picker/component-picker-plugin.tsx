@@ -41,6 +41,12 @@ import {
 } from "lexical"
 import { cn } from "@/lib/utils"
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import {
   BulletedListIcon,
   CheckListIcon,
   CodeBlockIcon,
@@ -55,6 +61,14 @@ import {
   ParagraphIcon,
   QuoteIcon,
 } from "../icons"
+import { Sigma as EquationIcon } from "lucide-react"
+import { Pencil as ExcalidrawIcon } from "lucide-react"
+import { Table as TableIcon } from "lucide-react"
+import { InsertEquationDialog } from "../equation"
+import { INSERT_EXCALIDRAW_COMMAND } from "../excalidraw"
+import { InsertTableDialog } from "../table"
+
+type DialogRender = (opts: { activeEditor: LexicalEditor; onClose: () => void }) => React.ReactNode
 
 type IconCmp = React.ComponentType<{ className?: string }>
 
@@ -63,20 +77,23 @@ class ComponentPickerOption extends MenuOption {
   readonly Icon: IconCmp
   readonly keywords: string[]
   readonly onSelect: () => void
+  readonly dialog?: { title: string; render: DialogRender }
 
   constructor(
     title: string,
     options: {
       Icon: IconCmp
       keywords?: string[]
-      onSelect: () => void
+      onSelect?: () => void
+      dialog?: { title: string; render: DialogRender }
     },
   ) {
     super(title)
     this.title = title
     this.Icon = options.Icon
     this.keywords = options.keywords ?? []
-    this.onSelect = options.onSelect.bind(this)
+    this.onSelect = (options.onSelect ?? (() => {})).bind(this)
+    this.dialog = options.dialog
   }
 }
 
@@ -208,12 +225,41 @@ function getBaseOptions(editor: LexicalEditor): ComponentPickerOption[] {
       keywords: ["horizontal rule", "divider", "hr"],
       onSelect: () => editor.dispatchCommand(INSERT_HORIZONTAL_RULE_COMMAND, undefined),
     }),
+    new ComponentPickerOption("Equation", {
+      Icon: EquationIcon,
+      keywords: ["equation", "katex", "latex", "math"],
+      dialog: {
+        title: "Insert Equation",
+        render: ({ activeEditor, onClose }) => (
+          <InsertEquationDialog activeEditor={activeEditor} onClose={onClose} />
+        ),
+      },
+    }),
+    new ComponentPickerOption("Excalidraw", {
+      Icon: ExcalidrawIcon,
+      keywords: ["excalidraw", "diagram", "drawing", "sketch"],
+      onSelect: () => editor.dispatchCommand(INSERT_EXCALIDRAW_COMMAND, undefined),
+    }),
+    new ComponentPickerOption("Table", {
+      Icon: TableIcon,
+      keywords: ["table", "grid", "rows", "columns"],
+      dialog: {
+        title: "Insert Table",
+        render: ({ activeEditor, onClose }) => (
+          <InsertTableDialog activeEditor={activeEditor} onClose={onClose} />
+        ),
+      },
+    }),
   ]
 }
 
 export default function ComponentPickerPlugin() {
   const [editor] = useLexicalComposerContext()
   const [queryString, setQueryString] = useState<string | null>(null)
+  const [pendingDialog, setPendingDialog] = useState<
+    | { title: string; render: DialogRender }
+    | null
+  >(null)
 
   const checkForTriggerMatch = useBasicTypeaheadTriggerMatch("/", {
     allowWhitespace: true,
@@ -240,15 +286,21 @@ export default function ComponentPickerPlugin() {
     ) => {
       editor.update(() => {
         nodeToRemove?.remove()
-        selectedOption.onSelect()
+        if (!selectedOption.dialog) {
+          selectedOption.onSelect()
+        }
         closeMenu()
       })
+      if (selectedOption.dialog) {
+        setPendingDialog(selectedOption.dialog)
+      }
     },
     [editor],
   )
 
   return (
-    <LexicalTypeaheadMenuPlugin<ComponentPickerOption>
+    <>
+      <LexicalTypeaheadMenuPlugin<ComponentPickerOption>
       onQueryChange={setQueryString}
       onSelectOption={onSelectOption}
       triggerFn={checkForTriggerMatch}
@@ -296,5 +348,14 @@ export default function ComponentPickerPlugin() {
         )
       }}
     />
+    <Dialog open={pendingDialog !== null} onOpenChange={(open) => { if (!open) setPendingDialog(null) }}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>{pendingDialog?.title}</DialogTitle>
+        </DialogHeader>
+        {pendingDialog?.render({ activeEditor: editor, onClose: () => setPendingDialog(null) })}
+      </DialogContent>
+    </Dialog>
+    </>
   )
 }

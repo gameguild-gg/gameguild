@@ -14,6 +14,10 @@ import { LinkNode, AutoLinkNode } from "@lexical/link"
 import { CodeNode } from "@lexical/code"
 import { CustomListNode } from "../../nodes/custom-list-node"
 import { BlockEmbedNode } from "../../nodes/block-embed-node"
+import { EquationNode } from "../../lexical-surface/equation"
+import { ExcalidrawNode } from "../../lexical-surface/excalidraw"
+import { YouTubeNode, TweetNode, FigmaNode } from "../../lexical-surface/embeds"
+import { TableNode, TableRowNode, TableCellNode } from "@lexical/table"
 
 /**
  * Full node set supported by our Lexical instances. Adding a node here
@@ -39,6 +43,14 @@ export const SHARED_LEXICAL_NODES = [
   LinkNode,
   AutoLinkNode,
   BlockEmbedNode,
+  EquationNode,
+  ExcalidrawNode,
+  YouTubeNode,
+  TweetNode,
+  FigmaNode,
+  TableNode,
+  TableRowNode,
+  TableCellNode,
 ]
 
 /**
