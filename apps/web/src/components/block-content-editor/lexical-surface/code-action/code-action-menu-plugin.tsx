@@ -9,20 +9,24 @@
 "use client"
 
 import * as React from "react"
-import { useCallback, useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { createPortal } from "react-dom"
 import { $isCodeNode, CodeNode } from "@lexical/code"
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext"
 import {
   $getNearestNodeFromDOMNode,
+  $getNodeByKey,
   $getSelection,
   $createNodeSelection,
   $setSelection,
   COPY_COMMAND,
   isHTMLElement,
+  type NodeKey,
 } from "lexical"
 import { cn } from "@/lib/utils"
-import { Copy, Check } from "lucide-react"
+import { Copy, Check, Trash2 } from "lucide-react"
+import { useNodesDeleteProtection } from "../shared/use-node-delete-protection"
+import { DeleteConfirmDialog } from "../../extras/dialogs/delete-confirm-dialog"
 
 const CODE_PADDING = 8
 
@@ -60,6 +64,7 @@ function CodeActionMenuContainer({ anchorElem }: { anchorElem: HTMLElement }) {
   const [shouldListen, setShouldListen] = useState(false)
   const [position, setPosition] = useState<Position>({ right: "0", top: "0" })
   const [copied, setCopied] = useState(false)
+  const [pendingDeleteKey, setPendingDeleteKey] = useState<NodeKey | null>(null)
   const codeSetRef = useRef<Set<string>>(new Set())
   const codeDOMNodeRef = useRef<HTMLElement | null>(null)
 
@@ -147,26 +152,80 @@ function CodeActionMenuContainer({ anchorElem }: { anchorElem: HTMLElement }) {
       })
   }, [editor])
 
-  if (!isShown) return null
-  return (
-    <div
-      className={cn(
-        "lexical-code-action-menu absolute z-30 flex items-center gap-2 px-2 py-1 rounded shadow",
-        "border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900",
-        "text-xs text-gray-700 dark:text-gray-300",
-      )}
-      style={{ top: position.top, right: position.right }}
-    >
-      <span className="font-mono">{lang || "(no language)"}</span>
-      <button
-        type="button"
-        onClick={onCopy}
-        className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded hover:bg-gray-100 dark:hover:bg-gray-800"
+  // Proteção contra exclusão acidental: ao tentar apagar um CodeNode,
+  // intercepta a tecla e abre dialog de confirmação.
+  const getNodeKeys = useCallback(() => codeSetRef.current, [])
+  useNodesDeleteProtection({
+    getNodeKeys,
+    onRequestDelete: (key) => setPendingDeleteKey(key),
+  })
+
+  const onRequestDeleteHovered = useCallback(() => {
+    const dom = codeDOMNodeRef.current
+    if (!dom) return
+    editor.read(() => {
+      const node = $getNearestNodeFromDOMNode(dom)
+      if ($isCodeNode(node)) setPendingDeleteKey(node.getKey())
+    })
+  }, [editor])
+
+  const confirmDelete = useCallback(() => {
+    if (pendingDeleteKey === null) return
+    const key = pendingDeleteKey
+    editor.update(() => {
+      const node = $getNodeByKey(key)
+      if (node) node.remove()
+    })
+    setPendingDeleteKey(null)
+  }, [editor, pendingDeleteKey])
+
+  const menuOverlay = useMemo(() => {
+    if (!isShown) return null
+    return (
+      <div
+        className={cn(
+          "lexical-code-action-menu absolute z-30 flex items-center gap-2 px-2 py-1 rounded shadow",
+          "border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900",
+          "text-xs text-gray-700 dark:text-gray-300",
+        )}
+        style={{ top: position.top, right: position.right }}
       >
-        {copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
-        {copied ? "Copied" : "Copy"}
-      </button>
-    </div>
+        <span className="font-mono">{lang || "(no language)"}</span>
+        <button
+          type="button"
+          onClick={onCopy}
+          className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded hover:bg-gray-100 dark:hover:bg-gray-800"
+        >
+          {copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+          {copied ? "Copied" : "Copy"}
+        </button>
+        <button
+          type="button"
+          onClick={onRequestDeleteHovered}
+          className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded hover:bg-red-100 dark:hover:bg-red-900/40 text-red-600 dark:text-red-400"
+        >
+          <Trash2 className="w-3 h-3" />
+          Delete
+        </button>
+      </div>
+    )
+  }, [isShown, position, lang, onCopy, onRequestDeleteHovered, copied])
+
+  return (
+    <>
+      {menuOverlay}
+      <DeleteConfirmDialog
+        open={pendingDeleteKey !== null}
+        onOpenChange={(o) => {
+          if (!o) setPendingDeleteKey(null)
+        }}
+        title="Remove code block?"
+        itemName="this code block"
+        itemType="code block"
+        confirmText="Remove"
+        onConfirm={confirmDelete}
+      />
+    </>
   )
 }
 
