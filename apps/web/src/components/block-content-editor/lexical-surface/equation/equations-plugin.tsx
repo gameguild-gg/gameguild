@@ -64,18 +64,24 @@ export function EquationsPlugin() {
 export function EquationDialogBody({
   initialEquation = "",
   initialInline = true,
+  initialFontSize = 2,
   submitLabel = "Insert",
   onClose,
   onSubmit,
 }: {
   initialEquation?: string
   initialInline?: boolean
+  initialFontSize?: number
   submitLabel?: string
   onClose: () => void
   onSubmit: (payload: CommandPayload) => void
 }) {
   const [equation, setEquation] = useState(initialEquation)
   const [inline, setInline] = useState(initialInline)
+  // Tamanho da fonte do editor (em rem). Apenas afeta a edição visual —
+  // o tamanho final aplicado no documento é controlado separadamente
+  // via mini-toolbar quando a equação está selecionada.
+  const [editorFontSize, setEditorFontSize] = useState(initialFontSize)
 
   const onConfirm = useCallback(() => {
     onSubmit({ equation, inline })
@@ -83,16 +89,33 @@ export function EquationDialogBody({
   }, [equation, inline, onClose, onSubmit])
 
   return (
-    <div className="flex flex-col gap-3 min-w-[420px]">
-      <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
-        <input
-          type="checkbox"
-          checked={inline}
-          onChange={() => setInline((v) => !v)}
-          className="h-4 w-4"
-        />
-        Inline
-      </label>
+    <div className="flex flex-col gap-3 min-w-[640px]">
+      <div className="flex items-center justify-between gap-3">
+        <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+          <input
+            type="checkbox"
+            checked={inline}
+            onChange={() => setInline((v) => !v)}
+            className="h-4 w-4"
+          />
+          Inline
+        </label>
+        <label className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
+          <span className="whitespace-nowrap">Editor zoom</span>
+          <input
+            type="range"
+            min={1}
+            max={4}
+            step={0.1}
+            value={editorFontSize}
+            onChange={(e) => setEditorFontSize(parseFloat(e.target.value))}
+            className="w-32 accent-blue-600"
+          />
+          <span className="tabular-nums w-10 text-right">
+            {editorFontSize.toFixed(1)}×
+          </span>
+        </label>
+      </div>
       <div className="flex flex-col gap-1 text-sm text-gray-700 dark:text-gray-300">
         <span>Equation</span>
         {/* MathLive virtual keyboard / visual formula editor. The value
@@ -102,10 +125,8 @@ export function EquationDialogBody({
           onChange={setEquation}
           autoFocus
           placeholder="\\frac{a}{b}"
-          className={cn(
-            "min-h-[2.75rem] text-base",
-            !inline && "min-h-[5rem]",
-          )}
+          className={cn("min-h-[5.5rem]")}
+          style={{ fontSize: `${editorFontSize}rem` }}
         />
         <details className="text-xs text-gray-500 dark:text-gray-400">
           <summary className="cursor-pointer select-none">Raw LaTeX</summary>

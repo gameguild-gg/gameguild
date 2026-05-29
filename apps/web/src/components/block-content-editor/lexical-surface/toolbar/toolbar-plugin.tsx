@@ -131,6 +131,7 @@ import {
 } from "./utils"
 import { SHORTCUTS } from "../shortcuts/shortcuts"
 import { BlockInsertButtonPlugin } from "../../plugins/block-insert-button-plugin"
+import { $isEquationNode } from "../equation/equation-node"
 
 // ─── constants ──────────────────────────────────────────────────────────────
 
@@ -387,9 +388,22 @@ function FontSizeStepper({
       editor.update(() => {
         $addUpdateTag(SKIP_SELECTION_FOCUS_TAG)
         const selection = $getSelection()
-        if (selection !== null) {
-          $patchStyleText(selection, { "font-size": `${clamped}px` })
+        if (selection === null) return
+        // Caso especial: equação selecionada (NodeSelection com EquationNode).
+        // `$patchStyleText` só funciona para RangeSelection — para o decorator
+        // node, ajustamos a propriedade `fontSize` (em em) diretamente.
+        if ($isNodeSelection(selection)) {
+          const nodes = selection.getNodes()
+          let handled = false
+          for (const n of nodes) {
+            if ($isEquationNode(n)) {
+              n.setFontSize(clamped / DEFAULT_FONT_SIZE)
+              handled = true
+            }
+          }
+          if (handled) return
         }
+        $patchStyleText(selection, { "font-size": `${clamped}px` })
       })
     },
     [editor],
@@ -732,6 +746,12 @@ export default function ToolbarPlugin({
     if ($isNodeSelection(selection)) {
       const nodes = selection.getNodes()
       for (const selectedNode of nodes) {
+        if ($isEquationNode(selectedNode)) {
+          updateToolbarState(
+            "fontSize",
+            `${Math.round(selectedNode.getFontSize() * DEFAULT_FONT_SIZE)}px`,
+          )
+        }
         const parentList = $getNearestNodeOfType<ListNode>(selectedNode, ListNode)
         if (parentList) {
           updateToolbarState("blockType", parentList.getListType())
