@@ -83,13 +83,13 @@ export function RichTextEditor({ initialData, onSave, onCancel }: RichTextEditor
       }
     >
       <div className="flex-1 overflow-auto bg-gray-50 dark:bg-gray-950">
-        <div className="w-full max-w-3xl mx-auto flex flex-col bg-white dark:bg-gray-900 border-x border-gray-200 dark:border-gray-800 shadow-sm min-h-full">
+        <div className="w-full max-w-5xl mx-auto flex flex-col bg-white dark:bg-gray-900 border-x border-gray-200 dark:border-gray-800 shadow-sm min-h-full">
           <LexicalSurface
             namespace="RichTextEditor"
             initialState={initialState}
             onChange={handleChange}
             placeholder="Start writing your rich text content..."
-            contentClassName="flex-1 px-8 py-6 max-w-none"
+            contentClassName="min-h-[400px] max-w-none"
             className="flex-1 flex flex-col"
             headerSlot={
               <div className="sticky top-0 z-10 bg-white dark:bg-gray-900">

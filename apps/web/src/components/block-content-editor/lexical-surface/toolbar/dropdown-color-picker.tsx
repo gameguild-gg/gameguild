@@ -1,7 +1,7 @@
 /**
- * Color picker dropdown — replaces the playground `DropdownColorPicker`
- * with a swatch grid + HEX input. Picker with hue/saturation/lightness
- * sliders is deferred to Wave B if needed.
+ * Color picker dropdown — trigger button (matches playground style) with
+ * a popover that hosts the fully-ported `ColorPicker` (HEX, swatches,
+ * HSV picker, hue slider).
  */
 "use client"
 
@@ -9,19 +9,7 @@ import * as React from "react"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
 import { ChevronDownIcon } from "../icons"
-
-const SWATCHES: string[] = [
-  // grayscale
-  "#000000", "#525252", "#737373", "#a3a3a3", "#d4d4d4", "#ffffff",
-  // reds / oranges / yellows
-  "#ef4444", "#f97316", "#f59e0b", "#eab308",
-  // greens
-  "#84cc16", "#22c55e", "#10b981", "#14b8a6",
-  // blues
-  "#06b6d4", "#0ea5e9", "#3b82f6", "#6366f1",
-  // purples / pinks
-  "#8b5cf6", "#a855f7", "#d946ef", "#ec4899",
-]
+import ColorPicker from "./color-picker"
 
 export function DropdownColorPicker({
   color,
@@ -39,17 +27,6 @@ export function DropdownColorPicker({
   disabled?: boolean
 }) {
   const [open, setOpen] = React.useState(false)
-  const [hex, setHex] = React.useState(color)
-
-  React.useEffect(() => {
-    setHex(color)
-  }, [color])
-
-  const commit = (next: string) => {
-    if (/^#[0-9a-fA-F]{3,8}$/.test(next)) {
-      onChange(next, false, false)
-    }
-  }
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -75,51 +52,8 @@ export function DropdownColorPicker({
           <ChevronDownIcon className="w-3 h-3 opacity-60" />
         </button>
       </PopoverTrigger>
-      <PopoverContent align="start" sideOffset={4} className="w-[220px] p-3 space-y-3">
-        <div className="grid grid-cols-6 gap-1.5">
-          {SWATCHES.map((s) => (
-            <button
-              key={s}
-              type="button"
-              aria-label={`Color ${s}`}
-              onClick={() => {
-                setHex(s)
-                onChange(s, false, false)
-                setOpen(false)
-              }}
-              className={cn(
-                "w-7 h-7 rounded border border-black/10 dark:border-white/10",
-                "hover:scale-110 transition-transform",
-                color.toLowerCase() === s.toLowerCase() &&
-                  "ring-2 ring-blue-500 ring-offset-1 ring-offset-white dark:ring-offset-gray-900",
-              )}
-              style={{ background: s }}
-            />
-          ))}
-        </div>
-        <div className="flex items-center gap-2">
-          <label className="text-xs text-gray-500 dark:text-gray-400" htmlFor="hex-input">
-            HEX
-          </label>
-          <input
-            id="hex-input"
-            type="text"
-            value={hex}
-            onChange={(e) => setHex(e.target.value)}
-            onBlur={() => commit(hex)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                e.preventDefault()
-                commit(hex)
-                setOpen(false)
-              }
-            }}
-            className={cn(
-              "flex-1 h-7 px-2 text-sm rounded border bg-transparent",
-              "border-gray-300 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500",
-            )}
-          />
-        </div>
+      <PopoverContent align="start" sideOffset={4} className="w-auto p-3">
+        <ColorPicker color={color} onChange={onChange} />
       </PopoverContent>
     </Popover>
   )
