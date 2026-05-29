@@ -55,7 +55,19 @@ export const LEXICAL_SURFACE_THEME: EditorThemeClasses = {
     capitalize: "capitalize",
     highlight: "bg-yellow-200 dark:bg-yellow-700/50 px-0.5 rounded",
   },
-  code: "block bg-gray-100 dark:bg-gray-800 p-3 rounded font-mono text-sm my-2 overflow-x-auto leading-relaxed",
+  code: [
+    "block relative bg-gray-100 dark:bg-gray-800 rounded font-mono text-[13px] my-2 overflow-x-auto leading-[1.53] [tab-size:2]",
+    // Padding: extra-left para o gutter de numeração, extra-top para o label da linguagem.
+    "pt-2 pr-2 pb-2 pl-[52px]",
+    // Gutter de números de linha (lê o atributo data-gutter populado pelo @lexical/code).
+    "before:content-[attr(data-gutter)] before:absolute before:left-0 before:top-0 before:bottom-0",
+    "before:bg-gray-200 dark:before:bg-gray-700 before:text-gray-500 dark:before:text-gray-400",
+    "before:border-r before:border-gray-300 dark:before:border-gray-600",
+    "before:py-2 before:px-2 before:whitespace-pre-wrap before:text-right before:min-w-[28px] before:select-none",
+    // Label da linguagem no canto superior direito (data-highlight-language).
+    "after:content-[attr(data-highlight-language)] after:absolute after:top-0 after:right-1 after:p-1",
+    "after:text-[10px] after:uppercase after:text-gray-500 dark:after:text-gray-400 after:select-none",
+  ].join(" "),
   codeHighlight: {
     atrule: "text-purple-600 dark:text-purple-400",
     attr: "text-purple-600 dark:text-purple-400",

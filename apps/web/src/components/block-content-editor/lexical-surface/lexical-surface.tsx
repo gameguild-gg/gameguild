@@ -44,7 +44,7 @@ import { ExcalidrawPlugin } from "./excalidraw"
 import { EmojiPickerPlugin } from "./emoji"
 import { AutoEmbedPlugin } from "./embeds"
 import { ContextMenuPlugin } from "./context-menu"
-import { CodeActionMenuPlugin } from "./code-action"
+import { CodeActionMenuPlugin, CodeHighlightPlugin } from "./code-action"
 import { TablePlugin, TableActionMenuPlugin, TableCellResizerPlugin, TableInsertHandlesPlugin } from "./table"
 import {
   FloatingLinkEditorPlugin,
@@ -283,7 +283,8 @@ function EditorBody({
         {features.emoji && <EmojiPickerPlugin />}
         {features.autoEmbed && <AutoEmbedPlugin />}
         {features.contextMenu && <ContextMenuPlugin />}
-        {features.codeAction && <CodeActionMenuPlugin />}
+        {features.codeAction && anchorElem && <CodeActionMenuPlugin anchorElem={anchorElem} />}
+        <CodeHighlightPlugin />
         {features.table && <TablePlugin />}
         {anchorElem && features.table && <TableActionMenuPlugin anchorElem={anchorElem} />}
         {anchorElem && features.table && <TableCellResizerPlugin anchorElem={anchorElem} />}

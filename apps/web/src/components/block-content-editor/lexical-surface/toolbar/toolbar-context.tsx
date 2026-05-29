@@ -73,6 +73,7 @@ const INITIAL_TOOLBAR_STATE = {
   isCapitalize: false,
   rootType: "root" as keyof typeof rootTypeToRootName,
   listStartNumber: null as number | null,
+  codeLanguage: "",
 }
 
 type ToolbarState = typeof INITIAL_TOOLBAR_STATE
