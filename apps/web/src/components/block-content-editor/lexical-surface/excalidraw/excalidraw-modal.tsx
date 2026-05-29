@@ -10,7 +10,7 @@
 import "@excalidraw/excalidraw/index.css"
 
 import * as React from "react"
-import { useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import dynamic from "next/dynamic"
 import { useTheme } from "next-themes"
 import type {
@@ -29,10 +29,10 @@ import {
 import { cn } from "@/lib/utils"
 
 /**
- * Selector que cobre overlays/popovers internos do Excalidraw
+ * Selector that covers internal overlays/popovers of Excalidraw
  * (help, library, mermaid-to-excalidraw, color picker, etc.).
- * Usado nos guards do Radix Dialog para que cliques dentro desses
- * sub-modais não fechem o nosso Dialog hospedeiro.
+ * Used in the Radix Dialog guards to prevent clicks inside these
+ * sub-modals from closing our host Dialog.
  */
 const EXCALIDRAW_INTERNAL_SELECTOR =
   ".excalidraw, .excalidraw-modal-container, .excalidraw-overlay, [class*=\"excalidraw\"], .ttd-dialog, .Dialog, .Modal, .Island, .popover, .HelpDialog, .library-menu, .picker, [data-prevent-outside-click]"
@@ -75,8 +75,34 @@ export default function ExcalidrawModal({
   const [excalidrawAPI, setExcalidrawAPI] = useState<ExcalidrawImperativeAPI | null>(null)
   const [elements, setElements] = useState<ExcalidrawInitialElements>(initialElements)
   const [files, setFiles] = useState<BinaryFiles>(initialFiles)
+  const canvasContainerRef = useRef<HTMLDivElement | null>(null)
   const { resolvedTheme } = useTheme()
   const excalidrawTheme: "light" | "dark" = resolvedTheme === "dark" ? "dark" : "light"
+
+  // The canvas of Excalidraw is mounted during the opening animation of
+  // the Radix Dialog (zoom-in-95), which causes the initial bounding rect
+  // measurements to be incorrect and the pointer hit-test
+  // (showing the little hand exactly over the stroke) to be offset.
+  // We call `refresh()` after the animation and on any container resize
+  // to force a new measurement.
+  useEffect(() => {
+    if (!isShown || !excalidrawAPI) return
+    const t1 = window.setTimeout(() => excalidrawAPI.refresh(), 200)
+    const t2 = window.setTimeout(() => excalidrawAPI.refresh(), 600)
+    const container = canvasContainerRef.current
+    const ro = container
+      ? new ResizeObserver(() => excalidrawAPI.refresh())
+      : null
+    if (container && ro) ro.observe(container)
+    const onWinResize = () => excalidrawAPI.refresh()
+    window.addEventListener("resize", onWinResize)
+    return () => {
+      window.clearTimeout(t1)
+      window.clearTimeout(t2)
+      ro?.disconnect()
+      window.removeEventListener("resize", onWinResize)
+    }
+  }, [isShown, excalidrawAPI])
 
   if (!isShown) return null
 
@@ -119,7 +145,7 @@ export default function ExcalidrawModal({
         <DialogHeader className="px-4 pt-4 pb-2">
           <DialogTitle>Excalidraw</DialogTitle>
         </DialogHeader>
-        <div className={cn("flex-1 min-h-0 px-4")}>
+        <div ref={canvasContainerRef} className={cn("flex-1 min-h-0")}>
           <Excalidraw
             excalidrawAPI={setExcalidrawAPI}
             theme={excalidrawTheme}
