@@ -5,10 +5,10 @@
  *
  * Replaces `SHARED_LEXICAL_THEME` from `../lib/lexical/shared-lexical-config`.
  *
- * Entries that map to nodes we haven't registered yet (mark, hashtag,
- * embedBlock, layout, table*) are kept intentionally — Lexical silently
- * ignores theme entries for unregistered node types, and pre-declaring
- * them keeps Wave B integration trivial (just register the node).
+ * Entries that map to nodes we haven't registered yet (layout, etc.)
+ * are kept intentionally — Lexical silently ignores theme entries for
+ * unregistered node types, and pre-declaring them keeps future
+ * integration trivial (just register the node).
  */
 import type { EditorThemeClasses } from "lexical"
 
@@ -95,6 +95,25 @@ export const LEXICAL_SURFACE_THEME: EditorThemeClasses = {
     base: "select-none",
     focus: "outline outline-2 outline-blue-500 rounded",
   },
+  table:
+    "border-collapse my-2 table-fixed w-full max-w-full",
+  tableScrollableWrapper: "overflow-x-auto my-2",
+  tableRow: "",
+  tableCell:
+    "border border-gray-300 dark:border-gray-700 align-top p-2 relative break-words",
+  tableCellHeader:
+    "bg-gray-100 dark:bg-gray-800 font-bold border border-gray-300 dark:border-gray-700 align-top p-2 text-start break-words",
+  tableCellSelected: "bg-blue-100/40 dark:bg-blue-900/30",
+  tableSelected: "outline outline-2 outline-blue-500",
+  tableSelection: "[caret-color:transparent]",
+  tableAddColumns:
+    "absolute top-0 right-[-12px] h-full w-3 bg-gray-200 dark:bg-gray-700 hover:bg-blue-500 cursor-pointer",
+  tableAddRows:
+    "absolute bottom-[-12px] left-0 w-full h-3 bg-gray-200 dark:bg-gray-700 hover:bg-blue-500 cursor-pointer",
+  tableCellActionButton:
+    "absolute top-1 right-1 w-5 h-5 rounded bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 flex items-center justify-center",
+  tableCellActionButtonContainer: "absolute top-1 right-1",
+  tableCellResizer: "absolute right-[-2px] top-0 h-full w-1 cursor-col-resize",
   indent: "[--lexical-indent:40px]",
   // Tailwind utility hooks for ElementFormatPlugin alignment classes.
   // Lexical writes these as theme classes on the block element.
