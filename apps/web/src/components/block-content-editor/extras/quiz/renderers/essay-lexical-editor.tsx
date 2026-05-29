@@ -52,6 +52,7 @@ export function EssayLexicalEditor({
             blockEmbed: false,
             blockInsertMenu: false,
             picker: false,
+            pageLayout: false,
           }}
         />
       </div>
