@@ -17,7 +17,12 @@
 
 import * as React from "react"
 import { Dispatch, useCallback, useEffect, useState } from "react"
-import { $isCodeNode } from "@lexical/code"
+import {
+  $isCodeNode,
+  CODE_LANGUAGE_FRIENDLY_NAME_MAP,
+  getCodeLanguageOptions,
+  getLanguageFriendlyName,
+} from "@lexical/code"
 import { $isLinkNode, TOGGLE_LINK_COMMAND } from "@lexical/link"
 import { $isListNode, ListNode } from "@lexical/list"
 import { INSERT_HORIZONTAL_RULE_COMMAND } from "@lexical/react/LexicalHorizontalRuleNode"
@@ -37,6 +42,7 @@ import {
 } from "@lexical/utils"
 import {
   $addUpdateTag,
+  $getNodeByKey,
   $getSelection,
   $isElementNode,
   $isNodeSelection,
@@ -259,6 +265,49 @@ function BlockFormatDropDown({
       <DropDownItem active={blockType === "code"} onClick={() => formatCode(editor, blockType)} shortcut={SHORTCUTS.CODE_BLOCK}>
         <CodeBlockIcon className="w-4 h-4" /> Code Block
       </DropDownItem>
+    </DropDown>
+  )
+}
+
+function CodeLanguageDropDown({
+  editor,
+  language,
+  codeNodeKey,
+  disabled,
+}: {
+  editor: LexicalEditor
+  language: string
+  codeNodeKey: string
+  disabled?: boolean
+}) {
+  const options = React.useMemo(() => getCodeLanguageOptions(), [])
+  const friendly =
+    CODE_LANGUAGE_FRIENDLY_NAME_MAP[language] ??
+    (language ? getLanguageFriendlyName(language) : "Plain Text")
+
+  const onSelect = (value: string) => {
+    editor.update(() => {
+      const node = $getNodeByKey(codeNodeKey)
+      if (node && $isCodeNode(node)) node.setLanguage(value)
+    })
+  }
+
+  return (
+    <DropDown
+      disabled={disabled}
+      buttonLabel={friendly}
+      buttonClassName="min-w-[120px]"
+      buttonAriaLabel="Select code language"
+    >
+      {options.map(([value, label]) => (
+        <DropDownItem
+          key={value || "plain"}
+          active={value === language}
+          onClick={() => onSelect(value)}
+        >
+          {label}
+        </DropDownItem>
+      ))}
     </DropDown>
   )
 }
@@ -552,7 +601,7 @@ export default function ToolbarPlugin({
   setActiveEditor: Dispatch<LexicalEditor>
   setIsLinkEditMode: Dispatch<boolean>
 }) {
-  const [, setSelectedElementKey] = useState<string | null>(null)
+  const [selectedElementKey, setSelectedElementKey] = useState<string | null>(null)
   const [isEditable, setIsEditable] = useState(() => editor.isEditable())
   const { toolbarState, updateToolbarState } = useToolbarState()
 
@@ -622,6 +671,10 @@ export default function ToolbarPlugin({
           $handleHeadingNode(element)
           if ($isCodeNode(element)) {
             updateToolbarState("blockType", "code")
+            updateToolbarState(
+              "codeLanguage",
+              element.getLanguage() ?? "",
+            )
           }
         }
       }
@@ -821,6 +874,14 @@ export default function ToolbarPlugin({
             blockType={toolbarState.blockType}
             editor={activeEditor}
           />
+          {toolbarState.blockType === "code" && selectedElementKey && (
+            <CodeLanguageDropDown
+              disabled={!isEditable}
+              language={toolbarState.codeLanguage}
+              editor={activeEditor}
+              codeNodeKey={selectedElementKey}
+            />
+          )}
           <Divider />
         </>
       )}

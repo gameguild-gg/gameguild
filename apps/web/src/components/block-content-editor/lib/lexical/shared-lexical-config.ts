@@ -11,7 +11,7 @@
 import { HeadingNode, QuoteNode } from "@lexical/rich-text"
 import { ListNode, ListItemNode } from "@lexical/list"
 import { LinkNode, AutoLinkNode } from "@lexical/link"
-import { CodeNode } from "@lexical/code"
+import { CodeNode, CodeHighlightNode } from "@lexical/code"
 import { CustomListNode } from "../../nodes/custom-list-node"
 import { BlockEmbedNode } from "../../nodes/block-embed-node"
 import { EquationNode } from "../../lexical-surface/equation"
@@ -40,6 +40,7 @@ export const SHARED_LEXICAL_NODES = [
   ListItemNode,
   CustomListNode,
   CodeNode,
+  CodeHighlightNode,
   LinkNode,
   AutoLinkNode,
   BlockEmbedNode,
