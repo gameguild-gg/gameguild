@@ -7,15 +7,24 @@
 "use client"
 
 import { useEffect, useRef } from "react"
+import type * as React from "react"
 import katex from "katex"
 
 export function KatexRenderer({
   equation,
   inline,
+  fontSize,
+  align,
+  selected,
+  onClick,
   onDoubleClick,
 }: Readonly<{
   equation: string
   inline: boolean
+  fontSize?: number
+  align?: "left" | "center" | "right"
+  selected?: boolean
+  onClick?: (e: React.MouseEvent) => void
   onDoubleClick?: () => void
 }>) {
   const ref = useRef<HTMLSpanElement>(null)
@@ -34,6 +43,17 @@ export function KatexRenderer({
     }
   }, [equation, inline])
 
+  const style: React.CSSProperties = {}
+  if (fontSize) style.fontSize = `${fontSize}em`
+  if (!inline && align) style.textAlign = align
+  const className = [
+    "inline-block rounded transition-shadow",
+    !inline ? "w-full" : "",
+    selected ? "ring-2 ring-blue-500 ring-offset-1" : "",
+  ]
+    .filter(Boolean)
+    .join(" ")
+
   return (
     <>
       <img
@@ -42,7 +62,15 @@ export function KatexRenderer({
         height="0"
         alt=""
       />
-      <span role="button" tabIndex={-1} onDoubleClick={onDoubleClick} ref={ref} />
+      <span
+        role="button"
+        tabIndex={-1}
+        onClick={onClick}
+        onDoubleClick={onDoubleClick}
+        ref={ref}
+        className={className}
+        style={style}
+      />
       <img
         src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
         width="0"
