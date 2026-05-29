@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/select"
 import type { FormulaEntry } from "../types"
 import { validateFormula, evaluateFormula, generateVariableValue } from "../utils/formula-evaluator"
-import { MathInput } from "../components/math-input"
+import { MathInput } from "@/components/block-content-editor/extras/math/math-input"
 
 export function FormulaEditor() {
   const { register, control, watch, setValue } = useFormContext<FormulaEntry>()

@@ -16,8 +16,7 @@ import {
   type SerializedLexicalNode,
   type Spread,
 } from "lexical"
-
-const EquationComponent = React.lazy(() => import("./equation-component"))
+import EquationComponent from "./equation-component"
 
 export type SerializedEquationNode = Spread<
   {

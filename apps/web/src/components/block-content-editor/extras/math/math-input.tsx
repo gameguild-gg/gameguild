@@ -50,6 +50,43 @@ function ensureMathLive(): Promise<void> {
         ME.fontsDirectory = `${origin}/mathlive/fonts/`
         ME.soundsDirectory = `${origin}/mathlive/sounds/`
       }
+
+      // Sinaliza globalmente quando o teclado virtual está visível.
+      // Marcamos `<body data-math-keyboard-open>` para que diálogos /
+      // popovers possam ignorar cliques fora enquanto o teclado estiver
+      // aberto (o teclado é montado em `document.body`, fora da árvore
+      // de qualquer Radix Dialog/Popover).
+      const vk = (
+        window as unknown as { mathVirtualKeyboard?: EventTarget & { visible: boolean } }
+      ).mathVirtualKeyboard
+      if (vk) {
+        const sync = () => {
+          if (vk.visible) document.body.setAttribute("data-math-keyboard-open", "true")
+          else document.body.removeAttribute("data-math-keyboard-open")
+        }
+        vk.addEventListener("geometrychange", sync)
+        // `update-state` é disparado em show/hide; cobre os dois eventos.
+        vk.addEventListener("update-state" as keyof HTMLElementEventMap, sync)
+        sync()
+
+        // Guarda global: enquanto o teclado virtual estiver aberto,
+        // interceptamos pointerdown/mousedown na fase de captura para
+        // que detectores de "clique fora" (Radix Dialog/Popover, etc.)
+        // não fechem nada quando o usuário toca em qualquer ponto fora
+        // do teclado. Apenas chamamos `stopPropagation` — o evento de
+        // `click` resultante ainda atinge botões normalmente, então
+        // ações explícitas (Save/Cancel) continuam funcionando.
+        const guard = (e: Event) => {
+          if (!document.body.hasAttribute("data-math-keyboard-open")) return
+          const target = e.target as HTMLElement | null
+          if (!target) return
+          if (target.closest(".ML__keyboard, .ML__virtual-keyboard, math-field")) return
+          e.stopPropagation()
+        }
+        document.addEventListener("pointerdown", guard, true)
+        document.addEventListener("mousedown", guard, true)
+        document.addEventListener("touchstart", guard, true)
+      }
     })
   }
   return mathliveReady
@@ -67,6 +104,12 @@ export function MathInput({
 }: MathInputProps) {
   const ref = useRef<MathfieldElement | null>(null)
   const [ready, setReady] = useState(false)
+  // Vira `true` quando o `<math-field>` foi montado E o seu mathfield
+  // interno (`this.mathfield`) já existe — só então é seguro setar
+  // `value`, chamar `focus()`, etc. Sem essa guarda o MathLive lança
+  // `TypeError: can't access property "options", this.mathfield is
+  // undefined` durante o blur subsequente.
+  const [elementReady, setElementReady] = useState(false)
 
   useEffect(() => {
     let cancelled = false
@@ -78,32 +121,66 @@ export function MathInput({
     }
   }, [])
 
+  // Aguarda o custom element terminar de inicializar.
+  useEffect(() => {
+    if (!ready) return
+    const mf = ref.current
+    if (!mf) return
+    let cancelled = false
+    let raf = 0
+    const check = (attempt = 0) => {
+      if (cancelled) return
+      // MathfieldElement guarda a instância interna em `_mathfield`
+      // (criada de forma assíncrona dentro do connectedCallback).
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const m = mf as any
+      if (m._mathfield != null || m.mathfield != null) {
+        setElementReady(true)
+        return
+      }
+      if (attempt > 120) {
+        // Fallback: assume pronto após ~2s para não travar a UI caso
+        // o nome interno mude em versões futuras.
+        setElementReady(true)
+        return
+      }
+      raf = requestAnimationFrame(() => check(attempt + 1))
+    }
+    raf = requestAnimationFrame(() => check(0))
+    return () => {
+      cancelled = true
+      cancelAnimationFrame(raf)
+    }
+  }, [ready])
+
   // Keep MathLive value in sync with React-controlled `value`.
   useEffect(() => {
-    if (!ready) return
+    if (!elementReady) return
     const mf = ref.current
     if (!mf) return
-    if (mf.value !== value) {
-      mf.value = value ?? ""
+    try {
+      if (mf.value !== value) mf.value = value ?? ""
+    } catch {
+      /* ignore */
     }
-  }, [value, ready])
+  }, [value, elementReady])
 
   useEffect(() => {
-    if (!ready) return
+    if (!elementReady) return
     const mf = ref.current
     if (!mf) return
-    mf.readOnly = !!readOnly
-  }, [readOnly, ready])
+    try { mf.readOnly = !!readOnly } catch { /* ignore */ }
+  }, [readOnly, elementReady])
 
   useEffect(() => {
-    if (!ready) return
+    if (!elementReady) return
     const mf = ref.current
     if (!mf || placeholder === undefined) return
-    mf.placeholder = placeholder
-  }, [placeholder, ready])
+    try { mf.placeholder = placeholder } catch { /* ignore */ }
+  }, [placeholder, elementReady])
 
   useEffect(() => {
-    if (!ready) return
+    if (!elementReady) return
     const mf = ref.current
     if (!mf) return
     const handleInput = () => onChange?.(mf.value)
@@ -114,15 +191,18 @@ export function MathInput({
       mf.removeEventListener("input", handleInput)
       mf.removeEventListener("change", handleChange)
     }
-  }, [onChange, onCommit, ready])
+  }, [onChange, onCommit, elementReady])
 
   useEffect(() => {
-    if (!ready || !autoFocus) return
+    if (!elementReady || !autoFocus) return
     const mf = ref.current
     if (!mf) return
-    const id = requestAnimationFrame(() => mf.focus?.())
-    return () => cancelAnimationFrame(id)
-  }, [autoFocus, ready])
+    try {
+      mf.focus?.()
+    } catch {
+      /* ignore — usuário pode focar manualmente */
+    }
+  }, [autoFocus, elementReady])
 
   // The `<math-field>` tag is a custom element not in the React JSX
   // namespace. Cast through `any` to keep TS happy without polluting

@@ -24,6 +24,7 @@ import {
 import { cn } from "@/lib/utils"
 import { $createEquationNode, EquationNode } from "./equation-node"
 import { KatexRenderer } from "./katex-renderer"
+import { MathInput } from "@/components/block-content-editor/extras/math/math-input"
 
 type CommandPayload = {
   equation: string
@@ -56,23 +57,33 @@ export function EquationsPlugin() {
   return null
 }
 
-export function InsertEquationDialog({
-  activeEditor,
+/**
+ * Corpo reutilizável do diálogo de equação (criação e edição).
+ * Usa MathLive (`MathInput`) como editor visual + preview KaTeX.
+ */
+export function EquationDialogBody({
+  initialEquation = "",
+  initialInline = true,
+  submitLabel = "Insert",
   onClose,
+  onSubmit,
 }: {
-  activeEditor: LexicalEditor
+  initialEquation?: string
+  initialInline?: boolean
+  submitLabel?: string
   onClose: () => void
+  onSubmit: (payload: CommandPayload) => void
 }) {
-  const [equation, setEquation] = useState("")
-  const [inline, setInline] = useState(true)
+  const [equation, setEquation] = useState(initialEquation)
+  const [inline, setInline] = useState(initialInline)
 
   const onConfirm = useCallback(() => {
-    activeEditor.dispatchCommand(INSERT_EQUATION_COMMAND, { equation, inline })
+    onSubmit({ equation, inline })
     onClose()
-  }, [activeEditor, equation, inline, onClose])
+  }, [equation, inline, onClose, onSubmit])
 
   return (
-    <div className="flex flex-col gap-3 min-w-[320px]">
+    <div className="flex flex-col gap-3 min-w-[420px]">
       <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
         <input
           type="checkbox"
@@ -82,33 +93,34 @@ export function InsertEquationDialog({
         />
         Inline
       </label>
-      <label className="flex flex-col gap-1 text-sm text-gray-700 dark:text-gray-300">
-        Equation
-        {inline ? (
+      <div className="flex flex-col gap-1 text-sm text-gray-700 dark:text-gray-300">
+        <span>Equation</span>
+        {/* MathLive virtual keyboard / visual formula editor. The value
+            is stored as LaTeX, exactly what the EquationNode expects. */}
+        <MathInput
+          value={equation}
+          onChange={setEquation}
+          autoFocus
+          placeholder="\\frac{a}{b}"
+          className={cn(
+            "min-h-[2.75rem] text-base",
+            !inline && "min-h-[5rem]",
+          )}
+        />
+        <details className="text-xs text-gray-500 dark:text-gray-400">
+          <summary className="cursor-pointer select-none">Raw LaTeX</summary>
           <input
             value={equation}
             onChange={(e) => setEquation(e.target.value)}
             className={cn(
-              "h-8 px-2 rounded border text-sm font-mono",
+              "mt-1 w-full h-7 px-2 rounded border text-xs font-mono",
               "border-gray-300 dark:border-gray-700",
               "bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100",
               "focus:outline-none focus:ring-1 focus:ring-blue-500",
             )}
           />
-        ) : (
-          <textarea
-            value={equation}
-            onChange={(e) => setEquation(e.target.value)}
-            rows={4}
-            className={cn(
-              "px-2 py-1 rounded border text-sm font-mono",
-              "border-gray-300 dark:border-gray-700",
-              "bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100",
-              "focus:outline-none focus:ring-1 focus:ring-blue-500",
-            )}
-          />
-        )}
-      </label>
+        </details>
+      </div>
       <div className="flex flex-col gap-1 text-sm text-gray-700 dark:text-gray-300">
         Preview
         <div className="min-h-[40px] p-2 rounded border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50">
@@ -129,9 +141,24 @@ export function InsertEquationDialog({
           disabled={!equation.trim()}
           className="h-8 px-3 rounded text-sm bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:pointer-events-none"
         >
-          Insert
+          {submitLabel}
         </button>
       </div>
     </div>
+  )
+}
+
+export function InsertEquationDialog({
+  activeEditor,
+  onClose,
+}: {
+  activeEditor: LexicalEditor
+  onClose: () => void
+}) {
+  return (
+    <EquationDialogBody
+      onClose={onClose}
+      onSubmit={(payload) => activeEditor.dispatchCommand(INSERT_EQUATION_COMMAND, payload)}
+    />
   )
 }
