@@ -124,6 +124,7 @@ export default function ColorPicker({ color, onChange }: Readonly<ColorPickerPro
             "focus:outline-none focus:ring-1 focus:ring-blue-500",
           )}
         />
+        
       </label>
 
       <div className="flex flex-wrap gap-1">
@@ -183,7 +184,23 @@ export default function ColorPicker({ color, onChange }: Readonly<ColorPickerPro
         className="w-full h-5 rounded border border-black/10 dark:border-white/10"
         style={{ backgroundColor: selfColor.hex }}
       />
+
+      <button
+          type="button"
+          onClick={() => onChange?.("", false, false)}
+          title="Clear color"
+          aria-label="Clear color"
+          className={cn(
+            "shrink-0 h-7 px-2 rounded border text-xs",
+            "border-gray-300 dark:border-gray-700",
+            "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200",
+            "hover:bg-gray-50 dark:hover:bg-gray-700",
+          )}
+        >
+          Clear
+        </button>
     </div>
+    
   )
 }
 
