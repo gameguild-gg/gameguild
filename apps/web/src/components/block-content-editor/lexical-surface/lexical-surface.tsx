@@ -37,13 +37,14 @@ import { buildInitialEditorState, stripSelection } from "../lib/lexical/initial-
 import { BlockEmbedPlugin } from "../plugins/block-embed-plugin"
 import { BlockInsertMenuPlugin } from "../plugins/block-insert-menu-plugin"
 import { LEXICAL_SURFACE_THEME } from "./theme"
-import { ToolbarPlugin, ToolbarContextProvider } from "./toolbar"
+import { ToolbarPlugin, ToolbarContextProvider, useToolbarState } from "./toolbar"
 import {
   FloatingLinkEditorPlugin,
   FloatingTextFormatToolbarPlugin,
 } from "./floating"
 import { ComponentPickerPlugin } from "./picker"
 import { DraggableBlockPlugin } from "./draggable"
+import { pageSettingsToStyle } from "./page"
 
 export type LexicalSurfaceFeatures = {
   /** Top toolbar (block format, font, color, alignment, …). Default: true */
@@ -60,6 +61,8 @@ export type LexicalSurfaceFeatures = {
   blockEmbed?: boolean
   /** Our `BlockInsertMenuPlugin` ("//" trigger). Default: true */
   blockInsertMenu?: boolean
+  /** Apply page-size/margin/orientation from the toolbar to the editable area. Default: true */
+  pageLayout?: boolean
   /** Lexical built-ins. Defaults: true */
   history?: boolean
   list?: boolean
@@ -96,6 +99,7 @@ const DEFAULT_FEATURES: Required<LexicalSurfaceFeatures> = {
   picker: true,
   blockEmbed: true,
   blockInsertMenu: true,
+  pageLayout: true,
   history: true,
   list: true,
   link: true,
@@ -122,24 +126,36 @@ function resolveFeatures(
   return merged
 }
 
-// ─── Inner toolbar bridge ───────────────────────────────────────────────────
-// The top toolbar needs `editor`, `activeEditor`, `setActiveEditor`, and
-// `setIsLinkEditMode` — state that lives above LexicalComposer in the
-// upstream playground but is most cleanly owned here. We also share
-// `setIsLinkEditMode` with the FloatingLinkEditor below.
+// ─── Inner editor body ──────────────────────────────────────────────────────
+// Holds editor-scoped state (activeEditor, isLinkEditMode) so the top
+// toolbar can render ABOVE the editable area while still sharing state
+// with the floating link editor rendered below.
 
-function SurfacePlugins({
+function EditorBody({
   features,
-  anchorElem,
   onChange,
+  placeholder,
+  readOnly,
+  contentClassName,
+  contentStyle,
+  className,
+  headerSlot,
 }: {
   features: Required<LexicalSurfaceFeatures>
-  anchorElem: HTMLElement | null
   onChange?: (state: SerializedEditorState, editor: LexicalEditor) => void
+  placeholder?: React.ReactNode
+  readOnly: boolean
+  contentClassName?: string
+  contentStyle?: React.CSSProperties
+  className?: string
+  headerSlot?: React.ReactNode
 }) {
   const [editor] = useLexicalComposerContext()
   const [activeEditor, setActiveEditor] = useState<LexicalEditor>(editor)
   const [isLinkEditMode, setIsLinkEditMode] = useState(false)
+  const [anchorElem, setAnchorElem] = useState<HTMLElement | null>(null)
+  const { pageSettings } = useToolbarState()
+  const pageStyle = features.pageLayout ? pageSettingsToStyle(pageSettings) : undefined
 
   const handleChange = useCallback(
     (editorState: EditorState, editorInstance: LexicalEditor) => {
@@ -160,30 +176,60 @@ function SurfacePlugins({
           setIsLinkEditMode={setIsLinkEditMode}
         />
       )}
-      {features.history && <HistoryPlugin />}
-      {features.list && <ListPlugin />}
-      {features.checkList && <CheckListPlugin />}
-      {features.link && <LinkPlugin />}
-      {features.horizontalRule && <HorizontalRulePlugin />}
-      {features.tabIndentation && <TabIndentationPlugin />}
-      {features.picker && <ComponentPickerPlugin />}
-      {features.blockEmbed && <BlockEmbedPlugin />}
-      {features.blockInsertMenu && <BlockInsertMenuPlugin />}
-      {anchorElem && features.floatingTextFormat && (
-        <FloatingTextFormatToolbarPlugin
-          anchorElem={anchorElem}
-          setIsLinkEditMode={setIsLinkEditMode}
-        />
-      )}
-      {anchorElem && features.floatingLinkEditor && (
-        <FloatingLinkEditorPlugin
-          anchorElem={anchorElem}
-          isLinkEditMode={isLinkEditMode}
-          setIsLinkEditMode={setIsLinkEditMode}
-        />
-      )}
-      {anchorElem && features.draggable && <DraggableBlockPlugin anchorElem={anchorElem} />}
-      {onChange && <OnChangePlugin onChange={handleChange} ignoreSelectionChange />}
+      {headerSlot}
+      <div className={cn("relative", className)} ref={setAnchorElem}>
+        <div
+          className={cn(features.pageLayout && "mx-auto")}
+          style={pageStyle}
+        >
+          <RichTextPlugin
+            contentEditable={
+              <ContentEditable
+                readOnly={readOnly}
+                tabIndex={readOnly ? -1 : 0}
+                style={contentStyle}
+                className={cn(
+                  "outline-none py-3 text-base text-gray-900 dark:text-gray-100",
+                  !features.pageLayout && "px-4",
+                  contentClassName,
+                )}
+              />
+            }
+            placeholder={
+              placeholder ? (
+                <div className="pointer-events-none absolute left-4 top-3 select-none text-gray-400 dark:text-gray-500">
+                  {placeholder}
+                </div>
+              ) : null
+            }
+            ErrorBoundary={LexicalErrorBoundary}
+          />
+        </div>
+        {features.history && <HistoryPlugin />}
+        {features.list && <ListPlugin />}
+        {features.checkList && <CheckListPlugin />}
+        {features.link && <LinkPlugin />}
+        {features.horizontalRule && <HorizontalRulePlugin />}
+        {features.tabIndentation && <TabIndentationPlugin />}
+        {features.picker && <ComponentPickerPlugin />}
+        {features.blockEmbed && <BlockEmbedPlugin />}
+        {features.blockInsertMenu && <BlockInsertMenuPlugin />}
+        {anchorElem && features.floatingTextFormat && (
+          <FloatingTextFormatToolbarPlugin
+            anchorElem={anchorElem}
+            setIsLinkEditMode={setIsLinkEditMode}
+          />
+        )}
+        {anchorElem && features.floatingLinkEditor && (
+          <FloatingLinkEditorPlugin
+            anchorElem={anchorElem}
+            isLinkEditMode={isLinkEditMode}
+            setIsLinkEditMode={setIsLinkEditMode}
+          />
+        )}
+        {anchorElem && features.draggable && <DraggableBlockPlugin anchorElem={anchorElem} />}
+        {onChange && <OnChangePlugin onChange={handleChange} ignoreSelectionChange />}
+      </div>
     </>
   )
 }
@@ -204,7 +250,6 @@ export function LexicalSurface({
   headerSlot,
 }: LexicalSurfaceProps) {
   const resolvedFeatures = useMemo(() => resolveFeatures(features, readOnly), [features, readOnly])
-  const [anchorElem, setAnchorElem] = useState<HTMLElement | null>(null)
   // Re-mount when caller passes a new `mountKey` (e.g. external state reset).
   const seedRef = useRef<SerializedEditorState | null | undefined>(initialState)
 
@@ -236,35 +281,16 @@ export function LexicalSurface({
   return (
     <LexicalComposer key={mountKey} initialConfig={initialConfig}>
       <ToolbarContextProvider>
-        {headerSlot}
-        <div className={cn("relative", className)} ref={setAnchorElem}>
-          <RichTextPlugin
-            contentEditable={
-              <ContentEditable
-                readOnly={readOnly}
-                tabIndex={readOnly ? -1 : 0}
-                style={contentStyle}
-                className={cn(
-                  "outline-none px-4 py-3 text-base text-gray-900 dark:text-gray-100",
-                  contentClassName,
-                )}
-              />
-            }
-            placeholder={
-              placeholder ? (
-                <div className="pointer-events-none absolute left-4 top-3 select-none text-gray-400 dark:text-gray-500">
-                  {placeholder}
-                </div>
-              ) : null
-            }
-            ErrorBoundary={LexicalErrorBoundary}
-          />
-          <SurfacePlugins
-            features={resolvedFeatures}
-            anchorElem={anchorElem}
-            onChange={onChange}
-          />
-        </div>
+        <EditorBody
+          features={resolvedFeatures}
+          onChange={onChange}
+          placeholder={placeholder}
+          readOnly={readOnly}
+          contentClassName={contentClassName}
+          contentStyle={contentStyle}
+          className={className}
+          headerSlot={headerSlot}
+        />
       </ToolbarContextProvider>
     </LexicalComposer>
   )

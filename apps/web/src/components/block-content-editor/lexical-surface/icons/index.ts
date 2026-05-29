@@ -42,6 +42,7 @@ export {
   PaintBucket as BgColorIcon,
   Plus as InsertIcon,
   Minus as HorizontalRuleIcon,
+  FileText as PageIcon,
   // Picker & misc
   ChevronDown as ChevronDownIcon,
   ChevronUp as ChevronUpIcon,
