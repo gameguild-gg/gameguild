@@ -123,6 +123,7 @@ import {
   formatQuote,
   isKeyboardInput,
 } from "./utils"
+import { SHORTCUTS } from "../shortcuts/shortcuts"
 
 // ─── constants ──────────────────────────────────────────────────────────────
 
@@ -222,16 +223,16 @@ function BlockFormatDropDown({
       buttonClassName="min-w-[120px]"
       buttonAriaLabel="Formatting options for text style"
     >
-      <DropDownItem active={blockType === "paragraph"} onClick={() => formatParagraph(editor)}>
+      <DropDownItem active={blockType === "paragraph"} onClick={() => formatParagraph(editor)} shortcut={SHORTCUTS.NORMAL}>
         <ParagraphIcon className="w-4 h-4" /> Normal
       </DropDownItem>
-      <DropDownItem active={blockType === "h1"} onClick={() => formatHeading(editor, blockType, "h1")}>
+      <DropDownItem active={blockType === "h1"} onClick={() => formatHeading(editor, blockType, "h1")} shortcut={SHORTCUTS.HEADING1}>
         <Heading1Icon className="w-4 h-4" /> Heading 1
       </DropDownItem>
-      <DropDownItem active={blockType === "h2"} onClick={() => formatHeading(editor, blockType, "h2")}>
+      <DropDownItem active={blockType === "h2"} onClick={() => formatHeading(editor, blockType, "h2")} shortcut={SHORTCUTS.HEADING2}>
         <Heading2Icon className="w-4 h-4" /> Heading 2
       </DropDownItem>
-      <DropDownItem active={blockType === "h3"} onClick={() => formatHeading(editor, blockType, "h3")}>
+      <DropDownItem active={blockType === "h3"} onClick={() => formatHeading(editor, blockType, "h3")} shortcut={SHORTCUTS.HEADING3}>
         <Heading3Icon className="w-4 h-4" /> Heading 3
       </DropDownItem>
       <DropDownItem active={blockType === "h4"} onClick={() => formatHeading(editor, blockType, "h4")}>
@@ -243,19 +244,19 @@ function BlockFormatDropDown({
       <DropDownItem active={blockType === "h6"} onClick={() => formatHeading(editor, blockType, "h6")}>
         <Heading6Icon className="w-4 h-4" /> Heading 6
       </DropDownItem>
-      <DropDownItem active={blockType === "bullet"} onClick={() => formatBulletList(editor, blockType)}>
+      <DropDownItem active={blockType === "bullet"} onClick={() => formatBulletList(editor, blockType)} shortcut={SHORTCUTS.BULLET_LIST}>
         <BulletedListIcon className="w-4 h-4" /> Bullet List
       </DropDownItem>
-      <DropDownItem active={blockType === "number"} onClick={() => formatNumberedList(editor, blockType)}>
+      <DropDownItem active={blockType === "number"} onClick={() => formatNumberedList(editor, blockType)} shortcut={SHORTCUTS.NUMBERED_LIST}>
         <NumberedListIcon className="w-4 h-4" /> Numbered List
       </DropDownItem>
-      <DropDownItem active={blockType === "check"} onClick={() => formatCheckList(editor, blockType)}>
+      <DropDownItem active={blockType === "check"} onClick={() => formatCheckList(editor, blockType)} shortcut={SHORTCUTS.CHECK_LIST}>
         <CheckListIcon className="w-4 h-4" /> Check List
       </DropDownItem>
-      <DropDownItem active={blockType === "quote"} onClick={() => formatQuote(editor, blockType)}>
+      <DropDownItem active={blockType === "quote"} onClick={() => formatQuote(editor, blockType)} shortcut={SHORTCUTS.QUOTE}>
         <QuoteIcon className="w-4 h-4" /> Quote
       </DropDownItem>
-      <DropDownItem active={blockType === "code"} onClick={() => formatCode(editor, blockType)}>
+      <DropDownItem active={blockType === "code"} onClick={() => formatCode(editor, blockType)} shortcut={SHORTCUTS.CODE_BLOCK}>
         <CodeBlockIcon className="w-4 h-4" /> Code Block
       </DropDownItem>
     </DropDown>
@@ -435,23 +436,23 @@ function ElementFormatDropdown({
       buttonClassName="min-w-[120px]"
       buttonAriaLabel="Formatting options for text alignment"
     >
-      <DropDownItem onClick={() => editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, "left")}>
+      <DropDownItem onClick={() => editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, "left")} shortcut={SHORTCUTS.LEFT_ALIGN}>
         <AlignLeftIcon className="w-4 h-4" /> Left Align
       </DropDownItem>
-      <DropDownItem onClick={() => editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, "center")}>
+      <DropDownItem onClick={() => editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, "center")} shortcut={SHORTCUTS.CENTER_ALIGN}>
         <AlignCenterIcon className="w-4 h-4" /> Center Align
       </DropDownItem>
-      <DropDownItem onClick={() => editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, "right")}>
+      <DropDownItem onClick={() => editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, "right")} shortcut={SHORTCUTS.RIGHT_ALIGN}>
         <AlignRightIcon className="w-4 h-4" /> Right Align
       </DropDownItem>
-      <DropDownItem onClick={() => editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, "justify")}>
+      <DropDownItem onClick={() => editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, "justify")} shortcut={SHORTCUTS.JUSTIFY_ALIGN}>
         <AlignJustifyIcon className="w-4 h-4" /> Justify Align
       </DropDownItem>
       <DropDownDivider />
-      <DropDownItem onClick={() => editor.dispatchCommand(OUTDENT_CONTENT_COMMAND, undefined)}>
+      <DropDownItem onClick={() => editor.dispatchCommand(OUTDENT_CONTENT_COMMAND, undefined)} shortcut={SHORTCUTS.OUTDENT}>
         <OutdentIcon className="w-4 h-4" /> Outdent
       </DropDownItem>
-      <DropDownItem onClick={() => editor.dispatchCommand(INDENT_CONTENT_COMMAND, undefined)}>
+      <DropDownItem onClick={() => editor.dispatchCommand(INDENT_CONTENT_COMMAND, undefined)} shortcut={SHORTCUTS.INDENT}>
         <IndentIcon className="w-4 h-4" /> Indent
       </DropDownItem>
     </DropDown>
@@ -495,28 +496,28 @@ function CaseFormatDropDown({
       buttonIcon={<CaseIcon className="w-4 h-4" />}
       buttonAriaLabel="Formatting options for additional text styles"
     >
-      <DropDownItem active={isLowercase} onClick={() => dispatch("lowercase")}>
+      <DropDownItem active={isLowercase} onClick={() => dispatch("lowercase")} shortcut={SHORTCUTS.LOWERCASE}>
         <LowercaseIcon className="w-4 h-4" /> Lowercase
       </DropDownItem>
-      <DropDownItem active={isUppercase} onClick={() => dispatch("uppercase")}>
+      <DropDownItem active={isUppercase} onClick={() => dispatch("uppercase")} shortcut={SHORTCUTS.UPPERCASE}>
         <UppercaseIcon className="w-4 h-4" /> Uppercase
       </DropDownItem>
-      <DropDownItem active={isCapitalize} onClick={() => dispatch("capitalize")}>
+      <DropDownItem active={isCapitalize} onClick={() => dispatch("capitalize")} shortcut={SHORTCUTS.CAPITALIZE}>
         <CapitalizeIcon className="w-4 h-4" /> Capitalize
       </DropDownItem>
-      <DropDownItem active={isStrikethrough} onClick={() => dispatch("strikethrough")}>
+      <DropDownItem active={isStrikethrough} onClick={() => dispatch("strikethrough")} shortcut={SHORTCUTS.STRIKETHROUGH}>
         <StrikethroughIcon className="w-4 h-4" /> Strikethrough
       </DropDownItem>
-      <DropDownItem active={isSubscript} onClick={() => dispatch("subscript")}>
+      <DropDownItem active={isSubscript} onClick={() => dispatch("subscript")} shortcut={SHORTCUTS.SUBSCRIPT}>
         <SubscriptIcon className="w-4 h-4" /> Subscript
       </DropDownItem>
-      <DropDownItem active={isSuperscript} onClick={() => dispatch("superscript")}>
+      <DropDownItem active={isSuperscript} onClick={() => dispatch("superscript")} shortcut={SHORTCUTS.SUPERSCRIPT}>
         <SuperscriptIcon className="w-4 h-4" /> Superscript
       </DropDownItem>
       <DropDownItem active={isHighlight} onClick={() => dispatch("highlight")}>
         <HighlightIcon className="w-4 h-4" /> Highlight
       </DropDownItem>
-      <DropDownItem onClick={clear}>
+      <DropDownItem onClick={clear} shortcut={SHORTCUTS.CLEAR_FORMATTING}>
         <ClearFormatIcon className="w-4 h-4" /> Clear Formatting
       </DropDownItem>
     </DropDown>
