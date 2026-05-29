@@ -22,6 +22,7 @@ export function DropDown({
   buttonLabel,
   buttonIcon,
   buttonClassName,
+  buttonLabelStyle,
   buttonAriaLabel,
   disabled,
   showChevron = true,
@@ -32,6 +33,7 @@ export function DropDown({
   buttonLabel?: React.ReactNode
   buttonIcon?: React.ReactNode
   buttonClassName?: string
+  buttonLabelStyle?: React.CSSProperties
   buttonAriaLabel?: string
   disabled?: boolean
   showChevron?: boolean
@@ -41,6 +43,22 @@ export function DropDown({
 }) {
   const [open, setOpen] = React.useState(false)
   const close = React.useCallback(() => setOpen(false), [])
+  const contentRef = React.useRef<HTMLDivElement | null>(null)
+
+  // On open, scrolls to the active item (if any) — avoids having to scroll
+  // to find the current option in long lists (e.g., fonts).
+  React.useEffect(() => {
+    if (!open) return
+    const id = requestAnimationFrame(() => {
+      const root = contentRef.current
+      if (!root) return
+      const active = root.querySelector<HTMLElement>('[data-dropdown-active="true"]')
+      if (active) {
+        active.scrollIntoView({ block: "nearest", inline: "nearest" })
+      }
+    })
+    return () => cancelAnimationFrame(id)
+  }, [open])
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -57,11 +75,16 @@ export function DropDown({
           )}
         >
           {buttonIcon}
-          {buttonLabel != null && <span className="truncate max-w-[160px]">{buttonLabel}</span>}
+          {buttonLabel != null && (
+            <span className="truncate max-w-[160px]" style={buttonLabelStyle}>
+              {buttonLabel}
+            </span>
+          )}
           {showChevron && <ChevronDownIcon className="w-3 h-3 opacity-60" />}
         </button>
       </PopoverTrigger>
       <PopoverContent
+        ref={contentRef}
         align={align}
         sideOffset={4}
         className="p-1 w-auto min-w-[180px] max-h-[60vh] overflow-y-auto"
@@ -80,6 +103,7 @@ export function DropDownItem({
   shortcut,
   title,
   ariaLabel,
+  closeOnClick = true,
 }: {
   children: React.ReactNode
   onClick?: (e: React.MouseEvent<HTMLButtonElement>) => void
@@ -88,6 +112,9 @@ export function DropDownItem({
   shortcut?: string
   title?: string
   ariaLabel?: string
+  /** If `false`, the dropdown remains open after the click (useful for
+   *  lists where the user wants to preview multiple options, e.g., fonts). */
+  closeOnClick?: boolean
 }) {
   const ctx = React.useContext(DropDownContext)
   return (
@@ -95,9 +122,10 @@ export function DropDownItem({
       type="button"
       title={title}
       aria-label={ariaLabel}
+      data-dropdown-active={active ? "true" : undefined}
       onClick={(e) => {
         onClick?.(e)
-        ctx?.close()
+        if (closeOnClick) ctx?.close()
       }}
       className={cn(
         "w-full flex items-center gap-2 px-2 py-1.5 text-sm rounded",
