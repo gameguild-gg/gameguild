@@ -20,6 +20,7 @@ import { Dispatch, useCallback, useEffect, useState } from "react"
 import {
   $isCodeNode,
   CODE_LANGUAGE_FRIENDLY_NAME_MAP,
+  CodeNode,
   getCodeLanguageOptions,
   getLanguageFriendlyName,
 } from "@lexical/code"
@@ -132,17 +133,139 @@ import {
 import { SHORTCUTS } from "../shortcuts/shortcuts"
 import { BlockInsertButtonPlugin } from "../../plugins/block-insert-button-plugin"
 import { $isEquationNode } from "../equation/equation-node"
+import { InsertEquationDialog } from "../equation"
+import { InsertTableDialog } from "../table"
+import { INSERT_EXCALIDRAW_COMMAND } from "../excalidraw"
+import { Sigma as EquationIcon, Pencil as ExcalidrawIcon, Table as TableIcon } from "lucide-react"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 
 // ─── constants ──────────────────────────────────────────────────────────────
 
-const FONT_FAMILY_OPTIONS: ReadonlyArray<readonly [string, string]> = [
-  ["Arial", "Arial"],
-  ["Courier New", "Courier New"],
-  ["Georgia", "Georgia"],
-  ["Times New Roman", "Times New Roman"],
-  ["Trebuchet MS", "Trebuchet MS"],
-  ["Verdana", "Verdana"],
+const CODE_FONT_FAMILY_VALUE =
+  "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace"
+const CODE_FONT_FAMILY_LABEL = "Monospace"
+
+type FontGroup = "Sans-serif" | "Serif" | "Display" | "Monospace" | "Accessibility"
+
+interface FontOption {
+  /** CSS `font-family` value applied to the text. */
+  value: string
+  /** Label displayed in the dropdown. */
+  label: string
+  /** Category for visual grouping. */
+  group: FontGroup
+  /** Short note displayed below the name (e.g., for accessibility fonts). */
+  hint?: string
+  /** When true, ensures the Google Fonts CSS is loaded. */
+  webFont?: boolean
+}
+
+const FONT_FAMILY_OPTIONS: ReadonlyArray<FontOption> = [
+  // Sans-serif (common proportional)
+  { value: "Arial", label: "Arial", group: "Sans-serif" },
+  { value: "Helvetica", label: "Helvetica", group: "Sans-serif" },
+  { value: "Verdana", label: "Verdana", group: "Sans-serif" },
+  { value: "Tahoma", label: "Tahoma", group: "Sans-serif" },
+  { value: "Trebuchet MS", label: "Trebuchet MS", group: "Sans-serif" },
+  { value: "Calibri", label: "Calibri", group: "Sans-serif" },
+  { value: "Segoe UI", label: "Segoe UI", group: "Sans-serif" },
+  { value: "system-ui", label: "System UI", group: "Sans-serif" },
+  // Serif
+  { value: "Times New Roman", label: "Times New Roman", group: "Serif" },
+  { value: "Georgia", label: "Georgia", group: "Serif" },
+  { value: "Garamond", label: "Garamond", group: "Serif" },
+  { value: "Palatino", label: "Palatino", group: "Serif" },
+  // Display
+  { value: "Comic Sans MS", label: "Comic Sans MS", group: "Display" },
+  { value: "Impact", label: "Impact", group: "Display" },
+  // Monospace
+  { value: CODE_FONT_FAMILY_VALUE, label: CODE_FONT_FAMILY_LABEL, group: "Monospace" },
+  { value: "Courier New", label: "Courier New", group: "Monospace" },
+  { value: "Consolas", label: "Consolas", group: "Monospace" },
+  { value: "Menlo", label: "Menlo", group: "Monospace" },
+  { value: "Monaco", label: "Monaco", group: "Monospace" },
+  { value: "Source Code Pro", label: "Source Code Pro", group: "Monospace", webFont: true },
+  // Accessibility — recommended for dyslexia / low vision / autism.
+  // Dynamically loaded from Google Fonts when mounting the toolbar.
+  {
+    value: "'Atkinson Hyperlegible', Arial, sans-serif",
+    label: "Atkinson Hyperlegible",
+    group: "Accessibility",
+    hint: "Low Vision (Braille Institute)",
+    webFont: true,
+  },
+  {
+    value: "Lexend, Arial, sans-serif",
+    label: "Lexend",
+    group: "Accessibility",
+    hint: "Reading / Dyslexia",
+    webFont: true,
+  },
+  {
+    value: "'Lexend Deca', Arial, sans-serif",
+    label: "Lexend Deca",
+    group: "Accessibility",
+    hint: "Fluent Reading",
+    webFont: true,
+  },
+  {
+    value: "'OpenDyslexic', 'Comic Sans MS', sans-serif",
+    label: "OpenDyslexic",
+    group: "Accessibility",
+    hint: "Dyslexia",
+    webFont: true,
+  },
+  {
+    value: "'Andika', Arial, sans-serif",
+    label: "Andika",
+    group: "Accessibility",
+    hint: "Literacy / Autism",
+    webFont: true,
+  },
+  {
+    value: "'Nunito', Arial, sans-serif",
+    label: "Nunito",
+    group: "Accessibility",
+    hint: "High Readability",
+    webFont: true,
+  },
 ]
+
+// only URL Google Fonts CSS since we don't want to ship the font files ourselves or load
+const ACCESSIBILITY_FONTS_HREF =
+  "https://fonts.googleapis.com/css2?" +
+  [
+    "family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400;1,700",
+    "family=Lexend:wght@300;400;500;600;700",
+    "family=Lexend+Deca:wght@300;400;500;600;700",
+    "family=Andika:ital,wght@0,400;0,700;1,400;1,700",
+    "family=Nunito:ital,wght@0,400;0,700;1,400;1,700",
+    "family=Source+Code+Pro:wght@400;500;600;700",
+    "display=swap",
+  ].join("&")
+
+const OPENDYSLEXIC_CSS_HREF =
+  "https://cdn.jsdelivr.net/npm/open-dyslexic@1.0.3/open-dyslexic-regular.css"
+
+function ensureToolbarWebFontsLoaded(): void {
+  if (typeof document === "undefined") return
+  const head = document.head
+  const ensure = (href: string, id: string) => {
+    if (document.getElementById(id)) return
+    const link = document.createElement("link")
+    link.id = id
+    link.rel = "stylesheet"
+    link.href = href
+    head.appendChild(link)
+  }
+  ensure(ACCESSIBILITY_FONTS_HREF, "lexical-toolbar-google-fonts")
+  ensure(OPENDYSLEXIC_CSS_HREF, "lexical-toolbar-opendyslexic")
+}
 
 const FONT_SIZE_OPTIONS: ReadonlyArray<readonly [string, string]> = [
   ["8px", "8"],
@@ -180,6 +303,40 @@ const ELEMENT_FORMAT_OPTIONS: Record<
 
 function Divider() {
   return <div className="w-px h-5 mx-1 bg-gray-200 dark:bg-gray-700 self-center" aria-hidden />
+}
+
+// Set/replace a CSS property in an inline `style` string. Used para aplicar
+// font-family / font-size diretamente no CodeNode (ElementNode), já que os
+// CodeHighlightNode filhos são recriados pelo registerCodeHighlighting e
+// perdem styles inline.
+function upsertCssProperty(prev: string, prop: string, value: string): string {
+  const decls = (prev || "")
+    .split(";")
+    .map((d) => d.trim())
+    .filter(Boolean)
+    .filter((d) => {
+      const idx = d.indexOf(":")
+      if (idx < 0) return false
+      return d.slice(0, idx).trim().toLowerCase() !== prop.toLowerCase()
+    })
+  decls.push(`${prop}: ${value}`)
+  return decls.join("; ")
+}
+
+// Procura um CodeNode ancestral cobrindo a seleção atual.
+function $getEnclosingCodeNode(): CodeNode | null {
+  const selection = $getSelection()
+  if (selection === null) return null
+  const nodes =
+    $isRangeSelection(selection) || $isNodeSelection(selection)
+      ? selection.getNodes()
+      : []
+  for (const n of nodes) {
+    const code = $findMatchingParent(n, $isCodeNode)
+    if (code) return code as CodeNode
+    if ($isCodeNode(n)) return n as CodeNode
+  }
+  return null
 }
 
 function ToolbarButton({
@@ -228,7 +385,7 @@ function BlockFormatDropDown({
     <DropDown
       disabled={disabled}
       buttonLabel={blockTypeToBlockName[blockType]}
-      buttonClassName="min-w-[120px]"
+      buttonClassName="w-[140px] truncate justify-start"
       buttonAriaLabel="Formatting options for text style"
     >
       <DropDownItem active={blockType === "paragraph"} onClick={() => formatParagraph(editor)} shortcut={SHORTCUTS.NORMAL}>
@@ -298,7 +455,7 @@ function CodeLanguageDropDown({
     <DropDown
       disabled={disabled}
       buttonLabel={friendly}
-      buttonClassName="min-w-[120px]"
+      buttonClassName="w-[140px] truncate justify-start"
       buttonAriaLabel="Select code language"
     >
       {options.map(([value, label]) => (
@@ -325,40 +482,108 @@ function FontDropDown({
   style: "font-family" | "font-size"
   disabled?: boolean
 }) {
-  const options = style === "font-family" ? FONT_FAMILY_OPTIONS : FONT_SIZE_OPTIONS
-  const display = style === "font-size" ? value.replace(/px$/, "") : value
+  const isFontFamily = style === "font-family"
+  // Garante que as web fonts (Google Fonts + OpenDyslexic) estejam
+  // carregadas para o preview de cada item.
+  React.useEffect(() => {
+    if (isFontFamily) ensureToolbarWebFontsLoaded()
+  }, [isFontFamily])
+
+  const display = isFontFamily
+    ? (FONT_FAMILY_OPTIONS.find((o) => o.value === value)?.label ?? value)
+    : value.replace(/px$/, "")
 
   const handleClick = useCallback(
     (option: string) => {
       editor.update(() => {
         $addUpdateTag(SKIP_SELECTION_FOCUS_TAG)
         const selection = $getSelection()
-        if (selection !== null) {
-          $patchStyleText(selection, { [style]: option })
+        if (selection === null) return
+        // Em blocos de código, o registerCodeHighlighting recria os
+        // CodeHighlightNode descartando styles inline. Aplicamos o
+        // style no CodeNode pai e os spans filhos herdam via CSS.
+        const codeNode = $getEnclosingCodeNode()
+        if (codeNode) {
+          codeNode.setStyle(upsertCssProperty(codeNode.getStyle(), style, option))
+          return
         }
+        $patchStyleText(selection, { [style]: option })
       })
     },
     [editor, style],
   )
 
+  // Estilo de botão dedicado para a fonte selecionada (preview no toolbar).
+  const buttonLabelStyle: React.CSSProperties | undefined = isFontFamily
+    ? { fontFamily: value }
+    : undefined
+
+  if (!isFontFamily) {
+    return (
+      <DropDown
+        disabled={disabled}
+        buttonLabel={display}
+        buttonClassName="min-w-[60px]"
+        buttonAriaLabel="Formatting options for font size"
+      >
+        {FONT_SIZE_OPTIONS.map(([option, label]) => (
+          <DropDownItem
+            key={option}
+            active={value === option}
+            onClick={() => handleClick(option)}
+          >
+            {label}
+          </DropDownItem>
+        ))}
+      </DropDown>
+    )
+  }
+
+  // Agrupa as fontes preservando a ordem dos grupos definidos em FONT_FAMILY_OPTIONS.
+  const groups: FontGroup[] = []
+  for (const opt of FONT_FAMILY_OPTIONS) {
+    if (!groups.includes(opt.group)) groups.push(opt.group)
+  }
+
   return (
     <DropDown
       disabled={disabled}
       buttonLabel={display}
-      buttonClassName={style === "font-family" ? "min-w-[110px]" : "min-w-[60px]"}
-      buttonAriaLabel={
-        style === "font-family" ? "Formatting options for font family" : "Formatting options for font size"
-      }
+      buttonLabelStyle={buttonLabelStyle}
+      buttonClassName="w-[140px] truncate justify-start"
+      buttonAriaLabel="Formatting options for font family"
     >
-      {options.map(([option, label]) => (
-        <DropDownItem
-          key={option}
-          active={value === option}
-          onClick={() => handleClick(option)}
-        >
-          {label}
-        </DropDownItem>
-      ))}
+      {groups.flatMap((group, gi) => {
+        const items = FONT_FAMILY_OPTIONS.filter((o) => o.group === group)
+        return [
+          gi > 0 ? <DropDownDivider key={`div-${group}`} /> : null,
+          <div
+            key={`hdr-${group}`}
+            className="px-2 pt-1 pb-0.5 text-[10px] uppercase tracking-wide text-gray-500 dark:text-gray-400"
+          >
+            {group}
+          </div>,
+          ...items.map((opt) => (
+            <DropDownItem
+              key={opt.value}
+              active={value === opt.value}
+              closeOnClick={false}
+              onClick={() => handleClick(opt.value)}
+            >
+              <span className="flex flex-col min-w-0">
+                <span className="truncate" style={{ fontFamily: opt.value }}>
+                  {opt.label}
+                </span>
+                {opt.hint && (
+                  <span className="text-[10px] text-gray-500 dark:text-gray-400 truncate">
+                    {opt.hint}
+                  </span>
+                )}
+              </span>
+            </DropDownItem>
+          )),
+        ]
+      })}
     </DropDown>
   )
 }
@@ -402,6 +627,15 @@ function FontSizeStepper({
             }
           }
           if (handled) return
+        }
+        // Em blocos de código, aplicar font-size no CodeNode pai (ver comentário
+        // em FontDropDown.handleClick).
+        const codeNode = $getEnclosingCodeNode()
+        if (codeNode) {
+          codeNode.setStyle(
+            upsertCssProperty(codeNode.getStyle(), "font-size", `${clamped}px`),
+          )
+          return
         }
         $patchStyleText(selection, { "font-size": `${clamped}px` })
       })
@@ -497,7 +731,7 @@ function ElementFormatDropdown({
       disabled={disabled}
       buttonLabel={formatOption.name}
       buttonIcon={<Icon className="w-4 h-4" />}
-      buttonClassName="min-w-[120px]"
+      buttonClassName="w-[140px] truncate justify-start"
       buttonAriaLabel="Formatting options for text alignment"
     >
       <DropDownItem onClick={() => editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, "left")} shortcut={SHORTCUTS.LEFT_ALIGN}>
@@ -618,6 +852,7 @@ export default function ToolbarPlugin({
 }) {
   const [selectedElementKey, setSelectedElementKey] = useState<string | null>(null)
   const [isEditable, setIsEditable] = useState(() => editor.isEditable())
+  const [insertDialog, setInsertDialog] = useState<"equation" | "table" | null>(null)
   const { toolbarState, updateToolbarState } = useToolbarState()
 
   const dispatchToolbarCommand = <T extends LexicalCommand<unknown>>(
@@ -694,6 +929,21 @@ export default function ToolbarPlugin({
         }
       }
 
+      const elementIsCode = $isCodeNode(element)
+      // Estilos efetivos definidos no próprio CodeNode (font-family/size)
+      // — ver comentário em FontDropDown.handleClick.
+      const codeStyleObj: Record<string, string> = {}
+      if (elementIsCode) {
+        const raw = (element as CodeNode).getStyle() || ""
+        for (const decl of raw.split(";")) {
+          const idx = decl.indexOf(":")
+          if (idx > 0) {
+            const k = decl.slice(0, idx).trim().toLowerCase()
+            const v = decl.slice(idx + 1).trim()
+            if (k) codeStyleObj[k] = v
+          }
+        }
+      }
       updateToolbarState(
         "fontColor",
         $getSelectionStyleValueForProperty(selection, "color", "#000"),
@@ -704,7 +954,9 @@ export default function ToolbarPlugin({
       )
       updateToolbarState(
         "fontFamily",
-        $getSelectionStyleValueForProperty(selection, "font-family", "Arial"),
+        elementIsCode
+          ? (codeStyleObj["font-family"] ?? CODE_FONT_FAMILY_VALUE)
+          : $getSelectionStyleValueForProperty(selection, "font-family", "Arial"),
       )
 
       let matchingParent
@@ -734,9 +986,24 @@ export default function ToolbarPlugin({
       updateToolbarState("isSuperscript", selection.hasFormat("superscript"))
       updateToolbarState("isHighlight", selection.hasFormat("highlight"))
       updateToolbarState("isCode", selection.hasFormat("code"))
+      // Para blocos de código, lemos o font-size do CodeNode pai.
+      const codeAncestor = $getEnclosingCodeNode()
+      let codeFontSize: string | null = null
+      if (codeAncestor) {
+        const raw = codeAncestor.getStyle() || ""
+        for (const decl of raw.split(";")) {
+          const idx = decl.indexOf(":")
+          if (idx > 0 && decl.slice(0, idx).trim().toLowerCase() === "font-size") {
+            codeFontSize = decl.slice(idx + 1).trim()
+            break
+          }
+        }
+      }
       updateToolbarState(
         "fontSize",
-        $getSelectionStyleValueForProperty(selection, "font-size", `${DEFAULT_FONT_SIZE}px`),
+        codeAncestor
+          ? (codeFontSize ?? `${DEFAULT_FONT_SIZE}px`)
+          : $getSelectionStyleValueForProperty(selection, "font-size", `${DEFAULT_FONT_SIZE}px`),
       )
       updateToolbarState("isLowercase", selection.hasFormat("lowercase"))
       updateToolbarState("isUppercase", selection.hasFormat("uppercase"))
@@ -895,14 +1162,6 @@ export default function ToolbarPlugin({
             blockType={toolbarState.blockType}
             editor={activeEditor}
           />
-          {toolbarState.blockType === "code" && selectedElementKey && (
-            <CodeLanguageDropDown
-              disabled={!isEditable}
-              language={toolbarState.codeLanguage}
-              editor={activeEditor}
-              codeNodeKey={selectedElementKey}
-            />
-          )}
           <Divider />
         </>
       )}
@@ -1032,6 +1291,17 @@ export default function ToolbarPlugin({
         <DropDownItem onClick={() => dispatchToolbarCommand(INSERT_HORIZONTAL_RULE_COMMAND)}>
           <HorizontalRuleIcon className="w-4 h-4" /> Horizontal Rule
         </DropDownItem>
+        <DropDownItem onClick={() => setInsertDialog("equation")}>
+          <EquationIcon className="w-4 h-4" /> Equation
+        </DropDownItem>
+        <DropDownItem onClick={() => setInsertDialog("table")}>
+          <TableIcon className="w-4 h-4" /> Table
+        </DropDownItem>
+        <DropDownItem
+          onClick={() => dispatchToolbarCommand(INSERT_EXCALIDRAW_COMMAND)}
+        >
+          <ExcalidrawIcon className="w-4 h-4" /> Excalidraw
+        </DropDownItem>
       </DropDown>
 
       <Divider />
@@ -1042,6 +1312,69 @@ export default function ToolbarPlugin({
         editor={activeEditor}
         isRTL={toolbarState.isRTL}
       />
+
+      {/* Área contextual: dropdowns dependentes do bloco selecionado.
+          Ficam no final do toolbar (segunda linha quando não cabe na
+          primeira) para não empurrar os controles principais. */}
+      {toolbarState.blockType === "code" && selectedElementKey && activeEditor === editor && (
+        <>
+          <Divider />
+          <CodeLanguageDropDown
+            disabled={!isEditable}
+            language={toolbarState.codeLanguage}
+            editor={activeEditor}
+            codeNodeKey={selectedElementKey}
+          />
+        </>
+      )}
+
+      {/* Diálogos disparados pelo menu Insert. */}
+      <Dialog
+        open={insertDialog !== null}
+        onOpenChange={(open) => {
+          if (!open) setInsertDialog(null)
+        }}
+      >
+        <DialogContent
+          className={insertDialog === "equation" ? "sm:max-w-[720px]" : undefined}
+          onPointerDownOutside={(e) => {
+            const target = e.target as HTMLElement | null
+            if (document.body.hasAttribute("data-math-keyboard-open")) e.preventDefault()
+            else if (target?.closest(".ML__keyboard, .ML__virtual-keyboard, math-field")) e.preventDefault()
+          }}
+          onInteractOutside={(e) => {
+            const target = e.target as HTMLElement | null
+            if (document.body.hasAttribute("data-math-keyboard-open")) e.preventDefault()
+            else if (target?.closest(".ML__keyboard, .ML__virtual-keyboard, math-field")) e.preventDefault()
+          }}
+          onFocusOutside={(e) => {
+            const target = e.target as HTMLElement | null
+            if (document.body.hasAttribute("data-math-keyboard-open")) e.preventDefault()
+            else if (target?.closest(".ML__keyboard, .ML__virtual-keyboard, math-field")) e.preventDefault()
+          }}
+          onEscapeKeyDown={(e) => {
+            if (document.body.hasAttribute("data-math-keyboard-open")) e.preventDefault()
+          }}
+        >
+          <DialogHeader>
+            <DialogTitle>
+              {insertDialog === "equation" ? "Insert Equation" : "Insert Table"}
+            </DialogTitle>
+          </DialogHeader>
+          {insertDialog === "equation" && (
+            <InsertEquationDialog
+              activeEditor={activeEditor}
+              onClose={() => setInsertDialog(null)}
+            />
+          )}
+          {insertDialog === "table" && (
+            <InsertTableDialog
+              activeEditor={activeEditor}
+              onClose={() => setInsertDialog(null)}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
