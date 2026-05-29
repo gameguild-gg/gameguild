@@ -145,6 +145,33 @@ export default function ExcalidrawModal({
         <DialogHeader className="px-4 pt-4 pb-2">
           <DialogTitle>Excalidraw</DialogTitle>
         </DialogHeader>
+        {/*
+          When an internal sub-modal of Excalidraw is open (Help,
+          Mermaid-to-Excalidraw, Library, etc.), the side UI of the canvas
+          (toolbar, zoom, hamburger, library) remains interactive because
+          it has a higher z-index than `.Modal__background`. We block
+          interaction with everything inside `.excalidraw` when there is
+          a `.Modal`/`.Dialog`, and re-enable it only in the internal modal itself.
+        */}
+        <style>{`
+          .excalidraw:has(.Modal) .layer-ui__wrapper > *:not(.Modal),
+          .excalidraw:has(.Modal) .excalidraw__canvas,
+          .excalidraw:has(.Modal) canvas {
+            pointer-events: none !important;
+          }
+          .excalidraw .Modal,
+          .excalidraw .Modal * {
+            pointer-events: auto !important;
+          }
+          /* Allows scrolling with the mouse wheel inside internal sub-modals
+             without propagating to the global canvas zoom. */
+          .excalidraw .Modal,
+          .excalidraw .Modal__content,
+          .excalidraw .HelpDialog,
+          .excalidraw .ttd-dialog {
+            overscroll-behavior: contain;
+          }
+        `}</style>
         <div ref={canvasContainerRef} className={cn("flex-1 min-h-0")}>
           <Excalidraw
             excalidrawAPI={setExcalidrawAPI}
@@ -153,6 +180,24 @@ export default function ExcalidrawModal({
               appState: {
                 ...(initialAppState || { isLoading: false }),
                 theme: (initialAppState?.theme ?? excalidrawTheme) as AppState["theme"],
+                // Defaults "rich" based on the example "With Additional
+                // properties" from the official documentation:
+                // https://docs.excalidraw.com/docs/@excalidraw/excalidraw/api/excalidraw-element-skeleton
+                // Apply only to new elements created in this session;
+                // does not overwrite already saved elements.
+                currentItemStrokeWidth: initialAppState?.currentItemStrokeWidth ?? 2,
+                currentItemStrokeStyle: initialAppState?.currentItemStrokeStyle ?? "solid",
+                currentItemFillStyle: initialAppState?.currentItemFillStyle ?? "solid",
+                currentItemRoughness: initialAppState?.currentItemRoughness ?? 1,
+                currentItemRoundness: initialAppState?.currentItemRoundness ?? "round",
+                currentItemFontSize: initialAppState?.currentItemFontSize ?? 20,
+                currentItemStrokeColor: initialAppState?.currentItemStrokeColor ?? "#1971c2",
+                currentItemBackgroundColor:
+                  initialAppState?.currentItemBackgroundColor ?? "#a5d8ff",
+                currentItemStartArrowhead:
+                  initialAppState?.currentItemStartArrowhead ?? null,
+                currentItemEndArrowhead:
+                  initialAppState?.currentItemEndArrowhead ?? "triangle",
               },
               elements: initialElements,
               files: initialFiles,
