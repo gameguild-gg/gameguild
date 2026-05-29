@@ -57,7 +57,7 @@ export function InlineRichTextEditor({ data, onChange, readOnly = false }: Inlin
       onChange={handleChange}
       placeholder="Start writing… press / to insert a block"
       contentClassName="min-h-[80px]"
-      features={{ toolbar: false }}
+      features={{ toolbar: false, pageLayout: false }}
       headerSlot={
         !readOnly ? (
           <div className="px-3 py-1.5 border-b border-gray-200 dark:border-gray-800 bg-gray-50/60 dark:bg-gray-900/40 flex items-center justify-between shrink-0">

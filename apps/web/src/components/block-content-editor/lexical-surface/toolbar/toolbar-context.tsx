@@ -21,6 +21,7 @@ import {
   useState,
 } from "react"
 import type { ElementFormatType } from "lexical"
+import { DEFAULT_PAGE_SETTINGS, type PageSettings } from "../page"
 
 export const MIN_ALLOWED_FONT_SIZE = 8
 export const MAX_ALLOWED_FONT_SIZE = 72
@@ -81,12 +82,23 @@ type ToolbarStateValue<Key extends ToolbarStateKey> = ToolbarState[Key]
 type ContextShape = {
   toolbarState: ToolbarState
   updateToolbarState<Key extends ToolbarStateKey>(key: Key, value: ToolbarStateValue<Key>): void
+  pageSettings: PageSettings
+  setPageSettings: (next: PageSettings) => void
 }
 
 const Context = createContext<ContextShape | undefined>(undefined)
 
-export const ToolbarContextProvider = ({ children }: { children: ReactNode }): JSX.Element => {
+export const ToolbarContextProvider = ({
+  children,
+  initialPageSettings,
+}: {
+  children: ReactNode
+  initialPageSettings?: PageSettings
+}): JSX.Element => {
   const [toolbarState, setToolbarState] = useState(INITIAL_TOOLBAR_STATE)
+  const [pageSettings, setPageSettings] = useState<PageSettings>(
+    initialPageSettings ?? DEFAULT_PAGE_SETTINGS,
+  )
   const selectionFontSize = toolbarState.fontSize
 
   const updateToolbarState = useCallback(
@@ -107,8 +119,10 @@ export const ToolbarContextProvider = ({ children }: { children: ReactNode }): J
     () => ({
       toolbarState,
       updateToolbarState,
+      pageSettings,
+      setPageSettings,
     }),
-    [toolbarState, updateToolbarState],
+    [toolbarState, updateToolbarState, pageSettings],
   )
 
   return <Context.Provider value={contextValue}>{children}</Context.Provider>

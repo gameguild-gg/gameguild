@@ -16,8 +16,8 @@ import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext
 import {
   LexicalTypeaheadMenuPlugin,
   MenuOption,
-  useBasicTypeaheadTriggerMatch,
 } from "@lexical/react/LexicalTypeaheadMenuPlugin"
+import type { MenuTextMatch } from "@lexical/react/LexicalTypeaheadMenuPlugin"
 import { ChevronRight } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
 
@@ -47,7 +47,19 @@ export function BlockInsertMenuPlugin() {
   const [editor] = useLexicalComposerContext()
   const [query, setQuery] = useState<string | null>(null)
 
-  const triggerFn = useBasicTypeaheadTriggerMatch("//", { minLength: 0 })
+  // Custom trigger: matches `//` (optionally followed by query chars).
+  // `useBasicTypeaheadTriggerMatch` only handles a single-character trigger
+  // and would fire on the first `/`, colliding with `ComponentPickerPlugin`.
+  const triggerFn = useCallback((text: string): MenuTextMatch | null => {
+    const match = /(?:^|\s)(\/\/)([\w-]{0,75})$/.exec(text)
+    if (match === null) return null
+    const matchingString = match[2] ?? ""
+    return {
+      leadOffset: match.index + (match[0]?.startsWith(" ") ? 1 : 0),
+      matchingString,
+      replaceableString: `//${matchingString}`,
+    }
+  }, [])
 
   const options = useMemo<BlockMenuOption[]>(() => {
     const all = EMBEDDABLE_BLOCK_TYPES.map((t) => new BlockMenuOption(t))
@@ -85,7 +97,6 @@ export function BlockInsertMenuPlugin() {
       onSelectOption={onSelectOption}
       triggerFn={triggerFn}
       options={options}
-      preselectFirstItem={false}
       anchorClassName="z-[60]"
       menuRenderFn={(anchorElementRef, { selectedIndex, selectOptionAndCleanUp, setHighlightedIndex }, matchingString) => {
         if (!anchorElementRef.current || options.length === 0) return null

@@ -95,6 +95,7 @@ import {
 } from "../icons"
 import { DropDown, DropDownDivider, DropDownItem } from "./dropdown"
 import { DropdownColorPicker } from "./dropdown-color-picker"
+import { PageSettingsDropDown } from "./page-settings-dropdown"
 import { getSelectedNode } from "./get-selected-node"
 import {
   blockTypeToBlockName,
@@ -734,6 +735,8 @@ export default function ToolbarPlugin({
       </ToolbarButton>
 
       <Divider />
+
+      <PageSettingsDropDown disabled={!isEditable} />
 
       <DropDown
         disabled={!isEditable}
