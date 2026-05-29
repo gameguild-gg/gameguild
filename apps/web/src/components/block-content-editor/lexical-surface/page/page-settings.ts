@@ -102,13 +102,29 @@ export function pageSettingsToStyle(settings: PageSettings): React.CSSProperties
   }
 
   const widthIn = settings.orientation === "portrait" ? size.widthIn : size.heightIn
+  const heightIn = settings.orientation === "portrait" ? size.heightIn : size.widthIn
   const widthPx = Math.round(widthIn * PX_PER_INCH)
+  const heightPx = Math.round(heightIn * PX_PER_INCH)
   const padPx = Math.round(marginIn * PX_PER_INCH)
 
   return {
     maxWidth: `${widthPx}px`,
     width: "100%",
+    minHeight: `${heightPx}px`,
     paddingLeft: `${padPx}px`,
     paddingRight: `${padPx}px`,
+    paddingTop: `${padPx}px`,
+    paddingBottom: `${padPx}px`,
   }
+}
+
+/** True when the settings produce a bounded (page-shaped) layout. */
+export function isPagedLayout(settings: PageSettings): boolean {
+  const size = PAGE_SIZES.find((s) => s.id === settings.size)
+  return !!(size && size.widthIn != null && size.heightIn != null)
+}
+
+/** Margin in CSS px (used to draw the dashed usable-area guide). */
+export function pageMarginPx(settings: PageSettings): number {
+  return Math.round(PAGE_MARGIN_INCHES[settings.margin] * PX_PER_INCH)
 }

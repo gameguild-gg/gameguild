@@ -44,7 +44,7 @@ import {
 } from "./floating"
 import { ComponentPickerPlugin } from "./picker"
 import { DraggableBlockPlugin } from "./draggable"
-import { pageSettingsToStyle } from "./page"
+import { pageSettingsToStyle, isPagedLayout, pageMarginPx } from "./page"
 
 export type LexicalSurfaceFeatures = {
   /** Top toolbar (block format, font, color, alignment, …). Default: true */
@@ -156,6 +156,8 @@ function EditorBody({
   const [anchorElem, setAnchorElem] = useState<HTMLElement | null>(null)
   const { pageSettings } = useToolbarState()
   const pageStyle = features.pageLayout ? pageSettingsToStyle(pageSettings) : undefined
+  const paged = features.pageLayout && isPagedLayout(pageSettings)
+  const marginPx = paged ? pageMarginPx(pageSettings) : 0
 
   const handleChange = useCallback(
     (editorState: EditorState, editorInstance: LexicalEditor) => {
@@ -177,11 +179,34 @@ function EditorBody({
         />
       )}
       {headerSlot}
-      <div className={cn("relative", className)} ref={setAnchorElem}>
+      <div
+        className={cn(
+          "relative",
+          features.pageLayout && "bg-gray-100 dark:bg-gray-950 py-6",
+          className,
+        )}
+        ref={setAnchorElem}
+      >
         <div
-          className={cn(features.pageLayout && "mx-auto")}
+          className={cn(
+            features.pageLayout && "mx-auto relative",
+            paged &&
+              "bg-white dark:bg-gray-900 shadow-md border border-gray-200 dark:border-gray-700",
+          )}
           style={pageStyle}
         >
+          {paged && (
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute border border-dashed border-gray-300 dark:border-gray-600"
+              style={{
+                top: marginPx,
+                left: marginPx,
+                right: marginPx,
+                bottom: marginPx,
+              }}
+            />
+          )}
           <RichTextPlugin
             contentEditable={
               <ContentEditable
@@ -189,15 +214,23 @@ function EditorBody({
                 tabIndex={readOnly ? -1 : 0}
                 style={contentStyle}
                 className={cn(
-                  "outline-none py-3 text-base text-gray-900 dark:text-gray-100",
-                  !features.pageLayout && "px-4",
+                  "outline-none text-base text-gray-900 dark:text-gray-100 relative",
+                  !features.pageLayout && "px-4 py-3",
+                  features.pageLayout && !paged && "py-3",
                   contentClassName,
                 )}
               />
             }
             placeholder={
               placeholder ? (
-                <div className="pointer-events-none absolute left-4 top-3 select-none text-gray-400 dark:text-gray-500">
+                <div
+                  className="pointer-events-none absolute select-none text-gray-400 dark:text-gray-500"
+                  style={
+                    paged
+                      ? { top: marginPx, left: marginPx }
+                      : { top: 12, left: 16 }
+                  }
+                >
                   {placeholder}
                 </div>
               ) : null
