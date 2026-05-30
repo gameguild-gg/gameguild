@@ -71,6 +71,11 @@ interface BlockCardProps {
   /** Called with new block data when the inline editor (rich-text) updates. */
   onUpdate?: (data: unknown) => void
   readOnly: boolean
+  /**
+   * When true, the block header hides the move/remove buttons
+   * (single-block document mode). The edit button remains.
+   */
+  hideRemove?: boolean
   onDragStart?: () => void
   onDragEnd?: () => void
   isDragSource?: boolean
@@ -79,7 +84,7 @@ interface BlockCardProps {
   onDropHere?: () => void
 }
 
-function BlockCard({ block, index, total, onMoveUp, onMoveDown, onRemove, onEdit, onUpdate, readOnly, onDragStart, onDragEnd, isDragSource, onDragHover, onDropHere }: BlockCardProps) {
+function BlockCard({ block, index, total, onMoveUp, onMoveDown, onRemove, onEdit, onUpdate, readOnly, hideRemove, onDragStart, onDragEnd, isDragSource, onDragHover, onDropHere }: BlockCardProps) {
   const config = BLOCK_REGISTRY[block.type]
 
   if (!config) return null
@@ -106,7 +111,7 @@ function BlockCard({ block, index, total, onMoveUp, onMoveDown, onRemove, onEdit
       {/* Header bar */}
       <div className="flex items-center gap-2 px-3 py-2 bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
         {/* Grip handle */}
-        {!readOnly && (
+        {!readOnly && !hideRemove && (
           <div
             draggable
             onDragStart={(e) => {
@@ -128,10 +133,12 @@ function BlockCard({ block, index, total, onMoveUp, onMoveDown, onRemove, onEdit
           <span className="text-xs font-medium text-gray-600 dark:text-gray-300 truncate">{config.label}</span>
         </div>
 
-        {/* Index badge */}
-        <span className="text-[11px] font-mono text-gray-400 dark:text-gray-500 bg-gray-100 dark:bg-gray-700 px-1.5 py-0.5 rounded shrink-0">
-          #{index + 1}
-        </span>
+        {/* Index badge (hidden in single-block mode) */}
+        {!hideRemove && (
+          <span className="text-[11px] font-mono text-gray-400 dark:text-gray-500 bg-gray-100 dark:bg-gray-700 px-1.5 py-0.5 rounded shrink-0">
+            #{index + 1}
+          </span>
+        )}
 
         {/* Spacer */}
         <div className="flex-1" />
@@ -148,35 +155,37 @@ function BlockCard({ block, index, total, onMoveUp, onMoveDown, onRemove, onEdit
             >
               <Pencil className="h-3.5 w-3.5" />
             </button>
-            {/* Move/delete — visible on hover */}
-            <div className="flex items-center gap-0.5 opacity-0 group-hover/card:opacity-100 transition-opacity">
-              <button
-                type="button"
-                onClick={onMoveUp}
-                disabled={index === 0}
-                className="p-1 rounded text-gray-400 hover:text-gray-700 hover:bg-gray-200/60 dark:hover:text-gray-200 dark:hover:bg-gray-700/60 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                title="Move up"
-              >
-                <ChevronUp className="h-3.5 w-3.5" />
-              </button>
-              <button
-                type="button"
-                onClick={onMoveDown}
-                disabled={index === total - 1}
-                className="p-1 rounded text-gray-400 hover:text-gray-700 hover:bg-gray-200/60 dark:hover:text-gray-200 dark:hover:bg-gray-700/60 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                title="Move down"
-              >
-                <ChevronDown className="h-3.5 w-3.5" />
-              </button>
-              <button
-                type="button"
-                onClick={onRemove}
-                className="p-1 rounded text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:text-red-400 dark:hover:bg-red-950/40 transition-colors"
-                title="Remove block"
-              >
-                <Trash2 className="h-3.5 w-3.5" />
-              </button>
-            </div>
+            {/* Move/delete — visible on hover; hidden in single-block mode */}
+            {!hideRemove && (
+              <div className="flex items-center gap-0.5 opacity-0 group-hover/card:opacity-100 transition-opacity">
+                <button
+                  type="button"
+                  onClick={onMoveUp}
+                  disabled={index === 0}
+                  className="p-1 rounded text-gray-400 hover:text-gray-700 hover:bg-gray-200/60 dark:hover:text-gray-200 dark:hover:bg-gray-700/60 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                  title="Move up"
+                >
+                  <ChevronUp className="h-3.5 w-3.5" />
+                </button>
+                <button
+                  type="button"
+                  onClick={onMoveDown}
+                  disabled={index === total - 1}
+                  className="p-1 rounded text-gray-400 hover:text-gray-700 hover:bg-gray-200/60 dark:hover:text-gray-200 dark:hover:bg-gray-700/60 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                  title="Move down"
+                >
+                  <ChevronDown className="h-3.5 w-3.5" />
+                </button>
+                <button
+                  type="button"
+                  onClick={onRemove}
+                  className="p-1 rounded text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:text-red-400 dark:hover:bg-red-950/40 transition-colors"
+                  title="Remove block"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -212,11 +221,17 @@ interface BlockArrayEditorProps {
   defaultPickerTab?: "blocks" | "templates"
   /** Hide the Block Types tab in the picker */
   hideBlockTypesTab?: boolean
+  /**
+   * Mode "single block document": hides the insertion lines, the
+   * empty state, and the move/remove buttons of the single block.
+   * The auto-create of the block is done in `EditorField`.
+   */
+  singleBlockMode?: boolean
   /** Called when drag state changes (for parent zoom) */
   onDragStateChange?: (dragging: boolean) => void
 }
 
-export function BlockArrayEditor({ blocks, onChange, readOnly = false, allowedBlockTypes, defaultPickerTab, hideBlockTypesTab, onDragStateChange }: BlockArrayEditorProps) {
+export function BlockArrayEditor({ blocks, onChange, readOnly = false, allowedBlockTypes, defaultPickerTab, hideBlockTypesTab, singleBlockMode, onDragStateChange }: BlockArrayEditorProps) {
   const [pickerOpen, setPickerOpen] = useState(false)
   const [insertIndex, setInsertIndex] = useState<number | null>(null)
 
@@ -333,8 +348,8 @@ export function BlockArrayEditor({ blocks, onChange, readOnly = false, allowedBl
 
   return (
     <div className="space-y-0">
-      {/* Empty state */}
-      {blocks.length === 0 && !readOnly && (
+      {/* Empty state (oculto em modo single-block; EditorField auto-cria o bloco) */}
+      {blocks.length === 0 && !readOnly && !singleBlockMode && (
         <div className="flex flex-col items-center justify-center py-20">
           <button
             type="button"
@@ -356,7 +371,7 @@ export function BlockArrayEditor({ blocks, onChange, readOnly = false, allowedBl
           onDragLeave={drag.isDragging ? drag.handleContainerDragLeave : undefined}
         >
           {/* Insert line before first block (normal mode) */}
-          {!readOnly && !drag.isDragging && <InsertLine onInsert={() => openPickerAt(0)} />}
+          {!readOnly && !drag.isDragging && !singleBlockMode && <InsertLine onInsert={() => openPickerAt(0)} />}
 
           {/* Drag preview before first block */}
           {drag.isDragging && drag.dropTargetIndex === 0 && drag.dragIndex !== null && (
@@ -375,6 +390,7 @@ export function BlockArrayEditor({ blocks, onChange, readOnly = false, allowedBl
                 onEdit={() => handleEditBlock(index)}
                 onUpdate={(data) => handleInlineBlockUpdate(index, data)}
                 readOnly={readOnly}
+                hideRemove={singleBlockMode}
                 onDragStart={() => drag.handleDragStart(index)}
                 onDragEnd={drag.handleDragEnd}
                 isDragSource={drag.dragIndex === index}
@@ -387,8 +403,8 @@ export function BlockArrayEditor({ blocks, onChange, readOnly = false, allowedBl
                 <DragPreview onDragOver={drag.handleContainerDragOver} onDrop={() => drag.handleDragEnd()} />
               )}
 
-              {/* Insert line after each block (normal mode) */}
-              {!readOnly && !drag.isDragging && <InsertLine onInsert={() => openPickerAt(index + 1)} />}
+              {/* Insert line after each block (normal mode; oculto em single-block) */}
+              {!readOnly && !drag.isDragging && !singleBlockMode && <InsertLine onInsert={() => openPickerAt(index + 1)} />}
             </div>
           ))}
         </div>

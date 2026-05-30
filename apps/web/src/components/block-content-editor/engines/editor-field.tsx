@@ -1,7 +1,10 @@
 "use client"
-
-import { useCallback, useRef, useState } from "react"
+/**
+ * Main editor field component, used in both the doc editor and block editor.
+ */
+import { useCallback, useEffect, useRef, useState } from "react"
 import { BlockArrayEditor } from "@/components/block-content-editor/engines/blocks/block-array-editor"
+import { BLOCK_REGISTRY } from "@/components/block-content-editor/engines/blocks/block-component-registry"
 import { useEditor } from "./editor-provider"
 
 export function EditorField() {
@@ -10,6 +13,21 @@ export function EditorField() {
   const [scaledHeight, setScaledHeight] = useState<number | null>(null)
   const fieldRef = useRef<HTMLDivElement>(null)
   const wrapperRef = useRef<HTMLDivElement>(null)
+
+  // Mode "single block document": ensures exactly one block of
+  // the allowed type (or rich-text by default). Automatically creates if
+  // the list is empty, so the user opens directly in the
+  // editor without needing to go through the block picker.
+  useEffect(() => {
+    if (!fieldConfig.singleBlockMode) return
+    if (history.isViewingHistory) return
+    if (project.blocks.length > 0) return
+    const type = fieldConfig.allowedBlockTypes?.[0] ?? "rich-text"
+    const config = BLOCK_REGISTRY[type]
+    if (!config) return
+    project.setBlocks([config.createEmpty()])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fieldConfig.singleBlockMode, project.blocks.length, history.isViewingHistory])
 
   const handleDragStateChange = useCallback((dragging: boolean) => {
     if (dragging && fieldRef.current) {
@@ -43,6 +61,7 @@ export function EditorField() {
           allowedBlockTypes={fieldConfig.allowedBlockTypes}
           defaultPickerTab={hideBlocks || isQuizMode ? "templates" : "blocks"}
           hideBlockTypesTab={hideBlocks}
+          singleBlockMode={fieldConfig.singleBlockMode}
           onDragStateChange={handleDragStateChange}
         />
       </div>

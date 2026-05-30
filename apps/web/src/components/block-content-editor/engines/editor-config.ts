@@ -22,6 +22,17 @@ export interface FieldConfig {
   allowedModes?: ProjectMode[]
   /** Default project mode */
   defaultMode?: ProjectMode
+  /**
+   * Mode "single block document". When true, the editor:
+   *  - automatically creates a single block of the type defined in
+   *    `allowedBlockTypes[0]` (or `"rich-text"`) when mounting with an empty list;
+   *  - hides the insertion lines between blocks and the empty state with
+   *    the "add" button;
+   *  - hides the remove button in the block header;
+   *  - hides the move arrows (there's no other block to move to).
+   * Saving uses the standard project flow (only with a single block).
+   */
+  singleBlockMode?: boolean
 }
 
 export const DEFAULT_FIELD_CONFIG: FieldConfig = {
