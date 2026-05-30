@@ -10,6 +10,9 @@ import type { FieldConfig, ToolbarConfig } from "@/components/block-content-edit
 const fieldConfig: Partial<FieldConfig> = {
   allowedBlockTypes: ["rich-text"],
   defaultMode: "free-page",
+  // Starts with a single rich-text block; no option to add or
+  // remove other blocks. Saving uses the standard project flow.
+  singleBlockMode: true,
 }
 
 const toolbarConfig: Partial<ToolbarConfig> = {
