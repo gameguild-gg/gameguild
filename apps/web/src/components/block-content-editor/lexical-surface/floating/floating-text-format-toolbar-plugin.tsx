@@ -16,6 +16,7 @@ import { $isCodeHighlightNode } from "@lexical/code"
 import { $isLinkNode, TOGGLE_LINK_COMMAND } from "@lexical/link"
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext"
 import { mergeRegister } from "@lexical/utils"
+import { $getSelectionStyleValueForProperty, $patchStyleText } from "@lexical/selection"
 import {
   $getSelection,
   $isParagraphNode,
@@ -28,6 +29,7 @@ import {
   SELECTION_CHANGE_COMMAND,
 } from "lexical"
 import { cn } from "@/lib/utils"
+import { DEFAULT_FONT_SIZE } from "../toolbar/toolbar-context"
 import {
   BoldIcon,
   CodeInlineIcon,
@@ -39,17 +41,22 @@ import {
 import { getSelectedNode } from "../toolbar/get-selected-node"
 import { getDOMRangeRect, setFloatingElemPosition } from "./use-floating-position"
 
+const MIN_FONT_SIZE = 8
+const MAX_FONT_SIZE = 400
+
 function BubbleButton({
   active,
   onClick,
   title,
   ariaLabel,
+  disabled,
   children,
 }: {
   active?: boolean
   onClick: () => void
   title: string
   ariaLabel: string
+  disabled?: boolean
   children: React.ReactNode
 }) {
   return (
@@ -58,15 +65,102 @@ function BubbleButton({
       onClick={onClick}
       title={title}
       aria-label={ariaLabel}
+      disabled={disabled}
       className={cn(
-        "inline-flex items-center justify-center w-8 h-8 rounded text-white",
-        "hover:bg-white/10",
-        active && "bg-white/20",
+        "inline-flex items-center justify-center w-8 h-8 rounded",
+        "text-gray-800 dark:text-white",
+        "hover:bg-gray-100 dark:hover:bg-white/10",
+        active && "bg-gray-200 dark:bg-white/20",
+        disabled && "opacity-40 pointer-events-none",
       )}
     >
       {children}
     </button>
   )
+}
+
+function BubbleFontSizeStepper({
+  editor,
+  fontSize,
+}: {
+  editor: LexicalEditor
+  fontSize: string
+}) {
+  const currentNumber = React.useMemo(() => {
+    const parsed = parseInt(String(fontSize).replace(/px$/, ""), 10)
+    return Number.isFinite(parsed) ? parsed : DEFAULT_FONT_SIZE
+  }, [fontSize])
+  const [inputValue, setInputValue] = useState<string>(String(currentNumber))
+
+  useEffect(() => {
+    setInputValue(String(currentNumber))
+  }, [currentNumber])
+
+  const applySize = useCallback(
+    (px: number) => {
+      const clamped = Math.max(MIN_FONT_SIZE, Math.min(MAX_FONT_SIZE, Math.round(px)))
+      editor.update(() => {
+        const selection = $getSelection()
+        if (!$isRangeSelection(selection)) return
+        $patchStyleText(selection, { "font-size": `${clamped}px` })
+      })
+    },
+    [editor],
+  )
+
+  const commitInput = useCallback(() => {
+    const parsed = parseInt(inputValue, 10)
+    if (Number.isFinite(parsed)) {
+      applySize(parsed)
+    } else {
+      setInputValue(String(currentNumber))
+    }
+  }, [applySize, currentNumber, inputValue])
+
+  return (
+    <div className="inline-flex items-center gap-0.5 px-0.5">
+      <button
+        type="button"
+        disabled={currentNumber <= MIN_FONT_SIZE}
+        onClick={() => applySize(currentNumber - 1)}
+        title="Decrease font size"
+        aria-label="Decrease font size"
+        className="inline-flex items-center justify-center w-6 h-7 rounded text-sm text-gray-800 dark:text-white hover:bg-gray-100 dark:hover:bg-white/10 disabled:opacity-40 disabled:pointer-events-none"
+      >
+        −
+      </button>
+      <input
+        type="text"
+        inputMode="numeric"
+        value={inputValue}
+        onChange={(e) => setInputValue(e.target.value.replace(/[^0-9]/g, ""))}
+        onBlur={commitInput}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            e.preventDefault()
+            commitInput()
+            ;(e.target as HTMLInputElement).blur()
+          }
+        }}
+        aria-label="Font size"
+        className="w-8 h-7 bg-transparent text-sm text-center outline-none tabular-nums text-gray-800 dark:text-white rounded border border-gray-200 dark:border-white/20"
+      />
+      <button
+        type="button"
+        disabled={currentNumber >= MAX_FONT_SIZE}
+        onClick={() => applySize(currentNumber + 1)}
+        title="Increase font size"
+        aria-label="Increase font size"
+        className="inline-flex items-center justify-center w-6 h-7 rounded text-sm text-gray-800 dark:text-white hover:bg-gray-100 dark:hover:bg-white/10 disabled:opacity-40 disabled:pointer-events-none"
+      >
+        +
+      </button>
+    </div>
+  )
+}
+
+function BubbleDivider() {
+  return <div className="w-px h-5 mx-0.5 bg-gray-200 dark:bg-white/20" />
 }
 
 function TextFormatFloatingToolbar({
@@ -78,6 +172,7 @@ function TextFormatFloatingToolbar({
   isUnderline,
   isCode,
   isStrikethrough,
+  fontSize,
   setIsLinkEditMode,
   ref,
 }: {
@@ -89,6 +184,7 @@ function TextFormatFloatingToolbar({
   isLink: boolean
   isStrikethrough: boolean
   isUnderline: boolean
+  fontSize: string
   setIsLinkEditMode: Dispatch<boolean>
   ref?: React.Ref<HTMLDivElement | null>
 }) {
@@ -197,11 +293,14 @@ function TextFormatFloatingToolbar({
       ref={mergedRef}
       className={cn(
         "absolute top-0 left-0 flex items-center gap-0.5 p-1 rounded-md shadow-lg",
-        "bg-gray-900 dark:bg-gray-800 text-white",
+        "bg-white text-gray-900 border border-gray-200",
+        "dark:bg-gray-900 dark:text-white dark:border-gray-700",
         "opacity-0 will-change-transform pointer-events-auto z-50",
       )}
       style={{ transform: "translate(-10000px, -10000px)" }}
     >
+      <BubbleFontSizeStepper editor={editor} fontSize={fontSize} />
+      <BubbleDivider />
       <BubbleButton
         active={isBold}
         onClick={() => editor.dispatchCommand(FORMAT_TEXT_COMMAND, "bold")}
@@ -266,8 +365,17 @@ function useFloatingTextFormatToolbar(
   const [isUnderline, setIsUnderline] = useState(false)
   const [isStrikethrough, setIsStrikethrough] = useState(false)
   const [isCode, setIsCode] = useState(false)
+  const [fontSize, setFontSize] = useState<string>(`${DEFAULT_FONT_SIZE}px`)
+
+  const ref = useRef<HTMLDivElement | null>(null)
 
   const updatePopup = useCallback(() => {
+    // If the focus/selection is inside the bubble itself (e.g., font-size input),
+    // we don't recalculate visibility — otherwise the bubble disappears as soon as the user clicks the input.
+    const active = document.activeElement
+    if (ref.current && active && ref.current.contains(active)) {
+      return
+    }
     editor.getEditorState().read(() => {
       if (editor.isComposing()) {
         return
@@ -275,6 +383,16 @@ function useFloatingTextFormatToolbar(
       const selection = $getSelection()
       const nativeSelection = getDOMSelection(editor._window)
       const rootElement = editor.getRootElement()
+
+      // When the native selection is inside the bubble (input focused),
+      // we ignore it — the editor's selection is preserved in Lexical's state.
+      if (
+        nativeSelection !== null &&
+        ref.current &&
+        ref.current.contains(nativeSelection.anchorNode as Node | null)
+      ) {
+        return
+      }
 
       if (
         nativeSelection !== null &&
@@ -295,6 +413,9 @@ function useFloatingTextFormatToolbar(
       setIsUnderline(selection.hasFormat("underline"))
       setIsStrikethrough(selection.hasFormat("strikethrough"))
       setIsCode(selection.hasFormat("code"))
+      setFontSize(
+        $getSelectionStyleValueForProperty(selection, "font-size", `${DEFAULT_FONT_SIZE}px`),
+      )
 
       const parent = node.getParent()
       setIsLink($isLinkNode(parent) || $isLinkNode(node))
@@ -322,7 +443,6 @@ function useFloatingTextFormatToolbar(
     }
   }, [updatePopup])
 
-  const ref = useRef<HTMLDivElement | null>(null)
   useEffect(() => {
     const onDragStart = () => {
       if (ref.current) {
@@ -372,6 +492,7 @@ function useFloatingTextFormatToolbar(
       isStrikethrough={isStrikethrough}
       isUnderline={isUnderline}
       isCode={isCode}
+      fontSize={fontSize}
       setIsLinkEditMode={setIsLinkEditMode}
     />,
     anchorElem,
