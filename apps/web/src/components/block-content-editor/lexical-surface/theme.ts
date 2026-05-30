@@ -31,14 +31,20 @@ export const LEXICAL_SURFACE_THEME: EditorThemeClasses = {
       listitem: "list-none",
     },
     ol: "list-decimal list-inside ml-4 my-2",
-    ul: "list-disc list-inside ml-4 my-2",
+    // Lists with itens checkbox (role="checkbox") fall this marcador
+    //  do <ul> via :has(), evitando bullet + checkbox.
+    ul: "list-disc list-inside ml-4 my-2 [&:has(>li[role=checkbox])]:list-none [&:has(>li[role=checkbox])]:ml-0 [&:has(>li[role=checkbox])]:pl-0",
     listitem: "my-0.5",
+    // Checkbox marcado: caixa preenchida em azul + check branco (✓ via rotação).
     listitemChecked:
-      "relative pl-6 my-0.5 line-through text-gray-500 dark:text-gray-400 before:content-[''] before:absolute before:left-0 before:top-1 before:w-4 before:h-4 before:border before:border-gray-400 before:rounded before:bg-blue-500 after:content-[''] after:absolute after:left-[6px] after:top-[3px] after:w-[4px] after:h-[8px] after:border-r-2 after:border-b-2 after:border-white after:rotate-45",
+      "relative list-none pl-7 my-1 leading-snug cursor-pointer line-through text-gray-500 dark:text-gray-400 select-none before:content-[''] before:absolute before:left-0 before:top-[3px] before:w-[18px] before:h-[18px] before:rounded-[4px] before:border before:border-blue-500 before:bg-blue-500 before:transition-colors after:content-[''] after:absolute after:left-[6px] after:top-[5px] after:w-[6px] after:h-[11px] after:border-r-2 after:border-b-2 after:border-white after:rotate-45",
+    // Checkbox vazio: caixa branca com borda neutra.
     listitemUnchecked:
-      "relative pl-6 my-0.5 before:content-[''] before:absolute before:left-0 before:top-1 before:w-4 before:h-4 before:border before:border-gray-400 before:rounded",
+      "relative list-none pl-7 my-1 leading-snug cursor-pointer text-gray-800 dark:text-gray-200 select-none before:content-[''] before:absolute before:left-0 before:top-[3px] before:w-[18px] before:h-[18px] before:rounded-[4px] before:border before:border-gray-400 dark:before:border-gray-500 before:bg-white dark:before:bg-gray-900 before:transition-colors hover:before:border-blue-500",
   },
   hashtag: "bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-300 rounded px-1",
+  hr: "my-4 border-0 border-t border-gray-300 dark:border-gray-700",
+  hrSelected: "my-4 border-0 border-t-2 border-blue-500 outline-none",
   image: "inline-block max-w-full",
   link: "text-blue-600 dark:text-blue-400 underline hover:text-blue-800 dark:hover:text-blue-300 cursor-pointer",
   text: {
