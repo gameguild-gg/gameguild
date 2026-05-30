@@ -844,11 +844,17 @@ export default function ToolbarPlugin({
   activeEditor,
   setActiveEditor,
   setIsLinkEditMode,
+  features,
 }: {
   editor: LexicalEditor
   activeEditor: LexicalEditor
   setActiveEditor: Dispatch<LexicalEditor>
   setIsLinkEditMode: Dispatch<boolean>
+  features?: {
+    blockEmbed?: boolean
+    blockInsertMenu?: boolean
+    pageLayout?: boolean
+  }
 }) {
   const [selectedElementKey, setSelectedElementKey] = useState<string | null>(null)
   const [isEditable, setIsEditable] = useState(() => editor.isEditable())
@@ -1278,31 +1284,33 @@ export default function ToolbarPlugin({
 
       <Divider />
 
-      <PageSettingsDropDown disabled={!isEditable} />
+      {features?.pageLayout !== false && <PageSettingsDropDown disabled={!isEditable} />}
 
-      <BlockInsertButtonPlugin disabled={!isEditable} />
+      {features?.blockEmbed !== false && <BlockInsertButtonPlugin disabled={!isEditable} />}
 
-      <DropDown
-        disabled={!isEditable}
-        buttonLabel="Insert"
-        buttonIcon={<InsertIcon className="w-4 h-4" />}
-        buttonAriaLabel="Insert specialized editor node"
-      >
-        <DropDownItem onClick={() => dispatchToolbarCommand(INSERT_HORIZONTAL_RULE_COMMAND)}>
-          <HorizontalRuleIcon className="w-4 h-4" /> Horizontal Rule
-        </DropDownItem>
-        <DropDownItem onClick={() => setInsertDialog("equation")}>
-          <EquationIcon className="w-4 h-4" /> Equation
-        </DropDownItem>
-        <DropDownItem onClick={() => setInsertDialog("table")}>
-          <TableIcon className="w-4 h-4" /> Table
-        </DropDownItem>
-        <DropDownItem
-          onClick={() => dispatchToolbarCommand(INSERT_EXCALIDRAW_COMMAND)}
+      {features?.blockInsertMenu !== false && (
+        <DropDown
+          disabled={!isEditable}
+          buttonLabel="Insert"
+          buttonIcon={<InsertIcon className="w-4 h-4" />}
+          buttonAriaLabel="Insert specialized editor node"
         >
-          <ExcalidrawIcon className="w-4 h-4" /> Excalidraw
-        </DropDownItem>
-      </DropDown>
+          <DropDownItem onClick={() => dispatchToolbarCommand(INSERT_HORIZONTAL_RULE_COMMAND)}>
+            <HorizontalRuleIcon className="w-4 h-4" /> Horizontal Rule
+          </DropDownItem>
+          <DropDownItem onClick={() => setInsertDialog("equation")}>
+            <EquationIcon className="w-4 h-4" /> Equation
+          </DropDownItem>
+          <DropDownItem onClick={() => setInsertDialog("table")}>
+            <TableIcon className="w-4 h-4" /> Table
+          </DropDownItem>
+          <DropDownItem
+            onClick={() => dispatchToolbarCommand(INSERT_EXCALIDRAW_COMMAND)}
+          >
+            <ExcalidrawIcon className="w-4 h-4" /> Excalidraw
+          </DropDownItem>
+        </DropDown>
+      )}
 
       <Divider />
 

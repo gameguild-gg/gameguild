@@ -208,6 +208,11 @@ function EditorBody({
           activeEditor={activeEditor}
           setActiveEditor={setActiveEditor}
           setIsLinkEditMode={setIsLinkEditMode}
+          features={{
+            blockEmbed: features.blockEmbed,
+            blockInsertMenu: features.blockInsertMenu,
+            pageLayout: features.pageLayout,
+          }}
         />
       )}
       {headerSlot}
