@@ -47,7 +47,7 @@ export function EssayLexicalEditor({
           contentStyle={{ minHeight }}
           contentClassName="resize-y overflow-auto"
           features={{
-            toolbar: false,
+            toolbar: true,
             draggable: false,
             blockEmbed: false,
             blockInsertMenu: false,
