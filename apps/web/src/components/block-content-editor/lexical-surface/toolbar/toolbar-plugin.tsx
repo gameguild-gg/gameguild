@@ -45,6 +45,7 @@ import {
   $addUpdateTag,
   $getNodeByKey,
   $getSelection,
+  $createTextNode,
   $isElementNode,
   $isNodeSelection,
   $isRangeSelection,
@@ -136,14 +137,15 @@ import { $isEquationNode } from "../equation/equation-node"
 import { InsertEquationDialog } from "../equation"
 import { InsertTableDialog } from "../table"
 import { INSERT_EXCALIDRAW_COMMAND } from "../excalidraw"
-import { Sigma as EquationIcon, Pencil as ExcalidrawIcon, Table as TableIcon } from "lucide-react"
+import { EmojiPickerPanel } from "../emoji"
+import { Sigma as EquationIcon, Pencil as ExcalidrawIcon, Smile as EmojiIcon, Table as TableIcon } from "lucide-react"
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 // ─── constants ──────────────────────────────────────────────────────────────
 
 const CODE_FONT_FAMILY_VALUE =
@@ -839,6 +841,58 @@ function $findTopLevelElement(node: LexicalNode) {
 
 // ─── main plugin ────────────────────────────────────────────────────────────
 
+function EmojiPickerPopover({
+  editor,
+  disabled,
+}: {
+  editor: LexicalEditor
+  disabled?: boolean
+}) {
+  const [open, setOpen] = useState(false)
+
+  const insert = useCallback(
+    (emoji: string) => {
+      editor.update(() => {
+        $addUpdateTag(SKIP_SELECTION_FOCUS_TAG)
+        const selection = $getSelection()
+        if ($isRangeSelection(selection)) {
+          selection.insertNodes([$createTextNode(emoji)])
+        }
+      })
+      setOpen(false)
+    },
+    [editor],
+  )
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <button
+          type="button"
+          disabled={disabled}
+          title="Insert emoji"
+          aria-label="Insert emoji"
+          className="inline-flex h-8 items-center justify-center gap-1 rounded px-2 text-sm text-gray-800 hover:bg-gray-100 disabled:pointer-events-none disabled:opacity-40 dark:text-gray-100 dark:hover:bg-gray-800"
+        >
+          <EmojiIcon className="h-4 w-4" />
+          <span className="hidden sm:inline">Emoji</span>
+        </button>
+      </PopoverTrigger>
+      <PopoverContent
+        align="start"
+        sideOffset={4}
+        className="w-auto p-2"
+        onOpenAutoFocus={(e) => {
+          // Mantém o foco no input interno do panel.
+          e.preventDefault()
+        }}
+      >
+        <EmojiPickerPanel onSelect={insert} />
+      </PopoverContent>
+    </Popover>
+  )
+}
+
 export default function ToolbarPlugin({
   editor,
   activeEditor,
@@ -1311,6 +1365,8 @@ export default function ToolbarPlugin({
           </DropDownItem>
         </DropDown>
       )}
+
+      <EmojiPickerPopover editor={activeEditor} disabled={!isEditable} />
 
       <Divider />
 
