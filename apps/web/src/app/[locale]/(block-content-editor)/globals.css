@@ -132,3 +132,85 @@ body > .monaco-editor,
 .monaco-editor-overlaymessage {
     z-index: 10000 !important;
 }
+
+/*
+ * Lexical layout/collapsible borders for block-editor routes.
+ *
+ * This route group ships its own CSS bundle, so keep these rules here
+ * (in addition to shared globals) to guarantee consistent rendering.
+ */
+.lexical-editor [data-lexical-layout-container="true"] {
+  --gg-layout-border-style: var(--layout-border-style, solid);
+  --gg-layout-border-color: var(--layout-border-color, rgba(148, 163, 184, 0.78));
+}
+
+.dark .lexical-editor [data-lexical-layout-container="true"] {
+  --gg-layout-border-color: var(--layout-border-color, rgba(148, 163, 184, 0.8));
+}
+
+.lexical-editor [data-lexical-layout-item="true"] {
+  border-width: 1px;
+  border-style: var(--gg-layout-border-style);
+  border-color: transparent;
+  border-radius: 0.375rem;
+  transition: border-color 120ms ease;
+}
+
+.lexical-editor.lexical-editable [data-lexical-layout-item="true"],
+.lexical-editor[data-lexical-readonly="false"] [data-lexical-layout-item="true"],
+.lexical-editor[contenteditable="true"] [data-lexical-layout-item="true"] {
+  border-color: var(--gg-layout-border-color);
+}
+
+.lexical-editor.lexical-readonly [data-lexical-layout-item="true"],
+.lexical-editor[data-lexical-readonly="true"] [data-lexical-layout-item="true"],
+.lexical-editor[contenteditable="false"] [data-lexical-layout-item="true"] {
+  border-color: transparent;
+}
+
+.lexical-editor.lexical-readonly [data-lexical-layout-container="true"][data-layout-border-always="true"] [data-lexical-layout-item="true"],
+.lexical-editor[data-lexical-readonly="true"] [data-lexical-layout-container="true"][data-layout-border-always="true"] [data-lexical-layout-item="true"],
+.lexical-editor[contenteditable="false"] [data-lexical-layout-container="true"][data-layout-border-always="true"] [data-lexical-layout-item="true"] {
+  border-color: var(--gg-layout-border-color);
+}
+
+.lexical-editor .Collapsible__container {
+  --gg-collapsible-border-style: var(--collapsible-border-style, solid);
+  --gg-collapsible-border-color: var(--collapsible-border-color, rgba(148, 163, 184, 0.86));
+  border-width: 1px;
+  border-style: var(--gg-collapsible-border-style);
+  border-color: transparent;
+  border-radius: 0.375rem;
+}
+
+.dark .lexical-editor .Collapsible__container {
+  --gg-collapsible-border-color: var(--collapsible-border-color, rgba(148, 163, 184, 0.82));
+}
+
+.lexical-editor.lexical-editable .Collapsible__container,
+.lexical-editor[data-lexical-readonly="false"] .Collapsible__container,
+.lexical-editor[contenteditable="true"] .Collapsible__container {
+  border-color: var(--gg-collapsible-border-color);
+}
+
+.lexical-editor.lexical-readonly .Collapsible__container,
+.lexical-editor[data-lexical-readonly="true"] .Collapsible__container,
+.lexical-editor[contenteditable="false"] .Collapsible__container {
+  border-color: transparent;
+}
+
+.lexical-editor.lexical-readonly .Collapsible__container[data-collapsible-border-always="true"],
+.lexical-editor[data-lexical-readonly="true"] .Collapsible__container[data-collapsible-border-always="true"],
+.lexical-editor[contenteditable="false"] .Collapsible__container[data-collapsible-border-always="true"] {
+  border-color: var(--gg-collapsible-border-color);
+}
+
+.lexical-editor .Collapsible__title {
+  line-height: 1.25;
+  min-height: 1.9rem;
+}
+
+.lexical-editor .Collapsible__title > p {
+  display: inline;
+  margin: 0;
+}
