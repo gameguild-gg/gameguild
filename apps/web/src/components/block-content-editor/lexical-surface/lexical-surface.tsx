@@ -46,6 +46,8 @@ import { AutoEmbedPlugin } from "./embeds"
 import { ContextMenuPlugin } from "./context-menu"
 import { CodeActionMenuPlugin, CodeHighlightPlugin } from "./code-action"
 import { TablePlugin, TableActionMenuPlugin, TableCellResizerPlugin, TableInsertHandlesPlugin } from "./table"
+import { LayoutPlugin, LayoutActionMenuPlugin } from "./layout"
+import { CollapsiblePlugin, CollapsibleActionMenuPlugin } from "./collapsible"
 import {
   FloatingLinkEditorPlugin,
   FloatingTextFormatToolbarPlugin,
@@ -87,6 +89,10 @@ export type LexicalSurfaceFeatures = {
   codeAction?: boolean
   /** Tables (`@lexical/table`) + `/Table` picker item. Default: true */
   table?: boolean
+  /** Columns Layout via `INSERT_LAYOUT_COMMAND` + +Insert dialog. Default: true */
+  layout?: boolean
+  /** Collapsible container via `INSERT_COLLAPSIBLE_COMMAND` + +Insert item. Default: true */
+  collapsible?: boolean
   /** Lexical built-ins. Defaults: true */
   history?: boolean
   list?: boolean
@@ -132,6 +138,8 @@ const DEFAULT_FEATURES: Required<LexicalSurfaceFeatures> = {
   contextMenu: true,
   codeAction: true,
   table: true,
+  layout: true,
+  collapsible: true,
   history: true,
   list: true,
   link: true,
@@ -249,9 +257,11 @@ function EditorBody({
               <ContentEditable
                 readOnly={readOnly}
                 tabIndex={readOnly ? -1 : 0}
+                data-lexical-readonly={readOnly ? "true" : "false"}
                 style={contentStyle}
                 className={cn(
-                  "outline-none text-base text-gray-900 dark:text-gray-100 relative",
+                  "lexical-editor outline-none text-base text-gray-900 dark:text-gray-100 relative",
+                  readOnly ? "lexical-readonly" : "lexical-editable",
                   !features.pageLayout && "px-4 py-3",
                   features.pageLayout && !paged && "py-3",
                   contentClassName,
@@ -294,6 +304,10 @@ function EditorBody({
         {anchorElem && features.table && <TableActionMenuPlugin anchorElem={anchorElem} />}
         {anchorElem && features.table && <TableCellResizerPlugin anchorElem={anchorElem} />}
         {anchorElem && features.table && <TableInsertHandlesPlugin anchorElem={anchorElem} />}
+        {features.layout && <LayoutPlugin />}
+        {anchorElem && features.layout && <LayoutActionMenuPlugin anchorElem={anchorElem} />}
+        {features.collapsible && <CollapsiblePlugin />}
+        {anchorElem && features.collapsible && <CollapsibleActionMenuPlugin anchorElem={anchorElem} />}
         {features.blockEmbed && <BlockEmbedPlugin />}
         {features.blockInsertMenu && <BlockInsertMenuPlugin />}
         {anchorElem && features.floatingTextFormat && (
