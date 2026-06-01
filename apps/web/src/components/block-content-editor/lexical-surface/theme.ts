@@ -132,6 +132,8 @@ export const LEXICAL_SURFACE_THEME: EditorThemeClasses = {
     "absolute top-1 right-1 w-5 h-5 rounded bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 flex items-center justify-center",
   tableCellActionButtonContainer: "absolute top-1 right-1",
   tableCellResizer: "absolute right-[-2px] top-0 h-full w-1 cursor-col-resize",
+  layoutContainer: "my-2 gap-3",
+  layoutItem: "min-h-[40px] p-2 rounded",
   indent: "[--lexical-indent:40px]",
   // Tailwind utility hooks for ElementFormatPlugin alignment classes.
   // Lexical writes these as theme classes on the block element.

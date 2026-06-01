@@ -137,8 +137,10 @@ import { $isEquationNode } from "../equation/equation-node"
 import { InsertEquationDialog } from "../equation"
 import { InsertTableDialog } from "../table"
 import { INSERT_EXCALIDRAW_COMMAND } from "../excalidraw"
+import { InsertLayoutDialog } from "../layout"
+import { INSERT_COLLAPSIBLE_COMMAND } from "../collapsible"
 import { EmojiPickerPanel } from "../emoji"
-import { Sigma as EquationIcon, Pencil as ExcalidrawIcon, Smile as EmojiIcon, Table as TableIcon } from "lucide-react"
+import { Sigma as EquationIcon, Pencil as ExcalidrawIcon, Smile as EmojiIcon, Table as TableIcon, Columns as ColumnsIcon, PanelTopOpen as CollapsibleIcon } from "lucide-react"
 import {
   Dialog,
   DialogContent,
@@ -912,7 +914,7 @@ export default function ToolbarPlugin({
 }) {
   const [selectedElementKey, setSelectedElementKey] = useState<string | null>(null)
   const [isEditable, setIsEditable] = useState(() => editor.isEditable())
-  const [insertDialog, setInsertDialog] = useState<"equation" | "table" | null>(null)
+  const [insertDialog, setInsertDialog] = useState<"equation" | "table" | "layout" | null>(null)
   const { toolbarState, updateToolbarState } = useToolbarState()
 
   const dispatchToolbarCommand = <T extends LexicalCommand<unknown>>(
@@ -1363,6 +1365,14 @@ export default function ToolbarPlugin({
           >
             <ExcalidrawIcon className="w-4 h-4" /> Excalidraw
           </DropDownItem>
+          <DropDownItem onClick={() => setInsertDialog("layout")}>
+            <ColumnsIcon className="w-4 h-4" /> Columns Layout
+          </DropDownItem>
+          <DropDownItem
+            onClick={() => dispatchToolbarCommand(INSERT_COLLAPSIBLE_COMMAND)}
+          >
+            <CollapsibleIcon className="w-4 h-4" /> Collapsible container
+          </DropDownItem>
         </DropDown>
       )}
 
@@ -1422,7 +1432,11 @@ export default function ToolbarPlugin({
         >
           <DialogHeader>
             <DialogTitle>
-              {insertDialog === "equation" ? "Insert Equation" : "Insert Table"}
+              {insertDialog === "equation"
+                ? "Insert Equation"
+                : insertDialog === "table"
+                  ? "Insert Table"
+                  : "Insert Columns Layout"}
             </DialogTitle>
           </DialogHeader>
           {insertDialog === "equation" && (
@@ -1433,6 +1447,12 @@ export default function ToolbarPlugin({
           )}
           {insertDialog === "table" && (
             <InsertTableDialog
+              activeEditor={activeEditor}
+              onClose={() => setInsertDialog(null)}
+            />
+          )}
+          {insertDialog === "layout" && (
+            <InsertLayoutDialog
               activeEditor={activeEditor}
               onClose={() => setInsertDialog(null)}
             />

@@ -19,6 +19,12 @@ import { EquationNode } from "../../lexical-surface/equation"
 import { ExcalidrawNode } from "../../lexical-surface/excalidraw"
 import { YouTubeNode, TweetNode, FigmaNode } from "../../lexical-surface/embeds"
 import { TableNode, TableRowNode, TableCellNode } from "@lexical/table"
+import { LayoutContainerNode, LayoutItemNode } from "../../lexical-surface/layout"
+import {
+  CollapsibleContainerNode,
+  CollapsibleTitleNode,
+  CollapsibleContentNode,
+} from "../../lexical-surface/collapsible"
 
 /**
  * Full node set supported by our Lexical instances. Adding a node here
@@ -54,6 +60,11 @@ export const SHARED_LEXICAL_NODES = [
   TableNode,
   TableRowNode,
   TableCellNode,
+  LayoutContainerNode,
+  LayoutItemNode,
+  CollapsibleContainerNode,
+  CollapsibleTitleNode,
+  CollapsibleContentNode,
 ]
 
 /**
