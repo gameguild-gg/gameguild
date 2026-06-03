@@ -195,14 +195,6 @@ export const UnifiedMediaEditor = dynamic(
   },
 )
 
-export const TableEditor = dynamic(
-  () => import("@/components/block-content-editor/extras/table/table-editor").then((mod) => ({ default: mod.TableEditor })),
-  {
-    ssr: false,
-    loading: () => <EditorOverlaySkeleton title="Loading table editor..." />,
-  },
-)
-
 export const HTMLEditor = dynamic(
   () => import("@/components/block-content-editor/extras/html/html-editor").then((mod) => ({ default: mod.HTMLEditor })),
   {

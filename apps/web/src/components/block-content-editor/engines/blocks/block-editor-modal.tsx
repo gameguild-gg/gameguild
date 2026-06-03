@@ -20,7 +20,6 @@ import {
   ModeSelectionDialog,
   QuizSettingsDialog,
   RichTextEditor,
-  TableEditor,
   UnifiedMediaEditor,
   VegaLiteEditor,
 } from "@/components/block-content-editor/lazy-client-components"
@@ -391,12 +390,6 @@ export function BlockEditorModal({ open, onOpenChange, block, blockType, onSave 
   if (blockType === "admonition") {
     if (!open) return null
     return <AdmonitionEditor initialData={currentData} onSave={handleSave} onCancel={handleCancel} />
-  }
-
-  // Table — renders its own full-screen overlay
-  if (blockType === "table") {
-    if (!open) return null
-    return <TableEditor initialData={currentData} onSave={handleSave} onCancel={handleCancel} />
   }
 
   // HTML — renders its own full-screen overlay

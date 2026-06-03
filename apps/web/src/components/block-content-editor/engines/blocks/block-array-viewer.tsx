@@ -29,13 +29,10 @@ import { PreviewAudio } from "@/components/block-content-editor/plugins/preview-
 import { PreviewHeader } from "@/components/block-content-editor/plugins/preview-components/preview-header"
 import { PreviewDivider } from "@/components/block-content-editor/plugins/preview-components/preview-divider"
 import { PreviewSource } from "@/components/block-content-editor/plugins/preview-components/preview-source"
-import { PreviewYouTube } from "@/components/block-content-editor/plugins/preview-components/preview-youtube"
-import { PreviewSpotify } from "@/components/block-content-editor/plugins/preview-components/preview-spotify"
 import { PreviewAdmonition } from "@/components/block-content-editor/plugins/preview-components/preview-admonition"
 import { PreviewButton } from "@/components/block-content-editor/plugins/preview-components/preview-button"
 import { PreviewMermaid } from "@/components/block-content-editor/plugins/preview-components/preview-mermaid"
 import { PreviewVegaLite } from "@/components/block-content-editor/plugins/preview-components/preview-vega-lite"
-import { PreviewTable } from "@/components/block-content-editor/plugins/preview-components/preview-table"
 import { PreviewCodeStudio } from "@/components/block-content-editor/plugins/preview-components/preview-code-studio"
 import { PreviewProject } from "@/components/block-content-editor/plugins/preview-components/preview-project"
 import { PreviewRichText } from "@/components/block-content-editor/plugins/preview-components/preview-rich-text"
@@ -64,10 +61,6 @@ export function BlockContentRenderer({ block }: BlockContentRendererProps) {
       return <PreviewAudio node={node} />
     case "gallery":
       return <PreviewGallery node={node} />
-    case "youtube":
-      return <PreviewYouTube node={node} />
-    case "spotify":
-      return <PreviewSpotify node={node} />
     case "mermaid":
       return <PreviewMermaid data={node.data} />
     case "vega-lite":
@@ -88,8 +81,6 @@ export function BlockContentRenderer({ block }: BlockContentRendererProps) {
       return <PreviewButton node={node} />
     case "admonition":
       return <PreviewAdmonition node={node} />
-    case "table":
-      return <PreviewTable node={node} />
     case "project":
       return <PreviewProject node={node} />
     default:
