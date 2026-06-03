@@ -21,6 +21,8 @@ export interface ProjectCard extends BaseCard {
   data: string
   storageType?: 'local' | 'gameguild-cloud' | 'google-drive'
   isLocallyAvailable?: boolean
+  /** High-level kind (document/quiz/general). Read from preferences. */
+  projectType?: 'document' | 'quiz' | 'general'
 }
 
 export interface AssetCard extends BaseCard {

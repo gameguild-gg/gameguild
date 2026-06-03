@@ -2,14 +2,20 @@
  * Editor Configuration Types
  *
  * Two config types control what the editor can do:
- * - FieldConfig: what the editor field supports (allowed block types, modes)
+ * - FieldConfig: what the editor field supports (allowed block types,
+ *   project type, etc.)
  * - ToolbarConfig: what controls the header/toolbar shows
  *
  * Pages compose freely by passing different configs to EditorField/EditorToolbar.
+ *
+ * NOTE: there is no `defaultMode`/`allowedModes` field anymore. The internal
+ * `ProjectMode` (free-page/quiz-page/code-page) is now fully derived from the
+ * project's type — see `projectTypeToMode()` in `project-types.ts`.
  */
 
-import type { ProjectMode } from "@/components/block-content-editor/lib/storage/editor/project-modes"
 import type { BlockCellType } from "@/components/block-content-editor/lib/storage/editor/block-structure"
+import type { ProjectType } from "@/components/block-content-editor/lib/storage/editor/project-types"
+import type { ProjectPreferences } from "@/components/block-content-editor/lib/storage/editor/project-preferences"
 
 // ============================================================================
 // Field Config — what the editor/viewer field supports
@@ -18,10 +24,6 @@ import type { BlockCellType } from "@/components/block-content-editor/lib/storag
 export interface FieldConfig {
   /** Which block types to show in the picker (undefined = all) */
   allowedBlockTypes?: BlockCellType[]
-  /** Which content modes are available in create dialog (undefined = all) */
-  allowedModes?: ProjectMode[]
-  /** Default project mode */
-  defaultMode?: ProjectMode
   /**
    * Mode "single block document". When true, the editor:
    *  - automatically creates a single block of the type defined in
@@ -33,11 +35,21 @@ export interface FieldConfig {
    * Saving uses the standard project flow (only with a single block).
    */
   singleBlockMode?: boolean
+  /**
+   * Project type this page creates when a new project is created from here.
+   * Stored in the project's preferences and shown on the project card.
+   * Default: "general".
+   */
+  projectType?: ProjectType
+  /**
+   * Restrict which project types this page can open. When set, the open dialog
+   * only lists projects whose type matches, and loading a project via URL hash
+   * with a non-matching type is rejected. Undefined = accepts all types.
+   */
+  allowedProjectTypes?: ProjectType[]
 }
 
-export const DEFAULT_FIELD_CONFIG: FieldConfig = {
-  defaultMode: "free-page",
-}
+export const DEFAULT_FIELD_CONFIG: FieldConfig = {}
 
 // ============================================================================
 // Toolbar Config — what the header/toolbar shows
@@ -86,6 +98,29 @@ export const DEFAULT_TOOLBAR_CONFIG: ToolbarConfig = {
 export function mergeFieldConfig(partial?: Partial<FieldConfig>): FieldConfig {
   if (!partial) return DEFAULT_FIELD_CONFIG
   return { ...DEFAULT_FIELD_CONFIG, ...partial }
+}
+
+/**
+ * Apply the structural constraints captured in a project's preferences on top
+ * of the page's FieldConfig. When a project is loaded, the project's own
+ * structural rules (singleBlockMode/allowedBlockTypes/projectType) take
+ * precedence over whatever the page declares — so the same project always
+ * behaves consistently regardless of which page opens it.
+ *
+ * The page-level `allowedProjectTypes` is NOT overridden: it belongs to the
+ * page's filtering contract.
+ */
+export function applyProjectPreferencesToFieldConfig(
+  base: FieldConfig,
+  preferences: ProjectPreferences | undefined,
+): FieldConfig {
+  const g = preferences?.global
+  if (!g) return base
+  const out: FieldConfig = { ...base }
+  if (g.singleBlockMode !== undefined) out.singleBlockMode = g.singleBlockMode
+  if (g.allowedBlockTypes !== undefined) out.allowedBlockTypes = g.allowedBlockTypes
+  if (g.projectType !== undefined) out.projectType = g.projectType
+  return out
 }
 
 export function mergeToolbarConfig(partial?: Partial<ToolbarConfig>): ToolbarConfig {

@@ -1,10 +1,23 @@
 import type { ProjectMode, NodeRestrictions } from "./project-modes"
+import type { ProjectType } from "./project-types"
+import type { BlockCellType } from "./block-structure"
 
 // Project-level preferences structure
 export interface ProjectPreferences {
   global: {
     mode?: ProjectMode
     restrictions?: NodeRestrictions
+    /**
+     * High-level kind of the project (document/quiz/general). Defined by the
+     * page that creates the project and respected by every page that opens it.
+     */
+    projectType?: ProjectType
+    /**
+     * Structural constraints captured at creation time. They follow the project
+     * across pages: opening this project anywhere will honor these constraints.
+     */
+    singleBlockMode?: boolean
+    allowedBlockTypes?: BlockCellType[]
   }
   nodes: {
     [nodeType: string]: {

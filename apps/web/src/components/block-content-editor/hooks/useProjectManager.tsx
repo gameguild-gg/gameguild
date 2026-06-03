@@ -177,6 +177,7 @@ export function useProjectManager({
       storageType: project.storageType,
       createdAt: project.metadata.createdAt,
       updatedAt: project.metadata.updatedAt,
+      projectType: project.preferences?.global?.projectType ?? 'general',
     }))
   }, [additionalFilteredProjects, currentPage, itemsPerPage])
 

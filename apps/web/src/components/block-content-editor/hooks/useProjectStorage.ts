@@ -36,8 +36,9 @@ import {
   deserializeProject,
   serializeProject,
 } from "@/components/block-content-editor/lib/storage/editor/block-storage"
-import type { BlockArray } from "@/components/block-content-editor/lib/storage/editor/block-structure"
+import type { BlockArray, BlockCellType } from "@/components/block-content-editor/lib/storage/editor/block-structure"
 import { type ProjectMode } from "@/components/block-content-editor/lib/storage/editor/project-modes"
+import type { ProjectType } from "@/components/block-content-editor/lib/storage/editor/project-types"
 import { handleSave as saveProject, handleSaveAs as saveAsProject } from "@/components/block-content-editor/extras/editor/project-save-operations"
 import { handleTitleEdit as titleEdit, handleTitleSave as titleSave } from "@/components/block-content-editor/extras/editor/project-title-operations"
 import { calculateProjectAssetsSize as calculateAssets } from "@/components/block-content-editor/extras/editor/project-assets-operations"
@@ -141,6 +142,16 @@ function estimateSize(data: string): number {
 
 export interface ProjectStorageDefaults {
   mode?: ProjectMode
+  /** Refuse to hash-load projects whose type isn't allowed by the current page. */
+  allowedProjectTypes?: ProjectType[]
+  /**
+   * Page-declared structural defaults. Used to fill the new project's
+   * preferences on Save As when the current project has none (e.g. saving
+   * from a fresh untouched editor).
+   */
+  projectType?: ProjectType
+  singleBlockMode?: boolean
+  allowedBlockTypes?: BlockCellType[]
 }
 
 export function useProjectStorage(initialDefaults?: ProjectStorageDefaults): UseProjectStorageReturn {
@@ -285,6 +296,7 @@ export function useProjectStorage(initialDefaults?: ProjectStorageDefaults): Use
       setLastProjectLoadTime,
       setCurrentProjectPreferences,
       setBlocks,
+      allowedProjectTypes: initialDefaults?.allowedProjectTypes,
     })
   }, [isDbInitialized])
 
@@ -381,7 +393,14 @@ export function useProjectStorage(initialDefaults?: ProjectStorageDefaults): Use
 
     const dataToSave = serializeProject(blocks)
     const preferences: ProjectPreferences = {
-      global: { ...currentProjectPreferences?.global, mode: currentProjectMode },
+      global: {
+        // Page-declared defaults fill in any missing structural fields.
+        ...(initialDefaults?.projectType !== undefined ? { projectType: initialDefaults.projectType } : {}),
+        ...(initialDefaults?.singleBlockMode !== undefined ? { singleBlockMode: initialDefaults.singleBlockMode } : {}),
+        ...(initialDefaults?.allowedBlockTypes !== undefined ? { allowedBlockTypes: initialDefaults.allowedBlockTypes } : {}),
+        ...currentProjectPreferences?.global,
+        mode: currentProjectMode,
+      },
       nodes: currentProjectPreferences?.nodes || {},
     }
 
@@ -403,6 +422,20 @@ export function useProjectStorage(initialDefaults?: ProjectStorageDefaults): Use
     const dataToSave = serializeProject(blocks)
     const tagsToSave = tags ?? projectTags
 
+    // Carry the current project's preferences (project type, structural rules)
+    // forward to the new copy so its identity follows. When the current project
+    // has no preferences yet (fresh editor), fall back to page-declared defaults.
+    const preferences: ProjectPreferences = {
+      global: {
+        ...(initialDefaults?.projectType !== undefined ? { projectType: initialDefaults.projectType } : {}),
+        ...(initialDefaults?.singleBlockMode !== undefined ? { singleBlockMode: initialDefaults.singleBlockMode } : {}),
+        ...(initialDefaults?.allowedBlockTypes !== undefined ? { allowedBlockTypes: initialDefaults.allowedBlockTypes } : {}),
+        ...currentProjectPreferences?.global,
+        mode: currentProjectMode,
+      },
+      nodes: currentProjectPreferences?.nodes || {},
+    }
+
     await saveAsProject({
       newProjectName: name,
       data: dataToSave,
@@ -417,10 +450,11 @@ export function useProjectStorage(initialDefaults?: ProjectStorageDefaults): Use
       setSaveAsDialogOpen: () => {},
       loadSavedProjectsList: refreshProjects,
       calculateProjectAssetsSize: calcAssets,
+      preferences,
     })
 
     if (tags) setProjectTags(tagsToSave)
-  }, [blocks, projectTags, isDbInitialized])
+  }, [blocks, projectTags, isDbInitialized, currentProjectPreferences, currentProjectMode])
 
   // ═══════════════════════════════════════════════════════════════════════════
   // Load project (called from OpenProjectDialog onProjectLoad)
@@ -451,6 +485,7 @@ export function useProjectStorage(initialDefaults?: ProjectStorageDefaults): Use
     setCurrentProjectName(projectData.name)
     setCurrentProjectStorageType(projectData.storageType)
     setProjectTags(projectData.tags)
+    if (projectData.preferences) setCurrentProjectPreferences(projectData.preferences)
     setIsFirstTime(false)
     window.history.pushState(null, "", `#${projectData.id}`)
   }, [])

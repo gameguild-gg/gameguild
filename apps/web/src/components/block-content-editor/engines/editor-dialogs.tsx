@@ -29,8 +29,10 @@ export function EditorDialogs() {
         onProjectsListUpdate={project.refreshProjects}
         onAvailableTagsUpdate={project.refreshTags}
         generateProjectId={project.generateProjectId}
-        allowedModes={fieldConfig.allowedModes}
-        defaultMode={fieldConfig.allowedModes?.[0] ?? fieldConfig.defaultMode}
+        projectType={fieldConfig.projectType}
+        allowedProjectTypes={fieldConfig.allowedProjectTypes}
+        singleBlockMode={fieldConfig.singleBlockMode}
+        allowedBlockTypes={fieldConfig.allowedBlockTypes}
       />
 
       <SizeDetailsDialog

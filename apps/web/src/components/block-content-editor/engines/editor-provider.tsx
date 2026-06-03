@@ -22,7 +22,8 @@ import { useRouter } from "next/navigation"
 import { useProjectStorage, type UseProjectStorageReturn } from "@/components/block-content-editor/hooks/useProjectStorage"
 import { useProjectHistory, type UseProjectHistoryReturn } from "@/components/block-content-editor/hooks/useProjectHistory"
 import { useProjectPreview, type UseProjectPreviewReturn } from "@/components/block-content-editor/hooks/useProjectPreview"
-import { type FieldConfig, type ToolbarConfig, mergeFieldConfig, mergeToolbarConfig } from "./editor-config"
+import { projectTypeToMode } from "@/components/block-content-editor/lib/storage/editor/project-types"
+import { type FieldConfig, type ToolbarConfig, mergeFieldConfig, mergeToolbarConfig, applyProjectPreferencesToFieldConfig } from "./editor-config"
 
 // ============================================================================
 // Context
@@ -32,7 +33,18 @@ export interface EditorContextValue {
   project: UseProjectStorageReturn
   history: UseProjectHistoryReturn
   preview: UseProjectPreviewReturn
+  /**
+   * Page-declared config (the contract for *creating* new projects and for
+   * page-level filters like `allowedProjectTypes`).
+   */
   fieldConfig: FieldConfig
+  /**
+   * Effective config after applying the loaded project's structural
+   * preferences. This is what the editor field and toolbar should use to
+   * decide what the user can do *right now*. When no project is loaded, this
+   * equals `fieldConfig`.
+   */
+  effectiveFieldConfig: FieldConfig
   toolbarConfig: ToolbarConfig
   // UI-only state shared across toolbar/dialogs
   ui: EditorUIState
@@ -101,14 +113,25 @@ export function EditorProvider({ fieldConfig: fieldPartial, toolbarConfig: toolb
   const fieldConfig = mergeFieldConfig(fieldPartial)
   const toolbarConfig = mergeToolbarConfig(toolbarPartial)
 
-  // allowedModes drives the effective mode; defaultMode is just a UI hint for the dialog
-  const effectiveMode = fieldConfig.allowedModes?.[0] ?? fieldConfig.defaultMode
+  // The internal ProjectMode is fully derived from the page's project type.
+  const effectiveMode = projectTypeToMode(fieldConfig.projectType)
 
   const project = useProjectStorage({
     mode: effectiveMode,
+    allowedProjectTypes: fieldConfig.allowedProjectTypes,
+    projectType: fieldConfig.projectType,
+    singleBlockMode: fieldConfig.singleBlockMode,
+    allowedBlockTypes: fieldConfig.allowedBlockTypes,
   })
   const history = useProjectHistory(project)
   const preview = useProjectPreview(project)
+
+  // Once a project is loaded, its stored preferences take precedence over the
+  // page's structural config. This way the project's identity (single-block?
+  // which block types? which modes?) follows it across editor pages.
+  const effectiveFieldConfig = project.projectId
+    ? applyProjectPreferencesToFieldConfig(fieldConfig, project.preferences)
+    : fieldConfig
 
   // ── Sync readOnlyRef with history viewing ──
   useEffect(() => {
@@ -216,7 +239,7 @@ export function EditorProvider({ fieldConfig: fieldPartial, toolbarConfig: toolb
   }
 
   return (
-    <EditorContext.Provider value={{ project, history, preview, fieldConfig, toolbarConfig, ui }}>
+    <EditorContext.Provider value={{ project, history, preview, fieldConfig, effectiveFieldConfig, toolbarConfig, ui }}>
       {children}
     </EditorContext.Provider>
   )

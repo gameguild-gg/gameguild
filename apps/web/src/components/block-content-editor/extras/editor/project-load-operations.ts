@@ -2,6 +2,8 @@ import { toast } from "sonner"
 import { deserializeProject } from "@/components/block-content-editor/lib/storage/editor/block-storage"
 import type { BlockArray } from "@/components/block-content-editor/lib/storage/editor/block-structure"
 import type { ProjectData } from "@/components/block-content-editor/lib/storage/editor/enhanced-storage-adapter"
+import type { ProjectType } from "@/components/block-content-editor/lib/storage/editor/project-types"
+import { getProjectTypeLabel } from "@/components/block-content-editor/lib/storage/editor/project-types"
 
 export interface CheckSelectedProjectParams {
   storageAdapter: {
@@ -24,6 +26,8 @@ export interface CheckSelectedProjectParams {
   setLastProjectLoadTime?: (time: number) => void
   setCurrentProjectPreferences?: (preferences: any) => void
   setBlocks: (blocks: BlockArray) => void
+  /** Page-declared filter — refuse to load projects whose type isn't allowed here. */
+  allowedProjectTypes?: ProjectType[]
 }
 
 /**
@@ -42,6 +46,7 @@ export async function checkSelectedProject(params: CheckSelectedProjectParams): 
     setLastProjectLoadTime,
     setCurrentProjectPreferences,
     setBlocks,
+    allowedProjectTypes,
   } = params
 
   const loadProject = directDbLoad || storageAdapter.load
@@ -65,6 +70,23 @@ export async function checkSelectedProject(params: CheckSelectedProjectParams): 
     }
 
     const projectMode = projectData.preferences?.global?.mode || "free-page"
+    const projectType: ProjectType = projectData.preferences?.global?.projectType ?? "general"
+
+    if (allowedProjectTypes && allowedProjectTypes.length > 0 && !allowedProjectTypes.includes(projectType)) {
+      toast.error("Projeto incompatível com esta página", {
+        description: `Este editor aceita: ${allowedProjectTypes
+          .map((t) => getProjectTypeLabel(t))
+          .join(", ")}. O projeto é do tipo "${getProjectTypeLabel(projectType)}".`,
+        duration: 5000,
+        icon: "🚫",
+      })
+      setIsFirstTime(false)
+      // Drop the hash so we don't keep retrying on refresh.
+      if (typeof window !== "undefined") {
+        window.history.replaceState(null, "", window.location.pathname + window.location.search)
+      }
+      return
+    }
 
     setCurrentProjectId(projectData.id)
     setCurrentProjectName(projectData.name)

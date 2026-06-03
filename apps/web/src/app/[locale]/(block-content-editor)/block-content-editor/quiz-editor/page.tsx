@@ -9,8 +9,9 @@ import type { FieldConfig, ToolbarConfig } from "@/components/block-content-edit
 
 const fieldConfig: Partial<FieldConfig> = {
   allowedBlockTypes: [],
-  allowedModes: ["quiz-page"],
-  defaultMode: "quiz-page",
+  // Project identity: this page creates and opens "quiz" projects.
+  projectType: "quiz",
+  allowedProjectTypes: ["quiz"],
 }
 
 const toolbarConfig: Partial<ToolbarConfig> = {

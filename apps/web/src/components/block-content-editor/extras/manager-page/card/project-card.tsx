@@ -10,6 +10,27 @@ import { ptBR } from 'date-fns/locale'
 import { formatFileSize, getStorageIcon } from './utils'
 import { CardActionsMenu } from './card-actions-menu'
 
+const PROJECT_TYPE_BADGE_CLASS: Record<NonNullable<ProjectCard['projectType']>, string> = {
+  document: "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800",
+  quiz: "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300 border-amber-200 dark:border-amber-800",
+  general: "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border-slate-200 dark:border-slate-700",
+}
+
+const PROJECT_TYPE_LABEL: Record<NonNullable<ProjectCard['projectType']>, string> = {
+  document: "Document",
+  quiz: "Quiz",
+  general: "General",
+}
+
+function ProjectTypeBadge({ type, className = "" }: { type: ProjectCard['projectType']; className?: string }) {
+  const t = type ?? 'general'
+  return (
+    <Badge variant="outline" className={`${PROJECT_TYPE_BADGE_CLASS[t]} ${className}`}>
+      {PROJECT_TYPE_LABEL[t]}
+    </Badge>
+  )
+}
+
 interface ProjectCardComponentProps {
   card: ProjectCard
   isGrid: boolean
@@ -61,6 +82,8 @@ export function ProjectCardComponent({
               </div>
             )}
 
+            <ProjectTypeBadge type={card.projectType} className="text-[9px] px-1 py-0 w-fit" />
+
             <div className="mt-auto flex items-center justify-between text-[9px] text-gray-500 dark:text-gray-400">
               <div className="flex items-center gap-0.5">
                 {React.createElement(getStorageIcon(card.storageType))}
@@ -93,6 +116,7 @@ export function ProjectCardComponent({
           </div>
 
           <div className="flex flex-wrap gap-1 mb-2 min-h-[24px]">
+            <ProjectTypeBadge type={card.projectType} className="text-[10px] sm:text-xs px-1.5 py-0" />
             {card.tags.slice(0, 2).map((tag, idx) => (
               <Badge key={idx} variant="secondary" className="text-[10px] sm:text-xs px-1.5 py-0 max-w-[100px] truncate">
                 {tag}
@@ -157,6 +181,7 @@ export function ProjectCardComponent({
         </div>
 
         <div className="flex flex-wrap gap-1 max-w-md">
+          <ProjectTypeBadge type={card.projectType} className="text-xs py-0.5" />
           {card.tags.slice(0, 3).map((tag, idx) => (
             <Badge key={idx} variant="secondary" className="text-xs py-0.5">
               {tag}
