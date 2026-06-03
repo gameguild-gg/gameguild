@@ -10,7 +10,6 @@
  * - "general"  : generalist project, no structural constraints (full/block editors)
  */
 
-import type { ProjectMode } from "./project-modes"
 import type { BlockCellType } from "./block-structure"
 
 export type ProjectType = "document" | "quiz" | "general"
@@ -25,22 +24,6 @@ export const PROJECT_TYPE_LABELS: Record<ProjectType, string> = {
 
 export function getProjectTypeLabel(type: ProjectType | undefined): string {
   return PROJECT_TYPE_LABELS[type ?? DEFAULT_PROJECT_TYPE]
-}
-
-/**
- * Map a project type to its corresponding `ProjectMode` used by the editor
- * restrictions system. The mode is fully derived from the project type — no
- * user-pickable "mode" option exists anymore.
- */
-export function projectTypeToMode(type: ProjectType | undefined): ProjectMode {
-  switch (type) {
-    case "quiz":
-      return "quiz-page"
-    case "document":
-    case "general":
-    default:
-      return "free-page"
-  }
 }
 
 /**

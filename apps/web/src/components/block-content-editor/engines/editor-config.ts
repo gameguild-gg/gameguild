@@ -7,10 +7,6 @@
  * - ToolbarConfig: what controls the header/toolbar shows
  *
  * Pages compose freely by passing different configs to EditorField/EditorToolbar.
- *
- * NOTE: there is no `defaultMode`/`allowedModes` field anymore. The internal
- * `ProjectMode` (free-page/quiz-page/code-page) is now fully derived from the
- * project's type — see `projectTypeToMode()` in `project-types.ts`.
  */
 
 import type { BlockCellType } from "@/components/block-content-editor/lib/storage/editor/block-structure"
@@ -66,7 +62,7 @@ export interface ToolbarConfig {
   showSizeIndicator?: boolean
   showSyncStatus?: boolean
   showProjectTitle?: boolean
-  showModeIndicator?: boolean
+  showTypeIndicator?: boolean
   showStorageInfo?: boolean
   showNavHome?: boolean
   showNavViewer?: boolean
@@ -84,7 +80,7 @@ export const DEFAULT_TOOLBAR_CONFIG: ToolbarConfig = {
   showSizeIndicator: true,
   showSyncStatus: true,
   showProjectTitle: true,
-  showModeIndicator: true,
+  showTypeIndicator: true,
   showStorageInfo: true,
   showNavHome: true,
   showNavViewer: true,

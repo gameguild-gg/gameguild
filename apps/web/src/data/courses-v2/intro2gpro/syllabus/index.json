@@ -13,17 +13,6 @@
   "exportedAt": "2026-05-12T14:27:06.784Z",
   "assetsCount": 0,
   "preferences": {
-    "global": {
-      "mode": "free-page",
-      "restrictions": {
-        "blocks": {
-          "b1": [
-            null,
-            null
-          ]
-        }
-      }
-    },
-    "nodes": {}
+    "global": {}
   }
 }

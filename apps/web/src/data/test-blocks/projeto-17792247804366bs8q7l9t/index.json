@@ -13,9 +13,6 @@
   "exportedAt": "2026-05-19T21:40:31.502Z",
   "assetsCount": 0,
   "preferences": {
-    "global": {
-      "mode": "free-page"
-    },
-    "nodes": {}
+    "global": {}
   }
 }

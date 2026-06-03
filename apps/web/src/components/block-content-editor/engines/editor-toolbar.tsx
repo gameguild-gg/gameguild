@@ -11,7 +11,7 @@ import { ProjectSizeIndicator } from "@/components/block-content-editor/extras/e
 import { SyncStatusIndicator } from "@/components/block-content-editor/extras/editor/sync-status-indicator"
 import { EditableProjectTitle } from "@/components/block-content-editor/extras/editor/editable-project-title"
 import { ProjectStorageInfo } from "@/components/block-content-editor/extras/editor/project-storage-info"
-import { ProjectModeIndicator } from "@/components/block-content-editor/extras/editor/project-mode-indicator"
+import { ProjectTypeIndicator } from "@/components/block-content-editor/extras/editor/project-type-indicator"
 import { syncConfig } from "@/components/block-content-editor/lib/sync/editor/sync-config"
 import { useEditor } from "./editor-provider"
 
@@ -50,7 +50,7 @@ export function EditorToolbar() {
               )}
               {project.projectId && (
                 <div className="flex items-center gap-2 shrink-0">
-                  {tc.showModeIndicator !== false && <ProjectModeIndicator mode={project.projectMode} />}
+                  {tc.showTypeIndicator !== false && <ProjectTypeIndicator type={project.preferences?.global?.projectType} />}
                   {tc.showStorageInfo !== false && <ProjectStorageInfo storageType={project.storageType} />}
                 </div>
               )}

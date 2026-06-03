@@ -52,12 +52,7 @@ export function PreviewProject({ node, storageAdapter }: PreviewProjectProps) {
           let editorState = null
 
           try {
-            const data = JSON.parse(fullProject.data)
-            if (data.blocks && data.blocks.b1) {
-              editorState = data.blocks.b1
-            } else {
-              editorState = data
-            }
+            editorState = JSON.parse(fullProject.data)
           } catch (error) {
             console.error("Failed to parse project data:", error)
           }
