@@ -7,13 +7,9 @@ import { Label } from "@/components/ui/label"
 import { useEffect, useState } from "react"
 import { toast } from "sonner"
 import { StorageOptionSelector, type StorageOption } from "./storage-option-selector"
-import {
-  NODE_RESTRICTIONS,
-  type ProjectMode,
-} from "@/components/block-content-editor/lib/storage/editor/project-modes"
 import { EMPTY_PROJECT_DATA } from "@/components/block-content-editor/lib/storage/editor/block-storage"
 import type { ProjectData } from "@/components/block-content-editor/lib/storage/editor/project-data"
-import { projectTypeToMode, getProjectTypeStructure, PROJECT_TYPE_LABELS, type ProjectType } from "@/components/block-content-editor/lib/storage/editor/project-types"
+import { getProjectTypeStructure, PROJECT_TYPE_LABELS, type ProjectType } from "@/components/block-content-editor/lib/storage/editor/project-types"
 import type { BlockCellType } from "@/components/block-content-editor/lib/storage/editor/block-structure"
 import type { ProjectPreferences } from "@/components/block-content-editor/lib/storage/editor/project-preferences"
 
@@ -33,7 +29,6 @@ interface CreateProjectDialogProps {
     name: string
     tags: string[]
     storageType: "local" | "gameguild-cloud" | "google-drive"
-    mode: ProjectMode
     preferences: ProjectPreferences
   }) => void
   onProjectsListUpdate: () => void
@@ -89,7 +84,6 @@ export function CreateProjectDialog({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, projectType, allowedProjectTypes?.join("|")])
 
-  const projectMode: ProjectMode = projectTypeToMode(selectedType)
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -146,7 +140,6 @@ export function CreateProjectDialog({
 
     try {
       const newProjectId = generateProjectId()
-      const restrictions = NODE_RESTRICTIONS[projectMode]
       // Page-pinned structural rules win; otherwise fall back to the defaults
       // implied by the chosen project type.
       const typeDefaults = getProjectTypeStructure(selectedType)
@@ -154,13 +147,10 @@ export function CreateProjectDialog({
       const effectiveAllowedBlockTypes = allowedBlockTypes ?? typeDefaults.allowedBlockTypes
       const preferences: ProjectPreferences = {
         global: {
-          mode: projectMode,
-          restrictions,
           projectType: selectedType,
           ...(effectiveSingleBlockMode !== undefined ? { singleBlockMode: effectiveSingleBlockMode } : {}),
           ...(effectiveAllowedBlockTypes !== undefined ? { allowedBlockTypes: effectiveAllowedBlockTypes } : {}),
         },
-        nodes: {},
       }
 
       await storageAdapter.save(
@@ -177,7 +167,6 @@ export function CreateProjectDialog({
         name: newCreateProjectName,
         tags: projectTags,
         storageType: storageOption,
-        mode: projectMode,
         preferences,
       })
 

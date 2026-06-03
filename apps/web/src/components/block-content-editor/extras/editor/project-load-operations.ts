@@ -22,7 +22,6 @@ export interface CheckSelectedProjectParams {
   setCurrentProjectStorageType: (type: "local" | "gameguild-cloud" | "google-drive") => void
   setProjectTags: (tags: string[]) => void
   setIsFirstTime: (value: boolean) => void
-  setCurrentProjectMode?: (mode: any) => void
   setLastProjectLoadTime?: (time: number) => void
   setCurrentProjectPreferences?: (preferences: any) => void
   setBlocks: (blocks: BlockArray) => void
@@ -42,7 +41,6 @@ export async function checkSelectedProject(params: CheckSelectedProjectParams): 
     setCurrentProjectStorageType,
     setProjectTags,
     setIsFirstTime,
-    setCurrentProjectMode,
     setLastProjectLoadTime,
     setCurrentProjectPreferences,
     setBlocks,
@@ -69,7 +67,6 @@ export async function checkSelectedProject(params: CheckSelectedProjectParams): 
       return
     }
 
-    const projectMode = projectData.preferences?.global?.mode || "free-page"
     const projectType: ProjectType = projectData.preferences?.global?.projectType ?? "general"
 
     if (allowedProjectTypes && allowedProjectTypes.length > 0 && !allowedProjectTypes.includes(projectType)) {
@@ -94,7 +91,6 @@ export async function checkSelectedProject(params: CheckSelectedProjectParams): 
     setProjectTags(projectData.tags || [])
     setIsFirstTime(false)
 
-    if (setCurrentProjectMode) setCurrentProjectMode(projectMode)
     if (setCurrentProjectPreferences) setCurrentProjectPreferences(projectData.preferences)
     if (setLastProjectLoadTime) setLastProjectLoadTime(Date.now())
 

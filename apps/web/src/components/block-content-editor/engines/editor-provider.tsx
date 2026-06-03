@@ -22,7 +22,6 @@ import { useRouter } from "next/navigation"
 import { useProjectStorage, type UseProjectStorageReturn } from "@/components/block-content-editor/hooks/useProjectStorage"
 import { useProjectHistory, type UseProjectHistoryReturn } from "@/components/block-content-editor/hooks/useProjectHistory"
 import { useProjectPreview, type UseProjectPreviewReturn } from "@/components/block-content-editor/hooks/useProjectPreview"
-import { projectTypeToMode } from "@/components/block-content-editor/lib/storage/editor/project-types"
 import { type FieldConfig, type ToolbarConfig, mergeFieldConfig, mergeToolbarConfig, applyProjectPreferencesToFieldConfig } from "./editor-config"
 
 // ============================================================================
@@ -113,11 +112,7 @@ export function EditorProvider({ fieldConfig: fieldPartial, toolbarConfig: toolb
   const fieldConfig = mergeFieldConfig(fieldPartial)
   const toolbarConfig = mergeToolbarConfig(toolbarPartial)
 
-  // The internal ProjectMode is fully derived from the page's project type.
-  const effectiveMode = projectTypeToMode(fieldConfig.projectType)
-
   const project = useProjectStorage({
-    mode: effectiveMode,
     allowedProjectTypes: fieldConfig.allowedProjectTypes,
     projectType: fieldConfig.projectType,
     singleBlockMode: fieldConfig.singleBlockMode,

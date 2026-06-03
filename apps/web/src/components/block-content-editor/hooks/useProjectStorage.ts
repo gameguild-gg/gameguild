@@ -36,8 +36,8 @@ import {
   deserializeProject,
   serializeProject,
 } from "@/components/block-content-editor/lib/storage/editor/block-storage"
+
 import type { BlockArray, BlockCellType } from "@/components/block-content-editor/lib/storage/editor/block-structure"
-import { type ProjectMode } from "@/components/block-content-editor/lib/storage/editor/project-modes"
 import type { ProjectType } from "@/components/block-content-editor/lib/storage/editor/project-types"
 import { handleSave as saveProject, handleSaveAs as saveAsProject } from "@/components/block-content-editor/extras/editor/project-save-operations"
 import { handleTitleEdit as titleEdit, handleTitleSave as titleSave } from "@/components/block-content-editor/extras/editor/project-title-operations"
@@ -69,7 +69,6 @@ export interface UseProjectStorageReturn {
   projectId: string
   projectName: string
   setProjectName: Dispatch<SetStateAction<string>>
-  projectMode: ProjectMode
   storageType: StorageType
   tags: string[]
   setTags: Dispatch<SetStateAction<string[]>>
@@ -141,7 +140,6 @@ function estimateSize(data: string): number {
 // ─── Hook ────────────────────────────────────────────────────────────────────
 
 export interface ProjectStorageDefaults {
-  mode?: ProjectMode
   /** Refuse to hash-load projects whose type isn't allowed by the current page. */
   allowedProjectTypes?: ProjectType[]
   /**
@@ -164,7 +162,6 @@ export function useProjectStorage(initialDefaults?: ProjectStorageDefaults): Use
   const [currentProjectName, setCurrentProjectName] = useState<string>("")
   const [currentProjectStorageType, setCurrentProjectStorageType] = useState<StorageType>("local")
   const [projectTags, setProjectTags] = useState<string[]>([])
-  const [currentProjectMode, setCurrentProjectMode] = useState<ProjectMode>(initialDefaults?.mode || "free-page")
   const [currentProjectPreferences, setCurrentProjectPreferences] = useState<ProjectPreferences | undefined>(undefined)
   const [isFirstTime, setIsFirstTime] = useState(true)
 
@@ -292,7 +289,6 @@ export function useProjectStorage(initialDefaults?: ProjectStorageDefaults): Use
       setCurrentProjectStorageType,
       setProjectTags,
       setIsFirstTime,
-      setCurrentProjectMode,
       setLastProjectLoadTime,
       setCurrentProjectPreferences,
       setBlocks,
@@ -399,9 +395,7 @@ export function useProjectStorage(initialDefaults?: ProjectStorageDefaults): Use
         ...(initialDefaults?.singleBlockMode !== undefined ? { singleBlockMode: initialDefaults.singleBlockMode } : {}),
         ...(initialDefaults?.allowedBlockTypes !== undefined ? { allowedBlockTypes: initialDefaults.allowedBlockTypes } : {}),
         ...currentProjectPreferences?.global,
-        mode: currentProjectMode,
       },
-      nodes: currentProjectPreferences?.nodes || {},
     }
 
     await saveProject({
@@ -412,7 +406,7 @@ export function useProjectStorage(initialDefaults?: ProjectStorageDefaults): Use
       preferences,
     })
     return { needsSaveAs: false }
-  }, [currentProjectId, currentProjectName, currentProjectStorageType, blocks, projectTags, currentProjectPreferences, currentProjectMode, isDbInitialized])
+  }, [currentProjectId, currentProjectName, currentProjectStorageType, blocks, projectTags, currentProjectPreferences, isDbInitialized])
 
   // ═══════════════════════════════════════════════════════════════════════════
   // Save As
@@ -431,9 +425,7 @@ export function useProjectStorage(initialDefaults?: ProjectStorageDefaults): Use
         ...(initialDefaults?.singleBlockMode !== undefined ? { singleBlockMode: initialDefaults.singleBlockMode } : {}),
         ...(initialDefaults?.allowedBlockTypes !== undefined ? { allowedBlockTypes: initialDefaults.allowedBlockTypes } : {}),
         ...currentProjectPreferences?.global,
-        mode: currentProjectMode,
       },
-      nodes: currentProjectPreferences?.nodes || {},
     }
 
     await saveAsProject({
@@ -454,7 +446,7 @@ export function useProjectStorage(initialDefaults?: ProjectStorageDefaults): Use
     })
 
     if (tags) setProjectTags(tagsToSave)
-  }, [blocks, projectTags, isDbInitialized, currentProjectPreferences, currentProjectMode])
+  }, [blocks, projectTags, isDbInitialized, currentProjectPreferences])
 
   // ═══════════════════════════════════════════════════════════════════════════
   // Load project (called from OpenProjectDialog onProjectLoad)
@@ -466,7 +458,6 @@ export function useProjectStorage(initialDefaults?: ProjectStorageDefaults): Use
     setCurrentProjectName(projectData.name)
     setCurrentProjectStorageType(projectData.storageType || "local")
     setProjectTags(projectData.tags || [])
-    setCurrentProjectMode(projectData.preferences?.global?.mode || "free-page")
     setCurrentProjectPreferences(projectData.preferences)
     setIsFirstTime(false)
     setLastProjectLoadTime(Date.now())
@@ -479,7 +470,6 @@ export function useProjectStorage(initialDefaults?: ProjectStorageDefaults): Use
 
   const createProject = useCallback((projectData: any) => {
     setBlocks([])
-    setCurrentProjectMode(projectData.mode || "free-page")
     setLastProjectLoadTime(Date.now())
     setCurrentProjectId(projectData.id)
     setCurrentProjectName(projectData.name)
@@ -544,7 +534,6 @@ export function useProjectStorage(initialDefaults?: ProjectStorageDefaults): Use
     projectId: currentProjectId,
     projectName: currentProjectName,
     setProjectName: setCurrentProjectName,
-    projectMode: currentProjectMode,
     storageType: currentProjectStorageType,
     tags: projectTags,
     setTags: setProjectTags,
