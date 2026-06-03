@@ -12,8 +12,6 @@ import { PreviewAudio } from "@/components/block-content-editor/plugins/preview-
 import { PreviewHeader } from "@/components/block-content-editor/plugins/preview-components/preview-header"
 import { PreviewDivider } from "@/components/block-content-editor/plugins/preview-components/preview-divider"
 import { PreviewSource } from "@/components/block-content-editor/plugins/preview-components/preview-source"
-import { PreviewYouTube } from "@/components/block-content-editor/plugins/preview-components/preview-youtube"
-import { PreviewSpotify } from "@/components/block-content-editor/plugins/preview-components/preview-spotify"
 import { PreviewAdmonition } from "@/components/block-content-editor/plugins/preview-components/preview-admonition"
 import { PreviewButton } from "@/components/block-content-editor/plugins/preview-components/preview-button"
 import { PreviewText } from "@/components/block-content-editor/plugins/preview-components/preview-text"
@@ -25,7 +23,6 @@ import { PreviewListItem } from "@/components/block-content-editor/plugins/previ
 import { PreviewLink } from "@/components/block-content-editor/plugins/preview-components/preview-link"
 import { PreviewHeading } from "@/components/block-content-editor/plugins/preview-components/preview-heading"
 import { PreviewVegaLite } from "@/components/block-content-editor/plugins/preview-components/preview-vega-lite"
-import { PreviewTable } from "@/components/block-content-editor/plugins/preview-components/preview-table"
 import { PreviewCodeStudio } from "@/components/block-content-editor/plugins/preview-components/preview-code-studio"
 import { PreviewProject } from "@/components/block-content-editor/plugins/preview-components/preview-project"
 import { PreviewRichText } from "@/components/block-content-editor/plugins/preview-components/preview-rich-text"
@@ -131,16 +128,6 @@ export function SerializedContentRenderer({
       return <PreviewSource key={uniqueKey} node={node} />
     }
 
-    // Handle YouTube nodes
-    if (node.type === "youtube") {
-      return <PreviewYouTube key={uniqueKey} node={node} />
-    }
-
-    // Handle Spotify nodes
-    if (node.type === "spotify") {
-      return <PreviewSpotify key={uniqueKey} node={node} />
-    }
-
     // For text content - now using the new component
     if (node.type === "text") {
       return <PreviewText key={uniqueKey} node={node} />
@@ -154,11 +141,6 @@ export function SerializedContentRenderer({
     // For Vega-Lite charts
     if (node.type === "vega-lite") {
       return <PreviewVegaLite key={uniqueKey} node={node} />
-    }
-
-    // For table nodes
-    if (node.type === "table") {
-      return <PreviewTable key={uniqueKey} node={node} />
     }
 
     // For CodeStudio nodes

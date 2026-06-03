@@ -7,7 +7,7 @@
 - Divider
 - Button
 
-### 75%
+### 100%
 - Galley
 - Image
 - Mermaid
@@ -16,7 +16,7 @@
 - Code
 - Lexical text
 
-### 50%
+### 100%
 - Audio
 - Video
 

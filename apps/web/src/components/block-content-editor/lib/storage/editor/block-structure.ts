@@ -23,11 +23,8 @@ import type { MermaidData } from "../../../nodes/mermaid-node"
 import type { ProjectData as ProjectNodeData } from "../../../nodes/project-node"
 import type { RichTextData } from "../../../nodes/rich-text-node"
 import type { SourceData } from "../../../nodes/source-node"
-import type { SpotifyData } from "../../../nodes/spotify-node"
-import type { TableData } from "../../../nodes/table-node"
 import type { VegaLiteData } from "../../../nodes/vega-lite-node"
 import type { VideoData } from "../../../nodes/video-node"
-import type { YouTubeData } from "../../../nodes/youtube-node"
 import type { CodeStudioData } from "../../../extras/code-studio/types"
 import type { QuizEntry } from "../../../extras/quiz"
 
@@ -42,8 +39,6 @@ export const BLOCK_CELL_TYPES = [
   "video",
   "audio",
   "gallery",
-  "youtube",
-  "spotify",
   "mermaid",
   "vega-lite",
   "presentation",
@@ -55,7 +50,6 @@ export const BLOCK_CELL_TYPES = [
   "divider",
   "button",
   "admonition",
-  "table",
   "project",
 ] as const
 
@@ -72,8 +66,6 @@ export interface BlockDataMap {
   "video": VideoData
   "audio": AudioData
   "gallery": GalleryData
-  "youtube": YouTubeData
-  "spotify": SpotifyData
   "mermaid": MermaidData
   "vega-lite": VegaLiteData
   "presentation": unknown
@@ -85,7 +77,6 @@ export interface BlockDataMap {
   "divider": DividerData
   "button": ButtonData
   "admonition": AdmonitionData
-  "table": TableData
   "project": ProjectNodeData
 }
 
