@@ -7,20 +7,33 @@
  *   deserializeProject(data)   →  BlockArray
  *   blockToPreviewNode(block)  →  fake serialized node shape consumed by
  *                                 preview components in plugins/preview-components/*
+ *
+ * The persisted shape is:
+ *   {
+ *     order: [["1", "rich-text"], ["2", "image"], …],
+ *     blocks: { "1": <rich-text data>, "2": <image data>, … }
+ *   }
  */
 
-import type { Block, BlockArray, BlockStorage, BlockStorageEntry } from "./block-structure"
+import type {
+  AnyBlockData,
+  Block,
+  BlockArray,
+  BlockCellType,
+  BlockDataMap,
+  BlockStorage,
+} from "./block-structure"
 
 // ============================================================================
 // Conversion: BlockArray ↔ BlockStorage
 // ============================================================================
 
 export function blocksToStorage(blocks: BlockArray): BlockStorage {
-  const order: string[] = []
-  const map: Record<string, BlockStorageEntry> = {}
+  const order: BlockStorage["order"] = []
+  const map: Record<string, AnyBlockData> = {}
   for (const block of blocks) {
-    order.push(block.id)
-    map[block.id] = { type: block.type, data: block.data } as BlockStorageEntry
+    order.push([block.id, block.type])
+    map[block.id] = block.data
   }
   return { order, blocks: map }
 }
@@ -28,10 +41,12 @@ export function blocksToStorage(blocks: BlockArray): BlockStorage {
 export function storageToBlocks(storage: BlockStorage | null | undefined): BlockArray {
   if (!storage || !Array.isArray(storage.order) || !storage.blocks) return []
   const out: BlockArray = []
-  for (const id of storage.order) {
-    const entry = storage.blocks[id]
-    if (!entry) continue
-    out.push({ id, type: entry.type, data: entry.data } as Block)
+  for (const entry of storage.order) {
+    if (!Array.isArray(entry) || entry.length < 2) continue
+    const [id, type] = entry
+    const data = storage.blocks[id]
+    if (data === undefined) continue
+    out.push({ id, type, data } as Block)
   }
   return out
 }
@@ -40,7 +55,7 @@ export function storageToBlocks(storage: BlockStorage | null | undefined): Block
 // Project-level serialization
 // ============================================================================
 
-export const EMPTY_PROJECT_DATA: string = JSON.stringify({ order: [], blocks: {} })
+export const EMPTY_PROJECT_DATA: string = JSON.stringify({ order: [], blocks: {} } satisfies BlockStorage)
 
 export function serializeProject(blocks: BlockArray): string {
   return JSON.stringify(blocksToStorage(blocks))
@@ -66,9 +81,14 @@ export function deserializeProject(data: string | null | undefined): BlockArray 
 // This wrapper keeps that shape so preview components do not need to change.
 // ============================================================================
 
-export function blockToPreviewNode(block: Block): any {
+export type PreviewNode<T extends BlockCellType = BlockCellType> =
+  T extends "quiz"
+    ? { type: "quiz"; entry: BlockDataMap["quiz"]; version: 1 }
+    : { type: T; data: BlockDataMap[T]; version: 1 }
+
+export function blockToPreviewNode<B extends Block>(block: B): PreviewNode<B["type"]> {
   if (block.type === "quiz") {
-    return { type: "quiz", entry: block.data, version: 1 }
+    return { type: "quiz", entry: block.data, version: 1 } as PreviewNode<B["type"]>
   }
-  return { type: block.type, data: block.data, version: 1 }
+  return { type: block.type, data: block.data, version: 1 } as PreviewNode<B["type"]>
 }

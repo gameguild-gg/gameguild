@@ -46,43 +46,41 @@ interface BlockContentRendererProps {
 }
 
 export function BlockContentRenderer({ block }: BlockContentRendererProps) {
-  const node = blockToPreviewNode(block)
-
-  switch (block.type as BlockCellType) {
+  switch (block.type) {
     case "quiz":
-      return <PreviewQuiz node={node} />
+      return <PreviewQuiz node={blockToPreviewNode(block)} />
     case "code-studio":
-      return <PreviewCodeStudio data={node.data} />
+      return <PreviewCodeStudio data={block.data} />
     case "image":
-      return <PreviewImage node={node} />
+      return <PreviewImage node={blockToPreviewNode(block)} />
     case "video":
-      return <PreviewVideo node={node} />
+      return <PreviewVideo node={blockToPreviewNode(block)} />
     case "audio":
-      return <PreviewAudio node={node} />
+      return <PreviewAudio node={blockToPreviewNode(block)} />
     case "gallery":
-      return <PreviewGallery node={node} />
+      return <PreviewGallery node={blockToPreviewNode(block)} />
     case "mermaid":
-      return <PreviewMermaid data={node.data} />
+      return <PreviewMermaid data={block.data} />
     case "vega-lite":
-      return <PreviewVegaLite node={node} />
+      return <PreviewVegaLite node={blockToPreviewNode(block)} />
     case "source":
-      return <PreviewSource node={node} />
+      return <PreviewSource node={blockToPreviewNode(block)} />
     case "markdown":
-      return <PreviewMarkdown node={node} />
+      return <PreviewMarkdown node={blockToPreviewNode(block)} />
     case "html":
-      return <PreviewHTML node={node} />
+      return <PreviewHTML node={blockToPreviewNode(block)} />
     case "rich-text":
-      return <PreviewRichText node={node} />
+      return <PreviewRichText node={blockToPreviewNode(block)} />
     case "header":
-      return <PreviewHeader node={node} />
+      return <PreviewHeader node={blockToPreviewNode(block)} />
     case "divider":
-      return <PreviewDivider node={node} />
+      return <PreviewDivider node={blockToPreviewNode(block)} />
     case "button":
-      return <PreviewButton node={node} />
+      return <PreviewButton node={blockToPreviewNode(block)} />
     case "admonition":
-      return <PreviewAdmonition node={node} />
+      return <PreviewAdmonition node={blockToPreviewNode(block)} />
     case "project":
-      return <PreviewProject node={node} />
+      return <PreviewProject node={blockToPreviewNode(block)} />
     default:
       return (
         <div className="p-3 border border-gray-200 dark:border-gray-700 rounded text-sm text-gray-500 dark:text-gray-400">
