@@ -28,6 +28,7 @@ import { BlockEditorModal } from "./block-editor-modal"
 import { BLOCK_REGISTRY, type BlockCellType } from "./block-component-registry"
 import { DeleteConfirmDialog } from "@/components/block-content-editor/extras/dialogs/delete-confirm-dialog"
 import type { Block, BlockArray } from "@/components/block-content-editor/lib/storage/editor/block-structure"
+import { nextBlockId } from "@/components/block-content-editor/lib/storage/editor/block-structure"
 import { BlockContentRenderer } from "./block-array-viewer"
 import { InlineRichTextEditor } from "../../extras/rich-text/inline-rich-text-editor"
 import type { RichTextData } from "../../nodes/rich-text-node"
@@ -254,8 +255,9 @@ export function BlockArrayEditor({ blocks, onChange, readOnly = false, allowedBl
 
 
 
-  const handleAddBlock = useCallback((block: Block) => {
+  const handleAddBlock = useCallback((factory: (id: string) => Block) => {
     const idx = insertIndex ?? blocks.length
+    const block = factory(nextBlockId(blocks))
     const next = [...blocks]
     next.splice(idx, 0, block)
     onChange(next)

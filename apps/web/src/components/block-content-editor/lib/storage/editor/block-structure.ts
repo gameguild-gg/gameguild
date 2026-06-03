@@ -7,7 +7,10 @@
  *
  *   Block         = runtime unit:        { id, type, data }
  *   BlockArray    = ordered list:        Block[]
- *   BlockStorage  = persistence format:  { order: string[], blocks: Record<id, {type, data}> }
+ *   BlockStorage  = persistence format:  { order: [id, type][], blocks: Record<id, data> }
+ *
+ * Block IDs are sequential numeric strings ("1", "2", "3", ...) — assigned
+ * by `nextBlockId(blocks)` and never recycled. Project IDs remain UUIDs.
  */
 
 import type { AdmonitionData } from "../../../nodes/admonition-node"
@@ -94,14 +97,36 @@ export type BlockArray = Block[]
 
 // ============================================================================
 // BlockStorage — persistence format
+//
+// `order` pairs each block id with its type, so `blocks` only needs to hold
+// the raw data payload (no `{type, data}` envelope).
 // ============================================================================
 
-export interface BlockStorageEntry<T extends BlockCellType = BlockCellType> {
-  type: T
-  data: BlockDataMap[T]
-}
+/** `[id, type]` pair — one per block, in render order. */
+export type BlockOrderEntry<T extends BlockCellType = BlockCellType> = readonly [id: string, type: T]
+
+/** Union of every possible block data payload (one per known block type). */
+export type AnyBlockData = BlockDataMap[BlockCellType]
 
 export interface BlockStorage {
-  order: string[]
-  blocks: Record<string, BlockStorageEntry>
+  order: BlockOrderEntry[]
+  blocks: Record<string, AnyBlockData>
+}
+
+// ============================================================================
+// ID helpers — block ids are sequential numeric strings: "1", "2", "3", …
+// ============================================================================
+
+/**
+ * Compute the next sequential block id for the given array. Walks every
+ * block to find the highest numeric id and returns `String(max + 1)`. Ids
+ * are never recycled, so this stays stable across deletions.
+ */
+export function nextBlockId(blocks: BlockArray): string {
+  let max = 0
+  for (const b of blocks) {
+    const n = Number(b.id)
+    if (Number.isFinite(n) && n > max) max = n
+  }
+  return String(max + 1)
 }

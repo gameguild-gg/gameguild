@@ -5,6 +5,7 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 import { BlockArrayEditor } from "@/components/block-content-editor/engines/blocks/block-array-editor"
 import { BLOCK_REGISTRY } from "@/components/block-content-editor/engines/blocks/block-component-registry"
+import { nextBlockId } from "@/components/block-content-editor/lib/storage/editor/block-structure"
 import { useEditor } from "./editor-provider"
 
 export function EditorField() {
@@ -25,7 +26,7 @@ export function EditorField() {
     const type = fieldConfig.allowedBlockTypes?.[0] ?? "rich-text"
     const config = BLOCK_REGISTRY[type]
     if (!config) return
-    project.setBlocks([config.createEmpty()])
+    project.setBlocks([config.createEmpty(nextBlockId(project.blocks))])
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fieldConfig.singleBlockMode, project.blocks.length, history.isViewingHistory])
 

@@ -19,7 +19,7 @@ const BLOCK_CATEGORIES: { label: string; types: BlockCellType[] }[] = [
   { label: "Content", types: ["rich-text", "markdown", "html"] },
   { label: "Media", types: ["image", "video", "audio", "gallery"] },
   { label: "Interactive", types: ["quiz", "code-studio", "button"] },
-  { label: "Data & Diagrams", types: ["mermaid", "vega-lite", "table"] },
+  { label: "Data & Diagrams", types: ["mermaid", "vega-lite"] },
   { label: "Structure", types: ["divider", "admonition", "project"] },
 ]
 
@@ -30,7 +30,12 @@ const BLOCK_CATEGORIES: { label: string; types: BlockCellType[] }[] = [
 interface BlockTypePickerProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  onSelect: (block: Block) => void
+  /**
+   * Called with a factory that builds the selected block given an id —
+   * the caller is responsible for computing the next sequential id (e.g.
+   * via `nextBlockId(currentBlocks)`).
+   */
+  onSelect: (factory: (id: string) => Block) => void
   allowedBlockTypes?: BlockCellType[]
   /** Which tab to show by default */
   defaultTab?: "blocks" | "templates"
@@ -67,17 +72,14 @@ export function BlockTypePicker({ open, onOpenChange, onSelect, allowedBlockType
 
   const handleSelect = (type: BlockCellType) => {
     const config = BLOCK_REGISTRY[type]
-    const block = config.createEmpty()
-    onSelect(block)
+    onSelect((id) => config.createEmpty(id))
     onOpenChange(false)
     setSearch("")
     setTab("blocks")
   }
 
   const handleSelectQuizTemplate = (template: QuizTypeTemplate) => {
-    const entry = template.createEntry()
-    const block: Block = { id: crypto.randomUUID(), type: "quiz", data: entry }
-    onSelect(block)
+    onSelect((id) => ({ id, type: "quiz", data: template.createEntry() }))
     onOpenChange(false)
     setSearch("")
     setTab(effectiveDefault)

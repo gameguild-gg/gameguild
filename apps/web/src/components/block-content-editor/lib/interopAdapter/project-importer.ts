@@ -7,6 +7,9 @@
 import JSZip from "jszip"
 import { assetManager } from "@/components/block-content-editor/lib/storage/assets/asset-manager"
 import type { AssetData, AssetUsage } from "@/components/block-content-editor/lib/storage/assets/types"
+import type { ProjectPreferences } from "@/components/block-content-editor/lib/storage/editor/project-preferences"
+
+export type ProjectStorageType = "local" | "gameguild-cloud" | "google-drive"
 
 export interface ProjectData {
   id: string
@@ -17,8 +20,8 @@ export interface ProjectData {
   createdAt: string
   updatedAt: string
   hash?: string
-  storageType?: "local" | "gameguild-cloud" | "google-drive"
-  preferences?: any
+  storageType?: ProjectStorageType
+  preferences?: ProjectPreferences
 }
 
 export interface ProjectMetadata {
@@ -33,7 +36,7 @@ export interface ProjectMetadata {
   version: string
   exportedAt?: string
   assetsCount?: number
-  preferences?: any
+  preferences?: ProjectPreferences
 }
 
 export interface ImportedProjectData {
@@ -44,7 +47,7 @@ export interface ImportedProjectData {
   metadata: ProjectMetadata | null
   assets?: Record<string, AssetData>
   assetIndex?: Record<string, AssetUsage[]>
-  preferences?: any
+  preferences?: ProjectPreferences
 }
 
 export interface FolderStructureData {
@@ -214,10 +217,11 @@ export class ProjectImporter {
     // Build a map keyed by the path *inside* the project folder (or just filename if at root)
     const fileMap = new Map<string, File>()
     for (const file of files) {
-      const rel = (file as any).webkitRelativePath || file.name
+      const rel = (file as File & { webkitRelativePath?: string }).webkitRelativePath || file.name
       const parts = rel.split('/').filter(Boolean)
       // Drop the top-level folder name if it exists, so paths are relative to the project root
       const innerPath = parts.length > 1 ? parts.slice(1).join('/') : parts[0]
+      if (!innerPath) continue
       fileMap.set(innerPath, file)
     }
 
@@ -310,7 +314,7 @@ export class ProjectImporter {
   static convertToProjectData(
     importedData: ImportedProjectData,
     newId?: string,
-    newStorageType?: "local" | "gameguild-cloud" | "google-drive"
+    newStorageType?: ProjectStorageType
   ): ProjectData {
     const now = new Date().toISOString()
     
@@ -323,7 +327,7 @@ export class ProjectImporter {
       createdAt: importedData.metadata?.createdAt || now,
       updatedAt: now, // Always update to current time on import
       hash: importedData.metadata?.hash,
-      storageType: newStorageType || (importedData.metadata?.storageType as "local" | "gameguild-cloud" | "google-drive") || "local",
+      storageType: newStorageType || (importedData.metadata?.storageType as ProjectStorageType) || "local",
       preferences: importedData.preferences || importedData.metadata?.preferences,
     }
   }
@@ -384,17 +388,17 @@ export class ProjectImporter {
   /**
    * Validate metadata structure
    */
-  private static isValidMetadata(metadata: any): metadata is ProjectMetadata {
+  private static isValidMetadata(metadata: unknown): metadata is ProjectMetadata {
+    if (!metadata || typeof metadata !== 'object') return false
+    const m = metadata as Record<string, unknown>
     return !!(
-      metadata &&
-      typeof metadata === 'object' &&
-      metadata.id &&
-      metadata.name &&
-      Array.isArray(metadata.tags) &&
-      metadata.createdAt &&
-      metadata.updatedAt &&
-      metadata.storageType &&
-      metadata.version
+      m.id &&
+      m.name &&
+      Array.isArray(m.tags) &&
+      m.createdAt &&
+      m.updatedAt &&
+      m.storageType &&
+      m.version
     )
   }
 

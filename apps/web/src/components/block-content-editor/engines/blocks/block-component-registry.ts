@@ -46,7 +46,12 @@ export interface BlockTypeConfig {
   icon: LucideIcon
   label: string
   description: string
-  createEmpty: () => Block
+  /**
+   * Build a fresh empty block. The caller is responsible for providing the
+   * block id — typically via `nextBlockId(currentBlocks)` for top-level
+   * inserts.
+   */
+  createEmpty: (id: string) => Block
 }
 
 // ============================================================================
@@ -58,8 +63,8 @@ export const BLOCK_REGISTRY: Record<BlockCellType, BlockTypeConfig> = {
     icon: HelpCircle,
     label: "Quiz",
     description: "Interactive quiz question",
-    createEmpty: () => ({
-      id: crypto.randomUUID(),
+    createEmpty: (id) => ({
+      id,
       type: "quiz",
       data: { type: QuizEntryType.SingleChoice, stem: "", options: [{ id: "o1", text: "" }], correctOptionId: "o1", settings: createDefaultSettings() },
     }),
@@ -68,8 +73,8 @@ export const BLOCK_REGISTRY: Record<BlockCellType, BlockTypeConfig> = {
     icon: Code,
     label: "Code Studio",
     description: "Code editor with multiple files",
-    createEmpty: () => ({
-      id: crypto.randomUUID(),
+    createEmpty: (id) => ({
+      id,
       type: "code-studio",
       data: { id: crypto.randomUUID(), files: [], folders: [], openTabs: [], mode: "execution", language: "javascript", readonly: false, showLineNumbers: true, fontSize: 14, theme: "system", shikiTheme: "github", testCases: {} },
     }),
@@ -78,8 +83,8 @@ export const BLOCK_REGISTRY: Record<BlockCellType, BlockTypeConfig> = {
     icon: Image,
     label: "Image",
     description: "Image with caption",
-    createEmpty: () => ({
-      id: crypto.randomUUID(),
+    createEmpty: (id) => ({
+      id,
       type: "image",
       data: { src: "", alt: "", caption: "", size: 100, isNew: true },
     }),
@@ -88,8 +93,8 @@ export const BLOCK_REGISTRY: Record<BlockCellType, BlockTypeConfig> = {
     icon: Video,
     label: "Video",
     description: "Video player",
-    createEmpty: () => ({
-      id: crypto.randomUUID(),
+    createEmpty: (id) => ({
+      id,
       type: "video",
       data: { src: "", alt: "", caption: "", size: 100, isNew: true },
     }),
@@ -98,8 +103,8 @@ export const BLOCK_REGISTRY: Record<BlockCellType, BlockTypeConfig> = {
     icon: Music,
     label: "Audio",
     description: "Audio player",
-    createEmpty: () => ({
-      id: crypto.randomUUID(),
+    createEmpty: (id) => ({
+      id,
       type: "audio",
       data: { src: "", caption: "", size: 100, isNew: true },
     }),
@@ -108,38 +113,18 @@ export const BLOCK_REGISTRY: Record<BlockCellType, BlockTypeConfig> = {
     icon: GalleryHorizontalEnd,
     label: "Gallery",
     description: "Image gallery",
-    createEmpty: () => ({
-      id: crypto.randomUUID(),
+    createEmpty: (id) => ({
+      id,
       type: "gallery",
       data: { images: [], layout: "2", caption: "", defaultDisplayMode: "crop", isNew: true },
-    }),
-  },
-  "youtube": {
-    icon: Youtube,
-    label: "YouTube",
-    description: "YouTube video embed",
-    createEmpty: () => ({
-      id: crypto.randomUUID(),
-      type: "youtube",
-      data: { videoId: "", title: "", caption: "", size: 100, isNew: true, startAt: 0, showControls: true, showInfo: true, showRelated: false },
-    }),
-  },
-  "spotify": {
-    icon: Music2,
-    label: "Spotify",
-    description: "Spotify embed",
-    createEmpty: () => ({
-      id: crypto.randomUUID(),
-      type: "spotify",
-      data: { spotifyId: "", type: "track", title: "", caption: "", size: 100, isNew: true },
     }),
   },
   "mermaid": {
     icon: GitGraph,
     label: "Mermaid",
     description: "Mermaid diagram",
-    createEmpty: () => ({
-      id: crypto.randomUUID(),
+    createEmpty: (id) => ({
+      id,
       type: "mermaid",
       data: { code: "", type: "flowchart", direction: "TD", theme: "default", themeMode: "system" },
     }),
@@ -148,8 +133,8 @@ export const BLOCK_REGISTRY: Record<BlockCellType, BlockTypeConfig> = {
     icon: BarChart3,
     label: "Vega-Lite",
     description: "Data visualization chart",
-    createEmpty: () => ({
-      id: crypto.randomUUID(),
+    createEmpty: (id) => ({
+      id,
       type: "vega-lite",
       data: { spec: "", title: "", caption: "", theme: "default", themeMode: "system" },
     }),
@@ -158,8 +143,8 @@ export const BLOCK_REGISTRY: Record<BlockCellType, BlockTypeConfig> = {
     icon: Presentation,
     label: "Presentation",
     description: "Slide presentation",
-    createEmpty: () => ({
-      id: crypto.randomUUID(),
+    createEmpty: (id) => ({
+      id,
       type: "presentation",
       data: { slides: [], title: "Untitled Presentation", theme: "light", transitionEffect: "fade", autoAdvance: false, autoAdvanceDelay: 5, autoAdvanceLoop: false, showControls: true, isNew: true },
     }),
@@ -168,8 +153,8 @@ export const BLOCK_REGISTRY: Record<BlockCellType, BlockTypeConfig> = {
     icon: BookOpen,
     label: "Sources",
     description: "Reference sources",
-    createEmpty: () => ({
-      id: crypto.randomUUID(),
+    createEmpty: (id) => ({
+      id,
       type: "source",
       data: { sources: [], title: "References", style: "apa", isNew: true },
     }),
@@ -178,8 +163,8 @@ export const BLOCK_REGISTRY: Record<BlockCellType, BlockTypeConfig> = {
     icon: FileText,
     label: "Markdown",
     description: "Markdown content",
-    createEmpty: () => ({
-      id: crypto.randomUUID(),
+    createEmpty: (id) => ({
+      id,
       type: "markdown",
       data: { content: "", title: "", caption: "" },
     }),
@@ -188,8 +173,8 @@ export const BLOCK_REGISTRY: Record<BlockCellType, BlockTypeConfig> = {
     icon: FileCode,
     label: "HTML",
     description: "Custom HTML/CSS/XML block",
-    createEmpty: () => ({
-      id: crypto.randomUUID(),
+    createEmpty: (id) => ({
+      id,
       type: "html",
       data: createDefaultHTMLData(),
     }),
@@ -198,8 +183,8 @@ export const BLOCK_REGISTRY: Record<BlockCellType, BlockTypeConfig> = {
     icon: FileText,
     label: "Rich Text",
     description: "Rich text content with formatting",
-    createEmpty: () => ({
-      id: crypto.randomUUID(),
+    createEmpty: (id) => ({
+      id,
       type: "rich-text",
       data: { content: null },
     }),
@@ -208,8 +193,8 @@ export const BLOCK_REGISTRY: Record<BlockCellType, BlockTypeConfig> = {
     icon: Heading,
     label: "Header",
     description: "Section header",
-    createEmpty: () => ({
-      id: crypto.randomUUID(),
+    createEmpty: (id) => ({
+      id,
       type: "header",
       data: { text: "", level: 1, style: "default" },
     }),
@@ -218,8 +203,8 @@ export const BLOCK_REGISTRY: Record<BlockCellType, BlockTypeConfig> = {
     icon: Minus,
     label: "Divider",
     description: "Visual divider",
-    createEmpty: () => ({
-      id: crypto.randomUUID(),
+    createEmpty: (id) => ({
+      id,
       type: "divider",
       data: { style: "simple", thickness: "thin", spacing: "md", colorPalette: "blue", isNew: true },
     }),
@@ -228,8 +213,8 @@ export const BLOCK_REGISTRY: Record<BlockCellType, BlockTypeConfig> = {
     icon: MousePointerClick,
     label: "Button",
     description: "Clickable button",
-    createEmpty: () => ({
-      id: crypto.randomUUID(),
+    createEmpty: (id) => ({
+      id,
       type: "button",
       data: { text: "Button", url: "", actionType: "url", variant: "solid", size: "md", showIcon: false, iconVariant: 0, iconPosition: "left", iconSize: "md", colorPalette: "blue", fontFamily: "sans", fontSize: "md", isNew: true },
     }),
@@ -238,28 +223,18 @@ export const BLOCK_REGISTRY: Record<BlockCellType, BlockTypeConfig> = {
     icon: AlertTriangle,
     label: "Admonition",
     description: "Info/warning callout",
-    createEmpty: () => ({
-      id: crypto.randomUUID(),
+    createEmpty: (id) => ({
+      id,
       type: "admonition",
       data: { title: "", content: "", type: "note", design: "default", isNew: true },
-    }),
-  },
-  "table": {
-    icon: Table2,
-    label: "Table",
-    description: "Data table",
-    createEmpty: () => ({
-      id: crypto.randomUUID(),
-      type: "table",
-      data: { rows: 3, columns: 3, style: "default", showHeader: true, showBorders: true, cells: [], caption: "", isNew: false },
     }),
   },
   "project": {
     icon: FolderOpen,
     label: "Project",
     description: "Embedded project",
-    createEmpty: () => ({
-      id: crypto.randomUUID(),
+    createEmpty: (id) => ({
+      id,
       type: "project",
       data: { projectId: "", projectName: "", editorState: null, isLocalCopy: false },
     }),

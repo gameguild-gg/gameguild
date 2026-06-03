@@ -50,7 +50,7 @@ export function BlockInsertButtonPlugin({ disabled }: BlockInsertButtonPluginPro
         return (
           <DropDownItem
             key={type}
-            onClick={() => insert(config.createEmpty())}
+            onClick={() => insert(config.createEmpty(String(Date.now())))}
             title={config.description}
           >
             <Icon className="w-4 h-4 opacity-80" />
