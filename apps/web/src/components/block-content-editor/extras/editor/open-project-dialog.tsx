@@ -16,6 +16,7 @@ import { ImportProjectDialog } from "./import-project-dialog"
 import { InfoDialog } from "./info-dialog"
 import type { StorageOption } from "./storage-option-selector"
 import type { ProjectData } from "@/components/block-content-editor/lib/storage/editor/project-data"
+import type { ProjectType } from "@/components/block-content-editor/lib/storage/editor/project-types"
 
 interface StorageAdapter {
   save: (
@@ -48,6 +49,12 @@ interface OpenProjectDialogProps {
   onProjectsListUpdate: () => void
   onCreateNew: () => void
   currentProjectName: string
+  /**
+   * If set, the dialog only lists projects whose `preferences.global.projectType`
+   * matches one of these values. Projects with no `projectType` are treated as
+   * "general". Undefined = accept all.
+   */
+  allowedProjectTypes?: ProjectType[]
 }
 
 export function OpenProjectDialog({
@@ -61,6 +68,7 @@ export function OpenProjectDialog({
   onProjectsListUpdate,
   onCreateNew,
   currentProjectName,
+  allowedProjectTypes,
 }: OpenProjectDialogProps) {
   const {
     searchTerm,
@@ -102,6 +110,19 @@ export function OpenProjectDialog({
         throw new Error("Project data is missing")
       }
 
+      // Guard: don't allow opening a project whose type this page doesn't accept.
+      if (allowedProjectTypes && allowedProjectTypes.length > 0) {
+        const t = projectData.preferences?.global?.projectType ?? "general"
+        if (!allowedProjectTypes.includes(t)) {
+          toast.error("Projeto incompatível com esta página", {
+            description: `Este editor não abre projetos do tipo "${t}".`,
+            duration: 4000,
+            icon: "🚫",
+          })
+          return
+        }
+      }
+
       onProjectLoad(projectData)
       onOpenChange(false)
       await new Promise((resolve) => setTimeout(resolve, 100))
@@ -129,6 +150,18 @@ export function OpenProjectDialog({
   const generateProjectId = () => {
     return Date.now().toString() + Math.random().toString(36).substr(2, 9)
   }
+
+  // Page-level filter by project type. Projects with no projectType stored
+  // are treated as "general".
+  const visibleProjects = allowedProjectTypes && allowedProjectTypes.length > 0
+    ? filteredProjects.filter((p) => {
+        const t = p.preferences?.global?.projectType ?? "general"
+        return allowedProjectTypes.includes(t)
+      })
+    : filteredProjects
+  const visibleTotal = allowedProjectTypes && allowedProjectTypes.length > 0
+    ? visibleProjects.length
+    : totalProjects
 
   return (
     <>
@@ -170,7 +203,7 @@ export function OpenProjectDialog({
         }
         list={
           <ProjectList
-            projects={filteredProjects}
+            projects={visibleProjects}
             currentPage={currentPage}
             itemsPerPage={itemsPerPage}
             searchTerm={searchTerm}
@@ -187,7 +220,7 @@ export function OpenProjectDialog({
         pagination={
           <ProjectPagination
             currentPage={currentPage}
-            totalProjects={totalProjects}
+            totalProjects={visibleTotal}
             itemsPerPage={itemsPerPage}
             onPageChange={setCurrentPage}
           />

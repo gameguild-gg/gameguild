@@ -5,18 +5,14 @@ import { EditorToolbar } from "@/components/block-content-editor/engines/editor-
 import { EditorField } from "@/components/block-content-editor/engines/editor-field"
 import { EditorDialogs } from "@/components/block-content-editor/engines/editor-dialogs"
 import { StudioLayout } from "../studio/studio-layout"
-import type { FieldConfig, ToolbarConfig } from "@/components/block-content-editor/engines/editor-config"
-
-const fieldConfig: Partial<FieldConfig> = {
-  defaultMode: "free-page",
-}
+import type { ToolbarConfig } from "@/components/block-content-editor/engines/editor-config"
 
 const toolbarConfig: Partial<ToolbarConfig> = {
 }
 
 export default function DocEditorPage() {
   return (
-    <EditorProvider fieldConfig={fieldConfig} toolbarConfig={toolbarConfig}>
+    <EditorProvider toolbarConfig={toolbarConfig}>
       <StudioLayout>
         <EditorToolbar />
         <EditorField />

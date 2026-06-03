@@ -8,7 +8,7 @@ import { BLOCK_REGISTRY } from "@/components/block-content-editor/engines/blocks
 import { useEditor } from "./editor-provider"
 
 export function EditorField() {
-  const { project, history, fieldConfig } = useEditor()
+  const { project, history, effectiveFieldConfig: fieldConfig } = useEditor()
   const [blocksDragging, setBlocksDragging] = useState(false)
   const [scaledHeight, setScaledHeight] = useState<number | null>(null)
   const fieldRef = useRef<HTMLDivElement>(null)
@@ -44,7 +44,7 @@ export function EditorField() {
   }, [])
 
   const hasRestrictedBlockTypes = !!fieldConfig.allowedBlockTypes && fieldConfig.allowedBlockTypes.length <= 1
-  const isQuizMode = fieldConfig.allowedModes?.includes("quiz-page")
+  const isQuizMode = fieldConfig.projectType === "quiz"
   const hideBlocks = hasRestrictedBlockTypes || (isQuizMode && !fieldConfig.allowedBlockTypes?.length)
 
   return (

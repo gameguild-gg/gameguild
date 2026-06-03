@@ -16,7 +16,7 @@ import { syncConfig } from "@/components/block-content-editor/lib/sync/editor/sy
 import { useEditor } from "./editor-provider"
 
 export function EditorToolbar() {
-  const { project, history, preview, toolbarConfig: tc, ui } = useEditor()
+  const { project, history, preview, toolbarConfig: tc, ui, fieldConfig } = useEditor()
 
   return (
     <div className="border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-900">
@@ -137,6 +137,7 @@ export function EditorToolbar() {
                 window.history.pushState(null, "", window.location.pathname)
               }}
               currentProjectName={project.projectName}
+              allowedProjectTypes={fieldConfig.allowedProjectTypes}
             />
           )}
 

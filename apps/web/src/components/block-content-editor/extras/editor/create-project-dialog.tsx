@@ -13,6 +13,9 @@ import {
 } from "@/components/block-content-editor/lib/storage/editor/project-modes"
 import { EMPTY_PROJECT_DATA } from "@/components/block-content-editor/lib/storage/editor/block-storage"
 import type { ProjectData } from "@/components/block-content-editor/lib/storage/editor/project-data"
+import { projectTypeToMode, getProjectTypeStructure, PROJECT_TYPE_LABELS, type ProjectType } from "@/components/block-content-editor/lib/storage/editor/project-types"
+import type { BlockCellType } from "@/components/block-content-editor/lib/storage/editor/block-structure"
+import type { ProjectPreferences } from "@/components/block-content-editor/lib/storage/editor/project-preferences"
 
 interface StorageAdapter {
   list: () => Promise<ProjectData[]>
@@ -31,12 +34,21 @@ interface CreateProjectDialogProps {
     tags: string[]
     storageType: "local" | "gameguild-cloud" | "google-drive"
     mode: ProjectMode
+    preferences: ProjectPreferences
   }) => void
   onProjectsListUpdate: () => void
   onAvailableTagsUpdate: () => void
   generateProjectId: () => string
-  allowedModes?: ProjectMode[]
-  defaultMode?: ProjectMode
+  /** Page-declared structural constraints to persist on the new project. */
+  projectType?: ProjectType
+  /**
+   * Which project types this page is allowed to create. When undefined or
+   * containing more than one entry, the dialog shows a project-type selector
+   * (so a "general" page lets the user choose document / quiz / general).
+   */
+  allowedProjectTypes?: ProjectType[]
+  singleBlockMode?: boolean
+  allowedBlockTypes?: BlockCellType[]
 }
 
 export function CreateProjectDialog({
@@ -49,15 +61,35 @@ export function CreateProjectDialog({
   onProjectsListUpdate,
   onAvailableTagsUpdate,
   generateProjectId,
-  allowedModes,
-  defaultMode,
+  projectType,
+  allowedProjectTypes,
+  singleBlockMode,
+  allowedBlockTypes,
 }: CreateProjectDialogProps) {
   const [newCreateProjectName, setNewCreateProjectName] = useState("")
   const [projectTags, setProjectTags] = useState<string[]>([])
   const [tagInput, setTagInput] = useState("")
   const [showTagDropdown, setShowTagDropdown] = useState(false)
   const [storageOption, setStorageOption] = useState<StorageOption>("local")
-  const [projectMode, setProjectMode] = useState<ProjectMode>(defaultMode || "free-page")
+
+  // Available project types: page filter wins; otherwise show all three.
+  const ALL_TYPES: ProjectType[] = ["document", "quiz", "general"]
+  const availableTypes: ProjectType[] = allowedProjectTypes && allowedProjectTypes.length > 0
+    ? allowedProjectTypes
+    : ALL_TYPES
+  const initialType: ProjectType =
+    projectType && availableTypes.includes(projectType)
+      ? projectType
+      : (availableTypes[0] ?? "general")
+  const [selectedType, setSelectedType] = useState<ProjectType>(initialType)
+
+  // Reset selected type whenever the dialog reopens or page defaults change.
+  useEffect(() => {
+    if (open) setSelectedType(initialType)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, projectType, allowedProjectTypes?.join("|")])
+
+  const projectMode: ProjectMode = projectTypeToMode(selectedType)
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -115,8 +147,19 @@ export function CreateProjectDialog({
     try {
       const newProjectId = generateProjectId()
       const restrictions = NODE_RESTRICTIONS[projectMode]
-      const preferences = {
-        global: { mode: projectMode, restrictions },
+      // Page-pinned structural rules win; otherwise fall back to the defaults
+      // implied by the chosen project type.
+      const typeDefaults = getProjectTypeStructure(selectedType)
+      const effectiveSingleBlockMode = singleBlockMode ?? typeDefaults.singleBlockMode
+      const effectiveAllowedBlockTypes = allowedBlockTypes ?? typeDefaults.allowedBlockTypes
+      const preferences: ProjectPreferences = {
+        global: {
+          mode: projectMode,
+          restrictions,
+          projectType: selectedType,
+          ...(effectiveSingleBlockMode !== undefined ? { singleBlockMode: effectiveSingleBlockMode } : {}),
+          ...(effectiveAllowedBlockTypes !== undefined ? { allowedBlockTypes: effectiveAllowedBlockTypes } : {}),
+        },
         nodes: {},
       }
 
@@ -135,6 +178,7 @@ export function CreateProjectDialog({
         tags: projectTags,
         storageType: storageOption,
         mode: projectMode,
+        preferences,
       })
 
       setNewCreateProjectName("")
@@ -142,7 +186,6 @@ export function CreateProjectDialog({
       setTagInput("")
       setShowTagDropdown(false)
       setStorageOption("local")
-      setProjectMode(defaultMode || "free-page")
       onOpenChange(false)
 
       await onProjectsListUpdate()
@@ -169,16 +212,8 @@ export function CreateProjectDialog({
     setTagInput("")
     setShowTagDropdown(false)
     setStorageOption("local")
-    setProjectMode(defaultMode || "free-page")
     onOpenChange(false)
   }
-
-  const allModes: { value: ProjectMode; label: string }[] = [
-    { value: "free-page", label: "Free Page - No restrictions" },
-    { value: "code-page", label: "Code Page - Code studio focused" },
-    { value: "quiz-page", label: "Quiz Page - Quiz focused" },
-  ]
-  const visibleModes = allowedModes ? allModes.filter((m) => allowedModes.includes(m.value)) : allModes
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -201,17 +236,18 @@ export function CreateProjectDialog({
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-3">
-            {visibleModes.length > 1 ? (
+
+            {availableTypes.length > 1 ? (
               <div>
-                <Label htmlFor="project-mode" className="text-sm font-semibold">Content Mode *</Label>
+                <Label htmlFor="project-type" className="text-sm font-semibold">Project Type *</Label>
                 <select
-                  id="project-mode"
-                  value={projectMode}
-                  onChange={(e) => setProjectMode(e.target.value as ProjectMode)}
+                  id="project-type"
+                  value={selectedType}
+                  onChange={(e) => setSelectedType(e.target.value as ProjectType)}
                   className="w-full px-3 py-2 mt-1.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
                 >
-                  {visibleModes.map((m) => (
-                    <option key={m.value} value={m.value}>{m.label}</option>
+                  {availableTypes.map((t) => (
+                    <option key={t} value={t}>{PROJECT_TYPE_LABELS[t]}</option>
                   ))}
                 </select>
               </div>
