@@ -146,7 +146,7 @@ export function SizeDetailsDialog({
           )}
 
           {/* Total Size */}
-          <div className="flex items-center justify-between rounded-lg bg-gradient-to-r from-purple-50 to-blue-50 p-3 dark:from-purple-900/30 dark:to-blue-900/30">
+          <div className="flex items-center justify-between rounded-lg bg-linear-to-r from-purple-50 to-blue-50 p-3 dark:from-purple-900/30 dark:to-blue-900/30">
             <span className="text-sm font-bold text-gray-800 dark:text-gray-200">Total Project Size:</span>
             <span className={`text-lg font-bold ${getSizeIndicatorColor()}`}>
               {formatSize(currentProjectSize + currentProjectAssetsSize)}
