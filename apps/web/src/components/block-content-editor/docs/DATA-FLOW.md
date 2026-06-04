@@ -54,24 +54,33 @@ For a structural overview of the modules, see [ARCHITECTURE.md](ARCHITECTURE.md)
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-Each layer talks only to its neighbors. Hooks (`useProjectStorage`, `useViewerStorage`, `useProjectHistory`, `useProjectPreview`) live between the engine and storage layers and are the only callers of `EnhancedStorageAdapter` in the application code.
+Each layer talks only to its neighbors. Hooks (`useProjectStorage`, `useViewerStorage`, `useProjectHistory`, `useProjectPreview`) live between the engine and storage layers and are the only callers of `EnhancedStorageAdapter` in the application code. `useProjectStorage` is itself a thin composer over six focused sub-hooks under [hooks/editor/](../hooks/editor/) (DB init, state, lists, sizes, sync, operations); only the composer owns the cross-cutting concerns — storage adapter wrapper, URL-hash bootstrap, and debounced auto-save.
 
 ---
 
 ## Type Vocabulary
 
-The data plane is built around four core types declared in [lib/storage/editor/block-structure.ts](../lib/storage/editor/block-structure.ts) and [lib/storage/editor/project-data.ts](../lib/storage/editor/project-data.ts):
+The canonical type modules live under [lib/storage/editor/](../lib/storage/editor/) and [lib/sync/editor/](../lib/sync/editor/) and are re-exported through the barrel [lib/storage/editor/index.ts](../lib/storage/editor/index.ts). Callers should import from the barrel and never need to know which file owns a given type.
 
 ```
-Block            { id, type: BlockCellType, data: BlockDataMap[type] }
-BlockArray       Block[]                                        // runtime list
-BlockStorage     { order: string[]; blocks: Record<id, {type,data}> } // persistence
-BlockStorageEntry { type, data }                                 // single entry
+Block              { id: string; type: BlockCellType; data: BlockDataMap[type] }
+BlockArray         Block[]                                          // runtime list
+BlockOrderEntry    readonly [id: string, type: BlockCellType]       // persistence entry
+AnyBlockData       BlockDataMap[BlockCellType]                      // union of all payloads
+BlockStorage       { order: BlockOrderEntry[]; blocks: Record<id, AnyBlockData> }
 
-ProjectMetadata  { size, hash, createdAt, updatedAt }
-ProjectData      { id, name, data: string, tags, metadata,
-                   storageType, syncStatus?, isLocallyAvailable?, preferences? }
+ProjectType        "document" | "quiz" | "general"                  // project-types.ts
+ProjectPreferences { global, blocks } stored on ProjectData          // project-preferences.ts
+StorageType        "local" | "gameguild-cloud" | "google-drive"     // storage-types.ts
+SyncStatus         "pending" | "syncing" | "synced" | "error"        // storage-types.ts
+SyncStats          { pending, syncing, synced, errors, ... }         // sync-types.ts
+
+ProjectMetadata    { size, hash, createdAt, updatedAt }
+ProjectData        { id, name, data: string, tags, metadata,
+                     storageType, syncStatus?, isLocallyAvailable?, preferences? }
 ProjectMetadataRecord  ProjectData minus the heavy `data` field
+
+ProjectExportInput / ProjectExportMetadata          // interopAdapter/interop-types.ts
 ```
 
 Conversion functions in [lib/storage/editor/block-storage.ts](../lib/storage/editor/block-storage.ts):
@@ -85,7 +94,7 @@ blockToPreviewNode(Block)              → { type, data | entry, version }  // f
 EMPTY_PROJECT_DATA                     → '{"order":[],"blocks":{}}'
 ```
 
-`BlockCellType` is the union of 21 string literals (`"quiz" | "code-studio" | "image" | …`). `BlockDataMap[T]` resolves to the data shape for type `T` (e.g. `BlockDataMap["mermaid"] === MermaidData`).
+`BlockCellType` is the union of the 18 string literals enumerated in `BLOCK_CELL_TYPES` (`"quiz" | "code-studio" | "image" | …`). `BlockDataMap[T]` resolves to the data shape for type `T` (e.g. `BlockDataMap["mermaid"] === MermaidData`). `AnyBlockData = BlockDataMap[BlockCellType]` is the union of every possible payload — the value type stored in `BlockStorage.blocks`. Block IDs are sequential numeric strings produced by `nextBlockId(blocks)` (in [block-structure.ts](../lib/storage/editor/block-structure.ts)) and never recycled. Project IDs remain UUIDs (`generateProjectId()` in [project-id.ts](../lib/storage/editor/project-id.ts)).
 
 ---
 
@@ -101,19 +110,20 @@ Path of a single user edit, from the DOM down to IndexedDB:
     (filtered by FieldConfig.allowedBlockTypes)
         │
         ▼
-[3] User picks a type → BLOCK_REGISTRY[type].createEmpty()
-    Returns: { id: uuid(), type, data: <defaults> }    block-component-registry.ts
+[3] User picks a type → BLOCK_REGISTRY[type].createEmpty(nextBlockId(blocks))
+    Returns: { id, type, data: <defaults> }            block-component-registry.ts
         │
         ▼
 [4] setBlocks([…before, newBlock, …after])             useProjectStorage.setBlocks
-    (Dispatch<SetStateAction<BlockArray>>)
+    (Dispatch<SetStateAction<BlockArray>>)             — forwards to useProjectState
         │
         ▼
 [5] React commit → effect detects `blocks` changed
         │
         ▼
 [6] Debounced auto-save fires (if !readOnlyRef.current &&
-    autoSaveEnabled)                                   useProjectStorage
+    autoSaveEnabled). The composer owns the debounce;     useProjectStorage
+    sub-hooks are state/operation-focused.
         │
         ▼
 [7] serializeProject(blocks) → string                  block-storage.ts
