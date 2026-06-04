@@ -22,6 +22,7 @@
  */
 
 import { SyncManager } from "../../sync/editor/sync-manager"
+import type { SyncStats } from "../../sync/editor/sync-types"
 import { GoogleDriveSync } from "../../sync/editor/google-drive-sync"
 import { HashManager } from "../../sync/editor/hash-manager"
 import { getHistoryManager, type CommitInfo, type SnapshotInfo } from "../git"
@@ -790,7 +791,7 @@ export class EnhancedStorageAdapter {
     this.syncManager.onSyncStart(callback)
   }
 
-  onSyncComplete(callback: (stats: any) => void): void {
+  onSyncComplete(callback: (stats: SyncStats) => void): void {
     this.syncManager.onSyncComplete(callback)
   }
 

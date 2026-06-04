@@ -180,7 +180,8 @@ export function MarkdownEditor({ initialData, onSave, onCancel }: MarkdownEditor
   )
 
   const handlePickerSelect = useCallback(
-    (block: Block) => {
+    (factory: (id: string) => Block) => {
+      const block = factory(crypto.randomUUID())
       insertEmbedBlock(block)
       setShowBlockPicker(false)
     },
@@ -233,7 +234,7 @@ export function MarkdownEditor({ initialData, onSave, onCancel }: MarkdownEditor
       const state = slashMenuRef.current
       if (!state) return
       const config = BLOCK_REGISTRY[type]
-      const block = config.createEmpty()
+      const block = config.createEmpty(crypto.randomUUID())
       insertEmbedBlock(block, state.range)
       setSlashMenu(null)
       setHighlightedIndex(0)

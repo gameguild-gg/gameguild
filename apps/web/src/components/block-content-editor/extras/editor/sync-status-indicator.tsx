@@ -1,13 +1,9 @@
 "use client"
 
+import type { SyncStats } from "@/components/block-content-editor/lib/sync/editor/sync-types"
+
 interface SyncStatusIndicatorProps {
-  syncStats: {
-    isOnline: boolean
-    isSyncing: boolean
-    queue: {
-      pending: number
-    }
-  }
+  syncStats: Pick<SyncStats, "isOnline" | "isSyncing" | "queue">
   isSyncEnabled: boolean
   onClick: () => void
 }

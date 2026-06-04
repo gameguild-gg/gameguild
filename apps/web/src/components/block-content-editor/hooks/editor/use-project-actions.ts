@@ -3,10 +3,12 @@
 import { useState } from "react"
 import { toast } from "sonner"
 import type { ProjectData } from "@/components/block-content-editor/lib/storage/editor/project-data"
+import type { StorageType } from "@/components/block-content-editor/lib/storage/editor/storage-types"
+import type { ProjectPreferences } from "@/components/block-content-editor/lib/storage/editor/project-preferences"
 
 interface StorageAdapter {
   load: (id: string) => Promise<ProjectData | null>
-  save: (id: string, name: string, data: string, tags: string[], storageType?: "local" | "gameguild-cloud" | "google-drive") => Promise<void>
+  save: (id: string, name: string, data: string, tags: string[], storageType?: StorageType) => Promise<void>
   delete: (id: string) => Promise<void>
 }
 
@@ -40,7 +42,7 @@ export function useProjectActions({
     projectId: string, 
     newName: string, 
     newTags: string[], 
-    storageType: "local" | "gameguild-cloud" | "google-drive"
+    storageType: StorageType
   ) => {
     const projectToUpdate = await storageAdapter.load(projectId)
     if (!projectToUpdate) {
@@ -120,7 +122,7 @@ export function useProjectActions({
     projectTags: string[],
     createdAt: string,
     updatedAt: string,
-    projectPreferences?: any
+    projectPreferences?: ProjectPreferences
   ) => {
     try {
       // Dynamic imports to avoid issues if these aren't available

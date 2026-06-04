@@ -10,6 +10,7 @@ import { ProjectPagination } from "@/components/block-content-editor/extras/proj
 import { ProjectPickerShell } from "@/components/block-content-editor/extras/project-dialog/project-picker-shell"
 import { useProjectDialog } from "@/components/block-content-editor/hooks/editor/use-project-dialog"
 import type { ProjectData } from "./preview-load-operations"
+import type { StorageType } from "@/components/block-content-editor/lib/storage/editor/storage-types"
 
 interface StorageAdapter {
   list: () => Promise<ProjectData[]>
@@ -18,7 +19,7 @@ interface StorageAdapter {
     searchTerm: string,
     tags: string[],
     filterMode: "all" | "any",
-    storageTypeFilter?: "local" | "gameguild-cloud" | "google-drive",
+    storageTypeFilter?: StorageType,
   ) => Promise<ProjectData[]>
 }
 

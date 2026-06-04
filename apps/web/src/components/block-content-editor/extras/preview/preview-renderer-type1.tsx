@@ -5,6 +5,7 @@ import { PreviewRenderer } from "./preview-renderer"
 import { PreviewTableOfContents } from "./preview-table-of-contents"
 import { ProjectSidebarList } from "./project-sidebar-list-improved"
 import type { ProjectData } from "./preview-load-operations"
+import type { StorageType } from "@/components/block-content-editor/lib/storage/editor/storage-types"
 
 interface PreviewRendererType1Props {
   serializedState: SerializedEditorState
@@ -16,7 +17,7 @@ interface PreviewRendererType1Props {
       searchTerm: string,
       tags: string[],
       filterMode?: "all" | "any",
-      storageTypeFilter?: "local" | "gameguild-cloud" | "google-drive"
+      storageTypeFilter?: StorageType
     ) => Promise<ProjectData[]>
   }
   availableTags: Array<{ name: string; usageCount: number }>

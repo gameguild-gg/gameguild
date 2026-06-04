@@ -8,11 +8,12 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Calendar, ChevronDown, FileText, Filter, Search } from "lucide-react"
 import { useEffect, useState } from "react"
 import type { ProjectData } from "@/components/block-content-editor/lib/storage/editor/project-data"
+import type { StorageType } from "@/components/block-content-editor/lib/storage/editor/storage-types"
 
 interface ProjectSidebarListProps {
   storageAdapter: {
     list: () => Promise<ProjectData[]>
-    searchProjects: (searchTerm: string, tags: string[], filterMode: "all" | "any", storageTypeFilter?: "local" | "gameguild-cloud" | "google-drive") => Promise<ProjectData[]>
+    searchProjects: (searchTerm: string, tags: string[], filterMode: "all" | "any", storageTypeFilter?: StorageType) => Promise<ProjectData[]>
   }
   availableTags: Array<{ name: string; usageCount: number }>
   currentProject: ProjectData | null
@@ -32,7 +33,7 @@ export function ProjectSidebarList({
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedTags, setSelectedTags] = useState<string[]>([])
   const [tagFilterMode, setTagFilterMode] = useState<"all" | "any">("any")
-  const [storageTypeFilter, setStorageTypeFilter] = useState<"local" | "gameguild-cloud" | "google-drive" | undefined>(undefined)
+  const [storageTypeFilter, setStorageTypeFilter] = useState<StorageType | undefined>(undefined)
   const [showFilters, setShowFilters] = useState(false)
   const [loading, setLoading] = useState(false)
   const [tagSearchInput, setTagSearchInput] = useState("")

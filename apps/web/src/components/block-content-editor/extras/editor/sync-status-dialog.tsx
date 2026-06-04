@@ -3,21 +3,12 @@
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { toast } from "sonner"
+import type { SyncStats } from "@/components/block-content-editor/lib/sync/editor/sync-types"
 
 interface SyncStatusDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  syncStats: {
-    isOnline: boolean
-    isSyncing: boolean
-    queue: {
-      pending: number
-      processing: number
-      completed: number
-      failed: number
-    }
-    lastSync?: string
-  } | null
+  syncStats: SyncStats | null
   onRetryFailed: () => Promise<void>
 }
 

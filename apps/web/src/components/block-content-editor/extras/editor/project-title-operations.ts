@@ -1,6 +1,6 @@
 import { toast } from "sonner"
-
-type StorageType = "local" | "gameguild-cloud" | "google-drive"
+import type { StorageType } from "@/components/block-content-editor/lib/storage/editor/storage-types"
+import type { ProjectPreferences } from "@/components/block-content-editor/lib/storage/editor/project-preferences"
 
 interface ProjectListItem {
   id: string
@@ -9,7 +9,7 @@ interface ProjectListItem {
 }
 
 interface StorageAdapter {
-  save: (id: string, name: string, data: string, tags?: string[], storageType?: StorageType, preferences?: any) => Promise<void>
+  save: (id: string, name: string, data: string, tags?: string[], storageType?: StorageType, preferences?: ProjectPreferences) => Promise<void>
   list: () => Promise<ProjectListItem[]>
 }
 

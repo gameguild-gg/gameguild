@@ -14,9 +14,10 @@ import { useProjectDialog } from "@/components/block-content-editor/hooks/editor
 import { useProjectActions } from "@/components/block-content-editor/hooks/editor/use-project-actions"
 import { ImportProjectDialog } from "./import-project-dialog"
 import { InfoDialog } from "./info-dialog"
-import type { StorageOption } from "./storage-option-selector"
 import type { ProjectData } from "@/components/block-content-editor/lib/storage/editor/project-data"
 import type { ProjectType } from "@/components/block-content-editor/lib/storage/editor/project-types"
+import type { StorageType } from "@/components/block-content-editor/lib/storage/editor/storage-types"
+import type { ProjectPreferences } from "@/components/block-content-editor/lib/storage/editor/project-preferences"
 
 interface StorageAdapter {
   save: (
@@ -24,8 +25,8 @@ interface StorageAdapter {
     name: string,
     data: string,
     tags: string[],
-    storageType?: StorageOption,
-    preferences?: any,
+    storageType?: StorageType,
+    preferences?: ProjectPreferences,
   ) => Promise<void>
   list: () => Promise<ProjectData[]>
   load: (id: string) => Promise<ProjectData | null>
@@ -34,7 +35,7 @@ interface StorageAdapter {
     searchTerm: string,
     tags: string[],
     filterMode: "all" | "any",
-    storageTypeFilter?: "local" | "gameguild-cloud" | "google-drive",
+    storageTypeFilter?: StorageType,
   ) => Promise<ProjectData[]>
 }
 

@@ -11,10 +11,12 @@ import { toast } from "sonner"
 import { Upload, FileText, FolderOpen, Archive, X } from "lucide-react"
 import { ProjectImporter, type ImportedProjectData } from "@/components/block-content-editor/lib/interopAdapter/project-importer"
 import type { ProjectData } from "@/components/block-content-editor/lib/storage/editor/project-data"
+import type { StorageType } from "@/components/block-content-editor/lib/storage/editor/storage-types"
+import type { ProjectPreferences } from "@/components/block-content-editor/lib/storage/editor/project-preferences"
 
 interface StorageAdapter {
   list: () => Promise<ProjectData[]>
-  save: (id: string, name: string, data: string, tags: string[], storageType?: any, preferences?: any) => Promise<void>
+  save: (id: string, name: string, data: string, tags: string[], storageType?: StorageType, preferences?: ProjectPreferences) => Promise<void>
 }
 
 interface ImportProjectDialogProps {

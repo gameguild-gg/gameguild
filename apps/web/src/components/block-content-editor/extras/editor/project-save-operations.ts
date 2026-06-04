@@ -1,7 +1,7 @@
 import { toast } from "sonner"
 import { assetManager } from "@/components/block-content-editor/lib/storage/assets/asset-manager"
-
-type StorageType = "local" | "gameguild-cloud" | "google-drive"
+import type { StorageType } from "@/components/block-content-editor/lib/storage/editor/storage-types"
+import type { ProjectPreferences } from "@/components/block-content-editor/lib/storage/editor/project-preferences"
 
 export interface SaveParams {
   currentProjectId: string
@@ -10,11 +10,11 @@ export interface SaveParams {
   data: string
   projectTags: string[]
   storageAdapter: {
-    save: (id: string, name: string, data: string, tags: string[], storageType: StorageType, preferences?: any) => Promise<void>
+    save: (id: string, name: string, data: string, tags: string[], storageType: StorageType, preferences?: ProjectPreferences) => Promise<void>
   }
   calculateProjectAssetsSize: (projectId: string) => Promise<void>
   setSaveAsDialogOpen: (open: boolean) => void
-  preferences?: any
+  preferences?: ProjectPreferences
 }
 
 export interface SaveAsParams {
@@ -23,7 +23,7 @@ export interface SaveAsParams {
   projectTags: string[]
   storageOption: StorageType
   storageAdapter: {
-    save: (id: string, name: string, data: string, tags: string[], storageType: StorageType, preferences?: any) => Promise<void>
+    save: (id: string, name: string, data: string, tags: string[], storageType: StorageType, preferences?: ProjectPreferences) => Promise<void>
     list: () => Promise<Array<{ name: string }>>
   }
   generateProjectId: () => string
@@ -34,7 +34,7 @@ export interface SaveAsParams {
   setSaveAsDialogOpen: (open: boolean) => void
   loadSavedProjectsList: () => Promise<void>
   calculateProjectAssetsSize: (projectId: string) => Promise<void>
-  preferences?: any
+  preferences?: ProjectPreferences
 }
 
 export async function handleSave(params: SaveParams): Promise<void> {
