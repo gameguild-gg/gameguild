@@ -13,7 +13,7 @@
 5. [Configuration System](#configuration-system)
 6. [The Block Engine](#the-block-engine)
 7. [Block Types](#block-types)
-8. [Content Modes & Block Restrictions](#content-modes--block-restrictions)
+8. [Project Types & Structural Defaults](#project-types--structural-defaults)
 9. [Storage Layer](#storage-layer)
 10. [Block Storage Format](#block-storage-format)
 11. [Nodes (Type-Only Modules)](#nodes-type-only-modules)
@@ -30,7 +30,7 @@
 
 ## Overview
 
-The GameGuild Block Content Editor is a composable, single-engine content editor built with Next.js (App Router) and React 19. Content is modeled as an ordered list of standalone **blocks** — there is no global rich-text tree between blocks. Each block is one of 21 typed units (quiz, code studio, image, mermaid, rich-text, …) rendered top-to-bottom.
+The GameGuild Block Content Editor is a composable, single-engine content editor built with Next.js (App Router) and React 19. Content is modeled as an ordered list of standalone **blocks** — there is no global rich-text tree between blocks. Each block is one of 18 typed units (quiz, code studio, image, mermaid, rich-text, …) rendered top-to-bottom.
 
 Pages are assembled by combining a Provider, a Layout, a Toolbar, a Field, and Dialogs, driven by two configuration objects: `FieldConfig` and `ToolbarConfig`. Lexical is used only **inside** two blocks (`rich-text` for inline formatting and `quiz` for essay-question answers); the editor itself has no Lexical engine.
 
@@ -39,7 +39,8 @@ Pages are assembled by combining a Provider, a Layout, a Toolbar, a Field, and D
 - **Composability** — Every page is a composition of Provider + Field + Toolbar + Dialogs.
 - **Configuration over code** — `FieldConfig` controls *what* is available; `ToolbarConfig` controls *what is visible*.
 - **One engine, one schema** — Single Block Array model, single persistence format (`BlockStorage`).
-- **Mode-based restrictions** — Block types are allowed/blocked declaratively per `ProjectMode`, enforced at insert-time and in the picker.
+- **Project types carry structure** — Each project declares a `ProjectType` (`document` / `quiz` / `general`) stored in its preferences; structural defaults (single-block mode, allowed block types) follow the project across pages.
+- **Centralized type vocabulary** — All canonical types (`StorageType`, `ProjectData`, `ProjectMetadata`, `ProjectType`, `ProjectPreferences`, `Block*`, `SyncStats`, …) live in `lib/storage/editor/` and `lib/sync/editor/` and are re-exported through [lib/storage/editor/index.ts](../lib/storage/editor/index.ts).
 - **Storage abstraction** — IndexedDB + Google Drive + GameGuild Cloud behind a single adapter interface (`EnhancedStorageAdapter`).
 - **Module boundary** — Editor-only hooks, storage, sync, services, viewers, and utilities live under [components/block-content-editor](../).
 
@@ -91,8 +92,8 @@ Every editor page follows the same pattern:
 // Minimal page — quiz-only editor
 const fieldConfig: Partial<FieldConfig> = {
   allowedBlockTypes: [],
-  allowedModes: ["quiz-page"],
-  defaultMode: "quiz-page",
+  projectType: "quiz",
+  allowedProjectTypes: ["quiz"],
 }
 
 export default function QuizEditorPage() {
@@ -178,20 +179,33 @@ Controls **what** the editor supports.
 
 ```typescript
 interface FieldConfig {
-  /** Which block types to show in the picker (undefined = all 21) */
+  /** Which block types to show in the picker (undefined = all 18) */
   allowedBlockTypes?: BlockCellType[]
-  /** Which content modes are available in create dialog (undefined = all) */
-  allowedModes?: ProjectMode[]
-  /** Default project mode */
-  defaultMode?: ProjectMode
+  /**
+   * Single-block document mode. When true the editor auto-creates a single
+   * block of `allowedBlockTypes[0]` (or `"rich-text"`) and hides insertion
+   * seams, remove button, and reorder arrows.
+   */
+  singleBlockMode?: boolean
+  /** Project type stamped on new projects created from this page. */
+  projectType?: ProjectType
+  /**
+   * Restricts which project types this page may open. Undefined = all types.
+   * Hash-loading a non-matching project is refused; the open dialog filters
+   * by the same list.
+   */
+  allowedProjectTypes?: ProjectType[]
 }
 ```
 
 Behavior:
 
-- `allowedBlockTypes` — filters the Block Types tab in the block picker. Empty array or single entry hides the tab.
-- `allowedModes` — filters the Content Mode dropdown in the Create Project dialog. Single entry hides it. First entry becomes the effective initial mode.
-- `defaultMode` — UI hint for dialog default; overridden by `allowedModes[0]` when set.
+- `allowedBlockTypes` — filters the Block Types tab in the block picker; empty or single-entry list hides the tab.
+- `singleBlockMode` — drives the document-style layout (one block, no seams, no reorder).
+- `projectType` — written into `ProjectPreferences.global.projectType` on Create / Save As when the project has no type yet; the project then carries this across pages.
+- `allowedProjectTypes` — page-level filter, used both by the open dialog and by the URL-hash bootstrap to refuse loading projects whose type isn't allowed.
+
+When a project's preferences carry their own `singleBlockMode`, `allowedBlockTypes`, or `projectType`, [`applyProjectPreferencesToFieldConfig`](../engines/editor-config.ts) overlays them on top of the page-declared `FieldConfig` so the saved structure follows the project.
 
 ### `ToolbarConfig`
 
@@ -209,7 +223,7 @@ interface ToolbarConfig {
   showSizeIndicator?: boolean
   showSyncStatus?: boolean
   showProjectTitle?: boolean
-  showModeIndicator?: boolean
+  showTypeIndicator?: boolean
   showStorageInfo?: boolean
   showNavHome?: boolean
   showNavViewer?: boolean
@@ -240,87 +254,80 @@ The editor has a single engine: the **Block Array Engine**. Every project is an 
 |--------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------|
 | [block-array-editor.tsx](../engines/blocks/block-array-editor.tsx)                         | Main editor: ordered list with insert seams between blocks and drag-to-reorder                                  |
 | [block-array-viewer.tsx](../engines/blocks/block-array-viewer.tsx)                         | Read-only renderer; maps each `Block` to its preview component                                                  |
-| [block-component-registry.ts](../engines/blocks/block-component-registry.ts)               | Registry mapping the 21 block types to icon, label, description, and `createEmpty()`                            |
+| [block-component-registry.ts](../engines/blocks/block-component-registry.ts)               | Registry mapping the 18 block types to icon, label, description, and `createEmpty()`                            |
 | [block-type-picker.tsx](../engines/blocks/block-type-picker.tsx)                           | Modal picker with two tabs: Block Types + Templates (quiz presets)                                              |
 | [block-editor-modal.tsx](../engines/blocks/block-editor-modal.tsx)                         | Per-block edit dialog dispatching to type-specific editors                                                      |
 | [block-drag-drop.tsx](../engines/blocks/block-drag-drop.tsx)                               | Drag-and-drop reordering helpers                                                                                |
 
 ### Block picker behavior
 
-The picker has two tabs: **Block Types** and **Templates** (quiz presets).
+The picker has two tabs: **Block Types** and **Templates** (quiz presets). `EditorField` derives the picker tabs from the merged `FieldConfig`:
 
-- When `allowedBlockTypes` is empty (`[]`) or undefined **and** `allowedModes` includes `"quiz-page"` → Block Types tab is **hidden**, opens on Templates.
+- When the project's `projectType` is `"quiz"` and `allowedBlockTypes` is empty/undefined → Block Types tab is **hidden**, opens on Templates.
 - When `allowedBlockTypes` has exactly 1 entry → Block Types tab is **hidden** (pointless with a single item).
-- When `allowedBlockTypes` has 2+ entries **and** `allowedModes` includes `"quiz-page"` → both tabs visible, defaults to Templates.
+- When `allowedBlockTypes` has 2+ entries **and** `projectType` is `"quiz"` → both tabs visible, defaults to Templates.
 - Otherwise → both tabs visible, defaults to Block Types.
 
 ---
 
 ## Block Types
 
-21 block types are registered in [BLOCK_REGISTRY](../engines/blocks/block-component-registry.ts). The registry keys are the same strings used as `BlockCellType` discriminants.
+18 block types are registered in [BLOCK_REGISTRY](../engines/blocks/block-component-registry.ts). The registry keys are the same strings used as `BlockCellType` discriminants and are enumerated in `BLOCK_CELL_TYPES` ([lib/storage/editor/block-structure.ts](../lib/storage/editor/block-structure.ts)).
 
 | Type           | Label        | Notes                                                          |
 |----------------|--------------|----------------------------------------------------------------|
 | `quiz`         | Quiz         | Interactive question (uses Lexical internally for essays)      |
 | `code-studio`  | Code Studio  | Full file-tree code IDE with multi-language runners            |
-| `button`       | Button       | Action button (URL, copy, email, download)                     |
 | `image`        | Image        | Image media                                                    |
 | `video`        | Video        | Video media (direct/YouTube/Vimeo/DailyMotion)                 |
 | `audio`        | Audio        | Audio media (direct/YouTube/Spotify/SoundCloud)                |
 | `gallery`      | Gallery      | Image gallery (1–4 columns, span layouts)                      |
-| `youtube`      | YouTube      | YouTube embed                                                  |
-| `spotify`      | Spotify      | Spotify track/album/playlist/artist embed                      |
 | `mermaid`      | Mermaid      | Mermaid diagram                                                |
 | `vega-lite`    | Vega-Lite    | Vega-Lite visualization                                        |
-| `table`        | Table        | Spreadsheet-style table                                        |
 | `presentation` | Presentation | Presentation player (ODP/PPTX)                                 |
-| `rich-text`    | Rich Text    | Inline rich-text block (uses Lexical internally)               |
+| `source`       | Source       | Citation/source reference list                                 |
 | `markdown`     | Markdown     | Markdown content                                               |
 | `html`         | HTML         | Raw HTML (sanitized via DOMPurify)                             |
+| `rich-text`    | Rich Text    | Inline rich-text block (uses Lexical internally)               |
 | `header`       | Header       | Heading with styling                                           |
 | `divider`      | Divider      | Section divider                                                |
+| `button`       | Button       | Action button (URL, copy, email, download)                     |
 | `admonition`   | Admonition   | Note/warning/tip box                                           |
-| `source`       | Source       | Citation/source reference list                                 |
 | `project`      | Project      | Embedded sub-project (placeholder; not currently loaded)       |
 
-The `BlockCellType` union and `BlockDataMap` (type-level map from `BlockCellType` to its data shape) are the single source of truth for block typing. See [lib/storage/editor/block-structure.ts](../lib/storage/editor/block-structure.ts).
+`BlockCellType = (typeof BLOCK_CELL_TYPES)[number]` and `BlockDataMap[T]` (type-level map from `BlockCellType` to its data shape) are the single source of truth for block typing. `AnyBlockData = BlockDataMap[BlockCellType]` is the union of every possible block payload.
 
 ---
 
-## Content Modes & Block Restrictions
+## Project Types & Structural Defaults
 
-### Modes
+Every project carries a `ProjectType` stored in `ProjectPreferences.global.projectType`, so the structural rules a project follows are persisted with the project itself rather than depending on the page that opens it.
 
-Three content modes constrain which block types are allowed:
+### Types
 
-| Mode         | Description                                       |
-|--------------|---------------------------------------------------|
-| `free-page`  | No restrictions. All block types allowed.         |
-| `code-page`  | Blocks `code-studio` from being inserted.         |
-| `quiz-page`  | Blocks `quiz` from being inserted as a free pick. |
+| Type       | Default structure                                           | Typical entry page    |
+|------------|-------------------------------------------------------------|-----------------------|
+| `document` | `singleBlockMode: true`, `allowedBlockTypes: ["rich-text"]` | `doc-editor`          |
+| `quiz`     | `allowedBlockTypes: []` (picker filtered by the page)       | `quiz-editor`         |
+| `general`  | No structural constraints                                    | `block-editor`, `studio` |
 
-Restrictions live in [lib/storage/editor/project-modes.ts](../lib/storage/editor/project-modes.ts) as `NODE_RESTRICTIONS`:
+Defined in [lib/storage/editor/project-types.ts](../lib/storage/editor/project-types.ts):
 
 ```typescript
-{
-  "free-page": { blocks: { b1: [null, null] } },
-  "code-page": { blocks: { b1: ["code-studio", null] } },
-  "quiz-page": { blocks: { b1: ["quiz", null] } },
+export type ProjectType = "document" | "quiz" | "general"
+
+export function getProjectTypeStructure(type: ProjectType): {
+  singleBlockMode?: boolean
+  allowedBlockTypes?: BlockCellType[]
 }
 ```
 
-Each tuple is `[blocked, allowed]`. `'*'` means all; `null` means none; a string or string array names specific types.
-
 ### Enforcement
 
-- **Picker filter** — `BlockTypePicker` honors `allowedBlockTypes` from `FieldConfig`.
-- **Mode helper** — `isNodeAllowed()` in `project-modes.ts` is consulted by code paths that need to validate inserts programmatically.
-
-`allowedModes` in `FieldConfig` serves double duty:
-
-1. Restricts the Content Mode dropdown in the Create Project dialog (single entry hides it).
-2. Sets the effective initial mode — `allowedModes[0]` overrides `defaultMode`.
+- **Page boundary** — `FieldConfig.allowedProjectTypes` declares which types a page accepts. The open dialog filters by it; the URL-hash bootstrap refuses to load projects whose type isn't allowed.
+- **Project structure** — `applyProjectPreferencesToFieldConfig` in [engines/editor-config.ts](../engines/editor-config.ts) overlays the project's stored `singleBlockMode` / `allowedBlockTypes` / `projectType` on top of the page-declared `FieldConfig`, so a `document` project keeps its single-block layout even if opened by a less restrictive page.
+- **Picker filter** — `BlockTypePicker` honors the merged `allowedBlockTypes`.
+- **Type stamping** — When a project is created or saved-as for the first time, the page's `FieldConfig.projectType` (and the page's structural defaults captured by `ProjectStorageDefaults`) seed the new project's preferences. `getProjectTypeStructure(type)` fills in `singleBlockMode` / `allowedBlockTypes` defaults that weren't pinned by the page.
 
 ---
 
@@ -413,15 +420,15 @@ The Block Array is serialized directly to a flat JSON schema. There is no interm
 
 ```typescript
 interface BlockStorage {
-  order: string[]                                // Block IDs in display order
-  blocks: Record<string, BlockStorageEntry>      // Block ID → { type, data }
+  order: BlockOrderEntry[]                       // [id, type] pairs in display order
+  blocks: Record<string, AnyBlockData>           // Block ID → raw data payload (no envelope)
 }
 
-interface BlockStorageEntry<T extends BlockCellType = BlockCellType> {
-  type: T
-  data: BlockDataMap[T]
-}
+type BlockOrderEntry<T extends BlockCellType = BlockCellType> = readonly [id: string, type: T]
+type AnyBlockData = BlockDataMap[BlockCellType]  // union of every possible payload
 ```
+
+The `order` array pairs each block id with its type so the `blocks` map can store the raw data payload directly — there is no `{ type, data }` envelope at rest. Block IDs are sequential numeric strings (`"1"`, `"2"`, …) produced by `nextBlockId(blocks)` and never recycled. Project IDs remain UUIDs (see `generateProjectId()` in [project-id.ts](../lib/storage/editor/project-id.ts)).
 
 Round-trip helpers:
 
@@ -431,7 +438,7 @@ Round-trip helpers:
 - `blockToPreviewNode(block)` — wraps a `Block` in the `{ type, data | entry, version }` shape consumed by preview components.
 - `EMPTY_PROJECT_DATA` — canonical empty payload (`{"order":[],"blocks":{}}`).
 
-`BlockArray = Block[]`, where `Block<T extends BlockCellType>` is a discriminated union over the 21 `BlockCellType`s and their corresponding data shapes via `BlockDataMap`.
+`BlockArray = Block[]`, where `Block<T extends BlockCellType>` is a discriminated union over the 18 `BlockCellType`s and their corresponding data shapes via `BlockDataMap`.
 
 ---
 
@@ -455,11 +462,11 @@ These modules carry **no Lexical imports**. They are consumed by:
 | [nodes/base/serialized-block-node.ts](../nodes/base/serialized-block-node.ts) | `SerializedBlockNode<TType, TData>` base type (no Lexical)                                    |
 | [nodes/base/media-node-base.tsx](../nodes/base/media-node-base.tsx)           | `BaseMediaData` shared by `image`, `video`, `audio`, `gallery` (no Lexical)                   |
 | [nodes/custom-list-node.tsx](../nodes/custom-list-node.tsx)                   | **Live Lexical node.** Used inside the rich-text block's floating toolbar for ordered/unordered/colored lists |
-| [nodes/spotify-node.tsx](../nodes/spotify-node.tsx)                           | Also exports the pure helper `extractSpotifyInfo(url)`                                        |
+| [nodes/block-embed-node.tsx](../nodes/block-embed-node.tsx)                   | Lexical node embedding a `Block` inside the rich-text block's editor surface                  |
 
 ### Files in `nodes/`
 
-`admonition-node.tsx`, `audio-node.tsx`, `button-node.tsx`, `code-studio-node.tsx`, `custom-list-node.tsx`, `divider-node.tsx`, `gallery-node.tsx`, `header-node.tsx`, `html-node.tsx`, `image-node.tsx`, `markdown-node.tsx`, `mermaid-node.tsx`, `project-node.tsx`, `quiz-node.tsx`, `rich-text-node.tsx`, `source-node.tsx`, `spotify-node.tsx`, `table-node.tsx`, `vega-lite-node.tsx`, `video-node.tsx`, `youtube-node.tsx`, plus `base/`.
+`admonition-node.tsx`, `audio-node.tsx`, `block-embed-node.tsx`, `button-node.tsx`, `code-studio-node.tsx`, `custom-list-node.tsx`, `divider-node.tsx`, `gallery-node.tsx`, `header-node.tsx`, `html-node.tsx`, `image-node.tsx`, `markdown-node.tsx`, `mermaid-node.tsx`, `project-node.tsx`, `quiz-node.tsx`, `rich-text-node.tsx`, `source-node.tsx`, `vega-lite-node.tsx`, `video-node.tsx`, plus `base/`.
 
 > The `presentation` block does not have a dedicated `nodes/` file; its data type lives under [extras/presentation/](../extras/presentation/) and is referenced as `unknown` in `BlockDataMap`.
 
@@ -488,17 +495,15 @@ Read-only renderers used by the viewer field, the static viewer, and the editor 
 **Path:** [plugins/preview-components/](../plugins/preview-components/)
 
 ```
-preview-admonition.tsx   preview-list-item.tsx    preview-source.tsx
-preview-audio.tsx        preview-list.tsx         preview-spotify.tsx
-preview-button.tsx       preview-markdown.tsx     preview-table.tsx
-preview-code-studio.tsx  preview-mermaid.tsx      preview-text.tsx
-preview-divider.tsx      preview-paragraph.tsx    preview-vega-lite.tsx
-preview-gallery.tsx      preview-project.tsx      preview-video.tsx
-preview-header.tsx       preview-quiz.tsx         preview-youtube.tsx
-preview-heading.tsx      preview-quote.tsx
-preview-html.tsx         preview-rich-text.tsx
-preview-image.tsx
-preview-link.tsx
+preview-admonition.tsx   preview-image.tsx       preview-quote.tsx
+preview-audio.tsx        preview-link.tsx        preview-rich-text.tsx
+preview-button.tsx       preview-list-item.tsx   preview-source.tsx
+preview-code-studio.tsx  preview-list.tsx        preview-text.tsx
+preview-divider.tsx      preview-markdown.tsx    preview-vega-lite.tsx
+preview-gallery.tsx      preview-mermaid.tsx     preview-video.tsx
+preview-header.tsx       preview-paragraph.tsx
+preview-heading.tsx      preview-project.tsx
+preview-html.tsx         preview-quiz.tsx
 ```
 
 The `paragraph`, `text`, `heading`, `quote`, `link`, `list`, `list-item` components are used **inside** `preview-rich-text.tsx` to render the Lexical EditorState JSON embedded in a `rich-text` block. They are not standalone block types.
@@ -511,29 +516,42 @@ The `paragraph`, `text`, `heading`, `quote`, `link`, `list`, `list-item` compone
 
 **File:** [hooks/useProjectStorage.ts](../hooks/useProjectStorage.ts)
 
-The main hook. Manages all project state and persistence.
+The main editor hook. It is a thin composer (~290 lines) over six focused sub-hooks under [hooks/editor/](../hooks/editor/) and owns only the cross-cutting concerns that don't fit a single sub-hook:
 
-**Accepts:** `ProjectStorageDefaults?` — optional initial `mode`.
+1. The `storageAdapter` — a memoized wrapper around the raw DB that gates every operation on `isDbInitialized`.
+2. The URL-hash bootstrap — when `window.location.hash` is a project id, loads it as soon as the DB is ready, refusing types not in `FieldConfig.allowedProjectTypes`.
+3. The auto-save effect — debounced (~2s), gated by `readOnlyRef.current` (history viewing).
+
+**Accepts:** `ProjectStorageDefaults?` — page-declared `allowedProjectTypes` / `projectType` / `singleBlockMode` / `allowedBlockTypes` used by the URL-hash bootstrap and by Create/Save As.
 
 **Returns (`UseProjectStorageReturn`):**
 
-- Project metadata: `projectId`, `projectName`, `projectMode`, `storageType`, `tags`, `preferences`
+- Status: `isDbInitialized`, `isFirstTime`, `lastProjectLoadTime`
+- Project metadata: `projectId`, `projectName`, `storageType`, `tags`, `preferences` (carries `projectType`, structural rules), plus setters
 - Content: `blocks: BlockArray`, `setBlocks`
-- Operations: `save()`, `saveAs()`, `loadProject()`, `createProject()`
+- Operations: `save()`, `saveAs()`, `loadProject()`, `createProject()`, `titleEdit`, `titleSave`, `createSnapshot`
 - Lists: `savedProjects`, `availableTags`, `refreshProjects()`, `refreshTags()`
 - Size: `projectSize`, `assetsSize`, `assets`
-- Sync: `syncStats`, `autoSaveEnabled`
-- Direct access: `db` (`EnhancedStorageAdapter`)
+- Sync: `syncStats: SyncStats | null`, `autoSaveEnabled`
+- Direct access: `db` (`EnhancedStorageAdapter`), `storageAdapter` (`StorageAdapterInterface`), `readOnlyRef`
+- ID generation: `generateProjectId()`
 
-**Auto-save:** Debounced save triggered by state changes. Suppressed when `readOnlyRef.current` is `true` (history viewing).
+### Editor sub-hooks (`hooks/editor/`)
 
-**URL hash:** On mount, checks `window.location.hash` for project ID and loads it.
+| Hook                    | Responsibility                                                                 |
+|-------------------------|--------------------------------------------------------------------------------|
+| `useProjectDbInit`      | IndexedDB bootstrap; owns the `EnhancedStorageAdapter` singleton, `isDbInitialized`, `readOnlyRef`. |
+| `useProjectState`       | Project metadata state (`projectId`, `projectName`, `storageType`, `tags`, `preferences`) + `blocks` and a mirroring `blocksRef`. |
+| `useProjectLists`       | `savedProjects` and `availableTags`; auto-refreshes when the DB becomes available. |
+| `useProjectSizes`       | `projectSize`, `assetsSize`, and the per-block `assets[]` list with `recalcAssets`. |
+| `useProjectSync`        | Polls `db.getSyncStats()` every 5s, subscribes to sync events, owns `autoSaveEnabled`. |
+| `useProjectOperations`  | The operation surface: save / saveAs / loadProject / createProject / titleEdit / titleSave / createSnapshot. |
 
 ### `useProjectHistory`
 
 **File:** [hooks/useProjectHistory.ts](../hooks/useProjectHistory.ts)
 
-Git-based version history (commits, snapshots, return-to-head). Toggles `readOnlyRef` while viewing a past commit.
+Git-based version history (commits, snapshots, return-to-head). Toggles `readOnlyRef` while viewing a past commit so the composer's auto-save effect stays idle.
 
 ### `useProjectPreview`
 
@@ -587,11 +605,11 @@ All pages live under `app/[locale]/(block-content-editor)/block-content-editor/`
 | Route                                  | Page          | Description                                       |
 |----------------------------------------|---------------|---------------------------------------------------|
 | `/block-content-editor`                | Home          | Project manager (grid/list), asset manager, collections |
-| `/block-content-editor/studio`         | Studio        | Full editor — all block types, all modes          |
+| `/block-content-editor/studio`         | Studio        | Full editor — all block types, all project types  |
 | `/block-content-editor/viewer`         | Viewer        | Read-only content viewer                          |
-| `/block-content-editor/quiz-editor`    | Quiz Editor   | Quiz-mode only, picker restricted to templates    |
-| `/block-content-editor/doc-editor`     | Doc Editor    | Rich-text-only block (`["rich-text"]`), free mode |
-| `/block-content-editor/block-editor`   | Block Editor  | Free mode, all block types                        |
+| `/block-content-editor/quiz-editor`    | Quiz Editor   | `quiz` project type only, picker restricted to templates |
+| `/block-content-editor/doc-editor`     | Doc Editor    | `document` project type; single-block `rich-text` |
+| `/block-content-editor/block-editor`   | Block Editor  | `general` project type, all block types           |
 | `/block-content-editor/full-editor`    | Full Editor   | All defaults enabled                              |
 | `/block-content-editor/static-viewer`  | Static Viewer | Header + content only (no sidebar/TOC)            |
 | `/block-content-editor/publish`        | Publish       | Placeholder                                       |
@@ -725,7 +743,13 @@ engines/
 ```
 hooks/
 ├── editor/                         # Editor-specific sub-hooks
-├── useProjectStorage.ts            # Main storage hook (CRUD, auto-save, sync)
+│   ├── useProjectDbInit.ts          # IndexedDB bootstrap + readOnlyRef
+│   ├── useProjectState.ts           # id / name / tags / blocks / preferences state
+│   ├── useProjectLists.ts           # savedProjects + availableTags
+│   ├── useProjectSizes.ts           # projectSize / assetsSize / assets
+│   ├── useProjectSync.ts            # syncStats poller + autoSaveEnabled
+│   └── useProjectOperations.ts      # save / saveAs / load / create / title / snapshot
+├── useProjectStorage.ts            # Composer over the sub-hooks above
 ├── useProjectHistory.ts            # Git-based version history
 ├── useProjectPreview.ts            # Preview dialog management
 ├── useViewerStorage.ts             # Read-only viewer storage
@@ -747,13 +771,15 @@ lib/storage/
 │   ├── types.ts
 │   └── use-resolved-media.ts
 ├── editor/                         # Project/content persistence
-│   ├── project-data.ts             # ProjectData, ProjectMetadata, ProjectMetadataRecord
-│   ├── enhanced-storage-adapter.ts # IndexedDB + sync + Drive adapter
-│   ├── block-storage.ts            # serialize/deserialize + EMPTY_PROJECT_DATA + blockToPreviewNode
-│   ├── block-structure.ts          # Block, BlockArray, BlockStorage, BlockDataMap
-│   ├── project-modes.ts            # ProjectMode, NodeRestrictions, isNodeAllowed()
-│   ├── project-preferences.ts      # ProjectPreferences
-│   ├── storage-types.ts            # StorageType, SyncStatus constants
+│   ├── index.ts                     # Public types barrel
+│   ├── project-data.ts              # ProjectData, ProjectMetadata, ProjectMetadataRecord
+│   ├── project-id.ts                # generateProjectId()
+│   ├── project-types.ts             # ProjectType + getProjectTypeStructure / labels
+│   ├── project-preferences.ts       # ProjectPreferences
+│   ├── storage-types.ts             # STORAGE_TYPES, StorageType, SYNC_STATUS, SyncStatus
+│   ├── block-structure.ts           # Block, BlockArray, BlockStorage, BlockDataMap, BLOCK_CELL_TYPES, nextBlockId
+│   ├── block-storage.ts             # serialize/deserialize + EMPTY_PROJECT_DATA + blockToPreviewNode
+│   ├── enhanced-storage-adapter.ts  # IndexedDB + sync + Drive adapter
 │   └── editor-preferences.ts       # Editor preferences DB
 └── git/                            # Isomorphic-git history/snapshots
     ├── git-fs.ts
@@ -772,12 +798,14 @@ lib/sync/editor/
 ├── hash-manager.ts                 # Project/hash helpers
 ├── sync-config.ts                  # Sync configuration manager
 ├── sync-manager.ts                 # Queue orchestration + remote checks
-└── sync-queue.ts                   # IndexedDB-backed sync queue
+├── sync-queue.ts                   # IndexedDB-backed sync queue
+└── sync-types.ts                   # SyncStats, SyncQueueStats
 
 services/editor/
 └── google-drive-service.ts         # Google Drive API integration
 
 lib/interopAdapter/
+├── interop-types.ts                # ProjectExportInput, ProjectExportMetadata
 ├── project-exporter.ts             # ZIP/folder export with assets
 ├── project-importer.ts             # ZIP / folder import with assets
 └── README.md
