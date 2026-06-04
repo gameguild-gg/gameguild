@@ -3,6 +3,8 @@ import { deserializeProject } from "@/components/block-content-editor/lib/storag
 import type { BlockArray } from "@/components/block-content-editor/lib/storage/editor/block-structure"
 import type { ProjectData } from "@/components/block-content-editor/lib/storage/editor/enhanced-storage-adapter"
 import type { ProjectType } from "@/components/block-content-editor/lib/storage/editor/project-types"
+import type { StorageType } from "@/components/block-content-editor/lib/storage/editor/storage-types"
+import type { ProjectPreferences } from "@/components/block-content-editor/lib/storage/editor/project-preferences"
 import { getProjectTypeLabel } from "@/components/block-content-editor/lib/storage/editor/project-types"
 
 export interface CheckSelectedProjectParams {
@@ -12,18 +14,18 @@ export interface CheckSelectedProjectParams {
       name: string
       data: string
       tags: string[]
-      storageType?: "local" | "gameguild-cloud" | "google-drive"
-      preferences?: any
+      storageType?: StorageType
+      preferences?: ProjectPreferences
     } | null>
   }
   directDbLoad?: (id: string) => Promise<ProjectData | null>
   setCurrentProjectId: (id: string) => void
   setCurrentProjectName: (name: string) => void
-  setCurrentProjectStorageType: (type: "local" | "gameguild-cloud" | "google-drive") => void
+  setCurrentProjectStorageType: (type: StorageType) => void
   setProjectTags: (tags: string[]) => void
   setIsFirstTime: (value: boolean) => void
   setLastProjectLoadTime?: (time: number) => void
-  setCurrentProjectPreferences?: (preferences: any) => void
+  setCurrentProjectPreferences?: (preferences: ProjectPreferences | undefined) => void
   setBlocks: (blocks: BlockArray) => void
   /** Page-declared filter — refuse to load projects whose type isn't allowed here. */
   allowedProjectTypes?: ProjectType[]

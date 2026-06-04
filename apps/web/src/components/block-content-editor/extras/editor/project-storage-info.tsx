@@ -1,9 +1,10 @@
 "use client"
 
 import { HardDrive } from "lucide-react"
+import type { StorageType } from "@/components/block-content-editor/lib/storage/editor/storage-types"
 
 interface ProjectStorageInfoProps {
-  storageType: "local" | "gameguild-cloud" | "google-drive"
+  storageType: StorageType
 }
 
 export function ProjectStorageInfo({ storageType }: ProjectStorageInfoProps) {

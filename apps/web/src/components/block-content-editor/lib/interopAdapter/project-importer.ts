@@ -8,43 +8,23 @@ import JSZip from "jszip"
 import { assetManager } from "@/components/block-content-editor/lib/storage/assets/asset-manager"
 import type { AssetData, AssetUsage } from "@/components/block-content-editor/lib/storage/assets/types"
 import type { ProjectPreferences } from "@/components/block-content-editor/lib/storage/editor/project-preferences"
+import type { StorageType } from "@/components/block-content-editor/lib/storage/editor/storage-types"
+import type { ProjectExportInput, ProjectExportMetadata } from "./interop-types"
 
-export type ProjectStorageType = "local" | "gameguild-cloud" | "google-drive"
-
-export interface ProjectData {
-  id: string
-  name: string
-  data: string
-  tags: string[]
-  size: number
-  createdAt: string
-  updatedAt: string
-  hash?: string
-  storageType?: ProjectStorageType
-  preferences?: ProjectPreferences
-}
-
-export interface ProjectMetadata {
-  id: string
-  name: string
-  tags: string[]
-  size: number
-  hash: string
-  createdAt: string
-  updatedAt: string
-  storageType: string
-  version: string
-  exportedAt?: string
-  assetsCount?: number
-  preferences?: ProjectPreferences
-}
+export type { ProjectExportInput, ProjectExportMetadata } from "./interop-types"
+/** @deprecated Use {@link StorageType} from `lib/storage/editor/storage-types`. */
+export type ProjectStorageType = StorageType
+/** @deprecated Use {@link ProjectExportInput} */
+export type ProjectData = ProjectExportInput
+/** @deprecated Use {@link ProjectExportMetadata} */
+export type ProjectMetadata = ProjectExportMetadata
 
 export interface ImportedProjectData {
   id: string
   name: string
   data: string
   tags: string[]
-  metadata: ProjectMetadata | null
+  metadata: ProjectExportMetadata | null
   assets?: Record<string, AssetData>
   assetIndex?: Record<string, AssetUsage[]>
   preferences?: ProjectPreferences

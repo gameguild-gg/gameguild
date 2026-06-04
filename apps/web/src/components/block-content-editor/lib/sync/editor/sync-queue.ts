@@ -1,5 +1,6 @@
 import { syncConfig } from "./sync-config"
 import { ApiClient } from "../../api/editor/api-client"
+import type { SyncQueueStats as QueueStats } from "./sync-types"
 
 interface SyncQueueItem {
   id: string
@@ -11,14 +12,6 @@ interface SyncQueueItem {
   status: "pending" | "processing" | "completed" | "failed"
   error?: string
   lastAttempt?: number
-}
-
-interface QueueStats {
-  pending: number
-  processing: number
-  completed: number
-  failed: number
-  total: number
 }
 
 export class SyncQueue {

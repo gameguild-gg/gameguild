@@ -4,22 +4,19 @@ import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { EnhancedStorageAdapter } from "@/components/block-content-editor/lib/storage/editor/enhanced-storage-adapter"
 import { assetManager } from "@/components/block-content-editor/lib/storage/assets/asset-manager"
 import type { ProjectData } from "@/components/block-content-editor/lib/storage/editor/project-data"
+import type { ProjectPreferences } from "@/components/block-content-editor/lib/storage/editor/project-preferences"
+import type { StorageType } from "@/components/block-content-editor/lib/storage/editor/storage-types"
 import { toast } from "sonner"
 
 export interface HomeStorageAdapter {
   load: (id: string) => Promise<ProjectData | null>
   list: () => Promise<ProjectData[]>
   delete: (id: string) => Promise<void>
-  save: (id: string, name: string, data: string, tags: string[], storageType?: "local" | "gameguild-cloud" | "google-drive", preferences?: any, type?: string, deps?: any, engine?: string) => Promise<void>
-  searchProjects: (searchTerm: string, tags: string[], filterMode: "all" | "any", storageTypeFilter?: "local" | "gameguild-cloud" | "google-drive") => Promise<ProjectData[]>
+  save: (id: string, name: string, data: string, tags: string[], storageType?: StorageType, preferences?: ProjectPreferences, type?: string, deps?: unknown, engine?: string) => Promise<void>
+  searchProjects: (searchTerm: string, tags: string[], filterMode: "all" | "any", storageTypeFilter?: StorageType) => Promise<ProjectData[]>
 }
 
-function generateProjectId(): string {
-  if (typeof crypto !== "undefined" && crypto.randomUUID) {
-    return crypto.randomUUID()
-  }
-  return "proj_" + Date.now().toString(36) + "_" + Math.random().toString(36).substr(2, 9)
-}
+import { generateProjectId } from "@/components/block-content-editor/lib/storage/editor/project-id"
 
 export interface UseHomeStorageReturn {
   isDbInitialized: boolean
@@ -96,7 +93,7 @@ export function useHomeStorage(): UseHomeStorageReturn {
       }
     },
 
-    save: async (id: string, name: string, data: string, tags: string[], storageType?: "local" | "gameguild-cloud" | "google-drive", preferences?: any) => {
+    save: async (id: string, name: string, data: string, tags: string[], storageType?: StorageType, preferences?: ProjectPreferences) => {
       if (!isDbInitialized) throw new Error("Database not initialized")
       try {
         await dbStorage.current.save(id, name, data, tags, storageType, preferences)
@@ -106,7 +103,7 @@ export function useHomeStorage(): UseHomeStorageReturn {
       }
     },
 
-    searchProjects: async (searchTerm: string, tags: string[], filterMode: "all" | "any", storageTypeFilter?: "local" | "gameguild-cloud" | "google-drive"): Promise<ProjectData[]> => {
+    searchProjects: async (searchTerm: string, tags: string[], filterMode: "all" | "any", storageTypeFilter?: StorageType): Promise<ProjectData[]> => {
       if (!isDbInitialized) return []
       try {
         return await dbStorage.current.searchProjects(searchTerm, tags, filterMode, storageTypeFilter)

@@ -6,16 +6,17 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Label } from "@/components/ui/label"
 import { useEffect, useState } from "react"
 import { toast } from "sonner"
-import { StorageOptionSelector, type StorageOption } from "./storage-option-selector"
+import { StorageOptionSelector } from "./storage-option-selector"
 import { EMPTY_PROJECT_DATA } from "@/components/block-content-editor/lib/storage/editor/block-storage"
 import type { ProjectData } from "@/components/block-content-editor/lib/storage/editor/project-data"
 import { getProjectTypeStructure, PROJECT_TYPE_LABELS, type ProjectType } from "@/components/block-content-editor/lib/storage/editor/project-types"
 import type { BlockCellType } from "@/components/block-content-editor/lib/storage/editor/block-structure"
 import type { ProjectPreferences } from "@/components/block-content-editor/lib/storage/editor/project-preferences"
+import type { StorageType } from "@/components/block-content-editor/lib/storage/editor/storage-types"
 
 interface StorageAdapter {
   list: () => Promise<ProjectData[]>
-  save: (id: string, name: string, data: string, tags: string[], storageType?: "local" | "gameguild-cloud" | "google-drive", preferences?: any) => Promise<void>
+  save: (id: string, name: string, data: string, tags: string[], storageType?: StorageType, preferences?: ProjectPreferences) => Promise<void>
 }
 
 interface CreateProjectDialogProps {
@@ -28,7 +29,7 @@ interface CreateProjectDialogProps {
     id: string
     name: string
     tags: string[]
-    storageType: "local" | "gameguild-cloud" | "google-drive"
+    storageType: StorageType
     preferences: ProjectPreferences
   }) => void
   onProjectsListUpdate: () => void
@@ -65,7 +66,7 @@ export function CreateProjectDialog({
   const [projectTags, setProjectTags] = useState<string[]>([])
   const [tagInput, setTagInput] = useState("")
   const [showTagDropdown, setShowTagDropdown] = useState(false)
-  const [storageOption, setStorageOption] = useState<StorageOption>("local")
+  const [storageOption, setStorageOption] = useState<StorageType>("local")
 
   // Available project types: page filter wins; otherwise show all three.
   const ALL_TYPES: ProjectType[] = ["document", "quiz", "general"]

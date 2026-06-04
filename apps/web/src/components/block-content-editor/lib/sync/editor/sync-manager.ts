@@ -3,23 +3,12 @@ import { SyncQueue } from "./sync-queue"
 import { HashManager } from "./hash-manager"
 import { syncConfig } from "./sync-config"
 import type { ProjectData, ProjectMetadataRecord } from "../../storage/editor/project-data"
+import type { SyncStats } from "./sync-types"
 
 interface TagData {
   id: string
   name: string
   projectIds: string[]
-}
-
-interface SyncStats {
-  isOnline: boolean
-  isSyncing: boolean
-  lastSync: string | null
-  queue: {
-    pending: number
-    processing: number
-    completed: number
-    failed: number
-  }
 }
 
 export class SyncManager {
@@ -30,7 +19,7 @@ export class SyncManager {
   private lastSync: string | null = null
   private eventListeners: {
     syncStart: Array<() => void>
-    syncComplete: Array<(stats: any) => void>
+    syncComplete: Array<(stats: SyncStats) => void>
     syncError: Array<(error: Error) => void>
   } = {
     syncStart: [],
@@ -219,7 +208,7 @@ export class SyncManager {
     this.eventListeners.syncStart.push(callback)
   }
 
-  onSyncComplete(callback: (stats: any) => void): void {
+  onSyncComplete(callback: (stats: SyncStats) => void): void {
     this.eventListeners.syncComplete.push(callback)
   }
 
@@ -237,7 +226,7 @@ export class SyncManager {
     })
   }
 
-  private emitSyncComplete(stats: any): void {
+  private emitSyncComplete(stats: SyncStats): void {
     this.eventListeners.syncComplete.forEach((callback) => {
       try {
         callback(stats)

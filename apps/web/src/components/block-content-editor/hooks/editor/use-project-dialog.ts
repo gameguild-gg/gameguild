@@ -3,6 +3,8 @@
 import { ProjectExporter, type ProjectData as ExportProjectData } from "@/components/block-content-editor/lib/interopAdapter/project-exporter"
 import { HashManager } from "@/components/block-content-editor/lib/sync/editor/hash-manager"
 import type { ProjectData } from "@/components/block-content-editor/lib/storage/editor/project-data"
+import type { StorageType } from "@/components/block-content-editor/lib/storage/editor/storage-types"
+import type { ProjectPreferences } from "@/components/block-content-editor/lib/storage/editor/project-preferences"
 import { useCallback, useEffect, useState } from "react"
 import { toast } from "sonner"
 
@@ -10,7 +12,7 @@ interface StorageAdapter {
   list: () => Promise<ProjectData[]>
   load: (id: string) => Promise<ProjectData | null>
   delete?: (id: string) => Promise<void>
-  searchProjects: (searchTerm: string, tags: string[], filterMode: "all" | "any", storageTypeFilter?: "local" | "gameguild-cloud" | "google-drive") => Promise<ProjectData[]>
+  searchProjects: (searchTerm: string, tags: string[], filterMode: "all" | "any", storageTypeFilter?: StorageType) => Promise<ProjectData[]>
 }
 
 interface UseProjectDialogProps {
@@ -21,7 +23,7 @@ interface UseProjectDialogProps {
 export function useProjectDialog({ isDbInitialized, storageAdapter }: UseProjectDialogProps) {
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedTags, setSelectedTags] = useState<string[]>([])
-  const [storageTypeFilter, setStorageTypeFilter] = useState<"local" | "gameguild-cloud" | "google-drive" | undefined>(undefined)
+  const [storageTypeFilter, setStorageTypeFilter] = useState<StorageType | undefined>(undefined)
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(16) // Changed initial itemsPerPage from 10 to 12 to match available options in selector
   const [filteredProjects, setFilteredProjects] = useState<ProjectData[]>([])
@@ -69,7 +71,7 @@ export function useProjectDialog({ isDbInitialized, storageAdapter }: UseProject
     projectTags: string[],
     createdAt: string,
     updatedAt: string,
-    projectPreferences?: any
+    projectPreferences?: ProjectPreferences
   ) => {
     try {
       // Generate hash for the project

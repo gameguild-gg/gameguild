@@ -7,6 +7,7 @@ import { deserializeProject } from "@/components/block-content-editor/lib/storag
 import { checkSelectedProject as checkProjectPreview } from "@/components/block-content-editor/extras/preview/preview-load-operations"
 import type { ProjectData } from "@/components/block-content-editor/extras/preview/preview-load-operations"
 import type { BlockArray } from "@/components/block-content-editor/lib/storage/editor/block-structure"
+import type { StorageType } from "@/components/block-content-editor/lib/storage/editor/storage-types"
 
 export interface UseViewerStorageReturn {
   currentProject: ProjectData | null
@@ -20,7 +21,7 @@ export interface UseViewerStorageReturn {
       searchTerm: string,
       tags: string[],
       filterMode?: "all" | "any",
-      storageTypeFilter?: "local" | "gameguild-cloud" | "google-drive",
+      storageTypeFilter?: StorageType,
     ) => Promise<ProjectData[]>
   }
   loadProject: (projectData: ProjectData) => void
@@ -53,7 +54,7 @@ export function useViewerStorage(): UseViewerStorageReturn {
       searchTerm: string,
       tags: string[],
       filterMode?: "all" | "any",
-      storageTypeFilter?: "local" | "gameguild-cloud" | "google-drive",
+      storageTypeFilter?: StorageType,
     ): Promise<ProjectData[]> => {
       if (!isDbInitialized) return []
       try { return await dbStorage.current.searchProjects(searchTerm, tags, filterMode || "any", storageTypeFilter) }

@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input"
 import { FileText, Search, X, HardDrive, Cloud, Database } from "lucide-react"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import type { ProjectData } from "@/components/block-content-editor/lib/storage/editor/project-data"
+import type { StorageType } from "@/components/block-content-editor/lib/storage/editor/storage-types"
 
 interface SelectProjectDialogProps {
   open: boolean
@@ -19,7 +20,7 @@ interface SelectProjectDialogProps {
       searchTerm: string,
       tags: string[],
       filterMode: "all" | "any",
-      storageTypeFilter?: "local" | "gameguild-cloud" | "google-drive"
+      storageTypeFilter?: StorageType
     ) => Promise<ProjectData[]>
   }
 }
@@ -81,7 +82,7 @@ export function SelectProjectDialog({
   }
 
   // Get storage icon
-  const getStorageIcon = (storageType?: "local" | "gameguild-cloud" | "google-drive") => {
+  const getStorageIcon = (storageType?: StorageType) => {
     switch (storageType) {
       case "gameguild-cloud":
         return <Database className="h-3 w-3" />

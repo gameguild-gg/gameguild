@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react'
 import { Eye, Blocks, Download, Trash, Info } from "lucide-react"
+import type { StorageType } from "@/components/block-content-editor/lib/storage/editor/storage-types"
+import type { ProjectPreferences } from "@/components/block-content-editor/lib/storage/editor/project-preferences"
 import { useProjectDialog } from "@/components/block-content-editor/hooks/editor/use-project-dialog"
 import { useProjectActions } from "@/components/block-content-editor/hooks/editor/use-project-actions"
 import {
@@ -35,7 +37,7 @@ export interface UseProjectManagerReturn {
   createDialogOpen: boolean
   setCreateDialogOpen: (open: boolean) => void
   handleCreateNewProject: () => void
-  handleProjectCreate: (projectData: { id: string; name: string; tags: string[]; storageType: "local" | "gameguild-cloud" | "google-drive" }) => void
+  handleProjectCreate: (projectData: { id: string; name: string; tags: string[]; storageType: StorageType }) => void
   refreshProjects: () => Promise<void>
 }
 
@@ -157,7 +159,7 @@ export function useProjectManager({
     projectTags: string[],
     createdAt: string,
     updatedAt: string,
-    projectPreferences?: any
+    projectPreferences?: ProjectPreferences
   ) => {
     projectActions.handleDownload(projectId, projectName, projectData, projectTags, createdAt, updatedAt, projectPreferences)
   }, [projectActions])
@@ -227,7 +229,7 @@ export function useProjectManager({
     setCreateDialogOpen(true)
   }, [])
 
-  const handleProjectCreate = useCallback((projectData: { id: string; name: string; tags: string[]; storageType: "local" | "gameguild-cloud" | "google-drive" }) => {
+  const handleProjectCreate = useCallback((projectData: { id: string; name: string; tags: string[]; storageType: StorageType }) => {
     // Navigate to studio with the newly created project's ID
     window.location.href = `/block-content-editor/studio#${projectData.id}`
   }, [])

@@ -7,38 +7,16 @@
 import JSZip from "jszip"
 import { assetManager } from "@/components/block-content-editor/lib/storage/assets/asset-manager"
 import type { AssetData, AssetUsage } from "@/components/block-content-editor/lib/storage/assets/types"
+import type { ProjectExportInput, ProjectExportMetadata } from "./interop-types"
 
-export interface ProjectData {
-  id: string
-  name: string
-  data: string
-  tags: string[]
-  size: number
-  createdAt: string
-  updatedAt: string
-  hash?: string
-  storageType?: "local" | "gameguild-cloud" | "google-drive"
-  isLocallyAvailable?: boolean
-  preferences?: any // ProjectPreferences from @/components/block-content-editor/lib/storage/editor/project-preferences
-}
-
-export interface ProjectMetadata {
-  id: string
-  name: string
-  tags: string[]
-  size: number
-  hash: string
-  createdAt: string
-  updatedAt: string
-  storageType: string
-  version: string
-  exportedAt: string
-  assetsCount?: number
-  preferences?: any
-}
+export type { ProjectExportInput, ProjectExportMetadata } from "./interop-types"
+/** @deprecated Use {@link ProjectExportInput} */
+export type ProjectData = ProjectExportInput
+/** @deprecated Use {@link ProjectExportMetadata} */
+export type ProjectMetadata = ProjectExportMetadata
 
 export interface ExportedProjectStructure {
-  metadata: ProjectMetadata
+  metadata: ProjectExportMetadata
   data: string
   folderName: string
   assets?: Record<string, AssetData>
@@ -56,7 +34,7 @@ export class ProjectExporter {
    * Prepare project data for export with standardized structure
    */
   static async prepareForExport(
-    projectData: ProjectData,
+    projectData: ProjectExportInput,
     hash: string
   ): Promise<ExportedProjectStructure> {
     console.log('[ProjectExporter] Preparing project for export:', projectData.id)
@@ -68,7 +46,7 @@ export class ProjectExporter {
     const assetIndex = await assetManager.exportProjectAssetIndex(projectData.id)
     console.log('[ProjectExporter] Exported asset index entries:', Object.keys(assetIndex).length)
 
-    const metadata: ProjectMetadata = {
+    const metadata: ProjectExportMetadata = {
       id: projectData.id,
       name: projectData.name,
       tags: projectData.tags,

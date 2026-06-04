@@ -9,8 +9,9 @@ import { Button } from "@/components/ui/button"
 import { Cloud, Database, HardDrive, Settings, CheckCircle } from "lucide-react"
 import { GoogleDriveAuthDialog } from "./google-drive-auth-dialog"
 import { useGoogleDriveAuth } from "@/components/block-content-editor/hooks/editor/use-google-drive-auth"
+import type { StorageType } from "@/components/block-content-editor/lib/storage/editor/storage-types"
 
-export type StorageOption = "local" | "gameguild-cloud" | "google-drive"
+export type StorageOption = StorageType
 
 interface StorageOptionSelectorProps {
   selectedOption: StorageOption

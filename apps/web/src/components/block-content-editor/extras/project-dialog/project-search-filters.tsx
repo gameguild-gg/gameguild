@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { useState, useEffect } from "react"
 import { Cloud, Database, HardDrive, Calendar, User, AlertCircle } from "lucide-react"
 import { useGoogleDriveAuth } from "@/components/block-content-editor/hooks/editor/use-google-drive-auth"
+import type { StorageType } from "@/components/block-content-editor/lib/storage/editor/storage-types"
 
 interface ProjectSearchFiltersProps {
   searchTerm: string
@@ -15,8 +16,8 @@ interface ProjectSearchFiltersProps {
   availableTags: Array<{ name: string }>
   tagFilterMode: "all" | "any"
   onTagFilterModeChange: (mode: "all" | "any") => void
-  storageTypeFilter?: "local" | "gameguild-cloud" | "google-drive"
-  onStorageTypeFilterChange?: (type: "local" | "gameguild-cloud" | "google-drive" | undefined) => void
+  storageTypeFilter?: StorageType
+  onStorageTypeFilterChange?: (type: StorageType | undefined) => void
   itemsPerPage: number
   onItemsPerPageChange: (value: number) => void
   showFilters?: boolean
@@ -274,7 +275,7 @@ export function ProjectSearchFilters({
                   <div className="space-y-2">
                     <select
                       value={storageTypeFilter || ""}
-                      onChange={(e) => onStorageTypeFilterChange(e.target.value as "local" | "gameguild-cloud" | "google-drive" || undefined)}
+                      onChange={(e) => onStorageTypeFilterChange(e.target.value as StorageType || undefined)}
                       className="w-full rounded border bg-background px-3 py-2 text-sm"
                     >
                       <option value="">All storage types</option>

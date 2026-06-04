@@ -8,6 +8,7 @@ import { DownloadConfirmDialog } from "@/components/block-content-editor/extras/
 import { ProjectGridView } from "./project-grid-view"
 import { ProjectListView } from "./project-list-view"
 import type { ProjectData } from "@/components/block-content-editor/lib/storage/editor/project-data"
+import type { ProjectPreferences } from "@/components/block-content-editor/lib/storage/editor/project-preferences"
 
 interface ProjectListProps {
   projects: ProjectData[]
@@ -29,7 +30,7 @@ interface ProjectListProps {
     projectTags: string[],
     createdAt: string,
     updatedAt: string,
-    projectPreferences?: any
+    projectPreferences?: ProjectPreferences
   ) => void
   showDeleteButton?: boolean
   showStudioViewerButtons?: boolean
