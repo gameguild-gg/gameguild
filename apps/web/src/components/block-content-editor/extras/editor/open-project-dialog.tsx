@@ -175,12 +175,6 @@ export function OpenProjectDialog({
             ? "To get started, please open an existing project or create a new one."
             : undefined
         }
-        trigger={
-          <Button variant="outline" size="sm" className="gap-2 bg-transparent" disabled={!isDbInitialized}>
-            <FolderOpen className="w-4 h-4" />
-            Open
-          </Button>
-        }
         onAuthSuccess={onProjectsListUpdate}
         authSuccessToast={{
           title: "Google Drive connected successfully!",

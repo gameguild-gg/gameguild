@@ -33,7 +33,7 @@ export interface ViewerUIState {
   setExitDialogOpen: (open: boolean) => void
   nextUrl: string
   setNextUrl: (url: string) => void
-  handleLinkNavigation: (event: React.MouseEvent<HTMLAnchorElement>, url: string) => void
+  handleLinkNavigation: (event: React.MouseEvent<HTMLElement>, url: string) => void
 }
 
 const ViewerContext = createContext<ViewerContextValue | null>(null)
@@ -67,7 +67,7 @@ export function ViewerProvider({ fieldConfig: fieldPartial, toolbarConfig: toolb
   const [exitDialogOpen, setExitDialogOpen] = useState(false)
   const [nextUrl, setNextUrl] = useState("")
 
-  const handleLinkNavigation = (event: React.MouseEvent<HTMLAnchorElement>, url: string) => {
+  const handleLinkNavigation = (event: React.MouseEvent<HTMLElement>, url: string) => {
     if (event.ctrlKey || event.metaKey || event.button === 1) return
     event.preventDefault()
     if (viewer.currentProject) {

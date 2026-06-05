@@ -20,7 +20,6 @@ export function EditorDialogs() {
         open={ui.createDialogOpen}
         onOpenChange={(open) => {
           ui.setCreateDialogOpen(open)
-          if (!open) ui.setOpenDialogOpen(true)
         }}
         isDbInitialized={project.isDbInitialized}
         storageAdapter={project.storageAdapter}

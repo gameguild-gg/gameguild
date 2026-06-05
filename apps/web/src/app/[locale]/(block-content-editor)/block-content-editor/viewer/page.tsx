@@ -9,8 +9,7 @@ import { ViewerLayout } from "./viewer-layout"
 export default function PreviewPage() {
   return (
     <ViewerProvider>
-      <ViewerLayout>
-        <ViewerToolbar />
+      <ViewerLayout header={<ViewerToolbar />}>
         <ViewerField />
       </ViewerLayout>
       <ViewerDialogs />

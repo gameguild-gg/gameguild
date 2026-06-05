@@ -65,12 +65,6 @@ export function SaveAsDialog({
   }
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogTrigger asChild>
-        <Button variant="outline" size="sm" className="gap-2 bg-transparent" disabled={!isDbInitialized}>
-          <SaveAll className="w-4 h-4" />
-          Save As
-        </Button>
-      </DialogTrigger>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Save Project As</DialogTitle>

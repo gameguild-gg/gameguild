@@ -23,8 +23,7 @@ const toolbarConfig: Partial<ToolbarConfig> = {
 export default function DocEditorPage() {
   return (
     <EditorProvider fieldConfig={fieldConfig} toolbarConfig={toolbarConfig}>
-      <StudioLayout>
-        <EditorToolbar />
+      <StudioLayout header={<EditorToolbar />}>
         <EditorField />
       </StudioLayout>
       <EditorDialogs />

@@ -6,7 +6,7 @@ import React from 'react';
 export const metadata: Metadata = {
   title: "GameGuild Block Content Editor",
   description: "Block editor for game development community",
-    generator: 'Next.js',
+  generator: 'Next.js',
   applicationName: "GameGuild Editor",
   keywords: [
     "game development",
@@ -34,7 +34,7 @@ export default function RootLayout({
   return (
     <div>
       <TopMenu />
-      <div className="flex flex-col flex-1 mt-10">{ children }</div>
+      <div className="flex flex-col flex-1 mt-20">{children}</div>
     </div>
   )
 }
