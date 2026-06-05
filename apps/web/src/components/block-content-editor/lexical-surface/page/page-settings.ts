@@ -23,7 +23,7 @@ export type PageSizeId =
   | "folio"
 
 export type PageOrientation = "portrait" | "landscape"
-export type PageMargin = "narrow" | "normal" | "moderate" | "wide"
+export type PageMargin = "none" | "narrow" | "normal" | "moderate" | "wide"
 
 export interface PageSize {
   id: PageSizeId
@@ -50,6 +50,7 @@ export const PAGE_SIZES: PageSize[] = [
 ]
 
 export const PAGE_MARGIN_INCHES: Record<PageMargin, number> = {
+  none: 0,
   narrow: 0.25,
   normal: 0.4,
   moderate: 0.75,
@@ -57,6 +58,7 @@ export const PAGE_MARGIN_INCHES: Record<PageMargin, number> = {
 }
 
 export const PAGE_MARGIN_LABELS: Record<PageMargin, string> = {
+  none: 'None (0")',
   narrow: 'Narrow (0.25")',
   normal: 'Normal (0.4")',
   moderate: 'Moderate (0.75")',
