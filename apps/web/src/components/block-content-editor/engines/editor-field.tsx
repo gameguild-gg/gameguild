@@ -7,6 +7,7 @@ import { BlockArrayEditor } from "@/components/block-content-editor/engines/bloc
 import { BLOCK_REGISTRY } from "@/components/block-content-editor/engines/blocks/block-component-registry"
 import { nextBlockId } from "@/components/block-content-editor/lib/storage/editor/block-structure"
 import { useEditor } from "./editor-provider"
+import { LexicalSurface } from "@/components/block-content-editor/lexical-surface"
 
 export function EditorField() {
   const { project, history, effectiveFieldConfig: fieldConfig } = useEditor()
@@ -47,6 +48,32 @@ export function EditorField() {
   const hasRestrictedBlockTypes = !!fieldConfig.allowedBlockTypes && fieldConfig.allowedBlockTypes.length <= 1
   const isQuizMode = fieldConfig.projectType === "quiz"
   const hideBlocks = hasRestrictedBlockTypes || (isQuizMode && !fieldConfig.allowedBlockTypes?.length)
+
+  // Document Mode interception: fully unlocked LexicalSurface without block chrome
+  const isDocumentMode = fieldConfig.projectType === "document" && project.blocks.length === 1 && project.blocks[0]?.type === "rich-text"
+
+  if (isDocumentMode) {
+    const block = project.blocks[0]!
+    const data = block.data as any
+
+    return (
+      <div className="border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 shadow-sm rounded-lg flex flex-col min-h-full">
+        <LexicalSurface
+          namespace="DocumentEditor"
+          initialState={data?.content ?? null}
+          readOnly={history.isViewingHistory}
+          onChange={(content) => {
+            const next = [...project.blocks]
+            next[0] = { ...block, data: { ...data, content } }
+            project.setBlocks(next)
+          }}
+          placeholder="Start writing your document..."
+          className="flex-1 flex flex-col"
+          contentClassName="min-h-[600px] max-w-none px-8 py-10"
+        />
+      </div>
+    )
+  }
 
   return (
     <div ref={wrapperRef} style={blocksDragging ? { height: scaledHeight ?? undefined } : undefined}>
