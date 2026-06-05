@@ -110,6 +110,7 @@ import {
   TextColorIcon,
   UnderlineIcon,
   UndoIcon,
+  StickyIcon,
 } from "../icons"
 import { DropDown, DropDownDivider, DropDownItem } from "./dropdown"
 import { DropdownColorPicker } from "./dropdown-color-picker"
@@ -139,6 +140,7 @@ import { InsertTableDialog } from "../table"
 import { INSERT_EXCALIDRAW_COMMAND } from "../excalidraw"
 import { InsertLayoutDialog } from "../layout"
 import { INSERT_COLLAPSIBLE_COMMAND } from "../collapsible"
+import { INSERT_STICKY_COMMAND } from "../sticky"
 import { EmojiPickerPanel } from "../emoji"
 import { Sigma as EquationIcon, Pencil as ExcalidrawIcon, Smile as EmojiIcon, Table as TableIcon, Columns as ColumnsIcon, PanelTopOpen as CollapsibleIcon } from "lucide-react"
 import {
@@ -1293,6 +1295,33 @@ export default function ToolbarPlugin({
         <StrikethroughIcon className="w-4 h-4" />
       </ToolbarButton>
       <ToolbarButton
+        active={toolbarState.isSubscript}
+        disabled={!isEditable}
+        onClick={(e) => dispatchFormatTextCommand("subscript", isKeyboardInput(e))}
+        title="Subscript"
+        ariaLabel="Format Subscript"
+      >
+        <SubscriptIcon className="w-4 h-4" />
+      </ToolbarButton>
+      <ToolbarButton
+        active={toolbarState.isSuperscript}
+        disabled={!isEditable}
+        onClick={(e) => dispatchFormatTextCommand("superscript", isKeyboardInput(e))}
+        title="Superscript"
+        ariaLabel="Format Superscript"
+      >
+        <SuperscriptIcon className="w-4 h-4" />
+      </ToolbarButton>
+      <ToolbarButton
+        active={toolbarState.isHighlight}
+        disabled={!isEditable}
+        onClick={(e) => dispatchFormatTextCommand("highlight", isKeyboardInput(e))}
+        title="Highlight"
+        ariaLabel="Format Highlight"
+      >
+        <HighlightIcon className="w-4 h-4" />
+      </ToolbarButton>
+      <ToolbarButton
         active={toolbarState.isCode}
         disabled={!isEditable}
         onClick={(e) => dispatchFormatTextCommand("code", isKeyboardInput(e))}
@@ -1372,6 +1401,11 @@ export default function ToolbarPlugin({
             onClick={() => dispatchToolbarCommand(INSERT_COLLAPSIBLE_COMMAND)}
           >
             <CollapsibleIcon className="w-4 h-4" /> Collapsible container
+          </DropDownItem>
+          <DropDownItem
+            onClick={() => dispatchToolbarCommand(INSERT_STICKY_COMMAND)}
+          >
+            <StickyIcon className="w-4 h-4" /> Sticky Note
           </DropDownItem>
         </DropDown>
       )}
