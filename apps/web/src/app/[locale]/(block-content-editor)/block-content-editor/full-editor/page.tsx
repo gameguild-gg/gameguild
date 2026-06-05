@@ -9,8 +9,7 @@ import { StudioLayout } from "../studio/studio-layout"
 export default function FullEditorPage() {
   return (
     <EditorProvider>
-      <StudioLayout>
-        <EditorToolbar />
+      <StudioLayout header={<EditorToolbar />}>
         <EditorField />
       </StudioLayout>
       <EditorDialogs />

@@ -75,7 +75,7 @@ export interface EditorUIState {
   // Derived helpers
   handleSave: () => Promise<void>
   handleSaveAndExit: () => Promise<void>
-  handleLinkNavigation: (event: React.MouseEvent<HTMLAnchorElement>, url: string) => void
+  handleLinkNavigation: (event: React.MouseEvent<HTMLElement>, url: string) => void
   handleNavigation: (url: string) => void
   handleExitConfirm: () => void
   getSizeIndicatorColor: () => string
@@ -182,7 +182,7 @@ export function EditorProvider({ fieldConfig: fieldPartial, toolbarConfig: toolb
     if (result.needsSaveAs) setSaveAsDialogOpen(true)
   }
 
-  const handleLinkNavigation = (event: React.MouseEvent<HTMLAnchorElement>, url: string) => {
+  const handleLinkNavigation = (event: React.MouseEvent<HTMLElement>, url: string) => {
     if (event.ctrlKey || event.metaKey || event.button === 1) return
     event.preventDefault()
     if (project.projectId && project.blocks.length > 0) {

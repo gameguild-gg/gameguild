@@ -7,8 +7,7 @@ import { StudioLayout } from "./studio-layout"
 export default function Page() {
   return (
     <EditorProvider>
-      <StudioLayout>
-        <EditorToolbar />
+      <StudioLayout header={<EditorToolbar />}>
         <EditorField />
       </StudioLayout>
       <EditorDialogs />

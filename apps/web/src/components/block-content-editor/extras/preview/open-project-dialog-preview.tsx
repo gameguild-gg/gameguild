@@ -78,12 +78,6 @@ export function OpenProjectDialogPreview({
       onOpenChange={onOpenChange}
       title="Open Project for Preview"
       description="Select a project to preview its content"
-      trigger={
-        <Button variant="outline" size="sm" className="gap-2 bg-transparent" disabled={!isDbInitialized}>
-          <FolderOpen className="w-4 h-4" />
-          Open Project
-        </Button>
-      }
       authSuccessToast={{
         title: "Google Drive connected successfully!",
         description: "You can now access your Google Drive projects for preview.",
