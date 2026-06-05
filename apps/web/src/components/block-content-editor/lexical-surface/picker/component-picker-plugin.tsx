@@ -60,6 +60,7 @@ import {
   NumberedListIcon,
   ParagraphIcon,
   QuoteIcon,
+  StickyIcon,
 } from "../icons"
 import { Sigma as EquationIcon } from "lucide-react"
 import { Pencil as ExcalidrawIcon } from "lucide-react"
@@ -67,6 +68,7 @@ import { Table as TableIcon } from "lucide-react"
 import { InsertEquationDialog } from "../equation"
 import { INSERT_EXCALIDRAW_COMMAND } from "../excalidraw"
 import { InsertTableDialog } from "../table"
+import { INSERT_STICKY_COMMAND } from "../sticky"
 
 type DialogRender = (opts: { activeEditor: LexicalEditor; onClose: () => void }) => React.ReactNode
 
@@ -249,6 +251,11 @@ function getBaseOptions(editor: LexicalEditor): ComponentPickerOption[] {
           <InsertTableDialog activeEditor={activeEditor} onClose={onClose} />
         ),
       },
+    }),
+    new ComponentPickerOption("Sticky Note", {
+      Icon: StickyIcon,
+      keywords: ["sticky", "note", "postit", "memo"],
+      onSelect: () => editor.dispatchCommand(INSERT_STICKY_COMMAND, undefined),
     }),
   ]
 }

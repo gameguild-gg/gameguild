@@ -25,6 +25,7 @@ import {
   CollapsibleTitleNode,
   CollapsibleContentNode,
 } from "../../lexical-surface/collapsible"
+import { StickyNode } from "../../lexical-surface/sticky"
 
 /**
  * Full node set supported by our Lexical instances. Adding a node here
@@ -65,6 +66,7 @@ export const SHARED_LEXICAL_NODES = [
   CollapsibleContainerNode,
   CollapsibleTitleNode,
   CollapsibleContentNode,
+  StickyNode,
 ]
 
 /**
