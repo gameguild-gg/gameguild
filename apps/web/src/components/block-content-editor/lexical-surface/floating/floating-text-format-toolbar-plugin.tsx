@@ -37,6 +37,9 @@ import {
   LinkIcon,
   StrikethroughIcon,
   UnderlineIcon,
+  HighlightIcon,
+  SubscriptIcon,
+  SuperscriptIcon,
 } from "../icons"
 import { getSelectedNode } from "../toolbar/get-selected-node"
 import { getDOMRangeRect, setFloatingElemPosition } from "./use-floating-position"
@@ -172,6 +175,9 @@ function TextFormatFloatingToolbar({
   isUnderline,
   isCode,
   isStrikethrough,
+  isSubscript,
+  isSuperscript,
+  isHighlight,
   fontSize,
   setIsLinkEditMode,
   ref,
@@ -184,6 +190,9 @@ function TextFormatFloatingToolbar({
   isLink: boolean
   isStrikethrough: boolean
   isUnderline: boolean
+  isSubscript: boolean
+  isSuperscript: boolean
+  isHighlight: boolean
   fontSize: string
   setIsLinkEditMode: Dispatch<boolean>
   ref?: React.Ref<HTMLDivElement | null>
@@ -334,6 +343,30 @@ function TextFormatFloatingToolbar({
         <StrikethroughIcon className="w-4 h-4" />
       </BubbleButton>
       <BubbleButton
+        active={isSubscript}
+        onClick={() => editor.dispatchCommand(FORMAT_TEXT_COMMAND, "subscript")}
+        title="Subscript"
+        ariaLabel="Format text as subscript"
+      >
+        <SubscriptIcon className="w-4 h-4" />
+      </BubbleButton>
+      <BubbleButton
+        active={isSuperscript}
+        onClick={() => editor.dispatchCommand(FORMAT_TEXT_COMMAND, "superscript")}
+        title="Superscript"
+        ariaLabel="Format text as superscript"
+      >
+        <SuperscriptIcon className="w-4 h-4" />
+      </BubbleButton>
+      <BubbleButton
+        active={isHighlight}
+        onClick={() => editor.dispatchCommand(FORMAT_TEXT_COMMAND, "highlight")}
+        title="Highlight"
+        ariaLabel="Format text as highlighted"
+      >
+        <HighlightIcon className="w-4 h-4" />
+      </BubbleButton>
+      <BubbleButton
         active={isCode}
         onClick={() => editor.dispatchCommand(FORMAT_TEXT_COMMAND, "code")}
         title="Inline code"
@@ -364,6 +397,9 @@ function useFloatingTextFormatToolbar(
   const [isItalic, setIsItalic] = useState(false)
   const [isUnderline, setIsUnderline] = useState(false)
   const [isStrikethrough, setIsStrikethrough] = useState(false)
+  const [isSubscript, setIsSubscript] = useState(false)
+  const [isSuperscript, setIsSuperscript] = useState(false)
+  const [isHighlight, setIsHighlight] = useState(false)
   const [isCode, setIsCode] = useState(false)
   const [fontSize, setFontSize] = useState<string>(`${DEFAULT_FONT_SIZE}px`)
 
@@ -412,6 +448,9 @@ function useFloatingTextFormatToolbar(
       setIsItalic(selection.hasFormat("italic"))
       setIsUnderline(selection.hasFormat("underline"))
       setIsStrikethrough(selection.hasFormat("strikethrough"))
+      setIsSubscript(selection.hasFormat("subscript"))
+      setIsSuperscript(selection.hasFormat("superscript"))
+      setIsHighlight(selection.hasFormat("highlight"))
       setIsCode(selection.hasFormat("code"))
       setFontSize(
         $getSelectionStyleValueForProperty(selection, "font-size", `${DEFAULT_FONT_SIZE}px`),
@@ -492,6 +531,9 @@ function useFloatingTextFormatToolbar(
       isStrikethrough={isStrikethrough}
       isUnderline={isUnderline}
       isCode={isCode}
+      isSubscript={isSubscript}
+      isSuperscript={isSuperscript}
+      isHighlight={isHighlight}
       fontSize={fontSize}
       setIsLinkEditMode={setIsLinkEditMode}
     />,
