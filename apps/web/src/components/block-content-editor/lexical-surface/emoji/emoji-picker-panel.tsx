@@ -8,9 +8,9 @@
 "use client"
 
 import * as React from "react"
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useState, useRef } from "react"
 import { cn } from "@/lib/utils"
-import type { Emoji } from "./emoji-list"
+import type { Emoji, EmojiCategory } from "./emoji-list"
 
 interface EmojiPickerPanelProps {
   onSelect: (emoji: string) => void
@@ -18,9 +18,33 @@ interface EmojiPickerPanelProps {
   className?: string
 }
 
+const CATEGORY_ICONS: Record<EmojiCategory, string> = {
+  "Smileys & Emotion": "😀",
+  "People & Body": "👋",
+  "Animals & Nature": "🐶",
+  "Food & Drink": "🍔",
+  "Travel & Places": "🚗",
+  "Activities & Objects": "⚽",
+  "Symbols": "❤️",
+  "Flags": "🏁",
+}
+
+const CATEGORIES: EmojiCategory[] = [
+  "Smileys & Emotion",
+  "People & Body",
+  "Animals & Nature",
+  "Food & Drink",
+  "Travel & Places",
+  "Activities & Objects",
+  "Symbols",
+  "Flags",
+]
+
 export function EmojiPickerPanel({ onSelect, autoFocus = true, className }: EmojiPickerPanelProps) {
   const [emojis, setEmojis] = useState<Emoji[]>([])
   const [query, setQuery] = useState("")
+  const [activeCategory, setActiveCategory] = useState<EmojiCategory>("Smileys & Emotion")
+  const listRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -32,15 +56,24 @@ export function EmojiPickerPanel({ onSelect, autoFocus = true, className }: Emoj
     }
   }, [])
 
+  // Reset scroll on category or query change
+  useEffect(() => {
+    if (listRef.current) {
+      listRef.current.scrollTop = 0
+    }
+  }, [activeCategory, query])
+
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
-    if (!q) return emojis
+    if (!q) {
+      return emojis.filter(e => e.category === activeCategory)
+    }
     return emojis.filter(
       (e) =>
         e.aliases.some((a) => a.toLowerCase().includes(q)) ||
         e.tags.some((t) => t.toLowerCase().includes(q)),
     )
-  }, [emojis, query])
+  }, [emojis, query, activeCategory])
 
   return (
     <div className={cn("flex w-[280px] flex-col gap-2", className)}>
@@ -58,7 +91,29 @@ export function EmojiPickerPanel({ onSelect, autoFocus = true, className }: Emoj
           "focus:border-blue-500",
         )}
       />
+
+      {!query && (
+        <div className="flex items-center justify-between px-1 border-b border-gray-100 dark:border-gray-800 pb-2">
+          {CATEGORIES.map((cat) => (
+            <button
+              key={cat}
+              type="button"
+              title={cat}
+              aria-label={cat}
+              onClick={() => setActiveCategory(cat)}
+              className={cn(
+                "p-1.5 rounded hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-[16px] leading-none grayscale opacity-50",
+                activeCategory === cat && "bg-gray-100 dark:bg-gray-800 grayscale-0 opacity-100"
+              )}
+            >
+              {CATEGORY_ICONS[cat]}
+            </button>
+          ))}
+        </div>
+      )}
+
       <div
+        ref={listRef}
         role="listbox"
         aria-label="Emoji"
         className="grid max-h-[260px] grid-cols-8 gap-0.5 overflow-y-auto pr-0.5"
