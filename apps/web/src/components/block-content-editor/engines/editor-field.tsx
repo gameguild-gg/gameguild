@@ -56,10 +56,15 @@ export function EditorField() {
     const block = project.blocks[0]!
     const data = block.data as any
 
+    // mountKey ensures LexicalComposer re-mounts when a different project
+    // is loaded (otherwise the old empty state stays).
+    const documentMountKey = `${project.projectId ?? "new"}-${block.id}`
+
     return (
       <div className="border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 shadow-sm rounded-lg flex flex-col min-h-full">
         <LexicalSurface
           namespace="DocumentEditor"
+          mountKey={documentMountKey}
           initialState={data?.content ?? null}
           readOnly={history.isViewingHistory}
           onChange={(content) => {
