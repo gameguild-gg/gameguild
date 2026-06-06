@@ -15,11 +15,13 @@ export function ViewerField() {
     if (isDocumentMode) {
       const block = viewer.blocks[0]!
       const data = block.data as any
+      const viewerMountKey = `${viewer.currentProject.id ?? "view"}-${block.id}`
 
       return (
         <div className="border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 shadow-sm rounded-lg flex flex-col min-h-full">
           <LexicalSurface
             namespace="DocumentViewer"
+            mountKey={viewerMountKey}
             initialState={data?.content ?? null}
             readOnly={true}
             onChange={() => { }}
