@@ -37,10 +37,10 @@ function hexToRgb(hex: string) {
   const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(fullHex)
   return result
     ? {
-        r: parseInt(result[1]!, 16),
-        g: parseInt(result[2]!, 16),
-        b: parseInt(result[3]!, 16),
-      }
+      r: parseInt(result[1]!, 16),
+      g: parseInt(result[2]!, 16),
+      b: parseInt(result[3]!, 16),
+    }
     : { r: 254, g: 243, b: 199 } // Default amber-100/yellow
 }
 
@@ -97,7 +97,60 @@ export function StickyComponent({ text, color, style, nodeKey }: StickyComponent
     })
   }, [editor])
 
+  // Auto-focus the textarea when a new sticky note is created (text is empty).
+  // We need a small delay so the DecoratorNode finishes rendering first,
+  // then we blur the Lexical root to release its selection lock, and
+  // finally focus the textarea.
+  useEffect(() => {
+    if (text === "" && isEditable && textareaRef.current) {
+      const timer = setTimeout(() => {
+        const rootElement = editor.getRootElement()
+        if (rootElement) {
+          rootElement.blur()
+        }
+        textareaRef.current?.focus()
+      }, 50)
+      return () => clearTimeout(timer)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []) // Only on mount
+
+  // Stop keyboard/input events from bubbling up to Lexical's handlers.
+  // Without this, Lexical intercepts all keystrokes inside its
+  // contentEditable tree, so the textarea never receives characters.
+  const stopLexicalPropagation = useCallback(
+    (e: React.SyntheticEvent) => {
+      e.stopPropagation()
+    },
+    [],
+  )
+
+  // When the user clicks anywhere inside the sticky wrapper, we need to
+  // blur Lexical's root element first so it releases selection, then
+  // focus the textarea. Without this, Lexical intercepts the mousedown.
+  const handleWrapperMouseDown = useCallback(
+    (e: React.MouseEvent) => {
+      if (!isEditable) return
+      // Only intervene when the click target is the wrapper or the textarea
+      // area — not toolbar buttons (which have their own handlers).
+      const target = e.target as HTMLElement
+      const isToolbarClick = target.closest("button") || target.closest("[data-radix-popper-content-wrapper]")
+      if (isToolbarClick) return
+
+      const rootElement = editor.getRootElement()
+      if (rootElement) {
+        rootElement.blur()
+      }
+      // Focus the textarea on the next tick after Lexical releases
+      requestAnimationFrame(() => {
+        textareaRef.current?.focus()
+      })
+    },
+    [editor, isEditable],
+  )
+
   const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    e.stopPropagation()
     const val = e.target.value
     setValue(val)
     editor.update(() => {
@@ -115,6 +168,10 @@ export function StickyComponent({ text, color, style, nodeKey }: StickyComponent
         node.setColor(newColor)
       }
     })
+    // Re-focus the textarea after Lexical re-renders the decorator
+    requestAnimationFrame(() => {
+      textareaRef.current?.focus()
+    })
   }
 
   const handleStyleChange = (newStyle: StickyStyle) => {
@@ -123,6 +180,10 @@ export function StickyComponent({ text, color, style, nodeKey }: StickyComponent
       if ($isStickyNode(node)) {
         node.setStyle(newStyle)
       }
+    })
+    // Re-focus the textarea after Lexical re-renders the decorator
+    requestAnimationFrame(() => {
+      textareaRef.current?.focus()
     })
   }
 
@@ -191,6 +252,16 @@ export function StickyComponent({ text, color, style, nodeKey }: StickyComponent
           setIsFocused(false)
         }
       }}
+      onMouseDown={handleWrapperMouseDown}
+      // Prevent Lexical from intercepting keyboard events
+      // (e.g. Backspace/Delete would otherwise remove the node)
+      onKeyDown={stopLexicalPropagation}
+      onKeyUp={stopLexicalPropagation}
+      onInput={stopLexicalPropagation}
+      onBeforeInput={stopLexicalPropagation}
+      onCopy={stopLexicalPropagation}
+      onCut={stopLexicalPropagation}
+      onPaste={stopLexicalPropagation}
       tabIndex={isEditable ? 0 : -1}
     >
       {/* Pin Icon (Classic Style Only) */}
