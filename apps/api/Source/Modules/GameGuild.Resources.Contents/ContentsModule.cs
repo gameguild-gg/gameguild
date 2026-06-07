@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using GameGuild.CQRS;
 
 namespace GameGuild.Resources.Contents;
 
@@ -16,6 +17,10 @@ public class ContentsModule : IModule
     public IServiceCollection ConfigureServices(IServiceCollection services, IConfiguration configuration)
     {
         // Register focused sub-services
+        services.AddScoped<IDocumentTemplateService, DocumentTemplateService>();
+        services.AddScoped<IContractGenerationService, ContractGenerationService>();
+        services.AddScoped<ICommandHandler<GenerateContractCommand, Result<GeneratedContractResult>>, GenerateContractCommandHandler>();
+        services.AddScoped<ICommandHandler<BulkGenerateContractsCommand, BulkGeneratedContractsResult>, BulkGenerateContractsCommandHandler>();
         services.AddScoped<IContentDraftService, ContentDraftService>();
         services.AddScoped<IContentReviewPublishingService, ContentReviewPublishingService>();
         services.AddScoped<IContentVersionQueryService, ContentVersionQueryService>();

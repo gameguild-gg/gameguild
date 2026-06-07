@@ -101,6 +101,12 @@ public class TenantSettings : EntityBase, ITenantable
     public string? SecuritySettings { get; set; }
 
     /// <summary>
+    ///     Integration settings (JSON)
+    ///     Stores external service configuration, API keys, and SSO settings.
+    /// </summary>
+    public string? IntegrationSettingsJson { get; set; }
+
+    /// <summary>
     ///     Navigation property to the tenant
     /// </summary>
     public Tenant? Tenant { get; set; }

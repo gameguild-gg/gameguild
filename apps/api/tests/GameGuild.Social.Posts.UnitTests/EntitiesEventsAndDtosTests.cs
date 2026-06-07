@@ -177,6 +177,23 @@ public class PostFollowerTests
         follower.NotifyOnShares.Should().BeFalse(); // unchanged default
         follower.NotifyOnUpdates.Should().BeTrue(); // unchanged default
     }
+
+    [Fact]
+    public void UpdatePreferences_ShouldUpdateShareAndUpdateFlags()
+    {
+        var follower = PostFollower.Create(Guid.NewGuid(), Guid.NewGuid());
+
+        follower.UpdatePreferences(
+            notifyOnComments: null,
+            notifyOnLikes: null,
+            notifyOnShares: true,
+            notifyOnUpdates: false);
+
+        follower.NotifyOnComments.Should().BeTrue();
+        follower.NotifyOnLikes.Should().BeFalse();
+        follower.NotifyOnShares.Should().BeTrue();
+        follower.NotifyOnUpdates.Should().BeFalse();
+    }
 }
 
 /// <summary>

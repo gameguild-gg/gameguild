@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
     <PropertyGroup>
-        <TargetFramework>net9.0</TargetFramework>
+        <TargetFramework>net10.0</TargetFramework>
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
     </PropertyGroup>
@@ -30,7 +30,9 @@
     </ItemGroup>
 
     <ItemGroup>
+        <ProjectReference Include="..\Modules\GameGuild.AI\GameGuild.AI.csproj" />
         <ProjectReference Include="..\Modules\GameGuild.Compliance.Audit\GameGuild.Compliance.Audit.csproj" />
+        <ProjectReference Include="..\Modules\GameGuild.Compliance.FERPA\GameGuild.Compliance.FERPA.csproj" />
         <ProjectReference Include="..\Modules\GameGuild.Identity.Authentication\GameGuild.Identity.Authentication.csproj" />
         <ProjectReference Include="..\Modules\GameGuild.Identity.Authorization\GameGuild.Identity.Authorization.csproj" />
         <ProjectReference Include="..\Modules\GameGuild.Commerce.Billing\GameGuild.Commerce.Billing.csproj" />
@@ -39,13 +41,11 @@
         <ProjectReference Include="..\Modules\GameGuild.Features\GameGuild.Features.csproj" />
         <!-- Orphaned: SLA module is not in EnabledModules and has no DI registration -->
         <!-- <ProjectReference Include="..\Modules\GameGuild.Monitoring.SLA\GameGuild.Monitoring.SLA.csproj" /> -->
-        <!-- Orphaned: Notifications module is not in EnabledModules and has no DI registration -->
-        <!-- <ProjectReference Include="..\Modules\GameGuild.Notifications\GameGuild.Notifications.csproj" /> -->
+        <ProjectReference Include="..\Modules\GameGuild.Notifications\GameGuild.Notifications.csproj" />
         <ProjectReference Include="..\Modules\GameGuild.Commerce.Payments\GameGuild.Commerce.Payments.csproj" />
         <ProjectReference Include="..\Modules\GameGuild.Commerce.Products\GameGuild.Commerce.Products.csproj" />
-        <!-- Learning Modules — orphaned: not in EnabledModules, no DI registration, controllers would fail at runtime -->
         <ProjectReference Include="..\Modules\GameGuild.Learning.Courses\GameGuild.Learning.Courses.csproj" />
-        <!-- <ProjectReference Include="..\Modules\GameGuild.Learning.Enrollments\GameGuild.Learning.Enrollments.csproj" /> -->
+        <ProjectReference Include="..\Modules\GameGuild.Learning.Enrollments\GameGuild.Learning.Enrollments.csproj" />
         <!-- <ProjectReference Include="..\Modules\GameGuild.Learning.Cohorts\GameGuild.Learning.Cohorts.csproj" /> -->
         <ProjectReference Include="..\Modules\GameGuild.Learning.Assessments\GameGuild.Learning.Assessments.csproj" />
         <!-- <ProjectReference Include="..\Modules\GameGuild.Learning.Certificates\GameGuild.Learning.Certificates.csproj" /> -->
@@ -53,13 +53,15 @@
         <!-- <ProjectReference Include="..\Modules\GameGuild.Learning.Experience.Recommendations\GameGuild.Learning.Experience.Recommendations.csproj" /> -->
         <!-- <ProjectReference Include="..\Modules\GameGuild.Learning.Experience.LearningPaths\GameGuild.Learning.Experience.LearningPaths.csproj" /> -->
         <!-- <ProjectReference Include="..\Modules\GameGuild.Learning.Experience.Social\GameGuild.Learning.Experience.Social.csproj" /> -->
-        <!-- Social Modules — orphaned: not in EnabledModules, no DI registration -->
-        <!-- <ProjectReference Include="..\Modules\GameGuild.Social.Profiles\GameGuild.Social.Profiles.csproj" /> -->
-        <!-- <ProjectReference Include="..\Modules\GameGuild.Social.Posts\GameGuild.Social.Posts.csproj" /> -->
-        <!-- <ProjectReference Include="..\Modules\GameGuild.Social.Blog\GameGuild.Social.Blog.csproj" /> -->
-        <!-- <ProjectReference Include="..\Modules\GameGuild.Social.Reactions\GameGuild.Social.Reactions.csproj" /> -->
+        <ProjectReference Include="..\Modules\GameGuild.Social.Profiles\GameGuild.Social.Profiles.csproj" />
+        <ProjectReference Include="..\Modules\GameGuild.Social.Blog\GameGuild.Social.Blog.csproj" />
+        <ProjectReference Include="..\Modules\GameGuild.Social.Posts\GameGuild.Social.Posts.csproj" />
+        <ProjectReference Include="..\Modules\GameGuild.Social.Reactions\GameGuild.Social.Reactions.csproj" />
+        <ProjectReference Include="..\Modules\GameGuild.Social.Feed\GameGuild.Social.Feed.csproj" />
+        <!-- Social Modules — remaining modules are not in EnabledModules and do not have API bootstrap registration yet -->
         <!-- <ProjectReference Include="..\Modules\GameGuild.Social.Follows\GameGuild.Social.Follows.csproj" /> -->
-        <!-- <ProjectReference Include="..\Modules\GameGuild.Social.Feed\GameGuild.Social.Feed.csproj" /> -->
+        <ProjectReference Include="..\Modules\GameGuild.GameJams\GameGuild.GameJams.csproj" />
+        <ProjectReference Include="..\Modules\GameGuild.Tags\GameGuild.Tags.csproj" />
         <ProjectReference Include="..\Modules\GameGuild.Content.Pages\GameGuild.Content.Pages.csproj" />
         <ProjectReference Include="..\Modules\GameGuild.Resources\GameGuild.Resources.csproj" />
         <ProjectReference Include="..\Modules\GameGuild.SharedKernel\GameGuild.SharedKernel.csproj" />

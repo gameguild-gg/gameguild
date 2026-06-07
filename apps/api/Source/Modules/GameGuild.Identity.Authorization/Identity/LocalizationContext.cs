@@ -28,11 +28,11 @@ public class LocalizationContext(IHttpContextAccessor httpContextAccessor) : ILo
             // Fallback to Accept-Language header
             if (httpContext.Request.Headers.TryGetValue(AcceptLanguageHeader, out var acceptLanguage))
             {
-                var firstLanguage = acceptLanguage.ToString().Split(',').FirstOrDefault()?.Trim();
-                if (!string.IsNullOrEmpty(firstLanguage))
+                var firstLanguage = acceptLanguage.ToString().Split(',')[0].Trim();
+                if (!string.IsNullOrWhiteSpace(firstLanguage))
                 {
                     // Remove quality value if present (e.g., "en-US;q=0.9" -> "en-US")
-                    return firstLanguage.Split(';').FirstOrDefault()?.Trim();
+                    return firstLanguage.Split(';')[0].Trim();
                 }
             }
 

@@ -305,6 +305,17 @@ public class UserCoverageBoostTests
     }
 
     [Fact]
+    public void ValidateForRegistration_EmptyName_ShouldIncludeRequiredNameError()
+    {
+        var user = new User { Email = "test@example.com", Name = string.Empty };
+
+        var result = user.ValidateForRegistration();
+
+        result.IsSuccess.Should().BeFalse();
+        result.Errors.Should().Contain("Name is required.");
+    }
+
+    [Fact]
     public void ValidateForTenantJoin_ActiveUser_ShouldSucceed()
     {
         var user = User.Create("test@example.com", "Test");

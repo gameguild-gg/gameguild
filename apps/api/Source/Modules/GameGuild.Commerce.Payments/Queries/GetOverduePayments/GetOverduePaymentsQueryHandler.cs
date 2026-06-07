@@ -1,33 +1,43 @@
 using GameGuild.CQRS;
+using Microsoft.EntityFrameworkCore;
 
 namespace GameGuild.Commerce.Payments;
 
 /// <summary>
 ///     Handler for getting overdue payments that require collection or retry.
 /// </summary>
-/// <remarks>
-///     Overdue payment tracking involves:
-///     - Invoice due date tracking
-///     - Subscription payment failure tracking
-///     - Retry scheduling and escalation
-/// </remarks>
-public sealed class GetOverduePaymentsQueryHandler : IQueryHandler<GetOverduePaymentsQuery, IEnumerable<PaymentResult>>
+public sealed class GetOverduePaymentsQueryHandler(IApplicationDbContext context) : IQueryHandler<GetOverduePaymentsQuery, IEnumerable<PaymentResult>>
 {
-    public Task<IEnumerable<PaymentResult>> Handle(GetOverduePaymentsQuery request, CancellationToken cancellationToken)
+    public async Task<IEnumerable<PaymentResult>> Handle(GetOverduePaymentsQuery request, CancellationToken cancellationToken)
     {
-        // Overdue payment queries should integrate with:
-        // - Invoice entities with past-due status
-        // - Subscription payment failure history
-        // - Dunning management workflows
-        //
-        // Implementation would:
-        // 1. Query invoices past their due date
-        // 2. Apply overdue threshold filtering
-        // 3. Include retry attempt information
-        // 4. Calculate escalation status
-        //
-        // Returns empty collection until Invoice/dunning integration is complete.
+        var thresholdDays = Math.Max(0, request.OverdueThreshold);
+        var cutoff = SystemClock.UtcNow.AddDays(-thresholdDays);
 
-        return Task.FromResult<IEnumerable<PaymentResult>>(new List<PaymentResult>());
+        var query = context.Set<Payment>()
+            .AsNoTracking()
+            .Where(payment => payment.Status == PaymentStatus.Failed)
+            .Where(payment => (payment.NextRetryAt != null && payment.NextRetryAt <= cutoff)
+                              || (payment.NextRetryAt == null && payment.UpdatedAt <= cutoff));
+
+        if (request.TenantId.HasValue)
+        {
+            query = query.Where(payment => payment.TenantId == request.TenantId.Value);
+        }
+
+        if (request.StartDate.HasValue)
+        {
+            query = query.Where(payment => (payment.NextRetryAt ?? payment.UpdatedAt) >= request.StartDate.Value);
+        }
+
+        if (request.EndDate.HasValue)
+        {
+            query = query.Where(payment => (payment.NextRetryAt ?? payment.UpdatedAt) <= request.EndDate.Value);
+        }
+
+        var payments = await query
+            .OrderBy(payment => payment.NextRetryAt ?? payment.UpdatedAt)
+            .ToListAsync(cancellationToken);
+
+        return payments.Select(PaymentQueryMapper.ToResult).ToList();
     }
 }

@@ -61,7 +61,15 @@ public class GetDefaultTenantQueryHandlerTests
         public Task<bool> IsSlugUniqueAsync(string slug, Guid? excludeId = null, CancellationToken cancellationToken = default) => throw new NotImplementedException();
         public Task<IEnumerable<Tenant>> GetActiveTenantsAsync(CancellationToken cancellationToken = default) => throw new NotImplementedException();
         public Task<IEnumerable<Tenant>> GetAllAsync(CancellationToken cancellationToken = default) => throw new NotImplementedException();
-        public Task<(IEnumerable<Tenant> Items, int TotalCount)> GetPagedAsync(int page, int pageSize, bool? isActive = null, CancellationToken cancellationToken = default) => throw new NotImplementedException();
+        public Task<(IEnumerable<Tenant> Items, int TotalCount)> GetPagedAsync(
+            int page,
+            int pageSize,
+            bool? isActive = null,
+            bool? isArchived = null,
+            string? searchTerm = null,
+            string? sortBy = "Name",
+            bool sortDescending = false,
+            CancellationToken cancellationToken = default) => throw new NotImplementedException();
         public Task<Tenant> CreateAsync(Tenant tenant, CancellationToken cancellationToken = default) => throw new NotImplementedException();
         public Task<Tenant> UpdateAsync(Tenant tenant, CancellationToken cancellationToken = default) => throw new NotImplementedException();
         public Task DeleteAsync(Guid id, CancellationToken cancellationToken = default) => throw new NotImplementedException();

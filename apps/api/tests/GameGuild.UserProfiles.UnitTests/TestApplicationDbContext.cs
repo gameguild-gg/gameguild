@@ -17,6 +17,6 @@ public class TestApplicationDbContext(DbContextOptions<ApplicationDbContext> opt
         // Ignore entities with Dictionary properties that can't be mapped by in-memory provider
         modelBuilder.Ignore<PermissionAuditLog>();
         modelBuilder.Ignore<PermissionDelegation>();
-        modelBuilder.Ignore<PermissionTemplate>();
+            modelBuilder.Ignore<PermissionTemplate>();
     }
 }

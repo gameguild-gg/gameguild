@@ -102,7 +102,7 @@ public record PhoneNumber
         }
 
         // Fallback: assume first 2–3 digits are the country code
-        return internationalNumber.Length >= 3 ? internationalNumber[..3] : internationalNumber;
+        return internationalNumber[..3];
     }
 
     public string GetDisplayFormat()

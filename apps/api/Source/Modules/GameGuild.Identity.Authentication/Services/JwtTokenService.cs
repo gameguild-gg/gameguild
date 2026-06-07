@@ -152,20 +152,7 @@ public sealed class JwtTokenService(
         try
         {
             var tokenHandler = new JwtSecurityTokenHandler();
-
-            var validationParameters = new TokenValidationParameters
-            {
-                ValidateIssuer = _jwtOptions.ValidateIssuer,
-                ValidateAudience = _jwtOptions.ValidateAudience,
-                ValidateLifetime = _jwtOptions.ValidateLifetime,
-                ValidateIssuerSigningKey = _jwtOptions.ValidateIssuerSigningKey,
-                ValidIssuer = _jwtOptions.Issuer,
-                ValidAudience = _jwtOptions.Audience,
-                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtOptions.SecretKey)),
-                ClockSkew = TimeSpan.FromSeconds(_jwtOptions.ClockSkewSeconds)
-            };
-
-            tokenHandler.ValidateToken(token, validationParameters, out _);
+            tokenHandler.ValidateToken(token, CreateValidationParameters(validateLifetime: _jwtOptions.ValidateLifetime), out _);
 
             logger.LogInformation("Token validated successfully");
 
@@ -400,8 +387,10 @@ public sealed class JwtTokenService(
     /// </summary>
     public ClaimsPrincipal GetPrincipalFromExpiredToken(string token)
     {
-        // This is a legacy method - implement if needed
-        throw new NotSupportedException("This method is not yet implemented. Use ValidateTokenAsync instead");
+        var tokenHandler = new JwtSecurityTokenHandler();
+        var principal = tokenHandler.ValidateToken(token, CreateValidationParameters(validateLifetime: false), out var securityToken);
+        EnsureExpectedSigningAlgorithm(securityToken);
+        return principal;
     }
 
     /// <summary>
@@ -409,9 +398,33 @@ public sealed class JwtTokenService(
     /// </summary>
     public ClaimsPrincipal ValidateToken(string token)
     {
-        // This is a legacy method - implement if needed
-        throw new NotSupportedException("This method is not yet implemented. Use ValidateTokenAsync instead");
+        var tokenHandler = new JwtSecurityTokenHandler();
+        var principal = tokenHandler.ValidateToken(token, CreateValidationParameters(validateLifetime: _jwtOptions.ValidateLifetime), out var securityToken);
+        EnsureExpectedSigningAlgorithm(securityToken);
+        return principal;
     }
 
     #endregion
+
+    private TokenValidationParameters CreateValidationParameters(bool validateLifetime)
+        => new()
+        {
+            ValidateIssuer = _jwtOptions.ValidateIssuer,
+            ValidateAudience = _jwtOptions.ValidateAudience,
+            ValidateLifetime = validateLifetime,
+            ValidateIssuerSigningKey = _jwtOptions.ValidateIssuerSigningKey,
+            ValidIssuer = _jwtOptions.Issuer,
+            ValidAudience = _jwtOptions.Audience,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtOptions.SecretKey)),
+            ClockSkew = TimeSpan.FromSeconds(_jwtOptions.ClockSkewSeconds)
+        };
+
+    private static void EnsureExpectedSigningAlgorithm(SecurityToken securityToken)
+    {
+        if (securityToken is not JwtSecurityToken jwtSecurityToken ||
+            !string.Equals(jwtSecurityToken.Header.Alg, SecurityAlgorithms.HmacSha256, StringComparison.Ordinal))
+        {
+            throw new SecurityTokenException("Invalid token signing algorithm.");
+        }
+    }
 }

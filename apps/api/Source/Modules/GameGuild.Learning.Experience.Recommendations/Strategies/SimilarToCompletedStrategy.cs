@@ -119,11 +119,12 @@ public class SimilarToCompletedStrategy(IApplicationDbContext context) : IRecomm
         try
         {
             // Could be comma-separated or JSON array
-            if (skillsJson.TrimStart().StartsWith("["))
+            var trimmed = skillsJson.TrimStart();
+            if (trimmed.StartsWith("[") || trimmed.Equals("null", StringComparison.OrdinalIgnoreCase))
             {
-                return System.Text.Json.JsonSerializer.Deserialize<List<string>>(skillsJson) ?? new List<string>();
+                return System.Text.Json.JsonSerializer.Deserialize<List<string>>(trimmed) ?? new List<string>();
             }
-            return skillsJson.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList();
+            return trimmed.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList();
         }
         catch
         {

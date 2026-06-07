@@ -126,18 +126,10 @@ public sealed class PasswordHasher(ILogger<PasswordHasher> logger, IConfiguratio
     {
         if (string.IsNullOrWhiteSpace(password)) { throw new ArgumentException("Password cannot be empty", nameof(password)); }
 
-        try
-        {
-            logger.LogDebug("Hashing password with BCrypt (work factor: {WorkFactor})", BCryptWorkFactor);
-            var passwordHash = BCrypt.Net.BCrypt.HashPassword(password, BCryptWorkFactor);
-            logger.LogDebug("Password hashed successfully");
-            return passwordHash;
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Error hashing password");
-            throw;
-        }
+        logger.LogDebug("Hashing password with BCrypt (work factor: {WorkFactor})", BCryptWorkFactor);
+        var passwordHash = BCrypt.Net.BCrypt.HashPassword(password, BCryptWorkFactor);
+        logger.LogDebug("Password hashed successfully");
+        return passwordHash;
     }
 
     /// <summary>
@@ -168,33 +160,25 @@ public sealed class PasswordHasher(ILogger<PasswordHasher> logger, IConfiguratio
     {
         if (string.IsNullOrWhiteSpace(hashedPassword)) { return false; }
 
-        try
+        var parts = hashedPassword.Split('$');
+
+        if (parts.Length < 3)
         {
-            var parts = hashedPassword.Split('$');
-
-            if (parts.Length < 3)
-            {
-                logger.LogWarning("Invalid BCrypt hash format");
-                return true;
-            }
-
-            if (!int.TryParse(parts[2], out var currentWorkFactor))
-            {
-                logger.LogWarning("Cannot parse BCrypt work factor");
-                return true;
-            }
-
-            var needsRehash = currentWorkFactor < BCryptWorkFactor;
-
-            if (needsRehash) { logger.LogInformation("Password hash needs rehashing: Current work factor {Current}, Required {Required}", currentWorkFactor, BCryptWorkFactor); }
-
-            return needsRehash;
+            logger.LogWarning("Invalid BCrypt hash format");
+            return true;
         }
-        catch (Exception ex)
+
+        if (!int.TryParse(parts[2], out var currentWorkFactor))
         {
-            logger.LogError(ex, "Error checking if password needs rehash");
-            return false;
+            logger.LogWarning("Cannot parse BCrypt work factor");
+            return true;
         }
+
+        var needsRehash = currentWorkFactor < BCryptWorkFactor;
+
+        if (needsRehash) { logger.LogInformation("Password hash needs rehashing: Current work factor {Current}, Required {Required}", currentWorkFactor, BCryptWorkFactor); }
+
+        return needsRehash;
     }
 
     /// <summary>

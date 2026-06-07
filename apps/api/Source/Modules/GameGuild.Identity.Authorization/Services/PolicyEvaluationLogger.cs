@@ -161,8 +161,10 @@ public sealed class PolicyEvaluationLogger : IPolicyEvaluationLogger
         if (endpoint == null) return null;
 
         // Check for PolicyDebugAttribute on the endpoint
-        var metadata = endpoint as Microsoft.AspNetCore.Http.Endpoint;
-        var attribute = metadata?.Metadata?.GetMetadata<PolicyDebugAttribute>();
+        if (endpoint is not Microsoft.AspNetCore.Http.Endpoint metadata)
+            return null;
+
+        var attribute = metadata.Metadata.GetMetadata<PolicyDebugAttribute>();
 
         if (attribute == null || !attribute.Enabled)
             return null;
@@ -186,10 +188,18 @@ public sealed class PolicyEvaluationLogger : IPolicyEvaluationLogger
 
     private static string GetUserId(ClaimsPrincipal user)
     {
-        return user.FindFirst(ClaimTypes.NameIdentifier)?.Value
-            ?? user.FindFirst("sub")?.Value
-            ?? user.Identity?.Name
-            ?? "(anonymous)";
+        var nameIdentifierClaim = user.FindFirst(ClaimTypes.NameIdentifier);
+        if (nameIdentifierClaim is not null)
+            return nameIdentifierClaim.Value;
+
+        var subjectClaim = user.FindFirst("sub");
+        if (subjectClaim is not null)
+            return subjectClaim.Value;
+
+        if (user.Identity is not null && user.Identity.Name is { } identityName)
+            return identityName;
+
+        return "(anonymous)";
     }
 
     private void LogUserClaims(string traceId, ClaimsPrincipal user)

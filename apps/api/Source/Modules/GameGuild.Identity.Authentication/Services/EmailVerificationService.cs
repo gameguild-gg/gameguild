@@ -1,119 +1,189 @@
+using GameGuild.CQRS;
 using GameGuild.Identity.Users;
 using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
 namespace GameGuild.Identity.Authentication;
 
 /// <summary>
-///     Implementation of email verification service that handles token generation, validation, and email sending coordination.
-///     Uses IMemoryCache for token/verification storage. In production, replace with IDistributedCache (Redis).
+///     Handles verification/reset token generation, validation, and email dispatch coordination.
 /// </summary>
-public class EmailVerificationService(ILogger<EmailVerificationService> logger, IConfiguration configuration, IMemoryCache memoryCache, IUserRepository? userRepository = null) : IEmailVerificationService
+public class EmailVerificationService(
+    ILogger<EmailVerificationService> logger,
+    IMemoryCache memoryCache,
+    IPublisher publisher,
+    IUserRepository? userRepository = null) : IEmailVerificationService
 {
     private const string TokenKeyPrefix = "emailverify:token:";
     private const string VerifiedKeyPrefix = "emailverify:verified:";
     private const string RateLimitKeyPrefix = "emailverify:ratelimit:";
+    private const string EmailVerificationTokenType = "email_verification";
+    private const string PasswordResetTokenType = "password_reset";
+    private const string MagicLinkTokenType = "magic_link";
 
     public Task<string> GenerateVerificationTokenAsync(Guid userId, string email)
+    {
+        return GenerateTokenAsync(userId, email, EmailVerificationTokenType, TimeSpan.FromHours(24));
+    }
+
+    public Task<string> GeneratePasswordResetTokenAsync(Guid userId, string email)
+    {
+        return GenerateTokenAsync(userId, email, PasswordResetTokenType, TimeSpan.FromHours(1));
+    }
+
+    public Task<string> GenerateMagicLinkTokenAsync(Guid userId, string email)
+    {
+        return GenerateTokenAsync(userId, email, MagicLinkTokenType, TimeSpan.FromMinutes(15));
+    }
+
+    private Task<string> GenerateTokenAsync(Guid userId, string email, string tokenType, TimeSpan lifetime)
     {
         try
         {
             var token = Guid.NewGuid().ToString("N");
-            var tokenInfo = new TokenInfo { UserId = userId, Email = email.ToLowerInvariant(), Type = "email_verification", ExpiresAt = SystemClock.UtcNow.AddHours(24) };
+            var tokenInfo = new TokenInfo
+            {
+                UserId = userId,
+                Email = email.ToLowerInvariant(),
+                Type = tokenType,
+                ExpiresAt = SystemClock.UtcNow.Add(lifetime)
+            };
 
             memoryCache.Set(TokenKeyPrefix + token, tokenInfo, new MemoryCacheEntryOptions
             {
                 AbsoluteExpiration = tokenInfo.ExpiresAt
-            });
-            logger.LogInformation("Generated email verification token for user {UserId}", userId);
+            }.SetSize(1));
 
+            logger.LogInformation("Generated {TokenType} token for user {UserId}", tokenType, userId);
             return Task.FromResult(token);
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error generating verification token for user {UserId}", userId);
-
+            logger.LogError(ex, "Error generating {TokenType} token for user {UserId}", tokenType, userId);
             throw;
         }
     }
 
-    public Task SendVerificationEmailAsync(string email, string token, string? userName = null)
+    public async Task SendVerificationEmailAsync(string email, string token, string? userName = null)
     {
         try
         {
-            // PLANNED: Integrate with IEmailService (SendGrid, SMTP, etc.) when Communication module
-            // exposes email dispatch infrastructure. Currently logs the verification link.
-            var verificationLink = $"{configuration["App:BaseUrl"]}/verify-email?token={token}";
-            logger.LogInformation("Email verification link for {Email} (User: {UserName}): {VerificationLink}", email, userName ?? "Unknown", verificationLink);
+            await publisher.Publish(
+                new EmailVerificationRequestedNotification
+                {
+                    Email = email,
+                    Token = token,
+                    UserName = userName
+                }).ConfigureAwait(false);
 
-            // PLANNED: Send actual email via IEmailService.SendAsync when available.
-            // Example:
-            // await _emailService.SendAsync(new EmailMessage
-            // {
-            //     To = email,
-            //     Subject = "Verify Your Email Address",
-            //     Body = $"Hi {userName},\n\nPlease verify your email by clicking: {verificationLink}"
-            // });
-
-            return Task.CompletedTask;
+            logger.LogInformation("Verification email queued for {Email}", email);
         }
         catch (Exception ex)
         {
             logger.LogError(ex, "Error sending verification email to {Email}", email);
-
             throw;
         }
     }
 
-    public Task<bool> VerifyEmailTokenAsync(Guid userId, string token)
+    public async Task<bool> VerifyEmailTokenAsync(Guid userId, string token)
+    {
+        var result = await ValidateAndConsumeTokenAsync(
+            token,
+            EmailVerificationTokenType,
+            userId,
+            markEmailVerified: true).ConfigureAwait(false);
+
+        return result.Success;
+    }
+
+    public Task<TokenValidationResult> VerifyEmailTokenAsync(string token)
+    {
+        return ValidateAndConsumeTokenAsync(
+            token,
+            EmailVerificationTokenType,
+            expectedUserId: null,
+            markEmailVerified: true);
+    }
+
+    public Task<TokenValidationResult> VerifyPasswordResetTokenAsync(string token)
+    {
+        return ValidateAndConsumeTokenAsync(
+            token,
+            PasswordResetTokenType,
+            expectedUserId: null,
+            markEmailVerified: false);
+    }
+
+    public Task<TokenValidationResult> VerifyMagicLinkTokenAsync(string token)
+    {
+        return ValidateAndConsumeTokenAsync(
+            token,
+            MagicLinkTokenType,
+            expectedUserId: null,
+            markEmailVerified: false);
+    }
+
+    private Task<TokenValidationResult> ValidateAndConsumeTokenAsync(
+        string token,
+        string expectedType,
+        Guid? expectedUserId,
+        bool markEmailVerified)
     {
         try
         {
-            if (!memoryCache.TryGetValue(TokenKeyPrefix + token, out TokenInfo? tokenInfo) || tokenInfo == null)
+            if (string.IsNullOrWhiteSpace(token))
             {
-                logger.LogWarning("Invalid verification token used for user {UserId}", userId);
-
-                return Task.FromResult(false);
+                logger.LogWarning("Empty {TokenType} token used", expectedType);
+                return Task.FromResult(TokenValidationResult.Failed("Token is required"));
             }
 
-            if (tokenInfo.UserId != userId)
+            if (!memoryCache.TryGetValue(TokenKeyPrefix + token, out TokenInfo? tokenInfo) || tokenInfo == null)
             {
-                logger.LogWarning("Token user ID mismatch. Expected {ExpectedUserId}, got {ActualUserId}", tokenInfo.UserId, userId);
+                logger.LogWarning("Invalid {TokenType} token used", expectedType);
+                return Task.FromResult(TokenValidationResult.Failed("Invalid token"));
+            }
 
-                return Task.FromResult(false);
+            if (expectedUserId.HasValue && tokenInfo.UserId != expectedUserId.Value)
+            {
+                logger.LogWarning(
+                    "Token user ID mismatch. Expected {ExpectedUserId}, got {ActualUserId}",
+                    tokenInfo.UserId,
+                    expectedUserId);
+
+                return Task.FromResult(TokenValidationResult.Failed("Token does not belong to the requested user"));
             }
 
             if (tokenInfo.ExpiresAt < SystemClock.UtcNow)
             {
                 memoryCache.Remove(TokenKeyPrefix + token);
-                logger.LogWarning("Expired verification token used for user {UserId}", userId);
-
-                return Task.FromResult(false);
+                logger.LogWarning("Expired {TokenType} token used for user {UserId}", expectedType, tokenInfo.UserId);
+                return Task.FromResult(TokenValidationResult.Failed("Expired token"));
             }
 
-            if (tokenInfo.Type != "email_verification")
+            if (tokenInfo.Type != expectedType)
             {
-                logger.LogWarning("Invalid token type {TokenType} for email verification", tokenInfo.Type);
+                logger.LogWarning(
+                    "Invalid token type {ActualTokenType}; expected {ExpectedTokenType}",
+                    tokenInfo.Type,
+                    expectedType);
 
-                return Task.FromResult(false);
+                return Task.FromResult(TokenValidationResult.Failed("Invalid token type"));
             }
 
-            // Mark email as verified (no expiration — stays until app restarts or cache eviction)
-            memoryCache.Set(VerifiedKeyPrefix + userId, true);
+            if (markEmailVerified)
+            {
+                memoryCache.Set(VerifiedKeyPrefix + tokenInfo.UserId, true, new MemoryCacheEntryOptions().SetSize(1));
+            }
 
-            // Remove used token
             memoryCache.Remove(TokenKeyPrefix + token);
 
-            logger.LogInformation("Email verified successfully for user {UserId}", userId);
-
-            return Task.FromResult(true);
+            logger.LogInformation("{TokenType} token consumed successfully for user {UserId}", expectedType, tokenInfo.UserId);
+            return Task.FromResult(new TokenValidationResult(true, tokenInfo.UserId, tokenInfo.Email));
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error verifying email token for user {UserId}", userId);
-
-            return Task.FromResult(false);
+            logger.LogError(ex, "Error verifying {TokenType} token", expectedType);
+            return Task.FromResult(TokenValidationResult.Failed("Token verification failed"));
         }
     }
 
@@ -121,7 +191,6 @@ public class EmailVerificationService(ILogger<EmailVerificationService> logger, 
     {
         try
         {
-            // Check database for actual email verification status via IUserRepository
             if (userRepository is not null)
             {
                 var user = await userRepository.GetByIdAsync(userId).ConfigureAwait(false);
@@ -131,15 +200,11 @@ public class EmailVerificationService(ILogger<EmailVerificationService> logger, 
                 }
             }
 
-            // Fallback to in-memory cache when IUserRepository is unavailable or user not found
-            var isVerified = memoryCache.TryGetValue(VerifiedKeyPrefix + userId, out bool verified) && verified;
-
-            return isVerified;
+            return memoryCache.TryGetValue(VerifiedKeyPrefix + userId, out bool verified) && verified;
         }
         catch (Exception ex)
         {
             logger.LogError(ex, "Error checking email verification status for user {UserId}", userId);
-
             return false;
         }
     }
@@ -150,39 +215,35 @@ public class EmailVerificationService(ILogger<EmailVerificationService> logger, 
         {
             var rateLimitKey = RateLimitKeyPrefix + $"{userId}:{email.ToLowerInvariant()}";
 
-            // Check rate limiting (1 email per 2 minutes)
             if (memoryCache.TryGetValue(rateLimitKey, out DateTime lastSent))
             {
                 var timeSinceLastSent = SystemClock.UtcNow - lastSent;
 
                 if (timeSinceLastSent < TimeSpan.FromMinutes(2))
                 {
-                    logger.LogWarning("Rate limit exceeded for resending verification email to user {UserId}. Last sent {Seconds} seconds ago", userId, timeSinceLastSent.TotalSeconds);
+                    logger.LogWarning(
+                        "Rate limit exceeded for resending verification email to user {UserId}. Last sent {Seconds} seconds ago",
+                        userId,
+                        timeSinceLastSent.TotalSeconds);
 
                     return false;
                 }
             }
 
-            // Generate new token
             var token = await GenerateVerificationTokenAsync(userId, email).ConfigureAwait(false);
-
-            // Send email
             await SendVerificationEmailAsync(email, token).ConfigureAwait(false);
 
-            // Update rate limit with sliding expiration
             memoryCache.Set(rateLimitKey, SystemClock.UtcNow, new MemoryCacheEntryOptions
             {
                 AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(2)
-            });
+            }.SetSize(1));
 
             logger.LogInformation("Resent verification email to user {UserId}", userId);
-
             return true;
         }
         catch (Exception ex)
         {
             logger.LogError(ex, "Error resending verification email for user {UserId}", userId);
-
             return false;
         }
     }
@@ -191,16 +252,21 @@ public class EmailVerificationService(ILogger<EmailVerificationService> logger, 
     {
         try
         {
-            if (!memoryCache.TryGetValue(TokenKeyPrefix + token, out TokenInfo? tokenInfo) || tokenInfo == null) { return Task.FromResult(false); }
+            if (!memoryCache.TryGetValue(TokenKeyPrefix + token, out TokenInfo? tokenInfo) || tokenInfo == null)
+            {
+                return Task.FromResult(false);
+            }
 
-            var isValid = tokenInfo.ExpiresAt >= SystemClock.UtcNow && tokenInfo.Type == "email_verification";
+            var isValid = tokenInfo.ExpiresAt >= SystemClock.UtcNow &&
+                (tokenInfo.Type == EmailVerificationTokenType ||
+                 tokenInfo.Type == PasswordResetTokenType ||
+                 tokenInfo.Type == MagicLinkTokenType);
 
             return Task.FromResult(isValid);
         }
         catch (Exception ex)
         {
             logger.LogError(ex, "Error checking token validity");
-
             return Task.FromResult(false);
         }
     }

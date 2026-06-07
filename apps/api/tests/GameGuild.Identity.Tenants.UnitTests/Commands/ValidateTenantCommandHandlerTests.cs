@@ -187,6 +187,18 @@ public class ValidateTenantCommandHandlerTests
     }
 
     [Fact]
+    public async Task Handle_Should_Return_Error_For_Null_AdminEmail()
+    {
+        _tenantRepositoryMock.Setup(r => r.IsSlugUniqueAsync("valid-slug", null, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+
+        var result = await _handler.Handle(new ValidateTenantCommand("Valid Name", "valid-slug", null!), CancellationToken.None);
+
+        result.IsValid.Should().BeFalse();
+        result.Errors.Should().Contain(e => e.Field == "adminEmail" && e.Code == "REQUIRED");
+    }
+
+    [Fact]
     public async Task Handle_Should_Warn_For_Personal_Email_Domain()
     {
         _tenantRepositoryMock.Setup(r => r.IsSlugUniqueAsync("valid-slug", null, It.IsAny<CancellationToken>()))

@@ -4,17 +4,17 @@ namespace GameGuild.Projects.UnitTests.Handlers;
 
 public class ProjectHandlersIntegrationTests : IDisposable
 {
-    private readonly ApplicationDbContext _context;
+    private readonly TestProjectsDbContext _context;
     private readonly TestDataBuilder _testDataBuilder;
     private readonly Guid _testUserId;
 
     public ProjectHandlersIntegrationTests()
     {
-        var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+        var options = new DbContextOptionsBuilder<TestProjectsDbContext>()
             .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
             .Options;
 
-        _context = new ApplicationDbContext(options);
+        _context = new TestProjectsDbContext(options);
         _testDataBuilder = new TestDataBuilder();
         _testUserId = Guid.NewGuid();
     }
@@ -34,11 +34,11 @@ public class ProjectHandlersIntegrationTests : IDisposable
         project.Type = ProjectType.Game;
 
         // Act
-        _context.Projects.Add(project);
+        _context.Set<Project>().Add(project);
         await _context.SaveChangesAsync();
 
         // Retrieve the project
-        var retrievedProject = await _context.Projects.FirstOrDefaultAsync(p => p.Id == project.Id);
+        var retrievedProject = await _context.Set<Project>().FirstOrDefaultAsync(p => p.Id == project.Id);
 
         // Assert
         retrievedProject.Should().NotBeNull();
@@ -59,11 +59,11 @@ public class ProjectHandlersIntegrationTests : IDisposable
         project2.Slug = "test-project-2";
 
         // Act
-        _context.Projects.AddRange(project1, project2);
+        _context.Set<Project>().AddRange(project1, project2);
         await _context.SaveChangesAsync();
 
         // Assert
-        var projects = await _context.Projects.ToListAsync();
+        var projects = await _context.Set<Project>().ToListAsync();
         projects.Should().HaveCount(2);
         projects[0].Slug.Should().NotBe(projects[1].Slug);
     }
@@ -73,7 +73,7 @@ public class ProjectHandlersIntegrationTests : IDisposable
     {
         // Arrange
         var project = _testDataBuilder.CreateProject(createdById: _testUserId);
-        _context.Projects.Add(project);
+        _context.Set<Project>().Add(project);
 
         var collaborator = new ProjectCollaborator
         {
@@ -104,30 +104,27 @@ public class ProjectHandlersIntegrationTests : IDisposable
     {
         // Arrange
         var project = _testDataBuilder.CreateProject(createdById: _testUserId);
-        _context.Projects.Add(project);
+        _context.Set<Project>().Add(project);
 
-        var stats = new ProjectStatistics
+        var stats = new ProjectMetadata
         {
-            Id = Guid.NewGuid(),
             ProjectId = project.Id,
             ViewCount = 100,
             DownloadCount = 50,
-            LikeCount = 25,
             FollowerCount = 10
         };
-        _context.Set<ProjectStatistics>().Add(stats);
+        _context.Set<ProjectMetadata>().Add(stats);
 
         // Act
         await _context.SaveChangesAsync();
 
         // Assert
-        var savedStats = await _context.Set<ProjectStatistics>()
+        var savedStats = await _context.Set<ProjectMetadata>()
             .FirstOrDefaultAsync(s => s.ProjectId == project.Id);
         
         savedStats.Should().NotBeNull();
         savedStats!.ViewCount.Should().Be(100);
         savedStats.DownloadCount.Should().Be(50);
-        savedStats.LikeCount.Should().Be(25);
         savedStats.FollowerCount.Should().Be(10);
     }
 
@@ -136,14 +133,14 @@ public class ProjectHandlersIntegrationTests : IDisposable
     {
         // Arrange
         var project = _testDataBuilder.CreateProject(createdById: _testUserId);
-        _context.Projects.Add(project);
+        _context.Set<Project>().Add(project);
 
         var metadata = new ProjectMetadata
         {
-            Id = Guid.NewGuid(),
             ProjectId = project.Id,
-            Key = "engine",
-            Value = "Unity"
+            ViewCount = 12,
+            DownloadCount = 4,
+            FollowerCount = 2
         };
         _context.Set<ProjectMetadata>().Add(metadata);
 
@@ -155,7 +152,8 @@ public class ProjectHandlersIntegrationTests : IDisposable
             .FirstOrDefaultAsync(m => m.ProjectId == project.Id);
         
         savedMetadata.Should().NotBeNull();
-        savedMetadata!.Key.Should().Be("engine");
-        savedMetadata.Value.Should().Be("Unity");
+        savedMetadata!.ViewCount.Should().Be(12);
+        savedMetadata.DownloadCount.Should().Be(4);
+        savedMetadata.FollowerCount.Should().Be(2);
     }
 }

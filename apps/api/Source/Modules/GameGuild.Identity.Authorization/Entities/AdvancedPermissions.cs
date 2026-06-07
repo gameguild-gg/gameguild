@@ -328,7 +328,16 @@ public class DelegatedAdminScope
         if (!IsActive) return false;
 
         var now = SystemClock.UtcNow;
-        return now >= StartsAt && (ExpiresAt == null || now < ExpiresAt);
+        if (now < StartsAt)
+            return false;
+
+        if (ExpiresAt is null)
+            return true;
+
+        if (now >= ExpiresAt.Value)
+            return false;
+
+        return true;
     }
 
     /// <summary>

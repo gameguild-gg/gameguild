@@ -46,6 +46,6 @@ public class CapabilityAuditLogConfiguration : IEntityTypeConfiguration<Capabili
         // Index for querying by user
         builder.HasIndex(x => x.ChangedByUserId)
             .HasDatabaseName("ix_capability_audit_logs_user")
-            .HasFilter("changed_by_user_id IS NOT NULL");
+            .HasFilter("\"ChangedByUserId\" IS NOT NULL");
     }
 }

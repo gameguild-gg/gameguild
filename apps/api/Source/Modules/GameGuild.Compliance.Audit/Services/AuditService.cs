@@ -319,9 +319,10 @@ public class AuditService(IApplicationDbContext context, IHttpContextAccessor ht
 
     private Guid? GetSessionId(HttpContext? httpContext)
     {
-        if (httpContext?.User?.FindFirst("session_id")?.Value is string sessionIdStr && Guid.TryParse(sessionIdStr, out var sessionId)) { return sessionId; }
+        if (httpContext == null) { return null; }
 
-        return null;
+        var sessionIdValue = httpContext.User.FindFirst("session_id")?.Value;
+        return Guid.TryParse(sessionIdValue, out var sessionId) ? sessionId : null;
     }
 
     private string? GetCorrelationId(HttpContext? httpContext) { return httpContext?.Request.Headers["X-Correlation-ID"].FirstOrDefault(); }

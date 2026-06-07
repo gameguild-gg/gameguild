@@ -20,6 +20,7 @@ public sealed class ReplaceUserAccessibilityPreferencesCommandHandler(IUserRepos
 
         preferences.SetAccessibilityPreferences(JsonValueDictionary.ToObjects(request.Request.AccessibilityPreferences));
         await preferencesRepository.UpdateAsync(preferences, cancellationToken).ConfigureAwait(false);
+        await preferencesRepository.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         return Unit.Value;
     }
 }

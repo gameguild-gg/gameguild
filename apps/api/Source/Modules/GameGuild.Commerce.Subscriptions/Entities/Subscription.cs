@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
@@ -107,7 +107,7 @@ public class Subscription : StatefulEntity<SubscriptionStatus>, ISubscription
     /// <exception cref="InvalidOperationException">Thrown if already set to a different order</exception>
     public void SetFulfilledOrderId(Guid orderId)
     {
-        if (FulfilledOrderId.HasValue && FulfilledOrderId != orderId)
+        if (FulfilledOrderId is Guid existingOrderId && existingOrderId != orderId)
             throw new InvalidOperationException($"Subscription {Id} already linked to order {FulfilledOrderId}");
         
         FulfilledOrderId = orderId;

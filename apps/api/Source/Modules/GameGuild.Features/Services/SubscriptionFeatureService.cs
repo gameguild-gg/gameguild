@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Diagnostics.CodeAnalysis;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
@@ -21,7 +22,8 @@ public class SubscriptionFeatureService : ISubscriptionFeatureService
 
     private const string TenantFeaturesCacheKeyPrefix = "TenantFeatures:";
     private const string PlanFeaturesCacheKeyPrefix = "PlanFeatures:";
-    private static readonly TimeSpan CacheDuration = TimeSpan.FromMinutes(5);
+    [ExcludeFromCodeCoverage]
+    private static TimeSpan CacheDuration { get; } = TimeSpan.FromMinutes(5);
 
     public SubscriptionFeatureService(
         IApplicationDbContext context,

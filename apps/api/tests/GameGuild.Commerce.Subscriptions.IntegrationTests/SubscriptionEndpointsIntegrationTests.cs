@@ -1,5 +1,6 @@
 using FluentAssertions;
 using GameGuild.API.Database;
+using GameGuild.Commerce.Payments;
 using GameGuild.Commerce.Subscriptions.IntegrationTests.Infrastructure;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Hosting;
@@ -58,6 +59,12 @@ public class SubscriptionEndpointsIntegrationTests : IClassFixture<WebApplicatio
                 // Add HTTP logging services (required by the pipeline)
                 services.AddHttpLogging(o => { });
 
+                services.PostConfigure<StripeGatewayOptions>(options =>
+                {
+                    options.UseSimulation = true;
+                    options.ApiKey = string.Empty;
+                });
+
                 // Override authentication with the test handler
                 services.AddAuthentication(options =>
                 {
@@ -75,6 +82,8 @@ public class SubscriptionEndpointsIntegrationTests : IClassFixture<WebApplicatio
 
     private async Task<Guid> SeedSubscriptionPlanAsync()
     {
+        SubscriptionTestTenantSeeder.EnsureTenantExists(_factory.Services, _tenantId);
+
         using var scope = _factory.Services.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
@@ -90,6 +99,33 @@ public class SubscriptionEndpointsIntegrationTests : IClassFixture<WebApplicatio
         await dbContext.SaveChangesAsync();
 
         return plan.Id;
+    }
+
+    private async Task<Guid> CreateSubscriptionAsync(Guid planId)
+    {
+        var createRequest = new
+        {
+            TenantId = _tenantId,
+            PlanId = planId,
+            CreatedByUserId = Guid.NewGuid(),
+            BillingCycle = 1,
+            Amount = 29.99m,
+            Currency = "USD",
+            StartDate = (DateTime?)null,
+            TrialDays = (int?)null
+        };
+
+        var createResponse = await _client.PostAsJsonAsync("/api/v1/subscriptions", createRequest);
+        createResponse.EnsureSuccessStatusCode();
+
+        var responseContent = await createResponse.Content.ReadAsStringAsync();
+        var subscription = System.Text.Json.JsonDocument.Parse(responseContent).RootElement;
+
+        return subscription.TryGetProperty("id", out var idProp)
+            ? idProp.GetGuid()
+            : subscription.TryGetProperty("Id", out var idPropCap)
+                ? idPropCap.GetGuid()
+                : throw new Exception($"Could not find id property in response: {responseContent}");
     }
 
     [Fact]
@@ -114,6 +150,55 @@ public class SubscriptionEndpointsIntegrationTests : IClassFixture<WebApplicatio
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Created);
+    }
+
+    [Fact]
+    public async Task ProcessPayment_ShouldActivateSubscription_AndRecordLastPaymentAt()
+    {
+        // Arrange
+        var planId = await SeedSubscriptionPlanAsync();
+        var subscriptionId = await CreateSubscriptionAsync(planId);
+
+        var paymentRequest = new
+        {
+            TenantId = _tenantId,
+            SubscriptionId = subscriptionId,
+            Amount = 29.99m,
+            PaymentMethodId = "pm_test_card"
+        };
+
+        // Act
+        var paymentResponse = await _client.PostAsJsonAsync("/api/v1/payments", paymentRequest);
+        paymentResponse.StatusCode.Should().Be(HttpStatusCode.Created);
+
+        var getResponse = await _client.GetAsync($"/api/v1/subscriptions/{subscriptionId}");
+
+        // Assert
+        getResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var responseContent = await getResponse.Content.ReadAsStringAsync();
+        var subscription = System.Text.Json.JsonDocument.Parse(responseContent).RootElement;
+
+        var status = subscription.TryGetProperty("status", out var statusProp)
+            ? statusProp.GetString()
+            : subscription.TryGetProperty("Status", out var statusPropCap)
+                ? statusPropCap.GetString()
+                : null;
+
+        var isActive = subscription.TryGetProperty("isActive", out var isActiveProp)
+            ? isActiveProp.GetBoolean()
+            : subscription.TryGetProperty("IsActive", out var isActivePropCap)
+                && isActivePropCap.GetBoolean();
+
+        var lastPaymentAtPresent = subscription.TryGetProperty("lastPaymentAt", out var lastPaymentProp)
+            ? lastPaymentProp.ValueKind != System.Text.Json.JsonValueKind.Null && lastPaymentProp.ValueKind != System.Text.Json.JsonValueKind.Undefined
+            : subscription.TryGetProperty("LastPaymentAt", out var lastPaymentPropCap)
+                && lastPaymentPropCap.ValueKind != System.Text.Json.JsonValueKind.Null
+                && lastPaymentPropCap.ValueKind != System.Text.Json.JsonValueKind.Undefined;
+
+        status.Should().Be("Active");
+        isActive.Should().BeTrue();
+        lastPaymentAtPresent.Should().BeTrue();
     }
 
     [Fact]

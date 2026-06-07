@@ -10,7 +10,7 @@ public class TestingParticipantOperationsService(IApplicationDbContext context) 
 
     public async Task<TestingParticipant> AddParticipantAsync(Guid testingRequestId, Guid userId)
     {
-        var existingParticipant = await context.TestingParticipants
+        var existingParticipant = await context.Set<TestingParticipant>()
             .FirstOrDefaultAsync(tp => tp.TestingRequestId == testingRequestId && tp.UserId == userId);
 
         if (existingParticipant != null) return existingParticipant;
@@ -22,10 +22,10 @@ public class TestingParticipantOperationsService(IApplicationDbContext context) 
             UserId = userId
         };
 
-        context.TestingParticipants.Add(participant);
+        context.Set<TestingParticipant>().Add(participant);
         await context.SaveChangesAsync().ConfigureAwait(false);
 
-        return await context.TestingParticipants
+        return await context.Set<TestingParticipant>()
             .Include(tp => tp.TestingRequest)
             .Include(tp => tp.User)
             .FirstAsync(tp => tp.Id == participant.Id);
@@ -33,12 +33,12 @@ public class TestingParticipantOperationsService(IApplicationDbContext context) 
 
     public async Task<bool> RemoveParticipantAsync(Guid testingRequestId, Guid userId)
     {
-        var participant = await context.TestingParticipants
+        var participant = await context.Set<TestingParticipant>()
             .FirstOrDefaultAsync(tp => tp.TestingRequestId == testingRequestId && tp.UserId == userId);
 
         if (participant == null) return false;
 
-        context.TestingParticipants.Remove(participant);
+        context.Set<TestingParticipant>().Remove(participant);
         await context.SaveChangesAsync().ConfigureAwait(false);
 
         return true;
@@ -46,7 +46,7 @@ public class TestingParticipantOperationsService(IApplicationDbContext context) 
 
     public async Task<IEnumerable<TestingParticipant>> GetTestingRequestParticipantsAsync(Guid testingRequestId)
     {
-        return await context.TestingParticipants
+        return await context.Set<TestingParticipant>()
             .Where(tp => tp.TestingRequestId == testingRequestId)
             .Include(tp => tp.User)
             .OrderBy(tp => tp.CreatedAt)
@@ -55,7 +55,7 @@ public class TestingParticipantOperationsService(IApplicationDbContext context) 
 
     public async Task<bool> IsUserParticipantAsync(Guid testingRequestId, Guid userId)
     {
-        return await context.TestingParticipants
+        return await context.Set<TestingParticipant>()
             .AnyAsync(tp => tp.TestingRequestId == testingRequestId && tp.UserId == userId);
     }
 
@@ -65,7 +65,7 @@ public class TestingParticipantOperationsService(IApplicationDbContext context) 
 
     public async Task<SessionRegistration> RegisterForSessionAsync(Guid sessionId, Guid userId, RegistrationType registrationType, string? notes = null)
     {
-        var existingRegistration = await context.SessionRegistrations
+        var existingRegistration = await context.Set<SessionRegistration>()
             .FirstOrDefaultAsync(sr => sr.SessionId == sessionId && sr.UserId == userId);
 
         if (existingRegistration != null) return existingRegistration;
@@ -79,9 +79,9 @@ public class TestingParticipantOperationsService(IApplicationDbContext context) 
             RegistrationNotes = notes
         };
 
-        context.SessionRegistrations.Add(registration);
+        context.Set<SessionRegistration>().Add(registration);
 
-        var session = await context.TestingSessions.FindAsync(sessionId).ConfigureAwait(false);
+        var session = await context.Set<TestingSession>().FindAsync(sessionId).ConfigureAwait(false);
 
         if (session != null)
         {
@@ -93,7 +93,7 @@ public class TestingParticipantOperationsService(IApplicationDbContext context) 
 
         await context.SaveChangesAsync().ConfigureAwait(false);
 
-        return await context.SessionRegistrations
+        return await context.Set<SessionRegistration>()
             .Include(sr => sr.Session)
             .Include(sr => sr.User)
             .FirstAsync(sr => sr.Id == registration.Id);
@@ -101,12 +101,12 @@ public class TestingParticipantOperationsService(IApplicationDbContext context) 
 
     public async Task<bool> UnregisterFromSessionAsync(Guid sessionId, Guid userId)
     {
-        var registration = await context.SessionRegistrations
+        var registration = await context.Set<SessionRegistration>()
             .FirstOrDefaultAsync(sr => sr.SessionId == sessionId && sr.UserId == userId);
 
         if (registration == null) return false;
 
-        var session = await context.TestingSessions.FindAsync(sessionId).ConfigureAwait(false);
+        var session = await context.Set<TestingSession>().FindAsync(sessionId).ConfigureAwait(false);
 
         if (session != null)
         {
@@ -116,7 +116,7 @@ public class TestingParticipantOperationsService(IApplicationDbContext context) 
                 session.RegisteredProjectMemberCount = Math.Max(0, session.RegisteredProjectMemberCount - 1);
         }
 
-        context.SessionRegistrations.Remove(registration);
+        context.Set<SessionRegistration>().Remove(registration);
         await context.SaveChangesAsync().ConfigureAwait(false);
 
         return true;
@@ -124,7 +124,7 @@ public class TestingParticipantOperationsService(IApplicationDbContext context) 
 
     public async Task<IEnumerable<SessionRegistration>> GetSessionRegistrationsAsync(Guid sessionId)
     {
-        return await context.SessionRegistrations
+        return await context.Set<SessionRegistration>()
             .Where(sr => sr.SessionId == sessionId)
             .Include(sr => sr.User)
             .OrderBy(sr => sr.CreatedAt)
@@ -137,12 +137,12 @@ public class TestingParticipantOperationsService(IApplicationDbContext context) 
 
     public async Task<SessionWaitlist> AddToWaitlistAsync(Guid sessionId, Guid userId, RegistrationType registrationType, string? notes = null)
     {
-        var existingWaitlist = await context.SessionWaitlists
+        var existingWaitlist = await context.Set<SessionWaitlist>()
             .FirstOrDefaultAsync(sw => sw.SessionId == sessionId && sw.UserId == userId);
 
         if (existingWaitlist != null) return existingWaitlist;
 
-        var maxPosition = await context.SessionWaitlists
+        var maxPosition = await context.Set<SessionWaitlist>()
             .Where(sw => sw.SessionId == sessionId)
             .MaxAsync(sw => (int?)sw.Position) ?? 0;
 
@@ -156,10 +156,10 @@ public class TestingParticipantOperationsService(IApplicationDbContext context) 
             RegistrationNotes = notes,
         };
 
-        context.SessionWaitlists.Add(waitlistEntry);
+        context.Set<SessionWaitlist>().Add(waitlistEntry);
         await context.SaveChangesAsync().ConfigureAwait(false);
 
-        return await context.SessionWaitlists
+        return await context.Set<SessionWaitlist>()
             .Include(sw => sw.Session)
             .Include(sw => sw.User)
             .FirstAsync(sw => sw.Id == waitlistEntry.Id);
@@ -167,16 +167,16 @@ public class TestingParticipantOperationsService(IApplicationDbContext context) 
 
     public async Task<bool> RemoveFromWaitlistAsync(Guid sessionId, Guid userId)
     {
-        var waitlistEntry = await context.SessionWaitlists
+        var waitlistEntry = await context.Set<SessionWaitlist>()
             .FirstOrDefaultAsync(sw => sw.SessionId == sessionId && sw.UserId == userId);
 
         if (waitlistEntry == null) return false;
 
         var removedPosition = waitlistEntry.Position;
 
-        context.SessionWaitlists.Remove(waitlistEntry);
+        context.Set<SessionWaitlist>().Remove(waitlistEntry);
 
-        var remainingEntries = await context.SessionWaitlists
+        var remainingEntries = await context.Set<SessionWaitlist>()
             .Where(sw => sw.SessionId == sessionId && sw.Position > removedPosition)
             .ToListAsync();
 
@@ -189,7 +189,7 @@ public class TestingParticipantOperationsService(IApplicationDbContext context) 
 
     public async Task<IEnumerable<SessionWaitlist>> GetSessionWaitlistAsync(Guid sessionId)
     {
-        return await context.SessionWaitlists
+        return await context.Set<SessionWaitlist>()
             .Where(sw => sw.SessionId == sessionId)
             .Include(sw => sw.User)
             .OrderBy(sw => sw.Position)
@@ -202,11 +202,11 @@ public class TestingParticipantOperationsService(IApplicationDbContext context) 
 
     public async Task<object> GetUserTestingActivityAsync(Guid userId)
     {
-        var participationCount = await context.TestingParticipants.CountAsync(tp => tp.UserId == userId);
-        var sessionRegistrationCount = await context.SessionRegistrations.CountAsync(sr => sr.UserId == userId);
-        var feedbackCount = await context.TestingFeedback.CountAsync(tf => tf.UserId == userId);
-        var managedSessionCount = await context.TestingSessions.CountAsync(ts => ts.ManagerUserId == userId && ts.DeletedAt == null);
-        var createdRequestCount = await context.TestingRequests.CountAsync(tr => tr.CreatedById == userId && tr.DeletedAt == null);
+        var participationCount = await context.Set<TestingParticipant>().CountAsync(tp => tp.UserId == userId);
+        var sessionRegistrationCount = await context.Set<SessionRegistration>().CountAsync(sr => sr.UserId == userId);
+        var feedbackCount = await context.Set<TestingFeedback>().CountAsync(tf => tf.UserId == userId);
+        var managedSessionCount = await context.Set<TestingSession>().CountAsync(ts => ts.ManagerUserId == userId && ts.DeletedAt == null);
+        var createdRequestCount = await context.Set<TestingRequest>().CountAsync(tr => tr.CreatedById == userId && tr.DeletedAt == null);
 
         return new
         {

@@ -102,6 +102,28 @@ public class AssessmentEntityTests
         assessment.MaxAttempts.Should().Be(5);
         assessment.IsRequired.Should().BeFalse();
     }
+
+    [Fact]
+    public void Update_WithContentId_ShouldSetContentId()
+    {
+        var assessment = Assessment.Create(Guid.NewGuid(), "Title", AssessmentType.Quiz, 100, 50);
+        var contentId = Guid.NewGuid();
+
+        assessment.Update(null, null, null, null, null, null, null, null, null, contentId);
+
+        assessment.ContentId.Should().Be(contentId);
+    }
+
+    [Fact]
+    public void Update_WithClearContentId_ShouldClearContentId()
+    {
+        var assessment = Assessment.Create(Guid.NewGuid(), "Title", AssessmentType.Quiz, 100, 50);
+        assessment.Update(null, null, null, null, null, null, null, null, null, Guid.NewGuid());
+
+        assessment.Update(null, null, null, null, null, null, null, null, null, null, clearContentId: true);
+
+        assessment.ContentId.Should().BeNull();
+    }
 }
 
 /// <summary>

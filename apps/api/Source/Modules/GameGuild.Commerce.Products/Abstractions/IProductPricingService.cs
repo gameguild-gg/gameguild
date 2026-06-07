@@ -1,4 +1,4 @@
-﻿namespace GameGuild.Commerce.Products;
+namespace GameGuild.Commerce.Products;
 
 /// <summary> Interface for product pricing services with immutable versioning support </summary>
 public interface IProductPricingService {

@@ -1,4 +1,4 @@
-﻿namespace GameGuild.Commerce.Billing;
+namespace GameGuild.Commerce.Billing;
 
 /// <summary>
 ///     Webhook processing configuration

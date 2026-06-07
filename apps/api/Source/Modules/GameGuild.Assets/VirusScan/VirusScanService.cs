@@ -1,3 +1,6 @@
+using System.Buffers.Binary;
+using System.Net.Sockets;
+using System.Text;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
@@ -74,6 +77,31 @@ public class VirusScanOptions
     public long MaxScanSizeBytes { get; set; } = 100 * 1024 * 1024; // 100 MB
 
     /// <summary>
+    /// Whether to stream file bytes to a ClamAV daemon.
+    /// </summary>
+    public bool UseClamAvDaemon { get; set; }
+
+    /// <summary>
+    /// Whether scanner connectivity failures should reject the file.
+    /// </summary>
+    public bool FailClosedWhenScannerUnavailable { get; set; } = true;
+
+    /// <summary>
+    /// Extensions that are rejected by local policy scanning.
+    /// </summary>
+    public string[] BlockedExtensions { get; set; } =
+    [
+        ".exe",
+        ".dll",
+        ".msi",
+        ".bat",
+        ".cmd",
+        ".ps1",
+        ".sh",
+        ".jar"
+    ];
+
+    /// <summary>
     /// Whether to quarantine infected files instead of deleting.
     /// </summary>
     public bool QuarantineInfected { get; set; } = true;
@@ -146,11 +174,11 @@ public interface IVirusScanService
 }
 
 /// <summary>
-/// Placeholder implementation of virus scanning.
-/// In production, replace with ClamAV or commercial antivirus integration.
+/// Virus scanning service with local policy checks and optional ClamAV daemon integration.
 /// </summary>
 public class VirusScanService : IVirusScanService
 {
+    private const string EicarSignature = "X5O!P%@AP[4\\PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H*";
     private readonly VirusScanOptions _options;
     private readonly ILogger<VirusScanService> _logger;
 
@@ -176,8 +204,7 @@ public class VirusScanService : IVirusScanService
 
         try
         {
-            // Check file size
-            if (content.Length > _options.MaxScanSizeBytes)
+            if (content.CanSeek && content.Length > _options.MaxScanSizeBytes)
             {
                 return new VirusScanResult(
                     false,
@@ -187,23 +214,45 @@ public class VirusScanService : IVirusScanService
                     Details: $"File size {content.Length} exceeds maximum {_options.MaxScanSizeBytes}");
             }
 
-            // PLANNED: Implement actual ClamAV integration (depends on ClamAV daemon or commercial AV SDK)
-            // For now, this is a placeholder that always returns clean
-            // In production, integrate with ClamAV, Windows Defender, or commercial AV
-            await Task.Delay(10, ct).ConfigureAwait(false); // Simulate scan time
+            if (_options.UseClamAvDaemon)
+            {
+                try
+                {
+                    return await ScanWithClamAvAsync(content, fileName, startTime, ct).ConfigureAwait(false);
+                }
+                catch (Exception ex) when (ex is SocketException or IOException or TimeoutException)
+                {
+                    _logger.LogError(ex, "ClamAV scan failed for {FileName}", fileName);
+
+                    if (_options.FailClosedWhenScannerUnavailable)
+                    {
+                        return new VirusScanResult(
+                            false,
+                            "Scanner unavailable",
+                            ThreatName: "SCANNER_UNAVAILABLE",
+                            ThreatType: "Configuration",
+                            ScanEngine: "ClamAV",
+                            ScanDuration: SystemClock.UtcNow - startTime,
+                            Details: ex.Message);
+                    }
+                }
+            }
+
+            var localResult = await ScanWithLocalPolicyAsync(content, fileName, startTime, ct).ConfigureAwait(false);
+            if (!localResult.IsClean)
+            {
+                return localResult;
+            }
 
             var duration = SystemClock.UtcNow - startTime;
 
             _logger.LogDebug(
-                "Virus scan completed for {FileName}: Clean in {Duration}ms",
-                fileName, duration.TotalMilliseconds);
+                "Virus scan completed for {FileName}: {Status} in {Duration}ms",
+                fileName,
+                localResult.Status,
+                duration.TotalMilliseconds);
 
-            return new VirusScanResult(
-                true,
-                "Clean",
-                ScanEngine: "Placeholder",
-                ScanEngineVersion: "1.0",
-                ScanDuration: duration);
+            return localResult with { ScanDuration = duration };
         }
         catch (OperationCanceledException)
         {
@@ -219,25 +268,65 @@ public class VirusScanService : IVirusScanService
         }
     }
 
-    public async Task<VirusScanResult> ScanStoredAsync(
+    public Task<VirusScanResult> ScanStoredAsync(
         string bucketName,
         string objectKey,
         CancellationToken ct = default)
     {
-        // PLANNED: Implement scanning of stored objects (depends on IStorageService to stream object content for scanning)
-        await Task.Delay(10, ct).ConfigureAwait(false);
+        var startTime = SystemClock.UtcNow;
 
-        return new VirusScanResult(
-            true,
-            "Clean",
-            ScanEngine: "Placeholder",
-            ScanEngineVersion: "1.0");
+        if (!_options.Enabled)
+        {
+            return Task.FromResult(new VirusScanResult(true, "Scanning disabled"));
+        }
+
+        var localPolicyResult = ScanFileNamePolicy(objectKey, startTime);
+        if (!localPolicyResult.IsClean)
+        {
+            return Task.FromResult(localPolicyResult);
+        }
+
+        return Task.FromResult(new VirusScanResult(
+            false,
+            "Stored object scan requires stream content",
+            ThreatName: "STORED_SCAN_REQUIRES_STREAM",
+            ThreatType: "Configuration",
+            ScanEngine: "LocalPolicy",
+            ScanEngineVersion: "1.0",
+            ScanDuration: SystemClock.UtcNow - startTime,
+            Details: $"Object {bucketName}/{objectKey} must be downloaded and passed to ScanAsync for byte-level scanning."));
     }
 
-    public Task<bool> IsHealthyAsync(CancellationToken ct = default)
+    public async Task<bool> IsHealthyAsync(CancellationToken ct = default)
     {
-        // PLANNED: Check ClamAV daemon connectivity (depends on ClamAV daemon deployment)
-        return Task.FromResult(true);
+        if (!_options.Enabled || !_options.UseClamAvDaemon)
+        {
+            return true;
+        }
+
+        try
+        {
+            using var timeout = CancellationTokenSource.CreateLinkedTokenSource(ct);
+            timeout.CancelAfter(TimeSpan.FromSeconds(Math.Max(1, _options.TimeoutSeconds)));
+
+            using var client = new TcpClient();
+            await client.ConnectAsync(_options.ClamAvHost, _options.ClamAvPort, timeout.Token).ConfigureAwait(false);
+            await using var stream = client.GetStream();
+
+            var ping = Encoding.ASCII.GetBytes("zPING\0");
+            await stream.WriteAsync(ping, timeout.Token).ConfigureAwait(false);
+
+            var buffer = new byte[32];
+            var read = await stream.ReadAsync(buffer, timeout.Token).ConfigureAwait(false);
+            var response = Encoding.ASCII.GetString(buffer, 0, read).TrimEnd('\0', '\r', '\n');
+
+            return string.Equals(response, "PONG", StringComparison.OrdinalIgnoreCase);
+        }
+        catch (Exception ex) when (ex is SocketException or IOException or TimeoutException or OperationCanceledException)
+        {
+            _logger.LogWarning(ex, "Virus scanner health check failed");
+            return false;
+        }
     }
 
     public bool RequiresSyncScan(string mimeType)
@@ -250,5 +339,168 @@ public class VirusScanService : IVirusScanService
 
         // Hybrid mode: check high-risk MIME types
         return _options.SyncScanMimeTypes.Contains(mimeType, StringComparer.OrdinalIgnoreCase);
+    }
+
+    private async Task<VirusScanResult> ScanWithLocalPolicyAsync(
+        Stream content,
+        string fileName,
+        DateTime startTime,
+        CancellationToken ct)
+    {
+        var fileNamePolicy = ScanFileNamePolicy(fileName, startTime);
+        if (!fileNamePolicy.IsClean)
+        {
+            return fileNamePolicy;
+        }
+
+        var originalPosition = content.CanSeek ? content.Position : (long?)null;
+        try
+        {
+            if (content.CanSeek)
+            {
+                content.Position = 0;
+            }
+
+            using var buffer = new MemoryStream();
+            await content.CopyToAsync(buffer, ct).ConfigureAwait(false);
+            var text = Encoding.ASCII.GetString(buffer.ToArray());
+
+            if (text.Contains(EicarSignature, StringComparison.Ordinal))
+            {
+                return new VirusScanResult(
+                    false,
+                    "Malware signature detected",
+                    ThreatName: "EICAR-Test-Signature",
+                    ThreatType: "Virus",
+                    ScanEngine: "LocalPolicy",
+                    ScanEngineVersion: "1.0",
+                    ScanDuration: SystemClock.UtcNow - startTime);
+            }
+
+            return new VirusScanResult(
+                true,
+                "Clean",
+                ScanEngine: "LocalPolicy",
+                ScanEngineVersion: "1.0",
+                ScanDuration: SystemClock.UtcNow - startTime);
+        }
+        finally
+        {
+            if (content.CanSeek && originalPosition.HasValue)
+            {
+                content.Position = originalPosition.Value;
+            }
+        }
+    }
+
+    private VirusScanResult ScanFileNamePolicy(string fileName, DateTime startTime)
+    {
+        var extension = Path.GetExtension(fileName);
+        if (_options.BlockedExtensions.Contains(extension, StringComparer.OrdinalIgnoreCase))
+        {
+            return new VirusScanResult(
+                false,
+                "Blocked file type",
+                ThreatName: "BLOCKED_EXTENSION",
+                ThreatType: "Policy",
+                ScanEngine: "LocalPolicy",
+                ScanEngineVersion: "1.0",
+                ScanDuration: SystemClock.UtcNow - startTime,
+                Details: $"Extension '{extension}' is blocked.");
+        }
+
+        return new VirusScanResult(
+            true,
+            "Clean",
+            ScanEngine: "LocalPolicy",
+            ScanEngineVersion: "1.0",
+            ScanDuration: SystemClock.UtcNow - startTime);
+    }
+
+    private async Task<VirusScanResult> ScanWithClamAvAsync(
+        Stream content,
+        string fileName,
+        DateTime startTime,
+        CancellationToken ct)
+    {
+        using var timeout = CancellationTokenSource.CreateLinkedTokenSource(ct);
+        timeout.CancelAfter(TimeSpan.FromSeconds(Math.Max(1, _options.TimeoutSeconds)));
+
+        using var client = new TcpClient();
+        await client.ConnectAsync(_options.ClamAvHost, _options.ClamAvPort, timeout.Token).ConfigureAwait(false);
+        await using var networkStream = client.GetStream();
+
+        var command = Encoding.ASCII.GetBytes("zINSTREAM\0");
+        await networkStream.WriteAsync(command, timeout.Token).ConfigureAwait(false);
+
+        var originalPosition = content.CanSeek ? content.Position : (long?)null;
+        try
+        {
+            if (content.CanSeek)
+            {
+                content.Position = 0;
+            }
+
+            var buffer = new byte[8192];
+            int bytesRead;
+            while ((bytesRead = await content.ReadAsync(buffer, timeout.Token).ConfigureAwait(false)) > 0)
+            {
+                Span<byte> lengthPrefix = stackalloc byte[4];
+                BinaryPrimitives.WriteInt32BigEndian(lengthPrefix, bytesRead);
+                await networkStream.WriteAsync(lengthPrefix.ToArray(), timeout.Token).ConfigureAwait(false);
+                await networkStream.WriteAsync(buffer.AsMemory(0, bytesRead), timeout.Token).ConfigureAwait(false);
+            }
+
+            await networkStream.WriteAsync(new byte[4], timeout.Token).ConfigureAwait(false);
+
+            var responseBuffer = new byte[4096];
+            var read = await networkStream.ReadAsync(responseBuffer, timeout.Token).ConfigureAwait(false);
+            var response = Encoding.UTF8.GetString(responseBuffer, 0, read).TrimEnd('\0', '\r', '\n');
+            var duration = SystemClock.UtcNow - startTime;
+
+            if (response.Contains(" FOUND", StringComparison.OrdinalIgnoreCase))
+            {
+                var threatName = response
+                    .Replace("stream:", string.Empty, StringComparison.OrdinalIgnoreCase)
+                    .Replace("FOUND", string.Empty, StringComparison.OrdinalIgnoreCase)
+                    .Trim();
+
+                return new VirusScanResult(
+                    false,
+                    "Malware signature detected",
+                    ThreatName: threatName,
+                    ThreatType: "Virus",
+                    ScanEngine: "ClamAV",
+                    ScanDuration: duration,
+                    Details: response);
+            }
+
+            if (response.Contains(" OK", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(response, "stream: OK", StringComparison.OrdinalIgnoreCase))
+            {
+                return new VirusScanResult(
+                    true,
+                    "Clean",
+                    ScanEngine: "ClamAV",
+                    ScanDuration: duration,
+                    Details: response);
+            }
+
+            return new VirusScanResult(
+                false,
+                "Scanner returned an unknown response",
+                ThreatName: "UNKNOWN_SCAN_RESPONSE",
+                ThreatType: "Configuration",
+                ScanEngine: "ClamAV",
+                ScanDuration: duration,
+                Details: response);
+        }
+        finally
+        {
+            if (content.CanSeek && originalPosition.HasValue)
+            {
+                content.Position = originalPosition.Value;
+            }
+        }
     }
 }

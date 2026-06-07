@@ -31,6 +31,12 @@ public class ControllerTests
         return new FollowersController(_svc.Object, _actor.Object, _log.Object);
     }
 
+    private FollowersController CreateAnonymousController()
+    {
+        _actor.Setup(a => a.ActorContext).Returns(ActorContext.Anonymous);
+        return new FollowersController(_svc.Object, _actor.Object, _log.Object);
+    }
+
     [Fact] public void Ctor_Creates() => CreateController().Should().NotBeNull();
 
     [Fact]
@@ -60,6 +66,19 @@ public class ControllerTests
             .ReturnsAsync(Result.Success(true));
         var r = await CreateController(uid).IsFollowing(Guid.NewGuid(), "User", CancellationToken.None);
         r.Result.Should().BeOfType<OkObjectResult>();
+    }
+
+    [Fact]
+    public async Task IsFollowing_AnonymousActor_UsesEmptyUserId()
+    {
+        var entityId = Guid.NewGuid();
+        _svc.Setup(s => s.IsFollowingAsync(Guid.Empty, entityId, "User", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Success(false));
+
+        var r = await CreateAnonymousController().IsFollowing(entityId, "User", CancellationToken.None);
+
+        r.Result.Should().BeOfType<OkObjectResult>();
+        _svc.Verify(s => s.IsFollowingAsync(Guid.Empty, entityId, "User", It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]

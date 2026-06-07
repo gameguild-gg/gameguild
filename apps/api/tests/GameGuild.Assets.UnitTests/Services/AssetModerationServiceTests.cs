@@ -48,7 +48,7 @@ public class AssetModerationServiceTests
     {
         // Arrange
         var assetContentId = Guid.NewGuid();
-        using var stream = new MemoryStream(new byte[100]);
+        using var stream = new MemoryStream([0x89, (byte)'P', (byte)'N', (byte)'G', 0x0D, 0x0A]);
         var content = CreateAssetContent(assetContentId, "image/png");
 
         _contentRepositoryMock
@@ -69,7 +69,7 @@ public class AssetModerationServiceTests
     {
         // Arrange
         var assetContentId = Guid.NewGuid();
-        using var stream = new MemoryStream(new byte[100]);
+        using var stream = new MemoryStream("%PDF-1.7\ncontent"u8.ToArray());
         var content = CreateAssetContent(assetContentId, "application/pdf");
 
         _contentRepositoryMock
@@ -85,11 +85,47 @@ public class AssetModerationServiceTests
     }
 
     [Fact]
+    public async Task ModerateAsync_ImageHeaderMismatch_ReturnsNeedsReview()
+    {
+        var assetContentId = Guid.NewGuid();
+        using var stream = new MemoryStream("not a png"u8.ToArray());
+        var content = CreateAssetContent(assetContentId, "image/png");
+
+        _contentRepositoryMock
+            .Setup(x => x.GetByIdAsync(assetContentId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(content);
+
+        var result = await _service.ModerateAsync(assetContentId, stream, "image/png");
+
+        result.IsApproved.Should().BeFalse();
+        result.Status.Should().Be(ModerationStatus.NeedsReview);
+        result.DetectedIssue.Should().Contain("Image header");
+    }
+
+    [Fact]
+    public async Task ModerateAsync_ExecutableSignature_ReturnsBlocked()
+    {
+        var assetContentId = Guid.NewGuid();
+        using var stream = new MemoryStream([(byte)'M', (byte)'Z', 0x90, 0x00]);
+        var content = CreateAssetContent(assetContentId, "application/octet-stream");
+
+        _contentRepositoryMock
+            .Setup(x => x.GetByIdAsync(assetContentId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(content);
+
+        var result = await _service.ModerateAsync(assetContentId, stream, "application/octet-stream");
+
+        result.IsApproved.Should().BeFalse();
+        result.Status.Should().Be(ModerationStatus.Blocked);
+        result.DetectedIssue.Should().Contain("Executable");
+    }
+
+    [Fact]
     public async Task ModerateAsync_UpdatesContentStatus()
     {
         // Arrange
         var assetContentId = Guid.NewGuid();
-        using var stream = new MemoryStream(new byte[100]);
+        using var stream = new MemoryStream([0x89, (byte)'P', (byte)'N', (byte)'G', 0x0D, 0x0A]);
         var content = CreateAssetContent(assetContentId, "image/png");
 
         _contentRepositoryMock

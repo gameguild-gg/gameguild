@@ -239,7 +239,7 @@ public class UsageRetentionServiceTests
         _policyRepositoryMock.Verify(r => r.UpdateAsync(It.IsAny<UsageRetentionPolicy>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
-    [Fact(Skip = "Compaction requires proper TenantId property setup which is complex with EntityBase")]
+    [Fact]
     public async Task ExecuteRetentionAsync_CompactsRecords_WhenCompactionEnabled()
     {
         // Arrange
@@ -254,12 +254,9 @@ public class UsageRetentionServiceTests
             EnableCompaction = true,
             ResourceType = ResourceUsageType.Storage
         };
+        policy.SetTenantId(tenantId);
 
         _policyRepositoryMock.Setup(r => r.GetByIdAsync(policyId, It.IsAny<CancellationToken>()))
-            .Callback(() => {
-                // Set TenantId after policy is retrieved (simulating it was loaded from DB)
-                policy.SetProperties(new Dictionary<string, object?> { ["TenantId"] = new TenantId(tenantId) });
-            })
             .ReturnsAsync(policy);
 
         _usageRepositoryMock.Setup(r => r.ArchiveOlderThanAsync(It.IsAny<DateTime>(), It.IsAny<CancellationToken>()))

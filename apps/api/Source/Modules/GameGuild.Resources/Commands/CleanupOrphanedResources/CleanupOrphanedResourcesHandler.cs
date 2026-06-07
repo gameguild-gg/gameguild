@@ -1,29 +1,33 @@
 using GameGuild.CQRS;
+using Microsoft.EntityFrameworkCore;
 
 namespace GameGuild.Resources;
 
 /// <summary>
-///     Handler for CleanupOrphanedResourcesCommand
+///     Handler for CleanupOrphanedResourcesCommand.
 /// </summary>
-public sealed class CleanupOrphanedResourcesHandler(IUsageRecordRepository repository)
+public sealed class CleanupOrphanedResourcesHandler(IApplicationDbContext context)
     : ICommandHandler<CleanupOrphanedResourcesCommand, int>
 {
     public async Task<int> Handle(CleanupOrphanedResourcesCommand request, CancellationToken cancellationToken)
     {
-        // For orphaned resources, we look for records without a valid tenant
-        // This is a placeholder implementation - actual logic would depend on business rules
-        var totalRecords = await repository.GetTotalRecordCountAsync(null, cancellationToken).ConfigureAwait(false);
+        var query = context.Set<UsageRecord>()
+            .Where(record => record.TenantId == null || record.TenantId == Guid.Empty);
 
-        if (request.DryRun)
+        if (request.ResourceTypes is { Count: > 0 })
         {
-            // In dry run mode, just return estimated count
-            return 0;
+            query = query.Where(record => request.ResourceTypes.Contains(record.Type));
         }
 
-        // Actual cleanup would involve:
-        // 1. Finding records with null or deleted tenant references
-        // 2. Deleting those records or moving them to an archive
-        // For now, return 0 as no actual cleanup is performed without proper orphan detection
-        return 0;
+        var records = await query.ToListAsync(cancellationToken).ConfigureAwait(false);
+        if (records.Count == 0 || request.DryRun)
+        {
+            return records.Count;
+        }
+
+        context.Set<UsageRecord>().RemoveRange(records);
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+
+        return records.Count;
     }
 }

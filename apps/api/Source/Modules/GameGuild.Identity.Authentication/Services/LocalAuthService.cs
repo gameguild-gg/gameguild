@@ -1,4 +1,6 @@
 using System.Diagnostics;
+using GameGuild.CQRS;
+using GameGuild.Email;
 using GameGuild.Identity.Users;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
@@ -21,7 +23,9 @@ public class LocalAuthService(
 #pragma warning restore CS9113
     IUserEnumerationProtectionService enumerationProtection,
     IHttpContextAccessor httpContextAccessor,
-    ILogger<LocalAuthService> logger
+    ILogger<LocalAuthService> logger,
+    IPublisher publisher,
+    ISender sender
 ) : ILocalAuthService
 {
     public async Task<SignInResponse> LocalSignInAsync(LocalSignInRequest request, CancellationToken cancellationToken = default)
@@ -126,9 +130,16 @@ public class LocalAuthService(
             // Fetch user again to get token version
             var authenticatedUser = await userRepository.GetByIdAsync(userId!.Value, cancellationToken).ConfigureAwait(false);
             var tokenVersion = authenticatedUser?.TokenVersion ?? 1;
+            var tenantAccessContext = await ResolveTenantAccessContextAsync(userId.Value, request.TenantId, cancellationToken).ConfigureAwait(false);
 
             // Create tokens and response
-            var accessToken = await jwtTokenService.GenerateAccessTokenAsync(userId!.Value, request.Email, ["User"], request.TenantId, tokenVersion, cancellationToken).ConfigureAwait(false);
+            var accessToken = await jwtTokenService.GenerateAccessTokenAsync(
+                userId.Value,
+                authenticatedUser?.Email ?? request.Email,
+                tenantAccessContext.Roles.ToArray(),
+                tenantAccessContext.TenantId,
+                tokenVersion,
+                cancellationToken).ConfigureAwait(false);
             var refreshToken = await jwtTokenService.GenerateRefreshTokenAsync(userId.Value, deviceInfo, cancellationToken).ConfigureAwait(false);
 
             var refreshTokenExpiryDays = int.Parse(configuration["Jwt:RefreshTokenExpiryInDays"] ?? "7");
@@ -150,9 +161,10 @@ public class LocalAuthService(
                 AccessTokenExpiresAt = SystemClock.UtcNow.AddMinutes(accessTokenExpirationMinutes),
                 RefreshTokenExpiresAt = refreshTokenExpiresAt,
                 UserId = userId.Value,
-                Email = request.Email,
+                Email = authenticatedUser?.Email ?? request.Email,
                 SessionId = Guid.NewGuid(),
-                TenantId = request.TenantId
+                TenantId = tenantAccessContext.TenantId,
+                AvailableTenants = tenantAccessContext.AvailableTenants
             };
         }
         catch (UnauthorizedAccessException)
@@ -210,8 +222,16 @@ public class LocalAuthService(
             // Create device info for refresh token
             var deviceInfo = new DeviceInfo { Fingerprint = Guid.NewGuid().ToString(), IpAddress = ipAddress, UserAgent = userAgent, DeviceName = "Test Device", DeviceType = "Web" };
 
+            var tenantAccessContext = await ResolveTenantAccessContextAsync(userId, request.TenantId, cancellationToken).ConfigureAwait(false);
+
             // Create tokens (new users have TokenVersion = 1)
-            var accessToken = await jwtTokenService.GenerateAccessTokenAsync(userId, request.Email, ["User"], request.TenantId, newUser.TokenVersion, cancellationToken).ConfigureAwait(false);
+            var accessToken = await jwtTokenService.GenerateAccessTokenAsync(
+                userId,
+                newUser.Email,
+                tenantAccessContext.Roles.ToArray(),
+                tenantAccessContext.TenantId,
+                newUser.TokenVersion,
+                cancellationToken).ConfigureAwait(false);
             var refreshToken = await jwtTokenService.GenerateRefreshTokenAsync(userId, deviceInfo, cancellationToken).ConfigureAwait(false);
 
             var refreshTokenExpiryDays = int.Parse(configuration["Jwt:RefreshTokenExpiryInDays"] ?? "7");
@@ -219,6 +239,16 @@ public class LocalAuthService(
 
             // Record successful registration
             await authAttemptService.RecordSuccessfulAttemptAsync(request.Email, userId, ipAddress, userAgent, stopwatch.Elapsed).ConfigureAwait(false);
+
+            await publisher.Publish(
+                new UserSignedUpNotification
+                {
+                    UserId = newUser.Id,
+                    Email = newUser.Email,
+                    Username = newUser.Username ?? newUser.Email,
+                    TenantId = request.TenantId
+                },
+                cancellationToken).ConfigureAwait(false);
 
             logger.LogInformation("User {Email} successfully signed up", request.Email);
 
@@ -233,9 +263,10 @@ public class LocalAuthService(
                 ExpiresAt = refreshTokenExpiresAt,
                 ExpiresIn = (int)(refreshTokenExpiresAt - SystemClock.UtcNow).TotalSeconds,
                 UserId = userId,
-                Email = request.Email,
+                Email = newUser.Email,
                 SessionId = Guid.NewGuid(),
-                TenantId = request.TenantId
+                TenantId = tenantAccessContext.TenantId,
+                AvailableTenants = tenantAccessContext.AvailableTenants
             };
         }
         catch (Exception ex)
@@ -281,13 +312,22 @@ public class LocalAuthService(
         }
 
         var userId = storedToken.UserId;
-        var userEmail = $"user{userId}@game-guild.com";
+        var user = await userRepository.GetByIdAsync(userId, cancellationToken).ConfigureAwait(false);
+        var tokenVersion = user?.TokenVersion ?? 1;
+        var tenantAccessContext = await ResolveTenantAccessContextAsync(userId, request.TenantId, cancellationToken).ConfigureAwait(false);
+        var userEmail = user?.Email ?? $"user{userId}@game-guild.com";
 
         // Create device info for refresh token
         var deviceInfo = new DeviceInfo { Fingerprint = Guid.NewGuid().ToString(), IpAddress = ipAddress, UserAgent = userAgent, DeviceName = "Test Device", DeviceType = "Web" };
 
         // Generate new tokens (token rotation)
-        var accessToken = jwtTokenService.GenerateAccessToken(userId, userEmail, ["User"]);
+        var accessToken = await jwtTokenService.GenerateAccessTokenAsync(
+            userId,
+            userEmail,
+            tenantAccessContext.Roles.ToArray(),
+            tenantAccessContext.TenantId,
+            tokenVersion,
+            cancellationToken).ConfigureAwait(false);
         var newRefreshToken = await jwtTokenService.GenerateRefreshTokenAsync(userId, deviceInfo, cancellationToken).ConfigureAwait(false);
 
         var refreshTokenExpiryDays = int.Parse(configuration["Jwt:RefreshTokenExpiryInDays"] ?? "7");
@@ -316,8 +356,56 @@ public class LocalAuthService(
             RefreshTokenExpiresAt = refreshTokenExpiresAt,
             UserId = userId,
             Email = userEmail,
-            SessionId = Guid.NewGuid()
+            SessionId = Guid.NewGuid(),
+            TenantId = tenantAccessContext.TenantId,
+            AvailableTenants = tenantAccessContext.AvailableTenants
         };
+    }
+
+    private async Task<TenantAccessContext> ResolveTenantAccessContextAsync(Guid userId, Guid? requestedTenantId, CancellationToken cancellationToken)
+    {
+        var memberships = await sender.Send(new global::GameGuild.Identity.Tenants.GetUserMembershipsQuery(userId), cancellationToken).ConfigureAwait(false);
+
+        if (memberships.TotalCount == 0)
+        {
+            return new TenantAccessContext(null, null, ["User"]);
+        }
+
+        var activeMemberships = memberships.Memberships
+            .Where(membership => membership.IsActive)
+            .ToList();
+
+        if (activeMemberships.Count == 0)
+        {
+            return new TenantAccessContext(null, null, ["User"]);
+        }
+
+        var availableTenants = activeMemberships
+            .GroupBy(membership => membership.TenantId)
+            .Select(group => group.First())
+            .Select(membership => new global::GameGuild.TenantInfo(
+                membership.TenantId,
+                membership.TenantName,
+                membership.TenantSlug,
+                membership.TenantIsActive))
+            .ToList();
+
+        var selectedTenantId = requestedTenantId.HasValue
+            ? availableTenants.FirstOrDefault(tenant => tenant.Id == requestedTenantId.Value && tenant.IsActive)?.Id
+            : null;
+
+        selectedTenantId ??= availableTenants.FirstOrDefault(tenant => tenant.IsActive)?.Id;
+        selectedTenantId ??= availableTenants[0].Id;
+
+        var roles = activeMemberships
+            .Where(membership => membership.TenantId == selectedTenantId)
+            .Select(membership => membership.Role)
+            .Where(role => !string.IsNullOrWhiteSpace(role))
+            .Append("User")
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        return new TenantAccessContext(selectedTenantId, availableTenants, roles);
     }
 
     public async Task RevokeRefreshTokenAsync(string token, string ipAddress, CancellationToken cancellationToken = default)
@@ -335,4 +423,9 @@ public class LocalAuthService(
 
         await refreshTokenRepository.UpdateAsync(refreshToken).ConfigureAwait(false);
     }
+
+    private sealed record TenantAccessContext(
+        Guid? TenantId,
+        IReadOnlyList<global::GameGuild.TenantInfo>? AvailableTenants,
+        IReadOnlyList<string> Roles);
 }

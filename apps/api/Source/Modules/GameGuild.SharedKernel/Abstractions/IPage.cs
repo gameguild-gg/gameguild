@@ -1,4 +1,4 @@
-﻿namespace GameGuild;
+namespace GameGuild;
 
 /// <summary>
 ///     Represents a page of items with pagination information

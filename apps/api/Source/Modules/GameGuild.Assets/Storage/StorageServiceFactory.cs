@@ -348,16 +348,12 @@ public class StorageServiceFactory : IStorageServiceFactory
 
     private IStorageService CreateGcsService(GoogleCloudStorageConfiguration config, string bucketName)
     {
-        // PLANNED: Implement Google Cloud Storage service (depends on Google.Cloud.Storage.V1 NuGet package)
-        // Would use Google.Cloud.Storage.V1 NuGet package
-        throw new NotImplementedException("Google Cloud Storage support coming soon");
+        throw new NotSupportedException("Google Cloud Storage requires the Google.Cloud.Storage.V1 provider package and runtime credentials. Use S3-compatible, Cloudflare R2, Backblaze B2, or LocalFileSystem until that provider package is installed.");
     }
 
     private IStorageService CreateAzureService(AzureBlobStorageConfiguration config, string bucketName)
     {
-        // PLANNED: Implement Azure Blob Storage service (depends on Azure.Storage.Blobs NuGet package)
-        // Would use Azure.Storage.Blobs NuGet package
-        throw new NotImplementedException("Azure Blob Storage support coming soon");
+        throw new NotSupportedException("Azure Blob Storage requires the Azure.Storage.Blobs provider package and runtime credentials. Use S3-compatible, Cloudflare R2, Backblaze B2, or LocalFileSystem until that provider package is installed.");
     }
 
     private IStorageService CreateR2Service(CloudflareR2Configuration config, string bucketName)
@@ -390,8 +386,11 @@ public class StorageServiceFactory : IStorageServiceFactory
 
     private IStorageService CreateLocalService(LocalFileSystemConfiguration config, string bucketName)
     {
-        // PLANNED: Implement local filesystem storage for development (lower priority, useful for local dev without cloud credentials)
-        throw new NotImplementedException("Local filesystem storage for development coming soon");
+        return new LocalFileSystemStorageService(
+            config,
+            bucketName,
+            _globalOptions.TransformedBucketName,
+            _globalOptions.QuarantineBucketName);
     }
 }
 

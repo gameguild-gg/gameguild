@@ -17,4 +17,9 @@ public sealed record SendEmailVerificationCommand : ICommand<EmailVerificationRe
     ///     Optional user ID (when the user is known/authenticated).
     /// </summary>
     public Guid? UserId { get; init; }
+
+    /// <summary>
+    ///     Optional user name for personalization.
+    /// </summary>
+    public string? UserName { get; init; }
 }

@@ -131,14 +131,21 @@ public class ApplePayReceiptValidationService(
 
             // Decode the signed transaction info if present
             AppleTransactionInfo? transactionInfo = null;
-            if (!string.IsNullOrEmpty(data?.SignedTransactionInfo))
+            var signedTransactionInfo = data.SignedTransactionInfo;
+            if (!string.IsNullOrEmpty(signedTransactionInfo))
             {
-                transactionInfo = jwsVerificationService.DecodeSignedTransaction(data.SignedTransactionInfo);
+                transactionInfo = jwsVerificationService.DecodeSignedTransaction(signedTransactionInfo);
             }
 
             logger.LogInformation(
                 "Apple notification verified. Type={NotificationType}, Subtype={Subtype}, TransactionId={TransactionId}",
                 notification.NotificationType, notification.Subtype, transactionInfo?.TransactionId);
+
+            DateTime? expirationDate = null;
+            if (transactionInfo?.ExpiresDate is long expiresDate)
+            {
+                expirationDate = DateTimeOffset.FromUnixTimeMilliseconds(expiresDate).UtcDateTime;
+            }
 
             return Task.FromResult(AppleNotificationVerificationResult.Success(
                 notification.NotificationType,
@@ -146,10 +153,8 @@ public class ApplePayReceiptValidationService(
                 transactionInfo?.TransactionId ?? string.Empty,
                 transactionInfo?.OriginalTransactionId ?? string.Empty,
                 transactionInfo?.ProductId ?? string.Empty,
-                transactionInfo?.ExpiresDate.HasValue == true
-                    ? DateTimeOffset.FromUnixTimeMilliseconds(transactionInfo.ExpiresDate.Value).UtcDateTime
-                    : null,
-                data?.Environment ?? "unknown"));
+                expirationDate,
+                data.Environment ?? "unknown"));
         }
         catch (Exception ex)
         {

@@ -1,4 +1,4 @@
-﻿namespace GameGuild.Resources;
+namespace GameGuild.Resources;
 
 /// <summary>
 ///     Result of executing a retention policy

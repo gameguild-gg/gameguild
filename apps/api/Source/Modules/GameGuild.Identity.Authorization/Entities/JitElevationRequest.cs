@@ -81,7 +81,13 @@ public class JitElevationRequest
         UpdatedAt = SystemClock.UtcNow;
 
         // Auto-activate if no start time specified
-        if (StartsAt == null || StartsAt <= SystemClock.UtcNow)
+        if (StartsAt is null)
+        {
+            Activate();
+            return;
+        }
+
+        if (StartsAt.Value <= SystemClock.UtcNow)
         {
             Activate();
         }

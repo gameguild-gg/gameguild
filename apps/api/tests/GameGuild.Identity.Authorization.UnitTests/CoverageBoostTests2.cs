@@ -2,7 +2,6 @@ using System.Text.Json;
 using FluentAssertions;
 using GameGuild.Identity.Authorization;
 using GameGuild.Identity.Authorization.Caching;
-using GameGuild.Identity.Authorization.Examples;
 using GameGuild.Identity.Authorization.Models;
 using GameGuild.Identity.Context.Actors;
 using GameGuild.Configuration.PresentationLayer.Authorization;
@@ -1105,54 +1104,6 @@ public class CacheMetricsServiceTests
 
 #endregion
 
-#region ActorContextTestExamples Tests
-
-public class ActorContextTestExamplesTests
-{
-    private readonly ActorContextTestExamples _examples = new();
-
-    [Fact]
-    public void CreateUserContext_ShouldReturnValidContext()
-    {
-        var ctx = _examples.CreateUserContext();
-        ctx.Should().NotBeNull();
-        ctx.ActorKind.Should().Be(ActorKind.User);
-    }
-
-    [Fact]
-    public void CreateAdminContext_ShouldReturnAdminContext()
-    {
-        var ctx = _examples.CreateAdminContext();
-        ctx.Should().NotBeNull();
-        ctx.ActorKind.Should().Be(ActorKind.User);
-    }
-
-    [Fact]
-    public void CreateServiceContext_ShouldReturnServiceContext()
-    {
-        var ctx = _examples.CreateServiceContext();
-        ctx.Should().NotBeNull();
-        ctx.ActorKind.Should().Be(ActorKind.Service);
-    }
-
-    [Fact]
-    public void CreateSystemContext_ShouldReturnSystemContext()
-    {
-        var ctx = _examples.CreateSystemContext();
-        ctx.Should().NotBeNull();
-        ctx.ActorKind.Should().Be(ActorKind.System);
-    }
-
-    [Fact]
-    public void ExampleTest_ShouldNotThrow()
-    {
-        var act = () => _examples.ExampleTest();
-        act.Should().NotThrow();
-    }
-}
-
-#endregion
-
 #region AuthorizationTenantResolver Tests
 
 public class AuthorizationTenantResolverTests
@@ -1190,7 +1141,7 @@ public class AuthorizationTenantResolverTests
     {
         var resolver = CreateResolver();
         var principal = new ClaimsPrincipal(new ClaimsIdentity(
-            new[] { new Claim("tenant", "tenant-from-claims") }, "Test"));
+            new[] { new Claim("tenant_id", "tenant-from-claims") }, "Test"));
 
         var result = resolver.ResolveFromClaims(principal);
         result.Should().Be("tenant-from-claims");

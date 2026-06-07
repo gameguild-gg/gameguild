@@ -38,6 +38,46 @@ public sealed record RequestPasswordResetRequest
 }
 
 /// <summary>
+///     Request to send a passwordless magic sign-in link.
+/// </summary>
+public sealed record RequestMagicLinkRequest
+{
+    /// <summary>
+    ///     Email address to send the magic link to.
+    /// </summary>
+    [Required]
+    [EmailAddress]
+    public required string Email { get; init; }
+
+    /// <summary>
+    ///     Optional tenant context.
+    /// </summary>
+    public Guid? TenantId { get; init; }
+}
+
+/// <summary>
+///     Request to consume a passwordless magic sign-in link.
+/// </summary>
+public sealed record ConsumeMagicLinkRequest
+{
+    /// <summary>
+    ///     One-time token from the magic link.
+    /// </summary>
+    [Required]
+    public required string Token { get; init; }
+
+    /// <summary>
+    ///     Optional tenant context.
+    /// </summary>
+    public Guid? TenantId { get; init; }
+
+    /// <summary>
+    ///     Optional device fingerprint for refresh-token session tracking.
+    /// </summary>
+    public string? DeviceFingerprint { get; init; }
+}
+
+/// <summary>
 ///     Request to complete password reset
 /// </summary>
 public sealed record CompletePasswordResetRequest

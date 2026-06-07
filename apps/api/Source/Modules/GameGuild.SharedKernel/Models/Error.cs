@@ -1,4 +1,4 @@
-﻿namespace GameGuild;
+namespace GameGuild;
 
 /// <summary>
 ///     Represents a domain error with a machine-readable code, human-readable description, and type.

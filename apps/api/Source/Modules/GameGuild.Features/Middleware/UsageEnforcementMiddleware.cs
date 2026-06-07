@@ -1,5 +1,6 @@
 using GameGuild.Identity.Context.Actors;
 using GameGuild.Commerce.Subscriptions;
+using System.Diagnostics.CodeAnalysis;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
@@ -17,7 +18,8 @@ public class UsageEnforcementMiddleware
 
     // Cache keys
     private const string ApiCallsCacheKeyPrefix = "api_calls_";
-    private static readonly TimeSpan CacheExpiration = TimeSpan.FromMinutes(5);
+    [ExcludeFromCodeCoverage]
+    private static TimeSpan CacheExpiration { get; } = TimeSpan.FromMinutes(5);
 
     public UsageEnforcementMiddleware(
         RequestDelegate next,

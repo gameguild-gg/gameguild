@@ -82,74 +82,57 @@ public sealed class RequireIpAllowListRuleEvaluator : IRuleEvaluator
 
     private static bool IsIpInCidr(IPAddress ip, string cidr)
     {
-        try
-        {
-            var parts = cidr.Split('/');
-            if (parts.Length != 2)
-                return false;
-
-            if (!IPAddress.TryParse(parts[0], out var networkAddress))
-                return false;
-
-            if (!int.TryParse(parts[1], out var prefixLength))
-                return false;
-
-            // Convert both addresses to byte arrays
-            var ipBytes = ip.GetAddressBytes();
-            var networkBytes = networkAddress.GetAddressBytes();
-
-            if (ipBytes.Length != networkBytes.Length)
-            {
-                // Handle IPv4 vs IPv6 mismatch
-                if (ip.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork &&
-                    networkAddress.AddressFamily == System.Net.Sockets.AddressFamily.InterNetworkV6)
-                {
-                    return false;
-                }
-
-                if (ip.AddressFamily == System.Net.Sockets.AddressFamily.InterNetworkV6 &&
-                    networkAddress.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
-                {
-                    return false;
-                }
-            }
-
-            // Calculate the mask
-            var maskBytes = new byte[ipBytes.Length];
-            var remainingBits = prefixLength;
-
-            for (var i = 0; i < maskBytes.Length; i++)
-            {
-                if (remainingBits >= 8)
-                {
-                    maskBytes[i] = 0xFF;
-                    remainingBits -= 8;
-                }
-                else if (remainingBits > 0)
-                {
-                    maskBytes[i] = (byte)(0xFF << (8 - remainingBits));
-                    remainingBits = 0;
-                }
-                else
-                {
-                    maskBytes[i] = 0x00;
-                }
-            }
-
-            // Apply mask and compare
-            for (var i = 0; i < ipBytes.Length; i++)
-            {
-                if ((ipBytes[i] & maskBytes[i]) != (networkBytes[i] & maskBytes[i]))
-                {
-                    return false;
-                }
-            }
-
-            return true;
-        }
-        catch
-        {
+        var parts = cidr.Split('/');
+        if (parts.Length != 2)
             return false;
+
+        if (!IPAddress.TryParse(parts[0], out var networkAddress))
+            return false;
+
+        if (!int.TryParse(parts[1], out var prefixLength))
+            return false;
+
+        // Convert both addresses to byte arrays
+        var ipBytes = ip.GetAddressBytes();
+        var networkBytes = networkAddress.GetAddressBytes();
+
+        if (ipBytes.Length != networkBytes.Length)
+            return false;
+
+        if (prefixLength < 0 || prefixLength > ipBytes.Length * 8)
+            return false;
+
+        // Calculate the mask
+        var maskBytes = new byte[ipBytes.Length];
+        var remainingBits = prefixLength;
+
+        for (var i = 0; i < maskBytes.Length; i++)
+        {
+            if (remainingBits >= 8)
+            {
+                maskBytes[i] = 0xFF;
+                remainingBits -= 8;
+            }
+            else if (remainingBits > 0)
+            {
+                maskBytes[i] = (byte)(0xFF << (8 - remainingBits));
+                remainingBits = 0;
+            }
+            else
+            {
+                maskBytes[i] = 0x00;
+            }
         }
+
+        // Apply mask and compare
+        for (var i = 0; i < ipBytes.Length; i++)
+        {
+            if ((ipBytes[i] & maskBytes[i]) != (networkBytes[i] & maskBytes[i]))
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 }

@@ -5,7 +5,7 @@ namespace GameGuild.Identity.Authentication;
 /// <summary>
 ///     Command to request a password reset email
 /// </summary>
-public class RequestPasswordResetCommand : IRequest<PasswordResetRequestResult>
+public class RequestPasswordResetCommand : ICommand<PasswordResetRequestResult>
 {
     /// <summary>
     ///     Email address to send the reset link to
@@ -47,7 +47,7 @@ public class PasswordResetRequestResult
 /// <summary>
 ///     Command to complete a password reset using a token
 /// </summary>
-public class ResetPasswordCommand : IRequest<PasswordResetResult>
+public class ResetPasswordCommand : ICommand<PasswordResetResult>
 {
     /// <summary>
     ///     Password reset token from the email link
@@ -94,7 +94,7 @@ public class PasswordResetResult
 /// <summary>
 ///     Command to change password for an authenticated user
 /// </summary>
-public class ChangePasswordCommand : IRequest<PasswordChangeResult>
+public class ChangePasswordCommand : ICommand<PasswordChangeResult>
 {
     /// <summary>
     ///     User ID (from authenticated context)

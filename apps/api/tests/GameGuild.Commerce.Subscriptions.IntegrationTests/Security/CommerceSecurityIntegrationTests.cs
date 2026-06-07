@@ -2,6 +2,7 @@ using FluentAssertions;
 using GameGuild.API.Database;
 using GameGuild.Commerce.Billing;
 using GameGuild.Commerce.Subscriptions.IntegrationTests;
+using GameGuild.Commerce.Subscriptions.IntegrationTests.Infrastructure;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -166,6 +167,7 @@ public class CommerceSecurityIntegrationTests : IClassFixture<WebApplicationFact
 
         // Verify subscription is cancelled
         var statusResponse = await _client.GetAsync($"/api/v1/subscriptions/{subscriptionId}");
+        statusResponse.StatusCode.Should().Be(HttpStatusCode.OK);
         var responseBody = await statusResponse.Content.ReadAsStringAsync();
         if (!string.IsNullOrWhiteSpace(responseBody))
         {
@@ -308,7 +310,7 @@ public class CommerceSecurityIntegrationTests : IClassFixture<WebApplicationFact
 
     #region Payment Retry Flow (P0/P1)
 
-    [Fact(Skip = "BillingInvoicesController not yet implemented")]
+    [Fact]
     public async Task PaymentRetry_AfterFailure_ShouldBeScheduled()
     {
         // Arrange
@@ -322,7 +324,7 @@ public class CommerceSecurityIntegrationTests : IClassFixture<WebApplicationFact
         response.StatusCode.Should().BeOneOf(HttpStatusCode.OK, HttpStatusCode.Accepted);
     }
 
-    [Fact(Skip = "BillingInvoicesController not yet implemented")]
+    [Fact]
     public async Task PaymentRetry_ExceedsMaxAttempts_ShouldMarkAsFailed()
     {
         // Arrange
@@ -342,13 +344,18 @@ public class CommerceSecurityIntegrationTests : IClassFixture<WebApplicationFact
 
     private async Task<Guid> SeedActiveSubscriptionAsync()
     {
+        var tenantId = Guid.NewGuid();
+        SubscriptionTestTenantSeeder.EnsureTenantExists(_factory.Services, tenantId);
+        _client.DefaultRequestHeaders.Remove("X-Tenant-Id");
+        _client.DefaultRequestHeaders.Add("X-Tenant-Id", tenantId.ToString());
+
         using var scope = _factory.Services.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
         var planId = await SeedSubscriptionPlanAsync(dbContext);
 
         var subscription = new Subscription(
-            tenantId: Guid.NewGuid(),
+            tenantId: tenantId,
             planId: planId,
             createdByUserId: Guid.NewGuid(),
             billingCycle: BillingCycle.Monthly,
@@ -366,6 +373,8 @@ public class CommerceSecurityIntegrationTests : IClassFixture<WebApplicationFact
 
     private async Task<Guid> SeedSubscriptionForTenantAsync(Guid tenantId)
     {
+        SubscriptionTestTenantSeeder.EnsureTenantExists(_factory.Services, tenantId);
+
         using var scope = _factory.Services.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 

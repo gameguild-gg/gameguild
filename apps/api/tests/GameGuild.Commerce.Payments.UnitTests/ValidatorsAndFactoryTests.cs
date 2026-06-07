@@ -2,6 +2,7 @@ using FluentAssertions;
 using FluentValidation.TestHelper;
 using GameGuild.Commerce.Payments;
 using GameGuild.Commerce.Payments.Models;
+using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
 
 namespace GameGuild.Commerce.Payments.UnitTests;
@@ -74,6 +75,15 @@ public class ProcessPaymentCommandValidatorTests
         var cmd = new ProcessPaymentCommand(Guid.NewGuid(), Guid.NewGuid(), 99.99m, new string('x', 101));
         var result = _validator.TestValidate(cmd);
         result.ShouldHaveValidationErrorFor(x => x.PaymentMethodId);
+    }
+
+    [Fact]
+    public void RawCardNumberPaymentMethodId_ShouldFail()
+    {
+        var cmd = new ProcessPaymentCommand(Guid.NewGuid(), Guid.NewGuid(), 99.99m, "4242 4242 4242 4242");
+        var result = _validator.TestValidate(cmd);
+        result.ShouldHaveValidationErrorFor(x => x.PaymentMethodId)
+            .WithErrorMessage(StripePaymentMethodIdentifier.ValidationMessage);
     }
 }
 
@@ -401,6 +411,15 @@ public class SimulatedPaymentResultFactoryTests
     }
 
     [Fact]
+    public void PaymentSuccess_WithLogger_ShouldReturnSuccessResult()
+    {
+        var result = SimulatedPaymentResultFactory.PaymentSuccess(NullLogger.Instance);
+
+        result.Success.Should().BeTrue();
+        result.TransactionId.Should().StartWith("pi_");
+    }
+
+    [Fact]
     public void PaymentFailure_ShouldReturnFailureResult()
     {
         var result = SimulatedPaymentResultFactory.PaymentFailure("Card declined", "card_declined");
@@ -433,6 +452,15 @@ public class SimulatedPaymentResultFactoryTests
     }
 
     [Fact]
+    public void RefundSuccess_WithLogger_ShouldReturnSuccessResult()
+    {
+        var result = SimulatedPaymentResultFactory.RefundSuccess(50m, NullLogger.Instance);
+
+        result.Success.Should().BeTrue();
+        result.RefundId.Should().StartWith("re_");
+    }
+
+    [Fact]
     public void RefundFailure_ShouldReturnFailureResult()
     {
         var result = SimulatedPaymentResultFactory.RefundFailure("Not found");
@@ -451,6 +479,15 @@ public class SimulatedPaymentResultFactoryTests
         result.Success.Should().BeTrue();
         result.ExternalCustomerId.Should().StartWith("cus_");
         result.ErrorCode.Should().BeNull();
+    }
+
+    [Fact]
+    public void CustomerSuccess_WithLogger_ShouldReturnSuccessResult()
+    {
+        var result = SimulatedPaymentResultFactory.CustomerSuccess(NullLogger.Instance);
+
+        result.Success.Should().BeTrue();
+        result.ExternalCustomerId.Should().StartWith("cus_");
     }
 
     [Fact]
@@ -484,6 +521,15 @@ public class SimulatedPaymentResultFactoryTests
     }
 
     [Fact]
+    public void PaymentMethodSuccess_WithLogger_ShouldReturnSuccessResult()
+    {
+        var result = SimulatedPaymentResultFactory.PaymentMethodSuccess(SimulatedTestCard.Visa4242, NullLogger.Instance);
+
+        result.Success.Should().BeTrue();
+        result.ExternalPaymentMethodId.Should().StartWith("pm_");
+    }
+
+    [Fact]
     public void PaymentMethodSuccess_AmexCard_ShouldReturnCorrectDetails()
     {
         var result = SimulatedPaymentResultFactory.PaymentMethodSuccess(SimulatedTestCard.Amex8431);
@@ -504,6 +550,50 @@ public class SimulatedPaymentResultFactoryTests
     }
 
     [Fact]
+    public void SetupIntentSuccess_ShouldReturnSuccessResult()
+    {
+        var result = SimulatedPaymentResultFactory.SetupIntentSuccess("cus_123", NullLogger.Instance);
+
+        result.Success.Should().BeTrue();
+        result.ExternalSetupIntentId.Should().StartWith("seti_");
+        result.ClientSecret.Should().Contain("_secret_");
+        result.CustomerId.Should().Be("cus_123");
+    }
+
+    [Fact]
+    public void SetupIntentFailure_ShouldReturnFailureResult()
+    {
+        var result = SimulatedPaymentResultFactory.SetupIntentFailure("setup failed", "setup_error");
+
+        result.Success.Should().BeFalse();
+        result.ExternalSetupIntentId.Should().BeNull();
+        result.ClientSecret.Should().BeNull();
+        result.CustomerId.Should().BeNull();
+        result.ErrorCode.Should().Be("setup_error");
+        result.ErrorMessage.Should().Be("setup failed");
+    }
+
+    [Fact]
+    public void DefaultPaymentMethodSuccess_ShouldReturnSuccessResult()
+    {
+        var result = SimulatedPaymentResultFactory.DefaultPaymentMethodSuccess();
+
+        result.Success.Should().BeTrue();
+        result.ErrorCode.Should().BeNull();
+        result.ErrorMessage.Should().BeNull();
+    }
+
+    [Fact]
+    public void DefaultPaymentMethodFailure_ShouldReturnFailureResult()
+    {
+        var result = SimulatedPaymentResultFactory.DefaultPaymentMethodFailure("default update failed", "default_error");
+
+        result.Success.Should().BeFalse();
+        result.ErrorCode.Should().Be("default_error");
+        result.ErrorMessage.Should().Be("default update failed");
+    }
+
+    [Fact]
     public void CancellationSuccess_ShouldReturnSuccessResult()
     {
         var result = SimulatedPaymentResultFactory.CancellationSuccess();
@@ -521,6 +611,15 @@ public class SimulatedPaymentResultFactoryTests
         var result = SimulatedPaymentResultFactory.CancellationSuccess(date);
 
         result.EffectiveDate.Should().Be(date);
+    }
+
+    [Fact]
+    public void CancellationSuccess_WithLogger_ShouldReturnSuccessResult()
+    {
+        var result = SimulatedPaymentResultFactory.CancellationSuccess(logger: NullLogger.Instance);
+
+        result.Success.Should().BeTrue();
+        result.EffectiveDate.Should().NotBeNull();
     }
 
     [Fact]

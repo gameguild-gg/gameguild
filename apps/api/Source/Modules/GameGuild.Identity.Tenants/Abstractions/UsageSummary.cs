@@ -1,4 +1,4 @@
-﻿namespace GameGuild.Identity.Tenants;
+namespace GameGuild.Identity.Tenants;
 
 /// <summary>
 ///     Summary of usage data for a tenant

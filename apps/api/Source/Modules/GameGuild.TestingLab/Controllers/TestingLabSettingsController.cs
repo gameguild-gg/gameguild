@@ -108,17 +108,8 @@ public class TestingLabSettingsController(
 
     if (Guid.TryParse(tenantIdClaim, out var tenantId)) { return tenantId; }
 
-    // If not in claims, try to get from tenant service using current user
-    var userGuid = Actor.SubjectIdAsGuid;
-
-    if (userGuid.HasValue) {
-      var tenantPermissions = await tenantService.GetTenantsForUserAsync(userGuid.Value).ConfigureAwait(false);
-      var firstTenant = tenantPermissions.FirstOrDefault()?.Tenant;
-
-      return firstTenant?.Id;
-    }
-
-    return null;
+    await Task.CompletedTask.ConfigureAwait(false);
+    return Actor.TenantId;
   }
 
   #endregion

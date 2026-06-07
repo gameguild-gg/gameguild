@@ -30,6 +30,7 @@ public class AssetUploadService : IAssetUploadService
     
     // In-memory store for chunked uploads (should be replaced with distributed cache in production)
     private static readonly Dictionary<string, ChunkedUploadSession> _chunkedSessions = new();
+    private static readonly Dictionary<string, SortedDictionary<int, string>> _chunkedSessionPartETags = new();
 
     public AssetUploadService(
         IAssetContentRepository contentRepository,
@@ -150,6 +151,7 @@ public class AssetUploadService : IAssetUploadService
             SystemClock.UtcNow.AddMinutes(_options.Value.ChunkedUploadExpiryMinutes));
 
         _chunkedSessions[uploadId] = session;
+        _chunkedSessionPartETags[uploadId] = new SortedDictionary<int, string>();
 
         return session;
     }
@@ -168,17 +170,30 @@ public class AssetUploadService : IAssetUploadService
         if (session.ExpiresAt < SystemClock.UtcNow)
         {
             _chunkedSessions.Remove(uploadId);
+            _chunkedSessionPartETags.Remove(uploadId);
             await _storageService.AbortMultipartUploadAsync(uploadId, session.ObjectKey, ct).ConfigureAwait(false);
             return false;
         }
 
-        var eTag = await _storageService.UploadPartAsync(
-            uploadId, session.ObjectKey, chunkIndex + 1, chunkContent, ct).ConfigureAwait(false);
+        if (chunkIndex < 0 || chunkIndex >= session.TotalChunks)
+        {
+            return false;
+        }
 
-        // Track the ETag for this part
+        var partNumber = chunkIndex + 1;
+        var eTag = await _storageService.UploadPartAsync(
+            uploadId, session.ObjectKey, partNumber, chunkContent, ct).ConfigureAwait(false);
+
+        if (!_chunkedSessionPartETags.TryGetValue(uploadId, out var partETags))
+        {
+            partETags = new SortedDictionary<int, string>();
+            _chunkedSessionPartETags[uploadId] = partETags;
+        }
+
+        partETags[partNumber] = eTag;
         session = session with 
         { 
-            UploadedChunks = session.UploadedChunks + 1 
+            UploadedChunks = partETags.Count
         };
         _chunkedSessions[uploadId] = session;
 
@@ -195,11 +210,35 @@ public class AssetUploadService : IAssetUploadService
             return new AssetUploadResult(false, null, null, "Upload session not found");
         }
 
-        _chunkedSessions.Remove(uploadId);
+        if (session.ExpiresAt < SystemClock.UtcNow)
+        {
+            _chunkedSessions.Remove(uploadId);
+            _chunkedSessionPartETags.Remove(uploadId);
+            await _storageService.AbortMultipartUploadAsync(uploadId, session.ObjectKey, ct).ConfigureAwait(false);
+            return new AssetUploadResult(false, null, null, "Upload session expired");
+        }
 
-        // This would need the ETags from each chunk - simplified implementation
-        var eTags = Enumerable.Range(1, session.TotalChunks)
-            .Select(i => $"etag-{i}") // Placeholder - real implementation tracks these
+        if (!_chunkedSessionPartETags.TryGetValue(uploadId, out var partETags) ||
+            partETags.Count < session.TotalChunks)
+        {
+            var receivedParts = partETags?.Keys.ToHashSet() ?? [];
+            var missingParts = Enumerable.Range(1, session.TotalChunks)
+                .Where(partNumber => !receivedParts.Contains(partNumber))
+                .ToList();
+
+            return new AssetUploadResult(
+                false,
+                null,
+                null,
+                $"Upload is incomplete. Missing chunks: {string.Join(", ", missingParts)}");
+        }
+
+        _chunkedSessions.Remove(uploadId);
+        _chunkedSessionPartETags.Remove(uploadId);
+
+        var eTags = partETags
+            .OrderBy(part => part.Key)
+            .Select(part => part.Value)
             .ToList();
 
         var storageResult = await _storageService.CompleteMultipartUploadAsync(
@@ -241,6 +280,7 @@ public class AssetUploadService : IAssetUploadService
         if (_chunkedSessions.TryGetValue(uploadId, out var session))
         {
             _chunkedSessions.Remove(uploadId);
+            _chunkedSessionPartETags.Remove(uploadId);
             await _storageService.AbortMultipartUploadAsync(uploadId, session.ObjectKey, ct).ConfigureAwait(false);
         }
     }

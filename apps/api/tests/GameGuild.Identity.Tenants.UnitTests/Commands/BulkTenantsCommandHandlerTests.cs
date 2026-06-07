@@ -107,6 +107,140 @@ public class BulkTenantsCommandHandlerTests
         repo.Verify(r => r.DeleteAsync(tenant, It.IsAny<CancellationToken>()), Times.Once);
     }
 
+    [Fact]
+    public async Task BulkCreate_Should_Count_Success_UniqueConflicts_And_Exceptions()
+    {
+        var repo = new Mock<ITenantRepository>();
+        var items = new[]
+        {
+            new BulkCreateTenantItem("Created", "created", "created@example.com", "created description"),
+            new BulkCreateTenantItem("Duplicate", "duplicate", "duplicate@example.com"),
+            new BulkCreateTenantItem("Broken", "broken", "broken@example.com")
+        };
+        Tenant? createdTenant = null;
+
+        repo.Setup(r => r.IsSlugUniqueAsync("created", It.IsAny<Guid?>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+        repo.Setup(r => r.IsSlugUniqueAsync("duplicate", It.IsAny<Guid?>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
+        repo.Setup(r => r.IsSlugUniqueAsync("broken", It.IsAny<Guid?>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+        repo.Setup(r => r.CreateAsync(It.Is<Tenant>(tenant => tenant.Slug == "created"), It.IsAny<CancellationToken>()))
+            .Callback<Tenant, CancellationToken>((tenant, _) => createdTenant = tenant)
+            .ReturnsAsync((Tenant tenant, CancellationToken _) => tenant);
+        repo.Setup(r => r.CreateAsync(It.Is<Tenant>(tenant => tenant.Slug == "broken"), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new InvalidOperationException("boom"));
+
+        var handler = new BulkCreateTenantsCommandHandler(repo.Object);
+        var result = await handler.Handle(new BulkCreateTenantsCommand(items), CancellationToken.None);
+
+        result.TotalRequested.Should().Be(3);
+        result.SuccessfulOperations.Should().Be(1);
+        result.FailedOperations.Should().Be(2);
+        result.Errors.Should().BeEmpty();
+        createdTenant.Should().NotBeNull();
+        createdTenant!.Name.Should().Be("Created");
+        createdTenant.Description.Should().Be("created description");
+        createdTenant.IsActive.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task BulkPurge_Should_Count_Success_MissingTenants_And_Exceptions()
+    {
+        var repo = new Mock<ITenantRepository>();
+        var ids = new[] { Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid() };
+        var deletedTenant = new Tenant { Id = ids[1], Name = "Delete Me", Slug = "delete-me" };
+        var brokenTenant = new Tenant { Id = ids[2], Name = "Broken", Slug = "broken" };
+
+        repo.Setup(r => r.GetByIdAsync(ids[0], It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Tenant?)null);
+        repo.Setup(r => r.GetByIdAsync(ids[1], It.IsAny<CancellationToken>()))
+            .ReturnsAsync(deletedTenant);
+        repo.Setup(r => r.GetByIdAsync(ids[2], It.IsAny<CancellationToken>()))
+            .ReturnsAsync(brokenTenant);
+        repo.Setup(r => r.DeleteAsync(deletedTenant, It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+        repo.Setup(r => r.DeleteAsync(brokenTenant, It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new InvalidOperationException("boom"));
+
+        var handler = new BulkPurgeTenantsCommandHandler(repo.Object);
+        var result = await handler.Handle(new BulkPurgeTenantsCommand(ids), CancellationToken.None);
+
+        result.TotalRequested.Should().Be(3);
+        result.SuccessfulOperations.Should().Be(1);
+        result.FailedOperations.Should().Be(2);
+    }
+
+    [Fact]
+    public async Task BulkUndelete_Should_Count_Success_MissingTenants_And_Exceptions()
+    {
+        var repo = new Mock<ITenantRepository>();
+        var ids = new[] { Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid() };
+        var alreadyActiveTenant = new Tenant { Id = ids[1], Name = "Active", Slug = "active" };
+        var deletedTenant = new Tenant { Id = ids[2], Name = "Deleted", Slug = "deleted" };
+        var brokenTenant = new Tenant { Id = ids[3], Name = "Broken", Slug = "broken" };
+        typeof(EntityBase).GetProperty(nameof(EntityBase.Version))!.SetValue(deletedTenant, 1);
+        typeof(EntityBase).GetProperty(nameof(EntityBase.Version))!.SetValue(brokenTenant, 1);
+        deletedTenant.SoftDelete();
+        brokenTenant.SoftDelete();
+
+        repo.Setup(r => r.GetByIdAsync(ids[0], It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Tenant?)null);
+        repo.Setup(r => r.GetByIdAsync(ids[1], It.IsAny<CancellationToken>()))
+            .ReturnsAsync(alreadyActiveTenant);
+        repo.Setup(r => r.GetByIdAsync(ids[2], It.IsAny<CancellationToken>()))
+            .ReturnsAsync(deletedTenant);
+        repo.Setup(r => r.GetByIdAsync(ids[3], It.IsAny<CancellationToken>()))
+            .ReturnsAsync(brokenTenant);
+        repo.Setup(r => r.UpdateAsync(deletedTenant, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(deletedTenant);
+        repo.Setup(r => r.UpdateAsync(brokenTenant, It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new InvalidOperationException("boom"));
+
+        var handler = new BulkUndeleteTenantsCommandHandler(repo.Object);
+        var result = await handler.Handle(new BulkUndeleteTenantsCommand(ids), CancellationToken.None);
+
+        result.TotalRequested.Should().Be(4);
+        result.SuccessfulOperations.Should().Be(2);
+        result.FailedOperations.Should().Be(2);
+        deletedTenant.IsDeleted.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task BulkUpdate_Should_Count_Success_MissingTenants_And_Exceptions()
+    {
+        var repo = new Mock<ITenantRepository>();
+        var existingTenant = new Tenant { Id = Guid.NewGuid(), Name = "Old", Slug = "old" };
+        var brokenTenant = new Tenant { Id = Guid.NewGuid(), Name = "Broken", Slug = "broken" };
+        var missingId = Guid.NewGuid();
+        var updates = new[]
+        {
+            new BulkUpdateTenantItem(missingId, "Missing"),
+            new BulkUpdateTenantItem(existingTenant.Id, "Updated", "updated description"),
+            new BulkUpdateTenantItem(brokenTenant.Id, "Broken Updated")
+        };
+
+        repo.Setup(r => r.GetByIdAsync(missingId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Tenant?)null);
+        repo.Setup(r => r.GetByIdAsync(existingTenant.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(existingTenant);
+        repo.Setup(r => r.GetByIdAsync(brokenTenant.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(brokenTenant);
+        repo.Setup(r => r.UpdateAsync(existingTenant, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(existingTenant);
+        repo.Setup(r => r.UpdateAsync(brokenTenant, It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new InvalidOperationException("boom"));
+
+        var handler = new BulkUpdateTenantsCommandHandler(repo.Object);
+        var result = await handler.Handle(new BulkUpdateTenantsCommand(updates), CancellationToken.None);
+
+        result.TotalRequested.Should().Be(3);
+        result.SuccessfulOperations.Should().Be(1);
+        result.FailedOperations.Should().Be(2);
+        existingTenant.Name.Should().Be("Updated");
+        existingTenant.Description.Should().Be("updated description");
+    }
+
     private sealed record TestBulkActivateTenantsCommand(IEnumerable<Guid> TenantIds) : BulkActivateTenantsCommand(TenantIds);
 
     private sealed record TestBulkDeactivateTenantsCommand(IEnumerable<Guid> TenantIds) : BulkDeactivateTenantsCommand(TenantIds);

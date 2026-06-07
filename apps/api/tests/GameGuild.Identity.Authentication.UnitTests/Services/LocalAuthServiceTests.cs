@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
+using GameGuild.CQRS;
 using GameGuild.Identity.Authentication;
+using GameGuild.Identity.Tenants;
 using GameGuild.Identity.Users;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
@@ -25,6 +27,8 @@ public class LocalAuthServiceTests
     private readonly Mock<IAuthenticationAnomalyDetectionService> _anomalyDetectionMock = new();
     private readonly Mock<IUserEnumerationProtectionService> _enumerationProtectionMock = new();
     private readonly Mock<IHttpContextAccessor> _httpContextAccessorMock = new();
+    private readonly Mock<IPublisher> _publisherMock = new();
+    private readonly Mock<ISender> _senderMock = new();
     private readonly IConfiguration _configuration;
     private readonly LocalAuthService _sut;
 
@@ -44,6 +48,10 @@ public class LocalAuthServiceTests
         _authAttemptServiceMock.Setup(x => x.GetClientIpAddress(It.IsAny<HttpContext>())).Returns("127.0.0.1");
         _enumerationProtectionMock.Setup(x => x.GetGenericErrorMessage(It.IsAny<string>())).Returns("Authentication failed");
         _enumerationProtectionMock.Setup(x => x.AddTimingProtectionDelayAsync(It.IsAny<bool>(), It.IsAny<DateTime>())).Returns(Task.CompletedTask);
+        _publisherMock.Setup(x => x.Publish(It.IsAny<UserSignedUpNotification>(), It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
+        _senderMock
+            .Setup(x => x.Send(It.IsAny<GetUserMembershipsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new GetUserMembershipsResponse());
 
         _sut = new LocalAuthService(
             _userRepoMock.Object,
@@ -55,7 +63,9 @@ public class LocalAuthServiceTests
             _anomalyDetectionMock.Object,
             _enumerationProtectionMock.Object,
             _httpContextAccessorMock.Object,
-            NullLogger<LocalAuthService>.Instance
+            NullLogger<LocalAuthService>.Instance,
+            _publisherMock.Object,
+            _senderMock.Object
         );
     }
 
@@ -283,6 +293,32 @@ public class LocalAuthServiceTests
             Times.Once);
     }
 
+    [Fact]
+    public async Task LocalSignUpAsync_PublishesUserSignedUpNotification()
+    {
+        _userRepoMock.Setup(x => x.ExistsByEmailAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
+        _userRepoMock.Setup(x => x.AddAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+        _userRepoMock.Setup(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+        _jwtTokenServiceMock.Setup(x => x.GenerateAccessTokenAsync(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<string[]>(), It.IsAny<Guid?>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync("at");
+        _jwtTokenServiceMock.Setup(x => x.GenerateRefreshTokenAsync(It.IsAny<Guid>(), It.IsAny<DeviceInfo>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync("rt");
+
+        var request = new LocalSignUpRequest { Email = "new@example.com", Password = "P@ss1word", Username = "newuser" };
+
+        await _sut.LocalSignUpAsync(request);
+
+        _publisherMock.Verify(
+            x => x.Publish(
+                It.Is<UserSignedUpNotification>(notification =>
+                    notification.Email == "new@example.com"),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
     // ── RefreshTokenAsync ─────────────────────────────────────
 
     [Fact]
@@ -368,8 +404,8 @@ public class LocalAuthServiceTests
         _refreshTokenHasherMock.Setup(x => x.HashToken("valid-token")).Returns("hashed");
         _refreshTokenRepoMock.Setup(x => x.GetByTokenAsync("hashed", default)).ReturnsAsync(storedToken);
 
-        _jwtTokenServiceMock.Setup(x => x.GenerateAccessToken(userId, It.IsAny<string>(), It.IsAny<string[]>()))
-            .Returns("new-access-token");
+        _jwtTokenServiceMock.Setup(x => x.GenerateAccessTokenAsync(userId, It.IsAny<string>(), It.IsAny<string[]>(), It.IsAny<Guid?>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync("new-access-token");
         _jwtTokenServiceMock.Setup(x => x.GenerateRefreshTokenAsync(userId, It.IsAny<DeviceInfo>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync("new-refresh-token");
 
@@ -402,8 +438,8 @@ public class LocalAuthServiceTests
         _refreshTokenHasherMock.Setup(x => x.HashToken(It.IsAny<string>())).Returns("hashed");
         _refreshTokenRepoMock.Setup(x => x.GetByTokenAsync("hashed", default)).ReturnsAsync(storedToken);
 
-        _jwtTokenServiceMock.Setup(x => x.GenerateAccessToken(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<string[]>()))
-            .Returns("at");
+        _jwtTokenServiceMock.Setup(x => x.GenerateAccessTokenAsync(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<string[]>(), It.IsAny<Guid?>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync("at");
         _jwtTokenServiceMock.Setup(x => x.GenerateRefreshTokenAsync(It.IsAny<Guid>(), It.IsAny<DeviceInfo>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync("new-rt");
         _refreshTokenRepoMock.Setup(x => x.UpdateAsync(It.IsAny<RefreshToken>(), default))

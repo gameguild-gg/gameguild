@@ -1247,6 +1247,57 @@ public class TenantPermissionQueryHandlerTests5
     }
 
     [Fact]
+    public async Task GetEffectivePermissionsQueryHandler_ReturnsResourcePermissionsFromQueryService()
+    {
+        var actorId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+        var resourceId = Guid.NewGuid();
+        var actor = new ActorContext
+        {
+            ActorKind = ActorKind.User,
+            SubjectId = actorId.ToString(),
+            TenantId = tenantId,
+            Roles = new HashSet<string> { "Member" },
+            Permissions = new HashSet<string>(),
+            IsAuthenticated = true
+        };
+        var accessor = new Mock<IActorContextAccessor>();
+        accessor.SetupGet(a => a.ActorContext).Returns(actor);
+        var querySvc = new Mock<IPermissionQueryService>();
+        querySvc
+            .Setup(s => s.HasTenantPermissionAsync(actorId, tenantId, $"Property.{resourceId}.Read", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+        querySvc
+            .Setup(s => s.GetEffectivePermissionsAsync(actorId, tenantId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<string>
+            {
+                $"Property.{resourceId}.Read",
+                $"Property.{resourceId}.Update",
+                "Property.other.Read",
+                "Admin"
+            });
+        var handler = new GetEffectivePermissionsQueryHandler(
+            accessor.Object,
+            querySvc.Object,
+            NullLogger<GetEffectivePermissionsQueryHandler>.Instance);
+
+        var result = await handler.Handle(
+            new GetEffectivePermissionsQuery
+            {
+                TenantId = new TenantId(tenantId),
+                ResourceType = "Property",
+                ResourceId = resourceId
+            },
+            CancellationToken.None);
+
+        result.Permissions.Should().HaveCount(3);
+        result.Permissions.Should().Contain(p => p.Permission == $"Property.{resourceId}.Read" && p.Source == "Effective");
+        result.Permissions.Should().Contain(p => p.Permission == $"Property.{resourceId}.Update" && p.Source == "Effective");
+        result.Permissions.Should().Contain(p => p.Permission == "Admin" && p.Source == "Effective");
+        result.HasFullAccess.Should().BeTrue();
+    }
+
+    [Fact]
     public void HasPermissionQueryHandler_CanBeCreated()
     {
         var accessor = new Mock<IActorContextAccessor>();

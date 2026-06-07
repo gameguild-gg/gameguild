@@ -47,6 +47,7 @@ public class ApplicationStartupIntegrationTests : IClassFixture<WebApplicationFa
                 {
                     options.UseInMemoryDatabase($"StartupTestDb_{Guid.NewGuid()}");
                 });
+                services.AddScoped<DbContext>(provider => provider.GetRequiredService<ApplicationDbContext>());
             });
         });
     }

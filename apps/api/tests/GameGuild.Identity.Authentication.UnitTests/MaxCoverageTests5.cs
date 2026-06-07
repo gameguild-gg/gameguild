@@ -645,15 +645,14 @@ public sealed class EmailVerificationCatchBlockTests
         mockCache.Setup(c => c.CreateEntry(It.IsAny<object>()))
             .Throws(new InvalidOperationException("Cache error"));
 
-        var config = new ConfigurationBuilder()
-            .AddInMemoryCollection(new Dictionary<string, string?>
-            {
-                ["App:BaseUrl"] = "http://localhost"
-            }).Build();
+        var publisher = new Mock<IPublisher>();
+        publisher.Setup(x => x.Publish(It.IsAny<EmailVerificationRequestedNotification>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
 
         var sut = new EmailVerificationService(
             Mock.Of<ILogger<EmailVerificationService>>(),
-            config, mockCache.Object);
+            mockCache.Object,
+            publisher.Object);
 
         await Assert.ThrowsAsync<InvalidOperationException>(() =>
             sut.GenerateVerificationTokenAsync(Guid.NewGuid(), "test@test.com"));
@@ -667,15 +666,14 @@ public sealed class EmailVerificationCatchBlockTests
         mockCache.Setup(c => c.TryGetValue(It.IsAny<object>(), out outVal))
             .Throws(new InvalidOperationException("Cache error"));
 
-        var config = new ConfigurationBuilder()
-            .AddInMemoryCollection(new Dictionary<string, string?>
-            {
-                ["App:BaseUrl"] = "http://localhost"
-            }).Build();
+        var publisher = new Mock<IPublisher>();
+        publisher.Setup(x => x.Publish(It.IsAny<EmailVerificationRequestedNotification>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
 
         var sut = new EmailVerificationService(
             Mock.Of<ILogger<EmailVerificationService>>(),
-            config, mockCache.Object);
+            mockCache.Object,
+            publisher.Object);
 
         var result = await sut.VerifyEmailTokenAsync(Guid.NewGuid(), "fake-token");
         result.Should().BeFalse();
@@ -689,15 +687,15 @@ public sealed class EmailVerificationCatchBlockTests
         mockRepo.Setup(r => r.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new Exception("DB error"));
 
-        var config = new ConfigurationBuilder()
-            .AddInMemoryCollection(new Dictionary<string, string?>
-            {
-                ["App:BaseUrl"] = "http://localhost"
-            }).Build();
+        var publisher = new Mock<IPublisher>();
+        publisher.Setup(x => x.Publish(It.IsAny<EmailVerificationRequestedNotification>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
 
         var sut = new EmailVerificationService(
             Mock.Of<ILogger<EmailVerificationService>>(),
-            config, mockCache.Object, mockRepo.Object);
+            mockCache.Object,
+            publisher.Object,
+            mockRepo.Object);
 
         var result = await sut.IsEmailVerifiedAsync(Guid.NewGuid());
         result.Should().BeFalse();
@@ -711,15 +709,14 @@ public sealed class EmailVerificationCatchBlockTests
         mockCache.Setup(c => c.TryGetValue(It.IsAny<object>(), out outVal))
             .Throws(new InvalidOperationException("Cache error"));
 
-        var config = new ConfigurationBuilder()
-            .AddInMemoryCollection(new Dictionary<string, string?>
-            {
-                ["App:BaseUrl"] = "http://localhost"
-            }).Build();
+        var publisher = new Mock<IPublisher>();
+        publisher.Setup(x => x.Publish(It.IsAny<EmailVerificationRequestedNotification>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
 
         var sut = new EmailVerificationService(
             Mock.Of<ILogger<EmailVerificationService>>(),
-            config, mockCache.Object);
+            mockCache.Object,
+            publisher.Object);
 
         var result = await sut.ResendVerificationEmailAsync(Guid.NewGuid(), "test@test.com");
         result.Should().BeFalse();
@@ -733,15 +730,14 @@ public sealed class EmailVerificationCatchBlockTests
         mockCache.Setup(c => c.TryGetValue(It.IsAny<object>(), out outVal))
             .Throws(new InvalidOperationException("Cache error"));
 
-        var config = new ConfigurationBuilder()
-            .AddInMemoryCollection(new Dictionary<string, string?>
-            {
-                ["App:BaseUrl"] = "http://localhost"
-            }).Build();
+        var publisher = new Mock<IPublisher>();
+        publisher.Setup(x => x.Publish(It.IsAny<EmailVerificationRequestedNotification>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
 
         var sut = new EmailVerificationService(
             Mock.Of<ILogger<EmailVerificationService>>(),
-            config, mockCache.Object);
+            mockCache.Object,
+            publisher.Object);
 
         var result = await sut.IsTokenValidAsync("some-token");
         result.Should().BeFalse();

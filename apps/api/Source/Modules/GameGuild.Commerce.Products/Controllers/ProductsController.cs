@@ -274,7 +274,11 @@ public class ProductsController(IMediator mediator) : BaseApiController
 
     private bool CanIncludeUnpublished(bool includeUnpublished)
     {
-        return includeUnpublished && User?.Identity?.IsAuthenticated == true;
+        if (!includeUnpublished)
+            return false;
+
+        var identity = User?.Identity;
+        return identity is { IsAuthenticated: true };
     }
 }
 

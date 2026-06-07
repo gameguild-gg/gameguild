@@ -23,6 +23,7 @@ public class AssetAccessOptions
 public class AssetAccessService : IAssetAccessService
 {
     private readonly IAssetReferenceRepository _referenceRepository;
+    private readonly ITransformedAssetRepository _transformedAssetRepository;
     private readonly IAssetStorageService _storageService;
     private readonly IAssetTokenService _tokenService;
     private readonly ITenantMemberRepository _tenantMemberRepository;
@@ -32,6 +33,7 @@ public class AssetAccessService : IAssetAccessService
 
     public AssetAccessService(
         IAssetReferenceRepository referenceRepository,
+        ITransformedAssetRepository transformedAssetRepository,
         IAssetStorageService storageService,
         IAssetTokenService tokenService,
         ITenantMemberRepository tenantMemberRepository,
@@ -40,6 +42,7 @@ public class AssetAccessService : IAssetAccessService
         ILogger<AssetAccessService> logger)
     {
         _referenceRepository = referenceRepository;
+        _transformedAssetRepository = transformedAssetRepository;
         _storageService = storageService;
         _tokenService = tokenService;
         _tenantMemberRepository = tenantMemberRepository;
@@ -394,18 +397,33 @@ public class AssetAccessService : IAssetAccessService
             return null;
         }
 
-        // For now, return null - transformation implementation is in TransformationService
-        // This is a placeholder that would delegate to the transformation service
-        _logger.LogDebug(
-            "GetOrCreateTransformation called for content {ContentId} with spec {Spec}",
-            contentId, spec);
+        var canonicalSpec = spec.ToCanonicalString();
+        var transformedAsset = await _transformedAssetRepository
+            .GetAsync(contentId, canonicalSpec, ct)
+            .ConfigureAwait(false);
 
-        // PLANNED: Implement transformation lookup/creation via ITransformationService (depends on GameGuild.Assets.Transformations)
-        // var transformedAsset = await _transformationService.GetOrCreateAsync(contentId, spec, ct);
-        // return transformedAsset != null
-        //     ? new TransformedAssetInfo(transformedAsset.Id, contentId, ...)
-        //     : null;
+        if (transformedAsset == null)
+        {
+            _logger.LogInformation(
+                "No cached transformed asset found for content {ContentId} and spec {Spec}",
+                contentId, canonicalSpec);
+            return null;
+        }
 
-        return null;
+        var metadata = await _storageService
+            .GetMetadataAsync(transformedAsset.BucketName, transformedAsset.ObjectKey, ct)
+            .ConfigureAwait(false);
+
+        transformedAsset.RecordAccess();
+        await _transformedAssetRepository.UpdateAsync(transformedAsset, ct).ConfigureAwait(false);
+
+        return new TransformedAssetInfo(
+            transformedAsset.Id,
+            transformedAsset.SourceContentId,
+            transformedAsset.BucketName,
+            transformedAsset.ObjectKey,
+            metadata?.MimeType ?? transformedAsset.MimeType,
+            metadata?.ETag ?? transformedAsset.ObjectKey,
+            metadata?.SizeBytes ?? transformedAsset.SizeBytes);
     }
 }

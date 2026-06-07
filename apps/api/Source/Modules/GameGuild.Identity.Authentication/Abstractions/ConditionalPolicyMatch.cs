@@ -1,4 +1,4 @@
-﻿using GameGuild.Identity.Authorization;
+using GameGuild.Identity.Authorization;
 
 namespace GameGuild.Identity.Authentication;
 

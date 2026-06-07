@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using Microsoft.Extensions.Caching.Memory;
 
 namespace GameGuild.CQRS.Implementation;
@@ -11,9 +12,10 @@ namespace GameGuild.CQRS.Implementation;
 ///     enabling drop-in replacement with distributed cache implementations (Redis, SQL Server)
 ///     without changing the calling code.
 /// </remarks>
-public sealed class MemoryCacheService : ICacheService
+public sealed class MemoryCacheService : IPatternCacheService
 {
     private readonly IMemoryCache _memoryCache;
+    private readonly ConcurrentDictionary<string, byte> _keys = new(StringComparer.Ordinal);
 
     /// <summary>
     ///     Initializes a new instance of the MemoryCacheService class
@@ -51,6 +53,7 @@ public sealed class MemoryCacheService : ICacheService
         cancellationToken.ThrowIfCancellationRequested();
 
         _memoryCache.Set(key, value, expiration);
+        _keys[key] = 0;
 
         return Task.CompletedTask;
     }
@@ -66,7 +69,63 @@ public sealed class MemoryCacheService : ICacheService
         cancellationToken.ThrowIfCancellationRequested();
 
         _memoryCache.Remove(key);
+        _keys.TryRemove(key, out _);
 
         return Task.CompletedTask;
+    }
+
+    public Task<int> RemoveByPatternAsync(string pattern, CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(pattern);
+        cancellationToken.ThrowIfCancellationRequested();
+
+        var matchingKeys = _keys.Keys.Where(key => MatchesPattern(key, pattern)).ToArray();
+
+        foreach (var key in matchingKeys)
+        {
+            _memoryCache.Remove(key);
+            _keys.TryRemove(key, out _);
+        }
+
+        return Task.FromResult(matchingKeys.Length);
+    }
+
+    private static bool MatchesPattern(string key, string pattern)
+    {
+        if (pattern == "*") { return true; }
+
+        if (!pattern.Contains('*') && !pattern.Contains('?')) { return string.Equals(key, pattern, StringComparison.Ordinal); }
+
+        var keyIndex = 0;
+        var patternIndex = 0;
+        var starIndex = -1;
+        var matchIndex = 0;
+
+        while (keyIndex < key.Length)
+        {
+            if (patternIndex < pattern.Length && (pattern[patternIndex] == '?' || pattern[patternIndex] == key[keyIndex]))
+            {
+                patternIndex++;
+                keyIndex++;
+            }
+            else if (patternIndex < pattern.Length && pattern[patternIndex] == '*')
+            {
+                starIndex = patternIndex++;
+                matchIndex = keyIndex;
+            }
+            else if (starIndex != -1)
+            {
+                patternIndex = starIndex + 1;
+                keyIndex = ++matchIndex;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        while (patternIndex < pattern.Length && pattern[patternIndex] == '*') { patternIndex++; }
+
+        return patternIndex == pattern.Length;
     }
 }

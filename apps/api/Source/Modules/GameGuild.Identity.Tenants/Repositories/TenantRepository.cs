@@ -36,15 +36,49 @@ public class TenantRepository(IApplicationDbContext context) : ITenantRepository
         return await context.Set<Tenant>().Where(t => t.DeletedAt == null).OrderBy(t => t.Name).ToListAsync(cancellationToken).ConfigureAwait(false);
     }
 
-    public async Task<(IEnumerable<Tenant> Items, int TotalCount)> GetPagedAsync(int page, int pageSize, bool? isActive = null, CancellationToken cancellationToken = default)
+    public async Task<(IEnumerable<Tenant> Items, int TotalCount)> GetPagedAsync(
+        int page,
+        int pageSize,
+        bool? isActive = null,
+        bool? isArchived = null,
+        string? searchTerm = null,
+        string? sortBy = "Name",
+        bool sortDescending = false,
+        CancellationToken cancellationToken = default)
     {
         var query = context.Set<Tenant>().Where(t => t.DeletedAt == null);
 
         if (isActive.HasValue) { query = query.Where(t => t.IsActive == isActive.Value); }
+        if (isArchived.HasValue) { query = query.Where(t => t.IsArchived == isArchived.Value); }
+
+        if (!string.IsNullOrWhiteSpace(searchTerm))
+        {
+            var normalizedSearchTerm = searchTerm.Trim();
+            query = query.Where(
+                t => t.Name.Contains(normalizedSearchTerm)
+                     || t.Slug.Contains(normalizedSearchTerm)
+                     || (t.AdminEmail != null && t.AdminEmail.Contains(normalizedSearchTerm)));
+        }
 
         var totalCount = await query.CountAsync(cancellationToken).ConfigureAwait(false);
 
-        var items = await query.OrderBy(t => t.Name).Skip((page - 1) * pageSize).Take(pageSize).ToListAsync(cancellationToken).ConfigureAwait(false);
+        var orderedQuery = (sortBy, sortDescending) switch
+        {
+            ("CreatedAt", true) => query.OrderByDescending(t => t.CreatedAt),
+            ("CreatedAt", false) => query.OrderBy(t => t.CreatedAt),
+            ("UpdatedAt", true) => query.OrderByDescending(t => t.UpdatedAt),
+            ("UpdatedAt", false) => query.OrderBy(t => t.UpdatedAt),
+            ("IsActive", true) => query.OrderByDescending(t => t.IsActive).ThenBy(t => t.Name),
+            ("IsActive", false) => query.OrderBy(t => t.IsActive).ThenBy(t => t.Name),
+            ("Slug", true) => query.OrderByDescending(t => t.Slug),
+            ("Slug", false) => query.OrderBy(t => t.Slug),
+            ("AdminEmail", true) => query.OrderByDescending(t => t.AdminEmail),
+            ("AdminEmail", false) => query.OrderBy(t => t.AdminEmail),
+            (_, true) => query.OrderByDescending(t => t.Name),
+            _ => query.OrderBy(t => t.Name)
+        };
+
+        var items = await orderedQuery.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync(cancellationToken).ConfigureAwait(false);
 
         return (items, totalCount);
     }
@@ -99,9 +133,6 @@ public class TenantRepository(IApplicationDbContext context) : ITenantRepository
         int pageSize,
         CancellationToken cancellationToken = default)
     {
-        // Build query for audit entries
-        // Note: This is a placeholder implementation. In production, you would query
-        // an actual audit log table (e.g., TenantAuditLogs or use a centralized audit service)
         var query = context.Set<TenantAuditLog>()
             .Where(a => a.TenantId.HasValue && a.TenantId.Value == tenantId);
 

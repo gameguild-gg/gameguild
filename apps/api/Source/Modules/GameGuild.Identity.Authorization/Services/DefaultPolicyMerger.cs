@@ -16,10 +16,18 @@ public sealed class DefaultPolicyMerger : IPolicyMerger
             return basePolicy;
 
         // Tenant override takes precedence, with fallback to base
+        var resourceType = tenantOverride.ResourceType;
+        if (resourceType is null)
+            resourceType = basePolicy.ResourceType;
+
+        var minimumAccessLevel = tenantOverride.MinimumAccessLevel;
+        if (minimumAccessLevel is null)
+            minimumAccessLevel = basePolicy.MinimumAccessLevel;
+
         return new PolicyDefinition
         {
             PolicyName = basePolicy.PolicyName,
-            RequireAuthentication = tenantOverride.RequireAuthentication || basePolicy.RequireAuthentication,
+            RequireAuthentication = tenantOverride.RequireAuthentication | basePolicy.RequireAuthentication,
             AuthenticationSchemes = MergeCollections(
                 basePolicy.AuthenticationSchemes,
                 tenantOverride.AuthenticationSchemes),
@@ -29,12 +37,12 @@ public sealed class DefaultPolicyMerger : IPolicyMerger
             RequiredRoles = MergeCollections(
                 basePolicy.RequiredRoles,
                 tenantOverride.RequiredRoles),
-            RequireAccessControlListAccess = tenantOverride.RequireAccessControlListAccess || basePolicy.RequireAccessControlListAccess,
-            ResourceType = tenantOverride.ResourceType ?? basePolicy.ResourceType,
-            MinimumAccessLevel = tenantOverride.MinimumAccessLevel ?? basePolicy.MinimumAccessLevel,
+            RequireAccessControlListAccess = tenantOverride.RequireAccessControlListAccess | basePolicy.RequireAccessControlListAccess,
+            ResourceType = resourceType,
+            MinimumAccessLevel = minimumAccessLevel,
             IsTenantScoped = true,
             Version = Math.Max(basePolicy.Version, tenantOverride.Version),
-            UseRuleBasedEvaluation = tenantOverride.UseRuleBasedEvaluation || basePolicy.UseRuleBasedEvaluation,
+            UseRuleBasedEvaluation = tenantOverride.UseRuleBasedEvaluation | basePolicy.UseRuleBasedEvaluation,
             Rules = MergeRules(basePolicy.Rules, tenantOverride.Rules)
         };
     }
@@ -67,7 +75,7 @@ public sealed class DefaultPolicyMerger : IPolicyMerger
         }
 
         // All policies must use rule-based evaluation
-        if (definition.UseRuleBasedEvaluation && definition.Rules is { Count: > 0 })
+        if (ShouldUseRuleBasedEvaluation(definition))
         {
             var ruleset = new PolicyRuleset
             {
@@ -107,6 +115,17 @@ public sealed class DefaultPolicyMerger : IPolicyMerger
         if (baseList.Count == 0)
             return overrideList;
         return baseList.Concat(overrideList).Distinct().ToList();
+    }
+
+    private static bool ShouldUseRuleBasedEvaluation(PolicyDefinition definition)
+    {
+        if (!definition.UseRuleBasedEvaluation)
+            return false;
+
+        if (definition.Rules is null)
+            return false;
+
+        return definition.Rules.Count > 0;
     }
 
     /// <summary>

@@ -2,6 +2,7 @@ using FluentAssertions;
 using Xunit;
 using GameGuild.API.Database;
 using GameGuild.Identity.Authentication;
+using GameGuild.Identity.Tenants;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
@@ -28,6 +29,7 @@ public class AuthenticationFlowsE2ETests : IClassFixture<WebApplicationFactory<G
     private readonly ApplicationDbContext _dbContext;
     private readonly IAuthService _authService;
     private readonly IMfaService _mfaService;
+    private readonly IRefreshTokenHasher _refreshTokenHasher;
 
     public AuthenticationFlowsE2ETests(WebApplicationFactory<GameGuild.API.Program> factory)
     {
@@ -72,6 +74,7 @@ public class AuthenticationFlowsE2ETests : IClassFixture<WebApplicationFactory<G
         _dbContext = _scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         _authService = _scope.ServiceProvider.GetRequiredService<IAuthService>();
         _mfaService = _scope.ServiceProvider.GetRequiredService<IMfaService>();
+        _refreshTokenHasher = _scope.ServiceProvider.GetRequiredService<IRefreshTokenHasher>();
 
         // Ensure database is created
         _dbContext.Database.EnsureCreated();
@@ -138,8 +141,9 @@ public class AuthenticationFlowsE2ETests : IClassFixture<WebApplicationFactory<G
         await _authService.RevokeRefreshTokenAsync(refreshResult.RefreshToken, "127.0.0.1");
 
         // Assert Revoke - Token should no longer work
+        var revokedTokenHash = _refreshTokenHasher.HashToken(refreshResult.RefreshToken);
         var revokedToken = await _dbContext.Set<RefreshToken>()
-            .FirstOrDefaultAsync(rt => rt.Token == refreshResult.RefreshToken);
+            .FirstOrDefaultAsync(rt => rt.Token == revokedTokenHash);
 
         revokedToken.Should().NotBeNull();
         revokedToken!.IsRevoked.Should().BeTrue();
@@ -188,6 +192,79 @@ public class AuthenticationFlowsE2ETests : IClassFixture<WebApplicationFactory<G
 
         await FluentActions.Invoking(async () => await _authService.RefreshTokenAsync(refreshRequest))
             .Should().ThrowAsync<Exception>();
+    }
+
+    [Fact]
+    public async Task LocalAuth_SignIn_WithTenantMemberships_ShouldPopulateTenantContext()
+    {
+        // Arrange
+        var email = $"tenant.flow.{Guid.NewGuid()}@test.com";
+        var password = "TenantPassword123!";
+
+        var signUpRequest = new LocalSignUpRequest
+        {
+            Email = email,
+            Username = $"tenant_user_{Guid.NewGuid():N}",
+            Password = password
+        };
+
+        var signUpResult = await _authService.LocalSignUpAsync(signUpRequest);
+        var userId = signUpResult.UserId;
+
+        var tenantOne = new Tenant
+        {
+            Name = $"Tenant One {Guid.NewGuid():N}",
+            Slug = $"tenant-one-{Guid.NewGuid():N}",
+            AdminEmail = email,
+            IsActive = true
+        };
+
+        var tenantTwo = new Tenant
+        {
+            Name = $"Tenant Two {Guid.NewGuid():N}",
+            Slug = $"tenant-two-{Guid.NewGuid():N}",
+            AdminEmail = email,
+            IsActive = true
+        };
+
+        _dbContext.Set<Tenant>().AddRange(tenantOne, tenantTwo);
+        await _dbContext.SaveChangesAsync();
+
+        _dbContext.Set<TenantMember>().AddRange(
+            new TenantMember
+            {
+                UserId = userId,
+                TenantId = tenantOne.Id,
+                Role = "Owner",
+                IsActive = true,
+                Tenant = tenantOne
+            },
+            new TenantMember
+            {
+                UserId = userId,
+                TenantId = tenantTwo.Id,
+                Role = "Owner",
+                IsActive = true,
+                Tenant = tenantTwo
+            });
+        await _dbContext.SaveChangesAsync();
+
+        var signInRequest = new LocalSignInRequest
+        {
+            Email = email,
+            Password = password,
+            TenantId = tenantTwo.Id
+        };
+
+        // Act
+        var signInResult = await _authService.LocalSignInAsync(signInRequest);
+
+        // Assert
+        signInResult.TenantId.Should().Be(tenantTwo.Id);
+        signInResult.AvailableTenants.Should().NotBeNull();
+        signInResult.AvailableTenants!.Should().HaveCount(2);
+        signInResult.AvailableTenants.Should().Contain(tenant => tenant.Id == tenantOne.Id && tenant.Name == tenantOne.Name);
+        signInResult.AvailableTenants.Should().Contain(tenant => tenant.Id == tenantTwo.Id && tenant.Name == tenantTwo.Name);
     }
 
     #endregion
@@ -326,7 +403,7 @@ public class AuthenticationFlowsE2ETests : IClassFixture<WebApplicationFactory<G
         // This would work with proper mocking of external services
         // await FluentActions.Invoking(async () => await _authService.GoogleIdTokenSignInAsync(googleSignInRequest))
         //     .Should().NotThrowAsync();
-        
+
         await Task.CompletedTask; // Placeholder until actual implementation
     }
 
@@ -345,7 +422,7 @@ public class AuthenticationFlowsE2ETests : IClassFixture<WebApplicationFactory<G
         // This would work with proper mocking of external GitHub OAuth
         // await FluentActions.Invoking(async () => await _authService.SocialSignInAsync(githubSignInRequest))
         //     .Should().NotThrowAsync();
-        
+
         await Task.CompletedTask; // Placeholder until actual implementation
     }
 

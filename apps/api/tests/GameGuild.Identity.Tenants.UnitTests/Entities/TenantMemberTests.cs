@@ -6,6 +6,19 @@ namespace GameGuild.Identity.Tenants.UnitTests.Entities;
 public class TenantMemberTests
 {
     [Fact]
+    public void TenantMember_Partial_Constructor_Should_Map_Properties()
+    {
+        var tenantId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+
+        var member = new TenantMember(new { TenantId = tenantId, UserId = userId, Role = "Admin" });
+
+        member.TenantId.Should().Be(tenantId);
+        member.UserId.Should().Be(userId);
+        member.Role.Should().Be("Admin");
+    }
+
+    [Fact]
     public void TenantMember_Should_Default_To_Active()
     {
         var member = new TenantMember

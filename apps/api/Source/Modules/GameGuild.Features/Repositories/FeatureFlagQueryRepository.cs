@@ -62,14 +62,26 @@ public class FeatureFlagQueryRepository : IFeatureFlagQueryRepository
             .ToListAsync(cancellationToken).ConfigureAwait(false);
     }
 
-    public Task<IEnumerable<FeatureFlagTargetDto>> GetTargetingRulesAsync(Guid featureFlagId, CancellationToken cancellationToken = default)
+    public async Task<IEnumerable<FeatureFlagTargetDto>> GetTargetingRulesAsync(Guid featureFlagId, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException("GetTargetingRulesAsync will be implemented in follow-up work");
+        return await _context.Set<FeatureFlagTarget>()
+            .AsNoTracking()
+            .Where(t => t.FeatureFlagId == featureFlagId && t.DeletedAt == null)
+            .OrderByDescending(t => t.Priority)
+            .ThenBy(t => t.CreatedAt)
+            .Select(t => ToTargetDto(t))
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
     }
 
-    public Task<FeatureFlagTargetDto?> GetTargetingRuleByIdAsync(Guid ruleId, CancellationToken cancellationToken = default)
+    public async Task<FeatureFlagTargetDto?> GetTargetingRuleByIdAsync(Guid ruleId, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException("GetTargetingRuleByIdAsync will be implemented in follow-up work");
+        return await _context.Set<FeatureFlagTarget>()
+            .AsNoTracking()
+            .Where(t => t.Id == ruleId && t.DeletedAt == null)
+            .Select(t => ToTargetDto(t))
+            .FirstOrDefaultAsync(cancellationToken)
+            .ConfigureAwait(false);
     }
 
     public async Task<IEnumerable<FeatureFlagUsageSummary>> GetUsageSummaryAsync(string featureKey, DateTime? startDate, DateTime? endDate, string? groupBy, CancellationToken cancellationToken = default)
@@ -387,4 +399,20 @@ public class FeatureFlagQueryRepository : IFeatureFlagQueryRepository
         return await _context.Set<FeatureFlag>()
             .AnyAsync(f => f.Id == id && f.DeletedAt == null, cancellationToken).ConfigureAwait(false);
     }
+
+    private static FeatureFlagTargetDto ToTargetDto(FeatureFlagTarget target) => new()
+    {
+        Id = target.Id,
+        FeatureFlagId = target.FeatureFlagId,
+        TargetType = target.TargetType,
+        TargetIdentifier = target.TargetIdentifier,
+        IsEnabled = target.IsEnabled,
+        RolloutPercentage = target.RolloutPercentage,
+        CustomValue = target.CustomValue,
+        Metadata = target.Metadata,
+        Priority = target.Priority,
+        CreatedAt = target.CreatedAt,
+        UpdatedAt = target.UpdatedAt,
+        DeletedAt = target.DeletedAt
+    };
 }

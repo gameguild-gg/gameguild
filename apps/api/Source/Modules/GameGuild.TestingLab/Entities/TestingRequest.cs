@@ -1,4 +1,5 @@
 using GameGuild.Identity.Users;
+using GameGuild.Projects;
 
 
 namespace GameGuild.TestingLab;
@@ -20,6 +21,8 @@ public class TestingRequest : EntityBase
     /// Foreign key to the project version (optional - can be standalone testing)
     /// </summary>
     public Guid? ProjectVersionId { get; set; }
+
+    public virtual ProjectVersion? ProjectVersion { get; set; }
 
     /// <summary>
     /// Request title
@@ -118,7 +121,7 @@ public class TestingRequest : EntityBase
     /// <summary>
     /// Testing mode (manual, automated, mixed)
     /// </summary>
-    public TestingMode Mode { get; set; } = TestingMode.Manual;
+    public TestingMode Mode { get; set; } = TestingMode.Online;
 
     // Navigation Properties
     /// <summary>

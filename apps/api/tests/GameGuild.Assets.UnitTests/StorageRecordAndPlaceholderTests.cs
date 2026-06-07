@@ -2,12 +2,15 @@ using FluentAssertions;
 using GameGuild.Assets.Extensions;
 using GameGuild.Assets.Security;
 using GameGuild.Assets.Storage;
+using GameGuild.Commerce.Orders;
+using Moq;
 using Xunit;
+using AssetOrderStatus = GameGuild.Assets.Security.OrderStatus;
 
 namespace GameGuild.Assets.UnitTests;
 
 /// <summary>
-/// R5 tests targeting StorageUploadResult, StorageMetadata, PlaceholderOrderValidationService
+/// R5 tests targeting StorageUploadResult, StorageMetadata, CommerceOrderValidationService
 /// to push coverage past 75%.
 /// </summary>
 public class StorageRecordAndPlaceholderTests
@@ -126,37 +129,74 @@ public class StorageRecordAndPlaceholderTests
     // ─── PlaceholderOrderValidationService ────────────────────────────
 
     [Fact]
-    public async Task PlaceholderOrderValidationService_GetOrderStatusAsync_ReturnsFulfilled()
+    public async Task CommerceOrderValidationService_GetOrderStatusAsync_ReturnsFulfilled()
     {
-        var svc = new PlaceholderOrderValidationService();
-        var status = await svc.GetOrderStatusAsync(Guid.NewGuid());
-        status.Should().Be(OrderStatus.Fulfilled);
+        var orderId = Guid.NewGuid();
+        var repo = new Mock<IOrderRepository>();
+        repo.Setup(r => r.GetByIdAsync(orderId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(CreateOrder(orderId, fulfilled: true));
+        var svc = new CommerceOrderValidationService(repo.Object);
+
+        var status = await svc.GetOrderStatusAsync(orderId);
+
+        status.Should().Be(AssetOrderStatus.Fulfilled);
     }
 
     [Fact]
-    public async Task PlaceholderOrderValidationService_IsOrderValidForDownloadAsync_ReturnsTrue()
+    public async Task CommerceOrderValidationService_IsOrderValidForDownloadAsync_ReturnsTrue()
     {
-        var svc = new PlaceholderOrderValidationService();
-        var valid = await svc.IsOrderValidForDownloadAsync(Guid.NewGuid());
+        var orderId = Guid.NewGuid();
+        var repo = new Mock<IOrderRepository>();
+        repo.Setup(r => r.GetByIdAsync(orderId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(CreateOrder(orderId, fulfilled: true));
+        var svc = new CommerceOrderValidationService(repo.Object);
+
+        var valid = await svc.IsOrderValidForDownloadAsync(orderId);
+
         valid.Should().BeTrue();
     }
 
     [Fact]
-    public async Task PlaceholderOrderValidationService_GetOrderStatus_WithCancellationToken()
+    public async Task CommerceOrderValidationService_GetOrderStatus_WithCancellationToken()
     {
-        var svc = new PlaceholderOrderValidationService();
+        var orderId = Guid.NewGuid();
+        var repo = new Mock<IOrderRepository>();
+        repo.Setup(r => r.GetByIdAsync(orderId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(CreateOrder(orderId, fulfilled: true));
+        var svc = new CommerceOrderValidationService(repo.Object);
         using var cts = new CancellationTokenSource();
-        var status = await svc.GetOrderStatusAsync(Guid.NewGuid(), cts.Token);
+
+        var status = await svc.GetOrderStatusAsync(orderId, cts.Token);
+
         status.Should().NotBeNull();
     }
 
     [Fact]
-    public async Task PlaceholderOrderValidationService_IsOrderValid_WithCancellationToken()
+    public async Task CommerceOrderValidationService_IsOrderValid_WithCancellationToken()
     {
-        var svc = new PlaceholderOrderValidationService();
+        var orderId = Guid.NewGuid();
+        var repo = new Mock<IOrderRepository>();
+        repo.Setup(r => r.GetByIdAsync(orderId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(CreateOrder(orderId, fulfilled: true));
+        var svc = new CommerceOrderValidationService(repo.Object);
         using var cts = new CancellationTokenSource();
-        var result = await svc.IsOrderValidForDownloadAsync(Guid.NewGuid(), cts.Token);
+
+        var result = await svc.IsOrderValidForDownloadAsync(orderId, cts.Token);
+
         result.Should().BeTrue();
+    }
+
+    private static Order CreateOrder(Guid id, bool fulfilled = false)
+    {
+        var order = Order.Create(Guid.NewGuid(), $"idem-{Guid.NewGuid():N}", Guid.NewGuid());
+        typeof(Order).GetProperty(nameof(Order.Id))!.SetValue(order, id);
+        order.MarkAsPaidPendingFulfillment(Guid.NewGuid());
+        if (fulfilled)
+        {
+            order.MarkAsFulfilled();
+        }
+
+        return order;
     }
 
     // ─── TenantValidationResult ───────────────────────────────────────

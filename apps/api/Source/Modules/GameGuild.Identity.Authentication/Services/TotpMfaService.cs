@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Security.Cryptography;
 using Microsoft.Extensions.Logging;
+using QRCoder;
 
 namespace GameGuild.Identity.Authentication;
 
@@ -151,14 +152,16 @@ public sealed class TotpMfaService(
     /// <summary>
     ///     Generates a QR code image from QR code data.
     /// </summary>
-    public async Task<byte[]> GenerateQrCodeAsync(string qrCodeData, CancellationToken cancellationToken = default)
+    public Task<byte[]> GenerateQrCodeAsync(string qrCodeData, CancellationToken cancellationToken = default)
     {
-        // PLANNED: Implement QR code generation using QRCoder or SkiaSharp.QrCode NuGet package.
-        // Encode qrCodeData as a standard otpauth:// URI into a PNG byte array.
-        await Task.CompletedTask;
-        logger.LogWarning("QR code generation not implemented yet");
+        ArgumentException.ThrowIfNullOrWhiteSpace(qrCodeData);
+        cancellationToken.ThrowIfCancellationRequested();
 
-        return [];
+        using var generator = new QRCodeGenerator();
+        using var qrCodeDataModel = generator.CreateQrCode(qrCodeData, QRCodeGenerator.ECCLevel.Q);
+        var qrCode = new PngByteQRCode(qrCodeDataModel);
+
+        return Task.FromResult(qrCode.GetGraphic(20));
     }
 
     #region Private TOTP Helpers

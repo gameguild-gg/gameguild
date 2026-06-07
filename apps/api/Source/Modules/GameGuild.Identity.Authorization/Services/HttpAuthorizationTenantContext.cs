@@ -43,10 +43,11 @@ public sealed class HttpAuthorizationTenantContext : IAuthorizationTenantContext
             if (httpContext.Items.TryGetValue(PrimaryTenantIdKey, out var primaryValue))
             {
                 if (primaryValue is Guid guidValue) return guidValue;
-                if (primaryValue is string strValue && Guid.TryParse(strValue, out var parsedGuid))
+                if (primaryValue is string strValue)
                 {
                     // SECURITY: Don't accept Guid.Empty as valid tenant
-                    return parsedGuid != Guid.Empty ? parsedGuid : null;
+                    if (TryParseTenantId(strValue, out var parsedPrimaryTenantId))
+                        return parsedPrimaryTenantId;
                 }
             }
             
@@ -54,14 +55,27 @@ public sealed class HttpAuthorizationTenantContext : IAuthorizationTenantContext
             if (httpContext.Items.TryGetValue(FallbackTenantIdKey, out var fallbackValue))
             {
                 if (fallbackValue is Guid fallbackGuid) return fallbackGuid != Guid.Empty ? fallbackGuid : null;
-                if (fallbackValue is string fallbackStr && Guid.TryParse(fallbackStr, out var fallbackParsed))
+                if (fallbackValue is string fallbackStr)
                 {
-                    return fallbackParsed != Guid.Empty ? fallbackParsed : null;
+                    if (TryParseTenantId(fallbackStr, out var parsedFallbackTenantId))
+                        return parsedFallbackTenantId;
                 }
             }
             
             return null;
         }
+    }
+
+    private static bool TryParseTenantId(string value, out Guid? tenantId)
+    {
+        if (!Guid.TryParse(value, out var parsedGuid))
+        {
+            tenantId = null;
+            return false;
+        }
+
+        tenantId = parsedGuid != Guid.Empty ? parsedGuid : null;
+        return true;
     }
 
     /// <summary>

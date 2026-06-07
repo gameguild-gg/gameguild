@@ -1,4 +1,4 @@
-﻿namespace GameGuild;
+namespace GameGuild;
 
 /// <summary>
 ///     Captures metrics from the CQRS handler/validator registration process.

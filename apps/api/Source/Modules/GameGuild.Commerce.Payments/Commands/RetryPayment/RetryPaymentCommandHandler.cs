@@ -116,7 +116,7 @@ public sealed class RetryPaymentCommandHandler(
         if (gatewayResult.Success && payment.ProcessedAt.HasValue)
         {
             await paymentSubscriptionSyncService.SyncSuccessfulPaymentAsync(
-                payment.Id.ToString(),
+                payment.Id,
                 payment.SubscriptionId,
                 payment.Amount,
                 payment.Currency,

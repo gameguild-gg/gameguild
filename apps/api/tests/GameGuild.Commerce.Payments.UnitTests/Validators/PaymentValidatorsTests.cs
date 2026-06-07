@@ -44,6 +44,13 @@ public class ProcessPaymentCommandValidatorTests
     }
 
     [Fact]
+    public void ShouldFail_WhenPaymentMethodIdLooksLikeRawCardNumber()
+    {
+        var cmd = new ProcessPaymentCommand(Guid.NewGuid(), Guid.NewGuid(), 100m, "4242424242424242");
+        _validator.TestValidate(cmd).ShouldHaveValidationErrorFor(x => x.PaymentMethodId);
+    }
+
+    [Fact]
     public void ShouldPass_WhenValid()
     {
         var cmd = new ProcessPaymentCommand(Guid.NewGuid(), Guid.NewGuid(), 100m, "pm_123");

@@ -367,7 +367,10 @@ public class AuthorizationTokenOptionsTests
     [Fact]
     public void CreateDefault_ShouldReturnInstance()
     {
-        AuthorizationTokenOptions.CreateDefault().Should().NotBeNull();
+        var options = AuthorizationTokenOptions.CreateDefault();
+
+        options.Should().NotBeNull();
+        options.TenantClaimType.Should().Be("tenant_id");
     }
 
     [Fact]
@@ -792,7 +795,7 @@ public class RedisCachingOptionsTests
     [Fact]
     public void Validate_EmptyConnectionString_ShouldThrow()
     {
-        var options = new RedisCachingOptions { ConnectionString = "" };
+        var options = new RedisCachingOptions { Enabled = true, ConnectionString = "" };
         var act = () => options.Validate();
 
         act.Should().Throw<ArgumentException>();

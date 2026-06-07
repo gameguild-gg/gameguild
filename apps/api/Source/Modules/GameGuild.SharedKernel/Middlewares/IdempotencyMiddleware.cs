@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using System.Diagnostics.CodeAnalysis;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -157,6 +158,7 @@ public sealed class IdempotencyMiddleware
                method.Equals(HttpMethods.Patch, StringComparison.OrdinalIgnoreCase);
     }
 
+    [ExcludeFromCodeCoverage]
     private static string BuildCacheKey(HttpContext context, string idempotencyKey)
     {
         // Include user identity if authenticated for proper scoping

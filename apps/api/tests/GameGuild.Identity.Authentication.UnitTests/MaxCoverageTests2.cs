@@ -834,10 +834,31 @@ public class TotpMfaServiceCovTests
     }
 
     [Fact]
-    public async Task GenerateQrCode_ReturnsEmptyArray()
+    public async Task GenerateQrCode_ReturnsPngBytes()
     {
         var result = await _svc.GenerateQrCodeAsync("otpauth://totp/test");
-        result.Should().BeEmpty();
+
+        result.Should().NotBeEmpty();
+        result.Take(8).Should().Equal(137, 80, 78, 71, 13, 10, 26, 10);
+    }
+
+    [Fact]
+    public async Task GenerateQrCode_BlankData_Throws()
+    {
+        await _svc.Invoking(s => s.GenerateQrCodeAsync(" "))
+            .Should()
+            .ThrowAsync<ArgumentException>();
+    }
+
+    [Fact]
+    public async Task GenerateQrCode_Cancelled_Throws()
+    {
+        var cts = new CancellationTokenSource();
+        cts.Cancel();
+
+        await _svc.Invoking(s => s.GenerateQrCodeAsync("otpauth://totp/test", cts.Token))
+            .Should()
+            .ThrowAsync<OperationCanceledException>();
     }
 }
 

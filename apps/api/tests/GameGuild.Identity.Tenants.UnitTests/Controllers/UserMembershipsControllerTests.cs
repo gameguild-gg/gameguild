@@ -1,5 +1,6 @@
 using FluentAssertions;
 using GameGuild.CQRS;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Xunit;
 
@@ -41,6 +42,32 @@ public class UserMembershipsControllerTests
         var result = await controller.GetMembershipCount(Guid.NewGuid(), CancellationToken.None);
 
         result.Should().BeOfType<OkObjectResult>();
+    }
+
+    [Fact]
+    public async Task AddUserMembership_Should_Return_Created_When_Command_Succeeds()
+    {
+        var sender = new StubSender();
+        sender.Setup<AddTenantMemberCommand, AddTenantMemberResponse>(_ => new AddTenantMemberResponse
+        {
+            Success = true,
+            MemberId = Guid.NewGuid(),
+            Message = "Member added successfully"
+        });
+
+        var controller = new UserMembershipsController(sender);
+        var result = await controller.AddUserMembership(
+            Guid.NewGuid(),
+            new AddUserMembershipRequest
+            {
+                TenantId = Guid.NewGuid(),
+                Role = "Renter",
+                InvitedByEmail = "admin@game-guild.com"
+            },
+            CancellationToken.None);
+
+        result.Should().BeOfType<ObjectResult>()
+            .Which.StatusCode.Should().Be(StatusCodes.Status201Created);
     }
 
     private sealed class StubSender : ISender

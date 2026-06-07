@@ -331,9 +331,9 @@ public class RedisCachingOptionsTests
     [Fact]
     public void Validate_EmptyConnectionString_ShouldThrow()
     {
-        var options = new RedisCachingOptions { ConnectionString = "" };
+        var options = new RedisCachingOptions { Enabled = true, ConnectionString = "" };
         var act = () => options.Validate();
-        act.Should().Throw<Exception>();
+        act.Should().Throw<ArgumentException>();
     }
 
     [Fact]

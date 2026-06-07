@@ -127,38 +127,23 @@ public class Web3Service(ILogger<Web3Service> logger, IMemoryCache memoryCache) 
 
     private Task<bool> VerifyEthereumSignature(string signature, string walletAddress)
     {
-        try
+        // Basic format validation
+        if (string.IsNullOrEmpty(signature) || signature.Length < 132) // 0x + 130 hex chars
         {
-            // Basic format validation
-            if (string.IsNullOrEmpty(signature) || signature.Length < 132) // 0x + 130 hex chars
-            {
-                return Task.FromResult(false);
-            }
-
-            if (!signature.StartsWith("0x", StringComparison.Ordinal)) { return Task.FromResult(false); }
-
-            // SECURITY: Actual cryptographic signature verification is NOT implemented.
-            // Add the Nethereum NuGet package and implement EcRecover to verify
-            // that the signature was produced by the private key for walletAddress.
-            // Until then, Web3 authentication MUST NOT be enabled in production.
-            logger.LogError(
-                "Web3 signature verification is not implemented — rejecting signature for wallet {WalletAddress}. " +
-                "Add Nethereum package and implement EcRecover before enabling Web3 auth in production",
-                walletAddress);
-
             return Task.FromResult(false);
         }
-        catch (CryptographicException ex)
-        {
-            logger.LogError(ex, "Cryptographic error verifying Web3 signature for wallet {WalletAddress}", walletAddress);
 
-            return Task.FromResult(false);
-        }
-        catch (FormatException ex)
-        {
-            logger.LogError(ex, "Format error verifying Web3 signature for wallet {WalletAddress}", walletAddress);
+        if (!signature.StartsWith("0x", StringComparison.Ordinal)) { return Task.FromResult(false); }
 
-            return Task.FromResult(false);
-        }
+        // SECURITY: Actual cryptographic signature verification is NOT implemented.
+        // Add the Nethereum NuGet package and implement EcRecover to verify
+        // that the signature was produced by the private key for walletAddress.
+        // Until then, Web3 authentication MUST NOT be enabled in production.
+        logger.LogError(
+            "Web3 signature verification is not implemented — rejecting signature for wallet {WalletAddress}. " +
+            "Add Nethereum package and implement EcRecover before enabling Web3 auth in production",
+            walletAddress);
+
+        return Task.FromResult(false);
     }
 }

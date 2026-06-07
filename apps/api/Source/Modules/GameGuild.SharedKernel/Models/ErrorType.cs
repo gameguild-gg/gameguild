@@ -1,4 +1,4 @@
-﻿namespace GameGuild;
+namespace GameGuild;
 
 /// <summary>
 ///     Categorizes domain errors so they can be mapped to HTTP status codes or similar transport-level responses.

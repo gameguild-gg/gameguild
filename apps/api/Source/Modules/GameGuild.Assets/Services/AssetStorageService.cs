@@ -52,6 +52,8 @@ public class AssetStorageService : IAssetStorageService
         var bucketName = isTransformed ? _options.GetTransformedBucketName() : _options.BucketName;
         var objectKey = GenerateObjectKey(contentHash, mimeType, isTransformed);
 
+        await EnsureBucketExistsAsync(bucketName, ct).ConfigureAwait(false);
+
         var request = new Amazon.S3.Model.PutObjectRequest
         {
             BucketName = bucketName,
@@ -154,12 +156,16 @@ public class AssetStorageService : IAssetStorageService
         bool isDownload = true,
         CancellationToken ct = default)
     {
+        var useHttp = Uri.TryCreate(_options.ServiceUrl, UriKind.Absolute, out var serviceUri)
+            && string.Equals(serviceUri.Scheme, Uri.UriSchemeHttp, StringComparison.OrdinalIgnoreCase);
+
         var request = new Amazon.S3.Model.GetPreSignedUrlRequest
         {
             BucketName = bucketName,
             Key = objectKey,
             Expires = SystemClock.UtcNow.Add(expiry),
-            Verb = isDownload ? Amazon.S3.HttpVerb.GET : Amazon.S3.HttpVerb.PUT
+            Verb = isDownload ? Amazon.S3.HttpVerb.GET : Amazon.S3.HttpVerb.PUT,
+            Protocol = useHttp ? Amazon.S3.Protocol.HTTP : Amazon.S3.Protocol.HTTPS
         };
 
         return await Task.FromResult(_s3Client.GetPreSignedURL(request));
@@ -170,6 +176,8 @@ public class AssetStorageService : IAssetStorageService
         CancellationToken ct = default)
     {
         var objectKey = $"multipart/{Guid.NewGuid()}";
+
+        await EnsureBucketExistsAsync(_options.BucketName, ct).ConfigureAwait(false);
 
         var request = new Amazon.S3.Model.InitiateMultipartUploadRequest
         {
@@ -248,6 +256,8 @@ public class AssetStorageService : IAssetStorageService
     {
         var quarantineBucket = _options.GetQuarantineBucketName();
 
+        await EnsureBucketExistsAsync(quarantineBucket, ct).ConfigureAwait(false);
+
         var request = new Amazon.S3.Model.PutObjectRequest
         {
             BucketName = quarantineBucket,
@@ -266,6 +276,26 @@ public class AssetStorageService : IAssetStorageService
         request.Metadata.Add("quarantined-at", SystemClock.UtcNow.ToString("O"));
 
         await _s3Client.PutObjectAsync(request, ct).ConfigureAwait(false);
+    }
+
+    private async Task EnsureBucketExistsAsync(string bucketName, CancellationToken ct)
+    {
+        try
+        {
+            await _s3Client.PutBucketAsync(
+                new Amazon.S3.Model.PutBucketRequest
+                {
+                    BucketName = bucketName,
+                    UseClientRegion = true
+                },
+                ct).ConfigureAwait(false);
+        }
+        catch (Amazon.S3.AmazonS3Exception ex) when (
+            string.Equals(ex.ErrorCode, "BucketAlreadyOwnedByYou", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(ex.ErrorCode, "BucketAlreadyExists", StringComparison.OrdinalIgnoreCase) ||
+            ex.StatusCode == System.Net.HttpStatusCode.Conflict)
+        {
+        }
     }
 
     private static string GenerateObjectKey(string contentHash, string mimeType, bool isTransformed)

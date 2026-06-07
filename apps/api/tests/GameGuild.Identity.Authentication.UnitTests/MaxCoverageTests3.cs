@@ -714,11 +714,31 @@ public sealed class JwtTokenServiceCoverageTests
     [Fact] public void GenerateRefreshToken_Sync_ThrowsNotSupported() =>
         Assert.Throws<NotSupportedException>(() => _sut.GenerateRefreshToken());
 
-    [Fact] public void GetPrincipalFromExpiredToken_ThrowsNotSupported() =>
-        Assert.Throws<NotSupportedException>(() => _sut.GetPrincipalFromExpiredToken("t"));
+    [Fact]
+    public void GetPrincipalFromExpiredToken_ReturnsPrincipal()
+    {
+        var userId = Guid.NewGuid();
+        var token = _sut.GenerateAccessToken(userId, "a@b.c", new[] { "User" });
 
-    [Fact] public void ValidateToken_Sync_ThrowsNotSupported() =>
-        Assert.Throws<NotSupportedException>(() => _sut.ValidateToken("t"));
+        var principal = _sut.GetPrincipalFromExpiredToken(token);
+
+        principal.Identity?.IsAuthenticated.Should().BeTrue();
+        principal.FindFirst(ClaimTypes.NameIdentifier)?.Value.Should().Be(userId.ToString());
+        principal.IsInRole("User").Should().BeTrue();
+    }
+
+    [Fact]
+    public void ValidateToken_ReturnsPrincipal()
+    {
+        var userId = Guid.NewGuid();
+        var token = _sut.GenerateAccessToken(userId, "a@b.c", new[] { "User" });
+
+        var principal = _sut.ValidateToken(token);
+
+        principal.Identity?.IsAuthenticated.Should().BeTrue();
+        principal.FindFirst(ClaimTypes.NameIdentifier)?.Value.Should().Be(userId.ToString());
+        principal.IsInRole("User").Should().BeTrue();
+    }
 
     [Fact]
     public void GenerateAccessToken_Sync()
@@ -934,12 +954,14 @@ public sealed class RefreshTokenHandlerCoverageTests
 public sealed class SendEmailVerificationHandlerCoverageTests
 {
     private readonly Mock<IEmailVerificationService> _emailService = new();
+    private readonly Mock<IUserRepository> _userRepository = new();
     private readonly SendEmailVerificationCommandHandler _sut;
 
     public SendEmailVerificationHandlerCoverageTests()
     {
         _sut = new SendEmailVerificationCommandHandler(
             _emailService.Object,
+            _userRepository.Object,
             Mock.Of<ILogger<SendEmailVerificationCommandHandler>>());
     }
 
@@ -948,6 +970,8 @@ public sealed class SendEmailVerificationHandlerCoverageTests
     {
         var userId = Guid.NewGuid();
         var cmd = new SendEmailVerificationCommand { Email = "test@test.com", UserId = userId };
+        _userRepository.Setup(r => r.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new User { Id = userId, Email = "test@test.com", Username = "test" });
         _emailService.Setup(s => s.GenerateVerificationTokenAsync(userId, "test@test.com"))
             .ReturnsAsync("token123");
         _emailService.Setup(s => s.SendVerificationEmailAsync(
@@ -959,11 +983,14 @@ public sealed class SendEmailVerificationHandlerCoverageTests
     }
 
     [Fact]
-    public async Task Handle_WithNullUserId_GeneratesNewGuid()
+    public async Task Handle_WithNullUserId_ResolvesUserByEmail()
     {
+        var userId = Guid.NewGuid();
         var cmd = new SendEmailVerificationCommand { Email = "test@test.com", UserId = null };
-        _emailService.Setup(s => s.GenerateVerificationTokenAsync(
-            It.IsAny<Guid>(), "test@test.com")).ReturnsAsync("token123");
+        _userRepository.Setup(r => r.GetByEmailAsync("test@test.com", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new User { Id = userId, Email = "test@test.com", Username = "test" });
+        _emailService.Setup(s => s.GenerateVerificationTokenAsync(userId, "test@test.com"))
+            .ReturnsAsync("token123");
         _emailService.Setup(s => s.SendVerificationEmailAsync(
             "test@test.com", "token123", It.IsAny<string?>()))
             .Returns(Task.CompletedTask);
@@ -980,19 +1007,19 @@ public sealed class EmailVerificationServiceCoverageTests
 {
     private readonly MemoryCache _cache;
     private readonly Mock<IUserRepository> _userRepo = new();
+    private readonly Mock<IPublisher> _publisher = new();
     private readonly EmailVerificationService _sut;
 
     public EmailVerificationServiceCoverageTests()
     {
         _cache = new MemoryCache(new MemoryCacheOptions());
-        var config = new ConfigurationBuilder()
-            .AddInMemoryCollection(new Dictionary<string, string?>
-            {
-                ["EmailVerification:TokenExpirationMinutes"] = "30",
-                ["EmailVerification:RateLimitMinutes"] = "5"
-            }).Build();
+        _publisher.Setup(p => p.Publish(It.IsAny<EmailVerificationRequestedNotification>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
         _sut = new EmailVerificationService(
-            Mock.Of<ILogger<EmailVerificationService>>(), config, _cache, _userRepo.Object);
+            Mock.Of<ILogger<EmailVerificationService>>(),
+            _cache,
+            _publisher.Object,
+            _userRepo.Object);
     }
 
     [Fact]

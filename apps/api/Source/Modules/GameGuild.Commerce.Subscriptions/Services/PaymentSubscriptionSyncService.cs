@@ -4,65 +4,52 @@ using Microsoft.Extensions.Logging;
 namespace GameGuild.Commerce.Subscriptions;
 
 /// <summary>
-///     Applies subscription billing and lifecycle updates after a successful payment.
+///     Bridges successful payment events back into subscription billing state.
 /// </summary>
 public sealed class PaymentSubscriptionSyncService(
     ISubscriptionRepository subscriptionRepository,
-    ISubscriptionBillingService billingService,
-    ISubscriptionLifecycleService lifecycleService,
     ILogger<PaymentSubscriptionSyncService> logger) : IPaymentSubscriptionSyncService
 {
     public async Task SyncSuccessfulPaymentAsync(
-        string paymentReference,
+        Guid paymentId,
         Guid? subscriptionId,
         decimal amount,
         string currency,
         DateTime processedAt,
         CancellationToken cancellationToken = default)
     {
-        if (!subscriptionId.HasValue)
+        if (!subscriptionId.HasValue || subscriptionId.Value == Guid.Empty)
         {
-            logger.LogDebug(
-                "Skipping subscription sync for payment {PaymentReference} because it is not linked to a subscription.",
-                paymentReference);
+            logger.LogDebug("Payment {PaymentId} has no subscription to synchronize", paymentId);
             return;
         }
 
-        logger.LogInformation(
-            "Recording successful payment {PaymentReference} for subscription {SubscriptionId}",
-            paymentReference,
-            subscriptionId.Value);
-
-        var subscription = await subscriptionRepository.GetByIdAsync(
-            subscriptionId.Value,
-            cancellationToken).ConfigureAwait(false);
+        var subscription = await subscriptionRepository.GetByIdAsync(subscriptionId.Value, cancellationToken)
+            .ConfigureAwait(false);
 
         if (subscription is null)
         {
-            logger.LogWarning(
-                "Subscription {SubscriptionId} was not found while syncing successful payment {PaymentReference}.",
-                subscriptionId.Value,
-                paymentReference);
+            logger.LogWarning("Payment {PaymentId} referenced missing subscription {SubscriptionId}",
+                paymentId, subscriptionId.Value);
             return;
         }
 
-        subscription = await billingService.RecordPaymentAsync(
-            subscription.Id,
+        var result = subscription.RecordPayment(
             amount,
             currency,
             processedAt,
-            cancellationToken).ConfigureAwait(false);
+            paymentId.ToString("N"));
 
-        switch (subscription.Status)
+        if (!result.IsSuccess)
         {
-            case SubscriptionStatus.PendingActivation:
-                await lifecycleService.ActivateAsync(subscription.Id, cancellationToken).ConfigureAwait(false);
-                break;
-
-            case SubscriptionStatus.PastDue:
-            case SubscriptionStatus.Suspended:
-                await lifecycleService.ReactivateAsync(subscription.Id, cancellationToken).ConfigureAwait(false);
-                break;
+            logger.LogInformation(
+                "Payment {PaymentId} was already synchronized or rejected for subscription {SubscriptionId}: {Reason}",
+                paymentId,
+                subscriptionId.Value,
+                result.Message);
+            return;
         }
+
+        await subscriptionRepository.UpdateAsync(subscription, cancellationToken).ConfigureAwait(false);
     }
 }

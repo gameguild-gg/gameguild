@@ -59,10 +59,22 @@ public class TestingLocation : EntityBase
     /// </summary>
     public int? Capacity { get; set; }
 
+    public int MaxTestersCapacity {
+        get => Capacity ?? 0;
+        set => Capacity = value;
+    }
+
+    public int MaxProjectsCapacity { get; set; }
+
     /// <summary>
     /// Available equipment/resources
     /// </summary>
     public string? Equipment { get; set; }
+
+    public string? EquipmentAvailable {
+        get => Equipment;
+        set => Equipment = value;
+    }
 
     /// <summary>
     /// Whether this is a virtual location (online testing)

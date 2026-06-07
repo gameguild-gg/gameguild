@@ -12,7 +12,11 @@ public sealed class GetTenantsPageQueryHandler(ITenantRepository tenantRepositor
         (var items, var totalCount) = await tenantRepository.GetPagedAsync(
             request.Page,
             request.PageSize,
-            !request.IncludeInactive, // isActive filter - if IncludeInactive is true, don't filter
+            request.IsActive,
+            request.IsArchived,
+            request.SearchTerm,
+            request.SortBy,
+            request.SortDescending,
             cancellationToken
         ).ConfigureAwait(false);
 

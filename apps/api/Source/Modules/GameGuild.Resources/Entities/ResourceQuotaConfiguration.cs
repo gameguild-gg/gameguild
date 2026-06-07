@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -13,7 +14,8 @@ public class ResourceQuotaConfiguration : IEntityTypeConfiguration<ResourceQuota
     ///     JSON serializer options for metadata serialization.
     ///     Uses camelCase property naming for consistency.
     /// </summary>
-    private static readonly JsonSerializerOptions JsonOptions = new()
+    [ExcludeFromCodeCoverage]
+    private static JsonSerializerOptions JsonOptions { get; } = new()
     {
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
         WriteIndented = false

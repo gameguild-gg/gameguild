@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
-        <TargetFramework>net9.0</TargetFramework>
+        <TargetFramework>net10.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <IsPackable>false</IsPackable>
@@ -33,5 +33,6 @@
     <ItemGroup>
         <ProjectReference Include="..\..\Source\Modules\GameGuild.Content.Pages\GameGuild.Content.Pages.csproj" />
         <ProjectReference Include="..\..\Source\Modules\GameGuild.SharedKernel\GameGuild.SharedKernel.csproj" />
+        <ProjectReference Include="..\..\Source\Modules\GameGuild.Identity.Context\GameGuild.Identity.Context.csproj" />
     </ItemGroup>
 </Project>

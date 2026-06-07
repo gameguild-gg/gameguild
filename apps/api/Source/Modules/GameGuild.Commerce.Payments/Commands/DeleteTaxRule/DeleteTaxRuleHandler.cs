@@ -1,15 +1,30 @@
 using GameGuild.CQRS;
+using Microsoft.EntityFrameworkCore;
 
 namespace GameGuild.Commerce.Payments;
 
 /// <summary>
 ///     Handler for DeleteTaxRuleCommand
 /// </summary>
-public sealed class DeleteTaxRuleHandler : ICommandHandler<DeleteTaxRuleCommand>
+public sealed class DeleteTaxRuleHandler(IApplicationDbContext context) : ICommandHandler<DeleteTaxRuleCommand>
 {
-    public Task<Unit> Handle(DeleteTaxRuleCommand request, CancellationToken cancellationToken)
+    public async Task<Unit> Handle(DeleteTaxRuleCommand request, CancellationToken cancellationToken)
     {
-        // Placeholder implementation - would delete actual rule
-        return Unit.Task;
+        var rule = await context.Set<TaxRule>()
+            .Include(item => item.DefaultTaxRate)
+            .FirstOrDefaultAsync(item => item.Id == request.RuleId, cancellationToken)
+            ?? throw new InvalidOperationException($"Tax rule '{request.RuleId}' not found.");
+
+        rule.IsActive = false;
+        rule.Touch();
+
+        if (rule.DefaultTaxRate is not null)
+        {
+            rule.DefaultTaxRate.IsActive = false;
+        }
+
+        await context.SaveChangesAsync(cancellationToken);
+
+        return Unit.Value;
     }
 }

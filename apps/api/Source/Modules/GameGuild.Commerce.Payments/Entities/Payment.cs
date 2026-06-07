@@ -205,6 +205,14 @@ public class Payment : EntityBase
         ExternalPaymentId = externalPaymentId;
         ExternalTransactionId = externalTransactionId ?? ExternalTransactionId;
         ProcessedAt = SystemClock.UtcNow;
+
+        Raise(new PaymentSucceededEvent(
+            Id,
+            TenantId,
+            SubscriptionId,
+            Amount,
+            Currency,
+            ProcessedAt.Value));
     }
 
     /// <summary>Marks the payment as failed</summary>

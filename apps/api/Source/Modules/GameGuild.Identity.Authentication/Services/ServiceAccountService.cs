@@ -174,17 +174,27 @@ public sealed class ServiceAccountService : IServiceAccountService
     }
 
     /// <inheritdoc />
-    public Task<PagedAuditResult> GetAuditLogAsync(
+    public async Task<PagedAuditResult> GetAuditLogAsync(
         Guid serviceAccountId,
         int skip = 0,
         int take = 20,
         CancellationToken cancellationToken = default)
     {
-        // Note: This is a placeholder implementation. 
-        // A full implementation would query an audit log table.
-        // For now, we return an empty result.
-        var entries = new List<ServiceAccountAuditEntry>();
-        return Task.FromResult(new PagedAuditResult(entries, 0));
+        var serviceAccount = await _repository.GetByIdAsync(serviceAccountId, cancellationToken).ConfigureAwait(false);
+        if (serviceAccount is null)
+        {
+            return new PagedAuditResult([], 0);
+        }
+
+        var entries = BuildDerivedAuditEntries(serviceAccount)
+            .OrderByDescending(entry => entry.Timestamp)
+            .ThenByDescending(entry => entry.Action, StringComparer.Ordinal)
+            .ToList();
+
+        var safeSkip = Math.Max(0, skip);
+        var safeTake = Math.Clamp(take, 1, 100);
+
+        return new PagedAuditResult(entries.Skip(safeSkip).Take(safeTake).ToList(), entries.Count);
     }
 
     /// <inheritdoc />
@@ -256,5 +266,79 @@ public sealed class ServiceAccountService : IServiceAccountService
                 return true;
         }
         return false;
+    }
+
+    private static IEnumerable<ServiceAccountAuditEntry> BuildDerivedAuditEntries(ServiceAccount account)
+    {
+        yield return new ServiceAccountAuditEntry
+        {
+            Id = StableAuditId(account.Id, "created", account.CreatedAt),
+            Timestamp = account.CreatedAt,
+            Action = "Created",
+            PerformedBy = account.CreatedBy,
+            Details = $"Service account '{account.Name}' created with scopes: {account.Scopes}"
+        };
+
+        if (account.SecretRotatedAt.HasValue)
+        {
+            yield return new ServiceAccountAuditEntry
+            {
+                Id = StableAuditId(account.Id, "secret-rotated", account.SecretRotatedAt.Value),
+                Timestamp = account.SecretRotatedAt.Value,
+                Action = "SecretRotated",
+                Details = $"Secret rotation count: {account.SecretRotationCount}"
+            };
+        }
+
+        if (account.LastAuthenticatedAt.HasValue)
+        {
+            yield return new ServiceAccountAuditEntry
+            {
+                Id = StableAuditId(account.Id, "authenticated", account.LastAuthenticatedAt.Value),
+                Timestamp = account.LastAuthenticatedAt.Value,
+                Action = "Authenticated",
+                IpAddress = account.LastAuthenticatedFromIp,
+                Details = $"Successful authentication count: {account.AuthenticationCount}"
+            };
+        }
+
+        if (account.FailedAuthenticationAttempts > 0)
+        {
+            yield return new ServiceAccountAuditEntry
+            {
+                Id = StableAuditId(account.Id, "failed-auth", account.UpdatedAt),
+                Timestamp = account.UpdatedAt,
+                Action = "AuthenticationFailed",
+                Details = $"Failed attempts since last success: {account.FailedAuthenticationAttempts}"
+            };
+        }
+
+        if (account.LockedAt.HasValue)
+        {
+            yield return new ServiceAccountAuditEntry
+            {
+                Id = StableAuditId(account.Id, "locked", account.LockedAt.Value),
+                Timestamp = account.LockedAt.Value,
+                Action = "Locked",
+                Details = "Service account locked"
+            };
+        }
+
+        yield return new ServiceAccountAuditEntry
+        {
+            Id = StableAuditId(account.Id, account.IsActive ? "active-state" : "deactivated", account.UpdatedAt),
+            Timestamp = account.UpdatedAt,
+            Action = account.IsActive ? "Updated" : "Deactivated",
+            Details = account.IsActive
+                ? $"Current active state; scopes: {account.Scopes}"
+                : "Service account is inactive"
+        };
+    }
+
+    private static Guid StableAuditId(Guid serviceAccountId, string action, DateTime timestamp)
+    {
+        var input = $"{serviceAccountId:N}:{action}:{timestamp.ToUniversalTime():O}";
+        var hash = SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(input));
+        return new Guid(hash[..16]);
     }
 }

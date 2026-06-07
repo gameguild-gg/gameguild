@@ -24,6 +24,17 @@ public class TenantSettingsTests
     }
 
     [Fact]
+    public void TenantSettings_Partial_Constructor_Should_Map_Properties()
+    {
+        var tenantId = Guid.NewGuid();
+
+        var settings = new TenantSettings(new { TenantId = tenantId, DefaultLanguage = "pt-BR" });
+
+        settings.TenantId.Should().Be(tenantId);
+        settings.DefaultLanguage.Should().Be("pt-BR");
+    }
+
+    [Fact]
     public void CreateDefault_Should_Set_Default_Values()
     {
         // Arrange

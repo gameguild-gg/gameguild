@@ -1,4 +1,4 @@
-// Placeholder commands - these need proper implementations
+// User command implementation index.
 
 // User Metadata Commands
 // UpdateUserMetadataCommand - IMPLEMENTED (see UpdateUserMetadata folder)
@@ -26,4 +26,3 @@
 // Bulk Notification Commands - NO CONTROLLER ENDPOINTS
 // DeleteNotificationCommand, MarkAllNotificationsAsReadCommand, ArchiveAllNotificationsCommand
 // DeleteArchivedNotificationsCommand, ExecuteNotificationActionCommand, UpdateUserNotificationDeliverySettingsCommand
-

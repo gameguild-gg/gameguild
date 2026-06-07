@@ -1,25 +1,39 @@
 using GameGuild.CQRS;
+using Microsoft.EntityFrameworkCore;
 
 namespace GameGuild.Commerce.Payments;
 
 /// <summary>
 ///     Handler for getting scheduled payments.
 /// </summary>
-/// <remarks>
-///     Scheduled payments are typically managed via:
-///     - Subscription renewal schedules in the Subscriptions module
-///     - Payment gateway scheduling (e.g., Stripe Billing)
-/// </remarks>
-public sealed class GetScheduledPaymentsQueryHandler : IQueryHandler<GetScheduledPaymentsQuery, IEnumerable<PaymentResult>>
+public sealed class GetScheduledPaymentsQueryHandler(IApplicationDbContext context) : IQueryHandler<GetScheduledPaymentsQuery, IEnumerable<PaymentResult>>
 {
-    public Task<IEnumerable<PaymentResult>> Handle(GetScheduledPaymentsQuery request, CancellationToken cancellationToken)
+    public async Task<IEnumerable<PaymentResult>> Handle(GetScheduledPaymentsQuery request, CancellationToken cancellationToken)
     {
-        // Scheduled payment queries should integrate with:
-        // - ISubscriptionService.GetDueForRenewalAsync() for upcoming renewals
-        // - Payment gateway scheduled payment APIs
-        //
-        // Returns empty collection until scheduling requirements are finalized.
-        
-        return Task.FromResult<IEnumerable<PaymentResult>>([]);
+        var query = context.Set<Payment>()
+            .AsNoTracking()
+            .Where(payment => payment.Status == PaymentStatus.Failed && payment.NextRetryAt != null);
+
+        if (request.TenantId.HasValue)
+        {
+            query = query.Where(payment => payment.TenantId == request.TenantId.Value);
+        }
+
+        if (request.ScheduledDate.HasValue)
+        {
+            var start = request.ScheduledDate.Value.Date;
+            var end = start.AddDays(1);
+            query = query.Where(payment => payment.NextRetryAt >= start && payment.NextRetryAt < end);
+        }
+        else
+        {
+            query = query.Where(payment => payment.NextRetryAt >= SystemClock.UtcNow);
+        }
+
+        var payments = await query
+            .OrderBy(payment => payment.NextRetryAt)
+            .ToListAsync(cancellationToken);
+
+        return payments.Select(PaymentQueryMapper.ToResult).ToList();
     }
 }

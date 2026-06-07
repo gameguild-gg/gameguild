@@ -394,11 +394,56 @@ public class FeatureFlagManagementServiceTests
         _queryRepositoryMock.Verify(r => r.UpdateAsync(flag, It.IsAny<CancellationToken>()), Times.Once);
     }
 
-    [Fact(Skip = "Targeting requests use abstract class - requires concrete implementation")]
+    [Fact]
     public async Task CreateTargetingRuleAsync_CreatesRule_Successfully()
     {
-        // Test skipped - FeatureFlagTargetingRequest is abstract and has no concrete implementation
-        await Task.CompletedTask;
+        // Arrange
+        var featureFlagId = Guid.NewGuid();
+        var targetId = Guid.NewGuid();
+        var flag = new FeatureFlag
+        {
+            Id = featureFlagId,
+            Key = "advanced-inspections"
+        };
+        var request = new TestTargetingRequest
+        {
+            FeatureFlagId = featureFlagId,
+            FeatureKey = flag.Key,
+            TargetType = "tenant",
+            TargetIdentifier = "tenant-alpha",
+            IsEnabled = true,
+            RolloutPercentage = 65,
+            CustomValue = "enabled",
+            Priority = 9,
+            Metadata = new Dictionary<string, object>
+            {
+                ["source"] = "unit-test",
+                ["plan"] = "enterprise"
+            }
+        };
+
+        _queryRepositoryMock.Setup(r => r.GetByIdAsync(featureFlagId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(flag);
+        _targetingRepositoryMock.Setup(r => r.CreateTargetAsync(It.IsAny<FeatureFlagTarget>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(targetId);
+
+        // Act
+        var result = await _service.CreateTargetingRuleAsync(request);
+
+        // Assert
+        result.Should().Be(targetId);
+        _targetingRepositoryMock.Verify(r => r.CreateTargetAsync(It.Is<FeatureFlagTarget>(target =>
+            target.FeatureFlagId == featureFlagId &&
+            target.TargetType == "tenant" &&
+            target.TargetIdentifier == "tenant-alpha" &&
+            target.IsEnabled &&
+            target.RolloutPercentage == 65 &&
+            target.CustomValue == "enabled" &&
+            target.Priority == 9 &&
+            target.Metadata != null &&
+            target.Metadata.Contains("unit-test") &&
+            target.Metadata.Contains("enterprise")
+        ), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -417,4 +462,6 @@ public class FeatureFlagManagementServiceTests
         // Assert
         _targetingRepositoryMock.Verify(r => r.DeleteTargetAsync(targetId, It.IsAny<CancellationToken>()), Times.Once);
     }
+
+    private sealed class TestTargetingRequest : FeatureFlagTargetingRequest;
 }

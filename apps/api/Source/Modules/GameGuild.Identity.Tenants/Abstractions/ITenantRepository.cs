@@ -34,7 +34,15 @@ public interface ITenantRepository
     /// <summary>
     ///     Get tenants with pagination
     /// </summary>
-    Task<(IEnumerable<Tenant> Items, int TotalCount)> GetPagedAsync(int page, int pageSize, bool? isActive = null, CancellationToken cancellationToken = default);
+    Task<(IEnumerable<Tenant> Items, int TotalCount)> GetPagedAsync(
+        int page,
+        int pageSize,
+        bool? isActive = null,
+        bool? isArchived = null,
+        string? searchTerm = null,
+        string? sortBy = "Name",
+        bool sortDescending = false,
+        CancellationToken cancellationToken = default);
 
     /// <summary>
     ///     Create a new tenant

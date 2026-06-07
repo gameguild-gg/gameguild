@@ -191,6 +191,36 @@ public class WebAuthnAuthenticationResult
     ///     Whether this was a passwordless authentication.
     /// </summary>
     public bool IsPasswordless { get; set; }
+
+    /// <summary>
+    ///     Authenticated user's email address.
+    /// </summary>
+    public string? Email { get; set; }
+
+    /// <summary>
+    ///     JWT access token issued after successful WebAuthn authentication.
+    /// </summary>
+    public string? AccessToken { get; set; }
+
+    /// <summary>
+    ///     Refresh token issued after successful WebAuthn authentication.
+    /// </summary>
+    public string? RefreshToken { get; set; }
+
+    /// <summary>
+    ///     Access token expiration timestamp.
+    /// </summary>
+    public DateTime? AccessTokenExpiresAt { get; set; }
+
+    /// <summary>
+    ///     Refresh token expiration timestamp.
+    /// </summary>
+    public DateTime? RefreshTokenExpiresAt { get; set; }
+
+    /// <summary>
+    ///     Access token lifetime in seconds.
+    /// </summary>
+    public int ExpiresIn { get; set; }
 }
 
 /// <summary>

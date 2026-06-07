@@ -173,9 +173,19 @@ public class Program : EntityBase {
     /// <summary>
     /// Whether enrollment is currently open
     /// </summary>
-    public bool IsEnrollmentOpen => EnrollmentStatus == EnrollmentStatus.Open
-        && (EnrollmentDeadline == null || EnrollmentDeadline > SystemClock.UtcNow)
-        && (MaxEnrollments == null || CurrentEnrollments < MaxEnrollments);
+    public bool IsEnrollmentOpen {
+        get {
+            if (EnrollmentStatus != EnrollmentStatus.Open)
+                return false;
+
+            if (EnrollmentDeadline.HasValue) {
+                if (EnrollmentDeadline.Value <= SystemClock.UtcNow)
+                    return false;
+            }
+
+            return MaxEnrollments is null || CurrentEnrollments < MaxEnrollments;
+        }
+    }
 
     // Domain Methods
     /// <summary>

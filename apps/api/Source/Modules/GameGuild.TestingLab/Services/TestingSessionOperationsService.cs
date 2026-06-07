@@ -8,7 +8,7 @@ public class TestingSessionOperationsService(IApplicationDbContext context) : IT
 {
     public async Task<IEnumerable<TestingSession>> GetAllTestingSessionsAsync()
     {
-        return await context.TestingSessions
+        return await context.Set<TestingSession>()
             .Where(ts => ts.DeletedAt == null)
             .Include(ts => ts.TestingRequest)
             .Include(ts => ts.Location)
@@ -18,7 +18,7 @@ public class TestingSessionOperationsService(IApplicationDbContext context) : IT
 
     public async Task<IEnumerable<TestingSession>> GetTestingSessionsAsync(int skip = 0, int take = 50)
     {
-        return await context.TestingSessions
+        return await context.Set<TestingSession>()
             .Where(ts => ts.DeletedAt == null)
             .Include(ts => ts.TestingRequest)
             .Include(ts => ts.Location)
@@ -30,7 +30,7 @@ public class TestingSessionOperationsService(IApplicationDbContext context) : IT
 
     public async Task<TestingSession?> GetTestingSessionByIdAsync(Guid id)
     {
-        return await context.TestingSessions
+        return await context.Set<TestingSession>()
             .Where(ts => ts.Id == id && ts.DeletedAt == null)
             .Include(ts => ts.TestingRequest)
             .Include(ts => ts.Location)
@@ -39,7 +39,7 @@ public class TestingSessionOperationsService(IApplicationDbContext context) : IT
 
     public async Task<TestingSession?> GetTestingSessionByIdWithDetailsAsync(Guid id)
     {
-        return await context.TestingSessions
+        return await context.Set<TestingSession>()
             .Where(ts => ts.Id == id && ts.DeletedAt == null)
             .Include(ts => ts.TestingRequest)
             .Include(ts => ts.Location)
@@ -51,7 +51,7 @@ public class TestingSessionOperationsService(IApplicationDbContext context) : IT
         testingSession.Id = Guid.NewGuid();
         testingSession.Touch();
 
-        context.TestingSessions.Add(testingSession);
+        context.Set<TestingSession>().Add(testingSession);
         await context.SaveChangesAsync().ConfigureAwait(false);
 
         return testingSession;
@@ -59,7 +59,7 @@ public class TestingSessionOperationsService(IApplicationDbContext context) : IT
 
     public async Task<TestingSession> UpdateTestingSessionAsync(TestingSession testingSession)
     {
-        var existingSession = await context.TestingSessions.FindAsync(testingSession.Id).ConfigureAwait(false);
+        var existingSession = await context.Set<TestingSession>().FindAsync(testingSession.Id).ConfigureAwait(false);
 
         if (existingSession == null)
             throw new InvalidOperationException($"Testing session with ID {testingSession.Id} not found.");
@@ -75,12 +75,12 @@ public class TestingSessionOperationsService(IApplicationDbContext context) : IT
 
         await context.SaveChangesAsync().ConfigureAwait(false);
 
-        return await GetTestingSessionByIdAsync(existingSession.Id) ?? existingSession.ConfigureAwait(false);
+        return (await GetTestingSessionByIdAsync(existingSession.Id).ConfigureAwait(false)) ?? existingSession;
     }
 
     public async Task<bool> DeleteTestingSessionAsync(Guid id)
     {
-        var testingSession = await context.TestingSessions.FindAsync(id).ConfigureAwait(false);
+        var testingSession = await context.Set<TestingSession>().FindAsync(id).ConfigureAwait(false);
 
         if (testingSession == null) return false;
 
@@ -92,7 +92,7 @@ public class TestingSessionOperationsService(IApplicationDbContext context) : IT
 
     public async Task<bool> RestoreTestingSessionAsync(Guid id)
     {
-        var testingSession = await context.TestingSessions.IgnoreQueryFilters().FirstOrDefaultAsync(ts => ts.Id == id);
+        var testingSession = await context.Set<TestingSession>().IgnoreQueryFilters().FirstOrDefaultAsync(ts => ts.Id == id);
 
         if (testingSession == null) return false;
 
@@ -105,7 +105,7 @@ public class TestingSessionOperationsService(IApplicationDbContext context) : IT
 
     public async Task<IEnumerable<TestingSession>> GetTestingSessionsByRequestAsync(Guid testingRequestId)
     {
-        return await context.TestingSessions
+        return await context.Set<TestingSession>()
             .Where(ts => ts.TestingRequestId == testingRequestId && ts.DeletedAt == null)
             .Include(ts => ts.TestingRequest)
             .Include(ts => ts.Location)
@@ -115,7 +115,7 @@ public class TestingSessionOperationsService(IApplicationDbContext context) : IT
 
     public async Task<IEnumerable<TestingSession>> GetTestingSessionsByLocationAsync(Guid locationId)
     {
-        return await context.TestingSessions
+        return await context.Set<TestingSession>()
             .Where(ts => ts.LocationId == locationId && ts.DeletedAt == null)
             .Include(ts => ts.TestingRequest)
             .Include(ts => ts.Location)
@@ -125,7 +125,7 @@ public class TestingSessionOperationsService(IApplicationDbContext context) : IT
 
     public async Task<IEnumerable<TestingSession>> GetTestingSessionsByStatusAsync(SessionStatus status)
     {
-        return await context.TestingSessions
+        return await context.Set<TestingSession>()
             .Where(ts => ts.Status == status && ts.DeletedAt == null)
             .Include(ts => ts.TestingRequest)
             .Include(ts => ts.Location)
@@ -135,7 +135,7 @@ public class TestingSessionOperationsService(IApplicationDbContext context) : IT
 
     public async Task<IEnumerable<TestingSession>> GetTestingSessionsByManagerAsync(Guid managerId)
     {
-        return await context.TestingSessions
+        return await context.Set<TestingSession>()
             .Where(ts => ts.ManagerUserId == managerId && ts.DeletedAt == null)
             .Include(ts => ts.TestingRequest)
             .Include(ts => ts.Location)
@@ -147,7 +147,7 @@ public class TestingSessionOperationsService(IApplicationDbContext context) : IT
     {
         var lowerSearchTerm = searchTerm.ToLower();
 
-        return await context.TestingSessions
+        return await context.Set<TestingSession>()
             .Where(ts => ts.DeletedAt == null && ts.SessionName.ToLower().Contains(lowerSearchTerm))
             .Include(ts => ts.TestingRequest)
             .Include(ts => ts.Location)
@@ -160,7 +160,7 @@ public class TestingSessionOperationsService(IApplicationDbContext context) : IT
         var now = SystemClock.UtcNow;
         var graceWindow = now.AddHours(-2);
 
-        return await context.TestingSessions
+        return await context.Set<TestingSession>()
             .Where(ts => ts.DeletedAt == null &&
                 (ts.Status == SessionStatus.Scheduled || ts.Status == SessionStatus.Active) &&
                 ts.EndTime >= graceWindow)
@@ -172,13 +172,13 @@ public class TestingSessionOperationsService(IApplicationDbContext context) : IT
 
     public async Task<object> GetTestingSessionStatisticsAsync(Guid testingSessionId)
     {
-        var session = await context.TestingSessions.FindAsync(testingSessionId).ConfigureAwait(false);
+        var session = await context.Set<TestingSession>().FindAsync(testingSessionId).ConfigureAwait(false);
 
         if (session == null) return new { };
 
-        var registrationCount = await context.SessionRegistrations.CountAsync(sr => sr.SessionId == testingSessionId);
-        var waitlistCount = await context.SessionWaitlists.CountAsync(sw => sw.SessionId == testingSessionId);
-        var feedbackCount = await context.TestingFeedback.CountAsync(tf => tf.SessionId == testingSessionId);
+        var registrationCount = await context.Set<SessionRegistration>().CountAsync(sr => sr.SessionId == testingSessionId);
+        var waitlistCount = await context.Set<SessionWaitlist>().CountAsync(sw => sw.SessionId == testingSessionId);
+        var feedbackCount = await context.Set<TestingFeedback>().CountAsync(tf => tf.SessionId == testingSessionId);
 
         return new
         {
@@ -192,7 +192,7 @@ public class TestingSessionOperationsService(IApplicationDbContext context) : IT
 
     public async Task<object> GetSessionAttendanceReportAsync()
     {
-        var sessions = await context.TestingSessions
+        var sessions = await context.Set<TestingSession>()
             .Where(ts => ts.DeletedAt == null)
             .Include(ts => ts.Location)
             .Select(ts => new
@@ -214,7 +214,7 @@ public class TestingSessionOperationsService(IApplicationDbContext context) : IT
 
     public async Task UpdateSessionAttendanceAsync(Guid sessionId, Guid userId, AttendanceStatus status, Guid updatedByUserId)
     {
-        var registration = await context.SessionRegistrations.FirstOrDefaultAsync(sr => sr.SessionId == sessionId && sr.UserId == userId);
+        var registration = await context.Set<SessionRegistration>().FirstOrDefaultAsync(sr => sr.SessionId == sessionId && sr.UserId == userId);
 
         if (registration == null) { throw new ArgumentException("Registration not found"); }
 

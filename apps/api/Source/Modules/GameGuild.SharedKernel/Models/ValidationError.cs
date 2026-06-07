@@ -1,4 +1,4 @@
-﻿namespace GameGuild;
+namespace GameGuild;
 
 /// <summary>
 ///     An aggregate validation error that wraps one or more individual <see cref="Error" /> instances.

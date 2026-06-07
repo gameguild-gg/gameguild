@@ -1,4 +1,4 @@
-﻿namespace GameGuild.Features;
+namespace GameGuild.Features;
 
 /// <summary>
 ///     Result of feature flag evaluation with detailed information

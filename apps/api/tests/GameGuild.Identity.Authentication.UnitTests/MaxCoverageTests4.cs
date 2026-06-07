@@ -531,21 +531,19 @@ public sealed class EmailVerificationBranchTests
 {
     private readonly MemoryCache _cache;
     private readonly Mock<IUserRepository> _userRepo = new();
+    private readonly Mock<IPublisher> _publisher = new();
     private readonly EmailVerificationService _sut;
     private readonly EmailVerificationService _sutWithoutRepo;
 
     public EmailVerificationBranchTests()
     {
         _cache = new MemoryCache(new MemoryCacheOptions());
-        var config = new ConfigurationBuilder()
-            .AddInMemoryCollection(new Dictionary<string, string?>
-            {
-                ["App:BaseUrl"] = "http://localhost:3000"
-            }).Build();
+        _publisher.Setup(p => p.Publish(It.IsAny<EmailVerificationRequestedNotification>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
         _sut = new EmailVerificationService(
-            Mock.Of<ILogger<EmailVerificationService>>(), config, _cache, _userRepo.Object);
+            Mock.Of<ILogger<EmailVerificationService>>(), _cache, _publisher.Object, _userRepo.Object);
         _sutWithoutRepo = new EmailVerificationService(
-            Mock.Of<ILogger<EmailVerificationService>>(), config, _cache);
+            Mock.Of<ILogger<EmailVerificationService>>(), _cache, _publisher.Object);
     }
 
     [Fact]

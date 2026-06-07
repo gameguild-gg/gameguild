@@ -89,7 +89,6 @@ public class UsageTrendAnalysisService(IResourceUsageTrendRepository trendReposi
         if (recordsList.Count == 0)
         {
             logger.LogWarning("No usage records found for forecasting tenant {TenantId}, type {Type}", tenantId, type);
-            return 0;
         }
 
         // Use linear regression for forecasting

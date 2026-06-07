@@ -1,7 +1,7 @@
 using FluentAssertions;
+using GameGuild.CQRS;
 using GameGuild.Identity.Authentication;
 using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Xunit;
@@ -11,16 +11,17 @@ namespace GameGuild.Identity.Authentication.UnitTests.Services;
 public class EmailVerificationServiceTests
 {
     private readonly Mock<ILogger<EmailVerificationService>> _loggerMock;
-    private readonly Mock<IConfiguration> _configurationMock;
+    private readonly Mock<IPublisher> _publisherMock;
     private readonly EmailVerificationService _service;
 
     public EmailVerificationServiceTests()
     {
         _loggerMock = new Mock<ILogger<EmailVerificationService>>();
-        _configurationMock = new Mock<IConfiguration>();
-        _configurationMock.Setup(c => c["App:BaseUrl"]).Returns("https://example.com");
+        _publisherMock = new Mock<IPublisher>();
+        _publisherMock.Setup(x => x.Publish(It.IsAny<EmailVerificationRequestedNotification>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
         var memoryCache = new MemoryCache(new MemoryCacheOptions());
-        _service = new EmailVerificationService(_loggerMock.Object, _configurationMock.Object, memoryCache);
+        _service = new EmailVerificationService(_loggerMock.Object, memoryCache, _publisherMock.Object);
     }
 
     [Fact]
@@ -54,6 +55,49 @@ public class EmailVerificationServiceTests
     }
 
     [Fact]
+    public async Task GenerateVerificationTokenAsync_WorksWithSizeLimitedMemoryCache()
+    {
+        // Arrange
+        var sizedCache = new MemoryCache(new MemoryCacheOptions { SizeLimit = 1024 });
+        var sizedService = new EmailVerificationService(_loggerMock.Object, sizedCache, _publisherMock.Object);
+        var userId = Guid.NewGuid();
+        var email = "test@example.com";
+
+        // Act
+        var act = async () => await sizedService.GenerateVerificationTokenAsync(userId, email);
+
+        // Assert
+        await act.Should().NotThrowAsync();
+    }
+
+    [Fact]
+    public async Task GenerateMagicLinkTokenAsync_GeneratesValidOneTimeToken()
+    {
+        var userId = Guid.NewGuid();
+        var token = await _service.GenerateMagicLinkTokenAsync(userId, "Magic@Test.COM");
+
+        token.Should().MatchRegex("^[a-f0-9]{32}$");
+
+        var firstValidation = await _service.VerifyMagicLinkTokenAsync(token);
+        var secondValidation = await _service.VerifyMagicLinkTokenAsync(token);
+
+        firstValidation.Success.Should().BeTrue();
+        firstValidation.UserId.Should().Be(userId);
+        firstValidation.Email.Should().Be("magic@test.com");
+        secondValidation.Success.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task IsTokenValidAsync_ReturnsTrue_ForMagicLinkToken()
+    {
+        var token = await _service.GenerateMagicLinkTokenAsync(Guid.NewGuid(), "magic@test.com");
+
+        var result = await _service.IsTokenValidAsync(token);
+
+        result.Should().BeTrue();
+    }
+
+    [Fact]
     public async Task SendVerificationEmailAsync_CompletesSuccessfully()
     {
         // Arrange
@@ -66,6 +110,21 @@ public class EmailVerificationServiceTests
 
         // Assert
         await act.Should().NotThrowAsync();
+    }
+
+    [Fact]
+    public async Task SendVerificationEmailAsync_PublishesVerificationRequestedNotification()
+    {
+        await _service.SendVerificationEmailAsync("test@example.com", "test-token", "Test User");
+
+        _publisherMock.Verify(
+            x => x.Publish(
+                It.Is<EmailVerificationRequestedNotification>(notification =>
+                    notification.Email == "test@example.com" &&
+                    notification.Token == "test-token" &&
+                    notification.UserName == "Test User"),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
     }
 
     [Fact]

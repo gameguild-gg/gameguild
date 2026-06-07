@@ -174,8 +174,8 @@ public class TenantService(
         var (items, totalCount) = await tenantRepository.GetPagedAsync(
             page,
             pageSize,
-            includeArchived ? null : true,
-            cancellationToken).ConfigureAwait(false);
+            isActive: includeArchived ? null : true,
+            cancellationToken: cancellationToken).ConfigureAwait(false);
 
         return (items.ToList().AsReadOnly(), totalCount);
     }

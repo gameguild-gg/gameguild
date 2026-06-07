@@ -571,18 +571,36 @@ public class ServiceAccountServiceTests
     #region GetAuditLogAsync Tests
 
     [Fact]
-    public async Task GetAuditLogAsync_ShouldReturnEmptyResult()
+    public async Task GetAuditLogAsync_ShouldReturnDerivedAuditEntries()
     {
         // Arrange
         var serviceAccountId = Guid.NewGuid();
+        var serviceAccount = new ServiceAccount
+        {
+            Id = serviceAccountId,
+            Name = "API Worker",
+            Scopes = "read:users",
+            CreatedBy = "admin",
+            CreatedAt = DateTime.UtcNow.AddDays(-2),
+            UpdatedAt = DateTime.UtcNow.AddDays(-1),
+            LastAuthenticatedAt = DateTime.UtcNow.AddHours(-2),
+            LastAuthenticatedFromIp = "127.0.0.1",
+            AuthenticationCount = 3,
+            SecretRotatedAt = DateTime.UtcNow.AddHours(-1),
+            SecretRotationCount = 1
+        };
+        _repositoryMock.Setup(x => x.GetByIdAsync(serviceAccountId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(serviceAccount);
 
         // Act
         var result = await _service.GetAuditLogAsync(serviceAccountId);
 
         // Assert
         result.Should().NotBeNull();
-        result.Items.Should().BeEmpty();
-        result.TotalCount.Should().Be(0);
+        result.Items.Should().Contain(x => x.Action == "Created");
+        result.Items.Should().Contain(x => x.Action == "Authenticated");
+        result.Items.Should().Contain(x => x.Action == "SecretRotated");
+        result.TotalCount.Should().BeGreaterThan(0);
     }
 
     #endregion

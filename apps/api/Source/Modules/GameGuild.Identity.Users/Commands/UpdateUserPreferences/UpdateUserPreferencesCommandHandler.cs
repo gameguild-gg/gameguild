@@ -30,7 +30,7 @@ public sealed class UpdateUserPreferencesCommandHandler(IUserRepository userRepo
         if (request.Request.GeneralPreferences != null)
         {
             var existing = preferences.GetGeneralPreferences();
-            foreach (var pref in request.Request.GeneralPreferences)
+            foreach (var pref in JsonValueDictionary.ToObjects(request.Request.GeneralPreferences))
             {
                 existing[pref.Key] = pref.Value;
             }
@@ -40,7 +40,7 @@ public sealed class UpdateUserPreferencesCommandHandler(IUserRepository userRepo
         if (request.Request.NotificationPreferences != null)
         {
             var existing = preferences.GetNotificationPreferences();
-            foreach (var pref in request.Request.NotificationPreferences)
+            foreach (var pref in JsonValueDictionary.ToObjects(request.Request.NotificationPreferences))
             {
                 existing[pref.Key] = pref.Value;
             }
@@ -50,7 +50,7 @@ public sealed class UpdateUserPreferencesCommandHandler(IUserRepository userRepo
         if (request.Request.AccessibilityPreferences != null)
         {
             var existing = preferences.GetAccessibilityPreferences();
-            foreach (var pref in request.Request.AccessibilityPreferences)
+            foreach (var pref in JsonValueDictionary.ToObjects(request.Request.AccessibilityPreferences))
             {
                 existing[pref.Key] = pref.Value;
             }
@@ -60,7 +60,7 @@ public sealed class UpdateUserPreferencesCommandHandler(IUserRepository userRepo
         if (request.Request.PrivacyPreferences != null)
         {
             var existing = preferences.GetPrivacyPreferences();
-            foreach (var pref in request.Request.PrivacyPreferences)
+            foreach (var pref in JsonValueDictionary.ToObjects(request.Request.PrivacyPreferences))
             {
                 existing[pref.Key] = pref.Value;
             }
@@ -68,6 +68,7 @@ public sealed class UpdateUserPreferencesCommandHandler(IUserRepository userRepo
         }
 
         await preferencesRepository.UpdateAsync(preferences, cancellationToken).ConfigureAwait(false);
+        await preferencesRepository.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         return Unit.Value;
     }

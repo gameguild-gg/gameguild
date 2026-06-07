@@ -252,10 +252,9 @@ public sealed class GetEffectivePermissionsQueryHandler(
             throw new UnauthorizedAccessException("You don't have permission to view permissions for this resource");
         }
 
-        // PLANNED: Wire to full permission resolution engine that aggregates direct grants,
-        // role-based permissions, and inherited tenant permissions.
         var permissions = await GetEffectivePermissionsInternal(
             targetUserId,
+            request.TenantId,
             request.ResourceType,
             request.ResourceId,
             cancellationToken).ConfigureAwait(false);
@@ -275,15 +274,27 @@ public sealed class GetEffectivePermissionsQueryHandler(
 
     private async Task<List<EffectivePermissionDto>> GetEffectivePermissionsInternal(
         Guid userId,
+        TenantId tenantId,
         string resourceType,
         Guid resourceId,
         CancellationToken cancellationToken)
     {
-        // PLANNED: Query TenantPermission, RolePermission, and UserPermission tables
-        // to build aggregate effective permission set for the given user/resource pair.
-        await Task.CompletedTask;
+        var permissionKeys = await queryService
+            .GetEffectivePermissionsAsync(userId, tenantId, cancellationToken)
+            .ConfigureAwait(false);
 
-        return new List<EffectivePermissionDto>();
+        var resourcePrefix = $"{resourceType}.{resourceId}.";
+
+        return permissionKeys
+            .Where(permission => permission.Equals("Admin", StringComparison.OrdinalIgnoreCase)
+                || permission.Equals("Owner", StringComparison.OrdinalIgnoreCase)
+                || permission.StartsWith(resourcePrefix, StringComparison.OrdinalIgnoreCase))
+            .Select(permission => new EffectivePermissionDto
+            {
+                Permission = permission,
+                Source = "Effective"
+            })
+            .ToList();
     }
 }
 

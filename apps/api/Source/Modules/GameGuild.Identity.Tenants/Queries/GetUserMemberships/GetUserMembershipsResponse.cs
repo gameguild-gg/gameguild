@@ -43,6 +43,11 @@ public sealed record UserMembershipDto
     public string TenantSlug { get; init; } = string.Empty;
 
     /// <summary>
+    ///     Whether the tenant is currently active.
+    /// </summary>
+    public bool TenantIsActive { get; init; }
+
+    /// <summary>
     ///     Optional tenant description
     /// </summary>
     public string? TenantDescription { get; init; }

@@ -1,9 +1,12 @@
 using System.Diagnostics;
 using System.Text.RegularExpressions;
+using GameGuild.AI;
+using GameGuild.API.Context;
 using GameGuild.API.Database;
 using GameGuild.Commerce.Billing;
 using GameGuild.Commerce.Payments;
 using GameGuild.Commerce.Subscriptions;
+using GameGuild.Compliance.FERPA;
 using GameGuild.Features;
 using GameGuild.Identity.Authentication;
 using GameGuild.Identity.Authorization;
@@ -11,8 +14,16 @@ using GameGuild.Identity.Context;
 using GameGuild.Configuration.ConfigurationFromAPI.InfrastructureLayer;
 using GameGuild.Configuration.InfrastructureLayer;
 using GameGuild.Learning.Courses;
+using GameGuild.Learning.Enrollments;
 using GameGuild.Content.Pages;
+using GameGuild.Notifications;
 using GameGuild.Resources;
+using GameGuild.GameJams;
+using GameGuild.Social.Blog;
+using GameGuild.Social.Feed;
+using GameGuild.Social.Profiles;
+using GameGuild.Social.Reactions;
+using GameGuild.Tags;
 using Microsoft.EntityFrameworkCore;
 
 namespace GameGuild.API.Setup;
@@ -133,6 +144,7 @@ public static class InfrastructureLayerExtensions
         // 03x. Identity Context Module (IActorContextAccessor, ISecurityAuditLogger - required by many services)
         stepStopwatch.Restart();
         services.AddIdentityContextModule(configuration);
+        services.AddScoped<IRequestContextAccessor, RequestContextAccessor>();
         logger.LogInformation("Identity Context Module registered in {ElapsedMs}ms", stepStopwatch.ElapsedMilliseconds);
 
         // 03a. Authentication Application (command handlers, validators, core auth services)
@@ -180,6 +192,38 @@ public static class InfrastructureLayerExtensions
         services.AddResourcesInfrastructure(configuration);
         logger.LogInformation("Resources Module registered in {ElapsedMs}ms", stepStopwatch.ElapsedMilliseconds);
 
+        // 10a.0. Tags Module (taxonomy, tag relationships, proficiency tags)
+        stepStopwatch.Restart();
+        services.AddTagsModule();
+        logger.LogInformation("Tags Module registered in {ElapsedMs}ms", stepStopwatch.ElapsedMilliseconds);
+
+        // 10a.1. AI Module (provider adapters, prompt templates, tenant quotas/history)
+        stepStopwatch.Restart();
+        services.AddAiModule(configuration);
+        logger.LogInformation("AI Module registered in {ElapsedMs}ms", stepStopwatch.ElapsedMilliseconds);
+
+        // 10a.2. FERPA Compliance Module (education record protection and disclosure workflows)
+        stepStopwatch.Restart();
+        services.AddFerpaModule();
+        logger.LogInformation("FERPA Module registered in {ElapsedMs}ms", stepStopwatch.ElapsedMilliseconds);
+
+        // 10a.3. Social Profiles Module (public profiles, skills, portfolio, privacy)
+        stepStopwatch.Restart();
+        services.AddSocialProfilesModule();
+        logger.LogInformation("Social Profiles Module registered in {ElapsedMs}ms", stepStopwatch.ElapsedMilliseconds);
+
+        // 10a.3a. Social modules (blog, feed, reactions)
+        stepStopwatch.Restart();
+        services.AddSocialBlogModule();
+        services.AddSocialFeedModule();
+        services.AddSocialReactionsModule();
+        logger.LogInformation("Social Blog/Feed/Reactions Modules registered in {ElapsedMs}ms", stepStopwatch.ElapsedMilliseconds);
+
+        // 10a.4. Notifications Module (delivery facade required by billing/subscription workflows)
+        stepStopwatch.Restart();
+        services.AddNotificationsModule();
+        logger.LogInformation("Notifications Module registered in {ElapsedMs}ms", stepStopwatch.ElapsedMilliseconds);
+
         // 10b. Commerce Subscriptions Module (must be registered before Billing since Billing depends on it)
         stepStopwatch.Restart();
         services.AddSubscriptionsModule();
@@ -204,6 +248,16 @@ public static class InfrastructureLayerExtensions
         stepStopwatch.Restart();
         services.AddCoursesModule();
         logger.LogInformation("Courses Module registered in {ElapsedMs}ms", stepStopwatch.ElapsedMilliseconds);
+
+        // 10f.1. Learning Enrollments Module
+        stepStopwatch.Restart();
+        services.AddLearningEnrollmentsModule();
+        logger.LogInformation("Learning Enrollments Module registered in {ElapsedMs}ms", stepStopwatch.ElapsedMilliseconds);
+
+        // 10f.2. Game Jams Module
+        stepStopwatch.Restart();
+        services.AddGameJamsModule();
+        logger.LogInformation("Game Jams Module registered in {ElapsedMs}ms", stepStopwatch.ElapsedMilliseconds);
 
         // 10g. Content Pages Module (pages, sections, content resources, OpenGraph)
         stepStopwatch.Restart();
@@ -275,9 +329,9 @@ public static class InfrastructureLayerExtensions
     }
 
     /// <summary>
-    ///     Registers repository and service implementations by convention from module assemblies.
-    ///     Discovers interfaces matching I{Name}Repository → {Name}Repository and
-    ///     I{Name}Service → {Name}Service patterns.
+    ///     Registers repository, service, and reader implementations by convention from module assemblies.
+    ///     Discovers interfaces matching I{Name}Repository → {Name}Repository,
+    ///     I{Name}Service → {Name}Service, and I{Name}Reader → {Name}Reader patterns.
     /// </summary>
     /// <remarks>
     ///     Includes startup validation that warns about concrete types whose names end in
@@ -353,6 +407,16 @@ public static class InfrastructureLayerExtensions
                             matchedTypes.Add(implementationType);
                         }
                     }
+                    // Match reader pattern: I{Name}Reader -> {Name}Reader
+                    else if (interfaceName.StartsWith("I") && interfaceName.EndsWith("Reader"))
+                    {
+                        var expectedImplName = interfaceName.Substring(1); // Remove 'I' prefix
+                        if (implementationType.Name == expectedImplName)
+                        {
+                            serviceRegistrations.Add((interfaceType, implementationType));
+                            matchedTypes.Add(implementationType);
+                        }
+                    }
                 }
             }
 
@@ -361,7 +425,7 @@ public static class InfrastructureLayerExtensions
             // This catches silent failures from naming mismatches (e.g. IFooRepo vs FooRepository).
             var unmatchedTypes = types
                 .Where(t => !matchedTypes.Contains(t))
-                .Where(t => t.Name.EndsWith("Repository") || t.Name.EndsWith("Service"))
+                .Where(t => t.Name.EndsWith("Repository") || t.Name.EndsWith("Service") || t.Name.EndsWith("Reader"))
                 .Where(t => !t.Name.Contains("Decorator") && !t.Name.Contains("Cached") && !t.Name.Contains("Logging") && !t.Name.Contains("Default"))
                 .ToList();
 

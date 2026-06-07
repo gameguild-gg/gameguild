@@ -83,6 +83,7 @@ public class SubscriptionQueryAndExternalIdServiceTests
 
         result.IsWithinLimits.Should().BeTrue();
         result.LimitChecks.Should().BeEmpty();
+        result.Message.Should().Be("All limits are within allowed ranges");
     }
 
     [Fact]

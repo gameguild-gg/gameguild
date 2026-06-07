@@ -2,6 +2,8 @@ using FluentAssertions;
 using GameGuild.Configuration.ApplicationLayer;
 using GameGuild.Identity.Authorization;
 using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -13,6 +15,8 @@ using Xunit;
 namespace GameGuild.Identity.Authentication.UnitTests.Services;
 
 #region PermissionService Tests
+
+#if false
 
 /// <summary>
 /// Tests for PermissionService — all methods throw NotImplementedException (stub).
@@ -275,6 +279,91 @@ public class PermissionServiceTests
     {
         await Assert.ThrowsAsync<NotImplementedException>(
             () => _service.CleanupExpiredPermissionsAsync());
+    }
+}
+#endif
+
+public class PermissionServiceTests
+{
+    [Fact]
+    public async Task TenantPermissions_CanGrantQueryRevokeAndJoin()
+    {
+        await using var db = CreateDbContext();
+        var service = new PermissionService(db);
+        var tenantId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+
+        await service.SetTenantDefaultPermissionsAsync(tenantId, [PermissionType.Read]);
+        await service.GrantTenantPermissionAsync(userId, tenantId, [PermissionType.Edit]);
+
+        (await service.HasTenantPermissionAsync(userId, tenantId, PermissionType.Read)).Should().BeTrue();
+        (await service.HasTenantPermissionAsync(userId, tenantId, PermissionType.Edit)).Should().BeTrue();
+        (await service.IsUserInTenantAsync(userId, tenantId)).Should().BeTrue();
+        (await service.GetUsersWithPermissionAsync(tenantId, PermissionType.Edit)).Should().Contain(userId);
+
+        await service.RevokeTenantPermissionAsync(userId, tenantId, [PermissionType.Edit]);
+
+        (await service.HasTenantPermissionAsync(userId, tenantId, PermissionType.Edit)).Should().BeFalse();
+        (await service.JoinTenantAsync(Guid.NewGuid(), tenantId)).Permissions.Should().Contain(PermissionType.Read.ToString());
+    }
+
+    [Fact]
+    public async Task ContentTypePermissions_ResolveTenantAndContentLayers()
+    {
+        await using var db = CreateDbContext();
+        var service = new PermissionService(db);
+        var tenantId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+
+        await service.SetTenantDefaultPermissionsAsync(tenantId, [PermissionType.Read]);
+        await service.GrantContentTypePermissionAsync(userId, tenantId, "Listing", [PermissionType.Publish]);
+
+        var effective = (await service.GetEffectiveContentTypePermissionsAsync(userId, tenantId, "Listing")).ToArray();
+
+        effective.Should().Contain(PermissionType.Read);
+        effective.Should().Contain(PermissionType.Publish);
+        (await service.GetPermissionSourceAsync(userId, tenantId, PermissionType.Publish, "Listing")).Should().Be("ContentType");
+    }
+
+    [Fact]
+    public async Task ResourcePermissions_CanShareResolveAndRevoke()
+    {
+        await using var db = CreateDbContext();
+        var service = new PermissionService(db);
+        var tenantId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+        var resourceId = Guid.NewGuid();
+
+        await service.ShareResourceAsync<GenericResourcePermission, EntityBase>(resourceId, userId, tenantId, [PermissionType.Read, PermissionType.Share]);
+
+        (await service.HasResourcePermissionAsync<GenericResourcePermission, EntityBase>(userId, tenantId, resourceId, PermissionType.Share)).Should().BeTrue();
+        (await service.GetResourcesWithPermissionAsync(userId, tenantId, PermissionType.Read, nameof(EntityBase))).Should().Contain(resourceId);
+
+        await service.RevokeResourceAccessAsync<GenericResourcePermission, EntityBase>(userId, tenantId, resourceId);
+
+        (await service.HasResourcePermissionAsync<GenericResourcePermission, EntityBase>(userId, tenantId, resourceId, PermissionType.Share)).Should().BeFalse();
+    }
+
+    private static PermissionServiceDbContext CreateDbContext()
+    {
+        var options = new DbContextOptionsBuilder<PermissionServiceDbContext>()
+            .UseInMemoryDatabase(Guid.NewGuid().ToString("N"))
+            .Options;
+
+        return new PermissionServiceDbContext(options);
+    }
+
+    private sealed class PermissionServiceDbContext(DbContextOptions<PermissionServiceDbContext> options) : DbContext(options), IApplicationDbContext
+    {
+        public Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default)
+            => Database.BeginTransactionAsync(cancellationToken);
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<TenantPermission>().Ignore(p => p.Metadata);
+            modelBuilder.Entity<ContentTypePermission>();
+            modelBuilder.Entity<GenericResourcePermission>();
+        }
     }
 }
 
@@ -646,15 +735,29 @@ public class JwtTokenServiceAdditionalTests
     }
 
     [Fact]
-    public void GetPrincipalFromExpiredToken_ShouldThrowNotSupportedException()
+    public void GetPrincipalFromExpiredToken_ShouldReturnPrincipal()
     {
-        Assert.Throws<NotSupportedException>(() => _service.GetPrincipalFromExpiredToken("some-token"));
+        var userId = Guid.NewGuid();
+        var token = _service.GenerateAccessToken(userId, "test@test.com", new[] { "User" });
+
+        var principal = _service.GetPrincipalFromExpiredToken(token);
+
+        principal.Identity?.IsAuthenticated.Should().BeTrue();
+        principal.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value.Should().Be(userId.ToString());
+        principal.IsInRole("User").Should().BeTrue();
     }
 
     [Fact]
-    public void ValidateToken_Sync_ShouldThrowNotSupportedException()
+    public void ValidateToken_Sync_ShouldReturnPrincipal()
     {
-        Assert.Throws<NotSupportedException>(() => _service.ValidateToken("some-token"));
+        var userId = Guid.NewGuid();
+        var token = _service.GenerateAccessToken(userId, "test@test.com", new[] { "User" });
+
+        var principal = _service.ValidateToken(token);
+
+        principal.Identity?.IsAuthenticated.Should().BeTrue();
+        principal.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value.Should().Be(userId.ToString());
+        principal.IsInRole("User").Should().BeTrue();
     }
 
     // ValidateTokenAsync tests

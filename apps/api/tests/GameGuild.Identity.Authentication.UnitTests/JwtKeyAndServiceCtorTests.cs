@@ -327,7 +327,7 @@ public class JwtKeyAndServiceCtorTests
         var handler = new LogAnalyticsEventHandler(
             NullLogger<LogAnalyticsEventHandler>.Instance
         );
-        var notification = new TestUserSignedUpNotification
+        var notification = new UserSignedUpNotification
         {
             UserId = Guid.NewGuid(),
             Email = "test@example.com",
@@ -343,7 +343,7 @@ public class JwtKeyAndServiceCtorTests
         var handler = new LogAnalyticsEventHandler(
             NullLogger<LogAnalyticsEventHandler>.Instance
         );
-        var notification = new TestUserSignedUpNotification
+        var notification = new UserSignedUpNotification
         {
             UserId = Guid.NewGuid(),
             Email = "no-tenant@test.com",
@@ -352,7 +352,4 @@ public class JwtKeyAndServiceCtorTests
         };
         await handler.Handle(notification, CancellationToken.None);
     }
-
-    // Helper: concrete implementation of the abstract notification
-    private class TestUserSignedUpNotification : UserSignedUpNotification { }
 }

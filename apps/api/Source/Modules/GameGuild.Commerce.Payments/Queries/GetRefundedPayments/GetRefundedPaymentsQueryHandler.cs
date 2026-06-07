@@ -1,25 +1,44 @@
 using GameGuild.CQRS;
+using Microsoft.EntityFrameworkCore;
 
 namespace GameGuild.Commerce.Payments;
 
 /// <summary>
 ///     Handler for getting refunded payments.
 /// </summary>
-/// <remarks>
-///     Refund tracking is typically managed via:
-///     - FinancialLedgerEntry with refund transaction type
-///     - Payment gateway refund records
-/// </remarks>
-public sealed class GetRefundedPaymentsQueryHandler : IQueryHandler<GetRefundedPaymentsQuery, IEnumerable<PaymentResult>>
+public sealed class GetRefundedPaymentsQueryHandler(IApplicationDbContext context) : IQueryHandler<GetRefundedPaymentsQuery, IEnumerable<PaymentResult>>
 {
-    public Task<IEnumerable<PaymentResult>> Handle(GetRefundedPaymentsQuery request, CancellationToken cancellationToken)
+    public async Task<IEnumerable<PaymentResult>> Handle(GetRefundedPaymentsQuery request, CancellationToken cancellationToken)
     {
-        // Refund queries should integrate with:
-        // - IFinancialLedgerRepository for refund ledger entries
-        // - Payment gateway refund history
-        //
-        // Returns empty collection until refund tracking is fully implemented.
-        
-        return Task.FromResult<IEnumerable<PaymentResult>>([]);
+        var query = context.Set<Payment>()
+            .AsNoTracking()
+            .Where(payment => payment.Status == PaymentStatus.Refunded || payment.RefundedAmount > 0m);
+
+        if (request.TenantId.HasValue)
+        {
+            query = query.Where(payment => payment.TenantId == request.TenantId.Value);
+        }
+
+        if (!string.IsNullOrWhiteSpace(request.RefundReason))
+        {
+            query = query.Where(payment => payment.RefundReason != null
+                                           && payment.RefundReason.Contains(request.RefundReason));
+        }
+
+        if (request.StartDate.HasValue)
+        {
+            query = query.Where(payment => payment.RefundedAt >= request.StartDate.Value);
+        }
+
+        if (request.EndDate.HasValue)
+        {
+            query = query.Where(payment => payment.RefundedAt <= request.EndDate.Value);
+        }
+
+        var payments = await query
+            .OrderByDescending(payment => payment.RefundedAt ?? payment.UpdatedAt)
+            .ToListAsync(cancellationToken);
+
+        return payments.Select(PaymentQueryMapper.ToResult).ToList();
     }
 }

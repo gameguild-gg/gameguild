@@ -1,4 +1,4 @@
-﻿namespace GameGuild.Commerce.Subscriptions;
+namespace GameGuild.Commerce.Subscriptions;
 
 /// <summary>
 ///     Cancellation reason enumeration

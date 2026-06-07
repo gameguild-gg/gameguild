@@ -199,9 +199,13 @@ public class ProgramContent : EntityBase
     /// </summary>
     public bool IsAccessibleBy(Guid userId)
     {
-        // Basic visibility check - can be extended with more complex logic
-        return Visibility == Visibility.Public ||
-               (Visibility == Visibility.Internal && Program.ProgramUsers.Any(pu => pu.UserId == userId && pu.IsActive == true));
+        if (Visibility == Visibility.Public)
+            return true;
+
+        if (Visibility != Visibility.Internal || Program?.ProgramUsers == null)
+            return false;
+
+        return Program.ProgramUsers.Any(pu => pu.UserId == userId && pu.IsActive == true);
     }
 
     /// <summary>
@@ -209,15 +213,18 @@ public class ProgramContent : EntityBase
     /// </summary>
     public decimal GetCompletionPercentage(Guid userId)
     {
-        var interactions = ContentInteractions?.Where(ci => ci.UserId == userId).ToList();
-        if (interactions?.Any() != true)
+        if (ContentInteractions == null)
             return 0m;
 
-        if (HasChildren)
+        var interactions = ContentInteractions.Where(ci => ci.UserId == userId).ToList();
+        if (interactions.Count == 0)
+            return 0m;
+
+        if (Children is { Count: > 0 })
         {
             // For parent content, calculate based on children
-            var childCompletions = Children?.Select(child => child.GetCompletionPercentage(userId)).ToList();
-            return childCompletions?.Any() == true ? childCompletions.Average() : 0m;
+            var childCompletions = Children.Select(child => child.GetCompletionPercentage(userId)).ToList();
+            return childCompletions.Average();
         }
 
         // For leaf content, check if completed

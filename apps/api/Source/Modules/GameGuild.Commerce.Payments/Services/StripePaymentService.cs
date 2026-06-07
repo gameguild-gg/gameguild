@@ -12,9 +12,16 @@ public class StripePaymentService(
     IOptions<StripeGatewayOptions> options,
     ILogger<StripePaymentService> logger) : IStripePaymentService
 {
-    private readonly StripeGatewayOptions _options = options.Value;
+    private readonly StripeGatewayOptions _options = InitializeOptions(options);
     private readonly PaymentIntentService _paymentIntentService = new();
     private readonly RefundService _refundService = new();
+
+    private static StripeGatewayOptions InitializeOptions(IOptions<StripeGatewayOptions> options)
+    {
+        var stripeOptions = options.Value;
+        StripePaymentGateway.EnsureApiKey(stripeOptions);
+        return stripeOptions;
+    }
 
     /// <inheritdoc />
     public async Task<GatewayPaymentResult> ProcessPaymentAsync(

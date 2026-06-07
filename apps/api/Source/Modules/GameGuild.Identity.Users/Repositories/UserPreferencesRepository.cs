@@ -39,6 +39,11 @@ public class UserPreferencesRepository(IApplicationDbContext context) : IUserPre
 
     public Task UpdateAsync(UserPreferences preferences, CancellationToken cancellationToken = default)
     {
+        if (context is DbContext dbContext && dbContext.Entry(preferences).State != EntityState.Detached)
+        {
+            return Task.CompletedTask;
+        }
+
         context.Set<UserPreferences>().Update(preferences);
 
         return Task.CompletedTask;
@@ -48,6 +53,11 @@ public class UserPreferencesRepository(IApplicationDbContext context) : IUserPre
     {
         ArgumentNullException.ThrowIfNull(preferences);
         preferences.SoftDelete();
+        if (context is DbContext dbContext && dbContext.Entry(preferences).State != EntityState.Detached)
+        {
+            return Task.CompletedTask;
+        }
+
         context.Set<UserPreferences>().Update(preferences);
 
         return Task.CompletedTask;

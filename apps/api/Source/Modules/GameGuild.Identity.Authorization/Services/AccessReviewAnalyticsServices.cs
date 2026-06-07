@@ -328,20 +328,25 @@ public class PermissionAnalyticsService(
             cancellationToken
         ).ConfigureAwait(false);
 
-        return logs
+        var dailyTrends = logs
             .GroupBy(l => l.Timestamp.Date)
             .Select(g => new PermissionTrend
             {
                 Date = g.Key,
                 Grants = g.Count(l => l.OperationType == PermissionOperationType.Grant),
                 Revokes = g.Count(l => l.OperationType == PermissionOperationType.Revoke),
-                ActivePermissions = g.Count(l => l.OperationType == PermissionOperationType.Grant)
-                    - g.Count(l => l.OperationType == PermissionOperationType.Revoke)
-                    // NOTE: This is a daily delta, not a running total. A running total requires
-                    // a window function or post-processing scan. PLANNED: Replace with cumulative sum.
             })
             .OrderBy(t => t.Date)
             .ToList();
+
+        var activePermissions = 0;
+        foreach (var trend in dailyTrends)
+        {
+            activePermissions += trend.Grants - trend.Revokes;
+            trend.ActivePermissions = activePermissions;
+        }
+
+        return dailyTrends;
     }
 
     public async Task<List<PermissionAnomaly>> DetectAnomaliesAsync(

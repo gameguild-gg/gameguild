@@ -13,9 +13,8 @@ public class UserWalletConfiguration : IEntityTypeConfiguration<UserWallet>
         // Configure table with constraints for EF Core 9.0
         builder.ToTable(tb =>
             {
-                tb.HasCheckConstraint("CK_UserWallet_UserId_NotEmpty", "user_id != '00000000-0000-0000-0000-000000000000'");
-                tb.HasCheckConstraint("CK_UserWallet_Balance_NonNegative", "balance >= 0");
-                tb.HasCheckConstraint("CK_UserWallet_PendingBalance_NonNegative", "pending_balance >= 0");
+                tb.HasCheckConstraint("CK_UserWallet_UserId_NotEmpty", "\"UserId\" <> '00000000-0000-0000-0000-000000000000'::uuid");
+                tb.HasCheckConstraint("CK_UserWallet_Balance_NonNegative", "\"Balance\" >= 0");
             }
         );
 

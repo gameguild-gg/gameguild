@@ -4,7 +4,7 @@ using HotChocolate.Types;
 namespace GameGuild.TestingLab;
 
 /// <summary> GraphQL queries for TestingLab module using CQRS pattern </summary>
-[ExtendObjectType<Query>]
+[ExtendObjectType("Query")]
 public class TestingLabQueries {
   /// <summary> Get all testing requests </summary>
   public async Task<IEnumerable<TestingRequest>> GetTestingRequests([Service] ITestService testService, int skip = 0, int take = 50) { return await testService.GetTestingRequestsAsync(skip, take).ConfigureAwait(false); }

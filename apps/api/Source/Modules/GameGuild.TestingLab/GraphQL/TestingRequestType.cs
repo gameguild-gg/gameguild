@@ -1,4 +1,3 @@
-using GameGuild.Database;
 using GameGuild.Projects;
 using GameGuild.Identity.Users;
 using ProjectVersionEntity = GameGuild.Projects.ProjectVersion;
@@ -48,19 +47,19 @@ public class TestingRequestType : ObjectType<TestingRequest> {
 
     // Navigation Properties
     descriptor.Field("projectVersion")
-              .ResolveWith<TestingRequestResolvers>(r => r.GetProjectVersion(default(TestingRequest)!, default(ApplicationDbContext)!))
+              .ResolveWith<TestingRequestResolvers>(r => r.GetProjectVersion(default(TestingRequest)!, default(IApplicationDbContext)!))
               .Type<ObjectType<ProjectVersionEntity>>()
               .Description("The project version being tested.");
 
-    descriptor.Field("createdBy").ResolveWith<TestingRequestResolvers>(r => r.GetCreatedBy(default(TestingRequest)!, default(ApplicationDbContext)!)).Type<ObjectType<User>>().Description("The user who created this testing request.");
+    descriptor.Field("createdBy").ResolveWith<TestingRequestResolvers>(r => r.GetCreatedBy(default(TestingRequest)!, default(IApplicationDbContext)!)).Type<ObjectType<User>>().Description("The user who created this testing request.");
 
     descriptor.Field("participants")
-              .ResolveWith<TestingRequestResolvers>(r => r.GetParticipants(default(TestingRequest)!, default(ApplicationDbContext)!))
+              .ResolveWith<TestingRequestResolvers>(r => r.GetParticipants(default(TestingRequest)!, default(IApplicationDbContext)!))
               .Type<ListType<TestingParticipantType>>()
               .Description("Users participating in this testing request.");
 
     descriptor.Field("sessions")
-              .ResolveWith<TestingRequestResolvers>(r => TestingRequestResolvers.GetSessions(default(TestingRequest)!, default(ApplicationDbContext)!))
+              .ResolveWith<TestingRequestResolvers>(r => TestingRequestResolvers.GetSessions(default(TestingRequest)!, default(IApplicationDbContext)!))
               .Type<ListType<TestingSessionType>>()
               .Description("Testing sessions for this request.");
   }

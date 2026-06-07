@@ -33,7 +33,11 @@ public static class PaymentsModule
         services.AddScoped<IWalletService, WalletService>();
 
         // Register payment gateway and sub-services
-        services.Configure<StripeGatewayOptions>(configuration.GetSection("Stripe"));
+        services.Configure<StripeGatewayOptions>(options =>
+        {
+            configuration.GetSection("Stripe").Bind(options);
+            configuration.GetSection(StripeGatewayOptions.SectionName).Bind(options);
+        });
         services.AddScoped<IStripePaymentService, StripePaymentService>();
         services.AddScoped<IStripeCustomerService, StripeCustomerService>();
         services.AddScoped<IPaymentGateway, StripePaymentGateway>();

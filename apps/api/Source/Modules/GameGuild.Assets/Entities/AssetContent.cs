@@ -129,6 +129,22 @@ public class AssetContent : EntityBase
     public DateTime? ModerationCompletedAt { get; set; }
 
     /// <summary>
+    /// User who performed the last manual moderation review.
+    /// </summary>
+    public Guid? ModerationReviewedBy { get; set; }
+
+    /// <summary>
+    /// When the last manual moderation review occurred.
+    /// </summary>
+    public DateTime? ModerationReviewedAt { get; set; }
+
+    /// <summary>
+    /// Notes captured during the last manual moderation review.
+    /// </summary>
+    [MaxLength(2000)]
+    public string? ModerationReviewNotes { get; set; }
+
+    /// <summary>
     /// Auto-moderation labels detected (JSON array).
     /// </summary>
     [MaxLength(2000)]
@@ -219,11 +235,13 @@ public class AssetContent : EntityBase
     {
         ModerationStatus = status;
         ModerationCompletedAt = SystemClock.UtcNow;
+        ModerationReviewedBy = reviewedBy;
+        ModerationReviewedAt = ModerationCompletedAt;
+        ModerationReviewNotes = string.IsNullOrWhiteSpace(notes) ? null : notes.Trim();
         if (labels != null)
         {
             SetModerationLabels(labels);
         }
-        // Note: reviewedBy and notes could be stored if we add properties for audit trail
     }
 
     /// <summary>

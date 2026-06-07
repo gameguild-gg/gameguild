@@ -1,4 +1,5 @@
 using FluentAssertions;
+using GameGuild.CQRS;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Conventions;
 using Microsoft.Extensions.Caching.Memory;
@@ -227,11 +228,13 @@ public class EfConfigAndExtendedTests
     [Fact]
     public void EmailVerificationService_CanBeCreated()
     {
-        var config = new ConfigurationBuilder().AddInMemoryCollection().Build();
+        var publisher = new Mock<IPublisher>();
+        publisher.Setup(x => x.Publish(It.IsAny<EmailVerificationRequestedNotification>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
         var svc = new EmailVerificationService(
             Mock.Of<ILogger<EmailVerificationService>>(),
-            config,
-            new MemoryCache(new MemoryCacheOptions()));
+            new MemoryCache(new MemoryCacheOptions()),
+            publisher.Object);
         svc.Should().NotBeNull();
     }
 

@@ -1,5 +1,5 @@
-﻿# Stage 1: Build stage
-FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
+# Stage 1: Build stage
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
 # Copy source code for the API solution
@@ -12,7 +12,7 @@ RUN dotnet restore "Source/GameGuild.API/GameGuild.API.csproj"
 RUN dotnet publish "Source/GameGuild.API/GameGuild.API.csproj" -c Release -o /app/publish /p:UseAppHost=false --no-restore
 
 # Stage 2: Runtime stage
-FROM mcr.microsoft.com/dotnet/aspnet:9.0-alpine AS runtime
+FROM mcr.microsoft.com/dotnet/aspnet:10.0-alpine AS runtime
 
 # Install curl for health checks and create non-root user
 RUN apk add --no-cache curl \
@@ -51,13 +51,13 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
 ENTRYPOINT ["dotnet", "GameGuild.API.dll"]
 
 #
-#FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS base
+#FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS base
 #USER $APP_UID
 #WORKDIR /app
 #EXPOSE 8080
 #EXPOSE 8081
 #
-#FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
+#FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 #ARG BUILD_CONFIGURATION=Release
 #WORKDIR /src
 #COPY ["cms.csproj", "./"]

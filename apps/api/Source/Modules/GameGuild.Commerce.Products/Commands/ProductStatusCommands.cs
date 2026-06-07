@@ -21,8 +21,7 @@ public sealed class ActivateProductHandler(IProductRepository repository) : ICom
             throw new ProductNotFoundException(request.ProductId);
         }
 
-        // Product activation logic - if the entity had an IsActive flag, we'd set it here
-        // For now, this is a placeholder for future status management
+        product.IsPublished = true;
         product.Touch();
 
         await repository.UpdateAsync(product, cancellationToken).ConfigureAwait(false);
@@ -49,8 +48,7 @@ public sealed class DeactivateProductHandler(IProductRepository repository) : IC
             throw new ProductNotFoundException(request.ProductId);
         }
 
-        // Product deactivation logic - if the entity had an IsActive flag, we'd set it here
-        // For now, this is a placeholder for future status management
+        product.IsPublished = false;
         product.Touch();
 
         await repository.UpdateAsync(product, cancellationToken).ConfigureAwait(false);

@@ -44,6 +44,27 @@ public class SubscriptionsControllerTests
     }
 
     [Fact]
+    public async Task GetSubscriptions_ShouldAllowSystemAdminWithoutTenantContext()
+    {
+        var sender = new Mock<ISender>();
+        sender
+            .Setup(service => service.Send(
+                It.Is<GetPagedSubscriptionsQuery>(query =>
+                    query.Page == 1 &&
+                    query.PageSize == 20 &&
+                    query.TenantId == null),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(PagedResult<Subscription>.Empty(20));
+
+        var controller = CreateController(sender.Object, CreateAuthenticatedActorContext(null, "SystemAdmin"));
+
+        var result = await controller.GetSubscriptions();
+
+        result.Should().BeOfType<OkObjectResult>();
+        sender.VerifyAll();
+    }
+
+    [Fact]
     public async Task GetSubscriptions_ShouldReturnForbid_WhenRequestedTenantDoesNotMatchActorTenant()
     {
         var controller = CreateController(Mock.Of<ISender>(), CreateAuthenticatedActorContext(Guid.NewGuid()));
@@ -51,6 +72,25 @@ public class SubscriptionsControllerTests
         var result = await controller.GetSubscriptions(tenantId: Guid.NewGuid());
 
         result.Should().BeOfType<ForbidResult>();
+    }
+
+    [Fact]
+    public async Task GetSubscriptions_ShouldAllowSystemAdminRequestedTenantFilter()
+    {
+        var requestedTenantId = Guid.NewGuid();
+        var sender = new Mock<ISender>();
+        sender
+            .Setup(service => service.Send(
+                It.Is<GetPagedSubscriptionsQuery>(query => query.TenantId == requestedTenantId),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(PagedResult<Subscription>.Empty(20));
+
+        var controller = CreateController(sender.Object, CreateAuthenticatedActorContext(null, "SystemAdmin"));
+
+        var result = await controller.GetSubscriptions(tenantId: requestedTenantId);
+
+        result.Should().BeOfType<OkObjectResult>();
+        sender.VerifyAll();
     }
 
     [Fact]
@@ -224,14 +264,14 @@ public class SubscriptionsControllerTests
         };
     }
 
-    private static ActorContext CreateAuthenticatedActorContext(Guid? tenantId)
+    private static ActorContext CreateAuthenticatedActorContext(Guid? tenantId, params string[] roles)
     {
         return new ActorContext
         {
             ActorKind = ActorKind.User,
             SubjectId = Guid.NewGuid().ToString(),
             TenantId = tenantId,
-            Roles = new HashSet<string>(),
+            Roles = new HashSet<string>(roles),
             Permissions = new HashSet<string>(),
             TypedAttributes = ActorAttributes.Empty,
             AuthScheme = "Test",

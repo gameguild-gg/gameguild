@@ -4,6 +4,7 @@ using GameGuild.Identity.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
+using System.Reflection;
 using System.Security.Claims;
 using Xunit;
 
@@ -370,6 +371,15 @@ public class TenantResolverTests
     }
 
     [Fact]
+    public void GetTenantIdFromClaims_Should_Return_Null_For_Null_User_And_Missing_Identity()
+    {
+        var method = typeof(TenantResolver).GetMethod("GetTenantIdFromClaims", BindingFlags.NonPublic | BindingFlags.Static)!;
+
+        method.Invoke(null, [null]).Should().BeNull();
+        method.Invoke(null, [new ClaimsPrincipal()]).Should().BeNull();
+    }
+
+    [Fact]
     public async Task ResolveAsync_Should_Skip_Claims_When_TenantId_Is_Empty_Guid()
     {
         var mediator = new Mock<IMediator>();
@@ -380,6 +390,24 @@ public class TenantResolverTests
 
         var context = new DefaultHttpContext();
         var claims = new List<Claim> { new(TenantResolver.TenantIdClaimType, Guid.Empty.ToString()) };
+        context.User = new ClaimsPrincipal(new ClaimsIdentity(claims, "Test"));
+
+        var result = await resolver.ResolveAsync(context);
+
+        result.Should().Be(TenantResolutionResult.None);
+    }
+
+    [Fact]
+    public async Task ResolveAsync_Should_Skip_Claims_When_TenantId_Claim_Is_Invalid_Guid()
+    {
+        var mediator = new Mock<IMediator>();
+        mediator.Setup(m => m.Send(It.IsAny<GetDefaultTenantQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Tenant?)null);
+
+        var resolver = new TenantResolver(mediator.Object, Mock.Of<ITenantDomainsRepository>(), NullLogger<TenantResolver>.Instance);
+
+        var context = new DefaultHttpContext();
+        var claims = new List<Claim> { new(TenantResolver.TenantIdClaimType, "not-a-guid") };
         context.User = new ClaimsPrincipal(new ClaimsIdentity(claims, "Test"));
 
         var result = await resolver.ResolveAsync(context);

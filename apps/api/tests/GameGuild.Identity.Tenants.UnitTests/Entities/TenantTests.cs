@@ -40,6 +40,16 @@ public class TenantTests
     }
 
     [Fact]
+    public void Tenant_Partial_Constructor_Should_Map_Properties()
+    {
+        var tenant = new Tenant(new { Name = "Partial Tenant", Slug = "partial-tenant", IsActive = true });
+
+        tenant.Name.Should().Be("Partial Tenant");
+        tenant.Slug.Should().Be("partial-tenant");
+        tenant.IsActive.Should().BeTrue();
+    }
+
+    [Fact]
     public void Tenant_Should_Support_Activation()
     {
         // Arrange
@@ -238,6 +248,22 @@ public class TenantTests
     }
 
     [Fact]
+    public void ValidateConfiguration_Should_Return_Error_For_Required_Slug()
+    {
+        var tenant = new Tenant
+        {
+            Name = "Valid Name",
+            Slug = string.Empty
+        };
+
+        var result = tenant.ValidateConfiguration();
+
+        result.IsSuccess.Should().BeFalse();
+        result.Errors.Should().Contain("Tenant slug is required.");
+        result.Errors.Should().Contain("Tenant slug must contain only lowercase letters, numbers, and hyphens.");
+    }
+
+    [Fact]
     public void ValidateConfiguration_Should_Succeed_For_Valid_Tenant()
     {
         // Arrange
@@ -265,6 +291,21 @@ public class TenantTests
         // Assert
         count.Should().Be(1);
         tenant.HasActiveMembers.Should().BeTrue();
+    }
+
+    [Fact]
+    public void CanAcceptMembers_Should_Require_Active_And_Not_Archived()
+    {
+        var tenant = CreateActiveTenant();
+
+        tenant.CanAcceptMembers.Should().BeTrue();
+
+        tenant.IsArchived = true;
+        tenant.CanAcceptMembers.Should().BeFalse();
+
+        tenant.IsArchived = false;
+        tenant.IsActive = false;
+        tenant.CanAcceptMembers.Should().BeFalse();
     }
 
     [Fact]

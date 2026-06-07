@@ -19,13 +19,14 @@ public sealed class UpdateUserPrivacyPreferencesCommandHandler(IUserRepository u
         }
 
         var existing = preferences.GetPrivacyPreferences();
-        foreach (var pref in request.Request.PrivacyPreferences)
+        foreach (var pref in JsonValueDictionary.ToObjects(request.Request.PrivacyPreferences))
         {
             existing[pref.Key] = pref.Value;
         }
         preferences.SetPrivacyPreferences(existing);
 
         await preferencesRepository.UpdateAsync(preferences, cancellationToken).ConfigureAwait(false);
+        await preferencesRepository.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         return Unit.Value;
     }
 }

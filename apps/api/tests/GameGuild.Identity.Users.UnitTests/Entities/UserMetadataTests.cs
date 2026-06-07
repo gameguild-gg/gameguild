@@ -137,4 +137,37 @@ public class UserMetadataTests
         retrieved.Should().Contain("tag3");
         retrieved.Should().NotContain("tag2");
     }
+
+    [Fact]
+    public void GetCustomFields_WhenSerializedValueIsNull_ShouldReturnEmptyDictionary()
+    {
+        var metadata = UserMetadata.Create(Guid.NewGuid());
+        metadata.CustomFields = "null";
+
+        var result = metadata.GetCustomFields();
+
+        result.Should().BeEmpty();
+    }
+
+    [Fact]
+    public void GetTags_WhenSerializedValueIsNull_ShouldReturnEmptyList()
+    {
+        var metadata = UserMetadata.Create(Guid.NewGuid());
+        metadata.Tags = "null";
+
+        var result = metadata.GetTags();
+
+        result.Should().BeEmpty();
+    }
+
+    [Fact]
+    public void GetExternalReferences_WhenSerializedValueIsNull_ShouldReturnEmptyDictionary()
+    {
+        var metadata = UserMetadata.Create(Guid.NewGuid());
+        metadata.ExternalReferences = "null";
+
+        var result = metadata.GetExternalReferences();
+
+        result.Should().BeEmpty();
+    }
 }

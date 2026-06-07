@@ -1,4 +1,4 @@
-﻿namespace GameGuild.Commerce.Payments;
+namespace GameGuild.Commerce.Payments;
 
 /// <summary>Tax types</summary>
 // ReSharper disable InconsistentNaming - VAT and GST are standard tax acronyms
