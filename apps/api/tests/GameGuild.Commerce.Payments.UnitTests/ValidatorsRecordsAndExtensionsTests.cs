@@ -1,4 +1,5 @@
 using FluentAssertions;
+using Microsoft.EntityFrameworkCore;
 using GameGuild.Commerce.Payments;
 using GameGuild.Commerce.Payments.Commands.PatchWallet;
 using GameGuild.Commerce.Payments.Queries.ListWallets;
@@ -274,19 +275,44 @@ public class ValidateTaxExemptionHandlerTests
     [Fact]
     public async Task Handle_ReturnsValidResult()
     {
-        var handler = new ValidateTaxExemptionHandler();
+        var tenantId = Guid.NewGuid();
+        var customerId = Guid.NewGuid();
+        var exemption = CustomerTaxExemption.Create(
+            tenantId,
+            customerId,
+            "US-CA",
+            TaxExemptionType.NonProfit,
+            "CERT-123",
+            DateTime.UtcNow.AddYears(-1),
+            DateTime.UtcNow.AddYears(1));
+        exemption.MarkVerified("test");
+
+        await using var context = CreateContext(seed => seed.Set<CustomerTaxExemption>().Add(exemption));
+        var handler = new ValidateTaxExemptionHandler(context);
         var command = new ValidateTaxExemptionCommand(
-            "US-CA", "nonprofit", "CERT-123", null, Guid.NewGuid(), DateTime.UtcNow);
+            "US-CA", "nonprofit", "CERT-123", null, customerId, DateTime.UtcNow);
 
         var result = await handler.Handle(command, CancellationToken.None);
 
         result.IsValid.Should().BeTrue();
-        result.ExemptionType.Should().Be("nonprofit");
+        result.ExemptionType.Should().Be(TaxExemptionType.NonProfit.ToString());
         result.ExemptionRate.Should().Be(1.0m);
-        result.ValidationMessage.Should().Be("Exemption validated successfully");
+        result.ValidationMessage.Should().Be("Exemption certificate is active and verified");
         result.Warnings.Should().BeNull();
         result.ValidFrom.Should().NotBeNull();
         result.ValidTo.Should().NotBeNull();
+    }
+
+    private static PaymentsPersistenceTestDbContext CreateContext(Action<PaymentsPersistenceTestDbContext>? seed = null)
+    {
+        var options = new DbContextOptionsBuilder<PaymentsPersistenceTestDbContext>()
+            .UseInMemoryDatabase($"payments-exemption-{Guid.NewGuid()}")
+            .Options;
+
+        var context = new PaymentsPersistenceTestDbContext(options);
+        seed?.Invoke(context);
+        context.SaveChanges();
+        return context;
     }
 }
 

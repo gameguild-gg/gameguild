@@ -145,18 +145,10 @@ public sealed class RequireTimeWindowRuleEvaluator : IRuleEvaluator
             }
         }
 
-        // Only start or only end specified
-        if (startTime.HasValue && !endTime.HasValue)
-        {
-            return currentTime >= startTime.Value;
-        }
-
-        if (endTime.HasValue && !startTime.HasValue)
-        {
-            return currentTime <= endTime.Value;
-        }
-
-        return true;
+        // Only start or only end specified. The no-constraint case returned above.
+        return startTime.HasValue
+            ? currentTime >= startTime.Value
+            : currentTime <= endTime!.Value;
     }
 
     private static string ConvertIanaToWindows(string ianaId)
@@ -176,6 +168,7 @@ public sealed class RequireTimeWindowRuleEvaluator : IRuleEvaluator
             "Asia/Shanghai" => "China Standard Time",
             "Asia/Singapore" => "Singapore Standard Time",
             "Australia/Sydney" => "AUS Eastern Standard Time",
+            "UTC-Fallback" => "UTC",
             "UTC" => "UTC",
             _ => ianaId // Return as-is if no mapping found
         };

@@ -267,12 +267,16 @@ public class S3StorageService : IStorageService
         bool isDownload = true,
         CancellationToken ct = default)
     {
+        var useHttp = Uri.TryCreate(_options.ServiceUrl, UriKind.Absolute, out var serviceUri)
+            && string.Equals(serviceUri.Scheme, Uri.UriSchemeHttp, StringComparison.OrdinalIgnoreCase);
+
         var request = new Amazon.S3.Model.GetPreSignedUrlRequest
         {
             BucketName = bucketName,
             Key = objectKey,
             Expires = SystemClock.UtcNow.Add(expiry),
-            Verb = isDownload ? Amazon.S3.HttpVerb.GET : Amazon.S3.HttpVerb.PUT
+            Verb = isDownload ? Amazon.S3.HttpVerb.GET : Amazon.S3.HttpVerb.PUT,
+            Protocol = useHttp ? Amazon.S3.Protocol.HTTP : Amazon.S3.Protocol.HTTPS
         };
 
         return await Task.FromResult(_s3Client.GetPreSignedURL(request));

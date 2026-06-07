@@ -100,7 +100,13 @@ public class UserProduct : EntityBase
         if (AccessStatus != ProductAccessStatus.Active) return false;
 
         var now = SystemClock.UtcNow;
-        return (AccessStartDate == null || AccessStartDate <= now) && (AccessEndDate == null || AccessEndDate > now);
+        if (AccessStartDate.HasValue && AccessStartDate.Value > now)
+            return false;
+
+        if (AccessEndDate.HasValue && AccessEndDate.Value <= now)
+            return false;
+
+        return true;
     }
 
     /// <summary>Grant access to the product</summary>

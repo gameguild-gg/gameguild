@@ -94,17 +94,20 @@ public sealed class SubscriptionsController(ISender sender, IActorContextAccesso
         var actorContext = actorContextAccessor.ActorContext;
         if (actorContext.IsAuthenticated)
         {
-            if (!actorContext.TenantId.HasValue)
+            if (!actorContext.TenantId.HasValue && !actorContext.IsSystemAdmin)
             {
                 return BadRequest(new { error = "Tenant context is required" });
             }
 
-            if (tenantId.HasValue && tenantId.Value != actorContext.TenantId.Value)
+            if (!actorContext.IsSystemAdmin &&
+                tenantId.HasValue &&
+                actorContext.TenantId.HasValue &&
+                tenantId.Value != actorContext.TenantId.Value)
             {
                 return Forbid();
             }
 
-            tenantId ??= actorContext.TenantId.Value;
+            tenantId ??= actorContext.TenantId;
         }
 
         // If expiring filter is set, delegate to expiring subscriptions query

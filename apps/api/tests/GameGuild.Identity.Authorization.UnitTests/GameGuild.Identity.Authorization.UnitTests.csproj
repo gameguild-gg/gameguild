@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net9.0</TargetFramework>
+        <TargetFramework>net10.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <IsPackable>false</IsPackable>
@@ -20,7 +20,7 @@
         <Threshold>80</Threshold>
         <ThresholdType>line,branch,method</ThresholdType>
         <ThresholdStat>total</ThresholdStat>
-        <ExcludeByFile>**/*Tests.cs,**/obj/**,**/Migrations/**</ExcludeByFile>
+        <ExcludeByFile>**/*Tests.cs,**/obj/**,**/Migrations/**,**/Examples/**</ExcludeByFile>
         <ExcludeByAttribute>CompilerGenerated,GeneratedCodeAttribute</ExcludeByAttribute>
         <Include>[GameGuild.Identity.Authorization]*</Include>
     </PropertyGroup>

@@ -39,7 +39,7 @@ public class TestingLabSettings : EntityBase, ITenantable {
   public int MaxSimultaneousSessions { get; set; } = 10;
 
   /// <summary> Navigation property to the tenant this settings belongs to (implements ITenantable) If null, these are global settings that apply to all tenants If set, these are tenant-specific settings that override global ones </summary>
-  public override Tenant? Tenant { get; set; }
+  public Tenant? Tenant { get; set; }
 
   /// <summary> Indicates whether this settings is global (TenantId is null) or tenant-specific </summary>
   public override bool IsGlobal { get => Tenant == null; }

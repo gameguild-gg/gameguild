@@ -546,7 +546,7 @@ public class RequireTimeWindowRuleEvaluatorTests5
     {
         // Use current time + 1 hour as endTime to guarantee match
         var end = DateTime.UtcNow.TimeOfDay.Add(TimeSpan.FromHours(1));
-        var endStr = end.Hours >= 24 ? "23:59" : end.ToString(@"hh\:mm");
+        var endStr = end.TotalHours >= 24 ? "23:59" : end.ToString(@"hh\:mm");
         var json = JsonSerializer.Serialize(new
         {
             windows = new[] { new { endTime = endStr } }
@@ -909,7 +909,7 @@ public class AuthorizationTenantResolverExtended5
 
         var principal = new ClaimsPrincipal(new ClaimsIdentity(new[]
         {
-            new Claim("tenant", "claim-tenant")
+            new Claim("tenant_id", "claim-tenant")
         }, "test"));
 
         var result = resolver.ResolveFromClaims(principal);

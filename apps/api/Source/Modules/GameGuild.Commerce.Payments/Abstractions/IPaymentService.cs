@@ -1,4 +1,4 @@
-﻿namespace GameGuild.Commerce.Payments;
+namespace GameGuild.Commerce.Payments;
 
 /// <summary>
 ///     Service for processing payments and managing billing

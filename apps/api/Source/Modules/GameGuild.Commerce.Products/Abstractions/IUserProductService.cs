@@ -1,4 +1,4 @@
-﻿namespace GameGuild.Commerce.Products;
+namespace GameGuild.Commerce.Products;
 
 /// <summary>
 /// Interface for user product access services

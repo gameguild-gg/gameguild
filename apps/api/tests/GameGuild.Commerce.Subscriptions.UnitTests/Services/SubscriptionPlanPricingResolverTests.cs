@@ -36,8 +36,9 @@ public class SubscriptionPlanPricingResolverTests
     [Fact]
     public async Task GetPlanMonthlyPriceAsync_ShouldReturnMonthlyPrice_WhenPlanExists()
     {
+        var plan = CreatePlan();
         _planService.Setup(s => s.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(CreatePlan());
+            .ReturnsAsync(plan);
 
         var result = await _resolver.GetPlanMonthlyPriceAsync(Guid.NewGuid());
 
@@ -73,8 +74,9 @@ public class SubscriptionPlanPricingResolverTests
     [Fact]
     public async Task GetPlanPriceAsync_ShouldFallbackToTwelveMonths_WhenAnnualPriceMissing()
     {
+        var plan = CreatePlan();
         _planService.Setup(s => s.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(CreatePlan());
+            .ReturnsAsync(plan);
 
         var result = await _resolver.GetPlanPriceAsync(Guid.NewGuid(), BillingCycle.Annually);
 
@@ -89,8 +91,9 @@ public class SubscriptionPlanPricingResolverTests
     [InlineData(BillingCycle.Biannually, 479.76)]
     public async Task GetPlanPriceAsync_ShouldMapBillingCyclesToExpectedAmounts(BillingCycle cycle, decimal expectedAmount)
     {
+        var plan = CreatePlan();
         _planService.Setup(s => s.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(CreatePlan());
+            .ReturnsAsync(plan);
 
         var result = await _resolver.GetPlanPriceAsync(Guid.NewGuid(), cycle);
 
@@ -101,8 +104,9 @@ public class SubscriptionPlanPricingResolverTests
     [Fact]
     public async Task GetPlanPriceAsync_ShouldFallbackToMonthly_ForUnsupportedCycle()
     {
+        var plan = CreatePlan();
         _planService.Setup(s => s.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(CreatePlan());
+            .ReturnsAsync(plan);
 
         var result = await _resolver.GetPlanPriceAsync(Guid.NewGuid(), (BillingCycle)999);
 

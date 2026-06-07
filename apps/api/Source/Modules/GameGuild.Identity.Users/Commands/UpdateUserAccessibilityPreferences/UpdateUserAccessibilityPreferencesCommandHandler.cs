@@ -19,13 +19,14 @@ public sealed class UpdateUserAccessibilityPreferencesCommandHandler(IUserReposi
         }
 
         var existing = preferences.GetAccessibilityPreferences();
-        foreach (var pref in request.Request.AccessibilityPreferences)
+        foreach (var pref in JsonValueDictionary.ToObjects(request.Request.AccessibilityPreferences))
         {
             existing[pref.Key] = pref.Value;
         }
         preferences.SetAccessibilityPreferences(existing);
 
         await preferencesRepository.UpdateAsync(preferences, cancellationToken).ConfigureAwait(false);
+        await preferencesRepository.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         return Unit.Value;
     }
 }

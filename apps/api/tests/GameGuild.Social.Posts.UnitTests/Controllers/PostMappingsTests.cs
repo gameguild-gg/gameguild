@@ -1,3 +1,4 @@
+using System.Reflection;
 using FluentAssertions;
 
 using Xunit;
@@ -66,6 +67,21 @@ public class PostMappingsTests
         dto.CommentsCount.Should().Be(0);
         dto.SharesCount.Should().Be(0);
         dto.ViewsCount.Should().Be(0);
+    }
+
+    [Fact]
+    public void MapToDto_WithMediaType_ShouldMapMediaTypeName()
+    {
+        var post = Post.Create(Guid.NewGuid(), "With media");
+        typeof(Post).GetProperty(nameof(Post.MediaUrl), BindingFlags.Instance | BindingFlags.Public)!
+            .SetValue(post, "https://example.com/image.png");
+        typeof(Post).GetProperty(nameof(Post.MediaType), BindingFlags.Instance | BindingFlags.Public)!
+            .SetValue(post, MediaType.Image);
+
+        var dto = PostMappings.MapToDto(post);
+
+        dto.MediaUrl.Should().Be("https://example.com/image.png");
+        dto.MediaType.Should().Be("Image");
     }
 
     [Fact]

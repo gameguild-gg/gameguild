@@ -106,6 +106,28 @@ public class TenantRepositoryTests
     }
 
     [Fact]
+    public async Task GetQueryableAsync_Should_Filter_SoftDeleted_Tenants()
+    {
+        await using var context = CreateContext();
+        var repo = new TenantRepository(context);
+
+        var activeTenant = new Tenant { Name = "Active", Slug = "active" };
+        var deletedTenant = new Tenant { Name = "Deleted", Slug = "deleted" };
+
+        context.Set<Tenant>().AddRange(activeTenant, deletedTenant);
+        await context.SaveChangesAsync();
+
+        typeof(EntityBase).GetProperty(nameof(EntityBase.Version))!.SetValue(deletedTenant, 1);
+        await repo.DeleteAsync(deletedTenant);
+
+        var query = await repo.GetQueryableAsync();
+        var items = await query.ToListAsync();
+
+        items.Should().ContainSingle(t => t.Id == activeTenant.Id);
+        items.Should().NotContain(t => t.Id == deletedTenant.Id);
+    }
+
+    [Fact]
     public async Task UpdateAsync_Should_Persist_Changes()
     {
         await using var context = CreateContext();

@@ -8,6 +8,7 @@ namespace GameGuild.Assets.UnitTests.Services;
 public class AssetAccessServiceTests
 {
     private readonly Mock<IAssetReferenceRepository> _referenceRepositoryMock;
+    private readonly Mock<ITransformedAssetRepository> _transformedAssetRepositoryMock;
     private readonly Mock<IAssetStorageService> _storageServiceMock;
     private readonly Mock<IAssetTokenService> _tokenServiceMock;
     private readonly Mock<ITenantMemberRepository> _tenantMemberRepositoryMock;
@@ -19,6 +20,7 @@ public class AssetAccessServiceTests
     public AssetAccessServiceTests()
     {
         _referenceRepositoryMock = new Mock<IAssetReferenceRepository>();
+        _transformedAssetRepositoryMock = new Mock<ITransformedAssetRepository>();
         _storageServiceMock = new Mock<IAssetStorageService>();
         _tokenServiceMock = new Mock<IAssetTokenService>();
         _tenantMemberRepositoryMock = new Mock<ITenantMemberRepository>();
@@ -33,6 +35,7 @@ public class AssetAccessServiceTests
 
         _service = new AssetAccessService(
             _referenceRepositoryMock.Object,
+            _transformedAssetRepositoryMock.Object,
             _storageServiceMock.Object,
             _tokenServiceMock.Object,
             _tenantMemberRepositoryMock.Object,

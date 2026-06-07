@@ -106,7 +106,22 @@ public class AccessControlListEntry : EntityBase
     /// <summary>
     ///     Returns true if this entry has not expired and is active.
     /// </summary>
-    public bool IsEffective => IsActive && (ExpiresAt == null || ExpiresAt > SystemClock.UtcNow);
+    public bool IsEffective
+    {
+        get
+        {
+            if (!IsActive)
+                return false;
+
+            if (ExpiresAt is null)
+                return true;
+
+            if (ExpiresAt.Value <= SystemClock.UtcNow)
+                return false;
+
+            return true;
+        }
+    }
 
     /// <summary>
     ///     Creates a user-based ACL entry.

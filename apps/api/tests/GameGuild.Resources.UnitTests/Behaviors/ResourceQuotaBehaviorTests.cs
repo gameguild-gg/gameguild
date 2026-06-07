@@ -3,6 +3,7 @@ using GameGuild.CQRS;
 using GameGuild.Identity.Context.Actors;
 using Microsoft.Extensions.Logging;
 using Moq;
+using System.Reflection;
 using Xunit;
 
 namespace GameGuild.Resources.UnitTests.Behaviors;
@@ -269,6 +270,78 @@ public class ResourceQuotaBehaviorTests
         
         // Note: Logger.LogError is called but we don't verify it here to keep the test simple
         // The important thing is that the original exception is propagated, not the rollback exception
+    }
+
+    [Fact]
+    public void TryExtractUserId_ReturnsNull_WhenResponseIsNull()
+    {
+        InvokeTryExtractUserId<TestQuotaCommand, ResponseWithId>(null).Should().BeNull();
+    }
+
+    [Fact]
+    public void TryExtractUserId_ReturnsId_WhenGuidIdPropertyExists()
+    {
+        var expectedId = Guid.NewGuid();
+
+        var result = InvokeTryExtractUserId<TestQuotaCommand, ResponseWithId>(new ResponseWithId { Id = expectedId });
+
+        result.Should().Be(expectedId);
+    }
+
+    [Fact]
+    public void TryExtractUserId_ReturnsUserId_WhenIdPropertyIsMissing()
+    {
+        var expectedUserId = Guid.NewGuid();
+
+        var result = InvokeTryExtractUserId<TestQuotaCommand, ResponseWithUserId>(new ResponseWithUserId { UserId = expectedUserId });
+
+        result.Should().Be(expectedUserId);
+    }
+
+    [Fact]
+    public void TryExtractUserId_ReturnsNull_WhenIdAndUserIdPropertiesAreMissing()
+    {
+        InvokeTryExtractUserId<TestQuotaCommand, ResponseWithoutIdentifiers>(new ResponseWithoutIdentifiers())
+            .Should().BeNull();
+    }
+
+    [Fact]
+    public void TryExtractUserId_ReturnsNull_WhenIdPropertyIsNotGuid()
+    {
+        InvokeTryExtractUserId<TestQuotaCommand, ResponseWithStringId>(new ResponseWithStringId { Id = "not-a-guid" })
+            .Should().BeNull();
+    }
+
+    private static Guid? InvokeTryExtractUserId<TRequest, TResponse>(object? response)
+        where TRequest : IRequestBase
+    {
+        var method = typeof(ResourceQuotaBehavior<TRequest, TResponse>).GetMethod(
+            "TryExtractUserId",
+            BindingFlags.NonPublic | BindingFlags.Static);
+
+        method.Should().NotBeNull();
+
+        return (Guid?)method!.Invoke(null, new object?[] { response });
+    }
+
+    private sealed class ResponseWithId
+    {
+        public Guid Id { get; init; }
+    }
+
+    private sealed class ResponseWithUserId
+    {
+        public Guid UserId { get; init; }
+    }
+
+    private sealed class ResponseWithoutIdentifiers
+    {
+        public string Name { get; init; } = string.Empty;
+    }
+
+    private sealed class ResponseWithStringId
+    {
+        public string Id { get; init; } = string.Empty;
     }
 
     // Test command with RequiresQuota attribute

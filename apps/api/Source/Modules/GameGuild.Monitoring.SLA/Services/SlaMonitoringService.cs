@@ -12,10 +12,49 @@ public class SlaMonitoringService(
     IAlertManager alertManager
 ) : ISlaMonitoringService
 {
-    public Task RecordMetricAsync(SliMetricDto metric, CancellationToken cancellationToken = default)
+    public async Task RecordMetricAsync(SliMetricDto metric, CancellationToken cancellationToken = default)
     {
-        // This is handled by RecordSliMetricCommand
-        return Task.FromException(new NotImplementedException("Use RecordSliMetricCommand instead."));
+        ArgumentNullException.ThrowIfNull(metric);
+
+        if (metric.ServiceLevelObjectiveId == Guid.Empty)
+        {
+            throw new ArgumentException("Service level objective id is required.", nameof(metric));
+        }
+
+        var slo = await sloRepository
+            .GetByIdAsync(metric.ServiceLevelObjectiveId, cancellationToken)
+            .ConfigureAwait(false);
+
+        if (slo is null)
+        {
+            throw new InvalidOperationException($"SLO with ID '{metric.ServiceLevelObjectiveId}' not found.");
+        }
+
+        var indicator = metric.IsSuccessful
+            ? ServiceLevelIndicator.CreateSuccess(
+                metric.ServiceLevelObjectiveId,
+                metric.Value,
+                metric.ResponseTimeMs,
+                metric.StatusCode,
+                metric.Endpoint)
+            : ServiceLevelIndicator.CreateFailure(
+                metric.ServiceLevelObjectiveId,
+                metric.Value,
+                metric.ErrorMessage ?? "Unknown error",
+                metric.ResponseTimeMs,
+                metric.StatusCode,
+                metric.Endpoint);
+
+        indicator.Timestamp = metric.Timestamp ?? DateTimeOffset.UtcNow;
+        indicator.Metadata = metric.Metadata;
+
+        if (slo.TenantId.HasValue)
+        {
+            indicator.SetTenantId(slo.TenantId.Value);
+        }
+
+        await sliRepository.AddAsync(indicator, cancellationToken).ConfigureAwait(false);
+        await EvaluateSloAsync(metric.ServiceLevelObjectiveId, cancellationToken).ConfigureAwait(false);
     }
 
     public async Task EvaluateAllSlosAsync(Guid tenantId, CancellationToken cancellationToken = default)

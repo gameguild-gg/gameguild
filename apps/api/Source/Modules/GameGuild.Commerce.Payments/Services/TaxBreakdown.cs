@@ -1,4 +1,4 @@
-﻿namespace GameGuild.Commerce.Payments;
+namespace GameGuild.Commerce.Payments;
 
 /// <summary>
 ///     Individual tax breakdown (for compound/multiple taxes)

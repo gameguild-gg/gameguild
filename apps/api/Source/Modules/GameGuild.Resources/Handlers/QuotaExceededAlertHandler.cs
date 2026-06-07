@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Diagnostics.Metrics;
 using GameGuild.CQRS;
 using Microsoft.Extensions.Logging;
 
@@ -25,6 +26,15 @@ public sealed class QuotaExceededAlertHandler(
     ///     ActivitySource for OpenTelemetry tracing of alert handling.
     /// </summary>
     private static readonly ActivitySource ActivitySource = new("GameGuild.Resources.Alerts", "1.0.0");
+    private static readonly Meter Meter = new("GameGuild.Resources.Alerts", "1.0.0");
+    private static readonly Counter<double> QuotaExceededCounter = Meter.CreateCounter<double>(
+        "gameguild_quota_exceeded_total",
+        "violations",
+        "Total quota exceeded events.");
+    private static readonly Counter<double> QuotaExceededRepeatedCounter = Meter.CreateCounter<double>(
+        "gameguild_quota_exceeded_repeated_total",
+        "violations",
+        "Repeated quota exceeded events that crossed the escalation threshold.");
 
     /// <summary>
     ///     Counter for tracking quota exceeded events per tenant for rate limiting alerts.
@@ -157,12 +167,9 @@ public sealed class QuotaExceededAlertHandler(
             // Update or add current violation
             if (RecentViolations.TryGetValue(key, out var existing))
             {
-                if (now - existing.FirstOccurrence <= ViolationWindow)
-                {
-                    currentCount = existing.Count + 1;
-                    RecentViolations[key] = (currentCount, existing.FirstOccurrence);
-                    return currentCount >= EscalationThreshold;
-                }
+                currentCount = existing.Count + 1;
+                RecentViolations[key] = (currentCount, existing.FirstOccurrence);
+                return currentCount >= EscalationThreshold;
             }
 
             // First violation in new window
@@ -172,20 +179,15 @@ public sealed class QuotaExceededAlertHandler(
         }
     }
 
-    /// <summary>
-    ///     Records a metric for observability platforms.
-    ///     Placeholder for integration with Prometheus, Datadog, Application Insights, etc.
-    /// </summary>
     private static void RecordMetric(string metricName, double value, Dictionary<string, object?> tags)
     {
-        // This is a placeholder for actual metrics integration.
-        // In production, this would use:
-        // - System.Diagnostics.Metrics.Meter for OpenTelemetry metrics
-        // - Prometheus.Net for Prometheus
-        // - Datadog.Trace for Datadog
-        // - Application Insights TelemetryClient for Azure
+        var tagList = tags.Select(tag => new KeyValuePair<string, object?>(tag.Key, tag.Value)).ToArray();
+        if (metricName == "quota_exceeded_repeated_total")
+        {
+            QuotaExceededRepeatedCounter.Add(value, tagList);
+            return;
+        }
 
-        // The structured logs above can be parsed by log aggregators to create metrics.
-        // For explicit metrics, inject IMeterProvider or similar and record here.
+        QuotaExceededCounter.Add(value, tagList);
     }
 }

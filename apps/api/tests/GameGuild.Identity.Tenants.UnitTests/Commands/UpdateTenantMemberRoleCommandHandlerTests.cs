@@ -21,7 +21,7 @@ public class UpdateTenantMemberRoleCommandHandlerTests
         _memberRepositoryMock.Setup(r => r.GetByUserAndTenantAsync(It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((TenantMember?)null);
 
-        var result = await _handler.Handle(new TestUpdateTenantMemberRoleCommand(Guid.NewGuid(), Guid.NewGuid(), "Admin"), CancellationToken.None);
+        var result = await _handler.Handle(new UpdateTenantMemberRoleCommand(Guid.NewGuid(), Guid.NewGuid(), "Admin"), CancellationToken.None);
 
         result.Success.Should().BeFalse();
         result.Message.Should().Contain("not found");
@@ -37,13 +37,11 @@ public class UpdateTenantMemberRoleCommandHandlerTests
         _memberRepositoryMock.Setup(r => r.UpdateAsync(member, It.IsAny<CancellationToken>()))
             .ReturnsAsync(member);
 
-        var result = await _handler.Handle(new TestUpdateTenantMemberRoleCommand(member.TenantId, member.UserId, "Admin"), CancellationToken.None);
+        var result = await _handler.Handle(new UpdateTenantMemberRoleCommand(member.TenantId, member.UserId, "Admin"), CancellationToken.None);
 
         result.Success.Should().BeTrue();
         member.Role.Should().Be("Admin");
         _memberRepositoryMock.Verify(r => r.UpdateAsync(member, It.IsAny<CancellationToken>()), Times.Once);
     }
 
-    private sealed record TestUpdateTenantMemberRoleCommand(Guid TenantId, Guid UserId, string NewRole)
-        : UpdateTenantMemberRoleCommand(TenantId, UserId, NewRole);
 }

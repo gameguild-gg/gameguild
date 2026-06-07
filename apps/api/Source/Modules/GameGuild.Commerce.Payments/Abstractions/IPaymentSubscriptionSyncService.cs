@@ -1,12 +1,12 @@
 namespace GameGuild.Commerce.Payments;
 
 /// <summary>
-///     Synchronizes subscription state after a successful payment.
+///     Synchronizes subscription state after payment success.
 /// </summary>
 public interface IPaymentSubscriptionSyncService
 {
     Task SyncSuccessfulPaymentAsync(
-        string paymentReference,
+        Guid paymentId,
         Guid? subscriptionId,
         decimal amount,
         string currency,

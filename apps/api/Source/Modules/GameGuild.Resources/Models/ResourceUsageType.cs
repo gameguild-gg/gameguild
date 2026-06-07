@@ -89,5 +89,11 @@ public enum ResourceUsageType
     AssetDownloads = 26,
 
     /// <summary>Asset transformation operations per period</summary>
-    AssetTransformations = 27
+    AssetTransformations = 27,
+
+    /// <summary>AI completion requests per tenant</summary>
+    AiRequests = 28,
+
+    /// <summary>AI tokens consumed across providers</summary>
+    AiTokens = 29
 }

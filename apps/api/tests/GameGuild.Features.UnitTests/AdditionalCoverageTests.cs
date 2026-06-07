@@ -472,24 +472,57 @@ public class PlanTargetingHandlerAdditionalTests
     }
 
     [Fact]
-    public async Task EvaluateAsync_WithRolloutPercentage_AppliesRollout()
+    public async Task EvaluateAsync_WithRolloutPercentage_WhenIdentifierIsInRollout_ReturnsEnabled()
     {
         var flag = CreateFeatureFlag("test", targets: new[]
         {
             CreateTarget(FeatureFlagConstants.TargetTypes.Plan, "pro", isEnabled: true, rollout: 50)
         });
 
-        var context = new FeatureContext
-        {
-            SubscriptionPlanId = "pro",
-            TenantId = Guid.NewGuid(),
-            UserId = Guid.NewGuid()
-        };
+        var context = CreatePlanContext(
+            "pro",
+            "00000000-0000-0000-0000-000000000002",
+            "00000000-0000-0000-0000-000000000022"
+        );
 
         var result = await _sut.EvaluateAsync(flag, context);
 
         result.Should().NotBeNull();
+        result!.IsEnabled.Should().BeTrue();
+        result.Value.Should().Be("on");
+        result.RolloutPercentage.Should().Be(50);
+    }
+
+    [Fact]
+    public async Task EvaluateAsync_WithRolloutPercentage_WhenIdentifierIsOutsideRollout_ReturnsDisabled()
+    {
+        var flag = CreateFeatureFlag("test", targets: new[]
+        {
+            CreateTarget(FeatureFlagConstants.TargetTypes.Plan, "pro", isEnabled: true, rollout: 50)
+        });
+
+        var context = CreatePlanContext(
+            "pro",
+            "00000000-0000-0000-0000-000000000001",
+            "00000000-0000-0000-0000-000000000011"
+        );
+
+        var result = await _sut.EvaluateAsync(flag, context);
+
+        result.Should().NotBeNull();
+        result!.IsEnabled.Should().BeFalse();
+        result.Value.Should().Be("off");
         result!.RolloutPercentage.Should().Be(50);
+    }
+
+    private static FeatureContext CreatePlanContext(string subscriptionPlanId, string tenantId, string userId)
+    {
+        return new FeatureContext
+        {
+            SubscriptionPlanId = subscriptionPlanId,
+            TenantId = Guid.Parse(tenantId),
+            UserId = Guid.Parse(userId)
+        };
     }
 
     private static FeatureFlag CreateFeatureFlag(string key, string? defaultValue = "off", string? enabledValue = "on", FeatureFlagTarget[]? targets = null)
@@ -730,9 +763,9 @@ public class TenantTargetingHandlerAdditionalTests
     }
 
     [Fact]
-    public async Task EvaluateAsync_MatchingTenantWithRollout_AppliesRollout()
+    public async Task EvaluateAsync_MatchingTenantWithRollout_WhenIdentifierIsInRollout_ReturnsEnabled()
     {
-        var tenantId = Guid.NewGuid();
+        var tenantId = Guid.Parse("00000000-0000-0000-0000-000000000001");
         var flag = new FeatureFlag
         {
             Key = "test",
@@ -753,13 +786,50 @@ public class TenantTargetingHandlerAdditionalTests
         var context = new FeatureContext
         {
             TenantId = tenantId,
-            UserId = Guid.NewGuid()
+            UserId = Guid.Parse("00000000-0000-0000-0000-000000000013")
         };
 
         var result = await _sut.EvaluateAsync(flag, context);
 
         result.Should().NotBeNull();
+        result!.IsEnabled.Should().BeTrue();
+        result.Value.Should().Be("on");
         result!.RolloutPercentage.Should().Be(50);
+    }
+
+    [Fact]
+    public async Task EvaluateAsync_MatchingTenantWithRollout_WhenIdentifierIsOutsideRollout_ReturnsDisabled()
+    {
+        var tenantId = Guid.Parse("00000000-0000-0000-0000-000000000004");
+        var flag = new FeatureFlag
+        {
+            Key = "test",
+            EnabledValue = "on",
+            DefaultValue = "off",
+            Targets = new List<FeatureFlagTarget>
+            {
+                new()
+                {
+                    TargetType = FeatureFlagConstants.TargetTypes.Tenant,
+                    TargetIdentifier = tenantId.ToString(),
+                    IsEnabled = true,
+                    RolloutPercentage = 50
+                }
+            }
+        };
+
+        var context = new FeatureContext
+        {
+            TenantId = tenantId,
+            UserId = Guid.Parse("00000000-0000-0000-0000-00000000004c")
+        };
+
+        var result = await _sut.EvaluateAsync(flag, context);
+
+        result.Should().NotBeNull();
+        result!.IsEnabled.Should().BeFalse();
+        result.Value.Should().Be("off");
+        result.RolloutPercentage.Should().Be(50);
     }
 
     [Fact]
@@ -1253,7 +1323,7 @@ public class FeatureFlagEvaluationServicePrivateHelperTests
         method.Should().NotBeNull();
 
         var result = (FeatureEvaluationResult)method!.Invoke(null, new object[] { "testKey", DateTime.UtcNow })!;
-        
+
         result.FeatureKey.Should().Be("testKey");
         result.IsEnabled.Should().BeFalse();
         result.Reason.Should().Contain("not found");
@@ -1267,7 +1337,7 @@ public class FeatureFlagEvaluationServicePrivateHelperTests
         method.Should().NotBeNull();
 
         var result = (FeatureEvaluationResult)method!.Invoke(null, new object[] { "testKey", "production", "staging", DateTime.UtcNow })!;
-        
+
         result.FeatureKey.Should().Be("testKey");
         result.IsEnabled.Should().BeFalse();
         result.Reason.Should().Contain("Environment mismatch");
@@ -1281,7 +1351,7 @@ public class FeatureFlagEvaluationServicePrivateHelperTests
         method.Should().NotBeNull();
 
         var result = (FeatureEvaluationResult)method!.Invoke(null, new object[] { "testKey", "some error", DateTime.UtcNow })!;
-        
+
         result.FeatureKey.Should().Be("testKey");
         result.IsEnabled.Should().BeFalse();
         result.Reason.Should().Contain("some error");

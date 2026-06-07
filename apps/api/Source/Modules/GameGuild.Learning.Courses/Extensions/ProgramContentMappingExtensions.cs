@@ -70,8 +70,14 @@ public static class ProgramContentMappingExtensions
     }
 
     var contentStart = markerEnd + 3;
-    while (contentStart < body.Length && (body[contentStart] == '\r' || body[contentStart] == '\n'))
+    while (contentStart < body.Length)
     {
+      var current = body[contentStart];
+      if (current != '\r' && current != '\n')
+      {
+        break;
+      }
+
       contentStart++;
     }
 
@@ -109,7 +115,7 @@ public static class ProgramContentMappingExtensions
     if (dto.SortOrder != null) content.SortOrder = dto.SortOrder.Value;
     if (dto.IsRequired != null) content.IsRequired = dto.IsRequired.Value;
     if (dto.GradingMethod != null) content.GradingMethod = dto.GradingMethod.Value;
-    if (dto.MaxPoints != null) content.MaxPoints = (int?)dto.MaxPoints;
+    if (dto.MaxPoints.HasValue) content.MaxPoints = (int?)dto.MaxPoints.Value;
     if (dto.EstimatedMinutes != null) content.EstimatedMinutes = dto.EstimatedMinutes;
     if (dto.Visibility != null) content.Visibility = dto.Visibility.Value;
   }

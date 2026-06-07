@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Concurrent;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using GameGuild.CQRS.Infrastructure;
@@ -265,6 +266,7 @@ internal class MediatorSender : ISender
     ///     Creates a cached delegate using a compiled expression tree for handler dispatch.
     ///     Works for both generic response types and Unit-returning handlers.
     /// </summary>
+    [ExcludeFromCodeCoverage]
     private static Func<object, object[], Task<object?>>? CreateCachedInvoker(MethodInfo method, Type responseType)
     {
         try

@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
-using GameGuild.Projects.Entities;
+using Microsoft.EntityFrameworkCore.Storage;
+using GameGuild.Projects;
 using GameGuild.Identity.Users;
 using GameGuild.API.Database;
 
@@ -8,7 +9,7 @@ namespace GameGuild.Projects.UnitTests.Infrastructure;
 /// <summary>
 /// Test database context for Projects unit tests - uses simplified in-memory context
 /// </summary>
-public class TestProjectsDbContext : DbContext
+public class TestProjectsDbContext : DbContext, IApplicationDbContext
 {
     public TestProjectsDbContext(DbContextOptions<TestProjectsDbContext> options) : base(options)
     {
@@ -21,10 +22,12 @@ public class TestProjectsDbContext : DbContext
     public DbSet<ProjectFollower> ProjectFollowers { get; set; } = null!;
     public DbSet<ProjectMetadata> ProjectMetadata { get; set; } = null!;
     public DbSet<ProjectRelease> ProjectReleases { get; set; } = null!;
-    public DbSet<ProjectStatistics> ProjectStatistics { get; set; } = null!;
     public DbSet<ProjectTeam> ProjectTeams { get; set; } = null!;
     public DbSet<ProjectVersion> ProjectVersions { get; set; } = null!;
     public DbSet<User> Users { get; set; } = null!;
+
+    public Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default)
+        => Database.BeginTransactionAsync(cancellationToken);
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -38,12 +41,27 @@ public class TestProjectsDbContext : DbContext
             entity.Property(e => e.ImageUrl).HasMaxLength(500);
         });
 
+        modelBuilder.Entity<ProjectCategory>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Name).HasMaxLength(50).IsRequired();
+        });
+
+        modelBuilder.Entity<ProjectCollaborator>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+        });
+
+        modelBuilder.Entity<ProjectMetadata>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+        });
+
         modelBuilder.Entity<User>(entity =>
         {
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Email).HasMaxLength(255).IsRequired();
-            entity.Property(e => e.FirstName).HasMaxLength(100);
-            entity.Property(e => e.LastName).HasMaxLength(100);
+            entity.Property(e => e.Name).HasMaxLength(100).IsRequired();
         });
 
         // Add other entity configurations as needed
@@ -89,8 +107,7 @@ public class TestDataBuilder
         {
             Id = Guid.NewGuid(),
             Email = email ?? _fixture.Create<string>() + "@test.com",
-            FirstName = firstName ?? _fixture.Create<string>(),
-            LastName = lastName ?? _fixture.Create<string>()
+            Name = $"{firstName ?? _fixture.Create<string>()} {lastName ?? _fixture.Create<string>()}".Trim()
         };
     }
 
@@ -107,7 +124,7 @@ public class TestDataBuilder
             Type = type ?? ProjectType.Game,
             DevelopmentStatus = DevelopmentStatus.InDevelopment,
             Status = ContentStatus.Published,
-            Visibility = AccessLevel.Public,
+            Visibility = ContentVisibility.Public,
             CreatedById = userId
         };
     }
@@ -117,8 +134,7 @@ public class TestDataBuilder
         return new ProjectCategory
         {
             Id = Guid.NewGuid(),
-            Name = name ?? _fixture.Create<string>(),
-            Description = _fixture.Create<string>()
+            Name = name ?? _fixture.Create<string>()
         };
     }
 }

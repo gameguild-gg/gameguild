@@ -1,4 +1,5 @@
 using Asp.Versioning;
+using GameGuild.Commerce;
 using GameGuild.Configuration.PresentationLayer.RateLimiting;
 using GameGuild.CQRS;
 using GameGuild.Identity.Context.Actors;
@@ -21,7 +22,11 @@ namespace GameGuild.Commerce.Payments;
 [Microsoft.AspNetCore.Http.Tags("payments")]
 [Authorize]
 [EnableRateLimiting(RateLimitPolicies.ExpensiveOperations)]
-public sealed class PaymentsController(ISender sender, IActorContextAccessor actorContextAccessor) : BaseApiController
+public sealed class PaymentsController(
+    ISender sender,
+    IActorContextAccessor actorContextAccessor,
+    IStripeCustomerService stripeCustomerService,
+    ISubscriptionPaymentContextService subscriptionPaymentContextService) : BaseApiController
 {
     /// <summary>
     ///     Retrieve all payment transactions with optional filtering
@@ -98,7 +103,7 @@ public sealed class PaymentsController(ISender sender, IActorContextAccessor act
     ///     - TenantId: Organization identifier
     ///     - SubscriptionId: Target subscription
     ///     - Amount: Payment amount in base currency units
-    ///     - PaymentMethodId: Validated payment method identifier
+    ///     - PaymentMethodId: Stripe payment method identifier starting with pm_
     ///     Returns CreatedAtRoute with payment details for successful transactions.
     /// </remarks>
     [HttpPost]
@@ -130,9 +135,167 @@ public sealed class PaymentsController(ISender sender, IActorContextAccessor act
             return BadRequest(new { error = "PaymentMethodId is required" });
         }
 
+        if (!StripePaymentMethodIdentifier.IsValid(body.PaymentMethodId))
+        {
+            return BadRequest(new { error = StripePaymentMethodIdentifier.ValidationMessage });
+        }
+
         var result = await sender.Send(new ProcessPaymentCommand(body.TenantId, body.SubscriptionId, body.Amount, body.PaymentMethodId), ct).ConfigureAwait(false);
 
         return CreatedAtRoute("GetPaymentById", new { paymentId = result.PaymentId }, result);
+    }
+
+    /// <summary>
+    ///     Creates a Stripe SetupIntent for a subscription checkout.
+    /// </summary>
+    [HttpPost("setup-intents")]
+    [EndpointSummary("Create a Stripe SetupIntent for subscription checkout")]
+    [EndpointDescription("Creates or reuses a Stripe customer for the subscription and returns a SetupIntent client secret for PaymentElement-based card collection.")]
+    [ProducesResponseType<CreateSetupIntentResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> CreateSetupIntent([FromBody] CreateSetupIntentRequest body, CancellationToken ct)
+    {
+        if (body.TenantId == Guid.Empty)
+        {
+            return BadRequest(new { error = "TenantId cannot be empty" });
+        }
+
+        if (body.SubscriptionId == Guid.Empty)
+        {
+            return BadRequest(new { error = "SubscriptionId cannot be empty" });
+        }
+
+        var validationError = ValidateTenantAccess(body.TenantId, "create a setup intent");
+        if (validationError != null) return validationError;
+
+        var subscription = await subscriptionPaymentContextService.GetPaymentContextAsync(body.SubscriptionId, ct).ConfigureAwait(false);
+        if (subscription == null) return NotFound();
+
+        if (subscription.TenantId != body.TenantId)
+        {
+            return BadRequest(new { error = "Subscription does not belong to the specified tenant." });
+        }
+
+        var customerId = subscription.ExternalCustomerId;
+        if (string.IsNullOrWhiteSpace(customerId))
+        {
+            if (string.IsNullOrWhiteSpace(body.CustomerEmail))
+            {
+                return BadRequest(new { error = "CustomerEmail is required when the subscription does not yet have a Stripe customer." });
+            }
+
+            var customerResult = await stripeCustomerService.CreateCustomerAsync(
+                new GatewayCustomerRequest(
+                    body.CustomerEmail.Trim(),
+                    string.IsNullOrWhiteSpace(body.CustomerName) ? null : body.CustomerName.Trim(),
+                    Phone: null,
+                    Metadata: new Dictionary<string, string>
+                    {
+                        ["tenant_id"] = body.TenantId.ToString(),
+                        ["subscription_id"] = body.SubscriptionId.ToString()
+                    }),
+                ct).ConfigureAwait(false);
+
+            if (!customerResult.Success || string.IsNullOrWhiteSpace(customerResult.ExternalCustomerId))
+            {
+                return BadRequest(new { error = customerResult.ErrorMessage ?? "Stripe could not create a customer for this subscription." });
+            }
+
+            customerId = customerResult.ExternalCustomerId;
+            await subscriptionPaymentContextService.SetExternalCustomerIdAsync(body.SubscriptionId, customerId, ct).ConfigureAwait(false);
+        }
+
+        var setupIntentResult = await stripeCustomerService.CreateSetupIntentAsync(
+            new GatewaySetupIntentRequest(
+                customerId,
+                new Dictionary<string, string>
+                {
+                    ["tenant_id"] = body.TenantId.ToString(),
+                    ["subscription_id"] = body.SubscriptionId.ToString()
+                }),
+            ct).ConfigureAwait(false);
+
+        if (!setupIntentResult.Success || string.IsNullOrWhiteSpace(setupIntentResult.ClientSecret) || string.IsNullOrWhiteSpace(setupIntentResult.ExternalSetupIntentId))
+        {
+            return BadRequest(new { error = setupIntentResult.ErrorMessage ?? "Stripe could not create a setup intent for this subscription." });
+        }
+
+        return Ok(new CreateSetupIntentResponse(
+            subscription.SubscriptionId,
+            customerId,
+            setupIntentResult.ExternalSetupIntentId,
+            setupIntentResult.ClientSecret));
+    }
+
+    /// <summary>
+    ///     Completes a subscription checkout after Stripe confirms the SetupIntent.
+    /// </summary>
+    [HttpPost("subscription-checkouts:complete")]
+    [EndpointSummary("Complete subscription checkout after setup confirmation")]
+    [EndpointDescription("Sets the confirmed Stripe payment method as the customer's default and processes the first subscription charge.")]
+    [ProducesResponseType<PaymentResult>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> CompleteSubscriptionCheckout([FromBody] CompleteSubscriptionCheckoutRequest body, CancellationToken ct)
+    {
+        if (body.TenantId == Guid.Empty)
+        {
+            return BadRequest(new { error = "TenantId cannot be empty" });
+        }
+
+        if (body.SubscriptionId == Guid.Empty)
+        {
+            return BadRequest(new { error = "SubscriptionId cannot be empty" });
+        }
+
+        if (string.IsNullOrWhiteSpace(body.PaymentMethodId))
+        {
+            return BadRequest(new { error = "PaymentMethodId is required" });
+        }
+
+        if (!StripePaymentMethodIdentifier.IsValid(body.PaymentMethodId))
+        {
+            return BadRequest(new { error = StripePaymentMethodIdentifier.ValidationMessage });
+        }
+
+        var validationError = ValidateTenantAccess(body.TenantId, "complete subscription checkout");
+        if (validationError != null) return validationError;
+
+        var subscription = await subscriptionPaymentContextService.GetPaymentContextAsync(body.SubscriptionId, ct).ConfigureAwait(false);
+        if (subscription == null) return NotFound();
+
+        if (subscription.TenantId != body.TenantId)
+        {
+            return BadRequest(new { error = "Subscription does not belong to the specified tenant." });
+        }
+
+        if (subscription.Amount <= 0)
+        {
+            return BadRequest(new { error = "Only paid subscriptions require checkout completion." });
+        }
+
+        if (string.IsNullOrWhiteSpace(subscription.ExternalCustomerId))
+        {
+            return BadRequest(new { error = "Subscription does not have a Stripe customer associated with it yet." });
+        }
+
+        var defaultPaymentMethodResult = await stripeCustomerService.SetDefaultPaymentMethodAsync(
+            new GatewayDefaultPaymentMethodRequest(subscription.ExternalCustomerId, body.PaymentMethodId),
+            ct).ConfigureAwait(false);
+
+        if (!defaultPaymentMethodResult.Success)
+        {
+            return BadRequest(new { error = defaultPaymentMethodResult.ErrorMessage ?? "Stripe could not store the confirmed payment method for future billing." });
+        }
+
+        var result = await sender.Send(
+            new ProcessPaymentCommand(body.TenantId, body.SubscriptionId, subscription.Amount, body.PaymentMethodId),
+            ct).ConfigureAwait(false);
+
+        return Ok(result);
     }
 
     /// <summary>
@@ -300,6 +463,12 @@ public sealed class PaymentsController(ISender sender, IActorContextAccessor act
     }
 
     public sealed record ProcessPaymentRequest(Guid TenantId, Guid SubscriptionId, decimal Amount, string PaymentMethodId);
+
+    public sealed record CreateSetupIntentRequest(Guid TenantId, Guid SubscriptionId, string? CustomerEmail, string? CustomerName);
+
+    public sealed record CreateSetupIntentResponse(Guid SubscriptionId, string CustomerId, string SetupIntentId, string ClientSecret);
+
+    public sealed record CompleteSubscriptionCheckoutRequest(Guid TenantId, Guid SubscriptionId, string PaymentMethodId);
 
     public sealed record RefundRequest(decimal? Amount, string? Reason);
 

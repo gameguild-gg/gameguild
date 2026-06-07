@@ -1,4 +1,7 @@
 using FluentAssertions;
+using Microsoft.EntityFrameworkCore;
+using GameGuild.Identity.Context.Actors;
+using GameGuild.Identity.Tenants.UnitTests.Infrastructure;
 using Moq;
 using Xunit;
 
@@ -7,12 +10,39 @@ namespace GameGuild.Identity.Tenants.UnitTests.Commands;
 public class CreateTenantCommandHandlerTests
 {
     private readonly Mock<ITenantRepository> _tenantRepositoryMock;
+    private readonly Mock<IActorContextAccessor> _actorContextAccessorMock;
+    private readonly TestTenantDbContext _dbContext;
     private readonly CreateTenantCommandHandler _handler;
+    private readonly Guid _actorUserId = Guid.NewGuid();
 
     public CreateTenantCommandHandlerTests()
     {
         _tenantRepositoryMock = new Mock<ITenantRepository>();
-        _handler = new CreateTenantCommandHandler(_tenantRepositoryMock.Object);
+        _actorContextAccessorMock = new Mock<IActorContextAccessor>();
+
+        var options = new DbContextOptionsBuilder<TestTenantDbContext>()
+            .UseInMemoryDatabase($"CreateTenantCommandHandlerTests_{Guid.NewGuid()}")
+            .Options;
+
+        _dbContext = new TestTenantDbContext(options);
+        _actorContextAccessorMock
+            .SetupGet(x => x.ActorContext)
+            .Returns(new ActorContext
+            {
+                ActorKind = ActorKind.User,
+                SubjectId = _actorUserId.ToString(),
+                TenantId = null,
+                Roles = new HashSet<string>(),
+                Permissions = new HashSet<string>(),
+                TypedAttributes = ActorAttributes.Empty,
+                AuthScheme = "Test",
+                IsAuthenticated = true
+            });
+
+        _handler = new CreateTenantCommandHandler(
+            _tenantRepositoryMock.Object,
+            _actorContextAccessorMock.Object,
+            _dbContext);
     }
 
     [Fact]
@@ -28,21 +58,22 @@ public class CreateTenantCommandHandlerTests
         _tenantRepositoryMock.Setup(x => x.IsSlugUniqueAsync("test-tenant", null, It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
 
-        _tenantRepositoryMock.Setup(x => x.CreateAsync(It.IsAny<Tenant>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((Tenant tenant, CancellationToken _) => tenant);
-
         // Act
         var result = await _handler.Handle(command, CancellationToken.None);
 
+        var createdTenant = _dbContext.Tenants.Single();
+        var createdMembership = _dbContext.TenantMembers.Single();
+
         // Assert
-        result.Should().NotBeEmpty();
-        _tenantRepositoryMock.Verify(x => x.CreateAsync(
-            It.Is<Tenant>(t => 
-                t.Name == "Test Tenant" && 
-                t.Slug == "test-tenant" &&
-                t.AdminEmail == "admin@test.com" &&
-                t.IsActive == true), 
-            It.IsAny<CancellationToken>()), Times.Once);
+        result.Should().Be(createdTenant.Id);
+        createdTenant.Name.Should().Be("Test Tenant");
+        createdTenant.Slug.Should().Be("test-tenant");
+        createdTenant.AdminEmail.Should().Be("admin@test.com");
+        createdTenant.IsActive.Should().BeTrue();
+        createdMembership.TenantId.Should().Be(createdTenant.Id);
+        createdMembership.UserId.Should().Be(_actorUserId);
+        createdMembership.Role.Should().Be(TenantRole.Owner);
+        createdMembership.IsActive.Should().BeTrue();
     }
 
     [Fact]
@@ -60,7 +91,8 @@ public class CreateTenantCommandHandlerTests
 
         // Act & Assert
         await Assert.ThrowsAsync<InvalidOperationException>(() => _handler.Handle(command, CancellationToken.None));
-        _tenantRepositoryMock.Verify(x => x.CreateAsync(It.IsAny<Tenant>(), It.IsAny<CancellationToken>()), Times.Never);
+        _dbContext.Tenants.Should().BeEmpty();
+        _dbContext.TenantMembers.Should().BeEmpty();
     }
 
     [Fact]
@@ -76,21 +108,21 @@ public class CreateTenantCommandHandlerTests
         _tenantRepositoryMock.Setup(x => x.IsSlugUniqueAsync("full-tenant", null, It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
 
-        Tenant? capturedTenant = null;
-        _tenantRepositoryMock.Setup(x => x.CreateAsync(It.IsAny<Tenant>(), It.IsAny<CancellationToken>()))
-            .Callback<Tenant, CancellationToken>((tenant, _) => capturedTenant = tenant)
-            .ReturnsAsync((Tenant tenant, CancellationToken _) => tenant);
-
         // Act
         var result = await _handler.Handle(command, CancellationToken.None);
 
+        var capturedTenant = _dbContext.Tenants.Single();
+        var capturedMembership = _dbContext.TenantMembers.Single();
+
         // Assert
-        result.Should().NotBeEmpty();
-        capturedTenant.Should().NotBeNull();
-        capturedTenant!.Name.Should().Be("Full Tenant");
+        result.Should().Be(capturedTenant.Id);
+        capturedTenant.Name.Should().Be("Full Tenant");
         capturedTenant.Slug.Should().Be("full-tenant");
         capturedTenant.AdminEmail.Should().Be("admin@full.com");
         capturedTenant.Description.Should().Be("Full description");
         capturedTenant.IsActive.Should().BeTrue();
+        capturedMembership.TenantId.Should().Be(capturedTenant.Id);
+        capturedMembership.UserId.Should().Be(_actorUserId);
+        capturedMembership.Role.Should().Be(TenantRole.Owner);
     }
 }

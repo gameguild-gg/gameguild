@@ -1,16 +1,25 @@
 using System.Diagnostics;
 using System.Reflection;
 using System.Text.RegularExpressions;
+using GameGuild.AI;
 using GameGuild.Commerce.Billing;
 using GameGuild.Commerce.Payments;
 using GameGuild.Commerce.Products;
 using GameGuild.Commerce.Subscriptions;
+using GameGuild.Compliance.FERPA;
 using GameGuild.Configuration;
 using GameGuild.Configuration.PresentationLayer.Controllers;
 using GameGuild.Configuration.PresentationLayer.Endpoints;
 using GameGuild.Content.Pages;
+using GameGuild.GameJams;
 using GameGuild.Identity.Authentication;
 using GameGuild.Identity.Authorization;
+using GameGuild.Learning.Enrollments;
+using GameGuild.Social.Blog;
+using GameGuild.Social.Feed;
+using GameGuild.Social.Profiles;
+using GameGuild.Social.Reactions;
+using GameGuild.Tags;
 using Microsoft.AspNetCore.Mvc;
 
 namespace GameGuild.API;
@@ -111,6 +120,16 @@ public static class PresentationServiceCollectionExtensions
         services.AddControllers()
             .AddApplicationPart(typeof(AuthController).Assembly); // Authentication module
         LogControllersFromAssembly(typeof(AuthController).Assembly, logger, controllerStopwatch);
+
+        controllerStopwatch.Restart();
+        services.AddControllers()
+            .AddApplicationPart(typeof(AiController).Assembly); // AI module
+        LogControllersFromAssembly(typeof(AiController).Assembly, logger, controllerStopwatch);
+
+        controllerStopwatch.Restart();
+        services.AddControllers()
+            .AddApplicationPart(typeof(FerpaController).Assembly); // FERPA Compliance module
+        LogControllersFromAssembly(typeof(FerpaController).Assembly, logger, controllerStopwatch);
         
         controllerStopwatch.Restart();
         services.AddControllers()
@@ -126,6 +145,41 @@ public static class PresentationServiceCollectionExtensions
         services.AddControllers()
             .AddApplicationPart(typeof(GameGuild.Learning.Assessments.AssessmentsController).Assembly); // Assessments module
         LogControllersFromAssembly(typeof(GameGuild.Learning.Assessments.AssessmentsController).Assembly, logger, controllerStopwatch);
+
+        controllerStopwatch.Restart();
+        services.AddControllers()
+            .AddApplicationPart(typeof(EnrollmentsController).Assembly); // Learning Enrollments module
+        LogControllersFromAssembly(typeof(EnrollmentsController).Assembly, logger, controllerStopwatch);
+
+        controllerStopwatch.Restart();
+        services.AddControllers()
+            .AddApplicationPart(typeof(TagsController).Assembly); // Tags module
+        LogControllersFromAssembly(typeof(TagsController).Assembly, logger, controllerStopwatch);
+
+        controllerStopwatch.Restart();
+        services.AddControllers()
+            .AddApplicationPart(typeof(BlogPostsController).Assembly); // Social Blog module
+        LogControllersFromAssembly(typeof(BlogPostsController).Assembly, logger, controllerStopwatch);
+
+        controllerStopwatch.Restart();
+        services.AddControllers()
+            .AddApplicationPart(typeof(SocialProfilesController).Assembly); // Social Profiles module
+        LogControllersFromAssembly(typeof(SocialProfilesController).Assembly, logger, controllerStopwatch);
+
+        controllerStopwatch.Restart();
+        services.AddControllers()
+            .AddApplicationPart(typeof(FeedController).Assembly); // Social Feed module
+        LogControllersFromAssembly(typeof(FeedController).Assembly, logger, controllerStopwatch);
+
+        controllerStopwatch.Restart();
+        services.AddControllers()
+            .AddApplicationPart(typeof(ReactionsController).Assembly); // Social Reactions module
+        LogControllersFromAssembly(typeof(ReactionsController).Assembly, logger, controllerStopwatch);
+
+        controllerStopwatch.Restart();
+        services.AddControllers()
+            .AddApplicationPart(typeof(GameJamsController).Assembly); // Game Jams module
+        LogControllersFromAssembly(typeof(GameJamsController).Assembly, logger, controllerStopwatch);
 
         controllerStopwatch.Restart();
         services.AddControllers()

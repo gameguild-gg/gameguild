@@ -80,3 +80,43 @@ public class ContentVersionReviewEntityConfiguration : IEntityTypeConfiguration<
         builder.HasIndex(e => e.ReviewerId);
     }
 }
+
+/// <summary>
+/// EF Core configuration for DocumentTemplate entity
+/// </summary>
+public class DocumentTemplateEntityConfiguration : IEntityTypeConfiguration<DocumentTemplate>
+{
+    public void Configure(EntityTypeBuilder<DocumentTemplate> builder)
+    {
+        builder.ToTable("document_templates");
+        builder.HasKey(e => e.Id);
+
+        builder.Property(e => e.TemplateKey)
+            .HasMaxLength(160)
+            .IsRequired();
+
+        builder.Property(e => e.Name)
+            .HasMaxLength(200)
+            .IsRequired();
+
+        builder.Property(e => e.Description)
+            .HasMaxLength(1000);
+
+        builder.Property(e => e.Category)
+            .HasMaxLength(120);
+
+        builder.Property(e => e.SupportedEntityType)
+            .HasMaxLength(120);
+
+        builder.Property(e => e.PlaceholderSchema)
+            .HasColumnType("jsonb");
+
+        builder.HasQueryFilter(e => !e.IsDeleted);
+
+        builder.HasIndex(e => e.TemplateKey)
+            .IsUnique();
+
+        builder.HasIndex(e => e.Category);
+        builder.HasIndex(e => e.SupportedEntityType);
+    }
+}

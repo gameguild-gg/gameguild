@@ -1,7 +1,9 @@
 using FluentAssertions;
 using GameGuild.CQRS;
 using GameGuild.Identity.Authorization;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Primitives;
 using Moq;
@@ -169,6 +171,27 @@ public class TenantMiddlewareTests
     }
 
     [Fact]
+    public async Task InvokeAsync_WithRootPath_ShouldBypassTenantResolution()
+    {
+        var context = CreateHttpContext();
+        context.Request.Path = "/";
+
+        var nextCalled = false;
+        RequestDelegate next = _ =>
+        {
+            nextCalled = true;
+            return Task.CompletedTask;
+        };
+
+        var middleware = new TenantMiddleware(next, _loggerMock.Object);
+
+        await middleware.InvokeAsync(context, _mediator, _tenantDomainsRepositoryMock.Object, _tenantMemberRepositoryMock.Object);
+
+        nextCalled.Should().BeTrue();
+        context.Items.Should().NotContainKey(HttpContextKeys.CurrentTenant);
+    }
+
+    [Fact]
     public async Task InvokeAsync_WithQueryString_ShouldResolveTenantFromQueryString()
     {
         // Arrange
@@ -247,5 +270,23 @@ public class TenantMiddlewareTests
         var context = new DefaultHttpContext();
         context.Request.Host = new HostString("localhost", 5000);
         return context;
+    }
+
+    [Fact]
+    public void UseTenantResolution_WithNullBuilder_ShouldThrow()
+    {
+        var action = () => TenantMiddlewareExtensions.UseTenantResolution(null!);
+
+        action.Should().Throw<ArgumentNullException>();
+    }
+
+    [Fact]
+    public void UseTenantResolution_ShouldReturnBuilder()
+    {
+        var app = new ApplicationBuilder(new ServiceCollection().BuildServiceProvider());
+
+        var result = app.UseTenantResolution();
+
+        result.Should().BeSameAs(app);
     }
 }

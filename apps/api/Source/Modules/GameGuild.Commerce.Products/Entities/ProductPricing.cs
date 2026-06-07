@@ -172,7 +172,13 @@ public class ProductPricing : EntityBase
         if (!SalePrice.HasValue) return false;
 
         var now = SystemClock.UtcNow;
-        return (SaleStartDate == null || SaleStartDate <= now) && (SaleEndDate == null || SaleEndDate > now);
+        if (SaleStartDate.HasValue && SaleStartDate.Value > now)
+            return false;
+
+        if (SaleEndDate.HasValue && SaleEndDate.Value <= now)
+            return false;
+
+        return true;
     }
 
     /// <summary>

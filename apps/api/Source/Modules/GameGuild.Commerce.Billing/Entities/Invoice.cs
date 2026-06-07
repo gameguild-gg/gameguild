@@ -239,8 +239,11 @@ public class Invoice : EntityBase
             throw new InvalidOperationException("Invoice is already paid");
         if (Status == InvoiceStatus.Void)
             throw new InvalidOperationException("Cannot record payment on a voided invoice");
-        if (PaymentId.HasValue && PaymentId != paymentId)
-            throw new InvalidOperationException($"Invoice already has payment {PaymentId}. Single payment per invoice enforced.");
+        if (PaymentId.HasValue)
+        {
+            if (PaymentId.Value != paymentId)
+                throw new InvalidOperationException($"Invoice already has payment {PaymentId}. Single payment per invoice enforced.");
+        }
 
         PaymentId = paymentId;
         AmountPaid = amount;

@@ -22,10 +22,10 @@ public class TestingFeedbackOperationsService(IApplicationDbContext context) : I
             AdditionalNotes = additionalNotes,
         };
 
-        context.TestingFeedback.Add(feedback);
+        context.Set<TestingFeedback>().Add(feedback);
         await context.SaveChangesAsync().ConfigureAwait(false);
 
-        return await context.TestingFeedback
+        return await context.Set<TestingFeedback>()
             .Include(tf => tf.TestingRequest)
             .Include(tf => tf.User)
             .Include(tf => tf.FeedbackForm)
@@ -35,7 +35,7 @@ public class TestingFeedbackOperationsService(IApplicationDbContext context) : I
 
     public async Task<IEnumerable<TestingFeedback>> GetTestingRequestFeedbackAsync(Guid testingRequestId)
     {
-        return await context.TestingFeedback
+        return await context.Set<TestingFeedback>()
             .Where(tf => tf.TestingRequestId == testingRequestId)
             .Include(tf => tf.User)
             .Include(tf => tf.FeedbackForm)
@@ -46,7 +46,7 @@ public class TestingFeedbackOperationsService(IApplicationDbContext context) : I
 
     public async Task<IEnumerable<TestingFeedback>> GetFeedbackByUserAsync(Guid userId)
     {
-        return await context.TestingFeedback
+        return await context.Set<TestingFeedback>()
             .Where(tf => tf.UserId == userId)
             .Include(tf => tf.TestingRequest)
             .Include(tf => tf.FeedbackForm)
@@ -61,7 +61,7 @@ public class TestingFeedbackOperationsService(IApplicationDbContext context) : I
 
     public async Task SubmitFeedbackAsync(SubmitFeedbackDto feedbackDto, Guid userId)
     {
-        var existingForm = await context.TestingFeedbackForms
+        var existingForm = await context.Set<TestingFeedbackForm>()
             .FirstOrDefaultAsync(f => f.TestingRequestId == feedbackDto.TestingRequestId);
 
         Guid feedbackFormId;
@@ -77,7 +77,7 @@ public class TestingFeedbackOperationsService(IApplicationDbContext context) : I
                 IsForSessions = true,
             };
 
-            context.TestingFeedbackForms.Add(feedbackForm);
+            context.Set<TestingFeedbackForm>().Add(feedbackForm);
             await context.SaveChangesAsync().ConfigureAwait(false);
             feedbackFormId = feedbackForm.Id;
         }
@@ -100,13 +100,13 @@ public class TestingFeedbackOperationsService(IApplicationDbContext context) : I
             AdditionalNotes = feedbackDto.AdditionalNotes,
         };
 
-        context.TestingFeedback.Add(feedback);
+        context.Set<TestingFeedback>().Add(feedback);
 
-        var testingRequest = await context.TestingRequests.FindAsync(feedbackDto.TestingRequestId).ConfigureAwait(false);
+        var testingRequest = await context.Set<TestingRequest>().FindAsync(feedbackDto.TestingRequestId).ConfigureAwait(false);
 
         if (testingRequest != null)
         {
-            testingRequest.CurrentTesterCount = await context.TestingFeedback.CountAsync(f => f.TestingRequestId == feedbackDto.TestingRequestId);
+            testingRequest.CurrentTesterCount = await context.Set<TestingFeedback>().CountAsync(f => f.TestingRequestId == feedbackDto.TestingRequestId);
             testingRequest.Touch();
         }
 
@@ -119,10 +119,10 @@ public class TestingFeedbackOperationsService(IApplicationDbContext context) : I
 
     public async Task<object> GetTestingRequestStatisticsAsync(Guid testingRequestId)
     {
-        var participantCount = await context.TestingParticipants.CountAsync(tp => tp.TestingRequestId == testingRequestId);
-        var sessionCount = await context.TestingSessions.CountAsync(ts => ts.TestingRequestId == testingRequestId && ts.DeletedAt == null);
-        var feedbackCount = await context.TestingFeedback.CountAsync(tf => tf.TestingRequestId == testingRequestId);
-        var completedSessionCount = await context.TestingSessions.CountAsync(ts => ts.TestingRequestId == testingRequestId && ts.Status == SessionStatus.Completed && ts.DeletedAt == null);
+        var participantCount = await context.Set<TestingParticipant>().CountAsync(tp => tp.TestingRequestId == testingRequestId);
+        var sessionCount = await context.Set<TestingSession>().CountAsync(ts => ts.TestingRequestId == testingRequestId && ts.DeletedAt == null);
+        var feedbackCount = await context.Set<TestingFeedback>().CountAsync(tf => tf.TestingRequestId == testingRequestId);
+        var completedSessionCount = await context.Set<TestingSession>().CountAsync(ts => ts.TestingRequestId == testingRequestId && ts.Status == SessionStatus.Completed && ts.DeletedAt == null);
 
         return new
         {
@@ -139,7 +139,7 @@ public class TestingFeedbackOperationsService(IApplicationDbContext context) : I
 
     public async Task ReportFeedbackAsync(Guid feedbackId, string reason, Guid reportedByUserId)
     {
-        var feedback = await context.TestingFeedback.FirstOrDefaultAsync(tf => tf.Id == feedbackId);
+        var feedback = await context.Set<TestingFeedback>().FirstOrDefaultAsync(tf => tf.Id == feedbackId);
 
         if (feedback == null) { throw new ArgumentException("Feedback not found"); }
 
@@ -153,7 +153,7 @@ public class TestingFeedbackOperationsService(IApplicationDbContext context) : I
 
     public async Task RateFeedbackQualityAsync(Guid feedbackId, FeedbackQuality quality, Guid ratedByUserId)
     {
-        var feedback = await context.TestingFeedback.FirstOrDefaultAsync(tf => tf.Id == feedbackId);
+        var feedback = await context.Set<TestingFeedback>().FirstOrDefaultAsync(tf => tf.Id == feedbackId);
 
         if (feedback == null) { throw new ArgumentException("Feedback not found"); }
 

@@ -210,6 +210,65 @@ public class NotificationPreferenceServiceTests
         result.Should().BeFalse();
     }
 
+    [Fact]
+    public async Task ShouldSendNotificationAsync_Should_Allow_When_SameDay_Quiet_Hours_Are_Before_Or_After_Current_Time()
+    {
+        using var context = CreateContext();
+        var preference = NotificationPreference.CreateDefault(Guid.NewGuid());
+        context.NotificationPreferences.Add(preference);
+        await context.SaveChangesAsync();
+        var subject = new NotificationPreferenceService(new ApplicationDbContextAdapter(context));
+
+        try
+        {
+            SystemClock.SetProvider(new FixedTimeProvider(new DateTimeOffset(2026, 1, 1, 12, 0, 0, TimeSpan.Zero)));
+
+            preference.SetQuietHours(new TimeOnly(13, 0), new TimeOnly(14, 0), "UTC");
+            var beforeWindow = await subject.ShouldSendNotificationAsync(preference.UserId, NotificationType.System, NotificationChannel.InApp, NotificationPriority.Normal);
+
+            preference.SetQuietHours(new TimeOnly(10, 0), new TimeOnly(11, 0), "UTC");
+            var afterWindow = await subject.ShouldSendNotificationAsync(preference.UserId, NotificationType.System, NotificationChannel.InApp, NotificationPriority.Normal);
+
+            beforeWindow.Should().BeTrue();
+            afterWindow.Should().BeTrue();
+        }
+        finally
+        {
+            SystemClock.Reset();
+        }
+    }
+
+    [Fact]
+    public async Task ShouldSendNotificationAsync_Should_Evaluate_All_Overnight_Quiet_Hours_Branches()
+    {
+        using var context = CreateContext();
+        var preference = NotificationPreference.CreateDefault(Guid.NewGuid());
+        preference.SetQuietHours(new TimeOnly(22, 0), new TimeOnly(6, 0), "UTC");
+        context.NotificationPreferences.Add(preference);
+        await context.SaveChangesAsync();
+        var subject = new NotificationPreferenceService(new ApplicationDbContextAdapter(context));
+
+        try
+        {
+            SystemClock.SetProvider(new FixedTimeProvider(new DateTimeOffset(2026, 1, 1, 23, 0, 0, TimeSpan.Zero)));
+            var afterStart = await subject.ShouldSendNotificationAsync(preference.UserId, NotificationType.System, NotificationChannel.InApp, NotificationPriority.Normal);
+
+            SystemClock.SetProvider(new FixedTimeProvider(new DateTimeOffset(2026, 1, 1, 3, 0, 0, TimeSpan.Zero)));
+            var beforeEnd = await subject.ShouldSendNotificationAsync(preference.UserId, NotificationType.System, NotificationChannel.InApp, NotificationPriority.Normal);
+
+            SystemClock.SetProvider(new FixedTimeProvider(new DateTimeOffset(2026, 1, 1, 12, 0, 0, TimeSpan.Zero)));
+            var outsideWindow = await subject.ShouldSendNotificationAsync(preference.UserId, NotificationType.System, NotificationChannel.InApp, NotificationPriority.Normal);
+
+            afterStart.Should().BeFalse();
+            beforeEnd.Should().BeFalse();
+            outsideWindow.Should().BeTrue();
+        }
+        finally
+        {
+            SystemClock.Reset();
+        }
+    }
+
     private static NotificationsTestDbContext CreateContext()
     {
         var options = new DbContextOptionsBuilder<NotificationsTestDbContext>()
@@ -227,5 +286,10 @@ public class NotificationPreferenceServiceTests
 
         public Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default)
             => Task.FromResult(Mock.Of<IDbContextTransaction>());
+    }
+
+    private sealed class FixedTimeProvider(DateTimeOffset utcNow) : TimeProvider
+    {
+        public override DateTimeOffset GetUtcNow() => utcNow;
     }
 }

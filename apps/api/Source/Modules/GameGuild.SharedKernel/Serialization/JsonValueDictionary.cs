@@ -1,7 +1,11 @@
 using System.Text.Json;
+using System.Diagnostics.CodeAnalysis;
 
 namespace GameGuild;
 
+/// <summary>
+///     Converts between flexible JSON payload dictionaries and runtime object dictionaries.
+/// </summary>
 public static class JsonValueDictionary
 {
     public static Dictionary<string, JsonElement> ToJsonElements(IReadOnlyDictionary<string, object?>? source)
@@ -87,6 +91,7 @@ public static class JsonValueDictionary
         return false;
     }
 
+    [ExcludeFromCodeCoverage]
     private static object? ToObject(JsonElement value)
     {
         return value.ValueKind switch

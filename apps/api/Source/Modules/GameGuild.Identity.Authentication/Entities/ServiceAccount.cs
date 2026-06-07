@@ -129,10 +129,15 @@ public class ServiceAccount
     /// <summary>
     ///     Gets whether the service account can authenticate.
     /// </summary>
-    public bool CanAuthenticate =>
-        IsActive &&
-        !IsLocked &&
-        (ExpiresAt == null || SystemClock.UtcNow < ExpiresAt);
+    public bool CanAuthenticate
+    {
+        get
+        {
+            if (!IsActive || IsLocked) { return false; }
+
+            return !ExpiresAt.HasValue || SystemClock.UtcNow < ExpiresAt.Value;
+        }
+    }
 
     /// <summary>
     ///     Gets the scopes as a set.

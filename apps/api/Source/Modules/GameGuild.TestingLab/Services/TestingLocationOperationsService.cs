@@ -8,7 +8,7 @@ public class TestingLocationOperationsService(IApplicationDbContext context) : I
 {
     public async Task<IEnumerable<TestingLocation>> GetAllTestingLocationsAsync()
     {
-        return await context.TestingLocations
+        return await context.Set<TestingLocation>()
             .Where(tl => tl.DeletedAt == null)
             .OrderBy(tl => tl.Name)
             .ToListAsync();
@@ -16,7 +16,7 @@ public class TestingLocationOperationsService(IApplicationDbContext context) : I
 
     public async Task<IEnumerable<TestingLocation>> GetTestingLocationsAsync(int skip = 0, int take = 50)
     {
-        return await context.TestingLocations
+        return await context.Set<TestingLocation>()
             .Where(tl => tl.DeletedAt == null)
             .OrderBy(tl => tl.Name)
             .Skip(skip)
@@ -26,7 +26,7 @@ public class TestingLocationOperationsService(IApplicationDbContext context) : I
 
     public async Task<TestingLocation?> GetTestingLocationByIdAsync(Guid id)
     {
-        return await context.TestingLocations
+        return await context.Set<TestingLocation>()
             .Where(tl => tl.Id == id && tl.DeletedAt == null)
             .FirstOrDefaultAsync();
     }
@@ -36,7 +36,7 @@ public class TestingLocationOperationsService(IApplicationDbContext context) : I
         location.Id = Guid.NewGuid();
         location.Touch();
 
-        context.TestingLocations.Add(location);
+        context.Set<TestingLocation>().Add(location);
         await context.SaveChangesAsync().ConfigureAwait(false);
 
         return location;
@@ -44,7 +44,7 @@ public class TestingLocationOperationsService(IApplicationDbContext context) : I
 
     public async Task<TestingLocation> UpdateTestingLocationAsync(TestingLocation location)
     {
-        var existingLocation = await context.TestingLocations
+        var existingLocation = await context.Set<TestingLocation>()
             .FirstOrDefaultAsync(tl => tl.Id == location.Id && tl.DeletedAt == null);
 
         if (existingLocation == null)
@@ -66,7 +66,7 @@ public class TestingLocationOperationsService(IApplicationDbContext context) : I
 
     public async Task<bool> DeleteTestingLocationAsync(Guid id)
     {
-        var location = await context.TestingLocations
+        var location = await context.Set<TestingLocation>()
             .FirstOrDefaultAsync(tl => tl.Id == id && tl.DeletedAt == null);
 
         if (location == null) return false;
@@ -79,7 +79,7 @@ public class TestingLocationOperationsService(IApplicationDbContext context) : I
 
     public async Task<bool> RestoreTestingLocationAsync(Guid id)
     {
-        var location = await context.TestingLocations
+        var location = await context.Set<TestingLocation>()
             .FirstOrDefaultAsync(tl => tl.Id == id && tl.DeletedAt != null);
 
         if (location == null) return false;

@@ -30,6 +30,7 @@ public class TenantSettingsConfiguration : IEntityTypeConfiguration<TenantSettin
         builder.Property(ts => ts.BrandingSettings).IsRequired(false);
         builder.Property(ts => ts.NotificationSettings).IsRequired(false);
         builder.Property(ts => ts.SecuritySettings).IsRequired(false);
+        builder.Property(ts => ts.IntegrationSettingsJson).IsRequired(false);
 
         // Soft delete query filter
         builder.HasQueryFilter(ts => ts.DeletedAt == null);

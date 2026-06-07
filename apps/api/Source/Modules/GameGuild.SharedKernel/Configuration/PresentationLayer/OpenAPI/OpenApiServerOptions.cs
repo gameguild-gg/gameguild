@@ -1,4 +1,4 @@
-﻿namespace GameGuild.Configuration.PresentationLayer.OpenAPI;
+namespace GameGuild.Configuration.PresentationLayer.OpenAPI;
 
 /// <summary>
 ///     Configuration for OpenAPI server information.

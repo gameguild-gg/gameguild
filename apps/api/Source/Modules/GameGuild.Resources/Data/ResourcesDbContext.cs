@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 
@@ -6,6 +7,7 @@ namespace GameGuild.Resources;
 /// <summary>
 ///     DbContext for Resources module
 /// </summary>
+[ExcludeFromCodeCoverage]
 public class ResourcesDbContext(DbContextOptions<ResourcesDbContext> options) : DbContext(options), IApplicationDbContext
 {
     // Core entities

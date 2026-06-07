@@ -8,22 +8,22 @@ public class TestingRequestService : ITestingRequestService {
   public TestingRequestService(IApplicationDbContext context) { _context = context; }
 
   public async Task<IEnumerable<TestingRequest>> GetAllAsync() {
-    return await _context.TestingRequests.Include(r => r.CreatedBy).Include(r => r.ProjectVersion).ThenInclude(pv => pv.Project).OrderByDescending(r => r.CreatedAt).ToListAsync();
+    return await _context.Set<TestingRequest>().Include(r => r.CreatedBy).Include(r => r.ProjectVersion).ThenInclude(pv => pv.Project).OrderByDescending(r => r.CreatedAt).ToListAsync();
   }
 
   public async Task<IEnumerable<TestingRequest>> GetWithPaginationAsync(int skip = 0, int take = 50) {
-    return await _context.TestingRequests.Include(r => r.CreatedBy).Include(r => r.ProjectVersion).ThenInclude(pv => pv.Project).OrderByDescending(r => r.CreatedAt).Skip(skip).Take(take).ToListAsync();
+    return await _context.Set<TestingRequest>().Include(r => r.CreatedBy).Include(r => r.ProjectVersion).ThenInclude(pv => pv.Project).OrderByDescending(r => r.CreatedAt).Skip(skip).Take(take).ToListAsync();
   }
 
-  public async Task<TestingRequest?> GetByIdAsync(Guid id) { return await _context.TestingRequests.Include(r => r.CreatedBy).Include(r => r.ProjectVersion).ThenInclude(pv => pv.Project).FirstOrDefaultAsync(r => r.Id == id); }
+  public async Task<TestingRequest?> GetByIdAsync(Guid id) { return await _context.Set<TestingRequest>().Include(r => r.CreatedBy).Include(r => r.ProjectVersion).ThenInclude(pv => pv.Project).FirstOrDefaultAsync(r => r.Id == id); }
 
-  public async Task<TestingRequest?> GetByIdWithDetailsAsync(Guid id) { return await _context.TestingRequests.Include(r => r.CreatedBy).Include(r => r.ProjectVersion).ThenInclude(pv => pv.Project).FirstOrDefaultAsync(r => r.Id == id); }
+  public async Task<TestingRequest?> GetByIdWithDetailsAsync(Guid id) { return await _context.Set<TestingRequest>().Include(r => r.CreatedBy).Include(r => r.ProjectVersion).ThenInclude(pv => pv.Project).FirstOrDefaultAsync(r => r.Id == id); }
 
   public async Task<TestingRequest> CreateAsync(TestingRequest testingRequest) {
     testingRequest.Id = Guid.NewGuid();
     testingRequest.Touch();
 
-    _context.TestingRequests.Add(testingRequest);
+    _context.Set<TestingRequest>().Add(testingRequest);
     await _context.SaveChangesAsync().ConfigureAwait(false);
 
     return testingRequest;
@@ -32,18 +32,18 @@ public class TestingRequestService : ITestingRequestService {
   public async Task<TestingRequest> UpdateAsync(TestingRequest testingRequest) {
     testingRequest.Touch();
 
-    _context.TestingRequests.Update(testingRequest);
+    _context.Set<TestingRequest>().Update(testingRequest);
     await _context.SaveChangesAsync().ConfigureAwait(false);
 
     return testingRequest;
   }
 
   public async Task<bool> DeleteAsync(Guid id) {
-    var testingRequest = await _context.TestingRequests.FirstOrDefaultAsync(r => r.Id == id);
+    var testingRequest = await _context.Set<TestingRequest>().FirstOrDefaultAsync(r => r.Id == id);
 
     if (testingRequest == null) return false;
 
-    _context.TestingRequests.Remove(testingRequest);
+    _context.Set<TestingRequest>().Remove(testingRequest);
     await _context.SaveChangesAsync().ConfigureAwait(false);
 
     return true;
@@ -58,17 +58,17 @@ public class TestingRequestService : ITestingRequestService {
   }
 
   public async Task<IEnumerable<TestingRequest>> GetByProjectVersionAsync(Guid projectVersionId) {
-    return await _context.TestingRequests.Include(r => r.CreatedBy).Include(r => r.ProjectVersion).ThenInclude(pv => pv.Project).Where(r => r.ProjectVersionId == projectVersionId).OrderByDescending(r => r.CreatedAt).ToListAsync();
+    return await _context.Set<TestingRequest>().Include(r => r.CreatedBy).Include(r => r.ProjectVersion).ThenInclude(pv => pv.Project).Where(r => r.ProjectVersionId == projectVersionId).OrderByDescending(r => r.CreatedAt).ToListAsync();
   }
 
   public async Task<IEnumerable<TestingRequest>> GetByStatusAsync(TestingRequestStatus status) {
-    return await _context.TestingRequests.Include(r => r.CreatedBy).Include(r => r.ProjectVersion).ThenInclude(pv => pv.Project).Where(r => r.Status == status).OrderByDescending(r => r.CreatedAt).ToListAsync();
+    return await _context.Set<TestingRequest>().Include(r => r.CreatedBy).Include(r => r.ProjectVersion).ThenInclude(pv => pv.Project).Where(r => r.Status == status).OrderByDescending(r => r.CreatedAt).ToListAsync();
   }
 
   public async Task<IEnumerable<TestingRequest>> GetActiveRequestsAsync() {
     var now = SystemClock.UtcNow;
 
-    return await _context.TestingRequests.Include(r => r.CreatedBy)
+    return await _context.Set<TestingRequest>().Include(r => r.CreatedBy)
                          .Include(r => r.ProjectVersion)
                          .ThenInclude(pv => pv.Project)
                          .Where(r => r.Status == TestingRequestStatus.Open && r.StartDate <= now && r.EndDate >= now)
@@ -79,7 +79,7 @@ public class TestingRequestService : ITestingRequestService {
   public async Task<IEnumerable<TestingRequest>> GetRequestsNeedingClosureAsync() {
     var now = SystemClock.UtcNow;
 
-    return await _context.TestingRequests.Include(r => r.CreatedBy)
+    return await _context.Set<TestingRequest>().Include(r => r.CreatedBy)
                          .Include(r => r.ProjectVersion)
                          .ThenInclude(pv => pv.Project)
                          .Where(r => (r.Status == TestingRequestStatus.Open || r.Status == TestingRequestStatus.InProgress) && r.EndDate < now)
@@ -88,12 +88,12 @@ public class TestingRequestService : ITestingRequestService {
   }
 
   public async Task<bool> CanUserJoinTestingAsync(Guid userId, Guid testingRequestId) {
-    var request = await _context.TestingRequests.FirstOrDefaultAsync(r => r.Id == testingRequestId);
+    var request = await _context.Set<TestingRequest>().FirstOrDefaultAsync(r => r.Id == testingRequestId);
 
     if (request == null || request.Status != TestingRequestStatus.Open) return false;
 
     // Check if user is already participating
-    var existingParticipant = await _context.TestingParticipants.FirstOrDefaultAsync(p => p.TestingRequestId == testingRequestId && p.UserId == userId);
+    var existingParticipant = await _context.Set<TestingParticipant>().FirstOrDefaultAsync(p => p.TestingRequestId == testingRequestId && p.UserId == userId);
 
     if (existingParticipant != null) return false; // Already participating
 
@@ -104,12 +104,12 @@ public class TestingRequestService : ITestingRequestService {
   }
 
   public async Task<TestingRequest> JoinTestingAsync(Guid userId, Guid testingRequestId) {
-    var request = await _context.TestingRequests.Include(r => r.CreatedBy).Include(r => r.ProjectVersion).ThenInclude(pv => pv.Project).FirstOrDefaultAsync(r => r.Id == testingRequestId);
+    var request = await _context.Set<TestingRequest>().Include(r => r.CreatedBy).Include(r => r.ProjectVersion).ThenInclude(pv => pv.Project).FirstOrDefaultAsync(r => r.Id == testingRequestId);
 
     if (request == null || request.Status != TestingRequestStatus.Open) throw new InvalidOperationException("Testing request is not available for joining");
 
     // Check if user is already participating
-    var existingParticipant = await _context.TestingParticipants.FirstOrDefaultAsync(p => p.TestingRequestId == testingRequestId && p.UserId == userId);
+    var existingParticipant = await _context.Set<TestingParticipant>().FirstOrDefaultAsync(p => p.TestingRequestId == testingRequestId && p.UserId == userId);
 
     if (existingParticipant != null) throw new InvalidOperationException("User is already participating in this testing request");
 
@@ -118,7 +118,7 @@ public class TestingRequestService : ITestingRequestService {
 
     var participant = new TestingParticipant { TestingRequestId = testingRequestId, UserId = userId, StartedAt = SystemClock.UtcNow };
 
-    _context.TestingParticipants.Add(participant);
+    _context.Set<TestingParticipant>().Add(participant);
     request.CurrentTesterCount++;
 
     await _context.SaveChangesAsync().ConfigureAwait(false);
@@ -127,15 +127,15 @@ public class TestingRequestService : ITestingRequestService {
   }
 
   public async Task<TestingRequest> LeaveTestingAsync(Guid userId, Guid testingRequestId) {
-    var request = await _context.TestingRequests.Include(r => r.CreatedBy).Include(r => r.ProjectVersion).ThenInclude(pv => pv.Project).FirstOrDefaultAsync(r => r.Id == testingRequestId);
+    var request = await _context.Set<TestingRequest>().Include(r => r.CreatedBy).Include(r => r.ProjectVersion).ThenInclude(pv => pv.Project).FirstOrDefaultAsync(r => r.Id == testingRequestId);
 
     if (request == null) throw new ArgumentException("Testing request not found");
 
-    var participant = await _context.TestingParticipants.FirstOrDefaultAsync(p => p.TestingRequestId == testingRequestId && p.UserId == userId);
+    var participant = await _context.Set<TestingParticipant>().FirstOrDefaultAsync(p => p.TestingRequestId == testingRequestId && p.UserId == userId);
 
     if (participant == null) throw new InvalidOperationException("User is not participating in this testing request");
 
-    _context.TestingParticipants.Remove(participant);
+    _context.Set<TestingParticipant>().Remove(participant);
     request.CurrentTesterCount = Math.Max(0, request.CurrentTesterCount - 1);
 
     await _context.SaveChangesAsync().ConfigureAwait(false);
@@ -144,7 +144,7 @@ public class TestingRequestService : ITestingRequestService {
   }
 
   public async Task<TestingRequest> CloseTestingRequestAsync(Guid testingRequestId) {
-    var request = await _context.TestingRequests.Include(r => r.CreatedBy).Include(r => r.ProjectVersion).ThenInclude(pv => pv.Project).FirstOrDefaultAsync(r => r.Id == testingRequestId);
+    var request = await _context.Set<TestingRequest>().Include(r => r.CreatedBy).Include(r => r.ProjectVersion).ThenInclude(pv => pv.Project).FirstOrDefaultAsync(r => r.Id == testingRequestId);
 
     if (request == null) throw new ArgumentException("Testing request not found");
 
@@ -159,7 +159,7 @@ public class TestingRequestService : ITestingRequestService {
   public async Task<IEnumerable<TestingRequest>> SearchAsync(string searchTerm) {
     var lowerSearchTerm = searchTerm.ToLowerInvariant();
 
-    return await _context.TestingRequests.Include(r => r.CreatedBy)
+    return await _context.Set<TestingRequest>().Include(r => r.CreatedBy)
                          .Include(r => r.ProjectVersion)
                          .ThenInclude(pv => pv.Project)
                          .Where(r => r.Title.ToLowerInvariant().Contains(lowerSearchTerm) ||

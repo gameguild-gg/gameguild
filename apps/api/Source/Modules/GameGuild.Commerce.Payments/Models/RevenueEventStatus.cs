@@ -1,4 +1,4 @@
-﻿namespace GameGuild.Commerce.Payments;
+namespace GameGuild.Commerce.Payments;
 
 /// <summary>Revenue event status</summary>
 public enum RevenueEventStatus

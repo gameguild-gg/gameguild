@@ -73,9 +73,16 @@ public static class DataDependencyInjection
         services.AddScoped<IWeb3Service, Web3Service>();
         services.AddScoped<IServiceAccountService, ServiceAccountService>();
 
-        // Token revocation service (singleton for in-memory, scoped for Redis)
-        // NOTE: Replace with Redis implementation for distributed deployments
-        services.AddSingleton<ITokenRevocationService, InMemoryTokenRevocationService>();
+        var redisEnabled = configuration.GetValue<bool>("Redis:Enabled");
+        var distributedRevocationEnabled = configuration.GetValue<bool?>("Authentication:TokenRevocation:UseDistributedCache") ?? redisEnabled;
+        if (distributedRevocationEnabled)
+        {
+            services.AddSingleton<ITokenRevocationService, DistributedCacheTokenRevocationService>();
+        }
+        else
+        {
+            services.AddSingleton<ITokenRevocationService, InMemoryTokenRevocationService>();
+        }
 
         // MFA services - focused sub-services
         services.AddScoped<ITotpMfaService, TotpMfaService>();
@@ -184,6 +191,13 @@ public static class DataDependencyInjection
         services.AddScoped<IRequestHandler<LocalSignInCommand, SignInResponse>, LocalSignInHandler>();
         services.AddScoped<IRequestHandler<RefreshTokenCommand, SignInResponse>, RefreshTokenHandler>();
         services.AddScoped<IRequestHandler<GoogleIdTokenSignInCommand, SignInResponse>, GoogleIdTokenSignInHandler>();
+        services.AddScoped<IRequestHandler<SendEmailVerificationCommand, EmailVerificationResponse>, SendEmailVerificationCommandHandler>();
+        services.AddScoped<IRequestHandler<VerifyEmailCommand, EmailVerificationResult>, VerifyEmailCommandHandler>();
+        services.AddScoped<IRequestHandler<RequestPasswordResetCommand, PasswordResetRequestResult>, RequestPasswordResetCommandHandler>();
+        services.AddScoped<IRequestHandler<ResetPasswordCommand, PasswordResetResult>, ResetPasswordCommandHandler>();
+        services.AddScoped<IRequestHandler<ChangePasswordCommand, PasswordChangeResult>, ChangePasswordCommandHandler>();
+        services.AddScoped<IRequestHandler<RequestMagicLinkCommand, MagicLinkRequestResult>, RequestMagicLinkCommandHandler>();
+        services.AddScoped<IRequestHandler<ConsumeMagicLinkCommand, SignInResponse>, ConsumeMagicLinkCommandHandler>();
         
         // Logout handler with immediate token revocation
         services.AddScoped<IRequestHandler<LogoutCommand, LogoutResponse>, LogoutHandler>();

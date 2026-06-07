@@ -8,7 +8,7 @@ namespace GameGuild.Commerce.Subscriptions;
 public class SubscriptionQueryAndExternalIdService(
     ISubscriptionRepository repository,
     ISubscriptionPlanService planService,
-    ILogger<SubscriptionQueryAndExternalIdService> logger) : ISubscriptionQueryService, ISubscriptionExternalIdService
+    ILogger<SubscriptionQueryAndExternalIdService> logger) : ISubscriptionQueryService, ISubscriptionExternalIdService, ISubscriptionPaymentContextService
 {
     private readonly ISubscriptionRepository _repository = repository ?? throw new ArgumentNullException(nameof(repository));
     private readonly ISubscriptionPlanService _planService = planService ?? throw new ArgumentNullException(nameof(planService));
@@ -240,6 +240,33 @@ public class SubscriptionQueryAndExternalIdService(
     Task<Subscription?> ISubscriptionExternalIdService.GetByExternalIdAsync(string externalId, CancellationToken cancellationToken)
     {
         return _repository.GetByExternalIdAsync(externalId, cancellationToken);
+    }
+
+    public async Task<SubscriptionPaymentContext?> GetPaymentContextAsync(Guid subscriptionId, CancellationToken cancellationToken = default)
+    {
+        var subscription = await _repository.GetByIdAsync(subscriptionId, cancellationToken).ConfigureAwait(false);
+        if (subscription == null)
+        {
+            return null;
+        }
+
+        var tenantId = subscription.TenantId
+                       ?? throw new InvalidOperationException(
+                           "TenantId is required for subscription entities but was null. This indicates a data integrity issue.");
+
+        return new SubscriptionPaymentContext(
+            subscription.Id,
+            tenantId,
+            subscription.Amount.Amount,
+            subscription.Amount.Currency,
+            subscription.ExternalCustomerId);
+    }
+
+    public async Task SetExternalCustomerIdAsync(Guid subscriptionId, string externalCustomerId, CancellationToken cancellationToken = default)
+    {
+        var subscription = await GetRequiredAsync(subscriptionId, cancellationToken).ConfigureAwait(false);
+        subscription.SetExternalIds(subscription.ExternalId, externalCustomerId);
+        await _repository.UpdateAsync(subscription, cancellationToken).ConfigureAwait(false);
     }
 
     #endregion

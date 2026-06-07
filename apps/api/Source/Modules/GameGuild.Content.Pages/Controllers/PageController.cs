@@ -1,4 +1,6 @@
 using Asp.Versioning;
+using GameGuild.CQRS;
+using GameGuild.Identity.Context.Actors;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -9,7 +11,7 @@ namespace GameGuild.Content.Pages;
 [ApiVersion("1.0")]
 [Route("v{version:apiVersion}/pages")]
 [Authorize]
-public class PageController(IPageService pageService) : BaseApiController
+public class PageController(IPageService pageService, ISender sender, IActorContextAccessor actorContextAccessor) : BaseApiController
 {
     /// <summary>List pages with optional filtering.</summary>
     [HttpGet]
@@ -98,11 +100,12 @@ public class PageController(IPageService pageService) : BaseApiController
     [HttpPost("{id:guid}/publish")]
     public async Task<ActionResult<PageDto>> Publish(Guid id)
     {
-        // TODO: Extract user ID from claims when auth is wired
-        var userId = Guid.Empty;
-        var page = await pageService.PublishAsync(id, userId).ConfigureAwait(false);
+        var userId = actorContextAccessor.ActorContext.SubjectIdAsGuid;
+        if (!userId.HasValue) return Unauthorized();
+
+        var page = await sender.Send(new PublishPageCommand(id, userId.Value)).ConfigureAwait(false);
         if (page is null) return NotFound();
-        return Ok(page.ToDto());
+        return Ok(page);
     }
 
     /// <summary>Unpublish a page (back to Draft).</summary>

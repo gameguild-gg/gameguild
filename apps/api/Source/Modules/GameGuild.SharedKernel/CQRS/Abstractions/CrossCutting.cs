@@ -56,3 +56,14 @@ public interface ICacheService
     /// </summary>
     Task RemoveAsync(string key, CancellationToken cancellationToken = default);
 }
+
+/// <summary>
+///     Optional cache capability for removing app cache entries by wildcard pattern.
+/// </summary>
+public interface IPatternCacheService : ICacheService
+{
+    /// <summary>
+    ///     Removes app cache entries matching a wildcard pattern and returns the number of keys requested for removal.
+    /// </summary>
+    Task<int> RemoveByPatternAsync(string pattern, CancellationToken cancellationToken = default);
+}

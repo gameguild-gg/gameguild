@@ -1,4 +1,4 @@
-﻿namespace GameGuild.Identity.Authentication;
+namespace GameGuild.Identity.Authentication;
 
 /// <summary>
 ///     Context information for conditional policy evaluation

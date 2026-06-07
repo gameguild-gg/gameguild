@@ -1,5 +1,4 @@
 using GameGuild.CQRS;
-using GameGuild.Database;
 using GameGuild.Identity.Users;
 
 
@@ -9,16 +8,13 @@ namespace GameGuild.TestingLab;
 internal class UserCreatedTestingLabPermissionHandler : IDomainEventHandler<UserCreatedEvent> {
   private readonly IConfiguration _configuration;
 
-  private readonly ApplicationDbContext _context;
+  private readonly IApplicationDbContext _context;
 
   private readonly ILogger<UserCreatedTestingLabPermissionHandler> _logger;
 
-  private readonly IServiceProvider _serviceProvider;
-
-  public UserCreatedTestingLabPermissionHandler(ILogger<UserCreatedTestingLabPermissionHandler> logger, ApplicationDbContext context, IServiceProvider serviceProvider, IConfiguration configuration) {
+  public UserCreatedTestingLabPermissionHandler(ILogger<UserCreatedTestingLabPermissionHandler> logger, IApplicationDbContext context, IConfiguration configuration) {
     _logger = logger;
     _context = context;
-    _serviceProvider = serviceProvider;
     _configuration = configuration;
   }
 
@@ -29,7 +25,7 @@ internal class UserCreatedTestingLabPermissionHandler : IDomainEventHandler<User
 
     try {
       // Query the user's tenant associations since UserCreatedEvent doesn't include tenant context
-      var userTenants = await _context.TenantPermissions.Where(tp => tp.UserId == domainEvent.UserId && tp.DeletedAt == null && (tp.ExpiresAt == null || tp.ExpiresAt > SystemClock.UtcNow))
+      var userTenants = await _context.Set<TenantPermission>().Where(tp => tp.UserId == domainEvent.UserId && tp.DeletedAt == null && (tp.ExpiresAt == null || tp.ExpiresAt > SystemClock.UtcNow))
                                       .Select(tp => tp.TenantId)
                                       .Where(tenantId => tenantId.HasValue)
                                       .ToListAsync(cancellationToken);
@@ -57,15 +53,32 @@ internal class UserCreatedTestingLabPermissionHandler : IDomainEventHandler<User
     _logger.LogDebug("Granting basic TestingLab permissions to user {UserId} in tenant {TenantId}", userId, tenantId);
 
     try {
-      // Get the default role from configuration, fallback to "TestingLabTester"
-      var defaultRoleName = _configuration["TestingLab:DefaultUserRole"] ?? "TestingLabTester";
+      var defaultPermissions = (_configuration.GetSection("TestingLab:DefaultUserPermissions").Get<string[]>() ?? [
+        $"{TestingLabResourceTypes.Request}:{TestingLabActions.Read}",
+        $"{TestingLabResourceTypes.Session}:{TestingLabActions.Read}",
+        $"{TestingLabResourceTypes.Location}:{TestingLabActions.Read}",
+      ]);
 
-      // Use the simple permission service to assign the configurable default role
-      var permissionService = _serviceProvider.GetRequiredService<IPermissionService>();
+      var existing = await _context.Set<TenantPermission>()
+        .FirstOrDefaultAsync(tp => tp.UserId == userId && tp.TenantId == tenantId && tp.DeletedAt == null, cancellationToken)
+        .ConfigureAwait(false);
 
-      await permissionService.AssignRoleToUserAsync(userId, tenantId, defaultRoleName).ConfigureAwait(false);
+      if (existing == null) {
+        existing = new TenantPermission {
+          UserId = userId,
+          TenantId = tenantId,
+          Permissions = defaultPermissions,
+          Reason = "TestingLab default user permissions",
+        };
+        _context.Set<TenantPermission>().Add(existing);
+      }
+      else {
+        existing.AddPermissions(defaultPermissions);
+      }
 
-      _logger.LogInformation("Successfully assigned {RoleName} role to user {UserId} in tenant {TenantId}", defaultRoleName, userId, tenantId);
+      await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+
+      _logger.LogInformation("Successfully assigned default TestingLab permissions to user {UserId} in tenant {TenantId}", userId, tenantId);
     }
     catch (Exception ex) {
       _logger.LogError(ex, "Failed to assign default TestingLab role to user {UserId} in tenant {TenantId}", userId, tenantId);

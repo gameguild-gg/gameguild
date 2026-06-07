@@ -23,6 +23,8 @@ public sealed class ResetUserAccessibilityPreferencesCommandHandler(IUserReposit
             await preferencesRepository.UpdateAsync(preferences, cancellationToken).ConfigureAwait(false);
         }
 
+        await preferencesRepository.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+
         return Unit.Value;
     }
 }

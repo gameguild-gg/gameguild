@@ -12,7 +12,7 @@ public class TestingRequestOperationsService(IApplicationDbContext context) : IT
 {
     public async Task<IEnumerable<TestingRequest>> GetAllTestingRequestsAsync()
     {
-        return await context.TestingRequests
+        return await context.Set<TestingRequest>()
             .Where(tr => tr.DeletedAt == null)
             .Include(tr => tr.ProjectVersion)
             .Include(tr => tr.CreatedBy)
@@ -22,7 +22,7 @@ public class TestingRequestOperationsService(IApplicationDbContext context) : IT
 
     public async Task<IEnumerable<TestingRequest>> GetTestingRequestsAsync(int skip = 0, int take = 50)
     {
-        return await context.TestingRequests
+        return await context.Set<TestingRequest>()
             .Where(tr => tr.DeletedAt == null)
             .Include(tr => tr.ProjectVersion)
             .Include(tr => tr.CreatedBy)
@@ -34,7 +34,7 @@ public class TestingRequestOperationsService(IApplicationDbContext context) : IT
 
     public async Task<TestingRequest?> GetTestingRequestByIdAsync(Guid id)
     {
-        return await context.TestingRequests
+        return await context.Set<TestingRequest>()
             .Where(tr => tr.Id == id && tr.DeletedAt == null)
             .Include(tr => tr.ProjectVersion)
             .Include(tr => tr.CreatedBy)
@@ -43,7 +43,7 @@ public class TestingRequestOperationsService(IApplicationDbContext context) : IT
 
     public async Task<TestingRequest?> GetTestingRequestByIdWithDetailsAsync(Guid id)
     {
-        return await context.TestingRequests
+        return await context.Set<TestingRequest>()
             .Where(tr => tr.Id == id && tr.DeletedAt == null)
             .Include(tr => tr.ProjectVersion)
             .Include(tr => tr.CreatedBy)
@@ -55,15 +55,15 @@ public class TestingRequestOperationsService(IApplicationDbContext context) : IT
         testingRequest.Id = Guid.NewGuid();
         testingRequest.Touch();
 
-        context.TestingRequests.Add(testingRequest);
+        context.Set<TestingRequest>().Add(testingRequest);
         await context.SaveChangesAsync().ConfigureAwait(false);
 
-        return await GetTestingRequestByIdAsync(testingRequest.Id) ?? testingRequest.ConfigureAwait(false);
+        return (await GetTestingRequestByIdAsync(testingRequest.Id).ConfigureAwait(false)) ?? testingRequest;
     }
 
     public async Task<TestingRequest> UpdateTestingRequestAsync(TestingRequest testingRequest)
     {
-        var existingRequest = await context.TestingRequests.FindAsync(testingRequest.Id).ConfigureAwait(false);
+        var existingRequest = await context.Set<TestingRequest>().FindAsync(testingRequest.Id).ConfigureAwait(false);
 
         if (existingRequest == null)
             throw new InvalidOperationException($"Testing request with ID {testingRequest.Id} not found.");
@@ -82,12 +82,12 @@ public class TestingRequestOperationsService(IApplicationDbContext context) : IT
 
         await context.SaveChangesAsync().ConfigureAwait(false);
 
-        return await GetTestingRequestByIdAsync(existingRequest.Id) ?? existingRequest.ConfigureAwait(false);
+        return (await GetTestingRequestByIdAsync(existingRequest.Id).ConfigureAwait(false)) ?? existingRequest;
     }
 
     public async Task<bool> DeleteTestingRequestAsync(Guid id)
     {
-        var testingRequest = await context.TestingRequests.FindAsync(id).ConfigureAwait(false);
+        var testingRequest = await context.Set<TestingRequest>().FindAsync(id).ConfigureAwait(false);
 
         if (testingRequest == null) return false;
 
@@ -99,7 +99,7 @@ public class TestingRequestOperationsService(IApplicationDbContext context) : IT
 
     public async Task<bool> RestoreTestingRequestAsync(Guid id)
     {
-        var testingRequest = await context.TestingRequests.IgnoreQueryFilters().FirstOrDefaultAsync(tr => tr.Id == id);
+        var testingRequest = await context.Set<TestingRequest>().IgnoreQueryFilters().FirstOrDefaultAsync(tr => tr.Id == id);
 
         if (testingRequest == null) return false;
 
@@ -112,7 +112,7 @@ public class TestingRequestOperationsService(IApplicationDbContext context) : IT
 
     public async Task<IEnumerable<TestingRequest>> GetTestingRequestsByProjectVersionAsync(Guid projectVersionId)
     {
-        return await context.TestingRequests
+        return await context.Set<TestingRequest>()
             .Where(tr => tr.ProjectVersionId == projectVersionId && tr.DeletedAt == null)
             .Include(tr => tr.ProjectVersion)
             .Include(tr => tr.CreatedBy)
@@ -122,7 +122,7 @@ public class TestingRequestOperationsService(IApplicationDbContext context) : IT
 
     public async Task<IEnumerable<TestingRequest>> GetTestingRequestsByCreatorAsync(Guid creatorId)
     {
-        return await context.TestingRequests
+        return await context.Set<TestingRequest>()
             .Where(tr => tr.CreatedById == creatorId && tr.DeletedAt == null)
             .Include(tr => tr.ProjectVersion)
             .Include(tr => tr.CreatedBy)
@@ -132,7 +132,7 @@ public class TestingRequestOperationsService(IApplicationDbContext context) : IT
 
     public async Task<IEnumerable<TestingRequest>> GetTestingRequestsByStatusAsync(TestingRequestStatus status)
     {
-        return await context.TestingRequests
+        return await context.Set<TestingRequest>()
             .Where(tr => tr.Status == status && tr.DeletedAt == null)
             .Include(tr => tr.ProjectVersion)
             .Include(tr => tr.CreatedBy)
@@ -144,7 +144,7 @@ public class TestingRequestOperationsService(IApplicationDbContext context) : IT
     {
         var lowerSearchTerm = searchTerm.ToLower();
 
-        return await context.TestingRequests
+        return await context.Set<TestingRequest>()
             .Where(tr => tr.DeletedAt == null &&
                 (tr.Title.ToLower().Contains(lowerSearchTerm) ||
                  tr.Description != null && tr.Description.ToLower().Contains(lowerSearchTerm)))
@@ -156,7 +156,7 @@ public class TestingRequestOperationsService(IApplicationDbContext context) : IT
 
     public async Task<IEnumerable<TestingRequest>> GetActiveTestingRequestsAsync()
     {
-        return await context.TestingRequests
+        return await context.Set<TestingRequest>()
             .Where(tr => tr.DeletedAt == null && tr.Status == TestingRequestStatus.Open)
             .Include(tr => tr.ProjectVersion)
             .ThenInclude(pv => pv.Project)
@@ -167,7 +167,7 @@ public class TestingRequestOperationsService(IApplicationDbContext context) : IT
 
     public async Task<TestingRequest> CreateSimpleTestingRequestAsync(CreateSimpleTestingRequestDto requestDto, Guid userId)
     {
-        var existingProject = await context.Projects.FirstOrDefaultAsync(p => p.Title == requestDto.TeamIdentifier && p.DeletedAt == null);
+        var existingProject = await context.Set<GameGuild.Projects.Project>().FirstOrDefaultAsync(p => p.Title == requestDto.TeamIdentifier && p.DeletedAt == null);
 
         Guid projectId;
 
@@ -181,12 +181,12 @@ public class TestingRequestOperationsService(IApplicationDbContext context) : IT
                 Description = $"Capstone project repository for team {requestDto.TeamIdentifier}",
                 Status = ContentStatus.Published,
                 Visibility = ContentVisibility.Public,
-                DevelopmentStatus = DevelopmentStatus.InDevelopment,
-                Type = ProjectType.Game,
+                DevelopmentStatus = GameGuild.Projects.DevelopmentStatus.InDevelopment,
+                Type = GameGuild.Projects.ProjectType.Game,
                 CreatedById = userId,
             };
 
-            context.Projects.Add(newProject);
+            context.Set<GameGuild.Projects.Project>().Add(newProject);
             await context.SaveChangesAsync().ConfigureAwait(false);
             projectId = newProject.Id;
         }
@@ -207,7 +207,7 @@ public class TestingRequestOperationsService(IApplicationDbContext context) : IT
             ReleasedAt = SystemClock.UtcNow,
         };
 
-        context.ProjectReleases.Add(projectRelease);
+        context.Set<GameGuild.Projects.ProjectRelease>().Add(projectRelease);
         await context.SaveChangesAsync().ConfigureAwait(false);
 
         var testingRequest = new TestingRequest
@@ -228,9 +228,9 @@ public class TestingRequestOperationsService(IApplicationDbContext context) : IT
             CreatedById = userId,
         };
 
-        context.TestingRequests.Add(testingRequest);
+        context.Set<TestingRequest>().Add(testingRequest);
         await context.SaveChangesAsync().ConfigureAwait(false);
 
-        return await GetTestingRequestByIdAsync(testingRequest.Id) ?? testingRequest.ConfigureAwait(false);
+        return (await GetTestingRequestByIdAsync(testingRequest.Id).ConfigureAwait(false)) ?? testingRequest;
     }
 }

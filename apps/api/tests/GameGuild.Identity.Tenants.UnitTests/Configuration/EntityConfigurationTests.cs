@@ -71,4 +71,18 @@ public class EntityConfigurationTests
 
         modelBuilder.Model.GetEntityTypes().Should().NotBeEmpty();
     }
+
+    [Fact]
+    public void TenantsModelConfiguration_Should_Apply_Module_Entities()
+    {
+        var modelBuilder = new ModelBuilder(new ConventionSet());
+
+        new TenantsModelConfiguration().Configure(modelBuilder);
+
+        modelBuilder.Model.FindEntityType(typeof(Tenant)).Should().NotBeNull();
+        modelBuilder.Model.FindEntityType(typeof(TenantDomain)).Should().NotBeNull();
+        modelBuilder.Model.FindEntityType(typeof(TenantMember)).Should().NotBeNull();
+        modelBuilder.Model.FindEntityType(typeof(TenantMetadata)).Should().NotBeNull();
+        modelBuilder.Model.FindEntityType(typeof(TenantSettings)).Should().NotBeNull();
+    }
 }

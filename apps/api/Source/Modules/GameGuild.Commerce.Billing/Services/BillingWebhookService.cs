@@ -168,25 +168,13 @@ public abstract class BillingWebhookService : IBillingWebhookService
                 return;
             }
 
-            // Record the payment and apply any lifecycle transition needed after success.
-            subscription = await _billingService.RecordPaymentAsync(
+            // Record the payment
+            await _billingService.RecordPaymentAsync(
                 subscription.Id,
                 payload.Amount,
                 payload.Currency,
                 payload.PaidAt ?? SystemClock.UtcNow
             ).ConfigureAwait(false);
-
-            switch (subscription.Status)
-            {
-                case SubscriptionStatus.PendingActivation:
-                    await _lifecycleService.ActivateAsync(subscription.Id).ConfigureAwait(false);
-                    break;
-
-                case SubscriptionStatus.PastDue:
-                case SubscriptionStatus.Suspended:
-                    await _lifecycleService.ReactivateAsync(subscription.Id).ConfigureAwait(false);
-                    break;
-            }
 
             _logger.LogInformation("Successfully recorded payment {PaymentId} for subscription {SubscriptionId}",
                 payload.PaymentId, subscription.Id);

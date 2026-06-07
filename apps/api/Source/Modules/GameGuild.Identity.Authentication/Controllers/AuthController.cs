@@ -107,6 +107,62 @@ public sealed class AuthController(ISender sender) : BaseApiController
     }
 
     /// <summary>
+    ///     Request a passwordless magic sign-in link.
+    /// </summary>
+    /// <param name="body">Magic-link request with email and optional tenant context</param>
+    /// <param name="ct">Cancellation token</param>
+    /// <returns>Generic confirmation; does not reveal whether the account exists</returns>
+    [AllowAnonymous]
+    [HttpPost("v{version:apiVersion}/auth/magic-link:request")]
+    [EndpointSummary("Request magic sign-in link")]
+    [EndpointDescription("Generates a short-lived one-time sign-in token and dispatches the magic-link notification. Always returns a generic success response to prevent user enumeration.")]
+    [ProducesResponseType<MagicLinkRequestResult>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> RequestMagicLink([FromBody] RequestMagicLinkRequest body, CancellationToken ct)
+    {
+        ArgumentNullException.ThrowIfNull(body);
+        var command = new RequestMagicLinkCommand
+        {
+            Email = body.Email,
+            TenantId = body.TenantId,
+            IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString(),
+            UserAgent = Request.Headers.UserAgent.ToString()
+        };
+
+        var result = await sender.Send(command, ct).ConfigureAwait(false);
+
+        return Ok(result);
+    }
+
+    /// <summary>
+    ///     Consume a passwordless magic sign-in link.
+    /// </summary>
+    /// <param name="body">Magic-link token and optional tenant/device context</param>
+    /// <param name="ct">Cancellation token</param>
+    /// <returns>Authentication response with access and refresh tokens</returns>
+    [AllowAnonymous]
+    [HttpPost("v{version:apiVersion}/auth/magic-link:consume")]
+    [EndpointSummary("Consume magic sign-in link")]
+    [EndpointDescription("Consumes a short-lived one-time magic-link token and returns access and refresh tokens.")]
+    [ProducesResponseType<SignInResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> ConsumeMagicLink([FromBody] ConsumeMagicLinkRequest body, CancellationToken ct)
+    {
+        ArgumentNullException.ThrowIfNull(body);
+        var command = new ConsumeMagicLinkCommand
+        {
+            Token = body.Token,
+            TenantId = body.TenantId,
+            DeviceFingerprint = body.DeviceFingerprint,
+            IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString(),
+            UserAgent = Request.Headers.UserAgent.ToString()
+        };
+
+        return await ExecuteAuthCommandAsync(command, ct).ConfigureAwait(false);
+    }
+
+    /// <summary>
     ///     Initiate GitHub OAuth sign-in
     /// </summary>
     /// <param name="redirectUri">Redirect URI after authentication</param>

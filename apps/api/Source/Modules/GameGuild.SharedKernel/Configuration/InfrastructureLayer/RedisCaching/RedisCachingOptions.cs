@@ -6,9 +6,19 @@ namespace GameGuild.Configuration.InfrastructureLayer.RedisCaching;
 public sealed class RedisCachingOptions : BaseOptions
 {
     /// <summary>
+    ///     Whether Redis-backed distributed caching is enabled.
+    /// </summary>
+    public bool Enabled { get; set; }
+
+    /// <summary>
+    ///     The configuration section name.
+    /// </summary>
+    public const string SectionName = "Redis";
+
+    /// <summary>
     ///     Redis connection string
     /// </summary>
-    public string ConnectionString { get; set; } = "localhost:6379";
+    public string? ConnectionString { get; set; }
 
     /// <summary>
     ///     Redis instance name for key prefixing
@@ -49,7 +59,7 @@ public sealed class RedisCachingOptions : BaseOptions
     {
         base.Validate();
 
-        if (string.IsNullOrWhiteSpace(ConnectionString)) throw new ArgumentException("Redis ConnectionString cannot be null or empty.", nameof(ConnectionString));
+        if (Enabled && string.IsNullOrWhiteSpace(ConnectionString)) throw new ArgumentException("Redis ConnectionString cannot be null or empty when Redis is enabled.", nameof(ConnectionString));
 
         if (string.IsNullOrWhiteSpace(InstanceName)) throw new ArgumentException("Redis InstanceName cannot be null or empty.", nameof(InstanceName));
 

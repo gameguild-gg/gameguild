@@ -277,7 +277,7 @@ public class ActivityGrade : EntityBase
         if (Points.HasValue && Points < 0)
             return false;
 
-        if (MaxPoints.HasValue && MaxPoints <= 0)
+        if (MaxPoints is <= 0)
             return false;
 
         return true;

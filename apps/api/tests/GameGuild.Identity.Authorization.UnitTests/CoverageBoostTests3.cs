@@ -1148,7 +1148,7 @@ public class PermissionHandlerTests
             claims.Add(new Claim(ClaimTypes.NameIdentifier, userId.Value.ToString()));
 
         if (tenantId.HasValue)
-            claims.Add(new Claim("tenant", tenantId.Value.ToString()));
+            claims.Add(new Claim("tenant_id", tenantId.Value.ToString()));
 
         if (permissions != null)
         {
@@ -1342,7 +1342,7 @@ public class PermissionHandlerTests
             new[]
             {
                 new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
-                new Claim("tenant", Guid.Empty.ToString())
+                new Claim("tenant_id", Guid.Empty.ToString())
             }, "Test"));
         var requirement = new PermissionRequirement("courses.read");
         var context = CreateAuthContext(user, requirement);
@@ -1384,7 +1384,7 @@ public class TenantMatchHandlerTests
     {
         var claims = new List<Claim>();
         if (tenantClaim != null)
-            claims.Add(new Claim("tenant", tenantClaim));
+            claims.Add(new Claim("tenant_id", tenantClaim));
         return new ClaimsPrincipal(new ClaimsIdentity(claims, "Test"));
     }
 

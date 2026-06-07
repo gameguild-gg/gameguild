@@ -32,11 +32,42 @@ public class SlaMonitoringServiceTests
     }
 
     [Fact]
-    public async Task RecordMetricAsync_ShouldThrowNotImplementedException()
+    public async Task RecordMetricAsync_ShouldPersistMetricAndEvaluateSlo()
     {
-        var act = () => _sut.RecordMetricAsync(new SliMetricDto(), CancellationToken.None);
+        var tenantId = Guid.NewGuid();
+        var slo = CreateSlo(tenantId, isEnabled: true);
+        var recordedAt = DateTimeOffset.UtcNow.AddMinutes(-5);
+        ServiceLevelIndicator? persisted = null;
 
-        await act.Should().ThrowAsync<NotImplementedException>();
+        SetupSuccessfulEvaluation(slo);
+        _sliRepository
+            .Setup(repository => repository.AddAsync(It.IsAny<ServiceLevelIndicator>(), It.IsAny<CancellationToken>()))
+            .Callback<ServiceLevelIndicator, CancellationToken>((indicator, _) => persisted = indicator)
+            .ReturnsAsync((ServiceLevelIndicator indicator, CancellationToken _) => indicator);
+
+        await _sut.RecordMetricAsync(new SliMetricDto
+        {
+            ServiceLevelObjectiveId = slo.Id,
+            Value = 98.5,
+            IsSuccessful = false,
+            ResponseTimeMs = 1200,
+            StatusCode = 503,
+            Endpoint = "/health",
+            Metadata = """{"region":"us-east-1"}""",
+            ErrorMessage = "timeout",
+            Timestamp = recordedAt
+        }, CancellationToken.None);
+
+        persisted.Should().NotBeNull();
+        persisted!.ServiceLevelObjectiveId.Should().Be(slo.Id);
+        persisted.TenantId.Should().Be(tenantId);
+        persisted.IsSuccessful.Should().BeFalse();
+        persisted.Value.Should().Be(98.5);
+        persisted.ErrorMessage.Should().Be("timeout");
+        persisted.Timestamp.Should().Be(recordedAt);
+        persisted.Metadata.Should().Be("""{"region":"us-east-1"}""");
+        _errorBudgetCalculator.Verify(calculator => calculator.CalculateAsync(slo.Id, It.IsAny<CancellationToken>()), Times.Once);
+        _alertManager.Verify(manager => manager.CheckAndTriggerAlertAsync(slo, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]

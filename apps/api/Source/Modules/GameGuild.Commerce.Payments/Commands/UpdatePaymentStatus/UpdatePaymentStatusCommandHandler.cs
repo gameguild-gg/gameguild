@@ -74,7 +74,7 @@ public sealed class UpdatePaymentStatusCommandHandler(
         if (request.Status == PaymentStatus.Succeeded && payment.ProcessedAt.HasValue)
         {
             await paymentSubscriptionSyncService.SyncSuccessfulPaymentAsync(
-                payment.Id.ToString(),
+                payment.Id,
                 payment.SubscriptionId,
                 payment.Amount,
                 payment.Currency,

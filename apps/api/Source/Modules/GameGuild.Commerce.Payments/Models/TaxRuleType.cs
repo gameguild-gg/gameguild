@@ -1,4 +1,4 @@
-﻿namespace GameGuild.Commerce.Payments;
+namespace GameGuild.Commerce.Payments;
 
 /// <summary>Tax rule types</summary>
 public enum TaxRuleType

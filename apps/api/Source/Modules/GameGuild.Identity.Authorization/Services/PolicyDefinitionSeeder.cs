@@ -613,6 +613,125 @@ public sealed class PolicyDefinitionSeeder
             PolicyVersion = 1
         };
 
+        // ========================
+        // EMPLOYEE POLICIES (Human Resources Module)
+        // ========================
+        yield return new PolicyDefinitionEntity
+        {
+            Id = Guid.NewGuid(),
+            PolicyName = Policies.EmployeesRead,
+            Description = "Read access to employee records",
+            RequireAuthentication = true,
+            IsTenantScoped = true,
+            UseRuleBasedEvaluation = true,
+            RulesJson = """
+            [
+                {
+                    "Type": "TenantMatch",
+                    "Description": "Ensure user belongs to the request tenant",
+                    "Enabled": true
+                },
+                {
+                    "Type": "RequireAllPermissions",
+                    "Description": "Require users.read permission",
+                    "Params": {
+                        "permissions": ["users:read"]
+                    },
+                    "Enabled": true
+                }
+            ]
+            """,
+            IsActive = true,
+            PolicyVersion = 1
+        };
+
+        yield return new PolicyDefinitionEntity
+        {
+            Id = Guid.NewGuid(),
+            PolicyName = Policies.EmployeesCreate,
+            Description = "Permission to create employee records",
+            RequireAuthentication = true,
+            IsTenantScoped = true,
+            UseRuleBasedEvaluation = true,
+            RulesJson = """
+            [
+                {
+                    "Type": "TenantMatch",
+                    "Description": "Ensure user belongs to the request tenant",
+                    "Enabled": true
+                },
+                {
+                    "Type": "RequireAllPermissions",
+                    "Description": "Require users.create permission",
+                    "Params": {
+                        "permissions": ["users:create"]
+                    },
+                    "Enabled": true
+                }
+            ]
+            """,
+            IsActive = true,
+            PolicyVersion = 1
+        };
+
+        yield return new PolicyDefinitionEntity
+        {
+            Id = Guid.NewGuid(),
+            PolicyName = Policies.EmployeesUpdate,
+            Description = "Permission to update employee records",
+            RequireAuthentication = true,
+            IsTenantScoped = true,
+            UseRuleBasedEvaluation = true,
+            RulesJson = """
+            [
+                {
+                    "Type": "TenantMatch",
+                    "Description": "Ensure user belongs to the request tenant",
+                    "Enabled": true
+                },
+                {
+                    "Type": "RequireAllPermissions",
+                    "Description": "Require users.update permission",
+                    "Params": {
+                        "permissions": ["users:update"]
+                    },
+                    "Enabled": true
+                }
+            ]
+            """,
+            IsActive = true,
+            PolicyVersion = 1
+        };
+
+        yield return new PolicyDefinitionEntity
+        {
+            Id = Guid.NewGuid(),
+            PolicyName = Policies.EmployeesDelete,
+            Description = "Permission to delete employee records",
+            RequireAuthentication = true,
+            IsTenantScoped = true,
+            UseRuleBasedEvaluation = true,
+            RulesJson = """
+            [
+                {
+                    "Type": "TenantMatch",
+                    "Description": "Ensure user belongs to the request tenant",
+                    "Enabled": true
+                },
+                {
+                    "Type": "RequireAllPermissions",
+                    "Description": "Require users.delete permission",
+                    "Params": {
+                        "permissions": ["users:delete"]
+                    },
+                    "Enabled": true
+                }
+            ]
+            """,
+            IsActive = true,
+            PolicyVersion = 1
+        };
+
         yield return new PolicyDefinitionEntity
         {
             Id = Guid.NewGuid(),

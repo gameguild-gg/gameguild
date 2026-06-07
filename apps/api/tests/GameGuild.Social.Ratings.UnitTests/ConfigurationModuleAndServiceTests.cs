@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Conventions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using MockQueryable.Moq;
 using Moq;
 using Xunit;
 
@@ -105,5 +106,52 @@ public class ConfigurationModuleAndServiceTests
         var log = Mock.Of<ILogger<RatingQueryService>>();
         var svc = new RatingQueryService(db.Object, actor.Object, log);
         svc.Should().NotBeNull();
+    }
+
+    [Fact]
+    public async Task RatingServices_WithAnonymousActor_ShouldThrowUnauthorized()
+    {
+        var db = new Mock<IApplicationDbContext>();
+        var actor = new Mock<IActorContextAccessor>();
+        actor.Setup(a => a.ActorContext).Returns(ActorContext.Anonymous);
+        var query = new RatingQueryService(db.Object, actor.Object, Mock.Of<ILogger<RatingQueryService>>());
+        var crud = new RatingCrudService(db.Object, actor.Object, query, Mock.Of<ILogger<RatingCrudService>>());
+        var moderation = new RatingModerationService(db.Object, actor.Object, query, Mock.Of<ILogger<RatingModerationService>>());
+
+        await crud.Invoking(x => x.RateAsync(Guid.NewGuid(), "Course", 4))
+            .Should().ThrowAsync<UnauthorizedAccessException>();
+        await query.Invoking(x => x.HasUserRatedAsync(Guid.NewGuid(), "Course"))
+            .Should().ThrowAsync<UnauthorizedAccessException>();
+        await moderation.Invoking(x => x.VoteHelpfulAsync(Guid.NewGuid(), true))
+            .Should().ThrowAsync<UnauthorizedAccessException>();
+    }
+
+    [Fact]
+    public async Task RatingServices_WithAuthenticatedActor_ShouldUseUserIdBranch()
+    {
+        var db = new Mock<IApplicationDbContext>();
+        db.Setup(x => x.Set<Rating>())
+            .Returns(new List<Rating>().AsQueryable().BuildMockDbSet().Object);
+        db.Setup(x => x.Set<RatingHelpfulVote>())
+            .Returns(new List<RatingHelpfulVote>().AsQueryable().BuildMockDbSet().Object);
+
+        var actor = new Mock<IActorContextAccessor>();
+        actor.Setup(a => a.ActorContext).Returns(new ActorContext
+        {
+            ActorKind = ActorKind.User,
+            SubjectId = Guid.NewGuid().ToString(),
+            TenantId = Guid.NewGuid(),
+            IsAuthenticated = true,
+            Roles = new HashSet<string>(),
+            Permissions = new HashSet<string>()
+        });
+
+        var query = new RatingQueryService(db.Object, actor.Object, Mock.Of<ILogger<RatingQueryService>>());
+        var crud = new RatingCrudService(db.Object, actor.Object, query, Mock.Of<ILogger<RatingCrudService>>());
+        var moderation = new RatingModerationService(db.Object, actor.Object, query, Mock.Of<ILogger<RatingModerationService>>());
+
+        (await crud.GetUserRatingAsync(Guid.NewGuid(), "Course")).IsFailure.Should().BeTrue();
+        (await query.HasUserRatedAsync(Guid.NewGuid(), "Course")).Value.Should().BeFalse();
+        (await moderation.VoteHelpfulAsync(Guid.NewGuid(), true)).IsFailure.Should().BeTrue();
     }
 }

@@ -1,4 +1,4 @@
-﻿namespace GameGuild.Identity.Authentication;
+namespace GameGuild.Identity.Authentication;
 
 /// <summary>
 ///     Revocation failure details

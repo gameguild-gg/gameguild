@@ -96,6 +96,57 @@ public class MemoryCacheServiceAdditionalTests
         await Assert.ThrowsAsync<OperationCanceledException>(
             () => _sut.RemoveAsync("key1", cts.Token));
     }
+
+    [Fact]
+    public async Task RemoveByPatternAsync_RemovesWildcardMatches()
+    {
+        await _sut.SetAsync("tenant:1:user:1", "a", TimeSpan.FromMinutes(5));
+        await _sut.SetAsync("tenant:1:user:2", "b", TimeSpan.FromMinutes(5));
+        await _sut.SetAsync("tenant:2:user:1", "c", TimeSpan.FromMinutes(5));
+
+        var removed = await _sut.RemoveByPatternAsync("tenant:1:*");
+
+        removed.Should().Be(2);
+        (await _sut.GetAsync<string>("tenant:1:user:1")).Should().BeNull();
+        (await _sut.GetAsync<string>("tenant:1:user:2")).Should().BeNull();
+        (await _sut.GetAsync<string>("tenant:2:user:1")).Should().Be("c");
+    }
+
+    [Fact]
+    public async Task RemoveByPatternAsync_RemovesSingleCharacterWildcardMatches()
+    {
+        await _sut.SetAsync("plan:a", "a", TimeSpan.FromMinutes(5));
+        await _sut.SetAsync("plan:b", "b", TimeSpan.FromMinutes(5));
+        await _sut.SetAsync("plan:long", "long", TimeSpan.FromMinutes(5));
+
+        var removed = await _sut.RemoveByPatternAsync("plan:?");
+
+        removed.Should().Be(2);
+        (await _sut.GetAsync<string>("plan:a")).Should().BeNull();
+        (await _sut.GetAsync<string>("plan:b")).Should().BeNull();
+        (await _sut.GetAsync<string>("plan:long")).Should().Be("long");
+    }
+
+    [Fact]
+    public async Task RemoveByPatternAsync_ExactKeyRemovesTrackedKey()
+    {
+        await _sut.SetAsync("exact-key", "value", TimeSpan.FromMinutes(5));
+
+        var removed = await _sut.RemoveByPatternAsync("exact-key");
+
+        removed.Should().Be(1);
+        (await _sut.GetAsync<string>("exact-key")).Should().BeNull();
+    }
+
+    [Fact]
+    public async Task RemoveByPatternAsync_Cancelled_Throws()
+    {
+        var cts = new CancellationTokenSource();
+        cts.Cancel();
+
+        await Assert.ThrowsAsync<OperationCanceledException>(
+            () => _sut.RemoveByPatternAsync("key*", cts.Token));
+    }
 }
 
 #endregion

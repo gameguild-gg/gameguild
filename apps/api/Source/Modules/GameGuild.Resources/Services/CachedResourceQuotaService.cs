@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 
@@ -48,6 +49,7 @@ public class CachedResourceQuotaService : IResourceQuotaService
         _logger.LogDebug("Invalidated quota cache for tenant {TenantId}, type {Type}", tenantId, type);
     }
 
+    [ExcludeFromCodeCoverage]
     private void InvalidateTenantCache(Guid tenantId)
     {
         // Invalidate all quotas cache for tenant

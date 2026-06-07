@@ -140,10 +140,10 @@ public sealed class TimeWindowJsonConverter : JsonConverter<TimeWindow>
 
                 if (reader.TokenType == JsonTokenType.PropertyName)
                 {
-                    var propertyName = reader.GetString();
+                    var propertyName = reader.GetString()!;
                     reader.Read();
 
-                    switch (propertyName?.ToLowerInvariant())
+                    switch (propertyName.ToLowerInvariant())
                     {
                         case "start":
                             if (reader.TokenType == JsonTokenType.String)

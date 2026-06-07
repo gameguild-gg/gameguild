@@ -1,34 +1,50 @@
 using GameGuild.CQRS;
+using Microsoft.EntityFrameworkCore;
 
 namespace GameGuild.Commerce.Payments;
 
 /// <summary>
 ///     Handler for getting payment history.
 /// </summary>
-/// <remarks>
-///     Payment history combines data from:
-///     - FinancialLedgerEntry for transaction records
-///     - RevenueEvent for revenue tracking
-///     - Subscription payment records
-/// </remarks>
-public sealed class GetPaymentHistoryQueryHandler : IQueryHandler<GetPaymentHistoryQuery, List<PaymentHistoryResult>>
+public sealed class GetPaymentHistoryQueryHandler(IApplicationDbContext context) : IQueryHandler<GetPaymentHistoryQuery, List<PaymentHistoryResult>>
 {
-    public Task<List<PaymentHistoryResult>> Handle(GetPaymentHistoryQuery request, CancellationToken cancellationToken)
+    public async Task<List<PaymentHistoryResult>> Handle(GetPaymentHistoryQuery request, CancellationToken cancellationToken)
     {
-        // Payment history queries should integrate with:
-        // - IFinancialLedgerRepository for transaction history
-        // - IRevenueEventRepository for revenue records
-        // - ISubscriptionService for subscription payment history
-        //
-        // Implementation would:
-        // 1. Query ledger entries with pagination
-        // 2. Apply user/tenant filters
-        // 3. Apply date range and status filters
-        // 4. Format as PaymentHistoryResult DTOs
-        //
-        // Returns empty list until history tracking is fully implemented.
+        var query = context.Set<Payment>().AsNoTracking();
 
-        return Task.FromResult(new List<PaymentHistoryResult>());
+        if (request.TenantId.HasValue)
+        {
+            query = query.Where(payment => payment.TenantId == request.TenantId.Value);
+        }
+
+        if (request.StartDate.HasValue)
+        {
+            query = query.Where(payment => payment.CreatedAt >= request.StartDate.Value);
+        }
+
+        if (request.EndDate.HasValue)
+        {
+            query = query.Where(payment => payment.CreatedAt <= request.EndDate.Value);
+        }
+
+        var payments = await query
+            .OrderByDescending(payment => payment.CreatedAt)
+            .ToListAsync(cancellationToken);
+
+        if (request.UserId.HasValue)
+        {
+            payments = payments
+                .Where(payment => PaymentQueryMapper.TryGetUserId(payment.Metadata) == request.UserId.Value)
+                .ToList();
+        }
+
+        var page = Math.Max(1, request.PageNumber);
+        var pageSize = Math.Clamp(request.PageSize, 1, 200);
+
+        return payments
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .Select(PaymentQueryMapper.ToHistoryResult)
+            .ToList();
     }
 }
-

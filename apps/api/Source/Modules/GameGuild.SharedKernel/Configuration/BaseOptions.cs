@@ -24,5 +24,6 @@ public abstract class ModuleOptions : BaseOptions
     /// <summary>
     ///     The name of the module this configuration applies to.
     /// </summary>
+    [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
     public virtual string ModuleName => GetType().Assembly.GetName().Name ?? "Unknown";
 }

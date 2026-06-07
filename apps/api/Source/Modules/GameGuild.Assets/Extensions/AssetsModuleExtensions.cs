@@ -31,6 +31,8 @@ public static class AssetsModuleExtensions
             configuration.GetSection(AssetUploadConfiguration.SectionName));
         services.Configure<AssetAccessOptions>(
             configuration.GetSection(AssetAccessOptions.SectionName));
+        services.Configure<AssetTextExtractionOptions>(
+            configuration.GetSection(AssetTextExtractionOptions.SectionName));
 
         // Security Options (Threat Mitigations)
         services.Configure<AssetRateLimitOptions>(
@@ -92,6 +94,7 @@ public static class AssetsModuleExtensions
         services.AddScoped<IAssetUploadService, AssetUploadService>();
         services.AddScoped<IAssetAccessService, AssetAccessService>();
         services.AddScoped<IAssetModerationService, AssetModerationService>();
+        services.AddScoped<IAssetTextExtractionService, AssetTextExtractionService>();
 
         // Security Services (Threat Mitigations)
         services.AddScoped<IAssetRateLimitService, AssetRateLimitService>();
@@ -100,7 +103,7 @@ public static class AssetsModuleExtensions
         services.AddScoped<IAssetGarbageCollectionService, AssetGarbageCollectionService>();
         services.AddScoped<ITenantAssetValidationService, TenantAssetValidationService>();
         services.AddScoped<IDownloadWindowService, DownloadWindowService>();
-        services.AddScoped<IOrderValidationService, PlaceholderOrderValidationService>();
+        services.AddScoped<IOrderValidationService, CommerceOrderValidationService>();
         services.AddScoped<ISecureUploadService, SecureUploadService>();
 
         // Validators

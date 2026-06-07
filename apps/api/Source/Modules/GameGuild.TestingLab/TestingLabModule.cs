@@ -28,6 +28,7 @@ public class TestingLabModule : ModuleBase
         services.AddScoped<ITestingParticipantOperations, TestingParticipantOperationsService>();
         services.AddScoped<ITestingFeedbackOperations, TestingFeedbackOperationsService>();
         services.AddScoped<ITestingLocationOperations, TestingLocationOperationsService>();
+        services.AddScoped<ITestingLabPermissionService, TestingLabPermissionService>();
 
         // Register composite ITestService for backward compatibility (GraphQL resolvers)
         services.AddScoped<ITestService, TestService>();

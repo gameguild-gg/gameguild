@@ -196,8 +196,98 @@ public class EfConfigAndServicesTests
     [Fact]
     public void UsageService_CanBeCreated()
     {
-        var svc = new UsageService(NullLogger<UsageService>.Instance);
+        var svc = new UsageService(
+            Mock.Of<IUsageRecordRepository>(),
+            Mock.Of<IResourceQuotaRepository>(),
+            NullLogger<UsageService>.Instance);
         svc.Should().NotBeNull();
+    }
+
+    [Fact]
+    public async Task UsageService_GetCurrentUsageAsync_ReturnsQuotaAndCurrentRecords()
+    {
+        var tenantId = Guid.NewGuid();
+        var quotaRepository = new Mock<IResourceQuotaRepository>();
+        var usageRecordRepository = new Mock<IUsageRecordRepository>();
+
+        quotaRepository
+            .Setup(r => r.GetByTenantAsync(tenantId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync([
+                new ResourceQuota
+                {
+                    TenantId = tenantId,
+                    Type = ResourceUsageType.ApiCalls,
+                    CurrentUsage = 25,
+                    HardLimit = 100
+                }
+            ]);
+
+        usageRecordRepository
+            .Setup(r => r.GetByTenantAsync(tenantId, null, It.IsAny<DateTime?>(), It.IsAny<DateTime?>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync([
+                UsageRecord.CreateDaily(ResourceUsageType.Storage, tenantId, 50, DateTime.UtcNow)
+            ]);
+
+        var svc = new UsageService(usageRecordRepository.Object, quotaRepository.Object, NullLogger<UsageService>.Instance);
+
+        var result = await svc.GetCurrentUsageAsync(tenantId);
+
+        result.TenantId.Should().Be(tenantId);
+        result.CurrentUsage[ResourceUsageType.ApiCalls.ToString()].Should().Be(25);
+        result.CurrentUsage[ResourceUsageType.Storage.ToString()].Should().Be(50);
+        result.Limits[ResourceUsageType.ApiCalls.ToString()].Should().Be(100);
+    }
+
+    [Fact]
+    public async Task UsageService_TrackUsageAsync_IncrementsQuotaAndStoresDailyRecord()
+    {
+        var tenantId = Guid.NewGuid();
+        UsageRecord? capturedRecord = null;
+        var quotaRepository = new Mock<IResourceQuotaRepository>();
+        var usageRecordRepository = new Mock<IUsageRecordRepository>();
+
+        quotaRepository
+            .Setup(r => r.TryIncrementUsageAsync(tenantId, ResourceUsageType.ApiCalls, 3, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((true, new ResourceQuota { TenantId = tenantId, Type = ResourceUsageType.ApiCalls, CurrentUsage = 3 }));
+
+        usageRecordRepository
+            .Setup(r => r.CreateAsync(It.IsAny<UsageRecord>(), It.IsAny<CancellationToken>()))
+            .Callback<UsageRecord, CancellationToken>((record, _) => capturedRecord = record)
+            .ReturnsAsync((UsageRecord record, CancellationToken _) => record);
+
+        var svc = new UsageService(usageRecordRepository.Object, quotaRepository.Object, NullLogger<UsageService>.Instance);
+
+        await svc.TrackUsageAsync(tenantId, "ApiCalls", 3);
+
+        quotaRepository.Verify(r => r.TryIncrementUsageAsync(tenantId, ResourceUsageType.ApiCalls, 3, It.IsAny<CancellationToken>()), Times.Once);
+        capturedRecord.Should().NotBeNull();
+        capturedRecord!.TenantId.Should().Be(tenantId);
+        capturedRecord.Type.Should().Be(ResourceUsageType.ApiCalls);
+        capturedRecord.UsageAmount.Should().Be(3);
+    }
+
+    [Fact]
+    public async Task UsageService_IsWithinLimitsAsync_UsesHardLimit()
+    {
+        var tenantId = Guid.NewGuid();
+        var quotaRepository = new Mock<IResourceQuotaRepository>();
+        var usageRecordRepository = new Mock<IUsageRecordRepository>();
+
+        quotaRepository
+            .Setup(r => r.GetByTenantAndTypeAsync(tenantId, ResourceUsageType.Storage, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ResourceQuota
+            {
+                TenantId = tenantId,
+                Type = ResourceUsageType.Storage,
+                CurrentUsage = 90,
+                HardLimit = 100,
+                IsActive = true
+            });
+
+        var svc = new UsageService(usageRecordRepository.Object, quotaRepository.Object, NullLogger<UsageService>.Instance);
+
+        (await svc.IsWithinLimitsAsync(tenantId, "Storage", 10)).Should().BeTrue();
+        (await svc.IsWithinLimitsAsync(tenantId, "Storage", 11)).Should().BeFalse();
     }
 
     [Fact]

@@ -1,17 +1,17 @@
-﻿using GameGuild.CQRS;
+using GameGuild.CQRS;
 
 namespace GameGuild.Identity.Authentication;
 
 /// <summary>
 ///     Notification for user sign-up with additional details
 /// </summary>
-public abstract class UserSignedUpNotification : INotification
+public sealed class UserSignedUpNotification : INotification
 {
-    public Guid UserId { get; set; }
+    public required Guid UserId { get; init; }
 
-    public string Email { get; set; } = string.Empty;
+    public required string Email { get; init; }
 
-    public string Username { get; set; } = string.Empty;
+    public required string Username { get; init; }
 
-    public Guid? TenantId { get; set; }
+    public Guid? TenantId { get; init; }
 }

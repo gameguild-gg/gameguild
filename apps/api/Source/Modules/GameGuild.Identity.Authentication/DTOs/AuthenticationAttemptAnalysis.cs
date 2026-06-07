@@ -1,4 +1,4 @@
-﻿namespace GameGuild.Identity.Authentication;
+namespace GameGuild.Identity.Authentication;
 
 /// <summary>
 ///     Analysis result for an authentication attempt

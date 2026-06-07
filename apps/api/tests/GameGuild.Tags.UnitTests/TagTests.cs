@@ -1,4 +1,5 @@
 using FluentAssertions;
+using Microsoft.EntityFrameworkCore;
 using GameGuild.Tags;
 using Xunit;
 
@@ -184,5 +185,27 @@ public class SkillProficiencyLevelEnumTests
     public void SkillProficiencyLevel_ShouldHave6Values()
     {
         Enum.GetValues<SkillProficiencyLevel>().Should().HaveCount(6);
+    }
+}
+
+public class TagRelationshipConfigurationTests
+{
+    [Fact]
+    public void Configure_ShouldMapSourceTargetRelationshipsAndSelfReferenceConstraint()
+    {
+        var modelBuilder = new ModelBuilder();
+
+        new TagRelationshipConfiguration().Configure(modelBuilder.Entity<TagRelationship>());
+
+        var entity = modelBuilder.Model.FindEntityType(typeof(TagRelationship));
+        entity.Should().NotBeNull();
+
+        entity!.GetForeignKeys()
+            .Select(fk => fk.Properties.Single().Name)
+            .Should().BeEquivalentTo(nameof(TagRelationship.SourceId), nameof(TagRelationship.TargetId));
+
+        entity.GetCheckConstraints()
+            .Should().Contain(c => c.Name == "CK_TagRelationships_NoSelfReference" &&
+                                   c.Sql == "\"SourceId\" != \"TargetId\"");
     }
 }

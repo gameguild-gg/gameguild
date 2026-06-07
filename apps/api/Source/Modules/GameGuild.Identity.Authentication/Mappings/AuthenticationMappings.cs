@@ -22,13 +22,29 @@ public static class AuthenticationMappings
         // Note: In some scenarios (e.g., tests with separate DbContext scopes), the user might not be available yet
         var user = await userRepository.GetByIdAsync(domainResponse.UserId, cancellationToken).ConfigureAwait(false);
 
+        var accessTokenExpiresAt = domainResponse.AccessTokenExpiresAt == default
+            ? (domainResponse.ExpiresIn > 0 ? SystemClock.UtcNow.AddSeconds(domainResponse.ExpiresIn) : domainResponse.ExpiresAt)
+            : domainResponse.AccessTokenExpiresAt;
+
+        var refreshTokenExpiresAt = domainResponse.RefreshTokenExpiresAt == default
+            ? domainResponse.ExpiresAt
+            : domainResponse.RefreshTokenExpiresAt;
+
         return new Authentication_SignInResponse
         {
+            Success = domainResponse.Success,
+            Message = domainResponse.Message,
             AccessToken = domainResponse.AccessToken,
             RefreshToken = domainResponse.RefreshToken,
             ExpiresAt = domainResponse.ExpiresAt,
-            AccessTokenExpiresAt = SystemClock.UtcNow.AddSeconds(domainResponse.ExpiresIn),
-            RefreshTokenExpiresAt = domainResponse.ExpiresAt,
+            AccessTokenExpiresAt = accessTokenExpiresAt,
+            RefreshTokenExpiresAt = refreshTokenExpiresAt,
+            ExpiresIn = domainResponse.ExpiresIn,
+            UserId = domainResponse.UserId,
+            Email = domainResponse.Email,
+            SessionId = domainResponse.SessionId,
+            TempToken = domainResponse.TempToken,
+            MfaToken = domainResponse.MfaToken,
             User = new Authentication_UserDto
             {
                 Id = domainResponse.UserId,
@@ -43,8 +59,15 @@ public static class AuthenticationMappings
                 LastLoginAt = user?.LastLoginAt
             },
             TenantId = domainResponse.TenantId,
+            AvailableTenants = domainResponse.AvailableTenants,
             RequiresMfa = domainResponse.RequiresMfa,
-            MfaSessionId = domainResponse.TempToken ?? domainResponse.MfaToken
+            MfaSessionId = domainResponse.MfaSessionId,
+            RequiresStepUp = domainResponse.RequiresStepUp,
+            StepUpToken = domainResponse.StepUpToken,
+            StepUpExpiresAt = domainResponse.StepUpExpiresAt,
+            RiskLevel = domainResponse.RiskLevel,
+            RiskFactors = domainResponse.RiskFactors,
+            AvailableMethods = domainResponse.AvailableMethods
         };
     }
 

@@ -1,4 +1,4 @@
-﻿namespace GameGuild.Identity.Authentication;
+namespace GameGuild.Identity.Authentication;
 
 /// <summary>
 ///     Cryptographic proof for a verifiable credential.

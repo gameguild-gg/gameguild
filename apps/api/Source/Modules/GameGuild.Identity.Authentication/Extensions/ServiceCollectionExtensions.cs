@@ -70,7 +70,9 @@ public static class ServiceCollectionExtensions
     /// </summary>
     private static void RegisterAuthorizationServices(IServiceCollection services)
     {
-        _ = services; // PLANNED: Register authorization services once implementations are created.
+        services.AddScoped<IPermissionService, PermissionService>();
+
+        // PLANNED: Register advanced authorization presentation services once implementations are created.
         // Requires: PermissionAuthorizationService, PermissionHierarchyService, PermissionTemplateService,
         //           BulkPermissionService, BulkOperationResultService, PermissionAnalyticsService, PermissionAuditService.
         // services.AddScoped<IPermissionAuthorizationService, PermissionAuthorizationService>();

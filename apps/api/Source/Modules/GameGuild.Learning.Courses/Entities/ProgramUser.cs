@@ -140,9 +140,17 @@ public class ProgramUser : EntityBase
     /// <summary>
     /// Average grade across all activities
     /// </summary>
-    public decimal? AverageGrade => ReceivedGrades?.Any() == true
-        ? ReceivedGrades.Where(g => g.Points.HasValue).Average(g => g.Points!.Value)
-        : null;
+    public decimal? AverageGrade
+    {
+        get
+        {
+            if (ReceivedGrades == null)
+                return null;
+
+            var grades = ReceivedGrades.Where(g => g.Points.HasValue).Select(g => g.Points!.Value).ToList();
+            return grades.Count > 0 ? grades.Average() : null;
+        }
+    }
 
     // Domain Methods
     /// <summary>

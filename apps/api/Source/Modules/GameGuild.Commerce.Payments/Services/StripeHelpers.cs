@@ -1,3 +1,5 @@
+using System.Text.RegularExpressions;
+
 namespace GameGuild.Commerce.Payments;
 
 /// <summary>
@@ -61,4 +63,19 @@ internal static class StripeStatusMapper
             _ => null
         };
     }
+}
+
+/// <summary>
+///     Validates that payment requests carry Stripe object identifiers instead of raw card data.
+/// </summary>
+internal static class StripePaymentMethodIdentifier
+{
+    private static readonly Regex PaymentMethodIdPattern =
+        new("^pm_[A-Za-z0-9_]+$", RegexOptions.Compiled | RegexOptions.CultureInvariant);
+
+    public const string ValidationMessage =
+        "PaymentMethodId must be a Stripe payment method ID starting with 'pm_'. Raw card numbers are not accepted.";
+
+    public static bool IsValid(string? value) =>
+        !string.IsNullOrWhiteSpace(value) && PaymentMethodIdPattern.IsMatch(value.Trim());
 }

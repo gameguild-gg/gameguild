@@ -37,13 +37,13 @@ public class ConsentPolicyRepository(IApplicationDbContext context) : IConsentPo
 {
     public async Task<ConsentPolicy?> GetByIdAsync(Guid id, CancellationToken ct = default)
         => await context.Set<ConsentPolicy>().Include(p => p.Versions)
-            .FirstOrDefaultAsync(p => p.Id == id && !p.IsDeleted, ct).ConfigureAwait(false);
+            .FirstOrDefaultAsync(p => p.Id == id && p.DeletedAt == null, ct).ConfigureAwait(false);
 
     public async Task<List<ConsentPolicy>> GetAllActiveAsync(Guid? tenantId, CancellationToken ct = default)
     {
         var query = context.Set<ConsentPolicy>()
             .Include(p => p.Versions.Where(v => v.IsCurrent))
-            .Where(p => p.IsActive && !p.IsDeleted);
+            .Where(p => p.IsActive && p.DeletedAt == null);
         if (tenantId.HasValue) query = query.Where(p => p.TenantId == tenantId.Value);
         return await query.ToListAsync(ct).ConfigureAwait(false);
     }
@@ -66,7 +66,7 @@ public class PolicyVersionRepository(IApplicationDbContext context) : IPolicyVer
 {
     public async Task<PolicyVersion?> GetCurrentVersionAsync(Guid policyId, CancellationToken ct = default)
         => await context.Set<PolicyVersion>()
-            .FirstOrDefaultAsync(v => v.ConsentPolicyId == policyId && v.IsCurrent && !v.IsDeleted, ct)
+            .FirstOrDefaultAsync(v => v.ConsentPolicyId == policyId && v.IsCurrent && v.DeletedAt == null, ct)
             .ConfigureAwait(false);
 
     public async Task<PolicyVersion> AddAsync(PolicyVersion version, CancellationToken ct = default)
@@ -81,12 +81,12 @@ public class UserConsentRepository(IApplicationDbContext context) : IUserConsent
 {
     public async Task<UserConsent?> GetAsync(Guid userId, Guid policyVersionId, CancellationToken ct = default)
         => await context.Set<UserConsent>()
-            .FirstOrDefaultAsync(c => c.UserId == userId && c.PolicyVersionId == policyVersionId && !c.IsDeleted, ct)
+            .FirstOrDefaultAsync(c => c.UserId == userId && c.PolicyVersionId == policyVersionId && c.DeletedAt == null, ct)
             .ConfigureAwait(false);
 
     public async Task<List<UserConsent>> GetByUserAsync(Guid userId, CancellationToken ct = default)
         => await context.Set<UserConsent>().Include(c => c.PolicyVersion)
-            .Where(c => c.UserId == userId && !c.IsDeleted).ToListAsync(ct).ConfigureAwait(false);
+            .Where(c => c.UserId == userId && c.DeletedAt == null).ToListAsync(ct).ConfigureAwait(false);
 
     public async Task<UserConsent> AddAsync(UserConsent consent, CancellationToken ct = default)
     {
@@ -106,16 +106,16 @@ public class DataSubjectRequestRepository(IApplicationDbContext context) : IData
 {
     public async Task<DataSubjectRequest?> GetByIdAsync(Guid id, CancellationToken ct = default)
         => await context.Set<DataSubjectRequest>()
-            .FirstOrDefaultAsync(r => r.Id == id && !r.IsDeleted, ct).ConfigureAwait(false);
+            .FirstOrDefaultAsync(r => r.Id == id && r.DeletedAt == null, ct).ConfigureAwait(false);
 
     public async Task<List<DataSubjectRequest>> GetByUserAsync(Guid userId, CancellationToken ct = default)
         => await context.Set<DataSubjectRequest>()
-            .Where(r => r.UserId == userId && !r.IsDeleted)
+            .Where(r => r.UserId == userId && r.DeletedAt == null)
             .OrderByDescending(r => r.CreatedAt).ToListAsync(ct).ConfigureAwait(false);
 
     public async Task<List<DataSubjectRequest>> GetPendingAsync(CancellationToken ct = default)
         => await context.Set<DataSubjectRequest>()
-            .Where(r => r.Status == DataSubjectRequestStatus.Pending && !r.IsDeleted)
+            .Where(r => r.Status == DataSubjectRequestStatus.Pending && r.DeletedAt == null)
             .OrderBy(r => r.Deadline).ToListAsync(ct).ConfigureAwait(false);
 
     public async Task<DataSubjectRequest> AddAsync(DataSubjectRequest request, CancellationToken ct = default)

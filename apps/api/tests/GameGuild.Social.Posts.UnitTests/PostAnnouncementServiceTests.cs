@@ -61,6 +61,29 @@ public class PostAnnouncementServiceTests
     }
 
     [Theory]
+    [InlineData("low")]
+    [InlineData("unknown")]
+    public async Task CreateSystemAnnouncement_OtherPriorities_CreatesPost(string priority)
+    {
+        var post = CreateTestPost();
+
+        _postServiceMock
+            .Setup(x => x.CreatePostAsync(
+                It.IsAny<Guid>(), It.IsAny<string>(), PostVisibility.Public,
+                null, null, It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Success(post));
+
+        _postServiceMock
+            .Setup(x => x.AddTagsToPostAsync(post.Id, It.IsAny<string[]>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Success());
+
+        var result = await _service.CreateSystemAnnouncementAsync(
+            Guid.NewGuid(), Guid.NewGuid(), "Title", "Message", priority);
+
+        result.IsSuccess.Should().BeTrue();
+    }
+
+    [Theory]
     [InlineData("high")]
     [InlineData("urgent")]
     public async Task CreateSystemAnnouncement_HighPriority_PinsPost(string priority)

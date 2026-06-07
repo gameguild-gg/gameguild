@@ -23,6 +23,8 @@ public sealed class ResetUserPrivacyPreferencesCommandHandler(IUserRepository us
             await preferencesRepository.UpdateAsync(preferences, cancellationToken).ConfigureAwait(false);
         }
 
+        await preferencesRepository.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+
         return Unit.Value;
     }
 }

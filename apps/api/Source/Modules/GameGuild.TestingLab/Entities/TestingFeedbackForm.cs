@@ -28,6 +28,17 @@ public class TestingFeedbackForm : EntityBase
     [Required]
     public string FormData { get; set; } = string.Empty;
 
+    public Guid? TestingRequestId { get; set; }
+
+    public string FormSchema {
+        get => FormData;
+        set => FormData = value;
+    }
+
+    public bool IsForOnline { get; set; }
+
+    public bool IsForSessions { get; set; }
+
     /// <summary>
     /// Whether this form is currently active
     /// </summary>
@@ -41,7 +52,7 @@ public class TestingFeedbackForm : EntityBase
     /// <summary>
     /// Version number of this form
     /// </summary>
-    public override int Version { get; set; } = 1;
+    public int FormVersion { get; set; } = 1;
 
     /// <summary>
     /// Tags for categorization
@@ -98,7 +109,7 @@ public class TestingFeedbackForm : EntityBase
     public void UpdateFormData(string formData)
     {
         FormData = formData;
-        Version++;
+        FormVersion++;
         UpdatedAt = SystemClock.UtcNow;
     }
 

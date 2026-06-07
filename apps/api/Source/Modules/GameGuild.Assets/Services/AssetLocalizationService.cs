@@ -173,8 +173,7 @@ public class AssetLocalizationService : IAssetLocalizationService
         }
 
         // Fall back to English
-        if (FallbackMessages.TryGetValue("en", out messages) && 
-            messages.TryGetValue(key, out message))
+        if (FallbackMessages["en"].TryGetValue(key, out message))
         {
             return message;
         }

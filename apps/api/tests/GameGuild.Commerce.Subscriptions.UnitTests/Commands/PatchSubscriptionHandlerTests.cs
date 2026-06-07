@@ -1,6 +1,6 @@
 using FluentAssertions;
-using GameGuild.CQRS;
 using MockQueryable.Moq;
+using GameGuild.CQRS;
 using Moq;
 using Xunit;
 
@@ -29,8 +29,9 @@ public class PatchSubscriptionHandlerTests
         var subscription = CreateActiveSubscription();
         var context = CreateContext(subscription);
         var handler = new PatchSubscriptionHandler(context.Object);
+        var command = new PatchSubscriptionCommand(subscription.Id);
 
-        var result = await handler.Handle(new PatchSubscriptionCommand(subscription.Id), CancellationToken.None);
+        var result = await handler.Handle(command, CancellationToken.None);
 
         result.Should().Be(Unit.Value);
         subscription.BillingCycle.Should().Be(BillingCycle.Monthly);
@@ -47,10 +48,9 @@ public class PatchSubscriptionHandlerTests
         var subscription = CreateActiveSubscription();
         var context = CreateContext(subscription);
         var handler = new PatchSubscriptionHandler(context.Object);
+        var command = new PatchSubscriptionCommand(subscription.Id, BillingCycle: BillingCycle.Monthly);
 
-        await handler.Handle(
-            new PatchSubscriptionCommand(subscription.Id, BillingCycle: BillingCycle.Monthly),
-            CancellationToken.None);
+        await handler.Handle(command, CancellationToken.None);
 
         subscription.BillingCycle.Should().Be(BillingCycle.Monthly);
         subscription.Amount.Amount.Should().Be(29.99m);
@@ -62,16 +62,15 @@ public class PatchSubscriptionHandlerTests
         var subscription = CreateActiveSubscription();
         var context = CreateContext(subscription);
         var handler = new PatchSubscriptionHandler(context.Object);
+        var command = new PatchSubscriptionCommand(
+            subscription.Id,
+            BillingCycle: BillingCycle.Annually,
+            AutoRenew: false,
+            ExternalSubscriptionId: "sub_new",
+            ExternalCustomerId: "cus_new",
+            Metadata: "{\"tier\":\"enterprise\"}");
 
-        await handler.Handle(
-            new PatchSubscriptionCommand(
-                subscription.Id,
-                BillingCycle: BillingCycle.Annually,
-                AutoRenew: false,
-                ExternalSubscriptionId: "sub_new",
-                ExternalCustomerId: "cus_new",
-                Metadata: "{\"tier\":\"enterprise\"}"),
-            CancellationToken.None);
+        await handler.Handle(command, CancellationToken.None);
 
         subscription.BillingCycle.Should().Be(BillingCycle.Annually);
         subscription.AutoRenew.Should().BeFalse();

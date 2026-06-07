@@ -1,6 +1,7 @@
 using Asp.Versioning;
 using GameGuild.Identity.Authorization;
 using GameGuild.CQRS;
+using GameGuild.Identity.Context.Actors;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -13,7 +14,7 @@ namespace GameGuild.Identity.Users;
 [ApiVersion("1.0")]
 [Microsoft.AspNetCore.Http.Tags("users")]
 [Authorize]
-public sealed class UsersController(ISender sender) : BaseApiController
+public sealed class UsersController(ISender sender, IActorContextAccessor actorContextAccessor) : BaseApiController
 {
     #region Collection Operations - /v1/users
 
@@ -51,10 +52,10 @@ public sealed class UsersController(ISender sender) : BaseApiController
     /// <param name="ct">Cancellation token</param>
     /// <returns>Paginated list of users</returns>
     [HttpGet("v{version:apiVersion}/users")]
-    [Authorize(Policy = Policies.UsersRead)]
     [EndpointSummary("Get users with pagination, search, and sorting")]
     [EndpointDescription("Retrieves a paginated list of users with optional filtering by email, status, and text search.")]
     [ProducesResponseType<PagedResult<UserDto>>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> GetUsers(
         [FromQuery] string? email = null,
         [FromQuery] string? status = null,
@@ -66,6 +67,14 @@ public sealed class UsersController(ISender sender) : BaseApiController
         CancellationToken ct = default
     )
     {
+        var actor = actorContextAccessor.ActorContext;
+        if (!actor.IsSystemAdmin &&
+            !actor.HasPermission(UsersPermission.Keys.Read) &&
+            !actor.HasPermission(UsersPermission.Keys.Manage))
+        {
+            return Forbid();
+        }
+
         var query = new GetUsersQuery(email, status, includeDeleted, q, cursor, limit, sort);
         var result = await sender.Send(query, ct).ConfigureAwait(false);
 

@@ -51,4 +51,42 @@ public class TenantResultTests
         failure.IsSuccess.Should().BeFalse();
         failure.Error.Should().Be("blocked");
     }
+
+    [Fact]
+    public void TenantResolutionResult_None_Should_Represent_Missing_Tenant()
+    {
+        var result = TenantResolutionResult.None;
+
+        result.Tenant.Should().BeNull();
+        result.Source.Should().Be(TenantResolutionSource.None);
+        result.HasTenant.Should().BeFalse();
+    }
+
+    [Fact]
+    public void TenantResolutionResult_WithTenant_Should_Report_HasTenant()
+    {
+        var tenant = new Tenant { Id = Guid.NewGuid(), Name = "Tenant", Slug = "tenant" };
+        var result = new TenantResolutionResult(tenant, TenantResolutionSource.Header);
+
+        result.Tenant.Should().Be(tenant);
+        result.Source.Should().Be(TenantResolutionSource.Header);
+        result.HasTenant.Should().BeTrue();
+    }
+
+    [Fact]
+    public void Tenantable_IsGlobal_Should_Depened_On_Tenant_Presence()
+    {
+        ITenantable resource = new FakeTenantable();
+
+        resource.IsGlobal.Should().BeTrue();
+
+        resource.Tenant = new Tenant { Id = Guid.NewGuid(), Name = "Scoped", Slug = "scoped" };
+
+        resource.IsGlobal.Should().BeFalse();
+    }
+
+    private sealed class FakeTenantable : ITenantable
+    {
+        public Tenant? Tenant { get; set; }
+    }
 }

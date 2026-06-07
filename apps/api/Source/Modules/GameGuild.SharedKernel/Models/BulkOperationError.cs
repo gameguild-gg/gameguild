@@ -1,4 +1,4 @@
-﻿namespace GameGuild;
+namespace GameGuild;
 
 /// <summary>
 ///     Error details for failed bulk operations

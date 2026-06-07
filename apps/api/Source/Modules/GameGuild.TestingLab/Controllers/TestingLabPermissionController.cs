@@ -12,11 +12,11 @@ namespace GameGuild.TestingLab;
 public class TestingLabPermissionController : BaseApiController {
   private readonly ILogger<TestingLabPermissionController> _logger;
 
-  private readonly IPermissionService _permissionService;
+  private readonly ITestingLabPermissionService _permissionService;
 
   private readonly IActorContextAccessor _actorContextAccessor;
 
-  public TestingLabPermissionController(IPermissionService permissionService, IActorContextAccessor actorContextAccessor, ILogger<TestingLabPermissionController> logger) {
+  public TestingLabPermissionController(ITestingLabPermissionService permissionService, IActorContextAccessor actorContextAccessor, ILogger<TestingLabPermissionController> logger) {
     _permissionService = permissionService;
     _actorContextAccessor = actorContextAccessor;
     _logger = logger;

@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net9.0</TargetFramework>
+        <TargetFramework>net10.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <IsPackable>false</IsPackable>
@@ -22,7 +22,7 @@
         <ThresholdStat>total</ThresholdStat>
         <ExcludeByFile>**/*Tests.cs,**/obj/**,**/Migrations/**</ExcludeByFile>
         <ExcludeByAttribute>CompilerGenerated,GeneratedCodeAttribute</ExcludeByAttribute>
-        <Include>[GameGuild.Social.Profiles]*</Include>
+        <Include>[GameGuild.Identity.Users]*</Include>
     </PropertyGroup>
 
     <ItemGroup>
@@ -45,7 +45,12 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\..\Source\GameGuild.API\GameGuild.API.csproj" />
+        <ProjectReference Include="..\..\Source\Modules\GameGuild.Identity.Users\GameGuild.Identity.Users.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <Compile Remove="**\*.cs" />
+        <Compile Include="RetiredUserProfilesModuleTests.cs" />
     </ItemGroup>
 
 </Project>

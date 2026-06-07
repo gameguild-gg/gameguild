@@ -32,17 +32,13 @@ namespace GameGuild.Identity.Authentication.UnitTests;
 
 public class SendWelcomeEmailHandlerCovTests
 {
-    private sealed class ConcreteUserSignedUp : UserSignedUpNotification
-    {
-    }
-
     [Fact]
     public async Task Handle_LogsAndCompletes()
     {
         var logger = new Mock<ILogger<SendWelcomeEmailHandler>>();
         var handler = new SendWelcomeEmailHandler(logger.Object);
 
-        var notification = new ConcreteUserSignedUp
+        var notification = new UserSignedUpNotification
         {
             UserId = Guid.NewGuid(),
             Email = "test@example.com",
@@ -59,7 +55,7 @@ public class SendWelcomeEmailHandlerCovTests
     {
         var handler = new SendWelcomeEmailHandler(NullLogger<SendWelcomeEmailHandler>.Instance);
 
-        var notification = new ConcreteUserSignedUp
+        var notification = new UserSignedUpNotification
         {
             UserId = Guid.NewGuid(),
             Email = "tenant@example.com",
@@ -78,17 +74,50 @@ public class SendWelcomeEmailHandlerCovTests
 public class PasswordServiceCovTests
 {
     private readonly Mock<IUserRepository> _userRepo = new();
-    private readonly Mock<IPasswordHasher> _hasher = new();
-    private readonly Mock<IEmailVerificationService> _emailService = new();
+    private readonly Mock<ISender> _sender = new();
     private readonly PasswordService _svc;
 
     public PasswordServiceCovTests()
     {
+        _sender.Setup(s => s.Send(It.IsAny<SendEmailVerificationCommand>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new EmailVerificationResponse { Message = "sent" });
+        _sender.Setup(s => s.Send(It.IsAny<VerifyEmailCommand>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((VerifyEmailCommand command, CancellationToken _) => new EmailVerificationResult
+            {
+                Success = command.Token == "valid-token",
+                Message = command.Token == "valid-token" ? "Email verified successfully" : "Invalid or expired verification token"
+            });
+        _sender.Setup(s => s.Send(It.IsAny<RequestPasswordResetCommand>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new PasswordResetRequestResult
+            {
+                Success = true,
+                Message = "If an account with that email exists, a password reset link has been sent."
+            });
+        _sender.Setup(s => s.Send(It.IsAny<ResetPasswordCommand>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((ResetPasswordCommand command, CancellationToken _) => new PasswordResetResult
+            {
+                Success = command.Token == "valid",
+                Message = command.Token == "valid" ? "Password reset successfully" : "Invalid or expired reset token"
+            });
+        _sender.Setup(s => s.Send(It.IsAny<ChangePasswordCommand>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((ChangePasswordCommand command, CancellationToken _) =>
+            {
+                var success = command.CurrentPassword == "correct" && command.NewPassword == "StrongPass1!";
+                var message = command.CurrentPassword == "old" && command.NewPassword == "new"
+                    ? "User not found"
+                    : success ? "Password changed successfully" : "Current password is incorrect";
+
+                return new PasswordChangeResult
+                {
+                    Success = success,
+                    Message = message
+                };
+            });
+
         _svc = new PasswordService(
             NullLogger<PasswordService>.Instance,
             _userRepo.Object,
-            _hasher.Object,
-            _emailService.Object);
+            _sender.Object);
     }
 
     [Fact]
@@ -109,39 +138,43 @@ public class PasswordServiceCovTests
         var user = new User { Id = Guid.NewGuid(), Email = "found@test.com", Username = "user1" };
         _userRepo.Setup(r => r.GetByEmailAsync("found@test.com", It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
-        _emailService.Setup(s => s.GenerateVerificationTokenAsync(user.Id, "found@test.com"))
-            .ReturnsAsync("token123");
-        _emailService.Setup(s => s.SendVerificationEmailAsync("found@test.com", "token123", "user1"))
-            .Returns(Task.CompletedTask);
 
         var result = await _svc.SendEmailVerificationAsync(
             new SendEmailVerificationRequest { Email = "found@test.com" });
 
         result.Success.Should().BeTrue();
+        _sender.Verify(
+            s => s.Send(
+                It.Is<SendEmailVerificationCommand>(command =>
+                    command.Email == "found@test.com" &&
+                    command.UserId == user.Id &&
+                    command.UserName == "user1"),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
     }
 
     [Fact]
     public async Task VerifyEmail_ValidToken_ReturnsSuccess()
     {
-        _emailService.Setup(s => s.VerifyEmailTokenAsync(Guid.Empty, "valid-token"))
-            .ReturnsAsync(true);
-
         var result = await _svc.VerifyEmailAsync(
             new EmailVerificationRequest { Token = "valid-token" });
 
         result.Success.Should().BeTrue();
+        _sender.Verify(
+            s => s.Send(It.Is<VerifyEmailCommand>(command => command.Token == "valid-token"), It.IsAny<CancellationToken>()),
+            Times.Once);
     }
 
     [Fact]
     public async Task VerifyEmail_InvalidToken_ReturnsFailure()
     {
-        _emailService.Setup(s => s.VerifyEmailTokenAsync(Guid.Empty, "bad-token"))
-            .ReturnsAsync(false);
-
         var result = await _svc.VerifyEmailAsync(
             new EmailVerificationRequest { Token = "bad-token" });
 
         result.Success.Should().BeFalse();
+        _sender.Verify(
+            s => s.Send(It.Is<VerifyEmailCommand>(command => command.Token == "bad-token"), It.IsAny<CancellationToken>()),
+            Times.Once);
     }
 
     [Fact]
@@ -159,40 +192,37 @@ public class PasswordServiceCovTests
     [Fact]
     public async Task ForgotPassword_UserFound_GeneratesToken()
     {
-        var user = new User { Id = Guid.NewGuid(), Email = "user@test.com" };
-        _userRepo.Setup(r => r.GetByEmailAsync("user@test.com", It.IsAny<CancellationToken>()))
-            .ReturnsAsync(user);
-        _emailService.Setup(s => s.GenerateVerificationTokenAsync(user.Id, "user@test.com"))
-            .ReturnsAsync("reset-token");
-
         var result = await _svc.ForgotPasswordAsync(
             new PasswordResetRequest { Email = "user@test.com" });
 
         result.Success.Should().BeTrue();
+        _sender.Verify(
+            s => s.Send(It.Is<RequestPasswordResetCommand>(command => command.Email == "user@test.com"), It.IsAny<CancellationToken>()),
+            Times.Once);
     }
 
     [Fact]
     public async Task ResetPassword_InvalidToken_ReturnsFailure()
     {
-        _emailService.Setup(s => s.VerifyEmailTokenAsync(Guid.Empty, "expired"))
-            .ReturnsAsync(false);
-
         var result = await _svc.ResetPasswordAsync(
             new ResetPasswordRequest { Token = "expired", NewPassword = "NewPass123!" });
 
         result.Success.Should().BeFalse();
+        _sender.Verify(
+            s => s.Send(It.Is<ResetPasswordCommand>(command => command.Token == "expired" && command.NewPassword == "NewPass123!"), It.IsAny<CancellationToken>()),
+            Times.Once);
     }
 
     [Fact]
     public async Task ResetPassword_ValidToken_ReturnsSuccess()
     {
-        _emailService.Setup(s => s.VerifyEmailTokenAsync(Guid.Empty, "valid"))
-            .ReturnsAsync(true);
-
         var result = await _svc.ResetPasswordAsync(
             new ResetPasswordRequest { Token = "valid", NewPassword = "NewPass123!" });
 
         result.Success.Should().BeTrue();
+        _sender.Verify(
+            s => s.Send(It.Is<ResetPasswordCommand>(command => command.Token == "valid" && command.ConfirmPassword == "NewPass123!"), It.IsAny<CancellationToken>()),
+            Times.Once);
     }
 
     [Fact]
@@ -213,11 +243,6 @@ public class PasswordServiceCovTests
     public async Task ChangePassword_WrongCurrentPassword_ReturnsFailure()
     {
         var userId = Guid.NewGuid();
-        var user = new User { Id = userId, PasswordHash = "hashed" };
-        _userRepo.Setup(r => r.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(user);
-        _hasher.Setup(h => h.VerifyPassword("hashed", "wrong"))
-            .Returns(false);
 
         var result = await _svc.ChangePasswordAsync(
             new ChangePasswordRequest { CurrentPassword = "wrong", NewPassword = "new" },
@@ -225,48 +250,39 @@ public class PasswordServiceCovTests
 
         result.Success.Should().BeFalse();
         result.Message.Should().Contain("incorrect");
+        _sender.Verify(
+            s => s.Send(It.Is<ChangePasswordCommand>(command => command.UserId == userId && command.CurrentPassword == "wrong"), It.IsAny<CancellationToken>()),
+            Times.Once);
     }
 
     [Fact]
     public async Task ChangePassword_WeakNewPassword_ReturnsFailure()
     {
         var userId = Guid.NewGuid();
-        var user = new User { Id = userId, PasswordHash = "hashed" };
-        _userRepo.Setup(r => r.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(user);
-        _hasher.Setup(h => h.VerifyPassword("hashed", "correct"))
-            .Returns(true);
-        _hasher.Setup(h => h.ValidatePasswordStrength("weak"))
-            .Returns(new PasswordStrengthResult { IsValid = false, ValidationFailures = new List<string> { "Too short" } });
 
         var result = await _svc.ChangePasswordAsync(
             new ChangePasswordRequest { CurrentPassword = "correct", NewPassword = "weak" },
             userId);
 
         result.Success.Should().BeFalse();
+        _sender.Verify(
+            s => s.Send(It.Is<ChangePasswordCommand>(command => command.UserId == userId && command.NewPassword == "weak"), It.IsAny<CancellationToken>()),
+            Times.Once);
     }
 
     [Fact]
     public async Task ChangePassword_Success_UpdatesHash()
     {
         var userId = Guid.NewGuid();
-        var user = new User { Id = userId, PasswordHash = "oldhash" };
-        _userRepo.Setup(r => r.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(user);
-        _hasher.Setup(h => h.VerifyPassword("oldhash", "correct"))
-            .Returns(true);
-        _hasher.Setup(h => h.ValidatePasswordStrength("StrongPass1!"))
-            .Returns(new PasswordStrengthResult { IsValid = true, ValidationFailures = new List<string>() });
-        _hasher.Setup(h => h.HashPassword("StrongPass1!"))
-            .Returns("newhash");
-        _userRepo.Setup(r => r.UpdateAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()))
-            .Returns(Task.CompletedTask);
 
         var result = await _svc.ChangePasswordAsync(
             new ChangePasswordRequest { CurrentPassword = "correct", NewPassword = "StrongPass1!" },
             userId);
 
         result.Success.Should().BeTrue();
+        _sender.Verify(
+            s => s.Send(It.Is<ChangePasswordCommand>(command => command.UserId == userId && command.RevokeOtherSessions), It.IsAny<CancellationToken>()),
+            Times.Once);
     }
 
     [Fact]
@@ -1127,6 +1143,66 @@ public class WebAuthnControllerCovTests
         var result = await _controller.CompleteAuthentication(
             new CompleteWebAuthnAuthenticationRequest { AssertionResponse = "resp" });
         result.Result.Should().BeOfType<BadRequestObjectResult>();
+    }
+
+    [Fact]
+    public async Task CompleteAuthentication_Success_AttachesJwtTokens()
+    {
+        var userId = Guid.NewGuid();
+        var credentialId = Guid.NewGuid();
+        var userRepository = new Mock<IUserRepository>();
+        var jwtTokenService = new Mock<IJwtTokenService>();
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["Jwt:AccessTokenExpirationMinutes"] = "15",
+                ["Jwt:RefreshTokenExpirationDays"] = "7"
+            })
+            .Build();
+        var controller = new WebAuthnController(
+            _webAuthnService.Object,
+            jwtTokenService.Object,
+            userRepository.Object,
+            configuration);
+        controller.ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() };
+
+        _webAuthnService.Setup(s => s.CompleteAuthenticationAsync(
+                "resp",
+                It.IsAny<string>(),
+                It.IsAny<string>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new WebAuthnAuthenticationResult
+            {
+                Success = true,
+                UserId = userId,
+                CredentialId = credentialId,
+                IsPasswordless = true
+            });
+        userRepository.Setup(r => r.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new User { Id = userId, Email = "passkey@test.com" });
+        jwtTokenService.Setup(j => j.GenerateAccessTokenAsync(
+                userId,
+                "passkey@test.com",
+                It.IsAny<string[]>(),
+                null,
+                It.IsAny<int>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync("access-token");
+        jwtTokenService.Setup(j => j.GenerateRefreshTokenAsync(
+                userId,
+                It.IsAny<DeviceInfo>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync("refresh-token");
+
+        var result = await controller.CompleteAuthentication(
+            new CompleteWebAuthnAuthenticationRequest { AssertionResponse = "resp" });
+
+        var ok = result.Result.Should().BeOfType<OkObjectResult>().Subject;
+        var payload = ok.Value.Should().BeOfType<WebAuthnAuthenticationResult>().Subject;
+        payload.AccessToken.Should().Be("access-token");
+        payload.RefreshToken.Should().Be("refresh-token");
+        payload.Email.Should().Be("passkey@test.com");
+        payload.ExpiresIn.Should().Be(900);
     }
 
     [Fact]

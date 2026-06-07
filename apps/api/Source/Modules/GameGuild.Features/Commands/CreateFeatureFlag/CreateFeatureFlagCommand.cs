@@ -1,4 +1,4 @@
-﻿using GameGuild.CQRS;
+using GameGuild.CQRS;
 using GameGuild.Resources;
 
 namespace GameGuild.Features;

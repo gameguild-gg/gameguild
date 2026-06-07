@@ -1,4 +1,5 @@
 using System.Net.Http.Json;
+using System.Net.Http.Headers;
 using FluentAssertions;
 using GameGuild.API.Database;
 using Xunit;
@@ -61,7 +62,7 @@ public class AuthenticationIntegrationTests : IClassFixture<WebApplicationFactor
 
         _client = _factory.CreateClient();
         _scope = _factory.Services.CreateScope();
-        
+
         // Ensure the database is created
         var context = _scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         context.Database.EnsureCreated();
@@ -76,11 +77,11 @@ public class AuthenticationIntegrationTests : IClassFixture<WebApplicationFactor
         };
 
         // Act
-        var response = await _client.PostAsJsonAsync("/api/v1/auth/sign-up", signUpRequest);
+        var response = await _client.PostAsJsonAsync("/v1/auth/sign-up", signUpRequest);
 
         // Assert
         response.Should().NotBeNull();
-        
+
         // Check response status
         var content = await response.Content.ReadAsStringAsync();
         response.IsSuccessStatusCode.Should().BeTrue($"Response status: {response.StatusCode}, Content: {content}");
@@ -107,25 +108,25 @@ public class AuthenticationIntegrationTests : IClassFixture<WebApplicationFactor
 
         await authService.LocalSignUpAsync(signUpRequest);
 
-        var signInCommand = new LocalSignInCommand {
+        var signInCommand = new LocalSignInRequest {
             Email = signUpRequest.Email,
             Password = signUpRequest.Password
         };
 
         // Act
-        var response = await _client.PostAsJsonAsync("/api/auth/signin", signInCommand);
+        var response = await _client.PostAsJsonAsync("/v1/auth/sign-in", signInCommand);
 
         // Assert
         response.Should().NotBeNull();
+        var signInContent = await response.Content.ReadAsStringAsync();
+        response.IsSuccessStatusCode.Should().BeTrue($"Response status: {response.StatusCode}, Content: {signInContent}");
 
-        if (response.IsSuccessStatusCode) {
-            var signInResponse = await response.Content.ReadFromJsonAsync<SignInResponse>();
-            signInResponse.Should().NotBeNull();
-            signInResponse!.AccessToken.Should().NotBeNullOrEmpty();
-            signInResponse.RefreshToken.Should().NotBeNullOrEmpty();
-            signInResponse.UserId.Should().NotBeEmpty();
-            signInResponse.Email.Should().Be(signInCommand.Email);
-        }
+        var signInResponse = await response.Content.ReadFromJsonAsync<SignInResponse>();
+        signInResponse.Should().NotBeNull();
+        signInResponse!.AccessToken.Should().NotBeNullOrEmpty();
+        signInResponse.RefreshToken.Should().NotBeNullOrEmpty();
+        signInResponse.UserId.Should().NotBeEmpty();
+        signInResponse.Email.Should().Be(signInCommand.Email);
     }
 
     [Fact]
@@ -142,23 +143,23 @@ public class AuthenticationIntegrationTests : IClassFixture<WebApplicationFactor
         var signUpResult = await authService.LocalSignUpAsync(signUpRequest);
         var refreshToken = signUpResult.RefreshToken;
 
-        var refreshCommand = new RefreshTokenCommand {
+        var refreshCommand = new RefreshTokenRequest {
             RefreshToken = refreshToken
         };
 
         // Act
-        var response = await _client.PostAsJsonAsync("/api/auth/refresh", refreshCommand);
+        var response = await _client.PostAsJsonAsync("/v1/auth/tokens:refresh", refreshCommand);
 
         // Assert
         response.Should().NotBeNull();
+        var refreshContent = await response.Content.ReadAsStringAsync();
+        response.IsSuccessStatusCode.Should().BeTrue($"Response status: {response.StatusCode}, Content: {refreshContent}");
 
-        if (response.IsSuccessStatusCode) {
-            var refreshResponse = await response.Content.ReadFromJsonAsync<SignInResponse>();
-            refreshResponse.Should().NotBeNull();
-            refreshResponse!.AccessToken.Should().NotBeNullOrEmpty();
-            refreshResponse.RefreshToken.Should().NotBeNullOrEmpty();
-            refreshResponse.UserId.Should().NotBeEmpty();
-        }
+        var refreshResponse = await response.Content.ReadFromJsonAsync<SignInResponse>();
+        refreshResponse.Should().NotBeNull();
+        refreshResponse!.AccessToken.Should().NotBeNullOrEmpty();
+        refreshResponse.RefreshToken.Should().NotBeNullOrEmpty();
+        refreshResponse.UserId.Should().NotBeEmpty();
     }
 
     [Fact]
@@ -175,22 +176,24 @@ public class AuthenticationIntegrationTests : IClassFixture<WebApplicationFactor
         var signUpResult = await authService.LocalSignUpAsync(signUpRequest);
         var refreshToken = signUpResult.RefreshToken;
 
-        var revokeCommand = new RevokeTokenCommand {
-            RefreshToken = refreshToken
+        var revokeCommand = new RevokeRefreshTokenRequest {
+            Token = refreshToken
         };
 
         // Act
-        var response = await _client.PostAsJsonAsync("/api/auth/revoke", revokeCommand);
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", signUpResult.AccessToken);
+        var response = await _client.PostAsJsonAsync("/v1/auth/tokens:revoke", revokeCommand);
 
         // Assert
         response.Should().NotBeNull();
+        response.IsSuccessStatusCode.Should().BeTrue();
 
         // Try to use the revoked token - should fail
-        var refreshCommand = new RefreshTokenCommand {
+        var refreshCommand = new RefreshTokenRequest {
             RefreshToken = refreshToken
         };
 
-        var refreshResponse = await _client.PostAsJsonAsync("/api/auth/refresh", refreshCommand);
+        var refreshResponse = await _client.PostAsJsonAsync("/v1/auth/tokens:refresh", refreshCommand);
         refreshResponse.IsSuccessStatusCode.Should().BeFalse();
     }
 

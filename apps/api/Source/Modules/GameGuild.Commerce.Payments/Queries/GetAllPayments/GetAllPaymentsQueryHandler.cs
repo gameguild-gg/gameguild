@@ -1,36 +1,51 @@
 using GameGuild.CQRS;
+using Microsoft.EntityFrameworkCore;
 
 namespace GameGuild.Commerce.Payments;
 
 /// <summary>
 ///     Handler for getting all payments with filtering and pagination.
 /// </summary>
-/// <remarks>
-///     <para>
-///         Payment records are currently tracked via:
-///         <list type="bullet">
-///             <item>FinancialLedgerEntry - for accounting/reconciliation</item>
-///             <item>RevenueEvent - for revenue analytics</item>
-///             <item>External payment gateway records (Stripe, etc.)</item>
-///         </list>
-///     </para>
-///     <para>
-///         A dedicated Payment entity with full query capabilities can be added
-///         when more complex payment querying is required beyond ledger entries.
-///     </para>
-/// </remarks>
-public sealed class GetAllPaymentsQueryHandler : IQueryHandler<GetAllPaymentsQuery, IEnumerable<PaymentResult>>
+public sealed class GetAllPaymentsQueryHandler(IApplicationDbContext context) : IQueryHandler<GetAllPaymentsQuery, IEnumerable<PaymentResult>>
 {
-    public Task<IEnumerable<PaymentResult>> Handle(GetAllPaymentsQuery request, CancellationToken cancellationToken)
+    public async Task<IEnumerable<PaymentResult>> Handle(GetAllPaymentsQuery request, CancellationToken cancellationToken)
     {
-        // Payment querying implementation notes:
-        // - For ledger-based queries, use IFinancialLedgerRepository
-        // - For revenue analytics, use IRevenueEventRepository
-        // - For payment gateway records, query via IPaymentGateway
-        //
-        // Returns empty collection until Payment entity is implemented
-        // or requirements clarify which data source to query.
-        
-        return Task.FromResult<IEnumerable<PaymentResult>>([]);
+        var query = context.Set<Payment>().AsNoTracking();
+
+        if (request.TenantId.HasValue)
+        {
+            query = query.Where(payment => payment.TenantId == request.TenantId.Value);
+        }
+
+        if (!string.IsNullOrWhiteSpace(request.Status))
+        {
+            if (!Enum.TryParse<PaymentStatus>(request.Status, true, out var status))
+            {
+                throw new ArgumentException($"Unknown payment status '{request.Status}'.", nameof(request));
+            }
+
+            query = query.Where(payment => payment.Status == status);
+        }
+
+        if (request.StartDate.HasValue)
+        {
+            query = query.Where(payment => payment.CreatedAt >= request.StartDate.Value);
+        }
+
+        if (request.EndDate.HasValue)
+        {
+            query = query.Where(payment => payment.CreatedAt <= request.EndDate.Value);
+        }
+
+        var page = Math.Max(1, request.Page);
+        var pageSize = Math.Clamp(request.PageSize, 1, 200);
+
+        var payments = await query
+            .OrderByDescending(payment => payment.CreatedAt)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync(cancellationToken);
+
+        return payments.Select(PaymentQueryMapper.ToResult).ToList();
     }
 }

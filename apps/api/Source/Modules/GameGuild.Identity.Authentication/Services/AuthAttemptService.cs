@@ -1,3 +1,5 @@
+using System.Security.Cryptography;
+using System.Text;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 
@@ -28,6 +30,7 @@ public class AuthAttemptService(
             };
 
             await authenticationAttemptRepository.CreateAsync(attempt).ConfigureAwait(false);
+            LogLoginAuditEvent(attempt);
         }
         catch (Exception ex)
         {
@@ -53,6 +56,7 @@ public class AuthAttemptService(
             };
 
             await authenticationAttemptRepository.CreateAsync(attempt).ConfigureAwait(false);
+            LogLoginAuditEvent(attempt);
 
             // Record enumeration attempt for throttling
             await enumerationProtection.RecordEnumerationAttemptAsync(ipAddress, "login").ConfigureAwait(false);
@@ -74,7 +78,7 @@ public class AuthAttemptService(
         if (!string.IsNullOrEmpty(forwardedFor))
         {
             // X-Forwarded-For can contain multiple IPs, take the first one
-            var firstIp = forwardedFor.Split(',').FirstOrDefault()?.Trim();
+            var firstIp = forwardedFor.Split(',')[0].Trim();
 
             if (!string.IsNullOrEmpty(firstIp)) return firstIp;
         }
@@ -86,5 +90,29 @@ public class AuthAttemptService(
 
         // Fall back to connection remote IP
         return httpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown";
+    }
+
+    private void LogLoginAuditEvent(AuthenticationAttempt attempt)
+    {
+        var level = attempt.IsSuccessful ? LogLevel.Information : LogLevel.Warning;
+        logger.Log(
+            level,
+            "Authentication audit event {AuditEventType}: UserId={UserId}, EmailHash={EmailHash}, TenantId={TenantId}, IpAddress={IpAddress}, Success={Success}, FailureReason={FailureReason}, ProcessingTimeMs={ProcessingTimeMs}, AuditEvent={AuditEvent}, AuditCategory={AuditCategory}",
+            attempt.IsSuccessful ? "AuthenticationSucceeded" : "AuthenticationFailed",
+            attempt.UserId,
+            HashIdentifier(attempt.Email),
+            attempt.TenantId,
+            attempt.IpAddress,
+            attempt.IsSuccessful,
+            attempt.FailureReason ?? string.Empty,
+            attempt.ProcessingTime.TotalMilliseconds,
+            true,
+            "Authentication");
+    }
+
+    private static string HashIdentifier(string value)
+    {
+        var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(value.Trim().ToLowerInvariant()));
+        return Convert.ToHexString(bytes);
     }
 }

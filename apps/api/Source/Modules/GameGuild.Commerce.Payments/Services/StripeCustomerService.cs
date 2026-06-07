@@ -11,10 +11,18 @@ public class StripeCustomerService(
     IOptions<StripeGatewayOptions> options,
     ILogger<StripeCustomerService> logger) : IStripeCustomerService
 {
-    private readonly StripeGatewayOptions _options = options.Value;
+    private readonly StripeGatewayOptions _options = InitializeOptions(options);
     private readonly CustomerService _customerService = new();
     private readonly PaymentMethodService _paymentMethodService = new();
+    private readonly SetupIntentService _setupIntentService = new();
     private readonly SubscriptionService _subscriptionService = new();
+
+    private static StripeGatewayOptions InitializeOptions(IOptions<StripeGatewayOptions> options)
+    {
+        var stripeOptions = options.Value;
+        StripePaymentGateway.EnsureApiKey(stripeOptions);
+        return stripeOptions;
+    }
 
     /// <inheritdoc />
     public async Task<GatewayCustomerResult> CreateCustomerAsync(
@@ -142,6 +150,129 @@ public class StripeCustomerService(
             logger.LogError(ex, "Unexpected error during payment method attachment for customer {CustomerId}",
                 request.CustomerId);
             return SimulatedPaymentResultFactory.PaymentMethodFailure(ex.Message, "unexpected_error");
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task<GatewaySetupIntentResult> CreateSetupIntentAsync(
+        GatewaySetupIntentRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        logger.LogInformation("Creating Stripe setup intent for customer {CustomerId} (Simulation: {IsSimulation})",
+            request.CustomerId, _options.UseSimulation);
+
+        if (_options.UseSimulation)
+        {
+            await Task.Delay(1, cancellationToken).ConfigureAwait(false);
+            return SimulatedPaymentResultFactory.SetupIntentSuccess(request.CustomerId, logger);
+        }
+
+        try
+        {
+            var createOptions = new SetupIntentCreateOptions
+            {
+                Customer = request.CustomerId,
+                Usage = "off_session",
+                Metadata = request.Metadata,
+                AutomaticPaymentMethods = new SetupIntentAutomaticPaymentMethodsOptions
+                {
+                    Enabled = true
+                }
+            };
+
+            var setupIntent = await _setupIntentService.CreateAsync(
+                createOptions,
+                cancellationToken: cancellationToken).ConfigureAwait(false);
+
+            logger.LogInformation("Stripe setup intent created: {SetupIntentId} for customer {CustomerId}",
+                setupIntent.Id, request.CustomerId);
+
+            return new GatewaySetupIntentResult(
+                Success: true,
+                ExternalSetupIntentId: setupIntent.Id,
+                ClientSecret: setupIntent.ClientSecret,
+                CustomerId: request.CustomerId,
+                ErrorCode: null,
+                ErrorMessage: null);
+        }
+        catch (StripeException ex)
+        {
+            logger.LogError(ex, "Stripe setup intent creation failed for customer {CustomerId}: {ErrorCode}",
+                request.CustomerId, ex.StripeError?.Code);
+
+            return new GatewaySetupIntentResult(
+                Success: false,
+                ExternalSetupIntentId: null,
+                ClientSecret: null,
+                CustomerId: request.CustomerId,
+                ErrorCode: ex.StripeError?.Code ?? "stripe_error",
+                ErrorMessage: ex.StripeError?.Message ?? ex.Message);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Unexpected error during setup intent creation for customer {CustomerId}",
+                request.CustomerId);
+            return SimulatedPaymentResultFactory.SetupIntentFailure(ex.Message, "unexpected_error");
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task<GatewayDefaultPaymentMethodResult> SetDefaultPaymentMethodAsync(
+        GatewayDefaultPaymentMethodRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        logger.LogInformation(
+            "Setting Stripe default payment method {PaymentMethodId} for customer {CustomerId} (Simulation: {IsSimulation})",
+            request.PaymentMethodId,
+            request.CustomerId,
+            _options.UseSimulation);
+
+        if (_options.UseSimulation)
+        {
+            await Task.Delay(1, cancellationToken).ConfigureAwait(false);
+            return SimulatedPaymentResultFactory.DefaultPaymentMethodSuccess();
+        }
+
+        try
+        {
+            await _customerService.UpdateAsync(
+                request.CustomerId,
+                new CustomerUpdateOptions
+                {
+                    InvoiceSettings = new CustomerInvoiceSettingsOptions
+                    {
+                        DefaultPaymentMethod = request.PaymentMethodId
+                    }
+                },
+                cancellationToken: cancellationToken).ConfigureAwait(false);
+
+            logger.LogInformation(
+                "Stripe customer {CustomerId} default payment method updated to {PaymentMethodId}",
+                request.CustomerId,
+                request.PaymentMethodId);
+
+            return new GatewayDefaultPaymentMethodResult(
+                Success: true,
+                ErrorCode: null,
+                ErrorMessage: null);
+        }
+        catch (StripeException ex)
+        {
+            logger.LogError(ex,
+                "Stripe default payment method update failed for customer {CustomerId}: {ErrorCode}",
+                request.CustomerId,
+                ex.StripeError?.Code);
+
+            return new GatewayDefaultPaymentMethodResult(
+                Success: false,
+                ErrorCode: ex.StripeError?.Code ?? "stripe_error",
+                ErrorMessage: ex.StripeError?.Message ?? ex.Message);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Unexpected error while updating default payment method for customer {CustomerId}",
+                request.CustomerId);
+            return SimulatedPaymentResultFactory.DefaultPaymentMethodFailure(ex.Message, "unexpected_error");
         }
     }
 

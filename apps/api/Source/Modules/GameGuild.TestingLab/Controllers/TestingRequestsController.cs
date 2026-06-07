@@ -20,7 +20,7 @@ public class TestingRequestsController(
 {
     // GET: testing/requests
     [HttpGet("requests")]
-    [RequireResourcePermission<TestingRequestPermission, TestingRequest>(PermissionType.Read)]
+    [RequireResourcePermission<PermissionType, TestingRequest>(PermissionType.Read)]
     public async Task<ActionResult<IEnumerable<TestingRequest>>> GetTestingRequests([FromQuery] int skip = 0, [FromQuery] int take = 50)
     {
         var requests = await requestService.GetTestingRequestsAsync(skip, take).ConfigureAwait(false);
@@ -29,7 +29,7 @@ public class TestingRequestsController(
 
     // GET: testing/requests/{id}
     [HttpGet("requests/{id}")]
-    [RequireResourcePermission<TestingRequestPermission, TestingRequest>(PermissionType.Read)]
+    [RequireResourcePermission<PermissionType, TestingRequest>(PermissionType.Read)]
     public async Task<ActionResult<TestingRequest>> GetTestingRequest(Guid id)
     {
         var request = await requestService.GetTestingRequestByIdAsync(id).ConfigureAwait(false);
@@ -39,7 +39,7 @@ public class TestingRequestsController(
 
     // GET: testing/requests/{id}/details
     [HttpGet("requests/{id}/details")]
-    [RequireResourcePermission<TestingRequestPermission, TestingRequest>(PermissionType.Read)]
+    [RequireResourcePermission<PermissionType, TestingRequest>(PermissionType.Read)]
     public async Task<ActionResult<TestingRequest>> GetTestingRequestWithDetails(Guid id)
     {
         var request = await requestService.GetTestingRequestByIdWithDetailsAsync(id).ConfigureAwait(false);
@@ -49,7 +49,7 @@ public class TestingRequestsController(
 
     // POST: testing/requests
     [HttpPost("requests")]
-    [RequireResourcePermission<TestingRequestPermission, TestingRequest>(PermissionType.Create)]
+    [RequireResourcePermission<PermissionType, TestingRequest>(PermissionType.Create)]
     public async Task<ActionResult<TestingRequest>> CreateTestingRequest(CreateTestingRequestDto requestDto)
     {
         if (!ModelState.IsValid) return BadRequest(ModelState);
@@ -66,7 +66,7 @@ public class TestingRequestsController(
 
     // PUT: testing/requests/{id}
     [HttpPut("requests/{id}")]
-    [RequireResourcePermission<TestingRequestPermission, TestingRequest>(PermissionType.Edit)]
+    [RequireResourcePermission<PermissionType, TestingRequest>(PermissionType.Edit)]
     public async Task<ActionResult<TestingRequest>> UpdateTestingRequest(Guid id, TestingRequest request)
     {
         if (id != request.Id) return BadRequest("ID mismatch");
@@ -85,7 +85,7 @@ public class TestingRequestsController(
 
     // DELETE: testing/requests/{id}
     [HttpDelete("requests/{id}")]
-    [RequireResourcePermission<TestingRequestPermission, TestingRequest>(PermissionType.Delete)]
+    [RequireResourcePermission<PermissionType, TestingRequest>(PermissionType.Delete)]
     public async Task<ActionResult> DeleteTestingRequest(Guid id)
     {
         var result = await requestService.DeleteTestingRequestAsync(id).ConfigureAwait(false);
@@ -95,7 +95,7 @@ public class TestingRequestsController(
 
     // POST: testing/requests/{id}:restore
     [HttpPost("requests/{id}:restore")]
-    [RequireResourcePermission<TestingRequestPermission, TestingRequest>(PermissionType.Edit)]
+    [RequireResourcePermission<PermissionType, TestingRequest>(PermissionType.Edit)]
     public async Task<ActionResult> RestoreTestingRequest(Guid id)
     {
         var result = await requestService.RestoreTestingRequestAsync(id).ConfigureAwait(false);
@@ -105,7 +105,7 @@ public class TestingRequestsController(
 
     // GET: testing/requests/by-project-version/{projectVersionId}
     [HttpGet("requests/by-project-version/{projectVersionId}")]
-    [RequireResourcePermission<TestingRequestPermission, TestingRequest>(PermissionType.Read)]
+    [RequireResourcePermission<PermissionType, TestingRequest>(PermissionType.Read)]
     public async Task<ActionResult<IEnumerable<TestingRequest>>> GetTestingRequestsByProjectVersion(Guid projectVersionId)
     {
         var requests = await requestService.GetTestingRequestsByProjectVersionAsync(projectVersionId).ConfigureAwait(false);
@@ -114,7 +114,7 @@ public class TestingRequestsController(
 
     // GET: testing/requests/by-creator/{creatorId}
     [HttpGet("requests/by-creator/{creatorId}")]
-    [RequireResourcePermission<TestingRequestPermission, TestingRequest>(PermissionType.Read)]
+    [RequireResourcePermission<PermissionType, TestingRequest>(PermissionType.Read)]
     public async Task<ActionResult<IEnumerable<TestingRequest>>> GetTestingRequestsByCreator(Guid creatorId)
     {
         var requests = await requestService.GetTestingRequestsByCreatorAsync(creatorId).ConfigureAwait(false);
@@ -123,7 +123,7 @@ public class TestingRequestsController(
 
     // GET: testing/requests/by-status/{status}
     [HttpGet("requests/by-status/{status}")]
-    [RequireResourcePermission<TestingRequestPermission, TestingRequest>(PermissionType.Read)]
+    [RequireResourcePermission<PermissionType, TestingRequest>(PermissionType.Read)]
     public async Task<ActionResult<IEnumerable<TestingRequest>>> GetTestingRequestsByStatus(TestingRequestStatus status)
     {
         var requests = await requestService.GetTestingRequestsByStatusAsync(status).ConfigureAwait(false);
@@ -132,7 +132,7 @@ public class TestingRequestsController(
 
     // GET: testing/requests/search
     [HttpGet("requests/search")]
-    [RequireResourcePermission<TestingRequestPermission, TestingRequest>(PermissionType.Read)]
+    [RequireResourcePermission<PermissionType, TestingRequest>(PermissionType.Read)]
     public async Task<ActionResult<IEnumerable<TestingRequest>>> SearchTestingRequests([FromQuery] string searchTerm)
     {
         if (string.IsNullOrWhiteSpace(searchTerm)) return BadRequest("Search term is required");
@@ -143,7 +143,7 @@ public class TestingRequestsController(
 
     // POST: testing/submit-simple
     [HttpPost("submit-simple")]
-    [RequireResourcePermission<TestingRequestPermission, TestingRequest>(PermissionType.Create)]
+    [RequireResourcePermission<PermissionType, TestingRequest>(PermissionType.Create)]
     public async Task<ActionResult<TestingRequest>> SubmitSimpleTestingRequest(CreateSimpleTestingRequestDto requestDto)
     {
         if (!ModelState.IsValid) return BadRequest(ModelState);
@@ -159,7 +159,7 @@ public class TestingRequestsController(
 
     // GET: testing/my-requests
     [HttpGet("my-requests")]
-    [RequireResourcePermission<TestingRequestPermission, TestingRequest>(PermissionType.Read)]
+    [RequireResourcePermission<PermissionType, TestingRequest>(PermissionType.Read)]
     public async Task<ActionResult<IEnumerable<TestingRequest>>> GetMyTestingRequests()
     {
         var userId = actorContextAccessor.ActorContext.SubjectIdAsGuid;
@@ -172,7 +172,7 @@ public class TestingRequestsController(
 
     // GET: testing/available-for-testing
     [HttpGet("available-for-testing")]
-    [RequireResourcePermission<TestingRequestPermission, TestingRequest>(PermissionType.Read)]
+    [RequireResourcePermission<PermissionType, TestingRequest>(PermissionType.Read)]
     public async Task<ActionResult<IEnumerable<TestingRequest>>> GetAvailableTestingRequests()
     {
         var requests = await requestService.GetActiveTestingRequestsAsync().ConfigureAwait(false);
@@ -181,7 +181,7 @@ public class TestingRequestsController(
 
     // GET: testing/requests/{requestId}/statistics
     [HttpGet("requests/{requestId}/statistics")]
-    [RequireResourcePermission<TestingRequestPermission, TestingRequest>(PermissionType.Read)]
+    [RequireResourcePermission<PermissionType, TestingRequest>(PermissionType.Read)]
     public async Task<ActionResult<object>> GetTestingRequestStatistics(Guid requestId, [FromServices] ITestingFeedbackOperations feedbackService)
     {
         var statistics = await feedbackService.GetTestingRequestStatisticsAsync(requestId).ConfigureAwait(false);

@@ -1,68 +1,103 @@
+using System.ComponentModel.DataAnnotations;
+using FluentAssertions;
+using GameGuild.Commerce.Products;
 using Xunit;
 
 namespace GameGuild.Commerce.Products.UnitTests;
 
-/// <summary>
-/// Unit tests for Product entity validation and business rules.
-/// </summary>
 public class ProductValidationTests
 {
-    [Fact(Skip = "Scaffold - implement when Products module entities are complete")]
-    public void Product_WithValidData_CreatesSuccessfully()
+    [Fact]
+    public void Create_WithValidData_ShouldInitializeCatalogProduct()
     {
-        // Arrange
-        // TODO: Set up valid product data
+        var creatorId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
 
-        // Act
-        // TODO: Create product
+        var product = Product.Create(
+            "Owner Portal Pro",
+            ProductType.Subscription,
+            "Owner portal with statements and approvals.",
+            "Owner portal",
+            "https://cdn.example.com/owner-portal.png",
+            creatorId,
+            isBundle: false,
+            tenantId);
 
-        // Assert
-        // TODO: Verify product creation
+        product.Id.Should().NotBeEmpty();
+        product.Name.Should().Be("Owner Portal Pro");
+        product.Type.Should().Be(ProductType.Subscription);
+        product.Description.Should().Be("Owner portal with statements and approvals.");
+        product.ShortDescription.Should().Be("Owner portal");
+        product.ImageUrl.Should().Be("https://cdn.example.com/owner-portal.png");
+        product.CreatorId.Should().Be(creatorId);
+        product.TenantId.Should().Be(tenantId);
+        product.IsBundle.Should().BeFalse();
+        product.IsPublished.Should().BeTrue();
+        product.Pricing.Should().BeEmpty();
+        product.BundleItems.Should().BeEmpty();
     }
 
-    [Fact(Skip = "Scaffold - implement when Products module entities are complete")]
-    public void Product_WithNegativePrice_ThrowsValidationException()
+    [Fact]
+    public void EmptyName_ShouldFailDataAnnotationsValidation()
     {
-        // Arrange
-        // TODO: Set up product with negative price
+        var product = Product.Create("");
+        var results = new List<ValidationResult>();
 
-        // Act & Assert
-        // TODO: Verify validation exception
+        var isValid = Validator.TryValidateObject(
+            product,
+            new ValidationContext(product),
+            results,
+            validateAllProperties: true);
+
+        isValid.Should().BeFalse();
+        results.Should().Contain(result => result.MemberNames.Contains(nameof(Product.Name)));
     }
 
-    [Fact(Skip = "Scaffold - implement when Products module entities are complete")]
-    public void Product_WithEmptyName_ThrowsValidationException()
+    [Fact]
+    public void CreateWithVersion_WithNegativeBasePrice_ShouldThrowValidationException()
     {
-        // Arrange
-        // TODO: Set up product with empty name
+        var act = () => ProductPricing.CreateWithVersion(
+            Guid.NewGuid(),
+            "Default",
+            -1m,
+            isDefault: true);
 
-        // Act & Assert
-        // TODO: Verify validation exception
+        act.Should().Throw<ArgumentException>()
+            .WithMessage("*Base price cannot be negative*");
     }
 
-    [Fact(Skip = "Scaffold - implement when Products module entities are complete")]
-    public void ProductVariant_WithParentProduct_InheritsBaseProperties()
+    [Fact]
+    public void AddToBundleTypeSafe_ShouldStoreIncludedProductsInDisplayOrder()
     {
-        // Arrange
-        // TODO: Set up parent product and variant
+        var bundle = Product.Create("Brokerage Launch Bundle", ProductType.Bundle, isBundle: true);
+        var firstIncluded = Guid.NewGuid();
+        var secondIncluded = Guid.NewGuid();
 
-        // Act
-        // TODO: Create variant
+        var second = bundle.AddToBundleTypeSafe(secondIncluded, quantity: 2, displayOrder: 20);
+        var first = bundle.AddToBundleTypeSafe(firstIncluded, quantity: 1, displayOrder: 10);
 
-        // Assert
-        // TODO: Verify inheritance
+        first.BundleProductId.Should().Be(bundle.Id);
+        first.IncludedProductId.Should().Be(firstIncluded);
+        first.Quantity.Should().Be(1);
+        second.Quantity.Should().Be(2);
+        bundle.GetBundleProductIds().Should().Equal(firstIncluded, secondIncluded);
     }
 
-    [Fact(Skip = "Scaffold - implement when Products module entities are complete")]
-    public void Product_WithInventoryTracking_UpdatesStockCorrectly()
+    [Fact]
+    public void AddToBundleTypeSafe_ShouldRejectNonBundleAndDuplicateItems()
     {
-        // Arrange
-        // TODO: Set up product with inventory
+        var product = Product.Create("Standalone Product");
+        var includedProductId = Guid.NewGuid();
 
-        // Act
-        // TODO: Update stock levels
+        product.Invoking(p => p.AddToBundleTypeSafe(includedProductId))
+            .Should().Throw<InvalidOperationException>()
+            .WithMessage("*non-bundle*");
 
-        // Assert
-        // TODO: Verify stock updates
+        var bundle = Product.Create("Bundle", ProductType.Bundle, isBundle: true);
+        bundle.AddToBundleTypeSafe(includedProductId);
+
+        bundle.Invoking(p => p.AddToBundleTypeSafe(includedProductId))
+            .Should().Throw<InvalidOperationException>()
+            .WithMessage("*already in this bundle*");
     }
 }

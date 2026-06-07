@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net9.0</TargetFramework>
+        <TargetFramework>net10.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <RootNamespace>GameGuild.Assets</RootNamespace>
@@ -25,6 +25,7 @@
         <ProjectReference Include="..\GameGuild.Identity.Authorization\GameGuild.Identity.Authorization.csproj" />
         <ProjectReference Include="..\GameGuild.Identity.Context\GameGuild.Identity.Context.csproj" />
         <ProjectReference Include="..\GameGuild.Identity.Tenants\GameGuild.Identity.Tenants.csproj" />
+        <ProjectReference Include="..\GameGuild.Commerce.Orders\GameGuild.Commerce.Orders.csproj" />
         <ProjectReference Include="..\GameGuild.Resources\GameGuild.Resources.csproj" />
         <ProjectReference Include="..\GameGuild.Features\GameGuild.Features.csproj" />
         <ProjectReference Include="..\GameGuild.Localization\GameGuild.Localization.csproj" />

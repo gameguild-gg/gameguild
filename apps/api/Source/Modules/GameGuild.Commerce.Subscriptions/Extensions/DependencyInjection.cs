@@ -29,17 +29,21 @@ public static class DependencyInjection
         services.AddScoped<SubscriptionBillingService>();
         services.AddScoped<ISubscriptionBillingService>(sp => sp.GetRequiredService<SubscriptionBillingService>());
 
-        services.AddScoped<IPaymentSubscriptionSyncService, PaymentSubscriptionSyncService>();
-
         services.AddScoped<SubscriptionQueryAndExternalIdService>();
         services.AddScoped<ISubscriptionQueryService>(sp => sp.GetRequiredService<SubscriptionQueryAndExternalIdService>());
         services.AddScoped<ISubscriptionExternalIdService>(sp => sp.GetRequiredService<SubscriptionQueryAndExternalIdService>());
+        services.AddScoped<ISubscriptionPaymentContextService>(sp => sp.GetRequiredService<SubscriptionQueryAndExternalIdService>());
 
         // Register SubscriptionService as thin facade for backward compatibility
         services.AddScoped<SubscriptionService>();
 
         // Register Plan Pricing Resolver for cross-module pricing lookups (Payments module integration)
         services.AddScoped<IPlanPricingResolver, SubscriptionPlanPricingResolver>();
+        services.AddScoped<IPaymentSubscriptionSyncService, PaymentSubscriptionSyncService>();
+        services.AddSingleton<IMonthlyStatementLinkBuilder, MonthlyStatementLinkBuilder>();
+        services.AddScoped<IMonthlyStatementDataProvider, MonthlyStatementDataProvider>();
+        services.AddScoped<IMonthlyStatementAttachmentBuilder, MonthlyStatementAttachmentBuilder>();
+        services.AddScoped<IMonthlyStatementMailSender, LoggingMonthlyStatementMailSender>();
 
         // Register Command Handlers (only existing ones)
         services.AddScoped<ICommandHandler<ActivateSubscriptionCommand>, ActivateSubscriptionCommandHandler>();
@@ -133,6 +137,8 @@ public static class DependencyInjection
         // Register Repositories
         services.AddScoped<ISubscriptionRepository, SubscriptionRepository>();
         services.AddScoped<ISubscriptionPlanRepository, SubscriptionPlanRepository>();
+
+        services.AddHostedService<MonthlyStatementDispatchBackgroundService>();
 
         return services;
     }

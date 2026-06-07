@@ -5,7 +5,7 @@ namespace GameGuild.Identity.Authentication;
 /// <summary>
 ///     Command to verify a user's email address using a verification token
 /// </summary>
-public class VerifyEmailCommand : IRequest<EmailVerificationResult>
+public class VerifyEmailCommand : ICommand<EmailVerificationResult>
 {
     /// <summary>
     ///     The verification token sent to the user's email

@@ -1,4 +1,4 @@
-﻿using GameGuild.CQRS;
+using GameGuild.CQRS;
 
 namespace GameGuild.Commerce.Subscriptions;
 

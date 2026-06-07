@@ -103,6 +103,25 @@ public class AssetContentTests
     }
 
     [Fact]
+    public void SetModerationStatus_WithReviewer_ShouldPersistAuditContext()
+    {
+        var content = CreateTestContent();
+        var reviewerId = Guid.NewGuid();
+
+        content.SetModerationStatus(
+            ModerationStatus.Blocked,
+            reviewerId,
+            ["policy"],
+            "  Policy violation reviewed by admin.  ");
+
+        content.ModerationStatus.Should().Be(ModerationStatus.Blocked);
+        content.ModerationReviewedBy.Should().Be(reviewerId);
+        content.ModerationReviewedAt.Should().Be(content.ModerationCompletedAt);
+        content.ModerationReviewNotes.Should().Be("Policy violation reviewed by admin.");
+        content.ModerationLabelsList.Should().ContainSingle("policy");
+    }
+
+    [Fact]
     public void Kind_ForImageMimeType_ShouldBeImage()
     {
         // Arrange

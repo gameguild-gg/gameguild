@@ -19,7 +19,7 @@ public class AnalyticsEventRepository(IApplicationDbContext context) : IAnalytic
 
     public async Task<List<AnalyticsEvent>> GetByEventNameAsync(string eventName, DateTime? startDate, DateTime? endDate, Guid? tenantId, CancellationToken ct = default)
     {
-        var query = context.Set<AnalyticsEvent>().Where(e => e.EventName == eventName && !e.IsDeleted);
+        var query = context.Set<AnalyticsEvent>().Where(e => e.EventName == eventName && e.DeletedAt == null);
         if (startDate.HasValue) query = query.Where(e => e.Timestamp >= startDate.Value);
         if (endDate.HasValue) query = query.Where(e => e.Timestamp <= endDate.Value);
         if (tenantId.HasValue) query = query.Where(e => e.TenantId == tenantId.Value);
@@ -28,7 +28,7 @@ public class AnalyticsEventRepository(IApplicationDbContext context) : IAnalytic
 
     public async Task<List<AnalyticsEvent>> GetByUserIdAsync(Guid userId, DateTime? startDate, DateTime? endDate, CancellationToken ct = default)
     {
-        var query = context.Set<AnalyticsEvent>().Where(e => e.UserId == userId && !e.IsDeleted);
+        var query = context.Set<AnalyticsEvent>().Where(e => e.UserId == userId && e.DeletedAt == null);
         if (startDate.HasValue) query = query.Where(e => e.Timestamp >= startDate.Value);
         if (endDate.HasValue) query = query.Where(e => e.Timestamp <= endDate.Value);
         return await query.OrderByDescending(e => e.Timestamp).ToListAsync(ct).ConfigureAwait(false);
@@ -36,7 +36,7 @@ public class AnalyticsEventRepository(IApplicationDbContext context) : IAnalytic
 
     public async Task<int> CountAsync(string eventName, DateTime? startDate, DateTime? endDate, Guid? tenantId, CancellationToken ct = default)
     {
-        var query = context.Set<AnalyticsEvent>().Where(e => e.EventName == eventName && !e.IsDeleted);
+        var query = context.Set<AnalyticsEvent>().Where(e => e.EventName == eventName && e.DeletedAt == null);
         if (startDate.HasValue) query = query.Where(e => e.Timestamp >= startDate.Value);
         if (endDate.HasValue) query = query.Where(e => e.Timestamp <= endDate.Value);
         if (tenantId.HasValue) query = query.Where(e => e.TenantId == tenantId.Value);
@@ -47,10 +47,10 @@ public class AnalyticsEventRepository(IApplicationDbContext context) : IAnalytic
 public class KpiDefinitionRepository(IApplicationDbContext context) : IKpiDefinitionRepository
 {
     public async Task<KpiDefinition?> GetByNameAsync(string name, CancellationToken ct = default)
-        => await context.Set<KpiDefinition>().FirstOrDefaultAsync(k => k.Name == name && !k.IsDeleted, ct).ConfigureAwait(false);
+        => await context.Set<KpiDefinition>().FirstOrDefaultAsync(k => k.Name == name && k.DeletedAt == null, ct).ConfigureAwait(false);
 
     public async Task<List<KpiDefinition>> GetAllActiveAsync(CancellationToken ct = default)
-        => await context.Set<KpiDefinition>().Where(k => k.IsActive && !k.IsDeleted).ToListAsync(ct).ConfigureAwait(false);
+        => await context.Set<KpiDefinition>().Where(k => k.IsActive && k.DeletedAt == null).ToListAsync(ct).ConfigureAwait(false);
 
     public async Task<KpiDefinition> AddAsync(KpiDefinition kpi, CancellationToken ct = default)
     {
@@ -70,16 +70,16 @@ public class DashboardRepository(IApplicationDbContext context) : IDashboardRepo
 {
     public async Task<Dashboard?> GetByIdAsync(Guid id, CancellationToken ct = default)
         => await context.Set<Dashboard>().Include(d => d.Widgets.OrderBy(w => w.SortOrder))
-            .FirstOrDefaultAsync(d => d.Id == id && !d.IsDeleted, ct).ConfigureAwait(false);
+            .FirstOrDefaultAsync(d => d.Id == id && d.DeletedAt == null, ct).ConfigureAwait(false);
 
     public async Task<Dashboard?> GetBySlugAsync(string slug, CancellationToken ct = default)
         => await context.Set<Dashboard>().Include(d => d.Widgets.OrderBy(w => w.SortOrder))
-            .FirstOrDefaultAsync(d => d.Slug == slug && !d.IsDeleted, ct).ConfigureAwait(false);
+            .FirstOrDefaultAsync(d => d.Slug == slug && d.DeletedAt == null, ct).ConfigureAwait(false);
 
     public async Task<List<Dashboard>> GetAllAsync(Guid? tenantId, CancellationToken ct = default)
     {
         var query = context.Set<Dashboard>().Include(d => d.Widgets.OrderBy(w => w.SortOrder))
-            .Where(d => !d.IsDeleted);
+            .Where(d => d.DeletedAt == null);
         if (tenantId.HasValue) query = query.Where(d => d.TenantId == tenantId.Value);
         return await query.ToListAsync(ct).ConfigureAwait(false);
     }

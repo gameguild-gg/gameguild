@@ -1,4 +1,5 @@
 using GameGuild.CQRS;
+using GameGuild.Commerce;
 using Microsoft.Extensions.Logging;
 
 namespace GameGuild.Commerce.Payments;
@@ -10,6 +11,7 @@ public sealed class ProcessPaymentCommandHandler(
     IPaymentRepository paymentRepository,
     IPaymentGateway paymentGateway,
     IPaymentSubscriptionSyncService paymentSubscriptionSyncService,
+    ISubscriptionPaymentContextService subscriptionPaymentContextService,
     ILogger<ProcessPaymentCommandHandler> logger) : ICommandHandler<ProcessPaymentCommand, PaymentResult>
 {
     public async Task<PaymentResult> Handle(ProcessPaymentCommand request, CancellationToken cancellationToken)
@@ -42,6 +44,10 @@ public sealed class ProcessPaymentCommandHandler(
             };
         }
 
+        var subscription = await subscriptionPaymentContextService.GetPaymentContextAsync(request.SubscriptionId, cancellationToken)
+            .ConfigureAwait(false);
+        var externalCustomerId = subscription?.ExternalCustomerId;
+
         // 2. Create payment record
         var payment = Payment.Create(
             tenantId: request.TenantId,
@@ -50,6 +56,7 @@ public sealed class ProcessPaymentCommandHandler(
             idempotencyKey: idempotencyKey,
             provider: paymentGateway.ProviderId,
             subscriptionId: request.SubscriptionId,
+            externalCustomerId: externalCustomerId,
             paymentMethodId: request.PaymentMethodId);
 
         await paymentRepository.AddAsync(payment, cancellationToken).ConfigureAwait(false);
@@ -63,7 +70,7 @@ public sealed class ProcessPaymentCommandHandler(
             IdempotencyKey: idempotencyKey,
             Amount: request.Amount,
             Currency: "USD",
-            CustomerId: null,
+            CustomerId: externalCustomerId,
             PaymentMethodId: request.PaymentMethodId,
             Description: $"Payment for subscription {request.SubscriptionId}",
             Metadata: new Dictionary<string, string>
@@ -105,7 +112,7 @@ public sealed class ProcessPaymentCommandHandler(
         if (gatewayResult.Success && payment.ProcessedAt.HasValue)
         {
             await paymentSubscriptionSyncService.SyncSuccessfulPaymentAsync(
-                payment.Id.ToString(),
+                payment.Id,
                 payment.SubscriptionId,
                 payment.Amount,
                 payment.Currency,

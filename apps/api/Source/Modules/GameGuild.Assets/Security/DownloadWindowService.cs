@@ -1,4 +1,6 @@
 using Microsoft.Extensions.Logging;
+using GameGuild.Commerce.Orders;
+using CommerceOrderStatus = GameGuild.Commerce.Orders.OrderStatus;
 
 namespace GameGuild.Assets.Security;
 
@@ -261,21 +263,30 @@ public class DownloadWindowService : IDownloadWindowService
 }
 
 /// <summary>
-/// Placeholder implementation of order validation.
-/// Replace with actual Commerce module integration.
+/// Commerce module-backed order validation for paid asset downloads.
 /// </summary>
-public class PlaceholderOrderValidationService : IOrderValidationService
+public class CommerceOrderValidationService(IOrderRepository orderRepository) : IOrderValidationService
 {
-    public Task<OrderStatus?> GetOrderStatusAsync(Guid orderId, CancellationToken ct = default)
+    public async Task<OrderStatus?> GetOrderStatusAsync(Guid orderId, CancellationToken ct = default)
     {
-        // PLANNED: Integrate with Commerce.Orders module (depends on GameGuild.Commerce.Orders)
-        return Task.FromResult<OrderStatus?>(OrderStatus.Fulfilled);
+        var order = await orderRepository.GetByIdAsync(orderId, ct).ConfigureAwait(false);
+        return order == null ? null : MapStatus(order.Status);
     }
 
-    public Task<bool> IsOrderValidForDownloadAsync(Guid orderId, CancellationToken ct = default)
+    public async Task<bool> IsOrderValidForDownloadAsync(Guid orderId, CancellationToken ct = default)
     {
-        // PLANNED: Integrate with Commerce.Orders module (depends on GameGuild.Commerce.Orders)
-        // Valid if: Paid, Fulfilled, not Refunded, not Cancelled, not Disputed
-        return Task.FromResult(true);
+        var order = await orderRepository.GetByIdAsync(orderId, ct).ConfigureAwait(false);
+        return order?.Status is CommerceOrderStatus.Paid or CommerceOrderStatus.Fulfilled or CommerceOrderStatus.Completed;
     }
+
+    private static OrderStatus MapStatus(CommerceOrderStatus status)
+        => status switch
+        {
+            CommerceOrderStatus.Paid => OrderStatus.Paid,
+            CommerceOrderStatus.Fulfilled or CommerceOrderStatus.Completed => OrderStatus.Fulfilled,
+            CommerceOrderStatus.Refunded or CommerceOrderStatus.PartiallyRefunded => OrderStatus.Refunded,
+            CommerceOrderStatus.Cancelled => OrderStatus.Cancelled,
+            CommerceOrderStatus.Disputed => OrderStatus.Disputed,
+            _ => OrderStatus.Pending
+        };
 }

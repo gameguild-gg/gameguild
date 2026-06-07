@@ -83,7 +83,7 @@ public class SignInResponse
     /// <summary>
     ///     List of tenants the user has access to
     /// </summary>
-    public IEnumerable<TenantInfo>? AvailableTenants { get; set; }
+    public IEnumerable<global::GameGuild.TenantInfo>? AvailableTenants { get; set; }
 
     /// <summary>
     ///     Whether MFA is required

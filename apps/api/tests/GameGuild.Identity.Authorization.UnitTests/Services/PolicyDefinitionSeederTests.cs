@@ -24,6 +24,15 @@ public class PolicyDefinitionSeederTests
         await seeder.SeedAsync(CancellationToken.None);
 
         added.Should().NotBeEmpty();
+        added.Select(policy => policy.PolicyName).Should().Contain(new[]
+        {
+            Policies.EmployeesRead,
+            Policies.EmployeesCreate,
+            Policies.EmployeesUpdate,
+            Policies.EmployeesDelete
+        });
+        added.Single(policy => policy.PolicyName == Policies.EmployeesCreate)
+            .RulesJson.Should().Contain("users:create");
         repo.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 

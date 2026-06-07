@@ -1,4 +1,4 @@
-﻿namespace GameGuild.Features;
+namespace GameGuild.Features;
 
 /// <summary>
 ///     Bulk feature flags evaluation response

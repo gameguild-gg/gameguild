@@ -76,6 +76,50 @@ public class UserMetadataAndPreferencesRepositoryTests
         (await repository.GetByIdAsync(preferences.Id)).Should().BeNull();
     }
 
+    [Fact]
+    public async Task UserPreferencesRepository_UpdateAndDelete_ShouldAttachDetachedPreferences()
+    {
+        await using var context = CreateContext();
+        var repository = new UserPreferencesRepository(context);
+        var userId = Guid.NewGuid();
+        var preferences = UserPreferences.Create(userId);
+        preferences.Version = 1;
+
+        await SeedUserAsync(context, userId);
+        await repository.AddAsync(preferences);
+        await repository.SaveChangesAsync();
+
+        context.Entry(preferences).State = EntityState.Detached;
+        preferences.SetGeneralPreferences(new Dictionary<string, object?> { ["density"] = "compact" });
+
+        await repository.UpdateAsync(preferences);
+        context.Entry(preferences).State.Should().Be(EntityState.Modified);
+        await repository.SaveChangesAsync();
+
+        context.Entry(preferences).State = EntityState.Detached;
+
+        await repository.DeleteAsync(preferences);
+        preferences.DeletedAt.Should().NotBeNull();
+        context.Entry(preferences).State.Should().Be(EntityState.Modified);
+    }
+
+    [Fact]
+    public async Task UserPreferencesRepository_UpdateAndDelete_ShouldUseSetUpdate_ForNonDbContextAbstraction()
+    {
+        var preferences = UserPreferences.Create(Guid.NewGuid());
+        preferences.Version = 1;
+        var set = new Mock<DbSet<UserPreferences>>();
+        var context = new Mock<IApplicationDbContext>();
+        context.Setup(database => database.Set<UserPreferences>()).Returns(set.Object);
+        var repository = new UserPreferencesRepository(context.Object);
+
+        await repository.UpdateAsync(preferences);
+        await repository.DeleteAsync(preferences);
+
+        set.Verify(dbSet => dbSet.Update(preferences), Times.Exactly(2));
+        preferences.DeletedAt.Should().NotBeNull();
+    }
+
     private static UsersMetadataPreferencesTestDbContext CreateContext()
     {
         var options = new DbContextOptionsBuilder<UsersMetadataPreferencesTestDbContext>()

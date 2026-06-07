@@ -42,11 +42,29 @@ public class PermissionDelegation
     /// <summary>
     ///     Check if delegation is currently valid and active
     /// </summary>
-    public bool IsValidNow() =>
-        IsActive &&
-        StartsAt <= SystemClock.UtcNow &&
-        (ExpiresAt == null || ExpiresAt > SystemClock.UtcNow) &&
-        (UsageLimit == null || UsageCount < UsageLimit);
+    public bool IsValidNow()
+    {
+        if (!IsActive)
+            return false;
+
+        var now = SystemClock.UtcNow;
+        if (StartsAt > now)
+            return false;
+
+        if (ExpiresAt is not null)
+        {
+            if (ExpiresAt.Value <= now)
+                return false;
+        }
+
+        if (UsageLimit is not null)
+        {
+            if (UsageCount >= UsageLimit.Value)
+                return false;
+        }
+
+        return true;
+    }
 
     /// <summary>
     ///     Check if delegation allows a specific permission

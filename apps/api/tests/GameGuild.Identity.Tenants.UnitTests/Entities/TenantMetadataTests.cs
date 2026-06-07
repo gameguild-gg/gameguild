@@ -7,6 +7,15 @@ namespace GameGuild.Identity.Tenants.UnitTests.Entities;
 public class TenantMetadataTests
 {
     [Fact]
+    public void TenantMetadata_Partial_Constructor_Should_Map_Properties()
+    {
+        var metadata = new TenantMetadata(new { Industry = "Games", Type = "Studio" });
+
+        metadata.Industry.Should().Be("Games");
+        metadata.Type.Should().Be("Studio");
+    }
+
+    [Fact]
     public void SetCustomFields_Should_Serialize_And_Roundtrip()
     {
         var metadata = new TenantMetadata();
@@ -115,6 +124,25 @@ public class TenantMetadataTests
         var result = metadata.GetContactInfo(NullLogger<TenantMetadata>.Instance);
 
         result.Should().BeEmpty();
+    }
+
+    [Fact]
+    public void Getters_Should_Return_Empty_When_Serialized_Value_Is_Null()
+    {
+        var metadata = new TenantMetadata
+        {
+            CustomFields = "null",
+            Tags = "null",
+            ExternalReferences = "null",
+            BusinessInfo = "null",
+            ContactInfo = "null"
+        };
+
+        metadata.GetCustomFields().Should().BeEmpty();
+        metadata.GetTags().Should().BeEmpty();
+        metadata.GetExternalReferences().Should().BeEmpty();
+        metadata.GetBusinessInfo().Should().BeEmpty();
+        metadata.GetContactInfo().Should().BeEmpty();
     }
 
     [Fact]

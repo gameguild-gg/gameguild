@@ -139,38 +139,30 @@ public sealed class EncryptionService(ILogger<EncryptionService> logger, IConfig
     {
         if (string.IsNullOrEmpty(plainText)) { throw new ArgumentException("Plaintext cannot be empty", nameof(plainText)); }
 
-        try
-        {
-            logger.LogDebug("Encrypting data with AES-256-GCM");
+        logger.LogDebug("Encrypting data with AES-256-GCM");
 
-            var plaintextBytes = Encoding.UTF8.GetBytes(plainText);
-            var key = DeriveKey(EncryptionKey);
+        var plaintextBytes = Encoding.UTF8.GetBytes(plainText);
+        var key = DeriveKey(EncryptionKey);
 
-            var nonce = new byte[NonceSize];
-            using var rng = RandomNumberGenerator.Create();
-            rng.GetBytes(nonce);
+        var nonce = new byte[NonceSize];
+        using var rng = RandomNumberGenerator.Create();
+        rng.GetBytes(nonce);
 
-            var ciphertext = new byte[plaintextBytes.Length];
-            var tag = new byte[TagSize];
+        var ciphertext = new byte[plaintextBytes.Length];
+        var tag = new byte[TagSize];
 
-            using var aesGcm = new AesGcm(key, TagSize);
-            aesGcm.Encrypt(nonce, plaintextBytes, ciphertext, tag);
+        using var aesGcm = new AesGcm(key, TagSize);
+        aesGcm.Encrypt(nonce, plaintextBytes, ciphertext, tag);
 
-            var combined = new byte[NonceSize + ciphertext.Length + TagSize];
-            Buffer.BlockCopy(nonce, 0, combined, 0, NonceSize);
-            Buffer.BlockCopy(ciphertext, 0, combined, NonceSize, ciphertext.Length);
-            Buffer.BlockCopy(tag, 0, combined, NonceSize + ciphertext.Length, TagSize);
+        var combined = new byte[NonceSize + ciphertext.Length + TagSize];
+        Buffer.BlockCopy(nonce, 0, combined, 0, NonceSize);
+        Buffer.BlockCopy(ciphertext, 0, combined, NonceSize, ciphertext.Length);
+        Buffer.BlockCopy(tag, 0, combined, NonceSize + ciphertext.Length, TagSize);
 
-            var encrypted = Convert.ToBase64String(combined);
-            logger.LogDebug("Data encrypted successfully, Length: {Length}", encrypted.Length);
+        var encrypted = Convert.ToBase64String(combined);
+        logger.LogDebug("Data encrypted successfully, Length: {Length}", encrypted.Length);
 
-            return encrypted;
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Error encrypting data");
-            throw;
-        }
+        return encrypted;
     }
 
     /// <summary>

@@ -10,6 +10,7 @@ public sealed class PaymentsModelConfiguration : IModelConfiguration
 {
     public void Configure(ModelBuilder modelBuilder)
     {
+        modelBuilder.Entity<Payment>();
         modelBuilder.ApplyConfiguration(new TaxJurisdictionConfiguration());
         modelBuilder.ApplyConfiguration(new TaxRateConfiguration());
         modelBuilder.ApplyConfiguration(new TaxRuleConfiguration());

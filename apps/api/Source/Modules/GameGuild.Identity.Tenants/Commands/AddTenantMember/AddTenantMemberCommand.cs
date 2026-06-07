@@ -1,8 +1,8 @@
-﻿using GameGuild.CQRS;
+using GameGuild.CQRS;
 
 namespace GameGuild.Identity.Tenants;
 
 /// <summary>
 ///     Command to add a member to a tenant
 /// </summary>
-public abstract record AddTenantMemberCommand(Guid TenantId, Guid UserId, string Role, string? InvitedByEmail = null) : ICommand<AddTenantMemberResponse>;
+public record AddTenantMemberCommand(Guid TenantId, Guid UserId, string Role, string? InvitedByEmail = null) : ICommand<AddTenantMemberResponse>;

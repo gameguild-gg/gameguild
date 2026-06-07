@@ -20,6 +20,7 @@ public sealed class ReplaceUserNotificationPreferencesCommandHandler(IUserReposi
 
         preferences.SetNotificationPreferences(JsonValueDictionary.ToObjects(request.Request.NotificationPreferences));
         await preferencesRepository.UpdateAsync(preferences, cancellationToken).ConfigureAwait(false);
+        await preferencesRepository.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         return Unit.Value;
     }
 }

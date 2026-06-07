@@ -2,6 +2,8 @@ using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using GameGuild.CQRS;
+using GameGuild.Identity.Authorization;
+using GameGuild.Identity.Context.Actors;
 using Moq;
 using Xunit;
 
@@ -10,11 +12,13 @@ namespace GameGuild.Identity.Users.UnitTests.Controllers;
 public class UsersControllerTests
 {
     private readonly Mock<ISender> _sender = new();
+    private readonly Mock<IActorContextAccessor> _actorContextAccessor = new();
     private readonly UsersController _controller;
 
     public UsersControllerTests()
     {
-        _controller = new UsersController(_sender.Object)
+        _actorContextAccessor.Setup(x => x.ActorContext).Returns(CreateActorContext(roles: new[] { "Admin" }));
+        _controller = new UsersController(_sender.Object, _actorContextAccessor.Object)
         {
             ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() }
         };
@@ -68,6 +72,44 @@ public class UsersControllerTests
             limit: 10,
             sort: "-createdAt",
             ct: CancellationToken.None);
+
+        action.Should().BeOfType<OkObjectResult>().Which.Value.Should().Be(result);
+    }
+
+    [Fact]
+    public async Task GetUsers_ShouldAllowConsoleSystemAdminWithoutExplicitUsersReadPermission()
+    {
+        var result = PagedResult<UserDto>.FromPage(new[] { CreateUserDto() }, totalCount: 1, pageNumber: 1, pageSize: 50);
+        _actorContextAccessor.Setup(x => x.ActorContext).Returns(CreateActorContext(roles: new[] { "SystemAdmin" }));
+        _sender.Setup(sender => sender.Send(It.Is<GetUsersQuery>(query => query.Limit == 50), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(result);
+
+        var action = await _controller.GetUsers(limit: 50, ct: CancellationToken.None);
+
+        action.Should().BeOfType<OkObjectResult>().Which.Value.Should().Be(result);
+    }
+
+    [Fact]
+    public async Task GetUsers_ShouldForbidActorWithoutUsersReadPermission()
+    {
+        _actorContextAccessor.Setup(x => x.ActorContext).Returns(CreateActorContext(roles: new[] { "Member" }));
+
+        var action = await _controller.GetUsers(ct: CancellationToken.None);
+
+        action.Should().BeOfType<ForbidResult>();
+        _sender.Verify(sender => sender.Send(It.IsAny<GetUsersQuery>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task GetUsers_ShouldAllowActorWithUsersReadPermission()
+    {
+        var result = PagedResult<UserDto>.FromPage(new[] { CreateUserDto() }, totalCount: 1, pageNumber: 1, pageSize: 20);
+        _actorContextAccessor.Setup(x => x.ActorContext)
+            .Returns(CreateActorContext(roles: new[] { "Member" }, permissions: new[] { UsersPermission.Keys.Read }));
+        _sender.Setup(sender => sender.Send(It.IsAny<GetUsersQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(result);
+
+        var action = await _controller.GetUsers(ct: CancellationToken.None);
 
         action.Should().BeOfType<OkObjectResult>().Which.Value.Should().Be(result);
     }
@@ -137,4 +179,16 @@ public class UsersControllerTests
 
     private static UserDto CreateUserDto(Guid? id = null, string name = "Test User", string? phoneNumber = "+15550000")
         => new(id ?? Guid.NewGuid(), "user@example.com", name, DateTime.UtcNow, DateTime.UtcNow, true, phoneNumber, DateTime.UtcNow);
+
+    private static ActorContext CreateActorContext(IEnumerable<string> roles, IEnumerable<string>? permissions = null)
+        => new()
+        {
+            ActorKind = ActorKind.User,
+            SubjectId = Guid.NewGuid().ToString(),
+            TenantId = null,
+            Roles = roles.ToHashSet(),
+            Permissions = (permissions ?? Array.Empty<string>()).ToHashSet(),
+            TypedAttributes = ActorAttributes.Empty,
+            IsAuthenticated = true
+        };
 }

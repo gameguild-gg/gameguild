@@ -22,13 +22,14 @@ public sealed class UpdateUserNotificationPreferencesCommandHandler(IUserReposit
         }
 
         var existing = preferences.GetNotificationPreferences();
-        foreach (var pref in request.Request.NotificationPreferences)
+        foreach (var pref in JsonValueDictionary.ToObjects(request.Request.NotificationPreferences))
         {
             existing[pref.Key] = pref.Value;
         }
         preferences.SetNotificationPreferences(existing);
 
         await preferencesRepository.UpdateAsync(preferences, cancellationToken).ConfigureAwait(false);
+        await preferencesRepository.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         return Unit.Value;
     }
 }

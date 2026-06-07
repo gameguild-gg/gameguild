@@ -99,11 +99,18 @@ public class ContentProgress : EntityBase {
   public void UpdateProgress(decimal progressPercentage) {
     ProgressPercentage = Math.Max(0, Math.Min(100, progressPercentage));
 
-    if (ProgressPercentage == 100 && CompletionStatus != ContentCompletionStatus.Completed) {
-      CompletionStatus = ContentCompletionStatus.Completed;
-      CompletedAt = SystemClock.UtcNow;
+    if (ProgressPercentage == 100) {
+      if (CompletionStatus != ContentCompletionStatus.Completed) {
+        CompletionStatus = ContentCompletionStatus.Completed;
+        CompletedAt = SystemClock.UtcNow;
+      }
     }
-    else if (ProgressPercentage > 0 && CompletionStatus == ContentCompletionStatus.NotStarted) { CompletionStatus = ContentCompletionStatus.InProgress; }
+    else if (ProgressPercentage > 0) {
+      CompletionStatus = CompletionStatus switch {
+        ContentCompletionStatus.NotStarted => ContentCompletionStatus.InProgress,
+        _ => CompletionStatus,
+      };
+    }
 
     MarkAsAccessed();
   }

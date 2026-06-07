@@ -78,6 +78,16 @@ public class SessionRegistration : EntityBase
     /// </summary>
     public string? Notes { get; set; }
 
+    public string? RegistrationNotes {
+        get => Notes;
+        set => Notes = value;
+    }
+
+    public DateTime? AttendedAt {
+        get => CheckedInAt;
+        set => CheckedInAt = value;
+    }
+
     // Computed Properties
     /// <summary>
     /// Whether this registration is global (tenant-independent)

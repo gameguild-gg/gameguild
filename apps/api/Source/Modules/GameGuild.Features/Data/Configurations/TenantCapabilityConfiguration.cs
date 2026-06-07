@@ -52,6 +52,6 @@ public class TenantCapabilityConfiguration : IEntityTypeConfiguration<TenantCapa
         // Index for expiration queries
         builder.HasIndex(x => x.ExpiresAt)
             .HasDatabaseName("ix_tenant_capabilities_expires_at")
-            .HasFilter("expires_at IS NOT NULL");
+            .HasFilter("\"ExpiresAt\" IS NOT NULL");
     }
 }

@@ -1,17 +1,17 @@
+using GameGuild.CQRS;
 using GameGuild.Identity.Users;
 using Microsoft.Extensions.Logging;
 
 namespace GameGuild.Identity.Authentication;
 
 /// <summary>
-/// Password management: forgot-password, reset-password, change-password, email verification.
-/// Integrates with IUserRepository and IPasswordHasher for real password operations.
+///     Backward-compatible facade for password and email-verification operations.
+///     Public API controllers use the same CQRS commands directly.
 /// </summary>
 public class PasswordService(
     ILogger<PasswordService> logger,
     IUserRepository userRepository,
-    IPasswordHasher passwordHasher,
-    IEmailVerificationService emailVerificationService
+    ISender sender
 ) : IPasswordService
 {
     public async Task<EmailOperationResponse> SendEmailVerificationAsync(SendEmailVerificationRequest request, CancellationToken cancellationToken = default)
@@ -21,12 +21,17 @@ public class PasswordService(
         var user = await userRepository.GetByEmailAsync(request.Email.ToLowerInvariant(), cancellationToken).ConfigureAwait(false);
         if (user == null)
         {
-            // Return success even if user not found to prevent enumeration
             return new EmailOperationResponse { Success = true, Message = "If an account exists with that email, a verification email has been sent" };
         }
 
-        var token = await emailVerificationService.GenerateVerificationTokenAsync(user.Id, request.Email).ConfigureAwait(false);
-        await emailVerificationService.SendVerificationEmailAsync(request.Email, token, user.Username).ConfigureAwait(false);
+        await sender.Send(
+            new SendEmailVerificationCommand
+            {
+                Email = request.Email,
+                UserId = user.Id,
+                UserName = user.Username
+            },
+            cancellationToken).ConfigureAwait(false);
 
         return new EmailOperationResponse { Success = true, Message = "Verification email sent successfully" };
     }
@@ -35,91 +40,71 @@ public class PasswordService(
     {
         logger.LogInformation("Verifying email with token");
 
-        // NOTE: VerifyEmailTokenAsync requires a userId. The caller should supply the userId
-        // from the authenticated context. Using Guid.Empty as fallback is intentional —
-        // it will fail token validation cleanly if the userId is not embedded in the request.
-        var verified = await emailVerificationService.VerifyEmailTokenAsync(Guid.Empty, verificationRequest.Token).ConfigureAwait(false);
+        var result = await sender.Send(
+            new VerifyEmailCommand { Token = verificationRequest.Token },
+            cancellationToken).ConfigureAwait(false);
 
-        return verified
-            ? new EmailOperationResponse { Success = true, Message = "Email verified successfully" }
-            : new EmailOperationResponse { Success = false, Message = "Invalid or expired verification token" };
+        return new EmailOperationResponse
+        {
+            Success = result.Success,
+            Message = result.Message
+        };
     }
 
     public async Task<EmailOperationResponse> ForgotPasswordAsync(PasswordResetRequest request, CancellationToken cancellationToken = default)
     {
         logger.LogInformation("Processing forgot password request for {Email}", request.Email);
 
-        var user = await userRepository.GetByEmailAsync(request.Email.ToLowerInvariant(), cancellationToken).ConfigureAwait(false);
-        if (user == null)
+        var result = await sender.Send(
+            new RequestPasswordResetCommand { Email = request.Email },
+            cancellationToken).ConfigureAwait(false);
+
+        return new EmailOperationResponse
         {
-            // Always return success to prevent user enumeration
-            return new EmailOperationResponse { Success = true, Message = "If an account exists with that email, a password reset email has been sent" };
-        }
-
-        // Reuse IEmailVerificationService for token generation (same token infrastructure)
-        var token = await emailVerificationService.GenerateVerificationTokenAsync(user.Id, request.Email).ConfigureAwait(false);
-
-        // Log the reset link — actual email dispatch awaits IEmailService integration
-        logger.LogInformation("Password reset token generated for user {UserId}. Token delivery awaits IEmailService integration.", user.Id);
-
-        return new EmailOperationResponse { Success = true, Message = "If an account exists with that email, a password reset email has been sent" };
+            Success = result.Success,
+            Message = result.Message
+        };
     }
 
     public async Task<EmailOperationResponse> ResetPasswordAsync(ResetPasswordRequest request, CancellationToken cancellationToken = default)
     {
         logger.LogInformation("Processing password reset");
 
-        // Validate the reset token using IEmailVerificationService's token infrastructure.
-        // The token was generated by GenerateVerificationTokenAsync in ForgotPasswordAsync.
-        // NOTE: VerifyEmailTokenAsync requires a userId — using Guid.Empty means the token
-        // validation will check the stored userId against Guid.Empty. For full implementation,
-        // the token should embed the userId so it can be extracted before validation.
-        var isValid = await emailVerificationService.VerifyEmailTokenAsync(Guid.Empty, request.Token).ConfigureAwait(false);
-        if (!isValid)
+        var result = await sender.Send(
+            new ResetPasswordCommand
+            {
+                Token = request.Token,
+                NewPassword = request.NewPassword,
+                ConfirmPassword = request.NewPassword
+            },
+            cancellationToken).ConfigureAwait(false);
+
+        return new EmailOperationResponse
         {
-            return new EmailOperationResponse { Success = false, Message = "Invalid or expired reset token" };
-        }
-
-        // NOTE: Full password update requires extracting the userId from the token.
-        // Currently the token infrastructure doesn't expose the embedded userId externally.
-        // When IPasswordResetTokenService is implemented, it will return the userId from
-        // token validation, enabling: userRepository.GetByIdAsync(userId) → hash → update.
-        logger.LogWarning("Password reset token validated but password update requires IPasswordResetTokenService to extract userId from token");
-
-        return new EmailOperationResponse { Success = true, Message = "Password reset successfully" };
+            Success = result.Success,
+            Message = result.Message
+        };
     }
 
     public async Task<EmailOperationResponse> ChangePasswordAsync(ChangePasswordRequest request, Guid userId, CancellationToken cancellationToken = default)
     {
         logger.LogInformation("Processing password change for user {UserId}", userId);
 
-        var user = await userRepository.GetByIdAsync(userId, cancellationToken).ConfigureAwait(false);
-        if (user == null)
+        var result = await sender.Send(
+            new ChangePasswordCommand
+            {
+                UserId = userId,
+                CurrentPassword = request.CurrentPassword,
+                NewPassword = request.NewPassword,
+                ConfirmPassword = request.NewPassword,
+                RevokeOtherSessions = true
+            },
+            cancellationToken).ConfigureAwait(false);
+
+        return new EmailOperationResponse
         {
-            return new EmailOperationResponse { Success = false, Message = "User not found" };
-        }
-
-        // Verify current password
-        if (string.IsNullOrEmpty(user.PasswordHash) ||
-            !passwordHasher.VerifyPassword(user.PasswordHash, request.CurrentPassword))
-        {
-            return new EmailOperationResponse { Success = false, Message = "Current password is incorrect" };
-        }
-
-        // Validate new password strength
-        var strengthResult = passwordHasher.ValidatePasswordStrength(request.NewPassword);
-        if (!strengthResult.IsValid)
-        {
-            return new EmailOperationResponse { Success = false, Message = string.Join("; ", strengthResult.ValidationFailures) };
-        }
-
-        // Hash and store new password
-        var newHash = passwordHasher.HashPassword(request.NewPassword);
-        user.PasswordHash = newHash;
-        await userRepository.UpdateAsync(user, cancellationToken).ConfigureAwait(false);
-
-        logger.LogInformation("Password changed successfully for user {UserId}", userId);
-
-        return new EmailOperationResponse { Success = true, Message = "Password changed successfully" };
+            Success = result.Success,
+            Message = result.Message
+        };
     }
 }

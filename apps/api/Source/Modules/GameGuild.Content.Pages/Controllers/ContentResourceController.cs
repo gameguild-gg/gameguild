@@ -1,4 +1,6 @@
 using Asp.Versioning;
+using GameGuild.CQRS;
+using GameGuild.Identity.Context.Actors;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -9,7 +11,10 @@ namespace GameGuild.Content.Pages;
 [ApiVersion("1.0")]
 [Route("v{version:apiVersion}/content-resources")]
 [Authorize]
-public class ContentResourceController(IContentResourceService resourceService) : BaseApiController
+public class ContentResourceController(
+    IContentResourceService resourceService,
+    ISender sender,
+    IActorContextAccessor actorContextAccessor) : BaseApiController
 {
     /// <summary>List content resources with filtering and search.</summary>
     [HttpGet]
@@ -86,9 +91,11 @@ public class ContentResourceController(IContentResourceService resourceService) 
     [HttpPost("{id:guid}/publish")]
     public async Task<ActionResult<ContentResourceDto>> Publish(Guid id)
     {
-        var userId = Guid.Empty; // TODO: Extract from claims
-        var resource = await resourceService.PublishAsync(id, userId).ConfigureAwait(false);
+        var userId = actorContextAccessor.ActorContext.SubjectIdAsGuid;
+        if (!userId.HasValue) return Unauthorized();
+
+        var resource = await sender.Send(new PublishContentResourceCommand(id, userId.Value)).ConfigureAwait(false);
         if (resource is null) return NotFound();
-        return Ok(resource.ToDto());
+        return Ok(resource);
     }
 }

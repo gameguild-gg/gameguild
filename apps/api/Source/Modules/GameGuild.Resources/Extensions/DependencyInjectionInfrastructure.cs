@@ -3,6 +3,7 @@ using GameGuild.Configuration;
 using GameGuild.Resources.Handlers;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using StackExchange.Redis;
 
 namespace GameGuild.Resources;
 
@@ -34,7 +35,7 @@ public static class DependencyInjection
     /// <summary>
     ///     Registers all Resources application services including command/query handlers
     /// </summary>
-    private static void RegisterApplicationServices(IServiceCollection services, IConfiguration _)
+    private static void RegisterApplicationServices(IServiceCollection services, IConfiguration configuration)
     {
         // Register Quota Management Commands
         services.AddScoped<ICommandHandler<SetResourceQuotaCommand>, SetResourceQuotaCommandHandler>();
@@ -105,6 +106,15 @@ public static class DependencyInjection
 
         services.AddScoped<IUsageService, UsageService>();
         services.AddScoped<IResourceThrottlingService, ResourceThrottlingService>();
+        if (configuration.GetValue<bool>("Redis:Enabled"))
+        {
+            services.AddScoped<IDistributedRateLimiter, RedisDistributedRateLimiter>();
+        }
+        else
+        {
+            services.AddScoped<IDistributedRateLimiter, DistributedCacheRateLimiter>();
+        }
+
         services.AddScoped<IUsageRetentionService, UsageRetentionService>();
         services.AddScoped<IUsageTrendAnalysisService, UsageTrendAnalysisService>();
         services.AddScoped<ISlaImpactAnalysisService, SlaImpactAnalysisService>();

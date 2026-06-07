@@ -1,4 +1,4 @@
-﻿namespace GameGuild.Identity.Tenants;
+namespace GameGuild.Identity.Tenants;
 
 /// <summary>
 ///     Represents a usage metric for validation

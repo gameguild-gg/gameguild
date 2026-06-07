@@ -99,7 +99,13 @@ public class PromoCode : EntityBase
         if (!IsActive) return false;
 
         var now = SystemClock.UtcNow;
-        return (ValidFrom == null || ValidFrom <= now) && (ValidUntil == null || ValidUntil > now);
+        if (ValidFrom.HasValue && ValidFrom.Value > now)
+            return false;
+
+        if (ValidUntil.HasValue && ValidUntil.Value <= now)
+            return false;
+
+        return true;
     }
 
     /// <summary>Calculate the discount amount for a given order amount</summary>

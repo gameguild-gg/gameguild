@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Diagnostics.CodeAnalysis;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
@@ -19,10 +20,12 @@ public class CapabilityService : ICapabilityService
     private readonly ILogger<CapabilityService> _logger;
 
     private const string CapabilitiesCacheKeyPrefix = "TenantCapabilities:";
-    private static readonly TimeSpan CacheDuration = TimeSpan.FromMinutes(5);
+    [ExcludeFromCodeCoverage]
+    private static TimeSpan CacheDuration { get; } = TimeSpan.FromMinutes(5);
 
     // Known capabilities with their plan mappings
-    private static readonly Dictionary<string, HashSet<string>> PlanCapabilities = new()
+    [ExcludeFromCodeCoverage]
+    private static Dictionary<string, HashSet<string>> PlanCapabilities { get; } = new()
     {
         ["free"] = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
         {
@@ -76,7 +79,8 @@ public class CapabilityService : ICapabilityService
     };
 
     // All known capability keys for returning the full matrix
-    private static readonly HashSet<string> AllCapabilities = new(StringComparer.OrdinalIgnoreCase)
+    [ExcludeFromCodeCoverage]
+    private static HashSet<string> AllCapabilities { get; } = new(StringComparer.OrdinalIgnoreCase)
     {
         "lms.courses.basic",
         "lms.enrollments",

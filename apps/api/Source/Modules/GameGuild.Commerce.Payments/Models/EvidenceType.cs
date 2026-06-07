@@ -1,4 +1,4 @@
-﻿namespace GameGuild.Commerce.Payments;
+namespace GameGuild.Commerce.Payments;
 
 /// <summary>Evidence types</summary>
 public enum EvidenceType

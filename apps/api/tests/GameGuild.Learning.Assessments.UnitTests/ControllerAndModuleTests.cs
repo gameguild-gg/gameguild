@@ -2,6 +2,9 @@ using FluentAssertions;
 using GameGuild.Identity.Context.Actors;
 using GameGuild.Learning.Assessments;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Routing;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Conventions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -117,6 +120,26 @@ public class ControllerAndModuleTests
         sc.AddScoped<IApplicationDbContext>(_ => Mock.Of<IApplicationDbContext>());
         sc.AddAssessmentsModule();
         sc.BuildServiceProvider().GetService<IAssessmentService>().Should().NotBeNull();
+    }
+
+    [Fact]
+    public void MapAssessmentsEndpoints_ReturnsSameEndpointBuilder()
+    {
+        var endpoints = Mock.Of<IEndpointRouteBuilder>();
+
+        endpoints.MapAssessmentsEndpoints().Should().BeSameAs(endpoints);
+    }
+
+    [Fact]
+    public void AssessmentsModelConfiguration_ConfiguresAssessmentEntities()
+    {
+        var modelBuilder = new ModelBuilder(new ConventionSet());
+
+        new AssessmentsModelConfiguration().Configure(modelBuilder);
+        var model = modelBuilder.FinalizeModel();
+
+        model.FindEntityType(typeof(Assessment))!.GetTableName().Should().Be("Assessments");
+        model.FindEntityType(typeof(AssessmentSubmission))!.GetTableName().Should().Be("AssessmentSubmissions");
     }
 
     [Fact]

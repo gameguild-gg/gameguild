@@ -156,13 +156,13 @@ public class TenantServiceTests
     public async Task GetTenantsPagedAsync_Should_Clamp_Page_And_PageSize(int page, int pageSize, int expectedPage, int expectedPageSize)
     {
         var repo = new Mock<ITenantRepository>();
-        repo.Setup(r => r.GetPagedAsync(expectedPage, expectedPageSize, true, It.IsAny<CancellationToken>()))
+        repo.Setup(r => r.GetPagedAsync(expectedPage, expectedPageSize, true, null, null, "Name", false, It.IsAny<CancellationToken>()))
             .ReturnsAsync((new List<Tenant>(), 0));
 
         var service = new TenantService(repo.Object, NullLogger<TenantService>.Instance);
 
         await service.GetTenantsPagedAsync(page, pageSize, includeArchived: false);
 
-        repo.Verify(r => r.GetPagedAsync(expectedPage, expectedPageSize, true, It.IsAny<CancellationToken>()), Times.Once);
+        repo.Verify(r => r.GetPagedAsync(expectedPage, expectedPageSize, true, null, null, "Name", false, It.IsAny<CancellationToken>()), Times.Once);
     }
 }

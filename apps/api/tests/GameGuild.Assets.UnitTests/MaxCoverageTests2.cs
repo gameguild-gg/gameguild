@@ -271,6 +271,7 @@ public class AssetTokenServiceCoverageTests
 public class AssetAccessServiceCoverageTests
 {
     private readonly Mock<IAssetReferenceRepository> _refRepo = new();
+    private readonly Mock<ITransformedAssetRepository> _transformedAssetRepository = new();
     private readonly Mock<IAssetStorageService> _storageService = new();
     private readonly Mock<IAssetTokenService> _tokenService = new();
     private readonly Mock<ITenantMemberRepository> _tenantMemberRepository = new();
@@ -281,6 +282,7 @@ public class AssetAccessServiceCoverageTests
     {
         return new AssetAccessService(
             _refRepo.Object,
+            _transformedAssetRepository.Object,
             _storageService.Object,
             _tokenService.Object,
             _tenantMemberRepository.Object,
@@ -597,16 +599,37 @@ public class AssetAccessServiceCoverageTests
     }
 
     [Fact]
-    public async Task GetOrCreateTransformationAsync_Enabled_ReturnsNull_Placeholder()
+    public async Task GetOrCreateTransformationAsync_Enabled_ReturnsCachedTransformedAsset()
     {
         _featureService.Setup(f => f.IsEnabledAsync(
             FeatureFlagConstants.AssetFeatureFlags.TransformationsEnabled,
             It.IsAny<FeatureContext>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
+        var contentId = Guid.NewGuid();
+        var transformedAsset = new TransformedAsset
+        {
+            Id = Guid.NewGuid(),
+            SourceContentId = contentId,
+            TransformationSpec = "w=100",
+            BucketName = "assets-transformed",
+            ObjectKey = "transformed/image.webp",
+            MimeType = "image/webp",
+            SizeBytes = 123
+        };
+        _transformedAssetRepository
+            .Setup(r => r.GetAsync(contentId, "w=100", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(transformedAsset);
+        _storageService
+            .Setup(s => s.GetMetadataAsync("assets-transformed", "transformed/image.webp", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new StorageMetadata(123, "image/webp", "etag-123", DateTime.UtcNow));
 
         var svc = CreateService();
-        var result = await svc.GetOrCreateTransformationAsync(Guid.NewGuid(), TransformationSpec.Parse("w=100"));
-        result.Should().BeNull(); // current implementation is placeholder
+        var result = await svc.GetOrCreateTransformationAsync(contentId, TransformationSpec.Parse("w=100"));
+
+        result.Should().NotBeNull();
+        result!.Id.Should().Be(transformedAsset.Id);
+        result.ContentHash.Should().Be("etag-123");
+        _transformedAssetRepository.Verify(r => r.UpdateAsync(transformedAsset, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     // --- GenerateAccessUrlAsync ---
@@ -1470,15 +1493,26 @@ public class VirusScanServiceCoverageTests
         using var stream = new MemoryStream(new byte[100]);
         var result = await svc.ScanAsync(stream, "ok.txt");
         result.IsClean.Should().BeTrue();
-        result.ScanEngine.Should().Be("Placeholder");
+        result.ScanEngine.Should().Be("LocalPolicy");
     }
 
     [Fact]
-    public async Task ScanStoredAsync_ReturnsClean()
+    public async Task ScanStoredAsync_RequiresStreamContent()
     {
         var svc = CreateService();
         var result = await svc.ScanStoredAsync("bucket", "key.bin");
-        result.IsClean.Should().BeTrue();
+        result.IsClean.Should().BeFalse();
+        result.ThreatName.Should().Be("STORED_SCAN_REQUIRES_STREAM");
+    }
+
+    [Fact]
+    public async Task ScanAsync_EicarSignature_ReturnsThreat()
+    {
+        var svc = CreateService();
+        using var stream = new MemoryStream(System.Text.Encoding.ASCII.GetBytes("X5O!P%@AP[4\\PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H*"));
+        var result = await svc.ScanAsync(stream, "eicar.txt");
+        result.IsClean.Should().BeFalse();
+        result.ThreatName.Should().Be("EICAR-Test-Signature");
     }
 
     [Fact]

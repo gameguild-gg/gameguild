@@ -95,6 +95,98 @@ public class ValidatorTests
         result.IsValid.Should().BeFalse();
     }
 
+    [Fact]
+    public void BulkCreateTenantsCommandValidator_Should_Fail_On_Invalid_Items()
+    {
+        var validator = new BulkCreateTenantsCommandValidator();
+        var command = new BulkCreateTenantsCommand(
+        [
+            new BulkCreateTenantItem(string.Empty, "INVALID SLUG", "bad-email", new string('x', 501))
+        ]);
+
+        var result = validator.Validate(command);
+
+        result.IsValid.Should().BeFalse();
+    }
+
+    [Fact]
+    public void BulkCreateTenantsCommandValidator_Should_Pass_On_Valid_Data()
+    {
+        var validator = new BulkCreateTenantsCommandValidator();
+        var command = new BulkCreateTenantsCommand(
+        [
+            new BulkCreateTenantItem("Tenant", "tenant", "admin@example.com", "description")
+        ]);
+
+        var result = validator.Validate(command);
+
+        result.IsValid.Should().BeTrue();
+    }
+
+    [Fact]
+    public void BulkPurgeTenantsCommandValidator_Should_Fail_On_Empty_List()
+    {
+        var validator = new BulkPurgeTenantsCommandValidator();
+        var result = validator.Validate(new BulkPurgeTenantsCommand(Array.Empty<Guid>()));
+
+        result.IsValid.Should().BeFalse();
+    }
+
+    [Fact]
+    public void BulkPurgeTenantsCommandValidator_Should_Pass_On_Valid_Data()
+    {
+        var validator = new BulkPurgeTenantsCommandValidator();
+        var result = validator.Validate(new BulkPurgeTenantsCommand([Guid.NewGuid()]));
+
+        result.IsValid.Should().BeTrue();
+    }
+
+    [Fact]
+    public void BulkUndeleteTenantsCommandValidator_Should_Fail_On_Empty_List()
+    {
+        var validator = new BulkUndeleteTenantsCommandValidator();
+        var result = validator.Validate(new BulkUndeleteTenantsCommand(Array.Empty<Guid>()));
+
+        result.IsValid.Should().BeFalse();
+    }
+
+    [Fact]
+    public void BulkUndeleteTenantsCommandValidator_Should_Pass_On_Valid_Data()
+    {
+        var validator = new BulkUndeleteTenantsCommandValidator();
+        var result = validator.Validate(new BulkUndeleteTenantsCommand([Guid.NewGuid()]));
+
+        result.IsValid.Should().BeTrue();
+    }
+
+    [Fact]
+    public void BulkUpdateTenantsCommandValidator_Should_Fail_On_Invalid_Items()
+    {
+        var validator = new BulkUpdateTenantsCommandValidator();
+        var command = new BulkUpdateTenantsCommand(
+        [
+            new BulkUpdateTenantItem(Guid.Empty, string.Empty, new string('x', 501))
+        ]);
+
+        var result = validator.Validate(command);
+
+        result.IsValid.Should().BeFalse();
+    }
+
+    [Fact]
+    public void BulkUpdateTenantsCommandValidator_Should_Pass_On_Valid_Data()
+    {
+        var validator = new BulkUpdateTenantsCommandValidator();
+        var command = new BulkUpdateTenantsCommand(
+        [
+            new BulkUpdateTenantItem(Guid.NewGuid(), "Updated", "description")
+        ]);
+
+        var result = validator.Validate(command);
+
+        result.IsValid.Should().BeTrue();
+    }
+
     // Additional validators that were missing coverage
 
     [Fact]
@@ -196,7 +288,7 @@ public class ValidatorTests
     public void UpdateTenantMemberRoleCommandValidator_Should_Fail_On_Empty_Ids()
     {
         var validator = new UpdateTenantMemberRoleCommandValidator();
-        var result = validator.Validate(new TestUpdateTenantMemberRoleCommand(Guid.Empty, Guid.Empty, ""));
+        var result = validator.Validate(new UpdateTenantMemberRoleCommand(Guid.Empty, Guid.Empty, ""));
 
         result.IsValid.Should().BeFalse();
     }
@@ -205,7 +297,7 @@ public class ValidatorTests
     public void UpdateTenantMemberRoleCommandValidator_Should_Pass_On_Valid_Data()
     {
         var validator = new UpdateTenantMemberRoleCommandValidator();
-        var result = validator.Validate(new TestUpdateTenantMemberRoleCommand(Guid.NewGuid(), Guid.NewGuid(), "Admin"));
+        var result = validator.Validate(new UpdateTenantMemberRoleCommand(Guid.NewGuid(), Guid.NewGuid(), "Admin"));
 
         result.IsValid.Should().BeTrue();
     }
@@ -254,5 +346,4 @@ public class ValidatorTests
 
     private sealed record TestRestoreTenantCommand(Guid TenantId) : RestoreTenantCommand(TenantId);
 
-    private sealed record TestUpdateTenantMemberRoleCommand(Guid TenantId, Guid UserId, string NewRole) : UpdateTenantMemberRoleCommand(TenantId, UserId, NewRole);
 }

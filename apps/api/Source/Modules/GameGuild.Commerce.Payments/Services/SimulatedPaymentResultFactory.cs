@@ -24,6 +24,7 @@ public static class SimulatedPaymentResultFactory
         public const string Refund = "re_";
         public const string Customer = "cus_";
         public const string PaymentMethod = "pm_";
+        public const string SetupIntent = "seti_";
     }
 
     /// <summary>
@@ -158,6 +159,60 @@ public static class SimulatedPaymentResultFactory
             CardBrand: null,
             ExpiryMonth: null,
             ExpiryYear: null,
+            ErrorCode: errorCode,
+            ErrorMessage: errorMessage);
+    }
+
+    /// <summary>
+    ///     Creates a successful simulated setup intent result.
+    /// </summary>
+    public static GatewaySetupIntentResult SetupIntentSuccess(string customerId, ILogger? logger = null)
+    {
+        var setupIntentId = GenerateId(Prefixes.SetupIntent);
+        var clientSecret = $"{setupIntentId}_secret_{Guid.NewGuid():N}";
+        logger?.LogDebug("Generated simulated Stripe setup intent: {SetupIntentId}", setupIntentId);
+
+        return new GatewaySetupIntentResult(
+            Success: true,
+            ExternalSetupIntentId: setupIntentId,
+            ClientSecret: clientSecret,
+            CustomerId: customerId,
+            ErrorCode: null,
+            ErrorMessage: null);
+    }
+
+    /// <summary>
+    ///     Creates a failed simulated setup intent result.
+    /// </summary>
+    public static GatewaySetupIntentResult SetupIntentFailure(string errorMessage, string errorCode = "stripe_error")
+    {
+        return new GatewaySetupIntentResult(
+            Success: false,
+            ExternalSetupIntentId: null,
+            ClientSecret: null,
+            CustomerId: null,
+            ErrorCode: errorCode,
+            ErrorMessage: errorMessage);
+    }
+
+    /// <summary>
+    ///     Creates a successful simulated default payment method update result.
+    /// </summary>
+    public static GatewayDefaultPaymentMethodResult DefaultPaymentMethodSuccess()
+    {
+        return new GatewayDefaultPaymentMethodResult(
+            Success: true,
+            ErrorCode: null,
+            ErrorMessage: null);
+    }
+
+    /// <summary>
+    ///     Creates a failed simulated default payment method update result.
+    /// </summary>
+    public static GatewayDefaultPaymentMethodResult DefaultPaymentMethodFailure(string errorMessage, string errorCode = "stripe_error")
+    {
+        return new GatewayDefaultPaymentMethodResult(
+            Success: false,
             ErrorCode: errorCode,
             ErrorMessage: errorMessage);
     }

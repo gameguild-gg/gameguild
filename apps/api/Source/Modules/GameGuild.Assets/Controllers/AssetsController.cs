@@ -17,7 +17,8 @@ namespace GameGuild.Assets.Controllers;
 public class AssetsController(
     ISender sender,
     IActorContextAccessor actorContextAccessor,
-    IAssetUploadService uploadService) : BaseApiController
+    IAssetUploadService uploadService,
+    IAssetTextExtractionService textExtractionService) : BaseApiController
 {
     private ActorContext Actor => actorContextAccessor.ActorContext;
 
@@ -248,6 +249,63 @@ public class AssetsController(
     }
 
     /// <summary>
+    /// Extract text from an asset when the MIME type supports direct parsing or OCR.
+    /// </summary>
+    [HttpGet("{id:guid}/extracted-text")]
+    [ProducesResponseType(typeof(AssetExtractedTextResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetExtractedText(
+        Guid id,
+        [FromServices] IAssetReferenceRepository referenceRepository,
+        [FromServices] IAssetTextExtractionService textExtractionService,
+        CancellationToken ct = default)
+    {
+        if (!Actor.SubjectIdAsGuid.HasValue || !Actor.TenantId.HasValue)
+        {
+            return Unauthorized();
+        }
+
+        var asset = await sender.Send(
+            new GetAssetQuery(id, Actor.SubjectIdAsGuid.Value, Actor.TenantId.Value, false),
+            ct).ConfigureAwait(false);
+
+        if (asset == null)
+        {
+            return NotFound();
+        }
+
+        var reference = await referenceRepository.GetByIdWithContentAsync(id, ct).ConfigureAwait(false);
+        if (reference?.Content == null)
+        {
+            return NotFound();
+        }
+
+        if (reference.Content.VirusScanStatus == VirusScanStatus.Infected ||
+            reference.Content.ModerationStatus == ModerationStatus.Blocked)
+        {
+            return Forbid();
+        }
+
+        var result = await textExtractionService.ExtractAsync(reference, ct).ConfigureAwait(false);
+        var status = string.IsNullOrWhiteSpace(result.Text)
+            ? "empty"
+            : result.IsTruncated ? "partial" : "completed";
+        var message = result.Warnings.Count > 0 ? string.Join(" ", result.Warnings) : null;
+
+        return Ok(new AssetExtractedTextResponse(
+            id,
+            reference.Content.MimeType,
+            status,
+            result.Source,
+            result.Text,
+            message,
+            result.UsedOcr,
+            result.IsTruncated));
+    }
+
+    /// <summary>
     /// Generate an access URL for an asset.
     /// </summary>
     [HttpPost("{id:guid}:generate-access-url")]
@@ -333,6 +391,48 @@ public class AssetsController(
         await referenceRepository.RecordAccessAsync(id, ct).ConfigureAwait(false);
 
         return File(stream, reference.Content.MimeType, reference.DisplayName);
+    }
+
+    /// <summary>
+    /// Get extracted searchable text for an asset.
+    /// </summary>
+    [HttpGet("{id:guid}:extracted-text")]
+    [AllowAnonymous]
+    public async Task<IActionResult> GetExtractedText(
+        Guid id,
+        [FromQuery] string token,
+        [FromServices] IAssetAccessService accessService,
+        [FromServices] IAssetReferenceRepository referenceRepository,
+        CancellationToken ct = default)
+    {
+        if (!accessService.ValidateToken(token, id, Actor.TenantId))
+        {
+            return Forbid();
+        }
+
+        var reference = await referenceRepository.GetByIdWithContentAsync(id, ct).ConfigureAwait(false);
+        if (reference?.Content == null)
+        {
+            return NotFound();
+        }
+
+        if (reference.Content.VirusScanStatus == VirusScanStatus.Infected ||
+            reference.Content.ModerationStatus == ModerationStatus.Blocked)
+        {
+            return Forbid();
+        }
+
+        var extraction = await textExtractionService.ExtractAsync(reference, ct).ConfigureAwait(false);
+        await referenceRepository.RecordAccessAsync(id, ct).ConfigureAwait(false);
+
+        return Ok(new ExtractedAssetTextResponse(
+            id,
+            reference.Content.MimeType,
+            extraction.Text,
+            extraction.Source,
+            extraction.UsedOcr,
+            extraction.IsTruncated,
+            extraction.Warnings));
     }
 
     /// <summary>
@@ -490,3 +590,22 @@ public sealed record UpdateAssetRequest(
 public sealed record ReportAssetRequest(
     ReportReason Reason,
     string? Description = null);
+
+public sealed record ExtractedAssetTextResponse(
+    Guid AssetReferenceId,
+    string MimeType,
+    string Text,
+    string Source,
+    bool UsedOcr,
+    bool IsTruncated,
+    IReadOnlyList<string> Warnings);
+
+public sealed record AssetExtractedTextResponse(
+    Guid AssetId,
+    string MimeType,
+    string Status,
+    string Source,
+    string? Text,
+    string? Message,
+    bool UsedOcr,
+    bool IsPartial);

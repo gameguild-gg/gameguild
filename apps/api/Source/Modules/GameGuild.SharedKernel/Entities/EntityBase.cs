@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using GameGuild.CQRS;
 using GameGuild.CQRS.Models;
@@ -10,7 +10,7 @@ namespace GameGuild;
 ///     Supports different ID types while maintaining the same base functionality.
 /// </summary>
 /// <typeparam name="TKey">The type of the entity's identifier</typeparam>
-public abstract class EntityBase<TKey> : IEntity<TKey>, ITenantScoped where TKey : IEquatable<TKey>
+public abstract class EntityBase<TKey> : IEntity<TKey>, ITenantScoped, IHasDomainEvents where TKey : IEquatable<TKey>
 {
     private readonly List<IDomainEvent> _domainEvents = [];
 

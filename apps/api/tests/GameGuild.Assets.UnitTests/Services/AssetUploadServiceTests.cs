@@ -412,4 +412,100 @@ public class AssetUploadServiceTests
     }
 
     #endregion
+
+    #region Chunked upload completion tests
+
+    [Fact]
+    public async Task CompleteChunkedUploadAsync_UsesTrackedPartEtagsInPartOrder()
+    {
+        var uploadId = $"upload-{Guid.NewGuid():N}";
+        var userId = Guid.NewGuid();
+        var totalSize = 2L * _config.ChunkSizeBytes;
+        IReadOnlyList<string>? capturedPartETags = null;
+
+        _storageServiceMock
+            .Setup(x => x.InitiateMultipartUploadAsync("image/png", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(uploadId);
+        _storageServiceMock
+            .Setup(x => x.UploadPartAsync(
+                uploadId,
+                $"multipart/{uploadId}",
+                It.IsAny<int>(),
+                It.IsAny<Stream>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync((string _, string _, int partNumber, Stream _, CancellationToken _) => $"etag-{partNumber}");
+        _storageServiceMock
+            .Setup(x => x.CompleteMultipartUploadAsync(
+                uploadId,
+                $"multipart/{uploadId}",
+                It.IsAny<IReadOnlyList<string>>(),
+                It.IsAny<CancellationToken>()))
+            .Callback<string, string, IReadOnlyList<string>, CancellationToken>((_, _, partETags, _) => capturedPartETags = partETags)
+            .ReturnsAsync(new StorageUploadResult("bucket", "multipart/object"));
+        _storageServiceMock
+            .Setup(x => x.DownloadAsync("bucket", "multipart/object", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new MemoryStream([1, 2, 3, 4]));
+
+        var assetContent = new AssetContent("bucket", "multipart/object", "hash", "image/png", totalSize, null, null);
+        typeof(AssetContent).GetProperty("Id")?.SetValue(assetContent, Guid.NewGuid());
+        _contentRepositoryMock
+            .Setup(x => x.AddAsync(It.IsAny<AssetContent>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(assetContent);
+
+        var reference = new AssetReference(assetContent.Id, userId, "file.png", AssetAccessPolicy.Private, null, null);
+        typeof(AssetReference).GetProperty("Id")?.SetValue(reference, Guid.NewGuid());
+        _referenceRepositoryMock
+            .Setup(x => x.AddAsync(It.IsAny<AssetReference>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(reference);
+
+        await _service.InitiateChunkedUploadAsync("file.png", "image/png", totalSize, userId);
+        (await _service.UploadChunkAsync(uploadId, 1, new MemoryStream([2]))).Should().BeTrue();
+        (await _service.UploadChunkAsync(uploadId, 0, new MemoryStream([1]))).Should().BeTrue();
+
+        var result = await _service.CompleteChunkedUploadAsync(
+            uploadId,
+            new UploadAssetOptions("file.png", AssetAccessPolicy.Private));
+
+        result.Success.Should().BeTrue();
+        capturedPartETags.Should().Equal("etag-1", "etag-2");
+    }
+
+    [Fact]
+    public async Task CompleteChunkedUploadAsync_ReturnsError_WhenChunksAreMissing()
+    {
+        var uploadId = $"upload-{Guid.NewGuid():N}";
+        var userId = Guid.NewGuid();
+        var totalSize = 2L * _config.ChunkSizeBytes;
+
+        _storageServiceMock
+            .Setup(x => x.InitiateMultipartUploadAsync("image/png", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(uploadId);
+        _storageServiceMock
+            .Setup(x => x.UploadPartAsync(
+                uploadId,
+                $"multipart/{uploadId}",
+                1,
+                It.IsAny<Stream>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync("etag-1");
+
+        await _service.InitiateChunkedUploadAsync("file.png", "image/png", totalSize, userId);
+        (await _service.UploadChunkAsync(uploadId, 0, new MemoryStream([1]))).Should().BeTrue();
+
+        var result = await _service.CompleteChunkedUploadAsync(
+            uploadId,
+            new UploadAssetOptions("file.png", AssetAccessPolicy.Private));
+
+        result.Success.Should().BeFalse();
+        result.Error.Should().Contain("Missing chunks: 2");
+        _storageServiceMock.Verify(
+            x => x.CompleteMultipartUploadAsync(
+                It.IsAny<string>(),
+                It.IsAny<string>(),
+                It.IsAny<IReadOnlyList<string>>(),
+                It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    #endregion
 }

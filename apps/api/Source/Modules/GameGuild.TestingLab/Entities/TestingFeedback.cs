@@ -110,6 +110,11 @@ public class TestingFeedback : EntityBase
     /// </summary>
     public Guid? ReportedById { get; set; }
 
+    public Guid? ReportedByUserId {
+        get => ReportedById;
+        set => ReportedById = value;
+    }
+
     /// <summary>
     /// Navigation property to who reported this feedback
     /// </summary>
@@ -146,7 +151,7 @@ public class TestingFeedback : EntityBase
     /// Average quality rating from other users
     /// </summary>
     public decimal? AverageQualityRating => QualityRatings?.Any() == true
-        ? QualityRatings.Average(qr => qr.QualityRating)
+        ? (decimal)QualityRatings.Average(qr => qr.QualityRating)
         : null;
 
     // Domain Methods

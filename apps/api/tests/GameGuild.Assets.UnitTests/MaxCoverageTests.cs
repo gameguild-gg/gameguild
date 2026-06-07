@@ -1163,17 +1163,27 @@ public class DownloadWindowServiceMaxTests
 
 #endregion
 
-#region PlaceholderOrderValidationService Tests
+#region CommerceOrderValidationService Tests
 
 [Trait("Category", "Unit")]
-public class PlaceholderOrderValidationServiceMaxTests
+public class CommerceOrderValidationServiceMaxTests
 {
-    private readonly PlaceholderOrderValidationService _sut = new();
+    private readonly Mock<GameGuild.Commerce.Orders.IOrderRepository> _orderRepository = new();
+    private readonly CommerceOrderValidationService _sut;
+
+    public CommerceOrderValidationServiceMaxTests()
+    {
+        _sut = new CommerceOrderValidationService(_orderRepository.Object);
+    }
 
     [Fact]
     public async Task GetOrderStatusAsync_ReturnsFulfilled()
     {
-        var result = await _sut.GetOrderStatusAsync(Guid.NewGuid());
+        var orderId = Guid.NewGuid();
+        _orderRepository.Setup(r => r.GetByIdAsync(orderId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(CreateOrder(orderId));
+
+        var result = await _sut.GetOrderStatusAsync(orderId);
 
         result.Should().Be(OrderStatus.Fulfilled);
     }
@@ -1181,9 +1191,27 @@ public class PlaceholderOrderValidationServiceMaxTests
     [Fact]
     public async Task IsOrderValidForDownloadAsync_ReturnsTrue()
     {
-        var result = await _sut.IsOrderValidForDownloadAsync(Guid.NewGuid());
+        var orderId = Guid.NewGuid();
+        _orderRepository.Setup(r => r.GetByIdAsync(orderId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(CreateOrder(orderId));
+
+        var result = await _sut.IsOrderValidForDownloadAsync(orderId);
 
         result.Should().BeTrue();
+    }
+
+    private static GameGuild.Commerce.Orders.Order CreateOrder(Guid id)
+    {
+        var order = GameGuild.Commerce.Orders.Order.Create(
+            Guid.NewGuid(),
+            $"idem-{Guid.NewGuid():N}",
+            Guid.NewGuid());
+        typeof(GameGuild.Commerce.Orders.Order)
+            .GetProperty(nameof(GameGuild.Commerce.Orders.Order.Id))!
+            .SetValue(order, id);
+        order.MarkAsPaidPendingFulfillment(Guid.NewGuid());
+        order.MarkAsFulfilled();
+        return order;
     }
 }
 
@@ -1857,33 +1885,35 @@ public class StorageServiceFactoryMaxTests
     }
 
     [Fact]
-    public void CreateFromConfiguration_GoogleCloudStorage_ThrowsNotImplemented()
+    public void CreateFromConfiguration_GoogleCloudStorage_ThrowsNotSupported()
     {
         var config = new GoogleCloudStorageConfiguration();
 
         var act = () => _sut.CreateFromConfiguration(config, "bucket");
 
-        act.Should().Throw<NotImplementedException>();
+        act.Should().Throw<NotSupportedException>()
+            .WithMessage("*Google Cloud Storage requires*");
     }
 
     [Fact]
-    public void CreateFromConfiguration_AzureBlobStorage_ThrowsNotImplemented()
+    public void CreateFromConfiguration_AzureBlobStorage_ThrowsNotSupported()
     {
         var config = new AzureBlobStorageConfiguration();
 
         var act = () => _sut.CreateFromConfiguration(config, "bucket");
 
-        act.Should().Throw<NotImplementedException>();
+        act.Should().Throw<NotSupportedException>()
+            .WithMessage("*Azure Blob Storage requires*");
     }
 
     [Fact]
-    public void CreateFromConfiguration_LocalFileSystem_ThrowsNotImplemented()
+    public void CreateFromConfiguration_LocalFileSystem_ReturnsLocalStorage()
     {
         var config = new LocalFileSystemConfiguration();
 
-        var act = () => _sut.CreateFromConfiguration(config, "bucket");
+        var result = _sut.CreateFromConfiguration(config, "bucket");
 
-        act.Should().Throw<NotImplementedException>();
+        result.Should().BeOfType<LocalFileSystemStorageService>();
     }
 }
 

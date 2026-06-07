@@ -21,6 +21,75 @@ namespace GameGuild.Identity.Tenants;
 public sealed class UserMembershipsController(ISender sender) : BaseApiController
 {
     /// <summary>
+    ///     Add a user to a tenant membership.
+    ///     Useful for assigning a user to a workspace they can actively switch into.
+    /// </summary>
+    /// <param name="userId">The user receiving the tenant membership</param>
+    /// <param name="body">Membership details including tenant and role</param>
+    /// <param name="ct">Cancellation token</param>
+    /// <returns>Membership creation result</returns>
+    [HttpPost("v{version:apiVersion}/users/{userId:guid}/memberships")]
+    [Authorize(Policy = Policies.UsersEditSelf)]
+    [EndpointSummary("Add a tenant membership for a user")]
+    [EndpointDescription("Adds the specified user to a tenant with the requested role so the user can access that workspace.")]
+    [ProducesResponseType<AddTenantMemberResponse>(StatusCodes.Status201Created)]
+    [ProducesResponseType<AddTenantMemberResponse>(StatusCodes.Status404NotFound)]
+    [ProducesResponseType<AddTenantMemberResponse>(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> AddUserMembership(Guid userId, [FromBody] AddUserMembershipRequest body, CancellationToken ct = default)
+    {
+        ArgumentNullException.ThrowIfNull(body);
+
+        var result = await sender.Send(
+                new AddTenantMemberCommand(body.TenantId, userId, body.Role, body.InvitedByEmail),
+                ct
+            )
+            .ConfigureAwait(false);
+
+        if (result.Success)
+        {
+            return StatusCode(StatusCodes.Status201Created, result);
+        }
+
+        if (result.Message?.Contains("not found", StringComparison.OrdinalIgnoreCase) == true)
+        {
+            return NotFound(result);
+        }
+
+        return Conflict(result);
+    }
+
+    /// <summary>
+    ///     Update a user's tenant role.
+    ///     This is an operator/admin action used to promote or demote console access.
+    /// </summary>
+    /// <param name="userId">The member user ID.</param>
+    /// <param name="tenantId">The tenant/workspace where the role applies.</param>
+    /// <param name="body">The new role payload.</param>
+    /// <param name="ct">Cancellation token.</param>
+    /// <returns>Role update result.</returns>
+    [HttpPatch("v{version:apiVersion}/users/{userId:guid}/memberships/{tenantId:guid}/role")]
+    [Authorize(Policy = Policies.TenantAdmin)]
+    [EndpointSummary("Update tenant membership role")]
+    [EndpointDescription("Updates the user's role in the specified tenant/workspace. Use this for console promotion/demotion flows.")]
+    [ProducesResponseType<UpdateTenantMemberRoleResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<UpdateTenantMemberRoleResponse>(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> UpdateUserMembershipRole(
+        Guid userId,
+        Guid tenantId,
+        [FromBody] UpdateUserMembershipRoleRequest body,
+        CancellationToken ct = default)
+    {
+        ArgumentNullException.ThrowIfNull(body);
+
+        var result = await sender.Send(
+                new UpdateTenantMemberRoleCommand(tenantId, userId, body.Role),
+                ct)
+            .ConfigureAwait(false);
+
+        return result.Success ? Ok(result) : NotFound(result);
+    }
+
+    /// <summary>
     ///     Get all tenant memberships for a user.
     ///     Returns a list of all tenants the user belongs to with their role and status.
     ///     Similar to Discord's server list showing which servers you're a member of.
@@ -94,4 +163,36 @@ public sealed record MembershipCountResponse
     ///     Number of active memberships
     /// </summary>
     public int Count { get; init; }
+}
+
+/// <summary>
+///     Request body for adding a user membership.
+/// </summary>
+public sealed record AddUserMembershipRequest
+{
+    /// <summary>
+    ///     Tenant to join.
+    /// </summary>
+    public Guid TenantId { get; init; }
+
+    /// <summary>
+    ///     Role assigned in the tenant.
+    /// </summary>
+    public string Role { get; init; } = "Member";
+
+    /// <summary>
+    ///     Optional inviter identifier for audit trail purposes.
+    /// </summary>
+    public string? InvitedByEmail { get; init; }
+}
+
+/// <summary>
+///     Request body for changing a user's tenant role.
+/// </summary>
+public sealed record UpdateUserMembershipRoleRequest
+{
+    /// <summary>
+    ///     New role assigned in the tenant.
+    /// </summary>
+    public string Role { get; init; } = "Member";
 }

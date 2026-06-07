@@ -27,6 +27,15 @@ public class TenantDomainTests
     }
 
     [Fact]
+    public void TenantDomain_Partial_Constructor_Should_Map_Properties()
+    {
+        var domain = new TenantDomain(new { TopLevelDomain = "example.com", Subdomain = "team" });
+
+        domain.TopLevelDomain.Should().Be("example.com");
+        domain.Subdomain.Should().Be("team");
+    }
+
+    [Fact]
     public void TenantDomain_Should_Support_SetAsMainDomain()
     {
         // Arrange

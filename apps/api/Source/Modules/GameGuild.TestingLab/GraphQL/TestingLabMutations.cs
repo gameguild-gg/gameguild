@@ -38,7 +38,7 @@ public class UpdateTestingLocationInput {
 }
 
 /// <summary> GraphQL mutations for TestingLab module using CQRS pattern </summary>
-[ExtendObjectType<Mutation>]
+[ExtendObjectType("Mutation")]
 public class TestingLabMutations {
   /// <summary> Create a new testing request </summary>
   public async Task<TestingRequest> CreateTestingRequest([Service] ITestService testService, ClaimsPrincipal claimsPrincipal, CreateTestingRequestDto input) {

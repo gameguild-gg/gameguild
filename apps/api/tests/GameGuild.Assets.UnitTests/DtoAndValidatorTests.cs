@@ -32,9 +32,9 @@ public class DtoAndValidatorTests
     // ═══════════════════════════════════════════════════════════════════
 
     [Fact]
-    public void PlaceholderOrderValidationService_CanBeConstructed()
+    public void CommerceOrderValidationService_CanBeConstructed()
     {
-        var svc = new PlaceholderOrderValidationService();
+        var svc = new CommerceOrderValidationService(Mock.Of<GameGuild.Commerce.Orders.IOrderRepository>());
         svc.Should().NotBeNull();
     }
 

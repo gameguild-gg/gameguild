@@ -41,8 +41,8 @@ public sealed class TenantsController(ISender sender) : BaseApiController
     ///     Get tenants with pagination, search, and sorting
     /// </summary>
     /// <param name="page">Page number for pagination (default: 1)</param>
-    /// <param name="pageSize">Number of tenants per page (default: 20, max: 100)</param>
-    /// <param name="status">Optional status filter: 'active' (active only), 'inactive' (inactive only), or null (all statuses)</param>
+    /// <param name="pageSize">Number of tenants per page (default: 20, max: 500)</param>
+    /// <param name="status">Optional status filter: 'active', 'inactive', 'archived', or null (all statuses)</param>
     /// <param name="searchTerm">Optional search term to filter tenants by name or slug</param>
     /// <param name="ct">Cancellation token</param>
     /// <returns>Paginated list of tenant organizations with metadata</returns>
@@ -57,22 +57,29 @@ public sealed class TenantsController(ISender sender) : BaseApiController
         // Validate pagination parameters
         if (page < 1) page = 1;
         if (pageSize < 1) pageSize = 20;
-        if (pageSize > 100) pageSize = 100;
+        if (pageSize > 500) pageSize = 500;
 
-        // Convert status filter to repository parameters
-        bool? isActiveFilter = status?.ToLowerInvariant() switch
+        var normalizedStatus = status?.Trim().ToLowerInvariant();
+        bool? isActiveFilter = normalizedStatus switch
         {
             "active" => true,
             "inactive" => false,
-            _ => null // null means include all statuses
+            _ => null
+        };
+        bool? isArchivedFilter = normalizedStatus switch
+        {
+            "active" => false,
+            "inactive" => false,
+            "archived" => true,
+            _ => null
         };
 
         var tenants = await sender.Send(
                 new GetTenantsPageQuery(
                     page,
                     pageSize,
-                    isActiveFilter != true, // Include inactive if not filtering for active only
-                    true, // Always include archived for now since repository doesn't support this filter
+                    isActiveFilter,
+                    isArchivedFilter,
                     searchTerm
                 ),
                 ct

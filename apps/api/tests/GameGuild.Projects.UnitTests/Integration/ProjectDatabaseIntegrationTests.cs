@@ -4,17 +4,17 @@ namespace GameGuild.Projects.UnitTests.Integration;
 
 public class ProjectDatabaseIntegrationTests : IDisposable
 {
-    private readonly ApplicationDbContext _context;
+    private readonly TestProjectsDbContext _context;
     private readonly TestDataBuilder _testDataBuilder;
     private readonly Guid _testUserId;
 
     public ProjectDatabaseIntegrationTests()
     {
-        var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+        var options = new DbContextOptionsBuilder<TestProjectsDbContext>()
             .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
             .Options;
 
-        _context = new ApplicationDbContext(options);
+        _context = new TestProjectsDbContext(options);
         _testDataBuilder = new TestDataBuilder();
         _testUserId = Guid.NewGuid();
     }
@@ -35,11 +35,11 @@ public class ProjectDatabaseIntegrationTests : IDisposable
             _testDataBuilder.CreateProject(type: ProjectType.Game)
         };
 
-        _context.Projects.AddRange(projects);
+        _context.Set<Project>().AddRange(projects);
         await _context.SaveChangesAsync();
 
         // Act
-        var gameProjects = await _context.Projects
+        var gameProjects = await _context.Set<Project>()
             .Where(p => p.Type == ProjectType.Game)
             .ToListAsync();
 
@@ -63,11 +63,11 @@ public class ProjectDatabaseIntegrationTests : IDisposable
         projects[1].Status = ContentStatus.Published;
         projects[2].Status = ContentStatus.Published;
 
-        _context.Projects.AddRange(projects);
+        _context.Set<Project>().AddRange(projects);
         await _context.SaveChangesAsync();
 
         // Act
-        var publishedProjects = await _context.Projects
+        var publishedProjects = await _context.Set<Project>()
             .Where(p => p.Status == ContentStatus.Published)
             .ToListAsync();
 
@@ -87,14 +87,14 @@ public class ProjectDatabaseIntegrationTests : IDisposable
             _testDataBuilder.CreateProject()
         };
 
-        // Mark one as deleted
-        projects[2].SoftDelete();
+        // Mark one as deleted without requiring a prior persisted version.
+        projects[2].DeletedAt = DateTime.UtcNow;
 
-        _context.Projects.AddRange(projects);
+        _context.Set<Project>().AddRange(projects);
         await _context.SaveChangesAsync();
 
         // Act
-        var activeProjects = await _context.Projects
+        var activeProjects = await _context.Set<Project>()
             .Where(p => p.DeletedAt == null)
             .ToListAsync();
 
@@ -114,11 +114,11 @@ public class ProjectDatabaseIntegrationTests : IDisposable
             _testDataBuilder.CreateProject(title: "Another Game")
         };
 
-        _context.Projects.AddRange(projects);
+        _context.Set<Project>().AddRange(projects);
         await _context.SaveChangesAsync();
 
         // Act
-        var searchResults = await _context.Projects
+        var searchResults = await _context.Set<Project>()
             .Where(p => p.Title.ToLower().Contains("game"))
             .ToListAsync();
 
@@ -135,11 +135,11 @@ public class ProjectDatabaseIntegrationTests : IDisposable
             .Select(i => _testDataBuilder.CreateProject(title: $"Project {i}"))
             .ToArray();
 
-        _context.Projects.AddRange(projects);
+        _context.Set<Project>().AddRange(projects);
         await _context.SaveChangesAsync();
 
         // Act
-        var pagedResults = await _context.Projects
+        var pagedResults = await _context.Set<Project>()
             .OrderBy(p => p.Title)
             .Skip(3)
             .Take(4)
@@ -163,11 +163,11 @@ public class ProjectDatabaseIntegrationTests : IDisposable
             _testDataBuilder.CreateProject(createdById: creator2Id)
         };
 
-        _context.Projects.AddRange(projects);
+        _context.Set<Project>().AddRange(projects);
         await _context.SaveChangesAsync();
 
         // Act
-        var creator1Projects = await _context.Projects
+        var creator1Projects = await _context.Set<Project>()
             .Where(p => p.CreatedById == creator1Id)
             .ToListAsync();
 
@@ -185,12 +185,12 @@ public class ProjectDatabaseIntegrationTests : IDisposable
         
         project.CategoryId = category.Id;
         
-        _context.ProjectCategories.Add(category);
-        _context.Projects.Add(project);
+        _context.Set<ProjectCategory>().Add(category);
+        _context.Set<Project>().Add(project);
         await _context.SaveChangesAsync();
 
         // Act
-        var projectWithCategory = await _context.Projects
+        var projectWithCategory = await _context.Set<Project>()
             .FirstOrDefaultAsync(p => p.CategoryId == category.Id);
 
         // Assert

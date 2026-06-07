@@ -3,6 +3,8 @@ using GameGuild.CQRS;
 using GameGuild.Identity.Context.Actors;
 using GameGuild.Identity.Authorization;
 using GameGuild.Resources;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -530,9 +532,46 @@ public class CommandHandlerConstructorTests
     [Fact]
     public void CleanupOrphanedResourcesHandler_CanBeConstructed()
     {
-        var repo = new Mock<IUsageRecordRepository>();
-        var handler = new CleanupOrphanedResourcesHandler(repo.Object);
+        using var db = CreateResourcesDbContext();
+        var handler = new CleanupOrphanedResourcesHandler(db);
         handler.Should().NotBeNull();
+    }
+
+    [Fact]
+    public async Task CleanupOrphanedResourcesHandler_DryRunCountsAndDeleteRemovesOnlyOrphans()
+    {
+        await using var db = CreateResourcesDbContext();
+        var tenantId = Guid.NewGuid();
+        db.UsageRecords.AddRange(
+            UsageRecord.CreateDaily(ResourceUsageType.Users, tenantId, 1, DateTime.UtcNow),
+            new UsageRecord
+            {
+                Type = ResourceUsageType.Users,
+                Count = 2,
+                PeriodStart = DateTime.UtcNow.Date,
+                PeriodEnd = DateTime.UtcNow.Date.AddDays(1).AddTicks(-1)
+            },
+            new UsageRecord
+            {
+                TenantId = Guid.Empty,
+                Type = ResourceUsageType.Storage,
+                Count = 3,
+                PeriodStart = DateTime.UtcNow.Date,
+                PeriodEnd = DateTime.UtcNow.Date.AddDays(1).AddTicks(-1)
+            });
+        await db.SaveChangesAsync();
+
+        var handler = new CleanupOrphanedResourcesHandler(db);
+
+        var dryRunCount = await handler.Handle(new CleanupOrphanedResourcesCommand(DryRun: true), CancellationToken.None);
+        dryRunCount.Should().Be(2);
+        db.UsageRecords.Should().HaveCount(3);
+
+        var deleted = await handler.Handle(new CleanupOrphanedResourcesCommand(DryRun: false, ResourceTypes: [ResourceUsageType.Users]), CancellationToken.None);
+        deleted.Should().Be(1);
+        db.UsageRecords.Should().HaveCount(2);
+        db.UsageRecords.Count(record => record.TenantId == tenantId).Should().Be(1);
+        db.UsageRecords.Count(record => record.TenantId == Guid.Empty).Should().Be(1);
     }
 
     [Fact]
@@ -617,6 +656,28 @@ public class CommandHandlerConstructorTests
         var accessor = new Mock<IActorContextAccessor>();
         var handler = new ResetResourceQuotaCommandHandler(repo.Object, publisher.Object, accessor.Object);
         handler.Should().NotBeNull();
+    }
+
+    private static CleanupResourcesDbContext CreateResourcesDbContext()
+    {
+        var options = new DbContextOptionsBuilder<CleanupResourcesDbContext>()
+            .UseInMemoryDatabase(Guid.NewGuid().ToString("N"))
+            .Options;
+
+        return new CleanupResourcesDbContext(options);
+    }
+
+    private sealed class CleanupResourcesDbContext(DbContextOptions<CleanupResourcesDbContext> options) : DbContext(options), IApplicationDbContext
+    {
+        public DbSet<UsageRecord> UsageRecords => Set<UsageRecord>();
+
+        public Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default)
+            => Database.BeginTransactionAsync(cancellationToken);
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<UsageRecord>();
+        }
     }
 }
 

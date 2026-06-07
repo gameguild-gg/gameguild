@@ -61,6 +61,16 @@ public static class ProductsModule
                 .WithOne(up => up.Product)
                 .HasForeignKey(up => up.ProductId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasMany(e => e.BundleItems)
+                .WithOne(bi => bi.BundleProduct)
+                .HasForeignKey(bi => bi.BundleProductId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasMany(e => e.IncludedInBundles)
+                .WithOne(bi => bi.IncludedProduct)
+                .HasForeignKey(bi => bi.IncludedProductId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
 
         modelBuilder.Entity<ProductPricing>(entity =>

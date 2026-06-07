@@ -34,6 +34,19 @@ public class CertificatesModuleAndServiceTests
     }
 
     [Fact]
+    public async Task GenerateCertificateNumberAsync_ShouldReturnConventionalNumber()
+    {
+        var service = new CertificateService(
+            Mock.Of<IApplicationDbContext>(),
+            NullLogger<CertificateService>.Instance);
+
+        var number = await service.GenerateCertificateNumberAsync();
+
+        number.Should().StartWith($"CERT-{SystemClock.UtcNow:yyyyMMdd}-");
+        number.Length.Should().Be("CERT-yyyyMMdd-xxxxxxxx".Length);
+    }
+
+    [Fact]
     public void CertificateTemplateService_CanBeInstantiated()
     {
         var service = new CertificateTemplateService(

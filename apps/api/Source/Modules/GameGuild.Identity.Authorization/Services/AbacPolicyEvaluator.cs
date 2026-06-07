@@ -126,8 +126,12 @@ public class AbacPolicyEvaluator(
         // Check resource type filter
         if (!string.IsNullOrEmpty(policy.ResourceType))
         {
-            if (!context.ResourceAttributes.TryGetValue("resource.type", out var resType) ||
-                resType?.ToString() != policy.ResourceType)
+            if (!context.ResourceAttributes.TryGetValue("resource.type", out var resType))
+            {
+                return false;
+            }
+
+            if (resType?.ToString() != policy.ResourceType)
             {
                 return false;
             }
@@ -191,15 +195,34 @@ public class AbacPolicyEvaluator(
 
     private static bool CompareValues(object actual, JsonElement expected)
     {
-        return expected.ValueKind switch
+        switch (expected.ValueKind)
         {
-            JsonValueKind.String => actual?.ToString()?.Equals(expected.GetString(), StringComparison.OrdinalIgnoreCase) ?? false,
-            JsonValueKind.Number when expected.TryGetInt32(out var i) => int.TryParse(actual?.ToString(), out var ai) && ai == i,
-            JsonValueKind.True => actual is bool b && b,
-            JsonValueKind.False => actual is bool b2 && !b2,
-            JsonValueKind.Array => actual is IEnumerable<string> arr && expected.EnumerateArray().Any(e => arr.Contains(e.GetString() ?? "", StringComparer.OrdinalIgnoreCase)),
-            _ => false
-        };
+            case JsonValueKind.String:
+            {
+                var actualString = actual?.ToString();
+                var expectedString = expected.GetString();
+                return actualString is not null
+                       && expectedString is not null
+                       && actualString.Equals(expectedString, StringComparison.OrdinalIgnoreCase);
+            }
+            case JsonValueKind.Number when expected.TryGetInt32(out var expectedInt):
+                return int.TryParse(actual?.ToString(), out var actualInt) && actualInt == expectedInt;
+            case JsonValueKind.True:
+                return actual is bool trueValue && trueValue;
+            case JsonValueKind.False:
+                return actual is bool falseValue && !falseValue;
+            case JsonValueKind.Array:
+            {
+                if (actual is not IEnumerable<string> actualValues)
+                    return false;
+
+                return expected
+                    .EnumerateArray()
+                    .Any(e => actualValues.Contains(e.GetString() ?? string.Empty, StringComparer.OrdinalIgnoreCase));
+            }
+            default:
+                return false;
+        }
     }
 }
 

@@ -2,7 +2,7 @@ using GameGuild.CQRS;
 
 namespace GameGuild.Identity.Users;
 
-// Placeholder queries - these need proper implementations
+// Query contracts implemented by the focused query handler folders in this module.
 public sealed record GetUserMetadataQuery(Guid UserId) : IQuery<UserMetadataDto?>;
 
 public sealed record GetUserCustomFieldsQuery(Guid UserId) : IQuery<Dictionary<string, object?>>;
