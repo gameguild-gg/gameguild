@@ -17,6 +17,7 @@ using GameGuild.Identity.Authorization;
 using GameGuild.Learning.Enrollments;
 using GameGuild.Social.Blog;
 using GameGuild.Social.Feed;
+using GameGuild.Social.Groups;
 using GameGuild.Social.Profiles;
 using GameGuild.Social.Reactions;
 using GameGuild.Tags;
@@ -170,6 +171,11 @@ public static class PresentationServiceCollectionExtensions
         services.AddControllers()
             .AddApplicationPart(typeof(FeedController).Assembly); // Social Feed module
         LogControllersFromAssembly(typeof(FeedController).Assembly, logger, controllerStopwatch);
+
+        controllerStopwatch.Restart();
+        services.AddControllers()
+            .AddApplicationPart(typeof(SocialGroupsController).Assembly); // Social Groups module
+        LogControllersFromAssembly(typeof(SocialGroupsController).Assembly, logger, controllerStopwatch);
 
         controllerStopwatch.Restart();
         services.AddControllers()

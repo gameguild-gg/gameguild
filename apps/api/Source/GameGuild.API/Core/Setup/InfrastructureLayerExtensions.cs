@@ -21,6 +21,7 @@ using GameGuild.Resources;
 using GameGuild.GameJams;
 using GameGuild.Social.Blog;
 using GameGuild.Social.Feed;
+using GameGuild.Social.Groups;
 using GameGuild.Social.Profiles;
 using GameGuild.Social.Reactions;
 using GameGuild.Tags;
@@ -212,12 +213,13 @@ public static class InfrastructureLayerExtensions
         services.AddSocialProfilesModule();
         logger.LogInformation("Social Profiles Module registered in {ElapsedMs}ms", stepStopwatch.ElapsedMilliseconds);
 
-        // 10a.3a. Social modules (blog, feed, reactions)
+        // 10a.3a. Social modules (blog, feed, groups, reactions)
         stepStopwatch.Restart();
         services.AddSocialBlogModule();
         services.AddSocialFeedModule();
+        services.AddSocialGroupsModule();
         services.AddSocialReactionsModule();
-        logger.LogInformation("Social Blog/Feed/Reactions Modules registered in {ElapsedMs}ms", stepStopwatch.ElapsedMilliseconds);
+        logger.LogInformation("Social Blog/Feed/Groups/Reactions Modules registered in {ElapsedMs}ms", stepStopwatch.ElapsedMilliseconds);
 
         // 10a.4. Notifications Module (delivery facade required by billing/subscription workflows)
         stepStopwatch.Restart();

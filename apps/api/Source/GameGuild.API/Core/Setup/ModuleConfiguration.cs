@@ -10,7 +10,7 @@ public sealed class ModuleConfiguration
     ///     Default enabled modules for the application.
     /// </summary>
     public static readonly string[] DefaultEnabledModules =
-        ["AI", "Assessments", "Authentication", "Authorization", "Billing", "Compliance.FERPA", "ContentPages", "Courses", "Features", "GameJams", "Learning.Enrollments", "Notifications", "Payments", "Products", "Resources", "Social.Blog", "Social.Feed", "Social.Profiles", "Social.Reactions", "Subscriptions", "Tags", "Tenants", "Users"];
+        ["AI", "Assessments", "Authentication", "Authorization", "Billing", "Compliance.FERPA", "ContentPages", "Courses", "Features", "GameJams", "Learning.Enrollments", "Notifications", "Payments", "Products", "Resources", "Social.Blog", "Social.Feed", "Social.Groups", "Social.Profiles", "Social.Reactions", "Subscriptions", "Tags", "Tenants", "Users"];
 
     /// <summary>
     ///     Gets or sets the list of enabled module names.
