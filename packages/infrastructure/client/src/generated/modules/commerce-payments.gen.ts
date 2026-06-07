@@ -68,6 +68,64 @@ export class CommercePaymentsModule {
   }
 
   /**
+   * Create a Stripe SetupIntent for subscription checkout
+   *
+   * Creates or reuses a Stripe customer for the subscription and returns a SetupIntent client secret for PaymentElement-based card collection.
+   */
+  async postPaymentsSetupIntents(
+    body: Types.CommercePaymentsPaymentsControllerCreateSetupIntentInput,
+  ): Promise<Result<Types.CommercePaymentsPaymentsControllerCreateSetupIntentOutput, ApiError>> {
+    const url = '/api/v1/payments/setup-intents';
+
+    // Validate request body
+    const validatedBody = safeParse(Types.CommercePaymentsPaymentsControllerCreateSetupIntentInputSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.CommercePaymentsPaymentsControllerCreateSetupIntentOutputSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   * Complete subscription checkout after setup confirmation
+   *
+   * Sets the confirmed Stripe payment method as the customer's default and processes the first subscription charge.
+   */
+  async postPaymentsSubscriptionCheckoutsComplete(
+    body: Types.CommercePaymentsPaymentsControllerCompleteSubscriptionCheckoutInput,
+  ): Promise<Result<Types.CommercePaymentsPaymentResult, ApiError>> {
+    const url = '/api/v1/payments/subscription-checkouts:complete';
+
+    // Validate request body
+    const validatedBody = safeParse(Types.CommercePaymentsPaymentsControllerCompleteSubscriptionCheckoutInputSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.CommercePaymentsPaymentResultSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
    * Retrieve a specific payment by its unique identifier
    *
    * Retrieves detailed information about a specific payment transaction, including its current status, amount, payment method, and processing details. Use this endpoint to track payment progress and verify transaction completion.

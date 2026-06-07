@@ -202,6 +202,26 @@ export class LearningCoursesProgramModule {
 
   /**
    */
+  async postCoursesSelfEnroll(id: string): Promise<Result<Types.LearningCoursesUserProgress, ApiError>> {
+    const url = `/v1/courses/${id}:self-enroll`;
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.LearningCoursesUserProgressSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
   async postCoursesContentReorder1(id: string, body: Types.LearningCoursesReorderContent): Promise<Result<void, ApiError>> {
     const url = `/v1/courses/${id}/content:reorder`;
 

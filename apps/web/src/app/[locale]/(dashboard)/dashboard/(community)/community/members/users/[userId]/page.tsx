@@ -3,7 +3,7 @@ import { getMember } from '@/lib/community';
 import { Badge } from '@game-guild/ui/components/badge';
 import { Button } from '@game-guild/ui/components/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@game-guild/ui/components/card';
-import { ArrowLeft, Calendar, Clock, Globe, Mail, MapPin, Phone, User } from 'lucide-react';
+import { ArrowLeft, Award, BriefcaseBusiness, Calendar, Clock, Globe, Mail, MapPin, Phone, User, Users } from 'lucide-react';
 import { notFound } from 'next/navigation';
 import React from 'react';
 
@@ -19,6 +19,13 @@ export default async function UserDetailPage({ params }: Props): Promise<React.J
     notFound();
   }
 
+  const profileStats = [
+    { label: 'Followers', value: member.followerCount, icon: Users },
+    { label: 'Following', value: member.followingCount, icon: Users },
+    { label: 'Posts', value: member.postCount, icon: Calendar },
+    { label: 'Projects', value: member.projectCount, icon: BriefcaseBusiness },
+  ].filter((stat) => typeof stat.value === 'number');
+
   return (
     <div className="flex flex-col gap-6 p-6">
       {/* Header */}
@@ -30,11 +37,29 @@ export default async function UserDetailPage({ params }: Props): Promise<React.J
         </Button>
         <div className="flex-1">
           <h1 className="text-3xl font-bold tracking-tight">{member.displayName}</h1>
-          <p className="text-muted-foreground">@{member.username}</p>
+          <p className="text-muted-foreground">@{member.handle ?? member.username}</p>
+          {member.headline && <p className="mt-1 text-sm text-muted-foreground">{member.headline}</p>}
         </div>
+        {member.availabilityStatus && member.availabilityStatus !== 'NotSet' && <Badge variant="outline">{member.availabilityStatus}</Badge>}
         <Badge variant={member.status === 'active' ? 'default' : member.status === 'banned' ? 'destructive' : 'secondary'}>{member.status}</Badge>
         <Badge variant={member.role === 'admin' ? 'default' : member.role === 'moderator' ? 'secondary' : 'outline'}>{member.role}</Badge>
       </div>
+
+      {profileStats.length > 0 && (
+        <div className="grid gap-4 md:grid-cols-4">
+          {profileStats.map((stat) => (
+            <Card key={stat.label}>
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium">{stat.label}</CardTitle>
+                <stat.icon className="size-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stat.value}</div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
 
       <div className="grid gap-6 md:grid-cols-2">
         {/* Profile Info */}
@@ -146,6 +171,58 @@ export default async function UserDetailPage({ params }: Props): Promise<React.J
           </CardContent>
         </Card>
       </div>
+
+      {member.skills.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Award className="size-5" />
+              Skills
+            </CardTitle>
+            <CardDescription>Public skills from the member social profile</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-wrap gap-2">
+              {member.skills.map((skill) => (
+                <Badge key={skill.id ?? skill.name} variant="secondary">
+                  {skill.name}
+                  {skill.proficiency ? ` · ${skill.proficiency}` : ''}
+                </Badge>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {member.portfolioItems.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <BriefcaseBusiness className="size-5" />
+              Portfolio
+            </CardTitle>
+            <CardDescription>Public work attached to the member social profile</CardDescription>
+          </CardHeader>
+          <CardContent className="grid gap-4 md:grid-cols-2">
+            {member.portfolioItems.map((item) => (
+              <div key={item.id ?? item.title} className="rounded-lg border p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="font-medium">{item.title}</p>
+                    {item.description && <p className="mt-1 text-sm text-muted-foreground">{item.description}</p>}
+                  </div>
+                  {item.isPinned && <Badge variant="outline">Pinned</Badge>}
+                </div>
+                {item.url && (
+                  <a href={item.url} target="_blank" rel="noopener noreferrer" className="mt-3 inline-flex text-sm text-primary hover:underline">
+                    View project
+                  </a>
+                )}
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
