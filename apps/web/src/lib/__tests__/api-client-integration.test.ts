@@ -201,6 +201,7 @@ describe('API Client Package Integration', () => {
         socialProfiles: new GeneratedApi.SocialProfilesModule(client),
         socialBlog: new GeneratedApi.SocialBlogPostsModule(client),
         socialFeed: new GeneratedApi.SocialFeedModule(client),
+        socialGroups: new GeneratedApi.SocialGroupsSocialgroupsModule(client),
         socialReactions: new GeneratedApi.SocialReactionsModule(client),
         enrollments: new GeneratedApi.LearningEnrollmentsModule(client),
         gameJams: new GeneratedApi.GamejamsModule(client),
@@ -213,6 +214,8 @@ describe('API Client Package Integration', () => {
       expect(modules.socialProfiles.getApiSocialProfilesUsers).toBeTypeOf('function');
       expect(modules.socialBlog.getApiSocialBlog).toBeTypeOf('function');
       expect(modules.socialFeed.getApiSocialFeedUsers).toBeTypeOf('function');
+      expect(modules.socialGroups.getApiSocialGroups).toBeTypeOf('function');
+      expect(modules.socialGroups.postApiSocialGroupsMembers).toBeTypeOf('function');
       expect(modules.socialReactions.getApiSocialReactionsTarget).toBeTypeOf('function');
       expect(modules.enrollments.postApiLearningEnrollments).toBeTypeOf('function');
       expect(modules.gameJams.getApiGameJams).toBeTypeOf('function');

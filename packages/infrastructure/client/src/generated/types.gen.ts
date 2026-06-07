@@ -4393,6 +4393,75 @@ export interface SocialFeedFeedItem {
 
 export type SocialFeedFeedItemReason = 'Following' | 'Trending' | 'Recommended' | 'Mentioned' | 'Replied' | 'Liked' | 'InNetwork';
 
+export interface SocialGroupsApproveSocialGroupMemberInput {
+  approvedByUserId?: string;
+}
+
+export interface SocialGroupsChangeSocialGroupMemberRoleInput {
+  role?: SocialGroupsSocialGroupMemberRole;
+}
+
+export interface SocialGroupsCreateSocialGroupInput {
+  ownerId?: string;
+  name?: string | null;
+  slug?: string | null;
+  type?: SocialGroupsSocialGroupType;
+  visibility?: SocialGroupsSocialGroupVisibility;
+  description?: string | null;
+  tenantId?: string | null;
+}
+
+export interface SocialGroupsJoinSocialGroupInput {
+  userId?: string;
+  requestedRole?: SocialGroupsSocialGroupMemberRole;
+}
+
+export interface SocialGroupsSocialGroup {
+  id?: string;
+  tenantId?: string | null;
+  ownerId?: string;
+  name?: string | null;
+  slug?: string | null;
+  description?: string | null;
+  type?: SocialGroupsSocialGroupType;
+  visibility?: SocialGroupsSocialGroupVisibility;
+  status?: SocialGroupsSocialGroupStatus;
+  memberCount?: number;
+  pendingMemberCount?: number;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface SocialGroupsSocialGroupMember {
+  id?: string;
+  groupId?: string;
+  userId?: string;
+  role?: SocialGroupsSocialGroupMemberRole;
+  status?: SocialGroupsSocialGroupMembershipStatus;
+  requestedAt?: string;
+  joinedAt?: string | null;
+  approvedByUserId?: string | null;
+  removedAt?: string | null;
+}
+
+export type SocialGroupsSocialGroupMemberRole = 'Owner' | 'Admin' | 'Moderator' | 'Member';
+
+export type SocialGroupsSocialGroupMembershipStatus = 'Pending' | 'Active' | 'Rejected' | 'Removed';
+
+export type SocialGroupsSocialGroupStatus = 'Active' | 'Archived' | 'Suspended';
+
+export type SocialGroupsSocialGroupType = 'StudyGroup' | 'ProjectTeam' | 'InterestCommunity' | 'CourseCohort' | 'Institution' | 'GameJamTeam';
+
+export type SocialGroupsSocialGroupVisibility = 'Public' | 'Private' | 'InviteOnly';
+
+export interface SocialGroupsUpdateSocialGroupInput {
+  name?: string | null;
+  slug?: string | null;
+  type?: SocialGroupsSocialGroupType;
+  visibility?: SocialGroupsSocialGroupVisibility;
+  description?: string | null;
+}
+
 export interface SocialProfilesAddProfilePortfolioItemBody {
   title?: string | null;
   projectId?: string | null;
@@ -5115,6 +5184,18 @@ export let SocialFeedAddFeedItemInputSchema: z.ZodType<SocialFeedAddFeedItemInpu
 export let SocialFeedFeedContentTypeSchema: z.ZodType<SocialFeedFeedContentType>;
 export let SocialFeedFeedItemSchema: z.ZodType<SocialFeedFeedItem>;
 export let SocialFeedFeedItemReasonSchema: z.ZodType<SocialFeedFeedItemReason>;
+export let SocialGroupsApproveSocialGroupMemberInputSchema: z.ZodType<SocialGroupsApproveSocialGroupMemberInput>;
+export let SocialGroupsChangeSocialGroupMemberRoleInputSchema: z.ZodType<SocialGroupsChangeSocialGroupMemberRoleInput>;
+export let SocialGroupsCreateSocialGroupInputSchema: z.ZodType<SocialGroupsCreateSocialGroupInput>;
+export let SocialGroupsJoinSocialGroupInputSchema: z.ZodType<SocialGroupsJoinSocialGroupInput>;
+export let SocialGroupsSocialGroupSchema: z.ZodType<SocialGroupsSocialGroup>;
+export let SocialGroupsSocialGroupMemberSchema: z.ZodType<SocialGroupsSocialGroupMember>;
+export let SocialGroupsSocialGroupMemberRoleSchema: z.ZodType<SocialGroupsSocialGroupMemberRole>;
+export let SocialGroupsSocialGroupMembershipStatusSchema: z.ZodType<SocialGroupsSocialGroupMembershipStatus>;
+export let SocialGroupsSocialGroupStatusSchema: z.ZodType<SocialGroupsSocialGroupStatus>;
+export let SocialGroupsSocialGroupTypeSchema: z.ZodType<SocialGroupsSocialGroupType>;
+export let SocialGroupsSocialGroupVisibilitySchema: z.ZodType<SocialGroupsSocialGroupVisibility>;
+export let SocialGroupsUpdateSocialGroupInputSchema: z.ZodType<SocialGroupsUpdateSocialGroupInput>;
 export let SocialProfilesAddProfilePortfolioItemBodySchema: z.ZodType<SocialProfilesAddProfilePortfolioItemBody>;
 export let SocialProfilesAddProfileSkillBodySchema: z.ZodType<SocialProfilesAddProfileSkillBody>;
 export let SocialProfilesProfileAvailabilityStatusSchema: z.ZodType<SocialProfilesProfileAvailabilityStatus>;
@@ -10269,6 +10350,87 @@ SocialFeedFeedItemSchema = z.object({
 
 /** Zod schema for SocialFeedFeedItemReason */
 SocialFeedFeedItemReasonSchema = z.enum(['Following', 'Trending', 'Recommended', 'Mentioned', 'Replied', 'Liked', 'InNetwork']);
+
+/** Zod schema for SocialGroupsApproveSocialGroupMemberInput */
+SocialGroupsApproveSocialGroupMemberInputSchema = z.object({
+  approvedByUserId: z.string().uuid().optional(),
+});
+
+/** Zod schema for SocialGroupsChangeSocialGroupMemberRoleInput */
+SocialGroupsChangeSocialGroupMemberRoleInputSchema = z.object({
+  role: z.lazy(() => SocialGroupsSocialGroupMemberRoleSchema).optional(),
+});
+
+/** Zod schema for SocialGroupsCreateSocialGroupInput */
+SocialGroupsCreateSocialGroupInputSchema = z.object({
+  ownerId: z.string().uuid().optional(),
+  name: z.string().nullable().optional(),
+  slug: z.string().nullable().optional(),
+  type: z.lazy(() => SocialGroupsSocialGroupTypeSchema).optional(),
+  visibility: z.lazy(() => SocialGroupsSocialGroupVisibilitySchema).optional(),
+  description: z.string().nullable().optional(),
+  tenantId: z.string().uuid().nullable().optional(),
+});
+
+/** Zod schema for SocialGroupsJoinSocialGroupInput */
+SocialGroupsJoinSocialGroupInputSchema = z.object({
+  userId: z.string().uuid().optional(),
+  requestedRole: z.lazy(() => SocialGroupsSocialGroupMemberRoleSchema).optional(),
+});
+
+/** Zod schema for SocialGroupsSocialGroup */
+SocialGroupsSocialGroupSchema = z.object({
+  id: z.string().uuid().optional(),
+  tenantId: z.string().uuid().nullable().optional(),
+  ownerId: z.string().uuid().optional(),
+  name: z.string().nullable().optional(),
+  slug: z.string().nullable().optional(),
+  description: z.string().nullable().optional(),
+  type: z.lazy(() => SocialGroupsSocialGroupTypeSchema).optional(),
+  visibility: z.lazy(() => SocialGroupsSocialGroupVisibilitySchema).optional(),
+  status: z.lazy(() => SocialGroupsSocialGroupStatusSchema).optional(),
+  memberCount: z.number().int().optional(),
+  pendingMemberCount: z.number().int().optional(),
+  createdAt: z.string().datetime().optional(),
+  updatedAt: z.string().datetime().optional(),
+});
+
+/** Zod schema for SocialGroupsSocialGroupMember */
+SocialGroupsSocialGroupMemberSchema = z.object({
+  id: z.string().uuid().optional(),
+  groupId: z.string().uuid().optional(),
+  userId: z.string().uuid().optional(),
+  role: z.lazy(() => SocialGroupsSocialGroupMemberRoleSchema).optional(),
+  status: z.lazy(() => SocialGroupsSocialGroupMembershipStatusSchema).optional(),
+  requestedAt: z.string().datetime().optional(),
+  joinedAt: z.string().datetime().nullable().optional(),
+  approvedByUserId: z.string().uuid().nullable().optional(),
+  removedAt: z.string().datetime().nullable().optional(),
+});
+
+/** Zod schema for SocialGroupsSocialGroupMemberRole */
+SocialGroupsSocialGroupMemberRoleSchema = z.enum(['Owner', 'Admin', 'Moderator', 'Member']);
+
+/** Zod schema for SocialGroupsSocialGroupMembershipStatus */
+SocialGroupsSocialGroupMembershipStatusSchema = z.enum(['Pending', 'Active', 'Rejected', 'Removed']);
+
+/** Zod schema for SocialGroupsSocialGroupStatus */
+SocialGroupsSocialGroupStatusSchema = z.enum(['Active', 'Archived', 'Suspended']);
+
+/** Zod schema for SocialGroupsSocialGroupType */
+SocialGroupsSocialGroupTypeSchema = z.enum(['StudyGroup', 'ProjectTeam', 'InterestCommunity', 'CourseCohort', 'Institution', 'GameJamTeam']);
+
+/** Zod schema for SocialGroupsSocialGroupVisibility */
+SocialGroupsSocialGroupVisibilitySchema = z.enum(['Public', 'Private', 'InviteOnly']);
+
+/** Zod schema for SocialGroupsUpdateSocialGroupInput */
+SocialGroupsUpdateSocialGroupInputSchema = z.object({
+  name: z.string().nullable().optional(),
+  slug: z.string().nullable().optional(),
+  type: z.lazy(() => SocialGroupsSocialGroupTypeSchema).optional(),
+  visibility: z.lazy(() => SocialGroupsSocialGroupVisibilitySchema).optional(),
+  description: z.string().nullable().optional(),
+});
 
 /** Zod schema for SocialProfilesAddProfilePortfolioItemBody */
 SocialProfilesAddProfilePortfolioItemBodySchema = z.object({

@@ -3,7 +3,7 @@
 > **Generated:** 2026-02-13
 > **Updated:** 2026-06-07
 > **Architecture:** .NET 10 Modular Monolith · CQRS · EF Core · REST + GraphQL
-> **Total Modules:** 44 (across 10 domains)
+> **Total Modules:** 45 (across 10 domains)
 
 ---
 
@@ -556,6 +556,21 @@
 
 ---
 
+### 5.8 GameGuild.Social.Groups
+
+**Maturity:** ★★★★☆ Implemented — CQRS/API-backed social groups and memberships
+
+| Area | Endpoints / Capabilities |
+|------|--------------------------|
+| **Group Lifecycle** | List/create/get/update groups, activate, archive, suspend |
+| **Membership Workflow** | Join public groups, request private/invite-only groups, approve/reject members, leave groups |
+| **Roles** | Owner/admin/moderator/member model with protected owner flow |
+| **Modeling** | EF configuration for `social_groups` and `social_group_members`, unique slug, unique group/user membership |
+| **Client** | Generated `SocialGroupsSocialgroupsModule` from `/api/social/groups` OpenAPI surface |
+| **Coverage** | `GameGuild.Social.Groups.UnitTests` at 100% line / 100% branch coverage |
+
+---
+
 ## 6. Content Domain
 
 ### 6.1 GameGuild.Content.Pages
@@ -873,10 +888,10 @@
 
 | Metric | Count |
 |--------|-------|
-| **Total Modules** | 44 |
-| **Fully Implemented (★★★★+)** | 34 |
-| **Core/Foundation (★★-★★★)** | 9 |
-| **Skeleton/Placeholder (★)** | 1 |
+| **Total Modules** | 45 |
+| **Fully Implemented (★★★★+)** | 35 |
+| **Core/Foundation (★★-★★★)** | 10 |
+| **Skeleton/Placeholder (★)** | 0 |
 | **Controllers** | 80+ |
 | **REST Endpoints** | 500+ |
 | **Domains** | 10 |

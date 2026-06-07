@@ -5389,6 +5389,184 @@ export const deleteApiSocialProfilesPortfolioEndpoint = {
   requiresAuth: true,
 } as const;
 
+export interface GetApiSocialGroupsInput {
+  query?: {
+    tenantId?: string;
+    ownerId?: string;
+    type?: Types.SocialGroupsSocialGroupType;
+    visibility?: Types.SocialGroupsSocialGroupVisibility;
+    status?: Types.SocialGroupsSocialGroupStatus;
+    search?: string;
+    skip?: number;
+    take?: number;
+  };
+}
+export type GetApiSocialGroupsOutput = Array<Types.SocialGroupsSocialGroup>;
+export const getApiSocialGroupsEndpoint = {
+  operationId: 'getApiSocialGroups' as const,
+  method: 'GET' as const,
+  path: '/api/social/groups' as const,
+  tags: ['Social/groups/socialGroups'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostApiSocialGroupsInput {
+  body?: Types.SocialGroupsCreateSocialGroupInput;
+}
+export type PostApiSocialGroupsOutput = Types.SocialGroupsSocialGroup;
+export const postApiSocialGroupsEndpoint = {
+  operationId: 'postApiSocialGroups' as const,
+  method: 'POST' as const,
+  path: '/api/social/groups' as const,
+  tags: ['Social/groups/socialGroups'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetApiSocialGroups1Input {
+  id: string;
+}
+export type GetApiSocialGroups1Output = Types.SocialGroupsSocialGroup;
+export const getApiSocialGroups1Endpoint = {
+  operationId: 'getApiSocialGroups1' as const,
+  method: 'GET' as const,
+  path: '/api/social/groups/{id}' as const,
+  tags: ['Social/groups/socialGroups'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PutApiSocialGroupsInput {
+  id: string;
+  body?: Types.SocialGroupsUpdateSocialGroupInput;
+}
+export type PutApiSocialGroupsOutput = Types.SocialGroupsSocialGroup;
+export const putApiSocialGroupsEndpoint = {
+  operationId: 'putApiSocialGroups' as const,
+  method: 'PUT' as const,
+  path: '/api/social/groups/{id}' as const,
+  tags: ['Social/groups/socialGroups'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostApiSocialGroupsActivateInput {
+  id: string;
+}
+export type PostApiSocialGroupsActivateOutput = void;
+export const postApiSocialGroupsActivateEndpoint = {
+  operationId: 'postApiSocialGroupsActivate' as const,
+  method: 'POST' as const,
+  path: '/api/social/groups/{id}/activate' as const,
+  tags: ['Social/groups/socialGroups'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostApiSocialGroupsArchiveInput {
+  id: string;
+}
+export type PostApiSocialGroupsArchiveOutput = void;
+export const postApiSocialGroupsArchiveEndpoint = {
+  operationId: 'postApiSocialGroupsArchive' as const,
+  method: 'POST' as const,
+  path: '/api/social/groups/{id}/archive' as const,
+  tags: ['Social/groups/socialGroups'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostApiSocialGroupsSuspendInput {
+  id: string;
+}
+export type PostApiSocialGroupsSuspendOutput = void;
+export const postApiSocialGroupsSuspendEndpoint = {
+  operationId: 'postApiSocialGroupsSuspend' as const,
+  method: 'POST' as const,
+  path: '/api/social/groups/{id}/suspend' as const,
+  tags: ['Social/groups/socialGroups'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetApiSocialGroupsMembersInput {
+  id: string;
+  query?: {
+    status?: Types.SocialGroupsSocialGroupMembershipStatus;
+    skip?: number;
+    take?: number;
+  };
+}
+export type GetApiSocialGroupsMembersOutput = Array<Types.SocialGroupsSocialGroupMember>;
+export const getApiSocialGroupsMembersEndpoint = {
+  operationId: 'getApiSocialGroupsMembers' as const,
+  method: 'GET' as const,
+  path: '/api/social/groups/{id}/members' as const,
+  tags: ['Social/groups/socialGroups'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostApiSocialGroupsMembersInput {
+  id: string;
+  body?: Types.SocialGroupsJoinSocialGroupInput;
+}
+export type PostApiSocialGroupsMembersOutput = Types.SocialGroupsSocialGroupMember;
+export const postApiSocialGroupsMembersEndpoint = {
+  operationId: 'postApiSocialGroupsMembers' as const,
+  method: 'POST' as const,
+  path: '/api/social/groups/{id}/members' as const,
+  tags: ['Social/groups/socialGroups'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostApiSocialGroupsMembersApproveInput {
+  id: string;
+  userId: string;
+  body?: Types.SocialGroupsApproveSocialGroupMemberInput;
+}
+export type PostApiSocialGroupsMembersApproveOutput = void;
+export const postApiSocialGroupsMembersApproveEndpoint = {
+  operationId: 'postApiSocialGroupsMembersApprove' as const,
+  method: 'POST' as const,
+  path: '/api/social/groups/{id}/members/{userId}/approve' as const,
+  tags: ['Social/groups/socialGroups'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostApiSocialGroupsMembersRejectInput {
+  id: string;
+  userId: string;
+}
+export type PostApiSocialGroupsMembersRejectOutput = void;
+export const postApiSocialGroupsMembersRejectEndpoint = {
+  operationId: 'postApiSocialGroupsMembersReject' as const,
+  method: 'POST' as const,
+  path: '/api/social/groups/{id}/members/{userId}/reject' as const,
+  tags: ['Social/groups/socialGroups'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PutApiSocialGroupsMembersRoleInput {
+  id: string;
+  userId: string;
+  body?: Types.SocialGroupsChangeSocialGroupMemberRoleInput;
+}
+export type PutApiSocialGroupsMembersRoleOutput = void;
+export const putApiSocialGroupsMembersRoleEndpoint = {
+  operationId: 'putApiSocialGroupsMembersRole' as const,
+  method: 'PUT' as const,
+  path: '/api/social/groups/{id}/members/{userId}/role' as const,
+  tags: ['Social/groups/socialGroups'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface DeleteApiSocialGroupsMembersInput {
+  id: string;
+  userId: string;
+}
+export type DeleteApiSocialGroupsMembersOutput = void;
+export const deleteApiSocialGroupsMembersEndpoint = {
+  operationId: 'deleteApiSocialGroupsMembers' as const,
+  method: 'DELETE' as const,
+  path: '/api/social/groups/{id}/members/{userId}' as const,
+  tags: ['Social/groups/socialGroups'] as const,
+  requiresAuth: true,
+} as const;
+
 export interface GetApiTagsInput {
   query?: {
     search?: string;
@@ -9272,6 +9450,19 @@ export const endpoints = {
   postApiSocialProfilesPortfolio: postApiSocialProfilesPortfolioEndpoint,
   putApiSocialProfilesPortfolio: putApiSocialProfilesPortfolioEndpoint,
   deleteApiSocialProfilesPortfolio: deleteApiSocialProfilesPortfolioEndpoint,
+  getApiSocialGroups: getApiSocialGroupsEndpoint,
+  postApiSocialGroups: postApiSocialGroupsEndpoint,
+  getApiSocialGroups1: getApiSocialGroups1Endpoint,
+  putApiSocialGroups: putApiSocialGroupsEndpoint,
+  postApiSocialGroupsActivate: postApiSocialGroupsActivateEndpoint,
+  postApiSocialGroupsArchive: postApiSocialGroupsArchiveEndpoint,
+  postApiSocialGroupsSuspend: postApiSocialGroupsSuspendEndpoint,
+  getApiSocialGroupsMembers: getApiSocialGroupsMembersEndpoint,
+  postApiSocialGroupsMembers: postApiSocialGroupsMembersEndpoint,
+  postApiSocialGroupsMembersApprove: postApiSocialGroupsMembersApproveEndpoint,
+  postApiSocialGroupsMembersReject: postApiSocialGroupsMembersRejectEndpoint,
+  putApiSocialGroupsMembersRole: putApiSocialGroupsMembersRoleEndpoint,
+  deleteApiSocialGroupsMembers: deleteApiSocialGroupsMembersEndpoint,
   getApiTags: getApiTagsEndpoint,
   postApiTags: postApiTagsEndpoint,
   getApiTags1: getApiTags1Endpoint,

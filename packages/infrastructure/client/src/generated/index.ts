@@ -4,7 +4,7 @@
  * ⚠️  AUTO-GENERATED FILE - DO NOT EDIT MANUALLY
  *
  * Generated from: http://localhost:5295/swagger/v1/swagger.json
- * Generated at: 2026-06-07T02:26:51.061Z
+ * Generated at: 2026-06-07T06:59:24.382Z
  *
  * To regenerate, run: pnpm generate
  */
@@ -61,6 +61,7 @@ export * from './modules/commerce-products-promocodes.gen.js';
 export * from './modules/social-reactions.gen.js';
 export * from './modules/resources.gen.js';
 export * from './modules/social-profiles.gen.js';
+export * from './modules/social-groups-socialgroups.gen.js';
 export * from './modules/tags.gen.js';
 export * from './modules/commerce-payments-taxjurisdictions.gen.js';
 export * from './modules/commerce-payments-taxrules.gen.js';

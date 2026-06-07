@@ -55,6 +55,7 @@
         <!-- <ProjectReference Include="..\Modules\GameGuild.Learning.Experience.Social\GameGuild.Learning.Experience.Social.csproj" /> -->
         <ProjectReference Include="..\Modules\GameGuild.Social.Profiles\GameGuild.Social.Profiles.csproj" />
         <ProjectReference Include="..\Modules\GameGuild.Social.Blog\GameGuild.Social.Blog.csproj" />
+        <ProjectReference Include="..\Modules\GameGuild.Social.Groups\GameGuild.Social.Groups.csproj" />
         <ProjectReference Include="..\Modules\GameGuild.Social.Posts\GameGuild.Social.Posts.csproj" />
         <ProjectReference Include="..\Modules\GameGuild.Social.Reactions\GameGuild.Social.Reactions.csproj" />
         <ProjectReference Include="..\Modules\GameGuild.Social.Feed\GameGuild.Social.Feed.csproj" />

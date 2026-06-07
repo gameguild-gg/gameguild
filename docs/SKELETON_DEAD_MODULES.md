@@ -1,7 +1,7 @@
 # Skeleton & Dead Modules Inventory
 
 > **Generated:** 2026-02-08 | **Branch:** `feat/modular-backend`
-> **Updated:** 2026-06-07 — `GameGuild.Compliance.FERPA`, `GameGuild.Social.Profiles`, `GameGuild.GameJams`, `GameGuild.Social.Reactions`, `GameGuild.Social.Feed`, `GameGuild.Social.Blog`, `GameGuild.Learning.Enrollments`, and `GameGuild.Tags` are now implemented, API-exposed, and covered.
+> **Updated:** 2026-06-07 — `GameGuild.Compliance.FERPA`, `GameGuild.Social.Profiles`, `GameGuild.Social.Groups`, `GameGuild.GameJams`, `GameGuild.Social.Reactions`, `GameGuild.Social.Feed`, `GameGuild.Social.Blog`, `GameGuild.Learning.Enrollments`, and `GameGuild.Tags` are now implemented, API-exposed, and covered.
 >
 > These modules exist in the solution but have **minimal or no implementation**. They are planned for future development and migration. This document serves as a roadmap for what each module should become.
 
@@ -19,11 +19,12 @@
 | 6 | `GameGuild.Social.Blog` | ✅ **IMPLEMENTED** — blog CRUD/publish/feature/view API, EF config, tests | 2 | 375 | ✅ Done |
 | 7 | `GameGuild.Learning.Enrollments` | ✅ **IMPLEMENTED** — enrollment queries/commands/progress/status API, EF config, tests | 2 | 349 | ✅ Done |
 | 8 | `GameGuild.Tags` | ✅ **IMPLEMENTED** — tag taxonomy, relationships, proficiencies, EF config, CQRS API, tests | 11 | 502 | ✅ Done |
-| 9 | `GameGuild.Commerce` (base) | 🟡 **PARTIAL** — shared entities + base repo | 3 | 484 | 🟢 Low |
+| 9 | `GameGuild.Social.Groups` | ✅ **IMPLEMENTED** — groups, memberships, approvals, roles, EF config, CQRS API, generated client, tests | 3 | 900+ | ✅ Done |
+| 10 | `GameGuild.Commerce` (base) | 🟡 **PARTIAL** — shared entities + base repo | 3 | 484 | 🟢 Low |
 
-**Not skeleton (confirmed substantive):** `Compliance.FERPA`, `Social.Profiles`, `GameJams`, `Social.Reactions`, `Social.Feed`, `Social.Blog`, `Learning.Enrollments`, `Tags`, and all other modules outside the open skeleton rows have working controllers, services, CQRS handlers, and real business logic. Modules like `Learning.Cohorts` (710 lines), `Learning.Experience.Social` (2,771 lines), `Learning.Experience.Discovery` (1,748 lines), and `Learning.Experience.LearningPaths` (2,092 lines) are small but fully functional.
+**Not skeleton (confirmed substantive):** `Compliance.FERPA`, `Social.Profiles`, `Social.Groups`, `GameJams`, `Social.Reactions`, `Social.Feed`, `Social.Blog`, `Learning.Enrollments`, `Tags`, and all other modules outside the open skeleton rows have working controllers, services, CQRS handlers, and real business logic. Modules like `Learning.Cohorts` (710 lines), `Learning.Experience.Social` (2,771 lines), `Learning.Experience.Discovery` (1,748 lines), and `Learning.Experience.LearningPaths` (2,092 lines) are small but fully functional.
 
-**Does not exist:** `GameGuild.Social.Groups` — referenced in some discussions but never created. Needed for study groups, team collaboration, and cohort-based social learning.
+**Missing social modules:** none currently identified in this inventory.
 
 ---
 
@@ -213,7 +214,28 @@ Tags are the **semantic backbone** of the entire LXP — they drive search, disc
 
 ---
 
-### 9. 🟢 `GameGuild.Commerce` (base) — PARTIAL (484 lines)
+### 9. ✅ `GameGuild.Social.Groups` — IMPLEMENTED (900+ lines)
+
+**Current state:** Implemented module with social group creation/update/status lifecycle, public/private/invite-only membership requests, approval/rejection, role changes, leave/removal, EF model configuration, CQRS handlers, API controller, API host wiring, generated client support, migration, and 100% line/branch coverage.
+
+> Coverage: `GameGuild.Social.Groups.UnitTests` measured at 100% line / 100% branch coverage.
+
+#### Implemented Scope
+
+| Feature Area | Capabilities |
+|-------------|-------------|
+| **Group Types** | Study groups, project teams, interest communities, course cohorts, institutions, game jam teams |
+| **Group Management** | Create, list, get, update, activate, archive, suspend |
+| **Membership Lifecycle** | Join public groups immediately; request private/invite-only groups; approve, reject, leave, and rejoin without duplicate membership rows |
+| **Roles** | Owner, admin, moderator, member; owner role protected from normal role-change/leave flows |
+| **Data Model** | `social_groups` and `social_group_members` tables with unique slug and unique group/user membership constraints |
+| **API/Client** | `/api/social/groups` REST surface via custom CQRS library and generated `SocialGroupsSocialgroupsModule` client |
+
+**Dependencies:** `Identity.Users`, `Learning.Cohorts`, `GameJams`, `Social.Feed`, `Social.Profiles`
+
+---
+
+### 10. 🟢 `GameGuild.Commerce` (base) — PARTIAL (484 lines)
 
 **Current state:** Shared commerce infrastructure:
 - `PricingRule.cs` — Rich entity (234 lines) with volume discounts, time-based pricing, region-based pricing, customer segments, Buy X Get Y promotions. Well-documented with XML docs.
@@ -224,19 +246,19 @@ Tags are the **semantic backbone** of the entire LXP — they drive search, disc
 
 ---
 
-## Missing Module: `GameGuild.Social.Groups`
+## Former Missing Module: `GameGuild.Social.Groups`
 
-This module **does not exist** but is referenced in architecture discussions. For a game development LXP, social groups are important for:
+This module is now implemented. The original planned capability areas are covered as follows:
 
-| Feature Area | Capabilities |
-|-------------|-------------|
-| **Group Types** | Study groups, project teams, interest communities, course cohort groups, institution groups |
-| **Group Management** | Create/join/leave groups; public/private/invite-only settings; role hierarchy (owner, admin, moderator, member); membership approval workflows |
-| **Group Content** | Group-scoped discussions and posts; shared resource library; group announcements; pinned content |
-| **Collaboration** | Group project workspaces; shared learning goals and progress tracking; group game jam participation; peer review assignments within groups |
-| **Discovery** | Group search and recommendations; "Groups you might like" based on tags/interests; trending groups; group activity feed |
+| Feature Area | Status |
+|-------------|--------|
+| **Group Types** | ✅ Implemented |
+| **Group Management** | ✅ Implemented |
+| **Group Content** | 🟡 Deferred to integrations with `Social.Feed`, `Social.Posts`, and future group-scoped resources |
+| **Collaboration** | 🟡 Deferred to integrations with projects/game jams/cohorts |
+| **Discovery** | 🟡 Basic list/search implemented; recommendations/trending deferred |
 
-**Priority:** 🟡 Medium — Important for community building and cohort-based learning but not blocking core LXP functionality.
+**Priority:** ✅ Closed for API/module close-out. Rich group content/collaboration extensions are future product expansion, not skeleton-module completion.
 
 ---
 
@@ -254,7 +276,7 @@ Based on platform dependencies and LXP criticality:
 | ✅ | **Social.Feed** | Implemented: personalized feed item API with read/hide operations. |
 | ✅ | **Social.Blog** | Implemented: blog CRUD and publishing workflow API. |
 | ✅ | **GameJams** | Implemented: jam lifecycle, submissions, criteria, and scoring API. |
-| 1 | **Social.Groups** | Still missing module. Community building can be deferred until social features mature. |
+| ✅ | **Social.Groups** | Implemented: group lifecycle, memberships, role management, approval workflows, generated client support. |
 
 ---
 
