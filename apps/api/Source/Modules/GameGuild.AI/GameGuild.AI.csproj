@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <AssemblyName>GameGuild.AI</AssemblyName>
+        <RootNamespace>GameGuild.AI</RootNamespace>
+        <TargetFramework>net10.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Asp.Versioning.Mvc" />
+        <PackageReference Include="Microsoft.AspNetCore.Authorization" />
+        <PackageReference Include="Microsoft.AspNetCore.Http" />
+        <PackageReference Include="Microsoft.AspNetCore.Mvc.Core" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\GameGuild.Identity.Authorization\GameGuild.Identity.Authorization.csproj" />
+        <ProjectReference Include="..\GameGuild.Identity.Context\GameGuild.Identity.Context.csproj" />
+        <ProjectReference Include="..\GameGuild.Resources\GameGuild.Resources.csproj" />
+        <ProjectReference Include="..\GameGuild.Identity.Tenants\GameGuild.Identity.Tenants.csproj" />
+        <ProjectReference Include="..\GameGuild.SharedKernel\GameGuild.SharedKernel.csproj" />
+    </ItemGroup>
+
+</Project>
