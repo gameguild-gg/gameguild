@@ -1,6 +1,7 @@
 # Skeleton & Dead Modules Inventory
 
 > **Generated:** 2026-02-08 | **Branch:** `feat/modular-backend`
+> **Updated:** 2026-06-07 — `GameGuild.Compliance.FERPA`, `GameGuild.Social.Profiles`, `GameGuild.GameJams`, `GameGuild.Social.Reactions`, `GameGuild.Social.Feed`, `GameGuild.Social.Blog`, `GameGuild.Learning.Enrollments`, and `GameGuild.Tags` are now implemented, API-exposed, and covered.
 >
 > These modules exist in the solution but have **minimal or no implementation**. They are planned for future development and migration. This document serves as a roadmap for what each module should become.
 
@@ -10,17 +11,17 @@
 
 | # | Module | Status | Files | Lines | Priority |
 |---|--------|--------|-------|-------|----------|
-| 1 | `GameGuild.Compliance.FERPA` | 🔴 **DEAD** — empty project, zero code | 0 | 0 | 🔴 High |
-| 2 | `GameGuild.Social.Profiles` | 🔴 **DEAD** — empty project, zero code | 0 | 0 | 🔴 High |
-| 3 | `GameGuild.GameJams` | 🟠 **SKELETON** — entity stubs only | 5 | 79 | 🟡 Medium |
-| 4 | `GameGuild.Social.Reactions` | 🟠 **SKELETON** — single entity only | 1 | 53 | 🟡 Medium |
-| 5 | `GameGuild.Social.Feed` | 🟠 **SKELETON** — single entity only | 1 | 77 | 🟡 Medium |
-| 6 | `GameGuild.Social.Blog` | 🟠 **SKELETON** — single entity only | 1 | 80 | 🟡 Medium |
-| 7 | `GameGuild.Learning.Enrollments` | 🟠 **SKELETON** — single entity only | 1 | 82 | 🔴 High |
-| 8 | `GameGuild.Tags` | 🟡 **PARTIAL** — entities + EF config, no services | 10 | 238 | 🔴 Critical |
+| 1 | `GameGuild.Compliance.FERPA` | ✅ **IMPLEMENTED** — entities, EF config, CQRS, controller, services, tests | 9 | 807 | ✅ Done |
+| 2 | `GameGuild.Social.Profiles` | ✅ **IMPLEMENTED** — entities, EF config, CQRS, controller, services, tests | 9 | 742 | ✅ Done |
+| 3 | `GameGuild.GameJams` | ✅ **IMPLEMENTED** — CQRS API for jams, submissions, criteria, scoring, EF config, tests | 6 | 440 | ✅ Done |
+| 4 | `GameGuild.Social.Reactions` | ✅ **IMPLEMENTED** — reaction upsert/remove/summary API, EF config, tests | 2 | 286 | ✅ Done |
+| 5 | `GameGuild.Social.Feed` | ✅ **IMPLEMENTED** — user feed API, read/hide commands, EF config, tests | 2 | 308 | ✅ Done |
+| 6 | `GameGuild.Social.Blog` | ✅ **IMPLEMENTED** — blog CRUD/publish/feature/view API, EF config, tests | 2 | 375 | ✅ Done |
+| 7 | `GameGuild.Learning.Enrollments` | ✅ **IMPLEMENTED** — enrollment queries/commands/progress/status API, EF config, tests | 2 | 349 | ✅ Done |
+| 8 | `GameGuild.Tags` | ✅ **IMPLEMENTED** — tag taxonomy, relationships, proficiencies, EF config, CQRS API, tests | 11 | 502 | ✅ Done |
 | 9 | `GameGuild.Commerce` (base) | 🟡 **PARTIAL** — shared entities + base repo | 3 | 484 | 🟢 Low |
 
-**Not skeleton (confirmed substantive):** All other modules have working controllers, services, CQRS handlers, and real business logic. Modules like `Learning.Cohorts` (710 lines), `Learning.Experience.Social` (2,771 lines), `Learning.Experience.Discovery` (1,748 lines), and `Learning.Experience.LearningPaths` (2,092 lines) are small but fully functional.
+**Not skeleton (confirmed substantive):** `Compliance.FERPA`, `Social.Profiles`, `GameJams`, `Social.Reactions`, `Social.Feed`, `Social.Blog`, `Learning.Enrollments`, `Tags`, and all other modules outside the open skeleton rows have working controllers, services, CQRS handlers, and real business logic. Modules like `Learning.Cohorts` (710 lines), `Learning.Experience.Social` (2,771 lines), `Learning.Experience.Discovery` (1,748 lines), and `Learning.Experience.LearningPaths` (2,092 lines) are small but fully functional.
 
 **Does not exist:** `GameGuild.Social.Groups` — referenced in some discussions but never created. Needed for study groups, team collaboration, and cohort-based social learning.
 
@@ -28,13 +29,13 @@
 
 ## Module Details
 
-### 1. 🔴 `GameGuild.Compliance.FERPA` — DEAD (0 lines)
+### 1. ✅ `GameGuild.Compliance.FERPA` — IMPLEMENTED (807 lines)
 
-**Current state:** Empty `.csproj` file with zero code. Not even a placeholder class.
+**Current state:** Implemented module with education record classification, directory-information policy, disclosure consent and logging, inspection request workflow, EF model configuration, CQRS handlers, API controller, DI registration, API host wiring, and 100% line/branch/method coverage.
 
-> ⚠️ Note: The `.csproj.DotSettings` file references `GameGuild.Monitoring.FERPA` — a namespace mismatch that should be corrected when implementing.
+> Coverage artifact: `temp/coverage-work/gameguild-ferpa/coverage.cobertura.xml`
 
-#### What It Should Have
+#### Implemented Scope
 
 FERPA (Family Educational Rights and Privacy Act) compliance is **legally required** if GameGuild serves US educational institutions or handles student education records.
 
@@ -53,11 +54,13 @@ FERPA (Family Educational Rights and Privacy Act) compliance is **legally requir
 
 ---
 
-### 2. 🔴 `GameGuild.Social.Profiles` — DEAD (0 lines)
+### 2. ✅ `GameGuild.Social.Profiles` — IMPLEMENTED (742 lines)
 
-**Current state:** Empty `.csproj` file. No code at all.
+**Current state:** Implemented module with public profile data, privacy controls, skills, portfolio items, activity/stat counters, search, EF model configuration, CQRS handlers, API controller, DI registration, API host wiring, and 100% line/branch/method coverage.
 
-#### What It Should Have
+> Coverage artifact: `temp/coverage-work/gameguild-social-profiles/coverage.cobertura.xml`
+
+#### Implemented Scope
 
 User profiles are the **public-facing identity** on the platform. Currently, user data lives in `Identity.Users` but that's for account management, not social presentation.
 
@@ -74,18 +77,13 @@ User profiles are the **public-facing identity** on the platform. Currently, use
 
 ---
 
-### 3. 🟠 `GameGuild.GameJams` — SKELETON (79 lines)
+### 3. ✅ `GameGuild.GameJams` — IMPLEMENTED (440 lines)
 
-**Current state:** 5 bare entity/model classes with basic properties:
-- `Jam.cs` — Name, Slug, Theme, Description, Rules, StartDate, EndDate, Status, MaxParticipants, MinTeamSize, MaxTeamSize
-- `JamSubmission.cs` — JamId, ProjectVersionId, UserId, SubmissionNotes
-- `JamJudgingCriteria.cs` — JamId, Name, Description, Weight, MaxScore
-- `JamScore.cs` — SubmissionId, CriteriaId, JudgeUserId, Score, Feedback
-- `JamStatus.cs` — Enum: Upcoming, Active, Voting, Completed, Cancelled
+**Current state:** Implemented module with jam listing/creation, status transitions, submissions, judging criteria, submission scoring, EF model configuration, CQRS handlers, API controller, DI registration, API host wiring, generated client support, and 100% line/branch/method coverage.
 
-**What's missing:** No `IModule` registration, no controllers, no services, no CQRS handlers, no EF configuration, no validators, no DTOs. Entities are plain POCOs with DataAnnotation validation only (no factory methods, no domain behavior).
+> Coverage artifact: `temp/coverage-work/gameguild-only/gamejams/coverage.cobertura.xml`
 
-#### What It Should Have
+#### Future Expansion Scope
 
 Game jams are the **signature differentiator** for a game development LXP.
 
@@ -104,14 +102,13 @@ Game jams are the **signature differentiator** for a game development LXP.
 
 ---
 
-### 4. 🟠 `GameGuild.Social.Reactions` — SKELETON (53 lines)
+### 4. ✅ `GameGuild.Social.Reactions` — IMPLEMENTED (286 lines)
 
-**Current state:** Single entity `Reaction.cs` with:
-- Properties: UserId, TargetId, TargetType, Type
-- Factory method `Create()` and `ChangeType()` method
-- Two enums: `ReactionType` (Like, Love, Insightful, Celebrate, Support, Curious) and `ReactionTargetType` (Post, Comment, BlogPost, CourseReview, Discussion, Reply)
+**Current state:** Implemented module with reaction upsert/remove, user-target lookup, target reaction summaries, EF model configuration, CQRS handlers, API controller, DI registration, API host wiring, generated client support, and 100% line/branch/method coverage.
 
-#### What It Should Have
+> Coverage artifact: `temp/coverage-work/gameguild-only/social-reactions/coverage.cobertura.xml`
+
+#### Future Expansion Scope
 
 | Feature Area | Capabilities |
 |-------------|-------------|
@@ -125,14 +122,13 @@ Game jams are the **signature differentiator** for a game development LXP.
 
 ---
 
-### 5. 🟠 `GameGuild.Social.Feed` — SKELETON (77 lines)
+### 5. ✅ `GameGuild.Social.Feed` — IMPLEMENTED (308 lines)
 
-**Current state:** Single entity `FeedItem.cs` with:
-- Properties: UserId, ContentId, ContentType, AuthorId, RelevanceScore, Reason, IsRead, IsHidden, ContentCreatedAt
-- Factory method `Create()`, `MarkRead()`, `Hide()` methods
-- Two enums: `FeedContentType` (Post, BlogPost, CourseReview, ProjectUpdate, Achievement, CourseCompletion) and `FeedItemReason` (Following, Trending, Recommended, Mentioned, Replied, Liked, InNetwork)
+**Current state:** Implemented module with feed item creation, user feed queries, read/hide commands, EF model configuration, CQRS handlers, API controller, DI registration, API host wiring, generated client support, and 100% line/branch/method coverage.
 
-#### What It Should Have
+> Coverage artifact: `temp/coverage-work/gameguild-only/social-feed/coverage.cobertura.xml`
+
+#### Future Expansion Scope
 
 | Feature Area | Capabilities |
 |-------------|-------------|
@@ -147,14 +143,13 @@ Game jams are the **signature differentiator** for a game development LXP.
 
 ---
 
-### 6. 🟠 `GameGuild.Social.Blog` — SKELETON (80 lines)
+### 6. ✅ `GameGuild.Social.Blog` — IMPLEMENTED (375 lines)
 
-**Current state:** Single entity `BlogPost.cs` with:
-- Properties: AuthorId, Title, Slug, Excerpt, Content, CoverImageUrl, Status, PublishedAt, IsFeatured, AllowComments, ViewsCount, LikesCount, CommentsCount, ReadTimeMinutes
-- Factory method `Create()`, `Publish()`, `Unpublish()`, `Feature()`, `Unfeature()`, counter increment/decrement methods
-- Enum: `BlogPostStatus` (Draft, Published, Archived)
+**Current state:** Implemented module with blog post listing/creation, get by ID, publish/unpublish, feature/unfeature, view tracking, EF model configuration, CQRS handlers, API controller, DI registration, API host wiring, generated client support, and 100% line/branch/method coverage.
 
-#### What It Should Have
+> Coverage artifact: `temp/coverage-work/gameguild-only/social-blog/coverage.cobertura.xml`
+
+#### Future Expansion Scope
 
 | Feature Area | Capabilities |
 |-------------|-------------|
@@ -170,16 +165,15 @@ Game jams are the **signature differentiator** for a game development LXP.
 
 ---
 
-### 7. 🟠 `GameGuild.Learning.Enrollments` — SKELETON (82 lines)
+### 7. ✅ `GameGuild.Learning.Enrollments` — IMPLEMENTED (349 lines)
 
-**Current state:** Single entity `Enrollment.cs` with:
-- Properties: CourseId, UserId, CohortId, Status, EnrolledAt, CompletedAt, DroppedAt, Progress (0-100), LastActivityAt
-- Factory method `Create()`, `UpdateProgress()`, `Complete()`, `Drop()`, `Pause()`, `Resume()` methods
-- Enum: `EnrollmentStatus` (Active, Paused, Completed, Dropped, Expired)
+**Current state:** Implemented module with enrollment by user/course, enroll user, progress update, status transition commands, EF model configuration, CQRS handlers, API controller, DI registration, API host wiring, generated client support, and 100% line/branch/method coverage.
 
-> ⚠️ Note: `Learning.Courses` module already has enrollment-like functionality. This module should either **replace** the enrollment logic in Courses or be **merged** into it. Clarify the boundary before implementing.
+> Coverage artifact: `temp/coverage-work/gameguild-only/learning-enrollments/coverage.cobertura.xml`
 
-#### What It Should Have
+> Boundary note: `Learning.Courses` still has self-enrollment/progress endpoints. `Learning.Enrollments` now provides the normalized enrollment model/API; future cleanup should consolidate duplicate course enrollment semantics instead of reintroducing a second source of truth.
+
+#### Future Expansion Scope
 
 | Feature Area | Capabilities |
 |-------------|-------------|
@@ -195,21 +189,13 @@ Game jams are the **signature differentiator** for a game development LXP.
 
 ---
 
-### 8. 🟡 `GameGuild.Tags` — PARTIAL SKELETON (238 lines)
+### 8. ✅ `GameGuild.Tags` — IMPLEMENTED (502 lines)
 
-**Current state:** Well-designed entity model but zero operational code:
-- `Tag.cs` — Name, Description, Type, Color, Icon, IsActive, navigation to relationships (37 lines)
-- `TagProficiency.cs` — Skill proficiency levels tied to tags and users (36 lines)
-- `TagRelationship.cs` — Source→Target junction with type and weight (31 lines)
-- `TagType.cs` — Enum: Skill, Topic, Technology, Difficulty, Category, Industry, Certification (26 lines)
-- `TagRelationshipType.cs` — Enum: Related, Parent, Child, Requires, Suggested (20 lines)
-- `TagRelationshipConfiguration.cs` — EF config with FK constraints and self-reference check (22 lines)
-- `Models/SkillProficiencyLevel.cs` — Enum: Beginner→Master 6 levels (25 lines)
-- ⚠️ **Duplicate enums** in `Models/TagType.cs` and `Models/TagRelationshipType.cs` — identical to `Entities/` versions
+**Current state:** Implemented module with tag listing/search/create/update, relationships, proficiency records, EF model configuration, CQRS handlers, API controller, DI registration, API host wiring, generated client support, and 100% line/branch/method coverage.
 
-**What's missing:** No `IModule`, no controllers, no services, no CQRS, no repositories, no DTOs, no validators. No polymorphic tagging mechanism (how do courses/projects/users get tagged?).
+> Coverage artifact: `temp/coverage-current-common-net10-msbuild-direct/GameGuild.Tags.UnitTests/coverage.cobertura.xml`
 
-#### What It Should Have
+#### Future Expansion Scope
 
 Tags are the **semantic backbone** of the entire LXP — they drive search, discovery, recommendations, and skill tracking.
 
@@ -260,15 +246,15 @@ Based on platform dependencies and LXP criticality:
 
 | Priority | Module | Rationale |
 |----------|--------|-----------|
-| 1 | **Tags** | Semantic backbone — search, discovery, recommendations, skill profiles all depend on it. Unblocks multiple other modules. |
-| 2 | **Learning.Enrollments** | Core learning flow — enrollment is fundamental to an LXP. Must clarify boundary with `Learning.Courses` enrollment logic. |
-| 3 | **Social.Profiles** | Public identity layer — needed for social features, marketplace, and professional networking. |
-| 4 | **Compliance.FERPA** | Legal requirement for US educational institutions. Must exist before onboarding schools/universities. |
-| 5 | **Social.Reactions** | Small scope, high engagement impact. Powers engagement across Posts, Blog, Reviews. |
-| 6 | **Social.Feed** | Personalized content delivery — drives daily active usage and retention. |
-| 7 | **Social.Blog** | Content marketing + community knowledge sharing. Instructor and student blogs. |
-| 8 | **GameJams** | Signature differentiator for game dev education. Major engagement driver but not core learning flow. |
-| 9 | **Social.Groups** | Community building. Can be deferred until social features mature. |
+| ✅ | **Tags** | Implemented: semantic taxonomy, relationships, proficiencies, CQRS API, generated client support. |
+| ✅ | **Learning.Enrollments** | Implemented: normalized enrollment lifecycle API, progress updates, generated client support. |
+| ✅ | **Social.Profiles** | Implemented: public identity layer for social features, marketplace, and professional networking. |
+| ✅ | **Compliance.FERPA** | Implemented: legal education-record privacy workflows for school/university onboarding. |
+| ✅ | **Social.Reactions** | Implemented: target reaction summaries and user reaction upsert/remove API. |
+| ✅ | **Social.Feed** | Implemented: personalized feed item API with read/hide operations. |
+| ✅ | **Social.Blog** | Implemented: blog CRUD and publishing workflow API. |
+| ✅ | **GameJams** | Implemented: jam lifecycle, submissions, criteria, and scoring API. |
+| 1 | **Social.Groups** | Still missing module. Community building can be deferred until social features mature. |
 
 ---
 

@@ -1,7 +1,8 @@
 # GameGuild API — Deep Module Analysis
 
 > **Generated:** 2026-02-13
-> **Architecture:** .NET 9 Modular Monolith · CQRS · EF Core · REST + GraphQL
+> **Updated:** 2026-06-07
+> **Architecture:** .NET 10 Modular Monolith · CQRS · EF Core · REST + GraphQL
 > **Total Modules:** 44 (across 10 domains)
 
 ---
@@ -350,10 +351,14 @@
 
 ### 3.5 GameGuild.Learning.Enrollments
 
-**Maturity:** ★★☆ Foundation — Entity-only enrollment tracking
+**Maturity:** ★★★★☆ Implemented — CQRS/API-backed enrollment lifecycle
 
-- **Enrollment entity** — Tracks student enrollment in courses/programs
-- No controllers — consumed by other modules (Courses, Assessments, Certificates)
+| Area | Endpoints / Capabilities |
+|------|--------------------------|
+| **Enrollment Queries** | Get enrollment by ID, list by user, list by course |
+| **Enrollment Commands** | Enroll user, update progress, transition status |
+| **Modeling** | EF configuration, repository/service layer, generated client module |
+| **Coverage** | `GameGuild.Learning.Enrollments.UnitTests` at 100% line / 100% branch / 100% method |
 
 ---
 
@@ -504,33 +509,50 @@
 
 ### 5.4 GameGuild.Social.Blog
 
-**Maturity:** ★☆ Skeleton — Entity-only
+**Maturity:** ★★★★☆ Implemented — CQRS/API-backed blog publishing module
 
-- `BlogPost` entity defined — no controllers, services, or endpoints exposed yet
+| Area | Endpoints / Capabilities |
+|------|--------------------------|
+| **Blog CRUD** | List/create/get blog posts |
+| **Publishing Workflow** | Publish, unpublish, feature/unfeature |
+| **Engagement Counters** | View tracking and read metadata |
+| **Coverage** | `GameGuild.Social.Blog.UnitTests` at 100% line / 100% branch / 100% method |
 
 ---
 
 ### 5.5 GameGuild.Social.Feed
 
-**Maturity:** ★☆ Skeleton — Entity-only
+**Maturity:** ★★★★☆ Implemented — CQRS/API-backed feed module
 
-- `FeedItem` entity defined — no controllers, services, or endpoints exposed yet
+| Area | Endpoints / Capabilities |
+|------|--------------------------|
+| **Feed Items** | Add feed item, list user feed |
+| **Feed State** | Mark read, hide item |
+| **Modeling** | EF configuration, repository/service layer, generated client module |
+| **Coverage** | `GameGuild.Social.Feed.UnitTests` at 100% line / 100% branch / 100% method |
 
 ---
 
 ### 5.6 GameGuild.Social.Profiles
 
-**Maturity:** ★☆ Skeleton — Project structure only
+**Maturity:** ★★★★ Implemented — CQRS/API-backed social profile module
 
-- No entities or controllers — placeholder module
+- Adds profile data, privacy controls, skills, portfolio items, search, and activity/stat counters.
+- Uses EF model configuration, repositories, services, CQRS handlers, and `SocialProfilesController`.
+- Covered by `GameGuild.Social.Profiles.UnitTests` at 100% line / 100% branch / 100% method.
 
 ---
 
 ### 5.7 GameGuild.Social.Reactions
 
-**Maturity:** ★☆ Skeleton — Entity-only
+**Maturity:** ★★★★☆ Implemented — CQRS/API-backed reaction module
 
-- `Reaction` entity defined — no controllers, services, or endpoints exposed yet
+| Area | Endpoints / Capabilities |
+|------|--------------------------|
+| **Reaction CRUD** | Upsert/change/remove reaction per user and target |
+| **Aggregation** | Target reaction summary and user-target lookup |
+| **Modeling** | EF configuration, repository/service layer, generated client module |
+| **Coverage** | `GameGuild.Social.Reactions.UnitTests` at 100% line / 100% branch / 100% method |
 
 ---
 
@@ -684,12 +706,14 @@
 
 ### 8.3 GameGuild.GameJams
 
-**Maturity:** ★★☆ Foundation — Entity/model-only
+**Maturity:** ★★★★☆ Implemented — CQRS/API-backed game jam lifecycle
 
-**Models:** Jam, JamSubmission, JamScore, JamJudgingCriteria, JamStatus
-
-- Game jam entities defined (jam management, submissions, judging criteria, scoring)
-- No controllers — awaiting endpoint implementation
+| Area | Endpoints / Capabilities |
+|------|--------------------------|
+| **Jam Lifecycle** | List/create jams, get by ID, update status |
+| **Submissions** | List/create submissions per jam |
+| **Judging** | Add/list criteria, score submissions |
+| **Coverage** | `GameGuild.GameJams.UnitTests` at 100% line / 100% branch / 100% method |
 
 ---
 
@@ -730,12 +754,14 @@
 
 ### 9.3 GameGuild.Tags
 
-**Maturity:** ★★☆ Foundation — Entity-only tagging system
+**Maturity:** ★★★★☆ Implemented — CQRS/API-backed taxonomy and proficiency system
 
-**Entities:** Tag, TagType, TagProficiency, TagRelationship, TagRelationshipType
-
-- Hierarchical tag taxonomy with relationship types and proficiency levels
-- No controllers — used as a shared concern by other modules (courses, projects, etc.)
+| Area | Endpoints / Capabilities |
+|------|--------------------------|
+| **Tags** | List/search/create/update tags |
+| **Relationships** | Create/list relationships between tags |
+| **Proficiencies** | Create/list user skill proficiencies |
+| **Coverage** | `GameGuild.Tags.UnitTests` at 100% line / 100% branch / 100% method |
 
 ---
 
@@ -791,10 +817,11 @@
 
 ### 10.3 GameGuild.Compliance.FERPA
 
-**Maturity:** ★☆ Skeleton — Placeholder module
+**Maturity:** ★★★★ Implemented — CQRS/API-backed FERPA compliance module
 
-- Project file only — no entities, services, or controllers
-- Intended for FERPA (educational privacy) compliance
+- Adds education record classification, directory-information policy, disclosure consent/logging, and inspection request workflows.
+- Uses EF model configuration, repositories, services, CQRS handlers, and `FerpaController`.
+- Covered by `GameGuild.Compliance.FERPA.UnitTests` at 100% line / 100% branch / 100% method.
 
 ---
 
@@ -847,9 +874,9 @@
 | Metric | Count |
 |--------|-------|
 | **Total Modules** | 44 |
-| **Fully Implemented (★★★★+)** | 28 |
+| **Fully Implemented (★★★★+)** | 34 |
 | **Core/Foundation (★★-★★★)** | 9 |
-| **Skeleton/Placeholder (★)** | 7 |
+| **Skeleton/Placeholder (★)** | 1 |
 | **Controllers** | 80+ |
 | **REST Endpoints** | 500+ |
 | **Domains** | 10 |
