@@ -26,9 +26,22 @@ import {
   GripVertical,
   Maximize2,
   Minimize2,
+  Settings2,
+  ChevronDown,
+  Check,
 } from "lucide-react"
 import { StickyStyle, StickySize, $isStickyNode } from "./sticky-node"
-import { DropdownColorPicker } from "../toolbar/dropdown-color-picker"
+import ColorPicker from "../toolbar/color-picker"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 interface StickyComponentProps {
   text: string
@@ -312,14 +325,14 @@ export function StickyComponent({
       onPaste={stopLexicalPropagation}
       tabIndex={isEditable ? 0 : -1}
     >
-      {/* ── Drag Handle (top-right) ── */}
+      {/* ── Drag Handle (top-left) ── */}
       {isEditable && (
         <div
           data-sticky-drag
           onMouseDown={handleDragStart}
           onDoubleClick={handleResetPosition}
           className={cn(
-            "absolute top-1.5 right-1.5 cursor-grab active:cursor-grabbing p-0.5 rounded opacity-0 group-hover:opacity-60 group-focus-within:opacity-60 hover:!opacity-100 transition-opacity",
+            "absolute top-1.5 left-1.5 cursor-grab active:cursor-grabbing p-0.5 rounded opacity-0 group-hover:opacity-60 group-focus-within:opacity-60 hover:!opacity-100 transition-opacity",
             "text-black/40 dark:text-white/40 hover:text-black/70 dark:hover:text-white/70",
           )}
           title="Drag to reposition · Double-click to reset"
@@ -327,6 +340,74 @@ export function StickyComponent({
           <GripVertical className="w-4 h-4" />
         </div>
       )}
+
+      {/* ── Action Menu (top-right floating) ── */}
+      {isEditable && (
+        <div className="absolute top-2 right-2 z-10 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                type="button"
+                aria-label="Sticky note settings"
+                className={cn(
+                  "inline-flex h-6 items-center justify-center gap-1 rounded px-1.5",
+                  "border border-gray-300 dark:border-gray-700",
+                  "bg-white/90 dark:bg-gray-800/90 text-gray-700 dark:text-gray-200",
+                  "shadow-sm hover:bg-gray-100 dark:hover:bg-gray-700",
+                  isDragging && "hidden" // Hide while dragging
+                )}
+              >
+                <Settings2 className="h-3.5 w-3.5" />
+                <ChevronDown className="h-3.5 w-3.5" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-48">
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger>
+                  <Palette className="w-4 h-4 mr-2 text-gray-500" /> Style
+                </DropdownMenuSubTrigger>
+                <DropdownMenuSubContent>
+                  {STYLES_LIST.map(({ id, label, Icon: StyleIcon }) => (
+                    <DropdownMenuItem key={id} onSelect={() => handleStyleChange(id)}>
+                      <StyleIcon className="w-4 h-4 mr-2" />
+                      {label}
+                      {style === id && <Check className="ml-auto w-4 h-4" />}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuSubContent>
+              </DropdownMenuSub>
+
+              <DropdownMenuItem onSelect={handleSizeToggle}>
+                {size === "wide" ? <Minimize2 className="w-4 h-4 mr-2 text-gray-500" /> : <Maximize2 className="w-4 h-4 mr-2 text-gray-500" />}
+                {size === "wide" ? "Compact Size" : "Wide Size"}
+              </DropdownMenuItem>
+
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger>
+                  <span className="w-4 h-4 mr-2 rounded-full border border-gray-300 dark:border-gray-600" style={{ backgroundColor: color }} />
+                  Color
+                </DropdownMenuSubTrigger>
+                <DropdownMenuSubContent className="p-3">
+                  <ColorPicker
+                    color={color}
+                    onChange={(nextColor) => {
+                      if (typeof nextColor === "string") handleColorChange(nextColor)
+                    }}
+                  />
+                </DropdownMenuSubContent>
+              </DropdownMenuSub>
+
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onSelect={handleDelete} className="text-red-600 focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-950/30">
+                <Trash2 className="mr-2 h-4 w-4" />
+                Delete note
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      )}
+
+
 
       {/* Pin Icon (Classic Style Only) */}
       {style === "classic" && (
@@ -358,69 +439,6 @@ export function StickyComponent({
           rows={2}
         />
       </div>
-
-      {/* ── Action Toolbar ── */}
-      {isEditable && (
-        <div
-          className={cn(
-            "flex flex-wrap items-center justify-between gap-2 mt-4 pt-3 border-t border-black/5 dark:border-white/5 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity duration-200",
-          )}
-        >
-          {/* Style selector */}
-          <div className="flex items-center gap-1 bg-black/5 dark:bg-white/5 p-0.5 rounded-md">
-            {STYLES_LIST.map(({ id, label, Icon: StyleIcon }) => (
-              <button
-                key={id}
-                type="button"
-                onClick={() => handleStyleChange(id)}
-                className={cn(
-                  "px-2 py-0.5 rounded text-xs flex items-center gap-1 font-medium transition-colors focus:outline-none",
-                  style === id
-                    ? "bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-sm"
-                    : "text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200",
-                )}
-                title={`Style: ${label}`}
-              >
-                <StyleIcon className="w-3.5 h-3.5" />
-                <span className="text-xxs sm:text-xs">{label}</span>
-              </button>
-            ))}
-          </div>
-
-          <div className="flex items-center gap-1.5">
-            {/* Size toggle */}
-            <button
-              type="button"
-              onClick={handleSizeToggle}
-              className="p-1 rounded hover:bg-black/5 dark:hover:bg-white/5 text-black/50 dark:text-white/50 transition-colors focus:outline-none"
-              title={size === "wide" ? "Switch to compact" : "Switch to wide"}
-            >
-              {size === "wide"
-                ? <Minimize2 className="w-4 h-4" />
-                : <Maximize2 className="w-4 h-4" />
-              }
-            </button>
-
-            {/* Color picker */}
-            <DropdownColorPicker
-              color={color}
-              onChange={(nextColor) => handleColorChange(nextColor)}
-              title="Change note color"
-              buttonIcon={<Palette className="w-4 h-4 text-gray-500 dark:text-gray-400" />}
-            />
-
-            {/* Delete */}
-            <button
-              type="button"
-              onClick={handleDelete}
-              className="p-1 rounded hover:bg-black/5 dark:hover:bg-white/5 text-black/50 hover:text-red-600 dark:text-white/50 dark:hover:text-red-400 transition-colors focus:outline-none"
-              title="Delete note"
-            >
-              <Trash2 className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   )
 }
