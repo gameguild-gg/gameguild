@@ -17,7 +17,10 @@ export class CommerceProductsModule {
 
   /**
    */
-  async getProducts(productId: string, query?: { includePricing?: boolean }): Promise<Result<Types.CommerceProductsProduct, ApiError>> {
+  async getProducts(
+    productId: string,
+    query?: { includePricing?: boolean; includeUnpublished?: boolean },
+  ): Promise<Result<Types.CommerceProductsProduct, ApiError>> {
     const url = `/v1/products/${productId}`;
 
     const result = await this.client.request({
@@ -101,12 +104,13 @@ export class CommerceProductsModule {
 
   /**
    */
-  async headProducts(productId: string): Promise<Result<void, ApiError>> {
+  async headProducts(productId: string, query?: { includeUnpublished?: boolean }): Promise<Result<void, ApiError>> {
     const url = `/v1/products/${productId}`;
 
     const result = await this.client.request({
       method: 'HEAD',
       path: url,
+      params: query,
       requiresAuth: false,
     });
 
@@ -115,12 +119,16 @@ export class CommerceProductsModule {
 
   /**
    */
-  async getProductsPricing(productId: string): Promise<Result<Array<Types.CommerceProductsProductPricing>, ApiError>> {
+  async getProductsPricing(
+    productId: string,
+    query?: { includeUnpublished?: boolean },
+  ): Promise<Result<Array<Types.CommerceProductsProductPricing>, ApiError>> {
     const url = `/v1/products/${productId}/pricing`;
 
     const result = await this.client.request({
       method: 'GET',
       path: url,
+      params: query,
       requiresAuth: false,
     });
 
@@ -134,6 +142,7 @@ export class CommerceProductsModule {
     creatorId?: string;
     searchTerm?: string;
     isBundle?: boolean;
+    includeUnpublished?: boolean;
     skip?: number;
     take?: number;
     sortBy?: string;

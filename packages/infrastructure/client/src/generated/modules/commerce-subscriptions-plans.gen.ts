@@ -330,13 +330,13 @@ export class CommerceSubscriptionsPlansModule {
     minPrice?: number;
     maxPrice?: number;
   }): Promise<Result<void, ApiError>> {
-    const url = '/api/v1/subscription-plans';
+    const url = '/v1/subscription-plans';
 
     const result = await this.client.request({
       method: 'GET',
       path: url,
       params: query,
-      requiresAuth: true,
+      requiresAuth: false,
     });
 
     return result as Result<void, ApiError>;
@@ -348,7 +348,7 @@ export class CommerceSubscriptionsPlansModule {
    * Creates a new subscription plan with the provided information.
    */
   async postSubscriptionPlans(body: Types.CommerceSubscriptionsSubscriptionPlansCrudControllerCreatePlanInput): Promise<Result<void, ApiError>> {
-    const url = '/api/v1/subscription-plans';
+    const url = '/v1/subscription-plans';
 
     // Validate request body
     const validatedBody = safeParse(Types.CommerceSubscriptionsSubscriptionPlansCrudControllerCreatePlanInputSchema, body, 'request');
@@ -369,7 +369,7 @@ export class CommerceSubscriptionsPlansModule {
    * Compares multiple subscription plans side by side. Custom action per Google API guidelines.
    */
   async postSubscriptionPlansCompare(body: Types.CommerceSubscriptionsSubscriptionPlansCrudControllerComparePlansInput): Promise<Result<void, ApiError>> {
-    const url = '/api/v1/subscription-plans:compare';
+    const url = '/v1/subscription-plans:compare';
 
     // Validate request body
     const validatedBody = safeParse(Types.CommerceSubscriptionsSubscriptionPlansCrudControllerComparePlansInputSchema, body, 'request');
@@ -390,7 +390,7 @@ export class CommerceSubscriptionsPlansModule {
    * Retrieves detailed information for a specific subscription plan.
    */
   async getSubscriptionPlans1(planId: string): Promise<Result<void, ApiError>> {
-    const url = `/api/v1/subscription-plans/${planId}`;
+    const url = `/v1/subscription-plans/${planId}`;
 
     const result = await this.client.request({
       method: 'GET',
@@ -410,7 +410,7 @@ export class CommerceSubscriptionsPlansModule {
     planId: string,
     body: Types.CommerceSubscriptionsSubscriptionPlansCrudControllerPutSubscriptionPlanInput,
   ): Promise<Result<void, ApiError>> {
-    const url = `/api/v1/subscription-plans/${planId}`;
+    const url = `/v1/subscription-plans/${planId}`;
 
     // Validate request body
     const validatedBody = safeParse(Types.CommerceSubscriptionsSubscriptionPlansCrudControllerPutSubscriptionPlanInputSchema, body, 'request');
@@ -431,7 +431,7 @@ export class CommerceSubscriptionsPlansModule {
    * Deletes a subscription plan by ID.
    */
   async deleteSubscriptionPlans(planId: string): Promise<Result<void, ApiError>> {
-    const url = `/api/v1/subscription-plans/${planId}`;
+    const url = `/v1/subscription-plans/${planId}`;
 
     const result = await this.client.request({
       method: 'DELETE',
@@ -448,7 +448,7 @@ export class CommerceSubscriptionsPlansModule {
    * Checks if a subscription plan exists by ID without returning the body.
    */
   async headSubscriptionPlans(planId: string): Promise<Result<void, ApiError>> {
-    const url = `/api/v1/subscription-plans/${planId}`;
+    const url = `/v1/subscription-plans/${planId}`;
 
     const result = await this.client.request({
       method: 'HEAD',

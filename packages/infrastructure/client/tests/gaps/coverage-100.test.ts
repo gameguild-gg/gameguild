@@ -616,13 +616,14 @@ describe('session.ts — branch gaps', () => {
     const secret = 'test-secret-key-minimum-32-chars!';
     const now = Math.floor(Date.now() / 1000);
 
-    // Encode a token with an expired access token to trigger refresh
+    // Encode a token that is near expiry so refresh is attempted, but the
+    // existing session remains usable if refresh fails.
     const encrypted = await encodeJWT({
       token: {
         user: { id: '1', email: 't@t.com', name: 'T', image: null },
         accessToken: 'expired-at',
         refreshToken: 'rt',
-        accessTokenExpires: Date.now() - 60000, // expired
+        accessTokenExpires: Date.now() + 10_000, // within refresh threshold, not expired
         iat: now,
         exp: now + 86400,
       },

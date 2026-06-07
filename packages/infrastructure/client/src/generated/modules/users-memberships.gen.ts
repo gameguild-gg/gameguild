@@ -40,6 +40,36 @@ export class UsersMembershipsModule {
   }
 
   /**
+   * Add a tenant membership for a user
+   *
+   * Adds the specified user to a tenant with the requested role so the user can access that workspace.
+   */
+  async postUsersMemberships(
+    userId: string,
+    body: Types.IdentityTenantsAddUserMembershipInput,
+  ): Promise<Result<Types.IdentityTenantsAddTenantMemberOutput, ApiError>> {
+    const url = `/v1/users/${userId}/memberships`;
+
+    // Validate request body
+    const validatedBody = safeParse(Types.IdentityTenantsAddUserMembershipInputSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.IdentityTenantsAddTenantMemberOutputSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
    * Check if user has any tenant memberships
    */
   async headUsersMemberships(userId: string): Promise<Result<void, ApiError>> {
@@ -52,6 +82,37 @@ export class UsersMembershipsModule {
     });
 
     return result as Result<void, ApiError>;
+  }
+
+  /**
+   * Update tenant membership role
+   *
+   * Updates the user's role in the specified tenant/workspace. Use this for console promotion/demotion flows.
+   */
+  async patchUsersMembershipsRole(
+    userId: string,
+    tenantId: string,
+    body: Types.IdentityTenantsUpdateUserMembershipRoleInput,
+  ): Promise<Result<Types.IdentityTenantsUpdateTenantMemberRoleOutput, ApiError>> {
+    const url = `/v1/users/${userId}/memberships/${tenantId}/role`;
+
+    // Validate request body
+    const validatedBody = safeParse(Types.IdentityTenantsUpdateUserMembershipRoleInputSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'PATCH',
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.IdentityTenantsUpdateTenantMemberRoleOutputSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
   }
 
   /**

@@ -3,8 +3,14 @@
 // =============================================================================
 
 import { cookies } from 'next/headers';
-import { createServerClient, decodeJWT, SessionStore, resolveCookieOptions } from '@game-guild/client';
-import type { IdentityUsersUser, IdentityUsersUserProfile } from '@game-guild/client';
+import { createServerClient, decodeJWT, GeneratedApi, SessionStore, resolveCookieOptions } from '@game-guild/client';
+import type {
+  IdentityUsersUser,
+  IdentityUsersUserProfile,
+  SocialProfilesProfilePortfolioItem,
+  SocialProfilesProfileSkill,
+  SocialProfilesSocialProfile,
+} from '@game-guild/client';
 
 export interface MemberSummary {
   id: string;
@@ -48,6 +54,8 @@ export interface CommunityStats {
 }
 
 export interface MemberDetail extends MemberSummary {
+  handle?: string;
+  headline?: string;
   bio?: string;
   location?: string;
   website?: string;
@@ -56,6 +64,14 @@ export interface MemberDetail extends MemberSummary {
   language?: string;
   phoneNumber?: string;
   updatedAt?: string;
+  availabilityStatus?: SocialProfilesSocialProfile['availabilityStatus'];
+  completenessScore?: number;
+  followerCount?: number;
+  followingCount?: number;
+  postCount?: number;
+  projectCount?: number;
+  skills: SocialProfilesProfileSkill[];
+  portfolioItems: SocialProfilesProfilePortfolioItem[];
 }
 
 // Paged result shape returned by the API
@@ -183,7 +199,8 @@ export async function getMembers(options?: {
 export async function getMember(userId: string): Promise<MemberDetail | null> {
   try {
     const client = getApiClient();
-    const [userResult, profileResult] = await Promise.all([
+    const socialProfiles = new GeneratedApi.SocialProfilesModule(client);
+    const [userResult, profileResult, socialProfileResult] = await Promise.all([
       client.request<IdentityUsersUser>({
         method: 'GET',
         path: `/v1/users/${userId}`,
@@ -194,25 +211,39 @@ export async function getMember(userId: string): Promise<MemberDetail | null> {
         path: `/v1/users/${userId}/profile`,
         requiresAuth: true,
       }),
+      socialProfiles.getApiSocialProfilesUsers(userId),
     ]);
 
     if (!userResult.ok) return null;
 
     const user = userResult.data;
     const profile = profileResult.ok ? profileResult.data : null;
+    const socialProfile = socialProfileResult.ok ? socialProfileResult.data : null;
+    const summary = mapUserToMember(user);
 
     return {
-      ...mapUserToMember(user),
-      displayName: profile?.displayName ?? user.name ?? 'Unknown',
-      avatarUrl: profile?.avatarUrl ?? undefined,
-      bio: profile?.bio ?? undefined,
-      location: profile?.location ?? undefined,
-      website: profile?.website ?? undefined,
-      bannerUrl: profile?.bannerUrl ?? undefined,
-      timezone: profile?.timeZone ?? undefined,
+      ...summary,
+      username: socialProfile?.handle ?? summary.username,
+      handle: socialProfile?.handle ?? undefined,
+      displayName: socialProfile?.displayName ?? profile?.displayName ?? user.name ?? 'Unknown',
+      avatarUrl: socialProfile?.avatarUrl ?? profile?.avatarUrl ?? undefined,
+      headline: socialProfile?.headline ?? undefined,
+      bio: socialProfile?.bio ?? profile?.bio ?? undefined,
+      location: socialProfile?.location ?? profile?.location ?? undefined,
+      website: socialProfile?.websiteUrl ?? profile?.website ?? undefined,
+      bannerUrl: socialProfile?.bannerUrl ?? profile?.bannerUrl ?? undefined,
+      timezone: socialProfile?.timeZone ?? profile?.timeZone ?? undefined,
       language: profile?.language ?? undefined,
       phoneNumber: user.phoneNumber ?? undefined,
       updatedAt: user.updatedAt ?? undefined,
+      availabilityStatus: socialProfile?.availabilityStatus,
+      completenessScore: socialProfile?.completenessScore,
+      followerCount: socialProfile?.followerCount,
+      followingCount: socialProfile?.followingCount,
+      postCount: socialProfile?.postCount,
+      projectCount: socialProfile?.projectCount,
+      skills: socialProfile?.showSkills === false ? [] : socialProfile?.skills ?? [],
+      portfolioItems: socialProfile?.showPortfolio === false ? [] : socialProfile?.portfolioItems ?? [],
     };
   } catch {
     return null;

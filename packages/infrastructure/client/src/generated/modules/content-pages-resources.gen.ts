@@ -33,7 +33,7 @@ export class ContentPagesResourcesModule {
       method: 'GET',
       path: url,
       params: query,
-      requiresAuth: true,
+      requiresAuth: false,
     });
 
     return result as Result<Array<Types.ContentPagesContentResource>, ApiError>;
@@ -71,7 +71,7 @@ export class ContentPagesResourcesModule {
     const result = await this.client.request({
       method: 'GET',
       path: url,
-      requiresAuth: true,
+      requiresAuth: false,
     });
 
     // Validate response
@@ -129,7 +129,7 @@ export class ContentPagesResourcesModule {
     const result = await this.client.request({
       method: 'GET',
       path: url,
-      requiresAuth: true,
+      requiresAuth: false,
     });
 
     // Validate response

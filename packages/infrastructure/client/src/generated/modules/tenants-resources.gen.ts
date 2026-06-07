@@ -73,6 +73,8 @@ export class TenantsResourcesModule {
         AssetStorage?: number;
         AssetDownloads?: number;
         AssetTransformations?: number;
+        AiRequests?: number;
+        AiTokens?: number;
       },
       ApiError
     >
@@ -114,6 +116,8 @@ export class TenantsResourcesModule {
         AssetStorage?: number;
         AssetDownloads?: number;
         AssetTransformations?: number;
+        AiRequests?: number;
+        AiTokens?: number;
       },
       ApiError
     >;
@@ -157,6 +161,8 @@ export class TenantsResourcesModule {
         AssetStorage?: boolean;
         AssetDownloads?: boolean;
         AssetTransformations?: boolean;
+        AiRequests?: boolean;
+        AiTokens?: boolean;
       },
       ApiError
     >
@@ -199,6 +205,8 @@ export class TenantsResourcesModule {
         AssetStorage?: boolean;
         AssetDownloads?: boolean;
         AssetTransformations?: boolean;
+        AiRequests?: boolean;
+        AiTokens?: boolean;
       },
       ApiError
     >;

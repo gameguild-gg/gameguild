@@ -93,13 +93,15 @@ export async function encodeJWT(params: {
   const encryptionKey = await deriveEncryptionKey(secret);
 
   const now = Math.floor(Date.now() / 1000);
+  const issuedAt = token.iat ?? now;
+  const expiresAt = token.exp ?? issuedAt + maxAge;
 
-  // Build the payload — always slide exp forward so the JWE envelope
-  // doesn't expire before the next token refresh opportunity.
+  // Normal session encoding gets fresh claims, but callers can still provide
+  // explicit iat/exp values when they need a token with fixed boundaries.
   const payload: JoseJWTPayload & Record<string, unknown> = {
     ...token,
-    iat: now,
-    exp: now + maxAge,
+    iat: issuedAt,
+    exp: expiresAt,
     jti: token.jti ?? generateId(),
   };
 

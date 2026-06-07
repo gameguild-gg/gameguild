@@ -97,6 +97,62 @@ export class AuthModule {
   }
 
   /**
+   * Request magic sign-in link
+   *
+   * Generates a short-lived one-time sign-in token and dispatches the magic-link notification. Always returns a generic success response to prevent user enumeration.
+   */
+  async postAuthMagicLinkRequest(
+    body: Types.IdentityAuthenticationRequestMagicLinkInput,
+  ): Promise<Result<Types.IdentityAuthenticationMagicLinkRequestResult, ApiError>> {
+    const url = '/v1/auth/magic-link:request';
+
+    // Validate request body
+    const validatedBody = safeParse(Types.IdentityAuthenticationRequestMagicLinkInputSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      body: validatedBody,
+      requiresAuth: false,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.IdentityAuthenticationMagicLinkRequestResultSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   * Consume magic sign-in link
+   *
+   * Consumes a short-lived one-time magic-link token and returns access and refresh tokens.
+   */
+  async postAuthMagicLinkConsume(body: Types.IdentityAuthenticationConsumeMagicLinkInput): Promise<Result<Types.IdentityAuthenticationSignInOutput, ApiError>> {
+    const url = '/v1/auth/magic-link:consume';
+
+    // Validate request body
+    const validatedBody = safeParse(Types.IdentityAuthenticationConsumeMagicLinkInputSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      body: validatedBody,
+      requiresAuth: false,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.IdentityAuthenticationSignInOutputSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
    * Initiate GitHub OAuth sign-in
    *
    * Initiates GitHub OAuth authentication flow and returns the authorization URL.

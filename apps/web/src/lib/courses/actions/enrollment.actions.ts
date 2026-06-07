@@ -41,6 +41,7 @@ export interface EnrollmentResult {
 }
 
 type PublicCourseDto = GeneratedApi.LearningCoursesProgram;
+type PublicProductDto = GeneratedApi.CommerceProductsProduct;
 
 const DEFAULT_API_URL = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5295';
 
@@ -76,6 +77,41 @@ function createAuthenticatedProgramsModule(accessToken: string) {
     return new GeneratedApi.LearningCoursesProgramModule(client);
 }
 
+function createPublicProductsModule() {
+    const client = createServerClient({
+        baseUrl: getApiUrl(),
+    });
+
+    return new GeneratedApi.CommerceProductsModule(client);
+}
+
+function mapStorefrontProduct(product: PublicProductDto): Product | null {
+    if (!product.id || !product.name) {
+        return null;
+    }
+
+    const pricing = product.pricing ?? [];
+    const primaryPricing =
+        pricing.find((entry) => entry.isDefault) ??
+        pricing.find((entry) => typeof entry.currentPrice === 'number') ??
+        pricing[0];
+
+    const price =
+        primaryPricing?.currentPrice ??
+        primaryPricing?.salePrice ??
+        primaryPricing?.basePrice ??
+        0;
+
+    return {
+        id: product.id,
+        name: product.name,
+        type: product.type,
+        price,
+        currency: primaryPricing?.currency ?? 'USD',
+        description: product.description ?? product.shortDescription ?? undefined,
+    };
+}
+
 async function resolvePublishedCourseBySlug(courseSlug: string): Promise<{ course?: PublicCourseDto; error?: string }> {
     try {
         const programs = createPublicProgramsModule();
@@ -99,15 +135,6 @@ async function getAuthenticatedAccessToken(): Promise<string | null> {
     }
 
     return accessToken;
-}
-
-async function readProblemDetailMessage(response: Response): Promise<string> {
-    try {
-        const payload = (await response.json()) as { detail?: string; title?: string; message?: string };
-        return payload.detail || payload.message || payload.title || `${response.status} ${response.statusText}`;
-    } catch {
-        return `${response.status} ${response.statusText}`;
-    }
 }
 
 export async function getCourseEnrollmentStatus(courseSlug: string): Promise<EnrollmentStatus> {
@@ -168,8 +195,36 @@ export async function getCourseEnrollmentStatus(courseSlug: string): Promise<Enr
 }
 
 export async function getProductsContainingCourse(courseSlug: string): Promise<Product[]> {
-    void courseSlug;
-    return [];
+    try {
+        const { course } = await resolvePublishedCourseBySlug(courseSlug);
+        if (!course?.id) {
+            return [];
+        }
+
+        const programs = createPublicProgramsModule();
+        const products = createPublicProductsModule();
+        const courseProductsResult = await programs.getCoursesProducts(course.id);
+
+        if (!courseProductsResult.ok) {
+            return [];
+        }
+
+        const productIds = [...new Set(courseProductsResult.data.filter((productId): productId is string => typeof productId === 'string' && productId.length > 0))];
+        if (productIds.length === 0) {
+            return [];
+        }
+
+        const productResults = await Promise.all(
+            productIds.map(async (productId) => {
+                const result = await products.getProducts(productId, { includePricing: true });
+                return result.ok ? mapStorefrontProduct(result.data) : null;
+            })
+        );
+
+        return productResults.filter((product): product is Product => product !== null);
+    } catch {
+        return [];
+    }
 }
 
 export async function enrollInFreeCourse(courseSlug: string): Promise<EnrollmentResult> {
@@ -197,27 +252,19 @@ export async function enrollInFreeCourse(courseSlug: string): Promise<Enrollment
             };
         }
 
-        const response = await fetch(`${getApiUrl()}/v1/courses/${course.id}:self-enroll`, {
-            method: 'POST',
-            headers: {
-                Authorization: `Bearer ${accessToken}`,
-            },
-            cache: 'no-store',
-        });
+        const programs = createAuthenticatedProgramsModule(accessToken);
+        const enrollmentResult = await programs.postCoursesSelfEnroll(course.id);
 
-        if (!response.ok) {
+        if (!enrollmentResult.ok) {
             return {
                 success: false,
-                message: await readProblemDetailMessage(response),
+                message: formatApiError(enrollmentResult.error),
             };
         }
-
-        const enrollment = (await response.json()) as { id?: string };
 
         return {
             success: true,
             message: 'Enrollment complete. You can continue in the learning app now.',
-            enrollmentId: enrollment.id,
         };
     } catch (error) {
         return {
@@ -228,7 +275,9 @@ export async function enrollInFreeCourse(courseSlug: string): Promise<Enrollment
 }
 
 export async function createPaymentIntent(productId: string): Promise<PaymentIntentResult> {
-    void productId;
-
-    throw new Error('Paid storefront checkout is not wired yet. Only direct course self-enrollment is currently available.');
+    try {
+        throw new Error(`Product checkout is not available in the current payments API contract for product ${productId}.`);
+    } catch (error) {
+        throw new Error(error instanceof Error ? error.message : 'Failed to create payment intent.');
+    }
 }
