@@ -116,7 +116,12 @@ export default function ColorPicker({ color, onChange }: Readonly<ColorPickerPro
         <input
           type="text"
           value={inputColor}
-          onChange={(e) => onSetHex(e.target.value)}
+          onChange={(e) => {
+            e.stopPropagation()
+            onSetHex(e.target.value)
+          }}
+          onKeyDown={(e) => e.stopPropagation()}
+          onPointerDown={(e) => e.stopPropagation()}
           className={cn(
             "flex-1 h-7 px-2 rounded border text-xs font-mono",
             "border-gray-300 dark:border-gray-700",
@@ -138,7 +143,8 @@ export default function ColorPicker({ color, onChange }: Readonly<ColorPickerPro
               basicColor === selfColor.hex && "ring-2 ring-offset-1 ring-blue-500",
             )}
             style={{ backgroundColor: basicColor }}
-            onClick={(e) => onBasicColorClick(e, basicColor)}
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); onBasicColorClick(e, basicColor); }}
           />
         ))}
       </div>
@@ -187,7 +193,12 @@ export default function ColorPicker({ color, onChange }: Readonly<ColorPickerPro
 
       <button
           type="button"
-          onClick={() => onChange?.("", false, false)}
+          onPointerDown={(e) => e.stopPropagation()}
+          onClick={(e) => {
+            e.preventDefault()
+            e.stopPropagation()
+            onChange?.("", false, false)
+          }}
           title="Clear color"
           aria-label="Clear color"
           className={cn(
@@ -233,6 +244,8 @@ function MoveWrapper({ className, style, onChange, children }: MoveWrapperProps)
 
   const onMouseDown = (e: React.MouseEvent): void => {
     if (e.button !== 0) return
+    e.preventDefault()
+    e.stopPropagation()
     move(e)
 
     const onMouseMove = (_e: MouseEvent): void => {
@@ -256,7 +269,7 @@ function MoveWrapper({ className, style, onChange, children }: MoveWrapperProps)
   }
 
   return (
-    <div ref={divRef} className={className} style={style} onMouseDown={onMouseDown}>
+    <div ref={divRef} className={className} style={style} onMouseDown={onMouseDown} onPointerDown={(e) => e.stopPropagation()}>
       {children}
     </div>
   )

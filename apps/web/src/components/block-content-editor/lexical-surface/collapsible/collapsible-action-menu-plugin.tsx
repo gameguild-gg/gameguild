@@ -250,7 +250,7 @@ export function CollapsibleActionMenuPlugin({
               </DropdownMenuItem>
               <DropdownMenuSub>
                 <DropdownMenuSubTrigger>Border color</DropdownMenuSubTrigger>
-                <DropdownMenuSubContent className="p-3">
+                <DropdownMenuSubContent className="p-3" onFocusOutside={(e) => { const t = (e as any).detail?.originalEvent?.target; if (t instanceof Element && t.closest("[contenteditable=\"true\"]")) e.preventDefault(); }}>
                   <ColorPicker
                     color={state.borderColor ?? "#d1d5db"}
                     onChange={(next) =>

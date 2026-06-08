@@ -141,8 +141,10 @@ import { INSERT_EXCALIDRAW_COMMAND } from "../excalidraw"
 import { InsertLayoutDialog } from "../layout"
 import { INSERT_COLLAPSIBLE_COMMAND } from "../collapsible"
 import { INSERT_STICKY_COMMAND } from "../sticky"
+import { INSERT_ADMONITION_LEXICAL_COMMAND } from "../admonition"
+import { INSERT_BUTTON_LEXICAL_COMMAND } from "../button"
 import { EmojiPickerPanel } from "../emoji"
-import { Sigma as EquationIcon, Pencil as ExcalidrawIcon, Smile as EmojiIcon, Table as TableIcon, Columns as ColumnsIcon, PanelTopOpen as CollapsibleIcon } from "lucide-react"
+import { Sigma as EquationIcon, Pencil as ExcalidrawIcon, Smile as EmojiIcon, Table as TableIcon, Columns as ColumnsIcon, PanelTopOpen as CollapsibleIcon, AlertCircle as AdmonitionToolbarIcon, MousePointerClick as ButtonToolbarIcon } from "lucide-react"
 import {
   Dialog,
   DialogContent,
@@ -1406,6 +1408,16 @@ export default function ToolbarPlugin({
             onClick={() => dispatchToolbarCommand(INSERT_STICKY_COMMAND)}
           >
             <StickyIcon className="w-4 h-4" /> Sticky Note
+          </DropDownItem>
+          <DropDownItem
+            onClick={() => dispatchToolbarCommand(INSERT_ADMONITION_LEXICAL_COMMAND)}
+          >
+            <AdmonitionToolbarIcon className="w-4 h-4" /> Admonition
+          </DropDownItem>
+          <DropDownItem
+            onClick={() => dispatchToolbarCommand(INSERT_BUTTON_LEXICAL_COMMAND)}
+          >
+            <ButtonToolbarIcon className="w-4 h-4" /> Button
           </DropDownItem>
         </DropDown>
       )}

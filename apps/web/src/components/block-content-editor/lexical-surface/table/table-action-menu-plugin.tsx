@@ -287,7 +287,7 @@ export function TableActionMenuPlugin({
         <DropdownMenuContent align="end" className="w-56">
           <DropdownMenuSub>
             <DropdownMenuSubTrigger>Background color</DropdownMenuSubTrigger>
-            <DropdownMenuSubContent className="p-3">
+            <DropdownMenuSubContent className="p-3" onFocusOutside={(e) => { const t = (e as any).detail?.originalEvent?.target; if (t instanceof Element && t.closest("[contenteditable=\"true\"]")) e.preventDefault(); }}>
               <ColorPicker
                 color={state.backgroundColor ?? "#ffffff"}
                 onChange={(next) => setBackgroundColor(next)}
