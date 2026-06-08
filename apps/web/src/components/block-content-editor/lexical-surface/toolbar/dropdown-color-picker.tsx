@@ -52,7 +52,7 @@ export function DropdownColorPicker({
           <ChevronDownIcon className="w-3 h-3 opacity-60" />
         </button>
       </PopoverTrigger>
-      <PopoverContent align="start" sideOffset={4} className="w-auto p-3">
+      <PopoverContent align="start" sideOffset={4} className="w-auto p-3" onFocusOutside={(e) => { const t = (e as any).detail?.originalEvent?.target; if (t instanceof Element && t.closest("[contenteditable=\"true\"]")) e.preventDefault(); }}>
         <ColorPicker color={color} onChange={onChange} />
       </PopoverContent>
     </Popover>

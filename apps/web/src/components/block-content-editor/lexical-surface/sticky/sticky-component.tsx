@@ -467,7 +467,7 @@ export function StickyComponent({
                   <span className="w-4 h-4 mr-2 rounded-full border border-gray-300 dark:border-gray-600" style={{ backgroundColor: color }} />
                   Color
                 </DropdownMenuSubTrigger>
-                <DropdownMenuSubContent className="p-3">
+                <DropdownMenuSubContent className="p-3" onFocusOutside={(e) => { const t = (e as any).detail?.originalEvent?.target; if (t instanceof Element && t.closest("[contenteditable=\"true\"]")) e.preventDefault(); }}>
                   <ColorPicker
                     color={color}
                     onChange={(nextColor) => {

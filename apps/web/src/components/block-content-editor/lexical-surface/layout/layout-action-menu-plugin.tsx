@@ -316,7 +316,7 @@ export function LayoutActionMenuPlugin({
               </DropdownMenuItem>
               <DropdownMenuSub>
                 <DropdownMenuSubTrigger>Border color</DropdownMenuSubTrigger>
-                <DropdownMenuSubContent className="p-3">
+                <DropdownMenuSubContent className="p-3" onFocusOutside={(e) => { const t = (e as any).detail?.originalEvent?.target; if (t instanceof Element && t.closest("[contenteditable=\"true\"]")) e.preventDefault(); }}>
                   <ColorPicker
                     color={layoutState.borderColor ?? "#9ca3af"}
                     onChange={(next) =>

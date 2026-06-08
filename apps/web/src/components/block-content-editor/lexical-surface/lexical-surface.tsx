@@ -49,6 +49,8 @@ import { TablePlugin, TableActionMenuPlugin, TableCellResizerPlugin, TableInsert
 import { LayoutPlugin, LayoutActionMenuPlugin } from "./layout"
 import { CollapsiblePlugin, CollapsibleActionMenuPlugin } from "./collapsible"
 import { StickyPlugin } from "./sticky"
+import { AdmonitionPlugin } from "./admonition"
+import { ButtonPlugin } from "./button"
 import {
   FloatingLinkEditorPlugin,
   FloatingTextFormatToolbarPlugin,
@@ -96,6 +98,10 @@ export type LexicalSurfaceFeatures = {
   collapsible?: boolean
   /** Sticky notes. Default: true */
   sticky?: boolean
+  /** Admonition callouts. Default: true */
+  admonition?: boolean
+  /** Styled action buttons. Default: true */
+  button?: boolean
   /** Lexical built-ins. Defaults: true */
   history?: boolean
   list?: boolean
@@ -144,6 +150,8 @@ const DEFAULT_FEATURES: Required<LexicalSurfaceFeatures> = {
   layout: true,
   collapsible: true,
   sticky: true,
+  admonition: true,
+  button: true,
   history: true,
   list: true,
   link: true,
@@ -313,6 +321,8 @@ function EditorBody({
         {features.collapsible && <CollapsiblePlugin />}
         {anchorElem && features.collapsible && <CollapsibleActionMenuPlugin anchorElem={anchorElem} />}
         {features.sticky && <StickyPlugin />}
+        {features.admonition && <AdmonitionPlugin />}
+        {features.button && <ButtonPlugin />}
         {features.blockEmbed && <BlockEmbedPlugin />}
         {features.blockInsertMenu && <BlockInsertMenuPlugin />}
         {anchorElem && features.floatingTextFormat && (

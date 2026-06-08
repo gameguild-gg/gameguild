@@ -69,6 +69,9 @@ import { InsertEquationDialog } from "../equation"
 import { INSERT_EXCALIDRAW_COMMAND } from "../excalidraw"
 import { InsertTableDialog } from "../table"
 import { INSERT_STICKY_COMMAND } from "../sticky"
+import { INSERT_ADMONITION_LEXICAL_COMMAND } from "../admonition"
+import { INSERT_BUTTON_LEXICAL_COMMAND } from "../button"
+import { AlertCircle as AdmonitionIcon, MousePointerClick as ButtonIcon } from "lucide-react"
 
 type DialogRender = (opts: { activeEditor: LexicalEditor; onClose: () => void }) => React.ReactNode
 
@@ -256,6 +259,16 @@ function getBaseOptions(editor: LexicalEditor): ComponentPickerOption[] {
       Icon: StickyIcon,
       keywords: ["sticky", "note", "postit", "memo"],
       onSelect: () => editor.dispatchCommand(INSERT_STICKY_COMMAND, undefined),
+    }),
+    new ComponentPickerOption("Admonition", {
+      Icon: AdmonitionIcon,
+      keywords: ["admonition", "callout", "note", "warning", "info", "tip", "alert"],
+      onSelect: () => editor.dispatchCommand(INSERT_ADMONITION_LEXICAL_COMMAND, undefined),
+    }),
+    new ComponentPickerOption("Button", {
+      Icon: ButtonIcon,
+      keywords: ["button", "link", "action", "cta", "download"],
+      onSelect: () => editor.dispatchCommand(INSERT_BUTTON_LEXICAL_COMMAND, undefined),
     }),
   ]
 }
