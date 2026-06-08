@@ -96,6 +96,59 @@ export function StickyComponent({
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const wrapperRef = useRef<HTMLDivElement>(null)
 
+  // ── Clamp position to keep the sticky within the editor area ──
+  // Similar to how the table plugin uses getMaxTableWidth to keep
+  // columns within the content-editable's boundaries.
+  const clampToEditor = useCallback((): { x: number; y: number } | null => {
+    const wrapper = wrapperRef.current
+    const rootElement = editor.getRootElement()
+    if (!wrapper || !rootElement) return null
+
+    const rootRect = rootElement.getBoundingClientRect()
+    const wrapperRect = wrapper.getBoundingClientRect()
+
+    // Compute the natural position (where the wrapper would be at offset 0,0)
+    const naturalLeft = wrapperRect.left - xOffset
+    const naturalRight = wrapperRect.right - xOffset
+    const naturalTop = wrapperRect.top - yOffset
+    const naturalBottom = wrapperRect.bottom - yOffset
+
+    // Min/max offsets that keep the entire sticky within the root element
+    const minX = rootRect.left - naturalLeft
+    const maxX = rootRect.right - naturalRight
+    const minY = rootRect.top - naturalTop
+    const maxY = rootRect.bottom - naturalBottom
+
+    // If the sticky is wider/taller than the editor, clamp to left/top
+    const safeMinX = Math.min(minX, maxX)
+    const safeMaxX = Math.max(minX, maxX)
+    const safeMinY = Math.min(minY, maxY)
+    const safeMaxY = Math.max(minY, maxY)
+
+    const clampedX = Math.max(safeMinX, Math.min(xOffset, safeMaxX))
+    const clampedY = Math.max(safeMinY, Math.min(yOffset, safeMaxY))
+
+    if (clampedX !== xOffset || clampedY !== yOffset) {
+      return { x: clampedX, y: clampedY }
+    }
+    return null
+  }, [editor, xOffset, yOffset])
+
+  // Re-clamp whenever offset, size, or layout changes
+  useEffect(() => {
+    // Wait for the DOM to settle after size/offset changes
+    const raf = requestAnimationFrame(() => {
+      const clamped = clampToEditor()
+      if (clamped) {
+        editor.update(() => {
+          const node = $getNodeByKey(nodeKey)
+          if ($isStickyNode(node)) node.setPosition(clamped.x, clamped.y)
+        })
+      }
+    })
+    return () => cancelAnimationFrame(raf)
+  }, [editor, nodeKey, clampToEditor, size])
+
   // ── Autogrow ──
   const adjustHeight = useCallback(() => {
     const textarea = textareaRef.current
@@ -185,7 +238,7 @@ export function StickyComponent({
     })
   }
 
-  // ── Drag-to-reposition (GPU-accelerated, no transitions) ──
+  // ── Drag-to-reposition (GPU-accelerated, no transitions, bounded) ──
   const handleDragStart = useCallback(
     (e: React.MouseEvent) => {
       if (!isEditable) return
@@ -198,6 +251,32 @@ export function StickyComponent({
       const startOffsetX = xOffset
       const startOffsetY = yOffset
       const wrapper = wrapperRef.current
+      const rootElement = editor.getRootElement()
+
+      // Compute bounds once at drag start for consistent real-time clamping
+      let minOX = -Infinity
+      let maxOX = Infinity
+      let minOY = -Infinity
+      let maxOY = Infinity
+
+      if (wrapper && rootElement) {
+        const rootRect = rootElement.getBoundingClientRect()
+        const wrapperRect = wrapper.getBoundingClientRect()
+
+        // Natural position = where the wrapper sits at offset (0, 0)
+        const naturalLeft = wrapperRect.left - startOffsetX
+        const naturalRight = wrapperRect.right - startOffsetX
+        const naturalTop = wrapperRect.top - startOffsetY
+        const naturalBottom = wrapperRect.bottom - startOffsetY
+
+        minOX = rootRect.left - naturalLeft
+        maxOX = rootRect.right - naturalRight
+        minOY = rootRect.top - naturalTop
+        maxOY = rootRect.bottom - naturalBottom
+
+        if (maxOX < minOX) maxOX = minOX
+        if (maxOY < minOY) maxOY = minOY
+      }
 
       // GPU-accelerate and kill transitions for 60 fps drag
       if (wrapper) {
@@ -206,22 +285,23 @@ export function StickyComponent({
       }
 
       const onMouseMove = (ev: MouseEvent) => {
-        if (wrapper) {
-          const dx = ev.clientX - startX
-          const dy = ev.clientY - startY
-          wrapper.style.transform = `translate(${startOffsetX + dx}px, ${startOffsetY + dy}px)`
-        }
+        if (!wrapper) return
+        const rawX = startOffsetX + (ev.clientX - startX)
+        const rawY = startOffsetY + (ev.clientY - startY)
+        const cx = Math.max(minOX, Math.min(rawX, maxOX))
+        const cy = Math.max(minOY, Math.min(rawY, maxOY))
+        wrapper.style.transform = `translate(${cx}px, ${cy}px)`
       }
 
       const onMouseUp = (ev: MouseEvent) => {
-        const dx = ev.clientX - startX
-        const dy = ev.clientY - startY
-        const finalX = startOffsetX + dx
-        const finalY = startOffsetY + dy
+        const rawX = startOffsetX + (ev.clientX - startX)
+        const rawY = startOffsetY + (ev.clientY - startY)
+        const finalX = Math.max(minOX, Math.min(rawX, maxOX))
+        const finalY = Math.max(minOY, Math.min(rawY, maxOY))
+
         document.removeEventListener("mousemove", onMouseMove)
         document.removeEventListener("mouseup", onMouseUp)
 
-        // Restore transitions
         if (wrapper) {
           wrapper.style.willChange = ""
           wrapper.style.transition = ""
