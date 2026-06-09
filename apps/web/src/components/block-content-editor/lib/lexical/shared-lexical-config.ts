@@ -12,7 +12,6 @@ import { HeadingNode, QuoteNode } from "@lexical/rich-text"
 import { ListNode, ListItemNode } from "@lexical/list"
 import { LinkNode, AutoLinkNode } from "@lexical/link"
 import { CodeNode, CodeHighlightNode } from "@lexical/code"
-import { HorizontalRuleNode } from "@lexical/react/LexicalHorizontalRuleNode"
 import { CustomListNode } from "../../nodes/custom-list-node"
 import { BlockEmbedNode } from "../../nodes/block-embed-node"
 import { EquationNode } from "../../lexical-surface/equation"
@@ -28,6 +27,7 @@ import {
 import { StickyNode } from "../../lexical-surface/sticky"
 import { AdmonitionLexicalNode } from "../../lexical-surface/admonition"
 import { ButtonLexicalNode } from "../../lexical-surface/button"
+import { DividerLexicalNode } from "../../lexical-surface/divider"
 
 /**
  * Full node set supported by our Lexical instances. Adding a node here
@@ -51,7 +51,6 @@ export const SHARED_LEXICAL_NODES = [
   CustomListNode,
   CodeNode,
   CodeHighlightNode,
-  HorizontalRuleNode,
   LinkNode,
   AutoLinkNode,
   BlockEmbedNode,
@@ -71,6 +70,7 @@ export const SHARED_LEXICAL_NODES = [
   StickyNode,
   AdmonitionLexicalNode,
   ButtonLexicalNode,
+  DividerLexicalNode,
 ]
 
 /**

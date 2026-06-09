@@ -25,7 +25,6 @@ import { OnChangePlugin } from "@lexical/react/LexicalOnChangePlugin"
 import { ListPlugin } from "@lexical/react/LexicalListPlugin"
 import { LinkPlugin } from "@lexical/react/LexicalLinkPlugin"
 import { CheckListPlugin } from "@lexical/react/LexicalCheckListPlugin"
-import { HorizontalRulePlugin } from "@lexical/react/LexicalHorizontalRulePlugin"
 import { TabIndentationPlugin } from "@lexical/react/LexicalTabIndentationPlugin"
 import { LexicalErrorBoundary } from "@lexical/react/LexicalErrorBoundary"
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext"
@@ -51,6 +50,7 @@ import { CollapsiblePlugin, CollapsibleActionMenuPlugin } from "./collapsible"
 import { StickyPlugin } from "./sticky"
 import { AdmonitionPlugin } from "./admonition"
 import { ButtonPlugin } from "./button"
+import { DividerPlugin } from "./divider"
 import {
   FloatingLinkEditorPlugin,
   FloatingTextFormatToolbarPlugin,
@@ -102,12 +102,13 @@ export type LexicalSurfaceFeatures = {
   admonition?: boolean
   /** Styled action buttons. Default: true */
   button?: boolean
+  /** Configurable section divider. Default: true */
+  divider?: boolean
   /** Lexical built-ins. Defaults: true */
   history?: boolean
   list?: boolean
   link?: boolean
   checkList?: boolean
-  horizontalRule?: boolean
   tabIndentation?: boolean
 }
 
@@ -152,11 +153,11 @@ const DEFAULT_FEATURES: Required<LexicalSurfaceFeatures> = {
   sticky: true,
   admonition: true,
   button: true,
+  divider: true,
   history: true,
   list: true,
   link: true,
   checkList: true,
-  horizontalRule: true,
   tabIndentation: true,
 }
 
@@ -301,7 +302,6 @@ function EditorBody({
         {features.list && <ListPlugin />}
         {features.checkList && <CheckListPlugin />}
         {features.link && <LinkPlugin />}
-        {features.horizontalRule && <HorizontalRulePlugin />}
         {features.tabIndentation && <TabIndentationPlugin />}
         {features.picker && <ComponentPickerPlugin />}
         {features.shortcuts && <ShortcutsPlugin setIsLinkEditMode={setIsLinkEditMode} />}
@@ -323,6 +323,7 @@ function EditorBody({
         {features.sticky && <StickyPlugin />}
         {features.admonition && <AdmonitionPlugin />}
         {features.button && <ButtonPlugin />}
+        {features.divider && <DividerPlugin />}
         {features.blockEmbed && <BlockEmbedPlugin />}
         {features.blockInsertMenu && <BlockInsertMenuPlugin />}
         {anchorElem && features.floatingTextFormat && (

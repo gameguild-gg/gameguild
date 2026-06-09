@@ -26,7 +26,7 @@ import {
 } from "@lexical/code"
 import { $isLinkNode, TOGGLE_LINK_COMMAND } from "@lexical/link"
 import { $isListNode, ListNode } from "@lexical/list"
-import { INSERT_HORIZONTAL_RULE_COMMAND } from "@lexical/react/LexicalHorizontalRuleNode"
+import { INSERT_DIVIDER_LEXICAL_COMMAND } from "../divider"
 import { $isHeadingNode } from "@lexical/rich-text"
 import {
   $getSelectionStyleValueForProperty,
@@ -1382,7 +1382,7 @@ export default function ToolbarPlugin({
           buttonIcon={<InsertIcon className="w-4 h-4" />}
           buttonAriaLabel="Insert specialized editor node"
         >
-          <DropDownItem onClick={() => dispatchToolbarCommand(INSERT_HORIZONTAL_RULE_COMMAND)}>
+          <DropDownItem onClick={() => dispatchToolbarCommand(INSERT_DIVIDER_LEXICAL_COMMAND)}>
             <HorizontalRuleIcon className="w-4 h-4" /> Horizontal Rule
           </DropDownItem>
           <DropDownItem onClick={() => setInsertDialog("equation")}>

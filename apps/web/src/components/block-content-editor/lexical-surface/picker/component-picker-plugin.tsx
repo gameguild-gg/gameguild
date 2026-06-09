@@ -24,7 +24,7 @@ import {
   INSERT_UNORDERED_LIST_COMMAND,
 } from "@lexical/list"
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext"
-import { INSERT_HORIZONTAL_RULE_COMMAND } from "@lexical/react/LexicalHorizontalRuleNode"
+import { INSERT_DIVIDER_LEXICAL_COMMAND } from "../divider"
 import {
   LexicalTypeaheadMenuPlugin,
   MenuOption,
@@ -228,7 +228,7 @@ function getBaseOptions(editor: LexicalEditor): ComponentPickerOption[] {
     new ComponentPickerOption("Divider", {
       Icon: HorizontalRuleIcon,
       keywords: ["horizontal rule", "divider", "hr"],
-      onSelect: () => editor.dispatchCommand(INSERT_HORIZONTAL_RULE_COMMAND, undefined),
+      onSelect: () => editor.dispatchCommand(INSERT_DIVIDER_LEXICAL_COMMAND, undefined),
     }),
     new ComponentPickerOption("Equation", {
       Icon: EquationIcon,
