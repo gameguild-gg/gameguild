@@ -501,13 +501,19 @@ public class HybridPermissionCacheTests
     }
 
     [Fact]
-    public async Task InvalidatePatternAsync_ShouldCompleteSuccessfully()
+    public async Task InvalidatePatternAsync_RemovesMatchingTrackedL1Keys()
     {
         var cache = CreateCache();
+        await cache.SetAsync("pattern:user:1", "remove-1", "test");
+        await cache.SetAsync("pattern:user:2", "remove-2", "test");
+        await cache.SetAsync("other:user:1", "keep", "test");
 
         await cache.InvalidatePatternAsync("pattern:*", "test");
 
-        // InvalidatePattern is a placeholder, just returns Task.CompletedTask
+        (await cache.GetAsync<string>("pattern:user:1", "test")).Should().BeNull();
+        (await cache.GetAsync<string>("pattern:user:2", "test")).Should().BeNull();
+        (await cache.GetAsync<string>("other:user:1", "test")).Should().Be("keep");
+        _metricsMock.Verify(m => m.RecordEviction(CacheLevel.L1, "test", "pattern"), Times.Exactly(2));
     }
 
     [Fact]

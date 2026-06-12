@@ -296,25 +296,25 @@ public class ConditionalPolicyEvaluatorTests
     // ── Location conditions ───────────────────────────────────
 
     [Fact]
-    public async Task EvaluateAsync_BlockedCountry_ConditionsNotMet_DenySkipped()
+    public async Task EvaluateAsync_BlockedCountry_ConditionsMet_DenyApplied()
     {
-        // BlockedCountries contains "CN", context.GeoCountry="CN" → returns false → deny skipped
+        // BlockedCountries contains "CN", context.GeoCountry="CN" -> conditions match -> deny applied
         var loc = JsonSerializer.Serialize(new { BlockedCountries = new[] { "CN", "RU" } });
         SetupPolicies(CreatePolicy(action: PolicyAction.Deny, locationConditions: loc));
 
         var result = await _sut.EvaluateAsync(CreateContext(geoCountry: "CN"));
-        result.IsAllowed.Should().BeTrue();
+        result.IsAllowed.Should().BeFalse();
     }
 
     [Fact]
-    public async Task EvaluateAsync_NotBlockedCountry_ConditionsMet_DenyApplied()
+    public async Task EvaluateAsync_NotBlockedCountry_ConditionsNotMet_DenySkipped()
     {
-        // BlockedCountries=["CN","RU"], context.GeoCountry="US" → not blocked → passes → deny applied
+        // BlockedCountries=["CN","RU"], context.GeoCountry="US" -> conditions do not match -> deny skipped
         var loc = JsonSerializer.Serialize(new { BlockedCountries = new[] { "CN", "RU" } });
         SetupPolicies(CreatePolicy(action: PolicyAction.Deny, locationConditions: loc));
 
         var result = await _sut.EvaluateAsync(CreateContext(geoCountry: "US"));
-        result.IsAllowed.Should().BeFalse();
+        result.IsAllowed.Should().BeTrue();
     }
 
     [Fact]
@@ -384,24 +384,24 @@ public class ConditionalPolicyEvaluatorTests
     // ── Device conditions ─────────────────────────────────────
 
     [Fact]
-    public async Task EvaluateAsync_BlockedUserAgent_ConditionsNotMet_DenySkipped()
+    public async Task EvaluateAsync_BlockedUserAgent_ConditionsMet_DenyApplied()
     {
-        // BlockedUserAgents=["BadBot"], context.UserAgent="BadBot/1.0" → contains match → returns false
+        // BlockedUserAgents=["BadBot"], context.UserAgent="BadBot/1.0" -> conditions match -> deny applied
         var dev = JsonSerializer.Serialize(new { BlockedUserAgents = new[] { "BadBot", "Scraper" } });
         SetupPolicies(CreatePolicy(action: PolicyAction.Deny, deviceConditions: dev));
 
         var result = await _sut.EvaluateAsync(CreateContext(userAgent: "BadBot/1.0"));
-        result.IsAllowed.Should().BeTrue();
+        result.IsAllowed.Should().BeFalse();
     }
 
     [Fact]
-    public async Task EvaluateAsync_NonBlockedUserAgent_ConditionsMet_DenyApplied()
+    public async Task EvaluateAsync_NonBlockedUserAgent_ConditionsNotMet_DenySkipped()
     {
         var dev = JsonSerializer.Serialize(new { BlockedUserAgents = new[] { "BadBot" } });
         SetupPolicies(CreatePolicy(action: PolicyAction.Deny, deviceConditions: dev));
 
         var result = await _sut.EvaluateAsync(CreateContext(userAgent: "Chrome/120.0"));
-        result.IsAllowed.Should().BeFalse();
+        result.IsAllowed.Should().BeTrue();
     }
 
     [Fact]

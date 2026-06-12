@@ -1,3 +1,4 @@
+using GameGuild.Identity.Context.Actors;
 using GameGuild.Projects.UnitTests.Infrastructure;
 
 namespace GameGuild.Projects.UnitTests.Handlers;
@@ -126,6 +127,35 @@ public class ProjectHandlersIntegrationTests : IDisposable
         savedStats!.ViewCount.Should().Be(100);
         savedStats.DownloadCount.Should().Be(50);
         savedStats.FollowerCount.Should().Be(10);
+    }
+
+    [Fact]
+    public async Task GetProjectStatistics_Should_Return_Downloads_From_Metadata_And_Releases()
+    {
+        var actorAccessor = new Mock<IActorContextAccessor>();
+        actorAccessor
+            .SetupGet(accessor => accessor.ActorContext)
+            .Returns(ActorContextBuilder.ForUser(_testUserId).WithRole("Admin").Build());
+        var handler = new ProjectQueryHandlers(
+            _context,
+            actorAccessor.Object,
+            Microsoft.Extensions.Logging.Abstractions.NullLogger<ProjectQueryHandlers>.Instance);
+        var project = _testDataBuilder.CreateProject(createdById: _testUserId);
+        _context.Set<Project>().Add(project);
+        _context.Set<ProjectMetadata>().Add(new ProjectMetadata
+        {
+            ProjectId = project.Id,
+            DownloadCount = 7
+        });
+        _context.Set<ProjectRelease>().AddRange(
+            new ProjectRelease { ProjectId = project.Id, Title = "v1", ReleaseVersion = "1.0.0", DownloadCount = 5 },
+            new ProjectRelease { ProjectId = project.Id, Title = "v2", ReleaseVersion = "2.0.0", DownloadCount = 11 });
+        await _context.SaveChangesAsync();
+
+        var result = await handler.Handle(new GetProjectStatisticsQuery { ProjectId = project.Id }, CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value.TotalDownloads.Should().Be(23);
     }
 
     [Fact]

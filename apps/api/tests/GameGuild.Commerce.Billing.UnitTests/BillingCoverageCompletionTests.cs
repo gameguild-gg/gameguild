@@ -4,6 +4,7 @@ using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Text.Json;
 using FluentAssertions;
+using GameGuild.Billing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -38,6 +39,44 @@ public sealed class BillingCoverageCompletionTests
 
         new RetryInvoicePaymentHandler(Mock.Of<GameGuild.IApplicationDbContext>()).Should().NotBeNull();
         new BillingInvoicesController(Mock.Of<GameGuild.CQRS.ISender>()).Should().NotBeNull();
+    }
+
+    [Fact]
+    public async Task CreateCostAllocationInvoiceHandler_CreatesIssuedInvoice()
+    {
+        var invoices = new List<Invoice>();
+        var invoiceSet = new Mock<DbSet<Invoice>>();
+        invoiceSet
+            .Setup(set => set.Add(It.IsAny<Invoice>()))
+            .Callback<Invoice>(invoices.Add);
+
+        var context = new Mock<GameGuild.IApplicationDbContext>();
+        context.Setup(c => c.Set<Invoice>()).Returns(invoiceSet.Object);
+        context.Setup(c => c.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
+
+        var tenantId = Guid.NewGuid();
+        var subscriptionId = Guid.NewGuid();
+        var periodStart = DateTime.UtcNow.AddDays(-30);
+        var periodEnd = DateTime.UtcNow;
+        var dueDate = DateTime.UtcNow.AddDays(15);
+        var handler = new CreateCostAllocationInvoiceHandler(context.Object);
+
+        var result = await handler.Handle(
+            new CreateCostAllocationInvoiceCommand(tenantId, subscriptionId, 42.50m, periodStart, periodEnd, "USD", dueDate),
+            CancellationToken.None);
+
+        var invoice = invoices.Should().ContainSingle().Subject;
+        invoice.TenantId.Should().Be(tenantId);
+        invoice.SubscriptionId.Should().Be(subscriptionId);
+        invoice.PeriodStart.Should().Be(periodStart);
+        invoice.PeriodEnd.Should().Be(periodEnd);
+        invoice.Status.Should().Be(InvoiceStatus.Open);
+        invoice.Total.Should().Be(42.50m);
+        result.InvoiceId.Should().Be(invoice.Id);
+        result.InvoiceNumber.Should().Be(invoice.InvoiceNumber);
+        result.Status.Should().Be(nameof(InvoiceStatus.Open));
+        result.DueDate.Should().Be(dueDate);
+        context.Verify(c => c.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -542,7 +581,7 @@ public sealed class BillingCoverageCompletionTests
         jws.Setup(x => x.DecodeSignedNotification("no-transaction")).Returns(new AppleNotificationPayload
         {
             NotificationType = "SUBSCRIBED",
-            Data = new AppleNotificationData { BundleId = "com.gameguild.test", Environment = null }
+            Data = new AppleNotificationData { BundleId = "com.gameguild.test", Environment = null! }
         });
         var noTransactionResult = await service.VerifyNotificationAsync("no-transaction");
         noTransactionResult.IsValid.Should().BeTrue();

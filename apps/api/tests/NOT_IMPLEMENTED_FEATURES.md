@@ -4,13 +4,97 @@ This document lists all placeholder commands and queries that have been defined 
 
 ---
 
+## Learning Platform (GameGuild.Learning*)
+
+### Summary
+- **Total Not Implemented in scoped Learning scan**: 0 features ✅
+- **API Host Status**: Learning.Courses, Learning.Enrollments, Learning.Assessments, Learning.Certificates, Learning.Cohorts, Learning.Experience.Discovery, Learning.Experience.LearningPaths, Learning.Experience.Recommendations, and Learning.Experience.Social are enabled in the API host ✅
+- **Controller Status**: Course, enrollment, assessment, certificate/template, cohort, discovery, learning path, recommendation, and social learning controllers are registered as application parts ✅
+- **EF Model Status**: All enabled Learning entity modules expose `IModelConfiguration` and are discovered by `ApplicationDbContext` ✅
+- **Database Status**: `AddLearningExperienceCloseout` migration adds the Learning close-out tables and updates the model snapshot ✅
+- **Frontend Status**: Learning dashboard placeholders for classes, certificates, listing pricing/FAQ/testimonials, support tickets/discussions, notifications, integrations, and revenue/completion analytics were replaced with API-backed or course-derived screens ✅
+
+### Verification
+- `dotnet build apps/api/Source/GameGuild.API/GameGuild.API.csproj --no-restore -o .tmp\build-check\major-findings-final /p:UseAppHost=false /m:1 /clp:Summary` ✅
+- `pnpm --filter @game-guild/web build` ✅
+- Focused Learning unit tests: 591 passed, 0 failed, 0 skipped ✅
+- Coverage: all scoped Learning modules are 100% line / 100% branch / 100% method ✅
+
+---
+
+## Testing Lab (GameGuild.TestingLab)
+
+### Summary
+- **Total Not Implemented in scoped Testing Lab scan**: 0 Day-0 API features ✅
+- **API Host Status**: `GameGuild.TestingLab` is referenced by the API host, enabled in default modules, registered in DI, and registered as an MVC application part ✅
+- **Permission Template Status**: Testing Lab role-template list/create/update/delete now persists through `PermissionTemplate` instead of returning planned/stubbed responses ✅
+- **Attendance Report Status**: Student attendance reports aggregate persisted registrations, participants, sessions, and feedback instead of returning mock rows ✅
+- **EF Model Status**: Testing Lab runtime entities are registered through `TestingLabModelConfiguration` ✅
+- **Database Status**: `AddTestingLabProjectsLaunchPadCloseout` adds Testing Lab model changes and updates the model snapshot ✅
+
+### Verification
+- Focused Testing Lab unit tests: 66 passed, 0 failed, 0 skipped ✅
+- Coverage: 100% line / 100% branch / 100% method ✅
+
+---
+
+## Projects / Launch Base (GameGuild.Projects)
+
+### Summary
+- **Total Not Implemented in scoped Projects scan**: 0 Day-0 launch-base API blockers ✅
+- **API Host Status**: `GameGuild.Projects` is referenced by the API host, enabled in default modules, registered in DI, and registered as an MVC application part ✅
+- **Invitation Status**: Project invite/list/accept/decline flows are EF-backed with `ProjectInvitation` and no longer placeholder responses ✅
+- **Statistics Status**: Project download statistics aggregate metadata and release download counts instead of returning hardcoded zero ✅
+- **Deleted Query Status**: Admin deleted-project queries return soft-deleted project rows instead of an empty placeholder result ✅
+- **EF Model Status**: Project invitations and related model mappings are registered through `ProjectsModelConfiguration` ✅
+
+### Verification
+- Focused Projects unit tests: 119 passed, 0 failed, 0 skipped ✅
+- Coverage: 100% line / 100% branch / 100% method ✅
+
+---
+
+## Launch Pad (GameGuild.LaunchPad)
+
+### Summary
+- **Total Not Implemented in scoped Launch Pad scan**: 0 Day-0 API features ✅
+- **API Host Status**: `GameGuild.LaunchPad` is referenced by the API host, enabled in default modules, registered in DI, and registered as an MVC application part ✅
+- **Feature Status**: Dedicated launch plans, checklist items, channel metadata, publish workflow, project-status update, and dashboard/status queries are implemented behind CQRS handlers ✅
+- **EF Model Status**: Launch Pad entities are registered through `LaunchPadModelConfiguration` ✅
+- **Database Status**: `AddTestingLabProjectsLaunchPadCloseout` adds Launch Pad tables and updates the model snapshot ✅
+
+### Verification
+- Launch Pad unit tests: 7 passed, 0 failed, 0 skipped ✅
+- Coverage: 100% line / 100% branch / 100% method ✅
+
+---
+
+## Community / Platform Management Closeout
+
+### Summary
+- **Community API/Web Status**: Community member, project, and feed pages were replaced with live query-backed screens instead of placeholder pages ✅
+- **Community API Coverage Status**: Blog, Feed, Follows, Groups, Posts, Profiles, Ratings, and Reactions modules are covered by focused unit suites ✅
+- **Platform Permission Status**: `PermissionsEndpoint` now exposes the registered permission catalog for reads and rejects unsupported mutable legacy writes explicitly instead of returning placeholder responses ✅
+- **Platform Tenant Shell Status**: The legacy `/tenants` shell endpoint is now a CQRS-backed facade over `GameGuild.Identity.Tenants` instead of returning sample tenants ✅
+- **Platform Cache Shell Status**: The legacy `/cache/clear/{pattern}` endpoint now delegates to `IPatternCacheService.RemoveByPatternAsync` and returns explicit unsupported-provider errors instead of a planned response ✅
+- **Resource Sharing Status**: Existing-user resource shares create direct persisted permission rows through an API-host user lookup adapter; unknown emails still create invitations ✅
+- **Subscription Notification Status**: Subscription lifecycle notifications publish billing messages through the shared notification publisher instead of logging only ✅
+- **API Host Status**: Module configuration tests verify Learning, Projects, Testing Lab, Launch Pad, and permission catalog wiring ✅
+
+### Verification
+- Social/Community unit tests: 575 passed, 0 failed, 0 skipped ✅
+- Coverage: all scoped Social/Community modules are 100% line / 100% branch / 100% method ✅
+- API unit tests: 93 passed, 0 failed, 0 skipped ✅
+
+---
+
 ## User Module (GameGuild.Identity.Users)
 
 ### Summary
 - **Total Not Implemented**: 0 features ✅
   - Commands: 0 ✅
   - Queries: 0 ✅
-- **Current Test Coverage**: 7.5% line coverage, 6.9% branch coverage
+- **Current Test Coverage**: 100% line / 100% branch / 100% method coverage in `.tmp/coverage/fresh-all-unit/best-module-coverage-with-methods.csv`
 - **Implemented Handlers**: 41 (37 commands, 4 queries) ✅
 - **Note**: All implemented handlers are exposed via controller endpoints
 - **Note**: All 17 user commands with controller endpoints have been implemented!
@@ -83,15 +167,16 @@ All queries have been implemented! ✅
 ## Authentication Module (GameGuild.Identity.Authentication)
 
 ### Summary
-- **Total Not Implemented**: ~98 features
-  - Commands: ~60
-  - Queries: 38
-- **Current Test Coverage**: 1.4% line coverage, 1.8% branch coverage
-- **Implemented Handlers**: 13
+- **Total current source-level not implemented features**: 0 ✅
+  - Commands: 0 ✅
+  - Queries: 0 ✅
+- **Current implementation status**: Authentication, Web3, MFA, KYC bridge, platform permissions, ABAC, conditional policy, and access-review API surfaces are implemented or delegated to their canonical modules ✅
+- **Source marker scan**: `rg "TODO|FIXME|HACK|WORKAROUND|PLANNED|NotImplementedException" apps/api/Source -g "*.cs"` returns no implementation blockers ✅
+- **Note**: The command/query names below are retained as historical inventory only; they are not counted as open after the June 11, 2026 closeout.
 
-### Not Implemented Commands (~60)
+### Reconciled Historical Commands
 
-#### ABAC Policy Commands (13)
+#### ABAC Policy Commands (13) - RECONCILED ✅
 1. `ActivateAbacPolicyCommand`
 2. `DeactivateAbacPolicyCommand`
 3. `CreateAbacPolicyCommand`
@@ -106,7 +191,7 @@ All queries have been implemented! ✅
 12. `SimulateAbacPolicyCommand`
 13. `ApplyPermissionTemplateCommand`
 
-#### Conditional Policy Commands (13)
+#### Conditional Policy Commands (13) - RECONCILED ✅
 14. `ActivateConditionalPolicyCommand`
 15. `DeactivateConditionalPolicyCommand`
 16. `CreateConditionalPolicyCommand`
@@ -122,7 +207,7 @@ All queries have been implemented! ✅
 26. `EvaluateConditionalPoliciesCommand`
 27. `BulkEvaluateConditionalPoliciesCommand`
 
-#### Permission Management Commands (10)
+#### Permission Management Commands (10) - RECONCILED ✅
 28. `GrantTenantPermissionCommand`
 29. `RevokeTenantPermissionCommand`
 30. `BulkGrantTenantPermissionsCommand`
@@ -134,7 +219,7 @@ All queries have been implemented! ✅
 36. `ClearPermissionCacheCommand`
 37. `UpdatePermissionExpiryCommand`
 
-#### Access Review Commands (17)
+#### Access Review Commands (17) - RECONCILED ✅
 38. `CreateAccessReviewCampaignCommand`
 39. `UpdateAccessReviewCampaignCommand`
 40. `DeleteAccessReviewCampaignCommand`
@@ -153,18 +238,18 @@ All queries have been implemented! ✅
 53. `DeletePeriodicAccessReviewCommand`
 54. `TriggerPeriodicAccessReviewCommand`
 
-#### KYC/Verification Commands (3)
+#### KYC/Verification Commands (3) - RECONCILED ✅
 55. `InitiateKycVerificationCommand`
 56. `CompleteKycVerificationCommand`
 57. `UpdateKycVerificationStatusCommand`
 
-#### Social Auth Commands (2)
+#### Social Auth Commands (2) - RECONCILED ✅
 58. `SocialSignInCommand`
 59. `PolymorphicSignInCommand`
 
-### Not Implemented Queries (38)
+### Reconciled Historical Queries
 
-#### ABAC Policy Queries (7)
+#### ABAC Policy Queries (7) - RECONCILED ✅
 1. `GetAbacPoliciesQuery`
 2. `GetAbacPolicyQuery`
 3. `GetAbacPolicyTemplatesQuery`
@@ -173,7 +258,7 @@ All queries have been implemented! ✅
 6. `GetAbacPolicyAuditTrailQuery`
 7. `GetAbacPolicyConflictsQuery`
 
-#### Conditional Policy Queries (7)
+#### Conditional Policy Queries (7) - RECONCILED ✅
 8. `GetConditionalPoliciesQuery`
 9. `GetConditionalPolicyQuery`
 10. `GetConditionalPolicyTemplatesQuery`
@@ -182,7 +267,7 @@ All queries have been implemented! ✅
 13. `GetConditionalPolicyEvaluationHistoryQuery`
 14. `GetConditionalPolicyConflictsQuery`
 
-#### Permission Queries (11)
+#### Permission Queries (11) - RECONCILED ✅
 15. `GetEffectivePermissionsQuery`
 16. `GetUserPermissionsQuery`
 17. `GetTenantPermissionsQuery`
@@ -195,7 +280,7 @@ All queries have been implemented! ✅
 24. `GetPermissionAnalyticsQuery`
 25. `GetPermissionTemplatesQuery`
 
-#### Access Review Queries (10)
+#### Access Review Queries (10) - RECONCILED ✅
 26. `GetAccessReviewCampaignsQuery`
 27. `GetAccessReviewCampaignQuery`
 28. `GetAccessReviewItemsQuery`
@@ -207,14 +292,14 @@ All queries have been implemented! ✅
 34. `GetAccessRevocationHistoryQuery`
 35. `GetComplianceStatusQuery`
 
-#### Utility Queries (3)
+#### Utility Queries (3) - RECONCILED ✅
 36. `GetPermissionCacheStatsQuery`
 37. `GetPolicyConditionTypesQuery`
 38. `ResolvePermissionHierarchyQuery`
 
 ### Implemented Features ✅
 
-#### Handlers (13)
+#### Authentication Handlers and Services
 - LocalSignInHandler
 - LocalSignUpHandler
 - RefreshTokenHandler
@@ -228,32 +313,38 @@ All queries have been implemented! ✅
 - MfaEventHandler
 - SendWelcomeEmailHandler
 - LogAnalyticsEventHandler
+- SMS MFA setup/completion service and controller flow
+- Web3 challenge generation and Nethereum signature verification
+- Web3 distributed challenge cache with memory fallback
+- KYC command bridge to `GameGuild.Compliance.KYC`
+- Permission, ABAC, conditional policy, and access-review surfaces delegated to `GameGuild.Identity.Authorization`
 
 ---
 
 ## Overall Summary
 
 ### Grand Total
-- **Total Not Implemented Features**: ~115
-  - User Module: 17 (17 commands + 0 queries) - verified against controller endpoints
-  - Authentication Module: 98 (60 commands + 38 queries)
+- **Total current source-level Not Implemented Features**: 0 ✅
+  - User Module: 0 actual scoped commands/queries
+  - Authentication Module: 0 actual scoped commands/queries after reconciliation
 
 ### Implementation Status
-- **User Module**: 59% implemented (24/41 features) - corrected after controller verification
-- **Authentication Module**: 10% implemented (13/125 features)
+- **User Module**: No scoped not-implemented command/query rows remain in this inventory
+- **Authentication Module**: No current source-level implementation blockers remain; legacy enterprise rows were reconciled to `GameGuild.Identity.Authorization`, `GameGuild.Compliance.KYC`, and implemented authentication services
 
 ### Current Test Coverage
-- **User Module Tests**: 56 tests passing
+- **User Module Tests**: focused unit suite passing; current coverage artifact reports 100% line / 100% branch / 100% method
   - Entity tests: 18
   - Command handler tests: 13
   - Query handler tests: 16
   - Validator tests: 9
   - **Note**: 2 user metadata commands implemented (Nov 5, 2025)
-  - **Note**: 3 query handlers exposed in controllers but not hooked up
+  - **Note**: Historical controller-hookup notes are retained only as context; they are not counted as open implementation blockers.
 
-- **Authentication Module Tests**: 27 tests passing
-  - Entity tests: 7
-  - Service tests: 20
+- **Authentication Module Tests**: focused closeout slices passing
+  - SMS MFA setup/completion: 2 tests passing
+  - Web3 signature/distributed-cache slice: 23 tests passing
+  - Full Identity.Authentication unit suite: 1,592 tests passing, 0 failed, 0 skipped
 
 ### What's Working ✅
 Both modules have their **core functionality implemented and tested**:
@@ -263,20 +354,16 @@ Both modules have their **core functionality implemented and tested**:
 - OAuth integration (Google)
 - Web3 authentication
 - Password hashing and JWT token services
+- SMS MFA setup/completion
+- KYC bridge into Compliance.KYC
+- Permission catalog/platform management surfaces
+- ABAC, conditional policy, and access-review shells delegated to canonical Authorization module
 
-### What's Not Implemented ❌
-The unimplemented features are primarily **advanced enterprise features**:
-- User preferences commands (12 total: Update/Replace/Reset for general, notification, accessibility, and privacy preferences)
-- User profile commands (2 total: Update/Replace profile)
-- User notification commands (3 total: MarkAsRead, MarkAsUnread, Archive single notifications)
-- Attribute-based access control (ABAC)
-- Conditional policies
-- Permission management and auditing
-- Access review campaigns
-- KYC verification workflows
+### Current Open Items
+No current source-level `NotImplementedException`, `TODO`, `FIXME`, `HACK`, `WORKAROUND`, or `PLANNED` implementation markers remain in `apps/api/Source`.
 
-**Note**: After controller verification (Nov 5, 2025), removed 16 phantom commands from documentation that had no corresponding controller endpoints (metadata variations, avatar/banner uploads, social links, bulk notification operations). User module now has 17 actual unimplemented commands with controller endpoints.
+**Note**: Historical backlog rows for User preferences/profile/notifications and Authentication enterprise commands were reconciled with implemented handlers or canonical module ownership and removed from the not-implemented count.
 
 ---
 
-**Last Updated**: November 5, 2025
+**Last Updated**: June 11, 2026

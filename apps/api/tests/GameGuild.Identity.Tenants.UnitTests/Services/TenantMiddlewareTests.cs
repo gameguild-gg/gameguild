@@ -12,7 +12,7 @@ using Xunit;
 namespace GameGuild.Identity.Tenants.UnitTests.Services;
 
 /// <summary>
-///     A stub mediator for testing that handles tenant queries
+///     A test mediator that handles tenant queries.
 /// </summary>
 internal class StubMediator : IMediator
 {

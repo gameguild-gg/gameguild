@@ -275,6 +275,14 @@ public class ActorContextAdditionalTests
     }
 
     [Fact]
+    public void IsTenantAdmin_Should_Return_True_For_Owner_Role()
+    {
+        var ctx = CreateContext(roles: ["Owner"]);
+        ctx.IsTenantAdmin.Should().BeTrue();
+        ctx.IsSystemAdmin.Should().BeFalse();
+    }
+
+    [Fact]
     public void IsTenantAdmin_Should_Return_False_When_No_Admin_Role()
     {
         var ctx = CreateContext(roles: ["Editor"]);

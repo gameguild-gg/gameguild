@@ -149,6 +149,16 @@ public sealed class ApiKeyControllerTests
 public sealed class RolesControllerTests
 {
     [Fact]
+    public void RolesController_ShouldBeVisibleInApiExplorer()
+    {
+        typeof(RolesController)
+            .GetCustomAttributes(typeof(ApiExplorerSettingsAttribute), inherit: false)
+            .Cast<ApiExplorerSettingsAttribute>()
+            .Should()
+            .NotContain(attribute => attribute.IgnoreApi);
+    }
+
+    [Fact]
     public async Task GetAll_ShouldReturnOkAndForwardQuery()
     {
         var sender = new Mock<ISender>();

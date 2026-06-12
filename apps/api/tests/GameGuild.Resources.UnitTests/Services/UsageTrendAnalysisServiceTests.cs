@@ -1,4 +1,5 @@
 using FluentAssertions;
+using System.Diagnostics.Metrics;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Xunit;
@@ -154,6 +155,54 @@ public class UsageTrendAnalysisServiceTests
         // Assert - should detect at least one anomaly
         capturedTrend.Should().NotBeNull();
         capturedTrend!.AnomalyCount.Should().BeGreaterThan(0);
+    }
+
+    [Fact]
+    public async Task AnalyzeTrendAsync_ShouldEmitAnomalyMetric_WhenAnomaliesAreDetected()
+    {
+        // Arrange
+        var tenantId = Guid.NewGuid();
+        var periodStart = DateTime.UtcNow.AddDays(-30);
+        var periodEnd = DateTime.UtcNow;
+        var anomalyMeasurements = new List<long>();
+        using var listener = new MeterListener();
+        listener.InstrumentPublished = (instrument, meterListener) =>
+        {
+            if (instrument.Meter.Name == UsageTrendAnalysisService.MeterName)
+            {
+                meterListener.EnableMeasurementEvents(instrument);
+            }
+        };
+        listener.SetMeasurementEventCallback<long>((instrument, measurement, tags, state) =>
+        {
+            if (instrument.Name == "gameguild.resources.usage_trends.anomalies")
+            {
+                anomalyMeasurements.Add(measurement);
+            }
+        });
+        listener.Start();
+
+        var usageRecords = new List<UsageRecord>
+        {
+            new() { Type = ResourceUsageType.Storage, UsageAmount = 100, PeriodStart = periodStart },
+            new() { Type = ResourceUsageType.Storage, UsageAmount = 110, PeriodStart = periodStart.AddDays(5) },
+            new() { Type = ResourceUsageType.Storage, UsageAmount = 105, PeriodStart = periodStart.AddDays(10) },
+            new() { Type = ResourceUsageType.Storage, UsageAmount = 1000, PeriodStart = periodStart.AddDays(15) },
+            new() { Type = ResourceUsageType.Storage, UsageAmount = 100, PeriodStart = periodStart.AddDays(20) }
+        };
+
+        _usageRepositoryMock.Setup(r => r.GetByTenantAsync(
+                tenantId, ResourceUsageType.Storage, periodStart, periodEnd, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(usageRecords);
+        _trendRepositoryMock.Setup(r => r.AddAsync(It.IsAny<ResourceUsageTrend>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((ResourceUsageTrend t, CancellationToken _) => t);
+
+        // Act
+        await _service.AnalyzeTrendAsync(tenantId, ResourceUsageType.Storage, periodStart, periodEnd);
+        listener.RecordObservableInstruments();
+
+        // Assert
+        anomalyMeasurements.Should().Contain(measurement => measurement > 0);
     }
 
     [Fact]

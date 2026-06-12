@@ -115,6 +115,34 @@ public class UsersControllerTests
     }
 
     [Fact]
+    public async Task GetUsers_ShouldAllowTenantOwnerWithoutExplicitUsersReadPermission()
+    {
+        var result = PagedResult<UserDto>.FromPage(new[] { CreateUserDto() }, totalCount: 1, pageNumber: 1, pageSize: 20);
+        _actorContextAccessor.Setup(x => x.ActorContext)
+            .Returns(CreateActorContext(roles: new[] { "Owner" }));
+        _sender.Setup(sender => sender.Send(It.IsAny<GetUsersQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(result);
+
+        var action = await _controller.GetUsers(ct: CancellationToken.None);
+
+        action.Should().BeOfType<OkObjectResult>().Which.Value.Should().Be(result);
+    }
+
+    [Fact]
+    public async Task GetUsers_ShouldAllowTenantAdminWithoutExplicitUsersReadPermission()
+    {
+        var result = PagedResult<UserDto>.FromPage(new[] { CreateUserDto() }, totalCount: 1, pageNumber: 1, pageSize: 20);
+        _actorContextAccessor.Setup(x => x.ActorContext)
+            .Returns(CreateActorContext(roles: new[] { "TenantAdmin" }));
+        _sender.Setup(sender => sender.Send(It.IsAny<GetUsersQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(result);
+
+        var action = await _controller.GetUsers(ct: CancellationToken.None);
+
+        action.Should().BeOfType<OkObjectResult>().Which.Value.Should().Be(result);
+    }
+
+    [Fact]
     public async Task UserByIdReadEndpoints_ShouldReturnOkAndNotFound()
     {
         var existingUserId = Guid.NewGuid();

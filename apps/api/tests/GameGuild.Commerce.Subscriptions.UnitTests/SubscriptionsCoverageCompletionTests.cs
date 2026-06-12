@@ -57,6 +57,71 @@ public sealed class SubscriptionsCoverageCompletionTests
     }
 
     [Fact]
+    public async Task MonthlyStatementInfrastructure_ShouldBuildSourceDataLinksAndLogDelivery()
+    {
+        var tenantId = Guid.NewGuid();
+        var fromDate = new DateOnly(2026, 6, 1);
+        var toDate = new DateOnly(2026, 6, 30);
+        var provider = new MonthlyStatementDataProvider();
+
+        var context = await provider.BuildAsync(tenantId, fromDate, toDate);
+
+        context.SourceData.TenantId.Should().Be(tenantId);
+        context.SourceData.FromDate.Should().Be(fromDate);
+        context.SourceData.ToDate.Should().Be(toDate);
+        context.SourceData.Periods.Should().ContainSingle(period =>
+            period.PeriodStart == fromDate.ToString("yyyy-MM-dd") &&
+            period.PeriodEnd == toDate.ToString("yyyy-MM-dd") &&
+            period.PeriodLabel == $"{fromDate:MMM yyyy}");
+        context.SourceData.Categories.Should().BeEmpty();
+        context.SourceData.Transactions.Should().BeEmpty();
+        context.SourceData.OwnerStatements.Should().BeEmpty();
+        context.SourceData.RenterPayments.Should().BeEmpty();
+        context.SourceData.MaintenanceReport.Should().BeNull();
+        context.DocumentOptions.FileStem.Should().Contain(tenantId.ToString("N"));
+        context.DocumentOptions.DocumentProfile.Should().Be(MonthlyStatementDocumentProfile.Detailed);
+
+        await new LoggingMonthlyStatementMailSender(NullLogger<LoggingMonthlyStatementMailSender>.Instance)
+            .SendAsync(new MonthlyStatementEmailMessage(
+                "billing@example.test",
+                "Statement",
+                "plain",
+                "<p>html</p>",
+                [new MonthlyStatementEmailAttachment("statement.csv", "text/csv", Encoding.UTF8.GetBytes("a,b"))],
+                "Billing Owner"));
+
+        using var cancellation = new CancellationTokenSource();
+        await cancellation.CancelAsync();
+        await Assert.ThrowsAsync<OperationCanceledException>(() =>
+            provider.BuildAsync(tenantId, fromDate, toDate, cancellation.Token));
+        await Assert.ThrowsAsync<OperationCanceledException>(() =>
+            new LoggingMonthlyStatementMailSender(NullLogger<LoggingMonthlyStatementMailSender>.Instance)
+                .SendAsync(new MonthlyStatementEmailMessage("billing@example.test", "Statement", "plain", "html", []), cancellation.Token));
+
+        var configuredLinks = new MonthlyStatementLinkBuilder(new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["StatementEmails:WorkspaceLabel"] = "Console workspace",
+                ["StatementEmails:BillingDashboardPath"] = " finance/billing "
+            })
+            .Build()).Build(fromDate, toDate);
+        configuredLinks.WorkspaceLabel.Should().Be("Console workspace");
+        configuredLinks.BillingDashboardPath.Should().Be("/finance/billing");
+        configuredLinks.StatementPagePath.Should().Be("/finance/billing/statements/2026-06-01_2026-06-30");
+        configuredLinks.StatementPdfPath.Should().EndWith(".pdf");
+        configuredLinks.StatementCsvPath.Should().EndWith(".csv");
+
+        var defaultLinkBuilder = new MonthlyStatementLinkBuilder(new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["StatementEmails:BillingDashboardPath"] = " /billing/ "
+            })
+            .Build());
+        defaultLinkBuilder.GetBillingDashboardPath().Should().Be("/billing/");
+        defaultLinkBuilder.Build(fromDate, toDate).WorkspaceLabel.Should().Be("GameGuild workspace");
+    }
+
+    [Fact]
     public void MonthlyStatementArtifactComposer_ShouldRejectInvalidInputsAndProfiles()
     {
         FluentActions.Invoking(() => MonthlyStatementArtifactComposer.Compose(null!))
@@ -121,7 +186,14 @@ public sealed class SubscriptionsCoverageCompletionTests
             .ReturnsAsync(plan);
         planService.Setup(service => service.GetByIdAsync(Guid.Empty, It.IsAny<CancellationToken>()))
             .ThrowsAsync(new InvalidOperationException("missing"));
-        var service = new SubscriptionNotificationService(NullLogger<SubscriptionNotificationService>.Instance, planService.Object);
+        var publisher = new Mock<IApplicationNotificationPublisher>();
+        publisher
+            .Setup(service => service.PublishAsync(It.IsAny<ApplicationNotificationMessage>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(ApplicationNotificationPublishResult.Success(Guid.NewGuid()));
+        var service = new SubscriptionNotificationService(
+            NullLogger<SubscriptionNotificationService>.Instance,
+            planService.Object,
+            publisher.Object);
 
         await service.SendRenewalReminderAsync(subscription, 5);
         await service.SendTrialExpirationReminderAsync(subscription, 3);
@@ -134,6 +206,9 @@ public sealed class SubscriptionsCoverageCompletionTests
         await service.SendPlanDowngradeNotificationAsync(subscription, plan.Id, Guid.Empty, DateTime.UtcNow);
 
         planService.Verify(service => service.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.AtLeast(10));
+        publisher.Verify(service => service.PublishAsync(
+            It.Is<ApplicationNotificationMessage>(message => message.Type == "Billing" && message.RecipientId == subscription.CreatedByUserId),
+            It.IsAny<CancellationToken>()), Times.Exactly(9));
     }
 
     [Fact]

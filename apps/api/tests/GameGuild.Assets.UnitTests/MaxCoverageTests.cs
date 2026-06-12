@@ -1929,7 +1929,9 @@ public class StorageConfigurationEncryptionMaxTests
     {
         var mockProtector = new Mock<IDataProtector>();
         mockProtector.Setup(x => x.Protect(It.IsAny<byte[]>()))
-            .Returns<byte[]>(input => input); // identity transform for test
+            .Returns<byte[]>(input => input);
+        mockProtector.Setup(x => x.Unprotect(It.IsAny<byte[]>()))
+            .Returns<byte[]>(input => input);
 
         var mockProvider = new Mock<IDataProtectionProvider>();
         mockProvider.Setup(x => x.CreateProtector(It.IsAny<string>())).Returns(mockProtector.Object);
@@ -1943,18 +1945,12 @@ public class StorageConfigurationEncryptionMaxTests
             Region = "us-east-1"
         };
 
-        // This will call IDataProtector.Protect(string) which wraps Protect(byte[])
-        // The mock might not intercept the string overload, so let's just verify it doesn't throw
-        try
-        {
-            var encrypted = sut.Encrypt(config);
-            encrypted.Should().NotBeNull();
-        }
-        catch (NotImplementedException)
-        {
-            // string overload may call byte[] overload which calls the mock
-            // This is acceptable for coverage - the code paths are exercised
-        }
+        var encrypted = sut.Encrypt(config);
+        var decrypted = sut.Decrypt(encrypted, StorageProviderType.S3Compatible);
+
+        encrypted.Should().NotBeNullOrWhiteSpace();
+        decrypted.Should().BeOfType<S3CompatibleConfiguration>();
+        ((S3CompatibleConfiguration)decrypted).AccessKeyId.Should().Be(config.AccessKeyId);
     }
 
     [Fact]

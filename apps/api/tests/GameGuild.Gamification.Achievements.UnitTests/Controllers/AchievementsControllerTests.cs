@@ -1,7 +1,9 @@
 using FluentAssertions;
+using GameGuild.Identity.Authorization;
 using GameGuild.Identity.Context.Actors;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
+using System.Reflection;
 using Xunit;
 
 namespace GameGuild.Gamification.Achievements.Tests;
@@ -13,6 +15,14 @@ public class AchievementsControllerTests
     private readonly AchievementsController _sut;
     private readonly Guid _userId = Guid.NewGuid();
     private readonly Guid _tenantId = Guid.NewGuid();
+
+    public static IEnumerable<object[]> AdminMutationPermissions =>
+    [
+        [nameof(AchievementsController.CreateAchievement), "achievements:create"],
+        [nameof(AchievementsController.UpdateAchievement), "achievements:update"],
+        [nameof(AchievementsController.DeleteAchievement), "achievements:delete"],
+        [nameof(AchievementsController.AwardAchievement), "achievements:award"]
+    ];
 
     public AchievementsControllerTests()
     {
@@ -27,6 +37,19 @@ public class AchievementsControllerTests
         };
         _actorMock.Setup(a => a.ActorContext).Returns(actorContext);
         _sut = new AchievementsController(_serviceMock.Object, _actorMock.Object);
+    }
+
+    [Theory]
+    [MemberData(nameof(AdminMutationPermissions))]
+    public void AdminMutationActions_ShouldRequireExplicitAchievementPermission(string actionName, string permissionName)
+    {
+        var method = typeof(AchievementsController)
+            .GetMethods(BindingFlags.Instance | BindingFlags.Public)
+            .Single(method => method.Name == actionName);
+
+        method.GetCustomAttributes<RequirePermissionAttribute>(inherit: true)
+            .Should()
+            .ContainSingle(attribute => attribute.PermissionName == permissionName);
     }
 
     // ── GetMyAchievements ──

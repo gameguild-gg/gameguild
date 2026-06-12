@@ -11,6 +11,15 @@ namespace GameGuild.Compliance.KYC.Tests;
 public sealed class KycCoverageCompletionTests
 {
     [Fact]
+    public void VerificationEnums_ShouldBeOwnedByComplianceKycNamespace()
+    {
+        typeof(VerificationLevel).Namespace.Should().Be("GameGuild.Compliance.KYC");
+        typeof(VerificationType).Namespace.Should().Be("GameGuild.Compliance.KYC");
+        Enum.GetValues<VerificationLevel>().Should().Contain(VerificationLevel.Basic);
+        Enum.GetValues<VerificationType>().Should().Contain(VerificationType.Identity);
+    }
+
+    [Fact]
     public async Task KycRepository_ShouldCover_AllQueriesAndMutations()
     {
         await using var db = CreateDbContext();
@@ -208,11 +217,11 @@ public sealed class KycCoverageCompletionTests
         service.Setup(s => s.ProcessProviderWebhookAsync(KycProvider.Onfido, "external", KycVerificationStatus.Approved, "{}", It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result<bool>.Success(true));
         service.Setup(s => s.GetVerificationByIdAsync(verification.Id, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Result<UserKycVerification>.Success(verification));
+            .ReturnsAsync(Result<UserKycVerification?>.Success(verification));
         service.Setup(s => s.GetVerificationsByUserIdAsync(verification.UserId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result<List<UserKycVerification>>.Success(list));
         service.Setup(s => s.GetLatestVerificationAsync(verification.UserId, It.IsAny<CancellationToken>()))
-            .Returns(Task.FromResult(Result<UserKycVerification?>.Success(verification)));
+            .Returns(Task.FromResult(Result<UserKycVerification?>.Success((UserKycVerification?)verification)));
         service.Setup(s => s.IsUserVerifiedAsync(verification.UserId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result<bool>.Success(true));
         service.Setup(s => s.GetVerificationsByStatusAsync(KycVerificationStatus.Pending, It.IsAny<CancellationToken>()))

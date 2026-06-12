@@ -83,6 +83,36 @@ public class QuotaExceededAlertHandlerTests
     }
 
     [Fact]
+    public async Task Handle_WithActorId_PublishesInAppQuotaNotification()
+    {
+        var actorId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+        var publisher = new Mock<IApplicationNotificationPublisher>();
+        var handler = new QuotaExceededAlertHandler(_loggerMock.Object, publisher.Object);
+        var evt = CreateEvent(
+            tenantId: tenantId,
+            type: ResourceUsageType.Storage,
+            currentUsage: 125,
+            requestedAmount: 10,
+            hardLimit: 100,
+            actorId: actorId);
+
+        await handler.Handle(evt, CancellationToken.None);
+
+        publisher.Verify(
+            x => x.PublishAsync(
+                It.Is<ApplicationNotificationMessage>(message =>
+                    message.RecipientId == actorId &&
+                    message.TenantId == tenantId &&
+                    message.Type == "ResourceQuotaExceeded" &&
+                    message.Priority == "High" &&
+                    message.ReferenceEntityType == "ResourceQuota" &&
+                    message.Title.Contains("Storage quota exceeded")),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
     public async Task Handle_RepeatedViolations_EscalatesToError()
     {
         // Use a unique tenant+type combo to avoid interference with other tests

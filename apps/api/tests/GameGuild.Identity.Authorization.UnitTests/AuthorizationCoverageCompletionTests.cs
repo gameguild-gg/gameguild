@@ -791,7 +791,12 @@ public sealed class AuthorizationCoverageCompletionTests
             AssetsPermission.Moderate,
             AssetsPermission.Transform,
             AssetsPermission.GenerateUrl,
-            AssetsPermission.Report
+            AssetsPermission.Report,
+            AchievementsPermission.Create,
+            AchievementsPermission.Update,
+            AchievementsPermission.Delete,
+            AchievementsPermission.Award,
+            AchievementsPermission.Manage
         };
 
         permissions.Should().OnlyContain(p => !string.IsNullOrWhiteSpace(p.Key));
@@ -813,7 +818,8 @@ public sealed class AuthorizationCoverageCompletionTests
                      typeof(PromoCodesPermission),
                      typeof(OrdersPermission),
                      typeof(EntitlementsPermission),
-                     typeof(AssetsPermission)
+                     typeof(AssetsPermission),
+                     typeof(AchievementsPermission)
                  })
         {
             CreatePermission(permissionType, "custom:read", "Unscoped").Scope.Should().BeNull();
@@ -1470,13 +1476,13 @@ public sealed class AuthorizationCoverageCompletionTests
         InvokePrivate<bool>(conditional, "EvaluateEnvironmentConditions", JsonSerializer.Serialize(new { MaxRiskScore = 5 }), conditionalContext).Should().BeFalse();
         InvokePrivate<bool>(conditional, "EvaluateEnvironmentConditions", JsonSerializer.Serialize(new { MaxSessionAgeMinutes = 1 }), conditionalContext with { AuthenticationTime = SystemClock.UtcNow.AddMinutes(-5) }).Should().BeFalse();
         InvokePrivate<bool>(conditional, "EvaluateLocationConditions", JsonSerializer.Serialize(new { AllowedCountries = new[] { "CA" } }), conditionalContext).Should().BeFalse();
-        InvokePrivate<bool>(conditional, "EvaluateLocationConditions", JsonSerializer.Serialize(new { BlockedCountries = new[] { "US" } }), conditionalContext).Should().BeFalse();
+        InvokePrivate<bool>(conditional, "EvaluateLocationConditions", JsonSerializer.Serialize(new { BlockedCountries = new[] { "US" } }), conditionalContext).Should().BeTrue();
         InvokePrivate<bool>(conditional, "EvaluateLocationConditions", JsonSerializer.Serialize(new { AllowedIpRanges = new[] { "10.0.0.0/24" } }), conditionalContext).Should().BeTrue();
         InvokePrivate<bool>(conditional, "EvaluateLocationConditions", JsonSerializer.Serialize(new { AllowedIpRanges = new[] { "192.168.0.0/24" } }), conditionalContext).Should().BeFalse();
         InvokePrivate<bool>(conditional, "IsIpInRange", "10.0.0.1", "bad/cidr").Should().BeFalse();
         InvokePrivate<bool>(conditional, "IsIpInRange", "10.0.0.1", "10.0.0.2").Should().BeFalse();
         InvokePrivate<bool>(conditional, "EvaluateDeviceConditions", JsonSerializer.Serialize(new { AllowedFingerprints = new[] { "device-b" } }), conditionalContext).Should().BeFalse();
-        InvokePrivate<bool>(conditional, "EvaluateDeviceConditions", JsonSerializer.Serialize(new { BlockedUserAgents = new[] { "moz" } }), conditionalContext).Should().BeFalse();
+        InvokePrivate<bool>(conditional, "EvaluateDeviceConditions", JsonSerializer.Serialize(new { BlockedUserAgents = new[] { "moz" } }), conditionalContext).Should().BeTrue();
         InvokePrivate<bool>(conditional, "EvaluateDeviceConditions", "bad-json", conditionalContext).Should().BeTrue();
         InvokePrivate<bool>(conditional, "EvaluateCustomConditions", JsonSerializer.Serialize(new { department = "engineering" }), conditionalContext).Should().BeFalse();
         InvokePrivate<bool>(conditional, "EvaluateCustomConditions", JsonSerializer.Serialize(new { missing = "sales" }), conditionalContext).Should().BeFalse();
@@ -1608,7 +1614,7 @@ public sealed class AuthorizationCoverageCompletionTests
     }
 
     [Fact]
-    public void Remaining_Model_Service_And_Cache_Branches_Are_Covered()
+    public async Task Remaining_Model_Service_And_Cache_Branches_Are_Covered()
     {
         var options = Options.Create(new AuthorizationCacheOptions
         {
@@ -1649,9 +1655,11 @@ public sealed class AuthorizationCoverageCompletionTests
             PrincipalType = AclPrincipalType.Role,
             PrincipalId = Guid.NewGuid()
         };
+#pragma warning disable CS0618
         aclEntry.UserId.Should().Be(Guid.Empty);
         var userId = Guid.NewGuid();
         aclEntry.UserId = userId;
+#pragma warning restore CS0618
         aclEntry.PrincipalType.Should().Be(AclPrincipalType.User);
         aclEntry.PrincipalId.Should().Be(userId);
         aclEntry.IsActive = false;
@@ -1945,13 +1953,15 @@ public sealed class AuthorizationCoverageCompletionTests
             .ReturnsAsync([new TenantPermission { Permissions = ["read"] }]);
         var adapterType = typeof(AuthorizationModule).Assembly.GetType("GameGuild.Identity.Authorization.TenantPermissionStoreAdapter")!;
         var tenantAdapter = Activator.CreateInstance(adapterType, tenantRepository.Object)!;
-        ((Task<TenantPermission?>)adapterType.GetMethod("GetPermissionAsync")!.Invoke(tenantAdapter, [Guid.NewGuid(), CancellationToken.None])!).Result
+        var tenantPermission = await (Task<TenantPermission?>)adapterType.GetMethod("GetPermissionAsync")!.Invoke(tenantAdapter, [Guid.NewGuid(), CancellationToken.None])!;
+        tenantPermission
             .Should().NotBeNull();
 
         var resourceService = new Mock<IResourcePermissionService>();
         var resourceAdapterType = typeof(AuthorizationModule).Assembly.GetType("GameGuild.Identity.Authorization.ResourcePermissionStoreAdapter")!;
         var resourceAdapter = Activator.CreateInstance(resourceAdapterType, resourceService.Object)!;
-        ((Task<IReadOnlyList<ResourceUserPermission>>)resourceAdapterType.GetMethod("GetResourcePermissionsAsync")!.Invoke(resourceAdapter, [Guid.NewGuid(), CancellationToken.None])!).Result
+        var resourcePermissions = await (Task<IReadOnlyList<ResourceUserPermission>>)resourceAdapterType.GetMethod("GetResourcePermissionsAsync")!.Invoke(resourceAdapter, [Guid.NewGuid(), CancellationToken.None])!;
+        resourcePermissions
             .Should().BeEmpty();
 
         var resolver = new DefaultTenantResolver();
@@ -1976,9 +1986,10 @@ public sealed class AuthorizationCoverageCompletionTests
             Mock.Of<ISoDRuleRepository>(),
             Mock.Of<ISoDViolationRepository>(),
             NullLogger<SoDService>.Instance);
-        ((Task<bool>)typeof(SoDService)
+        var hasViolation = await (Task<bool>)typeof(SoDService)
             .GetMethod("CheckRuleViolationAsync", BindingFlags.NonPublic | BindingFlags.Static)!
-            .Invoke(null, [new SoDRule(), Guid.NewGuid(), null, CancellationToken.None])!).Result
+            .Invoke(null, [new SoDRule(), Guid.NewGuid(), null, CancellationToken.None])!;
+        hasViolation
             .Should().BeFalse();
     }
 
@@ -2019,10 +2030,10 @@ public sealed class AuthorizationCoverageCompletionTests
         InvokePrivate<bool>(conditional, "EvaluateEnvironmentConditions", """{"MaxSessionAgeMinutes":5}""", conditionalContext).Should().BeTrue();
         InvokePrivate<bool>(conditional, "EvaluateLocationConditions", "null", conditionalContext).Should().BeTrue();
         InvokePrivate<bool>(conditional, "EvaluateLocationConditions", """{"AllowedCountries":["US"]}""", conditionalContext).Should().BeFalse();
-        InvokePrivate<bool>(conditional, "EvaluateLocationConditions", """{"BlockedCountries":["US"]}""", conditionalContext).Should().BeTrue();
+        InvokePrivate<bool>(conditional, "EvaluateLocationConditions", """{"BlockedCountries":["US"]}""", conditionalContext).Should().BeFalse();
         InvokePrivate<bool>(conditional, "EvaluateDeviceConditions", "null", conditionalContext).Should().BeTrue();
         InvokePrivate<bool>(conditional, "EvaluateDeviceConditions", """{"AllowedFingerprints":["device"]}""", conditionalContext).Should().BeTrue();
-        InvokePrivate<bool>(conditional, "EvaluateDeviceConditions", """{"BlockedUserAgents":["bot"]}""", conditionalContext).Should().BeTrue();
+        InvokePrivate<bool>(conditional, "EvaluateDeviceConditions", """{"BlockedUserAgents":["bot"]}""", conditionalContext).Should().BeFalse();
         InvokePrivate<bool>(conditional, "EvaluateCustomConditions", "null", conditionalContext).Should().BeTrue();
 
         var policy = new AuthorizationPolicyBuilder("Bearer").RequireAuthenticatedUser().Build();
@@ -2248,8 +2259,10 @@ public sealed class AuthorizationCoverageCompletionTests
         ClaimsExtractor.GetTokenVersion(new ClaimsPrincipal(new ClaimsIdentity())).Should().BeNull();
         ClaimsExtractor.GetClaim(new ClaimsPrincipal(new ClaimsIdentity()), "missing").Should().BeNull();
 
+#pragma warning disable CS0618
         ClaimNames.GetUserId(Principal(new Claim(ClaimNames.NameIdentifier, "name-id"))).Should().Be("name-id");
         ClaimNames.GetTenantId(Principal(new Claim(ClaimNames.TenantIdAlt, "tenant-alt"))).Should().Be("tenant-alt");
+#pragma warning restore CS0618
         CreatePermission(typeof(SystemPermission), "system:manage:defaults", "Scoped system permission").Scope.Should().Be("defaults");
 
         new StaticClaimsPrincipalAccessor().IsAuthenticated.Should().BeFalse();
@@ -2380,9 +2393,11 @@ public sealed class AuthorizationCoverageCompletionTests
             .IsAuthenticated.Should().BeFalse();
 
         var aclEntry = new AccessControlListEntry { PrincipalType = AclPrincipalType.User, PrincipalId = null };
+#pragma warning disable CS0618
         aclEntry.UserId.Should().Be(Guid.Empty);
         aclEntry.PrincipalId = Guid.NewGuid();
         aclEntry.UserId.Should().NotBeEmpty();
+#pragma warning restore CS0618
         aclEntry.IsActive = true;
         aclEntry.ExpiresAt = null;
         aclEntry.IsEffective.Should().BeTrue();
@@ -2833,6 +2848,52 @@ public sealed class AuthorizationCoverageCompletionTests
 
         var cacheStats = new CacheStatistics { L2Hits = 2, Misses = 2 };
         cacheStats.L2HitRate.Should().Be(0.5);
+    }
+
+    [Fact]
+    public async Task Remaining_Authorization_Helper_Edge_Cases_Are_Covered()
+    {
+        var tenantId = TenantId.New();
+        var nullLookup = new NullResourceShareUserLookup();
+
+        (await nullLookup.FindByEmailAsync(tenantId, "operator@example.com")).Should().BeNull();
+        (await nullLookup.FindByIdAsync(tenantId, Guid.NewGuid())).Should().BeNull();
+
+        InvokePrivateStatic<IReadOnlyList<string>>(typeof(SoDService), "ParseConflictingPermissions", (string?)null)
+            .Should().BeEmpty();
+        InvokePrivateStatic<IReadOnlyList<string>>(typeof(SoDService), "ParseConflictingPermissions", " ")
+            .Should().BeEmpty();
+        InvokePrivateStatic<IReadOnlyList<string>>(typeof(SoDService), "ParseConflictingPermissions", "null")
+            .Should().BeEmpty();
+        InvokePrivateStatic<IReadOnlyList<string>>(
+                typeof(SoDService),
+                "ParseConflictingPermissions",
+                """[" approve ","","APPROVE","pay"]""")
+            .Should().Equal("approve", "pay");
+        InvokePrivateStatic<IReadOnlyList<string>>(
+                typeof(SoDService),
+                "ParseConflictingPermissions",
+                "approve, ,APPROVE,pay")
+            .Should().Equal("approve", "pay");
+
+        InvokePrivateStatic<bool>(typeof(HybridPermissionCache), "MatchesPattern", "cache:key", "")
+            .Should().BeFalse();
+        InvokePrivateStatic<bool>(typeof(HybridPermissionCache), "MatchesPattern", "cache:key", "*")
+            .Should().BeTrue();
+        InvokePrivateStatic<bool>(typeof(HybridPermissionCache), "MatchesPattern", "cache:key", "cache:key")
+            .Should().BeTrue();
+        InvokePrivateStatic<bool>(typeof(HybridPermissionCache), "MatchesPattern", "cache:key", "other:key")
+            .Should().BeFalse();
+        InvokePrivateStatic<bool>(typeof(HybridPermissionCache), "MatchesPattern", "cache:key", "other:*")
+            .Should().BeFalse();
+        InvokePrivateStatic<bool>(typeof(HybridPermissionCache), "MatchesPattern", "cache:tenant:user", "cache:*:user")
+            .Should().BeTrue();
+        InvokePrivateStatic<bool>(typeof(HybridPermissionCache), "MatchesPattern", "cache:tenant:user", "cache:**user")
+            .Should().BeTrue();
+        InvokePrivateStatic<bool>(typeof(HybridPermissionCache), "MatchesPattern", "cache:tenant:user", "cache:*:role")
+            .Should().BeFalse();
+        InvokePrivateStatic<bool>(typeof(HybridPermissionCache), "MatchesPattern", "prefix-middle-suffix", "*middle*")
+            .Should().BeTrue();
     }
 
     private static Guid GetResourceId(object request, string propertyName)

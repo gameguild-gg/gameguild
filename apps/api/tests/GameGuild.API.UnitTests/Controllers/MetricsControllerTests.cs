@@ -34,7 +34,7 @@ public class MetricsControllerTests
 
         var result = controller.GetMetrics() as ContentResult;
 
-        result!.ContentType.Should().Be("text/plain");
+        result!.ContentType.Should().Be("text/plain; version=0.0.4; charset=utf-8");
         result.Content.Should().Contain("process_cpu_seconds_total");
         result.Content.Should().Contain("process_virtual_memory_bytes");
         result.Content.Should().Contain("process_working_set_bytes");
@@ -51,6 +51,7 @@ public class MetricsControllerTests
 
         result!.Content.Should().Contain("# HELP");
         result.Content.Should().Contain("# TYPE");
+        result.Content.Should().NotContain("\r");
     }
 
     [Fact]

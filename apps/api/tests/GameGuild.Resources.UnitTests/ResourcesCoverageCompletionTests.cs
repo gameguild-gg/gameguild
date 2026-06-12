@@ -8,6 +8,7 @@ using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Options;
 using GameGuild;
 using GameGuild.CQRS;
 using GameGuild.Identity.Context.Actors;
@@ -17,6 +18,119 @@ using StackExchange.Redis;
 using Xunit;
 
 namespace GameGuild.Resources.UnitTests;
+
+public sealed class ResourceLocalIntegrationCoverageTests
+{
+    [Fact]
+    public async Task Local_Resource_Integrations_Cover_Validation_Recognition_Archive_And_Throttling()
+    {
+        CostCenterValidationResult.Validated()
+            .Should().Be(new CostCenterValidationResult(true, "Validated", null));
+        CostCenterValidationResult.Invalid("missing")
+            .Should().Be(new CostCenterValidationResult(false, "Invalid", "missing"));
+
+        var validator = new ConfiguredCostCenterValidator(Options.Create(new ResourcesOptions
+        {
+            AllowedCostCenters = ["ENG", "OPS"]
+        }));
+        (await validator.ValidateAsync(Guid.NewGuid(), ""))
+            .Should().Be(CostCenterValidationResult.Invalid("Cost center is required."));
+        (await validator.ValidateAsync(Guid.NewGuid(), "FIN"))
+            .IsValid.Should().BeFalse();
+        (await validator.ValidateAsync(Guid.NewGuid(), "eng"))
+            .Should().Be(CostCenterValidationResult.Validated());
+        (await new ConfiguredCostCenterValidator(Options.Create(new ResourcesOptions()))
+            .ValidateAsync(Guid.NewGuid(), "ANY")).Should().Be(CostCenterValidationResult.Validated());
+
+        FluentActions.Invoking(() => new ResourcesOptions { AllowedCostCenters = ["ENG", " "] }.Validate())
+            .Should().Throw<InvalidOperationException>()
+            .WithMessage("*AllowedCostCenters*");
+
+        var recognizer = new HeuristicUsagePatternRecognizer();
+        var trend = new ResourceUsageTrend { Pattern = "Growing" };
+        foreach (var (count, expectedConfidence) in new[] { (30, 0.95), (14, 0.85), (7, 0.75), (3, 0.6), (2, 0.35) })
+        {
+            var result = await recognizer.RecognizeAsync(trend, Enumerable.Range(0, count).Select(_ => new UsageRecord()).ToList());
+            result.Pattern.Should().Be("Growing");
+            result.Confidence.Should().Be(expectedConfidence);
+            result.Metadata.Should().Contain($"\"sampleSize\":{count}");
+        }
+
+        var tenantId = Guid.NewGuid();
+        var enforcementSink = new LocalResourceThrottlingEnforcementSink(NullLogger<LocalResourceThrottlingEnforcementSink>.Instance);
+        var enforcement = await enforcementSink
+            .ApplyAsync(
+                tenantId,
+                ResourceUsageType.ApiCalls,
+                10,
+                new ThrottlingResult
+                {
+                    IsAllowed = true,
+                    DelayMs = 250,
+                    Reason = "near threshold",
+                    AppliedStrategy = ThrottlingStrategy.GradualDegradation
+                });
+        enforcement.TenantId.Should().Be(tenantId);
+        enforcement.ResourceType.Should().Be(ResourceUsageType.ApiCalls);
+        enforcement.IsEnforced.Should().BeTrue();
+        enforcement.EnforcementReference.Should().StartWith($"local-throttle:{tenantId:N}:ApiCalls:");
+        enforcement.RetryAfterMs.Should().Be(250);
+        enforcement.Reason.Should().Be("near threshold");
+        (await enforcementSink.ApplyAsync(
+                tenantId,
+                ResourceUsageType.ApiCalls,
+                10,
+                new ThrottlingResult { IsAllowed = false, DelayMs = 0, Reason = "blocked" }))
+            .IsEnforced.Should().BeTrue();
+        (await enforcementSink.ApplyAsync(
+                tenantId,
+                ResourceUsageType.ApiCalls,
+                10,
+                new ThrottlingResult { IsAllowed = true, DelayMs = 0, Reason = "clear" }))
+            .IsEnforced.Should().BeFalse();
+
+        var globalArchive = await new LocalUsageRetentionArchiveSink(NullLogger<LocalUsageRetentionArchiveSink>.Instance)
+            .ArchiveAsync(null, null, new DateTime(2026, 6, 1), 3);
+        globalArchive.StorageReference.Should().Be("local-cold-storage:global:all:20260601");
+        globalArchive.BackupReference.Should().Be("local-backup:global:all:20260601");
+
+        var scopedArchive = await new LocalUsageRetentionArchiveSink(NullLogger<LocalUsageRetentionArchiveSink>.Instance)
+            .ArchiveAsync(tenantId, ResourceUsageType.Storage, new DateTime(2026, 6, 1), 5);
+        scopedArchive.StorageReference.Should().Be($"local-cold-storage:{tenantId:N}:Storage:20260601");
+        scopedArchive.ArchivedRecordCount.Should().Be(5);
+
+        var policyRepository = new Mock<IResourceThrottlingPolicyRepository>();
+        var quotaRepository = new Mock<IResourceQuotaRepository>();
+        policyRepository
+            .Setup(repository => repository.GetByTenantAndTypeAsync(tenantId, ResourceUsageType.ApiCalls, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ResourceThrottlingPolicy
+            {
+                IsActive = true,
+                ResourceType = ResourceUsageType.ApiCalls,
+                Strategy = ThrottlingStrategy.GradualDegradation,
+                ThrottlingThresholdPercent = 80,
+                DegradationFactor = 1m
+            });
+        quotaRepository
+            .Setup(repository => repository.GetByTenantAndTypeAsync(tenantId, ResourceUsageType.ApiCalls, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ResourceQuota
+            {
+                Type = ResourceUsageType.ApiCalls,
+                CurrentUsage = 90,
+                HardLimit = 100
+            });
+
+        var throttling = new ResourceThrottlingService(
+            policyRepository.Object,
+            quotaRepository.Object,
+            NullLogger<ResourceThrottlingService>.Instance);
+        var delayed = await throttling.ApplyThrottlingAsync(tenantId, ResourceUsageType.ApiCalls);
+
+        delayed.IsAllowed.Should().BeTrue();
+        delayed.DelayMs.Should().BeGreaterThan(0);
+        delayed.Reason.Should().Contain("delayed");
+    }
+}
 
 public sealed class ResourceUserScopedControllerCoverageTests
 {
@@ -354,7 +468,15 @@ public sealed class ResourceEntityAndServiceBranchCoverageTests
     [Fact]
     public async Task GetResourceUsageTrendsHandler_CoversDefaultGranularityBranch()
     {
-        var handler = new GetResourceUsageTrendsHandler();
+        var repository = new Mock<IUsageRecordRepository>();
+        repository
+            .Setup(x => x.GetByTypeAsync(
+                It.IsAny<ResourceUsageType>(),
+                It.IsAny<DateTime?>(),
+                It.IsAny<DateTime?>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync([]);
+        var handler = new GetResourceUsageTrendsHandler(repository.Object);
         var start = new DateTime(2025, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
         var result = await handler.Handle(

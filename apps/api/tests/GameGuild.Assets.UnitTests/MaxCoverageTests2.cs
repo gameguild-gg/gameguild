@@ -17,6 +17,7 @@ using GameGuild.Assets;
 using GameGuild.Assets.Deduplication;
 using GameGuild.Assets.Security;
 using GameGuild.Assets.VirusScan;
+using GameGuild.CQRS.Models;
 using GameGuild.Features;
 using GameGuild.Identity.Authorization;
 using GameGuild.Identity.Authorization.Models;
@@ -276,6 +277,7 @@ public class AssetAccessServiceCoverageTests
     private readonly Mock<IAssetTokenService> _tokenService = new();
     private readonly Mock<ITenantMemberRepository> _tenantMemberRepository = new();
     private readonly Mock<IFeatureFlagEvaluationService> _featureService = new();
+    private readonly Mock<IResourcePermissionService> _resourcePermissionService = new();
     private readonly AssetAccessOptions _options = new() { BaseUrl = "https://cdn.test.com", DefaultExpiryMinutes = 60 };
 
     private AssetAccessService CreateService()
@@ -288,13 +290,20 @@ public class AssetAccessServiceCoverageTests
             _tenantMemberRepository.Object,
             _featureService.Object,
             Options.Create(_options),
-            NullLogger<AssetAccessService>.Instance);
+            NullLogger<AssetAccessService>.Instance,
+            _resourcePermissionService.Object);
     }
 
-    private static AssetReference CreateRef(Guid id, Guid? userId = null, AssetAccessPolicy policy = AssetAccessPolicy.Public, bool deleted = false)
+    private static AssetReference CreateRef(
+        Guid id,
+        Guid? userId = null,
+        AssetAccessPolicy policy = AssetAccessPolicy.Public,
+        bool deleted = false,
+        string? parentResourceType = null,
+        Guid? parentResourceId = null)
     {
         var uid = userId ?? Guid.NewGuid();
-        var r = new AssetReference(Guid.NewGuid(), uid, "test", policy, null, null);
+        var r = new AssetReference(Guid.NewGuid(), uid, "test", policy, parentResourceType, parentResourceId);
         typeof(AssetReference).GetProperty("Id")!.SetValue(r, id);
         if (deleted)
         {
@@ -447,11 +456,27 @@ public class AssetAccessServiceCoverageTests
     public async Task ValidateAccessAsync_Inherited_WithUser_ReturnsValid()
     {
         var id = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+        var parentResourceId = Guid.NewGuid();
         _refRepo.Setup(r => r.GetByIdAsync(id, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(CreateRef(id, policy: AssetAccessPolicy.Inherited));
+            .ReturnsAsync(CreateRef(
+                id,
+                policy: AssetAccessPolicy.Inherited,
+                parentResourceType: "Course",
+                parentResourceId: parentResourceId));
+        _resourcePermissionService
+            .Setup(x => x.HasPermissionAsync(
+                It.Is<TenantId>(value => value.Value == tenantId),
+                userId,
+                "Course",
+                parentResourceId.ToString(),
+                "read",
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
 
         var svc = CreateService();
-        var result = await svc.ValidateAccessAsync(id, Guid.NewGuid(), null);
+        var result = await svc.ValidateAccessAsync(id, userId, tenantId);
         result.IsValid.Should().BeTrue();
     }
 
