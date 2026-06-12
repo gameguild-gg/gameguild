@@ -40,5 +40,5 @@ apps/website/.next/
 !turbo.json
 
 # Allow the packages directory and its contents, but exclude node_modules inside it
-packages/**/node_modules/
 !packages/**
+packages/**/node_modules/
