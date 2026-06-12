@@ -279,8 +279,7 @@ internal sealed class OpenApiDocumentTransformer : Microsoft.AspNetCore.OpenApi.
 {
     public Task TransformAsync(Microsoft.OpenApi.Models.OpenApiDocument document, Microsoft.AspNetCore.OpenApi.OpenApiDocumentTransformerContext context, CancellationToken cancellationToken)
     {
-        // Document is already transformed by the default pipeline
-        // This transformer is just a placeholder to ensure we can customize if needed
+        // Document transformation is currently handled by the default pipeline.
         return Task.CompletedTask;
     }
 }

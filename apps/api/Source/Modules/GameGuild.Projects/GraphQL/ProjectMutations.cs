@@ -1,13 +1,13 @@
 using GameGuild.Identity.Context.Actors;
 using HotChocolate;
-
+using HotChocolate.Types;
 
 namespace GameGuild.Projects;
 
 /// <summary>
 /// GraphQL mutations for Project module using CQRS pattern
 /// </summary>
-// [ExtendObjectType<Mutation>] // PLANNED: Configure GraphQL Mutation type when HotChocolate schema stitching is set up for the Projects module
+[ExtendObjectType("Mutation")]
 public class ProjectMutations {
   /// <summary>
   /// Creates a new project using CQRS pattern

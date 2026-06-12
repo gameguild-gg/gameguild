@@ -40,7 +40,4 @@ public interface IResourceThrottlingService
     ///     Get active throttling policies across all tenants
     /// </summary>
     Task<IEnumerable<ResourceThrottlingPolicy>> GetActivePoliciesAsync(ResourceUsageType? type = null, CancellationToken cancellationToken = default);
-
-    // PLANNED: Integration with API Gateway for rate limiting enforcement (depends on API Gateway module)
-    // PLANNED: Integration with Monitoring module for throttling metrics (depends on GameGuild.Monitoring)
 }

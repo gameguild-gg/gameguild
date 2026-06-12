@@ -17,7 +17,25 @@ public sealed class RateProgramCommandHandler(IApplicationDbContext context, ILo
 
     if (existingRating != null) { throw new InvalidOperationException("User has already rated this program"); }
 
-    var rating = new ProgramRating { ProgramId = request.ProgramId, UserId = request.UserId, Rating = request.Rating, Review = request.Review };
+    ProgramUser? enrollment = null;
+    if (Guid.TryParse(request.UserId, out var userGuid))
+    {
+        enrollment = await context.Set<ProgramUser>()
+            .FirstOrDefaultAsync(
+                pu => pu.ProgramId == request.ProgramId && pu.UserId == userGuid,
+                cancellationToken)
+            .ConfigureAwait(false);
+    }
+
+    var rating = new ProgramRating
+    {
+        ProgramId = request.ProgramId,
+        UserId = request.UserId,
+        ProgramUserId = enrollment?.Id,
+        Rating = request.Rating,
+        Review = request.Review,
+        IsVerified = enrollment?.CompletedAt is not null
+    };
 
     context.Set<ProgramRating>().Add(rating);
     await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);

@@ -2,7 +2,6 @@ using Asp.Versioning;
 using GameGuild.Identity.Authorization;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 
 namespace GameGuild.TestingLab;
 
@@ -13,8 +12,7 @@ namespace GameGuild.TestingLab;
 [Route("v{version:apiVersion}/testing")]
 [Authorize]
 public class TestingLocationsController(
-    ITestingLocationOperations locationService,
-    ILogger<TestingLocationsController> _logger) : BaseApiController
+    ITestingLocationOperations locationService) : BaseApiController
 {
     // GET: testing/locations
     [HttpGet("locations")]

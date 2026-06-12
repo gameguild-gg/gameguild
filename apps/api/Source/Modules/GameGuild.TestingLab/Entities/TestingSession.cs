@@ -133,10 +133,7 @@ public class TestingSession : EntityBase
     /// </summary>
     public virtual ICollection<TestingFeedback> Feedback { get; set; } = new List<TestingFeedback>();
 
-    /// <summary>
-    /// Session waitlist entries (PLANNED: Implement SessionWaitlist entity)
-    /// </summary>
-    // public virtual ICollection<SessionWaitlist> Waitlist { get; set; } = new List<SessionWaitlist>();
+    // Session waitlist entries are modeled through SessionWaitlist.SessionId.
 
     // Computed Properties
     /// <summary>

@@ -12,6 +12,7 @@ using GameGuild.Configuration.PresentationLayer.Controllers;
 using GameGuild.Configuration.PresentationLayer.Endpoints;
 using GameGuild.Content.Pages;
 using GameGuild.GameJams;
+using GameGuild.LaunchPad;
 using GameGuild.Identity.Authentication;
 using GameGuild.Identity.Authorization;
 using GameGuild.Learning.Enrollments;
@@ -21,6 +22,8 @@ using GameGuild.Social.Groups;
 using GameGuild.Social.Profiles;
 using GameGuild.Social.Reactions;
 using GameGuild.Tags;
+using GameGuild.Projects;
+using GameGuild.TestingLab;
 using Microsoft.AspNetCore.Mvc;
 
 namespace GameGuild.API;
@@ -154,6 +157,36 @@ public static class PresentationServiceCollectionExtensions
 
         controllerStopwatch.Restart();
         services.AddControllers()
+            .AddApplicationPart(typeof(GameGuild.Learning.Cohorts.CohortsController).Assembly); // Learning Cohorts module
+        LogControllersFromAssembly(typeof(GameGuild.Learning.Cohorts.CohortsController).Assembly, logger, controllerStopwatch);
+
+        controllerStopwatch.Restart();
+        services.AddControllers()
+            .AddApplicationPart(typeof(GameGuild.Learning.Certificates.CertificatesController).Assembly); // Learning Certificates module
+        LogControllersFromAssembly(typeof(GameGuild.Learning.Certificates.CertificatesController).Assembly, logger, controllerStopwatch);
+
+        controllerStopwatch.Restart();
+        services.AddControllers()
+            .AddApplicationPart(typeof(GameGuild.Learning.Experience.Discovery.DiscoveryController).Assembly); // Learning Discovery module
+        LogControllersFromAssembly(typeof(GameGuild.Learning.Experience.Discovery.DiscoveryController).Assembly, logger, controllerStopwatch);
+
+        controllerStopwatch.Restart();
+        services.AddControllers()
+            .AddApplicationPart(typeof(GameGuild.Learning.Experience.LearningPaths.LearningPathController).Assembly); // Learning Paths module
+        LogControllersFromAssembly(typeof(GameGuild.Learning.Experience.LearningPaths.LearningPathController).Assembly, logger, controllerStopwatch);
+
+        controllerStopwatch.Restart();
+        services.AddControllers()
+            .AddApplicationPart(typeof(GameGuild.Learning.Experience.Recommendations.RecommendationsController).Assembly); // Learning Recommendations module
+        LogControllersFromAssembly(typeof(GameGuild.Learning.Experience.Recommendations.RecommendationsController).Assembly, logger, controllerStopwatch);
+
+        controllerStopwatch.Restart();
+        services.AddControllers()
+            .AddApplicationPart(typeof(GameGuild.Learning.Experience.Social.Controllers.ReviewsController).Assembly); // Learning Social module
+        LogControllersFromAssembly(typeof(GameGuild.Learning.Experience.Social.Controllers.ReviewsController).Assembly, logger, controllerStopwatch);
+
+        controllerStopwatch.Restart();
+        services.AddControllers()
             .AddApplicationPart(typeof(TagsController).Assembly); // Tags module
         LogControllersFromAssembly(typeof(TagsController).Assembly, logger, controllerStopwatch);
 
@@ -186,6 +219,21 @@ public static class PresentationServiceCollectionExtensions
         services.AddControllers()
             .AddApplicationPart(typeof(GameJamsController).Assembly); // Game Jams module
         LogControllersFromAssembly(typeof(GameJamsController).Assembly, logger, controllerStopwatch);
+
+        controllerStopwatch.Restart();
+        services.AddControllers()
+            .AddApplicationPart(typeof(ProjectsController).Assembly); // Projects module
+        LogControllersFromAssembly(typeof(ProjectsController).Assembly, logger, controllerStopwatch);
+
+        controllerStopwatch.Restart();
+        services.AddControllers()
+            .AddApplicationPart(typeof(TestingRequestsController).Assembly); // Testing Lab module
+        LogControllersFromAssembly(typeof(TestingRequestsController).Assembly, logger, controllerStopwatch);
+
+        controllerStopwatch.Restart();
+        services.AddControllers()
+            .AddApplicationPart(typeof(LaunchPadController).Assembly); // Launch Pad module
+        LogControllersFromAssembly(typeof(LaunchPadController).Assembly, logger, controllerStopwatch);
 
         controllerStopwatch.Restart();
         services.AddControllers()

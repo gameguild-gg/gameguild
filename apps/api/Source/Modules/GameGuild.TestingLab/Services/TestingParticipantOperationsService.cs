@@ -1,4 +1,19 @@
+using GameGuild.Identity.Users;
+
 namespace GameGuild.TestingLab;
+
+public sealed record StudentAttendanceReportRow(
+    string Id,
+    string Name,
+    string Email,
+    string? Team,
+    int Block1Sessions,
+    int Block2Sessions,
+    int Block3Sessions,
+    int Block4Sessions,
+    int TotalSessions,
+    int GamesTested,
+    string Status);
 
 /// <summary>
 /// Service implementation for participant management, registration, and waitlist operations.
@@ -218,42 +233,130 @@ public class TestingParticipantOperationsService(IApplicationDbContext context) 
         };
     }
 
-    public Task<object> GetStudentAttendanceReportAsync()
+    public async Task<object> GetStudentAttendanceReportAsync()
     {
-        var mockData = new[]
-        {
-            new
-            {
-                Id = "1",
-                Name = "John Developer",
-                Email = "john.dev@mymail.champlain.edu",
-                Team = "fa23-capstone-2023-24-t01",
-                Block1Sessions = 2,
-                Block2Sessions = 1,
-                Block3Sessions = 0,
-                Block4Sessions = 0,
-                TotalSessions = 3,
-                GamesTested = 8,
-                Status = "onTrack",
-            },
-            new
-            {
-                Id = "2",
-                Name = "Jane Smith",
-                Email = "jane.smith@mymail.champlain.edu",
-                Team = "fa23-capstone-2023-24-t02",
-                Block1Sessions = 1,
-                Block2Sessions = 1,
-                Block3Sessions = 0,
-                Block4Sessions = 0,
-                TotalSessions = 2,
-                GamesTested = 4,
-                Status = "atRisk",
-            },
-        };
+        var registrations = await context.Set<SessionRegistration>()
+            .AsNoTracking()
+            .Include(registration => registration.User)
+            .Include(registration => registration.Session)
+            .Where(registration => registration.DeletedAt == null && registration.Session.DeletedAt == null)
+            .ToListAsync()
+            .ConfigureAwait(false);
 
-        return Task.FromResult<object>(mockData);
+        var participants = await context.Set<TestingParticipant>()
+            .AsNoTracking()
+            .Include(participant => participant.TestingRequest)
+            .Where(participant => participant.DeletedAt == null)
+            .ToListAsync()
+            .ConfigureAwait(false);
+
+        var feedback = await context.Set<TestingFeedback>()
+            .AsNoTracking()
+            .Where(entry => entry.DeletedAt == null)
+            .ToListAsync()
+            .ConfigureAwait(false);
+
+        var userIds = registrations.Select(registration => registration.UserId)
+            .Concat(participants.Select(participant => participant.UserId))
+            .Concat(feedback.Select(entry => entry.UserId))
+            .Distinct()
+            .ToArray();
+
+        if (userIds.Length == 0)
+        {
+            return new List<StudentAttendanceReportRow>();
+        }
+
+        var usersById = await context.Set<User>()
+            .AsNoTracking()
+            .Where(user => userIds.Contains(user.Id))
+            .ToDictionaryAsync(user => user.Id)
+            .ConfigureAwait(false);
+
+        var rows = userIds
+            .Select(userId => BuildAttendanceRow(
+                userId,
+                usersById.GetValueOrDefault(userId),
+                registrations.Where(registration => registration.UserId == userId),
+                participants.Where(participant => participant.UserId == userId),
+                feedback.Where(entry => entry.UserId == userId)))
+            .OrderBy(row => row.Name)
+            .ThenBy(row => row.Email)
+            .ToList();
+
+        return rows;
     }
 
     #endregion
+
+    private static StudentAttendanceReportRow BuildAttendanceRow(
+        Guid userId,
+        User? user,
+        IEnumerable<SessionRegistration> userRegistrations,
+        IEnumerable<TestingParticipant> userParticipants,
+        IEnumerable<TestingFeedback> userFeedback)
+    {
+        var registrations = userRegistrations.ToList();
+        var participants = userParticipants.ToList();
+        var feedback = userFeedback.ToList();
+        var attendedRegistrations = registrations.Where(IsAttended).ToList();
+        var noShowCount = registrations.Count(IsNoShow);
+
+        var blockCounts = attendedRegistrations
+            .GroupBy(registration => GetCalendarBlock(registration.Session.SessionDate))
+            .ToDictionary(group => group.Key, group => group.Count());
+
+        var gamesTested = attendedRegistrations.Select(registration => registration.Session.TestingRequestId)
+            .Concat(participants.Where(IsCompletedParticipation).Select(participant => participant.TestingRequestId))
+            .Concat(feedback.Select(entry => entry.TestingRequestId))
+            .Distinct()
+            .Count();
+
+        var totalSessions = attendedRegistrations.Count;
+        var status = noShowCount > 0 || totalSessions == 0
+            ? "atRisk"
+            : totalSessions >= 2 || feedback.Count > 0
+                ? "onTrack"
+                : "monitor";
+
+        return new StudentAttendanceReportRow(
+            userId.ToString(),
+            user?.Name ?? "Unknown user",
+            user?.Email ?? string.Empty,
+            ResolveTeam(registrations, participants),
+            blockCounts.GetValueOrDefault(1),
+            blockCounts.GetValueOrDefault(2),
+            blockCounts.GetValueOrDefault(3),
+            blockCounts.GetValueOrDefault(4),
+            totalSessions,
+            gamesTested,
+            status);
+    }
+
+    private static bool IsAttended(SessionRegistration registration)
+        => registration.AttendanceStatus is AttendanceStatus.Present or AttendanceStatus.Completed ||
+           registration.Status == RegistrationStatus.Attended ||
+           registration.CheckedInAt.HasValue;
+
+    private static bool IsNoShow(SessionRegistration registration)
+        => registration.AttendanceStatus == AttendanceStatus.NoShow ||
+           registration.Status == RegistrationStatus.NoShow;
+
+    private static bool IsCompletedParticipation(TestingParticipant participant)
+        => participant.Status == ParticipationStatus.Completed || participant.CompletedAt.HasValue;
+
+    private static int GetCalendarBlock(DateTime sessionDate)
+        => sessionDate.Month switch
+        {
+            <= 3 => 1,
+            <= 6 => 2,
+            <= 9 => 3,
+            _ => 4
+        };
+
+    private static string? ResolveTeam(IEnumerable<SessionRegistration> registrations, IEnumerable<TestingParticipant> participants)
+        => registrations.Select(registration => registration.RegistrationNotes)
+               .FirstOrDefault(note => !string.IsNullOrWhiteSpace(note))
+           ?? participants.Select(participant => participant.TestingRequest.Title)
+               .FirstOrDefault(title => !string.IsNullOrWhiteSpace(title));
 }

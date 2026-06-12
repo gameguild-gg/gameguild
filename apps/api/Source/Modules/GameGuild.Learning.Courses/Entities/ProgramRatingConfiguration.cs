@@ -14,6 +14,7 @@ public class ProgramRatingConfiguration : IEntityTypeConfiguration<ProgramRating
 
     // Foreign key relationships
     builder.HasOne(pr => pr.Program).WithMany(p => p.ProgramRatings).HasForeignKey(pr => pr.ProgramId).OnDelete(DeleteBehavior.Cascade);
+    builder.HasOne(pr => pr.ProgramUser).WithMany(pu => pu.ProgramRatings).HasForeignKey(pr => pr.ProgramUserId).OnDelete(DeleteBehavior.SetNull);
 
     // Properties
     builder.Property(pr => pr.Rating).HasPrecision(3, 2).IsRequired();
@@ -38,5 +39,7 @@ public class ProgramRatingConfiguration : IEntityTypeConfiguration<ProgramRating
     builder.HasIndex(pr => pr.IsVerified).HasDatabaseName("IX_ProgramRatings_IsVerified");
 
     builder.HasIndex(pr => pr.IsFeatured).HasDatabaseName("IX_ProgramRatings_IsFeatured");
+
+    builder.HasIndex(pr => pr.ProgramUserId).HasDatabaseName("IX_ProgramRatings_ProgramUserId");
   }
 }

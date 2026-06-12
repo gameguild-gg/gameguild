@@ -31,6 +31,14 @@ public class UserMfaConfigurationConfiguration : IEntityTypeConfiguration<UserMf
         // Configure BackupCodes property
         builder.Property(x => x.BackupCodes).HasColumnName("backup_codes").IsRequired(false);
 
+        builder.Property(x => x.SmsPhoneNumber).HasColumnName("sms_phone_number").HasMaxLength(32).IsRequired(false);
+
+        builder.Property(x => x.SmsVerificationCodeHash).HasColumnName("sms_verification_code_hash").HasMaxLength(256).IsRequired(false);
+
+        builder.Property(x => x.SmsVerificationExpiresAt).HasColumnName("sms_verification_expires_at").IsRequired(false);
+
+        builder.Property(x => x.IsSmsEnabled).HasColumnName("is_sms_enabled").IsRequired();
+
         // Configure EnabledAt property
         builder.Property(x => x.EnabledAt).HasColumnName("enabled_at").IsRequired(false);
 

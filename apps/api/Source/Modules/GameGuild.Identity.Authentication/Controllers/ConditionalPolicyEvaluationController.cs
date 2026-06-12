@@ -8,7 +8,7 @@ using Microsoft.Extensions.Logging;
 
 namespace GameGuild.Identity.Authentication;
 
-// PLANNED: Reactivate this controller when conditional policy features are ready for production
+// Legacy hidden shell; canonical conditional policy evaluation is owned by GameGuild.Identity.Authorization.
 /// <summary>
 ///     API controller for Conditional Policy evaluation, analytics, and validation.
 /// </summary>

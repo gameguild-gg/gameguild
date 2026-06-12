@@ -8,9 +8,12 @@ using GameGuild.Configuration.PresentationLayer.ModelValidation;
 using GameGuild.Configuration.PresentationLayer.RequestContext;
 using GameGuild.Configuration.PresentationLayer.ResponseCompression;
 using GameGuild.Configuration.PresentationLayer.SignalR;
+using GameGuild.Features;
 using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using OpenFeature;
 using HttpLoggingOptions = GameGuild.Configuration.PresentationLayer.HttpLogging.HttpLoggingOptions;
 using ProblemDetailsOptions = GameGuild.Configuration.PresentationLayer.ProblemDetails.ProblemDetailsOptions;
 
@@ -128,8 +131,11 @@ public static class InfrastructureServiceCollectionExtensions
             FeatureFlagsOptions.CreateDefault);
         options.Validate();
 
-        // PLANNED: Implement OpenFeature services when the OpenFeature .NET SDK is added.
-        // PLANNED: Add hosted service to initialize OpenFeature provider during startup.
+        services.TryAddSingleton<DatabaseFeatureFlagProvider>();
+        services.TryAddSingleton<FeatureProvider>(provider =>
+            provider.GetRequiredService<DatabaseFeatureFlagProvider>());
+        services.TryAddSingleton(_ => Api.Instance);
+        services.AddHostedService<OpenFeatureHostedInitializer>();
 
         return services;
     }

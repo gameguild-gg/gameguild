@@ -15,14 +15,18 @@ public sealed class SessionManagementService(ILogger<SessionManagementService> l
 
         deviceFingerprint ??= GenerateDeviceFingerprint(ipAddress, userAgent);
 
+        var now = SystemClock.UtcNow;
         var session = new UserSession
         {
             Id = Guid.NewGuid(),
             UserId = userId,
             IpAddress = ipAddress,
             UserAgent = userAgent,
-            DeviceFingerprint = deviceFingerprint, LastUsedAt = SystemClock.UtcNow,
-            ExpiresAt = SystemClock.UtcNow.AddDays(30),
+            DeviceFingerprint = deviceFingerprint,
+            CreatedAt = now,
+            UpdatedAt = now,
+            LastUsedAt = now,
+            ExpiresAt = now.AddDays(30),
             IsActive = true
         };
 
@@ -42,7 +46,7 @@ public sealed class SessionManagementService(ILogger<SessionManagementService> l
     {
         var sessions = await sessionRepository.GetByUserIdAsync(userId, cancellationToken).ConfigureAwait(false);
 
-        if (activeOnly) { sessions = sessions.Where(s => s.IsActive).ToList(); }
+        if (activeOnly) { sessions = sessions.Where(s => s.IsValid).ToList(); }
 
         return sessions.OrderByDescending(s => s.LastUsedAt).ToList();
     }
@@ -81,9 +85,12 @@ public sealed class SessionManagementService(ILogger<SessionManagementService> l
 
         if (session == null) return false;
 
+        var now = SystemClock.UtcNow;
         session.IsActive = false;
         session.TerminationReason = reason.ToString();
-        session.TerminatedAt = SystemClock.UtcNow;
+        session.TerminatedAt = now;
+        session.LastUsedAt = now;
+        session.UpdatedAt = now;
 
         await sessionRepository.UpdateAsync(session, cancellationToken).ConfigureAwait(false);
 
@@ -99,9 +106,12 @@ public sealed class SessionManagementService(ILogger<SessionManagementService> l
 
         foreach (var session in activeSessions)
         {
+            var now = SystemClock.UtcNow;
             session.IsActive = false;
             session.TerminationReason = reason.ToString();
-            session.TerminatedAt = SystemClock.UtcNow;
+            session.TerminatedAt = now;
+            session.LastUsedAt = now;
+            session.UpdatedAt = now;
             await sessionRepository.UpdateAsync(session, cancellationToken).ConfigureAwait(false);
         }
 

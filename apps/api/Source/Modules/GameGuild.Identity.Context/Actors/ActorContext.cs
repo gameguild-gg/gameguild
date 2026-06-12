@@ -125,7 +125,7 @@ public sealed record ActorContext
     /// <summary>
     ///     Gets whether the actor is a tenant administrator for the current tenant.
     /// </summary>
-    public bool IsTenantAdmin => Roles.Contains("TenantAdmin") || IsSystemAdmin;
+    public bool IsTenantAdmin => Roles.Contains("TenantAdmin") || Roles.Contains("Owner") || IsSystemAdmin;
 
     /// <summary>
     ///     Gets the subject ID as a GUID, or null if not a valid GUID.

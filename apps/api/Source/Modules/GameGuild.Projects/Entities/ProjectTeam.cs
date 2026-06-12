@@ -20,7 +20,7 @@ public class ProjectTeam : EntityBase<Guid>
     /// <summary> Team working on the project </summary>
     public Guid TeamId { get; set; }
 
-    /// <summary> Navigation property to team (uses stub Team from Models) </summary>
+    /// <summary> Navigation property to the project collaboration team. </summary>
     public virtual Team? Team { get; set; }
 
     /// <summary> Role of the team in the project </summary>

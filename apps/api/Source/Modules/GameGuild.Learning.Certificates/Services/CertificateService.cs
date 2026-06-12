@@ -1,4 +1,5 @@
 using GameGuild.Identity.Users;
+using GameGuild.Learning.Abstractions;
 using GameGuild.Learning.Courses;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -8,7 +9,7 @@ namespace GameGuild.Learning.Certificates;
 /// <summary>
 /// Service implementation for certificate issuance and management
 /// </summary>
-public class CertificateService : ICertificateService
+public class CertificateService : ICertificateService, ICertificateIssuanceService
 {
     private readonly IApplicationDbContext _context;
     private readonly ILogger<CertificateService> _logger;
@@ -83,6 +84,43 @@ public class CertificateService : ICertificateService
             _logger.LogError(ex, "Error issuing certificate for enrollment {EnrollmentId}", enrollmentId);
             return Result.Failure<Certificate>(Error.Failure("IssueCertificate", "Failed to issue certificate"));
         }
+    }
+
+    public async Task<Result<Guid>> IssueCertificateForEnrollmentAsync(
+        Guid enrollmentId,
+        Guid userId,
+        Guid programId,
+        Guid? tenantId = null)
+    {
+        var template = await _context.Set<CertificateTemplate>()
+            .Where(candidate => candidate.CourseId == programId
+                && candidate.IsActive
+                && (candidate.TenantId == tenantId || candidate.TenantId == null))
+            .OrderByDescending(candidate => candidate.TenantId == tenantId)
+            .ThenByDescending(candidate => candidate.IsDefault)
+            .ThenBy(candidate => candidate.Name)
+            .FirstOrDefaultAsync()
+            .ConfigureAwait(false);
+
+        if (template == null)
+        {
+            return Result.Failure<Guid>(
+                Error.NotFound("CertificateTemplate", "No active certificate template found for this enrollment"));
+        }
+
+        var result = await IssueCertificateAsync(template.Id, enrollmentId, userId, programId, tenantId)
+            .ConfigureAwait(false);
+
+        return result.IsSuccess
+            ? Result.Success(result.Value.Id)
+            : Result.Failure<Guid>(result.Error);
+    }
+
+    public async Task<bool> HasCertificateAsync(Guid enrollmentId)
+    {
+        return await _context.Set<Certificate>()
+            .AnyAsync(certificate => certificate.EnrollmentId == enrollmentId)
+            .ConfigureAwait(false);
     }
 
     public async Task<Certificate?> GetCertificateByIdAsync(Guid id)

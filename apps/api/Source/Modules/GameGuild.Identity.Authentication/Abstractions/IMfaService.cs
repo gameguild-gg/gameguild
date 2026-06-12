@@ -12,6 +12,12 @@ public interface IMfaService
 
     Task<MfaVerificationResult> CompleteMfaSetupAsync(Guid userId, string totpCode, CancellationToken cancellationToken = default);
 
+    Task<SmsMfaSetupResult> InitiateSmsSetupAsync(Guid userId, string phoneNumber, CancellationToken cancellationToken = default);
+
+    Task<MfaVerificationResult> CompleteSmsSetupAsync(Guid userId, string code, CancellationToken cancellationToken = default);
+
+    Task<bool> IsSmsMfaAvailableAsync(CancellationToken cancellationToken = default);
+
     Task<MfaVerificationResult> VerifyMfaAsync(Guid userId, string code, MfaMethod method = MfaMethod.Totp, CancellationToken cancellationToken = default);
 
     Task<bool> DisableMfaAsync(Guid userId, string confirmationCode, CancellationToken cancellationToken = default);

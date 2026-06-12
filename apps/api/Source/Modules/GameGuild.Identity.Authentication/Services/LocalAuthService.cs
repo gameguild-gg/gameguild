@@ -52,12 +52,7 @@ public class LocalAuthService(
             // Verify password if user exists
             if (user != null)
             {
-                var hashPreview = user.PasswordHash?.Substring(0, Math.Min(20, user.PasswordHash.Length)) ?? string.Empty;
-                logger.LogInformation("DEBUG: Verifying password for user {Email}. Password length: {PasswordLength}, Hash: {Hash}", user.Email, request.Password.Length, hashPreview);
-
                 var passwordValid = BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash);
-
-                logger.LogInformation("DEBUG: Password verification result for {Email}: {IsValid}", user.Email, passwordValid);
 
                 if (passwordValid)
                 {
@@ -188,8 +183,6 @@ public class LocalAuthService(
         var ipAddress = authAttemptService.GetClientIpAddress(httpContext);
         var userAgent = httpContext?.Request.Headers.UserAgent.ToString();
 
-        logger.LogInformation("[DEBUG] LocalSignUpAsync called with Email: '{Email}', Username: '{Username}'", request.Email, request.Username);
-
         try
         {
             // Check for existing user
@@ -252,8 +245,6 @@ public class LocalAuthService(
 
             logger.LogInformation("User {Email} successfully signed up", request.Email);
 
-            logger.LogInformation("[DEBUG] Creating SignInResponse - UserId: {UserId}, Email from request: '{Email}'", userId, request.Email);
-
             return new SignInResponse
             {
                 Success = true,
@@ -279,11 +270,11 @@ public class LocalAuthService(
 
     public async Task<SignInResponse> RefreshTokenAsync(RefreshTokenRequest request, CancellationToken cancellationToken = default)
     {
-        logger.LogInformation("🔥 [AUTHSERVICE] Processing refresh token request: {RefreshToken}", request.RefreshToken);
+        logger.LogInformation("Processing refresh token request");
 
         if (string.IsNullOrWhiteSpace(request.RefreshToken))
         {
-            logger.LogWarning("🔥 [AUTHSERVICE] RefreshToken is null or empty, throwing UnauthorizedAccessException");
+            logger.LogWarning("Refresh token is null or empty");
 
             throw new UnauthorizedAccessException("Invalid refresh token");
         }
@@ -296,14 +287,12 @@ public class LocalAuthService(
         var hashedToken = refreshTokenHasher.HashToken(request.RefreshToken);
         var storedToken = await refreshTokenRepository.GetByTokenAsync(hashedToken).ConfigureAwait(false);
 
-        logger.LogInformation("🔥 [AUTHSERVICE] Repository lookup result - storedToken is null: {IsNull}", storedToken == null);
-
         if (storedToken == null || !storedToken.IsActive || storedToken.ExpiresAt <= SystemClock.UtcNow)
         {
             logger.LogWarning(
-                "🔥 [AUTHSERVICE] Invalid refresh token attempt from {IpAddress}. storedToken is null: {IsNull}, IsActive: {IsActive}, ExpiresAt: {ExpiresAt}",
+                "Invalid refresh token attempt from {IpAddress}. TokenFound: {TokenFound}, IsActive: {IsActive}, ExpiresAt: {ExpiresAt}",
                 ipAddress,
-                storedToken == null,
+                storedToken != null,
                 storedToken?.IsActive,
                 storedToken?.ExpiresAt
             );

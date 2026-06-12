@@ -3,7 +3,6 @@ using GameGuild.Identity.Authorization;
 using GameGuild.Identity.Context.Actors;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 
 namespace GameGuild.TestingLab;
 
@@ -15,8 +14,7 @@ namespace GameGuild.TestingLab;
 [Authorize]
 public class TestingParticipantsController(
     ITestingParticipantOperations participantService,
-    IActorContextAccessor actorContextAccessor,
-    ILogger<TestingParticipantsController> _logger) : BaseApiController
+    IActorContextAccessor actorContextAccessor) : BaseApiController
 {
     #region Participant Management
 

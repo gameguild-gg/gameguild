@@ -1,10 +1,11 @@
 using GameGuild.CQRS;
 using HotChocolate;
+using HotChocolate.Types;
 
 namespace GameGuild.Projects;
 
 /// <summary> GraphQL queries for Project module using CQRS pattern </summary>
-// [ExtendObjectType<Query>] // PLANNED: Configure GraphQL Query type when HotChocolate schema stitching is set up for the Projects module
+[ExtendObjectType("Query")]
 public class ProjectQueries
 {
     private static T UnwrapResult<T>(Result<T> result) =>

@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Text.Json;
 using GameGuild.Configuration.PresentationLayer.Authorization;
 using Microsoft.Extensions.Caching.Distributed;
@@ -131,6 +132,7 @@ public sealed class HybridPermissionCache : IHybridPermissionCache
     private readonly AuthorizationCacheOptions _options;
     private readonly ILogger<HybridPermissionCache> _logger;
     private readonly bool _useL2;
+    private readonly ConcurrentDictionary<string, byte> _l1Keys = new(StringComparer.Ordinal);
 
     /// <summary>
     ///     Initializes a new instance of <see cref="HybridPermissionCache"/>.
@@ -300,18 +302,43 @@ public sealed class HybridPermissionCache : IHybridPermissionCache
     }
 
     /// <inheritdoc />
-    public Task InvalidatePatternAsync(string pattern, string cacheType, CancellationToken cancellationToken = default)
+    public async Task InvalidatePatternAsync(string pattern, string cacheType, CancellationToken cancellationToken = default)
     {
-        // Note: IDistributedCache doesn't support pattern-based deletion.
-        // For Redis, you would need to use StackExchange.Redis directly.
-        // For now, we rely on TTL expiration and version-based cache keys for pattern invalidation.
-        
-        _logger.LogDebug("Pattern invalidation requested for {Pattern}. Using TTL-based expiration.", pattern);
-        
-        // Pattern invalidation in L1 would require tracking keys, which ConcurrentDictionary in the service handles.
-        // This method is a placeholder for future Redis SCAN + DEL implementation.
-        
-        return Task.CompletedTask;
+        cancellationToken.ThrowIfCancellationRequested();
+
+        var matchingKeys = _l1Keys.Keys
+            .Where(key => MatchesPattern(key, pattern))
+            .ToArray();
+
+        foreach (var key in matchingKeys)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            _l1Cache.Remove(key);
+            _l1Keys.TryRemove(key, out _);
+            _metrics.RecordEviction(CacheLevel.L1, cacheType, "pattern");
+
+            if (!_useL2)
+            {
+                continue;
+            }
+
+            try
+            {
+                await _l2Cache!.RemoveAsync(key, cancellationToken).ConfigureAwait(false);
+                _metrics.RecordEviction(CacheLevel.L2, cacheType, "pattern");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "L2 cache pattern remove failed for key {Key}", key);
+                throw;
+            }
+        }
+
+        _logger.LogDebug(
+            "Pattern invalidation removed {Count} tracked cache keys for pattern {Pattern}",
+            matchingKeys.Length,
+            pattern);
     }
 
     private void SetL1<T>(string key, T value, TimeSpan? ttl = null)
@@ -319,8 +346,66 @@ public sealed class HybridPermissionCache : IHybridPermissionCache
         var cacheOptions = new MemoryCacheEntryOptions()
             .SetAbsoluteExpiration(ttl ?? TimeSpan.FromSeconds(_options.PermissionTtlSeconds))
             .SetSlidingExpiration(TimeSpan.FromSeconds(_options.PermissionTtlSeconds / 2))
-            .SetSize(1);
+            .SetSize(1)
+            .RegisterPostEvictionCallback((evictedKey, _, _, _) =>
+            {
+                if (evictedKey is string cacheKey)
+                {
+                    _l1Keys.TryRemove(cacheKey, out _);
+                }
+            });
 
+        _l1Keys[key] = 0;
         _l1Cache.Set(key, value, cacheOptions);
+    }
+
+    private static bool MatchesPattern(string key, string pattern)
+    {
+        if (string.IsNullOrEmpty(pattern))
+        {
+            return false;
+        }
+
+        if (pattern == "*")
+        {
+            return true;
+        }
+
+        if (!pattern.Contains('*', StringComparison.Ordinal))
+        {
+            return string.Equals(key, pattern, StringComparison.Ordinal);
+        }
+
+        var segments = pattern.Split('*');
+        var currentIndex = 0;
+
+        if (segments[0].Length > 0)
+        {
+            if (!key.StartsWith(segments[0], StringComparison.Ordinal))
+            {
+                return false;
+            }
+
+            currentIndex = segments[0].Length;
+        }
+
+        foreach (var segment in segments.Skip(1))
+        {
+            if (segment.Length == 0)
+            {
+                continue;
+            }
+
+            var segmentIndex = key.IndexOf(segment, currentIndex, StringComparison.Ordinal);
+            if (segmentIndex < 0)
+            {
+                return false;
+            }
+
+            currentIndex = segmentIndex + segment.Length;
+        }
+
+        var finalSegment = segments[^1];
+        return finalSegment.Length == 0 || key.EndsWith(finalSegment, StringComparison.Ordinal);
     }
 }

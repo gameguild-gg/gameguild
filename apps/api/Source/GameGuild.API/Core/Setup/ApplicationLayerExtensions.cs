@@ -117,8 +117,7 @@ public static class ApplicationLayerExtensions
             .ToArray();
 
         var moduleAssemblies = allAssemblies
-            .Where(a => config.EnabledModules.Any(m =>
-                a.GetName().Name?.EndsWith(m, StringComparison.OrdinalIgnoreCase) ?? false))
+            .Where(a => config.IsEnabledAssembly(a.GetName().Name))
             .ToArray();
 
         logger.LogInformation(

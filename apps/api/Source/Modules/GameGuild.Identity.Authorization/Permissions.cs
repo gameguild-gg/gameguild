@@ -234,6 +234,25 @@ public static class Permissions
 
     /// <summary>Report assets for moderation</summary>
     public const string AssetsReport = AssetsPermission.Keys.Report;
+
+    // ========================
+    // ACHIEVEMENTS PERMISSIONS
+    // ========================
+
+    /// <summary>Create achievements</summary>
+    public const string AchievementsCreate = AchievementsPermission.Keys.Create;
+
+    /// <summary>Update achievements</summary>
+    public const string AchievementsUpdate = AchievementsPermission.Keys.Update;
+
+    /// <summary>Delete achievements</summary>
+    public const string AchievementsDelete = AchievementsPermission.Keys.Delete;
+
+    /// <summary>Manually award achievements</summary>
+    public const string AchievementsAward = AchievementsPermission.Keys.Award;
+
+    /// <summary>Full management access to achievements</summary>
+    public const string AchievementsManage = AchievementsPermission.Keys.Manage;
 }
 
 /// <summary>

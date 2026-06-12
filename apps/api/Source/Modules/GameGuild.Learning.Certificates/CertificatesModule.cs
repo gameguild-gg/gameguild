@@ -1,3 +1,4 @@
+using GameGuild.Learning.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace GameGuild.Learning.Certificates;
@@ -13,7 +14,9 @@ public static class CertificatesModule
     public static IServiceCollection AddCertificatesModule(this IServiceCollection services)
     {
         // Register services
-        services.AddScoped<ICertificateService, CertificateService>();
+        services.AddScoped<CertificateService>();
+        services.AddScoped<ICertificateService>(sp => sp.GetRequiredService<CertificateService>());
+        services.AddScoped<ICertificateIssuanceService>(sp => sp.GetRequiredService<CertificateService>());
         services.AddScoped<ICertificateTemplateService, CertificateTemplateService>();
 
         return services;

@@ -140,6 +140,71 @@ public class CertificatesController : BaseApiController
     }
 
     /// <summary>
+    /// Get certificate templates for a specific course
+    /// </summary>
+    [HttpGet("templates/course/{courseId:guid}")]
+    [RequireContentTypePermission<CertificateTemplate>(PermissionType.Read)]
+    public async Task<ActionResult<IEnumerable<CertificateTemplateDto>>> GetCourseCertificateTemplates(Guid courseId)
+    {
+        var templates = await _templateService.GetTemplatesByCourseAsync(courseId).ConfigureAwait(false);
+        return Ok(templates.Select(CertificateTemplateDto.FromEntity));
+    }
+
+    /// <summary>
+    /// Get a certificate template by ID
+    /// </summary>
+    [HttpGet("templates/{templateId:guid}")]
+    [RequireContentTypePermission<CertificateTemplate>(PermissionType.Read)]
+    public async Task<ActionResult<CertificateTemplateDetailDto>> GetCertificateTemplate(Guid templateId)
+    {
+        var template = await _templateService.GetTemplateByIdAsync(templateId).ConfigureAwait(false);
+        if (template is null)
+        {
+            return NotFound();
+        }
+
+        return Ok(CertificateTemplateDetailDto.FromEntity(template));
+    }
+
+    /// <summary>
+    /// Create a certificate template for a course
+    /// </summary>
+    [HttpPost("templates")]
+    [RequireContentTypePermission<CertificateTemplate>(PermissionType.Create)]
+    public async Task<ActionResult<CertificateTemplateDetailDto>> CreateCertificateTemplate([FromBody] CreateCertificateTemplateRequest request)
+    {
+        var actor = _actorContextAccessor.ActorContext;
+        var template = CertificateTemplate.Create(request.CourseId, request.Name, request.TemplateHtml, actor.TenantId);
+        var result = await _templateService.CreateTemplateAsync(template, actor.TenantId).ConfigureAwait(false);
+
+        if (!result.IsSuccess)
+        {
+            return BadRequest(result.Error);
+        }
+
+        return CreatedAtAction(
+            nameof(GetCertificateTemplate),
+            new { templateId = result.Value.Id },
+            CertificateTemplateDetailDto.FromEntity(result.Value));
+    }
+
+    /// <summary>
+    /// Delete a certificate template
+    /// </summary>
+    [HttpDelete("templates/{templateId:guid}")]
+    [RequireContentTypePermission<CertificateTemplate>(PermissionType.Delete)]
+    public async Task<ActionResult> DeleteCertificateTemplate(Guid templateId)
+    {
+        var result = await _templateService.DeleteTemplateAsync(templateId).ConfigureAwait(false);
+        if (!result.IsSuccess)
+        {
+            return result.Error.Type == ErrorType.NotFound ? NotFound(result.Error) : BadRequest(result.Error);
+        }
+
+        return NoContent();
+    }
+
+    /// <summary>
     /// Get certificates expiring within the specified days
     /// </summary>
     [HttpGet("expiring")]
@@ -174,6 +239,67 @@ public sealed record CertificateDto(
         c.ExpiresAt,
         c.Status);
 }
+
+/// <summary>
+/// DTO for certificate template list display
+/// </summary>
+public sealed record CertificateTemplateDto(
+    Guid Id,
+    Guid CourseId,
+    Guid? TenantId,
+    string Name,
+    string? Description,
+    bool IsDefault,
+    bool IsActive,
+    DateTime CreatedAt,
+    DateTime UpdatedAt)
+{
+    public static CertificateTemplateDto FromEntity(CertificateTemplate template) => new(
+        template.Id,
+        template.CourseId,
+        template.TenantId,
+        template.Name,
+        template.Description,
+        template.IsDefault,
+        template.IsActive,
+        template.CreatedAt,
+        template.UpdatedAt);
+}
+
+/// <summary>
+/// DTO for certificate template editing and preview
+/// </summary>
+public sealed record CertificateTemplateDetailDto(
+    Guid Id,
+    Guid CourseId,
+    Guid? TenantId,
+    string Name,
+    string? Description,
+    string TemplateHtml,
+    string? TemplateStyles,
+    bool IsDefault,
+    bool IsActive,
+    DateTime CreatedAt,
+    DateTime UpdatedAt)
+{
+    public static CertificateTemplateDetailDto FromEntity(CertificateTemplate template) => new(
+        template.Id,
+        template.CourseId,
+        template.TenantId,
+        template.Name,
+        template.Description,
+        template.TemplateHtml,
+        template.TemplateStyles,
+        template.IsDefault,
+        template.IsActive,
+        template.CreatedAt,
+        template.UpdatedAt);
+}
+
+/// <summary>
+/// Request to create a certificate template
+/// </summary>
+public sealed record CreateCertificateTemplateRequest(Guid CourseId, string Name, string TemplateHtml);
 
 /// <summary>
 /// Request to issue a certificate

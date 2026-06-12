@@ -159,7 +159,7 @@ public class TestingRequestOperationsService(IApplicationDbContext context) : IT
         return await context.Set<TestingRequest>()
             .Where(tr => tr.DeletedAt == null && tr.Status == TestingRequestStatus.Open)
             .Include(tr => tr.ProjectVersion)
-            .ThenInclude(pv => pv.Project)
+            .ThenInclude(pv => pv!.Project)
             .Include(tr => tr.CreatedBy)
             .OrderByDescending(tr => tr.CreatedAt)
             .ToListAsync();

@@ -46,13 +46,13 @@
         <ProjectReference Include="..\Modules\GameGuild.Commerce.Products\GameGuild.Commerce.Products.csproj" />
         <ProjectReference Include="..\Modules\GameGuild.Learning.Courses\GameGuild.Learning.Courses.csproj" />
         <ProjectReference Include="..\Modules\GameGuild.Learning.Enrollments\GameGuild.Learning.Enrollments.csproj" />
-        <!-- <ProjectReference Include="..\Modules\GameGuild.Learning.Cohorts\GameGuild.Learning.Cohorts.csproj" /> -->
+        <ProjectReference Include="..\Modules\GameGuild.Learning.Cohorts\GameGuild.Learning.Cohorts.csproj" />
         <ProjectReference Include="..\Modules\GameGuild.Learning.Assessments\GameGuild.Learning.Assessments.csproj" />
-        <!-- <ProjectReference Include="..\Modules\GameGuild.Learning.Certificates\GameGuild.Learning.Certificates.csproj" /> -->
-        <!-- <ProjectReference Include="..\Modules\GameGuild.Learning.Experience.Discovery\GameGuild.Learning.Experience.Discovery.csproj" /> -->
-        <!-- <ProjectReference Include="..\Modules\GameGuild.Learning.Experience.Recommendations\GameGuild.Learning.Experience.Recommendations.csproj" /> -->
-        <!-- <ProjectReference Include="..\Modules\GameGuild.Learning.Experience.LearningPaths\GameGuild.Learning.Experience.LearningPaths.csproj" /> -->
-        <!-- <ProjectReference Include="..\Modules\GameGuild.Learning.Experience.Social\GameGuild.Learning.Experience.Social.csproj" /> -->
+        <ProjectReference Include="..\Modules\GameGuild.Learning.Certificates\GameGuild.Learning.Certificates.csproj" />
+        <ProjectReference Include="..\Modules\GameGuild.Learning.Experience.Discovery\GameGuild.Learning.Experience.Discovery.csproj" />
+        <ProjectReference Include="..\Modules\GameGuild.Learning.Experience.Recommendations\GameGuild.Learning.Experience.Recommendations.csproj" />
+        <ProjectReference Include="..\Modules\GameGuild.Learning.Experience.LearningPaths\GameGuild.Learning.Experience.LearningPaths.csproj" />
+        <ProjectReference Include="..\Modules\GameGuild.Learning.Experience.Social\GameGuild.Learning.Experience.Social.csproj" />
         <ProjectReference Include="..\Modules\GameGuild.Social.Profiles\GameGuild.Social.Profiles.csproj" />
         <ProjectReference Include="..\Modules\GameGuild.Social.Blog\GameGuild.Social.Blog.csproj" />
         <ProjectReference Include="..\Modules\GameGuild.Social.Groups\GameGuild.Social.Groups.csproj" />
@@ -62,6 +62,9 @@
         <!-- Social Modules — remaining modules are not in EnabledModules and do not have API bootstrap registration yet -->
         <!-- <ProjectReference Include="..\Modules\GameGuild.Social.Follows\GameGuild.Social.Follows.csproj" /> -->
         <ProjectReference Include="..\Modules\GameGuild.GameJams\GameGuild.GameJams.csproj" />
+        <ProjectReference Include="..\Modules\GameGuild.Projects\GameGuild.Projects.csproj" />
+        <ProjectReference Include="..\Modules\GameGuild.TestingLab\GameGuild.TestingLab.csproj" />
+        <ProjectReference Include="..\Modules\GameGuild.LaunchPad\GameGuild.LaunchPad.csproj" />
         <ProjectReference Include="..\Modules\GameGuild.Tags\GameGuild.Tags.csproj" />
         <ProjectReference Include="..\Modules\GameGuild.Content.Pages\GameGuild.Content.Pages.csproj" />
         <ProjectReference Include="..\Modules\GameGuild.Resources\GameGuild.Resources.csproj" />

@@ -1,5 +1,7 @@
+using System.Text.Json;
 using GameGuild.CQRS;
 using GameGuild.Identity.Users;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 
@@ -12,8 +14,11 @@ public class EmailVerificationService(
     ILogger<EmailVerificationService> logger,
     IMemoryCache memoryCache,
     IPublisher publisher,
-    IUserRepository? userRepository = null) : IEmailVerificationService
+    IUserRepository? userRepository = null,
+    IDistributedCache? distributedCache = null) : IEmailVerificationService
 {
+    private static readonly JsonSerializerOptions CacheJsonOptions = new(JsonSerializerDefaults.Web);
+
     private const string TokenKeyPrefix = "emailverify:token:";
     private const string VerifiedKeyPrefix = "emailverify:verified:";
     private const string RateLimitKeyPrefix = "emailverify:ratelimit:";
@@ -36,7 +41,7 @@ public class EmailVerificationService(
         return GenerateTokenAsync(userId, email, MagicLinkTokenType, TimeSpan.FromMinutes(15));
     }
 
-    private Task<string> GenerateTokenAsync(Guid userId, string email, string tokenType, TimeSpan lifetime)
+    private async Task<string> GenerateTokenAsync(Guid userId, string email, string tokenType, TimeSpan lifetime)
     {
         try
         {
@@ -49,13 +54,10 @@ public class EmailVerificationService(
                 ExpiresAt = SystemClock.UtcNow.Add(lifetime)
             };
 
-            memoryCache.Set(TokenKeyPrefix + token, tokenInfo, new MemoryCacheEntryOptions
-            {
-                AbsoluteExpiration = tokenInfo.ExpiresAt
-            }.SetSize(1));
+            await StoreTokenInfoAsync(TokenKeyPrefix + token, tokenInfo).ConfigureAwait(false);
 
             logger.LogInformation("Generated {TokenType} token for user {UserId}", tokenType, userId);
-            return Task.FromResult(token);
+            return token;
         }
         catch (Exception ex)
         {
@@ -123,7 +125,7 @@ public class EmailVerificationService(
             markEmailVerified: false);
     }
 
-    private Task<TokenValidationResult> ValidateAndConsumeTokenAsync(
+    private async Task<TokenValidationResult> ValidateAndConsumeTokenAsync(
         string token,
         string expectedType,
         Guid? expectedUserId,
@@ -134,13 +136,15 @@ public class EmailVerificationService(
             if (string.IsNullOrWhiteSpace(token))
             {
                 logger.LogWarning("Empty {TokenType} token used", expectedType);
-                return Task.FromResult(TokenValidationResult.Failed("Token is required"));
+                return TokenValidationResult.Failed("Token is required");
             }
 
-            if (!memoryCache.TryGetValue(TokenKeyPrefix + token, out TokenInfo? tokenInfo) || tokenInfo == null)
+            var tokenKey = TokenKeyPrefix + token;
+            var tokenInfo = await GetTokenInfoAsync(tokenKey).ConfigureAwait(false);
+            if (tokenInfo == null)
             {
                 logger.LogWarning("Invalid {TokenType} token used", expectedType);
-                return Task.FromResult(TokenValidationResult.Failed("Invalid token"));
+                return TokenValidationResult.Failed("Invalid token");
             }
 
             if (expectedUserId.HasValue && tokenInfo.UserId != expectedUserId.Value)
@@ -150,14 +154,14 @@ public class EmailVerificationService(
                     tokenInfo.UserId,
                     expectedUserId);
 
-                return Task.FromResult(TokenValidationResult.Failed("Token does not belong to the requested user"));
+                return TokenValidationResult.Failed("Token does not belong to the requested user");
             }
 
             if (tokenInfo.ExpiresAt < SystemClock.UtcNow)
             {
-                memoryCache.Remove(TokenKeyPrefix + token);
+                await RemoveTokenInfoAsync(tokenKey).ConfigureAwait(false);
                 logger.LogWarning("Expired {TokenType} token used for user {UserId}", expectedType, tokenInfo.UserId);
-                return Task.FromResult(TokenValidationResult.Failed("Expired token"));
+                return TokenValidationResult.Failed("Expired token");
             }
 
             if (tokenInfo.Type != expectedType)
@@ -167,23 +171,23 @@ public class EmailVerificationService(
                     tokenInfo.Type,
                     expectedType);
 
-                return Task.FromResult(TokenValidationResult.Failed("Invalid token type"));
+                return TokenValidationResult.Failed("Invalid token type");
             }
 
             if (markEmailVerified)
             {
-                memoryCache.Set(VerifiedKeyPrefix + tokenInfo.UserId, true, new MemoryCacheEntryOptions().SetSize(1));
+                await StoreVerifiedMarkerAsync(tokenInfo.UserId).ConfigureAwait(false);
             }
 
-            memoryCache.Remove(TokenKeyPrefix + token);
+            await RemoveTokenInfoAsync(tokenKey).ConfigureAwait(false);
 
             logger.LogInformation("{TokenType} token consumed successfully for user {UserId}", expectedType, tokenInfo.UserId);
-            return Task.FromResult(new TokenValidationResult(true, tokenInfo.UserId, tokenInfo.Email));
+            return new TokenValidationResult(true, tokenInfo.UserId, tokenInfo.Email);
         }
         catch (Exception ex)
         {
             logger.LogError(ex, "Error verifying {TokenType} token", expectedType);
-            return Task.FromResult(TokenValidationResult.Failed("Token verification failed"));
+            return TokenValidationResult.Failed("Token verification failed");
         }
     }
 
@@ -200,7 +204,18 @@ public class EmailVerificationService(
                 }
             }
 
-            return memoryCache.TryGetValue(VerifiedKeyPrefix + userId, out bool verified) && verified;
+            if (memoryCache.TryGetValue(VerifiedKeyPrefix + userId, out bool verified) && verified)
+            {
+                return true;
+            }
+
+            if (distributedCache is null)
+            {
+                return false;
+            }
+
+            var distributedValue = await distributedCache.GetAsync(VerifiedKeyPrefix + userId).ConfigureAwait(false);
+            return distributedValue is [1];
         }
         catch (Exception ex)
         {
@@ -248,13 +263,14 @@ public class EmailVerificationService(
         }
     }
 
-    public Task<bool> IsTokenValidAsync(string token)
+    public async Task<bool> IsTokenValidAsync(string token)
     {
         try
         {
-            if (!memoryCache.TryGetValue(TokenKeyPrefix + token, out TokenInfo? tokenInfo) || tokenInfo == null)
+            var tokenInfo = await GetTokenInfoAsync(TokenKeyPrefix + token).ConfigureAwait(false);
+            if (tokenInfo == null)
             {
-                return Task.FromResult(false);
+                return false;
             }
 
             var isValid = tokenInfo.ExpiresAt >= SystemClock.UtcNow &&
@@ -262,12 +278,88 @@ public class EmailVerificationService(
                  tokenInfo.Type == PasswordResetTokenType ||
                  tokenInfo.Type == MagicLinkTokenType);
 
-            return Task.FromResult(isValid);
+            return isValid;
         }
         catch (Exception ex)
         {
             logger.LogError(ex, "Error checking token validity");
-            return Task.FromResult(false);
+            return false;
+        }
+    }
+
+    private async Task StoreTokenInfoAsync(string cacheKey, TokenInfo tokenInfo)
+    {
+        var memoryOptions = new MemoryCacheEntryOptions
+        {
+            AbsoluteExpiration = tokenInfo.ExpiresAt
+        }.SetSize(1);
+
+        memoryCache.Set(cacheKey, tokenInfo, memoryOptions);
+
+        if (distributedCache is null)
+        {
+            return;
+        }
+
+        await distributedCache.SetAsync(
+            cacheKey,
+            JsonSerializer.SerializeToUtf8Bytes(tokenInfo, CacheJsonOptions),
+            new DistributedCacheEntryOptions
+            {
+                AbsoluteExpiration = tokenInfo.ExpiresAt
+            }).ConfigureAwait(false);
+    }
+
+    private async Task<TokenInfo?> GetTokenInfoAsync(string cacheKey)
+    {
+        if (memoryCache.TryGetValue(cacheKey, out TokenInfo? tokenInfo) && tokenInfo is not null)
+        {
+            return tokenInfo;
+        }
+
+        if (distributedCache is null)
+        {
+            return null;
+        }
+
+        var bytes = await distributedCache.GetAsync(cacheKey).ConfigureAwait(false);
+        if (bytes is null || bytes.Length == 0)
+        {
+            return null;
+        }
+
+        tokenInfo = JsonSerializer.Deserialize<TokenInfo>(bytes, CacheJsonOptions);
+        if (tokenInfo is null)
+        {
+            return null;
+        }
+
+        memoryCache.Set(cacheKey, tokenInfo, new MemoryCacheEntryOptions
+        {
+            AbsoluteExpiration = tokenInfo.ExpiresAt
+        }.SetSize(1));
+
+        return tokenInfo;
+    }
+
+    private async Task RemoveTokenInfoAsync(string cacheKey)
+    {
+        memoryCache.Remove(cacheKey);
+
+        if (distributedCache is not null)
+        {
+            await distributedCache.RemoveAsync(cacheKey).ConfigureAwait(false);
+        }
+    }
+
+    private async Task StoreVerifiedMarkerAsync(Guid userId)
+    {
+        var cacheKey = VerifiedKeyPrefix + userId;
+        memoryCache.Set(cacheKey, true, new MemoryCacheEntryOptions().SetSize(1));
+
+        if (distributedCache is not null)
+        {
+            await distributedCache.SetAsync(cacheKey, [1]).ConfigureAwait(false);
         }
     }
 }

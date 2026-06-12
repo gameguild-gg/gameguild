@@ -303,10 +303,20 @@ public class ProjectsController : BaseApiController {
 
   /// <summary> Get current user's project invitations </summary>
   [HttpGet("my-invitations")]
-  public ActionResult<IEnumerable<object>> GetMyProjectInvitations() {
-    // PLANNED: Implement invitation query when ProjectInvitation entity is created (depends on GameGuild.Projects.Invitations)
-    // Returns empty list until invitation system is built
-    return Ok(new List<object>());
+  public async Task<ActionResult<IEnumerable<ProjectInvitationDto>>> GetMyProjectInvitations() {
+    var actor = _actorContextAccessor.ActorContext;
+    var userId = actor.SubjectIdAsGuid;
+    if (!userId.HasValue) return Unauthorized();
+
+    var invitations = await _context.Set<ProjectInvitation>()
+      .AsNoTracking()
+      .Include(invitation => invitation.Project)
+      .Where(invitation => invitation.InvitedUserId == userId.Value && invitation.Status == ProjectInvitationStatus.Pending)
+      .OrderByDescending(invitation => invitation.InvitedAt)
+      .ToListAsync()
+      .ConfigureAwait(false);
+
+    return Ok(invitations.Select(ProjectInvitationDto.FromInvitation).ToList());
   }
 
   /// <summary> Get permissions for a specific role </summary>
@@ -331,16 +341,59 @@ public class ProjectsController : BaseApiController {
 
   /// <summary> Accept a project invitation </summary>
   [HttpPost("invitations/{invitationToken}:accept")]
-  public ActionResult<object> AcceptProjectInvitation(string invitationToken) {
-    // PLANNED: Implement invitation acceptance when ProjectInvitation entity is created (depends on GameGuild.Projects.Invitations)
-    return Ok(new { Message = "Invitation accepted", Token = invitationToken });
+  public async Task<ActionResult<ProjectInvitationDto>> AcceptProjectInvitation(string invitationToken) {
+    var invitation = await GetRespondableInvitation(invitationToken).ConfigureAwait(false);
+    if (invitation == null) return NotFound(new { Message = "Invitation not found" });
+    if (!invitation.CanRespond) return Conflict(new { Message = "Invitation is no longer pending or has expired" });
+
+    var actor = _actorContextAccessor.ActorContext;
+    var userId = actor.SubjectIdAsGuid;
+    if (!userId.HasValue || invitation.InvitedUserId != userId.Value) return Forbid();
+
+    invitation.Accept();
+
+    var collaborator = await _context.Set<ProjectCollaborator>()
+      .FirstOrDefaultAsync(c => c.ProjectId == invitation.ProjectId && c.UserId == userId.Value)
+      .ConfigureAwait(false);
+
+    if (collaborator == null) {
+      collaborator = new ProjectCollaborator {
+        ProjectId = invitation.ProjectId,
+        UserId = userId.Value,
+        Role = invitation.Role,
+        Permissions = invitation.Permissions,
+        IsActive = true,
+        JoinedAt = SystemClock.UtcNow
+      };
+      _context.Set<ProjectCollaborator>().Add(collaborator);
+    }
+    else {
+      collaborator.Role = invitation.Role;
+      collaborator.Permissions = invitation.Permissions;
+      collaborator.IsActive = true;
+      collaborator.LeftAt = null;
+    }
+
+    await _context.SaveChangesAsync().ConfigureAwait(false);
+
+    return Ok(ProjectInvitationDto.FromInvitation(invitation));
   }
 
   /// <summary> Decline a project invitation </summary>
   [HttpPost("invitations/{invitationToken}:decline")]
-  public ActionResult<object> DeclineProjectInvitation(string invitationToken) {
-    // PLANNED: Implement invitation decline when ProjectInvitation entity is created (depends on GameGuild.Projects.Invitations)
-    return Ok(new { Message = "Invitation declined", Token = invitationToken });
+  public async Task<ActionResult<ProjectInvitationDto>> DeclineProjectInvitation(string invitationToken) {
+    var invitation = await GetRespondableInvitation(invitationToken).ConfigureAwait(false);
+    if (invitation == null) return NotFound(new { Message = "Invitation not found" });
+    if (!invitation.CanRespond) return Conflict(new { Message = "Invitation is no longer pending or has expired" });
+
+    var actor = _actorContextAccessor.ActorContext;
+    var userId = actor.SubjectIdAsGuid;
+    if (!userId.HasValue || invitation.InvitedUserId != userId.Value) return Forbid();
+
+    invitation.Decline();
+    await _context.SaveChangesAsync().ConfigureAwait(false);
+
+    return Ok(ProjectInvitationDto.FromInvitation(invitation));
   }
 
   /// <summary> Get project collaborators </summary>
@@ -502,6 +555,46 @@ public class ProjectsController : BaseApiController {
 
     return Ok(new { Message = "Project shared", ProjectId = id, UserId = request.UserId, Role = request.Role ?? "Viewer" });
   }
+
+  /// <summary> Invite a user to collaborate on a project without granting access until acceptance </summary>
+  [HttpPost("{id:guid}/invitations")]
+  public async Task<ActionResult<ProjectInvitationDto>> InviteProjectCollaborator(Guid id, [FromBody] InviteProjectCollaboratorRequest request) {
+    var project = await _context.Set<Project>().FindAsync(id).ConfigureAwait(false);
+    if (project == null) return NotFound();
+
+    var actor = _actorContextAccessor.ActorContext;
+    var userId = actor.SubjectIdAsGuid ?? Guid.Empty;
+    var isOwner = project.CreatedById == userId;
+    var isAdmin = actor.IsSystemAdmin || actor.IsTenantAdmin;
+    if (!isOwner && !isAdmin) return Forbid();
+
+    if (!request.UserId.HasValue && string.IsNullOrWhiteSpace(request.Email)) {
+      return BadRequest(new { Message = "Provide either a user id or an email address." });
+    }
+
+    var invitation = new ProjectInvitation {
+      ProjectId = id,
+      InvitedUserId = request.UserId,
+      InvitedEmail = request.Email?.Trim(),
+      InvitedByUserId = userId,
+      Role = request.Role ?? "Viewer",
+      Permissions = request.Permissions ?? "read",
+      ExpiresAt = request.ExpiresAt,
+      Token = Guid.NewGuid().ToString("N"),
+    };
+
+    _context.Set<ProjectInvitation>().Add(invitation);
+    await _context.SaveChangesAsync().ConfigureAwait(false);
+
+    return CreatedAtAction(nameof(GetMyProjectInvitations), new { }, ProjectInvitationDto.FromInvitation(invitation));
+  }
+
+  private async Task<ProjectInvitation?> GetRespondableInvitation(string invitationToken) {
+    return await _context.Set<ProjectInvitation>()
+      .Include(invitation => invitation.Project)
+      .FirstOrDefaultAsync(invitation => invitation.Token == invitationToken)
+      .ConfigureAwait(false);
+  }
 }
 
 /// <summary> Request DTOs for REST API </summary>
@@ -588,4 +681,44 @@ public sealed record ShareProjectRequest {
   [Required] public Guid UserId { get; init; }
   public string? Role { get; init; }
   public string? Permissions { get; init; }
+}
+
+public sealed record InviteProjectCollaboratorRequest {
+  public Guid? UserId { get; init; }
+  public string? Email { get; init; }
+  public string? Role { get; init; }
+  public string? Permissions { get; init; }
+  public DateTime? ExpiresAt { get; init; }
+}
+
+public sealed record ProjectInvitationDto(
+  Guid Id,
+  Guid ProjectId,
+  string ProjectTitle,
+  Guid? InvitedUserId,
+  string? InvitedEmail,
+  Guid InvitedByUserId,
+  string Role,
+  string Permissions,
+  string Token,
+  ProjectInvitationStatus Status,
+  DateTime InvitedAt,
+  DateTime? ExpiresAt,
+  DateTime? RespondedAt
+) {
+  public static ProjectInvitationDto FromInvitation(ProjectInvitation invitation)
+    => new(
+      invitation.Id,
+      invitation.ProjectId,
+      invitation.Project?.Title ?? string.Empty,
+      invitation.InvitedUserId,
+      invitation.InvitedEmail,
+      invitation.InvitedByUserId,
+      invitation.Role,
+      invitation.Permissions,
+      invitation.Token,
+      invitation.Status,
+      invitation.InvitedAt,
+      invitation.ExpiresAt,
+      invitation.RespondedAt);
 }

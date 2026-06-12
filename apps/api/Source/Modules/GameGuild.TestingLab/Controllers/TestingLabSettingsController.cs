@@ -1,6 +1,5 @@
 using GameGuild.Identity.Authorization;
 using GameGuild.Identity.Context.Actors;
-using GameGuild.Identity.Tenants;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -13,7 +12,6 @@ namespace GameGuild.TestingLab;
 [Authorize]
 public class TestingLabSettingsController(
   ITestingLabSettingsService settingsService,
-  ITenantService tenantService,
   IActorContextAccessor actorContextAccessor,
   ILogger<TestingLabSettingsController> _logger
 ) : BaseApiController {
@@ -97,20 +95,4 @@ public class TestingLabSettingsController(
 
     return Ok(exists);
   }
-
-  #region Private Helper Methods
-
-  /// <summary> Get the current tenant ID from the request context </summary>
-  private async Task<Guid?> GetCurrentTenantIdAsync() {
-    // First, try to get tenant ID from claims
-    // Check for both standard claim "tenant_id" and JWT-specific claim
-    var tenantIdClaim = User.FindFirst("tenant_id")?.Value ?? User.FindFirst("http://schemas.microsoft.com/identity/claims/tenantid")?.Value;
-
-    if (Guid.TryParse(tenantIdClaim, out var tenantId)) { return tenantId; }
-
-    await Task.CompletedTask.ConfigureAwait(false);
-    return Actor.TenantId;
-  }
-
-  #endregion
 }

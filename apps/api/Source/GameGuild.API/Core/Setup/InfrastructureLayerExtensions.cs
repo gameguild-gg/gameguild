@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Text.RegularExpressions;
 using GameGuild.AI;
 using GameGuild.API.Context;
+using GameGuild.API.Core.Services;
 using GameGuild.API.Database;
 using GameGuild.Commerce.Billing;
 using GameGuild.Commerce.Payments;
@@ -13,19 +14,29 @@ using GameGuild.Identity.Authorization;
 using GameGuild.Identity.Context;
 using GameGuild.Configuration.ConfigurationFromAPI.InfrastructureLayer;
 using GameGuild.Configuration.InfrastructureLayer;
+using GameGuild.Learning.Assessments;
+using GameGuild.Learning.Certificates;
+using GameGuild.Learning.Cohorts;
 using GameGuild.Learning.Courses;
 using GameGuild.Learning.Enrollments;
+using GameGuild.Learning.Experience.Discovery;
+using GameGuild.Learning.Experience.LearningPaths;
+using GameGuild.Learning.Experience.Recommendations;
 using GameGuild.Content.Pages;
 using GameGuild.Notifications;
 using GameGuild.Resources;
 using GameGuild.GameJams;
+using GameGuild.LaunchPad;
 using GameGuild.Social.Blog;
 using GameGuild.Social.Feed;
 using GameGuild.Social.Groups;
 using GameGuild.Social.Profiles;
 using GameGuild.Social.Reactions;
 using GameGuild.Tags;
+using GameGuild.Projects;
+using GameGuild.TestingLab;
 using Microsoft.EntityFrameworkCore;
+using LearningSocialModule = GameGuild.Learning.Experience.Social.SocialModule;
 
 namespace GameGuild.API.Setup;
 
@@ -171,6 +182,7 @@ public static class InfrastructureLayerExtensions
         // 07. Advanced Permission Services (JIT elevation, delegation, SoD, access reviews, delegated admin)
         stepStopwatch.Restart();
         services.AddAdvancedPermissionServices();
+        services.AddScoped<IResourceShareUserLookup, ApplicationResourceShareUserLookup>();
         logger.LogInformation("Advanced Permission Services registered in {ElapsedMs}ms", stepStopwatch.ElapsedMilliseconds);
 
         // 08. Rule-based Authorization
@@ -251,15 +263,45 @@ public static class InfrastructureLayerExtensions
         services.AddCoursesModule();
         logger.LogInformation("Courses Module registered in {ElapsedMs}ms", stepStopwatch.ElapsedMilliseconds);
 
-        // 10f.1. Learning Enrollments Module
+        // 10f.1. Learning Assessments Module
+        stepStopwatch.Restart();
+        services.AddAssessmentsModule();
+        logger.LogInformation("Learning Assessments Module registered in {ElapsedMs}ms", stepStopwatch.ElapsedMilliseconds);
+
+        // 10f.2. Learning Enrollments Module
         stepStopwatch.Restart();
         services.AddLearningEnrollmentsModule();
         logger.LogInformation("Learning Enrollments Module registered in {ElapsedMs}ms", stepStopwatch.ElapsedMilliseconds);
 
-        // 10f.2. Game Jams Module
+        // 10f.3. Learning Cohorts Module
+        stepStopwatch.Restart();
+        services.AddCohortsModule();
+        logger.LogInformation("Learning Cohorts Module registered in {ElapsedMs}ms", stepStopwatch.ElapsedMilliseconds);
+
+        // 10f.4. Learning Certificates Module
+        stepStopwatch.Restart();
+        services.AddCertificatesModule();
+        logger.LogInformation("Learning Certificates Module registered in {ElapsedMs}ms", stepStopwatch.ElapsedMilliseconds);
+
+        // 10f.5. Learning Experience Modules
+        stepStopwatch.Restart();
+        services.AddDiscoveryModule();
+        services.AddLearningPathsModule();
+        services.AddRecommendationsModule();
+        LearningSocialModule.AddSocialModule(services);
+        logger.LogInformation("Learning Discovery/Paths/Recommendations/Social Modules registered in {ElapsedMs}ms", stepStopwatch.ElapsedMilliseconds);
+
+        // 10f.6. Game Jams Module
         stepStopwatch.Restart();
         services.AddGameJamsModule();
         logger.LogInformation("Game Jams Module registered in {ElapsedMs}ms", stepStopwatch.ElapsedMilliseconds);
+
+        // 10f.7. Projects, Testing Lab, and Launch Pad Modules
+        stepStopwatch.Restart();
+        services.AddProjectsModule();
+        services.AddTestingLabModule(configuration);
+        services.AddLaunchPadModule();
+        logger.LogInformation("Projects/Testing Lab/Launch Pad Modules registered in {ElapsedMs}ms", stepStopwatch.ElapsedMilliseconds);
 
         // 10g. Content Pages Module (pages, sections, content resources, OpenGraph)
         stepStopwatch.Restart();
@@ -429,6 +471,8 @@ public static class InfrastructureLayerExtensions
                 .Where(t => !matchedTypes.Contains(t))
                 .Where(t => t.Name.EndsWith("Repository") || t.Name.EndsWith("Service") || t.Name.EndsWith("Reader"))
                 .Where(t => !t.Name.Contains("Decorator") && !t.Name.Contains("Cached") && !t.Name.Contains("Logging") && !t.Name.Contains("Default"))
+                .Where(t => !IsAlreadyRegistered(services, t))
+                .Where(t => !HasRegisteredAlternativeForServiceContract(services, t))
                 .ToList();
 
             foreach (var unmatched in unmatchedTypes)
@@ -521,6 +565,26 @@ public static class InfrastructureLayerExtensions
         // Also handle consecutive uppercase letters
         formatted = Regex.Replace(formatted, "([A-Z]+)([A-Z][a-z])", "$1 $2");
         return formatted;
+    }
+
+    private static bool IsAlreadyRegistered(IServiceCollection services, Type implementationType)
+    {
+        return services.Any(descriptor =>
+            descriptor.ServiceType == implementationType ||
+            descriptor.ImplementationType == implementationType ||
+            descriptor.ImplementationInstance?.GetType() == implementationType);
+    }
+
+    private static bool HasRegisteredAlternativeForServiceContract(IServiceCollection services, Type implementationType)
+    {
+        var serviceContracts = implementationType.GetInterfaces()
+            .Where(interfaceType => !interfaceType.IsGenericType)
+            .Where(interfaceType => interfaceType.Name.EndsWith("Service", StringComparison.Ordinal))
+            .Where(interfaceType => !interfaceType.Name.Contains("DbContext", StringComparison.Ordinal))
+            .ToArray();
+
+        return serviceContracts.Length > 0 &&
+               services.Any(descriptor => serviceContracts.Contains(descriptor.ServiceType));
     }
 
     #endregion

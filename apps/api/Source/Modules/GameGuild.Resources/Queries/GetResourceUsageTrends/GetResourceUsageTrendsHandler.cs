@@ -5,40 +5,63 @@ namespace GameGuild.Resources;
 /// <summary>
 ///     Handler for GetResourceUsageTrendsQuery
 /// </summary>
-public sealed class GetResourceUsageTrendsHandler
+public sealed class GetResourceUsageTrendsHandler(IUsageRecordRepository usageRecordRepository)
     : IQueryHandler<GetResourceUsageTrendsQuery, UsageTrendsResult>
 {
-    public Task<UsageTrendsResult> Handle(GetResourceUsageTrendsQuery request, CancellationToken cancellationToken)
+    public async Task<UsageTrendsResult> Handle(GetResourceUsageTrendsQuery request, CancellationToken cancellationToken)
     {
-        // Get all records for all tenants within the date range
-        // Note: This aggregates across all tenants for admin overview
-        var allRecords = new List<UsageRecord>();
-
-        // We need to add a method to get records by type and date range across all tenants
-        // For now, we'll return the structure and let the repository be extended if needed
         var dataPoints = new List<UsageTrendDataPoint>();
 
-        // Generate sample data points based on granularity
+        if (request.StartDate > request.EndDate)
+        {
+            return new UsageTrendsResult(
+                request.ResourceUsageType,
+                request.StartDate,
+                request.EndDate,
+                request.Granularity,
+                dataPoints);
+        }
+
+        var records = (await usageRecordRepository
+                .GetByTypeAsync(request.ResourceUsageType, request.StartDate, request.EndDate, cancellationToken)
+                .ConfigureAwait(false))
+            .ToList();
+
         var currentDate = request.StartDate;
         while (currentDate <= request.EndDate)
         {
-            var nextDate = request.Granularity switch
-            {
-                TrendGranularity.Daily => currentDate.AddDays(1),
-                TrendGranularity.Weekly => currentDate.AddDays(7),
-                TrendGranularity.Monthly => currentDate.AddMonths(1),
-                _ => currentDate.AddDays(1)
-            };
+            var nextDate = GetNextPeriod(currentDate, request.Granularity);
+            var bucketEnd = nextDate <= currentDate ? currentDate.AddDays(1) : nextDate;
+            var bucketRecords = records
+                .Where(record => record.PeriodStart >= currentDate && record.PeriodStart < bucketEnd)
+                .ToList();
 
-            dataPoints.Add(new UsageTrendDataPoint(currentDate, 0, 0));
-            currentDate = nextDate;
+            dataPoints.Add(new UsageTrendDataPoint(
+                currentDate,
+                bucketRecords.Sum(record => record.Count),
+                bucketRecords
+                    .Where(record => record.TenantId.HasValue)
+                    .Select(record => record.TenantId!.Value)
+                    .Distinct()
+                    .Count()));
+
+            currentDate = bucketEnd;
         }
 
-        return Task.FromResult(new UsageTrendsResult(
+        return new UsageTrendsResult(
             request.ResourceUsageType,
             request.StartDate,
             request.EndDate,
             request.Granularity,
-            dataPoints));
+            dataPoints);
     }
+
+    private static DateTime GetNextPeriod(DateTime currentDate, TrendGranularity granularity)
+        => granularity switch
+        {
+            TrendGranularity.Daily => currentDate.AddDays(1),
+            TrendGranularity.Weekly => currentDate.AddDays(7),
+            TrendGranularity.Monthly => currentDate.AddMonths(1),
+            _ => currentDate.AddDays(1)
+        };
 }
